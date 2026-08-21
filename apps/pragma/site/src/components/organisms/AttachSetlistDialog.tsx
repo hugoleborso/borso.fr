@@ -1,10 +1,4 @@
-/**
- * Modal that attaches a setlist the band already wrote to this session.
- * It offers only the setlists the session does not already carry, so
- * the list is what can actually be picked rather than everything with
- * half the rows inert.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';

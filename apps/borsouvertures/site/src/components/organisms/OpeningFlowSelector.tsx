@@ -14,9 +14,8 @@ const FLOW_BY_VIEWPORT: ComponentByFlag<OpeningPanelProps> = {
   false: WideOpeningFlow,
 };
 
-/** Nothing to advance to until a flow decides what "next" means. */
 function stayOnTheSameStep(): void {
-  // Intentionally empty.
+  return undefined;
 }
 
 interface OpeningFlowSelectorProps {

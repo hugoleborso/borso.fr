@@ -1,10 +1,3 @@
-/**
- * Service layer for setlists. Owns the position-compaction after
- * delete, the reorder validation (refuse stale client payloads), the
- * assembly of the list read models, and the rule that a setlist is
- * only ever attached to a session that exists.
- */
-
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { getSessionById } from '../sessions/sessions.service';
@@ -66,14 +59,6 @@ export async function findSetlist(setlistId: string): Promise<SetlistRow | null>
   return await findSetlistById(setlistId);
 }
 
-/**
- * Creates the setlist and, when the caller named a session, attaches it
- * in the same call. The attach is what makes the button on a session's
- * own page one tap rather than two. A session that does not exist is
- * refused before anything is written, and the two rows are written in
- * one transaction, so a link without its setlist cannot outlive a
- * failure the way it would under a database enforcing no foreign key.
- */
 export async function createSetlist(
   input: SetlistCreateInput,
 ): Promise<{ kind: 'ok'; setlist: SetlistRow } | { kind: 'session-not-found' }> {
@@ -146,19 +131,22 @@ export async function patchEntry(
   return { kind: 'ok', entry };
 }
 
-export async function removeEntryAndCompact(
-  setlistId: string,
-  entryId: string,
-): Promise<DeletionOutcome> {
-  const outcome = await deleteEntry(setlistId, entryId);
-  if (outcome === 'not-found') return outcome;
-  // Compact positions so the next append lands at the right index.
+async function compactEntryPositions(setlistId: string): Promise<void> {
   const remaining = await listEntries(setlistId);
   for (let position = 0; position < remaining.length; position += 1) {
     const entry = remaining[position];
     if (entry === undefined) continue;
     await setEntryPosition(entry.id, position);
   }
+}
+
+export async function removeEntryAndCompact(
+  setlistId: string,
+  entryId: string,
+): Promise<DeletionOutcome> {
+  const outcome = await deleteEntry(setlistId, entryId);
+  if (outcome === 'not-found') return outcome;
+  await compactEntryPositions(setlistId);
   return outcome;
 }
 

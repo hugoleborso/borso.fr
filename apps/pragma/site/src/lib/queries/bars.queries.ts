@@ -1,13 +1,4 @@
-/**
- * Bars (CRM) feature queries / mutations.
- *
- * Every cache-touching mutation is optimistic (round 17c). The kanban
- * DnD case (`useUpdateBar` switching `status`) is the most visible —
- * the card moves to the new column the instant the operator drops it,
- * the server confirms in the background, and a 500 rolls the card back
- * to its previous column.
- * @Feature bars
- */
+/** @Feature bars */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';

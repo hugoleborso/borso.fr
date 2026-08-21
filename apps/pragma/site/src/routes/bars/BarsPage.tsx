@@ -1,21 +1,4 @@
-/**
- * Bars CRM. Toggle between two views: list and kanban. The kanban
- * columns map 1:1 to the spec `BarStatus` enum
- * (`lead | contacted | booked | played | cold`); drag a card between
- * columns to update its `status` via the bar-update mutation.
- *
- * The kanban moves cards with HTML5 drag and drop, which touch input does not
- * fire, so it is a desktop-only view: below `lg` the toggle is hidden and
- * `selectVisibleBarsView` forces the list, whose form carries the status
- * field. The stale-bar banner + per-row badge fire from
- * `domain/bar-staleness.core`.
- *
- * Deleting a bar asks first — it takes the contact details and the follow-up
- * history with it and there is no undo — and a successful write bumps the
- * counter feeding the form's key, so the blank form remounts empty rather than
- * keeping what it just submitted and writing it twice.
- * @Feature bars
- */
+/** @Feature bars */
 
 import type { JSX } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
@@ -148,13 +131,7 @@ export function BarsPage(): JSX.Element {
     );
   };
 
-  /**
-   * Under `md` the form sits below the whole list, so on a phone a tap on a row
-   * filled a form several hundred pixels off the bottom of the screen. The
-   * scroll happens here, in the handler the tap runs, rather than in an effect
-   * watching the selection.
-   */
-  const selectBar = (barId: string): void => {
+  const selectBarAndScrollItsFormIntoView = (barId: string): void => {
     setFormInitial((current) => selectFormForBar(bars, barId, current));
     barFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
   };
@@ -173,7 +150,7 @@ export function BarsPage(): JSX.Element {
         <BarsList
           bars={listRows}
           statusLabel={(status) => t(BAR_STATUS_KEY[status])}
-          onSelect={selectBar}
+          onSelect={selectBarAndScrollItsFormIntoView}
           onRemove={setPendingDeletionId}
         />
         <div ref={barFormRef} className="scroll-mt-4">
@@ -191,7 +168,7 @@ export function BarsPage(): JSX.Element {
         statuses={BAR_STATUSES}
         cardsByStatus={kanbanCardsByStatus}
         statusLabel={(status) => t(BAR_STATUS_KEY[status])}
-        onSelect={selectBar}
+        onSelect={selectBarAndScrollItsFormIntoView}
         onMoveToStatus={moveBarToStatus}
       />
     ),

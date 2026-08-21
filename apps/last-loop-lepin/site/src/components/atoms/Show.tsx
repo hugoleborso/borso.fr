@@ -12,11 +12,6 @@ interface ShowProps {
 }
 
 /**
- * Render the children only when the claim holds. The alternative, a ternary
- * or a logical operator inside the parent's markup, puts a branch in a place
- * no test can reach without rendering the whole parent.
- */
-/**
  * @Blueprint branchless-render
  * @BlueprintName Branchless Conditional Render
  * @BlueprintUsage Use for showing or hiding a subtree without writing a ternary or a logical operator in the parent's markup.

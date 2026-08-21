@@ -24,9 +24,6 @@ function synth(props: {
   cloneFromSchema?: { readonly sourceSchemaName: string };
 }) {
   return synthTemplate((stack) => {
-    // Stand up a real cluster in the same stack so the schema has something
-    // to reference. In production, prod stacks use this same pattern; preview
-    // stacks use `lookupDsqlCluster(scope, app)` from SSM instead.
     const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
     new DsqlSchema(stack, 'Db', {
       app: 'test-app',
@@ -39,9 +36,6 @@ function synth(props: {
   });
 }
 
-// A clone that copies a credential table without saying which behaviour it
-// wants is the shape that put production band data behind a published password
-// on a public pragma preview. The construct refuses to synthesize it.
 describe('DsqlSchema clone guard on credential tables', () => {
   let credentialMigrations: string;
 
@@ -175,23 +169,27 @@ describe('DsqlSchema', () => {
       cluster,
     });
     expect(schema.schemaName).toBe('prod');
-    // grantConnect is exercised by lambda-api integration; we just make sure
-    // the public surface is reachable.
     expect(typeof schema.grantConnect).toBe('function');
   });
 });
+
+const MIGRATION_FILES = {
+  '0001_init.sql': 'CREATE TABLE x (id INT);',
+  '0002_more.sql': 'CREATE TABLE y (id INT);',
+};
+const FILES_THE_READER_IGNORES = ['README.md', 'not-a-migration.sql'];
 
 describe('DsqlSchema (migrations directory edge cases)', () => {
   let temporaryDirectory: string;
 
   beforeAll(() => {
     temporaryDirectory = fs.mkdtempSync(path.join(os.tmpdir(), 'borso-migrations-'));
-    // valid migrations
-    fs.writeFileSync(path.join(temporaryDirectory, '0001_init.sql'), 'CREATE TABLE x (id INT);');
-    fs.writeFileSync(path.join(temporaryDirectory, '0002_more.sql'), 'CREATE TABLE y (id INT);');
-    // junk that should be ignored
-    fs.writeFileSync(path.join(temporaryDirectory, 'README.md'), 'noise');
-    fs.writeFileSync(path.join(temporaryDirectory, 'not-a-migration.sql'), 'noise');
+    for (const [name, sql] of Object.entries(MIGRATION_FILES)) {
+      fs.writeFileSync(path.join(temporaryDirectory, name), sql);
+    }
+    for (const name of FILES_THE_READER_IGNORES) {
+      fs.writeFileSync(path.join(temporaryDirectory, name), 'noise');
+    }
   });
 
   afterAll(() => {

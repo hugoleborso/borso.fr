@@ -1,9 +1,4 @@
-/**
- * Decisions the bars page makes: which kanban column a bar belongs to,
- * which write a submitted form means, and which form the page should
- * show after a row is selected or deleted.
- * @Feature bars
- */
+/** @Feature bars */
 
 import {
   type BarFormInitial,
@@ -54,11 +49,6 @@ export interface KanbanCard {
   readonly isStale: boolean;
 }
 
-/**
- * The kanban board reads a bar as a card, and staleness is the only field it
- * derives rather than copies. Projecting here keeps the board free of the
- * clock the staleness check needs.
- */
 export function buildKanbanCardsByStatus(
   barsByStatus: Readonly<Record<BarStatus, readonly BarRow[]>>,
   isBarStale: (bar: BarRow) => boolean,
@@ -91,10 +81,6 @@ export type BarWriteIntent =
   | { readonly kind: 'update'; readonly payload: BarFormSubmitPayload & { readonly id: string } };
 
 /**
- * A blank name means the operator submitted an untouched form, which is
- * not a write. Otherwise the presence of an identifier decides between
- * an insert and an update.
- *
  * @Blueprint core-view-intent
  * @BlueprintName Core View Intent
  * @BlueprintUsage Use for a decision a route makes about what to do next, so the component holds no condition.
@@ -115,7 +101,6 @@ export interface BarWriteVisitor<Result> {
   readonly update: (payload: BarFormSubmitPayload & { readonly id: string }) => Result;
 }
 
-/** Dispatches an intent to the matching visitor branch, so the caller holds no condition. */
 export function applyBarWriteIntent<Result>(
   intent: BarWriteIntent,
   visitor: BarWriteVisitor<Result>,
@@ -127,12 +112,10 @@ export function applyBarWriteIntent<Result>(
 
 export type DragDropIntent = 'ignore' | 'move';
 
-/** An empty drag payload means the drop came from outside the kanban. */
 export function selectDragDropIntent(draggedBarId: string): DragDropIntent {
   return draggedBarId.length === 0 ? 'ignore' : 'move';
 }
 
-/** Selecting an unknown identifier leaves the form untouched. */
 export function selectFormForBar(
   bars: readonly BarRow[],
   barId: string,
@@ -142,18 +125,10 @@ export function selectFormForBar(
   return bar === undefined ? current : buildBarFormInitial(bar);
 }
 
-/**
- * Whether the list row is the bar the form currently holds.
- *
- * Under `md` the form sits below the whole list, so a tap on a row changed
- * nothing a phone could see: the form it filled was off the bottom of the
- * screen and the row itself looked exactly as it did before.
- */
 export function isBarBeingEdited(barId: string, form: BarFormInitial): boolean {
   return form.id === barId;
 }
 
-/** Deleting the bar the form is editing resets the form; any other deletion does not. */
 export function selectFormAfterDeletion(
   current: BarFormInitial,
   deletedBarId: string,
@@ -162,27 +137,10 @@ export function selectFormAfterDeletion(
   return current.id === deletedBarId ? blank : current;
 }
 
-/**
- * The React key of the bar form.
- *
- * Selecting another bar remounts the form, which is how the fields pick up the
- * new values. Creating one used to leave the key at its blank value, so the
- * form kept everything just submitted and a second tap on Save wrote a
- * duplicate record. The counter the page bumps on every successful write is
- * what makes the blank form a different form from the one that produced it.
- */
 export function buildBarFormKey(initial: BarFormInitial, writeCount: number): string {
   return `${initial.id ?? 'new'}-${writeCount}`;
 }
 
-/**
- * Which of the two panels the page actually shows.
- *
- * The kanban board moves cards with HTML5 drag and drop, and touch input never
- * fires those events, so on a phone the board renders a reordering affordance
- * no finger can use — and five empty 480px columns to scroll past. The list,
- * whose form carries a status field, is the path that works by touch.
- */
 export function selectVisibleBarsView(chosen: BarsView, isNarrow: boolean): BarsView {
   return isNarrow ? 'list' : chosen;
 }

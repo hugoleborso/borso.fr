@@ -1,32 +1,5 @@
 import { isSiteFile } from './site-paths.js';
 
-/**
- * Most effects in a React codebase are not synchronising React with anything
- * outside React, and they are working around React instead. An effect that
- * watches one piece of state and writes another is `useMemo` rebuilt by hand,
- * with an extra render, a stale closure risk, and a dependency array someone
- * will get wrong.
- *
- * The rule is deliberately blunt, because the standard bans the hook outright
- * and names a disable comment as the escape hatch. A genuine effect, e.g.
- * attaching a Leaflet map to a DOM node, is written as
- * `// eslint-disable-next-line borso/no-use-effect -- <which external system>`,
- * and `eslint-comments/require-description` makes the reason mandatory.
- *
- * What this deliberately allows:
- *
- * - Every other hook whose name starts with `useEffect`, e.g. `useEffectEvent`
- *   and a project hook named `useEffectOnce`, because the callee name is
- *   matched exactly.
- * - `useLayoutEffect` and `useInsertionEffect`, which the standard does not
- *   name. They are rare enough that a reviewer catches them.
- * - A method call named `useEffect` on some other object, because only
- *   `React.useEffect` is the React hook.
- * - Back end code, since the rule reads the file name and stays silent outside
- *   `apps/<app>/site/`.
- *
- * See docs/standards/07-state-and-effects.md.
- */
 const MESSAGE =
   'No front end in this repository contains a `useEffect`. Compute during render for derived ' +
   'state, do the work in the event handler for a user action, use CSS for a media query or an ' +
@@ -37,7 +10,6 @@ const MESSAGE =
 const HOOK_NAME = 'useEffect';
 const REACT_NAMESPACE = 'React';
 
-/** `useEffect(…)` and `React.useEffect(…)`, and nothing else named similarly. */
 export function isUseEffectCallee(callee) {
   if (callee.type === 'Identifier') {
     return callee.name === HOOK_NAME;
@@ -56,7 +28,7 @@ export function isUseEffectCallee(callee) {
  * @Blueprint lint-rule
  * @BlueprintName Custom Lint Rule
  * @BlueprintUsage Use for a rule in the `borso` plugin that enforces one document in `docs/standards/`.
- * @BlueprintDescription Keeps the argument for the rule in a file header that also lists what the rule deliberately allows, holds the whole operator facing text in one `MESSAGE` constant ending in a pointer to the standard, exports the matching predicate so the test can drive it directly, and opens `create` with a file name guard that returns an empty visitor object for the paths the rule does not police.
+ * @BlueprintDescription Carries no file header, because the argument for the rule and the list of what it deliberately allows both live in the `docs/standards/` document its message points to, holds the whole operator facing text in one `MESSAGE` constant ending in that pointer, exports the matching predicate so the test can drive it directly, and opens `create` with a file name guard that returns an empty visitor object for the paths the rule does not police.
  * @type {import('eslint').Rule.RuleModule}
  */
 export default {

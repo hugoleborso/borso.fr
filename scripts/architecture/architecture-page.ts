@@ -1,15 +1,3 @@
-/**
- * Renders the architecture graph as one self-contained page.
- *
- * Each diagram level ships its nodes and edges as JSON and is drawn in the
- * browser by the layered renderer in `architecture-graph-view.ts`, so the
- * arrows are real SVG paths with arrowheads that can be hovered, focused,
- * panned and zoomed. The levels carrying too many nodes for any layout to
- * help, meaning code and the slice walk, stay as filterable HTML, because a
- * reader browsing two hundred files wants search and detail rather than a
- * picture.
- */
-
 import { GRAPH_RUNTIME_SCRIPT, GRAPH_STYLES } from './architecture-graph-view';
 import type { JourneyModel, SourceEntry } from './architecture-journeys';
 import type { LevelLayout } from './architecture-layout';
@@ -27,22 +15,12 @@ import type { ArchitectureManifest } from './architecture-manifest';
 import type { DiffSummary } from './architecture-model-json';
 import { wrapInDocumentShell } from './document-shell.core';
 
-/**
- * What a branch did, counted, before a reviewer reads a single block.
- *
- * The graphs answer *where* something moved; this answers *how much*, and it is
- * the part that tells a reviewer whether the page is worth their next minute.
- */
 export interface DiffReport {
-  /** The revision this branch is compared against, short. */
   readonly baseline: string;
   readonly counts: readonly { label: string; value: number }[];
-  /** Things the colours deliberately do not say, in the reader's words. */
   readonly notes: readonly string[];
-  /** New path → the path it came from, for every file this branch renamed. */
   readonly renamedFrom: Readonly<Record<string, string>>;
   readonly removedFiles: readonly { path: string; layer: string; context: string }[];
-  /** Movement on the header totals, keyed by the label they carry. */
   readonly deltas: Readonly<Record<string, number>>;
 }
 
@@ -52,25 +30,13 @@ export interface RenderInput {
   readonly slices: readonly ContextSlice[];
   readonly blueprints: readonly BlueprintEntry[];
   readonly files: readonly ArchitectureFile[];
-  /** How much of the codebase each level draws, one entry per level id. */
   readonly coverage: readonly LevelCoverage[];
-  /** Everything the code dialog can open, keyed once for the whole page. */
   readonly sources: Readonly<Record<string, SourceEntry>>;
   readonly standards: readonly StandardEntry[];
-  /** Last commit per blueprint or standard file, keyed by repo-relative path. */
   readonly histories: Readonly<Record<string, FileHistory>>;
-  /**
-   * The revision every date and commit count on this page was read at.
-   *
-   * The page is regenerated when the structure or the renderer moves, not on
-   * every commit, so the history it shows can be a few commits behind. Saying
-   * which revision it was read at is what keeps that honest.
-   */
   readonly historyRevision: string;
   readonly repositorySlug: string;
-  /** Present only on the diff page: what this branch did to each block. */
   readonly statuses?: ReadonlyMap<string, StatusByNode>;
-  /** Present only on the diff page, alongside `statuses`. */
   readonly report?: DiffReport;
   readonly unmarkedCount: number;
   readonly layouts: ReadonlyMap<string, LevelLayout>;
@@ -78,10 +44,6 @@ export interface RenderInput {
   readonly journeyLayouts: ReadonlyMap<string, LevelLayout>;
 }
 
-/**
- * The one line that says whether this page is worth the next minute: how many
- * files moved, in which direction, against which revision.
- */
 function renderDiffCounts(report: DiffReport | undefined): string {
   if (report === undefined) return '';
   const counted = report.counts
@@ -103,11 +65,6 @@ function escapeHtml(text: string): string {
     .replaceAll('"', '&quot;');
 }
 
-/**
- * The tone drives the colour of a node's left stripe, and it is derived from
- * the node kind rather than authored, so a new container or boundary picks up a
- * colour without anyone editing a palette.
- */
 function toneOf(kind: string): string {
   if (kind === 'actor' || kind === 'system') return kind;
   if (kind.startsWith('external-')) {
@@ -126,28 +83,19 @@ const STYLE_BLOCK = /<style>([\s\S]*?)<\/style>/g;
 const CUSTOM_PROPERTY_USE = /var\(\s*(--[\w-]+)\s*([,)])/g;
 const CUSTOM_PROPERTY_DEFINITION = /(--[\w-]+)\s*:/g;
 
-/**
- * The page, or a throw naming a custom property it reads and never defines.
- *
- * An undefined custom property is not an empty string and not the property's
- * inherited value: the declaration is invalid at computed-value time, so the
- * property falls back to its *initial* value. `fill: var(--chip)` with no
- * `--chip` paints black, on a page whose whole palette exists to keep colour
- * meaningful. Nothing about that reads as a missing definition when you look at
- * it, which is why it survived a light theme, a dark theme and a review.
- *
- * A `var(--x, fallback)` use may name a property nobody defines, because that
- * is what the fallback is for. Only the page's own stylesheets are read: the
- * application source the code viewer embeds carries custom properties defined
- * in the application's stylesheet, which this page neither ships nor needs.
- */
+const CLOSING_PARENTHESIS = ')';
+
+function hasNoFallback(use: RegExpExecArray): boolean {
+  return use[2] === CLOSING_PARENTHESIS;
+}
+
 function withDefinedCustomProperties(page: string): string {
   const styles = [...page.matchAll(STYLE_BLOCK)].map(([, css]) => css ?? '').join('\n');
   const defined = new Set([...styles.matchAll(CUSTOM_PROPERTY_DEFINITION)].map(([, name]) => name));
   const missing = [
     ...new Set(
       [...styles.matchAll(CUSTOM_PROPERTY_USE)]
-        .filter((match) => match[2] === ')')
+        .filter((use) => hasNoFallback(use))
         .map((match) => match[1] ?? '')
         .filter((name) => !defined.has(name)),
     ),
@@ -160,7 +108,6 @@ function withDefinedCustomProperties(page: string): string {
   return page;
 }
 
-/** JSON embedded in a script tag, with the one sequence that could close it escaped. */
 function embedJson(value: unknown): string {
   return JSON.stringify(value).replaceAll('<', String.raw`\u003c`);
 }
@@ -218,12 +165,6 @@ function renderGraph(
       </div>`;
 }
 
-/**
- * The journey level: pick a feature, then an action, and see its flow.
- *
- * Every graph is laid out at generation time like the others, so switching
- * between them is a redraw of ready coordinates rather than a layout run.
- */
 function renderUnreachedByAction(journeys: JourneyModel, slices: readonly ContextSlice[]): string {
   const behindAnAction = new Set(
     journeys.features.flatMap((feature) =>
@@ -248,35 +189,17 @@ function renderUnreachedByAction(journeys: JourneyModel, slices: readonly Contex
     .join('')}</ul>`;
 }
 
-/**
- * A journey step is coloured by what the branch did to the file it lives in.
- *
- * Silence on this level reads as "unchanged", which is the worst default for
- * the walk that ties a URL to a table; a step whose module this branch wrote is
- * exactly the step a reviewer should look at first.
- */
 function journeyStatusOf(location: string | undefined, code: StatusByNode | undefined): string {
   if (location === undefined || code === undefined) return '';
   return code.get(location.slice(0, location.lastIndexOf(':'))) ?? '';
 }
 
-/**
- * How many actions this level actually found, beside its own title.
- *
- * The coverage figure below is built from three walks, and two of them draw a
- * file without needing an action at all. So an application whose query modules
- * the walk could not recognise still reported ninety-odd percent, and the one
- * number that would have said "I could not see anything here" was the one
- * nobody printed. See docs/dantotsus/the-map-recognised-modules-by-their-names.md.
- */
 function renderActionCount(journeys: JourneyModel, routeTotal: number): string {
   const total = journeys.features.reduce((count, feature) => count + feature.actions.length, 0);
   const flows = journeys.features
     .filter((feature) => !feature.id.startsWith('shell') && feature.id !== 'request')
     .reduce((count, feature) => count + feature.actions.length, 0);
   if (flows > 0) return ` <span class="level-count">${flows} of ${total} are data flows</span>`;
-  // No routes at all is a site without an API, and drawing no data flow is the
-  // right answer. Routes with no flow is the reader failing to see them.
   if (routeTotal === 0) {
     return ' <span class="level-count">no API, so every block below is what the pages render</span>';
   }
@@ -392,15 +315,6 @@ function renderNodeCards(level: GraphLevel): string {
     .join('');
 }
 
-/**
- * What a level draws, and what it leaves out.
- *
- * A diagram that shows most of a codebase and says nothing about the rest is
- * read as showing all of it. The bar per layer says how much, and the list says
- * exactly which files are missing — collapsed, because on a level that draws
- * everything there is nothing to open, and on one that does not the list is
- * long.
- */
 function renderCoverage(coverage: LevelCoverage | undefined, applicationPrefix: string): string {
   if (coverage === undefined) return '';
   const total = coverage.byLayer.reduce((sum, layer) => sum + layer.total, 0);
@@ -454,8 +368,6 @@ function renderBlueprints(
   applicationPrefix: string,
   statuses: StatusByNode | undefined,
 ): string {
-  // A pattern the target branch had and this one does not still needs a row,
-  // because a table cannot show a deletion by leaving the row out.
   const noFollowers: readonly string[] = [];
   const removed = [...(statuses ?? new Map())]
     .filter(([, status]) => status === 'removed')
@@ -488,20 +400,6 @@ function renderBlueprints(
     .join('');
 }
 
-/**
- * The standards, each with its own history and a diff between any two commits.
- *
- * A rule that changed is more interesting than a rule that exists. The whole
- * text at every commit ships with the page — thirteen documents and their
- * history is about 150 KB — so picking two commits is a redraw rather than a
- * request, which is the only kind of interaction this page can have.
- *
- * That history is the one input to this page that is not the working tree. It
- * is why the page is generated rather than committed: a file cannot contain the
- * commit that adds it, so a committed page would be one commit behind from the
- * moment it landed. `pages.yml` regenerates before publishing, so what a reader
- * opens is always current.
- */
 function renderStandards(standards: readonly StandardEntry[], repositorySlug: string): string {
   const payload = {
     repositorySlug,
@@ -543,13 +441,6 @@ function renderStandards(standards: readonly StandardEntry[], repositorySlug: st
 
 const PAGE_STYLES = String.raw`
 <style>
-  /*
-    Colour carries one meaning on this page: which layer a thing belongs to.
-    The chrome is therefore achromatic and cool, so a controller blue or a
-    repository amber is never competing with a decorative accent. Navy marks
-    the active level and links; amber is reserved for a route nothing reaches.
-    Monospace carries structure, because the subject is source files.
-  */
   :root {
     color-scheme: light dark;
     --ground: #eef0f4;
@@ -698,9 +589,6 @@ const PAGE_STYLES = String.raw`
     display: flex;
     flex-direction: column;
     gap: .4rem;
-    /* A grid item defaults to min-width:auto, so the nowrap kind tag in the
-       header sets a floor wider than the track's share and pushes the whole
-       page sideways. */
     min-width: 0;
     overflow-wrap: anywhere;
   }
@@ -900,8 +788,6 @@ export function renderArchitecturePage(input: RenderInput): string {
     })
     .join('');
 
-  // A table that can only grow is not a diff. These rows have no source to
-  // open, because the file is not in this tree to read.
   const removedRows = (report?.removedFiles ?? [])
     .map(
       (
@@ -919,9 +805,6 @@ export function renderArchitecturePage(input: RenderInput): string {
     .join('');
 
   const layers = [...new Set(files.map((file) => file.layer))].sort();
-  // A file the suffix table does not recognise sits at `unknown`, which every
-  // level then draws in a group nobody named. The count is the migration's
-  // remaining budget, so it is a header number rather than a row to hunt for.
   const unlayeredCount = files.filter((file) => file.layer === 'unknown').length;
   const routeTotal = slices.reduce((total, slice) => total + slice.routes.length, 0);
 
@@ -1099,10 +982,9 @@ ${PAGE_STYLES}
 
   const codeModal = document.getElementById('code-modal');
   codeModal?.querySelector('[data-code-close]')?.addEventListener('click', () => codeModal.close());
-  // A native dialog fills its whole box, so a click on the backdrop reports the
-  // dialog itself as the target; anything inside reports a child.
+  const isBackdropClick = (event) => event.target === codeModal;
   codeModal?.addEventListener('click', (event) => {
-    if (event.target === codeModal) codeModal.close();
+    if (isBackdropClick(event)) codeModal.close();
   });
 </script>
 <script>${GRAPH_RUNTIME_SCRIPT}</script>
@@ -1110,22 +992,8 @@ ${PAGE_STYLES}
   );
 }
 
-/**
- * The landing page for the folder, one card per application.
- *
- * Each map is a page of its own so it can be published on its own, which leaves
- * a reader arriving at the folder with nowhere to start unless something lists
- * them.
- */
 type DiffCounts = DiffSummary['counts'];
 
-/**
- * Which counts reach the index, in reading order, and how each one is written.
- *
- * A renamed file is not a change to the architecture — the map pairs it rather
- * than reporting an addition beside a deletion — so it carries no sign and is
- * left out here; the diff page still lists every rename.
- */
 const DELTA_LABELS = [
   { label: 'added', sign: '+', tone: 'delta-added' },
   { label: 'edited', sign: '~', tone: 'delta-edited' },
@@ -1138,13 +1006,6 @@ function countFor(counts: DiffCounts, label: string): number {
 
 export function renderArchitectureIndex(
   manifests: readonly ArchitectureManifest[],
-  /**
-   * What each application's diff run found, by application. An application
-   * absent from this map has no diff page, and one whose counts are all zero
-   * did not move on this branch; neither belongs in the top section, which
-   * exists to answer one question and should not answer it with a list of
-   * applications the reader has to check one by one.
-   */
   diffSummaries: ReadonlyMap<string, DiffSummary> = new Map(),
 ): string {
   const moved = manifests

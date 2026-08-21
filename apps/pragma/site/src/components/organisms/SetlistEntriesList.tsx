@@ -1,13 +1,4 @@
-/**
- * dnd-kit sortable list of setlist entries, plus the drag overlay
- * preview. Lives in its own file so `SetlistEditor.tsx` stays under
- * the `noExcessiveLinesPerFile` cap. The parent owns the data,
- * mutations, and the modal state — this component composes the
- * derived row props (resolved lineup, prominent member chip in
- * single-member mode, override badge, the transition strip that
- * precedes each row) and emits intent through the supplied callbacks.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import {
   closestCenter,

@@ -1,8 +1,3 @@
-/**
- * The constraints are the contract this slice publishes, so each test names a
- * rule a caller could break rather than restating the shape of the object.
- */
-
 import { describe, expect, it } from 'vitest';
 import { signGetInputSchema, signUploadInputSchema } from './uploads.schema';
 import { MAX_UPLOAD_BYTES } from './uploads.types';

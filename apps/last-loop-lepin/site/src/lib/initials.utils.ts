@@ -1,11 +1,3 @@
-/**
- * Avatar fallback helpers — pure, deterministic.
- *
- * Drives the placeholder rendered when a runner has no photo: two-letter
- * initials on an OKLCH-based coloured background derived from the runner's
- * display name. Same name → same colour, always.
- */
-
 const HASH_INITIAL = 5381;
 const HASH_MULTIPLIER = 33;
 const OKLCH_LIGHTNESS = 0.72;
@@ -29,10 +21,6 @@ function djb2Hash(input: string): number {
 }
 
 function pickInitials(displayName: string): string {
-  // `matchAll` over runs of non-space is the whitespace split without the
-  // empty entries a `split` on a single-space pattern would leave behind,
-  // and each match's group 0 types as `string`, so no index access is
-  // needed to read the initial off it.
   const wordInitials = Array.from(displayName.matchAll(WORD_PATTERN), (match) =>
     match[0].charAt(0),
   );
@@ -45,11 +33,6 @@ function pickInitials(displayName: string): string {
   return (firstInitial + lastInitial).toUpperCase();
 }
 
-/**
- * Compute the avatar to display when a runner has no photo. Deterministic
- * in `displayName` — the same name always yields the same colour and the
- * same initials.
- */
 // @FollowsBlueprint utils-pure-module
 export function initialsAvatar(displayName: string): InitialsAvatar {
   const hash = djb2Hash(displayName);

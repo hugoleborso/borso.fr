@@ -1,8 +1,3 @@
-/**
- * The address bar is the single source of truth for the seed and the palette,
- * so the React tree reads it with `useSyncExternalStore` instead of mirroring
- * it into state. Everything that changes the composition goes through here.
- */
 import { useSyncExternalStore } from 'react';
 import type { PaletteKey } from './palettes.utils';
 import { buildSearch, freshSeed, readUrlState, type UrlState } from './url-state.utils';
@@ -11,7 +6,6 @@ const DEFAULT_PALETTE_KEY: PaletteKey = 'classic';
 const POP_STATE_EVENT = 'popstate';
 const URL_CHANGED_EVENT = 'borso:composition-url-changed';
 
-/** The seed and palette this visit resolved to, before anything the reader does. */
 export const INITIAL_STATE = readUrlState(window.location.search, {
   paletteKey: DEFAULT_PALETTE_KEY,
   fallbackSeed: freshSeed(Math.random()),
@@ -19,10 +13,6 @@ export const INITIAL_STATE = readUrlState(window.location.search, {
 
 const DEFAULTS = { paletteKey: INITIAL_STATE.paletteKey, fallbackSeed: INITIAL_STATE.seed };
 
-/**
- * A visit with no `?seed=`, and a visit with an unreadable one, both end up
- * with a shareable address bar.
- */
 export function mirrorResolvedStateIntoUrl(): void {
   window.history.replaceState(INITIAL_STATE, '', buildSearch(INITIAL_STATE));
 }
@@ -66,7 +56,6 @@ export function useCompositionState(): UrlState {
   return readUrlState(search, DEFAULTS);
 }
 
-/** A deliberate recomposition, so it earns a history entry the reader can undo. */
 // @FollowsBlueprint browser-edge-module
 export function composeNewSeed(): void {
   const nextState: UrlState = {
@@ -77,7 +66,6 @@ export function composeNewSeed(): void {
   announceUrlChange();
 }
 
-/** Cascade reseeds on a timer, so it replaces the entry rather than stacking one per tick. */
 export function refreshSeedInPlace(): void {
   const nextState: UrlState = {
     seed: freshSeed(Math.random()),

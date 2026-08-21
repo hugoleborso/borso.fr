@@ -1,21 +1,3 @@
-/**
- * Authentication controller. Hono routing + Zod parsing; orchestration
- * lives in `auth.service.ts`, DB access in `auth.repository.ts`.
- *
- *  - POST /api/auth/login           — verify password, set session cookie.
- *  - POST /api/admin/set-password    — bootstrap; rejected if a row already exists.
- *  - POST /api/admin/rotate-password — rotate password + HMAC key
- *                                       (invalidates every existing cookie).
- *
- * The bootstrap endpoint is intentionally NOT gated by the session
- * middleware — it can only succeed exactly once, when the singleton row
- * does not yet exist. The rotate endpoint IS gated by the session
- * middleware: it is mounted on a dedicated router that applies
- * `requireSharedPasswordSession` to every route. Returning two distinct
- * admin routers (bootstrap vs. rotate) prevents the wiring mistake of
- * accidentally putting the rotate handler on an ungated router.
- */
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';

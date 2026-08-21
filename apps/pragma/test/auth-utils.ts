@@ -1,9 +1,3 @@
-/**
- * Helpers for back-e2e tests that exercise gated endpoints. Builds an
- * app with auth already bootstrapped and produces a session cookie
- * header that the suites pass to every gated request.
- */
-
 import type { Hono } from 'hono';
 import type { z } from 'zod';
 import { createApp } from '../api/src/app';
@@ -55,13 +49,6 @@ export async function jsonRequest(
   return app.request(`${TEST_HOST}${path}`, init);
 }
 
-/**
- * Reads the JSON body of a Response and validates it via the provided
- * Zod schema. Use this in tests instead of casting `await
- * response.json()` to a TypeScript shape — the repo's
- * no-type-assertion plugin bans the cast, and parsing through Zod
- * doubles as a runtime check that the controller honors its contract.
- */
 export async function readJson<Output>(
   response: Response,
   schema: z.ZodType<Output>,

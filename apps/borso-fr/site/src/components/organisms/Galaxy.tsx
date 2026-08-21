@@ -1,14 +1,6 @@
-// Galaxy — react-bits Galaxy component, ported as TSX for borso.fr.
-//
-//   SPDX-License-Identifier: MIT
-//   Source:    https://github.com/DavidHDev/react-bits
-//             (components/Backgrounds/Galaxy/Galaxy.jsx)
-//   Copyright (c) 2024 David Haz
-//
-// Do not strip this header — it is the license compliance surface for the
-// react-bits component (see docs/adr/0003-react-bits-galaxy-as-react-component.md).
-// The GLSL lives in `galaxy-shaders.ts`, preserved verbatim from upstream; only
-// the harness was retyped.
+// SPDX-License-Identifier: MIT
+// SPDX-FileCopyrightText: 2024 David Haz
+// SPDX-FileContributor: ported to TSX for borso.fr from https://github.com/DavidHDev/react-bits (components/Backgrounds/Galaxy/Galaxy.jsx)
 
 import { Color, Mesh, type OGLRenderingContext, Program, Renderer, Triangle } from 'ogl';
 import { useEffect, useRef } from 'react';
@@ -20,13 +12,6 @@ const POINTER_INACTIVE = 0;
 const POINTER_ACTIVE = 1;
 const CENTRE = 0.5;
 
-/**
- * `pointer-events-auto` puts back what the mount point turns off, so
- * `pointermove` still reaches the warp effect while clicks on the canvas
- * region keep falling through to whatever is stacked below. `touch-none`
- * stops the browser claiming a finger drag as a scroll or zoom gesture, which
- * is safe because the page behind cannot scroll.
- */
 const CANVAS_CONTAINER_CLASS_NAME =
   'pointer-events-auto absolute inset-0 block h-full w-full touch-none [&>canvas]:h-full [&>canvas]:w-full';
 
@@ -80,9 +65,6 @@ interface PointerHandlers {
 }
 
 function attachPointer(container: HTMLDivElement, handlers: PointerHandlers): DetachPointer {
-  // pointermove instead of mousemove so finger drags on touch devices also
-  // drive the warp — the upstream component listened for mouse events only,
-  // which silently dropped the effect on mobile.
   container.addEventListener('pointermove', handlers.onPointerMove);
   container.addEventListener('pointerleave', handlers.onPointerLeave);
   return () => {
@@ -214,10 +196,6 @@ export function Galaxy({
 
     const update = (timestamp: number) => {
       frame.handle = requestAnimationFrame(update);
-      // The lightspeed jump between two pages of the site is this galaxy flying
-      // rather than anything drawn over it, so the frame loop reads how hard it
-      // should be travelling from a module outside React. State would not do:
-      // it would re-run the effect that owns this WebGL context.
       const jumpIntensity = readJumpIntensity(timestamp);
       const clock = selectStarClock(
         isAnimationPaused,

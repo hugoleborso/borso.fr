@@ -2,9 +2,6 @@ import path from 'node:path';
 import { createRuleTester } from './rule-tester.js';
 import rule from './test-file-has-sibling-source.js';
 
-// The rule asks the filesystem, so the cases point at real paths in this
-// repository rather than at fixtures, which keeps the suite from adding
-// `.core.ts` files that the coverage gate would then want tests for.
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 const pureFile = (relativePath) => path.join(repositoryRoot, relativePath);
 
@@ -27,14 +24,10 @@ createRuleTester(sourceWithSiblingTest, { jsx: false }).run('test-file-has-sibli
   valid: [
     { code: 'export const metres = 1;' },
     { code: 'export const metres = 1;', filename: coreWithSiblingTest },
-    // An adapter is gated too, though it is the opposite of pure.
     { code: 'export const search = () => null;', filename: adapterWithSiblingTest },
     { code: 'export const memberSchema = {};', filename: schemaWithSiblingTest },
-    // The sibling itself, which has no sibling of its own.
     { code: 'export const cases = [];', filename: siblingTestItself },
-    // A file the coverage and mutation gates do not cover.
     { code: 'export const service = {};', filename: impureSource },
-    // A file that never touched the disk, e.g. a snippet linted from stdin.
     { code: 'export const metres = 1;', filename: '<input>' },
   ],
   invalid: [

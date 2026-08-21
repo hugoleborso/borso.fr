@@ -1,10 +1,3 @@
-/**
- * Behaviour test for `useIsOnline`, which replaced the AppShell effect
- * that copied `navigator.onLine` into React state. The hook has to
- * report the browser's status at mount and re-render on the `online`
- * and `offline` events.
- */
-
 import { cleanup, render, screen } from '@testing-library/react';
 import type { JSX } from 'react';
 import { act } from 'react';

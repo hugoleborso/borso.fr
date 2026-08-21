@@ -16,12 +16,6 @@ interface SetupPanelProps {
   readonly now: Date;
 }
 
-/**
- * The setup tab. It always shows the create form, so next year's race can be
- * registered while the current one is still running, and it shows either the
- * edit form for an edition still in setup or a read only card for one that
- * has started.
- */
 // @FollowsBlueprint organism-presentational
 export function SetupPanel({ currentEdition, locale, now }: SetupPanelProps) {
   return (

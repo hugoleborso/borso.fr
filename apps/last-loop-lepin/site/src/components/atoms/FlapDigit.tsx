@@ -5,12 +5,6 @@ interface FlapDigitProps {
   readonly digit: string;
 }
 
-/**
- * One split flap character. The `key` bound to the digit value makes React
- * replace the element whenever the digit changes, which is what restarts the
- * `flap` keyframes declared in `styles/tokens.css`; without it React reuses
- * the element and the animation only plays once, on mount.
- */
 // @FollowsBlueprint atom-plain
 export function FlapDigit({ digit }: FlapDigitProps) {
   return (

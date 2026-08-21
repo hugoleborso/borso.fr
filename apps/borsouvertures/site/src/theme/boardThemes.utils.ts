@@ -1,9 +1,5 @@
 export type BoardThemeId = 'lichess' | 'chesscom' | 'nord' | 'sand';
 
-/**
- * Written as a union of literals rather than `string`, so `t(theme.nameKey)`
- * still typechecks against the catalogue and a renamed key is a build failure.
- */
 type BoardThemeNameKey =
   | 'top-bar.board-style.theme.lichess'
   | 'top-bar.board-style.theme.chesscom'
@@ -70,10 +66,6 @@ export function isBoardThemeId(value: unknown): value is BoardThemeId {
   return value === 'lichess' || value === 'chesscom' || value === 'nord' || value === 'sand';
 }
 
-/**
- * Narrow a raw `<select>` value to a board theme, keeping the current theme
- * when the value is not one we ship.
- */
 // @FollowsBlueprint utils-pure-module
 export function toBoardThemeId(value: string, fallback: BoardThemeId): BoardThemeId {
   return isBoardThemeId(value) ? value : fallback;

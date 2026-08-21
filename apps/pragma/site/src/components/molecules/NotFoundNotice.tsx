@@ -1,16 +1,3 @@
-/**
- * What a detail route draws when the record behind its id is gone.
- *
- * A shared or bookmarked link outlives the record it names, and every route
- * used to answer that with the raw API message — `song 404` — in red, with no
- * control of any kind. On the stage route, which renders outside the
- * application shell, that left a phone with nothing to tap at all.
- *
- * The way out is a button rather than the thin back link a detail page carries
- * on its success path: it is the only thing on the screen, so it is what the
- * reader is aiming at.
- */
-
 import type { JSX } from 'react';
 import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';

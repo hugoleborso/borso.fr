@@ -1,11 +1,3 @@
-/**
- * Back-e2e for the setlists endpoints. Covers create + attach/detach to
- * sessions + rename + delete + add/update/remove entries + reorder +
- * delete-compaction. The transition warning rule is unit-tested in
- * `transition.core.test.ts`; here we just verify the end-to-end
- * persistence semantics.
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
@@ -152,7 +144,6 @@ describe('setlists controller (back-e2e)', () => {
       });
       ids.push((await readJson(response, singleEntryEnvelope)).entry.id);
     }
-    // Remove the middle entry; the others must end up at positions [0, 1].
     await jsonRequest(app, `/api/setlists/${setlistId}/entries/${ids[1]}`, {
       method: 'DELETE',
       cookieHeader,

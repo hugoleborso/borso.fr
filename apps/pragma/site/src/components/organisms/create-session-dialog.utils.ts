@@ -1,9 +1,4 @@
-/**
- * Pure helpers backing `CreateSessionDialog`. Kept side-effect-free so
- * the date defaulting + the `<input type="datetime-local">` ↔ ISO bridge
- * can be tested without mounting the form.
- * @Feature sessions
- */
+/** @Feature sessions */
 
 const TOMORROW_HOUR = 20;
 const TOMORROW_MINUTE = 0;
@@ -16,21 +11,12 @@ const YEAR_DIGITS = 4;
 const TWO_DIGIT_FIELD = 2;
 const DATETIME_LOCAL_LENGTH = 16;
 
-/**
- * Returns "tomorrow at 20:00 local time" formatted for an
- * `<input type="datetime-local">` value attribute (`YYYY-MM-DDTHH:mm`,
- * no timezone suffix). `now` is injected so the helper stays pure.
- */
 export function defaultDateTimeLocal(now: Date): string {
   const tomorrow = new Date(now.getTime() + ONE_DAY_MS);
   tomorrow.setHours(TOMORROW_HOUR, TOMORROW_MINUTE, 0, 0);
   return formatDateTimeLocal(tomorrow);
 }
 
-/**
- * Format a `Date` as the value attribute expected by
- * `<input type="datetime-local">`. Uses the local timezone (no `Z`).
- */
 // @FollowsBlueprint utils-pure-module
 export function formatDateTimeLocal(date: Date): string {
   const year = String(date.getFullYear()).padStart(YEAR_DIGITS, '0');
@@ -41,12 +27,6 @@ export function formatDateTimeLocal(date: Date): string {
   return `${year}-${month}-${day}T${hours}:${minutes}`;
 }
 
-/**
- * Convert a `<input type="datetime-local">` string (local time, no
- * timezone suffix) into an ISO-8601 datetime accepted by
- * `z.string().datetime()` on the back-end. Returns `null` if the input
- * is not a parseable local-datetime literal.
- */
 export function dateTimeLocalToIso(value: string): string | null {
   if (value.length < DATETIME_LOCAL_LENGTH) return null;
   const candidate = new Date(value);
@@ -54,11 +34,6 @@ export function dateTimeLocalToIso(value: string): string | null {
   return candidate.toISOString();
 }
 
-/**
- * Filter concerts to those happening strictly after `now`. Defensive
- * against unparseable dates (drops them) so the dropdown doesn't
- * surface garbage rows.
- */
 export function filterFutureConcerts<T extends { date: string }>(
   concerts: readonly T[],
   now: Date,

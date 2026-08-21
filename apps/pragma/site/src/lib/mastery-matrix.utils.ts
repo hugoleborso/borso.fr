@@ -1,22 +1,10 @@
-/**
- * Pure helpers for the mastery matrix UI on /members. Per spec use
- * case 1bis: row averages = per-member overall musicianship, column
- * averages = per-instrument bench strength. Both compute live as the
- * matrix is edited.
- * @Feature mastery
- */
+/** @Feature mastery */
 
 // @FollowsBlueprint utils-pure-module
 export function cellKey(memberId: string, instrumentId: string): string {
   return `${memberId}/${instrumentId}`;
 }
 
-/**
- * Average mastery for a single member across every instrument that
- * has a score. Cells without a score are skipped (they're treated as
- * "no opinion logged", not "zero"). Returns null when the row is
- * empty.
- */
 export function rowAverage(
   memberId: string,
   instrumentIds: readonly string[],
@@ -34,10 +22,6 @@ export function rowAverage(
   return sum / count;
 }
 
-/**
- * Average mastery for a single instrument across every member that
- * has a score. Symmetric to `rowAverage`.
- */
 export function columnAverage(
   instrumentId: string,
   memberIds: readonly string[],
@@ -55,10 +39,6 @@ export function columnAverage(
   return sum / count;
 }
 
-/**
- * Clamps the proposed score into [0, 10]. Used by scroll-wheel ±1
- * (which can take a score past either bound).
- */
 export const MASTERY_SCORE_MIN = 0;
 export const MASTERY_SCORE_MAX = 10;
 
@@ -68,13 +48,6 @@ export function clampScore(value: number): number {
 
 export type ScoreEditIntent = 'clear' | 'write';
 
-/**
- * What emptying a cell means. A phone fires no `contextmenu` on an input and
- * no `wheel` on a touch scroll, so the right-click that used to be the only
- * way to drop an override was unreachable with a finger; deleting the digits
- * is the gesture that is left, and it used to write a literal zero because
- * `Number('')` is `0`.
- */
 export function selectScoreEditIntent(rawValue: string): ScoreEditIntent {
   return rawValue.trim() === '' ? 'clear' : 'write';
 }

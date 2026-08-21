@@ -1,9 +1,3 @@
-/**
- * The marker is a hint the route guard reads before it decides whether asking
- * the API is worth a request, so what matters is that a browser which has
- * never signed in reads `false` and one that has reads `true`.
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import {
   forgetSessionMarker,

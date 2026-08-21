@@ -11,7 +11,6 @@ import { listRunnerMarkers, selectProjectionMode } from './course-map-markers.co
 interface CourseMapProps {
   readonly edition: RaceEditionDto;
   readonly ranked: readonly RankedRunnerDto[];
-  /** Wall clock used to place each runner along the track. */
   readonly now: Date;
 }
 
@@ -64,11 +63,6 @@ export function CourseMap({ edition, ranked, now }: CourseMapProps) {
   const startLng = edition.gpx.startLatLng.lng;
   const startMarkerTitle = t('course-map.start-marker');
 
-  /**
-   * Leaflet owns the map instance: it attaches to a DOM node, keeps its own
-   * pan and zoom state, and has to be torn down explicitly. A ref callback
-   * with a cleanup is the way in that does not need an effect.
-   */
   /**
    * @Blueprint organism-imperative-bridge
    * @BlueprintName Organism Bridging An Imperative Library

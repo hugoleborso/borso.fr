@@ -1,9 +1,3 @@
-/**
- * Runner reads and writes, plus the presign call that precedes a photo
- * upload. The upload itself goes straight to Amazon with `fetch`, because it
- * does not reach our API; the presign call is the part that does.
- */
-
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 
@@ -77,11 +71,6 @@ export function useCreateRunner() {
   });
 }
 
-/**
- * Ask the API for a presigned S3 upload target. The caller then `PUT`s the
- * file straight to the returned URL, which is the one request in this site
- * that does not go through the Hono client.
- */
 // @FollowsBlueprint query-uncached-mutation
 export function usePresignRunnerPhoto() {
   return useMutation({

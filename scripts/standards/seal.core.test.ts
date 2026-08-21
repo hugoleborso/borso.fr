@@ -98,7 +98,6 @@ describe('verifySeals', () => {
     ]);
   });
 
-  /** A rename is not something the review would say anything new about. */
   it('keeps the seal when a file moves without changing', () => {
     const verification = verifySeals(
       [{ path: 'apps/pragma/api/src/catalogue/songs.service.ts', contentHash: 'a'.repeat(64) }],

@@ -1,11 +1,3 @@
-/**
- * Holds the GPX file the operator picked and reads it on demand.
- *
- * The read happens at submit time, not at pick time, because `File.text` is
- * asynchronous and a quick submit would otherwise race it and post an empty
- * track. The decisions live in `gpx-file.utils.ts`.
- */
-
 import { useState } from 'react';
 import type { GpxErrorKey } from '../molecules/GpxFileField';
 import {
@@ -19,9 +11,7 @@ export interface GpxFileState {
   readonly errorKey: GpxErrorKey | null;
   readonly pickFile: (file: File | null) => void;
   readonly reportError: (errorKey: GpxErrorKey | null) => void;
-  /** Read for a create, where a missing file is an error. */
   readonly readRequired: () => Promise<GpxReadResult>;
-  /** Read for an edit, where a missing file keeps the persisted track. */
   readonly readOptional: () => Promise<GpxReadResult>;
 }
 

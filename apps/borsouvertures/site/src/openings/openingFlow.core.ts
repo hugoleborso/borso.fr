@@ -13,14 +13,6 @@ export interface LineEntry {
   line: Line;
 }
 
-/**
- * The four lists the three-column opening picker renders.
- *
- * `variationEntries` and `lineEntries` are the totals the "All variations" and
- * "All lines" cards count. The `panel…` lists are what the columns actually
- * show, which differ in learn mode: a learner sees only the variations of the
- * opening they picked, whereas the totals span the whole play scope.
- */
 export interface OpeningFlowLists {
   readonly variationEntries: VariationEntry[];
   readonly panelVariationEntries: VariationEntry[];
@@ -76,12 +68,6 @@ function listPanelVariationEntries(
   return listVariationEntries([selectedOpening]);
 }
 
-/**
- * The learner's line column reads the variation out of the list the variation
- * column is already showing, rather than re-deriving the opening/variation
- * pair. The panel list is empty until an opening is picked, so one lookup
- * answers both "is an opening picked" and "is one of its variations picked".
- */
 function listPanelLineEntries(
   mode: Mode,
   lineEntries: LineEntry[],

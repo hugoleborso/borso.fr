@@ -1,10 +1,3 @@
-/**
- * The colours the twelve labours page picks at runtime, as references into the
- * `@theme` block in `site/styles/tokens.css`, so the hex is written once and a
- * value chosen in TypeScript and a value chosen by a Tailwind utility cannot
- * drift apart. Everything a component knows at build time is a utility class
- * on the element instead, which is why only the runtime palette is here.
- */
 export const ACCENT = 'var(--color-labours-accent)';
 export const INK = 'var(--color-labours-ink)';
 export const PAPER = 'var(--color-labours-paper)';

@@ -133,14 +133,6 @@ const BODY_BY_STATE: Readonly<Record<SelfPunchStateKind, (props: BodyProps) => R
 };
 
 /**
- * Dialog a runner uses to confirm their own loop from their phone. The state
- * machine lives in `self-punch.core.ts`; this shell wires the mutation's
- * outcome into it and looks the matching body up in a table.
- *
- * The standings query polls every two seconds, so a confirmed punch needs no
- * refetch here to show up on the leaderboard.
- */
-/**
  * @Blueprint organism-state-machine
  * @BlueprintName Organism Driven By A State Machine
  * @BlueprintUsage Use for a flow with several outcomes, where each step has to name why it happened rather than only whether it worked.

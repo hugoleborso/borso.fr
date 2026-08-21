@@ -57,11 +57,6 @@ interface PunchPanelProps {
 }
 
 /**
- * The organiser's punching grid. A tap flips the tile straight away from a
- * local overlay, so the next bib can be tapped without waiting on the two
- * second standings poll, and the poll is what confirms it.
- */
-/**
  * @Blueprint organism-mutation-panel
  * @BlueprintName Organism Mutation Panel
  * @BlueprintUsage Use for a panel whose controls each fire a mutation and have to look applied before the server answers.

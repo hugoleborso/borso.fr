@@ -61,8 +61,6 @@ const STATUS_FOREGROUND: Readonly<Record<ChallengeStatus, string>> = {
 const IN_PROGRESS_STATUS: ChallengeStatus = 'doing';
 
 /**
- * The one status that reverses the tag, so it reads as the live month.
- *
  * @Blueprint core-appearance
  * @BlueprintName Appearance Selector Core
  * @BlueprintUsage Use whenever a component would otherwise branch on a domain status to choose a colour, a class name, or a label key.
@@ -93,10 +91,6 @@ export function selectFilmstripBarColor(status: ChallengeStatus, isActive: boole
 
 export type MediaProofType = 'photo' | 'video';
 
-/**
- * Only the media section of a challenge renders through this, so every other
- * proof type resolves to the still image renderer rather than a branch.
- */
 const MEDIA_PROOF_TYPE: Readonly<Record<ProofType, MediaProofType>> = {
   photo: 'photo',
   video: 'video',
@@ -161,7 +155,6 @@ export function selectFilmstripCardColors(isActive: boolean): FilmstripCardColor
   return FILMSTRIP_CARD_COLORS[`${isActive}`];
 }
 
-/** The cover sits in a column of its own, and only once the page is wide enough. */
 const FEATURED_ARTICLE_CLASS: Readonly<Record<`${boolean}`, string>> = {
   true: 'grid-cols-1 labours-stack:grid-cols-[320px_minmax(0,1fr)]',
   false: 'grid-cols-1 labours-stack:grid-cols-[minmax(0,1fr)]',

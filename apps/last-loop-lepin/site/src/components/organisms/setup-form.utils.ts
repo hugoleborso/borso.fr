@@ -6,7 +6,6 @@ function padTwoDigits(value: number): string {
   return `${value}`.padStart(TWO_DIGITS, '0');
 }
 
-/** An instant as the `datetime-local` input reads it, in local wall time. */
 // @FollowsBlueprint utils-pure-module
 export function isoLocal(date: Date): string {
   const month = padTwoDigits(date.getMonth() + 1);
@@ -33,11 +32,6 @@ export function defaultEndsAt(now: Date): string {
   return isoLocal(cursor);
 }
 
-/**
- * Suggest the next edition's slug. If the current edition slug ends in a
- * 4-digit year (`lepin-2026`), increment it (`lepin-2027`). Otherwise
- * append `-next` so the suggestion never collides with the existing slug.
- */
 export function suggestNextSlug(currentSlug: string | undefined): string {
   if (currentSlug === undefined) return FIRST_EDITION_SLUG;
   const match = TRAILING_YEAR.exec(currentSlug);
@@ -59,12 +53,6 @@ const zodValidationErrorSchema = z.object({
   }),
 });
 
-/**
- * Pull a human-readable summary out of a `zValidator` 400 body. Hono's
- * default error shape is `{ success: false, error: { issues: [...] } }`
- * — surface the path + message of each issue so the operator sees which
- * field actually failed instead of a generic "données invalides" hint.
- */
 // @FollowsBlueprint core-parse-untrusted
 export function summariseZodError(body: unknown): string | null {
   const validationError = zodValidationErrorSchema.safeParse(body);

@@ -1,8 +1,3 @@
-/**
- * Card atom — paper-elevated surface with the editorial radius and
- * border. Mirrors `.card` from the prototype.
- */
-
 import { forwardRef, type HTMLAttributes } from 'react';
 import { type CardVariantProps, cardVariants } from './card.variants';
 import { composeClassName } from './class-name.utils';

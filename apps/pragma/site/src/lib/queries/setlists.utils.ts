@@ -1,25 +1,4 @@
-/**
- * Pure cache transforms for the two setlist queries, and the one filter
- * that picks which setlists a session can still be offered.
- *
- * The entry half is optimistic and the setlist half is not. An entry
- * mutation snapshots the cache before the request and rolls back on
- * failure; a setlist mutation writes what its own response returned, so
- * it needs no snapshot and has nothing to roll back.
- *
- * Each mutation in `setlist-entries.queries.ts` snapshots the current `{ entries }`
- * cache, applies one of these helpers in `onMutate`, and rolls back to
- * the snapshot in `onError`. The shape is generic in the entry type so
- * the helpers don't pin themselves to the BE projection — the queries
- * file passes the inferred shape through `setQueryData<EntriesCache>`.
- *
- * A lineup written by a mutation arrives in whichever shape the request body
- * allows — a list of instruments per member, or the single id and null the
- * older rows carry — while the cache holds what a read returns, which is
- * always lists. `toEntryPatch` and `appendOptimisticEntry` normalise on the
- * way in, so an optimistic row and a fetched row are the same shape.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { type Lineup, normalizeLineup, type StoredLineup } from '@domain/lineup.core';
 
@@ -109,7 +88,6 @@ export interface EntryPatchInput {
   readonly lineupOverride?: StoredLineup | null;
 }
 
-/** A mutation's variables as the cache holds them, lineup included. */
 export function toEntryPatch(input: EntryPatchInput): Partial<MinimalSetlistEntry> {
   const { lineupOverride, ...rest } = input;
   if (lineupOverride === undefined) return rest;
@@ -130,13 +108,6 @@ export interface SetlistsCache<TSetlist extends MinimalSetlistSummary = MinimalS
   readonly setlists: readonly TSetlist[];
 }
 
-/**
- * The lists a write reconciles from its own response rather than from a
- * refetch: Aurora DSQL makes a row visible on the connection that wrote
- * it before the others, so a `GET` fired straight after a `POST` can be
- * served by another Lambda and answer without it. See
- * docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md.
- */
 export function appendSetlistToCache<TSetlist extends MinimalSetlistSummary>(
   cache: SetlistsCache<TSetlist>,
   setlist: TSetlist,
@@ -164,12 +135,6 @@ export function renameSetlistInCache<TSetlist extends MinimalSetlistSummary>(
   };
 }
 
-/**
- * Records that a session now carries a setlist, or no longer does, in
- * the summary the index reads. The index shows every setlist with the
- * sessions playing it, so a link made from a session's page has to
- * reach that list too.
- */
 export function applySessionLinkInCache<TSetlist extends MinimalSetlistSummary>(
   cache: SetlistsCache<TSetlist>,
   setlistId: string,
@@ -188,10 +153,6 @@ export function applySessionLinkInCache<TSetlist extends MinimalSetlistSummary>(
   };
 }
 
-/**
- * The setlists a session does not carry yet, which are the ones its
- * "attach an existing setlist" picker can offer.
- */
 export function selectSetlistsNotOnSession<TSetlist extends MinimalSetlistSummary>(
   setlists: readonly TSetlist[],
   sessionId: string,

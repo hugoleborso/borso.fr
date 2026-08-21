@@ -10,10 +10,6 @@ import type { Construct } from 'constructs';
 export const HOSTED_ZONE_NAME = 'borso.fr';
 
 // @FollowsBlueprint shared-account-stack
-/**
- * us-east-1-only stack: wildcard certs that CloudFront requires in this
- * region. Looks up the existing borso.fr hosted zone for DNS validation.
- */
 export class CertsStack extends Stack {
   public readonly borsoFrCert: ICertificate;
   public readonly previewCert: ICertificate;

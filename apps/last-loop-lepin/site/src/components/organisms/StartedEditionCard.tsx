@@ -46,10 +46,6 @@ interface StartedEditionCardProps {
   readonly locale: string;
 }
 
-/**
- * Read only summary of the edition that has started or finished, with the one
- * status button that fits it: a live race ends, a finished race reopens.
- */
 // @FollowsBlueprint organism-mutation-panel
 export function StartedEditionCard({ edition, locale }: StartedEditionCardProps) {
   const { t } = useTranslation();

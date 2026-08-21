@@ -1,18 +1,3 @@
-/**
- * Pure MusicBrainz response mapper. Takes the JSON the
- * `/ws/2/recording/?query=...&inc=tags+releases+isrcs` endpoint returns
- * and projects it onto the shape the catalog UI renders. The mapper is
- * permissive — every upstream field can be missing — and falls back
- * gracefully so a partial result still surfaces in the search dropdown.
- *
- * Live HTTP and rate-limit live in `songs.service.ts`; this file is
- * IO-free and gated at 100% coverage by the `core` Vitest project.
- *
- * Tonality is deliberately not pulled: MusicBrainz only carries it on
- * `work` entities (sparingly), never on `recording`. Pop/rock coverage
- * is near-zero — see kaizen note for GetSongBPM as a future source.
- */
-
 import { z } from 'zod';
 
 export interface ExternalSongHit {
@@ -27,10 +12,7 @@ export interface ExternalSongHit {
   readonly disambiguation: string | null;
   readonly tags: readonly string[];
   readonly isrcs: readonly string[];
-  /** How many releases carry this recording; the notability signal the
-   * ranker reads, since MusicBrainz publishes no popularity figure. */
   readonly releaseCount: number;
-  /** Full ISRC count, before `isrcs` is trimmed for display. */
   readonly isrcCount: number;
 }
 
@@ -165,10 +147,6 @@ export interface ExternalSearchCacheEntry {
   readonly expiresAt: number;
 }
 
-/**
- * The keys of a search cache whose entries have reached their expiry, so the
- * caller can drop them without iterating a map it is mutating.
- */
 export function expiredSearchCacheKeys(
   cache: ReadonlyMap<string, ExternalSearchCacheEntry>,
   nowMillis: number,

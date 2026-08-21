@@ -9,7 +9,6 @@ createRuleTester(componentFile).run('no-component-css-imports', rule, {
   valid: [
     "import { clsx } from 'clsx';",
     "import { cva } from 'class-variance-authority';",
-    // A module whose name merely contains `css`.
     "import { toClassName } from '../lib/css-names.utils';",
     "import { tokens } from './tokens.css.json';",
   ],
@@ -29,8 +28,6 @@ createRuleTester(componentFile).run('no-component-css-imports', rule, {
   ],
 });
 
-// The entry point is where the one token file and every vendor stylesheet are
-// loaded, and an application has one per bundle.
 createRuleTester(entryPointFile).run('no-component-css-imports (entry point)', rule, {
   valid: [
     "import './styles/tokens.css';",
@@ -40,8 +37,6 @@ createRuleTester(entryPointFile).run('no-component-css-imports (entry point)', r
   invalid: [],
 });
 
-// A stylesheet import in infrastructure or back end code is not a component
-// style, and the rule stays out of it.
 createRuleTester('infra/cdk/src/constructs/static-site.ts', { jsx: false }).run(
   'no-component-css-imports (outside a site)',
   rule,

@@ -1,9 +1,3 @@
-/**
- * UI test for MemberFilterPills — the all-vs-member toggling
- * behaviour. Mirrors the test pattern used in `file-drop.test.tsx`
- * (createRoot + act, no testing-library dep added).
- */
-
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

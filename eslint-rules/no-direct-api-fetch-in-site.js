@@ -1,15 +1,3 @@
-/**
- * Ported from `biome-plugins/no-direct-api-fetch-in-site.grit`.
- *
- * A relative `/api/...` URL resolves against whatever origin served the
- * bundle, which on preview and on production is the static site CloudFront
- * distribution. That distribution has no `/api/*` behaviour, so the request
- * falls through to the single page application and returns the 404 page while
- * the real endpoint, on its own API hostname, returns 200.
- *
- * See docs/dantotsus/frontend-fetch-must-go-through-api-client.md and
- * docs/standards/06-data-fetching.md.
- */
 const MESSAGE =
   'Direct fetch() on a relative `/api/...` URL bypasses the Hono client and hits the ' +
   'static-site CloudFront distribution, which has no /api/* behaviour, on preview and ' +

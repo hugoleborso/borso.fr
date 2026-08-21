@@ -1,12 +1,4 @@
-/**
- * The row the sessions list shows while a create request is in flight.
- *
- * Practices and concerts share one table, so half the columns belong to the
- * other kind and read as `null`. Which half is the decision this file holds,
- * and it mirrors `buildSessionInsertShape` on the API side, which does the
- * same thing to the same body on its way into the database.
- * @Feature sessions
- */
+/** @Feature sessions */
 
 import type { InferResponseType } from 'hono/client';
 import type { api } from '../api.client';

@@ -1,16 +1,3 @@
-/**
- * ScoreInput atom — one mastery cell. Three affordances share one value:
- * typing it, wheeling it by a step, and clearing it from the context menu. The
- * atom owns the affordances and reports the intent; clamping, reading an empty
- * box as "no score" and persistence belong to the caller, which already has
- * the pure helpers for all three.
- *
- * A cell with no score shows an empty box rather than a zero: the two mean
- * different things to the band — nobody has rated this member on this
- * instrument, against they cannot play it at all — and the row is absent from
- * the API in the first case.
- */
-
 import type { JSX, MouseEvent, WheelEvent } from 'react';
 
 const SCORE_INPUT_CLASS =

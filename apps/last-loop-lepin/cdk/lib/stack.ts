@@ -1,23 +1,3 @@
-/**
- * Last Loop Lépin CDK stack — composes `PreviewableApp` (StaticSite +
- * LambdaApi + DsqlSchema) from `@borso/infra`, the S3 bucket the admin
- * uploads runner photos to, and the `PhotosCdn` distribution in front of
- * it.
- *
- * Admin auth wiring is intentionally absent: per ADR-0004 the PIN scrypt
- * hash and the session state live in the application DB rows
- * `admin_credentials` and `admin_sessions`, not in Secrets Manager. The
- * stack therefore carries no `AWS::SecretsManager::Secret` resources and
- * no `PIN_HASH` or `JWT_SECRET` environment variable — the test
- * `stack.test.ts` asserts all three absences. The operator seeds the PIN
- * hash row through psql after the first deploy of a stage; sessions are
- * random ids the Lambda mints on each login.
- *
- * Test-seed flag: `ALLOW_TEST_SEED=1` is injected on non-prod API
- * Lambdas by `PreviewableApp` itself, not here — the construct owns the
- * prod-exclusion. The API reads it to mount `/api/__test/seed`.
- */
-
 import {
   frontendOrigin,
   type IDsqlCluster,
@@ -42,11 +22,6 @@ const PHOTOS_CDN_PROD_HOSTNAME = 'photos-cdn.borso.fr';
 const PHOTO_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
 
-/**
- * Mirrors the `previewSuffix` guard inside `@borso/infra`, which every other
- * per-stage name in this stack already goes through. Kept here because the
- * photos CDN hostname is composed in this file rather than by a construct.
- */
 function requirePreviewSuffix(prNumber: number | undefined): string {
   if (prNumber === undefined) {
     throw new Error(`${APP_SLUG}: a non-production stage requires prNumber.`);
@@ -87,11 +62,6 @@ export function buildLastLoopLepinAppStack(props: BuildLastLoopLepinAppStackProp
     ],
   });
 
-  // Photos CDN — CloudFront fronting `photosBucket`, deterministic URL
-  // scheme `https://<hostname>/<photoKey>`. Spec
-  // `docs/features/last-loop-lepin/runner-photos-everywhere`. The
-  // `PHOTOS_CDN_HOST` env var flows into the API Lambda so the runner
-  // DTO mapper can compose `photoUrl` server-side.
   const isProduction = isProductionStage(props.stage);
   const photosCdnHostname = isProduction
     ? PHOTOS_CDN_PROD_HOSTNAME
@@ -124,24 +94,6 @@ export function buildLastLoopLepinAppStack(props: BuildLastLoopLepinAppStackProp
     database: {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
-      // Neon-branch-style clone: every non-prod schema starts as a copy
-      // of prod's data so the admin PIN (seeded once in prod) carries
-      // over, the editions + runners + punches are realistic for debug,
-      // and the operator doesn't have to re-seed each preview by hand.
-      // Skipped automatically for the prod stack (source === target) and
-      // for the very first app deploy (source doesn't exist yet).
-      // Runtime-state tables (sessions, rate-limit buckets) keep their
-      // structure but no rows; `runners.photo_key` is NULLed so the
-      // preview's CDN doesn't dereference prod's S3 bucket.
-      //
-      // `admin_credentials` is blocked because a preview is a public URL and
-      // must not hold production's PIN hash. ADR-0004 moved the PIN out of a
-      // stage-shared Secrets Manager entry into a per-schema row precisely so
-      // each stage would carry its own; cloning the row from prod put the
-      // sharing back by another route. Consequence: a fresh preview has no
-      // admin PIN and the admin area is unreachable until someone seeds the
-      // row, which is the intended per-stage behaviour rather than a
-      // regression.
       ...(isProduction
         ? {}
         : {

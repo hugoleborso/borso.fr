@@ -13,17 +13,7 @@ import type { GpxMetadata, RaceEdition } from './edition.types';
 
 const DEFAULT_INTERVAL_MINUTES = 60;
 
-/**
- * Build the persisted `trackJson` from a parser output. Centralises the
- * `null` (core boundary) → omitted-key (DTO / persisted JSON) translation
- * for `pointTimeFractions` — without this, `JSON.stringify` would emit
- * `"pointTimeFractions": null`, which the Zod refine on read would reject.
- */
-function trackJsonOf(track: GpxTrack): GpxMetadata['trackJson'] {
-  // Both `pointTimeFractions` and `pointElevations` follow the
-  // `null` (core) → omitted-key (DTO) translation — emitting `null` would
-  // round-trip through `JSON.stringify` as `"…": null` and trip the Zod
-  // `.optional()` on read.
+function trackJsonOmittingAbsentSeries(track: GpxTrack): GpxMetadata['trackJson'] {
   const base: GpxMetadata['trackJson'] = { points: track.points };
   const withTimings: GpxMetadata['trackJson'] =
     track.pointTimeFractions === null
@@ -90,7 +80,7 @@ export async function createEdition(input: CreateEditionInput): Promise<RaceEdit
     gpx: {
       distanceMeters: track.distanceMeters,
       elevationGainMeters: track.elevationGainMeters,
-      trackJson: trackJsonOf(track),
+      trackJson: trackJsonOmittingAbsentSeries(track),
       startLatLng: track.startLatLng,
     },
     status: 'setup',
@@ -184,22 +174,9 @@ export interface UpdateSetupEditionInput {
   readonly startsAt: Date;
   readonly endsAt: Date;
   readonly intervalMinutes?: number;
-  /**
-   * Omitted (or empty) → keep the persisted GPX + sunrise/sunset.
-   * Provided → re-parse, recompute, replace. Empty strings are coerced
-   * to `undefined` by the controller so the schema-side `.optional()`
-   * + this branch agree.
-   */
   readonly gpxXml?: string;
 }
 
-/**
- * Re-parses the GPX, recomputes sunrise/sunset, and writes every mutable
- * field on the existing edition row. Refused (with
- * {@link EditionNotInSetupError}) once the race has gone live — the
- * GPX + schedule are the contract the spectators see and shouldn't shift
- * mid-race. Slug is the primary key and never edits.
- */
 // @FollowsBlueprint service-orchestration
 export async function replaceSetupEdition(
   slug: string,
@@ -212,9 +189,6 @@ export async function replaceSetupEdition(
   if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
   const newTrack =
     input.gpxXml === undefined || input.gpxXml.length === 0 ? null : parseGpx(input.gpxXml);
-  // Sunrise/sunset depend on (a) the start coordinates and (b) the start
-  // date. Re-compute whenever either changed — i.e. when the user uploaded
-  // a new GPX OR shifted `startsAt`.
   const startLatLng = newTrack?.startLatLng ?? existing.gpx.startLatLng;
   const { sunriseAt, sunsetAt } = computeSunriseSunset(startLatLng, input.startsAt);
   const replaced: RaceEdition = {
@@ -231,7 +205,7 @@ export async function replaceSetupEdition(
         : {
             distanceMeters: newTrack.distanceMeters,
             elevationGainMeters: newTrack.elevationGainMeters,
-            trackJson: trackJsonOf(newTrack),
+            trackJson: trackJsonOmittingAbsentSeries(newTrack),
             startLatLng: newTrack.startLatLng,
           },
   };
@@ -245,11 +219,6 @@ export async function removeSetupEdition(slug: string): Promise<void> {
   await deleteEdition(slug);
 }
 
-/**
- * Write a whole edition row, replacing an existing one with the same slug.
- * Exposed for the test seeding endpoint, which rebuilds its fixture edition
- * from scratch on every call.
- */
 export async function seedEdition(edition: RaceEdition): Promise<void> {
   await upsertEdition(edition);
 }

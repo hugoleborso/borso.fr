@@ -16,16 +16,6 @@ const MINUTES_PER_HOUR = 60;
 const ADMIN_COOKIE_TTL_HOURS = 12;
 const ADMIN_COOKIE_TTL_SECONDS = ADMIN_COOKIE_TTL_HOURS * MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
 
-/**
- * `sameSite: 'Lax'` is the deliberate default — `Strict` blocked the
- * cookie on every top-level navigation from outside the app (links in
- * mail, bookmarks opened from elsewhere, OAuth-style redirects),
- * forcing the operator to log in again on each visit. Lax sends the
- * cookie on GET top-level navigations but withholds it on cross-site
- * POST/PUT/PATCH/DELETE — the state-changing CSRF surface stays
- * covered. `requireAdminSession` adds an explicit Origin-header check
- * as belt-and-braces for scripted cross-origin requests.
- */
 // @FollowsBlueprint controller-public-router
 const authRouter = new Hono()
   .post('/login', zValidator('json', loginInputSchema), async (context) => {

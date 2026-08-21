@@ -20,25 +20,12 @@ import type { IDsqlCluster } from './dsql-cluster.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 
-/**
- * Resolves the migration-runner entry path that's handed to NodejsFunction
- * for esbuild bundling at synth time.
- *
- * Two candidates because this code runs in two contexts:
- *   - When this package is consumed by an app (apps/<x>/bin/app.ts) it runs
- *     from `dist/`, where the runner is the compiled `index.js`.
- *   - When this package's own vitest suite runs against the TypeScript
- *     sources, this code runs from `src/`, where the runner is `index.ts`
- *     (esbuild compiles the TS at synth time).
- *
- * Same path resolution either way; the file extension just differs by
- * context.
- */
 /* v8 ignore start -- both candidates exist in their respective contexts */
 function resolveRunnerEntry(): string {
+  const runnerDirectory = path.join(HERE, '..', 'internal', 'migration-runner');
   const candidates = [
-    path.join(HERE, '..', 'internal', 'migration-runner', 'index.js'),
-    path.join(HERE, '..', 'internal', 'migration-runner', 'index.ts'),
+    path.join(runnerDirectory, 'index.js'),
+    path.join(runnerDirectory, 'index.ts'),
   ];
   for (const candidate of candidates) {
     if (fs.existsSync(candidate)) return candidate;
@@ -50,36 +37,9 @@ function resolveRunnerEntry(): string {
 /* v8 ignore stop */
 
 export interface DsqlSchemaCloneFromConfig {
-  /**
-   * Source schema in the SAME cluster to clone structure + data from.
-   * Typical value: `'prod'` for preview/integ stacks. Same name as
-   * `schemaName` → the runner skips (no self-clone).
-   */
   readonly sourceSchemaName: string;
-  /**
-   * Table names whose ROWS are skipped during the data step — typically
-   * runtime state (`admin_sessions`, `auth_attempts`) that shouldn't
-   * cross schema boundaries. Their structure is still copied so the
-   * application can write to the empty table after deploy.
-   */
   readonly tableBlocklist?: readonly string[];
-  /**
-   * Map of `table → columns` whose values are replaced by `NULL` in the
-   * clone INSERT. Use this for any column carrying a reference to a
-   * stage-specific S3 object key, ARN, or URL — the preview's app code
-   * would otherwise dereference prod's bucket and get 403s or worse.
-   */
   readonly columnsToNullify?: Readonly<Record<string, readonly string[]>>;
-  /**
-   * Tables emptied in the target immediately before their rows are copied, so
-   * the source wins outright.
-   *
-   * The clone INSERT is `ON CONFLICT DO NOTHING`, which is right for domain
-   * data — a re-deploy keeps what the preview accumulated and adds what is new
-   * upstream. It is wrong for a singleton row that exists to mirror the
-   * source: the conflict clause keeps the stale one forever. Use this for a
-   * credential or config row with a fixed primary key.
-   */
   readonly tablesToReplace?: readonly string[];
 }
 
@@ -87,25 +47,8 @@ export interface DsqlSchemaProps {
   readonly app: string;
   readonly stage: Stage;
   readonly prNumber?: number;
-  /**
-   * Directory containing forward-only migrations. Files matching
-   * `^\d+_.*\.sql$` are read in lexical order and applied idempotently.
-   */
   readonly migrationsPath: string;
-  /**
-   * The cluster the schema lives in. For prod stacks, pass the
-   * {@link DsqlCluster} the same stack creates. For preview/integ
-   * stacks, pass `lookupDsqlCluster(scope, app)` — the cluster is
-   * owned by the app's prod stack and shared across stages.
-   */
   readonly cluster: IDsqlCluster;
-  /**
-   * Optional Neon-branch-style clone: before applying migrations on
-   * this schema, copy structure + data from `sourceSchemaName` (same
-   * cluster). The runner skips when the source schema doesn't exist
-   * yet (first-ever deploy of an app) or matches the target. See
-   * `docs/knowledge/dsql-clone-from-prod.md` for the full contract.
-   */
   readonly cloneFromSchema?: DsqlSchemaCloneFromConfig;
 }
 
@@ -114,10 +57,14 @@ interface MigrationFile {
   readonly sql: string;
 }
 
+const DSQL_ADMIN_CONNECT_ACTION = 'dsql:DbConnectAdmin';
 const MIGRATION_FILE_PATTERN = /^(\d+)_[A-Za-z0-9_-]+\.sql$/;
 const MIGRATION_RUNNER_TIMEOUT_MINUTES = 5;
 const MIGRATION_RUNNER_MEMORY_MIB = 512;
 const HEXADECIMAL_RADIX = 16;
+const NODE_BUILTIN_REQUIRE_SHIM_BANNER =
+  "import { createRequire } from 'module'; const require = createRequire(import.meta.url);";
+const LAMBDA_RUNTIME_PROVIDED_MODULES = '@aws-sdk/client-*';
 
 function readMigrations(dir: string): readonly MigrationFile[] {
   const absDir = path.resolve(dir);
@@ -135,14 +82,6 @@ function readMigrations(dir: string): readonly MigrationFile[] {
 }
 
 // @FollowsBlueprint reusable-cdk-construct
-/**
- * Fail the synth when a clone config says nothing about a credential-bearing
- * table. pragma shipped a preview that served production's band data behind a
- * password published in this repository, because `app_config` was in neither
- * list and the clone's `ON CONFLICT DO NOTHING` quietly kept the fixture's row.
- * The decision is cheap to state and expensive to forget, so the construct
- * refuses to synthesize without it.
- */
 function assertCredentialTablesDecided(
   config: DsqlSchemaCloneFromConfig | undefined,
   migrations: readonly MigrationFile[],
@@ -161,14 +100,6 @@ function assertCredentialTablesDecided(
 }
 
 /**
- * Manages an Aurora DSQL schema's lifecycle: create on stack create, apply
- * migrations idempotently on update, DROP CASCADE on delete.
- *
- * Takes a {@link IDsqlCluster} reference. For prod stacks, pass the
- * `DsqlCluster` the same stack creates. For preview/integ stacks, pass
- * `lookupDsqlCluster(scope, app)` — the cluster is owned by the app's
- * prod stack and shared across stages.
- *
  * @Blueprint cdk-custom-resource
  * @BlueprintName CDK Custom Resource
  * @BlueprintUsage Use when a stack has to reach something CloudFormation has no resource type for, such as a database schema.
@@ -207,30 +138,14 @@ export class DsqlSchema extends Construct {
       bundling: {
         target: 'node22',
         format: OutputFormat.ESM,
-        // Banner needed because `@aws-sdk/dsql-signer` (bundled inline) pulls
-        // in `@smithy/util-buffer-from` which `require('buffer')`. esbuild's
-        // ESM output replaces CJS `require` with a `__require` shim that
-        // can't resolve Node built-ins → the Lambda fails at cold start with
-        // `Dynamic require of "buffer" is not supported`. Re-exposing
-        // `createRequire(import.meta.url)` as `require` patches both Node
-        // built-ins and any other transitive CJS dep without re-bundling
-        // them as external (which would just push the problem to runtime).
-        banner:
-          "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
-        // Keep ONLY the Lambda-runtime-provided clients external. We do NOT
-        // include @aws-sdk/dsql-signer here — the runtime doesn't ship it,
-        // so esbuild bundles it inline from the workspace's node_modules
-        // (same with `postgres`). Avoiding `nodeModules` here means CDK
-        // does not run a transient `pnpm install` on every synth, which
-        // shaved ~70 % off the unit-test wall-clock and cleared a vitest
-        // worker-RPC timeout that the cold-cache install was triggering.
-        externalModules: ['@aws-sdk/client-*'],
+        banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,
+        externalModules: [LAMBDA_RUNTIME_PROVIDED_MODULES],
       },
     });
     this.runnerFn.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: ['dsql:DbConnectAdmin'],
+        actions: [DSQL_ADMIN_CONNECT_ACTION],
         resources: [this.clusterArn],
       }),
     );
@@ -258,33 +173,17 @@ export class DsqlSchema extends Construct {
     new CfnOutput(this, 'SchemaName', { value: this.schemaName });
   }
 
-  /**
-   * Grant `dsql:DbConnectAdmin` on the cluster to a Lambda. The grantee
-   * MUST authenticate via `DsqlSigner.getDbConnectAdminAuthToken()` and
-   * set its connection `search_path` to {@link schemaName} — the
-   * schema-per-stage layout is what gives us isolation, because DSQL
-   * doesn't (yet) narrow IAM to a specific schema OR support non-admin
-   * application users we could provision from the migration runner.
-   * That's the tradeoff we accept until DSQL ships a finer-grained
-   * authn model.
-   */
   public grantConnect(grantable: IGrantable): void {
     grantable.grantPrincipal.addToPrincipalPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: ['dsql:DbConnectAdmin'],
+        actions: [DSQL_ADMIN_CONNECT_ACTION],
         resources: [this.clusterArn],
       }),
     );
   }
 }
 
-/**
- * Stable digest of the migration files' contents, used as a CloudFormation
- * resource property so an `Update` event re-fires the migration runner
- * whenever any file changes. Not a cryptographic hash — content stability
- * is the only requirement.
- */
 function digestMigrations(migrations: readonly MigrationFile[]): string {
   const HASH_MULTIPLIER = 31;
   const FILE_SEPARATOR = '\n---\n';

@@ -2,7 +2,6 @@ import type { TranslationKey } from '../../i18n/i18n.utils';
 import { type ColoredRect, mulberry32 } from './painting.utils';
 import type { Palette } from './palettes.utils';
 
-/** Resolves a catalogue key, interpolating the placeholders its value carries. */
 export type TitleTranslator = (
   key: TranslationKey,
   interpolations?: Readonly<Record<string, string>>,
@@ -10,10 +9,6 @@ export type TitleTranslator = (
 
 type GrammaticalGender = 'masculine' | 'feminine';
 
-/**
- * One key per gender, so the only way to reach an adjective form is through the
- * gender of the noun that governs it. "Une étude généreux" cannot be built.
- */
 type TitleAdjective = Readonly<Record<GrammaticalGender, TranslationKey>>;
 
 interface TitleNoun {
@@ -96,7 +91,6 @@ export function pickFromNonEmptyList<Element>(
   return pickedElement;
 }
 
-/** The noun phrase, with the adjective already put in the gender the noun asks for. */
 export function composeSubject(
   adjective: TitleAdjective,
   noun: TitleNoun,

@@ -39,7 +39,6 @@ interface ArchivedEditionCardProps {
   readonly locale: string;
 }
 
-/** One finished edition: its headline numbers, its podium, and its exports. */
 // @FollowsBlueprint organism-query-owning
 export function ArchivedEditionCard({ edition, locale }: ArchivedEditionCardProps) {
   const { t } = useTranslation();

@@ -1,35 +1,7 @@
-/**
- * Where the next defect is most likely to come from.
- *
- * Every other gate in this repository answers a question about the code as it
- * stands right now. None of them can see that one file has been edited in
- * nineteen of the last hundred commits and follows no recorded pattern, while
- * another has not been touched since it was written. Those two files carry very
- * different risk and no static check can tell them apart.
- *
- * So this one reads the git history and crosses it with the signals the
- * repository already produces about itself:
- *
- *   exposure  how often the file changes
- *   weakness  whether it follows a pattern, and whether its path says what it is
- *
- * A file that changes constantly and follows a blueprint is fine; the pattern is
- * doing its job. A file that follows nothing and never changes is fine too;
- * nobody is there to get it wrong. The product is what matters, and a file
- * scoring zero on weakness never appears however often it changes.
- *
- * The output is a report and not a gate, on purpose. You cannot fail a build
- * because a file was edited often, and a threshold on churn would be gamed by
- * splitting files. What it produces instead is an ordered list of the next
- * blueprints worth writing, which is a decision a person makes.
- */
-
 export interface FileHistory {
   readonly path: string;
-  /** Commits that touched this file within the window read. */
   readonly commits: number;
   readonly layer: string;
-  /** The file declares a blueprint, or names one it follows. */
   readonly followsAPattern: boolean;
 }
 
@@ -52,13 +24,6 @@ export function readWeaknesses(history: FileHistory): readonly string[] {
   return weaknesses;
 }
 
-/**
- * Risk is exposure times weakness, and nothing cleverer.
- *
- * A weighted score would be more precise and less checkable. This one a reader
- * can verify against the two numbers beside it, which matters more for a report
- * whose whole job is to be argued with.
- */
 export function rankHotspots(histories: readonly FileHistory[]): readonly Hotspot[] {
   return histories
     .map((history) => {
@@ -84,13 +49,6 @@ export interface LayerGap {
   readonly churn: number;
 }
 
-/**
- * Which layer would repay a blueprint most.
- *
- * Ordered by the churn sitting on files that follow nothing, because a pattern
- * is worth writing where people are actively working without one, not where the
- * count of unmarked files happens to be highest.
- */
 export function rankLayerGaps(histories: readonly FileHistory[]): readonly LayerGap[] {
   const gaps = new Map<string, { unpatternedFiles: number; churn: number }>();
   for (const history of histories) {

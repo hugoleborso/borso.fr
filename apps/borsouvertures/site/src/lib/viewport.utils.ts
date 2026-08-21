@@ -6,16 +6,10 @@ const DESKTOP_BOARD_FRACTION = 0.6;
 const DESKTOP_BREAKPOINT_PX = 1024;
 const NO_WIDTH_PX = 0;
 
-/**
- * A compact viewport is the one where the opening picker becomes a stepped
- * flow instead of three columns, and where the drill defaults to tappable move
- * buttons instead of arrows drawn on the board.
- */
 export function isCompactViewport(viewportWidth: number): boolean {
   return viewportWidth <= COMPACT_VIEWPORT_MAX_PX;
 }
 
-/** The board takes a share of a desktop viewport and the full width of a phone. */
 // @FollowsBlueprint utils-pure-module
 export function selectBoardWidth(viewportWidth: number): number {
   const availableWidth = readAvailableBoardWidth(viewportWidth);

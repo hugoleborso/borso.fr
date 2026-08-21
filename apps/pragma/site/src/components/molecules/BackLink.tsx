@@ -1,11 +1,3 @@
-/**
- * The "up one level" link at the top of a detail page.
- *
- * It is a molecule because the same three lines had been pasted onto every
- * detail route, and every copy was a 16px-tall strip — a quarter of what a
- * thumb needs. Fixing the height in one place is the point of the file.
- */
-
 import type { JSX } from 'react';
 import { Link } from 'react-router-dom';
 import { Icon } from '../atoms/Icon';

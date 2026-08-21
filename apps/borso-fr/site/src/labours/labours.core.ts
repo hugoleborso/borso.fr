@@ -51,19 +51,11 @@ export function deriveEditionScore(edition: Edition): Score {
   return { completed, total };
 }
 
-/** A score of zero out of zero is a full bar of nothing, so it reads as empty. */
 export function selectCompletionRatio(score: Score): number {
   if (score.total === 0) return 0;
   return score.completed / score.total;
 }
 
-/**
- * A half point keeps its decimal, a whole one drops it, and the separator is
- * the comma French writes. The locale is named rather than left to the browser
- * because the page around this figure hard-codes `196,9 km`, and one number
- * reading `4.5` beside another reading `196,9` is the inconsistency this
- * avoids.
- */
 export function formatScore(value: number): string {
   return Number(value.toFixed(SINGLE_DECIMAL)).toLocaleString(FRENCH_LOCALE);
 }
@@ -93,20 +85,11 @@ export function selectDefaultMonthNumber(year: number, today: Date): number {
   return FIRST_MONTH_NUMBER;
 }
 
-/** The month to flag as live, or nothing when the edition on screen is not this year. */
 export function selectCurrentMonthNumber(year: number, today: Date): number | null {
   if (year !== today.getFullYear()) return null;
   return today.getMonth() + MONTH_NUMBER_OFFSET_FROM_INDEX;
 }
 
-/**
- * The years the data module carries, oldest first, which is the order the
- * masthead offers them in.
- *
- * A key that reads as an array index is enumerated in ascending numeric order,
- * and a year always does, so the keys arrive sorted and sorting them again here
- * would be dead code.
- */
 export function listAvailableYears(data: LaboursData): readonly number[] {
   return Object.keys(data.editions).map(Number);
 }
@@ -121,7 +104,6 @@ export function selectEdition(data: LaboursData, year: number): Edition {
   return edition;
 }
 
-/** A month always reads as two digits, so `3` sits under `11` rather than beside it. */
 export function formatMonthNumber(monthNumber: number): string {
   return String(monthNumber).padStart(MONTH_NUMBER_DIGITS, MONTH_NUMBER_PAD);
 }
@@ -133,12 +115,6 @@ export function selectFeaturedMonth(edition: Edition, monthNumber: number): Mont
   return featured;
 }
 
-/**
- * At most one cover, returned as a list so the caller renders it with `map`
- * instead of a branch. A month with an explicit cover uses it; otherwise a
- * month with several photos lends its first one, and a month with a single
- * photo keeps it for the challenge itself.
- */
 export function listMonthCoverImages(month: Month): readonly string[] {
   if (month.coverImage !== undefined) return [month.coverImage];
   const photos = month.challenges.flatMap(
@@ -148,27 +124,18 @@ export function listMonthCoverImages(month: Month): readonly string[] {
   return photos.slice(0, ONE_COVER).map((photo) => photo.value);
 }
 
-/** At most one note, returned as a list for the same reason as the cover. */
 export function listChallengeNoteKeys(challenge: Challenge): readonly TranslationKey[] {
   if (challenge.noteKey === undefined) return [];
   return [challenge.noteKey];
 }
 
-/** At most one label, returned as a list for the same reason as the cover. */
 export function listProofLabelKeys(proof: Proof): readonly TranslationKey[] {
   if (proof.labelKey === undefined) return [];
   return [proof.labelKey];
 }
 
-/** Resolves a catalogue key to the words a reader sees. */
 export type ProofLabelTranslator = (key: TranslationKey) => string;
 
-/**
- * The proof's label, or nothing when it carries none. Absence is one value here
- * so that each caller renders it once: a chip falls back to the proof itself,
- * and a media element falls back to the empty alternative text that marks it
- * decorative.
- */
 export function selectProofLabel(proof: Proof, translate: ProofLabelTranslator): string | null {
   return listProofLabelKeys(proof).map((key) => translate(key))[0] ?? NO_LABEL;
 }
@@ -186,10 +153,6 @@ export function isMediaProof(proof: Proof): boolean {
   return MEDIA_PROOF_TYPES.has(proof.type);
 }
 
-/**
- * Splits a challenge's proofs into the carousel of media and the row of chips,
- * dropping either section when it would be empty.
- */
 // @FollowsBlueprint core-view-intent
 export function listProofSections(challenge: Challenge): readonly ProofSection[] {
   const proofs = challenge.proofs ?? [];
@@ -207,10 +170,6 @@ export function buildProofChipText(proof: Proof, label: string | null): string {
   return proof.value;
 }
 
-/**
- * The first few challenge titles, with a count of whatever did not fit, e.g.
- * `Sport every day · Spike properly +2`.
- */
 export function buildFilmstripSummary(
   challengeTitles: readonly string[],
   visibleTitleCount: number,

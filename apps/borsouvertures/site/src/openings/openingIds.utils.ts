@@ -25,16 +25,6 @@ function fingerprint(value: string): string {
   return hash.toString(FINGERPRINT_RADIX);
 }
 
-/**
- * Derive the identifier of a line from its name *and* its moves.
- *
- * The upstream Lichess dataset reuses one name across several rows — "Ruy
- * Lopez: Closed" names five different move sequences, two of them under the
- * same ECO code — so a name-only slug is not an identifier. The move sequence
- * is what actually distinguishes those rows, and it is unique across the whole
- * dataset, which makes the fingerprint suffix unique by construction rather
- * than by luck of the data.
- */
 export function buildLineId(name: string, movesUci: readonly string[]): string {
   return `${toSlug(name)}-${fingerprint(movesUci.join(MOVE_SEPARATOR))}`;
 }

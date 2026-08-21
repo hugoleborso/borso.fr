@@ -1,11 +1,3 @@
-/**
- * Behaviour test for MemberEditForm, which replaced the MembersPage
- * effect that pushed the selected member into the form fields. The
- * form now starts from `initialValues`, and the page remounts it under
- * a new key when the operator picks another member, so this test
- * covers both the initial values and what a remount produces.
- */
-
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
 import { afterEach, describe, expect, it, vi } from 'vitest';

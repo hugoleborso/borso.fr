@@ -1,7 +1,3 @@
-/**
- * 100%-coverage gate for the FileDrop validation helpers.
- */
-
 import { describe, expect, it } from 'vitest';
 import {
   ALLOWED_IMAGE_MIMES,

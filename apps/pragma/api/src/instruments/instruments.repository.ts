@@ -1,17 +1,3 @@
-/**
- * Repository for the instruments bounded context — the only file that
- * touches the DB client for this domain. Holds Drizzle queries and
- * transactions; the service orchestrates business rules above it.
- *
- * The table carries two columns for one fact: `family`, which the
- * product reads, and the legacy `is_harmonic` boolean, which Aurora
- * DSQL refuses to drop (docs/knowledge/dsql-postgres-compat-gaps.md
- * §10). Every write sets both from the family so the boolean never
- * contradicts it, and every read resolves the family through
- * `resolveInstrumentFamily`, which falls back to the boolean for rows
- * written before the column existed.
- */
-
 import { eq } from 'drizzle-orm';
 import { type InstrumentFamily, resolveInstrumentFamily } from '@domain/instrument.core';
 import { getDatabase } from '../database/client';

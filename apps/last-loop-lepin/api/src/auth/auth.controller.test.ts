@@ -1,6 +1,10 @@
 import { afterAll, afterEach, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
-import { seedAdminCredentials, truncateAllTables } from '../../../test/database-utils';
+import {
+  seedAdminCredentials,
+  TEST_ADMIN_PIN,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { createApp } from '../app';
 import { findValidSession } from './auth.repository';
 
@@ -25,6 +29,14 @@ async function login(pin: string, ipAddress = '127.0.0.1') {
   });
 }
 
+function restoreAllowedOriginForTheSuitesThatFollow(original: string | undefined): void {
+  if (original === undefined) {
+    delete process.env.ALLOWED_ORIGIN;
+  } else {
+    process.env.ALLOWED_ORIGIN = original;
+  }
+}
+
 // @FollowsBlueprint test-back-e2e
 describe('admin auth controller', () => {
   const originalOrigin = process.env.ALLOWED_ORIGIN;
@@ -38,13 +50,7 @@ describe('admin auth controller', () => {
   });
 
   afterAll(() => {
-    // Restore so subsequent test files don't inherit the strict cross-origin
-    // check (POSTs without `origin` headers would 403 in this suite's wake).
-    if (originalOrigin === undefined) {
-      delete process.env.ALLOWED_ORIGIN;
-    } else {
-      process.env.ALLOWED_ORIGIN = originalOrigin;
-    }
+    restoreAllowedOriginForTheSuitesThatFollow(originalOrigin);
   });
 
   beforeEach(async () => {
@@ -53,7 +59,7 @@ describe('admin auth controller', () => {
   });
 
   it('returns 200 and sets the lastloop_admin cookie with SameSite=Lax on a correct PIN', async () => {
-    const response = await login('lastloop');
+    const response = await login(TEST_ADMIN_PIN);
     expect(response.status).toBe(200);
     const body = loginResponseSchema.parse(await response.json());
     expect(body.expiresAt).toBeTruthy();
@@ -64,7 +70,7 @@ describe('admin auth controller', () => {
   });
 
   it('persists the session in the DB so verifySession can find it', async () => {
-    const response = await login('lastloop');
+    const response = await login(TEST_ADMIN_PIN);
     const sessionId = readCookieValue(response.headers.get('set-cookie'), 'lastloop_admin');
     expect(sessionId).not.toBeNull();
     if (sessionId === null) throw new Error('session cookie missing');
@@ -96,14 +102,14 @@ describe('admin auth controller', () => {
     for (let attempt = 0; attempt < 3; attempt += 1) {
       await login('totallywrong', ipAddress);
     }
-    const success = await login('lastloop', ipAddress);
+    const success = await login(TEST_ADMIN_PIN, ipAddress);
     expect(success.status).toBe(200);
     const nextAttempt = await login('totallywrong', ipAddress);
     expect(nextAttempt.status).toBe(401);
   });
 
   it('POST /logout deletes the session and clears the cookie', async () => {
-    const loginResponse = await login('lastloop');
+    const loginResponse = await login(TEST_ADMIN_PIN);
     const sessionId = readCookieValue(loginResponse.headers.get('set-cookie'), 'lastloop_admin');
     expect(sessionId).not.toBeNull();
     if (sessionId === null) throw new Error('session cookie missing');

@@ -1,9 +1,3 @@
-/**
- * Pure fixture arithmetic for the test seeding endpoint. Every schedule the
- * seeder writes is derived here from an explicit `now`, so a fixture's shape
- * can be asserted without a database and without a fake clock.
- */
-
 export type SeedFixtureName =
   'race-down-to-one-survivor' | 'race-finished' | 'top-with-dnf-candidates';
 
@@ -34,11 +28,6 @@ export interface SeedPlan {
   readonly didNotFinishes: readonly SeedDidNotFinishPlan[];
 }
 
-/**
- * One row of a fixture's story, written in hours from the race start rather
- * than as a timestamp, so the table stays readable and stays independent of
- * the `now` the seeder is called with.
- */
 interface SeedPunchSchedule {
   readonly runnerSlug: string;
   readonly loopIndex: number;
@@ -186,11 +175,6 @@ const PLANNER_BY_FIXTURE: Readonly<Record<SeedFixtureName, (now: Date) => SeedPl
   'race-finished': planRaceFinished,
 };
 
-/**
- * Build every row one fixture needs, from the fixture name and an explicit
- * wall clock. Timestamps are relative to `now` so the seeded race window
- * stays inside the punch validator's accepted range.
- */
 // @FollowsBlueprint core-lookup-table
 export function planSeedFixture(fixture: SeedFixtureName, now: Date): SeedPlan {
   return PLANNER_BY_FIXTURE[fixture](now);

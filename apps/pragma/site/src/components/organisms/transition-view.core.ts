@@ -1,16 +1,4 @@
-/**
- * What the strip between two setlist rows says.
- *
- * The rule itself lives in `domain/transition.core.ts`; this turns its verdict
- * into rows a reader can render — the member's name and colour, and the
- * instruments they keep across the pair — with the harmonic carriers first and
- * the percussive or vocal ones behind them, which is the order the band reads
- * them in: who can hold the sound, then who can cover.
- *
- * Also indexes the stored transition comments by ordered pair, so a setlist of
- * twenty songs looks its notes up once rather than asking per gap.
- * @Feature transitions
- */
+/** @Feature transitions */
 
 import type { TransitionCarrier, TransitionVerdict } from '@domain/transition.core';
 

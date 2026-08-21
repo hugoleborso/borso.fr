@@ -1,11 +1,3 @@
-/**
- * Where each runner sits on the elevation profile, computed as values.
- *
- * The profile shares its along the track fraction with the map, so a runner
- * appears at the same point on both surfaces. A runner resting at the corral
- * carries no pastille, because the profile has no corral to show them at.
- */
-
 import type { RaceEditionDto, RankedRunnerDto } from '../../lib/race.types';
 import { buildRunnerAvatar } from '../../lib/runner-avatar.utils';
 import { type RaceTimingInputs, runnerDistanceFraction } from './course-map.utils';
@@ -23,10 +15,6 @@ export interface ElevationPastille {
   readonly photoUrl: string | null;
 }
 
-/**
- * Whether the edition's track carries enough elevation samples to draw a
- * profile. A GPX without an elevation on every point produces none.
- */
 export function hasElevationSamples(edition: RaceEditionDto): boolean {
   const pointElevations = edition.gpx.trackJson.pointElevations;
   if (pointElevations === undefined) return false;

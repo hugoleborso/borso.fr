@@ -1,26 +1,9 @@
-/*
- * Borsouvertures — design tokens bridged to Tailwind v4 through `@theme`.
- *
- * Every variable declared here becomes a utility automatically:
- * `--color-panel` → `bg-panel` / `text-panel` / `border-panel`,
- * `--breakpoint-triple` → the `triple:` responsive prefix.
- *
- * `static` keeps every variable in the built stylesheet even when no utility
- * references it, because the gradients are read back through
- * `bg-[image:var(--gradient-…)]` and the page background is read from the
- * `@layer base` rule below, neither of which the class scanner treats as a
- * utility that pulls its variable in.
- */
-
 @import 'tailwindcss';
 
 @theme static {
   --font-sans: 'Inter', system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, monospace;
 
-  /* Two extra breakpoints for the widths this layout switches at: 601px is
-     where the shell regains its full padding, 900px is where the opening
-     picker becomes three columns. */
   --breakpoint-roomy: 601px;
   --breakpoint-triple: 900px;
 
@@ -85,7 +68,6 @@
     min-height: 100vh;
   }
 
-  /* Tailwind's preflight gives a button the default arrow cursor. */
   button {
     cursor: pointer;
   }

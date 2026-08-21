@@ -1,10 +1,5 @@
 import type english from './en.json';
 
-/**
- * The only language this site renders. There is no switcher and no browser
- * negotiation: borso.fr is French, and `en.json` exists as the reference
- * catalogue the parity test compares against rather than as a second edition.
- */
 export const DEFAULT_LANGUAGE = 'fr';
 
 export type CatalogueValue = string | CatalogueTree;
@@ -18,11 +13,6 @@ type DottedLeafPaths<Tree> = {
     : `${Segment}.${DottedLeafPaths<Tree[Segment]>}`;
 }[keyof Tree & string];
 
-/**
- * Every dotted path that resolves to a string in `en.json`. Storing one of
- * these in a data file, rather than a bare `string`, is what makes a stale
- * content key a typecheck failure instead of a raw key rendered on the page.
- */
 export type TranslationKey = DottedLeafPaths<typeof english>;
 
 const KEY_PATH_SEPARATOR = '.';

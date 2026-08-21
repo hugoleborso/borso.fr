@@ -51,14 +51,6 @@ const PANEL_BY_TAB: Readonly<Record<EditionPanelTab, (props: EditionTabProps) =>
   corrections: ({ edition }) => <CorrectionPanel edition={edition} />,
 };
 
-/**
- * The organiser screen. PIN first, then one panel per tab.
- *
- * The punch grid flags a runner as late from how far into the loop the race
- * is, so the screen subscribes to the shared clock once and hands the instant
- * down. Reading `new Date()` during render instead would only advance when the
- * standings poll happened to re-render the tree.
- */
 // @FollowsBlueprint route-list-page
 export function AdminPage() {
   const { t, i18n } = useTranslation();

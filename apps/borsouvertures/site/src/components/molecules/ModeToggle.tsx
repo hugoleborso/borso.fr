@@ -8,7 +8,7 @@ import type { Mode } from '@/state/persistedState.utils';
 const MODE_BY_IS_PLAY: Record<`${boolean}`, Mode> = { true: 'play', false: 'learn' };
 
 function keepPlayScope(): void {
-  // Staying in, or returning to, learn mode leaves the scope untouched.
+  return undefined;
 }
 
 const SCOPE_CHANGE_BY_REQUIREMENT: Record<`${boolean}`, () => void> = {

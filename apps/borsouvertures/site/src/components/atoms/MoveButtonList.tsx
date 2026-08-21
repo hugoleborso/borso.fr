@@ -4,18 +4,11 @@ import { describeMoveInStandardNotation } from './moveNotation.utils';
 const MOVE_BUTTON_CLASS = BUTTON_CLASS + ' font-mono text-[0.95rem] tabular-nums';
 
 interface MoveButtonListProps {
-  /** UCI moves the user can play at the current ply. */
   candidates: readonly string[];
-  /** Current position, used to label each move in standard algebraic notation. */
   fen: string;
   onPick: (uci: string) => void;
 }
 
-/**
- * Mobile-first alternative to board arrows. Each candidate is a button
- * labelled with the move, so a user can tap a move instead of dragging a piece
- * on a small board.
- */
 // @FollowsBlueprint atom-plain
 export function MoveButtonList({ candidates, fen, onPick }: MoveButtonListProps) {
   return (

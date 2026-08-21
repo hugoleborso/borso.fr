@@ -47,11 +47,6 @@ describe('makeIdempotent', () => {
     );
   });
 
-  /**
-   * The rewrites match the first occurrence in the statement, and drizzle puts
-   * a prose header above the DDL. A comment naming the same keywords used to
-   * take the rewrite and leave the statement it described un-idempotent.
-   */
   it('rewrites the statement and not a comment that names the same keywords', () => {
     const statement = [
       '-- We CREATE TABLE here for the first time.',
@@ -122,11 +117,6 @@ describe('asyncifyIndex', () => {
     );
   });
 
-  /**
-   * `ASYNC` is a keyword of `CREATE INDEX` and of nothing else, so a statement
-   * that names an index without creating one keeps whatever it was written
-   * with. Only the guard says so: every rewrite below it matches on `INDEX`.
-   */
   it('leaves a statement that names an index without creating one alone', () => {
     expect(asyncifyIndex('DROP INDEX ASYNC "i"')).toBe('DROP INDEX ASYNC "i"');
   });
@@ -159,13 +149,6 @@ describe('splitStatements', () => {
   });
 });
 
-/**
- * Every keyword separator in these rewrites is `\s+` rather than a space, and
- * until this block existed nothing said so: each case above feeds canonical
- * single-space SQL, which a `\s` reads identically. drizzle-kit emits one
- * spacing today, so the tolerance is there for the hand-written migration and
- * for whatever the generator emits next.
- */
 describe('the rewrites tolerate the whitespace SQL allows', () => {
   it('adds IF NOT EXISTS across a doubled space and a newline', () => {
     expect(makeIdempotent('CREATE  TABLE "runners" (id TEXT)')).toBe(
@@ -253,13 +236,6 @@ describe('the rewrites tolerate the whitespace SQL allows', () => {
   });
 });
 
-/**
- * The lookahead that spots an `IF NOT EXISTS` the statement already carries has
- * to see through the whitespace SQL allows in three places at once: before
- * `IF`, between `IF` and `NOT`, and between `NOT` and `EXISTS`. A rewrite that
- * misses one appends a second `IF NOT EXISTS`, and the migration then dies on a
- * syntax error rather than on the relation the clause was there to tolerate.
- */
 describe('no rewrite re-adds an IF NOT EXISTS the statement already carries', () => {
   const CREATE_KEYWORDS = [
     'CREATE TABLE',

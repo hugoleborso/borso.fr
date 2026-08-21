@@ -4,10 +4,6 @@ import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { Modal } from './Modal';
 
 /**
- * jsdom ships no `<dialog>` implementation, so the two methods the component
- * calls are stubbed here. Mocking what cannot run is the one case
- * docs/standards/10-testing.md allows a mock for.
- *
  * @Blueprint test-jsdom-gap-stub
  * @BlueprintName jsdom Gap Stub
  * @BlueprintUsage Use when a component calls a browser API the test environment does not implement, and only then.

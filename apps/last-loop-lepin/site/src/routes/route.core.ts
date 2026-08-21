@@ -1,10 +1,3 @@
-/**
- * The application's routing table, as a pure reading of the path.
- *
- * Every route is a literal name plus the parameters it carries, so the shell
- * looks the page up in a table rather than testing the path itself.
- */
-
 export type RouteName = 'spectator' | 'admin' | 'archives' | 'runner' | 'not-found';
 
 export interface Route {
@@ -37,7 +30,6 @@ export function parseRoute(pathname: string): Route {
   return { name: 'runner', runnerSlug };
 }
 
-/** How a navigation entry reads: the page in view is active, every other is not. */
 export type NavigationItemState = 'active' | 'inactive';
 
 export function selectNavigationState(pathname: string, target: RouteName): NavigationItemState {

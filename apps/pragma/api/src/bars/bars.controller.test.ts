@@ -1,10 +1,3 @@
-/**
- * Back-e2e for the bars CRM endpoints. Covers auth gating, CRUD, the
- * five spec status values (`lead | contacted | booked | played |
- * cold`), and the kanban-drag use case (PUT with `{ status }` only —
- * stage transition from drag-and-drop).
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';

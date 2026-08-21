@@ -80,7 +80,7 @@ describe('createLearnTreeMachine', () => {
     machine.playMove('e2e4');
     expect(calls).toBe(2);
     unsubscribe();
-    driver.fireNextTimer(); // opponent move fires; subscriber no longer counted
+    driver.fireNextTimer();
     expect(calls).toBe(2);
   });
 
@@ -136,7 +136,7 @@ describe('createLearnTreeMachine', () => {
     const driver = buildDriver();
     const machine = createLearnTreeMachine(driver.options);
     machine.start(ITALIAN_MAIN, 'black');
-    driver.fireNextTimer(); // White opens with e2e4
+    driver.fireNextTimer();
     expect(machine.playMove('e7e5')).toBe('accepted');
     expect(driver.pendingTimers).toHaveLength(1);
     driver.fireNextTimer();
@@ -146,7 +146,6 @@ describe('createLearnTreeMachine', () => {
   it('marks the leaf visited and flips variationCleared once every leaf is reached', () => {
     const driver = buildDriver();
     const machine = createLearnTreeMachine(driver.options);
-    // Drill the Classical line first.
     machine.start(ITALIAN_MAIN, 'white');
     driver.rngQueue.push('e7e5');
     machine.playMove('e2e4');
@@ -157,7 +156,6 @@ describe('createLearnTreeMachine', () => {
     machine.playMove('f1c4');
     expect(machine.getSnapshot().visitedLeafIds.has('classical')).toBe(true);
     expect(machine.getSnapshot().variationCleared).toBe(false);
-    // Restart and drill the Two Knights line.
     machine.reset();
     driver.rngQueue.push('e7e5');
     machine.playMove('e2e4');
@@ -168,7 +166,6 @@ describe('createLearnTreeMachine', () => {
     machine.playMove('f1b5');
     const snapshot = machine.getSnapshot();
     expect(snapshot.visitedLeafIds.has('two-knights')).toBe(true);
-    // Reset clears visited; classical should NOT be in the set after the second drill.
     expect(snapshot.visitedLeafIds.has('classical')).toBe(false);
   });
 
@@ -185,13 +182,13 @@ describe('createLearnTreeMachine', () => {
   it('dismissOutOfBook closes the modal, and dismissing a closed modal notifies nobody', () => {
     const machine = createLearnTreeMachine(buildDriver().options);
     machine.start(ITALIAN_MAIN, 'white');
-    machine.playMove('a2a3'); // out-of-book → open
+    machine.playMove('a2a3');
     expect(machine.getSnapshot().outOfBookOpen).toBe(true);
     const notifications = countNotifications(machine);
     machine.dismissOutOfBook();
     expect(machine.getSnapshot().outOfBookOpen).toBe(false);
     expect(notifications.read()).toBe(1);
-    machine.dismissOutOfBook(); // no-op
+    machine.dismissOutOfBook();
     expect(machine.getSnapshot().outOfBookOpen).toBe(false);
     expect(notifications.read()).toBe(1);
   });
@@ -204,13 +201,13 @@ describe('createLearnTreeMachine', () => {
     machine.revealArrows();
     expect(machine.getSnapshot().showRevealedArrows).toBe(true);
     expect(notifications.read()).toBe(1);
-    machine.revealArrows(); // no-op
+    machine.revealArrows();
     expect(machine.getSnapshot().showRevealedArrows).toBe(true);
     expect(notifications.read()).toBe(1);
     machine.hideArrows();
     expect(machine.getSnapshot().showRevealedArrows).toBe(false);
     expect(notifications.read()).toBe(2);
-    machine.hideArrows(); // no-op
+    machine.hideArrows();
     expect(machine.getSnapshot().showRevealedArrows).toBe(false);
     expect(notifications.read()).toBe(2);
     machine.revealArrows();
@@ -222,7 +219,7 @@ describe('createLearnTreeMachine', () => {
     const driver = buildDriver();
     const machine = createLearnTreeMachine(driver.options);
     machine.start(ITALIAN_MAIN, 'white');
-    machine.playMove('a2a3'); // out-of-book → open
+    machine.playMove('a2a3');
     machine.revealArrows();
     expect(machine.getSnapshot().outOfBookOpen).toBe(true);
     expect(machine.getSnapshot().showRevealedArrows).toBe(true);
@@ -240,8 +237,8 @@ describe('createLearnTreeMachine', () => {
     machine.start(ITALIAN_MAIN, 'white');
     machine.playMove('e2e4');
     expect(driver.pendingTimers).toHaveLength(1);
-    machine.reset(); // a new run begins; the pending timer is now stale
-    driver.fireNextTimer(); // fires but bails
+    machine.reset();
+    driver.fireNextTimer();
     expect(machine.getSnapshot().playedMovesUci).toEqual([]);
   });
 
@@ -250,9 +247,7 @@ describe('createLearnTreeMachine', () => {
     const machine = createLearnTreeMachine(driver.options);
     machine.start(ITALIAN_MAIN, 'white');
     machine.playMove('e2e4');
-    // Opponent timer is queued; user attempts to play in the same window.
     expect(machine.playMove('e7e5')).toBe('rejected-opponents-turn');
-    // The pending timer is still there; firing it advances the opponent.
     driver.fireNextTimer();
     expect(machine.getSnapshot().playedMovesUci).toEqual(['e2e4', 'e7e5']);
   });
@@ -269,11 +264,6 @@ describe('createLearnTreeMachine', () => {
 
   it('does not enqueue a no-op opponent timer when reaching a leaf leaves no candidates', () => {
     const driver = buildDriver();
-    // Two siblings diverging at ply 0; line A is 3 plies, line B is 1 ply.
-    // After the user drills A to its leaf, line B is unvisited so
-    // variationCleared stays false — playMove still calls scheduleOpponentMove,
-    // but the matching line A has nothing left, so the upfront `length === 0`
-    // guard fires and no timer enters the queue.
     const variation: Variation = {
       id: 'v',
       name: 'V',
@@ -302,12 +292,10 @@ describe('createLearnTreeMachine', () => {
     machine.playMove('g1f3');
     expect(machine.getSnapshot().visitedLeafIds.has('a')).toBe(true);
     expect(machine.getSnapshot().variationCleared).toBe(false);
-    // Upfront guard prevents the no-op timer; queue is empty.
     expect(driver.pendingTimers).toHaveLength(0);
   });
 
   it("does not schedule an opponent reply when the variation is cleared after the user's move", () => {
-    // One-line variation; user's last move clears the variation, no opponent reply.
     const trivial: Variation = {
       id: 'trivial',
       name: 'Trivial',
@@ -342,15 +330,12 @@ describe('createLearnTreeMachine', () => {
       machine.start(ITALIAN_MAIN, 'white');
       expect(machine.playMove('e2e4')).toBe('accepted');
       vi.runAllTimers();
-      // With Math.random pinned to 0, defaultPickRandom returns candidates[0].
-      // Both Italian lines share 'e7e5' at this ply, so the picked move is 'e7e5'.
       expect(machine.getSnapshot().playedMovesUci).toEqual(['e2e4', 'e7e5']);
     });
   });
 
   it('uses the default RNG to pick when the picker has no seed available', () => {
     const driver = buildDriver();
-    // Empty rngQueue → buildDriver's pickRandom falls back to candidates[0].
     const machine = createLearnTreeMachine(driver.options);
     machine.start(ITALIAN_MAIN, 'white');
     machine.playMove('e2e4');

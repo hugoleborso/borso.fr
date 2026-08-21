@@ -1,9 +1,3 @@
-/**
- * Service layer for uploads. Composes the pure key-builder with the
- * S3 presigner repository. Returns DTOs the controller serialises
- * straight to JSON.
- */
-
 import { randomUUID } from 'node:crypto';
 import { buildChartObjectKey } from './uploads.core';
 import { presignGetObject, presignPutObject } from './uploads.adapter';

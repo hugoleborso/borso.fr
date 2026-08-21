@@ -1,14 +1,4 @@
-/**
- * The strip drawn between two consecutive setlist rows. It is always
- * present — a transition that goes well is as worth reading as one that
- * does not — and it says three things: whether somebody keeps a harmonic
- * instrument across the pair, who can therefore carry the gap, and the
- * note the band left on it.
- *
- * The whole strip is one button, so a note is one tap away on a phone
- * rather than a marker in a desktop-only gutter.
- * @Feature transitions
- */
+/** @Feature transitions */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -18,12 +18,8 @@ const selfPunchResponseSchema = z.object({
   }),
 });
 
-// Sample client coordinates close to the makeEdition centre
-// ({ lat: 45.55, lng: 5.78 }). The geofence was dropped in 4bb4b78 — the
-// values still travel on the self-punch payload as proof-of-life telemetry,
-// but no longer gate acceptance.
-const IN_ZONE_LAT = 45.5505;
-const IN_ZONE_LNG = 5.78;
+const NEAR_TRACK_START_LAT = 45.5505;
+const NEAR_TRACK_START_LNG = 5.78;
 const TEST_USER_AGENT = 'Mozilla/5.0 (iPhone) AppleWebKit Test';
 
 // @FollowsBlueprint test-back-e2e
@@ -60,8 +56,8 @@ describe('self-punch controller (public, no admin middleware)', () => {
     const response = await postSelfPunch({
       editionSlug: 'lepin-2026',
       runnerSlug: 'alice',
-      clientLat: IN_ZONE_LAT,
-      clientLng: IN_ZONE_LNG,
+      clientLat: NEAR_TRACK_START_LAT,
+      clientLng: NEAR_TRACK_START_LNG,
       clientAccuracyM: 9,
     });
     expect(response.status).toBe(201);
@@ -91,8 +87,8 @@ describe('self-punch controller (public, no admin middleware)', () => {
     const response = await postSelfPunch({
       editionSlug: 'lepin-2026',
       runnerSlug: 'alice',
-      clientLat: IN_ZONE_LAT,
-      clientLng: IN_ZONE_LNG,
+      clientLat: NEAR_TRACK_START_LAT,
+      clientLng: NEAR_TRACK_START_LNG,
       clientAccuracyM: null,
     });
     expect(response.status).toBe(400);
@@ -102,8 +98,6 @@ describe('self-punch controller (public, no admin middleware)', () => {
 
   it('returns 409 when admin already punched the same loop', async () => {
     vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
-    // Plant an admin punch via the same controller surface so the conflict is
-    // observable end-to-end.
     const { adminSessionCookie } = await import('../../../test/database-utils');
     const cookie = await adminSessionCookie();
     const adminResponse = await app.request('/api/admin/punches', {
@@ -119,8 +113,8 @@ describe('self-punch controller (public, no admin middleware)', () => {
     const response = await postSelfPunch({
       editionSlug: 'lepin-2026',
       runnerSlug: 'alice',
-      clientLat: IN_ZONE_LAT,
-      clientLng: IN_ZONE_LNG,
+      clientLat: NEAR_TRACK_START_LAT,
+      clientLng: NEAR_TRACK_START_LNG,
       clientAccuracyM: null,
     });
     expect(response.status).toBe(409);
@@ -131,7 +125,7 @@ describe('self-punch controller (public, no admin middleware)', () => {
       editionSlug: 'lepin-2026',
       runnerSlug: 'alice',
       clientLat: 999,
-      clientLng: IN_ZONE_LNG,
+      clientLng: NEAR_TRACK_START_LNG,
       clientAccuracyM: null,
     });
     expect(response.status).toBe(400);

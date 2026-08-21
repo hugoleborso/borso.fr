@@ -1,9 +1,3 @@
-/**
- * Transition-comment endpoints. Comments are stored on the ordered pair
- * (songA, songB). Hono routing + Zod parsing only; orchestration in
- * the service.
- */
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';

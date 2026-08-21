@@ -1,8 +1,3 @@
-/**
- * The hand-written half of borso-fr's architecture model. Types and the
- * register of applications live in `../architecture-manifest.ts`.
- */
-
 import type { ArchitectureManifest } from '../architecture-manifest';
 
 export const borsoFrManifest: ArchitectureManifest = {

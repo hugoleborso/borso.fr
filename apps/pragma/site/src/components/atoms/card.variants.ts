@@ -1,8 +1,3 @@
-/**
- * Variant table for the Card atom. `flat` drops the border and the
- * background so a Card can be a layout-only wrapper.
- */
-
 import { cva, type VariantProps } from 'class-variance-authority';
 
 // @FollowsBlueprint atom-variant

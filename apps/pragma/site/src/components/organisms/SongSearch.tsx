@@ -1,15 +1,4 @@
-/**
- * SongSearch — search-as-you-type input that proxies to MusicBrainz
- * via `useSongSearch()` (TanStack Query). The caller (the New-Song
- * form) is fed the full `ExternalSongHit` on pick — title + artist
- * pre-fill the form, the album / duration / tags / isrcs / mbid /
- * disambiguation rows ride along for the persisted song record.
- *
- * The 1000ms debounce runs in the change handler, through the shared
- * `debounce` primitive, so the network call fires once per typing
- * pause and no effect watches the input value.
- * @Feature songs
- */
+/** @Feature songs */
 
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';

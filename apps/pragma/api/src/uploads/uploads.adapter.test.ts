@@ -1,9 +1,5 @@
 /**
  * @vitest-environment node
- *
- * The presigner signs locally: no request leaves the process, so the URL it
- * returns can be read back for the bucket, the key and the lifetime without a
- * network or an AWS account.
  */
 
 // @FollowsBlueprint test-node-adapter
@@ -19,9 +15,7 @@ const PRESERVED_ENV = {
 };
 
 const BUCKET = 'pragma-uploads-test';
-// Deliberately not 900: that is the presigner's own default, so a test using it
-// cannot tell a lifetime that was passed from one that was never passed.
-const EXPIRES_IN_SECONDS = 300;
+const EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT = 300;
 
 beforeAll(() => {
   process.env.UPLOADS_BUCKET = BUCKET;
@@ -42,11 +36,11 @@ describe('presignPutObject', () => {
     const url = await presignPutObject({
       objectKey: 'charts/song-1.pdf',
       contentType: 'application/pdf',
-      expiresInSeconds: EXPIRES_IN_SECONDS,
+      expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
     });
     expect(url).toContain(BUCKET);
     expect(url).toContain('charts/song-1.pdf');
-    expect(url).toContain(`X-Amz-Expires=${EXPIRES_IN_SECONDS}`);
+    expect(url).toContain(`X-Amz-Expires=${EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT}`);
   });
 
   it('raises the slice its own error when the bucket is not configured', async () => {
@@ -55,14 +49,14 @@ describe('presignPutObject', () => {
       presignPutObject({
         objectKey: 'charts/song-1.pdf',
         contentType: 'application/pdf',
-        expiresInSeconds: EXPIRES_IN_SECONDS,
+        expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
       }),
     ).rejects.toThrow(new UploadsConfigError('UPLOADS_BUCKET not set'));
     await expect(
       presignPutObject({
         objectKey: 'charts/song-1.pdf',
         contentType: 'application/pdf',
-        expiresInSeconds: EXPIRES_IN_SECONDS,
+        expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
       }),
     ).rejects.toMatchObject({ name: 'UploadsConfigError' });
     process.env.UPLOADS_BUCKET = BUCKET;
@@ -74,7 +68,7 @@ describe('presignPutObject', () => {
       presignPutObject({
         objectKey: 'charts/song-1.pdf',
         contentType: 'application/pdf',
-        expiresInSeconds: EXPIRES_IN_SECONDS,
+        expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
       }),
     ).rejects.toThrow(new UploadsConfigError('UPLOADS_BUCKET not set'));
     process.env.UPLOADS_BUCKET = BUCKET;
@@ -88,22 +82,19 @@ describe('the S3 client', () => {
     const freshModule = await import('./uploads.adapter');
     const url = await freshModule.presignGetObject({
       objectKey: 'charts/song-1.pdf',
-      expiresInSeconds: EXPIRES_IN_SECONDS,
+      expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
     });
     expect(url).toContain('us-east-1');
     process.env.AWS_REGION = 'eu-west-3';
   });
 
-  it('falls back to the deployment region when the environment names none', async () => {
-    // The client is cached for the life of the module, so the region is read
-    // exactly once — on a module that has already signed something, the
-    // fallback is unreachable however the environment is set.
+  it('falls back to the deployment region when a freshly imported module finds none in the environment, the client being cached for the life of the module', async () => {
     vi.resetModules();
     delete process.env.AWS_REGION;
     const freshModule = await import('./uploads.adapter');
     const url = await freshModule.presignGetObject({
       objectKey: 'charts/song-1.pdf',
-      expiresInSeconds: EXPIRES_IN_SECONDS,
+      expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
     });
     expect(url).toContain('eu-west-3');
     process.env.AWS_REGION = 'eu-west-3';
@@ -114,17 +105,20 @@ describe('presignGetObject', () => {
   it('signs a readable URL for the same object', async () => {
     const url = await presignGetObject({
       objectKey: 'charts/song-1.pdf',
-      expiresInSeconds: EXPIRES_IN_SECONDS,
+      expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
     });
     expect(url).toContain(BUCKET);
     expect(url).toContain('charts/song-1.pdf');
-    expect(url).toContain(`X-Amz-Expires=${EXPIRES_IN_SECONDS}`);
+    expect(url).toContain(`X-Amz-Expires=${EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT}`);
   });
 
   it('raises the slice its own error when the bucket is not configured', async () => {
     delete process.env.UPLOADS_BUCKET;
     await expect(
-      presignGetObject({ objectKey: 'charts/song-1.pdf', expiresInSeconds: EXPIRES_IN_SECONDS }),
+      presignGetObject({
+        objectKey: 'charts/song-1.pdf',
+        expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
+      }),
     ).rejects.toThrow(new UploadsConfigError('UPLOADS_BUCKET not set'));
     process.env.UPLOADS_BUCKET = BUCKET;
   });

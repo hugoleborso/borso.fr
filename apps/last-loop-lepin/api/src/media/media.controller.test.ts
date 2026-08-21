@@ -1,9 +1,3 @@
-/**
- * Media controller — happy-path presign exercises S3's presigner, which
- * needs AWS_REGION but not a live bucket: `getSignedUrl` builds the URL
- * locally via SigV4. We only assert the URL shape and the auth gating.
- */
-
 import { describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { adminSessionCookie } from '../../../test/database-utils';

@@ -41,7 +41,6 @@ describe('readNameSuffix', () => {
 });
 
 describe('readCaseStyle', () => {
-  /** `books` and `self-punch` are one convention, not two. */
   it.each([
     ['books', 'kebab'],
     ['self-punch', 'kebab'],
@@ -60,7 +59,6 @@ describe('listCaseStyleDivergences', () => {
     expect(listCaseStyleDivergences(facts)).toEqual([]);
   });
 
-  /** The minority style is met first, so a report in reading order fails here. */
   it('reports a layer that uses two case styles, majority first', () => {
     const facts = [
       buildFact('apps/b/x/bookArrows.utils.ts'),
@@ -76,7 +74,6 @@ describe('listCaseStyleDivergences', () => {
     ]);
   });
 
-  /** The question names the extension, because the answer differs by extension. */
   it('names the extension in the question it asks about components', () => {
     const facts = [
       buildFact('apps/a/x/SongCard.tsx', { layer: 'atom' }),
@@ -87,7 +84,6 @@ describe('listCaseStyleDivergences', () => {
     expect(divergence?.question).toBe('How is the name of a atom.tsx file written?');
   });
 
-  /** A component is PascalCase and a module is kebab-case, and both are right. */
   it('asks the question per extension, so a component does not fight a module', () => {
     const facts = [
       buildFact('apps/a/x/App.tsx', { layer: 'entrypoint' }),
@@ -104,7 +100,6 @@ describe('listCaseStyleDivergences', () => {
     expect(listCaseStyleDivergences(facts)).toEqual([]);
   });
 
-  /** Three examples, and the first three by path rather than the first three met. */
   it('shows the three lowest paths as examples', () => {
     const facts = ['zulu', 'mike', 'alpha', 'bravo'].map((name) =>
       buildFact(`apps/a/x/${name}.utils.ts`),
@@ -150,8 +145,7 @@ describe('listHookNamingDivergences', () => {
     expect(listHookNamingDivergences(facts)).toEqual([]);
   });
 
-  /** The module that exports no hook belongs to none of the three spellings. */
-  it('reports the three spellings a hook module can carry', () => {
+  it('reports the three spellings a hook module can carry, ignoring a module that exports none', () => {
     const facts = [
       buildFact('apps/a/x/online-status.hook.ts', { exportsHook: true }),
       buildFact('apps/a/x/usePaginatedList.ts', { exportsHook: true }),
@@ -227,7 +221,7 @@ describe('listLayerMarkerDivergences', () => {
       'the suffix names the layer',
       'nothing in the name says',
     ]);
-    expect(divergence?.correctVariant).toBe('the suffix names the layer');
+    expect(divergence?.documentedAnswer).toBe('the suffix names the layer');
   });
 
   it('ignores a bare `apps` path, which names no application', () => {
@@ -298,7 +292,7 @@ describe('countDivergentFiles', () => {
         { name: 'named', count: 54, examples: [] },
         { name: 'unnamed', count: 15, examples: [] },
       ],
-      correctVariant: 'named',
+      documentedAnswer: 'named',
     };
     expect(countDivergentFiles(divergence)).toBe(15);
   });
@@ -311,7 +305,7 @@ describe('countDivergentFiles', () => {
         { name: 'unnamed', count: 54, examples: [] },
         { name: 'named', count: 15, examples: [] },
       ],
-      correctVariant: 'named',
+      documentedAnswer: 'named',
     };
     expect(countDivergentFiles(divergence)).toBe(54);
   });
@@ -324,7 +318,7 @@ describe('countDivergentFiles', () => {
         { name: 'one way', count: 54, examples: [] },
         { name: 'another', count: 15, examples: [] },
       ],
-      correctVariant: 'the documented one',
+      documentedAnswer: 'the documented one',
     };
     expect(countDivergentFiles(divergence)).toBe(69);
   });

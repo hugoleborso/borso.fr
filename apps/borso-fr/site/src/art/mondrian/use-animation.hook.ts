@@ -102,11 +102,6 @@ const START_BY_ANIMATED: Readonly<
   false: settleCanvas,
 };
 
-/**
- * Returns the `ref` callback for the canvas. The animation loop is a
- * `requestAnimationFrame` cycle that owns its own lifecycle, which is the one
- * case standard 07 keeps an effect for.
- */
 export function useAnimation(
   mode: AnimationMode,
   isReducedMotion: boolean,

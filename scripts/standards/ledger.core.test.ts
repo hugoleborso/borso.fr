@@ -13,7 +13,7 @@ function buildCitation(overrides: Partial<Citation> = {}): Citation {
   return {
     kind: 'eslint',
     target: 'borso/no-use-effect',
-    claim: '`eslint:borso/no-use-effect` rejects effects.',
+    bullet: '`eslint:borso/no-use-effect` rejects effects.',
     ...overrides,
   };
 }
@@ -218,11 +218,6 @@ describe('renderLedger', () => {
     ]);
   });
 
-  /**
-   * One standard mixing a tool claim with a reviewer claim, one naming no
-   * enforcement at all, and one orphan. The checklist section names only the
-   * standard that has a reviewer claim, and the totals count each kind once.
-   */
   it('renders the whole page for a mixed ledger', () => {
     const standard: StandardCitations = {
       standard: '07-state-and-effects.md',
@@ -240,7 +235,7 @@ describe('renderLedger', () => {
       buildCitation({
         kind: 'reviewer',
         target: '',
-        claim: '`reviewer` checks the layout at 375 pixels.',
+        bullet: '`reviewer` checks the layout at 375 pixels.',
       }),
       buildFacts(),
     );

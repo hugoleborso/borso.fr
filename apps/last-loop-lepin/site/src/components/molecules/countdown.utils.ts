@@ -1,12 +1,3 @@
-/**
- * Turns a remaining duration into the four digits the split flap counter
- * shows, plus the caption under them and the value a screen reader announces.
- *
- * Under one hour and forty minutes the counter reads minutes and seconds,
- * which keeps the left pair inside two digits. Beyond that it switches to
- * hours and minutes.
- */
-
 const MILLISECONDS_PER_SECOND = 1_000;
 const SECONDS_PER_MINUTE = 60;
 const MINUTES_PER_HOUR = 60;

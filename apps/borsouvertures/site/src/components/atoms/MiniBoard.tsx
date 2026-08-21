@@ -14,10 +14,6 @@ interface MiniBoardProps {
 export function MiniBoard({ fen, boardStyleId }: MiniBoardProps) {
   const { theme } = getBoardAppearance(boardStyleId);
   return (
-    // The library gives all 64 squares `role="button"` and `tabindex="0"`.
-    // This board is decoration inside a `button.selector-card`, so `inert`
-    // takes the squares out of the tab order and out of hit testing, and
-    // `aria-hidden` states the same thing for the tools that read the tree.
     <div inert aria-hidden className="size-[140px]">
       <Chessboard
         options={{

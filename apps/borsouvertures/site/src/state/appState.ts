@@ -36,17 +36,19 @@ function readInitialState(): AppState {
     if (raw === null) return INITIAL_STATE;
     return parsePersistedState(raw) ?? INITIAL_STATE;
   } catch {
-    // localStorage is unavailable in private mode and over quota, and the
-    // application is fully usable without it, so persistence degrades silently.
     return INITIAL_STATE;
   }
+}
+
+function ignoreUnavailableStorage(): void {
+  return undefined;
 }
 
 function persistSafely(state: AppState): void {
   try {
     window.localStorage.setItem(STORAGE_KEY, stringifyPersistedState(state));
   } catch {
-    // Same reasoning as readInitialState.
+    ignoreUnavailableStorage();
   }
 }
 
@@ -112,7 +114,6 @@ export function setTreeVisualizationMode(treeVisualizationMode: TreeVisualizatio
   update({ treeVisualizationMode });
 }
 
-/** Leaving learn for play must not inherit the line the user was drilling. */
 export function resetPlayScopeAndSelection(): void {
   update({ playScope: EMPTY_PLAY_SCOPE, selection: FULL_SELECTION });
 }

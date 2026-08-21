@@ -1,11 +1,3 @@
-/**
- * Domain → DTO mapper for `Runner`. Pure, deterministic in
- * `(runner, cdnHost)`. The DTO carries `photoUrl` (composed from
- * `photoKey` + the CDN host) on top of the domain fields so the front
- * can render the runner's photo without knowing the bucket / CDN URL
- * scheme.
- */
-
 import type { Runner } from './runner.types';
 
 export interface RunnerDto {
@@ -19,12 +11,6 @@ export interface RunnerDto {
 
 const LEADING_SLASHES = /^\/+/;
 
-/**
- * Compose the `photoUrl` for a runner. Returns `null` when the runner has
- * no `photoKey` OR when `cdnHost` is not configured (= the API is
- * deployed without `PHOTOS_CDN_HOST`); the front then cascades to the
- * initials avatar in both cases.
- */
 function composePhotoUrl(photoKey: string | null, cdnHost: string | undefined): string | null {
   if (photoKey === null) return null;
   if (cdnHost === undefined || cdnHost === '') return null;
@@ -32,11 +18,6 @@ function composePhotoUrl(photoKey: string | null, cdnHost: string | undefined): 
   return `https://${cdnHost}/${trimmedKey}`;
 }
 
-/**
- * Map a domain `Runner` to its DTO. `cdnHost` is the bare hostname (no
- * scheme, no path) of the photos CDN — typically read from the
- * `PHOTOS_CDN_HOST` env var by the caller.
- */
 /**
  * @Blueprint dto-mapper
  * @BlueprintName DTO Mapper

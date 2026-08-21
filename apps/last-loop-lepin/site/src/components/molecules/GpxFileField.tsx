@@ -6,7 +6,6 @@ import { Label } from '../atoms/Label';
 import { MonoNote } from '../atoms/MonoNote';
 import { Show } from '../atoms/Show';
 
-/** The three ways reading a picked GPX file can fail. */
 export type GpxErrorKey =
   'admin.setup.gpx-missing' | 'admin.setup.gpx-empty' | 'admin.setup.gpx-unreadable';
 
@@ -19,13 +18,6 @@ interface GpxFileFieldProps {
   readonly errorKey: GpxErrorKey | null;
 }
 
-/**
- * File picker for a GPX track, with the picked file's name and size under it.
- *
- * There is no `accept` attribute on purpose: iOS Files filters by uniform type
- * identifier and has no entry for `.gpx`, so any value greys every file out in
- * the picker. The API rejects a body that is not GPX with a 400 anyway.
- */
 /**
  * @Blueprint molecule-field
  * @BlueprintName Molecule Form Field

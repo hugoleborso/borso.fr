@@ -1,13 +1,3 @@
-/**
- * Uploads a runner's photo and returns the object key the runner record will
- * carry.
- *
- * The presign call goes through the Hono client and a mutation, like every
- * other call to our API. The `PUT` that follows goes straight to Amazon with
- * `fetch`, which is the one direct request this site makes, because the
- * presigned URL points at S3 and the client knows nothing about it.
- */
-
 import { usePresignRunnerPhoto } from '../../lib/queries/runners';
 import { listPresent } from '../../lib/optional.utils';
 import { readPhotoContentType, selectPhotoRejection } from './runner-form.core';

@@ -6,7 +6,6 @@ export type ProofType = 'photo' | 'video' | 'link' | 'note' | 'stat';
 
 export interface Proof {
   type: ProofType;
-  /** A media path, an external address, or a measured figure, depending on `type`. */
   value: string;
   labelKey?: TranslationKey;
 }

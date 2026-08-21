@@ -3,54 +3,71 @@ import en from './en.json';
 import fr from './fr.json';
 import { diffCatalogs, isInParity, listIdenticalValueKeys } from './i18n-parity.core';
 
-/**
- * An English string sitting untouched in `fr.json` is a missed translation, not
- * a design choice. The only exceptions are the entries below, which read the
- * same in both languages. Adding a key here is a claim a reviewer can check
- * against the comment next to it.
- */
-const KEYS_IDENTICAL_IN_BOTH_LANGUAGES: readonly string[] = [
-  'appName', // the Pragma brand
-  'bars.contactEmail', // "Email" is the label French users read too
-  'bars.contactName', // same word, same spelling
-  'bars.notes', // same word, same spelling
-  'bars.title', // "un bar" is the same word in French
-  'bars.viewKanban', // Kanban, a proper noun
-  'catalog.album', // same word, same spelling
-  'catalog.chartImage', // same word, same spelling
-  'catalog.chartPdf', // the PDF format name
-  'catalog.energyBadge', // "E" — the initial of Energy and of Énergie alike
-  'catalog.linkPlaceholder', // a URL placeholder, not prose
-  'catalog.masteryBadge', // "M" — the initial of Mastery and of Maîtrise alike
-  'catalog.noMastery', // an em dash, not a word
-  'catalog.notesGimmicks', // "gimmick" is the word French musicians use here
-  'catalog.notesStructure', // same word, same spelling
-  'catalog.notesTitle', // same word, same spelling
-  'catalog.tags', // "tags" is the word French musicians use here
-  'common.actions', // same word, same spelling
-  'instruments.title', // same word, same spelling
-  'lineup.edit', // fr.json says "lineup" throughout, e.g. "Lineup par défaut"
-  'lineup.instruments', // same word, same spelling
-  'nav.administrationSection', // same word, same spelling
-  'nav.bars', // "un bar" is the same word in French
-  'nav.instruments', // same word, same spelling
-  'nav.language.en', // the EN language tag
-  'nav.language.fr', // the FR language tag
-  'nav.sessions', // same word, same spelling
-  'nav.setlists', // "setlist" is the word French musicians use
-  'sessions.date', // same word, same spelling
-  'sessions.kindConcert', // same word, same spelling
-  'sessions.noPreparedConcert', // an em dash, not a word
-  'sessions.setlist', // "setlist" is the word French musicians use
-  'sessions.setlists', // same word, and French pluralises it the same way
-  'sessions.title', // same word, same spelling
-  'setlist.capo', // guitar jargon, used as-is in French
-  'setlist.create.defaultName', // "Set 1" is what the band writes on the paper, in both languages
-  'setlist.crumb', // the band says "setlist" in both languages
-  'setlist.notes', // same word, same spelling
-  'setlist.title', // "setlist" is the word French musicians use
-  'shell.meName', // a first name
-  'shell.meVersion', // the brand and a version number
+interface IdenticalByDesign {
+  readonly key: string;
+  readonly readsTheSameBecause: string;
+}
+
+const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
+  { key: 'appName', readsTheSameBecause: 'the Pragma brand' },
+  { key: 'bars.contactEmail', readsTheSameBecause: '"Email" is the label French users read too' },
+  { key: 'bars.contactName', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'bars.notes', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'bars.title', readsTheSameBecause: '"un bar" is the same word in French' },
+  { key: 'bars.viewKanban', readsTheSameBecause: 'Kanban, a proper noun' },
+  { key: 'catalog.album', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'catalog.chartImage', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'catalog.chartPdf', readsTheSameBecause: 'the PDF format name' },
+  {
+    key: 'catalog.energyBadge',
+    readsTheSameBecause: '"E" — the initial of Energy and of Énergie alike',
+  },
+  { key: 'catalog.linkPlaceholder', readsTheSameBecause: 'a URL placeholder, not prose' },
+  {
+    key: 'catalog.masteryBadge',
+    readsTheSameBecause: '"M" — the initial of Mastery and of Maîtrise alike',
+  },
+  { key: 'catalog.noMastery', readsTheSameBecause: 'an em dash, not a word' },
+  {
+    key: 'catalog.notesGimmicks',
+    readsTheSameBecause: '"gimmick" is the word French musicians use here',
+  },
+  { key: 'catalog.notesStructure', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'catalog.notesTitle', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'catalog.tags', readsTheSameBecause: '"tags" is the word French musicians use here' },
+  { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'instruments.title', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'lineup.edit',
+    readsTheSameBecause: 'fr.json says "lineup" throughout, e.g. "Lineup par défaut"',
+  },
+  { key: 'lineup.instruments', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'nav.administrationSection', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'nav.bars', readsTheSameBecause: '"un bar" is the same word in French' },
+  { key: 'nav.instruments', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'nav.language.en', readsTheSameBecause: 'the EN language tag' },
+  { key: 'nav.language.fr', readsTheSameBecause: 'the FR language tag' },
+  { key: 'nav.sessions', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'nav.setlists', readsTheSameBecause: '"setlist" is the word French musicians use' },
+  { key: 'sessions.date', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'sessions.kindConcert', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'sessions.noPreparedConcert', readsTheSameBecause: 'an em dash, not a word' },
+  { key: 'sessions.setlist', readsTheSameBecause: '"setlist" is the word French musicians use' },
+  {
+    key: 'sessions.setlists',
+    readsTheSameBecause: 'same word, and French pluralises it the same way',
+  },
+  { key: 'sessions.title', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'setlist.capo', readsTheSameBecause: 'guitar jargon, used as-is in French' },
+  {
+    key: 'setlist.create.defaultName',
+    readsTheSameBecause: '"Set 1" is what the band writes on the paper, in both languages',
+  },
+  { key: 'setlist.crumb', readsTheSameBecause: 'the band says "setlist" in both languages' },
+  { key: 'setlist.notes', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'setlist.title', readsTheSameBecause: '"setlist" is the word French musicians use' },
+  { key: 'shell.meName', readsTheSameBecause: 'a first name' },
+  { key: 'shell.meVersion', readsTheSameBecause: 'the brand and a version number' },
 ];
 
 // @FollowsBlueprint test-i18n-parity
@@ -80,8 +97,15 @@ describe('i18n-parity.core', () => {
 });
 
 describe('listIdenticalValueKeys', () => {
-  it('leaves the shipped catalogs with only the deliberately identical entries', () => {
-    expect(listIdenticalValueKeys(en, fr)).toEqual(KEYS_IDENTICAL_IN_BOTH_LANGUAGES);
+  it('leaves the shipped catalogs with only the entries identical by design', () => {
+    expect(listIdenticalValueKeys(en, fr)).toEqual(IDENTICAL_BY_DESIGN.map((entry) => entry.key));
+  });
+
+  it('states, for every exemption, why the two languages read the same', () => {
+    const unexplained = IDENTICAL_BY_DESIGN.filter(
+      (entry) => entry.readsTheSameBecause.trim() === '',
+    );
+    expect(unexplained).toEqual([]);
   });
 
   it('reports a nested key whose French value was copied from the English one', () => {

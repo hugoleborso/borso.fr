@@ -1,7 +1,3 @@
-/**
- * Tests for the optimistic write path on the instruments mutations.
- */
-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   instrumentKeys,

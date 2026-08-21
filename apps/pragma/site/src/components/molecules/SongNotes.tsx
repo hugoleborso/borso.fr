@@ -1,16 +1,4 @@
-/**
- * The song's notes, as the band reads them: how the song is built, the
- * gimmicks to watch for, and anything else. Renders nothing when the song
- * carries none, so a page can drop it in unconditionally.
- *
- * `tone` picks the palette rather than the layout: the same block appears on
- * the cream detail page and on the black stage view.
- *
- * A pasted link is one unbreakable word, and the detail page clips what
- * overflows, so the note text breaks mid-word rather than running past the
- * card and off the screen.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

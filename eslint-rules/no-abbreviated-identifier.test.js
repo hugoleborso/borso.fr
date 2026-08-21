@@ -9,7 +9,6 @@ createRuleTester('apps/pragma/api/src/songs/songs.service.ts', { jsx: false }).r
     valid: [
       'const applicationConfiguration = loadApplicationConfiguration();',
       'const migrationDigest = digestMigrations(migrationFiles);',
-      // Words that contain an abbreviation as a prefix and are not one.
       'const resource = await findResource(resourceId);',
       'const messages = [];',
       'const previousLap = laps.at(-1);',
@@ -22,21 +21,17 @@ createRuleTester('apps/pragma/api/src/songs/songs.service.ts', { jsx: false }).r
       'const quantity = 2;',
       'const objective = "finish";',
       'const strategy = "steady";',
-      // The established domain terms.
       'const id = createRunnerId();',
       'const url = new URL(base);',
       'const bpm = 120;',
       'const lat = 48.85;',
       'const dto = toRunnerDto(runner);',
-      // A counter in a loop header.
       'for (let i = 0; i < total; i += 1) { count += i; }',
       'for (const x of entries) { total += x; }',
-      // Names somebody else chose.
       "import { cb } from 'external-library';",
       'const { req } = context;',
       'const body = context.req.valid("json");',
       'const payload = { cfg: 1, msg: "hello" };',
-      // A binding that exists only to be skipped.
       'const [, _unused] = pair;',
       'function ignore(_) { return null; }',
     ],
@@ -60,13 +55,11 @@ createRuleTester('apps/pragma/api/src/songs/songs.service.ts', { jsx: false }).r
         errors: [{ messageId: 'abbreviation' }],
       },
       { code: 'class BtnRenderer {}', errors: [{ messageId: 'abbreviation' }] },
-      // Short names outside a loop header.
       { code: 'const x = 1;', errors: [{ messageId: 'tooShort', data: { name: 'x' } }] },
       {
         code: 'function at(p) { return p; }',
         errors: [{ messageId: 'tooShort' }, { messageId: 'tooShort' }],
       },
-      // A `for` header binding is exempt only inside the header.
       {
         code: 'for (const entry of entries) { const i = entry.index; }',
         errors: [{ messageId: 'tooShort' }],
@@ -75,8 +68,6 @@ createRuleTester('apps/pragma/api/src/songs/songs.service.ts', { jsx: false }).r
   },
 );
 
-// Both lists extend through the options, so an application can add a term
-// without editing the rule.
 createRuleTester('apps/pragma/api/src/songs/songs.service.ts', { jsx: false }).run(
   'no-abbreviated-identifier (options)',
   rule,

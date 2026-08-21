@@ -1,12 +1,4 @@
-/**
- * The sidebar of the song detail page: who plays what by default, how well
- * each of them plays it, and the song's base energy.
- *
- * The lineup card reads one row per member, holding every instrument they
- * carry on this song; the mastery card scores each instrument separately, so
- * it reads the same rows flattened.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

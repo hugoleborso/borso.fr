@@ -1,25 +1,3 @@
-/**
- * Effective mastery resolution.
- *
- *   effective(member, instrument, song) = override(member, instrument, song)
- *                                       ?? default(member, instrument)
- *
- * The override table is sparse — only rows where the song deviates
- * from the band-wide default exist. A `0` override is a legitimate
- * value ("ne joue pas") and MUST win over the default — the falsy
- * trap: don't write `override || default`.
- *
- * Aggregations:
- *  - `meanForSong`: arithmetic mean of `effective(member, instrument)`
- *    over the song's lineup, one score per instrument held — a member
- *    on drums and vocals is rated on both — skipping the members
- *    sitting the song out and the pairs nothing is known about.
- *  - `isRedundantOverride`: true iff override.score === default.score,
- *    so the admin UI can flag rows that should be garbage-collected.
- *
- * Pure functions over plain objects. No I/O.
- */
-
 import { type Lineup, memberInstrumentPairs } from '@domain/lineup.core';
 
 export type MemberId = string;

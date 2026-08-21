@@ -1,9 +1,3 @@
-/**
- * Wall-clock external store. Components subscribe via `useSyncExternalStore`
- * to re-render on each tick. The store owns its interval lifecycle (no
- * `useEffect` in component code).
- */
-
 const TICK_INTERVAL_MS = 1_000;
 
 type Listener = () => void;
@@ -50,11 +44,6 @@ export function getCurrentTime(): number {
   return currentTime;
 }
 
-/**
- * Snapshot for a server render. This application only renders in the browser,
- * so React never asks for it; it exists because `useSyncExternalStore` takes
- * the argument, and it has to be a stable value rather than a fresh clock read.
- */
 export function readServerTime(): number {
   return 0;
 }

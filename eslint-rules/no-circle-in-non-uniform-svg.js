@@ -1,11 +1,3 @@
-/**
- * Ported from `biome-plugins/no-circle-in-non-uniform-svg.grit`.
- *
- * An `<svg preserveAspectRatio="none">` scales its x and y axes by different
- * factors, so a `<circle>` inside it renders as an oval.
- *
- * See docs/knowledge/svg-preserveaspectratio-distorts-non-uniform.md.
- */
 const MESSAGE =
   'A <circle> or <ellipse> inside an <svg preserveAspectRatio="none"> renders as an oval, ' +
   'because non-uniform scaling stretches the x and y axes by different factors. Keep the ' +

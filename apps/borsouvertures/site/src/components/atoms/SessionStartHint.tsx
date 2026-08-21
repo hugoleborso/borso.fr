@@ -11,7 +11,6 @@ interface SessionStartHintProps {
   mode: Mode;
 }
 
-/** Says what is still missing before a session can start. */
 // @FollowsBlueprint atom-plain
 export function SessionStartHint({ mode }: SessionStartHintProps) {
   const { t } = useTranslation();

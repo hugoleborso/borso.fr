@@ -1,8 +1,3 @@
-/**
- * Every rule here is one a caller could break: a blank name, a family outside
- * the four the domain knows, an id that is not a uuid.
- */
-
 import { describe, expect, it } from 'vitest';
 import {
   createInstrumentSchema,

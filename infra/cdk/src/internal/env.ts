@@ -1,12 +1,3 @@
-/**
- * Environment-variable helpers shared by app CDK entrypoints (`bin/app.ts`).
- *
- * Each helper enforces "the variable is present and shaped as expected"
- * with an actionable error when it isn't — apps should never reach into
- * `process.env` directly when a helper exists for the value.
- *
- */
-
 import { assertDeployStage, type Stage } from './naming.utils.js';
 
 const STAGE_ENV = 'STAGE';
@@ -16,11 +7,6 @@ const ACCOUNT_FALLBACK_ENV = 'AWS_ACCOUNT_ID';
 const DEFAULT_STAGE: Stage = 'prod';
 
 // @FollowsBlueprint environment-reader
-/**
- * Reads `name` from the process environment. Throws if it's missing or
- * empty. The error message names the missing variable so callers (and CI
- * logs) can act on it.
- */
 export function requireEnv(name: string): string {
   const value = process.env[name];
   if (!value) {
@@ -29,11 +15,6 @@ export function requireEnv(name: string): string {
   return value;
 }
 
-/**
- * Reads the `CDK_DEFAULT_ACCOUNT` env (or `AWS_ACCOUNT_ID` as a fallback,
- * since both are common in different deployment harnesses). Throws if
- * neither is set.
- */
 export function requireAwsAccount(): string {
   const account = process.env[ACCOUNT_ENV] ?? process.env[ACCOUNT_FALLBACK_ENV];
   if (!account) {
@@ -42,11 +23,6 @@ export function requireAwsAccount(): string {
   return account;
 }
 
-/**
- * Reads the `STAGE` env (default: `prod`). Throws if the value isn't one
- * of the four known stages, or if it's `dev` (which is reserved for app
- * code paths and never deployable — see `Stage` in naming.ts).
- */
 export function requireDeployStage(): Exclude<Stage, 'dev'> {
   const raw = process.env[STAGE_ENV] ?? DEFAULT_STAGE;
   if (!isStage(raw)) {
@@ -60,10 +36,6 @@ function isStage(value: string): value is Stage {
   return value === 'prod' || value === 'preview' || value === 'integ' || value === 'dev';
 }
 
-/**
- * Reads the `PR_NUMBER` env. Throws if it's missing, not an integer, or
- * not strictly positive.
- */
 export function requirePrNumber(): number {
   const raw = requireEnv(PR_NUMBER_ENV);
   const asNumber = Number(raw);

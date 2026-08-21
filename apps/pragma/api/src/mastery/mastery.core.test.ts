@@ -81,7 +81,6 @@ describe('mastery.core', () => {
     });
 
     it('averages the effective scores over the lineup', () => {
-      // hugo on guitar in songA -> override = 6. gui on drums -> default = 9.
       const mean = meanForSong(DEFAULTS, OVERRIDES, 'songA', { hugo: ['guitar'], gui: ['drums'] });
       expect(mean).toBe(7.5);
     });
@@ -92,7 +91,6 @@ describe('mastery.core', () => {
     });
 
     it('rates a member holding two instruments on each of them', () => {
-      // hugo on guitar in songA -> override = 6, hugo on piano -> default = 5.
       const mean = meanForSong(DEFAULTS, OVERRIDES, 'songA', { hugo: ['guitar', 'piano'] });
       expect(mean).toBe(5.5);
     });
@@ -106,7 +104,6 @@ describe('mastery.core', () => {
     });
 
     it('includes the 0-score override (falsy trap)', () => {
-      // hugo on piano in songB -> override = 0. gui on drums -> default = 9. mean = 4.5.
       const mean = meanForSong(DEFAULTS, OVERRIDES, 'songB', { hugo: ['piano'], gui: ['drums'] });
       expect(mean).toBe(4.5);
     });

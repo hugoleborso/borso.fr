@@ -1,18 +1,4 @@
-/**
- * Read-only song detail page — mirrors the prototype's `SongDetail`
- * (design-bundle/project/src/screens/catalog.jsx lines 141-260):
- *  - header carries the status chip, chart-kind badge, title, artist
- *    + tonality + status meta, and right-side actions (Edit / Mode
- *    stage view),
- *  - left column: chord-chart preview card + external-links card
- *    (oEmbed iframes via SongExternalLinks),
- *  - right aside: default-lineup card (member chip + instrument
- *    tag), mastery card (ten coloured bars per member, score x/10).
- *
- * The edit form lives in SongEditPage.tsx at /catalog/:songId/edit;
- * pressing the Edit button navigates there.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
@@ -224,7 +210,7 @@ export function SongDetailPage(): JSX.Element {
                 <UploadedChartPreview
                   kind={uploadedChart.kind}
                   objectKey={uploadedChart.s3Key}
-                  previewUrl={signedChartUrlQuery.data?.getUrl ?? null}
+                  signedPreviewUrl={signedChartUrlQuery.data?.getUrl ?? null}
                   errorMessage={
                     signedChartUrlQuery.error instanceof ApiError
                       ? signedChartUrlQuery.error.message

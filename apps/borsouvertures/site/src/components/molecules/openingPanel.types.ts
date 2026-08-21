@@ -5,9 +5,6 @@ import type { Mode, PlayScope } from '@/state/persistedState.utils';
 import type { BoardThemeId } from '@/theme/boardThemes.utils';
 
 /**
- * The three columns of the opening picker share one props shape, so the
- * compact flow can pick the column to show from a lookup keyed by its step.
- *
  * @Blueprint shared-props-shape
  * @BlueprintName Shared Props Shape Module
  * @BlueprintUsage Use when several interchangeable components must satisfy one props type that a lookup table can be typed against.

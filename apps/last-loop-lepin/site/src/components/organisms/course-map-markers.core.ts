@@ -1,12 +1,3 @@
-/**
- * Everything the course map paints, computed as values.
- *
- * The React component owns the Leaflet instance and nothing else: it walks
- * the list this file returns and turns each entry into a marker. Every rule
- * about where a runner sits, what their marker says, and which projection to
- * use therefore has its own test.
- */
-
 import { formatPercent } from '../../lib/formatters.utils';
 import type { LatLngDto, RaceEditionDto, RankedRunnerDto } from '../../lib/race.types';
 import { selectRunnerStatusLoop } from '../../lib/runner-status.utils';
@@ -15,7 +6,7 @@ import {
   type Indexed,
   indexTrack,
   projectFraction,
-  projectFractionTimeAware,
+  projectFractionAlongMonotonicTimeFractions,
   type RaceTimingInputs,
   runnerDistanceFraction,
 } from './course-map.utils';
@@ -42,11 +33,6 @@ export interface RunnerMarker {
   readonly titleParameters: MarkerTitleParameters;
 }
 
-/**
- * Which projection the map uses. Recorded pace needs the per point time
- * fractions the GPX carried; without them the map spreads runners linearly
- * along the track.
- */
 export function selectProjectionMode(
   pointTimeFractions: readonly number[] | undefined,
 ): ProjectionMode {
@@ -54,11 +40,6 @@ export function selectProjectionMode(
   return 'recorded-pace';
 }
 
-/**
- * The loop the race is currently in. Backyard rule: a loop starts on the top
- * of the hour, not when the previous loop closed, so the index comes from the
- * elapsed race time and not from anybody's punches.
- */
 export function projectCurrentLoopIndex(
   startsAt: string,
   intervalMinutes: number,
@@ -75,7 +56,7 @@ function projectPosition(
   pointTimeFractions: readonly number[] | undefined,
 ): LatLngDto {
   if (pointTimeFractions === undefined) return projectFraction(track, fraction);
-  return projectFractionTimeAware(track, fraction, pointTimeFractions);
+  return projectFractionAlongMonotonicTimeFractions(track, fraction, pointTimeFractions);
 }
 
 function describeMarkerTitle(
@@ -95,11 +76,6 @@ function describeMarkerTitle(
   return { key: 'course-map.runner-progress', parameters };
 }
 
-/**
- * One marker per runner the map should show. Runners who are out, and every
- * runner while the edition is not live, produce no marker, and neither does
- * an edition whose track carries no length.
- */
 // @FollowsBlueprint core-view-projection
 export function listRunnerMarkers(
   edition: RaceEditionDto,

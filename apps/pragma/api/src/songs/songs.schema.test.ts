@@ -1,9 +1,3 @@
-/**
- * A song carries the most optional fields in the application, so most of these
- * name a ceiling or an allow-list. The chart is the interesting one: three
- * kinds, and the union is what keeps a pdf from arriving with chordpro text.
- */
-
 import { describe, expect, it } from 'vitest';
 import {
   chordChartSchema,

@@ -34,11 +34,6 @@ interface RunnerProfilePageProps {
   readonly runnerSlug: string;
 }
 
-/**
- * One runner's page: who they are, where they stand, and every loop they
- * closed. The edition comes from the current edition response, so the page
- * follows whichever edition the API says is current.
- */
 // @FollowsBlueprint route-detail-page
 export function RunnerProfilePage({ runnerSlug }: RunnerProfilePageProps) {
   const { t } = useTranslation();

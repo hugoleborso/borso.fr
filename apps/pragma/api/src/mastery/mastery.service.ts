@@ -1,7 +1,3 @@
-/**
- * Service layer for mastery.
- */
-
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteMasteryDefault,

@@ -51,13 +51,10 @@ describe('resolveEmbed — YouTube', () => {
   });
 
   it('falls back to plain for a YouTube page that is not a single video', () => {
-    // A playlist or a channel has no video id to embed, so the viewer
-    // renders the link instead of an iframe pointing nowhere.
-    expect(resolveEmbed('https://www.youtube.com/playlist?list=PL123')).toEqual({
-      kind: 'plain',
-      href: 'https://www.youtube.com/playlist?list=PL123',
-    });
-    expect(resolveEmbed('https://www.youtube.com/@someband').kind).toBe('plain');
+    const playlistUrl = 'https://www.youtube.com/playlist?list=PL123';
+    const channelUrl = 'https://www.youtube.com/@someband';
+    expect(resolveEmbed(playlistUrl)).toEqual({ kind: 'plain', href: playlistUrl });
+    expect(resolveEmbed(channelUrl).kind).toBe('plain');
   });
 });
 

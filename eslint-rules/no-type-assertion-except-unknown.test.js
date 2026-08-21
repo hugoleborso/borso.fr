@@ -20,8 +20,6 @@ createRuleTester().run('no-type-assertion-except-unknown', rule, {
   ],
 });
 
-// The angle bracket form only parses when JSX is off, which is the case for
-// every `.ts` file on the back end.
 createRuleTester('apps/pragma/api/src/songs/songs.core.ts', { jsx: false }).run(
   'no-type-assertion-except-unknown (angle bracket form)',
   rule,

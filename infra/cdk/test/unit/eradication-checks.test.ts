@@ -3,16 +3,6 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
 
-/**
- * Source-level invariants that backstop our Dantotsu eradications.
- * Each test corresponds to a documented dantotsu under
- * `docs/dantotsus/`; the test failing tells you a regression is
- * about to ship.
- *
- * Strip comments before matching so the lesson description in the
- * source can mention the banned token without triggering the rule.
- */
-
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '../../../..');
 const CONSTRUCTS_DIR = path.resolve(HERE, '../../src/constructs');
@@ -31,10 +21,6 @@ function readStripped(filePath: string): string {
  * @BlueprintDescription Reads the source files off disk, strips block and line comments, and asserts the banned shape is absent from what remains. Stripping first is what lets the same file carry a comment explaining the trap without the explanation tripping the check. The file list is read from the directory rather than hard coded and driven through `it.each`, so a construct added later is covered without anyone remembering to add it, and each describe names the dantotsu it backstops.
  */
 describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
-  // docs/dantotsus/cdk-nodejsfunction-bundling.md — pure-JS deps belong
-  // in esbuild's inline bundle (externalModules: ['@aws-sdk/client-*'],
-  // no nodeModules). nodeModules triggers a transient pnpm install on
-  // every synth and balloons test wall-clock + risks IPC timeouts.
   const files = fs.readdirSync(CONSTRUCTS_DIR).filter((name) => name.endsWith('.ts'));
   it.each(files)('%s', (file) => {
     const stripped = readStripped(path.join(CONSTRUCTS_DIR, file));
@@ -44,11 +30,6 @@ describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
 
 // @FollowsBlueprint test-artifact-audit
 describe('eradication: every app `destroy` script chains the same builds as `deploy`', () => {
-  // docs/dantotsus/cdk-destroy-failure-swallowed-by-trailing-or-echo.md
-  // — cdk destroy synthesizes the app first, and Source.asset() resolves
-  // at synth time. Without `pnpm build` before destroy, synth fails with
-  // CannotFindAsset and DeleteStack is never reached. The fix is making
-  // destroy symmetric with deploy: both chain the build.
   const APPS_DIR = path.resolve(HERE, '../../../../apps');
   const appNames = fs.existsSync(APPS_DIR)
     ? fs.readdirSync(APPS_DIR).filter((entry) => {
@@ -68,11 +49,6 @@ describe('eradication: every app `destroy` script chains the same builds as `dep
 
 // @FollowsBlueprint test-source-invariant
 describe('eradication: no RemovalPolicy.RETAIN on static-site buckets', () => {
-  // docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md
-  // — the failed-first-deploy orphan trap requires literal bucketName +
-  // RETAIN. Static-site buckets hold only rebuildable build output, so
-  // DESTROY + autoDeleteObjects is correct. A future construct re-
-  // introducing RETAIN here would silently reintroduce the trap.
   const sourcePath = path.join(CONSTRUCTS_DIR, 'static-site.ts');
   const stripped = readStripped(sourcePath);
 
@@ -83,10 +59,6 @@ describe('eradication: no RemovalPolicy.RETAIN on static-site buckets', () => {
 
 // @FollowsBlueprint test-source-invariant
 describe('eradication: shared SSM parameter names live in one module', () => {
-  // The names used to be retyped in three constructs and again in the
-  // shared stack that writes them, so a rename in the writer left a
-  // reader pointing at a path nobody publishes — a failure that surfaces
-  // only at runtime, since a missing SSM path synthesizes fine.
   const SHARED_SSM_PREFIX = '/borso/shared/';
   const OWNING_MODULE = path.join(INTERNAL_DIR, 'shared-ssm.ts');
   const scannedFiles = [CONSTRUCTS_DIR, INTERNAL_DIR, SHARED_LIB_DIR]
@@ -106,10 +78,6 @@ describe('eradication: shared SSM parameter names live in one module', () => {
 
 // @FollowsBlueprint test-source-invariant
 describe('eradication: cf-host-routing-function uses ES5-only syntax', () => {
-  // docs/dantotsus/cloudfront-function-runtime-es5.md — CloudFront
-  // Functions runtime 2.0 advertises ES2020 but is unreliable. Stay on
-  // var / string concat / no optional chaining / no template literals
-  // so deploys don't surface FunctionExecutionError on the edge.
   const sourcePath = path.join(INTERNAL_DIR, 'cf-host-routing-function.code.js');
   const stripped = readStripped(sourcePath);
 
@@ -123,5 +91,53 @@ describe('eradication: cf-host-routing-function uses ES5-only syntax', () => {
 
   it('does not use template literals', () => {
     expect(stripped).not.toMatch(/`[^`]*\$\{/);
+  });
+});
+
+// @FollowsBlueprint test-artifact-audit
+describe('eradication: the edge function knows every app that gets SPA routing', () => {
+  const APPS_DIR = path.resolve(REPO_ROOT, 'apps');
+  const EDGE_FUNCTION = path.join(INTERNAL_DIR, 'cf-host-routing-function.code.js');
+
+  function appsComposingPreviewableApp(): string[] {
+    return fs
+      .readdirSync(APPS_DIR)
+      .filter((appName) => {
+        const stackPath = path.join(APPS_DIR, appName, 'cdk/lib/stack.ts');
+        return fs.existsSync(stackPath) && readStripped(stackPath).includes('new PreviewableApp');
+      })
+      .sort();
+  }
+
+  function singlePageAppsInEdgeFunction(): string[] {
+    const listed = /var SINGLE_PAGE_APPS = \[([^\]]*)\]/.exec(readStripped(EDGE_FUNCTION));
+    expect(listed).not.toBeNull();
+    return [...(listed?.[1] ?? '').matchAll(/'([^']+)'/g)].map((entry) => entry[1] ?? '').sort();
+  }
+
+  it('lists exactly the apps whose stack composes PreviewableApp, which sets spaFallback', () => {
+    expect(singlePageAppsInEdgeFunction()).toEqual(appsComposingPreviewableApp());
+  });
+});
+
+function withoutAnnotations(relativePath: string): string {
+  return fs
+    .readFileSync(path.resolve(REPO_ROOT, relativePath), 'utf-8')
+    .split('\n')
+    .filter((line) => !line.trimStart().startsWith('//'))
+    .join('\n')
+    .trim();
+}
+
+// @FollowsBlueprint test-artifact-audit
+describe('eradication: the two copies of haversine.utils.ts agree', () => {
+  const COPIES = [
+    'apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.ts',
+    'apps/last-loop-lepin/site/src/lib/haversine.utils.ts',
+  ];
+
+  it('compute distance from the same source, which no import path enforces', () => {
+    const [apiCopy, siteCopy] = COPIES.map(withoutAnnotations);
+    expect(siteCopy).toBe(apiCopy);
   });
 });

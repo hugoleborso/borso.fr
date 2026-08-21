@@ -1,18 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Map blueprint coverage across the repository.
- *
- * Usage:
- *   pnpm exec tsx .claude/skills/blueprint/blueprint-heatmap.ts
- *
- * Where `blueprint-indexing.ts` answers "which patterns exist", this answers
- * "which code carries one". Every source file is bucketed by application and
- * layer, then counted as carrying a `@Blueprint`, carrying a
- * `@FollowsBlueprint`, or carrying neither, and the result is written to
- * `blueprint-coverage.html`, a colour grid of application against layer.
- *
- * Adapted from the `blueprint` skill in pernod-ricard-rgm/pr-aquila-ap-v2.
- */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -42,11 +28,6 @@ const SKIPPED_DIRECTORY_NAMES = new Set([
 ]);
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js'];
 
-/**
- * Ambient declaration files describe types the compiler already knows how to
- * read. There is no pattern to copy in one, so they are counted and reported
- * separately rather than dragging every layer's percentage down.
- */
 const LAYER_EXCLUDED_FROM_COVERAGE = 'declaration';
 
 const BLUEPRINT_ID_PATTERN = /@Blueprint\s+(\S+)/g;
@@ -97,7 +78,6 @@ function bucketKeyOf(file: MarkedFile): string {
   return `${file.application}|${file.project}|${file.layer}`;
 }
 
-/** The tally as it is being built, before it is handed to the renderer. */
 interface BucketTally {
   application: string;
   layer: string;

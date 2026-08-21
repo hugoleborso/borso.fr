@@ -1,8 +1,3 @@
-/**
- * The presign body names an edition, a runner and a photo format, and the
- * format allow-list is the one the adapter signs against.
- */
-
 import { describe, expect, it } from 'vitest';
 import { presignInputSchema } from './media.schema';
 

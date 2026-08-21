@@ -1,14 +1,4 @@
-/**
- * Transition-comment queries / mutations. Comments are keyed on
- * ordered pairs `(songA, songB)`.
- *
- * The save mutation is optimistic (round 17c) — the pair cache is
- * replaced with the new comment before the server replies, so the
- * setlist editor's inline comment field commits instantly. `onSettled`
- * reconciles, and `onError` rolls back to whatever the cache held
- * before (null when this was a first-time comment).
- * @Feature transitions
- */
+/** @Feature transitions */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
@@ -28,11 +18,6 @@ type TransitionPairOk = Extract<
 >;
 type TransitionPairCache = TransitionPairOk | null;
 
-/**
- * Every stored comment in one read. The setlist editor shows the note on each
- * gap inline, and a setlist of twenty songs would otherwise open nineteen
- * requests for rows that mostly do not exist.
- */
 export function useTransitionCommentsList() {
   return useQuery({
     queryKey: transitionKeys.list(),

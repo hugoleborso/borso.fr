@@ -3,7 +3,6 @@ import { JUMP_DURATION_MILLISECONDS, selectIntensityAt } from './warp-jump.core'
 
 const STARTED_AT = 4000;
 
-/** Reads the jump the way the store does, from a start time and a clock. */
 function selectJumpIntensity(elapsedMilliseconds: number) {
   return selectIntensityAt(STARTED_AT, STARTED_AT + elapsedMilliseconds);
 }

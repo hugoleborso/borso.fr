@@ -1,15 +1,4 @@
-/**
- * Songs (catalog) feature queries / mutations. The external search
- * query (`useSongSearch`) is the MusicBrainz proxy; the caller passes
- * a debounced query and the `enabled` flag flips on once the user
- * has typed at least one non-blank character.
- *
- * Every cache-touching mutation is optimistic (round 17c): the
- * `onMutate` snapshot is rolled back in `onError`, and `onSettled`
- * invalidates to reconcile with the server-issued row (replacing the
- * temporary id on create, syncing server-defaulted fields on update).
- * @Feature songs
- */
+/** @Feature songs */
 
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
@@ -168,20 +157,10 @@ export function useUpdateSong() {
   });
 }
 
-/**
- * Whether the last write aimed at this song failed, so a page showing the song
- * can say the values it renders are the ones `onError` put back.
- */
 export function useDidLastSongWriteFail(songId: string): boolean {
   return didLastSongWriteFail(useSongWrites(), songId);
 }
 
-/**
- * The song that lost its last write, for a page listing many of them. A delete
- * is fired and the operator leaves immediately, so the catalog is where a
- * failed one has to be reported: the row comes back on rollback, which is
- * visible but says nothing about why.
- */
 export function useSongThatLostItsLastWrite(): string | null {
   return selectSongThatLostItsLastWrite(useSongWrites());
 }

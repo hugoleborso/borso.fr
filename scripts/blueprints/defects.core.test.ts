@@ -123,7 +123,6 @@ describe('rankBlueprintRisk', () => {
     { blueprintId: 'barely-copied', name: 'Barely Copied', followers: 1 },
   ];
 
-  /** One defect in a pattern forty files copy beats three in one nobody uses. */
   it('puts the most exposed pattern first, not the most defective', () => {
     const ranked = rankBlueprintRisk(adoptions, [
       { blueprintId: 'barely-copied', dantotsuSlugs: ['a', 'b', 'c'] },
@@ -139,11 +138,6 @@ describe('rankBlueprintRisk', () => {
     ]);
   });
 
-  /**
-   * Exposure is followers times defects, so the defect count has to weigh as
-   * much as the follower count. Asked from both sides, because a comparator
-   * that only reads one of its two arguments correctly passes from one.
-   */
   const evenlyCopied: BlueprintAdoption[] = [
     { blueprintId: 'alpha', name: 'Alpha', followers: 1 },
     { blueprintId: 'zebra', name: 'Zebra', followers: 1 },
@@ -253,7 +247,6 @@ describe('readBlueprintAnnotations', () => {
     ]);
   });
 
-  /** `songs.queries.ts` declares two, and reading only the first lost one. */
   it('reads both annotations when one file declares two', () => {
     const source = [
       '/** @Blueprint query-module',
@@ -271,7 +264,6 @@ describe('readBlueprintAnnotations', () => {
     ]);
   });
 
-  /** The scan and the identifier pattern accept the same separators. */
   it('reads a declaration written with a tab after the marker', () => {
     expect(readBlueprintAnnotations('/** @Blueprint\ttabbed */')).toEqual([
       { id: 'tabbed', name: 'tabbed', usage: '' },

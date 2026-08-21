@@ -1,9 +1,3 @@
-/**
- * Picks what the avatar renders, from the avatar the pure builder produced and
- * whether the photo has already failed to load. Returning both the photo URL
- * and the initials means the component holds no branch of its own.
- */
-
 import type { RunnerAvatar } from '../../lib/runner-avatar.utils';
 
 export interface RunnerAvatarView {

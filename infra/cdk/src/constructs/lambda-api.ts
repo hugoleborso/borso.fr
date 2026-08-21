@@ -29,62 +29,31 @@ const DEFAULT_TIMEOUT_SECONDS = 10;
 const DEFAULT_RESERVED_CONCURRENCY = 10;
 const CORS_PREFLIGHT_MAX_AGE_MINUTES = 10;
 const ERROR_ALARM_PERIOD_MINUTES = 5;
+const NODE_BUILTIN_REQUIRE_SHIM_BANNER =
+  "import { createRequire } from 'module'; const require = createRequire(import.meta.url);";
+const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
 
 export interface LambdaApiProps {
   readonly app: string;
   readonly stage: Stage;
   readonly prNumber?: number;
-  /**
-   * Single Hono-style Lambda entry. Exports an APIGW v2 handler that does
-   * its own internal routing across methods + paths. The HTTP API forwards
-   * every request to it via the `$default` route + `ANY /{proxy+}` catchall.
-   */
   readonly entry: string;
-  /** Memory in MiB. Default: 512. */
   readonly memoryMb?: number;
-  /** Timeout in seconds. Default: 10. */
   readonly timeoutSeconds?: number;
-  /**
-   * Reserved concurrent executions. Default: 10 — guards against runaway
-   * billing.
-   */
   readonly reservedConcurrency?: number;
   readonly environment?: Readonly<Record<string, string>>;
-  /** If provided, the Lambda is granted IAM auth to this DSQL schema. */
   readonly dsqlSchema?: DsqlSchema;
-  /**
-   * Optional custom domain for the HTTP API. When set, the construct
-   * provisions:
-   *   - an APIGW v2 `DomainName` (regional) backed by `certificateArn`
-   *   - an `ApiMapping` from the HttpApi to that DomainName
-   *   - A + AAAA Route 53 alias records in `hostedZoneName` pointing the
-   *     hostname at the DomainName.
-   *
-   * The cert MUST be in the same region as the API (eu-west-3) — API
-   * Gateway regional custom domains reject cross-region certs.
-   */
   readonly customDomain?: {
     readonly hostname: string;
     readonly certificateArn: string;
     readonly hostedZoneId: string;
     readonly hostedZoneName: string;
   };
-  /**
-   * Origins allowed to call this API. When set, CORS uses these specific
-   * origins and enables `Access-Control-Allow-Credentials: true` (browsers
-   * reject `*` for credentialed fetches, and the Hono back-end relies on
-   * cookies for admin auth). When unset, falls back to wildcard origin
-   * without credentials.
-   */
   readonly allowedOrigins?: readonly string[];
   readonly cors?: CorsPreflightOptions;
 }
 
 // @FollowsBlueprint reusable-cdk-construct
-/**
- * One HTTP API + one Lambda handling every method + path.
- *
- */
 export class LambdaApi extends Construct {
   public readonly httpApi: HttpApi;
   public readonly handler: NodejsFunction;
@@ -132,16 +101,7 @@ export class LambdaApi extends Construct {
         target: 'node22',
         format: OutputFormat.ESM,
         mainFields: ['module', 'main'],
-        // Re-expose CommonJS `require` for transitive deps that need it.
-        // Some AWS SDK + smithy packages (notably `@aws-sdk/dsql-signer`
-        // → `@smithy/util-buffer-from`) do `require('buffer')` at module
-        // load, which esbuild's ESM `__require` shim can't resolve at
-        // runtime — the Lambda cold-starts with `Dynamic require of
-        // "buffer" is not supported`. The banner patches the shim with a
-        // real `createRequire` so every Node built-in + any other CJS
-        // transitive dep just works.
-        banner:
-          "import { createRequire } from 'module'; const require = createRequire(import.meta.url);",
+        banner: NODE_BUILTIN_REQUIRE_SHIM_BANNER,
       },
     });
 
@@ -196,17 +156,17 @@ export class LambdaApi extends Construct {
           apiDomainName.regionalHostedZoneId,
         ),
       );
-      // Trailing dot tags the recordName as an FQDN so CDK's
-      // `determineFullyQualifiedDomainName` short-circuits and does NOT
-      // append the zone name. Without it, when `zoneName` is a CFN token
-      // (from SSM, as it is here), CDK's suffix check fails and the
-      // record ends up as `<hostname>.${zoneName}` → `last-loop-lepin-
-      // pr-12-api.preview.borso.fr.borso.fr` in Route 53, which loses the
-      // ALIAS race against the wildcard `*.preview.borso.fr` record on
-      // the shared previews distribution.
-      const fqdn = `${props.customDomain.hostname}.`;
-      new ARecord(this, 'DomainAliasA', { zone, recordName: fqdn, target: aliasTarget });
-      new AaaaRecord(this, 'DomainAliasAAAA', { zone, recordName: fqdn, target: aliasTarget });
+      const fullyQualifiedHostname = `${props.customDomain.hostname}${FULLY_QUALIFIED_DOMAIN_SUFFIX}`;
+      new ARecord(this, 'DomainAliasA', {
+        zone,
+        recordName: fullyQualifiedHostname,
+        target: aliasTarget,
+      });
+      new AaaaRecord(this, 'DomainAliasAAAA', {
+        zone,
+        recordName: fullyQualifiedHostname,
+        target: aliasTarget,
+      });
     }
 
     const integration = new HttpLambdaIntegration('Int', this.handler);

@@ -3,22 +3,12 @@ import { Duration } from 'aws-cdk-lib';
 import { Effect, ManagedPolicy, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
 import type { Construct } from 'constructs';
 
-/** Single source of truth: the consumer repo every deploy role trusts. */
 const CONSUMER_REPO = 'hugoleborso/borso.fr';
-
-/**
- * The branch a `schedule` or `workflow_dispatch` run reports as its ref, and
- * therefore the branch name that ends up in the OIDC sub claim for those events.
- */
 const DEFAULT_BRANCH = 'main';
 const PREVIEW_ROLE_MAX_SESSION_HOURS = 2;
+const DEPLOY_ROLE_MAX_SESSION_HOURS = 1;
+const RESOURCES_NOT_SCOPABLE_BY_ARN = ['*'];
 
-/**
- * IAM actions a CDK-driven deploy needs on the per-stack roles it creates,
- * updates, tags, and deletes. Shared between PreviewDeployRole and
- * ProdDeployRole (which scope these to different role-name patterns) and
- * SharedInfraDeployRole (which adds policy management on top).
- */
 const cdkRoleIamActions = [
   'iam:CreateRole',
   'iam:DeleteRole',
@@ -39,13 +29,30 @@ const cdkRoleIamActions = [
   'iam:PassRole',
 ];
 
-/**
- * DSQL actions an app deploy needs: cluster lifecycle (prod stack creates
- * one per app, preview/integ stacks share it via SSM lookup) plus connect.
- * The cluster ARN isn't predictable at policy-creation time (DSQL assigns
- * IDs), so resources are `*`. Tag-based scoping could narrow this later
- * via `aws:ResourceTag/Project: borso` if it becomes worth doing.
- */
+const managedPolicyIamActions = [
+  'iam:CreatePolicy',
+  'iam:DeletePolicy',
+  'iam:GetPolicy',
+  'iam:GetPolicyVersion',
+  'iam:CreatePolicyVersion',
+  'iam:DeletePolicyVersion',
+  'iam:ListPolicyVersions',
+  'iam:TagPolicy',
+  'iam:UntagPolicy',
+];
+
+const oidcProviderIamActions = [
+  'iam:CreateOpenIDConnectProvider',
+  'iam:DeleteOpenIDConnectProvider',
+  'iam:GetOpenIDConnectProvider',
+  'iam:UpdateOpenIDConnectProviderThumbprint',
+  'iam:AddClientIDToOpenIDConnectProvider',
+  'iam:RemoveClientIDFromOpenIDConnectProvider',
+  'iam:TagOpenIDConnectProvider',
+  'iam:UntagOpenIDConnectProvider',
+  'iam:ListOpenIDConnectProviderTags',
+];
+
 const dsqlAppActions = [
   'dsql:CreateCluster',
   'dsql:DeleteCluster',
@@ -70,30 +77,22 @@ interface DeployRolesProps {
   readonly account: string;
 }
 
-/**
- * Creates the three GitHub Actions deploy roles owned by the shared stack.
- * No role gets AdministratorAccess — PowerUserAccess + scoped IAM/DSQL
- * (and on the shared role, OIDC provider lifecycle + budgets:*) covers what
- * CDK actually does at each scope.
- */
-export function createDeployRoles(scope: Construct, props: DeployRolesProps): DeployRoles {
-  const { oidcProviderArn, account } = props;
-
-  const dsqlAppPolicy = new PolicyStatement({
+function dsqlAppPolicy(): PolicyStatement {
+  return new PolicyStatement({
     effect: Effect.ALLOW,
     actions: dsqlAppActions,
-    resources: ['*'],
+    resources: RESOURCES_NOT_SCOPABLE_BY_ARN,
   });
+}
 
-  // --- ProdDeployRole — trusts repo:…:environment:prod ---
-
+function createProdDeployRole(scope: Construct, props: DeployRolesProps): Role {
   const prod = new Role(scope, 'ProdDeployRole', {
     roleName: 'ProdDeployRole',
-    assumedBy: githubActionsPrincipal(oidcProviderArn, {
+    assumedBy: githubActionsPrincipal(props.oidcProviderArn, {
       repo: CONSUMER_REPO,
       subjects: [{ kind: 'environment', environment: 'prod' }],
     }),
-    maxSessionDuration: Duration.hours(1),
+    maxSessionDuration: Duration.hours(DEPLOY_ROLE_MAX_SESSION_HOURS),
     description:
       'Used by deploy.yml to deploy prod app stacks. The prod GitHub environment scopes this trust; the merge to main is the gate, not a reviewer rule.',
   });
@@ -102,22 +101,20 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
     new PolicyStatement({
       effect: Effect.ALLOW,
       actions: cdkRoleIamActions,
-      resources: [`arn:aws:iam::${account}:role/*-prod-*`, `arn:aws:iam::${account}:role/cdk-*`],
+      resources: [
+        `arn:aws:iam::${props.account}:role/*-prod-*`,
+        `arn:aws:iam::${props.account}:role/cdk-*`,
+      ],
     }),
   );
-  prod.addToPolicy(dsqlAppPolicy);
+  prod.addToPolicy(dsqlAppPolicy());
+  return prod;
+}
 
-  // --- PreviewDeployRole — trusts repo:…:pull_request AND the default branch ---
-  //
-  // preview.yml assumes this on `pull_request`, and cleanup-orphans.yml assumes
-  // it on `pull_request`, `schedule` AND `workflow_dispatch`. The last two mint
-  // a `ref:refs/heads/main` sub, not a `pull_request` one, so a trust policy
-  // naming only `pull_request` left the nightly sweep unable to authenticate
-  // from the day it was written.
-
+function createPreviewDeployRole(scope: Construct, props: DeployRolesProps): Role {
   const preview = new Role(scope, 'PreviewDeployRole', {
     roleName: 'PreviewDeployRole',
-    assumedBy: githubActionsPrincipal(oidcProviderArn, {
+    assumedBy: githubActionsPrincipal(props.oidcProviderArn, {
       repo: CONSUMER_REPO,
       subjects: [{ kind: 'pull_request' }, { kind: 'branch', branch: DEFAULT_BRANCH }],
     }),
@@ -130,80 +127,69 @@ export function createDeployRoles(scope: Construct, props: DeployRolesProps): De
     new PolicyStatement({
       effect: Effect.ALLOW,
       actions: cdkRoleIamActions,
-      resources: [`arn:aws:iam::${account}:role/*-pr-*`, `arn:aws:iam::${account}:role/cdk-*`],
+      resources: [
+        `arn:aws:iam::${props.account}:role/*-pr-*`,
+        `arn:aws:iam::${props.account}:role/cdk-*`,
+      ],
     }),
   );
-  preview.addToPolicy(dsqlAppPolicy);
+  preview.addToPolicy(dsqlAppPolicy());
+  return preview;
+}
 
-  // --- SharedInfraDeployRole — trusts repo:…:environment:prod-shared ---
+function rolesAndPoliciesThisStackOwns(account: string): string[] {
+  return [
+    `arn:aws:iam::${account}:role/ProdDeployRole`,
+    `arn:aws:iam::${account}:role/PreviewDeployRole`,
+    `arn:aws:iam::${account}:role/SharedInfraDeployRole`,
+    `arn:aws:iam::${account}:role/borso-shared-*`,
+    `arn:aws:iam::${account}:role/cdk-*`,
+    `arn:aws:iam::${account}:policy/*`,
+  ];
+}
 
+function createSharedInfraDeployRole(scope: Construct, props: DeployRolesProps): Role {
   const shared = new Role(scope, 'SharedInfraDeployRole', {
     roleName: 'SharedInfraDeployRole',
-    assumedBy: githubActionsPrincipal(oidcProviderArn, {
+    assumedBy: githubActionsPrincipal(props.oidcProviderArn, {
       repo: CONSUMER_REPO,
       subjects: [{ kind: 'environment', environment: 'prod-shared' }],
     }),
-    maxSessionDuration: Duration.hours(1),
+    maxSessionDuration: Duration.hours(DEPLOY_ROLE_MAX_SESSION_HOURS),
     description:
       'Self-deploy role for this stack. The prod-shared GitHub environment scopes this trust and carries no reviewer rule; shared-deploy.yml is dispatch-only, so the operator dispatching it is the gate.',
   });
   shared.addManagedPolicy(ManagedPolicy.fromAwsManagedPolicyName('PowerUserAccess'));
-  // IAM role/policy lifecycle on the resources this stack owns:
-  //   - the three named deploy roles themselves
-  //   - CDK-managed roles created within this stack (borso-shared-*)
-  //   - CDK bootstrap roles (cdk-*)
-  //   - any managed policies created by the stack
   shared.addToPolicy(
     new PolicyStatement({
       effect: Effect.ALLOW,
-      actions: [
-        ...cdkRoleIamActions,
-        'iam:CreatePolicy',
-        'iam:DeletePolicy',
-        'iam:GetPolicy',
-        'iam:GetPolicyVersion',
-        'iam:CreatePolicyVersion',
-        'iam:DeletePolicyVersion',
-        'iam:ListPolicyVersions',
-        'iam:TagPolicy',
-        'iam:UntagPolicy',
-      ],
+      actions: [...cdkRoleIamActions, ...managedPolicyIamActions],
+      resources: rolesAndPoliciesThisStackOwns(props.account),
+    }),
+  );
+  shared.addToPolicy(
+    new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: oidcProviderIamActions,
       resources: [
-        `arn:aws:iam::${account}:role/ProdDeployRole`,
-        `arn:aws:iam::${account}:role/PreviewDeployRole`,
-        `arn:aws:iam::${account}:role/SharedInfraDeployRole`,
-        `arn:aws:iam::${account}:role/borso-shared-*`,
-        `arn:aws:iam::${account}:role/cdk-*`,
-        `arn:aws:iam::${account}:policy/*`,
+        `arn:aws:iam::${props.account}:oidc-provider/token.actions.githubusercontent.com`,
       ],
     }),
   );
-  // OIDC provider for GitHub Actions (one per account).
-  shared.addToPolicy(
-    new PolicyStatement({
-      effect: Effect.ALLOW,
-      actions: [
-        'iam:CreateOpenIDConnectProvider',
-        'iam:DeleteOpenIDConnectProvider',
-        'iam:GetOpenIDConnectProvider',
-        'iam:UpdateOpenIDConnectProviderThumbprint',
-        'iam:AddClientIDToOpenIDConnectProvider',
-        'iam:RemoveClientIDFromOpenIDConnectProvider',
-        'iam:TagOpenIDConnectProvider',
-        'iam:UntagOpenIDConnectProvider',
-        'iam:ListOpenIDConnectProviderTags',
-      ],
-      resources: [`arn:aws:iam::${account}:oidc-provider/token.actions.githubusercontent.com`],
-    }),
-  );
-  // Budgets does not support resource-level scoping.
   shared.addToPolicy(
     new PolicyStatement({
       effect: Effect.ALLOW,
       actions: ['budgets:*'],
-      resources: ['*'],
+      resources: RESOURCES_NOT_SCOPABLE_BY_ARN,
     }),
   );
+  return shared;
+}
 
-  return { prod, preview, shared };
+export function createDeployRoles(scope: Construct, props: DeployRolesProps): DeployRoles {
+  return {
+    prod: createProdDeployRole(scope, props),
+    preview: createPreviewDeployRole(scope, props),
+    shared: createSharedInfraDeployRole(scope, props),
+  };
 }

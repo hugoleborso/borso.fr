@@ -1,34 +1,4 @@
-/**
- * Setlist editor. Mounted by the setlist's own page.
- * Renders the ordered entries; `SetlistEntryRow` owns what one of them shows.
- *
- * The energy curve and the member filter sit in `SetlistToolbar`, pinned to
- * the top of the page, so the curve stays in view while rows move under it.
- * The two set-level actions sit in a `BottomActionBar` instead, within thumb
- * reach and clear of the tab bar.
- *
- * A failure names the action that failed rather than echoing what threw: the
- * only thing an `ApiError` here carries is a string like `reorder 500`, which
- * told the operator nothing and read as a bug. The message is painted in the
- * pinned toolbar, so it is on screen wherever the set is scrolled to.
- *
- * Reordering uses dnd-kit's sortable list (see `SetlistEntriesList`):
- * the list is a `DndContext` wrapping a `SortableContext`, each row is
- * a sortable node grabbed by its handle, and the drop is committed via
- * the optimistic `useReorderSetlist` mutation.
- *
- * Between every two consecutive rows sits a `TransitionStrip`: the verdict
- * from `domain/transition.core.ts` — who keeps a harmonic instrument across
- * the pair, who backs them up, and whether the gap is risky — plus the note
- * stored on that ordered song pair. Tapping the strip opens the note editor.
- *
- * When a member is selected in the filter, `filterEntriesForMember` keeps only
- * entries where that member plays; each visible row receives a
- * `prominentMemberInstrument` chip describing what they play here, and the
- * strips are hidden because the gaps between the visible rows are no longer
- * the gaps of the set.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { evaluateTransition } from '@domain/transition.core';
 import type { JSX } from 'react';

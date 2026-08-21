@@ -1,9 +1,3 @@
-/**
- * Back-e2e for the catalog endpoints. Covers auth gating, CRUD + the
- * three chord-chart variants (chordpro / pdf / image) + a cascade
- * delete that also removes the song's mastery overrides.
- */
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';

@@ -1,14 +1,3 @@
-/**
- * Pure builder for the SW pre-cache list. Spec Q.O.D. *Offline cache
- * scope* = "next session only" — the GET /api/offline-manifest call
- * returns the catalog + the next-upcoming session's setlist, and this
- * util turns the response into the flat list of URLs the SW pins on
- * install. 100% coverage gated.
- *
- * The "next session" is whichever session — practice or concert — has
- * the smallest future date; selection is deterministic given `now`.
- */
-
 export interface OfflineManifestSession {
   readonly id: string;
   readonly date: string;
@@ -32,12 +21,6 @@ export interface OfflineManifest {
   readonly nextSetlistUrl: string | null;
 }
 
-/**
- * Picks the upcoming session whose date is smallest but > now. Returns
- * `null` if every session is in the past or the list is empty. Stable
- * tie-break by id ascending so callers get a deterministic answer
- * even if two sessions land at the same instant.
- */
 // @FollowsBlueprint utils-pure-module
 export function pickNextSession(
   sessions: readonly OfflineManifestSession[],
@@ -62,10 +45,6 @@ export function buildOfflineManifest(input: OfflineManifestInput): OfflineManife
   };
 }
 
-/**
- * Flattens an OfflineManifest to the array the SW passes to
- * `cache.addAll()`. Null entries (no upcoming session) are dropped.
- */
 export function manifestUrls(manifest: OfflineManifest): readonly string[] {
   const urls: string[] = [manifest.catalogListUrl, ...manifest.songDetailUrls];
   if (manifest.nextSessionUrl !== null) urls.push(manifest.nextSessionUrl);

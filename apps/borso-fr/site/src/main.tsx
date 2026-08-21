@@ -3,9 +3,6 @@ import { createRoot } from 'react-dom/client';
 import { Galaxy } from './components/organisms/Galaxy';
 import './styles/tokens.css';
 
-// Frozen params from the Claude Design chat — Hugo's tuning of the
-// react-bits Galaxy. Tweaks panel is intentionally out of scope; see
-// docs/features/borso-fr/front-page-redesign/spec/spec.md (Q.O.D. "Tweaks panel").
 const GALAXY_PARAMS = {
   starSpeed: 0.3,
   density: 2.2,

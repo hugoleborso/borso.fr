@@ -1,9 +1,3 @@
-/**
- * StatusChip — the song's lifecycle marker, one of
- * `idea | wip | rehearsed | concert_ready`. Wraps the Chip atom
- * and picks the right tone + i18n label.
- */
-
 import { useTranslation } from 'react-i18next';
 import { Chip } from '../atoms/Chip';
 

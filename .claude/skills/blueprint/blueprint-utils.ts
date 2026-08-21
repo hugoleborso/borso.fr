@@ -1,16 +1,3 @@
-/**
- * Shared utilities for the blueprint scripts.
- *
- * Project and layer are inferred from the file path, and the layer names match
- * the Layer Reference table that `blueprint-indexing.ts` writes into
- * `blueprint-index.md`.
- *
- * Adapted from the `blueprint` skill in pernod-ricard-rgm/pr-aquila-ap-v2. The
- * inference here follows this repository's layout, which is `apps/<slug>/api`
- * and `apps/<slug>/site` per application, the shared CDK packages under
- * `infra/`, and the custom lint rules under `eslint-rules/`.
- */
-
 export type BlueprintProject = 'api' | 'site' | 'domain' | 'cdk' | 'infra' | 'tooling';
 
 const API_PATH_SEGMENT = '/api/src/';
@@ -37,7 +24,6 @@ export function inferProject(filePath: string): BlueprintProject {
   return 'site';
 }
 
-/** The application slug, e.g. `pragma`, or `infra` for the shared packages. */
 export function inferApplication(filePath: string): string {
   const application = /^apps\/([^/]+)\//.exec(filePath)?.[1];
   if (application !== undefined) {
@@ -71,11 +57,6 @@ export const LAYER_BY_FILE_SUFFIX: readonly (readonly [string, string])[] = [
   ['.config.ts', 'config'],
 ];
 
-/**
- * Composition roots, which are named by convention rather than by suffix. Each
- * entry is matched against the end of the path, so `main.ts` only counts as an
- * entry point where it sits directly under a container's source root.
- */
 export const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
   '/api/src/app.ts',
   '/api/src/main.ts',
@@ -105,16 +86,10 @@ const TEST_FILE_PATTERN = /\.test\.(ts|tsx|js)$/;
 const TEST_HELPER_PATTERN =
   /(\.test-utils\.tsx?|\/test-setup\.tsx?$|^apps\/[^/]+\/test\/|\/test\/(unit\/)?(fixtures|helpers)\/)/;
 
-/** Whether the file is a test rather than the code under test. */
 export function isTestFile(filePath: string): boolean {
   return TEST_FILE_PATTERN.test(filePath) || TEST_HELPER_PATTERN.test(filePath);
 }
 
-/**
- * The layer a file belongs to. A test is reported in the layer of the code it
- * covers, so `punch.core.test.ts` reads as `core` rather than as its own thing,
- * which keeps the coverage map one grid instead of two.
- */
 export function inferLayer(filePath: string): string {
   const pathWithoutTestSuffix = filePath.replace(TEST_FILE_PATTERN, '.$1');
   for (const entryPointSuffix of ENTRY_POINT_PATH_SUFFIXES) {
@@ -140,24 +115,9 @@ export interface FollowsBlueprintEntry {
   readonly lineNumber: number;
 }
 
-/**
- * A marker line, in either comment style, followed by identifiers only.
- *
- * Two things this gets right that the first version did not. It accepts the
- * JSDoc form as well as the line-comment form, because `@Blueprint` is written
- * inside a JSDoc block and a reader naturally writes its counterpart the same
- * way, where it was silently invisible. And the identifiers are matched as
- * identifiers rather than as "the rest of the line", which is what made this
- * file count a sentence in its own documentation as a follower of a blueprint
- * called `id\` comments out of a file, returning one entry`.
- */
 const FOLLOWS_BLUEPRINT_PATTERN =
   /(?:\/\/|^\s*\*)\s*@FollowsBlueprint\s+([A-Za-z0-9][\w-]*(?:\s+[A-Za-z0-9][\w-]*)*)\s*$/;
 
-/**
- * Parse `@FollowsBlueprint id` markers out of a file, returning one entry per
- * identifier with the line it sits on.
- */
 export function extractFollowsBlueprint(fileContent: string): FollowsBlueprintEntry[] {
   const entries: FollowsBlueprintEntry[] = [];
   const lines = fileContent.split('\n');
@@ -175,7 +135,6 @@ export function extractFollowsBlueprint(fileContent: string): FollowsBlueprintEn
   return entries;
 }
 
-/** The parts of a parsed `@Blueprint` block that have to be complete. */
 export interface AnnotatedBlueprint {
   readonly id: string;
   readonly hasName: boolean;
@@ -191,25 +150,15 @@ export interface LocatedFollower {
   readonly lineNumber: number;
 }
 
-/**
- * The usage line answers "when do I reach for this", so it starts with the
- * instruction. `Use for a ...` and `Use whenever ...` both read correctly and
- * both appear in the repository, so the check is on the verb rather than on the
- * preposition after it.
- */
 const REQUIRED_USAGE_PREFIX = 'Use ';
 
 function locationOf(entry: { readonly filePath: string; readonly lineNumber: number }): string {
   return `${entry.filePath}:${entry.lineNumber}`;
 }
 
-/**
- * The indexer reads each tag within five lines either side of its `@Blueprint`
- * line and keeps the last match, so two blocks closer than that silently take
- * each other's name, usage, or description. Both entries still look complete in
- * the index, which is why this has to be checked rather than eyeballed.
- */
-const MINIMUM_LINES_BETWEEN_BLUEPRINTS = 11;
+export const ANNOTATION_SEARCH_RADIUS_LINES = 5;
+
+const MINIMUM_LINES_BETWEEN_BLUEPRINTS = ANNOTATION_SEARCH_RADIUS_LINES * 2 + 1;
 
 function listCollidingBlueprints(blueprints: readonly AnnotatedBlueprint[]): string[] {
   const byFile = new Map<string, AnnotatedBlueprint[]>();
@@ -235,14 +184,6 @@ function listCollidingBlueprints(blueprints: readonly AnnotatedBlueprint[]): str
   return problems;
 }
 
-/**
- * Everything wrong with the annotations, one line each.
- *
- * A blueprint missing a tag still lands in the index with an empty cell, and a
- * follower naming nothing still reads as adoption, so neither shows up as a
- * failure without this. The `--check` flag turns the list into an exit code,
- * which is what the pre-commit hook and CI run.
- */
 export function listAnnotationProblems(
   blueprints: readonly AnnotatedBlueprint[],
   followers: readonly LocatedFollower[],

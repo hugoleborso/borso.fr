@@ -29,12 +29,6 @@ const PIECE_LABEL_STYLE: CSSProperties = {
   whiteSpace: 'nowrap',
 };
 
-/**
- * react-chessboard wraps every piece in a `div[role="button"]` built by the
- * dnd-kit it embeds, and exposes no prop for that wrapper's attributes. A
- * command takes its accessible name from its contents, so the name has to be
- * rendered inside the piece — which the `pieces` option is the only hook for.
- */
 // @FollowsBlueprint component-lookup-table
 export function buildNamedPieces(translate: TFunction): PieceRenderObject {
   return Object.fromEntries(

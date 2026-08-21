@@ -37,63 +37,24 @@ import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import { applyStandardTags } from '../internal/tags.js';
 
 const ERROR_RESPONSE_TTL_MINUTES = 5;
+const BUCKET_DEPLOYMENT_MEMORY_MIB = 512;
+const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
+const DEFAULT_API_PATH_PATTERN = '/api/*';
 
 export interface StaticSiteProps {
-  /** App slug, kebab-case (e.g. "borso-fr"). */
   readonly app: string;
-  /** Deployment stage. */
   readonly stage: Stage;
-  /**
-   * Apex/subdomain for prod (e.g. "borso.fr" or "borsouvertures.borso.fr").
-   * Required for stage="prod"; ignored for preview/integ.
-   */
   readonly domainName?: string;
-  /** PR number for preview/integ stages. */
   readonly prNumber?: number;
-  /** Path to the directory with built assets to upload. */
   readonly assetsPath: string;
-  /**
-   * Optional same-origin API routing for prod. When set, the prod
-   * CloudFront distribution forwards requests matching `pathPattern`
-   * (default `/api/*`) to `domainName` as an additional origin. Used by
-   * full-stack apps that compose a `LambdaApi` alongside the site — the
-   * frontend can then call `/api/*` same-origin, no CORS needed.
-   *
-   * Ignored for preview/integ stages: previews use the shared CloudFront
-   * distribution (no per-PR routing surface there) and rely on a
-   * cross-origin API hostname injected at build time via `VITE_API_BASE`.
-   */
   readonly api?: {
-    /** API origin hostname (no scheme, no path). */
     readonly domainName: string;
-    /** CloudFront path pattern. Default: `/api/*`. */
     readonly pathPattern?: string;
   };
-  /**
-   * Enable SPA client-side routing fallback. When true, CloudFront serves
-   * `/index.html` with status 200 on any 404 from S3, so direct navigation
-   * to client-side routes (`/r/alice`, `/admin`, refresh on a deep link)
-   * loads the SPA bundle and the in-app router renders the right view —
-   * including a catch-all route that shows a 404 page if no client route
-   * matches. When false (default), CloudFront serves `/404.jpeg` with the
-   * original 404 status, suitable for multi-page static sites whose paths
-   * map one-to-one to S3 keys (e.g. borso-fr).
-   */
   readonly spaFallback?: boolean;
 }
 
 // @FollowsBlueprint reusable-cdk-construct
-/**
- * S3 + CloudFront static-site construct.
- *
- * - **prod**: dedicated bucket + dedicated CloudFront distribution + Route 53
- *   alias on `domainName`. ACM cert is looked up from SSM (must be in
- *   us-east-1).
- * - **preview** / **integ**: uploads to the shared previews bucket at a
- *   key prefix; URL is served by the shared previews distribution via
- *   host-based routing (see `cf-host-routing-function.ts`).
- *
- */
 export class StaticSite extends Construct {
   public readonly url: string;
 
@@ -119,14 +80,6 @@ export class StaticSite extends Construct {
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
       versioned: false,
-      // Static-site buckets hold only build artefacts from dist/ — no
-      // user-generated content, fully rebuildable from source. The usual
-      // "RETAIN buckets to protect user data" reflex buys no protection
-      // here, and the combination of pinned bucketName + RETAIN caused
-      // the failed-first-deploy orphan trap (see dantotsu
-      // cdk-failed-deploy-leaves-retained-buckets-orphaned). DESTROY +
-      // autoDeleteObjects: failed creates roll back cleanly, intentional
-      // destroys actually destroy.
       removalPolicy: RemovalPolicy.DESTROY,
       autoDeleteObjects: true,
     });
@@ -137,10 +90,6 @@ export class StaticSite extends Construct {
     );
     const cert = Certificate.fromCertificateArn(this, 'Cert', certArn);
 
-    // Rewrites directory-style URIs to /<dir>/index.html so subpaths like
-    // /art/mondrian/ and /art/mondrian both resolve to the index.html in S3.
-    // CloudFront's `defaultRootObject` only handles the apex /, not nested
-    // dirs. See infra/cdk/src/internal/cf-static-site-index-rewrite.code.js.
     const indexRewriteFunction = new CloudFrontFunction(this, 'IndexRewriteFunction', {
       runtime: FunctionRuntime.JS_2_0,
       code: FunctionCode.fromInline(STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE),
@@ -169,11 +118,6 @@ export class StaticSite extends Construct {
       priceClass: PriceClass.PRICE_CLASS_100,
       errorResponses: props.spaFallback
         ? [
-            // SPA fallback: rewrite any 404 to /index.html with status 200,
-            // so the React bundle loads and the in-app router decides
-            // whether to render a real route (/r/alice) or the catch-all
-            // 404 view. Serving the JPEG directly here would short-circuit
-            // the bundle and break direct navigation to SPA routes.
             {
               httpStatus: 404,
               responsePagePath: '/index.html',
@@ -182,10 +126,6 @@ export class StaticSite extends Construct {
             },
           ]
         : [
-            // Serve the JPEG directly as the 404 response body (no wrapping
-            // HTML). CloudFront returns the file as-is; S3 supplies the
-            // image/jpeg Content-Type. The browser renders it as a
-            // full-page image.
             {
               httpStatus: 404,
               responsePagePath: '/404.jpeg',
@@ -195,14 +135,8 @@ export class StaticSite extends Construct {
     });
 
     if (props.api) {
-      // Same-origin API routing. CACHING_DISABLED keeps every request reaching
-      // the Lambda (API responses are per-user, edge caching would leak between
-      // sessions). ALL_VIEWER_EXCEPT_HOST_HEADER forwards every viewer header
-      // to the API — except Host, which CloudFront must override to the
-      // *.execute-api.* origin hostname so API Gateway's virtual-host routing
-      // resolves to the right HTTP API.
       distribution.addBehavior(
-        props.api.pathPattern ?? '/api/*',
+        props.api.pathPattern ?? DEFAULT_API_PATH_PATTERN,
         new HttpOrigin(props.api.domainName),
         {
           allowedMethods: AllowedMethods.ALLOW_ALL,
@@ -213,13 +147,6 @@ export class StaticSite extends Construct {
       );
     }
 
-    // Grant the CloudFront OAC principal s3:ListBucket so S3 can return 404
-    // for missing keys instead of 403. The default OAC policy only grants
-    // s3:GetObject, which leaves S3 unable to disambiguate "not found" from
-    // "forbidden" — so it returns 403 for both. With ListBucket added, S3
-    // can answer NoSuchKey and CloudFront's errorResponses entry above
-    // (/index.html for SPAs, /404.jpeg otherwise) fires for genuinely-missing
-    // paths.
     bucket.addToResourcePolicy(
       new PolicyStatement({
         actions: ['s3:ListBucket'],
@@ -236,9 +163,7 @@ export class StaticSite extends Construct {
       destinationBucket: bucket,
       distribution,
       distributionPaths: ['/*'],
-      // 128 MB (the default) leaves no headroom for `aws s3 sync` to upload
-      // multi-MiB media bundles and crashes with `[SSL: UNEXPECTED_EOF_WHILE_READING]`.
-      memoryLimit: 512,
+      memoryLimit: BUCKET_DEPLOYMENT_MEMORY_MIB,
     });
 
     const zoneName = StringParameter.valueForStringParameter(
@@ -253,21 +178,17 @@ export class StaticSite extends Construct {
       hostedZoneId: zoneId,
       zoneName,
     });
-    // CDK's ARecord treats a recordName without a trailing dot as relative to
-    // the zone and silently appends the zone name. Passing `'borso.fr'` against
-    // zone `borso.fr` yields the R53 record `borso.fr.borso.fr.` — a record
-    // that resolves nothing useful and forced operators to recreate the alias
-    // manually outside CDK. Force absolute (FQDN with trailing dot) so the
-    // record always matches `props.domainName` exactly.
-    const recordName = props.domainName.endsWith('.') ? props.domainName : `${props.domainName}.`;
+    const fullyQualifiedDomainName = props.domainName.endsWith(FULLY_QUALIFIED_DOMAIN_SUFFIX)
+      ? props.domainName
+      : `${props.domainName}${FULLY_QUALIFIED_DOMAIN_SUFFIX}`;
     new ARecord(this, 'AliasA', {
       zone,
-      recordName,
+      recordName: fullyQualifiedDomainName,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
     new AaaaRecord(this, 'AliasAAAA', {
       zone,
-      recordName,
+      recordName: fullyQualifiedDomainName,
       target: RecordTarget.fromAlias(new CloudFrontTarget(distribution)),
     });
 
@@ -280,11 +201,6 @@ export class StaticSite extends Construct {
       SHARED_SSM_PARAMETERS.previewsBucketName,
     );
     const sharedBucket = Bucket.fromBucketName(this, 'SharedPreviewsBucket', sharedBucketName);
-    // Look up the shared previews distribution so BucketDeployment can issue
-    // a CloudFront invalidation for this PR's prefix on every redeploy.
-    // Without this, CloudFront keeps serving the previously-cached HTML
-    // until TTL (default ~24h), which is invisible-magic painful when
-    // iterating on a preview.
     const previewsDistribution = Distribution.fromDistributionAttributes(
       this,
       'SharedPreviewsDistribution',
@@ -306,12 +222,8 @@ export class StaticSite extends Construct {
       destinationKeyPrefix: keyPrefix,
       prune: false,
       distribution: previewsDistribution,
-      // Scope the invalidation to this PR's hostname-routed prefix, so
-      // co-tenant previews don't pay for unrelated cache busting.
       distributionPaths: [`/${keyPrefix}/*`],
-      // 128 MB (the default) leaves no headroom for `aws s3 sync` to upload
-      // multi-MiB media bundles and crashes with `[SSL: UNEXPECTED_EOF_WHILE_READING]`.
-      memoryLimit: 512,
+      memoryLimit: BUCKET_DEPLOYMENT_MEMORY_MIB,
     });
     return `https://${previewHostname(props)}`;
   }

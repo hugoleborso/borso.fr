@@ -1,9 +1,4 @@
-/**
- * FileDropZone — the drag target and file-picker fallback a chord-chart
- * upload is started from. It hands the chosen file to its parent, which
- * owns the upload and the message the operator reads afterwards.
- * @Feature uploads
- */
+/** @Feature uploads */
 
 import { type DragEvent, type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';

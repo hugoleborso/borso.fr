@@ -1,11 +1,4 @@
-/**
- * The three per-entry overrides a setlist row hides behind its "more" toggle:
- * key override, capo, and notes.
- *
- * Like every other field on the row, a change here reaches the parent through
- * `onPatch` as it is typed; the form is never submitted.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

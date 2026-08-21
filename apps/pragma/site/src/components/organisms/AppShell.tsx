@@ -1,37 +1,4 @@
-/**
- * AppShell — sidebar nav, offline banner, and page outlet. Cream paper
- * background, editorial sidebar with the "Pragma · ERP DU GROUPE"
- * wordmark, two nav sections (main and administration), and a
- * bottom-aligned "me" chip.
- *
- * Under the `lg` breakpoint the 232px sidebar gives way to a bottom tab bar
- * carrying the four pages the band uses on stage, plus a "more" tab that
- * toggles the same sidebar as a slide-over for the admin pages. The slide-over
- * is a native modal `<dialog>`, so the browser owns the top layer — which is
- * above the fixed tab bar with no stacking context to reason about — the focus
- * trap, and the Escape key, which the hand-rolled panel it replaced ignored
- * while the confirmation sheet beside it honoured.
- *
- * The frame is `h-dvh`, not `h-screen`. `100vh` on a phone is the height the
- * viewport has once the address bar has scrolled away, so while it is showing,
- * the scroll container runs past the bottom of what the screen shows and the
- * last rows stay under the tab bar however far you scroll. `100dvh` follows the
- * address bar.
- *
- * The scroll container's bottom padding follows the home indicator, because
- * the tab bar's own height does: the bar pads itself by
- * `env(safe-area-inset-bottom)`, so a fixed 64px here left the last row of a
- * page under the bar on any handset reporting a non-zero inset.
- *
- * While a `<dialog>` inside it is open the container stops scrolling, so a
- * drag on an open sheet moves the sheet rather than the page behind it. A
- * native modal dialog freezes the *document*, and the document is not what
- * scrolls here.
- *
- * The browser's online status and the viewport width are both read
- * through `useSyncExternalStore` hooks, so this file holds no effect.
- * @Feature shell
- */
+/** @Feature shell */
 
 import type { ParseKeys } from 'i18next';
 import { useState } from 'react';
@@ -172,11 +139,8 @@ export function AppShell(): JSX.Element {
 
   return (
     <div className="h-dvh flex bg-bg text-ink-900">
-      {/* Desktop sidebar — hidden under the lg breakpoint. */}
       <div className="hidden lg:block">{renderSidebar('desktop')}</div>
 
-      {/* Mobile slide-over — rendered only when open to keep the
-          tree light when the user is on desktop. */}
       {isNarrow && isMobileNavOpen ? (
         <dialog
           ref={openDismissibleDialogOnAttach}

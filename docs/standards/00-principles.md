@@ -57,10 +57,31 @@ See [02. Purity and core files](./02-purity-and-core-files.md).
 
 ## The name carries the explanation
 
-We do not write comments that restate code, and we rename until the code reads
-as prose instead. A comment survives review only when it explains a constraint
-the reader cannot see in the file, e.g., a vendor bug, an edge runtime that is
-not Node, or a CloudFormation intrinsic that looks like a mistake.
+There are no comments in this code. A comment is a smell of badly written
+code: it is the explanation the code failed to give, parked beside it where
+nothing checks it and nothing keeps it true.
+
+Replace it in this order. First rename, until the code reads as prose: most
+comments disappear the moment the identifier says what the comment said.
+Failing that, reorganise — extract the helper, name the constant, introduce
+the type, write the test that states the behaviour. Only when neither works
+does the explanation belong in a document under `docs/`, because it is about
+something outside this file: a vendor bug, an edge runtime that is not Node, a
+CloudFormation intrinsic that looks like a mistake. That is a
+[knowledge entry](../knowledge/) or an [architecture decision
+record](../adr/README.md), and the code carries no trace of it.
+
+A comment recording how a piece of code changed over time is never the right
+artefact. What the code used to do belongs in `git log`, in the pull request,
+and in [the dantotsus](../dantotsus/) when it cost us something.
+
+What stays is not a comment but an annotation a generator parses: `@Blueprint`
+and its `@BlueprintName` / `@BlueprintUsage` / `@BlueprintDescription` fields,
+`@FollowsBlueprint`, `@Feature`, `@DependsOnExternal`, a `@type` a JavaScript
+file needs to be typed at all, and the `-- <reason>` half of a rule exception.
+Each of those has a reader that fails when it is missing, which is exactly what
+a comment does not have. A block mixing one such tag with a sentence of prose
+is prose, and the rule rejects it.
 
 See [01. Naming](./01-naming.md).
 
@@ -124,6 +145,16 @@ generated artefact is therefore named in prose and never linked.
 
 ## Enforced by
 
+- `eslint:borso/no-comments` rejects every comment that is not entirely
+  machine-read. It asks one question of the comment body alone: does every
+  non-empty line match a known annotation or directive. That is why a
+  `@Blueprint` block passes whole, a `/** @type {…} */` on a JavaScript module
+  passes, and a block pairing a tag with a sentence does not.
+- `script:scripts/check-no-comments-in-styles-and-markup.sh` asks the same
+  question of the two file kinds ESLint does not lint here, `.css` and
+  `.html`. It keeps the `@third-party-dom` markers
+  `scripts/check-stylesheet-contents.sh` parses, and a conditional comment,
+  which is markup rather than prose.
 - `script:scripts/docs/check-doc-links.ts` fails a document that links a file
   which is not there, across every markdown file outside `docs/features/`. It
   skips a placeholder, a GitHub-relative target and anything inside a fenced

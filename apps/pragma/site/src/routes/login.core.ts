@@ -1,9 +1,4 @@
-/**
- * What the sign-in screen does with the two answers it can get: where it sends
- * the visitor once the password is accepted, and which message it shows when
- * it is not.
- * @Feature auth
- */
+/** @Feature auth */
 
 import type { ParseKeys } from 'i18next';
 import { z } from 'zod';
@@ -22,11 +17,6 @@ const LOGIN_ERROR_KEY_BY_STATUS: ReadonlyMap<number | null, ParseKeys> = new Map
   [NOT_BOOTSTRAPPED_STATUS, 'auth.notBootstrapped'],
 ]);
 
-/**
- * `null` stands for a failure the API did not answer at all, e.g. the network
- * dropped, which reads the same way to the visitor as a status nobody planned
- * for.
- */
 // @FollowsBlueprint core-label-key
 export function selectLoginErrorMessageKey(status: number | null): ParseKeys {
   return LOGIN_ERROR_KEY_BY_STATUS.get(status) ?? UNKNOWN_LOGIN_ERROR_KEY;

@@ -8,15 +8,12 @@ import { buildProfileGeometry } from './elevation-profile.utils';
 interface ElevationProfileProps {
   readonly edition: RaceEditionDto;
   readonly ranked: readonly RankedRunnerDto[];
-  /** Wall clock driving each runner pastille along the X axis. */
   readonly now: Date;
 }
 
-// The container scales the SVG to the card width, so these are internal
-// coordinates and only their ratio matters. Four to one matches the map card
-// under it.
-const VIEWBOX_WIDTH = 800;
+const VIEWBOX_WIDTH_PER_HEIGHT = 4;
 const VIEWBOX_HEIGHT = 200;
+const VIEWBOX_WIDTH = VIEWBOX_HEIGHT * VIEWBOX_WIDTH_PER_HEIGHT;
 const MIN_HEIGHT_PX = 200;
 const AVATAR_RADIUS_PX = 10;
 const RADII_PER_DIAMETER = 2;
@@ -29,15 +26,6 @@ const EMPTY_ELEVATIONS: readonly number[] = [];
 const FRAME_STYLE = { minHeight: MIN_HEIGHT_PX } as const;
 const PLACEHOLDER_STYLE = { height: MIN_HEIGHT_PX } as const;
 
-/**
- * The loop's elevation curve with one pastille per running runner, placed by
- * the same along the track fraction the map uses. A pure render: the parent's
- * poll driven re-render is the only refresh mechanism.
- *
- * The photo, when there is one, is layered over the initials circle and
- * clipped to it, so a broken or slow image lets the circle show through with
- * no error handler; SVG image error events are not reliable across browsers.
- */
 // @FollowsBlueprint organism-presentational
 export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps) {
   const { t } = useTranslation();

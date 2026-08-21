@@ -1,21 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Reports where the repository has two spellings for one idea, and fails when
- * a third appears.
- *
- * Usage:
- *   pnpm exec tsx scripts/standards/convention-drift.ts            # write the report
- *   pnpm exec tsx scripts/standards/convention-drift.ts --check    # gate
- *   pnpm exec tsx scripts/standards/convention-drift.ts --accept   # lower the baseline
- *
- * `--check` compares against `docs/standards/convention-baseline.json` and
- * fails only on an increase. The existing divergences are a backlog nobody
- * needs to clear this afternoon; the next one is a decision being taken by
- * accident, and that is the thing worth stopping.
- *
- * `--accept` rewrites the baseline. Run it after fixing a divergence, never to
- * make a failure go away — the diff is small and a reviewer will read it.
- */
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -108,9 +91,9 @@ function renderReport(facts: readonly FileFact[]): string {
     lines.push(`## ${divergence.question}`, '');
     lines.push(
       `\`${divergence.key}\` — ${String(countDivergentFiles(divergence))} file(s) outside ${
-        divergence.correctVariant === undefined
+        divergence.documentedAnswer === undefined
           ? 'the majority spelling'
-          : `\`${divergence.correctVariant}\`, which is the answer the standards give`
+          : `\`${divergence.documentedAnswer}\`, which is the answer the standards give`
       }.`,
       '',
     );
@@ -158,10 +141,6 @@ function main(): void {
   const stale = listStaleBaselineKeys(baseline, current);
 
   if (process.argv.includes('--check')) {
-    // The ratchet is reported before staleness. A new spelling and a stale
-    // report arrive together, and "regenerate the page" is not the message
-    // somebody needs when the actual finding is that they just answered a
-    // settled question a second way.
     for (const failure of failures) {
       console.error(
         `  ${failure.key}: ${String(failure.was)} file(s) disagreed, now ${String(failure.now)}.`,

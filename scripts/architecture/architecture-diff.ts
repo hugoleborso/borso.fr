@@ -1,25 +1,3 @@
-/**
- * Compares two architecture models and reports what moved.
- *
- * ```
- * pnpm exec tsx scripts/architecture/architecture-diff.ts <base.json> <head.json>
- * pnpm exec tsx scripts/architecture/architecture-diff.ts <base.json> <head.json> --html <out.html>
- * ```
- *
- * Markdown on stdout for the pull-request comment, and a self-contained page
- * with `--html` for a reader who wants to look at the change rather than scroll
- * a comment.
- *
- * The point is a reviewer reading one screen instead of a generated HTML diff.
- * Architecture changes worth a second look are the ones this reports: a route
- * appearing or vanishing, a route reaching a table or an external system it did
- * not reach before, a file changing layer, a new external system, and a route
- * losing its last caller.
- *
- * Exits 0 whether or not anything changed. This describes a diff for a human;
- * it is not a gate, and `architecture-graph.ts --check` is the gate.
- */
-
 import { readFileSync, writeFileSync } from 'node:fs';
 
 import {
@@ -30,12 +8,6 @@ import {
 } from './architecture-model-json';
 import { wrapInDocumentShell } from './document-shell.core';
 
-/**
- * The models this reads are written by `architecture-graph.ts` one job earlier,
- * so the shape is known. Parsing rather than trusting is what turns a truncated
- * or half-written file into a clear error instead of a diff full of phantom
- * removals.
- */
 function readModel(path: string): ArchitectureModel {
   const parsed: unknown = JSON.parse(readFileSync(path, 'utf8'));
   const result = architectureModelSchema.safeParse(parsed);
@@ -61,11 +33,6 @@ function buildChangeSets<T>(
   return { added, removed, common };
 }
 
-/**
- * A section long enough to bury the rest of the report is worse than a count.
- * A rename or a new tag can move every route at once, and a reviewer needs to
- * see that it happened, not read it fifty times.
- */
 const MAXIMUM_LINES_PER_SECTION = 15;
 
 function bullet(lines: readonly string[]): string {
@@ -101,7 +68,6 @@ function escapeHtml(text: string): string {
     .replaceAll('"', '&quot;');
 }
 
-/** Backticks and bold, which is all the report's own lines use. */
 function renderInline(text: string): string {
   return escapeHtml(text)
     .replaceAll(/`([^`]+)`/g, '<code>$1</code>')
@@ -117,13 +83,6 @@ function renderCount(label: string, before: number, after: number): string {
     </li>`;
 }
 
-/**
- * The same report as a page.
- *
- * A comment is read once and scrolled past; this is the thing to open when the
- * question is what a branch did to the shape of the application rather than to
- * its lines.
- */
 function renderDiffPage(
   application: string,
   base: ArchitectureModel,

@@ -1,14 +1,4 @@
-/**
- * The solid card that rides the pointer inside dnd-kit's `DragOverlay` while a
- * setlist row is being dragged.
- *
- * The in-list row dims to a ghost placeholder at the live insertion slot; this
- * is the piece the operator actually carries, so it stays fully opaque and
- * lifted. It shares nothing with `SetlistEntryRow` beyond the look of the
- * card, which is why it is a component of its own rather than a mode of that
- * one.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { Icon } from '../atoms/Icon';

@@ -1,11 +1,3 @@
-/**
- * Test-only seeding workflow. Reached from `test-seed.controller.ts`, which
- * `app.ts` mounts only when `ALLOW_TEST_SEED === '1'`.
- *
- * Every write goes through another slice's service, so this file owns no
- * table of its own, and the schedule arithmetic lives in `test-seed.core.ts`.
- */
-
 import { randomUUID } from 'node:crypto';
 import { computeSunriseSunset, seedEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
@@ -65,10 +57,6 @@ export interface SeedResult {
   readonly runnerCount: number;
 }
 
-/**
- * Rebuild the fixture edition, its roster, and its punch history from a
- * clean slate, then report how many runners the edition ended up with.
- */
 // @FollowsBlueprint service-orchestration
 export async function applySeedFixture(fixture: SeedFixtureName, now: Date): Promise<SeedResult> {
   const plan = planSeedFixture(fixture, now);

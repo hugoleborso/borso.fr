@@ -1,13 +1,4 @@
-/**
- * The delete control at the foot of the song edit form, and the question it
- * asks first.
- *
- * It is its own component so the destructive path is one small file a reviewer
- * can read whole: the button sits apart from Save behind a rule, and the write
- * only happens once the reader has answered. The two used to be 8px apart on
- * the same row with nothing between the tap and the deletion.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useState } from 'react';

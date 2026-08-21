@@ -1,15 +1,6 @@
-// CloudFront Function (viewer-request) for the per-app prod / preview
-// `StaticSite` distribution.
-//
-// Rewrites directory-style URIs to /<dir>/index.html so subpaths like
-// /art/mondrian/ AND /art/mondrian both resolve to the file at
-// /art/mondrian/index.html in the S3 origin. CloudFront's
-// `defaultRootObject` only covers the apex /, not nested directories.
-//
-// Runs on the CloudFront edge runtime, NOT Node — no imports, no
-// require, no Node APIs. Targets CloudFront Functions JavaScript
-// runtime 2.0; ES5 syntax (var + string concat) on purpose, since the
-// runtime has historically been stricter than the docs imply.
+function hasNoExtensionOnLastSegment(uri) {
+  return uri.lastIndexOf('.') < uri.lastIndexOf('/');
+}
 
 function handler(event) {
   var request = event.request;
@@ -18,12 +9,7 @@ function handler(event) {
     request.uri = uri + 'index.html';
     return request;
   }
-  // Heuristic: if the last path segment has no '.', treat as a
-  // directory and append /index.html. Otherwise pass through (so
-  // /style.css, /img/photo.jpg etc. still hit S3 directly).
-  var lastSlash = uri.lastIndexOf('/');
-  var lastDot = uri.lastIndexOf('.');
-  if (lastDot < lastSlash) {
+  if (hasNoExtensionOnLastSegment(uri)) {
     request.uri = uri + '/index.html';
   }
   return request;

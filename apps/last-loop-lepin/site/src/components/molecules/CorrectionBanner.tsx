@@ -10,11 +10,6 @@ interface CorrectionBannerProps {
   readonly correctedAt: Date | null;
 }
 
-/**
- * Public notice shown for one minute after a punch correction lands. It reads
- * the shared wall clock, so it dismisses itself as the predicate turns false
- * on a later tick.
- */
 // @FollowsBlueprint molecule-clock-subscriber
 export function CorrectionBanner({ correctedAt }: CorrectionBannerProps) {
   const { t } = useTranslation();

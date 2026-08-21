@@ -1,9 +1,3 @@
-/**
- * Pure helpers around the saved language entry. The `Storage` dependency is
- * injected by the caller, so the runtime passes `window.localStorage` and a
- * test passes an in-memory stand-in.
- */
-
 import { SUPPORTED_LANGUAGES, type SupportedLanguage } from './i18n.utils';
 
 export const LANGUAGE_STORAGE_KEY = 'last-loop-lepin.language';

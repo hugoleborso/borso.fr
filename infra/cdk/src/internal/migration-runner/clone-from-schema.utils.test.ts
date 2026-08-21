@@ -36,8 +36,6 @@ describe('listUndecidedCredentialTables', () => {
     ).toStrictEqual([]);
   });
 
-  // The guard has to stay quiet about a credential table this app has never
-  // heard of, or every app pays for every other app's schema.
   it('says nothing about a credential table the migrations never create', () => {
     expect(listUndecidedCredentialTables({}, LLL_MIGRATIONS)).toStrictEqual(['admin_credentials']);
     expect(listUndecidedCredentialTables({}, [])).toStrictEqual([]);
@@ -58,8 +56,6 @@ describe('listUndecidedCredentialTables', () => {
     ).toStrictEqual(['app_config']);
   });
 
-  // A migration that only reads or alters the table is not where it is born, so
-  // an app inheriting a cloned schema is not asked to re-decide.
   it('does not fire on a migration that merely references the table', () => {
     expect(
       listUndecidedCredentialTables({}, ['ALTER TABLE app_config ADD COLUMN hmac_key text;']),
@@ -125,11 +121,6 @@ describe('buildCreateTableLikeSql', () => {
     },
   );
 
-  /**
-   * Three identifiers reach the same guard, so the rejection has to say which
-   * one was wrong — a CDK prop misconfigured on the source is a different fix
-   * from one misconfigured on the target.
-   */
   it('names the argument it rejected', () => {
     expect(() => buildCreateTableLikeSql('pr-27', 'pr_27', 'editions')).toThrow(
       /Invalid schema name: "pr-27"/,
@@ -180,10 +171,6 @@ describe('buildCloneInsertSql', () => {
   });
 
   it("ignores nullify entries that aren't in the column list (no-op rather than crash)", () => {
-    // Caller misconfigured `columnsToNullify` — column doesn't exist on
-    // this table. We still build a valid INSERT for the columns that
-    // DO exist; the stray nullify entry is silently skipped because the
-    // SELECT list is driven by `columns`, not `nullifyColumns`.
     const sql = buildCloneInsertSql(
       'prod',
       'pr_27',
@@ -369,10 +356,6 @@ describe('formatColumnType', () => {
     );
   });
 
-  /**
-   * DSQL reports no precision for an unconstrained `numeric`, and `numeric(,0)`
-   * is not a type, so the column has to fall back to the bare type name.
-   */
   it('keeps a numeric the catalogue reports no precision for as a bare numeric', () => {
     expect(formatColumnType({ ...row, data_type: 'numeric' })).toStrictEqual({
       name: 'family',

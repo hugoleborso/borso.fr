@@ -1,14 +1,3 @@
-/**
- * Render the blueprint coverage grid as a self-contained HTML page.
- *
- * Kept apart from `blueprint-heatmap.ts` so the scan and the rendering can be
- * read separately, and because the style block would otherwise push that file
- * past the line ceiling.
- *
- * The page carries no timestamp and no external asset. A timestamp would make
- * the file differ on every run and `--check` would fail on an unchanged tree.
- */
-
 export interface CoverageBucket {
   readonly application: string;
   readonly layer: string;
@@ -21,11 +10,6 @@ export interface CoverageBucket {
 
 const PERCENTAGE_SCALE = 100;
 
-/**
- * Six steps rather than a continuous ramp, because a reader compares cells to
- * each other and a named band is easier to compare than a shade. The percentage
- * is printed in every cell as well, so the colour is never the only carrier.
- */
 const COVERAGE_BANDS: readonly (readonly [number, string])[] = [
   [100, 'full'],
   [90, 'high'],
@@ -139,7 +123,6 @@ function renderUnmarked(buckets: readonly CoverageBucket[]): string {
   return `<details><summary>${total} unmarked files</summary>${sections}</details>`;
 }
 
-/** The whole page, deterministic for a given set of buckets. */
 export function renderCoveragePage(
   buckets: readonly CoverageBucket[],
   excludedDeclarationFiles: number,

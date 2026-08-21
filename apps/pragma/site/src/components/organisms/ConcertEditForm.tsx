@@ -1,15 +1,4 @@
-/**
- * Concert detail edit form. Owns its field state via `useForm`. The
- * parent (`SessionDetailPage`) supplies the initial values + a single
- * `onSubmit(payload)` callback; the form is keyed on session id so
- * React mounts a fresh instance whenever a different session is
- * being edited.
- *
- * The friends-count grid is modelled as a nested `friends` field of
- * `Record<memberId, number>` — TanStack Form handles arbitrary-shape
- * objects natively.
- * @Feature sessions
- */
+/** @Feature sessions */
 
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';

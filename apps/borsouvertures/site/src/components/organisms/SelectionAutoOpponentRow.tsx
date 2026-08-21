@@ -5,7 +5,6 @@ interface SelectionAutoOpponentRowProps {
   isAutoOpponentEnabled: boolean;
 }
 
-/** Only play mode has an opponent to automate, so learn mode renders nothing. */
 // @FollowsBlueprint organism-presentational
 export function SelectionAutoOpponentRow({ isAutoOpponentEnabled }: SelectionAutoOpponentRowProps) {
   return (

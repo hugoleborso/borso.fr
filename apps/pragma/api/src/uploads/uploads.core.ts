@@ -1,8 +1,3 @@
-/**
- * Pure helpers for the uploads bounded context. Maps content types to
- * file extensions and assembles object keys. No I/O.
- */
-
 import type { AllowedUploadContentType } from './uploads.types';
 import { CHART_OBJECT_PREFIX } from './uploads.types';
 

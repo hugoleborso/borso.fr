@@ -1,19 +1,10 @@
-/**
- * Decisions the stage view makes: how a zoom step lands inside the readable
- * range, and how the transpose offset is written next to the buttons. The
- * chord source it renders is read by `selectChordProText` in
- * `chart-kind.utils.ts`, which every catalog surface shares.
- * @Feature songs
- */
+/** @Feature songs */
 
-/**
- * Twelve semitones is an octave, so `+12` renders the chart it started
- * from while the counter claims a change. The offset stops one step
- * short of the octave in both directions, which is the whole range that
- * has distinct output.
- */
-export const SCENE_TRANSPOSE_MIN_SEMITONES = -11;
-export const SCENE_TRANSPOSE_MAX_SEMITONES = 11;
+const SEMITONES_IN_OCTAVE = 12;
+const DISTINCT_TRANSPOSE_STEPS_PER_DIRECTION = SEMITONES_IN_OCTAVE - 1;
+
+export const SCENE_TRANSPOSE_MIN_SEMITONES = -DISTINCT_TRANSPOSE_STEPS_PER_DIRECTION;
+export const SCENE_TRANSPOSE_MAX_SEMITONES = DISTINCT_TRANSPOSE_STEPS_PER_DIRECTION;
 
 export const SCENE_FONT_SIZE_MIN_PX = 16;
 export const SCENE_FONT_SIZE_MAX_PX = 48;

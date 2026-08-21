@@ -1,8 +1,3 @@
-/**
- * The password bounds are the only thing this slice validates before it hashes,
- * so each test names a rule rather than restating the object's shape.
- */
-
 import { describe, expect, it } from 'vitest';
 import { credentialsSchema } from './auth.schema';
 

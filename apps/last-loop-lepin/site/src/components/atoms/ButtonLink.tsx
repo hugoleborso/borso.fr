@@ -16,11 +16,6 @@ interface ButtonLinkProps {
   readonly size?: ButtonSize;
 }
 
-/**
- * A navigation that looks like a button, e.g. a results download. It reuses the
- * button's variant tables so the two never drift, and stays an anchor so the
- * browser handles the download rather than a click handler.
- */
 // @FollowsBlueprint atom-lookup-variants
 export function ButtonLink({
   href,

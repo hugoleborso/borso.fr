@@ -1,20 +1,4 @@
-/**
- * Member-color helpers — pure, side-effect-free.
- *
- *  - `parseHex(hex)` turns `#abc` or `#aabbcc` into `{ r, g, b }`. Returns
- *    `null` on malformed input.
- *  - `relativeLuminance({ r, g, b })` is the WCAG luminance formula (sRGB
- *    components → linearised → weighted sum). Used to pick the chip's
- *    readable foreground.
- *  - `readableForeground(hex)` returns `'#1a1814'` (paper ink) when the
- *    background is light, `'#fffefa'` (paper surface) when it is dark.
- *    The threshold sits at the standard 0.5 luminance cutoff — bright
- *    enough to be more "white-on-dark" than "black-on-light".
- *
- * The constants below come from the design tokens; they MUST stay in
- * sync with `styles/design-tokens.css` (`--ink` / `--surface`).
- * @Feature members
- */
+/** @Feature members */
 
 const HEX_PATTERN = /^#(?:[0-9a-fA-F]{3}|[0-9a-fA-F]{6})$/;
 const HEX_RADIX = 16;

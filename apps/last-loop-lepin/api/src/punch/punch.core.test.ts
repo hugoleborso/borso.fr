@@ -142,16 +142,18 @@ describe('lastLoopDurationMs', () => {
     expect(lastLoopDurationMs(EDITION, 'alice', [punch])).toBeNull();
   });
 
-  it("uses the loop's top-of-hour boundary as the start, not the previous punch", () => {
-    // Loop 1 closed at 06:48:30 (the punch). Loop 2 starts at 07:00 (top of
-    // the hour) regardless of when the runner arrived back at the corral.
-    // Loop 2 punch at 07:51:15 → 51 min 15 s of actual running, not the
-    // 1h02m45s wall-clock gap between the two punches.
+  it('measures the loop from its own hourly top, not from the previous punch', () => {
     const punches = [
       buildPunch(1, '2026-09-19T06:48:30+02:00'),
       buildPunch(2, '2026-09-19T07:51:15+02:00'),
     ];
-    expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(51 * 60_000 + 15_000);
+    const runningTimeSinceTheSevenOclockTopMs = 51 * 60_000 + 15_000;
+    const wallClockGapBetweenTheTwoPunchesMs = 62 * 60_000 + 45_000;
+
+    expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(runningTimeSinceTheSevenOclockTopMs);
+    expect(lastLoopDurationMs(EDITION, 'alice', punches)).not.toBe(
+      wallClockGapBetweenTheTwoPunchesMs,
+    );
   });
 
   it('reads the deepest loop, not the last element, when punches arrive out of order', () => {
@@ -170,12 +172,11 @@ describe('lastLoopDurationMs', () => {
     expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(48.5 * 60_000);
   });
 
-  it('uses the punch loopIndex (not array length) to find the top-of-hour boundary', () => {
-    // A runner who skipped loop 1 and only punched loop 2 has their loop
-    // time measured from 07:00, not 06:00 — the boundary is keyed on the
-    // recorded loopIndex.
-    const punches = [buildPunch(2, '2026-09-19T07:48:30+02:00')];
-    expect(lastLoopDurationMs(EDITION, 'alice', punches)).toBe(48.5 * 60_000);
+  it('keys the hourly top on the recorded loopIndex, not on how many punches there are', () => {
+    const punchesFromARunnerWhoSkippedLoopOne = [buildPunch(2, '2026-09-19T07:48:30+02:00')];
+    expect(lastLoopDurationMs(EDITION, 'alice', punchesFromARunnerWhoSkippedLoopOne)).toBe(
+      48.5 * 60_000,
+    );
   });
 });
 

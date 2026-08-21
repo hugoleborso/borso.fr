@@ -89,3 +89,81 @@ Three tells that you are looking at contention rather than a defect:
 - [`cdk-tests-leak-a-temp-assembly-per-synth.md`](../dantotsus/cdk-tests-leak-a-temp-assembly-per-synth.md)
 - [`lectured-without-reading-the-code.md`](../dantotsus/lectured-without-reading-the-code.md)
   — the general form: concluding from an observation you did not re-check.
+
+## Stryker's dry run has its own budget, and it is five minutes by default
+
+The same contention reaches mutation testing, where it surfaces with a
+different message: `Initial test run timed out!`, followed by
+`Something went wrong in the initial test run`. That is **not** a mutant and
+not a survivor — it is Stryker's *dry run*, the unmutated pass it uses to
+collect per-test coverage, hitting `dryRunTimeoutMinutes`, whose default is
+five.
+
+Measured on the push that removed every comment from the repository, with six
+mutation runs started at once on four cores: `last-loop-lepin`'s dry run took
+**3 minutes 46 seconds** and passed; `pragma`'s, which instruments 83 files
+against 576, exceeded five minutes and killed the run. Neither app's tests had
+changed in a way that could slow them down.
+
+`stryker.shared.js` now sets
+`dryRunTimeoutMinutes: DRY_RUN_TIMEOUT_MINUTES_UNDER_THE_PARALLEL_PUSH_WAVE`,
+at 20. The budget is for the loaded machine the gate actually runs on, in the
+same spirit as the `testTimeout` reasoning above.
+
+**Telling the two apart matters**, because the fixes are opposite: a survivor
+is a missing assertion and is yours to fix, while this is a budget and fixing
+it by weakening a test would be a real regression. Read the line before the
+stack trace — `Final mutation score N under breaking threshold 100` is a
+survivor, `Initial test run timed out!` is this.
+
+## The third data point, and the fix that is not another number
+
+A push touching every application put six mutation runs in flight at once.
+Stryker's default is four workers per run, so that was **twenty-four mutation
+workers plus four test suites against four cores**. The victim was not a
+mutation run: it was a CDK synth test in another gate, which **measured 5.06
+seconds run alone and timed out past 60 seconds under the wave** — a factor of
+thirteen, on a test nothing had touched.
+
+That is the third time this shape has cost a push, and the section above
+already says a number that needs raising twice is not the fix. So the budget
+stayed at 60 seconds and the oversubscription went instead:
+
+- `.husky/pre-push` exports `BORSO_MUTATION_RUNS_IN_FLIGHT`, an upper bound on
+  the runs it is about to start (changed apps, plus tooling, plus infra).
+- `stryker.shared.js` derives `concurrency` from it —
+  `availableParallelism() / runs`, floored at one and capped at four.
+
+A single run, which is what a normal push starts, still takes the whole machine:
+four workers on four cores, unchanged. Six runs take one each. On a larger CI
+box the cap keeps the old behaviour at both ends.
+
+**The tell that you are here rather than looking at a real failure:** the test
+that fails is in a *different* gate from the expensive one, its own duration is
+close to the timeout rather than well past it, and it passes alone in seconds.
+
+## A memoised fixture bills the whole synth to whichever test runs first
+
+Sharing the concurrency above cut the CDK stack test from 68.5 s to 60.5 s,
+against a 60 s budget. Still red, and raising the budget would have been the
+third raise. The remaining cost was not contention alone but where it landed.
+
+Both full-stack apps memoise their synthesised templates in a
+`templateByStage` map, so the file synthesises each stage once. The **first
+test to ask** therefore pays for two synths and four esbuild bundles, and the
+eight after it are nearly free. Alone that is 5 s and invisible. Under the
+wave it is the whole file's cost charged to one `it`, against one test's
+timeout.
+
+The fix is to stop billing a warm-up to an assertion. Both files now do the
+synths in `beforeAll`, with an explicit generous timeout of their own, so each
+`it` is timed for what it actually asserts:
+
+    beforeAll(() => {
+      synthAppStack('prod');
+      synthAppStack('preview');
+    }, SYNTH_WARMUP_TIMEOUT_MILLISECONDS);
+
+**The tell:** one test in a file is far slower than its siblings and its
+duration matches the file's total, while the assertions inside it are trivial.
+Look for a lazily-memoised fixture before looking at the test.

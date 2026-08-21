@@ -1,21 +1,4 @@
-/**
- * Catalog-style list view of bars: a sortable table with name, status,
- * city, capacity, and last-interaction-derived staleness columns.
- *
- * Layout is driven by `useReactTable` from `@tanstack/react-table`
- * with `getSortedRowModel()` enabled — header cells are clickable
- * to toggle sort direction (an arrow indicator sits next to the
- * label). Click on a row's name selects the bar for editing; the
- * `×` action removes it.
- *
- * The selected row is outlined and carries `aria-current`, because under `md`
- * the form it fills sits below the entire list: without the outline a tap on a
- * row changed nothing anybody could see on a phone.
- *
- * The stale-banner above the list and the kanban view live in the
- * parent (`BarsPage`); this organism owns the list-view shape only.
- * @Feature bars
- */
+/** @Feature bars */
 
 import {
   type ColumnDef,
@@ -36,12 +19,6 @@ import { Icon } from '../atoms/Icon';
 
 const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity']);
 
-/**
- * The name button stretches over the whole row through an `::after` overlay, so
- * the status badge and the staleness cell open the bar like the name does
- * instead of being a dead strip a finger lands on. The delete button is lifted
- * above the overlay by its own stacking context.
- */
 const ROW_OPENING_BUTTON_CLASS =
   'flex flex-col items-start justify-center w-full min-h-11 text-left text-[13.5px] text-ink-900 ' +
   'cursor-pointer bg-transparent border-0 p-0 after:absolute after:inset-0';
@@ -236,19 +213,9 @@ interface SortableHeaderProps {
   readonly children: ReactNode;
 }
 
-/**
- * No `display` utility here: the caller decides between `inline-flex` and
- * `hidden md:inline-flex`, and a `display` in this string would win over the
- * caller's `hidden` on stylesheet order rather than on source order.
- */
 const HEADER_CELL_CLASS =
   'items-center min-h-11 bg-transparent border-0 text-xs tracking-wider uppercase text-ink-500 font-medium p-0 text-left';
 
-/**
- * A column header, rendered as a button only when the column can actually be
- * sorted. The actions column carries neither a label nor a sort, and as a
- * disabled button it put an invisible, unnamed control in the tab order.
- */
 function SortableHeader({
   canSort,
   onToggleSorting,

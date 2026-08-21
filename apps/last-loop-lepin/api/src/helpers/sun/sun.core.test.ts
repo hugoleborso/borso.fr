@@ -13,13 +13,7 @@ const LEPIN = { lat: 45.55, lng: 5.78 };
 const REYKJAVIK = { lat: 64.13, lng: -21.94 };
 const SYDNEY = { lat: -33.87, lng: 151.21 };
 const ARCTIC_NEAR_POLE = { lat: 78.0, lng: 15.0 };
-/**
- * The published times for Lépin the two tests below anchor against sit at
- * most 5.899 minutes away from what this port computes (measured: summer
- * sunrise 0.247, summer sunset 4.647, winter sunrise 5.899, winter sunset
- * 5.804). Six is that measured worst case rounded up, not a comfort margin.
- */
-const HOUR_TOLERANCE_MINUTES = 6;
+const MEASURED_WORST_CASE_DRIFT_FROM_PUBLISHED_TIMES_MINUTES = 6;
 
 function hoursMinutesUtc(date: Date): string {
   const hours = `${date.getUTCHours()}`.padStart(2, '0');
@@ -106,14 +100,8 @@ describe('polarCrossingFailure', () => {
   });
 });
 
-/**
- * Golden values, captured from this port. They pin every coefficient of the
- * U.S. Naval Observatory formula to the millisecond: the tolerance-based
- * tests above cannot see a coefficient that moves sunrise by seconds, and
- * several of them do exactly that.
- */
 // @FollowsBlueprint test-pure-unit
-describe('computeSunriseSunset golden values', () => {
+describe('computeSunriseSunset golden values, pinning every coefficient to the millisecond', () => {
   const cases: readonly {
     readonly label: string;
     readonly coordinates: { readonly lat: number; readonly lng: number };
@@ -190,8 +178,12 @@ describe('computeSunriseSunset', () => {
     const expectedSunrise = new Date(Date.UTC(2026, 5, 21, 3, 48));
     const expectedSunset = new Date(Date.UTC(2026, 5, 21, 19, 34));
 
-    expect(minutesBetween(sunriseAt, expectedSunrise)).toBeLessThan(HOUR_TOLERANCE_MINUTES);
-    expect(minutesBetween(sunsetAt, expectedSunset)).toBeLessThan(HOUR_TOLERANCE_MINUTES);
+    expect(minutesBetween(sunriseAt, expectedSunrise)).toBeLessThan(
+      MEASURED_WORST_CASE_DRIFT_FROM_PUBLISHED_TIMES_MINUTES,
+    );
+    expect(minutesBetween(sunsetAt, expectedSunset)).toBeLessThan(
+      MEASURED_WORST_CASE_DRIFT_FROM_PUBLISHED_TIMES_MINUTES,
+    );
   });
 
   it('matches known winter solstice times at Lépin', () => {
@@ -201,8 +193,12 @@ describe('computeSunriseSunset', () => {
     const expectedSunrise = new Date(Date.UTC(2026, 11, 21, 7, 8));
     const expectedSunset = new Date(Date.UTC(2026, 11, 21, 15, 50));
 
-    expect(minutesBetween(sunriseAt, expectedSunrise)).toBeLessThan(HOUR_TOLERANCE_MINUTES);
-    expect(minutesBetween(sunsetAt, expectedSunset)).toBeLessThan(HOUR_TOLERANCE_MINUTES);
+    expect(minutesBetween(sunriseAt, expectedSunrise)).toBeLessThan(
+      MEASURED_WORST_CASE_DRIFT_FROM_PUBLISHED_TIMES_MINUTES,
+    );
+    expect(minutesBetween(sunsetAt, expectedSunset)).toBeLessThan(
+      MEASURED_WORST_CASE_DRIFT_FROM_PUBLISHED_TIMES_MINUTES,
+    );
   });
 
   it('returns sunrise before sunset on race-day in September', () => {

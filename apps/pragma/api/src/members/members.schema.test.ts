@@ -1,8 +1,3 @@
-/**
- * A member is a first name, an optional colour and an optional avatar key. The
- * colour is the interesting one: it is a hex string the avatar palette reads.
- */
-
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import {

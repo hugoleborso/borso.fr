@@ -8,7 +8,6 @@ interface InRaceCounterProps {
   readonly ranked: readonly RankedRunnerDto[];
 }
 
-/** How many runners are still going, with how many are out beside it. */
 // @FollowsBlueprint molecule-presentational
 export function InRaceCounter({ ranked }: InRaceCounterProps) {
   const { t } = useTranslation();

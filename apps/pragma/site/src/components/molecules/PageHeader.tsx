@@ -1,12 +1,3 @@
-/**
- * PageHeader — the editorial `.ph` block from the prototype.
- *  - optional `crumb` (uppercase letterspaced label),
- *  - serif italic display H1, scaled down under `sm` so a phone keeps the
- *    title to two lines rather than five,
- *  - dense, ink-500 subtitle,
- *  - right-side actions slot (typically Buttons).
- */
-
 import type { ReactNode } from 'react';
 import { Crumb } from '../atoms/Crumb';
 import { composeClassName } from '../atoms/class-name.utils';

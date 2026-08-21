@@ -1,20 +1,5 @@
-/**
- * Resource naming conventions for the borso platform.
- *
- * Constructs MUST route every name through here so the conventions stay
- * consistent and enforceable by IAM policies.
- *
- */
-
-/**
- * The full set of stages app code may reference. `dev` is a marker for app
- * code only — it selects local-Postgres connection paths in app handlers and
- * is never a valid stage for any of the naming helpers or constructs in this
- * package. Synthing a stack with `stage: 'dev'` throws.
- */
 export type Stage = 'dev' | 'preview' | 'integ' | 'prod';
 
-/** Subset of {@link Stage} that the platform actually deploys. */
 type DeployStage = Exclude<Stage, 'dev'>;
 
 const APP_SLUG_PATTERN = /^[a-z][a-z0-9]*(-[a-z0-9]+)*$/;
@@ -22,6 +7,7 @@ const APP_SLUG_MAX_LENGTH = 32;
 
 const PREVIEW_PARENT_DOMAIN = 'preview.borso.fr';
 const INTEG_STACK_PREFIX = 'bp-integ';
+const API_HOSTNAME_SUFFIX = '-api';
 
 export function validateAppSlug(slug: string): void {
   if (!APP_SLUG_PATTERN.test(slug)) {
@@ -34,22 +20,11 @@ export function validateAppSlug(slug: string): void {
   }
 }
 
-/**
- * Whether a stage is the one long-lived environment.
- *
- * Every construct that branches on the stage is asking this rather than
- * naming a stage: prod gets its own bucket, its own distribution and no test
- * seed, while preview and integ share the preview infrastructure and differ
- * from each other in naming only.
- */
 export function isProductionStage(stage: Stage): boolean {
   return stage === 'prod';
 }
 
 /**
- * Throws if `stage` is `'dev'`. Acts as a TypeScript assertion so callers
- * see `stage` narrowed to {@link DeployStage}.
- *
  * @Blueprint construct-stage-guard
  * @BlueprintName Deploy Stage Guard
  * @BlueprintUsage Use for the first lines of any construct or naming helper that takes a stage.
@@ -78,13 +53,6 @@ function previewSuffix(prNumber: number | undefined): string {
 }
 
 // @FollowsBlueprint utils-pure-module
-/**
- * CloudFormation stack name.
- *
- *   prod    -> "<app>-prod"
- *   preview -> "<app>-pr-<n>"
- *   integ   -> "bp-integ-pr-<n>-<app>"
- */
 export function stackName(context: NameContext): string {
   validateAppSlug(context.app);
   assertDeployStage(context.stage);
@@ -98,13 +66,6 @@ export function stackName(context: NameContext): string {
   }
 }
 
-/**
- * S3 bucket name for the per-app prod / preview / integ bucket. Single
- * AWS account, single region, so no account/region suffix — once the name
- * is taken in this account it stays ours (RemovalPolicy.RETAIN). If the
- * literal `<app>-<stage>` ever did collide on first deploy, rename and
- * redeploy is the one-time fix.
- */
 export function bucketName(context: NameContext): string {
   validateAppSlug(context.app);
   assertDeployStage(context.stage);
@@ -121,11 +82,6 @@ export function lambdaFunctionName(context: NameContext, handler: string): strin
   return `${context.app}-${stagePart}-${handler}`;
 }
 
-/**
- * SSM parameter paths for the per-app DSQL cluster. The cluster lives in
- * the prod stack and is looked up from preview/integ stacks via these
- * paths.
- */
 export function dsqlClusterSsmPaths(app: string): {
   readonly arn: string;
   readonly endpoint: string;
@@ -137,15 +93,6 @@ export function dsqlClusterSsmPaths(app: string): {
   };
 }
 
-/**
- * DSQL schema names — Postgres identifiers, so underscores not hyphens.
- * The cluster is per-app (see `DsqlCluster`), so schema names don't carry
- * the app prefix.
- *
- *   prod    -> "prod"
- *   preview -> "pr_<n>"
- *   integ   -> "integ_<n>"
- */
 export function dsqlSchemaName(context: NameContext): string {
   validateAppSlug(context.app);
   assertDeployStage(context.stage);
@@ -167,9 +114,6 @@ export function dsqlSchemaName(context: NameContext): string {
   }
 }
 
-/**
- * Hostname used for preview/integ frontends — both share *.preview.borso.fr.
- */
 export function previewHostname(context: NameContext): string {
   validateAppSlug(context.app);
   assertDeployStage(context.stage);
@@ -181,14 +125,6 @@ export function previewHostname(context: NameContext): string {
   return `${integPrefix}${context.app}-${suffix}.${PREVIEW_PARENT_DOMAIN}`;
 }
 
-/**
- * Origin, meaning scheme and host with no path, that the application's
- * frontend is served from. The API accepts it on state changing requests, so
- * the value has to match the hostname the browser actually loaded.
- *
- *   prod            -> "https://<domainName>"
- *   preview / integ -> "https://<previewHostname>"
- */
 export function frontendOrigin(context: NameContext, domainName: string | undefined): string {
   if (context.stage === 'prod') {
     if (domainName === undefined) {
@@ -199,12 +135,6 @@ export function frontendOrigin(context: NameContext, domainName: string | undefi
   return `https://${previewHostname(context)}`;
 }
 
-/**
- * Hostname for the per-PR HTTP API behind a preview frontend. Mirrors
- * {@link previewHostname} with an `-api` suffix so the wildcard cert
- * `*.preview.borso.fr` covers both. The frontend points at this hostname
- * via the build-time `VITE_API_BASE` env var.
- */
 export function previewApiHostname(context: NameContext): string {
   validateAppSlug(context.app);
   assertDeployStage(context.stage);
@@ -213,14 +143,9 @@ export function previewApiHostname(context: NameContext): string {
   }
   const suffix = previewSuffix(context.prNumber);
   const integPrefix = context.stage === 'integ' ? `${INTEG_STACK_PREFIX}-` : '';
-  return `${integPrefix}${context.app}-${suffix}-api.${PREVIEW_PARENT_DOMAIN}`;
+  return `${integPrefix}${context.app}-${suffix}${API_HOSTNAME_SUFFIX}.${PREVIEW_PARENT_DOMAIN}`;
 }
 
-/**
- * Host header → S3 key prefix used by the CloudFront viewer-request function.
- * Mirrors the previewHostname() convention so changes here ripple to
- * cf-host-routing-function.ts.
- */
 export function previewS3Prefix(context: NameContext): string {
   validateAppSlug(context.app);
   assertDeployStage(context.stage);

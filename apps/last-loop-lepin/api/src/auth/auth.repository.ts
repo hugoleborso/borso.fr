@@ -30,12 +30,6 @@ export async function upsertBucket(bucket: RateLimitBucket): Promise<void> {
     });
 }
 
-/**
- * Returns the admin PIN scrypt hash, or `null` if the operator hasn't
- * seeded the credentials row yet. A `null` result means the API is
- * deployed but unbootstrapped — `auth.service` translates it into the
- * `misconfigured` AuthDeniedError so the caller gets a clean 500.
- */
 export async function findAdminPinHash(): Promise<string | null> {
   const rows = await getDatabase()
     .select({ scryptHash: adminCredentialsTable.scryptHash })
@@ -54,12 +48,6 @@ export async function createSession(session: AdminSession): Promise<void> {
   await getDatabase().insert(adminSessionsTable).values(session);
 }
 
-/**
- * Returns the session row only if it exists AND hasn't expired at `now`.
- * Expired rows are left in place — `purgeExpiredSessions` mops them up
- * lazily. Splitting expiry filter from physical deletion keeps the
- * read-path query cheap (single PK lookup + timestamp comparison).
- */
 // @FollowsBlueprint repository-query
 export async function findValidSession(id: string, now: Date): Promise<AdminSession | null> {
   const rows = await getDatabase()
@@ -74,11 +62,6 @@ export async function deleteSession(id: string): Promise<void> {
   await getDatabase().delete(adminSessionsTable).where(eq(adminSessionsTable.id, id));
 }
 
-/**
- * Deletes every session whose `expires_at` is in the past relative to
- * `now`. Called opportunistically from the login path so the table
- * doesn't grow unbounded; no scheduled job needed.
- */
 export async function purgeExpiredSessions(now: Date): Promise<void> {
   await getDatabase().delete(adminSessionsTable).where(lt(adminSessionsTable.expiresAt, now));
 }

@@ -1,16 +1,3 @@
-/**
- * Generates `docs/standards/enforcement-ledger.md`, and with `--check` fails
- * when a standard's `## Enforced by` section is not true of this checkout.
- *
- * Whether a rule is enabled is asked of ESLint itself, through
- * `calculateConfigForFile`, rather than by reading `eslint.config.js`. That is
- * the only way to see through the shared presets: `no-explicit-any` is never
- * written in the configuration and is on, while `no-magic-numbers` was cited by
- * a standard and on nowhere. Reading the configuration file gets both backwards.
- *
- * Called by `.husky/pre-commit` and by `ci.yml`.
- */
-
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
@@ -35,13 +22,8 @@ const WORKFLOWS_DIRECTORY = join(REPOSITORY_ROOT, '.github', 'workflows');
 const APPS_DIRECTORY = join(REPOSITORY_ROOT, 'apps');
 const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 0]);
 const STANDARD_FILE_PATTERN = /^\d\d-[a-z0-9-]+\.md$/;
-/** A gate, wherever it sits under `scripts/` and in either language. */
 const CHECK_SCRIPT_PATTERN = /^scripts\/(?:[a-z0-9-]+\/)*check-[a-z0-9-]+\.(?:sh|ts)$/;
 
-/**
- * A script that guards the conversation rather than the code, so no standard
- * has to claim it.
- */
 const MECHANISMS_OUTSIDE_THE_STANDARDS: ReadonlySet<string> = new Set([
   'scripts/check-branch-context.sh',
   'scripts/check-negative-claims-are-dated.sh',
@@ -53,7 +35,6 @@ function listStandardFiles(): readonly string[] {
     .sort();
 }
 
-/** Where an application keeps its front-end source. */
 function resolveSiteRoot(app: string): string | null {
   if (existsSync(join(APPS_DIRECTORY, app, 'site', 'src'))) return `apps/${app}/site/src`;
   if (existsSync(join(APPS_DIRECTORY, app, 'site'))) return `apps/${app}/site`;
@@ -65,12 +46,6 @@ interface Probe {
   readonly path: string;
 }
 
-/**
- * One representative path per layer per application, so a rule's reach is read
- * off the layout each application actually has rather than the one the
- * standards describe. The files need not exist; ESLint resolves a configuration
- * for any path inside the project.
- */
 function listProbes(): readonly Probe[] {
   const probes: Probe[] = [];
   for (const app of readdirSync(APPS_DIRECTORY).sort()) {
@@ -130,11 +105,6 @@ function listAllScopes(): readonly string[] {
   return scopes;
 }
 
-/**
- * A front-end rule that reaches every front end has done its job, so a rule is
- * measured against the applications that have the layer it applies to rather
- * than against every application.
- */
 function selectCandidateScopes(activeScopes: readonly string[]): readonly string[] {
   const layers = new Set(activeScopes.map(readScopeLayer));
   return listAllScopes().filter((scope) => layers.has(readScopeLayer(scope)));
@@ -186,7 +156,6 @@ interface Repository {
   readonly trackedFiles: readonly string[];
 }
 
-/** Which hooks and workflows name this file. */
 function selectInvokingSites(repository: Repository, target: string): readonly string[] {
   return repository.invocationSites.filter((site) => readSiteText(site).includes(target));
 }
@@ -214,7 +183,9 @@ function readMechanismFacts(citation: Citation, repository: Repository): Mechani
     case 'gate': {
       const gate = findGate(citation.target);
       if (gate === null) return { exists: false, activeScopes: [], candidateScopes: [] };
-      const activeScopes = gate.sites.filter((site) => readSiteText(site).includes(gate.token));
+      const activeScopes = gate.sites.filter((site) =>
+        readSiteText(site).includes(gate.siteMustContain),
+      );
       return { exists: true, activeScopes, candidateScopes: gate.sites };
     }
     case 'types': {

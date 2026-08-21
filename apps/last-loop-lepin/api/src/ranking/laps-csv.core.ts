@@ -1,17 +1,3 @@
-/**
- * Per-loop CSV projection — pure.
- *
- * Given a race edition, the current ranked standings, and the raw punches,
- * produce a runner × loops matrix CSV where each cell carries the runner's
- * time on that loop (formula: `loopDurationMs` from `punch.core.ts`).
- *
- * Rows are emitted in the standings order — finishers first, DNFs after,
- * tie-breaks already decided upstream. Voided punches and missing loops
- * leave the cell empty. The point of this export is for runners to
- * compare loop-by-loop pacing after the race; tie-break correctness is
- * left to `ranking.core.ts`.
- */
-
 import { totalHourlyTops } from '../edition/edition.core';
 import type { RaceEdition } from '../edition/edition.types';
 import { loopDurationMs } from '../punch/punch.core';
@@ -27,13 +13,6 @@ function pad(value: number): string {
   return value.toString().padStart(TWO_DIGITS, '0');
 }
 
-/**
- * Format a loop duration as `MM:SS` (e.g. `58:14`) when under an hour, or
- * `Hh MM:SS` (e.g. `1h02:13`) when an hour or more. Seconds are floored,
- * not rounded, to avoid `59.6s` rolling over to `01:00`. Negative or null
- * durations yield an empty string — they show up as empty cells in the
- * CSV (clock-skew degenerate or no punch).
- */
 export function formatLoopDuration(durationMs: number | null): string {
   if (durationMs === null) return '';
   if (durationMs < 0) return '';
@@ -63,14 +42,6 @@ function indexPunches(
   return (runnerSlug, loopIndex) => byKey.get(`${runnerSlug} ${loopIndex}`);
 }
 
-/**
- * Render the per-loop CSV: one header row, one row per ranked runner.
- *
- * Columns: `bib,runner_slug,display_name,B1,B2,...,B<totalHourlyTops>`.
- * Each `B<n>` cell carries the formatted loop duration, or empty when no
- * valid punch exists for that runner/loop. A trailing newline closes the
- * body so the file is well-formed for Excel and `csvkit`.
- */
 /**
  * @Blueprint core-serializer
  * @BlueprintName Core Serializer

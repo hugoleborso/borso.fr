@@ -1,10 +1,3 @@
-/**
- * Generic debounce primitive. Returns a wrapped function that delays
- * the underlying call until `delayMs` has elapsed since the last
- * invocation; calling the returned `.cancel()` voids any pending
- * call. No reliance on React — usable from any layer.
- */
-
 export interface DebouncedFunction<Args extends readonly unknown[]> {
   (...args: Args): void;
   cancel: () => void;

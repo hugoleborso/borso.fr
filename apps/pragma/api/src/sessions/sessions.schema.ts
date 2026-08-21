@@ -1,14 +1,3 @@
-/**
- * Drizzle schema for the sessions bounded context. `session` is
- * single-table inheritance keyed by `kind`. Concert-only columns are
- * nullable; the API validates the shape per kind via the discriminated
- * union below. Both branches are `strict()` so a practice payload
- * carrying a concert-only key (or vice versa) is rejected at the
- * controller boundary. `friends_count_per_member` is stored as TEXT
- * (JSON-encoded) because Aurora DSQL doesn't support `jsonb` — see
- * docs/knowledge/dsql-postgres-compat-gaps.md §1.
- */
-
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
@@ -21,13 +10,9 @@ export const sessionTable = pgTable('session', {
   venue: text('venue'),
   capacity: integer('capacity'),
   gear: text('gear'),
-  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
   friendsCountPerMember: text('friends_count_per_member'),
 });
 
-// Also used by the repository to validate the JSON blob deserialised
-// from the `friends_count_per_member` text column (Aurora DSQL stores
-// it as TEXT — see docs/knowledge/dsql-postgres-compat-gaps.md §1).
 const FRIENDS_PER_MEMBER_MAX = 1_000;
 
 export const friendsCountSchema = z.record(
@@ -71,12 +56,6 @@ export const practiceUpdateSchema = practiceCreateSchema
   .extend({ kind: z.literal('practice').optional() });
 export const sessionUpdateSchema = z.union([concertUpdateSchema, practiceUpdateSchema]);
 
-/**
- * The columns a patch is allowed to write, after the service has turned the
- * request body into what the row holds. It is a separate schema from
- * `sessionUpdateSchema` because `date` has already become a `Date` by then,
- * and `z.date()` rejects the `Invalid Date` a malformed string would produce.
- */
 export const sessionPersistedUpdateSchema = z
   .object({
     date: z.date(),

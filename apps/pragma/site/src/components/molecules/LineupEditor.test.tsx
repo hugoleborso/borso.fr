@@ -1,10 +1,3 @@
-/**
- * UI test for LineupEditor — covers the modal-open behaviour
- * (`<dialog>.open`), the instruments each member is shown holding, the save
- * payload (a selection where nobody plays collapses to `null`), the Save
- * callback shape, the Reset-to-default callback, and the Cancel close.
- */
-
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
@@ -30,10 +23,8 @@ const DRUMS: LineupEditorInstrument = { id: 'drums-id', name: 'Drums' };
 const RESET_BUTTON_TEXT_EN = 'Reset to song default';
 const CANCEL_BUTTON_TEXT_EN = 'Cancel';
 
-// JSDOM doesn't implement <dialog>.showModal/close; stub the
-// prototype once so the production showModal() call doesn't throw.
 // @FollowsBlueprint test-jsdom-gap-stub
-function stubDialogModal(): void {
+function stubDialogModalMissingFromJsdom(): void {
   function stubShowModal(this: HTMLDialogElement): void {
     this.setAttribute('open', '');
   }
@@ -95,7 +86,7 @@ describe('LineupEditor', () => {
   let root: Root;
 
   beforeEach(() => {
-    stubDialogModal();
+    stubDialogModalMissingFromJsdom();
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);

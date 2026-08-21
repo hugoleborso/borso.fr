@@ -1,10 +1,4 @@
-/**
- * MemberChip — Avatar + (optional) name label. The prototype has
- * four styles (`pill`, `chip`, `accent`, `avatar`) — we keep two
- * here: the bare (avatar-only) form used in song-card lineups, and
- * the named form used in detail panels.
- * @Feature members
- */
+/** @Feature members */
 
 import { Avatar } from '../atoms/Avatar';
 import { composeClassName } from '../atoms/class-name.utils';

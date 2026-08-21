@@ -8,14 +8,6 @@ interface PaginatedList<Item> {
   loadMore: () => void;
 }
 
-/**
- * A page cursor over a flat list.
- *
- * The cursor resets by remounting rather than by watching the inputs: a caller
- * whose list changes meaning gives the owning component a new `key`, which is
- * React's own answer to "reset all state when a prop changes" and needs
- * neither an effect nor state written during render.
- */
 // @FollowsBlueprint hook-effect-free-mount
 export function usePaginatedList<Item>(
   items: readonly Item[],

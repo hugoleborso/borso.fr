@@ -1,11 +1,4 @@
-/**
- * Read-only metadata panel for the MusicBrainz-sourced song fields:
- * album, duration, mbid, isrcs, tags. Shown on the edit page below
- * the title/artist inputs when any field is populated. The user can
- * override any field by editing the underlying form state; this
- * panel only displays.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';

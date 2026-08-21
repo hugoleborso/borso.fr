@@ -1,18 +1,3 @@
-/**
- * Records and verifies standards review seals.
- *
- *   pnpm exec tsx scripts/standards/seal.ts record <path> --reviewer <name> --note "…"
- *   pnpm exec tsx scripts/standards/seal.ts verify --base origin/main
- *
- * `record` is what the standards review agent calls once it has read a file
- * against the `reviewer` bullets in `docs/standards/enforcement-ledger.md`. It
- * hashes the file itself, so the agent cannot record a hash for content it did
- * not read off disk.
- *
- * `verify` is what CI calls. It hashes the files the branch changed and fails
- * on any that carry no seal. No model runs on that side.
- */
-
 import { execFileSync } from 'node:child_process';
 import { createHash } from 'node:crypto';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
@@ -92,23 +77,10 @@ function recordSeal(): void {
     console.log(`sealed ${path} (${contentHash.slice(0, 12)})`);
   }
 
-  writeSealLedgerFile(recorded);
+  writeSealLedgerInPathOrder(recorded);
 }
 
-/**
- * Rewrites the whole ledger in path order rather than appending to its end.
- *
- * Two branches that seal different files append at the same last line, which
- * git reports as a conflict on every merge even though the two edits cannot
- * disagree. In path order they land in different regions and merge on their
- * own, and the one case left — the same file sealed on both branches — is a
- * real disagreement that deserves a person.
- *
- * Entries are kept, never replaced: `verify` re-hashes a file and looks for an
- * entry carrying that hash, so a revert to a previously sealed content is
- * still sealed.
- */
-function writeSealLedgerFile(entries: readonly SealEntry[]): void {
+function writeSealLedgerInPathOrder(entries: readonly SealEntry[]): void {
   const ordered = [...entries].sort(
     (left, right) =>
       left.path.localeCompare(right.path) || left.sealedAt.localeCompare(right.sealedAt),

@@ -1,34 +1,4 @@
-/**
- * LineupEditor — modal that edits a lineup record
- * (`Record<memberId, instrumentIds>`). Two surfaces share this molecule:
- * the song detail page (editing the song's `defaultLineup`) and a setlist
- * entry row (editing the entry's `lineupOverride`).
- *
- * Each member gets a row of instrument toggles rather than a dropdown,
- * because one person can hold several instruments at once — a drummer who
- * also sings — and because a toggle is a thumb-sized target where a native
- * select on a phone is a scroll wheel.
- *
- * Only the member list scrolls: the sheet is a flex column whose middle band
- * is the scroll container, so the title stays at the top and Save and Cancel
- * at the bottom whatever the band's size. They were sticky instead, which
- * keeps them on screen but paints them over whatever the sheet has not
- * scrolled past — the last member's bottom instrument chip was three quarters
- * behind the action row and swallowed every tap aimed at it.
- *
- * On Save, the molecule normalises a selection where nobody plays to
- * `null` so the BE never persists an override that says nothing — the
- * override-vs-default badge is binary on non-null.
- *
- * On Reset to default (button only present when `defaultLineup` is
- * supplied — i.e. the setlist-entry surface), the form values revert
- * to `defaultLineup` and the modal stays open so the operator can
- * review. A subsequent Save click invokes `onSave(lineup, true)` so
- * the parent persists `lineupOverride: null`. Without a prior Reset,
- * Save calls `onSave(lineup, false)` and the parent persists the form
- * values verbatim.
- * @Feature members
- */
+/** @Feature members */
 
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useRef } from 'react';
@@ -54,12 +24,6 @@ export interface LineupEditorInstrument {
 
 export type LineupEditorSurface = 'song' | 'setlist-entry';
 
-/**
- * The scrollbar is drawn rather than left to the platform's overlay one, which
- * only appears once a scroll is already under way. A band long enough to
- * overflow the sheet showed its last instrument chip sliced by the action row
- * with nothing on screen saying the list continued.
- */
 const MEMBER_SCROLLER_CLASS =
   'flex-1 overflow-y-auto flex flex-col gap-3 p-4 pb-8 ' +
   '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +

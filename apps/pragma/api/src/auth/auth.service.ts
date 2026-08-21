@@ -1,15 +1,3 @@
-/**
- * Service layer for the auth bounded context. Wraps the argon2id
- * hashing + the HMAC key generation around the repository, so the
- * controller carries only request/response shape and never imports
- * crypto or the DB client directly.
- *
- * Argon2id is provided by `hash-wasm` (pure WASM, no native bindings)
- * to keep the Lambda bundle ESM-clean — see
- * `docs/knowledge/lambda-esm-native-modules.md` for the trap that
- * pushed us off the native `argon2` package.
- */
-
 import { randomBytes } from 'node:crypto';
 import { argon2id, argon2Verify } from 'hash-wasm';
 import {

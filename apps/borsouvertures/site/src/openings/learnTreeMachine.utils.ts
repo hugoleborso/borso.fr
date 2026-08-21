@@ -32,14 +32,8 @@ export interface LearnTreeMachine {
 }
 
 export interface LearnTreeMachineOptions {
-  /** Delay before the opponent's automated reply. Default {@link DEFAULT_OPPONENT_DELAY_MS}. */
   opponentDelayMs?: number;
-  /** Pick a random move from the candidates. Tests inject a deterministic picker. */
   pickRandom?: (candidates: readonly string[]) => string | undefined;
-  /**
-   * Schedules a callback after `delayMs`. Tests inject a fake-timer-friendly
-   * implementation; production uses the global setTimeout.
-   */
   scheduleTimeout?: (callback: () => void, delayMs: number) => void;
 }
 
@@ -62,14 +56,6 @@ const INITIAL_SNAPSHOT: LearnTreeSnapshot = {
   showRevealedArrows: false,
 };
 
-/**
- * Everything one drill owns. A fresh object per {@link LearnTreeMachine.start},
- * so the object's identity doubles as the run's identity: a pending opponent
- * timeout captures the run it was scheduled for and bails when the machine has
- * moved on. That is the mitigation for B5 in the spec (a stale setTimeout
- * firing after a side / variation change), and it also makes "the machine has
- * been started" a single fact rather than one nullable field per value.
- */
 interface LearnTreeRun {
   variation: Variation;
   side: Side;
@@ -128,13 +114,6 @@ function recordVisitedLeafIfReached(run: LearnTreeRun): void {
   run.visitedLeafIds.add(leaf.id);
 }
 
-/**
- * Creates a Learn-tree state machine instance. The machine owns one
- * {@link Chess} engine, the played-move history, and the visited-leaves set,
- * all held in the {@link LearnTreeRun} the current drill created. Components
- * subscribe via `useSyncExternalStore`; tests drive it directly with injected
- * timers + RNG.
- */
 // @FollowsBlueprint state-machine-module
 export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): LearnTreeMachine {
   const opponentDelayMs = options.opponentDelayMs ?? DEFAULT_OPPONENT_DELAY_MS;
@@ -151,20 +130,21 @@ export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): L
     for (const listener of listeners) listener();
   }
 
+  function hasNoOpponentCandidate(currentRun: LearnTreeRun): boolean {
+    return nextMovesAt(currentRun.variation, currentRun.playedMovesUci).length === 0;
+  }
+
+  function isRunSupersededBy(scheduledRun: LearnTreeRun): boolean {
+    return scheduledRun !== run;
+  }
+
   function scheduleOpponentMove(currentRun: LearnTreeRun): void {
     if (!isOpponentToMove(currentRun)) return;
-    // No candidate at this ply — don't enqueue a no-op timer that would sit
-    // stale in the queue across a reset and dequeue ahead of the next real
-    // opponent move when fired.
-    if (nextMovesAt(currentRun.variation, currentRun.playedMovesUci).length === 0) return;
+    if (hasNoOpponentCandidate(currentRun)) return;
     scheduleTimeout(() => {
-      // Stale callback after a reset / start that began a different run.
-      if (currentRun !== run) return;
+      if (isRunSupersededBy(currentRun)) return;
       const candidates = nextMovesAt(currentRun.variation, currentRun.playedMovesUci);
       const choice = pickRandom(candidates);
-      // Empty candidates → pickRandomCandidate returns `candidates[0]`, which is
-      // `undefined` per `noUncheckedIndexedAccess`. Tests can also inject a
-      // picker that returns `undefined` to assert this path.
       if (!choice) return;
       applyUciToBoard(currentRun, choice);
       currentRun.playedMovesUci.push(choice);
@@ -201,8 +181,6 @@ export function createLearnTreeMachine(options: LearnTreeMachineOptions = {}): L
     recordVisitedLeafIfReached(currentRun);
     currentRun.isShowRevealedArrows = false;
     notify(currentRun);
-    // A cleared variation has no line left to follow, so the candidate guard in
-    // scheduleOpponentMove already declines; the call is made unconditionally.
     scheduleOpponentMove(currentRun);
     return 'accepted';
   }

@@ -20,7 +20,6 @@ import { type Palette, PALETTES } from './palettes.utils';
 const drawLow = (): number => 0.001;
 const drawHigh = (): number => 0.999;
 
-/** A generator that hands out the listed draws in order, so a test can aim one. */
 function scriptedDraws(draws: readonly number[]): () => number {
   let drawIndex = 0;
   return () => draws[drawIndex++] ?? 0;
@@ -41,10 +40,8 @@ function rectOf(overrides: Partial<Rectangle> = {}): Rectangle {
 
 const SAMPLE_SEED = 0x9bd1c87f;
 
-/** Half the shortest span that can be cut in two, i.e. the smallest rectangle. */
 const MIN_RECT_DIMENSION = 0.06;
 const MIN_SPLITTABLE_SPAN = MIN_RECT_DIMENSION * 2;
-/** Repeated cuts drift a coordinate by a few units in the last place. */
 const FLOAT_DRIFT = 1e-9;
 
 // @FollowsBlueprint test-pure-unit

@@ -1,17 +1,4 @@
-/**
- * `useIsMediaQueryMatching(query)` is true while
- * `window.matchMedia(query)` matches. It reads through `useSyncExternalStore`, which is correct
- * under concurrent rendering, where an effect that copies the match
- * into state is not.
- *
- * `subscribe` and `getSnapshot` are built once per query string and
- * cached at module level, so a render that does not change the query
- * hands React the same two function identities and React does not
- * resubscribe. See
- * docs/dantotsus/usesyncexternal-store-subscribe-must-be-stable.md.
- *
- * @DependsOnExternal browser-media-query
- */
+/** @DependsOnExternal browser-media-query */
 
 import { useSyncExternalStore } from 'react';
 

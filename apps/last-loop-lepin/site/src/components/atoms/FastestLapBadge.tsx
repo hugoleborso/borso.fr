@@ -5,14 +5,9 @@ const BADGE_CLASS =
   'absolute -top-1.5 -right-1.5 z-1 inline-flex items-center justify-center w-4 h-4 rounded-full bg-fastest-lap shadow-[0_1px_3px_rgba(0,0,0,0.25)]';
 
 interface FastestLapBadgeProps {
-  /** Accessible name, supplied by the caller through the translation layer. */
   readonly title: string;
 }
 
-/**
- * Inline chronometer mark. Inline rather than an asset so the SVG can carry
- * its own `<title>`, which is what screen readers announce.
- */
 // @FollowsBlueprint atom-plain
 export function FastestLapBadge({ title }: FastestLapBadgeProps) {
   return (

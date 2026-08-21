@@ -1,21 +1,9 @@
-/**
- * The spectator screen's reading of the current edition.
- *
- * The race is over either because the operator closed the edition or because
- * the backyard rule left at most one runner standing, which the standings
- * report on their own.
- */
-
 import type { RaceEditionDto } from '../../lib/race.types';
 
 const MINUTES_TO_MS = 60_000;
 
 export type SpectatorView = 'waiting' | 'racing';
 
-/**
- * Race day shows the live screen; anything else shows the announcement and
- * the archives, which is also what an absent edition shows.
- */
 // @FollowsBlueprint core-view-intent
 export function selectSpectatorView(edition: RaceEditionDto | null): SpectatorView {
   if (edition === null) return 'waiting';
@@ -27,10 +15,6 @@ export function isRaceOver(edition: RaceEditionDto, hasStandingsEnded: boolean):
   return edition.status === 'finished' || hasStandingsEnded;
 }
 
-/**
- * When the next top of the hour falls. Before the gun that is the start, and
- * after the cut off it is the end, so the counter never runs past the race.
- */
 export function projectNextLoopBoundaryMs(edition: RaceEditionDto, nowMs: number): number {
   const startMs = new Date(edition.startsAt).getTime();
   const endMs = new Date(edition.endsAt).getTime();
@@ -47,7 +31,6 @@ export function listFinishedEditions(
   return editions.filter((edition) => edition.status === 'finished');
 }
 
-/** Finished editions, most recent first, which is how the archives read. */
 export function listArchivedEditions(
   editions: readonly RaceEditionDto[],
 ): readonly RaceEditionDto[] {
@@ -67,16 +50,11 @@ export function collectFastestLapSlugs(
   return new Set(fastestLap.map((entry) => entry.runnerSlug));
 }
 
-/** The edition to render the live screen for, if the screen should show one. */
 export function selectRacingEdition(edition: RaceEditionDto | null): RaceEditionDto | null {
   if (selectSpectatorView(edition) !== 'racing') return null;
   return edition;
 }
 
-/**
- * Whether the announcement screen is what the spectator sees. A failed edition
- * request shows the outage message instead, so neither screen is shown twice.
- */
 export function isShowingAnnouncement(
   hasEditionFailed: boolean,
   edition: RaceEditionDto | null,

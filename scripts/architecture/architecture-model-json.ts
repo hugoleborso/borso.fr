@@ -1,12 +1,3 @@
-/**
- * The shape of a committed architecture model, parsed rather than trusted.
- *
- * Two readers need it: the diff, which compares two of them, and the generator,
- * which reads the target branch's model to colour a diff page. Neither can
- * import the other — the diff runs its own `main()` at module load — so the
- * schema lives here.
- */
-
 import { z } from 'zod';
 
 export const routeSchema = z.object({
@@ -47,14 +38,6 @@ export type ArchitectureModel = z.infer<typeof architectureModelSchema>;
 export type RouteEntry = z.infer<typeof routeSchema>;
 export type FileEntry = z.infer<typeof fileSchema>;
 
-/**
- * What one application's diff run found, written beside its page.
- *
- * The index needs every application's counts and the workflow builds the diffs
- * one application per invocation, so the folder is where the runs meet. Parsed
- * rather than trusted for the same reason the model is: a stale file from an
- * earlier shape would otherwise render as `undefined` on the page.
- */
 export const diffSummarySchema = z.object({
   counts: z.array(z.object({ label: z.string(), value: z.number() })),
 });

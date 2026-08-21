@@ -1,10 +1,4 @@
-/**
- * The running time the MusicBrainz panel prints for a song.
- *
- * MusicBrainz reports a length in whole seconds, and the panel shows it the
- * way a track listing does, so the seconds are always two digits.
- * @Feature songs
- */
+/** @Feature songs */
 
 const SECONDS_PER_MINUTE = 60;
 const SECONDS_LABEL_PAD = 2;

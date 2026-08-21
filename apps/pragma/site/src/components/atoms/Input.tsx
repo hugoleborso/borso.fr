@@ -1,8 +1,3 @@
-/**
- * Input atom — text inputs, search fields, and selects share the same
- * paper-elevated style.
- */
-
 import { forwardRef, type InputHTMLAttributes } from 'react';
 import { composeClassName } from './class-name.utils';
 import { type InputVariantProps, inputVariants } from './input.variants';

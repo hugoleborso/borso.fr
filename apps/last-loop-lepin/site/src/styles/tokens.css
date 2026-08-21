@@ -1,19 +1,8 @@
-/*
- * Last Loop Lépin — design tokens bridged to Tailwind v4 via `@theme`.
- *
- * Every variable declared inside `@theme` becomes a Tailwind utility
- * automatically: `--color-bg-elev` → `bg-bg-elev` / `text-bg-elev`,
- * `--font-display` → `font-display`, and so on.
- *
- * `static` keeps every variable in the built stylesheet even when no utility
- * references it, because the Leaflet polyline colour and the SVG gradient
- * stops read `var(--color-accent)` from JavaScript and from an attribute,
- * neither of which the class scanner can see.
- */
-
 @import 'tailwindcss';
 
 @theme static {
+  --size-touch-target-floor: 44px;
+
   --font-display: 'Space Grotesk', system-ui, sans-serif;
   --font-body: 'Inter', system-ui, sans-serif;
   --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
@@ -88,21 +77,11 @@
     -webkit-font-smoothing: antialiased;
   }
 
-  /* Tailwind's preflight gives a button the default arrow cursor. */
   button {
     cursor: pointer;
   }
 }
 
-/*
- * Leaflet renders its tiles, its zoom bar and its attribution into DOM it
- * owns, so no utility class can reach those elements. Everything below is
- * scoped to `.course-map`, the one container this application hands Leaflet.
- *
- * The container's own colour belongs here too: Leaflet's `.leaflet-container`
- * rule sits outside every cascade layer, and unlayered CSS beats the layered
- * utilities Tailwind emits, so `bg-bg-elev` on the element would lose to it.
- */
 /* @third-party-dom leaflet: renders its tiles, controls and attribution into
    DOM it owns, so no JSX element exists to carry a utility class. The rules
    stay unlayered because Leaflet's own `.leaflet-container` rule is unlayered
@@ -116,7 +95,7 @@
 }
 
 .course-map .leaflet-control-attribution {
-  min-height: 44px;
+  min-height: var(--size-touch-target-floor);
   display: flex;
   align-items: center;
   background: color-mix(in oklch, var(--color-bg-elev) 70%, transparent);
@@ -138,11 +117,10 @@
   background: var(--color-bg-elev-2);
 }
 
-/* Leaflet ships 30px controls, which is below the 44px touch floor. */
 .course-map .leaflet-control-zoom a {
-  width: 44px;
-  height: 44px;
-  line-height: 44px;
+  width: var(--size-touch-target-floor);
+  height: var(--size-touch-target-floor);
+  line-height: var(--size-touch-target-floor);
 }
 
 .course-map .leaflet-marker-icon {

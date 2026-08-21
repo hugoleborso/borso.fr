@@ -14,7 +14,6 @@ function readSelectedLanguage(value: string): SupportedLanguage {
   return SUPPORTED_LANGUAGES.find((language) => language === value) ?? 'fr';
 }
 
-/** Interface language picker, which remembers the choice for the next visit. */
 // @FollowsBlueprint molecule-presentational
 export function LanguageSwitcher() {
   const { t, i18n } = useTranslation();

@@ -1,19 +1,3 @@
-/**
- * Assembles pragma's architecture graph and writes the browsable page.
- *
- * Run `pnpm exec tsx scripts/architecture/architecture-graph.ts` to regenerate,
- * and add `--check` to fail when the committed output is stale or when the
- * manifest and the code disagree about which external systems exist.
- *
- * The five levels this emits are the four C4 levels plus one between component
- * and code. Level 3.5 exists because component is too coarse to trust and code
- * is too fine to read: it walks one bounded context end to end, from the HTTP
- * route through the service and repository functions to the tables and external
- * systems, and on the front from the calling module through the query hook to
- * the endpoint it reaches. It is the level at which a reader can decide whether
- * a slice does what its name claims without opening a file.
- */
-
 import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -57,35 +41,15 @@ const REPOSITORY_ROOT = resolve(import.meta.dirname, '../..');
 const OUTPUT_DIRECTORY = join(REPOSITORY_ROOT, 'docs/architecture');
 const SKIPPED_DIRECTORIES = new Set(['node_modules', 'dist', 'cdk.out', '__fixtures__']);
 
-/**
- * True for a directory holding tooling state rather than application source.
- *
- * The named list cannot anticipate the next tool: a Stryker run that is killed
- * leaves `.stryker-tmp/sandbox-*`, a whole copy of the application, and the
- * scan counted it as more application — pragma read 501 files instead of 249,
- * every context appeared twice, and the committed page went stale against a
- * tree nobody had edited. Every tool in this repository writes its scratch
- * state to a dot-directory, so that is the rule rather than the roster.
- */
 function isToolingDirectory(name: string): boolean {
   return name.startsWith('.') || SKIPPED_DIRECTORIES.has(name);
 }
 const SOURCE_PATTERN = /\.tsx?$/;
-/**
- * The repository a commit link points at. Read from a constant rather than from
- * `git remote`, because a fork's remote would change every emitted page and the
- * `--check` gate compares exact bytes.
- */
 const REPOSITORY_SLUG = 'hugoleborso/borso.fr';
-/** How much of a sha a reader needs to recognise the revision they compared against. */
 const SHORT_SHA_LENGTH = 12;
-/** The two levels that draw a file inside a named group, in the order they appear. */
 const GROUPING_LEVELS = ['container', 'component'] as const;
-/** Lines of a file the modal shows before it stops. */
 const MAXIMUM_MODAL_LINES = 400;
-/** A document's whole history is small; this only stops a runaway read. */
 const MAXIMUM_GIT_OUTPUT_BYTES = 8 * 1024 * 1024;
-/** The revision a tree's history was read at, short, or `unknown` outside git. */
 function readHeadRevision(root: string): string {
   try {
     return execFileSync('git', ['rev-parse', '--short', 'HEAD'], {
@@ -97,18 +61,7 @@ function readHeadRevision(root: string): string {
   }
 }
 
-/** The standard documents in a directory, or none when it is not there. */
-/**
- * The authored standards, which is not every markdown file in the folder.
- *
- * Six of the documents beside them are generated reports that no commit
- * carries, and the Standards tab is built from each file's history: asking git
- * for a revision of an untracked path prints `fatal: … exists on disk, but not
- * in <sha>` once per revision per application, and renders a rule whose whole
- * history is empty. Tracked is the test because it is exactly the property the
- * tab needs.
- */
-function listStandardFileNames(directory: string, root: string): string[] {
+function listTrackedStandardFileNames(directory: string, root: string): string[] {
   try {
     const tracked = new Set(
       execFileSync('git', ['ls-files', 'docs/standards'], { cwd: root, encoding: 'utf8' })
@@ -123,7 +76,6 @@ function listStandardFileNames(directory: string, root: string): string[] {
   }
 }
 
-/** The files under a directory, or none when the directory is not there. */
 function listSourceFilesOrEmpty(directory: string): string[] {
   try {
     return listSourceFiles(directory);
@@ -139,10 +91,6 @@ export interface FileHistory {
   readonly subject: string;
 }
 
-/**
- * When a file last changed, and how often, so a pattern can be read as current
- * or as something nobody has touched since it was written.
- */
 function readFileHistory(repositoryRelativePath: string, root: string): FileHistory | null {
   try {
     const last = execFileSync(
@@ -167,7 +115,6 @@ export interface StandardVersion {
   readonly sha: string;
   readonly date: string;
   readonly subject: string;
-  /** The document as it stood at that commit. */
   readonly text: string;
 }
 
@@ -175,11 +122,9 @@ export interface StandardEntry {
   readonly path: string;
   readonly title: string;
   readonly rule: string;
-  /** Every commit that touched it, newest first, with the text at each. */
   readonly versions: readonly StandardVersion[];
 }
 
-/** A git read, or the empty string when git has nothing to say about the path. */
 function readGitOutput(root: string, argumentList: readonly string[]): string {
   try {
     return execFileSync('git', [...argumentList], {
@@ -192,7 +137,6 @@ function readGitOutput(root: string, argumentList: readonly string[]): string {
   }
 }
 
-/** Commits touching a path, newest first, with the file's text at each. */
 function readVersions(repositoryRelativePath: string, root: string): StandardVersion[] {
   const log = readGitOutput(root, [
     'log',
@@ -215,17 +159,9 @@ function readVersions(repositoryRelativePath: string, root: string): StandardVer
     });
 }
 
-/**
- * The written rules, each with its whole history.
- *
- * A blueprint says which example to copy and a standard says what the rule is,
- * and a rule that changed is more interesting than a rule that exists: the page
- * carries every version so a reader can pick two commits and see what the
- * repository decided in between, without leaving for a git client.
- */
 function listStandards(root: string): StandardEntry[] {
   const directory = 'docs/standards';
-  const names = listStandardFileNames(join(root, directory), root);
+  const names = listTrackedStandardFileNames(join(root, directory), root);
   return names.map((name) => {
     const path = `${directory}/${name}`;
     const text = readSourceOrEmpty(path, root);
@@ -240,7 +176,6 @@ function listStandards(root: string): StandardEntry[] {
   });
 }
 
-/** A file's own source, for the modal, with a cap so a long one stays readable. */
 function readCappedSource(repositoryRelativePath: string, root: string): string {
   return capSource(readSourceOrEmpty(repositoryRelativePath, root));
 }
@@ -251,14 +186,12 @@ function capSource(text: string): string {
   return `${lines.slice(0, MAXIMUM_MODAL_LINES).join('\n')}\n\n// … ${lines.length - MAXIMUM_MODAL_LINES} more lines, see the file`;
 }
 
-/** A file as one revision had it, or the empty string when it was not there. */
 function readSourceAt(revision: string, repositoryRelativePath: string): string {
   return capSource(
     readGitOutput(REPOSITORY_ROOT, ['show', `${revision}:${repositoryRelativePath}`]),
   );
 }
 
-/** File contents, or the empty string when the file is not there yet. */
 function readSourceOrEmpty(repositoryRelativePath: string, root: string = REPOSITORY_ROOT): string {
   try {
     return readFileSync(join(root, repositoryRelativePath), 'utf8');
@@ -269,14 +202,6 @@ function readSourceOrEmpty(repositoryRelativePath: string, root: string = REPOSI
 
 const HTML_MODULE_SCRIPT = /<script[^>]+type=["']module["'][^>]+src=["']([^"']+)["']/g;
 
-/**
- * The modules an application's HTML pages load directly.
- *
- * A page built without a bundler entry convention names its script in the
- * markup and nowhere else, so this is the only place the scan can learn that
- * the file is where a person's visit begins rather than a module like any
- * other.
- */
 function readHtmlEntries(applicationRoot: string, scanRoot: string): string[] {
   const found: string[] = [];
   for (const page of listFilesNamed(applicationRoot, 'index.html')) {
@@ -327,37 +252,21 @@ export interface GraphNode {
   readonly blueprints: readonly string[];
   readonly followsBlueprints: readonly string[];
   readonly fileCount: number;
-  /** The layer this node's code sits in, shown on the block itself. */
   readonly layer?: string;
-  /** `path:line`, so a reader can open the real thing. */
   readonly location?: string;
-  /** Key into the shared source map, when this node is a function. */
   readonly sourceKey?: string;
-  /** Size and shape of the code behind this node. */
   readonly metrics?: NodeMetrics;
-  /** Emoji drawn before the name, so a block is sorted before it is read. */
   readonly icon?: string;
-  /** Plain rows printed under the name. */
   readonly lines?: readonly string[];
-  /** Pills printed under the rows: blueprint, size, complexity. */
   readonly chips?: readonly NodeChip[];
 }
 
 export interface NodeChip {
   readonly icon: string;
   readonly text: string;
-  /** Drives the pill's colour, and is a class name in the page. */
   readonly tone: 'plain' | 'blueprint' | 'complexity' | 'size' | 'warn';
 }
 
-/**
- * The pills a block prints for the code behind it.
- *
- * `total` distinguishes a sum from a reading of one function: a container
- * showing `cx 2313` is the complexity of everything inside it added up, which
- * says nothing about any one file, and a block that does not say so invites the
- * number to be read as a single measurement.
- */
 function metricChips(metrics: NodeMetrics, isAggregate: boolean): NodeChip[] {
   const suffix = isAggregate ? ' total' : '';
   return [
@@ -403,13 +312,6 @@ function containerIdOf(file: ArchitectureFile): string {
 
 export type NodeStatus = 'added' | 'changed' | 'moved' | 'removed';
 
-/**
- * What a branch did to each block, keyed by node id and level.
- *
- * The diff page is the map with these applied, because a list of paths answers
- * "what changed" and a coloured graph answers "what changed *where*", which is
- * the question a reviewer actually has.
- */
 export type StatusByNode = ReadonlyMap<string, NodeStatus>;
 
 export interface LayerCoverage {
@@ -420,20 +322,11 @@ export interface LayerCoverage {
 
 export interface LevelCoverage {
   readonly levelId: string;
-  /** What being drawn by this level means, so the number can be read. */
   readonly rule: string;
   readonly byLayer: readonly LayerCoverage[];
   readonly uncovered: readonly string[];
 }
 
-/**
- * How much of the codebase a level actually draws, per layer.
- *
- * A level that shows everything says so in one line, and one that does not
- * lists what it left out. The distinction matters most at 3.5, where a file no
- * user action reaches is either dead or the back end of a feature with no front
- * end — and nothing on the page said which files those were.
- */
 function buildLevelCoverage(
   levelId: string,
   rule: string,
@@ -492,7 +385,6 @@ function validateExternals(
   return problems;
 }
 
-/** What "outside" means for each kind of external, spelled out on the block. */
 const BOUNDARY_LABEL: Readonly<Record<string, string>> = {
   'third-party': 'a third party',
   aws: 'an AWS service this account owns',
@@ -609,11 +501,8 @@ function buildContainerLevel(
       lines: [
         container.technology,
         ...(container.hosting === undefined ? [] : [container.hosting]),
-        // A container with no scanned file used to print "no source in this
-        // repository", which is false for anything whose source is simply not
-        // TypeScript under `apps/<slug>/`. The note says which it is.
-        ...(owned.length === 0 && container.sourceNote !== undefined
-          ? wrapNote(container.sourceNote)
+        ...(owned.length === 0 && container.noScannedSourceNote !== undefined
+          ? wrapNote(container.noScannedSourceNote)
           : []),
       ],
       chips:
@@ -622,7 +511,7 @@ function buildContainerLevel(
               {
                 icon: FILE_ICON,
                 text:
-                  container.sourceNote === undefined
+                  container.noScannedSourceNote === undefined
                     ? 'no file the scan reads'
                     : 'source outside the scan',
                 tone: 'plain' as const,
@@ -701,7 +590,6 @@ function buildContainerLevel(
   };
 }
 
-/** A note broken into block-width rows, since a block prints one row at a time. */
 const NOTE_ROW_CHARACTERS = 58;
 
 function wrapNote(note: string): string[] {
@@ -719,7 +607,6 @@ function wrapNote(note: string): string[] {
   return rows;
 }
 
-/** The folder a group of files shares, which is what names the block. */
 function commonFolder(files: readonly ArchitectureFile[], applicationPrefix: string): string {
   const folders = files.map((file) => file.path.split('/').slice(0, -1));
   const first = folders[0] ?? [];
@@ -747,9 +634,6 @@ function buildComponentLevel(
   }
 
   const containerName = new Map(manifest.containers.map((each) => [each.id, each.name]));
-  // A context is named after its folder, and `root` or `lib` occurs under more
-  // than one container. Two blocks reading `root` is the diagram failing to say
-  // which is which, so the container joins the name where the name repeats.
   const nameCount = new Map<string, number>();
   for (const id of grouped.keys()) {
     const name = id.split('::')[1] ?? id;
@@ -788,11 +672,6 @@ function buildComponentLevel(
           ? [{ icon: ROUTE_ICON, text: `${routeCount} routes`, tone: 'plain' as const }]
           : []),
         ...metricChips(metrics, true),
-        // One pill per blueprint made a context with nine patterns the widest
-        // block on the level, and a reader could not compare two contexts
-        // without counting. The count plus the share of files carrying a marker
-        // is the comparable form; the ids are on the block's card and in
-        // Patterns.
         {
           icon: BLUEPRINT_ICON,
           text: `${blueprintIds.length} pattern${blueprintIds.length === 1 ? '' : 's'} · ${markedCount}/${owned.length} marked`,
@@ -841,7 +720,6 @@ export interface SliceRoute {
   readonly tables: readonly string[];
   readonly externals: readonly string[];
   readonly callers: readonly string[];
-  /** Modules naming this path as a URL string rather than through the client. */
   readonly urlCallers: readonly string[];
 }
 
@@ -853,10 +731,6 @@ export interface ContextSlice {
   readonly files: readonly { path: string; layer: string; lineCount: number }[];
 }
 
-/**
- * Walk one back-end bounded context from its HTTP routes down to the tables and
- * external systems each one reaches, and record which front-end modules call it.
- */
 function buildSlices(
   files: readonly ArchitectureFile[],
   extraUrlSources: ReadonlyMap<string, readonly string[]>,
@@ -1015,12 +889,6 @@ export interface BlueprintEntry {
   readonly followers: readonly string[];
 }
 
-/**
- * Blueprints are declared repository-wide and followed per application, so the
- * declaration has to be looked for outside this application's own files. Half
- * the pattern list read `not declared` when it was only ever "declared in
- * another application", which is a different statement entirely.
- */
 function readRepositoryDeclarations(root: string): Map<string, string> {
   const declaredIn = new Map<string, string>();
   const pattern = /@Blueprint\s+([\w-]+)/g;
@@ -1051,9 +919,6 @@ function buildBlueprintOverlay(
       followers.set(blueprintId, [...(followers.get(blueprintId) ?? []), file.path]);
     }
   }
-  // Only the ids this application actually uses. The repository declares many
-  // more, and listing a pattern no file here follows would pad the view with
-  // other applications' business.
   const used = new Set([...files.flatMap((file) => file.blueprints), ...followers.keys()]);
   return [...used].sort().map((id) => ({
     id,
@@ -1090,14 +955,6 @@ export interface ArchitectureModelJson {
   readonly blueprints: readonly { id: string; file: string; followerCount: number }[];
 }
 
-/**
- * The graph as sorted data, committed beside the page.
- *
- * A generated HTML file diffs badly, so the same graph is written as JSON with
- * every list sorted. That makes an architecture change legible in `git diff`
- * and lets `architecture-diff.ts` say what moved between two branches without
- * re-parsing either tree.
- */
 function buildModelJson(
   files: readonly ArchitectureFile[],
   manifest: ArchitectureManifest,
@@ -1163,19 +1020,12 @@ function buildModelJson(
   };
 }
 
-/** The value following a flag, or null when the flag is absent. */
 function readFlag(name: string): string | null {
   const index = process.argv.indexOf(name);
   if (index === -1) return null;
   return process.argv[index + 1] ?? null;
 }
 
-/**
- * The node ids each level would have drawn for a scanned tree.
- *
- * Rebuilt from the committed model of the target branch rather than kept
- * alongside it, so a branch opened before any of this existed still compares.
- */
 function nodeIdentitiesOf(model: ArchitectureModel): {
   context: Map<string, string>;
   container: Map<string, string>;
@@ -1206,9 +1056,6 @@ function nodeIdentitiesOf(model: ArchitectureModel): {
     containerByPath.set(file.path, containerId);
     componentByPath.set(file.path, id);
     digestByPath.set(file.path, file.digest);
-    // A file count is invariant under a rename, and a layer is invariant under
-    // any edit; both make a busy branch read as untouched. The digest is what
-    // makes "changed" a state these levels can actually reach.
     code.set(file.path, `${file.container}/${file.layer}/${file.digest}`);
   }
   const joined = (entries: Map<string, string[]>): Map<string, string> =>
@@ -1230,15 +1077,6 @@ function nodeIdentitiesOf(model: ArchitectureModel): {
 
 type ModelIdentities = ReturnType<typeof nodeIdentitiesOf>;
 
-/**
- * Paths this branch renamed, as `new path` → `old path`.
- *
- * Git's own rename detection when a base revision is at hand, which catches a
- * move that also edited the file; identical content otherwise, which catches
- * only a pure move. Without this, a branch that renamed twenty-five modules
- * reports twenty-five additions and twenty-five deletions, and a reviewer
- * reading "twenty-five new files" goes looking for code that does not exist.
- */
 function renamesBetween(
   base: ModelIdentities,
   head: ModelIdentities,
@@ -1275,12 +1113,6 @@ function renamesBetween(
   return renames;
 }
 
-/**
- * Added, changed or removed per node, by comparing two models' identities.
- *
- * A block is changed when the thing behind it changed — the files a context
- * holds, the count a container reports — not when a line moved inside a file.
- */
 function statusesBetween(
   base: ReadonlyMap<string, string>,
   head: ReadonlyMap<string, string>,
@@ -1297,13 +1129,6 @@ function statusesBetween(
   return statuses;
 }
 
-/**
- * Code statuses with renames folded in.
- *
- * A renamed file is one event, not an addition beside a deletion: its new path
- * carries `moved` when the content is identical and `changed` when the branch
- * edited it on the way, and its old path drops out of the removed set.
- */
 function codeStatuses(
   base: ModelIdentities,
   head: ModelIdentities,
@@ -1320,14 +1145,6 @@ function codeStatuses(
   return statuses;
 }
 
-/**
- * Externals whose declaration merely appeared, rather than a call site moving.
- *
- * `reachedFrom` is built from `@DependsOnExternal` tags, so a branch that tags
- * a tree for the first time turns every external amber and the colour stops
- * discriminating. Nothing was reached differently; the map only learned to say
- * so, and a diff that cannot tell those apart should say neither.
- */
 function contextStatuses(base: ModelIdentities, head: ModelIdentities): Map<string, NodeStatus> {
   const statuses = statusesBetween(base.context, head.context);
   for (const [id, status] of statuses) {
@@ -1336,14 +1153,6 @@ function contextStatuses(base: ModelIdentities, head: ModelIdentities): Map<stri
   return statuses;
 }
 
-/**
- * Component statuses, with a group whose files all moved elsewhere marked
- * `moved` rather than `removed`.
- *
- * Re-bucketing a front end by feature empties the folder-shaped groups without
- * deleting a line, and a tombstone over a folder that still exists costs a
- * reviewer a real investigation to disprove.
- */
 function componentStatuses(
   base: ModelIdentities,
   head: ModelIdentities,
@@ -1365,7 +1174,6 @@ function componentStatuses(
   return { statuses, regroupedInto };
 }
 
-/** A block for something the target branch had and this one does not. */
 function ghostNode(id: string, label: string, kind: string, detail: string): GraphNode {
   return {
     id,
@@ -1381,12 +1189,6 @@ function ghostNode(id: string, label: string, kind: string, detail: string): Gra
   };
 }
 
-/**
- * How many files entered and left each group, as a line the block can carry.
- *
- * A group that took twenty-five files in and let twenty-five out nets to zero,
- * and a reviewer reading only the total concludes nothing happened there.
- */
 function fileMovement(
   base: ModelIdentities,
   head: ModelIdentities,
@@ -1433,7 +1235,6 @@ function fileMovement(
   return byLevel;
 }
 
-/** A block for a group this branch emptied by re-bucketing rather than deleting. */
 function regroupedNode(
   id: string,
   label: string,
@@ -1474,14 +1275,6 @@ interface DiffPageOptions {
   readonly outputDirectory: string;
 }
 
-/**
- * The map again, with what this branch did to it.
- *
- * A list of paths answers "what changed" and a coloured graph answers "what
- * changed *where*", which is the question a reviewer has. Blocks the target
- * branch had and this one does not are drawn as their own nodes rather than
- * left out, because a diagram cannot show a deletion by omitting it.
- */
 async function writeDiffPage(options: DiffPageOptions): Promise<void> {
   const basePath = join(options.diffBase, `${options.manifest.application}-architecture.json`);
   const baseText = readSourceOrEmpty(basePath, '/');
@@ -1504,9 +1297,6 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
     ['container', statusesBetween(base.container, head.container)],
     ['component', component.statuses],
     ['code', code],
-    // A pattern gained, lost, or with a different declaring file or follower
-    // count is an architectural change like any other, so the Blueprints table
-    // carries the same colours as the graphs.
     ['blueprint', statusesBetween(base.blueprint, head.blueprint)],
   ]);
 
@@ -1576,10 +1366,6 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
     diffRef: options.diffRef,
   });
 
-  // The counts, beside the page, because the index is written by a different
-  // invocation than the one that built this diff: the workflow runs the
-  // generator once per application, so nothing in a single run knows what the
-  // others found. A file in the output folder is what they share.
   writeFileSync(
     join(options.outputDirectory, `${options.manifest.application}-diff.json`),
     `${JSON.stringify({ counts: report.counts }, null, 2)}\n`,
@@ -1609,14 +1395,6 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
   );
 }
 
-/**
- * The dialog's sources, with the earlier text attached to every file this
- * branch edited.
- *
- * Reading ninety lines of final source to find the six that moved is the work
- * the page exists to remove, so on a diff page the dialog opens on the change
- * and offers the whole file second.
- */
 function withBaseSources(
   sources: Readonly<Record<string, SourceEntry>>,
   code: ReadonlyMap<string, NodeStatus>,
@@ -1645,13 +1423,6 @@ interface DiffReportInput {
   readonly diffRef: string | null;
 }
 
-/**
- * The counts a reviewer needs before reading a single block.
- *
- * Absolute totals answer "how big is this application", which is not the
- * question a page titled *what this branch moved* is asked. Without these,
- * "nothing was removed" and "removals are not rendered" look identical.
- */
 function buildDiffReport(input: DiffReportInput): DiffReport {
   const { base, baseModel, headModel, code, renames, diffRef } = input;
   const countOf = (wanted: NodeStatus): number =>
@@ -1701,11 +1472,8 @@ interface BuildOptions {
   readonly scanRoot: string;
   readonly outputDirectory: string;
   readonly isCheck: boolean;
-  /** True when scanning a checkout other than this one, which softens the gates. */
   readonly isForeignTree: boolean;
-  /** Directory holding the target branch's models, when a diff page is wanted. */
   readonly diffBase: string | null;
-  /** The revision the diff page compares against, when the caller knows it. */
   readonly diffRef: string | null;
 }
 
@@ -1730,10 +1498,6 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   const problems = validateExternals(files, manifest);
   if (problems.length > 0) {
     for (const problem of problems) console.error(`  ${problem}`);
-    // A scan of another checkout is modelling the target branch, which predates
-    // whichever tag or manifest entry this branch adds. Failing there would
-    // report every new external as a broken build rather than as the change it
-    // is, so the mismatch is only fatal for the tree being committed.
     if (!isForeignTree) {
       console.error(`${problems.length} architecture manifest problem(s).`);
       process.exit(1);
@@ -1812,9 +1576,6 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     buildLevelCoverage('code', 'Every file is a row.', files, () => true),
   ];
 
-  // One source map for the whole page: the journey graphs key their functions,
-  // and level 4 and the pattern list key whole files, so a click anywhere opens
-  // the same dialog rather than each view carrying its own copy.
   const pageSources: Record<string, SourceEntry> = Object.fromEntries(journeys.sources);
   for (const file of files) {
     pageSources[`file:${file.path}`] = {
@@ -1886,13 +1647,6 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   }
 
   if (isCheck) {
-    /**
-     * Neither the page nor the model is committed, so there is nothing to
-     * compare them against and `--check` writes them like any other run. What
-     * it still refuses is a `@DependsOnExternal` naming a system the manifest
-     * does not declare, and a declared external no file reaches — which is
-     * checked while the model is built, above.
-     */
     writeFileSync(pagePath, page);
     writeFileSync(modelPath, model);
     console.log(
@@ -1911,14 +1665,6 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   );
 }
 
-/**
- * What each application's diff run found, read back out of the output folder.
- *
- * The workflow runs this generator once per application to build the diff
- * maps, so no single invocation knows what the others found and the index has
- * to describe all of them. Each diff run leaves its counts in
- * `<app>-diff.json`; this reads whichever ones are there.
- */
 function readDiffSummaries(outputDirectory: string): ReadonlyMap<string, DiffSummary> {
   const summaries = new Map<string, DiffSummary>();
   for (const manifest of ARCHITECTURE_MANIFESTS) {
@@ -1932,29 +1678,15 @@ function readDiffSummaries(outputDirectory: string): ReadonlyMap<string, DiffSum
 }
 
 async function main(): Promise<void> {
-  // `--list` prints the applications a caller can loop over, so a workflow does
-  // not carry a second copy of the register that would drift from this one.
   if (process.argv.includes('--list')) {
     for (const manifest of ARCHITECTURE_MANIFESTS) console.log(manifest.application);
     return;
   }
   const isCheck = process.argv.includes('--check');
-  /**
-   * `--app-root` points the scan at another checkout of one application, which
-   * is how the pull-request workflow models the target branch: it runs this
-   * script, at this revision, against a worktree of the merge base. The target
-   * branch does not have to carry the generator for its graph to exist.
-   */
   const applicationRootFlag = readFlag('--app-root');
   const outputDirectory = readFlag('--out') ?? OUTPUT_DIRECTORY;
   const requested = readFlag('--app');
-  /** Where the target branch's models sit, when a coloured diff page is wanted. */
   const diffBase = readFlag('--diff-base');
-  /**
-   * The base revision, when the caller has it. Git's own rename detection needs
-   * a revision to compare against, and a rename it misses reads as an addition
-   * beside a deletion — the one mistake that makes a diff page lie about size.
-   */
   const diffRef = readFlag('--diff-ref');
   if (requested !== null && manifestFor(requested) === undefined) {
     console.error(
@@ -1999,7 +1731,6 @@ async function main(): Promise<void> {
     });
   }
 
-  // The index is a page like any other, so it is generated and not committed.
   if (isCheck) return;
 
   const indexPath = join(outputDirectory, 'index.html');

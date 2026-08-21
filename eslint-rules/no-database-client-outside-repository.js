@@ -2,36 +2,6 @@ import { isTestPath } from './impurity.js';
 import { isTypeOnlyModuleSource, onEveryModuleSource } from './module-source.js';
 import { toPosixPath } from './site-paths.js';
 
-/**
- * Keeping the client import inside repositories is what makes "what writes to
- * this table" a one file question. A service that reaches for `getDatabase()`
- * writes a query nobody will find when the column is renamed, and a controller
- * that does it has skipped both other layers.
- *
- * The rule allows a type only import, because `import type { Database }` names
- * the handle a repository method takes as an argument, and every service and
- * controller that passes one along needs the type. The type carries no query
- * and disappears at compile time, so it is not the client.
- *
- * A re-export is an import and an export in one statement, so
- * `export { getDatabase } from '../database/client'` is checked exactly like
- * the import it contains. Without that, a service could re-export the client
- * and every controller downstream would import it from a path this rule does
- * not recognise, which is how a controller ended up opening the database.
- *
- * What this deliberately allows:
- *
- * - `*.repository.ts`, which is the layer that owns the client, and
- *   `database/client.ts` itself.
- * - `import type { Database } from '../database/client'`, and an import whose
- *   specifiers are all `type` specifiers.
- * - `../database/schema`, which is table definitions rather than a connection.
- * - A test, and the harness under `apps/<app>/test/`, which builds the test
- *   database the back end end to end suite runs against.
- *
- * See docs/standards/11-database.md and
- * docs/standards/04-backend-architecture.md.
- */
 const MESSAGE =
   'Only a `*.repository.ts` file may import the database client. Move the query into the ' +
   "slice's repository and call it from the service, so the tables have one owner. A type only " +

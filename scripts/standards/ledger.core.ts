@@ -1,31 +1,10 @@
-/**
- * Turns the facts gathered about a citation into a verdict, and renders the
- * ledger.
- *
- * Kept apart from `enforcement-ledger.ts` so the rule that decides whether a
- * claim holds is testable without an ESLint instance, a checkout, or a file
- * system.
- */
-
 import type { Citation, CitationKind, StandardCitations } from './citations.core';
 
 export type Verdict = 'enforced' | 'reviewer' | 'unscoped' | 'broken';
 
-/** What the repository could be found to say about one cited mechanism. */
 export interface MechanismFacts {
-  /** The mechanism is registered, or the file is on disk. */
   readonly exists: boolean;
-  /**
-   * Where the mechanism actually runs. A rule enabled nowhere, or a script no
-   * hook and no workflow invokes, is a claim with nothing behind it.
-   */
   readonly activeScopes: readonly string[];
-  /**
-   * The scopes the mechanism could have covered. When `activeScopes` is a
-   * strict subset, the rule is real but does not reach every application, which
-   * is how `borso/no-outbound-call-outside-adapter` came to be dead on two
-   * applications while its standard read as repository-wide.
-   */
   readonly candidateScopes: readonly string[];
 }
 
@@ -84,7 +63,6 @@ export interface OrphanMechanism {
 export interface LedgerInput {
   readonly standards: readonly StandardCitations[];
   readonly resolutionsByStandard: ReadonlyMap<string, readonly ResolvedCitation[]>;
-  /** A mechanism that exists and that no standard claims. */
   readonly orphans: readonly OrphanMechanism[];
 }
 
@@ -96,9 +74,7 @@ export interface LedgerProblem {
 export function selectLedgerProblems(input: LedgerInput): readonly LedgerProblem[] {
   const problems: LedgerProblem[] = [];
   for (const standard of input.standards) {
-    // Stryker disable next-line ArrayDeclaration: equivalent mutant. The
-    // fallback stands in for a standard the map has no entry for, and the loop
-    // body only reads `verdict`, which no injected filler carries.
+    // Stryker disable next-line ArrayDeclaration: equivalent mutant, the loop body reads only verdict
     for (const resolved of input.resolutionsByStandard.get(standard.standard) ?? []) {
       if (resolved.verdict === 'broken' || resolved.verdict === 'unscoped') {
         problems.push({ standard: standard.standard, message: resolved.detail });
@@ -186,16 +162,13 @@ export function renderLedger(input: LedgerInput): string {
     '',
   );
   for (const standard of input.standards) {
-    // Stryker disable next-line ArrayDeclaration: equivalent mutant. The
-    // fallback stands in for a standard the map has no entry for, and the
-    // filter that follows keeps only entries whose `verdict` is `reviewer`,
-    // which no injected filler carries.
+    // Stryker disable next-line ArrayDeclaration: equivalent mutant, the filter keeps only verdict reviewer
     const reviewerClaims = (input.resolutionsByStandard.get(standard.standard) ?? []).filter(
       (resolved) => resolved.verdict === 'reviewer',
     );
     if (reviewerClaims.length === 0) continue;
     lines.push(`### ${standard.title}`, '');
-    for (const resolved of reviewerClaims) lines.push(`- ${resolved.citation.claim}`);
+    for (const resolved of reviewerClaims) lines.push(`- ${resolved.citation.bullet}`);
     lines.push('');
   }
 

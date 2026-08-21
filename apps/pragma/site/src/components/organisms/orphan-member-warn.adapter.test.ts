@@ -1,10 +1,3 @@
-/**
- * The module owns a Set that lives as long as the page does, so each test
- * imports the module fresh — a warning already emitted in an earlier test
- * would otherwise be silently swallowed in the next one, which is exactly the
- * behaviour under test.
- */
-
 import { describe, expect, it, vi } from 'vitest';
 
 type Warner = typeof import('./orphan-member-warn.adapter').warnIfOrphanMemberIds;

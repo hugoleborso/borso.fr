@@ -1,11 +1,3 @@
-/**
- * Every message the admin screens show when a write fails.
- *
- * Each function maps a rejected request to the translation key that explains
- * it, so the panels hold no status code arithmetic and the mapping has its own
- * tests. An unnamed failure falls back to the message the error carried.
- */
-
 import { ApiError } from '../../lib/api-error';
 import type { PhotoRejection } from './runner-form.core';
 import { RunnerPhotoRejectedError, RunnerPhotoUploadFailedError } from './runner-photo.errors';
@@ -66,7 +58,6 @@ function readStatus(error: unknown): number | null {
   return null;
 }
 
-/** Why the API refused a create or replace on an edition. */
 /**
  * @Blueprint core-error-to-key
  * @BlueprintName Core Error To Translation Key
@@ -82,7 +73,6 @@ export function selectEditionWriteError(error: unknown): AdminErrorMessage {
   return buildMessage('admin.setup.invalid-input-detail', { summary });
 }
 
-/** Why the API refused to delete an edition. */
 export function selectEditionDeleteError(error: unknown): AdminErrorMessage {
   if (readStatus(error) === CONFLICT_STATUS) return buildMessage('admin.setup.delete-locked');
   return fallbackMessage(error);
@@ -98,7 +88,6 @@ const PHOTO_KEY_BY_REJECTION: Readonly<
   'too-large': 'admin.runners.photo-too-large',
 };
 
-/** Why registering a runner failed, including before the request was sent. */
 export function selectRunnerCreateError(error: unknown): AdminErrorMessage {
   if (error instanceof RunnerPhotoRejectedError) {
     return buildMessage(PHOTO_KEY_BY_REJECTION[error.rejection], {
@@ -112,7 +101,6 @@ export function selectRunnerCreateError(error: unknown): AdminErrorMessage {
   return fallbackMessage(error);
 }
 
-/** Why the API refused a punch, which is usually a duplicate for the loop. */
 export function selectPunchError(error: unknown, runnerName: string): AdminErrorMessage {
   if (readStatus(error) === CONFLICT_STATUS) {
     return buildMessage('admin.punch.already-punched', { name: runnerName });
@@ -120,7 +108,6 @@ export function selectPunchError(error: unknown, runnerName: string): AdminError
   return fallbackMessage(error);
 }
 
-/** Why the API refused the administrator PIN. */
 export function selectAdminLoginError(error: unknown): AdminErrorMessage {
   const status = readStatus(error);
   if (status === TOO_MANY_REQUESTS_STATUS) return buildMessage('admin.rate-limited');

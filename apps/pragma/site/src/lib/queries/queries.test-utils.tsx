@@ -1,17 +1,3 @@
-/**
- * Test-side scaffolding for TanStack Query mutation tests.
- *
- * Each test runs against a fresh `QueryClient` so the cache doesn't
- * bleed across siblings. `stubFetch` replaces `globalThis.fetch`, and
- * `deferred()` lets a test observe the optimistic UI state between
- * dispatch and the server reply.
- *
- * The wrapper-component path is preferred over `renderHook` from
- * `@testing-library/react` because the project doesn't depend on that
- * library — see `apps/pragma/site/src/components/molecules/use-media-query.test.tsx`
- * for the same `react-dom/client` pattern.
- */
-
 import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
@@ -102,13 +88,6 @@ export function deferred<T>(): { promise: Promise<T>; resolve: (value: T) => voi
   return { promise, resolve: resolver };
 }
 
-/**
- * Yields the microtask queue ten times so all pending microtasks
- * scheduled by `mutate()` (`cancelQueries` awaits, `setQueryData`
- * notifications, observer rerenders) have flushed before the next
- * assertion. Ten turns covers TanStack Query's longest chain in both
- * `onMutate` and `onError`/`onSettled`.
- */
 export async function flushMicrotasks(): Promise<void> {
   await act(async () => {
     for (let turn = 0; turn < MICROTASK_FLUSH_TURNS; turn += 1) {
@@ -117,16 +96,6 @@ export async function flushMicrotasks(): Promise<void> {
   });
 }
 
-/**
- * A slot a probe component publishes its `mutateAsync` handle into.
- *
- * The probe calls `sink` while React renders it, which TypeScript's control
- * flow analysis cannot see, so a plain `let capturedDispatch: Mutate | null =
- * null` stays narrowed to `null` and the check that follows reads as always
- * true. Putting the write behind `sink` and the read behind `read` makes the
- * absent case a real question again, and gives every suite the same message
- * when a probe never rendered.
- */
 export function createMutateSlot<Dispatch>(): {
   readonly sink: (dispatch: Dispatch) => void;
   readonly read: () => Dispatch;

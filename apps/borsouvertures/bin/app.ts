@@ -1,21 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * CDK entry point for `borsouvertures.borso.fr` — chess openings PWA.
- *
- * Required env:
- *   - CDK_DEFAULT_ACCOUNT (or AWS_ACCOUNT_ID)
- *   - STAGE = 'prod' | 'preview'        (default 'prod')
- *   - PR_NUMBER                         (required when STAGE=preview)
- *
- * Stage routing:
- *   - prod    → stack borsouvertures-prod, alias borsouvertures.borso.fr
- *   - preview → stack borsouvertures-pr-<N>, hosted at
- *               borsouvertures-pr-<N>.preview.borso.fr
- *
- * Builds the static assets via the workspace's `build` script before synth/
- * deploy (chained in package.json), so the construct's `assetsPath: './dist'`
- * is always populated.
- */
 
 import { requireAwsAccount, requireDeployStage, requirePrNumber, StaticSite } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';

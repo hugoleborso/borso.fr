@@ -1,12 +1,4 @@
-/**
- * Session detail — read-only display by default. Mirrors the
- * prototype's `ConcertDetail` (sessions.jsx lines 108-202) and
- * `PracticeDetail` (lines 222-277). The concert read view + practice
- * read view live in sibling files so this page stays a thin
- * orchestrator: data fetch, edit-mode toggle, and the region listing
- * the setlists the session carries.
- * @Feature sessions
- */
+/** @Feature sessions */
 
 import type { JSX } from 'react';
 import { useMemo, useState, useSyncExternalStore } from 'react';

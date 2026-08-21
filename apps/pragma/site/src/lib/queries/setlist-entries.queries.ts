@@ -1,29 +1,4 @@
-/**
- * The entries of one setlist: the songs, their order, and everything
- * written on each of them. The setlist itself is read and written next
- * door in `setlists.queries.ts`.
- *
- * Every mutation here is optimistic: `onMutate` snapshots the
- * `{ entries }` cache, applies a pure transform from
- * `setlists.utils.ts`, returns the snapshot as `context.previous`;
- * `onError` rolls back.
- *
- * **Only the append refetches.** It is the one write here whose result the
- * client does not already hold — the server names the new entry's id. A patch,
- * a delete and a reorder are each fully determined by the request, so the
- * optimistic cache is already the answer and a `GET` can only be worse than
- * it: an immediate read after the write can land on a different Lambda and
- * DSQL connection and see a pre-commit snapshot, overwriting correct state
- * with stale state (Aurora DSQL read-after-write visibility is per
- * connection). Any later entries fetch reconciles once the write has
- * propagated, and a genuine failure rolls back through `onError`. See
- * docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md.
- *
- * The append's own refetch waits for the entry-mutation family to drain (see
- * `optimistic.utils.ts`), because a refetch from an early tick otherwise lands
- * after a later optimistic write and snaps it back.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
@@ -121,12 +96,6 @@ export function useAppendSetlistEntry() {
   });
 }
 
-/**
- * What one setlist row may change about itself, derived from the endpoint that
- * stores it. The components that carry a patch from a field up to the mutation
- * pass this rather than a bag of unknowns, so a key the API does not accept is
- * a type error where the field is written rather than a 400 in the browser.
- */
 export type SetlistEntryPatch = Parameters<
   (typeof api.api.setlists)[':id']['entries'][':entryId']['$put']
 >[0]['json'];

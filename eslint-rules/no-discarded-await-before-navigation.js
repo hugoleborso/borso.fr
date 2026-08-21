@@ -1,37 +1,3 @@
-/**
- * An optimistic write is only optimistic if the interface moves before the
- * server answers. `onMutate` writing the cache is half of it; the other half is
- * the caller not standing still. `await save.mutateAsync(payload)` followed by
- * `navigateTo(...)` parks the operator on the form for the whole round trip and
- * shows them nothing, which is exactly the bug the optimistic write was added
- * to prevent — reported on pragma as "updating the artist does no optimistic
- * update", against a mutation whose `onMutate` had been patching both caches
- * correctly all along.
- *
- * The discriminator is whether the awaited value is used. A create awaits
- * because the route it navigates to needs the server-issued id:
- *
- *   const created = await createSong.mutateAsync(payload);
- *   navigateTo(`/catalog/${created.song.id}`);
- *
- * An update has nothing to wait for, so the await is pure latency:
- *
- *   await updateSong.mutateAsync({ id, ...payload });   // flagged
- *   navigateTo(`/catalog/${id}`);
- *
- * So the rule reports an `await` of a mutation whose result is discarded when a
- * navigation follows it in the same block. Rewrite as `mutate(...)` and
- * navigate, and surface a failed write where the operator now is.
- *
- * It reports only writes the cache can answer for: the receiver has to come
- * from a `useCreate…` / `useUpdate…` / `useDelete…` hook in the same file. A
- * login is the shape this excludes on purpose — `await login.mutateAsync(...)`
- * then navigate is correct, because there is no optimistic cache standing in
- * for the session and a wrong password has to keep the operator on the form.
- *
- * See docs/dantotsus/the-optimistic-update-nobody-could-see.md.
- */
-
 const MESSAGE =
   'This awaits a write whose result is discarded, then navigates — so the operator waits out ' +
   'the round trip and never sees the optimistic update. Call `mutate(...)` and navigate ' +
@@ -52,11 +18,6 @@ function readReceiverName(node) {
   return callee.object.type === 'Identifier' ? callee.object.name : null;
 }
 
-/**
- * True when the receiver was declared in scope from an entity-write hook, which
- * is what tells us a cache already holds the new values. An unresolvable
- * receiver is left alone rather than guessed at.
- */
 function isEntityWriteReceiver(context, node, receiverName) {
   let scope = context.sourceCode.getScope(node);
   while (scope !== null) {
@@ -70,7 +31,6 @@ function isEntityWriteReceiver(context, node, receiverName) {
   return false;
 }
 
-/** An `await` whose value nobody reads: the whole statement is the await. */
 function isDiscardedAwaitOfMutation(context, statement) {
   if (statement.type !== 'ExpressionStatement') return false;
   if (statement.expression.type !== 'AwaitExpression') return false;

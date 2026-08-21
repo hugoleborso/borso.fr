@@ -1,10 +1,4 @@
 /**
- * Barrel for every Drizzle table in the app. `drizzle-kit` reads from
- * here (configured in `drizzle.config.ts`); the migration runner Lambda
- * applies the generated `.sql` files via the `DsqlSchema` construct.
- */
-
-/**
  * @Blueprint database-schema-barrel
  * @BlueprintName Database Schema Barrel
  * @BlueprintUsage Use for the one module the migration tool reads, so every table is named in a single place while each declaration stays inside the slice that owns it.

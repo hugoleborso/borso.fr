@@ -1,20 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Writes `blueprint-context.json`, the lookup the blueprint seeding hook reads
- * when a new source file is about to be written.
- *
- * Usage:
- *   pnpm exec tsx .claude/skills/blueprint/blueprint-context.ts [--check]
- *
- * The hook could import `blueprint-utils.ts` directly and skip this file. It
- * does not, because starting `tsx` costs about a second, and the hook runs on
- * every Write. Paying that on each file write taxes a whole session to answer a
- * question whose answer changes only when an annotation changes. So the answer
- * is precomputed here and the hook resolves it with one `jq` call.
- *
- * The layer tables are emitted rather than restated, so the hook decides a
- * layer from the same data `inferLayer` uses and the two cannot drift.
- */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
@@ -44,11 +28,6 @@ const SKIPPED_DIRECTORY_NAMES = new Set([
 ]);
 const SOURCE_EXTENSIONS = new Set(['.ts', '.tsx', '.js']);
 
-/**
- * Which standard governs a layer. A hook that names the blueprint and not the
- * rule teaches the shape without the reason, and the reason is what tells you
- * when the shape does not apply.
- */
 const STANDARD_BY_LAYER: Readonly<Record<string, string>> = {
   controller: 'docs/standards/04-backend-architecture.md',
   service: 'docs/standards/04-backend-architecture.md',
@@ -91,6 +70,13 @@ function listSourceFiles(directory: string): string[] {
   return found;
 }
 
+const TEST_BUCKET_PREFIX = 'test/';
+
+function readBlueprintBucketKey(relativePath: string): string {
+  const layerKey = `${inferProject(relativePath)}/${inferLayer(relativePath)}`;
+  return isTestFile(relativePath) ? `${TEST_BUCKET_PREFIX}${layerKey}` : layerKey;
+}
+
 function buildContext(): string {
   const blueprintsByKey = new Map<string, BlueprintSummary[]>();
   const followerCounts = new Map<string, number>();
@@ -107,18 +93,9 @@ function buildContext(): string {
     }
   }
 
-  // Every annotation rather than the first, because one file can declare two:
-  // `songs.queries.ts` carries both `query-module` and `query-optimistic-mutation`.
-  //
-  // A blueprint declared in a test file is bucketed under `test/`. `inferLayer`
-  // deliberately reports a test in the layer of the code it covers, which keeps
-  // the coverage map one grid, but it means `test-back-e2e` would otherwise be
-  // the first thing offered to someone writing a controller. The hook never
-  // seeds a test file, so these keys simply go unread.
   for (const absolutePath of allFiles) {
     const relativePath = path.relative(REPOSITORY_ROOT, absolutePath);
-    const layerKey = `${inferProject(relativePath)}/${inferLayer(relativePath)}`;
-    const key = isTestFile(relativePath) ? `test/${layerKey}` : layerKey;
+    const key = readBlueprintBucketKey(relativePath);
     for (const annotation of readBlueprintAnnotations(fs.readFileSync(absolutePath, 'utf8'))) {
       const summaries = blueprintsByKey.get(key) ?? [];
       summaries.push({

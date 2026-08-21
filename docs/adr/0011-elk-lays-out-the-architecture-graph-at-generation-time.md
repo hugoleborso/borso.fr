@@ -180,3 +180,23 @@ because the layout is computed once and committed.
   `cytoscape.min.js` 435,503 (136,809 gz); `vis-network.min.js` 435,001
   (124,426 gz).
 - Related ADRs: none. This is the first decision about the architecture map.
+
+## The options, and what they were measured against
+
+These numbers are why the layout options are what they are. Nothing in the code
+can recompute them, and each was taken on the component level of the real graph.
+
+- **`nodePlacement`: `SIMPLE`, not `BRANDES_KOEPF`.** All four placement
+  strategies reach **zero edge crossings** here, so crossings do not decide it
+  and area does: `SIMPLE` gives **2926 x 709**, `BRANDES_KOEPF` **3007 x 1087**.
+- **`edgeRouting`: `POLYLINE`, not `SPLINES`.** `SPLINES` reaches the same zero
+  crossings and emits roughly **three times the points**, which is page weight
+  for no readability gain.
+
+## The text-width constants are measured, not guessed
+
+Label boxes are sized from a per-character width because the layout runs before
+a browser exists. The constants come from `getComputedTextLength` in the page:
+**9.016 px per character** for a node name at its 15 px weight, and **6.315 px**
+for the lines beneath it. The code carries 9.3 and 6.5 — the measured figures
+plus headroom, so a slightly wider glyph set does not overflow the box.

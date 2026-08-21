@@ -1,13 +1,4 @@
-/**
- * Login page — the only public route. Submits the shared password via
- * `useLogin()` mutation, redirects to the originating page on success
- * (or /catalog if there isn't one), surfaces the spec-defined error
- * states (rate-limited, wrong password, not bootstrapped).
- *
- * Design bundle source of truth: cream paper, centred card, blue
- * accent on the submit button, serif italic display title.
- * @Feature auth
- */
+/** @Feature auth */
 
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';

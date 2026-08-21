@@ -1,10 +1,4 @@
-/**
- * The setlists a session carries, with the two ways to add one — write a
- * new one, or attach one the band already has — and a way to detach each
- * of them. Detaching leaves the setlist alive, because another session
- * may be playing it and the index holds it either way.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useState } from 'react';

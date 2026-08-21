@@ -196,6 +196,17 @@ done
 #     nothing, and `{a}` alone matches nothing either because a single-element
 #     brace never expands. Stryker then instruments zero files and exits 1 on
 #     "No tests were executed". Comma-separated plain paths, no braces.
+# Stryker defaults to four workers per run, and this gate starts one run per
+# changed app plus tooling plus infra, each of which would then take four. On a
+# four-core machine that is twenty-eight processes against four cores, and the
+# victims are the CDK synth tests in the *other* gates: one measured 5s alone
+# and timed out past 60s under the wave. Handing each run the number in flight
+# lets it take a share instead of the whole machine. An upper bound is enough
+# and costs no second pass over the file selection below, so an app with no
+# gated files is counted too.
+BORSO_MUTATION_RUNS_IN_FLIGHT=$(( $(echo "$changed_app_slugs" | grep -c . || echo 0) + 2 ))
+export BORSO_MUTATION_RUNS_IN_FLIGHT
+
 if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
   for app in $changed_app_slugs; do
     # `|| true` because a grep that matches nothing exits 1, and a failing

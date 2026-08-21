@@ -46,6 +46,13 @@ Configurable via `DsqlSchemaCloneFromConfig`:
 - **Re-deploy of the same PR**: `ON CONFLICT DO NOTHING` keeps existing
   rows; new prod rows propagate. Deletions in prod don't propagate
   (acceptable for preview — re-create the PR if you need a fresh start).
+- **A singleton row that exists to mirror the source** (a credential or
+  config row with a fixed primary key): `ON CONFLICT DO NOTHING` is
+  wrong for it, because the conflict clause keeps the stale copy
+  forever. Name the table in `DsqlSchema`'s `truncateBeforeClone`, which
+  empties it in the target immediately before the rows are copied, so
+  the source wins outright. The default is right for domain data and
+  only ever wrong for this shape.
 - **Schema drift** (PR adds a column not yet in prod): `LIKE INCLUDING
   ALL` copies prod's columns, the PR migration's `ALTER TABLE ADD
   COLUMN` adds the new one (nullable per the DSQL §10 constraint, see
@@ -81,3 +88,20 @@ data + decide what to clone vs blocklist.
 - `infra/cdk/src/internal/migration-runner/index.ts` — the runner integration (function `cloneFromSchema`).
 - `infra/cdk/src/constructs/dsql-schema.ts` — the `DsqlSchemaCloneFromConfig` prop.
 - `docs/knowledge/dsql-postgres-compat-gaps.md` — the DSQL-vs-Postgres divergences this design accommodates.
+
+## last-loop-lepin blocks `admin_credentials`, and a fresh preview is admin-locked
+
+`last-loop-lepin` makes the opposite call to `pragma` (see
+[ADR-0009](../adr/0009-pragma-previews-clone-production.md)): it **blocks**
+`admin_credentials` from the clone. A preview is a public URL and must not hold
+production's PIN hash. ADR-0004 moved that PIN out of a stage-shared Secrets
+Manager entry into a per-schema row precisely so each stage would carry its own,
+and cloning the row from prod would put the sharing back by another route.
+
+**The consequence, which is the part that confuses an operator:** a freshly
+deployed preview has **no admin PIN at all**, so its admin area is unreachable
+until someone seeds the row. That is by design, not a broken deploy.
+
+`pragma` can afford the opposite because there the *data* is the secret and the
+password is what guards it; here the cloned data is race results that production
+publishes anyway, so the PIN was the only secret worth protecting.

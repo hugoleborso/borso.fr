@@ -8,16 +8,12 @@ const clientFile = 'apps/last-loop-lepin/api/src/database/client.ts';
 // @FollowsBlueprint test-lint-rule
 createRuleTester(serviceFile, { jsx: false }).run('no-database-client-outside-repository', rule, {
   valid: [
-    // The handle a repository method takes, which every layer passes along.
     "import type { Database } from '../database/client';",
     "import { type Database } from '../database/client';",
-    // Tables rather than a connection.
     "import { punchesTable } from '../database/schema';",
     "import { punchRepository } from './punch.repository';",
     "import { drizzle } from 'drizzle-orm/node-postgres';",
-    // A module whose name merely starts the same way.
     "import { clientVersion } from '../database/client-version';",
-    // A re-export carrying only the type is the type import in another shape.
     "export type { Database } from '../database/client';",
     "export { type Database } from '../database/client';",
     "export { recordPunch } from './punch.repository';",
@@ -35,8 +31,6 @@ createRuleTester(serviceFile, { jsx: false }).run('no-database-client-outside-re
       code: "import { getDatabase } from '../../api/src/database/client';",
       errors: [{ messageId: 'databaseClientOutsideRepository' }],
     },
-    // A re-export hands the client to every module downstream through a path
-    // this rule would not otherwise see.
     {
       code: "export { getDatabase } from '../database/client';",
       errors: [{ messageId: 'databaseClientOutsideRepository' }],
@@ -48,7 +42,6 @@ createRuleTester(serviceFile, { jsx: false }).run('no-database-client-outside-re
   ],
 });
 
-// The repository owns the client, and `database/client.ts` is the client.
 createRuleTester(repositoryFile, { jsx: false }).run(
   'no-database-client-outside-repository (repository file)',
   rule,
@@ -67,7 +60,6 @@ createRuleTester(clientFile, { jsx: false }).run(
   },
 );
 
-// The harness that builds the test database, which is not named `.test.ts`.
 createRuleTester('apps/last-loop-lepin/test/database-utils.ts', { jsx: false }).run(
   'no-database-client-outside-repository (test harness)',
   rule,
@@ -77,8 +69,6 @@ createRuleTester('apps/last-loop-lepin/test/database-utils.ts', { jsx: false }).
   },
 );
 
-// A controller is the layer furthest from the client, and it is where the
-// import shows up most often in practice.
 createRuleTester('apps/last-loop-lepin/api/src/punch/punch.controller.ts', { jsx: false }).run(
   'no-database-client-outside-repository (controller file)',
   rule,

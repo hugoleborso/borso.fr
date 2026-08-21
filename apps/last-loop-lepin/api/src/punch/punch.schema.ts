@@ -11,21 +11,11 @@ import { z } from 'zod';
 import { editionSlugSchema } from '../edition/edition.schema';
 import { runnerSlugSchema } from '../runner/runner.schema';
 
-// Foreign keys to `runners` are intentionally not declared. Aurora DSQL
-// rejects `ALTER TABLE ADD CONSTRAINT` (drizzle-kit's FK emission shape),
-// and the engine doesn't enforce FK semantics at write time anyway.
-// App-level invariants are kept by the service layer.
-//
-// The previous partial unique index `(edition_slug, runner_slug, loop_index)
-// WHERE voided_at IS NULL` is gone too: DSQL doesn't support partial
-// indexes (`WHERE not supported for CREATE INDEX`) and a full unique on
-// the same columns would block the void-then-re-punch flow. The
-// re-punch guard now lives entirely in `validatePunchTiming` (app side).
 /**
  * @Blueprint schema-dsql-constraints
  * @BlueprintName Schema With DSQL Constraints Written Down
- * @BlueprintUsage Use for a table on Aurora DSQL, so every constraint the engine refuses is recorded beside the column with the guard that replaces it.
- * @BlueprintDescription Declares the table without the foreign keys and the partial unique index DSQL rejects, and names in the surrounding comments both what was refused and where the application level replacement lives, so a reader does not take the missing constraint for an oversight and reintroduce it.
+ * @BlueprintUsage Use for a table on Aurora DSQL, so every constraint the engine refuses carries an application level guard instead of a database one.
+ * @BlueprintDescription Declares the table without the foreign keys and the partial unique index Aurora DSQL rejects, and leaves the rules they would have held to the slice's own code, where `validatePunchTiming` keeps one punch per runner and loop. The engine gaps are listed in docs/knowledge/dsql-postgres-compat-gaps.md and the invariants in the application's VOCABULARY.md.
  */
 export const loopPunchesTable = pgTable('loop_punches', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -36,10 +26,6 @@ export const loopPunchesTable = pgTable('loop_punches', {
   correctedAt: timestamp('corrected_at', { withTimezone: true, mode: 'date' }),
   voidedAt: timestamp('voided_at', { withTimezone: true, mode: 'date' }),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-  // `source` stays nullable at the DB level — DSQL rejects ALTER TABLE
-  // post-creation NOT NULL/DEFAULT (cf. docs/knowledge/dsql-postgres-compat-gaps.md §10).
-  // The app-level narrow lives in `punch.repository.ts:narrowPunchSource`.
-  // No IP column by design (cf. spec Q.O.D. Q8 option (d)).
   source: text('source'),
   clientLat: doublePrecision('client_lat'),
   clientLng: doublePrecision('client_lng'),
@@ -90,9 +76,6 @@ export const selfPunchInputSchema = z.object({
 export const createDidNotFinishInputSchema = z.object({
   editionSlug: editionSlugSchema,
   runnerSlug: runnerSlugSchema,
-  // 0 = the runner didn't even close the first loop (the system projects
-  // them as `dnf:late` with `outAtLoop = 0`, and the orga may also mark a
-  // pre-race abandon by hand). Anything below 0 is meaningless.
   outAtLoop: z.number().int().nonnegative(),
   reason: z.enum(['late', 'manual']),
 });

@@ -6,15 +6,8 @@ const FROM_SLICE_END = 2;
 const TO_SLICE_END = 4;
 const DEFAULT_ARROW_COLOR = '#5bc86e';
 
-// Square is just `string` after react-chessboard v5 widened its public type.
-// The runtime gate is `SQUARE_PATTERN.test(value)` in {@link toSquare}.
 type Square = string;
 
-/**
- * Not a type guard, deliberately. `Square` is `string`, so narrowing on it
- * would make the failing branch `never` and leave `value` unprintable in the
- * error {@link toSquare} throws.
- */
 export function isSquare(value: string): boolean {
   return SQUARE_PATTERN.test(value);
 }
@@ -29,7 +22,6 @@ export function isPromotionPiece(value: string): value is PieceSymbol {
   return value === 'q' || value === 'r' || value === 'b' || value === 'n';
 }
 
-/** Optional promotion suffix (5th char of a UCI move). Kings/pawns can never appear here. */
 export function parsePromotion(value: string): PieceSymbol | undefined {
   return isPromotionPiece(value) ? value : undefined;
 }
@@ -46,14 +38,6 @@ export function uciPromotion(uci: string): PieceSymbol | undefined {
   return parsePromotion(uci.slice(TO_SLICE_END));
 }
 
-/**
- * Build a react-chessboard v5 `Arrow` object.
- *
- * v5 ships L-shaped paths automatically when `(startSquare, endSquare)`
- * describes a knight move — we just hand it the two endpoints. The color is
- * a default; callers may override via `arrowOptions.color` on the board or
- * by mapping `(arrow) => ({ ...arrow, color: ... })` for per-arrow tints.
- */
 export function uciToArrow(uci: string): Arrow {
   return {
     startSquare: uciFromSquare(uci),

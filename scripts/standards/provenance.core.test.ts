@@ -43,7 +43,6 @@ describe('readEradicationSection', () => {
     expect(readEradicationSection('## Eradication\n\nships borso/b')).toBe('\n\nships borso/b');
   });
 
-  /** The next heading opening one character in is still the next heading. */
   it('stops at a heading that follows the eradication heading immediately', () => {
     const markdown = '## Eradication \n## What to check next time\n\nnames borso/c\n';
     expect(readEradicationSection(markdown)).toBe(' ');
@@ -87,8 +86,7 @@ describe('summariseProvenance', () => {
 });
 
 describe('rankRecords', () => {
-  /** The rule with more evidence is named later in the alphabet on purpose. */
-  it('puts the rules with the most evidence first', () => {
+  it('puts the rules with the most evidence first, against alphabetical order', () => {
     const ranked = rankRecords([
       buildRecord({ rule: 'borso/a', dantotsuSlugs: ['x'] }),
       buildRecord({ rule: 'borso/b', dantotsuSlugs: ['x', 'y'] }),
@@ -142,7 +140,6 @@ describe('renderProvenanceReport', () => {
     ]);
   });
 
-  /** Two rules no standard cites, both registered and enabled nowhere. */
   it('renders the whole page, both warnings included, for a flagged pair of rules', () => {
     const rendered = renderProvenanceReport(
       [

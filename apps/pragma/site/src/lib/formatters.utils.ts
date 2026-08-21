@@ -1,13 +1,3 @@
-/**
- * Pure formatters used across the UI.
- *  - `formatSessionDate(iso, locale)` formats an ISO string into a
- *    locale-aware "Sat 13 Sep 2025" / "sam. 13 sept. 2025" line.
- *  - `formatCapacity(value)` returns `'—'` on null / undefined, the
- *    integer formatted with thin spaces otherwise.
- *
- * No DOM, no React. 100%-covered.
- */
-
 const THIN_SPACE = ' ';
 
 // @FollowsBlueprint utils-formatter

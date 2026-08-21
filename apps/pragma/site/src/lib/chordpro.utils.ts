@@ -1,17 +1,4 @@
-/**
- * Minimal ChordPro renderer. Parses ChordPro source into a flat list
- * of typed segments the chord-chart viewer can render: directive
- * lines (title/key/comment), section headers ({start_of_chorus}),
- * chord-over-lyric lines, blank lines. The actual visual rendering is
- * delegated to a thin React wrapper around the output of this
- * function — keeping the parser pure makes the chord viewer
- * unit-testable without a DOM.
- *
- * Spec note: this is a minimal parser, sufficient for the v1 viewer
- * (chord-above-lyric layout, transposable). Tab + Lilypond blocks are
- * left as raw text — the viewer renders them in a `<pre>` block.
- * @Feature songs
- */
+/** @Feature songs */
 
 export interface ChordToken {
   readonly kind: 'chord';
@@ -92,7 +79,6 @@ export function parseChordPro(source: string): readonly ChordProLine[] {
 
 const TITLE_DIRECTIVE_NAMES = new Set(['title', 't']);
 
-/** ChordPro spells the title directive both in full and abbreviated. */
 export function isTitleDirective(directiveName: string): boolean {
   return TITLE_DIRECTIVE_NAMES.has(directiveName);
 }
@@ -103,10 +89,6 @@ function isKeyDirective(directiveName: string): boolean {
   return KEY_DIRECTIVE_NAMES.has(directiveName);
 }
 
-/**
- * Returns the title declared via `{title: ...}` or `{t: ...}` if any.
- */
-/** The directive lines of a parsed chart, in source order. */
 export function directiveLines(lines: readonly ChordProLine[]): readonly DirectiveLine[] {
   const directives: DirectiveLine[] = [];
   for (const line of lines) {
@@ -124,23 +106,19 @@ export function readTitle(lines: readonly ChordProLine[]): string | null {
 
 export type ChordProSectionKind = 'verse' | 'chorus' | 'bridge' | 'tab' | 'body';
 
-/** Every section kind that carries a heading on screen. */
 export type LabelledSectionKind = Exclude<ChordProSectionKind, 'body'>;
 
-/** An unmarked stretch of chart, between or before the marked blocks. */
 export interface BodySection {
   readonly kind: 'body';
   readonly label: null;
-  readonly ordinal: null;
+  readonly ordinalAmongKind: null;
   readonly lines: readonly ChordProLine[];
 }
 
 export interface LabelledSection {
   readonly kind: LabelledSectionKind;
-  /** The directive argument, e.g. `{start_of_verse: Intro riff}`. */
   readonly label: string | null;
-  /** Rank among the sections sharing this kind, counting from one. */
-  readonly ordinal: number;
+  readonly ordinalAmongKind: number;
   readonly lines: readonly ChordProLine[];
 }
 
@@ -149,7 +127,6 @@ export type ChordProSection = BodySection | LabelledSection;
 const BODY_SECTION_KIND = 'body';
 const FIRST_ORDINAL = 1;
 
-// ChordPro spells every section marker in full and abbreviated.
 const SECTION_START_DIRECTIVES = new Map<string, ChordProSectionKind>([
   ['start_of_verse', 'verse'],
   ['sov', 'verse'],
@@ -192,20 +169,13 @@ function rankByKind(sections: readonly AccumulatingSection[]): readonly ChordPro
   const seenPerKind = new Map<LabelledSectionKind, number>();
   return sections.map((section) => {
     const { kind, label, lines } = section;
-    if (kind === BODY_SECTION_KIND) return { kind, label: null, ordinal: null, lines };
-    const ordinal = (seenPerKind.get(kind) ?? NO_SECTION_SEEN_YET) + FIRST_ORDINAL;
-    seenPerKind.set(kind, ordinal);
-    return { kind, label, ordinal, lines };
+    if (kind === BODY_SECTION_KIND) return { kind, label: null, ordinalAmongKind: null, lines };
+    const ordinalAmongKind = (seenPerKind.get(kind) ?? NO_SECTION_SEEN_YET) + FIRST_ORDINAL;
+    seenPerKind.set(kind, ordinalAmongKind);
+    return { kind, label, ordinalAmongKind, lines };
   });
 }
 
-/**
- * Groups parsed lines into the verse / chorus / bridge blocks a reader
- * scans for on stage. Lines outside any marker collect into `body`
- * sections, which are dropped when they hold nothing but blanks so the
- * gap between two marked blocks does not render as an empty heading.
- * A section left unclosed at the end of the source is still returned.
- */
 export function groupChordProSections(lines: readonly ChordProLine[]): readonly ChordProSection[] {
   const closed: AccumulatingSection[] = [];
   let current = openSection(BODY_SECTION_KIND, null);
@@ -216,10 +186,7 @@ export function groupChordProSections(lines: readonly ChordProLine[]): readonly 
     current = openSection(BODY_SECTION_KIND, null);
   };
   for (const line of lines) {
-    // Stryker disable next-line ConditionalExpression: equivalent mutant. This
-    // narrows the union so `line.name` type-checks; at runtime every other line
-    // kind lacks `name`, so both marker lookups miss and the line is pushed
-    // either way.
+    // Stryker disable next-line ConditionalExpression: equivalent mutant
     if (line.kind === 'directive') {
       const startedKind = SECTION_START_DIRECTIVES.get(line.name);
       if (startedKind !== undefined) {
@@ -238,12 +205,6 @@ export function groupChordProSections(lines: readonly ChordProLine[]): readonly 
   return rankByKind(closed);
 }
 
-/**
- * Transposes a single chord by an integer number of semitones. Only
- * the chord root is shifted; the suffix (m, 7, maj7, sus2, …) stays
- * intact. Returns the original chord unchanged if it can't be parsed
- * as a known root.
- */
 const NOTES_SHARP: readonly string[] = [
   'C',
   'C#',
@@ -276,15 +237,16 @@ const NOTES_IN_OCTAVE = 12;
 const ROOT_PATTERN = /^[A-G][#b]?/;
 const FLAT_SIGN = 'b';
 
+function chromaticIndexOfRoot(root: string): number {
+  return root.endsWith(FLAT_SIGN) ? NOTES_FLAT.indexOf(root) : NOTES_SHARP.indexOf(root);
+}
+
 export function transposeChord(chord: string, semitones: number): string {
   const rootMatch = ROOT_PATTERN.exec(chord);
   if (rootMatch === null) return chord;
   const root = rootMatch[0];
   const suffix = chord.slice(root.length);
-  // Flats: convert via the flat table first, then re-emit in the
-  // sharp convention (the parser is forgiving on input, normalised on
-  // output).
-  const rootIndex = root.endsWith(FLAT_SIGN) ? NOTES_FLAT.indexOf(root) : NOTES_SHARP.indexOf(root);
+  const rootIndex = chromaticIndexOfRoot(root);
   if (rootIndex === -1) return chord;
   const next = (((rootIndex + semitones) % NOTES_IN_OCTAVE) + NOTES_IN_OCTAVE) % NOTES_IN_OCTAVE;
   return `${NOTES_SHARP[next]}${suffix}`;
@@ -295,11 +257,6 @@ function transposeDirective(line: DirectiveLine, semitones: number): DirectiveLi
   return { kind: 'directive', name: line.name, value: transposeChord(line.value, semitones) };
 }
 
-/**
- * Shifts every chord the chart draws, including the one the `{key: …}`
- * directive prints above them: a key label left at its written value while the
- * chords move says the song is in a key the chart no longer plays.
- */
 export function transposeLines(
   lines: readonly ChordProLine[],
   semitones: number,
@@ -319,17 +276,11 @@ export function transposeLines(
   });
 }
 
-/** A `body` run is an unmarked stretch of chart, so it carries no heading. */
 export function hasSectionHeading(section: ChordProSection): section is LabelledSection {
   return section.kind !== BODY_SECTION_KIND;
 }
 
-/**
- * Names a section for the reader. The first block of a kind stays
- * unnumbered, because "Chorus" reads better than "Chorus 1" on a chart
- * carrying a single chorus; every later block takes its rank.
- */
-export function buildSectionHeading(displayName: string, ordinal: number): string {
-  if (ordinal <= FIRST_ORDINAL) return displayName;
-  return `${displayName} ${ordinal}`;
+export function buildSectionHeading(displayName: string, ordinalAmongKind: number): string {
+  if (ordinalAmongKind <= FIRST_ORDINAL) return displayName;
+  return `${displayName} ${ordinalAmongKind}`;
 }

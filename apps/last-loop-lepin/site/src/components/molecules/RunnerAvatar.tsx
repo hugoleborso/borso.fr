@@ -20,12 +20,6 @@ interface RunnerAvatarProps {
 }
 
 /**
- * Avatar surface used by the leaderboard, the map, the elevation profile, and
- * the self punch dialog. It renders the runner's photo when there is one and
- * swaps to the initials placeholder when the image fails to load, which is a
- * DOM event and so needs one piece of state and no effect.
- */
-/**
  * @Blueprint molecule-view-selector
  * @BlueprintName Molecule With A Selected View
  * @BlueprintUsage Use for a molecule that renders one of several shapes, where the choice depends on props plus one small piece of local state.

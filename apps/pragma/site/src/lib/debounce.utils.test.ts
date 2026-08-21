@@ -1,8 +1,3 @@
-/**
- * 100%-coverage gate for the debounce primitive. Uses Vitest's fake
- * timers to step the timer queue deterministically.
- */
-
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { debounce } from './debounce.utils';
 

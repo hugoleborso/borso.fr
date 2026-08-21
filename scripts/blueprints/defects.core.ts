@@ -1,24 +1,4 @@
-/**
- * Reads which blueprint each dantotsu implicates, and aggregates the result.
- *
- * A blueprint is the canonical example of a pattern, and `blueprint-index.md`
- * already answers how widely each one has been copied. Adoption on its own is
- * the wrong signal: a pattern with forty-seven followers and three defects
- * traced to its shape has propagated a mistake forty-seven times, and the high
- * follower count makes that look like success.
- *
- * So a dantotsu may name the blueprints whose shape let the defect through, in
- * its front matter:
- *
- *     blueprints: [optimistic-mutation, query-module]
- *
- * The field is optional, because most defects implicate no pattern. It is not
- * blame: naming a blueprint says the pattern permitted the mistake, which is
- * worth knowing precisely when the pattern is otherwise working.
- */
-
 export interface DantotsuReference {
-  /** The dantotsu's file name without the extension. */
   readonly slug: string;
   readonly title: string;
   readonly blueprintIds: readonly string[];
@@ -33,13 +13,9 @@ const FRONT_MATTER_PATTERN = /^---\n([\s\S]*?)\n---/;
 const BLUEPRINTS_FIELD_PATTERN = /^blueprints:\s*\[([^\]]*)\]\s*$/m;
 const TITLE_PATTERN = /^#\s+(.+)$/m;
 
-/** The `blueprints: [a, b]` front-matter field, or an empty list. */
 export function readBlueprintIds(markdown: string): readonly string[] {
   const frontMatter = FRONT_MATTER_PATTERN.exec(markdown)?.[1];
-  // Stryker disable next-line ConditionalExpression: equivalent mutant. The
-  // guard is what lets the next line take a `string`; without it `exec` reads
-  // `undefined` as the literal text `"undefined"`, which the blueprints
-  // pattern never matches, so the guard below returns the same empty list.
+  // Stryker disable next-line ConditionalExpression: equivalent mutant, the next guard returns the same empty list
   if (frontMatter === undefined) return [];
   const namedIds = BLUEPRINTS_FIELD_PATTERN.exec(frontMatter)?.[1];
   if (namedIds === undefined) return [];
@@ -58,10 +34,6 @@ export function readDantotsuReference(slug: string, markdown: string): DantotsuR
   };
 }
 
-/**
- * A dantotsu naming a blueprint that does not exist. Usually a renamed
- * blueprint, which is exactly when the link is worth keeping.
- */
 export function selectUnknownBlueprintReferences(
   references: readonly DantotsuReference[],
   knownBlueprintIds: ReadonlySet<string>,
@@ -110,23 +82,9 @@ export interface BlueprintAnnotation {
 
 const BLUEPRINT_NAME_PATTERN = /@BlueprintName\s+(.+)/;
 const BLUEPRINT_USAGE_PATTERN = /@BlueprintUsage\s+(.+)/;
-// The identifier is on the marker's own line. `\s+` would step over the
-// newline and read the JSDoc's closing `*/` as an identifier. The two patterns
-// accept the same separators, so every declaration the scan finds is one the
-// identifier pattern can read.
 const BLUEPRINT_MARKER_PATTERN = /@Blueprint[ \t]/g;
 const BLUEPRINT_ID_PATTERN = /@Blueprint[ \t]+([A-Za-z0-9][\w-]*)/;
 
-/**
- * Every blueprint a file declares.
- *
- * Reading only the first one loses the second, and files do carry two:
- * `songs.queries.ts` declares `query-module` and `query-optimistic-mutation`,
- * and a generator that stopped at the first reported the second as a blueprint
- * that does not exist. Each identifier's name and usage are read from the span
- * up to the next declaration, so two blocks in one file do not borrow each
- * other's text.
- */
 export function readBlueprintAnnotations(contents: string): readonly BlueprintAnnotation[] {
   const annotations: BlueprintAnnotation[] = [];
   const starts = [...contents.matchAll(BLUEPRINT_MARKER_PATTERN)].map((match) => match.index);
@@ -138,13 +96,9 @@ export function readBlueprintAnnotations(contents: string): readonly BlueprintAn
     if (id === undefined) continue;
     annotations.push({
       id,
-      // Stryker disable next-line OptionalChaining: equivalent mutant. The
-      // capture group is not optional, so a match always carries it; the `?.`
-      // is there because `noUncheckedIndexedAccess` types an index read as
-      // possibly undefined, and nothing at runtime can take that branch.
+      // Stryker disable next-line OptionalChaining: equivalent mutant, only noUncheckedIndexedAccess makes the capture optional
       name: BLUEPRINT_NAME_PATTERN.exec(span)?.[1]?.trim() ?? id,
-      // Stryker disable next-line OptionalChaining: equivalent mutant. Same
-      // reason as the line above.
+      // Stryker disable next-line OptionalChaining: equivalent mutant, only noUncheckedIndexedAccess makes the capture optional
       usage: BLUEPRINT_USAGE_PATTERN.exec(span)?.[1]?.trim() ?? '',
     });
   }
@@ -159,13 +113,6 @@ export interface BlueprintRisk {
   readonly dantotsuSlugs: readonly string[];
 }
 
-/**
- * Blueprints that have a defect against them, worst first.
- *
- * Ordered by how far the pattern has spread rather than by defect count, since
- * one defect in a pattern forty files copy is a bigger problem than three in a
- * pattern nobody uses.
- */
 export function rankBlueprintRisk(
   adoptions: readonly BlueprintAdoption[],
   defects: readonly BlueprintDefectCount[],

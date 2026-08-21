@@ -4,7 +4,7 @@ import { findGate, GATE_DEFINITIONS } from './gates.core';
 
 describe('findGate', () => {
   it('finds a gate by name', () => {
-    expect(findGate('stryker')?.token).toBe('stryker run');
+    expect(findGate('stryker')?.siteMustContain).toBe('stryker run');
   });
 
   it('returns null for a name no gate carries', () => {
@@ -22,15 +22,12 @@ describe('GATE_DEFINITIONS', () => {
     for (const gate of GATE_DEFINITIONS) expect(gate.sites.length).toBeGreaterThan(0);
   });
 
-  /**
-   * The registry is the claim and the checkout is the fact. This test is what
-   * makes removing a step from CI fail here rather than silently weaken a
-   * standard that cites the gate.
-   */
   it('finds each gate running in every site it claims', () => {
     for (const gate of GATE_DEFINITIONS) {
       for (const site of gate.sites) {
-        expect(readFileSync(site, 'utf8'), `${gate.name} in ${site}`).toContain(gate.token);
+        expect(readFileSync(site, 'utf8'), `${gate.name} in ${site}`).toContain(
+          gate.siteMustContain,
+        );
       }
     }
   });

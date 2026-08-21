@@ -1,9 +1,3 @@
-/**
- * Back-e2e for the transition-comments endpoints. Comments are stored
- * on the ordered pair (songA, songB) — A→B is a different musical
- * transition from B→A and warrants its own row.
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
@@ -61,7 +55,6 @@ describe('transitions.controller (back-e2e)', () => {
     );
     expect(fetched.comment.comment).toBe('tricky drop');
 
-    // Update the same pair — must overwrite, not duplicate.
     await jsonRequest(app, `/api/transition-comments/${songAId}/${songBId}`, {
       method: 'PUT',
       body: { comment: 'fixed' },

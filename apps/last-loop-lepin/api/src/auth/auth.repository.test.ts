@@ -100,7 +100,7 @@ describe('auth.repository — admin sessions', () => {
     });
     await purgeExpiredSessions(now);
     expect(await findValidSession('sess-live', now)).not.toBeNull();
-    // Probe with `new Date(0)` so the expires_at filter doesn't itself hide the row.
-    expect(await findValidSession('sess-dead', new Date(0))).toBeNull();
+    const beforeAnySessionCouldExpire = new Date(0);
+    expect(await findValidSession('sess-dead', beforeAnySessionCouldExpire)).toBeNull();
   });
 });

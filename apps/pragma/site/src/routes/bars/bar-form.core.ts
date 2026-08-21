@@ -1,10 +1,4 @@
-/**
- * Bar form vocabulary and the pure translation from the form's string
- * fields to the payload the bars API accepts. The form keeps every
- * field as a string so the inputs stay controlled; this module is the
- * single place that turns those strings back into the domain types.
- * @Feature bars
- */
+/** @Feature bars */
 
 import { z } from 'zod';
 
@@ -72,7 +66,6 @@ export const BLANK_BAR_FORM: BarFormInitial = {
   contactPhone: '',
 };
 
-/** An empty text field means "no value", which the API reads as `null`. */
 function emptyToNull(value: string): string | null {
   return value.length === 0 ? null : value;
 }

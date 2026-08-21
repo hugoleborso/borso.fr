@@ -89,7 +89,6 @@ describe('buildPointTimeFractions', () => {
   });
 
   it('captures non-uniform cadence (uphill slower than downhill)', () => {
-    // First half spans 9s (slow uphill), second half 1s (fast downhill).
     const fractions = buildPointTimeFractions([0, 9000, 10000]) ?? [];
     expect(fractions).toEqual([0, 0.9, 1]);
   });
@@ -125,11 +124,6 @@ const MINIMAL_GPX = `<?xml version="1.0" encoding="UTF-8"?>
   </trk>
 </gpx>`;
 
-// Strava-recorded sample sub-sampled from the 2026-05-14 test edition GPX
-// (`/root/.claude/uploads/.../1dfdb349-Course_a__pied_le_midi.gpx`, 2644
-// trkpts) down to 50 evenly-spaced trkpts (indices `floor(i * (N-1) /
-// (sample-1))`). Inlined as a string constant matching the existing
-// `MINIMAL_GPX` convention — no `__fixtures__` folder introduced.
 const STRAVA_RECORDED_SAMPLE = `<?xml version="1.0" encoding="UTF-8"?>
 <gpx creator="StravaGPX" version="1.1">
  <trk>

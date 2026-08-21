@@ -20,7 +20,6 @@ interface LeaderboardChipProps {
   readonly locale: string;
 }
 
-/** The chip body, shared by the tappable and the display only variants. */
 // @FollowsBlueprint molecule-presentational
 export function LeaderboardChip({ entry, hasFastestLap, locale }: LeaderboardChipProps) {
   const { t } = useTranslation();

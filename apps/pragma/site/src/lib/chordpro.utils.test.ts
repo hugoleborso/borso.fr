@@ -179,13 +179,15 @@ describe('transposeChord', () => {
   });
 
   it('leaves an enharmonic spelling absent from the twelve-tone tables untouched', () => {
-    // Cb and Fb are B and E respelled; E# and B# are F and C respelled.
-    // Neither table lists them, so the chord comes back as written
-    // rather than silently landing a semitone away.
-    expect(transposeChord('Cb', 1)).toBe('Cb');
-    expect(transposeChord('Fbm7', 3)).toBe('Fbm7');
-    expect(transposeChord('E#', 1)).toBe('E#');
-    expect(transposeChord('B#sus4', 2)).toBe('B#sus4');
+    const spellingsNeitherTableLists = [
+      { chord: 'Cb', semitones: 1 },
+      { chord: 'Fbm7', semitones: 3 },
+      { chord: 'E#', semitones: 1 },
+      { chord: 'B#sus4', semitones: 2 },
+    ];
+    for (const { chord, semitones } of spellingsNeitherTableLists) {
+      expect(transposeChord(chord, semitones)).toBe(chord);
+    }
   });
 });
 
@@ -245,7 +247,7 @@ describe('groupChordProSections', () => {
     const sections = groupChordProSections(parseChordPro('[C]Hello'));
     expect(sections).toHaveLength(1);
     expect(sections[0]?.kind).toBe('body');
-    expect(sections[0]?.ordinal).toBeNull();
+    expect(sections[0]?.ordinalAmongKind).toBeNull();
     expect(sections[0]?.label).toBeNull();
     expect(sections[0]?.lines).toHaveLength(1);
   });
@@ -264,7 +266,7 @@ describe('groupChordProSections', () => {
     );
     expect(sections).toHaveLength(1);
     expect(sections[0]?.kind).toBe('verse');
-    expect(sections[0]?.ordinal).toBe(1);
+    expect(sections[0]?.ordinalAmongKind).toBe(1);
     expect(sections[0]?.lines).toHaveLength(1);
   });
 
@@ -277,7 +279,7 @@ describe('groupChordProSections', () => {
     const sections = groupChordProSections(
       parseChordPro('{sov}\nA\n{eov}\n{soc}\nB\n{eoc}\n{sov}\nC\n{eov}\n{soc}\nD\n{eoc}'),
     );
-    expect(sections.map((section) => `${section.kind}${section.ordinal ?? ''}`)).toEqual([
+    expect(sections.map((section) => `${section.kind}${section.ordinalAmongKind ?? ''}`)).toEqual([
       'verse1',
       'chorus1',
       'verse2',

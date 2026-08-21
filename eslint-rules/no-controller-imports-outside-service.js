@@ -1,20 +1,5 @@
 import { onEveryModuleSource } from './module-source.js';
 
-/**
- * Ported from `biome-plugins/no-controller-imports-outside-service.grit`.
- *
- * A controller may import its own service and schema, the shared auth
- * middleware, and third-party packages. Anything else, which includes a
- * repository, a core file, a helper, and another slice's service, is
- * re-exported through this slice's own service.
- *
- * The grit version matched every file in the repository and relied on the
- * import path shapes to imply a controller. Here the rule reads the file name,
- * so it fires only inside `*.controller.ts` and cannot misfire on a service
- * that legitimately imports a repository.
- *
- * See docs/standards/04-backend-architecture.md.
- */
 const MESSAGE =
   'A controller may import only its own `<domain>.service`, its own `<domain>.schema`, the ' +
   'auth middleware, and third-party packages. Re-export anything else, which includes ' +

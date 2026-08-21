@@ -8,10 +8,6 @@ function changeEvent(): Event {
   return new Event('change');
 }
 
-/**
- * jsdom ships no `matchMedia`, so the test stands in a minimal one whose
- * `matches` can be flipped and announced, which is what the hook subscribes to.
- */
 // @FollowsBlueprint test-jsdom-gap-stub
 function installMatchMedia(isReducedMotionInitially: boolean): (isReducedMotion: boolean) => void {
   const state = { matches: isReducedMotionInitially };

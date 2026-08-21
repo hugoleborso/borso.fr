@@ -1,10 +1,3 @@
-/**
- * The browser history, as an external store the shell subscribes to.
- *
- * `useSyncExternalStore` reads it, so the shell needs no effect to follow a
- * back button or a programmatic navigation.
- */
-
 import { listWhen } from './optional.utils';
 
 type Listener = () => void;

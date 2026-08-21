@@ -14,6 +14,14 @@ function buildGuardedApp() {
 
 const ALLOWED_ORIGIN = 'https://last-loop-lepin.borso.fr';
 
+function restoreAllowedOriginForTheSuitesThatFollow(original: string | undefined): void {
+  if (original === undefined) {
+    delete process.env.ALLOWED_ORIGIN;
+  } else {
+    process.env.ALLOWED_ORIGIN = original;
+  }
+}
+
 /**
  * @Blueprint test-middleware-integration
  * @BlueprintName Middleware Integration Test
@@ -32,14 +40,7 @@ describe('auth.middleware', () => {
   });
 
   afterAll(() => {
-    // Critical: restore the env var so subsequent test files (controller
-    // suites that POST without `origin` headers) don't trip the cross-origin
-    // check inherited from a previous worker.
-    if (originalOrigin === undefined) {
-      delete process.env.ALLOWED_ORIGIN;
-    } else {
-      process.env.ALLOWED_ORIGIN = originalOrigin;
-    }
+    restoreAllowedOriginForTheSuitesThatFollow(originalOrigin);
   });
 
   beforeEach(async () => {

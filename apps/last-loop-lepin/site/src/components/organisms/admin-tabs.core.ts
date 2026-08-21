@@ -1,10 +1,3 @@
-/**
- * The organiser screen's tabs, and which of them a missing edition blocks.
- *
- * Every tab but setup needs an edition to work on, so with none the screen
- * points the operator at setup instead of rendering an empty panel.
- */
-
 import type { RaceEditionDto } from '../../lib/race.types';
 import type { NavigationItemState } from '../../routes/route.core';
 
@@ -38,32 +31,22 @@ export function selectTabState(currentTab: AdminTabName, tab: AdminTabName): Nav
   return 'inactive';
 }
 
-/** The setup tab is the only one that works without an edition to act on. */
 export function isTabBlockedByMissingEdition(tab: AdminTabName, hasEdition: boolean): boolean {
   if (hasEdition) return false;
   return tab !== 'setup';
 }
 
-/**
- * Whether the race is over in practice: every registered runner is out, so
- * the standings will not move again on their own.
- */
 export function isRaceOverInPractice(totalRunners: number, runnersInRace: number): boolean {
   if (totalRunners === 0) return false;
   return runnersInRace === 0;
 }
 
-/** The tab whose panel needs an edition to act on, or null for setup. */
 // @FollowsBlueprint core-view-intent
 export function selectEditionPanelTab(tab: AdminTabName): EditionPanelTab | null {
   if (tab === 'setup') return null;
   return tab;
 }
 
-/**
- * The edition the finish banner offers to close, if there is one. Only a live
- * edition whose registered runners are all out qualifies.
- */
 export function selectEditionNeedingFinish(
   edition: RaceEditionDto | null,
   totalRunners: number,

@@ -1,11 +1,4 @@
 /**
- * Turns a condition or an optional value into a list, so a caller can iterate
- * it instead of branching on it. Two lines, and they move the only `null`
- * check and the only "did the operator confirm" check in a dozen call sites
- * into functions that have their own tests.
- */
-
-/**
  * @Blueprint utils-branchless-list
  * @BlueprintName Branchless Optional As A List
  * @BlueprintUsage Use for a value that may be absent, or an action that only applies under a condition, so the caller iterates instead of branching.

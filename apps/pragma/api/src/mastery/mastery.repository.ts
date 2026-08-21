@@ -1,7 +1,3 @@
-/**
- * Repository for the mastery bounded context.
- */
-
 import { and, eq } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';

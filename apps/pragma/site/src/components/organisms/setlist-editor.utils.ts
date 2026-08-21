@@ -1,9 +1,4 @@
-/**
- * Pure helpers for the SetlistEditor. Extracted so the parent stays
- * under the file-length cap and so the lineup / tonality / instrument
- * derivations stay easy to cover at 100%.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { InstrumentFamily } from '@domain/instrument.core';
 import { type Lineup, resolveLineup } from '@domain/lineup.core';
@@ -53,13 +48,6 @@ export interface ClipboardSetlistEntry {
   readonly keyOverride: string | null;
 }
 
-/**
- * Renders the ordered setlist as plain text for the clipboard, one
- * numbered line per entry: `1. Title — Artist (Key)`. The key is the
- * entry's `keyOverride` when set, otherwise the song's tonality label;
- * it is omitted when neither is available. A missing song id yields a
- * `?` placeholder so the position numbering stays aligned.
- */
 // @FollowsBlueprint utils-pure-module
 export function formatSetlistOrder(
   entries: readonly ClipboardSetlistEntry[],
@@ -93,7 +81,6 @@ export function lineupOf(
   return resolveLineup(song?.defaultLineup ?? {}, entry.lineupOverride);
 }
 
-/** The lineup without the members sitting the song out, which is what a chip row draws. */
 export function compactLineup(lineup: Lineup): Record<string, readonly string[]> {
   const played: Record<string, readonly string[]> = {};
   for (const [memberId, instrumentIds] of Object.entries(lineup)) {
@@ -117,12 +104,6 @@ interface NameableInstrument {
   readonly name: string;
 }
 
-/**
- * Returns member ids that appear in a resolved lineup but are not in
- * the supplied set of known member ids — the symptom of a missed
- * cascade-scrub (R1 in the lineup-editor plan). Pure so the caller
- * owns when and how to surface the warning.
- */
 export function listOrphanMemberIds(lineup: Lineup, knownMemberIds: ReadonlySet<string>): string[] {
   const orphans: string[] = [];
   for (const memberId of Object.keys(lineup)) {
@@ -131,10 +112,6 @@ export function listOrphanMemberIds(lineup: Lineup, knownMemberIds: ReadonlySet<
   return orphans;
 }
 
-/**
- * The orphans nobody has been told about yet, so the caller loops over a list
- * rather than deciding per entry whether it has already complained.
- */
 export function selectUnwarnedMemberIds(
   orphanMemberIds: readonly string[],
   warnedMemberIds: ReadonlySet<string>,
@@ -164,7 +141,6 @@ export function prominentMemberInstrumentFor(
   };
 }
 
-/** The instrument names a lineup gives one member, for a chip's tooltip. */
 export function instrumentNamesFor(
   instrumentIds: readonly string[],
   instrumentsById: Readonly<Record<string, NameableInstrument>>,
@@ -175,13 +151,6 @@ export function instrumentNamesFor(
   });
 }
 
-/**
- * A dnd-kit modifier that drops the horizontal half of a drag.
- *
- * A setlist is one column, so sideways travel moves the card away from every
- * drop target it could reach while the finger is still on it — on a phone that
- * reads as the card escaping the list.
- */
 export function restrictToVerticalAxis({ transform }: DragModifierArgument): DragTransform {
   return { ...transform, x: 0 };
 }

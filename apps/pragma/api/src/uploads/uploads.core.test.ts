@@ -1,8 +1,3 @@
-/**
- * Pure-unit coverage for the uploads core helpers — extension mapping
- * and object-key composition.
- */
-
 import { describe, expect, it } from 'vitest';
 import { buildChartObjectKey, extensionForContentType } from './uploads.core';
 

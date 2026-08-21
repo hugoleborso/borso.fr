@@ -30,6 +30,7 @@ Two failure modes to watch for:
 
 ### CloudFront
 
+- [`s3-sync-serves-html-without-a-charset.md`](./s3-sync-serves-html-without-a-charset.md) — `aws s3 sync` sets `Content-Type` from the extension and sends a bare `text/html`, so the same bytes that read fine from GitHub Pages render as mojibake once published.
 - [`a-rebase-cannot-see-what-a-merge-decided.md`](./a-rebase-cannot-see-what-a-merge-decided.md) — a rebase replays the work and drops every reconciliation the merge commits carried. Measured: three shortcuts, 52 and 36 files wrong, `rerere` zero hits, `git cherry` blind to thirty duplicates.
 - [`cloudfront-function-throttle-persistence.md`](./cloudfront-function-throttle-persistence.md) — throttle state outlives a function code update; recovery 5–15 min.
 - [`cloudfront-resources-in-us-east-1.md`](./cloudfront-resources-in-us-east-1.md) — control plane is region-pinned regardless of the distribution's data-plane region.
@@ -38,11 +39,15 @@ Two failure modes to watch for:
 - [`eslint-content-cache-replays-a-stale-type-aware-error.md`](./eslint-content-cache-replays-a-stale-type-aware-error.md) — `--cache-strategy content` keys on the linted file, and a type-aware rule depends on the whole graph, so an error you already fixed keeps being reported. `rm -f .eslintcache`.
 - [`how-a-mutation-survivor-hides.md`](./how-a-mutation-survivor-hides.md) — three cases where a test reads as sufficient and is not: a `Stryker disable` covering one line of a multi-line statement, `toContain` blind to a prepended digit, and a capture-boundary mutant that is genuinely equivalent.
 - [`knip-does-not-follow-a-stryker-vitest-config.md`](./knip-does-not-follow-a-stryker-vitest-config.md) — knip's Stryker plugin resolves package names and never follows `vitest.configFile`, so the config it points at reads as unreferenced.
+- [`apigw-http-api-has-no-response-streaming.md`](./apigw-http-api-has-no-response-streaming.md) — an HTTP API buffers the whole response, so `streamifyResponse` does nothing behind `LambdaApi`; streaming needs a Function URL with `RESPONSE_STREAM`, which is an ADR.
 - [`preview-api-cross-origin.md`](./preview-api-cross-origin.md) — previews use a custom-domain API per PR (`<app>-pr-<n>-api.preview.borso.fr`) because the shared previews distribution can't host per-app `/api/*` routing.
 - [`cdk-route53-zone-token-pitfall.md`](./cdk-route53-zone-token-pitfall.md) — `ARecord(recordName: '<host>')` doubles the zone suffix when `zoneName` is a CFN token (resolves at deploy time, fails the literal-string suffix check). Trailing-dot the `recordName` to short-circuit.
 
 ### CDK / S3
 
+- [`esbuild-esm-dynamic-require-of-buffer.md`](./esbuild-esm-dynamic-require-of-buffer.md) — an ESM-bundled Lambda that inlines `@aws-sdk/dsql-signer` dies at cold start with `Dynamic require of "buffer" is not supported`; the `createRequire` banner is what prevents it, and the stack deploys green either way.
+- [`integ-test-tag-must-be-absent-not-false.md`](./integ-test-tag-must-be-absent-not-false.md) — the integ role's IAM policy keys off the *presence* of the `IntegTest` tag, so setting it to `false` elsewhere widens the role rather than narrowing it.
+- [`vitest-4-invokes-mock-implementations-as-constructors.md`](./vitest-4-invokes-mock-implementations-as-constructors.md) — a mock for a class reached with `new` must be a function declaration; an arrow has no `[[Construct]]` and fails with "is not a constructor".
 - [`preview-deploys-never-delete-what-you-removed.md`](./preview-deploys-never-delete-what-you-removed.md) — `prune: false` on the preview `BucketDeployment` keeps serving files a commit deleted; prod is unaffected because it takes the CDK default.
 - [`cdk-retain-buckets-orphan-on-failed-create.md`](./cdk-retain-buckets-orphan-on-failed-create.md) — `RemovalPolicy.RETAIN` on a literal-named bucket leaves an orphan if the first deploy of the stack fails post-bucket-create; manual `aws s3 rb` recovery.
 - [`cfn-rollback-blocks-redeploys.md`](./cfn-rollback-blocks-redeploys.md) — `UPDATE_ROLLBACK_IN_PROGRESS` rejects new deploys; a CI retry fails in ~40 s and looks like a code regression. Poll status, wait for terminal state, then trigger.
@@ -104,6 +109,9 @@ Two failure modes to watch for:
 - [`drizzle-unique-index-is-not-a-unique-constraint.md`](./drizzle-unique-index-is-not-a-unique-constraint.md) — `uniqueIndex` lands in `getTableConfig().indexes`, not `.uniqueConstraints`; asserting against the wrong one passes on `undefined`.
 ### Build / lint tooling
 
+- [`authoring-the-architecture-page-runtime-script.md`](./authoring-the-architecture-page-runtime-script.md) — the page's browser script is emitted from a template literal, so a literal backtick closes it and a comment inside it is invisible to `borso/no-comments`; plus why `git log --follow` makes a moved file read as new in the hotspots report.
+- [`stryker-sandbox-and-plugin-resolution-under-pnpm.md`](./stryker-sandbox-and-plugin-resolution-under-pnpm.md) — pnpm's symlinked store defeats Stryker's plugin glob, so the runner must be named; and a sandbox inside the workspace makes `infra/cdk` snapshot tests fail with `ENOENT` in `AssetStaging.calculateHash` under the parallel pre-push wave.
+- [`eslint-rule-tester-needs-vitest-globals.md`](./eslint-rule-tester-needs-vitest-globals.md) — Vitest installs no test globals without `globals: true`, so a `RuleTester` suite registers zero cases and passes vacuously; plus why an `eslint-disable` valid case fails as an unused directive.
 - [`biome-stack-overflow-on-dist-binaries.md`](./biome-stack-overflow-on-dist-binaries.md) — Biome 2.x stack-overflows on woff/png binaries in `dist/`; turn on `vcs.useIgnoreFile`.
 - [`biome-ignore-must-be-single-line.md`](./biome-ignore-must-be-single-line.md) — Biome `lint:` suppression comments must be a single line directly above the diagnostic; multi-line forms silently no-op.
 - [`biome-grit-jsx-matching.md`](./biome-grit-jsx-matching.md) — Grit plugins targeting JSX need `engine biome(1.0)` + `language js(jsx)` + the `JsxString()` node ; the JS-string templates from the docs match nothing on JSX attribute literals.
@@ -147,8 +155,13 @@ Two failure modes to watch for:
 
 - [`react-bits-galaxy-mouse-events-vs-touch.md`](./react-bits-galaxy-mouse-events-vs-touch.md) — react-bits Galaxy listens on `mousemove` only; touch is silently broken on mobile. Swap to `pointermove`/`pointerleave` + `touch-action: none` on the container; also set `pointer-events: auto` if a parent has `none`.
 
+### pragma / MusicBrainz
+
+- [`musicbrainz-search-parser-and-missing-tonality.md`](./musicbrainz-search-parser-and-missing-tonality.md) — the default Lucene parser misses what a person actually types, so the adapter asks for `dismax`; and key/tonality lives only on `work` entities, never on the `recording` a search returns, so it cannot be enriched from here.
+
 ### Frontend / React
 
+- [`tailwind-v4-theme-and-preflight-traps.md`](./tailwind-v4-theme-and-preflight-traps.md) — `@theme` blocks collapse into `:root` so a media-nested second one wins unconditionally; a variable outside a namespace needs `bg-[image:var(--x)]` and `@theme static`; an inline `animation` shorthand pulls in no keyframes; and what preflight zeroes on `<dialog>`, buttons and file inputs.
 - [`tailwind-v4-fails-quietly-in-two-places.md`](./tailwind-v4-fails-quietly-in-two-places.md) — a `var()` in an `@theme` entry resolves against `:root`, and a variant bracket opening on a bare word compiles to nothing.
 - [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
 - [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes. Now enforced in pragma by the `no-circle-in-non-uniform-svg.grit` Biome plugin (see [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md)).
@@ -161,6 +174,7 @@ Two failure modes to watch for:
 
 ### borsouvertures / chess libraries
 
+- [`lichess-openings-dataset-identity-and-matching.md`](./lichess-openings-dataset-identity-and-matching.md) — the source reuses one name across several lines, so identity needs the move sequence; and a `FAMILIES` entry that matches nothing shrinks the dataset silently (prefix shadowing, typographic apostrophe).
 - [`chessjs-v1-throws-on-illegal-move.md`](./chessjs-v1-throws-on-illegal-move.md) — `chess.js` v1 throws on illegal moves; v0 returned `null`. Wrap every `chess.move` in `try`/`catch`.
 - [`react-chessboard-l-arrows-v5.md`](./react-chessboard-l-arrows-v5.md) — v5 detects knight moves and draws native L-shaped arrows; consolidated `options` prop; React-19 peer requirement.
 - [`pwa-third-party-cdn-breaks-offline.md`](./pwa-third-party-cdn-breaks-offline.md) — third-party image CDNs break PWAs offline (and often online via hotlink-blocking 403s); bundle assets or use library-bundled SVGs.

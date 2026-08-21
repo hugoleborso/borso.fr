@@ -1,12 +1,3 @@
-/**
- * The hand-written half of borsouvertures's architecture model. Types and the
- * register of applications live in `../architecture-manifest.ts`.
- *
- * No file in this application carries a `@DependsOnExternal` tag yet, so the
- * externals list is empty and level 1 draws the actor and the system alone.
- * Tagging is what puts an external on the map; see `docs/architecture/install.md`.
- */
-
 import type { ArchitectureManifest } from '../architecture-manifest';
 
 export const borsouverturesManifest: ArchitectureManifest = {

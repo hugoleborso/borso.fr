@@ -1,13 +1,3 @@
-/**
- * Drizzle schema for the songs (catalog) bounded context. The three
- * JSON blobs (`links`, `chart`, `default_lineup`) are stored as TEXT
- * because Aurora DSQL doesn't support `jsonb` (see
- * docs/knowledge/dsql-postgres-compat-gaps.md §1). The repository
- * JSON.stringifies at insert and JSON.parse + Zod-validates at read.
- * Zod schemas in this file double as runtime validators at both the
- * controller (input) and repository (row) boundaries.
- */
-
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
@@ -23,35 +13,17 @@ export const songTable = pgTable('song', {
   title: text('title').notNull(),
   artist: text('artist').notNull().default(''),
   status: text('status').notNull(),
-  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
   links: text('links').notNull().default('[]'),
-  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
   chart: text('chart'),
   tonalityStart: text('tonality_start'),
   tonalityEnd: text('tonality_end'),
-  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
   defaultLineup: text('default_lineup').notNull().default('{}'),
-  // baseEnergy is the "what energy does this song carry on average"
-  // hint; the per-entry energy on setlist_entry overrides it for the
-  // sparkline.
   baseEnergy: integer('base_energy'),
-  // MusicBrainz enrichment: stable foreign key + denormalised metadata.
-  // Captured at pick-time; the user can override any of these. The
-  // text-stringified JSON columns (`isrcs`, `tags`) carry no DB-side
-  // NOT NULL / DEFAULT because DSQL §10 forbids those on ADD COLUMN;
-  // the repository write-side defaults to `[]` on insert and the read
-  // path narrows `null → []`.
   mbid: text('mbid'),
   album: text('album'),
   durationSeconds: integer('duration_seconds'),
-  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
   isrcs: text('isrcs'),
-  // Aurora DSQL doesn't support jsonb — see docs/knowledge/dsql-postgres-compat-gaps.md §1
   tags: text('tags'),
-  // The three note fields the band fills in. Nullable at the database
-  // level because DSQL §10 forbids NOT NULL / DEFAULT on ADD COLUMN;
-  // the repository writes '' rather than null and the read path
-  // narrows null → ''.
   structureNotes: text('structure_notes'),
   gimmickNotes: text('gimmick_notes'),
   notes: text('notes'),
@@ -74,12 +46,6 @@ export const chordChartSchema = z.union([
   z.object({ kind: z.literal('image'), s3Key: z.string().min(1).max(S3_KEY_MAX) }),
 ]);
 
-/**
- * A stored lineup value is a list of instrument ids. Rows written before one
- * member could hold two instruments carry a single id or a null instead, so
- * the schema accepts all three shapes and `normalizeLineup` hands back lists;
- * nothing has to rewrite the JSON already in the column.
- */
 const storedLineupValueSchema = z.union([z.array(z.string().uuid()), z.string().uuid(), z.null()]);
 
 export const defaultLineupSchema = z
@@ -126,10 +92,6 @@ export const externalSearchQuerySchema = z.object({
   q: z.string().min(1).max(SONG_STRING_FIELD_MAX),
 });
 
-// Row-side Zod schema for the `links` text column — wraps the array
-// shape that the controller validates per-element. The repository uses
-// this + the existing `chordChartSchema` + `defaultLineupSchema` to
-// validate JSON blobs deserialised from text columns.
 export const songLinksRowSchema = z.array(songExternalLinkSchema);
 export const songIsrcsRowSchema = z.array(z.string().max(SONG_ISRC_MAX));
 export const songTagsRowSchema = z.array(z.string().max(SONG_TAG_MAX));

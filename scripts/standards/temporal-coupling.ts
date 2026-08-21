@@ -1,17 +1,4 @@
 #!/usr/bin/env tsx
-/**
- * Generates `docs/standards/temporal-coupling.md` from the git history crossed
- * with the module graph the architecture generator already writes.
- *
- * Usage:
- *   pnpm exec tsx scripts/standards/temporal-coupling.ts [--commits <n>]
- *
- * There is no `--check`, for the reason written at length in
- * `docs/dantotsus/a-generated-file-cannot-contain-its-own-commit.md`: the input
- * is the history, so the page changes on every commit whether or not any source
- * moved, and a freshness gate on it could never be green. The page records the
- * revision it was read at instead.
- */
 
 import { execFileSync } from 'node:child_process';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
@@ -42,12 +29,6 @@ function readCommitWindow(): number {
   return Number.isNaN(parsed) ? DEFAULT_COMMIT_WINDOW : parsed;
 }
 
-/**
- * The window's commits, each as the source paths it touched.
- *
- * Merges are excluded: a merge commit lists every file either side changed, so
- * it would couple two unrelated branches' worth of work together.
- */
 function readCommits(commitWindow: number): readonly Commit[] {
   const log = execFileSync(
     'git',
@@ -68,7 +49,6 @@ function readCommits(commitWindow: number): readonly Commit[] {
   return commits.filter((paths) => paths.length > 1);
 }
 
-/** Every application's module graph, read from the committed architecture models. */
 function readGraphFiles(): readonly GraphFile[] {
   const applications = execFileSync(
     'pnpm',

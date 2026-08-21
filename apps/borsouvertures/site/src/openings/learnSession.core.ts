@@ -11,14 +11,6 @@ const NO_VARIATION_ID = '';
 const NO_OPENING: Opening = { id: '', name: '', ecoCodes: [], variations: [] };
 const NO_VARIATION: Variation = { id: NO_VARIATION_ID, name: '', lines: [] };
 
-/**
- * The opening and variation a drill runs against.
- *
- * When the selection names neither, the placeholder target below is returned
- * rather than `null`, so the caller picks the screen to render from
- * {@link isLearnDrillReady} and never has to narrow a nullable value inside
- * its markup. The placeholder is never rendered.
- */
 export const NO_DRILL_TARGET: LearnDrillTarget = {
   opening: NO_OPENING,
   variation: NO_VARIATION,

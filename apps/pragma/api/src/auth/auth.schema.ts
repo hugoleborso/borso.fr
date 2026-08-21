@@ -1,18 +1,6 @@
-/**
- * Drizzle schema for the auth bounded context.
- *
- * Singleton row carrying the shared-password argon2id hash + the HMAC
- * signing key for session cookies. See ADR-0004. The `id = 1` constraint
- * is the singleton guard. Auth-attempts table holds per-ip-hash sliding
- * windows used by the rate limiter.
- */
-
 import { customType, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
-// Drizzle ships no first-class `bytea` type; declare one. Stored as
-// raw bytes; read/written as `Buffer` (Node) or `Uint8Array` after
-// `Buffer.from` in tests.
 const bytea = customType<{ data: Buffer; default: false }>({
   dataType() {
     return 'bytea';

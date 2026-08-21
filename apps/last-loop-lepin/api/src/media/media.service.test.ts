@@ -1,9 +1,5 @@
 /**
  * @vitest-environment node
- *
- * media.service is a thin wrapper around `createPresignedUpload`; this
- * test exercises the wrapper boundary so the file isn't left untested.
- * Heavy S3 / content-type assertions live in media.adapter.test.ts.
  */
 
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';

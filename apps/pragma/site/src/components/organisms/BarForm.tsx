@@ -1,14 +1,4 @@
-/**
- * Bar edit / create form. Owns its field state via `useForm` from
- * `@tanstack/react-form`. The parent supplies the initial bar (or the
- * blank form for create) plus a single `onSubmit(payload)` callback;
- * the form keys on `initial.id` so React mounts a fresh instance
- * whenever the parent selects a different row.
- *
- * Field vocabulary, validation, and the values-to-payload translation
- * live in `bar-form.core.ts`.
- * @Feature bars
- */
+/** @Feature bars */
 
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';

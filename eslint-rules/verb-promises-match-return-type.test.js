@@ -20,14 +20,10 @@ createRuleTester('apps/pragma/api/src/songs/songs.core.ts', { jsx: false }).run(
       { code: 'function isProblem(value: unknown): value is Problem { return true; }' },
       { code: 'function hasUpload(runner: Runner): boolean { return true; }' },
       { code: 'function canSelfPunch(runner: Runner): boolean { return true; }' },
-      // No annotation, so the promise is unfalsifiable and another rule's problem.
       { code: 'function listProblems() { return 3; }' },
-      // The verb needs an upper case letter after it, which is what tells
-      // `listing` from `listProblems` and `island` from `isReady`.
       { code: 'function listing(): number { return 1; }' },
       { code: 'function island(): number { return 1; }' },
       { code: 'function finder(): number[] { return []; }' },
-      // Other verbs from the table promise a shape no annotation can settle.
       { code: 'function buildTitle(): string[] { return []; }' },
       { code: 'function selectVisibleSongs(): Song[] { return []; }' },
       { code: 'const listProblems = (): Problem[] => [];' },
@@ -81,8 +77,6 @@ createRuleTester('apps/pragma/api/src/songs/songs.core.ts', { jsx: false }).run(
         code: 'declare function findProblems(): Problem[];',
         errors: [{ messageId: 'brokenPromise' }],
       },
-      // A bare `Promise` has no inner type, so the check falls on `Promise`
-      // itself. TypeScript rejects the annotation too.
       {
         code: 'async function listProblems(): Promise { return []; }',
         errors: [{ messageId: 'brokenPromise' }],

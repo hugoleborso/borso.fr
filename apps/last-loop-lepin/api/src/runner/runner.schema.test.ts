@@ -1,8 +1,3 @@
-/**
- * A runner slug is the identifier the URL carries, so its character rule is the
- * one worth pinning; the bib is mandatory here even though the column is not.
- */
-
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import { createRunnerInputSchema, runnersTable, runnerSlugSchema } from './runner.schema';

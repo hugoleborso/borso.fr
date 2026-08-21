@@ -1,10 +1,3 @@
-/**
- * Service layer for members. Includes the M2M assignment to
- * instruments and the auto-pick of a chip color on create (palette
- * slot N for the N-th member), which closes the design-bundle
- * member-chip wiring (VD blocker).
- */
-
 import { pickNextPaletteHex } from './member-palette.utils';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {

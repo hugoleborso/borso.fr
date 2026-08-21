@@ -1,19 +1,3 @@
-/**
- * Signed-cookie format for the pragma shared-password session.
- *
- * Cookie value layout: `<payload>.<signature>` where
- *   - `payload` is `base64url(JSON({ issuedAt, expiresAt }))`
- *   - `signature` is `base64url(HMAC-SHA256(payload, hmacKey))`
- *
- * The HMAC key lives in `pragma.app_config.hmac_key`; rotating it (via
- * `POST /api/admin/rotate-password`) invalidates every existing cookie.
- * See ADR-0004.
- *
- * Pure module — `crypto` and `zod` are its only dependencies. The
- * caller passes `now` so callers stay testable; `verifyCookie` rejects
- * expired tokens deterministically.
- */
-
 import { createHmac, timingSafeEqual } from 'node:crypto';
 import { z } from 'zod';
 

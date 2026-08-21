@@ -1,16 +1,4 @@
-/**
- * The phone's navigation: a fixed bar of thumb-sized tabs at the bottom of
- * the screen, plus a "more" tab that opens the drawer holding the admin
- * pages. It replaces reaching for a hamburger at the top of a screen the
- * hand is holding from the bottom.
- *
- * The more tab is a toggle, and says so through `aria-expanded` and through
- * the glyph it carries, because a button that only opens leaves the second
- * tap doing nothing and reads as broken.
- *
- * Hidden from `lg` up, where the sidebar is already visible.
- * @Feature shell
- */
+/** @Feature shell */
 
 import type { ParseKeys } from 'i18next';
 import type { JSX } from 'react';

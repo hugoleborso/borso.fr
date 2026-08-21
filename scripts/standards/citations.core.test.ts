@@ -11,7 +11,6 @@ describe('readEnforcedByBullets', () => {
     expect(readEnforcedByBullets('# 00. Principles\n\nSome prose.\n')).toEqual([]);
   });
 
-  /** A standard can carry bullets elsewhere, and none of them is a citation. */
   it('returns nothing from a standard that has bullets and no enforcement section', () => {
     expect(readEnforcedByBullets('# 01. Naming\n\n- `eslint:borso/x` a rule.\n')).toEqual([]);
   });
@@ -35,7 +34,6 @@ describe('readEnforcedByBullets', () => {
     expect(readEnforcedByBullets(markdown)).toEqual(['`reviewer` kept.']);
   });
 
-  /** The next heading opening one character in is still the next heading. */
   it('stops at a heading that follows the enforcement heading immediately', () => {
     const markdown = '## Enforced by \n## Something else\n\n- dropped.\n';
     expect(readEnforcedByBullets(markdown)).toEqual([]);
@@ -63,7 +61,7 @@ describe('readCitationFromBullet', () => {
     expect(readCitationFromBullet('`eslint:borso/no-use-effect` rejects effects.')).toEqual({
       kind: 'eslint',
       target: 'borso/no-use-effect',
-      claim: '`eslint:borso/no-use-effect` rejects effects.',
+      bullet: '`eslint:borso/no-use-effect` rejects effects.',
     });
   });
 
@@ -82,7 +80,7 @@ describe('readCitationFromBullet', () => {
     expect(readCitationFromBullet('`reviewer` checks the name.')).toEqual({
       kind: 'reviewer',
       target: '',
-      claim: '`reviewer` checks the name.',
+      bullet: '`reviewer` checks the name.',
     });
   });
 

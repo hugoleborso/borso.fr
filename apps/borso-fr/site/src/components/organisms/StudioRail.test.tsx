@@ -6,9 +6,6 @@ import { CUSTOM_DEFAULTS, PALETTES, type PaletteKey } from '../../art/mondrian/p
 import { i18next } from '../../i18n/i18n';
 import { StudioRail } from './StudioRail';
 
-// `ReturnType<typeof vi.fn>` is `Mock<Procedure | Constructable>` in Vitest 4,
-// which no longer narrows to a call signature. Naming the signature is both
-// what the compiler needs and a better description of the prop.
 interface RailSpies {
   onPaletteKeyChange: Mock<(nextPaletteKey: PaletteKey) => void>;
   onAnimationModeChange: Mock<(nextMode: AnimationMode) => void>;

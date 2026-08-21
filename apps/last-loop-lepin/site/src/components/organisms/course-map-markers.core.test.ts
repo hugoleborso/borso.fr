@@ -130,7 +130,7 @@ describe('listRunnerMarkers', () => {
     expect(markers[0]?.avatarHtml).toContain('data-runner-slug="alice"');
   });
 
-  it('uses the recorded pace projection when the track carries timings', () => {
+  it('uses the recorded pace projection when the track carries timings, so a pace spending 90 % of the loop on the first segment puts the halfway avatar where the linear projection never would', () => {
     const edition = buildEdition();
     const timed: RaceEditionDto = {
       ...edition,
@@ -143,8 +143,6 @@ describe('listRunnerMarkers', () => {
     const linearMarkers = listRunnerMarkers(edition, [buildRunner()], RACE_START_MS + HOUR_MS / 2);
     expect(timedMarkers).toHaveLength(1);
     expect(timedMarkers[0]?.position.lat).toBeGreaterThan(45.55);
-    // The recorded pace spends 90 % of the loop on the first segment, so
-    // the halfway avatar sits somewhere the linear projection never puts it.
     expect(timedMarkers[0]?.position).not.toEqual(linearMarkers[0]?.position);
   });
 });

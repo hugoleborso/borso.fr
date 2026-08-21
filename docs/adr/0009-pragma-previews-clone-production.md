@@ -37,6 +37,15 @@ Preview and integ schemas clone `prod`, with:
 | `tableBlocklist` | `auth_attempt` — rate-limit counters, meaningless across schemas |
 | `columnsToNullify` | `member.avatar_s3_key` — prod's key in the preview's bucket is a 404 |
 | **cloned deliberately** | `app_config` — the shared password hash *and* the HMAC key |
+| `tablesToReplace` | `app_config` — emptied in the target immediately before the copy |
+| **left alone deliberately** | `song.chart` — most charts are inline ChordPro text, which is the useful part; a PDF chart merely 404s |
+
+`app_config` appears twice on purpose. It is a singleton keyed on `id=1`, and the
+clone INSERT is `ON CONFLICT DO NOTHING`, so cloning alone is not enough: a schema
+bootstrapped before cloning existed keeps its old row, which leaves the preview on
+the fixture's published password while it now holds real production data. Naming it
+in `tablesToReplace` empties the row first, so production's credential is
+authoritative on every deploy.
 
 Cloning `app_config` is the load-bearing part. It means **a preview's password
 is production's password**.

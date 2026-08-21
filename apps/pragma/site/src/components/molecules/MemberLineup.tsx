@@ -1,15 +1,4 @@
-/**
- * MemberLineup — the band on a song, as a row of bare MemberChips.
- *
- * The chips overlap and the row stops at four, with a count for the rest.
- * A setlist row gives the lineup whatever width the title and the key leave,
- * and a five-piece band spaced out was wide enough to wrap the line under the
- * title — which cost the card a whole line for four avatars. Overlapping them
- * is what keeps the meta line one line at 375 px. Each chip carries a ring in
- * the card's own colour, so the overlap reads as separate people rather than
- * as one smeared circle.
- * @Feature members
- */
+/** @Feature members */
 
 import { composeClassName } from '../atoms/class-name.utils';
 import { buildLineupChips } from './member-lineup.core';

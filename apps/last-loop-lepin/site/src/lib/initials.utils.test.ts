@@ -32,9 +32,7 @@ describe('initialsAvatar', () => {
     expect(initialsAvatar('   ').initials).toBe('??');
   });
 
-  it('pins the colour each exemplar name hashes to', () => {
-    // Golden values: the hue is the only visible output of the djb2 hash,
-    // and "same name, same colour" alone cannot see the hash changing.
+  it('pins the colour each exemplar name hashes to, the hue being the only visible output of the djb2 hash and so the only reading that catches the hash itself changing', () => {
     expect(initialsAvatar('Hugo').backgroundColor).toBe('oklch(0.72 0.14 224)');
     expect(initialsAvatar('Marie Curie').backgroundColor).toBe('oklch(0.72 0.14 127)');
     expect(initialsAvatar('Éloïse Aïn').backgroundColor).toBe('oklch(0.72 0.14 102)');

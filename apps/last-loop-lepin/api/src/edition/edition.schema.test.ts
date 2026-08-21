@@ -1,9 +1,3 @@
-/**
- * The two refinements are the rules that matter: a per-point array that does
- * not match the point count would silently mis-place every elevation on the
- * profile, and the type checker cannot see it.
- */
-
 import { describe, expect, it } from 'vitest';
 import {
   createEditionInputSchema,
@@ -64,7 +58,6 @@ describe('gpxMetadataSchema', () => {
   });
 
   it('refuses time fractions that do not match the point count, and says which', () => {
-    // Monotonic from 0 to 1, so the only rule left to break is the length one.
     expect(() =>
       gpxMetadataSchema.parse(metadata({ points, pointTimeFractions: [0, 0.5, 1] })),
     ).toThrow('pointTimeFractions.length');

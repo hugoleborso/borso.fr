@@ -1,11 +1,3 @@
-/**
- * Every SSM parameter the `borso-shared` stack publishes, keyed by intent.
- *
- * `infra/shared/lib/shared-stack.ts` writes these paths and the constructs
- * here read them at synth time. Both sides import this table, so renaming a
- * key is a type error on the writer and on every reader at once.
- *
- */
 export const SHARED_SSM_PARAMETERS = {
   oidcProviderArn: '/borso/shared/oidc-provider-arn',
   hostedZoneId: '/borso/shared/hosted-zone-id',

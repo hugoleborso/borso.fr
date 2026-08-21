@@ -7,14 +7,10 @@ createRuleTester().run('no-step-named-value', rule, {
     'const namedSong = songWriteVariablesSchema.safeParse(variables);',
     'const rankedRunners = rank(progresses);',
     'const sessionPayloadBytes = encode(session);',
-    // A loop head: the meaning is one line away by construction, and CLAUDE.md
-    // names `entry` among the acceptable generic locals.
     'for (const entry of songWrites) { total += entry.score; }',
     'for (const item in lookup) { count += 1; }',
-    // A destructuring keeps the name its library chose.
     'const { data } = useSongsList();',
     'const { result, payload } = await callTheThing();',
-    // The names are only rejected as a binding, not as a property.
     'const song = response.data;',
     'return { result: total };',
   ],

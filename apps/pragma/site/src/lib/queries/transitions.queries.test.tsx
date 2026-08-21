@@ -1,11 +1,3 @@
-/**
- * Tests for the optimistic write path on the transition-comment save
- * mutation. The setlist editor's inline comment commits the new
- * comment into the byPair cache before the server replies; a 500
- * rolls back to whatever the cache held (null when there was no
- * previous comment).
- */
-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import {
   createIsolatedQueryClient,

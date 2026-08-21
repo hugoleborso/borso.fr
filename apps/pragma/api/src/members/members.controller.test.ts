@@ -1,10 +1,3 @@
-/**
- * Back-e2e for the members CRUD + member-instrument M2M endpoints.
- * Covers auth gating, CRUD round-trip, the M2M assignment replace,
- * and the foreign-key validation on the assignment payload (DSQL does
- * not enforce FK; the controller does the check up-front).
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
@@ -126,7 +119,7 @@ describe('members controller (back-e2e)', () => {
     expect(response.status).toBe(400);
   });
 
-  it('assigns instruments to a member and reads them back', async () => {
+  it('assigns instruments to a member, reads them back, and clears the previous rows when the assignment is replaced', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const memberCreate = await jsonRequest(app, '/api/members', {
       method: 'POST',
@@ -153,8 +146,6 @@ describe('members controller (back-e2e)', () => {
     const listed = await readJson(list, instrumentListEnvelope);
     expect(listed.instruments.map((row) => row.name)).toEqual(['Bass', 'Guitar']);
 
-    // Replace the assignment with a single-instrument set; the old
-    // rows must be cleared.
     const replace = await jsonRequest(app, `/api/members/${memberId}/instruments`, {
       method: 'PUT',
       body: { instrumentIds: [bassId] },

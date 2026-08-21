@@ -1,30 +1,6 @@
 import { existsSync } from 'node:fs';
 import { isGatedFile, isTestFile } from './impurity.js';
 
-/**
- * A `.core.ts`, `.utils.ts`, `.adapter.ts` or `.schema.ts` file is under the
- * coverage gate, and it is satisfied by a file that has no tests at all,
- * because a file nothing imports contributes no uncovered line to a run that
- * never loads it. The missing sibling is therefore invisible until someone
- * notices the number is wrong.
- *
- * The rule reads the filesystem in `Program:exit`, which is the one place a
- * lint rule can ask a question about a file that is not the file being linted.
- * It costs one `existsSync` per pure file.
- *
- * The name comes from docs/standards/12-linting-and-gates.md, and it reads
- * backwards: the rule fires on the source file that has no test, and not on a
- * test file that has no source.
- *
- * What this deliberately allows:
- *
- * - The sibling itself, e.g. a `.core.test.ts` or an `.adapter.test.ts`.
- * - Either extension on either side, so `chart.utils.tsx` is satisfied by
- *   `chart.utils.test.ts` and by `chart.utils.test.tsx`.
- * - Any file without the four suffixes, since the gates only cover those.
- *
- * See docs/standards/10-testing.md.
- */
 const MESSAGE =
   'A `.core.ts`, `.utils.ts`, `.adapter.ts` or `.schema.ts` file ships with a sibling `.test.ts`. ' +
   'The coverage and mutation gates both pass a file that nothing tests, because a module no test ' +

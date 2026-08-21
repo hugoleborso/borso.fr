@@ -1,18 +1,4 @@
-/**
- * Pure SQL builders for the "clone from source schema" step of the
- * migration runner. Tests live in `clone-from-schema.utils.test.ts` at
- * 100 % coverage (`*.utils.ts` gate). All identifiers are quoted with
- * double-quotes; the helpers reject any name that isn't a Postgres
- * unquoted identifier (alphanumeric + underscore, starting with a
- * letter or underscore) so callers can't smuggle a `"; DROP …` payload
- * via a misconfigured CDK prop.
- *
- * Why these are SQL strings rather than `postgres.js` tagged-template
- * calls: cross-schema DDL/DML must be schema-qualified (`"a"."t"`)
- * which postgres.js doesn't naturally parameterise (it expects values,
- * not identifiers). Hand-built strings with strict identifier
- * validation are simpler and equally safe.
- */
+const APPLIED_MIGRATIONS_TABLE = '_migrations';
 
 const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
 
@@ -26,15 +12,6 @@ function quote(identifier: string): string {
   return `"${identifier}"`;
 }
 
-/**
- * `CREATE TABLE IF NOT EXISTS target.table (LIKE source.table INCLUDING ALL)`.
- *
- * Cross-schema `LIKE` is in DSQL's documented CREATE TABLE grammar
- * (cf. docs/knowledge/dsql-postgres-compat-gaps.md — the LIKE clause
- * with INCLUDING ALL copies constraints, defaults, indexes, and
- * identity. `IF NOT EXISTS` makes the call idempotent so a retried
- * CFN custom-resource invocation doesn't trip on the second pass.
- */
 export function buildCreateTableLikeSql(
   sourceSchema: string,
   targetSchema: string,
@@ -47,16 +24,6 @@ export function buildCreateTableLikeSql(
 }
 
 // @FollowsBlueprint utils-pure-module
-/**
- * `INSERT INTO target.table (cols) SELECT cols FROM source.table
- *  ON CONFLICT DO NOTHING`. Columns in `nullifyColumns` are replaced by
- * a literal `NULL` in the SELECT list — used to strip S3-bearing keys
- * so previews don't inherit pointers to prod's bucket objects.
- *
- * `ON CONFLICT DO NOTHING` makes the call idempotent on re-deploy of
- * the same target schema: pre-existing rows survive; new prod rows
- * land. Deletions in prod don't propagate (acceptable for preview).
- */
 export function buildCloneInsertSql(
   sourceSchema: string,
   targetSchema: string,
@@ -89,7 +56,6 @@ export interface ColumnDefinition {
   readonly type: string;
 }
 
-/** One `information_schema.columns` row, as far as recreating a column needs. */
 export interface CatalogueColumnRow {
   readonly column_name: string;
   readonly data_type: string;
@@ -98,12 +64,6 @@ export interface CatalogueColumnRow {
   readonly numeric_scale: number | null;
 }
 
-/**
- * A catalogue row as the type a column would have to be recreated with.
- *
- * `data_type` alone drops the length of a `character varying` and the precision
- * of a `numeric`, both of which the catalogue reports in their own columns.
- */
 export function formatColumnType(row: CatalogueColumnRow): ColumnDefinition {
   if (row.character_maximum_length !== null) {
     return { name: row.column_name, type: `${row.data_type}(${row.character_maximum_length})` };
@@ -117,23 +77,8 @@ export function formatColumnType(row: CatalogueColumnRow): ColumnDefinition {
   return { name: row.column_name, type: row.data_type };
 }
 
-/**
- * A type name read back out of the catalogue, so it carries a length or a
- * precision but never an expression. Anything outside that shape is a column
- * this reconciliation refuses to copy rather than interpolate blindly.
- */
-const TYPE_PATTERN = /^[A-Za-z][A-Za-z0-9 ]*(\(\d+(, ?\d+)?\))?( with(out)? time zone)?$/;
+const CATALOGUE_TYPE_PATTERN = /^[A-Za-z][A-Za-z0-9 ]*(\(\d+(, ?\d+)?\))?( with(out)? time zone)?$/;
 
-/**
- * Columns the source table has and the target table does not.
- *
- * `CREATE TABLE IF NOT EXISTS … (LIKE …)` can only create. A preview schema
- * that already exists therefore keeps whatever shape it was created with, and
- * a column production gained since then never arrives — until the clone's
- * INSERT names it and Aurora DSQL answers `column "family" of relation
- * "instrument" does not exist`. The structural step has to reconcile, not just
- * create.
- */
 export function selectMissingColumns(
   sourceColumns: readonly ColumnDefinition[],
   targetColumnNames: readonly string[],
@@ -142,14 +87,6 @@ export function selectMissingColumns(
   return sourceColumns.filter((column) => !present.has(column.name));
 }
 
-/**
- * `ALTER TABLE target.table ADD COLUMN name type`.
- *
- * No constraint clause, and none is possible: Aurora DSQL accepts `ADD COLUMN`
- * only in its bare form (dsql-postgres-compat-gaps §10). A column that is NOT
- * NULL in production therefore arrives nullable in the preview, which is the
- * same compromise every migration in this repository already makes.
- */
 export function buildAddColumnSql(
   targetSchema: string,
   table: string,
@@ -158,55 +95,22 @@ export function buildAddColumnSql(
   assertIdentifier(targetSchema, 'schema');
   assertIdentifier(table, 'table');
   assertIdentifier(column.name, 'column');
-  if (!TYPE_PATTERN.test(column.type)) {
+  if (!CATALOGUE_TYPE_PATTERN.test(column.type)) {
     throw new Error(`buildAddColumnSql: refusing to build with type "${column.type}".`);
   }
   return `ALTER TABLE ${quote(targetSchema)}.${quote(table)} ADD COLUMN IF NOT EXISTS ${quote(column.name)} ${column.type}`;
 }
 
-/**
- * `DELETE FROM target.table` — run immediately before the clone INSERT for a
- * table the source must own outright.
- *
- * The INSERT is `ON CONFLICT DO NOTHING`, which is right for domain data: a
- * re-deploy keeps whatever the preview accumulated and adds what is new in
- * prod. It is wrong for a singleton row whose whole purpose is to match the
- * source. `app_config` is one: it holds pragma's shared password hash, it has
- * a fixed primary key, and a schema that was bootstrapped before cloning was
- * switched on already has row id 1 — so the conflict clause silently kept the
- * old credential and the preview stayed on a password that had since been
- * published in a public repository, guarding cloned production data.
- *
- * Emptying the table first makes the source authoritative, at the cost of a
- * sub-second window mid-deploy where the app answers 503 `auth-not-bootstrapped`.
- */
 export function buildReplaceBeforeCloneSql(targetSchema: string, table: string): string {
   assertIdentifier(targetSchema, 'schema');
   assertIdentifier(table, 'table');
   return `DELETE FROM ${quote(targetSchema)}.${quote(table)}`;
 }
 
-/** Whether the clone must empty this table first so the source row wins. */
 export function isReplacedBeforeClone(table: string, tablesToReplace: readonly string[]): boolean {
   return tablesToReplace.includes(table);
 }
 
-/**
- * Tables that hold a credential rather than domain data. Cloning one of these
- * without saying which behaviour you want is never right, and the two possible
- * mistakes fail in opposite directions:
- *
- *   - copied and *not* replaced → `ON CONFLICT DO NOTHING` keeps whatever row
- *     the target already had, so the preview guards cloned production data with
- *     a stale password. On pragma that stale row came from a test fixture whose
- *     password is published in a public repository.
- *   - copied and replaced → the preview shares production's credential, which
- *     is a deliberate, defensible choice (ADR-0009) but has to be deliberate.
- *   - blocklisted → the preview has no credential and answers 503 until seeded.
- *
- * Add a table here when an app introduces one; the guard below then forces the
- * author to pick.
- */
 const CREDENTIAL_TABLES = ['app_config', 'admin_credentials'] as const;
 
 interface CloneDecisionLists {
@@ -220,16 +124,6 @@ function hasCreateTableStatement(migrationSql: string, table: string): boolean {
   );
 }
 
-/**
- * The credential tables an app's own migrations create and whose clone
- * behaviour its config leaves unstated.
- *
- * Scoped to the migrations rather than to {@link CREDENTIAL_TABLES} wholesale
- * because each app has one such table and not the other: pragma keeps its
- * shared password in `app_config`, last-loop-lepin keeps its admin PIN in
- * `admin_credentials`. Demanding a decision about a table the schema has never
- * heard of would be noise, and noise is what gets a guard deleted.
- */
 export function listUndecidedCredentialTables(
   config: CloneDecisionLists,
   migrationSql: readonly string[],
@@ -246,21 +140,11 @@ export function listUndecidedCredentialTables(
   );
 }
 
-/**
- * Decide whether a table name should have its rows cloned. Returns
- * `false` for `_migrations` (handled out-of-band by the runner so the
- * applied-migrations marker survives even when the blocklist would
- * otherwise hide it) — caller's job is to clone `_migrations` rows
- * explicitly. Returns `false` for any entry in the blocklist
- * (`admin_sessions`, `auth_attempts` by default — runtime state, not
- * data).
- */
 export function isCloneableDataTable(table: string, blocklist: readonly string[]): boolean {
-  if (table === '_migrations') return false;
+  if (table === APPLIED_MIGRATIONS_TABLE) return false;
   return !blocklist.includes(table);
 }
 
-/** The tables whose rows the clone copies, so the caller loops rather than skips. */
 export function selectCloneableDataTables(
   tables: readonly string[],
   blocklist: readonly string[],

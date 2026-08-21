@@ -1,12 +1,5 @@
 /**
  * @vitest-environment node
- *
- * Migration audit — runs in the `core` gate. Reads every `.sql` file under
- * `migrations/` and asserts that no column outside the explicit audit
- * whitelist carries `DEFAULT now()`. The file is the artifact the
- * `DsqlSchema` construct actually applies in preview / prod, so checking
- * the artifact (instead of introspecting the Drizzle objects) also catches
- * the case where someone edits the SQL directly.
  */
 
 import { readdirSync, readFileSync } from 'node:fs';

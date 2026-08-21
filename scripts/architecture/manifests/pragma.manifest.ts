@@ -1,8 +1,3 @@
-/**
- * The hand-written half of pragma's architecture model. Types and the register
- * of applications live in `../architecture-manifest.ts`.
- */
-
 import type { ArchitectureManifest } from '../architecture-manifest';
 
 export const pragmaManifest: ArchitectureManifest = {
@@ -34,7 +29,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'service-worker',
-      sourceNote:
+      noScannedSourceNote:
         'Ships as apps/pragma/site/public/sw.js, a plain script the scan does not read. Its helpers under site/src/sw/ are counted with the single page application.',
       hosting: 'Served from the same origin as the site',
       icon: '📴',
@@ -69,7 +64,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'database',
-      sourceNote:
+      noScannedSourceNote:
         'Declared by the CDK stack and filled by the migrations under api/src/database/migrations/. No application source of its own.',
       hosting: 'Aurora DSQL, eu-west-3, one cluster per application',
       icon: '🗄️',
@@ -82,7 +77,7 @@ export const pragmaManifest: ArchitectureManifest = {
     },
     {
       id: 'uploads-bucket',
-      sourceNote: 'Declared by the CDK stack. No application source of its own.',
+      noScannedSourceNote: 'Declared by the CDK stack. No application source of its own.',
       hosting: 'S3, eu-west-3',
       icon: '🪣',
       name: 'Chord chart bucket',

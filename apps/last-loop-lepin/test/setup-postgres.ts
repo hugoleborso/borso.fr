@@ -1,20 +1,3 @@
-/**
- * Vitest globalSetup for the back-e2e gate.
- *
- * Two modes:
- *
- * 1. **External Postgres** — if `DATABASE_URL` is already set, we trust the
- *    caller (CI runner, local sandbox with a system Postgres) and just
- *    apply the migrations once. Cheaper and works in environments that
- *    can't run nested containers.
- * 2. **Testcontainers** — otherwise, boot a Postgres 16 container, apply
- *    migrations, expose its URL.
- *
- * Per-suite isolation: every test that wants its own data set should call
- * `truncateAllTables(database)` in a `beforeEach`. Schema is shared across
- * suites because applying migrations is the expensive step (~1 s).
- */
-
 import { readdirSync, readFileSync } from 'node:fs';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -49,8 +32,6 @@ function readMigrationStatements(): readonly string[] {
 async function applyMigrations(connectionString: string): Promise<void> {
   const sql = postgres(connectionString, { max: 1, onnotice: () => undefined });
   try {
-    // Always start from an empty database — a previous run may have left
-    // tables behind under an external Postgres. DROP IF EXISTS keeps it idempotent.
     await sql.unsafe(
       'DROP TABLE IF EXISTS loop_punches, manual_dnfs, runners, editions, auth_attempts, admin_credentials, admin_sessions CASCADE',
     );
@@ -66,14 +47,7 @@ function setProcessEnv(databaseUrl: string): void {
   process.env.DATABASE_URL = databaseUrl;
   process.env.STAGE = 'dev';
   process.env.PHOTOS_BUCKET = 'last-loop-lepin-test-photos';
-  // ALLOWED_ORIGIN is intentionally left unset: the `requireAdminSession`
-  // middleware treats absence as "no Origin allow-list configured" and
-  // skips the cross-origin check, so controller tests can POST without
-  // setting `origin` on every request. The middleware unit test sets it
-  // locally to cover the strict-mode path.
   delete process.env.ALLOWED_ORIGIN;
-  // The PIN hash is no longer an env var — tests that exercise the
-  // login flow seed `admin_credentials` via `seedAdminCredentials()`.
   delete process.env.PIN_HASH;
   delete process.env.JWT_SECRET;
 }

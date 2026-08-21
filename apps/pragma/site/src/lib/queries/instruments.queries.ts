@@ -1,10 +1,4 @@
-/**
- * Instruments feature queries / mutations. Pure CRUD over the
- * `/api/instruments` route. Mutations apply an optimistic update on
- * `instrumentKeys.list()` (round 17c) so the admin form's create/edit/
- * delete feels instant; `onSettled` invalidates to reconcile.
- * @Feature instruments
- */
+/** @Feature instruments */
 
 import type { InstrumentFamily } from '@domain/instrument.core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';

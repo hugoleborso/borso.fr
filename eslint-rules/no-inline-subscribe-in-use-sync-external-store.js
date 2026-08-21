@@ -1,12 +1,3 @@
-/**
- * Ported from `biome-plugins/no-inline-subscribe-in-use-sync-external-store.grit`.
- *
- * React calls `subscribe` again whenever its reference changes, so an inline
- * function unsubscribes and resubscribes on every render.
- *
- * See docs/dantotsus/usesyncexternal-store-subscribe-must-be-stable.md and
- * docs/standards/07-state-and-effects.md.
- */
 const MESSAGE =
   'The `subscribe` argument to useSyncExternalStore must keep the same reference across ' +
   'renders, or React resubscribes on every render. Hoist the function to module scope, ' +

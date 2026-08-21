@@ -103,14 +103,14 @@ describe('selectSongThatLostItsLastWrite', () => {
     ).toBe(null);
   });
 
-  it('still names the song when a failed create follows it', () => {
-    // A create carries no id, so it cannot be the answer. Reaching the map, it
-    // would take the last word and hide the song that really lost its write.
-    expect(
-      selectSongThatLostItsLastWrite([
-        { variables: { id: 'song-1' }, status: 'error' },
-        { variables: { title: 'Feeling Good' }, status: 'error' },
-      ]),
-    ).toBe('song-1');
+  it('still names the song when a failed create, which names none, follows it', () => {
+    const failedUpdateOfSongOne = { variables: { id: 'song-1' }, status: 'error' } as const;
+    const failedCreateNamingNoSong = {
+      variables: { title: 'Feeling Good' },
+      status: 'error',
+    } as const;
+    expect(selectSongThatLostItsLastWrite([failedUpdateOfSongOne, failedCreateNamingNoSong])).toBe(
+      'song-1',
+    );
   });
 });

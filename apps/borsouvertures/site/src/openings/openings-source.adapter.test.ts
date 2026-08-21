@@ -1,9 +1,3 @@
-/**
- * The three ways the network fails to produce a document all collapse into one
- * absent value, so each test names the failure it stands for rather than the
- * shape it returns.
- */
-
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { fetchOpeningsDocument } from './openings-source.adapter';
 
@@ -32,8 +26,6 @@ describe('fetchOpeningsDocument', () => {
   });
 
   it('answers with nothing when the origin refuses', async () => {
-    // A readable body on purpose: with an unreadable one the status guard could
-    // be deleted and the parse failure would produce the same absent value.
     vi.stubGlobal('fetch', () =>
       Promise.resolve(Response.json({ openings: ['ruy-lopez'] }, { status: 404 })),
     );

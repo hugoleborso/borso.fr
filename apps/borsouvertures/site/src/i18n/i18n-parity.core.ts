@@ -9,14 +9,6 @@ export interface CatalogueParityDifference {
   readonly missingInFrench: readonly string[];
 }
 
-/**
- * The keys each catalogue is missing relative to the other. The sibling test
- * fails when either list is non-empty, so an English string added without its
- * French counterpart never merges.
- *
- * Both lists come out sorted, because {@link listTranslationKeys} sorts and a
- * `Set` then a `filter` both preserve the order they were given.
- */
 export function diffCatalogues(
   english: TranslationCatalogue,
   french: TranslationCatalogue,
@@ -53,11 +45,6 @@ function collectIdenticalValueKeys(
 }
 
 /**
- * Every key whose two catalogues carry the byte-identical string. Key parity
- * alone stays green when an English value is copied into `fr.json`, so the
- * sibling test asserts this list equals a named allowlist of the words that
- * genuinely read the same in both languages.
- *
  * @Blueprint i18n-parity-gate
  * @BlueprintName Catalogue Parity Gate
  * @BlueprintUsage Use in every application shipping two catalogues, to fail the build on a key or a translation that was never written.

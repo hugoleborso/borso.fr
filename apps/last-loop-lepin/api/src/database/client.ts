@@ -1,18 +1,3 @@
-/**
- * Drizzle client over Aurora DSQL via `postgres-js` + `@aws-sdk/dsql-signer`.
- *
- * Cold-start contract:
- * - `getDatabase()` is a process-level singleton — the Lambda creates one
- *   client on first invocation and reuses the same socket on warm starts.
- * - The DSQL token is regenerated lazily via the `password` callback when
- *   `postgres-js` needs a new connection. AWS issues tokens that expire
- *   after one hour; if a connection survives that long, the next reconnect
- *   uses a fresh token.
- *
- * Local dev: set `STAGE=dev` and provide `DATABASE_URL` (a plain Postgres
- * connection string for a local docker-postgres) — `DsqlSigner` is skipped.
- */
-
 import { DsqlSigner } from '@aws-sdk/dsql-signer';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres, { type Sql } from 'postgres';
@@ -75,11 +60,6 @@ function createLocalClient(config: LocalConfig): Sql {
   return postgres(config.databaseUrl, { types: { bigint: postgres.BigInt } });
 }
 
-/**
- * Returns the process-wide singleton Drizzle client. Constructs it on first
- * call using `DSQL_ENDPOINT` / `DSQL_SCHEMA` (Lambda) or `DATABASE_URL`
- * (local dev / testcontainers).
- */
 export function getDatabase(): Database {
   if (cachedDatabase !== null) return cachedDatabase;
   const dsql = readDsqlConfig();
@@ -94,7 +74,6 @@ export function getDatabase(): Database {
   return cachedDatabase;
 }
 
-/** Test-only: forget the cached client so the next `getDatabase()` rebuilds. */
 export function resetDatabaseForTests(): void {
   cachedDatabase = null;
   void cachedClient?.end({ timeout: 1 });

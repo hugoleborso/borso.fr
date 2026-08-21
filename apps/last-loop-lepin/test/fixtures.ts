@@ -1,9 +1,3 @@
-/**
- * Tiny factories for back-e2e tests. They produce in-memory shapes the
- * services can consume directly, or insert into the testcontainer Postgres
- * via the repository functions.
- */
-
 import { randomUUID } from 'node:crypto';
 import type { RaceEdition } from '../api/src/edition/edition.types';
 import type { LoopPunch } from '../api/src/punch/punch.types';

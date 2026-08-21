@@ -1,10 +1,3 @@
-/**
- * SearchBar — text input with a leading search icon. The prototype
- * builds this inline (an absolutely-positioned icon over a padded
- * input); the molecule wraps that composition once so the routes
- * don't repeat the same six-line snippet.
- */
-
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';

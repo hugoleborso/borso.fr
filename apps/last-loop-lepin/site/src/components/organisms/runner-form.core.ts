@@ -1,13 +1,3 @@
-/**
- * The runner registration form's rules: the slug derived from the display
- * name, the accepted photo formats, and the shape the form fields hold.
- *
- * The Zod schema mirrors `createRunnerInputSchema` in
- * `api/src/runner/runner.schema.ts`. It is restated rather than imported
- * because that file also declares the Drizzle table, which has no business in
- * a browser bundle.
- */
-
 import { z } from 'zod';
 
 const COMBINING_MARKS = /[̀-ͯ]/g;
@@ -48,7 +38,6 @@ export const runnerFormValuesSchema = z.object({
     ),
 });
 
-/** URL friendly identifier derived from the display name the organiser typed. */
 export function slugifyRunnerName(displayName: string): string {
   return displayName
     .toLowerCase()
@@ -69,11 +58,6 @@ export interface PhotoDescriptor {
   readonly sizeBytes: number;
 }
 
-/**
- * Why a picked photo cannot be uploaded, or null when it can. The size cap
- * matches what the presigned upload accepts, so a file too large is refused
- * before it costs the operator a round trip.
- */
 export function selectPhotoRejection(photo: PhotoDescriptor): PhotoRejection {
   const isSupported = RUNNER_PHOTO_CONTENT_TYPES.some((type) => type === photo.contentType);
   if (!isSupported) return 'unsupported-type';
@@ -81,11 +65,6 @@ export function selectPhotoRejection(photo: PhotoDescriptor): PhotoRejection {
   return null;
 }
 
-/**
- * Narrow a browser supplied MIME type to the union the API accepts, or null
- * when it is not one of them. The `File` type says `string`, and a hostile
- * file must not reach the network on that promise alone.
- */
 export function readPhotoContentType(rawContentType: string): RunnerPhotoContentType | null {
   return RUNNER_PHOTO_CONTENT_TYPES.find((type) => type === rawContentType) ?? null;
 }

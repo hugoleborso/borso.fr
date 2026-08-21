@@ -40,10 +40,6 @@ const BACK_BUTTON_BY_STEP: ComponentByKind<SelectorStep, BackButtonProps> = {
   line: Button,
 };
 
-/**
- * On a narrow viewport the three columns become one step at a time, so a card
- * tap moves the flow forward and the back button walks it out again.
- */
 // @FollowsBlueprint organism-table-dispatch
 export function CompactOpeningFlow(props: OpeningPanelProps) {
   const { t } = useTranslation();

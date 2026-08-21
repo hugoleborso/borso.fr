@@ -1,21 +1,10 @@
 #!/usr/bin/env tsx
-/**
- * Index every blueprint annotation in the repository.
- *
- * Usage:
- *   pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts
- *
- * Scans the source directories for `@Blueprint` JSDoc annotations, extracts the
- * identifier, name, usage, and description, counts the `@FollowsBlueprint`
- * references pointing at each one, and writes `blueprint-index.md`.
- *
- * Adapted from the `blueprint` skill in pernod-ricard-rgm/pr-aquila-ap-v2.
- */
 
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import {
+  ANNOTATION_SEARCH_RADIUS_LINES,
   type BlueprintProject,
   extractFollowsBlueprint,
   inferApplication,
@@ -45,7 +34,6 @@ const BLUEPRINT_ID_PATTERN = /@Blueprint\s+(\S+)/;
 const BLUEPRINT_NAME_PATTERN = /@BlueprintName\s+(.+)/;
 const BLUEPRINT_USAGE_PATTERN = /@BlueprintUsage\s+(.+)/;
 const BLUEPRINT_DESCRIPTION_PATTERN = /@BlueprintDescription\s+(.+)/;
-const ANNOTATION_SEARCH_RADIUS_LINES = 5;
 
 interface Blueprint {
   readonly id: string;

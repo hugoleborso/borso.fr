@@ -1,9 +1,3 @@
-/**
- * Uploads endpoints — presigned PUT for new chart uploads, presigned
- * GET for rendering existing charts. Both are gated by the shared
- * session middleware (mounted in `app.ts`).
- */
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';

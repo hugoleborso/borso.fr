@@ -17,7 +17,6 @@ interface AdminLoginFormProps {
   readonly onAuthenticated: () => void;
 }
 
-/** PIN entry that opens the organiser screens. */
 // @FollowsBlueprint organism-form
 export function AdminLoginForm({ onAuthenticated }: AdminLoginFormProps) {
   const { t } = useTranslation();

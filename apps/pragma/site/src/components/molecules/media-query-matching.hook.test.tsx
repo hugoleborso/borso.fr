@@ -1,10 +1,3 @@
-/**
- * Tests for `useIsMediaQueryMatching`. jsdom does not implement a real matchMedia
- * — we stub `window.matchMedia` per test to drive the hook through the
- * three states it can be in (matches, doesn't, then flips on change
- * event).
- */
-
 import { act } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';

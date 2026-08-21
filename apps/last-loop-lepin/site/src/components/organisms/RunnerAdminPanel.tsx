@@ -43,11 +43,6 @@ interface RunnerAdminPanelProps {
   readonly edition: RaceEditionDto;
 }
 
-/**
- * Registration of the field, plus the roster as it stands. A picked photo is
- * uploaded to S3 first and the returned object key travels with the runner,
- * so a failed upload never leaves a runner pointing at a missing image.
- */
 // @FollowsBlueprint organism-form
 export function RunnerAdminPanel({ edition }: RunnerAdminPanelProps) {
   const { t } = useTranslation();

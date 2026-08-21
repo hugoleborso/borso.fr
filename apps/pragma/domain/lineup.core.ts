@@ -1,36 +1,7 @@
-/**
- * The lineup vocabulary both sides of this application read.
- *
- * A lineup maps every band member to the instruments they hold on a song. One
- * person can hold several at once — a drummer who also sings is one member
- * holding two instruments, and the transition rule has to see both — so the
- * value is a list, and an empty list means the member sits that song out.
- *
- * Rows written before this shape existed carry a single instrument id, or
- * `null` for a member sitting out. `normalizeLineup` accepts either form and
- * always yields lists, so nothing has to rewrite the stored JSON.
- *
- * Lineup resolution between a song's `defaultLineup` and a setlist entry's
- * per-entry `lineupOverride` keeps three null shapes apart:
- *
- *   1. The member is absent from the override → fall back to the default.
- *   2. The override maps the member to an empty list → the member sits out
- *      explicitly (cleared on this song).
- *   3. The override maps the member to instruments → those win.
- *
- * The default is always preserved when the override has no opinion on a member.
- *
- * Pure functions over plain objects.
- */
-
 export type MemberId = string;
 export type InstrumentId = string;
 export type Lineup = Readonly<Record<MemberId, readonly InstrumentId[]>>;
 
-/**
- * What a stored lineup can look like: the current list form, or the single-id
- * and `null` forms written before a member could hold two instruments.
- */
 export type StoredLineupValue = InstrumentId | readonly InstrumentId[] | null;
 export type StoredLineup = Readonly<Record<MemberId, StoredLineupValue>>;
 
@@ -61,11 +32,6 @@ export function resolveLineup(defaultLineup: Lineup, overrideLineup: Lineup | nu
 
 export type InstrumentedMember = readonly [MemberId, readonly InstrumentId[]];
 
-/**
- * The members who hold at least one instrument, which is where every rule
- * reading a lineup starts: the mastery average and the transition check both
- * ignore the members sitting the song out.
- */
 // @FollowsBlueprint core-projection
 export function instrumentedMembers(lineup: Lineup): readonly InstrumentedMember[] {
   const held: InstrumentedMember[] = [];
@@ -77,10 +43,6 @@ export function instrumentedMembers(lineup: Lineup): readonly InstrumentedMember
 
 export type MemberInstrumentPair = readonly [MemberId, InstrumentId];
 
-/**
- * One pair per instrument held, which is the grain mastery is scored at: a
- * member holding two instruments is rated on each of them separately.
- */
 // @FollowsBlueprint core-projection
 export function memberInstrumentPairs(lineup: Lineup): readonly MemberInstrumentPair[] {
   const pairs: MemberInstrumentPair[] = [];
@@ -90,7 +52,6 @@ export function memberInstrumentPairs(lineup: Lineup): readonly MemberInstrument
   return pairs;
 }
 
-/** The instruments a member holds, whether or not the lineup names them. */
 export function instrumentsHeldBy(lineup: Lineup, memberId: MemberId): readonly InstrumentId[] {
   return lineup[memberId] ?? [];
 }

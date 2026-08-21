@@ -1,11 +1,4 @@
-/**
- * A setlist's own page at `/setlists/:setlistId`: its name, the
- * sessions playing it, and the editor. The setlist is addressed by its
- * own identifier rather than through a session, because it no longer
- * belongs to one — the same set can be run in a rehearsal and played at
- * the concert that rehearsal prepares.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useMemo } from 'react';

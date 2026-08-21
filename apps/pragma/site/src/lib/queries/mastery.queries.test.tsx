@@ -1,10 +1,3 @@
-/**
- * Tests for the optimistic write path on the mastery defaults mutations.
- * The scroll-wheel ±1 in the matrix relies on the cell upserting the
- * default row immediately; a 500 reply rolls the cell back to its
- * previous score.
- */
-
 import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import { masteryKeys, useDeleteMasteryDefault, useSaveMasteryDefault } from './mastery.queries';
 import {

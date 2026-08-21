@@ -1,9 +1,4 @@
 /**
- * The browser's way out of the page: a byte transfer straight to a presigned
- * URL, so no chart passes through the API. Per ADR-0012 an outbound call lives
- * in an `.adapter.ts` and nowhere else, which is why the `fetch` a component
- * used to make sits here.
- *
  * @DependsOnExternal aws-s3
  * @Feature uploads
  */

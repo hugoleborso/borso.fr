@@ -12,7 +12,6 @@ const CLASS_BY_TONE: Readonly<Record<HintTextTone, string>> = {
 
 interface HintTextProps {
   readonly tone: HintTextTone;
-  /** Set on the danger tone so a screen reader announces the failure. */
   readonly role?: 'alert';
   readonly children: ReactNode;
 }

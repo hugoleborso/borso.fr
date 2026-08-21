@@ -66,9 +66,6 @@ describe('PhotosCdn (prod)', () => {
   });
 
   it('does NOT create its own S3 bucket (bucket lifecycle stays with the caller)', () => {
-    // The caller-provided bucket is created in the same stack here for
-    // testing purposes, but the construct itself doesn't synthesise a
-    // second bucket. The OAC bucket policy lives on the existing bucket.
     tpl.resourceCountIs('AWS::S3::Bucket', 1);
   });
 });

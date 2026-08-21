@@ -30,8 +30,7 @@ function hit(overrides: Partial<ExternalSongHit> = {}): ExternalSongHit {
   };
 }
 
-/** Nothing in the default hit matches, so only the unasked-title penalty applies. */
-const BASELINE = -7;
+const SCORE_FROM_TITLE_PENALTY_ALONE = -7;
 
 // @FollowsBlueprint test-pure-unit
 describe('wordsOf', () => {
@@ -115,28 +114,40 @@ describe('hasCoverMarker', () => {
 
 describe('scoreExternalHit', () => {
   it('penalises a title the query never asked for', () => {
-    expect(scoreExternalHit(hit(), 'zzz')).toBe(BASELINE);
+    expect(scoreExternalHit(hit(), 'zzz')).toBe(SCORE_FROM_TITLE_PENALTY_ALONE);
   });
 
   it('rewards each release', () => {
-    expect(scoreExternalHit(hit({ releaseCount: 2 }), 'zzz')).toBe(BASELINE + 6);
+    expect(scoreExternalHit(hit({ releaseCount: 2 }), 'zzz')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 6,
+    );
   });
 
   it('caps the release reward so a compilation flood cannot dominate', () => {
-    expect(scoreExternalHit(hit({ releaseCount: 20 }), 'zzz')).toBe(BASELINE + 60);
-    expect(scoreExternalHit(hit({ releaseCount: 999 }), 'zzz')).toBe(BASELINE + 60);
+    expect(scoreExternalHit(hit({ releaseCount: 20 }), 'zzz')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 60,
+    );
+    expect(scoreExternalHit(hit({ releaseCount: 999 }), 'zzz')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 60,
+    );
   });
 
   it('rewards each ISRC', () => {
-    expect(scoreExternalHit(hit({ isrcCount: 3 }), 'zzz')).toBe(BASELINE + 12);
+    expect(scoreExternalHit(hit({ isrcCount: 3 }), 'zzz')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 12,
+    );
   });
 
   it('rewards each tag', () => {
-    expect(scoreExternalHit(hit({ tags: ['rock', 'pop'] }), 'zzz')).toBe(BASELINE + 4);
+    expect(scoreExternalHit(hit({ tags: ['rock', 'pop'] }), 'zzz')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 4,
+    );
   });
 
   it('rewards carrying an album', () => {
-    expect(scoreExternalHit(hit({ album: 'Il ballo della vita' }), 'zzz')).toBe(BASELINE + 5);
+    expect(scoreExternalHit(hit({ album: 'Il ballo della vita' }), 'zzz')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 5,
+    );
   });
 
   it('rewards a title word the query names', () => {
@@ -144,7 +155,9 @@ describe('scoreExternalHit', () => {
   });
 
   it('rewards an artist word the query names, more than a title word', () => {
-    expect(scoreExternalHit(hit({ artist: 'Maneskin' }), 'maneskin')).toBe(BASELINE + 14);
+    expect(scoreExternalHit(hit({ artist: 'Maneskin' }), 'maneskin')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 14,
+    );
   });
 
   it('penalises a recording that announces itself as a cover', () => {
@@ -203,18 +216,6 @@ describe('rankExternalHits', () => {
   });
 });
 
-/**
- * The unit tests above pass on more than one scoring design, and the first
- * design this block would have rejected was one of them: a flat bonus when the
- * query contained the hit's title ranked tracks literally titled *Amy
- * Winehouse* first. Only a real payload showed it.
- *
- * The fixture is what `dismax` returns for that query. The studio recording
- * sits sixth, with one release, no ISRC and no tag, behind three covers and a
- * mashup — so nothing in the notability signals promotes it. The word overlap
- * and the unasked-title-word penalty do, which is the part a synthetic fixture
- * would never have exercised.
- */
 describe('rankExternalHits, against a captured MusicBrainz response', () => {
   const QUERY = 'Valerie Amy Winehouse';
 

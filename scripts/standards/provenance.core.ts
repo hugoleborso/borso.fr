@@ -1,38 +1,5 @@
-/**
- * Where each rule came from, and whether anything ever went wrong to justify it.
- *
- * This repository holds thirty-three custom lint rules and seventy-nine
- * root-cause analyses. The rules are the answer and the dantotsus are the evidence, and
- * nothing has ever put the two side by side. The published record on static
- * analysis is not encouraging about rules written from principle — Lenarduzzi
- * and colleagues found no difference in fault-proneness between clean and dirty
- * classes across 33 projects, and Netflix reports about a thousand actionable
- * findings out of a million — so "does this rule earn its place" is a question
- * worth being able to ask before writing the next one.
- *
- * It cannot be answered directly. Nobody can count the defects a rule
- * prevented, because they did not happen. What *can* be counted is provenance:
- * a rule named in a dantotsu's eradication was written because something
- * actually went wrong, and a rule no dantotsu mentions was written from
- * principle.
- *
- * Neither is a verdict. A rule written from principle can be the best one here,
- * and several obviously are. The number is an input to a conversation about the
- * next rule, which is the only place it belongs.
- */
-
-/**
- * The part of a dantotsu that names the rule it shipped.
- *
- * Scanning the whole document credits a rule for merely appearing in one. The
- * dantotsu about a lint rule that knew only one of three spellings lists nine
- * rules as *affected by* the defect, and reading that as nine rules born from
- * nine defects inflates the count by a third. The eradication section is where
- * a dantotsu says what it shipped, so that is the only part read.
- */
 export const ERADICATION_HEADING = '## Eradication';
 
-/** The `## Eradication` section, or an empty string when there is none. */
 export function readEradicationSection(markdown: string): string {
   const start = markdown.indexOf(ERADICATION_HEADING);
   if (start === -1) return '';
@@ -43,11 +10,8 @@ export function readEradicationSection(markdown: string): string {
 
 export interface RuleRecord {
   readonly rule: string;
-  /** Dantotsu slugs whose text names this rule. */
   readonly dantotsuSlugs: readonly string[];
-  /** Standards whose `## Enforced by` section cites it. */
   readonly citingStandards: readonly string[];
-  /** True when `eslint.config.js` turns it on somewhere. */
   readonly enabled: boolean;
 }
 
@@ -75,11 +39,6 @@ export function summariseProvenance(records: readonly RuleRecord[]): ProvenanceS
   };
 }
 
-/**
- * Ordered so the rules with the most evidence behind them come first, then the
- * ones with none. Sorting the other way would read as a list of suspects, which
- * is not what a rule written from principle is.
- */
 export function rankRecords(records: readonly RuleRecord[]): readonly RuleRecord[] {
   return [...records].sort((first, second) => {
     const byEvidence = second.dantotsuSlugs.length - first.dantotsuSlugs.length;

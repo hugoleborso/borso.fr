@@ -1,13 +1,4 @@
-/**
- * What the add-a-song sheet shows for what the operator typed.
- *
- * Two decisions: which songs match the query, and whether to offer creating
- * the song being typed. An empty query matches every song, since every string
- * contains the empty one, which is how the sheet opens on the whole catalog. The offer only makes sense once something is typed and
- * no song already carries that exact title, otherwise the sheet invites the
- * band to enter the same song twice.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 export interface PickableSong {
   readonly id: string;
@@ -38,10 +29,6 @@ export function shouldOfferCreatingSong(songs: readonly PickableSong[], query: s
   return !songs.some((song) => normalize(song.title) === needle);
 }
 
-/**
- * What the sheet's closing button says. Once songs have gone in, the button is
- * the way out of a finished job rather than a way to back out of one.
- */
 export function selectPickerCloseLabelKey(
   addedCount: number,
 ): 'setlist.addSongDone' | 'common.cancel' {

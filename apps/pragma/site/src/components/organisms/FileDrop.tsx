@@ -1,13 +1,4 @@
-/**
- * FileDrop — chord-chart upload flow. Calls `/api/uploads/sign`, PUTs the
- * file to the returned URL, then emits `{ kind, objectKey }` to the parent
- * so the song form can stamp the chart variant. The drag target itself is
- * the `FileDropZone` molecule; validation lives in `file-drop.utils.ts`.
- *
- * The PUT goes through `fetch` rather than the Hono client because the
- * signed URL is S3's, not this application's API.
- * @Feature uploads
- */
+/** @Feature uploads */
 
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';

@@ -34,7 +34,6 @@ describe('validateAppSlug', () => {
     expect(() => validateAppSlug('a'.repeat(33))).toThrow(/exceeds 32 characters/);
   });
 
-  /** 32 is the longest accepted slug, not the first rejected one. */
   it('accepts a slug of exactly 32 chars', () => {
     expect(() => validateAppSlug('a'.repeat(32))).not.toThrow();
   });

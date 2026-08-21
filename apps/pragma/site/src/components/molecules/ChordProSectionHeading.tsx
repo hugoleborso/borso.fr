@@ -1,13 +1,3 @@
-/**
- * ChordProSectionHeading — names one block of a chord chart, so a
- * reader scanning the page mid-song lands on the right verse instead
- * of counting lines back from the top.
- *
- * The heading carries its own tone because the stage view reads on black:
- * the Badge atom's default surface disappears there, so the dark tone drops
- * the fill and keeps the dimmed stage ink that clears contrast on it.
- */
-
 import { useTranslation } from 'react-i18next';
 import { buildSectionHeading, type LabelledSectionKind } from '../../lib/chordpro.utils';
 import type { ChordChartTone } from '../atoms/chart-tone';
@@ -28,7 +18,7 @@ const HEADING_CLASS_BY_TONE = {
 export interface ChordProSectionHeadingProps {
   readonly kind: LabelledSectionKind;
   readonly label: string | null;
-  readonly ordinal: number;
+  readonly ordinalAmongKind: number;
   readonly tone: ChordChartTone;
 }
 
@@ -36,13 +26,13 @@ export interface ChordProSectionHeadingProps {
 export function ChordProSectionHeading({
   kind,
   label,
-  ordinal,
+  ordinalAmongKind,
   tone,
 }: ChordProSectionHeadingProps): JSX.Element {
   const { t } = useTranslation();
   return (
     <Badge tone="mono" size="md" className={HEADING_CLASS_BY_TONE[tone]}>
-      {buildSectionHeading(label ?? t(SECTION_LABEL_KEY[kind]), ordinal)}
+      {buildSectionHeading(label ?? t(SECTION_LABEL_KEY[kind]), ordinalAmongKind)}
     </Badge>
   );
 }

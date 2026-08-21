@@ -1,18 +1,3 @@
-/**
- * Builds the architecture graph of one application by parsing its source with
- * the TypeScript compiler API.
- *
- * Everything here is derived, never authored. A node's position comes from its
- * path and its file-name suffix, its edges come from real import and identifier
- * references, and its HTTP routes come from the Hono call chain as written. The
- * only hand-written inputs are the manifest, which names the actors and
- * external systems that no single source file owns, and the `@DependsOnExternal`
- * and `@Feature` tags, which record the two facts a path cannot carry.
- *
- * The layer inference is shared with the blueprint scripts rather than
- * duplicated, so a rename cannot make the two disagree.
- */
-
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -28,33 +13,16 @@ export interface ExportedSymbol {
   readonly name: string;
   readonly line: number;
   readonly isFunction: boolean;
-  /** Repo-relative paths of files this symbol references through an import. */
   readonly calls: readonly string[];
-  /** Imported identifiers this symbol references, paired with their file. */
   readonly callSymbols: readonly CallSymbol[];
-  /**
-   * External systems this symbol reaches. Read from the symbol's own JSDoc when
-   * it carries a tag, and inherited from the file otherwise, which is correct
-   * for a file whose whole purpose is one external such as a repository holding
-   * the S3 client. Attributing at the symbol keeps a route that never calls
-   * MusicBrainz from claiming it does.
-   */
   readonly dependsOnExternal: readonly string[];
-  /** Drizzle tables this symbol references by name. */
   readonly tables: readonly string[];
-  /** Endpoints this symbol calls through the typed client. */
   readonly apiCalls: readonly ApiCall[];
-  /** Blueprint declared directly above this symbol, if any. */
   readonly blueprints: readonly string[];
-  /** Blueprint this symbol is marked as following. */
   readonly followsBlueprints: readonly string[];
-  /** The declaration's own source, leading comment included. */
   readonly source: string;
-  /** Lines the declaration spans, comment included. */
   readonly lineCount: number;
-  /** Cognitive complexity, by the SonarSource rules. */
   readonly complexity: number;
-  /** `eslint-disable` directives inside the declaration. */
   readonly lintExceptions: number;
 }
 
@@ -65,9 +33,7 @@ export interface CallSymbol {
 }
 
 export interface ImportEdge {
-  /** Repo-relative path when the import resolves inside the repository. */
   readonly targetFile: string | null;
-  /** Package name when the import leaves the repository. */
   readonly packageName: string | null;
   readonly namedBindings: readonly string[];
   readonly isTypeOnly: boolean;
@@ -77,23 +43,12 @@ export interface RouteEntry {
   readonly method: string;
   readonly path: string;
   readonly line: number;
-  /** Identifiers referenced inside the handler that came from an import. */
   readonly calls: readonly CallSymbol[];
-  /**
-   * The router this route was chained onto, named by the variable holding it or
-   * by the factory function returning it. A controller exporting several
-   * routers mounts them at different base paths, so the route cannot be given a
-   * full path without knowing which one it belongs to.
-   */
   readonly routerVariable: string;
 }
 
 export interface ArchitectureFile {
   readonly path: string;
-  /**
-   * The file's content, hashed. Position and layer are invariant under an edit,
-   * so without this a rewritten service reads as untouched in a branch diff.
-   */
   readonly digest: string;
   readonly application: string;
   readonly container: string;
@@ -101,9 +56,7 @@ export interface ArchitectureFile {
   readonly context: string;
   readonly feature: string | null;
   readonly lineCount: number;
-  /** Cognitive complexity of the whole file. */
   readonly complexity: number;
-  /** `eslint-disable` directives anywhere in the file. */
   readonly lintExceptions: number;
   readonly blueprints: readonly string[];
   readonly followsBlueprints: readonly string[];
@@ -114,38 +67,23 @@ export interface ArchitectureFile {
   readonly tables: readonly string[];
   readonly mounts: readonly RouteMount[];
   readonly apiCalls: readonly ApiCall[];
-  /**
-   * String literals naming an API path. The service worker and anything else
-   * that fetches by URL never appears in `apiCalls`, so a route reached only
-   * that way would otherwise read as unreachable.
-   */
   readonly urlStrings: readonly string[];
-  /** Screens this module declares, when it is the router. */
   readonly screenRoutes: readonly ScreenRoute[];
-  /**
-   * JSX event handlers whose body reaches an identifier imported from a query
-   * module, paired with the hook that identifier came from. This is the one
-   * record the tree keeps of what a person actually did.
-   */
   readonly gestures: readonly HookGesture[];
 }
 
-/** One `<Route path="…" element={<Page />} />` in the front end's router. */
 export interface ScreenRoute {
   readonly path: string;
   readonly component: string;
-  /** Repo-relative path of the module the component comes from. */
   readonly componentFile: string | null;
 }
 
-/** A JSX event handler whose body reaches a given identifier. */
 export interface GestureBinding {
   readonly event: string;
   readonly line: number;
 }
 
 export interface HookGesture extends GestureBinding {
-  /** The query hook whose binding this handler reaches. */
   readonly hook: string;
 }
 
@@ -155,7 +93,6 @@ export interface RouteMount {
   readonly targetFile: string | null;
 }
 
-/** Size and shape of whatever code a block stands for, one file or many. */
 export interface NodeMetrics {
   readonly lines: number;
   readonly complexity: number;
@@ -181,11 +118,6 @@ export function aggregateMetrics(files: readonly ArchitectureFile[]): NodeMetric
   };
 }
 
-/**
- * Names bound by a destructuring whose initialiser calls an import, so that
- * `const { publicRouter } = buildAuthRouter()` resolves `publicRouter` back to
- * the module `buildAuthRouter` came from.
- */
 function buildLocalAliases(
   sourceFile: ts.SourceFile,
   importLookup: ReadonlyMap<string, CallSymbol>,
@@ -214,7 +146,6 @@ function buildLocalAliases(
   return aliases;
 }
 
-/** The variable or function that owns the Hono chain a route sits on. */
 function findRouterVariable(node: ts.Node): string {
   let current: ts.Node | undefined = node;
   while (current !== undefined) {
@@ -236,9 +167,7 @@ export interface ApiCall {
 }
 
 const SOURCE_EXTENSIONS = ['.ts', '.tsx'] as const;
-/** The name every front end in this repository reads its typed Hono client through. */
 const API_CLIENT_BINDING = 'api';
-/** Enough of a sha1 to keep collisions out of a tree of a few hundred files. */
 const DIGEST_LENGTH = 12;
 const INDEX_BASENAMES = ['index.ts', 'index.tsx'] as const;
 
@@ -261,19 +190,6 @@ function matchAll(pattern: RegExp, text: string): string[] {
   return found;
 }
 
-/**
- * The path aliases an application declares, read from its own tsconfig.
- *
- * Hard-coding `@api`, `@site` and `@domain` described two of this repository's
- * four applications. A site that maps `@/*` to `./site/*` had every aliased
- * import resolve to nothing, so its import graph showed 67 edges across 103
- * files and its user-action level drew one of them. The compiler already knows
- * the answer; asking it is what makes the scan work on an application nobody
- * wrote this script for.
- *
- * Cached per application root, since every file in a scan asks the same
- * question and reading a tsconfig per file is a measurable cost.
- */
 const aliasesByApplicationRoot = new Map<string, readonly (readonly [string, string])[]>();
 
 function readAliasPrefixes(applicationRoot: string): readonly (readonly [string, string])[] {
@@ -293,9 +209,6 @@ function readAliasPrefixes(applicationRoot: string): readonly (readonly [string,
     for (const [pattern, targets] of Object.entries(paths)) {
       const first = Array.isArray(targets) ? targets[0] : undefined;
       if (typeof first !== 'string') continue;
-      // `"@site/*": ["./site/src/*"]` means the prefix `@site/` resolves under
-      // `<app>/site/src`. A mapping without the trailing star names one module
-      // rather than a directory and is left to the package branch.
       if (!pattern.endsWith('/*') || !first.endsWith('/*')) continue;
       prefixes.push([
         pattern.slice(0, -1),
@@ -308,10 +221,6 @@ function readAliasPrefixes(applicationRoot: string): readonly (readonly [string,
   return resolved;
 }
 
-/**
- * Resolve an import specifier to a repo-relative path, or to the package name
- * when it leaves the repository.
- */
 function resolveSpecifier(
   specifier: string,
   containingFile: string,
@@ -430,27 +339,8 @@ function readImports(
 
 const TABLE_IDENTIFIER_PATTERN = /^[a-z][A-Za-z]*Table$/;
 
-/**
- * A declaration long enough to fill a modal twice is not read, it is scrolled
- * past, and every extra line is carried in the committed page. The cap keeps
- * the common case whole and says so when it cuts.
- */
 const MAXIMUM_SOURCE_LINES = 80;
 
-/**
- * Cognitive complexity, as SonarSource defines it rather than as McCabe does.
- *
- * The difference is the one that matters for reading code: a flat sequence of
- * five guard clauses is easy and scores five in McCabe, while one `if` nested
- * five deep is hard and scores the same. Here every structure that breaks the
- * linear flow costs one, and costs one more for each level it is nested inside,
- * so the second case scores far higher. A sequence of the same boolean operator
- * costs one however long it is, because `a && b && c` is one idea.
- *
- * `else` and `else if` take the flat increment without the nesting penalty, and
- * a function declared inside another raises the nesting level for its body
- * without scoring on its own.
- */
 function cognitiveComplexity(root: ts.Node): number {
   let total = 0;
 
@@ -476,8 +366,6 @@ function cognitiveComplexity(root: ts.Node): number {
     let hasScored = false;
 
     if (ts.isIfStatement(node)) {
-      // An `else if` arrives as an if inside the else branch; it takes the flat
-      // increment, which is why the parent check matters here.
       const isElseIf =
         node.parent !== undefined &&
         ts.isIfStatement(node.parent) &&
@@ -531,17 +419,6 @@ function dedupeApiCalls(calls: readonly ApiCall[]): ApiCall[] {
   return [...new Map(calls.map((call) => [`${call.method} ${call.path}`, call])).values()];
 }
 
-/**
- * Endpoints reachable from each module-local function, followed to a fixed
- * point.
- *
- * A hook that calls `api.…$post()` inline is read from its own body, but a hook
- * whose request sits in a module-local helper — the shape TanStack Query
- * encourages, since `queryFn` wants a named function — reads as calling no
- * endpoint at all. The whole feature then vanishes from the user-action level
- * while its code is plainly there, which is worse than drawing nothing: the
- * coverage number says the walk looked and found nothing to draw.
- */
 function readLocalApiCalls(
   sourceFile: ts.SourceFile,
   clientIdentifier: string | null,
@@ -658,13 +535,6 @@ function readExportedSymbols(
   return symbols;
 }
 
-/**
- * Walk the Hono call chain and read every route and mount off it.
- *
- * The routers in this repository are one unbroken chained expression, because
- * breaking the chain drops the accumulated route types the front end reads, so
- * the chain is also the complete list of routes and can be traversed as one.
- */
 function readRoutesAndMounts(
   sourceFile: ts.SourceFile,
   importLookup: Map<string, CallSymbol>,
@@ -719,15 +589,6 @@ function readRoutesAndMounts(
   return { routes, mounts };
 }
 
-/**
- * Read the endpoints a front-end module calls off the Hono RPC client.
- *
- * A call reads `api.api.songs[':id'].$put(...)`, so the method is the property
- * beginning with a dollar and the path is the chain of property names and
- * string subscripts between the client identifier and that method. Reading it
- * this way means the front-to-back edges come from the calls themselves, not
- * from matching a query module's name against a bounded context.
- */
 function readApiCallsIn(
   root: ts.Node,
   sourceFile: ts.SourceFile,
@@ -776,19 +637,16 @@ function readApiCallsIn(
   return calls;
 }
 
-/** Every endpoint the file calls, wherever in it the call sits. */
 function readApiCalls(sourceFile: ts.SourceFile, clientIdentifier: string | null): ApiCall[] {
   return readApiCallsIn(sourceFile, sourceFile, clientIdentifier);
 }
 
 const API_PATH_STRING = /['"`](\/api\/[A-Za-z0-9\-_/:]*)['"`]/g;
 
-/** Every string literal in the file that names an API path. */
 export function readApiPathStrings(text: string): string[] {
   return [...new Set(matchAll(API_PATH_STRING, text))];
 }
 
-/** Drizzle table identifiers a repository reads, taken from its schema import. */
 function readTables(imports: readonly ImportEdge[]): string[] {
   const tables = new Set<string>();
   for (const edge of imports) {
@@ -823,6 +681,13 @@ function inferContext(filePath: string, container: string): string {
   return 'root';
 }
 
+const MODULE_HEADER_END = '\nimport ';
+
+function readModuleHeaderText(text: string): string {
+  const firstImportIndex = text.indexOf(MODULE_HEADER_END);
+  return firstImportIndex === -1 ? text : text.slice(0, firstImportIndex);
+}
+
 export function buildArchitectureFile(
   absolutePath: string,
   repositoryRoot: string,
@@ -838,15 +703,7 @@ export function buildArchitectureFile(
     absolutePath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
   );
 
-  /**
-   * A tag in the file header describes the whole module, so every export
-   * inherits it. A tag deeper in the file belongs to the one declaration it
-   * sits above and must not spread, which is why the header is cut out here
-   * rather than the whole text being reused.
-   */
-  const firstImportIndex = text.indexOf('\nimport ');
-  const headerText = firstImportIndex === -1 ? text : text.slice(0, firstImportIndex);
-  const headerExternals = matchAll(DEPENDS_ON_EXTERNAL_TAG, headerText);
+  const headerExternals = matchAll(DEPENDS_ON_EXTERNAL_TAG, readModuleHeaderText(text));
 
   const imports = readImports(sourceFile, absolutePath, repositoryRoot, applicationRoot);
   const importLookup = buildImportLookup(imports);
@@ -854,13 +711,6 @@ export function buildArchitectureFile(
   const featureMatch = FEATURE_TAG.exec(text);
   const localAliases = buildLocalAliases(sourceFile, importLookup);
   const { routes, mounts } = readRoutesAndMounts(sourceFile, importLookup, localAliases);
-  // The typed client is recognised by the binding a caller reads it through,
-  // not by the file it came from. Requiring `.client.ts` described the one
-  // application that had already been renamed: the other calls the same
-  // `api.api.x.$get()` chains through `lib/api.ts`, so every hook in it
-  // resolved no endpoint and the whole application reported no user action.
-  // A local module exporting something else called `api` is harmless here,
-  // because a call is only read when the chain ends in a `$method`.
   const clientBinding = imports
     .filter((edge) => edge.targetFile !== null)
     .flatMap((edge) => edge.namedBindings)
@@ -892,14 +742,6 @@ export function buildArchitectureFile(
   };
 }
 
-/**
- * The screens the front-end router declares.
- *
- * `<Route path="/catalog/:songId" element={<SongDetailPage />} />` is the only
- * place in the tree that ties a URL to a component, and a flow that starts at a
- * function rather than at an address is a flow nobody can follow back to
- * something they did.
- */
 export function readScreenRoutes(
   sourceFile: ts.SourceFile,
   importLookup: ReadonlyMap<string, CallSymbol>,
@@ -937,13 +779,6 @@ export function readScreenRoutes(
   return found;
 }
 
-/**
- * The JSX event handlers whose body references one of the given identifiers.
- *
- * A page reaches a mutation hook through a binding, and what a person actually
- * did is the attribute that binding sits under: `onClick`, `onSubmit`,
- * `onDragEnd`. Nothing else in the tree records the gesture.
- */
 export function readGestures(
   sourceFile: ts.SourceFile,
   identifiers: ReadonlySet<string>,
@@ -969,14 +804,26 @@ export function readGestures(
   return [...found.values()].sort((left, right) => left.event.localeCompare(right.event));
 }
 
-/**
- * Gestures, one per event handler, tagged with the query hook it reaches.
- *
- * A component imports `useCreateBar`, binds it to a local, and the local is
- * referenced inside an `onSubmit`. Following the binding rather than the import
- * is what keeps a page that imports four hooks from claiming all four sit under
- * every handler.
- */
+interface LocalDeclaration {
+  readonly names: string[];
+  readonly referenced: ReadonlySet<string>;
+}
+
+function addLocalsDerivedFrom(names: Set<string>, declarations: readonly LocalDeclaration[]): void {
+  let hasGrown = true;
+  while (hasGrown) {
+    hasGrown = false;
+    for (const declaration of declarations) {
+      if (![...names].some((each) => declaration.referenced.has(each))) continue;
+      for (const name of declaration.names) {
+        if (names.has(name)) continue;
+        names.add(name);
+        hasGrown = true;
+      }
+    }
+  }
+}
+
 export function readHookGestures(
   sourceFile: ts.SourceFile,
   imports: readonly ImportEdge[],
@@ -989,15 +836,10 @@ export function readHookGestures(
   );
   if (hookNames.size === 0) return [];
 
-  // The hook is called once and its result held in a local, the local is
-  // wrapped in a callback, and the callback is held in another local before a
-  // handler ever names it. Following one hop finds nothing; the propagation
-  // repeats until no new name is bound, which is what reaches the handler on a
-  // page that routes its mutations through a dispatch object.
   const localsByHook = new Map<string, Set<string>>(
     [...hookNames].map((hook) => [hook, new Set([hook])]),
   );
-  const declarations: { readonly names: string[]; readonly referenced: ReadonlySet<string> }[] = [];
+  const declarations: LocalDeclaration[] = [];
   const collectDeclarations = (node: ts.Node): void => {
     if (ts.isVariableDeclaration(node) && node.initializer !== undefined) {
       const bound: string[] = [];
@@ -1018,20 +860,7 @@ export function readHookGestures(
   };
   collectDeclarations(sourceFile);
 
-  for (const names of localsByHook.values()) {
-    let hasGrown = true;
-    while (hasGrown) {
-      hasGrown = false;
-      for (const declaration of declarations) {
-        if (![...names].some((each) => declaration.referenced.has(each))) continue;
-        for (const name of declaration.names) {
-          if (names.has(name)) continue;
-          names.add(name);
-          hasGrown = true;
-        }
-      }
-    }
-  }
+  for (const names of localsByHook.values()) addLocalsDerivedFrom(names, declarations);
 
   return [...localsByHook.entries()].flatMap(([hook, names]) =>
     readGestures(sourceFile, names).map((gesture) => ({ ...gesture, hook })),

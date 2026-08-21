@@ -168,6 +168,13 @@ scripts/check-single-stylesheet.sh
 echo "[pre-commit] checking each stylesheet holds tokens only"
 scripts/check-stylesheet-contents.sh
 
+# `borso/no-comments` is an ESLint rule and ESLint lints no `.css` and no
+# `.html` here, so the no-comment standard reached every source file except
+# those two kinds. This closes the gap, keeping the `@third-party-dom` markers
+# the check above parses.
+echo "[pre-commit] checking no stylesheet or page carries a comment"
+scripts/check-no-comments-in-styles-and-markup.sh
+
 # And that no Tailwind arbitrary variant opens on a bare word, which Tailwind
 # reads as an attribute selector and compiles to nothing at all — no rule, no
 # error, no warning, and a class in the markup that looks right. A grep over

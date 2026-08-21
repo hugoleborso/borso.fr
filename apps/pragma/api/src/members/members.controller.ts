@@ -1,7 +1,3 @@
-/**
- * Members admin endpoints. Hono routing + Zod parsing only.
- */
-
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireSharedPasswordSession } from '../auth/shared-password.middleware';

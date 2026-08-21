@@ -1,11 +1,3 @@
-/**
- * Back-e2e gate for the MusicBrainz enrichment columns on the song
- * table — round-trips `mbid`, `album`, `durationSeconds`, `tags`,
- * `isrcs` through create / read / update. Split out of
- * `songs.controller.test.ts` so each file stays under the per-file
- * line cap; the auth/CRUD smoke covers the same controller surface.
- */
-
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';

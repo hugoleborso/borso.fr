@@ -1,10 +1,4 @@
-/**
- * UploadedChartPreview — renders a chart variant stored in S3 from a
- * short-lived signed GET URL, in an `<iframe>` (PDF) or an `<img>`
- * (image). The URL is signed by the route that renders this preview,
- * so the molecule stays renderable without a query client.
- * @Feature songs
- */
+/** @Feature songs */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,8 +9,7 @@ import { PreviewImage } from '../atoms/PreviewImage';
 export interface UploadedChartPreviewProps {
   readonly kind: 'pdf' | 'image';
   readonly objectKey: string;
-  /** Signed GET URL, or `null` while it is still being fetched. */
-  readonly previewUrl: string | null;
+  readonly signedPreviewUrl: string | null;
   readonly errorMessage: string | null;
 }
 
@@ -28,7 +21,7 @@ const IMAGE_CLASS = 'max-w-full rounded-md border border-line';
 export function UploadedChartPreview({
   kind,
   objectKey,
-  previewUrl,
+  signedPreviewUrl,
   errorMessage,
 }: UploadedChartPreviewProps): JSX.Element {
   const { t } = useTranslation();
@@ -40,11 +33,13 @@ export function UploadedChartPreview({
       </HintText>
     );
   }
-  if (previewUrl === null) {
+  if (signedPreviewUrl === null) {
     return <HintText tone="muted">{t('common.loading')}</HintText>;
   }
   if (kind === 'pdf') {
-    return <DocumentFrame source={previewUrl} title={objectKey} className={DOCUMENT_CLASS} />;
+    return <DocumentFrame source={signedPreviewUrl} title={objectKey} className={DOCUMENT_CLASS} />;
   }
-  return <PreviewImage source={previewUrl} alternativeText={objectKey} className={IMAGE_CLASS} />;
+  return (
+    <PreviewImage source={signedPreviewUrl} alternativeText={objectKey} className={IMAGE_CLASS} />
+  );
 }

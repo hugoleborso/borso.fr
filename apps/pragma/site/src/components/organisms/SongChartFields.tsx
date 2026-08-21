@@ -1,8 +1,4 @@
-/**
- * Chord chart variant + tonality + base-energy fields. Extracted from
- * SongDetailPage so the parent stays under the file-length limit.
- * @Feature songs
- */
+/** @Feature songs */
 
 import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
@@ -31,12 +27,6 @@ interface SongChartFieldsProps {
 }
 
 const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
-/**
- * No negative margin pulling the padding back out: the tap box is what the
- * layout reserves, and `px-2 -mx-2` grew it eight pixels past the slot, so two
- * neighbours in this row overlapped by four pixels and the later one won the
- * hit test on the earlier one's right edge.
- */
 const RADIO_LABEL_CLASS =
   'inline-flex items-center gap-2 min-h-11 px-2 rounded-md text-sm text-ink-700 cursor-pointer';
 const RADIO_INPUT_CLASS = 'w-5 h-5 accent-accent';
@@ -133,11 +123,6 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
 const CHORDPRO_MAX_LENGTH = 64_000;
 const CHORDPRO_ROWS = 10;
 
-/**
- * The editor the selected chart variant needs, or nothing when the song
- * carries no chart. One guard per variant, so the fieldset above holds no
- * condition of its own.
- */
 function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
   const keySetterByUploadKind = {
     pdf: props.onPdfKeyChange,

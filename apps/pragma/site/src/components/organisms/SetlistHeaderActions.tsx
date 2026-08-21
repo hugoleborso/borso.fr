@@ -1,10 +1,4 @@
-/**
- * What a setlist's own page offers about the setlist itself: renaming it
- * in place, and deleting it behind a confirmation naming what goes with
- * it. The draft name lives here rather than on the route, because it is
- * the state of this control and nothing else reads it.
- * @Feature setlists
- */
+/** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useState } from 'react';

@@ -1,12 +1,3 @@
-/**
- * The offline manifest a service worker pre-caches: the catalog list,
- * every song detail, and the next upcoming session with its setlist.
- *
- * The "next session" rule is mirrored on the front end in
- * `site/src/sw/manifest.utils.ts`; both read the same shape so the
- * back-e2e test can assert the wire contract.
- */
-
 export interface OfflineManifestSession {
   readonly id: string;
   readonly date: Date;
