@@ -227,6 +227,7 @@
       "remove": "The song was not removed. Check the connection and try again.",
       "reorder": "The new order was not saved. Check the connection and try again.",
       "update": "The change was not saved. Check the connection and try again.",
+      "songDefaults": "The song defaults were not saved. Check the connection and try again.",
       "create": "The setlist was not created. Check the connection and try again.",
       "copyOrder": "The running order could not be copied to the clipboard.",
       "rename": "The new name was not saved. Check the connection and try again.",
@@ -310,7 +311,8 @@
     "remove": "Remove"
   },
   "lineup": {
-    "edit": "Lineup",
+    "editOverride": "Lineup (this set)",
+    "editDefault": "Default lineup",
     "modal": {
       "title": {
         "song": "Default lineup",
@@ -327,5 +329,10 @@
     "filterByMember": "Filter by member",
     "multiInstrumentHint": "Tap every instrument a member holds on this song. Two at once is fine.",
     "instruments": "Instruments"
+  },
+  "songDefaults": {
+    "open": "Song defaults",
+    "title": "Defaults — {{title}}",
+    "hint": "These values come from the song itself. Changing them reaches every setlist that plays it."
   }
 }

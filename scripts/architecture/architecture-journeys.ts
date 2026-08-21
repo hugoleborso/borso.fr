@@ -329,6 +329,7 @@ export interface SourceEntry {
   readonly blueprint: string;
   readonly code: string;
   readonly baseCode?: string;
+  readonly isNew?: boolean;
   readonly lines: number;
   readonly complexity: number;
   readonly disables: number;
@@ -377,10 +378,21 @@ function addComposition(
       node.id.startsWith('ui:') ? [node.id.slice('ui:'.length)] : filePathOf(node.location),
     ),
   );
-  const seeds = nodes
+  const reachedFromPages = nodes
     .filter((node) => node.id.startsWith('ui:'))
     .map((node) => node.id.slice('ui:'.length));
-  if (seeds.length === 0) return;
+  if (reachedFromPages.length === 0) return;
+  const ownedByFeature = [...fileByPath.values()]
+    .filter((file) => isFrontEndModule(file) && file.feature === featureId)
+    .map((file) => file.path);
+  const seeds = [...new Set([...reachedFromPages, ...ownedByFeature])];
+  for (const path of ownedByFeature) {
+    if (drawn.has(path)) continue;
+    const file = fileByPath.get(path);
+    if (file === undefined) continue;
+    nodes.push(compositionNode(file, sources));
+    drawn.add(path);
+  }
 
   const rendered = renderedBy(
     seeds,

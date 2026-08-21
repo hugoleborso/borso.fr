@@ -693,8 +693,21 @@ export function buildArchitectureFile(
   repositoryRoot: string,
   applicationRoot: string,
 ): ArchitectureFile {
+  return buildArchitectureFileFromText(
+    absolutePath,
+    readFileSync(absolutePath, 'utf8'),
+    repositoryRoot,
+    applicationRoot,
+  );
+}
+
+export function buildArchitectureFileFromText(
+  absolutePath: string,
+  text: string,
+  repositoryRoot: string,
+  applicationRoot: string,
+): ArchitectureFile {
   const relativePath = relative(repositoryRoot, absolutePath);
-  const text = readFileSync(absolutePath, 'utf8');
   const sourceFile = ts.createSourceFile(
     absolutePath,
     text,

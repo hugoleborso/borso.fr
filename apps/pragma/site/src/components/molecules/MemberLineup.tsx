@@ -19,18 +19,24 @@ export interface MemberLineupProps {
   lineup: Record<string, readonly string[]>;
   members: readonly LineupMember[];
   instruments: readonly LineupInstrument[];
+  maximumVisible?: number;
 }
 
 const MAXIMUM_VISIBLE_MEMBERS = 4;
 const OVERLAP_CLASS = '-ml-1.5 first:ml-0 rounded-full ring-2 ring-bg-elev';
 
 // @FollowsBlueprint molecule-presentational
-export function MemberLineup({ lineup, members, instruments }: MemberLineupProps): JSX.Element {
+export function MemberLineup({
+  lineup,
+  members,
+  instruments,
+  maximumVisible = MAXIMUM_VISIBLE_MEMBERS,
+}: MemberLineupProps): JSX.Element {
   const { visible, hiddenCount, hasHiddenMembers } = buildLineupChips(
     lineup,
     members,
     instruments,
-    MAXIMUM_VISIBLE_MEMBERS,
+    maximumVisible,
   );
   return (
     <span className="inline-flex shrink-0 items-center">

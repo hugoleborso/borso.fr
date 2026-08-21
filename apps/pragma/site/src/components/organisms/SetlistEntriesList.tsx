@@ -33,11 +33,13 @@ import {
   type SetlistEditorSong,
   tonalityLabelFor,
 } from './setlist-editor.utils';
+import type { SongDefaults, SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];
+const STATUS_OF_A_SONG_THE_CATALOG_LOST = 'idea';
 const SONG_ID_FALLBACK_LENGTH = 8;
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
 const DRAG_TOUCH_DELAY_MS = 200;
@@ -54,7 +56,7 @@ interface ListEntry extends SetlistEditorEntry {
 export interface SetlistEntriesListProps {
   readonly entries: readonly ListEntry[];
   readonly visibleEntries: readonly ListEntry[];
-  readonly songsById: Readonly<Record<string, SetlistEditorSong & { baseEnergy: number | null }>>;
+  readonly songsById: Readonly<Record<string, SetlistEditorSong>>;
   readonly transitionViews: readonly TransitionView[];
   readonly transitionNotesByPair: Readonly<Record<string, string>>;
   readonly meanMasteryBySongId: Readonly<Record<string, number | null>>;
@@ -66,10 +68,21 @@ export interface SetlistEntriesListProps {
   readonly membersById: Readonly<Record<string, { firstName: string; color: string }>>;
   readonly instrumentsById: Readonly<Record<string, { name: string }>>;
   readonly knownMemberIds: ReadonlySet<string>;
+  readonly maximumVisibleMembers: number;
   readonly onReorder: (orderedEntryIds: readonly string[]) => void;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
+  readonly onUpdateSongDefaults: (songId: string, patch: SongDefaultsPatch) => void;
   readonly onRemove: (entryId: string) => void;
   readonly onOpenTransition: (leftSongId: string, rightSongId: string) => void;
+}
+
+function songDefaultsOf(song: SetlistEditorSong | undefined): SongDefaults {
+  return {
+    status: song?.status ?? STATUS_OF_A_SONG_THE_CATALOG_LOST,
+    tonalityStart: song?.tonalityStart ?? null,
+    tonalityEnd: song?.tonalityEnd ?? null,
+    baseEnergy: song?.baseEnergy ?? null,
+  };
 }
 
 export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element {
@@ -158,12 +171,15 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 lineup={compactLineup(lineupRaw)}
                 resolvedLineupForEdit={lineupRaw}
                 songDefaultLineup={song?.defaultLineup ?? {}}
+                songDefaults={songDefaultsOf(song)}
+                maximumVisibleMembers={props.maximumVisibleMembers}
                 hasOverride={entry.lineupOverride !== null}
                 members={props.lineupMembers}
                 instruments={props.instruments}
                 prominentMemberInstrument={prominent}
                 transitionBefore={renderTransitionBefore(fullIndex)}
                 onUpdate={props.onUpdate}
+                onUpdateSongDefaults={(patch) => props.onUpdateSongDefaults(entry.songId, patch)}
                 onRemove={props.onRemove}
               />
             );

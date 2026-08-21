@@ -37,10 +37,6 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'catalog.tags', readsTheSameBecause: '"tags" is the word French musicians use here' },
   { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
   { key: 'instruments.title', readsTheSameBecause: 'same word, same spelling' },
-  {
-    key: 'lineup.edit',
-    readsTheSameBecause: 'fr.json says "lineup" throughout, e.g. "Lineup par défaut"',
-  },
   { key: 'lineup.instruments', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.administrationSection', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.bars', readsTheSameBecause: '"un bar" is the same word in French' },

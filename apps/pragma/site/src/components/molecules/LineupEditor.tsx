@@ -25,7 +25,7 @@ export interface LineupEditorInstrument {
 export type LineupEditorSurface = 'song' | 'setlist-entry';
 
 const MEMBER_SCROLLER_CLASS =
-  'flex-1 overflow-y-auto flex flex-col gap-3 p-4 pb-8 ' +
+  'min-h-0 flex-auto overflow-y-auto flex flex-col gap-3 p-4 pb-8 ' +
   '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +
   '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line-strong';
 
@@ -102,7 +102,7 @@ function LineupEditorContent({
         </Button>
       </div>
       <form
-        className="flex min-h-0 flex-1 flex-col"
+        className="flex min-h-0 flex-auto flex-col"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();

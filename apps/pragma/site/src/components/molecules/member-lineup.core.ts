@@ -26,6 +26,7 @@ export interface LineupChips {
 
 const INSTRUMENT_SEPARATOR = ' + ';
 const NAME_INSTRUMENT_SEPARATOR = ' — ';
+const MINIMUM_HIDDEN_WORTH_A_COUNTER = 2;
 
 function nameInstruments(
   instrumentIds: readonly string[],
@@ -54,9 +55,10 @@ export function buildLineupChips(
         : `${member.name}${NAME_INSTRUMENT_SEPARATOR}${names.join(INSTRUMENT_SEPARATOR)}`;
     return [{ memberId, memberName: member.name, memberColor: member.color, title }];
   });
-  const hiddenCount = Math.max(chips.length - maximumVisible, 0);
+  const overflowCount = Math.max(chips.length - maximumVisible, 0);
+  const hiddenCount = overflowCount < MINIMUM_HIDDEN_WORTH_A_COUNTER ? 0 : overflowCount;
   return {
-    visible: chips.slice(0, maximumVisible),
+    visible: hiddenCount === 0 ? chips : chips.slice(0, maximumVisible),
     hiddenCount,
     hasHiddenMembers: hiddenCount > 0,
   };

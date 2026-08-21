@@ -7,6 +7,7 @@ const MEMBERS = [
   { id: 'marc', name: 'Marc', color: '#c4912b' },
   { id: 'sarah', name: 'Sarah', color: '#8a4870' },
   { id: 'noa', name: 'Noa', color: '#6e8a48' },
+  { id: 'ines', name: 'Inès', color: '#4a6ea8' },
 ];
 
 const INSTRUMENTS: readonly LineupChipInstrument[] = [
@@ -57,16 +58,34 @@ describe('buildLineupChips', () => {
     });
   });
 
-  it('counts the members past the cap instead of drawing them', () => {
+  it('counts the members past the cap once two or more would be hidden', () => {
+    const chips = buildLineupChips(
+      { hugo: [], lea: [], marc: [], sarah: [], noa: [], ines: [] },
+      MEMBERS,
+      INSTRUMENTS,
+      MAXIMUM_VISIBLE,
+    );
+    expect(chips.visible.map((chip) => chip.memberId)).toEqual(['hugo', 'lea', 'marc', 'sarah']);
+    expect(chips.hiddenCount).toBe(2);
+    expect(chips.hasHiddenMembers).toBe(true);
+  });
+
+  it('draws the single member past the cap rather than a counter standing in for them', () => {
     const chips = buildLineupChips(
       { hugo: [], lea: [], marc: [], sarah: [], noa: [] },
       MEMBERS,
       INSTRUMENTS,
       MAXIMUM_VISIBLE,
     );
-    expect(chips.visible.map((chip) => chip.memberId)).toEqual(['hugo', 'lea', 'marc', 'sarah']);
-    expect(chips.hiddenCount).toBe(1);
-    expect(chips.hasHiddenMembers).toBe(true);
+    expect(chips.visible.map((chip) => chip.memberId)).toEqual([
+      'hugo',
+      'lea',
+      'marc',
+      'sarah',
+      'noa',
+    ]);
+    expect(chips.hiddenCount).toBe(0);
+    expect(chips.hasHiddenMembers).toBe(false);
   });
 
   it('hides nobody when the lineup fits exactly', () => {
