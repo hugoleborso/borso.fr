@@ -14,6 +14,12 @@ import type {
 import type { ArchitectureManifest } from './architecture-manifest';
 import type { DiffSummary } from './architecture-model-json';
 import { wrapInDocumentShell } from './document-shell.core';
+import {
+  changeOfGraphs,
+  changeOfNodes,
+  type JourneyChange,
+  statusOfNode,
+} from './journey-status.core';
 
 export interface DiffReport {
   readonly baseline: string;
@@ -189,11 +195,6 @@ function renderUnreachedByAction(journeys: JourneyModel, slices: readonly Contex
     .join('')}</ul>`;
 }
 
-function journeyStatusOf(location: string | undefined, code: StatusByNode | undefined): string {
-  if (location === undefined || code === undefined) return '';
-  return code.get(location.slice(0, location.lastIndexOf(':'))) ?? '';
-}
-
 function renderActionCount(journeys: JourneyModel, routeTotal: number): string {
   const total = journeys.features.reduce((count, feature) => count + feature.actions.length, 0);
   const flows = journeys.features
@@ -204,6 +205,18 @@ function renderActionCount(journeys: JourneyModel, routeTotal: number): string {
     return ' <span class="level-count">no API, so every block below is what the pages render</span>';
   }
   return ` <span class="level-count flagged">no data flow found, though the API has ${routeTotal} routes — the walk could not read this application</span>`;
+}
+
+const NO_JOURNEY_CHANGE: JourneyChange = { status: '', touched: 0 };
+const OVERVIEW_GRAPH_SUFFIX = ':__all__';
+
+function overviewGraphIdOf(featureId: string): string {
+  return `${featureId}${OVERVIEW_GRAPH_SUFFIX}`;
+}
+
+function renderTouchedBadge(change: JourneyChange): string {
+  if (change.status === '') return '';
+  return `<span class="journey-touched">${change.touched}</span>`;
 }
 
 function renderJourneys(
@@ -228,7 +241,7 @@ function renderJourneys(
             chips: source.chips ?? [],
             detail: source.detail,
             tone: source.kind,
-            status: journeyStatusOf(source.location, code),
+            status: statusOfNode(source.location, code),
             sourceKey: source.sourceKey ?? '',
             x: placed.x,
             y: placed.y,
@@ -241,6 +254,24 @@ function renderJourneys(
     };
   }
 
+  const actionChanges = new Map(
+    [...journeys.graphs].map(([id, graph]) => [id, changeOfNodes(graph.nodes, code)]),
+  );
+  const featureChanges = new Map(
+    journeys.features.map((feature) => [
+      feature.id,
+      changeOfGraphs(
+        [overviewGraphIdOf(feature.id), ...feature.actions.map((action) => action.id)].flatMap(
+          (id) => {
+            const graph = journeys.graphs.get(id);
+            return graph === undefined ? [] : [graph.nodes];
+          },
+        ),
+        code,
+      ),
+    ]),
+  );
+
   const payload = {
     level: 'journey',
     title: 'User action',
@@ -249,11 +280,14 @@ function renderJourneys(
       id: feature.id,
       label: feature.label,
       overview: feature.overview,
+      change: featureChanges.get(feature.id) ?? NO_JOURNEY_CHANGE,
+      overviewChange: actionChanges.get(overviewGraphIdOf(feature.id)) ?? NO_JOURNEY_CHANGE,
       actions: feature.actions.map((action) => ({
         id: action.id,
         label: action.label,
         method: action.method,
         path: action.path,
+        change: actionChanges.get(action.id) ?? NO_JOURNEY_CHANGE,
       })),
     })),
     graphs,
@@ -265,10 +299,10 @@ function renderJourneys(
           <span class="journey-picker-label">Feature</span>
           <div class="journey-features">
             ${journeys.features
-              .map(
-                (feature) =>
-                  `<button type="button" class="journey-feature" data-feature-id="${escapeHtml(feature.id)}" aria-pressed="false">${escapeHtml(feature.label)}</button>`,
-              )
+              .map((feature) => {
+                const change = featureChanges.get(feature.id) ?? NO_JOURNEY_CHANGE;
+                return `<button type="button" class="journey-feature${change.status === '' ? '' : ` touched-${change.status}`}" data-feature-id="${escapeHtml(feature.id)}" aria-pressed="false">${escapeHtml(feature.label)}${renderTouchedBadge(change)}</button>`;
+              })
               .join('')}
           </div>
           <span class="journey-picker-label">Action</span>

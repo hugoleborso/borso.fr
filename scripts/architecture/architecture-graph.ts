@@ -1404,9 +1404,13 @@ function withBaseSources(
   if (diffRef === null) return sources;
   const withBase: Record<string, SourceEntry> = { ...sources };
   for (const [path, status] of code) {
-    if (status !== 'changed') continue;
     const entry = withBase[`file:${path}`];
     if (entry === undefined) continue;
+    if (status === 'added') {
+      withBase[`file:${path}`] = { ...entry, baseCode: '', isNew: true };
+      continue;
+    }
+    if (status !== 'changed') continue;
     const baseCode = readSourceAt(diffRef, renames.get(path) ?? path);
     if (baseCode === '') continue;
     withBase[`file:${path}`] = { ...entry, baseCode };

@@ -329,6 +329,7 @@ export interface SourceEntry {
   readonly blueprint: string;
   readonly code: string;
   readonly baseCode?: string;
+  readonly isNew?: boolean;
   readonly lines: number;
   readonly complexity: number;
   readonly disables: number;
