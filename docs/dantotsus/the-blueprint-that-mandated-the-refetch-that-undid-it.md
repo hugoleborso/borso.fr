@@ -109,19 +109,28 @@ supposed to enforce, which is level 5 on this ladder; nothing mechanical ran,
 and that is why the shape survived in twenty-two places.
 
 `borso/no-refetch-of-optimistically-written-query` rejects an
-`invalidateQueries` or `refetchQueries` call inside a `useMutation` whose
-options carry `onMutate`. It resolves the transitive case too: it first names
-every function in the file whose body refetches, then treats a call to one of
-those names as the refetch itself, because extracting the call into a
+`invalidateQueries` or `refetchQueries` call whose key covers a key the same
+mutation wrote in `onMutate`. It resolves the transitive case too: it first
+names every function in the file whose body refetches, then treats a call to
+one of those names as the refetch itself, because extracting the call into a
 well-named helper is exactly the move a reader makes when a linter complains,
 and it is the move `last-loop-lepin` had already made unprompted.
 
-The rule deliberately does not try to decide which key is safe to refetch,
-which is the undecidable question June stopped at. It bans the pair, and a
-genuine exception is written where every other exception in this repository is
-written: on the line, as `eslint-disable-next-line` with a reason a reviewer can
-check. That turns the invisible omission this defect depended on into a visible
-claim.
+June concluded no rule was possible, because telling a full-state-known write
+from an identifier-needing one is not statically decidable. That is true and it
+is not the question. *"Does this refetch a key this mutation already wrote?"* is
+decidable, because the key factories are object literals: expanding `list()`
+through its spread of `all` gives `['editions','list']`, an argument gives a
+segment matching anything, and overlap is then the prefix test TanStack applies
+itself. So a refetch of a sibling key needs no exception at all — which matters,
+because the first version of this rule banned the pair outright, and the one
+place in either application with a legitimate reason to refetch had to carry a
+four-sentence comment excusing itself. A rule that makes correct code apologise
+is the wrong rule.
+
+The rule's own suite pins both directions: a refetch of `editionKeys.current()`
+beside an optimistic write of `editionKeys.list()` passes, and the same code
+refetching `editionKeys.all` does not.
 
 A regression test in `instruments.queries.test.tsx` pins the behaviour from the
 screen's side: the probe mounts `useInstrumentsList` beside the mutation, the

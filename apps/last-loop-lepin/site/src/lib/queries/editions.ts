@@ -113,7 +113,6 @@ export function useDeleteEdition() {
       }
     },
     onSettled: () => {
-      // eslint-disable-next-line borso/no-refetch-of-optimistically-written-query -- this refetches `current()`, which is not a key this mutation wrote. It is a projection over every edition (live, else earliest setup by startsAt, else latest finished by endsAt — getCurrentEdition in edition.service.ts), and the write that just ran touched one edition, so the client cannot tell which edition the projection now names. A transition or a delete can hand current to a different edition entirely.
       refetchTheCurrentEditionProjection(queryClient);
     },
   });
@@ -155,7 +154,6 @@ export function useTransitionEditionStatus() {
       }
     },
     onSettled: () => {
-      // eslint-disable-next-line borso/no-refetch-of-optimistically-written-query -- this refetches `current()`, which is not a key this mutation wrote. It is a projection over every edition (live, else earliest setup by startsAt, else latest finished by endsAt — getCurrentEdition in edition.service.ts), and the write that just ran touched one edition, so the client cannot tell which edition the projection now names. A transition or a delete can hand current to a different edition entirely.
       refetchTheCurrentEditionProjection(queryClient);
     },
   });

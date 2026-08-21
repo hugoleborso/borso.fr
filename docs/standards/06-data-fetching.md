@@ -187,9 +187,11 @@ predates the suffix and has not been renamed.
   promise is dropped on the way to a route change, where the failure would land
   on a screen nobody is looking at.
 - `eslint:borso/no-refetch-of-optimistically-written-query` rejects an
-  `invalidateQueries` or `refetchQueries` call inside a `useMutation` that
-  carries `onMutate`, including one reached through a helper declared in the
-  same file.
+  `invalidateQueries` or `refetchQueries` call whose key covers one the same
+  mutation wrote in `onMutate`, including one reached through a helper declared
+  in the same file. It expands each key through its factory, so a sibling key
+  passes and a prefix of a written key does not; a key it cannot expand, such as
+  one from a factory declared in another file, counts as covering.
 - `eslint:@typescript-eslint/no-unsafe-assignment` fails on a response value that
   has lost its type.
 - `eslint:no-restricted-imports` rejects a database package imported from a
