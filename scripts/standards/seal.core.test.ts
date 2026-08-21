@@ -134,14 +134,18 @@ describe('verifySeals', () => {
   });
 
   it('tells a file edited since its review from one never reviewed at all', () => {
-    const reviewed = buildEntry({ contentHash: 'old' });
+    const reviewedSongs = buildEntry({ contentHash: 'old' });
+    const reviewedElsewhere = buildEntry({
+      contentHash: 'other',
+      path: 'apps/pragma/api/src/setlists/setlists.service.ts',
+    });
 
     const verification = verifySeals(
       [
         { path: 'apps/pragma/api/src/songs/songs.service.ts', contentHash: 'edited' },
         { path: 'apps/pragma/api/src/bars/bars.service.ts', contentHash: 'fresh' },
       ],
-      [reviewed],
+      [reviewedSongs, reviewedElsewhere],
       currentLedgerHash,
     );
 
