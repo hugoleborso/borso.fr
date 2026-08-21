@@ -96,6 +96,7 @@ git.
 | `borso/no-step-named-value`                            | [01](./01-naming.md)                                       |
 | `borso/no-discarded-await-before-navigation`           | a dantotsu, [06](./06-data-fetching.md)                    |
 | `borso/no-circle-in-non-uniform-svg`                   | a dantotsu, kept from the Biome plugins                    |
+| `borso/no-flex-one-in-auto-height-dialog`              | a dantotsu, [08](./08-styling.md)                          |
 
 Six of the rules above came across from the Biome grit plugins, which are
 `no-type-assertion-except-unknown`, `no-controller-imports-outside-service`,

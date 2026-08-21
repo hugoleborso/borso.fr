@@ -108,6 +108,14 @@ and `lg:` for wider screens. See
   in a `className` attribute and points at `clsx`.
 - `eslint:borso/no-circle-in-non-uniform-svg` rejects a `<circle>` inside an SVG
   that scales unevenly, where it renders as an ellipse.
+- `eslint:borso/no-flex-one-in-auto-height-dialog` rejects `flex-1` on a child of
+  a column inside a `dialog` that declares no height of its own. `flex-1` is
+  `flex: 1 1 0%`, and a percentage basis in a container whose height comes from
+  its content resolves to zero on an engine that follows the specification —
+  Blink draws it anyway, WebKit does not, so the dialog reaches a phone as a
+  bare title bar. `flex-auto` starts from the content instead. The rule stays
+  quiet on a dialog carrying `h-dvh` or `h-[85vh]`, and on a `flex-1` inside a
+  row, where the main axis is the width the dialog already has.
 - `script:scripts/check-single-stylesheet.sh` fails an application that ships
   more than one `.css` file under its site directory. It reads the git index
   rather than walking the filesystem, because `coverage/` and `.stryker-tmp/`
