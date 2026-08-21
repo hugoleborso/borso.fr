@@ -5,9 +5,6 @@ import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
 
-// @FollowsBlueprint service-facade-reexport
-export { PunchConflictError } from './punch.repository';
-
 import { hourlyTopOfLoopMs, type PunchRejectReason, validatePunchTiming } from './punch.core';
 import {
   deleteAllEditionPunchesAndDidNotFinishes,
@@ -21,13 +18,20 @@ import {
   markPunchCorrected,
   markPunchVoided,
   runInOneTransaction,
-  PunchConflictError,
 } from './punch.repository';
 import type { LoopPunch, ManualDidNotFinish } from './punch.types';
 
 // @FollowsBlueprint named-domain-error
 export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
+}
+
+// @FollowsBlueprint named-domain-error
+export class PunchConflictError extends Error {
+  override readonly name = 'PunchConflictError';
+  constructor(public readonly existing: LoopPunch) {
+    super(`punch conflict for edition/runner/loop_index`);
+  }
 }
 
 /**

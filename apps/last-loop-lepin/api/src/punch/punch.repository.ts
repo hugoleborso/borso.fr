@@ -39,14 +39,6 @@ function rowToLoopPunch(row: LoopPunchRow): LoopPunch {
   };
 }
 
-// @FollowsBlueprint named-domain-error
-export class PunchConflictError extends Error {
-  override readonly name = 'PunchConflictError';
-  constructor(public readonly existing: LoopPunch) {
-    super(`punch conflict for edition/runner/loop_index`);
-  }
-}
-
 export async function runInOneTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
