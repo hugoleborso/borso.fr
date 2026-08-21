@@ -77,14 +77,14 @@ function SongDefaultsDialogContent({
         </Button>
       </div>
       <form
-        className="flex min-h-0 flex-1 flex-col"
+        className="flex min-h-0 flex-auto flex-col"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
           void form.handleSubmit();
         }}
       >
-        <div className="flex-1 overflow-y-auto flex flex-col gap-3 p-4">
+        <div className="min-h-0 flex-auto overflow-y-auto flex flex-col gap-3 p-4">
           <p className="text-xs text-ink-500 m-0">{t('songDefaults.hint')}</p>
           <form.Field name="status">
             {(field) => (
