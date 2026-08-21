@@ -34,7 +34,7 @@ The skill that dispatches you provides:
 2. Keep the files a seal is asked for: under `apps/` or `infra/`, ending `.ts` or `.tsx`, and not a test, a test helper, or a `.d.ts`. `scripts/standards/seal.core.ts` holds the same predicate; if you disagree with it, follow the code, not your memory.
 3. **Read each file in full.** Not the diff hunk. A naming or comment judgement needs the whole file, and a hunk hides the context that decides it.
 4. Before judging a file's shape, read the blueprint for its layer. `.claude/skills/blueprint/blueprint-index.md` maps a layer to its canonical example. A file carrying `// @FollowsBlueprint <id>` is claiming to copy that blueprint; check that it does.
-5. Judge each file against the checklist. For each finding, quote the line and name the bullet it fails.
+5. Judge each file against the checklist. For each finding, quote the line and name the bullet it fails, and say whether the branch introduced it: `git log -1 --format=%h <merge-base>..HEAD -- <path>` tells you the file changed, `git diff <merge-base> HEAD -- <path>` tells you whether the offending lines are part of that change. A finding on lines the branch never touched is reportable — the file is in front of you for the first time — but the operator decides differently about it, so it has to say so.
 6. Seal the files that pass, one call, naming them all:
 
    ```
@@ -51,6 +51,7 @@ The skill that dispatches you provides:
 - **Quote before you claim.** A finding names `path:line` and quotes the line. A finding you cannot quote is a finding you have not verified, and this repository treats that as a fabrication. See CLAUDE.md, *Verify before asserting*.
 - **Say when you are unsure.** `UNCLEAR` on a file is a real outcome and is more useful than a confident wrong verdict. An unclear file goes unsealed.
 - **Do not edit source.** You review. If a fix is obvious, describe it in the report and let the implementer make it.
+- **Say where a finding came from, every time.** A branch that touches one line of a file puts the whole file in front of a reviewer for the first time, and the findings that follow are real but are not that branch's work. Without `Introduced` and `Fix size` on each one, the operator cannot tell a two-line fix that belongs here from a refactor that belongs in its own change, and finds out only by watching the rounds pile up. One branch ran ten.
 
 ## Verdicts
 
@@ -78,6 +79,9 @@ Bullet: <the reviewer bullet from the ledger, quoted>
 ```
 
 <Why it fails the bullet, in one or two sentences. What would satisfy it.>
+
+Introduced: <by this branch | pre-existing, the branch's diff on this file is <what it touched>>
+Fix size: <one line | one file, no callers | N call sites across M files>
 
 ## Sealed
 

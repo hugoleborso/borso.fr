@@ -87,14 +87,17 @@ describe('verifySeals', () => {
     expect(verification.sealedCount).toBe(1);
   });
 
-  it('fails a file the reviewer never cleared', () => {
+  it('fails a file whose content the reviewer never cleared', () => {
     const verification = verifySeals(
       [{ path: 'apps/pragma/api/src/songs/songs.service.ts', contentHash: 'd'.repeat(64) }],
       [buildEntry()],
       currentLedgerHash,
     );
     expect(verification.failures).toEqual([
-      { path: 'apps/pragma/api/src/songs/songs.service.ts', reason: 'unsealed' },
+      {
+        path: 'apps/pragma/api/src/songs/songs.service.ts',
+        reason: 'edited-since-it-was-reviewed',
+      },
     ]);
   });
 
@@ -128,6 +131,27 @@ describe('verifySeals', () => {
       currentLedgerHash,
     );
     expect(verification.failures).toEqual([]);
+  });
+
+  it('tells a file edited since its review from one never reviewed at all', () => {
+    const reviewed = buildEntry({ contentHash: 'old' });
+
+    const verification = verifySeals(
+      [
+        { path: 'apps/pragma/api/src/songs/songs.service.ts', contentHash: 'edited' },
+        { path: 'apps/pragma/api/src/bars/bars.service.ts', contentHash: 'fresh' },
+      ],
+      [reviewed],
+      currentLedgerHash,
+    );
+
+    expect(verification.failures).toStrictEqual([
+      {
+        path: 'apps/pragma/api/src/songs/songs.service.ts',
+        reason: 'edited-since-it-was-reviewed',
+      },
+      { path: 'apps/pragma/api/src/bars/bars.service.ts', reason: 'never-reviewed' },
+    ]);
   });
 
   it('passes an empty change set', () => {
