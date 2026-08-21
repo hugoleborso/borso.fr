@@ -3,7 +3,7 @@
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
-import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
+import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 import { buildOptimisticSong, mergeSongUpdate } from './song-cache.core';
 import { didLastSongWriteFail, selectSongThatLostItsLastWrite } from './song-write-failure.core';
 
@@ -63,10 +63,10 @@ export function useSongSearch(query: string) {
 }
 
 /**
- * @Blueprint query-optimistic-mutation
- * @BlueprintName Optimistic Mutation
- * @BlueprintUsage Use for a write whose new state the client can predict, so the change shows before the server answers.
- * @BlueprintDescription Cancels the in flight reads for the key, snapshots the list cache, writes the predicted row, and returns the snapshot as the mutation context so `onError` can put it back verbatim. `onSettled` invalidates only once `isLastPendingMutation` reports the family has drained, which stops a refetch from an early write landing after a later optimistic one and snapping the user interface back.
+ * @Blueprint query-optimistic-insert
+ * @BlueprintName Optimistic Insert
+ * @BlueprintUsage Use for an insert, where the only thing the client cannot predict is the identifier the server assigns.
+ * @BlueprintDescription Writes the row under an identifier the client generates, keeps that identifier in the mutation context, and swaps the row for the one the response carries in `onSuccess`, so the insert settles from its own answer. That is what lets it drop the `onSettled` refetch every other write dropped: a `GET` fired straight after the `POST` can be served by another connection that has not seen the commit, and it would take the new row back out of the list it was just added to.
  */
 export function useCreateSong() {
   const queryClient = useQueryClient();
@@ -92,21 +92,29 @@ export function useCreateSong() {
           ],
         };
       });
-      return { previousList };
+      return { previousList, temporaryId };
+    },
+    onSuccess: (data, _vars, context) => {
+      queryClient.setQueryData<SongsListResponse>(songKeys.list(), (old) => {
+        if (old === undefined) return old;
+        return { songs: settleTemporaryEntity(old.songs, context.temporaryId, data.song) };
+      });
+      queryClient.setQueryData<SongByIdResponse>(songKeys.byId(data.song.id), data);
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(songKeys.list(), context.previousList);
       }
     },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: songKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: songKeys.all });
-    },
   });
 }
 
-// @FollowsBlueprint query-optimistic-mutation
+/**
+ * @Blueprint query-optimistic-mutation
+ * @BlueprintName Optimistic Mutation
+ * @BlueprintUsage Use for a write whose new state the client can predict, so the change shows before the server answers.
+ * @BlueprintDescription Cancels the in flight reads for every key it is about to touch, snapshots them, writes the predicted rows, and returns the snapshots as the mutation context so `onError` can put them back verbatim. It then stops: nothing here refetches, because the cache it just wrote is the answer, and a `GET` fired at this moment can be served by a connection that has not seen the commit and would undo the write the user is looking at.
+ */
 export function useUpdateSong() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -149,11 +157,6 @@ export function useUpdateSong() {
         queryClient.setQueryData(songKeys.byId(variables.id), context.previousById);
       }
     },
-    onSettled: (_data, _err, variables) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: songKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: songKeys.byId(variables.id) });
-      void queryClient.invalidateQueries({ queryKey: songKeys.list() });
-    },
   });
 }
 
@@ -193,16 +196,13 @@ export function useDeleteSong() {
         if (old === undefined) return old;
         return { songs: old.songs.filter((song) => song.id !== variables.id) };
       });
+      queryClient.removeQueries({ queryKey: songKeys.byId(variables.id) });
       return { previousList };
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(songKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: songKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: songKeys.all });
     },
   });
 }

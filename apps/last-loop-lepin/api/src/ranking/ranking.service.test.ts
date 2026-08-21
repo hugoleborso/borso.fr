@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
 import { truncateAllTables } from '../../../test/database-utils';
+import { getDatabase } from '../database/client';
 import { makeEdition, makePunch, makeRunner } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import { EditionNotFoundError } from '../edition/edition.service';
@@ -38,8 +39,8 @@ describe('ranking.service', () => {
   });
 
   it('orders survivors before DNF runners', async () => {
-    await insertPunch(makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
-    await insertPunch(makePunch('alice', 2, '2026-09-19T07:55:00+02:00'));
+    await insertPunch(getDatabase(), makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
+    await insertPunch(getDatabase(), makePunch('alice', 2, '2026-09-19T07:55:00+02:00'));
 
     vi.setSystemTime(new Date('2026-09-19T08:30:00+02:00'));
     const standings = await computeStandingsForEdition('lepin-2026', new Date());

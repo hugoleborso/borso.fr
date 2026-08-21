@@ -1,10 +1,3 @@
-export const LAST_PENDING_MUTATION_COUNT = 1;
-
-// @FollowsBlueprint utils-pure-module
-export function isLastPendingMutation(activeMutationCount: number): boolean {
-  return activeMutationCount <= LAST_PENDING_MUTATION_COUNT;
-}
-
 interface Slugged {
   readonly slug: string;
 }

@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
-import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
+import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 export const barKeys = {
   all: ['bars'] as const,
@@ -52,7 +52,7 @@ export function useBarsList() {
   });
 }
 
-// @FollowsBlueprint query-optimistic-mutation
+// @FollowsBlueprint query-optimistic-insert
 export function useCreateBar() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -76,16 +76,18 @@ export function useCreateBar() {
         );
         return { bars: next };
       });
-      return { previousList };
+      return { previousList, temporaryId };
+    },
+    onSuccess: (data, _vars, context) => {
+      queryClient.setQueryData<BarsListResponse>(barKeys.list(), (old) => {
+        if (old === undefined) return old;
+        return { bars: settleTemporaryEntity(old.bars, context.temporaryId, data.bar) };
+      });
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(barKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: barKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: barKeys.all });
     },
   });
 }
@@ -122,10 +124,6 @@ export function useUpdateBar() {
         queryClient.setQueryData(barKeys.list(), context.previousList);
       }
     },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: barKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: barKeys.all });
-    },
   });
 }
 
@@ -153,10 +151,6 @@ export function useDeleteBar() {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(barKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: barKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: barKeys.all });
     },
   });
 }

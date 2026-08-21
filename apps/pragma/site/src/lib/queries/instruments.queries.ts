@@ -1,10 +1,9 @@
 /** @Feature instruments */
 
-import type { InstrumentFamily } from '@domain/instrument.core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
-import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
+import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 export const instrumentKeys = {
   all: ['instruments'] as const,
@@ -13,6 +12,10 @@ export const instrumentKeys = {
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 type InstrumentRow = InstrumentsListResponse['instruments'][number];
+type InstrumentCreateVariables = Parameters<typeof api.api.instruments.$post>[0]['json'];
+type InstrumentUpdateVariables = { id: string } & Parameters<
+  (typeof api.api.instruments)[':id']['$put']
+>[0]['json'];
 
 async function listInstruments() {
   const response = await api.api.instruments.$get();
@@ -27,12 +30,12 @@ export function useInstrumentsList() {
   });
 }
 
-// @FollowsBlueprint query-optimistic-mutation
+// @FollowsBlueprint query-optimistic-insert
 export function useCreateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: instrumentKeys.all,
-    mutationFn: async (variables: { name: string; family: InstrumentFamily }) => {
+    mutationFn: async (variables: InstrumentCreateVariables) => {
       const response = await api.api.instruments.$post({ json: variables });
       if (!isResponseSuccessful(response))
         throw new ApiError(response.status, `create ${response.status}`, null);
@@ -48,17 +51,20 @@ export function useCreateInstrument() {
         if (old === undefined) return old;
         return { instruments: [...old.instruments, inserted] };
       });
-      return { previousList };
+      return { previousList, temporaryId };
+    },
+    onSuccess: (data, _vars, context) => {
+      queryClient.setQueryData<InstrumentsListResponse>(instrumentKeys.list(), (old) => {
+        if (old === undefined) return old;
+        return {
+          instruments: settleTemporaryEntity(old.instruments, context.temporaryId, data.instrument),
+        };
+      });
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(instrumentKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: instrumentKeys.all })))
-        return;
-      void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });
 }
@@ -68,7 +74,7 @@ export function useUpdateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: instrumentKeys.all,
-    mutationFn: async (variables: { id: string; name?: string; family?: InstrumentFamily }) => {
+    mutationFn: async (variables: InstrumentUpdateVariables) => {
       const { id, ...rest } = variables;
       const response = await api.api.instruments[':id'].$put({
         param: { id },
@@ -97,11 +103,6 @@ export function useUpdateInstrument() {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(instrumentKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: instrumentKeys.all })))
-        return;
-      void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });
 }
@@ -134,11 +135,6 @@ export function useDeleteInstrument() {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(instrumentKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: instrumentKeys.all })))
-        return;
-      void queryClient.invalidateQueries({ queryKey: instrumentKeys.all });
     },
   });
 }

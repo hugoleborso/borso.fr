@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { runnersTable } from './runner.schema';
 import type { Runner } from './runner.types';
 
@@ -7,8 +7,7 @@ export async function insertRunner(runner: Runner): Promise<void> {
   await getDatabase().insert(runnersTable).values(runner);
 }
 
-// @FollowsBlueprint repository-idempotent-upsert
-export async function upsertRunner(runner: Runner): Promise<void> {
+export async function insertRunnerIfAbsent(runner: Runner): Promise<void> {
   await getDatabase().insert(runnersTable).values(runner).onConflictDoNothing();
 }
 
@@ -19,6 +18,13 @@ export async function findRunner(editionSlug: string, runnerSlug: string): Promi
     .where(and(eq(runnersTable.editionSlug, editionSlug), eq(runnersTable.slug, runnerSlug)))
     .limit(1);
   return rows[0] ?? null;
+}
+
+export async function deleteAllEditionRunners(
+  executor: DatabaseExecutor,
+  editionSlug: string,
+): Promise<void> {
+  await executor.delete(runnersTable).where(eq(runnersTable.editionSlug, editionSlug));
 }
 
 // @FollowsBlueprint repository-query

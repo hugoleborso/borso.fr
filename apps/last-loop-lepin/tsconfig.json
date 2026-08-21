@@ -16,13 +16,15 @@
     "types": ["vite/client", "node"],
     "paths": {
       "@site/*": ["./site/src/*"],
-      "@api/*": ["./api/src/*"]
+      "@api/*": ["./api/src/*"],
+      "@domain/*": ["./domain/*"]
     }
   },
   "include": [
     "site/src/**/*.ts",
     "site/src/**/*.tsx",
     "api/src/**/*.ts",
+    "domain/**/*.ts",
     "cdk/test/**/*.ts",
     "test/**/*.ts",
     "vite.config.ts",

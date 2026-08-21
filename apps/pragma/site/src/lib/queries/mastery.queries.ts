@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { upsertMasteryDefault, withoutMasteryDefault } from './mastery.utils';
-import { isLastPendingMutation } from './optimistic.utils';
 
 export const masteryKeys = {
   all: ['mastery'] as const,
@@ -13,6 +12,7 @@ export const masteryKeys = {
 };
 
 type MasteryDefaultsResponse = InferResponseType<typeof api.api.mastery.defaults.$get>;
+type MasteryDefaultVariables = Parameters<typeof api.api.mastery.defaults.$put>[0]['json'];
 
 export function useMasteryDefaults() {
   return useQuery({
@@ -30,7 +30,7 @@ export function useSaveMasteryDefault() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: masteryKeys.all,
-    mutationFn: async (variables: { memberId: string; instrumentId: string; score: number }) => {
+    mutationFn: async (variables: MasteryDefaultVariables) => {
       const response = await api.api.mastery.defaults.$put({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `save ${response.status}`, null);
       return response.json();
@@ -49,10 +49,6 @@ export function useSaveMasteryDefault() {
       if (context?.previousDefaults !== undefined) {
         queryClient.setQueryData(masteryKeys.defaults(), context.previousDefaults);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: masteryKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: masteryKeys.defaults() });
     },
   });
 }
@@ -85,10 +81,6 @@ export function useDeleteMasteryDefault() {
       if (context?.previousDefaults !== undefined) {
         queryClient.setQueryData(masteryKeys.defaults(), context.previousDefaults);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: masteryKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: masteryKeys.defaults() });
     },
   });
 }

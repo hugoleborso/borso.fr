@@ -81,6 +81,7 @@ git.
 | `borso/no-cross-slice-repository-imports`              | [04](./04-backend-architecture.md)                         |
 | `borso/no-raw-sql-outside-migrations`                  | [11](./11-database.md)                                     |
 | `borso/no-server-state-in-use-state`                   | [06](./06-data-fetching.md)                                |
+| `borso/no-refetch-of-optimistically-written-query`      | [06](./06-data-fetching.md)                                |
 | `borso/no-flat-components-folder`                      | [05](./05-frontend-architecture.md)                        |
 | `borso/no-dynamic-translation-keys`                    | [09](./09-i18n.md)                                         |
 | `borso/no-string-concatenated-class-names`             | [08](./08-styling.md)                                      |

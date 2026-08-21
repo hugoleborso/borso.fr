@@ -1,11 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { truncateAllTables } from '../../../test/database-utils';
+import { createRunner, listRunners } from '../runner/runner.service';
 import {
   createEdition,
   EditionAlreadyExistsError,
   EditionNotFoundError,
   getAllEditions,
   getEdition,
+  removeSetupEdition,
   transitionEditionStatus,
 } from './edition.service';
 
@@ -76,5 +78,34 @@ describe('edition.service', () => {
     await createEdition(input('lepin-svc-b'));
     const editions = await getAllEditions();
     expect(editions.length).toBeGreaterThanOrEqual(2);
+  });
+
+  it('removeSetupEdition takes the roster with it, so the slug comes back empty', async () => {
+    await createEdition(input('lepin-svc-cascade'));
+    await createRunner({
+      editionSlug: 'lepin-svc-cascade',
+      slug: 'runner-one',
+      displayName: 'Runner One',
+    });
+    expect(await listRunners('lepin-svc-cascade')).toHaveLength(1);
+
+    await removeSetupEdition('lepin-svc-cascade');
+    expect(await listRunners('lepin-svc-cascade')).toHaveLength(0);
+
+    await createEdition(input('lepin-svc-cascade'));
+    expect(await listRunners('lepin-svc-cascade')).toHaveLength(0);
+  });
+
+  it('removeSetupEdition refuses an edition that has already started', async () => {
+    await createEdition(input('lepin-svc-live-delete'));
+    await transitionEditionStatus('lepin-svc-live-delete', 'live');
+    await createRunner({
+      editionSlug: 'lepin-svc-live-delete',
+      slug: 'runner-two',
+      displayName: 'Runner Two',
+    });
+
+    await expect(removeSetupEdition('lepin-svc-live-delete')).rejects.toThrow();
+    expect(await listRunners('lepin-svc-live-delete')).toHaveLength(1);
   });
 });

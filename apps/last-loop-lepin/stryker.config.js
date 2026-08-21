@@ -2,6 +2,7 @@ import { defineStrykerConfig } from '../../stryker.shared.js';
 
 export default defineStrykerConfig({
   mutate: [
+    'domain/**/*.core.ts',
     'api/src/**/*.core.ts',
     'api/src/**/*.utils.ts',
     'api/src/**/*.adapter.ts',

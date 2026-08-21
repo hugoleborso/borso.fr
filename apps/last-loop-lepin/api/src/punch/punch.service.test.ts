@@ -3,9 +3,9 @@ import { truncateAllTables } from '../../../test/database-utils';
 import { makeEdition, makeRunner } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import { insertRunner } from '../runner/runner.repository';
-import { PunchConflictError } from './punch.repository';
 import {
   correctPunch,
+  PunchConflictError,
   PunchRejectedError,
   recordManualDidNotFinish,
   registerPunch,

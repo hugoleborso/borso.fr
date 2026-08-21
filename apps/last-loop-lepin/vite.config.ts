@@ -13,6 +13,7 @@ export default defineConfig({
   resolve: {
     alias: {
       '@site': fromHere('./site/src'),
+      '@domain': fromHere('./domain'),
     },
   },
   build: {

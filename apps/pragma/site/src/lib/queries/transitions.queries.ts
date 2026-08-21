@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
-import { isLastPendingMutation } from './optimistic.utils';
+import { upsertTransitionComment } from './transitions.utils';
 
 export const transitionKeys = {
   all: ['transition-comments'] as const,
@@ -17,6 +17,7 @@ type TransitionPairOk = Extract<
   { comment: unknown }
 >;
 type TransitionPairCache = TransitionPairOk | null;
+type TransitionsListResponse = InferResponseType<(typeof api.api)['transition-comments']['$get']>;
 
 export function useTransitionCommentsList() {
   return useQuery({
@@ -70,24 +71,22 @@ export function useSaveTransitionComment() {
         },
       };
       queryClient.setQueryData<TransitionPairCache>(pairKey, optimistic);
-      return { previousPair };
+      const listKey = transitionKeys.list();
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previousList = queryClient.getQueryData<TransitionsListResponse>(listKey);
+      queryClient.setQueryData<TransitionsListResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return { comments: upsertTransitionComment(old.comments, optimistic.comment) };
+      });
+      return { previousPair, previousList };
     },
     onError: (_err, variables, context) => {
-      if (context !== undefined) {
-        queryClient.setQueryData(
-          transitionKeys.byPair(variables.a, variables.b),
-          context.previousPair,
-        );
-      }
-    },
-    onSettled: (_data, _err, variables) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: transitionKeys.all }))) {
-        return;
-      }
-      void queryClient.invalidateQueries({
-        queryKey: transitionKeys.byPair(variables.a, variables.b),
-      });
-      void queryClient.invalidateQueries({ queryKey: transitionKeys.list() });
+      if (context === undefined) return;
+      queryClient.setQueryData(
+        transitionKeys.byPair(variables.a, variables.b),
+        context.previousPair,
+      );
+      queryClient.setQueryData(transitionKeys.list(), context.previousList);
     },
   });
 }

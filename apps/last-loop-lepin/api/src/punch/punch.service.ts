@@ -1,13 +1,18 @@
 import { randomUUID } from 'node:crypto';
+import type { DatabaseExecutor } from '../database/client';
 import { loopIndexAt } from '../edition/edition.core';
 import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
 
-// @FollowsBlueprint service-facade-reexport
-export { PunchConflictError } from './punch.repository';
-
+import { z } from 'zod';
 import { hourlyTopOfLoopMs, type PunchRejectReason, validatePunchTiming } from './punch.core';
+import {
+  catchupPunchInputSchema,
+  createDidNotFinishInputSchema,
+  createPunchInputSchema,
+  selfPunchInputSchema,
+} from './punch.schema';
 import {
   deleteAllEditionPunchesAndDidNotFinishes,
   deleteManualDidNotFinish,
@@ -19,13 +24,21 @@ import {
   listPunchesForEdition,
   markPunchCorrected,
   markPunchVoided,
-  PunchConflictError,
+  runInOneTransaction,
 } from './punch.repository';
 import type { LoopPunch, ManualDidNotFinish } from './punch.types';
 
 // @FollowsBlueprint named-domain-error
 export class PunchNotFoundError extends Error {
   override readonly name = 'PunchNotFoundError';
+}
+
+// @FollowsBlueprint named-domain-error
+export class PunchConflictError extends Error {
+  override readonly name = 'PunchConflictError';
+  constructor(public readonly existing: LoopPunch) {
+    super(`punch conflict for edition/runner/loop_index`);
+  }
 }
 
 /**
@@ -41,10 +54,7 @@ export class PunchRejectedError extends Error {
   }
 }
 
-export interface RegisterPunchInput {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-}
+export type RegisterPunchInput = z.infer<typeof createPunchInputSchema>;
 
 async function buildPunchRejectionError(
   edition: RaceEdition,
@@ -91,17 +101,11 @@ export async function registerPunch(input: RegisterPunchInput, now: Date): Promi
     userAgent: null,
   };
 
-  await insertPunch(punch);
+  await runInOneTransaction((executor) => insertPunch(executor, punch));
   return punch;
 }
 
-export interface SelfPunchInput {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly clientLat: number | null;
-  readonly clientLng: number | null;
-  readonly clientAccuracyM: number | null;
-}
+export type SelfPunchInput = z.infer<typeof selfPunchInputSchema>;
 
 export async function registerSelfPunch(
   input: SelfPunchInput,
@@ -140,7 +144,7 @@ export async function registerSelfPunch(
     distanceFromCenterM: distanceFromCenter,
     userAgent,
   };
-  await insertPunch(punch);
+  await runInOneTransaction((executor) => insertPunch(executor, punch));
   return punch;
 }
 
@@ -163,12 +167,7 @@ export async function voidPunch(id: string, now: Date): Promise<LoopPunch> {
   return { ...existing, voidedAt: now };
 }
 
-export interface RecordDidNotFinishInput {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly outAtLoop: number;
-  readonly reason: 'late' | 'manual';
-}
+export type RecordDidNotFinishInput = z.infer<typeof createDidNotFinishInputSchema>;
 
 export async function recordManualDidNotFinish(
   input: RecordDidNotFinishInput,
@@ -179,7 +178,7 @@ export async function recordManualDidNotFinish(
   return manualDidNotFinish;
 }
 
-export async function getPunchesForEdition(editionSlug: string): Promise<readonly LoopPunch[]> {
+export async function listEditionPunches(editionSlug: string): Promise<readonly LoopPunch[]> {
   return listPunchesForEdition(editionSlug);
 }
 
@@ -189,11 +188,7 @@ export async function listManualDidNotFinishes(
   return listManualDidNotFinishesForEdition(editionSlug);
 }
 
-export interface CatchupPunchInput {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly loopIndex: number;
-}
+export type CatchupPunchInput = z.infer<typeof catchupPunchInputSchema>;
 
 function lastInstantOfLoop(edition: RaceEdition, loopIndex: number): number {
   const ONE_MILLISECOND = 1;
@@ -228,17 +223,28 @@ export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise
     distanceFromCenterM: null,
     userAgent: null,
   };
-  await insertPunch(punch);
-  await deleteManualDidNotFinish(input.editionSlug, input.runnerSlug);
+  await runInOneTransaction(async (executor) => {
+    await insertPunch(executor, punch);
+    await deleteManualDidNotFinish(executor, input.editionSlug, input.runnerSlug);
+  });
   return punch;
 }
 
 export async function clearEditionPunchHistory(editionSlug: string): Promise<void> {
-  await deleteAllEditionPunchesAndDidNotFinishes(editionSlug);
+  await runInOneTransaction((executor) =>
+    deleteAllEditionPunchesAndDidNotFinishes(executor, editionSlug),
+  );
+}
+
+export async function clearEditionPunchHistoryWithin(
+  executor: DatabaseExecutor,
+  editionSlug: string,
+): Promise<void> {
+  await deleteAllEditionPunchesAndDidNotFinishes(executor, editionSlug);
 }
 
 export async function seedPunch(punch: LoopPunch): Promise<void> {
-  await insertPunch(punch);
+  await runInOneTransaction((executor) => insertPunch(executor, punch));
 }
 
 export async function seedManualDidNotFinish(didNotFinish: ManualDidNotFinish): Promise<void> {

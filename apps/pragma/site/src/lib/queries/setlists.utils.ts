@@ -159,3 +159,16 @@ export function selectSetlistsNotOnSession<TSetlist extends MinimalSetlistSummar
 ): TSetlist[] {
   return setlists.filter((setlist) => !setlist.sessionIds.includes(sessionId));
 }
+
+// @FollowsBlueprint utils-pure-module
+export function settleAppendedEntry<TEntry extends MinimalSetlistEntry>(
+  cache: EntriesCache<TEntry>,
+  temporaryId: string,
+  settled: { readonly id: string; readonly position: number },
+): EntriesCache<TEntry> {
+  return {
+    entries: cache.entries.map((entry) =>
+      entry.id === temporaryId ? { ...entry, id: settled.id, position: settled.position } : entry,
+    ),
+  };
+}

@@ -9,6 +9,7 @@ const DSQL_DATABASE = 'postgres';
 
 type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
 export type Database = DrizzleClient;
+export type DatabaseExecutor = Parameters<Parameters<Database['transaction']>[0]>[0] | Database;
 
 interface DatabaseConfig {
   readonly endpoint: string;
