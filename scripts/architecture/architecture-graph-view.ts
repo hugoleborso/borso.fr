@@ -789,14 +789,20 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         button.addEventListener('click', () => selectAction(entry.id));
         actionList.appendChild(button);
       }
-      const first = entries[1] || entries[0];
+      const touched = entries
+        .filter((entry) => entry.change && entry.change.status)
+        .sort((left, right) => right.change.touched - left.change.touched)[0];
+      const first = touched || entries[1] || entries[0];
       if (first) selectAction(first.id);
     };
 
     for (const button of host.querySelectorAll('[data-feature-id]')) {
       button.addEventListener('click', () => selectFeature(button.dataset.featureId));
     }
-    const firstFeature = data.features[0];
+    const movedFeature = data.features
+      .filter((each) => each.change && each.change.status)
+      .sort((left, right) => right.change.touched - left.change.touched)[0];
+    const firstFeature = movedFeature || data.features[0];
     if (firstFeature) selectFeature(firstFeature.id);
   }
 
@@ -993,9 +999,15 @@ export const GRAPH_STYLES = String.raw`
   .touched-moved .journey-touched { background: var(--accent); }
   .touched-removed .journey-touched { background: var(--layer-edge); }
 
-  .node-added .node-body { stroke: var(--layer-service); stroke-width: 2.4; fill: var(--layer-service-bg); }
+  .node-added .node-body {
+    stroke: var(--layer-service); stroke-width: 2.4; fill: var(--layer-service-bg);
+    stroke-dasharray: 4 2.5;
+  }
   .node-added .node-stripe { fill: var(--layer-service); }
-  .node-changed .node-body { stroke: var(--signal); stroke-width: 2.4; fill: var(--signal-soft); }
+  .node-changed .node-body {
+    stroke: var(--signal); stroke-width: 2.4; fill: var(--signal-soft);
+    stroke-dasharray: 4 2.5;
+  }
   .node-changed .node-stripe { fill: var(--signal); }
   .node-removed .node-body { stroke: var(--layer-edge); stroke-width: 2.4; fill: var(--layer-edge-bg); stroke-dasharray: 5 3; }
   .node-removed .node-stripe { fill: var(--layer-edge); }
@@ -1008,8 +1020,8 @@ export const GRAPH_STYLES = String.raw`
     margin: .2rem 0 0; font: .75rem/1.6 var(--font-mono); color: var(--muted);
   }
   .diff-legend .swatch { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; margin-right: .3rem; vertical-align: -1px; }
-  .diff-legend .added { background: var(--layer-service-bg); border: 2px solid var(--layer-service); }
-  .diff-legend .changed { background: var(--signal-soft); border: 2px solid var(--signal); }
+  .diff-legend .added { background: var(--layer-service-bg); border: 2px dashed var(--layer-service); }
+  .diff-legend .changed { background: var(--signal-soft); border: 2px dashed var(--signal); }
   .diff-legend .moved { background: var(--accent-soft); border: 2px dashed var(--accent); }
   .diff-legend .removed { background: var(--layer-edge-bg); border: 2px dashed var(--layer-edge); }
   .diff-legend span { color: var(--muted); opacity: .8; }

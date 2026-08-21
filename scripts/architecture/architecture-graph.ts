@@ -2,6 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
+import { filePathOfLocation } from './journey-status.core';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
 import {
   type DiffReport,
@@ -13,6 +14,7 @@ import {
   type NodeMetrics,
   aggregateMetrics,
   buildArchitectureFile,
+  buildArchitectureFileFromText,
   isTestFile,
   readApiPathStrings,
 } from './architecture-model';
@@ -1263,6 +1265,7 @@ interface DiffPageOptions {
   readonly headModel: string;
   readonly levels: readonly GraphLevel[];
   readonly pageSources: Readonly<Record<string, SourceEntry>>;
+  readonly applicationRoot: string;
   readonly standards: readonly StandardEntry[];
   readonly histories: Readonly<Record<string, FileHistory>>;
   readonly journeys: ReturnType<typeof buildJourneys>;
@@ -1375,7 +1378,13 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
     join(options.outputDirectory, `${options.manifest.application}-diff.html`),
     renderArchitecturePage({
       manifest: options.manifest,
-      sources: withBaseSources(options.pageSources, code, renames, options.diffRef),
+      sources: withBaseSources(
+        options.pageSources,
+        code,
+        renames,
+        options.diffRef,
+        options.applicationRoot,
+      ),
       standards: options.standards,
       histories: options.histories,
       historyRevision: readHeadRevision(REPOSITORY_ROOT),
@@ -1395,25 +1404,54 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
   );
 }
 
+function readBaseSymbolSources(
+  diffRef: string,
+  path: string,
+  basePath: string,
+  applicationRoot: string,
+): ReadonlyMap<string, string> {
+  const text = readSourceAt(diffRef, basePath);
+  if (text === '') return new Map();
+  const parsed = buildArchitectureFileFromText(
+    join(REPOSITORY_ROOT, path),
+    text,
+    REPOSITORY_ROOT,
+    applicationRoot,
+  );
+  return new Map(parsed.exports.map((exported) => [exported.name, exported.source]));
+}
+
 function withBaseSources(
   sources: Readonly<Record<string, SourceEntry>>,
   code: ReadonlyMap<string, NodeStatus>,
   renames: ReadonlyMap<string, string>,
   diffRef: string | null,
+  applicationRoot: string,
 ): Readonly<Record<string, SourceEntry>> {
   if (diffRef === null) return sources;
   const withBase: Record<string, SourceEntry> = { ...sources };
-  for (const [path, status] of code) {
-    const entry = withBase[`file:${path}`];
-    if (entry === undefined) continue;
+  const baseSymbolsByPath = new Map<string, ReadonlyMap<string, string>>();
+  for (const [key, entry] of Object.entries(sources)) {
+    const path = filePathOfLocation(entry.location);
+    const status = code.get(path);
     if (status === 'added') {
-      withBase[`file:${path}`] = { ...entry, baseCode: '', isNew: true };
+      withBase[key] = { ...entry, baseCode: '', isNew: true };
       continue;
     }
     if (status !== 'changed') continue;
-    const baseCode = readSourceAt(diffRef, renames.get(path) ?? path);
-    if (baseCode === '') continue;
-    withBase[`file:${path}`] = { ...entry, baseCode };
+    const baseFileText = readSourceAt(diffRef, renames.get(path) ?? path);
+    if (baseFileText === '') continue;
+    if (entry.location === path) {
+      withBase[key] = { ...entry, baseCode: baseFileText };
+      continue;
+    }
+    const symbols =
+      baseSymbolsByPath.get(path) ??
+      readBaseSymbolSources(diffRef, path, renames.get(path) ?? path, applicationRoot);
+    baseSymbolsByPath.set(path, symbols);
+    const baseCode = symbols.get(entry.name);
+    withBase[key] =
+      baseCode === undefined ? { ...entry, baseCode: '', isNew: true } : { ...entry, baseCode };
   }
   return withBase;
 }
@@ -1637,6 +1675,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
       headModel: model,
       levels,
       pageSources,
+      applicationRoot,
       standards,
       histories,
       journeys,
