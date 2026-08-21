@@ -1,3 +1,4 @@
+import { selectCurrentEdition } from '@domain/edition-selection.core';
 import { type GpxTrack, parseGpx } from '../helpers/gpx/gpx.core';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
 import {
@@ -147,17 +148,7 @@ export async function replaceEditionFromInput(
 }
 
 export async function getCurrentEdition(): Promise<RaceEdition | null> {
-  const editions = await listEditions();
-  const live = editions.find((edition) => edition.status === 'live');
-  if (live !== undefined) return live;
-  const nextSetup = editions
-    .filter((edition) => edition.status === 'setup')
-    .toSorted((left, right) => left.startsAt.getTime() - right.startsAt.getTime())[0];
-  if (nextSetup !== undefined) return nextSetup;
-  const lastFinished = editions
-    .filter((edition) => edition.status === 'finished')
-    .toSorted((left, right) => right.endsAt.getTime() - left.endsAt.getTime())[0];
-  return lastFinished ?? null;
+  return selectCurrentEdition(await listEditions());
 }
 
 export async function transitionEditionStatus(

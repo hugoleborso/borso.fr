@@ -132,6 +132,13 @@ The rule's own suite pins both directions: a refetch of `editionKeys.current()`
 beside an optimistic write of `editionKeys.list()` passes, and the same code
 refetching `editionKeys.all` does not.
 
+The rule is the floor, not the answer. Reviewing this branch turned up the
+`current` refetch it now permits, and the better fix was to stop refetching at
+all: that projection is a pure selection over the list the mutation had just
+rewritten, so it moved to `apps/last-loop-lepin/domain/` and both sides apply
+it. A refetch the rule permits is still worth asking whether the client could
+have derived.
+
 A regression test in `instruments.queries.test.tsx` pins the behaviour from the
 screen's side: the probe mounts `useInstrumentsList` beside the mutation, the
 stub answers any `GET` with the pre-delete list, and the test asserts both that

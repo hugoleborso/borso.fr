@@ -1,3 +1,4 @@
+import { selectCurrentEdition } from '@domain/edition-selection.core';
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
@@ -10,8 +11,34 @@ export const editionKeys = {
   current: () => [...editionKeys.all, 'current'] as const,
 };
 
-function refetchTheCurrentEditionProjection(queryClient: QueryClient): void {
-  void queryClient.invalidateQueries({ queryKey: editionKeys.current() });
+type CachedCurrentEdition = InferResponseType<typeof api.api.editions.current.$get>;
+
+function writeTheCurrentEditionDerivedFrom(
+  queryClient: QueryClient,
+  list: CachedEditionList | undefined,
+): void {
+  if (list === undefined) return;
+  queryClient.setQueryData<CachedCurrentEdition>(editionKeys.current(), {
+    edition: selectCurrentEdition(list.editions),
+  });
+}
+
+function rollBackTheEditionCaches(
+  queryClient: QueryClient,
+  previousList: CachedEditionList | undefined,
+  previousCurrent: CachedCurrentEdition | undefined,
+): void {
+  if (previousList === undefined) return;
+  queryClient.setQueryData(editionKeys.list(), previousList);
+  queryClient.setQueryData(editionKeys.current(), previousCurrent);
+}
+
+async function snapshotTheEditionCaches(queryClient: QueryClient) {
+  await queryClient.cancelQueries({ queryKey: editionKeys.all });
+  return {
+    previousList: queryClient.getQueryData<CachedEditionList>(editionKeys.list()),
+    previousCurrent: queryClient.getQueryData<CachedCurrentEdition>(editionKeys.current()),
+  };
 }
 
 export type CreateEditionVariables = Parameters<typeof api.api.admin.editions.$post>[0]['json'];
@@ -97,23 +124,21 @@ export function useDeleteEdition() {
       return response.json();
     },
     onMutate: async (variables) => {
-      const listKey = editionKeys.list();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      const previousList = queryClient.getQueryData<CachedEditionList>(listKey);
-      queryClient.setQueryData<CachedEditionList>(listKey, (old) =>
-        old === undefined
-          ? old
-          : { editions: old.editions.filter((edition) => edition.slug !== variables.slug) },
-      );
-      return { previousList };
+      const snapshot = await snapshotTheEditionCaches(queryClient);
+      const nextList =
+        snapshot.previousList === undefined
+          ? undefined
+          : {
+              editions: snapshot.previousList.editions.filter(
+                (edition) => edition.slug !== variables.slug,
+              ),
+            };
+      if (nextList !== undefined) queryClient.setQueryData(editionKeys.list(), nextList);
+      writeTheCurrentEditionDerivedFrom(queryClient, nextList);
+      return snapshot;
     },
     onError: (_error, _variables, context) => {
-      if (context?.previousList !== undefined) {
-        queryClient.setQueryData(editionKeys.list(), context.previousList);
-      }
-    },
-    onSettled: () => {
-      refetchTheCurrentEditionProjection(queryClient);
+      rollBackTheEditionCaches(queryClient, context?.previousList, context?.previousCurrent);
     },
   });
 }
@@ -133,28 +158,23 @@ export function useTransitionEditionStatus() {
       return response.json();
     },
     onMutate: async (variables) => {
-      const listKey = editionKeys.list();
-      await queryClient.cancelQueries({ queryKey: listKey });
-      const previousList = queryClient.getQueryData<CachedEditionList>(listKey);
-      queryClient.setQueryData<CachedEditionList>(listKey, (old) =>
-        old === undefined
-          ? old
+      const snapshot = await snapshotTheEditionCaches(queryClient);
+      const nextList =
+        snapshot.previousList === undefined
+          ? undefined
           : {
-              editions: replaceEntityBySlug(old.editions, variables.slug, (edition) => ({
-                ...edition,
-                status: variables.status,
-              })),
-            },
-      );
-      return { previousList };
+              editions: replaceEntityBySlug(
+                snapshot.previousList.editions,
+                variables.slug,
+                (edition) => ({ ...edition, status: variables.status }),
+              ),
+            };
+      if (nextList !== undefined) queryClient.setQueryData(editionKeys.list(), nextList);
+      writeTheCurrentEditionDerivedFrom(queryClient, nextList);
+      return snapshot;
     },
     onError: (_error, _variables, context) => {
-      if (context?.previousList !== undefined) {
-        queryClient.setQueryData(editionKeys.list(), context.previousList);
-      }
-    },
-    onSettled: () => {
-      refetchTheCurrentEditionProjection(queryClient);
+      rollBackTheEditionCaches(queryClient, context?.previousList, context?.previousCurrent);
     },
   });
 }

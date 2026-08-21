@@ -114,11 +114,18 @@ predict is the identifier, and the response carries it, so the insert settles
 from its own answer through `query-optimistic-insert` rather than from a `GET`
 that could take the new row straight back out of the list.
 
-If a key really does hold a projection no client can derive, refetch that one
-key and write the reason on the line, as an `eslint-disable-next-line`. A
-helper named for the scoping is not enough: `last-loop-lepin` had one called
-`refetchEditionProjectionsTheClientCannotPredict` whose body invalidated
-`editionKeys.all`, the optimistically written list included.
+A *sibling* key is a different matter, and needs no exception: the rule below
+expands both keys through the key factory, so refetching `editionKeys.current()`
+beside an optimistic write of `editionKeys.list()` passes on its own.
+`reportUnusedDisableDirectives` is on, so writing a disable there now fails for
+the opposite reason.
+
+Before reaching for that, ask whether the projection is derivable, because it
+usually is. `current` on `last-loop-lepin` is a pure selection over the very
+list the mutation just rewrote, so it lives in `apps/last-loop-lepin/domain/`
+and both sides apply it: the endpoint to answer the first read, and `onMutate`
+to keep the answer current without one. A refetch is the fallback for a
+projection the client genuinely cannot compute, not the first move.
 
 The two accounts are
 [`docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md`](../dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md)

@@ -6,6 +6,7 @@ const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url))
 const workspaceAliases = {
   '@site': fromHere('./site/src'),
   '@api': fromHere('./api/src'),
+  '@domain': fromHere('./domain'),
 };
 
 // @FollowsBlueprint workspace-test-config
@@ -22,6 +23,7 @@ export default defineConfig({
         'site/src/**/*.core.ts',
         'site/src/**/*.utils.ts',
         'site/src/**/*.adapter.ts',
+        'domain/**/*.core.ts',
       ],
       thresholds: { perFile: true, statements: 100, branches: 100, functions: 100, lines: 100 },
     },
@@ -42,6 +44,7 @@ export default defineConfig({
             'site/src/**/*.core.test.ts',
             'site/src/**/*.adapter.test.ts',
             'site/src/**/*.test.tsx',
+            'domain/**/*.core.test.ts',
           ],
           sequence: { groupOrder: 0 },
           globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
