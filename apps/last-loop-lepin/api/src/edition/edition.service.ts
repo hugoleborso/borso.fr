@@ -1,12 +1,15 @@
 import { selectCurrentEdition } from '@domain/edition-selection.core';
 import { type GpxTrack, parseGpx } from '../helpers/gpx/gpx.core';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
+import { clearEditionPunchHistoryWithin } from '../punch/punch.service';
+import { clearEditionRoster } from '../runner/runner.service';
 import {
   deleteEdition,
   findEditionBySlug,
   insertEdition,
   listEditions,
   updateEditionSetup,
+  runInOneTransaction,
   updateEditionStatus,
   upsertEdition,
 } from './edition.repository';
@@ -207,7 +210,11 @@ export async function replaceSetupEdition(
 export async function removeSetupEdition(slug: string): Promise<void> {
   const existing = await getEdition(slug);
   if (existing.status !== 'setup') throw new EditionNotInSetupError(slug);
-  await deleteEdition(slug);
+  await runInOneTransaction(async (executor) => {
+    await clearEditionPunchHistoryWithin(executor, slug);
+    await clearEditionRoster(executor, slug);
+    await deleteEdition(executor, slug);
+  });
 }
 
 export async function seedEdition(edition: RaceEdition): Promise<void> {

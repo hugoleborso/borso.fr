@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import type { DatabaseExecutor } from '../database/client';
 import { loopIndexAt } from '../edition/edition.core';
 import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
@@ -10,6 +11,7 @@ export { PunchConflictError } from './punch.repository';
 import { hourlyTopOfLoopMs, type PunchRejectReason, validatePunchTiming } from './punch.core';
 import {
   deleteAllEditionPunchesAndDidNotFinishes,
+  deleteAllEditionPunchesAndDidNotFinishesOutsideATransaction,
   deleteManualDidNotFinish,
   findActivePunchForLoop,
   findPunchById,
@@ -234,7 +236,14 @@ export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise
 }
 
 export async function clearEditionPunchHistory(editionSlug: string): Promise<void> {
-  await deleteAllEditionPunchesAndDidNotFinishes(editionSlug);
+  await deleteAllEditionPunchesAndDidNotFinishesOutsideATransaction(editionSlug);
+}
+
+export async function clearEditionPunchHistoryWithin(
+  executor: DatabaseExecutor,
+  editionSlug: string,
+): Promise<void> {
+  await deleteAllEditionPunchesAndDidNotFinishes(executor, editionSlug);
 }
 
 export async function seedPunch(punch: LoopPunch): Promise<void> {

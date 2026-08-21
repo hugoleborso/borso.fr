@@ -1,5 +1,5 @@
 import { and, eq, isNull } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { loopPunchesTable, manualDidNotFinishesTable } from './punch.schema';
 import type { LoopPunch, ManualDidNotFinish, PunchSource } from './punch.types';
 
@@ -151,11 +151,20 @@ export async function deleteManualDidNotFinish(
     );
 }
 
-export async function deleteAllEditionPunchesAndDidNotFinishes(editionSlug: string): Promise<void> {
-  await getDatabase().delete(loopPunchesTable).where(eq(loopPunchesTable.editionSlug, editionSlug));
-  await getDatabase()
+export async function deleteAllEditionPunchesAndDidNotFinishes(
+  executor: DatabaseExecutor,
+  editionSlug: string,
+): Promise<void> {
+  await executor.delete(loopPunchesTable).where(eq(loopPunchesTable.editionSlug, editionSlug));
+  await executor
     .delete(manualDidNotFinishesTable)
     .where(eq(manualDidNotFinishesTable.editionSlug, editionSlug));
+}
+
+export async function deleteAllEditionPunchesAndDidNotFinishesOutsideATransaction(
+  editionSlug: string,
+): Promise<void> {
+  await deleteAllEditionPunchesAndDidNotFinishes(getDatabase(), editionSlug);
 }
 
 export async function listManualDidNotFinishesForEdition(

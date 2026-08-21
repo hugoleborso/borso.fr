@@ -1,8 +1,15 @@
+import type { DatabaseExecutor } from '../database/client';
 import { getPunchesForEdition } from '../punch/punch.service';
 import type { LoopPunch } from '../punch/punch.types';
 import { type RunnerDto, toRunnerDto } from './runner.dto.utils';
 import { readPhotosCdnHost } from './runner.environment';
-import { findRunner, insertRunner, listRunnersForEdition, upsertRunner } from './runner.repository';
+import {
+  deleteAllEditionRunners,
+  findRunner,
+  insertRunner,
+  listRunnersForEdition,
+  upsertRunner,
+} from './runner.repository';
 import type { Runner } from './runner.types';
 
 // @FollowsBlueprint named-domain-error
@@ -84,6 +91,13 @@ export async function listPunchesForRunner(
   return allPunches
     .filter((punch) => punch.runnerSlug === runnerSlug)
     .toSorted((left, right) => left.loopIndex - right.loopIndex);
+}
+
+export async function clearEditionRoster(
+  executor: DatabaseExecutor,
+  editionSlug: string,
+): Promise<void> {
+  await deleteAllEditionRunners(executor, editionSlug);
 }
 
 export async function seedRunner(runner: Runner): Promise<void> {

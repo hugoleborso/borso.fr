@@ -1,5 +1,5 @@
 import { eq } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { editionsTable, gpxMetadataSchema, isEditionStatus } from './edition.schema';
 import type { EditionStatus, RaceEdition } from './edition.types';
 
@@ -121,6 +121,18 @@ export async function updateEditionSetup(slug: string, edition: RaceEdition): Pr
     .where(eq(editionsTable.slug, slug));
 }
 
-export async function deleteEdition(slug: string): Promise<void> {
-  await getDatabase().delete(editionsTable).where(eq(editionsTable.slug, slug));
+export async function deleteEdition(executor: DatabaseExecutor, slug: string): Promise<void> {
+  await executor.delete(editionsTable).where(eq(editionsTable.slug, slug));
+}
+
+/**
+ * @Blueprint repository-owned-transaction
+ * @BlueprintName Transaction The Owning Slice Lends Out
+ * @BlueprintUsage Use when deleting a row means deleting rows another bounded context owns, which `borso/no-cross-slice-repository-imports` stops a service reaching directly.
+ * @BlueprintDescription Hands the executor to a callback rather than exposing the client, so the owning service composes the other slices' service calls into one transaction without importing their repositories. Every function it calls takes the executor as a required argument, because an optional `executor ?? getDatabase()` would make running the second half outside the transaction merely discouraged rather than impossible, and would add a branch no test covers.
+ */
+export async function runInOneTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await getDatabase().transaction(work);
 }

@@ -1,5 +1,5 @@
 import { and, eq } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { runnersTable } from './runner.schema';
 import type { Runner } from './runner.types';
 
@@ -22,6 +22,13 @@ export async function findRunner(editionSlug: string, runnerSlug: string): Promi
 }
 
 // @FollowsBlueprint repository-query
+export async function deleteAllEditionRunners(
+  executor: DatabaseExecutor,
+  editionSlug: string,
+): Promise<void> {
+  await executor.delete(runnersTable).where(eq(runnersTable.editionSlug, editionSlug));
+}
+
 export async function listRunnersForEdition(editionSlug: string): Promise<readonly Runner[]> {
   return getDatabase().select().from(runnersTable).where(eq(runnersTable.editionSlug, editionSlug));
 }
