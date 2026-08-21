@@ -169,9 +169,12 @@ describe('describeDetachedClaim', () => {
       blueprintId: 'repository-query',
       subject: 'listRunnersForEdition',
     });
-    expect(message).toContain(RUNNER_REPOSITORY);
-    expect(message).toContain('@FollowsBlueprint repository-query');
-    expect(message).toContain('listRunnersForEdition');
-    expect(message).toContain('--accept');
+    expect(message).toBe(
+      `${RUNNER_REPOSITORY}: the \`@FollowsBlueprint repository-query\` marker no longer names ` +
+        '`listRunnersForEdition`, which the file still declares. A marker is bound to its subject ' +
+        'by position, so a declaration inserted under one moves the claim without changing any ' +
+        'count. Move the marker back, or accept the new subject in the same commit: ' +
+        '`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
+    );
   });
 });

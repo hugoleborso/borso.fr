@@ -13,6 +13,7 @@ export interface DetachedClaim {
 }
 
 function byKey([left]: readonly [string, unknown], [right]: readonly [string, unknown]): number {
+  // Stryker disable next-line EqualityOperator: equivalent mutant, both sides come from the keys of one Map and are therefore never equal
   return left < right ? -1 : 1;
 }
 
