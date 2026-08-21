@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
-import { filePathOfLocation } from './journey-status.core';
+import { filePathOfLocation, statusOfNode } from './journey-status.core';
 import { type LevelLayout, layoutLevel } from './architecture-layout';
 import {
   type DiffReport,
@@ -1258,6 +1258,37 @@ function regroupedNode(
   };
 }
 
+const UNCOLOURED_JOURNEYS_MESSAGE = [
+  'Level 3.5 draws these files and the diff says they moved, yet not one of their nodes',
+  'carries a status, so the page would show them as untouched. Level 3.5 shipped in that',
+  "state and nobody saw it for months: the colouring read a node's location through its own",
+  'spelling of "the path part", that spelling chopped a character off any location carrying',
+  'no line number, and every group node missed. This check is deliberately not written',
+  'through that parser — it matches each real path from the diff against each location by',
+  'string containment — so a parser that stops resolving is caught here rather than by a',
+  'reader noticing an absence of colour:',
+].join(' ');
+
+function isNodeOfFile(node: GraphNode, path: string): boolean {
+  return node.location === path || (node.location?.startsWith(`${path}:`) ?? false);
+}
+
+function assertJourneysCarryTheDiff(
+  journeys: ReturnType<typeof buildJourneys>,
+  code: ReadonlyMap<string, NodeStatus>,
+): void {
+  const nodes = [...journeys.graphs.values()].flatMap((graph) => graph.nodes);
+  const uncoloured = [...code]
+    .filter(([, status]) => status !== 'removed')
+    .map(([path]) => path)
+    .filter((path) => {
+      const drawn = nodes.filter((node) => isNodeOfFile(node, path));
+      return drawn.length > 0 && !drawn.some((node) => statusOfNode(node.location, code) !== '');
+    });
+  if (uncoloured.length === 0) return;
+  throw new Error(`${UNCOLOURED_JOURNEYS_MESSAGE}\n  ${uncoloured.join('\n  ')}`);
+}
+
 interface DiffPageOptions {
   readonly diffBase: string;
   readonly diffRef: string | null;
@@ -1302,6 +1333,8 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
     ['code', code],
     ['blueprint', statusesBetween(base.blueprint, head.blueprint)],
   ]);
+
+  assertJourneysCarryTheDiff(options.journeys, code);
 
   const externalName = new Map(baseModel.externals.map((each) => [each.id, each.name]));
   const containerName = new Map(baseModel.containers.map((each) => [each.id, each.name]));
