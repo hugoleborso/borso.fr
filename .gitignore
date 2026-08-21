@@ -45,9 +45,11 @@ reports
 # resolving them by hand is a step nobody can do correctly by reading it.
 #
 # What stays, because each is an input: `convention-baseline.json`, a count a
-# person accepted with `--accept`; `seals.jsonl`, an attestation nothing can
-# recompute because it records that a review happened; and the CloudFormation
-# template snapshots, whose diff IS the review artefact.
+# person accepted with `--accept`; `blueprint-subjects.json`, which symbol each
+# `@FollowsBlueprint` marker was accepted against, since a marker moved to a
+# neighbouring function leaves every count identical; `seals.jsonl`, an
+# attestation nothing can recompute because it records that a review happened;
+# and the CloudFormation template snapshots, whose diff IS the review artefact.
 #
 # Where the outputs went instead: `pages.yml` regenerates and publishes every
 # one of them on each push to `main`, so each still has an address, and the

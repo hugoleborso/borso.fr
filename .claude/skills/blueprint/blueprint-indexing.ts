@@ -11,6 +11,7 @@ import {
   inferLayer,
   inferProject,
   listAnnotationProblems,
+  resolveAnnotationSubject,
 } from './blueprint-utils.js';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
@@ -19,6 +20,12 @@ const SCAN_DIRECTORIES = ['apps', 'infra', 'eslint-rules'].map((name) =>
   path.join(REPOSITORY_ROOT, name),
 );
 const OUTPUT_FILE = path.join(scriptDirectory, 'blueprint-index.md');
+const SUBJECT_BASELINE_FILE = path.join(
+  REPOSITORY_ROOT,
+  'docs',
+  'standards',
+  'blueprint-subjects.json',
+);
 const SKIPPED_DIRECTORY_NAMES = new Set([
   'node_modules',
   'dist',
@@ -52,6 +59,7 @@ interface FollowerReference {
   readonly blueprintId: string;
   readonly filePath: string;
   readonly lineNumber: number;
+  readonly subject: string;
 }
 
 function listSourceFiles(directory: string): string[] {
@@ -127,6 +135,7 @@ function extractFollowers(absolutePath: string): FollowerReference[] {
     blueprintId: entry.blueprintId,
     filePath: relativePath,
     lineNumber: entry.lineNumber,
+    subject: resolveAnnotationSubject(content, entry.lineNumber),
   }));
 }
 
@@ -255,8 +264,46 @@ ${orphanedSection}
 `;
 }
 
+type SubjectBaseline = Record<string, readonly string[]>;
+
+function buildSubjectBaseline(followers: readonly FollowerReference[]): SubjectBaseline {
+  const byBlueprintId = new Map<string, string[]>();
+  for (const follower of followers) {
+    const subjects = byBlueprintId.get(follower.blueprintId) ?? [];
+    subjects.push(follower.subject);
+    byBlueprintId.set(follower.blueprintId, subjects);
+  }
+  const baseline: Record<string, readonly string[]> = {};
+  for (const blueprintId of [...byBlueprintId.keys()].sort()) {
+    baseline[blueprintId] = (byBlueprintId.get(blueprintId) ?? []).toSorted();
+  }
+  return baseline;
+}
+
+function serialiseSubjectBaseline(baseline: SubjectBaseline): string {
+  return `${JSON.stringify(baseline, null, 2)}\n`;
+}
+
+function listSubjectDrift(followers: readonly FollowerReference[]): string[] {
+  if (!fs.existsSync(SUBJECT_BASELINE_FILE)) {
+    return [
+      `docs/standards/blueprint-subjects.json is missing. Run \`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept\`.`,
+    ];
+  }
+  const recorded: unknown = JSON.parse(fs.readFileSync(SUBJECT_BASELINE_FILE, 'utf8'));
+  if (JSON.stringify(recorded) === JSON.stringify(buildSubjectBaseline(followers))) return [];
+  return [
+    'a `@FollowsBlueprint` marker names a different symbol than the baseline records. ' +
+      'A marker is bound to its subject by position, so inserting a declaration under one moves ' +
+      'the claim without changing any count. Read the diff of ' +
+      'docs/standards/blueprint-subjects.json, and if the move is intended accept it in the same ' +
+      'commit: `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
+  ];
+}
+
 function main(): void {
   const isCheckOnly = process.argv.includes('--check');
+  const isAccepting = process.argv.includes('--accept');
   const sourceFiles = SCAN_DIRECTORIES.flatMap((directory) =>
     fs.existsSync(directory) ? listSourceFiles(directory) : [],
   );
@@ -265,6 +312,17 @@ function main(): void {
   const followers = sourceFiles.flatMap((file) => extractFollowers(file));
   const markdown = generateMarkdown(blueprints, followers);
   const problems = listAnnotationProblems(blueprints, followers);
+
+  if (isAccepting) {
+    fs.writeFileSync(
+      SUBJECT_BASELINE_FILE,
+      serialiseSubjectBaseline(buildSubjectBaseline(followers)),
+      'utf8',
+    );
+    process.stdout.write('Accepted the blueprint marker subjects on disk.\n');
+  } else {
+    problems.push(...listSubjectDrift(followers));
+  }
 
   process.stdout.write(
     `Scanned ${sourceFiles.length} source files: ${blueprints.length} blueprint(s), ${followers.length} follower(s).\n`,
