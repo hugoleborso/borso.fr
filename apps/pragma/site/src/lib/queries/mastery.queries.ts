@@ -4,7 +4,6 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { upsertMasteryDefault, withoutMasteryDefault } from './mastery.utils';
-import { isLastPendingMutation } from './optimistic.utils';
 
 export const masteryKeys = {
   all: ['mastery'] as const,
@@ -50,10 +49,6 @@ export function useSaveMasteryDefault() {
         queryClient.setQueryData(masteryKeys.defaults(), context.previousDefaults);
       }
     },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: masteryKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: masteryKeys.defaults() });
-    },
   });
 }
 
@@ -85,10 +80,6 @@ export function useDeleteMasteryDefault() {
       if (context?.previousDefaults !== undefined) {
         queryClient.setQueryData(masteryKeys.defaults(), context.previousDefaults);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: masteryKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: masteryKeys.defaults() });
     },
   });
 }

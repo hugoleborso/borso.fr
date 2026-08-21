@@ -4,9 +4,10 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { buildOptimisticSession } from './optimistic-session.core';
-import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
+import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
+type SessionByIdShape = InferResponseType<(typeof api.api.sessions)[':id']['$get']>;
 
 export const sessionKeys = {
   all: ['sessions'] as const,
@@ -37,7 +38,7 @@ export function useSession(id: string, isEnabled = true) {
   });
 }
 
-// @FollowsBlueprint query-optimistic-mutation
+// @FollowsBlueprint query-optimistic-insert
 export function useCreateSession() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -52,20 +53,27 @@ export function useCreateSession() {
       const key = sessionKeys.list();
       await queryClient.cancelQueries({ queryKey: key });
       const previous = queryClient.getQueryData<SessionsListShape>(key);
-      const optimistic = buildOptimisticSession(crypto.randomUUID(), variables);
+      const temporaryId = crypto.randomUUID();
+      const optimistic = buildOptimisticSession(temporaryId, variables);
       queryClient.setQueryData<SessionsListShape>(key, (old) =>
         old === undefined ? old : { ...old, sessions: [...old.sessions, optimistic] },
       );
-      return { previous };
+      return { previous, temporaryId };
+    },
+    onSuccess: (data, _vars, context) => {
+      queryClient.setQueryData<SessionsListShape>(sessionKeys.list(), (old) =>
+        old === undefined
+          ? old
+          : {
+              ...old,
+              sessions: settleTemporaryEntity(old.sessions, context.temporaryId, data.session),
+            },
+      );
     },
     onError: (_err, _vars, context) => {
       if (context?.previous !== undefined) {
         queryClient.setQueryData(sessionKeys.list(), context.previous);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: sessionKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: sessionKeys.all });
     },
   });
 }
@@ -92,7 +100,7 @@ export function useUpdateSession() {
       await queryClient.cancelQueries({ queryKey: listKey });
       await queryClient.cancelQueries({ queryKey: byIdKey });
       const previousList = queryClient.getQueryData<SessionsListShape>(listKey);
-      const previousById = queryClient.getQueryData(byIdKey);
+      const previousById = queryClient.getQueryData<SessionByIdShape>(byIdKey);
       const { id, ...patch } = variables;
       queryClient.setQueryData<SessionsListShape>(listKey, (old) =>
         old === undefined
@@ -105,6 +113,11 @@ export function useUpdateSession() {
               })),
             },
       );
+      queryClient.setQueryData<SessionByIdShape>(byIdKey, (old) => {
+        if (old === undefined) return old;
+        if (!('session' in old)) return old;
+        return { session: { ...old.session, ...patch } };
+      });
       return { previousList, previousById };
     },
     onError: (_err, variables, context) => {
@@ -114,11 +127,6 @@ export function useUpdateSession() {
       if (context?.previousById !== undefined) {
         queryClient.setQueryData(sessionKeys.byId(variables.id), context.previousById);
       }
-    },
-    onSettled: (_data, _err, variables) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: sessionKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: sessionKeys.byId(variables.id) });
-      void queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
     },
   });
 }
@@ -142,17 +150,13 @@ export function useDeleteSession() {
           ? old
           : { ...old, sessions: old.sessions.filter((session) => session.id !== id) },
       );
+      queryClient.removeQueries({ queryKey: sessionKeys.byId(id) });
       return { previous };
     },
     onError: (_err, _vars, context) => {
       if (context?.previous !== undefined) {
         queryClient.setQueryData(sessionKeys.list(), context.previous);
       }
-    },
-    onSettled: (_data, _err, { id }) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: sessionKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: sessionKeys.list() });
-      void queryClient.invalidateQueries({ queryKey: sessionKeys.byId(id) });
     },
   });
 }

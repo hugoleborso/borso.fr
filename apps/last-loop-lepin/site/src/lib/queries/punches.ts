@@ -1,6 +1,5 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api';
-import { isLastPendingMutation } from './optimistic.utils';
 
 // @FollowsBlueprint query-module
 export const punchKeys = {
@@ -104,12 +103,6 @@ export function useVoidPunch() {
       if (context?.previousPunches !== undefined) {
         queryClient.setQueryData(context.runnerKey, context.previousPunches);
       }
-    },
-    onSettled: (_result, _error, variables) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: punchKeys.all }))) return;
-      void queryClient.invalidateQueries({
-        queryKey: punchKeys.forRunner(variables.editionSlug, variables.runnerSlug),
-      });
     },
   });
 }

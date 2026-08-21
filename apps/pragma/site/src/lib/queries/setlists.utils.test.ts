@@ -12,6 +12,7 @@ import {
   renameSetlistInCache,
   reorderEntriesByIds,
   selectSetlistsNotOnSession,
+  settleAppendedEntry,
   type SetlistsCache,
   toEntryPatch,
 } from './setlists.utils';
@@ -229,5 +230,37 @@ describe('selectSetlistsNotOnSession', () => {
 
   it('offers only the setlists the session does not carry', () => {
     expect(selectSetlistsNotOnSession([attached, loose], 'concert-1')).toEqual([loose]);
+  });
+});
+
+describe('settleAppendedEntry', () => {
+  const persisted: MinimalSetlistEntry = {
+    id: 'entry-a',
+    songId: 'song-a',
+    position: 0,
+    energy: null,
+    keyOverride: null,
+    capo: null,
+    notes: '',
+    lineupOverride: null,
+  };
+  const temporary: MinimalSetlistEntry = { ...persisted, id: 'temporary-1', position: 1 };
+
+  it('takes the identifier and the position the server answered with', () => {
+    const settled = settleAppendedEntry({ entries: [persisted, temporary] }, 'temporary-1', {
+      id: 'entry-b',
+      position: 7,
+    });
+
+    expect(settled.entries[1]).toStrictEqual({ ...temporary, id: 'entry-b', position: 7 });
+  });
+
+  it('leaves the entries that were already settled untouched', () => {
+    const settled = settleAppendedEntry({ entries: [persisted] }, 'temporary-1', {
+      id: 'entry-b',
+      position: 7,
+    });
+
+    expect(settled.entries).toStrictEqual([persisted]);
   });
 });

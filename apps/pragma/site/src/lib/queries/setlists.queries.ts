@@ -88,6 +88,25 @@ function updateSessionCache(
   );
 }
 
+interface SummaryCaches {
+  readonly list: SetlistsCache | undefined;
+  readonly bySession: readonly (readonly [readonly unknown[], SetlistsCache | undefined])[];
+}
+
+async function snapshotSummaryCaches(queryClient: QueryClient): Promise<SummaryCaches> {
+  await queryClient.cancelQueries({ queryKey: setlistKeys.list() });
+  await queryClient.cancelQueries({ queryKey: setlistKeys.bySession() });
+  return {
+    list: queryClient.getQueryData<SetlistsCache>(setlistKeys.list()),
+    bySession: queryClient.getQueriesData<SetlistsCache>({ queryKey: setlistKeys.bySession() }),
+  };
+}
+
+function restoreSummaryCaches(queryClient: QueryClient, snapshot: SummaryCaches): void {
+  queryClient.setQueryData(setlistKeys.list(), snapshot.list);
+  for (const [key, cache] of snapshot.bySession) queryClient.setQueryData(key, cache);
+}
+
 /**
  * @Blueprint query-pessimistic-mutation
  * @BlueprintName Pessimistic Mutation
@@ -122,6 +141,7 @@ export function useCreateSetlist() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useRenameSetlist() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -134,16 +154,24 @@ export function useRenameSetlist() {
         throw new ApiError(response.status, `rename ${response.status}`, null);
       return response.json();
     },
-    onSuccess: (data, variables) => {
-      queryClient.setQueryData(setlistKeys.detail(variables.setlistId), data);
+    onMutate: async (variables) => {
+      const previous = await snapshotSummaryCaches(queryClient);
       const rename: SummaryTransform = (cache) =>
-        renameSetlistInCache(cache, variables.setlistId, data.setlist.name);
+        renameSetlistInCache(cache, variables.setlistId, variables.name);
       updateListCache(queryClient, rename);
       updateEverySessionCache(queryClient, rename);
+      return { previous };
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData(setlistKeys.detail(variables.setlistId), data);
+    },
+    onError: (_error, _variables, context) => {
+      if (context !== undefined) restoreSummaryCaches(queryClient, context.previous);
     },
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useDeleteSetlist() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -154,16 +182,22 @@ export function useDeleteSetlist() {
       if (!response.ok) throw new ApiError(response.status, `delete ${response.status}`, null);
       return response.json();
     },
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables) => {
+      const previous = await snapshotSummaryCaches(queryClient);
       const remove: SummaryTransform = (cache) =>
         removeSetlistFromCache(cache, variables.setlistId);
       updateListCache(queryClient, remove);
       updateEverySessionCache(queryClient, remove);
       queryClient.removeQueries({ queryKey: setlistKeys.detail(variables.setlistId) });
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context !== undefined) restoreSummaryCaches(queryClient, context.previous);
     },
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useLinkSetlistToSession() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -176,17 +210,23 @@ export function useLinkSetlistToSession() {
         throw new ApiError(response.status, `link ${response.status}`, null);
       return response.json();
     },
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables) => {
+      const previous = await snapshotSummaryCaches(queryClient);
       updateSessionCache(queryClient, variables.sessionId, (cache) =>
         appendSetlistToCache(cache, variables.setlist),
       );
       updateListCache(queryClient, (cache) =>
         applySessionLinkInCache(cache, variables.setlist.id, variables.sessionId, true),
       );
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context !== undefined) restoreSummaryCaches(queryClient, context.previous);
     },
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useUnlinkSetlistFromSession() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -197,13 +237,18 @@ export function useUnlinkSetlistFromSession() {
       if (!response.ok) throw new ApiError(response.status, `unlink ${response.status}`, null);
       return response.json();
     },
-    onSuccess: (_data, variables) => {
+    onMutate: async (variables) => {
+      const previous = await snapshotSummaryCaches(queryClient);
       updateSessionCache(queryClient, variables.sessionId, (cache) =>
         removeSetlistFromCache(cache, variables.setlistId),
       );
       updateListCache(queryClient, (cache) =>
         applySessionLinkInCache(cache, variables.setlistId, variables.sessionId, false),
       );
+      return { previous };
+    },
+    onError: (_error, _variables, context) => {
+      if (context !== undefined) restoreSummaryCaches(queryClient, context.previous);
     },
   });
 }

@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { instrumentKeys } from './instruments.queries';
-import { isLastPendingMutation, replaceEntityById } from './optimistic.utils';
+import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 
@@ -48,7 +48,7 @@ export function useMemberInstruments(memberId: string, isEnabled = true) {
   });
 }
 
-// @FollowsBlueprint query-optimistic-mutation
+// @FollowsBlueprint query-optimistic-insert
 export function useCreateMember() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -78,16 +78,18 @@ export function useCreateMember() {
         if (old === undefined) return old;
         return { members: [...old.members, inserted] };
       });
-      return { previousList };
+      return { previousList, temporaryId };
+    },
+    onSuccess: (data, _vars, context) => {
+      queryClient.setQueryData<MembersListResponse>(memberKeys.list(), (old) => {
+        if (old === undefined) return old;
+        return { members: settleTemporaryEntity(old.members, context.temporaryId, data.member) };
+      });
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(memberKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: memberKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: memberKeys.all });
     },
   });
 }
@@ -129,10 +131,6 @@ export function useUpdateMember() {
         queryClient.setQueryData(memberKeys.list(), context.previousList);
       }
     },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: memberKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: memberKeys.all });
-    },
   });
 }
 
@@ -162,10 +160,6 @@ export function useDeleteMember() {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(memberKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: memberKeys.all }))) return;
-      void queryClient.invalidateQueries({ queryKey: memberKeys.all });
     },
   });
 }
@@ -217,12 +211,6 @@ export function useAssignMemberInstruments() {
           context.previousRoster,
         );
       }
-    },
-    onSettled: (_data, _err, variables) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: memberKeys.all }))) return;
-      void queryClient.invalidateQueries({
-        queryKey: memberKeys.instrumentsOf(variables.memberId),
-      });
     },
   });
 }

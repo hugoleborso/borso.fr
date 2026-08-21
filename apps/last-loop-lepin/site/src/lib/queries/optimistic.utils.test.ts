@@ -1,25 +1,7 @@
 import { describe, expect, it } from 'vitest';
-import {
-  isLastPendingMutation,
-  LAST_PENDING_MUTATION_COUNT,
-  replaceEntityBySlug,
-} from './optimistic.utils';
+import { replaceEntityBySlug } from './optimistic.utils';
 
 // @FollowsBlueprint test-pure-unit
-describe('isLastPendingMutation', () => {
-  it('says yes for the settling mutation counting only itself', () => {
-    expect(isLastPendingMutation(LAST_PENDING_MUTATION_COUNT)).toBe(true);
-  });
-
-  it('says yes when the count has already reached zero', () => {
-    expect(isLastPendingMutation(0)).toBe(true);
-  });
-
-  it('says no while another write of the family is still in flight', () => {
-    expect(isLastPendingMutation(2)).toBe(false);
-  });
-});
-
 describe('replaceEntityBySlug', () => {
   const editions = [
     { slug: 'lepin-2025', status: 'finished' },

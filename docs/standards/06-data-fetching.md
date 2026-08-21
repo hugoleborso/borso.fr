@@ -90,7 +90,8 @@ A mutation is one of three shapes, and it says which by carrying the marker of
 the blueprint it follows. Ask whether the client can name the row the server
 will return.
 
-| It can | Optimistic | `onMutate` writes the predicted state, `onError` restores the snapshot, `onSettled` invalidates once the family has drained. `query-optimistic-mutation`. |
+| It can | Optimistic | `onMutate` writes the predicted state and `onError` restores the snapshot. Nothing refetches. `query-optimistic-mutation`. |
+| Everything but the identifier | Optimistic insert | `onMutate` writes the row under an identifier the client generates and keeps it in the context, and `onSuccess` swaps that row for the one the response carries. Nothing refetches. `query-optimistic-insert`. |
 | It cannot | Pessimistic | No `onMutate`. `onSuccess` invalidates the affected key, and the header says why the optimistic path is refused. `query-pessimistic-mutation`. |
 | No cached query holds the result | Uncached | A `mutationFn` and nothing else, with the header naming whatever does surface the write. `query-uncached-mutation`. |
 
@@ -99,21 +100,30 @@ file, a derived timestamp, a generated identifier. A status change, a delete
 and a reorder are all fully determined by the request, so they are optimistic
 and a spinner on one of them is a defect rather than a style.
 
-## Do not refetch a write whose result you already hold
+## A mutation that wrote the cache never refetches it
 
-When the request itself fully determines the new state, e.g., a reorder or a
-toggle, reconcile from the mutation response and do not add an `onSettled`
-call to `invalidateQueries`.
-
-Refetching in that case adds no data, and it can revert the user interface,
-because an immediate `GET` after a write may be served by a different Lambda
-and a different DSQL connection that still sees the state from before the
-commit. DSQL read after write consistency holds per connection and not across
+A mutation carrying `onMutate` has already written the state it predicted, so
+refetching from that same mutation adds no data, and it can revert the user
+interface: an immediate `GET` after a write may be served by a different Lambda
+on a different DSQL connection that still sees the state from before the commit.
+DSQL read after write consistency holds per connection and not across
 connections.
 
-Keep the refetch only when the server generates data the client cannot predict,
-e.g., an insert that returns a new identifier. The full account is in
-[`docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md`](../dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md).
+An insert is not the exception it looks like. The one thing its client cannot
+predict is the identifier, and the response carries it, so the insert settles
+from its own answer through `query-optimistic-insert` rather than from a `GET`
+that could take the new row straight back out of the list.
+
+If a key really does hold a projection no client can derive, refetch that one
+key and write the reason on the line, as an `eslint-disable-next-line`. A
+helper named for the scoping is not enough: `last-loop-lepin` had one called
+`refetchEditionProjectionsTheClientCannotPredict` whose body invalidated
+`editionKeys.all`, the optimistically written list included.
+
+The two accounts are
+[`docs/dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md`](../dantotsus/optimistic-reorder-reverted-by-stale-dsql-read.md)
+and
+[`docs/dantotsus/the-blueprint-that-mandated-the-refetch-that-undid-it.md`](../dantotsus/the-blueprint-that-mandated-the-refetch-that-undid-it.md).
 
 ## The one allowed direct fetch
 
@@ -176,6 +186,10 @@ predates the suffix and has not been renamed.
 - `eslint:borso/no-discarded-await-before-navigation` rejects a write whose
   promise is dropped on the way to a route change, where the failure would land
   on a screen nobody is looking at.
+- `eslint:borso/no-refetch-of-optimistically-written-query` rejects an
+  `invalidateQueries` or `refetchQueries` call inside a `useMutation` that
+  carries `onMutate`, including one reached through a helper declared in the
+  same file.
 - `eslint:@typescript-eslint/no-unsafe-assignment` fails on a response value that
   has lost its type.
 - `eslint:no-restricted-imports` rejects a database package imported from a

@@ -25,6 +25,7 @@ import noLiteralJsxText from './no-literal-jsx-text.js';
 import noOutboundCallOutsideAdapter from './no-outbound-call-outside-adapter.js';
 import noQueryHooksOutsideOrganisms from './no-query-hooks-outside-organisms.js';
 import noRawSqlOutsideMigrations from './no-raw-sql-outside-migrations.js';
+import noRefetchOfOptimisticallyWrittenQuery from './no-refetch-of-optimistically-written-query.js';
 import noServerStateInUseState from './no-server-state-in-use-state.js';
 import noStepNamedValue from './no-step-named-value.js';
 import noStringConcatenatedClassNames from './no-string-concatenated-class-names.js';
@@ -65,6 +66,7 @@ export const borsoPlugin = {
     'no-outbound-call-outside-adapter': noOutboundCallOutsideAdapter,
     'no-query-hooks-outside-organisms': noQueryHooksOutsideOrganisms,
     'no-raw-sql-outside-migrations': noRawSqlOutsideMigrations,
+    'no-refetch-of-optimistically-written-query': noRefetchOfOptimisticallyWrittenQuery,
     'no-server-state-in-use-state': noServerStateInUseState,
     'no-step-named-value': noStepNamedValue,
     'no-string-concatenated-class-names': noStringConcatenatedClassNames,

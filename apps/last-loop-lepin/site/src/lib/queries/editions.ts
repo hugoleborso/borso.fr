@@ -1,6 +1,6 @@
-import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
-import { isLastPendingMutation, replaceEntityBySlug } from './optimistic.utils';
+import { replaceEntityBySlug } from './optimistic.utils';
 
 // @FollowsBlueprint query-module
 export const editionKeys = {
@@ -8,11 +8,6 @@ export const editionKeys = {
   list: () => [...editionKeys.all, 'list'] as const,
   current: () => [...editionKeys.all, 'current'] as const,
 };
-
-function refetchEditionProjectionsTheClientCannotPredict(queryClient: QueryClient): void {
-  if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: editionKeys.all }))) return;
-  void queryClient.invalidateQueries({ queryKey: editionKeys.all });
-}
 
 export interface CreateEditionVariables {
   readonly slug: string;
@@ -134,9 +129,6 @@ export function useDeleteEdition() {
         queryClient.setQueryData(editionKeys.list(), context.previousList);
       }
     },
-    onSettled: () => {
-      refetchEditionProjectionsTheClientCannotPredict(queryClient);
-    },
   });
 }
 
@@ -174,9 +166,6 @@ export function useTransitionEditionStatus() {
       if (context?.previousList !== undefined) {
         queryClient.setQueryData(editionKeys.list(), context.previousList);
       }
-    },
-    onSettled: () => {
-      refetchEditionProjectionsTheClientCannotPredict(queryClient);
     },
   });
 }

@@ -2,7 +2,6 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
-import { isLastPendingMutation } from './optimistic.utils';
 import { setlistKeys } from './setlists.queries';
 import {
   appendOptimisticEntry,
@@ -10,6 +9,7 @@ import {
   type EntriesCache,
   removeEntryById,
   reorderEntriesByIds,
+  settleAppendedEntry,
   toEntryPatch,
 } from './setlists.utils';
 
@@ -40,7 +40,7 @@ export function useSetlistEntries(setlistId: string, isEnabled = true) {
   });
 }
 
-// @FollowsBlueprint query-optimistic-mutation
+// @FollowsBlueprint query-optimistic-insert
 export function useAppendSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
@@ -87,11 +87,12 @@ export function useAppendSetlistEntry() {
         );
       }
     },
-    onSettled: (_data, _error, variables) => {
-      if (!isLastPendingMutation(queryClient.isMutating({ mutationKey: ENTRY_MUTATION_KEY }))) {
-        return;
-      }
-      void queryClient.invalidateQueries({ queryKey: setlistKeys.entriesOf(variables.setlistId) });
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(variables.setlistId), (cache) =>
+        cache === undefined
+          ? cache
+          : settleAppendedEntry(cache, variables.optimisticId, data.entry),
+      );
     },
   });
 }
