@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: 84
 fix-pr: 85
-fix-commits: []
+fix-commits: [7747353, 2672da6]
 eradication-level: 2
 time-to-detect: hours
 tags: [standards, review, seals, meta]
@@ -82,7 +82,7 @@ it stops being ad hoc.
 
 **Type:** DevX check (level 2), in two parts.
 
-**Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85)
+**Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85) · commits [`7747353`](https://github.com/hugoleborso/borso.fr/commit/7747353), [`2672da6`](https://github.com/hugoleborso/borso.fr/commit/2672da6)
 
 **The actual fix — the report contract.** Every finding now carries two
 required lines, in `.claude/agents/standards-reviewer.md`:
