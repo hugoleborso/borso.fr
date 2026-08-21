@@ -18,7 +18,7 @@ function readStripped(filePath: string): string {
  * @Blueprint test-source-invariant
  * @BlueprintName Source Invariant Test
  * @BlueprintUsage Use for a dantotsu eradication whose rule is a shape that must never reappear in a file, where no type or lint rule can express it.
- * @BlueprintDescription Reads the source files off disk, strips block and line comments, and asserts the banned shape is absent from what remains. Stripping first is what lets the same file carry a comment explaining the trap without the explanation tripping the check. The file list is read from the directory rather than hard coded and driven through `it.each`, so a construct added later is covered without anyone remembering to add it, and each describe names the dantotsu it backstops.
+ * @BlueprintDescription Reads the source files off disk and asserts the banned shape is absent from what remains once the annotations are dropped, so a `@FollowsBlueprint` line naming the trap never trips the check on itself. The file list is read from the directory rather than hard coded and driven through `it.each`, so a construct added later is covered without anyone remembering to add it, and each describe names the dantotsu it backstops. It lives in a workspace whose gated files Stryker does not mutate: a test that reads a file off disk sees that file instrumented during a mutation run, and comparing two instrumented copies fails in the dry run before a single mutant is activated.
  */
 describe('eradication: no `bundling.nodeModules` in CDK constructs', () => {
   const files = fs.readdirSync(CONSTRUCTS_DIR).filter((name) => name.endsWith('.ts'));
