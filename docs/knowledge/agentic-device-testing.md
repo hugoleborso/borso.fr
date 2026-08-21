@@ -27,6 +27,13 @@ looks fine.
 Safari on iOS and Chrome on Android differ from desktop Chromium on scroll
 chaining, on `100vh` against the dynamic toolbar, and on touch event ordering.
 
+They also differ on **layout**, which this list did not say until a dialog
+reached a phone as a bare title bar. WebKit follows the flexbox specification
+where Blink is lenient, so markup that is wrong on paper can draw correctly in
+every check that runs here and collapse to zero height on the device — with no
+gesture involved, and nothing for a touch pass to find. See
+[`../dantotsus/a-dialog-that-only-collapsed-on-a-phone.md`](../dantotsus/a-dialog-that-only-collapsed-on-a-phone.md).
+
 Real device pixel ratios change how a hairline border and a small font actually
 render.
 
