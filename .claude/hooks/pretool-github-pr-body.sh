@@ -13,7 +13,15 @@
 #   [text](….png)              same, whether or not it is an image tag
 #   <https://…>                removed entirely
 #   [text](….md), (…/tree/…),  untouched, including at a pinned 40-hex SHA,
-#   (…/commit/<sha>)           so the rule is the extension, not the URL
+#   (…/commit/…)               so the rule is the extension, not the URL
+#
+# One more form, measured on PR #51 and PR #49 on 2026-08-15, on PR #82 on
+# 2026-08-21 and twice on PR #83 the same day: an angle-bracket placeholder is
+# read as an HTML tag and deleted, and a code span does NOT protect it. The
+# sanitizer strips markup before markdown fencing is considered, so a body
+# saying it in backticks loses it exactly like a body saying it in prose. That
+# is why the placeholder check below reads the raw body rather than the
+# rendered one — for this rule there is no such thing as a mention.
 #
 # A body that leans on any of those reaches the reader with its evidence
 # gone. This hook refuses the call and names the shape that survives.
@@ -62,6 +70,21 @@ fi
 
 if grep -qE '\]\([^)]+\.(png|jpe?g|gif|webp|svg)([?#][^)]*)?\)' <<<"$BODY_AS_RENDERED"; then
   block "the body links a file whose extension is an image; the URL comes back wrapped in backticks."
+fi
+
+# Raw body on purpose: backticks do not protect an angle-bracket placeholder,
+# so stripping code spans first would hide the very occurrences that get
+# deleted. Everything shaped like a tag goes, whatever it is quoted inside.
+PLACEHOLDER="$(grep -oE '<[A-Za-z][A-Za-z0-9._/:-]*>' <<<"$BODY" | head -1 || true)"
+if [[ -n "$PLACEHOLDER" ]]; then
+  echo "[pr-body] the body carries $PLACEHOLDER, which the server reads as an HTML tag and deletes." >&2
+  echo "[pr-body] Backticks do not protect it: the sanitizer strips markup before markdown fencing" >&2
+  echo "[pr-body]   is considered, so a code span loses the placeholder too. The sentence around it" >&2
+  echo "[pr-body]   stays grammatical and silently changes meaning, which is the worst shape here." >&2
+  echo "[pr-body] Write a real example instead (PATH/TO/file.ts, 2026-08-21), or name the thing in" >&2
+  echo "[pr-body]   words (\"the generator's path\"). Keep the bracket form for files in the repo." >&2
+  echo "[pr-body] See docs/knowledge/github-mcp-pr-body-sanitizer.md." >&2
+  exit 2
 fi
 
 exit 0
