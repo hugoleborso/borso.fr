@@ -16,6 +16,18 @@ describe('upsertTransitionComment', () => {
     expect(upsertTransitionComment([FIRST], SECOND)).toStrictEqual([FIRST, SECOND]);
   });
 
+  it('does not match a pair that shares only its first song', () => {
+    const sharesFirst = { ...FIRST, songBId: 'z', comment: 'into z' };
+
+    expect(upsertTransitionComment([FIRST], sharesFirst)).toStrictEqual([FIRST, sharesFirst]);
+  });
+
+  it('does not match a pair that shares only its second song', () => {
+    const sharesSecond = { ...FIRST, songAId: 'z', comment: 'from z' };
+
+    expect(upsertTransitionComment([FIRST], sharesSecond)).toStrictEqual([FIRST, sharesSecond]);
+  });
+
   it('treats the reversed pair as a different transition', () => {
     const reversed = { ...FIRST, songAId: 'b', songBId: 'a', comment: 'other way' };
 
