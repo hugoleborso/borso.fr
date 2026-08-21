@@ -181,7 +181,7 @@ export async function recordManualDidNotFinish(
   return manualDidNotFinish;
 }
 
-export async function getPunchesForEdition(editionSlug: string): Promise<readonly LoopPunch[]> {
+export async function listEditionPunches(editionSlug: string): Promise<readonly LoopPunch[]> {
   return listPunchesForEdition(editionSlug);
 }
 

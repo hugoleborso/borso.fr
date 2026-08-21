@@ -2,7 +2,7 @@
 export { EditionNotFoundError } from '../edition/edition.service';
 
 import { getEdition } from '../edition/edition.service';
-import { getPunchesForEdition, listManualDidNotFinishes } from '../punch/punch.service';
+import { listEditionPunches, listManualDidNotFinishes } from '../punch/punch.service';
 import type { RunnerDto } from '../runner/runner.dto.utils';
 import { toRunnerDto } from '../runner/runner.dto.utils';
 import { readPhotosCdnHost } from '../runner/runner.environment';
@@ -33,7 +33,7 @@ export async function computeStandingsForEdition(
   const edition = await getEdition(editionSlug);
   const [runners, punches, manualDidNotFinishes] = await Promise.all([
     listRunners(editionSlug),
-    getPunchesForEdition(editionSlug),
+    listEditionPunches(editionSlug),
     listManualDidNotFinishes(editionSlug),
   ]);
   return computeStandings(edition, runners, punches, manualDidNotFinishes, now);
@@ -46,7 +46,7 @@ export async function getSpectatorStandings(
 ): Promise<SpectatorStandings> {
   const [standings, punches] = await Promise.all([
     computeStandingsForEdition(editionSlug, now),
-    getPunchesForEdition(editionSlug),
+    listEditionPunches(editionSlug),
   ]);
   const cdnHost = readPhotosCdnHost();
   const rankedWithDto: readonly RankedRunnerWithDto[] = standings.ranked.map((entry) => ({
@@ -70,7 +70,7 @@ export async function getLapsCsv(editionSlug: string, now: Date): Promise<string
   const edition = await getEdition(editionSlug);
   const [standings, punches] = await Promise.all([
     computeStandingsForEdition(editionSlug, now),
-    getPunchesForEdition(editionSlug),
+    listEditionPunches(editionSlug),
   ]);
   return renderLapsCsv(edition, standings.ranked, punches);
 }

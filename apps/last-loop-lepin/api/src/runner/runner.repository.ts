@@ -7,8 +7,7 @@ export async function insertRunner(runner: Runner): Promise<void> {
   await getDatabase().insert(runnersTable).values(runner);
 }
 
-// @FollowsBlueprint repository-idempotent-upsert
-export async function upsertRunner(runner: Runner): Promise<void> {
+export async function insertRunnerIfAbsent(runner: Runner): Promise<void> {
   await getDatabase().insert(runnersTable).values(runner).onConflictDoNothing();
 }
 

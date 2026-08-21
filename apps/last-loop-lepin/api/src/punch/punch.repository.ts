@@ -9,21 +9,7 @@ import type { LoopPunch, ManualDidNotFinish, PunchSource } from './punch.types';
  * @BlueprintUsage Use for data access. Drizzle queries and transactions only, and the single file allowed to import the database client for its slice.
  * @BlueprintDescription Holds every query against the punch tables. Each function returns rows, an array of rows, or a count, with no business condition, no derived field, and no formatting. A shape the database does not have is built by a core function the service calls.
  */
-interface LoopPunchRow {
-  readonly id: string;
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly loopIndex: number;
-  readonly finishedAt: Date;
-  readonly correctedAt: Date | null;
-  readonly voidedAt: Date | null;
-  readonly source: string | null;
-  readonly clientLat: number | null;
-  readonly clientLng: number | null;
-  readonly clientAccuracyM: number | null;
-  readonly distanceFromCenterM: number | null;
-  readonly userAgent: string | null;
-}
+type LoopPunchRow = typeof loopPunchesTable.$inferSelect;
 
 function narrowPunchSource(raw: string | null): PunchSource {
   return raw === 'self' ? 'self' : 'admin';
@@ -33,7 +19,7 @@ function narrowPunchSource(raw: string | null): PunchSource {
  * @Blueprint repository-row-mapper
  * @BlueprintName Repository Row Mapper
  * @BlueprintUsage Use for a column wider than the domain type, so the narrowing happens once at the data boundary instead of at every read site.
- * @BlueprintDescription Declares the row shape as a private interface and maps it field by field, routing the nullable `source` column through `narrowPunchSource` so a value the database allows but the domain does not becomes the default rather than leaking out as `string | null`.
+ * @BlueprintDescription Derives the row shape from the table with `$inferSelect` rather than restating its columns, so a column added to the schema cannot leave a hand-written twin behind, and maps it field by field, routing the nullable `source` column through `narrowPunchSource` so a value the database allows but the domain does not becomes the default rather than leaking out as `string | null`. A repository whose reads are projections rather than whole rows types the projection instead, which is what `repository-projection` is for.
  */
 function rowToLoopPunch(row: LoopPunchRow): LoopPunch {
   return {
