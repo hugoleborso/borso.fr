@@ -5,7 +5,14 @@ import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
 
+import { z } from 'zod';
 import { hourlyTopOfLoopMs, type PunchRejectReason, validatePunchTiming } from './punch.core';
+import {
+  catchupPunchInputSchema,
+  createDidNotFinishInputSchema,
+  createPunchInputSchema,
+  selfPunchInputSchema,
+} from './punch.schema';
 import {
   deleteAllEditionPunchesAndDidNotFinishes,
   deleteManualDidNotFinish,
@@ -47,10 +54,7 @@ export class PunchRejectedError extends Error {
   }
 }
 
-export interface RegisterPunchInput {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-}
+export type RegisterPunchInput = z.infer<typeof createPunchInputSchema>;
 
 async function buildPunchRejectionError(
   edition: RaceEdition,
@@ -101,13 +105,7 @@ export async function registerPunch(input: RegisterPunchInput, now: Date): Promi
   return punch;
 }
 
-export interface SelfPunchInput {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly clientLat: number | null;
-  readonly clientLng: number | null;
-  readonly clientAccuracyM: number | null;
-}
+export type SelfPunchInput = z.infer<typeof selfPunchInputSchema>;
 
 export async function registerSelfPunch(
   input: SelfPunchInput,
@@ -169,12 +167,7 @@ export async function voidPunch(id: string, now: Date): Promise<LoopPunch> {
   return { ...existing, voidedAt: now };
 }
 
-export interface RecordDidNotFinishInput {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly outAtLoop: number;
-  readonly reason: 'late' | 'manual';
-}
+export type RecordDidNotFinishInput = z.infer<typeof createDidNotFinishInputSchema>;
 
 export async function recordManualDidNotFinish(
   input: RecordDidNotFinishInput,
@@ -195,11 +188,7 @@ export async function listManualDidNotFinishes(
   return listManualDidNotFinishesForEdition(editionSlug);
 }
 
-export interface CatchupPunchInput {
-  readonly editionSlug: string;
-  readonly runnerSlug: string;
-  readonly loopIndex: number;
-}
+export type CatchupPunchInput = z.infer<typeof catchupPunchInputSchema>;
 
 function lastInstantOfLoop(edition: RaceEdition, loopIndex: number): number {
   const ONE_MILLISECOND = 1;
