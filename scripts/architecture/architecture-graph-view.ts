@@ -144,33 +144,36 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
     dialog.querySelector('[data-code-location]').textContent = entry.location;
     const body = dialog.querySelector('[data-code-body]');
     const toggle = dialog.querySelector('[data-code-view]');
-    const showFinal = () => {
+    const hasBefore = Boolean(entry.baseCode) || Boolean(entry.isNew);
+    const rowsOfWholeFile = () =>
+      diffLines(entry.isNew ? [] : entry.baseCode.split('\n'), entry.code.split('\n'));
+    const showListing = () => {
       body.innerHTML = highlight(entry.code);
       body.classList.remove('as-diff');
     };
-    const showDiff = () => {
-      body.replaceChildren(
-        buildDiffRows(
-          collapseDiff(diffLines(entry.baseCode.split('\n'), entry.code.split('\n'))),
-          highlight,
-        ),
-      );
+    const showWholeFile = () => {
+      body.replaceChildren(buildDiffRows(rowsOfWholeFile(), highlight));
       body.classList.add('as-diff');
     };
+    const showWhatChanged = () => {
+      body.replaceChildren(buildDiffRows(collapseDiff(rowsOfWholeFile()), highlight));
+      body.classList.add('as-diff');
+    };
+    let isCollapsed = hasBefore;
     if (toggle) {
-      toggle.hidden = !entry.baseCode;
+      toggle.hidden = !hasBefore;
       toggle.textContent = 'show whole file';
-      if (entry.baseCode) {
+      if (hasBefore) {
         toggle.onclick = () => {
-          const wasDiff = body.classList.contains('as-diff');
-          toggle.textContent = wasDiff ? 'show what changed' : 'show whole file';
-          if (wasDiff) showFinal();
-          else showDiff();
+          isCollapsed = !isCollapsed;
+          toggle.textContent = isCollapsed ? 'show whole file' : 'show what changed';
+          if (isCollapsed) showWhatChanged();
+          else showWholeFile();
         };
       }
     }
-    if (entry.baseCode) showDiff();
-    else showFinal();
+    if (hasBefore) showWhatChanged();
+    else showListing();
     dialog.showModal();
   };
 
@@ -752,6 +755,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
                 feature.actions.length === 0
                   ? 'what it is made of'
                   : feature.actions.length + (feature.actions.length === 1 ? ' action' : ' actions'),
+              change: feature.overviewChange,
             },
           ]
         : [];
@@ -761,12 +765,14 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
           id: action.id,
           label: action.label,
           meta: [action.method, action.path].filter(Boolean).join(' '),
+          change: action.change,
         })),
       ];
       for (const entry of entries) {
         const button = document.createElement('button');
         button.type = 'button';
-        button.className = 'journey-action';
+        const change = entry.change || { status: '', touched: 0 };
+        button.className = 'journey-action' + (change.status ? ' touched-' + change.status : '');
         button.dataset.actionId = entry.id;
         button.setAttribute('aria-pressed', 'false');
         const name = document.createElement('span');
@@ -776,17 +782,31 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         meta.className = 'journey-action-meta';
         meta.textContent = entry.meta;
         button.append(name, meta);
+        if (change.status) {
+          const touched = document.createElement('span');
+          touched.className = 'journey-touched';
+          touched.textContent = String(change.touched);
+          touched.title =
+            change.touched + (change.touched === 1 ? ' file' : ' files') + ' this branch moved';
+          button.appendChild(touched);
+        }
         button.addEventListener('click', () => selectAction(entry.id));
         actionList.appendChild(button);
       }
-      const first = entries[1] || entries[0];
+      const touched = entries
+        .filter((entry) => entry.change && entry.change.status)
+        .sort((left, right) => right.change.touched - left.change.touched)[0];
+      const first = touched || entries[1] || entries[0];
       if (first) selectAction(first.id);
     };
 
     for (const button of host.querySelectorAll('[data-feature-id]')) {
       button.addEventListener('click', () => selectFeature(button.dataset.featureId));
     }
-    const firstFeature = data.features[0];
+    const movedFeature = data.features
+      .filter((each) => each.change && each.change.status)
+      .sort((left, right) => right.change.touched - left.change.touched)[0];
+    const firstFeature = movedFeature || data.features[0];
     if (firstFeature) selectFeature(firstFeature.id);
   }
 
@@ -953,10 +973,45 @@ export const GRAPH_STYLES = String.raw`
     background: var(--accent-soft);
   }
   .journey-action[aria-pressed='true'] .journey-action-name { color: var(--accent); }
+  .journey-touched {
+    display: inline-flex; align-items: center; justify-content: center;
+    min-width: 1.15rem; padding: 0 .25rem; border-radius: 999px;
+    font: 600 .68rem/1.5 var(--font-mono); color: var(--panel);
+  }
+  .journey-feature .journey-touched { margin-left: .4rem; }
+  .journey-action .journey-touched { position: absolute; top: -.4rem; right: -.4rem; }
+  .journey-action { position: relative; }
+  .touched-added:not([aria-pressed='true']) {
+    border-color: var(--layer-service); background: var(--layer-service-bg); color: var(--ink);
+  }
+  .touched-changed:not([aria-pressed='true']) {
+    border-color: var(--signal); background: var(--signal-soft); color: var(--ink);
+  }
+  .touched-moved:not([aria-pressed='true']) {
+    border-color: var(--accent); background: var(--accent-soft); color: var(--ink);
+  }
+  .touched-removed:not([aria-pressed='true']) {
+    border-color: var(--layer-edge); background: var(--layer-edge-bg); color: var(--ink);
+  }
+  .journey-feature.touched-added[aria-pressed='true'] { background: var(--layer-service); border-color: var(--layer-service); }
+  .journey-feature.touched-changed[aria-pressed='true'] { background: var(--signal); border-color: var(--signal); }
+  .journey-feature.touched-moved[aria-pressed='true'] { background: var(--accent); border-color: var(--accent); }
+  .journey-feature.touched-removed[aria-pressed='true'] { background: var(--layer-edge); border-color: var(--layer-edge); }
+  [aria-pressed='true'] .journey-touched { background: var(--panel); color: var(--ink); }
+  .touched-added .journey-touched { background: var(--layer-service); }
+  .touched-changed .journey-touched { background: var(--signal); }
+  .touched-moved .journey-touched { background: var(--accent); }
+  .touched-removed .journey-touched { background: var(--layer-edge); }
 
-  .node-added .node-body { stroke: var(--layer-service); stroke-width: 2.4; fill: var(--layer-service-bg); }
+  .node-added .node-body {
+    stroke: var(--layer-service); stroke-width: 2.4; fill: var(--layer-service-bg);
+    stroke-dasharray: 4 2.5;
+  }
   .node-added .node-stripe { fill: var(--layer-service); }
-  .node-changed .node-body { stroke: var(--signal); stroke-width: 2.4; fill: var(--signal-soft); }
+  .node-changed .node-body {
+    stroke: var(--signal); stroke-width: 2.4; fill: var(--signal-soft);
+    stroke-dasharray: 4 2.5;
+  }
   .node-changed .node-stripe { fill: var(--signal); }
   .node-removed .node-body { stroke: var(--layer-edge); stroke-width: 2.4; fill: var(--layer-edge-bg); stroke-dasharray: 5 3; }
   .node-removed .node-stripe { fill: var(--layer-edge); }
@@ -969,8 +1024,8 @@ export const GRAPH_STYLES = String.raw`
     margin: .2rem 0 0; font: .75rem/1.6 var(--font-mono); color: var(--muted);
   }
   .diff-legend .swatch { width: .8rem; height: .8rem; border-radius: 3px; display: inline-block; margin-right: .3rem; vertical-align: -1px; }
-  .diff-legend .added { background: var(--layer-service-bg); border: 2px solid var(--layer-service); }
-  .diff-legend .changed { background: var(--signal-soft); border: 2px solid var(--signal); }
+  .diff-legend .added { background: var(--layer-service-bg); border: 2px dashed var(--layer-service); }
+  .diff-legend .changed { background: var(--signal-soft); border: 2px dashed var(--signal); }
   .diff-legend .moved { background: var(--accent-soft); border: 2px dashed var(--accent); }
   .diff-legend .removed { background: var(--layer-edge-bg); border: 2px dashed var(--layer-edge); }
   .diff-legend span { color: var(--muted); opacity: .8; }

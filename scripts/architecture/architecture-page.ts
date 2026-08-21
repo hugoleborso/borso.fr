@@ -14,6 +14,12 @@ import type {
 import type { ArchitectureManifest } from './architecture-manifest';
 import type { DiffSummary } from './architecture-model-json';
 import { wrapInDocumentShell } from './document-shell.core';
+import {
+  changeOfGraphs,
+  changeOfNodes,
+  type JourneyChange,
+  statusOfNode,
+} from './journey-status.core';
 
 export interface DiffReport {
   readonly baseline: string;
@@ -189,11 +195,6 @@ function renderUnreachedByAction(journeys: JourneyModel, slices: readonly Contex
     .join('')}</ul>`;
 }
 
-function journeyStatusOf(location: string | undefined, code: StatusByNode | undefined): string {
-  if (location === undefined || code === undefined) return '';
-  return code.get(location.slice(0, location.lastIndexOf(':'))) ?? '';
-}
-
 function renderActionCount(journeys: JourneyModel, routeTotal: number): string {
   const total = journeys.features.reduce((count, feature) => count + feature.actions.length, 0);
   const flows = journeys.features
@@ -206,10 +207,23 @@ function renderActionCount(journeys: JourneyModel, routeTotal: number): string {
   return ` <span class="level-count flagged">no data flow found, though the API has ${routeTotal} routes — the walk could not read this application</span>`;
 }
 
+const NO_JOURNEY_CHANGE: JourneyChange = { status: '', touched: 0 };
+const OVERVIEW_GRAPH_SUFFIX = ':__all__';
+
+function overviewGraphIdOf(featureId: string): string {
+  return `${featureId}${OVERVIEW_GRAPH_SUFFIX}`;
+}
+
+function renderTouchedBadge(change: JourneyChange): string {
+  if (change.status === '') return '';
+  return `<span class="journey-touched">${change.touched}</span>`;
+}
+
 function renderJourneys(
   journeys: JourneyModel,
   journeyLayouts: ReadonlyMap<string, LevelLayout>,
   code: StatusByNode | undefined,
+  sources: Readonly<Record<string, SourceEntry>>,
 ): string {
   const graphs: Record<string, unknown> = {};
   for (const [id, layout] of journeyLayouts) {
@@ -228,7 +242,7 @@ function renderJourneys(
             chips: source.chips ?? [],
             detail: source.detail,
             tone: source.kind,
-            status: journeyStatusOf(source.location, code),
+            status: statusOfNode(source.location, code),
             sourceKey: source.sourceKey ?? '',
             x: placed.x,
             y: placed.y,
@@ -241,19 +255,40 @@ function renderJourneys(
     };
   }
 
+  const actionChanges = new Map(
+    [...journeys.graphs].map(([id, graph]) => [id, changeOfNodes(graph.nodes, code)]),
+  );
+  const featureChanges = new Map(
+    journeys.features.map((feature) => [
+      feature.id,
+      changeOfGraphs(
+        [overviewGraphIdOf(feature.id), ...feature.actions.map((action) => action.id)].flatMap(
+          (id) => {
+            const graph = journeys.graphs.get(id);
+            return graph === undefined ? [] : [graph.nodes];
+          },
+        ),
+        code,
+      ),
+    ]),
+  );
+
   const payload = {
     level: 'journey',
     title: 'User action',
-    sources: Object.fromEntries(journeys.sources),
+    sources,
     features: journeys.features.map((feature) => ({
       id: feature.id,
       label: feature.label,
       overview: feature.overview,
+      change: featureChanges.get(feature.id) ?? NO_JOURNEY_CHANGE,
+      overviewChange: actionChanges.get(overviewGraphIdOf(feature.id)) ?? NO_JOURNEY_CHANGE,
       actions: feature.actions.map((action) => ({
         id: action.id,
         label: action.label,
         method: action.method,
         path: action.path,
+        change: actionChanges.get(action.id) ?? NO_JOURNEY_CHANGE,
       })),
     })),
     graphs,
@@ -265,10 +300,10 @@ function renderJourneys(
           <span class="journey-picker-label">Feature</span>
           <div class="journey-features">
             ${journeys.features
-              .map(
-                (feature) =>
-                  `<button type="button" class="journey-feature" data-feature-id="${escapeHtml(feature.id)}" aria-pressed="false">${escapeHtml(feature.label)}</button>`,
-              )
+              .map((feature) => {
+                const change = featureChanges.get(feature.id) ?? NO_JOURNEY_CHANGE;
+                return `<button type="button" class="journey-feature${change.status === '' ? '' : ` touched-${change.status}`}" data-feature-id="${escapeHtml(feature.id)}" aria-pressed="false">${escapeHtml(feature.label)}${renderTouchedBadge(change)}</button>`;
+              })
               .join('')}
           </div>
           <span class="journey-picker-label">Action</span>
@@ -913,7 +948,7 @@ ${PAGE_STYLES}
   <section class="level" id="level-slice" hidden>
     <h2>Level 3.5 — User actions${renderActionCount(journeys, routeTotal)}</h2>
     <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written. Picking a feature rather than an action draws what that feature is made of, down to the atoms its pages render. Two journeys are not data flows and are listed with the rest: <b>shell</b>, opening the application, and <b>request</b>, arriving at the API before a route is chosen.</p>
-    ${renderJourneys(journeys, journeyLayouts, statuses?.get('code'))}
+    ${renderJourneys(journeys, journeyLayouts, statuses?.get('code'), sources)}
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     ${renderUnreachedByAction(journeys, slices)}
     ${renderCoverage(

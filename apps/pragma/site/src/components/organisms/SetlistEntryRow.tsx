@@ -16,6 +16,12 @@ import {
 import { toLineupPayload } from '../molecules/lineup-editor.core';
 import { MemberChip } from '../molecules/MemberChip';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import { SetlistEntryActions } from '../molecules/SetlistEntryActions';
+import {
+  type SongDefaults,
+  SongDefaultsDialog,
+  type SongDefaultsPatch,
+} from '../molecules/SongDefaultsDialog';
 import { SetlistEntryDetailsFields } from '../molecules/SetlistEntryDetailsFields';
 import {
   ENERGY_MAX,
@@ -35,9 +41,6 @@ import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.querie
 const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
   'w-11 h-11 sm:w-9 sm:h-9 shrink-0 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
-const MENU_ITEM_CLASS =
-  'min-h-11 flex-1 inline-flex items-center justify-center gap-2 rounded-md border border-line ' +
-  'bg-bg-elev px-3 text-sm text-ink-700 cursor-pointer hover:border-line-strong';
 
 export interface ProminentMemberInstrument {
   readonly memberName: string;
@@ -60,12 +63,15 @@ export interface SetlistEntryRowProps {
   readonly lineup: Readonly<Record<string, readonly string[]>>;
   readonly resolvedLineupForEdit: LineupRecord;
   readonly songDefaultLineup: LineupRecord;
+  readonly songDefaults: SongDefaults;
+  readonly maximumVisibleMembers: number;
   readonly hasOverride: boolean;
   readonly members: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
   readonly prominentMemberInstrument: ProminentMemberInstrument | null;
   readonly transitionBefore: ReactNode;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
+  readonly onUpdateSongDefaults: (patch: SongDefaultsPatch) => void;
   readonly onRemove: (entryId: string) => void;
 }
 
@@ -74,6 +80,8 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const [moreOpen, setMoreOpen] = useState<boolean>(false);
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
+  const [defaultLineupEditorOpen, setDefaultLineupEditorOpen] = useState<boolean>(false);
+  const [songDefaultsOpen, setSongDefaultsOpen] = useState<boolean>(false);
   const [isRemovalPending, setIsRemovalPending] = useState<boolean>(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
     id: props.entryId,
@@ -94,6 +102,9 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     props.onUpdate(props.entryId, {
       lineupOverride: wasReset || lineup === null ? null : toLineupPayload(lineup),
     });
+  };
+  const saveDefaultLineup = (lineup: LineupRecord | null): void => {
+    props.onUpdateSongDefaults({ defaultLineup: toLineupPayload(lineup ?? {}) });
   };
   const publishEnergy = (next: number): void => {
     props.onUpdate(props.entryId, { energy: next });
@@ -142,8 +153,8 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 [overflow-wrap:anywhere]">
               {props.title}
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-ink-500 mt-0.5 min-w-0">
-              <span className="truncate" title={props.artist}>
+            <div className="flex items-center gap-1.5 text-xs text-ink-500 mt-0.5 min-w-0 lg:flex-wrap">
+              <span className="max-lg:truncate" title={props.artist}>
                 {props.artist}
               </span>
               {props.tonalityLabel === null ? null : (
@@ -171,6 +182,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 lineup={props.lineup}
                 members={props.members}
                 instruments={props.instruments}
+                maximumVisible={props.maximumVisibleMembers}
               />
             </div>
           </div>
@@ -226,24 +238,12 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               form={form}
               onPatch={(patch) => props.onUpdate(props.entryId, patch)}
             />
-            <div className="flex items-center gap-2">
-              <button
-                type="button"
-                onClick={() => setLineupEditorOpen(true)}
-                className={MENU_ITEM_CLASS}
-              >
-                <Icon name="members" size={15} />
-                {t('lineup.edit')}
-              </button>
-              <button
-                type="button"
-                onClick={() => setIsRemovalPending(true)}
-                className={composeClassName(MENU_ITEM_CLASS, 'text-danger hover:border-danger')}
-              >
-                <Icon name="trash" size={14} />
-                {t('setlist.removeEntry')}
-              </button>
-            </div>
+            <SetlistEntryActions
+              onEditLineupOverride={() => setLineupEditorOpen(true)}
+              onEditDefaultLineup={() => setDefaultLineupEditorOpen(true)}
+              onEditSongDefaults={() => setSongDefaultsOpen(true)}
+              onRemove={() => setIsRemovalPending(true)}
+            />
           </div>
         ) : null}
       </div>
@@ -256,6 +256,22 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         defaultLineup={props.songDefaultLineup}
         onSave={saveLineupOverride}
         onClose={() => setLineupEditorOpen(false)}
+      />
+      <LineupEditor
+        open={defaultLineupEditorOpen}
+        surface="song"
+        members={lineupEditorMembers}
+        instruments={props.instruments}
+        currentLineup={props.songDefaultLineup}
+        onSave={saveDefaultLineup}
+        onClose={() => setDefaultLineupEditorOpen(false)}
+      />
+      <SongDefaultsDialog
+        open={songDefaultsOpen}
+        songTitle={props.title}
+        defaults={props.songDefaults}
+        onSave={(defaults) => props.onUpdateSongDefaults(defaults)}
+        onClose={() => setSongDefaultsOpen(false)}
       />
       {isRemovalPending ? (
         <ConfirmDialog
