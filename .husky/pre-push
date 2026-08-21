@@ -204,7 +204,11 @@ done
 # lets it take a share instead of the whole machine. An upper bound is enough
 # and costs no second pass over the file selection below, so an app with no
 # gated files is counted too.
-BORSO_MUTATION_RUNS_IN_FLIGHT=$(( $(echo "$changed_app_slugs" | grep -c . || echo 0) + 2 ))
+# `grep -c` prints its count and *then* exits 1 when nothing matched, so a
+# `|| echo 0` fallback appends a second zero and the arithmetic below sees
+# "0\n0". That only bites when no app changed, which is every docs-only push.
+changed_app_count=$(printf '%s\n' "$changed_app_slugs" | grep -c . || true)
+BORSO_MUTATION_RUNS_IN_FLIGHT=$(( ${changed_app_count:-0} + 2 ))
 export BORSO_MUTATION_RUNS_IN_FLIGHT
 
 if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
