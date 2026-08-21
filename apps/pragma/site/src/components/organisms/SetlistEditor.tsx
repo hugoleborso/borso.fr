@@ -16,7 +16,7 @@ import {
   useSetlistEntries,
   useUpdateSetlistEntry,
 } from '../../lib/queries/setlist-entries.queries';
-import { useSongsList } from '../../lib/queries/songs.queries';
+import { useSongsList, useUpdateSong } from '../../lib/queries/songs.queries';
 import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
@@ -28,7 +28,13 @@ import {
 import { SetlistEntriesList } from './SetlistEntriesList';
 import { SetlistSongPicker } from './SetlistSongPicker';
 import { SetlistToolbar } from './SetlistToolbar';
-import { formatSetlistOrder, instrumentFamilyMap, lineupOf } from './setlist-editor.utils';
+import {
+  formatSetlistOrder,
+  instrumentFamilyMap,
+  lineupOf,
+  maximumVisibleLineupMembers,
+} from './setlist-editor.utils';
+import type { SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
 import { filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import { buildTransitionView, indexTransitionComments } from './transition-view.core';
@@ -46,6 +52,7 @@ type SetlistFailureKey =
   | 'setlist.failure.remove'
   | 'setlist.failure.reorder'
   | 'setlist.failure.update'
+  | 'setlist.failure.songDefaults'
   | 'setlist.failure.copyOrder';
 
 // @FollowsBlueprint organism-query-owning
@@ -61,6 +68,7 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
   const updateEntry = useUpdateSetlistEntry();
   const removeEntry = useDeleteSetlistEntry();
   const reorder = useReorderSetlist();
+  const updateSong = useUpdateSong();
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
 
   const [transitionEditing, setTransitionEditing] = useState<{
@@ -181,6 +189,13 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
     );
   };
 
+  const updateSongDefaults = (songId: string, patch: SongDefaultsPatch): void => {
+    updateSong.mutate(
+      { id: songId, ...patch },
+      { onError: failWith('setlist.failure.songDefaults') },
+    );
+  };
+
   const copyOrderToClipboard = async (): Promise<void> => {
     try {
       await navigator.clipboard.writeText(formatSetlistOrder(setlistEntries, songsById));
@@ -228,8 +243,10 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
           membersById={membersById}
           instrumentsById={instrumentsById}
           knownMemberIds={knownMemberIds}
+          maximumVisibleMembers={maximumVisibleLineupMembers(isNarrow)}
           onReorder={reorderSetlistEntries}
           onUpdate={updateSetlistEntry}
+          onUpdateSongDefaults={updateSongDefaults}
           onRemove={removeSetlistEntry}
           onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
         />

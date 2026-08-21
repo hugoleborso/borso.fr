@@ -2,6 +2,7 @@
 
 import type { InstrumentFamily } from '@domain/instrument.core';
 import { type Lineup, resolveLineup } from '@domain/lineup.core';
+import type { SongStatus } from '../../routes/catalog/song-draft.core';
 
 export interface DragTransform {
   readonly x: number;
@@ -18,8 +19,10 @@ export interface SetlistEditorSong {
   readonly id: string;
   readonly title: string;
   readonly artist: string;
+  readonly status?: SongStatus;
   readonly tonalityStart?: string | null;
   readonly tonalityEnd?: string | null;
+  readonly baseEnergy?: number | null;
   readonly defaultLineup: Lineup;
 }
 
@@ -32,6 +35,13 @@ export interface SetlistEditorInstrument {
 export interface SetlistEditorEntry {
   readonly songId: string;
   readonly lineupOverride: Lineup | null;
+}
+
+const MAXIMUM_VISIBLE_MEMBERS_WHEN_CONDENSED = 3;
+const MAXIMUM_VISIBLE_MEMBERS_WHEN_ROOMY = 8;
+
+export function maximumVisibleLineupMembers(isCondensed: boolean): number {
+  return isCondensed ? MAXIMUM_VISIBLE_MEMBERS_WHEN_CONDENSED : MAXIMUM_VISIBLE_MEMBERS_WHEN_ROOMY;
 }
 
 export function tonalityLabelFor(song: SetlistEditorSong | undefined): string | null {
