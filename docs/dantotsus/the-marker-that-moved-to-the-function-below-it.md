@@ -5,7 +5,7 @@ detected-at: review
 severity: low
 related-pr: 84
 fix-pr: 85
-fix-commits: [3583040]
+fix-commits: [3583040, ff9e8e9]
 eradication-level: 2
 time-to-detect: hours
 tags: [blueprints, generators, meta]
@@ -76,7 +76,7 @@ The marker moved back onto `listRunnersForEdition` in commit
 
 **Type:** DevX check (level 2 — a baseline the check compares against)
 
-**Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85) · commit [`3583040`](https://github.com/hugoleborso/borso.fr/commit/3583040)
+**Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85) · commits [`3583040`](https://github.com/hugoleborso/borso.fr/commit/3583040), [`ff9e8e9`](https://github.com/hugoleborso/borso.fr/commit/ff9e8e9)
 
 **The actual fix:** `blueprint-indexing.ts` records the symbol each marker
 resolves to, per file, in `docs/standards/blueprint-subjects.json`, and

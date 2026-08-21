@@ -22,3 +22,6 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [11:55] `standards-reviewer` seal.ts verify names a file as unsealed without saying whether it has ever been sealed, so a reviewer has to grep seals.jsonl by hand to tell a first review from a re-review after an edit
 - [12:49] `standards-reviewer` a @FollowsBlueprint tag sits on the line above its subject, so inserting a function directly under it silently moves the claim to the new function and no generator notices
 - [13:04] `standards-reviewer` the reviewer brief names which files were fixed, but seal.ts verify is the only trustworthy source of what needs review, and the two disagree whenever a fix touches a file the brief did not mention
+- [18:22] `main` the blueprint-subject gate shipped in this sweep compared the whole baseline by value, so the first thing it failed was a merge of main that added three markers and moved none, with a message accusing its author of moving one
+- [18:24] `main` that gate's failure message told the operator to read the diff of a JSON file Prettier reformats wholesale, so the diff carried 281 changed lines and four real ones
+- [18:31] `main` the friction archive from PR #84 was committed to the merged branch after the merge, so it never reached main and the sweep's primary input was one cherry-pick from being lost
