@@ -12,6 +12,7 @@ import {
   type ScreenRoute,
   symbolMetrics,
 } from './architecture-model';
+import { filePathOfLocation } from './journey-status.core';
 
 export interface JourneyAction {
   readonly id: string;
@@ -361,9 +362,8 @@ function isFrontEndModule(file: ArchitectureFile): boolean {
 }
 
 function filePathOf(location: string | undefined): string[] {
-  if (location === undefined) return [];
-  const [filePath] = location.split(':');
-  return filePath === undefined ? [] : [filePath];
+  const filePath = filePathOfLocation(location);
+  return filePath === '' ? [] : [filePath];
 }
 
 function addComposition(

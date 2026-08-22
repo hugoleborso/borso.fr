@@ -103,6 +103,37 @@ Read this before concluding that a button is dead. During PR #60 this exact
 sequence read as *"the create button does nothing"*, which was wrong, and the
 real defect was elsewhere.
 
+## There is no `resize`; the command is `set viewport`
+
+_Observed 2026-08-21 on agent-browser 0.27.0._ Widths are changed with
+`agent-browser set viewport <w> <h>`, listed under *Browser Settings* in
+`--help`. There is no `resize` command, and `--width` / `--height` passed to
+`open` are accepted and ignored, so a pass that thinks it measured 390 px
+measured whatever the default is. Check `agent-browser get box body` after
+setting it if the numbers matter.
+
+The same section carries `set device <name>`, which does **not** give a coarse
+pointer — see [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md).
+
+## The `eval` scope is shared between calls, so `const` collides
+
+_Observed 2026-08-21._ Two `eval` calls in a row, each declaring the same
+name, fail on the second:
+
+```bash
+agent-browser open "data:text/html,<p id=x>hi</p>"
+agent-browser eval "const el = document.getElementById('x'); el.textContent"
+# "hi"
+agent-browser eval "const el = document.getElementById('x'); el.tagName"
+# ✗ Evaluation error: SyntaxError: Identifier 'el' has already been declared
+```
+
+The declarations persist in one scope for the life of the session, so an
+iteration loop that reuses an obvious name dies on its second turn with an
+error that names a JavaScript problem rather than a CLI one. Wrap every
+snippet in an IIFE — `(() => { … })()` — which is the form the examples above
+already use, and the collision cannot happen.
+
 ## Related
 
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md)

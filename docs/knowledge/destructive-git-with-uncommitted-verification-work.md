@@ -44,3 +44,30 @@ runs untouched.
 
 This entry stays because its examples are the evidence for the gate. See
 [`a-warning-that-had-to-become-a-gate`](../dantotsus/a-warning-that-had-to-become-a-gate.md).
+
+## `git stash drop` after a partial restore, and where the untracked files went
+
+_2026-08-21, during the sweep of PR #83._ Docs were stashed with
+`git stash push -u` so a run of code-only commits could pass the doc-link gate,
+which reads the working tree for link sources and the index for link targets.
+Restoring afterwards with `git checkout stash@{0} -- docs/` brought back the
+three modified files and none of the four new ones, and `git stash drop` then
+made the stash unreachable.
+
+The reason is that a `-u` stash is three commits, not one. Tracked
+modifications are the stash commit itself; the index is its second parent; the
+**untracked files are its third parent**, and a pathspec checkout of the stash
+ref reads only the first. `git stash pop` would have restored all three.
+
+Nothing was lost, because a dropped stash is unreachable rather than deleted:
+
+```bash
+git fsck --unreachable | grep commit | awk '{print $3}' \
+  | while read -r c; do echo "$c :: $(git log -1 --format='%s' "$c")"; done
+# 4885ef9 :: untracked files on claude/lessons-from-pr-83: 6b27c95 …
+git checkout 4885ef9 -- docs/
+```
+
+The three stash commits are recognisable by their subjects — `WIP on`,
+`index on`, and `untracked files on`. Prefer `git stash pop`; when a pathspec
+restore is what you want, do it from the untracked parent as well.

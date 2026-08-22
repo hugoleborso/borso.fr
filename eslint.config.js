@@ -229,6 +229,7 @@ export default tseslint.config(
       'borso/atomic-design-composition': 'error',
       'borso/atomic-design-import-direction': 'error',
       'borso/no-flat-components-folder': 'error',
+      'borso/no-flex-one-in-auto-height-dialog': 'error',
       'borso/no-components-outside-buckets': 'error',
       'borso/no-query-hooks-outside-organisms': 'error',
       'borso/no-component-css-imports': 'error',

@@ -17,6 +17,7 @@ import noDirectApiFetchInSite from './no-direct-api-fetch-in-site.js';
 import noDiscardedAwaitBeforeNavigation from './no-discarded-await-before-navigation.js';
 import noDynamicTranslationKeys from './no-dynamic-translation-keys.js';
 import noFlatComponentsFolder from './no-flat-components-folder.js';
+import noFlexOneInAutoHeightDialog from './no-flex-one-in-auto-height-dialog.js';
 import noFrenchIdentifiers from './no-french-identifiers.js';
 import noHorizontalFoldersInApi from './no-horizontal-folders-in-api.js';
 import noImpureCallsInCoreFiles from './no-impure-calls-in-core-files.js';
@@ -58,6 +59,7 @@ export const borsoPlugin = {
     'no-discarded-await-before-navigation': noDiscardedAwaitBeforeNavigation,
     'no-dynamic-translation-keys': noDynamicTranslationKeys,
     'no-flat-components-folder': noFlatComponentsFolder,
+    'no-flex-one-in-auto-height-dialog': noFlexOneInAutoHeightDialog,
     'no-french-identifiers': noFrenchIdentifiers,
     'no-horizontal-folders-in-api': noHorizontalFoldersInApi,
     'no-impure-calls-in-core-files': noImpureCallsInCoreFiles,
