@@ -59,6 +59,14 @@ The agent runs standalone. Do not pass it your conversation, your intent, or you
 
 Never seal to get a green gate. A file with an open finding stays unsealed; that is the only thing making the gate worth having.
 
+## Findings on code the branch did not write
+
+Touching one line of a file puts the whole file in front of a reviewer for the first time, so a small change can return findings that are real and are not its work. Each finding carries `Introduced` and `Fix size` for exactly this: read them together before fixing anything.
+
+A one-line fix on a pre-existing finding is cheaper to ship here than to schedule. A refactor is not, and shipping it here buries the change the branch was actually for. Say which you are doing, in the commit message, and take the rest in its own branch — the seal on the untouched half stays valid either way, because a seal is on content and not on a path.
+
+The cost of getting this wrong compounds: each round's fix touches new files, which the next round reviews for the first time. One branch reached ten rounds this way, and the last five were on code its subject never went near.
+
 ## Where the checklist comes from
 
 `docs/standards/enforcement-ledger.md`, section **"What only a reviewer can check"**. It is generated from the `reviewer` bullets in the standards, so adding a reviewer bullet to a standard adds it to the agent's scope on the next generation, and nothing has to be remembered or copied.

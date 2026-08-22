@@ -6,12 +6,22 @@ import { fileURLToPath } from 'node:url';
 import {
   ANNOTATION_SEARCH_RADIUS_LINES,
   type BlueprintProject,
+  hasDeclarationOf,
   extractFollowsBlueprint,
   inferApplication,
   inferLayer,
   inferProject,
   listAnnotationProblems,
+  resolveAnnotationSubject,
+  UNRESOLVED_SUBJECT,
 } from './blueprint-utils.js';
+import {
+  buildSubjectBaseline,
+  describeDetachedClaim,
+  listDetachedClaims,
+  parseSubjectBaseline,
+  type MarkerClaim,
+} from '../../../scripts/blueprints/subjects.core.js';
 
 const scriptDirectory = path.dirname(fileURLToPath(import.meta.url));
 const REPOSITORY_ROOT = path.resolve(scriptDirectory, '../../..');
@@ -19,6 +29,12 @@ const SCAN_DIRECTORIES = ['apps', 'infra', 'eslint-rules'].map((name) =>
   path.join(REPOSITORY_ROOT, name),
 );
 const OUTPUT_FILE = path.join(scriptDirectory, 'blueprint-index.md');
+const SUBJECT_BASELINE_FILE = path.join(
+  REPOSITORY_ROOT,
+  'docs',
+  'standards',
+  'blueprint-subjects.json',
+);
 const SKIPPED_DIRECTORY_NAMES = new Set([
   'node_modules',
   'dist',
@@ -52,6 +68,7 @@ interface FollowerReference {
   readonly blueprintId: string;
   readonly filePath: string;
   readonly lineNumber: number;
+  readonly subject: string;
 }
 
 function listSourceFiles(directory: string): string[] {
@@ -127,6 +144,7 @@ function extractFollowers(absolutePath: string): FollowerReference[] {
     blueprintId: entry.blueprintId,
     filePath: relativePath,
     lineNumber: entry.lineNumber,
+    subject: resolveAnnotationSubject(content, entry.lineNumber),
   }));
 }
 
@@ -255,8 +273,41 @@ ${orphanedSection}
 `;
 }
 
+function toMarkerClaims(followers: readonly FollowerReference[]): MarkerClaim[] {
+  return followers
+    .filter((follower) => follower.subject !== UNRESOLVED_SUBJECT)
+    .map((follower) => ({
+      filePath: follower.filePath,
+      blueprintId: follower.blueprintId,
+      subject: follower.subject,
+    }));
+}
+
+function writeSubjectBaseline(followers: readonly FollowerReference[]): void {
+  const baseline = buildSubjectBaseline(toMarkerClaims(followers));
+  fs.writeFileSync(SUBJECT_BASELINE_FILE, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8');
+}
+
+function listSubjectDrift(followers: readonly FollowerReference[]): string[] {
+  if (!fs.existsSync(SUBJECT_BASELINE_FILE)) {
+    return [
+      'docs/standards/blueprint-subjects.json is missing. Run `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
+    ];
+  }
+  const recorded = parseSubjectBaseline(fs.readFileSync(SUBJECT_BASELINE_FILE, 'utf8'));
+  if (recorded === undefined) {
+    return [
+      'docs/standards/blueprint-subjects.json does not read as a mapping of file to subject. Run `pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
+    ];
+  }
+  return listDetachedClaims(recorded, toMarkerClaims(followers), (filePath, subject) =>
+    hasDeclarationOf(fs.readFileSync(path.join(REPOSITORY_ROOT, filePath), 'utf8'), subject),
+  ).map(describeDetachedClaim);
+}
+
 function main(): void {
   const isCheckOnly = process.argv.includes('--check');
+  const isAccepting = process.argv.includes('--accept');
   const sourceFiles = SCAN_DIRECTORIES.flatMap((directory) =>
     fs.existsSync(directory) ? listSourceFiles(directory) : [],
   );
@@ -265,6 +316,13 @@ function main(): void {
   const followers = sourceFiles.flatMap((file) => extractFollowers(file));
   const markdown = generateMarkdown(blueprints, followers);
   const problems = listAnnotationProblems(blueprints, followers);
+
+  if (isAccepting) {
+    writeSubjectBaseline(followers);
+    process.stdout.write('Accepted the blueprint marker subjects on disk.\n');
+  } else if (isCheckOnly) {
+    problems.push(...listSubjectDrift(followers));
+  }
 
   process.stdout.write(
     `Scanned ${sourceFiles.length} source files: ${blueprints.length} blueprint(s), ${followers.length} follower(s).\n`,

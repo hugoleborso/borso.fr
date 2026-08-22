@@ -1,0 +1,2482 @@
+{
+  "apps/borso-fr/bin/app.ts": {
+    "account": "cdk-app-entrypoint"
+  },
+  "apps/borso-fr/site/src/12-travaux/App.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/borso-fr/site/src/12-travaux/main.tsx": {
+    "rootElement": "site-entrypoint"
+  },
+  "apps/borso-fr/site/src/art/mondrian/animation.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/art/mondrian/animation.core.ts": {
+    "selectCanvasTransform": "core-lookup-table"
+  },
+  "apps/borso-fr/site/src/art/mondrian/composition-url.ts": {
+    "composeNewSeed": "browser-edge-module",
+    "useCompositionState": "hook-external-store"
+  },
+  "apps/borso-fr/site/src/art/mondrian/download.ts": {
+    "downloadCompositionPng": "browser-edge-module"
+  },
+  "apps/borso-fr/site/src/art/mondrian/keyboard.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/art/mondrian/keyboard.utils.ts": {
+    "isComposeKeyEvent": "injected-browser-api"
+  },
+  "apps/borso-fr/site/src/art/mondrian/main.tsx": {
+    "rootElement": "site-entrypoint"
+  },
+  "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/art/mondrian/mondrian-labels.core.ts": {
+    "selectSwatchRowKind": "core-view-intent"
+  },
+  "apps/borso-fr/site/src/art/mondrian/painting.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/art/mondrian/palettes.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/art/mondrian/palettes.utils.ts": {
+    "selectPalette": "utils-pure-module"
+  },
+  "apps/borso-fr/site/src/art/mondrian/paper-theme.ts": {
+    "applyPaperTheme": "browser-edge-module"
+  },
+  "apps/borso-fr/site/src/art/mondrian/titles.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/art/mondrian/titles.utils.ts": {
+    "buildTitle": "utils-seeded-generator"
+  },
+  "apps/borso-fr/site/src/art/mondrian/url-state.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/art/mondrian/url-state.utils.ts": {
+    "freshSeed": "utils-seeded-generator",
+    "readUrlState": "unknown-payload-parser"
+  },
+  "apps/borso-fr/site/src/art/mondrian/use-animation.hook.ts": {
+    "useEffect": "lint-exception"
+  },
+  "apps/borso-fr/site/src/art/mondrian/use-reduced-motion.hook.test.tsx": {
+    "ReducedMotionReadout": "test-hook-probe",
+    "installMatchMedia": "test-jsdom-gap-stub"
+  },
+  "apps/borso-fr/site/src/art/mondrian/use-reduced-motion.hook.ts": {
+    "useIsReducedMotion": "hook-external-store"
+  },
+  "apps/borso-fr/site/src/components/atoms/Announcer.tsx": {
+    "Announcer": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/BrandWordmark.tsx": {
+    "BrandWordmark": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/CarouselImage.tsx": {
+    "CarouselImage": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/CarouselVideo.tsx": {
+    "CarouselVideo": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/ChallengeBarStrip.tsx": {
+    "ChallengeBarStrip": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/Chip.tsx": {
+    "Chip": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/ChipLink.tsx": {
+    "ChipLink": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/ControlField.tsx": {
+    "ControlField": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/EditableSwatch.tsx": {
+    "EditableSwatch": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/MiniStat.tsx": {
+    "MiniStat": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/MondrianRect.tsx": {
+    "MondrianRect": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/ProgressBar.tsx": {
+    "ProgressBar": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/ReadOnlySwatch.tsx": {
+    "ReadOnlySwatch": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/SegmentedControl.tsx": {
+    "SegmentedControl": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/Tag.tsx": {
+    "Tag": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/atoms/YearButton.tsx": {
+    "YearButton": "atom-plain"
+  },
+  "apps/borso-fr/site/src/components/molecules/ChallengeStatusTag.tsx": {
+    "ChallengeStatusTag": "molecule-presentational"
+  },
+  "apps/borso-fr/site/src/components/molecules/EditablePaletteSwatches.tsx": {
+    "EditablePaletteSwatches": "molecule-presentational"
+  },
+  "apps/borso-fr/site/src/components/molecules/FilmstripCard.tsx": {
+    "FilmstripCard": "molecule-presentational"
+  },
+  "apps/borso-fr/site/src/components/molecules/ProofChip.tsx": {
+    "ProofChip": "molecule-presentational"
+  },
+  "apps/borso-fr/site/src/components/molecules/ProofMedia.tsx": {
+    "ProofMedia": "molecule-presentational"
+  },
+  "apps/borso-fr/site/src/components/molecules/ReadOnlyPaletteSwatches.tsx": {
+    "ReadOnlyPaletteSwatches": "molecule-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/ChallengeRow.tsx": {
+    "ChallengeRow": "organism-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/CompositionStage.tsx": {
+    "CompositionStage": "organism-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/FeaturedMonth.tsx": {
+    "FeaturedMonth": "organism-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/Galaxy.tsx": {
+    "Galaxy": "vendored-third-party"
+  },
+  "apps/borso-fr/site/src/components/organisms/LaboursHero.tsx": {
+    "LaboursHero": "organism-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/LaboursMasthead.tsx": {
+    "LaboursMasthead": "organism-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/MondrianFrame.tsx": {
+    "MondrianFrame": "organism-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/MonthFilmstrip.tsx": {
+    "MonthFilmstrip": "organism-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/PaletteSwatchRow.tsx": {
+    "PaletteSwatchRow": "organism-table-dispatch"
+  },
+  "apps/borso-fr/site/src/components/organisms/ProofSection.tsx": {
+    "ProofSection": "organism-table-dispatch"
+  },
+  "apps/borso-fr/site/src/components/organisms/StudioRail.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/borso-fr/site/src/components/organisms/StudioRail.tsx": {
+    "StudioRail": "organism-presentational"
+  },
+  "apps/borso-fr/site/src/components/organisms/galaxy-clock.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/components/organisms/galaxy-clock.core.ts": {
+    "selectStarClock": "core-view-projection"
+  },
+  "apps/borso-fr/site/src/home-menu.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/home-menu.core.ts": {
+    "selectBurgerLabelKey": "core-view-intent"
+  },
+  "apps/borso-fr/site/src/i18n/i18n-parity.core.test.ts": {
+    "IDENTICAL_VALUE_REASON_BY_KEY": "test-i18n-parity"
+  },
+  "apps/borso-fr/site/src/i18n/i18n-parity.core.ts": {
+    "diffCatalogues": "i18n-parity-gate"
+  },
+  "apps/borso-fr/site/src/i18n/i18n.ts": {
+    "i18next": "i18n-setup"
+  },
+  "apps/borso-fr/site/src/i18n/i18n.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/i18n/i18n.utils.ts": {
+    "listTranslationKeys": "i18n-key-walk"
+  },
+  "apps/borso-fr/site/src/labours/labours-2025.ts": {
+    "EDITION_2025": "data-module"
+  },
+  "apps/borso-fr/site/src/labours/labours-appearance.core.ts": {
+    "selectStatusLabelKey": "core-label-key"
+  },
+  "apps/borso-fr/site/src/labours/labours.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/labours/labours.core.ts": {
+    "listProofSections": "core-view-intent"
+  },
+  "apps/borso-fr/site/src/labours/labours.ts": {
+    "LABOURS": "data-module"
+  },
+  "apps/borso-fr/site/src/labours/labours.types.ts": {
+    "Edition": "domain-types-module"
+  },
+  "apps/borso-fr/site/src/warp/warp-drive.ts": {
+    "installWarpDrive": "browser-edge-module"
+  },
+  "apps/borso-fr/site/src/warp/warp-jump.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/site/src/warp/warp-navigation.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borso-fr/vitest.config.ts": {
+    "defineConfig": "workspace-test-config"
+  },
+  "apps/borsouvertures/bin/app.ts": {
+    "account": "cdk-app-entrypoint"
+  },
+  "apps/borsouvertures/site/src/components/atoms/BoardView.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/borsouvertures/site/src/components/atoms/BoardView.tsx": {
+    "BoardView": "atom-plain",
+    "DROP_OUTCOME_BY_DECISION": "component-lookup-table"
+  },
+  "apps/borsouvertures/site/src/components/atoms/Button.tsx": {
+    "Button": "atom-lookup-variants"
+  },
+  "apps/borsouvertures/site/src/components/atoms/ErrorPanel.tsx": {
+    "ErrorPanel": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/InlineBanner.tsx": {
+    "InlineBanner": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/LoadMoreRow.tsx": {
+    "LoadMoreRow": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/LoadingPanel.tsx": {
+    "LoadingPanel": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/MiniBoard.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/borsouvertures/site/src/components/atoms/MiniBoard.tsx": {
+    "MiniBoard": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/Modal.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/borsouvertures/site/src/components/atoms/Modal.tsx": {
+    "Modal": "atom-plain",
+    "openAsModalDialog": "ref-callback-browser-api"
+  },
+  "apps/borsouvertures/site/src/components/atoms/MoveButtonList.tsx": {
+    "MoveButtonList": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/Select.tsx": {
+    "Select": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/SelectorCard.tsx": {
+    "CARD_CLASS_BY_ACTIVE": "component-lookup-table",
+    "SelectorCard": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/SelectorPanel.tsx": {
+    "SelectorPanel": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/SessionStartHint.tsx": {
+    "HINT_KEY_BY_MODE": "core-label-key",
+    "SessionStartHint": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/StatusItem.tsx": {
+    "StatusItem": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/ToggleSlider.tsx": {
+    "TRACK_CLASS_BY_STATE": "component-lookup-table",
+    "ToggleSlider": "atom-plain"
+  },
+  "apps/borsouvertures/site/src/components/atoms/boardDrop.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/components/atoms/boardDrop.utils.ts": {
+    "selectBoardDropDecision": "core-view-intent"
+  },
+  "apps/borsouvertures/site/src/components/atoms/boardPieces.tsx": {
+    "PIECE_LABEL_KEY_BY_TYPE": "core-label-key",
+    "buildNamedPieces": "component-lookup-table"
+  },
+  "apps/borsouvertures/site/src/components/atoms/loadMoreRow.types.ts": {
+    "LoadMoreRowProps": "shared-props-shape"
+  },
+  "apps/borsouvertures/site/src/components/atoms/moveNotation.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/components/atoms/moveNotation.utils.ts": {
+    "describeMoveInStandardNotation": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/components/molecules/AutoOpponentToggle.tsx": {
+    "AutoOpponentToggle": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/BoardStyleSelect.tsx": {
+    "BoardStyleSelect": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/LanguageSwitcher.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/borsouvertures/site/src/components/molecules/LanguageSwitcher.tsx": {
+    "LANGUAGE_BY_IS_FRENCH": "component-lookup-table",
+    "LanguageSwitcher": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/LearnClearedBanner.tsx": {
+    "LearnClearedBanner": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/LearnDrillPanel.tsx": {
+    "ARROW_LABEL_KEY_BY_VISIBILITY": "component-lookup-table",
+    "LearnDrillPanel": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/LearnDrillProgress.tsx": {
+    "LearnDrillProgress": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/LearnOutOfBookModal.tsx": {
+    "LearnOutOfBookModal": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/LearnPickPrompt.tsx": {
+    "LearnPickPrompt": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/LinesPanel.tsx": {
+    "ALL_LINES_CARD_BY_MODE": "component-lookup-table",
+    "LinesPanel": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/ModeToggle.tsx": {
+    "MODE_BY_IS_PLAY": "component-lookup-table",
+    "ModeToggle": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/OpeningsLoadFailurePanel.tsx": {
+    "OpeningsLoadFailurePanel": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/OpeningsLoadingPanel.tsx": {
+    "OpeningsLoadingPanel": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/OpeningsPanel.tsx": {
+    "ALL_OPENINGS_CARD_BY_MODE": "component-lookup-table",
+    "OpeningsPanel": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/PlayBookPanel.tsx": {
+    "PlayBookPanel": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/PlayCompletedBanner.tsx": {
+    "PlayCompletedBanner": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/PlayOutOfBookModal.tsx": {
+    "PlayOutOfBookModal": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/PlayStatusPanel.tsx": {
+    "BOOK_STATUS_KEY_BY_IN_BOOK": "component-lookup-table",
+    "PlayStatusPanel": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/ShowMovesToggle.tsx": {
+    "ShowMovesToggle": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/SideSelector.tsx": {
+    "SIDE_BY_IS_BLACK": "component-lookup-table",
+    "SideSelector": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/molecules/TreeVisualizationToggle.tsx": {
+    "TreeVisualizationToggle": "molecule-presentational",
+    "VISUALIZATION_BY_USES_BUTTONS": "component-lookup-table"
+  },
+  "apps/borsouvertures/site/src/components/molecules/VariationsPanel.tsx": {
+    "ALL_VARIATIONS_CARD_BY_MODE": "component-lookup-table",
+    "VariationsPanel": "molecule-presentational"
+  },
+  "apps/borsouvertures/site/src/components/organisms/CompactOpeningFlow.tsx": {
+    "CompactOpeningFlow": "organism-table-dispatch",
+    "PANEL_BY_STEP": "component-lookup-table"
+  },
+  "apps/borsouvertures/site/src/components/organisms/LearnDrill.tsx": {
+    "CLEARED_BANNER_BY_STATE": "component-lookup-table",
+    "LearnDrill": "organism-machine-bound"
+  },
+  "apps/borsouvertures/site/src/components/organisms/LearnSessionControl.tsx": {
+    "LearnSessionControl": "organism-presentational"
+  },
+  "apps/borsouvertures/site/src/components/organisms/LearnTreeSession.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/borsouvertures/site/src/components/organisms/LearnTreeSession.tsx": {
+    "DRILL_BY_READINESS": "component-lookup-table",
+    "LearnTreeSession": "organism-table-dispatch"
+  },
+  "apps/borsouvertures/site/src/components/organisms/OpeningFlowSelector.tsx": {
+    "FLOW_BY_VIEWPORT": "component-lookup-table",
+    "OpeningFlowSelector": "organism-table-dispatch"
+  },
+  "apps/borsouvertures/site/src/components/organisms/PlaySession.tsx": {
+    "COMPLETED_BANNER_BY_STATE": "component-lookup-table"
+  },
+  "apps/borsouvertures/site/src/components/organisms/PlaySessionControl.tsx": {
+    "PlaySessionControl": "organism-presentational"
+  },
+  "apps/borsouvertures/site/src/components/organisms/SelectionAutoOpponentRow.tsx": {
+    "SelectionAutoOpponentRow": "organism-presentational"
+  },
+  "apps/borsouvertures/site/src/components/organisms/SelectionScreen.tsx": {
+    "AUTO_OPPONENT_ROW_BY_MODE": "component-lookup-table",
+    "SelectionScreen": "organism-table-dispatch"
+  },
+  "apps/borsouvertures/site/src/components/organisms/SessionScreen.tsx": {
+    "SESSION_BODY_BY_MODE": "component-lookup-table"
+  },
+  "apps/borsouvertures/site/src/components/organisms/TopBar.test.tsx": {
+    "AppStateProbe": "test-hook-probe",
+    "describe": "test-component-render"
+  },
+  "apps/borsouvertures/site/src/components/organisms/TopBar.tsx": {
+    "TopBar": "organism-presentational"
+  },
+  "apps/borsouvertures/site/src/components/organisms/TrainerScreens.tsx": {
+    "TrainerScreens": "component-lookup-table"
+  },
+  "apps/borsouvertures/site/src/components/organisms/WideOpeningFlow.tsx": {
+    "WideOpeningFlow": "organism-presentational"
+  },
+  "apps/borsouvertures/site/src/components/organisms/session.types.ts": {
+    "SessionBodyProps": "shared-props-shape"
+  },
+  "apps/borsouvertures/site/src/components/organisms/trainerScreen.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/components/organisms/trainerScreen.core.ts": {
+    "selectTrainerScreenKind": "core-view-intent"
+  },
+  "apps/borsouvertures/site/src/i18n/i18n.ts": {
+    "applyDocumentLanguage": "i18n-setup"
+  },
+  "apps/borsouvertures/site/src/i18n/i18n.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/i18n/i18n.utils.ts": {
+    "selectInitialLanguage": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/i18n/locale-storage.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/lib/paginated-list.hook.ts": {
+    "usePaginatedList": "hook-effect-free-mount"
+  },
+  "apps/borsouvertures/site/src/lib/viewport.hook.ts": {
+    "useViewportWidth": "hook-external-store"
+  },
+  "apps/borsouvertures/site/src/lib/viewport.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/lib/viewport.utils.ts": {
+    "selectBoardWidth": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/main.tsx": {
+    "rootElement": "site-entrypoint"
+  },
+  "apps/borsouvertures/site/src/openings/bookArrows.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/bookArrows.utils.ts": {
+    "selectVisibleBookMoves": "utils-branchless-list"
+  },
+  "apps/borsouvertures/site/src/openings/bookEngine.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/bookEngine.utils.ts": {
+    "computeBookState": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/openings/bookTree.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/bookTree.utils.ts": {
+    "nextMovesAt": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/openings/learnSession.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/learnSession.core.ts": {
+    "findLearnDrillTarget": "core-view-intent"
+  },
+  "apps/borsouvertures/site/src/openings/learnTreeMachine.test-utils.ts": {
+    "buildDriver": "test-machine-driver"
+  },
+  "apps/borsouvertures/site/src/openings/learnTreeMachine.utils.test.ts": {
+    "describe": "test-machine-transition"
+  },
+  "apps/borsouvertures/site/src/openings/learnTreeMachine.utils.ts": {
+    "createLearnTreeMachine": "state-machine-module"
+  },
+  "apps/borsouvertures/site/src/openings/lineDisplay.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/lineDisplay.utils.ts": {
+    "shortLineName": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/openings/openingFlow.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/openingFlow.core.ts": {
+    "buildOpeningFlowLists": "core-view-intent"
+  },
+  "apps/borsouvertures/site/src/openings/openingIds.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/openingIds.utils.ts": {
+    "toSlug": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/openings/openings-source.adapter.ts": {
+    "fetchOpeningsDocument": "adapter-external-service"
+  },
+  "apps/borsouvertures/site/src/openings/openingsLoad.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/openingsLoad.utils.ts": {
+    "selectOpeningsLoad": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/openings/parseOpenings.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/parseOpenings.utils.ts": {
+    "parseOpenings": "unknown-payload-parser"
+  },
+  "apps/borsouvertures/site/src/openings/playScope.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/playScope.core.ts": {
+    "isOpeningActive": "core-view-intent"
+  },
+  "apps/borsouvertures/site/src/openings/playSession.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/playSession.core.ts": {
+    "selectLineLabel": "core-view-intent"
+  },
+  "apps/borsouvertures/site/src/openings/previews.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/previews.utils.ts": {
+    "buildOpeningPreview": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/openings/selectors.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/selectors.utils.ts": {
+    "findOpening": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/openings/sessionStart.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/sessionStart.core.ts": {
+    "isSessionStartAllowed": "core-view-intent"
+  },
+  "apps/borsouvertures/site/src/openings/types.ts": {
+    "Opening": "domain-types-module"
+  },
+  "apps/borsouvertures/site/src/openings/uciSquare.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/openings/uciSquare.utils.ts": {
+    "toSquare": "utils-pure-module"
+  },
+  "apps/borsouvertures/site/src/routes/OpeningTrainerPage.tsx": {
+    "OpeningTrainerPage": "organism-shell"
+  },
+  "apps/borsouvertures/site/src/state/persistedState.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/theme/boardAppearance.ts": {
+    "getBoardAppearance": "core-appearance"
+  },
+  "apps/borsouvertures/site/src/theme/boardThemes.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/borsouvertures/site/src/theme/boardThemes.utils.ts": {
+    "toBoardThemeId": "utils-pure-module"
+  },
+  "apps/borsouvertures/vitest.config.ts": {
+    "defineConfig": "workspace-test-config"
+  },
+  "apps/last-loop-lepin/api/src/__test/test-seed.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/__test/test-seed.controller.ts": {
+    "testSeedRouter": "controller-public-router"
+  },
+  "apps/last-loop-lepin/api/src/__test/test-seed.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/__test/test-seed.core.ts": {
+    "planSeedFixture": "core-lookup-table"
+  },
+  "apps/last-loop-lepin/api/src/__test/test-seed.service.ts": {
+    "applySeedFixture": "service-orchestration"
+  },
+  "apps/last-loop-lepin/api/src/app.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/app.ts": {
+    "buildAppRouter": "api-composition-root"
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.controller.ts": {
+    "authRouter": "controller-public-router"
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.core.ts": {
+    "isRequestOriginRejected": "core-decision"
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.repository.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.repository.ts": {
+    "findValidSession": "repository-query",
+    "upsertBucket": "repository-idempotent-upsert"
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.service.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/last-loop-lepin/api/src/auth/auth.service.ts": {
+    "AuthDeniedError": "named-domain-error",
+    "httpStatusForAuthDenial": "service-facade-reexport",
+    "login": "service-orchestration"
+  },
+  "apps/last-loop-lepin/api/src/database/client.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.controller.ts": {
+    "adminEditionRouter": "controller-guarded-router",
+    "editionRouter": "controller-public-router"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.core.ts": {
+    "isRaceEndReached": "core-decision",
+    "projectDidNotFinishCandidates": "core-projection"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.repository.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.repository.ts": {
+    "findEditionBySlug": "repository-query",
+    "rowToEdition": "repository-row-mapper"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.schema.ts": {
+    "editionsTable": "schema-dsql-constraints"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.schema.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.service.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.service.ts": {
+    "EditionAlreadyExistsError": "named-domain-error",
+    "EditionNotFoundError": "named-domain-error",
+    "EditionNotInSetupError": "named-domain-error",
+    "createEdition": "service-orchestration",
+    "replaceSetupEdition": "service-orchestration"
+  },
+  "apps/last-loop-lepin/api/src/edition/edition.types.ts": {
+    "EditionStatus": "domain-types-module"
+  },
+  "apps/last-loop-lepin/api/src/helpers/geo/geo.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/helpers/geo/geo.core.ts": {
+    "smoothedElevationGainMeters": "helper-module"
+  },
+  "apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/helpers/gpx/gpx.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/helpers/gpx/gpx.core.ts": {
+    "GpxParseError": "named-domain-error"
+  },
+  "apps/last-loop-lepin/api/src/helpers/sun/sun.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/helpers/sun/sun.core.ts": {
+    "SunCalculationError": "named-domain-error"
+  },
+  "apps/last-loop-lepin/api/src/media/media.adapter.ts": {
+    "MediaConfigError": "named-domain-error",
+    "MediaContentTypeError": "named-domain-error"
+  },
+  "apps/last-loop-lepin/api/src/media/media.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/media/media.controller.ts": {
+    "mediaRouter": "controller-guarded-router"
+  },
+  "apps/last-loop-lepin/api/src/media/media.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/media/media.core.ts": {
+    "fileExtensionForContentType": "core-lookup-table"
+  },
+  "apps/last-loop-lepin/api/src/media/media.schema.ts": {
+    "presignInputSchema": "schema-shared-slug"
+  },
+  "apps/last-loop-lepin/api/src/media/media.service.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/last-loop-lepin/api/src/media/media.service.ts": {
+    "MediaConfigError": "service-facade-reexport"
+  },
+  "apps/last-loop-lepin/api/src/punch/punch.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/punch/punch.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/punch/punch.service.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/last-loop-lepin/api/src/punch/punch.service.ts": {
+    "PunchConflictError": "named-domain-error",
+    "PunchNotFoundError": "named-domain-error"
+  },
+  "apps/last-loop-lepin/api/src/punch/self-punch.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/ranking/fastest-lap.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/ranking/fastest-lap.core.ts": {
+    "fastestLap": "core-projection"
+  },
+  "apps/last-loop-lepin/api/src/ranking/laps-csv.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/ranking/ranking.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/ranking/ranking.controller.ts": {
+    "rankingRouter": "controller-public-router"
+  },
+  "apps/last-loop-lepin/api/src/ranking/ranking.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/ranking/ranking.core.ts": {
+    "computeStandings": "core-projection",
+    "formatStandingsAsCsv": "core-serializer"
+  },
+  "apps/last-loop-lepin/api/src/ranking/ranking.service.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/last-loop-lepin/api/src/ranking/ranking.service.ts": {
+    "EditionNotFoundError": "service-facade-reexport",
+    "getLapsCsv": "service-read-model",
+    "getSpectatorStandings": "service-dto-mapping"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.controller.ts": {
+    "adminRunnerRouter": "controller-guarded-router",
+    "runnerRouter": "controller-public-router"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.core.ts": {
+    "slugifyDisplayName": "core-decision",
+    "validateRunnerDraft": "core-decision"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.dto.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.repository.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.repository.ts": {
+    "listRunnersForEdition": "repository-query"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.schema.ts": {
+    "runnerSlugSchema": "schema-shared-slug",
+    "runnersTable": "schema-dsql-constraints"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.service.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/last-loop-lepin/api/src/runner/runner.service.ts": {
+    "RunnerAlreadyExistsError": "named-domain-error",
+    "RunnerNotFoundError": "named-domain-error",
+    "createRunner": "service-orchestration"
+  },
+  "apps/last-loop-lepin/cdk/bin/cdk.ts": {
+    "account": "cdk-app-entrypoint"
+  },
+  "apps/last-loop-lepin/cdk/lib/stack.ts": {
+    "buildLastLoopLepinAppStack": "app-cdk-stack"
+  },
+  "apps/last-loop-lepin/cdk/test/stack.test.ts": {
+    "synthAppStack": "test-cdk-synth"
+  },
+  "apps/last-loop-lepin/domain/edition-selection.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/App.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/last-loop-lepin/site/src/App.tsx": {
+    "PAGE_BY_ROUTE": "component-lookup-table"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/BigCount.tsx": {
+    "BigCount": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/ButtonLink.tsx": {
+    "ButtonLink": "atom-lookup-variants"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/Card.tsx": {
+    "Card": "atom-plain",
+    "CardBody": "atom-lookup-variants"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/CardHeader.tsx": {
+    "CardHeader": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/ErrorText.tsx": {
+    "ErrorText": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/FastestLapBadge.tsx": {
+    "FastestLapBadge": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/FileInput.tsx": {
+    "FileInput": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/FlapDigit.tsx": {
+    "FlapDigit": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/InitialsAvatar.tsx": {
+    "InitialsAvatar": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/Input.tsx": {
+    "Input": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/Label.tsx": {
+    "Label": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/MonoNote.tsx": {
+    "MonoNote": "atom-lookup-variants"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/Pill.tsx": {
+    "Pill": "atom-lookup-variants"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/Select.tsx": {
+    "Select": "atom-plain"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/visibility.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/atoms/visibility.utils.ts": {
+    "selectVisibility": "core-view-intent"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/CorrectionBanner.tsx": {
+    "CorrectionBanner": "molecule-clock-subscriber"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/FormField.tsx": {
+    "FormField": "molecule-field"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/InRaceCounter.tsx": {
+    "InRaceCounter": "molecule-presentational"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/LanguageSwitcher.tsx": {
+    "LanguageSwitcher": "molecule-presentational"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/LeaderboardChip.tsx": {
+    "LeaderboardChip": "molecule-presentational"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/correction-banner.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/correction-banner.utils.ts": {
+    "isCorrectionBannerVisible": "utils-pure-module"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/countdown.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/countdown.utils.ts": {
+    "projectCountdownDisplay": "core-view-projection"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/leaderboard-chip.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/leaderboard-chip.utils.ts": {
+    "formatRank": "utils-formatter"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/runner-avatar-view.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/molecules/runner-avatar-view.utils.ts": {
+    "selectRunnerAvatarView": "core-view-intent"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/AdminLoginForm.tsx": {
+    "AdminLoginForm": "organism-form"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/ArchivedEditionCard.tsx": {
+    "ArchivedEditionCard": "organism-query-owning"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/CorrectionPanel.tsx": {
+    "CorrectionPanel": "organism-query-owning"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/CourseMap.tsx": {
+    "useEffect": "lint-exception"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/DidNotFinishPanel.tsx": {
+    "DidNotFinishPanel": "organism-mutation-panel"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/EditionEditForm.tsx": {
+    "EditionEditForm": "organism-form"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/EditionFormFields.tsx": {
+    "EditionFormFields": "organism-presentational"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/ElevationProfile.tsx": {
+    "ElevationProfile": "organism-presentational"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/FinishRacePrompt.tsx": {
+    "FinishRacePrompt": "organism-mutation-panel"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/Leaderboard.tsx": {
+    "Leaderboard": "organism-presentational",
+    "WRAPPER_BY_INTERACTIVITY": "component-lookup-table"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/NavigationBar.tsx": {
+    "NavigationBar": "organism-shell"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/NextLoopCountdown.tsx": {
+    "NextLoopCountdown": "molecule-clock-subscriber"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/PunchPanel.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/RunnerAdminPanel.tsx": {
+    "RunnerAdminPanel": "organism-form"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/SelfPunchModal.tsx": {
+    "BODY_BY_STATE": "component-lookup-table"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/SetupPanel.tsx": {
+    "SetupPanel": "organism-presentational"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/StartedEditionCard.tsx": {
+    "StartedEditionCard": "organism-mutation-panel"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/UpcomingEditionCard.tsx": {
+    "UpcomingEditionCard": "organism-presentational"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/admin-errors.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/admin-login.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/admin-login.core.ts": {
+    "adminLoginSchema": "core-form-schema"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/admin-tabs.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/admin-tabs.core.ts": {
+    "ADMIN_TABS": "data-module",
+    "selectEditionPanelTab": "core-view-intent"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/correction-panel.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/correction-panel.core.ts": {
+    "selectPunchTone": "core-view-intent"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/course-map-markers.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/course-map-markers.core.ts": {
+    "listRunnerMarkers": "core-view-projection"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/course-map.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/did-not-finish.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/did-not-finish.core.ts": {
+    "splitByDidNotFinish": "core-view-projection"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/edition-form.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/elevation-pastilles.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/elevation-pastilles.core.ts": {
+    "listElevationPastilles": "core-view-projection"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/elevation-profile.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/elevation-profile.utils.ts": {
+    "buildProfileGeometry": "utils-geometry"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/gpx-file.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/gpx-file.utils.ts": {
+    "selectRequiredGpxResult": "utils-pure-module"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/leaderboard.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/leaderboard.utils.ts": {
+    "selectChipInteractivity": "core-view-intent"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/punch-panel.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/runner-form.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/runner-form.core.ts": {
+    "runnerFormValuesSchema": "core-form-schema"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/runner-loop-history.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/runner-loop-history.core.ts": {
+    "listClosedLoops": "core-view-projection"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/runner-photo.errors.ts": {
+    "RunnerPhotoRejectedError": "named-domain-error"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/self-punch.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/setup-form.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/setup-form.utils.ts": {
+    "isoLocal": "utils-pure-module",
+    "summariseZodError": "core-parse-untrusted"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/spectator.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/spectator.core.ts": {
+    "selectSpectatorView": "core-view-intent"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/upcoming-edition.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/upcoming-edition.core.ts": {
+    "selectDistanceLabelKey": "core-label-key"
+  },
+  "apps/last-loop-lepin/site/src/components/organisms/useRunnerPhotoUpload.ts": {
+    "useRunnerPhotoUpload": "hook-stateful-helper"
+  },
+  "apps/last-loop-lepin/site/src/i18n/i18n-parity.core.test.ts": {
+    "REASON_EACH_KEY_READS_THE_SAME_IN_BOTH_LANGUAGES": "test-i18n-parity"
+  },
+  "apps/last-loop-lepin/site/src/i18n/i18n-parity.core.ts": {
+    "diffCatalogues": "i18n-parity-gate"
+  },
+  "apps/last-loop-lepin/site/src/i18n/i18n.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/i18n/i18n.utils.ts": {
+    "flattenKeys": "i18n-key-walk"
+  },
+  "apps/last-loop-lepin/site/src/i18n/locale-storage.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/i18n/locale-storage.utils.ts": {
+    "readSavedLanguage": "injected-storage-slice"
+  },
+  "apps/last-loop-lepin/site/src/lib/api-base.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/api-base.utils.ts": {
+    "selectApiBase": "utils-pure-module"
+  },
+  "apps/last-loop-lepin/site/src/lib/api-error.ts": {
+    "ApiError": "named-domain-error"
+  },
+  "apps/last-loop-lepin/site/src/lib/api.ts": {
+    "api": "typed-api-client"
+  },
+  "apps/last-loop-lepin/site/src/lib/environment.ts": {
+    "readApiBaseSetting": "environment-reader"
+  },
+  "apps/last-loop-lepin/site/src/lib/formatters.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/haversine.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/haversine.utils.ts": {
+    "haversineDistanceMeters": "utils-geometry"
+  },
+  "apps/last-loop-lepin/site/src/lib/initials.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/initials.utils.ts": {
+    "initialsAvatar": "utils-pure-module"
+  },
+  "apps/last-loop-lepin/site/src/lib/label.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/label.utils.ts": {
+    "selectLabel": "core-label-key"
+  },
+  "apps/last-loop-lepin/site/src/lib/navigation.ts": {
+    "subscribeLocation": "external-store-module"
+  },
+  "apps/last-loop-lepin/site/src/lib/object-upload.adapter.ts": {
+    "sendFileToPresignedUrl": "adapter-direct-upload"
+  },
+  "apps/last-loop-lepin/site/src/lib/optional.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/queries/auth.ts": {
+    "useAdminLogin": "query-uncached-mutation"
+  },
+  "apps/last-loop-lepin/site/src/lib/queries/editions.ts": {
+    "editionKeys": "query-module",
+    "useCreateEdition": "query-pessimistic-mutation",
+    "useDeleteEdition": "query-optimistic-mutation",
+    "useReplaceEdition": "query-pessimistic-mutation",
+    "useTransitionEditionStatus": "query-optimistic-mutation"
+  },
+  "apps/last-loop-lepin/site/src/lib/queries/optimistic.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/queries/optimistic.utils.ts": {
+    "replaceEntityBySlug": "utils-pure-module"
+  },
+  "apps/last-loop-lepin/site/src/lib/queries/punches.ts": {
+    "punchKeys": "query-module",
+    "useCatchupPunch": "query-pessimistic-mutation",
+    "useRecordDidNotFinish": "query-uncached-mutation",
+    "useRegisterPunch": "query-uncached-mutation",
+    "useVoidPunch": "query-optimistic-mutation"
+  },
+  "apps/last-loop-lepin/site/src/lib/queries/runners.ts": {
+    "runnerKeys": "query-module",
+    "useCreateRunner": "query-pessimistic-mutation",
+    "usePresignRunnerPhoto": "query-uncached-mutation"
+  },
+  "apps/last-loop-lepin/site/src/lib/queries/standings.ts": {
+    "standingKeys": "query-module"
+  },
+  "apps/last-loop-lepin/site/src/lib/request-position.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/runner-avatar.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/runner-avatar.utils.ts": {
+    "buildRunnerAvatar": "utils-pure-module"
+  },
+  "apps/last-loop-lepin/site/src/lib/runner-status.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/lib/runner-status.utils.ts": {
+    "selectRunnerStatusKind": "core-view-intent"
+  },
+  "apps/last-loop-lepin/site/src/main.tsx": {
+    "rootElement": "site-entrypoint"
+  },
+  "apps/last-loop-lepin/site/src/observability/sentry.ts": {
+    "recordDiagnosticEvent": "observability-adapter"
+  },
+  "apps/last-loop-lepin/site/src/routes/AdminPage.tsx": {
+    "AdminPage": "route-list-page",
+    "PANEL_BY_TAB": "component-lookup-table"
+  },
+  "apps/last-loop-lepin/site/src/routes/ArchivesPage.tsx": {
+    "ArchivesPage": "route-list-page"
+  },
+  "apps/last-loop-lepin/site/src/routes/RunnerProfilePage.tsx": {
+    "RunnerProfilePage": "route-detail-page"
+  },
+  "apps/last-loop-lepin/site/src/routes/SpectatorPage.tsx": {
+    "SpectatorPage": "route-list-page"
+  },
+  "apps/last-loop-lepin/site/src/routes/route.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/routes/runner-profile.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/site/src/routes/runner-profile.core.ts": {
+    "formatCurrentRank": "utils-pure-module"
+  },
+  "apps/last-loop-lepin/test/database-utils.ts": {
+    "adminSessionCookie": "test-database-isolation"
+  },
+  "apps/last-loop-lepin/test/fixtures.ts": {
+    "makePunch": "test-fixtures-object-mother",
+    "makeRunner": "test-fixtures-object-mother"
+  },
+  "apps/last-loop-lepin/vitest.config.ts": {
+    "defineConfig": "workspace-test-config"
+  },
+  "apps/pragma/api/src/__test/test-seed.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/__test/test-seed.controller.ts": {
+    "buildTestSeedRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/__test/test-seed.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/__test/test-seed.core.ts": {
+    "buildSeedLineup": "core-projection",
+    "selectInstrumentIds": "core-projection"
+  },
+  "apps/pragma/api/src/__test/test-seed.repository.ts": {
+    "deleteAllDomainRows": "repository-query"
+  },
+  "apps/pragma/api/src/auth/auth.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/auth/auth.repository.ts": {
+    "loadAppConfig": "repository-query"
+  },
+  "apps/pragma/api/src/auth/auth.schema.ts": {
+    "appConfigTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/auth/ip-hash.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/auth/ip-hash.utils.ts": {
+    "readClientIp": "utils-pure-module"
+  },
+  "apps/pragma/api/src/auth/rate-limit.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/auth/rate-limit.utils.ts": {
+    "recordAttempt": "utils-pure-module"
+  },
+  "apps/pragma/api/src/auth/session-cookie.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/auth/session-cookie.utils.ts": {
+    "verifyCookie": "utils-pure-module"
+  },
+  "apps/pragma/api/src/bars/bars.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/bars/bars.controller.ts": {
+    "buildBarsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/bars/bars.repository.ts": {
+    "PROJECTION": "repository-projection"
+  },
+  "apps/pragma/api/src/database/migrations.audit.test.ts": {
+    "describe": "test-artifact-audit"
+  },
+  "apps/pragma/api/src/database/schema.ts": {
+    "appConfigTable": "database-schema-barrel"
+  },
+  "apps/pragma/api/src/helpers/persistence/deletion.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/helpers/persistence/deletion.core.ts": {
+    "selectDeletionOutcome": "helper-module"
+  },
+  "apps/pragma/api/src/instruments/instruments.controller.ts": {
+    "buildInstrumentsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/instruments/instruments.service.ts": {
+    "patchInstrument": "service-crud-update"
+  },
+  "apps/pragma/api/src/main.dev.ts": {
+    "app": "api-dev-entrypoint"
+  },
+  "apps/pragma/api/src/main.ts": {
+    "handler": "api-lambda-entrypoint"
+  },
+  "apps/pragma/api/src/mastery/mastery.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/mastery/mastery.controller.ts": {
+    "buildMasteryRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/mastery/mastery.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/mastery/mastery.core.ts": {
+    "effective": "core-decision"
+  },
+  "apps/pragma/api/src/mastery/mastery.repository.ts": {
+    "listMasteryDefaults": "repository-query",
+    "upsertMasteryDefault": "repository-idempotent-upsert"
+  },
+  "apps/pragma/api/src/mastery/mastery.schema.ts": {
+    "masteryDefaultTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/members/lineup-scrub.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/members/lineup-scrub.core.ts": {
+    "scrubMemberFromLineup": "core-projection"
+  },
+  "apps/pragma/api/src/members/member-palette.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/members/member-palette.utils.ts": {
+    "pickPaletteHex": "utils-pure-module"
+  },
+  "apps/pragma/api/src/members/members.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/members/members.controller.ts": {
+    "buildMembersRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/members/members.repository.ts": {
+    "MEMBER_PROJECTION": "repository-projection"
+  },
+  "apps/pragma/api/src/members/members.service.ts": {
+    "patchMember": "service-crud-update"
+  },
+  "apps/pragma/api/src/sessions/offline-manifest.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/sessions/sessions.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/sessions/sessions.controller.ts": {
+    "buildSessionsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/sessions/sessions.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/sessions/sessions.core.ts": {
+    "buildSessionInsertShape": "core-projection"
+  },
+  "apps/pragma/api/src/sessions/sessions.repository.ts": {
+    "PROJECTION": "repository-projection",
+    "rowToSession": "repository-json-column"
+  },
+  "apps/pragma/api/src/sessions/sessions.schema.ts": {
+    "sessionTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/sessions/sessions.service.ts": {
+    "getNextSessionOfflineManifest": "service-read-model",
+    "patchSession": "service-crud-update"
+  },
+  "apps/pragma/api/src/setlists/setlists.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/setlists/setlists.controller.ts": {
+    "buildSetlistsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/setlists/setlists.core.ts": {
+    "buildSetlistSummaries": "core-projection",
+    "selectNextLinkPosition": "core-decision",
+    "tallySongsPerSetlist": "core-projection"
+  },
+  "apps/pragma/api/src/setlists/setlists.repository.ts": {
+    "ENTRY_PROJECTION": "repository-projection",
+    "SETLIST_PROJECTION": "repository-projection",
+    "rowToEntry": "repository-json-column"
+  },
+  "apps/pragma/api/src/setlists/setlists.schema.ts": {
+    "setlistTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/setlists/setlists.service.ts": {
+    "getAllSetlists": "service-read-model",
+    "patchEntry": "service-crud-update"
+  },
+  "apps/pragma/api/src/songs/musicbrainz.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/songs/search-ranking.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/songs/search-ranking.core.ts": {
+    "scoreExternalHit": "core-decision"
+  },
+  "apps/pragma/api/src/songs/songs.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/songs/songs.musicbrainz.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/songs/songs.repository.ts": {
+    "PROJECTION": "repository-projection"
+  },
+  "apps/pragma/api/src/songs/songs.schema.ts": {
+    "songTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/songs/songs.service.ts": {
+    "patchSong": "service-crud-update"
+  },
+  "apps/pragma/api/src/transitions/transitions.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/transitions/transitions.controller.ts": {
+    "buildTransitionCommentsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/transitions/transitions.repository.ts": {
+    "PROJECTION": "repository-projection",
+    "upsertTransitionComment": "repository-idempotent-upsert"
+  },
+  "apps/pragma/api/src/transitions/transitions.schema.ts": {
+    "transitionCommentTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/transitions/transitions.service.ts": {
+    "getTransitionComments": "service-passthrough"
+  },
+  "apps/pragma/api/src/uploads/uploads.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/uploads/uploads.controller.ts": {
+    "buildUploadsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/uploads/uploads.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/uploads/uploads.core.ts": {
+    "extensionForContentType": "core-lookup-table"
+  },
+  "apps/pragma/cdk/test/stack.test.ts": {
+    "synthAppStack": "test-cdk-synth"
+  },
+  "apps/pragma/domain/bar-staleness.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/bar-staleness.core.ts": {
+    "isStale": "core-decision"
+  },
+  "apps/pragma/domain/instrument.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/instrument.core.ts": {
+    "familyFromHarmonicFlag": "core-projection"
+  },
+  "apps/pragma/domain/lineup.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/lineup.core.ts": {
+    "instrumentedMembers": "core-projection",
+    "memberInstrumentPairs": "core-projection",
+    "normalizeLineup": "core-projection",
+    "resolveLineup": "core-projection"
+  },
+  "apps/pragma/domain/tonality.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/transition.core.ts": {
+    "evaluateTransition": "core-decision"
+  },
+  "apps/pragma/site/src/clock.store.ts": {
+    "subscribeClock": "external-store-module"
+  },
+  "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx": {
+    "AutoGrowTextarea": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/DocumentFrame.tsx": {
+    "DocumentFrame": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/EnergyBar.test.tsx": {
+    "beforeAll": "test-jsdom-gap-stub",
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/atoms/EnergyBar.tsx": {
+    "EnergyBar": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/ExternalLink.tsx": {
+    "ExternalLink": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/HintText.tsx": {
+    "HintText": "atom-lookup-variants"
+  },
+  "apps/pragma/site/src/components/atoms/OembedFrame.tsx": {
+    "OembedFrame": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/PreviewImage.tsx": {
+    "PreviewImage": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/PulsingDot.tsx": {
+    "PulsingDot": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/ScoreInput.tsx": {
+    "STEP_BY_SCROLLED_UP": "component-lookup-table",
+    "ScoreInput": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/auto-grow-textarea.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/atoms/auto-grow-textarea.utils.ts": {
+    "measureAutoGrowBox": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/atoms/avatar.variants.ts": {
+    "avatarVariants": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/badge.variants.ts": {
+    "badgeVariants": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/card.variants.ts": {
+    "cardVariants": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/chip.variants.ts": {
+    "chipVariants": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/class-name.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/atoms/class-name.utils.ts": {
+    "composeClassName": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/atoms/energy-bar.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/atoms/energy-bar.utils.ts": {
+    "buildEnergyLevels": "utils-pure-module",
+    "isDragIntent": "utils-pure-module",
+    "levelFromKey": "utils-pure-module",
+    "levelFromPointerRatio": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/atoms/input.variants.ts": {
+    "inputVariants": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/member-palette.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/atoms/member-palette.utils.ts": {
+    "parseHexTriplet": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/molecules/BackLink.tsx": {
+    "BackLink": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/BottomActionBar.tsx": {
+    "BottomActionBar": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/ChartKindIcon.tsx": {
+    "ChartKindIcon": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/ChordProSectionHeading.tsx": {
+    "ChordProSectionHeading": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx": {
+    "ConfirmDialog": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/EnergyBadge.tsx": {
+    "EnergyBadge": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/EnergySparkline.tsx": {
+    "EnergySparkline": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/FilterPillGroup.tsx": {
+    "FilterPillGroup": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/LanguageSwitcher.tsx": {
+    "LanguageSwitcher": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/LineupEditor.test.tsx": {
+    "describe": "test-component-render",
+    "stubDialogModalMissingFromJsdom": "test-jsdom-gap-stub"
+  },
+  "apps/pragma/site/src/components/molecules/MasteryBadge.tsx": {
+    "MasteryBadge": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/MemberChip.tsx": {
+    "MemberChip": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/MemberFilterPills.tsx": {
+    "MemberFilterPills": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/MemberLineup.tsx": {
+    "MemberLineup": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx": {
+    "NotFoundNotice": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/OfflineBanner.tsx": {
+    "OfflineBanner": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/PageHeader.tsx": {
+    "PageHeader": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/PracticeReadView.tsx": {
+    "PracticeReadView": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SearchBar.tsx": {
+    "SearchBar": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SetlistEntryActions.tsx": {
+    "SetlistEntryActions": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SetlistEntryDetailsFields.tsx": {
+    "SetlistEntryDetailsFields": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SetlistEntryDragPreview.tsx": {
+    "SetlistEntryDragPreview": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SongDefaultsDialog.tsx": {
+    "SongDefaultsDialog": "molecule-dialog-form"
+  },
+  "apps/pragma/site/src/components/molecules/SongEmbed.tsx": {
+    "SongEmbed": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SongLinkAdder.tsx": {
+    "SongLinkAdder": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SongMusicBrainzPanel.tsx": {
+    "SongMusicBrainzPanel": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SongNotes.tsx": {
+    "SongNotes": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SongNotesFields.tsx": {
+    "SongNotesFields": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/UploadedChartPreview.tsx": {
+    "UploadedChartPreview": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/energy-sparkline.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/energy-sparkline.utils.ts": {
+    "buildSparklinePath": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/molecules/file-drop.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/file-drop.utils.ts": {
+    "validateChartFile": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/molecules/lineup-editor.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/lineup-editor.core.ts": {
+    "lineupToFormValues": "core-form-schema"
+  },
+  "apps/pragma/site/src/components/molecules/media-query-matching.hook.test.tsx": {
+    "describe": "test-hook-probe"
+  },
+  "apps/pragma/site/src/components/molecules/media-query-matching.hook.ts": {
+    "useIsMediaQueryMatching": "hook-external-store"
+  },
+  "apps/pragma/site/src/components/molecules/member-lineup.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/member-lineup.core.ts": {
+    "buildLineupChips": "core-projection"
+  },
+  "apps/pragma/site/src/components/molecules/online-status.hook.test.tsx": {
+    "describe": "test-hook-probe"
+  },
+  "apps/pragma/site/src/components/molecules/song-defaults.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/song-defaults.core.ts": {
+    "songDefaultsToFormValues": "core-form-schema"
+  },
+  "apps/pragma/site/src/components/molecules/song-duration.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/song-duration.utils.ts": {
+    "formatDuration": "utils-formatter"
+  },
+  "apps/pragma/site/src/components/organisms/BarsKanban.tsx": {
+    "BarsKanban": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/BarsList.tsx": {
+    "BarsList": "organism-table"
+  },
+  "apps/pragma/site/src/components/organisms/BottomTabBar.tsx": {
+    "BottomTabBar": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/CatalogGrid.tsx": {
+    "CatalogGrid": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx": {
+    "ChordChartViewer": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/ConcertEditForm.tsx": {
+    "ConcertEditForm": "route-form"
+  },
+  "apps/pragma/site/src/components/organisms/ConcertReadView.tsx": {
+    "ConcertReadView": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/CreateSessionDialog.tsx": {
+    "CreateSessionDialog": "organism-form"
+  },
+  "apps/pragma/site/src/components/organisms/CreateSetlistDialog.tsx": {
+    "CreateSetlistDialog": "organism-form"
+  },
+  "apps/pragma/site/src/components/organisms/FileDrop.tsx": {
+    "FileDrop": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/MemberEditForm.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/MemberEditForm.tsx": {
+    "MemberEditForm": "route-form"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistCatalogList.tsx": {
+    "SetlistCatalogList": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistEditor.tsx": {
+    "SetlistEditor": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx": {
+    "SetlistEntryRow": "organism-form"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistSongPicker.tsx": {
+    "SetlistSongPicker": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx": {
+    "SetlistToolbar": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SongChartFields.tsx": {
+    "SongChartFields": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SongChordPreview.tsx": {
+    "SongChordPreview": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SongDeleteAction.tsx": {
+    "SongDeleteAction": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SongDetailSidebar.tsx": {
+    "SongDetailSidebar": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SongEditForm.tsx": {
+    "SongEditForm": "route-form"
+  },
+  "apps/pragma/site/src/components/organisms/SongExternalLinks.tsx": {
+    "SongExternalLinks": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SongSearch.tsx": {
+    "SongSearch": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/TransitionCommentModal.tsx": {
+    "TransitionCommentModal": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/TransitionStrip.tsx": {
+    "TransitionStrip": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/create-session-dialog.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/create-session-dialog.utils.ts": {
+    "formatDateTimeLocal": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/organisms/file-drop.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/mastery-color.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/mastery-color.core.ts": {
+    "selectMasteryColor": "core-appearance"
+  },
+  "apps/pragma/site/src/components/organisms/navigation-active.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/navigation-active.core.ts": {
+    "isNavigationDestinationActive": "core-decision"
+  },
+  "apps/pragma/site/src/components/organisms/session-gate.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/session-gate.core.ts": {
+    "selectSessionGateState": "core-view-intent"
+  },
+  "apps/pragma/site/src/components/organisms/setlist-editor.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts": {
+    "formatSetlistOrder": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts": {
+    "isEnergyStored": "core-appearance",
+    "selectEnergyAppearance": "core-appearance"
+  },
+  "apps/pragma/site/src/components/organisms/setlist-filter.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/setlist-filter.core.ts": {
+    "filterEntriesForMember": "core-view-projection"
+  },
+  "apps/pragma/site/src/components/organisms/song-picker.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/song-picker.core.ts": {
+    "filterPickableSongs": "core-view-projection"
+  },
+  "apps/pragma/site/src/components/organisms/transition-view.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/transition-view.core.ts": {
+    "buildTransitionView": "core-view-projection"
+  },
+  "apps/pragma/site/src/i18n/i18n-parity.core.test.ts": {
+    "describe": "test-i18n-parity"
+  },
+  "apps/pragma/site/src/i18n/i18n-parity.core.ts": {
+    "diffCatalogs": "i18n-parity-gate"
+  },
+  "apps/pragma/site/src/i18n/i18n.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/i18n/i18n.utils.ts": {
+    "flattenKeys": "i18n-key-walk"
+  },
+  "apps/pragma/site/src/i18n/locale-storage.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/i18n/locale-storage.utils.ts": {
+    "readPersistedLocale": "injected-storage-slice"
+  },
+  "apps/pragma/site/src/lib/chordpro.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/chordpro.utils.ts": {
+    "parseChordProLine": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/counts.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/counts.utils.ts": {
+    "isPositiveCount": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/debounce.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/debounce.utils.ts": {
+    "debounce": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/embed.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/embed.utils.ts": {
+    "resolveEmbed": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/form-submit.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/form-submit.utils.ts": {
+    "isSubmitDisabled": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/formatters.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/formatters.utils.ts": {
+    "formatSessionDate": "utils-formatter"
+  },
+  "apps/pragma/site/src/lib/mastery-aggregate.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/mastery-aggregate.core.ts": {
+    "meanDefaultMasteryForSong": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/mastery-matrix.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/mastery-matrix.utils.ts": {
+    "cellKey": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/member-color.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/auth.queries.test.tsx": {
+    "describe": "test-query-hook"
+  },
+  "apps/pragma/site/src/lib/queries/auth.queries.ts": {
+    "useLogin": "query-pessimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/bars.queries.test.tsx": {
+    "describe": "test-query-hook"
+  },
+  "apps/pragma/site/src/lib/queries/bars.queries.ts": {
+    "useCreateBar": "query-optimistic-insert",
+    "useDeleteBar": "query-optimistic-mutation",
+    "useUpdateBar": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/instruments.queries.test.tsx": {
+    "describe": "test-query-hook"
+  },
+  "apps/pragma/site/src/lib/queries/instruments.queries.ts": {
+    "useCreateInstrument": "query-optimistic-insert",
+    "useDeleteInstrument": "query-optimistic-mutation",
+    "useUpdateInstrument": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/mastery.queries.test.tsx": {
+    "describe": "test-query-hook"
+  },
+  "apps/pragma/site/src/lib/queries/mastery.queries.ts": {
+    "useDeleteMasteryDefault": "query-optimistic-mutation",
+    "useSaveMasteryDefault": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/mastery.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/mastery.utils.ts": {
+    "upsertMasteryDefault": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/queries/members.queries.test.tsx": {
+    "describe": "test-query-hook"
+  },
+  "apps/pragma/site/src/lib/queries/members.queries.ts": {
+    "useAssignMemberInstruments": "query-optimistic-mutation",
+    "useCreateMember": "query-optimistic-insert",
+    "useDeleteMember": "query-optimistic-mutation",
+    "useMembersList": "query-module",
+    "useUpdateMember": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/optimistic-session.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/optimistic-session.core.ts": {
+    "buildOptimisticSession": "dto-mapper"
+  },
+  "apps/pragma/site/src/lib/queries/optimistic.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/optimistic.utils.ts": {
+    "replaceEntityById": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/queries/sessions.queries.ts": {
+    "useCreateSession": "query-optimistic-insert",
+    "useDeleteSession": "query-optimistic-mutation",
+    "useUpdateSession": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/setlist-entries.queries.ts": {
+    "useAppendSetlistEntry": "query-optimistic-insert",
+    "useDeleteSetlistEntry": "query-optimistic-mutation",
+    "useReorderSetlist": "query-optimistic-mutation",
+    "useUpdateSetlistEntry": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/setlists.queries.ts": {
+    "useDeleteSetlist": "query-optimistic-mutation",
+    "useLinkSetlistToSession": "query-optimistic-mutation",
+    "useRenameSetlist": "query-optimistic-mutation",
+    "useUnlinkSetlistFromSession": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/setlists.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/setlists.utils.ts": {
+    "appendOptimisticEntry": "utils-pure-module",
+    "settleAppendedEntry": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/queries/song-cache.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/song-cache.core.ts": {
+    "buildOptimisticSong": "core-projection",
+    "mergeSongUpdate": "core-projection"
+  },
+  "apps/pragma/site/src/lib/queries/song-write-failure.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/song-write-failure.core.ts": {
+    "didLastSongWriteFail": "core-view-projection",
+    "selectSongThatLostItsLastWrite": "core-view-projection"
+  },
+  "apps/pragma/site/src/lib/queries/songs.queries.ts": {
+    "useDeleteSong": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/transitions.queries.test.tsx": {
+    "describe": "test-query-hook"
+  },
+  "apps/pragma/site/src/lib/queries/transitions.queries.ts": {
+    "useSaveTransitionComment": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/transitions.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/transitions.utils.ts": {
+    "upsertTransitionComment": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/queries/uploads.queries.ts": {
+    "useSignChartUpload": "query-uncached-mutation",
+    "useSignedChartUrl": "query-module"
+  },
+  "apps/pragma/site/src/lib/setlist-index.core.ts": {
+    "buildSetlistIndexRows": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/setlist-name.utils.ts": {
+    "selectSetlistDisplayName": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/upcoming-concerts.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/upcoming-concerts.core.ts": {
+    "selectUpcomingConcerts": "core-view-projection"
+  },
+  "apps/pragma/site/src/routes/LoginPage.tsx": {
+    "LoginPage": "route-form"
+  },
+  "apps/pragma/site/src/routes/bars/BarsPage.tsx": {
+    "BarsPage": "route-list-page"
+  },
+  "apps/pragma/site/src/routes/bars/bar-form.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/bars/bar-form.core.ts": {
+    "buildBarPayloadFromFormValues": "core-form-schema"
+  },
+  "apps/pragma/site/src/routes/bars/bars-page.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/catalog/SongDetailPage.tsx": {
+    "SongDetailPage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/catalog/SongEditPage.tsx": {
+    "SongEditPage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/catalog/SongScenePage.tsx": {
+    "SongScenePage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/catalog/catalog-page.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/catalog/catalog-page.core.ts": {
+    "selectVisibleSongs": "core-view-projection"
+  },
+  "apps/pragma/site/src/routes/catalog/chart-kind.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/catalog/chart-kind.utils.ts": {
+    "extractChartKind": "core-lookup-table"
+  },
+  "apps/pragma/site/src/routes/catalog/scene-view.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/catalog/scene-view.core.ts": {
+    "clampSceneFontSize": "utils-pure-module"
+  },
+  "apps/pragma/site/src/routes/catalog/song-draft.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/catalog/song-draft.core.ts": {
+    "payloadFromDraft": "core-form-schema"
+  },
+  "apps/pragma/site/src/routes/catalog/song-lineup.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/catalog/song-lineup.core.ts": {
+    "buildSongLineupRows": "core-view-projection"
+  },
+  "apps/pragma/site/src/routes/catalog/song-notes.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/catalog/song-notes.core.ts": {
+    "selectSongNoteSections": "core-view-projection"
+  },
+  "apps/pragma/site/src/routes/catalog/tonality-label.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/catalog/tonality-label.utils.ts": {
+    "buildTonalityLabel": "utils-formatter"
+  },
+  "apps/pragma/site/src/routes/instruments/InstrumentsPage.tsx": {
+    "InstrumentsPage": "route-list-page"
+  },
+  "apps/pragma/site/src/routes/instruments/instruments-page.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/instruments/instruments-page.core.ts": {
+    "selectInstrumentDeletionEffect": "core-view-intent"
+  },
+  "apps/pragma/site/src/routes/login.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/login.core.ts": {
+    "selectLoginErrorMessageKey": "core-label-key"
+  },
+  "apps/pragma/site/src/routes/members/MembersPage.tsx": {
+    "MembersPage": "route-list-page"
+  },
+  "apps/pragma/site/src/routes/members/members-page.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/members/members-page.core.ts": {
+    "selectMemberWriteIntent": "core-view-intent"
+  },
+  "apps/pragma/site/src/routes/sessions/SessionsPage.tsx": {
+    "SessionsPage": "route-list-page"
+  },
+  "apps/pragma/site/src/routes/sessions/friends-count.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/sessions/friends-count.core.ts": {
+    "parseFriendsCounts": "core-parse-untrusted"
+  },
+  "apps/pragma/site/src/routes/sessions/session-facts.core.ts": {
+    "selectSessionFacts": "core-projection"
+  },
+  "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx": {
+    "SetlistEditorPage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx": {
+    "SetlistsPage": "route-list-page"
+  },
+  "apps/pragma/site/src/sw/manifest.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/sw/manifest.utils.ts": {
+    "pickNextSession": "utils-pure-module"
+  },
+  "apps/pragma/site/src/sw/sw-cache.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/sw/sw-cache.utils.ts": {
+    "isReadableApiPath": "utils-pure-module"
+  },
+  "eslint-rules/ast-walk.js": {
+    "forEachDescendant": "lint-rule-predicate"
+  },
+  "eslint-rules/atomic-design-composition.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/atomic-design-composition.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/atomic-design-import-direction.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/atomic-design-import-direction.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/conditions-live-in-pure-functions.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/conditions-live-in-pure-functions.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/decisions.js": {
+    "isShapeTest": "lint-rule-predicate"
+  },
+  "eslint-rules/function-names-are-verb-phrases.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/function-names-are-verb-phrases.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/identifier-segments.js": {
+    "readIdentifierSegments": "lint-rule-predicate"
+  },
+  "eslint-rules/impurity.js": {
+    "isPureFile": "lint-rule-predicate"
+  },
+  "eslint-rules/no-abbreviated-identifier.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-abbreviated-identifier.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-adapter-import-in-pure-module.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-api-anchor-in-site.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-api-anchor-in-site.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-array-methods-in-controllers.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-array-methods-in-controllers.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-circle-in-non-uniform-svg.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-circle-in-non-uniform-svg.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-comments.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-comments.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-component-css-imports.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-component-css-imports.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-components-outside-buckets.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-components-outside-buckets.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-controller-imports-outside-service.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-controller-imports-outside-service.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-cross-slice-repository-imports.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-cross-slice-repository-imports.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-database-client-outside-repository.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-database-client-outside-repository.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-direct-api-fetch-in-site.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-direct-api-fetch-in-site.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-discarded-await-before-navigation.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-discarded-await-before-navigation.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-dynamic-translation-keys.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-dynamic-translation-keys.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-flat-components-folder.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-flat-components-folder.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-french-identifiers.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-french-identifiers.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-horizontal-folders-in-api.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-horizontal-folders-in-api.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-impure-calls-in-core-files.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-impure-calls-in-core-files.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-inline-subscribe-in-use-sync-external-store.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-inline-subscribe-in-use-sync-external-store.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-literal-jsx-text.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-literal-jsx-text.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-outbound-call-outside-adapter.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-outbound-call-outside-adapter.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-query-hooks-outside-organisms.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-query-hooks-outside-organisms.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-raw-sql-outside-migrations.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-raw-sql-outside-migrations.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-refetch-of-optimistically-written-query.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-refetch-of-optimistically-written-query.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-server-state-in-use-state.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-server-state-in-use-state.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-step-named-value.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-step-named-value.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-string-concatenated-class-names.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-string-concatenated-class-names.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-type-assertion-except-unknown.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-type-assertion-except-unknown.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-vendor-sdk-outside-adapter.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-vendor-sdk-outside-adapter.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/pure-functions-live-in-core-files.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/pure-functions-live-in-core-files.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/test-file-has-sibling-source.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/test-file-has-sibling-source.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/verb-promises-match-return-type.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/verb-promises-match-return-type.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "infra/cdk/src/constructs/dsql-cluster.ts": {
+    "DsqlCluster": "reusable-cdk-construct"
+  },
+  "infra/cdk/src/constructs/dsql-schema.ts": {
+    "assertCredentialTablesDecided": "reusable-cdk-construct"
+  },
+  "infra/cdk/src/constructs/lambda-api.ts": {
+    "LambdaApi": "reusable-cdk-construct"
+  },
+  "infra/cdk/src/constructs/previewable-app.ts": {
+    "PreviewableApp": "reusable-cdk-construct"
+  },
+  "infra/cdk/src/constructs/static-site.ts": {
+    "StaticSite": "reusable-cdk-construct"
+  },
+  "infra/cdk/src/internal/cf-host-routing-function.ts": {
+    "HOST_ROUTING_FUNCTION_CODE": "cloudfront-function-source"
+  },
+  "infra/cdk/src/internal/env.ts": {
+    "requireEnv": "environment-reader"
+  },
+  "infra/cdk/src/internal/migration-runner/clone-from-schema.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts": {
+    "buildCloneInsertSql": "utils-pure-module"
+  },
+  "infra/cdk/src/internal/migration-runner/pending-migrations.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/migration-runner/pending-migrations.utils.ts": {
+    "selectPendingMigrations": "utils-pure-module"
+  },
+  "infra/cdk/src/internal/migration-runner/statement-rewrites.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/migration-runner/statement-rewrites.utils.ts": {
+    "splitStatements": "utils-pure-module"
+  },
+  "infra/cdk/src/internal/naming.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/naming.utils.ts": {
+    "stackName": "utils-pure-module"
+  },
+  "infra/cdk/src/internal/stage-wiring.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/stage-wiring.utils.ts": {
+    "selectSameOriginApiDomainName": "construct-stage-selector"
+  },
+  "infra/cdk/src/internal/tags.ts": {
+    "standardTagPairs": "utils-pure-module"
+  },
+  "infra/cdk/test/unit/cf-host-routing-function.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/test/unit/dsql-cluster-stack.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/dsql-cluster.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/dsql-schema.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/env.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "infra/cdk/test/unit/eradication-checks.test.ts": {
+    "describe": "test-artifact-audit"
+  },
+  "infra/cdk/test/unit/lambda-api.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/migration-runner-clone.test.ts": {
+    "describe": "test-handler-mocked-sdk"
+  },
+  "infra/cdk/test/unit/oidc.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/previewable-app.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/static-site-spa-fallback.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/static-site.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/tags.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/vitest.config.ts": {
+    "defineConfig": "workspace-test-config"
+  },
+  "infra/shared/bin/shared.ts": {
+    "app": "cdk-app-entrypoint"
+  },
+  "infra/shared/lib/certs-stack.ts": {
+    "CertsStack": "shared-account-stack"
+  },
+  "infra/shared/test/unit/certs-stack.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/shared/test/unit/shared-stack.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/shared/vitest.config.ts": {
+    "defineConfig": "workspace-test-config"
+  }
+}

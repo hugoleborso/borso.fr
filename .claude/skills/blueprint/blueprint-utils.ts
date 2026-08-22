@@ -228,3 +228,42 @@ export function listAnnotationProblems(
 
   return problems;
 }
+
+const DECLARATION_PATTERNS = [
+  /^\s*(?:export\s+)?(?:default\s+)?(?:async\s+)?function\s+([A-Za-z_$][\w$]*)/,
+  /^\s*(?:export\s+)?(?:const|let|class|interface|type|enum)\s+([A-Za-z_$][\w$]*)/,
+  /^\s*export\s*\{\s*([A-Za-z_$][\w$]*)/,
+  /^\s*export\s+default\s+([A-Za-z_$][\w$]*)?/,
+  /^\s*(?:export\s+)?(?:public\s+|private\s+|protected\s+)?(?:static\s+)?(?:async\s+)?([A-Za-z_$][\w$]*)\s*[(<]/,
+];
+
+const CONTINUATION_PATTERN = /^\s*(?:\/\/|\/\*|\*|$)/;
+
+export const UNRESOLVED_SUBJECT = 'unresolved';
+
+/**
+ * @Blueprint generator-annotation-subject
+ * @BlueprintName Annotation Subject Resolution
+ * @BlueprintUsage Use when a generator has to record not only that an annotation exists but what it is attached to.
+ * @BlueprintDescription Reads forward from the annotation's line past blank lines and further comment lines to the first declaration, and returns the name it declares. A marker is bound to its subject by position alone, so a function inserted between the two silently moves the claim; recording the name is what lets a later run notice that the subject changed, since the counts a generator otherwise tracks are identical before and after.
+ */
+export function resolveAnnotationSubject(fileContent: string, lineNumber: number): string {
+  const lines = fileContent.split('\n');
+  for (let index = lineNumber; index < lines.length; index += 1) {
+    const line = lines[index] ?? '';
+    if (CONTINUATION_PATTERN.test(line)) continue;
+    for (const pattern of DECLARATION_PATTERNS) {
+      const match = pattern.exec(line);
+      if (match === null) continue;
+      return match[1] ?? 'default';
+    }
+    return UNRESOLVED_SUBJECT;
+  }
+  return UNRESOLVED_SUBJECT;
+}
+
+export function hasDeclarationOf(fileContent: string, symbolName: string): boolean {
+  return fileContent
+    .split('\n')
+    .some((line) => DECLARATION_PATTERNS.some((pattern) => pattern.exec(line)?.[1] === symbolName));
+}

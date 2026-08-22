@@ -67,7 +67,8 @@ export interface ReviewableFile {
   readonly contentHash: string;
 }
 
-export type SealFailureReason = 'unsealed' | 'sealed-against-an-older-ledger';
+export type SealFailureReason =
+  'never-reviewed' | 'edited-since-it-was-reviewed' | 'sealed-against-an-older-ledger';
 
 export interface SealFailure {
   readonly path: string;
@@ -89,7 +90,11 @@ export function verifySeals(
   for (const file of reviewable) {
     const matching = ledger.filter((entry) => entry.contentHash === file.contentHash);
     if (matching.length === 0) {
-      failures.push({ path: file.path, reason: 'unsealed' });
+      const wasReviewedBefore = ledger.some((entry) => entry.path === file.path);
+      failures.push({
+        path: file.path,
+        reason: wasReviewedBefore ? 'edited-since-it-was-reviewed' : 'never-reviewed',
+      });
       continue;
     }
     if (!matching.some((entry) => entry.ledgerHash === currentLedgerHash)) {

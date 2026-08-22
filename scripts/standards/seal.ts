@@ -116,11 +116,18 @@ function verify(): void {
   }
 
   const verification = verifySeals(reviewable, readSealEntries(), readEnforcementLedgerHash());
+  const failingPaths = new Set(verification.failures.map((failure) => failure.path));
+  console.log(`Reviewable against ${base}: ${String(reviewable.length)} file(s).`);
+  for (const file of reviewable) {
+    if (failingPaths.has(file.path)) continue;
+    console.log(`  ${file.path} — sealed`);
+  }
   if (verification.failures.length === 0) {
     console.log(`${String(verification.sealedCount)} changed file(s) carry a current seal.`);
     return;
   }
 
+  console.error('');
   console.error(
     `${String(verification.failures.length)} of ${String(reviewable.length)} changed file(s) are not cleared by the standards reviewer:`,
   );
