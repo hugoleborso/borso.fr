@@ -71,12 +71,18 @@ describe('listMeaningConnascence', () => {
       ],
       INDEX,
     );
-    expect(findings).toHaveLength(1);
-    expect(findings[0]?.subject).toBe('"chordpro"');
-    expect(findings[0]?.degree).toBe(2);
-    expect(findings[0]?.occurrences.map((each) => each.detail)).toStrictEqual([
-      'inline literal',
-      'named constant',
+    expect(findings).toStrictEqual([
+      {
+        kind: 'meaning',
+        subject: '"chordpro"',
+        degree: 2,
+        locality: 1,
+        score: 6,
+        occurrences: [
+          { path: SONGS_CONTROLLER.path, line: 4, detail: 'inline literal' },
+          { path: SONGS_SERVICE.path, line: 9, detail: 'named constant' },
+        ],
+      },
     ]);
   });
 
@@ -112,6 +118,15 @@ describe('listAlgorithmConnascence', () => {
       '/[a-z]+-[0-9]+/',
       'body of slugify',
     ]);
+    expect(findings.map((each) => each.kind)).toStrictEqual(['algorithm', 'algorithm']);
+    expect(findings[0]?.occurrences).toStrictEqual([
+      { path: SONGS_CONTROLLER.path, line: 3, detail: 'regular expression' },
+      { path: BARS_SERVICE.path, line: 7, detail: 'regular expression' },
+    ]);
+    expect(findings[1]?.occurrences).toStrictEqual([
+      { path: SONGS_CONTROLLER.path, line: 20, detail: 'slugify' },
+      { path: BARS_SERVICE.path, line: 30, detail: 'slugify' },
+    ]);
   });
 
   it('names a shared body after the first declaration that carried the digest', () => {
@@ -137,13 +152,22 @@ describe('listPositionConnascence', () => {
       new Map([[SONGS_SERVICE.path, [CATALOG_PAGE.path]]]),
       INDEX,
     );
-    expect(findings).toHaveLength(1);
-    expect(findings[0]?.degree).toBe(4);
-    expect(findings[0]?.locality).toBe(3);
-    expect(findings[0]?.score).toBe(96);
-    expect(findings[0]?.occurrences[0]?.detail).toBe(
-      '4 positional parameters, 1 importing file(s)',
-    );
+    expect(findings).toStrictEqual([
+      {
+        kind: 'position',
+        subject: 'rankSongs/4',
+        degree: 4,
+        locality: 3,
+        score: 96,
+        occurrences: [
+          {
+            path: SONGS_SERVICE.path,
+            line: 12,
+            detail: '4 positional parameters, 1 importing file(s)',
+          },
+        ],
+      },
+    ]);
   });
 
   it('treats a signature nothing imports as local', () => {
@@ -153,6 +177,9 @@ describe('listPositionConnascence', () => {
       INDEX,
     );
     expect(findings[0]?.locality).toBe(0);
+    expect(findings[0]?.occurrences[0]?.detail).toBe(
+      '3 positional parameters, 0 importing file(s)',
+    );
   });
 });
 
@@ -174,9 +201,23 @@ describe('listValueConnascence', () => {
       ]),
       INDEX,
     );
-    expect(findings).toHaveLength(1);
-    expect(findings[0]?.degree).toBe(2);
-    expect(findings[0]?.subject).toBe('ChartKind = "pdf" | "image"');
+    expect(findings).toStrictEqual([
+      {
+        kind: 'value',
+        subject: 'ChartKind = "pdf" | "image"',
+        degree: 2,
+        locality: 3,
+        score: 64,
+        occurrences: [
+          { path: SONGS_SERVICE.path, line: 5, detail: 'type ChartKind' },
+          {
+            path: CATALOG_PAGE.path,
+            line: 0,
+            detail: 're-enumerates every member of ChartKind',
+          },
+        ],
+      },
+    ]);
   });
 
   it('excuses a file that imports the union and reports nothing when no file echoes it', () => {
@@ -229,9 +270,36 @@ describe('listExecutionConnascence', () => {
       ],
       INDEX,
     );
-    expect(findings).toHaveLength(1);
-    expect(findings[0]?.subject).toBe(`cachedClient in ${SONGS_SERVICE.path}`);
-    expect(findings[0]?.locality).toBe(0);
+    expect(findings).toStrictEqual([
+      {
+        kind: 'execution',
+        subject: `cachedClient in ${SONGS_SERVICE.path}`,
+        degree: 2,
+        locality: 0,
+        score: 6,
+        occurrences: [
+          { path: SONGS_SERVICE.path, line: 3, detail: 'connect' },
+          { path: SONGS_SERVICE.path, line: 3, detail: 'query' },
+        ],
+      },
+    ]);
+  });
+
+  it('skips state nothing writes', () => {
+    expect(
+      listExecutionConnascence(
+        [
+          {
+            path: SONGS_SERVICE.path,
+            name: 'neverWritten',
+            writers: [],
+            readers: ['query'],
+            line: 3,
+          },
+        ],
+        INDEX,
+      ),
+    ).toStrictEqual([]);
   });
 });
 
@@ -304,6 +372,32 @@ describe('summaries, ranking and the baseline', () => {
       'connascence:value': 0,
       'connascence-score:apps/pragma': 32,
     });
+  });
+
+  it('lists workspace counters in a stable order whatever order the findings arrived in', () => {
+    const infra: SourceFile = {
+      path: 'infra/cdk/src/constructs/static-site.ts',
+      workspace: 'infra/cdk',
+      container: 'src',
+      context: 'constructs',
+      imports: [],
+    };
+    const index = new Map(INDEX);
+    index.set(infra.path, infra);
+    const across = [
+      ...listMeaningConnascence(
+        [
+          { path: infra.path, value: '"eu-west-3"', line: 1, named: false },
+          { path: SONGS_SERVICE.path, value: '"eu-west-3"', line: 1, named: false },
+        ],
+        index,
+      ),
+      ...findings,
+    ];
+    expect(Object.keys(buildBaseline(across, index)).slice(-2)).toStrictEqual([
+      'connascence-score:apps/pragma',
+      'connascence-score:infra/cdk',
+    ]);
   });
 
   it('fails only the counters that went up, treating an absent counter as zero', () => {

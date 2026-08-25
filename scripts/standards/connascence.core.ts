@@ -106,8 +106,7 @@ export function localityOf(
   let widest = SAME_FILE;
   for (const left of known) {
     for (const right of known) {
-      const distance = distanceBetween(left, right);
-      if (distance > widest) widest = distance;
+      widest = Math.max(widest, distanceBetween(left, right));
     }
   }
   return widest;
