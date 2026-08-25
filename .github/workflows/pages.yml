@@ -81,6 +81,7 @@ jobs:
             scripts/standards/rule-provenance.ts \
             scripts/standards/hotspots.ts \
             scripts/standards/temporal-coupling.ts \
+            scripts/standards/connascence.ts \
             scripts/standards/enforcement-ledger.ts; do
             pnpm exec tsx "$generator"
           done
@@ -92,6 +93,7 @@ jobs:
              docs/standards/rule-provenance.md \
              docs/standards/hotspots.md \
              docs/standards/temporal-coupling.md \
+             docs/standards/connascence.md \
              docs/standards/enforcement-ledger.md \
              docs/architecture/reports/
 

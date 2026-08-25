@@ -84,6 +84,7 @@ read the rest.
 | 11     | [Database](./11-database.md)                            | Drizzle, migrations, and transactions                  |
 | 12     | [Lint and gates](./12-linting-and-gates.md)             | ESLint, hooks, and CI                                  |
 | 13     | [Dependencies](./13-dependencies.md)                    | One version per dependency, in the pnpm catalog        |
+| 14     | [Connascence](./14-connascence.md)                      | What must change together, counted and ratcheted       |
 
 ## How a standard differs from a blueprint
 

@@ -8,7 +8,7 @@
 #
 #   scripts/reports.sh                # everything, ~20s
 #   scripts/reports.sh blueprints     # the index, the heatmap, the defects page, the hook's lookup
-#   scripts/reports.sh standards      # the enforcement ledger, drift, provenance, hotspots, coupling
+#   scripts/reports.sh standards      # the enforcement ledger, drift, provenance, hotspots, coupling, connascence
 #   scripts/reports.sh maps           # the architecture maps and models
 #   scripts/reports.sh all --missing-only   # only the ones absent from the tree
 #
@@ -37,6 +37,7 @@ output_of() {
     *rule-provenance.ts) echo docs/standards/rule-provenance.md ;;
     *hotspots.ts) echo docs/standards/hotspots.md ;;
     *temporal-coupling.ts) echo docs/standards/temporal-coupling.md ;;
+    *connascence.ts) echo docs/standards/connascence.md ;;
     *enforcement-ledger.ts) echo docs/standards/enforcement-ledger.md ;;
     *architecture-graph.ts) echo docs/architecture/pragma-architecture.json ;;
     *) echo '' ;;
@@ -55,6 +56,7 @@ STANDARDS_GENERATORS=(
   scripts/standards/rule-provenance.ts
   scripts/standards/hotspots.ts
   scripts/standards/temporal-coupling.ts
+  scripts/standards/connascence.ts
   scripts/standards/enforcement-ledger.ts
 )
 

@@ -111,6 +111,14 @@ if [ -n "$staged_lintable" ]; then
   # existing backlog never blocks a commit and the next divergence does. A git
   # index read plus one pass over the tree, so it belongs on the commit.
   run_generator_check scripts/standards/convention-drift.ts
+  # Connascence, on the same ratchet. A literal two files now share, a union a
+  # third file re-enumerates, a signature that grew a fourth positional
+  # parameter: each is a thing that must now change in more than one place, and
+  # each is cheap to see the moment it appears and expensive to see at twenty
+  # sites. Scoped per workspace, because two applications that never import each
+  # other can hold the same literal without either having to change.
+  # 2.4 s over 640 files, so it belongs on the commit.
+  run_generator_check scripts/standards/connascence.ts
   set -e
 fi
 

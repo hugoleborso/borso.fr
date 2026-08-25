@@ -1,0 +1,8 @@
+{
+  "json": "Hono zValidator target, not a value this repository chose. 36 call sites, all zValidator('json').",
+  "param": "Hono zValidator target. 32 call sites, all zValidator('param').",
+  "query": "Hono zValidator target. 2 call sites, all zValidator('query').",
+  "form": "Hono zValidator target, reserved so a first use does not read as a finding.",
+  "header": "Hono zValidator target, reserved so a first use does not read as a finding.",
+  "cookie": "Hono zValidator target, reserved so a first use does not read as a finding."
+}

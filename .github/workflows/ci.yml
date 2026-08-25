@@ -102,6 +102,7 @@ jobs:
             scripts/standards/rule-provenance.ts \
             scripts/standards/hotspots.ts \
             scripts/standards/temporal-coupling.ts \
+            scripts/standards/connascence.ts \
             scripts/standards/enforcement-ledger.ts \
             scripts/architecture/architecture-graph.ts; do
             pnpm exec tsx "$generator"
@@ -202,6 +203,12 @@ jobs:
       # someone follows the link.
       - run: pnpm exec tsx scripts/blueprints/blueprint-defects.ts --check
       - run: pnpm exec tsx scripts/standards/convention-drift.ts --check
+      # Connascence, on a baseline that only goes down. Mirrors the pre-commit
+      # hook, which runs only when a lintable file is staged: a commit that
+      # deletes the last caller of a shared literal moves the counts without
+      # staging any source, and a bypassed hook moves them without staging
+      # anything at all.
+      - run: pnpm exec tsx scripts/standards/connascence.ts --check
       # Every `## Enforced by` bullet in docs/standards/ resolves against the
       # live ESLint configuration and the checked-in hooks. Fails on a rule
       # cited and enabled nowhere, a script no hook invokes, a gate whose
