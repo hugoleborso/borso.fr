@@ -16,3 +16,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [17:18] `main` the local dev database kept an admin_credentials row from an earlier seed, so the seeded password did not work and the login said only Wrong password; recovering it meant deleting the app_config row by hand
 - [17:18] `main` the preview seed fixture shipped chart: null for every song, so Mode Scene had nothing to render on any preview deploy and no screenshot of it was possible without hand-writing charts first
 - [17:18] `main` argent gesture-swipe answers with its own help text on Chromium instead of an error naming gesture-scroll, so a failed swipe reads as a wrong flag rather than a wrong tool
+- [17:40] `main` the GitHub MCP PR-body sanitizer also backtick-wraps a /tree/<sha>/ folder URL when the path ends in a dated screenshots folder, while an identical /tree/ link to a source folder survived in the same body — the knowledge doc lists the extension rule only
