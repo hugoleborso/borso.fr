@@ -91,7 +91,7 @@ buttons do the same thing for anyone not using a wheel or a touchscreen.
 | 1 Context | Actors, the system, external systems                      | The manifest, cross-checked against tags        |
 | 2 Container | Deployable and build-time units and the edges between them | Container of each file, plus real imports      |
 | 3 Component | Bounded contexts and front-end areas                     | Folder, or a `@Feature` tag when one is present |
-| **3.5 User action** | One thing a person does, walked end to end     | Query hooks, then identifier references         |
+| **3.5 User action** | One page, and what a person does from it       | Router screens, then query hooks and identifier references |
 | 4 Code    | Every file and every import                               | The module graph                                |
 
 ### Why 3.5 exists
@@ -103,8 +103,15 @@ Nobody appends a row to `setlist_entry`; they add a song to a setlist.
 
 So the unit is a **user action**, and the level draws one flow per action: the
 components that trigger it, the hook, the endpoint, and every function behind
-that endpoint down to the tables and external systems. Pick a feature, then an
-action, or take **Everything in <feature>** to see where its actions meet.
+that endpoint down to the tables and external systems.
+
+Actions are grouped by the **page** they are reachable from, because a page is
+where a person is when they act. Picking a page starts at **Open the page**,
+which draws its arrival: every read it fires and everything behind those reads.
+The actions listed after it are the writes that page can send, and
+**Everything in <page>** draws all of them at once. Three journeys are not
+pages and sit with them: `shell`, `request`, and `reached from no page` for the
+hooks no screen renders.
 
 A flow starts where a person starts: the URL. The router is the one place that
 ties an address to a component, so `<Route path="/bars" element={<BarsPage />} />`

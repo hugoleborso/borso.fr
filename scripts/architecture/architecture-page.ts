@@ -297,7 +297,7 @@ function renderJourneys(
   return `
       <div class="graph journey" data-level="journey">
         <div class="journey-picker">
-          <span class="journey-picker-label">Feature</span>
+          <span class="journey-picker-label">Page</span>
           <div class="journey-features">
             ${journeys.features
               .map((feature) => {
@@ -947,7 +947,7 @@ ${PAGE_STYLES}
 
   <section class="level" id="level-slice" hidden>
     <h2>Level 3.5 — User actions${renderActionCount(journeys, routeTotal)}</h2>
-    <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written. Picking a feature rather than an action draws what that feature is made of, down to the atoms its pages render. Two journeys are not data flows and are listed with the rest: <b>shell</b>, opening the application, and <b>request</b>, arriving at the API before a route is chosen.</p>
+    <p class="summary">One page, and what a person can do from it. Picking a page opens with <b>Open the page</b>, which draws what happens on arrival — every read the page fires, the endpoints they reach, and every function behind them down to the tables and external systems. The actions after it are the writes that page can send, one per exported hook in a query module, so the names are the ones whoever wrote them chose and the chain comes from the calls as written. Picking the page itself rather than one action draws all of it at once, down to the atoms the page renders. Three journeys are not pages and are listed with the rest: <b>shell</b>, opening the application, <b>request</b>, arriving at the API before a route is chosen, and <b>reached from no page</b>, the hooks no screen renders.</p>
     ${renderJourneys(journeys, journeyLayouts, statuses?.get('code'), sources)}
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     ${renderUnreachedByAction(journeys, slices)}

@@ -345,16 +345,176 @@ export interface JourneyModel {
 
 const SHELL_FEATURE_ID = 'shell';
 const REQUEST_FEATURE_ID = 'request';
+const PAGE_JOURNEY_PREFIX = 'page:';
+const NO_PAGE_JOURNEY_ID = 'reached-from-no-page';
+const OPEN_ACTION_SUFFIX = ':open';
+const OVERVIEW_GRAPH_SUFFIX = ':__all__';
+const READ_METHOD = 'GET';
+
+function overviewGraphIdOf(journeyId: string): string {
+  return `${journeyId}${OVERVIEW_GRAPH_SUFFIX}`;
+}
 
 const JOURNEY_LABELS: Record<string, string> = {
   [SHELL_FEATURE_ID]: 'opening the app',
   [REQUEST_FEATURE_ID]: 'serving a request',
+  [NO_PAGE_JOURNEY_ID]: 'reached from no page',
   shared: 'shared front end',
 };
 
 function journeyLabel(featureId: string): string {
   return JOURNEY_LABELS[featureId] ?? featureId;
 }
+interface HookJourneyAction {
+  readonly action: JourneyAction;
+  readonly graph: JourneyGraph;
+  readonly isRead: boolean;
+  readonly screens: readonly OwnedScreenRoute[];
+}
+
+interface PageBucket {
+  readonly screen: OwnedScreenRoute;
+  readonly reads: HookJourneyAction[];
+  readonly writes: HookJourneyAction[];
+}
+
+function mergeGraphs(graphs: readonly JourneyGraph[]): JourneyGraph {
+  return {
+    nodes: dedupeNodes(graphs.flatMap((graph) => graph.nodes)),
+    edges: dedupeEdges(graphs.flatMap((graph) => graph.edges)),
+  };
+}
+
+function screenCompositionGraph(
+  screen: OwnedScreenRoute,
+  fileByPath: ReadonlyMap<string, ArchitectureFile>,
+  sources: Map<string, SourceEntry>,
+): JourneyGraph {
+  const screenNode: GraphNode = {
+    id: `screen:${screen.path}`,
+    label: screen.path,
+    kind: 'step-screen',
+    detail: `${screen.component} renders at ${screen.path}`,
+    group: 'screen',
+    blueprints: [],
+    followsBlueprints: [],
+    fileCount: 0,
+    layer: 'screen',
+    icon: '\u{1F517}',
+    lines: ['screen'],
+  };
+  if (screen.componentFile === null) return { nodes: [screenNode], edges: [] };
+  const rendered = renderedBy([screen.componentFile], fileByPath, () => false);
+  const renderedPaths = new Set(rendered.map((file) => file.path));
+  const nodes = [screenNode, ...rendered.map((file) => compositionNode(file, sources))];
+  const edges: GraphEdge[] = [
+    { from: screenNode.id, to: `ui:${screen.componentFile}`, label: 'renders', kind: 'import' },
+  ];
+  for (const file of rendered) {
+    for (const edge of file.imports) {
+      if (edge.targetFile === null || !renderedPaths.has(edge.targetFile)) continue;
+      edges.push({
+        from: `ui:${file.path}`,
+        to: `ui:${edge.targetFile}`,
+        label: 'renders',
+        kind: 'import',
+      });
+    }
+  }
+  return { nodes: dedupeNodes(nodes), edges: dedupeEdges(edges) };
+}
+
+function openPageAction(page: PageBucket, pageId: string, graph: JourneyGraph): JourneyAction {
+  return {
+    id: `${pageId}${OPEN_ACTION_SUFFIX}`,
+    label: 'Open the page',
+    hook: '',
+    feature: pageId,
+    method: '',
+    path: page.screen.path,
+    triggerCount: page.reads.length,
+    reaches: [
+      ...new Set(
+        graph.nodes
+          .filter((node) => node.kind === 'step-table' || node.kind === 'step-external')
+          .map((node) => node.label),
+      ),
+    ],
+  };
+}
+
+function buildPageJourneys(
+  hookActions: readonly HookJourneyAction[],
+  screens: readonly OwnedScreenRoute[],
+  fileByPath: ReadonlyMap<string, ArchitectureFile>,
+  sources: Map<string, SourceEntry>,
+  graphs: Map<string, JourneyGraph>,
+): JourneyFeature[] {
+  const pages = new Map<string, PageBucket>();
+  for (const screen of screens) {
+    if (pages.has(screen.path)) continue;
+    pages.set(screen.path, { screen, reads: [], writes: [] });
+  }
+  const placed = new Set<string>();
+  for (const hook of hookActions) {
+    for (const screen of hook.screens) {
+      const page = pages.get(screen.path);
+      if (page === undefined) continue;
+      placed.add(hook.action.id);
+      if (hook.isRead) page.reads.push(hook);
+      else page.writes.push(hook);
+    }
+  }
+
+  const journeys: JourneyFeature[] = [];
+  for (const [path, page] of [...pages.entries()].sort(([left], [right]) =>
+    left.localeCompare(right),
+  )) {
+    const pageId = `${PAGE_JOURNEY_PREFIX}${path}`;
+    const openGraph =
+      page.reads.length > 0
+        ? mergeGraphs(page.reads.map((hook) => hook.graph))
+        : screenCompositionGraph(page.screen, fileByPath, sources);
+    const openAction = openPageAction(page, pageId, openGraph);
+    graphs.set(openAction.id, openGraph);
+    const writeActions = page.writes
+      .map((hook) => ({ ...hook.action, id: `${pageId}:${hook.action.hook}`, feature: pageId }))
+      .sort((left, right) => left.label.localeCompare(right.label));
+    for (const [index, write] of writeActions.entries()) {
+      const source = page.writes[index];
+      if (source === undefined) continue;
+      graphs.set(write.id, source.graph);
+    }
+    graphs.set(
+      overviewGraphIdOf(pageId),
+      mergeGraphs([openGraph, ...page.writes.map((hook) => hook.graph)]),
+    );
+    journeys.push({
+      id: pageId,
+      label: path,
+      actions: [openAction, ...writeActions],
+      overview: true,
+    });
+  }
+
+  const orphans = hookActions.filter((hook) => !placed.has(hook.action.id));
+  if (orphans.length > 0) {
+    graphs.set(
+      overviewGraphIdOf(NO_PAGE_JOURNEY_ID),
+      mergeGraphs(orphans.map((hook) => hook.graph)),
+    );
+    journeys.push({
+      id: NO_PAGE_JOURNEY_ID,
+      label: journeyLabel(NO_PAGE_JOURNEY_ID),
+      actions: orphans
+        .map((hook) => hook.action)
+        .sort((left, right) => left.label.localeCompare(right.label)),
+      overview: true,
+    });
+  }
+  return journeys;
+}
+
 const SHARED_FEATURE_ID = 'shared';
 
 function isFrontEndModule(file: ArchitectureFile): boolean {
@@ -610,6 +770,8 @@ export function buildJourneys(
     .filter((file) => file.layer === QUERY_LAYER)
     .sort((left, right) => left.path.localeCompare(right.path));
 
+  const hookJourneyActions: HookJourneyAction[] = [];
+
   for (const module of queryModules) {
     const featureId = fileLabel(module.path)
       .replace(QUERIES_SUFFIX, '')
@@ -639,8 +801,11 @@ export function buildJourneys(
       const nodes: GraphNode[] = [];
       const edges: GraphEdge[] = [];
 
+      const reachingScreens = new Map<string, OwnedScreenRoute>();
+
       for (const trigger of triggers) {
         for (const screen of screensReaching(trigger.path, screens, importersOf)) {
+          reachingScreens.set(screen.path, screen);
           const screenId = `screen:${screen.path}`;
           nodes.push({
             id: screenId,
@@ -829,7 +994,7 @@ export function buildJourneys(
       featureNodes.push(...graph.nodes);
       featureEdges.push(...graph.edges);
 
-      actions.push({
+      const action: JourneyAction = {
         id: actionId,
         label: humaniseHook(exported.name),
         hook: exported.name,
@@ -844,22 +1009,25 @@ export function buildJourneys(
               .map((node) => node.label),
           ),
         ],
+      };
+      actions.push(action);
+      hookJourneyActions.push({
+        action,
+        graph,
+        isRead: call.method === READ_METHOD,
+        screens: [...reachingScreens.values()],
       });
     }
 
     if (actions.length === 0) continue;
     addComposition(featureNodes, featureEdges, fileByPath, sources, featureId);
-    graphs.set(`${featureId}:__all__`, {
+    graphs.set(overviewGraphIdOf(featureId), {
       nodes: dedupeNodes(featureNodes),
       edges: dedupeEdges(featureEdges),
     });
-    features.push({
-      id: featureId,
-      label: journeyLabel(featureId),
-      actions: actions.sort((left, right) => left.label.localeCompare(right.label)),
-      overview: true,
-    });
   }
+
+  features.push(...buildPageJourneys(hookJourneyActions, screens, fileByPath, sources, graphs));
 
   for (const entry of frontEndEntries(files, htmlEntries)) {
     const shell = buildShellJourney(entry, files, screens, fileByPath, sources, graphs);
@@ -901,7 +1069,7 @@ export function buildJourneys(
       }
     }
     const sharedGraph = { nodes: dedupeNodes(sharedNodes), edges: dedupeEdges(sharedEdges) };
-    graphs.set(`${SHARED_FEATURE_ID}:__all__`, sharedGraph);
+    graphs.set(overviewGraphIdOf(SHARED_FEATURE_ID), sharedGraph);
     features.push({
       id: SHARED_FEATURE_ID,
       label: journeyLabel(SHARED_FEATURE_ID),
