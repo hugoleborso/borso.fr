@@ -1,0 +1,22 @@
+{
+  "duplicatedLinePercent": {
+    "limit": 1.5,
+    "anchor": "half of SonarQube's default Sonar way gate, which fails above 3.0% duplicated lines on new code"
+  },
+  "maximumArity": {
+    "limit": 5,
+    "anchor": "below SonarSource rule S107, whose default maximum is 7 parameters"
+  },
+  "maximumCacheFanOut": {
+    "limit": 4,
+    "anchor": "well below the Coupling Between Objects limits in the literature, 9 in Microsoft's guidance and 14 in Sahraoui, Godin and Miceli"
+  },
+  "orphanCacheKeys": {
+    "limit": 0,
+    "anchor": "no industry number: a cache write naming a key no query reads is a defect, not a quantity to budget"
+  },
+  "maximumTimingDegree": {
+    "limit": 8,
+    "anchor": "no industry number exists for connascence; set from this repository's own distribution, whose worst cluster is 6"
+  }
+}

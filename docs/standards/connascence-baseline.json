@@ -3,11 +3,13 @@
   "connascence:position": 99,
   "connascence:algorithm": 9,
   "connascence:execution": 4,
+  "connascence:timing": 8,
+  "connascence:cache": 1,
   "connascence:value": 15,
   "connascence-score:apps/borso-fr": 2434,
-  "connascence-score:apps/borsouvertures": 1338,
-  "connascence-score:apps/last-loop-lepin": 8662,
-  "connascence-score:apps/pragma": 16072,
-  "connascence-score:infra/cdk": 572,
+  "connascence-score:apps/borsouvertures": 1366,
+  "connascence-score:apps/last-loop-lepin": 9306,
+  "connascence-score:apps/pragma": 16184,
+  "connascence-score:infra/cdk": 586,
   "connascence-score:infra/shared": 6
 }
