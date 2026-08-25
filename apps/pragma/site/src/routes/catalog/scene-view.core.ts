@@ -26,3 +26,21 @@ export function clampSemitoneOffset(semitones: number): number {
 export function formatSemitoneOffset(semitones: number): string {
   return semitones >= 0 ? `+${semitones}` : String(semitones);
 }
+
+export const SCENE_SCROLL_SPEED_MIN_PX_PER_SECOND = 10;
+export const SCENE_SCROLL_SPEED_MAX_PX_PER_SECOND = 120;
+export const SCENE_SCROLL_SPEED_STEP_PX_PER_SECOND = 10;
+export const SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND = 30;
+
+const MILLISECONDS_IN_SECOND = 1000;
+
+export function clampSceneScrollSpeed(pixelsPerSecond: number): number {
+  return Math.min(
+    SCENE_SCROLL_SPEED_MAX_PX_PER_SECOND,
+    Math.max(SCENE_SCROLL_SPEED_MIN_PX_PER_SECOND, pixelsPerSecond),
+  );
+}
+
+export function computeScrollStepPx(pixelsPerSecond: number, tickMs: number): number {
+  return (pixelsPerSecond * tickMs) / MILLISECONDS_IN_SECOND;
+}

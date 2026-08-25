@@ -22,6 +22,9 @@ export const buttonVariants = cva(
         ghost:
           'bg-transparent border border-transparent text-ink-900 hover:bg-[rgba(26,22,18,0.05)]',
         danger: 'bg-danger border border-danger text-bg-elev hover:opacity-90',
+        stage:
+          'bg-[rgba(255,255,255,0.08)] border border-[rgba(255,255,255,0.14)] text-stage-ink ' +
+          'hover:bg-[rgba(255,255,255,0.16)]',
       },
       size: {
         sm: `${COARSE_POINTER_MIN_HEIGHT} px-2 py-1 text-xs`,

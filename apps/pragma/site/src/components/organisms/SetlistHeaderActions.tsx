@@ -3,6 +3,7 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { useDeleteSetlist, useRenameSetlist } from '../../lib/queries/setlists.queries';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
@@ -42,6 +43,12 @@ export function SetlistHeaderActions({
   return (
     <>
       <div className="flex flex-wrap items-center gap-2 mb-4">
+        <Link to={`/setlists/${setlistId}/scene`}>
+          <Button variant="accent" type="button">
+            <Icon name="play" size={14} />
+            {t('scene.title')}
+          </Button>
+        </Link>
         {draftName === null ? (
           <Button variant="default" onClick={() => setDraftName(name)}>
             <Icon name="edit" size={14} />

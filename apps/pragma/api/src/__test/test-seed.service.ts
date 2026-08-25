@@ -1,4 +1,3 @@
-import type { InstrumentFamily } from '@domain/instrument.core';
 import type { Lineup } from '@domain/lineup.core';
 import { bootstrapAuth } from '../auth/auth.service';
 import { createInstrument } from '../instruments/instruments.service';
@@ -8,10 +7,17 @@ import { appendEntry, createSetlist } from '../setlists/setlists.service';
 import { createSong } from '../songs/songs.service';
 import { saveTransitionComment } from '../transitions/transitions.service';
 import {
+  BLANK_ENTRY_DETAIL,
+  SEED_INSTRUMENTS,
+  SEED_MEMBERS,
+  SEED_SONGS,
+  SEED_TRANSITION_COMMENT,
+  type SeedSong,
+} from './test-seed-fixture.core';
+import {
   buildSeedLineup,
   selectAdminCredentialsState,
   selectInstrumentIds,
-  type SeedLineupByMemberName,
 } from './test-seed.core';
 import { deleteAllDomainRows } from './test-seed.repository';
 
@@ -30,142 +36,13 @@ const SEED_SETLIST_NAME = 'Set principal';
 
 type SongCreateInput = Parameters<typeof createSong>[0];
 
-interface SeedInstrument {
-  readonly name: string;
-  readonly family: InstrumentFamily;
-}
-
-const SEED_INSTRUMENTS: readonly SeedInstrument[] = [
-  { name: 'Guitare', family: 'harmonic' },
-  { name: 'Clavier', family: 'harmonic' },
-  { name: 'Basse', family: 'harmonic' },
-  { name: 'Batterie', family: 'percussive' },
-  { name: 'Chant', family: 'vocal' },
-];
-
-interface SeedMember {
-  readonly firstName: string;
-  readonly color: string;
-  readonly instrumentNames: readonly string[];
-}
-
-const SEED_MEMBERS: readonly SeedMember[] = [
-  { firstName: 'Hugo', color: '#e0533a', instrumentNames: ['Batterie', 'Chant'] },
-  { firstName: 'Léa', color: '#2f8f6b', instrumentNames: ['Guitare', 'Chant'] },
-  { firstName: 'Marc', color: '#3a6ee0', instrumentNames: ['Basse'] },
-  { firstName: 'Sarah', color: '#b8841a', instrumentNames: ['Clavier', 'Chant'] },
-];
-
-interface SeedSong {
-  readonly title: string;
-  readonly artist: string;
-  readonly status: SongCreateInput['status'];
-  readonly tonalityStart: string | null;
-  readonly baseEnergy: number;
-  readonly lineup: SeedLineupByMemberName;
-  readonly structureNotes: string;
-  readonly gimmickNotes: string;
-  readonly notes: string;
-}
-
-const SEED_SONGS: readonly SeedSong[] = [
-  {
-    title: 'Slow Burn',
-    artist: 'The Embers',
-    status: 'concert_ready',
-    tonalityStart: 'Am',
-    baseEnergy: 3,
-    lineup: {
-      Hugo: ['Batterie', 'Chant'],
-      Léa: ['Guitare'],
-      Marc: ['Basse'],
-      Sarah: ['Clavier'],
-    },
-    structureNotes: 'intro ×4 · couplet · refrain · couplet · refrain · pont · refrain ×2',
-    gimmickNotes: 'Break complet avant le dernier refrain, Hugo compte 1-2-3-4 à voix haute.',
-    notes: 'Baisser le gain de la guitare sur le pont.',
-  },
-  {
-    title: 'Midnight Drive',
-    artist: 'Nova Reef',
-    status: 'concert_ready',
-    tonalityStart: 'C',
-    baseEnergy: 6,
-    lineup: {
-      Hugo: ['Batterie'],
-      Léa: ['Guitare', 'Chant'],
-      Marc: ['Basse'],
-      Sarah: ['Clavier'],
-    },
-    structureNotes: 'intro clavier 8 mesures · couplet · refrain · solo · refrain',
-    gimmickNotes: 'Le solo part sur un signe de Léa, pas sur un compte.',
-    notes: '',
-  },
-  {
-    title: 'Lightning',
-    artist: 'Volt',
-    status: 'rehearsed',
-    tonalityStart: 'E',
-    baseEnergy: 9,
-    lineup: { Hugo: ['Batterie'], Léa: ['Chant'], Sarah: ['Chant'] },
-    structureNotes: 'attaque directe sur le refrain, pas d’intro',
-    gimmickNotes: 'Marc ne joue pas : il change de basse pendant le morceau.',
-    notes: 'Enchaînement délicat, personne ne garde d’instrument harmonique avant.',
-  },
-  {
-    title: 'Afterglow',
-    artist: 'Nova Reef',
-    status: 'concert_ready',
-    tonalityStart: 'G',
-    baseEnergy: 5,
-    lineup: {
-      Hugo: ['Batterie', 'Chant'],
-      Léa: ['Guitare'],
-      Marc: ['Basse'],
-      Sarah: ['Clavier', 'Chant'],
-    },
-    structureNotes: 'couplet · refrain · couplet · refrain · outro instrumentale',
-    gimmickNotes: '',
-    notes: '',
-  },
-  {
-    title: 'Runaway Sun',
-    artist: 'The Embers',
-    status: 'wip',
-    tonalityStart: 'D',
-    baseEnergy: 8,
-    lineup: { Hugo: ['Batterie'], Léa: ['Guitare', 'Chant'], Marc: ['Basse'] },
-    structureNotes: '',
-    gimmickNotes: '',
-    notes: 'Le pont n’est pas encore calé.',
-  },
-  {
-    title: 'Last Call',
-    artist: 'Volt',
-    status: 'rehearsed',
-    tonalityStart: 'F',
-    baseEnergy: 4,
-    lineup: {
-      Hugo: ['Batterie', 'Chant'],
-      Léa: ['Guitare'],
-      Marc: ['Basse'],
-      Sarah: ['Clavier'],
-    },
-    structureNotes: 'couplet · refrain · pont long · refrain ×3',
-    gimmickNotes: 'Fin suspendue : tout le monde s’arrête sauf le clavier.',
-    notes: '',
-  },
-];
-
-const SEED_TRANSITION_COMMENT = 'Léa annonce le titre pendant que Marc change de basse.';
-
 function buildSongInput(song: SeedSong, defaultLineup: Lineup): SongCreateInput {
   return {
     title: song.title,
     artist: song.artist,
     status: song.status,
     links: [],
-    chart: null,
+    chart: { kind: 'chordpro', text: song.chordChartText },
     tonalityStart: song.tonalityStart,
     tonalityEnd: null,
     defaultLineup,
@@ -240,14 +117,15 @@ async function seedConcertSetlist(songIds: readonly string[], now: Date): Promis
   const created = await createSetlist({ name: SEED_SETLIST_NAME, sessionId: concert.id });
   if (created.kind === 'session-not-found')
     throw new Error('seeded concert vanished before its setlist was written');
-  for (const songId of songIds) {
+  for (const [index, songId] of songIds.entries()) {
+    const detail = SEED_SONGS[index]?.entry ?? BLANK_ENTRY_DETAIL;
     await appendEntry(created.setlist.id, {
       songId,
       energy: null,
       lineupOverride: null,
-      keyOverride: null,
-      capo: null,
-      notes: '',
+      keyOverride: detail.keyOverride,
+      capo: detail.capo,
+      notes: detail.notes,
     });
   }
 }
