@@ -93,11 +93,26 @@ export function computeSceneProgressPercent(index: number, entryCount: number): 
   return ((clampSceneIndex(index, entryCount) + 1) / entryCount) * FULL_PERCENT;
 }
 
+type PillDirection = -1 | 0 | 1;
+
+const NEXT_SONG_DISTANCE = 1;
+
+const PILL_STATE_BY_DIRECTION: Readonly<Record<PillDirection, ScenePillState>> = {
+  [-1]: 'done',
+  [0]: 'current',
+  [1]: 'upcoming',
+};
+
+function directionOf(distance: number): PillDirection {
+  if (distance < 0) return -1;
+  if (distance > 0) return 1;
+  return 0;
+}
+
 function selectPillState(index: number, currentIndex: number): ScenePillState {
-  if (index === currentIndex) return 'current';
-  if (index < currentIndex) return 'done';
-  if (index === currentIndex + 1) return 'next';
-  return 'upcoming';
+  const distance = index - currentIndex;
+  if (distance === NEXT_SONG_DISTANCE) return 'next';
+  return PILL_STATE_BY_DIRECTION[directionOf(distance)];
 }
 
 export function buildScenePills(

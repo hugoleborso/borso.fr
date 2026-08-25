@@ -23,7 +23,7 @@ function createSceneScroller(): SceneScroller {
   let carriedPx = 0;
 
   const stop = (): void => {
-    if (tickId !== null) clearInterval(tickId);
+    clearInterval(tickId ?? undefined);
     tickId = null;
     carriedPx = 0;
   };
@@ -32,7 +32,6 @@ function createSceneScroller(): SceneScroller {
     if (scrollBody === null) return;
     carriedPx += computeScrollStepPx(pixelsPerSecond, TICK_MS);
     const wholePx = Math.floor(carriedPx);
-    if (wholePx === 0) return;
     carriedPx -= wholePx;
     scrollBody.scrollTop += wholePx;
   };

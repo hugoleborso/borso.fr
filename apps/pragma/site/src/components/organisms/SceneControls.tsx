@@ -3,15 +3,15 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
+  canScrollFaster,
+  canScrollSlower,
+  canTransposeDown,
+  canTransposeUp,
+  canZoomIn,
+  canZoomOut,
   formatSemitoneOffset,
-  SCENE_FONT_SIZE_MAX_PX,
-  SCENE_FONT_SIZE_MIN_PX,
   SCENE_FONT_SIZE_STEP_PX,
-  SCENE_SCROLL_SPEED_MAX_PX_PER_SECOND,
-  SCENE_SCROLL_SPEED_MIN_PX_PER_SECOND,
   SCENE_SCROLL_SPEED_STEP_PX_PER_SECOND,
-  SCENE_TRANSPOSE_MAX_SEMITONES,
-  SCENE_TRANSPOSE_MIN_SEMITONES,
 } from '../../routes/catalog/scene-view.core';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
@@ -49,7 +49,7 @@ export function SceneControls({
           variant="stage"
           size="sm"
           onClick={() => onTransposeBy(-1)}
-          disabled={semitones <= SCENE_TRANSPOSE_MIN_SEMITONES}
+          disabled={!canTransposeDown(semitones)}
           aria-label={t('scene.transposeDown')}
         >
           -1
@@ -59,7 +59,7 @@ export function SceneControls({
           variant="stage"
           size="sm"
           onClick={() => onTransposeBy(1)}
-          disabled={semitones >= SCENE_TRANSPOSE_MAX_SEMITONES}
+          disabled={!canTransposeUp(semitones)}
           aria-label={t('scene.transposeUp')}
         >
           +1
@@ -71,7 +71,7 @@ export function SceneControls({
           variant="stage"
           size="sm"
           onClick={() => onZoomBy(-SCENE_FONT_SIZE_STEP_PX)}
-          disabled={fontSizePx <= SCENE_FONT_SIZE_MIN_PX}
+          disabled={!canZoomOut(fontSizePx)}
           aria-label={t('scene.zoomOut')}
         >
           A−
@@ -80,7 +80,7 @@ export function SceneControls({
           variant="stage"
           size="sm"
           onClick={() => onZoomBy(SCENE_FONT_SIZE_STEP_PX)}
-          disabled={fontSizePx >= SCENE_FONT_SIZE_MAX_PX}
+          disabled={!canZoomIn(fontSizePx)}
           aria-label={t('scene.zoomIn')}
         >
           A+
@@ -101,7 +101,7 @@ export function SceneControls({
           variant="stage"
           size="sm"
           onClick={() => onScrollSpeedBy(-SCENE_SCROLL_SPEED_STEP_PX_PER_SECOND)}
-          disabled={scrollSpeedPxPerSecond <= SCENE_SCROLL_SPEED_MIN_PX_PER_SECOND}
+          disabled={!canScrollSlower(scrollSpeedPxPerSecond)}
           aria-label={t('scene.scrollSlower')}
         >
           −
@@ -111,7 +111,7 @@ export function SceneControls({
           variant="stage"
           size="sm"
           onClick={() => onScrollSpeedBy(SCENE_SCROLL_SPEED_STEP_PX_PER_SECOND)}
-          disabled={scrollSpeedPxPerSecond >= SCENE_SCROLL_SPEED_MAX_PX_PER_SECOND}
+          disabled={!canScrollFaster(scrollSpeedPxPerSecond)}
           aria-label={t('scene.scrollFaster')}
         >
           +

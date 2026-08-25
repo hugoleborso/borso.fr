@@ -61,6 +61,7 @@ describe('holdScreenAwakeWhileAttached', () => {
     const { holdScreenAwakeWhileAttached } = await freshModule();
     holdScreenAwakeWhileAttached(document.createElement('dialog'));
     await settleRequests();
+    expect(sentinel.release).not.toHaveBeenCalled();
     holdScreenAwakeWhileAttached(null);
     expect(sentinel.release).toHaveBeenCalledOnce();
   });
@@ -114,6 +115,7 @@ describe('releaseScreenLock', () => {
     const { holdScreenAwakeWhileAttached, releaseScreenLock } = await freshModule();
     holdScreenAwakeWhileAttached(document.createElement('dialog'));
     await settleRequests();
+    expect(sentinel.release).not.toHaveBeenCalled();
     releaseScreenLock();
     await vi.waitFor(() =>
       expect(warn).toHaveBeenCalledWith({ surface: 'scene-wake-lock', error: failure }),

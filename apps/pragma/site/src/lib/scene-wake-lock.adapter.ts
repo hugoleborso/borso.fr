@@ -22,10 +22,10 @@ function releaseLock(lock: ReleasableLock): void {
 
 function createScreenLockHolder(): ScreenLockHolder {
   let held: ReleasableLock | null = null;
-  let isWanted = false;
+  let holdingFor: HTMLElement | null = null;
 
   const release = (): void => {
-    isWanted = false;
+    holdingFor = null;
     if (held === null) return;
     releaseLock(held);
     held = null;
@@ -38,15 +38,15 @@ function createScreenLockHolder(): ScreenLockHolder {
         return;
       }
       if (!('wakeLock' in navigator)) return;
-      isWanted = true;
+      holdingFor = element;
       navigator.wakeLock
         .request(SCREEN_LOCK)
         .then((sentinel) => {
-          if (isWanted) {
-            held = sentinel;
+          if (holdingFor === null) {
+            releaseLock(sentinel);
             return;
           }
-          releaseLock(sentinel);
+          held = sentinel;
         })
         .catch(report);
     },

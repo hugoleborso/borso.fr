@@ -56,8 +56,21 @@ describe('scene auto-scroll', () => {
     startSceneAutoScroll(READABLE_SPEED_PX_PER_SECOND);
     vi.advanceTimersByTime(ONE_SECOND_MS);
     attachSceneScrollBody(null);
+    expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(ONE_SECOND_MS);
     expect(body.scrollTop).toBe(READABLE_SPEED_PX_PER_SECOND);
+  });
+
+  it('keeps scrolling when a second body attaches, which a re-render can do', async () => {
+    const { attachSceneScrollBody, startSceneAutoScroll } = await freshModule();
+    const first = scrollableElement();
+    const second = scrollableElement();
+    attachSceneScrollBody(first);
+    startSceneAutoScroll(READABLE_SPEED_PX_PER_SECOND);
+    attachSceneScrollBody(second);
+    vi.advanceTimersByTime(ONE_SECOND_MS);
+    expect(second.scrollTop).toBe(READABLE_SPEED_PX_PER_SECOND);
+    expect(first.scrollTop).toBe(0);
   });
 
   it('replaces the running timer rather than adding a second one', async () => {
@@ -66,6 +79,7 @@ describe('scene auto-scroll', () => {
     attachSceneScrollBody(body);
     startSceneAutoScroll(SLOW_SPEED_PX_PER_SECOND);
     startSceneAutoScroll(READABLE_SPEED_PX_PER_SECOND);
+    expect(vi.getTimerCount()).toBe(1);
     vi.advanceTimersByTime(ONE_SECOND_MS);
     expect(body.scrollTop).toBe(READABLE_SPEED_PX_PER_SECOND);
   });
@@ -83,6 +97,7 @@ describe('scene auto-scroll', () => {
     attachSceneScrollBody(body);
     startSceneAutoScroll(READABLE_SPEED_PX_PER_SECOND);
     stopSceneAutoScroll();
+    expect(vi.getTimerCount()).toBe(0);
     vi.advanceTimersByTime(ONE_SECOND_MS);
     expect(body.scrollTop).toBe(0);
   });
