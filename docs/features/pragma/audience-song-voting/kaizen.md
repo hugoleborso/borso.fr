@@ -19,3 +19,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [22:03] `implement-03` git stash push -u followed by pop turned a staged git mv into an untracked add plus an unstaged delete, and the convention-drift check then died on ENOENT for the old path
 - [22:03] `implement-03` a locale-formatted time test passes against a UTC-slicing implementation on a UTC runner, so the assertion needs the zone pinned or it proves nothing
 - [22:07] `implement-03` kaizen.sh archive overwrote the earlier agent's archived entries instead of appending, so a second archive on the same feature loses the first round's friction log
+- [22:11] `implement-03` vi.stubEnv('TZ') pins the zone under vitest's own runner but not under Stryker's, so a green suite and a green push gate disagreed and only the mutation dry run said so

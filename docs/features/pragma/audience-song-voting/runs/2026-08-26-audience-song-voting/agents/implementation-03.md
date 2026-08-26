@@ -11,7 +11,8 @@ summary: >-
   error case had. One thing outside the blockers moved: two vote-page cases
   failed about one run in five before this round, and the wait they used is
   fixed rather than walked past. The pragma suite is 1322 tests green at 100%
-  per-file coverage, with eslint, prettier, knip, typecheck and build clean.
+  per-file coverage, with eslint, prettier, knip, typecheck, build and the
+  scoped mutation gate clean.
 artifacts:
   - apps/pragma/api/src/audience/audience.service.ts
   - apps/pragma/api/src/audience/audience.controller.ts
@@ -32,7 +33,8 @@ next:
 
 A fix round on `claude/concert-sound-voting-c7r8w7`, scoped to the four rows
 `technical-validation-03` failed the branch on. Three commits, one per subject,
-plus one for a flaky test the round could not push past.
+plus one for a flaky test the round could not push past and one correcting how
+the clock label is asserted.
 
 ## A1 — the suggestion route was an open write into the catalogue
 
@@ -96,10 +98,18 @@ returning the input untouched on a malformed ISO string as its sibling does.
 `i18n.language`, which is how `SetlistCatalogList` already feeds
 `formatSessionDate`.
 
-The core test pins the label under `TZ=Europe/Paris` through `vi.stubEnv`, so
-`2026-08-26T21:04:00.000Z` must render `23:04`. Without the pinned zone the
-case would pass on a UTC runner against the old slice, which is exactly how
-the defect survived.
+**The tests pin the locale, not the runner's zone.** The first version of them
+set `TZ=Europe/Paris` through `vi.stubEnv` and asserted `23:04`. That holds
+under vitest's own runner and not under Stryker's, whose worker does not read a
+`TZ` assignment as a timezone change: the suite was green, the coverage run was
+green, and the push gate's mutation dry run refused the branch. The property
+the label actually has to carry is that it goes through the viewer's locale,
+and a locale is an argument rather than ambient state, so `fr` must render a
+twenty-four hour clock and `en` a twelve hour one. Those two differ in shape in
+every zone, and the old slice returns the same five characters for both.
+`formatters.utils.test.ts` also pins the label to the local clock components,
+which is the half a slice gets right only on a runner sitting in UTC. Mutation
+score on the two files is 100, 52 mutants killed.
 
 ## D1 — the round-closed test the spec's first error case never had
 
@@ -146,6 +156,7 @@ optimistic update ran. Twenty consecutive runs of the file are green.
 | `pnpm --filter @borso-app/pragma run build` | clean |
 | `pnpm --filter @borso-app/pragma run test:coverage` | 140 files, 1322 tests, 100% statements, branches, functions and lines per file |
 | `pnpm exec knip` | clean |
+| `stryker run --mutate voting-round-panel.core.ts,formatters.utils.ts` | 100, 52 mutants killed |
 | `blueprint-indexing.ts --check` | annotations complete, index up to date |
 | `architecture-graph.ts --check` and `convention-drift.ts --check` | clean |
 | pre-commit, all three commits | every check green, never bypassed |
