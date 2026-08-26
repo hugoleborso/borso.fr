@@ -115,6 +115,15 @@ sequenceDiagram
 
 **Out of scope.** Promoting an audience-suggested song beyond `idea` status. Any record that a song was actually played. Moderating or removing a suggestion. Voting during a practice. Any protection against a visitor who clears local storage to vote twice — see *Zero-defect strategy*.
 
+## Architectural choices
+
+The two decisions this feature could not take on its own, each ratified and committed before any code is written. `/technical-conception` reads this table for the ADR numbers the plan must reference.
+
+| ADR | Decision | What it constrains downstream |
+|---|---|---|
+| [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md) | MusicBrainz stays the song-search source; its cache moves into a shared table and a throttled response surfaces as a typed error | The suggestion carries an `mbid`, so a winning suggestion promotes into a catalogue song with the MusicBrainz columns intact. `musicbrainz.adapter.ts` changes its cache location and its failure branch, not its ranking. |
+| [ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the QR code | One new dependency, reachable from exactly one atom, added to the workspace catalog. |
+
 ## Changes
 
 ### Types / domain model
