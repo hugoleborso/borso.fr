@@ -35,13 +35,14 @@ export function tallySongsPerSetlist(
 export interface SetlistSummary {
   readonly id: string;
   readonly name: string;
+  readonly kind: SetlistKind;
   readonly songCount: number;
   readonly sessionIds: string[];
 }
 
 // @FollowsBlueprint core-projection
 export function buildSetlistSummaries(
-  setlists: readonly { readonly id: string; readonly name: string }[],
+  setlists: readonly { readonly id: string; readonly name: string; readonly kind: SetlistKind }[],
   songCounts: readonly SetlistSongCount[],
   links: readonly { readonly setlistId: string; readonly sessionId: string }[],
 ): SetlistSummary[] {
@@ -60,6 +61,7 @@ export function buildSetlistSummaries(
   return setlists.map((setlist) => ({
     id: setlist.id,
     name: setlist.name,
+    kind: setlist.kind,
     songCount: songCountBySetlistId.get(setlist.id) ?? 0,
     sessionIds: sessionIdsBySetlistId.get(setlist.id) ?? [],
   }));

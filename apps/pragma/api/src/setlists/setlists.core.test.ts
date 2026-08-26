@@ -53,8 +53,8 @@ describe('buildSetlistSummaries', () => {
     expect(
       buildSetlistSummaries(
         [
-          { id: 'a', name: 'Set 1' },
-          { id: 'b', name: 'Set 2' },
+          { id: 'a', name: 'Set 1', kind: 'manual' as const },
+          { id: 'b', name: 'Set 2', kind: 'audience_choice' as const },
         ],
         [
           { setlistId: 'a', songCount: 3 },
@@ -66,21 +66,31 @@ describe('buildSetlistSummaries', () => {
         ],
       ),
     ).toEqual([
-      { id: 'a', name: 'Set 1', songCount: 3, sessionIds: ['concert-1', 'practice-1'] },
-      { id: 'b', name: 'Set 2', songCount: 0, sessionIds: [] },
+      {
+        id: 'a',
+        name: 'Set 1',
+        kind: 'manual',
+        songCount: 3,
+        sessionIds: ['concert-1', 'practice-1'],
+      },
+      { id: 'b', name: 'Set 2', kind: 'audience_choice', songCount: 0, sessionIds: [] },
     ]);
   });
 
   it('reads a setlist with no counted row as empty', () => {
-    expect(buildSetlistSummaries([{ id: 'a', name: '' }], [], [])).toEqual([
-      { id: 'a', name: '', songCount: 0, sessionIds: [] },
+    expect(buildSetlistSummaries([{ id: 'a', name: '', kind: 'manual' }], [], [])).toEqual([
+      { id: 'a', name: '', kind: 'manual', songCount: 0, sessionIds: [] },
     ]);
   });
 
   it('ignores a link pointing at a setlist outside the list', () => {
     expect(
-      buildSetlistSummaries([{ id: 'a', name: '' }], [], [{ setlistId: 'z', sessionId: 's' }]),
-    ).toEqual([{ id: 'a', name: '', songCount: 0, sessionIds: [] }]);
+      buildSetlistSummaries(
+        [{ id: 'a', name: '', kind: 'manual' }],
+        [],
+        [{ setlistId: 'z', sessionId: 's' }],
+      ),
+    ).toEqual([{ id: 'a', name: '', kind: 'manual', songCount: 0, sessionIds: [] }]);
   });
 });
 

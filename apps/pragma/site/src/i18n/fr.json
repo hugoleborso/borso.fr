@@ -334,5 +334,30 @@
     "open": "Défauts du morceau",
     "title": "Défauts — {{title}}",
     "hint": "Ces valeurs viennent du morceau lui-même. Les changer touche toutes les setlists qui le jouent."
+  },
+  "audience": {
+    "pageCrumb": "Ce soir",
+    "pageTitle": "La salle choisit le prochain morceau",
+    "noConcertLive": "Aucun vote en cours. Demandez au groupe, puis actualisez.",
+    "noRoundOpen": "Aucun vote ouvert pour le moment. Le groupe en ouvre un depuis la scène.",
+    "refresh": "Actualiser",
+    "tapToVote": "Touchez un morceau pour voter. Touchez-le à nouveau pour retirer votre voix.",
+    "timeLeft": "Temps restant",
+    "secondsLeft": "{{count}} s",
+    "notConcertReadyIdea": "demandé par la salle",
+    "notConcertReadyWip": "encore en travail",
+    "notConcertReadyRehearsed": "répété, jamais joué sur scène",
+    "suggestTitle": "Demander autre chose",
+    "suggestPlaceholder": "Cherchez un morceau par titre ou par artiste",
+    "suggestHint": "Choisissez un résultat et il rejoint le vote.",
+    "suggestFailed": "Ce morceau n'a pas pu rejoindre le vote.",
+    "searchNoResults": "Rien trouvé sous ce nom.",
+    "searchUnavailable": "La recherche de morceaux est indisponible. Réessayez dans un instant.",
+    "panelTitle": "Vote du public",
+    "panelIdle": "Aucun tour en cours. En ouvrir un donne trente secondes à la salle.",
+    "openRound": "Ouvrir un tour de trente secondes",
+    "openRoundFailed": "Le tour n'a pas pu s'ouvrir. Un tour est peut-être déjà en cours.",
+    "qrTitle": "Scannez pour voter",
+    "blankRound": "aucune voix"
   }
 }

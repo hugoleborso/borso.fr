@@ -16,13 +16,15 @@ export type AudienceRefusal = (typeof AUDIENCE_REFUSALS)[number];
  * @Blueprint domain-refusal-with-reason
  * @BlueprintName Refusal Carrying Its Reason
  * @BlueprintUsage Use for a slice whose refusals are many and whose controller has to answer a different status code for each.
- * @BlueprintDescription One error class rather than one per refusal, carrying a machine-readable reason drawn from a closed union, so the caller indexes a frozen status table with it instead of matching seven classes or parsing a message. `name` is overridden with a string literal, because a subclass otherwise inherits `Error.prototype.name` and calls itself `Error`. Adding a refusal is a union member and a table row, and the compiler refuses the table that forgot it.
+ * @BlueprintDescription Every refusing function returns `Refused` in its outcome union rather than throwing, carrying a machine-readable reason drawn from a closed union, so the controller indexes a frozen status table with it in a guard clause instead of matching seven error classes. Returning beats throwing here because Hono turns an exception a handler lets escape into a 500 before any middleware of ours can read it, and because the compiler then refuses the handler that forgot a branch. Adding a refusal is a union member and a table row, and the table that forgot it does not compile.
  */
-export class AudienceRefusedError extends Error {
-  override readonly name = 'AudienceRefusedError';
-  constructor(public readonly reason: AudienceRefusal) {
-    super(`the audience request was refused: ${reason}`);
-  }
+export interface Refused {
+  readonly kind: 'refused';
+  readonly reason: AudienceRefusal;
+}
+
+export function refuse(reason: AudienceRefusal): Refused {
+  return { kind: 'refused', reason };
 }
 
 export interface RoundView {

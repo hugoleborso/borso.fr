@@ -30,6 +30,7 @@ export interface JsonRequestOptions {
   readonly method?: 'GET' | 'POST' | 'PUT' | 'DELETE' | 'PATCH';
   readonly body?: unknown;
   readonly cookieHeader?: string;
+  readonly extraHeaders?: Readonly<Record<string, string>>;
 }
 
 export async function jsonRequest(
@@ -37,7 +38,10 @@ export async function jsonRequest(
   path: string,
   options: JsonRequestOptions = {},
 ): Promise<Response> {
-  const headers: Record<string, string> = { 'content-type': 'application/json' };
+  const headers: Record<string, string> = {
+    'content-type': 'application/json',
+    ...options.extraHeaders,
+  };
   if (options.cookieHeader !== undefined) headers.cookie = options.cookieHeader;
   const init: RequestInit = {
     method: options.method ?? 'GET',

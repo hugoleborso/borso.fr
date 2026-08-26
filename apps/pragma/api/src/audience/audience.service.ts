@@ -31,7 +31,7 @@ import {
   type AudienceVoteRow,
   type VotingRoundRow,
 } from './audience.repository';
-import { AudienceRefusedError, type ConcertVoteState, type RoundView } from './audience.types';
+import { type ConcertVoteState, refuse, type Refused, type RoundView } from './audience.types';
 import { BALLOT_TOKEN_BYTES, mintBallotToken } from './ballot-token.utils';
 import { buildPoolEntries, type PoolCandidateSong, selectPool, tallyVotes } from './pool.core';
 import {
@@ -92,20 +92,22 @@ export interface OpenRoundParams {
   readonly now: Date;
 }
 
+export type OpenRoundOutcome = { kind: 'ok'; round: RoundView } | Refused;
+
 // @FollowsBlueprint service-orchestration
-export async function openRound(params: OpenRoundParams): Promise<RoundView> {
+export async function openRound(params: OpenRoundParams): Promise<OpenRoundOutcome> {
   const session = await getSessionById(params.sessionId);
-  if (session === null) throw new AudienceRefusedError('not-a-concert');
-  if (session.kind !== CONCERT_SESSION_KIND) throw new AudienceRefusedError('not-a-concert');
+  if (session === null) return refuse('not-a-concert');
+  if (session.kind !== CONCERT_SESSION_KIND) return refuse('not-a-concert');
   const running = await findOpenRoundOfConcert(params.sessionId, params.now);
-  if (running !== null) throw new AudienceRefusedError('round-already-open');
+  if (running !== null) return refuse('round-already-open');
   await findOrCreateAudienceChoiceSetlist(params.sessionId);
   const round = await insertRound({
     sessionId: params.sessionId,
     openedAt: params.now,
     closesAt: selectRoundClosesAt(params.now),
   });
-  return projectRound(round, params.now);
+  return { kind: 'ok', round: projectRound(round, params.now) };
 }
 
 export interface RoundHistoryParams {
@@ -196,11 +198,13 @@ function projectRoundOrNothing(round: VotingRoundRow | null, now: Date): RoundVi
   return projectRound(round, now);
 }
 
-async function readOpenRound(roundId: string, now: Date): Promise<VotingRoundRow> {
+type OpenRoundRead = { kind: 'ok'; round: VotingRoundRow } | Refused;
+
+async function readOpenRound(roundId: string, now: Date): Promise<OpenRoundRead> {
   const round = await findRoundById(roundId);
-  if (round === null) throw new AudienceRefusedError('round-closed');
-  if (!isRoundOpen(round, now)) throw new AudienceRefusedError('round-closed');
-  return round;
+  if (round === null) return refuse('round-closed');
+  if (!isRoundOpen(round, now)) return refuse('round-closed');
+  return { kind: 'ok', round };
 }
 
 export interface CastVoteParams {
@@ -210,19 +214,23 @@ export interface CastVoteParams {
   readonly now: Date;
 }
 
+export type VoteOutcome = { kind: 'ok' } | Refused;
+
 // @FollowsBlueprint service-orchestration
-export async function castVote(params: CastVoteParams): Promise<void> {
-  const round = await readOpenRound(params.roundId, params.now);
-  const pool = await readConcertPool(round.sessionId);
+export async function castVote(params: CastVoteParams): Promise<VoteOutcome> {
+  const read = await readOpenRound(params.roundId, params.now);
+  if (read.kind === 'refused') return read;
+  const pool = await readConcertPool(read.round.sessionId);
   const isSongInPool = pool.songs.some((song) => song.id === params.songId);
-  if (!isSongInPool) throw new AudienceRefusedError('song-not-in-pool');
+  if (!isSongInPool) return refuse('song-not-in-pool');
   const write = await recordVote({
     roundId: params.roundId,
     ballotToken: params.ballotToken,
     songId: params.songId,
     castAt: params.now,
   });
-  if (write === 'already-present') throw new AudienceRefusedError('round-closed');
+  if (write === 'already-present') return refuse('round-closed');
+  return { kind: 'ok' };
 }
 
 export interface RetractVoteParams {
@@ -232,9 +240,11 @@ export interface RetractVoteParams {
   readonly now: Date;
 }
 
-export async function retractVote(params: RetractVoteParams): Promise<void> {
-  await readOpenRound(params.roundId, params.now);
+export async function retractVote(params: RetractVoteParams): Promise<VoteOutcome> {
+  const read = await readOpenRound(params.roundId, params.now);
+  if (read.kind === 'refused') return read;
   await deleteVote(params.roundId, params.ballotToken, params.songId);
+  return { kind: 'ok' };
 }
 
 export interface SearchForSuggestionParams {
@@ -242,12 +252,14 @@ export interface SearchForSuggestionParams {
   readonly now: Date;
 }
 
+export type SuggestionSearchOutcome = { kind: 'ok'; hits: ExternalSongHit[] } | Refused;
+
 export async function searchForSuggestion(
   params: SearchForSuggestionParams,
-): Promise<ExternalSongHit[]> {
+): Promise<SuggestionSearchOutcome> {
   const outcome = await searchExternalSongs({ query: params.query, now: params.now });
-  if (outcome.kind === 'unavailable') throw new AudienceRefusedError('external-search-unavailable');
-  return outcome.hits;
+  if (outcome.kind === 'unavailable') return refuse('external-search-unavailable');
+  return { kind: 'ok', hits: outcome.hits };
 }
 
 export interface AcceptSuggestionParams {
@@ -257,12 +269,14 @@ export interface AcceptSuggestionParams {
   readonly now: Date;
 }
 
-async function importSuggestedSong(musicBrainzId: string): Promise<SongRow> {
+type SongResolution = { kind: 'ok'; song: SongRow } | Refused;
+
+async function importSuggestedSong(musicBrainzId: string): Promise<SongResolution> {
   const outcome = await lookupExternalSong(musicBrainzId);
-  if (outcome.kind === 'unavailable') throw new AudienceRefusedError('external-search-unavailable');
+  if (outcome.kind === 'unavailable') return refuse('external-search-unavailable');
   const hit = outcome.hits.find((candidate) => candidate.mbid === musicBrainzId);
-  if (hit === undefined) throw new AudienceRefusedError('unknown-suggestion');
-  return await createSong({
+  if (hit === undefined) return refuse('unknown-suggestion');
+  const song = await createSong({
     title: hit.title,
     artist: hit.artist,
     status: 'idea',
@@ -281,26 +295,30 @@ async function importSuggestedSong(musicBrainzId: string): Promise<SongRow> {
     gimmickNotes: '',
     notes: '',
   });
+  return { kind: 'ok', song };
 }
 
-async function resolveSuggestedSong(musicBrainzId: string): Promise<SongRow> {
+async function resolveSuggestedSong(musicBrainzId: string): Promise<SongResolution> {
   const catalogSongs = await getSongs();
   const known = catalogSongs.find((song) => song.mbid === musicBrainzId);
   if (known === undefined) return await importSuggestedSong(musicBrainzId);
-  return known;
+  return { kind: 'ok', song: known };
 }
 
+export type SuggestionOutcome = { kind: 'ok'; song: SongRow } | Refused;
+
 // @FollowsBlueprint service-orchestration
-export async function acceptSuggestion(params: AcceptSuggestionParams): Promise<SongRow> {
+export async function acceptSuggestion(params: AcceptSuggestionParams): Promise<SuggestionOutcome> {
   const manualSetlistSongIds = await getManualSetlistSongIdsOfSession(params.sessionId);
-  const song = await resolveSuggestedSong(params.musicBrainzId);
-  const isAlreadyPlannedTonight = manualSetlistSongIds.includes(song.id);
-  if (isAlreadyPlannedTonight) throw new AudienceRefusedError('song-already-planned');
+  const resolution = await resolveSuggestedSong(params.musicBrainzId);
+  if (resolution.kind === 'refused') return resolution;
+  const isAlreadyPlannedTonight = manualSetlistSongIds.includes(resolution.song.id);
+  if (isAlreadyPlannedTonight) return refuse('song-already-planned');
   await insertSuggestion({
     sessionId: params.sessionId,
-    songId: song.id,
+    songId: resolution.song.id,
     ballotToken: params.ballotToken,
     suggestedAt: params.now,
   });
-  return song;
+  return resolution;
 }

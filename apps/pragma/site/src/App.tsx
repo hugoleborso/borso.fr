@@ -14,12 +14,15 @@ import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
+import { VotePage } from './routes/vote/VotePage';
 
 export function App(): JSX.Element {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/vote" element={<VotePage />} />
+        <Route path="/vote/:sessionId" element={<VotePage />} />
         <Route element={<RequireSession />}>
           <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
           <Route element={<AppShell />}>

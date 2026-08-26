@@ -12,6 +12,10 @@ const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
 
 const TRACKED_TABLES = [
   'app_config',
+  'audience_suggestion',
+  'audience_vote',
+  'voting_round',
+  'external_search_cache',
   'auth_attempt',
   'bar',
   'transition_comment',
