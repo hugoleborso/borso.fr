@@ -220,5 +220,23 @@ export const pragmaManifest: ArchitectureManifest = {
         'Opens a native modal where it is rendered, through a ref callback rather than an effect.',
       boundary: 'browser-platform',
     },
+    {
+      id: 'browser-scroll',
+      icon: '📜',
+      name: 'Element scrolling',
+      technology: 'Browser scroll API',
+      description:
+        'Drives the scene chart down the screen while a song is played, and brings the current setlist pill into view. Held by a ref callback, so the timer stops when the scene unmounts.',
+      boundary: 'browser-platform',
+    },
+    {
+      id: 'browser-wake-lock',
+      icon: '🔦',
+      name: 'Screen Wake Lock',
+      technology: 'Browser wake lock API',
+      description:
+        'Keeps the screen lit while the scene is open, so a phone on a music stand does not sleep between two songs. Absent on some browsers, where the scene simply runs without it.',
+      boundary: 'browser-platform',
+    },
   ],
 };

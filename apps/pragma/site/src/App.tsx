@@ -13,6 +13,7 @@ import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
+import { SetlistScenePage } from './routes/setlists/SetlistScenePage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
 
 export function App(): JSX.Element {
@@ -22,6 +23,7 @@ export function App(): JSX.Element {
         <Route path="/login" element={<LoginPage />} />
         <Route element={<RequireSession />}>
           <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
+          <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
           <Route element={<AppShell />}>
             <Route path="/" element={<Navigate to="/catalog" replace />} />
             <Route path="/catalog" element={<CatalogPage />} />
