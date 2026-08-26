@@ -4,6 +4,7 @@ import '../../i18n/i18n.setup';
 import {
   createIsolatedQueryClient,
   flushMicrotasks,
+  flushTasks,
   jsonResponse,
   mountWithClient,
   type MountedTree,
@@ -59,6 +60,7 @@ function openRoundState(ownVotes: readonly string[]) {
 }
 
 const FLUSH_ATTEMPTS_MAX = 8;
+const WRITES_OF_ONE_RETRIED_VOTE = 2;
 
 function findButtonByText(container: HTMLElement, text: string): HTMLButtonElement | null {
   const buttons = [...container.querySelectorAll('button')];
@@ -69,7 +71,10 @@ async function flushUntil(hasSettled: () => boolean): Promise<void> {
   for (let attempt = 0; attempt < FLUSH_ATTEMPTS_MAX; attempt += 1) {
     await flushMicrotasks();
     if (hasSettled()) return;
+    await flushTasks();
+    if (hasSettled()) return;
   }
+  throw new Error('the page never reached the state this case waits for');
 }
 
 // @FollowsBlueprint test-component-render
@@ -214,16 +219,22 @@ describe('the public vote page', () => {
       return Promise.resolve(jsonResponse(openRoundState([])));
     });
 
-    await flushUntil(() => voteRow() !== null);
-    voteRow()?.click();
-    await flushUntil(() => voteRow()?.getAttribute('aria-pressed') === 'false');
-
-    const writes =
+    const writesSoFar = () =>
       fetchStub?.calls.filter((call) => call.method === 'POST' && call.url.includes('/votes')) ??
       [];
+
+    await flushUntil(() => voteRow()?.disabled === false);
+    voteRow()?.click();
+    await flushUntil(
+      () =>
+        writesSoFar().length === WRITES_OF_ONE_RETRIED_VOTE &&
+        voteRow()?.getAttribute('aria-pressed') === 'false',
+    );
+
     const mints = fetchStub?.calls.filter((call) => call.url.includes('/ballot')) ?? [];
-    expect(writes).toHaveLength(2);
+    expect(writesSoFar()).toHaveLength(WRITES_OF_ONE_RETRIED_VOTE);
     expect(mints).toHaveLength(1);
+    expect(voteRow()?.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('carries the ballot token on every write, so the server can tell one browser from another', async () => {

@@ -96,6 +96,16 @@ export async function flushMicrotasks(): Promise<void> {
   });
 }
 
+const NEXT_TASK_DELAY_MS = 0;
+
+export async function flushTasks(): Promise<void> {
+  await act(async () => {
+    await new Promise((resolve) => {
+      setTimeout(resolve, NEXT_TASK_DELAY_MS);
+    });
+  });
+}
+
 export function createMutateSlot<Dispatch>(): {
   readonly sink: (dispatch: Dispatch) => void;
   readonly read: () => Dispatch;
