@@ -33,6 +33,7 @@ const STATUS_BY_REFUSAL = {
   'not-a-concert': 422,
   'round-already-open': 409,
   'round-closed': 409,
+  'duplicate-vote': 409,
   'song-not-in-pool': 422,
   'song-already-planned': 409,
   'unknown-suggestion': 422,

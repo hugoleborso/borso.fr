@@ -1,5 +1,5 @@
 import type { Hono } from 'hono';
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
@@ -7,6 +7,9 @@ import { externalSearchCacheTable } from '../songs/songs.schema';
 import { AUDIENCE_SEARCH_BUDGET } from './audience-search-limit.middleware';
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
+const KNOWN_SONG_MBID = 'cccccccc-3333-4333-8333-333333333333';
+const PLANNED_SONG_MBID = 'dddddddd-4444-4444-8444-444444444444';
+const UNKNOWN_SONG_MBID = 'eeeeeeee-5555-4555-8555-555555555555';
 const A_BALLOT = 'a'.repeat(48);
 const ANOTHER_BALLOT = 'b'.repeat(48);
 const UNAUTHORISED = 401;
@@ -39,6 +42,19 @@ const stateEnvelope = z.object({
     ownVotes: z.array(z.string().uuid()),
     ballotCount: z.number(),
     capacity: z.number().nullable(),
+  }),
+});
+const suggestedSongEnvelope = z.object({
+  song: z.object({
+    id: z.string().uuid(),
+    title: z.string(),
+    artist: z.string(),
+    status: z.string(),
+    mbid: z.string().nullable(),
+    album: z.string().nullable(),
+    durationSeconds: z.number().nullable(),
+    tags: z.array(z.string()),
+    isrcs: z.array(z.string()),
   }),
 });
 const setlistsEnvelope = z.object({
@@ -75,20 +91,103 @@ async function seedSearchCache(query: string): Promise<void> {
     });
 }
 
+async function createSongRow(
+  app: Hono,
+  cookieHeader: string,
+  body: Readonly<Record<string, unknown>>,
+): Promise<string> {
+  const created = await jsonRequest(app, '/api/songs', { method: 'POST', cookieHeader, body });
+  const newSong = await readJson(created, z.object({ song: z.object({ id: z.string().uuid() }) }));
+  return newSong.song.id;
+}
+
 async function createConcertReadySong(app: Hono, cookieHeader: string, title: string) {
-  const created = await jsonRequest(app, '/api/songs', {
+  return await createSongRow(app, cookieHeader, {
+    title,
+    artist: 'The Band',
+    status: 'concert_ready',
+  });
+}
+
+async function appendSongToSetlist(
+  app: Hono,
+  cookieHeader: string,
+  setlistId: string,
+  songId: string,
+): Promise<void> {
+  await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
     method: 'POST',
     cookieHeader,
-    body: { title, artist: 'The Band', status: 'concert_ready' },
+    body: { songId },
   });
-  const body = await readJson(created, z.object({ song: z.object({ id: z.string().uuid() }) }));
-  return body.song.id;
+}
+
+async function createManualSetlistHolding(
+  app: Hono,
+  cookieHeader: string,
+  sessionId: string,
+  songId: string,
+): Promise<string> {
+  const created = await jsonRequest(app, '/api/setlists', {
+    method: 'POST',
+    cookieHeader,
+    body: { name: 'Tonight', sessionId },
+  });
+  const newSetlist = await readJson(
+    created,
+    z.object({ setlist: z.object({ id: z.string().uuid() }) }),
+  );
+  await appendSongToSetlist(app, cookieHeader, newSetlist.setlist.id, songId);
+  return newSetlist.setlist.id;
+}
+
+async function readSetlistsOfSession(app: Hono, cookieHeader: string, sessionId: string) {
+  return await readJson(
+    await jsonRequest(app, `/api/setlists/by-session/${sessionId}`, { cookieHeader }),
+    setlistsEnvelope,
+  );
+}
+
+async function countCatalogSongs(app: Hono, cookieHeader: string): Promise<number> {
+  const listed = await readJson(
+    await jsonRequest(app, '/api/songs', { cookieHeader }),
+    z.object({ songs: z.array(z.object({ id: z.string().uuid() })) }),
+  );
+  return listed.songs.length;
+}
+
+function recordingPayload(musicBrainzId: string): Readonly<Record<string, unknown>> {
+  return {
+    id: musicBrainzId,
+    title: 'Voodoo Child',
+    length: 900_000,
+    'first-release-date': '1968-10-25',
+    'artist-credit': [{ name: 'The Jimi Hendrix Experience' }],
+    releases: [{ id: 'ffffffff-1111-4111-8111-111111111111', title: 'Electric Ladyland' }],
+    isrcs: ['USSM16800123'],
+    tags: [{ name: 'psychedelic rock', count: 4 }],
+  };
+}
+
+function stubMusicBrainzRecording(musicBrainzId: string): void {
+  vi.stubGlobal('fetch', () =>
+    Promise.resolve(
+      new Response(JSON.stringify(recordingPayload(musicBrainzId)), {
+        status: 200,
+        headers: { 'content-type': 'application/json' },
+      }),
+    ),
+  );
 }
 
 // @FollowsBlueprint test-back-e2e
 describe('audience controller (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
+  });
+
+  afterEach(() => {
+    vi.unstubAllGlobals();
   });
 
   it('answers every public route without a session cookie and gates the two band routes', async () => {
@@ -279,7 +378,11 @@ describe('audience controller (back-e2e)', () => {
       });
 
     expect((await castVote(riffSongId, A_BALLOT)).status).toBe(201);
-    expect((await castVote(riffSongId, A_BALLOT)).status).toBe(409);
+    const duplicate = await castVote(riffSongId, A_BALLOT);
+    expect(duplicate.status).toBe(409);
+    expect((await readJson(duplicate, z.object({ error: z.string() }))).error).toBe(
+      'duplicate-vote',
+    );
     expect((await castVote(balladSongId, A_BALLOT)).status).toBe(201);
     expect((await castVote(riffSongId, ANOTHER_BALLOT)).status).toBe(201);
     expect((await castVote(UNKNOWN_ID, A_BALLOT)).status).toBe(422);
@@ -299,6 +402,104 @@ describe('audience controller (back-e2e)', () => {
       { method: 'DELETE', extraHeaders: ballotHeaders(A_BALLOT) },
     );
     expect(retracted.status).toBe(200);
+  });
+
+  it('keeps a song sitting in the audience-choice setlist in the pool, and drops a planned one', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const riffSongId = await createConcertReadySong(app, cookieHeader, 'Riff');
+    const balladSongId = await createConcertReadySong(app, cookieHeader, 'Ballad');
+    await createManualSetlistHolding(app, cookieHeader, sessionId, balladSongId);
+
+    await jsonRequest(app, `/api/audience/concerts/${sessionId}/rounds`, {
+      method: 'POST',
+      cookieHeader,
+    });
+    const setlists = await readSetlistsOfSession(app, cookieHeader, sessionId);
+    const audienceChoice = setlists.setlists.find((setlist) => setlist.kind === 'audience_choice');
+    await appendSongToSetlist(app, cookieHeader, audienceChoice?.id ?? '', riffSongId);
+
+    const state = await readJson(
+      await jsonRequest(app, `/api/audience/concerts/${sessionId}/state`),
+      stateEnvelope,
+    );
+    expect(state.state.pool.map((entry) => entry.songId)).toEqual([riffSongId]);
+    expect(state.state.round?.isSettled).toBe(false);
+    expect(state.state.pool.map((entry) => entry.title)).not.toContain('Ballad');
+  });
+
+  it('refuses a suggestion naming a song the band already planned for tonight', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const plannedSongId = await createSongRow(app, cookieHeader, {
+      title: 'Ballad',
+      artist: 'The Band',
+      status: 'concert_ready',
+      mbid: PLANNED_SONG_MBID,
+    });
+    await createManualSetlistHolding(app, cookieHeader, sessionId, plannedSongId);
+
+    const refused = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
+      method: 'POST',
+      extraHeaders: ballotHeaders(A_BALLOT),
+      body: { mbid: PLANNED_SONG_MBID },
+    });
+    expect(refused.status).toBe(409);
+    const body = await readJson(refused, z.object({ error: z.string() }));
+    expect(body.error).toBe('song-already-planned');
+  });
+
+  it('resolves a suggestion naming a catalogue song onto that song, adding none', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const knownSongId = await createSongRow(app, cookieHeader, {
+      title: 'Riff',
+      artist: 'The Band',
+      status: 'concert_ready',
+      mbid: KNOWN_SONG_MBID,
+    });
+    const before = await countCatalogSongs(app, cookieHeader);
+
+    const accepted = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
+      method: 'POST',
+      extraHeaders: ballotHeaders(A_BALLOT),
+      body: { mbid: KNOWN_SONG_MBID },
+    });
+    expect(accepted.status).toBe(201);
+    const body = await readJson(accepted, suggestedSongEnvelope);
+    expect(body.song.id).toBe(knownSongId);
+    expect(await countCatalogSongs(app, cookieHeader)).toBe(before);
+  });
+
+  it('imports a suggestion naming an unknown recording as one idea carrying its MusicBrainz columns', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const before = await countCatalogSongs(app, cookieHeader);
+    stubMusicBrainzRecording(UNKNOWN_SONG_MBID);
+
+    const accepted = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
+      method: 'POST',
+      extraHeaders: ballotHeaders(A_BALLOT),
+      body: { mbid: UNKNOWN_SONG_MBID },
+    });
+    expect(accepted.status).toBe(201);
+    const body = await readJson(accepted, suggestedSongEnvelope);
+    expect(body.song.status).toBe('idea');
+    expect(body.song.mbid).toBe(UNKNOWN_SONG_MBID);
+    expect(body.song.title).toBe('Voodoo Child');
+    expect(body.song.artist).toBe('The Jimi Hendrix Experience');
+    expect(body.song.album).toBe('Electric Ladyland');
+    expect(body.song.durationSeconds).toBe(900);
+    expect(body.song.isrcs).toEqual(['USSM16800123']);
+    expect(body.song.tags).toEqual(['psychedelic rock']);
+    expect(await countCatalogSongs(app, cookieHeader)).toBe(before + 1);
+
+    const state = await readJson(
+      await jsonRequest(app, `/api/audience/concerts/${sessionId}/state`),
+      stateEnvelope,
+    );
+    expect(state.state.pool.map((entry) => entry.songId)).toEqual([body.song.id]);
+    expect(state.state.pool.map((entry) => entry.isSuggestion)).toEqual([true]);
   });
 
   it(

@@ -229,7 +229,7 @@ export async function castVote(params: CastVoteParams): Promise<VoteOutcome> {
     songId: params.songId,
     castAt: params.now,
   });
-  if (write === 'already-present') return refuse('round-closed');
+  if (write === 'already-present') return refuse('duplicate-vote');
   return { kind: 'ok' };
 }
 

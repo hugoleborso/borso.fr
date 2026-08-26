@@ -4,6 +4,7 @@ export const AUDIENCE_REFUSALS = [
   'not-a-concert',
   'round-already-open',
   'round-closed',
+  'duplicate-vote',
   'song-not-in-pool',
   'song-already-planned',
   'unknown-suggestion',

@@ -54,8 +54,17 @@ describe('selecting the pool', () => {
     expect(poolOf({ catalogSongs: [RIFF], manualSetlistSongIds: [RIFF_SONG_ID] })).toEqual([]);
   });
 
-  it('keeps that same song when the setlist holding it is the audience-choice one', () => {
-    expect(poolOf({ catalogSongs: [RIFF], manualSetlistSongIds: EMPTY })).toEqual([RIFF_SONG_ID]);
+  it('drops a previous winner even when no manual setlist names it, so the two rules stay apart', () => {
+    expect(
+      poolOf({
+        catalogSongs: [RIFF, BALLAD],
+        manualSetlistSongIds: [BALLAD_SONG_ID],
+        previousWinnerSongIds: [RIFF_SONG_ID],
+      }),
+    ).toEqual([]);
+    expect(
+      poolOf({ catalogSongs: [RIFF, BALLAD], manualSetlistSongIds: [BALLAD_SONG_ID] }),
+    ).toEqual([RIFF_SONG_ID]);
   });
 
   it('carries a song suggested from the room whatever its status', () => {
