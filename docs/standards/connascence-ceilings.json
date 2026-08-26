@@ -1,7 +1,7 @@
 {
   "duplicatedLinePercent": {
     "limit": 1.5,
-    "anchor": "half of SonarQube's default Sonar way gate, which fails above 3.0% duplicated lines on new code"
+    "anchor": "half of SonarQube's default Sonar way gate, which fails above 3.0% duplicated lines on new code. For scale, DejaVu (Lopes et al., OOPSLA 2017, 4.5M GitHub projects and 428M files) found only 6% of JavaScript files distinct, the worst of the four languages it measured"
   },
   "maximumArity": {
     "limit": 5,

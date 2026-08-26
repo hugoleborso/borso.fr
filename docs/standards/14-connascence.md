@@ -110,6 +110,37 @@ correctness depends on its handlers running in the right order. A cache write
 naming a key root no `useQuery` reads is not a quantity at all — it is a
 no-op nobody will notice, and the ceiling for it is zero.
 
+## Position, and why the count is the arity rather than the callers
+
+Connascence of position is the one where correctness depends on the **order** of
+things rather than their names. `validatePunchTiming(edition, runner, at, now)`
+has four slots, and every call site has to agree on which slot means what.
+Nothing catches a mistake: swap two parameters that share a type and it compiles,
+it passes every test that happens to use the same value for both, and it fails at
+runtime in whichever direction the values differ.
+
+The **degree is the arity**, not the number of call sites, and that is the part
+worth being precise about. A finding's degree is how many elements have to agree,
+and with four positional parameters there are four slots whose order every caller
+must hold in its head — which is why `rankSongs/4` scores higher than
+`applyEntryPatch/3` even when the second has more callers. How many callers there
+are is a different property, and it is already carried by **locality**: the widest
+distance between the declaring file and the files that import it. A four-parameter
+function used only inside its own module is local; the same function read across
+the API and the site boundary is not.
+
+The threshold is three, and the reason is that two is the arity where the mistake
+is bounded. Two positional parameters admit exactly one wrong ordering, and the
+type checker usually catches it. From three the orderings grow factorially, and
+the parameters are much more likely to share a type. Read
+`docs/standards/01-naming.md` next to this: the repository already prefers a
+single destructured object, and the reason is exactly this rule. `f({ songs,
+members, now })` **cannot** be mis-ordered, because it has no order — it converts
+connascence of position, rank 4, into connascence of name, rank 1, which is the
+cheapest kind there is. The detector reflects that: a callable whose only
+parameter is an object binding pattern counts as arity zero and is never reported,
+because it is the fix rather than the problem.
+
 ## Findings are scoped to one workspace
 
 `apps/pragma` and `apps/last-loop-lepin` both write `404`, and neither has to
@@ -145,9 +176,30 @@ two percent at a time and would never say so; a ceiling is the thing the walk
 runs into. They also answer a question the ratchet cannot: not *did this get
 worse*, but *is this already bad*.
 
-There is no published industry threshold for connascence. What exists are
-thresholds for the nearest metric that is already measured elsewhere, so each
-ceiling names one and sits under it:
+There is no published industry threshold for connascence. It is a design
+vocabulary, not a metric anyone ships defaults for. What exists are thresholds
+for the nearest metric that *is* measured elsewhere, so each ceiling names one
+and sits under it. Two kinds of source are worth separating: a **tool default**,
+which is a vendor's opinion, and a **measurement of real repositories**, which is
+evidence. The duplication ceiling has both.
+
+Duplication in real code, largest study to date: DéjàVu (Lopes, Maj, Martins,
+Saini, Yang, Zitny, Sajnani and Vitek, OOPSLA 2017,
+[doi:10.1145/3133908](https://doi.org/10.1145/3133908)) read 4.5 million non-fork
+GitHub projects and 428 million files and found 85 million unique ones — 70% of
+the code on GitHub is a clone of a file that already existed. The variation by
+language matters here: **JavaScript is the worst of the four measured, with only
+6% of its files distinct**, against 60% for Java. Any JavaScript or TypeScript
+repository is swimming in an ecosystem where copying is the norm, which is why a
+duplication ceiling on this repository is worth having and worth setting low.
+
+Why a ceiling is worth the friction at all: Tornhill and Borg,
+[*Code Red*](https://arxiv.org/abs/2203.04374) (2022), measured 39 proprietary
+production codebases over 30,737 files and found that low-quality code carried
+**15 times more defects**, took **124% more time** to change, and showed **9
+times longer maximum cycle times**. The uncertainty is the finding that argues
+for a gate rather than a dashboard: the median cost of bad code is bearable and
+the tail is not.
 
 | Metric | Ceiling | Anchor |
 | --- | --- | --- |
