@@ -63,12 +63,14 @@ No:
 
 - 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
 - 0009 — pragma previews clone production, credentials included.
+- 0015 — MusicBrainz stays the song-search source, with its cache moved into the database and a throttled response surfaced as an error; a winning audience suggestion becomes a catalogue song, so the `mbid` has to survive.
 
 ### App architecture
 
 - 0002, 0003 — react-bits Galaxy integration (see table above).
 - 0004 — shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
 - 0010 — a `domain/` folder for the pure rules pragma's front end and back end both read, admitted only with a caller on each side.
+- 0016 — `qrcode.react` renders the audience-vote QR code; zero runtime dependencies decided it, against a general-purpose encoder that drags a CLI argument parser into the browser bundle.
 
 ### CDK / infra
 
