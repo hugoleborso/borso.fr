@@ -25,7 +25,7 @@ export interface VotingRoundPanelProps {
 
 // @FollowsBlueprint organism-query-owning
 export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Element {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const voteState = useConcertVoteState(sessionId, null);
   const history = useRoundHistory(sessionId);
   const openRound = useOpenRound();
@@ -38,7 +38,11 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
     voteState.data?.state.ballotCount ?? 0,
     voteState.data?.state.capacity ?? null,
   );
-  const historyLines = selectRoundHistoryLines(history.data?.rounds ?? [], songs.data?.songs ?? []);
+  const historyLines = selectRoundHistoryLines(
+    history.data?.rounds ?? [],
+    songs.data?.songs ?? [],
+    i18n.language,
+  );
 
   return (
     <section className="flex flex-col gap-4">

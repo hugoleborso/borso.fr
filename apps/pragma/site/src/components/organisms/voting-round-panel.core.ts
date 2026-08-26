@@ -1,10 +1,10 @@
 /** @Feature audience-voting */
 
+import { formatClockTime } from '../../lib/formatters.utils';
+
 const VOTE_PATH_PREFIX = '/vote/';
 const PERCENT_SCALE = 100;
 const NO_ROOM_COUNTED = 0;
-const TIME_LABEL_SLICE_START = 11;
-const TIME_LABEL_SLICE_END = 16;
 
 export interface RoundHistoryRow {
   readonly id: string;
@@ -31,11 +31,12 @@ export function buildVoteAddress(origin: string, sessionId: string): string {
 export function selectRoundHistoryLines(
   rounds: readonly RoundHistoryRow[],
   songs: readonly NamedSong[],
+  locale: string,
 ): RoundHistoryLine[] {
   const titleBySongId = new Map<string | null, string>(songs.map((song) => [song.id, song.title]));
   return rounds.map((round) => ({
     roundId: round.id,
-    openedAtLabel: round.openedAt.slice(TIME_LABEL_SLICE_START, TIME_LABEL_SLICE_END),
+    openedAtLabel: formatClockTime(round.openedAt, locale),
     winnerTitle: titleBySongId.get(round.winningSongId) ?? null,
   }));
 }

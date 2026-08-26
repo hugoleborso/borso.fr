@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCapacity, formatSessionDate } from './formatters.utils';
+import { formatCapacity, formatClockTime, formatSessionDate } from './formatters.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('formatters.utils', () => {
@@ -17,6 +17,25 @@ describe('formatters.utils', () => {
 
     it('returns the input untouched when the ISO string is malformed', () => {
       expect(formatSessionDate('not-a-date', 'en-GB')).toBe('not-a-date');
+    });
+  });
+
+  describe('formatClockTime', () => {
+    it('reads the instant in the zone the viewer is in, never in UTC', () => {
+      const iso = '2026-08-26T19:30:00.000Z';
+      const inTheViewerZone = new Date(iso);
+      const hour = String(inTheViewerZone.getHours()).padStart(2, '0');
+      const minute = String(inTheViewerZone.getMinutes()).padStart(2, '0');
+      expect(formatClockTime(iso, 'en-GB')).toBe(`${hour}:${minute}`);
+    });
+
+    it('formats the same instant through the french catalogue too', () => {
+      const iso = '2026-08-26T19:30:00.000Z';
+      expect(formatClockTime(iso, 'fr-FR')).toMatch(/^\d{2}:\d{2}$/);
+    });
+
+    it('returns the input untouched when the ISO string is malformed', () => {
+      expect(formatClockTime('not-a-time', 'en-GB')).toBe('not-a-time');
     });
   });
 

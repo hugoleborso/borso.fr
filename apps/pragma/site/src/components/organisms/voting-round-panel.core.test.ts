@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   buildVoteAddress,
   selectParticipation,
@@ -7,6 +7,10 @@ import {
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const RIFF_SONG_ID = 'bbbbbbbb-2222-4222-8222-222222222222';
+const UTC_HOUR_START = 11;
+const UTC_HOUR_END = 16;
+const TIME_ZONE_VARIABLE = 'TZ';
+const A_SUMMER_ZONE_TWO_HOURS_AHEAD_OF_UTC = 'Europe/Paris';
 
 // @FollowsBlueprint test-pure-unit
 describe('buildVoteAddress', () => {
@@ -19,23 +23,47 @@ describe('buildVoteAddress', () => {
 
 describe('selectRoundHistoryLines', () => {
   const SONGS = [{ id: RIFF_SONG_ID, title: 'Riff' }];
+  const A_LOCALE = 'en-GB';
+  const OPENED_AT_UTC = '2026-08-26T21:04:00.000Z';
+  const OPENED_AT_IN_PARIS = '23:04';
+
+  beforeAll(() => {
+    vi.stubEnv(TIME_ZONE_VARIABLE, A_SUMMER_ZONE_TWO_HOURS_AHEAD_OF_UTC);
+  });
+
+  afterAll(() => {
+    vi.unstubAllEnvs();
+  });
 
   it('shows nothing for a concert that has run no round', () => {
-    expect(selectRoundHistoryLines([], SONGS)).toEqual([]);
+    expect(selectRoundHistoryLines([], SONGS, A_LOCALE)).toEqual([]);
   });
 
   it('names the winner of a decided round, at the time it opened', () => {
     const lines = selectRoundHistoryLines(
-      [{ id: 'r1', openedAt: '2026-08-26T21:04:00.000Z', winningSongId: RIFF_SONG_ID }],
+      [{ id: 'r1', openedAt: OPENED_AT_UTC, winningSongId: RIFF_SONG_ID }],
       SONGS,
+      A_LOCALE,
     );
-    expect(lines).toEqual([{ roundId: 'r1', openedAtLabel: '21:04', winnerTitle: 'Riff' }]);
+    expect(lines).toEqual([
+      { roundId: 'r1', openedAtLabel: OPENED_AT_IN_PARIS, winnerTitle: 'Riff' },
+    ]);
+  });
+
+  it('labels the round on the clock the band is reading, not on the UTC instant', () => {
+    const lines = selectRoundHistoryLines(
+      [{ id: 'r1', openedAt: OPENED_AT_UTC, winningSongId: RIFF_SONG_ID }],
+      SONGS,
+      A_LOCALE,
+    );
+    expect(lines[0]?.openedAtLabel).not.toBe(OPENED_AT_UTC.slice(UTC_HOUR_START, UTC_HOUR_END));
   });
 
   it('leaves a blank round without a winner rather than inventing one', () => {
     const lines = selectRoundHistoryLines(
       [{ id: 'r2', openedAt: '2026-08-26T21:10:00.000Z', winningSongId: null }],
       SONGS,
+      A_LOCALE,
     );
     expect(lines[0]?.winnerTitle).toBe(null);
   });
@@ -44,6 +72,7 @@ describe('selectRoundHistoryLines', () => {
     const lines = selectRoundHistoryLines(
       [{ id: 'r3', openedAt: '2026-08-26T21:20:00.000Z', winningSongId: 'gone' }],
       SONGS,
+      A_LOCALE,
     );
     expect(lines[0]?.winnerTitle).toBe(null);
   });
