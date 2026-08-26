@@ -51,11 +51,11 @@ export function selectParticipation(
   ballotCount: number,
   capacity: number | null,
 ): ParticipationView {
-  const hasADenominator = capacity !== null && capacity > NO_ROOM_COUNTED;
-  if (!hasADenominator) return { ballotCount, capacity: null, sharePercent: null };
+  const roomSize = capacity ?? NO_ROOM_COUNTED;
+  if (roomSize <= NO_ROOM_COUNTED) return { ballotCount, capacity: null, sharePercent: null };
   return {
     ballotCount,
-    capacity,
-    sharePercent: Math.round((ballotCount / capacity) * PERCENT_SCALE),
+    capacity: roomSize,
+    sharePercent: Math.round((ballotCount / roomSize) * PERCENT_SCALE),
   };
 }

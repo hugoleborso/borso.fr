@@ -103,33 +103,33 @@ describe('settling a round', () => {
       round: openRound(),
       votes: [
         voteAt(RIFF_SONG_ID, '2026-08-26T20:00:01.000Z'),
-        voteAt(RIFF_SONG_ID, '2026-08-26T20:00:04.000Z'),
+        voteAt(RIFF_SONG_ID, '2026-08-26T20:00:09.000Z'),
         voteAt(BALLAD_SONG_ID, '2026-08-26T20:00:02.000Z'),
-        voteAt(BALLAD_SONG_ID, '2026-08-26T20:00:09.000Z'),
+        voteAt(BALLAD_SONG_ID, '2026-08-26T20:00:04.000Z'),
       ],
       now: CLOSES_AT,
     });
-    expect(settlement).toEqual({ kind: 'winner', songId: RIFF_SONG_ID });
+    expect(settlement).toEqual({ kind: 'winner', songId: BALLAD_SONG_ID });
   });
 
   it('reshuffles the same tie once a retraction removes the vote that had decided it', () => {
-    const retractedVote = voteAt(RIFF_SONG_ID, '2026-08-26T20:00:01.000Z');
+    const retractedVote = voteAt(BALLAD_SONG_ID, '2026-08-26T20:00:04.000Z');
     const beforeRetraction: SurvivingVote[] = [
-      retractedVote,
-      voteAt(RIFF_SONG_ID, '2026-08-26T20:00:04.000Z'),
+      voteAt(RIFF_SONG_ID, '2026-08-26T20:00:01.000Z'),
+      voteAt(RIFF_SONG_ID, '2026-08-26T20:00:09.000Z'),
       voteAt(BALLAD_SONG_ID, '2026-08-26T20:00:02.000Z'),
-      voteAt(BALLAD_SONG_ID, '2026-08-26T20:00:09.000Z'),
+      retractedVote,
     ];
     const afterRetraction = beforeRetraction.filter((vote) => vote !== retractedVote);
 
     expect(settleRound({ round: openRound(), votes: beforeRetraction, now: CLOSES_AT })).toEqual({
       kind: 'winner',
-      songId: RIFF_SONG_ID,
+      songId: BALLAD_SONG_ID,
     });
     expect(afterRetraction).toHaveLength(beforeRetraction.length - 1);
     expect(settleRound({ round: openRound(), votes: afterRetraction, now: CLOSES_AT })).toEqual({
       kind: 'winner',
-      songId: BALLAD_SONG_ID,
+      songId: RIFF_SONG_ID,
     });
   });
 
