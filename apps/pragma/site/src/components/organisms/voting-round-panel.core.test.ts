@@ -1,4 +1,4 @@
-import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
+import { describe, expect, it } from 'vitest';
 import {
   buildVoteAddress,
   selectParticipation,
@@ -7,10 +7,8 @@ import {
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const RIFF_SONG_ID = 'bbbbbbbb-2222-4222-8222-222222222222';
-const UTC_HOUR_START = 11;
-const UTC_HOUR_END = 16;
-const TIME_ZONE_VARIABLE = 'TZ';
-const A_SUMMER_ZONE_TWO_HOURS_AHEAD_OF_UTC = 'Europe/Paris';
+const FRENCH = 'fr';
+const ENGLISH = 'en';
 
 // @FollowsBlueprint test-pure-unit
 describe('buildVoteAddress', () => {
@@ -23,47 +21,45 @@ describe('buildVoteAddress', () => {
 
 describe('selectRoundHistoryLines', () => {
   const SONGS = [{ id: RIFF_SONG_ID, title: 'Riff' }];
-  const A_LOCALE = 'en-GB';
-  const OPENED_AT_UTC = '2026-08-26T21:04:00.000Z';
-  const OPENED_AT_IN_PARIS = '23:04';
+  const OPENED_AT = '2026-08-26T21:04:00.000Z';
+  const TWENTY_FOUR_HOUR_LABEL = /^\d{2}:\d{2}$/;
+  const TWELVE_HOUR_LABEL = /^\d{2}:\d{2}\s?(AM|PM)$/;
 
-  beforeAll(() => {
-    vi.stubEnv(TIME_ZONE_VARIABLE, A_SUMMER_ZONE_TWO_HOURS_AHEAD_OF_UTC);
-  });
-
-  afterAll(() => {
-    vi.unstubAllEnvs();
-  });
+  function labelOfOneRound(locale: string): string {
+    const lines = selectRoundHistoryLines(
+      [{ id: 'r1', openedAt: OPENED_AT, winningSongId: RIFF_SONG_ID }],
+      SONGS,
+      locale,
+    );
+    return lines[0]?.openedAtLabel ?? '';
+  }
 
   it('shows nothing for a concert that has run no round', () => {
-    expect(selectRoundHistoryLines([], SONGS, A_LOCALE)).toEqual([]);
+    expect(selectRoundHistoryLines([], SONGS, FRENCH)).toEqual([]);
   });
 
-  it('names the winner of a decided round, at the time it opened', () => {
+  it('names the winner of a decided round', () => {
     const lines = selectRoundHistoryLines(
-      [{ id: 'r1', openedAt: OPENED_AT_UTC, winningSongId: RIFF_SONG_ID }],
+      [{ id: 'r1', openedAt: OPENED_AT, winningSongId: RIFF_SONG_ID }],
       SONGS,
-      A_LOCALE,
+      FRENCH,
     );
-    expect(lines).toEqual([
-      { roundId: 'r1', openedAtLabel: OPENED_AT_IN_PARIS, winnerTitle: 'Riff' },
-    ]);
+    expect(lines).toHaveLength(1);
+    expect(lines[0]?.roundId).toBe('r1');
+    expect(lines[0]?.winnerTitle).toBe('Riff');
   });
 
-  it('labels the round on the clock the band is reading, not on the UTC instant', () => {
-    const lines = selectRoundHistoryLines(
-      [{ id: 'r1', openedAt: OPENED_AT_UTC, winningSongId: RIFF_SONG_ID }],
-      SONGS,
-      A_LOCALE,
-    );
-    expect(lines[0]?.openedAtLabel).not.toBe(OPENED_AT_UTC.slice(UTC_HOUR_START, UTC_HOUR_END));
+  it('labels the round through the viewer own locale, not by cutting the UTC string', () => {
+    expect(labelOfOneRound(FRENCH)).toMatch(TWENTY_FOUR_HOUR_LABEL);
+    expect(labelOfOneRound(ENGLISH)).toMatch(TWELVE_HOUR_LABEL);
+    expect(labelOfOneRound(ENGLISH)).not.toBe(labelOfOneRound(FRENCH));
   });
 
   it('leaves a blank round without a winner rather than inventing one', () => {
     const lines = selectRoundHistoryLines(
       [{ id: 'r2', openedAt: '2026-08-26T21:10:00.000Z', winningSongId: null }],
       SONGS,
-      A_LOCALE,
+      FRENCH,
     );
     expect(lines[0]?.winnerTitle).toBe(null);
   });
@@ -72,7 +68,7 @@ describe('selectRoundHistoryLines', () => {
     const lines = selectRoundHistoryLines(
       [{ id: 'r3', openedAt: '2026-08-26T21:20:00.000Z', winningSongId: 'gone' }],
       SONGS,
-      A_LOCALE,
+      FRENCH,
     );
     expect(lines[0]?.winnerTitle).toBe(null);
   });

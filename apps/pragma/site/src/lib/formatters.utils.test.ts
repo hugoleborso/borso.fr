@@ -21,17 +21,21 @@ describe('formatters.utils', () => {
   });
 
   describe('formatClockTime', () => {
-    it('reads the instant in the zone the viewer is in, never in UTC', () => {
-      const iso = '2026-08-26T19:30:00.000Z';
-      const inTheViewerZone = new Date(iso);
-      const hour = String(inTheViewerZone.getHours()).padStart(2, '0');
-      const minute = String(inTheViewerZone.getMinutes()).padStart(2, '0');
-      expect(formatClockTime(iso, 'en-GB')).toBe(`${hour}:${minute}`);
+    const AN_EVENING_INSTANT = '2026-08-26T19:30:00.000Z';
+
+    it('renders a twenty-four hour clock for a locale that reads one', () => {
+      expect(formatClockTime(AN_EVENING_INSTANT, 'fr')).toMatch(/^\d{2}:\d{2}$/);
     });
 
-    it('formats the same instant through the french catalogue too', () => {
-      const iso = '2026-08-26T19:30:00.000Z';
-      expect(formatClockTime(iso, 'fr-FR')).toMatch(/^\d{2}:\d{2}$/);
+    it('renders a twelve hour clock for a locale that reads one', () => {
+      expect(formatClockTime(AN_EVENING_INSTANT, 'en')).toMatch(/^\d{2}:\d{2}\s?(AM|PM)$/);
+    });
+
+    it('reads the instant on the viewer own clock rather than on the UTC string', () => {
+      const onTheViewerClock = new Date(AN_EVENING_INSTANT);
+      const hour = String(onTheViewerClock.getHours()).padStart(2, '0');
+      const minute = String(onTheViewerClock.getMinutes()).padStart(2, '0');
+      expect(formatClockTime(AN_EVENING_INSTANT, 'en-GB')).toBe(`${hour}:${minute}`);
     });
 
     it('returns the input untouched when the ISO string is malformed', () => {
