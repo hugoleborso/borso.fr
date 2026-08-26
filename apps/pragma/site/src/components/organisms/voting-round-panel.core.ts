@@ -30,11 +30,10 @@ export function selectRoundHistoryLines(
   rounds: readonly RoundHistoryRow[],
   songs: readonly NamedSong[],
 ): RoundHistoryLine[] {
-  const titleBySongId = new Map(songs.map((song) => [song.id, song.title]));
+  const titleBySongId = new Map<string | null, string>(songs.map((song) => [song.id, song.title]));
   return rounds.map((round) => ({
     roundId: round.id,
     openedAtLabel: round.openedAt.slice(TIME_LABEL_SLICE_START, TIME_LABEL_SLICE_END),
-    winnerTitle:
-      round.winningSongId === null ? null : (titleBySongId.get(round.winningSongId) ?? null),
+    winnerTitle: titleBySongId.get(round.winningSongId) ?? null,
   }));
 }

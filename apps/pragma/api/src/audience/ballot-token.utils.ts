@@ -16,8 +16,10 @@ export function isWellFormedBallotToken(candidate: string): boolean {
   return BALLOT_TOKEN_PATTERN.test(candidate);
 }
 
+const ABSENT_HEADER = '';
+
 export function readBallotToken(headerValue: string | undefined): string | null {
-  if (headerValue === undefined) return null;
-  if (!isWellFormedBallotToken(headerValue)) return null;
-  return headerValue;
+  const candidate = headerValue ?? ABSENT_HEADER;
+  if (!isWellFormedBallotToken(candidate)) return null;
+  return candidate;
 }

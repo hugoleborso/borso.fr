@@ -142,8 +142,12 @@ describe('lookupExternalRecording', () => {
       now: () => 0,
       state: freshState(),
     });
-    const [url] = fetcher.mock.calls[0] ?? [];
+    const [url, init] = fetcher.mock.calls[0] ?? [];
     expect(url).toContain(RECORDING.id);
+    expect(init?.headers).toMatchObject({
+      Accept: 'application/json',
+      'User-Agent': expect.stringContaining('Pragma'),
+    });
     expect(outcome).toEqual({
       kind: 'ok',
       hits: [expect.objectContaining({ mbid: RECORDING.id })],
