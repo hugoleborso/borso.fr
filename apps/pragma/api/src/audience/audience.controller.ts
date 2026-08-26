@@ -21,6 +21,7 @@ import {
   searchForSuggestion,
 } from './audience.service';
 import type { AudienceRefusal } from './audience.types';
+import { buildAudienceSearchLimiter } from './audience-search-limit.middleware';
 import { readBallotToken } from './ballot-token.utils';
 import {
   BALLOT_TOKEN_HEADER,
@@ -45,6 +46,7 @@ const STATUS_BY_REFUSAL = {
  * @BlueprintDescription Returns two routers rather than one, and the gated router applies `requireSharedPasswordSession` on each route rather than through a wildcard `use`. A sub-router carrying one registers `/<prefix>/*` in the parent, so mounting it before a public sub-router at the same prefix makes the public routes answer 401; applying the guard per route removes that mount-order hazard entirely. Each handler reads the service's outcome union and answers a refusal through one frozen status table, because an exception a Hono handler lets escape becomes a 500 before any middleware of ours can read it. The sibling test drives every public route through the composition root with no cookie, so a guard forgotten on either side fails loudly rather than at a concert.
  */
 export function buildAudienceRouter() {
+  const limitAudienceSearch = buildAudienceSearchLimiter();
   const publicRouter = new Hono<BallotEnvironment>()
     .get('/live', async (context) => {
       const sessionId = await findLiveConcert(new Date());
@@ -63,14 +65,19 @@ export function buildAudienceRouter() {
       if (state === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ state });
     })
-    .get('/search', zValidator('query', audienceSearchQuerySchema), async (context) => {
-      const { q } = context.req.valid('query');
-      const outcome = await searchForSuggestion({ query: q, now: new Date() });
-      if (outcome.kind === 'refused') {
-        return context.json({ error: outcome.reason }, STATUS_BY_REFUSAL[outcome.reason]);
-      }
-      return context.json({ hits: outcome.hits });
-    })
+    .get(
+      '/search',
+      limitAudienceSearch,
+      zValidator('query', audienceSearchQuerySchema),
+      async (context) => {
+        const { q } = context.req.valid('query');
+        const outcome = await searchForSuggestion({ query: q, now: new Date() });
+        if (outcome.kind === 'refused') {
+          return context.json({ error: outcome.reason }, STATUS_BY_REFUSAL[outcome.reason]);
+        }
+        return context.json({ hits: outcome.hits });
+      },
+    )
     .post(
       '/rounds/:roundId/votes',
       requireBallot,

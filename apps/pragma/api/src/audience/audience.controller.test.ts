@@ -3,6 +3,8 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { externalSearchCacheTable } from '../songs/songs.schema';
+import { AUDIENCE_SEARCH_BUDGET } from './audience-search-limit.middleware';
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
 const A_BALLOT = 'a'.repeat(48);
@@ -10,6 +12,7 @@ const ANOTHER_BALLOT = 'b'.repeat(48);
 const UNAUTHORISED = 401;
 const ROUND_DURATION_MS = 30_000;
 const SETTLEMENT_TEST_TIMEOUT_MS = 90_000;
+const CACHE_LIFETIME_MS = 60_000;
 
 const roundSchema = z.object({
   id: z.string().uuid(),
@@ -60,6 +63,16 @@ async function createConcert(app: Hono, cookieHeader: string): Promise<string> {
   });
   const body = await readJson(created, z.object({ session: z.object({ id: z.string().uuid() }) }));
   return body.session.id;
+}
+
+async function seedSearchCache(query: string): Promise<void> {
+  await testDatabase()
+    .insert(externalSearchCacheTable)
+    .values({
+      normalizedQuery: query,
+      hits: JSON.stringify([]),
+      expiresAt: new Date(Date.now() + CACHE_LIFETIME_MS),
+    });
 }
 
 async function createConcertReadySong(app: Hono, cookieHeader: string, title: string) {
@@ -187,6 +200,23 @@ describe('audience controller (back-e2e)', () => {
       body: { name: 'Encore' },
     });
     expect(rename.status).toBe(409);
+  });
+
+  it('answers the public search without a session cookie and bars an address that hammers it', async () => {
+    const { app } = await buildAuthenticatedApp();
+    await seedSearchCache('lucky');
+    const fromOneAddress = () =>
+      jsonRequest(app, '/api/audience/search?q=lucky', {
+        extraHeaders: { 'x-forwarded-for': '203.0.113.7' },
+      });
+    const first = await fromOneAddress();
+    expect(first.status).toBe(200);
+
+    let lastStatus = first.status;
+    for (let attempt = 0; attempt < AUDIENCE_SEARCH_BUDGET.maxAttempts; attempt += 1) {
+      lastStatus = (await fromOneAddress()).status;
+    }
+    expect(lastStatus).toBe(429);
   });
 
   it('refuses a suggestion body carrying free text beside the picked result', async () => {

@@ -1,3 +1,5 @@
+/** @Feature audience-voting */
+
 import type { JSX } from 'react';
 import { QRCodeSVG } from 'qrcode.react';
 
