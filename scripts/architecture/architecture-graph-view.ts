@@ -786,7 +786,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         ...feature.actions.map((action) => ({
           id: action.id,
           label: action.label,
-          meta: [action.method, action.path].filter(Boolean).join(' '),
+          meta: action.method ? action.method + ' ' + action.path : '',
           change: action.change,
         })),
       ];
