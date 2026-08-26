@@ -14,6 +14,8 @@ export interface IndexSetlist {
   readonly sessionIds: readonly string[];
 }
 
+const CONCERT_SESSION_KIND = 'concert';
+
 export interface SetlistIndexRow<TSession extends IndexSession> {
   readonly id: string;
   readonly name: string;
@@ -53,4 +55,11 @@ export function buildSetlistIndexRows<TSession extends IndexSession>(
       .toSorted((left, right) => right.date.localeCompare(left.date)),
   }));
   return rows.toSorted(compareRows);
+}
+
+// @FollowsBlueprint core-projection
+export function selectConcertSessionId(sessions: readonly IndexSession[]): string | null {
+  const concerts = sessions.filter((session) => session.kind === CONCERT_SESSION_KIND);
+  const latest = concerts.toSorted((left, right) => right.date.localeCompare(left.date))[0];
+  return latest?.id ?? null;
 }

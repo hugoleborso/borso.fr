@@ -1,6 +1,8 @@
 /** @Feature audience-voting */
 
 const VOTE_PATH_PREFIX = '/vote/';
+const PERCENT_SCALE = 100;
+const NO_ROOM_COUNTED = 0;
 const TIME_LABEL_SLICE_START = 11;
 const TIME_LABEL_SLICE_END = 16;
 
@@ -36,4 +38,24 @@ export function selectRoundHistoryLines(
     openedAtLabel: round.openedAt.slice(TIME_LABEL_SLICE_START, TIME_LABEL_SLICE_END),
     winnerTitle: titleBySongId.get(round.winningSongId) ?? null,
   }));
+}
+
+export interface ParticipationView {
+  readonly ballotCount: number;
+  readonly capacity: number | null;
+  readonly sharePercent: number | null;
+}
+
+// @FollowsBlueprint core-projection
+export function selectParticipation(
+  ballotCount: number,
+  capacity: number | null,
+): ParticipationView {
+  const hasADenominator = capacity !== null && capacity > NO_ROOM_COUNTED;
+  if (!hasADenominator) return { ballotCount, capacity: null, sharePercent: null };
+  return {
+    ballotCount,
+    capacity,
+    sharePercent: Math.round((ballotCount / capacity) * PERCENT_SCALE),
+  };
 }

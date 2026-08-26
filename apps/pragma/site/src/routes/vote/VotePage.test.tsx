@@ -14,6 +14,8 @@ import { VotePage } from './VotePage';
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const RIFF_SONG_ID = 'bbbbbbbb-2222-4222-8222-222222222222';
 const A_BALLOT = 'a'.repeat(48);
+const A_STALE_BALLOT = 'b'.repeat(48);
+const BALLOT_STORAGE_KEY = `pragma.ballot.${A_CONCERT}`;
 
 const CLOSED_ROUND_STATE = {
   state: {
@@ -171,6 +173,57 @@ describe('the public vote page', () => {
     voteRow()?.click();
     await flushMicrotasks();
     expect(voteRow()?.textContent).toContain('3');
+  });
+
+  it('mints a fresh ballot and sends the vote again when the server refuses the remembered one', async () => {
+    localStorage.setItem(BALLOT_STORAGE_KEY, A_STALE_BALLOT);
+    await renderVotePage((request) => {
+      if (request.url.includes('/ballot')) {
+        return Promise.resolve(jsonResponse({ ballotToken: A_BALLOT }, 201));
+      }
+      if (request.method === 'POST' && request.url.includes('/votes')) {
+        const isStale = request.headers.get('x-ballot-token') === A_STALE_BALLOT;
+        if (isStale) return Promise.resolve(jsonResponse({ error: 'ballot-required' }, 401));
+        return Promise.resolve(jsonResponse({ roundId: 'round-1', songId: RIFF_SONG_ID }, 201));
+      }
+      return Promise.resolve(jsonResponse(openRoundState([])));
+    });
+
+    await flushUntil(() => voteRow() !== null);
+    voteRow()?.click();
+    await flushUntil(() => localStorage.getItem(BALLOT_STORAGE_KEY) === A_BALLOT);
+
+    const writes = fetchStub?.calls.filter(
+      (call) => call.method === 'POST' && call.url.includes('/votes'),
+    );
+    expect(writes).toHaveLength(2);
+    expect(writes?.[0]?.headers.get('x-ballot-token')).toBe(A_STALE_BALLOT);
+    expect(writes?.[1]?.headers.get('x-ballot-token')).toBe(A_BALLOT);
+    expect(localStorage.getItem(BALLOT_STORAGE_KEY)).toBe(A_BALLOT);
+  });
+
+  it('gives up after that one retry rather than minting a ballot per attempt', async () => {
+    localStorage.setItem(BALLOT_STORAGE_KEY, A_STALE_BALLOT);
+    await renderVotePage((request) => {
+      if (request.url.includes('/ballot')) {
+        return Promise.resolve(jsonResponse({ ballotToken: A_BALLOT }, 201));
+      }
+      if (request.method === 'POST' && request.url.includes('/votes')) {
+        return Promise.resolve(jsonResponse({ error: 'ballot-required' }, 401));
+      }
+      return Promise.resolve(jsonResponse(openRoundState([])));
+    });
+
+    await flushUntil(() => voteRow() !== null);
+    voteRow()?.click();
+    await flushUntil(() => voteRow()?.getAttribute('aria-pressed') === 'false');
+
+    const writes =
+      fetchStub?.calls.filter((call) => call.method === 'POST' && call.url.includes('/votes')) ??
+      [];
+    const mints = fetchStub?.calls.filter((call) => call.url.includes('/ballot')) ?? [];
+    expect(writes).toHaveLength(2);
+    expect(mints).toHaveLength(1);
   });
 
   it('carries the ballot token on every write, so the server can tell one browser from another', async () => {

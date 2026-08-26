@@ -1,8 +1,8 @@
 /** @Feature audience-voting */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
-import { readBallotToken, writeBallotToken } from '../ballot-token.adapter';
+import { forgetBallotToken, readBallotToken, writeBallotToken } from '../ballot-token.adapter';
 import {
   addSuggestedSongToPool,
   applyVoteToState,
@@ -14,6 +14,7 @@ import {
 } from './audience.utils';
 
 const BALLOT_TOKEN_HEADER = 'x-ballot-token';
+const BALLOT_REJECTED_STATUS = 401;
 
 export const audienceKeys = {
   all: ['audience'] as const,
@@ -43,24 +44,52 @@ export function useLiveConcert(isEnabled: boolean) {
   });
 }
 
+async function mintBallotToken(sessionId: string): Promise<{ ballotToken: string }> {
+  const response = await api.api.audience.concerts[':sessionId'].ballot.$post({
+    param: { sessionId },
+  });
+  if (!isResponseSuccessful(response))
+    throw new ApiError(response.status, `ballot ${response.status}`, null);
+  const minted = await response.json();
+  writeBallotToken(sessionId, minted.ballotToken);
+  return minted;
+}
+
 export function useBallot(sessionId: string, isEnabled = true) {
   return useQuery({
     queryKey: audienceKeys.ballot(sessionId),
     queryFn: async () => {
       const remembered = readBallotToken(sessionId);
       if (remembered !== null) return { ballotToken: remembered };
-      const response = await api.api.audience.concerts[':sessionId'].ballot.$post({
-        param: { sessionId },
-      });
-      if (!isResponseSuccessful(response))
-        throw new ApiError(response.status, `ballot ${response.status}`, null);
-      const minted = await response.json();
-      writeBallotToken(sessionId, minted.ballotToken);
-      return minted;
+      return await mintBallotToken(sessionId);
     },
     staleTime: Number.POSITIVE_INFINITY,
     enabled: isEnabled,
   });
+}
+
+interface BallotWrite<TAnswer extends { readonly status: number }> {
+  readonly queryClient: QueryClient;
+  readonly sessionId: string;
+  readonly ballotToken: string;
+  readonly send: (ballotToken: string) => Promise<TAnswer>;
+}
+
+/**
+ * @Blueprint query-write-reminting-its-credential
+ * @BlueprintName Write That Remints The Credential It Was Refused On
+ * @BlueprintUsage Use for a write carrying a credential the browser remembers and the server can stop honouring, where the person holding it did nothing wrong and should not be asked anything.
+ * @BlueprintDescription Sends once, and on the one status that means the credential is no longer honoured, forgets it, mints a fresh one, publishes it to the query holding it, and sends again exactly once. The retry is written as a second call rather than as a loop or a `retry` option, so a server that refuses the fresh credential too surfaces the refusal instead of hammering the route: two requests is the ceiling the code shape enforces, not a budget a constant happens to hold. The mint updates the cache as well as the storage, because the caller reads the credential from the query and would otherwise hand back the dead one on the next write.
+ */
+async function sendCarryingABallot<TAnswer extends { readonly status: number }>(
+  write: BallotWrite<TAnswer>,
+): Promise<TAnswer> {
+  const answer = await write.send(write.ballotToken);
+  if (answer.status !== BALLOT_REJECTED_STATUS) return answer;
+  forgetBallotToken(write.sessionId);
+  const minted = await mintBallotToken(write.sessionId);
+  write.queryClient.setQueryData(audienceKeys.ballot(write.sessionId), minted);
+  return await write.send(minted.ballotToken);
 }
 
 /**
@@ -115,10 +144,16 @@ export function useCastVote() {
   return useMutation({
     mutationKey: VOTE_MUTATION_KEY,
     mutationFn: async (variables: VoteVariables) => {
-      const response = await api.api.audience.rounds[':roundId'].votes.$post(
-        { param: { roundId: variables.roundId }, json: { songId: variables.songId } },
-        ballotHeaders(variables.ballotToken),
-      );
+      const response = await sendCarryingABallot({
+        queryClient,
+        sessionId: variables.sessionId,
+        ballotToken: variables.ballotToken,
+        send: (ballotToken) =>
+          api.api.audience.rounds[':roundId'].votes.$post(
+            { param: { roundId: variables.roundId }, json: { songId: variables.songId } },
+            ballotHeaders(ballotToken),
+          ),
+      });
       if (!response.ok) throw new ApiError(response.status, `vote ${response.status}`, null);
       return response.json();
     },
@@ -145,10 +180,16 @@ export function useRetractVote() {
   return useMutation({
     mutationKey: VOTE_MUTATION_KEY,
     mutationFn: async (variables: VoteVariables) => {
-      const response = await api.api.audience.rounds[':roundId'].votes[':songId'].$delete(
-        { param: { roundId: variables.roundId, songId: variables.songId } },
-        ballotHeaders(variables.ballotToken),
-      );
+      const response = await sendCarryingABallot({
+        queryClient,
+        sessionId: variables.sessionId,
+        ballotToken: variables.ballotToken,
+        send: (ballotToken) =>
+          api.api.audience.rounds[':roundId'].votes[':songId'].$delete(
+            { param: { roundId: variables.roundId, songId: variables.songId } },
+            ballotHeaders(ballotToken),
+          ),
+      });
       if (!response.ok) throw new ApiError(response.status, `retract ${response.status}`, null);
       return response.json();
     },
@@ -180,10 +221,16 @@ export function useSuggestSong() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationFn: async (variables: SuggestionVariables) => {
-      const response = await api.api.audience.concerts[':sessionId'].suggestions.$post(
-        { param: { sessionId: variables.sessionId }, json: { mbid: variables.mbid } },
-        ballotHeaders(variables.ballotToken),
-      );
+      const response = await sendCarryingABallot({
+        queryClient,
+        sessionId: variables.sessionId,
+        ballotToken: variables.ballotToken,
+        send: (ballotToken) =>
+          api.api.audience.concerts[':sessionId'].suggestions.$post(
+            { param: { sessionId: variables.sessionId }, json: { mbid: variables.mbid } },
+            ballotHeaders(ballotToken),
+          ),
+      });
       if (!response.ok) throw new ApiError(response.status, `suggest ${response.status}`, null);
       return response.json();
     },

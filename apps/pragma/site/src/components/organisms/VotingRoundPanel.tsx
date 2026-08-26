@@ -13,7 +13,11 @@ import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { VoteQrCode } from '../atoms/VoteQrCode';
 import { VoteCountdown } from '../molecules/VoteCountdown';
-import { buildVoteAddress, selectRoundHistoryLines } from './voting-round-panel.core';
+import {
+  buildVoteAddress,
+  selectParticipation,
+  selectRoundHistoryLines,
+} from './voting-round-panel.core';
 
 export interface VotingRoundPanelProps {
   readonly sessionId: string;
@@ -30,6 +34,10 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
   const round = voteState.data?.state.round ?? null;
   const isRoundOpen = round?.isOpen === true;
   const voteAddress = buildVoteAddress(globalThis.location.origin, sessionId);
+  const participation = selectParticipation(
+    voteState.data?.state.ballotCount ?? 0,
+    voteState.data?.state.capacity ?? null,
+  );
   const historyLines = selectRoundHistoryLines(history.data?.rounds ?? [], songs.data?.songs ?? []);
 
   return (
@@ -58,6 +66,15 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
               {t('audience.openRoundFailed')}
             </p>
           )}
+          <p className="text-[13px] text-ink-500 m-0">
+            {participation.sharePercent === null
+              ? t('audience.ballotsCast', { ballots: participation.ballotCount })
+              : t('audience.ballotsAgainstCapacity', {
+                  ballots: participation.ballotCount,
+                  capacity: participation.capacity,
+                  share: participation.sharePercent,
+                })}
+          </p>
           <p className="font-mono text-xs text-ink-500 m-0 break-all">{voteAddress}</p>
         </Card>
         <Card variant="sunk" className="flex flex-col items-center gap-2">

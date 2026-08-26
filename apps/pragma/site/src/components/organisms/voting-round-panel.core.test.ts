@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildVoteAddress, selectRoundHistoryLines } from './voting-round-panel.core';
+import {
+  buildVoteAddress,
+  selectParticipation,
+  selectRoundHistoryLines,
+} from './voting-round-panel.core';
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const RIFF_SONG_ID = 'bbbbbbbb-2222-4222-8222-222222222222';
@@ -42,5 +46,39 @@ describe('selectRoundHistoryLines', () => {
       SONGS,
     );
     expect(lines[0]?.winnerTitle).toBe(null);
+  });
+});
+
+describe('selectParticipation', () => {
+  it('reports the ballots this round drew against the room the concert holds', () => {
+    expect(selectParticipation(30, 120)).toEqual({
+      ballotCount: 30,
+      capacity: 120,
+      sharePercent: 25,
+    });
+  });
+
+  it('reports no share when the concert carries no capacity to divide by', () => {
+    expect(selectParticipation(12, null)).toEqual({
+      ballotCount: 12,
+      capacity: null,
+      sharePercent: null,
+    });
+  });
+
+  it('reports no share on a capacity of zero rather than dividing by it', () => {
+    expect(selectParticipation(4, 0)).toEqual({
+      ballotCount: 4,
+      capacity: null,
+      sharePercent: null,
+    });
+  });
+
+  it('rounds the share to a whole percent the band can say out loud', () => {
+    expect(selectParticipation(1, 3).sharePercent).toBe(33);
+  });
+
+  it('is zero, not absent, before anyone in the room has voted', () => {
+    expect(selectParticipation(0, 120).sharePercent).toBe(0);
   });
 });
