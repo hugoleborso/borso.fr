@@ -2,10 +2,19 @@ import { integer, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 
+export const SETLIST_KINDS = ['manual', 'audience_choice'] as const;
+
+export type SetlistKind = (typeof SETLIST_KINDS)[number];
+
+export const DEFAULT_SETLIST_KIND: SetlistKind = 'manual';
+export const AUDIENCE_CHOICE_SETLIST_KIND: SetlistKind = 'audience_choice';
+export const AUDIENCE_CHOICE_SETLIST_NAME = 'Audience choice';
+
 // @FollowsBlueprint schema-table-and-input
 export const setlistTable = pgTable('setlist_sheet', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull().default(''),
+  kind: text('kind'),
 });
 
 export const sessionSetlistTable = pgTable(

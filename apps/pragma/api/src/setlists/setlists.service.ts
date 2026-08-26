@@ -1,31 +1,46 @@
 import type { z } from 'zod';
+import type { DatabaseExecutor } from '../database/client';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { getSessionById } from '../sessions/sessions.service';
-import { buildSetlistSummaries, type SetlistSummary, tallySongsPerSetlist } from './setlists.core';
 import {
+  buildSetlistSummaries,
+  isSetlistRenamable,
+  type SetlistSummary,
+  tallySongsPerSetlist,
+} from './setlists.core';
+import {
+  countEntriesWithin,
   deleteEntry,
-  deleteSessionLink,
-  deleteSetlistWithEntries,
-  findSetlistById,
   insertEntry,
-  insertSessionLink,
-  insertSetlist,
-  listAllSessionLinks,
+  insertEntryWithin,
   listEntries,
   listEntryIds,
   listEntryOwners,
-  listSetlists,
-  listSetlistsOfSession,
   type SetlistEntryRow,
-  type SetlistRow,
   setEntryPosition,
   updateEntry,
+} from './setlist-entry.repository';
+import {
+  deleteSessionLink,
+  deleteSetlistWithEntries,
+  findAudienceChoiceSetlistOfSession,
+  findSetlistById,
+  insertSessionLink,
+  insertSetlist,
+  listAllSessionLinks,
+  listManualSetlistSongIdsOfSession,
+  listSetlists,
+  listSetlistsOfSession,
+  type SetlistRow,
   updateSetlistName,
 } from './setlists.repository';
-import type {
-  SetlistEntryPersistedUpdate,
-  setlistCreateSchema,
-  setlistEntryCreateSchema,
+import {
+  AUDIENCE_CHOICE_SETLIST_KIND,
+  AUDIENCE_CHOICE_SETLIST_NAME,
+  DEFAULT_SETLIST_KIND,
+  type SetlistEntryPersistedUpdate,
+  type setlistCreateSchema,
+  type setlistEntryCreateSchema,
 } from './setlists.schema';
 
 type EntryCreateInput = z.infer<typeof setlistEntryCreateSchema>;
@@ -66,12 +81,52 @@ export async function createSetlist(
     const session = await getSessionById(input.sessionId);
     if (session === null) return { kind: 'session-not-found' };
   }
-  const setlist = await insertSetlist(input.name, input.sessionId);
+  const setlist = await insertSetlist(input.name, input.sessionId, DEFAULT_SETLIST_KIND);
   return { kind: 'ok', setlist };
 }
 
-export async function renameSetlist(setlistId: string, name: string): Promise<SetlistRow | null> {
-  return await updateSetlistName(setlistId, name);
+export type RenameOutcome =
+  { kind: 'ok'; setlist: SetlistRow } | { kind: 'not-found' } | { kind: 'not-renamable' };
+
+// @FollowsBlueprint service-crud-update
+export async function renameSetlist(setlistId: string, name: string): Promise<RenameOutcome> {
+  const existing = await findSetlistById(setlistId);
+  if (existing === null) return { kind: 'not-found' };
+  if (!isSetlistRenamable(existing.kind)) return { kind: 'not-renamable' };
+  const setlist = await updateSetlistName(setlistId, name);
+  if (setlist === null) return { kind: 'not-found' };
+  return { kind: 'ok', setlist };
+}
+
+export async function getManualSetlistSongIdsOfSession(sessionId: string): Promise<string[]> {
+  return await listManualSetlistSongIdsOfSession(sessionId);
+}
+
+export async function findOrCreateAudienceChoiceSetlist(sessionId: string): Promise<SetlistRow> {
+  const existing = await findAudienceChoiceSetlistOfSession(sessionId);
+  if (existing !== null) return existing;
+  return await insertSetlist(AUDIENCE_CHOICE_SETLIST_NAME, sessionId, AUDIENCE_CHOICE_SETLIST_KIND);
+}
+
+// @FollowsBlueprint service-facade-reexport
+export { runInOneSetlistTransaction } from './setlists.repository';
+
+export async function appendSongWithin(
+  executor: DatabaseExecutor,
+  setlistId: string,
+  songId: string,
+): Promise<void> {
+  const position = await countEntriesWithin(executor, setlistId);
+  await insertEntryWithin(executor, {
+    setlistId,
+    songId,
+    position,
+    energy: null,
+    lineupOverride: null,
+    keyOverride: null,
+    capo: null,
+    notes: '',
+  });
 }
 
 export async function removeSetlist(setlistId: string): Promise<DeletionOutcome> {

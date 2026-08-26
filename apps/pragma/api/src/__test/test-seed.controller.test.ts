@@ -5,7 +5,8 @@ import { createApp } from '../app';
 import { listInstruments } from '../instruments/instruments.repository';
 import { listMembers } from '../members/members.repository';
 import { listSessions } from '../sessions/sessions.repository';
-import { listEntries, listSetlistsOfSession } from '../setlists/setlists.repository';
+import { listEntries } from '../setlists/setlist-entry.repository';
+import { listSetlistsOfSession } from '../setlists/setlists.repository';
 import { listSongsNewestFirst } from '../songs/songs.repository';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';

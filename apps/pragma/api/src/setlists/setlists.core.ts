@@ -1,3 +1,9 @@
+import {
+  AUDIENCE_CHOICE_SETLIST_KIND,
+  DEFAULT_SETLIST_KIND,
+  type SetlistKind,
+} from './setlists.schema';
+
 export interface SetlistSongCount {
   readonly setlistId: string;
   readonly songCount: number;
@@ -57,4 +63,14 @@ export function buildSetlistSummaries(
     songCount: songCountBySetlistId.get(setlist.id) ?? 0,
     sessionIds: sessionIdsBySetlistId.get(setlist.id) ?? [],
   }));
+}
+
+// @FollowsBlueprint core-decision
+export function resolveSetlistKind(storedKind: string | null): SetlistKind {
+  if (storedKind === AUDIENCE_CHOICE_SETLIST_KIND) return AUDIENCE_CHOICE_SETLIST_KIND;
+  return DEFAULT_SETLIST_KIND;
+}
+
+export function isSetlistRenamable(kind: SetlistKind): boolean {
+  return kind !== AUDIENCE_CHOICE_SETLIST_KIND;
 }

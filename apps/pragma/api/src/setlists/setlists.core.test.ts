@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSetlistSummaries,
+  isSetlistRenamable,
+  resolveSetlistKind,
   selectNextLinkPosition,
   tallySongsPerSetlist,
 } from './setlists.core';
@@ -79,5 +81,33 @@ describe('buildSetlistSummaries', () => {
     expect(
       buildSetlistSummaries([{ id: 'a', name: '' }], [], [{ setlistId: 'z', sessionId: 's' }]),
     ).toEqual([{ id: 'a', name: '', songCount: 0, sessionIds: [] }]);
+  });
+});
+
+describe('resolveSetlistKind', () => {
+  it('reads the audience-choice kind back as itself', () => {
+    expect(resolveSetlistKind('audience_choice')).toBe('audience_choice');
+  });
+
+  it('reads the manual kind back as itself', () => {
+    expect(resolveSetlistKind('manual')).toBe('manual');
+  });
+
+  it('reads a row written before the column existed as manual', () => {
+    expect(resolveSetlistKind(null)).toBe('manual');
+  });
+
+  it('reads a value nobody writes as manual rather than propagating it', () => {
+    expect(resolveSetlistKind('encore')).toBe('manual');
+  });
+});
+
+describe('isSetlistRenamable', () => {
+  it('lets the band rename a setlist they wrote', () => {
+    expect(isSetlistRenamable('manual')).toBe(true);
+  });
+
+  it('refuses to rename the audience-choice setlist', () => {
+    expect(isSetlistRenamable('audience_choice')).toBe(false);
   });
 });

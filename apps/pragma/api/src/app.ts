@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { cors } from 'hono/cors';
 import { logger } from 'hono/logger';
+import { buildAudienceRouter } from './audience/audience.controller';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
@@ -25,6 +26,7 @@ export interface CreateAppOptions {
  */
 function buildAppRouter(options: CreateAppOptions = {}) {
   const { publicRouter, bootstrapRouter, rotateRouter } = buildAuthRouter(options.auth ?? {});
+  const audience = buildAudienceRouter();
   return new Hono()
     .use('*', logger())
     .use('*', cors())
@@ -41,7 +43,9 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/setlists', buildSetlistsRouter())
     .route('/api/transition-comments', buildTransitionCommentsRouter())
     .route('/api/bars', buildBarsRouter())
-    .route('/api/uploads', buildUploadsRouter());
+    .route('/api/uploads', buildUploadsRouter())
+    .route('/api/audience', audience.publicRouter)
+    .route('/api/audience', audience.gatedRouter);
 }
 
 export type AppRouter = ReturnType<typeof buildAppRouter>;

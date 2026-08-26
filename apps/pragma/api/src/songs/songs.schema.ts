@@ -30,6 +30,12 @@ export const songTable = pgTable('song', {
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
+export const externalSearchCacheTable = pgTable('external_search_cache', {
+  normalizedQuery: text('normalized_query').primaryKey(),
+  hits: text('hits').notNull(),
+  expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
+});
+
 const LINK_COMMENT_MAX = 2_048;
 const CHORDPRO_TEXT_MAX = 64_000;
 const S3_KEY_MAX = 512;

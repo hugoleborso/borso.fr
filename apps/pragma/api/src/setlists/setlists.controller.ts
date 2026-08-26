@@ -66,9 +66,12 @@ export function buildSetlistsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const { name } = context.req.valid('json');
-        const setlist = await renameSetlist(id, name);
-        if (setlist === null) return context.json({ error: 'not-found' }, 404);
-        return context.json({ setlist });
+        const renamed = await renameSetlist(id, name);
+        if (renamed.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        if (renamed.kind === 'not-renamable') {
+          return context.json({ error: 'setlist-not-renamable' }, 409);
+        }
+        return context.json({ setlist: renamed.setlist });
       },
     )
     .delete('/:id', zValidator('param', setlistIdParamSchema), async (context) => {

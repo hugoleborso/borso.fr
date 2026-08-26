@@ -31,8 +31,11 @@ export function buildSongsRouter() {
     })
     .get('/search', zValidator('query', externalSearchQuerySchema), async (context) => {
       const { q } = context.req.valid('query');
-      const hits = await searchExternalSongs(q);
-      return context.json({ hits });
+      const outcome = await searchExternalSongs({ query: q, now: new Date() });
+      if (outcome.kind === 'unavailable') {
+        return context.json({ error: 'external-search-unavailable' }, 503);
+      }
+      return context.json({ hits: outcome.hits });
     })
     .get('/:id', zValidator('param', songIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
