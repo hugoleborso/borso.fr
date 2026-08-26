@@ -4,7 +4,7 @@ import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { externalSearchCacheTable } from '../songs/songs.schema';
-import { AUDIENCE_SEARCH_BUDGET } from './audience-search-limit.middleware';
+import { AUDIENCE_SEARCH_BUDGET, AUDIENCE_WRITE_BUDGET } from './audience-rate-limit.middleware';
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
 const KNOWN_SONG_MBID = 'cccccccc-3333-4333-8333-333333333333';
@@ -156,6 +156,13 @@ async function countCatalogSongs(app: Hono, cookieHeader: string): Promise<numbe
   return listed.songs.length;
 }
 
+async function openRoundOn(app: Hono, cookieHeader: string, sessionId: string): Promise<void> {
+  await jsonRequest(app, `/api/audience/concerts/${sessionId}/rounds`, {
+    method: 'POST',
+    cookieHeader,
+  });
+}
+
 function recordingPayload(musicBrainzId: string): Readonly<Record<string, unknown>> {
   return {
     id: musicBrainzId,
@@ -239,6 +246,85 @@ describe('audience controller (back-e2e)', () => {
     });
     expect(vote.status).toBe(UNAUTHORISED);
     expect(suggestion.status).toBe(UNAUTHORISED);
+  });
+
+  it('refuses a vote naming a round nobody ever opened with a conflict, not a silent drop', async () => {
+    const { app } = await buildAuthenticatedApp();
+    const refused = await jsonRequest(app, `/api/audience/rounds/${UNKNOWN_ID}/votes`, {
+      method: 'POST',
+      body: { songId: UNKNOWN_ID },
+      extraHeaders: ballotHeaders(A_BALLOT),
+    });
+    expect(refused.status).toBe(409);
+    expect((await readJson(refused, z.object({ error: z.string() }))).error).toBe('round-closed');
+  });
+
+  it('refuses a suggestion on a concert running no round, and writes no song for it', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const before = await countCatalogSongs(app, cookieHeader);
+    stubMusicBrainzRecording(UNKNOWN_SONG_MBID);
+
+    const refused = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
+      method: 'POST',
+      extraHeaders: ballotHeaders(A_BALLOT),
+      body: { mbid: UNKNOWN_SONG_MBID },
+    });
+    expect(refused.status).toBe(409);
+    expect((await readJson(refused, z.object({ error: z.string() }))).error).toBe('round-closed');
+    expect(await countCatalogSongs(app, cookieHeader)).toBe(before);
+  });
+
+  it('refuses a suggestion on a practice and on a session that does not exist', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const practice = await jsonRequest(app, '/api/sessions', {
+      method: 'POST',
+      cookieHeader,
+      body: { kind: 'practice', date: new Date().toISOString() },
+    });
+    const body = await readJson(
+      practice,
+      z.object({ session: z.object({ id: z.string().uuid() }) }),
+    );
+    const before = await countCatalogSongs(app, cookieHeader);
+    stubMusicBrainzRecording(UNKNOWN_SONG_MBID);
+
+    const suggest = (sessionId: string) =>
+      jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
+        method: 'POST',
+        extraHeaders: ballotHeaders(A_BALLOT),
+        body: { mbid: UNKNOWN_SONG_MBID },
+      });
+    const onAPractice = await suggest(body.session.id);
+    const onNothing = await suggest(UNKNOWN_ID);
+    expect(onAPractice.status).toBe(422);
+    expect(onNothing.status).toBe(422);
+    expect((await readJson(onNothing, z.object({ error: z.string() }))).error).toBe(
+      'not-a-concert',
+    );
+    expect(await countCatalogSongs(app, cookieHeader)).toBe(before);
+  });
+
+  it('bars an address that hammers the public write routes, sharing one budget across them', async () => {
+    const { app } = await buildAuthenticatedApp();
+    const fromOneAddress = () =>
+      jsonRequest(app, `/api/audience/rounds/${UNKNOWN_ID}/votes/${UNKNOWN_ID}`, {
+        method: 'DELETE',
+        extraHeaders: { ...ballotHeaders(A_BALLOT), 'x-forwarded-for': '203.0.113.9' },
+      });
+    let lastStatus = (await fromOneAddress()).status;
+    expect(lastStatus).toBe(409);
+    for (let attempt = 1; attempt <= AUDIENCE_WRITE_BUDGET.maxAttempts; attempt += 1) {
+      lastStatus = (await fromOneAddress()).status;
+    }
+    expect(lastStatus).toBe(429);
+
+    const suggestion = await jsonRequest(app, `/api/audience/concerts/${UNKNOWN_ID}/suggestions`, {
+      method: 'POST',
+      extraHeaders: { ...ballotHeaders(A_BALLOT), 'x-forwarded-for': '203.0.113.9' },
+      body: { mbid: UNKNOWN_SONG_MBID },
+    });
+    expect(suggestion.status).toBe(429);
   });
 
   it('refuses a round on a practice, because rounds belong to concerts', async () => {
@@ -438,6 +524,7 @@ describe('audience controller (back-e2e)', () => {
       mbid: PLANNED_SONG_MBID,
     });
     await createManualSetlistHolding(app, cookieHeader, sessionId, plannedSongId);
+    await openRoundOn(app, cookieHeader, sessionId);
 
     const refused = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
       method: 'POST',
@@ -459,6 +546,7 @@ describe('audience controller (back-e2e)', () => {
       mbid: KNOWN_SONG_MBID,
     });
     const before = await countCatalogSongs(app, cookieHeader);
+    await openRoundOn(app, cookieHeader, sessionId);
 
     const accepted = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
       method: 'POST',
@@ -475,6 +563,7 @@ describe('audience controller (back-e2e)', () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const sessionId = await createConcert(app, cookieHeader);
     const before = await countCatalogSongs(app, cookieHeader);
+    await openRoundOn(app, cookieHeader, sessionId);
     stubMusicBrainzRecording(UNKNOWN_SONG_MBID);
 
     const accepted = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
@@ -533,6 +622,16 @@ describe('audience controller (back-e2e)', () => {
       expect(settled.state.round?.isSettled).toBe(true);
       expect(settled.state.round?.winningSongId).toBe(riffSongId);
       expect(settled.state.pool.map((entry) => entry.title)).toEqual(['Ballad']);
+
+      const lateVote = await jsonRequest(app, `/api/audience/rounds/${opened.round.id}/votes`, {
+        method: 'POST',
+        body: { songId: riffSongId },
+        extraHeaders: ballotHeaders(ANOTHER_BALLOT),
+      });
+      expect(lateVote.status).toBe(409);
+      expect((await readJson(lateVote, z.object({ error: z.string() }))).error).toBe(
+        'round-closed',
+      );
 
       const setlists = await readJson(
         await jsonRequest(app, `/api/setlists/by-session/${sessionId}`, { cookieHeader }),

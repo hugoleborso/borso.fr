@@ -207,6 +207,15 @@ async function readOpenRound(roundId: string, now: Date): Promise<OpenRoundRead>
   return { kind: 'ok', round };
 }
 
+async function readConcertRunningARound(sessionId: string, now: Date): Promise<OpenRoundRead> {
+  const session = await getSessionById(sessionId);
+  if (session === null) return refuse('not-a-concert');
+  if (session.kind !== CONCERT_SESSION_KIND) return refuse('not-a-concert');
+  const running = await findOpenRoundOfConcert(sessionId, now);
+  if (running === null) return refuse('round-closed');
+  return { kind: 'ok', round: running };
+}
+
 export interface CastVoteParams {
   readonly roundId: string;
   readonly ballotToken: string;
@@ -309,6 +318,8 @@ export type SuggestionOutcome = { kind: 'ok'; song: SongRow } | Refused;
 
 // @FollowsBlueprint service-orchestration
 export async function acceptSuggestion(params: AcceptSuggestionParams): Promise<SuggestionOutcome> {
+  const gate = await readConcertRunningARound(params.sessionId, params.now);
+  if (gate.kind === 'refused') return gate;
   const manualSetlistSongIds = await getManualSetlistSongIdsOfSession(params.sessionId);
   const resolution = await resolveSuggestedSong(params.musicBrainzId);
   if (resolution.kind === 'refused') return resolution;
