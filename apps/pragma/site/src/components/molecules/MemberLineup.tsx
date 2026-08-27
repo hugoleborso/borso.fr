@@ -32,12 +32,12 @@ export function MemberLineup({
   instruments,
   maximumVisible = MAXIMUM_VISIBLE_MEMBERS,
 }: MemberLineupProps): JSX.Element {
-  const { visible, hiddenCount, hasHiddenMembers } = buildLineupChips(
+  const { visible, hiddenCount, hasHiddenMembers } = buildLineupChips({
     lineup,
     members,
     instruments,
     maximumVisible,
-  );
+  });
   return (
     <span className="inline-flex shrink-0 items-center">
       {visible.map((chip) => (

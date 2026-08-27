@@ -1,5 +1,5 @@
 import { isRaceEndReached, loopIndexAt, totalHourlyTops } from '../edition/edition.core';
-import type { RaceEdition } from '../edition/edition.types';
+import type { RaceEdition, RaceSnapshot } from '../edition/edition.types';
 import { lastLoopDurationMs } from '../punch/punch.core';
 import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
@@ -96,13 +96,13 @@ function areTiedForRanking(left: RunnerProgress, right: RunnerProgress): boolean
 }
 
 // @FollowsBlueprint core-projection
-export function computeStandings(
-  edition: RaceEdition,
-  runners: readonly Runner[],
-  punches: readonly LoopPunch[],
-  manualDidNotFinishes: readonly ManualDidNotFinish[],
-  now: Date,
-): Standings {
+export function computeStandings({
+  edition,
+  runners,
+  punches,
+  manualDidNotFinishes,
+  now,
+}: RaceSnapshot): Standings {
   const manualDidNotFinishesBySlug = new Map<string, ManualDidNotFinish>();
   for (const didNotFinish of manualDidNotFinishes)
     manualDidNotFinishesBySlug.set(didNotFinish.runnerSlug, didNotFinish);

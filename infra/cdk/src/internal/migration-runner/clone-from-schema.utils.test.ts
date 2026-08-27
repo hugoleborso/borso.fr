@@ -136,7 +136,15 @@ describe('buildCreateTableLikeSql', () => {
 
 describe('buildCloneInsertSql', () => {
   it('builds an INSERT … SELECT with explicit column list and ON CONFLICT DO NOTHING', () => {
-    expect(buildCloneInsertSql('prod', 'pr_27', 'editions', ['slug', 'display_name'], [])).toBe(
+    expect(
+      buildCloneInsertSql({
+        sourceSchema: 'prod',
+        targetSchema: 'pr_27',
+        table: 'editions',
+        columns: ['slug', 'display_name'],
+        nullifyColumns: [],
+      }),
+    ).toBe(
       'INSERT INTO "pr_27"."editions" ("slug", "display_name")' +
         ' SELECT "slug", "display_name" FROM "prod"."editions"' +
         ' ON CONFLICT DO NOTHING',
@@ -144,13 +152,13 @@ describe('buildCloneInsertSql', () => {
   });
 
   it('replaces nullified columns by `NULL AS "col"` in the SELECT list', () => {
-    const sql = buildCloneInsertSql(
-      'prod',
-      'pr_27',
-      'runners',
-      ['edition_slug', 'slug', 'display_name', 'photo_key'],
-      ['photo_key'],
-    );
+    const sql = buildCloneInsertSql({
+      sourceSchema: 'prod',
+      targetSchema: 'pr_27',
+      table: 'runners',
+      columns: ['edition_slug', 'slug', 'display_name', 'photo_key'],
+      nullifyColumns: ['photo_key'],
+    });
     expect(sql).toBe(
       'INSERT INTO "pr_27"."runners" ("edition_slug", "slug", "display_name", "photo_key")' +
         ' SELECT "edition_slug", "slug", "display_name", NULL AS "photo_key" FROM "prod"."runners"' +
@@ -159,62 +167,98 @@ describe('buildCloneInsertSql', () => {
   });
 
   it('nullifies multiple columns at once', () => {
-    const sql = buildCloneInsertSql(
-      'prod',
-      'pr_27',
-      'media',
-      ['id', 'object_key', 'thumbnail_key'],
-      ['object_key', 'thumbnail_key'],
-    );
+    const sql = buildCloneInsertSql({
+      sourceSchema: 'prod',
+      targetSchema: 'pr_27',
+      table: 'media',
+      columns: ['id', 'object_key', 'thumbnail_key'],
+      nullifyColumns: ['object_key', 'thumbnail_key'],
+    });
     expect(sql).toContain('NULL AS "object_key"');
     expect(sql).toContain('NULL AS "thumbnail_key"');
   });
 
   it("ignores nullify entries that aren't in the column list (no-op rather than crash)", () => {
-    const sql = buildCloneInsertSql(
-      'prod',
-      'pr_27',
-      'editions',
-      ['slug', 'display_name'],
-      ['photo_key'],
-    );
+    const sql = buildCloneInsertSql({
+      sourceSchema: 'prod',
+      targetSchema: 'pr_27',
+      table: 'editions',
+      columns: ['slug', 'display_name'],
+      nullifyColumns: ['photo_key'],
+    });
     expect(sql).not.toContain('photo_key');
   });
 
   it('throws when the column list is empty', () => {
-    expect(() => buildCloneInsertSql('prod', 'pr_27', 'runners', [], [])).toThrow(
-      /empty column list/,
-    );
+    expect(() =>
+      buildCloneInsertSql({
+        sourceSchema: 'prod',
+        targetSchema: 'pr_27',
+        table: 'runners',
+        columns: [],
+        nullifyColumns: [],
+      }),
+    ).toThrow(/empty column list/);
   });
 
   it('rejects invalid column identifiers', () => {
     expect(() =>
-      buildCloneInsertSql('prod', 'pr_27', 'runners', ['valid', 'DROP TABLE'], []),
+      buildCloneInsertSql({
+        sourceSchema: 'prod',
+        targetSchema: 'pr_27',
+        table: 'runners',
+        columns: ['valid', 'DROP TABLE'],
+        nullifyColumns: [],
+      }),
     ).toThrow(/Invalid column name: "DROP TABLE"/);
   });
 
   it('rejects invalid identifiers in the nullify list', () => {
-    expect(() => buildCloneInsertSql('prod', 'pr_27', 'runners', ['photo_key'], ['"; --'])).toThrow(
-      /Invalid column name/,
-    );
+    expect(() =>
+      buildCloneInsertSql({
+        sourceSchema: 'prod',
+        targetSchema: 'pr_27',
+        table: 'runners',
+        columns: ['photo_key'],
+        nullifyColumns: ['"; --'],
+      }),
+    ).toThrow(/Invalid column name/);
   });
 
   it('rejects an invalid table name', () => {
-    expect(() => buildCloneInsertSql('prod', 'pr_27', 'runners; DROP', ['slug'], [])).toThrow(
-      /Invalid table name/,
-    );
+    expect(() =>
+      buildCloneInsertSql({
+        sourceSchema: 'prod',
+        targetSchema: 'pr_27',
+        table: 'runners; DROP',
+        columns: ['slug'],
+        nullifyColumns: [],
+      }),
+    ).toThrow(/Invalid table name/);
   });
 
   it('rejects an invalid source schema name', () => {
-    expect(() => buildCloneInsertSql('prod"; --', 'pr_27', 'runners', ['slug'], [])).toThrow(
-      /Invalid schema name/,
-    );
+    expect(() =>
+      buildCloneInsertSql({
+        sourceSchema: 'prod"; --',
+        targetSchema: 'pr_27',
+        table: 'runners',
+        columns: ['slug'],
+        nullifyColumns: [],
+      }),
+    ).toThrow(/Invalid schema name/);
   });
 
   it('rejects an invalid target schema name', () => {
-    expect(() => buildCloneInsertSql('prod', 'pr_27"; --', 'runners', ['slug'], [])).toThrow(
-      /Invalid schema name/,
-    );
+    expect(() =>
+      buildCloneInsertSql({
+        sourceSchema: 'prod',
+        targetSchema: 'pr_27"; --',
+        table: 'runners',
+        columns: ['slug'],
+        nullifyColumns: [],
+      }),
+    ).toThrow(/Invalid schema name/);
   });
 });
 

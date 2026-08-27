@@ -100,3 +100,9 @@ export function listRatchetFailures(
     .map(([key, now]) => ({ key, was: baseline[key] ?? 0, now }))
     .filter((entry) => entry.now > entry.was + allowanceFor(entry.was, tolerance));
 }
+
+export function listRatchetSlack(baseline: Baseline, current: Baseline): readonly RatchetFailure[] {
+  return Object.entries(current)
+    .map(([key, now]) => ({ key, was: baseline[key] ?? 0, now }))
+    .filter((entry) => entry.now < entry.was);
+}

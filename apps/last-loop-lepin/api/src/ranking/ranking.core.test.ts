@@ -55,7 +55,13 @@ function punch(
 describe('computeStandings', () => {
   it('returns every runner in race before any punches', () => {
     const now = new Date('2026-09-19T06:30:00+02:00');
-    const standings = computeStandings(EDITION, RUNNERS, [], [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches: [],
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked).toHaveLength(3);
     expect(standings.ranked.every((entry) => entry.status.kind === 'in-race')).toBe(true);
     expect(standings.raceEnded).toBe(false);
@@ -70,7 +76,13 @@ describe('computeStandings', () => {
       punch('carla', 1, '2026-09-19T06:59:00+02:00'),
       punch('carla', 2, '2026-09-19T07:58:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked[0]?.runner.slug).toBe('alice');
     expect(standings.ranked[1]?.runner.slug).toBe('carla');
     expect(standings.ranked[2]?.runner.slug).toBe('bob');
@@ -82,7 +94,13 @@ describe('computeStandings', () => {
       punch('alice', 1, '2026-09-19T06:55:30+02:00'),
       punch('bob', 1, '2026-09-19T06:55:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked[0]?.runner.slug).toBe('bob');
     expect(standings.ranked[1]?.runner.slug).toBe('alice');
   });
@@ -93,7 +111,13 @@ describe('computeStandings', () => {
       punch('alice', 2, '2026-09-19T07:55:00+02:00'),
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     const alice = standings.ranked.find((entry) => entry.runner.slug === 'alice');
     expect(alice?.status).toEqual({ kind: 'in-race', lastLoop: 2 });
     expect(alice?.lastFinishedAt).toEqual(new Date('2026-09-19T07:55:00+02:00'));
@@ -116,7 +140,13 @@ describe('computeStandings', () => {
         decidedAt: new Date('2026-09-19T08:01:00+02:00'),
       },
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, manualDidNotFinishes, now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes,
+      now,
+    });
     expect(standings.ranked[0]?.runner.slug).toBe('bob');
     expect(standings.ranked[0]?.status.kind).toBe('in-race');
     expect(standings.ranked.findIndex((entry) => entry.runner.slug === 'alice')).toBeGreaterThan(0);
@@ -129,7 +159,13 @@ describe('computeStandings', () => {
       punch('alice', 2, '2026-09-19T07:25:00+02:00'),
       punch('bob', 1, '2026-09-19T06:50:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked[0]?.runner.slug).toBe('alice');
     expect(standings.ranked[1]?.runner.slug).toBe('bob');
     expect(standings.ranked.slice(0, 2).map((entry) => entry.rank)).toEqual([1, 2]);
@@ -150,7 +186,13 @@ describe('computeStandings', () => {
         decidedAt: new Date('2026-09-19T07:01:00+02:00'),
       },
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, manualDidNotFinishes, now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes,
+      now,
+    });
     expect(standings.ranked[0]?.runner.slug).toBe('alice');
     expect(standings.ranked[0]?.rank).toBe(1);
     expect(standings.ranked[1]?.runner.slug).toBe('bob');
@@ -164,7 +206,13 @@ describe('computeStandings', () => {
       punch('alice', 2, '2026-09-19T07:20:00.000+02:00'),
       punch('bob', 1, '2026-09-19T07:20:00.000+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked[0]?.runner.slug).toBe('alice');
     expect(standings.ranked[0]?.rank).toBe(1);
     expect(standings.ranked[1]?.runner.slug).toBe('bob');
@@ -181,7 +229,13 @@ describe('computeStandings', () => {
       punch('carla', 1, '2026-09-19T06:58:00+02:00'),
       punch('carla', 2, '2026-09-19T07:55:00.000+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked.map((entry) => entry.rank)).toEqual([1, 'ex-aequo', 'ex-aequo']);
     expect(standings.ranked[0]?.runner.slug).toBe('alice');
   });
@@ -192,7 +246,13 @@ describe('computeStandings', () => {
       punch('alice', 1, '2026-09-19T06:55:00.000+02:00'),
       punch('bob', 1, '2026-09-19T06:55:00.000+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked[0]?.rank).toBe('ex-aequo');
     expect(standings.ranked[1]?.rank).toBe('ex-aequo');
   });
@@ -204,7 +264,13 @@ describe('computeStandings', () => {
       punch('alice', 2, '2026-09-19T07:55:00+02:00'),
       punch('carla', 1, '2026-09-19T06:59:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     const lastIndex = standings.ranked.length - 1;
     expect(standings.ranked[0]?.runner.slug).toBe('alice');
     expect(standings.ranked[1]?.runner.slug).toBe('carla');
@@ -227,7 +293,13 @@ describe('computeStandings', () => {
         decidedAt: new Date('2026-09-19T08:01:00+02:00'),
       },
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, manualDidNotFinishes, now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes,
+      now,
+    });
     expect(standings.ranked.find((entry) => entry.runner.slug === 'alice')?.status.kind).toBe(
       'dnf',
     );
@@ -239,14 +311,26 @@ describe('computeStandings', () => {
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
       punch('bob', 1, '2026-09-19T06:55:00+02:00', '2026-09-19T07:00:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked.find((entry) => entry.runner.slug === 'bob')?.status.kind).toBe('dnf');
     expect(standings.ranked[0]?.runner.slug).toBe('alice');
   });
 
   it('marks raceEnded true once now passes endsAt', () => {
     const now = new Date('2026-09-19T22:30:00+02:00');
-    const standings = computeStandings(EDITION, RUNNERS, [], [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches: [],
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.raceEnded).toBe(true);
   });
 
@@ -256,7 +340,13 @@ describe('computeStandings', () => {
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
       punch('alice', 2, '2026-09-19T07:55:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.raceEnded).toBe(true);
     expect(standings.ranked[0]?.runner.slug).toBe('alice');
     expect(standings.ranked[0]?.status.kind).toBe('in-race');
@@ -268,7 +358,13 @@ describe('computeStandings', () => {
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
       punch('alice', 3, '2026-09-19T08:55:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     const alice = standings.ranked.find((entry) => entry.runner.slug === 'alice');
     expect(alice?.status.kind).toBe('dnf');
   });
@@ -281,7 +377,13 @@ describe('computeStandings', () => {
       punch('bob', 1, '2026-09-19T06:58:00+02:00'),
       punch('bob', 2, '2026-09-19T07:55:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.raceEnded).toBe(true);
     expect(standings.ranked[0]?.rank).toBe('ex-aequo');
   });
@@ -292,7 +394,13 @@ describe('computeStandings', () => {
       punch('alice', 1, '2026-09-19T06:55:00+02:00'),
       punch('alice', 2, '2026-09-19T07:55:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     const alice = standings.ranked.find((entry) => entry.runner.slug === 'alice');
     expect(alice?.lastLoopDurationMs).toBe(55 * 60_000);
     expect(alice?.lastFinishedAt).toEqual(new Date('2026-09-19T07:55:00+02:00'));
@@ -300,13 +408,25 @@ describe('computeStandings', () => {
 
   it('computedAt mirrors the now argument', () => {
     const now = new Date('2026-09-19T08:30:00+02:00');
-    const standings = computeStandings(EDITION, RUNNERS, [], [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches: [],
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.computedAt).toEqual(now);
   });
 
   it('returns an empty fastestLap before any punch is recorded', () => {
     const now = new Date('2026-09-19T06:30:00+02:00');
-    const standings = computeStandings(EDITION, RUNNERS, [], [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches: [],
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.fastestLap).toEqual([]);
   });
 
@@ -315,7 +435,13 @@ describe('computeStandings', () => {
     const punches = Array.from({ length: 16 }, (_, index) =>
       punch('alice', index + 1, `2026-09-19T${String(6 + index).padStart(2, '0')}:55:00+02:00`),
     );
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     const alice = standings.ranked.find((entry) => entry.runner.slug === 'alice');
     expect(alice?.status).toEqual({ kind: 'in-race', lastLoop: 16 });
     expect(standings.raceEnded).toBe(true);
@@ -326,7 +452,13 @@ describe('computeStandings', () => {
     const punches = Array.from({ length: 10 }, (_, index) =>
       punch('bob', index + 1, `2026-09-19T${String(6 + index).padStart(2, '0')}:55:00+02:00`),
     );
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     const bob = standings.ranked.find((entry) => entry.runner.slug === 'bob');
     expect(bob?.status).toEqual({ kind: 'dnf', outAtLoop: 10, reason: 'late' });
   });
@@ -350,7 +482,13 @@ describe('computeStandings', () => {
         ),
       ),
     );
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.ranked.slice(0, 3).map((entry) => entry.runner.slug)).toEqual([
       'alice',
       'bob',
@@ -371,7 +509,13 @@ describe('computeStandings', () => {
       punch('bob', 2, '2026-09-19T07:42:00+02:00'),
       punch('carla', 1, '2026-09-19T06:51:00+02:00'),
     ];
-    const standings = computeStandings(EDITION, RUNNERS, punches, [], now);
+    const standings = computeStandings({
+      edition: EDITION,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(standings.fastestLap).toEqual([{ runnerSlug: 'bob', durationMs: 42 * 60_000 }]);
   });
 });

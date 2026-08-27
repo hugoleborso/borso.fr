@@ -30,13 +30,19 @@ const PLACEHOLDER_STYLE = { height: MIN_HEIGHT_PX } as const;
 export function ElevationProfile({ edition, ranked, now }: ElevationProfileProps) {
   const { t } = useTranslation();
   const hasSamples = hasElevationSamples(edition);
-  const geometry = buildProfileGeometry(
-    edition.gpx.trackJson.pointElevations ?? EMPTY_ELEVATIONS,
-    indexTrack(edition.gpx.trackJson.points).cumulative,
-    VIEWBOX_WIDTH,
-    VIEWBOX_HEIGHT,
-  );
-  const pastilles = listElevationPastilles(edition, ranked, now.getTime(), geometry, VIEWBOX_WIDTH);
+  const geometry = buildProfileGeometry({
+    pointElevations: edition.gpx.trackJson.pointElevations ?? EMPTY_ELEVATIONS,
+    cumulativeDistances: indexTrack(edition.gpx.trackJson.points).cumulative,
+    width: VIEWBOX_WIDTH,
+    height: VIEWBOX_HEIGHT,
+  });
+  const pastilles = listElevationPastilles({
+    edition,
+    ranked,
+    nowMs: now.getTime(),
+    geometry,
+    viewBoxWidth: VIEWBOX_WIDTH,
+  });
 
   return (
     <div className="flex flex-col flex-1 overflow-auto p-0 bg-bg-elev" style={FRAME_STYLE}>

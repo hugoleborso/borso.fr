@@ -44,12 +44,14 @@ export function selectTreeVisualization(
 const SESSION_KEY_SEPARATOR = '|';
 const ID_LIST_SEPARATOR = ',';
 
-export function buildSessionKey(
-  mode: Mode,
-  side: string,
-  selection: Selection,
-  scope: PlayScope,
-): string {
+export interface SessionKeyRequest {
+  readonly mode: Mode;
+  readonly side: string;
+  readonly selection: Selection;
+  readonly scope: PlayScope;
+}
+
+export function buildSessionKey({ mode, side, selection, scope }: SessionKeyRequest): string {
   return [
     mode,
     side,

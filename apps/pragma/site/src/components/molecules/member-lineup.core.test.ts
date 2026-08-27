@@ -22,7 +22,12 @@ const MAXIMUM_VISIBLE = 4;
 describe('buildLineupChips', () => {
   it('names the member and every instrument they hold', () => {
     expect(
-      buildLineupChips({ hugo: ['drums', 'voice'] }, MEMBERS, INSTRUMENTS, MAXIMUM_VISIBLE),
+      buildLineupChips({
+        lineup: { hugo: ['drums', 'voice'] },
+        members: MEMBERS,
+        instruments: INSTRUMENTS,
+        maximumVisible: MAXIMUM_VISIBLE,
+      }),
     ).toEqual({
       visible: [
         {
@@ -38,20 +43,36 @@ describe('buildLineupChips', () => {
   });
 
   it('titles a member holding nothing with their name alone', () => {
-    expect(buildLineupChips({ lea: [] }, MEMBERS, INSTRUMENTS, MAXIMUM_VISIBLE).visible).toEqual([
-      { memberId: 'lea', memberName: 'Léa', memberColor: '#3d8a8a', title: 'Léa' },
-    ]);
+    expect(
+      buildLineupChips({
+        lineup: { lea: [] },
+        members: MEMBERS,
+        instruments: INSTRUMENTS,
+        maximumVisible: MAXIMUM_VISIBLE,
+      }).visible,
+    ).toEqual([{ memberId: 'lea', memberName: 'Léa', memberColor: '#3d8a8a', title: 'Léa' }]);
   });
 
   it('drops an instrument the map does not know', () => {
     expect(
-      buildLineupChips({ marc: ['bass', 'theremin'] }, MEMBERS, INSTRUMENTS, MAXIMUM_VISIBLE)
-        .visible[0]?.title,
+      buildLineupChips({
+        lineup: { marc: ['bass', 'theremin'] },
+        members: MEMBERS,
+        instruments: INSTRUMENTS,
+        maximumVisible: MAXIMUM_VISIBLE,
+      }).visible[0]?.title,
     ).toBe('Marc — Basse');
   });
 
   it('drops a member the roster does not know', () => {
-    expect(buildLineupChips({ ghost: ['bass'] }, MEMBERS, INSTRUMENTS, MAXIMUM_VISIBLE)).toEqual({
+    expect(
+      buildLineupChips({
+        lineup: { ghost: ['bass'] },
+        members: MEMBERS,
+        instruments: INSTRUMENTS,
+        maximumVisible: MAXIMUM_VISIBLE,
+      }),
+    ).toEqual({
       visible: [],
       hiddenCount: 0,
       hasHiddenMembers: false,
@@ -59,24 +80,24 @@ describe('buildLineupChips', () => {
   });
 
   it('counts the members past the cap once two or more would be hidden', () => {
-    const chips = buildLineupChips(
-      { hugo: [], lea: [], marc: [], sarah: [], noa: [], ines: [] },
-      MEMBERS,
-      INSTRUMENTS,
-      MAXIMUM_VISIBLE,
-    );
+    const chips = buildLineupChips({
+      lineup: { hugo: [], lea: [], marc: [], sarah: [], noa: [], ines: [] },
+      members: MEMBERS,
+      instruments: INSTRUMENTS,
+      maximumVisible: MAXIMUM_VISIBLE,
+    });
     expect(chips.visible.map((chip) => chip.memberId)).toEqual(['hugo', 'lea', 'marc', 'sarah']);
     expect(chips.hiddenCount).toBe(2);
     expect(chips.hasHiddenMembers).toBe(true);
   });
 
   it('draws the single member past the cap rather than a counter standing in for them', () => {
-    const chips = buildLineupChips(
-      { hugo: [], lea: [], marc: [], sarah: [], noa: [] },
-      MEMBERS,
-      INSTRUMENTS,
-      MAXIMUM_VISIBLE,
-    );
+    const chips = buildLineupChips({
+      lineup: { hugo: [], lea: [], marc: [], sarah: [], noa: [] },
+      members: MEMBERS,
+      instruments: INSTRUMENTS,
+      maximumVisible: MAXIMUM_VISIBLE,
+    });
     expect(chips.visible.map((chip) => chip.memberId)).toEqual([
       'hugo',
       'lea',
@@ -89,18 +110,25 @@ describe('buildLineupChips', () => {
   });
 
   it('hides nobody when the lineup fits exactly', () => {
-    const chips = buildLineupChips(
-      { hugo: [], lea: [], marc: [], sarah: [] },
-      MEMBERS,
-      INSTRUMENTS,
-      MAXIMUM_VISIBLE,
-    );
+    const chips = buildLineupChips({
+      lineup: { hugo: [], lea: [], marc: [], sarah: [] },
+      members: MEMBERS,
+      instruments: INSTRUMENTS,
+      maximumVisible: MAXIMUM_VISIBLE,
+    });
     expect(chips.visible).toHaveLength(MAXIMUM_VISIBLE);
     expect(chips.hasHiddenMembers).toBe(false);
   });
 
   it('reads an empty lineup as no chips at all', () => {
-    expect(buildLineupChips({}, MEMBERS, INSTRUMENTS, MAXIMUM_VISIBLE)).toEqual({
+    expect(
+      buildLineupChips({
+        lineup: {},
+        members: MEMBERS,
+        instruments: INSTRUMENTS,
+        maximumVisible: MAXIMUM_VISIBLE,
+      }),
+    ).toEqual({
       visible: [],
       hiddenCount: 0,
       hasHiddenMembers: false,

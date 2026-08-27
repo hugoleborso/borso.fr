@@ -199,22 +199,42 @@ describe('setlist list cache transforms', () => {
   });
 
   it('records a session that now carries the setlist', () => {
-    const linked = applySessionLinkInCache(cache, 'a', 'practice-1', true);
+    const linked = applySessionLinkInCache({
+      cache,
+      setlistId: 'a',
+      sessionId: 'practice-1',
+      isLinked: true,
+    });
     expect(linked.setlists[0]?.sessionIds).toEqual(['concert-1', 'practice-1']);
   });
 
   it('records the same session once, however many times it is linked', () => {
-    const linked = applySessionLinkInCache(cache, 'a', 'concert-1', true);
+    const linked = applySessionLinkInCache({
+      cache,
+      setlistId: 'a',
+      sessionId: 'concert-1',
+      isLinked: true,
+    });
     expect(linked.setlists[0]?.sessionIds).toEqual(['concert-1']);
   });
 
   it('records a session that no longer carries the setlist', () => {
-    const unlinked = applySessionLinkInCache(cache, 'a', 'concert-1', false);
+    const unlinked = applySessionLinkInCache({
+      cache,
+      setlistId: 'a',
+      sessionId: 'concert-1',
+      isLinked: false,
+    });
     expect(unlinked.setlists[0]?.sessionIds).toEqual([]);
   });
 
   it('leaves the other setlists untouched when a link changes', () => {
-    const linked = applySessionLinkInCache({ setlists: [first, second] }, 'b', 'concert-1', true);
+    const linked = applySessionLinkInCache({
+      cache: { setlists: [first, second] },
+      setlistId: 'b',
+      sessionId: 'concert-1',
+      isLinked: true,
+    });
     expect(linked.setlists[0]).toBe(first);
   });
 });

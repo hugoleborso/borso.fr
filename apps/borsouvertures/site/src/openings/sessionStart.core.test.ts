@@ -143,29 +143,51 @@ describe('selectTreeVisualization', () => {
 
 describe('buildSessionKey', () => {
   it('changes when the scope changes', () => {
-    const first = buildSessionKey('play', 'white', NOTHING_SELECTED, EMPTY_PLAY_SCOPE);
-    const second = buildSessionKey('play', 'white', NOTHING_SELECTED, {
-      openingIds: ['italian'],
-      variationIds: [],
-      lineIds: [],
+    const first = buildSessionKey({
+      mode: 'play',
+      side: 'white',
+      selection: NOTHING_SELECTED,
+      scope: EMPTY_PLAY_SCOPE,
+    });
+    const second = buildSessionKey({
+      mode: 'play',
+      side: 'white',
+      selection: NOTHING_SELECTED,
+      scope: {
+        openingIds: ['italian'],
+        variationIds: [],
+        lineIds: [],
+      },
     });
     expect(first).not.toBe(second);
   });
 
   it('is stable for the same session', () => {
-    expect(buildSessionKey('learn', 'black', NOTHING_SELECTED, EMPTY_PLAY_SCOPE)).toBe(
-      buildSessionKey('learn', 'black', NOTHING_SELECTED, EMPTY_PLAY_SCOPE),
+    expect(
+      buildSessionKey({
+        mode: 'learn',
+        side: 'black',
+        selection: NOTHING_SELECTED,
+        scope: EMPTY_PLAY_SCOPE,
+      }),
+    ).toBe(
+      buildSessionKey({
+        mode: 'learn',
+        side: 'black',
+        selection: NOTHING_SELECTED,
+        scope: EMPTY_PLAY_SCOPE,
+      }),
     );
   });
 
   it('spells out every part of the session', () => {
     expect(
-      buildSessionKey(
-        'play',
-        'white',
-        { openingId: 'italian', variationId: 'classical', lineId: 'greco' },
-        { openingIds: ['a', 'b'], variationIds: ['c'], lineIds: ['d'] },
-      ),
+      buildSessionKey({
+        mode: 'play',
+        side: 'white',
+        selection: { openingId: 'italian', variationId: 'classical', lineId: 'greco' },
+        scope: { openingIds: ['a', 'b'], variationIds: ['c'], lineIds: ['d'] },
+      }),
     ).toBe('play|white|italian|classical|greco|a,b|c|d');
   });
 });

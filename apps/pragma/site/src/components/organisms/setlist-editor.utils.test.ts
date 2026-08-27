@@ -253,35 +253,82 @@ describe('prominentMemberInstrumentFor', () => {
   const instruments = { i1: { name: 'Guitar' } };
 
   it('returns null when no instrument id is supplied', () => {
-    expect(prominentMemberInstrumentFor(undefined, 'm1', members, instruments)).toBe(null);
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: undefined,
+        selectedMemberId: 'm1',
+        membersById: members,
+        instrumentsById: instruments,
+      }),
+    ).toBe(null);
   });
 
   it('returns null when no member is selected', () => {
-    expect(prominentMemberInstrumentFor(['i1'], null, members, instruments)).toBe(null);
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: ['i1'],
+        selectedMemberId: null,
+        membersById: members,
+        instrumentsById: instruments,
+      }),
+    ).toBe(null);
   });
 
   it('returns null with no member selected, even against a member keyed "null"', () => {
     const keyedByNullText = { null: { firstName: 'Hugo', color: '#abc' } };
-    expect(prominentMemberInstrumentFor(['i1'], null, keyedByNullText, instruments)).toBe(null);
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: ['i1'],
+        selectedMemberId: null,
+        membersById: keyedByNullText,
+        instrumentsById: instruments,
+      }),
+    ).toBe(null);
   });
 
   it('returns null with no instrument id, even against an instrument keyed "undefined"', () => {
     const keyedByUndefinedText = { undefined: { name: 'Guitar' } };
-    expect(prominentMemberInstrumentFor(undefined, 'm1', members, keyedByUndefinedText)).toBe(null);
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: undefined,
+        selectedMemberId: 'm1',
+        membersById: members,
+        instrumentsById: keyedByUndefinedText,
+      }),
+    ).toBe(null);
   });
 
   it('returns null when the member id cannot be resolved', () => {
-    expect(prominentMemberInstrumentFor(['i1'], 'unknown-member', members, instruments)).toBe(null);
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: ['i1'],
+        selectedMemberId: 'unknown-member',
+        membersById: members,
+        instrumentsById: instruments,
+      }),
+    ).toBe(null);
   });
 
   it('returns null when the instrument id cannot be resolved', () => {
-    expect(prominentMemberInstrumentFor(['unknown-instrument'], 'm1', members, instruments)).toBe(
-      null,
-    );
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: ['unknown-instrument'],
+        selectedMemberId: 'm1',
+        membersById: members,
+        instrumentsById: instruments,
+      }),
+    ).toBe(null);
   });
 
   it('returns the resolved member name, colour and instrument names', () => {
-    expect(prominentMemberInstrumentFor(['i1'], 'm1', members, instruments)).toEqual({
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: ['i1'],
+        selectedMemberId: 'm1',
+        membersById: members,
+        instrumentsById: instruments,
+      }),
+    ).toEqual({
       memberName: 'Hugo',
       memberColor: '#abc',
       instrumentNames: ['Guitar'],
@@ -290,7 +337,14 @@ describe('prominentMemberInstrumentFor', () => {
 
   it('names every instrument the member holds here', () => {
     const twoInstruments = { i1: { name: 'Guitar' }, i2: { name: 'Vocals' } };
-    expect(prominentMemberInstrumentFor(['i1', 'i2'], 'm1', members, twoInstruments)).toEqual({
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: ['i1', 'i2'],
+        selectedMemberId: 'm1',
+        membersById: members,
+        instrumentsById: twoInstruments,
+      }),
+    ).toEqual({
       memberName: 'Hugo',
       memberColor: '#abc',
       instrumentNames: ['Guitar', 'Vocals'],
@@ -298,7 +352,14 @@ describe('prominentMemberInstrumentFor', () => {
   });
 
   it('returns null when the member holds nothing here', () => {
-    expect(prominentMemberInstrumentFor([], 'm1', members, instruments)).toBe(null);
+    expect(
+      prominentMemberInstrumentFor({
+        instrumentIds: [],
+        selectedMemberId: 'm1',
+        membersById: members,
+        instrumentsById: instruments,
+      }),
+    ).toBe(null);
   });
 });
 

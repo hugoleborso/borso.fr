@@ -53,12 +53,12 @@ export function MondrianFrame({
             lineWeight={lineWeight}
             animationName={inkbloom.name}
             animationDurationMs={inkbloom.durationMs}
-            animationDelayMs={selectInkbloomDelayMs(
+            animationDelayMs={selectInkbloomDelayMs({
               rectangleIndex,
-              rectangles.length,
-              rectangle.id,
+              rectangleCount: rectangles.length,
+              rectangleId: rectangle.id,
               isReducedMotion,
-            )}
+            })}
           />
         ))}
       </div>

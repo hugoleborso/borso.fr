@@ -8,13 +8,20 @@ export interface StarClock {
 
 const LONGEST_CHARGED_FRAME_SECONDS = 0.1;
 
+export interface StarClockRequest {
+  readonly isAnimationPaused: boolean;
+  readonly timestamp: number;
+  readonly starSpeed: number;
+  readonly previousClock: StarClock;
+}
+
 // @FollowsBlueprint core-view-projection
-export function selectStarClock(
-  isAnimationPaused: boolean,
-  timestamp: number,
-  starSpeed: number,
-  previousClock: StarClock,
-): StarClock {
+export function selectStarClock({
+  isAnimationPaused,
+  timestamp,
+  starSpeed,
+  previousClock,
+}: StarClockRequest): StarClock {
   if (isAnimationPaused) return previousClock;
   const elapsedSeconds = timestamp / MILLISECONDS_PER_SECOND;
   const chargedSeconds = Math.min(

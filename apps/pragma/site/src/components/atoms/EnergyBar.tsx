@@ -98,7 +98,7 @@ export function EnergyBar({
   }
 
   function changeFromKey(event: KeyboardEvent<HTMLDivElement>): void {
-    const next = levelFromKey(event.key, value, minimum, maximum);
+    const next = levelFromKey({ key: event.key, current: value, minimum, maximum });
     if (next === null) return;
     event.preventDefault();
     onChange(next);

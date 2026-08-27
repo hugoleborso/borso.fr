@@ -151,13 +151,13 @@ async function cloneFromSchema(
     }
     const nullifyColumns = nullifyMap[table] ?? [];
     await sql.unsafe(
-      buildCloneInsertSql(
-        config.sourceSchemaName,
-        targetSchemaName,
+      buildCloneInsertSql({
+        sourceSchema: config.sourceSchemaName,
+        targetSchema: targetSchemaName,
         table,
         columns,
         nullifyColumns,
-      ),
+      }),
     );
   }
 
@@ -168,13 +168,13 @@ async function cloneFromSchema(
   );
   if (migrationsColumns.length > 0) {
     await sql.unsafe(
-      buildCloneInsertSql(
-        config.sourceSchemaName,
-        targetSchemaName,
-        APPLIED_MIGRATIONS_TABLE,
-        migrationsColumns,
-        [],
-      ),
+      buildCloneInsertSql({
+        sourceSchema: config.sourceSchemaName,
+        targetSchema: targetSchemaName,
+        table: APPLIED_MIGRATIONS_TABLE,
+        columns: migrationsColumns,
+        nullifyColumns: [],
+      }),
     );
   }
 }

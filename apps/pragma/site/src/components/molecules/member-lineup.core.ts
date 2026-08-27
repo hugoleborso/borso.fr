@@ -38,13 +38,20 @@ function nameInstruments(
   });
 }
 
+export interface LineupChipsRequest {
+  readonly lineup: Readonly<Record<string, readonly string[]>>;
+  readonly members: readonly LineupChipMember[];
+  readonly instruments: readonly LineupChipInstrument[];
+  readonly maximumVisible: number;
+}
+
 // @FollowsBlueprint core-projection
-export function buildLineupChips(
-  lineup: Readonly<Record<string, readonly string[]>>,
-  members: readonly LineupChipMember[],
-  instruments: readonly LineupChipInstrument[],
-  maximumVisible: number,
-): LineupChips {
+export function buildLineupChips({
+  lineup,
+  members,
+  instruments,
+  maximumVisible,
+}: LineupChipsRequest): LineupChips {
   const chips = Object.entries(lineup).flatMap(([memberId, instrumentIds]) => {
     const member = members.find((candidate) => candidate.id === memberId);
     if (member === undefined) return [];

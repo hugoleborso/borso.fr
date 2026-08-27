@@ -29,7 +29,11 @@ describe('punch.repository', () => {
   });
 
   it('round-trips a punch via insert + listPunchesForEdition', async () => {
-    const punch = makePunch('alice', 1, '2026-09-19T06:55:00+02:00');
+    const punch = makePunch({
+      runnerSlug: 'alice',
+      loopIndex: 1,
+      finishedAtIso: '2026-09-19T06:55:00+02:00',
+    });
     await insertPunch(getDatabase(), punch);
     const found = await listPunchesForEdition('lepin-2026');
     expect(found).toHaveLength(1);
@@ -37,7 +41,11 @@ describe('punch.repository', () => {
   });
 
   it('findActivePunchForLoop skips voided punches', async () => {
-    const punch = makePunch('alice', 1, '2026-09-19T06:55:00+02:00');
+    const punch = makePunch({
+      runnerSlug: 'alice',
+      loopIndex: 1,
+      finishedAtIso: '2026-09-19T06:55:00+02:00',
+    });
     await insertPunch(getDatabase(), punch);
     await markPunchVoided(punch.id, new Date('2026-09-19T07:00:00+02:00'));
     const active = await findActivePunchForLoop('lepin-2026', 'alice', 1);
@@ -45,14 +53,22 @@ describe('punch.repository', () => {
   });
 
   it('findPunchById returns the row', async () => {
-    const punch = makePunch('alice', 1, '2026-09-19T06:55:00+02:00');
+    const punch = makePunch({
+      runnerSlug: 'alice',
+      loopIndex: 1,
+      finishedAtIso: '2026-09-19T06:55:00+02:00',
+    });
     await insertPunch(getDatabase(), punch);
     const found = await findPunchById(punch.id);
     expect(found?.id).toBe(punch.id);
   });
 
   it('markPunchCorrected updates finishedAt + correctedAt', async () => {
-    const punch = makePunch('alice', 1, '2026-09-19T06:55:00+02:00');
+    const punch = makePunch({
+      runnerSlug: 'alice',
+      loopIndex: 1,
+      finishedAtIso: '2026-09-19T06:55:00+02:00',
+    });
     await insertPunch(getDatabase(), punch);
     const newFinishedAt = new Date('2026-09-19T06:54:30+02:00');
     const correctedAt = new Date('2026-09-19T07:01:00+02:00');

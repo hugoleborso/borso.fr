@@ -36,7 +36,7 @@ export async function computeStandingsForEdition(
     listEditionPunches(editionSlug),
     listManualDidNotFinishes(editionSlug),
   ]);
-  return computeStandings(edition, runners, punches, manualDidNotFinishes, now);
+  return computeStandings({ edition, runners, punches, manualDidNotFinishes, now });
 }
 
 // @FollowsBlueprint service-dto-mapping

@@ -1,3 +1,5 @@
+import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
+import type { Runner } from '../runner/runner.types';
 // @FollowsBlueprint domain-types-module
 export type EditionStatus = 'setup' | 'live' | 'finished';
 
@@ -22,4 +24,12 @@ export interface RaceEdition {
   readonly intervalMinutes: number;
   readonly gpx: GpxMetadata;
   readonly status: EditionStatus;
+}
+
+export interface RaceSnapshot {
+  readonly edition: RaceEdition;
+  readonly runners: readonly Runner[];
+  readonly punches: readonly LoopPunch[];
+  readonly manualDidNotFinishes: readonly ManualDidNotFinish[];
+  readonly now: Date;
 }

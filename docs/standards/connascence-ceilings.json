@@ -4,8 +4,8 @@
     "anchor": "half of SonarQube's default Sonar way gate, which fails above 3.0% duplicated lines on new code. For scale, DejaVu (Lopes et al., OOPSLA 2017, 4.5M GitHub projects and 428M files) found only 6% of JavaScript files distinct, the worst of the four languages it measured"
   },
   "maximumArity": {
-    "limit": 5,
-    "anchor": "below SonarSource rule S107, whose default maximum is 7 parameters"
+    "limit": 3,
+    "anchor": "this repository now holds every exported callable at three positional parameters or fewer, which is where it sits rather than where it is allowed to go. SonarSource rule S107 defaults to 7 and the earlier ceiling here was 5"
   },
   "maximumCacheFanOut": {
     "limit": 4,

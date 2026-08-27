@@ -39,7 +39,14 @@ interface LinePickContext {
 const LINE_PICK_BY_MODE: Record<Mode, (entry: LineEntry, context: LinePickContext) => void> = {
   learn: ({ line }, { selection }) => setSelection(buildLineSelection(selection, line.id)),
   play: ({ opening, variation, line }, { scope }) =>
-    setPlayScope(toggleLineInPlayScope(scope, opening.id, variation.id, line.id)),
+    setPlayScope(
+      toggleLineInPlayScope({
+        scope,
+        openingId: opening.id,
+        variationId: variation.id,
+        lineId: line.id,
+      }),
+    ),
 };
 
 // @FollowsBlueprint molecule-presentational
@@ -62,7 +69,7 @@ export function LinesPanel({ mode, lists, selection, playScope, boardStyle }: Op
           key={`${entry.variation.id}-${entry.line.id}`}
           label={entry.line.name}
           meta={t('selection.lines.eco', { eco: entry.line.eco })}
-          isActive={isLineActive(mode, entry.line.id, selection, playScope)}
+          isActive={isLineActive({ mode, lineId: entry.line.id, selection, scope: playScope })}
           onSelect={() => LINE_PICK_BY_MODE[mode](entry, { scope: playScope, selection })}
           board={
             <MiniBoard

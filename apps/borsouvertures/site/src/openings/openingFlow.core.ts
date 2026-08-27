@@ -82,13 +82,20 @@ function listPanelLineEntries(
   return listLineEntries([selectedEntry]);
 }
 
+export interface OpeningFlowRequest {
+  readonly mode: Mode;
+  readonly openings: Opening[];
+  readonly selection: Selection;
+  readonly scope: PlayScope;
+}
+
 // @FollowsBlueprint core-view-intent
-export function buildOpeningFlowLists(
-  mode: Mode,
-  openings: Opening[],
-  selection: Selection,
-  scope: PlayScope,
-): OpeningFlowLists {
+export function buildOpeningFlowLists({
+  mode,
+  openings,
+  selection,
+  scope,
+}: OpeningFlowRequest): OpeningFlowLists {
   const selectedOpening = findOpening(openings, selection.openingId);
 
   const variationEntries = listVariationEntries(

@@ -72,7 +72,7 @@ export function OpeningsPanel({
           key={opening.id}
           label={opening.name}
           meta={t('selection.openings.variation-count', { count: opening.variations.length })}
-          isActive={isOpeningActive(mode, opening.id, selection, playScope)}
+          isActive={isOpeningActive({ mode, openingId: opening.id, selection, scope: playScope })}
           onSelect={() => pickOpening(opening)}
           board={<MiniBoard fen={buildOpeningPreview(opening).fen} boardStyleId={boardStyle} />}
         />

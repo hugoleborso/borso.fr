@@ -30,7 +30,7 @@ export function buildTransitionCommentsRouter() {
       async (context) => {
         const { a, b } = context.req.valid('param');
         const { comment } = context.req.valid('json');
-        await saveTransitionComment(a, b, comment, new Date());
+        await saveTransitionComment({ songAId: a, songBId: b, comment, now: new Date() });
         return context.json({ songAId: a, songBId: b, comment });
       },
     )

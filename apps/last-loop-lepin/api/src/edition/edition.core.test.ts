@@ -142,14 +142,26 @@ describe('isRaceEndReached', () => {
 describe('projectDidNotFinishCandidates', () => {
   it('returns no candidates before the second top', () => {
     const now = new Date('2026-09-19T06:30:00+02:00');
-    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, [], [], now);
+    const candidates = projectDidNotFinishCandidates({
+      edition: EDITION_2026,
+      runners: RUNNERS,
+      punches: [],
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(candidates).toHaveLength(0);
   });
 
   it('flags runners with no closed-loop punch at the top of loop 2', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
     const punches: readonly LoopPunch[] = [buildPunch('alice', 1, '2026-09-19T06:55:00+02:00')];
-    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    const candidates = projectDidNotFinishCandidates({
+      edition: EDITION_2026,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     const slugs = candidates.map((entry) => entry.runner.slug);
     expect(slugs).toEqual(['bob', 'carla']);
     expect(candidates[0]?.missedAfterLoop).toBe(1);
@@ -167,13 +179,13 @@ describe('projectDidNotFinishCandidates', () => {
         decidedAt: new Date('2026-09-19T06:50:00+02:00'),
       },
     ];
-    const candidates = projectDidNotFinishCandidates(
-      EDITION_2026,
-      RUNNERS,
+    const candidates = projectDidNotFinishCandidates({
+      edition: EDITION_2026,
+      runners: RUNNERS,
       punches,
       manualDidNotFinishes,
       now,
-    );
+    });
     expect(candidates.map((entry) => entry.runner.slug)).toEqual(['carla']);
   });
 
@@ -182,28 +194,52 @@ describe('projectDidNotFinishCandidates', () => {
     const punches: readonly LoopPunch[] = [
       buildPunch('alice', 1, '2026-09-19T06:55:00+02:00', '2026-09-19T07:00:00+02:00'),
     ];
-    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    const candidates = projectDidNotFinishCandidates({
+      edition: EDITION_2026,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(candidates.map((entry) => entry.runner.slug)).toEqual(['alice', 'bob', 'carla']);
   });
 
   it('does not let a punch for another loop stand in for the one that just closed', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
     const punches: readonly LoopPunch[] = [buildPunch('alice', 2, '2026-09-19T06:40:00+02:00')];
-    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    const candidates = projectDidNotFinishCandidates({
+      edition: EDITION_2026,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(candidates.map((entry) => entry.runner.slug)).toEqual(['alice', 'bob', 'carla']);
   });
 
   it('counts a punch landing exactly on the closing top', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
     const punches: readonly LoopPunch[] = [buildPunch('alice', 1, '2026-09-19T07:00:00+02:00')];
-    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    const candidates = projectDidNotFinishCandidates({
+      edition: EDITION_2026,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(candidates.map((entry) => entry.runner.slug)).toEqual(['bob', 'carla']);
   });
 
   it('treats a punch arriving within the tolerance window as valid', () => {
     const now = new Date('2026-09-19T07:01:00+02:00');
     const punches: readonly LoopPunch[] = [buildPunch('alice', 1, '2026-09-19T07:00:25+02:00')];
-    const candidates = projectDidNotFinishCandidates(EDITION_2026, RUNNERS, punches, [], now);
+    const candidates = projectDidNotFinishCandidates({
+      edition: EDITION_2026,
+      runners: RUNNERS,
+      punches,
+      manualDidNotFinishes: [],
+      now,
+    });
     expect(candidates.map((entry) => entry.runner.slug)).toContain('alice');
   });
 });

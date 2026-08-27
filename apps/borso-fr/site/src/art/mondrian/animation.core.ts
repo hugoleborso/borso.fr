@@ -58,12 +58,19 @@ const INKBLOOM_JITTER_SPREAD_MS = 80;
 const INKBLOOM_JITTER_STRIDE = 37;
 const NO_DELAY_MS = 0;
 
-export function selectInkbloomDelayMs(
-  rectangleIndex: number,
-  rectangleCount: number,
-  rectangleId: number,
-  isReducedMotion: boolean,
-): number {
+export interface InkbloomDelayRequest {
+  readonly rectangleIndex: number;
+  readonly rectangleCount: number;
+  readonly rectangleId: number;
+  readonly isReducedMotion: boolean;
+}
+
+export function selectInkbloomDelayMs({
+  rectangleIndex,
+  rectangleCount,
+  rectangleId,
+  isReducedMotion,
+}: InkbloomDelayRequest): number {
   if (isReducedMotion) return NO_DELAY_MS;
   if (rectangleCount === 0) return NO_DELAY_MS;
   const stagger = (rectangleIndex / rectangleCount) * INKBLOOM_STAGGER_TOTAL_MS;

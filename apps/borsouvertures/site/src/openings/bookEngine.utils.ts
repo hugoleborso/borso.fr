@@ -74,13 +74,20 @@ export function gatherCandidates(
   return candidates;
 }
 
+export interface BookStateRequest {
+  readonly openings: Opening[];
+  readonly selection: Selection;
+  readonly playedMoves: string[];
+  readonly playScope?: PlayScopeFilter;
+}
+
 // @FollowsBlueprint utils-pure-module
-export function computeBookState(
-  openings: Opening[],
-  selection: Selection,
-  playedMoves: string[],
-  playScope?: PlayScopeFilter,
-): BookState {
+export function computeBookState({
+  openings,
+  selection,
+  playedMoves,
+  playScope,
+}: BookStateRequest): BookState {
   const scopedCandidates = gatherCandidates(openings, selection, playScope);
   const matchingCandidates = scopedCandidates.filter((candidate) =>
     playedMoves.every((move, index) => candidate.line.movesUci[index] === move),

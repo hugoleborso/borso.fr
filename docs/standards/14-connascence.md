@@ -141,6 +141,30 @@ cheapest kind there is. The detector reflects that: a callable whose only
 parameter is an object binding pattern counts as arity zero and is never reported,
 because it is the fix rather than the problem.
 
+The first measurement found 25 exported callables above three, four of them at
+five. Every one of them is now an object, and the reason to do it rather than
+raise the ceiling is visible in what the five-parameter ones took:
+`buildCloneInsertSql(sourceSchema, targetSchema, table, …)` took three adjacent
+strings, so swapping the two schemas compiled and cloned in the wrong direction;
+`levelFromKey(key, current, minimum, maximum)` took three adjacent numbers;
+`saveTransitionComment(songAId, songBId, comment, now)` took two ids of the same
+type whose order is the whole meaning of the row. None of those mistakes has a
+type error to make it visible.
+
+Two of them turned out to be the same finding twice. `computeStandings` and
+`projectDidNotFinishCandidates` took the identical five parameters — a parameter
+group repeated across two bounded contexts, which is a domain type nobody had
+named. It is now `RaceSnapshot` in `edition.types.ts`, and the object conversion
+is what surfaced it. That is the argument for fixing rather than tolerating: an
+arity is often a missing noun.
+
+**The ceiling is now three, which is where the tree sits rather than where it is
+allowed to go.** Seventy-four callables take exactly three, and a three-parameter
+signature is not automatically wrong — `clamp(value, minimum, maximum)` reads
+better positionally than as an object. The ratchet holds that count at 74 and the
+next honest step is to look at those seventy-four one at a time, not to convert
+them all to satisfy a number.
+
 ## Findings are scoped to one workspace
 
 `apps/pragma` and `apps/last-loop-lepin` both write `404`, and neither has to
@@ -204,7 +228,7 @@ the tail is not.
 | Metric | Ceiling | Anchor |
 | --- | --- | --- |
 | `duplicatedLinePercent` | 1.5 | SonarQube's default Sonar way quality gate fails above 3.0% duplicated lines on new code |
-| `maximumArity` | 5 | SonarSource rule S107 defaults to a maximum of 7 parameters |
+| `maximumArity` | 3 | every exported callable here already holds at three or fewer; SonarSource rule S107 defaults to 7 |
 | `maximumCacheFanOut` | 4 | Coupling Between Objects is held to 9 in Microsoft's guidance and 14 in Sahraoui, Godin and Miceli |
 | `orphanCacheKeys` | 0 | none: a cache write naming a key no query reads is a defect, not a quantity to budget |
 | `maximumTimingDegree` | 8 | none: set from this repository's own distribution |

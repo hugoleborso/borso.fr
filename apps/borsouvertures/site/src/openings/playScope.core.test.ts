@@ -98,7 +98,14 @@ describe('toggleVariationInPlayScope', () => {
 
 describe('toggleLineInPlayScope', () => {
   it('adds the line and both of its parents', () => {
-    expect(toggleLineInPlayScope(EMPTY_PLAY_SCOPE, 'italian', 'classical', 'greco')).toEqual({
+    expect(
+      toggleLineInPlayScope({
+        scope: EMPTY_PLAY_SCOPE,
+        openingId: 'italian',
+        variationId: 'classical',
+        lineId: 'greco',
+      }),
+    ).toEqual({
       openingIds: ['italian'],
       variationIds: ['classical'],
       lineIds: ['greco'],
@@ -106,7 +113,14 @@ describe('toggleLineInPlayScope', () => {
   });
 
   it('keeps parents it already has and removes a line it already has', () => {
-    expect(toggleLineInPlayScope(SCOPE, 'italian', 'classical', 'greco')).toEqual({
+    expect(
+      toggleLineInPlayScope({
+        scope: SCOPE,
+        openingId: 'italian',
+        variationId: 'classical',
+        lineId: 'greco',
+      }),
+    ).toEqual({
       openingIds: ['italian'],
       variationIds: ['classical'],
       lineIds: [],
@@ -152,39 +166,98 @@ describe('buildLineSelection', () => {
 // @FollowsBlueprint test-pure-unit
 describe('isOpeningActive', () => {
   it('reads the play scope in play mode', () => {
-    expect(isOpeningActive('play', 'italian', FULL_SELECTION, SCOPE)).toBe(true);
-    expect(isOpeningActive('play', 'ruy-lopez', FULL_SELECTION, SCOPE)).toBe(false);
+    expect(
+      isOpeningActive({
+        mode: 'play',
+        openingId: 'italian',
+        selection: FULL_SELECTION,
+        scope: SCOPE,
+      }),
+    ).toBe(true);
+    expect(
+      isOpeningActive({
+        mode: 'play',
+        openingId: 'ruy-lopez',
+        selection: FULL_SELECTION,
+        scope: SCOPE,
+      }),
+    ).toBe(false);
   });
 
   it('reads the selection in learn mode', () => {
     const selection = buildOpeningSelection('italian');
-    expect(isOpeningActive('learn', 'italian', selection, EMPTY_PLAY_SCOPE)).toBe(true);
-    expect(isOpeningActive('learn', 'ruy-lopez', selection, EMPTY_PLAY_SCOPE)).toBe(false);
+    expect(
+      isOpeningActive({ mode: 'learn', openingId: 'italian', selection, scope: EMPTY_PLAY_SCOPE }),
+    ).toBe(true);
+    expect(
+      isOpeningActive({
+        mode: 'learn',
+        openingId: 'ruy-lopez',
+        selection,
+        scope: EMPTY_PLAY_SCOPE,
+      }),
+    ).toBe(false);
   });
 });
 
 describe('isVariationActive', () => {
   it('reads the play scope in play mode', () => {
-    expect(isVariationActive('play', 'classical', FULL_SELECTION, SCOPE)).toBe(true);
-    expect(isVariationActive('play', 'two-knights', FULL_SELECTION, SCOPE)).toBe(false);
+    expect(
+      isVariationActive({
+        mode: 'play',
+        variationId: 'classical',
+        selection: FULL_SELECTION,
+        scope: SCOPE,
+      }),
+    ).toBe(true);
+    expect(
+      isVariationActive({
+        mode: 'play',
+        variationId: 'two-knights',
+        selection: FULL_SELECTION,
+        scope: SCOPE,
+      }),
+    ).toBe(false);
   });
 
   it('reads the selection in learn mode', () => {
     const selection = buildVariationSelection('italian', 'classical');
-    expect(isVariationActive('learn', 'classical', selection, EMPTY_PLAY_SCOPE)).toBe(true);
-    expect(isVariationActive('learn', 'two-knights', selection, EMPTY_PLAY_SCOPE)).toBe(false);
+    expect(
+      isVariationActive({
+        mode: 'learn',
+        variationId: 'classical',
+        selection,
+        scope: EMPTY_PLAY_SCOPE,
+      }),
+    ).toBe(true);
+    expect(
+      isVariationActive({
+        mode: 'learn',
+        variationId: 'two-knights',
+        selection,
+        scope: EMPTY_PLAY_SCOPE,
+      }),
+    ).toBe(false);
   });
 });
 
 describe('isLineActive', () => {
   it('reads the play scope in play mode', () => {
-    expect(isLineActive('play', 'greco', FULL_SELECTION, SCOPE)).toBe(true);
-    expect(isLineActive('play', 'other', FULL_SELECTION, SCOPE)).toBe(false);
+    expect(
+      isLineActive({ mode: 'play', lineId: 'greco', selection: FULL_SELECTION, scope: SCOPE }),
+    ).toBe(true);
+    expect(
+      isLineActive({ mode: 'play', lineId: 'other', selection: FULL_SELECTION, scope: SCOPE }),
+    ).toBe(false);
   });
 
   it('reads the selection in learn mode', () => {
     const selection = buildLineSelection(FULL_SELECTION, 'greco');
-    expect(isLineActive('learn', 'greco', selection, EMPTY_PLAY_SCOPE)).toBe(true);
-    expect(isLineActive('learn', 'other', selection, EMPTY_PLAY_SCOPE)).toBe(false);
+    expect(
+      isLineActive({ mode: 'learn', lineId: 'greco', selection, scope: EMPTY_PLAY_SCOPE }),
+    ).toBe(true);
+    expect(
+      isLineActive({ mode: 'learn', lineId: 'other', selection, scope: EMPTY_PLAY_SCOPE }),
+    ).toBe(false);
   });
 });

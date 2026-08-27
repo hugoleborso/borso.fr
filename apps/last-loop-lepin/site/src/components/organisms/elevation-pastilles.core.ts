@@ -22,14 +22,22 @@ export function hasElevationSamples(edition: RaceEditionDto): boolean {
   return edition.gpx.trackJson.points.length >= MINIMUM_PROFILE_POINTS;
 }
 
+export interface ElevationPastillesRequest {
+  readonly edition: RaceEditionDto;
+  readonly ranked: readonly RankedRunnerDto[];
+  readonly nowMs: number;
+  readonly geometry: ProfileGeometry;
+  readonly viewBoxWidth: number;
+}
+
 // @FollowsBlueprint core-view-projection
-export function listElevationPastilles(
-  edition: RaceEditionDto,
-  ranked: readonly RankedRunnerDto[],
-  nowMs: number,
-  geometry: ProfileGeometry,
-  viewBoxWidth: number,
-): readonly ElevationPastille[] {
+export function listElevationPastilles({
+  edition,
+  ranked,
+  nowMs,
+  geometry,
+  viewBoxWidth,
+}: ElevationPastillesRequest): readonly ElevationPastille[] {
   const timingInputs: RaceTimingInputs = {
     status: edition.status,
     startsAt: edition.startsAt,

@@ -190,7 +190,11 @@ describe('gatherCandidates', () => {
 // @FollowsBlueprint test-pure-unit
 describe('computeBookState', () => {
   it('reports out-of-book when no candidate matches', () => {
-    const state = computeBookState([italianMain], allSelection, ['a2a3']);
+    const state = computeBookState({
+      openings: [italianMain],
+      selection: allSelection,
+      playedMoves: ['a2a3'],
+    });
     expect(state.inBook).toBe(false);
     expect(state.candidates).toEqual([]);
     expect(state.possibleNextMovesUci).toEqual([]);
@@ -201,7 +205,11 @@ describe('computeBookState', () => {
   });
 
   it('reports possible next moves when multiple lines match the prefix', () => {
-    const state = computeBookState([italianMain], allSelection, ['e2e4', 'e7e5']);
+    const state = computeBookState({
+      openings: [italianMain],
+      selection: allSelection,
+      playedMoves: ['e2e4', 'e7e5'],
+    });
     expect(state.inBook).toBe(true);
     expect(new Set(state.possibleNextMovesUci)).toEqual(new Set(['g1f3', 'f1c4', 'b2b4']));
     expect(state.uniqueOpening?.id).toBe('italian-game');
@@ -211,7 +219,11 @@ describe('computeBookState', () => {
   });
 
   it('detects unique line and atLineEnd when the played sequence equals the line', () => {
-    const state = computeBookState([italianMain], allSelection, ['e2e4', 'e7e5', 'g1f3']);
+    const state = computeBookState({
+      openings: [italianMain],
+      selection: allSelection,
+      playedMoves: ['e2e4', 'e7e5', 'g1f3'],
+    });
     expect(state.uniqueOpening?.id).toBe('italian-game');
     expect(state.uniqueVariation?.id).toBe('main');
     expect(state.uniqueLine?.id).toBe('classical');
@@ -247,7 +259,11 @@ describe('computeBookState', () => {
         },
       ],
     };
-    const state = computeBookState([longLine], allSelection, ['e2e4']);
+    const state = computeBookState({
+      openings: [longLine],
+      selection: allSelection,
+      playedMoves: ['e2e4'],
+    });
     expect(state.inBook).toBe(true);
     expect(state.atLineEnd).toBe(false);
   });

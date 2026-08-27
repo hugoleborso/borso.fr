@@ -38,7 +38,12 @@ function listLineIds(entries: readonly { line: { id: string } }[]): string[] {
 // @FollowsBlueprint test-pure-unit
 describe('buildOpeningFlowLists in play mode', () => {
   it('spans every opening when the scope is empty', () => {
-    const lists = buildOpeningFlowLists('play', OPENINGS, FULL_SELECTION, EMPTY_PLAY_SCOPE);
+    const lists = buildOpeningFlowLists({
+      mode: 'play',
+      openings: OPENINGS,
+      selection: FULL_SELECTION,
+      scope: EMPTY_PLAY_SCOPE,
+    });
     expect(listVariationIds(lists.variationEntries)).toEqual([
       'classical',
       'two-knights',
@@ -54,7 +59,12 @@ describe('buildOpeningFlowLists in play mode', () => {
 
   it('narrows to the openings in the scope', () => {
     const scope: PlayScope = { openingIds: ['ruy-lopez'], variationIds: [], lineIds: [] };
-    const lists = buildOpeningFlowLists('play', OPENINGS, FULL_SELECTION, scope);
+    const lists = buildOpeningFlowLists({
+      mode: 'play',
+      openings: OPENINGS,
+      selection: FULL_SELECTION,
+      scope,
+    });
     expect(listVariationIds(lists.variationEntries)).toEqual(['berlin']);
     expect(listLineIds(lists.lineEntries)).toEqual(['berlin-wall']);
   });
@@ -65,12 +75,22 @@ describe('buildOpeningFlowLists in play mode', () => {
       variationIds: ['two-knights'],
       lineIds: [],
     };
-    const lists = buildOpeningFlowLists('play', OPENINGS, FULL_SELECTION, scope);
+    const lists = buildOpeningFlowLists({
+      mode: 'play',
+      openings: OPENINGS,
+      selection: FULL_SELECTION,
+      scope,
+    });
     expect(listLineIds(lists.lineEntries)).toEqual(['fried-liver']);
   });
 
   it('shows the same lists in the panels as in the totals', () => {
-    const lists = buildOpeningFlowLists('play', OPENINGS, FULL_SELECTION, EMPTY_PLAY_SCOPE);
+    const lists = buildOpeningFlowLists({
+      mode: 'play',
+      openings: OPENINGS,
+      selection: FULL_SELECTION,
+      scope: EMPTY_PLAY_SCOPE,
+    });
     expect(lists.panelVariationEntries).toBe(lists.variationEntries);
     expect(lists.panelLineEntries).toBe(lists.lineEntries);
   });
@@ -78,7 +98,12 @@ describe('buildOpeningFlowLists in play mode', () => {
 
 describe('buildOpeningFlowLists in learn mode', () => {
   it('shows no variations and no lines until an opening is picked', () => {
-    const lists = buildOpeningFlowLists('learn', OPENINGS, FULL_SELECTION, EMPTY_PLAY_SCOPE);
+    const lists = buildOpeningFlowLists({
+      mode: 'learn',
+      openings: OPENINGS,
+      selection: FULL_SELECTION,
+      scope: EMPTY_PLAY_SCOPE,
+    });
     expect(lists.panelVariationEntries).toEqual([]);
     expect(lists.panelLineEntries).toEqual([]);
     expect(listVariationIds(lists.variationEntries)).toEqual([
@@ -94,7 +119,12 @@ describe('buildOpeningFlowLists in learn mode', () => {
       variationId: ALL_KEY,
       lineId: ALL_KEY,
     };
-    const lists = buildOpeningFlowLists('learn', OPENINGS, selection, EMPTY_PLAY_SCOPE);
+    const lists = buildOpeningFlowLists({
+      mode: 'learn',
+      openings: OPENINGS,
+      selection,
+      scope: EMPTY_PLAY_SCOPE,
+    });
     expect(listVariationIds(lists.panelVariationEntries)).toEqual(['classical', 'two-knights']);
     expect(lists.panelLineEntries).toEqual([]);
   });
@@ -105,7 +135,12 @@ describe('buildOpeningFlowLists in learn mode', () => {
       variationId: ALL_KEY,
       lineId: ALL_KEY,
     };
-    const lists = buildOpeningFlowLists('learn', OPENINGS, selection, EMPTY_PLAY_SCOPE);
+    const lists = buildOpeningFlowLists({
+      mode: 'learn',
+      openings: OPENINGS,
+      selection,
+      scope: EMPTY_PLAY_SCOPE,
+    });
     expect(listVariationIds(lists.variationEntries)).toEqual(['classical', 'two-knights']);
     expect(listLineIds(lists.lineEntries)).toEqual(['greco', 'center', 'fried-liver']);
   });
@@ -116,7 +151,12 @@ describe('buildOpeningFlowLists in learn mode', () => {
       variationId: 'classical',
       lineId: ALL_KEY,
     };
-    const lists = buildOpeningFlowLists('learn', OPENINGS, selection, EMPTY_PLAY_SCOPE);
+    const lists = buildOpeningFlowLists({
+      mode: 'learn',
+      openings: OPENINGS,
+      selection,
+      scope: EMPTY_PLAY_SCOPE,
+    });
     expect(listLineIds(lists.panelLineEntries)).toEqual(['greco', 'center']);
   });
 
@@ -127,7 +167,7 @@ describe('buildOpeningFlowLists in learn mode', () => {
       variationId: 'classical',
       lineId: ALL_KEY,
     };
-    const lists = buildOpeningFlowLists('learn', OPENINGS, selection, scope);
+    const lists = buildOpeningFlowLists({ mode: 'learn', openings: OPENINGS, selection, scope });
     expect(listLineIds(lists.panelLineEntries)).toEqual(['greco', 'center']);
     expect(listVariationIds(lists.variationEntries)).toEqual(['classical', 'two-knights']);
     expect(listLineIds(lists.lineEntries)).toEqual(['greco', 'center', 'fried-liver']);
@@ -139,7 +179,12 @@ describe('buildOpeningFlowLists in learn mode', () => {
       variationId: 'berlin',
       lineId: ALL_KEY,
     };
-    const lists = buildOpeningFlowLists('learn', OPENINGS, selection, EMPTY_PLAY_SCOPE);
+    const lists = buildOpeningFlowLists({
+      mode: 'learn',
+      openings: OPENINGS,
+      selection,
+      scope: EMPTY_PLAY_SCOPE,
+    });
     expect(lists.panelLineEntries).toEqual([]);
   });
 });

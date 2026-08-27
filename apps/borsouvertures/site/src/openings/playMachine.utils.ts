@@ -96,12 +96,12 @@ function beginRun(config: PlayMachineConfig): PlayRun {
 }
 
 function readBookState(run: PlayRun): BookState {
-  return computeBookState(
-    run.config.openings,
-    run.config.selection,
-    [...run.playedMovesUci],
-    run.config.playScope,
-  );
+  return computeBookState({
+    openings: run.config.openings,
+    selection: run.config.selection,
+    playedMoves: [...run.playedMovesUci],
+    playScope: run.config.playScope,
+  });
 }
 
 function computeSnapshot(run: PlayRun): PlayMachineSnapshot {

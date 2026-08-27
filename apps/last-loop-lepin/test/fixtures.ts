@@ -41,13 +41,19 @@ export function makeRunner(slug: string, overrides: Partial<Runner> = {}): Runne
   };
 }
 
+export interface PunchFixture extends Partial<LoopPunch> {
+  readonly runnerSlug: string;
+  readonly loopIndex: number;
+  readonly finishedAtIso: string;
+}
+
 // @FollowsBlueprint test-fixtures-object-mother
-export function makePunch(
-  runnerSlug: string,
-  loopIndex: number,
-  finishedAtIso: string,
-  overrides: Partial<LoopPunch> = {},
-): LoopPunch {
+export function makePunch({
+  runnerSlug,
+  loopIndex,
+  finishedAtIso,
+  ...overrides
+}: PunchFixture): LoopPunch {
   return {
     id: randomUUID(),
     editionSlug: 'lepin-2026',

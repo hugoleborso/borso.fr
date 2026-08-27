@@ -65,7 +65,7 @@ export function App() {
     [layout, palette, seed, balance],
   );
   const title = useMemo(
-    () => buildTitle(seed, rectangles, palette, t),
+    () => buildTitle({ seed, rects: rectangles, palette, translate: t }),
     [seed, rectangles, palette, t],
   );
 

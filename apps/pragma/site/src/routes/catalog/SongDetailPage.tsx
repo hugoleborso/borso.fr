@@ -78,7 +78,13 @@ export function SongDetailPage(): JSX.Element {
   }, [masteryDefaults]);
 
   const lineupRows = useMemo(
-    () => buildSongLineupRows(song?.defaultLineup ?? {}, members, instruments, masteryLookup),
+    () =>
+      buildSongLineupRows({
+        defaultLineup: song?.defaultLineup ?? {},
+        members,
+        instruments,
+        masteryByMemberInstrument: masteryLookup,
+      }),
     [song, members, instruments, masteryLookup],
   );
 

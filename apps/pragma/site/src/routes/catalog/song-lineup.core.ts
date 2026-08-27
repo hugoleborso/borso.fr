@@ -38,13 +38,20 @@ export function buildMasteryKey(memberId: string, instrumentId: string): string 
   return `${memberId}::${instrumentId}`;
 }
 
+export interface SongLineupRowsRequest {
+  readonly defaultLineup: Lineup;
+  readonly members: readonly LineupMember[];
+  readonly instruments: readonly LineupInstrument[];
+  readonly masteryByMemberInstrument: ReadonlyMap<string, number>;
+}
+
 // @FollowsBlueprint core-view-projection
-export function buildSongLineupRows(
-  defaultLineup: Lineup,
-  members: readonly LineupMember[],
-  instruments: readonly LineupInstrument[],
-  masteryByMemberInstrument: ReadonlyMap<string, number>,
-): SongLineupRow[] {
+export function buildSongLineupRows({
+  defaultLineup,
+  members,
+  instruments,
+  masteryByMemberInstrument,
+}: SongLineupRowsRequest): SongLineupRow[] {
   const rows: SongLineupRow[] = [];
   for (const [memberId, instrumentIds] of Object.entries(defaultLineup)) {
     const member = members.find((candidate) => candidate.id === memberId);

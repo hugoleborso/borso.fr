@@ -47,12 +47,19 @@ export function toggleVariationInPlayScope(
   };
 }
 
-export function toggleLineInPlayScope(
-  scope: PlayScope,
-  openingId: string,
-  variationId: string,
-  lineId: string,
-): PlayScope {
+export interface LineToggleRequest {
+  readonly scope: PlayScope;
+  readonly openingId: string;
+  readonly variationId: string;
+  readonly lineId: string;
+}
+
+export function toggleLineInPlayScope({
+  scope,
+  openingId,
+  variationId,
+  lineId,
+}: LineToggleRequest): PlayScope {
   return {
     openingIds: withMembership(scope.openingIds, openingId),
     variationIds: withMembership(scope.variationIds, variationId),
@@ -72,33 +79,49 @@ export function buildLineSelection(selection: Selection, lineId: string): Select
   return { openingId: selection.openingId, variationId: selection.variationId, lineId };
 }
 
+export interface OpeningScopeRequest {
+  readonly mode: Mode;
+  readonly openingId: string;
+  readonly selection: Selection;
+  readonly scope: PlayScope;
+}
+
 // @FollowsBlueprint core-view-intent
-export function isOpeningActive(
-  mode: Mode,
-  openingId: string,
-  selection: Selection,
-  scope: PlayScope,
-): boolean {
+export function isOpeningActive({
+  mode,
+  openingId,
+  selection,
+  scope,
+}: OpeningScopeRequest): boolean {
   if (mode === 'play') return scope.openingIds.includes(openingId);
   return selection.openingId === openingId;
 }
 
-export function isVariationActive(
-  mode: Mode,
-  variationId: string,
-  selection: Selection,
-  scope: PlayScope,
-): boolean {
+export interface VariationScopeRequest {
+  readonly mode: Mode;
+  readonly variationId: string;
+  readonly selection: Selection;
+  readonly scope: PlayScope;
+}
+
+export function isVariationActive({
+  mode,
+  variationId,
+  selection,
+  scope,
+}: VariationScopeRequest): boolean {
   if (mode === 'play') return scope.variationIds.includes(variationId);
   return selection.variationId === variationId;
 }
 
-export function isLineActive(
-  mode: Mode,
-  lineId: string,
-  selection: Selection,
-  scope: PlayScope,
-): boolean {
+export interface LineScopeRequest {
+  readonly mode: Mode;
+  readonly lineId: string;
+  readonly selection: Selection;
+  readonly scope: PlayScope;
+}
+
+export function isLineActive({ mode, lineId, selection, scope }: LineScopeRequest): boolean {
   if (mode === 'play') return scope.lineIds.includes(lineId);
   return selection.lineId === lineId;
 }

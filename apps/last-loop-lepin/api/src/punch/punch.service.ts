@@ -80,7 +80,12 @@ export async function registerPunch(input: RegisterPunchInput, now: Date): Promi
   const existingPunches = await listPunchesForEdition(input.editionSlug);
   const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);
 
-  const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
+  const validation = validatePunchTiming({
+    edition,
+    runnerSlug: input.runnerSlug,
+    validPunchesForRunner: runnerPunches,
+    now,
+  });
   if (!validation.ok) {
     throw await buildPunchRejectionError(edition, input, validation.reason, now);
   }
@@ -124,7 +129,12 @@ export async function registerSelfPunch(
   const existingPunches = await listPunchesForEdition(input.editionSlug);
   const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);
 
-  const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
+  const validation = validatePunchTiming({
+    edition,
+    runnerSlug: input.runnerSlug,
+    validPunchesForRunner: runnerPunches,
+    now,
+  });
   if (!validation.ok) {
     throw await buildPunchRejectionError(edition, input, validation.reason, now);
   }

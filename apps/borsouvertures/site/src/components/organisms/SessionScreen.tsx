@@ -56,7 +56,7 @@ export function SessionScreen({ openings }: SessionScreenProps) {
         </div>
       </div>
       <SessionBody
-        key={buildSessionKey(mode, side, selection, playScope)}
+        key={buildSessionKey({ mode, side, selection, scope: playScope })}
         openings={openings}
         selection={selection}
         playScope={playScope}

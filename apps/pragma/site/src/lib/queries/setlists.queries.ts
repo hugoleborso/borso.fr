@@ -216,7 +216,12 @@ export function useLinkSetlistToSession() {
         appendSetlistToCache(cache, variables.setlist),
       );
       updateListCache(queryClient, (cache) =>
-        applySessionLinkInCache(cache, variables.setlist.id, variables.sessionId, true),
+        applySessionLinkInCache({
+          cache,
+          setlistId: variables.setlist.id,
+          sessionId: variables.sessionId,
+          isLinked: true,
+        }),
       );
       return { previous };
     },
@@ -243,7 +248,12 @@ export function useUnlinkSetlistFromSession() {
         removeSetlistFromCache(cache, variables.setlistId),
       );
       updateListCache(queryClient, (cache) =>
-        applySessionLinkInCache(cache, variables.setlistId, variables.sessionId, false),
+        applySessionLinkInCache({
+          cache,
+          setlistId: variables.setlistId,
+          sessionId: variables.sessionId,
+          isLinked: false,
+        }),
       );
       return { previous };
     },

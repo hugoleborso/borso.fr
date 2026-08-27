@@ -52,13 +52,20 @@ function summarise(samples: readonly Sample[]): SampleStats | null {
   return { firstSample, lastSample, minElevation, maxElevation, totalDistance };
 }
 
+export interface ProfileGeometryRequest {
+  readonly pointElevations: readonly number[];
+  readonly cumulativeDistances: readonly number[];
+  readonly width: number;
+  readonly height: number;
+}
+
 // @FollowsBlueprint utils-geometry
-export function buildProfileGeometry(
-  pointElevations: readonly number[],
-  cumulativeDistances: readonly number[],
-  width: number,
-  height: number,
-): ProfileGeometry {
+export function buildProfileGeometry({
+  pointElevations,
+  cumulativeDistances,
+  width,
+  height,
+}: ProfileGeometryRequest): ProfileGeometry {
   const samples = zipSamples(pointElevations, cumulativeDistances);
   const midLineY = height * VERTICAL_MIDPOINT_FRACTION;
   const bottomLeftCorner = `0,${height}`;

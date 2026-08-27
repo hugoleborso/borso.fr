@@ -255,7 +255,12 @@ async function seedConcertSetlist(songIds: readonly string[], now: Date): Promis
 async function seedTransitionComment(songIds: readonly string[], now: Date): Promise<void> {
   const [, songB, songC] = songIds;
   if (songB === undefined || songC === undefined) return;
-  await saveTransitionComment(songB, songC, SEED_TRANSITION_COMMENT, now);
+  await saveTransitionComment({
+    songAId: songB,
+    songBId: songC,
+    comment: SEED_TRANSITION_COMMENT,
+    now,
+  });
 }
 
 export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {

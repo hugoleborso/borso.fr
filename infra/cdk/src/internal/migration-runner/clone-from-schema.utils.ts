@@ -23,14 +23,22 @@ export function buildCreateTableLikeSql(
   return `CREATE TABLE IF NOT EXISTS ${quote(targetSchema)}.${quote(table)} (LIKE ${quote(sourceSchema)}.${quote(table)} INCLUDING ALL)`;
 }
 
+export interface CloneInsertRequest {
+  readonly sourceSchema: string;
+  readonly targetSchema: string;
+  readonly table: string;
+  readonly columns: readonly string[];
+  readonly nullifyColumns: readonly string[];
+}
+
 // @FollowsBlueprint utils-pure-module
-export function buildCloneInsertSql(
-  sourceSchema: string,
-  targetSchema: string,
-  table: string,
-  columns: readonly string[],
-  nullifyColumns: readonly string[],
-): string {
+export function buildCloneInsertSql({
+  sourceSchema,
+  targetSchema,
+  table,
+  columns,
+  nullifyColumns,
+}: CloneInsertRequest): string {
   assertIdentifier(sourceSchema, 'schema');
   assertIdentifier(targetSchema, 'schema');
   assertIdentifier(table, 'table');

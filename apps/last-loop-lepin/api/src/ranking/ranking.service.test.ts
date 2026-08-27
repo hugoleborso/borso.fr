@@ -39,8 +39,14 @@ describe('ranking.service', () => {
   });
 
   it('orders survivors before DNF runners', async () => {
-    await insertPunch(getDatabase(), makePunch('alice', 1, '2026-09-19T06:55:00+02:00'));
-    await insertPunch(getDatabase(), makePunch('alice', 2, '2026-09-19T07:55:00+02:00'));
+    await insertPunch(
+      getDatabase(),
+      makePunch({ runnerSlug: 'alice', loopIndex: 1, finishedAtIso: '2026-09-19T06:55:00+02:00' }),
+    );
+    await insertPunch(
+      getDatabase(),
+      makePunch({ runnerSlug: 'alice', loopIndex: 2, finishedAtIso: '2026-09-19T07:55:00+02:00' }),
+    );
 
     vi.setSystemTime(new Date('2026-09-19T08:30:00+02:00'));
     const standings = await computeStandingsForEdition('lepin-2026', new Date());

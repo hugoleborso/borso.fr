@@ -17,12 +17,19 @@ export type PunchRejectReason =
  * @BlueprintUsage Use for every business rule. Take the data and `now` as arguments, return a decision, touch nothing else.
  * @BlueprintDescription Decides whether a punch is acceptable from the runner's existing punches, the edition, and an explicit `now`. Pure, so its test calls it with values and asserts on values, and it carries the full coverage gate and the zero-survivor mutation gate.
  */
-export function validatePunchTiming(
-  edition: RaceEdition,
-  runnerSlug: string,
-  validPunchesForRunner: readonly LoopPunch[],
-  now: Date,
-): PunchValidation {
+export interface PunchTimingRequest {
+  readonly edition: RaceEdition;
+  readonly runnerSlug: string;
+  readonly validPunchesForRunner: readonly LoopPunch[];
+  readonly now: Date;
+}
+
+export function validatePunchTiming({
+  edition,
+  runnerSlug,
+  validPunchesForRunner,
+  now,
+}: PunchTimingRequest): PunchValidation {
   if (now.getTime() < edition.startsAt.getTime()) {
     return { ok: false, reason: 'race-not-started' };
   }

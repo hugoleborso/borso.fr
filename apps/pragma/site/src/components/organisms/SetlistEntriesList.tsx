@@ -148,12 +148,12 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             const lineupRaw = lineupOf(entry, props.songsById);
             warnIfOrphanMemberIds(lineupRaw, props.knownMemberIds, entry.songId);
             const fullIndex = props.entries.indexOf(entry);
-            const prominent = prominentMemberInstrumentFor(
-              props.filteredInstrumentIdsByEntryId[entry.id],
-              props.selectedMemberId,
-              props.membersById,
-              props.instrumentsById,
-            );
+            const prominent = prominentMemberInstrumentFor({
+              instrumentIds: props.filteredInstrumentIdsByEntryId[entry.id],
+              selectedMemberId: props.selectedMemberId,
+              membersById: props.membersById,
+              instrumentsById: props.instrumentsById,
+            });
             return (
               <SetlistEntryRow
                 key={entry.id}

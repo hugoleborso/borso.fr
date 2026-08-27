@@ -135,12 +135,19 @@ export function renameSetlistInCache<TSetlist extends MinimalSetlistSummary>(
   };
 }
 
-export function applySessionLinkInCache<TSetlist extends MinimalSetlistSummary>(
-  cache: SetlistsCache<TSetlist>,
-  setlistId: string,
-  sessionId: string,
-  isLinked: boolean,
-): SetlistsCache<TSetlist> {
+export interface SessionLinkRequest<TSetlist extends MinimalSetlistSummary> {
+  readonly cache: SetlistsCache<TSetlist>;
+  readonly setlistId: string;
+  readonly sessionId: string;
+  readonly isLinked: boolean;
+}
+
+export function applySessionLinkInCache<TSetlist extends MinimalSetlistSummary>({
+  cache,
+  setlistId,
+  sessionId,
+  isLinked,
+}: SessionLinkRequest<TSetlist>): SetlistsCache<TSetlist> {
   return {
     setlists: cache.setlists.map((setlist) => {
       if (setlist.id !== setlistId) return setlist;

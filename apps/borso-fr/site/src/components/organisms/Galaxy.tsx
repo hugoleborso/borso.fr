@@ -197,15 +197,15 @@ export function Galaxy({
     const update = (timestamp: number) => {
       frame.handle = requestAnimationFrame(update);
       const jumpIntensity = readJumpIntensity(timestamp);
-      const clock = selectStarClock(
+      const clock = selectStarClock({
         isAnimationPaused,
         timestamp,
-        starSpeed * jumpIntensity.starSpeedMultiplier,
-        {
+        starSpeed: starSpeed * jumpIntensity.starSpeedMultiplier,
+        previousClock: {
           elapsedSeconds: uniforms.uTime.value,
           travelledDistance: uniforms.uStarSpeed.value,
         },
-      );
+      });
       uniforms.uTime.value = clock.elapsedSeconds;
       uniforms.uStarSpeed.value = clock.travelledDistance;
       uniforms.uGlowIntensity.value = glowIntensity * jumpIntensity.glowMultiplier;

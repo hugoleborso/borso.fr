@@ -19,13 +19,20 @@ export async function getTransitionComment(
   return await findTransitionComment(songAId, songBId);
 }
 
-export async function saveTransitionComment(
-  songAId: string,
-  songBId: string,
-  comment: string,
-  now: Date,
-): Promise<void> {
-  await upsertTransitionComment(songAId, songBId, comment, now);
+export interface TransitionCommentRequest {
+  readonly songAId: string;
+  readonly songBId: string;
+  readonly comment: string;
+  readonly now: Date;
+}
+
+export async function saveTransitionComment({
+  songAId,
+  songBId,
+  comment,
+  now,
+}: TransitionCommentRequest): Promise<void> {
+  await upsertTransitionComment({ songAId, songBId, comment, now });
 }
 
 export async function removeTransitionComment(

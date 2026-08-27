@@ -38,13 +38,20 @@ export async function findTransitionComment(
   return rows[0] ?? null;
 }
 
+export interface TransitionCommentUpsert {
+  readonly songAId: string;
+  readonly songBId: string;
+  readonly comment: string;
+  readonly now: Date;
+}
+
 // @FollowsBlueprint repository-idempotent-upsert
-export async function upsertTransitionComment(
-  songAId: string,
-  songBId: string,
-  comment: string,
-  now: Date,
-): Promise<void> {
+export async function upsertTransitionComment({
+  songAId,
+  songBId,
+  comment,
+  now,
+}: TransitionCommentUpsert): Promise<void> {
   const database = getDatabase();
   await database
     .insert(transitionCommentTable)

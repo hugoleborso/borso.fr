@@ -81,36 +81,100 @@ describe('selectInkbloomDelayMs', () => {
   it('adds the rectangle jitter to the delay its position earns', () => {
     const threeTenthsOfTheStagger = 180;
     const jitterOfIdentifierSeven = 19;
-    expect(selectInkbloomDelayMs(3, 10, 7, false)).toBe(
-      threeTenthsOfTheStagger + jitterOfIdentifierSeven,
-    );
+    expect(
+      selectInkbloomDelayMs({
+        rectangleIndex: 3,
+        rectangleCount: 10,
+        rectangleId: 7,
+        isReducedMotion: false,
+      }),
+    ).toBe(threeTenthsOfTheStagger + jitterOfIdentifierSeven);
   });
 
   it('wraps the jitter back round once an identifier runs past the spread', () => {
     const halfOfTheStagger = 300;
     const jitterOfIdentifierThree = 31;
-    expect(selectInkbloomDelayMs(5, 10, 3, false)).toBe(halfOfTheStagger + jitterOfIdentifierThree);
+    expect(
+      selectInkbloomDelayMs({
+        rectangleIndex: 5,
+        rectangleCount: 10,
+        rectangleId: 3,
+        isReducedMotion: false,
+      }),
+    ).toBe(halfOfTheStagger + jitterOfIdentifierThree);
   });
 
   it('staggers later rectangles more than earlier ones', () => {
-    const first = selectInkbloomDelayMs(0, 10, 0, false);
-    const last = selectInkbloomDelayMs(9, 10, 0, false);
+    const first = selectInkbloomDelayMs({
+      rectangleIndex: 0,
+      rectangleCount: 10,
+      rectangleId: 0,
+      isReducedMotion: false,
+    });
+    const last = selectInkbloomDelayMs({
+      rectangleIndex: 9,
+      rectangleCount: 10,
+      rectangleId: 0,
+      isReducedMotion: false,
+    });
     expect(last).toBeGreaterThan(first);
   });
 
   it('gives the same rectangle the same delay every time', () => {
-    expect(selectInkbloomDelayMs(3, 10, 7, false)).toBe(selectInkbloomDelayMs(3, 10, 7, false));
+    expect(
+      selectInkbloomDelayMs({
+        rectangleIndex: 3,
+        rectangleCount: 10,
+        rectangleId: 7,
+        isReducedMotion: false,
+      }),
+    ).toBe(
+      selectInkbloomDelayMs({
+        rectangleIndex: 3,
+        rectangleCount: 10,
+        rectangleId: 7,
+        isReducedMotion: false,
+      }),
+    );
   });
 
   it('separates two rectangles at the same position by their identifier', () => {
-    expect(selectInkbloomDelayMs(3, 10, 7, false)).not.toBe(selectInkbloomDelayMs(3, 10, 8, false));
+    expect(
+      selectInkbloomDelayMs({
+        rectangleIndex: 3,
+        rectangleCount: 10,
+        rectangleId: 7,
+        isReducedMotion: false,
+      }),
+    ).not.toBe(
+      selectInkbloomDelayMs({
+        rectangleIndex: 3,
+        rectangleCount: 10,
+        rectangleId: 8,
+        isReducedMotion: false,
+      }),
+    );
   });
 
   it('blooms everything at once when the reader asked for less motion', () => {
-    expect(selectInkbloomDelayMs(9, 10, 4, true)).toBe(0);
+    expect(
+      selectInkbloomDelayMs({
+        rectangleIndex: 9,
+        rectangleCount: 10,
+        rectangleId: 4,
+        isReducedMotion: true,
+      }),
+    ).toBe(0);
   });
 
   it('blooms at once when there are no rectangles to stagger', () => {
-    expect(selectInkbloomDelayMs(0, 0, 0, false)).toBe(0);
+    expect(
+      selectInkbloomDelayMs({
+        rectangleIndex: 0,
+        rectangleCount: 0,
+        rectangleId: 0,
+        isReducedMotion: false,
+      }),
+    ).toBe(0);
   });
 });

@@ -38,13 +38,20 @@ export function isDragIntent(horizontalTravel: number, verticalTravel: number): 
   return sideways >= DRAG_INTENT_TRAVEL_PX && sideways > Math.abs(verticalTravel);
 }
 
+export interface EnergyLevelRequest {
+  readonly key: string;
+  readonly current: number;
+  readonly minimum: number;
+  readonly maximum: number;
+}
+
 // @FollowsBlueprint utils-pure-module
-export function levelFromKey(
-  key: string,
-  current: number,
-  minimum: number,
-  maximum: number,
-): number | null {
+export function levelFromKey({
+  key,
+  current,
+  minimum,
+  maximum,
+}: EnergyLevelRequest): number | null {
   if (key === HOME_KEY) return minimum;
   if (key === END_KEY) return maximum;
   const step = STEP_BY_KEY[key];

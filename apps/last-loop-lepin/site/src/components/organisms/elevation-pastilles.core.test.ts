@@ -55,12 +55,12 @@ function buildRunner(overrides: Partial<RankedRunnerDto> = {}): RankedRunnerDto 
 }
 
 function buildGeometry(edition: RaceEditionDto) {
-  return buildProfileGeometry(
-    edition.gpx.trackJson.pointElevations ?? [],
-    indexTrack(edition.gpx.trackJson.points).cumulative,
-    VIEWBOX_WIDTH,
-    VIEWBOX_HEIGHT,
-  );
+  return buildProfileGeometry({
+    pointElevations: edition.gpx.trackJson.pointElevations ?? [],
+    cumulativeDistances: indexTrack(edition.gpx.trackJson.points).cumulative,
+    width: VIEWBOX_WIDTH,
+    height: VIEWBOX_HEIGHT,
+  });
 }
 
 // @FollowsBlueprint test-pure-unit
@@ -123,13 +123,13 @@ describe('listElevationPastilles', () => {
   it('returns nothing while the edition is not live', () => {
     const edition = buildEdition({ status: 'finished' });
     expect(
-      listElevationPastilles(
+      listElevationPastilles({
         edition,
-        [buildRunner()],
-        RACE_START_MS,
-        buildGeometry(edition),
-        VIEWBOX_WIDTH,
-      ),
+        ranked: [buildRunner()],
+        nowMs: RACE_START_MS,
+        geometry: buildGeometry(edition),
+        viewBoxWidth: VIEWBOX_WIDTH,
+      }),
     ).toEqual([]);
   });
 
@@ -137,25 +137,25 @@ describe('listElevationPastilles', () => {
     const edition = buildEdition();
     const resting = buildRunner({ status: { kind: 'in-race', lastLoop: 2 } });
     expect(
-      listElevationPastilles(
+      listElevationPastilles({
         edition,
-        [resting],
-        RACE_START_MS + HOUR_MS,
-        buildGeometry(edition),
-        VIEWBOX_WIDTH,
-      ),
+        ranked: [resting],
+        nowMs: RACE_START_MS + HOUR_MS,
+        geometry: buildGeometry(edition),
+        viewBoxWidth: VIEWBOX_WIDTH,
+      }),
     ).toEqual([]);
   });
 
   it('places a running runner at the fraction of the view box they have covered', () => {
     const edition = buildEdition();
-    const pastilles = listElevationPastilles(
+    const pastilles = listElevationPastilles({
       edition,
-      [buildRunner()],
-      RACE_START_MS + HOUR_MS / 2,
-      buildGeometry(edition),
-      VIEWBOX_WIDTH,
-    );
+      ranked: [buildRunner()],
+      nowMs: RACE_START_MS + HOUR_MS / 2,
+      geometry: buildGeometry(edition),
+      viewBoxWidth: VIEWBOX_WIDTH,
+    });
     expect(pastilles).toHaveLength(1);
     expect(pastilles[0]?.centerX).toBeCloseTo(VIEWBOX_WIDTH / 2, 5);
     expect(pastilles[0]?.runnerKey).toBe('lepin-2026-alice');
@@ -175,13 +175,13 @@ describe('listElevationPastilles', () => {
         bib: 2,
       },
     });
-    const pastilles = listElevationPastilles(
+    const pastilles = listElevationPastilles({
       edition,
-      [withPhoto],
-      RACE_START_MS + HOUR_MS / 2,
-      buildGeometry(edition),
-      VIEWBOX_WIDTH,
-    );
+      ranked: [withPhoto],
+      nowMs: RACE_START_MS + HOUR_MS / 2,
+      geometry: buildGeometry(edition),
+      viewBoxWidth: VIEWBOX_WIDTH,
+    });
     expect(pastilles[0]?.photoUrl).toBe('https://photos.example/bob.jpg');
     expect(pastilles[0]?.initials).toBe('BM');
   });

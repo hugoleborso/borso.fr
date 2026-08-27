@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { allowanceFor, buildMetrics, listCeilingFailures, listRatchetFailures } from './gate.core';
+import {
+  allowanceFor,
+  buildMetrics,
+  listCeilingFailures,
+  listRatchetFailures,
+  listRatchetSlack,
+} from './gate.core';
 import { listPositionConnascence } from './static-kinds.core';
 import { listTimingConnascence } from './timing-kinds.core';
 import {
@@ -176,5 +182,17 @@ describe('the ratchet', () => {
   it('gives a small counter no room at all', () => {
     expect(allowanceFor(4, TWO_PERCENT)).toBe(0);
     expect(allowanceFor(531, TWO_PERCENT)).toBe(10);
+  });
+});
+
+describe('listRatchetSlack', () => {
+  it('names every counter that fell, and stays quiet about the rest', () => {
+    expect(
+      listRatchetSlack({ fell: 99, held: 4, rose: 1 }, { fell: 74, held: 4, rose: 2 }),
+    ).toStrictEqual([{ key: 'fell', was: 99, now: 74 }]);
+  });
+
+  it('treats an absent baseline entry as zero, which nothing can fall below', () => {
+    expect(listRatchetSlack({}, { fresh: 3 })).toStrictEqual([]);
   });
 });

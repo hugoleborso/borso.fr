@@ -9,6 +9,7 @@ import {
   buildMetrics,
   listCeilingFailures,
   listRatchetFailures,
+  listRatchetSlack,
 } from './connascence/gate.core';
 import { renderReport, type Measured } from './connascence/report';
 import { rankFindings } from './connascence/scoring.core';
@@ -195,7 +196,9 @@ function main(): void {
   }
 
   writeFileSync(REPORT_PATH, rendered);
-  const failures = listRatchetFailures(readNumbers(BASELINE_PATH), current, RATCHET_TOLERANCE);
+  const baseline = readNumbers(BASELINE_PATH);
+  const failures = listRatchetFailures(baseline, current, RATCHET_TOLERANCE);
+  const slack = listRatchetSlack(baseline, current);
   const exceeded = listCeilingFailures(measured.metrics, ceilings);
 
   if (process.argv.includes('--check')) {
@@ -220,6 +223,11 @@ function main(): void {
       console.error('  A ratchet counter accepts a new number with `--accept` in the same commit.');
       process.exitCode = 1;
       return;
+    }
+    for (const gained of slack) {
+      console.log(
+        `  ${gained.key}: ${String(gained.was)} -> ${String(gained.now)}. Run \`--accept\` to keep it.`,
+      );
     }
     console.log(
       `Every ceiling holds and no counter rose beyond its ${String(RATCHET_TOLERANCE * PERCENT)}% allowance.`,

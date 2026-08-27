@@ -129,12 +129,19 @@ export function selectUnwarnedMemberIds(
   return orphanMemberIds.filter((memberId) => !warnedMemberIds.has(memberId));
 }
 
-export function prominentMemberInstrumentFor(
-  instrumentIds: readonly string[] | undefined,
-  selectedMemberId: string | null,
-  membersById: Readonly<Record<string, NameableMember>>,
-  instrumentsById: Readonly<Record<string, NameableInstrument>>,
-): ProminentMemberInstrumentResolution | null {
+export interface ProminentMemberInstrumentRequest {
+  readonly instrumentIds: readonly string[] | undefined;
+  readonly selectedMemberId: string | null;
+  readonly membersById: Readonly<Record<string, NameableMember>>;
+  readonly instrumentsById: Readonly<Record<string, NameableInstrument>>;
+}
+
+export function prominentMemberInstrumentFor({
+  instrumentIds,
+  selectedMemberId,
+  membersById,
+  instrumentsById,
+}: ProminentMemberInstrumentRequest): ProminentMemberInstrumentResolution | null {
   if (instrumentIds === undefined) return null;
   if (selectedMemberId === null) return null;
   const member = membersById[selectedMemberId];

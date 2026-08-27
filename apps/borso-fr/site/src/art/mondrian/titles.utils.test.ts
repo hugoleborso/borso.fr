@@ -117,28 +117,40 @@ describe('composeSubject', () => {
 describe('buildTitle', () => {
   it('names the composition in French, in the colour covering the most canvas', () => {
     const seed = 0xdeadbeef;
-    expect(buildTitle(seed, rectsForSeed(seed), PALETTES.classic, translate)).toBe(
-      'Un souffle soudain en cobalt',
-    );
+    expect(
+      buildTitle({ seed, rects: rectsForSeed(seed), palette: PALETTES.classic, translate }),
+    ).toBe('Un souffle soudain en cobalt');
   });
 
   it('takes the colour word from the palette in use', () => {
     const seed = 0xc0ffee;
     const rects = rectsForSeed(seed, PALETTES.muted);
-    expect(buildTitle(seed, rects, PALETTES.muted, translate)).toBe('Un geste tranquille en ocre');
+    expect(buildTitle({ seed, rects, palette: PALETTES.muted, translate })).toBe(
+      'Un geste tranquille en ocre',
+    );
   });
 
   it('is deterministic for a fixed seed + palette + rects', () => {
     const seed = 0x12345678;
     const rects = rectsForSeed(seed);
-    expect(buildTitle(seed, rects, PALETTES.classic, translate)).toBe(
-      buildTitle(seed, rects, PALETTES.classic, translate),
+    expect(buildTitle({ seed, rects, palette: PALETTES.classic, translate })).toBe(
+      buildTitle({ seed, rects, palette: PALETTES.classic, translate }),
     );
   });
 
   it('changes when the seed changes', () => {
-    const titleA = buildTitle(1, rectsForSeed(1), PALETTES.classic, translate);
-    const titleB = buildTitle(2, rectsForSeed(2), PALETTES.classic, translate);
+    const titleA = buildTitle({
+      seed: 1,
+      rects: rectsForSeed(1),
+      palette: PALETTES.classic,
+      translate,
+    });
+    const titleB = buildTitle({
+      seed: 2,
+      rects: rectsForSeed(2),
+      palette: PALETTES.classic,
+      translate,
+    });
     expect(titleA).not.toBe(titleB);
   });
 });

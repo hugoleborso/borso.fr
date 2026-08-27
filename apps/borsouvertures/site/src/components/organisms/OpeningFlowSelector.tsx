@@ -27,7 +27,7 @@ export function OpeningFlowSelector({ openings }: OpeningFlowSelectorProps) {
   const { mode, selection, playScope, boardStyle } = useAppState();
   const isCompactViewport = useIsCompactViewport();
   const lists = useMemo(
-    () => buildOpeningFlowLists(mode, openings, selection, playScope),
+    () => buildOpeningFlowLists({ mode, openings, selection, scope: playScope }),
     [mode, openings, selection, playScope],
   );
   const Flow = FLOW_BY_VIEWPORT[`${isCompactViewport}`];

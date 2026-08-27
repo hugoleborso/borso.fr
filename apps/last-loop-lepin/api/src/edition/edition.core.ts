@@ -1,6 +1,6 @@
-import type { LoopPunch, ManualDidNotFinish } from '../punch/punch.types';
+import type { ManualDidNotFinish } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
-import type { RaceEdition } from './edition.types';
+import type { RaceEdition, RaceSnapshot } from './edition.types';
 
 const MILLISECONDS_PER_MINUTE = 60_000;
 
@@ -35,13 +35,13 @@ interface DidNotFinishProjection {
 }
 
 // @FollowsBlueprint core-projection
-export function projectDidNotFinishCandidates(
-  edition: RaceEdition,
-  runners: readonly Runner[],
-  punches: readonly LoopPunch[],
-  manualDidNotFinishes: readonly ManualDidNotFinish[],
-  now: Date,
-): readonly DidNotFinishProjection[] {
+export function projectDidNotFinishCandidates({
+  edition,
+  runners,
+  punches,
+  manualDidNotFinishes,
+  now,
+}: RaceSnapshot): readonly DidNotFinishProjection[] {
   const currentLoop = loopIndexAt(edition, now);
   if (currentLoop <= 1) return [];
 

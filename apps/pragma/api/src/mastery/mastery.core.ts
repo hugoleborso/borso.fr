@@ -27,12 +27,19 @@ export function effective(
   return fallback ?? null;
 }
 
-export function meanForSong(
-  defaults: DefaultMap,
-  overrides: OverrideMap,
-  songId: SongId,
-  lineup: Lineup,
-): number | null {
+export interface SongMeanRequest {
+  readonly defaults: DefaultMap;
+  readonly overrides: OverrideMap;
+  readonly songId: SongId;
+  readonly lineup: Lineup;
+}
+
+export function meanForSong({
+  defaults,
+  overrides,
+  songId,
+  lineup,
+}: SongMeanRequest): number | null {
   const scores: number[] = [];
   for (const [memberId, instrumentId] of memberInstrumentPairs(lineup)) {
     const score = effective(defaults, overrides, { memberId, instrumentId, songId });

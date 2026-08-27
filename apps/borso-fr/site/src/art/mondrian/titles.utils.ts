@@ -99,13 +99,15 @@ export function composeSubject(
   return translate(noun.phraseKey, { adjective: translate(adjective[noun.gender]) });
 }
 
+export interface TitleRequest {
+  readonly seed: number;
+  readonly rects: ColoredRect[];
+  readonly palette: Palette;
+  readonly translate: TitleTranslator;
+}
+
 // @FollowsBlueprint utils-seeded-generator
-export function buildTitle(
-  seed: number,
-  rects: ColoredRect[],
-  palette: Palette,
-  translate: TitleTranslator,
-): string {
+export function buildTitle({ seed, rects, palette, translate }: TitleRequest): string {
   const nextRandom = mulberry32(seed ^ TITLE_SEED_MIX);
   const adjective = pickFromNonEmptyList(TITLE_ADJECTIVES, nextRandom);
   const noun = pickFromNonEmptyList(TITLE_NOUNS, nextRandom);
