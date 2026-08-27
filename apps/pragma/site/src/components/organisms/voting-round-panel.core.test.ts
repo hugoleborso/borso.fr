@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildShortVoteAddress,
   buildVoteAddress,
   selectParticipation,
   selectRoundHistoryLines,
@@ -28,6 +29,20 @@ describe('buildVoteAddress', () => {
     expect(buildVoteAddress('https://pragma.borso.fr', A_CONCERT)).toBe(
       `https://pragma.borso.fr/vote/${A_CONCERT}`,
     );
+  });
+});
+
+describe('buildShortVoteAddress', () => {
+  it('is sayable at a microphone, so it drops the scheme the long address keeps', () => {
+    expect(buildShortVoteAddress('https://pragma.borso.fr')).toBe('pragma.borso.fr/vote');
+  });
+
+  it('keeps the port, which a preview host needs and a listener has to hear', () => {
+    expect(buildShortVoteAddress('http://localhost:5173')).toBe('localhost:5173/vote');
+  });
+
+  it('names no concert, because the server resolves the live one', () => {
+    expect(buildShortVoteAddress('https://pragma.borso.fr')).not.toContain(A_CONCERT);
   });
 });
 

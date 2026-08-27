@@ -358,6 +358,7 @@
     "openRound": "Open a thirty-second round",
     "openRoundFailed": "The round could not be opened. A round may already be running.",
     "qrTitle": "Scan to vote",
+    "sayThisAddress": "Say this at the microphone:",
     "ballotsCast": "Ballots cast: {{ballots}}",
     "ballotsAgainstCapacity": "{{ballots}} of {{capacity}} in the room voted, {{share}}%",
     "blankRound": "no vote cast",

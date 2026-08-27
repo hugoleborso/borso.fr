@@ -3,6 +3,7 @@
 import { formatClockTime } from '../../lib/formatters.utils';
 
 const VOTE_PATH_PREFIX = '/vote/';
+const SHORT_VOTE_PATH = '/vote';
 const PERCENT_SCALE = 100;
 const NO_ROOM_COUNTED = 0;
 
@@ -26,6 +27,10 @@ export interface RoundHistoryLine {
 
 export function buildVoteAddress(origin: string, sessionId: string): string {
   return `${origin}${VOTE_PATH_PREFIX}${sessionId}`;
+}
+
+export function buildShortVoteAddress(origin: string): string {
+  return `${new URL(origin).host}${SHORT_VOTE_PATH}`;
 }
 
 // @FollowsBlueprint core-decision

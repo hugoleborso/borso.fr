@@ -13,6 +13,7 @@ import { Icon } from '../atoms/Icon';
 import { VoteQrCode } from '../atoms/VoteQrCode';
 import { VoteCountdown } from '../molecules/VoteCountdown';
 import {
+  buildShortVoteAddress,
   buildVoteAddress,
   type RoundOutcome,
   selectParticipation,
@@ -33,6 +34,7 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
   const round = voteState.data?.state.round ?? null;
   const isRoundOpen = round?.isOpen === true;
   const voteAddress = buildVoteAddress(globalThis.location.origin, sessionId);
+  const shortVoteAddress = buildShortVoteAddress(globalThis.location.origin);
   const participation = selectParticipation(
     voteState.data?.state.ballotCount ?? 0,
     voteState.data?.state.capacity ?? null,
@@ -80,7 +82,11 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
                   share: participation.sharePercent,
                 })}
           </p>
-          <p className="font-mono text-xs text-ink-500 m-0 break-all">{voteAddress}</p>
+          <p className="text-[13px] text-ink-500 m-0">
+            {t('audience.sayThisAddress')}{' '}
+            <span className="font-mono text-ink-900">{shortVoteAddress}</span>
+          </p>
+          <p className="font-mono text-xs text-ink-400 m-0 break-all">{voteAddress}</p>
         </Card>
         <Card variant="sunk" className="flex flex-col items-center gap-2">
           <VoteQrCode value={voteAddress} title={t('audience.qrTitle')} />
