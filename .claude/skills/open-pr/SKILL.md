@@ -173,7 +173,7 @@ Do **not** invoke when:
 
 - Title format: conventional-commits (`commitlint.config.js`), `feat(scope): subject`, subject lowercased, ≤ 70 chars.
 - Body lives in the PR description, never as a file in-tree.
-- The PR is opened as a draft (`--draft`) when the user hasn't explicitly said "ready to merge"; the draft state surfaces the validation gaps before a reviewer is pinged.
+- The PR is opened ready for review. `--draft` is for when the user asks for a draft; the `## Validation gaps` block is what surfaces an unverifiable row, and it does that whether or not the PR is a draft.
 - Repo scope: `hugoleborso/<repo>`. The skill refuses to draft a PR against any other org (CLAUDE.md repo guard).
 
 ## Auto-chain on PR merge
