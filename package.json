@@ -30,6 +30,8 @@
     "@vitest/coverage-v8": "catalog:",
     "@vitest/eslint-plugin": "1.6.26",
     "agent-browser": "0.33.2",
+    "bpmn-to-image": "0.10.0",
+    "bpmnlint": "11.13.0",
     "elkjs": "0.12.0",
     "esbuild": "catalog:",
     "eslint": "10.8.1",

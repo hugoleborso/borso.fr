@@ -36,20 +36,25 @@ mechanism that exists in the tree:
 
 ## Toolchain
 
-Authored and checked with the bpmn.io command line tools. The diagram passes
-`bpmnlint` with the `bpmnlint:recommended` ruleset and zero findings. To edit,
-open the `.bpmn` file at [demo.bpmn.io](https://demo.bpmn.io), or change the
-XML directly, then re-lint and re-render:
+Authored and checked with the bpmn.io command line tools, carried as root
+dev dependencies: `bpmnlint` (ruleset `bpmnlint:recommended` in
+[`.bpmnlintrc`](./.bpmnlintrc), zero findings) and `bpmn-to-image` for the
+SVG render. To edit, open the `.bpmn` file at
+[demo.bpmn.io](https://demo.bpmn.io), or change the XML directly, then:
 
 ```bash
-pnpm add -D bpmnlint bpmn-to-image
-pnpm exec bpmnlint docs/bpmn/pragma-prepare-a-concert.bpmn
-pnpm exec bpmn-to-image --title="pragma - prepare a concert" \
-  docs/bpmn/pragma-prepare-a-concert.bpmn:docs/bpmn/pragma-prepare-a-concert.svg
+scripts/bpmn.sh
 ```
 
-`bpmn-to-image` drives Puppeteer. In this repository's sandboxes, point
-`PUPPETEER_EXECUTABLE_PATH` at a one-line wrapper that execs the pre-installed
-`/opt/pw-browsers/chromium` with `--no-sandbox`, for the same reason
-[`scripts/browser.sh`](../../scripts/browser.sh) exists: the browser the CLI
-looks for is not where it looks.
+The script lints every diagram in this folder and re-renders its SVG beside
+it. It exists because `bpmn-to-image` drives Puppeteer, whose bundled
+Chromium is never downloaded here (pnpm blocks the postinstall), and the
+sandbox's pre-installed Chromium refuses to run as root without
+`--no-sandbox`, which Puppeteer cannot pass: the script builds the one-line
+wrapper and points `PUPPETEER_EXECUTABLE_PATH` at it. Same class of trap as
+[`scripts/browser.sh`](../../scripts/browser.sh).
+
+A reader that wants the journey without the geometry can drop the
+`<bpmndi:BPMNDiagram>` block: everything the diagram asserts lives in the
+`<bpmn:collaboration>` and `<bpmn:process>` elements, and the rest is
+layout.
