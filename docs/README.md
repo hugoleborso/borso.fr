@@ -9,3 +9,4 @@ Operational + architectural docs for the `borso.fr` monorepo. Read [`/CLAUDE.md`
 | [`aws-setup.md`](./aws-setup.md) | One-time manual setup: account hardening, Identity Center, CDK bootstrap, GitHub Environments, Variables, deploying `infra/shared/` for the first time. |
 | [`local-dev.md`](./local-dev.md) | Local toolchain, SessionStart hook, husky hooks, common commands, when to `--no-verify`. |
 | [`adding-an-app.md`](./adding-an-app.md) | Checklist for landing a new app. |
+| [`bpmn/`](./bpmn/README.md) | BPMN member journeys, authored and rendered with the bpmn.io CLI tools; today the pragma prepare-a-concert journey. |

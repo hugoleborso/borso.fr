@@ -1,0 +1,829 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<bpmn:definitions xmlns:bpmn="http://www.omg.org/spec/BPMN/20100524/MODEL" xmlns:bpmndi="http://www.omg.org/spec/BPMN/20100524/DI" xmlns:dc="http://www.omg.org/spec/DD/20100524/DC" xmlns:di="http://www.omg.org/spec/DD/20100524/DI" id="Definitions_PragmaPrepareConcert" targetNamespace="https://pragma.borso.fr/bpmn" exporter="bpmn-io toolchain" exporterVersion="1.0">
+  <bpmn:collaboration id="Collaboration_PrepareConcert">
+    <bpmn:participant id="Participant_Member" name="Band member, pragma.borso.fr (PWA)" processRef="Process_PrepareConcert" />
+    <bpmn:participant id="Participant_Api" name="Pragma API, Hono on Lambda + Aurora DSQL" />
+    <bpmn:participant id="Participant_Musicbrainz" name="MusicBrainz, rate-limited and cached" />
+    <bpmn:participant id="Participant_ChartsBucket" name="Charts bucket, S3 presigned PUT" />
+    <bpmn:messageFlow id="MessageFlow_Login" name="shared password" sourceRef="Task_EnterPassword" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_CreateConcert" name="concert" sourceRef="Task_CreateConcert" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_CreateSetlist" name="setlist + session link" sourceRef="Task_CreateSetlist" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_Search" name="recording search" sourceRef="Task_SearchMusicbrainz" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_SearchUpstream" name="search request" sourceRef="Participant_Api" targetRef="Participant_Musicbrainz" />
+    <bpmn:messageFlow id="MessageFlow_RankedMatches" name="ranked matches" sourceRef="Participant_Musicbrainz" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_Presign" name="presign request" sourceRef="Task_RequestPresign" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_UploadChart" name="chart file PUT" sourceRef="Task_UploadChart" targetRef="Participant_ChartsBucket" />
+    <bpmn:messageFlow id="MessageFlow_AppendEntry" name="append entry" sourceRef="Task_AppendEntry" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_Reorder" name="new order" sourceRef="Task_ReorderEntries" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_FixGap" name="override or comment" sourceRef="Task_FixRiskyGap" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_Practice" name="practice for the concert" sourceRef="Task_SchedulePractice" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_Manifest" name="offline manifest" sourceRef="Task_PrecacheManifest" targetRef="Participant_Api" />
+    <bpmn:messageFlow id="MessageFlow_BarStatus" name="bar status update" sourceRef="Task_MarkBarPlayed" targetRef="Participant_Api" />
+  </bpmn:collaboration>
+  <bpmn:process id="Process_PrepareConcert" isExecutable="false">
+    <bpmn:startEvent id="Event_ConcertBooked" name="Concert booked with a bar">
+      <bpmn:outgoing>Flow_Start</bpmn:outgoing>
+    </bpmn:startEvent>
+    <bpmn:userTask id="Task_OpenApp" name="Open pragma.borso.fr">
+      <bpmn:incoming>Flow_Start</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToCookieCheck</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_CookieValid" name="Sign-in cookie still valid?">
+      <bpmn:incoming>Flow_ToCookieCheck</bpmn:incoming>
+      <bpmn:outgoing>Flow_CookieYes</bpmn:outgoing>
+      <bpmn:outgoing>Flow_CookieNo</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:exclusiveGateway id="Gateway_JoinLoginAttempt">
+      <bpmn:incoming>Flow_CookieNo</bpmn:incoming>
+      <bpmn:incoming>Flow_WrongPassword</bpmn:incoming>
+      <bpmn:incoming>Flow_WindowElapsed</bpmn:incoming>
+      <bpmn:outgoing>Flow_TryPassword</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_EnterPassword" name="Enter the shared password">
+      <bpmn:incoming>Flow_TryPassword</bpmn:incoming>
+      <bpmn:outgoing>Flow_SubmitPassword</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_PasswordOutcome" name="Password accepted?">
+      <bpmn:incoming>Flow_SubmitPassword</bpmn:incoming>
+      <bpmn:outgoing>Flow_Accepted</bpmn:outgoing>
+      <bpmn:outgoing>Flow_WrongPassword</bpmn:outgoing>
+      <bpmn:outgoing>Flow_RateLimited</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:intermediateCatchEvent id="Event_RateLimitWindow" name="15 min rate-limit window">
+      <bpmn:incoming>Flow_RateLimited</bpmn:incoming>
+      <bpmn:outgoing>Flow_WindowElapsed</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Event_RateLimitWindow_timer" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:exclusiveGateway id="Gateway_JoinSignedIn">
+      <bpmn:incoming>Flow_CookieYes</bpmn:incoming>
+      <bpmn:incoming>Flow_Accepted</bpmn:incoming>
+      <bpmn:outgoing>Flow_SignedIn</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_CreateConcert" name="Create the concert: venue, capacity, date">
+      <bpmn:incoming>Flow_SignedIn</bpmn:incoming>
+      <bpmn:outgoing>Flow_ConcertCreated</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_CreateSetlist" name="Create a setlist attached to the concert">
+      <bpmn:incoming>Flow_ConcertCreated</bpmn:incoming>
+      <bpmn:outgoing>Flow_SetlistCreated</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_JoinReorder">
+      <bpmn:incoming>Flow_SetlistFilled</bpmn:incoming>
+      <bpmn:incoming>Flow_RetryReorder</bpmn:incoming>
+      <bpmn:outgoing>Flow_ToReorder</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_ReorderEntries" name="Reorder the entries into an energy arc">
+      <bpmn:incoming>Flow_ToReorder</bpmn:incoming>
+      <bpmn:outgoing>Flow_OrderSaved</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:boundaryEvent id="Event_ReorderStale" name="Reorder rejected as stale" attachedToRef="Task_ReorderEntries">
+      <bpmn:outgoing>Flow_StaleCaught</bpmn:outgoing>
+      <bpmn:errorEventDefinition id="Event_ReorderStale_error" />
+    </bpmn:boundaryEvent>
+    <bpmn:userTask id="Task_ReloadEntries" name="Reload the stored entries">
+      <bpmn:incoming>Flow_StaleCaught</bpmn:incoming>
+      <bpmn:outgoing>Flow_RetryReorder</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:parallelGateway id="Gateway_ForkChecks">
+      <bpmn:incoming>Flow_OrderSaved</bpmn:incoming>
+      <bpmn:outgoing>Flow_ForkTransitions</bpmn:outgoing>
+      <bpmn:outgoing>Flow_ForkMastery</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:userTask id="Task_ReviewTransitions" name="Review the transition between consecutive songs">
+      <bpmn:incoming>Flow_ForkTransitions</bpmn:incoming>
+      <bpmn:outgoing>Flow_TransitionsReviewed</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_TransitionsCovered" name="Harmonic carrier across every gap?">
+      <bpmn:incoming>Flow_TransitionsReviewed</bpmn:incoming>
+      <bpmn:outgoing>Flow_AllCovered</bpmn:outgoing>
+      <bpmn:outgoing>Flow_RiskyGap</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_FixRiskyGap" name="Adjust the lineup override or comment the gap">
+      <bpmn:incoming>Flow_RiskyGap</bpmn:incoming>
+      <bpmn:outgoing>Flow_GapHandled</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_JoinTransitions">
+      <bpmn:incoming>Flow_AllCovered</bpmn:incoming>
+      <bpmn:incoming>Flow_GapHandled</bpmn:incoming>
+      <bpmn:outgoing>Flow_TransitionsDone</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_CheckMastery" name="Check the mastery of each song lineup">
+      <bpmn:incoming>Flow_ForkMastery</bpmn:incoming>
+      <bpmn:outgoing>Flow_MasteryChecked</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_MasteryAbovePar" name="Every song above par?">
+      <bpmn:incoming>Flow_MasteryChecked</bpmn:incoming>
+      <bpmn:outgoing>Flow_MasteryFine</bpmn:outgoing>
+      <bpmn:outgoing>Flow_WeakSpot</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:userTask id="Task_SchedulePractice" name="Schedule a practice aimed at the concert">
+      <bpmn:incoming>Flow_WeakSpot</bpmn:incoming>
+      <bpmn:outgoing>Flow_PracticePlanned</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:exclusiveGateway id="Gateway_JoinMastery">
+      <bpmn:incoming>Flow_MasteryFine</bpmn:incoming>
+      <bpmn:incoming>Flow_PracticePlanned</bpmn:incoming>
+      <bpmn:outgoing>Flow_MasteryDone</bpmn:outgoing>
+    </bpmn:exclusiveGateway>
+    <bpmn:parallelGateway id="Gateway_JoinChecks">
+      <bpmn:incoming>Flow_TransitionsDone</bpmn:incoming>
+      <bpmn:incoming>Flow_MasteryDone</bpmn:incoming>
+      <bpmn:outgoing>Flow_ChecksDone</bpmn:outgoing>
+    </bpmn:parallelGateway>
+    <bpmn:serviceTask id="Task_PrecacheManifest" name="Service worker pre-caches the offline manifest">
+      <bpmn:incoming>Flow_ChecksDone</bpmn:incoming>
+      <bpmn:outgoing>Flow_Precached</bpmn:outgoing>
+    </bpmn:serviceTask>
+    <bpmn:intermediateCatchEvent id="Event_ConcertNight" name="Concert night">
+      <bpmn:incoming>Flow_Precached</bpmn:incoming>
+      <bpmn:outgoing>Flow_NightArrived</bpmn:outgoing>
+      <bpmn:timerEventDefinition id="Event_ConcertNight_timer" />
+    </bpmn:intermediateCatchEvent>
+    <bpmn:userTask id="Task_PlaySceneView" name="Play the set from the scene view, offline">
+      <bpmn:incoming>Flow_NightArrived</bpmn:incoming>
+      <bpmn:outgoing>Flow_SetPlayed</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:userTask id="Task_MarkBarPlayed" name="Move the bar to played in the CRM">
+      <bpmn:incoming>Flow_SetPlayed</bpmn:incoming>
+      <bpmn:outgoing>Flow_BarUpdated</bpmn:outgoing>
+    </bpmn:userTask>
+    <bpmn:endEvent id="Event_ConcertPlayed" name="Concert played">
+      <bpmn:incoming>Flow_BarUpdated</bpmn:incoming>
+    </bpmn:endEvent>
+    <bpmn:subProcess id="SubProcess_FillSetlist" name="Fill the setlist, one pass per song">
+      <bpmn:incoming>Flow_SetlistCreated</bpmn:incoming>
+      <bpmn:outgoing>Flow_SetlistFilled</bpmn:outgoing>
+      <bpmn:standardLoopCharacteristics />
+      <bpmn:startEvent id="Event_SongChosen" name="Song chosen">
+        <bpmn:outgoing>Flow_SongPicked</bpmn:outgoing>
+      </bpmn:startEvent>
+      <bpmn:exclusiveGateway id="Gateway_InCatalogue" name="Already in the catalogue?">
+        <bpmn:incoming>Flow_SongPicked</bpmn:incoming>
+        <bpmn:outgoing>Flow_SongKnown</bpmn:outgoing>
+        <bpmn:outgoing>Flow_SongMissing</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Task_CreateSongIdea" name="Create the song as an idea">
+        <bpmn:incoming>Flow_SongMissing</bpmn:incoming>
+        <bpmn:outgoing>Flow_SongDrafted</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Task_SearchMusicbrainz" name="Search MusicBrainz from the song form">
+        <bpmn:incoming>Flow_SongDrafted</bpmn:incoming>
+        <bpmn:outgoing>Flow_Searched</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="Gateway_MatchFound" name="Match found?">
+        <bpmn:incoming>Flow_Searched</bpmn:incoming>
+        <bpmn:outgoing>Flow_MatchYes</bpmn:outgoing>
+        <bpmn:outgoing>Flow_MatchNo</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Task_ApplyEnrichment" name="Apply album, duration, ISRCs and tags">
+        <bpmn:incoming>Flow_MatchYes</bpmn:incoming>
+        <bpmn:outgoing>Flow_Enriched</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="Gateway_JoinEnrichment">
+        <bpmn:incoming>Flow_MatchNo</bpmn:incoming>
+        <bpmn:incoming>Flow_Enriched</bpmn:incoming>
+        <bpmn:outgoing>Flow_ToChartChoice</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:exclusiveGateway id="Gateway_ChartForm" name="Chart form?">
+        <bpmn:incoming>Flow_ToChartChoice</bpmn:incoming>
+        <bpmn:outgoing>Flow_ChartChordpro</bpmn:outgoing>
+        <bpmn:outgoing>Flow_ChartFile</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Task_PasteChordpro" name="Paste ChordPro, review the derived tonality">
+        <bpmn:incoming>Flow_ChartChordpro</bpmn:incoming>
+        <bpmn:outgoing>Flow_TonalityReviewed</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Task_RequestPresign" name="Request a presigned upload URL">
+        <bpmn:incoming>Flow_ChartFile</bpmn:incoming>
+        <bpmn:outgoing>Flow_Presigned</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:userTask id="Task_UploadChart" name="Upload the chart file to the bucket">
+        <bpmn:incoming>Flow_Presigned</bpmn:incoming>
+        <bpmn:outgoing>Flow_Uploaded</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:exclusiveGateway id="Gateway_JoinChart">
+        <bpmn:incoming>Flow_SongKnown</bpmn:incoming>
+        <bpmn:incoming>Flow_Uploaded</bpmn:incoming>
+        <bpmn:incoming>Flow_TonalityReviewed</bpmn:incoming>
+        <bpmn:outgoing>Flow_ChartAttached</bpmn:outgoing>
+      </bpmn:exclusiveGateway>
+      <bpmn:userTask id="Task_AppendEntry" name="Append the song to the setlist">
+        <bpmn:incoming>Flow_ChartAttached</bpmn:incoming>
+        <bpmn:outgoing>Flow_Appended</bpmn:outgoing>
+      </bpmn:userTask>
+      <bpmn:endEvent id="Event_EntryAppended" name="Entry appended">
+        <bpmn:incoming>Flow_Appended</bpmn:incoming>
+      </bpmn:endEvent>
+      <bpmn:sequenceFlow id="Flow_SongPicked" sourceRef="Event_SongChosen" targetRef="Gateway_InCatalogue" />
+      <bpmn:sequenceFlow id="Flow_SongKnown" name="yes" sourceRef="Gateway_InCatalogue" targetRef="Gateway_JoinChart" />
+      <bpmn:sequenceFlow id="Flow_SongMissing" name="no" sourceRef="Gateway_InCatalogue" targetRef="Task_CreateSongIdea" />
+      <bpmn:sequenceFlow id="Flow_SongDrafted" sourceRef="Task_CreateSongIdea" targetRef="Task_SearchMusicbrainz" />
+      <bpmn:sequenceFlow id="Flow_Searched" sourceRef="Task_SearchMusicbrainz" targetRef="Gateway_MatchFound" />
+      <bpmn:sequenceFlow id="Flow_MatchYes" name="yes" sourceRef="Gateway_MatchFound" targetRef="Task_ApplyEnrichment" />
+      <bpmn:sequenceFlow id="Flow_MatchNo" name="no" sourceRef="Gateway_MatchFound" targetRef="Gateway_JoinEnrichment" />
+      <bpmn:sequenceFlow id="Flow_Enriched" sourceRef="Task_ApplyEnrichment" targetRef="Gateway_JoinEnrichment" />
+      <bpmn:sequenceFlow id="Flow_ToChartChoice" sourceRef="Gateway_JoinEnrichment" targetRef="Gateway_ChartForm" />
+      <bpmn:sequenceFlow id="Flow_ChartChordpro" name="ChordPro text" sourceRef="Gateway_ChartForm" targetRef="Task_PasteChordpro" />
+      <bpmn:sequenceFlow id="Flow_ChartFile" name="PDF or image" sourceRef="Gateway_ChartForm" targetRef="Task_RequestPresign" />
+      <bpmn:sequenceFlow id="Flow_Presigned" sourceRef="Task_RequestPresign" targetRef="Task_UploadChart" />
+      <bpmn:sequenceFlow id="Flow_Uploaded" sourceRef="Task_UploadChart" targetRef="Gateway_JoinChart" />
+      <bpmn:sequenceFlow id="Flow_TonalityReviewed" sourceRef="Task_PasteChordpro" targetRef="Gateway_JoinChart" />
+      <bpmn:sequenceFlow id="Flow_ChartAttached" sourceRef="Gateway_JoinChart" targetRef="Task_AppendEntry" />
+      <bpmn:sequenceFlow id="Flow_Appended" sourceRef="Task_AppendEntry" targetRef="Event_EntryAppended" />
+    </bpmn:subProcess>
+    <bpmn:sequenceFlow id="Flow_Start" sourceRef="Event_ConcertBooked" targetRef="Task_OpenApp" />
+    <bpmn:sequenceFlow id="Flow_ToCookieCheck" sourceRef="Task_OpenApp" targetRef="Gateway_CookieValid" />
+    <bpmn:sequenceFlow id="Flow_CookieYes" name="yes" sourceRef="Gateway_CookieValid" targetRef="Gateway_JoinSignedIn" />
+    <bpmn:sequenceFlow id="Flow_CookieNo" name="no" sourceRef="Gateway_CookieValid" targetRef="Gateway_JoinLoginAttempt" />
+    <bpmn:sequenceFlow id="Flow_TryPassword" sourceRef="Gateway_JoinLoginAttempt" targetRef="Task_EnterPassword" />
+    <bpmn:sequenceFlow id="Flow_SubmitPassword" sourceRef="Task_EnterPassword" targetRef="Gateway_PasswordOutcome" />
+    <bpmn:sequenceFlow id="Flow_Accepted" name="accepted" sourceRef="Gateway_PasswordOutcome" targetRef="Gateway_JoinSignedIn" />
+    <bpmn:sequenceFlow id="Flow_WrongPassword" name="wrong password" sourceRef="Gateway_PasswordOutcome" targetRef="Gateway_JoinLoginAttempt" />
+    <bpmn:sequenceFlow id="Flow_RateLimited" name="rate limited" sourceRef="Gateway_PasswordOutcome" targetRef="Event_RateLimitWindow" />
+    <bpmn:sequenceFlow id="Flow_WindowElapsed" sourceRef="Event_RateLimitWindow" targetRef="Gateway_JoinLoginAttempt" />
+    <bpmn:sequenceFlow id="Flow_SignedIn" sourceRef="Gateway_JoinSignedIn" targetRef="Task_CreateConcert" />
+    <bpmn:sequenceFlow id="Flow_ConcertCreated" sourceRef="Task_CreateConcert" targetRef="Task_CreateSetlist" />
+    <bpmn:sequenceFlow id="Flow_SetlistCreated" sourceRef="Task_CreateSetlist" targetRef="SubProcess_FillSetlist" />
+    <bpmn:sequenceFlow id="Flow_SetlistFilled" sourceRef="SubProcess_FillSetlist" targetRef="Gateway_JoinReorder" />
+    <bpmn:sequenceFlow id="Flow_ToReorder" sourceRef="Gateway_JoinReorder" targetRef="Task_ReorderEntries" />
+    <bpmn:sequenceFlow id="Flow_StaleCaught" sourceRef="Event_ReorderStale" targetRef="Task_ReloadEntries" />
+    <bpmn:sequenceFlow id="Flow_RetryReorder" sourceRef="Task_ReloadEntries" targetRef="Gateway_JoinReorder" />
+    <bpmn:sequenceFlow id="Flow_OrderSaved" sourceRef="Task_ReorderEntries" targetRef="Gateway_ForkChecks" />
+    <bpmn:sequenceFlow id="Flow_ForkTransitions" sourceRef="Gateway_ForkChecks" targetRef="Task_ReviewTransitions" />
+    <bpmn:sequenceFlow id="Flow_ForkMastery" sourceRef="Gateway_ForkChecks" targetRef="Task_CheckMastery" />
+    <bpmn:sequenceFlow id="Flow_TransitionsReviewed" sourceRef="Task_ReviewTransitions" targetRef="Gateway_TransitionsCovered" />
+    <bpmn:sequenceFlow id="Flow_AllCovered" name="covered" sourceRef="Gateway_TransitionsCovered" targetRef="Gateway_JoinTransitions" />
+    <bpmn:sequenceFlow id="Flow_RiskyGap" name="risky gap" sourceRef="Gateway_TransitionsCovered" targetRef="Task_FixRiskyGap" />
+    <bpmn:sequenceFlow id="Flow_GapHandled" sourceRef="Task_FixRiskyGap" targetRef="Gateway_JoinTransitions" />
+    <bpmn:sequenceFlow id="Flow_TransitionsDone" sourceRef="Gateway_JoinTransitions" targetRef="Gateway_JoinChecks" />
+    <bpmn:sequenceFlow id="Flow_MasteryChecked" sourceRef="Task_CheckMastery" targetRef="Gateway_MasteryAbovePar" />
+    <bpmn:sequenceFlow id="Flow_MasteryFine" name="yes" sourceRef="Gateway_MasteryAbovePar" targetRef="Gateway_JoinMastery" />
+    <bpmn:sequenceFlow id="Flow_WeakSpot" name="weak spot" sourceRef="Gateway_MasteryAbovePar" targetRef="Task_SchedulePractice" />
+    <bpmn:sequenceFlow id="Flow_PracticePlanned" sourceRef="Task_SchedulePractice" targetRef="Gateway_JoinMastery" />
+    <bpmn:sequenceFlow id="Flow_MasteryDone" sourceRef="Gateway_JoinMastery" targetRef="Gateway_JoinChecks" />
+    <bpmn:sequenceFlow id="Flow_ChecksDone" sourceRef="Gateway_JoinChecks" targetRef="Task_PrecacheManifest" />
+    <bpmn:sequenceFlow id="Flow_Precached" sourceRef="Task_PrecacheManifest" targetRef="Event_ConcertNight" />
+    <bpmn:sequenceFlow id="Flow_NightArrived" sourceRef="Event_ConcertNight" targetRef="Task_PlaySceneView" />
+    <bpmn:sequenceFlow id="Flow_SetPlayed" sourceRef="Task_PlaySceneView" targetRef="Task_MarkBarPlayed" />
+    <bpmn:sequenceFlow id="Flow_BarUpdated" sourceRef="Task_MarkBarPlayed" targetRef="Event_ConcertPlayed" />
+  </bpmn:process>
+  <bpmndi:BPMNDiagram id="BPMNDiagram_PrepareConcert">
+    <bpmndi:BPMNPlane id="BPMNPlane_PrepareConcert" bpmnElement="Collaboration_PrepareConcert">
+      <bpmndi:BPMNShape id="Participant_Member_di" bpmnElement="Participant_Member" isHorizontal="true">
+        <dc:Bounds x="160" y="100" width="4070" height="720" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Api_di" bpmnElement="Participant_Api" isHorizontal="true">
+        <dc:Bounds x="160" y="840" width="4070" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_Musicbrainz_di" bpmnElement="Participant_Musicbrainz" isHorizontal="true">
+        <dc:Bounds x="1460" y="980" width="300" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Participant_ChartsBucket_di" bpmnElement="Participant_ChartsBucket" isHorizontal="true">
+        <dc:Bounds x="2120" y="0" width="300" height="60" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="SubProcess_FillSetlist_di" bpmnElement="SubProcess_FillSetlist" isExpanded="true">
+        <dc:Bounds x="1180" y="140" width="1420" height="500" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ConcertBooked_di" bpmnElement="Event_ConcertBooked">
+        <dc:Bounds x="212" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="192" y="285" width="68" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_OpenApp_di" bpmnElement="Task_OpenApp">
+        <dc:Bounds x="265" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_CookieValid_di" bpmnElement="Gateway_CookieValid" isMarkerVisible="true">
+        <dc:Bounds x="445" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="398" y="214" width="144" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinLoginAttempt_di" bpmnElement="Gateway_JoinLoginAttempt" isMarkerVisible="true">
+        <dc:Bounds x="445" y="308" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_EnterPassword_di" bpmnElement="Task_EnterPassword">
+        <dc:Bounds x="405" y="380" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_PasswordOutcome_di" bpmnElement="Gateway_PasswordOutcome" isMarkerVisible="true">
+        <dc:Bounds x="615" y="395" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="648" y="468" width="110" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_RateLimitWindow_di" bpmnElement="Event_RateLimitWindow">
+        <dc:Bounds x="782" y="402" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="816" y="428" width="80" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinSignedIn_di" bpmnElement="Gateway_JoinSignedIn" isMarkerVisible="true">
+        <dc:Bounds x="735" y="235" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateConcert_di" bpmnElement="Task_CreateConcert">
+        <dc:Bounds x="835" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateSetlist_di" bpmnElement="Task_CreateSetlist">
+        <dc:Bounds x="1005" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinReorder_di" bpmnElement="Gateway_JoinReorder" isMarkerVisible="true">
+        <dc:Bounds x="2615" y="235" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReorderEntries_di" bpmnElement="Task_ReorderEntries">
+        <dc:Bounds x="2675" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ReorderStale_di" bpmnElement="Event_ReorderStale">
+        <dc:Bounds x="2752" y="282" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2790" y="290" width="100" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReloadEntries_di" bpmnElement="Task_ReloadEntries">
+        <dc:Bounds x="2710" y="360" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ForkChecks_di" bpmnElement="Gateway_ForkChecks">
+        <dc:Bounds x="2875" y="235" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ReviewTransitions_di" bpmnElement="Task_ReviewTransitions">
+        <dc:Bounds x="2995" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_TransitionsCovered_di" bpmnElement="Gateway_TransitionsCovered" isMarkerVisible="true">
+        <dc:Bounds x="3205" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3140" y="206" width="180" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_FixRiskyGap_di" bpmnElement="Task_FixRiskyGap">
+        <dc:Bounds x="3165" y="340" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinTransitions_di" bpmnElement="Gateway_JoinTransitions" isMarkerVisible="true">
+        <dc:Bounds x="3335" y="235" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CheckMastery_di" bpmnElement="Task_CheckMastery">
+        <dc:Bounds x="2995" y="580" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MasteryAbovePar_di" bpmnElement="Gateway_MasteryAbovePar" isMarkerVisible="true">
+        <dc:Bounds x="3205" y="595" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3140" y="566" width="180" height="40" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SchedulePractice_di" bpmnElement="Task_SchedulePractice">
+        <dc:Bounds x="3165" y="700" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinMastery_di" bpmnElement="Gateway_JoinMastery" isMarkerVisible="true">
+        <dc:Bounds x="3335" y="595" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinChecks_di" bpmnElement="Gateway_JoinChecks">
+        <dc:Bounds x="3435" y="235" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PrecacheManifest_di" bpmnElement="Task_PrecacheManifest">
+        <dc:Bounds x="3535" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ConcertNight_di" bpmnElement="Event_ConcertNight">
+        <dc:Bounds x="3722" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3686" y="284" width="108" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PlaySceneView_di" bpmnElement="Task_PlaySceneView">
+        <dc:Bounds x="3805" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_MarkBarPlayed_di" bpmnElement="Task_MarkBarPlayed">
+        <dc:Bounds x="3965" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_ConcertPlayed_di" bpmnElement="Event_ConcertPlayed">
+        <dc:Bounds x="4142" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4102" y="284" width="116" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_SongChosen_di" bpmnElement="Event_SongChosen">
+        <dc:Bounds x="1212" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1178" y="284" width="104" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_InCatalogue_di" bpmnElement="Gateway_InCatalogue" isMarkerVisible="true">
+        <dc:Bounds x="1295" y="235" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1352" y="247" width="150" height="27" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_CreateSongIdea_di" bpmnElement="Task_CreateSongIdea">
+        <dc:Bounds x="1335" y="310" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_SearchMusicbrainz_di" bpmnElement="Task_SearchMusicbrainz">
+        <dc:Bounds x="1495" y="310" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_MatchFound_di" bpmnElement="Gateway_MatchFound" isMarkerVisible="true">
+        <dc:Bounds x="1675" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1638" y="416" width="124" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_ApplyEnrichment_di" bpmnElement="Task_ApplyEnrichment">
+        <dc:Bounds x="1765" y="310" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinEnrichment_di" bpmnElement="Gateway_JoinEnrichment" isMarkerVisible="true">
+        <dc:Bounds x="1925" y="325" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_ChartForm_di" bpmnElement="Gateway_ChartForm" isMarkerVisible="true">
+        <dc:Bounds x="2025" y="325" width="50" height="50" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1985" y="304" width="115" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_PasteChordpro_di" bpmnElement="Task_PasteChordpro">
+        <dc:Bounds x="2105" y="310" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_RequestPresign_di" bpmnElement="Task_RequestPresign">
+        <dc:Bounds x="2035" y="430" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_UploadChart_di" bpmnElement="Task_UploadChart">
+        <dc:Bounds x="2205" y="430" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Gateway_JoinChart_di" bpmnElement="Gateway_JoinChart" isMarkerVisible="true">
+        <dc:Bounds x="2375" y="325" width="50" height="50" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Task_AppendEntry_di" bpmnElement="Task_AppendEntry">
+        <dc:Bounds x="2335" y="220" width="130" height="80" />
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNShape id="Event_EntryAppended_di" bpmnElement="Event_EntryAppended">
+        <dc:Bounds x="2512" y="242" width="36" height="36" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2472" y="284" width="116" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNShape>
+      <bpmndi:BPMNEdge id="Flow_Start_di" bpmnElement="Flow_Start">
+        <di:waypoint x="248" y="260" />
+        <di:waypoint x="265" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToCookieCheck_di" bpmnElement="Flow_ToCookieCheck">
+        <di:waypoint x="395" y="260" />
+        <di:waypoint x="445" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CookieYes_di" bpmnElement="Flow_CookieYes">
+        <di:waypoint x="495" y="260" />
+        <di:waypoint x="735" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="505" y="266" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_CookieNo_di" bpmnElement="Flow_CookieNo">
+        <di:waypoint x="470" y="285" />
+        <di:waypoint x="470" y="308" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="478" y="288" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TryPassword_di" bpmnElement="Flow_TryPassword">
+        <di:waypoint x="470" y="358" />
+        <di:waypoint x="470" y="380" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SubmitPassword_di" bpmnElement="Flow_SubmitPassword">
+        <di:waypoint x="535" y="420" />
+        <di:waypoint x="615" y="420" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Accepted_di" bpmnElement="Flow_Accepted">
+        <di:waypoint x="640" y="395" />
+        <di:waypoint x="640" y="320" />
+        <di:waypoint x="760" y="320" />
+        <di:waypoint x="760" y="285" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="652" y="338" width="62" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WrongPassword_di" bpmnElement="Flow_WrongPassword">
+        <di:waypoint x="640" y="445" />
+        <di:waypoint x="640" y="505" />
+        <di:waypoint x="560" y="505" />
+        <di:waypoint x="560" y="333" />
+        <di:waypoint x="495" y="333" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="566" y="508" width="100" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RateLimited_di" bpmnElement="Flow_RateLimited">
+        <di:waypoint x="665" y="420" />
+        <di:waypoint x="782" y="420" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="676" y="398" width="80" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WindowElapsed_di" bpmnElement="Flow_WindowElapsed">
+        <di:waypoint x="800" y="438" />
+        <di:waypoint x="800" y="540" />
+        <di:waypoint x="400" y="540" />
+        <di:waypoint x="400" y="333" />
+        <di:waypoint x="445" y="333" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SignedIn_di" bpmnElement="Flow_SignedIn">
+        <di:waypoint x="785" y="260" />
+        <di:waypoint x="835" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ConcertCreated_di" bpmnElement="Flow_ConcertCreated">
+        <di:waypoint x="965" y="260" />
+        <di:waypoint x="1005" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SetlistCreated_di" bpmnElement="Flow_SetlistCreated">
+        <di:waypoint x="1135" y="260" />
+        <di:waypoint x="1180" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SetlistFilled_di" bpmnElement="Flow_SetlistFilled">
+        <di:waypoint x="2600" y="260" />
+        <di:waypoint x="2615" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToReorder_di" bpmnElement="Flow_ToReorder">
+        <di:waypoint x="2665" y="260" />
+        <di:waypoint x="2675" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_StaleCaught_di" bpmnElement="Flow_StaleCaught">
+        <di:waypoint x="2770" y="318" />
+        <di:waypoint x="2770" y="360" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RetryReorder_di" bpmnElement="Flow_RetryReorder">
+        <di:waypoint x="2710" y="400" />
+        <di:waypoint x="2640" y="400" />
+        <di:waypoint x="2640" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_OrderSaved_di" bpmnElement="Flow_OrderSaved">
+        <di:waypoint x="2805" y="260" />
+        <di:waypoint x="2875" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ForkTransitions_di" bpmnElement="Flow_ForkTransitions">
+        <di:waypoint x="2925" y="260" />
+        <di:waypoint x="2995" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ForkMastery_di" bpmnElement="Flow_ForkMastery">
+        <di:waypoint x="2900" y="285" />
+        <di:waypoint x="2900" y="620" />
+        <di:waypoint x="2995" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TransitionsReviewed_di" bpmnElement="Flow_TransitionsReviewed">
+        <di:waypoint x="3125" y="260" />
+        <di:waypoint x="3205" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_AllCovered_di" bpmnElement="Flow_AllCovered">
+        <di:waypoint x="3255" y="260" />
+        <di:waypoint x="3335" y="260" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3262" y="266" width="60" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_RiskyGap_di" bpmnElement="Flow_RiskyGap">
+        <di:waypoint x="3230" y="285" />
+        <di:waypoint x="3230" y="340" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3238" y="298" width="70" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_GapHandled_di" bpmnElement="Flow_GapHandled">
+        <di:waypoint x="3295" y="380" />
+        <di:waypoint x="3360" y="380" />
+        <di:waypoint x="3360" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TransitionsDone_di" bpmnElement="Flow_TransitionsDone">
+        <di:waypoint x="3385" y="260" />
+        <di:waypoint x="3435" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MasteryChecked_di" bpmnElement="Flow_MasteryChecked">
+        <di:waypoint x="3125" y="620" />
+        <di:waypoint x="3205" y="620" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MasteryFine_di" bpmnElement="Flow_MasteryFine">
+        <di:waypoint x="3255" y="620" />
+        <di:waypoint x="3335" y="620" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3262" y="626" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_WeakSpot_di" bpmnElement="Flow_WeakSpot">
+        <di:waypoint x="3230" y="645" />
+        <di:waypoint x="3230" y="700" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3238" y="656" width="70" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_PracticePlanned_di" bpmnElement="Flow_PracticePlanned">
+        <di:waypoint x="3295" y="740" />
+        <di:waypoint x="3360" y="740" />
+        <di:waypoint x="3360" y="645" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MasteryDone_di" bpmnElement="Flow_MasteryDone">
+        <di:waypoint x="3385" y="620" />
+        <di:waypoint x="3460" y="620" />
+        <di:waypoint x="3460" y="285" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ChecksDone_di" bpmnElement="Flow_ChecksDone">
+        <di:waypoint x="3485" y="260" />
+        <di:waypoint x="3535" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Precached_di" bpmnElement="Flow_Precached">
+        <di:waypoint x="3665" y="260" />
+        <di:waypoint x="3722" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_NightArrived_di" bpmnElement="Flow_NightArrived">
+        <di:waypoint x="3758" y="260" />
+        <di:waypoint x="3805" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SetPlayed_di" bpmnElement="Flow_SetPlayed">
+        <di:waypoint x="3935" y="260" />
+        <di:waypoint x="3965" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_BarUpdated_di" bpmnElement="Flow_BarUpdated">
+        <di:waypoint x="4095" y="260" />
+        <di:waypoint x="4142" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SongPicked_di" bpmnElement="Flow_SongPicked">
+        <di:waypoint x="1248" y="260" />
+        <di:waypoint x="1295" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SongKnown_di" bpmnElement="Flow_SongKnown">
+        <di:waypoint x="1320" y="235" />
+        <di:waypoint x="1320" y="180" />
+        <di:waypoint x="2480" y="180" />
+        <di:waypoint x="2480" y="350" />
+        <di:waypoint x="2425" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1332" y="196" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SongMissing_di" bpmnElement="Flow_SongMissing">
+        <di:waypoint x="1320" y="285" />
+        <di:waypoint x="1320" y="350" />
+        <di:waypoint x="1335" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1328" y="296" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_SongDrafted_di" bpmnElement="Flow_SongDrafted">
+        <di:waypoint x="1465" y="350" />
+        <di:waypoint x="1495" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Searched_di" bpmnElement="Flow_Searched">
+        <di:waypoint x="1625" y="350" />
+        <di:waypoint x="1675" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MatchYes_di" bpmnElement="Flow_MatchYes">
+        <di:waypoint x="1725" y="350" />
+        <di:waypoint x="1765" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1730" y="326" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_MatchNo_di" bpmnElement="Flow_MatchNo">
+        <di:waypoint x="1700" y="375" />
+        <di:waypoint x="1700" y="410" />
+        <di:waypoint x="1950" y="410" />
+        <di:waypoint x="1950" y="375" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1706" y="384" width="30" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Enriched_di" bpmnElement="Flow_Enriched">
+        <di:waypoint x="1895" y="350" />
+        <di:waypoint x="1925" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ToChartChoice_di" bpmnElement="Flow_ToChartChoice">
+        <di:waypoint x="1975" y="350" />
+        <di:waypoint x="2025" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ChartChordpro_di" bpmnElement="Flow_ChartChordpro">
+        <di:waypoint x="2075" y="350" />
+        <di:waypoint x="2105" y="350" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2110" y="288" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ChartFile_di" bpmnElement="Flow_ChartFile">
+        <di:waypoint x="2050" y="375" />
+        <di:waypoint x="2050" y="430" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2058" y="390" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Presigned_di" bpmnElement="Flow_Presigned">
+        <di:waypoint x="2165" y="470" />
+        <di:waypoint x="2205" y="470" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Uploaded_di" bpmnElement="Flow_Uploaded">
+        <di:waypoint x="2335" y="470" />
+        <di:waypoint x="2400" y="470" />
+        <di:waypoint x="2400" y="375" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_TonalityReviewed_di" bpmnElement="Flow_TonalityReviewed">
+        <di:waypoint x="2235" y="350" />
+        <di:waypoint x="2375" y="350" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_ChartAttached_di" bpmnElement="Flow_ChartAttached">
+        <di:waypoint x="2400" y="325" />
+        <di:waypoint x="2400" y="300" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="Flow_Appended_di" bpmnElement="Flow_Appended">
+        <di:waypoint x="2465" y="260" />
+        <di:waypoint x="2512" y="260" />
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Login_di" bpmnElement="MessageFlow_Login">
+        <di:waypoint x="500" y="460" />
+        <di:waypoint x="500" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="505" y="640" width="110" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_CreateConcert_di" bpmnElement="MessageFlow_CreateConcert">
+        <di:waypoint x="900" y="300" />
+        <di:waypoint x="900" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="905" y="600" width="80" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_CreateSetlist_di" bpmnElement="MessageFlow_CreateSetlist">
+        <di:waypoint x="1070" y="300" />
+        <di:waypoint x="1070" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1075" y="600" width="110" height="34" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Search_di" bpmnElement="MessageFlow_Search">
+        <di:waypoint x="1560" y="390" />
+        <di:waypoint x="1560" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1565" y="600" width="110" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_SearchUpstream_di" bpmnElement="MessageFlow_SearchUpstream">
+        <di:waypoint x="1530" y="900" />
+        <di:waypoint x="1530" y="980" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1408" y="928" width="115" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_RankedMatches_di" bpmnElement="MessageFlow_RankedMatches">
+        <di:waypoint x="1690" y="980" />
+        <di:waypoint x="1690" y="900" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="1700" y="928" width="115" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Presign_di" bpmnElement="MessageFlow_Presign">
+        <di:waypoint x="2100" y="510" />
+        <di:waypoint x="2100" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2105" y="650" width="110" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_UploadChart_di" bpmnElement="MessageFlow_UploadChart">
+        <di:waypoint x="2270" y="430" />
+        <di:waypoint x="2270" y="60" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2278" y="66" width="110" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_AppendEntry_di" bpmnElement="MessageFlow_AppendEntry">
+        <di:waypoint x="2440" y="300" />
+        <di:waypoint x="2440" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2445" y="600" width="100" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Reorder_di" bpmnElement="MessageFlow_Reorder">
+        <di:waypoint x="2700" y="300" />
+        <di:waypoint x="2700" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="2705" y="600" width="90" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_FixGap_di" bpmnElement="MessageFlow_FixGap">
+        <di:waypoint x="3230" y="420" />
+        <di:waypoint x="3230" y="460" />
+        <di:waypoint x="3145" y="460" />
+        <di:waypoint x="3145" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3155" y="438" width="115" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Practice_di" bpmnElement="MessageFlow_Practice">
+        <di:waypoint x="3230" y="780" />
+        <di:waypoint x="3230" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3238" y="796" width="140" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_Manifest_di" bpmnElement="MessageFlow_Manifest">
+        <di:waypoint x="3600" y="300" />
+        <di:waypoint x="3600" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="3605" y="600" width="110" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+      <bpmndi:BPMNEdge id="MessageFlow_BarStatus_di" bpmnElement="MessageFlow_BarStatus">
+        <di:waypoint x="4030" y="300" />
+        <di:waypoint x="4030" y="840" />
+        <bpmndi:BPMNLabel>
+          <dc:Bounds x="4035" y="600" width="110" height="20" />
+        </bpmndi:BPMNLabel>
+      </bpmndi:BPMNEdge>
+    </bpmndi:BPMNPlane>
+  </bpmndi:BPMNDiagram>
+</bpmn:definitions>
