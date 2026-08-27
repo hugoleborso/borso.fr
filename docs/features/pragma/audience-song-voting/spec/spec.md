@@ -36,7 +36,7 @@ POST   /api/audience/concerts/:sessionId/ballot        public   mint a ballot to
 GET    /api/audience/concerts/:sessionId/state         public   round, countdown, pool with counts, this ballot's votes
 POST   /api/audience/rounds/:roundId/votes             public   { songId }
 DELETE /api/audience/rounds/:roundId/votes/:songId     public   retract
-GET    /api/audience/search?q=                         public   picked-result search, see ADR-0015
+GET    /api/audience/search?q=                         public   picked-result search on Deezer, see ADR-0015
 POST   /api/audience/concerts/:sessionId/suggestions   public   { mbid }
 POST   /api/audience/concerts/:sessionId/rounds        gated    open a round
 GET    /api/audience/concerts/:sessionId/rounds        gated    history
@@ -90,7 +90,8 @@ sequenceDiagram
 **Error cases.**
 - A vote on a closed or already-settled round is refused with a conflict, not silently dropped.
 - A vote on a song outside the current pool is refused.
-- The upstream search is throttled. The visitor sees a stated failure, not an empty result list. This is the defect [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md) exists to fix.
+- The upstream search is throttled or unreachable. The visitor sees a stated failure, not an empty result list. Reporting a throttle as emptiness is the defect [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md) exists to fix, and it applies to whichever provider answers.
+- A picked result cannot be resolved to an `mbid`, because MusicBrainz is throttled or knows nothing of it. The song enters the catalogue anyway, with a null `mbid`, and the duplicate check falls back to normalised title and artist. A suggestion is never refused for a metadata lookup that failed.
 - A round is opened on a session whose `kind` is `practice`. Refused: rounds belong to concerts.
 - Two members open a round at the same instant. The second is refused while one is open on that concert.
 
@@ -106,8 +107,8 @@ sequenceDiagram
 | Tie at the close? | Earliest to reach the score; band arbitrates; both enter | Among the songs sharing the top count, the one whose latest surviving vote is earliest. Deterministic from the rows that remain, so retractions cannot make it ambiguous, and still sayable at the microphone as "it got there first". |
 | No votes at the close? | Blank round; random pick | Blank round. |
 | What is stored from a free-text suggestion? | A picked search result only; free text with band approval; free text shown as typed | A picked search result only. Nothing arbitrary is ever displayed, so no moderation has to be built. |
-| Which search source? | MusicBrainz repaired; Deezer; self-hosted mirror; none | MusicBrainz, cache moved into the database, throttling surfaced as an error. Full rubric in [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md). The self-hosted mirror is impossible on the store this repo has: 39,961,031 recordings against DSQL's 3,000-row transaction ceiling. |
-| Where does a winning suggestion live? | A nullable `song_id` on the entry; a catalogue song | A catalogue song with status `idea`. Forced, not chosen: `setlist_entry.song_id` is `NOT NULL` and DSQL accepts no `ALTER COLUMN DROP NOT NULL` (compat gaps §10). This is also why the suggestion's `mbid` has to survive, which decided ADR-0015. |
+| Which search source? | MusicBrainz for both moments; Deezer for search with MusicBrainz resolving the pick; self-hosted mirror; none | **Deezer answers the search, MusicBrainz resolves the picked result.** Search runs on every keystroke for a whole room inside thirty seconds; resolution runs once per accepted suggestion. Nothing forces one provider to serve both, and separating them puts the hot path on the larger quota while keeping the `mbid`. Full rubric and the amendment's reasoning in [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md). The self-hosted mirror is impossible on the store this repo has: 39,961,031 recordings against DSQL's 3,000-row transaction ceiling. |
+| Where does a winning suggestion live? | A nullable `song_id` on the entry; a catalogue song | A catalogue song with status `idea`. Forced, not chosen: `setlist_entry.song_id` is `NOT NULL` and DSQL accepts no `ALTER COLUMN DROP NOT NULL` (compat gaps §10). |
 | Polling cadence? | 2 s always; 1 s always; 1 s in-round only | One second while a round is open, nothing at rest, plus a refresh control. There is no streaming transport: API Gateway HTTP API buffers the response. |
 | When is the audience-choice setlist created? | At concert creation with a backfill; at concert creation only; at the first round | At the opening of the first round. No empty setlist is ever left on a concert that never ran a vote. |
 | How is a thirty-second round asserted? | A bounded duration parameter; a preview-only server clock; the validator waits | The validator waits the real thirty seconds. **Accepted cost:** every closure assertion spends half a minute of suite time and becomes sensitive to a slow machine. Revisit if the visual-validation run gets flaky. |
@@ -121,7 +122,7 @@ The two decisions this feature could not take on its own, each ratified and comm
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md) | MusicBrainz stays the song-search source; its cache moves into a shared table and a throttled response surfaces as a typed error | The suggestion carries an `mbid`, so a winning suggestion promotes into a catalogue song with the MusicBrainz columns intact. `musicbrainz.adapter.ts` changes its cache location and its failure branch, not its ranking. |
+| [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md) | Deezer answers the search, MusicBrainz resolves the picked result; the shared cache and the typed failure apply to whichever provider answers | A new Deezer adapter and ranking serve `GET /api/audience/search`. Accepting a suggestion makes one MusicBrainz call to resolve the `mbid` and the metadata; the song is created either way, so the duplicate check degrades to title and artist when resolution fails. |
 | [ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the QR code | One new dependency, reachable from exactly one atom, added to the workspace catalog. |
 
 ## Changes
@@ -239,7 +240,8 @@ apps/pragma/package.json, pnpm-workspace.yaml                          // UPDATE
 - `audience_ballot_minted`, `audience_vote_cast`, `audience_vote_retracted`, `audience_suggestion_accepted`, `audience_round_opened`, `audience_round_settled` with the winner and the vote total, `audience_round_blank`.
 - Ballots per round against the concert's `capacity`, reported per concert on the band's panel. Target for a first real concert: any non-zero value, since the baseline is that no channel exists.
 - Time from page open to first vote, p75 under thirty seconds, which is the whole round.
-- Search failure rate, meaning throttled or non-ok upstream responses over total searches. Above five percent in a concert, the cache is not doing its job and ADR-0015's cold path is the bottleneck.
+- Search failure rate, meaning throttled or non-ok upstream responses over total searches. Above five percent in a concert, the cache is not doing its job and the cold search path is the bottleneck.
+- Resolution failure rate, meaning accepted suggestions that entered the catalogue with a null `mbid`. This is the price ADR-0015 accepts for taking search off MusicBrainz, and it is the number that says whether the price is real.
 
 **Output metric.** Audience participation is reviewed by the band after each concert, by hand, against what the room felt like. There is no instrument that can tell the difference between a room that did not care and a room that did not hear the announcement, so this stays a conversation and not a dashboard.
 

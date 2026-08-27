@@ -63,7 +63,7 @@ No:
 
 - 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
 - 0009 — pragma previews clone production, credentials included.
-- 0015 — MusicBrainz stays the song-search source, with its cache moved into the database and a throttled response surfaced as an error; a winning audience suggestion becomes a catalogue song, so the `mbid` has to survive.
+- 0015 — Deezer answers the audience search and MusicBrainz resolves the picked result; amended in place on 2026-08-27 after the first draft weighted identifier continuity high on the strength of a dedupe rule the same change had introduced. The file name predates the amendment.
 
 ### App architecture
 

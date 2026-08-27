@@ -1,64 +1,71 @@
-# ADR-0015: MusicBrainz stays the song-search source, with a shared cache and an honest failure
+# ADR-0015: Deezer answers the search, MusicBrainz resolves the pick
 
 - **Status:** proposed
 - **Date:** 2026-08-26
 - **Deciders:** Hugo Borsoni
 - **Tags:** audience-song-voting, pragma, data, external-dependency
 
+> The file name predates the amendment below and no longer states the decision.
+> It is kept because `docs/**/validation/**` is append-only: a dated report from
+> 26 August links to this path, and correcting that link would edit a record of
+> what a validator saw on a day that has passed. The title above is authoritative.
+
 ## Context
 
-Audience song voting opens `pragma` to unauthenticated visitors for the first time. A visitor may suggest a song the band does not have in its catalogue, and that suggestion is only accepted when the visitor picks a result the application found for them, so nothing arbitrary is ever displayed. The search behind that picker is therefore on the critical path of a feature that runs in bursts: the band opens a 30-second round on stage and a room of people types at the same time.
+Audience song voting opens `pragma` to unauthenticated visitors for the first time. A visitor may suggest a song the band does not have, and that suggestion is only accepted when the visitor picks a result the application found for them, so nothing arbitrary is ever displayed. The search behind that picker is therefore on the critical path of a feature that runs in bursts: the band opens a thirty-second round on stage and a room of people types at the same time.
 
-The search that exists today is `GET /api/songs/search`, which calls MusicBrainz through `apps/pragma/api/src/songs/musicbrainz.adapter.ts`. That adapter holds its cache and its last-call timestamp in module state, so a warm Lambda reuses both and a cold one starts empty, and it self-throttles to one call per second. Its stated contract is that a non-ok response yields an empty result rather than throwing. Under throttling that contract turns a 503 into "no results found", which is the failure the band would see on stage and could not diagnose.
+Two moments have to be told apart, and the first draft of this record failed to. **Search** runs on every keystroke, for everyone in the room, inside a thirty-second window. **Resolution** runs once, on the one result a visitor picked, and only when a suggestion is accepted. They have completely different load shapes, and nothing forces one provider to serve both.
 
-MusicBrainz publishes a rate limit of one request per second per source IP, three hundred per second globally, and answers 503 beyond either. It documents no paid tier. It requires a meaningful `User-Agent`, which the adapter already sends. A Lambda outside a VPC egresses from AWS-managed addresses that vary per instance, so it is not established that concurrent instances share one per-IP bucket; the silent 503 is a defect regardless of which bucket is hit first.
+The search that exists today calls MusicBrainz through `apps/pragma/api/src/songs/musicbrainz.adapter.ts`. That adapter holds its cache and its last-call timestamp in module state, so a warm Lambda reuses both and a cold one starts empty, and it self-throttles to one call per second. Its stated contract is that a non-ok response yields an empty result rather than throwing — so under throttling it reports "no results found", which is the failure the band would see on stage and could not diagnose.
 
-One constraint closes a door before the trade-off starts. A suggestion that wins a round has to enter the "audience choice" setlist, and `setlist_entry.song_id` is `NOT NULL`. Aurora DSQL accepts no `ALTER COLUMN DROP NOT NULL`, so the column cannot be relaxed in place. A winning suggestion must therefore become a catalogue `song` row, and a `song` row carries `mbid`, `album`, `duration_seconds`, `isrcs` and `tags`, all of which are MusicBrainz fields.
+MusicBrainz publishes a rate limit of one request per second per source IP, three hundred per second globally, and answers 503 beyond either. It documents no paid tier. Deezer's public API needs no key; its own developer FAQ confirms a query quota exists but does not publish the figure, and the commonly cited number, roughly fifty requests per five seconds, comes from community sources rather than from Deezer.
+
+What MusicBrainz data actually buys this application was measured rather than assumed. `mbid`, `album`, `duration_seconds`, `isrcs` and `tags` are rendered read-only by `SongMusicBrainzPanel.tsx` and nothing computes on them. Exactly one behaviour reads the `mbid`: the audience-suggestion dedupe in `audience.service.ts`, which this same change introduced.
 
 ## Decision
 
-**Keep MusicBrainz, move its cache into the database, and let a throttled response surface as an error.** The identifier a suggestion carries has to be the identifier the catalogue already stores, because a winning suggestion becomes a catalogue song; that alone rules out a second provider whose ids do not resolve to an `mbid`. What actually breaks under burst is not the provider, it is an adapter that reports throttling as emptiness and a cache that every Lambda instance rebuilds alone. Both are ours to fix, and fixing them costs one table and one changed return type rather than a new vendor.
+**Deezer answers the search; MusicBrainz resolves the picked result.** Every keystroke goes to the provider with the larger quota and no key, and the one call per accepted suggestion goes to the provider whose identifier the catalogue already stores. The two providers never compete, because they serve two different moments.
 
 ## Consequences
 
-- `+` A query already typed by anyone in the room is served from the shared cache and never reaches MusicBrainz, which is the shape of the burst: a room converges on a handful of famous titles rather than fifty distinct ones.
-- `+` A throttled upstream becomes a visible error on the visitor's screen and in the logs, instead of a list that is empty for a reason nobody can see.
-- `+` A suggestion that wins a round promotes into a catalogue song with its `mbid` intact, so the existing MusicBrainz enrichment on `song` keeps working with no second lookup.
-- `-` The cold path is still bounded by MusicBrainz's one request per second per source IP. A room typing fifty genuinely distinct titles in the same thirty seconds will queue, and the last visitor waits.
-- `-` The search path now writes to DSQL, which is an optimistic-concurrency store: two Lambdas resolving the same cold query race to insert the same cache row, and the loser retries.
-- `~` The cache table is per-stage like every other table, so a preview and production warm independently, and `/visual-validation` exercises a cold cache unless the run seeds it.
+- `+` The hot path leaves the tightest documented limit in the picture. MusicBrainz's one request per second per source IP no longer bounds a room typing at once, because a room typing does not reach MusicBrainz at all.
+- `+` A suggestion still carries an `mbid` when it enters the catalogue, so the dedupe and the metadata panel keep working unchanged.
+- `+` A query already typed by anyone in the room is served from the shared cache and never leaves the building, which is the shape of the burst: a room converges on a handful of famous titles.
+- `-` A second external system to declare in the architecture manifest, with its own adapter and its own ranking to write and cover.
+- `-` Resolution can fail. When MusicBrainz is unreachable or throttled, the song enters the catalogue with a null `mbid`, so the dedupe falls back to normalised title and artist. Two spellings of the same song can then produce two catalogue rows.
+- `-` Deezer's quota is not published by Deezer. We are building on a community figure, and only its order of magnitude is load-bearing.
+- `~` The search path writes to DSQL, which resolves conflicts at commit under optimistic concurrency: two Lambdas resolving the same cold query race to insert the same cache row and the loser retries. The cache table is per-stage, so a preview and production warm independently.
 
 ## Alternatives considered
 
-### Option A — MusicBrainz with a shared cache and a surfaced failure (chosen)
+### Option A — Deezer searches, MusicBrainz resolves (chosen)
 
-- **Summary:** Keep `musicbrainz.adapter.ts` and its ranking, move the sixty-second in-memory cache into a per-stage table keyed on the normalised query, and change the non-ok branch to return a typed failure the controller maps to a status code instead of an empty list.
+- **Summary:** The public search calls Deezer, which needs no key. When a visitor picks a result, one MusicBrainz call resolves it to an `mbid` and the accompanying metadata, and the song enters the catalogue with both. The shared cache sits in front of the search, as it would for any provider.
 - **Strengths:**
-  - Identifier continuity: the suggestion carries an `mbid`, which is what `song.mbid` already stores, so promotion into the catalogue needs no translation.
-  - Change cost: `musicbrainz.core.ts`, `search-ranking.core.ts` and the `adapter-rate-limited-fetch` blueprint all survive untouched; only the cache's home and the failure branch move.
-  - Operational surface: no new vendor, no new credential, no new manifest entry.
-- **Costs:**
-  - The cold path keeps MusicBrainz's one request per second per source IP as its ceiling.
-  - One new table and one new write on the search path, on a store where concurrent writers to the same key conflict.
-- **Rationale:** It wins because the top-weighted criterion is not "which provider has the biggest number" but whether the room's burst reaches the provider at all, and a shared cache is what decides that. It also happens to be the only option that keeps the identifier the catalogue is already built on.
-
-### Option B — Deezer for the public search (rejected)
-
-- **Summary:** Point the public search at Deezer's public API, which needs no key, and keep MusicBrainz for the band-side enrichment that already exists.
-- **Strengths:**
-  - Roughly fifty requests per five seconds, so ten times MusicBrainz's per-IP headroom, and the cold path stops being the binding constraint.
+  - Burst tolerance: the per-keystroke path uses the larger quota, and the one-per-second limit applies only to a call that happens once per accepted suggestion.
+  - Identifier continuity is satisfied anyway, because resolution is deferred rather than skipped.
   - A commercial catalogue is closer to what a visitor types from memory than an editorial database is.
 - **Costs:**
-  - A Deezer id does not resolve to an `mbid`. A winning suggestion promoted into a `song` row would arrive with the MusicBrainz columns empty and no way to fill them without a second lookup against the provider this option was meant to avoid.
-  - A second external system to declare in the architecture manifest, and a second adapter with its own ranking to write and cover.
-- **Rejection rationale:** It loses on identifier continuity, which the `NOT NULL` on `setlist_entry.song_id` promoted from a nice-to-have to a load-bearing criterion. Shifting the weights would flip this only if suggestions never entered the catalogue, and the DSQL constraint means they must.
+  - A second external dependency, its adapter, its ranking and their tests.
+  - A resolution step that can fail, and a dedupe that has to degrade rather than refuse.
+- **Rationale:** It wins the top-weighted criterion outright and loses none of the others, once resolution is recognised as a separate moment from search.
+
+### Option B — MusicBrainz for both, with a shared cache and a surfaced failure (rejected)
+
+- **Summary:** Keep `musicbrainz.adapter.ts` for search as well as resolution, move its cache into a per-stage table, and make a non-ok response return a typed failure instead of an empty list.
+- **Strengths:**
+  - One vendor, no new manifest entry, no second adapter.
+  - The existing ranking and its `adapter-rate-limited-fetch` blueprint survive untouched.
+- **Costs:**
+  - The cold search path stays bounded by one request per second per source IP, which is the exact window the feature runs in.
+  - Cache warmth is the only thing standing between a room and a throttle, so the first person to type an unusual title queues behind everyone else.
+- **Rejection rationale:** This was the first draft's choice, and it lost on re-examination. See the revision below: the criterion that carried it does not survive contact with deferred resolution.
 
 ### Option C — Self-hosted MusicBrainz mirror (rejected)
 
 - **Summary:** Load the published `mbdump` into a database of our own and search it locally, with no external limit at all.
 - **Strengths:**
-  - No rate limit, and latency under our control.
-  - Same identifier space as the catalogue.
+  - No rate limit, latency under our control, same identifier space.
 - **Costs:**
   - MusicBrainz holds 39,961,031 recordings, 5,730,341 releases, 2,968,149 artists and 2,825,244 works. Aurora DSQL modifies at most 3,000 rows per transaction, requires a separate transaction per DDL statement, and times out a connection after one hour, so the only database this repository has cannot receive the dump.
   - Hosting it elsewhere means a long-lived Postgres beside the serverless cluster, with replication to follow and monitoring to own, for a feature that runs a few minutes per concert.
@@ -70,30 +77,42 @@ One constraint closes a door before the trade-off starts. A suggestion that wins
 | Criterion | Weight | Why it matters |
 |---|---|---|
 | Burst tolerance across one 30-second round | high | The operator named this the deciding criterion. The load is a room typing at once for thirty seconds, and a source that answers 503 makes the suggestion silently useless. |
-| Identifier continuity with the catalogue | high | `setlist_entry.song_id` is `NOT NULL` and DSQL cannot relax it, so a winning suggestion becomes a `song` row, and `song` stores `mbid`, `album`, `isrcs`, `tags`. |
 | Operational surface added | high | CLAUDE.md's north star reserves the operator's time for design conversations. A long-lived database to replicate and watch is a permanent chore in a one-person lab. |
-| Cost of the change in this codebase | medium | `musicbrainz.adapter.ts`, `musicbrainz.core.ts` and `search-ranking.core.ts` exist, are covered, and one of them is the `adapter-rate-limited-fetch` blueprint. |
+| Identifier continuity with the catalogue | low | Deferred resolution satisfies it under every option, so it no longer separates them. The first draft weighted this high and was wrong to; see the revision. |
+| Cost of the change in this codebase | medium | `musicbrainz.adapter.ts`, `musicbrainz.core.ts` and `search-ranking.core.ts` exist and are covered, and one of them is the `adapter-rate-limited-fetch` blueprint. |
 | Latency during a round | medium | The search must feel instant while a thirty-second clock is running. |
 
-|  | A — MusicBrainz + shared cache | B — Deezer | C — Self-hosted mirror |
+|  | A — Deezer + MusicBrainz resolve | B — MusicBrainz for both | C — Self-hosted mirror |
 |---|---|---|---|
-| Burst tolerance | ✓ repeats collapse into the shared cache; cold path still 1 req/s per IP | ✓ ~50 req / 5 s, no cache needed to survive | ✓ no external limit |
-| Identifier continuity | ✓ `mbid`, the column `song` already stores | ✗ Deezer ids do not resolve to an `mbid` | ✓ same identifier space |
-| Operational surface | ✓ no new vendor or credential | ✗ a second external system and adapter to own | ✗ a Postgres beside DSQL, plus replication and monitoring |
-| Change cost | ✓ cache location and one failure branch | ✗ a second adapter, core and ranking to write and cover | ✗ ingestion, replication and a search engine to build |
-| Latency in-round | ✓ cache hit is a local read | ✓ single upstream call | ✓ local, once built |
+| Burst tolerance | ✓ the per-keystroke path uses the larger quota | ✗ cold path bounded at 1 req/s per IP, inside the exact window | ✓ no external limit |
+| Operational surface | ✓ one more keyless API, no infrastructure | ✓ no new vendor at all | ✗ a Postgres beside DSQL, plus replication and monitoring |
+| Identifier continuity | ✓ resolved on the pick | ✓ native | ✓ native |
+| Change cost | ✗ a second adapter, core and ranking to write and cover | ✓ cache location and one failure branch | ✗ ingestion, replication and a search engine to build |
+| Latency in-round | ✓ cache hit is a local read | ✓ cache hit is a local read | ✓ local, once built |
 
 ## Implementation pointers
 
 - Spec: [`docs/features/pragma/audience-song-voting/spec/spec.md`](../features/pragma/audience-song-voting/spec/spec.md)
 - Plan: `docs/features/pragma/audience-song-voting/plan/plan.md` (row "public song search")
 - Commit: pending
-- Files: `apps/pragma/api/src/songs/musicbrainz.adapter.ts:60`, `apps/pragma/api/src/songs/songs.controller.ts:33`, `apps/pragma/api/src/songs/songs.schema.ts`
+- Files: `apps/pragma/api/src/songs/musicbrainz.adapter.ts`, `apps/pragma/api/src/audience/audience.service.ts`, `apps/pragma/api/src/songs/songs.controller.ts`
 - Related ADRs: [ADR-0012](./0012-outbound-calls-live-in-adapter-files.md), [ADR-0006](./0006-cascade-on-delete-via-json-blob-scrub.md)
+
+## Revisions
+
+### Revision 2026-08-27 — the deciding criterion was self-justified
+
+What changed: the chosen option. The first draft picked Option B, MusicBrainz for both moments, and this record now picks Option A.
+
+Why: the draft weighted *identifier continuity* **high** and rejected Deezer on it, reasoning that a Deezer id does not resolve to an `mbid`. Two things were wrong with that. First, the only behaviour in this application that reads an `mbid` is the audience-suggestion dedupe, which the very same change introduced — the criterion was carried by a rule written to justify it, and everything else MusicBrainz supplies is rendered read-only and computed on nowhere. Second, and decisive, the argument assumed search and resolution had to share a provider. They do not: resolving the `mbid` once, on the result the visitor picked, keeps continuity intact while taking the per-keystroke path off the tightest documented limit in the picture.
+
+The operator raised both points. The record is amended in place rather than superseded because it never reached `main` and was never accepted, so there is no ratified decision to supersede.
+
+Implication for the original decision: replaced. The rubric above carries the corrected weights.
 
 ## Sources
 
 - MusicBrainz rate limiting: <https://musicbrainz.org/doc/MusicBrainz_API/Rate_Limiting>
 - MusicBrainz database statistics, read 2026-08-26: <https://musicbrainz.org/statistics>
-- MusicBrainz database dumps: <https://musicbrainz.org/doc/MusicBrainz_Database/Download>
+- Deezer developer FAQ, read 2026-08-27 — confirms a query quota exists, does not publish the figure: <https://support.deezer.com/hc/en-gb/articles/360011538897-Deezer-FAQs-For-Developers>
 - Aurora DSQL PostgreSQL compatibility and transaction limits: <https://docs.aws.amazon.com/aurora-dsql/latest/userguide/working-with-postgresql-compatibility-unsupported-features.html>
