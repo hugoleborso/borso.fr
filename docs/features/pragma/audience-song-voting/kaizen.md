@@ -12,6 +12,15 @@ struggling from four agents hitting the same wall.
 
 This file is gitignored and is deleted once the kaizen pull request is open.
 
+- [07:40] `revalidate-visual` agent-browser find rejects --name placed before the action but its own help prints the option list under a Usage line that puts [action] last, so the working order is not readable from the help
+- [07:43] `revalidate-visual` agent-browser silently discards a session's page and globals when a later call to the same --session omits a launch flag such as --init-script, so the next eval fails with ReferenceError and a SecurityError on about:blank rather than naming the flag mismatch
+- [07:58] `revalidate-visual` an agent-browser session wedged after roughly fifty page drives so a reload never returned and the panel rendered with every query empty, which reads as an application defect until a daemon restart shows otherwise
+- [08:07] `revalidate-visual` agent-browser batch re-parses each quoted command string and strips inner quotes, so eval __vote.vote('Wonderwall') reaches the page as vote(Wonderwall) and fails with ReferenceError while the same eval outside batch works
+- [08:07] `revalidate-visual` consecutive agent-browser eval calls share one script scope, so a second call declaring the same const dies with Identifier already declared rather than evaluating
+- [08:07] `revalidate-visual` pragma's POST /api/__test/seed returns adminPassword pragma-preview together with adminCredentials already-set, so a re-seeded database hands back a password that the login route then refuses
+- [08:07] `revalidate-visual` the audience song search returns in under a second through curl but takes six to seven seconds to render in the page, which does not fit the thirty-second round a suggestion has to be made inside
+- [08:30] `revalidate-visual` the local pragma Postgres is shared, so another agent running the seed mid-run wiped every voting_round row and replaced the concert id the validation was driving, which surfaces as a 404 on a public route rather than as a collision
+- [08:42] `revalidate-visual` an agent-browser page stopped completing its fetches after about forty drives and the panel froze mid-round showing TIME LEFT 0s with the request log recording two polls where thirty were due, which is indistinguishable from a poll that stopped early until the daemon is restarted
 - [17:40] `main` no skill or doc says where a spec's relative links to docs/adr/ should point from docs/features/<app>/<slug>/spec/, so the depth is guessed and only the link checker catches it
 - [17:40] `main` the doc-link checker is at scripts/docs/check-doc-links.ts but CLAUDE.md names it check-doc-links.ts, so the obvious invocation from the repo root fails with ERR_MODULE_NOT_FOUND naming a path that never existed
 - [17:42] `main` CLAUDE.md says the Dynamic Workflow lives at .claude/workflows/feature-pipeline.js but the .claude/workflows directory does not exist, so /feature-pipeline is always a first-run generation
