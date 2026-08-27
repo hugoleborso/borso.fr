@@ -101,3 +101,44 @@ export function settleRound(params: SettleRoundParams): RoundSettlement {
   if (winner === undefined) return { kind: 'blank' };
   return { kind: 'winner', songId: winner.songId };
 }
+
+export interface ProjectableRound extends RoundWindow {
+  readonly id: string;
+  readonly openedAt: Date;
+  readonly winningSongId: string | null;
+}
+
+export interface ProjectedRound {
+  readonly id: string;
+  readonly openedAt: string;
+  readonly closesAt: string;
+  readonly remainingSeconds: number;
+  readonly isOpen: boolean;
+  readonly isSettled: boolean;
+  readonly winningSongId: string | null;
+}
+
+// @FollowsBlueprint core-projection
+export function projectRound(round: ProjectableRound, now: Date): ProjectedRound {
+  return {
+    id: round.id,
+    openedAt: round.openedAt.toISOString(),
+    closesAt: round.closesAt.toISOString(),
+    remainingSeconds: remainingSeconds(round, now),
+    isOpen: isRoundOpen(round, now),
+    isSettled: round.settledAt !== null,
+    winningSongId: round.winningSongId,
+  };
+}
+
+// @FollowsBlueprint core-projection
+export function projectRoundHistory(
+  rounds: readonly ProjectableRound[],
+  titleBySongId: ReadonlyMap<string | null, string>,
+  now: Date,
+): (ProjectedRound & { readonly winningSongTitle: string | null })[] {
+  return rounds.map((round) => ({
+    ...projectRound(round, now),
+    winningSongTitle: titleBySongId.get(round.winningSongId) ?? null,
+  }));
+}

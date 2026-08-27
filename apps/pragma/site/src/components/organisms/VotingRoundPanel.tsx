@@ -7,7 +7,6 @@ import {
   useOpenRound,
   useRoundHistory,
 } from '../../lib/queries/audience.queries';
-import { useSongsList } from '../../lib/queries/songs.queries';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
@@ -15,6 +14,7 @@ import { VoteQrCode } from '../atoms/VoteQrCode';
 import { VoteCountdown } from '../molecules/VoteCountdown';
 import {
   buildVoteAddress,
+  type RoundOutcome,
   selectParticipation,
   selectRoundHistoryLines,
 } from './voting-round-panel.core';
@@ -29,7 +29,6 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
   const voteState = useConcertVoteState(sessionId, null);
   const history = useRoundHistory(sessionId);
   const openRound = useOpenRound();
-  const songs = useSongsList();
 
   const round = voteState.data?.state.round ?? null;
   const isRoundOpen = round?.isOpen === true;
@@ -38,11 +37,13 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
     voteState.data?.state.ballotCount ?? 0,
     voteState.data?.state.capacity ?? null,
   );
-  const historyLines = selectRoundHistoryLines(
-    history.data?.rounds ?? [],
-    songs.data?.songs ?? [],
-    i18n.language,
-  );
+  const historyLines = selectRoundHistoryLines(history.data?.rounds ?? [], i18n.language);
+
+  const OUTCOME_LABEL: Record<RoundOutcome['kind'], (outcome: RoundOutcome) => string> = {
+    blank: () => t('audience.blankRound'),
+    'won-unnamed': () => t('audience.winnerUnnamed'),
+    won: (outcome) => (outcome.kind === 'won' ? outcome.title : ''),
+  };
 
   return (
     <section className="flex flex-col gap-4">
@@ -96,7 +97,7 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
           >
             <span className="font-mono text-xs text-ink-400">{line.openedAtLabel}</span>
             <span className="text-[13px] text-ink-900 text-right">
-              {line.winnerTitle ?? t('audience.blankRound')}
+              {OUTCOME_LABEL[line.outcome.kind](line.outcome)}
             </span>
           </li>
         ))}

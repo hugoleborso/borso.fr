@@ -38,6 +38,10 @@ export interface RoundView {
   readonly winningSongId: string | null;
 }
 
+export interface RoundHistoryView extends RoundView {
+  readonly winningSongTitle: string | null;
+}
+
 export interface ConcertVoteState {
   readonly round: RoundView | null;
   readonly pool: readonly PoolEntry[];

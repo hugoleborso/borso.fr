@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   isRoundOpen,
+  projectRound,
+  projectRoundHistory,
+  type ProjectableRound,
   remainingSeconds,
   ROUND_DURATION_MS,
   type RoundWindow,
@@ -174,5 +177,81 @@ describe('what a settlement asks the database to write', () => {
       shouldClaimTheRound: true,
       winningSongId: RIFF_SONG_ID,
     });
+  });
+});
+
+describe('projectRound', () => {
+  const OPENED_AT = new Date('2026-08-26T21:04:00.000Z');
+  const projectable: ProjectableRound = {
+    id: 'r1',
+    openedAt: OPENED_AT,
+    closesAt: selectRoundClosesAt(OPENED_AT),
+    settledAt: null,
+    winningSongId: null,
+  };
+
+  it('reports a running round as open, with the seconds it has left', () => {
+    const projected = projectRound(projectable, new Date(OPENED_AT.getTime() + 10_000));
+    expect(projected.isOpen).toBe(true);
+    expect(projected.isSettled).toBe(false);
+    expect(projected.remainingSeconds).toBe(20);
+    expect(projected.openedAt).toBe(OPENED_AT.toISOString());
+  });
+
+  it('reports a settled round as closed and settled', () => {
+    const settled = new Date(OPENED_AT.getTime() + ROUND_DURATION_MS);
+    const projected = projectRound(
+      { ...projectable, settledAt: settled, winningSongId: RIFF_SONG_ID },
+      settled,
+    );
+    expect(projected.isOpen).toBe(false);
+    expect(projected.isSettled).toBe(true);
+    expect(projected.winningSongId).toBe(RIFF_SONG_ID);
+  });
+});
+
+describe('projectRoundHistory', () => {
+  const OPENED_AT = new Date('2026-08-26T21:04:00.000Z');
+  const SETTLED_AT = new Date(OPENED_AT.getTime() + ROUND_DURATION_MS);
+
+  function settledRound(id: string, winningSongId: string | null): ProjectableRound {
+    return {
+      id,
+      openedAt: OPENED_AT,
+      closesAt: selectRoundClosesAt(OPENED_AT),
+      settledAt: SETTLED_AT,
+      winningSongId,
+    };
+  }
+
+  it('names the winner, so the band screen never has to join against its own cache', () => {
+    const history = projectRoundHistory(
+      [settledRound('r1', RIFF_SONG_ID)],
+      new Map([[RIFF_SONG_ID, 'Riff']]),
+      SETTLED_AT,
+    );
+    expect(history[0]?.winningSongTitle).toBe('Riff');
+  });
+
+  it('leaves a blank round without a title, because it has no winner to name', () => {
+    const history = projectRoundHistory([settledRound('r2', null)], new Map(), SETTLED_AT);
+    expect(history[0]?.winningSongId).toBe(null);
+    expect(history[0]?.winningSongTitle).toBe(null);
+  });
+
+  it('keeps the winner id when the catalogue no longer names it, rather than dropping the win', () => {
+    const history = projectRoundHistory([settledRound('r3', RIFF_SONG_ID)], new Map(), SETTLED_AT);
+    expect(history[0]?.winningSongId).toBe(RIFF_SONG_ID);
+    expect(history[0]?.winningSongTitle).toBe(null);
+  });
+
+  it('carries every round of the concert', () => {
+    expect(
+      projectRoundHistory(
+        [settledRound('r1', RIFF_SONG_ID), settledRound('r2', null)],
+        new Map([[RIFF_SONG_ID, 'Riff']]),
+        SETTLED_AT,
+      ).map((entry) => entry.winningSongTitle),
+    ).toEqual(['Riff', null]);
   });
 });

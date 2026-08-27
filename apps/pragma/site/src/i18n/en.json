@@ -360,6 +360,7 @@
     "qrTitle": "Scan to vote",
     "ballotsCast": "Ballots cast: {{ballots}}",
     "ballotsAgainstCapacity": "{{ballots}} of {{capacity}} in the room voted, {{share}}%",
-    "blankRound": "no vote cast"
+    "blankRound": "no vote cast",
+    "winnerUnnamed": "winner not found"
   }
 }

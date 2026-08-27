@@ -3,12 +3,24 @@ import {
   buildVoteAddress,
   selectParticipation,
   selectRoundHistoryLines,
+  selectRoundOutcome,
 } from './voting-round-panel.core';
+import type { RoundHistoryRow } from './voting-round-panel.core';
 
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const RIFF_SONG_ID = 'bbbbbbbb-2222-4222-8222-222222222222';
 const FRENCH = 'fr';
 const ENGLISH = 'en';
+
+function round(overrides: Partial<RoundHistoryRow> = {}): RoundHistoryRow {
+  return {
+    id: 'r1',
+    openedAt: '2026-08-26T21:04:00.000Z',
+    winningSongId: RIFF_SONG_ID,
+    winningSongTitle: 'Riff',
+    ...overrides,
+  };
+}
 
 // @FollowsBlueprint test-pure-unit
 describe('buildVoteAddress', () => {
@@ -19,34 +31,52 @@ describe('buildVoteAddress', () => {
   });
 });
 
+describe('selectRoundOutcome', () => {
+  it('calls a round nobody voted in blank', () => {
+    expect(selectRoundOutcome(round({ winningSongId: null, winningSongTitle: null }))).toEqual({
+      kind: 'blank',
+    });
+  });
+
+  it('names the winner when the round has one', () => {
+    expect(selectRoundOutcome(round({ winningSongTitle: 'Riff' }))).toEqual({
+      kind: 'won',
+      title: 'Riff',
+    });
+  });
+
+  it('never calls a round with a winner blank, even when the title is missing', () => {
+    const outcome = selectRoundOutcome(round({ winningSongTitle: null }));
+    expect(outcome).toEqual({ kind: 'won-unnamed' });
+    expect(outcome.kind).not.toBe('blank');
+  });
+
+  it('separates a blank round from a won one whose title is unknown', () => {
+    const blank = selectRoundOutcome(round({ winningSongId: null, winningSongTitle: null }));
+    const unnamed = selectRoundOutcome(round({ winningSongTitle: null }));
+    expect(blank.kind).not.toBe(unnamed.kind);
+  });
+});
+
 describe('selectRoundHistoryLines', () => {
-  const SONGS = [{ id: RIFF_SONG_ID, title: 'Riff' }];
   const OPENED_AT = '2026-08-26T21:04:00.000Z';
   const TWENTY_FOUR_HOUR_LABEL = /^\d{2}:\d{2}$/;
   const TWELVE_HOUR_LABEL = /^\d{2}:\d{2}\s?(AM|PM)$/;
 
   function labelOfOneRound(locale: string): string {
-    const lines = selectRoundHistoryLines(
-      [{ id: 'r1', openedAt: OPENED_AT, winningSongId: RIFF_SONG_ID }],
-      SONGS,
-      locale,
-    );
+    const lines = selectRoundHistoryLines([round({ openedAt: OPENED_AT })], locale);
     return lines[0]?.openedAtLabel ?? '';
   }
 
   it('shows nothing for a concert that has run no round', () => {
-    expect(selectRoundHistoryLines([], SONGS, FRENCH)).toEqual([]);
+    expect(selectRoundHistoryLines([], FRENCH)).toEqual([]);
   });
 
   it('names the winner of a decided round', () => {
-    const lines = selectRoundHistoryLines(
-      [{ id: 'r1', openedAt: OPENED_AT, winningSongId: RIFF_SONG_ID }],
-      SONGS,
-      FRENCH,
-    );
+    const lines = selectRoundHistoryLines([round({ openedAt: OPENED_AT })], FRENCH);
     expect(lines).toHaveLength(1);
     expect(lines[0]?.roundId).toBe('r1');
-    expect(lines[0]?.winnerTitle).toBe('Riff');
+    expect(lines[0]?.outcome).toEqual({ kind: 'won', title: 'Riff' });
   });
 
   it('labels the round through the viewer own locale, not by cutting the UTC string', () => {
@@ -55,22 +85,12 @@ describe('selectRoundHistoryLines', () => {
     expect(labelOfOneRound(ENGLISH)).not.toBe(labelOfOneRound(FRENCH));
   });
 
-  it('leaves a blank round without a winner rather than inventing one', () => {
+  it('carries a round won by a song suggested from the room, which no earlier read knew', () => {
     const lines = selectRoundHistoryLines(
-      [{ id: 'r2', openedAt: '2026-08-26T21:10:00.000Z', winningSongId: null }],
-      SONGS,
+      [round({ id: 'r4', winningSongId: 'just-created', winningSongTitle: 'Hallelujah' })],
       FRENCH,
     );
-    expect(lines[0]?.winnerTitle).toBe(null);
-  });
-
-  it('leaves a winner the catalogue no longer names without a title rather than crashing', () => {
-    const lines = selectRoundHistoryLines(
-      [{ id: 'r3', openedAt: '2026-08-26T21:20:00.000Z', winningSongId: 'gone' }],
-      SONGS,
-      FRENCH,
-    );
-    expect(lines[0]?.winnerTitle).toBe(null);
+    expect(lines[0]?.outcome).toEqual({ kind: 'won', title: 'Hallelujah' });
   });
 });
 

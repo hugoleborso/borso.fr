@@ -27,6 +27,9 @@ const roundSchema = z.object({
   winningSongId: z.string().uuid().nullable(),
 });
 const roundEnvelope = z.object({ round: roundSchema });
+const historyEnvelope = z.object({
+  rounds: z.array(roundSchema.extend({ winningSongTitle: z.string().nullable() })),
+});
 const stateEnvelope = z.object({
   state: z.object({
     round: roundSchema.nullable(),
@@ -638,6 +641,12 @@ describe('audience controller (back-e2e)', () => {
         setlistsEnvelope,
       );
       expect(setlists.setlists.map((setlist) => setlist.songCount)).toEqual([1]);
+
+      const history = await readJson(
+        await jsonRequest(app, `/api/audience/concerts/${sessionId}/rounds`, { cookieHeader }),
+        historyEnvelope,
+      );
+      expect(history.rounds.map((entry) => entry.winningSongTitle)).toEqual(['Riff']);
 
       const reopened = await jsonRequest(app, `/api/audience/concerts/${sessionId}/rounds`, {
         method: 'POST',

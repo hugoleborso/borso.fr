@@ -10,34 +10,40 @@ export interface RoundHistoryRow {
   readonly id: string;
   readonly openedAt: string;
   readonly winningSongId: string | null;
+  readonly winningSongTitle: string | null;
 }
 
-export interface NamedSong {
-  readonly id: string;
-  readonly title: string;
-}
+export type RoundOutcome =
+  | { readonly kind: 'blank' }
+  | { readonly kind: 'won'; readonly title: string }
+  | { readonly kind: 'won-unnamed' };
 
 export interface RoundHistoryLine {
   readonly roundId: string;
   readonly openedAtLabel: string;
-  readonly winnerTitle: string | null;
+  readonly outcome: RoundOutcome;
 }
 
 export function buildVoteAddress(origin: string, sessionId: string): string {
   return `${origin}${VOTE_PATH_PREFIX}${sessionId}`;
 }
 
+// @FollowsBlueprint core-decision
+export function selectRoundOutcome(round: RoundHistoryRow): RoundOutcome {
+  if (round.winningSongId === null) return { kind: 'blank' };
+  if (round.winningSongTitle === null) return { kind: 'won-unnamed' };
+  return { kind: 'won', title: round.winningSongTitle };
+}
+
 // @FollowsBlueprint core-projection
 export function selectRoundHistoryLines(
   rounds: readonly RoundHistoryRow[],
-  songs: readonly NamedSong[],
   locale: string,
 ): RoundHistoryLine[] {
-  const titleBySongId = new Map<string | null, string>(songs.map((song) => [song.id, song.title]));
   return rounds.map((round) => ({
     roundId: round.id,
     openedAtLabel: formatClockTime(round.openedAt, locale),
-    winnerTitle: titleBySongId.get(round.winningSongId) ?? null,
+    outcome: selectRoundOutcome(round),
   }));
 }
 

@@ -31,12 +31,19 @@ import {
   type AudienceVoteRow,
   type VotingRoundRow,
 } from './audience.repository';
-import { type ConcertVoteState, refuse, type Refused, type RoundView } from './audience.types';
+import {
+  type ConcertVoteState,
+  refuse,
+  type Refused,
+  type RoundHistoryView,
+  type RoundView,
+} from './audience.types';
 import { BALLOT_TOKEN_BYTES, mintBallotToken } from './ballot-token.utils';
 import { buildPoolEntries, type PoolCandidateSong, selectPool, tallyVotes } from './pool.core';
 import {
   isRoundOpen,
-  remainingSeconds,
+  projectRound,
+  projectRoundHistory,
   selectRoundClosesAt,
   selectSettlementWrite,
   settleRound,
@@ -47,18 +54,6 @@ const NO_OWN_VOTES: readonly string[] = [];
 
 export function mintBallot(): string {
   return mintBallotToken(randomBytes(BALLOT_TOKEN_BYTES));
-}
-
-function projectRound(round: VotingRoundRow, now: Date): RoundView {
-  return {
-    id: round.id,
-    openedAt: round.openedAt.toISOString(),
-    closesAt: round.closesAt.toISOString(),
-    remainingSeconds: remainingSeconds(round, now),
-    isOpen: isRoundOpen(round, now),
-    isSettled: round.settledAt !== null,
-    winningSongId: round.winningSongId,
-  };
 }
 
 function toPoolCandidate(song: SongRow): PoolCandidateSong {
@@ -116,9 +111,12 @@ export interface RoundHistoryParams {
 }
 
 // @FollowsBlueprint service-read-model
-export async function getRoundHistory(params: RoundHistoryParams): Promise<RoundView[]> {
+export async function getRoundHistory(params: RoundHistoryParams): Promise<RoundHistoryView[]> {
   const rounds = await listRoundsOfConcert(params.sessionId);
-  return rounds.map((round) => projectRound(round, params.now));
+  const titleBySongId = new Map<string | null, string>(
+    (await getSongs()).map((song) => [song.id, song.title]),
+  );
+  return projectRoundHistory(rounds, titleBySongId, params.now);
 }
 
 export async function findLiveConcert(now: Date): Promise<string | null> {

@@ -360,6 +360,7 @@
     "qrTitle": "Scannez pour voter",
     "ballotsCast": "Voix exprimées : {{ballots}}",
     "ballotsAgainstCapacity": "{{ballots}} sur {{capacity}} dans la salle ont voté, {{share}} %",
-    "blankRound": "aucune voix"
+    "blankRound": "aucune voix",
+    "winnerUnnamed": "gagnant introuvable"
   }
 }
