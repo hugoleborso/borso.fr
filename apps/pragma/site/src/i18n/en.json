@@ -362,6 +362,7 @@
     "ballotsCast": "Ballots cast: {{ballots}}",
     "ballotsAgainstCapacity": "{{ballots}} of {{capacity}} in the room voted, {{share}}%",
     "blankRound": "no vote cast",
+    "roundRunning": "vote in progress",
     "winnerUnnamed": "winner not found"
   }
 }

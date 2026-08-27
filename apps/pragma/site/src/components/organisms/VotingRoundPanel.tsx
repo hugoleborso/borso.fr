@@ -42,6 +42,7 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
   const historyLines = selectRoundHistoryLines(history.data?.rounds ?? [], i18n.language);
 
   const OUTCOME_LABEL: Record<RoundOutcome['kind'], (outcome: RoundOutcome) => string> = {
+    running: () => t('audience.roundRunning'),
     blank: () => t('audience.blankRound'),
     'won-unnamed': () => t('audience.winnerUnnamed'),
     won: (outcome) => (outcome.kind === 'won' ? outcome.title : ''),

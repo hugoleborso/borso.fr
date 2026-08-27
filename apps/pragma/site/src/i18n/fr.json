@@ -362,6 +362,7 @@
     "ballotsCast": "Voix exprimées : {{ballots}}",
     "ballotsAgainstCapacity": "{{ballots}} sur {{capacity}} dans la salle ont voté, {{share}} %",
     "blankRound": "aucune voix",
+    "roundRunning": "vote en cours",
     "winnerUnnamed": "gagnant introuvable"
   }
 }

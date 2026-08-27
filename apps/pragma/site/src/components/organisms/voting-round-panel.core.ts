@@ -10,11 +10,13 @@ const NO_ROOM_COUNTED = 0;
 export interface RoundHistoryRow {
   readonly id: string;
   readonly openedAt: string;
+  readonly isSettled: boolean;
   readonly winningSongId: string | null;
   readonly winningSongTitle: string | null;
 }
 
 export type RoundOutcome =
+  | { readonly kind: 'running' }
   | { readonly kind: 'blank' }
   | { readonly kind: 'won'; readonly title: string }
   | { readonly kind: 'won-unnamed' };
@@ -35,6 +37,7 @@ export function buildShortVoteAddress(origin: string): string {
 
 // @FollowsBlueprint core-decision
 export function selectRoundOutcome(round: RoundHistoryRow): RoundOutcome {
+  if (!round.isSettled) return { kind: 'running' };
   if (round.winningSongId === null) return { kind: 'blank' };
   if (round.winningSongTitle === null) return { kind: 'won-unnamed' };
   return { kind: 'won', title: round.winningSongTitle };

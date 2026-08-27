@@ -17,6 +17,7 @@ function round(overrides: Partial<RoundHistoryRow> = {}): RoundHistoryRow {
   return {
     id: 'r1',
     openedAt: '2026-08-26T21:04:00.000Z',
+    isSettled: true,
     winningSongId: RIFF_SONG_ID,
     winningSongTitle: 'Riff',
     ...overrides,
@@ -47,10 +48,18 @@ describe('buildShortVoteAddress', () => {
 });
 
 describe('selectRoundOutcome', () => {
+  it('calls a round still running in progress, never blank, however few votes are in', () => {
+    const outcome = selectRoundOutcome(
+      round({ isSettled: false, winningSongId: null, winningSongTitle: null }),
+    );
+    expect(outcome).toEqual({ kind: 'running' });
+    expect(outcome.kind).not.toBe('blank');
+  });
+
   it('calls a round nobody voted in blank', () => {
-    expect(selectRoundOutcome(round({ winningSongId: null, winningSongTitle: null }))).toEqual({
-      kind: 'blank',
-    });
+    expect(
+      selectRoundOutcome(round({ isSettled: true, winningSongId: null, winningSongTitle: null })),
+    ).toEqual({ kind: 'blank' });
   });
 
   it('names the winner when the round has one', () => {
@@ -67,7 +76,9 @@ describe('selectRoundOutcome', () => {
   });
 
   it('separates a blank round from a won one whose title is unknown', () => {
-    const blank = selectRoundOutcome(round({ winningSongId: null, winningSongTitle: null }));
+    const blank = selectRoundOutcome(
+      round({ isSettled: true, winningSongId: null, winningSongTitle: null }),
+    );
     const unnamed = selectRoundOutcome(round({ winningSongTitle: null }));
     expect(blank.kind).not.toBe(unnamed.kind);
   });
