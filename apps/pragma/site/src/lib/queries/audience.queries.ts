@@ -3,11 +3,14 @@
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { forgetBallotToken, readBallotToken, writeBallotToken } from '../ballot-token.adapter';
+import { setlistKeys } from './setlists.queries';
 import {
   addSuggestedSongToPool,
   applyVoteToState,
   type ConcertStateCache,
+  hasNewSettlement,
   type RoundHistoryCache,
+  selectHistoryPollInterval,
   selectPollInterval,
   withOpenedRound,
   withRoundAppended,
@@ -242,7 +245,14 @@ export function useSuggestSong() {
   });
 }
 
+/**
+ * @Blueprint query-poll-that-settles-and-fans-out
+ * @BlueprintName Poll That Ends On Its Own Answer And Refreshes What The Answer Moved
+ * @BlueprintUsage Use for a read whose rows are finished by a server-side transition the client cannot schedule, and whose finishing also changes a sibling query nobody is polling.
+ * @BlueprintDescription Reads `refetchInterval` from its own last answer, polling while any row is still unfinished and stopping once every row is, so the client needs no clock of its own and no second query to ask whether to keep asking. When an answer carries more finished rows than the cache held, it invalidates the sibling the transition also moved, inside the `queryFn` where both the old and the new answer are in hand. Comparing counts rather than reacting to a rendered value is what keeps this out of an effect.
+ */
 export function useRoundHistory(sessionId: string, isEnabled = true) {
+  const queryClient = useQueryClient();
   return useQuery({
     queryKey: audienceKeys.rounds(sessionId),
     queryFn: async () => {
@@ -250,8 +260,17 @@ export function useRoundHistory(sessionId: string, isEnabled = true) {
         param: { sessionId },
       });
       if (!response.ok) throw new ApiError(response.status, `rounds ${response.status}`, null);
-      return response.json();
+      const fetched = await response.json();
+      const isFreshlySettled = hasNewSettlement(
+        fetched,
+        queryClient.getQueryData<RoundHistoryCache>(audienceKeys.rounds(sessionId)),
+      );
+      if (isFreshlySettled) {
+        await queryClient.invalidateQueries({ queryKey: setlistKeys.bySessionId(sessionId) });
+      }
+      return fetched;
     },
+    refetchInterval: (query) => selectHistoryPollInterval(query.state.data?.rounds),
     enabled: isEnabled,
   });
 }

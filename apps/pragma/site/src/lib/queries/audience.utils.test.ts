@@ -5,6 +5,9 @@ import {
   type ConcertStateCache,
   OPEN_ROUND_POLL_INTERVAL_MS,
   type RoundView,
+  countSettledRounds,
+  hasNewSettlement,
+  selectHistoryPollInterval,
   selectPollInterval,
   withOpenedRound,
   withRoundAppended,
@@ -24,6 +27,10 @@ function roundThatIs(isOpen: boolean): RoundView {
     isSettled: !isOpen,
     winningSongId: null,
   };
+}
+
+function roundClosedButNotSettled(): RoundView {
+  return { ...roundThatIs(false), isSettled: false };
 }
 
 function cacheWith(overrides: Partial<ConcertStateCache['state']> = {}): ConcertStateCache {
@@ -65,12 +72,82 @@ describe('choosing the poll cadence from the last answer', () => {
     expect(selectPollInterval(null)).toBe(false);
   });
 
-  it('polls nothing once the round has closed', () => {
+  it('polls nothing once the round is settled', () => {
     expect(selectPollInterval(roundThatIs(false))).toBe(false);
+  });
+
+  it('keeps polling a closed round nobody has settled yet, which is what settles it', () => {
+    expect(selectPollInterval(roundClosedButNotSettled())).toBe(OPEN_ROUND_POLL_INTERVAL_MS);
   });
 
   it('polls once a second while a round is open', () => {
     expect(selectPollInterval(roundThatIs(true))).toBe(OPEN_ROUND_POLL_INTERVAL_MS);
+  });
+});
+
+describe('selectHistoryPollInterval', () => {
+  it('polls nothing before the history has been read once', () => {
+    expect(selectHistoryPollInterval(undefined)).toBe(false);
+  });
+
+  it('polls nothing at a concert that has run no round', () => {
+    expect(selectHistoryPollInterval([])).toBe(false);
+  });
+
+  it('polls nothing once every round is settled, so the panel is quiet at rest', () => {
+    expect(selectHistoryPollInterval([roundThatIs(false), roundThatIs(false)])).toBe(false);
+  });
+
+  it('keeps polling while one round is unsettled, which is how the winner reaches the panel', () => {
+    expect(selectHistoryPollInterval([roundThatIs(false), roundClosedButNotSettled()])).toBe(
+      OPEN_ROUND_POLL_INTERVAL_MS,
+    );
+  });
+
+  it('keeps polling while a round is still open', () => {
+    expect(selectHistoryPollInterval([roundThatIs(true)])).toBe(OPEN_ROUND_POLL_INTERVAL_MS);
+  });
+});
+
+describe('countSettledRounds', () => {
+  it('counts none before the history has been read once', () => {
+    expect(countSettledRounds(undefined)).toBe(0);
+  });
+
+  it('counts none at a concert that has run no round', () => {
+    expect(countSettledRounds({ rounds: [] })).toBe(0);
+  });
+
+  it('counts only the settled rounds, so an opened round does not look like a result', () => {
+    expect(
+      countSettledRounds({
+        rounds: [roundThatIs(false), roundClosedButNotSettled(), roundThatIs(false)],
+      }),
+    ).toBe(2);
+  });
+});
+
+describe('hasNewSettlement', () => {
+  it('is true on the first answer that carries a settled round', () => {
+    expect(hasNewSettlement({ rounds: [roundThatIs(false)] }, { rounds: [] })).toBe(true);
+  });
+
+  it('is true against a cache never read, which is a first load carrying a result', () => {
+    expect(hasNewSettlement({ rounds: [roundThatIs(false)] }, undefined)).toBe(true);
+  });
+
+  it('is false when the answer settles nothing new, so the setlist is not refetched on every tick', () => {
+    const settled = { rounds: [roundThatIs(false)] };
+    expect(hasNewSettlement(settled, settled)).toBe(false);
+  });
+
+  it('is false when the answer only adds a round that is still running', () => {
+    expect(
+      hasNewSettlement(
+        { rounds: [roundThatIs(false), roundThatIs(true)] },
+        { rounds: [roundThatIs(false)] },
+      ),
+    ).toBe(false);
   });
 });
 

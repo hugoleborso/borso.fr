@@ -6,6 +6,7 @@ export type VoteDirection = 'cast' | 'retract';
 
 const VOTE_DELTA: Readonly<Record<VoteDirection, number>> = { cast: 1, retract: -1 };
 const NO_VOTES_YET = 0;
+const NO_ROUNDS_SETTLED_YET = 0;
 
 export interface RoundView {
   readonly id: string;
@@ -46,8 +47,28 @@ export interface SuggestedSongView {
 // @FollowsBlueprint utils-pure-module
 export function selectPollInterval(round: RoundView | null | undefined): number | false {
   if (round === null || round === undefined) return false;
-  if (!round.isOpen) return false;
+  if (round.isSettled) return false;
   return OPEN_ROUND_POLL_INTERVAL_MS;
+}
+
+export function selectHistoryPollInterval(
+  rounds: readonly RoundView[] | undefined,
+): number | false {
+  if (rounds === undefined) return false;
+  if (rounds.every((round) => round.isSettled)) return false;
+  return OPEN_ROUND_POLL_INTERVAL_MS;
+}
+
+export function countSettledRounds(cached: RoundHistoryCache | undefined): number {
+  if (cached === undefined) return NO_ROUNDS_SETTLED_YET;
+  return cached.rounds.filter((round) => round.isSettled).length;
+}
+
+export function hasNewSettlement(
+  fetched: RoundHistoryCache,
+  cached: RoundHistoryCache | undefined,
+): boolean {
+  return countSettledRounds(fetched) > countSettledRounds(cached);
 }
 
 function isVoteChangePointless(
