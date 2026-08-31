@@ -5,7 +5,6 @@ import { findCatalogueMatch } from './song-identity.core';
 import { type DeezerOptions, readDeezerTrack, searchDeezerTracks } from './deezer.adapter';
 import { buildSearchCacheKey } from './search-cache.core';
 import {
-  lookupExternalRecording,
   lookupExternalRecordingsByIsrc,
   searchExternal,
   type SearchExternalOptions,
@@ -101,14 +100,6 @@ export async function searchExternalSongs(params: SearchSongsParams): Promise<So
     expiresAt: new Date(params.now.getTime() + EXTERNAL_SEARCH_CACHE_TTL_MS),
   }).catch(() => undefined);
   return { kind: 'ok', hits: outcome.hits };
-}
-
-// @FollowsBlueprint service-passthrough
-export async function lookupExternalSong(
-  musicBrainzId: string,
-  options: SearchExternalOptions = {},
-): Promise<SongSearchOutcome> {
-  return await lookupExternalRecording(musicBrainzId, options);
 }
 
 export type AudienceSearchOutcome =

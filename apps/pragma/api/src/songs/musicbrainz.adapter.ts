@@ -67,25 +67,6 @@ export async function searchExternal(
 }
 
 // @FollowsBlueprint adapter-rate-limited-fetch
-export async function lookupExternalRecording(
-  musicBrainzId: string,
-  options: SearchExternalOptions = {},
-): Promise<ExternalSearchOutcome> {
-  const state = options.state ?? externalSearchState;
-  const now = options.now ?? Date.now;
-  const fetcher = options.fetcher ?? fetch;
-  await waitForRateSlot(state, now);
-  state.lastCallAt = now();
-  const url = `${MUSICBRAINZ_BASE_URL}${encodeURIComponent(musicBrainzId)}?fmt=json&inc=tags+releases+isrcs`;
-  const response = await fetcher(url, {
-    headers: { 'User-Agent': MUSICBRAINZ_USER_AGENT, Accept: 'application/json' },
-  });
-  if (!response.ok) return { kind: 'unavailable', status: response.status };
-  const body: unknown = await response.json();
-  return { kind: 'ok', hits: mapMusicBrainzRecordings({ recordings: [body] }) };
-}
-
-// @FollowsBlueprint adapter-rate-limited-fetch
 export async function lookupExternalRecordingsByIsrc(
   isrc: string,
   options: SearchExternalOptions = {},
