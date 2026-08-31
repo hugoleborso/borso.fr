@@ -187,9 +187,13 @@ describe('lookupExternalRecordingsByIsrc', () => {
       now: () => 0,
       state: freshState(),
     });
-    const [url] = fetcher.mock.calls[0] ?? [];
+    const [url, init] = fetcher.mock.calls[0] ?? [];
     expect(url).toContain(`/isrc/${ISRC}`);
     expect(url).toContain('artist-credits');
+    expect(init?.headers).toEqual({
+      Accept: 'application/json',
+      'User-Agent': expect.stringContaining('Pragma'),
+    });
     expect(outcome).toEqual({
       kind: 'ok',
       hits: [expect.objectContaining({ mbid: RECORDING.id })],
