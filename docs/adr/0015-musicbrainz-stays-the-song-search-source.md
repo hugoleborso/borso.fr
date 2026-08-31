@@ -24,15 +24,16 @@ What MusicBrainz data actually buys this application was measured rather than as
 
 ## Decision
 
-**Deezer answers the search; MusicBrainz resolves the picked result.** Every keystroke goes to the provider with the larger quota and no key, and the one call per accepted suggestion goes to the provider whose identifier the catalogue already stores. The two providers never compete, because they serve two different moments.
+**Deezer answers the search; MusicBrainz resolves the picked result, through its ISRC.** Every keystroke goes to the provider with the larger quota and no key, and the one call per accepted suggestion goes to the provider whose identifier the catalogue already stores. The two providers never compete, because they serve two different moments, and the ISRC is what joins them: Deezer returns one on every track, and MusicBrainz resolves an ISRC to a recording by exact match rather than by search.
 
 ## Consequences
 
 - `+` The hot path leaves the tightest documented limit in the picture. MusicBrainz's one request per second per source IP no longer bounds a room typing at once, because a room typing does not reach MusicBrainz at all.
 - `+` A suggestion still carries an `mbid` when it enters the catalogue, so the dedupe and the metadata panel keep working unchanged.
+- `+` Resolving through the ISRC cannot pick the wrong version. A cover, a live take and a remaster each carry their own ISRC, which a title-and-artist search would have had to guess between.
 - `+` A query already typed by anyone in the room is served from the shared cache and never leaves the building, which is the shape of the burst: a room converges on a handful of famous titles.
 - `-` A second external system to declare in the architecture manifest, with its own adapter and its own ranking to write and cover.
-- `-` Resolution can fail. When MusicBrainz is unreachable or throttled, the song enters the catalogue with a null `mbid`, so the dedupe falls back to normalised title and artist. Two spellings of the same song can then produce two catalogue rows.
+- `-` Resolution can fail, in two ways rather than one: Deezer may return no ISRC for a track, or MusicBrainz may know no recording for the ISRC it returned. Either way the song enters the catalogue with a null `mbid` and the dedupe falls back to normalised title and artist, so two spellings can produce two rows. Exact-match resolution makes this rarer than a title search would, and it never makes it wrong.
 - `-` Deezer's quota is not published by Deezer. We are building on a community figure, and only its order of magnitude is load-bearing.
 - `~` The search path writes to DSQL, which resolves conflicts at commit under optimistic concurrency: two Lambdas resolving the same cold query race to insert the same cache row and the loser retries. The cache table is per-stage, so a preview and production warm independently.
 
@@ -40,7 +41,7 @@ What MusicBrainz data actually buys this application was measured rather than as
 
 ### Option A — Deezer searches, MusicBrainz resolves (chosen)
 
-- **Summary:** The public search calls Deezer, which needs no key. When a visitor picks a result, one MusicBrainz call resolves it to an `mbid` and the accompanying metadata, and the song enters the catalogue with both. The shared cache sits in front of the search, as it would for any provider.
+- **Summary:** The public search calls Deezer, which needs no key and returns an ISRC on every track. When a visitor picks a result, one MusicBrainz ISRC lookup resolves it to an `mbid` and the accompanying metadata, and the song enters the catalogue with both. The shared cache sits in front of the search, as it would for any provider. Deezer returns several track ids for one recording — a first release and its reissues share an ISRC — so the results are collapsed on the ISRC before the room ever sees them, or the same song would appear twice and split its own vote.
 - **Strengths:**
   - Burst tolerance: the per-keystroke path uses the larger quota, and the one-per-second limit applies only to a call that happens once per accepted suggestion.
   - Identifier continuity is satisfied anyway, because resolution is deferred rather than skipped.
@@ -99,6 +100,25 @@ What MusicBrainz data actually buys this application was measured rather than as
 - Related ADRs: [ADR-0012](./0012-outbound-calls-live-in-adapter-files.md), [ADR-0006](./0006-cascade-on-delete-via-json-blob-scrub.md)
 
 ## Revisions
+
+### Revision 2026-08-31 — the join is the ISRC, not the title
+
+What changed: how resolution works, not which provider does what.
+
+The 27 August revision said the picked result would be resolved to an `mbid`
+by searching MusicBrainz on title and artist. Probing the two APIs before
+writing the adapter showed a better join: Deezer returns an `isrc` on every
+track, and MusicBrainz resolves an ISRC to a recording by exact match through
+`/ws/2/isrc/`. A fuzzy search that had to tell a cover from a live take from a
+remaster becomes a lookup that cannot pick the wrong one.
+
+The same probe surfaced a defect the title-based design would have hidden: one
+query returned two Deezer track ids carrying the same ISRC, because a reissue is
+a separate track there. Left alone, the room would see one song twice and split
+its own vote between the two rows.
+
+Implication for the original decision: unchanged in substance, sharper in
+mechanism.
 
 ### Revision 2026-08-27 — the deciding criterion was self-justified
 

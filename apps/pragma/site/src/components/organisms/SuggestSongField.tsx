@@ -32,9 +32,9 @@ export function SuggestSongField({ sessionId, ballotToken }: SuggestSongFieldPro
     publishSettledQuery(nextQuery.trim());
   };
 
-  const pickResult = (mbid: string): void => {
+  const pickResult = (trackId: string): void => {
     if (ballotToken === null) return;
-    suggestSong.mutate({ sessionId, mbid, ballotToken });
+    suggestSong.mutate({ sessionId, trackId, ballotToken });
     setTypedQuery('');
     setSettledQuery('');
   };
@@ -72,10 +72,10 @@ export function SuggestSongField({ sessionId, ballotToken }: SuggestSongFieldPro
       {search.data === undefined ? null : (
         <ul className="list-none p-1 m-0 flex flex-col gap-1 border border-line rounded-md bg-bg-elev max-h-72 overflow-y-auto">
           {search.data.hits.map((hit) => (
-            <li key={hit.mbid}>
+            <li key={hit.trackId}>
               <button
                 type="button"
-                onClick={() => pickResult(hit.mbid)}
+                onClick={() => pickResult(hit.trackId)}
                 className="w-full text-left px-2 py-2 rounded text-sm text-ink-700 flex flex-col gap-0.5"
               >
                 <span className="font-medium text-ink-900">{hit.title}</span>

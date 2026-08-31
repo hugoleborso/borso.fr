@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import FIXTURE from './__fixtures__/musicbrainz-sample.json';
-import {
-  mapMusicBrainzRecordings,
-  normalizeSearchQuery,
-  readCachedSearchHits,
-} from './musicbrainz.core';
+import { mapMusicBrainzRecordings, readCachedSearchHits } from './musicbrainz.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('mapMusicBrainzRecordings', () => {
@@ -248,12 +244,6 @@ describe('mapMusicBrainzRecordings', () => {
       recordings: [{ id: 'x', title: 'T', 'first-release-date': 'unknown' }],
     });
     expect(hits[0]?.year).toBe(null);
-  });
-});
-
-describe('normalizeSearchQuery', () => {
-  it('trims and lowercases, so any casing finds the same cached answer', () => {
-    expect(normalizeSearchQuery('  Get Lucky ')).toBe('get lucky');
   });
 });
 

@@ -14,7 +14,8 @@ import {
 
 const SOME_UUID = '11111111-1111-4111-8111-111111111111';
 const OTHER_UUID = '22222222-2222-4222-8222-222222222222';
-const MUSICBRAINZ_ID_MAX = 256;
+const TRACK_ID_MAX = 64;
+const A_TRACK_ID = '985745702';
 const SEARCH_QUERY_MAX = 256;
 
 // @FollowsBlueprint test-pure-unit
@@ -58,19 +59,19 @@ describe('voteCreateSchema', () => {
 });
 
 describe('suggestionCreateSchema', () => {
-  it('accepts a picked search result named by its MusicBrainz identifier', () => {
-    expect(suggestionCreateSchema.safeParse({ mbid: SOME_UUID }).success).toBe(true);
+  it('accepts a picked search result named by the provider track it came from', () => {
+    expect(suggestionCreateSchema.safeParse({ trackId: A_TRACK_ID }).success).toBe(true);
   });
 
   it('refuses free text arriving beside the picked result', () => {
-    const refusal = suggestionCreateSchema.safeParse({ mbid: SOME_UUID, title: 'anything' });
+    const refusal = suggestionCreateSchema.safeParse({ trackId: A_TRACK_ID, title: 'anything' });
     expect(refusal.success).toBe(false);
   });
 
   it('refuses an empty identifier and one past the ceiling', () => {
-    expect(suggestionCreateSchema.safeParse({ mbid: '' }).success).toBe(false);
+    expect(suggestionCreateSchema.safeParse({ trackId: '' }).success).toBe(false);
     expect(
-      suggestionCreateSchema.safeParse({ mbid: 'a'.repeat(MUSICBRAINZ_ID_MAX + 1) }).success,
+      suggestionCreateSchema.safeParse({ trackId: 'a'.repeat(TRACK_ID_MAX + 1) }).success,
     ).toBe(false);
   });
 });

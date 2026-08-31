@@ -145,8 +145,9 @@ export const pragmaManifest: ArchitectureManifest = {
       id: 'deezer',
       icon: '🎵',
       name: 'Deezer',
-      technology: 'iframe embed',
-      description: 'Renders a reference recording inside a song page.',
+      technology: 'iframe embed and unauthenticated search API',
+      description:
+        'Renders a reference recording inside a song page, and answers the audience search on every keystroke. It needs no key and publishes no per-second limit, which is why the room types against it rather than against MusicBrainz. It reports a refused request inside a 200 body, so the adapter reads the payload as well as the status.',
       boundary: 'third-party',
     },
     {

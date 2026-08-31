@@ -88,7 +88,7 @@ async function seedSearchCache(query: string): Promise<void> {
   await testDatabase()
     .insert(externalSearchCacheTable)
     .values({
-      normalizedQuery: query,
+      normalizedQuery: `deezer:${query}`,
       hits: JSON.stringify([]),
       expiresAt: new Date(Date.now() + CACHE_LIFETIME_MS),
     });
@@ -166,27 +166,91 @@ async function openRoundOn(app: Hono, cookieHeader: string, sessionId: string): 
   });
 }
 
-function recordingPayload(musicBrainzId: string): Readonly<Record<string, unknown>> {
+interface ProviderTrack {
+  readonly trackId: string;
+  readonly isrc: string;
+  readonly mbid: string;
+  readonly title: string;
+  readonly artist: string;
+  readonly album: string;
+  readonly durationSeconds: number;
+}
+
+const KNOWN_SONG_TRACK: ProviderTrack = {
+  trackId: '111111111',
+  isrc: 'GBAAA0000001',
+  mbid: KNOWN_SONG_MBID,
+  title: 'Riff',
+  artist: 'The Band',
+  album: 'Debut',
+  durationSeconds: 240,
+};
+
+const PLANNED_SONG_TRACK: ProviderTrack = {
+  trackId: '222222222',
+  isrc: 'GBAAA0000002',
+  mbid: PLANNED_SONG_MBID,
+  title: 'Ballad',
+  artist: 'The Band',
+  album: 'Debut',
+  durationSeconds: 260,
+};
+
+const UNKNOWN_SONG_TRACK: ProviderTrack = {
+  trackId: '333333333',
+  isrc: 'USSM16800123',
+  mbid: UNKNOWN_SONG_MBID,
+  title: 'Voodoo Child',
+  artist: 'The Jimi Hendrix Experience',
+  album: 'Electric Ladyland',
+  durationSeconds: 900,
+};
+
+const MILLIS_PER_SECOND = 1_000;
+const DEEZER_NO_DATA_CODE = 800;
+
+function deezerTrackPayload(track: ProviderTrack): unknown {
   return {
-    id: musicBrainzId,
-    title: 'Voodoo Child',
-    length: 900_000,
+    id: Number(track.trackId),
+    title: track.title,
+    title_short: track.title,
+    isrc: track.isrc,
+    duration: track.durationSeconds,
+    artist: { name: track.artist },
+    album: { title: track.album },
+  };
+}
+
+function recordingPayload(track: ProviderTrack): unknown {
+  return {
+    id: track.mbid,
+    title: track.title,
+    length: track.durationSeconds * MILLIS_PER_SECOND,
     'first-release-date': '1968-10-25',
-    'artist-credit': [{ name: 'The Jimi Hendrix Experience' }],
-    releases: [{ id: 'ffffffff-1111-4111-8111-111111111111', title: 'Electric Ladyland' }],
-    isrcs: ['USSM16800123'],
+    'artist-credit': [{ name: track.artist }],
+    isrcs: [track.isrc],
     tags: [{ name: 'psychedelic rock', count: 4 }],
   };
 }
 
-function stubMusicBrainzRecording(musicBrainzId: string): void {
-  vi.stubGlobal('fetch', () =>
-    Promise.resolve(
-      new Response(JSON.stringify(recordingPayload(musicBrainzId)), {
-        status: 200,
-        headers: { 'content-type': 'application/json' },
-      }),
-    ),
+function providerResponse(body: unknown): Response {
+  return new Response(JSON.stringify(body), {
+    status: 200,
+    headers: { 'content-type': 'application/json' },
+  });
+}
+
+function selectProviderPayload(url: string, tracks: readonly ProviderTrack[]): unknown {
+  const picked = tracks.find((track) => url.includes(`/track/${track.trackId}`));
+  if (picked !== undefined) return deezerTrackPayload(picked);
+  const resolved = tracks.find((track) => url.includes(`/isrc/${track.isrc}`));
+  if (resolved !== undefined) return { recordings: [recordingPayload(resolved)] };
+  return { error: { type: 'DataException', code: DEEZER_NO_DATA_CODE } };
+}
+
+function stubProviders(...tracks: readonly ProviderTrack[]): void {
+  vi.stubGlobal('fetch', (url: string) =>
+    Promise.resolve(providerResponse(selectProviderPayload(url, tracks))),
   );
 }
 
@@ -219,7 +283,7 @@ describe('audience controller (back-e2e)', () => {
       }),
       jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
         method: 'POST',
-        body: { mbid: 'mb-unknown' },
+        body: { trackId: 'dz-unknown' },
         extraHeaders: ballotHeaders(A_BALLOT),
       }),
     ]);
@@ -245,7 +309,7 @@ describe('audience controller (back-e2e)', () => {
     });
     const suggestion = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
       method: 'POST',
-      body: { mbid: 'mb-1' },
+      body: { trackId: 'dz-1' },
     });
     expect(vote.status).toBe(UNAUTHORISED);
     expect(suggestion.status).toBe(UNAUTHORISED);
@@ -266,12 +330,12 @@ describe('audience controller (back-e2e)', () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const sessionId = await createConcert(app, cookieHeader);
     const before = await countCatalogSongs(app, cookieHeader);
-    stubMusicBrainzRecording(UNKNOWN_SONG_MBID);
+    stubProviders(UNKNOWN_SONG_TRACK);
 
     const refused = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
       method: 'POST',
       extraHeaders: ballotHeaders(A_BALLOT),
-      body: { mbid: UNKNOWN_SONG_MBID },
+      body: { trackId: UNKNOWN_SONG_TRACK.trackId },
     });
     expect(refused.status).toBe(409);
     expect((await readJson(refused, z.object({ error: z.string() }))).error).toBe('round-closed');
@@ -290,13 +354,13 @@ describe('audience controller (back-e2e)', () => {
       z.object({ session: z.object({ id: z.string().uuid() }) }),
     );
     const before = await countCatalogSongs(app, cookieHeader);
-    stubMusicBrainzRecording(UNKNOWN_SONG_MBID);
+    stubProviders(UNKNOWN_SONG_TRACK);
 
     const suggest = (sessionId: string) =>
       jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
         method: 'POST',
         extraHeaders: ballotHeaders(A_BALLOT),
-        body: { mbid: UNKNOWN_SONG_MBID },
+        body: { trackId: UNKNOWN_SONG_TRACK.trackId },
       });
     const onAPractice = await suggest(body.session.id);
     const onNothing = await suggest(UNKNOWN_ID);
@@ -325,7 +389,7 @@ describe('audience controller (back-e2e)', () => {
     const suggestion = await jsonRequest(app, `/api/audience/concerts/${UNKNOWN_ID}/suggestions`, {
       method: 'POST',
       extraHeaders: { ...ballotHeaders(A_BALLOT), 'x-forwarded-for': '203.0.113.9' },
-      body: { mbid: UNKNOWN_SONG_MBID },
+      body: { trackId: UNKNOWN_SONG_TRACK.trackId },
     });
     expect(suggestion.status).toBe(429);
   });
@@ -413,7 +477,7 @@ describe('audience controller (back-e2e)', () => {
     const refused = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
       method: 'POST',
       extraHeaders: ballotHeaders(A_BALLOT),
-      body: { mbid: 'mb-1', title: 'anything the room typed' },
+      body: { trackId: 'dz-1', title: 'anything the room typed' },
     });
     expect(refused.status).toBe(400);
   });
@@ -528,11 +592,12 @@ describe('audience controller (back-e2e)', () => {
     });
     await createManualSetlistHolding(app, cookieHeader, sessionId, plannedSongId);
     await openRoundOn(app, cookieHeader, sessionId);
+    stubProviders(PLANNED_SONG_TRACK);
 
     const refused = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
       method: 'POST',
       extraHeaders: ballotHeaders(A_BALLOT),
-      body: { mbid: PLANNED_SONG_MBID },
+      body: { trackId: PLANNED_SONG_TRACK.trackId },
     });
     expect(refused.status).toBe(409);
     const body = await readJson(refused, z.object({ error: z.string() }));
@@ -550,11 +615,12 @@ describe('audience controller (back-e2e)', () => {
     });
     const before = await countCatalogSongs(app, cookieHeader);
     await openRoundOn(app, cookieHeader, sessionId);
+    stubProviders(KNOWN_SONG_TRACK);
 
     const accepted = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
       method: 'POST',
       extraHeaders: ballotHeaders(A_BALLOT),
-      body: { mbid: KNOWN_SONG_MBID },
+      body: { trackId: KNOWN_SONG_TRACK.trackId },
     });
     expect(accepted.status).toBe(201);
     const body = await readJson(accepted, suggestedSongEnvelope);
@@ -567,17 +633,17 @@ describe('audience controller (back-e2e)', () => {
     const sessionId = await createConcert(app, cookieHeader);
     const before = await countCatalogSongs(app, cookieHeader);
     await openRoundOn(app, cookieHeader, sessionId);
-    stubMusicBrainzRecording(UNKNOWN_SONG_MBID);
+    stubProviders(UNKNOWN_SONG_TRACK);
 
     const accepted = await jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
       method: 'POST',
       extraHeaders: ballotHeaders(A_BALLOT),
-      body: { mbid: UNKNOWN_SONG_MBID },
+      body: { trackId: UNKNOWN_SONG_TRACK.trackId },
     });
     expect(accepted.status).toBe(201);
     const body = await readJson(accepted, suggestedSongEnvelope);
     expect(body.song.status).toBe('idea');
-    expect(body.song.mbid).toBe(UNKNOWN_SONG_MBID);
+    expect(body.song.mbid).toBe(UNKNOWN_SONG_TRACK.mbid);
     expect(body.song.title).toBe('Voodoo Child');
     expect(body.song.artist).toBe('The Jimi Hendrix Experience');
     expect(body.song.album).toBe('Electric Ladyland');

@@ -10,6 +10,7 @@ import {
   type ExternalFetcher,
   type ExternalSearchState,
   lookupExternalRecording,
+  lookupExternalRecordingsByIsrc,
   searchExternal,
 } from './musicbrainz.adapter';
 
@@ -168,6 +169,76 @@ describe('lookupExternalRecording', () => {
     vi.stubGlobal('fetch', platformFetch);
     try {
       const outcome = await lookupExternalRecording(RECORDING.id);
+      expect(platformFetch).toHaveBeenCalledTimes(1);
+      expect(outcome.kind).toBe('ok');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe('lookupExternalRecordingsByIsrc', () => {
+  const ISRC = 'GBAAW9500189';
+
+  it('asks the service for the recording carrying the isrc the picked track named', async () => {
+    const fetcher = vi.fn(respondWith({ recordings: [RECORDING] }));
+    const outcome = await lookupExternalRecordingsByIsrc(ISRC, {
+      fetcher,
+      now: () => 0,
+      state: freshState(),
+    });
+    const [url] = fetcher.mock.calls[0] ?? [];
+    expect(url).toContain(`/isrc/${ISRC}`);
+    expect(url).toContain('artist-credits');
+    expect(outcome).toEqual({
+      kind: 'ok',
+      hits: [expect.objectContaining({ mbid: RECORDING.id })],
+    });
+  });
+
+  it('answers no hit for an isrc the service knows no recording for', async () => {
+    const outcome = await lookupExternalRecordingsByIsrc(ISRC, {
+      fetcher: respondWith({ recordings: [] }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'ok', hits: [] });
+  });
+
+  it('reports a refused lookup as unavailable, which leaves the song without an mbid', async () => {
+    const outcome = await lookupExternalRecordingsByIsrc(ISRC, {
+      fetcher: respondWith({}, THROTTLED_STATUS),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable', status: THROTTLED_STATUS });
+  });
+
+  it('shares the one-per-second floor with the search, since both reach the same service', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetcher = vi.fn(respondWith({ recordings: [RECORDING] }));
+      const state = freshState(RATE_FLOOR_MS - 1);
+      const pending = lookupExternalRecordingsByIsrc(ISRC, {
+        fetcher,
+        now: () => RATE_FLOOR_MS,
+        state,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetcher).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(RATE_FLOOR_MS - 1);
+      await pending;
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('falls back to its own state, clock and fetch when the caller names none', async () => {
+    const platformFetch = vi.fn(respondWith({ recordings: [RECORDING] }));
+    vi.stubGlobal('fetch', platformFetch);
+    try {
+      const outcome = await lookupExternalRecordingsByIsrc(ISRC);
       expect(platformFetch).toHaveBeenCalledTimes(1);
       expect(outcome.kind).toBe('ok');
     } finally {

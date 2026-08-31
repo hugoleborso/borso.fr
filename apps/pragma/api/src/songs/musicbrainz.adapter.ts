@@ -6,6 +6,7 @@ import { type ExternalSongHit, mapMusicBrainzRecordings } from './musicbrainz.co
 import { rankExternalHits } from './search-ranking.core';
 
 const MUSICBRAINZ_BASE_URL = 'https://musicbrainz.org/ws/2/recording/';
+const MUSICBRAINZ_ISRC_URL = 'https://musicbrainz.org/ws/2/isrc/';
 const MUSICBRAINZ_USER_AGENT = 'Pragma/1.0 (https://pragma.borso.fr)';
 const EXTERNAL_SEARCH_MIN_INTERVAL_MS = 1_000;
 const EXTERNAL_SEARCH_LIMIT = 25;
@@ -82,4 +83,23 @@ export async function lookupExternalRecording(
   if (!response.ok) return { kind: 'unavailable', status: response.status };
   const body: unknown = await response.json();
   return { kind: 'ok', hits: mapMusicBrainzRecordings({ recordings: [body] }) };
+}
+
+// @FollowsBlueprint adapter-rate-limited-fetch
+export async function lookupExternalRecordingsByIsrc(
+  isrc: string,
+  options: SearchExternalOptions = {},
+): Promise<ExternalSearchOutcome> {
+  const state = options.state ?? externalSearchState;
+  const now = options.now ?? Date.now;
+  const fetcher = options.fetcher ?? fetch;
+  await waitForRateSlot(state, now);
+  state.lastCallAt = now();
+  const url = `${MUSICBRAINZ_ISRC_URL}${encodeURIComponent(isrc)}?fmt=json&inc=artist-credits+tags+isrcs`;
+  const response = await fetcher(url, {
+    headers: { 'User-Agent': MUSICBRAINZ_USER_AGENT, Accept: 'application/json' },
+  });
+  if (!response.ok) return { kind: 'unavailable', status: response.status };
+  const body: unknown = await response.json();
+  return { kind: 'ok', hits: mapMusicBrainzRecordings(body) };
 }

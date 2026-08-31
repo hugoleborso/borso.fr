@@ -132,11 +132,11 @@ export function buildAudienceRouter() {
       zValidator('json', suggestionCreateSchema),
       async (context) => {
         const { sessionId } = context.req.valid('param');
-        const { mbid } = context.req.valid('json');
+        const { trackId } = context.req.valid('json');
         const outcome = await acceptSuggestion({
           sessionId,
           ballotToken: context.get('ballotToken'),
-          musicBrainzId: mbid,
+          trackId,
           now: new Date(),
         });
         if (outcome.kind === 'refused') {

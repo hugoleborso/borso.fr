@@ -142,10 +142,6 @@ export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
   return hits;
 }
 
-export function normalizeSearchQuery(query: string): string {
-  return query.trim().toLowerCase();
-}
-
 const externalSongHitSchema = z.object({
   mbid: z.string(),
   title: z.string(),

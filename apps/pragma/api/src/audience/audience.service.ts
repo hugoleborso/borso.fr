@@ -6,12 +6,11 @@ import {
   getManualSetlistSongIdsOfSession,
   runInOneSetlistTransaction,
 } from '../setlists/setlists.service';
-import type { ExternalSongHit } from '../songs/musicbrainz.core';
+import type { AudienceSongHit } from '../songs/deezer.core';
 import {
-  createSong,
   getSongs,
-  lookupExternalSong,
-  searchExternalSongs,
+  resolveCatalogueSongForTrack,
+  searchAudienceSongs,
   type SongRow,
 } from '../songs/songs.service';
 import {
@@ -259,12 +258,12 @@ export interface SearchForSuggestionParams {
   readonly now: Date;
 }
 
-export type SuggestionSearchOutcome = { kind: 'ok'; hits: ExternalSongHit[] } | Refused;
+export type SuggestionSearchOutcome = { kind: 'ok'; hits: AudienceSongHit[] } | Refused;
 
 export async function searchForSuggestion(
   params: SearchForSuggestionParams,
 ): Promise<SuggestionSearchOutcome> {
-  const outcome = await searchExternalSongs({ query: params.query, now: params.now });
+  const outcome = await searchAudienceSongs({ query: params.query, now: params.now });
   if (outcome.kind === 'unavailable') return refuse('external-search-unavailable');
   return { kind: 'ok', hits: outcome.hits };
 }
@@ -272,44 +271,8 @@ export async function searchForSuggestion(
 export interface AcceptSuggestionParams {
   readonly sessionId: string;
   readonly ballotToken: string;
-  readonly musicBrainzId: string;
+  readonly trackId: string;
   readonly now: Date;
-}
-
-type SongResolution = { kind: 'ok'; song: SongRow } | Refused;
-
-async function importSuggestedSong(musicBrainzId: string): Promise<SongResolution> {
-  const outcome = await lookupExternalSong(musicBrainzId);
-  if (outcome.kind === 'unavailable') return refuse('external-search-unavailable');
-  const hit = outcome.hits.find((candidate) => candidate.mbid === musicBrainzId);
-  if (hit === undefined) return refuse('unknown-suggestion');
-  const song = await createSong({
-    title: hit.title,
-    artist: hit.artist,
-    status: 'idea',
-    links: [],
-    chart: null,
-    tonalityStart: null,
-    tonalityEnd: null,
-    defaultLineup: {},
-    baseEnergy: null,
-    mbid: hit.mbid,
-    album: hit.album,
-    durationSeconds: hit.durationSeconds,
-    isrcs: [...hit.isrcs],
-    tags: [...hit.tags],
-    structureNotes: '',
-    gimmickNotes: '',
-    notes: '',
-  });
-  return { kind: 'ok', song };
-}
-
-async function resolveSuggestedSong(musicBrainzId: string): Promise<SongResolution> {
-  const catalogSongs = await getSongs();
-  const known = catalogSongs.find((song) => song.mbid === musicBrainzId);
-  if (known === undefined) return await importSuggestedSong(musicBrainzId);
-  return { kind: 'ok', song: known };
 }
 
 export type SuggestionOutcome = { kind: 'ok'; song: SongRow } | Refused;
@@ -319,8 +282,9 @@ export async function acceptSuggestion(params: AcceptSuggestionParams): Promise<
   const gate = await readConcertRunningARound(params.sessionId, params.now);
   if (gate.kind === 'refused') return gate;
   const manualSetlistSongIds = await getManualSetlistSongIdsOfSession(params.sessionId);
-  const resolution = await resolveSuggestedSong(params.musicBrainzId);
-  if (resolution.kind === 'refused') return resolution;
+  const resolution = await resolveCatalogueSongForTrack(params.trackId);
+  if (resolution.kind === 'unavailable') return refuse('external-search-unavailable');
+  if (resolution.kind === 'unknown') return refuse('unknown-suggestion');
   const isAlreadyPlannedTonight = manualSetlistSongIds.includes(resolution.song.id);
   if (isAlreadyPlannedTonight) return refuse('song-already-planned');
   await insertSuggestion({
@@ -329,5 +293,5 @@ export async function acceptSuggestion(params: AcceptSuggestionParams): Promise<
     ballotToken: params.ballotToken,
     suggestedAt: params.now,
   });
-  return resolution;
+  return { kind: 'ok', song: resolution.song };
 }

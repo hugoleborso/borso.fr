@@ -1,11 +1,12 @@
 import { and, eq, gt } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
+import type { AudienceSongHit } from './deezer.core';
 import type { ExternalSongHit } from './musicbrainz.core';
 import { externalSearchCacheTable } from './songs.schema';
 
 export interface CachedSearchInsertShape {
   normalizedQuery: string;
-  hits: readonly ExternalSongHit[];
+  hits: readonly (ExternalSongHit | AudienceSongHit)[];
   expiresAt: Date;
 }
 

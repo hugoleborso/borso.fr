@@ -215,7 +215,7 @@ export function useRetractVote() {
 
 interface SuggestionVariables {
   readonly sessionId: string;
-  readonly mbid: string;
+  readonly trackId: string;
   readonly ballotToken: string;
 }
 
@@ -230,7 +230,7 @@ export function useSuggestSong() {
         ballotToken: variables.ballotToken,
         send: (ballotToken) =>
           api.api.audience.concerts[':sessionId'].suggestions.$post(
-            { param: { sessionId: variables.sessionId }, json: { mbid: variables.mbid } },
+            { param: { sessionId: variables.sessionId }, json: { trackId: variables.trackId } },
             ballotHeaders(ballotToken),
           ),
       });

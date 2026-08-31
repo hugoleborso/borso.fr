@@ -37,7 +37,7 @@ export const audienceSuggestionTable = pgTable('audience_suggestion', {
   suggestedAt: timestamp('suggested_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
 
-const MUSICBRAINZ_ID_MAX = 256;
+const TRACK_ID_MAX = 64;
 const SEARCH_QUERY_MAX = 256;
 
 export const concertParamSchema = z.object({ sessionId: z.string().uuid() });
@@ -52,7 +52,7 @@ export const roundVoteParamSchema = z.object({
 export const voteCreateSchema = z.object({ songId: z.string().uuid() }).strict();
 
 export const suggestionCreateSchema = z
-  .object({ mbid: z.string().trim().min(1).max(MUSICBRAINZ_ID_MAX) })
+  .object({ trackId: z.string().trim().min(1).max(TRACK_ID_MAX) })
   .strict();
 
 export const audienceSearchQuerySchema = z.object({

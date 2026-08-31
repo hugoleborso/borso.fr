@@ -66,7 +66,7 @@ describe('the field that asks for a song the band does not have', () => {
         );
       }
       return Promise.resolve(
-        jsonResponse({ hits: [{ mbid: 'mb-1', title: 'Get Lucky', artist: 'Daft Punk' }] }),
+        jsonResponse({ hits: [{ trackId: 'dz-1', title: 'Get Lucky', artist: 'Daft Punk' }] }),
       );
     });
     await user.type(screen.getByRole('searchbox'), 'get lucky');
@@ -77,6 +77,6 @@ describe('the field that asks for a song the band does not have', () => {
     });
     const write = fetchStub?.calls.find((call) => call.method === 'POST');
     expect(write?.headers.get('x-ballot-token')).toBe(A_BALLOT);
-    expect(await write?.json()).toEqual({ mbid: 'mb-1' });
+    expect(await write?.json()).toEqual({ trackId: 'dz-1' });
   });
 });
