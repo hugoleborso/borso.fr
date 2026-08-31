@@ -17,7 +17,7 @@ catalog:
   '@testing-library/user-event': '14.6.3'
   '@types/node': '^22.10.5'
   '@types/react': '^19.2.18'
-  '@types/react-dom': '^19.2.4'
+  '@types/react-dom': '^19.2.5'
   '@vitejs/plugin-react': '^4.3.4'
   '@vitest/coverage-v8': '^4.1.10'
   aws-cdk: '^2.1136.0'
