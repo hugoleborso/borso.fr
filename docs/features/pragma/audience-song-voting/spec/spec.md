@@ -37,7 +37,7 @@ GET    /api/audience/concerts/:sessionId/state         public   round, countdown
 POST   /api/audience/rounds/:roundId/votes             public   { songId }
 DELETE /api/audience/rounds/:roundId/votes/:songId     public   retract
 GET    /api/audience/search?q=                         public   picked-result search on Deezer, see ADR-0015
-POST   /api/audience/concerts/:sessionId/suggestions   public   { mbid }
+POST   /api/audience/concerts/:sessionId/suggestions   public   { trackId }
 POST   /api/audience/concerts/:sessionId/rounds        gated    open a round
 GET    /api/audience/concerts/:sessionId/rounds        gated    history
 ```
@@ -56,7 +56,7 @@ sequenceDiagram
     V->>A: GET /concerts/:id/state (poll 1s while open)
     A-->>V: pool + counts + remaining seconds
     V->>A: POST /rounds/:roundId/votes { songId }
-    V->>A: POST /concerts/:id/suggestions { mbid }
+    V->>A: POST /concerts/:id/suggestions { trackId }
     A->>A: resolve or create song (status idea), record suggestion, add to pool
     Note over A: now > closesAt
     V->>A: GET /concerts/:id/state
@@ -81,7 +81,7 @@ sequenceDiagram
 - No vote at all. The round is blank, nothing is appended, and the member can open another.
 - A song that won an earlier round is out of the pool for the rest of the concert, so the setlist never carries a duplicate.
 - A suggestion arriving mid-round joins the pool of the round in progress and is votable immediately.
-- A suggestion naming a song already in the catalogue resolves to that song rather than creating a second one, matched on `mbid`. A song suggested while already in a manual setlist for tonight is refused: the band is playing it anyway.
+- A suggestion naming a song already in the catalogue resolves to that song rather than creating a second one, matched on the `mbid` its ISRC resolved to, or on a folded title and artist when none did. A song suggested while already in a manual setlist for tonight is refused: the band is playing it anyway.
 - A suggested song enters the pool with its own status, which is `idea` for a song the room invented and whatever it already was for a catalogue song. That status is exactly what the row renders as "not necessarily concert-ready", so the marker needs no separate flag.
 - Nobody reads the state after `closesAt`. The round stays unsettled until the next read settles it; there is no scheduler, and settlement is idempotent.
 - The short `/vote` address is opened when no concert is live. It resolves to the one concert that currently has an open round, and to nothing otherwise: it never guesses from the calendar. Two concerts cannot both have an open round, since a round is refused while one is running on that concert, and two concerts on the same night is not a case this iteration handles — the second band would use the full address.
@@ -188,7 +188,7 @@ ALTER TABLE "setlist_sheet" ADD COLUMN "kind" text;
 
 One vote is one row. No counter column exists anywhere, because DSQL resolves conflicts at commit under optimistic concurrency and a counter row would be the one place every voter collides.
 
-**Two boundaries worth stating.** `GET /api/audience/search` is a public façade only: the cache table, the adapter and the ranking all stay inside the `songs` context, which owns MusicBrainz, and the audience service calls the songs service rather than re-implementing the search. And the ballot token is stored in local storage **keyed by concert id**, so a visitor at a second concert is a second ballot; the token is opaque and server-minted, never derived from anything about the person.
+**Two boundaries worth stating.** `GET /api/audience/search` is a public façade only: the cache table, both provider adapters and the ranking all stay inside the `songs` context, which owns Deezer and MusicBrainz alike, and the audience service calls the songs service rather than re-implementing the search. And the ballot token is stored in local storage **keyed by concert id**, so a visitor at a second concert is a second ballot; the token is opaque and server-minted, never derived from anything about the person.
 
 ### Files to change
 
@@ -202,7 +202,11 @@ apps/pragma/api/src/audience/pool.core.ts                              // NEW: s
 apps/pragma/api/src/audience/ballot-token.utils.ts                     // NEW: mint and validate the opaque token
 apps/pragma/api/src/audience/open-ballot.middleware.ts                 // NEW: gate on a concert with an open round
 apps/pragma/api/src/database/migrations/0004_audience_voting.sql       // NEW
-apps/pragma/api/src/songs/musicbrainz.adapter.ts                       // UPDATE: cache to the shared table, non-ok returns a typed failure
+apps/pragma/api/src/songs/musicbrainz.adapter.ts                       // UPDATE: cache to the shared table, non-ok returns a typed failure, lookup by ISRC
+apps/pragma/api/src/songs/deezer.core.ts                               // NEW: map the search payload, collapse reissues sharing an ISRC
+apps/pragma/api/src/songs/deezer.adapter.ts                            // NEW: the keyless search the room types against
+apps/pragma/api/src/songs/song-identity.core.ts                        // NEW: match on mbid, fall back to a folded title and artist
+apps/pragma/api/src/songs/search-cache.core.ts                         // NEW: the cache key, namespaced by provider
 apps/pragma/api/src/songs/search-cache.repository.ts                   // NEW
 apps/pragma/api/src/setlists/setlists.schema.ts                        // UPDATE: kind column, resolveSetlistKind
 apps/pragma/api/src/setlists/setlists.service.ts                       // UPDATE: renameSetlist refuses an audience-choice setlist
