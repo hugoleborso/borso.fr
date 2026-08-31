@@ -4,6 +4,7 @@
 
 import {
   type AudienceSongHit,
+  collapseTracksOfOneSong,
   collapseTracksSharingAnIsrc,
   DEEZER_QUOTA_ERROR_CODE,
   mapDeezerTrack,
@@ -70,7 +71,8 @@ export async function searchDeezerTracks(
   if (read.refusedWithStatus !== null) {
     return { kind: 'unavailable', status: read.refusedWithStatus };
   }
-  return { kind: 'ok', hits: collapseTracksSharingAnIsrc(mapDeezerTracks(read.body)) };
+  const mapped = collapseTracksSharingAnIsrc(mapDeezerTracks(read.body));
+  return { kind: 'ok', hits: collapseTracksOfOneSong(mapped) };
 }
 
 // @FollowsBlueprint adapter-failure-inside-a-200

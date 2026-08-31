@@ -57,6 +57,18 @@ describe('searchDeezerTracks', () => {
     });
   });
 
+  it('shows one row per song, so five masters of one song cannot split the vote', async () => {
+    const outcome = await searchDeezerTracks('teen spirit', {
+      fetcher: respondWith({
+        data: [
+          { ...TRACK, id: 1, isrc: 'USGF19610505', album: { title: 'Nevermind' } },
+          { ...TRACK, id: 2, isrc: 'USUM70995906', album: { title: 'Live at Reading' } },
+        ],
+      }),
+    });
+    expect(outcome).toEqual({ kind: 'ok', hits: [expect.objectContaining({ trackId: '1' })] });
+  });
+
   it('reports a refused transport as unavailable rather than as an empty result list', async () => {
     const outcome = await searchDeezerTracks('wonderwall', {
       fetcher: respondWith({ data: [] }, SERVICE_DOWN_STATUS),

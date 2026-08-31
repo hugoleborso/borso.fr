@@ -3,6 +3,7 @@
  */
 
 import { z } from 'zod';
+import { buildSongIdentity } from './song-identity.core';
 
 export interface AudienceSongHit {
   readonly trackId: string;
@@ -87,6 +88,22 @@ export function collapseTracksSharingAnIsrc(hits: readonly AudienceSongHit[]): A
     if (hit.isrc === null) return true;
     if (seenIsrcs.has(hit.isrc)) return false;
     seenIsrcs.add(hit.isrc);
+    return true;
+  });
+}
+
+/**
+ * @Blueprint core-collapse-on-what-the-reader-can-tell-apart
+ * @BlueprintName Collapse On What The Reader Can Tell Apart
+ * @BlueprintUsage Use after an identifier-based collapse, where the reader still sees several rows for one thing because the provider considers them distinct and the reader does not.
+ * @BlueprintDescription Collapses on the folded text the reader actually reads, not on the identifier the provider assigns, because a remaster, a live take and a compilation cut each carry their own identifier and reach the page as the same words. Runs after the identifier collapse rather than instead of it, so the exact answer decides first and this one only merges what the identifier left looking identical. It costs the reader the ability to name one particular version; take it only where telling them apart is not the reader's job.
+ */
+export function collapseTracksOfOneSong(hits: readonly AudienceSongHit[]): AudienceSongHit[] {
+  const seenSongs = new Set<string>();
+  return hits.filter((hit) => {
+    const identity = buildSongIdentity(hit.title, hit.artist);
+    if (seenSongs.has(identity)) return false;
+    seenSongs.add(identity);
     return true;
   });
 }

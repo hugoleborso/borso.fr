@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   type AudienceSongHit,
+  collapseTracksOfOneSong,
   collapseTracksSharingAnIsrc,
   DEEZER_QUOTA_ERROR_CODE,
   mapDeezerTrack,
@@ -188,6 +189,37 @@ describe('mapDeezerTrack', () => {
   it('answers nothing for a payload that is not a track', () => {
     expect(mapDeezerTrack({ error: { code: 800, message: 'no data' } })).toBe(null);
     expect(mapDeezerTrack(null)).toBe(null);
+  });
+});
+
+describe('collapseTracksOfOneSong', () => {
+  it('shows one row for a song the provider holds five masters of, or the vote splits', () => {
+    const collapsed = collapseTracksOfOneSong([
+      hit({ trackId: 'remaster', isrc: 'USGF19610505', album: 'Nevermind' }),
+      hit({ trackId: 'reading', isrc: 'USUM70995906', album: 'Live at Reading' }),
+      hit({ trackId: 'paramount', isrc: 'USUM71113789', album: 'Live At The Paramount' }),
+    ]);
+    expect(collapsed.map((entry) => entry.album)).toEqual(['Nevermind']);
+  });
+
+  it('keeps a named alternative version apart, because the band plays it differently', () => {
+    const collapsed = collapseTracksOfOneSong([
+      hit({ trackId: 'studio', title: 'Wonderwall' }),
+      hit({ trackId: 'unplugged', title: 'Wonderwall (Unplugged)' }),
+    ]);
+    expect(collapsed).toHaveLength(2);
+  });
+
+  it('keeps a cover apart from the original, because the artist differs', () => {
+    const collapsed = collapseTracksOfOneSong([
+      hit({ trackId: 'oasis', artist: 'Oasis' }),
+      hit({ trackId: 'cover', artist: 'Ryan Adams' }),
+    ]);
+    expect(collapsed).toHaveLength(2);
+  });
+
+  it('collapses nothing in an empty list', () => {
+    expect(collapseTracksOfOneSong([])).toEqual([]);
   });
 });
 
