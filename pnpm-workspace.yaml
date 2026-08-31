@@ -39,7 +39,7 @@ catalog:
   tsx: '^4.19.2'
   typescript: '^5.7.2'
   vite: '^6.0.7'
-  vitest: '^4.1.10'
+  vitest: '^4.1.11'
 
 catalogs:
   zod3:
