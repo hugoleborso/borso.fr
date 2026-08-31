@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '../components/atoms/Button';
 import { Card } from '../components/atoms/Card';
@@ -119,6 +119,14 @@ export function LoginPage(): JSX.Element {
             </p>
           )}
         </form>
+        <Link
+          to="/vote"
+          className="mt-6 pt-5 border-t border-line flex items-center gap-2 min-h-11 text-[13px] text-ink-500 hover:text-ink-900 no-underline"
+        >
+          <Icon name="members" size={16} />
+          <span>{t('auth.audienceAccess')}</span>
+          <Icon name="chevR" size={14} />
+        </Link>
       </Card>
     </main>
   );

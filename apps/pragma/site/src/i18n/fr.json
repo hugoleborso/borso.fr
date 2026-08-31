@@ -27,6 +27,7 @@
     "showPassword": "Afficher le mot de passe",
     "hidePassword": "Masquer le mot de passe",
     "submit": "Entrer",
+    "audienceAccess": "Accès spectateur, voter pour un morceau",
     "rateLimited": "Trop d'essais — réessaie dans quelques minutes.",
     "invalidPassword": "Mauvais mot de passe.",
     "notBootstrapped": "L'application n'est pas encore initialisée.",

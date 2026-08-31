@@ -27,6 +27,7 @@
     "showPassword": "Show password",
     "hidePassword": "Hide password",
     "submit": "Enter",
+    "audienceAccess": "Audience access, vote for a song",
     "rateLimited": "Too many attempts — try again in a few minutes.",
     "invalidPassword": "Wrong password.",
     "notBootstrapped": "The application is not yet bootstrapped.",
