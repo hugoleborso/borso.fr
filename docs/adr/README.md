@@ -70,7 +70,7 @@ No:
 - 0002, 0003 — react-bits Galaxy integration (see table above).
 - 0004 — shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
 - 0010 — a `domain/` folder for the pure rules pragma's front end and back end both read, admitted only with a caller on each side.
-- 0016 — `qrcode.react` renders the audience-vote QR code; zero runtime dependencies decided it, against a general-purpose encoder that drags a CLI argument parser into the browser bundle.
+- 0016 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated on 2026-08-27** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
 
 ### CDK / infra
 

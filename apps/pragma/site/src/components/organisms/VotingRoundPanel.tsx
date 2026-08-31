@@ -10,7 +10,6 @@ import {
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
-import { VoteQrCode } from '../atoms/VoteQrCode';
 import { VoteCountdown } from '../molecules/VoteCountdown';
 import {
   buildShortVoteAddress,
@@ -51,7 +50,7 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
   return (
     <section className="flex flex-col gap-4">
       <h3 className="font-display italic text-2xl text-ink-900 m-0">{t('audience.panelTitle')}</h3>
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_auto] gap-4 items-start">
+      <div className="grid grid-cols-1 gap-4 items-start">
         <Card className="flex flex-col gap-3">
           {isRoundOpen ? (
             <VoteCountdown
@@ -88,12 +87,6 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
             <span className="font-mono text-ink-900">{shortVoteAddress}</span>
           </p>
           <p className="font-mono text-xs text-ink-400 m-0 break-all">{voteAddress}</p>
-        </Card>
-        <Card variant="sunk" className="flex flex-col items-center gap-2">
-          <VoteQrCode value={voteAddress} title={t('audience.qrTitle')} />
-          <span className="text-xs uppercase tracking-[0.16em] text-ink-400">
-            {t('audience.qrTitle')}
-          </span>
         </Card>
       </div>
       <ul className="list-none p-0 m-0 flex flex-col gap-1.5">

@@ -357,7 +357,6 @@
     "panelIdle": "Aucun tour en cours. En ouvrir un donne trente secondes à la salle.",
     "openRound": "Ouvrir un tour de trente secondes",
     "openRoundFailed": "Le tour n'a pas pu s'ouvrir. Un tour est peut-être déjà en cours.",
-    "qrTitle": "Scannez pour voter",
     "sayThisAddress": "À annoncer au micro :",
     "ballotsCast": "Voix exprimées : {{ballots}}",
     "ballotsAgainstCapacity": "{{ballots}} sur {{capacity}} dans la salle ont voté, {{share}} %",

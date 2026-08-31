@@ -4,7 +4,7 @@
 
 - [x] **Client / business** — the operator chose audience participation as the single success metric, measured as ballots per round against the concert's `capacity` column, over "the band reopens a round" and "elected songs get played".
 - [x] **Product** — the operator settled the pool, the ballot rule, the live feedback, the round mechanic, the tie rule, the empty round, and whether a suggestion is votable in the round it arrives in.
-- [x] **Tech-lead** — the operator arbitrated the search source against three evaluated options ([ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md)), the polling cadence, and the QR-code dependency ([ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md)).
+- [x] **Tech-lead** — the operator arbitrated the search source against three evaluated options ([ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md)) and the polling cadence, then withdrew the QR code entirely ([ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated).
 - [x] **Developer** — the operator was asked how a thirty-second round becomes assertable and chose to let the validator wait the full thirty seconds rather than add a duration parameter or a server-side clock switch. The cost is recorded in *Questions, Options and Decisions*.
 - [x] **Designer** — the operator chose both entry points, QR code and short address, chose live counters with visible numbers, and required that audience suggestions read as not necessarily concert-ready.
 
@@ -112,7 +112,7 @@ sequenceDiagram
 | Polling cadence? | 2 s always; 1 s always; 1 s in-round only | One second while a round is open, nothing at rest, plus a refresh control. There is no streaming transport: API Gateway HTTP API buffers the response. |
 | When is the audience-choice setlist created? | At concert creation with a backfill; at concert creation only; at the first round | At the opening of the first round. No empty setlist is ever left on a concert that never ran a vote. |
 | How is a thirty-second round asserted? | A bounded duration parameter; a preview-only server clock; the validator waits | The validator waits the real thirty seconds. **Accepted cost:** every closure assertion spends half a minute of suite time and becomes sensitive to a slow machine. Revisit if the visual-validation run gets flaky. |
-| QR code generation? | `qrcode.react`; `qrcode`; write the encoder | `qrcode.react`. Rubric in [ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md). |
+| How does the audience reach the vote page? | A QR code the band shows; a short address announced at the microphone; both | **The short address alone**, `pragma.borso.fr/vote`. The QR code is withdrawn: it encoded the long per-concert URL rather than the address people should reach, and twenty-two characters that never change do not need a dependency and a screen to display them. The library comparison survives in [ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated. |
 
 **Out of scope.** Promoting an audience-suggested song beyond `idea` status. Any record that a song was actually played. Moderating or removing a suggestion. Voting during a practice. Any protection against a visitor who clears local storage to vote twice — see *Zero-defect strategy*.
 
@@ -123,7 +123,7 @@ The two decisions this feature could not take on its own, each ratified and comm
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
 | [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md) | Deezer answers the search, MusicBrainz resolves the picked result; the shared cache and the typed failure apply to whichever provider answers | A new Deezer adapter and ranking serve `GET /api/audience/search`. Accepting a suggestion makes one MusicBrainz call to resolve the `mbid` and the metadata; the song is created either way, so the duplicate check degrades to title and artist when resolution fails. |
-| [ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the QR code | One new dependency, reachable from exactly one atom, added to the workspace catalog. |
+| [ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md) | Withdrawn — the QR code is gone, so its library is too | This feature adds no third-party dependency at all. |
 
 ## Changes
 
@@ -216,11 +216,9 @@ apps/pragma/site/src/components/organisms/SuggestSongField.tsx         // NEW
 apps/pragma/site/src/components/organisms/VotingRoundPanel.tsx         // NEW: band side, in the setlist editor
 apps/pragma/site/src/components/molecules/VoteCountdown.tsx            // NEW
 apps/pragma/site/src/components/molecules/PoolSongRow.tsx              // NEW: carries the not-concert-ready marker
-apps/pragma/site/src/components/atoms/VoteQrCode.tsx                   // NEW: wraps qrcode.react, the only file importing it
 apps/pragma/site/src/lib/queries/audience.queries.ts                   // NEW: keys, 1 s refetch only while a round is open
 apps/pragma/site/src/lib/ballot-token.adapter.ts                       // NEW: local-storage read and write
 apps/pragma/site/src/i18n/{en,fr}.json                                 // UPDATE: parity test gates both
-apps/pragma/package.json, pnpm-workspace.yaml                          // UPDATE: qrcode.react catalog entry
 ```
 
 ### Test strategy

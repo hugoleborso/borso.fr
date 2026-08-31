@@ -1,6 +1,6 @@
 # ADR-0016: `qrcode.react` renders the audience-vote QR code
 
-- **Status:** proposed
+- **Status:** deprecated
 - **Date:** 2026-08-26
 - **Deciders:** Hugo Borsoni
 - **Tags:** audience-song-voting, pragma, frontend, dependency
@@ -86,3 +86,25 @@ Two constraints narrow the field before the trade-off. The site's components fol
 ## Sources
 
 - Package metadata read from the npm registry on 2026-08-26: `qrcode.react@4.2.0`, `qrcode@1.5.4`, `@bitjson/qr-code@1.0.2`.
+
+## Revisions
+
+### Revision 2026-08-27 — the QR code is gone, so the dependency is too
+
+What changed: the feature this record chose a library for no longer exists. The
+band's panel shows the short address alone, and `qrcode.react` is out of the
+catalog, out of `apps/pragma/package.json`, and its atom is deleted.
+
+Why: the operator asked what the QR code was for, given that the audience can
+simply open `pragma.borso.fr/vote`. The QR encoded the long per-concert URL
+rather than that address, so it was not even a shortcut to the thing people
+should reach. Pointing it at the short address would have worked, and was
+rejected on the same reasoning: twenty-two characters that never change from one
+concert to the next, said at a microphone, do not need a dependency and a screen
+to display them.
+
+This record stays because the comparison it holds is still the right one to read
+the day a QR code is genuinely wanted somewhere in this repository. Nothing in
+its rubric was wrong; the feature under it was.
+
+Implication for the original decision: withdrawn, not overturned.
