@@ -41,7 +41,7 @@ What MusicBrainz data actually buys this application was measured rather than as
 
 ### Option A — Deezer searches, MusicBrainz resolves (chosen)
 
-- **Summary:** The public search calls Deezer, which needs no key and returns an ISRC on every track. When a visitor picks a result, one MusicBrainz ISRC lookup resolves it to an `mbid` and the accompanying metadata, and the song enters the catalogue with both. The shared cache sits in front of the search, as it would for any provider. Deezer returns several track ids for one recording — a first release and its reissues share an ISRC — so the results are collapsed on the ISRC before the room ever sees them, or the same song would appear twice and split its own vote.
+- **Summary:** The public search calls Deezer, which needs no key and returns an ISRC on every track. When a visitor picks a result, one MusicBrainz ISRC lookup resolves it to an `mbid` and the accompanying metadata, and the song enters the catalogue with both. The shared cache sits in front of the search, as it would for any provider. Deezer returns several track ids for one song, and the results are collapsed twice before the room ever sees them, or one song would take several shares of one vote: first on the ISRC, which catches a first release and its reissue, then on the folded title and artist, which catches the masters the ISRC cannot — a remaster, a live take and a compilation cut each carry their own.
 - **Strengths:**
   - Burst tolerance: the per-keystroke path uses the larger quota, and the one-per-second limit applies only to a call that happens once per accepted suggestion.
   - Identifier continuity is satisfied anyway, because resolution is deferred rather than skipped.
@@ -100,6 +100,28 @@ What MusicBrainz data actually buys this application was measured rather than as
 - Related ADRs: [ADR-0012](./0012-outbound-calls-live-in-adapter-files.md), [ADR-0006](./0006-cascade-on-delete-via-json-blob-scrub.md)
 
 ## Revisions
+
+### Revision 2026-08-31 — one row per song, not one per master
+
+What changed: the collapse the results go through, not the providers.
+
+Driving the search against the live API with what a room types, "nirvana
+smells like teen spirit", returned six rows all reading *Smells Like Teen
+Spirit — Nirvana*, carrying five different ISRCs: a remaster, three live takes
+and a compilation cut. The ISRC collapse this record already described cannot
+merge them, because upstream they genuinely are five recordings.
+
+So the results are collapsed a second time, on the folded title and artist,
+after the ISRC pass. Measured on that query: 25 rows to 13. A named
+alternative survives the fold — *Wonderwall (Unplugged)* is not *Wonderwall* —
+and so does a cover, because the artist differs.
+
+The cost is stated rather than hidden: a spectator wanting one particular live
+take can no longer ask for it. The band plays its own arrangement regardless,
+and a room that cannot tell two rows apart is a room whose vote splits.
+
+Implication for the original decision: unchanged. This is the price of a
+provider that indexes masters, and it was not visible from the documentation.
 
 ### Revision 2026-08-31 — the join is the ISRC, not the title
 
