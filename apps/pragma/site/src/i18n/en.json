@@ -356,6 +356,8 @@
     "searchUnavailable": "The song search is unavailable right now. Try again in a moment.",
     "panelTitle": "Audience vote",
     "panelIdle": "No round is running. Opening one gives the room thirty seconds.",
+    "standingTitle": "What the room is choosing",
+    "standingEmpty": "Nothing to vote for yet. Songs the room asks for land here too.",
     "openRound": "Open a thirty-second round",
     "openRoundFailed": "The round could not be opened. A round may already be running.",
     "sayThisAddress": "Say this at the microphone:",

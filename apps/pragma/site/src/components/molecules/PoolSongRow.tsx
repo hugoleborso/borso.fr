@@ -5,20 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '../atoms/Badge';
 import { Chip } from '../atoms/Chip';
 import { composeClassName } from '../atoms/class-name.utils';
-
-const CONCERT_READY_STATUS = 'concert_ready';
-
-const NOT_CONCERT_READY_LABEL_KEY = {
-  idea: 'audience.notConcertReadyIdea',
-  wip: 'audience.notConcertReadyWip',
-  rehearsed: 'audience.notConcertReadyRehearsed',
-} as const;
-
-type NotConcertReadyStatus = keyof typeof NOT_CONCERT_READY_LABEL_KEY;
-
-function isNotConcertReady(status: string): status is NotConcertReadyStatus {
-  return status !== CONCERT_READY_STATUS && status in NOT_CONCERT_READY_LABEL_KEY;
-}
+import { selectNotConcertReadyLabelKey } from './pool-song-row.core';
 
 export interface PoolSongRowProps {
   readonly title: string;
@@ -41,7 +28,7 @@ export function PoolSongRow({
   onToggle,
 }: PoolSongRowProps): JSX.Element {
   const { t } = useTranslation();
-  const isMarkedNotConcertReady = isNotConcertReady(status);
+  const notConcertReadyLabelKey = selectNotConcertReadyLabelKey(status);
   return (
     <button
       type="button"
@@ -59,11 +46,11 @@ export function PoolSongRow({
       <span className="flex-1 min-w-0 flex flex-col gap-1">
         <span className="flex items-center gap-2 flex-wrap">
           <span className="font-medium text-[15px] truncate">{title}</span>
-          {isMarkedNotConcertReady ? (
+          {notConcertReadyLabelKey === null ? null : (
             <Chip tone={isChosenByThisBallot ? 'solid' : 'default'}>
-              {t(NOT_CONCERT_READY_LABEL_KEY[status])}
+              {t(notConcertReadyLabelKey)}
             </Chip>
-          ) : null}
+          )}
         </span>
         <span className="text-[12.5px] opacity-70 truncate">{artist}</span>
       </span>

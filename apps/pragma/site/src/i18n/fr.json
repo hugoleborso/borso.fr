@@ -356,6 +356,8 @@
     "searchUnavailable": "La recherche de morceaux est indisponible. Réessayez dans un instant.",
     "panelTitle": "Vote du public",
     "panelIdle": "Aucun tour en cours. En ouvrir un donne trente secondes à la salle.",
+    "standingTitle": "Ce que la salle choisit",
+    "standingEmpty": "Rien à voter pour l'instant. Les morceaux demandés par la salle arrivent ici aussi.",
     "openRound": "Ouvrir un tour de trente secondes",
     "openRoundFailed": "Le tour n'a pas pu s'ouvrir. Un tour est peut-être déjà en cours.",
     "sayThisAddress": "À annoncer au micro :",

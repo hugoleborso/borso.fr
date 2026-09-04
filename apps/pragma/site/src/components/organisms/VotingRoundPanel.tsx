@@ -10,6 +10,7 @@ import {
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
+import { StandingSongRow } from '../molecules/StandingSongRow';
 import { VoteCountdown } from '../molecules/VoteCountdown';
 import {
   buildShortVoteAddress,
@@ -39,6 +40,7 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
     voteState.data?.state.capacity ?? null,
   );
   const historyLines = selectRoundHistoryLines(history.data?.rounds ?? [], i18n.language);
+  const standing = voteState.data?.state.pool ?? [];
 
   const OUTCOME_LABEL: Record<RoundOutcome['kind'], (outcome: RoundOutcome) => string> = {
     running: () => t('audience.roundRunning'),
@@ -88,6 +90,27 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
           </p>
           <p className="font-mono text-xs text-ink-400 m-0 break-all">{voteAddress}</p>
         </Card>
+      </div>
+      <div className="flex flex-col gap-2">
+        <h4 className="font-display italic text-lg text-ink-900 m-0">
+          {t('audience.standingTitle')}
+        </h4>
+        {standing.length === 0 ? (
+          <p className="text-[13px] text-ink-500 m-0">{t('audience.standingEmpty')}</p>
+        ) : (
+          <ul className="list-none p-0 m-0 flex flex-col gap-1.5">
+            {standing.map((entry) => (
+              <li key={entry.songId}>
+                <StandingSongRow
+                  title={entry.title}
+                  artist={entry.artist}
+                  status={entry.status}
+                  voteCount={entry.voteCount}
+                />
+              </li>
+            ))}
+          </ul>
+        )}
       </div>
       <ul className="list-none p-0 m-0 flex flex-col gap-1.5">
         {historyLines.map((line) => (
