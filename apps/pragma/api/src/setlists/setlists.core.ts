@@ -1,3 +1,9 @@
+import {
+  AUDIENCE_CHOICE_SETLIST_KIND,
+  DEFAULT_SETLIST_KIND,
+  type SetlistKind,
+} from './setlists.schema';
+
 export interface SetlistSongCount {
   readonly setlistId: string;
   readonly songCount: number;
@@ -29,13 +35,14 @@ export function tallySongsPerSetlist(
 export interface SetlistSummary {
   readonly id: string;
   readonly name: string;
+  readonly kind: SetlistKind;
   readonly songCount: number;
   readonly sessionIds: string[];
 }
 
 // @FollowsBlueprint core-projection
 export function buildSetlistSummaries(
-  setlists: readonly { readonly id: string; readonly name: string }[],
+  setlists: readonly { readonly id: string; readonly name: string; readonly kind: SetlistKind }[],
   songCounts: readonly SetlistSongCount[],
   links: readonly { readonly setlistId: string; readonly sessionId: string }[],
 ): SetlistSummary[] {
@@ -54,7 +61,18 @@ export function buildSetlistSummaries(
   return setlists.map((setlist) => ({
     id: setlist.id,
     name: setlist.name,
+    kind: setlist.kind,
     songCount: songCountBySetlistId.get(setlist.id) ?? 0,
     sessionIds: sessionIdsBySetlistId.get(setlist.id) ?? [],
   }));
+}
+
+// @FollowsBlueprint core-decision
+export function resolveSetlistKind(storedKind: string | null): SetlistKind {
+  if (storedKind === AUDIENCE_CHOICE_SETLIST_KIND) return AUDIENCE_CHOICE_SETLIST_KIND;
+  return DEFAULT_SETLIST_KIND;
+}
+
+export function isSetlistRenamable(kind: SetlistKind): boolean {
+  return kind !== AUDIENCE_CHOICE_SETLIST_KIND;
 }

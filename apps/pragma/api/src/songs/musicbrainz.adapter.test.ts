@@ -9,15 +9,15 @@ import FIXTURE from './__fixtures__/musicbrainz-sample.json';
 import {
   type ExternalFetcher,
   type ExternalSearchState,
+  lookupExternalRecordingsByIsrc,
   searchExternal,
 } from './musicbrainz.adapter';
-import type { ExternalSearchCacheEntry } from './musicbrainz.core';
 
-const CACHE_TTL_MS = 60_000;
 const RATE_FLOOR_MS = 1_000;
+const THROTTLED_STATUS = 503;
 
 function freshState(lastCallAt = 0): ExternalSearchState {
-  return { cache: new Map<string, ExternalSearchCacheEntry>(), lastCallAt };
+  return { lastCallAt };
 }
 
 function respondWith(body: unknown, status = 200): ExternalFetcher {
@@ -27,8 +27,8 @@ function respondWith(body: unknown, status = 200): ExternalFetcher {
 describe('searchExternal', () => {
   it('asks nothing of the service when the query is blank', async () => {
     const fetcher = vi.fn(respondWith(FIXTURE));
-    const hits = await searchExternal('   ', { fetcher, now: () => 0, state: freshState() });
-    expect(hits).toEqual([]);
+    const outcome = await searchExternal('   ', { fetcher, now: () => 0, state: freshState() });
+    expect(outcome).toEqual({ kind: 'ok', hits: [] });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
@@ -43,38 +43,20 @@ describe('searchExternal', () => {
   });
 
   it('returns the ranked hits the payload maps to', async () => {
-    const hits = await searchExternal('Get Lucky', {
+    const outcome = await searchExternal('Get Lucky', {
       fetcher: respondWith(FIXTURE),
       now: () => 0,
       state: freshState(),
     });
-    expect(hits.length).toBeGreaterThan(0);
-    expect(hits[0]?.title).toBe('Get Lucky');
+    expect(outcome.kind).toBe('ok');
+    expect(outcome.kind === 'ok' ? outcome.hits[0]?.title : null).toBe('Get Lucky');
   });
 
-  it('answers a repeated query from the cache rather than the service', async () => {
+  it('holds no cache of its own, so every call reaches the service', async () => {
     const fetcher = vi.fn(respondWith(FIXTURE));
     const state = freshState();
-    const first = await searchExternal('Get Lucky', { fetcher, now: () => 0, state });
-    const second = await searchExternal('GET LUCKY', { fetcher, now: () => 0, state });
-    expect(second).toEqual(first);
-    expect(fetcher).toHaveBeenCalledTimes(1);
-  });
-
-  it('keys the cache by the lowercased query, so any casing finds the same entry', async () => {
-    const state = freshState();
-    await searchExternal('Get Lucky', { fetcher: respondWith(FIXTURE), now: () => 0, state });
-    expect([...state.cache.keys()]).toEqual(['get lucky']);
-  });
-
-  it('asks again once the cached answer has aged past its lifetime', async () => {
-    const fetcher = vi.fn(respondWith(FIXTURE));
-    const state = freshState();
-    let clock = 0;
-    const now = (): number => clock;
-    await searchExternal('Get Lucky', { fetcher, now, state });
-    clock = CACHE_TTL_MS + 1;
-    await searchExternal('Get Lucky', { fetcher, now, state });
+    await searchExternal('Get Lucky', { fetcher, now: () => 0, state });
+    await searchExternal('GET LUCKY', { fetcher, now: () => 0, state });
     expect(fetcher).toHaveBeenCalledTimes(2);
   });
 
@@ -113,28 +95,113 @@ describe('searchExternal', () => {
     }
   });
 
-  it('treats a refusal as no results rather than an error the caller must handle', async () => {
-    const hits = await searchExternal('Get Lucky', {
-      fetcher: respondWith(FIXTURE, 503),
+  it('reports a throttled upstream as unavailable rather than as an empty result list', async () => {
+    const outcome = await searchExternal('Get Lucky', {
+      fetcher: respondWith(FIXTURE, THROTTLED_STATUS),
       now: () => 0,
       state: freshState(),
     });
-    expect(hits).toEqual([]);
+    expect(outcome).toEqual({ kind: 'unavailable', status: THROTTLED_STATUS });
   });
 
-  it('falls back to its own cache and clock when the caller names neither', async () => {
+  it('falls back to its own state and clock when the caller names neither', async () => {
     const fetcher = vi.fn(respondWith(FIXTURE));
-    const hits = await searchExternal('Get Lucky', { fetcher });
-    expect(hits.length).toBeGreaterThan(0);
+    const outcome = await searchExternal('Get Lucky', { fetcher });
+    expect(outcome.kind).toBe('ok');
   });
 
   it('falls back to the platform fetch when the caller names no fetcher', async () => {
     const platformFetch = vi.fn(respondWith(FIXTURE));
     vi.stubGlobal('fetch', platformFetch);
     try {
-      const hits = await searchExternal('Around The World', { now: () => 0, state: freshState() });
+      const outcome = await searchExternal('Around The World', {
+        now: () => 0,
+        state: freshState(),
+      });
       expect(platformFetch).toHaveBeenCalledTimes(1);
-      expect(hits.length).toBeGreaterThan(0);
+      expect(outcome.kind).toBe('ok');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+const RECORDING = {
+  id: 'fa28c7e7-a3ea-4f5f-9f5d-3a3f2c2b1a01',
+  title: 'Get Lucky',
+  length: 369_000,
+  'first-release-date': '2013-04-19',
+  'artist-credit': [{ name: 'Daft Punk' }],
+};
+
+describe('lookupExternalRecordingsByIsrc', () => {
+  const ISRC = 'GBAAW9500189';
+
+  it('asks the service for the recording carrying the isrc the picked track named', async () => {
+    const fetcher = vi.fn(respondWith({ recordings: [RECORDING] }));
+    const outcome = await lookupExternalRecordingsByIsrc(ISRC, {
+      fetcher,
+      now: () => 0,
+      state: freshState(),
+    });
+    const [url, init] = fetcher.mock.calls[0] ?? [];
+    expect(url).toContain(`/isrc/${ISRC}`);
+    expect(url).toContain('artist-credits');
+    expect(init?.headers).toEqual({
+      Accept: 'application/json',
+      'User-Agent': expect.stringContaining('Pragma'),
+    });
+    expect(outcome).toEqual({
+      kind: 'ok',
+      hits: [expect.objectContaining({ mbid: RECORDING.id })],
+    });
+  });
+
+  it('answers no hit for an isrc the service knows no recording for', async () => {
+    const outcome = await lookupExternalRecordingsByIsrc(ISRC, {
+      fetcher: respondWith({ recordings: [] }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'ok', hits: [] });
+  });
+
+  it('reports a refused lookup as unavailable, which leaves the song without an mbid', async () => {
+    const outcome = await lookupExternalRecordingsByIsrc(ISRC, {
+      fetcher: respondWith({}, THROTTLED_STATUS),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable', status: THROTTLED_STATUS });
+  });
+
+  it('shares the one-per-second floor with the search, since both reach the same service', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetcher = vi.fn(respondWith({ recordings: [RECORDING] }));
+      const state = freshState(RATE_FLOOR_MS - 1);
+      const pending = lookupExternalRecordingsByIsrc(ISRC, {
+        fetcher,
+        now: () => RATE_FLOOR_MS,
+        state,
+      });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetcher).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(RATE_FLOOR_MS - 1);
+      await pending;
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('falls back to its own state, clock and fetch when the caller names none', async () => {
+    const platformFetch = vi.fn(respondWith({ recordings: [RECORDING] }));
+    vi.stubGlobal('fetch', platformFetch);
+    try {
+      const outcome = await lookupExternalRecordingsByIsrc(ISRC);
+      expect(platformFetch).toHaveBeenCalledTimes(1);
+      expect(outcome.kind).toBe('ok');
     } finally {
       vi.unstubAllGlobals();
     }

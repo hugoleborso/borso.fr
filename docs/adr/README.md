@@ -63,12 +63,14 @@ No:
 
 - 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
 - 0009 — pragma previews clone production, credentials included.
+- 0015 — Deezer answers the audience search and MusicBrainz resolves the picked result; amended in place on 2026-08-27 after the first draft weighted identifier continuity high on the strength of a dedupe rule the same change had introduced. The file name predates the amendment.
 
 ### App architecture
 
 - 0002, 0003 — react-bits Galaxy integration (see table above).
 - 0004 — shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
 - 0010 — a `domain/` folder for the pure rules pragma's front end and back end both read, admitted only with a caller on each side.
+- 0016 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated on 2026-08-27** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
 
 ### CDK / infra
 

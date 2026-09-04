@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import FIXTURE from './__fixtures__/musicbrainz-sample.json';
-import {
-  type ExternalSearchCacheEntry,
-  expiredSearchCacheKeys,
-  mapMusicBrainzRecordings,
-} from './musicbrainz.core';
+import { mapMusicBrainzRecordings, readCachedSearchHits } from './musicbrainz.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('mapMusicBrainzRecordings', () => {
@@ -251,32 +247,13 @@ describe('mapMusicBrainzRecordings', () => {
   });
 });
 
-const NOW = 1_700_000_000_000;
-
-function entryExpiringAt(expiresAt: number): ExternalSearchCacheEntry {
-  return { value: [], expiresAt };
-}
-
-describe('expiredSearchCacheKeys', () => {
-  it('answers an empty list for an empty cache', () => {
-    expect(expiredSearchCacheKeys(new Map(), NOW)).toEqual([]);
+describe('readCachedSearchHits', () => {
+  it('reads back a row this application wrote', () => {
+    const hits = mapMusicBrainzRecordings(FIXTURE);
+    expect(readCachedSearchHits(JSON.stringify(hits))).toEqual(hits);
   });
 
-  it('keeps an entry whose expiry is still ahead', () => {
-    const cache = new Map([['daft punk', entryExpiringAt(NOW + 1)]]);
-    expect(expiredSearchCacheKeys(cache, NOW)).toEqual([]);
-  });
-
-  it('expires an entry the moment its expiry is reached, not one tick later', () => {
-    const cache = new Map([['daft punk', entryExpiringAt(NOW)]]);
-    expect(expiredSearchCacheKeys(cache, NOW)).toEqual(['daft punk']);
-  });
-
-  it('answers only the expired keys of a mixed cache', () => {
-    const cache = new Map([
-      ['stale', entryExpiringAt(NOW - 1)],
-      ['fresh', entryExpiringAt(NOW + 1)],
-    ]);
-    expect(expiredSearchCacheKeys(cache, NOW)).toEqual(['stale']);
+  it('answers an empty list rather than throwing when the stored shape has drifted', () => {
+    expect(readCachedSearchHits('[{"mbid":1}]')).toEqual([]);
   });
 });

@@ -10,6 +10,26 @@ This file names the things the application talks about. Use these words in
 identifiers, file names, commit messages and specs. Every claim below is
 taken from the schema, core rule or repository named beside it.
 
+## Audience suggestion
+
+The record that a song entered a concert's pool because someone in the
+room asked for it.
+
+Lives in: `api/src/audience/`
+
+- `audience_suggestion` holds `session_id`, `song_id`, `ballot_token` and
+  `suggested_at`. It anchors on the concert, never on a setlist.
+- Only a picked search result is accepted: `suggestionCreateSchema` is
+  `.strict()` and takes an `mbid` and nothing else, so no free text the
+  band has not seen can ever be displayed.
+- An `mbid` already in the catalogue resolves to that song; an unknown one
+  creates a song with status `idea` (`acceptSuggestion`).
+- A song already in a manual setlist attached to tonight is refused: the
+  band is playing it anyway.
+
+Not to be confused with: a vote, which is a ballot's tap on a song already
+in the pool.
+
 ## Bar
 
 A venue the band wants to play in, and the record of where the
@@ -29,6 +49,27 @@ Lives in: `api/src/bars/`
 
 Not to be confused with: the `venue` column on a concert, which is free
 text typed for that one date.
+
+## Ballot
+
+One browser's participation in one concert, identified by an opaque token
+the server mints.
+
+Lives in: `api/src/audience/`
+
+- A ballot is not a person and carries nothing about one. The token is
+  random bytes the server encodes (`mintBallotToken`), never derived from
+  an address, a header or a device.
+- The browser keeps it in local storage under `pragma.ballot.<sessionId>`,
+  so a visitor at a second concert is a second ballot
+  (`site/src/lib/ballot-token.adapter.ts`).
+- A ballot is the second column of `audience_vote`'s primary key, so one
+  ballot holds at most one vote per song per round.
+- Clearing local storage yields a fresh ballot with no votes. This is a
+  bar, not an election, and nothing here prevents it.
+
+Not to be confused with: a sign-in session, which is the band's shared
+password cookie and reaches gated routes a ballot never does.
 
 ## Chord chart
 
@@ -234,6 +275,13 @@ Lives in: `api/src/setlists/`
   moved the rows and left the old table unread.
 - `createSetlist` writes the setlist, and the link when the caller names
   a session, in one transaction. Its only refusal is `session-not-found`.
+- `kind` is `manual` or `audience_choice` (`resolveSetlistKind` in
+  `setlists.core.ts`). The column is nullable in the database because
+  Aurora DSQL accepts no `ADD COLUMN ... NOT NULL`, so every read narrows
+  a null to `manual`.
+- An `audience_choice` setlist is created at the first voting round of a
+  concert and refuses `renameSetlist`: its title is the band's promise to
+  the room, not an editable field.
 
 ## Session setlist link
 
@@ -361,6 +409,31 @@ Lives in: `api/src/uploads/`
   (`buildChartObjectKey`). The key is what a song's chart stores, so the
   slice persists everything through `song.chart`.
 
+## Voting round
+
+One thirty-second window, opened by a member on one concert, closing on at
+most one winner.
+
+Lives in: `api/src/audience/`
+
+- `voting_round` holds `session_id`, `opened_at`, `closes_at`,
+  `settled_at` and `winning_song_id`. `ROUND_DURATION_MS` in
+  `round.core.ts` is the window.
+- A second round is refused while one is open on that concert, and a round
+  is refused on a session whose `kind` is `practice`.
+- Settlement is lazy: the first read after `closes_at` settles the round,
+  and settling twice changes nothing (`settleRound`).
+- The winner is the song with the most surviving votes; a tie goes to the
+  song whose latest surviving vote is the earliest, and a tie that
+  survives that is broken on `songId` ascending.
+- A round that closes with no vote is blank: `settled_at` is written,
+  `winning_song_id` stays null, and nothing is appended.
+- **The person voting is deliberately not modelled.** There is no row for
+  a voter and no field that identifies one; only the ballot exists.
+
+Not to be confused with: a session, which is the concert the round belongs
+to.
+
 ## Words we do not use
 
 - **musician**, **player**, **bandmate**: the person is a **member**.
@@ -385,3 +458,8 @@ Lives in: `api/src/uploads/`
   chart**, and its inline form is **ChordPro**.
 - **colour** in identifiers: the column and every field are spelled
   `color`. Prose may spell it either way; code may not.
+- **voter**, **audience member**, **fan**: the person in the room is not
+  modelled at all. What exists is a **ballot**, and it identifies a
+  browser rather than anyone holding it.
+- **poll**, **election**, **survey**: the thirty-second window is a
+  **voting round**, and one tap in it is a **vote**.

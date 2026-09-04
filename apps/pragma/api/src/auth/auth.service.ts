@@ -7,7 +7,12 @@ import {
   updateAppConfig,
 } from './auth.repository';
 import { hashIp, readClientIp } from './ip-hash.utils';
-import { type BucketStore, isRateLimited, recordAttempt } from './rate-limit.utils';
+import {
+  type BucketStore,
+  isRateLimited,
+  recordAttempt,
+  SHARED_PASSWORD_BUDGET,
+} from './rate-limit.utils';
 import { buildCookie, SESSION_TTL_MS } from './session-cookie.utils';
 
 const HMAC_KEY_BYTES = 32;
@@ -49,9 +54,9 @@ export interface AttemptLoginParams {
 export async function attemptLogin(params: AttemptLoginParams): Promise<LoginAttempt> {
   const ipHash = hashIp(readClientIp(params.forwardedForHeader));
   const nowMillis = params.now.getTime();
-  const bucket = recordAttempt(params.bucketStore.read(ipHash), nowMillis);
+  const bucket = recordAttempt(params.bucketStore.read(ipHash), nowMillis, SHARED_PASSWORD_BUDGET);
   params.bucketStore.write(ipHash, bucket);
-  if (isRateLimited(bucket)) return { kind: 'rate-limited' };
+  if (isRateLimited(bucket, SHARED_PASSWORD_BUDGET)) return { kind: 'rate-limited' };
   const config = await loadAppConfig();
   if (config === null) return { kind: 'not-bootstrapped' };
   const isPasswordOk = await argon2Verify({

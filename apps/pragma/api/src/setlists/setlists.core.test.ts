@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSetlistSummaries,
+  isSetlistRenamable,
+  resolveSetlistKind,
   selectNextLinkPosition,
   tallySongsPerSetlist,
 } from './setlists.core';
@@ -51,8 +53,8 @@ describe('buildSetlistSummaries', () => {
     expect(
       buildSetlistSummaries(
         [
-          { id: 'a', name: 'Set 1' },
-          { id: 'b', name: 'Set 2' },
+          { id: 'a', name: 'Set 1', kind: 'manual' as const },
+          { id: 'b', name: 'Set 2', kind: 'audience_choice' as const },
         ],
         [
           { setlistId: 'a', songCount: 3 },
@@ -64,20 +66,58 @@ describe('buildSetlistSummaries', () => {
         ],
       ),
     ).toEqual([
-      { id: 'a', name: 'Set 1', songCount: 3, sessionIds: ['concert-1', 'practice-1'] },
-      { id: 'b', name: 'Set 2', songCount: 0, sessionIds: [] },
+      {
+        id: 'a',
+        name: 'Set 1',
+        kind: 'manual',
+        songCount: 3,
+        sessionIds: ['concert-1', 'practice-1'],
+      },
+      { id: 'b', name: 'Set 2', kind: 'audience_choice', songCount: 0, sessionIds: [] },
     ]);
   });
 
   it('reads a setlist with no counted row as empty', () => {
-    expect(buildSetlistSummaries([{ id: 'a', name: '' }], [], [])).toEqual([
-      { id: 'a', name: '', songCount: 0, sessionIds: [] },
+    expect(buildSetlistSummaries([{ id: 'a', name: '', kind: 'manual' }], [], [])).toEqual([
+      { id: 'a', name: '', kind: 'manual', songCount: 0, sessionIds: [] },
     ]);
   });
 
   it('ignores a link pointing at a setlist outside the list', () => {
     expect(
-      buildSetlistSummaries([{ id: 'a', name: '' }], [], [{ setlistId: 'z', sessionId: 's' }]),
-    ).toEqual([{ id: 'a', name: '', songCount: 0, sessionIds: [] }]);
+      buildSetlistSummaries(
+        [{ id: 'a', name: '', kind: 'manual' }],
+        [],
+        [{ setlistId: 'z', sessionId: 's' }],
+      ),
+    ).toEqual([{ id: 'a', name: '', kind: 'manual', songCount: 0, sessionIds: [] }]);
+  });
+});
+
+describe('resolveSetlistKind', () => {
+  it('reads the audience-choice kind back as itself', () => {
+    expect(resolveSetlistKind('audience_choice')).toBe('audience_choice');
+  });
+
+  it('reads the manual kind back as itself', () => {
+    expect(resolveSetlistKind('manual')).toBe('manual');
+  });
+
+  it('reads a row written before the column existed as manual', () => {
+    expect(resolveSetlistKind(null)).toBe('manual');
+  });
+
+  it('reads a value nobody writes as manual rather than propagating it', () => {
+    expect(resolveSetlistKind('encore')).toBe('manual');
+  });
+});
+
+describe('isSetlistRenamable', () => {
+  it('lets the band rename a setlist they wrote', () => {
+    expect(isSetlistRenamable('manual')).toBe(true);
+  });
+
+  it('refuses to rename the audience-choice setlist', () => {
+    expect(isSetlistRenamable('audience_choice')).toBe(false);
   });
 });

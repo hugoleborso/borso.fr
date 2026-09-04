@@ -357,10 +357,14 @@ repo uses for commit-message trailers (see CLAUDE.md "Git Operations").
 
 ## Draft vs ready
 
-- `--draft` by default. The user has to say "ready to merge" or "open
-  it as ready" for the skill to drop `--draft`.
-- If either validation is `PASS_EXCEPT_UNVERIFIABLE`, the skill keeps
-  `--draft` regardless of the user's request and surfaces why.
+- **Ready for review.** A pull request the skill opens is ready for
+  review, whatever the validation verdicts say. Use `--draft` only when
+  the user asks for one.
+- An `UNVERIFIABLE` row is disclosed in the body, in the `## Validation
+  gaps` block, and that block is the whole mechanism. Draft state adds
+  nothing to it: this repository has one human, so a draft blocks the
+  only person who could merge and pings no reviewer it could have
+  spared.
 
 ## Hook contract
 

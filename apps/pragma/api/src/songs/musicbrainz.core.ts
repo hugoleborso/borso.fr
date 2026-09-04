@@ -142,16 +142,28 @@ export function mapMusicBrainzRecordings(payload: unknown): ExternalSongHit[] {
   return hits;
 }
 
-export interface ExternalSearchCacheEntry {
-  readonly value: ExternalSongHit[];
-  readonly expiresAt: number;
-}
+const externalSongHitSchema = z.object({
+  mbid: z.string(),
+  title: z.string(),
+  artist: z.string(),
+  year: z.number().nullable(),
+  album: z.string().nullable(),
+  releaseId: z.string().nullable(),
+  durationSeconds: z.number().nullable(),
+  durationLabel: z.string().nullable(),
+  disambiguation: z.string().nullable(),
+  tags: z.array(z.string()),
+  isrcs: z.array(z.string()),
+  releaseCount: z.number(),
+  isrcCount: z.number(),
+});
 
-export function expiredSearchCacheKeys(
-  cache: ReadonlyMap<string, ExternalSearchCacheEntry>,
-  nowMillis: number,
-): readonly string[] {
-  return [...cache]
-    .filter(([, entry]) => entry.expiresAt <= nowMillis)
-    .map(([cacheKey]) => cacheKey);
+const cachedSearchHitsSchema = z.array(externalSongHitSchema);
+
+// @FollowsBlueprint core-parse-untrusted
+export function readCachedSearchHits(rawHits: string): ExternalSongHit[] {
+  const cachedPayload: unknown = JSON.parse(rawHits);
+  const hits = cachedSearchHitsSchema.safeParse(cachedPayload);
+  if (!hits.success) return [];
+  return hits.data;
 }

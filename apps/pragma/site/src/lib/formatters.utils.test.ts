@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatCapacity, formatSessionDate } from './formatters.utils';
+import { formatCapacity, formatClockTime, formatSessionDate } from './formatters.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('formatters.utils', () => {
@@ -17,6 +17,29 @@ describe('formatters.utils', () => {
 
     it('returns the input untouched when the ISO string is malformed', () => {
       expect(formatSessionDate('not-a-date', 'en-GB')).toBe('not-a-date');
+    });
+  });
+
+  describe('formatClockTime', () => {
+    const AN_EVENING_INSTANT = '2026-08-26T19:30:00.000Z';
+
+    it('renders a twenty-four hour clock for a locale that reads one', () => {
+      expect(formatClockTime(AN_EVENING_INSTANT, 'fr')).toMatch(/^\d{2}:\d{2}$/);
+    });
+
+    it('renders a twelve hour clock for a locale that reads one', () => {
+      expect(formatClockTime(AN_EVENING_INSTANT, 'en')).toMatch(/^\d{2}:\d{2}\s?(AM|PM)$/);
+    });
+
+    it('reads the instant on the viewer own clock rather than on the UTC string', () => {
+      const onTheViewerClock = new Date(AN_EVENING_INSTANT);
+      const hour = String(onTheViewerClock.getHours()).padStart(2, '0');
+      const minute = String(onTheViewerClock.getMinutes()).padStart(2, '0');
+      expect(formatClockTime(AN_EVENING_INSTANT, 'en-GB')).toBe(`${hour}:${minute}`);
+    });
+
+    it('returns the input untouched when the ISO string is malformed', () => {
+      expect(formatClockTime('not-a-time', 'en-GB')).toBe('not-a-time');
     });
   });
 

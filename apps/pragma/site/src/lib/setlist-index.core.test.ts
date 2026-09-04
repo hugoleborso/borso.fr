@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { buildSetlistIndexRows, type IndexSession, type IndexSetlist } from './setlist-index.core';
+import {
+  buildSetlistIndexRows,
+  type IndexSession,
+  type IndexSetlist,
+  selectConcertSessionId,
+} from './setlist-index.core';
 
 const EARLIER_CONCERT: IndexSession = {
   id: 'concert-1',
@@ -112,5 +117,31 @@ describe('buildSetlistIndexRows', () => {
 
   it('holds no row when the band has written no setlist', () => {
     expect(buildSetlistIndexRows([], [EARLIER_CONCERT])).toEqual([]);
+  });
+});
+
+describe('selectConcertSessionId', () => {
+  const A_PRACTICE: IndexSession = {
+    id: 'practice-1',
+    kind: 'practice',
+    date: '2026-10-01T20:00:00.000Z',
+    venue: null,
+  };
+
+  it('names no concert for a setlist the band only rehearses from', () => {
+    expect(selectConcertSessionId([A_PRACTICE])).toBe(null);
+  });
+
+  it('names no concert for a setlist attached to nothing at all', () => {
+    expect(selectConcertSessionId([])).toBe(null);
+  });
+
+  it('names the concert, ignoring a practice dated later', () => {
+    expect(selectConcertSessionId([A_PRACTICE, MIDDLE_CONCERT])).toBe('concert-2');
+  });
+
+  it('names the latest concert when the setlist is played at two of them', () => {
+    expect(selectConcertSessionId([EARLIER_CONCERT, MIDDLE_CONCERT])).toBe('concert-2');
+    expect(selectConcertSessionId([MIDDLE_CONCERT, EARLIER_CONCERT])).toBe('concert-2');
   });
 });

@@ -15,12 +15,15 @@ import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedi
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistScenePage } from './routes/setlists/SetlistScenePage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
+import { VotePage } from './routes/vote/VotePage';
 
 export function App(): JSX.Element {
   return (
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/vote" element={<VotePage />} />
+        <Route path="/vote/:sessionId" element={<VotePage />} />
         <Route element={<RequireSession />}>
           <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
           <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
