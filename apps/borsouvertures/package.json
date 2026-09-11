@@ -24,11 +24,11 @@
     "chess.js": "^1.0.0",
     "i18next": "catalog:",
     "react": "catalog:",
-    "react-chessboard": "^5.4.0",
+    "react-chessboard": "^5.12.1",
     "react-dom": "catalog:",
     "react-i18next": "catalog:",
     "tailwindcss": "catalog:",
-    "workbox-window": "^7.4.0"
+    "workbox-window": "^7.4.1"
   },
   "devDependencies": {
     "@stryker-mutator/core": "catalog:",
