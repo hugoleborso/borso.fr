@@ -21,9 +21,13 @@ Reach for it for functional walkthroughs.
 
 `@swmansion/argent` drives an already-running Chromium over the Chrome DevTools
 Protocol. It thinks in devices and normalised coordinates, and its verbs are the
-ones a phone has: `gesture-tap`, `gesture-swipe`, `keyboard`, `rotate`,
-`await-screen-idle`. Reach for it for touch behaviour and phone-shaped
-interaction.
+ones a phone has: `gesture-tap`, `keyboard`, `rotate`, `await-screen-idle`.
+Reach for it for touch behaviour and phone-shaped interaction.
+
+**`gesture-swipe` is not among them on Chromium.** It is listed, it returns a
+success object, and it moves nothing — scroll with `gesture-scroll` and drag
+with `gesture-drag` instead. Full contract and what that costs a phone pass:
+[`argent-gesture-swipe-does-nothing-on-chromium.md`](./argent-gesture-swipe-does-nothing-on-chromium.md).
 
 ## The two launch flags that are not optional
 
@@ -110,9 +114,14 @@ active page.
 ## argent
 
 **Use [`scripts/argent.sh`](../../scripts/argent.sh) rather than the steps below.**
-It encodes every one of them:
+It encodes every one of them, including the choice of network mode: the URL you
+pass to `start` decides it, because loopback and a preview need opposite proxy
+flags and those are fixed when the browser launches. A browser already running
+keeps the mode it was started with, so `stop` first when you switch between a
+dev server and a preview — the script says so rather than reusing it silently.
 
 ```bash
+scripts/argent.sh start https://borsouvertures-pr-95.preview.borso.fr/
 scripts/argent.sh start http://localhost:5174/   # browser + server + open, ~5s
 scripts/argent.sh describe                       # frames as normalised [0,1] boxes
 scripts/argent.sh tap 0.5 0.95                   # a real tap at a frame's centre

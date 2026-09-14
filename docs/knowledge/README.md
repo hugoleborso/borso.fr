@@ -94,6 +94,7 @@ Two failure modes to watch for:
 - [`subagents-that-were-never-told-their-label.md`](./subagents-that-were-never-told-their-label.md) — every `KAIZEN.md` line saying `main` after a task that spawned agents means the sweep cannot tell one agent's wall from four agents' wall.
 - [`a-generated-label-should-name-the-thing.md`](./a-generated-label-should-name-the-thing.md) — a generated UI label that reuses an internal id names the mechanism; keep the id, add a label.
 - [`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md) — which of the two tools answers which question, and the traps in each.
+- [`argent-gesture-swipe-does-nothing-on-chromium.md`](./argent-gesture-swipe-does-nothing-on-chromium.md) — `gesture-swipe` is not implemented on a Chromium target, returns a success object and moves nothing; scroll with `gesture-scroll`, drag with `gesture-drag`, and `gesture-tap` remains a real touch event.
 - [`dynamic-workflow-feature-pipeline.md`](./dynamic-workflow-feature-pipeline.md) — the operator runbook for the `plan → ship` Dynamic Workflow.
 - [`claude-code-built-in-output-styles.md`](./claude-code-built-in-output-styles.md) — the `outputStyle` setting, why it belongs in the committed settings file rather than the local one a hosted session never sees, and how to read the built-in names out of the installed binary when the published page is a release behind.
 - [`sleep-is-compressed-in-the-hosted-sandbox.md`](./sleep-is-compressed-in-the-hosted-sandbox.md) — `sleep` returns early whatever duration you ask for, so eight polls of a CI job read as a 40-minute hang when four minutes had passed; `python3 -c "import time; time.sleep(n)"` waits for real, and `date -u` is the check before you diagnose any remote hang.
@@ -103,6 +104,7 @@ Two failure modes to watch for:
 
 - [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.
 - [`dsql-clone-from-prod.md`](./dsql-clone-from-prod.md) — cloning a production schema into a preview, and what the clone does not carry.
+- [`a-pragma-preview-cannot-be-signed-into.md`](./a-pragma-preview-cannot-be-signed-into.md) — the preview clones production's credentials and bootstrap refuses an already-bootstrapped instance, so no agent-reachable path signs in; what can still be validated there, and what has to move local.
 - [`the-committed-template-snapshot-is-not-the-deployed-stack.md`](./the-committed-template-snapshot-is-not-the-deployed-stack.md) — the `borso-shared` snapshot is synthesized with stubbed certificates, so comparing it to the live template invents deletions that never happen; what the comparison *does* catch is a stack several merges behind its dispatch-only deploy.
 ### Aurora DSQL
 
