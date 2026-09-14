@@ -30,6 +30,25 @@ Lives in: `api/src/bars/`
 Not to be confused with: the `venue` column on a concert, which is free
 text typed for that one date.
 
+## Member credential
+
+The username and password one member signs in with.
+
+Lives in: `api/src/auth/`
+
+- Keyed on `memberId`, so a member holds one credential or none.
+  `username` is lowercase, unique through its own index, and 2 to 64
+  characters of letters, digits, dot, dash or underscore.
+- `passwordHash` is argon2id. `sessionEpoch` is a whole number that goes
+  up by one on every password change, and a cookie carrying an older
+  epoch stops verifying, which signs that member out everywhere else.
+- Created either through the enrolment window or by another member.
+  Deleted with the member, in the same transaction that scrubs them from
+  the lineups.
+
+Not to be confused with: the shared password in `app_config`, which now
+opens the enrolment route and nothing else.
+
 ## Chord chart
 
 The written music for a song, in one of three forms.
@@ -176,6 +195,23 @@ Lives in: `api/src/sessions/`
 - The next session is the earliest one strictly after now, with ties
   broken on the identifier (`buildNextSessionOfflineManifest`).
 
+## Passkey
+
+A credential held by a member's own device, which signs them in without
+a password.
+
+Lives in: `api/src/auth/` (`member_passkey`), verified through
+`passkey.adapter.ts`
+
+- Stores the credential id, the public key as `bytea`, the signature
+  counter and a label the member typed. The credential id is unique.
+- It is an alternative to the password, not a second factor: a member
+  signs in with either. The password stays as the way back when a device
+  is lost.
+- The challenge of a registration or an assertion lives one row in
+  `webauthn_challenge` for two minutes, because the options call and the
+  verify call are two Lambda invocations sharing no memory.
+
 ## Practice
 
 A rehearsal, optionally aimed at a concert.
@@ -247,6 +283,21 @@ Lives in: `api/src/setlists/`
 - A setlist joining a session lands one past the highest position already
   taken, so the order the band wrote survives.
 
+## Setlist status
+
+Whether a setlist is being voted on or is a running order.
+
+Lives in: `api/src/setlists/` (the `status` column), resolved by
+`resolveSetlistStatus`
+
+- Exactly two values: `voting` and `locked`. The column is nullable with
+  no default, because Aurora DSQL cannot add a `NOT NULL` column after
+  the table exists, so a row written before the column reads as `locked`.
+- `targetSongCount` is how many songs the band wants out of the vote. It
+  may be null, and then it reads as 15.
+- Closing a vote writes the entries and moves the status to `locked`.
+  Reopening moves it back and keeps every vote.
+
 ## Setlist entry
 
 One song in one setlist, with the decisions that apply to it that night.
@@ -265,18 +316,21 @@ Lives in: `api/src/setlists/`
 
 ## Sign-in session
 
-Proof that this browser knows the band's shared password.
+Proof that this browser is a named member.
 
 Lives in: `api/src/auth/`
 
-- One `app_config` row, keyed `id = 1`, holds the argon2id password hash
-  and the HMAC key that signs cookies.
+- One `app_config` row, keyed `id = 1`, still holds the HMAC key that
+  signs cookies, and a password hash the enrolment route alone reads.
 - The cookie is named `pragma_session` and is `payload.signature`, where
-  the payload carries the issue and expiry times. It lasts 30 days.
-- Rotating the password mints a fresh HMAC key, so every cookie issued
-  under the old key stops verifying.
+  the payload carries the member id, that member's session epoch, and the
+  issue and expiry times. It lasts 30 days.
+- The gate reads the cookie and the credential behind it: only the second
+  read can see a password change.
+- Rotating the shared password mints a fresh HMAC key, so every member's
+  cookie stops verifying.
 - Login attempts are counted per hashed client IP and rate limited.
-- Every domain router opens its chain with `requireSharedPasswordSession`.
+- Every domain router opens its chain with `requireMemberSession`.
 
 Not to be confused with: a session, which is a practice or a concert.
 
@@ -314,6 +368,30 @@ Lives in: `domain/tonality.core.ts`, stored in `api/src/songs/`
   field the reader can fill in by hand.
 - Stored as `tonalityStart` and `tonalityEnd`, both nullable, up to 16
   characters.
+
+## Vote
+
+What one member gives one song inside one setlist being voted on.
+
+Lives in: `api/src/setlists/` (`setlist_vote`)
+
+- Keyed on `(setlistId, memberId, songId)`, so a member holds one score
+  per song per setlist. `points` is a whole number from 0 to 3, and a
+  score of 0 deletes the row rather than storing it.
+- A member's budget is three points per targeted song. Unspent points are
+  simply not counted; nothing forces a member to spend them.
+- Deleted with the member who cast it and with the song it names.
+
+## Vote budget
+
+How many points one member still has to spend in one vote.
+
+Lives in: `api/src/setlists/voting.core.ts`
+
+- `total` is `targetSongCount × 3`, `spent` is the sum of that member's
+  votes, and `remaining` is the difference.
+- A score is refused as `budget-exhausted` when it would exceed what is
+  left, counting the points the same song already holds as free again.
 
 ## Transition
 
@@ -364,8 +442,9 @@ Lives in: `api/src/uploads/`
 ## Words we do not use
 
 - **musician**, **player**, **bandmate**: the person is a **member**.
-- **user**, **account**: nobody has one. There is a shared password and a
-  sign-in session.
+- **user**: the person is a **member**. **account** is allowed as everyday
+  prose for a **member credential**, which is the word identifiers use.
+- **admin**, **role**, **permission**: every member can do everything.
 - **venue** as an entity: the CRM record is a **bar**. `venue` is only the
   free-text column on a concert.
 - **gig**, **show**, **date**: the event is a **concert**. **rehearsal**
@@ -375,6 +454,8 @@ Lives in: `api/src/uploads/`
   upstream API's word.
 - **set**, **programme**, **running order**: the ordered run is a
   **setlist**, and each row in it is a **setlist entry**.
+- **ballot**, **poll**, **election**, **scrutin**: a setlist in its
+  `voting` status carries **votes**, each worth **points**.
 - **skill**, **level**, **rating**, **proficiency**: the measure is
   **mastery** and the number is a **score**.
 - **role**, **part**, **station**: what a member holds on a song is an
