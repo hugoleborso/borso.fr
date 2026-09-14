@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: '#95'
-fix-pr: '#96'
+fix-pr: '#97'
 fix-commits: [5d14095]
 eradication-level: 2
 time-to-detect: minutes
@@ -90,7 +90,7 @@ on the one in its own title, with an error naming the innocent host.
 **Type:** DevX check (level 2 — the wrapper derives the setting instead of
 hardcoding it)
 
-**Reference:** [PR #96](https://github.com/hugoleborso/borso.fr/pull/96) ·
+**Reference:** [PR #97](https://github.com/hugoleborso/borso.fr/pull/97) ·
 commit [`5d14095`](https://github.com/hugoleborso/borso.fr/commit/5d14095)
 
 `classify_target` reads the URL passed to `start` and picks the mode: loopback

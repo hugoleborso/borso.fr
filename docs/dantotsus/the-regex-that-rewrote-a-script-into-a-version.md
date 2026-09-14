@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#95'
-fix-pr: '#96'
+fix-pr: '#97'
 fix-commits: [5d14095]
 eradication-level: 2
 time-to-detect: minutes
@@ -82,7 +82,7 @@ edits the scripts block, and no gate in this repository reads a script value.
 
 **Type:** DevX check (level 2 — pre-commit rejects the shape)
 
-**Reference:** [PR #96](https://github.com/hugoleborso/borso.fr/pull/96) ·
+**Reference:** [PR #97](https://github.com/hugoleborso/borso.fr/pull/97) ·
 commit [`5d14095`](https://github.com/hugoleborso/borso.fr/commit/5d14095)
 
 Level 1 was considered: forbid text edits to manifests outright. There is no

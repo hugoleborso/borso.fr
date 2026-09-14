@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: high
 related-pr: '#95'
-fix-pr: '#96'
+fix-pr: '#97'
 fix-commits: [5d14095]
 eradication-level: 4
 time-to-detect: days
@@ -107,7 +107,7 @@ disproof.
 
 **Type:** detection (level 4 — a PreToolUse hook on the merge call itself)
 
-**Reference:** [PR #96](https://github.com/hugoleborso/borso.fr/pull/96) ·
+**Reference:** [PR #97](https://github.com/hugoleborso/borso.fr/pull/97) ·
 commit [`5d14095`](https://github.com/hugoleborso/borso.fr/commit/5d14095)
 
 A confirmation prompt was the obvious fix and is ruled out: CLAUDE.md says not
