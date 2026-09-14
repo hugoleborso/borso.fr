@@ -96,6 +96,7 @@ export function SetlistVotePage(): JSX.Element {
         <VoteClosePanel
           proposal={proposal.data ?? []}
           songsById={songsById}
+          addableSongs={songList}
           targetSongCount={board.data?.targetSongCount ?? 0}
           isClosing={closeVote.isPending}
           onClose={(songIds) => {
@@ -121,6 +122,7 @@ export function SetlistVotePage(): JSX.Element {
           <div className="px-4">
             <VoteDeck
               songs={songList}
+              lastScoredAt={board.data?.lastScoredAt ?? null}
               remainingPoints={board.data?.budget.remaining ?? 0}
               pointsBySongId={pointsBySongId}
               onExhausted={() => setWasRefused(true)}

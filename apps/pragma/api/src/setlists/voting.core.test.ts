@@ -6,6 +6,7 @@ import {
   POINTS_PER_TARGET_SONG,
   proposeClosing,
   resolveTargetSongCount,
+  selectLastScoredAt,
   selectScoreWriteIntent,
   selectTargetSongCount,
   selectWriteOutcome,
@@ -211,5 +212,25 @@ describe('voting.core ranking whichever order the votes arrived in', () => {
       vote(GRACE, 'song-b', 1),
     ]);
     expect(ranked.map((entry) => entry.songId)).toEqual(['song-b', 'song-a']);
+  });
+});
+
+describe('selectLastScoredAt', () => {
+  const EARLIER = new Date('2026-09-14T10:00:00.000Z');
+  const LATER = new Date('2026-09-14T12:00:00.000Z');
+
+  it('answers nothing for a member who has scored nothing', () => {
+    expect(selectLastScoredAt([])).toBeNull();
+  });
+
+  it('answers nothing when the votes carry no time', () => {
+    expect(selectLastScoredAt([vote(ADA, 'song-a', 2)])).toBeNull();
+  });
+
+  it('answers the latest time, whichever order the votes arrive in', () => {
+    const early = { ...vote(ADA, 'song-a', 1), updatedAt: EARLIER };
+    const late = { ...vote(ADA, 'song-b', 1), updatedAt: LATER };
+    expect(selectLastScoredAt([early, late])).toBe(LATER.toISOString());
+    expect(selectLastScoredAt([late, early])).toBe(LATER.toISOString());
   });
 });

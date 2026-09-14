@@ -5,6 +5,7 @@ export interface CastVote {
   readonly memberId: string;
   readonly songId: string;
   readonly points: number;
+  readonly updatedAt?: Date;
 }
 
 const BEFORE = -1;
@@ -117,4 +118,13 @@ export type WriteOutcome = 'written' | 'missing';
 
 export function selectWriteOutcome(updatedRowCount: number): WriteOutcome {
   return updatedRowCount === 0 ? 'missing' : 'written';
+}
+
+export function selectLastScoredAt(votesOfMember: readonly CastVote[]): string | null {
+  const stamps = votesOfMember
+    .map((vote) => vote.updatedAt)
+    .filter((stamp): stamp is Date => stamp !== undefined);
+  if (stamps.length === 0) return null;
+  const latest = Math.max(...stamps.map((stamp) => stamp.getTime()));
+  return new Date(latest).toISOString();
 }

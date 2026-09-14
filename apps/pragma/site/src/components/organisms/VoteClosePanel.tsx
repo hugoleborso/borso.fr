@@ -11,6 +11,7 @@ import type { TallySong } from './VoteTally';
 export interface VoteClosePanelProps {
   readonly proposal: readonly SongTally[];
   readonly songsById: ReadonlyMap<string, TallySong>;
+  readonly addableSongs: readonly TallySong[];
   readonly targetSongCount: number;
   readonly isClosing: boolean;
   readonly onClose: (songIds: readonly string[]) => void;
@@ -28,6 +29,7 @@ function moveWithin(songIds: readonly string[], from: number, target: number): s
 export function VoteClosePanel({
   proposal,
   songsById,
+  addableSongs,
   targetSongCount,
   isClosing,
   onClose,
@@ -38,6 +40,7 @@ export function VoteClosePanel({
   );
 
   const isOverTarget = keptSongIds.length > targetSongCount;
+  const leftOutSongs = addableSongs.filter((song) => !keptSongIds.includes(song.id));
 
   return (
     <section className="flex flex-col gap-3 px-4 py-4">
@@ -94,6 +97,31 @@ export function VoteClosePanel({
           </li>
         ))}
       </ol>
+      {leftOutSongs.length === 0 ? null : (
+        <div className="flex flex-col gap-2">
+          <span className="text-xs tracking-wider uppercase text-ink-400">
+            {t('voting.closeAddLabel')}
+          </span>
+          <ul className="list-none p-0 m-0 flex flex-col gap-2">
+            {leftOutSongs.map((song) => (
+              <li
+                key={song.id}
+                className="flex items-center gap-2 rounded-xl border border-dashed border-line px-3 py-2"
+              >
+                <span className="flex-1 min-w-0 truncate text-ink-500">{song.title}</span>
+                <Button
+                  type="button"
+                  variant="ghost"
+                  aria-label={t('voting.addToProposal')}
+                  onClick={() => setKeptSongIds([...keptSongIds, song.id])}
+                >
+                  +
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </div>
+      )}
       <Button
         type="button"
         variant="accent"

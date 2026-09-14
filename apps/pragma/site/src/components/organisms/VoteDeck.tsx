@@ -7,6 +7,7 @@ import {
   type DeckGeometry,
   type DeckZone,
   IDLE_OFFSET,
+  isSongNewSinceLastScore,
   judgeRelease,
   readIntentPoints,
   type ReleaseIntent,
@@ -18,16 +19,19 @@ import {
   selectZoneForOffset,
   SCORING_ZONES,
 } from '../../routes/setlists/vote-deck.core';
+import { Badge } from '../atoms/Badge';
 import { PointsBadge } from '../atoms/PointsBadge';
 
 export interface DeckSong {
   readonly id: string;
   readonly title: string;
   readonly artist: string;
+  readonly createdAt: string;
 }
 
 export interface VoteDeckProps {
   readonly songs: readonly DeckSong[];
+  readonly lastScoredAt: string | null;
   readonly remainingPoints: number;
   readonly pointsBySongId: Readonly<Record<string, number>>;
   readonly onScore: (songId: string, points: number) => void;
@@ -39,6 +43,7 @@ const UNKNOWN_GEOMETRY: DeckGeometry = { width: 1, height: 1 };
 // @FollowsBlueprint organism-mutation-panel
 export function VoteDeck({
   songs,
+  lastScoredAt,
   remainingPoints,
   pointsBySongId,
   onScore,
@@ -54,6 +59,7 @@ export function VoteDeck({
   const hasDeckLeft = song !== undefined;
   const zone: DeckZone = isDragging ? selectZoneForOffset(offset, geometry) : 'none';
   const givenPoints = readGivenPoints(pointsBySongId, song?.id ?? '');
+  const isNewSong = song !== undefined && isSongNewSinceLastScore(song, lastScoredAt, givenPoints);
 
   function startDrag(event: ReactPointerEvent<HTMLDivElement>) {
     const box = event.currentTarget.getBoundingClientRect();
@@ -120,6 +126,7 @@ export function VoteDeck({
           onPointerCancel={endDrag}
         >
           <div>
+            {isNewSong ? <Badge tone="accent">{t('voting.newSong')}</Badge> : null}
             <p className="text-xs tracking-wider uppercase text-ink-400 m-0">{song.artist}</p>
             <h2 className="font-display italic text-[32px] leading-tight text-ink-900 m-0">
               {song.title}

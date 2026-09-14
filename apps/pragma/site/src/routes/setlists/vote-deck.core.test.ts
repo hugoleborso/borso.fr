@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   judgeRelease,
+  countSongsNewSinceLastScore,
+  isSongNewSinceLastScore,
   readGivenPoints,
   readIntentPoints,
   selectCardRotation,
@@ -129,5 +131,36 @@ describe('readIntentPoints', () => {
 describe('selectZoneStrength on a card of no width', () => {
   it('reads an untravelled drag on a zero-width card as fully committed', () => {
     expect(selectZoneStrength('two', 'two', { x: 0, y: 0 }, { width: 0, height: 480 })).toBe(1);
+  });
+});
+
+describe('a song that arrived after this member went through the deck', () => {
+  const EARLIER = '2026-09-14T10:00:00.000Z';
+  const LATER = '2026-09-14T12:00:00.000Z';
+
+  it('is new when it was created after the last score and holds none', () => {
+    expect(isSongNewSinceLastScore({ id: 'song-a', createdAt: LATER }, EARLIER, 0)).toBe(true);
+  });
+
+  it('is not new when it was already there', () => {
+    expect(isSongNewSinceLastScore({ id: 'song-a', createdAt: EARLIER }, LATER, 0)).toBe(false);
+  });
+
+  it('is not new once this member has scored it', () => {
+    expect(isSongNewSinceLastScore({ id: 'song-a', createdAt: LATER }, EARLIER, 2)).toBe(false);
+  });
+
+  it('is not new to a member who has scored nothing yet', () => {
+    expect(isSongNewSinceLastScore({ id: 'song-a', createdAt: LATER }, null, 0)).toBe(false);
+  });
+
+  it('counts the ones worth telling the member about', () => {
+    const songs = [
+      { id: 'song-a', createdAt: LATER },
+      { id: 'song-b', createdAt: LATER },
+      { id: 'song-c', createdAt: EARLIER },
+    ];
+    expect(countSongsNewSinceLastScore(songs, EARLIER, { 'song-b': 1 })).toBe(1);
+    expect(countSongsNewSinceLastScore(songs, null, {})).toBe(0);
   });
 });

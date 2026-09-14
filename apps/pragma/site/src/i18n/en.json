@@ -376,15 +376,18 @@
     "title": "Defaults — {{title}}"
   },
   "voting": {
+    "addToProposal": "Add a song",
     "budgetExhausted": "No points left! Take points off another song to keep liking.",
     "budgetLabel": "Points left",
     "cardLabel": "Song to score",
+    "closeAddLabel": "Songs left out",
     "closeOverTarget": "More songs than the target, because some are tied. Drop the ones you do not want.",
     "closeSubmit": "Make this the setlist",
     "closeTitle": "Proposed running order",
     "deckDone": "You have been through the whole catalogue.",
     "moveDown": "Move down",
     "moveUp": "Move up",
+    "newSong": "New",
     "openClosing": "Close the vote",
     "openVote": "Open a vote",
     "removeFromProposal": "Remove",

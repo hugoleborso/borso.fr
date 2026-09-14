@@ -4,6 +4,7 @@ import {
   computeBudget,
   type ScoreWriteIntent,
   selectScoreWriteIntent,
+  selectLastScoredAt,
   selectTargetSongCount,
   selectWriteOutcome,
   type WriteOutcome,
@@ -45,6 +46,7 @@ export interface VoteBoard {
   readonly targetSongCount: number;
   readonly budget: VoteBudget;
   readonly tallies: SongTally[];
+  readonly lastScoredAt: string | null;
 }
 
 export type VoteBoardOutcome = { kind: 'ok'; board: VoteBoard } | { kind: 'setlist-not-found' };
@@ -67,6 +69,7 @@ export async function readVoteBoard(
       targetSongCount: resolveTargetSongCount(setlist.targetSongCount),
       budget: computeBudget(setlist.targetSongCount, votesOfMember),
       tallies: tally(allVotes),
+      lastScoredAt: selectLastScoredAt(votesOfMember),
     },
   };
 }

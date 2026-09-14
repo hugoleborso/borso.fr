@@ -6,6 +6,7 @@ const GRACE = 'member-grace';
 
 const BOARD: VoteBoard = {
   status: 'voting',
+  lastScoredAt: null,
   targetSongCount: 2,
   budget: { total: 6, spent: 3, remaining: 3 },
   tallies: [
@@ -79,6 +80,7 @@ describe('voting.utils ranking', () => {
   it('puts the song more members backed first when the points tie', () => {
     const board: VoteBoard = {
       status: 'voting',
+      lastScoredAt: null,
       targetSongCount: 3,
       budget: { total: 9, spent: 0, remaining: 9 },
       tallies: [
@@ -98,6 +100,7 @@ describe('voting.utils ranking', () => {
   it('ranks on points before the number of backers', () => {
     const board: VoteBoard = {
       status: 'voting',
+      lastScoredAt: null,
       targetSongCount: 3,
       budget: { total: 9, spent: 0, remaining: 9 },
       tallies: [
@@ -116,6 +119,7 @@ describe('voting.utils ranking', () => {
   it('falls back to the identifier when points and backers both tie', () => {
     const board: VoteBoard = {
       status: 'voting',
+      lastScoredAt: null,
       targetSongCount: 3,
       budget: { total: 9, spent: 2, remaining: 7 },
       tallies: [{ songId: 'song-z', points: 2, voterCount: 1, pointsByMember: { [GRACE]: 2 } }],
@@ -129,6 +133,7 @@ describe('voting.utils ranking whichever order the board arrived in', () => {
   it('lifts the higher scoring song even when it was already last', () => {
     const board: VoteBoard = {
       status: 'voting',
+      lastScoredAt: null,
       targetSongCount: 3,
       budget: { total: 9, spent: 1, remaining: 8 },
       tallies: [{ songId: 'song-a', points: 1, voterCount: 1, pointsByMember: { [ADA]: 1 } }],
@@ -140,6 +145,7 @@ describe('voting.utils ranking whichever order the board arrived in', () => {
   it('lifts the more backed song even when it was already last', () => {
     const board: VoteBoard = {
       status: 'voting',
+      lastScoredAt: null,
       targetSongCount: 3,
       budget: { total: 9, spent: 2, remaining: 7 },
       tallies: [{ songId: 'song-a', points: 2, voterCount: 1, pointsByMember: { [ADA]: 2 } }],
@@ -154,6 +160,7 @@ describe('voting.utils keeps the more backed song ahead', () => {
   it('leaves it ahead when it was already ahead', () => {
     const board: VoteBoard = {
       status: 'voting',
+      lastScoredAt: null,
       targetSongCount: 3,
       budget: { total: 9, spent: 2, remaining: 7 },
       tallies: [

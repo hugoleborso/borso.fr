@@ -14,6 +14,7 @@ import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 
 const boardSchema = z.object({
   status: z.enum(['voting', 'locked']),
+  lastScoredAt: z.string().nullable(),
   targetSongCount: z.number(),
   budget: z.object({ total: z.number(), spent: z.number(), remaining: z.number() }),
   tallies: z.array(
@@ -286,6 +287,24 @@ describe('setlist voting (back-e2e)', () => {
       boardSchema,
     );
     expect(board.tallies).toEqual([]);
+  });
+
+  it('reports when this member last scored, so the deck can mark what arrived after', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const setlistId = await createVotingSetlist(app, cookieHeader, 2);
+    const emptyBoard = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/votes`, { cookieHeader }),
+      boardSchema,
+    );
+    expect(emptyBoard.lastScoredAt).toBeNull();
+
+    const songId = await createSong(app, cookieHeader, 'Première');
+    await score(app, cookieHeader, setlistId, songId, 2);
+    const scoredBoard = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/votes`, { cookieHeader }),
+      boardSchema,
+    );
+    expect(scoredBoard.lastScoredAt).not.toBeNull();
   });
 
   it('answers 404 on a setlist that does not exist', async () => {

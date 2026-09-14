@@ -19,6 +19,7 @@ export interface VoteBoard {
   readonly targetSongCount: number;
   readonly budget: VoteBudget;
   readonly tallies: readonly SongTally[];
+  readonly lastScoredAt: string | null;
 }
 
 function withoutMember(

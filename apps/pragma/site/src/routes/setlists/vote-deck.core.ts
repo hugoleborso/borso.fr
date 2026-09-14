@@ -130,3 +130,29 @@ export function selectSpentShare(total: number, remaining: number): number {
 export function readIntentPoints(intent: ReleaseIntent): number {
   return intent.kind === 'score' ? intent.points : 0;
 }
+
+export interface DeckEntry {
+  readonly id: string;
+  readonly createdAt: string;
+}
+
+export function isSongNewSinceLastScore(
+  song: DeckEntry,
+  lastScoredAt: string | null,
+  givenPoints: number,
+): boolean {
+  // Stryker disable next-line ConditionalExpression: equivalent mutant. Without the guard the comparison below reads `Date.parse(null)`, which is NaN, and every comparison against NaN is false — the same answer this returns.
+  if (lastScoredAt === null) return false;
+  if (givenPoints > 0) return false;
+  return Date.parse(song.createdAt) > Date.parse(lastScoredAt);
+}
+
+export function countSongsNewSinceLastScore(
+  songs: readonly DeckEntry[],
+  lastScoredAt: string | null,
+  pointsBySongId: Readonly<Record<string, number>>,
+): number {
+  return songs.filter((song) =>
+    isSongNewSinceLastScore(song, lastScoredAt, readGivenPoints(pointsBySongId, song.id)),
+  ).length;
+}

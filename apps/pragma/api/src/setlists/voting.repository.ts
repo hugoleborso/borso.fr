@@ -7,6 +7,7 @@ export interface VoteRow {
   memberId: string;
   songId: string;
   points: number;
+  updatedAt: Date;
 }
 
 // @FollowsBlueprint repository-projection
@@ -15,6 +16,7 @@ const VOTE_PROJECTION = {
   memberId: setlistVoteTable.memberId,
   songId: setlistVoteTable.songId,
   points: setlistVoteTable.points,
+  updatedAt: setlistVoteTable.updatedAt,
 } as const;
 
 // @FollowsBlueprint repository-query

@@ -376,15 +376,18 @@
     "title": "Défauts — {{title}}"
   },
   "voting": {
+    "addToProposal": "Ajouter une chanson",
     "budgetExhausted": "Plus de points ! Enlève des points aux autres chansons pour continuer de liker.",
     "budgetLabel": "Points restants",
     "cardLabel": "Chanson à noter",
+    "closeAddLabel": "Chansons écartées",
     "closeOverTarget": "Plus de chansons que prévu, parce que certaines sont à égalité. Retire celles que tu ne veux pas.",
     "closeSubmit": "En faire la setlist",
     "closeTitle": "Ordre de passage proposé",
     "deckDone": "Tu as parcouru tout le catalogue.",
     "moveDown": "Descendre",
     "moveUp": "Monter",
+    "newSong": "Nouvelle",
     "openClosing": "Clôturer le vote",
     "openVote": "Ouvrir un vote",
     "removeFromProposal": "Retirer",
