@@ -17,6 +17,10 @@ type PasskeysResponse = InferResponseType<typeof api.api.me.passkeys.$get>;
 export type SignedInMember = Extract<MeResponse, { memberId: string }>;
 export type PasskeySummary = Extract<PasskeysResponse, { passkeys: unknown }>['passkeys'][number];
 
+function withoutPasskey(passkeys: readonly PasskeySummary[], passkeyId: string): PasskeySummary[] {
+  return passkeys.filter((passkey) => passkey.id !== passkeyId);
+}
+
 async function throwOnFailure(response: Response, label: string) {
   if (response.ok) return;
   const failureBody: unknown = await response.json().catch(() => null);
@@ -78,8 +82,10 @@ export function useRegisterPasskey() {
   });
 }
 
+// @FollowsBlueprint query-optimistic-mutation
 export function useRemovePasskey() {
   const queryClient = useQueryClient();
+  const passkeysKey = meKeys.passkeys();
   return useMutation({
     mutationFn: async (variables: { passkeyId: string }) => {
       const response = await api.api.me.passkeys[':passkeyId'].$delete({
@@ -88,8 +94,21 @@ export function useRemovePasskey() {
       await throwOnFailure(response, 'passkey-remove');
       return variables.passkeyId;
     },
-    onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: meKeys.passkeys() });
+    onMutate: async (variables) => {
+      await queryClient.cancelQueries({ queryKey: passkeysKey });
+      const snapshot = queryClient.getQueryData<PasskeySummary[]>(passkeysKey);
+      if (snapshot !== undefined) {
+        queryClient.setQueryData<PasskeySummary[]>(
+          passkeysKey,
+          withoutPasskey(snapshot, variables.passkeyId),
+        );
+      }
+      return { snapshot };
+    },
+    onError: (_error, _variables, context) => {
+      if (context?.snapshot !== undefined) {
+        queryClient.setQueryData<PasskeySummary[]>(passkeysKey, context.snapshot);
+      }
     },
   });
 }
