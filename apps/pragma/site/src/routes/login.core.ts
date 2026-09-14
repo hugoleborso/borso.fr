@@ -22,6 +22,27 @@ export function selectLoginErrorMessageKey(status: number | null): ParseKeys {
   return LOGIN_ERROR_KEY_BY_STATUS.get(status) ?? UNKNOWN_LOGIN_ERROR_KEY;
 }
 
+const CONFLICT_STATUS = 409;
+
+const ENROL_ERROR_KEY_BY_CODE: ReadonlyMap<string, ParseKeys> = new Map([
+  ['enrolment-closed', 'auth.enrolClosed'],
+  ['username-taken', 'auth.usernameTaken'],
+  ['already-enrolled', 'auth.alreadyEnrolled'],
+  ['invalid-shared-password', 'auth.invalidSharedPassword'],
+]);
+
+const errorBodySchema = z.object({ error: z.string() });
+
+export function selectEnrolErrorMessageKey(status: number | null, body: unknown): ParseKeys {
+  const namedError = errorBodySchema.safeParse(body);
+  if (namedError.success) {
+    const byCode = ENROL_ERROR_KEY_BY_CODE.get(namedError.data.error);
+    if (byCode !== undefined) return byCode;
+  }
+  if (status === CONFLICT_STATUS) return 'auth.enrolClosed';
+  return selectLoginErrorMessageKey(status);
+}
+
 const locationStateSchema = z.object({ from: z.string().min(1) }).partial();
 
 export function selectPostLoginPath(locationState: unknown): string {

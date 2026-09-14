@@ -19,15 +19,21 @@ export const SEED_INSTRUMENTS: readonly SeedInstrument[] = [
 
 export interface SeedMember {
   readonly firstName: string;
+  readonly username: string;
   readonly color: string;
   readonly instrumentNames: readonly string[];
 }
 
 export const SEED_MEMBERS: readonly SeedMember[] = [
-  { firstName: 'Hugo', color: '#e0533a', instrumentNames: ['Batterie', 'Chant'] },
-  { firstName: 'Léa', color: '#2f8f6b', instrumentNames: ['Guitare', 'Chant'] },
-  { firstName: 'Marc', color: '#3a6ee0', instrumentNames: ['Basse'] },
-  { firstName: 'Sarah', color: '#b8841a', instrumentNames: ['Clavier', 'Chant'] },
+  { firstName: 'Hugo', username: 'hugo', color: '#e0533a', instrumentNames: ['Batterie', 'Chant'] },
+  { firstName: 'Léa', username: 'lea', color: '#2f8f6b', instrumentNames: ['Guitare', 'Chant'] },
+  { firstName: 'Marc', username: 'marc', color: '#3a6ee0', instrumentNames: ['Basse'] },
+  {
+    firstName: 'Sarah',
+    username: 'sarah',
+    color: '#b8841a',
+    instrumentNames: ['Clavier', 'Chant'],
+  },
 ];
 
 export interface SeedEntryDetail {

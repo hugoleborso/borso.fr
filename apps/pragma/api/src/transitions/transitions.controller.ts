@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import { transitionCommentBodySchema, transitionPairParamSchema } from './transitions.schema';
 import {
   getTransitionComment,
@@ -12,7 +12,7 @@ import {
 // @FollowsBlueprint controller-dispatch
 export function buildTransitionCommentsRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/', async (context) => {
       const comments = await getTransitionComments();
       return context.json({ comments });

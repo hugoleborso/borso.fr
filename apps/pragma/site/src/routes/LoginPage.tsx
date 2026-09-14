@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useLocation } from 'react-router-dom';
+import { Link, useLocation } from 'react-router-dom';
 import { z } from 'zod';
 import { Button } from '../components/atoms/Button';
 import { Card } from '../components/atoms/Card';
@@ -12,12 +12,16 @@ import { Icon } from '../components/atoms/Icon';
 import { Input } from '../components/atoms/Input';
 import { ApiError } from '../lib/api.client';
 import { useNavigateTo } from '../lib/navigation.hook';
-import { useLogin } from '../lib/queries/auth.queries';
+import { isPasskeySupported } from '../lib/passkey.adapter';
+import { useLogin, usePasskeyLogin } from '../lib/queries/auth.queries';
 import { selectLoginErrorMessageKey, selectPostLoginPath } from './login.core';
 
 const PASSWORD_MIN_LENGTH = 8;
 const PASSWORD_MAX_LENGTH = 256;
-const passwordSchema = z.object({
+const USERNAME_MIN_LENGTH = 2;
+const USERNAME_MAX_LENGTH = 64;
+const credentialsSchema = z.object({
+  username: z.string().trim().min(USERNAME_MIN_LENGTH).max(USERNAME_MAX_LENGTH),
   password: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),
 });
 
@@ -27,15 +31,20 @@ export function LoginPage(): JSX.Element {
   const navigateTo = useNavigateTo();
   const location = useLocation();
   const login = useLogin();
+  const passkeyLogin = usePasskeyLogin();
   const [serverError, setServerError] = useState<string | null>(null);
   const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
+  const hasPasskeySupport = isPasskeySupported();
 
   const form = useForm({
-    defaultValues: { password: '' },
+    defaultValues: { username: '', password: '' },
     onSubmit: async ({ value }) => {
       setServerError(null);
       try {
-        await login.mutateAsync({ password: value.password });
+        await login.mutateAsync({
+          username: value.username.trim().toLowerCase(),
+          password: value.password,
+        });
         navigateTo(selectPostLoginPath(location.state), { replace: true });
       } catch (error) {
         const status = error instanceof ApiError ? error.status : null;
@@ -60,6 +69,35 @@ export function LoginPage(): JSX.Element {
           className="flex flex-col gap-3"
         >
           <label
+            htmlFor="login-username"
+            className="text-xs tracking-wider uppercase text-ink-400 font-medium"
+          >
+            {t('auth.usernameLabel')}
+          </label>
+          <form.Field
+            name="username"
+            validators={{
+              onChange: ({ value }) => {
+                const checked = credentialsSchema.shape.username.safeParse(value);
+                return checked.success
+                  ? undefined
+                  : (checked.error.issues[0]?.message ?? 'invalid');
+              },
+            }}
+          >
+            {(field) => (
+              <Input
+                id="login-username"
+                type="text"
+                value={field.state.value}
+                onChange={(event) => field.handleChange(event.target.value)}
+                onBlur={field.handleBlur}
+                autoComplete="username"
+                required
+              />
+            )}
+          </form.Field>
+          <label
             htmlFor="login-password"
             className="text-xs tracking-wider uppercase text-ink-400 font-medium"
           >
@@ -69,7 +107,7 @@ export function LoginPage(): JSX.Element {
             name="password"
             validators={{
               onChange: ({ value }) => {
-                const checked = passwordSchema.shape.password.safeParse(value);
+                const checked = credentialsSchema.shape.password.safeParse(value);
                 return checked.success
                   ? undefined
                   : (checked.error.issues[0]?.message ?? 'invalid');
@@ -119,6 +157,32 @@ export function LoginPage(): JSX.Element {
             </p>
           )}
         </form>
+        {hasPasskeySupport ? (
+          <Button
+            type="button"
+            variant="ghost"
+            className="mt-3 w-full"
+            disabled={passkeyLogin.isPending}
+            onClick={() => {
+              setServerError(null);
+              passkeyLogin.mutate(undefined, {
+                onSuccess: () => {
+                  navigateTo(selectPostLoginPath(location.state), { replace: true });
+                },
+                onError: () => {
+                  setServerError(t('auth.passkeyFailed'));
+                },
+              });
+            }}
+          >
+            {t('auth.passkeyLogin')}
+          </Button>
+        ) : null}
+        <p className="mt-4 text-sm text-ink-500">
+          <Link to="/enrol" className="underline">
+            {t('auth.enrolLink')}
+          </Link>
+        </p>
       </Card>
     </main>
   );

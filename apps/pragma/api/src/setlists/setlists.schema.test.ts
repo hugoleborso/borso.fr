@@ -13,6 +13,10 @@ import {
   setlistReorderSchema,
   setlistSessionParamSchema,
   sessionSetlistTable,
+  setlistCloseSchema,
+  setlistVoteTable,
+  setlistVoteScoreSchema,
+  setlistVoteStatusSchema,
 } from './setlists.schema';
 
 const ENERGY_FLOOR = 1;
@@ -142,5 +146,49 @@ describe('the session-setlist link table', () => {
   it('identifies a link by the session and the setlist, so one pair is stored once', () => {
     const [primary] = getTableConfig(sessionSetlistTable).primaryKeys;
     expect(primary?.columns.map((column) => column.name)).toEqual(['session_id', 'setlist_id']);
+  });
+});
+
+describe('setlist voting schemas', () => {
+  it('keys a vote on the setlist, the member and the song', () => {
+    const [primary] = getTableConfig(setlistVoteTable).primaryKeys;
+    expect(primary?.columns.map((column) => column.name)).toEqual([
+      'setlist_id',
+      'member_id',
+      'song_id',
+    ]);
+  });
+
+  it('defaults the target song count to null', () => {
+    expect(setlistVoteStatusSchema.parse({ status: 'voting' })).toEqual({
+      status: 'voting',
+      targetSongCount: null,
+    });
+  });
+
+  it('refuses a status the application does not know', () => {
+    expect(setlistVoteStatusSchema.safeParse({ status: 'counting' }).success).toBe(false);
+  });
+
+  it('refuses a target song count outside the accepted range', () => {
+    expect(
+      setlistVoteStatusSchema.safeParse({ status: 'voting', targetSongCount: 0 }).success,
+    ).toBe(false);
+    expect(
+      setlistVoteStatusSchema.safeParse({ status: 'voting', targetSongCount: 61 }).success,
+    ).toBe(false);
+  });
+
+  it('caps a score at three points and refuses a negative one', () => {
+    expect(setlistVoteScoreSchema.safeParse({ points: 3 }).success).toBe(true);
+    expect(setlistVoteScoreSchema.safeParse({ points: 4 }).success).toBe(false);
+    expect(setlistVoteScoreSchema.safeParse({ points: -1 }).success).toBe(false);
+  });
+
+  it('requires at least one song to close a vote', () => {
+    expect(setlistCloseSchema.safeParse({ songIds: [] }).success).toBe(false);
+    expect(
+      setlistCloseSchema.safeParse({ songIds: ['11111111-2222-3333-4444-555555555555'] }).success,
+    ).toBe(true);
   });
 });

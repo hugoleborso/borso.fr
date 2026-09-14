@@ -1,12 +1,14 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
 import { RequireSession } from './components/organisms/RequireSession';
+import { AccountPage } from './routes/account/AccountPage';
 import { BarsPage } from './routes/bars/BarsPage';
 import { CatalogPage } from './routes/catalog/CatalogPage';
 import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
+import { EnrolPage } from './routes/EnrolPage';
 import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
@@ -21,6 +23,7 @@ export function App(): JSX.Element {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/enrol" element={<EnrolPage />} />
         <Route element={<RequireSession />}>
           <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
           <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
@@ -38,6 +41,7 @@ export function App(): JSX.Element {
             <Route path="/bars" element={<BarsPage />} />
             <Route path="/members" element={<MembersPage />} />
             <Route path="/instruments" element={<InstrumentsPage />} />
+            <Route path="/account" element={<AccountPage />} />
           </Route>
         </Route>
       </Routes>

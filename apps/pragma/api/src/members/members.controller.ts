@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import {
   createMemberSchema,
   memberIdParamSchema,
@@ -19,7 +19,7 @@ import {
 // @FollowsBlueprint controller-dispatch
 export function buildMembersRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/', async (context) => {
       const members = await getMembersSortedByFirstName();
       return context.json({ members });

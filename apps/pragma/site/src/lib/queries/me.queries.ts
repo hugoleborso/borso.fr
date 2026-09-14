@@ -1,0 +1,101 @@
+/** @Feature auth */
+
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { ApiError, api } from '../api.client';
+import { startPasskeyEnrolment } from '../passkey.adapter';
+
+export const meKeys = {
+  all: ['me'] as const,
+  profile: () => [...meKeys.all, 'profile'] as const,
+  passkeys: () => [...meKeys.all, 'passkeys'] as const,
+};
+
+export interface SignedInMember {
+  readonly memberId: string;
+  readonly firstName: string;
+  readonly color: string;
+  readonly username: string;
+}
+
+export interface PasskeySummary {
+  readonly id: string;
+  readonly label: string;
+  readonly createdAt: string;
+}
+
+async function throwOnFailure(response: Response, label: string) {
+  if (response.ok) return;
+  const failureBody: unknown = await response.json().catch(() => null);
+  throw new ApiError(response.status, `${label} ${String(response.status)}`, failureBody);
+}
+
+// @FollowsBlueprint query-module
+export function useSignedInMember() {
+  return useQuery({
+    queryKey: meKeys.profile(),
+    queryFn: async (): Promise<SignedInMember | null> => {
+      const response = await api.api.me.$get();
+      if (!response.ok) return null;
+      const body = await response.json();
+      return 'memberId' in body ? body : null;
+    },
+  });
+}
+
+export function usePasskeys() {
+  return useQuery({
+    queryKey: meKeys.passkeys(),
+    queryFn: async (): Promise<PasskeySummary[]> => {
+      const response = await api.api.me.passkeys.$get();
+      if (!response.ok) return [];
+      const body = await response.json();
+      return 'passkeys' in body ? body.passkeys : [];
+    },
+  });
+}
+
+export function useChangePassword() {
+  return useMutation({
+    mutationFn: async (variables: { currentPassword: string; newPassword: string }) => {
+      const response = await api.api.me.password.$put({ json: variables });
+      await throwOnFailure(response, 'password');
+      return await response.json();
+    },
+  });
+}
+
+// @FollowsBlueprint query-pessimistic-mutation
+export function useRegisterPasskey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (variables: { label: string }) => {
+      const optionsResponse = await api.api.me.passkeys.options.$post();
+      await throwOnFailure(optionsResponse, 'passkey-options');
+      const attestation = await startPasskeyEnrolment(await optionsResponse.json());
+      const response = await api.api.me.passkeys.$post({
+        json: { label: variables.label, response: attestation },
+      });
+      await throwOnFailure(response, 'passkey-register');
+      return await response.json();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: meKeys.passkeys() });
+    },
+  });
+}
+
+export function useRemovePasskey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (variables: { passkeyId: string }) => {
+      const response = await api.api.me.passkeys[':passkeyId'].$delete({
+        param: { passkeyId: variables.passkeyId },
+      });
+      await throwOnFailure(response, 'passkey-remove');
+      return variables.passkeyId;
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: meKeys.passkeys() });
+    },
+  });
+}
