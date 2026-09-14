@@ -64,3 +64,9 @@ describe('passkey.core', () => {
     expect(isWebauthnResponse(null)).toBe(false);
   });
 });
+
+describe('isWebauthnResponse needs both identifiers', () => {
+  it('refuses a response carrying only a raw identifier', () => {
+    expect(isWebauthnResponse({ rawId: 'a' })).toBe(false);
+  });
+});

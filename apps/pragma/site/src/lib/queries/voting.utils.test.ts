@@ -74,3 +74,99 @@ describe('voting.utils', () => {
     expect(tied.tallies.map((tally) => tally.songId)).toEqual(['song-b', 'song-a']);
   });
 });
+
+describe('voting.utils ranking', () => {
+  it('puts the song more members backed first when the points tie', () => {
+    const board: VoteBoard = {
+      status: 'voting',
+      targetSongCount: 3,
+      budget: { total: 9, spent: 0, remaining: 9 },
+      tallies: [
+        { songId: 'song-a', points: 4, voterCount: 1, pointsByMember: { [ADA]: 4 } },
+        {
+          songId: 'song-z',
+          points: 4,
+          voterCount: 2,
+          pointsByMember: { [ADA]: 2, [GRACE]: 2 },
+        },
+      ],
+    };
+    const next = applyScoreToBoard(board, 'member-third', 'song-c', 1);
+    expect(next.tallies.map((tally) => tally.songId)).toEqual(['song-z', 'song-a', 'song-c']);
+  });
+
+  it('ranks on points before the number of backers', () => {
+    const board: VoteBoard = {
+      status: 'voting',
+      targetSongCount: 3,
+      budget: { total: 9, spent: 0, remaining: 9 },
+      tallies: [
+        {
+          songId: 'song-a',
+          points: 4,
+          voterCount: 2,
+          pointsByMember: { [ADA]: 2, [GRACE]: 2 },
+        },
+      ],
+    };
+    const next = applyScoreToBoard(board, 'member-third', 'song-b', 5);
+    expect(next.tallies.map((tally) => tally.songId)).toEqual(['song-b', 'song-a']);
+  });
+
+  it('falls back to the identifier when points and backers both tie', () => {
+    const board: VoteBoard = {
+      status: 'voting',
+      targetSongCount: 3,
+      budget: { total: 9, spent: 2, remaining: 7 },
+      tallies: [{ songId: 'song-z', points: 2, voterCount: 1, pointsByMember: { [GRACE]: 2 } }],
+    };
+    const next = applyScoreToBoard(board, ADA, 'song-a', 2);
+    expect(next.tallies.map((tally) => tally.songId)).toEqual(['song-a', 'song-z']);
+  });
+});
+
+describe('voting.utils ranking whichever order the board arrived in', () => {
+  it('lifts the higher scoring song even when it was already last', () => {
+    const board: VoteBoard = {
+      status: 'voting',
+      targetSongCount: 3,
+      budget: { total: 9, spent: 1, remaining: 8 },
+      tallies: [{ songId: 'song-a', points: 1, voterCount: 1, pointsByMember: { [ADA]: 1 } }],
+    };
+    const next = applyScoreToBoard(board, GRACE, 'song-b', 3);
+    expect(next.tallies.map((tally) => tally.songId)).toEqual(['song-b', 'song-a']);
+  });
+
+  it('lifts the more backed song even when it was already last', () => {
+    const board: VoteBoard = {
+      status: 'voting',
+      targetSongCount: 3,
+      budget: { total: 9, spent: 2, remaining: 7 },
+      tallies: [{ songId: 'song-a', points: 2, voterCount: 1, pointsByMember: { [ADA]: 2 } }],
+    };
+    const shared = applyScoreToBoard(board, ADA, 'song-b', 1);
+    const next = applyScoreToBoard(shared, GRACE, 'song-b', 1);
+    expect(next.tallies.map((tally) => tally.songId)).toEqual(['song-b', 'song-a']);
+  });
+});
+
+describe('voting.utils keeps the more backed song ahead', () => {
+  it('leaves it ahead when it was already ahead', () => {
+    const board: VoteBoard = {
+      status: 'voting',
+      targetSongCount: 3,
+      budget: { total: 9, spent: 2, remaining: 7 },
+      tallies: [
+        {
+          songId: 'song-z',
+          points: 2,
+          voterCount: 2,
+          pointsByMember: { [ADA]: 1, [GRACE]: 1 },
+        },
+        { songId: 'song-a', points: 2, voterCount: 1, pointsByMember: { [ADA]: 2 } },
+      ],
+    };
+    const next = applyScoreToBoard(board, 'member-third', 'song-c', 1);
+    expect(next.tallies.map((tally) => tally.songId)).toEqual(['song-z', 'song-a', 'song-c']);
+  });
+});

@@ -1,3 +1,6 @@
+const BEFORE = -1;
+const AFTER = 1;
+
 export interface VoteBudget {
   readonly total: number;
   readonly spent: number;
@@ -70,7 +73,11 @@ export function applyScoreToBoard(
 }
 
 function compareTallies(left: SongTally, right: SongTally): number {
-  if (right.points !== left.points) return right.points - left.points;
-  if (right.voterCount !== left.voterCount) return right.voterCount - left.voterCount;
+  // Stryker disable next-line EqualityOperator: equivalent mutant. The guard on this very line has established that the two point counts differ, so `>` and `>=` answer the same.
+  if (right.points !== left.points) return right.points > left.points ? AFTER : BEFORE;
+  if (right.voterCount !== left.voterCount) {
+    // Stryker disable next-line EqualityOperator: equivalent mutant. The guard above has established that the two voter counts differ, so `>` and `>=` answer the same.
+    return right.voterCount > left.voterCount ? AFTER : BEFORE;
+  }
   return left.songId.localeCompare(right.songId);
 }

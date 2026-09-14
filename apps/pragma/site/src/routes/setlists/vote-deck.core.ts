@@ -37,6 +37,7 @@ const POINTS_BY_ZONE: Readonly<Record<DeckZone, number>> = {
 
 const TOP_ROW = 0;
 const MIDDLE_ROW = 1;
+const LAST_ROW = 2;
 
 export function selectZoneForOffset(offset: DragOffset, geometry: DeckGeometry): DeckZone {
   const commitDistance = geometry.width * COMMIT_RATIO;
@@ -44,7 +45,7 @@ export function selectZoneForOffset(offset: DragOffset, geometry: DeckGeometry):
   if (offset.x < commitDistance) return 'none';
   const rowHeight = geometry.height / ZONE_COUNT;
   const pointerRow = Math.floor((geometry.height / HALF + offset.y) / rowHeight);
-  const clampedRow = Math.min(Math.max(pointerRow, 0), ZONE_COUNT - 1);
+  const clampedRow = Math.min(Math.max(pointerRow, 0), LAST_ROW);
   if (clampedRow === TOP_ROW) return 'three';
   if (clampedRow === MIDDLE_ROW) return 'two';
   return 'one';
@@ -73,6 +74,7 @@ export type ReleaseIntent =
 export function judgeRelease(zone: DeckZone, remainingPoints: number): ReleaseIntent {
   if (zone === 'none') return { kind: 'return' };
   const points = selectPointsForZone(zone);
+  // Stryker disable next-line ConditionalExpression: equivalent mutant. A discard is the only zone worth zero, and zero is never above a budget that cannot go negative, so the refusal test below answers the same way when this guard is removed.
   if (points === 0) return { kind: 'score', points: 0 };
   if (points > remainingPoints) return { kind: 'refused' };
   return { kind: 'score', points };
@@ -115,7 +117,7 @@ export function readGivenPoints(
 }
 
 export function selectNextCardIndex(currentIndex: number, deckLength: number): number {
-  return currentIndex + 1 >= deckLength ? deckLength : currentIndex + 1;
+  return Math.min(currentIndex + 1, deckLength);
 }
 
 const PERCENT = 100;

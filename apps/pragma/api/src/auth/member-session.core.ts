@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { parseJsonOrNull } from '../helpers/json/json.core';
 
 export const memberSessionPayloadSchema = z.object({
   memberId: z.string().uuid(),
@@ -36,13 +37,7 @@ export function buildMemberSessionPayload(
 }
 
 export function parseMemberSessionPayload(raw: string): MemberSessionPayload | null {
-  let decoded: unknown;
-  try {
-    decoded = JSON.parse(raw);
-  } catch {
-    return null;
-  }
-  const session = memberSessionPayloadSchema.safeParse(decoded);
+  const session = memberSessionPayloadSchema.safeParse(parseJsonOrNull(raw));
   return session.success ? session.data : null;
 }
 

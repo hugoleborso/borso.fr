@@ -125,3 +125,9 @@ describe('readIntentPoints', () => {
     expect(readIntentPoints({ kind: 'return' })).toBe(0);
   });
 });
+
+describe('selectZoneStrength on a card of no width', () => {
+  it('reads an untravelled drag on a zero-width card as fully committed', () => {
+    expect(selectZoneStrength('two', 'two', { x: 0, y: 0 }, { width: 0, height: 480 })).toBe(1);
+  });
+});

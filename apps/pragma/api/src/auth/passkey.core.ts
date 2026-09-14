@@ -1,6 +1,11 @@
+import { z } from 'zod';
+import { parseJsonOrNull } from '../helpers/json/json.core';
+
+const recordSchema = z.record(z.string(), z.unknown());
+
 function toRecord(value: unknown): Record<string, unknown> | null {
-  if (typeof value !== 'object' || value === null) return null;
-  return { ...value };
+  const record = recordSchema.safeParse(value);
+  return record.success ? record.data : null;
 }
 
 function readStringProperty(value: unknown, key: string): string | null {
@@ -11,12 +16,7 @@ function readStringProperty(value: unknown, key: string): string | null {
 }
 
 function decodeClientDataChallenge(clientDataJson: string): string | null {
-  let decoded: unknown;
-  try {
-    decoded = JSON.parse(Buffer.from(clientDataJson, 'base64url').toString('utf8'));
-  } catch {
-    return null;
-  }
+  const decoded = parseJsonOrNull(Buffer.from(clientDataJson, 'base64url').toString('utf8'));
   return readStringProperty(decoded, 'challenge');
 }
 
@@ -52,12 +52,7 @@ function isKnownTransport(value: unknown): value is KnownTransport {
 }
 
 export function parseTransports(stored: string): KnownTransport[] {
-  let decoded: unknown;
-  try {
-    decoded = JSON.parse(stored);
-  } catch {
-    return [];
-  }
+  const decoded = parseJsonOrNull(stored);
   return Array.isArray(decoded) ? decoded.filter(isKnownTransport) : [];
 }
 

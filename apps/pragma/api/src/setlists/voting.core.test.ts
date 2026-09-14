@@ -147,3 +147,69 @@ describe('voting.core write decisions', () => {
     expect(proposeClosing(tallies, 2)).toHaveLength(2);
   });
 });
+
+describe('voting.core ranking and boundary', () => {
+  it('ranks on points before anything else', () => {
+    const ranked = tally([
+      vote(ADA, 'song-b', 5),
+      vote(ADA, 'song-a', 2),
+      vote(GRACE, 'song-a', 2),
+    ]);
+    expect(ranked.map((entry) => entry.songId)).toEqual(['song-b', 'song-a']);
+  });
+
+  it('keeps the highest first even when the tallies arrive in that order already', () => {
+    const ranked = tally([vote(ADA, 'song-a', 3), vote(ADA, 'song-b', 2), vote(ADA, 'song-c', 1)]);
+    expect(ranked.map((entry) => entry.songId)).toEqual(['song-a', 'song-b', 'song-c']);
+  });
+
+  it('puts the song more members backed first when the points tie', () => {
+    const ranked = tally([
+      vote(ADA, 'song-a', 4),
+      vote(ADA, 'song-z', 2),
+      vote(GRACE, 'song-z', 2),
+    ]);
+    expect(ranked.map((entry) => entry.songId)).toEqual(['song-z', 'song-a']);
+  });
+
+  it('falls back to the identifier when points and backers both tie', () => {
+    const ranked = tally([vote(ADA, 'song-z', 2), vote(ADA, 'song-a', 2)]);
+    expect(ranked.map((entry) => entry.songId)).toEqual(['song-a', 'song-z']);
+  });
+
+  it('proposes everything when the ranking is shorter than the target', () => {
+    const tallies = tally([vote(ADA, 'song-a', 3)]);
+    expect(proposeClosing(tallies, 5).map((entry) => entry.songId)).toEqual(['song-a']);
+  });
+
+  it('proposes the whole ranking when it is exactly the target long', () => {
+    const tallies = tally([vote(ADA, 'song-a', 3), vote(ADA, 'song-b', 2)]);
+    expect(proposeClosing(tallies, 2).map((entry) => entry.songId)).toEqual(['song-a', 'song-b']);
+  });
+
+  it('reads the tie from the last song it keeps, not from the one after it', () => {
+    const tallies = tally([
+      vote(ADA, 'song-a', 3),
+      vote(ADA, 'song-b', 2),
+      vote(ADA, 'song-c', 1),
+      vote(ADA, 'song-d', 1),
+    ]);
+    expect(proposeClosing(tallies, 2).map((entry) => entry.songId)).toEqual(['song-a', 'song-b']);
+  });
+});
+
+describe('voting.core ranking whichever order the votes arrived in', () => {
+  it('lifts the higher scoring song even when it was counted last', () => {
+    const ranked = tally([vote(ADA, 'song-a', 1), vote(ADA, 'song-b', 3)]);
+    expect(ranked.map((entry) => entry.songId)).toEqual(['song-b', 'song-a']);
+  });
+
+  it('lifts the more backed song even when it was counted last', () => {
+    const ranked = tally([
+      vote(ADA, 'song-a', 2),
+      vote(ADA, 'song-b', 1),
+      vote(GRACE, 'song-b', 1),
+    ]);
+    expect(ranked.map((entry) => entry.songId)).toEqual(['song-b', 'song-a']);
+  });
+});
