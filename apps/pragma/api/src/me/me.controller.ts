@@ -21,11 +21,11 @@ import {
 const MILLISECONDS_PER_SECOND = 1_000;
 const SESSION_COOKIE_MAX_AGE_S = SESSION_TTL_MS / MILLISECONDS_PER_SECOND;
 
-// @FollowsBlueprint controller-guarded-router
 function readNow(): Date {
   return new Date();
 }
 
+// @FollowsBlueprint controller-guarded-router
 export function buildMeRouter() {
   return new Hono()
     .use('*', requireMemberSession)

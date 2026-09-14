@@ -24,3 +24,32 @@ export function isVotingPageState(
 ): boolean {
   return selectVotePageState({ hasBoard, status, isClosingOpen }) === 'voting';
 }
+
+export interface VotePageSong {
+  readonly id: string;
+  readonly title: string;
+  readonly artist: string;
+}
+
+export interface VotePageMember {
+  readonly id: string;
+  readonly firstName: string;
+  readonly color: string;
+}
+
+export function indexSongsById(songs: readonly VotePageSong[]): ReadonlyMap<string, VotePageSong> {
+  return new Map(songs.map((song) => [song.id, song]));
+}
+
+export function indexMembersById(
+  members: readonly VotePageMember[],
+): ReadonlyMap<string, VotePageMember> {
+  return new Map(members.map((member) => [member.id, member]));
+}
+
+export function projectPointsBySongId(
+  songs: readonly { readonly id: string }[],
+  readPoints: (songId: string) => number,
+): Record<string, number> {
+  return Object.fromEntries(songs.map((song) => [song.id, readPoints(song.id)]));
+}

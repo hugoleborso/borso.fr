@@ -18,7 +18,7 @@ function isAuthenticationOptions(value: unknown): value is AuthenticationOptions
   return optionsSchema.safeParse(value).success;
 }
 
-// @FollowsBlueprint adapter-direct-upload
+// @FollowsBlueprint adapter-external-service
 export async function startPasskeyEnrolment(options: unknown): Promise<unknown> {
   if (!isRegistrationOptions(options)) throw new Error('passkey options were not understood');
   return await startRegistration({ optionsJSON: options });

@@ -237,12 +237,14 @@ export async function updateSong(id: string, updates: SongPersistedShape): Promi
 
 export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
-  await database.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
-  await database.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
-  await deleteVotesOfDeletedSong(database, id);
-  const deleted = await database
-    .delete(songTable)
-    .where(eq(songTable.id, id))
-    .returning({ id: songTable.id });
-  return selectDeletionOutcome(deleted.length);
+  return await database.transaction(async (transaction) => {
+    await transaction.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
+    await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
+    await deleteVotesOfDeletedSong(transaction, id);
+    const deleted = await transaction
+      .delete(songTable)
+      .where(eq(songTable.id, id))
+      .returning({ id: songTable.id });
+    return selectDeletionOutcome(deleted.length);
+  });
 }

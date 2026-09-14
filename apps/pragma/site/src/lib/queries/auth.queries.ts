@@ -1,6 +1,7 @@
 /** @Feature auth */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { startPasskeyLogin } from '../passkey.adapter';
 import { forgetSessionMarker, rememberSessionMarker } from '../session-marker.adapter';
@@ -34,11 +35,9 @@ export function useSessionProbe(isEnabled: boolean) {
   });
 }
 
-export interface EnrolmentOffer {
-  readonly memberId: string;
-  readonly firstName: string;
-  readonly suggestedUsername: string;
-}
+type EnrolmentResponse = InferResponseType<typeof api.api.auth.enrolment.$get>;
+
+export type EnrolmentOffer = Extract<EnrolmentResponse, { offers: unknown }>['offers'][number];
 
 async function readEnrolmentOffers(): Promise<EnrolmentOffer[]> {
   const response = await api.api.auth.enrolment.$get();

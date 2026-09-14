@@ -1,26 +1,13 @@
+import type { InferResponseType } from 'hono/client';
+import { api } from '../api.client';
+
 const BEFORE = -1;
 const AFTER = 1;
 
-export interface VoteBudget {
-  readonly total: number;
-  readonly spent: number;
-  readonly remaining: number;
-}
+type VoteBoardResponse = InferResponseType<(typeof api.api.setlists)[':id']['votes']['$get']>;
 
-export interface SongTally {
-  readonly songId: string;
-  readonly points: number;
-  readonly voterCount: number;
-  readonly pointsByMember: Readonly<Record<string, number>>;
-}
-
-export interface VoteBoard {
-  readonly status: 'voting' | 'locked';
-  readonly targetSongCount: number;
-  readonly budget: VoteBudget;
-  readonly tallies: readonly SongTally[];
-  readonly lastScoredAt: string | null;
-}
+export type VoteBoard = Extract<VoteBoardResponse, { status: string }>;
+export type SongTally = VoteBoard['tallies'][number];
 
 function withoutMember(
   pointsByMember: Readonly<Record<string, number>>,

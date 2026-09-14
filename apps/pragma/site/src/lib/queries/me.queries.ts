@@ -1,6 +1,7 @@
 /** @Feature auth */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { startPasskeyEnrolment } from '../passkey.adapter';
 
@@ -10,18 +11,11 @@ export const meKeys = {
   passkeys: () => [...meKeys.all, 'passkeys'] as const,
 };
 
-export interface SignedInMember {
-  readonly memberId: string;
-  readonly firstName: string;
-  readonly color: string;
-  readonly username: string;
-}
+type MeResponse = InferResponseType<typeof api.api.me.$get>;
+type PasskeysResponse = InferResponseType<typeof api.api.me.passkeys.$get>;
 
-export interface PasskeySummary {
-  readonly id: string;
-  readonly label: string;
-  readonly createdAt: string;
-}
+export type SignedInMember = Extract<MeResponse, { memberId: string }>;
+export type PasskeySummary = Extract<PasskeysResponse, { passkeys: unknown }>['passkeys'][number];
 
 async function throwOnFailure(response: Response, label: string) {
   if (response.ok) return;

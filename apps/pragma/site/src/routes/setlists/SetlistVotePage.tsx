@@ -24,7 +24,10 @@ import {
 import { readMemberPoints } from '../../lib/queries/voting.utils';
 import {
   DEFAULT_TARGET_SONG_COUNT,
+  indexMembersById,
+  indexSongsById,
   isVotingPageState,
+  projectPointsBySongId,
   selectVotePageState,
 } from './setlist-vote.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
@@ -62,20 +65,11 @@ export function SetlistVotePage(): JSX.Element {
   const isShowingClosing = pageState === 'closing' && proposal.data !== undefined;
   const proposedSongIds = (proposal.data ?? []).map((tally) => tally.songId).join(',');
   const songList = songs.data?.songs ?? [];
-  const songsById = new Map(
-    songList.map((song) => [song.id, { id: song.id, title: song.title, artist: song.artist }]),
-  );
-  const membersById = new Map(
-    (members.data?.members ?? []).map((member) => [
-      member.id,
-      { id: member.id, firstName: member.firstName, color: member.color },
-    ]),
-  );
-  const pointsBySongId = Object.fromEntries(
-    songList.map((song) => [
-      song.id,
-      board.data === undefined ? 0 : readMemberPoints(board.data, memberId, song.id),
-    ]),
+  const boardData = board.data;
+  const songsById = indexSongsById(songList);
+  const membersById = indexMembersById(members.data?.members ?? []);
+  const pointsBySongId = projectPointsBySongId(songList, (songId) =>
+    boardData === undefined ? 0 : readMemberPoints(boardData, memberId, songId),
   );
 
   return (

@@ -6,23 +6,9 @@ import {
   webauthnChallengeTable,
 } from './credentials.schema';
 
-export interface CredentialRow {
-  memberId: string;
-  username: string;
-  passwordHash: string;
-  sessionEpoch: number;
-}
+export type CredentialRow = Omit<typeof memberCredentialTable.$inferSelect, 'createdAt'>;
 
-export interface PasskeyRow {
-  id: string;
-  memberId: string;
-  credentialId: string;
-  publicKey: Buffer;
-  signCounter: number;
-  transports: string;
-  label: string;
-  createdAt: Date;
-}
+export type PasskeyRow = typeof memberPasskeyTable.$inferSelect;
 
 // @FollowsBlueprint repository-projection
 const CREDENTIAL_PROJECTION = {
