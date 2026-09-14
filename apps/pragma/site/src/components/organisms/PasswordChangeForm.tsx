@@ -4,7 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
-import { Input } from '../atoms/Input';
+import { PasswordField } from '../molecules/PasswordField';
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -44,9 +44,8 @@ export function PasswordChangeForm(props: PasswordChangeFormProps): JSX.Element 
       </label>
       <form.Field name="currentPassword">
         {(field) => (
-          <Input
+          <PasswordField
             id="account-current"
-            type="password"
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             autoComplete="current-password"
@@ -60,9 +59,8 @@ export function PasswordChangeForm(props: PasswordChangeFormProps): JSX.Element 
       </label>
       <form.Field name="newPassword">
         {(field) => (
-          <Input
+          <PasswordField
             id="account-new"
-            type="password"
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             autoComplete="new-password"

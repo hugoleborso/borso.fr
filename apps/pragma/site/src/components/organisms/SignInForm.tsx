@@ -2,7 +2,6 @@
 
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   buildSignInPayload,
@@ -10,8 +9,8 @@ import {
   type CredentialsFormValues,
 } from './sign-in-form.core';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
+import { PasswordField } from '../molecules/PasswordField';
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -23,7 +22,6 @@ export interface SignInFormProps {
 // @FollowsBlueprint route-form
 export function SignInForm({ serverError, onSubmit }: SignInFormProps): JSX.Element {
   const { t } = useTranslation();
-  const [passwordVisible, setPasswordVisible] = useState<boolean>(false);
   const form = useForm({
     defaultValues: { username: '', password: '' },
     validators: { onChange: credentialsFormSchema },
@@ -68,28 +66,15 @@ export function SignInForm({ serverError, onSubmit }: SignInFormProps): JSX.Elem
       </label>
       <form.Field name="password">
         {(field) => (
-          <div className="relative">
-            <Input
-              id="login-password"
-              type={passwordVisible ? 'text' : 'password'}
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-              autoComplete="current-password"
-              required
-              minLength={PASSWORD_MIN_LENGTH}
-              className="pr-10"
-            />
-            <button
-              type="button"
-              onClick={() => setPasswordVisible((visible) => !visible)}
-              aria-label={passwordVisible ? t('auth.hidePassword') : t('auth.showPassword')}
-              aria-pressed={passwordVisible}
-              className="absolute inset-y-0 right-0 w-11 min-h-11 flex items-center justify-center text-ink-400 hover:text-ink-700 bg-transparent border-0 cursor-pointer"
-            >
-              <Icon name={passwordVisible ? 'eyeOff' : 'eye'} size={18} />
-            </button>
-          </div>
+          <PasswordField
+            id="login-password"
+            value={field.state.value}
+            onChange={(event) => field.handleChange(event.target.value)}
+            onBlur={field.handleBlur}
+            autoComplete="current-password"
+            required
+            minLength={PASSWORD_MIN_LENGTH}
+          />
         )}
       </form.Field>
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>

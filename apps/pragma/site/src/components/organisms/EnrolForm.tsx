@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import type { EnrolmentOffer } from '../../lib/queries/auth.queries';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
+import { PasswordField } from '../molecules/PasswordField';
 
 const PASSWORD_MIN_LENGTH = 8;
 
@@ -98,9 +99,8 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
       </label>
       <form.Field name="sharedPassword">
         {(field) => (
-          <Input
+          <PasswordField
             id="enrol-shared"
-            type="password"
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             onBlur={field.handleBlur}
@@ -119,9 +119,8 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
       </label>
       <form.Field name="password">
         {(field) => (
-          <Input
+          <PasswordField
             id="enrol-password"
-            type="password"
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             onBlur={field.handleBlur}
