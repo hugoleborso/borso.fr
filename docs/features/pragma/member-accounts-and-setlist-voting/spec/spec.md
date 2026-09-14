@@ -308,9 +308,16 @@ untouched.
   the budget bar reaching zero and refusing the right zones, a new song appearing mid-vote,
   the tie at the boundary showing more than N rows, reopening a closed vote. These are input
   metrics; neither output metric is in scope for this gate.
-- **Touch.** The swipe is the one thing a synthetic click cannot prove. `scripts/argent.sh`
-  drives the deck at 375 px, one run per zone, and the run is part of the visual-validation
-  evidence. A pass from `agent-browser` alone does not count for the deck.
+- **Pointer.** The deck is driven at 375 px by `scripts/argent.sh gesture-drag`, one run per
+  zone, and those runs are part of the visual-validation evidence. A synthetic click alone
+  does not count for the deck. What this cannot prove is the difference between a mouse drag
+  and a thumb: `gesture-swipe` is not implemented on Chromium and reports success while moving
+  nothing, per
+  [`argent-gesture-swipe-does-nothing-on-chromium`](../../../../knowledge/argent-gesture-swipe-does-nothing-on-chromium.md).
+  The deck listens to Pointer Events, which a mouse drag raises too, so the zone mapping and
+  the budget refusal are reachable here; a touch-specific failure, such as the page scrolling
+  away with the gesture, is reachable only on a real device and ships as a named gap on the
+  pull request.
 - **Technical validation** runs lint, knip, typecheck, build and the unit runner, plus a pass
   on the diff against every row of the decision table.
 - No manual sweep anywhere in this list.

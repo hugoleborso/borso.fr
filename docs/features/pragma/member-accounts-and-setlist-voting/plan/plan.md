@@ -51,7 +51,7 @@ Ships in two commit series on one branch: **A. member accounts** (deployable on 
 | A DSQL-only DDL rejection at preview deploy | high | Only `ADD COLUMN name type` on existing tables, every constraint on freshly created tables, no `jsonb`, no `ALTER COLUMN`; every statement re-runnable, per migration `0003`'s header | the preview stack fails at the migration custom resource; local Postgres will **not** catch it, so the migration is read against the DSQL grammar by eye before push |
 | Every live cookie dies at deploy | medium | Intended and named in ADR-0015 and in the commit body | the band sees one sign-in prompt; `session-invalid` spikes once and settles |
 | Passkey verifies on preview, fails in production | medium | Relying-party id and origin read per stage through `auth.environment.ts`, never hard-coded | a production `passkey-verification-failed` with a preview host in the log field |
-| The swipe passes with clicks and fails with thumbs | high | `scripts/argent.sh` is in the validation loop, one run per zone at 375 px; a synthetic click is explicitly not accepted as evidence | the repo has hit this twice across six audit rounds; the visual-validation report must carry argent output, not only agent-browser screenshots |
+| The swipe passes with clicks and fails with thumbs | high | `scripts/argent.sh gesture-drag` is in the validation loop, one run per zone at 375 px; a synthetic click is explicitly not accepted as evidence. `gesture-swipe` is a no-op on Chromium that reports success, so it is not used | the repo has hit this twice across six audit rounds; the visual-validation report must carry argent output. A touch-specific failure stays unreachable from this sandbox and ships as a named gap |
 | Optimistic scoring reverted by a stale DSQL read | medium | No invalidation after a score; reconcile from the mutation response | `borso/no-refetch-of-optimistically-written-query` fails the lint; visually, a point that lands then jumps back |
 | Two members close the same vote at once | low | The closing transaction is the only writer of the entries, and it deletes before inserting inside the transaction | duplicated or interleaved entries after a close; back-e2e runs two closes in parallel |
 | The enrolment window never closes because a member row has no claimant | low | The candidate list is computed from the `member` table, so it closes exactly when every existing member is enrolled | `enrolment-closed` never fires; the account page shows a member without a credential |
@@ -83,7 +83,7 @@ Run, in order, before each push:
 6. `pnpm --filter @borso-app/pragma run build`.
 7. `pnpm exec knip`.
 8. `scripts/reports.sh all` so the generated maps and the blueprint index match the tree.
-9. `/visual-validation` against the spec, including the `scripts/argent.sh` pass on the deck.
+9. `/visual-validation` against the spec, including the `scripts/argent.sh gesture-drag` pass on the deck.
 10. `/technical-validation` on the diff.
 11. `/standards-review` and its seals.
 
