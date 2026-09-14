@@ -21,13 +21,11 @@ export function selectEnrolmentWindow(
 
 export function suggestUsername(firstName: string, takenUsernames: readonly string[]): string {
   const base = firstName
-    .trim()
     .toLowerCase()
     .normalize('NFD')
     .replaceAll(/[̀-ͯ]/gu, '')
     .replaceAll(/[^a-z0-9]/gu, '');
   const taken = new Set(takenUsernames);
-  if (base.length === 0) return '';
   if (!taken.has(base)) return base;
   let suffix = FIRST_SUFFIX;
   while (taken.has(`${base}${String(suffix)}`)) suffix += 1;

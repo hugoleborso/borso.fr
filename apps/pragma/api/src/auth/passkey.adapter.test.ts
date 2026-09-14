@@ -56,9 +56,13 @@ describe('passkey.adapter', () => {
     });
     expect(options).toEqual({ challenge: CHALLENGE });
     const call: unknown = generateRegistrationOptions.mock.calls[0]?.[0];
-    expect(call).toMatchObject({
+    expect(call).toEqual({
       rpID: 'localhost',
+      rpName: 'pragma',
+      userID: new TextEncoder().encode(MEMBER_ID),
       userName: 'ada',
+      attestationType: 'none',
+      authenticatorSelection: { residentKey: 'preferred', userVerification: 'preferred' },
       excludeCredentials: [{ id: 'credential-1', transports: ['internal'] }],
     });
   });
@@ -66,9 +70,10 @@ describe('passkey.adapter', () => {
   it('asks for authentication options bound to the relying party', async () => {
     generateAuthenticationOptions.mockResolvedValue({ challenge: CHALLENGE });
     expect(await buildAuthenticationOptions()).toEqual({ challenge: CHALLENGE });
-    expect(generateAuthenticationOptions).toHaveBeenCalledWith(
-      expect.objectContaining({ rpID: 'localhost' }),
-    );
+    expect(generateAuthenticationOptions).toHaveBeenCalledWith({
+      rpID: 'localhost',
+      userVerification: 'preferred',
+    });
   });
 
   it('refuses a payload that is not a browser response, without calling the library', async () => {
@@ -82,6 +87,50 @@ describe('passkey.adapter', () => {
     ).toBeNull();
     expect(verifyRegistrationResponse).not.toHaveBeenCalled();
     expect(verifyAuthenticationResponse).not.toHaveBeenCalled();
+  });
+
+  it('asks the library to check the response against this stage and this challenge', async () => {
+    verifyRegistrationResponse.mockResolvedValue({ verified: false });
+    await checkRegistration({ response: BROWSER_RESPONSE, challenge: CHALLENGE });
+    expect(verifyRegistrationResponse).toHaveBeenCalledWith({
+      response: BROWSER_RESPONSE,
+      expectedChallenge: CHALLENGE,
+      expectedOrigin: 'http://localhost:5173',
+      expectedRPID: 'localhost',
+      requireUserVerification: false,
+    });
+
+    verifyAuthenticationResponse.mockResolvedValue({ verified: false });
+    await checkAuthentication({
+      response: BROWSER_RESPONSE,
+      challenge: CHALLENGE,
+      passkey: STORED_PASSKEY,
+    });
+    expect(verifyAuthenticationResponse).toHaveBeenCalledWith({
+      response: BROWSER_RESPONSE,
+      expectedChallenge: CHALLENGE,
+      expectedOrigin: 'http://localhost:5173',
+      expectedRPID: 'localhost',
+      requireUserVerification: false,
+      credential: {
+        id: 'credential-1',
+        publicKey: new Uint8Array([1, 2, 3]),
+        counter: 4,
+        transports: ['internal'],
+      },
+    });
+  });
+
+  it('answers null for a registration the library says is unverified even with a credential', async () => {
+    verifyRegistrationResponse.mockResolvedValue({
+      verified: false,
+      registrationInfo: {
+        credential: { id: 'credential-1', publicKey: new Uint8Array([9, 8]), counter: 0 },
+      },
+    });
+    expect(
+      await checkRegistration({ response: BROWSER_RESPONSE, challenge: CHALLENGE }),
+    ).toBeNull();
   });
 
   it('returns the credential the library extracted from a verified registration', async () => {
@@ -134,8 +183,11 @@ describe('passkey.adapter', () => {
     ).toEqual({ verified: true, signCounter: 7 });
   });
 
-  it('answers null when an assertion does not verify', async () => {
-    verifyAuthenticationResponse.mockResolvedValue({ verified: false });
+  it('answers null when an assertion does not verify, counter or no counter', async () => {
+    verifyAuthenticationResponse.mockResolvedValue({
+      verified: false,
+      authenticationInfo: { newCounter: 9 },
+    });
     expect(
       await checkAuthentication({
         response: BROWSER_RESPONSE,

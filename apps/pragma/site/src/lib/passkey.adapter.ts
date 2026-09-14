@@ -3,16 +3,19 @@
  */
 
 import { startAuthentication, startRegistration } from '@simplewebauthn/browser';
+import { z } from 'zod';
 
 type RegistrationOptions = Parameters<typeof startRegistration>[0]['optionsJSON'];
 type AuthenticationOptions = Parameters<typeof startAuthentication>[0]['optionsJSON'];
 
+const optionsSchema = z.object({ challenge: z.string().min(1) });
+
 function isRegistrationOptions(value: unknown): value is RegistrationOptions {
-  return typeof value === 'object' && value !== null && 'challenge' in value;
+  return optionsSchema.safeParse(value).success;
 }
 
 function isAuthenticationOptions(value: unknown): value is AuthenticationOptions {
-  return typeof value === 'object' && value !== null && 'challenge' in value;
+  return optionsSchema.safeParse(value).success;
 }
 
 // @FollowsBlueprint adapter-direct-upload

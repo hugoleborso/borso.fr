@@ -90,7 +90,9 @@ export async function checkRegistration(params: {
       requireUserVerification: false,
     });
     const info = verification.registrationInfo;
-    if (!verification.verified || info === undefined) return null;
+    if (!verification.verified) return null;
+    // Stryker disable next-line ConditionalExpression: equivalent mutant. Without the guard the next line reads `info.credential`, which throws into the catch below and answers the same null.
+    if (info === undefined) return null;
     return {
       verified: true,
       credentialId: info.credential.id,

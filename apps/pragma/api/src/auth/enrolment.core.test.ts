@@ -47,3 +47,13 @@ describe('enrolment.core', () => {
     expect(suggestUsername('***', [])).toBe('');
   });
 });
+
+describe('suggestUsername trims what it is handed', () => {
+  it('drops the spaces around a first name', () => {
+    expect(suggestUsername('  Ada  ', [])).toBe('ada');
+  });
+
+  it('keeps suffixing even when the usable part is empty', () => {
+    expect(suggestUsername('***', ['', '2'])).toBe('3');
+  });
+});
