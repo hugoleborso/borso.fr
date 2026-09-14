@@ -6,7 +6,10 @@ import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { TargetSongCountField } from '../../components/molecules/TargetSongCountField';
+import { DeckProgressBar } from '../../components/molecules/DeckProgressBar';
 import { VoteBudgetBar } from '../../components/molecules/VoteBudgetBar';
+import { VoteModeToggle } from '../../components/molecules/VoteModeToggle';
+import { VoteCatalog } from '../../components/organisms/VoteCatalog';
 import { VoteClosePanel } from '../../components/organisms/VoteClosePanel';
 import { VoteDeck } from '../../components/organisms/VoteDeck';
 import { VoteTally } from '../../components/organisms/VoteTally';
@@ -30,6 +33,7 @@ import {
   projectPointsBySongId,
   selectVotePageState,
 } from './setlist-vote.core';
+import { DEFAULT_VOTE_MODE, isDeckMode, type VoteMode } from './vote-deck.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 
 // @FollowsBlueprint organism-query-owning
@@ -48,6 +52,8 @@ export function SetlistVotePage(): JSX.Element {
   const [isClosingOpen, setIsClosingOpen] = useState<boolean>(false);
   const [wasRefused, setWasRefused] = useState<boolean>(false);
   const [typedTarget, setTypedTarget] = useState<number | null>(null);
+  const [cardIndex, setCardIndex] = useState<number>(0);
+  const [voteMode, setVoteMode] = useState<VoteMode>(DEFAULT_VOTE_MODE);
   const proposal = useClosingProposal(setlistId, isClosingOpen);
 
   const isVoting = isVotingPageState(
@@ -62,6 +68,7 @@ export function SetlistVotePage(): JSX.Element {
   });
 
   const targetSongCount = typedTarget ?? board.data?.targetSongCount ?? DEFAULT_TARGET_SONG_COUNT;
+  const isDeck = isDeckMode(voteMode);
   const isShowingClosing = pageState === 'closing' && proposal.data !== undefined;
   const proposedSongIds = (proposal.data ?? []).map((tally) => tally.songId).join(',');
   const songList = songs.data?.songs ?? [];
@@ -130,8 +137,28 @@ export function SetlistVotePage(): JSX.Element {
             remaining={board.data?.budget.remaining ?? 0}
             isExhausted={wasRefused}
           />
-          <div className="px-4">
-            <VoteDeck
+          <VoteModeToggle mode={voteMode} onChange={setVoteMode} />
+          {isDeck ? (
+            <>
+              <DeckProgressBar deckLength={songList.length} cardIndex={cardIndex} />
+              <div className="px-4">
+                <VoteDeck
+                  songs={songList}
+                  lastScoredAt={board.data?.lastScoredAt ?? null}
+                  remainingPoints={board.data?.budget.remaining ?? 0}
+                  pointsBySongId={pointsBySongId}
+                  cardIndex={cardIndex}
+                  onAdvance={setCardIndex}
+                  onExhausted={() => setWasRefused(true)}
+                  onScore={(songId, points) => {
+                    setWasRefused(false);
+                    scoreSong.mutate({ songId, points });
+                  }}
+                />
+              </div>
+            </>
+          ) : (
+            <VoteCatalog
               songs={songList}
               lastScoredAt={board.data?.lastScoredAt ?? null}
               remainingPoints={board.data?.budget.remaining ?? 0}
@@ -142,7 +169,7 @@ export function SetlistVotePage(): JSX.Element {
                 scoreSong.mutate({ songId, points });
               }}
             />
-          </div>
+          )}
         </>
       ) : null}
 

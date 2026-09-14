@@ -393,9 +393,13 @@
     "openVote": "Open a vote",
     "removeFromProposal": "Remove",
     "reopen": "Reopen the vote",
+    "songsLeftLabel": "Songs left",
     "statusVoting": "In a vote",
     "swipeHint": "Left to skip, right to give 1, 2 or 3",
+    "switchToDeck": "Swipe mode",
+    "switchToList": "List mode",
     "tallyEmpty": "Nobody has scored a song yet.",
+    "tapToScore": "Score {{title}}",
     "targetSongCount": "How many songs?",
     "untitled": "Unnamed setlist"
   }

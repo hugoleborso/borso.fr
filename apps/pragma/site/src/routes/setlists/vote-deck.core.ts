@@ -19,7 +19,45 @@ const SCORING_TINT_AT_FULL_TRAVEL = 0.7;
 const DISCARD_TINT_AT_FULL_TRAVEL = 0.5;
 const DEGREES_PER_PIXEL = 0.05;
 
+const PERCENT = 100;
+
 export const IDLE_OFFSET: DragOffset = { x: 0, y: 0 };
+
+export interface PointerPoint {
+  readonly x: number;
+  readonly y: number;
+}
+
+export function selectOffsetFromOrigin(origin: PointerPoint, point: PointerPoint): DragOffset {
+  return { x: point.x - origin.x, y: point.y - origin.y };
+}
+
+const TINT_CLASS_BY_DRAGGING: Readonly<Record<'yes' | 'no', string>> = {
+  yes: '',
+  no: 'transition-opacity duration-200',
+};
+
+export function selectTintTransitionClass(isDragging: boolean): string {
+  return TINT_CLASS_BY_DRAGGING[isDragging ? 'yes' : 'no'];
+}
+
+const CARD_CLASS_BY_DRAGGING: Readonly<Record<'yes' | 'no', string>> = {
+  yes: '',
+  no: 'transition-transform duration-200 ease-out',
+};
+
+export function selectCardTransitionClass(isDragging: boolean): string {
+  return CARD_CLASS_BY_DRAGGING[isDragging ? 'yes' : 'no'];
+}
+
+export function selectSongsLeft(deckLength: number, cardIndex: number): number {
+  return Math.max(deckLength - cardIndex, 0);
+}
+
+export function selectSeenShare(deckLength: number, cardIndex: number): number {
+  if (deckLength === 0) return 0;
+  return Math.min((cardIndex / deckLength) * PERCENT, PERCENT);
+}
 
 export const SCORING_ZONES: readonly { zone: DeckZone; points: number }[] = [
   { zone: 'three', points: 3 },
@@ -80,6 +118,33 @@ export function judgeRelease(zone: DeckZone, remainingPoints: number): ReleaseIn
   return { kind: 'score', points };
 }
 
+const MAX_POINTS_PER_SONG = 3;
+const POINT_STEPS = MAX_POINTS_PER_SONG + 1;
+
+export function cycleSongPoints(currentPoints: number): number {
+  return (currentPoints + 1) % POINT_STEPS;
+}
+
+export function judgeTap(currentPoints: number, remainingPoints: number): ReleaseIntent {
+  const points = cycleSongPoints(currentPoints);
+  if (selectRemainingAfterScore(remainingPoints, currentPoints, points) < 0) {
+    return { kind: 'refused' };
+  }
+  return { kind: 'score', points };
+}
+
+export type VoteMode = 'list' | 'deck';
+
+export const DEFAULT_VOTE_MODE: VoteMode = 'list';
+
+export function isDeckMode(mode: VoteMode): boolean {
+  return mode === 'deck';
+}
+
+export function selectOtherVoteMode(mode: VoteMode): VoteMode {
+  return mode === 'list' ? 'deck' : 'list';
+}
+
 export function selectRemainingAfterScore(
   remainingPoints: number,
   previousPoints: number,
@@ -119,8 +184,6 @@ export function readGivenPoints(
 export function selectNextCardIndex(currentIndex: number, deckLength: number): number {
   return Math.min(currentIndex + 1, deckLength);
 }
-
-const PERCENT = 100;
 
 export function selectSpentShare(total: number, remaining: number): number {
   if (total === 0) return 0;

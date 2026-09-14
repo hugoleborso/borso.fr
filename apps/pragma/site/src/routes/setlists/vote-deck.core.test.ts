@@ -9,7 +9,16 @@ import {
   selectDiscardTint,
   isBudgetExhausted,
   selectScoringTint,
+  selectCardTransitionClass,
+  selectOffsetFromOrigin,
+  cycleSongPoints,
+  isDeckMode,
+  judgeTap,
+  selectOtherVoteMode,
+  selectSeenShare,
+  selectSongsLeft,
   selectSpentShare,
+  selectTintTransitionClass,
   selectNextCardIndex,
   selectPointsForZone,
   selectRemainingAfterScore,
@@ -180,5 +189,60 @@ describe('a budget the member has overspent', () => {
     expect(isBudgetExhausted(1)).toBe(false);
     expect(isBudgetExhausted(0)).toBe(true);
     expect(isBudgetExhausted(-1)).toBe(true);
+  });
+});
+
+describe('a drag measured from where the finger went down', () => {
+  it('reads the distance travelled, not the frames that got there', () => {
+    expect(selectOffsetFromOrigin({ x: 100, y: 50 }, { x: 160, y: 20 })).toEqual({ x: 60, y: -30 });
+    expect(selectOffsetFromOrigin({ x: 100, y: 50 }, { x: 100, y: 50 })).toEqual({ x: 0, y: 0 });
+  });
+
+  it('animates nothing while the finger is down, and eases back once it lifts', () => {
+    expect(selectTintTransitionClass(true)).toBe('');
+    expect(selectTintTransitionClass(false)).toBe('transition-opacity duration-200');
+    expect(selectCardTransitionClass(true)).toBe('');
+    expect(selectCardTransitionClass(false)).toBe('transition-transform duration-200 ease-out');
+  });
+});
+
+describe('what is left of the deck', () => {
+  it('counts the cards the member has not reached yet', () => {
+    expect(selectSongsLeft(10, 0)).toBe(10);
+    expect(selectSongsLeft(10, 4)).toBe(6);
+    expect(selectSongsLeft(10, 10)).toBe(0);
+    expect(selectSongsLeft(10, 11)).toBe(0);
+  });
+
+  it('fills the bar with what has been seen, and never past the whole of it', () => {
+    expect(selectSeenShare(0, 0)).toBe(0);
+    expect(selectSeenShare(4, 1)).toBe(25);
+    expect(selectSeenShare(4, 4)).toBe(100);
+    expect(selectSeenShare(4, 5)).toBe(100);
+  });
+});
+
+describe('a tap on a song in the catalogue', () => {
+  it('walks the points up and drops a three back to nothing', () => {
+    expect(cycleSongPoints(0)).toBe(1);
+    expect(cycleSongPoints(1)).toBe(2);
+    expect(cycleSongPoints(2)).toBe(3);
+    expect(cycleSongPoints(3)).toBe(0);
+  });
+
+  it('refuses the step that would overspend, and always allows the one that frees points', () => {
+    expect(judgeTap(0, 1)).toEqual({ kind: 'score', points: 1 });
+    expect(judgeTap(0, 0)).toEqual({ kind: 'refused' });
+    expect(judgeTap(2, 0)).toEqual({ kind: 'refused' });
+    expect(judgeTap(3, 0)).toEqual({ kind: 'score', points: 0 });
+  });
+
+  it('names the other mode to switch to', () => {
+    expect(selectOtherVoteMode('list')).toBe('deck');
+    expect(selectOtherVoteMode('deck')).toBe('list');
+    expect(isDeckMode('deck')).toBe(true);
+    expect(isDeckMode('list')).toBe(false);
+    expect(isDeckMode('deck')).toBe(true);
+    expect(isDeckMode('list')).toBe(false);
   });
 });

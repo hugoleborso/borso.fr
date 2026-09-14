@@ -393,9 +393,13 @@
     "openVote": "Ouvrir un vote",
     "removeFromProposal": "Retirer",
     "reopen": "Rouvrir le vote",
+    "songsLeftLabel": "Chansons restantes",
     "statusVoting": "En vote",
     "swipeHint": "À gauche pour passer, à droite pour donner 1, 2 ou 3",
+    "switchToDeck": "Mode balayage",
+    "switchToList": "Mode liste",
     "tallyEmpty": "Personne n'a encore noté de chanson.",
+    "tapToScore": "Noter {{title}}",
     "targetSongCount": "Combien de chansons ?",
     "untitled": "Setlist sans nom"
   }

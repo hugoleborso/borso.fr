@@ -1,5 +1,6 @@
 /** @Feature setlist-voting */
 
+import clsx from 'clsx';
 import type { JSX, PointerEvent as ReactPointerEvent } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,10 +13,14 @@ import {
   readIntentPoints,
   type ReleaseIntent,
   readGivenPoints,
+  type PointerPoint,
   selectCardRotation,
+  selectCardTransitionClass,
   selectDiscardTint,
+  selectOffsetFromOrigin,
   selectNextCardIndex,
   selectScoringTint,
+  selectTintTransitionClass,
   selectZoneForOffset,
   SCORING_ZONES,
 } from '../../routes/setlists/vote-deck.core';
@@ -34,6 +39,8 @@ export interface VoteDeckProps {
   readonly lastScoredAt: string | null;
   readonly remainingPoints: number;
   readonly pointsBySongId: Readonly<Record<string, number>>;
+  readonly cardIndex: number;
+  readonly onAdvance: (nextIndex: number) => void;
   readonly onScore: (songId: string, points: number) => void;
   readonly onExhausted: () => void;
 }
@@ -46,11 +53,13 @@ export function VoteDeck({
   lastScoredAt,
   remainingPoints,
   pointsBySongId,
+  cardIndex,
+  onAdvance,
   onScore,
   onExhausted,
 }: VoteDeckProps): JSX.Element {
   const { t } = useTranslation();
-  const [cardIndex, setCardIndex] = useState<number>(0);
+  const [origin, setOrigin] = useState<PointerPoint>(IDLE_OFFSET);
   const [offset, setOffset] = useState<{ x: number; y: number }>(IDLE_OFFSET);
   const [geometry, setGeometry] = useState<DeckGeometry>(UNKNOWN_GEOMETRY);
   const [isDragging, setIsDragging] = useState<boolean>(false);
@@ -60,18 +69,21 @@ export function VoteDeck({
   const zone: DeckZone = isDragging ? selectZoneForOffset(offset, geometry) : 'none';
   const givenPoints = readGivenPoints(pointsBySongId, song?.id ?? '');
   const isNewSong = song !== undefined && isSongNewSinceLastScore(song, lastScoredAt, givenPoints);
+  const tintTransition = selectTintTransitionClass(isDragging);
+  const cardTransition = selectCardTransitionClass(isDragging);
 
   function startDrag(event: ReactPointerEvent<HTMLDivElement>) {
     const box = event.currentTarget.getBoundingClientRect();
     event.currentTarget.setPointerCapture(event.pointerId);
     setGeometry({ width: box.width, height: box.height });
+    setOrigin({ x: event.clientX, y: event.clientY });
     setIsDragging(true);
     setOffset(IDLE_OFFSET);
   }
 
   function trackDrag(event: ReactPointerEvent<HTMLDivElement>) {
     if (!isDragging) return;
-    setOffset({ x: offset.x + event.movementX, y: offset.y + event.movementY });
+    setOffset(selectOffsetFromOrigin(origin, { x: event.clientX, y: event.clientY }));
   }
 
   const applyRelease: Readonly<Record<ReleaseIntent['kind'], (points: number) => void>> = {
@@ -82,7 +94,7 @@ export function VoteDeck({
     score: (points) => {
       if (song === undefined) return;
       onScore(song.id, points);
-      setCardIndex(selectNextCardIndex(cardIndex, songs.length));
+      onAdvance(selectNextCardIndex(cardIndex, songs.length));
     },
   };
 
@@ -100,7 +112,10 @@ export function VoteDeck({
           <div
             key={scoring.zone}
             data-zone={scoring.zone}
-            className="flex-1 flex items-center justify-end pr-4 rounded-r-2xl bg-accent transition-opacity"
+            className={clsx(
+              'flex-1 flex items-center justify-end pr-4 rounded-r-2xl bg-accent',
+              tintTransition,
+            )}
             style={{ opacity: selectScoringTint(zone, scoring.zone, offset, geometry) }}
           >
             <PointsBadge points={scoring.points} />
@@ -109,14 +124,20 @@ export function VoteDeck({
       </div>
       <div
         data-zone="discard"
-        className="absolute inset-y-0 left-0 w-1/2 pointer-events-none rounded-l-2xl bg-ink-400 transition-opacity"
+        className={clsx(
+          'absolute inset-y-0 left-0 w-1/2 pointer-events-none rounded-l-2xl bg-ink-400',
+          tintTransition,
+        )}
         style={{ opacity: selectDiscardTint(zone, offset, geometry) }}
       />
       {hasDeckLeft ? (
         <div
           role="group"
           aria-label={t('voting.cardLabel')}
-          className="absolute inset-0 touch-none rounded-2xl border border-line bg-surface p-6 flex flex-col justify-between shadow-lg cursor-grab"
+          className={clsx(
+            'absolute inset-0 touch-none rounded-2xl border border-line bg-surface p-6 flex flex-col justify-between shadow-lg cursor-grab',
+            cardTransition,
+          )}
           style={{
             transform: `translate(${String(offset.x)}px, ${String(offset.y)}px) rotate(${String(selectCardRotation(offset))}deg)`,
           }}
