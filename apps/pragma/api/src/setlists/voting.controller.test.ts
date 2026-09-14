@@ -170,6 +170,23 @@ describe('setlist voting (back-e2e)', () => {
     expect((await score(app, cookieHeader, setlistId, songId, 1)).status).toBe(409);
   });
 
+  it('refuses to close a vote nobody scored', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const setlistId = await createVotingSetlist(app, cookieHeader, 2);
+    const songId = await createSong(app, cookieHeader, 'Première');
+    const refused = await jsonRequest(app, `/api/setlists/${setlistId}/close`, {
+      method: 'POST',
+      body: { songIds: [songId] },
+      cookieHeader,
+    });
+    expect(refused.status).toBe(409);
+    const board = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/votes`, { cookieHeader }),
+      boardSchema,
+    );
+    expect(board.status).toBe('voting');
+  });
+
   it('refuses to propose a closing when no song scored', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const setlistId = await createVotingSetlist(app, cookieHeader, 2);

@@ -1,5 +1,5 @@
 import type { Lineup } from '@domain/lineup.core';
-import { bootstrapAuth } from '../auth/auth.service';
+import { bootstrapAuth, rotatePassword } from '../auth/auth.service';
 import { createCredentialForMember } from '../auth/credentials.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
@@ -146,6 +146,7 @@ async function seedTransitionComment(songIds: readonly string[], now: Date): Pro
 export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {
   await deleteAllDomainRows();
   const bootstrap = await bootstrapAuth(SEED_ADMIN_PASSWORD, now);
+  await rotatePassword(SEED_ADMIN_PASSWORD, now);
   const instrumentIdByName = await seedInstruments();
   const memberIdByName = await seedMembers(instrumentIdByName);
   const songIds = await seedSongs(memberIdByName, instrumentIdByName);

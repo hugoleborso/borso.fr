@@ -367,7 +367,6 @@
     "untitled": "Setlist sans titre"
   },
   "shell": {
-    "meName": "Hugo",
     "meVersion": "Pragma · v0.1"
   },
   "songDefaults": {
@@ -377,6 +376,7 @@
   },
   "voting": {
     "addToProposal": "Ajouter une chanson",
+    "applyTarget": "Appliquer",
     "budgetExhausted": "Plus de points ! Enlève des points aux autres chansons pour continuer de liker.",
     "budgetLabel": "Points restants",
     "cardLabel": "Chanson à noter",
@@ -385,6 +385,7 @@
     "closeSubmit": "En faire la setlist",
     "closeTitle": "Ordre de passage proposé",
     "deckDone": "Tu as parcouru tout le catalogue.",
+    "dragHandle": "Réordonner",
     "moveDown": "Descendre",
     "moveUp": "Monter",
     "newSong": "Nouvelle",

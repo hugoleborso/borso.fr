@@ -122,6 +122,7 @@ export function buildSetlistsRouter() {
         const outcome = await closeVote({ setlistId: id, songIds });
         if (outcome.kind === 'setlist-not-found') return context.json({ error: 'not-found' }, 404);
         if (outcome.kind === 'not-voting') return context.json({ error: 'not-voting' }, 409);
+        if (outcome.kind === 'no-votes') return context.json({ error: 'no-votes' }, 409);
         return context.json({ ok: true });
       },
     )

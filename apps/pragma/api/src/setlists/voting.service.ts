@@ -160,7 +160,8 @@ export async function readClosingProposal(setlistId: string): Promise<ProposalOu
   return { kind: 'ok', tallies: proposeClosing(tallies, setlist.targetSongCount) };
 }
 
-export type CloseOutcome = { kind: 'ok' } | { kind: 'setlist-not-found' } | { kind: 'not-voting' };
+export type CloseOutcome =
+  { kind: 'ok' } | { kind: 'setlist-not-found' } | { kind: 'not-voting' } | { kind: 'no-votes' };
 
 export async function closeVote(params: {
   readonly setlistId: string;
@@ -169,6 +170,8 @@ export async function closeVote(params: {
   const setlist = await findSetlistById(params.setlistId);
   if (setlist === null) return { kind: 'setlist-not-found' };
   if (resolveSetlistStatus(setlist.status) !== SETLIST_VOTING) return { kind: 'not-voting' };
+  const scored = tally(await listVotesOfSetlist(params.setlistId));
+  if (scored.length === 0) return { kind: 'no-votes' };
   await replaceEntriesWithProposal(params.setlistId, params.songIds, SETLIST_LOCKED);
   return { kind: 'ok' };
 }

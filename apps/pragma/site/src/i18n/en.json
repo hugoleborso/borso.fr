@@ -367,7 +367,6 @@
     "untitled": "Untitled setlist"
   },
   "shell": {
-    "meName": "Hugo",
     "meVersion": "Pragma · v0.1"
   },
   "songDefaults": {
@@ -377,6 +376,7 @@
   },
   "voting": {
     "addToProposal": "Add a song",
+    "applyTarget": "Apply",
     "budgetExhausted": "No points left! Take points off another song to keep liking.",
     "budgetLabel": "Points left",
     "cardLabel": "Song to score",
@@ -385,6 +385,7 @@
     "closeSubmit": "Make this the setlist",
     "closeTitle": "Proposed running order",
     "deckDone": "You have been through the whole catalogue.",
+    "dragHandle": "Reorder",
     "moveDown": "Move down",
     "moveUp": "Move up",
     "newSong": "New",

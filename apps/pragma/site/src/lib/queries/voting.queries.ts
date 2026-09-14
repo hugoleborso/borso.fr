@@ -16,10 +16,14 @@ async function throwOnFailure(response: Response, label: string) {
   throw new ApiError(response.status, `${label} ${String(response.status)}`, failureBody);
 }
 
-// @FollowsBlueprint query-module
+const BOARD_REFRESH_MS = 15_000;
+
+// @FollowsBlueprint query-polling
 export function useVoteBoard(setlistId: string) {
   return useQuery({
     queryKey: votingKeys.board(setlistId),
+    refetchInterval: BOARD_REFRESH_MS,
+    refetchOnWindowFocus: true,
     queryFn: async (): Promise<VoteBoard> => {
       const response = await api.api.setlists[':id'].votes.$get({ param: { id: setlistId } });
       await throwOnFailure(response, 'vote-board');

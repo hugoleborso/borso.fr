@@ -68,7 +68,6 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'setlist.crumb', readsTheSameBecause: 'the band says "setlist" in both languages' },
   { key: 'setlist.notes', readsTheSameBecause: 'same word, same spelling' },
   { key: 'setlist.title', readsTheSameBecause: '"setlist" is the word French musicians use' },
-  { key: 'shell.meName', readsTheSameBecause: 'a first name' },
   { key: 'shell.meVersion', readsTheSameBecause: 'the brand and a version number' },
 ];
 

@@ -1,12 +1,28 @@
 /** @Feature setlist-voting */
 
+import {
+  closestCenter,
+  DndContext,
+  type DragEndEvent,
+  KeyboardSensor,
+  MouseSensor,
+  TouchSensor,
+  useSensor,
+  useSensors,
+} from '@dnd-kit/core';
+import {
+  SortableContext,
+  sortableKeyboardCoordinates,
+  verticalListSortingStrategy,
+} from '@dnd-kit/sortable';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SongTally } from '../../lib/queries/voting.utils';
+import { moveWithin, reorderByDrop } from '../../routes/setlists/vote-proposal.core';
 import { Button } from '../atoms/Button';
-import { PointsBadge } from '../atoms/PointsBadge';
 import type { TallySong } from './VoteTally';
+import { VoteProposalRow } from './VoteProposalRow';
 
 export interface VoteClosePanelProps {
   readonly proposal: readonly SongTally[];
@@ -17,13 +33,9 @@ export interface VoteClosePanelProps {
   readonly onClose: (songIds: readonly string[]) => void;
 }
 
-function moveWithin(songIds: readonly string[], from: number, target: number): string[] {
-  const reordered = [...songIds];
-  const [moved] = reordered.splice(from, 1);
-  if (moved === undefined) return reordered;
-  reordered.splice(target, 0, moved);
-  return reordered;
-}
+const DRAG_ACTIVATION_DISTANCE_PX = 6;
+const DRAG_TOUCH_DELAY_MS = 200;
+const DRAG_TOUCH_TOLERANCE_PX = 8;
 
 // @FollowsBlueprint organism-mutation-panel
 export function VoteClosePanel({
@@ -37,6 +49,13 @@ export function VoteClosePanel({
   const { t } = useTranslation();
   const [keptSongIds, setKeptSongIds] = useState<string[]>(() =>
     proposal.map((tally) => tally.songId),
+  );
+  const sensors = useSensors(
+    useSensor(MouseSensor, { activationConstraint: { distance: DRAG_ACTIVATION_DISTANCE_PX } }),
+    useSensor(TouchSensor, {
+      activationConstraint: { delay: DRAG_TOUCH_DELAY_MS, tolerance: DRAG_TOUCH_TOLERANCE_PX },
+    }),
+    useSensor(KeyboardSensor, { coordinateGetter: sortableKeyboardCoordinates }),
   );
 
   const isOverTarget = keptSongIds.length > targetSongCount;
@@ -55,48 +74,36 @@ export function VoteClosePanel({
           {t('voting.closeOverTarget')}
         </p>
       ) : null}
-      <ol className="list-none p-0 m-0 flex flex-col gap-2">
-        {keptSongIds.map((songId, position) => (
-          <li
-            key={songId}
-            className="flex items-center gap-2 rounded-xl border border-line bg-surface px-3 py-2"
-          >
-            <span className="w-6 text-right tabular-nums text-ink-400">{position + 1}</span>
-            <span className="flex-1 min-w-0 truncate text-ink-900">
-              {songsById.get(songId)?.title ?? songId}
-            </span>
-            <PointsBadge points={proposal.find((tally) => tally.songId === songId)?.points ?? 0} />
-            <Button
-              type="button"
-              variant="ghost"
-              aria-label={t('voting.moveUp')}
-              disabled={position === 0}
-              onClick={() => setKeptSongIds(moveWithin(keptSongIds, position, position - 1))}
-            >
-              ↑
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              aria-label={t('voting.moveDown')}
-              disabled={position === keptSongIds.length - 1}
-              onClick={() => setKeptSongIds(moveWithin(keptSongIds, position, position + 1))}
-            >
-              ↓
-            </Button>
-            <Button
-              type="button"
-              variant="ghost"
-              aria-label={t('voting.removeFromProposal')}
-              onClick={() =>
-                setKeptSongIds(keptSongIds.filter((candidate) => candidate !== songId))
-              }
-            >
-              ×
-            </Button>
-          </li>
-        ))}
-      </ol>
+      <DndContext
+        sensors={sensors}
+        collisionDetection={closestCenter}
+        onDragEnd={(event: DragEndEvent) => {
+          setKeptSongIds(
+            reorderByDrop(keptSongIds, String(event.active.id), event.over?.id ?? null),
+          );
+        }}
+      >
+        <SortableContext items={keptSongIds} strategy={verticalListSortingStrategy}>
+          <ol className="list-none p-0 m-0 flex flex-col gap-2">
+            {keptSongIds.map((songId, position) => (
+              <VoteProposalRow
+                key={songId}
+                songId={songId}
+                title={songsById.get(songId)?.title ?? songId}
+                points={proposal.find((tally) => tally.songId === songId)?.points ?? 0}
+                position={position}
+                isFirst={position === 0}
+                isLast={position === keptSongIds.length - 1}
+                onMoveUp={() => setKeptSongIds(moveWithin(keptSongIds, position, position - 1))}
+                onMoveDown={() => setKeptSongIds(moveWithin(keptSongIds, position, position + 1))}
+                onRemove={() =>
+                  setKeptSongIds(keptSongIds.filter((candidate) => candidate !== songId))
+                }
+              />
+            ))}
+          </ol>
+        </SortableContext>
+      </DndContext>
       {leftOutSongs.length === 0 ? null : (
         <div className="flex flex-col gap-2">
           <span className="text-xs tracking-wider uppercase text-ink-400">

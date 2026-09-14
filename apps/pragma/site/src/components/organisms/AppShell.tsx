@@ -3,7 +3,7 @@
 import type { ParseKeys } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Avatar } from '../atoms/Avatar';
 import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -21,6 +21,7 @@ import { useIsOnline } from '../molecules/online-status.hook';
 import { BottomTabBar } from './BottomTabBar';
 import { isNavigationDestinationActive } from './navigation-active.core';
 import { useNavigationBadges } from './navigation-badges.hook';
+import { useSignedInMember } from '../../lib/queries/me.queries';
 
 interface NavItem {
   to: string;
@@ -55,6 +56,9 @@ export function AppShell(): JSX.Element {
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
   const badges = useNavigationBadges();
+  const signedInMember = useSignedInMember();
+  const signedInName = signedInMember.data?.firstName ?? '';
+  const signedInColor = signedInMember.data?.color ?? MEMBER_PALETTE.teal;
 
   const closeMobileNav = (): void => setIsMobileNavOpen(false);
 
@@ -121,17 +125,16 @@ export function AppShell(): JSX.Element {
           <div className="border-t border-line pt-2">
             <LanguageSwitcher />
           </div>
-          <div className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev">
-            <Avatar
-              initials={memberInitial(t('shell.meName'))}
-              color={MEMBER_PALETTE.teal}
-              size="md"
-            />
+          <Link
+            to="/account"
+            className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev no-underline text-ink-900"
+          >
+            <Avatar initials={memberInitial(signedInName)} color={signedInColor} size="md" />
             <div className="min-w-0">
-              <div className="text-[13px] font-medium truncate">{t('shell.meName')}</div>
+              <div className="text-[13px] font-medium truncate">{signedInName}</div>
               <div className="text-xs text-ink-500 truncate">{t('shell.meVersion')}</div>
             </div>
-          </div>
+          </Link>
         </div>
       </nav>
     );

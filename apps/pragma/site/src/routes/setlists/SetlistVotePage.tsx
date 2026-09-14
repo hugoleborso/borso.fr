@@ -5,6 +5,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
+import { TargetSongCountField } from '../../components/molecules/TargetSongCountField';
 import { VoteBudgetBar } from '../../components/molecules/VoteBudgetBar';
 import { VoteClosePanel } from '../../components/organisms/VoteClosePanel';
 import { VoteDeck } from '../../components/organisms/VoteDeck';
@@ -21,7 +22,11 @@ import {
   useVoteBoard,
 } from '../../lib/queries/voting.queries';
 import { readMemberPoints } from '../../lib/queries/voting.utils';
-import { isVotingPageState, selectVotePageState } from './setlist-vote.core';
+import {
+  DEFAULT_TARGET_SONG_COUNT,
+  isVotingPageState,
+  selectVotePageState,
+} from './setlist-vote.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 
 // @FollowsBlueprint organism-query-owning
@@ -39,6 +44,7 @@ export function SetlistVotePage(): JSX.Element {
   const closeVote = useCloseVote(setlistId);
   const [isClosingOpen, setIsClosingOpen] = useState<boolean>(false);
   const [wasRefused, setWasRefused] = useState<boolean>(false);
+  const [targetSongCount, setTargetSongCount] = useState<number>(DEFAULT_TARGET_SONG_COUNT);
   const proposal = useClosingProposal(setlistId, isClosingOpen);
 
   const isVoting = isVotingPageState(
@@ -52,7 +58,8 @@ export function SetlistVotePage(): JSX.Element {
     isClosingOpen,
   });
 
-  const isShowingClosing = pageState === 'closing';
+  const isShowingClosing = pageState === 'closing' && proposal.data !== undefined;
+  const proposedSongIds = (proposal.data ?? []).map((tally) => tally.songId).join(',');
   const songList = songs.data?.songs ?? [];
   const songsById = new Map(
     songList.map((song) => [song.id, { id: song.id, title: song.title, artist: song.artist }]),
@@ -85,16 +92,25 @@ export function SetlistVotePage(): JSX.Element {
             type="button"
             variant="ghost"
             disabled={setVoteStatus.isPending}
-            onClick={() => setVoteStatus.mutate({ status: 'voting', targetSongCount: null })}
+            onClick={() => setVoteStatus.mutate({ status: 'voting', targetSongCount })}
           >
-            {t('voting.reopen')}
+            {t('voting.openVote')}
           </Button>
         )}
       </header>
 
+      <TargetSongCountField
+        value={targetSongCount}
+        isPending={setVoteStatus.isPending}
+        onChange={setTargetSongCount}
+        onCommit={() => setVoteStatus.mutate({ status: 'voting', targetSongCount })}
+        isVoting={isVoting}
+      />
+
       {isShowingClosing ? (
         <VoteClosePanel
-          proposal={proposal.data ?? []}
+          key={proposedSongIds}
+          proposal={proposal.data}
           songsById={songsById}
           addableSongs={songList}
           targetSongCount={board.data?.targetSongCount ?? 0}
