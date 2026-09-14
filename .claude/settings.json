@@ -56,6 +56,16 @@
             "statusMessage": "Seeding the layer's blueprint"
           }
         ]
+      },
+      {
+        "matcher": "mcp__github__merge_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/pretool-merge-deploys-prod.sh",
+            "statusMessage": "Naming what this merge deploys"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -76,6 +86,16 @@
             "type": "command",
             "command": ".claude/hooks/posttool-empty-checks-means-conflict.sh",
             "statusMessage": "Checking whether an empty checks list means a conflict"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh",
+            "statusMessage": "Checking whether a type-aware error is a cache replay"
           }
         ]
       }

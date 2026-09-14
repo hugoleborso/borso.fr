@@ -57,6 +57,23 @@ A dependency nothing else uses is not shared, so nothing can disagree with it,
 and hoisting it would put a version in a shared file to serve one reader. The
 check only asks for a catalog once a second workspace declares the same name.
 
+## A version is never written into a manifest by regex
+
+Bumping versions means rewriting `"<name>": "<string>"` pairs, and a `scripts`
+entry has exactly that shape too. A regex keyed on the package name cannot tell
+the two apart, so rewriting the `knip` dependency also rewrites the `knip`
+script:
+
+```jsonc
+// package.json — what a name-keyed regex does to the scripts block
+"scripts": { "knip": "6.33.0" }        // was "knip": "knip"
+"devDependencies": { "knip": "6.33.0" } // the entry that was meant
+```
+
+Nothing downstream reads a script value, so this passes lint, typecheck, every
+suite and the pre-push gate — `pnpm exec knip` resolves the binary and never
+opens `scripts`. Edit manifests with a JSON-aware tool, or with `pnpm up`.
+
 ## What this does not cover
 
 The catalog governs the ranges this repository writes. It says nothing about
@@ -69,3 +86,6 @@ reading that lockfile's diff.
   workspaces name a version for the same dependency, when a `catalog:` marker
   points at a catalog with no entry for it, and when a catalog holds an entry
   no workspace reads.
+- `script:scripts/check-package-scripts-are-commands.sh` fails a `scripts`
+  entry whose whole value is a bare semver, which is the shape a name-keyed
+  regex leaves behind and never something a runner is called.

@@ -206,6 +206,13 @@ scripts/check-dated-records-are-append-only.sh
 echo "[pre-commit] checking no file carries a NUL byte"
 scripts/check-no-null-bytes.sh
 
+# A dependency bump rewrites version strings in package.json, and a regex keyed
+# on the package name cannot tell a dependency entry from a script of the same
+# name — both are `"<name>": "<string>"`. A script rewritten into a version runs
+# nothing and no other gate reads it.
+echo "[pre-commit] checking every package script is a command"
+scripts/check-package-scripts-are-commands.sh
+
 # One version per dependency, written in pnpm-workspace.yaml. Nothing else here
 # reads a version field, so two workspaces drifting onto different majors of the
 # same library passes every other gate and surfaces later as a type error in
