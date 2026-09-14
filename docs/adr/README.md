@@ -69,6 +69,8 @@ No:
 - 0002, 0003 — react-bits Galaxy integration (see table above).
 - 0004 — shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
 - 0010 — a `domain/` folder for the pure rules pragma's front end and back end both read, admitted only with a caller on each side.
+- 0015 — per-member credentials replace the shared password (supersedes 0004); the old secret opens a self-closing enrolment window and nothing else.
+- 0016 — `@simplewebauthn` carries the passkey flow, as an alternative single factor beside the password.
 
 ### CDK / infra
 

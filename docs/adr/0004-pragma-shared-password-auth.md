@@ -1,6 +1,6 @@
 # ADR-0004: Shared-password auth for the pragma band ERP
 
-- **Status:** proposed
+- **Status:** superseded by [ADR-0015](./0015-per-member-credentials-replace-the-shared-password.md)
 - **Date:** 2026-05-19
 - **Deciders:** Hugo, tech-lead-orchestrator (run `2026-05-19-1937-pragma`)
 - **Tags:** pragma, auth, security
