@@ -84,12 +84,17 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
 
-  it('clones prod into a preview, leaving every credential behind, dropping rate-limit state and nulling avatar keys', () => {
+  it('clones prod into a preview with no secret of production in it, and no avatar keys', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
-      tableBlocklist: ['auth_attempt'],
+      tableBlocklist: [
+        'auth_attempt',
+        'app_config',
+        'member_credential',
+        'member_passkey',
+        'webauthn_challenge',
+      ],
       columnsToNullify: { member: ['avatar_s3_key'] },
-      tablesToReplace: ['app_config', 'member_credential', 'member_passkey', 'webauthn_challenge'],
     });
   });
 });

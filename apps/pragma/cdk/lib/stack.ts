@@ -100,14 +100,14 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
-              tableBlocklist: ['auth_attempt'],
-              columnsToNullify: { member: ['avatar_s3_key'] },
-              tablesToReplace: [
+              tableBlocklist: [
+                'auth_attempt',
                 'app_config',
                 'member_credential',
                 'member_passkey',
                 'webauthn_challenge',
               ],
+              columnsToNullify: { member: ['avatar_s3_key'] },
             },
           }),
     },
