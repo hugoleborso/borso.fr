@@ -124,7 +124,12 @@ const PERCENT = 100;
 
 export function selectSpentShare(total: number, remaining: number): number {
   if (total === 0) return 0;
-  return ((total - remaining) / total) * PERCENT;
+  const spentShare = ((total - remaining) / total) * PERCENT;
+  return Math.min(spentShare, PERCENT);
+}
+
+export function isBudgetExhausted(remaining: number): boolean {
+  return remaining <= 0;
 }
 
 export function readIntentPoints(intent: ReleaseIntent): number {

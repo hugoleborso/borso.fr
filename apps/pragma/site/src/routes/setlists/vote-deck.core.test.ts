@@ -7,6 +7,7 @@ import {
   readIntentPoints,
   selectCardRotation,
   selectDiscardTint,
+  isBudgetExhausted,
   selectScoringTint,
   selectSpentShare,
   selectNextCardIndex,
@@ -115,6 +116,11 @@ describe('selectSpentShare', () => {
     expect(selectSpentShare(30, 0)).toBe(100);
   });
 
+  it('fills the bar by the share spent, not by the amount', () => {
+    expect(selectSpentShare(6, 3)).toBe(50);
+    expect(selectSpentShare(30, 24)).toBe(20);
+  });
+
   it('answers zero rather than dividing by a budget of nothing', () => {
     expect(selectSpentShare(0, 0)).toBe(0);
   });
@@ -162,5 +168,17 @@ describe('a song that arrived after this member went through the deck', () => {
     ];
     expect(countSongsNewSinceLastScore(songs, EARLIER, { 'song-b': 1 })).toBe(1);
     expect(countSongsNewSinceLastScore(songs, null, {})).toBe(0);
+  });
+});
+
+describe('a budget the member has overspent', () => {
+  it('never fills the bar past the whole of it', () => {
+    expect(selectSpentShare(6, -1)).toBe(100);
+  });
+
+  it('reads as exhausted at zero and below', () => {
+    expect(isBudgetExhausted(1)).toBe(false);
+    expect(isBudgetExhausted(0)).toBe(true);
+    expect(isBudgetExhausted(-1)).toBe(true);
   });
 });

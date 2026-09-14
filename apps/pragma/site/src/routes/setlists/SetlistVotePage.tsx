@@ -44,7 +44,7 @@ export function SetlistVotePage(): JSX.Element {
   const closeVote = useCloseVote(setlistId);
   const [isClosingOpen, setIsClosingOpen] = useState<boolean>(false);
   const [wasRefused, setWasRefused] = useState<boolean>(false);
-  const [targetSongCount, setTargetSongCount] = useState<number>(DEFAULT_TARGET_SONG_COUNT);
+  const [typedTarget, setTypedTarget] = useState<number | null>(null);
   const proposal = useClosingProposal(setlistId, isClosingOpen);
 
   const isVoting = isVotingPageState(
@@ -58,6 +58,7 @@ export function SetlistVotePage(): JSX.Element {
     isClosingOpen,
   });
 
+  const targetSongCount = typedTarget ?? board.data?.targetSongCount ?? DEFAULT_TARGET_SONG_COUNT;
   const isShowingClosing = pageState === 'closing' && proposal.data !== undefined;
   const proposedSongIds = (proposal.data ?? []).map((tally) => tally.songId).join(',');
   const songList = songs.data?.songs ?? [];
@@ -102,7 +103,7 @@ export function SetlistVotePage(): JSX.Element {
       <TargetSongCountField
         value={targetSongCount}
         isPending={setVoteStatus.isPending}
-        onChange={setTargetSongCount}
+        onChange={setTypedTarget}
         onCommit={() => setVoteStatus.mutate({ status: 'voting', targetSongCount })}
         isVoting={isVoting}
       />
