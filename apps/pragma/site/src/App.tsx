@@ -16,6 +16,7 @@ import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistScenePage } from './routes/setlists/SetlistScenePage';
+import { SetlistVotePage } from './routes/setlists/SetlistVotePage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
 
 export function App(): JSX.Element {
@@ -38,6 +39,7 @@ export function App(): JSX.Element {
             <Route path="/sessions/:sessionId/setlist" element={<SessionSetlistRedirectPage />} />
             <Route path="/setlists" element={<SetlistsPage />} />
             <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
+            <Route path="/setlists/:setlistId/vote" element={<SetlistVotePage />} />
             <Route path="/bars" element={<BarsPage />} />
             <Route path="/members" element={<MembersPage />} />
             <Route path="/instruments" element={<InstrumentsPage />} />

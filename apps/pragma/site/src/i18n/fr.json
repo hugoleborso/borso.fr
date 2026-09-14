@@ -374,5 +374,25 @@
     "hint": "Ces valeurs viennent du morceau lui-même. Les changer touche toutes les setlists qui le jouent.",
     "open": "Défauts du morceau",
     "title": "Défauts — {{title}}"
+  },
+  "voting": {
+    "budgetExhausted": "Plus de points ! Enlève des points aux autres chansons pour continuer de liker.",
+    "budgetLabel": "Points restants",
+    "cardLabel": "Chanson à noter",
+    "closeOverTarget": "Plus de chansons que prévu, parce que certaines sont à égalité. Retire celles que tu ne veux pas.",
+    "closeSubmit": "En faire la setlist",
+    "closeTitle": "Ordre de passage proposé",
+    "deckDone": "Tu as parcouru tout le catalogue.",
+    "moveDown": "Descendre",
+    "moveUp": "Monter",
+    "openClosing": "Clôturer le vote",
+    "openVote": "Ouvrir un vote",
+    "removeFromProposal": "Retirer",
+    "reopen": "Rouvrir le vote",
+    "statusVoting": "En vote",
+    "swipeHint": "À gauche pour passer, à droite pour donner 1, 2 ou 3",
+    "tallyEmpty": "Personne n'a encore noté de chanson.",
+    "targetSongCount": "Combien de chansons ?",
+    "untitled": "Setlist sans nom"
   }
 }

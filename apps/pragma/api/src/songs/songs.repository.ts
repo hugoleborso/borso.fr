@@ -4,6 +4,7 @@ import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
 import { setlistEntryTable } from '../setlists/setlists.schema';
+import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
 import {
   chordChartSchema,
   defaultLineupSchema,
@@ -238,6 +239,7 @@ export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome
   const database = getDatabase();
   await database.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
   await database.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
+  await deleteVotesOfDeletedSong(database, id);
   const deleted = await database
     .delete(songTable)
     .where(eq(songTable.id, id))

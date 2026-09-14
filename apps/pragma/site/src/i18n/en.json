@@ -374,5 +374,25 @@
     "hint": "These values come from the song itself. Changing them reaches every setlist that plays it.",
     "open": "Song defaults",
     "title": "Defaults — {{title}}"
+  },
+  "voting": {
+    "budgetExhausted": "No points left! Take points off another song to keep liking.",
+    "budgetLabel": "Points left",
+    "cardLabel": "Song to score",
+    "closeOverTarget": "More songs than the target, because some are tied. Drop the ones you do not want.",
+    "closeSubmit": "Make this the setlist",
+    "closeTitle": "Proposed running order",
+    "deckDone": "You have been through the whole catalogue.",
+    "moveDown": "Move down",
+    "moveUp": "Move up",
+    "openClosing": "Close the vote",
+    "openVote": "Open a vote",
+    "removeFromProposal": "Remove",
+    "reopen": "Reopen the vote",
+    "statusVoting": "In a vote",
+    "swipeHint": "Left to skip, right to give 1, 2 or 3",
+    "tallyEmpty": "Nobody has scored a song yet.",
+    "targetSongCount": "How many songs?",
+    "untitled": "Unnamed setlist"
   }
 }
