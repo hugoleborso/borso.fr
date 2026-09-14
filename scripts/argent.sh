@@ -66,6 +66,22 @@ note() {
   printf '\033[36m[argent]\033[0m %s\n' "$1"
 }
 
+# A browser started for localhost cannot reach a preview and vice versa, and the
+# browser's flags are fixed at launch, so the target decides them. Anything that
+# is not loopback is treated as remote, which is the safe default: the remote
+# flags still reach a LAN address, the localhost flags reach nothing off-box.
+TARGET_IS_REMOTE=no
+classify_target() {
+  case "${1:-}" in
+    '' | http://localhost* | http://127.0.0.1* | https://localhost* | https://127.0.0.1*)
+      TARGET_IS_REMOTE=no
+      ;;
+    *)
+      TARGET_IS_REMOTE=yes
+      ;;
+  esac
+}
+
 find_chromium() {
   local candidate
   candidate="$(ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome 2>/dev/null | head -1)"
@@ -107,16 +123,38 @@ start_browser() {
   chromium="$(find_chromium)"
   rm -rf "$PROFILE_DIR"
   mkdir -p "$PROFILE_DIR"
-  # `env -u` strips the proxy the sandbox exports, and --no-proxy-server stops
-  # Chromium reading any other source for one. Without both, localhost fails.
-  env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy \
+  # Two mutually exclusive network modes, because the flags that make localhost
+  # work are the flags that make a preview unreachable.
+  #
+  # localhost: `env -u` strips the proxy the sandbox exports and
+  # --no-proxy-server stops Chromium reading any other source for one. Without
+  # both, a Chromium that inherited HTTPS_PROXY sends http://localhost:5174 out
+  # through the proxy and renders ERR_CONNECTION_REFUSED.
+  #
+  # remote: the proxy is the only route off this sandbox, so it has to stay,
+  # and --ssl-version-max=tls1.2 has to be added because the proxy cannot
+  # complete a TLS 1.3 handshake with Chromium. Stripping the proxy here fails
+  # as ERR_CERT_AUTHORITY_INVALID, which reads as a broken certificate on the
+  # preview rather than as a flag meant for the other mode.
+  if [ "$TARGET_IS_REMOTE" = yes ]; then
     nohup "$chromium" \
-    --remote-debugging-port="${CDP_PORT}" --remote-allow-origins='*' \
-    --headless=new --no-sandbox --disable-dev-shm-usage --no-proxy-server \
-    --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader \
-    --window-size="${PHONE_WIDTH},${PHONE_HEIGHT}" \
-    --user-data-dir="$PROFILE_DIR" about:blank \
-    > "$BROWSER_LOG" 2>&1 &
+      --remote-debugging-port="${CDP_PORT}" --remote-allow-origins='*' \
+      --headless=new --no-sandbox --disable-dev-shm-usage \
+      --ssl-version-max=tls1.2 \
+      --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader \
+      --window-size="${PHONE_WIDTH},${PHONE_HEIGHT}" \
+      --user-data-dir="$PROFILE_DIR" about:blank \
+      > "$BROWSER_LOG" 2>&1 &
+  else
+    env -u HTTP_PROXY -u HTTPS_PROXY -u http_proxy -u https_proxy \
+      nohup "$chromium" \
+      --remote-debugging-port="${CDP_PORT}" --remote-allow-origins='*' \
+      --headless=new --no-sandbox --disable-dev-shm-usage --no-proxy-server \
+      --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader \
+      --window-size="${PHONE_WIDTH},${PHONE_HEIGHT}" \
+      --user-data-dir="$PROFILE_DIR" about:blank \
+      > "$BROWSER_LOG" 2>&1 &
+  fi
   disown || true
   wait_for is_cdp_up "Chromium CDP on ${CDP_PORT}"
   note "Chromium up on CDP ${CDP_PORT}, window ${PHONE_WIDTH}x${PHONE_HEIGHT}"
@@ -141,6 +179,12 @@ start_server() {
 
 case "${1:-start}" in
   start)
+    classify_target "${2:-}"
+    if is_cdp_up; then
+      note "reusing the Chromium already on ${CDP_PORT} — its network mode was fixed at launch; scripts/argent.sh stop first if the target changed"
+    else
+      [ "$TARGET_IS_REMOTE" = yes ] && note "remote target: keeping the proxy, capping TLS at 1.2"
+    fi
     start_browser
     start_server
     if [ -n "${2:-}" ]; then
@@ -159,11 +203,17 @@ Ready. The device is ${UDID}.
   scripts/argent.sh describe            # every frame, as normalised [0,1] boxes
   scripts/argent.sh tap 0.5 0.95        # tap the centre of the bottom bar
   scripts/argent.sh run keyboard --text "hello"
-  scripts/argent.sh run gesture-swipe --udid ${UDID} --help
+  scripts/argent.sh run gesture-scroll --udid ${UDID} --x 0.5 --y 0.5 --deltaY 0.9
+  scripts/argent.sh run gesture-drag --udid ${UDID} --fromX .. --fromY .. --toX .. --toY ..
   scripts/argent.sh run screenshot --udid ${UDID} --out /abs/path.png --json
   scripts/argent.sh stop
 
 A tap goes to a frame's centre: x + width / 2, y + height / 2.
+
+gesture-tap is a real touch event. gesture-swipe is NOT supported on Chromium —
+it returns an issues list and changes nothing, which reads as the page ignoring
+the gesture. Scroll with gesture-scroll (wheel) and drag with gesture-drag
+(mouse); deltas there are fractions of the window, not pixels.
 EOF
     ;;
   run)
