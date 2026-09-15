@@ -97,6 +97,7 @@ export function SongDetailPage(): JSX.Element {
     title: song?.title ?? '',
     artist: song?.artist ?? '',
     deezerTrackId: song?.deezerTrackId ?? null,
+    spotifyTrackId: song?.spotifyTrackId ?? null,
   });
 
   const saveSongLineup = (lineup: LineupRecord | null): void => {

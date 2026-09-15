@@ -16,6 +16,7 @@ import {
 const API_SONG: Song = {
   id: '00000000-0000-4000-8000-000000000000',
   deezerAlbumId: null,
+  spotifyTrackId: null,
   title: 'Slow Burn',
   artist: 'The Embers',
   status: 'rehearsed',
@@ -73,6 +74,7 @@ describe('songFromApi', () => {
       title: 'Slow Burn',
       artist: 'The Embers',
       deezerAlbumId: null,
+      spotifyTrackId: null,
       status: 'rehearsed',
       tonalityStart: 'Am',
       tonalityEnd: 'C',
@@ -175,6 +177,7 @@ describe('payloadFromDraft', () => {
       links: [],
       deezerTrackId: null,
       deezerAlbumId: null,
+      spotifyTrackId: null,
       album: 'Embers',
       durationSeconds: null,
       isrcs: [],
@@ -232,6 +235,7 @@ describe('applyExternalPickToDraft', () => {
       status: 'rehearsed',
       tonalityStart: 'Am',
       tags: ['kept'],
+      spotifyTrackId: 'stale-from-the-previous-track',
     };
     expect(
       applyExternalPickToDraft(draft, {
@@ -249,6 +253,7 @@ describe('applyExternalPickToDraft', () => {
       artist: 'Volt',
       deezerTrackId: 'track-2',
       deezerAlbumId: 'album-2',
+      spotifyTrackId: null,
       album: '',
       durationSeconds: 180,
       isrcs: ['ISRC2'],

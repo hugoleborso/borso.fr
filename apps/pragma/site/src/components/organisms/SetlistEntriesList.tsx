@@ -162,6 +162,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 title={song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}
                 deezerAlbumId={song?.deezerAlbumId ?? null}
                 deezerTrackId={song?.deezerTrackId ?? null}
+                spotifyTrackId={song?.spotifyTrackId ?? null}
                 artist={song?.artist ?? ''}
                 tonalityLabel={tonalityLabelFor(song)}
                 meanMastery={props.meanMasteryBySongId[entry.songId] ?? null}

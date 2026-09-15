@@ -20,6 +20,7 @@ const NEW_SONG_DEFAULTS: Pick<
   | 'baseEnergy'
   | 'deezerTrackId'
   | 'deezerAlbumId'
+  | 'spotifyTrackId'
   | 'album'
   | 'durationSeconds'
   | 'isrcs'
@@ -37,6 +38,7 @@ const NEW_SONG_DEFAULTS: Pick<
   baseEnergy: null,
   deezerTrackId: null,
   deezerAlbumId: null,
+  spotifyTrackId: null,
   album: null,
   durationSeconds: null,
   isrcs: [],

@@ -56,6 +56,7 @@ export interface SetlistEntryRowProps {
   readonly title: string;
   readonly deezerAlbumId: string | null;
   readonly deezerTrackId: string | null;
+  readonly spotifyTrackId: string | null;
   readonly artist: string;
   readonly tonalityLabel: string | null;
   readonly meanMastery: number | null;
@@ -86,6 +87,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     title: props.title,
     artist: props.artist,
     deezerTrackId: props.deezerTrackId,
+    spotifyTrackId: props.spotifyTrackId,
   });
   const [moreOpen, setMoreOpen] = useState<boolean>(false);
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);

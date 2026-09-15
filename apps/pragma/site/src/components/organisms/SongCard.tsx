@@ -16,6 +16,7 @@ export interface SongCardProps {
   artist: string;
   deezerAlbumId: string | null;
   deezerTrackId: string | null;
+  spotifyTrackId: string | null;
   status: SongStatus;
   tonalityStart: string | null;
   tonalityEnd: string | null;
@@ -39,6 +40,7 @@ export function SongCard({
   artist,
   deezerAlbumId,
   deezerTrackId,
+  spotifyTrackId,
   status,
   tonalityStart,
   tonalityEnd,
@@ -50,7 +52,7 @@ export function SongCard({
   instruments,
 }: SongCardProps): JSX.Element {
   const tonalityLabel = buildTonalityLabel(tonalityStart, tonalityEnd);
-  const longPress = useSongLongPress({ title, artist, deezerTrackId });
+  const longPress = useSongLongPress({ title, artist, deezerTrackId, spotifyTrackId });
   return (
     <Link
       to={`/catalog/${id}`}

@@ -34,6 +34,7 @@ export interface DeckSong {
   readonly artist: string;
   readonly deezerAlbumId: string | null;
   readonly deezerTrackId: string | null;
+  readonly spotifyTrackId: string | null;
   readonly createdAt: string;
 }
 

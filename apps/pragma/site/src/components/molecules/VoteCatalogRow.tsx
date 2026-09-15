@@ -12,6 +12,7 @@ export interface VoteCatalogRowProps {
   readonly artist: string;
   readonly deezerAlbumId: string | null;
   readonly deezerTrackId: string | null;
+  readonly spotifyTrackId: string | null;
   readonly points: number;
   readonly isNew: boolean;
   readonly onTap: () => void;
@@ -23,12 +24,13 @@ export function VoteCatalogRow({
   artist,
   deezerAlbumId,
   deezerTrackId,
+  spotifyTrackId,
   points,
   isNew,
   onTap,
 }: VoteCatalogRowProps): JSX.Element {
   const { t } = useTranslation();
-  const longPress = useSongLongPress({ title, artist, deezerTrackId });
+  const longPress = useSongLongPress({ title, artist, deezerTrackId, spotifyTrackId });
 
   return (
     <li>

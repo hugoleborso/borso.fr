@@ -121,9 +121,9 @@ export const pragmaManifest: ArchitectureManifest = {
       id: 'spotify',
       icon: '🎧',
       name: 'Spotify',
-      technology: 'iframe embed, plus a search address',
+      technology: 'HTTPS Web API behind client credentials, plus an iframe embed',
       description:
-        'Renders a reference recording inside a song page. Holding a song also offers to open it on Spotify, as a search rather than a track, because nothing in the catalogue holds a Spotify identifier and asking for one needs a credential this application has not been given.',
+        "Holding a song offers to open its Spotify track. The id is resolved once when the song is saved, by asking Spotify for the ISRC Deezer returned, so the match is on the recording's own identifier rather than on its title; a song Spotify carries no track for keeps a search address. The client credentials come from an SSM parameter the API reads at cold start. Also renders a reference recording inside a song page as an iframe.",
       boundary: 'third-party',
     },
     {
@@ -168,6 +168,15 @@ export const pragmaManifest: ArchitectureManifest = {
         'Connection tokens are minted per connection by the signer rather than held, so a warm Lambda never carries an expired password.',
       boundary: 'aws',
       realisedBy: 'database',
+    },
+    {
+      id: 'aws-ssm',
+      icon: '🔐',
+      name: 'SSM Parameter Store',
+      technology: 'AWS SDK, GetParameter with decryption',
+      description:
+        'Holds the Spotify client credentials as a SecureString, read once per warm Lambda through helpers/secrets/parameter-store.client.ts. Chosen over a Lambda environment variable because CDK writes those into the deployed CloudFormation template in plaintext; see ADR-0017.',
+      boundary: 'aws',
     },
     {
       id: 'aws-s3',

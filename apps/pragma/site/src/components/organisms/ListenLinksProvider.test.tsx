@@ -28,6 +28,7 @@ function SongRow(): JSX.Element {
     title: 'Get Lucky',
     artist: 'Daft Punk',
     deezerTrackId: '67238735',
+    spotifyTrackId: '2Foc5Q5nqNiosCNqttzHof',
   });
   return (
     <button type="button" data-testid="row" {...handlers}>
@@ -70,7 +71,7 @@ describe('ListenLinksProvider', () => {
     const addresses = screen.getAllByRole('link').map((link) => link.getAttribute('href'));
     expect(addresses).toEqual([
       'https://www.deezer.com/track/67238735',
-      'https://open.spotify.com/search/Daft%20Punk%20Get%20Lucky',
+      'https://open.spotify.com/track/2Foc5Q5nqNiosCNqttzHof',
     ]);
   });
 

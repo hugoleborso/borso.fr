@@ -229,6 +229,25 @@ Lives in: `api/src/songs/` (the `deezer_track_id` column), read by
 - There is no Spotify equivalent: no column holds a Spotify identifier, so
   the Spotify entry in the listen dialog is always a search.
 
+## Spotify track
+
+The Spotify recording a catalogue song is linked to, resolved from the ISRC
+Deezer returned rather than from the song's title.
+
+Lives in: `api/src/songs/` (the `spotify_track_id` column), read by
+`site/src/lib/listen-links.utils.ts`
+
+- Nullable, and ordinarily so. Spotify and Deezer do not carry identical
+  catalogues, a song typed in by hand names no ISRC to resolve from, and a
+  song predating the column has none until it is re-linked. Each of those
+  falls back to a Spotify *search* address in the listen dialog.
+- Written by the API, never by a member. There is no form field for it, unlike
+  the **Deezer track**, which a member may type. Picking a new Deezer result
+  clears it, so an id can never outlive the recording it was found for.
+- Distinct from the **Deezer track**: the two name the same recording on two
+  services, and the ISRC is what joins them. See
+  [ADR-0017](../../docs/adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md).
+
 ## Deezer album
 
 The Deezer album a song's track belongs to, which is what Deezer serves
@@ -386,7 +405,8 @@ Lives in: `api/src/songs/`
 - `links` holds up to 16 external links, each with a URL, a provider
   (`spotify`, `deezer`, `youtube`, `other`) and a comment.
 - Deezer enrichment lands in `deezerTrackId`, `deezerAlbumId`, `album`,
-  `durationSeconds` and `isrcs` (Deezer names one per track). `tags` (up to
+  `durationSeconds` and `isrcs` (Deezer names one per track). `spotifyTrackId`
+  follows, resolved from that ISRC when the song is saved. `tags` (up to
   16) is kept for the songs imported from MusicBrainz before the move and
   is no longer filled by a search.
 - Three separate note fields, each up to 4 096 characters:

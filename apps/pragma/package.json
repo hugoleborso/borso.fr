@@ -28,6 +28,7 @@
   },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/client-ssm": "catalog:",
     "@aws-sdk/dsql-signer": "catalog:",
     "@aws-sdk/s3-request-presigner": "catalog:",
     "@borso/infra": "workspace:*",

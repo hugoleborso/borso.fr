@@ -8,7 +8,13 @@ import {
 } from './listen-links.utils';
 
 function subject(overrides: Partial<ListenSubject> = {}): ListenSubject {
-  return { title: 'Get Lucky', artist: 'Daft Punk', deezerTrackId: '67238735', ...overrides };
+  return {
+    title: 'Get Lucky',
+    artist: 'Daft Punk',
+    deezerTrackId: '67238735',
+    spotifyTrackId: null,
+    ...overrides,
+  };
 }
 
 describe('buildSearchTerms', () => {
@@ -54,12 +60,30 @@ describe('buildDeezerTarget', () => {
 });
 
 describe('buildSpotifyTarget', () => {
-  it('searches, because no song in the catalogue holds a Spotify identifier', () => {
+  it('points straight at the track once the song names one', () => {
+    expect(buildSpotifyTarget(subject({ spotifyTrackId: '2Foc5Q5nqNiosCNqttzHof' }))).toEqual({
+      provider: 'spotify',
+      address: 'https://open.spotify.com/track/2Foc5Q5nqNiosCNqttzHof',
+      isExact: true,
+    });
+  });
+
+  it('falls back to a search for a song Spotify never resolved', () => {
     expect(buildSpotifyTarget(subject())).toEqual({
       provider: 'spotify',
       address: 'https://open.spotify.com/search/Daft%20Punk%20Get%20Lucky',
       isExact: false,
     });
+  });
+
+  it('treats a blank track id as none', () => {
+    expect(buildSpotifyTarget(subject({ spotifyTrackId: '   ' })).isExact).toBe(false);
+  });
+
+  it('escapes what a track id could carry', () => {
+    expect(buildSpotifyTarget(subject({ spotifyTrackId: 'a/b' })).address).toBe(
+      'https://open.spotify.com/track/a%2Fb',
+    );
   });
 });
 

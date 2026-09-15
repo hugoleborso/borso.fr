@@ -4,6 +4,7 @@ import rule from './no-outbound-call-outside-adapter.js';
 const serviceFile = 'apps/pragma/api/src/songs/songs.service.ts';
 const adapterFile = 'apps/pragma/api/src/songs/deezer.adapter.ts';
 const databaseClientFile = 'apps/pragma/api/src/database/client.ts';
+const vendorClientFile = 'apps/pragma/api/src/helpers/secrets/parameter-store.client.ts';
 const testFile = 'apps/pragma/api/src/songs/songs.service.test.ts';
 const toolingFile = 'scripts/architecture/architecture-graph.ts';
 
@@ -29,7 +30,19 @@ createRuleTester(serviceFile).run('no-outbound-call-outside-adapter (service)', 
         { messageId: 'outboundCallOutsideAdapter', data: { what: 'the EventBridgeClient' } },
       ],
     },
+    {
+      code: "const parameters = new SSMClient({ region: 'eu-west-3' });",
+      errors: [{ messageId: 'outboundCallOutsideAdapter', data: { what: 'the SSMClient' } }],
+    },
   ],
+});
+
+createRuleTester(vendorClientFile).run('no-outbound-call-outside-adapter (vendor client)', rule, {
+  valid: [
+    'const parameters = new SSMClient({ region });',
+    'const response = await fetch(url, { headers });',
+  ],
+  invalid: [],
 });
 
 createRuleTester(adapterFile).run('no-outbound-call-outside-adapter (adapter)', rule, {

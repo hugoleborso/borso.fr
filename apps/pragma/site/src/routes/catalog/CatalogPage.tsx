@@ -119,6 +119,7 @@ export function CatalogPage(): JSX.Element {
         title: song.title,
         deezerAlbumId: song.deezerAlbumId,
         deezerTrackId: song.deezerTrackId,
+        spotifyTrackId: song.spotifyTrackId,
         artist: song.artist,
         status: song.status,
         tonalityStart: song.tonalityStart,

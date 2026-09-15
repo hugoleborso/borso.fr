@@ -19,6 +19,7 @@ const EXISTING_SONG = {
   baseEnergy: 4,
   deezerTrackId: null,
   deezerAlbumId: null,
+  spotifyTrackId: null,
   album: null,
   durationSeconds: null,
   isrcs: [],

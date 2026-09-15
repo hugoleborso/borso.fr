@@ -35,6 +35,7 @@ export interface SongRow {
   baseEnergy: number | null;
   deezerTrackId: string | null;
   deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string[];
@@ -57,6 +58,7 @@ export interface SongInsertShape {
   baseEnergy: number | null;
   deezerTrackId: string | null;
   deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string[];
@@ -81,6 +83,7 @@ interface SongRawRow {
   baseEnergy: number | null;
   deezerTrackId: string | null;
   deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string | null;
@@ -105,6 +108,7 @@ const PROJECTION = {
   baseEnergy: songTable.baseEnergy,
   deezerTrackId: songTable.deezerTrackId,
   deezerAlbumId: songTable.deezerAlbumId,
+  spotifyTrackId: songTable.spotifyTrackId,
   album: songTable.album,
   durationSeconds: songTable.durationSeconds,
   isrcs: songTable.isrcs,
@@ -144,6 +148,7 @@ function rowToSong(row: SongRawRow): SongRow {
     baseEnergy: row.baseEnergy,
     deezerTrackId: row.deezerTrackId,
     deezerAlbumId: row.deezerAlbumId,
+    spotifyTrackId: row.spotifyTrackId,
     album: row.album,
     durationSeconds: row.durationSeconds,
     isrcs: parseJsonArrayColumn(row.isrcs, songIsrcsRowSchema),
@@ -171,6 +176,7 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     baseEnergy: values.baseEnergy,
     deezerTrackId: values.deezerTrackId,
     deezerAlbumId: values.deezerAlbumId,
+    spotifyTrackId: values.spotifyTrackId,
     album: values.album,
     durationSeconds: values.durationSeconds,
     isrcs: JSON.stringify(values.isrcs),
@@ -198,6 +204,7 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('baseEnergy' in updates) encoded.baseEnergy = updates.baseEnergy;
   if ('deezerTrackId' in updates) encoded.deezerTrackId = updates.deezerTrackId;
   if ('deezerAlbumId' in updates) encoded.deezerAlbumId = updates.deezerAlbumId;
+  if ('spotifyTrackId' in updates) encoded.spotifyTrackId = updates.spotifyTrackId;
   if ('album' in updates) encoded.album = updates.album;
   if ('durationSeconds' in updates) encoded.durationSeconds = updates.durationSeconds;
   if ('isrcs' in updates) encoded.isrcs = JSON.stringify(updates.isrcs ?? []);

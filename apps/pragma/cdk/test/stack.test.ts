@@ -198,6 +198,42 @@ describe('pragma app stack', () => {
     }
   });
 
+  it('names the Spotify parameter and grants the API permission to read it', () => {
+    const template = synthAppStack('prod');
+    const functions = template.findResources('AWS::Lambda::Function');
+    const apiFunction = Object.entries(functions).find(([logicalId]) =>
+      logicalId.includes('AppApiFn'),
+    )?.[1];
+    const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
+    expect(variables.SPOTIFY_CREDENTIALS_PARAMETER).toBe('/pragma/spotify-credentials');
+    template.hasResourceProperties(
+      'AWS::IAM::Policy',
+      Match.objectLike({
+        PolicyDocument: Match.objectLike({
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: 'ssm:GetParameter',
+              Effect: 'Allow',
+              Resource: Match.objectLike({
+                'Fn::Join': Match.arrayWith([
+                  Match.arrayWith([
+                    Match.stringLikeRegexp(':parameter/pragma/spotify-credentials'),
+                  ]),
+                ]),
+              }),
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it('keeps the Spotify secret itself out of the synthesized template', () => {
+    const rendered = JSON.stringify(synthAppStack('prod').toJSON());
+    expect(rendered).not.toContain('SPOTIFY_CREDENTIALS"');
+    expect(rendered).toContain('/pragma/spotify-credentials');
+  });
+
   it('declares the custom prod domain alias on the CloudFront distribution', () => {
     const prodTemplate = synthAppStack('prod');
     prodTemplate.hasResourceProperties(

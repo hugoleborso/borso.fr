@@ -50,6 +50,7 @@ function buildSongInput(song: SeedSong, defaultLineup: Lineup): SongCreateInput 
     baseEnergy: song.baseEnergy,
     deezerTrackId: null,
     deezerAlbumId: null,
+    spotifyTrackId: null,
     album: null,
     durationSeconds: null,
     isrcs: [],

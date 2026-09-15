@@ -38,6 +38,7 @@ export const songSchema = z.object({
     .nullable(),
   deezerTrackId: z.string().nullable().default(null),
   deezerAlbumId: z.string().nullable().default(null),
+  spotifyTrackId: z.string().nullable().default(null),
   album: z.string().nullable().default(null),
   durationSeconds: z.number().nullable().default(null),
   isrcs: z.array(z.string()).default([]),
@@ -65,6 +66,7 @@ export interface SongDraftState {
   links: SongExternalLinkValue[];
   deezerTrackId: string | null;
   deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string;
   durationSeconds: number | null;
   isrcs: string[];
@@ -88,6 +90,7 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   links: [],
   deezerTrackId: null,
   deezerAlbumId: null,
+  spotifyTrackId: null,
   album: '',
   durationSeconds: null,
   isrcs: [],
@@ -112,6 +115,7 @@ export function songFromApi(song: Song): SongDraftState {
     links: song.links,
     deezerTrackId: song.deezerTrackId,
     deezerAlbumId: song.deezerAlbumId,
+    spotifyTrackId: song.spotifyTrackId,
     album: song.album ?? '',
     durationSeconds: song.durationSeconds,
     isrcs: song.isrcs,
@@ -140,6 +144,7 @@ export interface SongSavePayload {
   readonly links: SongExternalLinkValue[];
   readonly deezerTrackId: string | null;
   readonly deezerAlbumId: string | null;
+  readonly spotifyTrackId: string | null;
   readonly album: string | null;
   readonly durationSeconds: number | null;
   readonly isrcs: string[];
@@ -166,6 +171,7 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     links: draft.links,
     deezerTrackId: draft.deezerTrackId,
     deezerAlbumId: draft.deezerAlbumId,
+    spotifyTrackId: draft.spotifyTrackId,
     album: albumTrimmed.length === 0 ? null : albumTrimmed,
     durationSeconds: draft.durationSeconds,
     isrcs: draft.isrcs,
@@ -213,6 +219,7 @@ export function applyExternalIdentityToDraft(
     ...draft,
     deezerTrackId: hit.deezerTrackId,
     deezerAlbumId: hit.deezerAlbumId,
+    spotifyTrackId: null,
     album: hit.album ?? '',
     durationSeconds: hit.durationSeconds,
     isrcs: [...hit.isrcs],
