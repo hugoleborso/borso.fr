@@ -19,6 +19,7 @@ import { didCopyTextToClipboard } from '../../lib/clipboard.adapter';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useOutreachTemplate, useSaveOutreachTemplate } from '../../lib/queries/outreach.queries';
+import { BarPlaceSearch } from '../../components/organisms/BarPlaceSearch';
 import { OutreachTemplateCard } from '../../components/organisms/OutreachTemplateCard';
 import { renderOutreachMessage, selectOutreachTemplate } from './outreach-message.core';
 import {
@@ -36,6 +37,7 @@ import {
   type BarFormSubmitPayload,
   type BarStatus,
   BLANK_BAR_FORM,
+  buildBarFormFromPlace,
 } from './bar-form.core';
 import {
   applyBarWriteIntent,
@@ -264,6 +266,13 @@ export function BarsPage(): JSX.Element {
         </div>
       ) : null}
 
+      <BarPlaceSearch
+        onPick={(hit) => {
+          setFormInitial(buildBarFormFromPlace(hit, BLANK_BAR_FORM));
+          setWriteCount((current) => current + 1);
+          barFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+        }}
+      />
       <OutreachTemplateCard
         key={template}
         template={template}

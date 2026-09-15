@@ -32,6 +32,11 @@ Lives in: `api/src/bars/`
   interaction is stale too (`isStale` in `domain/bar-staleness.core.ts`).
   The default threshold is 60 days.
 
+A bar is added either by hand or from a **place**, the Google Places
+record a member picked in the search; a place fills the name, the city and
+the phone number of a new bar and is never stored as such
+(`bar-search.core.ts`).
+
 Not to be confused with: the `venue` column on a concert, which is free
 text typed for that one date.
 

@@ -7,7 +7,7 @@ import { fileURLToPath } from 'node:url';
 import { DsqlClusterStack } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
-import { beforeAll, describe, expect, it } from 'vitest';
+import { beforeAll, describe, expect, it, vi } from 'vitest';
 import { buildPragmaAppStack } from '../lib/stack.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -20,6 +20,14 @@ const PREVIEW_PR_NUMBER = 1;
 const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
 
 const templateByStage = new Map<string, Template>();
+
+function readApiEnvVars(template: Template): Record<string, unknown> {
+  const functions = template.findResources('AWS::Lambda::Function');
+  const apiFunction = Object.entries(functions).find(([logicalId]) =>
+    logicalId.includes('AppApiFn'),
+  )?.[1];
+  return apiFunction === undefined ? {} : readEnvVars(apiFunction);
+}
 
 // @FollowsBlueprint test-cdk-synth
 function synthAppStack(stage: 'prod' | 'preview'): Template {
@@ -178,6 +186,19 @@ describe('pragma app stack', () => {
       const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
       expect(variables).toHaveProperty('UPLOADS_BUCKET');
     }
+  });
+
+  it('carries the Places key only where the deploy environment supplies one', () => {
+    expect(readApiEnvVars(buildAppStackTemplate('prod'))).not.toHaveProperty(
+      'GOOGLE_PLACES_API_KEY',
+    );
+
+    vi.stubEnv('GOOGLE_PLACES_API_KEY', 'key-1');
+    expect(readApiEnvVars(buildAppStackTemplate('prod'))).toHaveProperty(
+      'GOOGLE_PLACES_API_KEY',
+      'key-1',
+    );
+    vi.unstubAllEnvs();
   });
 
   it('passes the relying party of the stage a passkey is enrolled on', () => {

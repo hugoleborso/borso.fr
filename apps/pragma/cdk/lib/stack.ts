@@ -20,6 +20,8 @@ const APP_SLUG = 'pragma';
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
 
+const PLACES_API_KEY_VARIABLE = 'GOOGLE_PLACES_API_KEY';
+
 export interface BuildPragmaAppStackProps {
   readonly scope: Construct;
   readonly stage: Stage;
@@ -77,6 +79,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   });
 
   const siteOrigin = readSiteOrigin(props);
+  const placesApiKey = process.env[PLACES_API_KEY_VARIABLE];
 
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
@@ -90,6 +93,9 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,
         WEBAUTHN_ORIGIN: siteOrigin.origin,
+        ...(placesApiKey === undefined || placesApiKey.length === 0
+          ? {}
+          : { [PLACES_API_KEY_VARIABLE]: placesApiKey }),
       },
     },
     database: {

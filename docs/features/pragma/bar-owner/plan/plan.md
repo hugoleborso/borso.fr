@@ -38,3 +38,22 @@ Risks: the default template lives in the translation catalogues rather than
 in the database, so an empty `outreach_template` table is not a missing
 value but the intended starting point; switching language before saving
 switches the default too.
+
+## Plan — adding a bar from Google Maps
+
+| Layer | File | Change |
+| --- | --- | --- |
+| Core | `api/src/bars/bar-search.core.ts` | Parses the Places body with Zod into `BarSearchHit`, reading the city from the address components with a `postal_town` fallback. 100% coverage. |
+| Adapter | `api/src/bars/bar-search.adapter.ts` | The one outbound call, per ADR-0012. Reads `GOOGLE_PLACES_API_KEY` at call time and answers `not-configured` rather than throwing when it is unset. |
+| Controller | `api/src/bars/bars.controller.ts` | `GET /api/bars/search?query=`, behind the member session; `not-configured` becomes a 503. |
+| CDK | `cdk/lib/stack.ts` | Passes the key to the API Lambda only when the deploy environment supplies one, with a stack test asserting both halves. |
+| Query | `site/src/lib/queries/bars.queries.ts` | `useBarPlaceSearch`, disabled on an empty query. |
+| Organism | `site/src/components/organisms/BarPlaceSearch.tsx` | The search box, 600 ms debounce, one sentence when the deployment has no key. |
+| Front core | `site/src/routes/bars/bar-form.core.ts` | `buildBarFormFromPlace`, which always prepares a new bar. |
+| i18n | `site/src/i18n/{en,fr}.json` | The search labels. |
+| ADR | `docs/adr/0017-…md` | Why the call is proxied and where the key lives. |
+
+Risks: the key lands in the Lambda's configuration in plaintext, so the
+restriction that bounds spend is the one set on the key in the Google
+console. The search is debounced in the page, not rate-limited on the
+server, because Google charges rather than throttles.

@@ -5,6 +5,7 @@ import {
   type BarFormValues,
   barFormValuesSchema,
   BLANK_BAR_FORM,
+  buildBarFormFromPlace,
   buildBarFormInitial,
   buildBarPayloadFromFormValues,
   parseBarStatus,
@@ -124,6 +125,34 @@ describe('buildBarFormInitial', () => {
         ownerMemberId: 'member-1',
       }),
     ).toMatchObject({ capacity: '80', city: 'Lyon', ownerMemberId: 'member-1' });
+  });
+});
+
+describe('buildBarFormFromPlace', () => {
+  it('fills a blank form with what the place knows', () => {
+    expect(
+      buildBarFormFromPlace(
+        { name: 'Le Zinc', city: 'Paris', phone: '01 02 03 04 05' },
+        BLANK_BAR_FORM,
+      ),
+    ).toEqual({
+      ...BLANK_BAR_FORM,
+      id: null,
+      name: 'Le Zinc',
+      city: 'Paris',
+      contactPhone: '01 02 03 04 05',
+    });
+  });
+
+  it('leaves a field the place does not know empty', () => {
+    expect(
+      buildBarFormFromPlace({ name: 'Le Zinc', city: null, phone: null }, BLANK_BAR_FORM),
+    ).toMatchObject({ city: '', contactPhone: '' });
+  });
+
+  it('always builds a new bar, never an edit of the one on screen', () => {
+    const editing = { ...BLANK_BAR_FORM, id: 'bar-1' };
+    expect(buildBarFormFromPlace({ name: 'X', city: null, phone: null }, editing).id).toBeNull();
   });
 });
 

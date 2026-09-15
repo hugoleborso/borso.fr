@@ -116,6 +116,22 @@ export function buildBarFormInitial(bar: {
   };
 }
 
+export interface BarPlacePick {
+  readonly name: string;
+  readonly city: string | null;
+  readonly phone: string | null;
+}
+
+export function buildBarFormFromPlace(pick: BarPlacePick, blank: BarFormInitial): BarFormInitial {
+  return {
+    ...blank,
+    id: null,
+    name: pick.name,
+    city: pick.city ?? '',
+    contactPhone: pick.phone ?? '',
+  };
+}
+
 export type BarFormTitleKind = 'new' | 'existing';
 
 export function selectBarFormTitleKind(initial: BarFormInitial): BarFormTitleKind {

@@ -58,3 +58,32 @@ puts the result on the clipboard.
 
 - No per-bar or per-member variant of the template, and no history.
 - No sending: the message is copied, never mailed from the application.
+
+# Adding a bar from Google Maps
+
+## Problem
+
+Adding a bar means retyping what the member is already reading on Google
+Maps: the name, the city, the phone number.
+
+## Decision
+
+The bars page carries a **search** box backed by Google's Places API.
+Picking a result fills the new-bar form with the name, the city and the
+phone number, leaving the member to set the status and the notes.
+
+## Rules
+
+- The search runs through this application's API, behind the same session
+  as every other bars route. The browser never holds the Google key.
+- Picking a result always prepares a **new** bar, even while another bar
+  is open in the form. Nothing is written until the member saves.
+- A field the place does not carry is left empty, never guessed.
+- A deployment with no Google key says the search is not configured, in one
+  sentence, and every other part of the page keeps working.
+
+## Out of scope
+
+- No map, no pin, no coordinates stored.
+- No duplicate detection against the bars already recorded.
+- No enrichment of an existing bar from a place.

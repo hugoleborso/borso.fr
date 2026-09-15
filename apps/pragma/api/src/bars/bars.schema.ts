@@ -44,6 +44,12 @@ export const barCreateSchema = z.object({
 });
 
 export const barUpdateSchema = barCreateSchema.partial();
+const SEARCH_QUERY_MAX = 256;
+
+export const barSearchQuerySchema = z.object({
+  query: z.string().trim().min(1).max(SEARCH_QUERY_MAX),
+});
+
 export const barIdParamSchema = z.object({ id: z.string().uuid() });
 
 export type BarStatus = (typeof BAR_STATUSES)[number];

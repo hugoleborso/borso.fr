@@ -110,6 +110,15 @@ export const pragmaManifest: ArchitectureManifest = {
       boundary: 'third-party',
     },
     {
+      id: 'google-places',
+      icon: '🗺️',
+      name: 'Google Places',
+      technology: 'Places API (New), Text Search',
+      description:
+        "Answers a bar search with the places matching it, so a new bar is picked from a map rather than typed. The key is the deployment's, never the browser's: the search is proxied through the API, and a deployment with no key answers a named not-configured outcome.",
+      boundary: 'third-party',
+    },
+    {
       id: 'musicbrainz',
       icon: '🎼',
       name: 'MusicBrainz',
