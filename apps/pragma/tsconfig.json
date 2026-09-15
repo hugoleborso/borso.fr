@@ -25,6 +25,7 @@
     "site/src/**/*.ts",
     "site/src/**/*.tsx",
     "api/src/**/*.ts",
+    "api/scripts/**/*.ts",
     "cdk/test/**/*.ts",
     "test/**/*.ts",
     "vite.config.ts",

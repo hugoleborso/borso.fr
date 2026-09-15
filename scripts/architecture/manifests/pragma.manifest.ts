@@ -119,6 +119,15 @@ export const pragmaManifest: ArchitectureManifest = {
       boundary: 'third-party',
     },
     {
+      id: 'coverartarchive',
+      icon: '💿',
+      name: 'Cover Art Archive',
+      technology: 'HTTPS, public web service',
+      description:
+        "Album artwork, served by MusicBrainz release id. The browser requests each cover directly and falls back to a tile of the song's initials when there is none; the backfill script asks it which of a recording's releases actually has artwork.",
+      boundary: 'third-party',
+    },
+    {
       id: 'youtube',
       icon: '▶️',
       name: 'YouTube',

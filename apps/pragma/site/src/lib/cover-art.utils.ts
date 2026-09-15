@@ -1,3 +1,7 @@
+/**
+ * @DependsOnExternal coverartarchive
+ */
+
 const COVER_ART_ARCHIVE_ORIGIN = 'https://coverartarchive.org';
 const THUMBNAIL_SIZE = 250;
 const INITIALS_MAX = 2;

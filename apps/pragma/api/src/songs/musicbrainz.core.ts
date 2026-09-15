@@ -155,3 +155,49 @@ export function expiredSearchCacheKeys(
     .filter(([, entry]) => entry.expiresAt <= nowMillis)
     .map(([cacheKey]) => cacheKey);
 }
+
+const RELEASE_CANDIDATES_MAX = 5;
+const OFFICIAL_STATUS = 'Official';
+const BEFORE = -1;
+const AFTER = 1;
+const SAME = 0;
+const NO_DATE = '9999-99-99';
+
+const lookupReleaseSchema = z.object({
+  id: z.string(),
+  date: z.string().optional(),
+  status: z.string().optional(),
+});
+
+export type ReleaseCandidate = z.infer<typeof lookupReleaseSchema>;
+
+const recordingLookupSchema = z.object({
+  releases: z.array(lookupReleaseSchema).default([]),
+});
+
+export function compareText(left: string, right: string): number {
+  if (left < right) return BEFORE;
+  if (left > right) return AFTER;
+  return SAME;
+}
+
+export function compareReleaseCandidates(left: ReleaseCandidate, right: ReleaseCandidate): number {
+  const isLeftOfficial = left.status === OFFICIAL_STATUS;
+  const isRightOfficial = right.status === OFFICIAL_STATUS;
+  if (isLeftOfficial !== isRightOfficial) return isLeftOfficial ? BEFORE : AFTER;
+  const byDate = compareText(left.date ?? NO_DATE, right.date ?? NO_DATE);
+  if (byDate !== SAME) return byDate;
+  return compareText(left.id, right.id);
+}
+
+/**
+ * @DependsOnExternal musicbrainz
+ */
+export function rankReleaseCandidates(payload: unknown): string[] {
+  const lookup = recordingLookupSchema.safeParse(payload);
+  if (!lookup.success) return [];
+  return [...lookup.data.releases]
+    .sort(compareReleaseCandidates)
+    .slice(0, RELEASE_CANDIDATES_MAX)
+    .map((release) => release.id);
+}
