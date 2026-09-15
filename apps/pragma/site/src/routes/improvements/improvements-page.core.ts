@@ -48,3 +48,19 @@ export function selectImprovementDeletionEffect(
 ): DeletionEffect {
   return selectedImprovementId === deletedImprovementId ? 'clear-form' : 'keep-form';
 }
+
+export type WriteFailureStatus = number | null;
+
+const UNKNOWN_ERROR_MESSAGE_KEY: ParseKeys = 'improvements.errorUnknown';
+
+const ERROR_MESSAGE_KEY_BY_STATUS = new Map<number, ParseKeys>([
+  [400, 'improvements.errorRefused'],
+  [401, 'improvements.errorSignedOut'],
+  [404, 'improvements.errorGone'],
+]);
+
+// @FollowsBlueprint core-label-key
+export function selectErrorMessageKey(status: WriteFailureStatus): ParseKeys {
+  if (status === null) return UNKNOWN_ERROR_MESSAGE_KEY;
+  return ERROR_MESSAGE_KEY_BY_STATUS.get(status) ?? UNKNOWN_ERROR_MESSAGE_KEY;
+}

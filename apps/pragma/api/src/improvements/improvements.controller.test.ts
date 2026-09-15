@@ -33,9 +33,19 @@ describe('improvements controller (back-e2e)', () => {
     await truncateAllTables(testDatabase());
   });
 
-  it('rejects the list without a session cookie', async () => {
+  it('rejects every route without a session cookie', async () => {
     const { app } = await buildAuthenticatedApp();
-    expect((await jsonRequest(app, '/api/improvements')).status).toBe(401);
+    const anyId = crypto.randomUUID();
+    const unauthenticatedCalls = [
+      jsonRequest(app, '/api/improvements'),
+      jsonRequest(app, '/api/improvements', { method: 'POST', body: { title: 'x' } }),
+      jsonRequest(app, `/api/improvements/${anyId}`, { method: 'PUT', body: { title: 'x' } }),
+      jsonRequest(app, `/api/improvements/${anyId}`, { method: 'DELETE' }),
+      jsonRequest(app, `/api/improvements/${anyId}/vote`, { method: 'PUT' }),
+      jsonRequest(app, `/api/improvements/${anyId}/vote`, { method: 'DELETE' }),
+    ];
+    const statuses = (await Promise.all(unauthenticatedCalls)).map((response) => response.status);
+    expect(statuses).toEqual([401, 401, 401, 401, 401, 401]);
   });
 
   it('files a new improvement as an idea authored by the signed-in member', async () => {

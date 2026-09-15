@@ -3,6 +3,7 @@ import {
   IMPROVEMENT_STATUSES,
   filterByStatus,
   readStatus,
+  selectErrorMessageKey,
   selectImprovementDeletionEffect,
   selectStatusLabelKey,
 } from './improvements-page.core';
@@ -52,5 +53,21 @@ describe('readStatus', () => {
 
   it('falls back to an idea for a value the backlog does not know', () => {
     expect(readStatus('wontfix')).toBe('idea');
+  });
+});
+
+describe('selectErrorMessageKey', () => {
+  it('names the refusal, the signed-out and the gone cases', () => {
+    expect(selectErrorMessageKey(400)).toBe('improvements.errorRefused');
+    expect(selectErrorMessageKey(401)).toBe('improvements.errorSignedOut');
+    expect(selectErrorMessageKey(404)).toBe('improvements.errorGone');
+  });
+
+  it('falls back to the unknown message for a status it has no words for', () => {
+    expect(selectErrorMessageKey(500)).toBe('improvements.errorUnknown');
+  });
+
+  it('falls back to the unknown message when the failure carried no status', () => {
+    expect(selectErrorMessageKey(null)).toBe('improvements.errorUnknown');
   });
 });

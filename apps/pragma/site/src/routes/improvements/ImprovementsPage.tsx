@@ -27,7 +27,9 @@ import {
   type ImprovementStatus,
   type StatusFilter,
   filterByStatus,
+  type WriteFailureStatus,
   readStatus,
+  selectErrorMessageKey,
   selectImprovementDeletionEffect,
   selectStatusLabelKey,
 } from './improvements-page.core';
@@ -108,8 +110,7 @@ export function ImprovementsPage(): JSX.Element {
   const visibleImprovements = filterByStatus(improvements, statusFilter);
   const lastError: unknown =
     list.error ?? create.error ?? update.error ?? remove.error ?? vote.error ?? null;
-  const errorMessage =
-    lastError instanceof ApiError ? lastError.message : lastError ? 'unknown-error' : null;
+  const failureStatus: WriteFailureStatus = lastError instanceof ApiError ? lastError.status : null;
 
   const filterOptions = [
     { value: ALL_STATUSES, label: t('common.all'), count: improvements.length },
@@ -123,9 +124,9 @@ export function ImprovementsPage(): JSX.Element {
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader title={t('improvements.title')} subtitle={t('improvements.subtitle')} />
-      {errorMessage === null ? null : (
+      {lastError === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
-          {errorMessage}
+          {t(selectErrorMessageKey(failureStatus))}
         </p>
       )}
       <FilterPillGroup
