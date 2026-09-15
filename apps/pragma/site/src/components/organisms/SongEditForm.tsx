@@ -4,15 +4,15 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { z } from 'zod';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
-import { inputVariants } from '../atoms/input.variants';
 import { BackLink } from '../molecules/BackLink';
+import { EnumSelectField } from '../molecules/EnumSelectField';
 import { PageHeader } from '../molecules/PageHeader';
 import { SongSearch } from './SongSearch';
+import { SONG_ORIGINS } from '@domain/song-origin.core';
 import { deriveTonality } from '@domain/tonality.core';
 import { SongChartFields } from './SongChartFields';
 import { SongChordPreview } from './SongChordPreview';
@@ -24,6 +24,7 @@ import { SongNotesFields } from '../molecules/SongNotesFields';
 import {
   applyExternalPickToDraft,
   detectProvider,
+  SONG_ORIGIN_LABEL_KEY,
   SONG_STATUS_LABEL_KEY,
   type SongDraftState,
   songStatuses,
@@ -205,27 +206,33 @@ export function SongEditForm({
             )}
           </form.Field>
 
-          <label className={labelClass} htmlFor="song-status">
-            {t('catalog.status')}
-          </label>
           <form.Field name="status">
             {(field) => (
-              <select
+              <EnumSelectField
                 id="song-status"
+                label={t('catalog.status')}
+                labelClassName={labelClass}
                 value={field.state.value}
-                onChange={(event) => {
-                  const status = z.enum(songStatuses).safeParse(event.target.value);
-                  if (status.success) field.handleChange(status.data);
-                }}
+                options={songStatuses}
+                labelOf={(status) => t(SONG_STATUS_LABEL_KEY[status])}
+                onChange={field.handleChange}
                 onBlur={field.handleBlur}
-                className={inputVariants({ size: 'md' })}
-              >
-                {songStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {t(SONG_STATUS_LABEL_KEY[status])}
-                  </option>
-                ))}
-              </select>
+              />
+            )}
+          </form.Field>
+
+          <form.Field name="origin">
+            {(field) => (
+              <EnumSelectField
+                id="song-origin"
+                label={t('catalog.origin')}
+                labelClassName={labelClass}
+                value={field.state.value}
+                options={SONG_ORIGINS}
+                labelOf={(origin) => t(SONG_ORIGIN_LABEL_KEY[origin])}
+                onChange={field.handleChange}
+                onBlur={field.handleBlur}
+              />
             )}
           </form.Field>
 

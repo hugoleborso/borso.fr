@@ -9,6 +9,7 @@ const ALL_TABLES: readonly string[] = [
   'setlist_vote',
   'auth_attempt',
   'bar',
+  'task',
   'transition_comment',
   'setlist_entry',
   'session_setlist',

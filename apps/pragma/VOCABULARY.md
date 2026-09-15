@@ -61,6 +61,27 @@ uploaded through `api/src/uploads/`
   key (`chordChartSchema`).
 - The column is nullable, and stored as JSON in a TEXT column.
 
+## Composition
+
+A song the band wrote itself, as opposed to one it covers.
+
+Lives in: `api/src/songs/` (the `origin` column), read through
+`domain/song-origin.core.ts`
+
+- `origin` is one of `cover`, `original`. The column is nullable with no
+  default, because Aurora DSQL cannot add a `NOT NULL` column after the
+  table exists, so a row written before the column reads as `cover`
+  through `resolveSongOrigin`.
+- A composition is not a separate record: it is a song, so it carries the
+  same chord chart, the same default lineup, the same three note fields
+  and the same mastery scores, and it enters a setlist the same way.
+  `selectCompositions` is the only thing that separates the two.
+- The compositions screen reads those fields and adds the tasks pointing
+  at that song; the catalogue screen is where a composition is edited.
+
+Not to be confused with: the **song**, which is the record itself. Every
+composition is a song; the word names which kind.
+
 ## Concert
 
 A date the band plays in front of an audience.
@@ -373,6 +394,33 @@ Lives in: `api/src/songs/`
 - The catalogue is listed newest first by `createdAt`.
 - Deleting a song first deletes its mastery overrides and every setlist
   entry that points at it (`deleteSongWithCascade`).
+
+## Task
+
+Something one member owes the band, with an optional date and an optional
+composition it is about.
+
+Lives in: `api/src/tasks/`
+
+- `title` and `status` are `NOT NULL`; `notes` is `NOT NULL` and defaults
+  to the empty string.
+- `status` is one of `todo`, `doing`, `done` (`TASK_STATUSES` in
+  `domain/task-status.core.ts`). Every status but `done` counts as open.
+- `assigneeId` and `songId` are both nullable, and neither carries a
+  foreign key, because DSQL has none. The service checks the member and
+  the song exist before the write; deleting a member nulls the assignee
+  out and deleting a song nulls the link out, in the same transaction
+  that deletes the row.
+- The list comes back ordered by what is most urgent: in progress first,
+  then waiting, then done; within a status, by the nearest due date, with
+  a task carrying no date behind every dated one; then by title
+  (`compareTasksByUrgency`).
+- The tasks screen draws one column per member, in the order the members
+  come back, and adds an unclaimed column only when something is
+  unassigned.
+
+Not to be confused with: a **setlist entry**, which is a decision about
+one song for one night rather than work owed by a person.
 
 ## Tonality
 

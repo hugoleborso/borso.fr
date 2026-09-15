@@ -1,6 +1,7 @@
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
+import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS } from '@domain/song-origin.core';
 
 export const SONG_STATUSES = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const LINK_PROVIDERS = ['spotify', 'deezer', 'youtube', 'other'] as const;
@@ -13,6 +14,7 @@ export const songTable = pgTable('song', {
   title: text('title').notNull(),
   artist: text('artist').notNull().default(''),
   status: text('status').notNull(),
+  origin: text('origin'),
   links: text('links').notNull().default('[]'),
   chart: text('chart'),
   tonalityStart: text('tonality_start'),
@@ -70,6 +72,7 @@ const songBaseSchema = z.object({
   title: z.string().trim().min(1).max(SONG_STRING_FIELD_MAX),
   artist: z.string().trim().max(SONG_STRING_FIELD_MAX).default(''),
   status: z.enum(SONG_STATUSES),
+  origin: z.enum(SONG_ORIGINS).default(DEFAULT_SONG_ORIGIN),
   links: z.array(songExternalLinkSchema).max(SONG_LINKS_MAX).default([]),
   chart: chordChartSchema.nullable().default(null),
   tonalityStart: z.string().max(SONG_TONALITY_MAX).nullable().default(null),

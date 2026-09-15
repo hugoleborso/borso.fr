@@ -21,6 +21,7 @@ function valuesFromCreate(input: SongCreateInput): SongInsertShape {
     title: input.title,
     artist: input.artist,
     status: input.status,
+    origin: input.origin,
     links: input.links,
     chart: input.chart,
     tonalityStart: input.tonalityStart,

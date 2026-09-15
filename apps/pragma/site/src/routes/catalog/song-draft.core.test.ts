@@ -19,6 +19,7 @@ const API_SONG: Song = {
   title: 'Slow Burn',
   artist: 'The Embers',
   status: 'rehearsed',
+  origin: 'original',
   tonalityStart: 'Am',
   tonalityEnd: 'C',
   baseEnergy: 6,
@@ -66,6 +67,7 @@ describe('songFromApi', () => {
     expect(songFromApi(API_SONG)).toEqual({
       title: 'Slow Burn',
       artist: 'The Embers',
+      origin: 'original',
       releaseId: null,
       status: 'rehearsed',
       tonalityStart: 'Am',
@@ -162,6 +164,7 @@ describe('payloadFromDraft', () => {
       title: 'Slow Burn',
       artist: 'The Embers',
       status: 'wip',
+      origin: 'cover',
       tonalityStart: 'Am',
       tonalityEnd: 'C',
       baseEnergy: 7,

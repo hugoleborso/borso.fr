@@ -12,6 +12,7 @@ const EXISTING_SONG = {
   artist: 'Volt',
   status: 'rehearsed',
   links: [{ url: 'https://example.test/a', provider: 'other', comment: 'live take' }],
+  origin: 'cover',
   chart: null,
   tonalityStart: 'F',
   tonalityEnd: null,

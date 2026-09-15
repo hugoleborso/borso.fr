@@ -40,6 +40,10 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'catalog.notesTitle', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.tags', readsTheSameBecause: '"tags" is the word French musicians use here' },
   { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'compos.lineup',
+    readsTheSameBecause: 'the band says lineup in French too, and the vocabulary keeps that word',
+  },
   { key: 'instruments.title', readsTheSameBecause: 'same word, same spelling' },
   { key: 'lineup.instruments', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.administrationSection', readsTheSameBecause: 'same word, same spelling' },
@@ -69,6 +73,7 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'setlist.notes', readsTheSameBecause: 'same word, same spelling' },
   { key: 'setlist.title', readsTheSameBecause: '"setlist" is the word French musicians use' },
   { key: 'shell.meVersion', readsTheSameBecause: 'the brand and a version number' },
+  { key: 'tasks.notes', readsTheSameBecause: 'same word, same spelling' },
 ];
 
 // @FollowsBlueprint test-i18n-parity

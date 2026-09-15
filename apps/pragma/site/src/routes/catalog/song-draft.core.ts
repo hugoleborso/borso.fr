@@ -1,11 +1,17 @@
 /** @Feature songs */
 
 import { z } from 'zod';
+import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS, type SongOrigin } from '@domain/song-origin.core';
 import type { SongChartKind } from '../../components/organisms/SongChartFields';
 import type { SongExternalLinkValue } from '../../components/organisms/SongExternalLinks';
 
 export const songStatuses = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const linkProviders = ['spotify', 'deezer', 'youtube', 'other'] as const;
+
+export const SONG_ORIGIN_LABEL_KEY = {
+  cover: 'catalog.originCover',
+  original: 'catalog.originOriginal',
+} as const satisfies Record<SongOrigin, string>;
 
 export const SONG_STATUS_LABEL_KEY = {
   idea: 'catalog.statusIdea',
@@ -25,6 +31,7 @@ export const songSchema = z.object({
   title: z.string(),
   artist: z.string(),
   status: z.enum(songStatuses),
+  origin: z.enum(SONG_ORIGINS).default(DEFAULT_SONG_ORIGIN),
   tonalityStart: z.string().nullable(),
   tonalityEnd: z.string().nullable(),
   baseEnergy: z.number().nullable(),
@@ -55,6 +62,7 @@ export interface SongDraftState {
   title: string;
   artist: string;
   status: SongStatus;
+  origin: SongOrigin;
   tonalityStart: string;
   tonalityEnd: string;
   baseEnergy: string;
@@ -78,6 +86,7 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   title: '',
   artist: '',
   status: 'idea',
+  origin: DEFAULT_SONG_ORIGIN,
   tonalityStart: '',
   tonalityEnd: '',
   baseEnergy: '',
@@ -102,6 +111,7 @@ export function songFromApi(song: Song): SongDraftState {
     title: song.title,
     artist: song.artist,
     status: song.status,
+    origin: song.origin,
     tonalityStart: song.tonalityStart ?? '',
     tonalityEnd: song.tonalityEnd ?? '',
     baseEnergy: song.baseEnergy === null ? '' : String(song.baseEnergy),
@@ -133,6 +143,7 @@ export interface SongSavePayload {
   readonly title: string;
   readonly artist: string;
   readonly status: SongStatus;
+  readonly origin: SongOrigin;
   readonly tonalityStart: string | null;
   readonly tonalityEnd: string | null;
   readonly baseEnergy: number | null;
@@ -159,6 +170,7 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     title: titleTrimmed,
     artist: draft.artist.trim(),
     status: draft.status,
+    origin: draft.origin,
     tonalityStart: draft.tonalityStart.trim().length === 0 ? null : draft.tonalityStart.trim(),
     tonalityEnd: draft.tonalityEnd.trim().length === 0 ? null : draft.tonalityEnd.trim(),
     baseEnergy: baseEnergyValue,

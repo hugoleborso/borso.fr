@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatCapacity, formatSessionDate } from './formatters.utils';
+import {
+  formatCapacity,
+  formatDueDate,
+  formatSessionDate,
+  isDueDatePast,
+} from './formatters.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('formatters.utils', () => {
@@ -43,5 +48,34 @@ describe('formatters.utils', () => {
       expect(formatCapacity(1_200)).toBe('1 200');
       expect(formatCapacity(1_200_000)).toBe('1 200 000');
     });
+  });
+});
+
+describe('formatDueDate', () => {
+  it('prints a day and a month, and nothing at all without a date', () => {
+    expect(formatDueDate('2026-05-01T12:00:00.000Z', 'en-GB')).toBe('1 May');
+    expect(formatDueDate(null, 'en-GB')).toBeNull();
+  });
+
+  it('gives back what it was handed when that is not a date', () => {
+    expect(formatDueDate('next tuesday', 'en-GB')).toBe('next tuesday');
+  });
+});
+
+describe('isDueDatePast', () => {
+  const NOW = new Date('2026-05-10T00:00:00.000Z').getTime();
+
+  it('is true only for a date already gone', () => {
+    expect(isDueDatePast('2026-05-01T12:00:00.000Z', NOW)).toBe(true);
+    expect(isDueDatePast('2026-06-01T12:00:00.000Z', NOW)).toBe(false);
+  });
+
+  it('is not past on the very moment it is due', () => {
+    expect(isDueDatePast('2026-05-10T00:00:00.000Z', NOW)).toBe(false);
+  });
+
+  it('is false for a task with no date, and for text that is not one', () => {
+    expect(isDueDatePast(null, NOW)).toBe(false);
+    expect(isDueDatePast('soon', NOW)).toBe(false);
   });
 });

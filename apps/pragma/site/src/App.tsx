@@ -4,6 +4,7 @@ import { RequireSession } from './components/organisms/RequireSession';
 import { AccountPage } from './routes/account/AccountPage';
 import { BarsPage } from './routes/bars/BarsPage';
 import { CatalogPage } from './routes/catalog/CatalogPage';
+import { ComposPage } from './routes/compos/ComposPage';
 import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
@@ -11,6 +12,7 @@ import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
 import { EnrolPage } from './routes/EnrolPage';
 import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
+import { TasksPage } from './routes/tasks/TasksPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
@@ -41,6 +43,8 @@ export function App(): JSX.Element {
             <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
             <Route path="/setlists/:setlistId/vote" element={<SetlistVotePage />} />
             <Route path="/bars" element={<BarsPage />} />
+            <Route path="/tasks" element={<TasksPage />} />
+            <Route path="/compos" element={<ComposPage />} />
             <Route path="/members" element={<MembersPage />} />
             <Route path="/instruments" element={<InstrumentsPage />} />
             <Route path="/account" element={<AccountPage />} />
