@@ -26,15 +26,18 @@ const OPENING_BUTTON_CLASS =
 export function TaskRow(props: TaskRowProps): JSX.Element {
   const { t } = useTranslation();
   const isOpen = isTaskOpen({ status: props.status });
+  const isDueDateLate = props.isOverdue && isOpen;
   return (
     <li className="relative flex items-start gap-2.5 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors">
-      <input
-        type="checkbox"
-        checked={!isOpen}
-        onChange={props.onToggleDone}
-        aria-label={t('tasks.toggleDone')}
-        className="relative z-10 mt-1.5 w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
-      />
+      <label className="relative z-10 -my-2 -ml-1 inline-flex min-w-11 min-h-11 items-center justify-center cursor-pointer">
+        <input
+          type="checkbox"
+          checked={!isOpen}
+          onChange={props.onToggleDone}
+          aria-label={t('tasks.toggleDone')}
+          className="w-4 h-4 accent-[var(--color-accent)] cursor-pointer"
+        />
+      </label>
       <div className="flex-1 min-w-0 flex flex-col gap-1">
         <button type="button" className={OPENING_BUTTON_CLASS} onClick={props.onOpen}>
           <span className={composeClassName(isOpen ? 'text-ink-900' : 'text-ink-400 line-through')}>
@@ -54,7 +57,7 @@ export function TaskRow(props: TaskRowProps): JSX.Element {
             <span
               className={composeClassName(
                 'text-xs',
-                props.isOverdue ? 'text-danger font-medium' : 'text-ink-500',
+                isDueDateLate ? 'text-danger font-medium' : 'text-ink-500',
               )}
             >
               {props.dueLabel}
@@ -66,7 +69,7 @@ export function TaskRow(props: TaskRowProps): JSX.Element {
         type="button"
         onClick={props.onDelete}
         aria-label={t('common.delete')}
-        className="relative z-10 inline-flex items-center justify-center min-w-11 min-h-11 -my-1 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0"
+        className="relative z-10 inline-flex shrink-0 items-center justify-center min-w-11 min-h-11 -my-1 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0"
       >
         ×
       </button>

@@ -106,7 +106,7 @@ export function ComposPage(): JSX.Element {
               >
                 <span className="flex-1 min-w-0 truncate text-[13.5px]">{composition.title}</span>
                 <ChartKindIcon kind={composition.chart?.kind ?? null} />
-                <span className="font-mono text-[11px] text-ink-400">
+                <span className="font-mono text-xs text-ink-500">
                   {countLineupMembers(composition.defaultLineup)}
                 </span>
                 <StatusChip status={composition.status} />
