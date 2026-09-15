@@ -84,7 +84,6 @@ export function selectOwnerName(
   owners: readonly BarOwnerCandidate[],
   ownerMemberId: string | null,
 ): string | null {
-  if (ownerMemberId === null) return null;
   const owner = owners.find((candidate) => candidate.id === ownerMemberId);
   return owner === undefined ? null : owner.firstName;
 }
