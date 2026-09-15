@@ -106,7 +106,7 @@ export function VoteDeck({
   }
 
   return (
-    <div className="relative w-full max-w-[420px] mx-auto aspect-[3/4] select-none">
+    <div className="relative w-full max-w-[320px] mx-auto aspect-[4/3] select-none">
       <div className="absolute inset-y-0 right-0 w-1/2 flex flex-col pointer-events-none">
         {SCORING_ZONES.map((scoring) => (
           <div
@@ -135,7 +135,7 @@ export function VoteDeck({
           role="group"
           aria-label={t('voting.cardLabel')}
           className={clsx(
-            'absolute inset-0 touch-none rounded-2xl border border-line bg-surface p-6 flex flex-col justify-between shadow-lg cursor-grab',
+            'absolute inset-0 touch-none rounded-2xl border border-line bg-surface p-4 flex flex-col justify-between shadow-lg cursor-grab',
             cardTransition,
           )}
           style={{
@@ -149,12 +149,12 @@ export function VoteDeck({
           <div>
             {isNewSong ? <Badge tone="accent">{t('voting.newSong')}</Badge> : null}
             <p className="text-xs tracking-wider uppercase text-ink-400 m-0">{song.artist}</p>
-            <h2 className="font-display italic text-[32px] leading-tight text-ink-900 m-0">
+            <h2 className="font-display italic text-[26px] leading-tight text-ink-900 m-0">
               {song.title}
             </h2>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-sm text-ink-500">{t('voting.swipeHint')}</span>
+            <span className="text-xs text-ink-500">{t('voting.swipeHint')}</span>
             <PointsBadge points={givenPoints} />
           </div>
         </div>

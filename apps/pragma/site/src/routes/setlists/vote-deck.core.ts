@@ -161,6 +161,18 @@ export function selectShuffledDeck<Song extends { readonly id: string }>(
     .map((entry) => entry.song);
 }
 
+export function selectScoredSongs<Song extends { readonly id: string }>(
+  songs: readonly Song[],
+  pointsBySongId: Readonly<Record<string, number>>,
+): Song[] {
+  return songs
+    .filter((song) => readGivenPoints(pointsBySongId, song.id) > 0)
+    .sort(
+      (left, right) =>
+        readGivenPoints(pointsBySongId, right.id) - readGivenPoints(pointsBySongId, left.id),
+    );
+}
+
 export function isDeckMode(mode: VoteMode): boolean {
   return mode === 'deck';
 }

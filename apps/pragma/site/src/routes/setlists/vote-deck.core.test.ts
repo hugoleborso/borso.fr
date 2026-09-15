@@ -16,6 +16,7 @@ import {
   isDeckMode,
   judgeTap,
   selectOtherVoteMode,
+  selectScoredSongs,
   selectShuffledDeck,
   selectSeenShare,
   selectSongsLeft,
@@ -252,6 +253,19 @@ describe('the order the deck deals its cards in', () => {
     expect(hashDeckKey('a')).not.toBe(hashDeckKey('b'));
     expect(hashDeckKey('ab')).not.toBe(hashDeckKey('ba'));
     expect(hashDeckKey('')).toBe(2_166_136_261);
+  });
+});
+
+describe('the songs the member has already scored', () => {
+  const songs = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
+
+  it('keeps only the ones carrying points, heaviest first', () => {
+    expect(selectScoredSongs(songs, { a: 1, c: 3 })).toEqual([{ id: 'c' }, { id: 'a' }]);
+  });
+
+  it('is empty when nothing has been scored', () => {
+    expect(selectScoredSongs(songs, { a: 0 })).toEqual([]);
+    expect(selectScoredSongs(songs, {})).toEqual([]);
   });
 });
 

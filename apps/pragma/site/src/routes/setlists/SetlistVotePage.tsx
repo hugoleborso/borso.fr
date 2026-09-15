@@ -33,7 +33,13 @@ import {
   projectPointsBySongId,
   selectVotePageState,
 } from './setlist-vote.core';
-import { DEFAULT_VOTE_MODE, isDeckMode, selectShuffledDeck, type VoteMode } from './vote-deck.core';
+import {
+  DEFAULT_VOTE_MODE,
+  isDeckMode,
+  selectScoredSongs,
+  selectShuffledDeck,
+  type VoteMode,
+} from './vote-deck.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 
 // @FollowsBlueprint organism-query-owning
@@ -80,6 +86,7 @@ export function SetlistVotePage(): JSX.Element {
   const pointsBySongId = projectPointsBySongId(songList, (songId) =>
     boardData === undefined ? 0 : readMemberPoints(boardData, memberId, songId),
   );
+  const scoredSongs = selectScoredSongs(songList, pointsBySongId);
 
   return (
     <section className="flex flex-col gap-4 pb-8">
@@ -158,6 +165,17 @@ export function SetlistVotePage(): JSX.Element {
                   }}
                 />
               </div>
+              <VoteCatalog
+                songs={scoredSongs}
+                lastScoredAt={board.data?.lastScoredAt ?? null}
+                remainingPoints={board.data?.budget.remaining ?? 0}
+                pointsBySongId={pointsBySongId}
+                onExhausted={() => setWasRefused(true)}
+                onScore={(songId, points) => {
+                  setWasRefused(false);
+                  scoreSong.mutate({ songId, points });
+                }}
+              />
             </>
           ) : (
             <VoteCatalog
