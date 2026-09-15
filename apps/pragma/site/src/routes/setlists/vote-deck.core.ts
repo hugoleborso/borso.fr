@@ -145,8 +145,8 @@ const HASH_MASK = 0xffffffff;
 
 export function hashDeckKey(key: string): number {
   let hash = HASH_SEED;
-  for (const character of key) {
-    hash = ((hash ^ (character.codePointAt(0) ?? 0)) * HASH_PRIME) & HASH_MASK;
+  for (let i = 0; i < key.length; i += 1) {
+    hash = ((hash ^ key.charCodeAt(i)) * HASH_PRIME) & HASH_MASK;
   }
   return hash >>> 0;
 }
