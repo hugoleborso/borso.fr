@@ -20,6 +20,7 @@ export const barTable = pgTable('bar', {
   contactName: text('contact_name'),
   contactEmail: text('contact_email'),
   contactPhone: text('contact_phone'),
+  ownerMemberId: uuid('owner_member_id'),
 });
 
 const NAME_MAX = 256;
@@ -39,6 +40,7 @@ export const barCreateSchema = z.object({
   contactName: z.string().max(CONTACT_NAME_MAX).nullable().default(null),
   contactEmail: z.string().email().nullable().default(null),
   contactPhone: z.string().max(CONTACT_PHONE_MAX).nullable().default(null),
+  ownerMemberId: z.string().uuid().nullable().default(null),
 });
 
 export const barUpdateSchema = barCreateSchema.partial();

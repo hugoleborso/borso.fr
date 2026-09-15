@@ -15,6 +15,12 @@ import { BarsKanban } from '../../components/organisms/BarsKanban';
 import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
 import { ApiError } from '../../lib/api.client';
 import { isPositiveCount } from '../../lib/counts.utils';
+import { didCopyTextToClipboard } from '../../lib/clipboard.adapter';
+import { useMembersList } from '../../lib/queries/members.queries';
+import { useSignedInMember } from '../../lib/queries/me.queries';
+import { useOutreachTemplate, useSaveOutreachTemplate } from '../../lib/queries/outreach.queries';
+import { OutreachTemplateCard } from '../../components/organisms/OutreachTemplateCard';
+import { renderOutreachMessage, selectOutreachTemplate } from './outreach-message.core';
 import {
   useBarsList,
   useCreateBar,
@@ -22,7 +28,7 @@ import {
   useUpdateBar,
 } from '../../lib/queries/bars.queries';
 import { countStale, isStale } from '@domain/bar-staleness.core';
-import { BarForm } from '../../components/organisms/BarForm';
+import { BarForm, type BarOwnerOption } from '../../components/organisms/BarForm';
 import {
   BAR_STATUS_KEY,
   BAR_STATUSES,
@@ -43,12 +49,14 @@ import {
   selectDragDropIntent,
   selectFormAfterDeletion,
   selectFormForBar,
+  selectOwnerName,
   selectToggleState,
   selectVisibleBarsView,
   sortBarsByName,
 } from './bars-page.core';
 
 const NO_BARS: readonly BarRow[] = [];
+const NO_OWNERS: readonly BarOwnerOption[] = [];
 
 const VIEW_TOGGLE_CLASS = {
   active: 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]',
@@ -66,12 +74,26 @@ export function BarsPage(): JSX.Element {
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
   const barFormRef = useRef<HTMLDivElement>(null);
   const barsQuery = useBarsList();
+  const membersQuery = useMembersList();
+  const signedInMember = useSignedInMember();
+  const outreachTemplateQuery = useOutreachTemplate();
+  const saveOutreachTemplate = useSaveOutreachTemplate();
+  const [templateMessage, setTemplateMessage] = useState<string | null>(null);
+  const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const createBar = useCreateBar();
   const updateBar = useUpdateBar();
   const deleteBar = useDeleteBar();
 
   const bars = useMemo<readonly BarRow[]>(() => barsQuery.data?.bars ?? NO_BARS, [barsQuery.data]);
   const sortedBars = useMemo(() => sortBarsByName(bars), [bars]);
+  const owners = useMemo<readonly BarOwnerOption[]>(
+    () => membersQuery.data?.members ?? NO_OWNERS,
+    [membersQuery.data],
+  );
+  const ownerNameOf = useCallback(
+    (bar: BarRow): string | null => selectOwnerName(owners, bar.ownerMemberId),
+    [owners],
+  );
 
   const now = useMemo(() => new Date(), []);
   const staleCount = useMemo(() => countStale(bars, now), [bars, now]);
@@ -80,8 +102,8 @@ export function BarsPage(): JSX.Element {
 
   const grouped = useMemo(() => groupBarsByStatus(sortedBars), [sortedBars]);
   const kanbanCardsByStatus = useMemo(
-    () => buildKanbanCardsByStatus(grouped, isBarStale),
-    [grouped, isBarStale],
+    () => buildKanbanCardsByStatus(grouped, isBarStale, ownerNameOf),
+    [grouped, isBarStale, ownerNameOf],
   );
 
   const queryError = barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
@@ -95,11 +117,27 @@ export function BarsPage(): JSX.Element {
         status: bar.status,
         city: bar.city,
         capacity: bar.capacity,
+        ownerName: ownerNameOf(bar),
         isStale: isBarStale(bar),
         isBeingEdited: isBarBeingEdited(bar.id, formInitial),
       })),
-    [sortedBars, isBarStale, formInitial],
+    [sortedBars, isBarStale, ownerNameOf, formInitial],
   );
+
+  const template = selectOutreachTemplate(
+    outreachTemplateQuery.data?.body ?? null,
+    t('bars.outreachDefaultTemplate'),
+  );
+
+  const copyMessageForBar = async (barName: string): Promise<void> => {
+    const message = renderOutreachMessage(template, {
+      barName,
+      phone: signedInMember.data?.phone ?? null,
+      email: signedInMember.data?.email ?? null,
+    });
+    const isCopied = await didCopyTextToClipboard(message);
+    setCopyMessage(isCopied ? t('bars.outreachCopied') : t('bars.outreachCopyFailed'));
+  };
 
   const reportError = (error: Error): void => {
     setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
@@ -157,6 +195,9 @@ export function BarsPage(): JSX.Element {
           <BarForm
             key={buildBarFormKey(formInitial, writeCount)}
             initial={formInitial}
+            owners={owners}
+            copyMessageLabel={t('bars.outreachCopy')}
+            onCopyMessage={(barName) => void copyMessageForBar(barName)}
             onSubmit={saveBar}
             onCancel={() => setFormInitial(BLANK_BAR_FORM)}
           />
@@ -223,6 +264,21 @@ export function BarsPage(): JSX.Element {
         </div>
       ) : null}
 
+      <OutreachTemplateCard
+        key={template}
+        template={template}
+        message={templateMessage}
+        onSave={(body) =>
+          saveOutreachTemplate.mutate(
+            { body },
+            {
+              onSuccess: () => setTemplateMessage(t('bars.outreachTemplateSaved')),
+              onError: reportError,
+            },
+          )
+        }
+      />
+      {copyMessage === null ? null : <p className="text-sm text-ink-500 mb-3">{copyMessage}</p>}
       {panelByView[selectVisibleBarsView(view, isNarrow)]}
       {pendingDeletionId === null ? null : (
         <ConfirmDialog

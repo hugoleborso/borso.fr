@@ -25,6 +25,7 @@ function valuesFromCreate(input: BarCreateInput): BarPersistedShape {
     contactName: input.contactName,
     contactEmail: input.contactEmail,
     contactPhone: input.contactPhone,
+    ownerMemberId: input.ownerMemberId,
   };
 }
 
@@ -42,6 +43,7 @@ function valuesFromUpdate(input: BarUpdateInput): BarPersistedShape {
   if (input.contactName !== undefined) out.contactName = input.contactName;
   if (input.contactEmail !== undefined) out.contactEmail = input.contactEmail;
   if (input.contactPhone !== undefined) out.contactPhone = input.contactPhone;
+  if (input.ownerMemberId !== undefined) out.ownerMemberId = input.ownerMemberId;
   return out;
 }
 

@@ -8,6 +8,8 @@ export const memberTable = pgTable('member', {
   firstName: text('first_name').notNull(),
   color: text('color').notNull(),
   avatarS3Key: text('avatar_s3_key'),
+  phone: text('phone'),
+  email: text('email'),
 });
 
 export const memberInstrumentTable = pgTable(
@@ -21,6 +23,8 @@ export const memberInstrumentTable = pgTable(
 
 const FIRST_NAME_MAX = 64;
 const AVATAR_S3_KEY_MAX = 512;
+const PHONE_MAX = 32;
+const EMAIL_MAX = 254;
 
 export const firstNameSchema = z.string().trim().min(1).max(FIRST_NAME_MAX);
 export const colorSchema = z
@@ -28,16 +32,28 @@ export const colorSchema = z
   .regex(HEX_COLOR_PATTERN, 'expected hex color like #abc or #aabbcc');
 export const avatarS3KeySchema = z.string().min(1).max(AVATAR_S3_KEY_MAX).nullable();
 
+export const phoneSchema = z.string().trim().max(PHONE_MAX).nullable();
+export const emailSchema = z.string().trim().email().max(EMAIL_MAX).nullable();
+
+export const memberContactSchema = z.object({
+  phone: phoneSchema.optional(),
+  email: emailSchema.optional(),
+});
+
 export const createMemberSchema = z.object({
   firstName: firstNameSchema,
   color: colorSchema.optional(),
   avatarS3Key: avatarS3KeySchema.optional(),
+  phone: phoneSchema.optional(),
+  email: emailSchema.optional(),
 });
 
 export const updateMemberSchema = z.object({
   firstName: firstNameSchema.optional(),
   color: colorSchema.optional(),
   avatarS3Key: avatarS3KeySchema.optional(),
+  phone: phoneSchema.optional(),
+  email: emailSchema.optional(),
 });
 
 export const memberInstrumentAssignmentSchema = z.object({

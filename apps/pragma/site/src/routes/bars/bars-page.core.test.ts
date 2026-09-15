@@ -11,6 +11,7 @@ import {
   isBarBeingEdited,
   selectFormAfterDeletion,
   selectFormForBar,
+  selectOwnerName,
   selectToggleState,
   selectVisibleBarsView,
   sortBarsByName,
@@ -25,6 +26,7 @@ function buildBar(overrides: Partial<BarRow> & { id: string; name: string }): Ba
     contactName: null,
     contactEmail: null,
     contactPhone: null,
+    ownerMemberId: null,
     lastInteractionAt: null,
     ...overrides,
   };
@@ -39,6 +41,7 @@ const PAYLOAD = {
   contactName: null,
   contactEmail: null,
   contactPhone: null,
+  ownerMemberId: null,
 } as const;
 
 // @FollowsBlueprint test-pure-unit
@@ -74,7 +77,11 @@ describe('buildKanbanCardsByStatus', () => {
   ]);
 
   it('projects each bar into the fields the board shows', () => {
-    const cards = buildKanbanCardsByStatus(grouped, () => false);
+    const cards = buildKanbanCardsByStatus(
+      grouped,
+      () => false,
+      () => null,
+    );
 
     expect(cards.lead).toStrictEqual([
       {
@@ -83,23 +90,64 @@ describe('buildKanbanCardsByStatus', () => {
         city: 'Lyon',
         capacity: 90,
         contactName: null,
+        ownerName: null,
         isStale: false,
       },
     ]);
   });
 
   it('derives staleness through the caller, which owns the clock', () => {
-    const cards = buildKanbanCardsByStatus(grouped, (bar) => bar.id === 'stale-bar');
+    const cards = buildKanbanCardsByStatus(
+      grouped,
+      (bar) => bar.id === 'stale-bar',
+      () => null,
+    );
 
     expect(cards.booked[0]?.isStale).toBe(true);
     expect(cards.lead[0]?.isStale).toBe(false);
   });
 
   it('gives every status a column, including the empty ones', () => {
-    const cards = buildKanbanCardsByStatus(grouped, () => false);
+    const cards = buildKanbanCardsByStatus(
+      grouped,
+      () => false,
+      () => null,
+    );
 
     expect(Object.keys(cards)).toStrictEqual(['lead', 'contacted', 'booked', 'played', 'cold']);
     expect(cards.cold).toStrictEqual([]);
+  });
+});
+
+describe('buildKanbanCardsByStatus owner projection', () => {
+  it('names the owner the caller resolves', () => {
+    const owned = groupBarsByStatus([buildBar({ id: 'bar-1', name: 'Le Zinc' })]);
+    const cards = buildKanbanCardsByStatus(
+      owned,
+      () => false,
+      () => 'Ada',
+    );
+
+    expect(cards.lead[0]?.ownerName).toBe('Ada');
+  });
+});
+
+describe('selectOwnerName', () => {
+  const owners = [
+    { id: 'member-1', firstName: 'Ada' },
+    { id: 'member-2', firstName: 'Bob' },
+  ];
+
+  it('names the member the bar points at', () => {
+    expect(selectOwnerName(owners, 'member-2')).toBe('Bob');
+  });
+
+  it('has no name for a bar nobody owns', () => {
+    expect(selectOwnerName(owners, null)).toBeNull();
+  });
+
+  it('has no name for an owner who is gone', () => {
+    expect(selectOwnerName(owners, 'member-3')).toBeNull();
   });
 });
 

@@ -20,6 +20,7 @@ const FILLED_VALUES: BarFormValues = {
   contactName: 'Ada',
   contactEmail: 'ada@example.com',
   contactPhone: '0102030405',
+  ownerMemberId: 'member-1',
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -50,6 +51,7 @@ describe('buildBarPayloadFromFormValues', () => {
       contactName: 'Ada',
       contactEmail: 'ada@example.com',
       contactPhone: '0102030405',
+      ownerMemberId: 'member-1',
     });
   });
 
@@ -62,6 +64,7 @@ describe('buildBarPayloadFromFormValues', () => {
         contactName: '',
         contactEmail: '',
         contactPhone: '',
+        ownerMemberId: '',
       }),
     ).toEqual({
       name: 'Le Zinc',
@@ -72,6 +75,7 @@ describe('buildBarPayloadFromFormValues', () => {
       contactName: null,
       contactEmail: null,
       contactPhone: null,
+      ownerMemberId: null,
     });
   });
 });
@@ -89,6 +93,7 @@ describe('buildBarFormInitial', () => {
         contactName: null,
         contactEmail: null,
         contactPhone: null,
+        ownerMemberId: null,
       }),
     ).toEqual({
       id: 'bar-1',
@@ -100,6 +105,7 @@ describe('buildBarFormInitial', () => {
       contactName: '',
       contactEmail: '',
       contactPhone: '',
+      ownerMemberId: '',
     });
   });
 
@@ -115,8 +121,9 @@ describe('buildBarFormInitial', () => {
         contactName: 'Ada',
         contactEmail: 'ada@example.com',
         contactPhone: '01',
+        ownerMemberId: 'member-1',
       }),
-    ).toMatchObject({ capacity: '80', city: 'Lyon' });
+    ).toMatchObject({ capacity: '80', city: 'Lyon', ownerMemberId: 'member-1' });
   });
 });
 

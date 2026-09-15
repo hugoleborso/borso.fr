@@ -8,6 +8,7 @@ import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
 import { buildMeRouter } from './me/me.controller';
 import { buildMembersRouter } from './members/members.controller';
+import { buildOutreachRouter } from './outreach/outreach.controller';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
@@ -43,6 +44,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/setlists', buildSetlistsRouter())
     .route('/api/transition-comments', buildTransitionCommentsRouter())
     .route('/api/bars', buildBarsRouter())
+    .route('/api/outreach', buildOutreachRouter())
     .route('/api/uploads', buildUploadsRouter());
 }
 

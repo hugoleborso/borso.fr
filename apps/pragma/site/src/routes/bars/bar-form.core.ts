@@ -27,6 +27,7 @@ export const barFormValuesSchema = z.object({
   contactName: z.string().max(BAR_FIELD_MAX_LENGTH),
   contactEmail: z.string().max(BAR_FIELD_MAX_LENGTH),
   contactPhone: z.string().max(BAR_FIELD_MAX_LENGTH),
+  ownerMemberId: z.string(),
 });
 
 export type BarFormValues = z.infer<typeof barFormValuesSchema>;
@@ -40,6 +41,7 @@ export interface BarFormSubmitPayload {
   readonly contactName: string | null;
   readonly contactEmail: string | null;
   readonly contactPhone: string | null;
+  readonly ownerMemberId: string | null;
 }
 
 export interface BarFormInitial {
@@ -52,6 +54,7 @@ export interface BarFormInitial {
   readonly contactName: string;
   readonly contactEmail: string;
   readonly contactPhone: string;
+  readonly ownerMemberId: string;
 }
 
 export const BLANK_BAR_FORM: BarFormInitial = {
@@ -64,6 +67,7 @@ export const BLANK_BAR_FORM: BarFormInitial = {
   contactName: '',
   contactEmail: '',
   contactPhone: '',
+  ownerMemberId: '',
 };
 
 function emptyToNull(value: string): string | null {
@@ -82,6 +86,7 @@ export function buildBarPayloadFromFormValues(values: BarFormValues): BarFormSub
     contactName: emptyToNull(values.contactName),
     contactEmail: emptyToNull(values.contactEmail),
     contactPhone: emptyToNull(values.contactPhone),
+    ownerMemberId: emptyToNull(values.ownerMemberId),
   };
 }
 
@@ -95,6 +100,7 @@ export function buildBarFormInitial(bar: {
   readonly contactName: string | null;
   readonly contactEmail: string | null;
   readonly contactPhone: string | null;
+  readonly ownerMemberId: string | null;
 }): BarFormInitial {
   return {
     id: bar.id,
@@ -106,6 +112,7 @@ export function buildBarFormInitial(bar: {
     contactName: bar.contactName ?? '',
     contactEmail: bar.contactEmail ?? '',
     contactPhone: bar.contactPhone ?? '',
+    ownerMemberId: bar.ownerMemberId ?? '',
   };
 }
 

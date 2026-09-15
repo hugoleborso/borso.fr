@@ -230,6 +230,15 @@ export const pragmaManifest: ArchitectureManifest = {
       realisedBy: 'service-worker',
     },
     {
+      id: 'browser-clipboard',
+      icon: '📋',
+      name: 'Clipboard',
+      technology: 'Browser clipboard API',
+      description:
+        'Puts the outreach message a member copied for one bar on the clipboard, answering whether the write happened so a refused permission is a message in the page.',
+      boundary: 'browser-platform',
+    },
+    {
       id: 'browser-dialog',
       icon: '🪟',
       name: 'HTMLDialogElement',

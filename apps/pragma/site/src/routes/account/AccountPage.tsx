@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/atoms/Card';
+import { ContactDetailsForm } from '../../components/organisms/ContactDetailsForm';
 import { PasskeyList } from '../../components/organisms/PasskeyList';
 import { PasswordChangeForm } from '../../components/organisms/PasswordChangeForm';
 import { ApiError } from '../../lib/api.client';
@@ -13,6 +14,7 @@ import {
   usePasskeys,
   useRegisterPasskey,
   useRemovePasskey,
+  useSaveContactDetails,
   useSignedInMember,
 } from '../../lib/queries/me.queries';
 import { selectLoginErrorMessageKey } from '../login.core';
@@ -25,6 +27,8 @@ export function AccountPage(): JSX.Element {
   const changePassword = useChangePassword();
   const registerPasskey = useRegisterPasskey();
   const removePasskey = useRemovePasskey();
+  const saveContactDetails = useSaveContactDetails();
+  const [contactMessage, setContactMessage] = useState<string | null>(null);
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
 
@@ -38,6 +42,24 @@ export function AccountPage(): JSX.Element {
         <p className="text-lg text-ink-900 m-0">
           {member.data?.firstName ?? '—'} ({member.data?.username ?? '—'})
         </p>
+      </Card>
+
+      <Card className="p-4 sm:p-6">
+        <h2 className="text-base text-ink-900 m-0 mb-3">{t('account.contactDetails')}</h2>
+        <p className="text-xs text-ink-500 mt-0 mb-3">{t('account.contactDetailsHint')}</p>
+        <ContactDetailsForm
+          key={`${member.data?.phone ?? ''}-${member.data?.email ?? ''}`}
+          initial={{ phone: member.data?.phone ?? '', email: member.data?.email ?? '' }}
+          message={contactMessage}
+          onSubmit={async (values) => {
+            setContactMessage(null);
+            await saveContactDetails.mutateAsync({
+              phone: values.phone.length === 0 ? null : values.phone,
+              email: values.email.length === 0 ? null : values.email,
+            });
+            setContactMessage(t('account.contactDetailsSaved'));
+          }}
+        />
       </Card>
 
       <Card className="p-4 sm:p-6">

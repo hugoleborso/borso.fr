@@ -27,6 +27,7 @@ const NEW_BAR_DEFAULTS: Pick<
   | 'contactName'
   | 'contactEmail'
   | 'contactPhone'
+  | 'ownerMemberId'
 > = {
   notes: '',
   lastInteractionAt: null,
@@ -35,6 +36,7 @@ const NEW_BAR_DEFAULTS: Pick<
   contactName: null,
   contactEmail: null,
   contactPhone: null,
+  ownerMemberId: null,
 };
 
 function buildOptimisticBar(id: string, input: BarCreateVariables): BarRow {

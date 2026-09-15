@@ -25,7 +25,13 @@ export async function bootstrapSharedPassword(app: Hono, password = TEST_SHARED_
 
 export async function createMemberDirectly(app: Hono, firstName: string): Promise<string> {
   const { insertMember } = await import('../api/src/members/members.repository');
-  const member = await insertMember({ firstName, color: '#ff8a65', avatarS3Key: null });
+  const member = await insertMember({
+    firstName,
+    color: '#ff8a65',
+    avatarS3Key: null,
+    phone: null,
+    email: null,
+  });
   return member.id;
 }
 

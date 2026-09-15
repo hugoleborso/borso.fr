@@ -8,6 +8,7 @@ import {
   listInstrumentsForMember,
   listMembers,
   type MemberInstrumentRow,
+  type MemberPersistedShape,
   type MemberRow,
   replaceMemberInstruments,
   updateMember,
@@ -18,11 +19,18 @@ export async function getMembersSortedByFirstName(): Promise<MemberRow[]> {
   return rows.toSorted((left, right) => left.firstName.localeCompare(right.firstName));
 }
 
-export async function createMember(input: {
-  firstName: string;
-  color?: string;
-  avatarS3Key?: string | null;
-}): Promise<MemberRow> {
+export interface MemberContactInput {
+  phone?: string | null;
+  email?: string | null;
+}
+
+export async function createMember(
+  input: {
+    firstName: string;
+    color?: string;
+    avatarS3Key?: string | null;
+  } & MemberContactInput,
+): Promise<MemberRow> {
   let color = input.color;
   if (color === undefined) {
     const existing = await listMembers();
@@ -32,18 +40,22 @@ export async function createMember(input: {
     firstName: input.firstName,
     color,
     avatarS3Key: input.avatarS3Key ?? null,
+    phone: input.phone ?? null,
+    email: input.email ?? null,
   });
 }
 
 // @FollowsBlueprint service-crud-update
 export async function patchMember(
   id: string,
-  input: { firstName?: string; color?: string; avatarS3Key?: string | null },
+  input: { firstName?: string; color?: string; avatarS3Key?: string | null } & MemberContactInput,
 ): Promise<{ kind: 'ok'; member: MemberRow } | { kind: 'empty' } | { kind: 'not-found' }> {
-  const updates: Partial<{ firstName: string; color: string; avatarS3Key: string | null }> = {};
+  const updates: Partial<MemberPersistedShape> = {};
   if (input.firstName !== undefined) updates.firstName = input.firstName;
   if (input.color !== undefined) updates.color = input.color;
   if (input.avatarS3Key !== undefined) updates.avatarS3Key = input.avatarS3Key;
+  if (input.phone !== undefined) updates.phone = input.phone;
+  if (input.email !== undefined) updates.email = input.email;
   if (Object.keys(updates).length === 0) return { kind: 'empty' };
   const member = await updateMember(id, updates);
   if (member === null) return { kind: 'not-found' };

@@ -17,6 +17,7 @@ function toBarRow(row: {
   contactName: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  ownerMemberId: string | null;
 }): BarRow {
   return { ...row, status: barStatusSchema.parse(row.status) };
 }
@@ -32,6 +33,7 @@ export interface BarRow {
   contactName: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  ownerMemberId: string | null;
 }
 
 // @FollowsBlueprint repository-projection
@@ -46,6 +48,7 @@ const PROJECTION = {
   contactName: barTable.contactName,
   contactEmail: barTable.contactEmail,
   contactPhone: barTable.contactPhone,
+  ownerMemberId: barTable.ownerMemberId,
 } as const;
 
 export interface BarPersistedShape {
@@ -58,6 +61,7 @@ export interface BarPersistedShape {
   contactName?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
+  ownerMemberId?: string | null;
 }
 
 export async function listBars(): Promise<BarRow[]> {
@@ -86,6 +90,7 @@ export async function insertBar(values: BarPersistedShape): Promise<BarRow> {
       contactName: values.contactName ?? null,
       contactEmail: values.contactEmail ?? null,
       contactPhone: values.contactPhone ?? null,
+      ownerMemberId: values.ownerMemberId ?? null,
     })
     .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');

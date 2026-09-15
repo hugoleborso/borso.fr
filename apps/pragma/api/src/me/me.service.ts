@@ -1,5 +1,5 @@
 import { readCredentialOfMember } from '../auth/credentials.service';
-import { getMembersSortedByFirstName } from '../members/members.service';
+import { getMembersSortedByFirstName, patchMember } from '../members/members.service';
 
 export { changePassword } from '../auth/credentials.service';
 export { SESSION_COOKIE_NAME, SESSION_TTL_MS } from '../auth/session-cookie.utils';
@@ -15,6 +15,8 @@ export interface SignedInMember {
   readonly firstName: string;
   readonly color: string;
   readonly username: string;
+  readonly phone: string | null;
+  readonly email: string | null;
 }
 
 // @FollowsBlueprint service-orchestration
@@ -31,5 +33,16 @@ export async function readSignedInMember(memberId: string): Promise<SignedInMemb
     firstName: member.firstName,
     color: member.color,
     username: credential.username,
+    phone: member.phone,
+    email: member.email,
   };
+}
+
+export async function saveOwnContactDetails(
+  memberId: string,
+  contact: { phone?: string | null; email?: string | null },
+): Promise<{ kind: 'ok' } | { kind: 'empty' } | { kind: 'not-found' }> {
+  const outcome = await patchMember(memberId, contact);
+  if (outcome.kind === 'ok') return { kind: 'ok' };
+  return outcome;
 }

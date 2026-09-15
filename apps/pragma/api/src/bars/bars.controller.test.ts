@@ -14,6 +14,7 @@ const barSchema = z.object({
   contactName: z.string().nullable(),
   contactEmail: z.string().nullable(),
   contactPhone: z.string().nullable(),
+  ownerMemberId: z.string().nullable(),
 });
 const singleEnvelope = z.object({ bar: barSchema });
 const listEnvelope = z.object({ bars: z.array(barSchema) });
@@ -93,6 +94,40 @@ describe('bars controller (back-e2e)', () => {
       singleEnvelope,
     );
     expect(dragged.bar.status).toBe('booked');
+  });
+
+  it('carries the owner through create and clears it when that member goes', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const memberEnvelope = z.object({ member: z.object({ id: z.string().uuid() }) });
+    const member = await readJson(
+      await jsonRequest(app, '/api/members', {
+        method: 'POST',
+        body: { firstName: 'Ada' },
+        cookieHeader,
+      }),
+      memberEnvelope,
+    );
+    const created = await readJson(
+      await jsonRequest(app, '/api/bars', {
+        method: 'POST',
+        body: { name: 'Le Zinc', status: 'lead', ownerMemberId: member.member.id },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(created.bar.ownerMemberId).toBe(member.member.id);
+
+    await jsonRequest(app, `/api/members/${member.member.id}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+
+    const reread = await readJson(
+      await jsonRequest(app, `/api/bars/${created.bar.id}`, { cookieHeader }),
+      singleEnvelope,
+    );
+    expect(reread.bar.ownerMemberId).toBeNull();
+    expect(reread.bar.name).toBe('Le Zinc');
   });
 
   it('rejects an unknown status value', async () => {
