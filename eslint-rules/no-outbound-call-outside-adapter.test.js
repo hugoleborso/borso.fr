@@ -2,7 +2,7 @@ import { createRuleTester } from './rule-tester.js';
 import rule from './no-outbound-call-outside-adapter.js';
 
 const serviceFile = 'apps/pragma/api/src/songs/songs.service.ts';
-const adapterFile = 'apps/pragma/api/src/songs/musicbrainz.adapter.ts';
+const adapterFile = 'apps/pragma/api/src/songs/deezer.adapter.ts';
 const databaseClientFile = 'apps/pragma/api/src/database/client.ts';
 const testFile = 'apps/pragma/api/src/songs/songs.service.test.ts';
 const toolingFile = 'scripts/architecture/architecture-graph.ts';
@@ -16,7 +16,7 @@ createRuleTester(serviceFile).run('no-outbound-call-outside-adapter (service)', 
   ],
   invalid: [
     {
-      code: "const response = await fetch('https://musicbrainz.org');",
+      code: "const response = await fetch('https://api.deezer.com');",
       errors: [{ messageId: 'outboundCallOutsideAdapter', data: { what: 'the fetch' } }],
     },
     {

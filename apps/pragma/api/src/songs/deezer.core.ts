@@ -49,8 +49,8 @@ function textOrNull(value: string | undefined): string | null {
 }
 
 function durationOrNull(duration: number | undefined): number | null {
-  if (duration === undefined) return null;
-  return duration > 0 ? duration : null;
+  const seconds = duration ?? 0;
+  return seconds > 0 ? seconds : null;
 }
 
 /**

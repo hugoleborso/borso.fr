@@ -14,7 +14,7 @@ const sourceWithoutSiblingTest = pureFile(
 );
 const siblingTestItself = pureFile('apps/last-loop-lepin/api/src/ranking/ranking.core.test.ts');
 const impureSource = pureFile('apps/last-loop-lepin/api/src/ranking/ranking.service.ts');
-const adapterWithSiblingTest = pureFile('apps/pragma/api/src/songs/musicbrainz.adapter.ts');
+const adapterWithSiblingTest = pureFile('apps/pragma/api/src/songs/deezer.adapter.ts');
 const adapterWithoutSiblingTest = pureFile('apps/pragma/api/src/songs/imaginary.adapter.ts');
 const schemaWithSiblingTest = pureFile('apps/pragma/api/src/members/members.schema.ts');
 const schemaWithoutSiblingTest = pureFile('apps/pragma/api/src/members/imaginary.schema.ts');
