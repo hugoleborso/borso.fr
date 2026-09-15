@@ -33,7 +33,7 @@ import {
   projectPointsBySongId,
   selectVotePageState,
 } from './setlist-vote.core';
-import { DEFAULT_VOTE_MODE, isDeckMode, type VoteMode } from './vote-deck.core';
+import { DEFAULT_VOTE_MODE, isDeckMode, selectShuffledDeck, type VoteMode } from './vote-deck.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 
 // @FollowsBlueprint organism-query-owning
@@ -54,6 +54,7 @@ export function SetlistVotePage(): JSX.Element {
   const [typedTarget, setTypedTarget] = useState<number | null>(null);
   const [cardIndex, setCardIndex] = useState<number>(0);
   const [voteMode, setVoteMode] = useState<VoteMode>(DEFAULT_VOTE_MODE);
+  const [deckSeed] = useState<string>(() => crypto.randomUUID());
   const proposal = useClosingProposal(setlistId, isClosingOpen);
 
   const isVoting = isVotingPageState(
@@ -72,6 +73,7 @@ export function SetlistVotePage(): JSX.Element {
   const isShowingClosing = pageState === 'closing' && proposal.data !== undefined;
   const proposedSongIds = (proposal.data ?? []).map((tally) => tally.songId).join(',');
   const songList = songs.data?.songs ?? [];
+  const deckSongs = selectShuffledDeck(songList, deckSeed);
   const boardData = board.data;
   const songsById = indexSongsById(songList);
   const membersById = indexMembersById(members.data?.members ?? []);
@@ -140,10 +142,10 @@ export function SetlistVotePage(): JSX.Element {
           <VoteModeToggle mode={voteMode} onChange={setVoteMode} />
           {isDeck ? (
             <>
-              <DeckProgressBar deckLength={songList.length} cardIndex={cardIndex} />
+              <DeckProgressBar deckLength={deckSongs.length} cardIndex={cardIndex} />
               <div className="px-4">
                 <VoteDeck
-                  songs={songList}
+                  songs={deckSongs}
                   lastScoredAt={board.data?.lastScoredAt ?? null}
                   remainingPoints={board.data?.budget.remaining ?? 0}
                   pointsBySongId={pointsBySongId}

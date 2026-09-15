@@ -137,6 +137,30 @@ export type VoteMode = 'list' | 'deck';
 
 export const DEFAULT_VOTE_MODE: VoteMode = 'list';
 
+export const VOTE_MODES: readonly VoteMode[] = ['list', 'deck'];
+
+const HASH_SEED = 2_166_136_261;
+const HASH_PRIME = 16_777_619;
+const HASH_MASK = 0xffffffff;
+
+export function hashDeckKey(key: string): number {
+  let hash = HASH_SEED;
+  for (const character of key) {
+    hash = ((hash ^ (character.codePointAt(0) ?? 0)) * HASH_PRIME) & HASH_MASK;
+  }
+  return hash >>> 0;
+}
+
+export function selectShuffledDeck<Song extends { readonly id: string }>(
+  songs: readonly Song[],
+  seed: string,
+): Song[] {
+  return songs
+    .map((song) => ({ song, rank: hashDeckKey(`${seed}:${song.id}`) }))
+    .sort((left, right) => left.rank - right.rank)
+    .map((entry) => entry.song);
+}
+
 export function isDeckMode(mode: VoteMode): boolean {
   return mode === 'deck';
 }

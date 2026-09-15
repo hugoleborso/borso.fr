@@ -12,9 +12,11 @@ import {
   selectCardTransitionClass,
   selectOffsetFromOrigin,
   cycleSongPoints,
+  hashDeckKey,
   isDeckMode,
   judgeTap,
   selectOtherVoteMode,
+  selectShuffledDeck,
   selectSeenShare,
   selectSongsLeft,
   selectSpentShare,
@@ -222,6 +224,37 @@ describe('what is left of the deck', () => {
   });
 });
 
+describe('the order the deck deals its cards in', () => {
+  const songs = [{ id: 'a' }, { id: 'b' }, { id: 'c' }, { id: 'd' }, { id: 'e' }];
+
+  it('keeps every song, once', () => {
+    const dealt = selectShuffledDeck(songs, 'seed-one');
+    expect([...dealt].map((song) => song.id).sort()).toEqual(['a', 'b', 'c', 'd', 'e']);
+  });
+
+  it('deals the same order for one seed and a different one for another', () => {
+    expect(selectShuffledDeck(songs, 'seed-one')).toEqual(selectShuffledDeck(songs, 'seed-one'));
+    expect(selectShuffledDeck(songs, 'seed-one')).not.toEqual(
+      selectShuffledDeck(songs, 'seed-two'),
+    );
+  });
+
+  it('ranks a song by its own key, so a new song never reshuffles the rest', () => {
+    const before = selectShuffledDeck(songs, 'seed-one').map((song) => song.id);
+    const after = selectShuffledDeck([...songs, { id: 'f' }], 'seed-one')
+      .map((song) => song.id)
+      .filter((id) => id !== 'f');
+    expect(after).toEqual(before);
+  });
+
+  it('hashes a key to a number that depends on every character', () => {
+    expect(hashDeckKey('a')).toBe(hashDeckKey('a'));
+    expect(hashDeckKey('a')).not.toBe(hashDeckKey('b'));
+    expect(hashDeckKey('ab')).not.toBe(hashDeckKey('ba'));
+    expect(hashDeckKey('')).toBe(2_166_136_261);
+  });
+});
+
 describe('a tap on a song in the catalogue', () => {
   it('walks the points up and drops a three back to nothing', () => {
     expect(cycleSongPoints(0)).toBe(1);
@@ -237,7 +270,7 @@ describe('a tap on a song in the catalogue', () => {
     expect(judgeTap(3, 0)).toEqual({ kind: 'score', points: 0 });
   });
 
-  it('names the other mode to switch to', () => {
+  it('names both modes, and which one is the deck', () => {
     expect(selectOtherVoteMode('list')).toBe('deck');
     expect(selectOtherVoteMode('deck')).toBe('list');
     expect(isDeckMode('deck')).toBe(true);
