@@ -54,7 +54,7 @@ export type WriteFailureStatus = number | null;
 
 const UNKNOWN_ERROR_MESSAGE_KEY: ParseKeys = 'improvements.errorUnknown';
 
-const ERROR_MESSAGE_KEY_BY_STATUS = new Map<number, ParseKeys>([
+const ERROR_MESSAGE_KEY_BY_STATUS = new Map<WriteFailureStatus, ParseKeys>([
   [400, 'improvements.errorRefused'],
   [401, 'improvements.errorSignedOut'],
   [404, 'improvements.errorGone'],
@@ -62,6 +62,5 @@ const ERROR_MESSAGE_KEY_BY_STATUS = new Map<number, ParseKeys>([
 
 // @FollowsBlueprint core-label-key
 export function selectErrorMessageKey(status: WriteFailureStatus): ParseKeys {
-  if (status === null) return UNKNOWN_ERROR_MESSAGE_KEY;
   return ERROR_MESSAGE_KEY_BY_STATUS.get(status) ?? UNKNOWN_ERROR_MESSAGE_KEY;
 }
