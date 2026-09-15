@@ -17,3 +17,5 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [18:33] `main` the dev API and the back-e2e suite share one local Postgres, so a POST to /api/__test/seed while the suite runs deletes its rows and the failure surfaces in an unrelated test file
 - [18:33] `main` coverage passed a guard that could not change an outcome (undefined > 0 is already false) and only the mutation gate named it
 - [18:33] `main` eslint-rules/test-file-has-sibling-source.test.js resolves its fixtures against the real tree, so renaming a source file fails a lint-rule test nowhere near the change, and only at push time
+- [20:41] `standards-reviewer` the standards reviewer is told to keep files under apps/ ending .ts or .tsx, but seal.ts verify also puts VOCABULARY.md in scope, so the skill's own predicate and the tool disagree
+- [20:53] `main` pnpm dev applies no migrations — only the back-e2e setup does — so a new migration leaves local dev answering 500 with errorMissingColumn until that suite happens to run
