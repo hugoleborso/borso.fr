@@ -225,9 +225,9 @@ Lives in: `api/src/songs/` (the `deezer_track_id` column), read by
   and the listen dialog then offers a Deezer *search* instead of the track
   page. Both are ordinary, not faults.
 - Distinct from the **Deezer album**, which is what the cover is fetched
-  by. Picking a search result sets both.
-- There is no Spotify equivalent: no column holds a Spotify identifier, so
-  the Spotify entry in the listen dialog is always a search.
+  by, and from the **Spotify track**, which the API resolves from this
+  track's ISRC. Picking a search result sets the first two and clears the
+  third, which is then resolved again on save.
 
 ## Spotify track
 

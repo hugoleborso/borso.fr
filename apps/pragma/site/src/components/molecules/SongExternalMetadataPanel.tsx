@@ -13,7 +13,7 @@ interface SongExternalMetadataPanelProps {
   readonly isrcs: readonly string[];
 }
 
-// @FollowsBlueprint organism-presentational
+// @FollowsBlueprint molecule-presentational
 export function SongExternalMetadataPanel({
   album,
   durationSeconds,

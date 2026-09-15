@@ -11,7 +11,7 @@ import {
 } from './queries.test-utils';
 
 interface OptimisticListShape {
-  songs: { id: string; title: string }[];
+  songs: { id: string; title: string; spotifyTrackId?: string | null }[];
 }
 
 interface ProbeProps<Mutate> {
@@ -142,6 +142,38 @@ describe('songs mutations — optimistic updates', () => {
 
     pending.resolve(jsonResponse({ song: { ...SEED_LIST.songs[0], title: 'Renamed' } }));
     await flushMicrotasks();
+    tree.unmount();
+  });
+
+  it('useUpdateSong takes the fields the server derived, which the client could not predict', async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(songKeys.list(), SEED_LIST);
+    const pending = deferred<Response>();
+    stub = stubFetch(() => pending.promise);
+
+    const slot = createMutateSlot<ReturnType<typeof useUpdateSong>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+    const send = slot.read();
+
+    send({ id: 'song-a', deezerTrackId: '67238735', spotifyTrackId: null }).catch(() => undefined);
+    await flushMicrotasks();
+
+    const midflight = queryClient.getQueryData<OptimisticListShape>(songKeys.list());
+    expect(midflight?.songs[0]?.spotifyTrackId).toBeNull();
+
+    pending.resolve(
+      jsonResponse({
+        song: {
+          ...SEED_LIST.songs[0],
+          deezerTrackId: '67238735',
+          spotifyTrackId: '2Foc5Q5nqNiosCNqttzHof',
+        },
+      }),
+    );
+    await flushMicrotasks();
+
+    const settled = queryClient.getQueryData<OptimisticListShape>(songKeys.list());
+    expect(settled?.songs[0]?.spotifyTrackId).toBe('2Foc5Q5nqNiosCNqttzHof');
     tree.unmount();
   });
 

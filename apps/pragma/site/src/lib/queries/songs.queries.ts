@@ -15,6 +15,10 @@ export const songKeys = {
 };
 
 type SongsListResponse = InferResponseType<typeof api.api.songs.$get>;
+export type ExternalSongHit = InferResponseType<
+  typeof api.api.songs.search.$get,
+  200
+>['hits'][number];
 type SongByIdResponse = InferResponseType<(typeof api.api.songs)[':id']['$get']>;
 type SongCreateVariables = Parameters<typeof api.api.songs.$post>[0]['json'];
 type SongUpdateVariables = { id: string } & Parameters<
@@ -113,7 +117,7 @@ export function useCreateSong() {
  * @Blueprint query-optimistic-mutation
  * @BlueprintName Optimistic Mutation
  * @BlueprintUsage Use for a write whose new state the client can predict, so the change shows before the server answers.
- * @BlueprintDescription Cancels the in flight reads for every key it is about to touch, snapshots them, writes the predicted rows, and returns the snapshots as the mutation context so `onError` can put them back verbatim. It then stops: nothing here refetches, because the cache it just wrote is the answer, and a `GET` fired at this moment can be served by a connection that has not seen the commit and would undo the write the user is looking at.
+ * @BlueprintDescription Cancels the in flight reads for every key it is about to touch, snapshots them, writes the predicted rows, and returns the snapshots as the mutation context so `onError` can put them back verbatim. `onSuccess` then overwrites those rows with the one the response carries, which is not the same thing as refetching: a `GET` fired at this moment can be served by a connection that has not seen the commit and would undo the write the user is looking at, whereas the response is the commit. Predicting is not enough on its own, because a write the server enriches — here a Spotify id resolved from the song's ISRC — leaves the client holding a value it had no way to guess.
  */
 export function useUpdateSong() {
   const queryClient = useQueryClient();
@@ -148,6 +152,13 @@ export function useUpdateSong() {
         return { song: mergeSongUpdate(old.song, patch) };
       });
       return { previousList, previousById };
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData<SongsListResponse>(songKeys.list(), (old) => {
+        if (old === undefined) return old;
+        return { songs: replaceEntityById(old.songs, data.song.id, () => data.song) };
+      });
+      queryClient.setQueryData<SongByIdResponse>(songKeys.byId(data.song.id), data);
     },
     onError: (_err, variables, context) => {
       if (context?.previousList !== undefined) {

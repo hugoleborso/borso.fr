@@ -3,7 +3,7 @@
  */
 
 const DEEZER_ALBUM_IMAGE_ORIGIN = 'https://api.deezer.com/album';
-const THUMBNAIL_SIZE = 'medium';
+const THUMBNAIL_SIZE = 'big';
 const INITIALS_MAX = 2;
 const HUE_DEGREES = 360;
 const COVER_SATURATION_PERCENT = 46;

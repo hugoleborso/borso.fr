@@ -4,14 +4,12 @@ import { buildCoverArtUrl, selectCoverColor, selectCoverInitials } from './cover
 describe('the address a cover is fetched from', () => {
   it('points at the album image Deezer serves by album id', () => {
     expect(buildCoverArtUrl('12047952')).toBe(
-      'https://api.deezer.com/album/12047952/image?size=medium',
+      'https://api.deezer.com/album/12047952/image?size=big',
     );
   });
 
   it('escapes what an album id could carry', () => {
-    expect(buildCoverArtUrl('a/b?c')).toBe(
-      'https://api.deezer.com/album/a%2Fb%3Fc/image?size=medium',
-    );
+    expect(buildCoverArtUrl('a/b?c')).toBe('https://api.deezer.com/album/a%2Fb%3Fc/image?size=big');
   });
 
   it('has no address for a song that names no album', () => {

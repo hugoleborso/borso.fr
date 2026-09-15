@@ -4,24 +4,14 @@ import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api.client';
 import { debounce } from '../../lib/debounce.utils';
-import { useSongSearch } from '../../lib/queries/songs.queries';
+import { type ExternalSongHit, useSongSearch } from '../../lib/queries/songs.queries';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 
 const DEBOUNCE_MS = 1000;
 
-export interface ExternalSongHit {
-  readonly deezerTrackId: string;
-  readonly title: string;
-  readonly artist: string;
-  readonly album: string | null;
-  readonly deezerAlbumId: string | null;
-  readonly durationSeconds: number | null;
-  readonly durationLabel: string | null;
-  readonly titleVersion: string | null;
-  readonly isrcs: readonly string[];
-}
+export type { ExternalSongHit };
 
 export interface SongSearchProps {
   readonly onPick: (hit: ExternalSongHit) => void;
