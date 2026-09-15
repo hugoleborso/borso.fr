@@ -28,7 +28,11 @@ describe('searchPlacesForBars', () => {
     expect(outcome).toEqual({ kind: 'ok', hits: [expect.objectContaining({ name: 'Le Zinc' })] });
     const [url, init] = fetcher.mock.calls[0] ?? [];
     expect(url).toBe('https://places.googleapis.com/v1/places:searchText');
-    expect(init?.headers).toMatchObject({ 'X-Goog-Api-Key': 'key-1' });
+    expect(init?.method).toBe('POST');
+    expect(init?.headers).toMatchObject({
+      'X-Goog-Api-Key': 'key-1',
+      'Content-Type': 'application/json',
+    });
     expect(init?.body).toContain('zinc paris');
   });
 
@@ -41,8 +45,8 @@ describe('searchPlacesForBars', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it('answers an empty list when the vendor refuses the call', async () => {
-    const fetcher = vi.fn<PlacesFetcher>(async () => respondWith({}, false));
+  it('ignores the body of a call the vendor refused', async () => {
+    const fetcher = vi.fn<PlacesFetcher>(async () => respondWith(BODY, false));
     expect(await searchPlacesForBars('zinc', { fetcher, apiKey: 'key-1' })).toEqual({
       kind: 'ok',
       hits: [],

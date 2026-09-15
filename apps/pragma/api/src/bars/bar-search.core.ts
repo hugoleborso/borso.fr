@@ -13,7 +13,7 @@ const placeSchema = z.object({
     .optional(),
 });
 
-const placesResponseSchema = z.object({ places: z.array(placeSchema).optional() });
+const placesResponseSchema = z.object({ places: z.array(placeSchema).default([]) });
 
 export interface BarSearchHit {
   readonly placeId: string;
@@ -47,7 +47,7 @@ function selectCity(components: readonly PlaceAddressComponent[] | undefined): s
 export function mapPlacesToBarSearchHits(payload: unknown): BarSearchHit[] {
   const placesBody = placesResponseSchema.safeParse(payload);
   if (!placesBody.success) return [];
-  const places = placesBody.data.places ?? [];
+  const places = placesBody.data.places;
   const hits: BarSearchHit[] = [];
   for (const place of places) {
     const name = place.displayName?.text ?? '';
