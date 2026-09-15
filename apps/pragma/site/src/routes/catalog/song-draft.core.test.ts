@@ -15,6 +15,7 @@ import {
 
 const API_SONG: Song = {
   id: '00000000-0000-4000-8000-000000000000',
+  releaseId: null,
   title: 'Slow Burn',
   artist: 'The Embers',
   status: 'rehearsed',
@@ -65,6 +66,7 @@ describe('songFromApi', () => {
     expect(songFromApi(API_SONG)).toEqual({
       title: 'Slow Burn',
       artist: 'The Embers',
+      releaseId: null,
       status: 'rehearsed',
       tonalityStart: 'Am',
       tonalityEnd: 'C',
@@ -166,6 +168,7 @@ describe('payloadFromDraft', () => {
       chart: null,
       links: [],
       mbid: null,
+      releaseId: null,
       album: 'Embers',
       durationSeconds: null,
       isrcs: [],
@@ -222,6 +225,7 @@ describe('applyExternalPickToDraft', () => {
     expect(
       applyExternalPickToDraft(draft, {
         mbid: 'mbid-2',
+        releaseId: 'release-2',
         title: 'Lightning',
         artist: 'Volt',
         album: null,
@@ -234,6 +238,7 @@ describe('applyExternalPickToDraft', () => {
       title: 'Lightning',
       artist: 'Volt',
       mbid: 'mbid-2',
+      releaseId: 'release-2',
       album: '',
       durationSeconds: 180,
       isrcs: ['ISRC2'],

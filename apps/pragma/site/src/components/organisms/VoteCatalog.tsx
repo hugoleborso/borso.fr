@@ -57,6 +57,7 @@ export function VoteCatalog({
             key={song.id}
             title={song.title}
             artist={song.artist}
+            releaseId={song.releaseId}
             points={points}
             isNew={isSongNewSinceLastScore(song, lastScoredAt, points)}
             onTap={() => {

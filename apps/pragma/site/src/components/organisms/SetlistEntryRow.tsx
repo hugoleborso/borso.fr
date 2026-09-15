@@ -1,5 +1,6 @@
 /** @Feature setlists */
 
+import { AlbumCover } from '../atoms/AlbumCover';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { JSX, ReactNode } from 'react';
@@ -52,6 +53,7 @@ export interface SetlistEntryRowProps {
   readonly position: number;
   readonly entryId: string;
   readonly title: string;
+  readonly releaseId: string | null;
   readonly artist: string;
   readonly tonalityLabel: string | null;
   readonly meanMastery: number | null;
@@ -150,8 +152,11 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 </span>
               </div>
             ) : null}
-            <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 [overflow-wrap:anywhere]">
-              {props.title}
+            <div className="flex items-start gap-2">
+              <AlbumCover title={props.title} releaseId={props.releaseId} size="sm" />
+              <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 [overflow-wrap:anywhere]">
+                {props.title}
+              </div>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-ink-500 mt-0.5 min-w-0 lg:flex-wrap">
               <span className="max-lg:truncate" title={props.artist}>

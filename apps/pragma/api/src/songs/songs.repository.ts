@@ -34,6 +34,7 @@ export interface SongRow {
   defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
   mbid: string | null;
+  releaseId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string[];
@@ -55,6 +56,7 @@ export interface SongInsertShape {
   defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
   mbid: string | null;
+  releaseId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string[];
@@ -78,6 +80,7 @@ interface SongRawRow {
   defaultLineup: string;
   baseEnergy: number | null;
   mbid: string | null;
+  releaseId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string | null;
@@ -101,6 +104,7 @@ const PROJECTION = {
   defaultLineup: songTable.defaultLineup,
   baseEnergy: songTable.baseEnergy,
   mbid: songTable.mbid,
+  releaseId: songTable.releaseId,
   album: songTable.album,
   durationSeconds: songTable.durationSeconds,
   isrcs: songTable.isrcs,
@@ -139,6 +143,7 @@ function rowToSong(row: SongRawRow): SongRow {
     defaultLineup: defaultLineupSchema.parse(defaultLineupRaw),
     baseEnergy: row.baseEnergy,
     mbid: row.mbid,
+    releaseId: row.releaseId,
     album: row.album,
     durationSeconds: row.durationSeconds,
     isrcs: parseJsonArrayColumn(row.isrcs, songIsrcsRowSchema),
@@ -165,6 +170,7 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     defaultLineup: JSON.stringify(values.defaultLineup),
     baseEnergy: values.baseEnergy,
     mbid: values.mbid,
+    releaseId: values.releaseId,
     album: values.album,
     durationSeconds: values.durationSeconds,
     isrcs: JSON.stringify(values.isrcs),
@@ -191,6 +197,7 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
     encoded.defaultLineup = JSON.stringify(updates.defaultLineup ?? {});
   if ('baseEnergy' in updates) encoded.baseEnergy = updates.baseEnergy;
   if ('mbid' in updates) encoded.mbid = updates.mbid;
+  if ('releaseId' in updates) encoded.releaseId = updates.releaseId;
   if ('album' in updates) encoded.album = updates.album;
   if ('durationSeconds' in updates) encoded.durationSeconds = updates.durationSeconds;
   if ('isrcs' in updates) encoded.isrcs = JSON.stringify(updates.isrcs ?? []);

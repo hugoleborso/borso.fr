@@ -24,6 +24,7 @@ import {
   selectZoneForOffset,
   SCORING_ZONES,
 } from '../../routes/setlists/vote-deck.core';
+import { AlbumCover } from '../atoms/AlbumCover';
 import { Badge } from '../atoms/Badge';
 import { PointsBadge } from '../atoms/PointsBadge';
 
@@ -31,6 +32,7 @@ export interface DeckSong {
   readonly id: string;
   readonly title: string;
   readonly artist: string;
+  readonly releaseId: string | null;
   readonly createdAt: string;
 }
 
@@ -146,12 +148,15 @@ export function VoteDeck({
           onPointerUp={endDrag}
           onPointerCancel={endDrag}
         >
-          <div>
-            {isNewSong ? <Badge tone="accent">{t('voting.newSong')}</Badge> : null}
-            <p className="text-xs tracking-wider uppercase text-ink-400 m-0">{song.artist}</p>
-            <h2 className="font-display italic text-[26px] leading-tight text-ink-900 m-0">
-              {song.title}
-            </h2>
+          <div className="flex items-start gap-3 min-w-0">
+            <AlbumCover title={song.title} releaseId={song.releaseId} size="lg" />
+            <div className="min-w-0">
+              {isNewSong ? <Badge tone="accent">{t('voting.newSong')}</Badge> : null}
+              <p className="text-xs tracking-wider uppercase text-ink-400 m-0">{song.artist}</p>
+              <h2 className="font-display italic text-[26px] leading-tight text-ink-900 m-0">
+                {song.title}
+              </h2>
+            </div>
           </div>
           <div className="flex items-center justify-between">
             <span className="text-xs text-ink-500">{t('voting.swipeHint')}</span>

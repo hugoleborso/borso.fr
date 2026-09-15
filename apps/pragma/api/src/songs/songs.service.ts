@@ -28,6 +28,7 @@ function valuesFromCreate(input: SongCreateInput): SongInsertShape {
     defaultLineup: input.defaultLineup,
     baseEnergy: input.baseEnergy,
     mbid: input.mbid,
+    releaseId: input.releaseId,
     album: input.album,
     durationSeconds: input.durationSeconds,
     isrcs: input.isrcs,

@@ -49,6 +49,7 @@ function buildSongInput(song: SeedSong, defaultLineup: Lineup): SongCreateInput 
     defaultLineup,
     baseEnergy: song.baseEnergy,
     mbid: null,
+    releaseId: null,
     album: null,
     durationSeconds: null,
     isrcs: [],

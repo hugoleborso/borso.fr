@@ -19,6 +19,7 @@ export interface SetlistEditorSong {
   readonly id: string;
   readonly title: string;
   readonly artist: string;
+  readonly releaseId?: string | null;
   readonly status?: SongStatus;
   readonly tonalityStart?: string | null;
   readonly tonalityEnd?: string | null;

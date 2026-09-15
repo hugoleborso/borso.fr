@@ -37,6 +37,7 @@ export const songSchema = z.object({
     ])
     .nullable(),
   mbid: z.string().nullable().default(null),
+  releaseId: z.string().nullable().default(null),
   album: z.string().nullable().default(null),
   durationSeconds: z.number().nullable().default(null),
   isrcs: z.array(z.string()).default([]),
@@ -63,6 +64,7 @@ export interface SongDraftState {
   imageS3Key: string;
   links: SongExternalLinkValue[];
   mbid: string | null;
+  releaseId: string | null;
   album: string;
   durationSeconds: number | null;
   isrcs: string[];
@@ -85,6 +87,7 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   imageS3Key: '',
   links: [],
   mbid: null,
+  releaseId: null,
   album: '',
   durationSeconds: null,
   isrcs: [],
@@ -108,6 +111,7 @@ export function songFromApi(song: Song): SongDraftState {
     imageS3Key: song.chart !== null && song.chart.kind === 'image' ? song.chart.s3Key : '',
     links: song.links,
     mbid: song.mbid,
+    releaseId: song.releaseId,
     album: song.album ?? '',
     durationSeconds: song.durationSeconds,
     isrcs: song.isrcs,
@@ -135,6 +139,7 @@ export interface SongSavePayload {
   readonly chart: Song['chart'];
   readonly links: SongExternalLinkValue[];
   readonly mbid: string | null;
+  readonly releaseId: string | null;
   readonly album: string | null;
   readonly durationSeconds: number | null;
   readonly isrcs: string[];
@@ -160,6 +165,7 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     chart: chartFromDraft(draft),
     links: draft.links,
     mbid: draft.mbid,
+    releaseId: draft.releaseId,
     album: albumTrimmed.length === 0 ? null : albumTrimmed,
     durationSeconds: draft.durationSeconds,
     isrcs: draft.isrcs,
@@ -180,6 +186,7 @@ export function detectProvider(url: string): SongExternalLinkValue['provider'] {
 
 export interface ExternalSongPick {
   readonly mbid: string;
+  readonly releaseId: string | null;
   readonly title: string;
   readonly artist: string;
   readonly album: string | null;
@@ -197,6 +204,7 @@ export function applyExternalPickToDraft(
     title: hit.title,
     artist: hit.artist,
     mbid: hit.mbid,
+    releaseId: hit.releaseId,
     album: hit.album ?? '',
     durationSeconds: hit.durationSeconds,
     isrcs: [...hit.isrcs],

@@ -212,6 +212,25 @@ Lives in: `api/src/auth/` (`member_passkey`), verified through
   `webauthn_challenge` for two minutes, because the options call and the
   verify call are two Lambda invocations sharing no memory.
 
+## Release
+
+The MusicBrainz release a song's recording was imported from, which is
+what Cover Art Archive serves artwork by.
+
+Lives in: `api/src/songs/` (the `release_id` column), read by
+`site/src/lib/cover-art.utils.ts`
+
+- Distinct from the **recording**, which is what `mbid` holds. One
+  recording appears on many releases; one release has one front cover.
+- Nullable, because Aurora DSQL cannot add a `NOT NULL` column after the
+  table exists, and because a song typed in by hand names no release.
+- A song with no release, or one whose artwork Cover Art Archive does not
+  have, renders a tile carrying the song's initials instead. Both cases
+  are ordinary, not faults.
+- Most confused with **album**, which is the release's *title* as text
+  and is what the interface prints; the release is the identifier the
+  cover is fetched by.
+
 ## Practice
 
 A rehearsal, optionally aimed at a concert.
