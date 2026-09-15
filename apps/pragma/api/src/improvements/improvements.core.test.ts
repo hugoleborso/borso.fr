@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  type RankableImprovement,
-  rankImprovements,
-  readTally,
-  summariseVotes,
-} from './improvements.core';
+import { readTally, summariseVotes } from './improvements.core';
 
 const VIEWER = 'viewer-member';
 const OTHER = 'other-member';
@@ -59,58 +54,5 @@ describe('readTally', () => {
       voteCount: 0,
       votedByViewer: false,
     });
-  });
-});
-
-function improvement(
-  id: string,
-  status: RankableImprovement['status'],
-  voteCount: number,
-  createdAt: string,
-): RankableImprovement {
-  return { id, status, voteCount, createdAt: new Date(createdAt) };
-}
-
-describe('rankImprovements', () => {
-  it('puts the open statuses before the closed ones', () => {
-    const ranked = rankImprovements([
-      improvement('declined', 'declined', 9, '2026-01-01T00:00:00Z'),
-      improvement('shipped', 'shipped', 9, '2026-01-01T00:00:00Z'),
-      improvement('building', 'building', 0, '2026-01-01T00:00:00Z'),
-      improvement('planned', 'planned', 0, '2026-01-01T00:00:00Z'),
-      improvement('idea', 'idea', 0, '2026-01-01T00:00:00Z'),
-    ]);
-    expect(ranked.map((row) => row.id)).toEqual([
-      'idea',
-      'planned',
-      'building',
-      'shipped',
-      'declined',
-    ]);
-  });
-
-  it('puts the most voted first inside one status', () => {
-    const ranked = rankImprovements([
-      improvement('few', 'idea', 1, '2026-01-01T00:00:00Z'),
-      improvement('many', 'idea', 4, '2026-01-02T00:00:00Z'),
-    ]);
-    expect(ranked.map((row) => row.id)).toEqual(['many', 'few']);
-  });
-
-  it('breaks a tie on votes with the older idea first', () => {
-    const ranked = rankImprovements([
-      improvement('newer', 'idea', 2, '2026-02-01T00:00:00Z'),
-      improvement('older', 'idea', 2, '2026-01-01T00:00:00Z'),
-    ]);
-    expect(ranked.map((row) => row.id)).toEqual(['older', 'newer']);
-  });
-
-  it('leaves the argument untouched', () => {
-    const rows = [
-      improvement('b', 'planned', 0, '2026-01-01T00:00:00Z'),
-      improvement('a', 'idea', 0, '2026-01-01T00:00:00Z'),
-    ];
-    rankImprovements(rows);
-    expect(rows.map((row) => row.id)).toEqual(['b', 'a']);
   });
 });

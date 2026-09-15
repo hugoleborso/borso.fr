@@ -1,10 +1,13 @@
 /** @Feature improvements */
 
+import {
+  IMPROVEMENT_STATUSES,
+  type ImprovementStatus,
+  resolveImprovementStatus,
+} from '@domain/improvement.core';
 import type { ParseKeys } from 'i18next';
 
-export const IMPROVEMENT_STATUSES = ['idea', 'planned', 'building', 'shipped', 'declined'] as const;
-
-export type ImprovementStatus = (typeof IMPROVEMENT_STATUSES)[number];
+export { IMPROVEMENT_STATUSES, type ImprovementStatus };
 
 // @FollowsBlueprint core-label-key
 const STATUS_LABEL_KEY = {
@@ -19,10 +22,8 @@ export function selectStatusLabelKey(status: ImprovementStatus): ParseKeys {
   return STATUS_LABEL_KEY[status];
 }
 
-const FALLBACK_STATUS: ImprovementStatus = 'idea';
-
 export function readStatus(value: string): ImprovementStatus {
-  return IMPROVEMENT_STATUSES.find((status) => status === value) ?? FALLBACK_STATUS;
+  return resolveImprovementStatus(value);
 }
 
 export type StatusFilter = ImprovementStatus | 'all';

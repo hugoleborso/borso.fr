@@ -1,5 +1,6 @@
 /** @Feature improvements */
 
+import { rankImprovements } from '@domain/improvement.core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
@@ -37,7 +38,7 @@ function writeList(
 ): void {
   queryClient.setQueryData<ImprovementsListResponse>(improvementKeys.list(), (old) => {
     if (old === undefined) return old;
-    return { improvements: rewrite(old.improvements) };
+    return { improvements: rankImprovements(rewrite(old.improvements)) };
   });
 }
 
@@ -52,7 +53,7 @@ export function useCreateImprovement() {
       return response.json();
     },
     onSuccess: (data) => {
-      writeList(queryClient, (improvements) => [data.improvement, ...improvements]);
+      writeList(queryClient, (improvements) => [...improvements, data.improvement]);
     },
   });
 }

@@ -1,5 +1,10 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { improvementKeys, useImprovementsList, useVoteOnImprovement } from './improvements.queries';
+import {
+  improvementKeys,
+  useImprovementsList,
+  useUpdateImprovement,
+  useVoteOnImprovement,
+} from './improvements.queries';
 import {
   createIsolatedQueryClient,
   createMutateSlot,
@@ -121,6 +126,47 @@ describe('useVoteOnImprovement', () => {
     await slot.read()({ id: 'improvement-1', intent: 'withdraw' });
     await flushMicrotasks();
     expect(fetchStub.calls.at(-1)?.method).toBe('DELETE');
+    tree.unmount();
+  });
+});
+
+function ProbeUpdate({
+  sink,
+}: {
+  sink: (mutate: ReturnType<typeof useUpdateImprovement>['mutateAsync']) => void;
+}): null {
+  useImprovementsList();
+  sink(useUpdateImprovement().mutateAsync);
+  return null;
+}
+
+describe('useUpdateImprovement', () => {
+  let fetchStub: ReturnType<typeof stubFetch> | null = null;
+
+  afterEach(() => {
+    fetchStub?.restore();
+    fetchStub = null;
+  });
+
+  it('drops an improvement below the open ones the moment it is shipped', async () => {
+    const queryClient = createIsolatedQueryClient();
+    const promoted = improvement({ id: 'promoted', title: 'Promoted', voteCount: 5 });
+    const quiet = improvement({ id: 'quiet', title: 'Quiet', voteCount: 0 });
+    queryClient.setQueryData(improvementKeys.list(), { improvements: [promoted, quiet] });
+    fetchStub = stubFetch(async (request) =>
+      request.method === 'GET'
+        ? jsonResponse({ improvements: [promoted, quiet] })
+        : jsonResponse({ improvement: { ...promoted, status: 'shipped' } }),
+    );
+    const slot = createMutateSlot<ReturnType<typeof useUpdateImprovement>['mutateAsync']>();
+    const tree = mountWithClient(queryClient, <ProbeUpdate sink={slot.sink} />);
+
+    await slot.read()({ id: 'promoted', status: 'shipped' });
+    await flushMicrotasks();
+    const reranked = queryClient.getQueryData<{ improvements: ImprovementShape[] }>(
+      improvementKeys.list(),
+    );
+    expect(reranked?.improvements.map((row) => row.id)).toEqual(['quiet', 'promoted']);
     tree.unmount();
   });
 });

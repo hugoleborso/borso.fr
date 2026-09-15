@@ -34,5 +34,3 @@ export const improvementCreateSchema = z.object({
 
 export const improvementUpdateSchema = improvementCreateSchema.partial();
 export const improvementIdParamSchema = z.object({ id: z.string().uuid() });
-
-export type ImprovementStatus = (typeof IMPROVEMENT_STATUSES)[number];

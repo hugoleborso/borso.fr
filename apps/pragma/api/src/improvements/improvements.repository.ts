@@ -1,14 +1,10 @@
+import { IMPROVEMENT_STATUSES, type ImprovementStatus } from '@domain/improvement.core';
 import { and, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import type { ImprovementVoteRecord } from './improvements.core';
-import {
-  IMPROVEMENT_STATUSES,
-  type ImprovementStatus,
-  improvementTable,
-  improvementVoteTable,
-} from './improvements.schema';
+import { improvementTable, improvementVoteTable } from './improvements.schema';
 
 const improvementStatusSchema = z.enum(IMPROVEMENT_STATUSES);
 

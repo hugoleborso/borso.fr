@@ -1,6 +1,7 @@
+import { rankImprovements } from '@domain/improvement.core';
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
-import { rankImprovements, readTally, summariseVotes } from './improvements.core';
+import { readTally, summariseVotes } from './improvements.core';
 import {
   type ImprovementPersistedShape,
   type ImprovementRow,
