@@ -2,7 +2,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
-import MUSICBRAINZ_FIXTURE from './__fixtures__/musicbrainz-sample.json';
+import DEEZER_FIXTURE from './__fixtures__/deezer-sample.json';
 
 const songSchema = z.object({
   id: z.string().uuid(),
@@ -20,7 +20,7 @@ const songSchema = z.object({
   tonalityEnd: z.string().nullable(),
   defaultLineup: z.unknown(),
   baseEnergy: z.number().nullable(),
-  mbid: z.string().nullable(),
+  deezerTrackId: z.string().nullable(),
   album: z.string().nullable(),
   durationSeconds: z.number().nullable(),
   isrcs: z.array(z.string()),
@@ -184,7 +184,7 @@ describe('songs controller (back-e2e)', () => {
     expect(overridesAfter.overrides).toHaveLength(0);
   });
 
-  describe('external song search via MusicBrainz', () => {
+  describe('external song search via Deezer', () => {
     afterEach(() => {
       vi.restoreAllMocks();
     });
@@ -195,15 +195,15 @@ describe('songs controller (back-e2e)', () => {
       expect(response.status).toBe(401);
     });
 
-    it('proxies a MusicBrainz lookup and returns the mapped hits', async () => {
+    it('proxies a Deezer lookup and returns the mapped hits', async () => {
       const { app, cookieHeader } = await buildAuthenticatedApp();
       const fetchSpy = vi.spyOn(globalThis, 'fetch').mockResolvedValueOnce(
-        new Response(JSON.stringify(MUSICBRAINZ_FIXTURE), {
+        new Response(JSON.stringify(DEEZER_FIXTURE), {
           status: 200,
           headers: { 'content-type': 'application/json' },
         }),
       );
-      const response = await jsonRequest(app, `/api/songs/search?q=happy-${Date.now()}`, {
+      const response = await jsonRequest(app, `/api/songs/search?q=happy-${String(Date.now())}`, {
         cookieHeader,
       });
       expect(response.status).toBe(200);
@@ -212,45 +212,36 @@ describe('songs controller (back-e2e)', () => {
         z.object({
           hits: z.array(
             z.object({
-              mbid: z.string(),
+              deezerTrackId: z.string(),
               title: z.string(),
               artist: z.string(),
-              year: z.number().nullable(),
               album: z.string().nullable(),
-              releaseId: z.string().nullable(),
+              deezerAlbumId: z.string().nullable(),
               durationSeconds: z.number().nullable(),
               durationLabel: z.string().nullable(),
-              disambiguation: z.string().nullable(),
-              tags: z.array(z.string()),
+              titleVersion: z.string().nullable(),
               isrcs: z.array(z.string()),
+              popularity: z.number(),
+              isExplicit: z.boolean(),
             }),
           ),
         }),
       );
       expect(body.hits.length).toBeGreaterThan(0);
-      const firstHit = body.hits[0];
-      expect(firstHit?.title).toBe('Get Lucky');
-      expect(firstHit?.album).toBe('Random Access Memories');
-      expect(firstHit?.durationLabel).toBe('6:09');
-      expect(firstHit?.tags).toEqual(['electronic', 'disco', 'funk', 'house', 'dance']);
-      expect(firstHit?.isrcs).toEqual(['USQX91300108', 'GBUM71302999', 'USQX91300109']);
-      expect(firstHit?.disambiguation).toBe('radio edit');
+      const albumTrack = body.hits.find((entry) => entry.deezerTrackId === '67238735');
+      expect(albumTrack).toMatchObject({
+        title: 'Get Lucky',
+        artist: 'Daft Punk',
+        album: 'Random Access Memories',
+        deezerAlbumId: '6575789',
+        durationLabel: '6:07',
+        isrcs: ['USQX91300108'],
+      });
       expect(fetchSpy).toHaveBeenCalledTimes(1);
       const calledInput = fetchSpy.mock.calls[0]?.[0];
       const calledUrl = calledInput instanceof Request ? calledInput.url : String(calledInput);
-      expect(calledUrl).toContain('musicbrainz.org/ws/2/recording/');
-      expect(calledUrl).toContain('inc=tags+releases+isrcs');
-      const calledInit = fetchSpy.mock.calls[0]?.[1];
-      const headersRecord = calledInit?.headers;
-      const headersDictionary =
-        headersRecord instanceof Headers
-          ? Object.fromEntries(headersRecord.entries())
-          : (headersRecord ?? {});
-      const userAgentValue =
-        typeof headersDictionary === 'object' && 'User-Agent' in headersDictionary
-          ? headersDictionary['User-Agent']
-          : undefined;
-      expect(userAgentValue).toContain('Pragma/');
+      expect(calledUrl).toContain('api.deezer.com/search');
+      expect(calledUrl).toContain('limit=25');
     });
 
     it('rejects an empty query', async () => {

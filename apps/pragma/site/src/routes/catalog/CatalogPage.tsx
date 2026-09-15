@@ -117,7 +117,8 @@ export function CatalogPage(): JSX.Element {
       filteredSongs.map((song) => ({
         id: song.id,
         title: song.title,
-        releaseId: song.releaseId,
+        deezerAlbumId: song.deezerAlbumId,
+        deezerTrackId: song.deezerTrackId,
         artist: song.artist,
         status: song.status,
         tonalityStart: song.tonalityStart,

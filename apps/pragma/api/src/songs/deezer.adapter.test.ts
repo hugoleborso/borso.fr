@@ -5,16 +5,12 @@
 // @FollowsBlueprint test-node-adapter
 
 import { describe, expect, it, vi } from 'vitest';
-import FIXTURE from './__fixtures__/musicbrainz-sample.json';
-import {
-  type ExternalFetcher,
-  type ExternalSearchState,
-  searchExternal,
-} from './musicbrainz.adapter';
-import type { ExternalSearchCacheEntry } from './musicbrainz.core';
+import FIXTURE from './__fixtures__/deezer-sample.json';
+import { type ExternalFetcher, type ExternalSearchState, searchExternal } from './deezer.adapter';
+import type { ExternalSearchCacheEntry } from './deezer.core';
 
 const CACHE_TTL_MS = 60_000;
-const RATE_FLOOR_MS = 1_000;
+const RATE_FLOOR_MS = 100;
 
 function freshState(lastCallAt = 0): ExternalSearchState {
   return { cache: new Map<string, ExternalSearchCacheEntry>(), lastCallAt };
@@ -32,14 +28,23 @@ describe('searchExternal', () => {
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it('carries the query, the widened limit and the forgiving parser in the URL', async () => {
+  it('carries the query and the widened limit in the URL', async () => {
     const fetcher = vi.fn(respondWith(FIXTURE));
     await searchExternal('Get Lucky', { fetcher, now: () => 0, state: freshState() });
     const [url, init] = fetcher.mock.calls[0] ?? [];
-    expect(url).toContain('query=Get%20Lucky');
+    expect(url).toContain('api.deezer.com/search');
+    expect(url).toContain('q=Get%20Lucky');
     expect(url).toContain('limit=25');
-    expect(url).toContain('dismax=true');
     expect(init?.headers).toMatchObject({ Accept: 'application/json' });
+  });
+
+  it('treats the error object Deezer answers an unusable query with as no results', async () => {
+    const hits = await searchExternal('Get Lucky', {
+      fetcher: respondWith({ error: { type: 'Exception', message: 'invalid' } }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(hits).toEqual([]);
   });
 
   it('returns the ranked hits the payload maps to', async () => {

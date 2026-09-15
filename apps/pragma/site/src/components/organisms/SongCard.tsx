@@ -1,6 +1,7 @@
 /** @Feature songs */
 
 import { Link } from 'react-router-dom';
+import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { buildTonalityLabel } from '../../routes/catalog/tonality-label.utils';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { type ChartKind, ChartKindIcon } from '../molecules/ChartKindIcon';
@@ -13,7 +14,8 @@ export interface SongCardProps {
   id: string;
   title: string;
   artist: string;
-  releaseId: string | null;
+  deezerAlbumId: string | null;
+  deezerTrackId: string | null;
   status: SongStatus;
   tonalityStart: string | null;
   tonalityEnd: string | null;
@@ -35,7 +37,8 @@ export function SongCard({
   id,
   title,
   artist,
-  releaseId,
+  deezerAlbumId,
+  deezerTrackId,
   status,
   tonalityStart,
   tonalityEnd,
@@ -47,17 +50,19 @@ export function SongCard({
   instruments,
 }: SongCardProps): JSX.Element {
   const tonalityLabel = buildTonalityLabel(tonalityStart, tonalityEnd);
+  const longPress = useSongLongPress({ title, artist, deezerTrackId });
   return (
     <Link
       to={`/catalog/${id}`}
-      className="block bg-bg-elev border border-line rounded-lg p-4 transition-all duration-100 hover:-translate-y-px hover:border-line-strong"
+      {...longPress}
+      className="block bg-bg-elev border border-line rounded-lg p-4 transition-all duration-100 hover:-translate-y-px hover:border-line-strong select-none"
     >
       <div className="flex justify-between items-start gap-2 mb-2">
         <StatusChip status={status} />
         <ChartKindIcon kind={chartKind} />
       </div>
       <div className="flex items-start gap-3">
-        <AlbumCover title={title} releaseId={releaseId} size="md" />
+        <AlbumCover title={title} deezerAlbumId={deezerAlbumId} size="md" />
         <div className="min-w-0 flex-1">
           <h3 className="font-display italic text-[22px] leading-tight tracking-[-0.01em] text-ink-900 m-0 mb-1">
             {title}

@@ -2,19 +2,19 @@ import { describe, expect, it } from 'vitest';
 import { buildCoverArtUrl, selectCoverColor, selectCoverInitials } from './cover-art.utils';
 
 describe('the address a cover is fetched from', () => {
-  it('points at the release front thumbnail on Cover Art Archive', () => {
-    expect(buildCoverArtUrl('abc-123')).toBe(
-      'https://coverartarchive.org/release/abc-123/front-250',
+  it('points at the album image Deezer serves by album id', () => {
+    expect(buildCoverArtUrl('12047952')).toBe(
+      'https://api.deezer.com/album/12047952/image?size=medium',
     );
   });
 
-  it('escapes what a release id could carry', () => {
+  it('escapes what an album id could carry', () => {
     expect(buildCoverArtUrl('a/b?c')).toBe(
-      'https://coverartarchive.org/release/a%2Fb%3Fc/front-250',
+      'https://api.deezer.com/album/a%2Fb%3Fc/image?size=medium',
     );
   });
 
-  it('has no address for a song that names no release', () => {
+  it('has no address for a song that names no album', () => {
     expect(buildCoverArtUrl(null)).toBeNull();
     expect(buildCoverArtUrl('')).toBeNull();
     expect(buildCoverArtUrl('   ')).toBeNull();

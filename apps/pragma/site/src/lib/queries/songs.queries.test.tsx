@@ -49,7 +49,7 @@ const SEED_LIST = {
       tonalityEnd: null,
       defaultLineup: {},
       baseEnergy: null,
-      mbid: null,
+      deezerTrackId: null,
       album: null,
       durationSeconds: null,
       isrcs: [],

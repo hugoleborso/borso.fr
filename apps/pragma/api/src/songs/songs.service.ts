@@ -1,6 +1,6 @@
 import type { z } from 'zod';
-import type { ExternalSongHit } from './musicbrainz.core';
-import { searchExternal, type SearchExternalOptions } from './musicbrainz.adapter';
+import type { ExternalSongHit } from './deezer.core';
+import { searchExternal, type SearchExternalOptions } from './deezer.adapter';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteSongWithCascade,
@@ -27,8 +27,8 @@ function valuesFromCreate(input: SongCreateInput): SongInsertShape {
     tonalityEnd: input.tonalityEnd,
     defaultLineup: input.defaultLineup,
     baseEnergy: input.baseEnergy,
-    mbid: input.mbid,
-    releaseId: input.releaseId,
+    deezerTrackId: input.deezerTrackId,
+    deezerAlbumId: input.deezerAlbumId,
     album: input.album,
     durationSeconds: input.durationSeconds,
     isrcs: input.isrcs,

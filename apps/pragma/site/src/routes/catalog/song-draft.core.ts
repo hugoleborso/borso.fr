@@ -36,8 +36,8 @@ export const songSchema = z.object({
       z.object({ kind: z.literal('image'), s3Key: z.string() }),
     ])
     .nullable(),
-  mbid: z.string().nullable().default(null),
-  releaseId: z.string().nullable().default(null),
+  deezerTrackId: z.string().nullable().default(null),
+  deezerAlbumId: z.string().nullable().default(null),
   album: z.string().nullable().default(null),
   durationSeconds: z.number().nullable().default(null),
   isrcs: z.array(z.string()).default([]),
@@ -63,8 +63,8 @@ export interface SongDraftState {
   pdfS3Key: string;
   imageS3Key: string;
   links: SongExternalLinkValue[];
-  mbid: string | null;
-  releaseId: string | null;
+  deezerTrackId: string | null;
+  deezerAlbumId: string | null;
   album: string;
   durationSeconds: number | null;
   isrcs: string[];
@@ -86,8 +86,8 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   pdfS3Key: '',
   imageS3Key: '',
   links: [],
-  mbid: null,
-  releaseId: null,
+  deezerTrackId: null,
+  deezerAlbumId: null,
   album: '',
   durationSeconds: null,
   isrcs: [],
@@ -110,8 +110,8 @@ export function songFromApi(song: Song): SongDraftState {
     pdfS3Key: song.chart !== null && song.chart.kind === 'pdf' ? song.chart.s3Key : '',
     imageS3Key: song.chart !== null && song.chart.kind === 'image' ? song.chart.s3Key : '',
     links: song.links,
-    mbid: song.mbid,
-    releaseId: song.releaseId,
+    deezerTrackId: song.deezerTrackId,
+    deezerAlbumId: song.deezerAlbumId,
     album: song.album ?? '',
     durationSeconds: song.durationSeconds,
     isrcs: song.isrcs,
@@ -138,8 +138,8 @@ export interface SongSavePayload {
   readonly baseEnergy: number | null;
   readonly chart: Song['chart'];
   readonly links: SongExternalLinkValue[];
-  readonly mbid: string | null;
-  readonly releaseId: string | null;
+  readonly deezerTrackId: string | null;
+  readonly deezerAlbumId: string | null;
   readonly album: string | null;
   readonly durationSeconds: number | null;
   readonly isrcs: string[];
@@ -164,8 +164,8 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     baseEnergy: baseEnergyValue,
     chart: chartFromDraft(draft),
     links: draft.links,
-    mbid: draft.mbid,
-    releaseId: draft.releaseId,
+    deezerTrackId: draft.deezerTrackId,
+    deezerAlbumId: draft.deezerAlbumId,
     album: albumTrimmed.length === 0 ? null : albumTrimmed,
     durationSeconds: draft.durationSeconds,
     isrcs: draft.isrcs,
@@ -185,14 +185,13 @@ export function detectProvider(url: string): SongExternalLinkValue['provider'] {
 }
 
 export interface ExternalSongPick {
-  readonly mbid: string;
-  readonly releaseId: string | null;
+  readonly deezerTrackId: string;
+  readonly deezerAlbumId: string | null;
   readonly title: string;
   readonly artist: string;
   readonly album: string | null;
   readonly durationSeconds: number | null;
   readonly isrcs: readonly string[];
-  readonly tags: readonly string[];
 }
 
 export function applyExternalPickToDraft(
@@ -200,14 +199,22 @@ export function applyExternalPickToDraft(
   hit: ExternalSongPick,
 ): SongDraftState {
   return {
-    ...draft,
+    ...applyExternalIdentityToDraft(draft, hit),
     title: hit.title,
     artist: hit.artist,
-    mbid: hit.mbid,
-    releaseId: hit.releaseId,
+  };
+}
+
+export function applyExternalIdentityToDraft(
+  draft: SongDraftState,
+  hit: ExternalSongPick,
+): SongDraftState {
+  return {
+    ...draft,
+    deezerTrackId: hit.deezerTrackId,
+    deezerAlbumId: hit.deezerAlbumId,
     album: hit.album ?? '',
     durationSeconds: hit.durationSeconds,
     isrcs: [...hit.isrcs],
-    tags: [...hit.tags],
   };
 }

@@ -1,9 +1,9 @@
 /**
- * @DependsOnExternal coverartarchive
+ * @DependsOnExternal deezer
  */
 
-const COVER_ART_ARCHIVE_ORIGIN = 'https://coverartarchive.org';
-const THUMBNAIL_SIZE = 250;
+const DEEZER_ALBUM_IMAGE_ORIGIN = 'https://api.deezer.com/album';
+const THUMBNAIL_SIZE = 'medium';
 const INITIALS_MAX = 2;
 const HUE_DEGREES = 360;
 const COVER_SATURATION_PERCENT = 46;
@@ -11,10 +11,10 @@ const COVER_LIGHTNESS_PERCENT = 62;
 const HASH_SEED = 5_381;
 const HASH_SHIFT = 5;
 
-export function buildCoverArtUrl(releaseId: string | null): string | null {
-  if (releaseId === null) return null;
-  if (releaseId.trim() === '') return null;
-  return `${COVER_ART_ARCHIVE_ORIGIN}/release/${encodeURIComponent(releaseId)}/front-${String(THUMBNAIL_SIZE)}`;
+export function buildCoverArtUrl(deezerAlbumId: string | null): string | null {
+  if (deezerAlbumId === null) return null;
+  if (deezerAlbumId.trim() === '') return null;
+  return `${DEEZER_ALBUM_IMAGE_ORIGIN}/${encodeURIComponent(deezerAlbumId)}/image?size=${THUMBNAIL_SIZE}`;
 }
 
 export function selectCoverInitials(title: string): string {

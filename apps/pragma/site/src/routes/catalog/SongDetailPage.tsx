@@ -4,6 +4,7 @@ import { AlbumCover } from '../../components/atoms/AlbumCover';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
@@ -92,6 +93,12 @@ export function SongDetailPage(): JSX.Element {
     [instruments],
   );
 
+  const longPress = useSongLongPress({
+    title: song?.title ?? '',
+    artist: song?.artist ?? '',
+    deezerTrackId: song?.deezerTrackId ?? null,
+  });
+
   const saveSongLineup = (lineup: LineupRecord | null): void => {
     if (song === null) return;
     updateSong.mutate({ id: song.id, defaultLineup: toLineupPayload(lineup) });
@@ -120,8 +127,8 @@ export function SongDetailPage(): JSX.Element {
       <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
 
       <header className="flex items-end justify-between gap-4 flex-wrap">
-        <div className="flex items-start gap-4 min-w-0">
-          <AlbumCover title={song.title} releaseId={song.releaseId} size="lg" />
+        <div className="flex items-start gap-4 min-w-0 select-none" {...longPress}>
+          <AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="lg" />
           <div className="min-w-0">
             <div className="text-xs tracking-wider uppercase text-ink-500 mb-1">
               {song.artist.length > 0 ? song.artist : t('catalog.crumb')}

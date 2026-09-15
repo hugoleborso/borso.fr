@@ -119,6 +119,7 @@ const ICONS = {
       <path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
     </>
   ),
+  deezer: <path d="M4 16v4M9 12v8M14 8v12M19 4v16" />,
   spotify: (
     <>
       <circle cx="12" cy="12" r="9" />

@@ -18,8 +18,8 @@ const NEW_SONG_DEFAULTS: Pick<
   | 'tonalityEnd'
   | 'defaultLineup'
   | 'baseEnergy'
-  | 'mbid'
-  | 'releaseId'
+  | 'deezerTrackId'
+  | 'deezerAlbumId'
   | 'album'
   | 'durationSeconds'
   | 'isrcs'
@@ -35,8 +35,8 @@ const NEW_SONG_DEFAULTS: Pick<
   tonalityEnd: null,
   defaultLineup: {},
   baseEnergy: null,
-  mbid: null,
-  releaseId: null,
+  deezerTrackId: null,
+  deezerAlbumId: null,
   album: null,
   durationSeconds: null,
   isrcs: [],

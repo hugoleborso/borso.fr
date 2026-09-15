@@ -15,7 +15,7 @@ import {
 
 const API_SONG: Song = {
   id: '00000000-0000-4000-8000-000000000000',
-  releaseId: null,
+  deezerAlbumId: null,
   title: 'Slow Burn',
   artist: 'The Embers',
   status: 'rehearsed',
@@ -24,7 +24,7 @@ const API_SONG: Song = {
   baseEnergy: 6,
   links: [{ url: 'https://open.spotify.com/x', provider: 'spotify', comment: '' }],
   chart: { kind: 'chordpro', text: '[C]Hello' },
-  mbid: 'mbid-1',
+  deezerTrackId: 'deezerTrackId-1',
   album: 'Embers',
   durationSeconds: 210,
   isrcs: ['ISRC1'],
@@ -51,7 +51,13 @@ describe('songSchema', () => {
       baseEnergy: null,
       chart: null,
     });
-    expect(song).toMatchObject({ links: [], isrcs: [], tags: [], mbid: null, album: null });
+    expect(song).toMatchObject({
+      links: [],
+      isrcs: [],
+      tags: [],
+      deezerTrackId: null,
+      album: null,
+    });
   });
 });
 
@@ -66,7 +72,7 @@ describe('songFromApi', () => {
     expect(songFromApi(API_SONG)).toEqual({
       title: 'Slow Burn',
       artist: 'The Embers',
-      releaseId: null,
+      deezerAlbumId: null,
       status: 'rehearsed',
       tonalityStart: 'Am',
       tonalityEnd: 'C',
@@ -76,7 +82,7 @@ describe('songFromApi', () => {
       pdfS3Key: '',
       imageS3Key: '',
       links: API_SONG.links,
-      mbid: 'mbid-1',
+      deezerTrackId: 'deezerTrackId-1',
       album: 'Embers',
       durationSeconds: 210,
       isrcs: ['ISRC1'],
@@ -167,8 +173,8 @@ describe('payloadFromDraft', () => {
       baseEnergy: 7,
       chart: null,
       links: [],
-      mbid: null,
-      releaseId: null,
+      deezerTrackId: null,
+      deezerAlbumId: null,
       album: 'Embers',
       durationSeconds: null,
       isrcs: [],
@@ -221,28 +227,32 @@ describe('detectProvider', () => {
 
 describe('applyExternalPickToDraft', () => {
   it('overwrites the metadata fields and leaves the rest of the draft alone', () => {
-    const draft: SongDraftState = { ...BLANK_SONG_DRAFT, status: 'rehearsed', tonalityStart: 'Am' };
+    const draft: SongDraftState = {
+      ...BLANK_SONG_DRAFT,
+      status: 'rehearsed',
+      tonalityStart: 'Am',
+      tags: ['kept'],
+    };
     expect(
       applyExternalPickToDraft(draft, {
-        mbid: 'mbid-2',
-        releaseId: 'release-2',
+        deezerTrackId: 'track-2',
+        deezerAlbumId: 'album-2',
         title: 'Lightning',
         artist: 'Volt',
         album: null,
         durationSeconds: 180,
         isrcs: ['ISRC2'],
-        tags: ['rock'],
       }),
     ).toEqual({
       ...draft,
       title: 'Lightning',
       artist: 'Volt',
-      mbid: 'mbid-2',
-      releaseId: 'release-2',
+      deezerTrackId: 'track-2',
+      deezerAlbumId: 'album-2',
       album: '',
       durationSeconds: 180,
       isrcs: ['ISRC2'],
-      tags: ['rock'],
+      tags: ['kept'],
     });
   });
 });

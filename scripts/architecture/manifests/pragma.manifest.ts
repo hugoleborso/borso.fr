@@ -110,24 +110,6 @@ export const pragmaManifest: ArchitectureManifest = {
       boundary: 'third-party',
     },
     {
-      id: 'musicbrainz',
-      icon: '🎼',
-      name: 'MusicBrainz',
-      technology: 'HTTPS, public web service',
-      description:
-        'Song metadata lookup used to enrich a catalogue entry with recording id, album, duration, tags and ISRCs.',
-      boundary: 'third-party',
-    },
-    {
-      id: 'coverartarchive',
-      icon: '💿',
-      name: 'Cover Art Archive',
-      technology: 'HTTPS, public web service',
-      description:
-        "Album artwork, served by MusicBrainz release id. The browser requests each cover directly and falls back to a tile of the song's initials when there is none; the backfill script asks it which of a recording's releases actually has artwork.",
-      boundary: 'third-party',
-    },
-    {
       id: 'youtube',
       icon: '▶️',
       name: 'YouTube',
@@ -139,8 +121,9 @@ export const pragmaManifest: ArchitectureManifest = {
       id: 'spotify',
       icon: '🎧',
       name: 'Spotify',
-      technology: 'iframe embed',
-      description: 'Renders a reference recording inside a song page.',
+      technology: 'iframe embed, plus a search address',
+      description:
+        'Renders a reference recording inside a song page. Holding a song also offers to open it on Spotify, as a search rather than a track, because nothing in the catalogue holds a Spotify identifier and asking for one needs a credential this application has not been given.',
       boundary: 'third-party',
     },
     {
@@ -163,8 +146,9 @@ export const pragmaManifest: ArchitectureManifest = {
       id: 'deezer',
       icon: '🎵',
       name: 'Deezer',
-      technology: 'iframe embed',
-      description: 'Renders a reference recording inside a song page.',
+      technology: 'HTTPS public search API, plus an iframe embed',
+      description:
+        "The catalogue's song search: the API proxies /search and keeps the track id, the album id, the album title, the duration and the ISRC. The browser then fetches each album cover straight from Deezer by album id and falls back to a tile of the song's initials when there is none, and holding a song anywhere in the application opens its Deezer track page by that same track id. Also renders a reference recording inside a song page as an iframe. No credential is involved: the search endpoint and the album image are both public.",
       boundary: 'third-party',
     },
     {
