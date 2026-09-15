@@ -1,4 +1,10 @@
-import { type IDsqlCluster, isProductionStage, PreviewableApp, type Stage } from '@borso/infra';
+import {
+  frontendOrigin,
+  type IDsqlCluster,
+  isProductionStage,
+  PreviewableApp,
+  type Stage,
+} from '@borso/infra';
 import { Duration, RemovalPolicy } from 'aws-cdk-lib';
 import {
   BlockPublicAccess,
@@ -23,6 +29,23 @@ export interface BuildPragmaAppStackProps {
   readonly apiEntry: string;
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
+}
+
+interface SiteOrigin {
+  readonly origin: string;
+  readonly hostname: string;
+}
+
+function readSiteOrigin(props: BuildPragmaAppStackProps): SiteOrigin {
+  const origin = frontendOrigin(
+    {
+      app: APP_SLUG,
+      stage: props.stage,
+      ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
+    },
+    props.domainName,
+  );
+  return { origin, hostname: new URL(origin).hostname };
 }
 
 /**
@@ -53,6 +76,8 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     ],
   });
 
+  const siteOrigin = readSiteOrigin(props);
+
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
     stage: props.stage,
@@ -63,6 +88,8 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       entry: props.apiEntry,
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
+        WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,
+        WEBAUTHN_ORIGIN: siteOrigin.origin,
       },
     },
     database: {
@@ -73,9 +100,14 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
-              tableBlocklist: ['auth_attempt'],
+              tableBlocklist: [
+                'auth_attempt',
+                'app_config',
+                'member_credential',
+                'member_passkey',
+                'webauthn_challenge',
+              ],
               columnsToNullify: { member: ['avatar_s3_key'] },
-              tablesToReplace: ['app_config'],
             },
           }),
     },

@@ -24,11 +24,11 @@ async function postSeed(): Promise<Response> {
   return createApp().request('/api/__test/seed', { method: 'POST' });
 }
 
-async function postLogin(password: string): Promise<Response> {
+async function postLogin(password: string, username = 'hugo'): Promise<Response> {
   return createApp().request('/api/auth/login', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ username, password }),
   });
 }
 

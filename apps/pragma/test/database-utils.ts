@@ -3,6 +3,10 @@ import { type Database, getDatabase } from '../api/src/database/client';
 
 const ALL_TABLES: readonly string[] = [
   'app_config',
+  'member_credential',
+  'member_passkey',
+  'webauthn_challenge',
+  'setlist_vote',
   'auth_attempt',
   'bar',
   'transition_comment',

@@ -44,6 +44,8 @@ type SetlistEntryRawRow = typeof setlistEntryTable.$inferSelect;
 const SETLIST_PROJECTION = {
   id: setlistTable.id,
   name: setlistTable.name,
+  status: setlistTable.status,
+  targetSongCount: setlistTable.targetSongCount,
 } as const;
 
 // @FollowsBlueprint repository-projection

@@ -7,6 +7,8 @@ import { useParams } from 'react-router-dom';
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { VoteEntryLink } from '../../components/molecules/VoteEntryLink';
+import { resolveSetlistStatus } from './setlist-status.core';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { SetlistHeaderActions } from '../../components/organisms/SetlistHeaderActions';
 import { formatSessionDate } from '../../lib/formatters.utils';
@@ -81,6 +83,8 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
         displayedName={displayedName}
         onDeleted={() => navigateTo('/setlists')}
       />
+
+      <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
 
       <SetlistEditor setlistId={setlist.id} />
     </section>

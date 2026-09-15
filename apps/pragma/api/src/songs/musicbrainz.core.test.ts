@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import FIXTURE from './__fixtures__/musicbrainz-sample.json';
 import {
+  compareReleaseCandidates,
+  compareText,
+  rankReleaseCandidates,
   type ExternalSearchCacheEntry,
   expiredSearchCacheKeys,
   mapMusicBrainzRecordings,
@@ -278,5 +281,92 @@ describe('expiredSearchCacheKeys', () => {
       ['fresh', entryExpiringAt(NOW + 1)],
     ]);
     expect(expiredSearchCacheKeys(cache, NOW)).toEqual(['stale']);
+  });
+});
+
+describe('the releases a recording could take its cover from', () => {
+  it('puts an official release before anything else', () => {
+    expect(
+      rankReleaseCandidates({
+        releases: [
+          { id: 'bootleg', date: '1990-01-01', status: 'Bootleg' },
+          { id: 'official', date: '2005-01-01', status: 'Official' },
+        ],
+      }),
+    ).toEqual(['official', 'bootleg']);
+  });
+
+  it('puts the earliest release first among equals, and a dated one before an undated one', () => {
+    expect(
+      rankReleaseCandidates({
+        releases: [
+          { id: 'late', date: '2005-01-01', status: 'Official' },
+          { id: 'undated', status: 'Official' },
+          { id: 'early', date: '1999-01-01', status: 'Official' },
+        ],
+      }),
+    ).toEqual(['early', 'late', 'undated']);
+  });
+
+  it('orders by id when nothing else separates two releases', () => {
+    expect(
+      rankReleaseCandidates({
+        releases: [
+          { id: 'bbb', date: '2000-01-01' },
+          { id: 'aaa', date: '2000-01-01' },
+        ],
+      }),
+    ).toEqual(['aaa', 'bbb']);
+  });
+
+  it('takes at most five candidates', () => {
+    const releases = ['a', 'b', 'c', 'd', 'e', 'f'].map((id) => ({ id, date: `200${id}` }));
+    expect(rankReleaseCandidates({ releases })).toHaveLength(5);
+  });
+
+  it('has no candidate for a payload it cannot read, or one with no release', () => {
+    expect(rankReleaseCandidates({ releases: [] })).toEqual([]);
+    expect(rankReleaseCandidates(null)).toEqual([]);
+    expect(rankReleaseCandidates({ releases: 'nope' })).toEqual([]);
+  });
+});
+
+describe('the order two releases are put in', () => {
+  it('reads three ways round for two strings', () => {
+    expect(compareText('a', 'b')).toBe(-1);
+    expect(compareText('b', 'a')).toBe(1);
+    expect(compareText('a', 'a')).toBe(0);
+  });
+
+  it('answers the opposite way when its arguments are swapped', () => {
+    const official = { id: 'x', date: '2000-01-01', status: 'Official' };
+    const bootleg = { id: 'y', date: '1990-01-01', status: 'Bootleg' };
+    expect(compareReleaseCandidates(official, bootleg)).toBe(-1);
+    expect(compareReleaseCandidates(bootleg, official)).toBe(1);
+
+    const early = { id: 'a', date: '1999-01-01' };
+    const late = { id: 'b', date: '2005-01-01' };
+    expect(compareReleaseCandidates(early, late)).toBe(-1);
+    expect(compareReleaseCandidates(late, early)).toBe(1);
+
+    const undated = { id: 'c' };
+    expect(compareReleaseCandidates(early, undated)).toBe(-1);
+    expect(compareReleaseCandidates(undated, early)).toBe(1);
+  });
+
+  it('lets the date win over the id when the two disagree', () => {
+    const earlyButLastAlphabetically = { id: 'zzz', date: '1999-01-01' };
+    const lateButFirstAlphabetically = { id: 'aaa', date: '2005-01-01' };
+    expect(compareReleaseCandidates(earlyButLastAlphabetically, lateButFirstAlphabetically)).toBe(
+      -1,
+    );
+  });
+
+  it('falls to the id, and calls two identical releases equal', () => {
+    const left = { id: 'aaa', date: '2000-01-01' };
+    const right = { id: 'bbb', date: '2000-01-01' };
+    expect(compareReleaseCandidates(left, right)).toBe(-1);
+    expect(compareReleaseCandidates(right, left)).toBe(1);
+    expect(compareReleaseCandidates(left, left)).toBe(0);
   });
 });

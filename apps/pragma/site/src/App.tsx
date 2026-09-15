@@ -1,12 +1,14 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
 import { RequireSession } from './components/organisms/RequireSession';
+import { AccountPage } from './routes/account/AccountPage';
 import { BarsPage } from './routes/bars/BarsPage';
 import { CatalogPage } from './routes/catalog/CatalogPage';
 import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
+import { EnrolPage } from './routes/EnrolPage';
 import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
@@ -14,6 +16,7 @@ import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistScenePage } from './routes/setlists/SetlistScenePage';
+import { SetlistVotePage } from './routes/setlists/SetlistVotePage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
 
 export function App(): JSX.Element {
@@ -21,6 +24,7 @@ export function App(): JSX.Element {
     <BrowserRouter>
       <Routes>
         <Route path="/login" element={<LoginPage />} />
+        <Route path="/enrol" element={<EnrolPage />} />
         <Route element={<RequireSession />}>
           <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
           <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
@@ -35,9 +39,11 @@ export function App(): JSX.Element {
             <Route path="/sessions/:sessionId/setlist" element={<SessionSetlistRedirectPage />} />
             <Route path="/setlists" element={<SetlistsPage />} />
             <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
+            <Route path="/setlists/:setlistId/vote" element={<SetlistVotePage />} />
             <Route path="/bars" element={<BarsPage />} />
             <Route path="/members" element={<MembersPage />} />
             <Route path="/instruments" element={<InstrumentsPage />} />
+            <Route path="/account" element={<AccountPage />} />
           </Route>
         </Route>
       </Routes>

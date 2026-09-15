@@ -6,6 +6,7 @@ import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.contro
 import { buildBarsRouter } from './bars/bars.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
+import { buildMeRouter } from './me/me.controller';
 import { buildMembersRouter } from './members/members.controller';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
@@ -32,6 +33,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/auth', publicRouter)
     .route('/api/admin', bootstrapRouter)
     .route('/api/admin', rotateRouter)
+    .route('/api/me', buildMeRouter())
     .route('/api/instruments', buildInstrumentsRouter())
     .route('/api/members', buildMembersRouter())
     .route('/api/songs', buildSongsRouter())

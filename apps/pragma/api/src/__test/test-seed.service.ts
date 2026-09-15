@@ -1,5 +1,6 @@
 import type { Lineup } from '@domain/lineup.core';
-import { bootstrapAuth } from '../auth/auth.service';
+import { bootstrapAuth, rotatePassword } from '../auth/auth.service';
+import { createCredentialForMember } from '../auth/credentials.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
 import { createSession } from '../sessions/sessions.service';
@@ -48,6 +49,7 @@ function buildSongInput(song: SeedSong, defaultLineup: Lineup): SongCreateInput 
     defaultLineup,
     baseEnergy: song.baseEnergy,
     mbid: null,
+    releaseId: null,
     album: null,
     durationSeconds: null,
     isrcs: [],
@@ -83,6 +85,12 @@ async function seedMembers(
   for (const seed of SEED_MEMBERS) {
     const member = await createMember({ firstName: seed.firstName, color: seed.color });
     memberIdByName.set(seed.firstName, member.id);
+    await createCredentialForMember({
+      memberId: member.id,
+      username: seed.username,
+      password: SEED_ADMIN_PASSWORD,
+      now: new Date(),
+    });
     await assignInstrumentsToMember(
       member.id,
       selectInstrumentIds(seed.instrumentNames, instrumentIdByName),
@@ -139,6 +147,7 @@ async function seedTransitionComment(songIds: readonly string[], now: Date): Pro
 export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {
   await deleteAllDomainRows();
   const bootstrap = await bootstrapAuth(SEED_ADMIN_PASSWORD, now);
+  await rotatePassword(SEED_ADMIN_PASSWORD, now);
   const instrumentIdByName = await seedInstruments();
   const memberIdByName = await seedMembers(instrumentIdByName);
   const songIds = await seedSongs(memberIdByName, instrumentIdByName);

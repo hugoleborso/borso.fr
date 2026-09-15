@@ -19,6 +19,7 @@ const NEW_SONG_DEFAULTS: Pick<
   | 'defaultLineup'
   | 'baseEnergy'
   | 'mbid'
+  | 'releaseId'
   | 'album'
   | 'durationSeconds'
   | 'isrcs'
@@ -35,6 +36,7 @@ const NEW_SONG_DEFAULTS: Pick<
   defaultLineup: {},
   baseEnergy: null,
   mbid: null,
+  releaseId: null,
   album: null,
   durationSeconds: null,
   isrcs: [],

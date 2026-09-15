@@ -12,7 +12,7 @@ export const pragmaManifest: ArchitectureManifest = {
       icon: '🧑‍🎤',
       name: 'Band member',
       description:
-        'Signs in with the shared password and works the catalogue, the setlists and the sessions. Every human user holds this one role, because the application has no per-user accounts.',
+        'Signs in with their own account, by password or by passkey, and works the catalogue, the setlists and the sessions. Every member holds the same rights: there is no administrator role.',
     },
   ],
   containers: [
@@ -101,12 +101,30 @@ export const pragmaManifest: ArchitectureManifest = {
   ],
   externals: [
     {
+      id: 'webauthn',
+      icon: '🔑',
+      name: 'WebAuthn authenticator',
+      technology: 'Browser credential API, verified server side by @simplewebauthn',
+      description:
+        "Holds a member's passkey on their own device. The site asks the browser for an assertion and the API verifies it against the public key stored at enrolment, which is the alternative to typing a password.",
+      boundary: 'third-party',
+    },
+    {
       id: 'musicbrainz',
       icon: '🎼',
       name: 'MusicBrainz',
       technology: 'HTTPS, public web service',
       description:
         'Song metadata lookup used to enrich a catalogue entry with recording id, album, duration, tags and ISRCs.',
+      boundary: 'third-party',
+    },
+    {
+      id: 'coverartarchive',
+      icon: '💿',
+      name: 'Cover Art Archive',
+      technology: 'HTTPS, public web service',
+      description:
+        "Album artwork, served by MusicBrainz release id. The browser requests each cover directly and falls back to a tile of the song's initials when there is none; the backfill script asks it which of a recording's releases actually has artwork.",
       boundary: 'third-party',
     },
     {

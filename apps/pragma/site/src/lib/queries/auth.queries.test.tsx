@@ -36,7 +36,7 @@ describe('useLogin — session cache reconciliation', () => {
     await flushMicrotasks();
     const send = slot.read();
 
-    await send({ password: 'correct-horse-battery' });
+    await send({ username: 'tester', password: 'correct-horse-battery' });
     await flushMicrotasks();
 
     expect(queryClient.getQueryData(authKeys.session())).toEqual({ authenticated: true });

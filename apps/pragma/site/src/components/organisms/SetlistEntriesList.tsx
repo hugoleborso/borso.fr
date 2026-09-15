@@ -160,6 +160,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 position={props.inFilteredMode ? visibleIndex + 1 : fullIndex + 1}
                 entryId={entry.id}
                 title={song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}
+                releaseId={song?.releaseId ?? null}
                 artist={song?.artist ?? ''}
                 tonalityLabel={tonalityLabelFor(song)}
                 meanMastery={props.meanMasteryBySongId[entry.songId] ?? null}

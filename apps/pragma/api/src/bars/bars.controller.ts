@@ -1,13 +1,13 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import { barCreateSchema, barIdParamSchema, barUpdateSchema } from './bars.schema';
 import { createBar, getBarById, getBarsSortedByName, patchBar, removeBar } from './bars.service';
 
 // @FollowsBlueprint controller-dispatch
 export function buildBarsRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/', async (context) => {
       const bars = await getBarsSortedByName();
       return context.json({ bars });

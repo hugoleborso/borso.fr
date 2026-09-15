@@ -2,6 +2,7 @@
 
 import { Link } from 'react-router-dom';
 import { buildTonalityLabel } from '../../routes/catalog/tonality-label.utils';
+import { AlbumCover } from '../atoms/AlbumCover';
 import { type ChartKind, ChartKindIcon } from '../molecules/ChartKindIcon';
 import { EnergyBadge } from '../molecules/EnergyBadge';
 import { MasteryBadge } from '../molecules/MasteryBadge';
@@ -12,6 +13,7 @@ export interface SongCardProps {
   id: string;
   title: string;
   artist: string;
+  releaseId: string | null;
   status: SongStatus;
   tonalityStart: string | null;
   tonalityEnd: string | null;
@@ -33,6 +35,7 @@ export function SongCard({
   id,
   title,
   artist,
+  releaseId,
   status,
   tonalityStart,
   tonalityEnd,
@@ -53,17 +56,22 @@ export function SongCard({
         <StatusChip status={status} />
         <ChartKindIcon kind={chartKind} />
       </div>
-      <h3 className="font-display italic text-[22px] leading-tight tracking-[-0.01em] text-ink-900 m-0 mb-1">
-        {title}
-      </h3>
-      <div className="flex items-center gap-2 text-xs text-ink-500">
-        <span className="truncate">{artist}</span>
-        {tonalityLabel !== null && (
-          <>
-            <span className="text-ink-300">·</span>
-            <span className="font-mono text-xs">{tonalityLabel}</span>
-          </>
-        )}
+      <div className="flex items-start gap-3">
+        <AlbumCover title={title} releaseId={releaseId} size="md" />
+        <div className="min-w-0 flex-1">
+          <h3 className="font-display italic text-[22px] leading-tight tracking-[-0.01em] text-ink-900 m-0 mb-1">
+            {title}
+          </h3>
+          <div className="flex items-center gap-2 text-xs text-ink-500">
+            <span className="truncate">{artist}</span>
+            {tonalityLabel !== null && (
+              <>
+                <span className="text-ink-300">·</span>
+                <span className="font-mono text-xs">{tonalityLabel}</span>
+              </>
+            )}
+          </div>
+        </div>
       </div>
       <div className="flex items-center gap-1.5 mt-3">
         <EnergyBadge value={baseEnergy} />

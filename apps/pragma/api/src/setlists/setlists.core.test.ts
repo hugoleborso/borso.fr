@@ -3,6 +3,7 @@ import {
   buildSetlistSummaries,
   selectNextLinkPosition,
   tallySongsPerSetlist,
+  resolveSetlistStatus,
 } from './setlists.core';
 
 describe('selectNextLinkPosition', () => {
@@ -79,5 +80,19 @@ describe('buildSetlistSummaries', () => {
     expect(
       buildSetlistSummaries([{ id: 'a', name: '' }], [], [{ setlistId: 'z', sessionId: 's' }]),
     ).toEqual([{ id: 'a', name: '', songCount: 0, sessionIds: [] }]);
+  });
+});
+
+describe('resolveSetlistStatus', () => {
+  it('reads a row written before the column existed as locked', () => {
+    expect(resolveSetlistStatus(null)).toBe('locked');
+  });
+
+  it('reads the voting phase back', () => {
+    expect(resolveSetlistStatus('voting')).toBe('voting');
+  });
+
+  it('reads anything else as locked rather than throwing', () => {
+    expect(resolveSetlistStatus('counting')).toBe('locked');
   });
 });

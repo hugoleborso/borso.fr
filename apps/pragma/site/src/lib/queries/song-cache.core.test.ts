@@ -18,6 +18,7 @@ const EXISTING_SONG = {
   defaultLineup: { 'member-1': ['instrument-1'] },
   baseEnergy: 4,
   mbid: null,
+  releaseId: null,
   album: null,
   durationSeconds: null,
   isrcs: [],

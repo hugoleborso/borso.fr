@@ -1,5 +1,9 @@
 import { createHmac, timingSafeEqual } from 'node:crypto';
-import { z } from 'zod';
+import {
+  buildMemberSessionPayload,
+  type MemberSessionPayload,
+  parseMemberSessionPayload,
+} from './member-session.core';
 
 const SESSION_TTL_DAYS = 30;
 const HOURS_PER_DAY = 24;
@@ -17,12 +21,7 @@ export const SESSION_TTL_MS =
 
 const COOKIE_SEPARATOR = '.';
 
-const sessionPayloadSchema = z.object({
-  issuedAt: z.number(),
-  expiresAt: z.number(),
-});
-
-export type SessionPayload = z.infer<typeof sessionPayloadSchema>;
+export type SessionPayload = MemberSessionPayload;
 
 export type VerifyResult =
   | { ok: true; payload: SessionPayload }
@@ -41,22 +40,16 @@ function sign(payloadEncoded: string, hmacKey: Buffer): string {
   return toBase64Url(mac);
 }
 
-export function buildCookie(hmacKey: Buffer, nowMillis: number): string {
-  const session: SessionPayload = {
-    issuedAt: nowMillis,
-    expiresAt: nowMillis + SESSION_TTL_MS,
-  };
+export function buildCookie(
+  hmacKey: Buffer,
+  nowMillis: number,
+  memberId: string,
+  epoch: number,
+): string {
+  const session = buildMemberSessionPayload(memberId, epoch, nowMillis, SESSION_TTL_MS);
   const payloadEncoded = toBase64Url(Buffer.from(JSON.stringify(session)));
   const signature = sign(payloadEncoded, hmacKey);
   return `${payloadEncoded}${COOKIE_SEPARATOR}${signature}`;
-}
-
-function parseJsonPayload(raw: string): SessionPayload | null {
-  try {
-    return sessionPayloadSchema.parse(JSON.parse(raw));
-  } catch {
-    return null;
-  }
 }
 
 // @FollowsBlueprint utils-pure-module
@@ -81,7 +74,7 @@ export function verifyCookie(
   ) {
     return { ok: false, reason: 'bad-signature' };
   }
-  const session = parseJsonPayload(fromBase64Url(payloadEncoded).toString('utf8'));
+  const session = parseMemberSessionPayload(fromBase64Url(payloadEncoded).toString('utf8'));
   if (session === null) return { ok: false, reason: 'malformed' };
   if (nowMillis >= session.expiresAt) return { ok: false, reason: 'expired' };
   return { ok: true, payload: session };

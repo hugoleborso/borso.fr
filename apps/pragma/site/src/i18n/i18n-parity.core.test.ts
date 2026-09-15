@@ -9,6 +9,10 @@ interface IdenticalByDesign {
 }
 
 const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
+  {
+    key: 'account.passkeys',
+    readsTheSameBecause: 'the WebAuthn credential is called a passkey in French too',
+  },
   { key: 'appName', readsTheSameBecause: 'the Pragma brand' },
   { key: 'bars.contactEmail', readsTheSameBecause: '"Email" is the label French users read too' },
   { key: 'bars.contactName', readsTheSameBecause: 'same word, same spelling' },
@@ -64,7 +68,6 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'setlist.crumb', readsTheSameBecause: 'the band says "setlist" in both languages' },
   { key: 'setlist.notes', readsTheSameBecause: 'same word, same spelling' },
   { key: 'setlist.title', readsTheSameBecause: '"setlist" is the word French musicians use' },
-  { key: 'shell.meName', readsTheSameBecause: 'a first name' },
   { key: 'shell.meVersion', readsTheSameBecause: 'the brand and a version number' },
 ];
 

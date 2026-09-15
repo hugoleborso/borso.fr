@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import {
   createInstrumentSchema,
   instrumentIdParamSchema,
@@ -16,7 +16,7 @@ import {
 // @FollowsBlueprint controller-dispatch
 export function buildInstrumentsRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/', async (context) => {
       const instruments = await getInstrumentsSorted();
       return context.json({ instruments });

@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import {
   externalSearchQuerySchema,
   songCreateInputSchema,
@@ -24,7 +24,7 @@ import {
  */
 export function buildSongsRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/', async (context) => {
       const songs = await getSongs();
       return context.json({ songs });

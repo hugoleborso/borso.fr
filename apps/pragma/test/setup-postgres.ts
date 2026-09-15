@@ -12,6 +12,10 @@ const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
 
 const TRACKED_TABLES = [
   'app_config',
+  'member_credential',
+  'member_passkey',
+  'webauthn_challenge',
+  'setlist_vote',
   'auth_attempt',
   'bar',
   'transition_comment',

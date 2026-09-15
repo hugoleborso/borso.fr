@@ -1,0 +1,71 @@
+# Fills `song.release_id` for songs imported before the column existed, so
+# their album covers appear. Manual only: it writes to a database, and the
+# operator decides when.
+#
+# Dry run by default — it prints what it would write and writes nothing.
+# Set `apply` to true for the run that actually writes.
+#
+# Reads the cluster endpoint from the SSM parameter the DsqlCluster
+# construct publishes, rather than hardcoding it, so a cluster replacement
+# does not leave a stale host in this file. The schema name is the stage.
+#
+# Assumes ProdDeployRole can `dsql:DbConnectAdmin` on the cluster. The role
+# creates the cluster and the schema, so it should; nothing in this
+# repository can read an IAM policy to prove it, so a failure here reads as
+# an access-denied on connect rather than as a bad query.
+
+name: pragma-backfill-covers
+
+on:
+  workflow_dispatch:
+    inputs:
+      apply:
+        description: 'Write the release ids (unchecked = dry run, writes nothing)'
+        type: boolean
+        default: false
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency: pragma-backfill-covers
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  backfill:
+    runs-on: ubuntu-latest
+    environment: prod # scopes the OIDC subject ProdDeployRole trusts; no reviewer gate
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.PROD_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+      - id: cluster
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+        run: |
+          endpoint=$(aws ssm get-parameter \
+            --name /borso/pragma/dsql-cluster-endpoint \
+            --query 'Parameter.Value' --output text)
+          echo "endpoint=$endpoint" >> "$GITHUB_OUTPUT"
+      - name: Backfill release ids
+        env:
+          AWS_REGION: ${{ vars.AWS_REGION }}
+          DSQL_ENDPOINT: ${{ steps.cluster.outputs.endpoint }}
+          DSQL_SCHEMA: prod
+          APPLY: ${{ inputs.apply }}
+        run: |
+          if [ "$APPLY" = "true" ]; then
+            pnpm --filter @borso-app/pragma run db:backfill-covers --apply
+          else
+            pnpm --filter @borso-app/pragma run db:backfill-covers
+          fi

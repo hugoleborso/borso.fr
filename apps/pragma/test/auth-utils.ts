@@ -4,26 +4,85 @@ import { createApp } from '../api/src/app';
 
 export const TEST_HOST = 'http://localhost';
 export const TEST_PASSWORD = 'correct-horse-battery';
+export const TEST_SHARED_PASSWORD = 'shared-horse-battery';
+export const TEST_USERNAME = 'tester';
 export const SESSION_COOKIE_NAME = 'pragma_session';
 
-export async function buildAuthenticatedApp(): Promise<{ app: Hono; cookieHeader: string }> {
-  const app = createApp();
-  await app.request(`${TEST_HOST}/api/admin/set-password`, {
+export function extractSessionCookie(response: Response): string | null {
+  const setCookie = response.headers.get('set-cookie');
+  if (setCookie === null) return null;
+  const match = new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`).exec(setCookie);
+  return match === null ? null : (match[1] ?? null);
+}
+
+export async function bootstrapSharedPassword(app: Hono, password = TEST_SHARED_PASSWORD) {
+  return app.request(`${TEST_HOST}/api/admin/set-password`, {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ password: TEST_PASSWORD }),
+    body: JSON.stringify({ password }),
   });
-  const loginResponse = await app.request(`${TEST_HOST}/api/auth/login`, {
+}
+
+export async function createMemberDirectly(app: Hono, firstName: string): Promise<string> {
+  const { insertMember } = await import('../api/src/members/members.repository');
+  const member = await insertMember({ firstName, color: '#ff8a65', avatarS3Key: null });
+  return member.id;
+}
+
+export async function enrol(
+  app: Hono,
+  params: {
+    memberId: string;
+    username?: string;
+    password?: string;
+    sharedPassword?: string;
+  },
+): Promise<Response> {
+  return app.request(`${TEST_HOST}/api/auth/enrol`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': '203.0.113.250' },
-    body: JSON.stringify({ password: TEST_PASSWORD }),
+    headers: { 'content-type': 'application/json' },
+    body: JSON.stringify({
+      memberId: params.memberId,
+      username: params.username ?? TEST_USERNAME,
+      password: params.password ?? TEST_PASSWORD,
+      sharedPassword: params.sharedPassword ?? TEST_SHARED_PASSWORD,
+    }),
   });
-  const setCookie = loginResponse.headers.get('set-cookie');
-  if (setCookie === null) throw new Error('login did not return a session cookie');
-  const match = new RegExp(`${SESSION_COOKIE_NAME}=([^;]+)`).exec(setCookie);
-  const value = match === null ? null : (match[1] ?? null);
-  if (value === null) throw new Error('could not extract session cookie value');
-  return { app, cookieHeader: `${SESSION_COOKIE_NAME}=${value}` };
+}
+
+export async function loginAsMember(
+  app: Hono,
+  username = TEST_USERNAME,
+  password = TEST_PASSWORD,
+  ipAddress = '203.0.113.250',
+): Promise<Response> {
+  return app.request(`${TEST_HOST}/api/auth/login`, {
+    method: 'POST',
+    headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
+    body: JSON.stringify({ username, password }),
+  });
+}
+
+export interface AuthenticatedApp {
+  readonly app: Hono;
+  readonly cookieHeader: string;
+  readonly memberId: string;
+}
+
+let enrolmentCounter = 0;
+
+export async function buildAuthenticatedApp(firstName = 'Tester'): Promise<AuthenticatedApp> {
+  const app = createApp();
+  await bootstrapSharedPassword(app);
+  const memberId = await createMemberDirectly(app, firstName);
+  enrolmentCounter += 1;
+  const enrolResponse = await enrol(app, {
+    memberId,
+    username: `${TEST_USERNAME}${String(enrolmentCounter)}`,
+  });
+  const value = extractSessionCookie(enrolResponse);
+  if (value === null) throw new Error('enrolment did not return a session cookie');
+  return { app, cookieHeader: `${SESSION_COOKIE_NAME}=${value}`, memberId };
 }
 
 export interface JsonRequestOptions {

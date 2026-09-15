@@ -54,7 +54,8 @@
         "domain/**/*.core.test.ts",
         "site/src/**/*.utils.test.ts",
         "site/src/**/*.core.test.ts",
-        "test/**/*.ts"
+        "test/**/*.ts",
+        "api/scripts/*.ts"
       ],
       "project": [
         "cdk/**/*.ts",
@@ -62,7 +63,8 @@
         "site/src/**/*.ts",
         "site/src/**/*.tsx",
         "api/src/**/*.ts",
-        "test/**/*.ts"
+        "test/**/*.ts",
+        "api/scripts/**/*.ts"
       ],
       "ignoreDependencies": ["tailwindcss"]
     },
