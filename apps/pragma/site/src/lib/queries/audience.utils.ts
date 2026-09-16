@@ -44,10 +44,19 @@ export interface SuggestedSongView {
   readonly status: PoolEntryView['status'];
 }
 
-// @FollowsBlueprint utils-pure-module
-export function selectPollInterval(round: RoundView | null | undefined): number | false {
+/**
+ * @Blueprint utils-poll-that-yields-to-the-writer
+ * @BlueprintName Poll That Yields To The Writer
+ * @BlueprintUsage Use where a query polls the same key an optimistic mutation writes, so a read already in flight can land after the write and undo it.
+ * @BlueprintDescription Stops the interval while a write is pending, because cancelling in-flight reads inside `onMutate` does not stop the interval from starting a new one a moment later, and that read is answered from state the server has not committed yet. The visitor sees their own tap reverted a second after making it, which reads as the application refusing the tap. Pausing is not the same as invalidating: nothing is refetched here, the next scheduled read simply happens once the writes have settled.
+ */
+export function selectPollInterval(
+  round: RoundView | null | undefined,
+  pendingWriteCount = 0,
+): number | false {
   if (round === null || round === undefined) return false;
   if (round.isSettled) return false;
+  if (pendingWriteCount > 0) return false;
   return OPEN_ROUND_POLL_INTERVAL_MS;
 }
 

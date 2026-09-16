@@ -1,6 +1,12 @@
 /** @Feature audience-voting */
 
-import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  type QueryClient,
+  useIsMutating,
+  useMutation,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { forgetBallotToken, readBallotToken, writeBallotToken } from '../ballot-token.adapter';
 import { setlistKeys } from './setlists.queries';
@@ -106,6 +112,7 @@ export function useConcertVoteState(
   ballotToken: string | null,
   isEnabled = true,
 ) {
+  const pendingWriteCount = useIsMutating();
   return useQuery({
     queryKey: audienceKeys.state(sessionId),
     queryFn: async () => {
@@ -116,7 +123,8 @@ export function useConcertVoteState(
       if (!response.ok) throw new ApiError(response.status, `state ${response.status}`, null);
       return response.json();
     },
-    refetchInterval: (query) => selectPollInterval(query.state.data?.state.round),
+    refetchInterval: (query) =>
+      selectPollInterval(query.state.data?.state.round, pendingWriteCount),
     enabled: isEnabled && sessionId !== '',
   });
 }

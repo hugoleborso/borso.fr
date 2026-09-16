@@ -244,3 +244,27 @@ describe('what the band sees the instant a round opens', () => {
     expect(after?.rounds).toHaveLength(1);
   });
 });
+
+describe('selectPollInterval while a write is pending', () => {
+  const openRound: RoundView = {
+    id: 'round-1',
+    openedAt: '2026-09-16T20:00:00.000Z',
+    closesAt: '2026-09-16T20:00:30.000Z',
+    remainingSeconds: 30,
+    isOpen: true,
+    isSettled: false,
+    winningSongId: null,
+  };
+
+  it('polls a running round when nothing is being written', () => {
+    expect(selectPollInterval(openRound, 0)).toBe(1_000);
+  });
+
+  it('holds the poll back while a vote is in flight, or it undoes the tap', () => {
+    expect(selectPollInterval(openRound, 1)).toBe(false);
+  });
+
+  it('defaults to polling, so a caller that names no write count is unchanged', () => {
+    expect(selectPollInterval(openRound)).toBe(1_000);
+  });
+});
