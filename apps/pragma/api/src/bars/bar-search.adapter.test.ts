@@ -20,7 +20,7 @@ describe('searchPlacesForBars', () => {
       now: () => 10_000,
     });
 
-    expect(hits).toEqual([expect.objectContaining({ name: 'Le Zinc' })]);
+    expect(hits).toEqual({ kind: 'ok', hits: [expect.objectContaining({ name: 'Le Zinc' })] });
     const [url, init] = fetcher.mock.calls[0] ?? [];
     expect(url).toBe(
       'https://nominatim.openstreetmap.org/search?q=zinc+paris&format=jsonv2' +
@@ -34,15 +34,20 @@ describe('searchPlacesForBars', () => {
 
   it('answers an empty list for a blank query without calling out', async () => {
     const fetcher = vi.fn<PlacesFetcher>();
-    expect(await searchPlacesForBars('   ', { fetcher, state: freshState() })).toEqual([]);
+    expect(await searchPlacesForBars('   ', { fetcher, state: freshState() })).toEqual({
+      kind: 'ok',
+      hits: [],
+    });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it('ignores the body of a call the service refused', async () => {
+  it('names a refused call unavailable rather than answering no result', async () => {
     const fetcher = vi.fn<PlacesFetcher>(async () => respondWith(BODY, false));
-    expect(
-      await searchPlacesForBars('zinc', { fetcher, state: freshState(), now: () => 10_000 }),
-    ).toEqual([]);
+    const state = freshState();
+    expect(await searchPlacesForBars('zinc', { fetcher, state, now: () => 10_000 })).toEqual({
+      kind: 'unavailable',
+    });
+    expect(state.cache.size).toBe(0);
   });
 
   it('serves a repeated query from the cache, which the usage policy requires', async () => {
@@ -52,7 +57,7 @@ describe('searchPlacesForBars', () => {
     const second = await searchPlacesForBars('  ZINC  ', { fetcher, state, now: () => 20_000 });
 
     expect(fetcher).toHaveBeenCalledTimes(1);
-    expect(second).toEqual([expect.objectContaining({ name: 'Le Zinc' })]);
+    expect(second).toEqual({ kind: 'ok', hits: [expect.objectContaining({ name: 'Le Zinc' })] });
   });
 
   it('keys the cache on the lowercased query', async () => {
@@ -112,7 +117,7 @@ describe('searchPlacesForBars', () => {
     const hits = await searchPlacesForBars('zinc', { state: freshState(), now: () => 10_000 });
 
     expect(globalFetch).toHaveBeenCalledTimes(1);
-    expect(hits).toEqual([expect.objectContaining({ name: 'Le Zinc' })]);
+    expect(hits).toEqual({ kind: 'ok', hits: [expect.objectContaining({ name: 'Le Zinc' })] });
     vi.unstubAllGlobals();
   });
 

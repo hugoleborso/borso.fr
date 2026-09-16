@@ -24,6 +24,9 @@ export interface BarSearchState {
 
 const barSearchState: BarSearchState = { cache: new Map(), lastCallAt: 0 };
 
+export type BarSearchOutcome =
+  { readonly kind: 'ok'; readonly hits: BarSearchHit[] } | { readonly kind: 'unavailable' };
+
 export interface SearchPlacesOptions {
   readonly fetcher?: PlacesFetcher;
   readonly now?: () => number;
@@ -60,24 +63,24 @@ function buildSearchUrl(query: string): string {
 export async function searchPlacesForBars(
   query: string,
   options: SearchPlacesOptions = {},
-): Promise<BarSearchHit[]> {
+): Promise<BarSearchOutcome> {
   const trimmed = query.trim();
-  if (trimmed.length === 0) return [];
+  if (trimmed.length === 0) return { kind: 'ok', hits: [] };
   const state = options.state ?? barSearchState;
   const now = options.now ?? Date.now;
   const fetcher = options.fetcher ?? fetch;
   const cacheKey = trimmed.toLowerCase();
   evictExpired(state, now());
   const cached = state.cache.get(cacheKey);
-  if (cached !== undefined) return [...cached.value];
+  if (cached !== undefined) return { kind: 'ok', hits: [...cached.value] };
   await waitForRateSlot(state, now);
   state.lastCallAt = now();
   const response = await fetcher(buildSearchUrl(trimmed), {
     headers: { 'User-Agent': NOMINATIM_USER_AGENT, Accept: 'application/json' },
   });
-  if (!response.ok) return [];
+  if (!response.ok) return { kind: 'unavailable' };
   const nominatimBody: unknown = await response.json();
   const hits = mapNominatimToBarSearchHits(nominatimBody);
   state.cache.set(cacheKey, { value: [...hits], expiresAt: now() + SEARCH_CACHE_TTL_MS });
-  return [...hits];
+  return { kind: 'ok', hits: [...hits] };
 }

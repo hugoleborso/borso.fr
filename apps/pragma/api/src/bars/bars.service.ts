@@ -9,8 +9,7 @@ import {
   listBars,
   updateBar,
 } from './bars.repository';
-import { searchPlacesForBars } from './bar-search.adapter';
-import type { BarSearchHit } from './bar-search.core';
+import { type BarSearchOutcome, searchPlacesForBars } from './bar-search.adapter';
 import type { barCreateSchema, barUpdateSchema } from './bars.schema';
 
 type BarCreateInput = z.infer<typeof barCreateSchema>;
@@ -58,7 +57,7 @@ export async function getBarsSortedByName(): Promise<BarRow[]> {
   return rows.toSorted((left, right) => left.name.localeCompare(right.name));
 }
 
-export async function searchBarsInPlaces(query: string): Promise<BarSearchHit[]> {
+export async function searchBarsInPlaces(query: string): Promise<BarSearchOutcome> {
   return await searchPlacesForBars(query);
 }
 

@@ -74,7 +74,7 @@
     "searchFailed": "The search could not be reached. Try again in a moment.",
     "searchNoResult": "No place matched that search.",
     "searchPlaceholder": "Bar name, then the city",
-    "searchTitle": "Find a bar on Google Maps",
+    "searchTitle": "Find a bar on OpenStreetMap",
     "staleBadge": "Stale",
     "staleBanner": "{{count}} bars haven't been touched in 60+ days — give them a poke.",
     "staleColumn": "Follow-up",

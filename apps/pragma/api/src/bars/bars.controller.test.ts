@@ -32,6 +32,11 @@ describe('bars controller (back-e2e)', () => {
     expect((await jsonRequest(app, '/api/bars')).status).toBe(401);
   });
 
+  it('keeps the place search behind the same session as every other bars route', async () => {
+    const { app } = await buildAuthenticatedApp();
+    expect((await jsonRequest(app, '/api/bars/search?query=zinc')).status).toBe(401);
+  });
+
   it('persists every spec status value', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     for (const status of ['lead', 'contacted', 'booked', 'played', 'cold'] as const) {

@@ -74,7 +74,7 @@
     "searchFailed": "La recherche n'a pas répondu. Réessaie dans un instant.",
     "searchNoResult": "Aucun lieu ne correspond à cette recherche.",
     "searchPlaceholder": "Nom du bar, puis la ville",
-    "searchTitle": "Chercher un bar sur Google Maps",
+    "searchTitle": "Chercher un bar sur OpenStreetMap",
     "staleBadge": "À relancer",
     "staleBanner": "{{count}} bars n'ont pas été relancés depuis +60 jours — un petit coup de fil ?",
     "staleColumn": "Relance",

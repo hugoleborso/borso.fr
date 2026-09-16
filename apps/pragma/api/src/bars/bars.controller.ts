@@ -26,8 +26,9 @@ export function buildBarsRouter() {
     })
     .get('/search', zValidator('query', barSearchQuerySchema), async (context) => {
       const { query } = context.req.valid('query');
-      const hits = await searchBarsInPlaces(query);
-      return context.json({ hits });
+      const outcome = await searchBarsInPlaces(query);
+      if (outcome.kind === 'unavailable') return context.json({ error: 'search-unavailable' }, 502);
+      return context.json({ hits: outcome.hits });
     })
     .get('/:id', zValidator('param', barIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
