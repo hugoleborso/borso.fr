@@ -6,6 +6,10 @@ export interface Limits {
   readonly decisionShortCell: number;
   readonly decisionLongCell: number;
   readonly beforeMerge: number;
+  readonly inventory: number;
+  readonly shipped: number;
+  readonly patterns: number;
+  readonly whole: number;
   readonly evidenceItems: number;
   readonly evidenceTitle: number;
   readonly evidenceBody: number;
@@ -20,6 +24,10 @@ export const LIMITS: Limits = {
   decisionShortCell: 50,
   decisionLongCell: 100,
   beforeMerge: 200,
+  inventory: 150,
+  shipped: 350,
+  patterns: 200,
+  whole: 700,
   evidenceItems: 10,
   evidenceTitle: 30,
   evidenceBody: 100,
@@ -32,8 +40,14 @@ export const SECTION_NAMES = [
   'Before merge',
   'Validation',
   'Notable',
+  'Inventory',
+  'Shipped',
+  'Patterns',
 ] as const;
 export type SectionName = (typeof SECTION_NAMES)[number];
+
+export const FEATURE_SECTIONS = ['Flow', 'Decisions', 'Before merge', 'Validation', 'Notable'];
+export const SWEEP_SECTIONS = ['Inventory', 'Shipped', 'Patterns'];
 
 export const DECISION_COLUMNS = ['Decision', 'Alternative', 'Why', 'Consequences', 'ADR'] as const;
 
@@ -322,13 +336,28 @@ function checkNotable(lines: readonly string[], violations: Violation[]): void {
   });
 }
 
+function checkBounded(name: string, limit: number) {
+  return (lines: readonly string[], violations: Violation[]): void => {
+    overSize(name, countableLines(withoutFencedLines(lines)), limit, violations);
+  };
+}
+
 const SECTION_CHECKS: Record<SectionName, (lines: readonly string[], out: Violation[]) => void> = {
   Flow: checkFlow,
   Decisions: checkDecisions,
   'Before merge': checkBeforeMerge,
   Validation: checkValidation,
   Notable: checkNotable,
+  Inventory: checkBounded('Inventory', LIMITS.inventory),
+  Shipped: checkBounded('Shipped', LIMITS.shipped),
+  Patterns: checkBounded('Patterns', LIMITS.patterns),
 };
+
+export function isMixingShapes(names: readonly string[]): boolean {
+  const feature = names.some((name) => FEATURE_SECTIONS.includes(name));
+  const sweep = names.some((name) => SWEEP_SECTIONS.includes(name));
+  return feature && sweep;
+}
 
 function isSectionName(name: string): name is SectionName {
   return SECTION_NAMES.some((known) => known === name);
@@ -345,6 +374,17 @@ export function validateBody(source: string): readonly Violation[] {
     violations.push({ where: 'Description', problem: 'no paragraph under the title' });
   }
   overLimit('Description', parsed.description, LIMITS.description, violations);
+  const names = [...parsed.sections.keys()];
+  if (names.some((name) => SWEEP_SECTIONS.includes(name))) {
+    const wholeLines = withoutFencedLines(stripAttribution(source.split('\n')));
+    overSize('Body', countableLines(wholeLines), LIMITS.whole, violations);
+  }
+  if (isMixingShapes(names)) {
+    violations.push({
+      where: 'Body',
+      problem: `a body is a feature (${FEATURE_SECTIONS.join(', ')}) or a sweep (${SWEEP_SECTIONS.join(', ')}), never both`,
+    });
+  }
   for (const [name, lines] of parsed.sections) {
     if (!isSectionName(name)) {
       violations.push({
