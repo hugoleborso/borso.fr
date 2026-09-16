@@ -5,7 +5,7 @@ detected-at: review
 severity: low
 related-pr: '#89'
 fix-pr: '#106'
-fix-commits: []
+fix-commits: [96a3ed4a]
 eradication-level: 2
 time-to-detect: days
 tags: [documentation, gates, ci, pre-commit, meta, tooling]
@@ -116,7 +116,7 @@ that is live is the half an implementer reads first.
 
 **Type:** code diff (level 2 — devx check, by widening an existing one)
 
-**Reference:** PR #106 · `scripts/docs/check-doc-links.ts`
+**Reference:** PR #106 · commit `96a3ed4a` · `scripts/docs/check-doc-links.ts` and `scripts/check-cited-documents-exist.sh`
 
 ```diff
 -const HISTORICAL_PREFIX = 'docs/features/';
