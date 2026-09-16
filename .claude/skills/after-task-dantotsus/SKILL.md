@@ -267,24 +267,20 @@ Commit one or more commits scoped `docs:` (commitlint scope-enum)
 plus whatever code commits the eradications required. PR title:
 `docs: lessons from PR #<N>`.
 
-**PR body shape (in this order, every section required):**
+**PR body shape.** Draft from [`template.md`](./template.md) and check it with
+`pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>`, which holds the limits.
+Three sections, bounded, because the body is a skim and not the record:
 
-1. `## Friction inventory` — the table built in step 1, verbatim.
-   This is the *first* thing in the PR body; reviewers see the
-   problem space before any conclusion.
-2. `## Patterns` — a short paragraph naming the patterns the
-   inventory revealed (see step 2). Keep it to 3–5 bullets.
-3. `## Dantotsus shipped` — bulleted list of the
-   `docs/dantotsus/<slug>.md` entries with one-line summaries.
-4. `## Knowledge entries shipped` — bulleted list of the
-   `docs/knowledge/<slug>.md` entries with one-line summaries.
-5. `## Eradication commits` — bulleted list of `feat:` / `fix:` /
-   `chore:` commits on this branch that landed code-level
-   eradications, each linked.
+1. `## Inventory` — the decision counts, and a link to the full table.
+2. `## Shipped` — one row per entry: what it is, its level, what is now
+   impossible.
+3. `## Patterns` — what the inventory shows that no single row does.
 
-If the PR has zero entries (everything classified `no-op`), the
-inventory still goes first; the patterns / dantotsus / knowledge
-sections become "none — see inventory for reasons".
+**The full inventory goes in the branch, not the body**, at
+`docs/features/meta/lessons-from-pr-<N>/inventory.md`. It is the evidence
+behind the counts and the artefact this skill exists to produce; nobody reads
+twenty-three rows on a pull-request page, and a body long enough to hold them
+is a body nobody reads at all.
 
 **Apply the `kaizen` label.** This is non-optional — the label is
 the visible signature of the self-improvement loop in the repo.
