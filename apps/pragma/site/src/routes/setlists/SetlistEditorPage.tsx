@@ -16,7 +16,11 @@ import { useNavigateTo } from '../../lib/navigation.hook';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
 import { useSetlist, useSetlistsList } from '../../lib/queries/setlists.queries';
-import { buildSetlistIndexRows, type IndexSession } from '../../lib/setlist-index.core';
+import {
+  buildSetlistIndexRows,
+  type IndexSession,
+  selectConcertSessionId,
+} from '../../lib/setlist-index.core';
 
 const NO_ROWS: readonly never[] = [];
 
@@ -86,7 +90,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
 
       <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
 
-      <SetlistEditor setlistId={setlist.id} />
+      <SetlistEditor setlistId={setlist.id} concertSessionId={selectConcertSessionId(sessions)} />
     </section>
   );
 }

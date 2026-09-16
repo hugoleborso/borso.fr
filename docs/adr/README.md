@@ -64,6 +64,7 @@ No:
 
 - 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
 - 0009 — pragma previews clone production, credentials included.
+- 0015 — Deezer answers the audience search and MusicBrainz resolves the picked result; amended in place on 2026-08-27 after the first draft weighted identifier continuity high on the strength of a dedupe rule the same change had introduced. The file name predates the amendment.
 
 ### App architecture
 
@@ -74,6 +75,8 @@ No:
 - 0016 — `@simplewebauthn` carries the passkey flow, as an alternative single factor beside the password.
 - 0017 — a song's Spotify track is resolved once by the ISRC Deezer already returns, and the client credential lives in SSM rather than the database ADR-0004 chose, because rotation-as-an-endpoint does not apply to a machine credential.
 - 0018 — Nominatim answers the bar search, proxied through the API; no key and no billing account, in exchange for a rate limit, a cache and an attribution line the code carries.
+- 0019 — the room's search collapses a provider that indexes masters down to one row per song, and reads a refusal Deezer states inside a 200 body.
+- 0020 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
 
 ### CDK / infra
 

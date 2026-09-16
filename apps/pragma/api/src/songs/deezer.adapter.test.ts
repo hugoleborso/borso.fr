@@ -5,8 +5,14 @@
 // @FollowsBlueprint test-node-adapter
 
 import { describe, expect, it, vi } from 'vitest';
+import { DEEZER_QUOTA_ERROR_CODE } from './deezer.core';
 import FIXTURE from './__fixtures__/deezer-sample.json';
-import { type ExternalFetcher, type ExternalSearchState, searchExternal } from './deezer.adapter';
+import {
+  type ExternalFetcher,
+  type ExternalSearchState,
+  readDeezerTrack,
+  searchExternal,
+} from './deezer.adapter';
 import type { ExternalSearchCacheEntry } from './deezer.core';
 
 const CACHE_TTL_MS = 60_000;
@@ -24,7 +30,7 @@ describe('searchExternal', () => {
   it('asks nothing of the service when the query is blank', async () => {
     const fetcher = vi.fn(respondWith(FIXTURE));
     const hits = await searchExternal('   ', { fetcher, now: () => 0, state: freshState() });
-    expect(hits).toEqual([]);
+    expect(hits).toEqual({ kind: 'ok', hits: [] });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
@@ -44,7 +50,7 @@ describe('searchExternal', () => {
       now: () => 0,
       state: freshState(),
     });
-    expect(hits).toEqual([]);
+    expect(hits).toEqual({ kind: 'ok', hits: [] });
   });
 
   it('returns the ranked hits the payload maps to', async () => {
@@ -53,8 +59,8 @@ describe('searchExternal', () => {
       now: () => 0,
       state: freshState(),
     });
-    expect(hits.length).toBeGreaterThan(0);
-    expect(hits[0]?.title).toBe('Get Lucky');
+    expect(hits.kind).toBe('ok');
+    expect(hits.kind === 'ok' ? hits.hits[0]?.title : null).toBe('Get Lucky');
   });
 
   it('answers a repeated query from the cache rather than the service', async () => {
@@ -124,13 +130,13 @@ describe('searchExternal', () => {
       now: () => 0,
       state: freshState(),
     });
-    expect(hits).toEqual([]);
+    expect(hits).toEqual({ kind: 'unavailable' });
   });
 
   it('falls back to its own cache and clock when the caller names neither', async () => {
     const fetcher = vi.fn(respondWith(FIXTURE));
     const hits = await searchExternal('Get Lucky', { fetcher });
-    expect(hits.length).toBeGreaterThan(0);
+    expect(hits.kind).toBe('ok');
   });
 
   it('falls back to the platform fetch when the caller names no fetcher', async () => {
@@ -139,7 +145,88 @@ describe('searchExternal', () => {
     try {
       const hits = await searchExternal('Around The World', { now: () => 0, state: freshState() });
       expect(platformFetch).toHaveBeenCalledTimes(1);
-      expect(hits.length).toBeGreaterThan(0);
+      expect(hits.kind).toBe('ok');
+    } finally {
+      vi.unstubAllGlobals();
+    }
+  });
+});
+
+describe('the refusals a search has to tell apart', () => {
+  it('reports a refused transport as unavailable rather than as an empty result list', async () => {
+    const outcome = await searchExternal('Get Lucky', {
+      fetcher: respondWith(FIXTURE, 503),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable' });
+  });
+
+  it('reports a quota refusal stated inside a 200 as unavailable, because it is one', async () => {
+    const outcome = await searchExternal('Get Lucky', {
+      fetcher: respondWith({ error: { type: 'Exception', code: DEEZER_QUOTA_ERROR_CODE } }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable' });
+  });
+});
+
+describe('readDeezerTrack', () => {
+  const A_TRACK = {
+    id: 3135556,
+    title: 'Harder, Better, Faster, Stronger',
+    artist: { name: 'Daft Punk' },
+  };
+
+  it('reads the one track the visitor picked, so the write never trusts the browser', async () => {
+    const fetcher = vi.fn(respondWith(A_TRACK));
+    const outcome = await readDeezerTrack('3135556', {
+      fetcher,
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(fetcher.mock.calls[0]?.[0]).toContain('/track/3135556');
+    expect(outcome).toEqual({
+      kind: 'ok',
+      track: expect.objectContaining({ deezerTrackId: '3135556' }),
+    });
+  });
+
+  it('reads an unknown track as unknown, though the provider answered 200', async () => {
+    const outcome = await readDeezerTrack('1', {
+      fetcher: respondWith({ error: { type: 'DataException', code: 800 } }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unknown' });
+  });
+
+  it('tells a quota refusal apart from an unknown track, though both arrive as a 200', async () => {
+    const outcome = await readDeezerTrack('3135556', {
+      fetcher: respondWith({ error: { type: 'Exception', code: DEEZER_QUOTA_ERROR_CODE } }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable' });
+  });
+
+  it('reports a refused transport as unavailable', async () => {
+    const outcome = await readDeezerTrack('3135556', {
+      fetcher: respondWith(A_TRACK, 503),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable' });
+  });
+
+  it('falls back to its own state, clock and fetch when the caller names none', async () => {
+    const platformFetch = vi.fn(respondWith(A_TRACK));
+    vi.stubGlobal('fetch', platformFetch);
+    try {
+      const outcome = await readDeezerTrack('3135556');
+      expect(platformFetch).toHaveBeenCalledTimes(1);
+      expect(outcome.kind).toBe('ok');
     } finally {
       vi.unstubAllGlobals();
     }

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   formatCapacity,
+  formatClockTime,
   formatDueDate,
   formatSessionDate,
   isDueDatePast,
@@ -77,5 +78,16 @@ describe('isDueDatePast', () => {
   it('is false for a task with no date, and for text that is not one', () => {
     expect(isDueDatePast(null, NOW)).toBe(false);
     expect(isDueDatePast('soon', NOW)).toBe(false);
+  });
+});
+
+describe('formatClockTime', () => {
+  it('reads the wall clock a round was opened at, in the reader locale', () => {
+    const label = formatClockTime('2026-08-31T20:45:00.000Z', 'en-GB');
+    expect(label).toMatch(/\d{2}:\d{2}/);
+  });
+
+  it('hands back what it was given when the text is not a date', () => {
+    expect(formatClockTime('not a date', 'en-GB')).toBe('not a date');
   });
 });

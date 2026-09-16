@@ -5,10 +5,14 @@
 import { describe, expect, it } from 'vitest';
 import FIXTURE from './__fixtures__/deezer-sample.json';
 import {
-  type ExternalSearchCacheEntry,
+  collapseTracksOfOneSong,
+  DEEZER_QUOTA_ERROR_CODE,
   expiredSearchCacheKeys,
-  type ExternalSongHit,
+  mapDeezerTrack,
   mapDeezerTracks,
+  readDeezerErrorCode,
+  type ExternalSearchCacheEntry,
+  type ExternalSongHit,
 } from './deezer.core';
 
 function firstHit(payload: unknown): ExternalSongHit | undefined {
@@ -116,5 +120,89 @@ describe('expiredSearchCacheKeys', () => {
 
   it('names nothing when every entry is still fresh', () => {
     expect(expiredSearchCacheKeys(new Map([['fresh', entry(10)]]), 0)).toEqual([]);
+  });
+});
+
+describe('the refusal Deezer states inside a success', () => {
+  it('reads the quota code, so the adapter can call it a refusal', () => {
+    expect(
+      readDeezerErrorCode({ error: { type: 'Exception', code: DEEZER_QUOTA_ERROR_CODE } }),
+    ).toBe(DEEZER_QUOTA_ERROR_CODE);
+  });
+
+  it('tells an unknown record apart from a refused quota, because they arrive the same way', () => {
+    expect(readDeezerErrorCode({ error: { type: 'DataException', code: 800 } })).toBe(800);
+  });
+
+  it('answers nothing when the provider stated an error but no code', () => {
+    expect(readDeezerErrorCode({ error: { message: 'no data' } })).toBe(null);
+  });
+
+  it('answers nothing for the payload of a call that succeeded', () => {
+    expect(readDeezerErrorCode({ data: [] })).toBe(null);
+    expect(readDeezerErrorCode(null)).toBe(null);
+  });
+});
+
+describe('mapDeezerTrack', () => {
+  it('reads the one track an accepted suggestion is resolved from', () => {
+    const track = mapDeezerTrack({
+      id: 3135556,
+      title: 'Harder, Better, Faster, Stronger',
+      artist: { name: 'Daft Punk' },
+    });
+    expect(track?.deezerTrackId).toBe('3135556');
+  });
+
+  it('answers nothing for a payload that is not a track', () => {
+    expect(mapDeezerTrack({ error: { code: 800 } })).toBe(null);
+    expect(mapDeezerTrack(null)).toBe(null);
+  });
+});
+
+function master(deezerTrackId: string, album: string, title = 'Smells Like Teen Spirit') {
+  return {
+    deezerTrackId,
+    title,
+    artist: 'Nirvana',
+    album,
+    deezerAlbumId: null,
+    durationSeconds: null,
+    durationLabel: null,
+    titleVersion: null,
+    isrcs: [],
+    popularity: 0,
+    isExplicit: false,
+  };
+}
+
+describe('collapseTracksOfOneSong', () => {
+  it('shows one row for a song the provider holds several masters of, or the vote splits', () => {
+    const collapsed = collapseTracksOfOneSong([
+      master('1', 'Nevermind'),
+      master('2', 'Live at Reading'),
+      master('3', 'Live At The Paramount'),
+    ]);
+    expect(collapsed.map((hit) => hit.album)).toEqual(['Nevermind']);
+  });
+
+  it('keeps a named alternative apart, because the band plays it differently', () => {
+    const collapsed = collapseTracksOfOneSong([
+      master('1', 'Morning Glory', 'Wonderwall'),
+      master('2', 'MTV Unplugged', 'Wonderwall (Unplugged)'),
+    ]);
+    expect(collapsed).toHaveLength(2);
+  });
+
+  it('keeps a cover apart from the original, because the artist differs', () => {
+    const collapsed = collapseTracksOfOneSong([
+      master('1', 'Nevermind'),
+      { ...master('2', 'Covers'), artist: 'Malia J' },
+    ]);
+    expect(collapsed).toHaveLength(2);
+  });
+
+  it('collapses nothing in an empty list', () => {
+    expect(collapseTracksOfOneSong([])).toEqual([]);
   });
 });

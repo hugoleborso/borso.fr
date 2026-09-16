@@ -13,6 +13,13 @@ export function formatSessionDate(iso: string, locale: string): string {
   return formatter.format(date);
 }
 
+export function formatClockTime(iso: string, locale: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const formatter = new Intl.DateTimeFormat(locale, { hour: '2-digit', minute: '2-digit' });
+  return formatter.format(date);
+}
+
 export function formatCapacity(value: number | null | undefined): string {
   if (value === null || value === undefined) return '—';
   if (value < 0) return '—';

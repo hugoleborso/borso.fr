@@ -1,4 +1,9 @@
 // @FollowsBlueprint database-schema-barrel
+export {
+  audienceSuggestionTable,
+  audienceVoteTable,
+  votingRoundTable,
+} from '../audience/audience.schema';
 export { appConfigTable, authAttemptTable } from '../auth/auth.schema';
 export {
   memberCredentialTable,

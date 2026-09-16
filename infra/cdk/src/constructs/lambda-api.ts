@@ -28,6 +28,7 @@ const DEFAULT_MEMORY_MIB = 512;
 const DEFAULT_TIMEOUT_SECONDS = 10;
 const DEFAULT_RESERVED_CONCURRENCY = 10;
 const CORS_PREFLIGHT_MAX_AGE_MINUTES = 10;
+const CORS_ALLOWED_REQUEST_HEADERS = ['content-type', 'authorization', 'x-ballot-token'];
 const ERROR_ALARM_PERIOD_MINUTES = 5;
 const NODE_BUILTIN_REQUIRE_SHIM_BANNER =
   "import { createRequire } from 'module'; const require = createRequire(import.meta.url);";
@@ -129,7 +130,7 @@ export class LambdaApi extends Construct {
         ? {
             allowOrigins: [...props.allowedOrigins],
             allowCredentials: true,
-            allowHeaders: ['content-type', 'authorization'],
+            allowHeaders: [...CORS_ALLOWED_REQUEST_HEADERS],
             allowMethods: corsMethods,
             maxAge: Duration.minutes(CORS_PREFLIGHT_MAX_AGE_MINUTES),
           }

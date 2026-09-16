@@ -22,6 +22,7 @@ import {
 } from '../../components/organisms/ConcertEditForm';
 import { ConcertReadView } from '../../components/organisms/ConcertReadView';
 import { SessionSetlists } from '../../components/organisms/SessionSetlists';
+import { VotingRoundPanel } from '../../components/organisms/VotingRoundPanel';
 import { parseFriendsCounts } from './friends-count.core';
 import { selectMissingSessionMessageKey } from './missing-session.core';
 import { selectSessionFacts } from './session-facts.core';
@@ -196,6 +197,8 @@ export function SessionDetailPage(): JSX.Element {
         setlists={setlists}
         isLoading={setlistsQuery.isLoading}
       />
+
+      {isConcert ? <VotingRoundPanel sessionId={session.id} /> : null}
     </section>
   );
 }

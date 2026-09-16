@@ -1,4 +1,5 @@
 import { z } from 'zod';
+import { buildSongIdentity } from './song-identity.core';
 
 export interface ExternalSongHit {
   readonly deezerTrackId: string;
@@ -85,6 +86,44 @@ export function mapDeezerTracks(payload: unknown): ExternalSongHit[] {
     });
   }
   return hits;
+}
+
+const failurePayloadSchema = z.object({ error: z.object({ code: z.number().optional() }) });
+
+export const DEEZER_QUOTA_ERROR_CODE = 4;
+
+/**
+ * @Blueprint core-failure-reported-inside-a-success
+ * @BlueprintName Failure Reported Inside A Success
+ * @BlueprintUsage Use where a provider answers 200 to a request it refused, and the refusal is only readable in the body.
+ * @BlueprintDescription Reads the provider's own error code out of a payload the transport called a success, so the adapter beside it can tell a refusal from an empty answer. The code is returned rather than a boolean, because a quota refusal and an unknown record arrive through the same shape and the caller has to answer them differently. Returns nothing for a payload carrying no error, which is every successful call.
+ * @DependsOnExternal deezer
+ */
+export function readDeezerErrorCode(payload: unknown): number | null {
+  const failure = failurePayloadSchema.safeParse(payload);
+  if (!failure.success) return null;
+  return failure.data.error.code ?? null;
+}
+
+// @FollowsBlueprint core-parse-untrusted
+export function mapDeezerTrack(payload: unknown): ExternalSongHit | null {
+  return mapDeezerTracks({ data: [payload] })[0] ?? null;
+}
+
+/**
+ * @Blueprint core-collapse-on-what-the-reader-can-tell-apart
+ * @BlueprintName Collapse On What The Reader Can Tell Apart
+ * @BlueprintUsage Use where a provider indexes something finer than the reader distinguishes, and several rows reach the page reading identically.
+ * @BlueprintDescription Collapses on the folded text the reader actually reads rather than on the identifier the provider assigns, because a remaster, a live take and a compilation cut each carry their own identifier and their own ISRC while reaching the page as the same words. Keeps the first row, so whatever ranking the caller was given decides the survivor. It costs the reader the ability to name one particular version; take it only where telling them apart is not the reader's job, as it is not when a room is voting for a song rather than for a master.
+ */
+export function collapseTracksOfOneSong(hits: readonly ExternalSongHit[]): ExternalSongHit[] {
+  const seenSongs = new Set<string>();
+  return hits.filter((hit) => {
+    const identity = buildSongIdentity(hit.title, hit.artist);
+    if (seenSongs.has(identity)) return false;
+    seenSongs.add(identity);
+    return true;
+  });
 }
 
 export interface ExternalSearchCacheEntry {

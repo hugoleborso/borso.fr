@@ -14,7 +14,12 @@ import {
 import { type EnrolmentWindow, selectEnrolmentWindow, suggestUsername } from './enrolment.core';
 import { nextSessionEpoch } from './member-session.core';
 import { hashIp, readClientIp } from './ip-hash.utils';
-import { type BucketStore, isRateLimited, recordAttempt } from './rate-limit.utils';
+import {
+  type BucketStore,
+  isRateLimited,
+  MEMBER_LOGIN_BUDGET,
+  recordAttempt,
+} from './rate-limit.utils';
 import { buildCookie, SESSION_TTL_MS } from './session-cookie.utils';
 
 const ARGON2_SALT_BYTES = 16;
@@ -86,9 +91,9 @@ export async function attemptMemberLogin(
 ): Promise<MemberLoginOutcome> {
   const ipHash = hashIp(readClientIp(params.forwardedForHeader));
   const nowMillis = params.now.getTime();
-  const bucket = recordAttempt(params.bucketStore.read(ipHash), nowMillis);
+  const bucket = recordAttempt(params.bucketStore.read(ipHash), nowMillis, MEMBER_LOGIN_BUDGET);
   params.bucketStore.write(ipHash, bucket);
-  if (isRateLimited(bucket)) return { kind: 'rate-limited' };
+  if (isRateLimited(bucket, MEMBER_LOGIN_BUDGET)) return { kind: 'rate-limited' };
   const credential = await findCredentialByUsername(params.username);
   if (credential === null) return { kind: 'invalid-credentials' };
   const isPasswordOk = await argon2Verify({

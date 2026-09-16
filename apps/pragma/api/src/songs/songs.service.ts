@@ -1,8 +1,11 @@
 import type { z } from 'zod';
-import type { ExternalSongHit } from './deezer.core';
-import { searchExternal, type SearchExternalOptions } from './deezer.adapter';
+import { DEFAULT_SONG_ORIGIN } from '@domain/song-origin.core';
+import { collapseTracksOfOneSong, type ExternalSongHit } from './deezer.core';
+import { readDeezerTrack, searchExternal, type SearchExternalOptions } from './deezer.adapter';
+import { findCatalogueMatch } from './song-identity.core';
 import { resolveSpotifyTrackId, type ResolveSpotifyOptions } from './spotify.adapter';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
+export type { SongRow } from './songs.repository';
 import {
   deleteSongWithCascade,
   findSongById,
@@ -89,9 +92,64 @@ export async function removeSong(id: string): Promise<DeletionOutcome> {
   return await deleteSongWithCascade(id);
 }
 
+export type SongSearchOutcome = { kind: 'ok'; hits: ExternalSongHit[] } | { kind: 'unavailable' };
+
 export async function searchExternalSongs(
   query: string,
   options: SearchExternalOptions = {},
-): Promise<ExternalSongHit[]> {
+): Promise<SongSearchOutcome> {
   return await searchExternal(query, options);
+}
+
+export type AudienceSearchOutcome =
+  { kind: 'ok'; hits: ExternalSongHit[] } | { kind: 'unavailable' };
+
+// @FollowsBlueprint service-orchestration
+export async function searchAudienceSongs(
+  query: string,
+  options: SearchExternalOptions = {},
+): Promise<AudienceSearchOutcome> {
+  const outcome = await searchExternal(query, options);
+  if (outcome.kind === 'unavailable') return { kind: 'unavailable' };
+  return { kind: 'ok', hits: collapseTracksOfOneSong(outcome.hits) };
+}
+
+const SUGGESTED_SONG_STATUS = 'idea';
+
+async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
+  return await createSong({
+    title: track.title,
+    artist: track.artist,
+    status: SUGGESTED_SONG_STATUS,
+    origin: DEFAULT_SONG_ORIGIN,
+    links: [],
+    chart: null,
+    tonalityStart: null,
+    tonalityEnd: null,
+    defaultLineup: {},
+    baseEnergy: null,
+    deezerTrackId: track.deezerTrackId,
+    deezerAlbumId: track.deezerAlbumId,
+    spotifyTrackId: null,
+    album: track.album,
+    durationSeconds: track.durationSeconds,
+    isrcs: [...track.isrcs],
+    tags: [],
+    structureNotes: '',
+    gimmickNotes: '',
+    notes: '',
+  });
+}
+
+export type TrackResolution =
+  { kind: 'ok'; song: SongRow } | { kind: 'unknown' } | { kind: 'unavailable' };
+
+// @FollowsBlueprint service-orchestration
+export async function resolveCatalogueSongForTrack(trackId: string): Promise<TrackResolution> {
+  const read = await readDeezerTrack(trackId);
+  if (read.kind === 'unavailable') return { kind: 'unavailable' };
+  if (read.kind === 'unknown') return { kind: 'unknown' };
+  const known = findCatalogueMatch(await getSongs(), read.track);
+  if (known !== null) return { kind: 'ok', song: known };
+  return { kind: 'ok', song: await importSuggestedSong(read.track) };
 }

@@ -22,6 +22,7 @@ import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistScenePage } from './routes/setlists/SetlistScenePage';
 import { SetlistVotePage } from './routes/setlists/SetlistVotePage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
+import { VotePage } from './routes/vote/VotePage';
 
 export function App(): JSX.Element {
   return (
@@ -30,6 +31,8 @@ export function App(): JSX.Element {
         <Routes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/enrol" element={<EnrolPage />} />
+          <Route path="/vote" element={<VotePage />} />
+          <Route path="/vote/:sessionId" element={<VotePage />} />
           <Route element={<RequireSession />}>
             <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
             <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />

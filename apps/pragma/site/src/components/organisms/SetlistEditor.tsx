@@ -37,10 +37,12 @@ import {
 import type { SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
 import { filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
+import { VotingRoundPanel } from './VotingRoundPanel';
 import { buildTransitionView, indexTransitionComments } from './transition-view.core';
 
 interface SetlistEditorProps {
   readonly setlistId: string;
+  readonly concertSessionId: string | null;
 }
 
 const NO_ROWS: readonly never[] = [];
@@ -56,7 +58,7 @@ type SetlistFailureKey =
   | 'setlist.failure.copyOrder';
 
 // @FollowsBlueprint organism-query-owning
-export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
+export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
   const entriesQuery = useSetlistEntries(setlistId);
   const songsQuery = useSongsList();
@@ -275,6 +277,11 @@ export function SetlistEditor({ setlistId }: SetlistEditorProps): JSX.Element {
         onPick={addEntry}
         onClose={() => setPickerOpen(false)}
       />
+      {concertSessionId === null ? null : (
+        <div className="mt-8">
+          <VotingRoundPanel sessionId={concertSessionId} />
+        </div>
+      )}
       {transitionEditing === null ? null : (
         <TransitionCommentModal
           songAId={transitionEditing.songAId}
