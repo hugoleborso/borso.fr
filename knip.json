@@ -10,6 +10,7 @@
         "scripts/architecture/*.ts",
         "scripts/blueprints/*.ts",
         "scripts/standards/*.ts",
+        "scripts/pr/*.ts",
         "scripts/**/*.test.ts"
       ],
       "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts"]
