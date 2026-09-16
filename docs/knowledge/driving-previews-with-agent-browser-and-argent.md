@@ -269,3 +269,37 @@ request: `borso-fr`, `borsouvertures`, `pragma`, `last-loop-lepin`. The pull
 request's own sticky comment carries the four live links and the commit each was
 built from, which is the copy to trust — a table of URLs written here would name
 whichever pull request happened to be open when somebody wrote it.
+
+## Two traps when the application under test holds a session
+
+Both cost a visual validator a run on `pragma`, which signs a member in with
+a cookie and seeds its data through a test route.
+
+**A full-page navigation drops the session.** `agent-browser open <url>`
+starts the page fresh, and on this application that lands on `/login` rather
+than the address asked for. Once signed in, move through the application's
+own links — `find role link` then `click` — and reserve `open` for the first
+navigation of a run. The symptom is indistinguishable from an auth bug: the
+validator reports being bounced to the login screen, and the application is
+fine.
+
+**Re-running the seed invalidates the browser's session.** `POST
+/api/__test/seed?fixture=basic-band` recreates the members, so the member id
+in the cookie no longer exists and every subsequent request is rejected. The
+login screen then reports it as wrong credentials, because that is what the
+API answers for an unknown member. Seed once, at the start, before signing
+in — and if a run needs a clean slate, sign in again afterwards rather than
+assuming the session survived.
+
+A consequence worth knowing: five failed sign-ins from one address trip the
+API's fifteen-minute rate limiter. The limiter keys on the forwarded-for
+header, so a stuck run can be unblocked by setting a different one on the
+browser rather than by waiting it out.
+
+**`screenshot --full` captures the window, not the scrolled container.**
+Where a page scrolls an inner element rather than the document — which is how
+this application's list views are built — the full-page flag silently
+captures only what the window shows, and the element under test can be
+missing from the evidence entirely. Scroll the element into view first, or
+screenshot the element by reference, and check the image contains what the
+row claims before citing it.

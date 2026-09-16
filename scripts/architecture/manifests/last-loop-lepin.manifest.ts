@@ -86,6 +86,7 @@ export const lastLoopLepinManifest: ArchitectureManifest = {
       description:
         'Object storage for the runner photos the official uploads, reached only through a presigned URL so no image passes through the API.',
       boundary: 'aws',
+      access: 'credential',
       realisedBy: 'photos-bucket',
     },
   ],

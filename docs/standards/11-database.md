@@ -150,6 +150,19 @@ The background is in
   tag outside a migration or a repository.
 - `test:migrations.audit.test.ts`, one per full-stack application, rejects a
   `DEFAULT now()` on any column outside that application's allow list.
+- `script:scripts/check-migration-numbers.sh` fails a migrations folder where
+  one number is claimed by two files. The number is the only thing ordering one
+  migration against another, so a shared number leaves the alphabet to decide;
+  two branches open at once each take the next free number and git merges both
+  filenames without a conflict, which makes the merge commit the first moment
+  the collision exists and the last moment anybody is reading numbers.
+- `script:scripts/check-coupled-lists.sh` additionally fails when a table a
+  migration creates is missing from either list the back-e2e harness keeps of
+  them. The setup file drops its list before replaying the migrations and the
+  truncate file empties its list between cases; a table absent from the first
+  survives the reset and collides with its own `CREATE TABLE` on the second run
+  of the suite, which is a state CI never reaches because its Postgres is
+  always fresh.
 - `gate:vitest-back-e2e` runs every repository method against a real Postgres.
 - `reviewer` checks that a workflow writing more than one table wraps the
   writes in one transaction owned by the service, and that a cascade DSQL will

@@ -5,8 +5,8 @@
   "type": "module",
   "scripts": {
     "dev": "pnpm dev:db > /dev/null && concurrently -k -n api,site -c magenta,green 'pnpm dev:api' 'pnpm dev:site'",
-    "dev:db": "../../scripts/local-postgres.sh start pragma",
-    "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) STAGE=dev ALLOW_TEST_SEED=1 tsx watch api/src/main.dev.ts",
+    "dev:db": "../../scripts/local-postgres.sh start pragma dev",
+    "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma dev) STAGE=dev ALLOW_TEST_SEED=1 tsx watch api/src/main.dev.ts",
     "dev:site": "vite",
     "db:local:start": "../../scripts/local-postgres.sh start pragma",
     "db:local:stop": "../../scripts/local-postgres.sh stop pragma",
