@@ -333,6 +333,14 @@ review.
   rather than carrying limits of its own. A body is the one artefact a reviewer
   reads end to end and nothing else checks it, so it grew to ten kilobytes and
   carried a test count that had been wrong for three commits.
+- `script:scripts/dantotsus/check-dantotsus.ts` holds every entry under
+  `docs/dantotsus/` to its frontmatter enums, its required sections, a chain of
+  three to seven steps, a budget per section, and an Eradication block naming a
+  commit and carrying a diff. Each class of defect is baselined in
+  `convention-baseline.json` and the count only goes down, because the rule
+  saying an eradication must link its commit was prose for the corpus's whole
+  life and 66 of 129 entries name none. A dantotsu whose fix cannot be found is
+  a claim, and the corpus is worth more than its claims.
 - `gate:knip` fails on an unused file, export or dependency.
 - `gate:actionlint` fails on a malformed workflow, which is where a
   `paths-filter` base misuse and a shell quoting bug both hid.

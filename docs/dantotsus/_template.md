@@ -13,6 +13,13 @@ tags: [<topic>, …]                  # cdk, cloudfront, s3, ci, pnpm, dsql, git
 
 # <Title — sparks curiosity, hints at the lesson, NOT the user-story name>
 
+<!-- Budgets, in alphanumeric characters (punctuation, spaces, markup and link
+targets are free). `pnpm exec tsx scripts/dantotsus/check-dantotsus.ts` holds
+them and is the source of truth; the numbers here are a reminder, not a second
+copy to keep in sync. Title 72 · Symptom 400 · Root-cause chain 900 ·
+Detection failure causes 700 · Countermeasure 300 · Eradication 1000 ·
+See also 250 · whole file 3000. The chain runs 3 to 7 steps. -->
+
 ## Symptom
 
 User-perspective. Verbatim error or screenshot if useful.
@@ -79,6 +86,11 @@ lives, what changed*.
 **Type:** <one of: code diff · DevX check · vendor patch · detection · knowledge addition> (level <N> — <name>)
 
 **Reference:** [PR #<n>](url) · commits [`<sha>`](url)[, [`<sha>`](url) ...]
+
+A commit hash here is not decoration: the checker refuses an Eradication block
+that names none, because a reader who cannot find the diff cannot tell a shipped
+fix from an intended one. 66 of the entries written before the checker existed
+name no commit, which is the measurement that put this rule in code.
 
 **The actual fix:**
 

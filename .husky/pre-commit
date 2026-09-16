@@ -252,6 +252,13 @@ scripts/check-frontend-env-vars.sh
 echo "[pre-commit] checking each manifest names icons that ship"
 scripts/check-pwa-assets.sh
 
+# A dantotsu's eradication is the one claim in it that has to be checkable, and
+# the rule saying so was prose for the corpus's whole life: 66 of 129 entries
+# name no commit. Each class of defect is baselined, so the count only goes
+# down; --accept in the same commit as a rewrite is what lowers it.
+echo "[pre-commit] checking the dantotsu entries against their budget"
+pnpm exec tsx scripts/dantotsus/check-dantotsus.ts
+
 # The template a PR body is drafted from has to satisfy the budget the same
 # script enforces on the body. A template that drifts out of it teaches every
 # future body to be refused, and the drift is invisible until someone drafts.
