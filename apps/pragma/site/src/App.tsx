@@ -9,6 +9,7 @@ import { ComposPage } from './routes/compos/ComposPage';
 import { SongDetailPage } from './routes/catalog/SongDetailPage';
 import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
+import { ImprovementsPage } from './routes/improvements/ImprovementsPage';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
 import { EnrolPage } from './routes/EnrolPage';
 import { LoginPage } from './routes/LoginPage';
@@ -45,6 +46,7 @@ export function App(): JSX.Element {
               <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
               <Route path="/setlists/:setlistId/vote" element={<SetlistVotePage />} />
               <Route path="/bars" element={<BarsPage />} />
+              <Route path="/improvements" element={<ImprovementsPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/compos" element={<ComposPage />} />
               <Route path="/members" element={<MembersPage />} />

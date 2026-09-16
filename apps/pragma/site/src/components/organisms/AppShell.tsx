@@ -42,6 +42,7 @@ const WORKSHOP_NAV: readonly NavItem[] = [
 ];
 
 const ADMIN_NAV: readonly NavItem[] = [
+  { to: '/improvements', labelKey: 'nav.improvements', icon: 'bolt' },
   { to: '/members', labelKey: 'nav.members', icon: 'members' },
   { to: '/instruments', labelKey: 'nav.instruments', icon: 'instr' },
 ];

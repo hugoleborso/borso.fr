@@ -4,6 +4,7 @@ import { logger } from 'hono/logger';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
+import { buildImprovementsRouter } from './improvements/improvements.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
 import { buildMeRouter } from './me/me.controller';
@@ -37,6 +38,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/admin', rotateRouter)
     .route('/api/me', buildMeRouter())
     .route('/api/instruments', buildInstrumentsRouter())
+    .route('/api/improvements', buildImprovementsRouter())
     .route('/api/members', buildMembersRouter())
     .route('/api/songs', buildSongsRouter())
     .route('/api/mastery', buildMasteryRouter())

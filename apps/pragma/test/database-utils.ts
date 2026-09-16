@@ -7,6 +7,8 @@ const ALL_TABLES: readonly string[] = [
   'member_passkey',
   'webauthn_challenge',
   'setlist_vote',
+  'improvement_vote',
+  'improvement',
   'auth_attempt',
   'outreach_template',
   'bar',

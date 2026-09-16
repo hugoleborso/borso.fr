@@ -155,6 +155,42 @@ Lives in: `api/src/songs/` (`baseEnergy`) and `api/src/setlists/`
   so the row shows it nowhere else
   (`site/src/components/atoms/EnergyBar.tsx`).
 
+## Improvement
+
+Something the band wants changed in this application, written down by the
+member it annoys.
+
+Lives in: `api/src/improvements/`
+
+- `title` is `NOT NULL`, trimmed, 1 to 200 characters. `details` is
+  `NOT NULL` and defaults to the empty string.
+- `status` is one of `idea`, `planned`, `building`, `shipped`, `declined`
+  (`IMPROVEMENT_STATUSES` in `improvements.schema.ts`), and the backlog is
+  ranked in that order, then by vote count, then oldest first
+  (`rankImprovements` in `improvements.core.ts`).
+- `authorMemberId` is the member who filed it, taken from the session
+  rather than from the request body, and `createdAt` is written by the
+  application.
+- Deleting one deletes its improvement votes in the same call.
+
+Not to be confused with: a **song note**, which is about the music rather
+than about the tool that tracks it.
+
+## Improvement vote
+
+One member saying they want one improvement.
+
+Lives in: `api/src/improvements/` (`improvement_vote`)
+
+- Keyed on `(improvementId, memberId)`, so a member either wants an
+  improvement or does not. There are no points and no budget: casting the
+  same vote twice changes nothing but the `castAt` stamp.
+- The list endpoint reads every vote once and folds it into a count plus a
+  flag for the reader (`summariseVotes` in `improvements.core.ts`).
+
+Not to be confused with: a **vote**, which is the scored, budgeted thing a
+member spends on songs inside a setlist.
+
 ## Instrument
 
 Something a member can hold on a song.
@@ -527,6 +563,9 @@ Lives in: `api/src/setlists/` (`setlist_vote`)
   simply not counted; nothing forces a member to spend them.
 - Deleted with the member who cast it and with the song it names.
 
+Not to be confused with: an **improvement vote**, which carries no points
+and no budget.
+
 ## Vote budget
 
 How many points one member still has to spend in one vote.
@@ -606,6 +645,9 @@ Lives in: `api/src/uploads/`
 - **role**, **part**, **station**: what a member holds on a song is an
   **instrument**, and the whole map is a **lineup**. The word *station*
   survives in one comment in `members.schema.ts` and should not spread.
+- **ticket**, **issue**, **feature request**, **bug**: what the band wants
+  changed in this application is an **improvement**, and its votes are
+  **improvement votes**.
 - **prospect**, **contact** as an entity: a **bar** with status `lead`.
 - **chord sheet**, **tab**, **score**: the attached music is a **chord
   chart**, and its inline form is **ChordPro**.

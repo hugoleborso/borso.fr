@@ -208,6 +208,28 @@
   "fileDrop": {
     "remove": "Remove"
   },
+  "improvements": {
+    "deleteConfirm": "Delete this improvement? Its votes go with it.",
+    "deleteFor": "Delete {{title}}",
+    "detailsField": "Details",
+    "editTitle": "Edit improvement",
+    "empty": "Nothing here yet. Write down the first thing that annoys you.",
+    "errorGone": "That improvement is no longer there. Reload the page.",
+    "errorRefused": "That change was refused. Check the title and the status, then try again.",
+    "errorSignedOut": "You are signed out. Sign in again to keep going.",
+    "errorUnknown": "Something went wrong. Try again in a moment.",
+    "newTitle": "New improvement",
+    "statusBuilding": "building",
+    "statusDeclined": "declined",
+    "statusField": "Status",
+    "statusIdea": "idea",
+    "statusPlanned": "planned",
+    "statusShipped": "shipped",
+    "subtitle": "What the band wants changed in this application. The most voted idea is at the top.",
+    "title": "Improvements",
+    "titleField": "Title",
+    "voteFor": "Vote for {{title}}"
+  },
   "instruments": {
     "deleteConfirm": "Delete this instrument? It leaves every lineup that uses it.",
     "editTitle": "Edit instrument",
@@ -270,6 +292,7 @@
     "catalog": "Catalog",
     "closeMenu": "Close menu",
     "compos": "Compositions",
+    "improvements": "Improvements",
     "instruments": "Instruments",
     "language": {
       "fr": "FR",

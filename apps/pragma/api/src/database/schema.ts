@@ -6,6 +6,7 @@ export {
   webauthnChallengeTable,
 } from '../auth/credentials.schema';
 export { barTable } from '../bars/bars.schema';
+export { improvementTable, improvementVoteTable } from '../improvements/improvements.schema';
 export { instrumentTable } from '../instruments/instruments.schema';
 export { masteryDefaultTable, masteryOverrideTable } from '../mastery/mastery.schema';
 export { memberInstrumentTable, memberTable } from '../members/members.schema';

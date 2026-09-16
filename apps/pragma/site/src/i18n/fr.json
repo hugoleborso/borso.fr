@@ -208,6 +208,28 @@
   "fileDrop": {
     "remove": "Retirer"
   },
+  "improvements": {
+    "deleteConfirm": "Supprimer cette amélioration ? Ses votes partent avec elle.",
+    "deleteFor": "Supprimer {{title}}",
+    "detailsField": "Détails",
+    "editTitle": "Modifier l'amélioration",
+    "empty": "Rien pour l'instant. Notez la première chose qui vous agace.",
+    "errorGone": "Cette amélioration n'existe plus. Rechargez la page.",
+    "errorRefused": "Ce changement a été refusé. Vérifiez le titre et le statut, puis réessayez.",
+    "errorSignedOut": "Vous êtes déconnecté. Reconnectez-vous pour continuer.",
+    "errorUnknown": "Quelque chose s'est mal passé. Réessayez dans un instant.",
+    "newTitle": "Nouvelle amélioration",
+    "statusBuilding": "en cours",
+    "statusDeclined": "écartée",
+    "statusField": "Statut",
+    "statusIdea": "idée",
+    "statusPlanned": "prévue",
+    "statusShipped": "livrée",
+    "subtitle": "Ce que le groupe veut changer dans cette application. L'idée la plus votée est en haut.",
+    "title": "Améliorations",
+    "titleField": "Titre",
+    "voteFor": "Voter pour {{title}}"
+  },
   "instruments": {
     "deleteConfirm": "Supprimer cet instrument ? Il quitte tous les line-ups qui l'utilisent.",
     "editTitle": "Modifier l'instrument",
@@ -270,6 +292,7 @@
     "catalog": "Catalogue",
     "closeMenu": "Fermer le menu",
     "compos": "Compos",
+    "improvements": "Améliorations",
     "instruments": "Instruments",
     "language": {
       "fr": "FR",

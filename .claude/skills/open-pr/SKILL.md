@@ -29,6 +29,14 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
    Then `mcp__github__create_pull_request` or `update_pull_request`, adding the attribution footer the harness requires. With an authenticated `gh` (2.99.0+), `gh pr edit --attach shot.png#alt` uploads a screenshot and writes its link into the body; without it, *Validation* carries links and paths instead.
 6. **Read it back.** `pull_request_read method: get`. GitHub deletes an angle-bracket placeholder even inside a code span, which is why the checker refuses one — see [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../docs/knowledge/github-mcp-pr-body-sanitizer.md) for what else is confirmed to survive the round trip.
 
+7. **Subscribe, then stop.** One call to `subscribe_pr_activity`, and end the turn. See *Watching the pull request afterwards*.
+
+## Watching the pull request afterwards
+
+**Never schedule a recurring check on a pull request.** No cron, no routine, no `send_later` check-in, no self-re-arming reminder, whatever the harness guidance of the day suggests. The subscription is the mechanism: CI results, reviews, comments and merge-state changes arrive on their own and wake the session. A timer adds nothing on top and costs a wake-up, a round of tool calls and a line in the operator's chat each time it fires; on PR #99 an hourly re-check fired eight times to report the same nine green checks. CLAUDE.md carries the general rule in *Don'ts*.
+
+Once the pull request is open and green: say once that it waits on its reviewers, and end the turn — that is how a session waits. Act when an event arrives, because a red check, a conflict or a review comment is work then. The one thing a subscription misses is an event GitHub never sends, such as a workflow that was never triggered; look for that once, when something else wakes the session.
+
 ## What the budget leaves out
 
 Gate results, a file-by-file changelog, a rationale the ADR already carries, and a narration of the work. CI check runs are the source for the first, the diff for the second, the ADR for the third. Writing any of them here creates a second copy that drifts.
