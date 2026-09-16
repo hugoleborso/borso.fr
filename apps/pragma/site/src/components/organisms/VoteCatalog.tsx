@@ -57,7 +57,9 @@ export function VoteCatalog({
             key={song.id}
             title={song.title}
             artist={song.artist}
-            releaseId={song.releaseId}
+            deezerAlbumId={song.deezerAlbumId}
+            deezerTrackId={song.deezerTrackId}
+            spotifyTrackId={song.spotifyTrackId}
             points={points}
             isNew={isSongNewSinceLastScore(song, lastScoredAt, points)}
             onTap={() => {

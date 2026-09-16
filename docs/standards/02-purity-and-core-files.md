@@ -188,9 +188,9 @@ header, a URL shape — makes the call, and then hands the payload to its siblin
 `.core.ts` to become the domain's own type.
 
 ```ts
-// api/src/songs/musicbrainz.adapter.ts
+// api/src/songs/deezer.adapter.ts
 const body: unknown = await response.json();
-const hits = rankExternalHits(mapMusicBrainzRecordings(body), trimmed);
+const hits = rankExternalHits(mapDeezerTracks(body), trimmed);
 ```
 
 Both of those are pure functions in `.core.ts` files, tested without a network.

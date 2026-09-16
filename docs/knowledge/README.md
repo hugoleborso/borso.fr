@@ -165,6 +165,7 @@ Two failure modes to watch for:
 
 ### pragma / MusicBrainz
 
+- [`spotify-credentials-for-pragma.md`](./spotify-credentials-for-pragma.md) — creating the Spotify application, writing the one SSM parameter every stage reads, and the fact that a missing credential looks exactly like a song Spotify does not carry.
 - [`musicbrainz-search-parser-and-missing-tonality.md`](./musicbrainz-search-parser-and-missing-tonality.md) — the default Lucene parser misses what a person actually types, so the adapter asks for `dismax`; and key/tonality lives only on `work` entities, never on the `recording` a search returns, so it cannot be enriched from here.
 
 ### Frontend / React

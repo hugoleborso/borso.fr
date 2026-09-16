@@ -1,11 +1,11 @@
 import { createRuleTester } from './rule-tester.js';
 import rule from './no-adapter-import-in-pure-module.js';
 
-const coreFile = 'apps/pragma/api/src/songs/musicbrainz.core.ts';
+const coreFile = 'apps/pragma/api/src/songs/deezer.core.ts';
 const utilsFile = 'apps/pragma/site/src/lib/mastery-aggregate.utils.ts';
-const adapterFile = 'apps/pragma/api/src/songs/musicbrainz.adapter.ts';
+const adapterFile = 'apps/pragma/api/src/songs/deezer.adapter.ts';
 const serviceFile = 'apps/pragma/api/src/songs/songs.service.ts';
-const coreTestFile = 'apps/pragma/api/src/songs/musicbrainz.core.test.ts';
+const coreTestFile = 'apps/pragma/api/src/songs/deezer.core.test.ts';
 
 // @FollowsBlueprint test-lint-rule
 createRuleTester(coreFile, { jsx: false }).run('no-adapter-import-in-pure-module (core)', rule, {
@@ -16,7 +16,7 @@ createRuleTester(coreFile, { jsx: false }).run('no-adapter-import-in-pure-module
   ],
   invalid: [
     {
-      code: "import { searchExternal } from './musicbrainz.adapter';",
+      code: "import { searchExternal } from './deezer.adapter';",
       errors: [{ messageId: 'adapterInPureModule' }],
     },
     {
@@ -24,7 +24,7 @@ createRuleTester(coreFile, { jsx: false }).run('no-adapter-import-in-pure-module
       errors: [{ messageId: 'adapterInPureModule' }],
     },
     {
-      code: "import type { ExternalFetcher } from './musicbrainz.adapter';",
+      code: "import type { ExternalFetcher } from './deezer.adapter';",
       errors: [{ messageId: 'adapterInPureModule' }],
     },
     {
@@ -49,7 +49,7 @@ createRuleTester(adapterFile, { jsx: false }).run(
   rule,
   {
     valid: [
-      "import { mapMusicBrainzRecordings } from './musicbrainz.core';",
+      "import { mapDeezerTracks } from './deezer.core';",
       "import { searchExternal } from './other.adapter';",
     ],
     invalid: [],
@@ -60,7 +60,7 @@ createRuleTester(serviceFile, { jsx: false }).run(
   'no-adapter-import-in-pure-module (service)',
   rule,
   {
-    valid: ["import { searchExternal } from './musicbrainz.adapter';"],
+    valid: ["import { searchExternal } from './deezer.adapter';"],
     invalid: [],
   },
 );
@@ -69,7 +69,7 @@ createRuleTester(coreTestFile, { jsx: false }).run(
   'no-adapter-import-in-pure-module (test)',
   rule,
   {
-    valid: ["import { searchExternal } from './musicbrainz.adapter';"],
+    valid: ["import { searchExternal } from './deezer.adapter';"],
     invalid: [],
   },
 );
