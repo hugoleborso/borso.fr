@@ -347,6 +347,14 @@ scripts/check-adr-numbers-resolve.sh
 echo "[pre-commit] checking every tool an instruction names is installed"
 scripts/check-instructions-name-installed-tools.sh
 
+# And that a document a script cites is there. check-doc-links.ts reads
+# markdown, and a shell script is not markdown, so the line at the top of a
+# gate naming its dantotsu — the only thread back to the reasoning — was the
+# one nothing checked. Rung-2 eradication of
+# docs/dantotsus/the-link-checker-skipped-the-folder-it-was-trusted-for.md.
+echo "[pre-commit] checking every document a script cites is there"
+scripts/check-cited-documents-exist.sh
+
 # A spec with no Test strategy leaves the split between the two validators to
 # whichever one reads it first, and three of them guessed differently in one
 # task. Rung-2 eradication of

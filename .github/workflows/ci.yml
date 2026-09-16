@@ -133,6 +133,9 @@ jobs:
       # And that no skill, agent or standard tells an agent to run a command
       # this repository does not install. Prose has no build step.
       - run: ./scripts/check-instructions-name-installed-tools.sh
+      # And that a document a script, hook or workflow cites is there. The
+      # markdown link check does not read them, so their citations went unread.
+      - run: ./scripts/check-cited-documents-exist.sh
       # One stylesheet per application, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-single-stylesheet.sh

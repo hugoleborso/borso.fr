@@ -7,15 +7,19 @@ import { listBrokenLinks, type BrokenLink } from './doc-links.core';
 
 const REPOSITORY_ROOT = process.cwd();
 const LIST_FILES_BUFFER_BYTES = 16 * 1024 * 1024;
-const HISTORICAL_PREFIX = 'docs/features/';
+const DATED_RECORD_SEGMENT = /\/(validation|runs)\//;
 
 const TEMPLATE_SUFFIX = '/template.md';
+
+function isDatedRecord(path: string): boolean {
+  return DATED_RECORD_SEGMENT.test(path);
+}
 
 function listDocuments(): readonly string[] {
   return execFileSync('git', ['ls-files', '*.md'], { cwd: REPOSITORY_ROOT, encoding: 'utf8' })
     .split('\n')
     .filter((path) => path.length > 0)
-    .filter((path) => !path.startsWith(HISTORICAL_PREFIX))
+    .filter((path) => !isDatedRecord(path))
     .filter((path) => !path.endsWith(TEMPLATE_SUFFIX));
 }
 

@@ -156,10 +156,22 @@ generated artefact is therefore named in prose and never linked.
   `scripts/check-stylesheet-contents.sh` parses, and a conditional comment,
   which is markup rather than prose.
 - `script:scripts/docs/check-doc-links.ts` fails a document that links a file
-  which is not there, across every markdown file outside `docs/features/`. It
-  skips a placeholder, a GitHub-relative target and anything inside a fenced
-  block, and it is the reason the `/code-standards` routing table's thirteen
-  dead links are gone.
+  which is not there. It skips a placeholder, a GitHub-relative target and
+  anything inside a fenced block, and it is the reason the `/code-standards`
+  routing table's thirteen dead links are gone. What it skips beyond that is a
+  **dated record** — a `validation/` verdict or a `runs/` agent journal — whose
+  links describe a tree that has since moved and which nobody may edit anyway;
+  `scripts/check-dated-records-are-append-only.sh` is the gate that says so.
+  The exclusion was `docs/features/` wholesale until 2026-09-16, which also
+  took every `spec/` and `plan/` with it — the documents an implementer opens
+  first, and the six dead links narrowing it found were all in those.
+- `script:scripts/check-cited-documents-exist.sh` fails a `docs/….md` path
+  named in a script, hook or workflow that is not there. The check above reads
+  markdown, and a shell script is not markdown, so the line at the top of a
+  gate saying which dantotsu it eradicates — the only thread from a mechanism
+  back to its reasoning — was the one nothing read. Two had rotted, both
+  naming entries that were never written. Test files are skipped: a fixture
+  path is made up on purpose.
 - `reviewer` reads `docs/standards/hotspots.md` before deciding which pattern to
   write down next. It crosses how often each file changes with whether it
   follows a recorded pattern and whether its path says what it is. Nothing gates

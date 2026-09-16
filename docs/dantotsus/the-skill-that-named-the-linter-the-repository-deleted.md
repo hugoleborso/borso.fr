@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: '#89'
 fix-pr: '#106'
-fix-commits: []
+fix-commits: [79562bd0]
 eradication-level: 2
 time-to-detect: days
 tags: [agents, skills, eslint, biome, tooling, gates, meta, documentation]
@@ -127,7 +127,7 @@ runs rather than deleted and left vague:
 
 **Type:** DevX check (level 2 — devx check)
 
-**Reference:** PR #106 · `scripts/check-instructions-name-installed-tools.sh`
+**Reference:** PR #106 · commit `79562bd0` · `scripts/check-instructions-name-installed-tools.sh`
 
 Every `pnpm exec X`, `npx X` and `node_modules/.bin/X` named in `.claude/` or
 `docs/standards/` has to resolve in `node_modules/.bin`:

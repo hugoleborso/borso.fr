@@ -15,7 +15,8 @@
 # Adding a record is always fine. Deleting one is caught too, for the same
 # reason: 545 of these files exist and none of them should ever change.
 #
-# See docs/dantotsus/a-rename-rewrote-the-record-of-a-past-review.md.
+# The entry this line used to cite was never written, which is how a citation
+# in a shell header rots: nothing reads it. The paragraph above is the record.
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
