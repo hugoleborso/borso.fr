@@ -2,9 +2,11 @@ import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
+import { resolveSongOrigin, type SongOrigin } from '@domain/song-origin.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
 import { setlistEntryTable } from '../setlists/setlists.schema';
 import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
+import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
 import {
   chordChartSchema,
   defaultLineupSchema,
@@ -27,6 +29,7 @@ export interface SongRow {
   title: string;
   artist: string;
   status: SongStatus;
+  origin: SongOrigin;
   links: SongLink[];
   chart: SongChart | null;
   tonalityStart: string | null;
@@ -50,6 +53,7 @@ export interface SongInsertShape {
   title: string;
   artist: string;
   status: SongStatus;
+  origin: SongOrigin;
   links: SongLink[];
   chart: SongChart | null;
   tonalityStart: string | null;
@@ -75,6 +79,7 @@ interface SongRawRow {
   title: string;
   artist: string;
   status: string;
+  origin: string | null;
   links: string;
   chart: string | null;
   tonalityStart: string | null;
@@ -100,6 +105,7 @@ const PROJECTION = {
   title: songTable.title,
   artist: songTable.artist,
   status: songTable.status,
+  origin: songTable.origin,
   links: songTable.links,
   chart: songTable.chart,
   tonalityStart: songTable.tonalityStart,
@@ -140,6 +146,7 @@ function rowToSong(row: SongRawRow): SongRow {
     title: row.title,
     artist: row.artist,
     status: songStatusSchema.parse(row.status),
+    origin: resolveSongOrigin(row.origin),
     links: songLinksRowSchema.parse(linksRaw),
     chart: chartRaw === null ? null : chordChartSchema.parse(chartRaw),
     tonalityStart: row.tonalityStart,
@@ -168,6 +175,7 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     title: values.title,
     artist: values.artist,
     status: values.status,
+    origin: values.origin,
     links: JSON.stringify(values.links),
     chart: values.chart === null ? null : JSON.stringify(values.chart),
     tonalityStart: values.tonalityStart,
@@ -192,6 +200,7 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('title' in updates && updates.title !== undefined) encoded.title = updates.title;
   if ('artist' in updates && updates.artist !== undefined) encoded.artist = updates.artist;
   if ('status' in updates && updates.status !== undefined) encoded.status = updates.status;
+  if ('origin' in updates && updates.origin !== undefined) encoded.origin = updates.origin;
   if ('links' in updates) encoded.links = JSON.stringify(updates.links ?? []);
   if ('chart' in updates) {
     encoded.chart =
@@ -255,6 +264,7 @@ export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome
     await transaction.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
     await deleteVotesOfDeletedSong(transaction, id);
+    await detachTasksOfSongBeingDeleted(transaction, id);
     const deleted = await transaction
       .delete(songTable)
       .where(eq(songTable.id, id))

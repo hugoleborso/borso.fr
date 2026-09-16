@@ -4,13 +4,11 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { z } from 'zod';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { HintText } from '../atoms/HintText';
 import { Input } from '../atoms/Input';
-import { inputVariants } from '../atoms/input.variants';
 import { BackLink } from '../molecules/BackLink';
 import { PageHeader } from '../molecules/PageHeader';
 import { SongSearch } from './SongSearch';
@@ -19,6 +17,7 @@ import { SongChartFields } from './SongChartFields';
 import { SongChordPreview } from './SongChordPreview';
 import { SongDeleteAction } from './SongDeleteAction';
 import { SongExternalLinks } from './SongExternalLinks';
+import { SongClassificationFields } from '../molecules/SongClassificationFields';
 import { SongLinkAdder } from '../molecules/SongLinkAdder';
 import { SongDeezerTrackIdField } from '../molecules/SongDeezerTrackIdField';
 import { SongExternalMetadataPanel } from '../molecules/SongExternalMetadataPanel';
@@ -27,9 +26,7 @@ import {
   applyExternalIdentityToDraft,
   applyExternalPickToDraft,
   detectProvider,
-  SONG_STATUS_LABEL_KEY,
   type SongDraftState,
-  songStatuses,
 } from '../../routes/catalog/song-draft.core';
 
 const TITLE_MAX = 256;
@@ -221,27 +218,21 @@ export function SongEditForm({
             )}
           </form.Field>
 
-          <label className={labelClass} htmlFor="song-status">
-            {t('catalog.status')}
-          </label>
           <form.Field name="status">
-            {(field) => (
-              <select
-                id="song-status"
-                value={field.state.value}
-                onChange={(event) => {
-                  const status = z.enum(songStatuses).safeParse(event.target.value);
-                  if (status.success) field.handleChange(status.data);
-                }}
-                onBlur={field.handleBlur}
-                className={inputVariants({ size: 'md' })}
-              >
-                {songStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {t(SONG_STATUS_LABEL_KEY[status])}
-                  </option>
-                ))}
-              </select>
+            {(statusField) => (
+              <form.Field name="origin">
+                {(originField) => (
+                  <SongClassificationFields
+                    labelClassName={labelClass}
+                    status={statusField.state.value}
+                    origin={originField.state.value}
+                    onStatusChange={statusField.handleChange}
+                    onStatusBlur={statusField.handleBlur}
+                    onOriginChange={originField.handleChange}
+                    onOriginBlur={originField.handleBlur}
+                  />
+                )}
+              </form.Field>
             )}
           </form.Field>
 

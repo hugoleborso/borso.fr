@@ -114,6 +114,9 @@
     "notesStructurePlaceholder": "intro ×4 · verse · chorus · bridge · chorus ×2",
     "notesTitle": "Notes",
     "openScene": "Scene mode",
+    "origin": "Origin",
+    "originCover": "cover",
+    "originOriginal": "original",
     "playedRecently": "Played recently",
     "previewTitle": "Chord chart",
     "searchNoResults": "No results.",
@@ -157,6 +160,21 @@
     "offlineTitle": "Offline mode",
     "save": "Save",
     "search": "Search"
+  },
+  "compos": {
+    "addTaskLink": "Add a task",
+    "chart": "Chord chart",
+    "editLineup": "Edit the lineup",
+    "empty": "No composition yet. Mark a catalogue song as an original to see it here.",
+    "lineup": "Lineup",
+    "noChart": "No chart on this composition yet.",
+    "noNotes": "Nothing written down yet.",
+    "noTasks": "Nothing to do on this composition.",
+    "notes": "Notes and comments",
+    "openInCatalog": "Open in the catalog",
+    "subtitle": "The songs the band wrote itself, with their chart, their lineup and what is left to do on them.",
+    "tasks": "Tasks",
+    "title": "Compositions"
   },
   "fileDrop": {
     "remove": "Remove"
@@ -222,6 +240,7 @@
     "bottomBar": "Main sections",
     "catalog": "Catalog",
     "closeMenu": "Close menu",
+    "compos": "Compositions",
     "instruments": "Instruments",
     "language": {
       "fr": "FR",
@@ -231,7 +250,9 @@
     "members": "Members",
     "more": "More",
     "sessions": "Sessions",
-    "setlists": "Setlists"
+    "setlists": "Setlists",
+    "tasks": "Tasks",
+    "workshopSection": "Workshop"
   },
   "scaffold": {
     "subtitle": "First slice: auth, schema, design tokens, i18n. UI surfaces ship in follow-up PRs.",
@@ -380,6 +401,26 @@
     "hint": "These values come from the song itself. Changing them reaches every setlist that plays it.",
     "open": "Song defaults",
     "title": "Defaults — {{title}}"
+  },
+  "tasks": {
+    "assignee": "Assignee",
+    "deleteConfirm": "Delete this task?",
+    "dueDate": "Due date",
+    "editTitle": "Edit task",
+    "emptyColumn": "Nothing on this list.",
+    "linkedComposition": "Composition",
+    "newTitle": "New task",
+    "noComposition": "No composition",
+    "notes": "Notes",
+    "status": "Status",
+    "statusDoing": "in progress",
+    "statusDone": "done",
+    "statusTodo": "to do",
+    "subtitle": "One column per member, so everyone sees what they owe the next rehearsal.",
+    "title": "Tasks",
+    "titleField": "Title",
+    "toggleDone": "Mark as done",
+    "unassigned": "Unclaimed"
   },
   "voting": {
     "addToProposal": "Add a song",

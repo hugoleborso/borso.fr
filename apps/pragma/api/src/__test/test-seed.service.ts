@@ -42,6 +42,7 @@ function buildSongInput(song: SeedSong, defaultLineup: Lineup): SongCreateInput 
     title: song.title,
     artist: song.artist,
     status: song.status,
+    origin: song.origin,
     links: [],
     chart: { kind: 'chordpro', text: song.chordChartText },
     tonalityStart: song.tonalityStart,

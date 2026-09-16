@@ -17,4 +17,5 @@ export {
   setlistVoteTable,
 } from '../setlists/setlists.schema';
 export { songTable } from '../songs/songs.schema';
+export { taskTable } from '../tasks/tasks.schema';
 export { transitionCommentTable } from '../transitions/transitions.schema';
