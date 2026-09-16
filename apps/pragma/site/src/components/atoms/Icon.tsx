@@ -25,6 +25,19 @@ const ICONS = {
     </>
   ),
   bars: <path d="M3 21V8m6 13V3m6 18v-9m6 9V8" />,
+  tasks: (
+    <>
+      <path d="M9 6h11M9 12h11M9 18h11" />
+      <path d="M4 6l1.2 1.2L7.5 4.8M4 12l1.2 1.2L7.5 10.8M4 18l1.2 1.2L7.5 16.8" />
+    </>
+  ),
+  compos: (
+    <>
+      <path d="M9 18V5l10-2v13" />
+      <circle cx="6" cy="18" r="3" />
+      <circle cx="16" cy="16" r="3" />
+    </>
+  ),
   members: (
     <>
       <circle cx="9" cy="9" r="3.5" />
@@ -119,6 +132,7 @@ const ICONS = {
       <path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
     </>
   ),
+  deezer: <path d="M4 16v4M9 12v8M14 8v12M19 4v16" />,
   spotify: (
     <>
       <circle cx="12" cy="12" r="9" />

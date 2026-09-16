@@ -14,6 +14,10 @@ import {
   updateMember,
 } from './members.repository';
 
+export async function getMemberById(id: string): Promise<MemberRow | null> {
+  return await findMemberById(id);
+}
+
 export async function getMembersSortedByFirstName(): Promise<MemberRow[]> {
   const rows = await listMembers();
   return rows.toSorted((left, right) => left.firstName.localeCompare(right.firstName));

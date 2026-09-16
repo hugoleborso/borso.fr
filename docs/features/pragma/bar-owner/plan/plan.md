@@ -2,7 +2,7 @@
 
 | Layer | File | Change |
 | --- | --- | --- |
-| Migration | `api/src/database/migrations/0006_bar_owner.sql` | `ALTER TABLE "bar" ADD COLUMN IF NOT EXISTS "owner_member_id" uuid` — DSQL takes a bare `ADD COLUMN`, so the column is nullable with no default and no foreign key. |
+| Migration | `api/src/database/migrations/0009_bar_owner.sql` | `ALTER TABLE "bar" ADD COLUMN IF NOT EXISTS "owner_member_id" uuid` — DSQL takes a bare `ADD COLUMN`, so the column is nullable with no default and no foreign key. |
 | Schema | `api/src/bars/bars.schema.ts` | `ownerMemberId` on the table, and on `barCreateSchema` as a nullable uuid defaulting to null; the update schema derives from it. |
 | Repository | `api/src/bars/bars.repository.ts` | Column in `PROJECTION`, `BarRow`, `BarPersistedShape` and the insert defaults. |
 | Repository | `api/src/members/members.repository.ts` | `deleteMemberWithLinks` clears `owner_member_id` on the bars that member owned, inside the same transaction. |
@@ -24,7 +24,7 @@ end renders an unknown owner as no owner rather than throwing.
 
 | Layer | File | Change |
 | --- | --- | --- |
-| Migration | `api/src/database/migrations/0007_member_contact_and_outreach_template.sql` | `phone` and `email` on `member`, and the one-row `outreach_template` table. |
+| Migration | `api/src/database/migrations/0010_member_contact_and_outreach_template.sql` | `phone` and `email` on `member`, and the one-row `outreach_template` table. |
 | Slice | `api/src/outreach/` | `outreach.schema.ts`, `.repository.ts`, `.service.ts`, `.controller.ts` — `GET` and `PUT /api/outreach/template`, both behind the member session. |
 | Members | `members.schema.ts`, `.repository.ts`, `.service.ts` | `phone` and `email` carried through the projection, the persisted shape and the patch. |
 | Me | `me.service.ts`, `me.controller.ts` | `PUT /api/me/contact` lets the signed-in member save their own phone and email; `GET /api/me` returns them. |
@@ -50,7 +50,7 @@ switches the default too.
 | Organism | `site/src/components/organisms/BarPlaceSearch.tsx` | The search box, 600 ms debounce, the OpenStreetMap attribution link, one sentence when the service does not answer. |
 | Front core | `site/src/routes/bars/bar-form.core.ts` | `buildBarFormFromPlace`, which always prepares a new bar. |
 | i18n | `site/src/i18n/{en,fr}.json` | The search labels. |
-| ADR | `docs/adr/0017-…md` | Why Nominatim rather than Google, and what its usage policy costs. |
+| ADR | `docs/adr/0018-…md` | Why Nominatim rather than Google, and what its usage policy costs. |
 
 Risks: Nominatim is run for openstreetmap.org and serves everyone else on
 spare capacity, so a slow or refused answer is normal rather than an
@@ -62,7 +62,7 @@ policy requirement no gate here can check.
 
 | Layer | File | Change |
 | --- | --- | --- |
-| Migration | `api/src/database/migrations/0008_bar_concert_mood_and_support.sql` | `concert_mood` and `available_support` on `bar`, both nullable; the support list is JSON in a TEXT column, the shape a lineup already uses, because DSQL has no array type to add here. |
+| Migration | `api/src/database/migrations/0011_bar_concert_mood_and_support.sql` | `concert_mood` and `available_support` on `bar`, both nullable; the support list is JSON in a TEXT column, the shape a lineup already uses, because DSQL has no array type to add here. |
 | Core | `api/src/bars/bar-support.core.ts` | The canonical ordering of the support list and the mood resolution. The JSON decoding stays in the repository, per the `repository-json-column` blueprint: a fallback in a pure module is a branch no test can distinguish, since an unreadable column and an empty one give the same answer. |
 | Schema | `api/src/bars/bars.schema.ts` | The two columns and their Zod input, the support defaulting to the empty list. |
 | Repository | `api/src/bars/bars.repository.ts` | Serialises the support on write, parses it on read, so no other file sees the JSON. |

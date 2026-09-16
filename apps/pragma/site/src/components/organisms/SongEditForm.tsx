@@ -4,12 +4,11 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
-import { z } from 'zod';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
+import { HintText } from '../atoms/HintText';
 import { Input } from '../atoms/Input';
-import { inputVariants } from '../atoms/input.variants';
 import { BackLink } from '../molecules/BackLink';
 import { PageHeader } from '../molecules/PageHeader';
 import { SongSearch } from './SongSearch';
@@ -18,15 +17,16 @@ import { SongChartFields } from './SongChartFields';
 import { SongChordPreview } from './SongChordPreview';
 import { SongDeleteAction } from './SongDeleteAction';
 import { SongExternalLinks } from './SongExternalLinks';
+import { SongClassificationFields } from '../molecules/SongClassificationFields';
 import { SongLinkAdder } from '../molecules/SongLinkAdder';
-import { SongMusicBrainzPanel } from '../molecules/SongMusicBrainzPanel';
+import { SongDeezerTrackIdField } from '../molecules/SongDeezerTrackIdField';
+import { SongExternalMetadataPanel } from '../molecules/SongExternalMetadataPanel';
 import { SongNotesFields } from '../molecules/SongNotesFields';
 import {
+  applyExternalIdentityToDraft,
   applyExternalPickToDraft,
   detectProvider,
-  SONG_STATUS_LABEL_KEY,
   type SongDraftState,
-  songStatuses,
 } from '../../routes/catalog/song-draft.core';
 
 const TITLE_MAX = 256;
@@ -141,36 +141,49 @@ export function SongEditForm({
           }}
           className="flex flex-col gap-2.5"
         >
-          {isNew ? (
-            <SongSearch
-              onPick={(hit) => {
-                form.reset(applyExternalPickToDraft(form.state.values, hit));
-              }}
-              className="mb-2"
-            />
-          ) : null}
+          <SongSearch
+            onPick={(hit) => {
+              form.reset(
+                isNew
+                  ? applyExternalPickToDraft(form.state.values, hit)
+                  : applyExternalIdentityToDraft(form.state.values, hit),
+              );
+            }}
+            className="mb-2"
+          />
+          {isNew ? null : <HintText tone="muted">{t('catalog.searchSongLinkHint')}</HintText>}
 
           <form.Subscribe
             selector={(state) =>
               [
                 state.values.album,
                 state.values.durationSeconds,
-                state.values.mbid,
+                state.values.deezerTrackId,
                 state.values.tags,
                 state.values.isrcs,
               ] as const
             }
           >
-            {([albumValue, durationValue, mbidValue, tagsValue, isrcsValue]) => (
-              <SongMusicBrainzPanel
+            {([albumValue, durationValue, deezerTrackIdValue, tagsValue, isrcsValue]) => (
+              <SongExternalMetadataPanel
                 album={albumValue}
                 durationSeconds={durationValue}
-                mbid={mbidValue}
+                deezerTrackId={deezerTrackIdValue}
                 tags={tagsValue}
                 isrcs={isrcsValue}
               />
             )}
           </form.Subscribe>
+
+          <form.Field name="deezerTrackId">
+            {(field) => (
+              <SongDeezerTrackIdField
+                value={field.state.value}
+                onChange={field.handleChange}
+                onBlur={field.handleBlur}
+              />
+            )}
+          </form.Field>
 
           <label className={labelClass} htmlFor="song-title">
             {t('catalog.songTitle')}
@@ -205,27 +218,21 @@ export function SongEditForm({
             )}
           </form.Field>
 
-          <label className={labelClass} htmlFor="song-status">
-            {t('catalog.status')}
-          </label>
           <form.Field name="status">
-            {(field) => (
-              <select
-                id="song-status"
-                value={field.state.value}
-                onChange={(event) => {
-                  const status = z.enum(songStatuses).safeParse(event.target.value);
-                  if (status.success) field.handleChange(status.data);
-                }}
-                onBlur={field.handleBlur}
-                className={inputVariants({ size: 'md' })}
-              >
-                {songStatuses.map((status) => (
-                  <option key={status} value={status}>
-                    {t(SONG_STATUS_LABEL_KEY[status])}
-                  </option>
-                ))}
-              </select>
+            {(statusField) => (
+              <form.Field name="origin">
+                {(originField) => (
+                  <SongClassificationFields
+                    labelClassName={labelClass}
+                    status={statusField.state.value}
+                    origin={originField.state.value}
+                    onStatusChange={statusField.handleChange}
+                    onStatusBlur={statusField.handleBlur}
+                    onOriginChange={originField.handleChange}
+                    onOriginBlur={originField.handleBlur}
+                  />
+                )}
+              </form.Field>
             )}
           </form.Field>
 

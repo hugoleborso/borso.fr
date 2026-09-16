@@ -98,7 +98,7 @@ invoke them, not to reimplement them.
 ### Stage 5 — `ship`
 
 - **Skill invoked:** `/open-pr`.
-- **Standard:** [`.claude/skills/open-pr/standard.md`](../skills/open-pr/standard.md).
+- **Contract:** [`.claude/skills/open-pr/SKILL.md`](../skills/open-pr/SKILL.md), whose limits live in `scripts/pr/check-pr-body.ts`.
 - **Pre-conditions for the spawn:** both validators returned `PASS` (or
   `PASS_EXCEPT_UNVERIFIABLE` with the operator's awareness). The branch is
   pushed to remote.

@@ -1,4 +1,5 @@
 import type { InstrumentFamily } from '@domain/instrument.core';
+import type { SongOrigin } from '@domain/song-origin.core';
 import { SONG_STATUSES } from '../songs/songs.schema';
 import type { SeedLineupByMemberName } from './test-seed.core';
 
@@ -46,6 +47,7 @@ export interface SeedSong {
   readonly title: string;
   readonly artist: string;
   readonly status: SeedSongStatus;
+  readonly origin: SongOrigin;
   readonly tonalityStart: string | null;
   readonly baseEnergy: number;
   readonly lineup: SeedLineupByMemberName;
@@ -61,6 +63,7 @@ export const SEED_SONGS: readonly SeedSong[] = [
     title: 'Slow Burn',
     artist: 'The Embers',
     status: 'concert_ready',
+    origin: 'cover',
     tonalityStart: 'Am',
     baseEnergy: 3,
     lineup: {
@@ -110,6 +113,7 @@ export const SEED_SONGS: readonly SeedSong[] = [
     title: 'Midnight Drive',
     artist: 'Nova Reef',
     status: 'concert_ready',
+    origin: 'cover',
     tonalityStart: 'C',
     baseEnergy: 6,
     lineup: {
@@ -154,6 +158,7 @@ export const SEED_SONGS: readonly SeedSong[] = [
     title: 'Lightning',
     artist: 'Volt',
     status: 'rehearsed',
+    origin: 'cover',
     tonalityStart: 'E',
     baseEnergy: 9,
     lineup: { Hugo: ['Batterie'], Léa: ['Chant'], Sarah: ['Chant'] },
@@ -193,6 +198,7 @@ export const SEED_SONGS: readonly SeedSong[] = [
     title: 'Afterglow',
     artist: 'Nova Reef',
     status: 'concert_ready',
+    origin: 'cover',
     tonalityStart: 'G',
     baseEnergy: 5,
     lineup: {
@@ -238,6 +244,7 @@ G|---7-----------------|
     title: 'Runaway Sun',
     artist: 'The Embers',
     status: 'wip',
+    origin: 'original',
     tonalityStart: 'D',
     baseEnergy: 8,
     lineup: { Hugo: ['Batterie'], Léa: ['Guitare', 'Chant'], Marc: ['Basse'] },
@@ -272,6 +279,7 @@ G|---7-----------------|
     title: 'Last Call',
     artist: 'Volt',
     status: 'rehearsed',
+    origin: 'original',
     tonalityStart: 'F',
     baseEnergy: 4,
     lineup: {

@@ -10,6 +10,7 @@ const ALL_TABLES: readonly string[] = [
   'auth_attempt',
   'outreach_template',
   'bar',
+  'task',
   'transition_comment',
   'setlist_entry',
   'session_setlist',

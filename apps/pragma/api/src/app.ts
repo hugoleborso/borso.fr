@@ -12,6 +12,7 @@ import { buildOutreachRouter } from './outreach/outreach.controller';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
+import { buildTasksRouter } from './tasks/tasks.controller';
 import { buildTransitionCommentsRouter } from './transitions/transitions.controller';
 import { buildUploadsRouter } from './uploads/uploads.controller';
 
@@ -45,6 +46,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/transition-comments', buildTransitionCommentsRouter())
     .route('/api/bars', buildBarsRouter())
     .route('/api/outreach', buildOutreachRouter())
+    .route('/api/tasks', buildTasksRouter())
     .route('/api/uploads', buildUploadsRouter());
 }
 

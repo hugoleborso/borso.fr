@@ -24,11 +24,11 @@
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
     "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"pragma-pr-${PR_NUMBER:?PR_NUMBER env var required \u2014 pragma destroy targets the per-PR app stack only, never the shared pragma-cluster stack}\" --force",
-    "test:mutation": "stryker run",
-    "db:backfill-covers": "tsx api/scripts/backfill-release-ids.ts"
+    "test:mutation": "stryker run"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",
+    "@aws-sdk/client-ssm": "catalog:",
     "@aws-sdk/dsql-signer": "catalog:",
     "@aws-sdk/s3-request-presigner": "catalog:",
     "@borso/infra": "workspace:*",

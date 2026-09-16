@@ -7,6 +7,7 @@ import { barTable } from '../bars/bars.schema';
 import { instrumentTable } from '../instruments/instruments.schema';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
 import { defaultLineupSchema, songTable } from '../songs/songs.schema';
+import { unassignTasksOfMemberBeingDeleted } from '../tasks/tasks.service';
 import { scrubMemberFromLineup } from './lineup-scrub.core';
 import { type InstrumentFamily, resolveInstrumentFamily } from '@domain/instrument.core';
 import { memberInstrumentTable, memberTable } from './members.schema';
@@ -108,6 +109,7 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await transaction.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
     await deleteCredentialsOfMember(transaction, id);
     await deleteVotesOfDeletedMember(transaction, id);
+    await unassignTasksOfMemberBeingDeleted(transaction, id);
     const deleted = await transaction
       .delete(memberTable)
       .where(eq(memberTable.id, id))

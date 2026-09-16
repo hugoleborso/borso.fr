@@ -7,16 +7,17 @@ const MESSAGE =
 
 const ADAPTER_FILE_PATTERN = /\.adapter\.tsx?$/;
 const TEST_FILE_PATTERN = /\.test\.[jt]sx?$/;
-const DATABASE_CLIENT_PATTERN = /(^|\/)database\/client\.ts$/;
+const VENDOR_CLIENT_PATTERN = /(^|\/)(database\/client|[\w-]+\.client)\.ts$/;
 const APPLICATION_FILE_PATTERN = /(^|\/)apps\/[^/]+\//;
-const AWS_CLIENT_PATTERN = /^(S3|SQS|SNS|DynamoDB|Lambda|EventBridge|SES|SecretsManager)\w*Client$/;
+const AWS_CLIENT_PATTERN =
+  /^(S3|SQS|SNS|DynamoDB|Lambda|EventBridge|SES|SecretsManager|SSM)\w*Client$/;
 
 function isExempt(filename) {
   return (
     !APPLICATION_FILE_PATTERN.test(filename) ||
     ADAPTER_FILE_PATTERN.test(filename) ||
     TEST_FILE_PATTERN.test(filename) ||
-    DATABASE_CLIENT_PATTERN.test(filename)
+    VENDOR_CLIENT_PATTERN.test(filename)
   );
 }
 

@@ -1,11 +1,16 @@
 #!/usr/bin/env bash
 # PreToolUse hook for `gh pr create` invocations.
 #
-# Refuses to let the command run unless the PR body satisfies the
-# /open-pr standard (`.claude/skills/open-pr/standard.md`):
-#   - ≥ 800 characters
-#   - ≥ 3 `<details>` blocks (progressive-disclosure pattern)
-#   - a `## Validation` block when the feature has validation reports
+# Refuses to let the command run unless the PR body fits the budget the
+# /open-pr skill draws from, which `scripts/pr/check-pr-body.ts` holds: a
+# short title and description, one flow, one decisions table, one before-merge
+# block, bounded validation evidence and bounded notable facts.
+#
+# The hook owns no limit of its own. It hands the body to the checker, so the
+# numbers live in one place and a body that passes the checker by hand cannot
+# be refused here. Until 2026-09-16 it enforced the opposite — a floor of 800
+# characters and three toggles — which is what made a body nobody wanted to
+# rewrite.
 #
 # Output contract (Claude Code PreToolUse hook):
 #   - exit 0 + no stderr → command runs as-is.
@@ -41,8 +46,8 @@ fi
 
 block() {
   echo "[open-pr] $1" >&2
-  echo "[open-pr] Use the /open-pr skill to draft a progressive-disclosure PR body." >&2
-  echo "[open-pr] See .claude/skills/open-pr/SKILL.md." >&2
+  echo "[open-pr] Draft from .claude/skills/open-pr/template.md and check it with" >&2
+  echo "[open-pr]   pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>" >&2
   exit 2
 }
 
@@ -71,25 +76,16 @@ else
   block "no --body / --body-file flag — PRs without a body are rejected."
 fi
 
-BODY_LENGTH=${#BODY}
-if (( BODY_LENGTH < 800 )); then
-  block "PR body is too short ($BODY_LENGTH chars; threshold 800). A description that fits in a tweet underserves reviewers."
-fi
+BODY_FILE="$(mktemp)"
+trap 'rm -f "$BODY_FILE"' EXIT
+{
+  echo "# title placeholder for the checker"
+  echo
+  printf '%s\n' "$BODY"
+} >"$BODY_FILE"
 
-DETAILS_COUNT=$(grep -oE '<details' <<<"$BODY" | wc -l | tr -d '[:space:]')
-if (( DETAILS_COUNT < 3 )); then
-  block "PR body has only ${DETAILS_COUNT} <details> blocks (need ≥ 3). Reviewers can't navigate three levels of disclosure without them."
-fi
-
-# Validation block check — only enforced when the feature has at least
-# one validation report under docs/features/.
-# `-print -quit` rather than a pipe into the head of the output: under
-# `set -o pipefail` that pipe returns 141 whenever `find` still has output to
-# write when the reader closes it, and in a hook a non-zero that is not 2 is a
-# silent skip rather than a refusal.
-HAS_VALIDATION_DIR=$(find docs/features -type d -name validation -print -quit 2>/dev/null)
-if [[ -n "$HAS_VALIDATION_DIR" ]] && ! grep -qE '^## Validation\b' <<<"$BODY"; then
-  block "no '## Validation' section in the body, but docs/features has validation reports. Surface the verdicts up-front."
+if ! CHECKER_OUTPUT="$(pnpm exec tsx scripts/pr/check-pr-body.ts "$BODY_FILE" 2>&1)"; then
+  block "the body is outside the budget: ${CHECKER_OUTPUT}"
 fi
 
 # Everything checked out. Let `gh pr create` run.

@@ -32,7 +32,9 @@ export interface DeckSong {
   readonly id: string;
   readonly title: string;
   readonly artist: string;
-  readonly releaseId: string | null;
+  readonly deezerAlbumId: string | null;
+  readonly deezerTrackId: string | null;
+  readonly spotifyTrackId: string | null;
   readonly createdAt: string;
 }
 
@@ -149,7 +151,7 @@ export function VoteDeck({
           onPointerCancel={endDrag}
         >
           <div className="flex items-start gap-3 min-w-0">
-            <AlbumCover title={song.title} releaseId={song.releaseId} size="lg" />
+            <AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="lg" />
             <div className="min-w-0">
               {isNewSong ? <Badge tone="accent">{t('voting.newSong')}</Badge> : null}
               <p className="text-xs tracking-wider uppercase text-ink-400 m-0">{song.artist}</p>

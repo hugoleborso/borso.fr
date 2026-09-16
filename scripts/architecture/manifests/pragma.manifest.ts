@@ -119,24 +119,6 @@ export const pragmaManifest: ArchitectureManifest = {
       boundary: 'third-party',
     },
     {
-      id: 'musicbrainz',
-      icon: '🎼',
-      name: 'MusicBrainz',
-      technology: 'HTTPS, public web service',
-      description:
-        'Song metadata lookup used to enrich a catalogue entry with recording id, album, duration, tags and ISRCs.',
-      boundary: 'third-party',
-    },
-    {
-      id: 'coverartarchive',
-      icon: '💿',
-      name: 'Cover Art Archive',
-      technology: 'HTTPS, public web service',
-      description:
-        "Album artwork, served by MusicBrainz release id. The browser requests each cover directly and falls back to a tile of the song's initials when there is none; the backfill script asks it which of a recording's releases actually has artwork.",
-      boundary: 'third-party',
-    },
-    {
       id: 'youtube',
       icon: '▶️',
       name: 'YouTube',
@@ -148,8 +130,9 @@ export const pragmaManifest: ArchitectureManifest = {
       id: 'spotify',
       icon: '🎧',
       name: 'Spotify',
-      technology: 'iframe embed',
-      description: 'Renders a reference recording inside a song page.',
+      technology: 'HTTPS Web API behind client credentials, plus an iframe embed',
+      description:
+        "Holding a song offers to open its Spotify track. The id is resolved once when the song is saved, by asking Spotify for the ISRC Deezer returned, so the match is on the recording's own identifier rather than on its title; a song Spotify carries no track for keeps a search address. The client credentials come from an SSM parameter the API reads at cold start. Also renders a reference recording inside a song page as an iframe.",
       boundary: 'third-party',
     },
     {
@@ -172,8 +155,9 @@ export const pragmaManifest: ArchitectureManifest = {
       id: 'deezer',
       icon: '🎵',
       name: 'Deezer',
-      technology: 'iframe embed',
-      description: 'Renders a reference recording inside a song page.',
+      technology: 'HTTPS public search API, plus an iframe embed',
+      description:
+        "The catalogue's song search: the API proxies /search and keeps the track id, the album id, the album title, the duration and the ISRC. The browser then fetches each album cover straight from Deezer by album id and falls back to a tile of the song's initials when there is none, and holding a song anywhere in the application opens its Deezer track page by that same track id. Also renders a reference recording inside a song page as an iframe. No credential is involved: the search endpoint and the album image are both public.",
       boundary: 'third-party',
     },
     {
@@ -193,6 +177,15 @@ export const pragmaManifest: ArchitectureManifest = {
         'Connection tokens are minted per connection by the signer rather than held, so a warm Lambda never carries an expired password.',
       boundary: 'aws',
       realisedBy: 'database',
+    },
+    {
+      id: 'aws-ssm',
+      icon: '🔐',
+      name: 'SSM Parameter Store',
+      technology: 'AWS SDK, GetParameter with decryption',
+      description:
+        'Holds the Spotify client credentials as a SecureString, read once per warm Lambda through helpers/secrets/parameter-store.client.ts. Chosen over a Lambda environment variable because CDK writes those into the deployed CloudFormation template in plaintext; see ADR-0017.',
+      boundary: 'aws',
     },
     {
       id: 'aws-s3',
