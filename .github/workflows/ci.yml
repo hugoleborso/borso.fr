@@ -119,6 +119,10 @@ jobs:
       # gets caught before merge. Rung-2 eradication (paired with the
       # hook) of docs/dantotsus/dsql-alter-table-only-add-column.md.
       - run: ./scripts/check-migration-sql-dsql-compat.sh
+      # And that no two migrations claim the same number. The collision is
+      # invisible to git — two branches add differently named files — so the
+      # commit hook never sees both sides and only the merge does.
+      - run: ./scripts/check-migration-numbering.sh
       # One stylesheet per application, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-single-stylesheet.sh

@@ -48,6 +48,7 @@ block() {
   echo "[open-pr] $1" >&2
   echo "[open-pr] Draft from .claude/skills/open-pr/template.md and check it with" >&2
   echo "[open-pr]   pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>" >&2
+  "$(dirname "$0")/kaizen-refusal.sh" open-pr "opened a pull request with a body too thin for the template"
   exit 2
 }
 

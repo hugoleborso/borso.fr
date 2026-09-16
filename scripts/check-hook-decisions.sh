@@ -37,8 +37,11 @@ run_case() {
   payload="$(jq -n --arg field "$field" --arg value "$value" \
     '{tool_input: {($field): $value}}')"
 
+  # The hooks log the friction they refuse, and every refusal below is this
+  # check doing its job rather than anyone hitting a wall. Silence the logger
+  # so the friction file holds only what a real call ran into.
   set +e
-  message="$(printf '%s' "$payload" | "$HOOK_DIR/$hook" 2>&1 >/dev/null)"
+  message="$(printf '%s' "$payload" | KAIZEN_LOG_REFUSALS=0 "$HOOK_DIR/$hook" 2>&1 >/dev/null)"
   status=$?
   set -e
 
@@ -126,6 +129,19 @@ run_case pretool-github-pr-body.sh allow body \
   '### Evidence
 
 See the PR'"'"'s Files changed tab, which renders committed screenshots inline.'
+
+# A markdown link's target comes back backtick-wrapped past about 150
+# characters, whatever the extension, so the branch-name form of a link into
+# the tree is refused and the /blob/main/ form of the same file is not.
+
+run_case pretool-github-pr-body.sh block body \
+  'Full walk: [the resolution note](https://github.com/hugoleborso/borso.fr/blob/claude/a-branch-name-long-enough-to-matter/docs/features/pragma/tasks-and-compos/validation/visual-validation-20260915-1954-resolution.md)'
+run_case pretool-github-pr-body.sh allow body \
+  'Full walk: [the resolution note](https://github.com/hugoleborso/borso.fr/blob/main/docs/dantotsus/README.md)'
+
+run_case pretool-github-pr-body.sh allow body \
+  'A link target past about 150 characters comes back wrapped in backticks, so link through /blob/main/.'
+
 
 if [ "$failed" -ne 0 ]; then
   echo "[check-hook-decisions] a hook decided against its own contract. A hook that refuses a mention is a hook the next agent works around." >&2

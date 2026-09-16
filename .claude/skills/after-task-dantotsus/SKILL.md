@@ -102,8 +102,13 @@ Sources to walk in order, capturing each friction event as one row:
   when they should have, tools called with the wrong shape, paths
   assumed instead of verified.
 
-Output: a markdown table with these columns, **at the very top of
-the kaizen PR description**, before any other section:
+Output: a markdown table with these columns, committed to
+`docs/features/meta/lessons-from-pr-<N>/inventory.md`, which the kaizen
+PR body links from its *Notable* section. The table does not go in the
+body: `scripts/pr/check-pr-body.ts` holds a budget an inventory of this
+size cannot fit, and the two requirements contradicted each other from
+the moment the budget landed. A committed file is the better home
+anyway — the body is an index, and the inventory is the evidence.
 
 | # | When | Friction | Sources / evidence | Decision |
 | --- | --- | --- | --- | --- |
@@ -340,8 +345,10 @@ not its volume, is what keeps the system improving.
 - [ ] **`kaizen` label applied to the PR** (verify via
       `mcp__github__pull_request_read method: get` — `labels`
       array should include `"kaizen"`).
-- [ ] PR body lists every entry with a one-line summary plus the
-      list of eradication commits.
+- [ ] Inventory committed to
+      `docs/features/meta/lessons-from-pr-<N>/inventory.md` and linked
+      from the body's *Notable* section.
+- [ ] Body passes `pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>`.
 
 ## Reframes
 
