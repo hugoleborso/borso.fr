@@ -318,6 +318,20 @@ scripts/check-hook-decisions.sh
 echo "[pre-commit] checking the lists that have to agree"
 scripts/check-coupled-lists.sh
 
+# Two branches open at once each numbered their migration 0006, and the merge
+# kept both: every file still ran once, but the number stopped ordering
+# anything. Rung-2 eradication of
+# docs/dantotsus/two-branches-that-both-claimed-migration-0006.md.
+echo "[pre-commit] checking each migration number is claimed once"
+scripts/check-migration-numbers.sh
+
+# A spec with no Test strategy leaves the split between the two validators to
+# whichever one reads it first, and three of them guessed differently in one
+# task. Rung-2 eradication of
+# docs/dantotsus/a-spec-that-never-said-who-checks-what.md.
+echo "[pre-commit] checking each feature spec names who checks what"
+scripts/check-spec-test-strategy.sh
+
 # A workspace with gated files and no mutation config reports nothing, not zero,
 # and a coverage number then reads as reassurance it has not earned. Rung-2
 # eradication of docs/dantotsus/the-gate-that-was-never-pointed-at-the-code.md.

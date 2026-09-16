@@ -22,12 +22,15 @@ export interface ManifestContainer {
   readonly noScannedSourceNote?: string;
 }
 
+export type ExternalAccess = 'open' | 'usage-policy' | 'credential' | 'account' | 'billing-account';
+
 export interface ManifestExternal {
   readonly id: string;
   readonly name: string;
   readonly technology: string;
   readonly description: string;
   readonly boundary: 'third-party' | 'aws' | 'browser-platform';
+  readonly access: ExternalAccess;
   readonly icon: string;
   readonly realisedBy?: string;
 }

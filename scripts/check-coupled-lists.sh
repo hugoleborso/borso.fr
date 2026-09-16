@@ -114,6 +114,46 @@ if grep -rn --exclude="$(basename "$0")" 'pnpm exec prettier' .husky .github scr
   fail "the lines above invoke prettier through a command shape the agent harness rewrites to a different version. Use 'pnpm run format:check' or 'node_modules/.bin/prettier'."
 fi
 
+# 4. The tables a migration creates, and the two lists the back-e2e harness
+#    keeps of them.
+#
+# `test/setup-postgres.ts` drops the tables it knows before replaying every
+# migration, and `test/database-utils.ts` truncates the tables it knows between
+# cases. A table missing from the first is not dropped, so its `CREATE TABLE`
+# fails on the second run of the suite with 42P07 while the first run passed —
+# which is how it reached a pull request. A table missing from the second keeps
+# one case's rows visible to the next.
+#
+# See docs/dantotsus/a-table-the-harness-never-dropped-passed-the-first-run.md.
+for migrations_dir in apps/*/api/src/database/migrations; do
+  [ -d "$migrations_dir" ] || continue
+  workspace=${migrations_dir%/api/src/database/migrations}
+  setup_file="$workspace/test/setup-postgres.ts"
+  truncate_file="$workspace/test/database-utils.ts"
+  [ -f "$setup_file" ] || continue
+
+  created_tables=$(
+    grep -ho 'CREATE TABLE[[:space:]]*"[a-z_]*"' "$migrations_dir"/*.sql |
+      sed 's/.*"\(.*\)"/\1/' | sort -u
+  )
+
+  if [ -z "$created_tables" ]; then
+    fail "read no CREATE TABLE out of $migrations_dir — the migrations changed shape and this check went blind"
+  fi
+
+  while IFS= read -r table; do
+    [ -n "$table" ] || continue
+    # One harness names the tables as a quoted array, the other inside one
+    # DROP statement, so the check is the name itself rather than a spelling.
+    if ! grep -qE "(^|[^a-z_])$table([^a-z_]|$)" "$setup_file"; then
+      fail "$migrations_dir creates '$table' and $setup_file does not list it. The harness will not drop it, so its CREATE TABLE fails on the second run and passes on the first."
+    fi
+    if [ -f "$truncate_file" ] && ! grep -qE "(^|[^a-z_])$table([^a-z_]|$)" "$truncate_file"; then
+      fail "$migrations_dir creates '$table' and $truncate_file does not list it. Rows written by one case stay visible to the next."
+    fi
+  done <<<"$created_tables"
+done
+
 if [ "$failed" -ne 0 ]; then
   echo "[check-coupled-lists] two lists that have to agree do not." >&2
   exit 1

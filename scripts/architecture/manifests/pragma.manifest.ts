@@ -108,6 +108,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         "Holds a member's passkey on their own device. The site asks the browser for an assertion and the API verifies it against the public key stored at enrolment, which is the alternative to typing a password.",
       boundary: 'third-party',
+      access: 'open',
     },
     {
       id: 'openstreetmap-nominatim',
@@ -117,6 +118,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Answers a bar search with the places matching it, so a new bar is picked from the map rather than typed. No key and no billing account; in exchange its usage policy caps the service at one request per second, asks for an identifying User-Agent, requires results to be cached and requires attribution, all of which the adapter and the search card carry.',
       boundary: 'third-party',
+      access: 'usage-policy',
     },
     {
       id: 'youtube',
@@ -125,6 +127,7 @@ export const pragmaManifest: ArchitectureManifest = {
       technology: 'iframe embed',
       description: 'Renders a reference recording inside a song page.',
       boundary: 'third-party',
+      access: 'open',
     },
     {
       id: 'spotify',
@@ -134,6 +137,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         "Holding a song offers to open its Spotify track. The id is resolved once when the song is saved, by asking Spotify for the ISRC Deezer returned, so the match is on the recording's own identifier rather than on its title; a song Spotify carries no track for keeps a search address. The client credentials come from an SSM parameter the API reads at cold start. Also renders a reference recording inside a song page as an iframe.",
       boundary: 'third-party',
+      access: 'credential',
     },
     {
       id: 'vimeo',
@@ -142,6 +146,7 @@ export const pragmaManifest: ArchitectureManifest = {
       technology: 'iframe embed',
       description: 'Renders a reference recording inside a song page.',
       boundary: 'third-party',
+      access: 'open',
     },
     {
       id: 'soundcloud',
@@ -150,6 +155,7 @@ export const pragmaManifest: ArchitectureManifest = {
       technology: 'iframe embed',
       description: 'Renders a reference recording inside a song page.',
       boundary: 'third-party',
+      access: 'open',
     },
     {
       id: 'deezer',
@@ -159,6 +165,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         "The catalogue's song search: the API proxies /search and keeps the track id, the album id, the album title, the duration and the ISRC. The browser then fetches each album cover straight from Deezer by album id and falls back to a tile of the song's initials when there is none, and holding a song anywhere in the application opens its Deezer track page by that same track id. Also renders a reference recording inside a song page as an iframe. No credential is involved: the search endpoint and the album image are both public.",
       boundary: 'third-party',
+      access: 'open',
     },
     {
       id: 'soundslice',
@@ -167,6 +174,7 @@ export const pragmaManifest: ArchitectureManifest = {
       technology: 'iframe embed',
       description: 'Renders an interactive chord or tab chart inside a song page.',
       boundary: 'third-party',
+      access: 'open',
     },
     {
       id: 'aws-dsql',
@@ -176,6 +184,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Connection tokens are minted per connection by the signer rather than held, so a warm Lambda never carries an expired password.',
       boundary: 'aws',
+      access: 'credential',
       realisedBy: 'database',
     },
     {
@@ -186,6 +195,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Holds the Spotify client credentials as a SecureString, read once per warm Lambda through helpers/secrets/parameter-store.client.ts. Chosen over a Lambda environment variable because CDK writes those into the deployed CloudFormation template in plaintext; see ADR-0017.',
       boundary: 'aws',
+      access: 'credential',
     },
     {
       id: 'aws-s3',
@@ -194,6 +204,7 @@ export const pragmaManifest: ArchitectureManifest = {
       technology: 'AWS SDK, presigned URLs',
       description: 'Object storage for chord charts, reached only through presigned URLs.',
       boundary: 'aws',
+      access: 'credential',
       realisedBy: 'uploads-bucket',
     },
     {
@@ -204,6 +215,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Holds the chosen locale and the marker saying this browser has signed in before. Never holds an authorisation.',
       boundary: 'browser-platform',
+      access: 'open',
     },
     {
       id: 'browser-media-query',
@@ -213,6 +225,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Breakpoint reads, subscribed through useSyncExternalStore rather than copied into state.',
       boundary: 'browser-platform',
+      access: 'open',
     },
     {
       id: 'browser-network-status',
@@ -221,6 +234,7 @@ export const pragmaManifest: ArchitectureManifest = {
       technology: 'Browser network API',
       description: 'Drives the offline banner.',
       boundary: 'browser-platform',
+      access: 'open',
     },
     {
       id: 'browser-service-worker',
@@ -229,6 +243,7 @@ export const pragmaManifest: ArchitectureManifest = {
       technology: 'Browser service worker API',
       description: 'Registers the offline cache at boot, and is skipped in development.',
       boundary: 'browser-platform',
+      access: 'open',
       realisedBy: 'service-worker',
     },
     {
@@ -239,6 +254,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Puts the outreach message a member copied for one bar on the clipboard, answering whether the write happened so a refused permission is a message in the page.',
       boundary: 'browser-platform',
+      access: 'open',
     },
     {
       id: 'browser-dialog',
@@ -248,6 +264,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Opens a native modal where it is rendered, through a ref callback rather than an effect.',
       boundary: 'browser-platform',
+      access: 'open',
     },
     {
       id: 'browser-scroll',
@@ -257,6 +274,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Drives the scene chart down the screen while a song is played, and brings the current setlist pill into view. Held by a ref callback, so the timer stops when the scene unmounts.',
       boundary: 'browser-platform',
+      access: 'open',
     },
     {
       id: 'browser-wake-lock',
@@ -266,6 +284,7 @@ export const pragmaManifest: ArchitectureManifest = {
       description:
         'Keeps the screen lit while the scene is open, so a phone on a music stand does not sleep between two songs. Absent on some browsers, where the scene simply runs without it.',
       boundary: 'browser-platform',
+      access: 'open',
     },
   ],
 };

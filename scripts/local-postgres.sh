@@ -18,11 +18,17 @@
 #      branch.
 #
 # Subcommands:
-#   start <app-slug>     init + start cluster, create `<app>_test` db,
-#                        print DATABASE_URL to stdout. Idempotent.
+#   start <app-slug> [purpose]  init + start cluster, create
+#                        `<app>_<purpose>` db, print DATABASE_URL to
+#                        stdout. Idempotent. `purpose` defaults to
+#                        `test`; a dev server passes `dev` so the test
+#                        harness, which drops every table it knows
+#                        before replaying the migrations, cannot reach
+#                        the database a dev server is reading.
 #   stop  <app-slug>     stop the cluster (cluster files kept).
 #   wipe  <app-slug>     stop + rm -rf the cluster data dir.
-#   url   <app-slug>     just print the DATABASE_URL (cluster must run).
+#   url   <app-slug> [purpose]  just print the DATABASE_URL (cluster
+#                        must run).
 
 set -euo pipefail
 
@@ -33,13 +39,16 @@ PG_USER_DB="lastloop"   # Same role for every app; the schema is the app's datab
 
 usage() {
   cat >&2 <<EOF
-usage: $0 <start|stop|wipe|url> <app-slug>
+usage: $0 <start|stop|wipe|url> <app-slug> [purpose]
 
-start <app>   init + start a private Postgres cluster, print DATABASE_URL.
-              Hashes the app slug to pick a stable port in [50000, 65000).
+start <app> [purpose]   init + start a private Postgres cluster, print
+              DATABASE_URL. Hashes the app slug to pick a stable port in
+              [50000, 65000). One cluster per app, one database per
+              purpose: \`test\` (the default) is the harness's to drop,
+              \`dev\` is a dev server's to keep.
 stop  <app>   stop the cluster (kept on disk; restart is fast).
 wipe  <app>   stop and rm -rf the cluster data dir.
-url   <app>   just echo DATABASE_URL (cluster must already be running).
+url   <app> [purpose]   just echo DATABASE_URL (cluster must be running).
 EOF
   exit 64
 }
@@ -50,6 +59,7 @@ require_app_slug() {
 
 resolve_paths() {
   APP_SLUG="$1"
+  DB_PURPOSE="${2:-test}"
   PG_HOME="/tmp/borso-pg-${APP_SLUG}"
   PG_LOG="/tmp/borso-pg-${APP_SLUG}.log"
   # Stable port derived from the app slug — same app → same port across runs,
@@ -58,7 +68,7 @@ resolve_paths() {
   PORT_RANGE=15000
   HASH=$(printf '%s' "$APP_SLUG" | cksum | awk '{print $1}')
   PG_PORT=$(( PORT_BASE + (HASH % PORT_RANGE) ))
-  DB_NAME="${APP_SLUG//-/_}_test"
+  DB_NAME="${APP_SLUG//-/_}_${DB_PURPOSE}"
 }
 
 ensure_pg_installed() {
@@ -148,7 +158,7 @@ cmd_url() {
 [ $# -ge 1 ] || usage
 SUBCOMMAND="$1"
 require_app_slug "${2:-}"
-resolve_paths "$2"
+resolve_paths "$2" "${3:-test}"
 
 case "${SUBCOMMAND}" in
   start) cmd_start ;;

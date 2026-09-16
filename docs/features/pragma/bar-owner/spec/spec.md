@@ -127,3 +127,26 @@ support**, any number of three.
 - No filter by mood or by support.
 - The support list is fixed at those three; adding a fourth is a code
   change, not a screen.
+
+# Test strategy
+
+Which assertions belong to which validator, so neither has to guess and no
+rule is left to both or to neither.
+
+**`/technical-validation` owns** everything decided before a pixel: the
+nullable columns and what a row written before this feature reads as, the
+canonical order the support list is stored in, the placeholder substitution
+and its visible mark for a detail nobody filled in, the search's rate limit,
+its cache and its User-Agent, the named outcome a refused search answers,
+the session gate on every route including the search, and the member
+deletion that clears an owner without deleting a bar.
+
+**`/visual-validation` owns** everything only a browser can answer: that the
+owner select lists the band, that the mood column sorts, that the kanban card
+carries both, that the copied message reaches the clipboard and reports a
+refusal, that a bar with nothing filled in renders rather than errors, and
+that the owner and the mood are readable at 375 px as well as at 1280 px.
+
+**Neither owns** the attribution line's legal sufficiency: it renders, which
+a browser can see, but whether it satisfies OpenStreetMap's policy is a
+reading of that policy and belongs to the operator.
