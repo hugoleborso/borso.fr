@@ -2,7 +2,6 @@
 
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api.client';
 import { debounce } from '../../lib/debounce.utils';
 import { useBarPlaceSearch } from '../../lib/queries/bars.queries';
 import { Card } from '../atoms/Card';
@@ -11,7 +10,7 @@ import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 
 const DEBOUNCE_MS = 600;
-const SEARCH_DISABLED_STATUS = 503;
+const OPENSTREETMAP_COPYRIGHT_URL = 'https://www.openstreetmap.org/copyright';
 
 export interface BarPlaceHit {
   readonly placeId: string;
@@ -42,8 +41,6 @@ export function BarPlaceSearch({ onPick }: BarPlaceSearchProps): JSX.Element {
 
   const search = useBarPlaceSearch(debouncedQuery);
   const hits = search.data?.hits ?? [];
-  const status = search.error instanceof ApiError ? search.error.status : null;
-  const isDisabledUpstream = status === SEARCH_DISABLED_STATUS;
   const hasSearched = debouncedQuery.length > 0 && !search.isFetching && search.error === null;
 
   return (
@@ -64,9 +61,11 @@ export function BarPlaceSearch({ onPick }: BarPlaceSearchProps): JSX.Element {
           className="pl-9"
         />
       </div>
-      {isDisabledUpstream ? (
-        <p className="text-sm text-ink-500 mt-3 mb-0">{t('bars.searchDisabled')}</p>
-      ) : null}
+      {search.error === null ? null : (
+        <p className="text-sm text-danger mt-3 mb-0" role="alert">
+          {t('bars.searchFailed')}
+        </p>
+      )}
       {search.isFetching ? (
         <p className="text-sm text-ink-400 italic mt-3 mb-0">{t('common.loading')}</p>
       ) : null}
@@ -90,6 +89,16 @@ export function BarPlaceSearch({ onPick }: BarPlaceSearchProps): JSX.Element {
           </li>
         ))}
       </ul>
+      <p className="text-xs text-ink-400 mt-3 mb-0">
+        <a
+          href={OPENSTREETMAP_COPYRIGHT_URL}
+          target="_blank"
+          rel="noreferrer"
+          className="underline"
+        >
+          {t('bars.searchAttribution')}
+        </a>
+      </p>
     </Card>
   );
 }

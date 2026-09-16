@@ -25,7 +25,7 @@ export function VoteEntryLink({ setlistId, status }: VoteEntryLinkProps): JSX.El
     <Button
       type="button"
       variant="accent"
-      className="self-start"
+      className="self-start mb-4"
       onClick={() => navigateTo(`/setlists/${setlistId}/vote`)}
     >
       {t(LABEL_BY_STATUS[status])}

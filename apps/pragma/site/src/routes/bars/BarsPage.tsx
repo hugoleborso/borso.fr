@@ -33,6 +33,8 @@ import { BarForm, type BarOwnerOption } from '../../components/organisms/BarForm
 import {
   BAR_STATUS_KEY,
   BAR_STATUSES,
+  CONCERT_MOOD_KEY,
+  type ConcertMood,
   type BarFormInitial,
   type BarFormSubmitPayload,
   type BarStatus,
@@ -51,6 +53,7 @@ import {
   selectDragDropIntent,
   selectFormAfterDeletion,
   selectFormForBar,
+  addMoodLabelToCards,
   selectOwnerName,
   selectToggleState,
   selectVisibleBarsView,
@@ -102,10 +105,19 @@ export function BarsPage(): JSX.Element {
   const hasStaleBars = isPositiveCount(staleCount);
   const isBarStale = useCallback((bar: BarRow): boolean => isStale(bar, now), [now]);
 
+  const moodLabelOf = useCallback(
+    (mood: ConcertMood | null): string | null => (mood === null ? null : t(CONCERT_MOOD_KEY[mood])),
+    [t],
+  );
+
   const grouped = useMemo(() => groupBarsByStatus(sortedBars), [sortedBars]);
   const kanbanCardsByStatus = useMemo(
     () => buildKanbanCardsByStatus(grouped, isBarStale, ownerNameOf),
     [grouped, isBarStale, ownerNameOf],
+  );
+  const kanbanCardsWithMood = useMemo(
+    () => addMoodLabelToCards(kanbanCardsByStatus, moodLabelOf),
+    [kanbanCardsByStatus, moodLabelOf],
   );
 
   const queryError = barsQuery.error instanceof ApiError ? barsQuery.error.message : null;
@@ -120,10 +132,11 @@ export function BarsPage(): JSX.Element {
         city: bar.city,
         capacity: bar.capacity,
         ownerName: ownerNameOf(bar),
+        moodLabel: moodLabelOf(bar.concertMood),
         isStale: isBarStale(bar),
         isBeingEdited: isBarBeingEdited(bar.id, formInitial),
       })),
-    [sortedBars, isBarStale, ownerNameOf, formInitial],
+    [sortedBars, isBarStale, ownerNameOf, moodLabelOf, formInitial],
   );
 
   const template = selectOutreachTemplate(
@@ -209,7 +222,7 @@ export function BarsPage(): JSX.Element {
     kanban: (
       <BarsKanban
         statuses={BAR_STATUSES}
-        cardsByStatus={kanbanCardsByStatus}
+        cardsByStatus={kanbanCardsWithMood}
         statusLabel={(status) => t(BAR_STATUS_KEY[status])}
         onSelect={selectBarAndScrollItsFormIntoView}
         onMoveToStatus={moveBarToStatus}

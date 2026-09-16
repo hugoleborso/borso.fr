@@ -9,6 +9,8 @@ import {
   buildBarFormInitial,
   buildBarPayloadFromFormValues,
   parseBarStatus,
+  parseConcertMood,
+  toggleSupport,
   selectBarFormTitleKind,
 } from './bar-form.core';
 
@@ -22,6 +24,8 @@ const FILLED_VALUES: BarFormValues = {
   contactEmail: 'ada@example.com',
   contactPhone: '0102030405',
   ownerMemberId: 'member-1',
+  concertMood: 'gig',
+  availableSupport: ['pa-system'],
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -53,6 +57,8 @@ describe('buildBarPayloadFromFormValues', () => {
       contactEmail: 'ada@example.com',
       contactPhone: '0102030405',
       ownerMemberId: 'member-1',
+      concertMood: 'gig',
+      availableSupport: ['pa-system'],
     });
   });
 
@@ -66,6 +72,8 @@ describe('buildBarPayloadFromFormValues', () => {
         contactEmail: '',
         contactPhone: '',
         ownerMemberId: '',
+        concertMood: '',
+        availableSupport: [],
       }),
     ).toEqual({
       name: 'Le Zinc',
@@ -77,6 +85,8 @@ describe('buildBarPayloadFromFormValues', () => {
       contactEmail: null,
       contactPhone: null,
       ownerMemberId: null,
+      concertMood: null,
+      availableSupport: [],
     });
   });
 });
@@ -95,6 +105,8 @@ describe('buildBarFormInitial', () => {
         contactEmail: null,
         contactPhone: null,
         ownerMemberId: null,
+        concertMood: null,
+        availableSupport: [],
       }),
     ).toEqual({
       id: 'bar-1',
@@ -107,6 +119,8 @@ describe('buildBarFormInitial', () => {
       contactEmail: '',
       contactPhone: '',
       ownerMemberId: '',
+      concertMood: '',
+      availableSupport: [],
     });
   });
 
@@ -123,8 +137,16 @@ describe('buildBarFormInitial', () => {
         contactEmail: 'ada@example.com',
         contactPhone: '01',
         ownerMemberId: 'member-1',
+        concertMood: 'ticketed',
+        availableSupport: ['lights', 'sound-engineer'],
       }),
-    ).toMatchObject({ capacity: '80', city: 'Lyon', ownerMemberId: 'member-1' });
+    ).toMatchObject({
+      capacity: '80',
+      city: 'Lyon',
+      ownerMemberId: 'member-1',
+      concertMood: 'ticketed',
+      availableSupport: ['lights', 'sound-engineer'],
+    });
   });
 });
 
@@ -153,6 +175,36 @@ describe('buildBarFormFromPlace', () => {
   it('always builds a new bar, never an edit of the one on screen', () => {
     const editing = { ...BLANK_BAR_FORM, id: 'bar-1' };
     expect(buildBarFormFromPlace({ name: 'X', city: null, phone: null }, editing).id).toBeNull();
+  });
+});
+
+describe('toggleSupport', () => {
+  it('adds a support the bar did not lend', () => {
+    expect(toggleSupport([], 'lights')).toEqual(['lights']);
+  });
+
+  it('removes one it already lent', () => {
+    expect(toggleSupport(['lights', 'pa-system'], 'lights')).toEqual(['pa-system']);
+  });
+
+  it('keeps the declared order whatever the order of the clicks', () => {
+    expect(toggleSupport(['sound-engineer'], 'pa-system')).toEqual(['pa-system', 'sound-engineer']);
+  });
+});
+
+describe('parseConcertMood', () => {
+  it('reads every mood the select offers', () => {
+    for (const mood of ['chill', 'gig', 'ticketed'] as const) {
+      expect(parseConcertMood(mood)).toBe(mood);
+    }
+  });
+
+  it('reads the empty choice as no mood yet', () => {
+    expect(parseConcertMood('')).toBe('');
+  });
+
+  it('refuses a value the select never offered', () => {
+    expect(parseConcertMood('enormous')).toBeNull();
   });
 });
 

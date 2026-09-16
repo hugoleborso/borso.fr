@@ -1,55 +1,83 @@
 /**
- * @DependsOnExternal google-places
+ * @DependsOnExternal openstreetmap-nominatim
  */
 
-import { type BarSearchHit, mapPlacesToBarSearchHits } from './bar-search.core';
+import {
+  type BarSearchCacheEntry,
+  type BarSearchHit,
+  expiredBarSearchCacheKeys,
+  mapNominatimToBarSearchHits,
+} from './bar-search.core';
 
-const PLACES_SEARCH_URL = 'https://places.googleapis.com/v1/places:searchText';
-const PLACES_FIELD_MASK =
-  'places.id,places.displayName,places.formattedAddress,places.nationalPhoneNumber,places.addressComponents';
-const PLACES_API_KEY_VARIABLE = 'GOOGLE_PLACES_API_KEY';
-const PLACES_RESULT_LIMIT = 10;
+const NOMINATIM_BASE_URL = 'https://nominatim.openstreetmap.org/search';
+const NOMINATIM_USER_AGENT = 'Pragma/1.0 (https://pragma.borso.fr)';
+const SEARCH_CACHE_TTL_MS = 3_600_000;
+const SEARCH_MIN_INTERVAL_MS = 1_000;
+const SEARCH_RESULT_LIMIT = 10;
 
 export type PlacesFetcher = (url: string, init: RequestInit) => Promise<Response>;
 
+export interface BarSearchState {
+  readonly cache: Map<string, BarSearchCacheEntry>;
+  lastCallAt: number;
+}
+
+const barSearchState: BarSearchState = { cache: new Map(), lastCallAt: 0 };
+
 export interface SearchPlacesOptions {
   readonly fetcher?: PlacesFetcher;
-  readonly apiKey?: string | undefined;
+  readonly now?: () => number;
+  readonly state?: BarSearchState;
 }
 
-export type BarSearchOutcome =
-  { readonly kind: 'ok'; readonly hits: BarSearchHit[] } | { readonly kind: 'not-configured' };
-
-function readApiKey(options: SearchPlacesOptions): string | undefined {
-  return options.apiKey ?? process.env[PLACES_API_KEY_VARIABLE];
+function evictExpired(state: BarSearchState, nowMillis: number): void {
+  for (const cacheKey of expiredBarSearchCacheKeys(state.cache, nowMillis)) {
+    state.cache.delete(cacheKey);
+  }
 }
 
-/**
- * @Blueprint adapter-keyed-search-service
- * @BlueprintName Adapter Over A Keyed Search Service
- * @BlueprintUsage Use for the one file in a bounded context that calls a third party needing a credential the deployment supplies.
- * @BlueprintDescription Reads the credential at call time rather than at import, so a Lambda whose variable is set late still works and a test passes its own, and answers a named `not-configured` outcome instead of throwing when the deployment has no key, which is what lets a preview run the feature disabled rather than failing every request. The fetcher is injectable and the vendor's body is handed straight to the sibling `.core.ts`, so this file holds the transport and nothing else.
- * @DependsOnExternal google-places
- */
+async function waitForRateSlot(state: BarSearchState, now: () => number): Promise<void> {
+  const elapsed = now() - state.lastCallAt;
+  if (elapsed >= SEARCH_MIN_INTERVAL_MS) return;
+  await new Promise<void>((resolve) => {
+    setTimeout(resolve, SEARCH_MIN_INTERVAL_MS - elapsed);
+  });
+}
+
+function buildSearchUrl(query: string): string {
+  const parameters = new URLSearchParams({
+    q: query,
+    format: 'jsonv2',
+    addressdetails: '1',
+    extratags: '1',
+    namedetails: '0',
+    limit: String(SEARCH_RESULT_LIMIT),
+  });
+  return `${NOMINATIM_BASE_URL}?${parameters.toString()}`;
+}
+
+// @FollowsBlueprint adapter-rate-limited-fetch
 export async function searchPlacesForBars(
   query: string,
   options: SearchPlacesOptions = {},
-): Promise<BarSearchOutcome> {
-  const apiKey = readApiKey(options);
-  if (apiKey === undefined || apiKey.length === 0) return { kind: 'not-configured' };
+): Promise<BarSearchHit[]> {
   const trimmed = query.trim();
-  if (trimmed.length === 0) return { kind: 'ok', hits: [] };
+  if (trimmed.length === 0) return [];
+  const state = options.state ?? barSearchState;
+  const now = options.now ?? Date.now;
   const fetcher = options.fetcher ?? fetch;
-  const response = await fetcher(PLACES_SEARCH_URL, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Api-Key': apiKey,
-      'X-Goog-FieldMask': PLACES_FIELD_MASK,
-    },
-    body: JSON.stringify({ textQuery: trimmed, maxResultCount: PLACES_RESULT_LIMIT }),
+  const cacheKey = trimmed.toLowerCase();
+  evictExpired(state, now());
+  const cached = state.cache.get(cacheKey);
+  if (cached !== undefined) return [...cached.value];
+  await waitForRateSlot(state, now);
+  state.lastCallAt = now();
+  const response = await fetcher(buildSearchUrl(trimmed), {
+    headers: { 'User-Agent': NOMINATIM_USER_AGENT, Accept: 'application/json' },
   });
-  if (!response.ok) return { kind: 'ok', hits: [] };
-  const placesBody: unknown = await response.json();
-  return { kind: 'ok', hits: mapPlacesToBarSearchHits(placesBody) };
+  if (!response.ok) return [];
+  const nominatimBody: unknown = await response.json();
+  const hits = mapNominatimToBarSearchHits(nominatimBody);
+  state.cache.set(cacheKey, { value: [...hits], expiresAt: now() + SEARCH_CACHE_TTL_MS });
+  return [...hits];
 }

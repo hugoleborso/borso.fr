@@ -39,21 +39,40 @@ in the database, so an empty `outreach_template` table is not a missing
 value but the intended starting point; switching language before saving
 switches the default too.
 
-## Plan — adding a bar from Google Maps
+## Plan — adding a bar from the map
 
 | Layer | File | Change |
 | --- | --- | --- |
-| Core | `api/src/bars/bar-search.core.ts` | Parses the Places body with Zod into `BarSearchHit`, reading the city from the address components with a `postal_town` fallback. 100% coverage. |
-| Adapter | `api/src/bars/bar-search.adapter.ts` | The one outbound call, per ADR-0012. Reads `GOOGLE_PLACES_API_KEY` at call time and answers `not-configured` rather than throwing when it is unset. |
-| Controller | `api/src/bars/bars.controller.ts` | `GET /api/bars/search?query=`, behind the member session; `not-configured` becomes a 503. |
-| CDK | `cdk/lib/stack.ts` | Passes the key to the API Lambda only when the deploy environment supplies one, with a stack test asserting both halves. |
+| Core | `api/src/bars/bar-search.core.ts` | Parses the Nominatim body with Zod into `BarSearchHit`, walking the city keys OpenStreetMap uses and the two phone tags. 100% coverage. |
+| Adapter | `api/src/bars/bar-search.adapter.ts` | The one outbound call, per ADR-0012, carrying the usage policy in code: one request per second, an hour of caching, and an identifying User-Agent. |
+| Controller | `api/src/bars/bars.controller.ts` | `GET /api/bars/search?query=`, behind the member session. |
 | Query | `site/src/lib/queries/bars.queries.ts` | `useBarPlaceSearch`, disabled on an empty query. |
-| Organism | `site/src/components/organisms/BarPlaceSearch.tsx` | The search box, 600 ms debounce, one sentence when the deployment has no key. |
+| Organism | `site/src/components/organisms/BarPlaceSearch.tsx` | The search box, 600 ms debounce, the OpenStreetMap attribution link, one sentence when the service does not answer. |
 | Front core | `site/src/routes/bars/bar-form.core.ts` | `buildBarFormFromPlace`, which always prepares a new bar. |
 | i18n | `site/src/i18n/{en,fr}.json` | The search labels. |
-| ADR | `docs/adr/0017-…md` | Why the call is proxied and where the key lives. |
+| ADR | `docs/adr/0017-…md` | Why Nominatim rather than Google, and what its usage policy costs. |
 
-Risks: the key lands in the Lambda's configuration in plaintext, so the
-restriction that bounds spend is the one set on the key in the Google
-console. The search is debounced in the page, not rate-limited on the
-server, because Google charges rather than throttles.
+Risks: Nominatim is run for openstreetmap.org and serves everyone else on
+spare capacity, so a slow or refused answer is normal rather than an
+incident. Its data is thinner than a commercial vendor's — a phone number
+exists only where a contributor tagged it. The attribution line is a
+policy requirement no gate here can check.
+
+## Plan — qualifying a bar
+
+| Layer | File | Change |
+| --- | --- | --- |
+| Migration | `api/src/database/migrations/0008_bar_concert_mood_and_support.sql` | `concert_mood` and `available_support` on `bar`, both nullable; the support list is JSON in a TEXT column, the shape a lineup already uses, because DSQL has no array type to add here. |
+| Core | `api/src/bars/bar-support.core.ts` | The JSON round trip and the mood resolution, both answering "nothing" for a column written before the feature existed. 100% coverage. |
+| Schema | `api/src/bars/bars.schema.ts` | The two columns and their Zod input, the support defaulting to the empty list. |
+| Repository | `api/src/bars/bars.repository.ts` | Serialises the support on write, parses it on read, so no other file sees the JSON. |
+| Front core | `site/src/routes/bars/bar-form.core.ts` | The two lists, their translation keys, `toggleSupport` and `parseConcertMood`. |
+| Front core | `site/src/routes/bars/bars-page.core.ts` | `addMoodLabelToCards`, which keeps the translation in the page and the projection pure. |
+| Molecule | `site/src/components/molecules/BarQualificationFields.tsx` | The mood select and the support checkboxes, extracted so `BarForm` stays under the line limit. |
+| Organisms | `BarsList.tsx`, `BarsKanban.tsx` | The mood column and the mood on the card. |
+| i18n | `site/src/i18n/{en,fr}.json` | The mood and support labels. |
+
+Risks: the support list is a closed set in code, so a fourth kind of help
+is a migration-free code change but still a deploy. The JSON column cannot
+be queried by support without a scan, which is fine at this size and would
+not be at a thousand bars.

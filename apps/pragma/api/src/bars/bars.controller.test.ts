@@ -15,6 +15,8 @@ const barSchema = z.object({
   contactEmail: z.string().nullable(),
   contactPhone: z.string().nullable(),
   ownerMemberId: z.string().nullable(),
+  concertMood: z.enum(['chill', 'gig', 'ticketed']).nullable(),
+  availableSupport: z.array(z.enum(['pa-system', 'lights', 'sound-engineer'])),
 });
 const singleEnvelope = z.object({ bar: barSchema });
 const listEnvelope = z.object({ bars: z.array(barSchema) });
@@ -128,6 +130,60 @@ describe('bars controller (back-e2e)', () => {
     );
     expect(reread.bar.ownerMemberId).toBeNull();
     expect(reread.bar.name).toBe('Le Zinc');
+  });
+
+  it('keeps the mood and the support a bar was qualified with', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const created = await readJson(
+      await jsonRequest(app, '/api/bars', {
+        method: 'POST',
+        body: {
+          name: 'Le Klub',
+          status: 'lead',
+          concertMood: 'ticketed',
+          availableSupport: ['sound-engineer', 'pa-system'],
+        },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(created.bar.concertMood).toBe('ticketed');
+    expect(created.bar.availableSupport).toEqual(['pa-system', 'sound-engineer']);
+
+    const emptied = await readJson(
+      await jsonRequest(app, `/api/bars/${created.bar.id}`, {
+        method: 'PUT',
+        body: { availableSupport: [] },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(emptied.bar.availableSupport).toEqual([]);
+    expect(emptied.bar.concertMood).toBe('ticketed');
+  });
+
+  it('defaults a bar nobody qualified to no mood and no support', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const created = await readJson(
+      await jsonRequest(app, '/api/bars', {
+        method: 'POST',
+        body: { name: 'Le Zinc', status: 'lead' },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(created.bar.concertMood).toBeNull();
+    expect(created.bar.availableSupport).toEqual([]);
+  });
+
+  it('rejects a support the band does not name', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const response = await jsonRequest(app, '/api/bars', {
+      method: 'POST',
+      body: { name: 'X', status: 'lead', availableSupport: ['smoke-machine'] },
+      cookieHeader,
+    });
+    expect(response.status).toBe(400);
   });
 
   it('rejects an unknown status value', async () => {

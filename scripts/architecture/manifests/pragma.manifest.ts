@@ -110,12 +110,12 @@ export const pragmaManifest: ArchitectureManifest = {
       boundary: 'third-party',
     },
     {
-      id: 'google-places',
+      id: 'openstreetmap-nominatim',
       icon: '🗺️',
-      name: 'Google Places',
-      technology: 'Places API (New), Text Search',
+      name: 'Nominatim',
+      technology: 'OpenStreetMap search API',
       description:
-        "Answers a bar search with the places matching it, so a new bar is picked from a map rather than typed. The key is the deployment's, never the browser's: the search is proxied through the API, and a deployment with no key answers a named not-configured outcome.",
+        'Answers a bar search with the places matching it, so a new bar is picked from the map rather than typed. No key and no billing account; in exchange its usage policy caps the service at one request per second, asks for an identifying User-Agent, requires results to be cached and requires attribution, all of which the adapter and the search card carry.',
       boundary: 'third-party',
     },
     {

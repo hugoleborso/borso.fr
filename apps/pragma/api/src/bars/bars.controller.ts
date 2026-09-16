@@ -9,7 +9,7 @@ import {
 } from './bars.schema';
 import {
   createBar,
-  findBarsInPlaces,
+  searchBarsInPlaces,
   getBarById,
   getBarsSortedByName,
   patchBar,
@@ -26,9 +26,8 @@ export function buildBarsRouter() {
     })
     .get('/search', zValidator('query', barSearchQuerySchema), async (context) => {
       const { query } = context.req.valid('query');
-      const outcome = await findBarsInPlaces(query);
-      if (outcome.kind === 'not-configured') return context.json({ error: 'search-disabled' }, 503);
-      return context.json({ hits: outcome.hits });
+      const hits = await searchBarsInPlaces(query);
+      return context.json({ hits });
     })
     .get('/:id', zValidator('param', barIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');

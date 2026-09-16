@@ -27,12 +27,18 @@ Lives in: `api/src/bars/`
   bar. Deleting a member clears it on every bar they owned
   (`unassignBarsOwnedByMember` in `api/src/members/members.repository.ts`)
   and deletes no bar.
+- `concertMood` is how big a night the bar is up for: `chill`, `gig` or
+  `ticketed` (`CONCERT_MOODS` in `bar-support.core.ts`). It may be null,
+  which means nobody has judged the venue yet and is not a fourth mood.
+- `availableSupport` is what the bar lends the band, any number of
+  `pa-system`, `lights` and `sound-engineer`, held as JSON in a TEXT
+  column. An empty list and a null column both mean it lends nothing.
 - `lastInteractionAt` may be null. A bar is stale when its last
   interaction is older than the threshold, and a bar with no recorded
   interaction is stale too (`isStale` in `domain/bar-staleness.core.ts`).
   The default threshold is 60 days.
 
-A bar is added either by hand or from a **place**, the Google Places
+A bar is added either by hand or from a **place**, the OpenStreetMap
 record a member picked in the search; a place fills the name, the city and
 the phone number of a new bar and is never stored as such
 (`bar-search.core.ts`).

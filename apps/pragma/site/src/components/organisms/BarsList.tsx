@@ -17,7 +17,7 @@ import { Chip } from '../atoms/Chip';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 
-const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity', 'owner']);
+const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity', 'owner', 'mood']);
 
 const ROW_OPENING_BUTTON_CLASS =
   'flex flex-col items-start justify-center w-full min-h-11 text-left text-[13.5px] text-ink-900 ' +
@@ -37,6 +37,7 @@ export interface BarsListRow {
   readonly city: string | null;
   readonly capacity: number | null;
   readonly ownerName: string | null;
+  readonly moodLabel: string | null;
   readonly isStale: boolean;
   readonly isBeingEdited: boolean;
 }
@@ -99,6 +100,16 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
             {row.original.ownerName ?? t('bars.ownerNone')}
           </span>
         ),
+        enableSorting: true,
+      },
+      {
+        id: 'mood',
+        accessorFn: (row) => row.moodLabel ?? '',
+        header: () => t('bars.mood'),
+        cell: ({ row }) =>
+          row.original.moodLabel === null ? null : (
+            <Chip tone="default">{row.original.moodLabel}</Chip>
+          ),
         enableSorting: true,
       },
       {

@@ -8,6 +8,7 @@ import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
+import { AvailableSupportField, ConcertMoodField } from '../molecules/BarQualificationFields';
 import {
   BAR_NAME_MAX_LENGTH,
   BAR_NOTES_MAX_LENGTH,
@@ -92,6 +93,8 @@ export function BarForm({
     contactEmail: initial.contactEmail,
     contactPhone: initial.contactPhone,
     ownerMemberId: initial.ownerMemberId,
+    concertMood: initial.concertMood,
+    availableSupport: [...initial.availableSupport],
   };
   const form = useForm({
     defaultValues,
@@ -153,6 +156,24 @@ export function BarForm({
                 </option>
               ))}
             </select>
+          )}
+        </form.Field>
+        <form.Field name="concertMood">
+          {(field) => (
+            <ConcertMoodField
+              value={field.state.value}
+              onChange={field.handleChange}
+              onBlur={field.handleBlur}
+            />
+          )}
+        </form.Field>
+        <form.Field name="availableSupport">
+          {(field) => (
+            <AvailableSupportField
+              value={field.state.value}
+              onChange={field.handleChange}
+              onBlur={field.handleBlur}
+            />
           )}
         </form.Field>
         <label className={FIELD_LABEL_CLASS} htmlFor="bar-owner">

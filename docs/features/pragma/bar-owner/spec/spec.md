@@ -59,31 +59,68 @@ puts the result on the clipboard.
 - No per-bar or per-member variant of the template, and no history.
 - No sending: the message is copied, never mailed from the application.
 
-# Adding a bar from Google Maps
+# Adding a bar from the map
 
 ## Problem
 
-Adding a bar means retyping what the member is already reading on Google
-Maps: the name, the city, the phone number.
+Adding a bar means retyping what the member is already reading on a map:
+the name, the city, the phone number.
 
 ## Decision
 
-The bars page carries a **search** box backed by Google's Places API.
-Picking a result fills the new-bar form with the name, the city and the
-phone number, leaving the member to set the status and the notes.
+The bars page carries a **search** box backed by OpenStreetMap's Nominatim
+service. Picking a result fills the new-bar form with the name, the city
+and the phone number, leaving the member to set the status and the notes.
 
 ## Rules
 
 - The search runs through this application's API, behind the same session
-  as every other bars route. The browser never holds the Google key.
+  as every other bars route, which is where the one-per-second spacing and
+  the cache the service's usage policy requires are enforced.
+- The search card carries the OpenStreetMap attribution, which the usage
+  policy requires and no test can check.
 - Picking a result always prepares a **new** bar, even while another bar
   is open in the form. Nothing is written until the member saves.
 - A field the place does not carry is left empty, never guessed.
-- A deployment with no Google key says the search is not configured, in one
-  sentence, and every other part of the page keeps working.
+- A search the service does not answer says so in one sentence, and every
+  other part of the page keeps working.
 
 ## Out of scope
 
 - No map, no pin, no coordinates stored.
 - No duplicate detection against the bars already recorded.
 - No enrichment of an existing bar from a place.
+
+# Qualifying a bar
+
+## Problem
+
+Two things decide whether a venue is worth a date, and neither is
+recorded: how big a night the place is up for, and what it lends the band
+when they play.
+
+## Decision
+
+A bar carries a **concert mood**, one of three, and an **available
+support**, any number of three.
+
+- Mood: small and chill, mid-size and a proper gig, or a big ticketed
+  concert. A bar nobody has judged yet has no mood, which is not a fourth
+  mood.
+- Support: PA system, lights, sound engineer. A bar that lends nothing has
+  an empty list, which is the default.
+
+## Rules
+
+- The mood is a single choice, the support is a multiple choice, and both
+  are set on the bar form beside the status.
+- The list view shows the mood in its own column, sortable. The kanban card
+  shows it beside the owner.
+- A bar recorded before this feature existed reads as no mood and no
+  support, not as an error.
+
+## Out of scope
+
+- No filter by mood or by support.
+- The support list is fixed at those three; adding a fourth is a code
+  change, not a screen.

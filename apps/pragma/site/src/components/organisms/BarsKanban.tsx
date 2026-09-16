@@ -20,6 +20,7 @@ export interface BarsKanbanCard {
   readonly capacity: number | null;
   readonly contactName: string | null;
   readonly ownerName: string | null;
+  readonly moodLabel: string | null;
   readonly isStale: boolean;
 }
 
@@ -75,6 +76,7 @@ export function BarsKanban<TStatus extends string>(props: BarsKanbanProps<TStatu
               )}
               <div className="text-xs text-ink-400 mt-1">
                 {card.ownerName ?? t('bars.ownerNone')}
+                {card.moodLabel === null ? '' : ` · ${card.moodLabel}`}
               </div>
             </button>
           ))}
