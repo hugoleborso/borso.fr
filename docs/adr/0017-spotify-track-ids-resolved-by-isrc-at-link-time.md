@@ -65,6 +65,12 @@ template that a Lambda environment variable would publish in plaintext.
   never gain a Spotify id, not as an error anyone sees, because a failed
   resolution is indistinguishable from a song Spotify does not carry. The
   parameter has to be seeded per stage before the feature does anything.
+  Silence here is a property the adapter has to *implement*, not one it gets:
+  `GetParameter` throws `ParameterNotFound` on a parameter that was never
+  seeded, so `resolveSpotifyTrackId` catches everything and answers no id. The
+  first implementation did not, and the unseeded parameter answered 500 on every
+  song creation — the failure this consequence describes arrived as the loudest
+  one in the application.
 - `-` A stored id can go stale. Spotify re-issues track ids when a label
   re-delivers an album, and a stored id then points at a dead page until someone
   re-links the song. Resolving on demand would never be stale.

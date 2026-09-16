@@ -47,7 +47,12 @@ const tokenThenRefusedSearch: ExternalFetcher = (url) =>
       : jsonResponse({ tracks: { items: [{ id: TRACK_ID }] } }, 429),
   );
 
+function silencedWarn() {
+  return vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+}
+
 afterEach(() => {
+  vi.restoreAllMocks();
   vi.unstubAllEnvs();
 });
 
@@ -60,6 +65,7 @@ describe('resolveSpotifyTrackId', () => {
   });
 
   it('never reads a parameter the environment does not name', async () => {
+    const warn = silencedWarn();
     const fetcher = vi.fn(tokenThenSearch([{ id: TRACK_ID }]));
     const readParameter = vi.fn(readsParameter('id-1:secret-1'));
     const found = await resolveSpotifyTrackId([ISRC], {
@@ -70,10 +76,12 @@ describe('resolveSpotifyTrackId', () => {
     expect(found).toBeNull();
     expect(readParameter).not.toHaveBeenCalled();
     expect(fetcher).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('asks nothing when the named parameter holds no usable pair', async () => {
     vi.stubEnv('SPOTIFY_CREDENTIALS_PARAMETER', PARAMETER_NAME);
+    const warn = silencedWarn();
     const fetcher = vi.fn(tokenThenSearch([{ id: TRACK_ID }]));
     const found = await resolveSpotifyTrackId([ISRC], {
       fetcher,
@@ -82,6 +90,7 @@ describe('resolveSpotifyTrackId', () => {
     });
     expect(found).toBeNull();
     expect(fetcher).not.toHaveBeenCalled();
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('reads the credential from the parameter the environment names', async () => {
@@ -179,20 +188,24 @@ describe('resolveSpotifyTrackId', () => {
 
   it('answers nothing when the credential is refused, whatever the body carries', async () => {
     vi.stubEnv('SPOTIFY_CREDENTIALS', 'id-1:secret-1');
+    const warn = silencedWarn();
     const found = await resolveSpotifyTrackId([ISRC], {
       fetcher: refusedTokenThenSearch,
       state: freshState(),
     });
     expect(found).toBeNull();
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('answers nothing when the grant is malformed', async () => {
     vi.stubEnv('SPOTIFY_CREDENTIALS', 'id-1:secret-1');
+    const warn = silencedWarn();
     const found = await resolveSpotifyTrackId([ISRC], {
       fetcher: () => Promise.resolve(jsonResponse({ nothing: 'useful' })),
       state: freshState(),
     });
     expect(found).toBeNull();
+    expect(warn).not.toHaveBeenCalled();
   });
 
   it('answers nothing when the search is refused, even carrying a track it will not use', async () => {
@@ -211,6 +224,43 @@ describe('resolveSpotifyTrackId', () => {
       state: freshState(),
     });
     expect(found).toBeNull();
+  });
+
+  it('answers nothing when the parameter store refuses, rather than failing the write', async () => {
+    vi.stubEnv('SPOTIFY_CREDENTIALS_PARAMETER', PARAMETER_NAME);
+    const warn = silencedWarn();
+    const found = await resolveSpotifyTrackId([ISRC], {
+      fetcher: tokenThenSearch([{ id: TRACK_ID }]),
+      state: freshState(),
+      readParameter: () => Promise.reject(new Error('ParameterNotFound')),
+    });
+    expect(found).toBeNull();
+    expect(warn).toHaveBeenCalledWith(
+      'spotify track resolution failed, leaving the song unlinked',
+      expect.any(Error),
+    );
+  });
+
+  it('answers nothing when the network itself fails', async () => {
+    vi.stubEnv('SPOTIFY_CREDENTIALS', 'id-1:secret-1');
+    const warn = silencedWarn();
+    const found = await resolveSpotifyTrackId([ISRC], {
+      fetcher: () => Promise.reject(new Error('getaddrinfo ENOTFOUND')),
+      state: freshState(),
+    });
+    expect(found).toBeNull();
+    expect(warn).toHaveBeenCalledOnce();
+  });
+
+  it('answers nothing when a response body is not the json it claims', async () => {
+    vi.stubEnv('SPOTIFY_CREDENTIALS', 'id-1:secret-1');
+    const warn = silencedWarn();
+    const found = await resolveSpotifyTrackId([ISRC], {
+      fetcher: () => Promise.resolve(new Response('<html>nope', { status: 200 })),
+      state: freshState(),
+    });
+    expect(found).toBeNull();
+    expect(warn).toHaveBeenCalledOnce();
   });
 
   it('falls back to its own state and clock when the caller names neither', async () => {

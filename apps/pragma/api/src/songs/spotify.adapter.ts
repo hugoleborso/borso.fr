@@ -83,6 +83,18 @@ export async function resolveSpotifyTrackId(
   isrcs: readonly string[],
   options: ResolveSpotifyOptions = {},
 ): Promise<string | null> {
+  try {
+    return await askSpotifyForTrackId(isrcs, options);
+  } catch (error) {
+    console.warn('spotify track resolution failed, leaving the song unlinked', error);
+    return null;
+  }
+}
+
+async function askSpotifyForTrackId(
+  isrcs: readonly string[],
+  options: ResolveSpotifyOptions,
+): Promise<string | null> {
   const isrc = selectResolvableIsrc(isrcs);
   if (isrc === null) return null;
   const state = options.state ?? spotifyState;
