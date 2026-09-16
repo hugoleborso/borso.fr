@@ -61,21 +61,21 @@ export type TrackReadOutcome =
   | { readonly kind: 'unavailable' };
 
 interface DeezerRead {
-  readonly wasAnswered: boolean;
   readonly body: unknown;
 }
 
-const NOTHING_READ = null;
+const REFUSED = null;
 
-async function readDeezer(url: string, options: SearchExternalOptions): Promise<DeezerRead> {
+async function readDeezer(
+  url: string,
+  options: SearchExternalOptions,
+): Promise<DeezerRead | typeof REFUSED> {
   const fetcher = options.fetcher ?? fetch;
   const response = await fetcher(url, { headers: { Accept: 'application/json' } });
-  if (!response.ok) return { wasAnswered: false, body: NOTHING_READ };
+  if (!response.ok) return REFUSED;
   const body: unknown = await response.json();
-  if (readDeezerErrorCode(body) === DEEZER_QUOTA_ERROR_CODE) {
-    return { wasAnswered: false, body };
-  }
-  return { wasAnswered: true, body };
+  if (readDeezerErrorCode(body) === DEEZER_QUOTA_ERROR_CODE) return REFUSED;
+  return { body };
 }
 
 /**
@@ -101,7 +101,7 @@ export async function searchExternal(
   state.lastCallAt = now();
   const url = `${DEEZER_SEARCH_URL}?q=${encodeURIComponent(trimmed)}&limit=${String(EXTERNAL_SEARCH_LIMIT)}`;
   const read = await readDeezer(url, options);
-  if (!read.wasAnswered) return { kind: 'unavailable' };
+  if (read === REFUSED) return { kind: 'unavailable' };
   const hits = rankExternalHits(mapDeezerTracks(read.body), trimmed);
   state.cache.set(cacheKey, { value: [...hits], expiresAt: now() + EXTERNAL_SEARCH_CACHE_TTL_MS });
   return { kind: 'ok', hits: [...hits] };
@@ -117,7 +117,7 @@ export async function readDeezerTrack(
   await waitForRateSlot(state, now);
   state.lastCallAt = now();
   const read = await readDeezer(`${DEEZER_TRACK_URL}${encodeURIComponent(trackId)}`, options);
-  if (!read.wasAnswered) return { kind: 'unavailable' };
+  if (read === REFUSED) return { kind: 'unavailable' };
   const track = mapDeezerTrack(read.body);
   if (track === null) return { kind: 'unknown' };
   return { kind: 'ok', track };
