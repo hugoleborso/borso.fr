@@ -5,7 +5,7 @@ detected-at: local
 severity: medium
 related-pr: '#105'
 fix-pr: '#106'
-fix-commits: []
+fix-commits: [24eaf9b2]
 eradication-level: 1
 time-to-detect: hours
 tags: [meta, self-improvement-loop, agents, shell, gates, claude-md]
@@ -96,7 +96,7 @@ thing losing it.
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** PR #106 · `scripts/kaizen.sh`
+**Reference:** PR #106 · commit `24eaf9b2` · `scripts/kaizen.sh`
 
 ```diff
 -cp "$KAIZEN_FILE" "$destination"

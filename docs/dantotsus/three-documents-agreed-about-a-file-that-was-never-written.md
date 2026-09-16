@@ -5,7 +5,7 @@ detected-at: review
 severity: low
 related-pr: '#105'
 fix-pr: '#106'
-fix-commits: []
+fix-commits: [24eaf9b2]
 eradication-level: 2
 time-to-detect: days
 tags: [meta, claude-md, skills, agents, gates, documentation]
@@ -111,7 +111,7 @@ between the two is whether anything ever resolves it.
 
 **Type:** DevX check (level 2 — devx check)
 
-**Reference:** PR #106 · `scripts/check-named-paths-exist.sh`
+**Reference:** PR #106 · commit `24eaf9b2` · `scripts/check-named-paths-exist.sh`
 
 Every backticked repository path in `CLAUDE.md` or under `.claude/` has to
 resolve:
