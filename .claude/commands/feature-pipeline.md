@@ -51,8 +51,9 @@ invoke them, not to reimplement them.
 - **Standard:** [`.claude/skills/implementation/standard.md`](../skills/implementation/standard.md).
 - **Hygiene (non-skippable per [`orchestrator-dispatch-hygiene.md`](../../docs/knowledge/orchestrator-dispatch-hygiene.md)):**
   every spawn passes `model: 'opus'` explicitly + `isolation: 'worktree'`.
-  The dispatch brief mentions `biome check` (the composite gate), never
-  `biome lint`.
+  The dispatch brief names both halves of the gate — ESLint with
+  `--no-warn-ignored --max-warnings 0`, and `prettier --check` — because a
+  brief naming one half lets the other drift a round at a time.
 - **Loop:** round 1 starts from the plan. Subsequent rounds start from the
   previous validation verdict (`fail-local` rows become the fix list).
 - **Workflow guard — ADR trigger:** if any sub-agent emits a verdict
@@ -170,5 +171,5 @@ If the workflow exited with `outcome: needs-human-adr-ratification`:
 
 - [ADR-0005](../../docs/adr/0005-dynamic-workflows-for-orchestration.md) — the substrate decision.
 - [`docs/knowledge/dynamic-workflow-feature-pipeline.md`](../../docs/knowledge/dynamic-workflow-feature-pipeline.md) — full operator runbook including dogfooding + saving the generated `.js`.
-- [`docs/knowledge/orchestrator-dispatch-hygiene.md`](../../docs/knowledge/orchestrator-dispatch-hygiene.md) — the dispatch knobs (`model: 'opus'`, `isolation: 'worktree'`, `biome check`).
+- [`docs/knowledge/orchestrator-dispatch-hygiene.md`](../../docs/knowledge/orchestrator-dispatch-hygiene.md) — the dispatch knobs (`model: 'opus'`, `isolation: 'worktree'`, both halves of the lint gate).
 - [`.claude/skills/tech-lead-orchestrator/standard.md`](../skills/tech-lead-orchestrator/standard.md) — the durable contract the workflow honours; updated in PR #30 to reflect the new substrate boundary.

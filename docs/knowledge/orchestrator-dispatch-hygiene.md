@@ -43,14 +43,28 @@ chain into the next round. Escalate only on a stuck loop (a round closes
 genuine product ambiguity. Track the retry counter for visibility; don't
 let a small integer auto-escalate.
 
-## Dispatch briefs must say `biome check`, not `biome lint`
+## Dispatch briefs must name every half of the gate, not the loudest one
 
-`biome lint` runs only the lint sub-rule. The pre-commit hook runs the
-composite `biome check` (lint + formatter + organize-imports). Twelve
-rounds whose briefs said `biome lint` each passed individually, but the
-formatter drift accumulated invisibly until 105 files crossed the
+A brief that names one half of a two-part gate lets the other half drift
+one round at a time, invisibly, because each round passes the check its
+brief told it to run.
+
+Measured under Biome, where the two halves were sub-commands of one
+command: twelve rounds whose briefs said `biome lint` (the lint sub-rule)
+each passed individually, while the formatter drift the composite
+`biome check` would have caught accumulated until 105 files crossed the
 threshold together and a catch-up validation found 125 diagnostics.
-Briefs and pre-flight gate lists must name `biome check`.
+
+[ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md)
+replaced Biome with ESLint, and the two halves are now two commands:
+`pnpm exec eslint --no-warn-ignored --max-warnings 0` and
+`node_modules/.bin/prettier --check`. That makes the trap easier to fall
+into, not harder — a brief naming only ESLint reads complete. **Briefs and
+pre-flight gate lists name both.**
+
+`--no-warn-ignored --max-warnings 0` is not decoration: ESLint exits 0 on
+a warning, so a brief that drops the flags is the same failure in a third
+disguise.
 
 ## Verdict claims about routing/auth must name the stage
 

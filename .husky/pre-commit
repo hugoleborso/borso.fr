@@ -340,6 +340,13 @@ scripts/check-gate-names-are-distinct.sh
 echo "[pre-commit] checking each ADR number resolves the same way everywhere"
 scripts/check-adr-numbers-resolve.sh
 
+# And that no instruction surface tells an agent to run a command this
+# repository does not have. Prose has no build step, and a skill is read by a
+# model that will try what it is told. Rung-2 eradication of
+# docs/dantotsus/the-skill-that-named-the-linter-the-repository-deleted.md.
+echo "[pre-commit] checking every tool an instruction names is installed"
+scripts/check-instructions-name-installed-tools.sh
+
 # A spec with no Test strategy leaves the split between the two validators to
 # whichever one reads it first, and three of them guessed differently in one
 # task. Rung-2 eradication of

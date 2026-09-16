@@ -52,7 +52,7 @@ Severity is `low` / `medium` / `high`. High-severity risks block the pre-flight 
 
 ### 3. Code-quality self-check
 
-A checkbox list of the repo's standing rules — pulled from CLAUDE.md, biome.jsonc, the ban-list of type assertions, the no-abbreviations rule, the magic-numbers rule. The agent ticks each box as it checks the implementation against the rule. **An unchecked box is a blocker.**
+A checkbox list of the repo's standing rules — pulled from CLAUDE.md, `docs/standards/`, `eslint.config.js`, the ban-list of type assertions, the no-abbreviations rule, the magic-numbers rule. The agent ticks each box as it checks the implementation against the rule. **An unchecked box is a blocker.**
 
 This section is repo-specific. The template carries a starter list pulled from CLAUDE.md; sub-skills extend it.
 

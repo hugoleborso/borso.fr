@@ -36,9 +36,9 @@ Delete the block-quoted prompt under each heading once the section is written.
 
 ## Code-quality self-check
 
-> *Pulled from CLAUDE.md and the repo's biome / knip / commitlint config. Sub-skills (`/vite`, `/three-js`, …) extend this. An unchecked box blocks push.*
+> *Pulled from CLAUDE.md, `docs/standards/`, and the repo's eslint / knip / commitlint config. Sub-skills (`/vite`, `/three-js`, …) extend this. An unchecked box blocks push.*
 
-- [ ] `pnpm exec biome lint` clean (incl. type-assertion plugin: only `as const`, `as unknown`).
+- [ ] `pnpm exec eslint --no-warn-ignored --max-warnings 0` clean (incl. `borso/no-type-assertion-except-unknown`: only `as const`, `as unknown`).
 - [ ] `pnpm typecheck` clean (`tsc --noEmit` in every workspace touched).
 - [ ] No `any`.
 - [ ] No abbreviations / one-letter locals outside trivial loop indices.
@@ -55,7 +55,7 @@ Delete the block-quoted prompt under each heading once the section is written.
 
 1. `pnpm install`.
 2. `pnpm --filter <pkg> typecheck`.
-3. `pnpm exec biome lint`.
+3. `pnpm exec eslint --no-warn-ignored --max-warnings 0`.
 4. `pnpm --filter <pkg> build`.
 5. (UI work only) `/visual-validation docs/features/<app>/<slug>/spec/spec.md`.
 6. `pnpm exec knip`.

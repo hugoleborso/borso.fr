@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: '#89'
 fix-pr: '#106'
-fix-commits: []
+fix-commits: [4154b33a]
 eradication-level: 2
 time-to-detect: days
 tags: [adr, git, gates, pre-commit, ci, meta, documentation]
@@ -109,8 +109,8 @@ being wrong.
 
 **Type:** DevX check (level 2 — devx check), two of them
 
-**Reference:** PR #106 · `scripts/check-numbered-sequences.sh` and
-`scripts/check-adr-numbers-resolve.sh`
+**Reference:** PR #106 · commit `4154b33a` · `scripts/check-numbered-sequences.sh`
+and `scripts/check-adr-numbers-resolve.sh`
 
 **1. The collision itself.** `check-numbered-sequences.sh` replaces the two
 migration-only scripts with one that takes a list of folders where the leading

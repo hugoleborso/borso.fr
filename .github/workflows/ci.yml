@@ -130,6 +130,9 @@ jobs:
       # And that no ADR heading states a number other than its filename's, which
       # is what a renumber leaves behind when it moves the file only.
       - run: ./scripts/check-adr-numbers-resolve.sh
+      # And that no skill, agent or standard tells an agent to run a command
+      # this repository does not install. Prose has no build step.
+      - run: ./scripts/check-instructions-name-installed-tools.sh
       # One stylesheet per application, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-single-stylesheet.sh

@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: '#105'
 fix-pr: '#106'
-fix-commits: []
+fix-commits: [4154b33a]
 eradication-level: 2
 time-to-detect: days
 tags: [gates, pre-commit, ci, meta, self-improvement-loop, shell]
@@ -115,7 +115,7 @@ leading number is the order, not just migrations:
 
 **Type:** DevX check (level 2 — devx check)
 
-**Reference:** PR #106 · `scripts/check-gate-names-are-distinct.sh`
+**Reference:** PR #106 · commit `4154b33a` · `scripts/check-gate-names-are-distinct.sh`
 
 Nothing can decide that two shell scripts compute the same answer. What can be
 decided is that two authors, naming the same subject, converged on the same

@@ -69,7 +69,7 @@ Section names match the canonical template at [`template.md`](./template.md).
 
 ## Code-quality self-check
 
-- [ ] Repo lint rules pass (`pnpm exec biome lint`).
+- [ ] Repo lint rules pass (`pnpm exec eslint --no-warn-ignored --max-warnings 0`).
 - [ ] Type-assertion plugin satisfied (only `as const`, `as unknown` allowed in this repo).
 - [ ] No `any`.
 - [ ] No abbreviations or single-letter locals outside trivial loop indices.
@@ -83,7 +83,7 @@ Section names match the canonical template at [`template.md`](./template.md).
 Run, in order, before push:
 1. `pnpm install`.
 2. `pnpm --filter <pkg> typecheck`.
-3. `pnpm exec biome lint`.
+3. `pnpm exec eslint --no-warn-ignored --max-warnings 0`.
 4. `pnpm --filter <pkg> build`.
 5. (UI work only) `/visual-validation` against the spec.
 6. `pnpm exec knip` — no unused entries.
