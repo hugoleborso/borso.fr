@@ -271,7 +271,9 @@ two files at once:
 |--------|------------|
 | `check-single-stylesheet.sh` | an application ships a second `.css` file |
 | `check-migration-sql-dsql-compat.sh` | a migration uses SQL Aurora DSQL rejects |
-| `check-migration-numbering.sh` | two migrations in one application share a number, so which of them runs first is decided by the rest of the filename |
+| `check-numbered-sequences.sh` | two files in a numbered sequence — a migrations folder, the ADRs — claim the same number, so the order the number was there to carry falls to the rest of the filename |
+| `check-gate-names-are-distinct.sh` | two gates' names fold to the same words, which is what one gate written twice looks like from outside |
+| `check-adr-numbers-resolve.sh` | an ADR's heading states a number other than its filename's, or the index is missing a record or links one that is gone |
 | `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
 | `check-pure-modules-have-callers.sh` | a `*.core.ts` or `*.utils.ts` is reached only from its own test, where coverage and mutation both score it at full marks while it runs nowhere |
 | `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which ships un-bundled and 404s |
@@ -377,12 +379,32 @@ review.
   time while nothing else complains.
 - `script:scripts/check-migration-sql-dsql-compat.sh` fails a migration using
   SQL that Aurora DSQL rejects, which no local Postgres run would catch.
-- `script:scripts/check-migration-numbering.sh` fails two migrations sharing a
-  number. Two branches open at once each read the tree, see the same highest
-  number and take the next one; git merges both because the filenames differ,
-  and the apply order then falls to whatever follows the digits. The commit
-  hook cannot see it, because neither branch commits both files — CI on the
-  merge is where it is caught, and where the rename is still free.
+- `script:scripts/check-numbered-sequences.sh` fails two files in a numbered
+  sequence sharing a number, in every folder where the number is the order:
+  each application's migrations, and `docs/adr`. Two branches open at once each
+  read the tree, see the same highest number and take the next one; git merges
+  both because the filenames differ, and the order then falls to whatever
+  follows the digits. The commit hook cannot see it, because neither branch
+  commits both files — CI on the merge is where it is caught, and where the
+  rename is still free. One script covers every such folder because two
+  covering one folder each is what this repository shipped before it, a day
+  apart, neither able to see the other.
+- `script:scripts/check-gate-names-are-distinct.sh` fails two gate scripts
+  whose names, stemmed word by word, fold to the same set. Nothing can decide
+  that two shell scripts compute the same answer, so this decides the thing
+  that is decidable: that two authors naming one subject converged on the same
+  words. `check-migration-numbering.sh` and `check-migration-numbers.sh` both
+  fold to `migra numbe`, and both ran in pre-commit for a day. It misses a
+  duplicate whose authors chose unrelated words, which is the case where a name
+  was never going to help.
+- `script:scripts/check-adr-numbers-resolve.sh` fails when an ADR number does
+  not resolve the same way in the three places it appears: the filename a
+  citation resolves to, the heading a reader sees, and the index row. A
+  renumber moves the file and forgets the other two — `0020-qrcode-react-…`
+  read `ADR-0016:` for a day after one, and the index had drifted by nine of
+  twenty records before anything checked it. Only the number is compared, not
+  the punctuation: seven records predate the current heading shape and their
+  numbers are right.
 - `script:scripts/check-non-module-scripts.sh` fails an application's HTML
   carrying a `<script src>` without `type="module"`, which ships un-bundled and
   404s.
