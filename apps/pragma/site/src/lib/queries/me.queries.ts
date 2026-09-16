@@ -52,6 +52,20 @@ export function usePasskeys() {
   });
 }
 
+export function useSaveContactDetails() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (variables: { phone: string | null; email: string | null }) => {
+      const response = await api.api.me.contact.$put({ json: variables });
+      await throwOnFailure(response, 'contact');
+      return await response.json();
+    },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: meKeys.profile() });
+    },
+  });
+}
+
 export function useChangePassword() {
   return useMutation({
     mutationFn: async (variables: { currentPassword: string; newPassword: string }) => {

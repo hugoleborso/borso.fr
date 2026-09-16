@@ -22,10 +22,26 @@ Lives in: `api/src/bars/`
 - `status` is one of `lead`, `contacted`, `booked`, `played`, `cold`
   (`BAR_STATUSES` in `bars.schema.ts`), and the bars page groups the rows
   into one kanban column per status.
+- `ownerMemberId` names the one band member carrying the conversation
+  with that venue, and may be null: a bar nobody has taken on is a normal
+  bar. Deleting a member clears it on every bar they owned
+  (`unassignBarsOwnedByMember` in `api/src/members/members.repository.ts`)
+  and deletes no bar.
+- `concertMood` is how big a night the bar is up for: `chill`, `gig` or
+  `ticketed` (`CONCERT_MOODS` in `bar-support.core.ts`). It may be null,
+  which means nobody has judged the venue yet and is not a fourth mood.
+- `availableSupport` is what the bar lends the band, any number of
+  `pa-system`, `lights` and `sound-engineer`, held as JSON in a TEXT
+  column. An empty list and a null column both mean it lends nothing.
 - `lastInteractionAt` may be null. A bar is stale when its last
   interaction is older than the threshold, and a bar with no recorded
   interaction is stale too (`isStale` in `domain/bar-staleness.core.ts`).
   The default threshold is 60 days.
+
+A bar is added either by hand or from a **place**, the OpenStreetMap
+record a member picked in the search; a place fills the name, the city and
+the phone number of a new bar and is never stored as such
+(`bar-search.core.ts`).
 
 Not to be confused with: the `venue` column on a concert, which is free
 text typed for that one date.
@@ -42,12 +58,32 @@ Lives in: `api/src/auth/`
 - `passwordHash` is argon2id. `sessionEpoch` is a whole number that goes
   up by one on every password change, and a cookie carrying an older
   epoch stops verifying, which signs that member out everywhere else.
+- `phone` and `email` are the member's own contact details, both nullable,
+  filled in on the account page and used to sign the outreach message.
 - Created either through the enrolment window or by another member.
   Deleted with the member, in the same transaction that scrubs them from
   the lineups.
 
 Not to be confused with: the shared password in `app_config`, which now
 opens the enrolment route and nothing else.
+
+## Outreach template
+
+The pitch the band sends a bar to ask for a date, held once for the whole
+application and edited from the bars page.
+
+Lives in: `api/src/outreach/`
+
+- One row, keyed on `OUTREACH_TEMPLATE_ROW_ID`, the way `app_config` is.
+  No row means nobody has edited the pitch and the front end renders the
+  translated default.
+- The body carries three placeholders, `{{bar}}`, `{{phone}}` and
+  `{{email}}`, replaced by `renderOutreachMessage` in
+  `site/src/routes/bars/outreach-message.core.ts` when a member copies the
+  message for one bar.
+
+Not to be confused with: a bar's `notes`, which are what happened with
+that one venue.
 
 ## Chord chart
 

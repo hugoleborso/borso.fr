@@ -1,8 +1,20 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
 import { requireMemberSession } from '../auth/member-session.middleware';
-import { barCreateSchema, barIdParamSchema, barUpdateSchema } from './bars.schema';
-import { createBar, getBarById, getBarsSortedByName, patchBar, removeBar } from './bars.service';
+import {
+  barCreateSchema,
+  barIdParamSchema,
+  barSearchQuerySchema,
+  barUpdateSchema,
+} from './bars.schema';
+import {
+  createBar,
+  searchBarsInPlaces,
+  getBarById,
+  getBarsSortedByName,
+  patchBar,
+  removeBar,
+} from './bars.service';
 
 // @FollowsBlueprint controller-dispatch
 export function buildBarsRouter() {
@@ -11,6 +23,12 @@ export function buildBarsRouter() {
     .get('/', async (context) => {
       const bars = await getBarsSortedByName();
       return context.json({ bars });
+    })
+    .get('/search', zValidator('query', barSearchQuerySchema), async (context) => {
+      const { query } = context.req.valid('query');
+      const outcome = await searchBarsInPlaces(query);
+      if (outcome.kind === 'unavailable') return context.json({ error: 'search-unavailable' }, 502);
+      return context.json({ hits: outcome.hits });
     })
     .get('/:id', zValidator('param', barIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');

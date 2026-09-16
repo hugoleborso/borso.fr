@@ -7,12 +7,14 @@ import {
   passwordChangeSchema,
 } from '../auth/credentials.schema';
 import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
+import { memberContactSchema } from '../members/members.schema';
 import {
   changePassword,
   finishPasskeyRegistration,
   listPasskeys,
   readSignedInMember,
   removePasskey,
+  saveOwnContactDetails,
   SESSION_COOKIE_NAME,
   SESSION_TTL_MS,
   startPasskeyRegistration,
@@ -31,6 +33,15 @@ export function buildMeRouter() {
     .use('*', requireMemberSession)
     .get('/', async (context) => {
       const member = await readSignedInMember(readMemberId(context));
+      if (member === null) return context.json({ error: 'unknown-member' }, 404);
+      return context.json(member);
+    })
+    .put('/contact', zValidator('json', memberContactSchema), async (context) => {
+      const memberId = readMemberId(context);
+      const outcome = await saveOwnContactDetails(memberId, context.req.valid('json'));
+      if (outcome.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
+      if (outcome.kind === 'not-found') return context.json({ error: 'unknown-member' }, 404);
+      const member = await readSignedInMember(memberId);
       if (member === null) return context.json({ error: 'unknown-member' }, 404);
       return context.json(member);
     })

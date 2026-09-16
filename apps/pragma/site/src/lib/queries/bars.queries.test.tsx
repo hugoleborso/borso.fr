@@ -44,6 +44,7 @@ const SEED = {
       contactName: null,
       contactEmail: null,
       contactPhone: null,
+      ownerMemberId: null,
     },
   ],
 };

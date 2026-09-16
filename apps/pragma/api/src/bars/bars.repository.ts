@@ -2,9 +2,27 @@ import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
+import {
+  type AvailableSupport,
+  availableSupportSchema,
+  type ConcertMood,
+  orderAvailableSupport,
+  resolveConcertMood,
+} from './bar-support.core';
 import { BAR_STATUSES, type BarStatus, barTable } from './bars.schema';
 
 const barStatusSchema = z.enum(BAR_STATUSES);
+
+// @FollowsBlueprint repository-json-column
+function decodeAvailableSupportColumn(raw: string | null): AvailableSupport[] {
+  if (raw === null) return [];
+  const storedValue: unknown = JSON.parse(raw);
+  return orderAvailableSupport(availableSupportSchema.parse(storedValue));
+}
+
+function encodeAvailableSupportColumn(supports: readonly AvailableSupport[]): string {
+  return JSON.stringify(orderAvailableSupport(supports));
+}
 
 function toBarRow(row: {
   id: string;
@@ -17,8 +35,16 @@ function toBarRow(row: {
   contactName: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  ownerMemberId: string | null;
+  concertMood: string | null;
+  availableSupport: string | null;
 }): BarRow {
-  return { ...row, status: barStatusSchema.parse(row.status) };
+  return {
+    ...row,
+    status: barStatusSchema.parse(row.status),
+    concertMood: resolveConcertMood(row.concertMood),
+    availableSupport: decodeAvailableSupportColumn(row.availableSupport),
+  };
 }
 
 export interface BarRow {
@@ -32,6 +58,9 @@ export interface BarRow {
   contactName: string | null;
   contactEmail: string | null;
   contactPhone: string | null;
+  ownerMemberId: string | null;
+  concertMood: ConcertMood | null;
+  availableSupport: AvailableSupport[];
 }
 
 // @FollowsBlueprint repository-projection
@@ -46,6 +75,9 @@ const PROJECTION = {
   contactName: barTable.contactName,
   contactEmail: barTable.contactEmail,
   contactPhone: barTable.contactPhone,
+  ownerMemberId: barTable.ownerMemberId,
+  concertMood: barTable.concertMood,
+  availableSupport: barTable.availableSupport,
 } as const;
 
 export interface BarPersistedShape {
@@ -58,6 +90,9 @@ export interface BarPersistedShape {
   contactName?: string | null;
   contactEmail?: string | null;
   contactPhone?: string | null;
+  ownerMemberId?: string | null;
+  concertMood?: ConcertMood | null;
+  availableSupport?: readonly AvailableSupport[];
 }
 
 export async function listBars(): Promise<BarRow[]> {
@@ -86,6 +121,9 @@ export async function insertBar(values: BarPersistedShape): Promise<BarRow> {
       contactName: values.contactName ?? null,
       contactEmail: values.contactEmail ?? null,
       contactPhone: values.contactPhone ?? null,
+      ownerMemberId: values.ownerMemberId ?? null,
+      concertMood: values.concertMood ?? null,
+      availableSupport: encodeAvailableSupportColumn(values.availableSupport ?? []),
     })
     .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
@@ -94,9 +132,15 @@ export async function insertBar(values: BarPersistedShape): Promise<BarRow> {
 
 export async function updateBar(id: string, updates: BarPersistedShape): Promise<BarRow | null> {
   const database = getDatabase();
+  const { availableSupport, ...plainUpdates } = updates;
   const [row] = await database
     .update(barTable)
-    .set(updates)
+    .set({
+      ...plainUpdates,
+      ...(availableSupport === undefined
+        ? {}
+        : { availableSupport: encodeAvailableSupportColumn(availableSupport) }),
+    })
     .where(eq(barTable.id, id))
     .returning(PROJECTION);
   return row === undefined ? null : toBarRow(row);

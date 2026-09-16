@@ -73,6 +73,7 @@ No:
 - 0015 — per-member credentials replace the shared password (supersedes 0004); the old secret opens a self-closing enrolment window and nothing else.
 - 0016 — `@simplewebauthn` carries the passkey flow, as an alternative single factor beside the password.
 - 0017 — a song's Spotify track is resolved once by the ISRC Deezer already returns, and the client credential lives in SSM rather than the database ADR-0004 chose, because rotation-as-an-endpoint does not apply to a machine credential.
+- 0018 — Nominatim answers the bar search, proxied through the API; no key and no billing account, in exchange for a rate limit, a cache and an attribution line the code carries.
 
 ### CDK / infra
 

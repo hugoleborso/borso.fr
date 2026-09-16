@@ -17,6 +17,7 @@ const TRACKED_TABLES = [
   'webauthn_challenge',
   'setlist_vote',
   'auth_attempt',
+  'outreach_template',
   'bar',
   'task',
   'transition_comment',

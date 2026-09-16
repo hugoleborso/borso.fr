@@ -17,7 +17,7 @@ import { Chip } from '../atoms/Chip';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 
-const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity']);
+const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity', 'owner', 'mood']);
 
 const ROW_OPENING_BUTTON_CLASS =
   'flex flex-col items-start justify-center w-full min-h-11 text-left text-[13.5px] text-ink-900 ' +
@@ -36,6 +36,8 @@ export interface BarsListRow {
   readonly status: 'lead' | 'contacted' | 'booked' | 'played' | 'cold';
   readonly city: string | null;
   readonly capacity: number | null;
+  readonly ownerName: string | null;
+  readonly moodLabel: string | null;
   readonly isStale: boolean;
   readonly isBeingEdited: boolean;
 }
@@ -70,6 +72,10 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
             <span className="md:hidden text-xs font-mono text-ink-400">
               {row.original.city ?? ''} · {formatCapacity(row.original.capacity)}
             </span>
+            <span className="md:hidden text-xs text-ink-500">
+              {row.original.ownerName ?? t('bars.ownerNone')}
+              {row.original.moodLabel === null ? '' : ` · ${row.original.moodLabel}`}
+            </span>
           </button>
         ),
         enableSorting: true,
@@ -87,6 +93,27 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         header: () => t('bars.staleColumn'),
         cell: ({ row }) =>
           row.original.isStale ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null,
+        enableSorting: true,
+      },
+      {
+        id: 'owner',
+        accessorFn: (row) => row.ownerName ?? '',
+        header: () => t('bars.owner'),
+        cell: ({ row }) => (
+          <span className="text-xs text-ink-500">
+            {row.original.ownerName ?? t('bars.ownerNone')}
+          </span>
+        ),
+        enableSorting: true,
+      },
+      {
+        id: 'mood',
+        accessorFn: (row) => row.moodLabel ?? '',
+        header: () => t('bars.mood'),
+        cell: ({ row }) =>
+          row.original.moodLabel === null ? null : (
+            <Chip tone="default">{row.original.moodLabel}</Chip>
+          ),
         enableSorting: true,
       },
       {

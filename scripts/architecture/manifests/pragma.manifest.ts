@@ -110,6 +110,15 @@ export const pragmaManifest: ArchitectureManifest = {
       boundary: 'third-party',
     },
     {
+      id: 'openstreetmap-nominatim',
+      icon: '🗺️',
+      name: 'Nominatim',
+      technology: 'OpenStreetMap search API',
+      description:
+        'Answers a bar search with the places matching it, so a new bar is picked from the map rather than typed. No key and no billing account; in exchange its usage policy caps the service at one request per second, asks for an identifying User-Agent, requires results to be cached and requires attribution, all of which the adapter and the search card carry.',
+      boundary: 'third-party',
+    },
+    {
       id: 'youtube',
       icon: '▶️',
       name: 'YouTube',
@@ -221,6 +230,15 @@ export const pragmaManifest: ArchitectureManifest = {
       description: 'Registers the offline cache at boot, and is skipped in development.',
       boundary: 'browser-platform',
       realisedBy: 'service-worker',
+    },
+    {
+      id: 'browser-clipboard',
+      icon: '📋',
+      name: 'Clipboard',
+      technology: 'Browser clipboard API',
+      description:
+        'Puts the outreach message a member copied for one bar on the clipboard, answering whether the write happened so a refused permission is a message in the page.',
+      boundary: 'browser-platform',
     },
     {
       id: 'browser-dialog',

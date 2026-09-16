@@ -74,6 +74,8 @@ export function useCreateMember() {
         firstName: variables.firstName,
         color: variables.color,
         avatarS3Key: variables.avatarS3Key ?? null,
+        phone: null,
+        email: null,
       };
       queryClient.setQueryData<MembersListResponse>(listKey, (old) => {
         if (old === undefined) return old;
