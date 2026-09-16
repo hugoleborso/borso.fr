@@ -53,6 +53,7 @@ block() {
   echo "[no-swallowed-push]   git push -u origin <branch>" >&2
   echo "[no-swallowed-push] or keep the status if the output is genuinely too long:" >&2
   echo "[no-swallowed-push]   set -o pipefail; git push -u origin <branch> 2>&1 | tail -20" >&2
+  "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "piped git push into another command, throwing away its exit status"
   exit 2
 }
 

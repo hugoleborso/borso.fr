@@ -6,6 +6,7 @@ import { assignInstrumentsToMember, createMember } from '../members/members.serv
 import { createSession } from '../sessions/sessions.service';
 import { appendEntry, createSetlist } from '../setlists/setlists.service';
 import { createSong } from '../songs/songs.service';
+import { createTask } from '../tasks/tasks.service';
 import { saveTransitionComment } from '../transitions/transitions.service';
 import {
   BLANK_ENTRY_DETAIL,
@@ -15,6 +16,7 @@ import {
   SEED_TRANSITION_COMMENT,
   type SeedSong,
 } from './test-seed-fixture.core';
+import { SEED_TASKS } from './test-seed-task-board.core';
 import {
   buildSeedLineup,
   selectAdminCredentialsState,
@@ -66,6 +68,7 @@ export interface SeedSummary {
   readonly instruments: number;
   readonly members: number;
   readonly songs: number;
+  readonly tasks: number;
   readonly setlistEntries: number;
   readonly adminPassword: string;
   readonly adminCredentials: 'created' | 'already-set';
@@ -114,6 +117,29 @@ async function seedSongs(
   return songIds;
 }
 
+async function seedTasks(
+  memberIdByName: ReadonlyMap<string, string>,
+  songIdByTitle: ReadonlyMap<string, string>,
+  now: Date,
+): Promise<void> {
+  for (const seed of SEED_TASKS) {
+    await createTask({
+      title: seed.title,
+      notes: seed.notes,
+      status: seed.status,
+      assigneeId:
+        seed.assigneeFirstName === null
+          ? null
+          : (memberIdByName.get(seed.assigneeFirstName) ?? null),
+      songId: seed.songTitle === null ? null : (songIdByTitle.get(seed.songTitle) ?? null),
+      dueDate:
+        seed.dueInDays === null
+          ? null
+          : new Date(now.getTime() + seed.dueInDays * MILLISECONDS_PER_DAY).toISOString(),
+    });
+  }
+}
+
 async function seedConcertSetlist(songIds: readonly string[], now: Date): Promise<void> {
   const concertDate = new Date(now.getTime() + CONCERT_DAYS_FROM_NOW * MILLISECONDS_PER_DAY);
   const concert = await createSession({
@@ -153,6 +179,10 @@ export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {
   const instrumentIdByName = await seedInstruments();
   const memberIdByName = await seedMembers(instrumentIdByName);
   const songIds = await seedSongs(memberIdByName, instrumentIdByName);
+  const songIdByTitle = new Map(
+    SEED_SONGS.map((seed, index) => [seed.title, songIds[index] ?? '']),
+  );
+  await seedTasks(memberIdByName, songIdByTitle, now);
   await seedConcertSetlist(songIds, now);
   await seedTransitionComment(songIds, now);
 
@@ -160,6 +190,7 @@ export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {
     instruments: SEED_INSTRUMENTS.length,
     members: SEED_MEMBERS.length,
     songs: SEED_SONGS.length,
+    tasks: SEED_TASKS.length,
     setlistEntries: songIds.length,
     adminPassword: SEED_ADMIN_PASSWORD,
     adminCredentials: selectAdminCredentialsState(bootstrap.kind),

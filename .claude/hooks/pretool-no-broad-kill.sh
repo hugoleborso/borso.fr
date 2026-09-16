@@ -47,6 +47,7 @@ block() {
   echo "[no-broad-kill]   pnpm dev & pid=\$!   …   kill \"\$pid\"" >&2
   echo "[no-broad-kill] If the PID is lost, find the one holding YOUR port rather than every match:" >&2
   echo "[no-broad-kill]   ss -lptn 'sport = :5173'" >&2
+  "$(dirname "$0")/kaizen-refusal.sh" no-broad-kill "reached for pkill or killall on a machine other agents share"
   exit 2
 }
 

@@ -271,6 +271,7 @@ two files at once:
 |--------|------------|
 | `check-single-stylesheet.sh` | an application ships a second `.css` file |
 | `check-migration-sql-dsql-compat.sh` | a migration uses SQL Aurora DSQL rejects |
+| `check-migration-numbering.sh` | two migrations in one application share a number, so which of them runs first is decided by the rest of the filename |
 | `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
 | `check-pure-modules-have-callers.sh` | a `*.core.ts` or `*.utils.ts` is reached only from its own test, where coverage and mutation both score it at full marks while it runs nowhere |
 | `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which ships un-bundled and 404s |
@@ -376,6 +377,12 @@ review.
   time while nothing else complains.
 - `script:scripts/check-migration-sql-dsql-compat.sh` fails a migration using
   SQL that Aurora DSQL rejects, which no local Postgres run would catch.
+- `script:scripts/check-migration-numbering.sh` fails two migrations sharing a
+  number. Two branches open at once each read the tree, see the same highest
+  number and take the next one; git merges both because the filenames differ,
+  and the apply order then falls to whatever follows the digits. The commit
+  hook cannot see it, because neither branch commits both files — CI on the
+  merge is where it is caught, and where the rename is still free.
 - `script:scripts/check-non-module-scripts.sh` fails an application's HTML
   carrying a `<script src>` without `type="module"`, which ships un-bundled and
   404s.

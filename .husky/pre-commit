@@ -47,6 +47,8 @@ fi
 if echo "$changed" | grep -q 'api/src/database/migrations/.*\.sql$'; then
   echo "[pre-commit] migration SQL changed — running DSQL-compat check"
   ./scripts/check-migration-sql-dsql-compat.sh
+  echo "[pre-commit] checking no two migrations share a number"
+  ./scripts/check-migration-numbering.sh
 fi
 
 # Blueprint annotations, whenever source changed. A `@Blueprint` missing a tag

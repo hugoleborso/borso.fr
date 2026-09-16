@@ -156,6 +156,14 @@ below 149 survived. Six samples put the threshold somewhere around 150
 and do not pin it exactly, so treat ~150 as the working number rather
 than the specification.
 
+_2026-09-16, PR #100: hit again, on a `.md` target at about 180
+characters, which is why the list of forms further down says a `.md`
+link is untouched and this section is the one that governs — the rule is
+the length, and the extension only ever mattered for images. The
+threshold is now enforced by `.claude/hooks/pretool-github-pr-body.sh`
+rather than left to the writer; see
+`docs/dantotsus/the-threshold-was-measured-and-left-unguarded.md`._
+
 **Mitigation, in order of preference:**
 
 1. **Shorten the URL below the threshold.** On a long-lived agent

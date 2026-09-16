@@ -16,11 +16,13 @@ import {
   setlistVoteTable,
 } from '../setlists/setlists.schema';
 import { songTable } from '../songs/songs.schema';
+import { taskTable } from '../tasks/tasks.schema';
 import { transitionCommentTable } from '../transitions/transitions.schema';
 
 // @FollowsBlueprint repository-query
 export async function deleteAllDomainRows(): Promise<void> {
   const database = getDatabase();
+  await database.delete(taskTable);
   await database.delete(setlistVoteTable);
   await database.delete(setlistEntryTable);
   await database.delete(sessionSetlistTable);

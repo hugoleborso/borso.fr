@@ -52,6 +52,7 @@ if ! git diff --quiet 2>/dev/null; then
   echo "[no-discarding-reset]   git add -A && git commit -m 'wip'   …   git reset --soft HEAD~1" >&2
   echo "[no-discarding-reset] Or park them where the command cannot reach:" >&2
   echo "[no-discarding-reset]   git stash push -u -m 'before the probe'" >&2
+  "$(dirname "$0")/kaizen-refusal.sh" no-discarding-reset "ran a git command that would discard uncommitted work"
   exit 2
 fi
 
