@@ -12,7 +12,7 @@ export const pragmaManifest: ArchitectureManifest = {
       icon: '🧑‍🎤',
       name: 'Band member',
       description:
-        'Signs in with the shared password and works the catalogue, the setlists and the sessions. Every human user holds this one role, because the application has no per-user accounts.',
+        'Signs in with their own account, by password or by passkey, and works the catalogue, the setlists and the sessions. Every member holds the same rights: there is no administrator role.',
     },
   ],
   containers: [
@@ -101,12 +101,21 @@ export const pragmaManifest: ArchitectureManifest = {
   ],
   externals: [
     {
-      id: 'musicbrainz',
-      icon: '🎼',
-      name: 'MusicBrainz',
-      technology: 'HTTPS, public web service',
+      id: 'webauthn',
+      icon: '🔑',
+      name: 'WebAuthn authenticator',
+      technology: 'Browser credential API, verified server side by @simplewebauthn',
       description:
-        'Song metadata lookup used to enrich a catalogue entry with recording id, album, duration, tags and ISRCs.',
+        "Holds a member's passkey on their own device. The site asks the browser for an assertion and the API verifies it against the public key stored at enrolment, which is the alternative to typing a password.",
+      boundary: 'third-party',
+    },
+    {
+      id: 'openstreetmap-nominatim',
+      icon: '🗺️',
+      name: 'Nominatim',
+      technology: 'OpenStreetMap search API',
+      description:
+        'Answers a bar search with the places matching it, so a new bar is picked from the map rather than typed. No key and no billing account; in exchange its usage policy caps the service at one request per second, asks for an identifying User-Agent, requires results to be cached and requires attribution, all of which the adapter and the search card carry.',
       boundary: 'third-party',
     },
     {
@@ -121,8 +130,9 @@ export const pragmaManifest: ArchitectureManifest = {
       id: 'spotify',
       icon: '🎧',
       name: 'Spotify',
-      technology: 'iframe embed',
-      description: 'Renders a reference recording inside a song page.',
+      technology: 'HTTPS Web API behind client credentials, plus an iframe embed',
+      description:
+        "Holding a song offers to open its Spotify track. The id is resolved once when the song is saved, by asking Spotify for the ISRC Deezer returned, so the match is on the recording's own identifier rather than on its title; a song Spotify carries no track for keeps a search address. The client credentials come from an SSM parameter the API reads at cold start. Also renders a reference recording inside a song page as an iframe.",
       boundary: 'third-party',
     },
     {
@@ -145,9 +155,9 @@ export const pragmaManifest: ArchitectureManifest = {
       id: 'deezer',
       icon: '🎵',
       name: 'Deezer',
-      technology: 'iframe embed and unauthenticated search API',
+      technology: 'HTTPS public search API, plus an iframe embed',
       description:
-        'Renders a reference recording inside a song page, and answers the audience search on every keystroke. It needs no key and publishes no per-second limit, which is why the room types against it rather than against MusicBrainz. It reports a refused request inside a 200 body, so the adapter reads the payload as well as the status.',
+        "The catalogue's song search: the API proxies /search and keeps the track id, the album id, the album title, the duration and the ISRC. The browser then fetches each album cover straight from Deezer by album id and falls back to a tile of the song's initials when there is none, and holding a song anywhere in the application opens its Deezer track page by that same track id. Also renders a reference recording inside a song page as an iframe. No credential is involved: the search endpoint and the album image are both public.",
       boundary: 'third-party',
     },
     {
@@ -167,6 +177,15 @@ export const pragmaManifest: ArchitectureManifest = {
         'Connection tokens are minted per connection by the signer rather than held, so a warm Lambda never carries an expired password.',
       boundary: 'aws',
       realisedBy: 'database',
+    },
+    {
+      id: 'aws-ssm',
+      icon: '🔐',
+      name: 'SSM Parameter Store',
+      technology: 'AWS SDK, GetParameter with decryption',
+      description:
+        'Holds the Spotify client credentials as a SecureString, read once per warm Lambda through helpers/secrets/parameter-store.client.ts. Chosen over a Lambda environment variable because CDK writes those into the deployed CloudFormation template in plaintext; see ADR-0017.',
+      boundary: 'aws',
     },
     {
       id: 'aws-s3',
@@ -213,12 +232,39 @@ export const pragmaManifest: ArchitectureManifest = {
       realisedBy: 'service-worker',
     },
     {
+      id: 'browser-clipboard',
+      icon: '📋',
+      name: 'Clipboard',
+      technology: 'Browser clipboard API',
+      description:
+        'Puts the outreach message a member copied for one bar on the clipboard, answering whether the write happened so a refused permission is a message in the page.',
+      boundary: 'browser-platform',
+    },
+    {
       id: 'browser-dialog',
       icon: '🪟',
       name: 'HTMLDialogElement',
       technology: 'Browser dialog API',
       description:
         'Opens a native modal where it is rendered, through a ref callback rather than an effect.',
+      boundary: 'browser-platform',
+    },
+    {
+      id: 'browser-scroll',
+      icon: '📜',
+      name: 'Element scrolling',
+      technology: 'Browser scroll API',
+      description:
+        'Drives the scene chart down the screen while a song is played, and brings the current setlist pill into view. Held by a ref callback, so the timer stops when the scene unmounts.',
+      boundary: 'browser-platform',
+    },
+    {
+      id: 'browser-wake-lock',
+      icon: '🔦',
+      name: 'Screen Wake Lock',
+      technology: 'Browser wake lock API',
+      description:
+        'Keeps the screen lit while the scene is open, so a phone on a music stand does not sleep between two songs. Absent on some browsers, where the scene simply runs without it.',
       boundary: 'browser-platform',
     },
   ],

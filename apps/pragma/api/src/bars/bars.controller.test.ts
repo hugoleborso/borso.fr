@@ -14,6 +14,9 @@ const barSchema = z.object({
   contactName: z.string().nullable(),
   contactEmail: z.string().nullable(),
   contactPhone: z.string().nullable(),
+  ownerMemberId: z.string().nullable(),
+  concertMood: z.enum(['chill', 'gig', 'ticketed']).nullable(),
+  availableSupport: z.array(z.enum(['pa-system', 'lights', 'sound-engineer'])),
 });
 const singleEnvelope = z.object({ bar: barSchema });
 const listEnvelope = z.object({ bars: z.array(barSchema) });
@@ -27,6 +30,11 @@ describe('bars controller (back-e2e)', () => {
   it('rejects every verb without a session cookie', async () => {
     const { app } = await buildAuthenticatedApp();
     expect((await jsonRequest(app, '/api/bars')).status).toBe(401);
+  });
+
+  it('keeps the place search behind the same session as every other bars route', async () => {
+    const { app } = await buildAuthenticatedApp();
+    expect((await jsonRequest(app, '/api/bars/search?query=zinc')).status).toBe(401);
   });
 
   it('persists every spec status value', async () => {
@@ -93,6 +101,94 @@ describe('bars controller (back-e2e)', () => {
       singleEnvelope,
     );
     expect(dragged.bar.status).toBe('booked');
+  });
+
+  it('carries the owner through create and clears it when that member goes', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const memberEnvelope = z.object({ member: z.object({ id: z.string().uuid() }) });
+    const member = await readJson(
+      await jsonRequest(app, '/api/members', {
+        method: 'POST',
+        body: { firstName: 'Ada' },
+        cookieHeader,
+      }),
+      memberEnvelope,
+    );
+    const created = await readJson(
+      await jsonRequest(app, '/api/bars', {
+        method: 'POST',
+        body: { name: 'Le Zinc', status: 'lead', ownerMemberId: member.member.id },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(created.bar.ownerMemberId).toBe(member.member.id);
+
+    await jsonRequest(app, `/api/members/${member.member.id}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+
+    const reread = await readJson(
+      await jsonRequest(app, `/api/bars/${created.bar.id}`, { cookieHeader }),
+      singleEnvelope,
+    );
+    expect(reread.bar.ownerMemberId).toBeNull();
+    expect(reread.bar.name).toBe('Le Zinc');
+  });
+
+  it('keeps the mood and the support a bar was qualified with', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const created = await readJson(
+      await jsonRequest(app, '/api/bars', {
+        method: 'POST',
+        body: {
+          name: 'Le Klub',
+          status: 'lead',
+          concertMood: 'ticketed',
+          availableSupport: ['sound-engineer', 'pa-system'],
+        },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(created.bar.concertMood).toBe('ticketed');
+    expect(created.bar.availableSupport).toEqual(['pa-system', 'sound-engineer']);
+
+    const emptied = await readJson(
+      await jsonRequest(app, `/api/bars/${created.bar.id}`, {
+        method: 'PUT',
+        body: { availableSupport: [] },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(emptied.bar.availableSupport).toEqual([]);
+    expect(emptied.bar.concertMood).toBe('ticketed');
+  });
+
+  it('defaults a bar nobody qualified to no mood and no support', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const created = await readJson(
+      await jsonRequest(app, '/api/bars', {
+        method: 'POST',
+        body: { name: 'Le Zinc', status: 'lead' },
+        cookieHeader,
+      }),
+      singleEnvelope,
+    );
+    expect(created.bar.concertMood).toBeNull();
+    expect(created.bar.availableSupport).toEqual([]);
+  });
+
+  it('rejects a support the band does not name', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const response = await jsonRequest(app, '/api/bars', {
+      method: 'POST',
+      body: { name: 'X', status: 'lead', availableSupport: ['smoke-machine'] },
+      cookieHeader,
+    });
+    expect(response.status).toBe(400);
   });
 
   it('rejects an unknown status value', async () => {

@@ -5,12 +5,16 @@ import { buildAudienceRouter } from './audience/audience.controller';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
+import { buildImprovementsRouter } from './improvements/improvements.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
+import { buildMeRouter } from './me/me.controller';
 import { buildMembersRouter } from './members/members.controller';
+import { buildOutreachRouter } from './outreach/outreach.controller';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
+import { buildTasksRouter } from './tasks/tasks.controller';
 import { buildTransitionCommentsRouter } from './transitions/transitions.controller';
 import { buildUploadsRouter } from './uploads/uploads.controller';
 
@@ -34,7 +38,9 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/auth', publicRouter)
     .route('/api/admin', bootstrapRouter)
     .route('/api/admin', rotateRouter)
+    .route('/api/me', buildMeRouter())
     .route('/api/instruments', buildInstrumentsRouter())
+    .route('/api/improvements', buildImprovementsRouter())
     .route('/api/members', buildMembersRouter())
     .route('/api/songs', buildSongsRouter())
     .route('/api/mastery', buildMasteryRouter())
@@ -43,6 +49,8 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/setlists', buildSetlistsRouter())
     .route('/api/transition-comments', buildTransitionCommentsRouter())
     .route('/api/bars', buildBarsRouter())
+    .route('/api/outreach', buildOutreachRouter())
+    .route('/api/tasks', buildTasksRouter())
     .route('/api/uploads', buildUploadsRouter())
     .route('/api/audience', audience.publicRouter)
     .route('/api/audience', audience.gatedRouter);

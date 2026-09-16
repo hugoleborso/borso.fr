@@ -75,7 +75,7 @@ describe('members controller (back-e2e)', () => {
 
     const list = await jsonRequest(app, '/api/members', { cookieHeader });
     const listed = await readJson(list, memberListEnvelope);
-    expect(listed.members.map((row) => row.firstName)).toEqual(['Arn', 'Hugo']);
+    expect(listed.members.map((row) => row.firstName)).toEqual(['Arn', 'Hugo', 'Tester']);
 
     const update = await jsonRequest(app, `/api/members/${created.member.id}`, {
       method: 'PUT',

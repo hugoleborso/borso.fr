@@ -4,31 +4,29 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { Button } from '../../components/atoms/Button';
+import { Icon } from '../../components/atoms/Icon';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongNotes } from '../../components/molecules/SongNotes';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
-import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
+import { SceneControls } from '../../components/organisms/SceneControls';
+import { openSceneOnAttach } from '../../lib/scene-dialog.adapter';
+import {
+  attachSceneScrollBody,
+  startSceneAutoScroll,
+  stopSceneAutoScroll,
+} from '../../lib/scene-scroll.adapter';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useSong } from '../../lib/queries/songs.queries';
 import { selectChordProText } from './chart-kind.utils';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import {
   clampSceneFontSize,
+  clampSceneScrollSpeed,
   clampSemitoneOffset,
-  formatSemitoneOffset,
   SCENE_FONT_SIZE_DEFAULT_PX,
-  SCENE_FONT_SIZE_MAX_PX,
-  SCENE_FONT_SIZE_MIN_PX,
-  SCENE_FONT_SIZE_STEP_PX,
-  SCENE_TRANSPOSE_MAX_SEMITONES,
-  SCENE_TRANSPOSE_MIN_SEMITONES,
+  SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND,
 } from './scene-view.core';
-
-const SCENE_BUTTON_CLASS =
-  'inline-flex items-center justify-center min-w-11 min-h-11 bg-[rgba(255,255,255,0.08)] text-stage-ink border border-[rgba(255,255,255,0.14)] px-3 rounded-md text-sm cursor-pointer hover:bg-[rgba(255,255,255,0.14)] transition-colors disabled:opacity-40 disabled:cursor-not-allowed';
-
-const SCENE_BAR_CLASS =
-  'shrink-0 flex items-center gap-1.5 sm:gap-2 px-4 sm:px-10 py-3 border-t border-[rgba(255,255,255,0.08)] bg-stage-bg pb-[calc(0.75rem+env(safe-area-inset-bottom))]';
 
 // @FollowsBlueprint route-detail-page
 export function SongScenePage(): JSX.Element {
@@ -38,6 +36,8 @@ export function SongScenePage(): JSX.Element {
   const songQuery = useSong(songId ?? '', songId !== undefined);
   const [semitones, setSemitones] = useState(0);
   const [fontSizePx, setFontSizePx] = useState(SCENE_FONT_SIZE_DEFAULT_PX);
+  const [scrollSpeed, setScrollSpeed] = useState(SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND);
+  const [isAutoScrolling, setIsAutoScrolling] = useState(false);
 
   const song = songQuery.data?.song ?? null;
 
@@ -56,19 +56,29 @@ export function SongScenePage(): JSX.Element {
 
   const chordproText = selectChordProText(song.chart);
   const leaveScene = (): void => {
+    stopSceneAutoScroll();
     navigateTo(`/catalog/${song.id}`);
   };
-  const stepFontSize = (deltaPx: number): void => {
-    setFontSizePx((current) => clampSceneFontSize(current + deltaPx));
+
+  const toggleAutoScroll = (): void => {
+    if (isAutoScrolling) {
+      stopSceneAutoScroll();
+      setIsAutoScrolling(false);
+      return;
+    }
+    startSceneAutoScroll(scrollSpeed);
+    setIsAutoScrolling(true);
   };
 
-  const stepSemitones = (delta: number): void => {
-    setSemitones((current) => clampSemitoneOffset(current + delta));
+  const changeScrollSpeed = (delta: number): void => {
+    const speed = clampSceneScrollSpeed(scrollSpeed + delta);
+    setScrollSpeed(speed);
+    if (isAutoScrolling) startSceneAutoScroll(speed);
   };
 
   return (
     <dialog
-      ref={openDialogOnAttach}
+      ref={openSceneOnAttach}
       onClose={leaveScene}
       aria-label={song.title}
       className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-stage-bg text-stage-ink overflow-hidden p-0 flex flex-col"
@@ -79,6 +89,7 @@ export function SongScenePage(): JSX.Element {
         </h2>
       </header>
       <div
+        ref={attachSceneScrollBody}
         className="flex-1 overflow-y-auto px-4 sm:px-10 py-5"
         style={{ fontSize: `${fontSizePx}px` }}
       >
@@ -91,51 +102,23 @@ export function SongScenePage(): JSX.Element {
           <ChordChartViewer source={chordproText} semitones={semitones} tone="dark" />
         )}
       </div>
-      <div className={SCENE_BAR_CLASS}>
-        <button type="button" className={SCENE_BUTTON_CLASS} onClick={leaveScene}>
-          ← {t('common.back')}
-        </button>
+      <div className="shrink-0 flex flex-wrap items-center gap-2 px-4 sm:px-10 py-3 border-t border-[rgba(255,255,255,0.08)] bg-stage-bg pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <Button variant="stage" size="sm" onClick={leaveScene}>
+          <Icon name="chevL" size={14} />
+          {t('common.back')}
+        </Button>
         {chordproText === null ? null : (
-          <div className="flex items-center gap-1.5 sm:gap-2 ml-auto">
-            <button
-              type="button"
-              className={SCENE_BUTTON_CLASS}
-              onClick={() => stepSemitones(-1)}
-              disabled={semitones <= SCENE_TRANSPOSE_MIN_SEMITONES}
-              aria-label={t('scene.transposeDown')}
-            >
-              -1
-            </button>
-            <span className="font-mono text-sm text-stage-ink-dim px-1">
-              {formatSemitoneOffset(semitones)}
-            </span>
-            <button
-              type="button"
-              className={SCENE_BUTTON_CLASS}
-              onClick={() => stepSemitones(1)}
-              disabled={semitones >= SCENE_TRANSPOSE_MAX_SEMITONES}
-              aria-label={t('scene.transposeUp')}
-            >
-              +1
-            </button>
-            <button
-              type="button"
-              className={SCENE_BUTTON_CLASS}
-              onClick={() => stepFontSize(-SCENE_FONT_SIZE_STEP_PX)}
-              disabled={fontSizePx <= SCENE_FONT_SIZE_MIN_PX}
-              aria-label={t('scene.zoomOut')}
-            >
-              A−
-            </button>
-            <button
-              type="button"
-              className={SCENE_BUTTON_CLASS}
-              onClick={() => stepFontSize(SCENE_FONT_SIZE_STEP_PX)}
-              disabled={fontSizePx >= SCENE_FONT_SIZE_MAX_PX}
-              aria-label={t('scene.zoomIn')}
-            >
-              A+
-            </button>
+          <div className="ml-auto">
+            <SceneControls
+              semitones={semitones}
+              fontSizePx={fontSizePx}
+              scrollSpeedPxPerSecond={scrollSpeed}
+              isAutoScrolling={isAutoScrolling}
+              onTransposeBy={(delta) => setSemitones(clampSemitoneOffset(semitones + delta))}
+              onZoomBy={(delta) => setFontSizePx(clampSceneFontSize(fontSizePx + delta))}
+              onScrollSpeedBy={changeScrollSpeed}
+              onToggleAutoScroll={toggleAutoScroll}
+            />
           </div>
         )}
       </div>

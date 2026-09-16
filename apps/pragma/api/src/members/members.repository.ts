@@ -1,9 +1,13 @@
 import { eq, inArray, isNotNull } from 'drizzle-orm';
+import { deleteCredentialsOfMember } from '../auth/credentials.service';
+import { deleteVotesOfDeletedMember } from '../setlists/voting.service';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
+import { barTable } from '../bars/bars.schema';
 import { instrumentTable } from '../instruments/instruments.schema';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
 import { defaultLineupSchema, songTable } from '../songs/songs.schema';
+import { unassignTasksOfMemberBeingDeleted } from '../tasks/tasks.service';
 import { scrubMemberFromLineup } from './lineup-scrub.core';
 import { type InstrumentFamily, resolveInstrumentFamily } from '@domain/instrument.core';
 import { memberInstrumentTable, memberTable } from './members.schema';
@@ -13,6 +17,8 @@ export interface MemberRow {
   firstName: string;
   color: string;
   avatarS3Key: string | null;
+  phone: string | null;
+  email: string | null;
 }
 
 export interface MemberInstrumentRow {
@@ -27,6 +33,8 @@ const MEMBER_PROJECTION = {
   firstName: memberTable.firstName,
   color: memberTable.color,
   avatarS3Key: memberTable.avatarS3Key,
+  phone: memberTable.phone,
+  email: memberTable.email,
 } as const;
 
 const INSTRUMENT_PROJECTION = {
@@ -64,11 +72,15 @@ export async function findMemberById(id: string): Promise<MemberRow | null> {
   return rows[0] ?? null;
 }
 
-export async function insertMember(values: {
+export interface MemberPersistedShape {
   firstName: string;
   color: string;
   avatarS3Key: string | null;
-}): Promise<MemberRow> {
+  phone: string | null;
+  email: string | null;
+}
+
+export async function insertMember(values: MemberPersistedShape): Promise<MemberRow> {
   const database = getDatabase();
   const [row] = await database.insert(memberTable).values(values).returning(MEMBER_PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
@@ -77,7 +89,7 @@ export async function insertMember(values: {
 
 export async function updateMember(
   id: string,
-  updates: Partial<{ firstName: string; color: string; avatarS3Key: string | null }>,
+  updates: Partial<MemberPersistedShape>,
 ): Promise<MemberRow | null> {
   const database = getDatabase();
   const [row] = await database
@@ -91,15 +103,29 @@ export async function updateMember(
 export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
   return await database.transaction(async (transaction) => {
+    await unassignBarsOwnedByMember(transaction, id);
     await scrubMemberFromSongDefaults(transaction, id);
     await scrubMemberFromSetlistOverrides(transaction, id);
     await transaction.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
+    await deleteCredentialsOfMember(transaction, id);
+    await deleteVotesOfDeletedMember(transaction, id);
+    await unassignTasksOfMemberBeingDeleted(transaction, id);
     const deleted = await transaction
       .delete(memberTable)
       .where(eq(memberTable.id, id))
       .returning({ id: memberTable.id });
     return selectDeletionOutcome(deleted.length);
   });
+}
+
+async function unassignBarsOwnedByMember(
+  transaction: DatabaseExecutor,
+  memberId: string,
+): Promise<void> {
+  await transaction
+    .update(barTable)
+    .set({ ownerMemberId: null })
+    .where(eq(barTable.ownerMemberId, memberId));
 }
 
 async function scrubMemberFromSongDefaults(

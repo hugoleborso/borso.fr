@@ -72,10 +72,10 @@ export function SuggestSongField({ sessionId, ballotToken }: SuggestSongFieldPro
       {search.data === undefined ? null : (
         <ul className="list-none p-1 m-0 flex flex-col gap-1 border border-line rounded-md bg-bg-elev max-h-72 overflow-y-auto">
           {search.data.hits.map((hit) => (
-            <li key={hit.trackId}>
+            <li key={hit.deezerTrackId}>
               <button
                 type="button"
-                onClick={() => pickResult(hit.trackId)}
+                onClick={() => pickResult(hit.deezerTrackId)}
                 className="w-full text-left px-2 py-2 rounded text-sm text-ink-700 flex flex-col gap-0.5"
               >
                 <span className="font-medium text-ink-900">{hit.title}</span>

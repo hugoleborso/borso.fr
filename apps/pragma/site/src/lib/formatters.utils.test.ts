@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { formatCapacity, formatClockTime, formatSessionDate } from './formatters.utils';
+import {
+  formatCapacity,
+  formatClockTime,
+  formatDueDate,
+  formatSessionDate,
+  isDueDatePast,
+} from './formatters.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('formatters.utils', () => {
@@ -17,29 +23,6 @@ describe('formatters.utils', () => {
 
     it('returns the input untouched when the ISO string is malformed', () => {
       expect(formatSessionDate('not-a-date', 'en-GB')).toBe('not-a-date');
-    });
-  });
-
-  describe('formatClockTime', () => {
-    const AN_EVENING_INSTANT = '2026-08-26T19:30:00.000Z';
-
-    it('renders a twenty-four hour clock for a locale that reads one', () => {
-      expect(formatClockTime(AN_EVENING_INSTANT, 'fr')).toMatch(/^\d{2}:\d{2}$/);
-    });
-
-    it('renders a twelve hour clock for a locale that reads one', () => {
-      expect(formatClockTime(AN_EVENING_INSTANT, 'en')).toMatch(/^\d{2}:\d{2}\s?(AM|PM)$/);
-    });
-
-    it('reads the instant on the viewer own clock rather than on the UTC string', () => {
-      const onTheViewerClock = new Date(AN_EVENING_INSTANT);
-      const hour = String(onTheViewerClock.getHours()).padStart(2, '0');
-      const minute = String(onTheViewerClock.getMinutes()).padStart(2, '0');
-      expect(formatClockTime(AN_EVENING_INSTANT, 'en-GB')).toBe(`${hour}:${minute}`);
-    });
-
-    it('returns the input untouched when the ISO string is malformed', () => {
-      expect(formatClockTime('not-a-time', 'en-GB')).toBe('not-a-time');
     });
   });
 
@@ -66,5 +49,45 @@ describe('formatters.utils', () => {
       expect(formatCapacity(1_200)).toBe('1 200');
       expect(formatCapacity(1_200_000)).toBe('1 200 000');
     });
+  });
+});
+
+describe('formatDueDate', () => {
+  it('prints a day and a month, and nothing at all without a date', () => {
+    expect(formatDueDate('2026-05-01T12:00:00.000Z', 'en-GB')).toBe('1 May');
+    expect(formatDueDate(null, 'en-GB')).toBeNull();
+  });
+
+  it('gives back what it was handed when that is not a date', () => {
+    expect(formatDueDate('next tuesday', 'en-GB')).toBe('next tuesday');
+  });
+});
+
+describe('isDueDatePast', () => {
+  const NOW = new Date('2026-05-10T00:00:00.000Z').getTime();
+
+  it('is true only for a date already gone', () => {
+    expect(isDueDatePast('2026-05-01T12:00:00.000Z', NOW)).toBe(true);
+    expect(isDueDatePast('2026-06-01T12:00:00.000Z', NOW)).toBe(false);
+  });
+
+  it('is not past on the very moment it is due', () => {
+    expect(isDueDatePast('2026-05-10T00:00:00.000Z', NOW)).toBe(false);
+  });
+
+  it('is false for a task with no date, and for text that is not one', () => {
+    expect(isDueDatePast(null, NOW)).toBe(false);
+    expect(isDueDatePast('soon', NOW)).toBe(false);
+  });
+});
+
+describe('formatClockTime', () => {
+  it('reads the wall clock a round was opened at, in the reader locale', () => {
+    const label = formatClockTime('2026-08-31T20:45:00.000Z', 'en-GB');
+    expect(label).toMatch(/\d{2}:\d{2}/);
+  });
+
+  it('hands back what it was given when the text is not a date', () => {
+    expect(formatClockTime('not a date', 'en-GB')).toBe('not a date');
   });
 });

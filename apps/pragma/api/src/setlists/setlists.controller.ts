@@ -1,13 +1,17 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
 import {
   setlistBySessionParamSchema,
   setlistCreateSchema,
   setlistEntryCreateSchema,
   setlistEntryIdParamSchema,
   setlistEntryUpdateSchema,
+  setlistCloseSchema,
   setlistIdParamSchema,
+  setlistSongParamSchema,
+  setlistVoteScoreSchema,
+  setlistVoteStatusSchema,
   setlistLinkSchema,
   setlistRenameSchema,
   setlistReorderSchema,
@@ -28,11 +32,18 @@ import {
   reorderEntries,
   unlinkSetlistFromSession,
 } from './setlists.service';
+import {
+  closeVote,
+  readClosingProposal,
+  readVoteBoard,
+  scoreSong,
+  setVoteStatus,
+} from './voting.service';
 
 // @FollowsBlueprint controller-dispatch
 export function buildSetlistsRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/', async (context) => {
       const setlists = await getAllSetlists();
       return context.json({ setlists });
@@ -53,6 +64,68 @@ export function buildSetlistsRouter() {
         return context.json({ error: 'session-not-found' }, 404);
       return context.json({ setlist: created.setlist }, 201);
     })
+    .get('/:id/votes', zValidator('param', setlistIdParamSchema), async (context) => {
+      const { id } = context.req.valid('param');
+      const outcome = await readVoteBoard(id, readMemberId(context));
+      if (outcome.kind === 'setlist-not-found') return context.json({ error: 'not-found' }, 404);
+      return context.json(outcome.board);
+    })
+    .put(
+      '/:id/vote-status',
+      zValidator('param', setlistIdParamSchema),
+      zValidator('json', setlistVoteStatusSchema),
+      async (context) => {
+        const { id } = context.req.valid('param');
+        const { status, targetSongCount } = context.req.valid('json');
+        const outcome = await setVoteStatus({ setlistId: id, status, targetSongCount });
+        if (outcome.kind === 'setlist-not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ ok: true });
+      },
+    )
+    .put(
+      '/:id/votes/:songId',
+      zValidator('param', setlistSongParamSchema),
+      zValidator('json', setlistVoteScoreSchema),
+      async (context) => {
+        const { id, songId } = context.req.valid('param');
+        const { points } = context.req.valid('json');
+        const outcome = await scoreSong({
+          setlistId: id,
+          memberId: readMemberId(context),
+          songId,
+          points,
+          now: new Date(),
+        });
+        if (outcome.kind === 'setlist-not-found') return context.json({ error: 'not-found' }, 404);
+        if (outcome.kind === 'not-voting') return context.json({ error: 'not-voting' }, 409);
+        if (outcome.kind === 'budget-exhausted') {
+          return context.json({ error: 'budget-exhausted', budget: outcome.budget }, 409);
+        }
+        return context.json({ budget: outcome.budget, songId, points });
+      },
+    )
+    .get('/:id/closing-proposal', zValidator('param', setlistIdParamSchema), async (context) => {
+      const { id } = context.req.valid('param');
+      const outcome = await readClosingProposal(id);
+      if (outcome.kind === 'setlist-not-found') return context.json({ error: 'not-found' }, 404);
+      if (outcome.kind === 'not-voting') return context.json({ error: 'not-voting' }, 409);
+      if (outcome.kind === 'no-votes') return context.json({ error: 'no-votes' }, 409);
+      return context.json({ tallies: outcome.tallies });
+    })
+    .post(
+      '/:id/close',
+      zValidator('param', setlistIdParamSchema),
+      zValidator('json', setlistCloseSchema),
+      async (context) => {
+        const { id } = context.req.valid('param');
+        const { songIds } = context.req.valid('json');
+        const outcome = await closeVote({ setlistId: id, songIds });
+        if (outcome.kind === 'setlist-not-found') return context.json({ error: 'not-found' }, 404);
+        if (outcome.kind === 'not-voting') return context.json({ error: 'not-voting' }, 409);
+        if (outcome.kind === 'no-votes') return context.json({ error: 'no-votes' }, 409);
+        return context.json({ ok: true });
+      },
+    )
     .get('/:id', zValidator('param', setlistIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
       const setlist = await findSetlist(id);

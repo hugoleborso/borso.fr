@@ -15,6 +15,7 @@ describe('barCreateSchema', () => {
       contactName: null,
       contactEmail: null,
       contactPhone: null,
+      ownerMemberId: null,
     });
   });
 
@@ -28,6 +29,14 @@ describe('barCreateSchema', () => {
       expect(barCreateSchema.safeParse(bar({ status })).success).toBe(true);
     }
     expect(barCreateSchema.safeParse(bar({ status: 'maybe' })).success).toBe(false);
+  });
+
+  it('accepts a member uuid as the owner and refuses anything else', () => {
+    expect(
+      barCreateSchema.safeParse(bar({ ownerMemberId: '3f1b0f2e-3a4b-4c5d-8e9f-0a1b2c3d4e5f' }))
+        .success,
+    ).toBe(true);
+    expect(barCreateSchema.safeParse(bar({ ownerMemberId: 'member-1' })).success).toBe(false);
   });
 
   it('accepts null for a field the operator has not filled yet', () => {

@@ -9,6 +9,10 @@ interface IdenticalByDesign {
 }
 
 const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
+  {
+    key: 'account.passkeys',
+    readsTheSameBecause: 'the WebAuthn credential is called a passkey in French too',
+  },
   { key: 'appName', readsTheSameBecause: 'the Pragma brand' },
   { key: 'bars.contactEmail', readsTheSameBecause: '"Email" is the label French users read too' },
   { key: 'bars.contactName', readsTheSameBecause: 'same word, same spelling' },
@@ -36,6 +40,10 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'catalog.notesTitle', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.tags', readsTheSameBecause: '"tags" is the word French musicians use here' },
   { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'compos.lineup',
+    readsTheSameBecause: 'the band says lineup in French too, and the vocabulary keeps that word',
+  },
   { key: 'instruments.title', readsTheSameBecause: 'same word, same spelling' },
   { key: 'lineup.instruments', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.administrationSection', readsTheSameBecause: 'same word, same spelling' },
@@ -45,6 +53,8 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'nav.language.fr', readsTheSameBecause: 'the FR language tag' },
   { key: 'nav.sessions', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.setlists', readsTheSameBecause: '"setlist" is the word French musicians use' },
+  { key: 'scene.autoScrollStop', readsTheSameBecause: '"Stop" is the word on French pedals too' },
+  { key: 'scene.capo', readsTheSameBecause: 'guitar jargon, used as-is in French' },
   { key: 'sessions.date', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.kindConcert', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.noPreparedConcert', readsTheSameBecause: 'an em dash, not a word' },
@@ -62,8 +72,8 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'setlist.crumb', readsTheSameBecause: 'the band says "setlist" in both languages' },
   { key: 'setlist.notes', readsTheSameBecause: 'same word, same spelling' },
   { key: 'setlist.title', readsTheSameBecause: '"setlist" is the word French musicians use' },
-  { key: 'shell.meName', readsTheSameBecause: 'a first name' },
   { key: 'shell.meVersion', readsTheSameBecause: 'the brand and a version number' },
+  { key: 'tasks.notes', readsTheSameBecause: 'same word, same spelling' },
 ];
 
 // @FollowsBlueprint test-i18n-parity

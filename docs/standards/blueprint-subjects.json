@@ -1229,6 +1229,9 @@
   "apps/last-loop-lepin/vitest.config.ts": {
     "defineConfig": "workspace-test-config"
   },
+  "apps/pragma/api/src/__test/test-seed-fixture.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
   "apps/pragma/api/src/__test/test-seed.controller.test.ts": {
     "describe": "test-back-e2e"
   },
@@ -1254,11 +1257,52 @@
   "apps/pragma/api/src/auth/auth.schema.ts": {
     "appConfigTable": "schema-table-and-input"
   },
+  "apps/pragma/api/src/auth/credentials.repository.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/auth/credentials.repository.ts": {
+    "CREDENTIAL_PROJECTION": "repository-projection",
+    "listCredentials": "repository-query"
+  },
+  "apps/pragma/api/src/auth/credentials.schema.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/auth/credentials.schema.ts": {
+    "memberCredentialTable": "schema-dsql-constraints"
+  },
+  "apps/pragma/api/src/auth/credentials.service.ts": {
+    "attemptMemberLogin": "service-orchestration",
+    "deleteCredentialsOfMember": "repository-owned-transaction"
+  },
+  "apps/pragma/api/src/auth/enrolment.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/auth/enrolment.core.ts": {
+    "selectEnrolmentWindow": "core-decision"
+  },
   "apps/pragma/api/src/auth/ip-hash.utils.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/api/src/auth/ip-hash.utils.ts": {
     "readClientIp": "utils-pure-module"
+  },
+  "apps/pragma/api/src/auth/member-session.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/auth/member-session.core.ts": {
+    "buildMemberSessionPayload": "core-decision"
+  },
+  "apps/pragma/api/src/auth/passkey.adapter.ts": {
+    "buildRegistrationOptions": "adapter-external-service"
+  },
+  "apps/pragma/api/src/auth/passkey.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/auth/passkey.core.ts": {
+    "readChallengeFromResponse": "core-parse-untrusted"
+  },
+  "apps/pragma/api/src/auth/passkey.service.ts": {
+    "startPasskeyRegistration": "service-orchestration"
   },
   "apps/pragma/api/src/auth/rate-limit.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -1286,6 +1330,9 @@
   },
   "apps/pragma/api/src/database/schema.ts": {
     "appConfigTable": "database-schema-barrel"
+  },
+  "apps/pragma/api/src/helpers/json/json.core.test.ts": {
+    "describe": "test-pure-unit"
   },
   "apps/pragma/api/src/helpers/persistence/deletion.core.test.ts": {
     "describe": "test-pure-unit"
@@ -1323,6 +1370,12 @@
   },
   "apps/pragma/api/src/mastery/mastery.schema.ts": {
     "masteryDefaultTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/me/me.controller.ts": {
+    "buildMeRouter": "controller-guarded-router"
+  },
+  "apps/pragma/api/src/me/me.service.ts": {
+    "readSignedInMember": "service-orchestration"
   },
   "apps/pragma/api/src/members/lineup-scrub.core.test.ts": {
     "describe": "test-pure-unit"
@@ -1382,6 +1435,7 @@
   },
   "apps/pragma/api/src/setlists/setlists.core.ts": {
     "buildSetlistSummaries": "core-projection",
+    "resolveSetlistStatus": "core-decision",
     "selectNextLinkPosition": "core-decision",
     "tallySongsPerSetlist": "core-projection"
   },
@@ -1396,6 +1450,22 @@
   "apps/pragma/api/src/setlists/setlists.service.ts": {
     "getAllSetlists": "service-read-model",
     "patchEntry": "service-crud-update"
+  },
+  "apps/pragma/api/src/setlists/voting.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/setlists/voting.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/setlists/voting.core.ts": {
+    "computeBudget": "core-decision"
+  },
+  "apps/pragma/api/src/setlists/voting.repository.ts": {
+    "VOTE_PROJECTION": "repository-projection",
+    "listVotesOfSetlist": "repository-query"
+  },
+  "apps/pragma/api/src/setlists/voting.service.ts": {
+    "readVoteBoard": "service-orchestration"
   },
   "apps/pragma/api/src/songs/musicbrainz.core.test.ts": {
     "describe": "test-pure-unit"
@@ -1504,6 +1574,9 @@
   "apps/pragma/site/src/components/atoms/OembedFrame.tsx": {
     "OembedFrame": "atom-plain"
   },
+  "apps/pragma/site/src/components/atoms/PointsBadge.tsx": {
+    "PointsBadge": "atom-plain"
+  },
   "apps/pragma/site/src/components/atoms/PreviewImage.tsx": {
     "PreviewImage": "atom-plain"
   },
@@ -1611,6 +1684,9 @@
   "apps/pragma/site/src/components/molecules/PracticeReadView.tsx": {
     "PracticeReadView": "organism-presentational"
   },
+  "apps/pragma/site/src/components/molecules/SceneSongPill.tsx": {
+    "SceneSongPill": "molecule-presentational"
+  },
   "apps/pragma/site/src/components/molecules/SearchBar.tsx": {
     "SearchBar": "molecule-presentational"
   },
@@ -1641,8 +1717,17 @@
   "apps/pragma/site/src/components/molecules/SongNotesFields.tsx": {
     "SongNotesFields": "molecule-presentational"
   },
+  "apps/pragma/site/src/components/molecules/TargetSongCountField.tsx": {
+    "TargetSongCountField": "molecule-field"
+  },
   "apps/pragma/site/src/components/molecules/UploadedChartPreview.tsx": {
     "UploadedChartPreview": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/VoteBudgetBar.tsx": {
+    "VoteBudgetBar": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/VoteEntryLink.tsx": {
+    "VoteEntryLink": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/energy-sparkline.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -1716,6 +1801,9 @@
   "apps/pragma/site/src/components/organisms/CreateSetlistDialog.tsx": {
     "CreateSetlistDialog": "organism-form"
   },
+  "apps/pragma/site/src/components/organisms/EnrolForm.tsx": {
+    "EnrolForm": "route-form"
+  },
   "apps/pragma/site/src/components/organisms/FileDrop.tsx": {
     "FileDrop": "organism-query-owning"
   },
@@ -1724,6 +1812,18 @@
   },
   "apps/pragma/site/src/components/organisms/MemberEditForm.tsx": {
     "MemberEditForm": "route-form"
+  },
+  "apps/pragma/site/src/components/organisms/PasskeyList.tsx": {
+    "PasskeyList": "organism-mutation-panel"
+  },
+  "apps/pragma/site/src/components/organisms/PasswordChangeForm.tsx": {
+    "PasswordChangeForm": "route-form"
+  },
+  "apps/pragma/site/src/components/organisms/SceneControls.tsx": {
+    "SceneControls": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SceneTransport.tsx": {
+    "SceneTransport": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/SetlistCatalogList.tsx": {
     "SetlistCatalogList": "organism-presentational"
@@ -1739,6 +1839,9 @@
   },
   "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx": {
     "SetlistToolbar": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SignInForm.tsx": {
+    "SignInForm": "route-form"
   },
   "apps/pragma/site/src/components/organisms/SongChartFields.tsx": {
     "SongChartFields": "organism-presentational"
@@ -1766,6 +1869,18 @@
   },
   "apps/pragma/site/src/components/organisms/TransitionStrip.tsx": {
     "TransitionStrip": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/VoteClosePanel.tsx": {
+    "VoteClosePanel": "organism-mutation-panel"
+  },
+  "apps/pragma/site/src/components/organisms/VoteDeck.tsx": {
+    "VoteDeck": "organism-mutation-panel"
+  },
+  "apps/pragma/site/src/components/organisms/VoteProposalRow.tsx": {
+    "VoteProposalRow": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/VoteTally.tsx": {
+    "VoteTally": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/create-session-dialog.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -1812,6 +1927,12 @@
   },
   "apps/pragma/site/src/components/organisms/setlist-filter.core.ts": {
     "filterEntriesForMember": "core-view-projection"
+  },
+  "apps/pragma/site/src/components/organisms/sign-in-form.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/sign-in-form.core.ts": {
+    "credentialsFormSchema": "core-form-schema"
   },
   "apps/pragma/site/src/components/organisms/song-picker.core.test.ts": {
     "describe": "test-pure-unit"
@@ -1894,6 +2015,9 @@
   "apps/pragma/site/src/lib/member-color.utils.test.ts": {
     "describe": "test-pure-unit"
   },
+  "apps/pragma/site/src/lib/passkey.adapter.ts": {
+    "startPasskeyEnrolment": "adapter-external-service"
+  },
   "apps/pragma/site/src/lib/queries/auth.queries.test.tsx": {
     "describe": "test-query-hook"
   },
@@ -1928,6 +2052,10 @@
   },
   "apps/pragma/site/src/lib/queries/mastery.utils.ts": {
     "upsertMasteryDefault": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/queries/me.queries.ts": {
+    "useRegisterPasskey": "query-pessimistic-mutation",
+    "useSignedInMember": "query-module"
   },
   "apps/pragma/site/src/lib/queries/members.queries.test.tsx": {
     "describe": "test-query-hook"
@@ -2008,6 +2136,25 @@
     "useSignChartUpload": "query-uncached-mutation",
     "useSignedChartUrl": "query-module"
   },
+  "apps/pragma/site/src/lib/queries/voting.queries.ts": {
+    "useScoreSong": "query-optimistic-mutation",
+    "useVoteBoard": "query-polling"
+  },
+  "apps/pragma/site/src/lib/queries/voting.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/voting.utils.ts": {
+    "applyScoreToBoard": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/scene-dialog.adapter.ts": {
+    "openSceneOnAttach": "ref-callback-browser-api"
+  },
+  "apps/pragma/site/src/lib/scene-scroll.adapter.ts": {
+    "attachSceneScrollBody": "ref-callback-browser-api"
+  },
+  "apps/pragma/site/src/lib/scene-wake-lock.adapter.ts": {
+    "holdScreenAwakeWhileAttached": "ref-callback-browser-api"
+  },
   "apps/pragma/site/src/lib/setlist-index.core.ts": {
     "buildSetlistIndexRows": "utils-pure-module"
   },
@@ -2020,8 +2167,14 @@
   "apps/pragma/site/src/lib/upcoming-concerts.core.ts": {
     "selectUpcomingConcerts": "core-view-projection"
   },
+  "apps/pragma/site/src/routes/EnrolPage.tsx": {
+    "EnrolPage": "route-detail-page"
+  },
   "apps/pragma/site/src/routes/LoginPage.tsx": {
-    "LoginPage": "route-form"
+    "LoginPage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/account/AccountPage.tsx": {
+    "AccountPage": "route-detail-page"
   },
   "apps/pragma/site/src/routes/bars/BarsPage.tsx": {
     "BarsPage": "route-list-page"
@@ -2125,8 +2278,41 @@
   "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx": {
     "SetlistEditorPage": "route-detail-page"
   },
+  "apps/pragma/site/src/routes/setlists/SetlistScenePage.test.tsx": {
+    "stubDialogModalMissingFromJsdom": "test-jsdom-gap-stub"
+  },
+  "apps/pragma/site/src/routes/setlists/SetlistScenePage.tsx": {
+    "SetlistScene": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/setlists/SetlistVotePage.tsx": {
+    "SetlistVotePage": "organism-query-owning"
+  },
   "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx": {
     "SetlistsPage": "route-list-page"
+  },
+  "apps/pragma/site/src/routes/setlists/setlist-scene.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/setlists/setlist-scene.core.ts": {
+    "selectSceneKeyCommand": "core-lookup-table"
+  },
+  "apps/pragma/site/src/routes/setlists/setlist-status.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/setlists/setlist-status.core.ts": {
+    "resolveSetlistStatus": "core-decision"
+  },
+  "apps/pragma/site/src/routes/setlists/setlist-vote.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/setlists/setlist-vote.core.ts": {
+    "selectVotePageState": "core-decision"
+  },
+  "apps/pragma/site/src/routes/setlists/vote-deck.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/setlists/vote-proposal.core.test.ts": {
+    "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/sw/manifest.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -2261,6 +2447,12 @@
     "default": "lint-rule"
   },
   "eslint-rules/no-flat-components-folder.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-flex-one-in-auto-height-dialog.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-flex-one-in-auto-height-dialog.test.js": {
     "createRuleTester": "test-lint-rule"
   },
   "eslint-rules/no-french-identifiers.js": {

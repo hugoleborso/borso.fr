@@ -71,6 +71,7 @@ export const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
 
 export const LAYER_BY_PATH_SEGMENT: readonly (readonly [string, string])[] = [
   ['eslint-rules/', 'lint-rule'],
+  ['/api/scripts/', 'operation'],
   ['infra/shared/lib/', 'stack'],
   ['/components/atoms/', 'atom'],
   ['/components/molecules/', 'molecule'],

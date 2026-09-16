@@ -3,19 +3,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
-import { externalSearchCacheTable } from '../songs/songs.schema';
 import { AUDIENCE_SEARCH_BUDGET, AUDIENCE_WRITE_BUDGET } from './audience-rate-limit.middleware';
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
-const KNOWN_SONG_MBID = 'cccccccc-3333-4333-8333-333333333333';
-const PLANNED_SONG_MBID = 'dddddddd-4444-4444-8444-444444444444';
-const UNKNOWN_SONG_MBID = 'eeeeeeee-5555-4555-8555-555555555555';
 const A_BALLOT = 'a'.repeat(48);
 const ANOTHER_BALLOT = 'b'.repeat(48);
 const UNAUTHORISED = 401;
 const ROUND_DURATION_MS = 30_000;
 const SETTLEMENT_TEST_TIMEOUT_MS = 90_000;
-const CACHE_LIFETIME_MS = 60_000;
 
 const roundSchema = z.object({
   id: z.string().uuid(),
@@ -53,7 +48,7 @@ const suggestedSongEnvelope = z.object({
     title: z.string(),
     artist: z.string(),
     status: z.string(),
-    mbid: z.string().nullable(),
+    deezerTrackId: z.string().nullable(),
     album: z.string().nullable(),
     durationSeconds: z.number().nullable(),
     tags: z.array(z.string()),
@@ -82,16 +77,6 @@ async function createConcert(app: Hono, cookieHeader: string): Promise<string> {
   });
   const body = await readJson(created, z.object({ session: z.object({ id: z.string().uuid() }) }));
   return body.session.id;
-}
-
-async function seedSearchCache(query: string): Promise<void> {
-  await testDatabase()
-    .insert(externalSearchCacheTable)
-    .values({
-      normalizedQuery: `deezer:${query}`,
-      hits: JSON.stringify([]),
-      expiresAt: new Date(Date.now() + CACHE_LIFETIME_MS),
-    });
 }
 
 async function createSongRow(
@@ -169,7 +154,6 @@ async function openRoundOn(app: Hono, cookieHeader: string, sessionId: string): 
 interface ProviderTrack {
   readonly trackId: string;
   readonly isrc: string;
-  readonly mbid: string;
   readonly title: string;
   readonly artist: string;
   readonly album: string;
@@ -179,7 +163,6 @@ interface ProviderTrack {
 const KNOWN_SONG_TRACK: ProviderTrack = {
   trackId: '111111111',
   isrc: 'GBAAA0000001',
-  mbid: KNOWN_SONG_MBID,
   title: 'Riff',
   artist: 'The Band',
   album: 'Debut',
@@ -189,7 +172,6 @@ const KNOWN_SONG_TRACK: ProviderTrack = {
 const PLANNED_SONG_TRACK: ProviderTrack = {
   trackId: '222222222',
   isrc: 'GBAAA0000002',
-  mbid: PLANNED_SONG_MBID,
   title: 'Ballad',
   artist: 'The Band',
   album: 'Debut',
@@ -199,14 +181,12 @@ const PLANNED_SONG_TRACK: ProviderTrack = {
 const UNKNOWN_SONG_TRACK: ProviderTrack = {
   trackId: '333333333',
   isrc: 'USSM16800123',
-  mbid: UNKNOWN_SONG_MBID,
   title: 'Voodoo Child',
   artist: 'The Jimi Hendrix Experience',
   album: 'Electric Ladyland',
   durationSeconds: 900,
 };
 
-const MILLIS_PER_SECOND = 1_000;
 const DEEZER_NO_DATA_CODE = 800;
 
 function deezerTrackPayload(track: ProviderTrack): unknown {
@@ -221,18 +201,6 @@ function deezerTrackPayload(track: ProviderTrack): unknown {
   };
 }
 
-function recordingPayload(track: ProviderTrack): unknown {
-  return {
-    id: track.mbid,
-    title: track.title,
-    length: track.durationSeconds * MILLIS_PER_SECOND,
-    'first-release-date': '1968-10-25',
-    'artist-credit': [{ name: track.artist }],
-    isrcs: [track.isrc],
-    tags: [{ name: 'psychedelic rock', count: 4 }],
-  };
-}
-
 function providerResponse(body: unknown): Response {
   return new Response(JSON.stringify(body), {
     status: 200,
@@ -243,8 +211,7 @@ function providerResponse(body: unknown): Response {
 function selectProviderPayload(url: string, tracks: readonly ProviderTrack[]): unknown {
   const picked = tracks.find((track) => url.includes(`/track/${track.trackId}`));
   if (picked !== undefined) return deezerTrackPayload(picked);
-  const resolved = tracks.find((track) => url.includes(`/isrc/${track.isrc}`));
-  if (resolved !== undefined) return { recordings: [recordingPayload(resolved)] };
+  if (url.includes('/search')) return { data: tracks.map((track) => deezerTrackPayload(track)) };
   return { error: { type: 'DataException', code: DEEZER_NO_DATA_CODE } };
 }
 
@@ -456,7 +423,7 @@ describe('audience controller (back-e2e)', () => {
 
   it('answers the public search without a session cookie and bars an address that hammers it', async () => {
     const { app } = await buildAuthenticatedApp();
-    await seedSearchCache('lucky');
+    stubProviders();
     const fromOneAddress = () =>
       jsonRequest(app, '/api/audience/search?q=lucky', {
         extraHeaders: { 'x-forwarded-for': '203.0.113.7' },
@@ -588,7 +555,7 @@ describe('audience controller (back-e2e)', () => {
       title: 'Ballad',
       artist: 'The Band',
       status: 'concert_ready',
-      mbid: PLANNED_SONG_MBID,
+      deezerTrackId: PLANNED_SONG_TRACK.trackId,
     });
     await createManualSetlistHolding(app, cookieHeader, sessionId, plannedSongId);
     await openRoundOn(app, cookieHeader, sessionId);
@@ -611,7 +578,7 @@ describe('audience controller (back-e2e)', () => {
       title: 'Riff',
       artist: 'The Band',
       status: 'concert_ready',
-      mbid: KNOWN_SONG_MBID,
+      deezerTrackId: KNOWN_SONG_TRACK.trackId,
     });
     const before = await countCatalogSongs(app, cookieHeader);
     await openRoundOn(app, cookieHeader, sessionId);
@@ -628,7 +595,7 @@ describe('audience controller (back-e2e)', () => {
     expect(await countCatalogSongs(app, cookieHeader)).toBe(before);
   });
 
-  it('imports a suggestion naming an unknown recording as one idea carrying its MusicBrainz columns', async () => {
+  it('imports a suggestion naming an unknown track as one idea carrying the provider columns', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const sessionId = await createConcert(app, cookieHeader);
     const before = await countCatalogSongs(app, cookieHeader);
@@ -643,13 +610,12 @@ describe('audience controller (back-e2e)', () => {
     expect(accepted.status).toBe(201);
     const body = await readJson(accepted, suggestedSongEnvelope);
     expect(body.song.status).toBe('idea');
-    expect(body.song.mbid).toBe(UNKNOWN_SONG_TRACK.mbid);
+    expect(body.song.deezerTrackId).toBe(UNKNOWN_SONG_TRACK.trackId);
     expect(body.song.title).toBe('Voodoo Child');
     expect(body.song.artist).toBe('The Jimi Hendrix Experience');
     expect(body.song.album).toBe('Electric Ladyland');
     expect(body.song.durationSeconds).toBe(900);
     expect(body.song.isrcs).toEqual(['USSM16800123']);
-    expect(body.song.tags).toEqual(['psychedelic rock']);
     expect(await countCatalogSongs(app, cookieHeader)).toBe(before + 1);
 
     const state = await readJson(

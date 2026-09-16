@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import {
   masteryDefaultPathSchema,
   masteryDefaultRowSchema,
@@ -20,7 +20,7 @@ import {
 // @FollowsBlueprint controller-dispatch
 export function buildMasteryRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/defaults', async (context) => {
       const defaults = await getMasteryDefaults();
       return context.json({ defaults });

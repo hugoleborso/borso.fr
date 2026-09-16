@@ -1,5 +1,6 @@
 /** @Feature setlists */
 
+import { AlbumCover } from '../atoms/AlbumCover';
 import { useSortable } from '@dnd-kit/sortable';
 import { CSS } from '@dnd-kit/utilities';
 import type { JSX, ReactNode } from 'react';
@@ -15,6 +16,7 @@ import {
 } from '../molecules/LineupEditor';
 import { toLineupPayload } from '../molecules/lineup-editor.core';
 import { MemberChip } from '../molecules/MemberChip';
+import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { SetlistEntryActions } from '../molecules/SetlistEntryActions';
 import {
@@ -52,6 +54,9 @@ export interface SetlistEntryRowProps {
   readonly position: number;
   readonly entryId: string;
   readonly title: string;
+  readonly deezerAlbumId: string | null;
+  readonly deezerTrackId: string | null;
+  readonly spotifyTrackId: string | null;
   readonly artist: string;
   readonly tonalityLabel: string | null;
   readonly meanMastery: number | null;
@@ -78,6 +83,12 @@ export interface SetlistEntryRowProps {
 // @FollowsBlueprint organism-form
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
+  const longPress = useSongLongPress({
+    title: props.title,
+    artist: props.artist,
+    deezerTrackId: props.deezerTrackId,
+    spotifyTrackId: props.spotifyTrackId,
+  });
   const [moreOpen, setMoreOpen] = useState<boolean>(false);
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
   const [defaultLineupEditorOpen, setDefaultLineupEditorOpen] = useState<boolean>(false);
@@ -130,7 +141,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           >
             <Icon name="drag" size={16} />
           </button>
-          <div className="min-w-0 flex-1">
+          <div className="min-w-0 flex-1 select-none" {...longPress}>
             {props.prominentMemberInstrument === null ? null : (
               <div className="flex items-center gap-2 mb-1">
                 <MemberChip
@@ -150,8 +161,11 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 </span>
               </div>
             ) : null}
-            <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 [overflow-wrap:anywhere]">
-              {props.title}
+            <div className="flex items-start gap-2">
+              <AlbumCover title={props.title} deezerAlbumId={props.deezerAlbumId} size="sm" />
+              <div className="font-display italic text-[18px] sm:text-[20px] leading-tight text-ink-900 [overflow-wrap:anywhere]">
+                {props.title}
+              </div>
             </div>
             <div className="flex items-center gap-1.5 text-xs text-ink-500 mt-0.5 min-w-0 lg:flex-wrap">
               <span className="max-lg:truncate" title={props.artist}>

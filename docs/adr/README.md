@@ -58,6 +58,7 @@ No:
 | [0008](./0008-purity-enforced-structurally.md) | Purity is enforced by file location, not by review | accepted | 2026-08-08 |
 | [0009](./0009-pragma-previews-clone-production.md) | pragma previews clone production, credentials included | accepted | 2026-08-09 |
 | [0010](./0010-pragma-domain-folder-for-cross-boundary-rules.md) | A `domain/` folder for the rules pragma's two sides share | proposed | 2026-08-13 |
+| [0017](./0017-spotify-track-ids-resolved-by-isrc-at-link-time.md) | Spotify track ids resolved by ISRC at link time, credential in SSM | proposed | 2026-09-15 |
 
 ### Data layer
 
@@ -70,7 +71,12 @@ No:
 - 0002, 0003 — react-bits Galaxy integration (see table above).
 - 0004 — shared-password auth for the pragma band ERP (5 trusted members, daily-use tool, friction dominates over attribution).
 - 0010 — a `domain/` folder for the pure rules pragma's front end and back end both read, admitted only with a caller on each side.
-- 0016 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated on 2026-08-27** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
+- 0015 — per-member credentials replace the shared password (supersedes 0004); the old secret opens a self-closing enrolment window and nothing else.
+- 0016 — `@simplewebauthn` carries the passkey flow, as an alternative single factor beside the password.
+- 0017 — a song's Spotify track is resolved once by the ISRC Deezer already returns, and the client credential lives in SSM rather than the database ADR-0004 chose, because rotation-as-an-endpoint does not apply to a machine credential.
+- 0018 — Nominatim answers the bar search, proxied through the API; no key and no billing account, in exchange for a rate limit, a cache and an attribution line the code carries.
+- 0019 — the room's search collapses a provider that indexes masters down to one row per song, and reads a refusal Deezer states inside a 200 body.
+- 0020 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
 
 ### CDK / infra
 

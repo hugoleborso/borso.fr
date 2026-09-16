@@ -1,7 +1,7 @@
 import { and, asc, eq, isNull, max, ne, or } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { resolveSetlistKind, selectNextLinkPosition } from './setlists.core';
+import { selectNextLinkPosition } from './setlists.core';
 import {
   AUDIENCE_CHOICE_SETLIST_KIND,
   sessionSetlistTable,
@@ -10,24 +10,15 @@ import {
   setlistTable,
 } from './setlists.schema';
 
-export interface SetlistRow {
-  id: string;
-  name: string;
-  kind: SetlistKind;
-}
-
-type SetlistRawRow = typeof setlistTable.$inferSelect;
-
-// @FollowsBlueprint repository-row-mapper
-function rowToSetlist(row: SetlistRawRow): SetlistRow {
-  return { id: row.id, name: row.name, kind: resolveSetlistKind(row.kind) };
-}
+export type SetlistRow = typeof setlistTable.$inferSelect;
 
 // @FollowsBlueprint repository-projection
 const SETLIST_PROJECTION = {
   id: setlistTable.id,
   name: setlistTable.name,
   kind: setlistTable.kind,
+  status: setlistTable.status,
+  targetSongCount: setlistTable.targetSongCount,
 } as const;
 
 export async function listSetlists(): Promise<SetlistRow[]> {
@@ -36,7 +27,7 @@ export async function listSetlists(): Promise<SetlistRow[]> {
     .select(SETLIST_PROJECTION)
     .from(setlistTable)
     .orderBy(asc(setlistTable.id));
-  return rows.map((row) => rowToSetlist(row));
+  return rows;
 }
 
 export async function findSetlistById(setlistId: string): Promise<SetlistRow | null> {
@@ -47,7 +38,7 @@ export async function findSetlistById(setlistId: string): Promise<SetlistRow | n
     .where(eq(setlistTable.id, setlistId))
     .limit(1);
   const row = rows[0];
-  return row === undefined ? null : rowToSetlist(row);
+  return row ?? null;
 }
 
 export async function listSetlistsOfSession(sessionId: string): Promise<SetlistRow[]> {
@@ -58,7 +49,7 @@ export async function listSetlistsOfSession(sessionId: string): Promise<SetlistR
     .innerJoin(setlistTable, eq(setlistTable.id, sessionSetlistTable.setlistId))
     .where(eq(sessionSetlistTable.sessionId, sessionId))
     .orderBy(asc(sessionSetlistTable.position));
-  return rows.map((row) => rowToSetlist(row));
+  return rows;
 }
 
 export async function findAudienceChoiceSetlistOfSession(
@@ -77,7 +68,7 @@ export async function findAudienceChoiceSetlistOfSession(
     )
     .limit(1);
   const row = rows[0];
-  return row === undefined ? null : rowToSetlist(row);
+  return row ?? null;
 }
 
 export async function listManualSetlistSongIdsOfSession(sessionId: string): Promise<string[]> {
@@ -109,7 +100,7 @@ export async function insertSetlist(
       .returning(SETLIST_PROJECTION);
     if (row === undefined) throw new Error('insert returned no row');
     if (sessionId !== null) await attachAtEnd(transaction, sessionId, row.id);
-    return rowToSetlist(row);
+    return row;
   });
 }
 
@@ -149,7 +140,7 @@ export async function updateSetlistName(
     .set({ name })
     .where(eq(setlistTable.id, setlistId))
     .returning(SETLIST_PROJECTION);
-  return row === undefined ? null : rowToSetlist(row);
+  return row ?? null;
 }
 
 export async function deleteSetlistWithEntries(setlistId: string): Promise<DeletionOutcome> {

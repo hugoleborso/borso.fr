@@ -28,6 +28,8 @@ export const api = hc<AppRouter>(API_BASE === '' ? '/' : API_BASE, {
   init: { credentials: 'include' },
 });
 
-export function isResponseSuccessful(response: { readonly ok: boolean }): boolean {
+export function isResponseSuccessful<TResponse extends { readonly ok: boolean }>(
+  response: TResponse,
+): response is Extract<TResponse, { readonly ok: true }> {
   return response.ok;
 }

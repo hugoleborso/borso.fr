@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import FIXTURE from './__fixtures__/musicbrainz-valerie-dismax.json';
-import { type ExternalSongHit, mapMusicBrainzRecordings } from './musicbrainz.core';
+import FIXTURE from './__fixtures__/deezer-valerie.json';
+import { type ExternalSongHit, mapDeezerTracks } from './deezer.core';
 import {
   coverSearchText,
   hasCoverMarker,
   overlapWithQuery,
+  popularityScore,
   rankExternalHits,
   scoreExternalHit,
   unaskedTitleWords,
@@ -13,19 +14,17 @@ import {
 
 function hit(overrides: Partial<ExternalSongHit> = {}): ExternalSongHit {
   return {
-    mbid: 'mbid-a',
+    deezerTrackId: 'track-a',
     title: 'Beggin',
     artist: 'Maneskin',
-    year: 2017,
     album: null,
-    releaseId: null,
+    deezerAlbumId: null,
     durationSeconds: null,
     durationLabel: null,
-    disambiguation: null,
-    tags: [],
+    titleVersion: null,
     isrcs: [],
-    releaseCount: 0,
-    isrcCount: 0,
+    popularity: 0,
+    isExplicit: false,
     ...overrides,
   };
 }
@@ -75,14 +74,14 @@ describe('unaskedTitleWords', () => {
 });
 
 describe('coverSearchText', () => {
-  it('joins the title, the album and the disambiguation in lower case', () => {
+  it('joins the title, the album and the title version in lower case', () => {
     expect(
-      coverSearchText(hit({ title: 'Beggin', album: 'Il Ballo', disambiguation: 'Radio' })),
+      coverSearchText(hit({ title: 'Beggin', album: 'Il Ballo', titleVersion: 'Radio' })),
     ).toBe('beggin il ballo radio');
   });
 
-  it('substitutes nothing for a null album and a null disambiguation', () => {
-    expect(coverSearchText(hit({ title: 'Beggin', album: null, disambiguation: null }))).toBe(
+  it('substitutes nothing for a null album and a null title version', () => {
+    expect(coverSearchText(hit({ title: 'Beggin', album: null, titleVersion: null }))).toBe(
       'beggin  ',
     );
   });
@@ -97,8 +96,8 @@ describe('hasCoverMarker', () => {
     expect(hasCoverMarker(hit({ album: 'Karaoke Hits Vol. 3' }))).toBe(true);
   });
 
-  it('spots a marker in the disambiguation', () => {
-    expect(hasCoverMarker(hit({ disambiguation: 'live at Wembley' }))).toBe(true);
+  it('spots a marker in the title version', () => {
+    expect(hasCoverMarker(hit({ titleVersion: 'live at Wembley' }))).toBe(true);
   });
 
   it('spots a mashup', () => {
@@ -117,30 +116,12 @@ describe('scoreExternalHit', () => {
     expect(scoreExternalHit(hit(), 'zzz')).toBe(SCORE_FROM_TITLE_PENALTY_ALONE);
   });
 
-  it('rewards each release', () => {
-    expect(scoreExternalHit(hit({ releaseCount: 2 }), 'zzz')).toBe(
-      SCORE_FROM_TITLE_PENALTY_ALONE + 6,
+  it('rewards popularity, flattened so it cannot drown a word match', () => {
+    expect(scoreExternalHit(hit({ popularity: 100_000 }), 'zzz')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 20,
     );
-  });
-
-  it('caps the release reward so a compilation flood cannot dominate', () => {
-    expect(scoreExternalHit(hit({ releaseCount: 20 }), 'zzz')).toBe(
-      SCORE_FROM_TITLE_PENALTY_ALONE + 60,
-    );
-    expect(scoreExternalHit(hit({ releaseCount: 999 }), 'zzz')).toBe(
-      SCORE_FROM_TITLE_PENALTY_ALONE + 60,
-    );
-  });
-
-  it('rewards each ISRC', () => {
-    expect(scoreExternalHit(hit({ isrcCount: 3 }), 'zzz')).toBe(
-      SCORE_FROM_TITLE_PENALTY_ALONE + 12,
-    );
-  });
-
-  it('rewards each tag', () => {
-    expect(scoreExternalHit(hit({ tags: ['rock', 'pop'] }), 'zzz')).toBe(
-      SCORE_FROM_TITLE_PENALTY_ALONE + 4,
+    expect(scoreExternalHit(hit({ popularity: 1_000_000 }), 'zzz')).toBe(
+      SCORE_FROM_TITLE_PENALTY_ALONE + 24,
     );
   });
 
@@ -169,46 +150,60 @@ describe('scoreExternalHit', () => {
       hit({
         title: 'Uprising',
         artist: 'Muse',
-        releaseCount: 2,
-        isrcCount: 1,
-        tags: ['rock'],
+        popularity: 10_000,
         album: 'The Resistance',
       }),
       'uprising muse',
     );
-    expect(scored).toBe(6 + 4 + 2 + 10 + 14 + 5);
+    expect(scored).toBe(16 + 10 + 14 + 5);
+  });
+});
+
+describe('popularityScore', () => {
+  it('scores an unranked track at nothing', () => {
+    expect(popularityScore(0)).toBe(0);
+  });
+
+  it('scores a negative rank at nothing rather than a penalty', () => {
+    expect(popularityScore(-1)).toBe(0);
+  });
+
+  it('grows by a fixed step per order of magnitude', () => {
+    expect(popularityScore(10)).toBe(4);
+    expect(popularityScore(100)).toBe(8);
   });
 });
 
 describe('rankExternalHits', () => {
   it('puts the well released original above a drum cover', () => {
     const cover = hit({
-      mbid: 'cover',
+      deezerTrackId: 'cover',
       title: 'Beggin - Maneskin (Drum Cover)',
       artist: 'El Estepario Siberiano',
     });
     const original = hit({
-      mbid: 'original',
+      deezerTrackId: 'original',
       title: 'Beggin',
       artist: 'Maneskin',
       album: 'Il ballo della vita',
-      releaseCount: 22,
-      isrcCount: 1,
-      tags: ['rock'],
+      popularity: 900_000,
     });
     const ranked = rankExternalHits([cover, original], 'Beggin Maneskin');
-    expect(ranked.map((entry) => entry.mbid)).toEqual(['original', 'cover']);
+    expect(ranked.map((entry) => entry.deezerTrackId)).toEqual(['original', 'cover']);
   });
 
   it('breaks a tie on the identifier so the order is stable', () => {
-    const ranked = rankExternalHits([hit({ mbid: 'b' }), hit({ mbid: 'a' })], 'zzz');
-    expect(ranked.map((entry) => entry.mbid)).toEqual(['a', 'b']);
+    const ranked = rankExternalHits(
+      [hit({ deezerTrackId: 'b' }), hit({ deezerTrackId: 'a' })],
+      'zzz',
+    );
+    expect(ranked.map((entry) => entry.deezerTrackId)).toEqual(['a', 'b']);
   });
 
   it('leaves the caller list untouched', () => {
-    const input = [hit({ mbid: 'b' }), hit({ mbid: 'a' })];
+    const input = [hit({ deezerTrackId: 'b' }), hit({ deezerTrackId: 'a' })];
     rankExternalHits(input, 'zzz');
-    expect(input.map((entry) => entry.mbid)).toEqual(['b', 'a']);
+    expect(input.map((entry) => entry.deezerTrackId)).toEqual(['b', 'a']);
   });
 
   it('returns an empty list unchanged', () => {
@@ -216,25 +211,30 @@ describe('rankExternalHits', () => {
   });
 });
 
-describe('rankExternalHits, against a captured MusicBrainz response', () => {
+describe('rankExternalHits, against a captured Deezer response', () => {
   const QUERY = 'Valerie Amy Winehouse';
 
-  it('is handed a response whose first hits are covers, not the original', () => {
-    const hits = mapMusicBrainzRecordings(FIXTURE);
-    expect(hits[0]?.artist).not.toBe('Amy Winehouse');
-    expect(hits.findIndex((entry) => entry.artist === 'Amy Winehouse')).toBeGreaterThan(0);
+  it('is handed a response that mixes the original with tributes and a television cast', () => {
+    const artists = mapDeezerTracks(FIXTURE).map((entry) => entry.artist);
+    expect(artists).toContain('Mark Ronson');
+    expect(artists).toContain('Glee Cast');
   });
 
-  it('promotes the Amy Winehouse recording to the first result', () => {
-    const ranked = rankExternalHits(mapMusicBrainzRecordings(FIXTURE), QUERY);
-    expect(ranked[0]?.title).toBe('Valerie');
-    expect(ranked[0]?.artist).toBe('Amy Winehouse');
+  it('keeps the studio original first, which is credited to Mark Ronson', () => {
+    const ranked = rankExternalHits(mapDeezerTracks(FIXTURE), QUERY);
+    expect(ranked[0]?.artist).toBe('Mark Ronson');
+    expect(ranked[0]?.title).toBe('Valerie (feat. Amy Winehouse)');
   });
 
-  it('keeps every tribute, mashup and cover out of the first three', () => {
-    const ranked = rankExternalHits(mapMusicBrainzRecordings(FIXTURE), QUERY);
-    for (const entry of ranked.slice(0, 3)) {
-      expect(entry.artist).toBe('Amy Winehouse');
-    }
+  it('keeps the television cover out of the first three, popular though it is', () => {
+    const ranked = rankExternalHits(mapDeezerTracks(FIXTURE), QUERY);
+    const gleePosition = ranked.findIndex((entry) => entry.artist === 'Glee Cast');
+    expect(gleePosition).toBeGreaterThan(2);
+  });
+
+  it('demotes the live takes, which announce themselves in their title version', () => {
+    const ranked = rankExternalHits(mapDeezerTracks(FIXTURE), QUERY);
+    const firstLive = ranked.findIndex((entry) => entry.titleVersion?.includes('Live') === true);
+    expect(firstLive).toBeGreaterThan(0);
   });
 });

@@ -1,4 +1,5 @@
 import { normalizeLineup } from '@domain/lineup.core';
+import { DEFAULT_SONG_ORIGIN } from '@domain/song-origin.core';
 import type { InferResponseType } from 'hono/client';
 import type { api } from '../api.client';
 
@@ -12,13 +13,16 @@ type SongUpdateVariables = { id: string } & Parameters<
 const NEW_SONG_DEFAULTS: Pick<
   SongRow,
   | 'artist'
+  | 'origin'
   | 'links'
   | 'chart'
   | 'tonalityStart'
   | 'tonalityEnd'
   | 'defaultLineup'
   | 'baseEnergy'
-  | 'mbid'
+  | 'deezerTrackId'
+  | 'deezerAlbumId'
+  | 'spotifyTrackId'
   | 'album'
   | 'durationSeconds'
   | 'isrcs'
@@ -28,13 +32,16 @@ const NEW_SONG_DEFAULTS: Pick<
   | 'notes'
 > = {
   artist: '',
+  origin: DEFAULT_SONG_ORIGIN,
   links: [],
   chart: null,
   tonalityStart: null,
   tonalityEnd: null,
   defaultLineup: {},
   baseEnergy: null,
-  mbid: null,
+  deezerTrackId: null,
+  deezerAlbumId: null,
+  spotifyTrackId: null,
   album: null,
   durationSeconds: null,
   isrcs: [],

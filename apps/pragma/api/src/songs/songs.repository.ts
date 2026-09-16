@@ -2,8 +2,11 @@ import { desc, eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
+import { resolveSongOrigin, type SongOrigin } from '@domain/song-origin.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
 import { setlistEntryTable } from '../setlists/setlists.schema';
+import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
+import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
 import {
   chordChartSchema,
   defaultLineupSchema,
@@ -26,13 +29,16 @@ export interface SongRow {
   title: string;
   artist: string;
   status: SongStatus;
+  origin: SongOrigin;
   links: SongLink[];
   chart: SongChart | null;
   tonalityStart: string | null;
   tonalityEnd: string | null;
   defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
-  mbid: string | null;
+  deezerTrackId: string | null;
+  deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string[];
@@ -47,13 +53,16 @@ export interface SongInsertShape {
   title: string;
   artist: string;
   status: SongStatus;
+  origin: SongOrigin;
   links: SongLink[];
   chart: SongChart | null;
   tonalityStart: string | null;
   tonalityEnd: string | null;
   defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
-  mbid: string | null;
+  deezerTrackId: string | null;
+  deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string[];
@@ -70,13 +79,16 @@ interface SongRawRow {
   title: string;
   artist: string;
   status: string;
+  origin: string | null;
   links: string;
   chart: string | null;
   tonalityStart: string | null;
   tonalityEnd: string | null;
   defaultLineup: string;
   baseEnergy: number | null;
-  mbid: string | null;
+  deezerTrackId: string | null;
+  deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string | null;
@@ -93,13 +105,16 @@ const PROJECTION = {
   title: songTable.title,
   artist: songTable.artist,
   status: songTable.status,
+  origin: songTable.origin,
   links: songTable.links,
   chart: songTable.chart,
   tonalityStart: songTable.tonalityStart,
   tonalityEnd: songTable.tonalityEnd,
   defaultLineup: songTable.defaultLineup,
   baseEnergy: songTable.baseEnergy,
-  mbid: songTable.mbid,
+  deezerTrackId: songTable.deezerTrackId,
+  deezerAlbumId: songTable.deezerAlbumId,
+  spotifyTrackId: songTable.spotifyTrackId,
   album: songTable.album,
   durationSeconds: songTable.durationSeconds,
   isrcs: songTable.isrcs,
@@ -131,13 +146,16 @@ function rowToSong(row: SongRawRow): SongRow {
     title: row.title,
     artist: row.artist,
     status: songStatusSchema.parse(row.status),
+    origin: resolveSongOrigin(row.origin),
     links: songLinksRowSchema.parse(linksRaw),
     chart: chartRaw === null ? null : chordChartSchema.parse(chartRaw),
     tonalityStart: row.tonalityStart,
     tonalityEnd: row.tonalityEnd,
     defaultLineup: defaultLineupSchema.parse(defaultLineupRaw),
     baseEnergy: row.baseEnergy,
-    mbid: row.mbid,
+    deezerTrackId: row.deezerTrackId,
+    deezerAlbumId: row.deezerAlbumId,
+    spotifyTrackId: row.spotifyTrackId,
     album: row.album,
     durationSeconds: row.durationSeconds,
     isrcs: parseJsonArrayColumn(row.isrcs, songIsrcsRowSchema),
@@ -157,13 +175,16 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     title: values.title,
     artist: values.artist,
     status: values.status,
+    origin: values.origin,
     links: JSON.stringify(values.links),
     chart: values.chart === null ? null : JSON.stringify(values.chart),
     tonalityStart: values.tonalityStart,
     tonalityEnd: values.tonalityEnd,
     defaultLineup: JSON.stringify(values.defaultLineup),
     baseEnergy: values.baseEnergy,
-    mbid: values.mbid,
+    deezerTrackId: values.deezerTrackId,
+    deezerAlbumId: values.deezerAlbumId,
+    spotifyTrackId: values.spotifyTrackId,
     album: values.album,
     durationSeconds: values.durationSeconds,
     isrcs: JSON.stringify(values.isrcs),
@@ -179,6 +200,7 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('title' in updates && updates.title !== undefined) encoded.title = updates.title;
   if ('artist' in updates && updates.artist !== undefined) encoded.artist = updates.artist;
   if ('status' in updates && updates.status !== undefined) encoded.status = updates.status;
+  if ('origin' in updates && updates.origin !== undefined) encoded.origin = updates.origin;
   if ('links' in updates) encoded.links = JSON.stringify(updates.links ?? []);
   if ('chart' in updates) {
     encoded.chart =
@@ -189,7 +211,9 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('defaultLineup' in updates)
     encoded.defaultLineup = JSON.stringify(updates.defaultLineup ?? {});
   if ('baseEnergy' in updates) encoded.baseEnergy = updates.baseEnergy;
-  if ('mbid' in updates) encoded.mbid = updates.mbid;
+  if ('deezerTrackId' in updates) encoded.deezerTrackId = updates.deezerTrackId;
+  if ('deezerAlbumId' in updates) encoded.deezerAlbumId = updates.deezerAlbumId;
+  if ('spotifyTrackId' in updates) encoded.spotifyTrackId = updates.spotifyTrackId;
   if ('album' in updates) encoded.album = updates.album;
   if ('durationSeconds' in updates) encoded.durationSeconds = updates.durationSeconds;
   if ('isrcs' in updates) encoded.isrcs = JSON.stringify(updates.isrcs ?? []);
@@ -236,11 +260,15 @@ export async function updateSong(id: string, updates: SongPersistedShape): Promi
 
 export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
-  await database.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
-  await database.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
-  const deleted = await database
-    .delete(songTable)
-    .where(eq(songTable.id, id))
-    .returning({ id: songTable.id });
-  return selectDeletionOutcome(deleted.length);
+  return await database.transaction(async (transaction) => {
+    await transaction.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
+    await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
+    await deleteVotesOfDeletedSong(transaction, id);
+    await detachTasksOfSongBeingDeleted(transaction, id);
+    const deleted = await transaction
+      .delete(songTable)
+      .where(eq(songTable.id, id))
+      .returning({ id: songTable.id });
+    return selectDeletionOutcome(deleted.length);
+  });
 }

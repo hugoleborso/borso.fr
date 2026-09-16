@@ -9,6 +9,7 @@ export const barKeys = {
   all: ['bars'] as const,
   list: () => [...barKeys.all, 'list'] as const,
   byId: (id: string) => [...barKeys.all, 'byId', id] as const,
+  placeSearch: (query: string) => [...barKeys.all, 'placeSearch', query] as const,
 };
 
 type BarsListResponse = InferResponseType<typeof api.api.bars.$get>;
@@ -27,6 +28,9 @@ const NEW_BAR_DEFAULTS: Pick<
   | 'contactName'
   | 'contactEmail'
   | 'contactPhone'
+  | 'ownerMemberId'
+  | 'concertMood'
+  | 'availableSupport'
 > = {
   notes: '',
   lastInteractionAt: null,
@@ -35,6 +39,9 @@ const NEW_BAR_DEFAULTS: Pick<
   contactName: null,
   contactEmail: null,
   contactPhone: null,
+  ownerMemberId: null,
+  concertMood: null,
+  availableSupport: [],
 };
 
 function buildOptimisticBar(id: string, input: BarCreateVariables): BarRow {
@@ -49,6 +56,19 @@ export function useBarsList() {
       if (!response.ok) throw new ApiError(response.status, `bars ${response.status}`, null);
       return response.json();
     },
+  });
+}
+
+// @FollowsBlueprint query-module
+export function useBarPlaceSearch(query: string) {
+  return useQuery({
+    queryKey: barKeys.placeSearch(query),
+    queryFn: async () => {
+      const response = await api.api.bars.search.$get({ query: { query } });
+      if (!response.ok) throw new ApiError(response.status, `search ${response.status}`, null);
+      return response.json();
+    },
+    enabled: query.trim().length > 0,
   });
 }
 

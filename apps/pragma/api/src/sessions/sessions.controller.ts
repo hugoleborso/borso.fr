@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import { sessionCreateSchema, sessionIdParamSchema, sessionUpdateSchema } from './sessions.schema';
 import {
   createSession,
@@ -12,7 +12,7 @@ import {
 } from './sessions.service';
 
 export function buildOfflineManifestRouter() {
-  return new Hono().use('*', requireSharedPasswordSession).get('/', async (context) => {
+  return new Hono().use('*', requireMemberSession).get('/', async (context) => {
     const manifest = await getNextSessionOfflineManifest(new Date());
     return context.json(manifest);
   });
@@ -21,7 +21,7 @@ export function buildOfflineManifestRouter() {
 // @FollowsBlueprint controller-dispatch
 export function buildSessionsRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/', async (context) => {
       const sessions = await getSessions();
       return context.json({ sessions });

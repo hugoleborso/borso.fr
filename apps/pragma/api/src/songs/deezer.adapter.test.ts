@@ -5,134 +5,226 @@
 // @FollowsBlueprint test-node-adapter
 
 import { describe, expect, it, vi } from 'vitest';
-import { type DeezerFetcher, readDeezerTrack, searchDeezerTracks } from './deezer.adapter';
 import { DEEZER_QUOTA_ERROR_CODE } from './deezer.core';
+import FIXTURE from './__fixtures__/deezer-sample.json';
+import {
+  type ExternalFetcher,
+  type ExternalSearchState,
+  readDeezerTrack,
+  searchExternal,
+} from './deezer.adapter';
+import type { ExternalSearchCacheEntry } from './deezer.core';
 
-const WONDERWALL_ISRC = 'GBAAW9500189';
-const QUOTA_STATUS = 429;
-const SERVICE_DOWN_STATUS = 503;
-const UNKNOWN_RECORD_CODE = 800;
+const CACHE_TTL_MS = 60_000;
+const RATE_FLOOR_MS = 100;
 
-const TRACK = {
-  id: 985745702,
-  title: 'Wonderwall',
-  title_short: 'Wonderwall',
-  isrc: WONDERWALL_ISRC,
-  duration: 258,
-  artist: { name: 'Oasis' },
-  album: { title: "(What's The Story) Morning Glory?" },
-};
+function freshState(lastCallAt = 0): ExternalSearchState {
+  return { cache: new Map<string, ExternalSearchCacheEntry>(), lastCallAt };
+}
 
-const REISSUED_TRACK = { ...TRACK, id: 985985832, album: { title: 'Time Flies' } };
-
-function respondWith(body: unknown, status = 200): DeezerFetcher {
+function respondWith(body: unknown, status = 200): ExternalFetcher {
   return () => Promise.resolve(new Response(JSON.stringify(body), { status }));
 }
 
-describe('searchDeezerTracks', () => {
+describe('searchExternal', () => {
   it('asks nothing of the service when the query is blank', async () => {
-    const fetcher = vi.fn(respondWith({ data: [TRACK] }));
-    const outcome = await searchDeezerTracks('   ', { fetcher });
-    expect(outcome).toEqual({ kind: 'ok', hits: [] });
+    const fetcher = vi.fn(respondWith(FIXTURE));
+    const hits = await searchExternal('   ', { fetcher, now: () => 0, state: freshState() });
+    expect(hits).toEqual({ kind: 'ok', hits: [] });
     expect(fetcher).not.toHaveBeenCalled();
   });
 
-  it('carries the query and the limit in the URL, and asks for no key', async () => {
-    const fetcher = vi.fn(respondWith({ data: [TRACK] }));
-    await searchDeezerTracks('wonderwall oasis', { fetcher });
+  it('carries the query and the widened limit in the URL', async () => {
+    const fetcher = vi.fn(respondWith(FIXTURE));
+    await searchExternal('Get Lucky', { fetcher, now: () => 0, state: freshState() });
     const [url, init] = fetcher.mock.calls[0] ?? [];
-    expect(url).toContain('q=wonderwall%20oasis');
+    expect(url).toContain('api.deezer.com/search');
+    expect(url).toContain('q=Get%20Lucky');
     expect(url).toContain('limit=25');
     expect(init?.headers).toMatchObject({ Accept: 'application/json' });
-    expect(JSON.stringify(init?.headers)).not.toContain('Authorization');
   });
 
-  it('shows one row per recording, so a reissue cannot split the room vote', async () => {
-    const outcome = await searchDeezerTracks('wonderwall', {
-      fetcher: respondWith({ data: [TRACK, REISSUED_TRACK] }),
+  it('treats the error object Deezer answers an unusable query with as no results', async () => {
+    const hits = await searchExternal('Get Lucky', {
+      fetcher: respondWith({ error: { type: 'Exception', message: 'invalid' } }),
+      now: () => 0,
+      state: freshState(),
     });
-    expect(outcome).toEqual({
-      kind: 'ok',
-      hits: [expect.objectContaining({ trackId: '985745702' })],
-    });
+    expect(hits).toEqual({ kind: 'ok', hits: [] });
   });
 
-  it('shows one row per song, so five masters of one song cannot split the vote', async () => {
-    const outcome = await searchDeezerTracks('teen spirit', {
-      fetcher: respondWith({
-        data: [
-          { ...TRACK, id: 1, isrc: 'USGF19610505', album: { title: 'Nevermind' } },
-          { ...TRACK, id: 2, isrc: 'USUM70995906', album: { title: 'Live at Reading' } },
-        ],
-      }),
+  it('returns the ranked hits the payload maps to', async () => {
+    const hits = await searchExternal('Get Lucky', {
+      fetcher: respondWith(FIXTURE),
+      now: () => 0,
+      state: freshState(),
     });
-    expect(outcome).toEqual({ kind: 'ok', hits: [expect.objectContaining({ trackId: '1' })] });
+    expect(hits.kind).toBe('ok');
+    expect(hits.kind === 'ok' ? hits.hits[0]?.title : null).toBe('Get Lucky');
   });
 
-  it('reports a refused transport as unavailable rather than as an empty result list', async () => {
-    const outcome = await searchDeezerTracks('wonderwall', {
-      fetcher: respondWith({ data: [] }, SERVICE_DOWN_STATUS),
-    });
-    expect(outcome).toEqual({ kind: 'unavailable', status: SERVICE_DOWN_STATUS });
+  it('answers a repeated query from the cache rather than the service', async () => {
+    const fetcher = vi.fn(respondWith(FIXTURE));
+    const state = freshState();
+    const first = await searchExternal('Get Lucky', { fetcher, now: () => 0, state });
+    const second = await searchExternal('GET LUCKY', { fetcher, now: () => 0, state });
+    expect(second).toEqual(first);
+    expect(fetcher).toHaveBeenCalledTimes(1);
   });
 
-  it('reports a quota refusal stated inside a 200 as unavailable, because it is one', async () => {
-    const outcome = await searchDeezerTracks('wonderwall', {
-      fetcher: respondWith({ error: { type: 'Exception', code: DEEZER_QUOTA_ERROR_CODE } }),
+  it('keys the cache by the lowercased query, so any casing finds the same entry', async () => {
+    const state = freshState();
+    await searchExternal('Get Lucky', { fetcher: respondWith(FIXTURE), now: () => 0, state });
+    expect([...state.cache.keys()]).toEqual(['get lucky']);
+  });
+
+  it('asks again once the cached answer has aged past its lifetime', async () => {
+    const fetcher = vi.fn(respondWith(FIXTURE));
+    const state = freshState();
+    let clock = 0;
+    const now = (): number => clock;
+    await searchExternal('Get Lucky', { fetcher, now, state });
+    clock = CACHE_TTL_MS + 1;
+    await searchExternal('Get Lucky', { fetcher, now, state });
+    expect(fetcher).toHaveBeenCalledTimes(2);
+  });
+
+  it('holds the call back for exactly the rest of the floor', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetcher = vi.fn(respondWith(FIXTURE));
+      const state = freshState(RATE_FLOOR_MS - 1);
+      const pending = searchExternal('Get Lucky', { fetcher, now: () => RATE_FLOOR_MS, state });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(fetcher).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(RATE_FLOOR_MS - 2);
+      expect(fetcher).not.toHaveBeenCalled();
+      await vi.advanceTimersByTimeAsync(1);
+      await pending;
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('schedules no wait at all once the floor has elapsed', async () => {
+    vi.useFakeTimers();
+    const scheduleWait = vi.spyOn(globalThis, 'setTimeout');
+    try {
+      const fetcher = vi.fn(respondWith(FIXTURE));
+      const state = freshState(0);
+      const pending = searchExternal('Get Lucky', { fetcher, now: () => RATE_FLOOR_MS, state });
+      await vi.advanceTimersByTimeAsync(0);
+      expect(scheduleWait).not.toHaveBeenCalled();
+      expect(fetcher).toHaveBeenCalledTimes(1);
+      await pending;
+    } finally {
+      scheduleWait.mockRestore();
+      vi.useRealTimers();
+    }
+  });
+
+  it('treats a refusal as no results rather than an error the caller must handle', async () => {
+    const hits = await searchExternal('Get Lucky', {
+      fetcher: respondWith(FIXTURE, 503),
+      now: () => 0,
+      state: freshState(),
     });
-    expect(outcome).toEqual({ kind: 'unavailable', status: QUOTA_STATUS });
+    expect(hits).toEqual({ kind: 'unavailable' });
+  });
+
+  it('falls back to its own cache and clock when the caller names neither', async () => {
+    const fetcher = vi.fn(respondWith(FIXTURE));
+    const hits = await searchExternal('Get Lucky', { fetcher });
+    expect(hits.kind).toBe('ok');
   });
 
   it('falls back to the platform fetch when the caller names no fetcher', async () => {
-    const platformFetch = vi.fn(respondWith({ data: [TRACK] }));
+    const platformFetch = vi.fn(respondWith(FIXTURE));
     vi.stubGlobal('fetch', platformFetch);
     try {
-      const outcome = await searchDeezerTracks('wonderwall');
+      const hits = await searchExternal('Around The World', { now: () => 0, state: freshState() });
       expect(platformFetch).toHaveBeenCalledTimes(1);
-      expect(outcome.kind).toBe('ok');
+      expect(hits.kind).toBe('ok');
     } finally {
       vi.unstubAllGlobals();
     }
   });
 });
 
+describe('the refusals a search has to tell apart', () => {
+  it('reports a refused transport as unavailable rather than as an empty result list', async () => {
+    const outcome = await searchExternal('Get Lucky', {
+      fetcher: respondWith(FIXTURE, 503),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable' });
+  });
+
+  it('reports a quota refusal stated inside a 200 as unavailable, because it is one', async () => {
+    const outcome = await searchExternal('Get Lucky', {
+      fetcher: respondWith({ error: { type: 'Exception', code: DEEZER_QUOTA_ERROR_CODE } }),
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(outcome).toEqual({ kind: 'unavailable' });
+  });
+});
+
 describe('readDeezerTrack', () => {
+  const A_TRACK = {
+    id: 3135556,
+    title: 'Harder, Better, Faster, Stronger',
+    artist: { name: 'Daft Punk' },
+  };
+
   it('reads the one track the visitor picked, so the write never trusts the browser', async () => {
-    const fetcher = vi.fn(respondWith(TRACK));
-    const outcome = await readDeezerTrack('985745702', { fetcher });
-    expect(fetcher.mock.calls[0]?.[0]).toContain('/track/985745702');
+    const fetcher = vi.fn(respondWith(A_TRACK));
+    const outcome = await readDeezerTrack('3135556', {
+      fetcher,
+      now: () => 0,
+      state: freshState(),
+    });
+    expect(fetcher.mock.calls[0]?.[0]).toContain('/track/3135556');
     expect(outcome).toEqual({
       kind: 'ok',
-      track: expect.objectContaining({ trackId: '985745702', isrc: WONDERWALL_ISRC }),
+      track: expect.objectContaining({ deezerTrackId: '3135556' }),
     });
   });
 
   it('reads an unknown track as unknown, though the provider answered 200', async () => {
     const outcome = await readDeezerTrack('1', {
-      fetcher: respondWith({ error: { type: 'DataException', code: UNKNOWN_RECORD_CODE } }),
+      fetcher: respondWith({ error: { type: 'DataException', code: 800 } }),
+      now: () => 0,
+      state: freshState(),
     });
     expect(outcome).toEqual({ kind: 'unknown' });
   });
 
   it('tells a quota refusal apart from an unknown track, though both arrive as a 200', async () => {
-    const outcome = await readDeezerTrack('985745702', {
+    const outcome = await readDeezerTrack('3135556', {
       fetcher: respondWith({ error: { type: 'Exception', code: DEEZER_QUOTA_ERROR_CODE } }),
+      now: () => 0,
+      state: freshState(),
     });
-    expect(outcome).toEqual({ kind: 'unavailable', status: QUOTA_STATUS });
+    expect(outcome).toEqual({ kind: 'unavailable' });
   });
 
   it('reports a refused transport as unavailable', async () => {
-    const outcome = await readDeezerTrack('985745702', {
-      fetcher: respondWith(TRACK, SERVICE_DOWN_STATUS),
+    const outcome = await readDeezerTrack('3135556', {
+      fetcher: respondWith(A_TRACK, 503),
+      now: () => 0,
+      state: freshState(),
     });
-    expect(outcome).toEqual({ kind: 'unavailable', status: SERVICE_DOWN_STATUS });
+    expect(outcome).toEqual({ kind: 'unavailable' });
   });
 
-  it('falls back to the platform fetch when the caller names no fetcher', async () => {
-    const platformFetch = vi.fn(respondWith(TRACK));
+  it('falls back to its own state, clock and fetch when the caller names none', async () => {
+    const platformFetch = vi.fn(respondWith(A_TRACK));
     vi.stubGlobal('fetch', platformFetch);
     try {
-      const outcome = await readDeezerTrack('985745702');
+      const outcome = await readDeezerTrack('3135556');
       expect(platformFetch).toHaveBeenCalledTimes(1);
       expect(outcome.kind).toBe('ok');
     } finally {

@@ -74,3 +74,43 @@ See also
 [`a-green-mutation-gate-is-not-a-green-coverage-gate.md`](../dantotsus/a-green-mutation-gate-is-not-a-green-coverage-gate.md)
 and
 [`a-sed-delimiter-disarmed-the-mutation-gate.md`](../dantotsus/a-sed-delimiter-disarmed-the-mutation-gate.md).
+
+## The mutant survives because the code it mutates is dead
+
+Three survivors from PR #100, all the same shape, none of them a missing
+test:
+
+```
+[Survived] ConditionalExpression   site/src/lib/formatters.utils.ts:32
+-     if (Number.isNaN(dueEpochMs)) return false;
++     if (false) return false;
+```
+
+`NaN < nowEpochMs` is already `false`, so the guard the mutant deletes
+changes nothing, and no test can tell the two versions apart — because there
+is nothing to tell apart. Same for a `if (songId === null) return null;`
+sitting above a `find(...)?.title ?? null` that answers `null` for a null id
+on its own.
+
+The instinct on a survivor is to add an assertion. When the mutant is
+equivalent, an assertion cannot kill it: the correct move is to delete the
+guard, and the survivor was the gate pointing at redundant code rather than
+at a hole in the suite. Both deletions above shipped, and the score went to
+100% by *removing* lines.
+
+The third survivor was a real test weakness and did need a better input:
+
+```
+[Survived] EqualityOperator   site/src/routes/compos/compos-page.core.ts:42
+-     .filter((instrumentIds) => instrumentIds.length > 0).length
++     .filter((instrumentIds) => instrumentIds.length <= 0).length
+```
+
+The test passed `{one non-empty, one empty}`, so counting the non-empty and
+counting the empty both answered 1. Three members — two holding something,
+one sitting out — tell the two apart.
+
+So the triage on a survivor is one question before writing any test: **would
+the original and the mutant ever answer differently?** If no, the code is
+redundant and the fix is a deletion. If yes, the inputs are too symmetric and
+the fix is a better case.

@@ -91,7 +91,7 @@ buttons do the same thing for anyone not using a wheel or a touchscreen.
 | 1 Context | Actors, the system, external systems                      | The manifest, cross-checked against tags        |
 | 2 Container | Deployable and build-time units and the edges between them | Container of each file, plus real imports      |
 | 3 Component | Bounded contexts and front-end areas                     | Folder, or a `@Feature` tag when one is present |
-| **3.5 User action** | One thing a person does, walked end to end     | Query hooks, then identifier references         |
+| **3.5 User action** | One thing a person does, walked end to end     | Query hooks and router screens, then identifier references |
 | 4 Code    | Every file and every import                               | The module graph                                |
 
 ### Why 3.5 exists
@@ -103,8 +103,22 @@ Nobody appends a row to `setlist_entry`; they add a song to a setlist.
 
 So the unit is a **user action**, and the level draws one flow per action: the
 components that trigger it, the hook, the endpoint, and every function behind
-that endpoint down to the tables and external systems. Pick a feature, then an
-action, or take **Everything in <feature>** to see where its actions meet.
+that endpoint down to the tables and external systems.
+
+**Consulting a page is one of those actions**, and it comes first. A feature
+lists an **Open <address>** action per screen it owns, whose graph is that one
+screen, the components it renders, every read it fires — whichever feature the
+hook belongs to — and everything behind those reads down to the tables. The
+actions after the pages are the calls a person makes, and **Everything in
+<feature>** draws all of it at once. Three journeys are not features and sit
+with them: `shell`, opening the application, `request`, arriving at the API
+before a route is chosen, and `pages`, the screens no feature claims.
+
+A page's graph contains that page and nothing else. A read hook is drawn by
+every page that fires it, so the hook's own action carries every screen
+reaching it; an **Open** action keeps only the screen it opens and the
+components that page renders, and drops the rest. Selecting `/setlists` and
+being shown `/catalog` was what the level did before this scoping existed.
 
 A flow starts where a person starts: the URL. The router is the one place that
 ties an address to a component, so `<Route path="/bars" element={<BarsPage />} />`
@@ -118,7 +132,8 @@ something the person did would be a claim the code does not make.
 An action is an exported hook in a `*.queries.ts` module that calls one
 endpoint. Those are the application's user-facing operations, already named by
 whoever wrote them, so `useAppendSetlistEntry` reads as *Append setlist entry*
-without anyone maintaining a list. There are 38 of them across 9 features.
+without anyone maintaining a list. The pragma map carries 48 of them, plus the
+16 pages the router declares; the header counts both.
 
 The chain is real: the triggers come from imports of that hook, the endpoint
 from the call on the typed client, and each back-end step from the identifiers

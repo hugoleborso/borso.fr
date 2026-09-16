@@ -42,7 +42,7 @@ export interface SetlistSummary {
 
 // @FollowsBlueprint core-projection
 export function buildSetlistSummaries(
-  setlists: readonly { readonly id: string; readonly name: string; readonly kind: SetlistKind }[],
+  setlists: readonly { readonly id: string; readonly name: string; readonly kind: string | null }[],
   songCounts: readonly SetlistSongCount[],
   links: readonly { readonly setlistId: string; readonly sessionId: string }[],
 ): SetlistSummary[] {
@@ -61,7 +61,7 @@ export function buildSetlistSummaries(
   return setlists.map((setlist) => ({
     id: setlist.id,
     name: setlist.name,
-    kind: setlist.kind,
+    kind: resolveSetlistKind(setlist.kind),
     songCount: songCountBySetlistId.get(setlist.id) ?? 0,
     sessionIds: sessionIdsBySetlistId.get(setlist.id) ?? [],
   }));
@@ -75,4 +75,14 @@ export function resolveSetlistKind(storedKind: string | null): SetlistKind {
 
 export function isSetlistRenamable(kind: SetlistKind): boolean {
   return kind !== AUDIENCE_CHOICE_SETLIST_KIND;
+}
+
+export const SETLIST_LOCKED = 'locked';
+export const SETLIST_VOTING = 'voting';
+
+export type SetlistStatus = typeof SETLIST_LOCKED | typeof SETLIST_VOTING;
+
+// @FollowsBlueprint core-decision
+export function resolveSetlistStatus(stored: string | null): SetlistStatus {
+  return stored === SETLIST_VOTING ? SETLIST_VOTING : SETLIST_LOCKED;
 }

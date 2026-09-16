@@ -25,3 +25,15 @@ export function formatCapacity(value: number | null | undefined): string {
   if (value < 0) return '—';
   return String(value).replace(/\B(?=(\d{3})+(?!\d))/g, THIN_SPACE);
 }
+
+export function formatDueDate(iso: string | null, locale: string): string | null {
+  if (iso === null) return null;
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  return new Intl.DateTimeFormat(locale, { day: 'numeric', month: 'short' }).format(date);
+}
+
+export function isDueDatePast(iso: string | null, nowEpochMs: number): boolean {
+  if (iso === null) return false;
+  return new Date(iso).getTime() < nowEpochMs;
+}

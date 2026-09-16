@@ -1,5 +1,6 @@
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { availableSupportSchema, concertMoodSchema } from './bar-support.core';
 
 export const BAR_STATUSES = ['lead', 'contacted', 'booked', 'played', 'cold'] as const;
 
@@ -20,6 +21,9 @@ export const barTable = pgTable('bar', {
   contactName: text('contact_name'),
   contactEmail: text('contact_email'),
   contactPhone: text('contact_phone'),
+  ownerMemberId: uuid('owner_member_id'),
+  concertMood: text('concert_mood'),
+  availableSupport: text('available_support'),
 });
 
 const NAME_MAX = 256;
@@ -39,9 +43,18 @@ export const barCreateSchema = z.object({
   contactName: z.string().max(CONTACT_NAME_MAX).nullable().default(null),
   contactEmail: z.string().email().nullable().default(null),
   contactPhone: z.string().max(CONTACT_PHONE_MAX).nullable().default(null),
+  ownerMemberId: z.string().uuid().nullable().default(null),
+  concertMood: concertMoodSchema.nullable().default(null),
+  availableSupport: availableSupportSchema.default([]),
 });
 
 export const barUpdateSchema = barCreateSchema.partial();
+const SEARCH_QUERY_MAX = 256;
+
+export const barSearchQuerySchema = z.object({
+  query: z.string().trim().min(1).max(SEARCH_QUERY_MAX),
+});
+
 export const barIdParamSchema = z.object({ id: z.string().uuid() });
 
 export type BarStatus = (typeof BAR_STATUSES)[number];

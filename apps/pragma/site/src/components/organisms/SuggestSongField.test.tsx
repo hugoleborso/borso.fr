@@ -66,7 +66,9 @@ describe('the field that asks for a song the band does not have', () => {
         );
       }
       return Promise.resolve(
-        jsonResponse({ hits: [{ trackId: 'dz-1', title: 'Get Lucky', artist: 'Daft Punk' }] }),
+        jsonResponse({
+          hits: [{ deezerTrackId: 'dz-1', title: 'Get Lucky', artist: 'Daft Punk' }],
+        }),
       );
     });
     await user.type(screen.getByRole('searchbox'), 'get lucky');

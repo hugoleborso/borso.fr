@@ -4,7 +4,7 @@
 
 - [x] **Client / business** — the operator chose audience participation as the single success metric, measured as ballots per round against the concert's `capacity` column, over "the band reopens a round" and "elected songs get played".
 - [x] **Product** — the operator settled the pool, the ballot rule, the live feedback, the round mechanic, the tie rule, the empty round, and whether a suggestion is votable in the round it arrives in.
-- [x] **Tech-lead** — the operator arbitrated the search source against three evaluated options ([ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md)) and the polling cadence, then withdrew the QR code entirely ([ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated).
+- [x] **Tech-lead** — the operator arbitrated the search source against three evaluated options ([ADR-0019](../../../../adr/0019-the-room-search-collapses-masters-into-songs.md)) and the polling cadence, then withdrew the QR code entirely ([ADR-0020](../../../../adr/0020-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated).
 - [x] **Developer** — the operator was asked how a thirty-second round becomes assertable and chose to let the validator wait the full thirty seconds rather than add a duration parameter or a server-side clock switch. The cost is recorded in *Questions, Options and Decisions*.
 - [x] **Designer** — the operator chose both entry points, QR code and short address, chose live counters with visible numbers, and required that audience suggestions read as not necessarily concert-ready.
 
@@ -81,7 +81,7 @@ sequenceDiagram
 - No vote at all. The round is blank, nothing is appended, and the member can open another.
 - A song that won an earlier round is out of the pool for the rest of the concert, so the setlist never carries a duplicate.
 - A suggestion arriving mid-round joins the pool of the round in progress and is votable immediately.
-- A suggestion naming a song already in the catalogue resolves to that song rather than creating a second one, matched on the `mbid` its ISRC resolved to, or on a folded title and artist when none did. A song suggested while already in a manual setlist for tonight is refused: the band is playing it anyway.
+- A suggestion naming a song already in the catalogue resolves to that song rather than creating a second one, matched on its `deezer_track_id`, or on a folded title and artist when the catalogue row carries none. A song suggested while already in a manual setlist for tonight is refused: the band is playing it anyway.
 - A suggested song enters the pool with its own status, which is `idea` for a song the room invented and whatever it already was for a catalogue song. That status is exactly what the row renders as "not necessarily concert-ready", so the marker needs no separate flag.
 - Nobody reads the state after `closesAt`. The round stays unsettled until the next read settles it; there is no scheduler, and settlement is idempotent.
 - The short `/vote` address is opened when no concert is live. It resolves to the one concert that currently has an open round, and to nothing otherwise: it never guesses from the calendar. Two concerts cannot both have an open round, since a round is refused while one is running on that concert, and two concerts on the same night is not a case this iteration handles — the second band would use the full address.
@@ -90,8 +90,8 @@ sequenceDiagram
 **Error cases.**
 - A vote on a closed or already-settled round is refused with a conflict, not silently dropped.
 - A vote on a song outside the current pool is refused.
-- The upstream search is throttled or unreachable. The visitor sees a stated failure, not an empty result list. Reporting a throttle as emptiness is the defect [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md) exists to fix, and it applies to whichever provider answers.
-- A picked result cannot be resolved to an `mbid`, because MusicBrainz is throttled or knows nothing of it. The song enters the catalogue anyway, with a null `mbid`, and the duplicate check falls back to normalised title and artist. A suggestion is never refused for a metadata lookup that failed.
+- The upstream search is throttled or unreachable, through a status or through an error Deezer states inside a 200. The visitor sees a stated failure, not an empty result list. Reporting a refusal as emptiness is one of the two defects [ADR-0019](../../../../adr/0019-the-room-search-collapses-masters-into-songs.md) exists to fix.
+- A picked result names a track the provider no longer knows. The suggestion is refused as unknown rather than written blind, because the server re-reads the track before writing and a catalogue row must not be shaped by a request body.
 - A round is opened on a session whose `kind` is `practice`. Refused: rounds belong to concerts.
 - Two members open a round at the same instant. The second is refused while one is open on that concert.
 
@@ -107,12 +107,12 @@ sequenceDiagram
 | Tie at the close? | Earliest to reach the score; band arbitrates; both enter | Among the songs sharing the top count, the one whose latest surviving vote is earliest. Deterministic from the rows that remain, so retractions cannot make it ambiguous, and still sayable at the microphone as "it got there first". |
 | No votes at the close? | Blank round; random pick | Blank round. |
 | What is stored from a free-text suggestion? | A picked search result only; free text with band approval; free text shown as typed | A picked search result only. Nothing arbitrary is ever displayed, so no moderation has to be built. |
-| Which search source? | MusicBrainz for both moments; Deezer for search with MusicBrainz resolving the pick; self-hosted mirror; none | **Deezer answers the search, MusicBrainz resolves the picked result.** Search runs on every keystroke for a whole room inside thirty seconds; resolution runs once per accepted suggestion. Nothing forces one provider to serve both, and separating them puts the hot path on the larger quota while keeping the `mbid`. Full rubric and the amendment's reasoning in [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md). The self-hosted mirror is impossible on the store this repo has: 39,961,031 recordings against DSQL's 3,000-row transaction ceiling. |
+| Which search source? | (settled outside this feature) | **Deezer**, as [ADR-0017](../../../../adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md) and the catalogue search already decided: no key, and a song carries `deezer_track_id`. What this feature adds is what a *room* needs from that search, recorded in [ADR-0019](../../../../adr/0019-the-room-search-collapses-masters-into-songs.md): one row per song rather than one per master, and a refusal that reads as a refusal. |
 | Where does a winning suggestion live? | A nullable `song_id` on the entry; a catalogue song | A catalogue song with status `idea`. Forced, not chosen: `setlist_entry.song_id` is `NOT NULL` and DSQL accepts no `ALTER COLUMN DROP NOT NULL` (compat gaps §10). |
 | Polling cadence? | 2 s always; 1 s always; 1 s in-round only | One second while a round is open, nothing at rest, plus a refresh control. There is no streaming transport: API Gateway HTTP API buffers the response. |
 | When is the audience-choice setlist created? | At concert creation with a backfill; at concert creation only; at the first round | At the opening of the first round. No empty setlist is ever left on a concert that never ran a vote. |
 | How is a thirty-second round asserted? | A bounded duration parameter; a preview-only server clock; the validator waits | The validator waits the real thirty seconds. **Accepted cost:** every closure assertion spends half a minute of suite time and becomes sensitive to a slow machine. Revisit if the visual-validation run gets flaky. |
-| How does the audience reach the vote page? | A QR code the band shows; a short address announced at the microphone; both | **The short address alone**, `pragma.borso.fr/vote`. The QR code is withdrawn: it encoded the long per-concert URL rather than the address people should reach, and twenty-two characters that never change do not need a dependency and a screen to display them. The library comparison survives in [ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated. |
+| How does the audience reach the vote page? | A QR code the band shows; a short address announced at the microphone; both | **The short address alone**, `pragma.borso.fr/vote`. The QR code is withdrawn: it encoded the long per-concert URL rather than the address people should reach, and twenty-two characters that never change do not need a dependency and a screen to display them. The library comparison survives in [ADR-0020](../../../../adr/0020-qrcode-react-for-the-audience-vote-qr-code.md), now deprecated. |
 
 **Out of scope.** Promoting an audience-suggested song beyond `idea` status. Any record that a song was actually played. Moderating or removing a suggestion. Voting during a practice. Any protection against a visitor who clears local storage to vote twice — see *Zero-defect strategy*.
 
@@ -122,8 +122,8 @@ The two decisions this feature could not take on its own, each ratified and comm
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| [ADR-0015](../../../../adr/0015-musicbrainz-stays-the-song-search-source.md) | Deezer answers the search, MusicBrainz resolves the picked result; the shared cache and the typed failure apply to whichever provider answers | A new Deezer adapter and ranking serve `GET /api/audience/search`. Accepting a suggestion makes one MusicBrainz call to resolve the `mbid` and the metadata; the song is created either way, so the duplicate check degrades to title and artist when resolution fails. |
-| [ADR-0016](../../../../adr/0016-qrcode-react-for-the-audience-vote-qr-code.md) | Withdrawn — the QR code is gone, so its library is too | This feature adds no third-party dependency at all. |
+| [ADR-0019](../../../../adr/0019-the-room-search-collapses-masters-into-songs.md) | The room's search shows one row per song, and a refusal reaches the caller as a refusal | `collapseTracksOfOneSong` merges rows that read the same after the ranking has ordered them. `searchExternal` returns an outcome union and reads the error Deezer states inside a 200. Accepting a suggestion re-reads the picked track from the provider, matches the catalogue on `deezer_track_id`, and falls back to a folded title and artist when the row carries none. |
+| [ADR-0020](../../../../adr/0020-qrcode-react-for-the-audience-vote-qr-code.md) | Withdrawn — the QR code is gone, so its library is too | This feature adds no third-party dependency at all. |
 
 ## Changes
 
@@ -188,7 +188,7 @@ ALTER TABLE "setlist_sheet" ADD COLUMN "kind" text;
 
 One vote is one row. No counter column exists anywhere, because DSQL resolves conflicts at commit under optimistic concurrency and a counter row would be the one place every voter collides.
 
-**Two boundaries worth stating.** `GET /api/audience/search` is a public façade only: the cache table, both provider adapters and the ranking all stay inside the `songs` context, which owns Deezer and MusicBrainz alike, and the audience service calls the songs service rather than re-implementing the search. And the ballot token is stored in local storage **keyed by concert id**, so a visitor at a second concert is a second ballot; the token is opaque and server-minted, never derived from anything about the person.
+**Two boundaries worth stating.** `GET /api/audience/search` is a public façade only: the adapter, its cache and the ranking all stay inside the `songs` context, which owns the provider, and the audience service calls the songs service rather than re-implementing the search. And the ballot token is stored in local storage **keyed by concert id**, so a visitor at a second concert is a second ballot; the token is opaque and server-minted, never derived from anything about the person.
 
 ### Files to change
 
@@ -202,12 +202,9 @@ apps/pragma/api/src/audience/pool.core.ts                              // NEW: s
 apps/pragma/api/src/audience/ballot-token.utils.ts                     // NEW: mint and validate the opaque token
 apps/pragma/api/src/audience/open-ballot.middleware.ts                 // NEW: gate on a concert with an open round
 apps/pragma/api/src/database/migrations/0004_audience_voting.sql       // NEW
-apps/pragma/api/src/songs/musicbrainz.adapter.ts                       // UPDATE: cache to the shared table, non-ok returns a typed failure, lookup by ISRC
-apps/pragma/api/src/songs/deezer.core.ts                               // NEW: map the search payload, collapse reissues sharing an ISRC
-apps/pragma/api/src/songs/deezer.adapter.ts                            // NEW: the keyless search the room types against
-apps/pragma/api/src/songs/song-identity.core.ts                        // NEW: match on mbid, fall back to a folded title and artist
-apps/pragma/api/src/songs/search-cache.core.ts                         // NEW: the cache key, namespaced by provider
-apps/pragma/api/src/songs/search-cache.repository.ts                   // NEW
+apps/pragma/api/src/songs/deezer.core.ts                               // UPDATE: collapse masters into songs, read the refusal stated inside a 200
+apps/pragma/api/src/songs/deezer.adapter.ts                            // UPDATE: an outcome union, and readDeezerTrack for the accepted pick
+apps/pragma/api/src/songs/song-identity.core.ts                        // NEW: match on the track id, fall back to a folded title and artist
 apps/pragma/api/src/setlists/setlists.schema.ts                        // UPDATE: kind column, resolveSetlistKind
 apps/pragma/api/src/setlists/setlists.service.ts                       // UPDATE: renameSetlist refuses an audience-choice setlist
 apps/pragma/api/src/app.ts                                             // UPDATE: mount both audience routers in the chain
@@ -243,7 +240,7 @@ apps/pragma/site/src/i18n/{en,fr}.json                                 // UPDATE
 - Ballots per round against the concert's `capacity`, reported per concert on the band's panel. Target for a first real concert: any non-zero value, since the baseline is that no channel exists.
 - Time from page open to first vote, p75 under thirty seconds, which is the whole round.
 - Search failure rate, meaning throttled or non-ok upstream responses over total searches. Above five percent in a concert, the cache is not doing its job and the cold search path is the bottleneck.
-- Resolution failure rate, meaning accepted suggestions that entered the catalogue with a null `mbid`. This is the price ADR-0015 accepts for taking search off MusicBrainz, and it is the number that says whether the price is real.
+- Collapse rate, meaning rows the provider returned against rows the room was shown. It says whether a provider that indexes masters is costing the room a choice it wanted, and whether the fold is ever merging two songs that differ.
 
 **Output metric.** Audience participation is reviewed by the band after each concert, by hand, against what the room felt like. There is no instrument that can tell the difference between a room that did not care and a room that did not hear the announcement, so this stays a conversation and not a dashboard.
 

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_POST_LOGIN_PATH,
+  selectEnrolErrorMessageKey,
   selectLoginErrorMessageKey,
   selectPostLoginPath,
   UNKNOWN_LOGIN_ERROR_KEY,
@@ -36,5 +37,28 @@ describe('selectLoginErrorMessageKey', () => {
 
   it('reads a failure with no status at all as unknown', () => {
     expect(selectLoginErrorMessageKey(null)).toBe(UNKNOWN_LOGIN_ERROR_KEY);
+  });
+});
+
+describe('selectEnrolErrorMessageKey', () => {
+  it('names the reason the body carries', () => {
+    expect(selectEnrolErrorMessageKey(409, { error: 'enrolment-closed' })).toBe('auth.enrolClosed');
+    expect(selectEnrolErrorMessageKey(409, { error: 'username-taken' })).toBe('auth.usernameTaken');
+    expect(selectEnrolErrorMessageKey(409, { error: 'already-enrolled' })).toBe(
+      'auth.alreadyEnrolled',
+    );
+    expect(selectEnrolErrorMessageKey(401, { error: 'invalid-shared-password' })).toBe(
+      'auth.invalidSharedPassword',
+    );
+  });
+
+  it('falls back to the conflict message when the body names no known reason', () => {
+    expect(selectEnrolErrorMessageKey(409, { error: 'something-else' })).toBe('auth.enrolClosed');
+    expect(selectEnrolErrorMessageKey(409, null)).toBe('auth.enrolClosed');
+  });
+
+  it('falls back to the login messages for every other status', () => {
+    expect(selectEnrolErrorMessageKey(429, null)).toBe('auth.rateLimited');
+    expect(selectEnrolErrorMessageKey(null, null)).toBe('auth.unknownError');
   });
 });

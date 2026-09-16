@@ -53,6 +53,7 @@ block() {
   echo "[pr-body]   them inline. Collapsed sections: use ### headings instead." >&2
   echo "[pr-body] Then read the body back with pull_request_read and confirm what survived." >&2
   echo "[pr-body] See docs/knowledge/github-mcp-pr-body-sanitizer.md." >&2
+  "$(dirname "$0")/kaizen-refusal.sh" pr-body "wrote a pull-request body carrying markup the server silently strips"
   exit 2
 }
 
@@ -72,6 +73,17 @@ if grep -qE '\]\([^)]+\.(png|jpe?g|gif|webp|svg)([?#][^)]*)?\)' <<<"$BODY_AS_REN
   block "the body links a file whose extension is an image; the URL comes back wrapped in backticks."
 fi
 
+# A markdown link whose target is long comes back wrapped in backticks too,
+# whatever the extension. Six samples across PRs #46 and #48 separated cleanly
+# at about 150 characters, and PR #100 hit it again on a .md target — a shape
+# the entry lists as surviving, because the rule is the length and not the
+# extension. The knowledge has been written since 2026-08-14 and stopped
+# nothing, which is what moves it from a page into this hook.
+LONG_LINK="$(grep -oE '\]\([^) ]{150,}\)' <<<"$BODY_AS_RENDERED" | head -1 || true)"
+if [[ -n "$LONG_LINK" ]]; then
+  block "the body carries a markdown link whose target is $(( ${#LONG_LINK} - 3 )) characters; past about 150 the URL comes back wrapped in backticks and the anchor is dead. Link through /blob/main/ rather than a branch name, or write the bare URL, which autolinks at any length."
+fi
+
 # Raw body on purpose: backticks do not protect an angle-bracket placeholder,
 # so stripping code spans first would hide the very occurrences that get
 # deleted. Everything shaped like a tag goes, whatever it is quoted inside.
@@ -84,6 +96,7 @@ if [[ -n "$PLACEHOLDER" ]]; then
   echo "[pr-body] Write a real example instead (PATH/TO/file.ts, 2026-08-21), or name the thing in" >&2
   echo "[pr-body]   words (\"the generator's path\"). Keep the bracket form for files in the repo." >&2
   echo "[pr-body] See docs/knowledge/github-mcp-pr-body-sanitizer.md." >&2
+  "$(dirname "$0")/kaizen-refusal.sh" pr-body "wrote a pull-request body carrying an angle-bracket placeholder the server deletes"
   exit 2
 fi
 

@@ -1,4 +1,4 @@
-import { useForm, useStore } from '@tanstack/react-form';
+import { useForm, useSelector } from '@tanstack/react-form';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { selectLabel } from '../../lib/label.utils';
@@ -32,7 +32,7 @@ interface CreateEditionFormProps {
  * @Blueprint organism-form
  * @BlueprintName Organism Form
  * @BlueprintUsage Use for a screen region that collects fields and writes them through a mutation.
- * @BlueprintDescription Holds one `useForm` whose `defaultValues`, `validators` and payload all come from `edition-form.core.ts`, so the schema, the starting values and the request body are pure and tested away from React. Field values are read with `useStore` rather than mirrored into `useState`, the submit handler calls `mutateAsync` directly instead of watching a flag in an effect, and a rejected write becomes a translation key through `selectEditionWriteError`.
+ * @BlueprintDescription Holds one `useForm` whose `defaultValues`, `validators` and payload all come from `edition-form.core.ts`, so the schema, the starting values and the request body are pure and tested away from React. Field values are read with `useSelector` rather than mirrored into `useState`, the submit handler calls `mutateAsync` directly instead of watching a flag in an effect, and a rejected write becomes a translation key through `selectEditionWriteError`.
  */
 export function CreateEditionForm({
   currentEdition,
@@ -65,7 +65,7 @@ export function CreateEditionForm({
       }
     },
   });
-  const values = useStore(form.store, (state) => state.values);
+  const values = useSelector(form.store, (state) => state.values);
 
   return (
     <Card>

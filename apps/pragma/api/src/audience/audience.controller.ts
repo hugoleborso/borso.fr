@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import {
   audienceSearchQuerySchema,
   concertParamSchema,
@@ -48,7 +48,7 @@ const STATUS_BY_REFUSAL = {
  * @Blueprint controller-public-and-gated-routers
  * @BlueprintName Controller With A Public Router And A Gated One
  * @BlueprintUsage Use for a slice whose routes share one mount prefix and only some of which carry a session gate.
- * @BlueprintDescription Returns two routers rather than one, and the gated router applies `requireSharedPasswordSession` on each route rather than through a wildcard `use`. A sub-router carrying one registers `/<prefix>/*` in the parent, so mounting it before a public sub-router at the same prefix makes the public routes answer 401; applying the guard per route removes that mount-order hazard entirely. Each handler reads the service's outcome union and answers a refusal through one frozen status table, because an exception a Hono handler lets escape becomes a 500 before any middleware of ours can read it. Every public route that writes carries one shared rate limiter instance ahead of the ballot gate, because an unauthenticated write path with no bucket is a script's open door. The sibling test drives every public route through the composition root with no cookie, so a guard forgotten on either side fails loudly rather than at a concert.
+ * @BlueprintDescription Returns two routers rather than one, and the gated router applies `requireMemberSession` on each route rather than through a wildcard `use`. A sub-router carrying one registers `/<prefix>/*` in the parent, so mounting it before a public sub-router at the same prefix makes the public routes answer 401; applying the guard per route removes that mount-order hazard entirely. Each handler reads the service's outcome union and answers a refusal through one frozen status table, because an exception a Hono handler lets escape becomes a 500 before any middleware of ours can read it. Every public route that writes carries one shared rate limiter instance ahead of the ballot gate, because an unauthenticated write path with no bucket is a script's open door. The sibling test drives every public route through the composition root with no cookie, so a guard forgotten on either side fails loudly rather than at a concert.
  */
 export function buildAudienceRouter() {
   const limitAudienceSearch = buildAudienceRateLimiter(AUDIENCE_SEARCH_BUDGET);
@@ -149,7 +149,7 @@ export function buildAudienceRouter() {
   const gatedRouter = new Hono()
     .post(
       '/concerts/:sessionId/rounds',
-      requireSharedPasswordSession,
+      requireMemberSession,
       zValidator('param', concertParamSchema),
       async (context) => {
         const { sessionId } = context.req.valid('param');
@@ -162,7 +162,7 @@ export function buildAudienceRouter() {
     )
     .get(
       '/concerts/:sessionId/rounds',
-      requireSharedPasswordSession,
+      requireMemberSession,
       zValidator('param', concertParamSchema),
       async (context) => {
         const { sessionId } = context.req.valid('param');

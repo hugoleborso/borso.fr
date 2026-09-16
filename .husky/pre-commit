@@ -47,6 +47,8 @@ fi
 if echo "$changed" | grep -q 'api/src/database/migrations/.*\.sql$'; then
   echo "[pre-commit] migration SQL changed — running DSQL-compat check"
   ./scripts/check-migration-sql-dsql-compat.sh
+  echo "[pre-commit] checking no two migrations share a number"
+  ./scripts/check-migration-numbering.sh
 fi
 
 # Blueprint annotations, whenever source changed. A `@Blueprint` missing a tag
@@ -206,6 +208,13 @@ scripts/check-dated-records-are-append-only.sh
 echo "[pre-commit] checking no file carries a NUL byte"
 scripts/check-no-null-bytes.sh
 
+# A dependency bump rewrites version strings in package.json, and a regex keyed
+# on the package name cannot tell a dependency entry from a script of the same
+# name — both are `"<name>": "<string>"`. A script rewritten into a version runs
+# nothing and no other gate reads it.
+echo "[pre-commit] checking every package script is a command"
+scripts/check-package-scripts-are-commands.sh
+
 # One version per dependency, written in pnpm-workspace.yaml. Nothing else here
 # reads a version field, so two workspaces drifting onto different majors of the
 # same library passes every other gate and surfaces later as a type error in
@@ -244,6 +253,12 @@ scripts/check-frontend-env-vars.sh
 # a handful of stat calls, so it costs nothing and belongs on the commit.
 echo "[pre-commit] checking each manifest names icons that ship"
 scripts/check-pwa-assets.sh
+
+# The template a PR body is drafted from has to satisfy the budget the same
+# script enforces on the body. A template that drifts out of it teaches every
+# future body to be refused, and the drift is invisible until someone drafts.
+echo "[pre-commit] checking the pull-request template fits its own budget"
+pnpm exec tsx scripts/pr/check-pr-body.ts .claude/skills/open-pr/template.md
 
 # A knowledge entry saying a tool is broken steers every future agent away from
 # it and never expires on its own — two phone audits obeyed one that was wrong.

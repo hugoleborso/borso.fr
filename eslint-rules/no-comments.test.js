@@ -15,7 +15,7 @@ createRuleTester().run('no-comments', rule, {
     `/** ${annotation("type {import('eslint').Rule.RuleModule}")} */\nexport default {};`,
     `// ${annotation('ts-expect-error the vendor types are wrong here')}\nconst value = api.call();`,
     `// ${annotation('Feature catalog')}\nexport function CatalogGrid() {}`,
-    `// ${annotation('DependsOnExternal musicbrainz')}\nexport async function searchExternal() {}`,
+    `// ${annotation('DependsOnExternal deezer')}\nexport async function searchExternal() {}`,
     '// prettier-ignore\nconst matrix = [1, 0, 0];',
     '// SPDX-License-Identifier: MIT\n// SPDX-FileCopyrightText: 2024 David Haz\nexport const SHADER = `void main() {}`;',
     `/**\n * ${annotation('vitest-environment node')}\n */\nimport { it } from 'vitest';`,

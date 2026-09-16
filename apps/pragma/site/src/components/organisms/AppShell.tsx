@@ -3,7 +3,7 @@
 import type { ParseKeys } from 'i18next';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
 import { Avatar } from '../atoms/Avatar';
 import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
@@ -21,6 +21,7 @@ import { useIsOnline } from '../molecules/online-status.hook';
 import { BottomTabBar } from './BottomTabBar';
 import { isNavigationDestinationActive } from './navigation-active.core';
 import { useNavigationBadges } from './navigation-badges.hook';
+import { useSignedInMember } from '../../lib/queries/me.queries';
 
 interface NavItem {
   to: string;
@@ -35,18 +36,26 @@ const PRIMARY_NAV: readonly NavItem[] = [
   { to: '/bars', labelKey: 'nav.bars', icon: 'bars' },
 ];
 
+const WORKSHOP_NAV: readonly NavItem[] = [
+  { to: '/tasks', labelKey: 'nav.tasks', icon: 'tasks' },
+  { to: '/compos', labelKey: 'nav.compos', icon: 'compos' },
+];
+
 const ADMIN_NAV: readonly NavItem[] = [
+  { to: '/improvements', labelKey: 'nav.improvements', icon: 'bolt' },
   { to: '/members', labelKey: 'nav.members', icon: 'members' },
   { to: '/instruments', labelKey: 'nav.instruments', icon: 'instr' },
 ];
 
-const ADMIN_NAV_DESTINATIONS: readonly string[] = ADMIN_NAV.map((item) => item.to);
+const MORE_NAV_DESTINATIONS: readonly string[] = [...WORKSHOP_NAV, ...ADMIN_NAV].map(
+  (item) => item.to,
+);
 
 /**
  * @Blueprint organism-shell
  * @BlueprintName Application Shell Organism
  * @BlueprintUsage Use for the frame that wraps every routed page: the navigation, the global banners, and the outlet.
- * @BlueprintDescription Declares the navigation as two readonly arrays of items and maps them, so adding a destination is a data change rather than new markup. The browser's online status and the viewport width both arrive through `useSyncExternalStore` hooks, so the shell holds no effect, and its only state is the mobile panel flag a button writes.
+ * @BlueprintDescription Declares the navigation as readonly arrays of items, one per section, and maps them, so adding a destination is a data change rather than new markup. The browser's online status and the viewport width both arrive through `useSyncExternalStore` hooks, so the shell holds no effect, and its only state is the mobile panel flag a button writes.
  */
 export function AppShell(): JSX.Element {
   const { t } = useTranslation();
@@ -55,6 +64,9 @@ export function AppShell(): JSX.Element {
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
   const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
   const badges = useNavigationBadges();
+  const signedInMember = useSignedInMember();
+  const signedInName = signedInMember.data?.firstName ?? '';
+  const signedInColor = signedInMember.data?.color ?? MEMBER_PALETTE.teal;
 
   const closeMobileNav = (): void => setIsMobileNavOpen(false);
 
@@ -102,6 +114,22 @@ export function AppShell(): JSX.Element {
         </div>
 
         <div className="font-sans text-xs tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
+          {t('nav.workshopSection')}
+        </div>
+        <div className="flex flex-col gap-px">
+          {WORKSHOP_NAV.map((item) => (
+            <SidebarLink
+              key={item.to}
+              item={item}
+              label={t(item.labelKey)}
+              badge={badges[item.to]}
+              isActive={isNavigationDestinationActive(location.pathname, item.to)}
+              onClick={closeMobileNav}
+            />
+          ))}
+        </div>
+
+        <div className="font-sans text-xs tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
           {t('nav.administrationSection')}
         </div>
         <div className="flex flex-col gap-px">
@@ -121,17 +149,16 @@ export function AppShell(): JSX.Element {
           <div className="border-t border-line pt-2">
             <LanguageSwitcher />
           </div>
-          <div className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev">
-            <Avatar
-              initials={memberInitial(t('shell.meName'))}
-              color={MEMBER_PALETTE.teal}
-              size="md"
-            />
+          <Link
+            to="/account"
+            className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev no-underline text-ink-900"
+          >
+            <Avatar initials={memberInitial(signedInName)} color={signedInColor} size="md" />
             <div className="min-w-0">
-              <div className="text-[13px] font-medium truncate">{t('shell.meName')}</div>
+              <div className="text-[13px] font-medium truncate">{signedInName}</div>
               <div className="text-xs text-ink-500 truncate">{t('shell.meVersion')}</div>
             </div>
-          </div>
+          </Link>
         </div>
       </nav>
     );
@@ -162,7 +189,7 @@ export function AppShell(): JSX.Element {
           tabs={PRIMARY_NAV}
           badges={badges}
           activePath={location.pathname}
-          moreDestinations={ADMIN_NAV_DESTINATIONS}
+          moreDestinations={MORE_NAV_DESTINATIONS}
           isMoreOpen={isMobileNavOpen}
           onToggleMore={() => setIsMobileNavOpen((isOpen) => !isOpen)}
         />

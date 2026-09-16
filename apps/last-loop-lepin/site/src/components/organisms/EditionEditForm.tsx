@@ -1,4 +1,4 @@
-import { useForm, useStore } from '@tanstack/react-form';
+import { useForm, useSelector } from '@tanstack/react-form';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatElevationMetres, formatKilometres } from '../../lib/formatters.utils';
@@ -60,7 +60,7 @@ export function EditionEditForm({ edition }: EditionEditFormProps) {
       }
     },
   });
-  const values = useStore(form.store, (state) => state.values);
+  const values = useSelector(form.store, (state) => state.values);
 
   function startRace(): void {
     const isConfirmed = globalThis.confirm(t('admin.setup.confirm-live'));

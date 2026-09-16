@@ -8,6 +8,7 @@ import { listSessions } from '../sessions/sessions.repository';
 import { listEntries } from '../setlists/setlist-entry.repository';
 import { listSetlistsOfSession } from '../setlists/setlists.repository';
 import { listSongsNewestFirst } from '../songs/songs.repository';
+import { listTasks } from '../tasks/tasks.repository';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 const SEED_ADMIN_PASSWORD = 'pragma-preview';
@@ -16,6 +17,7 @@ const summarySchema = z.object({
   instruments: z.number(),
   members: z.number(),
   songs: z.number(),
+  tasks: z.number(),
   setlistEntries: z.number(),
   adminPassword: z.string(),
   adminCredentials: z.enum(['created', 'already-set']),
@@ -25,11 +27,11 @@ async function postSeed(): Promise<Response> {
   return createApp().request('/api/__test/seed', { method: 'POST' });
 }
 
-async function postLogin(password: string): Promise<Response> {
+async function postLogin(password: string, username = 'hugo'): Promise<Response> {
   return createApp().request('/api/auth/login', {
     method: 'POST',
     headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ password }),
+    body: JSON.stringify({ username, password }),
   });
 }
 
@@ -58,6 +60,7 @@ describe('__test/test-seed.controller (back-e2e)', () => {
       instruments: 5,
       members: 4,
       songs: 6,
+      tasks: 6,
       setlistEntries: 6,
       adminPassword: SEED_ADMIN_PASSWORD,
       adminCredentials: 'created',
@@ -65,6 +68,18 @@ describe('__test/test-seed.controller (back-e2e)', () => {
 
     expect((await listInstruments()).length).toBe(5);
     expect((await listMembers()).length).toBe(4);
+
+    const tasks = await listTasks();
+    expect(tasks.length).toBe(6);
+    const members = await listMembers();
+    const memberIdByName = new Map(members.map((member) => [member.firstName, member.id]));
+    const songIdByTitle = new Map(
+      (await listSongsNewestFirst()).map((song) => [song.title, song.id]),
+    );
+    const bridge = tasks.find((task) => task.title === 'Réécrire le pont');
+    expect(bridge?.assigneeId).toBe(memberIdByName.get('Hugo'));
+    expect(bridge?.songId).toBe(songIdByTitle.get('Runaway Sun'));
+    expect(tasks.filter((task) => task.assigneeId === null).length).toBe(1);
 
     const songs = await listSongsNewestFirst();
     expect(songs.length).toBe(6);

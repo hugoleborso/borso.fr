@@ -1,13 +1,13 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import { signGetInputSchema, signUploadInputSchema } from './uploads.schema';
 import { mintChartGetUrl, mintChartUpload } from './uploads.service';
 
 // @FollowsBlueprint controller-dispatch
 export function buildUploadsRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .post('/sign', zValidator('json', signUploadInputSchema), async (context) => {
       const input = context.req.valid('json');
       const minted = await mintChartUpload({

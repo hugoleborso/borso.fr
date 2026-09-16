@@ -8,6 +8,7 @@ import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
+import { AvailableSupportField, ConcertMoodField } from '../molecules/BarQualificationFields';
 import {
   BAR_NAME_MAX_LENGTH,
   BAR_NOTES_MAX_LENGTH,
@@ -23,8 +24,16 @@ import {
   selectBarFormTitleKind,
 } from '../../routes/bars/bar-form.core';
 
+export interface BarOwnerOption {
+  readonly id: string;
+  readonly firstName: string;
+}
+
 interface BarFormProps {
   readonly initial: BarFormInitial;
+  readonly owners: readonly BarOwnerOption[];
+  readonly copyMessageLabel: string;
+  readonly onCopyMessage: (barName: string) => void;
   readonly onSubmit: (id: string | null, payload: BarFormSubmitPayload) => void;
   readonly onCancel: () => void;
 }
@@ -65,7 +74,14 @@ const CANCEL_BUTTON_BY_TITLE_KIND: Record<
  * @BlueprintUsage Use for any form. One `useForm` call, fields as render props, and no field state in `useState`.
  * @BlueprintDescription Drives every field through `useForm` from `@tanstack/react-form`, validating on change with the Zod schema the core module also uses to type the values, so the fields and the payload cannot disagree. Each field is a `form.Field` render prop rather than a state variable, the submit button reads `canSubmit` and `isSubmitting` through `form.Subscribe` so only that button re-renders, and the values to payload translation is a pure function in `bar-form.core.ts`.
  */
-export function BarForm({ initial, onSubmit, onCancel }: BarFormProps): JSX.Element {
+export function BarForm({
+  initial,
+  owners,
+  copyMessageLabel,
+  onCopyMessage,
+  onSubmit,
+  onCancel,
+}: BarFormProps): JSX.Element {
   const { t } = useTranslation();
   const defaultValues: BarFormValues = {
     name: initial.name,
@@ -76,6 +92,9 @@ export function BarForm({ initial, onSubmit, onCancel }: BarFormProps): JSX.Elem
     contactName: initial.contactName,
     contactEmail: initial.contactEmail,
     contactPhone: initial.contactPhone,
+    ownerMemberId: initial.ownerMemberId,
+    concertMood: initial.concertMood,
+    availableSupport: [...initial.availableSupport],
   };
   const form = useForm({
     defaultValues,
@@ -134,6 +153,45 @@ export function BarForm({ initial, onSubmit, onCancel }: BarFormProps): JSX.Elem
               {BAR_STATUSES.map((status) => (
                 <option key={status} value={status}>
                   {t(BAR_STATUS_KEY[status])}
+                </option>
+              ))}
+            </select>
+          )}
+        </form.Field>
+        <form.Field name="concertMood">
+          {(field) => (
+            <ConcertMoodField
+              value={field.state.value}
+              onChange={field.handleChange}
+              onBlur={field.handleBlur}
+            />
+          )}
+        </form.Field>
+        <form.Field name="availableSupport">
+          {(field) => (
+            <AvailableSupportField
+              value={field.state.value}
+              onChange={field.handleChange}
+              onBlur={field.handleBlur}
+            />
+          )}
+        </form.Field>
+        <label className={FIELD_LABEL_CLASS} htmlFor="bar-owner">
+          {t('bars.owner')}
+        </label>
+        <form.Field name="ownerMemberId">
+          {(field) => (
+            <select
+              id="bar-owner"
+              value={field.state.value}
+              onChange={(event) => field.handleChange(event.target.value)}
+              onBlur={field.handleBlur}
+              className={SELECT_CLASS}
+            >
+              <option value="">{t('bars.ownerNone')}</option>
+              {owners.map((owner) => (
+                <option key={owner.id} value={owner.id}>
+                  {owner.firstName}
                 </option>
               ))}
             </select>
@@ -236,6 +294,13 @@ export function BarForm({ initial, onSubmit, onCancel }: BarFormProps): JSX.Elem
           </form.Subscribe>
           <CancelButton label={t('common.cancel')} onCancel={onCancel} />
         </div>
+        <form.Subscribe selector={(state) => state.values.name}>
+          {(barName) => (
+            <Button type="button" variant="ghost" onClick={() => onCopyMessage(barName)}>
+              {copyMessageLabel}
+            </Button>
+          )}
+        </form.Subscribe>
       </form>
     </Card>
   );

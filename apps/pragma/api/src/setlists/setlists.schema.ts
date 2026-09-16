@@ -1,4 +1,4 @@
-import { integer, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
+import { integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 
@@ -15,7 +15,21 @@ export const setlistTable = pgTable('setlist_sheet', {
   id: uuid('id').primaryKey().defaultRandom(),
   name: text('name').notNull().default(''),
   kind: text('kind'),
+  status: text('status'),
+  targetSongCount: integer('target_song_count'),
 });
+
+export const setlistVoteTable = pgTable(
+  'setlist_vote',
+  {
+    setlistId: uuid('setlist_id').notNull(),
+    memberId: uuid('member_id').notNull(),
+    songId: uuid('song_id').notNull(),
+    points: integer('points').notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true, mode: 'date' }).notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.setlistId, table.memberId, table.songId] })],
+);
 
 export const sessionSetlistTable = pgTable(
   'session_setlist',
@@ -77,6 +91,36 @@ export const setlistCreateSchema = z.object({
 export const setlistRenameSchema = z.object({ name: z.string().trim().max(NAME_MAX) });
 
 export const setlistLinkSchema = z.object({ sessionId: z.string().uuid() });
+
+export const SETLIST_STATUSES = ['voting', 'locked'] as const;
+
+export const TARGET_SONG_COUNT_MIN = 1;
+export const TARGET_SONG_COUNT_MAX = 60;
+export const MAX_POINTS_PER_SONG = 3;
+
+export const setlistVoteStatusSchema = z.object({
+  status: z.enum(SETLIST_STATUSES),
+  targetSongCount: z
+    .number()
+    .int()
+    .min(TARGET_SONG_COUNT_MIN)
+    .max(TARGET_SONG_COUNT_MAX)
+    .nullable()
+    .default(null),
+});
+
+export const setlistVoteScoreSchema = z.object({
+  points: z.number().int().min(0).max(MAX_POINTS_PER_SONG),
+});
+
+export const setlistCloseSchema = z.object({
+  songIds: z.array(z.string().uuid()).min(1),
+});
+
+export const setlistSongParamSchema = z.object({
+  id: z.string().uuid(),
+  songId: z.string().uuid(),
+});
 
 export const setlistIdParamSchema = z.object({ id: z.string().uuid() });
 export const setlistEntryIdParamSchema = z.object({

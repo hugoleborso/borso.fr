@@ -243,39 +243,61 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
       }
     });
     const out = [];
-    let skipped = 0;
+    let hidden = [];
+    const flushGap = () => {
+      if (hidden.length === 0) return;
+      out.push({ kind: 'gap', text: hidden.length + ' unchanged lines', hidden });
+      hidden = [];
+    };
     rows.forEach((row, index) => {
       if (keep[index]) {
-        if (skipped > 0) { out.push({ kind: 'gap', text: skipped + ' unchanged lines' }); skipped = 0; }
+        flushGap();
         out.push(row);
         return;
       }
-      skipped += 1;
+      hidden.push(row);
     });
-    if (skipped > 0) out.push({ kind: 'gap', text: skipped + ' unchanged lines' });
+    flushGap();
     return out;
+  };
+
+  const buildDiffRow = (row, paint) => {
+    const line = document.createElement('div');
+    line.className = 'diff-row diff-' + row.kind;
+    const gutter = document.createElement('span');
+    gutter.className = 'diff-gutter';
+    gutter.textContent =
+      row.kind === 'gap' ? '' : (row.before === null ? '' : String(row.before)) + ' ' + (row.after === null ? '' : String(row.after));
+    const text = document.createElement('span');
+    text.className = 'diff-text';
+    if (row.kind === 'gap' || !paint) {
+      text.textContent = row.kind === 'gap' ? '⋯ ' + row.text : row.text;
+    } else {
+      text.innerHTML = paint(row.text);
+    }
+    line.append(gutter, text);
+    if (row.kind !== 'gap' || !row.hidden || row.hidden.length === 0) return line;
+    gutter.textContent = '⤢';
+    text.textContent = '⋯ ' + row.text + ' — click to expand';
+    line.setAttribute('role', 'button');
+    line.setAttribute('tabindex', '0');
+    line.setAttribute('aria-expanded', 'false');
+    const expand = () => {
+      line.replaceWith(...row.hidden.map((each) => buildDiffRow(each, paint)));
+    };
+    line.addEventListener('click', expand);
+    line.addEventListener('keydown', (event) => {
+      if (event.key !== 'Enter' && event.key !== ' ') return;
+      event.preventDefault();
+      expand();
+    });
+    return line;
   };
 
   const buildDiffRows = (rows, paint) => {
     const table = document.createElement('div');
     table.className = 'diff-rows';
-    for (const row of rows) {
-      const line = document.createElement('div');
-      line.className = 'diff-row diff-' + row.kind;
-      const gutter = document.createElement('span');
-      gutter.className = 'diff-gutter';
-      gutter.textContent =
-        row.kind === 'gap' ? '' : (row.before === null ? '' : String(row.before)) + ' ' + (row.after === null ? '' : String(row.after));
-      const text = document.createElement('span');
-      text.className = 'diff-text';
-      if (row.kind === 'gap' || !paint) {
-        text.textContent = row.kind === 'gap' ? '⋯ ' + row.text : row.text;
-      } else {
-        text.innerHTML = paint(row.text);
-      }
-      line.append(gutter, text);
-      table.appendChild(line);
-    }
+    for (const row of rows) table.appendChild(buildDiffRow(row, paint));
     return table;
   };
 
@@ -764,7 +786,7 @@ export const GRAPH_RUNTIME_SCRIPT = String.raw`
         ...feature.actions.map((action) => ({
           id: action.id,
           label: action.label,
-          meta: [action.method, action.path].filter(Boolean).join(' '),
+          meta: action.method ? action.method + ' ' + action.path : '',
           change: action.change,
         })),
       ];
@@ -1254,6 +1276,10 @@ export const GRAPH_STYLES = String.raw`
   .diff-removed .diff-text { color: var(--layer-edge); }
   .diff-gap { background: var(--panel-sunk); }
   .diff-gap .diff-text { color: var(--muted); font-style: italic; }
+  .diff-gap[role='button'] { cursor: pointer; }
+  .diff-gap[role='button']:hover, .diff-gap[role='button']:focus-visible { background: var(--accent-soft); }
+  .diff-gap[role='button']:hover .diff-text, .diff-gap[role='button']:focus-visible .diff-text { color: var(--accent); }
+  .diff-gap[role='button'] .diff-gutter { text-align: center; }
   .standard-empty { color: var(--muted); font-size: .8rem; }
 
   .orphan-routes { list-style: none; margin: 0; padding: 0; display: flex; flex-wrap: wrap; gap: .4rem; }

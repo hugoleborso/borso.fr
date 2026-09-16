@@ -5,7 +5,7 @@ import {
   RATE_LIMIT_MAX_ATTEMPTS,
   RATE_LIMIT_WINDOW_MS,
   recordAttempt,
-  SHARED_PASSWORD_BUDGET,
+  MEMBER_LOGIN_BUDGET,
 } from './rate-limit.utils';
 
 const A_WIDER_BUDGET = { maxAttempts: 60, windowMs: 60_000 };
@@ -14,13 +14,13 @@ const A_WIDER_BUDGET = { maxAttempts: 60, windowMs: 60_000 };
 describe('rate-limit.utils', () => {
   describe('recordAttempt', () => {
     it('opens a fresh window when no bucket exists', () => {
-      const bucket = recordAttempt(undefined, 1000, SHARED_PASSWORD_BUDGET);
+      const bucket = recordAttempt(undefined, 1000, MEMBER_LOGIN_BUDGET);
       expect(bucket).toEqual({ attempts: 1, windowStartedAt: 1000 });
     });
 
     it('increments inside the current window', () => {
-      const opened = recordAttempt(undefined, 1000, SHARED_PASSWORD_BUDGET);
-      const next = recordAttempt(opened, 2000, SHARED_PASSWORD_BUDGET);
+      const opened = recordAttempt(undefined, 1000, MEMBER_LOGIN_BUDGET);
+      const next = recordAttempt(opened, 2000, MEMBER_LOGIN_BUDGET);
       expect(next).toEqual({ attempts: 2, windowStartedAt: 1000 });
     });
 
@@ -29,28 +29,28 @@ describe('rate-limit.utils', () => {
       const next = recordAttempt(
         { attempts: 1, windowStartedAt },
         windowStartedAt + 1000,
-        SHARED_PASSWORD_BUDGET,
+        MEMBER_LOGIN_BUDGET,
       );
       expect(next).toEqual({ attempts: 2, windowStartedAt });
     });
 
     it('opens a fresh window once the previous window expires', () => {
-      const opened = recordAttempt(undefined, 1000, SHARED_PASSWORD_BUDGET);
-      const fresh = recordAttempt(opened, 1000 + RATE_LIMIT_WINDOW_MS, SHARED_PASSWORD_BUDGET);
+      const opened = recordAttempt(undefined, 1000, MEMBER_LOGIN_BUDGET);
+      const fresh = recordAttempt(opened, 1000 + RATE_LIMIT_WINDOW_MS, MEMBER_LOGIN_BUDGET);
       expect(fresh).toEqual({ attempts: 1, windowStartedAt: 1000 + RATE_LIMIT_WINDOW_MS });
     });
   });
 
   describe('isRateLimited', () => {
     it('returns false when no bucket exists', () => {
-      expect(isRateLimited(undefined, SHARED_PASSWORD_BUDGET)).toBe(false);
+      expect(isRateLimited(undefined, MEMBER_LOGIN_BUDGET)).toBe(false);
     });
 
     it('returns false at the maximum allowed attempts', () => {
       expect(
         isRateLimited(
           { attempts: RATE_LIMIT_MAX_ATTEMPTS, windowStartedAt: 0 },
-          SHARED_PASSWORD_BUDGET,
+          MEMBER_LOGIN_BUDGET,
         ),
       ).toBe(false);
     });
@@ -59,7 +59,7 @@ describe('rate-limit.utils', () => {
       expect(
         isRateLimited(
           { attempts: RATE_LIMIT_MAX_ATTEMPTS + 1, windowStartedAt: 0 },
-          SHARED_PASSWORD_BUDGET,
+          MEMBER_LOGIN_BUDGET,
         ),
       ).toBe(true);
     });
@@ -68,7 +68,7 @@ describe('rate-limit.utils', () => {
   describe('a budget wider than the sign-in one', () => {
     it('lets through what the sign-in budget would refuse', () => {
       const bucket = { attempts: RATE_LIMIT_MAX_ATTEMPTS + 1, windowStartedAt: 0 };
-      expect(isRateLimited(bucket, SHARED_PASSWORD_BUDGET)).toBe(true);
+      expect(isRateLimited(bucket, MEMBER_LOGIN_BUDGET)).toBe(true);
       expect(isRateLimited(bucket, A_WIDER_BUDGET)).toBe(false);
     });
 

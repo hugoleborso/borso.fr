@@ -9,6 +9,7 @@ import {
   listBars,
   updateBar,
 } from './bars.repository';
+import { type BarSearchOutcome, searchPlacesForBars } from './bar-search.adapter';
 import type { barCreateSchema, barUpdateSchema } from './bars.schema';
 
 type BarCreateInput = z.infer<typeof barCreateSchema>;
@@ -25,6 +26,9 @@ function valuesFromCreate(input: BarCreateInput): BarPersistedShape {
     contactName: input.contactName,
     contactEmail: input.contactEmail,
     contactPhone: input.contactPhone,
+    ownerMemberId: input.ownerMemberId,
+    concertMood: input.concertMood,
+    availableSupport: input.availableSupport,
   };
 }
 
@@ -42,12 +46,19 @@ function valuesFromUpdate(input: BarUpdateInput): BarPersistedShape {
   if (input.contactName !== undefined) out.contactName = input.contactName;
   if (input.contactEmail !== undefined) out.contactEmail = input.contactEmail;
   if (input.contactPhone !== undefined) out.contactPhone = input.contactPhone;
+  if (input.ownerMemberId !== undefined) out.ownerMemberId = input.ownerMemberId;
+  if (input.concertMood !== undefined) out.concertMood = input.concertMood;
+  if (input.availableSupport !== undefined) out.availableSupport = input.availableSupport;
   return out;
 }
 
 export async function getBarsSortedByName(): Promise<BarRow[]> {
   const rows = await listBars();
   return rows.toSorted((left, right) => left.name.localeCompare(right.name));
+}
+
+export async function searchBarsInPlaces(query: string): Promise<BarSearchOutcome> {
+  return await searchPlacesForBars(query);
 }
 
 export async function getBarById(id: string): Promise<BarRow | null> {

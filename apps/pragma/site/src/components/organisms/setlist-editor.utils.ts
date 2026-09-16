@@ -19,6 +19,9 @@ export interface SetlistEditorSong {
   readonly id: string;
   readonly title: string;
   readonly artist: string;
+  readonly deezerAlbumId?: string | null;
+  readonly deezerTrackId?: string | null;
+  readonly spotifyTrackId?: string | null;
   readonly status?: SongStatus;
   readonly tonalityStart?: string | null;
   readonly tonalityEnd?: string | null;

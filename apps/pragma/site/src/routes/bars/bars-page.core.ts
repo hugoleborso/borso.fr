@@ -1,10 +1,12 @@
 /** @Feature bars */
 
 import {
+  type AvailableSupport,
   type BarFormInitial,
   type BarFormSubmitPayload,
   type BarStatus,
   buildBarFormInitial,
+  type ConcertMood,
 } from './bar-form.core';
 
 export interface BarRow {
@@ -17,6 +19,9 @@ export interface BarRow {
   readonly contactName: string | null;
   readonly contactEmail: string | null;
   readonly contactPhone: string | null;
+  readonly ownerMemberId: string | null;
+  readonly concertMood: ConcertMood | null;
+  readonly availableSupport: readonly AvailableSupport[];
   readonly lastInteractionAt: string | null;
 }
 
@@ -46,12 +51,15 @@ export interface KanbanCard {
   readonly city: string | null;
   readonly capacity: number | null;
   readonly contactName: string | null;
+  readonly ownerName: string | null;
+  readonly concertMood: ConcertMood | null;
   readonly isStale: boolean;
 }
 
 export function buildKanbanCardsByStatus(
   barsByStatus: Readonly<Record<BarStatus, readonly BarRow[]>>,
   isBarStale: (bar: BarRow) => boolean,
+  ownerNameOf: (bar: BarRow) => string | null,
 ): Record<BarStatus, KanbanCard[]> {
   const toCards = (bars: readonly BarRow[]): KanbanCard[] =>
     bars.map((bar) => ({
@@ -60,6 +68,8 @@ export function buildKanbanCardsByStatus(
       city: bar.city,
       capacity: bar.capacity,
       contactName: bar.contactName,
+      ownerName: ownerNameOf(bar),
+      concertMood: bar.concertMood,
       isStale: isBarStale(bar),
     }));
   return {
@@ -68,6 +78,38 @@ export function buildKanbanCardsByStatus(
     booked: toCards(barsByStatus.booked),
     played: toCards(barsByStatus.played),
     cold: toCards(barsByStatus.cold),
+  };
+}
+
+export interface BarOwnerCandidate {
+  readonly id: string;
+  readonly firstName: string;
+}
+
+export function selectOwnerName(
+  owners: readonly BarOwnerCandidate[],
+  ownerMemberId: string | null,
+): string | null {
+  const owner = owners.find((candidate) => candidate.id === ownerMemberId);
+  return owner === undefined ? null : owner.firstName;
+}
+
+export interface LabelledKanbanCard extends KanbanCard {
+  readonly moodLabel: string | null;
+}
+
+export function addMoodLabelToCards(
+  cardsByStatus: Readonly<Record<BarStatus, readonly KanbanCard[]>>,
+  moodLabelOf: (mood: ConcertMood | null) => string | null,
+): Record<BarStatus, LabelledKanbanCard[]> {
+  const label = (cards: readonly KanbanCard[]): LabelledKanbanCard[] =>
+    cards.map((card) => ({ ...card, moodLabel: moodLabelOf(card.concertMood) }));
+  return {
+    lead: label(cardsByStatus.lead),
+    contacted: label(cardsByStatus.contacted),
+    booked: label(cardsByStatus.booked),
+    played: label(cardsByStatus.played),
+    cold: label(cardsByStatus.cold),
   };
 }
 

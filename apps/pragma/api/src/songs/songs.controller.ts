@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireSharedPasswordSession } from '../auth/shared-password.middleware';
+import { requireMemberSession } from '../auth/member-session.middleware';
 import {
   externalSearchQuerySchema,
   songCreateInputSchema,
@@ -24,14 +24,14 @@ import {
  */
 export function buildSongsRouter() {
   return new Hono()
-    .use('*', requireSharedPasswordSession)
+    .use('*', requireMemberSession)
     .get('/', async (context) => {
       const songs = await getSongs();
       return context.json({ songs });
     })
     .get('/search', zValidator('query', externalSearchQuerySchema), async (context) => {
       const { q } = context.req.valid('query');
-      const outcome = await searchExternalSongs({ query: q, now: new Date() });
+      const outcome = await searchExternalSongs(q);
       if (outcome.kind === 'unavailable') {
         return context.json({ error: 'external-search-unavailable' }, 503);
       }

@@ -196,11 +196,12 @@ function renderUnreachedByAction(journeys: JourneyModel, slices: readonly Contex
 }
 
 function renderActionCount(journeys: JourneyModel, routeTotal: number): string {
-  const total = journeys.features.reduce((count, feature) => count + feature.actions.length, 0);
-  const flows = journeys.features
-    .filter((feature) => !feature.id.startsWith('shell') && feature.id !== 'request')
-    .reduce((count, feature) => count + feature.actions.length, 0);
-  if (flows > 0) return ` <span class="level-count">${flows} of ${total} are data flows</span>`;
+  const actions = journeys.features.flatMap((feature) => feature.actions);
+  const pages = actions.filter((action) => action.id.includes(PAGE_ACTION_INFIX)).length;
+  const flows = actions.filter((action) => action.method !== '').length;
+  if (flows > 0) {
+    return ` <span class="level-count">${pages} pages, ${flows} data flows</span>`;
+  }
   if (routeTotal === 0) {
     return ' <span class="level-count">no API, so every block below is what the pages render</span>';
   }
@@ -209,6 +210,7 @@ function renderActionCount(journeys: JourneyModel, routeTotal: number): string {
 
 const NO_JOURNEY_CHANGE: JourneyChange = { status: '', touched: 0 };
 const OVERVIEW_GRAPH_SUFFIX = ':__all__';
+const PAGE_ACTION_INFIX = ':page:';
 
 function overviewGraphIdOf(featureId: string): string {
   return `${featureId}${OVERVIEW_GRAPH_SUFFIX}`;
@@ -947,7 +949,7 @@ ${PAGE_STYLES}
 
   <section class="level" id="level-slice" hidden>
     <h2>Level 3.5 — User actions${renderActionCount(journeys, routeTotal)}</h2>
-    <p class="summary">One thing a person does, drawn end to end: the components that trigger it, the endpoint it reaches, and every function behind that endpoint down to the tables and external systems. An action is an exported hook in a query module, so the names are the ones whoever wrote them chose, and the chain comes from the calls as written. Picking a feature rather than an action draws what that feature is made of, down to the atoms its pages render. Two journeys are not data flows and are listed with the rest: <b>shell</b>, opening the application, and <b>request</b>, arriving at the API before a route is chosen.</p>
+    <p class="summary">One thing a person does, walked end to end. Pick a feature, then an action. A feature opens with its <b>pages</b>: an <b>Open</b> action per address it owns, whose graph is that one screen, the components it renders, every read it fires whichever feature the hook belongs to, and everything behind those reads down to the tables and external systems. The actions after the pages are the calls a person makes, one per exported hook in a query module, so the names are the ones whoever wrote them chose and the chain comes from the calls as written. Taking <b>Everything in &lt;feature&gt;</b> draws all of it at once. Three journeys are not features: <b>shell</b>, opening the application, <b>request</b>, arriving at the API before a route is chosen, and <b>pages</b>, the screens no feature claims.</p>
     ${renderJourneys(journeys, journeyLayouts, statuses?.get('code'), sources)}
     <p class="note">Endpoints below sit behind no user action. Some are deliberate — the admin bootstrap has no screen, and the test seed is never shipped to one — and the rest are the back end of a feature whose front end does not exist yet. The generator reports the fact and does not guess which.</p>
     ${renderUnreachedByAction(journeys, slices)}

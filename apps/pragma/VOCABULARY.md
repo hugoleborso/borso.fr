@@ -42,10 +42,26 @@ Lives in: `api/src/bars/`
 - `status` is one of `lead`, `contacted`, `booked`, `played`, `cold`
   (`BAR_STATUSES` in `bars.schema.ts`), and the bars page groups the rows
   into one kanban column per status.
+- `ownerMemberId` names the one band member carrying the conversation
+  with that venue, and may be null: a bar nobody has taken on is a normal
+  bar. Deleting a member clears it on every bar they owned
+  (`unassignBarsOwnedByMember` in `api/src/members/members.repository.ts`)
+  and deletes no bar.
+- `concertMood` is how big a night the bar is up for: `chill`, `gig` or
+  `ticketed` (`CONCERT_MOODS` in `bar-support.core.ts`). It may be null,
+  which means nobody has judged the venue yet and is not a fourth mood.
+- `availableSupport` is what the bar lends the band, any number of
+  `pa-system`, `lights` and `sound-engineer`, held as JSON in a TEXT
+  column. An empty list and a null column both mean it lends nothing.
 - `lastInteractionAt` may be null. A bar is stale when its last
   interaction is older than the threshold, and a bar with no recorded
   interaction is stale too (`isStale` in `domain/bar-staleness.core.ts`).
   The default threshold is 60 days.
+
+A bar is added either by hand or from a **place**, the OpenStreetMap
+record a member picked in the search; a place fills the name, the city and
+the phone number of a new bar and is never stored as such
+(`bar-search.core.ts`).
 
 Not to be confused with: the `venue` column on a concert, which is free
 text typed for that one date.
@@ -68,8 +84,47 @@ Lives in: `api/src/audience/`
 - Clearing local storage yields a fresh ballot with no votes. This is a
   bar, not an election, and nothing here prevents it.
 
-Not to be confused with: a sign-in session, which is the band's shared
-password cookie and reaches gated routes a ballot never does.
+Not to be confused with: a member credential, which signs a band member in
+and reaches gated routes a ballot never does.
+
+## Member credential
+
+The username and password one member signs in with.
+
+Lives in: `api/src/auth/`
+
+- Keyed on `memberId`, so a member holds one credential or none.
+  `username` is lowercase, unique through its own index, and 2 to 64
+  characters of letters, digits, dot, dash or underscore.
+- `passwordHash` is argon2id. `sessionEpoch` is a whole number that goes
+  up by one on every password change, and a cookie carrying an older
+  epoch stops verifying, which signs that member out everywhere else.
+- `phone` and `email` are the member's own contact details, both nullable,
+  filled in on the account page and used to sign the outreach message.
+- Created either through the enrolment window or by another member.
+  Deleted with the member, in the same transaction that scrubs them from
+  the lineups.
+
+Not to be confused with: the shared password in `app_config`, which now
+opens the enrolment route and nothing else.
+
+## Outreach template
+
+The pitch the band sends a bar to ask for a date, held once for the whole
+application and edited from the bars page.
+
+Lives in: `api/src/outreach/`
+
+- One row, keyed on `OUTREACH_TEMPLATE_ROW_ID`, the way `app_config` is.
+  No row means nobody has edited the pitch and the front end renders the
+  translated default.
+- The body carries three placeholders, `{{bar}}`, `{{phone}}` and
+  `{{email}}`, replaced by `renderOutreachMessage` in
+  `site/src/routes/bars/outreach-message.core.ts` when a member copies the
+  message for one bar.
+
+Not to be confused with: a bar's `notes`, which are what happened with
+that one venue.
 
 ## Chord chart
 
@@ -82,6 +137,27 @@ uploaded through `api/src/uploads/`
   characters, `pdf` with an S3 object key, or `image` with an S3 object
   key (`chordChartSchema`).
 - The column is nullable, and stored as JSON in a TEXT column.
+
+## Composition
+
+A song the band wrote itself, as opposed to one it covers.
+
+Lives in: `api/src/songs/` (the `origin` column), read through
+`domain/song-origin.core.ts`
+
+- `origin` is one of `cover`, `original`. The column is nullable with no
+  default, because Aurora DSQL cannot add a `NOT NULL` column after the
+  table exists, so a row written before the column reads as `cover`
+  through `resolveSongOrigin`.
+- A composition is not a separate record: it is a song, so it carries the
+  same chord chart, the same default lineup, the same three note fields
+  and the same mastery scores, and it enters a setlist the same way.
+  `selectCompositions` is the only thing that separates the two.
+- The compositions screen reads those fields and adds the tasks pointing
+  at that song; the catalogue screen is where a composition is edited.
+
+Not to be confused with: the **song**, which is the record itself. Every
+composition is a song; the word names which kind.
 
 ## Concert
 
@@ -119,6 +195,42 @@ Lives in: `api/src/songs/` (`baseEnergy`) and `api/src/setlists/`
   thumb taps or slides along; the value is the last number still filled,
   so the row shows it nowhere else
   (`site/src/components/atoms/EnergyBar.tsx`).
+
+## Improvement
+
+Something the band wants changed in this application, written down by the
+member it annoys.
+
+Lives in: `api/src/improvements/`
+
+- `title` is `NOT NULL`, trimmed, 1 to 200 characters. `details` is
+  `NOT NULL` and defaults to the empty string.
+- `status` is one of `idea`, `planned`, `building`, `shipped`, `declined`
+  (`IMPROVEMENT_STATUSES` in `improvements.schema.ts`), and the backlog is
+  ranked in that order, then by vote count, then oldest first
+  (`rankImprovements` in `improvements.core.ts`).
+- `authorMemberId` is the member who filed it, taken from the session
+  rather than from the request body, and `createdAt` is written by the
+  application.
+- Deleting one deletes its improvement votes in the same call.
+
+Not to be confused with: a **song note**, which is about the music rather
+than about the tool that tracks it.
+
+## Improvement vote
+
+One member saying they want one improvement.
+
+Lives in: `api/src/improvements/` (`improvement_vote`)
+
+- Keyed on `(improvementId, memberId)`, so a member either wants an
+  improvement or does not. There are no points and no budget: casting the
+  same vote twice changes nothing but the `castAt` stamp.
+- The list endpoint reads every vote once and folds it into a count plus a
+  flag for the reader (`summariseVotes` in `improvements.core.ts`).
+
+Not to be confused with: a **vote**, which is the scored, budgeted thing a
+member spends on songs inside a setlist.
 
 ## Instrument
 
@@ -217,6 +329,81 @@ Lives in: `api/src/sessions/`
 - The next session is the earliest one strictly after now, with ties
   broken on the identifier (`buildNextSessionOfflineManifest`).
 
+## Passkey
+
+A credential held by a member's own device, which signs them in without
+a password.
+
+Lives in: `api/src/auth/` (`member_passkey`), verified through
+`passkey.adapter.ts`
+
+- Stores the credential id, the public key as `bytea`, the signature
+  counter and a label the member typed. The credential id is unique.
+- It is an alternative to the password, not a second factor: a member
+  signs in with either. The password stays as the way back when a device
+  is lost.
+- The challenge of a registration or an assertion lives one row in
+  `webauthn_challenge` for two minutes, because the options call and the
+  verify call are two Lambda invocations sharing no memory.
+
+## Deezer track
+
+The Deezer recording a catalogue song is linked to. It is what the search
+fills in, what the listen dialog opens, and the one identifier a member can
+also type by hand on the song form.
+
+Lives in: `api/src/songs/` (the `deezer_track_id` column), read by
+`site/src/lib/listen-links.utils.ts`
+
+- Nullable. A song typed in by hand names no track until someone links it,
+  and the listen dialog then offers a Deezer *search* instead of the track
+  page. Both are ordinary, not faults.
+- Distinct from the **Deezer album**, which is what the cover is fetched
+  by, and from the **Spotify track**, which the API resolves from this
+  track's ISRC. Picking a search result sets the first two and clears the
+  third, which is then resolved again on save.
+
+## Spotify track
+
+The Spotify recording a catalogue song is linked to, resolved from the ISRC
+Deezer returned rather than from the song's title.
+
+Lives in: `api/src/songs/` (the `spotify_track_id` column), read by
+`site/src/lib/listen-links.utils.ts`
+
+- Nullable, and ordinarily so. Spotify and Deezer do not carry identical
+  catalogues, a song typed in by hand names no ISRC to resolve from, and a
+  song predating the column has none until it is re-linked. Each of those
+  falls back to a Spotify *search* address in the listen dialog.
+- Written by the API, never by a member. There is no form field for it, unlike
+  the **Deezer track**, which a member may type. Picking a new Deezer result
+  clears it, so an id can never outlive the recording it was found for.
+- Distinct from the **Deezer track**: the two name the same recording on two
+  services, and the ISRC is what joins them. See
+  [ADR-0017](../../docs/adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md).
+
+## Deezer album
+
+The Deezer album a song's track belongs to, which is what Deezer serves
+the cover by.
+
+Lives in: `api/src/songs/` (the `deezer_album_id` column), read by
+`site/src/lib/cover-art.utils.ts`
+
+- Distinct from the **Deezer track**, which is what `deezer_track_id`
+  holds. One track belongs to one album; an album has one front cover.
+- Nullable, because Aurora DSQL cannot add a `NOT NULL` column after the
+  table exists, and because a song typed in by hand names no album.
+- A song with no Deezer album renders a tile carrying the song's initials
+  instead. That case is ordinary, not a fault.
+- Most confused with **album**, which is the album's *title* as text and
+  is what the interface prints; the Deezer album is the identifier the
+  cover is fetched by.
+- The columns `mbid` and `release_id` are the MusicBrainz identifiers this
+  replaced. Aurora DSQL drops no column, so they stay in the table and
+  nothing reads them; a MusicBrainz identifier names nothing on Deezer, so
+  the old values were not carried over.
+
 ## Practice
 
 A rehearsal, optionally aimed at a concert.
@@ -295,6 +482,21 @@ Lives in: `api/src/setlists/`
 - A setlist joining a session lands one past the highest position already
   taken, so the order the band wrote survives.
 
+## Setlist status
+
+Whether a setlist is being voted on or is a running order.
+
+Lives in: `api/src/setlists/` (the `status` column), resolved by
+`resolveSetlistStatus`
+
+- Exactly two values: `voting` and `locked`. The column is nullable with
+  no default, because Aurora DSQL cannot add a `NOT NULL` column after
+  the table exists, so a row written before the column reads as `locked`.
+- `targetSongCount` is how many songs the band wants out of the vote. It
+  may be null, and then it reads as 15.
+- Closing a vote writes the entries and moves the status to `locked`.
+  Reopening moves it back and keeps every vote.
+
 ## Setlist entry
 
 One song in one setlist, with the decisions that apply to it that night.
@@ -313,18 +515,21 @@ Lives in: `api/src/setlists/`
 
 ## Sign-in session
 
-Proof that this browser knows the band's shared password.
+Proof that this browser is a named member.
 
 Lives in: `api/src/auth/`
 
-- One `app_config` row, keyed `id = 1`, holds the argon2id password hash
-  and the HMAC key that signs cookies.
+- One `app_config` row, keyed `id = 1`, still holds the HMAC key that
+  signs cookies, and a password hash the enrolment route alone reads.
 - The cookie is named `pragma_session` and is `payload.signature`, where
-  the payload carries the issue and expiry times. It lasts 30 days.
-- Rotating the password mints a fresh HMAC key, so every cookie issued
-  under the old key stops verifying.
+  the payload carries the member id, that member's session epoch, and the
+  issue and expiry times. It lasts 30 days.
+- The gate reads the cookie and the credential behind it: only the second
+  read can see a password change.
+- Rotating the shared password mints a fresh HMAC key, so every member's
+  cookie stops verifying.
 - Login attempts are counted per hashed client IP and rate limited.
-- Every domain router opens its chain with `requireSharedPasswordSession`.
+- Every domain router opens its chain with `requireMemberSession`.
 
 Not to be confused with: a session, which is a practice or a concert.
 
@@ -340,14 +545,44 @@ Lives in: `api/src/songs/`
   (`SONG_STATUSES`).
 - `links` holds up to 16 external links, each with a URL, a provider
   (`spotify`, `deezer`, `youtube`, `other`) and a comment.
-- MusicBrainz enrichment lands in `mbid`, `album`, `durationSeconds`,
-  `isrcs` (up to 8) and `tags` (up to 16).
+- Deezer enrichment lands in `deezerTrackId`, `deezerAlbumId`, `album`,
+  `durationSeconds` and `isrcs` (Deezer names one per track). `spotifyTrackId`
+  follows, resolved from that ISRC when the song is saved. `tags` (up to
+  16) is kept for the songs imported from MusicBrainz before the move and
+  is no longer filled by a search.
 - Three separate note fields, each up to 4 096 characters:
   `structureNotes`, `gimmickNotes` and `notes`, all read back as the empty
   string when the column is null.
 - The catalogue is listed newest first by `createdAt`.
 - Deleting a song first deletes its mastery overrides and every setlist
   entry that points at it (`deleteSongWithCascade`).
+
+## Task
+
+Something one member owes the band, with an optional date and an optional
+composition it is about.
+
+Lives in: `api/src/tasks/`
+
+- `title` and `status` are `NOT NULL`; `notes` is `NOT NULL` and defaults
+  to the empty string.
+- `status` is one of `todo`, `doing`, `done` (`TASK_STATUSES` in
+  `domain/task-status.core.ts`). Every status but `done` counts as open.
+- `assigneeId` and `songId` are both nullable, and neither carries a
+  foreign key, because DSQL has none. The service checks the member and
+  the song exist before the write; deleting a member nulls the assignee
+  out and deleting a song nulls the link out, in the same transaction
+  that deletes the row.
+- The list comes back ordered by what is most urgent: in progress first,
+  then waiting, then done; within a status, by the nearest due date, with
+  a task carrying no date behind every dated one; then by title
+  (`compareTasksByUrgency`).
+- The tasks screen draws one column per member, in the order the members
+  come back, and adds an unclaimed column only when something is
+  unassigned.
+
+Not to be confused with: a **setlist entry**, which is a decision about
+one song for one night rather than work owed by a person.
 
 ## Tonality
 
@@ -362,6 +597,33 @@ Lives in: `domain/tonality.core.ts`, stored in `api/src/songs/`
   field the reader can fill in by hand.
 - Stored as `tonalityStart` and `tonalityEnd`, both nullable, up to 16
   characters.
+
+## Vote
+
+What one member gives one song inside one setlist being voted on.
+
+Lives in: `api/src/setlists/` (`setlist_vote`)
+
+- Keyed on `(setlistId, memberId, songId)`, so a member holds one score
+  per song per setlist. `points` is a whole number from 0 to 3, and a
+  score of 0 deletes the row rather than storing it.
+- A member's budget is three points per targeted song. Unspent points are
+  simply not counted; nothing forces a member to spend them.
+- Deleted with the member who cast it and with the song it names.
+
+Not to be confused with: an **improvement vote**, which carries no points
+and no budget.
+
+## Vote budget
+
+How many points one member still has to spend in one vote.
+
+Lives in: `api/src/setlists/voting.core.ts`
+
+- `total` is `targetSongCount × 3`, `spent` is the sum of that member's
+  votes, and `remaining` is the difference.
+- A score is refused as `budget-exhausted` when it would exceed what is
+  left, counting the points the same song already holds as free again.
 
 ## Transition
 
@@ -437,22 +699,28 @@ to.
 ## Words we do not use
 
 - **musician**, **player**, **bandmate**: the person is a **member**.
-- **user**, **account**: nobody has one. There is a shared password and a
-  sign-in session.
+- **user**: the person is a **member**. **account** is allowed as everyday
+  prose for a **member credential**, which is the word identifiers use.
+- **admin**, **role**, **permission**: every member can do everything.
 - **venue** as an entity: the CRM record is a **bar**. `venue` is only the
   free-text column on a concert.
 - **gig**, **show**, **date**: the event is a **concert**. **rehearsal**
   is a **practice**. Both are kinds of **session**.
-- **track**, **tune**, **number**: the catalogue holds **songs**.
-  `recording` appears only inside `musicbrainz.core.ts`, where it is the
-  upstream API's word.
+- **tune**, **number**: the catalogue holds **songs**. **track** is
+  Deezer's word for what it returns and appears only as `deezerTrackId`
+  and inside `deezer.core.ts`.
 - **set**, **programme**, **running order**: the ordered run is a
   **setlist**, and each row in it is a **setlist entry**.
+- **ballot**, **poll**, **election**, **scrutin**: a setlist in its
+  `voting` status carries **votes**, each worth **points**.
 - **skill**, **level**, **rating**, **proficiency**: the measure is
   **mastery** and the number is a **score**.
 - **role**, **part**, **station**: what a member holds on a song is an
   **instrument**, and the whole map is a **lineup**. The word *station*
   survives in one comment in `members.schema.ts` and should not spread.
+- **ticket**, **issue**, **feature request**, **bug**: what the band wants
+  changed in this application is an **improvement**, and its votes are
+  **improvement votes**.
 - **prospect**, **contact** as an entity: a **bar** with status `lead`.
 - **chord sheet**, **tab**, **score**: the attached music is a **chord
   chart**, and its inline form is **ChordPro**.

@@ -1,111 +1,91 @@
-/**
- * @DependsOnExternal deezer
- */
-
 import { z } from 'zod';
 import { buildSongIdentity } from './song-identity.core';
 
-export interface AudienceSongHit {
-  readonly trackId: string;
+export interface ExternalSongHit {
+  readonly deezerTrackId: string;
   readonly title: string;
   readonly artist: string;
   readonly album: string | null;
+  readonly deezerAlbumId: string | null;
   readonly durationSeconds: number | null;
-  readonly isrc: string | null;
+  readonly durationLabel: string | null;
+  readonly titleVersion: string | null;
+  readonly isrcs: readonly string[];
+  readonly popularity: number;
+  readonly isExplicit: boolean;
 }
+
+const SECONDS_PER_MINUTE = 60;
+const SECONDS_LABEL_PAD = 2;
 
 const trackSchema = z.object({
-  id: z.union([z.number(), z.string()]),
+  id: z.number(),
   title: z.string().optional(),
   title_short: z.string().optional(),
+  title_version: z.string().optional(),
   isrc: z.string().optional(),
   duration: z.number().optional(),
+  rank: z.number().optional(),
+  explicit_lyrics: z.boolean().optional(),
   artist: z.object({ name: z.string().optional() }).optional(),
-  album: z.object({ title: z.string().optional() }).optional(),
+  album: z.object({ id: z.number().optional(), title: z.string().optional() }).optional(),
 });
 
-const searchPayloadSchema = z.object({ data: z.array(trackSchema).default([]) });
+const responseSchema = z.object({
+  data: z.array(trackSchema).default([]),
+});
 
-const NO_DURATION = 0;
-
-function readTitle(track: z.infer<typeof trackSchema>): string {
-  const short = track.title_short?.trim() ?? '';
-  if (short.length > 0) return short;
-  return track.title?.trim() ?? '';
+function durationLabelOf(seconds: number | null): string | null {
+  if (seconds === null) return null;
+  const minutes = Math.floor(seconds / SECONDS_PER_MINUTE);
+  const remainingSeconds = seconds % SECONDS_PER_MINUTE;
+  const paddedSeconds = String(remainingSeconds).padStart(SECONDS_LABEL_PAD, '0');
+  return `${String(minutes)}:${paddedSeconds}`;
 }
 
-function readDurationSeconds(track: z.infer<typeof trackSchema>): number | null {
-  const duration = track.duration ?? NO_DURATION;
-  if (duration <= NO_DURATION) return null;
-  return duration;
+function textOrNull(value: string | undefined): string | null {
+  if (value === undefined) return null;
+  const trimmed = value.trim();
+  return trimmed.length > 0 ? trimmed : null;
 }
 
-function readOptionalText(value: string | undefined): string | null {
-  const trimmed = value?.trim() ?? '';
-  if (trimmed.length === 0) return null;
-  return trimmed;
-}
-
-function toHit(track: z.infer<typeof trackSchema>): AudienceSongHit | null {
-  const title = readTitle(track);
-  const artist = track.artist?.name?.trim() ?? '';
-  if (title.length === 0 || artist.length === 0) return null;
-  return {
-    trackId: String(track.id),
-    title,
-    artist,
-    album: readOptionalText(track.album?.title),
-    durationSeconds: readDurationSeconds(track),
-    isrc: readOptionalText(track.isrc),
-  };
+function durationOrNull(duration: number | undefined): number | null {
+  const seconds = duration ?? 0;
+  return seconds > 0 ? seconds : null;
 }
 
 /**
- * @Blueprint core-vendor-payload-mapping
- * @BlueprintName Vendor Payload Mapping
- * @BlueprintUsage Use for the pure function that turns one third-party response into this application's own type, beside the adapter that fetched it.
- * @BlueprintDescription Parses the payload with a schema that makes every field it does not need optional, so a vendor adding or renaming a field it does not read cannot break the mapping. Drops a record the domain cannot use rather than emitting a half-filled one, and returns the application's type so no caller ever holds the vendor's shape.
+ * @Blueprint core-parse-untrusted
+ * @BlueprintName Core Parse Of Untrusted Input
+ * @BlueprintUsage Use for the boundary where a third-party response becomes a typed domain value.
+ * @BlueprintDescription Takes `unknown` and runs `safeParse`, returning an empty list rather than throwing, so a shape change upstream empties the search dropdown instead of failing the request. Every optional field falls back inside the mapper, and a track with no title is dropped rather than emitted blank. Deezer answers an unusable query with an `error` object instead of `data`, which the schema's default turns into no hits rather than a thrown request.
  * @DependsOnExternal deezer
  */
-export function mapDeezerTracks(payload: unknown): AudienceSongHit[] {
-  const searchResponse = searchPayloadSchema.safeParse(payload);
+export function mapDeezerTracks(payload: unknown): ExternalSongHit[] {
+  const searchResponse = responseSchema.safeParse(payload);
   if (!searchResponse.success) return [];
-  return searchResponse.data.data.flatMap((track) => {
-    const hit = toHit(track);
-    return hit === null ? [] : [hit];
-  });
-}
-
-/**
- * @Blueprint core-collapse-on-shared-identity
- * @BlueprintName Collapse Rows Sharing One Identity
- * @BlueprintUsage Use where a provider returns several rows for one real-world thing and the reader must see it once.
- * @BlueprintDescription Keeps the first row for each identity and drops the rest, so provider order decides the survivor and the caller keeps whatever ranking it was given. Rows carrying no identity are all kept, because absence of an identity is not evidence of sameness — collapsing them would merge things that only look alike.
- */
-export function collapseTracksSharingAnIsrc(hits: readonly AudienceSongHit[]): AudienceSongHit[] {
-  const seenIsrcs = new Set<string>();
-  return hits.filter((hit) => {
-    if (hit.isrc === null) return true;
-    if (seenIsrcs.has(hit.isrc)) return false;
-    seenIsrcs.add(hit.isrc);
-    return true;
-  });
-}
-
-/**
- * @Blueprint core-collapse-on-what-the-reader-can-tell-apart
- * @BlueprintName Collapse On What The Reader Can Tell Apart
- * @BlueprintUsage Use after an identifier-based collapse, where the reader still sees several rows for one thing because the provider considers them distinct and the reader does not.
- * @BlueprintDescription Collapses on the folded text the reader actually reads, not on the identifier the provider assigns, because a remaster, a live take and a compilation cut each carry their own identifier and reach the page as the same words. Runs after the identifier collapse rather than instead of it, so the exact answer decides first and this one only merges what the identifier left looking identical. It costs the reader the ability to name one particular version; take it only where telling them apart is not the reader's job.
- */
-export function collapseTracksOfOneSong(hits: readonly AudienceSongHit[]): AudienceSongHit[] {
-  const seenSongs = new Set<string>();
-  return hits.filter((hit) => {
-    const identity = buildSongIdentity(hit.title, hit.artist);
-    if (seenSongs.has(identity)) return false;
-    seenSongs.add(identity);
-    return true;
-  });
+  const hits: ExternalSongHit[] = [];
+  for (const track of searchResponse.data.data) {
+    const title = textOrNull(track.title_short) ?? textOrNull(track.title);
+    if (title === null) continue;
+    const durationSeconds = durationOrNull(track.duration);
+    const isrc = textOrNull(track.isrc);
+    const albumId = track.album?.id;
+    hits.push({
+      deezerTrackId: String(track.id),
+      title,
+      artist: textOrNull(track.artist?.name) ?? '',
+      album: textOrNull(track.album?.title),
+      deezerAlbumId: albumId === undefined ? null : String(albumId),
+      durationSeconds,
+      durationLabel: durationLabelOf(durationSeconds),
+      titleVersion: textOrNull(track.title_version),
+      isrcs: isrc === null ? [] : [isrc],
+      popularity: track.rank ?? 0,
+      isExplicit: track.explicit_lyrics ?? false,
+    });
+  }
+  return hits;
 }
 
 const failurePayloadSchema = z.object({ error: z.object({ code: z.number().optional() }) });
@@ -125,27 +105,37 @@ export function readDeezerErrorCode(payload: unknown): number | null {
   return failure.data.error.code ?? null;
 }
 
-// @FollowsBlueprint core-vendor-payload-mapping
-export function mapDeezerTrack(payload: unknown): AudienceSongHit | null {
-  const track = trackSchema.safeParse(payload);
-  if (!track.success) return null;
-  return toHit(track.data);
+// @FollowsBlueprint core-parse-untrusted
+export function mapDeezerTrack(payload: unknown): ExternalSongHit | null {
+  return mapDeezerTracks({ data: [payload] })[0] ?? null;
 }
 
-const audienceSongHitSchema = z.object({
-  trackId: z.string(),
-  title: z.string(),
-  artist: z.string(),
-  album: z.string().nullable(),
-  durationSeconds: z.number().nullable(),
-  isrc: z.string().nullable(),
-});
+/**
+ * @Blueprint core-collapse-on-what-the-reader-can-tell-apart
+ * @BlueprintName Collapse On What The Reader Can Tell Apart
+ * @BlueprintUsage Use where a provider indexes something finer than the reader distinguishes, and several rows reach the page reading identically.
+ * @BlueprintDescription Collapses on the folded text the reader actually reads rather than on the identifier the provider assigns, because a remaster, a live take and a compilation cut each carry their own identifier and their own ISRC while reaching the page as the same words. Keeps the first row, so whatever ranking the caller was given decides the survivor. It costs the reader the ability to name one particular version; take it only where telling them apart is not the reader's job, as it is not when a room is voting for a song rather than for a master.
+ */
+export function collapseTracksOfOneSong(hits: readonly ExternalSongHit[]): ExternalSongHit[] {
+  const seenSongs = new Set<string>();
+  return hits.filter((hit) => {
+    const identity = buildSongIdentity(hit.title, hit.artist);
+    if (seenSongs.has(identity)) return false;
+    seenSongs.add(identity);
+    return true;
+  });
+}
 
-const cachedAudienceHitsSchema = z.array(audienceSongHitSchema);
+export interface ExternalSearchCacheEntry {
+  readonly value: ExternalSongHit[];
+  readonly expiresAt: number;
+}
 
-export function readCachedAudienceHits(rawHits: string): AudienceSongHit[] {
-  const cachedPayload: unknown = JSON.parse(rawHits);
-  const hits = cachedAudienceHitsSchema.safeParse(cachedPayload);
-  if (!hits.success) return [];
-  return hits.data;
+export function expiredSearchCacheKeys(
+  cache: ReadonlyMap<string, ExternalSearchCacheEntry>,
+  nowMillis: number,
+): readonly string[] {
+  return [...cache]
+    .filter(([, entry]) => entry.expiresAt <= nowMillis)
+    .map(([cacheKey]) => cacheKey);
 }

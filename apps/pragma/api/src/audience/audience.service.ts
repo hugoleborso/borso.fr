@@ -6,7 +6,7 @@ import {
   getManualSetlistSongIdsOfSession,
   runInOneSetlistTransaction,
 } from '../setlists/setlists.service';
-import type { AudienceSongHit } from '../songs/deezer.core';
+import type { ExternalSongHit } from '../songs/deezer.core';
 import {
   getSongs,
   resolveCatalogueSongForTrack,
@@ -258,12 +258,12 @@ export interface SearchForSuggestionParams {
   readonly now: Date;
 }
 
-export type SuggestionSearchOutcome = { kind: 'ok'; hits: AudienceSongHit[] } | Refused;
+export type SuggestionSearchOutcome = { kind: 'ok'; hits: ExternalSongHit[] } | Refused;
 
 export async function searchForSuggestion(
   params: SearchForSuggestionParams,
 ): Promise<SuggestionSearchOutcome> {
-  const outcome = await searchAudienceSongs({ query: params.query, now: params.now });
+  const outcome = await searchAudienceSongs(params.query);
   if (outcome.kind === 'unavailable') return refuse('external-search-unavailable');
   return { kind: 'ok', hits: outcome.hits };
 }

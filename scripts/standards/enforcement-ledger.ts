@@ -19,6 +19,7 @@ const STANDARDS_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'standards');
 const LEDGER_PATH = join(STANDARDS_DIRECTORY, 'enforcement-ledger.md');
 const HOOKS_DIRECTORY = join(REPOSITORY_ROOT, '.husky');
 const WORKFLOWS_DIRECTORY = join(REPOSITORY_ROOT, '.github', 'workflows');
+const AGENT_HOOKS_DIRECTORY = join(REPOSITORY_ROOT, '.claude', 'hooks');
 const APPS_DIRECTORY = join(REPOSITORY_ROOT, 'apps');
 const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 0]);
 const STANDARD_FILE_PATTERN = /^\d\d-[a-z0-9-]+\.md$/;
@@ -134,6 +135,7 @@ function listInvocationSites(): readonly string[] {
   for (const [directory, prefix] of [
     [HOOKS_DIRECTORY, '.husky'],
     [WORKFLOWS_DIRECTORY, '.github/workflows'],
+    [AGENT_HOOKS_DIRECTORY, '.claude/hooks'],
   ] as const) {
     if (!existsSync(directory)) continue;
     for (const entry of readdirSync(directory, { withFileTypes: true })) {

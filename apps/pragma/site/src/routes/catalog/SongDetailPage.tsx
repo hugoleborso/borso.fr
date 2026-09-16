@@ -1,8 +1,10 @@
 /** @Feature songs */
 
+import { AlbumCover } from '../../components/atoms/AlbumCover';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { Link, useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
@@ -91,6 +93,13 @@ export function SongDetailPage(): JSX.Element {
     [instruments],
   );
 
+  const longPress = useSongLongPress({
+    title: song?.title ?? '',
+    artist: song?.artist ?? '',
+    deezerTrackId: song?.deezerTrackId ?? null,
+    spotifyTrackId: song?.spotifyTrackId ?? null,
+  });
+
   const saveSongLineup = (lineup: LineupRecord | null): void => {
     if (song === null) return;
     updateSong.mutate({ id: song.id, defaultLineup: toLineupPayload(lineup) });
@@ -119,27 +128,30 @@ export function SongDetailPage(): JSX.Element {
       <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
 
       <header className="flex items-end justify-between gap-4 flex-wrap">
-        <div className="min-w-0">
-          <div className="text-xs tracking-wider uppercase text-ink-500 mb-1">
-            {song.artist.length > 0 ? song.artist : t('catalog.crumb')}
-          </div>
-          <h1 className="font-display italic text-[40px] sm:text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
-            {song.title}
-          </h1>
-          <div className="flex items-center gap-2.5 text-[13px] text-ink-500 flex-wrap">
-            <span>{song.artist}</span>
-            {tonality === null ? null : (
-              <>
-                <span className="text-ink-300">·</span>
-                <span className="font-mono text-xs">
-                  {tonality.slice(0, MAX_TONALITY_RENDER_LENGTH)}
-                </span>
-              </>
-            )}
-            <span className="text-ink-300">·</span>
-            <StatusChip status={song.status} />
-            <span className="text-ink-300">·</span>
-            <ChartKindIcon kind={chartKind} />
+        <div className="flex items-start gap-4 min-w-0 select-none" {...longPress}>
+          <AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="lg" />
+          <div className="min-w-0">
+            <div className="text-xs tracking-wider uppercase text-ink-500 mb-1">
+              {song.artist.length > 0 ? song.artist : t('catalog.crumb')}
+            </div>
+            <h1 className="font-display italic text-[40px] sm:text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
+              {song.title}
+            </h1>
+            <div className="flex items-center gap-2.5 text-[13px] text-ink-500 flex-wrap">
+              <span>{song.artist}</span>
+              {tonality === null ? null : (
+                <>
+                  <span className="text-ink-300">·</span>
+                  <span className="font-mono text-xs">
+                    {tonality.slice(0, MAX_TONALITY_RENDER_LENGTH)}
+                  </span>
+                </>
+              )}
+              <span className="text-ink-300">·</span>
+              <StatusChip status={song.status} />
+              <span className="text-ink-300">·</span>
+              <ChartKindIcon kind={chartKind} />
+            </div>
           </div>
         </div>
         <div className="flex items-center gap-2 flex-wrap">

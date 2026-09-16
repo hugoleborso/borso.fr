@@ -5,6 +5,7 @@ import { getSessionById } from '../sessions/sessions.service';
 import {
   buildSetlistSummaries,
   isSetlistRenamable,
+  resolveSetlistKind,
   type SetlistSummary,
   tallySongsPerSetlist,
 } from './setlists.core';
@@ -92,7 +93,7 @@ export type RenameOutcome =
 export async function renameSetlist(setlistId: string, name: string): Promise<RenameOutcome> {
   const existing = await findSetlistById(setlistId);
   if (existing === null) return { kind: 'not-found' };
-  if (!isSetlistRenamable(existing.kind)) return { kind: 'not-renamable' };
+  if (!isSetlistRenamable(resolveSetlistKind(existing.kind))) return { kind: 'not-renamable' };
   const setlist = await updateSetlistName(setlistId, name);
   if (setlist === null) return { kind: 'not-found' };
   return { kind: 'ok', setlist };

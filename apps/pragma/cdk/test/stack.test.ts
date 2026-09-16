@@ -84,12 +84,17 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
 
-  it('clones prod into a preview, replacing app_config so the production password gates the preview, dropping rate-limit state and nulling avatar keys', () => {
+  it('clones prod into a preview with no secret of production in it, and no avatar keys', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
-      tableBlocklist: ['auth_attempt'],
+      tableBlocklist: [
+        'auth_attempt',
+        'app_config',
+        'member_credential',
+        'member_passkey',
+        'webauthn_challenge',
+      ],
       columnsToNullify: { member: ['avatar_s3_key'] },
-      tablesToReplace: ['app_config'],
     });
   });
 });
@@ -173,6 +178,60 @@ describe('pragma app stack', () => {
       const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
       expect(variables).toHaveProperty('UPLOADS_BUCKET');
     }
+  });
+
+  it('passes the relying party of the stage a passkey is enrolled on', () => {
+    const expectedOrigins = {
+      preview: 'https://pragma-pr-1.preview.borso.fr',
+      prod: 'https://pragma.borso.fr',
+    };
+    for (const stage of ['prod', 'preview'] as const) {
+      const template = synthAppStack(stage);
+      const functions = template.findResources('AWS::Lambda::Function');
+      const apiFunction = Object.entries(functions).find(([logicalId]) =>
+        logicalId.includes('AppApiFn'),
+      )?.[1];
+      const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
+      const expectedOrigin = expectedOrigins[stage];
+      expect(variables.WEBAUTHN_ORIGIN).toBe(expectedOrigin);
+      expect(variables.WEBAUTHN_RELYING_PARTY_ID).toBe(new URL(expectedOrigin).hostname);
+    }
+  });
+
+  it('names the Spotify parameter and grants the API permission to read it', () => {
+    const template = synthAppStack('prod');
+    const functions = template.findResources('AWS::Lambda::Function');
+    const apiFunction = Object.entries(functions).find(([logicalId]) =>
+      logicalId.includes('AppApiFn'),
+    )?.[1];
+    const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
+    expect(variables.SPOTIFY_CREDENTIALS_PARAMETER).toBe('/pragma/spotify-credentials');
+    template.hasResourceProperties(
+      'AWS::IAM::Policy',
+      Match.objectLike({
+        PolicyDocument: Match.objectLike({
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: 'ssm:GetParameter',
+              Effect: 'Allow',
+              Resource: Match.objectLike({
+                'Fn::Join': Match.arrayWith([
+                  Match.arrayWith([
+                    Match.stringLikeRegexp(':parameter/pragma/spotify-credentials'),
+                  ]),
+                ]),
+              }),
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it('keeps the Spotify secret itself out of the synthesized template', () => {
+    const rendered = JSON.stringify(synthAppStack('prod').toJSON());
+    expect(rendered).not.toContain('SPOTIFY_CREDENTIALS"');
+    expect(rendered).toContain('/pragma/spotify-credentials');
   });
 
   it('declares the custom prod domain alias on the CloudFront distribution', () => {

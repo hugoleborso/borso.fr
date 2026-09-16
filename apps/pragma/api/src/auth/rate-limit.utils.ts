@@ -11,7 +11,7 @@ export interface RateLimitBudget {
   readonly windowMs: number;
 }
 
-export const SHARED_PASSWORD_BUDGET: RateLimitBudget = {
+export const MEMBER_LOGIN_BUDGET: RateLimitBudget = {
   maxAttempts: RATE_LIMIT_MAX_ATTEMPTS,
   windowMs: RATE_LIMIT_WINDOW_MS,
 };

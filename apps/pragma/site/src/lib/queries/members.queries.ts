@@ -17,7 +17,8 @@ export const memberKeys = {
 type MembersListResponse = InferResponseType<typeof api.api.members.$get>;
 type MemberRow = MembersListResponse['members'][number];
 type MemberInstrumentsResponse = InferResponseType<
-  (typeof api.api.members)[':id']['instruments']['$get']
+  (typeof api.api.members)[':id']['instruments']['$get'],
+  200
 >;
 
 // @FollowsBlueprint query-module
@@ -73,6 +74,8 @@ export function useCreateMember() {
         firstName: variables.firstName,
         color: variables.color,
         avatarS3Key: variables.avatarS3Key ?? null,
+        phone: null,
+        email: null,
       };
       queryClient.setQueryData<MembersListResponse>(listKey, (old) => {
         if (old === undefined) return old;
