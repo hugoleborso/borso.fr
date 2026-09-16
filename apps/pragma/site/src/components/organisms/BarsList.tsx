@@ -72,6 +72,10 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
             <span className="md:hidden text-xs font-mono text-ink-400">
               {row.original.city ?? ''} · {formatCapacity(row.original.capacity)}
             </span>
+            <span className="md:hidden text-xs text-ink-500">
+              {row.original.ownerName ?? t('bars.ownerNone')}
+              {row.original.moodLabel === null ? '' : ` · ${row.original.moodLabel}`}
+            </span>
           </button>
         ),
         enableSorting: true,

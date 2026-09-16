@@ -19,7 +19,9 @@ relationship with that venue. The word is `owner`, the column is
 - The owner is picked from the band's members, on the bar form, beside the
   status.
 - The list view shows the owner's first name in its own column, and the
-  kanban card shows it under the contact line.
+  kanban card shows it under the contact line. At phone width the list has
+  no room for the column and the kanban is not offered, so the owner reads
+  under the bar's name instead, never only behind a tap.
 - When a member is deleted, the bars they owned lose their owner and stay
   otherwise untouched. Deleting a member must never delete a bar.
 
@@ -115,7 +117,8 @@ support**, any number of three.
 - The mood is a single choice, the support is a multiple choice, and both
   are set on the bar form beside the status.
 - The list view shows the mood in its own column, sortable. The kanban card
-  shows it beside the owner.
+  shows it beside the owner. At phone width the mood reads under the bar's
+  name, beside the owner, for the same reason the owner does.
 - A bar recorded before this feature existed reads as no mood and no
   support, not as an error.
 
