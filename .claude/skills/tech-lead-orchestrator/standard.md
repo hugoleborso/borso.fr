@@ -13,7 +13,7 @@ human input:
   human-bound (perspective sweeps, AskUserQuestion, ratification,
   decision-support walk). Workflows cannot pause for mid-run human input,
   so these stages stay in the chat session.
-- **Dynamic Workflow at `.claude/workflows/feature-pipeline.js`** owns
+- **Dynamic Workflow**, generated per run from `.claude/commands/feature-pipeline.md` (no script is committed under `.claude/workflows/`), owns
   `plan → implement → validate → ship`, dispatched via
   `/feature-pipeline <spec-path>` once the human has ratified the spec
   and all candidate ADRs. The workflow invokes the existing

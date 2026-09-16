@@ -63,6 +63,24 @@ Use only when the user knowingly defers the perspective for a follow-up; never a
 - Reference full ADRs (`docs/adr/`) and blueprints rather than duplicating their contents.
 - **Out of scope:** explicit list.
 
+## Architectural choices
+
+> *One row per decision this feature could not take on its own — a new
+> dependency, a new secret, a schema column driven by an external service, a
+> cross-cutting structural choice. Each is ratified as an ADR and committed
+> **before** any code is written. `/technical-conception` reads this table for
+> the ADR numbers its plan must reference, and `/feature-pipeline`'s stage 1
+> reads it to decide whether a run can start at all.*
+>
+> *No such decision? Say so in one line and keep the heading. An absent
+> section reads as an unanswered question, and the pipeline was told to read
+> this table for months while this template had no such section — so a run
+> looking for it found nothing and could not tell "none" from "not asked".*
+
+| ADR | Decision | What it constrains downstream |
+|---|---|---|
+|  |  |  |
+
 ## Changes
 
 > *Show types you need to create/update (DDD). Show database changes. Include the architectural schema and files to change (use LLM for challenging). Show the test strategy that will give you 100% confidence the feature is working without defects.*

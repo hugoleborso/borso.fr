@@ -165,13 +165,19 @@ generated artefact is therefore named in prose and never linked.
   The exclusion was `docs/features/` wholesale until 2026-09-16, which also
   took every `spec/` and `plan/` with it — the documents an implementer opens
   first, and the six dead links narrowing it found were all in those.
-- `script:scripts/check-cited-documents-exist.sh` fails a `docs/….md` path
-  named in a script, hook or workflow that is not there. The check above reads
-  markdown, and a shell script is not markdown, so the line at the top of a
-  gate saying which dantotsu it eradicates — the only thread from a mechanism
-  back to its reasoning — was the one nothing read. Two had rotted, both
-  naming entries that were never written. Test files are skipped: a fixture
-  path is made up on purpose.
+- `script:scripts/check-named-paths-exist.sh` fails a path this repository
+  names in prose and does not have, across two surfaces the markdown link check
+  cannot see. **A `docs/….md` cited from a script, hook or workflow:** the line
+  at the top of a gate saying which dantotsu it eradicates is the only thread
+  from a mechanism back to its reasoning, and two had rotted, both naming
+  entries that were never written. **A backticked repository path in `CLAUDE.md`
+  or a skill:** 95 such paths on the tree this landed against, one of them
+  absent — `.claude/workflows/feature-pipeline.js`, asserted in three documents
+  at once while the runbook's own step 6 says to commit it after the first run
+  and nobody ever had. Test files are skipped, and so is a path carrying a glob
+  or a `<placeholder>`: a made-up path is the point in both. One gate for two
+  surfaces is deliberate — this repository shipped the migration-number check
+  twice because two authors each wrote one for the folder in front of them.
 - `reviewer` reads `docs/standards/hotspots.md` before deciding which pattern to
   write down next. It crosses how often each file changes with whether it
   follows a recorded pattern and whether its path says what it is. Nothing gates

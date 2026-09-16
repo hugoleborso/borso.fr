@@ -352,8 +352,8 @@ scripts/check-instructions-name-installed-tools.sh
 # gate naming its dantotsu — the only thread back to the reasoning — was the
 # one nothing checked. Rung-2 eradication of
 # docs/dantotsus/the-link-checker-skipped-the-folder-it-was-trusted-for.md.
-echo "[pre-commit] checking every document a script cites is there"
-scripts/check-cited-documents-exist.sh
+echo "[pre-commit] checking every document a script cites and every path an instruction names"
+scripts/check-named-paths-exist.sh
 
 # A spec with no Test strategy leaves the split between the two validators to
 # whichever one reads it first, and three of them guessed differently in one

@@ -152,10 +152,16 @@ as a subagent, in the order described. The script:
      | regression-net-negative | spec-thin-on-tech-surface.
 ```
 
-Once the run completes successfully, save the generated script as a
-project workflow (`/workflows` → select the run → press `s` →
-choose `.claude/workflows/feature-pipeline.js`). Future runs invoke
-`/feature-pipeline <spec-path>` and execute the saved script.
+Once the run completes successfully, the generated script *may* be saved
+as a project workflow (`/workflows` → select the run → press `s` → choose
+a path under `.claude/workflows/`), after which future runs execute the
+saved script rather than regenerating it.
+
+**Nothing is saved there today**, and three documents described the saved
+file as if it were. Until one is committed, every `/feature-pipeline` is a
+first-run generation from the contract below — which is the durable
+artefact either way, and the reason a missing script costs correctness
+nothing.
 
 ## How to relaunch on exit-and-resume
 

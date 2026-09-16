@@ -116,7 +116,7 @@ that is live is the half an implementer reads first.
 
 **Type:** code diff (level 2 — devx check, by widening an existing one)
 
-**Reference:** PR #106 · commit `96a3ed4a` · `scripts/docs/check-doc-links.ts` and `scripts/check-cited-documents-exist.sh`
+**Reference:** PR #106 · commit `96a3ed4a` · `scripts/docs/check-doc-links.ts` and `scripts/check-named-paths-exist.sh`
 
 ```diff
 -const HISTORICAL_PREFIX = 'docs/features/';
@@ -153,7 +153,7 @@ reasoning — was read by nothing at all. Two had rotted:
 `preflight-preview-recovery.sh` cited
 `preview-deploy-orphans-block-recreate.md`. Neither was ever written. Both
 headers now state their reason and cite nothing, which is honest, and
-`scripts/check-cited-documents-exist.sh` refuses the next one — skipping test
+`scripts/check-named-paths-exist.sh` refuses the next one — skipping test
 files, where a made-up path is the point and where four of the six matches on
 this tree were.
 
