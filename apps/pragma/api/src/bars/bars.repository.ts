@@ -4,14 +4,25 @@ import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   type AvailableSupport,
+  availableSupportSchema,
   type ConcertMood,
-  parseAvailableSupport,
+  orderAvailableSupport,
   resolveConcertMood,
-  serializeAvailableSupport,
 } from './bar-support.core';
 import { BAR_STATUSES, type BarStatus, barTable } from './bars.schema';
 
 const barStatusSchema = z.enum(BAR_STATUSES);
+
+// @FollowsBlueprint repository-json-column
+function decodeAvailableSupportColumn(raw: string | null): AvailableSupport[] {
+  if (raw === null) return [];
+  const storedValue: unknown = JSON.parse(raw);
+  return orderAvailableSupport(availableSupportSchema.parse(storedValue));
+}
+
+function encodeAvailableSupportColumn(supports: readonly AvailableSupport[]): string {
+  return JSON.stringify(orderAvailableSupport(supports));
+}
 
 function toBarRow(row: {
   id: string;
@@ -32,7 +43,7 @@ function toBarRow(row: {
     ...row,
     status: barStatusSchema.parse(row.status),
     concertMood: resolveConcertMood(row.concertMood),
-    availableSupport: parseAvailableSupport(row.availableSupport),
+    availableSupport: decodeAvailableSupportColumn(row.availableSupport),
   };
 }
 
@@ -112,7 +123,7 @@ export async function insertBar(values: BarPersistedShape): Promise<BarRow> {
       contactPhone: values.contactPhone ?? null,
       ownerMemberId: values.ownerMemberId ?? null,
       concertMood: values.concertMood ?? null,
-      availableSupport: serializeAvailableSupport(values.availableSupport ?? []),
+      availableSupport: encodeAvailableSupportColumn(values.availableSupport ?? []),
     })
     .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
@@ -128,7 +139,7 @@ export async function updateBar(id: string, updates: BarPersistedShape): Promise
       ...plainUpdates,
       ...(availableSupport === undefined
         ? {}
-        : { availableSupport: serializeAvailableSupport(availableSupport) }),
+        : { availableSupport: encodeAvailableSupportColumn(availableSupport) }),
     })
     .where(eq(barTable.id, id))
     .returning(PROJECTION);

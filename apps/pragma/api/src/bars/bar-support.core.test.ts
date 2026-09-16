@@ -1,47 +1,28 @@
 import { describe, expect, it } from 'vitest';
-import {
-  parseAvailableSupport,
-  resolveConcertMood,
-  serializeAvailableSupport,
-} from './bar-support.core';
+import { orderAvailableSupport, resolveConcertMood } from './bar-support.core';
 
-describe('parseAvailableSupport', () => {
-  it('reads the list a bar was saved with', () => {
-    expect(parseAvailableSupport('["lights","pa-system"]')).toEqual(['pa-system', 'lights']);
+describe('orderAvailableSupport', () => {
+  it('reads back in the declared order, whatever order it was given', () => {
+    expect(orderAvailableSupport(['sound-engineer', 'pa-system'])).toEqual([
+      'pa-system',
+      'sound-engineer',
+    ]);
   });
 
-  it('reads a bar recorded before this column existed as lending nothing', () => {
-    expect(parseAvailableSupport(null)).toEqual([]);
+  it('keeps each support once', () => {
+    expect(orderAvailableSupport(['lights', 'lights'])).toEqual(['lights']);
   });
 
-  it('reads text that is not JSON as lending nothing', () => {
-    expect(parseAvailableSupport('pa-system')).toEqual([]);
+  it('keeps every support the bar lends', () => {
+    expect(orderAvailableSupport(['lights', 'sound-engineer', 'pa-system'])).toEqual([
+      'pa-system',
+      'lights',
+      'sound-engineer',
+    ]);
   });
 
-  it('reads JSON the schema refuses as lending nothing', () => {
-    expect(parseAvailableSupport('{"pa":true}')).toEqual([]);
-    expect(parseAvailableSupport('["smoke-machine"]')).toEqual([]);
-  });
-});
-
-describe('serializeAvailableSupport', () => {
-  it('writes the declared order, whatever order it was given', () => {
-    expect(serializeAvailableSupport(['sound-engineer', 'pa-system'])).toBe(
-      '["pa-system","sound-engineer"]',
-    );
-  });
-
-  it('writes each support once', () => {
-    expect(serializeAvailableSupport(['lights', 'lights'])).toBe('["lights"]');
-  });
-
-  it('writes an empty list for a bar that lends nothing', () => {
-    expect(serializeAvailableSupport([])).toBe('[]');
-  });
-
-  it('round-trips through the parser', () => {
-    const supports = ['pa-system', 'sound-engineer'] as const;
-    expect(parseAvailableSupport(serializeAvailableSupport(supports))).toEqual([...supports]);
+  it('answers an empty list for a bar that lends nothing', () => {
+    expect(orderAvailableSupport([])).toEqual([]);
   });
 });
 

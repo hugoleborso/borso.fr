@@ -22,11 +22,14 @@ describe('searchPlacesForBars', () => {
 
     expect(hits).toEqual([expect.objectContaining({ name: 'Le Zinc' })]);
     const [url, init] = fetcher.mock.calls[0] ?? [];
-    expect(url).toContain('https://nominatim.openstreetmap.org/search?');
-    expect(url).toContain('q=zinc+paris');
-    expect(url).toContain('extratags=1');
-    expect(url).toContain('addressdetails=1');
-    expect(init?.headers).toMatchObject({ 'User-Agent': 'Pragma/1.0 (https://pragma.borso.fr)' });
+    expect(url).toBe(
+      'https://nominatim.openstreetmap.org/search?q=zinc+paris&format=jsonv2' +
+        '&addressdetails=1&extratags=1&namedetails=0&limit=10',
+    );
+    expect(init?.headers).toEqual({
+      'User-Agent': 'Pragma/1.0 (https://pragma.borso.fr)',
+      Accept: 'application/json',
+    });
   });
 
   it('answers an empty list for a blank query without calling out', async () => {
@@ -46,10 +49,18 @@ describe('searchPlacesForBars', () => {
     const fetcher = vi.fn<PlacesFetcher>(async () => respondWith(BODY));
     const state = freshState();
     await searchPlacesForBars('Zinc', { fetcher, state, now: () => 10_000 });
-    const second = await searchPlacesForBars('  zinc  ', { fetcher, state, now: () => 20_000 });
+    const second = await searchPlacesForBars('  ZINC  ', { fetcher, state, now: () => 20_000 });
 
     expect(fetcher).toHaveBeenCalledTimes(1);
     expect(second).toEqual([expect.objectContaining({ name: 'Le Zinc' })]);
+  });
+
+  it('keys the cache on the lowercased query', async () => {
+    const fetcher = vi.fn<PlacesFetcher>(async () => respondWith(BODY));
+    const state = freshState();
+    await searchPlacesForBars('  Zinc  ', { fetcher, state, now: () => 10_000 });
+
+    expect([...state.cache.keys()]).toEqual(['zinc']);
   });
 
   it('asks again once the cached answer has expired', async () => {
@@ -74,6 +85,20 @@ describe('searchPlacesForBars', () => {
       expect(fetcher).not.toHaveBeenCalled();
       await vi.advanceTimersByTimeAsync(1);
       await pending;
+      expect(fetcher).toHaveBeenCalledTimes(1);
+    } finally {
+      vi.useRealTimers();
+    }
+  });
+
+  it('calls straight away once the last call is a full second old', async () => {
+    vi.useFakeTimers();
+    try {
+      const fetcher = vi.fn<PlacesFetcher>(async () => respondWith(BODY));
+      const state = freshState();
+      state.lastCallAt = 10_000;
+      await searchPlacesForBars('zinc', { fetcher, state, now: () => 11_000 });
+
       expect(fetcher).toHaveBeenCalledTimes(1);
     } finally {
       vi.useRealTimers();

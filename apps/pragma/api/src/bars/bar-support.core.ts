@@ -10,38 +10,16 @@ export const concertMoodSchema = z.enum(CONCERT_MOODS);
 export const availableSupportSchema = z.array(z.enum(AVAILABLE_SUPPORTS));
 
 /**
- * @Blueprint core-json-column-round-trip
- * @BlueprintName Core JSON Column Round Trip
- * @BlueprintUsage Use for a list a DSQL table holds as JSON in a TEXT column, so the parse and the serialisation are one pair a test can state.
- * @BlueprintDescription Answers an empty list for a null column, for text that is not JSON and for JSON the schema refuses, because a column written before this feature existed is a bar that lends nothing rather than an error a reader can act on. The serialisation drops duplicates and keeps the declared order, so two equal lists produce the same bytes and a diff on the column means the answer really changed.
+ * @Blueprint core-canonical-ordering
+ * @BlueprintName Core Canonical Ordering
+ * @BlueprintUsage Use for a set a column stores as a list, so two equal sets produce the same bytes and a diff on that column means the answer really changed.
+ * @BlueprintDescription Rebuilds the list by filtering the declared order rather than sorting what it was given, which drops duplicates and fixes the order in one pass, and makes the declaration the single place that decides how the set reads. The repository calls it on the way in and on the way out, so a list written by an older client is read in the same order as one written today.
  */
-export function parseAvailableSupport(stored: string | null): AvailableSupport[] {
-  if (stored === null) return [];
-  const decoded = z.string().transform(safelyParseJson).safeParse(stored);
-  if (!decoded.success) return [];
-  const supports = availableSupportSchema.safeParse(decoded.data);
-  return supports.success ? orderSupports(supports.data) : [];
-}
-
-export function serializeAvailableSupport(supports: readonly AvailableSupport[]): string {
-  return JSON.stringify(orderSupports(supports));
+export function orderAvailableSupport(supports: readonly AvailableSupport[]): AvailableSupport[] {
+  return AVAILABLE_SUPPORTS.filter((candidate) => supports.includes(candidate));
 }
 
 export function resolveConcertMood(stored: string | null): ConcertMood | null {
   const mood = concertMoodSchema.safeParse(stored);
   return mood.success ? mood.data : null;
-}
-
-function orderSupports(supports: readonly AvailableSupport[]): AvailableSupport[] {
-  return AVAILABLE_SUPPORTS.filter((candidate) => supports.includes(candidate));
-}
-
-function safelyParseJson(raw: string, context: z.RefinementCtx): unknown {
-  try {
-    const decoded: unknown = JSON.parse(raw);
-    return decoded;
-  } catch {
-    context.addIssue({ code: 'custom', message: 'not json' });
-    return z.NEVER;
-  }
 }

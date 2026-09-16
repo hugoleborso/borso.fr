@@ -63,7 +63,7 @@ policy requirement no gate here can check.
 | Layer | File | Change |
 | --- | --- | --- |
 | Migration | `api/src/database/migrations/0008_bar_concert_mood_and_support.sql` | `concert_mood` and `available_support` on `bar`, both nullable; the support list is JSON in a TEXT column, the shape a lineup already uses, because DSQL has no array type to add here. |
-| Core | `api/src/bars/bar-support.core.ts` | The JSON round trip and the mood resolution, both answering "nothing" for a column written before the feature existed. 100% coverage. |
+| Core | `api/src/bars/bar-support.core.ts` | The canonical ordering of the support list and the mood resolution. The JSON decoding stays in the repository, per the `repository-json-column` blueprint: a fallback in a pure module is a branch no test can distinguish, since an unreadable column and an empty one give the same answer. |
 | Schema | `api/src/bars/bars.schema.ts` | The two columns and their Zod input, the support defaulting to the empty list. |
 | Repository | `api/src/bars/bars.repository.ts` | Serialises the support on write, parses it on read, so no other file sees the JSON. |
 | Front core | `site/src/routes/bars/bar-form.core.ts` | The two lists, their translation keys, `toggleSupport` and `parseConcertMood`. |
