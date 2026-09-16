@@ -43,6 +43,25 @@ a `dnd-kit` `PointerSensor` losing the gesture to page scroll, for instance —
 cannot be reproduced with these tools. Drive that on a real device, or reason
 about it from the sensor configuration.
 
+## A long press is `gesture-drag`, not `gesture-custom`
+
+`gesture-custom` is the verb argent's own help documents a long press with. It
+refuses on Chromium:
+
+```
+no chromium support declared
+```
+
+The long press that works is a drag that does not move, with a duration:
+
+```sh
+scripts/argent.sh run gesture-drag --from 180,320 --to 180,320 --durationMs 900
+```
+
+Measured 2026-09-15 on a `pragma` catalog card: 900 ms opened the listen dialog,
+and a short tap afterwards still navigated, which is what proves the
+capture-phase handler swallows only the press. A synthetic click proves neither.
+
 ## See also
 
 - [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md)

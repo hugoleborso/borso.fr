@@ -15,8 +15,13 @@ function getClient(): SSMClient {
 }
 
 export async function readSecureParameter(parameterName: string): Promise<string | undefined> {
-  const answer = await getClient().send(
-    new GetParameterCommand({ Name: parameterName, WithDecryption: true }),
-  );
-  return answer.Parameter?.Value;
+  try {
+    const answer = await getClient().send(
+      new GetParameterCommand({ Name: parameterName, WithDecryption: true }),
+    );
+    return answer.Parameter?.Value;
+  } catch (error) {
+    console.warn(`the parameter ${parameterName} could not be read`, error);
+    return undefined;
+  }
 }

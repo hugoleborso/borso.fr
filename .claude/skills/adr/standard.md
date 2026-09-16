@@ -66,6 +66,18 @@ Each sub-section:
 
 Minimum two alternatives. An ADR with only the chosen option is a one-liner — push it back to `docs/knowledge/` or a code comment.
 
+**One of the options is always not doing the thing.** Write it as a real
+option with a real rationale, never as a sentence saying it was obviously
+rejected: what the product still does without the change, and what it costs to
+keep living that way. An ADR framed as *where do we store this credential*
+answers a question nobody asked until *do we want a credential at all* has been
+answered on the page. ADR-0017 scored five options for where a Spotify secret
+should live and never listed going without one, so the operator met that
+question for the first time after the pull request merged — and the honest
+answer was that the feature degrades to a search link and nothing breaks. Name
+the option, score it, and let it lose on the rubric if it loses. See
+[`docs/dantotsus/an-adr-that-never-listed-doing-nothing.md`](../../../docs/dantotsus/an-adr-that-never-listed-doing-nothing.md).
+
 ### 6. Evaluation rubric
 
 A table mapping each criterion to a weight and a justification.
