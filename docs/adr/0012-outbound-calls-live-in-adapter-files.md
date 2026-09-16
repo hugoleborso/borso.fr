@@ -127,6 +127,25 @@ the suffix as well. Two rules, one file, no contradiction — see
   floor, not a proof, and `database/client.ts` is deliberately exempt because
   the DSQL signer is that shape.
 
+### Revision 2026-09-15 — the exemption generalises to `*.client.ts`
+
+`database/client.ts` was exempt by its exact path. A second file wanted the
+same treatment: `helpers/secrets/parameter-store.client.ts`, which constructs an
+SSM client and reads one parameter. Both hold a vendor client whose construction
+cannot be exercised without the vendor, which is why neither belongs behind the
+coverage and mutation gates every `.adapter.ts` carries — an adapter is expected
+to be fully driven by an injected fetcher, and a file whose whole body is
+`new VendorClient(...)` never can be.
+
+The exemption is therefore the suffix `*.client.ts` rather than one path, which
+is also the layer name the architecture map already reads. `SSMClient` joins the
+AWS clients the rule names, so the same construction is now refused everywhere
+except an adapter or a `.client.ts`. An adapter reaches the vendor through that
+client and stays testable, which is what `spotify.adapter.ts` does.
+
+This widens what the rule *catches* and widens where it *permits*; the net is
+stricter, because SSM was previously unnamed and so allowed anywhere.
+
 **Good:**
 
 - Level 1's edges become derivable from the tree, and `@DependsOnExternal`

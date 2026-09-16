@@ -78,7 +78,7 @@ describe('songCreateInputSchema', () => {
       isrcs: [],
       tags: [],
       baseEnergy: null,
-      mbid: null,
+      deezerTrackId: null,
       album: null,
       durationSeconds: null,
     });

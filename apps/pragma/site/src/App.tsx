@@ -1,5 +1,6 @@
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
+import { ListenLinksProvider } from './components/organisms/ListenLinksProvider';
 import { RequireSession } from './components/organisms/RequireSession';
 import { AccountPage } from './routes/account/AccountPage';
 import { BarsPage } from './routes/bars/BarsPage';
@@ -24,33 +25,35 @@ import { SetlistsPage } from './routes/setlists/SetlistsPage';
 export function App(): JSX.Element {
   return (
     <BrowserRouter>
-      <Routes>
-        <Route path="/login" element={<LoginPage />} />
-        <Route path="/enrol" element={<EnrolPage />} />
-        <Route element={<RequireSession />}>
-          <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
-          <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
-          <Route element={<AppShell />}>
-            <Route path="/" element={<Navigate to="/catalog" replace />} />
-            <Route path="/catalog" element={<CatalogPage />} />
-            <Route path="/catalog/new" element={<SongEditPage />} />
-            <Route path="/catalog/:songId/edit" element={<SongEditPage />} />
-            <Route path="/catalog/:songId" element={<SongDetailPage />} />
-            <Route path="/sessions" element={<SessionsPage />} />
-            <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
-            <Route path="/sessions/:sessionId/setlist" element={<SessionSetlistRedirectPage />} />
-            <Route path="/setlists" element={<SetlistsPage />} />
-            <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
-            <Route path="/setlists/:setlistId/vote" element={<SetlistVotePage />} />
-            <Route path="/bars" element={<BarsPage />} />
-            <Route path="/tasks" element={<TasksPage />} />
-            <Route path="/compos" element={<ComposPage />} />
-            <Route path="/members" element={<MembersPage />} />
-            <Route path="/instruments" element={<InstrumentsPage />} />
-            <Route path="/account" element={<AccountPage />} />
+      <ListenLinksProvider>
+        <Routes>
+          <Route path="/login" element={<LoginPage />} />
+          <Route path="/enrol" element={<EnrolPage />} />
+          <Route element={<RequireSession />}>
+            <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
+            <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
+            <Route element={<AppShell />}>
+              <Route path="/" element={<Navigate to="/catalog" replace />} />
+              <Route path="/catalog" element={<CatalogPage />} />
+              <Route path="/catalog/new" element={<SongEditPage />} />
+              <Route path="/catalog/:songId/edit" element={<SongEditPage />} />
+              <Route path="/catalog/:songId" element={<SongDetailPage />} />
+              <Route path="/sessions" element={<SessionsPage />} />
+              <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
+              <Route path="/sessions/:sessionId/setlist" element={<SessionSetlistRedirectPage />} />
+              <Route path="/setlists" element={<SetlistsPage />} />
+              <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
+              <Route path="/setlists/:setlistId/vote" element={<SetlistVotePage />} />
+              <Route path="/bars" element={<BarsPage />} />
+              <Route path="/tasks" element={<TasksPage />} />
+              <Route path="/compos" element={<ComposPage />} />
+              <Route path="/members" element={<MembersPage />} />
+              <Route path="/instruments" element={<InstrumentsPage />} />
+              <Route path="/account" element={<AccountPage />} />
+            </Route>
           </Route>
-        </Route>
-      </Routes>
+        </Routes>
+      </ListenLinksProvider>
     </BrowserRouter>
   );
 }

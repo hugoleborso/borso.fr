@@ -11,8 +11,14 @@ tags: [pragma, musicbrainz, search, vendor-quirk]
 
 # MusicBrainz: use the `dismax` parser, and do not expect a key
 
-`pragma` enriches its song catalogue from MusicBrainz through
-`songs/musicbrainz.adapter.ts`. Two properties of that source are not visible
+`pragma` no longer reads MusicBrainz: its song search moved to Deezer, and
+`songs/deezer.adapter.ts` replaced the adapter this entry was written about.
+What follows is kept because both properties belong to MusicBrainz rather
+than to this repository, and the second one still holds for any source: the
+key of a song is not something a recording search returns.
+
+When it was written, `pragma` enriched its song catalogue from MusicBrainz
+through `songs/musicbrainz.adapter.ts`. Two properties of that source are not visible
 from the code and are worth knowing before changing the query or the mapping.
 
 ## 1. The default parser will not find what a user typed

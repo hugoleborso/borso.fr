@@ -6,14 +6,19 @@ import { type AlbumCoverVariantProps, albumCoverVariants } from './album-cover.v
 
 export interface AlbumCoverProps extends AlbumCoverVariantProps {
   readonly title: string;
-  readonly releaseId: string | null;
+  readonly deezerAlbumId: string | null;
   readonly className?: string;
 }
 
 // @FollowsBlueprint atom-variant
-export function AlbumCover({ title, releaseId, size, className }: AlbumCoverProps): JSX.Element {
+export function AlbumCover({
+  title,
+  deezerAlbumId,
+  size,
+  className,
+}: AlbumCoverProps): JSX.Element {
   const [hasArtFailed, setHasArtFailed] = useState<boolean>(false);
-  const artUrl = buildCoverArtUrl(releaseId);
+  const artUrl = buildCoverArtUrl(deezerAlbumId);
   const composed = composeClassName(albumCoverVariants({ size }), className);
   const tint: CSSProperties = { backgroundColor: selectCoverColor(title) };
 

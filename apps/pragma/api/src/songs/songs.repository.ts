@@ -36,8 +36,9 @@ export interface SongRow {
   tonalityEnd: string | null;
   defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
-  mbid: string | null;
-  releaseId: string | null;
+  deezerTrackId: string | null;
+  deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string[];
@@ -59,8 +60,9 @@ export interface SongInsertShape {
   tonalityEnd: string | null;
   defaultLineup: SongDefaultLineup;
   baseEnergy: number | null;
-  mbid: string | null;
-  releaseId: string | null;
+  deezerTrackId: string | null;
+  deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string[];
@@ -84,8 +86,9 @@ interface SongRawRow {
   tonalityEnd: string | null;
   defaultLineup: string;
   baseEnergy: number | null;
-  mbid: string | null;
-  releaseId: string | null;
+  deezerTrackId: string | null;
+  deezerAlbumId: string | null;
+  spotifyTrackId: string | null;
   album: string | null;
   durationSeconds: number | null;
   isrcs: string | null;
@@ -109,8 +112,9 @@ const PROJECTION = {
   tonalityEnd: songTable.tonalityEnd,
   defaultLineup: songTable.defaultLineup,
   baseEnergy: songTable.baseEnergy,
-  mbid: songTable.mbid,
-  releaseId: songTable.releaseId,
+  deezerTrackId: songTable.deezerTrackId,
+  deezerAlbumId: songTable.deezerAlbumId,
+  spotifyTrackId: songTable.spotifyTrackId,
   album: songTable.album,
   durationSeconds: songTable.durationSeconds,
   isrcs: songTable.isrcs,
@@ -149,8 +153,9 @@ function rowToSong(row: SongRawRow): SongRow {
     tonalityEnd: row.tonalityEnd,
     defaultLineup: defaultLineupSchema.parse(defaultLineupRaw),
     baseEnergy: row.baseEnergy,
-    mbid: row.mbid,
-    releaseId: row.releaseId,
+    deezerTrackId: row.deezerTrackId,
+    deezerAlbumId: row.deezerAlbumId,
+    spotifyTrackId: row.spotifyTrackId,
     album: row.album,
     durationSeconds: row.durationSeconds,
     isrcs: parseJsonArrayColumn(row.isrcs, songIsrcsRowSchema),
@@ -177,8 +182,9 @@ function encodeInsert(values: SongInsertShape): SongInsertEncoded {
     tonalityEnd: values.tonalityEnd,
     defaultLineup: JSON.stringify(values.defaultLineup),
     baseEnergy: values.baseEnergy,
-    mbid: values.mbid,
-    releaseId: values.releaseId,
+    deezerTrackId: values.deezerTrackId,
+    deezerAlbumId: values.deezerAlbumId,
+    spotifyTrackId: values.spotifyTrackId,
     album: values.album,
     durationSeconds: values.durationSeconds,
     isrcs: JSON.stringify(values.isrcs),
@@ -205,8 +211,9 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   if ('defaultLineup' in updates)
     encoded.defaultLineup = JSON.stringify(updates.defaultLineup ?? {});
   if ('baseEnergy' in updates) encoded.baseEnergy = updates.baseEnergy;
-  if ('mbid' in updates) encoded.mbid = updates.mbid;
-  if ('releaseId' in updates) encoded.releaseId = updates.releaseId;
+  if ('deezerTrackId' in updates) encoded.deezerTrackId = updates.deezerTrackId;
+  if ('deezerAlbumId' in updates) encoded.deezerAlbumId = updates.deezerAlbumId;
+  if ('spotifyTrackId' in updates) encoded.spotifyTrackId = updates.spotifyTrackId;
   if ('album' in updates) encoded.album = updates.album;
   if ('durationSeconds' in updates) encoded.durationSeconds = updates.durationSeconds;
   if ('isrcs' in updates) encoded.isrcs = JSON.stringify(updates.isrcs ?? []);

@@ -252,6 +252,12 @@ scripts/check-frontend-env-vars.sh
 echo "[pre-commit] checking each manifest names icons that ship"
 scripts/check-pwa-assets.sh
 
+# The template a PR body is drafted from has to satisfy the budget the same
+# script enforces on the body. A template that drifts out of it teaches every
+# future body to be refused, and the drift is invisible until someone drafts.
+echo "[pre-commit] checking the pull-request template fits its own budget"
+pnpm exec tsx scripts/pr/check-pr-body.ts .claude/skills/open-pr/template.md
+
 # A knowledge entry saying a tool is broken steers every future agent away from
 # it and never expires on its own — two phone audits obeyed one that was wrong.
 # A grep over one directory, so it costs nothing and belongs on the commit.

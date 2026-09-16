@@ -233,24 +233,63 @@ Lives in: `api/src/auth/` (`member_passkey`), verified through
   `webauthn_challenge` for two minutes, because the options call and the
   verify call are two Lambda invocations sharing no memory.
 
-## Release
+## Deezer track
 
-The MusicBrainz release a song's recording was imported from, which is
-what Cover Art Archive serves artwork by.
+The Deezer recording a catalogue song is linked to. It is what the search
+fills in, what the listen dialog opens, and the one identifier a member can
+also type by hand on the song form.
 
-Lives in: `api/src/songs/` (the `release_id` column), read by
+Lives in: `api/src/songs/` (the `deezer_track_id` column), read by
+`site/src/lib/listen-links.utils.ts`
+
+- Nullable. A song typed in by hand names no track until someone links it,
+  and the listen dialog then offers a Deezer *search* instead of the track
+  page. Both are ordinary, not faults.
+- Distinct from the **Deezer album**, which is what the cover is fetched
+  by, and from the **Spotify track**, which the API resolves from this
+  track's ISRC. Picking a search result sets the first two and clears the
+  third, which is then resolved again on save.
+
+## Spotify track
+
+The Spotify recording a catalogue song is linked to, resolved from the ISRC
+Deezer returned rather than from the song's title.
+
+Lives in: `api/src/songs/` (the `spotify_track_id` column), read by
+`site/src/lib/listen-links.utils.ts`
+
+- Nullable, and ordinarily so. Spotify and Deezer do not carry identical
+  catalogues, a song typed in by hand names no ISRC to resolve from, and a
+  song predating the column has none until it is re-linked. Each of those
+  falls back to a Spotify *search* address in the listen dialog.
+- Written by the API, never by a member. There is no form field for it, unlike
+  the **Deezer track**, which a member may type. Picking a new Deezer result
+  clears it, so an id can never outlive the recording it was found for.
+- Distinct from the **Deezer track**: the two name the same recording on two
+  services, and the ISRC is what joins them. See
+  [ADR-0017](../../docs/adr/0017-spotify-track-ids-resolved-by-isrc-at-link-time.md).
+
+## Deezer album
+
+The Deezer album a song's track belongs to, which is what Deezer serves
+the cover by.
+
+Lives in: `api/src/songs/` (the `deezer_album_id` column), read by
 `site/src/lib/cover-art.utils.ts`
 
-- Distinct from the **recording**, which is what `mbid` holds. One
-  recording appears on many releases; one release has one front cover.
+- Distinct from the **Deezer track**, which is what `deezer_track_id`
+  holds. One track belongs to one album; an album has one front cover.
 - Nullable, because Aurora DSQL cannot add a `NOT NULL` column after the
-  table exists, and because a song typed in by hand names no release.
-- A song with no release, or one whose artwork Cover Art Archive does not
-  have, renders a tile carrying the song's initials instead. Both cases
-  are ordinary, not faults.
-- Most confused with **album**, which is the release's *title* as text
-  and is what the interface prints; the release is the identifier the
+  table exists, and because a song typed in by hand names no album.
+- A song with no Deezer album renders a tile carrying the song's initials
+  instead. That case is ordinary, not a fault.
+- Most confused with **album**, which is the album's *title* as text and
+  is what the interface prints; the Deezer album is the identifier the
   cover is fetched by.
+- The columns `mbid` and `release_id` are the MusicBrainz identifiers this
+  replaced. Aurora DSQL drops no column, so they stay in the table and
+  nothing reads them; a MusicBrainz identifier names nothing on Deezer, so
+  the old values were not carried over.
 
 ## Practice
 
@@ -386,8 +425,11 @@ Lives in: `api/src/songs/`
   (`SONG_STATUSES`).
 - `links` holds up to 16 external links, each with a URL, a provider
   (`spotify`, `deezer`, `youtube`, `other`) and a comment.
-- MusicBrainz enrichment lands in `mbid`, `album`, `durationSeconds`,
-  `isrcs` (up to 8) and `tags` (up to 16).
+- Deezer enrichment lands in `deezerTrackId`, `deezerAlbumId`, `album`,
+  `durationSeconds` and `isrcs` (Deezer names one per track). `spotifyTrackId`
+  follows, resolved from that ISRC when the song is saved. `tags` (up to
+  16) is kept for the songs imported from MusicBrainz before the move and
+  is no longer filled by a search.
 - Three separate note fields, each up to 4 096 characters:
   `structureNotes`, `gimmickNotes` and `notes`, all read back as the empty
   string when the column is null.
@@ -516,9 +558,9 @@ Lives in: `api/src/uploads/`
   free-text column on a concert.
 - **gig**, **show**, **date**: the event is a **concert**. **rehearsal**
   is a **practice**. Both are kinds of **session**.
-- **track**, **tune**, **number**: the catalogue holds **songs**.
-  `recording` appears only inside `musicbrainz.core.ts`, where it is the
-  upstream API's word.
+- **tune**, **number**: the catalogue holds **songs**. **track** is
+  Deezer's word for what it returns and appears only as `deezerTrackId`
+  and inside `deezer.core.ts`.
 - **set**, **programme**, **running order**: the ordered run is a
   **setlist**, and each row in it is a **setlist entry**.
 - **ballot**, **poll**, **election**, **scrutin**: a setlist in its

@@ -46,6 +46,7 @@ const TEST_FILES = ['**/*.test.{ts,tsx,js}', '**/*.test-utils.ts', '**/test/**/*
 
 const MODULE_LEVEL_SINGLETON_FILES = [
   'apps/*/api/src/database/client.ts',
+  'apps/*/api/src/**/*.client.ts',
   'apps/*/api/src/**/*.adapter.ts',
   'apps/*/site/src/*-store.ts',
   'apps/*/site/src/**/*.store.ts',
