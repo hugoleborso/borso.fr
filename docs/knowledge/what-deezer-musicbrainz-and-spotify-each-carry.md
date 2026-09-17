@@ -39,6 +39,48 @@ will show a zero-BPM song. Map `0` to absent at the boundary.
 `bpm` is on the single-track endpoint, not on search hits — reading it costs one
 extra call per song.
 
+### Deezer answers 200 to requests it refused
+
+The refusal is stated only in the body, and the body has a different shape from
+a result:
+
+```json
+{ "error": { "type": "DataException", "code": 800, "message": "no data" } }
+{ "error": { "type": "Exception",     "code": 4,   "message": "Quota limit exceeded" } }
+```
+
+`response.ok` is `true` for both. Code `800` is an unknown record; code `4` is
+an exhausted quota, and the two need different answers — an unknown track is a
+fact about the track, an exhausted quota is a fact about the moment.
+
+An adapter that checks the status alone reports both as *no results*, which is
+the same answer a search gives when the song genuinely does not exist. A room
+that exhausts the quota during a concert is then told the band has no
+catalogue, and tries again, which is exactly what a throttled service does not
+want. Read the payload as well as the status, and give the caller an outcome
+union it cannot ignore.
+
+Measured 2026-09-16.
+
+### Deezer indexes masters, not songs
+
+Typing what a room types — `nirvana smells like teen spirit` — returned six
+rows all reading *Smells Like Teen Spirit — Nirvana*, carrying **five
+different ISRCs**: a remaster, three live takes and a compilation cut.
+
+Nothing upstream marks them as one song, because upstream they are not one
+song. An ISRC identifies a recording, and these are five recordings. To a room
+they are one song, and six rows take six shares of one vote.
+
+So the ISRC is an exact join and an insufficient one. Collapsing on a folded
+title and artist after ranking, keeping the first row, took that query from 25
+rows to 13. The cost is that a spectator who genuinely wants the Reading live
+take can no longer ask for it — acceptable where a band plays its own
+arrangement anyway, and not acceptable in a catalogue's own search, where
+losing a named version loses information.
+
+Measured 2026-09-16. See [ADR-0019](../adr/0019-the-room-search-collapses-masters-into-songs.md).
+
 ## MusicBrainz has no tempo and never did
 
 An ISRC does resolve:
@@ -86,3 +128,6 @@ the rest was deprecated in November 2024. Do not plan a feature on it.
   correct for a band: the key you play it in is not the key the record is in.
 - There is no tempo column. Deezer is the only one of the three that could fill
   one, partially, at one call per song.
+- The audience search collapses masters and reads Deezer's in-body refusals as
+  refusals. Both are in the section above, and both were found by probing the
+  live API rather than by reading its documentation, which states neither.

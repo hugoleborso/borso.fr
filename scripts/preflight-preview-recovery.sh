@@ -21,7 +21,10 @@
 #
 # Usage: preflight-preview-recovery.sh <app-slug> <pr-number>
 #
-# Eradication for docs/dantotsus/preview-deploy-orphans-block-recreate.md.
+# This is the eradication for the two failures listed above. The dantotsu it
+# used to cite was never written; the list is the record. The nearest entry is
+# docs/dantotsus/cdk-failed-deploy-leaves-retained-buckets-orphaned.md, which
+# covers retained buckets rather than these two.
 
 set -euo pipefail
 

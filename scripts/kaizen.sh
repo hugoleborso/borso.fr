@@ -42,6 +42,13 @@
 # primary input reaches the sweep only if somebody copies it into the branch
 # first. `archive` is that copy, into the feature folder where the sweep will
 # look for it.
+#
+# It merges rather than overwrites. It used to `cp`, and a task where three
+# agents each archived in turn ended with only the last one's entries — eight
+# lines from two earlier agents had to be merged back by hand. A command whose
+# entire purpose is to stop the sweep losing its input must not be the thing
+# that loses it. Entries are one line each carrying a writer and a timestamp,
+# so an exact-line match identifies a duplicate reliably.
 
 set -euo pipefail
 
@@ -88,9 +95,23 @@ case "${1:-}" in
     [ -f "$KAIZEN_FILE" ] || { printf 'no KAIZEN.md to archive\n' >&2; exit 1; }
     destination="$REPO_ROOT/docs/features/$2/kaizen.md"
     mkdir -p "$(dirname "$destination")"
-    cp "$KAIZEN_FILE" "$destination"
-    printf '\033[36m[kaizen]\033[0m archived %s entry/entries to docs/features/%s/kaizen.md — commit it, or the sweep will never see it\n' \
-      "$(grep -c '^- \[' "$KAIZEN_FILE" || true)" "$2"
+    if [ -f "$destination" ]; then
+      # An archive that overwrote destroyed the previous agents' entries, which
+      # is the one thing this command exists to prevent. Merge: keep the file
+      # that is there, append only the entry lines it does not already hold.
+      # Entries are one line each and carry their writer and timestamp, so an
+      # exact-line match is a reliable identity.
+      added=0
+      while IFS= read -r entry; do
+        grep -Fxq -- "$entry" "$destination" || { printf '%s\n' "$entry" >> "$destination"; added=$((added + 1)); }
+      done < <(grep '^- \[' "$KAIZEN_FILE" || true)
+      printf '\033[36m[kaizen]\033[0m merged %s new entry/entries into docs/features/%s/kaizen.md (%s total) — commit it, or the sweep will never see it\n' \
+        "$added" "$2" "$(grep -c '^- \[' "$destination" || true)"
+    else
+      cp "$KAIZEN_FILE" "$destination"
+      printf '\033[36m[kaizen]\033[0m archived %s entry/entries to docs/features/%s/kaizen.md — commit it, or the sweep will never see it\n' \
+        "$(grep -c '^- \[' "$KAIZEN_FILE" || true)" "$2"
+    fi
     ;;
   init)
     ensure_file

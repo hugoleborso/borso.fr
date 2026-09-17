@@ -56,6 +56,10 @@ Pulled from the spec, in this order:
   - A FAIL row names every divergence concretely ("filter pills absent on `/catalog`", "Instrument Serif not loaded — computed font-family on h1 is `system-ui`", "member chips replaced by plain text on song cards").
   - The prototype itself is the source of truth — when the prototype and the spec disagree on a visible detail, the validator flags the conflict in *Validation gaps* but defers to the prototype for the row's verdict.
 1. **Result** — every visible artefact named in the Result section. Typography, layout, copy, colours, spacing.
+
+   **One row per artefact, not per interaction.** A screen the spec describes by what it *carries* gets one row per thing it carries. A row asking whether the screen can be opened, or whether a control on it responds, covers the control and nothing else. This is the shape of a real miss: the band's panel in `pragma`'s audience-voting spec is described as carrying a QR code, a button, **the live standing while the round runs**, and the round history. The checklist asked whether a round could be opened from it. It could. The panel rendered four of those five and shipped with a PASS on top of the one it did not — the one the whole feature exists to put on stage. See [`the-panel-that-paid-for-a-poll-it-never-rendered.md`](../../../docs/dantotsus/the-panel-that-paid-for-a-poll-it-never-rendered.md).
+
+   Read each Result paragraph as a list, write the list out, and give every item a row before driving the browser. An item you cannot reach is UNVERIFIABLE with a reason, never absent.
 2. **Use cases / edge cases — happy path** — each numbered step, in order, with a concrete browser action.
 3. **Use cases / edge cases — edge cases** — narrow viewport, reduced motion, dark-mode preference, slow network, large input, empty input.
 4. **Use cases / edge cases — error cases** — invalid URL params, third-party failures, keyboard accidents.

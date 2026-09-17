@@ -1,5 +1,13 @@
 # Biome Grit plugins for JSX — the AST shape that's easy to miss
 
+> **Biome is no longer installed here.**
+> [ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md)
+> replaced it with ESLint on 2026-08-08. This entry is kept because the
+> behaviour it records is a fact about Biome that outlives our use of it, and
+> because the shape of the trap recurs. Nothing on this page is a live
+> instruction; `scripts/check-instructions-name-installed-tools.sh` is what
+> makes sure no skill or standard still tells an agent to run it.
+
 Biome 2.x ships a Grit-based plugin engine that runs as part of
 `biome lint` / `biome check`. The existing repo plugins
 (`no-direct-api-fetch-in-site.grit`,

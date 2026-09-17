@@ -109,7 +109,7 @@ export function projectFractionTimeAware(
 
 ### Database changes
 
-Aucune migration. La colonne `editions.gpx` est déjà stockée en `text`-JSON (cf. [`dsql-postgres-compat-gaps.md §1`](../../../knowledge/dsql-postgres-compat-gaps.md) — DSQL ne supporte pas `jsonb`). Le nouveau champ `pointTimeFractions` est juste une clé optionnelle de plus dans l'objet sérialisé. Les éditions existantes lues sans cette clé ⇒ `pointTimeFractions` reste `undefined` côté code ⇒ fallback déclenché. Backward-compatible par construction.
+Aucune migration. La colonne `editions.gpx` est déjà stockée en `text`-JSON (cf. [`dsql-postgres-compat-gaps.md §1`](../../../../knowledge/dsql-postgres-compat-gaps.md) — DSQL ne supporte pas `jsonb`). Le nouveau champ `pointTimeFractions` est juste une clé optionnelle de plus dans l'objet sérialisé. Les éditions existantes lues sans cette clé ⇒ `pointTimeFractions` reste `undefined` côté code ⇒ fallback déclenché. Backward-compatible par construction.
 
 ### Files to change
 

@@ -1,4 +1,4 @@
-# ADR-0016: `qrcode.react` renders the audience-vote QR code
+# ADR-0020: `qrcode.react` renders the audience-vote QR code
 
 - **Status:** deprecated
 - **Date:** 2026-08-26

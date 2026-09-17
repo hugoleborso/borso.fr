@@ -119,10 +119,23 @@ jobs:
       # gets caught before merge. Rung-2 eradication (paired with the
       # hook) of docs/dantotsus/dsql-alter-table-only-add-column.md.
       - run: ./scripts/check-migration-sql-dsql-compat.sh
-      # And that no two migrations claim the same number. The collision is
-      # invisible to git — two branches add differently named files — so the
-      # commit hook never sees both sides and only the merge does.
-      - run: ./scripts/check-migration-numbering.sh
+      # And that no number in a numbered sequence — a migrations folder, the
+      # ADRs — is claimed twice. The collision is invisible to git: two
+      # branches add differently named files, so the commit hook never sees
+      # both sides and only the merge does.
+      - run: ./scripts/check-numbered-sequences.sh
+      # And that no two gates name the same subject, which is how a duplicated
+      # gate announces itself when nothing can compare two scripts' behaviour.
+      - run: ./scripts/check-gate-names-are-distinct.sh
+      # And that no ADR heading states a number other than its filename's, which
+      # is what a renumber leaves behind when it moves the file only.
+      - run: ./scripts/check-adr-numbers-resolve.sh
+      # And that no skill, agent or standard tells an agent to run a command
+      # this repository does not install. Prose has no build step.
+      - run: ./scripts/check-instructions-name-installed-tools.sh
+      # And that a document a script, hook or workflow cites is there. The
+      # markdown link check does not read them, so their citations went unread.
+      - run: ./scripts/check-named-paths-exist.sh
       # One stylesheet per application, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-single-stylesheet.sh

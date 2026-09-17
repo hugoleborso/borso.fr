@@ -8,7 +8,7 @@ description: Dispatch the dedicated `technical-validator` agent to read the spec
 A spec is a contract. A plan is the engineering projection of the contract onto the codebase. A technical validation **reads the diff and asks four questions**:
 
 1. **Correctness** — does the code do what the spec says?
-2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, biome, type-assertion plugin)?
+2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, ESLint including `borso/no-type-assertion-except-unknown`)?
 3. **Tests pass** — does `pnpm test` succeed on every touched workspace?
 4. **Coverage** — does each use case in the spec have a test that exercises it?
 

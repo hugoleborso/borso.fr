@@ -150,12 +150,13 @@ The background is in
   tag outside a migration or a repository.
 - `test:migrations.audit.test.ts`, one per full-stack application, rejects a
   `DEFAULT now()` on any column outside that application's allow list.
-- `script:scripts/check-migration-numbers.sh` fails a migrations folder where
+- `script:scripts/check-numbered-sequences.sh` fails a migrations folder where
   one number is claimed by two files. The number is the only thing ordering one
   migration against another, so a shared number leaves the alphabet to decide;
   two branches open at once each take the next free number and git merges both
   filenames without a conflict, which makes the merge commit the first moment
-  the collision exists and the last moment anybody is reading numbers.
+  the collision exists and the last moment anybody is reading numbers. The same
+  script covers `docs/adr`, which has the same shape and had no gate at all.
 - `script:scripts/check-coupled-lists.sh` additionally fails when a table a
   migration creates is missing from either list the back-e2e harness keeps of
   them. The setup file drops its list before replaying the migrations and the

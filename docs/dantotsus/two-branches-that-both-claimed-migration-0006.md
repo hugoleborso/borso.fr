@@ -71,6 +71,12 @@ during the merge, and the merge commit records why.
 
 **Type:** DevX check (level 2 — pre-commit gate)
 
+> **Superseded mechanism.** The script this entry shipped was merged into
+> [`scripts/check-numbered-sequences.sh`](../../scripts/check-numbered-sequences.sh),
+> which covers every folder where the leading number is the order rather than
+> migrations alone. Two gates existed for this one subject for a day; see
+> [`the-loop-shipped-the-same-gate-twice.md`](./the-loop-shipped-the-same-gate-twice.md).
+
 **Reference:** PR #105
 
 **The actual fix:** `scripts/check-migration-numbers.sh`, wired into

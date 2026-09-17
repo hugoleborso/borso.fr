@@ -94,7 +94,7 @@ Sources to walk in order, capturing each friction event as one row:
   (`docs/features/<app>/<slug>/validation/`). Every FAIL or
   UNVERIFIABLE row in any report is a friction event.
 - **Tooling warnings** that fired during the session: knip noise,
-  Biome plugin diagnostics, Husky hook rejections, AWS API errors,
+  ESLint diagnostics, Husky hook rejections, AWS API errors,
   build pipeline surprises, dev-server crashes.
 - **Vendor "I didn't know it did that" moments** — every time
   documentation contradicted observation.
@@ -175,7 +175,7 @@ For each surviving subject (i.e. not a `merge into` row):
 ### 2c. Library-search pass — before writing custom anything
 
 For every subject classified as **real defect** or **design pivot**
-whose draft eradication is *"add a Biome plugin"*, *"add a hook"*,
+whose draft eradication is *"add an ESLint rule"*, *"add a hook"*,
 *"add a CI script"*, *"build a wrapper / a helper / a custom utility"*,
 or any other "we'll write X" — pause and run a library-search pass
 **before** opening the dantotsu file.

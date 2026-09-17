@@ -47,8 +47,6 @@ fi
 if echo "$changed" | grep -q 'api/src/database/migrations/.*\.sql$'; then
   echo "[pre-commit] migration SQL changed — running DSQL-compat check"
   ./scripts/check-migration-sql-dsql-compat.sh
-  echo "[pre-commit] checking no two migrations share a number"
-  ./scripts/check-migration-numbering.sh
 fi
 
 # Blueprint annotations, whenever source changed. A `@Blueprint` missing a tag
@@ -320,12 +318,42 @@ scripts/check-hook-decisions.sh
 echo "[pre-commit] checking the lists that have to agree"
 scripts/check-coupled-lists.sh
 
-# Two branches open at once each numbered their migration 0006, and the merge
-# kept both: every file still ran once, but the number stopped ordering
-# anything. Rung-2 eradication of
-# docs/dantotsus/two-branches-that-both-claimed-migration-0006.md.
-echo "[pre-commit] checking each migration number is claimed once"
-scripts/check-migration-numbers.sh
+# In a numbered sequence the number is the order, and two branches open at once
+# each take the next free one without conflicting. Migrations hit this twice and
+# ADR numbers once; one script covers every such folder so the next sequence does
+# not need a third. See docs/dantotsus/the-loop-shipped-the-same-gate-twice.md.
+echo "[pre-commit] checking each number in a sequence is claimed once"
+scripts/check-numbered-sequences.sh
+
+# And that no two gates name the same subject. The enforcement ledger asks
+# whether each mechanism exists and runs; it cannot ask whether two of them are
+# the same one, which is how this repository ran the migration-number check
+# twice for a day. Rung-2 eradication of
+# docs/dantotsus/the-loop-shipped-the-same-gate-twice.md.
+echo "[pre-commit] checking no two gates name the same subject"
+scripts/check-gate-names-are-distinct.sh
+
+# And that an ADR's heading states the number its filename does. A renumber
+# moves the file and forgets the heading, which then sends a reader to a record
+# about something else. Rung-2 eradication of
+# docs/dantotsus/an-adr-number-goes-to-whoever-writes-it-first.md.
+echo "[pre-commit] checking each ADR number resolves the same way everywhere"
+scripts/check-adr-numbers-resolve.sh
+
+# And that no instruction surface tells an agent to run a command this
+# repository does not have. Prose has no build step, and a skill is read by a
+# model that will try what it is told. Rung-2 eradication of
+# docs/dantotsus/the-skill-that-named-the-linter-the-repository-deleted.md.
+echo "[pre-commit] checking every tool an instruction names is installed"
+scripts/check-instructions-name-installed-tools.sh
+
+# And that a document a script cites is there. check-doc-links.ts reads
+# markdown, and a shell script is not markdown, so the line at the top of a
+# gate naming its dantotsu — the only thread back to the reasoning — was the
+# one nothing checked. Rung-2 eradication of
+# docs/dantotsus/the-link-checker-skipped-the-folder-it-was-trusted-for.md.
+echo "[pre-commit] checking every document a script cites and every path an instruction names"
+scripts/check-named-paths-exist.sh
 
 # A spec with no Test strategy leaves the split between the two validators to
 # whichever one reads it first, and three of them guessed differently in one

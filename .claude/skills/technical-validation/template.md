@@ -26,7 +26,7 @@ INPUTS:
 
 Read the spec, read the plan if present, resolve the diff against base_ref, and walk the four validation categories per your standard:
   A. Correctness vs spec
-  B. Code cleanliness (repo rules + biome lint + knip)
+  B. Code cleanliness (repo rules + eslint + knip)
   C. Tests pass
   D. Test coverage of spec
 

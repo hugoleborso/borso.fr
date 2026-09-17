@@ -144,7 +144,7 @@ Yes:
 No:
 - Reversible-at-zero-cost choices (variable names, file layout within a folder).
 - Cases where `CLAUDE.md` or a `docs/knowledge/` entry already settles the question. Cross-link instead.
-- A coding-style choice already covered by Biome / CLAUDE.md *Clean code* — those go in the linter.
+- A coding-style choice already covered by ESLint / `docs/standards/` / CLAUDE.md *Clean code* — those go in the linter.
 - An accepted ADR with the same slug already exists and the new invocation hasn't declared `supersedes`. See *Procedure* step 4.
 
 ## What `/open-pr` reads back

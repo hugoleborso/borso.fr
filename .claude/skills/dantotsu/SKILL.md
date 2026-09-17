@@ -139,7 +139,7 @@ top is best):
    code. Example: instead of accepting `unit: string` on a budget,
    take only `amountUsd: number` and hardcode `'USD'` internally.
    Now the EUR mistake is unspeakable.
-2. **DevX check.** A linter rule (Biome / GritQL plugin), a custom
+2. **DevX check.** A linter rule (a custom rule under `eslint-rules/`), a custom
    `pre-commit` / `pre-push` script, an `actionlint` config, or a
    typescript type guard that rejects the misconception at
    compile/lint/commit time. Catches the next instance before it

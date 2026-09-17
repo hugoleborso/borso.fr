@@ -156,10 +156,28 @@ generated artefact is therefore named in prose and never linked.
   `scripts/check-stylesheet-contents.sh` parses, and a conditional comment,
   which is markup rather than prose.
 - `script:scripts/docs/check-doc-links.ts` fails a document that links a file
-  which is not there, across every markdown file outside `docs/features/`. It
-  skips a placeholder, a GitHub-relative target and anything inside a fenced
-  block, and it is the reason the `/code-standards` routing table's thirteen
-  dead links are gone.
+  which is not there. It skips a placeholder, a GitHub-relative target and
+  anything inside a fenced block, and it is the reason the `/code-standards`
+  routing table's thirteen dead links are gone. What it skips beyond that is a
+  **dated record** — a `validation/` verdict or a `runs/` agent journal — whose
+  links describe a tree that has since moved and which nobody may edit anyway;
+  `scripts/check-dated-records-are-append-only.sh` is the gate that says so.
+  The exclusion was `docs/features/` wholesale until 2026-09-16, which also
+  took every `spec/` and `plan/` with it — the documents an implementer opens
+  first, and the six dead links narrowing it found were all in those.
+- `script:scripts/check-named-paths-exist.sh` fails a path this repository
+  names in prose and does not have, across two surfaces the markdown link check
+  cannot see. **A `docs/….md` cited from a script, hook or workflow:** the line
+  at the top of a gate saying which dantotsu it eradicates is the only thread
+  from a mechanism back to its reasoning, and two had rotted, both naming
+  entries that were never written. **A backticked repository path in `CLAUDE.md`
+  or a skill:** 95 such paths on the tree this landed against, one of them
+  absent — `.claude/workflows/feature-pipeline.js`, asserted in three documents
+  at once while the runbook's own step 6 says to commit it after the first run
+  and nobody ever had. Test files are skipped, and so is a path carrying a glob
+  or a `<placeholder>`: a made-up path is the point in both. One gate for two
+  surfaces is deliberate — this repository shipped the migration-number check
+  twice because two authors each wrote one for the folder in front of them.
 - `reviewer` reads `docs/standards/hotspots.md` before deciding which pattern to
   write down next. It crosses how often each file changes with whether it
   follows a recorded pattern and whether its path says what it is. Nothing gates

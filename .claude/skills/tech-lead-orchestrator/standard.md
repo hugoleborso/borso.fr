@@ -13,7 +13,7 @@ human input:
   human-bound (perspective sweeps, AskUserQuestion, ratification,
   decision-support walk). Workflows cannot pause for mid-run human input,
   so these stages stay in the chat session.
-- **Dynamic Workflow at `.claude/workflows/feature-pipeline.js`** owns
+- **Dynamic Workflow**, generated per run from `.claude/commands/feature-pipeline.md` (no script is committed under `.claude/workflows/`), owns
   `plan → implement → validate → ship`, dispatched via
   `/feature-pipeline <spec-path>` once the human has ratified the spec
   and all candidate ADRs. The workflow invokes the existing
@@ -203,9 +203,10 @@ see [`docs/dantotsus/orchestrator-agency-overcorrected-on-product-decisions.md`]
 - **Rounds ≥ ~4 commits or ~20 files default to `isolation: "worktree"`**
   (verify with `git worktree list` right after dispatch; if the flag was
   dropped, fall back to one round at a time).
-- **Dispatch briefs name `biome check`, not `biome lint`** (the
-  pre-commit hook runs the composite check; the lint sub-rule misses
-  formatter + organize-imports drift).
+- **Dispatch briefs name both halves of the gate** — `pnpm exec eslint
+  --no-warn-ignored --max-warnings 0` *and* `prettier --check`. A brief
+  naming one half lets the other drift a round at a time, because every
+  round passes the check its brief named.
 
 Full rationale: [`docs/knowledge/orchestrator-dispatch-hygiene.md`](../../../docs/knowledge/orchestrator-dispatch-hygiene.md).
 

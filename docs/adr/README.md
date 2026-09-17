@@ -44,7 +44,9 @@ No:
 ## Index
 
 <!-- New entries go under the right heading. If no heading fits, add
-     one. Manually curated — `/adr` never reorders existing entries. -->
+     one. Manually curated — `/adr` never reorders existing entries.
+     scripts/check-adr-numbers-resolve.sh refuses a record with no row and
+     a row with no record; it had drifted by nine of twenty before it ran. -->
 
 | # | Title | Status | Date |
 |---|---|---|---|
@@ -58,13 +60,21 @@ No:
 | [0008](./0008-purity-enforced-structurally.md) | Purity is enforced by file location, not by review | accepted | 2026-08-08 |
 | [0009](./0009-pragma-previews-clone-production.md) | pragma previews clone production, credentials included | accepted | 2026-08-09 |
 | [0010](./0010-pragma-domain-folder-for-cross-boundary-rules.md) | A `domain/` folder for the rules pragma's two sides share | proposed | 2026-08-13 |
+| [0011](./0011-elk-lays-out-the-architecture-graph-at-generation-time.md) | ELK lays out the architecture graph at generation time | proposed | 2026-08-14 |
+| [0012](./0012-outbound-calls-live-in-adapter-files.md) | Every outbound call lives in an `.adapter.ts` file | proposed | 2026-08-15 |
+| [0013](./0013-input-schemas-carry-the-coverage-gate.md) | `.schema.ts` carries the coverage gate | accepted | 2026-08-15 |
+| [0014](./0014-generated-files-are-not-committed.md) | Generated files are not committed | proposed | 2026-08-20 |
+| [0015](./0015-per-member-credentials-replace-the-shared-password.md) | Per-member credentials replace the shared password, behind a self-closing enrolment window | proposed | 2026-09-14 |
+| [0016](./0016-simplewebauthn-carries-the-passkey-flow.md) | `@simplewebauthn` carries the passkey flow, as an alternative single factor | proposed | 2026-09-14 |
 | [0017](./0017-spotify-track-ids-resolved-by-isrc-at-link-time.md) | Spotify track ids resolved by ISRC at link time, credential in SSM | proposed | 2026-09-15 |
+| [0018](./0018-nominatim-answers-the-bar-search.md) | Nominatim answers the bar search, proxied through the API | proposed | 2026-09-15 |
+| [0019](./0019-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | proposed | 2026-09-16 |
+| [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
 
 ### Data layer
 
 - 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
 - 0009 — pragma previews clone production, credentials included.
-- 0015 — Deezer answers the audience search and MusicBrainz resolves the picked result; amended in place on 2026-08-27 after the first draft weighted identifier continuity high on the strength of a dedupe rule the same change had introduced. The file name predates the amendment.
 
 ### App architecture
 

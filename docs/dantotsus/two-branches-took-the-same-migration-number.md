@@ -92,6 +92,12 @@ under the other file's name.
 
 **Type:** DevX check (level 2 — devx check)
 
+> **Superseded mechanism.** The script this entry shipped was merged into
+> [`scripts/check-numbered-sequences.sh`](../../scripts/check-numbered-sequences.sh),
+> which covers every folder where the leading number is the order rather than
+> migrations alone. Two gates existed for this one subject for a day; see
+> [`the-loop-shipped-the-same-gate-twice.md`](./the-loop-shipped-the-same-gate-twice.md).
+
 **Reference:** PR #102 · commit on this branch adding
 `scripts/check-migration-numbering.sh`
 

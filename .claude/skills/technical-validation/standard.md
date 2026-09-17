@@ -11,7 +11,7 @@
 A technical validation **reads the diff on the current branch and asks four questions about it**:
 
 1. **Correctness** — does the code do what the spec said it would? Quote the code, cross-reference the Q.O.D. or Changes entry.
-2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, biome, the type-assertion plugin)? Run lint, search for forbidden patterns, sample names.
+2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, ESLint including `borso/no-type-assertion-except-unknown`)? Run lint, search for forbidden patterns, sample names.
 3. **Tests pass** — `pnpm test` succeeds on every touched workspace. For coverage-gated workspaces, `test:coverage` succeeds at 100%.
 4. **Coverage** — every use case the spec lists is exercised by a test that exists.
 
@@ -43,16 +43,16 @@ Skip rows that are pure deferral ("out of scope"). Skip rows that the spec marks
 
 ### B. Code cleanliness (repo rules)
 
-Pulled from CLAUDE.md "Clean code" and the repo's biome config:
+Pulled from CLAUDE.md "Clean code", `docs/standards/`, and the repo's `eslint.config.js`:
 
 - Names carry intent — no `c`, `x`, `r` outside trivial loop indices. No abbreviations.
 - Magic numbers / strings extracted to named constants.
 - Comments document the WHY only — no what-comments, no JSDoc on internals.
 - Function names describe the result, not the mechanism.
-- Type assertions limited to `as const` and `as unknown` (the `no-type-assertion-except-unknown` Biome plugin enforces, but the rule must hold even where the plugin doesn't lint, e.g. type-only files).
+- Type assertions limited to `as const` and `as unknown` (`borso/no-type-assertion-except-unknown` enforces, but the rule must hold even where ESLint does not reach).
 - `noExplicitAny` — no `any`.
 - `noUncheckedIndexedAccess` honoured.
-- `pnpm exec biome lint` passes on changed files.
+- `pnpm exec eslint --no-warn-ignored --max-warnings 0` passes on changed files.
 - `pnpm exec knip` clean on the workspace.
 - **`useEffect` is a smell.** Every `useEffect` introduced or modified in the diff has to justify itself in the row's evidence — what external system is being synchronised, why CSS / derived state / event handlers / `useSyncExternalStore` couldn't do it. Effects that watch React state to set other React state are the classic anti-pattern (almost always `useMemo` in disguise) and land FAIL. Effects that subscribe to globals (`addEventListener`, `setInterval`, `MutationObserver`, `matchMedia`) or run a one-time mount-side replace (URL replaceState mirroring initial state) are legitimate and PASS with a one-line note. See CLAUDE.md "Clean code" and [*You Might Not Need an Effect*](https://react.dev/learn/you-might-not-need-an-effect).
 - **Per-domain triad on the backend.** Every new or modified folder under `apps/<app>/api/src/` is checked against CLAUDE.md "Clean code" — *Back-end domains are vertical slices*. The validator opens each domain folder and confirms: (a) the folder is a bounded context (named after the domain, not a horizontal aggregator), (b) it contains the layered triad (`<domain>.controller.ts` + `<domain>.service.ts` + `<domain>.repository.ts` + `<domain>.schema.ts`), (c) any pure `.core.ts` file lives INSIDE the bounded context's folder, not in a central `domain/`. Horizontal aggregator folders (`domain/`, `controllers/`, `services/`, `repositories/`, `routes/`) FAIL on sight — they cannot be papered over as "shared". A controller file with DB queries inlined (rather than going through a repository) FAILs the row even if a `<domain>.service.ts` exists. Reference: `apps/last-loop-lepin/api/src/{auth,edition,punch,runner,ranking,media}/` is the canonical shape; new code is compared against it. A workspace's `api/` directory that doesn't have any per-domain folders yet (e.g. a brand-new app shipping only a healthcheck) is UNVERIFIABLE with a note, not a free PASS.

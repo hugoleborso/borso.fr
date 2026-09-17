@@ -134,6 +134,75 @@ error that names a JavaScript problem rather than a CLI one. Wrap every
 snippet in an IIFE — `(() => { … })()` — which is the form the examples above
 already use, and the collision cannot happen.
 
+## A session wedges after roughly forty drives, and the symptom reads as an application defect
+
+This is the expensive one, because it does not announce itself as a tooling
+problem. Three times in one task (2026-09-16), two different agents, a session
+stopped completing its fetches after roughly forty to fifty page drives:
+
+- a reload never returned and the panel rendered with every query empty;
+- a React mutation stayed pending, so a button read as permanently disabled;
+- a panel froze mid-round showing `TIME LEFT 0s`, with the request log holding
+  two polls where thirty were due.
+
+Each of those is exactly what a real defect looks like from a browser. A
+validator that records a FAIL here records a false one, and the only evidence
+that tells the two apart — how many times this session has been driven — is
+not visible from inside the session.
+
+So [`scripts/browser.sh`](../../scripts/browser.sh) counts the drives per
+`--session` and prints the count plus this symptom list from drive 30 onward,
+with the restart command spelled out. **Before recording a FAIL on a page that
+looks frozen, restart the daemon and check whether the symptom survives it.**
+
+`--restart` may go anywhere in the argument list on the wrapper (agent-browser
+itself rejects `--restart` after `--session` with `Unknown command: --restart`,
+which is the kind of order-sensitivity its help does not state). A restart also
+resets the count.
+
+## `--session` silently discards the page when a later call omits a launch flag
+
+Calling the same `--session` again without a launch flag it was created with —
+`--init-script`, for instance — drops the page and its globals. The next `eval`
+then fails with a `ReferenceError` and a `SecurityError` on `about:blank`,
+naming neither the session nor the missing flag. Pass every launch flag on
+every call to that session, or accept that the session is new.
+
+Observed 2026-09-16.
+
+## `batch` re-parses each quoted command and strips the inner quotes
+
+`eval __vote.vote('Wonderwall')` inside a `batch` reaches the page as
+`vote(Wonderwall)` and dies with a `ReferenceError`, while the identical `eval`
+outside `batch` works. Anything carrying quoted arguments goes as its own call.
+
+Observed 2026-09-16.
+
+## `find` rejects `--name` placed before the action
+
+The working order is action first, then `--name`. The CLI's own help prints the
+option list under a `Usage` line that puts `[action]` last, so the order that
+works is not the order the help suggests.
+
+Observed 2026-09-16.
+
+## A ref goes stale within a second when the accessible name carries live text
+
+A pool row whose accessible name includes a live vote count and a countdown
+gets a new ref on every one-second poll, so click-by-ref loses the race. Find
+and click in the same beat, or drive the element by a stable attribute instead
+of by ref.
+
+Observed 2026-09-16.
+
+## Each wrapper call costs about 2.5 s of `pnpm exec` startup
+
+A thirty-second agent round affords roughly eight browser commands, so a
+multi-step flow has to be split across rounds. Budget for it when writing a
+validation brief rather than discovering it halfway through a flow.
+
+Measured 2026-09-16.
+
 ## Related
 
 - [`agent-browser-cdp-click-no-op-on-react-onclick.md`](./agent-browser-cdp-click-no-op-on-react-onclick.md)
