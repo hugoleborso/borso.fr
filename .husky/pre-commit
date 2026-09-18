@@ -291,6 +291,14 @@ pnpm exec tsx scripts/docs/check-doc-links.ts
 echo "[pre-commit] checking each pure module has a caller"
 scripts/check-pure-modules-have-callers.sh
 
+# A test file no project collects never runs, and a suite one file lighter looks
+# exactly like a suite that passed. Asks vitest itself, per workspace, which
+# files it would collect. About six seconds over six workspaces and no
+# globalSetup, so no database starts. Rung-2 eradication of
+# docs/dantotsus/the-test-that-no-project-collected.md.
+echo "[pre-commit] checking every test file is collected by a project"
+scripts/check-every-test-is-collected.sh
+
 # A non-module <script src> tag ships un-bundled and 404s in preview and
 # production. A grep over the app HTML, so it costs nothing and belongs on the
 # commit rather than the push. Rung-2 eradication of
