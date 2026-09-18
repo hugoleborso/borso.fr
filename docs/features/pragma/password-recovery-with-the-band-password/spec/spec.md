@@ -71,7 +71,7 @@ sequenceDiagram
 
 **Error cases.**
 - Wrong band password, or unknown username → 401 `invalid-recovery`, rendered as *Wrong band password or name.*
-- More than three failed attempts from one address within an hour → 429 `rate-limited`, rendered with the existing `auth.rateLimited` copy. A successful recovery clears the bucket, so a member who mistypes once and succeeds is not penalised.
+- More than three failed attempts from one address within an hour → 429 `rate-limited`, rendered with a recovery-specific `auth.recoveryRateLimited` copy that names an hour. The sign-in string beside it says *try again in a few minutes*, which is true of that flow's fifteen-minute window and understates this one's by four times, so the two flows do not share it. A successful recovery clears the bucket, so a member who mistypes once and succeeds is not penalised.
 - Password shorter than eight characters → refused by `zValidator` before any hashing, 400.
 
 ## Questions, Options and Decisions
