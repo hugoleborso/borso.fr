@@ -22,24 +22,21 @@ export function selectLoginErrorMessageKey(status: number | null): ParseKeys {
   return LOGIN_ERROR_KEY_BY_STATUS.get(status) ?? UNKNOWN_LOGIN_ERROR_KEY;
 }
 
-const CONFLICT_STATUS = 409;
-
-const ENROL_ERROR_KEY_BY_CODE: ReadonlyMap<string, ParseKeys> = new Map([
-  ['enrolment-closed', 'auth.enrolClosed'],
-  ['username-taken', 'auth.usernameTaken'],
-  ['already-enrolled', 'auth.alreadyEnrolled'],
-  ['invalid-shared-password', 'auth.invalidSharedPassword'],
+const RECOVERY_ERROR_KEY_BY_CODE: ReadonlyMap<string, ParseKeys> = new Map([
+  ['invalid-recovery', 'auth.invalidRecovery'],
+  ['rate-limited', 'auth.rateLimited'],
+  ['auth-not-bootstrapped', 'auth.notBootstrapped'],
 ]);
 
 const errorBodySchema = z.object({ error: z.string() });
 
-export function selectEnrolErrorMessageKey(status: number | null, body: unknown): ParseKeys {
+export function selectRecoverErrorMessageKey(status: number | null, body: unknown): ParseKeys {
   const namedError = errorBodySchema.safeParse(body);
   if (namedError.success) {
-    const byCode = ENROL_ERROR_KEY_BY_CODE.get(namedError.data.error);
+    const byCode = RECOVERY_ERROR_KEY_BY_CODE.get(namedError.data.error);
     if (byCode !== undefined) return byCode;
   }
-  if (status === CONFLICT_STATUS) return 'auth.enrolClosed';
+  if (status === WRONG_PASSWORD_STATUS) return 'auth.invalidRecovery';
   return selectLoginErrorMessageKey(status);
 }
 

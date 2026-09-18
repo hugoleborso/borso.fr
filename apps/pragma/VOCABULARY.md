@@ -101,12 +101,14 @@ Lives in: `api/src/auth/`
   epoch stops verifying, which signs that member out everywhere else.
 - `phone` and `email` are the member's own contact details, both nullable,
   filled in on the account page and used to sign the outreach message.
-- Created either through the enrolment window or by another member.
-  Deleted with the member, in the same transaction that scrubs them from
-  the lineups.
+- Created by another member, from the members page. Deleted with the
+  member, in the same transaction that scrubs them from the lineups.
+- Recovered rather than recreated: a member who forgot their password
+  proves the shared password on the recovery route, and the same row is
+  updated in place, which is why their passkeys survive it.
 
 Not to be confused with: the shared password in `app_config`, which now
-opens the enrolment route and nothing else.
+opens the recovery route and nothing else.
 
 ## Outreach template
 
@@ -520,7 +522,7 @@ Proof that this browser is a named member.
 Lives in: `api/src/auth/`
 
 - One `app_config` row, keyed `id = 1`, still holds the HMAC key that
-  signs cookies, and a password hash the enrolment route alone reads.
+  signs cookies, and a password hash the recovery route alone reads.
 - The cookie is named `pragma_session` and is `payload.signature`, where
   the payload carries the member id, that member's session epoch, and the
   issue and expiry times. It lasts 30 days.

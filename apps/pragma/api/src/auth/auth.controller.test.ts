@@ -3,8 +3,9 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import {
   bootstrapSharedPassword,
   createMemberDirectly,
-  enrol,
   extractSessionCookie,
+  giveMemberCredentials,
+  recoverPassword,
   loginAsMember,
   TEST_HOST,
   TEST_PASSWORD,
@@ -12,10 +13,13 @@ import {
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { loadAppConfig } from './auth.repository';
+import { insertPasskey, listPasskeysForMember } from './credentials.repository';
 import { requireMemberSession } from './member-session.middleware';
 
 const WRONG_PASSWORD = 'wrong-horse-battery';
 const NEW_PASSWORD = 'new-correct-horse-battery';
+const WRONG_SHARED_PASSWORD = 'not-the-band-password';
+const SHARED_PASSWORD_MAX_FAILURES = 3;
 
 function buildAppWithProtectedRoute(): Hono {
   const app = createApp();
@@ -24,9 +28,10 @@ function buildAppWithProtectedRoute(): Hono {
   return app;
 }
 
-async function enrolOneMember(app: Hono, firstName = 'Tester', username = 'tester') {
+async function signInOneMember(app: Hono, firstName = 'Tester', username = 'tester') {
   const memberId = await createMemberDirectly(app, firstName);
-  const response = await enrol(app, { memberId, username });
+  await giveMemberCredentials({ memberId, username });
+  const response = await loginAsMember(app, username);
   return { memberId, response };
 }
 
@@ -42,59 +47,10 @@ describe('member auth controller (back-e2e)', () => {
     expect((await bootstrapSharedPassword(app)).status).toBe(409);
   });
 
-  it('enrols a member with the shared password and signs them in', async () => {
-    const app = buildAppWithProtectedRoute();
-    await bootstrapSharedPassword(app);
-    const { response } = await enrolOneMember(app);
-    expect(response.status).toBe(200);
-    const setCookie = response.headers.get('set-cookie');
-    expect(setCookie).toMatch(/pragma_session=/);
-    expect(setCookie).toMatch(/HttpOnly/i);
-    expect(setCookie).toMatch(/SameSite=Strict/i);
-  });
-
-  it('refuses enrolment with the wrong shared password', async () => {
-    const app = buildAppWithProtectedRoute();
-    await bootstrapSharedPassword(app);
-    const memberId = await createMemberDirectly(app, 'Tester');
-    const response = await enrol(app, { memberId, sharedPassword: WRONG_PASSWORD });
-    expect(response.status).toBe(401);
-  });
-
-  it('closes the enrolment window once every member holds a credential', async () => {
-    const app = buildAppWithProtectedRoute();
-    await bootstrapSharedPassword(app);
-    await enrolOneMember(app, 'Ada', 'ada');
-    const windowResponse = await app.request(`${TEST_HOST}/api/auth/enrolment`);
-    expect(windowResponse.status).toBe(409);
-    const extraMemberId = await createMemberDirectly(app, 'Grace');
-    const reopened = await app.request(`${TEST_HOST}/api/auth/enrolment`);
-    expect(reopened.status).toBe(200);
-    expect((await enrol(app, { memberId: extraMemberId, username: 'grace' })).status).toBe(200);
-    expect((await app.request(`${TEST_HOST}/api/auth/enrolment`)).status).toBe(409);
-  });
-
-  it('refuses a second enrolment of the same member', async () => {
-    const app = buildAppWithProtectedRoute();
-    await bootstrapSharedPassword(app);
-    const { memberId } = await enrolOneMember(app, 'Ada', 'ada');
-    await createMemberDirectly(app, 'Grace');
-    const again = await enrol(app, { memberId, username: 'ada2' });
-    expect(again.status).toBe(409);
-  });
-
-  it('refuses a username another member already holds', async () => {
-    const app = buildAppWithProtectedRoute();
-    await bootstrapSharedPassword(app);
-    await enrolOneMember(app, 'Ada', 'ada');
-    const otherMemberId = await createMemberDirectly(app, 'Grace');
-    expect((await enrol(app, { memberId: otherMemberId, username: 'ada' })).status).toBe(409);
-  });
-
   it('logs a member in by username and refuses the wrong password', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);
-    await enrolOneMember(app);
+    await signInOneMember(app);
     expect((await loginAsMember(app)).status).toBe(200);
     const wrong = await loginAsMember(app, 'tester', WRONG_PASSWORD, '203.0.113.7');
     expect(wrong.status).toBe(401);
@@ -103,7 +59,7 @@ describe('member auth controller (back-e2e)', () => {
   it('rate-limits after 5 attempts in 15 min on the same ip', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);
-    await enrolOneMember(app);
+    await signInOneMember(app);
     const ipAddress = '198.51.100.42';
     for (let attempt = 0; attempt < 5; attempt += 1) {
       const response = await loginAsMember(app, 'tester', WRONG_PASSWORD, ipAddress);
@@ -113,10 +69,154 @@ describe('member auth controller (back-e2e)', () => {
     expect(blocked.status).toBe(429);
   });
 
+  it('replaces a forgotten password with the band password and signs the member in', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+
+    const recovered = await recoverPassword(app, { newPassword: NEW_PASSWORD });
+    expect(recovered.status).toBe(200);
+    const setCookie = recovered.headers.get('set-cookie');
+    expect(setCookie).toMatch(/pragma_session=/);
+    expect(setCookie).toMatch(/HttpOnly/i);
+    expect(setCookie).toMatch(/SameSite=Strict/i);
+
+    const withNewCookie = await app.request(`${TEST_HOST}/protected/ping`, {
+      headers: { cookie: `pragma_session=${extractSessionCookie(recovered)}` },
+    });
+    expect(withNewCookie.status).toBe(200);
+    expect((await loginAsMember(app, 'tester', NEW_PASSWORD, '203.0.113.31')).status).toBe(200);
+    expect((await loginAsMember(app, 'tester', TEST_PASSWORD, '203.0.113.32')).status).toBe(401);
+  });
+
+  it('drops the sessions the member had open elsewhere when they recover', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    const { response } = await signInOneMember(app);
+    const olderCookie = `pragma_session=${extractSessionCookie(response)}`;
+
+    expect((await recoverPassword(app, { newPassword: NEW_PASSWORD })).status).toBe(200);
+
+    const olderBrowser = await app.request(`${TEST_HOST}/protected/ping`, {
+      headers: { cookie: olderCookie },
+    });
+    expect(olderBrowser.status).toBe(401);
+  });
+
+  it('keeps the member passkeys alive through a recovery', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    const { memberId } = await signInOneMember(app);
+    await insertPasskey({
+      memberId,
+      credentialId: 'a-registered-key',
+      publicKey: Buffer.from([1, 2, 3]),
+      signCounter: 0,
+      transports: 'internal',
+      label: 'Phone',
+      createdAt: new Date(),
+    });
+
+    expect((await recoverPassword(app, { newPassword: NEW_PASSWORD })).status).toBe(200);
+
+    const passkeys = await listPasskeysForMember(memberId);
+    expect(passkeys).toHaveLength(1);
+  });
+
+  it('answers a wrong band password and an unknown username identically', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+
+    const wrongShared = await recoverPassword(app, {
+      sharedPassword: WRONG_SHARED_PASSWORD,
+      ipAddress: '198.51.100.61',
+    });
+    const unknownMember = await recoverPassword(app, {
+      username: 'nobody',
+      ipAddress: '198.51.100.62',
+    });
+
+    expect(wrongShared.status).toBe(401);
+    expect(unknownMember.status).toBe(wrongShared.status);
+    expect(await unknownMember.json()).toEqual(await wrongShared.json());
+  });
+
+  it('closes the recovery door after three failures from one address', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+    const ipAddress = '198.51.100.70';
+
+    for (let attempt = 0; attempt < SHARED_PASSWORD_MAX_FAILURES; attempt += 1) {
+      const refused = await recoverPassword(app, {
+        sharedPassword: WRONG_SHARED_PASSWORD,
+        ipAddress,
+      });
+      expect(refused.status).toBe(401);
+    }
+
+    const blocked = await recoverPassword(app, {
+      sharedPassword: WRONG_SHARED_PASSWORD,
+      ipAddress,
+    });
+    expect(blocked.status).toBe(429);
+  });
+
+  it('clears the recovery budget once a recovery succeeds', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+    const ipAddress = '198.51.100.80';
+
+    expect(
+      (await recoverPassword(app, { sharedPassword: WRONG_SHARED_PASSWORD, ipAddress })).status,
+    ).toBe(401);
+    expect((await recoverPassword(app, { newPassword: NEW_PASSWORD, ipAddress })).status).toBe(200);
+
+    for (let attempt = 0; attempt < SHARED_PASSWORD_MAX_FAILURES; attempt += 1) {
+      const refused = await recoverPassword(app, {
+        sharedPassword: WRONG_SHARED_PASSWORD,
+        ipAddress,
+      });
+      expect(refused.status).toBe(401);
+    }
+  });
+
+  it('leaves a failed sign-in budget from counting against the recovery door', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+    const ipAddress = '198.51.100.90';
+
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await loginAsMember(app, 'tester', WRONG_PASSWORD, ipAddress);
+    }
+
+    const recovered = await recoverPassword(app, { newPassword: NEW_PASSWORD, ipAddress });
+    expect(recovered.status).toBe(200);
+  });
+
+  it('no longer serves the enrolment endpoints', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    expect((await app.request(`${TEST_HOST}/api/auth/enrolment`)).status).toBe(404);
+    const enrolAttempt = await app.request(`${TEST_HOST}/api/auth/enrol`, {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({
+        memberId: crypto.randomUUID(),
+        username: 'ada',
+        password: TEST_PASSWORD,
+      }),
+    });
+    expect(enrolAttempt.status).toBe(404);
+  });
+
   it('gates a protected route on the member session cookie', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);
-    const { response } = await enrolOneMember(app);
+    const { response } = await signInOneMember(app);
     expect((await app.request(`${TEST_HOST}/protected/ping`)).status).toBe(401);
     const cookie = extractSessionCookie(response);
     const withCookie = await app.request(`${TEST_HOST}/protected/ping`, {
@@ -128,7 +228,7 @@ describe('member auth controller (back-e2e)', () => {
   it('refuses a cookie carrying no member, which is the shape issued before accounts existed', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);
-    await enrolOneMember(app);
+    await signInOneMember(app);
     const config = await loadAppConfig();
     expect(config).not.toBeNull();
     const legacyPayload = Buffer.from(
@@ -148,7 +248,7 @@ describe('member auth controller (back-e2e)', () => {
   it('changes a password, keeps that member signed in here and drops their other browsers', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);
-    await enrolOneMember(app);
+    await signInOneMember(app);
     const firstBrowser = await loginAsMember(app, 'tester', TEST_PASSWORD, '203.0.113.11');
     const secondBrowser = await loginAsMember(app, 'tester', TEST_PASSWORD, '203.0.113.12');
     const firstCookie = `pragma_session=${extractSessionCookie(firstBrowser)}`;
@@ -176,10 +276,11 @@ describe('member auth controller (back-e2e)', () => {
   it('leaves another member signed in when one member changes their password', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);
-    await enrolOneMember(app, 'Ada', 'ada');
+    await signInOneMember(app, 'Ada', 'ada');
     const graceId = await createMemberDirectly(app, 'Grace');
-    const graceEnrolment = await enrol(app, { memberId: graceId, username: 'grace' });
-    const graceCookie = `pragma_session=${extractSessionCookie(graceEnrolment)}`;
+    await giveMemberCredentials({ memberId: graceId, username: 'grace' });
+    const graceLogin = await loginAsMember(app, 'grace', TEST_PASSWORD, '203.0.113.22');
+    const graceCookie = `pragma_session=${extractSessionCookie(graceLogin)}`;
     const adaLogin = await loginAsMember(app, 'ada', TEST_PASSWORD, '203.0.113.21');
 
     await app.request(`${TEST_HOST}/api/me/password`, {
@@ -200,7 +301,7 @@ describe('member auth controller (back-e2e)', () => {
   it('refuses rotate-password without a session and rotates it with one', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);
-    const { response } = await enrolOneMember(app);
+    const { response } = await signInOneMember(app);
     const cookie = `pragma_session=${extractSessionCookie(response)}`;
     const configBefore = await loadAppConfig();
 

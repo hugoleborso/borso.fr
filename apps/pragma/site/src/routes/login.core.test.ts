@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_POST_LOGIN_PATH,
-  selectEnrolErrorMessageKey,
+  selectRecoverErrorMessageKey,
   selectLoginErrorMessageKey,
   selectPostLoginPath,
   UNKNOWN_LOGIN_ERROR_KEY,
@@ -40,25 +40,27 @@ describe('selectLoginErrorMessageKey', () => {
   });
 });
 
-describe('selectEnrolErrorMessageKey', () => {
+describe('selectRecoverErrorMessageKey', () => {
   it('names the reason the body carries', () => {
-    expect(selectEnrolErrorMessageKey(409, { error: 'enrolment-closed' })).toBe('auth.enrolClosed');
-    expect(selectEnrolErrorMessageKey(409, { error: 'username-taken' })).toBe('auth.usernameTaken');
-    expect(selectEnrolErrorMessageKey(409, { error: 'already-enrolled' })).toBe(
-      'auth.alreadyEnrolled',
+    expect(selectRecoverErrorMessageKey(401, { error: 'invalid-recovery' })).toBe(
+      'auth.invalidRecovery',
     );
-    expect(selectEnrolErrorMessageKey(401, { error: 'invalid-shared-password' })).toBe(
-      'auth.invalidSharedPassword',
+    expect(selectRecoverErrorMessageKey(429, { error: 'rate-limited' })).toBe('auth.rateLimited');
+    expect(selectRecoverErrorMessageKey(503, { error: 'auth-not-bootstrapped' })).toBe(
+      'auth.notBootstrapped',
     );
   });
 
-  it('falls back to the conflict message when the body names no known reason', () => {
-    expect(selectEnrolErrorMessageKey(409, { error: 'something-else' })).toBe('auth.enrolClosed');
-    expect(selectEnrolErrorMessageKey(409, null)).toBe('auth.enrolClosed');
+  it('reads any other refusal of the credentials as the single recovery message', () => {
+    expect(selectRecoverErrorMessageKey(401, { error: 'something-else' })).toBe(
+      'auth.invalidRecovery',
+    );
+    expect(selectRecoverErrorMessageKey(401, null)).toBe('auth.invalidRecovery');
   });
 
   it('falls back to the login messages for every other status', () => {
-    expect(selectEnrolErrorMessageKey(429, null)).toBe('auth.rateLimited');
-    expect(selectEnrolErrorMessageKey(null, null)).toBe('auth.unknownError');
+    expect(selectRecoverErrorMessageKey(429, null)).toBe('auth.rateLimited');
+    expect(selectRecoverErrorMessageKey(500, null)).toBe('auth.unknownError');
+    expect(selectRecoverErrorMessageKey(null, null)).toBe('auth.unknownError');
   });
 });
