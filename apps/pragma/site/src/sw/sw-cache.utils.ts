@@ -11,6 +11,9 @@ const EXACT_CACHEABLE_PATHS = new Set<string>([
   '/api/offline-manifest',
 ]);
 
+const HTML_CONTENT_TYPE = 'text/html';
+const CONTENT_TYPE_PARAMETER_SEPARATOR = ';';
+
 // @FollowsBlueprint utils-pure-module
 export function isReadableApiPath(pathname: string): boolean {
   if (EXACT_CACHEABLE_PATHS.has(pathname)) return true;
@@ -19,4 +22,12 @@ export function isReadableApiPath(pathname: string): boolean {
   if (SETLIST_BY_SESSION_PATTERN.test(pathname)) return true;
   if (SETLIST_ENTRIES_PATTERN.test(pathname)) return true;
   return false;
+}
+
+// @FollowsBlueprint utils-pure-module
+export function isHtmlContentType(contentType: string | null): boolean {
+  if (contentType === null) return false;
+  const separatorIndex = contentType.indexOf(CONTENT_TYPE_PARAMETER_SEPARATOR);
+  const mediaType = separatorIndex === -1 ? contentType : contentType.slice(0, separatorIndex);
+  return mediaType.trim().toLowerCase() === HTML_CONTENT_TYPE;
 }

@@ -206,6 +206,12 @@
     "tasks": "Tâches",
     "title": "Compos"
   },
+  "crash": {
+    "body": "La page s’est arrêtée sur une erreur inattendue. Recharger suffit en général. Si cela revient, videz la copie stockée de l’application et rechargez.",
+    "reload": "Recharger",
+    "reset": "Vider la copie stockée et recharger",
+    "title": "Quelque chose a cassé"
+  },
   "fileDrop": {
     "remove": "Retirer"
   },

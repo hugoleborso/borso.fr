@@ -20,7 +20,7 @@ import { PolicyStatement, ServicePrincipal } from 'aws-cdk-lib/aws-iam';
 import { AaaaRecord, ARecord, HostedZone, RecordTarget } from 'aws-cdk-lib/aws-route53';
 import { CloudFrontTarget } from 'aws-cdk-lib/aws-route53-targets';
 import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3';
-import { BucketDeployment, Source } from 'aws-cdk-lib/aws-s3-deployment';
+import { BucketDeployment, CacheControl, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE } from '../internal/cf-static-site-index-rewrite.js';
@@ -38,6 +38,8 @@ import { applyStandardTags } from '../internal/tags.js';
 
 const ERROR_RESPONSE_TTL_MINUTES = 5;
 const BUCKET_DEPLOYMENT_MEMORY_MIB = 512;
+const FINGERPRINTED_ASSET_GLOB = 'assets/*';
+const FINGERPRINTED_ASSET_MAX_AGE_DAYS = 365;
 const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
 const DEFAULT_API_PATH_PATTERN = '/api/*';
 
@@ -158,13 +160,31 @@ export class StaticSite extends Construct {
       }),
     );
 
-    new BucketDeployment(this, 'Deploy', {
+    const fingerprintedAssets = new BucketDeployment(this, 'DeployFingerprintedAssets', {
       sources: [Source.asset(path.resolve(props.assetsPath))],
       destinationBucket: bucket,
+      exclude: ['*'],
+      include: [FINGERPRINTED_ASSET_GLOB],
+      prune: false,
+      cacheControl: [
+        CacheControl.setPublic(),
+        CacheControl.maxAge(Duration.days(FINGERPRINTED_ASSET_MAX_AGE_DAYS)),
+        CacheControl.immutable(),
+      ],
+      memoryLimit: BUCKET_DEPLOYMENT_MEMORY_MIB,
+    });
+
+    const entryPoints = new BucketDeployment(this, 'Deploy', {
+      sources: [Source.asset(path.resolve(props.assetsPath))],
+      destinationBucket: bucket,
+      exclude: [FINGERPRINTED_ASSET_GLOB],
+      prune: false,
+      cacheControl: [CacheControl.noCache(), CacheControl.mustRevalidate()],
       distribution,
       distributionPaths: ['/*'],
       memoryLimit: BUCKET_DEPLOYMENT_MEMORY_MIB,
     });
+    entryPoints.node.addDependency(fingerprintedAssets);
 
     const zoneName = StringParameter.valueForStringParameter(
       this,

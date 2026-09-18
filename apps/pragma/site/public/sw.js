@@ -1,9 +1,23 @@
-const CACHE_VERSION = 'pragma-v3';
+const CACHE_VERSION = 'pragma-v4';
 const SHELL_CACHE = `${CACHE_VERSION}-shell`;
 const DATA_CACHE = `${CACHE_VERSION}-data`;
-const SHELL_ASSETS = ['/', '/index.html', '/manifest.webmanifest'];
+const ENTRY_POINT_URL = '/index.html';
+const SHELL_ASSETS = ['/', ENTRY_POINT_URL, '/manifest.webmanifest'];
 const OFFLINE_MANIFEST_URL = '/api/offline-manifest';
 const READ_METHOD = 'GET';
+const HTML_CONTENT_TYPE = 'text/html';
+const CONTENT_TYPE_PARAMETER_SEPARATOR = ';';
+
+function isHtmlContentType(contentType) {
+  if (contentType === null) return false;
+  const separatorIndex = contentType.indexOf(CONTENT_TYPE_PARAMETER_SEPARATOR);
+  const mediaType = separatorIndex === -1 ? contentType : contentType.slice(0, separatorIndex);
+  return mediaType.trim().toLowerCase() === HTML_CONTENT_TYPE;
+}
+
+function isHtmlResponse(response) {
+  return isHtmlContentType(response.headers.get('content-type'));
+}
 
 function listManifestUrls(manifest) {
   return [
@@ -94,13 +108,14 @@ async function networkFirstFallingBackToCache(request) {
     if (response.ok) {
       const cache = await caches.open(SHELL_CACHE);
       await cache.put(request, response.clone());
+      if (request.mode === 'navigate') await cache.put(ENTRY_POINT_URL, response.clone());
     }
     return response;
   } catch (error) {
     const cached = await caches.match(request);
     if (cached !== undefined) return cached;
     if (request.mode !== 'navigate') throw error;
-    const entryPoint = (await caches.match('/index.html')) ?? (await caches.match('/'));
+    const entryPoint = (await caches.match(ENTRY_POINT_URL)) ?? (await caches.match('/'));
     if (entryPoint !== undefined) return entryPoint;
     throw error;
   }
@@ -121,9 +136,9 @@ function staleWhileRevalidate(request) {
 
 function cacheFirst(request) {
   return caches.match(request).then(async (cached) => {
-    if (cached !== undefined) return cached;
+    if (cached !== undefined && !isHtmlResponse(cached)) return cached;
     const response = await fetch(request);
-    if (response.ok) {
+    if (response.ok && !isHtmlResponse(response)) {
       const cache = await caches.open(SHELL_CACHE);
       cache.put(request, response.clone());
     }
