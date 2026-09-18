@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/108
 fix-pr: https://github.com/hugoleborso/borso.fr/pull/109
-fix-commits: [PENDING]
+fix-commits: [2d5502d]
 eradication-level: 1
 time-to-detect: months
 tags: [gates, testing, coverage, mutation, pragma, dead-code, process]
@@ -87,7 +87,7 @@ implementation of one rule and `listManifestUrls` in `sw.js` a fourth.
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** [PR #109](https://github.com/hugoleborso/borso.fr/pull/109)
+**Reference:** [PR #109](https://github.com/hugoleborso/borso.fr/pull/109) · commit [`2d5502d`](https://github.com/hugoleborso/borso.fr/commit/2d5502de8f7e3f47272dbea3d02a0f23c3165f7a)
 
 **The actual fix:**
 
