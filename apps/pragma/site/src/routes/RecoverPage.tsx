@@ -34,8 +34,7 @@ export function RecoverPage(): JSX.Element {
               navigateTo(DEFAULT_POST_LOGIN_PATH, { replace: true });
             } catch (error) {
               const status = error instanceof ApiError ? error.status : null;
-              const body = error instanceof ApiError ? error.body : null;
-              setServerError(t(selectRecoverErrorMessageKey(status, body)));
+              setServerError(t(selectRecoverErrorMessageKey(status)));
             }
           }}
         />

@@ -41,28 +41,19 @@ describe('selectLoginErrorMessageKey', () => {
 });
 
 describe('selectRecoverErrorMessageKey', () => {
-  it('names the reason the body carries', () => {
-    expect(selectRecoverErrorMessageKey(401, { error: 'invalid-recovery' })).toBe(
-      'auth.invalidRecovery',
-    );
-    expect(selectRecoverErrorMessageKey(429, { error: 'rate-limited' })).toBe(
-      'auth.recoveryRateLimited',
-    );
-    expect(selectRecoverErrorMessageKey(503, { error: 'auth-not-bootstrapped' })).toBe(
-      'auth.notBootstrapped',
-    );
+  it('names the three failures the recovery flow plans for', () => {
+    expect(selectRecoverErrorMessageKey(429)).toBe('auth.recoveryRateLimited');
+    expect(selectRecoverErrorMessageKey(401)).toBe('auth.invalidRecovery');
+    expect(selectRecoverErrorMessageKey(503)).toBe('auth.notBootstrapped');
   });
 
-  it('reads any other refusal of the credentials as the single recovery message', () => {
-    expect(selectRecoverErrorMessageKey(401, { error: 'something-else' })).toBe(
-      'auth.invalidRecovery',
-    );
-    expect(selectRecoverErrorMessageKey(401, null)).toBe('auth.invalidRecovery');
+  it('says an hour where the sign-in copy says a few minutes', () => {
+    expect(selectRecoverErrorMessageKey(429)).not.toBe(selectLoginErrorMessageKey(429));
   });
 
-  it('falls back to the login messages for every other status', () => {
-    expect(selectRecoverErrorMessageKey(429, null)).toBe('auth.recoveryRateLimited');
-    expect(selectRecoverErrorMessageKey(500, null)).toBe('auth.unknownError');
-    expect(selectRecoverErrorMessageKey(null, null)).toBe('auth.unknownError');
+  it('reads every other status as unknown', () => {
+    expect(selectRecoverErrorMessageKey(500)).toBe(UNKNOWN_LOGIN_ERROR_KEY);
+    expect(selectRecoverErrorMessageKey(200)).toBe(UNKNOWN_LOGIN_ERROR_KEY);
+    expect(selectRecoverErrorMessageKey(null)).toBe(UNKNOWN_LOGIN_ERROR_KEY);
   });
 });
