@@ -3,6 +3,7 @@ import {
   ENERGY_DEFAULT,
   isEnergyStored,
   selectEnergyAppearance,
+  selectEnergyMeterAppearance,
 } from './setlist-entry-energy.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -37,6 +38,22 @@ describe('selectEnergyAppearance', () => {
     expect(selectEnergyAppearance(false)).toEqual({
       filledClassName: 'bg-ink-500 border-ink-500 text-bg-elev',
       emptyClassName: 'bg-bg-sunk border-line-strong text-ink-500',
+    });
+  });
+});
+
+describe('selectEnergyMeterAppearance', () => {
+  it('draws a stored energy in the accent palette, with no border or text class', () => {
+    expect(selectEnergyMeterAppearance(true)).toEqual({
+      filledClassName: 'bg-accent',
+      emptyClassName: 'bg-line-strong',
+    });
+  });
+
+  it('mutes the bars while nothing is stored', () => {
+    expect(selectEnergyMeterAppearance(false)).toEqual({
+      filledClassName: 'bg-ink-400',
+      emptyClassName: 'bg-line',
     });
   });
 });

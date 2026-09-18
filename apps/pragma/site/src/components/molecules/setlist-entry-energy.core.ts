@@ -19,6 +19,16 @@ const UNSET_APPEARANCE: EnergyAppearance = {
   emptyClassName: EMPTY_SEGMENT_CLASS,
 };
 
+const STORED_METER_APPEARANCE: EnergyAppearance = {
+  filledClassName: 'bg-accent',
+  emptyClassName: 'bg-line-strong',
+};
+
+const UNSET_METER_APPEARANCE: EnergyAppearance = {
+  filledClassName: 'bg-ink-400',
+  emptyClassName: 'bg-line',
+};
+
 export interface EnergyState {
   readonly isEdited: boolean;
   readonly entryEnergy: number | null;
@@ -33,4 +43,9 @@ export function isEnergyStored(state: EnergyState): boolean {
 // @FollowsBlueprint core-appearance
 export function selectEnergyAppearance(isStored: boolean): EnergyAppearance {
   return isStored ? STORED_APPEARANCE : UNSET_APPEARANCE;
+}
+
+// @FollowsBlueprint core-appearance
+export function selectEnergyMeterAppearance(isStored: boolean): EnergyAppearance {
+  return isStored ? STORED_METER_APPEARANCE : UNSET_METER_APPEARANCE;
 }
