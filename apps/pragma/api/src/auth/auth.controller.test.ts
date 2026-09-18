@@ -20,6 +20,7 @@ const WRONG_PASSWORD = 'wrong-horse-battery';
 const NEW_PASSWORD = 'new-correct-horse-battery';
 const WRONG_SHARED_PASSWORD = 'not-the-band-password';
 const SHARED_PASSWORD_MAX_FAILURES = 3;
+const TOO_SHORT_PASSWORD = 'seven77';
 
 function buildAppWithProtectedRoute(): Hono {
   const app = createApp();
@@ -211,6 +212,30 @@ describe('member auth controller (back-e2e)', () => {
         .status,
     ).toBe(401);
     expect((await loginAsMember(app, 'tester', TEST_PASSWORD, '203.0.113.51')).status).toBe(200);
+  });
+
+  it('refuses a new password shorter than eight characters before it hashes anything', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+
+    const refused = await recoverPassword(app, { newPassword: TOO_SHORT_PASSWORD });
+
+    expect(refused.status).toBe(400);
+    expect((await loginAsMember(app, 'tester', TEST_PASSWORD, '203.0.113.61')).status).toBe(200);
+  });
+
+  it('answers with the session expiry and the member it belongs to', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    const { memberId } = await signInOneMember(app);
+
+    const recovered = await recoverPassword(app, { newPassword: NEW_PASSWORD });
+
+    expect(await recovered.json()).toEqual({
+      expiresAt: expect.any(String),
+      memberId,
+    });
   });
 
   it('answers 503 when the application was never bootstrapped', async () => {

@@ -139,7 +139,8 @@ apps/pragma/api/src/auth/auth.controller.ts            UPDATE: add POST /recover
 apps/pragma/api/src/auth/auth.controller.test.ts       UPDATE: recovery cases replace the enrolment cases
 apps/pragma/api/src/auth/enrolment.core.ts             DELETE
 apps/pragma/api/src/auth/enrolment.core.test.ts        DELETE
-apps/pragma/test/auth-utils.ts                         UPDATE: buildAuthenticatedApp creates the credential directly; same signature, so its eighteen callers do not change
+apps/pragma/test/auth-utils.ts                         UPDATE: buildAuthenticatedApp creates the credential directly; same signature, so sixteen of its seventeen callers do not change
+apps/pragma/api/src/setlists/voting.controller.test.ts  UPDATE: the seventeenth, which called the deleted enrol() helper directly
 apps/pragma/site/src/routes/RecoverPage.tsx            NEW: route-detail-page
 apps/pragma/site/src/routes/EnrolPage.tsx              DELETE
 apps/pragma/site/src/components/organisms/RecoverPasswordForm.tsx  NEW: route-form
