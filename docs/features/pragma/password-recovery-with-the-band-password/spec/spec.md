@@ -5,7 +5,7 @@
 - [x] **Client / business** — the operator chose member autonomy as the objective: someone who is locked out gets back in without writing to anyone. They were told it is not measurable across five people without dedicated analytics, and kept it anyway; the *Why* names machine-observable input metrics instead.
 - [x] **Product** — the operator chose identification by typed username over a public list of enrolled members, chose to sign the member in on success rather than bounce them to the login form, and chose to keep the member's passkeys alive through a recovery.
 - [x] **Tech-lead** — the operator was shown that `POST /api/auth/enrol` verifies the band password with no rate limit at all, and chose to throttle every door onto that secret rather than harden only the new one. That decision was then superseded by the one below, which removes the other door entirely.
-- [x] **Developer** — the operator was shown that `buildAuthenticatedApp` reaches the enrol endpoint on behalf of eighteen controller test files, and accepted rewriting the helper's internals while keeping its signature, so those eighteen files stay untouched.
+- [x] **Developer** — the operator was shown that `buildAuthenticatedApp` reaches the enrol endpoint on behalf of seventeen other test files, and accepted rewriting the helper's internals while keeping its signature, so sixteen of them stay untouched — the seventeenth called the deleted helper directly.
 - [x] **Designer** — the operator chose a dedicated `/recover` screen reached from a link under the sign-in form, mirroring the shape of `/enrol`, over an in-place expansion of the sign-in card.
 
 ## Why

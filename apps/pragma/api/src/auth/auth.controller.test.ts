@@ -197,6 +197,22 @@ describe('member auth controller (back-e2e)', () => {
     expect(recovered.status).toBe(200);
   });
 
+  it('accepts a new password equal to the old one and still moves the epoch', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    const { response } = await signInOneMember(app);
+    const olderCookie = `pragma_session=${extractSessionCookie(response)}`;
+
+    const recovered = await recoverPassword(app, { newPassword: TEST_PASSWORD });
+
+    expect(recovered.status).toBe(200);
+    expect(
+      (await app.request(`${TEST_HOST}/protected/ping`, { headers: { cookie: olderCookie } }))
+        .status,
+    ).toBe(401);
+    expect((await loginAsMember(app, 'tester', TEST_PASSWORD, '203.0.113.51')).status).toBe(200);
+  });
+
   it('answers 503 when the application was never bootstrapped', async () => {
     const app = buildAppWithProtectedRoute();
     const memberId = await createMemberDirectly(app, 'Tester');
