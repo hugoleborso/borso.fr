@@ -1,12 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
-  enrolSchema,
+  recoverPasswordSchema,
   memberLoginSchema,
   passwordSchema,
   usernameSchema,
 } from './credentials.schema';
 
-const MEMBER_ID = '11111111-2222-3333-4444-555555555555';
 const GOOD_PASSWORD = 'correct-horse-battery';
 
 // @FollowsBlueprint test-pure-unit
@@ -37,17 +36,15 @@ describe('credentials.schema', () => {
     });
   });
 
-  it('requires the band password on an enrolment body', () => {
+  it('requires every field a recovery body carries', () => {
     expect(
-      enrolSchema.safeParse({ memberId: MEMBER_ID, username: 'ada', password: GOOD_PASSWORD })
-        .success,
+      recoverPasswordSchema.safeParse({ username: 'ada', sharedPassword: GOOD_PASSWORD }).success,
     ).toBe(false);
     expect(
-      enrolSchema.safeParse({
-        memberId: MEMBER_ID,
+      recoverPasswordSchema.safeParse({
         username: 'ada',
-        password: GOOD_PASSWORD,
         sharedPassword: GOOD_PASSWORD,
+        newPassword: GOOD_PASSWORD,
       }).success,
     ).toBe(true);
   });
