@@ -197,6 +197,31 @@ describe('member auth controller (back-e2e)', () => {
     expect(recovered.status).toBe(200);
   });
 
+  it('answers 503 when the application was never bootstrapped', async () => {
+    const app = buildAppWithProtectedRoute();
+    const memberId = await createMemberDirectly(app, 'Tester');
+    await giveMemberCredentials({ memberId, username: 'tester' });
+
+    const refused = await recoverPassword(app, { newPassword: NEW_PASSWORD });
+
+    expect(refused.status).toBe(503);
+    expect(await refused.json()).toEqual({ error: 'auth-not-bootstrapped' });
+  });
+
+  it('reads a username back through the same trimming the sign-in form applies', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app, 'Borso', 'borso');
+
+    const recovered = await recoverPassword(app, {
+      username: '  Borso  ',
+      newPassword: NEW_PASSWORD,
+    });
+
+    expect(recovered.status).toBe(200);
+    expect((await loginAsMember(app, 'borso', NEW_PASSWORD, '203.0.113.41')).status).toBe(200);
+  });
+
   it('no longer serves the enrolment endpoints', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);

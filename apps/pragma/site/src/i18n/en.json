@@ -36,6 +36,7 @@
     "recoverLink": "Forgot your password?",
     "recoverSubmit": "Set my new password",
     "recoverTitle": "Get back in",
+    "recoveryRateLimited": "Too many attempts — try again in an hour.",
     "sharedPasswordLabel": "Band password",
     "showPassword": "Show password",
     "submit": "Enter",

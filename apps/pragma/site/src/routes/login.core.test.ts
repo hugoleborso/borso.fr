@@ -45,7 +45,9 @@ describe('selectRecoverErrorMessageKey', () => {
     expect(selectRecoverErrorMessageKey(401, { error: 'invalid-recovery' })).toBe(
       'auth.invalidRecovery',
     );
-    expect(selectRecoverErrorMessageKey(429, { error: 'rate-limited' })).toBe('auth.rateLimited');
+    expect(selectRecoverErrorMessageKey(429, { error: 'rate-limited' })).toBe(
+      'auth.recoveryRateLimited',
+    );
     expect(selectRecoverErrorMessageKey(503, { error: 'auth-not-bootstrapped' })).toBe(
       'auth.notBootstrapped',
     );
@@ -59,7 +61,7 @@ describe('selectRecoverErrorMessageKey', () => {
   });
 
   it('falls back to the login messages for every other status', () => {
-    expect(selectRecoverErrorMessageKey(429, null)).toBe('auth.rateLimited');
+    expect(selectRecoverErrorMessageKey(429, null)).toBe('auth.recoveryRateLimited');
     expect(selectRecoverErrorMessageKey(500, null)).toBe('auth.unknownError');
     expect(selectRecoverErrorMessageKey(null, null)).toBe('auth.unknownError');
   });

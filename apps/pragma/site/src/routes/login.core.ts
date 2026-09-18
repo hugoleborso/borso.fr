@@ -24,7 +24,7 @@ export function selectLoginErrorMessageKey(status: number | null): ParseKeys {
 
 const RECOVERY_ERROR_KEY_BY_CODE: ReadonlyMap<string, ParseKeys> = new Map([
   ['invalid-recovery', 'auth.invalidRecovery'],
-  ['rate-limited', 'auth.rateLimited'],
+  ['rate-limited', 'auth.recoveryRateLimited'],
   ['auth-not-bootstrapped', 'auth.notBootstrapped'],
 ]);
 
@@ -37,6 +37,7 @@ export function selectRecoverErrorMessageKey(status: number | null, body: unknow
     if (byCode !== undefined) return byCode;
   }
   if (status === WRONG_PASSWORD_STATUS) return 'auth.invalidRecovery';
+  if (status === TOO_MANY_ATTEMPTS_STATUS) return 'auth.recoveryRateLimited';
   return selectLoginErrorMessageKey(status);
 }
 

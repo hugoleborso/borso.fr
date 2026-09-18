@@ -36,6 +36,7 @@
     "recoverLink": "Mot de passe oublié ?",
     "recoverSubmit": "Enregistrer mon mot de passe",
     "recoverTitle": "Reprendre la main",
+    "recoveryRateLimited": "Trop de tentatives — réessaie dans une heure.",
     "sharedPasswordLabel": "Mot de passe du groupe",
     "showPassword": "Afficher le mot de passe",
     "submit": "Entrer",
