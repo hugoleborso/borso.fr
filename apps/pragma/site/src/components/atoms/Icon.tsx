@@ -152,6 +152,13 @@ const ICONS = {
     </>
   ),
   check: <path d="M4 12l5 5L20 6" />,
+  vote: (
+    <>
+      <path d="m9 12 2 2 4-4" />
+      <path d="M5 7c0-1.1.9-2 2-2h10a2 2 0 0 1 2 2v12H5V7Z" />
+      <path d="M22 19H2" />
+    </>
+  ),
   bolt: <path d="M13 2L4 14h7l-1 8 9-12h-7l1-8z" />,
   star: <path d="M12 3l3 6 7 1-5 5 1 7-6-3-6 3 1-7-5-5 7-1 3-6z" />,
   calendar: (

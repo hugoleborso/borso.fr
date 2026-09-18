@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import type { SetlistStatus } from '../../routes/setlists/setlist-status.core';
 import { Button } from '../atoms/Button';
+import { Icon } from '../atoms/Icon';
 
 export interface VoteEntryLinkProps {
   readonly setlistId: string;
@@ -25,10 +26,12 @@ export function VoteEntryLink({ setlistId, status }: VoteEntryLinkProps): JSX.El
     <Button
       type="button"
       variant="accent"
-      className="self-start mb-4"
+      aria-label={t(LABEL_BY_STATUS[status])}
+      title={t(LABEL_BY_STATUS[status])}
       onClick={() => navigateTo(`/setlists/${setlistId}/vote`)}
     >
-      {t(LABEL_BY_STATUS[status])}
+      <Icon name="vote" size={14} />
+      <span className="hidden sm:inline">{t(LABEL_BY_STATUS[status])}</span>
     </Button>
   );
 }
