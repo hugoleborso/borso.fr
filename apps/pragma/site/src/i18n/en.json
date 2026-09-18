@@ -206,6 +206,12 @@
     "tasks": "Tasks",
     "title": "Compositions"
   },
+  "crash": {
+    "body": "The page stopped on an unexpected error. Reloading usually clears it. If it comes back, clear the stored copy of the app and reload.",
+    "reload": "Reload",
+    "reset": "Clear the stored copy and reload",
+    "title": "Something broke"
+  },
   "fileDrop": {
     "remove": "Remove"
   },

@@ -88,7 +88,6 @@ export default tseslint.config(
       '**/*.snap',
       'docs/**',
       'apps/*/api/src/database/migrations/**',
-      'apps/*/site/public/**',
       'apps/*/site/src/openings/openings.json',
     ],
   },
@@ -372,7 +371,7 @@ export default tseslint.config(
   {
     files: UNBUNDLED_BROWSER_SCRIPT_FILES,
     languageOptions: {
-      globals: { ...globals.browser },
+      globals: { ...globals.browser, ...globals.serviceworker },
       sourceType: 'script',
     },
   },

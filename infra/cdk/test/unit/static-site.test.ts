@@ -247,3 +247,40 @@ describe('StaticSite (validation)', () => {
     ).toThrow();
   });
 });
+
+// @FollowsBlueprint test-cdk-synth
+describe('StaticSite (prod) — the copies a browser holds of a deploy', () => {
+  const tpl = synth((stack) => {
+    new StaticSite(stack, 'Site', {
+      app: 'pragma',
+      stage: 'prod',
+      domainName: 'pragma.borso.fr',
+      assetsPath: '.',
+      spaFallback: true,
+    });
+  });
+
+  it('uploads the entry points and the fingerprinted assets as two deployments, nothing more', () => {
+    expect(Object.keys(tpl.findResources('Custom::CDKBucketDeployment'))).toHaveLength(2);
+  });
+
+  it('serves a fingerprinted asset as immutable, and keeps it past the deploy that replaced it', () => {
+    tpl.hasResourceProperties('Custom::CDKBucketDeployment', {
+      Include: ['assets/*'],
+      Prune: false,
+      SystemMetadata: Match.objectLike({
+        'cache-control': 'public, max-age=31536000, immutable',
+      }),
+    });
+  });
+
+  it('makes a browser revalidate index.html, so a deploy is never hidden behind a heuristic cache', () => {
+    tpl.hasResourceProperties('Custom::CDKBucketDeployment', {
+      Exclude: ['assets/*'],
+      Prune: false,
+      SystemMetadata: Match.objectLike({
+        'cache-control': 'no-cache, must-revalidate',
+      }),
+    });
+  });
+});

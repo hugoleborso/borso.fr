@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isReadableApiPath } from './sw-cache.utils';
+import { isHtmlContentType, isReadableApiPath } from './sw-cache.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('sw-cache.utils', () => {
@@ -47,6 +47,27 @@ describe('sw-cache.utils', () => {
 
     it('does not cache the root', () => {
       expect(isReadableApiPath('/')).toBe(false);
+    });
+  });
+
+  describe('isHtmlContentType', () => {
+    it('recognises the SPA fallback a CDN returns for a pruned bundle', () => {
+      expect(isHtmlContentType('text/html')).toBe(true);
+      expect(isHtmlContentType('text/html; charset=utf-8')).toBe(true);
+      expect(isHtmlContentType('TEXT/HTML')).toBe(true);
+      expect(isHtmlContentType(' text/html ; charset=utf-8')).toBe(true);
+    });
+
+    it('leaves a real asset response alone', () => {
+      expect(isHtmlContentType('text/javascript')).toBe(false);
+      expect(isHtmlContentType('text/css')).toBe(false);
+      expect(isHtmlContentType('application/json')).toBe(false);
+      expect(isHtmlContentType('image/png')).toBe(false);
+    });
+
+    it('treats a response carrying no content type as not HTML', () => {
+      expect(isHtmlContentType(null)).toBe(false);
+      expect(isHtmlContentType('')).toBe(false);
     });
   });
 });
