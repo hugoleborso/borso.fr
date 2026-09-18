@@ -5,11 +5,6 @@ import serviceWorkerSource from '../../public/sw.js?raw';
 
 export type ServiceWorkerListener = (event: unknown) => void;
 
-export interface CachedEntry {
-  readonly body: string;
-  readonly contentType: string;
-}
-
 export interface ServiceWorkerHarness {
   readonly listeners: ReadonlyMap<string, ServiceWorkerListener>;
   readonly caches: FakeCacheStorage;
