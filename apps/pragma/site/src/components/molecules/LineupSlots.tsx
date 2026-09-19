@@ -5,7 +5,8 @@ import { Icon } from '../atoms/Icon';
 import { type LineupSlotsView, slotTintColor } from './lineup-slots.core';
 
 const LINEUP_SLOT_ICON_SIZE_PX = 17;
-const SLOT_CLASS = 'inline-flex h-5 w-[19px] items-center justify-center';
+const SLOT_CLASS = 'inline-flex h-5 w-[19px] shrink-0 items-center justify-center';
+const COLUMN_CLASS = 'inline-flex h-5 min-w-0 flex-wrap content-start items-center overflow-hidden';
 
 export interface LineupSlotsProps {
   readonly view: LineupSlotsView;
@@ -15,7 +16,7 @@ export interface LineupSlotsProps {
 // @FollowsBlueprint molecule-presentational
 export function LineupSlots({ view, overflowTitle }: LineupSlotsProps): JSX.Element {
   return (
-    <span className="inline-flex shrink-0 items-center">
+    <span className={COLUMN_CLASS}>
       {view.slots.map((slot) => (
         <span
           key={slot.instrumentId}
@@ -28,7 +29,7 @@ export function LineupSlots({ view, overflowTitle }: LineupSlotsProps): JSX.Elem
       ))}
       {view.hasOverflow ? (
         <span
-          className="inline-flex h-5 items-center px-0.5 font-mono text-[10px] text-ink-400"
+          className="inline-flex h-5 shrink-0 items-center px-0.5 font-mono text-[10px] text-ink-400"
           title={overflowTitle}
         >
           +{view.overflowCount}

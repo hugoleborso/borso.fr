@@ -42,7 +42,10 @@ const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
   'w-9 h-11 sm:h-10 shrink-0 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
 const LINEUP_BUTTON_CLASS =
-  'hidden sm:inline-flex h-11 sm:h-10 shrink-0 items-center rounded-md px-0.5 cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
+  'hidden sm:inline-flex h-11 sm:h-10 min-w-0 shrink-[999] items-center overflow-hidden rounded-md px-0.5 cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
+const TITLE_COLUMN_CLASS = 'h-11 sm:h-10 min-w-0 flex-auto select-none overflow-hidden';
+const TITLE_CLASS =
+  'line-clamp-2 sm:line-clamp-none sm:truncate font-display text-[17px] italic leading-[22px] text-ink-900';
 const NARROW_LINEUP_BUTTON_CLASS =
   'flex sm:hidden items-center -ml-0.5 px-0.5 cursor-pointer bg-transparent border-0';
 
@@ -145,10 +148,8 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           <span className="w-4 shrink-0 text-right font-mono text-[10px] text-ink-300">
             {String(props.position).padStart(POSITION_DIGITS, '0')}
           </span>
-          <div className="min-w-0 flex-1 select-none" {...longPress}>
-            <span className="block truncate font-display text-[17px] italic leading-tight text-ink-900">
-              {props.title}
-            </span>
+          <div className={TITLE_COLUMN_CLASS} {...longPress}>
+            <span className={TITLE_CLASS}>{props.title}</span>
             <span className="hidden min-w-0 items-center gap-1.5 text-[11px] text-ink-500 sm:flex">
               <span className="truncate">{props.artist}</span>
               {props.tonalityLabel === null ? null : (
