@@ -4,9 +4,16 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { instrumentKeys } from './instruments.queries';
+import { predictMemberRoster } from './member-roster.core';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
+
+export interface MemberInstrumentAssignment {
+  readonly memberId: string;
+  readonly instrumentIds: string[];
+  readonly primaryInstrumentIds?: string[];
+}
 
 export const memberKeys = {
   all: ['members'] as const,
@@ -172,10 +179,15 @@ export function useAssignMemberInstruments() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: memberKeys.all,
-    mutationFn: async (variables: { memberId: string; instrumentIds: string[] }) => {
+    mutationFn: async (variables: MemberInstrumentAssignment) => {
       const response = await api.api.members[':id'].instruments.$put({
         param: { id: variables.memberId },
-        json: { instrumentIds: variables.instrumentIds },
+        json: {
+          instrumentIds: variables.instrumentIds,
+          ...(variables.primaryInstrumentIds === undefined
+            ? {}
+            : { primaryInstrumentIds: variables.primaryInstrumentIds }),
+        },
       });
       if (!response.ok) throw new ApiError(response.status, `assign ${response.status}`, null);
       return response.json();
@@ -184,26 +196,17 @@ export function useAssignMemberInstruments() {
       const rosterKey = memberKeys.instrumentsOf(variables.memberId);
       await queryClient.cancelQueries({ queryKey: rosterKey });
       const previousRoster = queryClient.getQueryData<MemberInstrumentsResponse>(rosterKey);
-      const allInstruments = queryClient.getQueryData<InstrumentsListResponse>(
-        instrumentKeys.list(),
-      );
+      const catalog = queryClient.getQueryData<InstrumentsListResponse>(instrumentKeys.list());
       queryClient.setQueryData<MemberInstrumentsResponse>(rosterKey, (old) => {
         if (old === undefined) return old;
-        if (allInstruments === undefined) {
-          return {
-            instruments: old.instruments.filter((instrument) =>
-              variables.instrumentIds.includes(instrument.id),
-            ),
-          };
-        }
-        const byId = new Map(
-          allInstruments.instruments.map((instrument) => [instrument.id, instrument]),
-        );
-        const nextInstruments = variables.instrumentIds.flatMap((id) => {
-          const instrument = byId.get(id);
-          return instrument === undefined ? [] : [instrument];
-        });
-        return { instruments: nextInstruments };
+        return {
+          instruments: predictMemberRoster(
+            old.instruments,
+            catalog?.instruments ?? [],
+            variables.instrumentIds,
+            variables.primaryInstrumentIds,
+          ),
+        };
       });
       return { previousRoster };
     },

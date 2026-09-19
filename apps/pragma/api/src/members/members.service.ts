@@ -81,11 +81,12 @@ export type AssignInstrumentsResult =
 export async function assignInstrumentsToMember(
   memberId: string,
   instrumentIds: readonly string[],
+  primaryInstrumentIds?: readonly string[],
 ): Promise<AssignInstrumentsResult> {
   const member = await findMemberById(memberId);
   if (member === null) return { kind: 'member-not-found' };
   const isKnown = await areInstrumentsKnown(instrumentIds);
   if (!isKnown) return { kind: 'instrument-not-found' };
-  await replaceMemberInstruments(memberId, instrumentIds);
+  await replaceMemberInstruments(memberId, instrumentIds, primaryInstrumentIds);
   return { kind: 'ok' };
 }

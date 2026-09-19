@@ -7,9 +7,26 @@ const instrumentSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   family: z.enum(['harmonic', 'percussive', 'vocal', 'other']),
+  icon: z.enum(['mic-vocal', 'guitar', 'bass', 'piano', 'drum', 'music']),
+  position: z.number().int(),
+  players: z.array(z.object({ memberId: z.string().uuid(), isPrimary: z.boolean() })),
 });
 const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
+
+async function createInstrument(
+  app: Parameters<typeof jsonRequest>[0],
+  cookieHeader: string,
+  body: { name: string; family: string; icon?: string },
+): Promise<string> {
+  const response = await jsonRequest(app, '/api/instruments', {
+    method: 'POST',
+    body,
+    cookieHeader,
+  });
+  const created = await readJson(response, singleInstrumentEnvelope);
+  return created.instrument.id;
+}
 
 /**
  * @Blueprint test-back-e2e
@@ -66,7 +83,7 @@ describe('instruments controller (back-e2e)', () => {
 
     const listResponse = await jsonRequest(app, '/api/instruments', { cookieHeader });
     const listed = await readJson(listResponse, instrumentListEnvelope);
-    expect(listed.instruments.map((row) => row.name)).toEqual(['Drums', 'Guitar']);
+    expect(listed.instruments.map((row) => row.name)).toEqual(['Guitar', 'Drums']);
 
     const updateResponse = await jsonRequest(app, `/api/instruments/${created.instrument.id}`, {
       method: 'PUT',
@@ -86,6 +103,113 @@ describe('instruments controller (back-e2e)', () => {
     const afterDelete = await jsonRequest(app, '/api/instruments', { cookieHeader });
     const remaining = await readJson(afterDelete, instrumentListEnvelope);
     expect(remaining.instruments.map((row) => row.name)).toEqual(['Drums']);
+  });
+
+  it('orders the list by family rather than by name, which is what the column reads', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    await createInstrument(app, cookieHeader, { name: 'Drums', family: 'percussive' });
+    await createInstrument(app, cookieHeader, { name: 'Accordion', family: 'harmonic' });
+    await createInstrument(app, cookieHeader, { name: 'Voice', family: 'vocal' });
+    await createInstrument(app, cookieHeader, { name: 'Zither', family: 'harmonic' });
+
+    const listResponse = await jsonRequest(app, '/api/instruments', { cookieHeader });
+    const listed = await readJson(listResponse, instrumentListEnvelope);
+    expect(listed.instruments.map((row) => row.name)).toEqual([
+      'Voice',
+      'Accordion',
+      'Zither',
+      'Drums',
+    ]);
+  });
+
+  it('gives a new instrument the fallback glyph and keeps the one a create names', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    await createInstrument(app, cookieHeader, { name: 'Bouzouki', family: 'harmonic' });
+    await createInstrument(app, cookieHeader, {
+      name: 'Bass',
+      family: 'harmonic',
+      icon: 'bass',
+    });
+
+    const listResponse = await jsonRequest(app, '/api/instruments', { cookieHeader });
+    const listed = await readJson(listResponse, instrumentListEnvelope);
+    const iconsByName = Object.fromEntries(listed.instruments.map((row) => [row.name, row.icon]));
+    expect(iconsByName).toEqual({ Bass: 'bass', Bouzouki: 'music' });
+  });
+
+  it('reports who plays each instrument, and an empty list for one nobody plays', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const guitarId = await createInstrument(app, cookieHeader, {
+      name: 'Guitar',
+      family: 'harmonic',
+    });
+    await createInstrument(app, cookieHeader, { name: 'Tuba', family: 'other' });
+    const memberIds: string[] = [];
+    for (const firstName of ['Ana', 'Ben']) {
+      const created = await jsonRequest(app, '/api/members', {
+        method: 'POST',
+        body: { firstName },
+        cookieHeader,
+      });
+      const member = await readJson(created, z.object({ member: z.object({ id: z.string() }) }));
+      memberIds.push(member.member.id);
+      await jsonRequest(app, `/api/members/${member.member.id}/instruments`, {
+        method: 'PUT',
+        body: { instrumentIds: [guitarId], primaryInstrumentIds: [guitarId] },
+        cookieHeader,
+      });
+    }
+
+    const listResponse = await jsonRequest(app, '/api/instruments', { cookieHeader });
+    const listed = await readJson(listResponse, instrumentListEnvelope);
+    const tuba = listed.instruments.find((row) => row.name === 'Tuba');
+    const guitar = listed.instruments.find((row) => row.name === 'Guitar');
+    expect(tuba?.players).toEqual([]);
+    expect(guitar?.players.map((player) => player.memberId).toSorted()).toEqual(
+      memberIds.toSorted(),
+    );
+    expect(guitar?.players.every((player) => player.isPrimary)).toBe(true);
+  });
+
+  it('reorders the whole list and answers with the settled order, not a stale one', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const voiceId = await createInstrument(app, cookieHeader, { name: 'Voice', family: 'vocal' });
+    const drumsId = await createInstrument(app, cookieHeader, {
+      name: 'Drums',
+      family: 'percussive',
+    });
+
+    const reorder = await jsonRequest(app, '/api/instruments/order', {
+      method: 'PUT',
+      body: { instrumentIds: [drumsId, voiceId] },
+      cookieHeader,
+    });
+    expect(reorder.status).toBe(200);
+    const reordered = await readJson(reorder, instrumentListEnvelope);
+    expect(reordered.instruments.map((row) => row.name)).toEqual(['Drums', 'Voice']);
+
+    const listResponse = await jsonRequest(app, '/api/instruments', { cookieHeader });
+    const listed = await readJson(listResponse, instrumentListEnvelope);
+    expect(listed.instruments.map((row) => row.name)).toEqual(['Drums', 'Voice']);
+  });
+
+  it('refuses a reorder that does not name every instrument, with 409', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const voiceId = await createInstrument(app, cookieHeader, { name: 'Voice', family: 'vocal' });
+    await createInstrument(app, cookieHeader, { name: 'Drums', family: 'percussive' });
+
+    const partial = await jsonRequest(app, '/api/instruments/order', {
+      method: 'PUT',
+      body: { instrumentIds: [voiceId] },
+      cookieHeader,
+    });
+    const unknown = await jsonRequest(app, '/api/instruments/order', {
+      method: 'PUT',
+      body: { instrumentIds: [voiceId, '11111111-1111-1111-1111-111111111111'] },
+      cookieHeader,
+    });
+    expect(partial.status).toBe(409);
+    expect(unknown.status).toBe(409);
   });
 
   it('rejects an update with an empty body with 400', async () => {

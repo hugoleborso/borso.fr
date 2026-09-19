@@ -9,7 +9,14 @@ import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.sc
 import { defaultLineupSchema, songTable } from '../songs/songs.schema';
 import { unassignTasksOfMemberBeingDeleted } from '../tasks/tasks.service';
 import { scrubMemberFromLineup } from './lineup-scrub.core';
-import { type InstrumentFamily, resolveInstrumentFamily } from '@domain/instrument.core';
+import {
+  decidePrimaryInstrumentIds,
+  type InstrumentFamily,
+  type InstrumentIcon,
+  resolveInstrumentFamily,
+  resolveInstrumentIcon,
+  resolveInstrumentPosition,
+} from '@domain/instrument.core';
 import { memberInstrumentTable, memberTable } from './members.schema';
 
 export interface MemberRow {
@@ -25,6 +32,9 @@ export interface MemberInstrumentRow {
   id: string;
   name: string;
   family: InstrumentFamily;
+  icon: InstrumentIcon;
+  position: number;
+  isPrimary: boolean;
 }
 
 // @FollowsBlueprint repository-projection
@@ -42,6 +52,9 @@ const INSTRUMENT_PROJECTION = {
   name: instrumentTable.name,
   isHarmonic: instrumentTable.isHarmonic,
   family: instrumentTable.family,
+  icon: instrumentTable.icon,
+  position: instrumentTable.position,
+  isPrimary: memberInstrumentTable.isPrimary,
 } as const;
 
 function rowToMemberInstrument(row: {
@@ -49,11 +62,17 @@ function rowToMemberInstrument(row: {
   name: string;
   isHarmonic: boolean;
   family: string | null;
+  icon: string | null;
+  position: number | null;
+  isPrimary: boolean | null;
 }): MemberInstrumentRow {
   return {
     id: row.id,
     name: row.name,
     family: resolveInstrumentFamily(row.family, row.isHarmonic),
+    icon: resolveInstrumentIcon(row.icon),
+    position: resolveInstrumentPosition(row.position),
+    isPrimary: row.isPrimary === true,
   };
 }
 
@@ -191,12 +210,38 @@ export async function areInstrumentsKnown(instrumentIds: readonly string[]): Pro
 export async function replaceMemberInstruments(
   memberId: string,
   instrumentIds: readonly string[],
+  requestedPrimaryInstrumentIds?: readonly string[],
 ): Promise<void> {
   const database = getDatabase();
-  await database.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, memberId));
-  if (instrumentIds.length > 0) {
-    await database
-      .insert(memberInstrumentTable)
-      .values(instrumentIds.map((instrumentId) => ({ memberId, instrumentId })));
-  }
+  await database.transaction(async (transaction) => {
+    const existing = await transaction
+      .select({
+        instrumentId: memberInstrumentTable.instrumentId,
+        isPrimary: memberInstrumentTable.isPrimary,
+      })
+      .from(memberInstrumentTable)
+      .where(eq(memberInstrumentTable.memberId, memberId));
+    const survivingPrimaryInstrumentIds = existing
+      .filter((link) => link.isPrimary === true)
+      .map((link) => link.instrumentId);
+    const primaryInstrumentIds = new Set(
+      decidePrimaryInstrumentIds(
+        instrumentIds,
+        requestedPrimaryInstrumentIds,
+        survivingPrimaryInstrumentIds,
+      ),
+    );
+    await transaction
+      .delete(memberInstrumentTable)
+      .where(eq(memberInstrumentTable.memberId, memberId));
+    if (instrumentIds.length > 0) {
+      await transaction.insert(memberInstrumentTable).values(
+        instrumentIds.map((instrumentId) => ({
+          memberId,
+          instrumentId,
+          isPrimary: primaryInstrumentIds.has(instrumentId),
+        })),
+      );
+    }
+  });
 }

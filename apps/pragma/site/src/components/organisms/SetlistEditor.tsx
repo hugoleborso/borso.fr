@@ -32,7 +32,7 @@ import {
   formatSetlistOrder,
   instrumentFamilyMap,
   lineupOf,
-  maximumVisibleLineupMembers,
+  maximumVisibleLineupSlots,
 } from './setlist-editor.utils';
 import type { SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
 import { filterEntriesForMember } from './setlist-filter.core';
@@ -238,14 +238,11 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
           transitionNotesByPair={transitionNotesByPair}
           meanMasteryBySongId={meanMasteryBySongId}
           inFilteredMode={isInFilteredMode}
-          selectedMemberId={selectedMemberId}
-          filteredInstrumentIdsByEntryId={filtered.instrumentIdsByEntryId}
           lineupMembers={lineupMembers}
           instruments={instruments}
-          membersById={membersById}
-          instrumentsById={instrumentsById}
+          slotInstruments={instruments}
           knownMemberIds={knownMemberIds}
-          maximumVisibleMembers={maximumVisibleLineupMembers(isNarrow)}
+          maximumVisibleSlots={maximumVisibleLineupSlots(isNarrow)}
           onReorder={reorderSetlistEntries}
           onUpdate={updateSetlistEntry}
           onUpdateSongDefaults={updateSongDefaults}
