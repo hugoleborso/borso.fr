@@ -51,10 +51,16 @@ Branch `claude/pensive-hamilton-nnllpm-impl-01`, five commits.
 | `cd apps/pragma && npx tsc --noEmit` | pass |
 | `npx vitest run --project core --root apps/pragma --coverage` | 178 files, 1825 tests, 100% on all four axes |
 | `pnpm --filter @borso-app/pragma run test` (back-end end to end) | 21 files, 161 tests |
+| `stryker run --mutate <the 10 changed gated files>` | 100, after two more cases |
 | `pnpm exec knip` | no unused export |
 | `bash scripts/check-vocabulary-paths.sh` | pass |
 | `pnpm exec tsx scripts/standards/convention-drift.ts --check` | no new answer |
 | blueprint indexing `--check` | complete |
+
+Both new pure modules sat at 100 percent coverage on all four axes and still
+let a mutant through, which the pre-push mutation gate caught: `.some` read as
+`.every` on the primacy test, and a dropped `.filter` on the surviving primacy.
+Each would have emptied or over-filled the column. Two cases now pin them.
 
 No dependency was added. `grep -n lucide apps/pragma/package.json` returns
 nothing; the five Lucide glyphs are path data copied into the existing `ICONS`
