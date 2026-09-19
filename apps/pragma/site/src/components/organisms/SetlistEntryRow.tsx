@@ -14,7 +14,6 @@ import {
   type LineupRecord,
 } from '../molecules/LineupEditor';
 import { toLineupPayload } from '../molecules/lineup-editor.core';
-import { MemberChip } from '../molecules/MemberChip';
 import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { SetlistEntryActions } from '../molecules/SetlistEntryActions';
@@ -35,20 +34,16 @@ import {
   selectSetlistEntryTone,
   selectSetlistEntryToneAppearance,
 } from './setlist-entry-tone.core';
-import { type LineupMember, MemberLineup } from '../molecules/MemberLineup';
+import type { LineupMember } from '../molecules/MemberLineup';
+import { LineupSlots } from '../molecules/LineupSlots';
+import type { LineupSlotsView } from '../molecules/lineup-slots.core';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 
 const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
   'w-9 h-11 sm:h-10 shrink-0 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
 const LINEUP_BUTTON_CLASS =
-  'hidden sm:inline-flex h-11 sm:h-10 shrink-0 items-center rounded-md px-1 cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
-
-export interface ProminentMemberInstrument {
-  readonly memberName: string;
-  readonly memberColor: string;
-  readonly instrumentNames: readonly string[];
-}
+  'inline-flex h-11 sm:h-10 shrink-0 items-center rounded-md px-0.5 cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
 
 export interface SetlistEntryRowProps {
   readonly position: number;
@@ -65,15 +60,13 @@ export interface SetlistEntryRowProps {
   readonly energy: number | null;
   readonly baseEnergy: number | null;
   readonly notes: string;
-  readonly lineup: Readonly<Record<string, readonly string[]>>;
+  readonly lineupSlots: LineupSlotsView;
   readonly resolvedLineupForEdit: LineupRecord;
   readonly songDefaultLineup: LineupRecord;
   readonly songDefaults: SongDefaults;
-  readonly maximumVisibleMembers: number;
   readonly hasOverride: boolean;
   readonly members: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
-  readonly prominentMemberInstrument: ProminentMemberInstrument | null;
   readonly transitionBefore: ReactNode;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onUpdateSongDefaults: (patch: SongDefaultsPatch) => void;
@@ -179,29 +172,15 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               )}
             </span>
           </div>
-          {props.prominentMemberInstrument === null ? null : (
-            <span className="hidden shrink-0 items-center gap-1 sm:inline-flex">
-              <MemberChip
-                memberName={props.prominentMemberInstrument.memberName}
-                memberColor={props.prominentMemberInstrument.memberColor}
-                size="sm"
-              />
-              <span className="rounded bg-bg-sunk px-1 font-mono text-[10px] uppercase tracking-wider text-ink-700">
-                {props.prominentMemberInstrument.instrumentNames.join(' + ')}
-              </span>
-            </span>
-          )}
           <button
             type="button"
             onClick={() => setLineupEditorOpen(true)}
             aria-label={t('lineup.editOverride')}
             className={LINEUP_BUTTON_CLASS}
           >
-            <MemberLineup
-              lineup={props.lineup}
-              members={props.members}
-              instruments={props.instruments}
-              maximumVisible={props.maximumVisibleMembers}
+            <LineupSlots
+              view={props.lineupSlots}
+              overflowTitle={props.lineupSlots.overflowInstrumentNames.join(', ')}
             />
           </button>
           <SetlistEntryEnergyField
@@ -222,14 +201,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         </div>
         {moreOpen ? (
           <div className="flex flex-col gap-2 border-t border-line px-1.5 pt-2">
-            <span className="flex items-center gap-2 sm:hidden">
-              <MemberLineup
-                lineup={props.lineup}
-                members={props.members}
-                instruments={props.instruments}
-                maximumVisible={props.maximumVisibleMembers}
-              />
-            </span>
             <SetlistEntryDetailsFields
               form={form}
               onPatch={(patch) => props.onUpdate(props.entryId, patch)}

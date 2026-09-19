@@ -47,6 +47,13 @@ export function maximumVisibleLineupMembers(isCondensed: boolean): number {
   return isCondensed ? MAXIMUM_VISIBLE_MEMBERS_WHEN_CONDENSED : MAXIMUM_VISIBLE_MEMBERS_WHEN_ROOMY;
 }
 
+const NARROW_LINEUP_SLOT_BUDGET = 4;
+const WIDE_LINEUP_SLOT_BUDGET = 8;
+
+export function maximumVisibleLineupSlots(isCondensed: boolean): number {
+  return isCondensed ? NARROW_LINEUP_SLOT_BUDGET : WIDE_LINEUP_SLOT_BUDGET;
+}
+
 export function tonalityLabelFor(song: SetlistEditorSong | undefined): string | null {
   if (song === undefined) return null;
   const start = song.tonalityStart ?? null;
@@ -102,17 +109,6 @@ export function compactLineup(lineup: Lineup): Record<string, readonly string[]>
   return played;
 }
 
-export interface ProminentMemberInstrumentResolution {
-  readonly memberName: string;
-  readonly memberColor: string;
-  readonly instrumentNames: readonly string[];
-}
-
-interface NameableMember {
-  readonly firstName: string;
-  readonly color: string;
-}
-
 interface NameableInstrument {
   readonly name: string;
 }
@@ -130,28 +126,6 @@ export function selectUnwarnedMemberIds(
   warnedMemberIds: ReadonlySet<string>,
 ): string[] {
   return orphanMemberIds.filter((memberId) => !warnedMemberIds.has(memberId));
-}
-
-export function prominentMemberInstrumentFor(
-  instrumentIds: readonly string[] | undefined,
-  selectedMemberId: string | null,
-  membersById: Readonly<Record<string, NameableMember>>,
-  instrumentsById: Readonly<Record<string, NameableInstrument>>,
-): ProminentMemberInstrumentResolution | null {
-  if (instrumentIds === undefined) return null;
-  if (selectedMemberId === null) return null;
-  const member = membersById[selectedMemberId];
-  if (member === undefined) return null;
-  const instrumentNames = instrumentIds.flatMap((instrumentId) => {
-    const instrument = instrumentsById[instrumentId];
-    return instrument === undefined ? [] : [instrument.name];
-  });
-  if (instrumentNames.length === 0) return null;
-  return {
-    memberName: member.firstName,
-    memberColor: member.color,
-    instrumentNames,
-  };
 }
 
 export function instrumentNamesFor(

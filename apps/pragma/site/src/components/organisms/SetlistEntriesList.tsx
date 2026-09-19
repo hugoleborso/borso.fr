@@ -27,12 +27,12 @@ import { SetlistEntryRow } from './SetlistEntryRow';
 import {
   compactLineup,
   lineupOf,
-  prominentMemberInstrumentFor,
   restrictToVerticalAxis,
   type SetlistEditorEntry,
   type SetlistEditorSong,
   tonalityLabelFor,
 } from './setlist-editor.utils';
+import { buildLineupSlots, type SlotInstrument } from '../molecules/lineup-slots.core';
 import type { SongDefaults, SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
@@ -61,14 +61,11 @@ export interface SetlistEntriesListProps {
   readonly transitionNotesByPair: Readonly<Record<string, string>>;
   readonly meanMasteryBySongId: Readonly<Record<string, number | null>>;
   readonly inFilteredMode: boolean;
-  readonly selectedMemberId: string | null;
-  readonly filteredInstrumentIdsByEntryId: Readonly<Record<string, readonly string[] | undefined>>;
   readonly lineupMembers: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
-  readonly membersById: Readonly<Record<string, { firstName: string; color: string }>>;
-  readonly instrumentsById: Readonly<Record<string, { name: string }>>;
+  readonly slotInstruments: readonly SlotInstrument[];
   readonly knownMemberIds: ReadonlySet<string>;
-  readonly maximumVisibleMembers: number;
+  readonly maximumVisibleSlots: number;
   readonly onReorder: (orderedEntryIds: readonly string[]) => void;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onUpdateSongDefaults: (songId: string, patch: SongDefaultsPatch) => void;
@@ -148,12 +145,12 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             const lineupRaw = lineupOf(entry, props.songsById);
             warnIfOrphanMemberIds(lineupRaw, props.knownMemberIds, entry.songId);
             const fullIndex = props.entries.indexOf(entry);
-            const prominent = prominentMemberInstrumentFor(
-              props.filteredInstrumentIdsByEntryId[entry.id],
-              props.selectedMemberId,
-              props.membersById,
-              props.instrumentsById,
-            );
+            const lineupSlots = buildLineupSlots({
+              instruments: props.slotInstruments,
+              lineup: compactLineup(lineupRaw),
+              members: props.lineupMembers,
+              maximumVisibleSlots: props.maximumVisibleSlots,
+            });
             return (
               <SetlistEntryRow
                 key={entry.id}
@@ -171,15 +168,13 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 energy={entry.energy}
                 baseEnergy={song?.baseEnergy ?? null}
                 notes={entry.notes}
-                lineup={compactLineup(lineupRaw)}
+                lineupSlots={lineupSlots}
                 resolvedLineupForEdit={lineupRaw}
                 songDefaultLineup={song?.defaultLineup ?? {}}
                 songDefaults={songDefaultsOf(song)}
-                maximumVisibleMembers={props.maximumVisibleMembers}
                 hasOverride={entry.lineupOverride !== null}
                 members={props.lineupMembers}
                 instruments={props.instruments}
-                prominentMemberInstrument={prominent}
                 transitionBefore={renderTransitionBefore(fullIndex)}
                 onUpdate={props.onUpdate}
                 onUpdateSongDefaults={(patch) => props.onUpdateSongDefaults(entry.songId, patch)}

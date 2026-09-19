@@ -7,7 +7,7 @@ import {
   instrumentNamesFor,
   lineupOf,
   maximumVisibleLineupMembers,
-  prominentMemberInstrumentFor,
+  maximumVisibleLineupSlots,
   restrictToVerticalAxis,
   selectUnwarnedMemberIds,
   tonalityLabelFor,
@@ -25,6 +25,20 @@ describe('maximumVisibleLineupMembers', () => {
 
   it('always shows fewer members when condensed than when roomy', () => {
     expect(maximumVisibleLineupMembers(true)).toBeLessThan(maximumVisibleLineupMembers(false));
+  });
+});
+
+describe('maximumVisibleLineupSlots', () => {
+  it('leaves room for the whole fixed order when the row is roomy', () => {
+    expect(maximumVisibleLineupSlots(false)).toBe(8);
+  });
+
+  it('drops slots from the right on a narrow screen rather than squeezing the title', () => {
+    expect(maximumVisibleLineupSlots(true)).toBe(4);
+  });
+
+  it('always shows fewer slots when condensed than when roomy', () => {
+    expect(maximumVisibleLineupSlots(true)).toBeLessThan(maximumVisibleLineupSlots(false));
   });
 });
 
@@ -245,60 +259,6 @@ describe('formatSetlistOrder', () => {
 
   it('renders a placeholder for a missing song id', () => {
     expect(formatSetlistOrder([{ songId: 'gone', keyOverride: null }], songsById)).toBe('1. ?');
-  });
-});
-
-describe('prominentMemberInstrumentFor', () => {
-  const members = { m1: { firstName: 'Hugo', color: '#abc' } };
-  const instruments = { i1: { name: 'Guitar' } };
-
-  it('returns null when no instrument id is supplied', () => {
-    expect(prominentMemberInstrumentFor(undefined, 'm1', members, instruments)).toBe(null);
-  });
-
-  it('returns null when no member is selected', () => {
-    expect(prominentMemberInstrumentFor(['i1'], null, members, instruments)).toBe(null);
-  });
-
-  it('returns null with no member selected, even against a member keyed "null"', () => {
-    const keyedByNullText = { null: { firstName: 'Hugo', color: '#abc' } };
-    expect(prominentMemberInstrumentFor(['i1'], null, keyedByNullText, instruments)).toBe(null);
-  });
-
-  it('returns null with no instrument id, even against an instrument keyed "undefined"', () => {
-    const keyedByUndefinedText = { undefined: { name: 'Guitar' } };
-    expect(prominentMemberInstrumentFor(undefined, 'm1', members, keyedByUndefinedText)).toBe(null);
-  });
-
-  it('returns null when the member id cannot be resolved', () => {
-    expect(prominentMemberInstrumentFor(['i1'], 'unknown-member', members, instruments)).toBe(null);
-  });
-
-  it('returns null when the instrument id cannot be resolved', () => {
-    expect(prominentMemberInstrumentFor(['unknown-instrument'], 'm1', members, instruments)).toBe(
-      null,
-    );
-  });
-
-  it('returns the resolved member name, colour and instrument names', () => {
-    expect(prominentMemberInstrumentFor(['i1'], 'm1', members, instruments)).toEqual({
-      memberName: 'Hugo',
-      memberColor: '#abc',
-      instrumentNames: ['Guitar'],
-    });
-  });
-
-  it('names every instrument the member holds here', () => {
-    const twoInstruments = { i1: { name: 'Guitar' }, i2: { name: 'Vocals' } };
-    expect(prominentMemberInstrumentFor(['i1', 'i2'], 'm1', members, twoInstruments)).toEqual({
-      memberName: 'Hugo',
-      memberColor: '#abc',
-      instrumentNames: ['Guitar', 'Vocals'],
-    });
-  });
-
-  it('returns null when the member holds nothing here', () => {
-    expect(prominentMemberInstrumentFor([], 'm1', members, instruments)).toBe(null);
   });
 });
 
