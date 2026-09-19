@@ -233,6 +233,7 @@
   },
   "instruments": {
     "deleteConfirm": "Delete this instrument? It leaves every lineup that uses it.",
+    "dragHandle": "Reorder instrument",
     "editTitle": "Edit instrument",
     "family": "Family",
     "familyHarmonic": "harmonic",
@@ -240,10 +241,19 @@
     "familyOther": "other",
     "familyPercussive": "percussive",
     "familyVocal": "vocal",
+    "icon": "Icon",
+    "iconBass": "Bass",
+    "iconDrum": "Drums",
+    "iconGuitar": "Guitar",
+    "iconMicVocal": "Voice",
+    "iconMusic": "Generic",
+    "iconPiano": "Keys",
     "name": "Name",
     "newTitle": "New instrument",
+    "orderHint": "Drag to set the column order on a setlist. Ring a member to mark this their main instrument.",
     "subtitle": "The family of an instrument feeds the transition analysis.",
-    "title": "Instruments"
+    "title": "Instruments",
+    "togglePrimary": "Main instrument"
   },
   "lineup": {
     "allMembers": "All members",

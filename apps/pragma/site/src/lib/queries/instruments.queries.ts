@@ -2,8 +2,9 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
+import { DEFAULT_INSTRUMENT_POSITION, FALLBACK_INSTRUMENT_ICON } from '@domain/instrument.core';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
-import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
+import { reorderById, replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 export const instrumentKeys = {
   all: ['instruments'] as const,
@@ -46,7 +47,13 @@ export function useCreateInstrument() {
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<InstrumentsListResponse>(listKey);
       const temporaryId = crypto.randomUUID();
-      const inserted: InstrumentRow = { id: temporaryId, ...variables };
+      const inserted: InstrumentRow = {
+        ...variables,
+        id: temporaryId,
+        icon: variables.icon ?? FALLBACK_INSTRUMENT_ICON,
+        position: variables.position ?? DEFAULT_INSTRUMENT_POSITION,
+        players: [],
+      };
       queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return { instruments: [...old.instruments, inserted] };
@@ -98,6 +105,39 @@ export function useUpdateInstrument() {
         };
       });
       return { previousList };
+    },
+    onError: (_err, _vars, context) => {
+      if (context?.previousList !== undefined) {
+        queryClient.setQueryData(instrumentKeys.list(), context.previousList);
+      }
+    },
+  });
+}
+
+// @FollowsBlueprint query-optimistic-mutation
+export function useReorderInstruments() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: instrumentKeys.all,
+    mutationFn: async (variables: { instrumentIds: string[] }) => {
+      const response = await api.api.instruments.order.$put({ json: variables });
+      if (!response.ok) throw new ApiError(response.status, `reorder ${response.status}`, null);
+      return response.json();
+    },
+    onMutate: async (variables) => {
+      const listKey = instrumentKeys.list();
+      await queryClient.cancelQueries({ queryKey: listKey });
+      const previousList = queryClient.getQueryData<InstrumentsListResponse>(listKey);
+      queryClient.setQueryData<InstrumentsListResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return { instruments: reorderById(old.instruments, variables.instrumentIds) };
+      });
+      return { previousList };
+    },
+    onSuccess: (data) => {
+      queryClient.setQueryData<InstrumentsListResponse>(instrumentKeys.list(), {
+        instruments: data.instruments,
+      });
     },
     onError: (_err, _vars, context) => {
       if (context?.previousList !== undefined) {

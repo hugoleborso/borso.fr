@@ -24,3 +24,16 @@ export function settleTemporaryEntity<TEntity extends Identified>(
 ): TEntity[] {
   return entities.map((entity) => (entity.id === temporaryId ? settled : entity));
 }
+
+export function reorderById<TEntity extends Identified>(
+  entities: readonly TEntity[],
+  orderedIds: readonly string[],
+): TEntity[] {
+  const byId = new Map(entities.map((entity) => [entity.id, entity]));
+  const ordered = orderedIds.flatMap((id) => {
+    const entity = byId.get(id);
+    return entity === undefined ? [] : [entity];
+  });
+  const placed = new Set(ordered.map((entity) => entity.id));
+  return [...ordered, ...entities.filter((entity) => !placed.has(entity.id))];
+}
