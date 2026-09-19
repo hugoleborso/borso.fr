@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   ENERGY_DEFAULT,
   isEnergyStored,
+  resolveEnergyLevel,
   selectEnergyAppearance,
   selectEnergyMeterAppearance,
 } from './setlist-entry-energy.core';
@@ -9,19 +10,30 @@ import {
 // @FollowsBlueprint test-pure-unit
 describe('isEnergyStored', () => {
   it('reads a freshly added entry as unset', () => {
-    expect(isEnergyStored({ isEdited: false, entryEnergy: null, songEnergy: null })).toBe(false);
+    expect(isEnergyStored({ entryEnergy: null, songEnergy: null })).toBe(false);
   });
 
   it('reads an entry energy as stored', () => {
-    expect(isEnergyStored({ isEdited: false, entryEnergy: 7, songEnergy: null })).toBe(true);
+    expect(isEnergyStored({ entryEnergy: 7, songEnergy: null })).toBe(true);
   });
 
   it('reads the song energy as stored when the entry has none', () => {
-    expect(isEnergyStored({ isEdited: false, entryEnergy: null, songEnergy: 3 })).toBe(true);
+    expect(isEnergyStored({ entryEnergy: null, songEnergy: 3 })).toBe(true);
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('resolveEnergyLevel', () => {
+  it('shows what the entry stores, which is what a refused write rolls back to', () => {
+    expect(resolveEnergyLevel({ entryEnergy: 9, songEnergy: 3 })).toBe(9);
   });
 
-  it('reads an edit in flight as stored', () => {
-    expect(isEnergyStored({ isEdited: true, entryEnergy: null, songEnergy: null })).toBe(true);
+  it('falls back to the song energy when the entry stores none', () => {
+    expect(resolveEnergyLevel({ entryEnergy: null, songEnergy: 3 })).toBe(3);
+  });
+
+  it('falls back to the midpoint when neither is set', () => {
+    expect(resolveEnergyLevel({ entryEnergy: null, songEnergy: null })).toBe(ENERGY_DEFAULT);
   });
 });
 

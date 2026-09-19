@@ -29,7 +29,6 @@ import {
 } from '../molecules/setlist-entry-form.hook';
 import { SetlistEntryEnergyField } from '../molecules/SetlistEntryEnergyField';
 import { selectMasteryColor } from './mastery-color.core';
-import { ENERGY_DEFAULT } from '../molecules/setlist-entry-energy.core';
 import {
   selectSetlistEntryTone,
   selectSetlistEntryToneAppearance,
@@ -101,7 +100,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     keyOverride: props.keyOverride ?? '',
     capo: props.capo === null ? '' : String(props.capo),
     notes: props.notes,
-    energy: props.energy ?? props.baseEnergy ?? ENERGY_DEFAULT,
   };
   const form = useSetlistEntryForm(defaultValues);
   const saveLineupOverride = (lineup: LineupRecord | null, wasReset: boolean): void => {
@@ -192,7 +190,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             <LineupSlots view={props.lineupSlots} overflowTitle={overflowTitle} />
           </button>
           <SetlistEntryEnergyField
-            form={form}
             entryEnergy={props.energy}
             songEnergy={props.baseEnergy}
             onPublish={publishEnergy}

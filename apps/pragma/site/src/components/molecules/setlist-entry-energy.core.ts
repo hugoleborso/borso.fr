@@ -1,6 +1,8 @@
 /** @Feature setlists */
 
 export const ENERGY_DEFAULT = 5;
+export const ENERGY_MIN = 1;
+export const ENERGY_MAX = 10;
 
 export interface EnergyAppearance {
   readonly filledClassName: string;
@@ -30,14 +32,18 @@ const UNSET_METER_APPEARANCE: EnergyAppearance = {
 };
 
 export interface EnergyState {
-  readonly isEdited: boolean;
   readonly entryEnergy: number | null;
   readonly songEnergy: number | null;
 }
 
 // @FollowsBlueprint core-appearance
 export function isEnergyStored(state: EnergyState): boolean {
-  return state.isEdited || state.entryEnergy !== null || state.songEnergy !== null;
+  return state.entryEnergy !== null || state.songEnergy !== null;
+}
+
+// @FollowsBlueprint core-projection
+export function resolveEnergyLevel(state: EnergyState): number {
+  return state.entryEnergy ?? state.songEnergy ?? ENERGY_DEFAULT;
 }
 
 // @FollowsBlueprint core-appearance
