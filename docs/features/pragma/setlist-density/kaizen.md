@@ -15,3 +15,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [23:49] `implementation-01` every git command via rtk is refused by the worktree-isolation guard; only an absolute /usr/bin/git path gets through
 - [23:51] `implementation-01` the spec and plan both wrote the migration as ADD COLUMN NOT NULL DEFAULT, which Aurora DSQL rejects and every one of the thirteen existing migrations avoids
 - [00:31] `implementation-01` prettier --write through rtk reformatted twelve files it was not asked about, in a style plain prettier --check accepts either way
+- [04:54] `implementation-02` eslint on apps/pragma reported 18 no-unsafe-* errors in cdk/lib/stack.ts because @borso/infra was never built in this worktree; the message names the consuming file and the type-aware rules and never the missing build
