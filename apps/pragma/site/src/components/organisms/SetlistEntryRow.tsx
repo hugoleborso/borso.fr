@@ -43,7 +43,9 @@ const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
   'w-9 h-11 sm:h-10 shrink-0 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
 const LINEUP_BUTTON_CLASS =
-  'inline-flex h-11 sm:h-10 shrink-0 items-center rounded-md px-0.5 cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
+  'hidden sm:inline-flex h-11 sm:h-10 shrink-0 items-center rounded-md px-0.5 cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
+const NARROW_LINEUP_BUTTON_CLASS =
+  'flex sm:hidden items-center -ml-0.5 px-0.5 cursor-pointer bg-transparent border-0';
 
 export interface SetlistEntryRowProps {
   readonly position: number;
@@ -113,6 +115,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const publishEnergy = (next: number): void => {
     props.onUpdate(props.entryId, { energy: next });
   };
+  const overflowTitle = props.lineupSlots.overflowInstrumentNames.join(', ');
   const tone = selectSetlistEntryTone(props.resolvedLineupForEdit, props.hasOverride);
   const toneAppearance = selectSetlistEntryToneAppearance(tone);
   return (
@@ -148,7 +151,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             <span className="block truncate font-display text-[17px] italic leading-tight text-ink-900">
               {props.title}
             </span>
-            <span className="flex min-w-0 items-center gap-1.5 text-[11px] text-ink-500">
+            <span className="hidden min-w-0 items-center gap-1.5 text-[11px] text-ink-500 sm:flex">
               <span className="truncate">{props.artist}</span>
               {props.tonalityLabel === null ? null : (
                 <>
@@ -171,6 +174,14 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 </>
               )}
             </span>
+            <button
+              type="button"
+              onClick={() => setLineupEditorOpen(true)}
+              aria-label={t('lineup.editOverride')}
+              className={NARROW_LINEUP_BUTTON_CLASS}
+            >
+              <LineupSlots view={props.lineupSlots} overflowTitle={overflowTitle} />
+            </button>
           </div>
           <button
             type="button"
@@ -178,10 +189,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             aria-label={t('lineup.editOverride')}
             className={LINEUP_BUTTON_CLASS}
           >
-            <LineupSlots
-              view={props.lineupSlots}
-              overflowTitle={props.lineupSlots.overflowInstrumentNames.join(', ')}
-            />
+            <LineupSlots view={props.lineupSlots} overflowTitle={overflowTitle} />
           </button>
           <SetlistEntryEnergyField
             form={form}
