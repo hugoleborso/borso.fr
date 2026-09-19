@@ -6,7 +6,6 @@ import {
   instrumentFamilyMap,
   instrumentNamesFor,
   lineupOf,
-  maximumVisibleLineupMembers,
   maximumVisibleLineupSlots,
   restrictToVerticalAxis,
   selectUnwarnedMemberIds,
@@ -14,20 +13,6 @@ import {
 } from './setlist-editor.utils';
 
 // @FollowsBlueprint test-pure-unit
-describe('maximumVisibleLineupMembers', () => {
-  it('leaves room for the whole band when the row is roomy', () => {
-    expect(maximumVisibleLineupMembers(false)).toBe(8);
-  });
-
-  it('condenses the row on a narrow screen', () => {
-    expect(maximumVisibleLineupMembers(true)).toBe(3);
-  });
-
-  it('always shows fewer members when condensed than when roomy', () => {
-    expect(maximumVisibleLineupMembers(true)).toBeLessThan(maximumVisibleLineupMembers(false));
-  });
-});
-
 describe('maximumVisibleLineupSlots', () => {
   it('leaves room for the whole fixed order when the row is roomy', () => {
     expect(maximumVisibleLineupSlots(false)).toBe(8);

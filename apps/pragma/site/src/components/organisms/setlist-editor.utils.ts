@@ -40,13 +40,6 @@ export interface SetlistEditorEntry {
   readonly lineupOverride: Lineup | null;
 }
 
-const MAXIMUM_VISIBLE_MEMBERS_WHEN_CONDENSED = 3;
-const MAXIMUM_VISIBLE_MEMBERS_WHEN_ROOMY = 8;
-
-export function maximumVisibleLineupMembers(isCondensed: boolean): number {
-  return isCondensed ? MAXIMUM_VISIBLE_MEMBERS_WHEN_CONDENSED : MAXIMUM_VISIBLE_MEMBERS_WHEN_ROOMY;
-}
-
 const NARROW_LINEUP_SLOT_BUDGET = 4;
 const WIDE_LINEUP_SLOT_BUDGET = 8;
 
