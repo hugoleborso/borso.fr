@@ -7,6 +7,7 @@ export default {
       2,
       'always',
       [
+        'banana-rush',
         'borso-fr',
         'borsouvertures',
         'last-loop-lepin',

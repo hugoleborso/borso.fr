@@ -61,6 +61,7 @@ export const ENTRY_POINT_PATH_SUFFIXES: readonly string[] = [
   '/api/src/app.ts',
   '/api/src/main.ts',
   '/api/src/main.dev.ts',
+  '/api/src/main.websocket.ts',
   '/site/src/main.tsx',
   '/site/src/App.tsx',
   '/cdk/bin/cdk.ts',

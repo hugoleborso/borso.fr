@@ -1,0 +1,128 @@
+{
+  "appName": "Banana Rush",
+  "tagline": "Mise en secret. Rafle la caisse. Paie la taxe.",
+  "common": {
+    "bananas_one": "{{count}} banane",
+    "bananas_other": "{{count}} bananes",
+    "back": "Retour",
+    "loading": "Ça charge…",
+    "you": "toi"
+  },
+  "home": {
+    "createGame": "Créer une partie",
+    "joinTitle": "Rejoindre une partie",
+    "joinPlaceholder": "CODE",
+    "join": "Rejoindre",
+    "rulesToggle": "Comment on joue"
+  },
+  "rules": {
+    "title": "Comment on joue",
+    "stashAndCrate": "Chacun démarre avec 10 bananes, et 10 bananes attendent dans la caisse.",
+    "secretNumber": "À chaque tour, tout le monde écrit en secret un nombre entre 1 et un bananillion.",
+    "highestWins": "Le plus grand nombre rafle toute la caisse, mais doit payer une taxe.",
+    "tariff": "La taxe vaut son nombre moins le deuxième plus grand nombre, et elle va à celui qui l'a écrit.",
+    "bust": "Qui ne peut pas payer la taxe explose : ses bananes tombent à zéro, et c'est au suivant de tenter sa chance.",
+    "tie": "Deux nombres identiques en tête se partagent la caisse sans payer de taxe.",
+    "crateRefill": "À la fin du tour, la caisse se remplit à hauteur du plus gros tas de la table.",
+    "winning": "Le premier à {{score}} bananes gagne la partie.",
+    "comeback": "À zéro banane on reste dans la partie : une mise ne se paie pas d'avance, donc tout peut revenir."
+  },
+  "create": {
+    "title": "Nouvelle partie",
+    "nickname": "Ton blaze",
+    "nicknamePlaceholder": "Hugo",
+    "monkey": "Ton singe",
+    "seats": "Places à table",
+    "timer": "Temps par tour",
+    "timerNone": "Sans limite",
+    "timerSeconds": "{{count}} s",
+    "winningScore": "Objectif",
+    "submit": "Créer la partie",
+    "submitting": "On installe la table…"
+  },
+  "join": {
+    "title": "Rejoindre {{code}}",
+    "submit": "Entrer dans la partie",
+    "submitting": "On te trouve une place…",
+    "monkeyTaken": "Déjà pris"
+  },
+  "lobby": {
+    "title": "Salle d'attente",
+    "codeLabel": "Code de la partie",
+    "shareHint": "Envoie ce code à tes potes.",
+    "seatsLeft_one": "{{count}} place libre",
+    "seatsLeft_other": "{{count}} places libres",
+    "full": "Table complète",
+    "start": "Lancer la partie",
+    "waitingForHost": "On attend que l'hôte lance la partie.",
+    "needMorePlayers": "Il faut être au moins deux pour jouer.",
+    "settings": "Réglages",
+    "host": "hôte"
+  },
+  "game": {
+    "crate": "La caisse",
+    "round": "Tour {{number}}",
+    "yourStash": "Ton tas",
+    "yourBid": "Ta mise",
+    "bidLabel": "Ta mise secrète",
+    "bidPlaceholder": "1",
+    "submitBid": "Miser",
+    "submittingBid": "On glisse ta mise…",
+    "waiting": "On attend les autres singes…",
+    "hasBid": "a misé",
+    "thinking": "réfléchit",
+    "timeLeft": "{{count}} s",
+    "timeUp": "Temps écoulé",
+    "resolveNow": "Résoudre le tour",
+    "target": "Objectif {{score}}"
+  },
+  "reveal": {
+    "title": "Le tour {{number}}",
+    "wonCrate": "rafle la caisse",
+    "paidTariff": "paie {{count}} de taxe",
+    "receivedTariff": "encaisse {{count}}",
+    "busted": "explose",
+    "split": "partage la caisse",
+    "nothing": "ne bouge pas",
+    "next": "Tour suivant"
+  },
+  "final": {
+    "title": "Partie terminée",
+    "winner": "{{nickname}} gagne la partie",
+    "winners": "Égalité au sommet",
+    "playAgain": "Rejouer",
+    "home": "Retour à l'accueil"
+  },
+  "errors": {
+    "game-not-found": "Cette partie n'existe pas.",
+    "game-full": "La partie est complète.",
+    "already-started": "La partie a déjà commencé.",
+    "avatar-taken": "Ce singe est déjà pris.",
+    "not-in-lobby": "La partie n'est plus en salle d'attente.",
+    "not-enough-players": "Il faut être au moins deux pour jouer.",
+    "not-host": "Seul l'hôte peut lancer la partie.",
+    "not-a-player": "Tu n'es pas assis à cette table.",
+    "not-playing": "La partie n'est pas en cours.",
+    "already-bid": "Tu as déjà misé ce tour-ci.",
+    "round-still-open": "Le tour n'est pas encore fini.",
+    "unexpected-failure": "Quelque chose a glissé sur une peau de banane.",
+    "bidOutOfRange": "Entre 1 et {{max}}.",
+    "nicknameRequired": "Il faut un blaze.",
+    "reload": "Recharger"
+  },
+  "language": {
+    "fr": "FR",
+    "en": "EN",
+    "switch": "Changer de langue"
+  },
+  "monkeys": {
+    "chimp": "Chimpanzé",
+    "gibbon": "Gibbon",
+    "macaque": "Macaque",
+    "mandrill": "Mandrill",
+    "marmoset": "Ouistiti",
+    "tamarin": "Tamarin",
+    "capuchin": "Capucin",
+    "lemur": "Lémurien"
+  }
+}

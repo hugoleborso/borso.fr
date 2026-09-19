@@ -3,6 +3,7 @@ packages:
   - infra/*
 
 catalog:
+  '@aws-sdk/client-apigatewaymanagementapi': '^3.1121.0'
   '@aws-sdk/client-s3': '^3.1121.0'
   '@aws-sdk/client-ssm': '^3.1121.0'
   '@aws-sdk/dsql-signer': '^3.1121.0'
@@ -23,6 +24,7 @@ catalog:
   '@vitest/coverage-v8': '^4.1.11'
   aws-cdk: '^2.1139.0'
   aws-cdk-lib: '^2.267.0'
+  class-variance-authority: '0.7.1'
   clsx: '2.1.1'
   concurrently: '9.2.1'
   constructs: '^10.8.1'
@@ -36,6 +38,7 @@ catalog:
   react: '^19.2.8'
   react-dom: '^19.2.8'
   react-i18next: '^15.4.0'
+  react-router-dom: '^7'
   tailwindcss: '^4'
   tsx: '^4.23.13'
   typescript: '^5.7.2'

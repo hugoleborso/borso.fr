@@ -1,0 +1,58 @@
+@import 'tailwindcss';
+
+@theme {
+  --color-peel: #ffd23f;
+  --color-peel-deep: #f5a623;
+  --color-peel-soft: #fff1c2;
+
+  --color-cream: #fff8e7;
+  --color-cream-sunk: #f6ead0;
+
+  --color-ink: #3b2712;
+  --color-ink-soft: #7a5c38;
+  --color-ink-faint: #b39b78;
+
+  --color-leaf: #4c9a2a;
+  --color-leaf-soft: #e2f3d8;
+  --color-coral: #e4572e;
+  --color-coral-soft: #fbdfd6;
+  --color-grape: #7d5ba6;
+
+  --font-display: 'Nunito Variable', ui-rounded, system-ui, sans-serif;
+  --font-sans: 'Nunito Variable', ui-rounded, system-ui, sans-serif;
+
+  --radius-chunk: 1.25rem;
+  --radius-pill: 999px;
+
+  --shadow-chunk: 0 4px 0 0 var(--color-ink);
+  --shadow-chunk-sm: 0 3px 0 0 var(--color-ink);
+}
+
+@layer base {
+  html {
+    background-color: var(--color-cream);
+    -webkit-text-size-adjust: 100%;
+  }
+
+  body {
+    margin: 0;
+    background-color: var(--color-cream);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    overscroll-behavior-y: none;
+  }
+
+  button {
+    font-family: inherit;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      animation-iteration-count: 1 !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+}
