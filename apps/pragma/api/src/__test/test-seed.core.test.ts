@@ -3,6 +3,7 @@ import {
   buildSeedLineup,
   selectAdminCredentialsState,
   selectInstrumentIds,
+  selectPrimaryInstrumentIds,
 } from './test-seed.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -25,6 +26,29 @@ describe('selectInstrumentIds', () => {
 
   it('returns an empty list for an empty roster', () => {
     expect(selectInstrumentIds([], instrumentIdByName)).toEqual([]);
+  });
+});
+
+describe('selectPrimaryInstrumentIds', () => {
+  const instrumentIdByName = new Map([
+    ['Guitar', 'guitar-id'],
+    ['Bass', 'bass-id'],
+  ]);
+
+  it('makes the first declared instrument the only primary one', () => {
+    expect(selectPrimaryInstrumentIds(['Guitar', 'Bass'], instrumentIdByName)).toEqual([
+      'guitar-id',
+    ]);
+  });
+
+  it('falls through to the first name the fixture actually wrote', () => {
+    expect(selectPrimaryInstrumentIds(['Theremin', 'Bass'], instrumentIdByName)).toEqual([
+      'bass-id',
+    ]);
+  });
+
+  it('claims nothing for a member holding no instrument', () => {
+    expect(selectPrimaryInstrumentIds([], instrumentIdByName)).toEqual([]);
   });
 });
 

@@ -2,6 +2,8 @@ import type { Lineup } from '@domain/lineup.core';
 
 export type SeedLineupByMemberName = Readonly<Record<string, readonly string[]>>;
 
+const PRIMARY_INSTRUMENTS_PER_SEEDED_MEMBER = 1;
+
 // @FollowsBlueprint core-projection
 export function buildSeedLineup(
   lineupByMemberName: SeedLineupByMemberName,
@@ -26,6 +28,17 @@ export function selectInstrumentIds(
     const instrumentId = instrumentIdByName.get(name);
     return instrumentId === undefined ? [] : [instrumentId];
   });
+}
+
+// @FollowsBlueprint core-projection
+export function selectPrimaryInstrumentIds(
+  instrumentNames: readonly string[],
+  instrumentIdByName: ReadonlyMap<string, string>,
+): string[] {
+  return selectInstrumentIds(instrumentNames, instrumentIdByName).slice(
+    0,
+    PRIMARY_INSTRUMENTS_PER_SEEDED_MEMBER,
+  );
 }
 
 export type AdminCredentialsState = 'created' | 'already-set';
