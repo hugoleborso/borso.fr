@@ -110,7 +110,7 @@ function InstrumentRow(
   );
 }
 
-// @FollowsBlueprint organism-query-owning
+// @FollowsBlueprint organism-presentational
 export function InstrumentsList({
   rows,
   listLabel,
