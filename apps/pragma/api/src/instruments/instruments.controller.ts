@@ -4,6 +4,7 @@ import { requireMemberSession } from '../auth/member-session.middleware';
 import {
   createInstrumentSchema,
   instrumentIdParamSchema,
+  instrumentOrderSchema,
   updateInstrumentSchema,
 } from './instruments.schema';
 import {
@@ -11,6 +12,7 @@ import {
   getInstrumentsSorted,
   patchInstrument,
   removeInstrument,
+  reorderInstruments,
 } from './instruments.service';
 
 // @FollowsBlueprint controller-dispatch
@@ -25,6 +27,12 @@ export function buildInstrumentsRouter() {
       const input = context.req.valid('json');
       const instrument = await createInstrument(input);
       return context.json({ instrument }, 201);
+    })
+    .put('/order', zValidator('json', instrumentOrderSchema), async (context) => {
+      const { instrumentIds } = context.req.valid('json');
+      const reordered = await reorderInstruments(instrumentIds);
+      if (reordered.kind === 'stale') return context.json({ error: 'reorder-stale' }, 409);
+      return context.json({ instruments: reordered.instruments });
     })
     .put(
       '/:id',

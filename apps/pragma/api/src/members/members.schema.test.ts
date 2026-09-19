@@ -84,6 +84,27 @@ describe('memberInstrumentAssignmentSchema', () => {
       false,
     );
   });
+
+  it('leaves the primary set optional, which is what the member form still sends', () => {
+    const assignment = memberInstrumentAssignmentSchema.parse({ instrumentIds: [] });
+    expect(assignment.primaryInstrumentIds).toBeUndefined();
+  });
+
+  it('accepts a primary set of uuids and refuses one that is not', () => {
+    const instrumentId = crypto.randomUUID();
+    expect(
+      memberInstrumentAssignmentSchema.safeParse({
+        instrumentIds: [instrumentId],
+        primaryInstrumentIds: [instrumentId],
+      }).success,
+    ).toBe(true);
+    expect(
+      memberInstrumentAssignmentSchema.safeParse({
+        instrumentIds: [instrumentId],
+        primaryInstrumentIds: ['guitar'],
+      }).success,
+    ).toBe(false);
+  });
 });
 
 describe('memberIdParamSchema', () => {

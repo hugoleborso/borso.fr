@@ -1,4 +1,4 @@
-import { pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
+import { boolean, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{3,8}$/;
@@ -17,6 +17,7 @@ export const memberInstrumentTable = pgTable(
   {
     memberId: uuid('member_id').notNull(),
     instrumentId: uuid('instrument_id').notNull(),
+    isPrimary: boolean('is_primary'),
   },
   (table) => [primaryKey({ columns: [table.memberId, table.instrumentId] })],
 );
@@ -58,6 +59,7 @@ export const updateMemberSchema = z.object({
 
 export const memberInstrumentAssignmentSchema = z.object({
   instrumentIds: z.array(z.string().uuid()),
+  primaryInstrumentIds: z.array(z.string().uuid()).optional(),
 });
 
 export const memberIdParamSchema = z.object({ id: z.string().uuid() });

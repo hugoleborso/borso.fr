@@ -173,6 +173,7 @@ Two failure modes to watch for:
 
 - [`spotify-credentials-for-pragma.md`](./spotify-credentials-for-pragma.md) — creating the Spotify application, writing the one SSM parameter every stage reads, and the fact that a missing credential looks exactly like a song Spotify does not carry.
 - [`musicbrainz-search-parser-and-missing-tonality.md`](./musicbrainz-search-parser-and-missing-tonality.md) — the default Lucene parser misses what a person actually types, so the adapter asks for `dismax`; and key/tonality lives only on `work` entities, never on the `recording` a search returns, so it cannot be enriched from here.
+- [`instrument-icon-provenance.md`](./instrument-icon-provenance.md) — five of the six instrument glyphs are Lucide path data copied into the icon registry under ISC, with the notice; the sixth is a bass built parametrically here, whose two fretboard edges are parallel by construction and must not be nudged by hand.
 
 ### Frontend / React
 

@@ -59,8 +59,8 @@ export function buildMembersRouter() {
       zValidator('json', memberInstrumentAssignmentSchema),
       async (context) => {
         const { id } = context.req.valid('param');
-        const { instrumentIds } = context.req.valid('json');
-        const updated = await assignInstrumentsToMember(id, instrumentIds);
+        const { instrumentIds, primaryInstrumentIds } = context.req.valid('json');
+        const updated = await assignInstrumentsToMember(id, instrumentIds, primaryInstrumentIds);
         if (updated.kind === 'member-not-found') return context.json({ error: 'not-found' }, 404);
         if (updated.kind === 'instrument-not-found') {
           return context.json({ error: 'instrument-not-found' }, 400);
