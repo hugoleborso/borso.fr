@@ -74,6 +74,25 @@ describe('buildLineupSlots', () => {
     expect(view.slots.map((slot) => slot.instrumentId)).toEqual(['voice']);
   });
 
+  it('keeps an instrument one member calls their main one and another does not', () => {
+    const shared = instrument({
+      id: 'shared',
+      name: 'Shared',
+      position: 5,
+      players: [
+        { memberId: ANA.id, isPrimary: false },
+        { memberId: BEN.id, isPrimary: true },
+      ],
+    });
+    const view = buildLineupSlots({
+      instruments: [shared],
+      lineup: {},
+      members: [ANA, BEN],
+      maximumVisibleSlots: ROOMY_BUDGET,
+    });
+    expect(view.slots.map((slot) => slot.instrumentId)).toEqual(['shared']);
+  });
+
   it('caps the column at the member count plus two and counts what it dropped', () => {
     const extras = [4, 5, 6].map((position) =>
       instrument({ id: `extra-${position}`, name: `Extra ${position}`, position }),

@@ -43,6 +43,17 @@ describe('predictMemberRoster', () => {
     ).toEqual([held(GUITAR, true)]);
   });
 
+  it('carries over only the primacy that was set, not every instrument held', () => {
+    expect(
+      predictMemberRoster(
+        [held(GUITAR, false), held(BASS, true)],
+        [GUITAR, BASS],
+        ['guitar', 'bass'],
+        undefined,
+      ),
+    ).toEqual([held(GUITAR, false), held(BASS, true)]);
+  });
+
   it('takes the requested primacy over the one that was there', () => {
     expect(
       predictMemberRoster([held(GUITAR, true)], [GUITAR, BASS], ['guitar', 'bass'], ['bass']),
