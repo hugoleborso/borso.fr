@@ -1,13 +1,13 @@
 import type { Context } from 'hono';
 import { GameError } from '../helpers/errors/game-error.types';
+import { readBearerToken } from '../helpers/http/bearer-token.core';
 
-export const PLAYER_TOKEN_HEADER = 'x-banana-token';
+export const PLAYER_TOKEN_HEADER = 'authorization';
+export const PLAYER_TOKEN_SCHEME = 'Bearer';
 
 // @FollowsBlueprint environment-reader
 export function readPlayerToken(context: Context): string | null {
-  const header = context.req.header(PLAYER_TOKEN_HEADER);
-  if (header === undefined || header.length === 0) return null;
-  return header;
+  return readBearerToken(context.req.header(PLAYER_TOKEN_HEADER));
 }
 
 export function requirePlayerToken(context: Context): string {

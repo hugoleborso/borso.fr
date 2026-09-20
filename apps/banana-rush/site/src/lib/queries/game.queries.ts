@@ -6,6 +6,10 @@ import { readFailureCode } from '../api-failure.core';
 import type { BroadcastGame } from '../game-broadcast.core';
 import { saveSeat } from '../player-session.store';
 
+function authorized(token: string): Record<string, string> {
+  return { authorization: `Bearer ${token}` };
+}
+
 export const gameKeys = {
   all: ['game'] as const,
   detail: (joinCode: string) => [...gameKeys.all, joinCode] as const,
@@ -38,7 +42,7 @@ export function useGame(joinCode: string, token: string | null) {
     queryFn: async (): Promise<BroadcastGame> => {
       const response = await api.api.games[':code'].$get(
         { param: { code: joinCode } },
-        { headers: token === null ? {} : { 'x-banana-token': token } },
+        { headers: token === null ? {} : authorized(token) },
       );
       if (!response.ok) return await refuse(response);
       const body = await response.json();
@@ -110,7 +114,7 @@ export function useStartGame(joinCode: string, token: string) {
   return useGameWrite(joinCode, async () => {
     const response = await api.api.games[':code'].start.$post(
       { param: { code: joinCode } },
-      { headers: { 'x-banana-token': token } },
+      { headers: authorized(token) },
     );
     if (!response.ok) return await refuse(response);
     const body = await response.json();
@@ -122,7 +126,7 @@ export function usePlaceBid(joinCode: string, token: string) {
   return useGameWrite(joinCode, async (amount: number) => {
     const response = await api.api.games[':code'].bids.$post(
       { param: { code: joinCode }, json: { amount } },
-      { headers: { 'x-banana-token': token } },
+      { headers: authorized(token) },
     );
     if (!response.ok) return await refuse(response);
     const body = await response.json();
@@ -134,7 +138,7 @@ export function useResolveRound(joinCode: string, token: string) {
   return useGameWrite(joinCode, async () => {
     const response = await api.api.games[':code'].resolve.$post(
       { param: { code: joinCode } },
-      { headers: { 'x-banana-token': token } },
+      { headers: authorized(token) },
     );
     if (!response.ok) return await refuse(response);
     const body = await response.json();

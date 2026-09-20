@@ -2,13 +2,14 @@ import { useEffect, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { normalizeJoinCode } from '@api/games/join-code.utils';
+import { ChunkyButton } from '@site/components/atoms/ChunkyButton';
 import { ErrorNote } from '@site/components/atoms/ErrorNote';
 import { AppShell } from '@site/components/organisms/AppShell';
 import { FinalScoreboard } from '@site/components/organisms/FinalScoreboard';
 import { GameBoard } from '@site/components/organisms/GameBoard';
 import { JoinGameForm } from '@site/components/organisms/JoinGameForm';
 import { LobbyPanel } from '@site/components/organisms/LobbyPanel';
-import { ApiError } from '@site/lib/api.client';
+import { readRejectionCode } from '@site/lib/rejection-code.core';
 import { useGameSocket } from '@site/lib/game-socket.hook';
 import { loadSeat } from '@site/lib/player-session.store';
 import {
@@ -21,10 +22,6 @@ import {
 } from '@site/lib/queries/game.queries';
 import { useRoundClock } from '@site/lib/round-clock.hook';
 import { isJoinable, isRoundOver } from '@site/lib/game-phase.core';
-
-function failureCode(failure: unknown): string | null {
-  return failure instanceof ApiError ? failure.code : null;
-}
 
 /**
  * @Blueprint route-owning-its-live-connection
@@ -88,7 +85,15 @@ export function GamePage() {
     return (
       <AppShell>
         <div className="space-y-4">
-          <ErrorNote code={failureCode(gameQuery.error)} />
+          <ErrorNote code={readRejectionCode(gameQuery.error)} />
+          <ChunkyButton
+            tone="peel"
+            onClick={() => {
+              void gameQuery.refetch();
+            }}
+          >
+            {t('errors.reload')}
+          </ChunkyButton>
         </div>
       </AppShell>
     );
@@ -99,7 +104,7 @@ export function GamePage() {
       <AppShell>
         <div className="space-y-5">
           <h1 className="text-3xl font-black">{t('join.title', { code: game.joinCode })}</h1>
-          <ErrorNote code={failureCode(joinGame.error)} />
+          <ErrorNote code={readRejectionCode(joinGame.error)} />
           <JoinGameForm
             takenAvatars={game.players.map((player) => player.avatar)}
             submitting={joinGame.isPending}
@@ -119,7 +124,7 @@ export function GamePage() {
   return (
     <AppShell>
       <div className="space-y-4">
-        <ErrorNote code={failureCode(placeBid.error ?? startGame.error)} />
+        <ErrorNote code={readRejectionCode(placeBid.error ?? startGame.error)} />
         {isWaitingInLobby ? (
           <LobbyPanel
             game={game}

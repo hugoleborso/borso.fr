@@ -1,6 +1,6 @@
 import { z } from 'zod';
 import { createApp } from '@api/app';
-import { PLAYER_TOKEN_HEADER } from '@api/games/player-token.middleware';
+import { PLAYER_TOKEN_HEADER, PLAYER_TOKEN_SCHEME } from '@api/games/player-token.middleware';
 
 const app = createApp();
 
@@ -66,7 +66,9 @@ export async function request(
   options: { body?: unknown; token?: string } = {},
 ): Promise<Response> {
   const headers: Record<string, string> = { 'content-type': 'application/json' };
-  if (options.token !== undefined) headers[PLAYER_TOKEN_HEADER] = options.token;
+  if (options.token !== undefined) {
+    headers[PLAYER_TOKEN_HEADER] = `${PLAYER_TOKEN_SCHEME} ${options.token}`;
+  }
   return await app.request(path, {
     method,
     headers,
