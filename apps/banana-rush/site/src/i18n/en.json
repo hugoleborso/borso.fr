@@ -74,7 +74,9 @@
     "timeLeft": "{{count}}s",
     "timeUp": "Time is up",
     "resolveNow": "Resolve the round",
-    "target": "Target {{score}}"
+    "target": "Target {{score}}",
+    "speakBid": "Say my bid",
+    "listening": "Listening…"
   },
   "reveal": {
     "title": "Round {{number}}",

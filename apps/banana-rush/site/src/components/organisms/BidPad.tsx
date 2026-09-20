@@ -1,6 +1,8 @@
 import { MAXIMUM_BID_BANANAS, MINIMUM_BID_BANANAS, refuseBid } from '@domain/bid.core';
 import { useForm } from '@tanstack/react-form';
+import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSpeechBid } from '@site/lib/speech-bid.hook';
 import { ChunkyButton } from '../atoms/ChunkyButton';
 import { FieldLabel } from '../atoms/FieldLabel';
 
@@ -32,13 +34,21 @@ export interface BidPadProps {
  * @BlueprintDescription Validates through the same `refuseBid` the API schema is built from, so a rule lives in one file and both sides read it rather than each carrying its own copy of the bounds. The refusal it returns is a named code, which the component turns into a sentence through the translation catalogue, so the rule holds no language and the form holds no bound. The quick buttons submit the same way the field does, so there is one submission path and no second place where a bid could skip validation.
  */
 export function BidPad({ onBid, submitting }: BidPadProps) {
-  const { t } = useTranslation();
+  const { t, i18n } = useTranslation();
   const form = useForm({
     defaultValues: { amount: '' },
     onSubmit: ({ value }) => {
       onBid(Number(value.amount));
     },
   });
+
+  const writeHeardAmount = useCallback(
+    (amount: number) => {
+      form.setFieldValue('amount', String(amount));
+    },
+    [form],
+  );
+  const speech = useSpeechBid(i18n.language, writeHeardAmount);
 
   return (
     <form
@@ -86,6 +96,22 @@ export function BidPad({ onBid, submitting }: BidPadProps) {
           </div>
         )}
       </form.Field>
+
+      {speech.isSupported ? (
+        <ChunkyButton
+          tone={speech.isListening ? 'coral' : 'cream'}
+          size="medium"
+          className="w-full"
+          aria-pressed={speech.isListening}
+          disabled={submitting}
+          onPointerDown={speech.startListening}
+          onPointerUp={speech.stopListening}
+          onPointerLeave={speech.stopListening}
+          onPointerCancel={speech.stopListening}
+        >
+          {speech.isListening ? t('game.listening') : t('game.speakBid')}
+        </ChunkyButton>
+      ) : null}
 
       <div className="grid grid-cols-3 gap-2">
         {QUICK_BIDS.map((amount) => (

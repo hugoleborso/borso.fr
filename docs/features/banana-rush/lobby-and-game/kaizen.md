@@ -20,3 +20,6 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [21:27] `main` a front end written before its first lint run needed four rounds of restructuring, because nothing surfaces the bucket rules (atoms import no component, routes are named Page) until eslint runs over the whole workspace
 - [21:27] `hook:no-swallowed-push` piped git push into another command, throwing away its exit status
 - [21:35] `main` a back-e2e test asserted secrecy with JSON.stringify(view).not.toContain('30'), which also matches the minutes inside an ISO timestamp, so the suite passed all day and failed only when the wall clock read :30
+- [21:36] `hook:no-swallowed-push` piped git push into another command, throwing away its exit status
+- [22:16] `voice-research` aws voice-id in eu-west-3 fails as a proxy 502 Bad Gateway, which reads as a network or proxy fault rather than what it is: the regional endpoint has no DNS record because the service is not in that region
+- [14:29] `main` the Web Speech API cannot be constrained to numbers because grammars were removed from the specification, so every recogniser answer needs an application-side number parser

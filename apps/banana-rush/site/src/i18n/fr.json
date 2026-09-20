@@ -74,7 +74,9 @@
     "timeLeft": "{{count}} s",
     "timeUp": "Temps écoulé",
     "resolveNow": "Résoudre le tour",
-    "target": "Objectif {{score}}"
+    "target": "Objectif {{score}}",
+    "speakBid": "Dire ma mise",
+    "listening": "On écoute…"
   },
   "reveal": {
     "title": "Le tour {{number}}",
