@@ -3,8 +3,6 @@ import type { BroadcastGame } from '@site/lib/game-broadcast.core';
 import { buildRoundStories } from '@site/lib/game-summary.core';
 import { RoundStoryRow } from '../molecules/RoundStoryRow';
 
-const SHARED_CRATE_WINNERS = 1;
-
 export interface RoundRevealProps {
   readonly game: BroadcastGame;
 }
@@ -15,19 +13,17 @@ export function RoundReveal({ game }: RoundRevealProps) {
   const stories = buildRoundStories(game);
   if (game.lastRound === null || stories.length === 0) return null;
 
-  const crateWinners = stories.filter((story) => story.wonTheCrate).length;
   return (
-    <section className="rounded-chunk border-[3px] border-ink bg-cream-sunk px-3 py-3 shadow-chunk">
-      <h2 className="mb-2 text-center text-sm font-black uppercase tracking-widest text-ink-soft">
+    <section className="flex min-h-0 flex-1 flex-col">
+      <h2 className="mb-1 shrink-0 text-center text-[0.625rem] font-black uppercase leading-tight tracking-widest text-ink-soft">
         {t('reveal.title', { number: game.lastRound.roundNumber })}
       </h2>
-      <ul className="space-y-2">
+      <ul className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 content-start gap-1">
         {stories.map((story) => (
           <RoundStoryRow
             key={story.playerId}
             story={story}
             isYou={story.playerId === game.viewerId}
-            sharedCrate={crateWinners > SHARED_CRATE_WINNERS}
           />
         ))}
       </ul>

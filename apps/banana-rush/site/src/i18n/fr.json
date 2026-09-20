@@ -35,6 +35,7 @@
     "seats": "Places à table",
     "timer": "Temps par tour",
     "timerNone": "Sans limite",
+    "timerNoneShort": "∞",
     "timerSeconds": "{{count}} s",
     "winningScore": "Objectif",
     "submit": "Créer la partie",

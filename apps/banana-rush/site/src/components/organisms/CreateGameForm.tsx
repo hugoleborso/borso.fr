@@ -75,7 +75,7 @@ export function CreateGameForm({ submitting, onSubmit }: CreateGameFormProps) {
 
   return (
     <form
-      className="space-y-5"
+      className="flex min-h-0 flex-1 flex-col gap-2"
       onSubmit={(event) => {
         event.preventDefault();
         void form.handleSubmit();
@@ -102,10 +102,10 @@ export function CreateGameForm({ submitting, onSubmit }: CreateGameFormProps) {
               onChange={(event) => {
                 field.handleChange(event.target.value);
               }}
-              className="w-full rounded-chunk border-[3px] border-ink bg-cream px-4 py-3 text-lg font-extrabold shadow-chunk-sm outline-none focus-visible:bg-peel-soft"
+              className="w-full rounded-chunk border-[3px] border-ink bg-cream px-4 py-2 text-lg font-extrabold shadow-chunk-sm outline-none focus-visible:bg-peel-soft"
             />
             {field.state.meta.errors.length > 0 ? (
-              <p className="mt-1.5 text-sm font-bold text-coral">
+              <p className="mt-1 text-xs font-bold text-coral">
                 {field.state.meta.errors.join(' ')}
               </p>
             ) : null}
@@ -165,7 +165,7 @@ export function CreateGameForm({ submitting, onSubmit }: CreateGameFormProps) {
                 value: seconds,
                 label: t('create.timerSeconds', { count: seconds }),
               })),
-              { value: NO_TIMER, label: t('create.timerNone') },
+              { value: NO_TIMER, label: t('create.timerNoneShort') },
             ]}
             onChange={(seconds) => {
               field.handleChange(seconds);
@@ -174,7 +174,7 @@ export function CreateGameForm({ submitting, onSubmit }: CreateGameFormProps) {
         )}
       </form.Field>
 
-      <ChunkyButton type="submit" tone="leaf" disabled={submitting}>
+      <ChunkyButton type="submit" tone="leaf" className="mt-auto shrink-0" disabled={submitting}>
         {submitting ? t('create.submitting') : t('create.submit')}
       </ChunkyButton>
     </form>

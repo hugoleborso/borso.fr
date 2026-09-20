@@ -27,17 +27,17 @@ export function SegmentedChoice<TValue extends string | number>({
 }: SegmentedChoiceProps<TValue>) {
   return (
     <fieldset className="min-w-0">
-      <legend className="mb-1.5 text-sm font-extrabold uppercase tracking-wide text-ink-soft">
+      <legend className="mb-1 text-xs font-extrabold uppercase tracking-wide text-ink-soft">
         {legend}
       </legend>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex flex-wrap gap-1.5">
         {options.map((option) => {
           const isSelected = option.value === value;
           return (
             <label
               key={String(option.value)}
               className={clsx(
-                'flex min-h-11 cursor-pointer items-center rounded-pill border-[3px] border-ink px-4 py-2 text-sm font-extrabold has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-40 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink',
+                'flex min-h-11 cursor-pointer items-center rounded-pill border-[3px] border-ink px-3 py-1.5 text-xs font-extrabold has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-40 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink',
                 isSelected ? 'bg-peel shadow-chunk-sm' : 'bg-cream',
               )}
             >

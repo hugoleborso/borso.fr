@@ -18,9 +18,10 @@ const chip = cva(
 
 export interface ChipProps extends VariantProps<typeof chip> {
   readonly children: ReactNode;
+  readonly className?: string;
 }
 
 // @FollowsBlueprint atom-variant
-export function Chip({ tone, children }: ChipProps) {
-  return <span className={chip({ tone })}>{children}</span>;
+export function Chip({ tone, className, children }: ChipProps) {
+  return <span className={chip({ tone, className })}>{children}</span>;
 }

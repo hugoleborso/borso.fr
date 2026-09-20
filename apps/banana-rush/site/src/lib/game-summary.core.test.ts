@@ -5,6 +5,7 @@ import {
   hasPaidATariff,
   hasReceivedATariff,
   haveAllPlayersBid,
+  readStashDelta,
   selectStoryTone,
   sortByStashDescending,
 } from './game-summary.core';
@@ -138,5 +139,33 @@ describe('the tariff predicates and the row tone', () => {
 
   it('colours everybody else with the plain tone', () => {
     expect(selectStoryTone(false, false)).toBe('bg-cream');
+  });
+});
+
+describe('readStashDelta', () => {
+  const story = {
+    playerId: 'p1',
+    nickname: 'Hugo',
+    avatar: 'chimp',
+    bid: 30,
+    stashBefore: 10,
+    stashAfter: 18,
+    crateWon: 10,
+    tariffPaid: 2,
+    tariffReceived: 0,
+    busted: false,
+    wonTheCrate: true,
+  };
+
+  it('reads what a round added', () => {
+    expect(readStashDelta(story)).toBe(8);
+  });
+
+  it('reads what a round took, as a negative number', () => {
+    expect(readStashDelta({ ...story, stashAfter: 0 })).toBe(-10);
+  });
+
+  it('reads a round that moved nothing as zero', () => {
+    expect(readStashDelta({ ...story, stashAfter: 10 })).toBe(0);
   });
 });

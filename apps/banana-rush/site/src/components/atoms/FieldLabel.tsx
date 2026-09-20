@@ -10,7 +10,7 @@ export function FieldLabel({ htmlFor, children }: FieldLabelProps) {
   return (
     <label
       htmlFor={htmlFor}
-      className="mb-1.5 block text-sm font-extrabold uppercase tracking-wide text-ink-soft"
+      className="mb-1 block text-xs font-extrabold uppercase tracking-wide text-ink-soft"
     >
       {children}
     </label>

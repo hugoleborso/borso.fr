@@ -4,7 +4,6 @@ import { useCallback } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSpeechBid } from '@site/lib/speech-bid.hook';
 import { ChunkyButton } from '../atoms/ChunkyButton';
-import { FieldLabel } from '../atoms/FieldLabel';
 
 const TIMID_BID = 1;
 const SMALL_BID = 5;
@@ -52,7 +51,7 @@ export function BidPad({ onBid, submitting }: BidPadProps) {
 
   return (
     <form
-      className="space-y-3"
+      className="shrink-0 space-y-1.5"
       onSubmit={(event) => {
         event.preventDefault();
         void form.handleSubmit();
@@ -72,7 +71,9 @@ export function BidPad({ onBid, submitting }: BidPadProps) {
       >
         {(field) => (
           <div>
-            <FieldLabel htmlFor={field.name}>{t('game.bidLabel')}</FieldLabel>
+            <label htmlFor={field.name} className="sr-only">
+              {t('game.bidLabel')}
+            </label>
             <input
               id={field.name}
               name={field.name}
@@ -86,10 +87,10 @@ export function BidPad({ onBid, submitting }: BidPadProps) {
               onChange={(event) => {
                 field.handleChange(event.target.value);
               }}
-              className="w-full rounded-chunk border-[3px] border-ink bg-cream px-4 py-3 text-center text-4xl font-black tabular-nums shadow-chunk-sm outline-none focus-visible:bg-peel-soft"
+              className="w-full rounded-chunk border-[3px] border-ink bg-cream px-4 py-2 text-center text-3xl font-black tabular-nums shadow-chunk-sm outline-none focus-visible:bg-peel-soft"
             />
             {field.state.meta.errors.length > 0 ? (
-              <p className="mt-1.5 text-sm font-bold text-coral">
+              <p className="mt-1 text-xs font-bold text-coral">
                 {field.state.meta.errors.join(' ')}
               </p>
             ) : null}
@@ -97,28 +98,12 @@ export function BidPad({ onBid, submitting }: BidPadProps) {
         )}
       </form.Field>
 
-      {speech.isSupported ? (
-        <ChunkyButton
-          tone={speech.isListening ? 'coral' : 'cream'}
-          size="medium"
-          className="w-full"
-          aria-pressed={speech.isListening}
-          disabled={submitting}
-          onPointerDown={speech.startListening}
-          onPointerUp={speech.stopListening}
-          onPointerLeave={speech.stopListening}
-          onPointerCancel={speech.stopListening}
-        >
-          {speech.isListening ? t('game.listening') : t('game.speakBid')}
-        </ChunkyButton>
-      ) : null}
-
-      <div className="grid grid-cols-3 gap-2">
+      <div className="grid grid-cols-6 gap-1.5">
         {QUICK_BIDS.map((amount) => (
           <ChunkyButton
             key={amount}
             tone="cream"
-            size="medium"
+            size="small"
             disabled={submitting}
             onClick={() => {
               onBid(amount);
@@ -129,18 +114,36 @@ export function BidPad({ onBid, submitting }: BidPadProps) {
         ))}
       </div>
 
-      <form.Subscribe selector={(state) => [state.canSubmit, state.values.amount] as const}>
-        {([canSubmit, amount]) => (
+      <div className="flex gap-1.5">
+        {speech.isSupported ? (
           <ChunkyButton
-            type="submit"
-            tone="leaf"
-            size="large"
-            disabled={submitting || !canSubmit || amount === ''}
+            tone={speech.isListening ? 'coral' : 'cream'}
+            size="medium"
+            className="shrink-0"
+            aria-pressed={speech.isListening}
+            disabled={submitting}
+            onPointerDown={speech.startListening}
+            onPointerUp={speech.stopListening}
+            onPointerLeave={speech.stopListening}
+            onPointerCancel={speech.stopListening}
           >
-            {submitting ? t('game.submittingBid') : t('game.submitBid')}
+            {speech.isListening ? t('game.listening') : t('game.speakBid')}
           </ChunkyButton>
-        )}
-      </form.Subscribe>
+        ) : null}
+        <form.Subscribe selector={(state) => [state.canSubmit, state.values.amount] as const}>
+          {([canSubmit, amount]) => (
+            <ChunkyButton
+              type="submit"
+              tone="leaf"
+              size="medium"
+              className="w-full flex-1"
+              disabled={submitting || !canSubmit || amount === ''}
+            >
+              {submitting ? t('game.submittingBid') : t('game.submitBid')}
+            </ChunkyButton>
+          )}
+        </form.Subscribe>
+      </div>
     </form>
   );
 }

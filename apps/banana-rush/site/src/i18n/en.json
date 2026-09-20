@@ -35,6 +35,7 @@
     "seats": "Seats at the table",
     "timer": "Time per round",
     "timerNone": "No limit",
+    "timerNoneShort": "∞",
     "timerSeconds": "{{count}}s",
     "winningScore": "Target",
     "submit": "Start the game",

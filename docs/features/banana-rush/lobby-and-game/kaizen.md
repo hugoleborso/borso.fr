@@ -36,3 +36,7 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [15:55] `main` check-pure-modules-have-callers caught a sw-cache.utils.ts reached only by its test — and its allow-list already carried two pragma entries for the same unmade 'SW bundling decision', which is a deferral the gate names but cannot force
 - [15:55] `main` a tsconfig that extends another inherits its exclude, so tsconfig.sw.json silently typechecked zero files and tsc exited 0 — only ESLint's 'not found in any of the provided project(s)' revealed it
 - [15:55] `main` the six lint findings on the service worker entry only appeared once it was actually in a tsconfig, which means a file outside every project passes every type-aware gate by being invisible to them
+- [15:56] `hook:no-swallowed-push` piped git push into another command, throwing away its exit status
+- [16:18] `main` a no-scroll layout is not a CSS switch: locking html/body turns every screen that overflowed into a screen with an unreachable control, so each one has to be measured against its fullest state and re-laid-out band by band
+- [16:18] `main` the 'YOU' chip truncated the nickname to a single letter in a two-column cell — a badge repeating what the row colour already said cost the only information the row carried
+- [16:18] `main` measuring overflow needs the fullest state, not the typical one: an 8-player lobby overflowed by 473px while a 3-player one fit, so a screen can pass every check and still hide its start button

@@ -62,6 +62,10 @@ export function hasReceivedATariff(story: RoundStory): boolean {
   return story.tariffReceived > NOTHING;
 }
 
+export function readStashDelta(story: RoundStory): number {
+  return story.stashAfter - story.stashBefore;
+}
+
 export function selectStoryTone(isBusted: boolean, isYou: boolean): string {
   if (isBusted) return 'bg-coral-soft';
   return isYou ? 'bg-peel-soft' : 'bg-cream';

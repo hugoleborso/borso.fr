@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isJoinable, isRoundOver } from './game-phase.core';
+import { isJoinable, isRoundOver, isLastRoundShowing } from './game-phase.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('isRoundOver', () => {
@@ -43,5 +43,20 @@ describe('isJoinable', () => {
 
   it('is false once the game is over', () => {
     expect(isJoinable(false, 'finished')).toBe(false);
+  });
+});
+
+describe('isLastRoundShowing', () => {
+  it('shows nothing before the first round has resolved', () => {
+    expect(isLastRoundShowing(false, false)).toBe(false);
+    expect(isLastRoundShowing(false, true)).toBe(false);
+  });
+
+  it('shows the reveal while the bid for the next round is still to come', () => {
+    expect(isLastRoundShowing(true, false)).toBe(true);
+  });
+
+  it('gives the band back to the roster once the bid is in', () => {
+    expect(isLastRoundShowing(true, true)).toBe(false);
   });
 });

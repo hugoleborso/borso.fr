@@ -34,12 +34,24 @@
     -webkit-text-size-adjust: 100%;
   }
 
+  html,
+  body {
+    height: 100%;
+    overflow: hidden;
+    overscroll-behavior: none;
+  }
+
   body {
     margin: 0;
     background-color: var(--color-cream);
     color: var(--color-ink);
     font-family: var(--font-sans);
-    overscroll-behavior-y: none;
+    touch-action: manipulation;
+  }
+
+  #root {
+    height: 100dvh;
+    overflow: hidden;
   }
 
   button {

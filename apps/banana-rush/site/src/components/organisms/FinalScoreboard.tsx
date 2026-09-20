@@ -19,24 +19,24 @@ export function FinalScoreboard({ game, onHome }: FinalScoreboardProps) {
   const soleWinner = winners.length === SINGLE_WINNER ? winners[0] : undefined;
 
   return (
-    <div className="space-y-4">
-      <section className="rounded-chunk border-[3px] border-ink bg-peel px-4 py-5 text-center shadow-chunk">
+    <div className="flex min-h-0 flex-1 flex-col gap-3">
+      <section className="shrink-0 rounded-chunk border-[3px] border-ink bg-peel px-4 py-3 text-center shadow-chunk">
         <p className="text-xs font-extrabold uppercase tracking-widest text-ink-soft">
           {t('final.title')}
         </p>
-        <div className="mt-2 flex items-center justify-center gap-2">
+        <div className="mt-1 flex items-center justify-center gap-2">
           {winners.map((winner) => (
-            <MonkeyFace key={winner.id} avatar={winner.avatar} className="h-16 w-16" />
+            <MonkeyFace key={winner.id} avatar={winner.avatar} className="h-14 w-14" />
           ))}
         </div>
-        <p className="mt-2 text-xl font-black">
+        <p className="mt-1 text-lg font-black">
           {soleWinner === undefined
             ? t('final.winners')
             : t('final.winner', { nickname: soleWinner.nickname })}
         </p>
       </section>
 
-      <ul className="space-y-2">
+      <ul className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 content-start gap-1.5">
         {sortByStashDescending(game.players).map((player) => (
           <PlayerCard
             key={player.id}
@@ -51,7 +51,7 @@ export function FinalScoreboard({ game, onHome }: FinalScoreboardProps) {
         ))}
       </ul>
 
-      <ChunkyButton tone="cream" onClick={onHome}>
+      <ChunkyButton tone="cream" className="shrink-0" onClick={onHome}>
         {t('final.home')}
       </ChunkyButton>
     </div>

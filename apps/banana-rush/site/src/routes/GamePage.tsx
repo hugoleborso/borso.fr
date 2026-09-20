@@ -84,7 +84,7 @@ export function GamePage() {
   if (game === undefined) {
     return (
       <AppShell>
-        <div className="space-y-4">
+        <div className="flex min-h-0 flex-1 flex-col justify-center gap-4">
           <ErrorNote code={readRejectionCode(gameQuery.error)} />
           <ChunkyButton
             tone="peel"
@@ -102,8 +102,10 @@ export function GamePage() {
   if (isJoinable(areYouSeated, game.status)) {
     return (
       <AppShell>
-        <div className="space-y-5">
-          <h1 className="text-3xl font-black">{t('join.title', { code: game.joinCode })}</h1>
+        <div className="flex min-h-0 flex-1 flex-col gap-3">
+          <h1 className="shrink-0 text-2xl font-black">
+            {t('join.title', { code: game.joinCode })}
+          </h1>
           <ErrorNote code={readRejectionCode(joinGame.error)} />
           <JoinGameForm
             takenAvatars={game.players.map((player) => player.avatar)}
@@ -123,7 +125,7 @@ export function GamePage() {
 
   return (
     <AppShell>
-      <div className="space-y-4">
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
         <ErrorNote code={readRejectionCode(placeBid.error ?? startGame.error)} />
         {isWaitingInLobby ? (
           <LobbyPanel

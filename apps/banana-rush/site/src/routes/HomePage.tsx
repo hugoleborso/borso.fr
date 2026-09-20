@@ -13,13 +13,18 @@ const JOIN_CODE_LENGTH = 4;
 const DEFAULT_WINNING_SCORE = WINNING_SCORE_CHOICES[1];
 const SHOWCASE_MONKEYS = ['chimp', 'mandrill', 'lemur'] as const;
 
-// @FollowsBlueprint route-list-page
+/**
+ * @Blueprint route-one-screen-at-a-time
+ * @BlueprintName Route One Screen At A Time
+ * @BlueprintUsage Use where a page offers reference material a reader opens on purpose, on a surface that does not scroll.
+ * @BlueprintDescription Swaps the reference material in for the page rather than revealing it underneath, so the reader gets the whole viewport for it and the page never has to grow past what the screen shows. A disclosure that expands in place is only workable where the page can scroll to reach what the expansion pushed down; without that, the same interaction hides the controls it was opened from. Swapping keeps the back path explicit — one control returns, which is also what a phone's own back gesture does elsewhere in the application.
+ */
 export function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const [code, setCode] = useState('');
-  const [rulesOpen, setRulesOpen] = useState(false);
+  const [areRulesOpen, setAreRulesOpen] = useState(false);
 
   const invitedCode = readInvitedCode(searchParams.get(INVITATION_PARAMETER));
   const normalized = normalizeJoinCode(code);
@@ -29,9 +34,27 @@ export function HomePage() {
     return <Navigate to={`/partie/${invitedCode}`} replace />;
   }
 
+  if (areRulesOpen) {
+    return (
+      <div className="flex min-h-0 flex-1 flex-col gap-2">
+        <RulesPanel winningScore={DEFAULT_WINNING_SCORE} />
+        <ChunkyButton
+          tone="cream"
+          size="medium"
+          className="w-full shrink-0"
+          onClick={() => {
+            setAreRulesOpen(false);
+          }}
+        >
+          {t('common.back')}
+        </ChunkyButton>
+      </div>
+    );
+  }
+
   return (
-    <div className="space-y-6">
-      <section className="text-center">
+    <div className="flex min-h-0 flex-1 flex-col justify-center gap-4">
+      <section className="shrink-0 text-center">
         <div className="flex items-end justify-center gap-1">
           {SHOWCASE_MONKEYS.map((avatar, index) => (
             <MonkeyFace
@@ -41,12 +64,13 @@ export function HomePage() {
             />
           ))}
         </div>
-        <h1 className="mt-3 text-4xl font-black leading-tight">{t('appName')}</h1>
+        <h1 className="mt-2 text-4xl font-black leading-tight">{t('appName')}</h1>
         <p className="mt-1 text-base font-bold text-ink-soft">{t('tagline')}</p>
       </section>
 
       <ChunkyButton
         tone="peel"
+        className="shrink-0"
         onClick={() => {
           void navigate('/nouvelle-partie');
         }}
@@ -54,7 +78,7 @@ export function HomePage() {
         {t('home.createGame')}
       </ChunkyButton>
 
-      <section className="rounded-chunk border-[3px] border-ink bg-cream px-4 py-4 shadow-chunk">
+      <section className="shrink-0 rounded-chunk border-[3px] border-ink bg-cream px-4 py-3 shadow-chunk">
         <FieldLabel htmlFor="join-code">{t('home.joinTitle')}</FieldLabel>
         <div className="flex gap-2">
           <input
@@ -69,7 +93,7 @@ export function HomePage() {
             onChange={(event) => {
               setCode(normalizeJoinCode(event.target.value));
             }}
-            className="min-w-0 flex-1 rounded-chunk border-[3px] border-ink bg-cream-sunk px-4 py-3 text-center text-2xl font-black uppercase tracking-[0.3em] outline-none focus-visible:bg-peel-soft"
+            className="min-w-0 flex-1 rounded-chunk border-[3px] border-ink bg-cream-sunk px-4 py-2.5 text-center text-2xl font-black uppercase tracking-[0.3em] outline-none focus-visible:bg-peel-soft"
           />
           <ChunkyButton
             tone="leaf"
@@ -84,23 +108,17 @@ export function HomePage() {
         </div>
       </section>
 
-      <div>
-        <ChunkyButton
-          tone="cream"
-          size="medium"
-          aria-expanded={rulesOpen}
-          onClick={() => {
-            setRulesOpen(!rulesOpen);
-          }}
-        >
-          {t('home.rulesToggle')}
-        </ChunkyButton>
-        {rulesOpen ? (
-          <div className="mt-3">
-            <RulesPanel winningScore={DEFAULT_WINNING_SCORE} />
-          </div>
-        ) : null}
-      </div>
+      <ChunkyButton
+        tone="cream"
+        size="medium"
+        className="w-full shrink-0"
+        aria-expanded={areRulesOpen}
+        onClick={() => {
+          setAreRulesOpen(true);
+        }}
+      >
+        {t('home.rulesToggle')}
+      </ChunkyButton>
     </div>
   );
 }

@@ -16,10 +16,10 @@ export function MonkeyPicker({ value, taken, onChange, legend }: MonkeyPickerPro
   const { t } = useTranslation();
   return (
     <fieldset>
-      <legend className="mb-1.5 text-sm font-extrabold uppercase tracking-wide text-ink-soft">
+      <legend className="mb-1 text-xs font-extrabold uppercase tracking-wide text-ink-soft">
         {legend}
       </legend>
-      <div className="grid grid-cols-4 gap-2 sm:grid-cols-8">
+      <div className="grid grid-cols-8 gap-1">
         {MONKEY_AVATARS.map((avatar) => {
           const isTaken = taken.includes(avatar);
           const isSelected = avatar === value;
@@ -30,7 +30,7 @@ export function MonkeyPicker({ value, taken, onChange, legend }: MonkeyPickerPro
               key={avatar}
               title={title}
               className={clsx(
-                'flex aspect-square min-h-11 cursor-pointer items-center justify-center rounded-chunk border-[3px] border-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-30 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink',
+                'flex h-11 cursor-pointer items-center justify-center rounded-chunk border-[3px] border-ink has-[:disabled]:cursor-not-allowed has-[:disabled]:opacity-30 has-[:focus-visible]:outline has-[:focus-visible]:outline-2 has-[:focus-visible]:outline-offset-2 has-[:focus-visible]:outline-ink',
                 isSelected ? 'bg-peel shadow-chunk-sm' : 'bg-cream',
               )}
             >
@@ -43,7 +43,7 @@ export function MonkeyPicker({ value, taken, onChange, legend }: MonkeyPickerPro
                   onChange(avatar);
                 }}
               />
-              <MonkeyFace avatar={avatar} className="h-10 w-10" />
+              <MonkeyFace avatar={avatar} className="h-7 w-7" />
               <span className="sr-only">{monkeyName}</span>
             </label>
           );

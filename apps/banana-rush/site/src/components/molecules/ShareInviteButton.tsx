@@ -38,7 +38,7 @@ export function ShareInviteButton({ joinCode }: ShareInviteButtonProps) {
   };
 
   return (
-    <div className="space-y-2">
+    <div className="shrink-0 space-y-1">
       <ChunkyButton
         tone="cream"
         size="medium"
@@ -50,7 +50,9 @@ export function ShareInviteButton({ joinCode }: ShareInviteButtonProps) {
         <LinkIcon className="h-5 w-5" />
         {isCopied ? t('lobby.linkCopied') : t('lobby.shareLink')}
       </ChunkyButton>
-      <p className="break-all text-center text-xs font-bold text-ink-soft">{invitationUrl}</p>
+      <p className="truncate text-center text-[0.625rem] font-bold text-ink-soft">
+        {invitationUrl}
+      </p>
     </div>
   );
 }

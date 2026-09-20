@@ -14,8 +14,8 @@ export interface AppShellProps {
 export function AppShell({ children }: AppShellProps) {
   const { t, i18n } = useTranslation();
   return (
-    <div className="min-h-dvh bg-cream">
-      <header className="mx-auto flex max-w-lg items-center justify-between gap-2 px-4 pt-4">
+    <div className="flex h-dvh flex-col overflow-hidden bg-cream pb-[env(safe-area-inset-bottom)]">
+      <header className="mx-auto flex w-full max-w-lg shrink-0 items-center justify-between gap-2 px-4 pt-3">
         <a href="/" className="flex items-center gap-1.5 text-lg font-black">
           <BananaIcon className="h-6 w-6" />
           {t('appName')}
@@ -42,7 +42,9 @@ export function AppShell({ children }: AppShellProps) {
           })}
         </nav>
       </header>
-      <main className="mx-auto max-w-lg px-4 pb-12 pt-4">{children}</main>
+      <main className="mx-auto flex w-full max-w-lg min-h-0 flex-1 flex-col px-4 pb-3 pt-3">
+        {children}
+      </main>
     </div>
   );
 }
