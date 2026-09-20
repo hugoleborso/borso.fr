@@ -1,6 +1,6 @@
 /** @Feature setlists */
 
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
@@ -10,11 +10,14 @@ import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 
+const ACTION_LABEL_CLASS = 'hidden sm:inline';
+
 interface SetlistHeaderActionsProps {
   readonly setlistId: string;
   readonly name: string;
   readonly displayedName: string;
   readonly onDeleted: () => void;
+  readonly trailing: ReactNode;
 }
 
 export function SetlistHeaderActions({
@@ -22,6 +25,7 @@ export function SetlistHeaderActions({
   name,
   displayedName,
   onDeleted,
+  trailing,
 }: SetlistHeaderActionsProps): JSX.Element {
   const { t } = useTranslation();
   const renameSetlist = useRenameSetlist();
@@ -44,15 +48,25 @@ export function SetlistHeaderActions({
     <>
       <div className="flex flex-wrap items-center gap-2 mb-4">
         <Link to={`/setlists/${setlistId}/scene`}>
-          <Button variant="accent" type="button">
+          <Button
+            variant="accent"
+            type="button"
+            aria-label={t('scene.title')}
+            title={t('scene.title')}
+          >
             <Icon name="play" size={14} />
-            {t('scene.title')}
+            <span className={ACTION_LABEL_CLASS}>{t('scene.title')}</span>
           </Button>
         </Link>
         {draftName === null ? (
-          <Button variant="default" onClick={() => setDraftName(name)}>
+          <Button
+            variant="default"
+            onClick={() => setDraftName(name)}
+            aria-label={t('setlist.rename.label')}
+            title={t('setlist.rename.label')}
+          >
             <Icon name="edit" size={14} />
-            {t('setlist.rename.label')}
+            <span className={ACTION_LABEL_CLASS}>{t('setlist.rename.label')}</span>
           </Button>
         ) : (
           <>
@@ -75,10 +89,12 @@ export function SetlistHeaderActions({
           variant="ghost"
           onClick={() => setIsConfirmingDeletion(true)}
           aria-label={t('setlist.delete.aria')}
+          title={t('setlist.delete.aria')}
         >
           <Icon name="trash" size={14} />
-          {t('setlist.delete.button')}
+          <span className={ACTION_LABEL_CLASS}>{t('setlist.delete.button')}</span>
         </Button>
+        {trailing}
       </div>
 
       {renameSetlist.isError ? (

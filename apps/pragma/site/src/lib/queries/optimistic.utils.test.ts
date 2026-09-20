@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
+import { reorderById, replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('replaceEntityById', () => {
@@ -56,5 +56,35 @@ describe('settleTemporaryEntity', () => {
 
   it('leaves an empty list empty', () => {
     expect(settleTemporaryEntity([], 'temporary-1', persisted)).toStrictEqual([]);
+  });
+});
+
+describe('reorderById', () => {
+  const guitar = { id: 'guitar', name: 'Guitar' };
+  const bass = { id: 'bass', name: 'Bass' };
+  const drums = { id: 'drums', name: 'Drums' };
+
+  it('puts the rows in the order the identifiers name', () => {
+    expect(reorderById([guitar, bass, drums], ['drums', 'guitar', 'bass'])).toStrictEqual([
+      drums,
+      guitar,
+      bass,
+    ]);
+  });
+
+  it('keeps a row the order forgot, at the end rather than losing it', () => {
+    expect(reorderById([guitar, bass, drums], ['drums', 'guitar'])).toStrictEqual([
+      drums,
+      guitar,
+      bass,
+    ]);
+  });
+
+  it('ignores an identifier naming a row the list no longer carries', () => {
+    expect(reorderById([guitar], ['tuba', 'guitar'])).toStrictEqual([guitar]);
+  });
+
+  it('leaves an empty list empty', () => {
+    expect(reorderById([], ['guitar'])).toStrictEqual([]);
   });
 });

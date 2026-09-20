@@ -21,6 +21,7 @@ import {
   buildSeedLineup,
   selectAdminCredentialsState,
   selectInstrumentIds,
+  selectPrimaryInstrumentIds,
 } from './test-seed.core';
 import { deleteAllDomainRows } from './test-seed.repository';
 
@@ -99,6 +100,7 @@ async function seedMembers(
     await assignInstrumentsToMember(
       member.id,
       selectInstrumentIds(seed.instrumentNames, instrumentIdByName),
+      selectPrimaryInstrumentIds(seed.instrumentNames, instrumentIdByName),
     );
   }
   return memberIdByName;

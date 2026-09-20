@@ -239,6 +239,7 @@
   },
   "instruments": {
     "deleteConfirm": "Supprimer cet instrument ? Il quitte tous les line-ups qui l'utilisent.",
+    "dragHandle": "Réordonner l'instrument",
     "editTitle": "Modifier l'instrument",
     "family": "Famille",
     "familyHarmonic": "harmonique",
@@ -246,10 +247,19 @@
     "familyOther": "autre",
     "familyPercussive": "percussif",
     "familyVocal": "chant",
+    "icon": "Icône",
+    "iconBass": "Basse",
+    "iconDrum": "Batterie",
+    "iconGuitar": "Guitare",
+    "iconMicVocal": "Chant",
+    "iconMusic": "Générique",
+    "iconPiano": "Clavier",
     "name": "Nom",
     "newTitle": "Nouvel instrument",
+    "orderHint": "Glisse pour fixer l’ordre des colonnes sur une setlist. Entoure un membre pour en faire son instrument principal.",
     "subtitle": "La famille d’un instrument alimente l’analyse des transitions.",
-    "title": "Instruments"
+    "title": "Instruments",
+    "togglePrimary": "Instrument principal"
   },
   "lineup": {
     "allMembers": "Tous les membres",

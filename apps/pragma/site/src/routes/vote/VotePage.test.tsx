@@ -154,14 +154,14 @@ describe('the public vote page', () => {
     expect(voteRow()?.getAttribute('aria-pressed')).toBe('false');
 
     voteRow()?.click();
-    await flushMicrotasks();
+    await flushUntil(() => voteRow()?.getAttribute('aria-pressed') === 'true');
     expect(
       fetchStub?.calls.some((call) => call.method === 'POST' && call.url.includes('/votes')),
     ).toBe(true);
     expect(voteRow()?.getAttribute('aria-pressed')).toBe('true');
 
     voteRow()?.click();
-    await flushMicrotasks();
+    await flushUntil(() => voteRow()?.getAttribute('aria-pressed') === 'false');
     expect(fetchStub?.calls.some((call) => call.method === 'DELETE')).toBe(true);
     expect(voteRow()?.getAttribute('aria-pressed')).toBe('false');
   });
@@ -176,7 +176,7 @@ describe('the public vote page', () => {
     });
     await flushUntil(() => voteRow() !== null);
     voteRow()?.click();
-    await flushMicrotasks();
+    await flushUntil(() => voteRow()?.textContent.includes('3') === true);
     expect(voteRow()?.textContent).toContain('3');
   });
 
@@ -247,7 +247,11 @@ describe('the public vote page', () => {
     });
     await flushUntil(() => voteRow() !== null);
     voteRow()?.click();
-    await flushMicrotasks();
+    await flushUntil(
+      () =>
+        fetchStub?.calls.some((call) => call.method === 'POST' && call.url.includes('/votes')) ===
+        true,
+    );
     const write = fetchStub?.calls.find(
       (call) => call.method === 'POST' && call.url.includes('/votes'),
     );

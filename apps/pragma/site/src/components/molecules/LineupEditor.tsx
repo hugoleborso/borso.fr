@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
+import { Icon } from '../atoms/Icon';
 import {
   formValuesToLineup,
   type LineupEditorMember,
@@ -24,6 +25,10 @@ export interface LineupEditorInstrument {
 
 export type LineupEditorSurface = 'song' | 'setlist-entry';
 
+const OVERRIDE_BADGE_CLASS =
+  'inline-flex shrink-0 items-center gap-1 rounded-full border border-warn bg-warn-soft ' +
+  'px-2 py-0.5 font-mono text-[10px] font-semibold uppercase tracking-wider text-warn';
+
 const MEMBER_SCROLLER_CLASS =
   'min-h-0 flex-auto overflow-y-auto flex flex-col gap-3 p-4 pb-8 ' +
   '[&::-webkit-scrollbar]:w-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +
@@ -36,6 +41,7 @@ export interface LineupEditorProps {
   readonly instruments: readonly LineupEditorInstrument[];
   readonly currentLineup: LineupRecord;
   readonly defaultLineup?: LineupRecord;
+  readonly overridesSongDefault?: boolean;
   readonly onSave: (lineup: LineupRecord | null, wasReset: boolean) => void;
   readonly onClose: () => void;
 }
@@ -57,6 +63,7 @@ function LineupEditorContent({
   instruments,
   currentLineup,
   defaultLineup,
+  overridesSongDefault = false,
   onSave,
   onClose,
 }: LineupEditorProps): JSX.Element {
@@ -88,8 +95,16 @@ function LineupEditorContent({
       onClose={onClose}
       className="m-auto w-[calc(100vw-1.5rem)] sm:w-[30rem] max-w-[30rem] max-h-[calc(100dvh-1.5rem)] flex flex-col overflow-hidden rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
-      <div className="shrink-0 flex items-center justify-between px-4 py-3 border-b border-line bg-bg-elev">
-        <h2 className="font-display italic text-xl text-ink-900 m-0">{modalTitle}</h2>
+      <div className="shrink-0 flex items-center justify-between gap-2 px-4 py-3 border-b border-line bg-bg-elev">
+        <div className="flex min-w-0 flex-wrap items-center gap-2">
+          <h2 className="font-display italic text-xl text-ink-900 m-0">{modalTitle}</h2>
+          {overridesSongDefault ? (
+            <span className={OVERRIDE_BADGE_CLASS}>
+              <Icon name="warn" size={10} />
+              {t('lineup.override')}
+            </span>
+          ) : null}
+        </div>
         <Button
           type="button"
           variant="ghost"

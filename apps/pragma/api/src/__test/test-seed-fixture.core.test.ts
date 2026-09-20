@@ -6,6 +6,9 @@ import {
   SEED_SONGS,
   SEED_TRANSITION_COMMENT,
 } from './test-seed-fixture.core';
+import { selectPrimaryInstrumentIds } from './test-seed.core';
+
+const SLOTS_BEYOND_MEMBER_COUNT = 2;
 
 const instrumentNames = new Set(SEED_INSTRUMENTS.map((instrument) => instrument.name));
 const memberNames = new Set(SEED_MEMBERS.map((member) => member.firstName));
@@ -29,6 +32,44 @@ describe('the seeded band', () => {
         }
       }
     }
+  });
+});
+
+describe('the primacy the seeded band ships with', () => {
+  const instrumentIdByName = new Map(
+    SEED_INSTRUMENTS.map((instrument) => [instrument.name, instrument.name]),
+  );
+
+  const primaryInstrumentNameOf = (member: (typeof SEED_MEMBERS)[number]): string | undefined =>
+    selectPrimaryInstrumentIds(member.instrumentNames, instrumentIdByName)[0];
+
+  it('gives every member exactly one primary instrument, so the lineup column is never empty', () => {
+    for (const member of SEED_MEMBERS) {
+      expect(selectPrimaryInstrumentIds(member.instrumentNames, instrumentIdByName)).toHaveLength(
+        1,
+      );
+    }
+  });
+
+  it('names that primary instrument first in the member roster', () => {
+    for (const member of SEED_MEMBERS) {
+      expect(primaryInstrumentNameOf(member)).toBe(member.instrumentNames[0]);
+    }
+  });
+
+  it('draws a slot for every instrument family the band declares', () => {
+    const primaryNames = new Set(SEED_MEMBERS.map(primaryInstrumentNameOf));
+    const familiesWithASlot = new Set(
+      SEED_INSTRUMENTS.filter((instrument) => primaryNames.has(instrument.name)).map(
+        (instrument) => instrument.family,
+      ),
+    );
+    expect(familiesWithASlot).toEqual(new Set(['harmonic', 'percussive']));
+  });
+
+  it('stays within the slot budget of the members plus two', () => {
+    const primaryNames = new Set(SEED_MEMBERS.map(primaryInstrumentNameOf));
+    expect(primaryNames.size).toBeLessThanOrEqual(SEED_MEMBERS.length + SLOTS_BEYOND_MEMBER_COUNT);
   });
 });
 

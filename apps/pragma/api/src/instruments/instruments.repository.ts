@@ -1,13 +1,28 @@
 import { eq } from 'drizzle-orm';
-import { type InstrumentFamily, resolveInstrumentFamily } from '@domain/instrument.core';
+import {
+  defaultPositionForFamily,
+  type InstrumentFamily,
+  type InstrumentIcon,
+  resolveInstrumentFamily,
+  resolveInstrumentIcon,
+  resolveInstrumentPosition,
+} from '@domain/instrument.core';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
+import { memberInstrumentTable } from '../members/members.schema';
+import { foldPlayersIntoInstruments, type InstrumentPlayer } from './instrument-players.core';
 import { instrumentTable } from './instruments.schema';
 
 export interface InstrumentRow {
   id: string;
   name: string;
   family: InstrumentFamily;
+  icon: InstrumentIcon;
+  position: number;
+}
+
+export interface InstrumentWithPlayersRow extends InstrumentRow {
+  players: readonly InstrumentPlayer[];
 }
 
 interface InstrumentRawRow {
@@ -15,6 +30,8 @@ interface InstrumentRawRow {
   name: string;
   isHarmonic: boolean;
   family: string | null;
+  icon: string | null;
+  position: number | null;
 }
 
 /**
@@ -28,6 +45,8 @@ const PROJECTION = {
   name: instrumentTable.name,
   isHarmonic: instrumentTable.isHarmonic,
   family: instrumentTable.family,
+  icon: instrumentTable.icon,
+  position: instrumentTable.position,
 } as const;
 
 function rowToInstrument(row: InstrumentRawRow): InstrumentRow {
@@ -35,6 +54,8 @@ function rowToInstrument(row: InstrumentRawRow): InstrumentRow {
     id: row.id,
     name: row.name,
     family: resolveInstrumentFamily(row.family, row.isHarmonic),
+    icon: resolveInstrumentIcon(row.icon),
+    position: resolveInstrumentPosition(row.position),
   };
 }
 
@@ -48,22 +69,51 @@ export async function listInstruments(): Promise<InstrumentRow[]> {
   return rows.map((row) => rowToInstrument(row));
 }
 
+export async function listInstrumentsWithPlayers(): Promise<InstrumentWithPlayersRow[]> {
+  const database = getDatabase();
+  const [instrumentRows, linkRows] = await Promise.all([
+    listInstruments(),
+    database
+      .select({
+        instrumentId: memberInstrumentTable.instrumentId,
+        memberId: memberInstrumentTable.memberId,
+        isPrimary: memberInstrumentTable.isPrimary,
+      })
+      .from(memberInstrumentTable),
+  ]);
+  return foldPlayersIntoInstruments(instrumentRows, linkRows);
+}
+
 export async function insertInstrument(input: {
   name: string;
   family: InstrumentFamily;
+  icon?: InstrumentIcon;
+  position?: number;
 }): Promise<InstrumentRow> {
   const database = getDatabase();
   const [row] = await database
     .insert(instrumentTable)
-    .values({ name: input.name, ...encodeFamily(input.family) })
+    .values({
+      name: input.name,
+      ...encodeFamily(input.family),
+      icon: input.icon ?? null,
+      position: input.position ?? defaultPositionForFamily(input.family),
+    })
     .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return rowToInstrument(row);
 }
 
+export interface InstrumentUpdates {
+  name?: string;
+  family?: InstrumentFamily;
+  icon?: InstrumentIcon;
+  position?: number;
+}
+
 export async function updateInstrument(
   id: string,
-  updates: Partial<{ name: string; family: InstrumentFamily }>,
+  updates: InstrumentUpdates,
 ): Promise<InstrumentRow | null> {
   const database = getDatabase();
   const [row] = await database
@@ -71,10 +121,29 @@ export async function updateInstrument(
     .set({
       ...(updates.name === undefined ? {} : { name: updates.name }),
       ...(updates.family === undefined ? {} : encodeFamily(updates.family)),
+      ...(updates.icon === undefined ? {} : { icon: updates.icon }),
+      ...(updates.position === undefined ? {} : { position: updates.position }),
     })
     .where(eq(instrumentTable.id, id))
     .returning(PROJECTION);
   return row === undefined ? null : rowToInstrument(row);
+}
+
+export async function listPlayersOfInstrument(instrumentId: string): Promise<InstrumentPlayer[]> {
+  const database = getDatabase();
+  const rows = await database
+    .select({
+      memberId: memberInstrumentTable.memberId,
+      isPrimary: memberInstrumentTable.isPrimary,
+    })
+    .from(memberInstrumentTable)
+    .where(eq(memberInstrumentTable.instrumentId, instrumentId));
+  return rows.map((row) => ({ memberId: row.memberId, isPrimary: row.isPrimary === true }));
+}
+
+export async function setInstrumentPosition(id: string, position: number): Promise<void> {
+  const database = getDatabase();
+  await database.update(instrumentTable).set({ position }).where(eq(instrumentTable.id, id));
 }
 
 export async function deleteInstrument(id: string): Promise<DeletionOutcome> {

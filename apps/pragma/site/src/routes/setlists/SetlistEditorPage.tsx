@@ -86,9 +86,10 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
         name={setlist.name}
         displayedName={displayedName}
         onDeleted={() => navigateTo('/setlists')}
+        trailing={
+          <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
+        }
       />
-
-      <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
 
       <SetlistEditor setlistId={setlist.id} concertSessionId={selectConcertSessionId(sessions)} />
     </section>
