@@ -1,6 +1,7 @@
 import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import { MAXIMUM_BID_BANANAS, MINIMUM_BID_BANANAS } from '@domain/bid.core';
+import { ROUND_TIMER_CHOICES_SECONDS } from '@domain/game-setup.core';
 import {
   bidTable,
   createGameSchema,
@@ -41,10 +42,22 @@ describe('createGameSchema', () => {
     }
   });
 
-  it('accepts the thirty second timer', () => {
-    expect(
-      createGameSchema.parse({ ...validCreate, roundTimerSeconds: 30 }).roundTimerSeconds,
-    ).toBe(30);
+  it('accepts exactly the round lengths the game offers, and nothing between them', () => {
+    for (const seconds of ROUND_TIMER_CHOICES_SECONDS) {
+      expect(
+        createGameSchema.parse({ ...validCreate, roundTimerSeconds: seconds }).roundTimerSeconds,
+      ).toBe(seconds);
+    }
+    expect(createGameSchema.safeParse({ ...validCreate, roundTimerSeconds: 7 }).success).toBe(
+      false,
+    );
+  });
+
+  it('offers a five second round, which is the shortest the game allows', () => {
+    expect(Math.min(...ROUND_TIMER_CHOICES_SECONDS)).toBe(5);
+    expect(createGameSchema.parse({ ...validCreate, roundTimerSeconds: 5 }).roundTimerSeconds).toBe(
+      5,
+    );
   });
 
   it('trims the nickname a player typed with spaces', () => {

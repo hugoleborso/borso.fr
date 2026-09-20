@@ -2,9 +2,13 @@ import { boolean, integer, pgTable, primaryKey, text, timestamp, uuid } from 'dr
 import { z } from 'zod';
 import { MAXIMUM_BID_BANANAS, MINIMUM_BID_BANANAS } from '@domain/bid.core';
 import {
+  BRISK_ROUND_SECONDS,
+  FLASH_ROUND_SECONDS,
   MAXIMUM_SEATS,
   MINIMUM_SEATS,
-  ROUND_TIMER_CHOICES_SECONDS,
+  QUICK_ROUND_SECONDS,
+  RELAXED_ROUND_SECONDS,
+  SNAPPY_ROUND_SECONDS,
   WINNING_SCORE_CHOICES,
 } from '@domain/game-setup.core';
 import { MONKEY_AVATARS, NICKNAME_MAX_LENGTH } from '@domain/monkey.core';
@@ -74,8 +78,11 @@ export const createGameSchema = z
     ]),
     roundTimerSeconds: z
       .union([
-        z.literal(ROUND_TIMER_CHOICES_SECONDS[0]),
-        z.literal(ROUND_TIMER_CHOICES_SECONDS[1]),
+        z.literal(FLASH_ROUND_SECONDS),
+        z.literal(QUICK_ROUND_SECONDS),
+        z.literal(SNAPPY_ROUND_SECONDS),
+        z.literal(BRISK_ROUND_SECONDS),
+        z.literal(RELAXED_ROUND_SECONDS),
         z.null(),
       ])
       .default(null),

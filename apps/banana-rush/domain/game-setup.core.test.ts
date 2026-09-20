@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { type GameSetup, MAXIMUM_SEATS, MINIMUM_SEATS, refuseGameSetup } from './game-setup.core';
+import {
+  type GameSetup,
+  MAXIMUM_SEATS,
+  MINIMUM_SEATS,
+  refuseGameSetup,
+  ROUND_TIMER_CHOICES_SECONDS,
+} from './game-setup.core';
 
 const validSetup: GameSetup = { maxPlayers: 4, winningScore: 200, roundTimerSeconds: 60 };
 
@@ -11,6 +17,13 @@ describe('refuseGameSetup', () => {
 
   it('accepts a game with no timer at all', () => {
     expect(refuseGameSetup({ ...validSetup, roundTimerSeconds: null })).toBeNull();
+  });
+
+  it('accepts every round length the game offers, down to five seconds', () => {
+    for (const seconds of ROUND_TIMER_CHOICES_SECONDS) {
+      expect(refuseGameSetup({ ...validSetup, roundTimerSeconds: seconds })).toBeNull();
+    }
+    expect(ROUND_TIMER_CHOICES_SECONDS).toEqual([5, 10, 15, 30, 60]);
   });
 
   it('accepts the smallest and the largest table', () => {

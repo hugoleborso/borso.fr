@@ -65,7 +65,11 @@ export function GamePage() {
     if (!isRoundExpired || currentRound === null || token === null) return;
     if (askedForRound.current === currentRound) return;
     askedForRound.current = currentRound;
-    resolveRound.mutate(undefined);
+    resolveRound.mutate(undefined, {
+      onError: () => {
+        askedForRound.current = null;
+      },
+    });
   }, [isRoundExpired, currentRound, token, resolveRound]);
 
   const areYouSeated =
