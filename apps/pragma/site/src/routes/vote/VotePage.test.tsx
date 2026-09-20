@@ -154,16 +154,14 @@ describe('the public vote page', () => {
     expect(voteRow()?.getAttribute('aria-pressed')).toBe('false');
 
     voteRow()?.click();
-    await flushMicrotasks();
+    await flushUntil(() => voteRow()?.getAttribute('aria-pressed') === 'true');
     expect(
       fetchStub?.calls.some((call) => call.method === 'POST' && call.url.includes('/votes')),
     ).toBe(true);
-    expect(voteRow()?.getAttribute('aria-pressed')).toBe('true');
 
     voteRow()?.click();
-    await flushMicrotasks();
+    await flushUntil(() => voteRow()?.getAttribute('aria-pressed') === 'false');
     expect(fetchStub?.calls.some((call) => call.method === 'DELETE')).toBe(true);
-    expect(voteRow()?.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('shows the count the tap moved, before the server has answered', async () => {

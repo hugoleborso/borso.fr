@@ -11,7 +11,7 @@ import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { ImprovementsPage } from './routes/improvements/ImprovementsPage';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
-import { EnrolPage } from './routes/EnrolPage';
+import { RecoverPage } from './routes/RecoverPage';
 import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { TasksPage } from './routes/tasks/TasksPage';
@@ -30,7 +30,7 @@ export function App(): JSX.Element {
       <ListenLinksProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/enrol" element={<EnrolPage />} />
+          <Route path="/recover" element={<RecoverPage />} />
           <Route path="/vote" element={<VotePage />} />
           <Route path="/vote/:sessionId" element={<VotePage />} />
           <Route element={<RequireSession />}>

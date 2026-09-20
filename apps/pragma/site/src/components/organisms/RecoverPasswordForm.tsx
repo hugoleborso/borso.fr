@@ -3,31 +3,31 @@
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { EnrolmentOffer } from '../../lib/queries/auth.queries';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { PasswordField } from '../molecules/PasswordField';
 
 const PASSWORD_MIN_LENGTH = 8;
 
-export interface EnrolFormValues {
-  readonly memberId: string;
+export interface RecoverPasswordFormValues {
   readonly username: string;
-  readonly password: string;
   readonly sharedPassword: string;
+  readonly newPassword: string;
 }
 
-export interface EnrolFormProps {
-  readonly offers: readonly EnrolmentOffer[];
+export interface RecoverPasswordFormProps {
   readonly serverError: string | null;
-  readonly onSubmit: (values: EnrolFormValues) => Promise<void>;
+  readonly onSubmit: (values: RecoverPasswordFormValues) => Promise<void>;
 }
 
 // @FollowsBlueprint route-form
-export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JSX.Element {
+export function RecoverPasswordForm({
+  serverError,
+  onSubmit,
+}: RecoverPasswordFormProps): JSX.Element {
   const { t } = useTranslation();
   const form = useForm({
-    defaultValues: { memberId: '', username: '', password: '', sharedPassword: '' },
+    defaultValues: { username: '', sharedPassword: '', newPassword: '' },
     onSubmit: async ({ value }) => {
       await onSubmit({ ...value, username: value.username.trim().toLowerCase() });
     },
@@ -43,36 +43,7 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
       className="flex flex-col gap-3"
     >
       <label
-        htmlFor="enrol-member"
-        className="text-xs tracking-wider uppercase text-ink-400 font-medium"
-      >
-        {t('auth.enrolMember')}
-      </label>
-      <form.Field name="memberId">
-        {(field) => (
-          <select
-            id="enrol-member"
-            value={field.state.value}
-            onChange={(event) => {
-              field.handleChange(event.target.value);
-              const picked = offers.find((offer) => offer.memberId === event.target.value);
-              form.setFieldValue('username', picked?.suggestedUsername ?? '');
-            }}
-            required
-            className="min-h-11 rounded-lg border border-line bg-surface px-3 text-ink-900"
-          >
-            <option value="">—</option>
-            {offers.map((offer) => (
-              <option key={offer.memberId} value={offer.memberId}>
-                {offer.firstName}
-              </option>
-            ))}
-          </select>
-        )}
-      </form.Field>
-
-      <label
-        htmlFor="enrol-username"
+        htmlFor="recover-username"
         className="text-xs tracking-wider uppercase text-ink-400 font-medium"
       >
         {t('auth.usernameLabel')}
@@ -80,7 +51,7 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
       <form.Field name="username">
         {(field) => (
           <Input
-            id="enrol-username"
+            id="recover-username"
             type="text"
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
@@ -90,9 +61,8 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
           />
         )}
       </form.Field>
-
       <label
-        htmlFor="enrol-shared"
+        htmlFor="recover-shared-password"
         className="text-xs tracking-wider uppercase text-ink-400 font-medium"
       >
         {t('auth.sharedPasswordLabel')}
@@ -100,7 +70,7 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
       <form.Field name="sharedPassword">
         {(field) => (
           <PasswordField
-            id="enrol-shared"
+            id="recover-shared-password"
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             onBlur={field.handleBlur}
@@ -110,17 +80,16 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
           />
         )}
       </form.Field>
-
       <label
-        htmlFor="enrol-password"
+        htmlFor="recover-new-password"
         className="text-xs tracking-wider uppercase text-ink-400 font-medium"
       >
-        {t('auth.passwordLabel')}
+        {t('auth.newPasswordLabel')}
       </label>
-      <form.Field name="password">
+      <form.Field name="newPassword">
         {(field) => (
           <PasswordField
-            id="enrol-password"
+            id="recover-new-password"
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             onBlur={field.handleBlur}
@@ -130,7 +99,6 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
           />
         )}
       </form.Field>
-
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
           <Button
@@ -139,7 +107,7 @@ export function EnrolForm({ offers, serverError, onSubmit }: EnrolFormProps): JS
             disabled={!canSubmit || isSubmitting}
             className="mt-2"
           >
-            {t('auth.enrolSubmit')}
+            {t('auth.recoverSubmit')}
           </Button>
         )}
       </form.Subscribe>
