@@ -23,3 +23,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [21:36] `hook:no-swallowed-push` piped git push into another command, throwing away its exit status
 - [22:16] `voice-research` aws voice-id in eu-west-3 fails as a proxy 502 Bad Gateway, which reads as a network or proxy fault rather than what it is: the regional endpoint has no DNS record because the service is not in that region
 - [14:29] `main` the Web Speech API cannot be constrained to numbers because grammars were removed from the specification, so every recogniser answer needs an application-side number parser
+- [14:37] `main` the architecture PR comment reads *-diff.json and a brand new application never writes one, so adding a whole app makes the comment say 'No application's architecture moved on this branch' while the job summary correctly calls it new
