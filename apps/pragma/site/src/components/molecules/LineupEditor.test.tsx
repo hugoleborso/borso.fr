@@ -21,6 +21,7 @@ const BASS: LineupEditorInstrument = { id: 'bass-id', name: 'Bass' };
 const DRUMS: LineupEditorInstrument = { id: 'drums-id', name: 'Drums' };
 
 const RESET_BUTTON_TEXT_EN = 'Reset to song default';
+const OVERRIDE_BADGE_TEXT_EN = 'Override';
 const CANCEL_BUTTON_TEXT_EN = 'Cancel';
 
 // @FollowsBlueprint test-jsdom-gap-stub
@@ -45,6 +46,11 @@ function renderEditor(root: Root, node: ReactNode): void {
   act(() => {
     root.render(node);
   });
+}
+
+function findOverrideBadge(container: HTMLElement): HTMLElement | null {
+  const spans = Array.from(container.querySelectorAll('span'));
+  return spans.find((span) => span.textContent.trim() === OVERRIDE_BADGE_TEXT_EN) ?? null;
 }
 
 function findButtonByText(container: HTMLElement, label: string): HTMLButtonElement | null {
@@ -281,6 +287,44 @@ describe('LineupEditor', () => {
       />,
     );
     expect(findButtonByText(container, RESET_BUTTON_TEXT_EN)).toBeNull();
+  });
+
+  it('marks the entry as overriding the song default, so the tint is not the only signal', () => {
+    renderEditor(
+      root,
+      <LineupEditor
+        open
+        surface="setlist-entry"
+        members={[HUGO]}
+        instruments={[GUITAR, BASS]}
+        currentLineup={{ [HUGO.id]: [BASS.id] }}
+        defaultLineup={{ [HUGO.id]: [GUITAR.id] }}
+        overridesSongDefault
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    const badge = findOverrideBadge(container);
+    expect(badge).not.toBeNull();
+    expect(badge?.className).toContain('text-warn');
+  });
+
+  it('carries no override marker when the entry plays the song default', () => {
+    renderEditor(
+      root,
+      <LineupEditor
+        open
+        surface="setlist-entry"
+        members={[HUGO]}
+        instruments={[GUITAR, BASS]}
+        currentLineup={{ [HUGO.id]: [GUITAR.id] }}
+        defaultLineup={{ [HUGO.id]: [GUITAR.id] }}
+        overridesSongDefault={false}
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(findOverrideBadge(container)).toBeNull();
   });
 
   it('closes without saving when Cancel is clicked', () => {

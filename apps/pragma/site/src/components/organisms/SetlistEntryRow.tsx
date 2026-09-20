@@ -30,6 +30,7 @@ import {
 import { SetlistEntryEnergyField } from '../molecules/SetlistEntryEnergyField';
 import { selectMasteryColor } from './mastery-color.core';
 import {
+  isOverridingSongLineup,
   selectSetlistEntryTone,
   selectSetlistEntryToneAppearance,
 } from './setlist-entry-tone.core';
@@ -117,6 +118,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     props.onUpdate(props.entryId, { energy: next });
   };
   const overflowTitle = props.lineupSlots.overflowInstrumentNames.join(', ');
+  const isOverriding = isOverridingSongLineup(props.songDefaultLineup, props.lineupOverride);
   const tone = selectSetlistEntryTone(props.songDefaultLineup, props.lineupOverride);
   const toneAppearance = selectSetlistEntryToneAppearance(tone);
   return (
@@ -227,6 +229,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         instruments={props.instruments}
         currentLineup={props.resolvedLineupForEdit}
         defaultLineup={props.songDefaultLineup}
+        overridesSongDefault={isOverriding}
         onSave={saveLineupOverride}
         onClose={() => setLineupEditorOpen(false)}
       />
