@@ -11,6 +11,7 @@ export interface GameFacts {
   readonly crateBananas: number;
   readonly currentRound: number;
   readonly roundOpenedAt: Date | null;
+  readonly rematchJoinCode: string | null;
 }
 
 export interface PlayerFacts {
@@ -66,6 +67,7 @@ export function buildGameView(input: BuildGameViewInput): GameView {
     roundOpenedAt: input.game.roundOpenedAt?.toISOString() ?? null,
     players,
     lastRound: input.lastRound,
+    rematchJoinCode: input.game.rematchJoinCode,
     winnerIds: input.winnerIds,
     viewerId: input.viewerId,
     viewerBid: viewer === undefined ? null : (bidByPlayerId.get(viewer.id) ?? null),

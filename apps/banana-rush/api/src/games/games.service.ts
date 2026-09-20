@@ -28,31 +28,32 @@ import {
   insertPlayer,
   listBidsForRound,
   listPlayers,
+  listRoundResults,
   type PlayerRow,
   updateGame,
 } from './games.repository';
-import type { GameView, SeatedPlayer } from './games.types';
+import type { GameView, RoundResultView, SeatedPlayer } from './games.types';
 import { buildJoinCode } from './join-code.utils';
 import { hashPlayerToken } from './player-token.utils';
 import { resolveRound } from './round.core';
 
-const FIRST_ROUND = 1;
+export const FIRST_ROUND = 1;
 const FIRST_SEAT = 0;
 const JOIN_CODE_ATTEMPTS = 8;
 
-async function loadGameOrRefuse(joinCode: string): Promise<GameRow> {
+export async function loadGameOrRefuse(joinCode: string): Promise<GameRow> {
   const game = await findGameByJoinCode(joinCode);
   if (game === null) throw new GameError('game-not-found');
   return game;
 }
 
-async function loadPlayerOrRefuse(gameId: string, token: string): Promise<PlayerRow> {
+export async function loadPlayerOrRefuse(gameId: string, token: string): Promise<PlayerRow> {
   const player = await findPlayerByTokenHash(gameId, hashPlayerToken(token));
   if (player === null) throw new GameError('not-a-player');
   return player;
 }
 
-async function describeGame(game: GameRow, viewerId: string | null): Promise<GameView> {
+export async function describeGame(game: GameRow, viewerId: string | null): Promise<GameView> {
   const [players, bidsThisRound, lastRound] = await Promise.all([
     listPlayers(game.id),
     listBidsForRound(game.id, game.currentRound),
@@ -75,6 +76,7 @@ async function describeGame(game: GameRow, viewerId: string | null): Promise<Gam
       crateBananas: game.crateBananas,
       currentRound: game.currentRound,
       roundOpenedAt: game.roundOpenedAt,
+      rematchJoinCode: game.rematchJoinCode,
     },
     players,
     bidsThisRound,
@@ -84,11 +86,11 @@ async function describeGame(game: GameRow, viewerId: string | null): Promise<Gam
   });
 }
 
-async function publishGame(game: GameRow): Promise<void> {
+export async function publishGame(game: GameRow): Promise<void> {
   await broadcastGame(game.id, await describeGame(game, null));
 }
 
-async function reserveJoinCode(): Promise<string> {
+export async function reserveJoinCode(): Promise<string> {
   for (let attempt = 0; attempt < JOIN_CODE_ATTEMPTS; attempt += 1) {
     const candidate = buildJoinCode(() => Math.random());
     const existing = await findGameByJoinCode(candidate);
@@ -112,6 +114,7 @@ export async function createGame(input: CreateGameInput, now: Date): Promise<Sea
     roundOpenedAt: null,
     createdAt: now,
     finishedAt: null,
+    rematchJoinCode: null,
   });
 
   const playerToken = randomUUID();
@@ -275,4 +278,9 @@ export async function resolveExpiredRound(
   const viewer =
     token === null ? null : await findPlayerByTokenHash(refreshed.id, hashPlayerToken(token));
   return await describeGame(refreshed, viewer?.id ?? null);
+}
+
+export async function readGameRounds(joinCode: string): Promise<readonly RoundResultView[]> {
+  const game = await loadGameOrRefuse(joinCode);
+  return await listRoundResults(game.id);
 }

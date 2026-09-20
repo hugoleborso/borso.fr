@@ -36,6 +36,7 @@ export const gameTable = pgTable('game', {
   roundOpenedAt: timestamp('round_opened_at', { withTimezone: true, mode: 'date' }),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
   finishedAt: timestamp('finished_at', { withTimezone: true, mode: 'date' }),
+  rematchJoinCode: text('rematch_join_code'),
 });
 
 export const playerTable = pgTable('player', {

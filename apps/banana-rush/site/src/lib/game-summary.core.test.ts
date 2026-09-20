@@ -45,6 +45,7 @@ const game: BroadcastGame = {
     crateAfter: 15,
     outcomes: [outcome('p1', { crateWon: 10, tariffPaid: 5, stashAfter: 15 }), outcome('p2')],
   },
+  rematchJoinCode: null,
   winnerIds: [],
   viewerId: null,
   viewerBid: null,

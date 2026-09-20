@@ -84,6 +84,8 @@
   },
   "reveal": {
     "title": "Round {{number}}",
+    "crateWinner": "Crate",
+    "tariffReceiver": "Tariff",
     "wonCrate": "takes the crate",
     "paidTariff": "pays a tariff of {{count}}",
     "receivedTariff": "collects {{count}}",
@@ -96,8 +98,17 @@
     "title": "Game over",
     "winner": "{{nickname}} wins the game",
     "winners": "A tie at the top",
-    "playAgain": "Play again",
-    "home": "Back home"
+    "playAgain": "Rematch",
+    "recap": "Recap",
+    "home": "Home"
+  },
+  "recap": {
+    "position": "Round {{number}} of {{total}}",
+    "crate": "The crate, before and after",
+    "previous": "Previous round",
+    "next": "Next round",
+    "back": "Back to the scores",
+    "empty": "No round was played."
   },
   "errors": {
     "game-not-found": "There is no game with that code.",
@@ -111,6 +122,8 @@
     "not-playing": "The game is not running.",
     "already-bid": "You have already bid this round.",
     "round-still-open": "The round is not over yet.",
+    "not-finished": "The game is not over yet.",
+    "no-rematch": "There is no rematch to join.",
     "unexpected-failure": "Something slipped on a banana peel.",
     "bidOutOfRange": "Between 1 and {{max}}.",
     "nicknameRequired": "A name is required.",

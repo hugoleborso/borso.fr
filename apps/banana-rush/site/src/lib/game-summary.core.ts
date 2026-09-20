@@ -1,4 +1,4 @@
-import type { BroadcastGame } from './game-broadcast.core';
+import type { BroadcastGame, BroadcastPlayer, BroadcastRound } from './game-broadcast.core';
 
 export interface RoundStory {
   readonly playerId: string;
@@ -22,10 +22,13 @@ const NOTHING = 0;
  * @BlueprintUsage Use where a screen needs one row per person built from a result list and a roster that name the same people by identifier.
  * @BlueprintDescription Joins the two through a map keyed by identifier rather than a nested search, so the cost does not grow with the square of the table, and drops a result whose person is not on the roster instead of rendering a row with an empty name. The ordering is taken from the result list rather than from the roster, because the story a reveal tells is ordered by what happened and not by where people are sitting.
  */
-export function buildRoundStories(game: BroadcastGame): readonly RoundStory[] {
-  if (game.lastRound === null) return [];
-  const playerById = new Map(game.players.map((player) => [player.id, player]));
-  return game.lastRound.outcomes.flatMap((outcome) => {
+export function buildStoriesForRound(
+  round: BroadcastRound | null,
+  players: readonly BroadcastPlayer[],
+): readonly RoundStory[] {
+  if (round === null) return [];
+  const playerById = new Map(players.map((player) => [player.id, player]));
+  return round.outcomes.flatMap((outcome) => {
     const player = playerById.get(outcome.playerId);
     if (player === undefined) return [];
     return [
@@ -44,6 +47,10 @@ export function buildRoundStories(game: BroadcastGame): readonly RoundStory[] {
       },
     ];
   });
+}
+
+export function buildRoundStories(game: BroadcastGame): readonly RoundStory[] {
+  return buildStoriesForRound(game.lastRound, game.players);
 }
 
 export function sortByStashDescending(players: BroadcastGame['players']): BroadcastGame['players'] {

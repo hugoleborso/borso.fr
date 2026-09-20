@@ -11,9 +11,11 @@ import {
   joinGame,
   placeBid,
   readGame,
+  readGameRounds,
   resolveExpiredRound,
   startGame,
 } from './games.service';
+import { claimRematchSeat, startRematch } from './rematch.service';
 import { normalizeJoinCode } from './join-code.utils';
 import { readPlayerToken, requirePlayerToken } from './player-token.middleware';
 
@@ -70,6 +72,25 @@ export function buildGamesRouter() {
         return context.json({ game });
       },
     )
+    .get('/:code/rounds', zValidator('param', joinCodeParamSchema), async (context) => {
+      const { code } = context.req.valid('param');
+      const rounds = await readGameRounds(normalizeJoinCode(code));
+      return context.json({ rounds });
+    })
+    .post('/:code/rematch', zValidator('param', joinCodeParamSchema), async (context) => {
+      const { code } = context.req.valid('param');
+      const game = await startRematch(
+        normalizeJoinCode(code),
+        requirePlayerToken(context),
+        new Date(),
+      );
+      return context.json({ game });
+    })
+    .post('/:code/seat', zValidator('param', joinCodeParamSchema), async (context) => {
+      const { code } = context.req.valid('param');
+      const seated = await claimRematchSeat(normalizeJoinCode(code), requirePlayerToken(context));
+      return context.json(seated, CREATED);
+    })
     .post('/:code/resolve', zValidator('param', joinCodeParamSchema), async (context) => {
       const { code } = context.req.valid('param');
       const game = await resolveExpiredRound(

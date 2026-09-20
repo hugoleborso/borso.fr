@@ -13,6 +13,7 @@ const game: BroadcastGame = {
   roundOpenedAt: null,
   players: [],
   lastRound: null,
+  rematchJoinCode: null,
   winnerIds: [],
   viewerId: null,
   viewerBid: null,
@@ -22,6 +23,13 @@ const game: BroadcastGame = {
 describe('parseBroadcast', () => {
   it('reads a message the API sent', () => {
     expect(parseBroadcast(JSON.stringify({ kind: 'game', game }))).toEqual(game);
+  });
+
+  it('reads the rematch code a finished game announces', () => {
+    const announced = { ...game, rematchJoinCode: 'WXYZ' };
+    expect(parseBroadcast(JSON.stringify({ kind: 'game', game: announced }))?.rematchJoinCode).toBe(
+      'WXYZ',
+    );
   });
 
   it('ignores a message that is not text', () => {
@@ -61,5 +69,11 @@ describe('mergeBroadcast', () => {
   it('takes every shared field from the message', () => {
     const held = { ...game, crateBananas: 10, viewerId: 'p1' };
     expect(mergeBroadcast(held, { ...game, crateBananas: 18 }).crateBananas).toBe(18);
+  });
+
+  it('takes the rematch code from the message rather than from what the reader held', () => {
+    const held = { ...game, viewerId: 'p1' };
+    const announced = { ...game, rematchJoinCode: 'WXYZ' };
+    expect(mergeBroadcast(held, announced).rematchJoinCode).toBe('WXYZ');
   });
 });

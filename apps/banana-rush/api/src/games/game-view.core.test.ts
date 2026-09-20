@@ -11,6 +11,7 @@ const baseInput: BuildGameViewInput = {
     crateBananas: 10,
     currentRound: 1,
     roundOpenedAt: new Date('2026-09-19T12:00:00.000Z'),
+    rematchJoinCode: null,
   },
   players: [
     { id: 'p1', nickname: 'Hugo', avatar: 'chimp', stashBananas: 10, isHost: true },
@@ -61,6 +62,15 @@ describe('buildGameView', () => {
   it('reports no opening time while the game waits in the lobby', () => {
     const waiting = { ...baseInput.game, status: 'lobby', roundOpenedAt: null } as const;
     expect(buildGameView({ ...baseInput, game: waiting }).roundOpenedAt).toBeNull();
+  });
+
+  it('carries no rematch code while none has been created', () => {
+    expect(buildGameView(baseInput).rematchJoinCode).toBeNull();
+  });
+
+  it('carries the rematch code through so every reader finds the new table', () => {
+    const announced = { ...baseInput.game, rematchJoinCode: 'WXYZ' };
+    expect(buildGameView({ ...baseInput, game: announced }).rematchJoinCode).toBe('WXYZ');
   });
 
   it('carries the resolved round and the winners through unchanged', () => {

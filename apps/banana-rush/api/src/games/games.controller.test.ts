@@ -1,12 +1,17 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { truncateAllTables } from '../../../test/database-utils';
 import {
+  askForARematch,
   bid,
+  claimMySeat,
+  type GameSnapshot,
   hostAGame,
   joinTheGame,
   readError,
   readGameView,
+  readRounds,
   request,
+  type SeatedSnapshot,
   startTheGame,
   stashOf,
 } from '../../../test/game-utils';
@@ -242,5 +247,216 @@ describe('the refusals a player can hit', () => {
     });
 
     expect(await readError(response)).toBe('round-still-open');
+  });
+});
+
+async function playUntilSomebodyWins(
+  host: SeatedSnapshot,
+  guest: SeatedSnapshot,
+): Promise<GameSnapshot> {
+  let latest = host.game;
+  for (let round = 0; round < 12; round += 1) {
+    await bid(host.game.joinCode, host.playerToken, 2);
+    latest = await bid(host.game.joinCode, guest.playerToken, 1);
+    if (latest.status === 'finished') break;
+  }
+  return latest;
+}
+
+describe('reading a finished game round by round', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+  });
+
+  it('tells nothing about a game where no round has resolved', async () => {
+    const host = await hostAGame();
+
+    expect(await readRounds(host.game.joinCode)).toEqual([]);
+  });
+
+  it('tells every round that was played, oldest first', async () => {
+    const host = await hostAGame({ winningScore: 100, maxPlayers: 2 });
+    const guest = await joinTheGame(host.game.joinCode, 'Zoe', 'lemur');
+    await startTheGame(host.game.joinCode, host.playerToken);
+    const finished = await playUntilSomebodyWins(host, guest);
+
+    const rounds = await readRounds(host.game.joinCode);
+
+    expect(finished.status).toBe('finished');
+    expect(rounds.map((round) => round.roundNumber)).toEqual(
+      rounds.map((round, index) => index + 1),
+    );
+    expect(rounds).toHaveLength(finished.currentRound - 1);
+  });
+
+  it('tells what each player bid in each round and what it did to their stash', async () => {
+    const host = await hostAGame({ winningScore: 100, maxPlayers: 2 });
+    const guest = await joinTheGame(host.game.joinCode, 'Zoe', 'lemur');
+    await startTheGame(host.game.joinCode, host.playerToken);
+    await playUntilSomebodyWins(host, guest);
+
+    const [firstRound] = await readRounds(host.game.joinCode);
+
+    expect(firstRound?.crateBefore).toBe(10);
+    expect(firstRound?.outcomes.map((outcome) => [outcome.playerId, outcome.bid])).toEqual([
+      [host.playerId, 2],
+      [guest.playerId, 1],
+    ]);
+    expect(
+      firstRound?.outcomes.find((outcome) => outcome.playerId === host.playerId),
+    ).toMatchObject({ stashBefore: 10, crateWon: 10, tariffPaid: 1, stashAfter: 19 });
+  });
+
+  it('refuses a code that matches no game', async () => {
+    const response = await request('GET', '/api/games/ZZZZ/rounds');
+
+    expect(response.status).toBe(404);
+    expect(await readError(response)).toBe('game-not-found');
+  });
+});
+
+async function reachTheEnd(): Promise<{
+  host: SeatedSnapshot;
+  guest: SeatedSnapshot;
+  finished: GameSnapshot;
+}> {
+  const host = await hostAGame({ winningScore: 100, maxPlayers: 2 });
+  const guest = await joinTheGame(host.game.joinCode, 'Zoe', 'lemur');
+  await startTheGame(host.game.joinCode, host.playerToken);
+  const finished = await playUntilSomebodyWins(host, guest);
+  return { host, guest, finished };
+}
+
+describe('playing again with the same group', () => {
+  beforeEach(async () => {
+    await truncateAllTables();
+  });
+
+  it('announces a new table on the finished game rather than resetting it', async () => {
+    const { host, finished } = await reachTheEnd();
+
+    const announced = await askForARematch(host.game.joinCode, host.playerToken);
+
+    expect(announced.status).toBe('finished');
+    expect(announced.rematchJoinCode).not.toBeNull();
+    expect(announced.rematchJoinCode).not.toBe(host.game.joinCode);
+    expect(await readRounds(host.game.joinCode)).toHaveLength(finished.currentRound - 1);
+  });
+
+  it('seats the same group again, with the opening stash and nobody playing yet', async () => {
+    const { host } = await reachTheEnd();
+
+    const announced = await askForARematch(host.game.joinCode, host.playerToken);
+    const rematch = await readGameView(announced.rematchJoinCode ?? '');
+
+    expect(rematch.status).toBe('lobby');
+    expect(rematch.maxPlayers).toBe(2);
+    expect(rematch.winningScore).toBe(100);
+    expect(rematch.players.map((player) => [player.nickname, player.avatar])).toEqual([
+      ['Hugo', 'chimp'],
+      ['Zoe', 'lemur'],
+    ]);
+    expect(rematch.players.map((player) => player.stashBananas)).toEqual([10, 10]);
+    expect(rematch.players.map((player) => player.isHost)).toEqual([true, false]);
+  });
+
+  it('answers the same table to a host who taps twice', async () => {
+    const { host } = await reachTheEnd();
+
+    const first = await askForARematch(host.game.joinCode, host.playerToken);
+    const second = await askForARematch(host.game.joinCode, host.playerToken);
+
+    expect(second.rematchJoinCode).toBe(first.rematchJoinCode);
+  });
+
+  it('hands each phone its own seat, in exchange for the token it already held', async () => {
+    const { host, guest } = await reachTheEnd();
+    await askForARematch(host.game.joinCode, host.playerToken);
+
+    const hostSeat = await claimMySeat(host.game.joinCode, host.playerToken);
+    const guestSeat = await claimMySeat(host.game.joinCode, guest.playerToken);
+
+    expect(hostSeat.playerId).not.toBe(guestSeat.playerId);
+    expect(hostSeat.playerToken).not.toBe(guestSeat.playerToken);
+    expect(hostSeat.playerToken).not.toBe(host.playerToken);
+    expect(hostSeat.game.viewerId).toBe(hostSeat.playerId);
+    expect(hostSeat.game.players.find((player) => player.id === hostSeat.playerId)?.avatar).toBe(
+      'chimp',
+    );
+    expect(guestSeat.game.players.find((player) => player.id === guestSeat.playerId)?.avatar).toBe(
+      'lemur',
+    );
+  });
+
+  it('never puts anybody token in what every phone receives', async () => {
+    const { host } = await reachTheEnd();
+
+    const announced = await askForARematch(host.game.joinCode, host.playerToken);
+    const rematch = await readGameView(announced.rematchJoinCode ?? '');
+
+    expect(JSON.stringify(announced)).not.toContain(host.playerToken);
+    expect(rematch.players.every((player) => !Object.hasOwn(player, 'playerToken'))).toBe(true);
+  });
+
+  it('lets the group play the rematch through', async () => {
+    const { host, guest } = await reachTheEnd();
+    const announced = await askForARematch(host.game.joinCode, host.playerToken);
+    const hostSeat = await claimMySeat(host.game.joinCode, host.playerToken);
+    const guestSeat = await claimMySeat(host.game.joinCode, guest.playerToken);
+    const rematchCode = announced.rematchJoinCode ?? '';
+
+    await startTheGame(rematchCode, hostSeat.playerToken);
+    await bid(rematchCode, hostSeat.playerToken, 4);
+    const afterARound = await bid(rematchCode, guestSeat.playerToken, 1);
+
+    expect(afterARound.status).toBe('playing');
+    expect(afterARound.lastRound?.roundNumber).toBe(1);
+    expect(stashOf(afterARound, hostSeat.playerId)).toBe(17);
+  });
+
+  it('refuses a rematch of a game that is not over', async () => {
+    const host = await hostAGame();
+    await joinTheGame(host.game.joinCode, 'Zoe', 'lemur');
+
+    const response = await request('POST', `/api/games/${host.game.joinCode}/rematch`, {
+      token: host.playerToken,
+    });
+
+    expect(response.status).toBe(409);
+    expect(await readError(response)).toBe('not-finished');
+  });
+
+  it('refuses a rematch asked for by anybody but the host', async () => {
+    const { host, guest } = await reachTheEnd();
+
+    const response = await request('POST', `/api/games/${host.game.joinCode}/rematch`, {
+      token: guest.playerToken,
+    });
+
+    expect(response.status).toBe(403);
+    expect(await readError(response)).toBe('not-host');
+  });
+
+  it('refuses a seat claim while no rematch has been announced', async () => {
+    const { host } = await reachTheEnd();
+
+    const response = await request('POST', `/api/games/${host.game.joinCode}/seat`, {
+      token: host.playerToken,
+    });
+
+    expect(response.status).toBe(409);
+    expect(await readError(response)).toBe('no-rematch');
+  });
+
+  it('refuses a seat claim from somebody who never sat at the finished table', async () => {
+    const { host } = await reachTheEnd();
+    await askForARematch(host.game.joinCode, host.playerToken);
+
+    const response = await request('POST', `/api/games/${host.game.joinCode}/seat`, {
+      token: 'a-token-nobody-was-given',
+    });
+
+    expect(response.status).toBe(401);
+    expect(await readError(response)).toBe('not-a-player');
   });
 });

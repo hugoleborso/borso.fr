@@ -29,6 +29,7 @@ export interface GameView {
   readonly roundOpenedAt: string | null;
   readonly players: readonly PlayerView[];
   readonly lastRound: RoundResultView | null;
+  readonly rematchJoinCode: string | null;
   readonly winnerIds: readonly string[];
   readonly viewerId: string | null;
   readonly viewerBid: number | null;

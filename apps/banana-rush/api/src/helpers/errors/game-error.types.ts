@@ -10,6 +10,8 @@ export const GAME_ERROR_CODES = [
   'not-playing',
   'already-bid',
   'round-still-open',
+  'not-finished',
+  'no-rematch',
 ] as const;
 
 export type GameErrorCode = (typeof GAME_ERROR_CODES)[number];
@@ -28,6 +30,8 @@ const STATUS_BY_CODE: Readonly<Record<GameErrorCode, GameErrorStatus>> = {
   'not-playing': 409,
   'already-bid': 409,
   'round-still-open': 409,
+  'not-finished': 409,
+  'no-rematch': 409,
 };
 
 // @FollowsBlueprint named-domain-error

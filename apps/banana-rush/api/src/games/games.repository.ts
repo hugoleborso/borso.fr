@@ -61,6 +61,27 @@ export async function insertPlayer(values: typeof playerTable.$inferInsert): Pro
   return row;
 }
 
+export async function insertPlayers(
+  values: readonly (typeof playerTable.$inferInsert)[],
+): Promise<void> {
+  if (values.length === 0) return;
+  const database = getDatabase();
+  await database.insert(playerTable).values([...values]);
+}
+
+export async function updatePlayerToken(
+  playerId: string,
+  tokenHash: string,
+): Promise<PlayerRow | null> {
+  const database = getDatabase();
+  const [row] = await database
+    .update(playerTable)
+    .set({ tokenHash })
+    .where(eq(playerTable.id, playerId))
+    .returning();
+  return row ?? null;
+}
+
 export async function updateGame(
   gameId: string,
   changes: Partial<typeof gameTable.$inferInsert>,
@@ -74,6 +95,16 @@ export async function updateGame(
   return row ?? null;
 }
 
+function readStoredRound(row: typeof roundResultTable.$inferSelect): StoredRoundResult {
+  const storedOutcomes: unknown = JSON.parse(row.outcomes);
+  return {
+    roundNumber: row.roundNumber,
+    crateBefore: row.crateBefore,
+    crateAfter: row.crateAfter,
+    outcomes: outcomesSchema.parse(storedOutcomes),
+  };
+}
+
 // @FollowsBlueprint repository-json-column
 export async function findLatestRoundResult(gameId: string): Promise<StoredRoundResult | null> {
   const database = getDatabase();
@@ -85,13 +116,17 @@ export async function findLatestRoundResult(gameId: string): Promise<StoredRound
     .limit(1);
   const row = rows[0];
   if (row === undefined) return null;
-  const storedOutcomes: unknown = JSON.parse(row.outcomes);
-  return {
-    roundNumber: row.roundNumber,
-    crateBefore: row.crateBefore,
-    crateAfter: row.crateAfter,
-    outcomes: outcomesSchema.parse(storedOutcomes),
-  };
+  return readStoredRound(row);
+}
+
+export async function listRoundResults(gameId: string): Promise<StoredRoundResult[]> {
+  const database = getDatabase();
+  const rows = await database
+    .select()
+    .from(roundResultTable)
+    .where(eq(roundResultTable.gameId, gameId))
+    .orderBy(asc(roundResultTable.roundNumber));
+  return rows.map(readStoredRound);
 }
 
 export interface BidToWrite {

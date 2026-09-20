@@ -84,6 +84,8 @@
   },
   "reveal": {
     "title": "Le tour {{number}}",
+    "crateWinner": "Caisse",
+    "tariffReceiver": "Taxe",
     "wonCrate": "rafle la caisse",
     "paidTariff": "paie {{count}} de taxe",
     "receivedTariff": "encaisse {{count}}",
@@ -97,7 +99,16 @@
     "winner": "{{nickname}} gagne la partie",
     "winners": "Égalité au sommet",
     "playAgain": "Rejouer",
-    "home": "Retour à l'accueil"
+    "recap": "Récap",
+    "home": "Accueil"
+  },
+  "recap": {
+    "position": "Tour {{number}} sur {{total}}",
+    "crate": "La caisse, avant et après",
+    "previous": "Tour précédent",
+    "next": "Tour suivant",
+    "back": "Retour aux scores",
+    "empty": "Aucun tour n'a été joué."
   },
   "errors": {
     "game-not-found": "Cette partie n'existe pas.",
@@ -111,6 +122,8 @@
     "not-playing": "La partie n'est pas en cours.",
     "already-bid": "Tu as déjà misé ce tour-ci.",
     "round-still-open": "Le tour n'est pas encore fini.",
+    "not-finished": "La partie n'est pas encore terminée.",
+    "no-rematch": "Il n'y a pas de revanche à rejoindre.",
     "unexpected-failure": "Quelque chose a glissé sur une peau de banane.",
     "bidOutOfRange": "Entre 1 et {{max}}.",
     "nicknameRequired": "Il faut un blaze.",

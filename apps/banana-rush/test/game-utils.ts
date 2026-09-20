@@ -43,6 +43,7 @@ export const gameViewSchema = z.object({
       outcomes: z.array(outcomeSchema),
     })
     .nullable(),
+  rematchJoinCode: z.string().nullable(),
   winnerIds: z.array(z.string()),
   viewerId: z.string().nullable(),
   viewerBid: z.number().nullable(),
@@ -55,9 +56,20 @@ const seatedSchema = z.object({
 });
 
 const gameEnvelopeSchema = z.object({ game: gameViewSchema });
+const roundsEnvelopeSchema = z.object({
+  rounds: z.array(
+    z.object({
+      roundNumber: z.number(),
+      crateBefore: z.number(),
+      crateAfter: z.number(),
+      outcomes: z.array(outcomeSchema),
+    }),
+  ),
+});
 const errorEnvelopeSchema = z.object({ error: z.string() });
 
 export type GameSnapshot = z.infer<typeof gameViewSchema>;
+export type RoundsSnapshot = z.infer<typeof roundsEnvelopeSchema>['rounds'];
 export type SeatedSnapshot = z.infer<typeof seatedSchema>;
 
 export async function request(
@@ -140,4 +152,18 @@ export function stashOf(game: GameSnapshot, playerId: string): number {
   const player = game.players.find((candidate) => candidate.id === playerId);
   if (player === undefined) throw new Error(`no player ${playerId} in the game`);
   return player.stashBananas;
+}
+
+export async function readRounds(joinCode: string): Promise<RoundsSnapshot> {
+  const response = await request('GET', `/api/games/${joinCode}/rounds`);
+  return roundsEnvelopeSchema.parse(await readBody(response)).rounds;
+}
+
+export async function askForARematch(joinCode: string, token: string): Promise<GameSnapshot> {
+  return await readGameEnvelope(await request('POST', `/api/games/${joinCode}/rematch`, { token }));
+}
+
+export async function claimMySeat(joinCode: string, token: string): Promise<SeatedSnapshot> {
+  const response = await request('POST', `/api/games/${joinCode}/seat`, { token });
+  return seatedSchema.parse(await readBody(response));
 }

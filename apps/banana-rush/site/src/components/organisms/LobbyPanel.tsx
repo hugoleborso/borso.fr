@@ -29,18 +29,18 @@ export function LobbyPanel({ game, isHost, starting, onStart }: LobbyPanelProps)
   const seatsLeftLabel = t('lobby.seatsLeft', { count: game.freeSeats });
 
   return (
-    <div className="flex min-h-0 flex-1 flex-col gap-2">
+    <div className="flex min-h-0 flex-1 flex-col gap-1.5">
       <JoinCodeBadge joinCode={game.joinCode} />
       <ShareInviteButton joinCode={game.joinCode} />
 
       <section className="flex min-h-0 flex-1 flex-col">
-        <div className="mb-1.5 flex shrink-0 flex-wrap items-center justify-between gap-2">
+        <div className="mb-1 flex shrink-0 flex-wrap items-center justify-between gap-2">
           <h2 className="text-base font-black">{t('lobby.title')}</h2>
           <Chip tone={isTableFull ? 'coral' : 'leaf'}>
             {isTableFull ? fullLabel : seatsLeftLabel}
           </Chip>
         </div>
-        <ul className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 content-start gap-1.5">
+        <ul className="grid min-h-0 flex-1 auto-rows-min grid-cols-2 content-start gap-1">
           {game.players.map((player) => (
             <PlayerCard
               key={player.id}

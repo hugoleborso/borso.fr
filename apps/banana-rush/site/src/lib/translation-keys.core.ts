@@ -37,6 +37,8 @@ export const ERROR_KEYS = {
   'not-playing': 'errors.not-playing',
   'already-bid': 'errors.already-bid',
   'round-still-open': 'errors.round-still-open',
+  'not-finished': 'errors.not-finished',
+  'no-rematch': 'errors.no-rematch',
   'unexpected-failure': 'errors.unexpected-failure',
 } as const;
 

@@ -39,6 +39,7 @@ export const broadcastGameSchema = z.object({
       outcomes: z.array(outcomeSchema),
     })
     .nullable(),
+  rematchJoinCode: z.string().nullable(),
   winnerIds: z.array(z.string()),
   viewerId: z.string().nullable(),
   viewerBid: z.number().nullable(),
@@ -91,6 +92,7 @@ export interface BroadcastGame {
   readonly roundOpenedAt: string | null;
   readonly players: readonly BroadcastPlayer[];
   readonly lastRound: BroadcastRound | null;
+  readonly rematchJoinCode: string | null;
   readonly winnerIds: readonly string[];
   readonly viewerId: string | null;
   readonly viewerBid: number | null;

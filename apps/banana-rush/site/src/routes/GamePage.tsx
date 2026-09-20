@@ -1,4 +1,4 @@
-import { useEffect, useRef } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
 import { normalizeJoinCode } from '@api/games/join-code.utils';
@@ -7,16 +7,19 @@ import { ErrorNote } from '@site/components/atoms/ErrorNote';
 import { AppShell } from '@site/components/organisms/AppShell';
 import { FinalScoreboard } from '@site/components/organisms/FinalScoreboard';
 import { GameBoard } from '@site/components/organisms/GameBoard';
+import { RoundRecap } from '@site/components/organisms/RoundRecap';
 import { JoinGameForm } from '@site/components/organisms/JoinGameForm';
 import { LobbyPanel } from '@site/components/organisms/LobbyPanel';
 import { readRejectionCode } from '@site/lib/rejection-code.core';
 import { useGameSocket } from '@site/lib/game-socket.hook';
 import { loadSeat } from '@site/lib/player-session.store';
 import {
+  useClaimRematchSeat,
   useConfig,
   useGame,
   useJoinGame,
   usePlaceBid,
+  useRematch,
   useResolveRound,
   useStartGame,
 } from '@site/lib/queries/game.queries';
@@ -46,7 +49,10 @@ export function GamePage() {
   const startGame = useStartGame(joinCode, token ?? '');
   const placeBid = usePlaceBid(joinCode, token ?? '');
   const resolveRound = useResolveRound(joinCode, token ?? '');
+  const rematch = useRematch(joinCode, token ?? '');
+  const claimRematchSeat = useClaimRematchSeat(joinCode, token ?? '');
   const joinGame = useJoinGame();
+  const [isRecapOpen, setIsRecapOpen] = useState(false);
 
   const secondsRemaining = useRoundClock(
     game?.roundOpenedAt ?? null,
@@ -68,6 +74,25 @@ export function GamePage() {
       },
     });
   }, [isRoundExpired, currentRound, token, resolveRound]);
+
+  const rematchJoinCode = game?.rematchJoinCode ?? null;
+  const claimedRematch = useRef<string | null>(null);
+
+  // eslint-disable-next-line borso/no-use-effect -- synchronises with an external system: the rematch is announced by another phone over the socket, and this phone has to exchange its old token for the seat waiting for it before it can render the new table
+  useEffect(() => {
+    if (rematchJoinCode === null || token === null) return;
+    if (claimedRematch.current === rematchJoinCode) return;
+    if (loadSeat(rematchJoinCode) !== null) return;
+    claimedRematch.current = rematchJoinCode;
+    claimRematchSeat.mutate(undefined, {
+      onSuccess: (seated) => {
+        void navigate(`/partie/${seated.game.joinCode}`);
+      },
+      onError: () => {
+        claimedRematch.current = null;
+      },
+    });
+  }, [rematchJoinCode, token, claimRematchSeat, navigate]);
 
   const areYouSeated =
     seat !== null && game?.players.some((player) => player.id === seat.playerId) === true;
@@ -126,7 +151,7 @@ export function GamePage() {
   return (
     <AppShell>
       <div className="flex min-h-0 flex-1 flex-col gap-2">
-        <ErrorNote code={readRejectionCode(placeBid.error ?? startGame.error)} />
+        <ErrorNote code={readRejectionCode(placeBid.error ?? startGame.error ?? rematch.error)} />
         {isWaitingInLobby ? (
           <LobbyPanel
             game={game}
@@ -147,9 +172,24 @@ export function GamePage() {
             }}
           />
         ) : null}
-        {isFinished ? (
+        {isFinished && isRecapOpen ? (
+          <RoundRecap
+            game={game}
+            onClose={() => {
+              setIsRecapOpen(false);
+            }}
+          />
+        ) : null}
+        {isFinished && !isRecapOpen ? (
           <FinalScoreboard
             game={game}
+            playingAgain={rematch.isPending || claimRematchSeat.isPending}
+            onRecap={() => {
+              setIsRecapOpen(true);
+            }}
+            onPlayAgain={() => {
+              rematch.mutate(undefined);
+            }}
             onHome={() => {
               void navigate('/');
             }}

@@ -10,5 +10,7 @@ export const GAME_ERROR_CODES = [
   'not-playing',
   'already-bid',
   'round-still-open',
+  'not-finished',
+  'no-rematch',
   'unexpected-failure',
 ] as const;
