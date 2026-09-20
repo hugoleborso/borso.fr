@@ -68,7 +68,7 @@ export interface SetlistEntryRowProps {
   readonly resolvedLineupForEdit: LineupRecord;
   readonly songDefaultLineup: LineupRecord;
   readonly songDefaults: SongDefaults;
-  readonly hasOverride: boolean;
+  readonly lineupOverride: LineupRecord | null;
   readonly members: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
   readonly transitionBefore: ReactNode;
@@ -117,7 +117,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     props.onUpdate(props.entryId, { energy: next });
   };
   const overflowTitle = props.lineupSlots.overflowInstrumentNames.join(', ');
-  const tone = selectSetlistEntryTone(props.resolvedLineupForEdit, props.hasOverride);
+  const tone = selectSetlistEntryTone(props.songDefaultLineup, props.lineupOverride);
   const toneAppearance = selectSetlistEntryToneAppearance(tone);
   return (
     <li

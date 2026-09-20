@@ -172,7 +172,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 resolvedLineupForEdit={lineupRaw}
                 songDefaultLineup={song?.defaultLineup ?? {}}
                 songDefaults={songDefaultsOf(song)}
-                hasOverride={entry.lineupOverride !== null}
+                lineupOverride={entry.lineupOverride}
                 members={props.lineupMembers}
                 instruments={props.instruments}
                 transitionBefore={renderTransitionBefore(fullIndex)}
