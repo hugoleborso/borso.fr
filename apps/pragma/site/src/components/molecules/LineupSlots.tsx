@@ -1,22 +1,25 @@
 /** @Feature setlists */
 
-import type { JSX } from 'react';
+import { type JSX, useState } from 'react';
 import { Icon } from '../atoms/Icon';
-import { type LineupSlotsView, slotTintColor } from './lineup-slots.core';
+import { useElementWidth } from './element-width.hook';
+import { type LineupColumnView, sliceColumnToWidth, slotTintColor } from './lineup-slots.core';
 
 const LINEUP_SLOT_ICON_SIZE_PX = 17;
+const OVERFLOW_NAME_SEPARATOR = ', ';
 const SLOT_CLASS = 'inline-flex h-5 w-[19px] shrink-0 items-center justify-center';
-const COLUMN_CLASS = 'inline-flex h-5 min-w-0 flex-wrap content-start items-center overflow-hidden';
+const COLUMN_CLASS = 'inline-flex h-5 min-w-0 flex-1 items-center overflow-hidden';
 
 export interface LineupSlotsProps {
-  readonly view: LineupSlotsView;
-  readonly overflowTitle: string;
+  readonly column: LineupColumnView;
 }
 
 // @FollowsBlueprint molecule-presentational
-export function LineupSlots({ view, overflowTitle }: LineupSlotsProps): JSX.Element {
+export function LineupSlots({ column }: LineupSlotsProps): JSX.Element {
+  const [measuredColumn, setMeasuredColumn] = useState<HTMLSpanElement | null>(null);
+  const view = sliceColumnToWidth(column, useElementWidth(measuredColumn));
   return (
-    <span className={COLUMN_CLASS}>
+    <span ref={setMeasuredColumn} className={COLUMN_CLASS}>
       {view.slots.map((slot) => (
         <span
           key={slot.instrumentId}
@@ -30,7 +33,7 @@ export function LineupSlots({ view, overflowTitle }: LineupSlotsProps): JSX.Elem
       {view.hasOverflow ? (
         <span
           className="inline-flex h-5 shrink-0 items-center px-0.5 font-mono text-[10px] text-ink-400"
-          title={overflowTitle}
+          title={view.overflowInstrumentNames.join(OVERFLOW_NAME_SEPARATOR)}
         >
           +{view.overflowCount}
         </span>

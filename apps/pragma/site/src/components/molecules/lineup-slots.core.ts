@@ -15,6 +15,9 @@ export const INSTRUMENT_ICON_GLYPH = {
 export const SLOTS_BEYOND_MEMBER_COUNT = 2;
 export const MINIMUM_OVERFLOW_WORTH_A_COUNTER = 1;
 export const EMPTY_LINEUP_SLOT_COLOR = 'var(--color-ink-300)';
+export const LINEUP_SLOT_WIDTH_PX = 19;
+export const OVERFLOW_COUNTER_WIDTH_PX = 22;
+export const WIDTH_NOT_MEASURED_YET = 0;
 
 export interface SlotInstrument {
   readonly id: string;
@@ -36,6 +39,11 @@ export interface LineupSlot {
   readonly holderColor: string | null;
 }
 
+export interface LineupColumnView {
+  readonly slots: readonly LineupSlot[];
+  readonly cappedInstrumentNames: readonly string[];
+}
+
 export interface LineupSlotsView {
   readonly slots: readonly LineupSlot[];
   readonly overflowCount: number;
@@ -43,11 +51,10 @@ export interface LineupSlotsView {
   readonly overflowInstrumentNames: readonly string[];
 }
 
-export interface BuildLineupSlotsInput {
+export interface BuildLineupColumnInput {
   readonly instruments: readonly SlotInstrument[];
   readonly lineup: Readonly<Record<string, readonly string[]>>;
   readonly members: readonly SlotMember[];
-  readonly maximumVisibleSlots: number;
 }
 
 function byPositionThenName(left: SlotInstrument, right: SlotInstrument): number {
@@ -70,8 +77,8 @@ export function selectColumnInstruments(
   return primaryOnes.length > 0 ? primaryOnes : instruments;
 }
 
-export function resolveSlotBudget(memberCount: number, maximumVisibleSlots: number): number {
-  return Math.min(memberCount + SLOTS_BEYOND_MEMBER_COUNT, maximumVisibleSlots);
+export function resolveSlotBudget(memberCount: number): number {
+  return memberCount + SLOTS_BEYOND_MEMBER_COUNT;
 }
 
 function findHolderColor(
@@ -86,21 +93,51 @@ function findHolderColor(
 }
 
 // @FollowsBlueprint core-projection
-export function buildLineupSlots(input: BuildLineupSlotsInput): LineupSlotsView {
+export function buildLineupColumn(input: BuildLineupColumnInput): LineupColumnView {
   const column = selectColumnInstruments(input.instruments).toSorted(byPositionThenName);
-  const budget = resolveSlotBudget(input.members.length, input.maximumVisibleSlots);
-  const visible = column.slice(0, budget);
-  const dropped = column.slice(budget);
+  const budget = resolveSlotBudget(input.members.length);
   return {
-    slots: visible.map((instrument) => ({
+    slots: column.slice(0, budget).map((instrument) => ({
       instrumentId: instrument.id,
       instrumentName: instrument.name,
       glyph: INSTRUMENT_ICON_GLYPH[instrument.icon],
       holderColor: findHolderColor(instrument.id, input.lineup, input.members),
     })),
-    overflowCount: dropped.length,
-    hasOverflow: hasOverflowWorthShowing(dropped.length),
-    overflowInstrumentNames: dropped.map((instrument) => instrument.name),
+    cappedInstrumentNames: column.slice(budget).map((instrument) => instrument.name),
+  };
+}
+
+export function slotsFittingWidth(
+  slotCount: number,
+  availableWidthPx: number,
+  isCounterAlreadyOwed: boolean,
+): number {
+  if (availableWidthPx <= WIDTH_NOT_MEASURED_YET) return slotCount;
+  const reservedForCounter = isCounterAlreadyOwed ? OVERFLOW_COUNTER_WIDTH_PX : 0;
+  if (slotCount * LINEUP_SLOT_WIDTH_PX <= availableWidthPx - reservedForCounter) return slotCount;
+  const roomBesideTheCounter = availableWidthPx - OVERFLOW_COUNTER_WIDTH_PX;
+  return Math.max(0, Math.floor(roomBesideTheCounter / LINEUP_SLOT_WIDTH_PX));
+}
+
+// @FollowsBlueprint core-projection
+export function sliceColumnToWidth(
+  column: LineupColumnView,
+  availableWidthPx: number,
+): LineupSlotsView {
+  const fitting = slotsFittingWidth(
+    column.slots.length,
+    availableWidthPx,
+    column.cappedInstrumentNames.length > 0,
+  );
+  const overflowInstrumentNames = [
+    ...column.slots.slice(fitting).map((slot) => slot.instrumentName),
+    ...column.cappedInstrumentNames,
+  ];
+  return {
+    slots: column.slots.slice(0, fitting),
+    overflowCount: overflowInstrumentNames.length,
+    hasOverflow: hasOverflowWorthShowing(overflowInstrumentNames.length),
+    overflowInstrumentNames,
   };
 }
 

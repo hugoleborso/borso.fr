@@ -6,26 +6,10 @@ import {
   instrumentFamilyMap,
   instrumentNamesFor,
   lineupOf,
-  maximumVisibleLineupSlots,
   restrictToVerticalAxis,
   selectUnwarnedMemberIds,
   tonalityLabelFor,
 } from './setlist-editor.utils';
-
-// @FollowsBlueprint test-pure-unit
-describe('maximumVisibleLineupSlots', () => {
-  it('leaves room for the whole fixed order when the row is roomy', () => {
-    expect(maximumVisibleLineupSlots(false)).toBe(8);
-  });
-
-  it('drops slots from the right on a narrow screen rather than squeezing the title', () => {
-    expect(maximumVisibleLineupSlots(true)).toBe(4);
-  });
-
-  it('always shows fewer slots when condensed than when roomy', () => {
-    expect(maximumVisibleLineupSlots(true)).toBeLessThan(maximumVisibleLineupSlots(false));
-  });
-});
 
 describe('tonalityLabelFor', () => {
   it('returns null for an undefined song', () => {

@@ -8,10 +8,10 @@
 > mechanism honestly matters more than claiming the tool was used.
 
 - [x] **Client / business** — The operator plays in the band and reads this screen during rehearsal. He set the energy slider as a frequent gesture, which ruled out the densest layout.
-- [x] **Product** — He chose which information the card may lose: artist and tonality may leave the row, the album cover may not, the song title may not be the thing that truncates.
+- [x] **Product** — He chose which information the card may lose: artist and tonality may leave the row, the album cover may not. Shown the arithmetic at 360 px — two title lines plus the column is 64 px inside a 44 px block — he reversed his first answer and gave the column priority over a whole title (2026-09-20).
 - [x] **Tech-lead** — He accepted a schema change over a name-matching table in the front end, after being shown that a typo would silently move an instrument out of its column.
 - [x] **Developer** — He accepted that instrument icons come from libraries plus one generated glyph, not from hand drawing, after four rejected rounds.
-- [x] **Designer** — He rejected four layouts and two icon sets on rendered evidence at real size, and picked the lineup column at 17 px with the column yielding before the title.
+- [x] **Designer** — He rejected four layouts and two icon sets on rendered evidence at real size, and picked the lineup column at 17 px. Below `sm` the title yields first; above it the column does.
 
 ## Why
 
@@ -32,8 +32,9 @@ question that decides whether a transition works.
 - **Input metrics**, each measurable in a browser at a fixed viewport:
   - At 375 px, at least **six songs** are fully visible in the list region,
     against 2.5 before.
-  - At 360 px, the song title is **not truncated** on a card whose title is
-    at most twenty characters.
+  - At 360 px, the song title takes **one line** and truncates with an
+    ellipsis when it is longer, so the lineup column always has its 20 px.
+    From `sm` up the title has the whole row and truncates only at the edge.
   - Setting a song's energy from the list takes **one gesture** and the value
     survives a reload.
   - Two consecutive songs whose lineup differs in one instrument show that
@@ -73,9 +74,14 @@ Happy path:
 
 Edge cases:
 
-- **The viewport is too narrow for every slot.** The column yields before the
-  title: it drops slots from the right of the fixed order and shows a `+N`
-  marker. The title never truncates to feed the column.
+- **The viewport is too narrow for every slot.** The column drops slots from
+  the right of the fixed order and shows a `+N` marker naming them. The budget
+  comes from the width the column actually has, measured, not from the
+  breakpoint, so the marker appears exactly when a slot was dropped.
+- **The title is longer than the row is wide.** Below `sm` the title takes one
+  line and truncates; the column keeps its 20 px. A two-line title would need
+  64 px inside a 44 px card and would push the column out of the card
+  entirely, which is what shipping it first showed.
 - **A song has no lineup at all.** The card takes the grey surface and every
   slot renders in the empty tint.
 - **The entry overrides the song's default lineup.** The card takes the yellow
@@ -100,12 +106,14 @@ Error cases:
 | --- | --- | --- |
 | How wide must the energy control be to stay usable? | 10-segment tap bar 138 px inline; same bar 347 px on its own row; volume-style meter with a relative drag | **Volume meter.** 32 px of travel is one level and the pointer stays captured past the widget bounds, so an 82 px control resolves ten levels with a 44 px target. Verified in the browser (2026-09-18) |
 | How do transitions stop eating the list? | keep the block; one-line rail; seam | **Seam.** A held transition is a 24 px hairline carrying the carriers; a risky one keeps a readable 36 px band with its note (2026-09-18) |
-| Where does the lineup column sit? | inline at 20 px; inline at 17 px compressible; replacing the artist line; on a second row; no album cover | **Inline at 17 px, compressible.** A second row was refused because the card may not grow; dropping the cover was refused (2026-09-18) |
+| Where does the lineup column sit? | inline at 20 px; inline at 17 px compressible; replacing the artist line; on a second row; no album cover | **Inline at 17 px, compressible.** A second row was refused because the card may not grow; dropping the cover was refused (2026-09-18). Below `sm` it takes the artist line's place under the title, since the artist and the tonality are already hidden there (2026-09-20) |
 | What marks an instrument in a slot? | drawn icons; three-letter codes; coloured code chips; emoji | **Icons.** Codes and chips were more legible at 17 px and were still refused (2026-09-18) |
 | Where do instrument icons come from? | Lucide only; Qlementine; game-icons; emoji; drawn | **Lucide first, one generated bass.** Lucide has no bass; Qlementine has 67 music glyphs but is illegible at 17 px; no stroke set in Lucide's language covers orchestral instruments (2026-09-18) |
 | How is the bass drawn? | traced contour of the operator's reference; parametric construction | **Parametric, proportions from the trace.** Tracing gave the right proportions and non-parallel fretboard edges; the parametric build makes both edges exactly parallel by construction (2026-09-18) |
 | How is the column ordered? | alphabetical; by family; hardcoded in the front end; a stored position | **A stored position.** Alphabetical is what the operator rejected outright; family lumps guitar, piano and bass together; a front-end name table breaks silently on a typo (2026-09-18) |
 | Which instruments get a slot? | all; the first N; those used in this setlist; the primary ones | **The primary ones**, capped at members plus two (2026-09-18) |
+| What gives way at 360 px, the title or the column? | one-line title, column always shown; the card grows for long titles; a smaller title face | **One-line title.** The column is the thing a reader scans down a set for; a truncated title is still recognisable from its first words, a missing column carries nothing. The card stays at 54 px and the type stays at 17 px (2026-09-20) |
+| Where does the slot budget come from? | a constant per breakpoint; the width the column actually has | **The measured width.** A breakpoint constant cannot know that a long title took the room, so the `+N` never appeared on the case that needed it: the slots were clipped by `overflow: hidden` while the model still believed it had shown them all (2026-09-20) |
 | How does an override read now? | keep the badge; tint the card | **Tint.** Grey for no lineup, yellow for an override. This drops a signal for a colourblind reader on the card; the badge remains in the editor (2026-09-18) |
 
 **Out of scope:** reordering instruments from the setlist screen; per-member

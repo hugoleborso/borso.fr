@@ -36,7 +36,7 @@ import {
 } from './setlist-entry-tone.core';
 import type { LineupMember } from '../molecules/MemberLineup';
 import { LineupSlots } from '../molecules/LineupSlots';
-import type { LineupSlotsView } from '../molecules/lineup-slots.core';
+import type { LineupColumnView } from '../molecules/lineup-slots.core';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 
 const POSITION_DIGITS = 2;
@@ -45,10 +45,9 @@ const ICON_BUTTON_CLASS =
 const LINEUP_BUTTON_CLASS =
   'hidden sm:inline-flex h-11 sm:h-10 min-w-0 shrink-[999] items-center overflow-hidden rounded-md px-0.5 cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
 const TITLE_COLUMN_CLASS = 'h-11 sm:h-10 min-w-0 flex-auto select-none overflow-hidden';
-const TITLE_CLASS =
-  'line-clamp-2 sm:line-clamp-none sm:truncate font-display text-[17px] italic leading-[22px] text-ink-900';
+const TITLE_CLASS = 'block truncate font-display text-[17px] italic leading-[22px] text-ink-900';
 const NARROW_LINEUP_BUTTON_CLASS =
-  'flex sm:hidden items-center -ml-0.5 px-0.5 cursor-pointer bg-transparent border-0';
+  'flex w-full min-w-0 sm:hidden items-center -ml-0.5 px-0.5 overflow-hidden cursor-pointer bg-transparent border-0';
 
 export interface SetlistEntryRowProps {
   readonly position: number;
@@ -65,7 +64,7 @@ export interface SetlistEntryRowProps {
   readonly energy: number | null;
   readonly baseEnergy: number | null;
   readonly notes: string;
-  readonly lineupSlots: LineupSlotsView;
+  readonly lineupColumn: LineupColumnView;
   readonly resolvedLineupForEdit: LineupRecord;
   readonly songDefaultLineup: LineupRecord;
   readonly songDefaults: SongDefaults;
@@ -117,7 +116,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const publishEnergy = (next: number): void => {
     props.onUpdate(props.entryId, { energy: next });
   };
-  const overflowTitle = props.lineupSlots.overflowInstrumentNames.join(', ');
   const isOverriding = isOverridingSongLineup(props.songDefaultLineup, props.lineupOverride);
   const tone = selectSetlistEntryTone(props.songDefaultLineup, props.lineupOverride);
   const toneAppearance = selectSetlistEntryToneAppearance(tone);
@@ -181,7 +179,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               aria-label={t('lineup.editOverride')}
               className={NARROW_LINEUP_BUTTON_CLASS}
             >
-              <LineupSlots view={props.lineupSlots} overflowTitle={overflowTitle} />
+              <LineupSlots column={props.lineupColumn} />
             </button>
           </div>
           <button
@@ -190,7 +188,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             aria-label={t('lineup.editOverride')}
             className={LINEUP_BUTTON_CLASS}
           >
-            <LineupSlots view={props.lineupSlots} overflowTitle={overflowTitle} />
+            <LineupSlots column={props.lineupColumn} />
           </button>
           <SetlistEntryEnergyField
             entryEnergy={props.energy}

@@ -32,7 +32,7 @@ import {
   type SetlistEditorSong,
   tonalityLabelFor,
 } from './setlist-editor.utils';
-import { buildLineupSlots, type SlotInstrument } from '../molecules/lineup-slots.core';
+import { buildLineupColumn, type SlotInstrument } from '../molecules/lineup-slots.core';
 import type { SongDefaults, SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
@@ -65,7 +65,6 @@ export interface SetlistEntriesListProps {
   readonly instruments: readonly LineupEditorInstrument[];
   readonly slotInstruments: readonly SlotInstrument[];
   readonly knownMemberIds: ReadonlySet<string>;
-  readonly maximumVisibleSlots: number;
   readonly onReorder: (orderedEntryIds: readonly string[]) => void;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onUpdateSongDefaults: (songId: string, patch: SongDefaultsPatch) => void;
@@ -145,11 +144,10 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             const lineupRaw = lineupOf(entry, props.songsById);
             warnIfOrphanMemberIds(lineupRaw, props.knownMemberIds, entry.songId);
             const fullIndex = props.entries.indexOf(entry);
-            const lineupSlots = buildLineupSlots({
+            const lineupColumn = buildLineupColumn({
               instruments: props.slotInstruments,
               lineup: compactLineup(lineupRaw),
               members: props.lineupMembers,
-              maximumVisibleSlots: props.maximumVisibleSlots,
             });
             return (
               <SetlistEntryRow
@@ -168,7 +166,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 energy={entry.energy}
                 baseEnergy={song?.baseEnergy ?? null}
                 notes={entry.notes}
-                lineupSlots={lineupSlots}
+                lineupColumn={lineupColumn}
                 resolvedLineupForEdit={lineupRaw}
                 songDefaultLineup={song?.defaultLineup ?? {}}
                 songDefaults={songDefaultsOf(song)}

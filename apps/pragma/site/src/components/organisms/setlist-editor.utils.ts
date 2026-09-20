@@ -40,13 +40,6 @@ export interface SetlistEditorEntry {
   readonly lineupOverride: Lineup | null;
 }
 
-const NARROW_LINEUP_SLOT_BUDGET = 4;
-const WIDE_LINEUP_SLOT_BUDGET = 8;
-
-export function maximumVisibleLineupSlots(isCondensed: boolean): number {
-  return isCondensed ? NARROW_LINEUP_SLOT_BUDGET : WIDE_LINEUP_SLOT_BUDGET;
-}
-
 export function tonalityLabelFor(song: SetlistEditorSong | undefined): string | null {
   if (song === undefined) return null;
   const start = song.tonalityStart ?? null;

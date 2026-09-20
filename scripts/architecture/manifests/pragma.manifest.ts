@@ -277,6 +277,16 @@ export const pragmaManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'browser-resize-observer',
+      icon: '📏',
+      name: 'Element resize observation',
+      technology: 'Browser ResizeObserver API',
+      description:
+        'Reports how wide the lineup column actually is on a setlist row, so the number of instrument slots it shows comes from the room it has rather than from a breakpoint. That is what lets the +N marker appear exactly when an instrument was dropped.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'browser-wake-lock',
       icon: '🔦',
       name: 'Screen Wake Lock',
