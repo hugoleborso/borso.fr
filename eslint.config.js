@@ -18,6 +18,8 @@ const TSCONFIG_PATHS = ['apps/*/tsconfig.json', 'infra/*/tsconfig.json', 'tsconf
 
 const TYPESCRIPT_FILES = ['**/*.ts', '**/*.tsx', '**/*.mts', '**/*.cts'];
 
+const SERVICE_WORKER_ENTRY_FILES = ['apps/*/site/src/sw/main.worker.ts'];
+
 const UNPROJECTED_TYPESCRIPT_FILES = [
   'vitest.config.ts',
   '.claude/skills/**/*.ts',
@@ -140,6 +142,17 @@ export default tseslint.config(
     ...tseslint.configs.disableTypeChecked,
     languageOptions: {
       globals: { ...globals.node },
+    },
+  },
+
+  {
+    files: SERVICE_WORKER_ENTRY_FILES,
+    languageOptions: {
+      parserOptions: {
+        projectService: false,
+        project: ['apps/*/tsconfig.sw.json'],
+        tsconfigRootDir: import.meta.dirname,
+      },
     },
   },
 

@@ -1,0 +1,1 @@
+ALTER TABLE "game" ADD COLUMN "rematch_join_code" text;

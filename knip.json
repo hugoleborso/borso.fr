@@ -15,6 +15,29 @@
       ],
       "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts"]
     },
+    "apps/banana-rush": {
+      "entry": [
+        "cdk/bin/cdk.ts",
+        "api/src/main.ts",
+        "api/src/main.websocket.ts",
+        "site/src/sw/main.worker.ts",
+        "api/src/**/*.test.ts",
+        "domain/**/*.core.test.ts",
+        "site/src/**/*.utils.test.ts",
+        "site/src/**/*.core.test.ts",
+        "test/**/*.ts",
+        "vitest.mutation.config.ts"
+      ],
+      "project": [
+        "cdk/**/*.ts",
+        "domain/**/*.ts",
+        "site/src/**/*.ts",
+        "site/src/**/*.tsx",
+        "api/src/**/*.ts",
+        "test/**/*.ts"
+      ],
+      "ignoreDependencies": ["tailwindcss"]
+    },
     "apps/borso-fr": {
       "entry": [
         "bin/app.ts",

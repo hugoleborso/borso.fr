@@ -1,0 +1,147 @@
+{
+  "appName": "Banana Rush",
+  "tagline": "Bid in secret. Take the crate. Pay the tariff.",
+  "common": {
+    "bananas_one": "{{count}} banana",
+    "bananas_other": "{{count}} bananas",
+    "back": "Back",
+    "loading": "Loading…",
+    "you": "you"
+  },
+  "home": {
+    "createGame": "Start a game",
+    "joinTitle": "Join a game",
+    "joinPlaceholder": "CODE",
+    "join": "Join",
+    "rulesToggle": "How it works"
+  },
+  "rules": {
+    "title": "How it works",
+    "stashAndCrate": "Everyone starts with 10 bananas, and 10 more wait in the crate.",
+    "secretNumber": "Each round, everybody secretly writes a number between 1 and a bananillion.",
+    "highestWins": "The highest number takes the whole crate, but has to pay a tariff.",
+    "tariff": "The tariff is their number minus the second highest number, and it goes to whoever wrote it.",
+    "bust": "Anyone who cannot pay the tariff busts: their bananas drop to zero, and the next player takes their turn at it.",
+    "tie": "Two equal numbers at the top split the crate and pay no tariff.",
+    "crateRefill": "At the end of the round the crate refills to match the largest stash on the table.",
+    "winning": "First to {{score}} bananas wins the game.",
+    "comeback": "Nobody is knocked out at zero: a bid is not paid up front, so anybody can climb back."
+  },
+  "create": {
+    "title": "New game",
+    "nickname": "Your name",
+    "nicknamePlaceholder": "Hugo",
+    "monkey": "Your monkey",
+    "seats": "Seats at the table",
+    "timer": "Time per round",
+    "timerNone": "No limit",
+    "timerNoneShort": "∞",
+    "timerSeconds": "{{count}}s",
+    "winningScore": "Target",
+    "submit": "Start the game",
+    "submitting": "Setting the table…"
+  },
+  "join": {
+    "title": "Join {{code}}",
+    "submit": "Take a seat",
+    "submitting": "Finding you a seat…",
+    "monkeyTaken": "Taken"
+  },
+  "lobby": {
+    "title": "Waiting room",
+    "codeLabel": "Game code",
+    "shareHint": "Send this code to your friends.",
+    "seatsLeft_one": "{{count}} seat left",
+    "seatsLeft_other": "{{count}} seats left",
+    "full": "Table full",
+    "start": "Start the game",
+    "waitingForHost": "Waiting for the host to start the game.",
+    "needMorePlayers": "You need at least two players.",
+    "settings": "Settings",
+    "host": "host",
+    "shareLink": "Copy the link",
+    "linkCopied": "Link copied!",
+    "shareText": "Come play Banana Rush with me!"
+  },
+  "game": {
+    "crate": "The crate",
+    "round": "Round {{number}}",
+    "yourStash": "Your stash",
+    "yourBid": "Your bid",
+    "bidLabel": "Your secret bid",
+    "bidPlaceholder": "1",
+    "submitBid": "Bid",
+    "submittingBid": "Slipping your bid in…",
+    "waiting": "Waiting for the other monkeys…",
+    "hasBid": "has bid",
+    "thinking": "thinking",
+    "timeLeft": "{{count}}s",
+    "timeUp": "Time is up",
+    "resolveNow": "Resolve the round",
+    "target": "Target {{score}}",
+    "speakBid": "Say my bid",
+    "listening": "Listening…"
+  },
+  "reveal": {
+    "title": "Round {{number}}",
+    "crateWinner": "Crate",
+    "tariffReceiver": "Tariff",
+    "wonCrate": "takes the crate",
+    "paidTariff": "pays a tariff of {{count}}",
+    "receivedTariff": "collects {{count}}",
+    "busted": "busts",
+    "split": "splits the crate",
+    "nothing": "holds steady",
+    "next": "Next round"
+  },
+  "final": {
+    "title": "Game over",
+    "winner": "{{nickname}} wins the game",
+    "winners": "A tie at the top",
+    "playAgain": "Rematch",
+    "recap": "Recap",
+    "home": "Home"
+  },
+  "recap": {
+    "position": "Round {{number}} of {{total}}",
+    "crate": "The crate, before and after",
+    "previous": "Previous round",
+    "next": "Next round",
+    "back": "Back to the scores",
+    "empty": "No round was played."
+  },
+  "errors": {
+    "game-not-found": "There is no game with that code.",
+    "game-full": "That game is full.",
+    "already-started": "That game has already started.",
+    "avatar-taken": "That monkey is taken.",
+    "not-in-lobby": "The game has left the waiting room.",
+    "not-enough-players": "You need at least two players.",
+    "not-host": "Only the host can start the game.",
+    "not-a-player": "You are not sitting at this table.",
+    "not-playing": "The game is not running.",
+    "already-bid": "You have already bid this round.",
+    "round-still-open": "The round is not over yet.",
+    "not-finished": "The game is not over yet.",
+    "no-rematch": "There is no rematch to join.",
+    "unexpected-failure": "Something slipped on a banana peel.",
+    "bidOutOfRange": "Between 1 and {{max}}.",
+    "nicknameRequired": "A name is required.",
+    "reload": "Reload"
+  },
+  "language": {
+    "fr": "FR",
+    "en": "EN",
+    "switch": "Change language"
+  },
+  "monkeys": {
+    "chimp": "Chimpanzee",
+    "gibbon": "Gibbon",
+    "macaque": "Macaque",
+    "mandrill": "Mandrill",
+    "marmoset": "Marmoset",
+    "tamarin": "Tamarin",
+    "capuchin": "Capuchin",
+    "lemur": "Lemur"
+  }
+}

@@ -1,3 +1,4 @@
+import { bananaRushManifest } from './manifests/banana-rush.manifest';
 import { borsoFrManifest } from './manifests/borso-fr.manifest';
 import { borsouverturesManifest } from './manifests/borsouvertures.manifest';
 import { lastLoopLepinManifest } from './manifests/last-loop-lepin.manifest';
@@ -48,6 +49,7 @@ export interface ArchitectureManifest {
 export const ARCHITECTURE_MANIFESTS: readonly ArchitectureManifest[] = [
   pragmaManifest,
   lastLoopLepinManifest,
+  bananaRushManifest,
   borsouverturesManifest,
   borsoFrManifest,
 ];

@@ -12,6 +12,8 @@ export type { PreviewableAppProps } from './constructs/previewable-app.js';
 export { PreviewableApp } from './constructs/previewable-app.js';
 export type { StaticSiteProps } from './constructs/static-site.js';
 export { StaticSite } from './constructs/static-site.js';
+export type { WebSocketChannelProps } from './constructs/web-socket-channel.js';
+export { WebSocketChannel } from './constructs/web-socket-channel.js';
 export { HOST_ROUTING_FUNCTION_CODE } from './internal/cf-host-routing-function.js';
 
 export {
