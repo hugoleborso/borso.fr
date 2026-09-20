@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next';
 import { switchLocale } from '@site/i18n/i18n.setup';
 import { SUPPORTED_LOCALES } from '@site/i18n/i18n.utils';
 import { LANGUAGE_KEYS } from '@site/lib/translation-keys.core';
-import { BananaIcon } from '../atoms/BananaIcon';
+import { TreasureIcon } from '../atoms/TreasureIcon';
 
 export interface AppShellProps {
   readonly children: ReactNode;
@@ -17,7 +17,7 @@ export function AppShell({ children }: AppShellProps) {
     <div className="flex h-dvh flex-col overflow-hidden bg-cream pb-[env(safe-area-inset-bottom)]">
       <header className="mx-auto flex w-full max-w-lg shrink-0 items-center justify-between gap-2 px-4 pt-3">
         <a href="/" className="flex items-center gap-1.5 text-lg font-black">
-          <BananaIcon className="h-6 w-6" />
+          <TreasureIcon className="h-7 w-7" />
           {t('appName')}
         </a>
         <nav aria-label={t('language.switch')} className="flex gap-1">
