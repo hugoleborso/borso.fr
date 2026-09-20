@@ -57,7 +57,10 @@
     "waitingForHost": "Waiting for the host to start the game.",
     "needMorePlayers": "You need at least two players.",
     "settings": "Settings",
-    "host": "host"
+    "host": "host",
+    "shareLink": "Copy the link",
+    "linkCopied": "Link copied!",
+    "shareText": "Come play Banana Rush with me!"
   },
   "game": {
     "crate": "The crate",

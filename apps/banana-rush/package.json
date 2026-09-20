@@ -12,10 +12,10 @@
     "db:local:stop": "../../scripts/local-postgres.sh stop banana-rush",
     "db:local:wipe": "../../scripts/local-postgres.sh wipe banana-rush",
     "db:local:url": "../../scripts/local-postgres.sh url banana-rush",
-    "build": "vite build",
+    "build": "vite build && vite build --config vite.sw.config.ts",
     "preview": "vite preview",
     "lint": "cd ../.. && eslint apps/banana-rush --cache --cache-location node_modules/.cache/eslint",
-    "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
+    "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc -p tsconfig.sw.json --noEmit && tsc --noEmit",
     "test:core": "pnpm --filter @borso/infra run build && vitest run --project core --coverage",
     "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start banana-rush) vitest run --project back-e2e",
     "test:coverage": "pnpm --filter @borso/infra run build && DATABASE_URL=$(../../scripts/local-postgres.sh start banana-rush) vitest run --coverage",
@@ -23,7 +23,7 @@
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"banana-rush-pr-${PR_NUMBER:?PR_NUMBER env var required \u2014 banana-rush destroy targets the per-PR app stack only, never the shared banana-rush-cluster stack}\" --force",
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"banana-rush-pr-${PR_NUMBER:?PR_NUMBER env var required — banana-rush destroy targets the per-PR app stack only, never the shared banana-rush-cluster stack}\" --force",
     "test:mutation": "stryker run"
   },
   "dependencies": {

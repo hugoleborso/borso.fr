@@ -20,6 +20,7 @@
         "cdk/bin/cdk.ts",
         "api/src/main.ts",
         "api/src/main.websocket.ts",
+        "site/src/sw/main.worker.ts",
         "api/src/**/*.test.ts",
         "domain/**/*.core.test.ts",
         "site/src/**/*.utils.test.ts",

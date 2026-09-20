@@ -1,12 +1,13 @@
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useNavigate } from 'react-router-dom';
+import { Navigate, useNavigate, useSearchParams } from 'react-router-dom';
 import { WINNING_SCORE_CHOICES } from '@domain/game-setup.core';
 import { normalizeJoinCode } from '@api/games/join-code.utils';
 import { ChunkyButton } from '@site/components/atoms/ChunkyButton';
 import { FieldLabel } from '@site/components/atoms/FieldLabel';
 import { MonkeyFace } from '@site/components/atoms/MonkeyFace';
 import { RulesPanel } from '@site/components/organisms/RulesPanel';
+import { INVITATION_PARAMETER, readInvitedCode } from '@site/lib/invitation.core';
 
 const JOIN_CODE_LENGTH = 4;
 const DEFAULT_WINNING_SCORE = WINNING_SCORE_CHOICES[1];
@@ -16,11 +17,17 @@ const SHOWCASE_MONKEYS = ['chimp', 'mandrill', 'lemur'] as const;
 export function HomePage() {
   const { t } = useTranslation();
   const navigate = useNavigate();
+  const [searchParams] = useSearchParams();
   const [code, setCode] = useState('');
   const [rulesOpen, setRulesOpen] = useState(false);
 
+  const invitedCode = readInvitedCode(searchParams.get(INVITATION_PARAMETER));
   const normalized = normalizeJoinCode(code);
   const canJoin = normalized.length === JOIN_CODE_LENGTH;
+
+  if (invitedCode !== null) {
+    return <Navigate to={`/partie/${invitedCode}`} replace />;
+  }
 
   return (
     <div className="space-y-6">

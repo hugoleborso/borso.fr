@@ -101,6 +101,26 @@ export const bananaRushManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'browser-service-worker',
+      icon: '📴',
+      name: 'Service worker registration',
+      technology: 'Browser service worker API',
+      description:
+        'Registers the shell cache at boot and is skipped in development. Caches the shell and the fingerprinted assets only, never the API, because a cached round is a wrong round rather than a slow one.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
+      id: 'browser-share-sheet',
+      icon: '📨',
+      name: 'Share sheet and clipboard',
+      technology: 'Browser share and clipboard APIs',
+      description:
+        "Hands the invitation address to whichever application the player picks, and falls back to the clipboard where a phone's own share sheet does not exist. Both are read at the moment of the tap, so a browser offering neither leaves the address on screen instead of a control that does nothing.",
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'aws-apigateway-management',
       icon: '📡',
       name: 'API Gateway management API',

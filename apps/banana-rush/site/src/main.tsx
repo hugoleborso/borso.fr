@@ -7,6 +7,7 @@ import { AppErrorBoundary } from './components/organisms/AppErrorBoundary';
 import './i18n/i18n.setup';
 import './styles/tokens.css';
 import { queryClient } from './lib/query-client.setup';
+import { registerServiceWorker } from './sw/service-worker.setup';
 
 // @FollowsBlueprint site-entrypoint
 const rootElement = document.getElementById('root');
@@ -23,3 +24,5 @@ createRoot(rootElement).render(
     </AppErrorBoundary>
   </StrictMode>,
 );
+
+registerServiceWorker();

@@ -5,6 +5,7 @@ import { NO_FREE_SEATS } from '@site/lib/game-summary.core';
 import { ChunkyButton } from '../atoms/ChunkyButton';
 import { Chip } from '../atoms/Chip';
 import { JoinCodeBadge } from '../molecules/JoinCodeBadge';
+import { ShareInviteButton } from '../molecules/ShareInviteButton';
 import { PlayerCard } from '../molecules/PlayerCard';
 
 export interface LobbyPanelProps {
@@ -25,6 +26,7 @@ export function LobbyPanel({ game, isHost, starting, onStart }: LobbyPanelProps)
   return (
     <div className="space-y-4">
       <JoinCodeBadge joinCode={game.joinCode} />
+      <ShareInviteButton joinCode={game.joinCode} />
 
       <section>
         <div className="mb-2 flex flex-wrap items-center justify-between gap-2">

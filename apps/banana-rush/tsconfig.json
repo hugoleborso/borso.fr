@@ -28,7 +28,9 @@
     "cdk/test/**/*.ts",
     "test/**/*.ts",
     "vite.config.ts",
+    "vite.sw.config.ts",
     "vitest.config.ts",
     "drizzle.config.ts"
-  ]
+  ],
+  "exclude": ["site/src/sw/main.worker.ts"]
 }

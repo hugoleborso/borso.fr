@@ -57,7 +57,10 @@
     "waitingForHost": "On attend que l'hôte lance la partie.",
     "needMorePlayers": "Il faut être au moins deux pour jouer.",
     "settings": "Réglages",
-    "host": "hôte"
+    "host": "hôte",
+    "shareLink": "Copier le lien",
+    "linkCopied": "Lien copié !",
+    "shareText": "Rejoins ma partie de Banana Rush !"
   },
   "game": {
     "crate": "La caisse",
