@@ -17,7 +17,6 @@ export const MINIMUM_OVERFLOW_WORTH_A_COUNTER = 1;
 export const EMPTY_LINEUP_SLOT_COLOR = 'var(--color-ink-300)';
 export const LINEUP_SLOT_WIDTH_PX = 19;
 export const OVERFLOW_COUNTER_WIDTH_PX = 22;
-export const WIDTH_NOT_MEASURED_YET = 0;
 
 export interface SlotInstrument {
   readonly id: string;
@@ -107,12 +106,17 @@ export function buildLineupColumn(input: BuildLineupColumnInput): LineupColumnVi
   };
 }
 
+export function naturalColumnWidth(column: LineupColumnView): number {
+  const counterWidth = column.cappedInstrumentNames.length > 0 ? OVERFLOW_COUNTER_WIDTH_PX : 0;
+  return column.slots.length * LINEUP_SLOT_WIDTH_PX + counterWidth;
+}
+
 export function slotsFittingWidth(
   slotCount: number,
-  availableWidthPx: number,
+  availableWidthPx: number | null,
   isCounterAlreadyOwed: boolean,
 ): number {
-  if (availableWidthPx <= WIDTH_NOT_MEASURED_YET) return slotCount;
+  if (availableWidthPx === null) return slotCount;
   const reservedForCounter = isCounterAlreadyOwed ? OVERFLOW_COUNTER_WIDTH_PX : 0;
   if (slotCount * LINEUP_SLOT_WIDTH_PX <= availableWidthPx - reservedForCounter) return slotCount;
   const roomBesideTheCounter = availableWidthPx - OVERFLOW_COUNTER_WIDTH_PX;
@@ -122,7 +126,7 @@ export function slotsFittingWidth(
 // @FollowsBlueprint core-projection
 export function sliceColumnToWidth(
   column: LineupColumnView,
-  availableWidthPx: number,
+  availableWidthPx: number | null,
 ): LineupSlotsView {
   const fitting = slotsFittingWidth(
     column.slots.length,

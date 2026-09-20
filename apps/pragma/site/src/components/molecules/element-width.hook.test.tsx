@@ -56,7 +56,7 @@ function Probe({
   sink,
 }: {
   element: Element | null;
-  sink: (width: number) => void;
+  sink: (width: number | null) => void;
 }): null {
   sink(useElementWidth(element));
   return null;
@@ -93,16 +93,16 @@ describe('useElementWidth', () => {
   });
 
   it('reports nothing measurable before an element exists', () => {
-    const widths: number[] = [];
+    const widths: (number | null)[] = [];
     act(() => root.render(<Probe element={null} sink={(width) => widths.push(width)} />));
-    expect(widths.at(-1)).toBe(0);
+    expect(widths.at(-1)).toBe(null);
     expect(observedElements.size).toBe(0);
   });
 
   it('reports the width the element already has on the first render', () => {
     const measured = document.createElement('span');
     widenTo(measured, A_FIRST_WIDTH_PX);
-    const widths: number[] = [];
+    const widths: (number | null)[] = [];
     act(() => root.render(<Probe element={measured} sink={(width) => widths.push(width)} />));
     expect(widths.at(-1)).toBe(A_FIRST_WIDTH_PX);
     expect(observedElements.has(measured)).toBe(true);
@@ -111,7 +111,7 @@ describe('useElementWidth', () => {
   it('republishes the width when the observer fires on a change', () => {
     const measured = document.createElement('span');
     widenTo(measured, A_FIRST_WIDTH_PX);
-    const widths: number[] = [];
+    const widths: (number | null)[] = [];
     act(() => root.render(<Probe element={measured} sink={(width) => widths.push(width)} />));
     widenTo(measured, A_SECOND_WIDTH_PX);
     act(() => notifyObservers());
@@ -121,7 +121,7 @@ describe('useElementWidth', () => {
   it('stays silent when the observer fires and the width did not move', () => {
     const measured = document.createElement('span');
     widenTo(measured, A_FIRST_WIDTH_PX);
-    const widths: number[] = [];
+    const widths: (number | null)[] = [];
     act(() => root.render(<Probe element={measured} sink={(width) => widths.push(width)} />));
     const rendersSoFar = widths.length;
     act(() => notifyObservers());

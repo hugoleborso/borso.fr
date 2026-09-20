@@ -10,8 +10,8 @@ import {
   sliceColumnToWidth,
   type SlotInstrument,
   slotsFittingWidth,
+  naturalColumnWidth,
   slotTintColor,
-  WIDTH_NOT_MEASURED_YET,
 } from './lineup-slots.core';
 
 const ANA = { id: 'ana', color: '#ff0000' };
@@ -254,7 +254,11 @@ const FOUR_SLOTS_EXACTLY_PX = 4 * LINEUP_SLOT_WIDTH_PX;
 
 describe('slotsFittingWidth', () => {
   it('holds nothing back before the column has been measured', () => {
-    expect(slotsFittingWidth(4, WIDTH_NOT_MEASURED_YET, false)).toBe(4);
+    expect(slotsFittingWidth(4, null, false)).toBe(4);
+  });
+
+  it('shows nothing but the counter when the column was measured at nothing', () => {
+    expect(slotsFittingWidth(4, 0, false)).toBe(0);
   });
 
   it('keeps every slot when they fit to the pixel', () => {
@@ -280,7 +284,7 @@ describe('slotsFittingWidth', () => {
 
 describe('sliceColumnToWidth', () => {
   it('shows the whole column and no counter while the width is unknown', () => {
-    const view = sliceColumnToWidth(columnOf('Voice', 'Guitar'), WIDTH_NOT_MEASURED_YET);
+    const view = sliceColumnToWidth(columnOf('Voice', 'Guitar'), null);
     expect(view.slots).toHaveLength(2);
     expect(view.hasOverflow).toBe(false);
     expect(view.overflowCount).toBe(0);
@@ -332,6 +336,18 @@ describe('sliceColumnToWidth', () => {
       LINEUP_SLOT_WIDTH_PX + OVERFLOW_COUNTER_WIDTH_PX,
     );
     expect(view.overflowInstrumentNames).toEqual(['Guitar', 'Bass', 'Triangle']);
+  });
+});
+
+describe('naturalColumnWidth', () => {
+  it('asks for one slot width per slot when nothing was capped', () => {
+    expect(naturalColumnWidth(columnOf('Voice', 'Guitar'))).toBe(2 * LINEUP_SLOT_WIDTH_PX);
+  });
+
+  it('asks for the counter too when the member cap already dropped a name', () => {
+    expect(naturalColumnWidth({ ...columnOf('Voice'), cappedInstrumentNames: ['Triangle'] })).toBe(
+      LINEUP_SLOT_WIDTH_PX + OVERFLOW_COUNTER_WIDTH_PX,
+    );
   });
 });
 

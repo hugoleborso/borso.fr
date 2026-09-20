@@ -1,19 +1,18 @@
 /** @DependsOnExternal browser-resize-observer */
 
 import { useMemo, useSyncExternalStore } from 'react';
-import { WIDTH_NOT_MEASURED_YET } from './lineup-slots.core';
 
 interface ElementWidthStore {
   readonly subscribe: (onStoreChange: () => void) => () => void;
-  readonly readWidth: () => number;
+  readonly readWidth: () => number | null;
 }
 
-function measure(element: Element | null): number {
-  return element === null ? WIDTH_NOT_MEASURED_YET : element.getBoundingClientRect().width;
+function measure(element: Element | null): number | null {
+  return element === null ? null : element.getBoundingClientRect().width;
 }
 
 function createElementWidthStore(element: Element | null): ElementWidthStore {
-  let width = measure(element);
+  let width: number | null = measure(element);
   let observer: ResizeObserver | null = null;
   const subscribers = new Set<() => void>();
 
@@ -45,12 +44,12 @@ function createElementWidthStore(element: Element | null): ElementWidthStore {
   };
 }
 
-function widthOnServer(): number {
-  return WIDTH_NOT_MEASURED_YET;
+function widthOnServer(): number | null {
+  return null;
 }
 
 // @FollowsBlueprint hook-external-store
-export function useElementWidth(element: Element | null): number {
+export function useElementWidth(element: Element | null): number | null {
   const store = useMemo(() => createElementWidthStore(element), [element]);
   return useSyncExternalStore(store.subscribe, store.readWidth, widthOnServer);
 }

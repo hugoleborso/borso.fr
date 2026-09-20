@@ -36,14 +36,18 @@ import {
 } from './setlist-entry-tone.core';
 import type { LineupMember } from '../molecules/MemberLineup';
 import { LineupSlots } from '../molecules/LineupSlots';
-import type { LineupColumnView } from '../molecules/lineup-slots.core';
+import {
+  type LineupColumnView,
+  naturalColumnWidth,
+  OVERFLOW_COUNTER_WIDTH_PX,
+} from '../molecules/lineup-slots.core';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 
 const POSITION_DIGITS = 2;
 const ICON_BUTTON_CLASS =
   'w-9 h-11 sm:h-10 shrink-0 inline-flex items-center justify-center rounded-md text-ink-400 hover:text-ink-900 hover:bg-bg-sunk cursor-pointer bg-transparent border-0';
 const LINEUP_BUTTON_CLASS =
-  'hidden sm:inline-flex h-11 sm:h-10 min-w-0 shrink-[999] items-center overflow-hidden rounded-md px-0.5 cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
+  'hidden sm:inline-flex h-11 sm:h-10 grow-0 shrink-[999] items-center overflow-hidden rounded-md cursor-pointer bg-transparent border-0 hover:bg-bg-sunk';
 const TITLE_COLUMN_CLASS = 'h-11 sm:h-10 min-w-0 flex-auto select-none overflow-hidden';
 const TITLE_CLASS = 'block truncate font-display text-[17px] italic leading-[22px] text-ink-900';
 const NARROW_LINEUP_BUTTON_CLASS =
@@ -187,6 +191,10 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             onClick={() => setLineupEditorOpen(true)}
             aria-label={t('lineup.editOverride')}
             className={LINEUP_BUTTON_CLASS}
+            style={{
+              flexBasis: naturalColumnWidth(props.lineupColumn),
+              minWidth: OVERFLOW_COUNTER_WIDTH_PX,
+            }}
           >
             <LineupSlots column={props.lineupColumn} />
           </button>
