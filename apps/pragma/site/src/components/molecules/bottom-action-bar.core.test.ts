@@ -86,10 +86,34 @@ describe('nextBottomActionBarState', () => {
 
   it('keeps the anchor and the decision when the movement is under the allowance', () => {
     const next = nextBottomActionBarState(shownInTheMiddle, {
-      offset: MIDDLE_OFFSET + IGNORED_SCROLL_MOVEMENT_PX,
+      offset: MIDDLE_OFFSET + IGNORED_SCROLL_MOVEMENT_PX - 1,
       isAtAnEdge: false,
     });
     expect(next).toBe(shownInTheMiddle);
+  });
+
+  it('acts on a downward movement of exactly the allowance, so the boundary belongs to the decision', () => {
+    const next = nextBottomActionBarState(shownInTheMiddle, {
+      offset: MIDDLE_OFFSET + IGNORED_SCROLL_MOVEMENT_PX,
+      isAtAnEdge: false,
+    });
+    expect(next.isShowing).toBe(false);
+  });
+
+  it('acts on an upward movement of exactly the allowance too', () => {
+    const next = nextBottomActionBarState(hiddenInTheMiddle, {
+      offset: MIDDLE_OFFSET - IGNORED_SCROLL_MOVEMENT_PX,
+      isAtAnEdge: false,
+    });
+    expect(next.isShowing).toBe(true);
+  });
+
+  it('shows the bar at an edge even when the movement that reached it was downward and long', () => {
+    const next = nextBottomActionBarState(hiddenInTheMiddle, {
+      offset: MIDDLE_OFFSET + IGNORED_SCROLL_MOVEMENT_PX * 4,
+      isAtAnEdge: true,
+    });
+    expect(next.isShowing).toBe(true);
   });
 
   it('accumulates a slow scroll against the anchor rather than the previous event', () => {

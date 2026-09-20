@@ -48,8 +48,13 @@ export function nextBottomActionBarState(
 ): BottomActionBarState {
   if (reading.isAtAnEdge) return { anchorOffset: reading.offset, isShowing: true };
   const movementSinceAnchor = reading.offset - state.anchorOffset;
-  if (Math.abs(movementSinceAnchor) <= IGNORED_SCROLL_MOVEMENT_PX) return state;
-  return { anchorOffset: reading.offset, isShowing: movementSinceAnchor < 0 };
+  if (movementSinceAnchor <= -IGNORED_SCROLL_MOVEMENT_PX) {
+    return { anchorOffset: reading.offset, isShowing: true };
+  }
+  if (movementSinceAnchor >= IGNORED_SCROLL_MOVEMENT_PX) {
+    return { anchorOffset: reading.offset, isShowing: false };
+  }
+  return state;
 }
 
 export function anchorStateAt(offset: number): BottomActionBarState {
