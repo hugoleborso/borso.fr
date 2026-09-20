@@ -4,6 +4,7 @@ import {
   EMPTY_LINEUP_SLOT_COLOR,
   INSTRUMENT_ICON_GLYPH,
   resolveSlotBudget,
+  selectColumnInstruments,
   type SlotInstrument,
   slotTintColor,
 } from './lineup-slots.core';
@@ -169,6 +170,87 @@ describe('buildLineupSlots', () => {
       maximumVisibleSlots: ROOMY_BUDGET,
     });
     expect(view.slots[0]?.glyph).toBe(INSTRUMENT_ICON_GLYPH.music);
+  });
+});
+
+function played(id: string, position: number, name: string): SlotInstrument {
+  return instrument({ id, name, position, players: [{ memberId: ANA.id, isPrimary: false }] });
+}
+
+describe('the fallback when the band declares no main instrument', () => {
+  it('falls back to every instrument in position order when no primacy exists anywhere', () => {
+    const view = buildLineupSlots({
+      instruments: [played('drums', 3, 'Drums'), played('voice', 0, 'Voice')],
+      lineup: {},
+      members: [ANA, BEN],
+      maximumVisibleSlots: ROOMY_BUDGET,
+    });
+    expect(view.slots.map((slot) => slot.instrumentId)).toEqual(['voice', 'drums']);
+  });
+
+  it('drops the fallback as soon as one instrument anywhere belongs to somebody as their main one', () => {
+    const view = buildLineupSlots({
+      instruments: [played('drums', 3, 'Drums'), VOICE],
+      lineup: {},
+      members: [ANA, BEN],
+      maximumVisibleSlots: ROOMY_BUDGET,
+    });
+    expect(view.slots.map((slot) => slot.instrumentId)).toEqual(['voice']);
+    expect(view.overflowCount).toBe(0);
+  });
+
+  it('never falls back when every instrument is already a main one', () => {
+    const view = buildLineupSlots({
+      instruments: [VOICE, GUITAR, BASS],
+      lineup: {},
+      members: [ANA, BEN],
+      maximumVisibleSlots: ROOMY_BUDGET,
+    });
+    expect(view.slots.map((slot) => slot.instrumentId)).toEqual(['voice', 'guitar', 'bass']);
+  });
+
+  it('still honours the cap while falling back, and counts what it dropped', () => {
+    const view = buildLineupSlots({
+      instruments: [
+        played('voice', 0, 'Voice'),
+        played('guitar', 1, 'Guitar'),
+        played('bass', 2, 'Bass'),
+        played('drums', 3, 'Drums'),
+      ],
+      lineup: {},
+      members: [ANA],
+      maximumVisibleSlots: ROOMY_BUDGET,
+    });
+    expect(view.slots.map((slot) => slot.instrumentId)).toEqual(['voice', 'guitar', 'bass']);
+    expect(view.overflowCount).toBe(1);
+    expect(view.overflowInstrumentNames).toEqual(['Drums']);
+    expect(view.hasOverflow).toBe(true);
+  });
+
+  it('tints a fallback slot with the colour of the member holding it on this song', () => {
+    const view = buildLineupSlots({
+      instruments: [played('guitar', 1, 'Guitar')],
+      lineup: { [BEN.id]: ['guitar'] },
+      members: [ANA, BEN],
+      maximumVisibleSlots: ROOMY_BUDGET,
+    });
+    expect(view.slots[0]?.holderColor).toBe(BEN.color);
+  });
+});
+
+describe('selectColumnInstruments', () => {
+  it('hands back the same list when nothing is a main instrument', () => {
+    const all = [
+      instrument({ id: 'one', players: [{ memberId: ANA.id, isPrimary: false }] }),
+      instrument({ id: 'two', players: [] }),
+    ];
+    expect(selectColumnInstruments(all)).toEqual(all);
+  });
+
+  it('keeps only the main ones as soon as there is one', () => {
+    const main = instrument({ id: 'main' });
+    const spare = instrument({ id: 'spare', players: [{ memberId: ANA.id, isPrimary: false }] });
+    expect(selectColumnInstruments([main, spare])).toEqual([main]);
   });
 });
 

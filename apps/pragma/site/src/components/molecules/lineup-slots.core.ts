@@ -63,6 +63,13 @@ function hasPrimaryPlayer(instrument: SlotInstrument): boolean {
   return instrument.players.some((player) => player.isPrimary);
 }
 
+export function selectColumnInstruments(
+  instruments: readonly SlotInstrument[],
+): readonly SlotInstrument[] {
+  const primaryOnes = instruments.filter(hasPrimaryPlayer);
+  return primaryOnes.length > 0 ? primaryOnes : instruments;
+}
+
 export function resolveSlotBudget(memberCount: number, maximumVisibleSlots: number): number {
   return Math.min(memberCount + SLOTS_BEYOND_MEMBER_COUNT, maximumVisibleSlots);
 }
@@ -80,7 +87,7 @@ function findHolderColor(
 
 // @FollowsBlueprint core-projection
 export function buildLineupSlots(input: BuildLineupSlotsInput): LineupSlotsView {
-  const column = input.instruments.filter(hasPrimaryPlayer).toSorted(byPositionThenName);
+  const column = selectColumnInstruments(input.instruments).toSorted(byPositionThenName);
   const budget = resolveSlotBudget(input.members.length, input.maximumVisibleSlots);
   const visible = column.slice(0, budget);
   const dropped = column.slice(budget);
