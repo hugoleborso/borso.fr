@@ -6,7 +6,7 @@ export interface TreasureIconProps {
  * @Blueprint atom-mark-composed-from-the-application-s-own-parts
  * @BlueprintName Atom Mark Composed From The Application's Own Parts
  * @BlueprintUsage Use for a composite mark, so the pieces it is made of cannot drift from the pieces used everywhere else.
- * @BlueprintDescription Places the application's existing banana paths inside the chest rather than drawing a second set that merely resembles them, so the fruit in the logo and the fruit beside a stash count are the same geometry and a change to one is a change to both. Each copy is positioned by a transform around the banana's own centre, and every stroke width is divided by that copy's scale so the outline lands at the same 2.2 units as every other outline in the interface — a scaled group scales its strokes too, which is what makes a composed mark look thinner or fatter than the components around it. The left banana is mirrored rather than rotated further, because a fan built only from rotations leans instead of opening.
+ * @BlueprintDescription Places the application's existing banana paths inside the chest rather than drawing a second set that merely resembles them, so the fruit in the logo and the fruit beside a stash count are the same geometry and a change to one is a change to both. Every copy carries all four of that banana's paths, including the dark stem and the pointed tip, because a body drawn without them ends bluntly at both ends and stops reading as fruit. Each copy's stroke widths are divided by its own scale so the outline lands at the same 2.2 units as every other outline in the interface, a scaled group scaling its strokes being what otherwise makes a composed mark look thinner or fatter than the components beside it. The arrangement is fixed rather than generated: the three were chosen from layouts where each banana rests on the chest floor or on another banana, no more than two tips break the lid line, and the heights and angles differ enough that they do not read as a row.
  */
 export function TreasureIcon({ className }: TreasureIconProps) {
   return (
@@ -24,51 +24,99 @@ export function TreasureIcon({ className }: TreasureIconProps) {
         strokeLinejoin="round"
       />
       <path
-        transform="translate(11.2,8.8) rotate(-22) scale(-0.47,0.47) translate(-16.5,-15.4)"
+        transform="translate(15.06,13.25) rotate(7.9) scale(-0.653,0.653) translate(-16.5,-15.4)"
         d="M11.2 4 C 3.8 13.5, 5.5 23.5, 14.6 27.6 C 19.8 30, 26 29.4, 29.2 27.4 C 24 26.4, 19.6 24, 17.4 20 C 15 15.6, 15.2 9.6, 17 4.8 Z"
         fill="#ffd23f"
         stroke="#3b2712"
-        strokeWidth="4.68"
+        strokeWidth="3.37"
         strokeLinejoin="round"
       />
       <path
-        transform="translate(20.8,8.8) rotate(22) scale(0.47,0.47) translate(-16.5,-15.4)"
-        d="M11.2 4 C 3.8 13.5, 5.5 23.5, 14.6 27.6 C 19.8 30, 26 29.4, 29.2 27.4 C 24 26.4, 19.6 24, 17.4 20 C 15 15.6, 15.2 9.6, 17 4.8 Z"
-        fill="#ffd23f"
-        stroke="#3b2712"
-        strokeWidth="4.68"
-        strokeLinejoin="round"
-      />
-      <path
-        transform="translate(16.0,7.0) rotate(33) scale(0.53,0.53) translate(-16.5,-15.4)"
-        d="M11.2 4 C 3.8 13.5, 5.5 23.5, 14.6 27.6 C 19.8 30, 26 29.4, 29.2 27.4 C 24 26.4, 19.6 24, 17.4 20 C 15 15.6, 15.2 9.6, 17 4.8 Z"
-        fill="#ffd23f"
-        stroke="#3b2712"
-        strokeWidth="4.15"
-        strokeLinejoin="round"
-      />
-      <path
-        transform="translate(16.0,7.0) rotate(33) scale(0.53,0.53) translate(-16.5,-15.4)"
+        transform="translate(15.06,13.25) rotate(7.9) scale(-0.653,0.653) translate(-16.5,-15.4)"
         d="M12.8 8.4 C 10.4 15, 11.6 21.4, 16.6 25"
         fill="none"
-        stroke="#f0a500"
-        strokeWidth="2.83"
+        stroke="#e09600"
+        strokeWidth="1.99"
         strokeLinecap="round"
       />
       <path
-        transform="translate(16.0,7.0) rotate(33) scale(0.53,0.53) translate(-16.5,-15.4)"
+        transform="translate(15.06,13.25) rotate(7.9) scale(-0.653,0.653) translate(-16.5,-15.4)"
         d="M11.9 4.3 L 16.5 4.7 L 15.6 1.6 C 15.3 0.7, 14 0.6, 13.4 1.4 Z"
         fill="#6b4a1f"
         stroke="#3b2712"
-        strokeWidth="4.15"
+        strokeWidth="3.37"
         strokeLinejoin="round"
       />
       <path
-        transform="translate(16.0,7.0) rotate(33) scale(0.53,0.53) translate(-16.5,-15.4)"
+        transform="translate(15.06,13.25) rotate(7.9) scale(-0.653,0.653) translate(-16.5,-15.4)"
         d="M24.6 26.6 C 27 27, 28.6 27, 29.2 27.4 C 28.4 28.2, 26.6 28.4, 25.2 28 Z"
         fill="#6b4a1f"
         stroke="#3b2712"
-        strokeWidth="4.15"
+        strokeWidth="3.37"
+        strokeLinejoin="round"
+      />
+      <path
+        transform="translate(11.47,13.71) rotate(-19.0) scale(0.655,0.655) translate(-16.5,-15.4)"
+        d="M11.2 4 C 3.8 13.5, 5.5 23.5, 14.6 27.6 C 19.8 30, 26 29.4, 29.2 27.4 C 24 26.4, 19.6 24, 17.4 20 C 15 15.6, 15.2 9.6, 17 4.8 Z"
+        fill="#ffd23f"
+        stroke="#3b2712"
+        strokeWidth="3.36"
+        strokeLinejoin="round"
+      />
+      <path
+        transform="translate(11.47,13.71) rotate(-19.0) scale(0.655,0.655) translate(-16.5,-15.4)"
+        d="M12.8 8.4 C 10.4 15, 11.6 21.4, 16.6 25"
+        fill="none"
+        stroke="#e09600"
+        strokeWidth="1.98"
+        strokeLinecap="round"
+      />
+      <path
+        transform="translate(11.47,13.71) rotate(-19.0) scale(0.655,0.655) translate(-16.5,-15.4)"
+        d="M11.9 4.3 L 16.5 4.7 L 15.6 1.6 C 15.3 0.7, 14 0.6, 13.4 1.4 Z"
+        fill="#6b4a1f"
+        stroke="#3b2712"
+        strokeWidth="3.36"
+        strokeLinejoin="round"
+      />
+      <path
+        transform="translate(11.47,13.71) rotate(-19.0) scale(0.655,0.655) translate(-16.5,-15.4)"
+        d="M24.6 26.6 C 27 27, 28.6 27, 29.2 27.4 C 28.4 28.2, 26.6 28.4, 25.2 28 Z"
+        fill="#6b4a1f"
+        stroke="#3b2712"
+        strokeWidth="3.36"
+        strokeLinejoin="round"
+      />
+      <path
+        transform="translate(19.36,16.09) rotate(20.2) scale(-0.665,0.665) translate(-16.5,-15.4)"
+        d="M11.2 4 C 3.8 13.5, 5.5 23.5, 14.6 27.6 C 19.8 30, 26 29.4, 29.2 27.4 C 24 26.4, 19.6 24, 17.4 20 C 15 15.6, 15.2 9.6, 17 4.8 Z"
+        fill="#ffd23f"
+        stroke="#3b2712"
+        strokeWidth="3.31"
+        strokeLinejoin="round"
+      />
+      <path
+        transform="translate(19.36,16.09) rotate(20.2) scale(-0.665,0.665) translate(-16.5,-15.4)"
+        d="M12.8 8.4 C 10.4 15, 11.6 21.4, 16.6 25"
+        fill="none"
+        stroke="#e09600"
+        strokeWidth="1.95"
+        strokeLinecap="round"
+      />
+      <path
+        transform="translate(19.36,16.09) rotate(20.2) scale(-0.665,0.665) translate(-16.5,-15.4)"
+        d="M11.9 4.3 L 16.5 4.7 L 15.6 1.6 C 15.3 0.7, 14 0.6, 13.4 1.4 Z"
+        fill="#6b4a1f"
+        stroke="#3b2712"
+        strokeWidth="3.31"
+        strokeLinejoin="round"
+      />
+      <path
+        transform="translate(19.36,16.09) rotate(20.2) scale(-0.665,0.665) translate(-16.5,-15.4)"
+        d="M24.6 26.6 C 27 27, 28.6 27, 29.2 27.4 C 28.4 28.2, 26.6 28.4, 25.2 28 Z"
+        fill="#6b4a1f"
+        stroke="#3b2712"
+        strokeWidth="3.31"
         strokeLinejoin="round"
       />
       <g stroke="#3b2712" strokeWidth="2.2" strokeLinejoin="round">

@@ -67,3 +67,7 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [19:27] `feat-victory` the final scoreboard list has exactly zero vertical slack at 375x560 with eight players, so any second footer button must sit beside the first rather than under it
 - [19:27] `feat-victory` a heredoc is refused in a worktree-isolated agent as too complex to verify, so every file has to go through the Write tool
 - [19:27] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [20:04] `hook:no-swallowed-push` piped git push into another command, throwing away its exit status
+- [21:59] `main` the logo took a dozen rounds because I kept guessing at 'fuller' and 'more random'; what unblocked it was measuring yellow coverage on a canvas and then asking four closed questions about the arrangement
+- [21:59] `main` a constraint can erase the randomness it was meant to allow: forcing every banana's base onto the chest floor pinned its height, so four random draws landed within 1.1 units of each other and read as a row
+- [21:59] `main` a generator dropped two of the four paths of the shape it reused, so every banana lost its stem and tip and ended bluntly; reusing a component's geometry means reusing all of it
