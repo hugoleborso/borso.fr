@@ -1,6 +1,6 @@
 ---
 name: visual-validation
-description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus a sibling folder of committed screenshot evidence, and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/visual-validation/standard.md` before dispatching.
+description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus screenshot evidence that is published to the previews CDN or, for a FAIL row, committed beside the report, and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/visual-validation/standard.md` before dispatching.
 ---
 
 > **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
@@ -70,16 +70,29 @@ Do **not** invoke when:
 5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path.
 6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
 7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
-8. **Stage the report and evidence for commit.** They live under `docs/features/<app>/<slug>/validation/` which is *not* gitignored — the screenshots are part of the report and must be committed alongside it.
+8. **Split the evidence by verdict.** Per [ADR-0022](../../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md), a passing screenshot goes to the previews CDN and never enters git. Read the report's rows: a screenshot a FAIL row references stays in `evidence_dir`, and every other one moves to the staging folder beside it.
+
+   ```bash
+   pending_dir="$validation_dir/.pending-upload/$timestamp"
+   mkdir -p "$pending_dir"
+   mv "$evidence_dir"<each-png-no-FAIL-row-cites> "$pending_dir/"
+   rmdir "$evidence_dir" 2>/dev/null
+   ```
+
+   `.pending-upload/` is gitignored, so a `git add` between here and the pull request cannot commit what is waiting to be published. **The upload happens in [`/open-pr`](../open-pr/SKILL.md), not here** — the destination host is `screenshots-pr-<n>`, and the pull request number does not exist yet.
+
+   The report cites a staged file as `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png` with `<n>` left literal; `/open-pr` substitutes the number once it has one. A file that stays in `evidence_dir` keeps its relative path.
+
+9. **Stage the report and the surviving evidence for commit.** They live under `docs/features/<app>/<slug>/validation/`, which is *not* gitignored. The report is always committed; the screenshots beside it are the ones a FAIL row references.
 
 ## Deliverable
 
 Two artefacts at `docs/features/<app>/<slug>/validation/`:
 
-- `visual-validation-<timestamp>.md` — the markdown verdict report.
-- `visual-validation-<timestamp>/` — the folder of PNG screenshots referenced from the report.
+- `visual-validation-<timestamp>.md` — the markdown verdict report, always committed.
+- `visual-validation-<timestamp>/` — present only when a FAIL row references a screenshot, or when the upload was denied. Everything else lives at `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/` and expires after 60 days.
 
-Both are committed. Do not gitignore them. Validation evidence rots and gets contested without a permanent record.
+Do not gitignore either path. A FAIL report gets contested without its screenshot, which is why that half stays permanent; see the standard's *Where evidence lives*.
 
 The skill's textual return to the user is one of:
 - `Verdict: PASS — see <report_path>` — mergeable.

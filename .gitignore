@@ -73,3 +73,9 @@ docs/standards/convention-drift.md
 docs/standards/rule-provenance.md
 docs/standards/hotspots.md
 docs/standards/temporal-coupling.md
+
+# A passing validation's screenshots wait here between /visual-validation and
+# /open-pr, which uploads them to the previews CDN once the pull request number
+# exists. They are never committed; ADR-0021 has the reasoning, and the point of
+# the ignore is that an intervening `git add` cannot undo it.
+docs/features/*/*/validation/.pending-upload/

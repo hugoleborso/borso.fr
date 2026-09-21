@@ -1,6 +1,6 @@
 ---
 name: visual-validator
-description: Standalone agent that drives the implemented app in a real browser via the agent-browser CLI and checks, assertion by assertion, that the running implementation matches the spec.md. Invoked by the /visual-validation skill. Operates with no main-session context — only the spec text, the running dev URL, and the assertion checklist passed in. Produces a markdown verdict report at the given report path with PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL, plus committed screenshot evidence.
+description: Standalone agent that drives the implemented app in a real browser via the agent-browser CLI and checks, assertion by assertion, that the running implementation matches the spec.md. Invoked by the /visual-validation skill. Operates with no main-session context — only the spec text, the running dev URL, and the assertion checklist passed in. Produces a markdown verdict report at the given report path with PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL, plus screenshot evidence the skill then publishes or commits depending on the verdict.
 tools: Bash, Read, Write, Glob, Grep
 ---
 
