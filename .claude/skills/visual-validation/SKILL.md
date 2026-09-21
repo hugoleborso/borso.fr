@@ -1,6 +1,6 @@
 ---
 name: visual-validation
-description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus a sibling folder of committed screenshot evidence, and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `.claude/skills/visual-validation/standard.md` before dispatching.
+description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus screenshot evidence that is published to the previews CDN or, for a FAIL row, committed beside the report, and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `.claude/skills/visual-validation/standard.md` before dispatching.
 ---
 
 # Visual-validation skill
@@ -68,16 +68,29 @@ Do **not** invoke when:
 5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path.
 6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
 7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
-8. **Stage the report and evidence for commit.** They live under `docs/features/<app>/<slug>/validation/` which is *not* gitignored — the screenshots are part of the report and must be committed alongside it.
+8. **Split the evidence by verdict.** Per [ADR-0022](../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md), a passing screenshot goes to the previews CDN and never enters git. Read the report's rows: a screenshot a FAIL row references stays in `evidence_dir`, and every other one moves to the staging folder beside it.
+
+   ```bash
+   pending_dir="$validation_dir/.pending-upload/$timestamp"
+   mkdir -p "$pending_dir"
+   mv "$evidence_dir"<each-png-no-FAIL-row-cites> "$pending_dir/"
+   rmdir "$evidence_dir" 2>/dev/null
+   ```
+
+   `.pending-upload/` is gitignored, so a `git add` between here and the pull request cannot commit what is waiting to be published. **The upload happens in [`/open-pr`](../open-pr/SKILL.md), not here** — the destination host is `screenshots-pr-<n>`, and the pull request number does not exist yet.
+
+   The report cites a staged file as `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png` with `<n>` left literal; `/open-pr` substitutes the number once it has one. A file that stays in `evidence_dir` keeps its relative path.
+
+9. **Stage the report and the surviving evidence for commit.** They live under `docs/features/<app>/<slug>/validation/`, which is *not* gitignored. The report is always committed; the screenshots beside it are the ones a FAIL row references.
 
 ## Deliverable
 
 Two artefacts at `docs/features/<app>/<slug>/validation/`:
 
-- `visual-validation-<timestamp>.md` — the markdown verdict report.
-- `visual-validation-<timestamp>/` — the folder of PNG screenshots referenced from the report.
+- `visual-validation-<timestamp>.md` — the markdown verdict report, always committed.
+- `visual-validation-<timestamp>/` — present only when a FAIL row references a screenshot, or when the upload was denied. Everything else lives at `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/` and expires after 60 days.
 
-Both are committed. Do not gitignore them. Validation evidence rots and gets contested without a permanent record.
+Do not gitignore either path. A FAIL report gets contested without its screenshot, which is why that half stays permanent; see the standard's *Where evidence lives*.
 
 The skill's textual return to the user is one of:
 - `Verdict: PASS — see <report_path>` — mergeable.
@@ -106,7 +119,10 @@ A PASS verdict needs only a link to the report — no per-row disclosure.
 
 Regardless of verdict (PASS or PASS_EXCEPT_UNVERIFIABLE), the PR description includes a `## Visual evidence` section with the screenshots from the latest validation report embedded inline. Reviewers should see the rendered feature without leaving the PR page.
 
-GitHub does **not** render relative-path images in PR descriptions; they must be absolute URLs. The robust pattern is the raw blob URL pinned to a commit SHA — the SHA persists after the branch is deleted at merge time, so the URLs do not 404 on historical PRs.
+GitHub does **not** render relative-path images in PR descriptions; they must be absolute URLs. Where the image lives decides which URL to write, and step 8 already made that split:
+
+- **Published screenshots** → `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png`. Live immediately after the upload, gone after 60 days.
+- **Committed screenshots** (the FAIL set, or everything when the upload was denied) → the raw blob URL pinned to a commit SHA. Merges here are true merge commits, so the branch commit stays an ancestor of `main` and the URL survives the branch being deleted.
 
 ```
 https://github.com/<owner>/<repo>/raw/<sha>/<path-to-png>
@@ -117,13 +133,17 @@ Generator (run after all commits are in, before opening the PR):
 ```bash
 slug_path=docs/features/<app>/<slug>/validation
 report_dir=$(ls -1td "$slug_path"/visual-validation-*/ 2>/dev/null | head -1)
+timestamp=$(basename "$report_dir")
 sha=$(git rev-parse HEAD)
-repo_path=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
+repo_path=$(git config --get remote.origin.url | sed -E 's#.*github\.com[:/]##; s#\.git$##')
+
 for png in "$report_dir"*.png; do
-  rel=${png#./}
-  echo "![${png##*/}](https://github.com/$repo_path/raw/$sha/$rel)"
+  [ -e "$png" ] || continue
+  echo "![${png##*/}](https://github.com/$repo_path/raw/$sha/${png#./})"
 done
 ```
+
+`git config` reads the remote rather than asking `gh`: the CLI is not installed in a hosted session, and every `*.github.com` host there is proxy-intercepted, so `gh repo view` cannot answer. Published files are not on disk, so the loop above only ever emits the committed set — write their CDN URLs from the report, which already cites them.
 
 The output is markdown ready to paste. Suggested PR-body shape:
 

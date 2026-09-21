@@ -1,7 +1,7 @@
 # Plan — the setlist lineup column
 
 > Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md) and
-> [ADR-0021](../../../../adr/0021-instruments-carry-their-own-icon-order-and-primacy.md).
+> [ADR-0022](../../../../adr/0022-instruments-carry-their-own-icon-order-and-primacy.md).
 > When a defect lands and a Dantotsu traces back here, the chain is visible: the
 > plan either named the risk and we missed mitigating it, did not name the risk
 > at all, or named it correctly and the defect comes from elsewhere.
@@ -26,7 +26,7 @@ Read from the tree, not from the spec, per the standard's step 2.
 | `member_instrument` | `(member_id, instrument_id)` composite primary key, no payload columns | `is_primary` is the first payload column the link has ever had |
 | Link write path | `replaceMemberInstruments` deletes every row for the member then re-inserts from `instrumentIds: string[]` | **Delete-then-insert erases `is_primary` on every member save.** This is the highest-severity finding in this plan; see R1 |
 | Instrument projection | `PROJECTION` in `instruments.repository.ts` *and* a second `INSTRUMENT_PROJECTION` in `members.repository.ts` | Two projections to widen, not one; missing the second makes the member roster draw the fallback glyph |
-| Icon atom | `Icon.tsx`, one `as const` map, `IconName = keyof typeof ICONS`, camelCase keys, shared `viewBox="0 0 24 24"`, `stroke="currentColor"`, `strokeWidth="1.6"` | Lucide paths drop in unchanged, per ADR-0021. Registry keys stay camelCase; the stored values do not |
+| Icon atom | `Icon.tsx`, one `as const` map, `IconName = keyof typeof ICONS`, camelCase keys, shared `viewBox="0 0 24 24"`, `stroke="currentColor"`, `strokeWidth="1.6"` | Lucide paths drop in unchanged, per ADR-0022. Registry keys stay camelCase; the stored values do not |
 | Responsive decisions | `useIsMediaQueryMatching(BREAKPOINT_BELOW_LG)` feeds `maximumVisibleLineupMembers(isNarrow)`, a pure function with its own test | The column's yielding reuses this shape. No `ResizeObserver`, no `useEffect` |
 | Coverage gate | Per file 100% on `domain/**/*.core.ts`, `api/src/**/*.core.ts`, `api/src/**/*.utils.ts`, **`api/src/**/*.schema.ts`**, `site/src/**/*.core.ts`, `site/src/**/*.utils.ts` | A new zod schema in `instruments.schema.ts` is itself under the gate, not only the core modules |
 | Migration runner | `test/setup-postgres.ts` drops `TRACKED_TABLES` and replays every `.sql` in name order; `DsqlSchema` applies the same files in prod | Additive `ALTER TABLE` only, next number is `0014`. No `TRACKED_TABLES` edit, since no new table |
@@ -37,7 +37,7 @@ Read from the tree, not from the spec, per the standard's step 2.
 
 | Question | Answer |
 |---|---|
-| New dependency? | **None.** ADR-0021 forbids `lucide-react`; the paths are copied into `Icon.tsx`. `@dnd-kit/*` is already a dependency and already drives setlist reordering, so instrument reordering reuses it rather than adding a second drag library |
+| New dependency? | **None.** ADR-0022 forbids `lucide-react`; the paths are copied into `Icon.tsx`. `@dnd-kit/*` is already a dependency and already drives setlist reordering, so instrument reordering reuses it rather than adding a second drag library |
 | New state pattern? | **None.** Server state stays in TanStack Query, the slot budget stays a pure function of a media-query boolean, the form stays `@tanstack/react-form`. Nothing here needs a store |
 | Pattern this absorbs | `MemberLineup` (overlapping avatar chips) stops being rendered by `SetlistEntryRow` in both the wide branch and the phone `moreOpen` branch, and so does the `prominentMemberInstrument` chip beside it. `MemberLineup` itself stays, because `LineupEditor` and other callers still use it; the row is the only call site that goes away. If knip reports it unused after the change, delete it in the same commit rather than keep a dead molecule |
 | Duplication this creates | Two instrument projections (see above). Widen both in the same commit; the alternative, one shared projection module, crosses the slice boundary for no gain |
@@ -46,7 +46,7 @@ Read from the tree, not from the spec, per the standard's step 2.
 
 | Spec ref | Decision | Where it lands | Self-check |
 |---|---|---|---|
-| ADR-0021, Changes → Database | `icon` and `position` on `instrument`, `is_primary` on `member_instrument` | `apps/pragma/api/src/database/migrations/0014_lineup_slots.sql`, three additive `ALTER TABLE … ADD COLUMN … NOT NULL DEFAULT` | `pnpm --filter @borso-app/pragma run test` boots Postgres, replays every migration and passes back-e2e |
+| ADR-0022, Changes → Database | `icon` and `position` on `instrument`, `is_primary` on `member_instrument` | `apps/pragma/api/src/database/migrations/0014_lineup_slots.sql`, three additive `ALTER TABLE … ADD COLUMN … NOT NULL DEFAULT` | `pnpm --filter @borso-app/pragma run test` boots Postgres, replays every migration and passes back-e2e |
 | Changes → Database, seeding | Existing rows seed `position` from family order then name | One `UPDATE instrument SET position = …` in the same file, ranking `vocal, harmonic, percussive, other` then `name`, reading `COALESCE(family, CASE WHEN is_harmonic THEN 'harmonic' ELSE 'other' END)` so rows written before `family` existed rank correctly | A back-e2e case seeds four instruments across three families and asserts the returned order is not alphabetical |
 | Changes → Types | `INSTRUMENT_ICONS` and `InstrumentIcon` | `apps/pragma/domain/instrument.core.ts`, beside `INSTRUMENT_FAMILIES`. Both the api zod schema and the site import it through `@domain/instrument.core` | `grep -rn "INSTRUMENT_ICONS" apps/pragma` shows one declaration and imports on both sides |
 | Q: how is the column ordered → a stored position | `icon` and `position` reach the wire | `instruments.schema.ts` (drizzle columns + `instrumentIconSchema`, `instrumentPositionSchema`, both folded into create and update), `instruments.repository.ts` (`PROJECTION` widened, `InstrumentRow` widened), `instruments.service.ts` (`getInstrumentsSorted` sorts by `position` then `name` instead of `name`), `instruments.controller.ts` (unchanged shape, wider row flows through `hc`) | `pnpm --filter @borso-app/pragma typecheck`; the site's `InstrumentRow` gains the fields with no hand-written type |
@@ -78,12 +78,12 @@ Read from the tree, not from the spec, per the standard's step 2.
 | R3 | The member roster and the mastery matrix draw the fallback glyph, because only `instruments.repository.ts`'s projection was widened and `members.repository.ts` keeps its own | medium | Both projections widen in the same commit, and `MemberInstrumentRow` gains the same fields as `InstrumentRow` | `pnpm --filter @borso-app/pragma typecheck` catches it only if the site reads the field off the member roster; otherwise the member page renders `music` for every instrument. `/visual-validation` opens the member page at 1280 px and asserts a non-fallback glyph |
 | R4 | The column pushes the title into truncation at 360 px, which is the one thing the spec forbids | **high** | The slot count is a budget the breakpoint fixes, the column is `shrink-0` at that budget, and the title block keeps `min-w-0 flex-1`. The column can only shrink by dropping a slot, never by squeezing the title | `/visual-validation` at 360 px on a 20 character title asserts no ellipsis. A pure case in `lineup-slots.core.test.ts` pins the narrow budget |
 | R5 | The card grows taller than 54 px once the column lands | **high** | `LineupSlots` renders inline in the existing `flex items-center` row at 17 px, inside the height the drag handle and the energy meter already set. No wrapping, no second row | `/visual-validation` measures the card's bounding box at 360 px and at 1280 px and fails above 54 px. A second row would show immediately as a doubled height |
-| R6 | A band that never opens the instruments page sees every instrument at position 0 and no primary flag, so the column is empty and reads worse than the avatars it replaced. ADR-0021 names this consequence | medium | The migration seeds `position` from family order then name, so day one ordering is sensible. Primacy has no equivalent seed, so the migration also marks primary every link whose instrument is the member's only instrument, which is the honest reading of "their main instrument" and is right for the seeded band | Back-e2e case on the migrated fixture asserts a non-empty slot set with no page visit. `/visual-validation` on the seeded set asserts at least one tinted slot |
+| R6 | A band that never opens the instruments page sees every instrument at position 0 and no primary flag, so the column is empty and reads worse than the avatars it replaced. ADR-0022 names this consequence | medium | The migration seeds `position` from family order then name, so day one ordering is sensible. Primacy has no equivalent seed, so the migration also marks primary every link whose instrument is the member's only instrument, which is the honest reading of "their main instrument" and is right for the seeded band | Back-e2e case on the migrated fixture asserts a non-empty slot set with no page visit. `/visual-validation` on the seeded set asserts at least one tinted slot |
 | R7 | The new zod schemas drop below the per-file 100% coverage gate, because `api/src/**/*.schema.ts` is inside the coverage include list and most people read it as a type file | medium | `instruments.schema.test.ts` and `members.schema.test.ts` both gain cases for the new fields, including the rejected values, in the same commit as the schema change | `pnpm --filter @borso-app/pragma run test:coverage` fails on the file, naming it |
 | R8 | The migration passes locally and fails on DSQL, because DSQL rejects something Postgres accepts | medium | Three additive `ALTER TABLE … ADD COLUMN`, one `UPDATE`, all of which the existing thirteen migrations already use. No index, no constraint, no type change | The preview deploy runs `DsqlSchema` against the real cluster on the first push to the pull request; a failure shows there, not in prod |
 | R9 | `+N` counts slots the reader cannot see, and the reader cannot tell which instrument is missing | low | The `+N` marker carries a `title` listing the dropped instrument names, the same way `MemberLineup`'s counter does today | `/visual-validation` hovers the marker at 1280 px and reads the title |
 | R10 | `MemberLineup` or `prominentMemberInstrumentFor` becomes dead code and stays | low | Delete the call sites, then let knip name what is left over and delete that too in the same commit | `pnpm exec knip` at pre-push |
-| R11 | The copied Lucide artwork ships with no attribution, which the ISC licence does not permit | medium | `docs/knowledge/instrument-icon-provenance.md` is written in the same commit as the glyphs, because the no-comments rule keeps the notice out of `Icon.tsx` | `/technical-validation` reads ADR-0021 and the diff together; a glyph commit with no provenance file is a FAIL row |
+| R11 | The copied Lucide artwork ships with no attribution, which the ISC licence does not permit | medium | `docs/knowledge/instrument-icon-provenance.md` is written in the same commit as the glyphs, because the no-comments rule keeps the notice out of `Icon.tsx` | `/technical-validation` reads ADR-0022 and the diff together; a glyph commit with no provenance file is a FAIL row |
 | R12 | A new file lands with no layer suffix and raises the `layer-marker:pragma` budget | low | Every new file ends in a suffix the inference knows: `.core.ts`, `.sql`, or a component filename | `pnpm exec tsx scripts/standards/convention-drift.ts --check` at pre-commit |
 
 ## Code-quality self-check
@@ -126,7 +126,7 @@ Run, in order, before push:
 - None blocking. Two things were resolved during planning rather than escalated,
   and are recorded here so a later Dantotsu can see they were decided and not
   overlooked:
-  - **Where primacy is edited.** The spec's file list and ADR-0021 both put it on
+  - **Where primacy is edited.** The spec's file list and ADR-0022 both put it on
     the instruments page, while the column itself lives on `member_instrument`,
     which only the member form writes today. Resolved by keeping the write on the
     existing `PUT /api/members/:id/instruments` route and giving the instruments
@@ -153,4 +153,4 @@ Run, in order, before push:
 - **`/icon-registry`** — the rules for adding a glyph to the one `as const` map
   (shared `viewBox`, `stroke="currentColor"`, no `fill` except where the existing
   entries set it explicitly, provenance for copied artwork) are spread across
-  `Icon.tsx`'s blueprint block and ADR-0021.
+  `Icon.tsx`'s blueprint block and ADR-0022.

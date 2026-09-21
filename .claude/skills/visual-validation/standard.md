@@ -91,15 +91,43 @@ Final verdict:
 
 There is no rounding up. PASS_EXCEPT_UNVERIFIABLE is its own verdict, not a flavour of PASS — it is mergeable only if the operator copies the UNVERIFIABLE rows into the PR description per the disclosure rule in `SKILL.md`. **FAIL is never mergeable** — the operator fixes the implementation (or the spec) and re-runs.
 
-## Evidence is committed
+## Where evidence lives
 
-Screenshots referenced from a verdict report are checked into git alongside the report itself. Both live under `docs/features/<app>/<slug>/validation/` — explicitly *not* gitignored. The reasoning:
+The report is always committed. Its screenshots split by verdict, per
+[ADR-0022](../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md):
 
-- A FAIL report without the screenshot it references is unrebuttable.
-- A PASS report without screenshots is "trust me".
-- Validation runs do not happen often enough for storage to matter; the size of three or four PNGs per feature is negligible against the value of a permanent record.
+- **A screenshot a FAIL row references is committed**, beside the report, as before. A FAIL
+  report without the screenshot it references is unrebuttable, and that argument is the whole
+  reason this section exists.
+- **Every other screenshot is published to the previews CDN and never committed.** A PASS
+  screenshot is read once, by the reviewer of that pull request. The previews bucket expires
+  its objects after 60 days, so the record is deliberately temporary.
 
-`.gitignore` at the repo root **must not** match `docs/features/**/validation/**`. The visual-validator agent never writes outside its given `evidence_dir` so the rule is enforced by the agent's behaviour, not by an ignore pattern.
+The third argument this section used to carry — that storage does not matter — was measured
+and was wrong. On `origin/main` at `3cdf324`, 791 PNGs under `docs/features/**` weighed 96.6 MB
+of a 118 MB `.git`: 82% of the repository, growing near 28 MB a month with nothing removing
+any of it.
+
+`.gitignore` at the repo root **must not** match `docs/features/**/validation/**`, because the
+FAIL set still lands there. The agent never writes outside its given `evidence_dir`, so which
+files survive is decided by the skill's publish step, not by an ignore pattern.
+
+**The published URL is what the report cites.** A published screenshot is referenced as
+`https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png`, never as a local path —
+a relative link to a file that was never committed resolves nowhere. A committed one keeps its
+relative path.
+
+**The upload runs in `/open-pr`, because the destination carries the pull request number.**
+Between the validation and the pull request, a publishable screenshot waits in
+`<validation_dir>/.pending-upload/<timestamp>/`, which is gitignored so that no intervening
+`git add` can commit it.
+
+**When the upload is denied, commit everything.** It needs `s3:PutObject` on the screenshots
+prefix, which [`docs/aws-setup.md` §12.6](../../../docs/aws-setup.md) grants by hand and no
+test here can verify. A denial is not a failed validation: move the staged files back beside
+the report, commit them, rewrite the report's URLs as relative paths, and say so in one line.
+Silently dropping a PASS run's evidence because an upload failed would turn the report into
+"trust me", which is the failure this section has always guarded against.
 
 ## Pixel-content checks (every screenshot)
 

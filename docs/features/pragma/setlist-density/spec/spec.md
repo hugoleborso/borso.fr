@@ -125,7 +125,7 @@ existing tokens give.
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| [ADR-0021](../../../../adr/0021-instruments-carry-their-own-icon-order-and-primacy.md) | The instrument table carries `icon` and `position`; the member-instrument link carries `is_primary` | The lineup column reads its slots and their order from the database, not from a table in the front end. The instruments page becomes the place those are edited. Lucide path data is copied into the icon registry rather than added as a dependency |
+| [ADR-0022](../../../../adr/0022-instruments-carry-their-own-icon-order-and-primacy.md) | The instrument table carries `icon` and `position`; the member-instrument link carries `is_primary` | The lineup column reads its slots and their order from the database, not from a table in the front end. The instruments page becomes the place those are edited. Lucide path data is copied into the icon registry rather than added as a dependency |
 
 ## Changes
 

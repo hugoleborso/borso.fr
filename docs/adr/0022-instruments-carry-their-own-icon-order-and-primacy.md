@@ -1,4 +1,4 @@
-# ADR-0021: Instruments carry their own icon, order and primacy
+# ADR-0022: Instruments carry their own icon, order and primacy
 
 - **Status:** accepted
 - **Date:** 2026-09-18

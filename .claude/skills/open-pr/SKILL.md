@@ -26,7 +26,22 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
    pnpm exec tsx scripts/pr/check-pr-body.ts draft.md --render
    ```
 
-   Then `mcp__github__create_pull_request` or `update_pull_request`, adding the attribution footer the harness requires. With an authenticated `gh` (2.99.0+), `gh pr edit --attach shot.png#alt` uploads a screenshot and writes its link into the body; without it, *Validation* carries links and paths instead.
+   Then `mcp__github__create_pull_request` or `update_pull_request`, adding the attribution footer the harness requires.
+
+   **`gh pr edit --attach` does not work from a hosted session, whatever the `gh` version.** The flag is real — 2.99.0 added it on 2026-09-01 — but the upload needs `POST /user/assets`, and every `*.github.com` host here is intercepted by the Claude Code proxy, which answers `403 sessions are bound to their configured repositories`; `gh pr create` also needs GraphQL, which answers `403 GitHub GraphQL is not available from Claude Code sessions`. Screenshots reach the body through step 5b instead.
+
+5b. **Publish the pending screenshots, now that the number exists.** `/visual-validation` left a passing run's PNGs in `<validation_dir>/.pending-upload/<timestamp>/`, gitignored and uncommitted, per [ADR-0023](../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md). Upload them, then replace the literal `<n>` the report wrote with the real number.
+
+   ```sh
+   bucket="$(aws ssm get-parameter --name /borso/shared/previews-bucket-name \
+     --query Parameter.Value --output text)"
+   aws s3 cp "$pending_dir" "s3://$bucket/screenshots/pr-$pr_number/$timestamp/" \
+     --recursive --only-show-errors
+   ```
+
+   Each file is then `https://screenshots-pr-<pr_number>.preview.borso.fr/<timestamp>/<file>.png` — the previews CloudFront function routes any `<name>-pr-<n>` host, so this needed no bucket, distribution, certificate or DNS record. The bucket's `expire-previews` rule deletes them after 60 days, so there is nothing to tear down. Embed them under *Validation*, and delete `.pending-upload/` once the body reads back correctly.
+
+   **On `AccessDenied`**, the grant in [`docs/aws-setup.md` §12.6](../../../docs/aws-setup.md) is not applied. Move the staged PNGs back beside the report, commit them, and cite them as raw blob URLs pinned to the head SHA — `https://github.com/<owner>/<repo>/raw/<sha>/<path>`, which renders because this repository is public. Say in one line that the upload was denied, so the next run does not rediscover it.
 6. **Read it back.** `pull_request_read method: get`. GitHub deletes an angle-bracket placeholder even inside a code span, which is why the checker refuses one — see [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../docs/knowledge/github-mcp-pr-body-sanitizer.md) for what else is confirmed to survive the round trip.
 
 7. **Subscribe, then stop.** One call to `subscribe_pr_activity`, and end the turn. See *Watching the pull request afterwards*.

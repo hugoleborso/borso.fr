@@ -70,7 +70,8 @@ No:
 | [0018](./0018-nominatim-answers-the-bar-search.md) | Nominatim answers the bar search, proxied through the API | proposed | 2026-09-15 |
 | [0019](./0019-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | proposed | 2026-09-16 |
 | [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
-| [0021](./0021-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
+| [0022](./0022-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
+| [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | proposed | 2026-09-21 |
 
 ### Data layer
 
@@ -88,7 +89,7 @@ No:
 - 0018 — Nominatim answers the bar search, proxied through the API; no key and no billing account, in exchange for a rate limit, a cache and an attribution line the code carries.
 - 0019 — the room's search collapses a provider that indexes masters down to one row per song, and reads a refusal Deezer states inside a 200 body.
 - 0020 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
-- 0021 — the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
+- 0022 — the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
 
 ### CDK / infra
 
@@ -106,6 +107,7 @@ _(no entries yet)_
 - 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
 - 0011 — ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
 - 0014 — generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.
+- 0023 — a passing validation's screenshots go to the previews CDN and expire after 60 days, while a FAIL row's stay committed; screenshots were 82% of `.git`.
 
 ## How `/open-pr` uses ADRs
 
