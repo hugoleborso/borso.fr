@@ -64,11 +64,11 @@ catalogs:
       specifier: ^4.1.11
       version: 4.1.11
     aws-cdk:
-      specifier: ^2.1139.0
-      version: 2.1141.0
+      specifier: ^2.1142.0
+      version: 2.1143.0
     aws-cdk-lib:
-      specifier: ^2.267.0
-      version: 2.269.0
+      specifier: ^2.270.0
+      version: 2.271.0
     class-variance-authority:
       specifier: 0.7.1
       version: 0.7.1
@@ -325,10 +325,10 @@ importers:
         version: 4.1.11(vitest@4.1.11)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1141.0
+        version: 2.1143.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.269.0(constructs@10.8.1)
+        version: 2.271.0(constructs@10.8.1)
       concurrently:
         specifier: 'catalog:'
         version: 9.2.1
@@ -425,10 +425,10 @@ importers:
         version: 4.1.11(vitest@4.1.11)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1141.0
+        version: 2.1143.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.269.0(constructs@10.8.1)
+        version: 2.271.0(constructs@10.8.1)
       constructs:
         specifier: 'catalog:'
         version: 10.8.1
@@ -513,10 +513,10 @@ importers:
         version: 4.1.11(vitest@4.1.11)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1141.0
+        version: 2.1143.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.269.0(constructs@10.8.1)
+        version: 2.271.0(constructs@10.8.1)
       constructs:
         specifier: 'catalog:'
         version: 10.8.1
@@ -640,10 +640,10 @@ importers:
         version: 4.1.11(vitest@4.1.11)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1141.0
+        version: 2.1143.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.269.0(constructs@10.8.1)
+        version: 2.271.0(constructs@10.8.1)
       concurrently:
         specifier: 'catalog:'
         version: 9.2.1
@@ -797,10 +797,10 @@ importers:
         version: 4.1.11(vitest@4.1.11)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1141.0
+        version: 2.1143.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.269.0(constructs@10.8.1)
+        version: 2.271.0(constructs@10.8.1)
       concurrently:
         specifier: 'catalog:'
         version: 9.2.1
@@ -849,7 +849,7 @@ importers:
         version: 4.1.11(vitest@4.1.11)
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.269.0(constructs@10.8.1)
+        version: 2.271.0(constructs@10.8.1)
       constructs:
         specifier: 'catalog:'
         version: 10.8.1
@@ -877,10 +877,10 @@ importers:
         version: 4.1.11(vitest@4.1.11)
       aws-cdk:
         specifier: 'catalog:'
-        version: 2.1141.0
+        version: 2.1143.0
       aws-cdk-lib:
         specifier: 'catalog:'
-        version: 2.269.0(constructs@10.8.1)
+        version: 2.271.0(constructs@10.8.1)
       constructs:
         specifier: 'catalog:'
         version: 10.8.1
@@ -916,8 +916,8 @@ packages:
   '@aws-cdk/asset-node-proxy-agent-v6@2.1.2':
     resolution: {integrity: sha512-pDiuqH+qY3zM9lhhLjbKJ1tnKOHzQ2V4Wr/3qsxyKeKAkuPMI/BVGvZG1PbrikUw949cGVTfVEt4ETKKYnrj0Q==}
 
-  '@aws-cdk/cloud-assembly-schema@54.20.0':
-    resolution: {integrity: sha512-ts2dVBi0VUXOLKcqyLYsHUWYpwGPFd+xm4q+6Y4jjP8orwodjRi2mJrmpy9b0gHnbv8e/hFnmEbqrD0bBJOnPA==}
+  '@aws-cdk/cloud-assembly-schema@54.25.0':
+    resolution: {integrity: sha512-aZkzPqWLg1Oozm53NeyrBZPguTq3e6v7NpQ3QOGULj0IIrodLzGPM7fmAvjcJcHzjtuZU9IP1gIY92nKIM+Bvw==}
     engines: {node: '>= 18.0.0'}
     bundledDependencies:
       - jsonschema
@@ -3850,8 +3850,8 @@ packages:
     resolution: {integrity: sha512-wvUjBtSGN7+7SjNpq/9M2Tg350UZD3q62IFZLbRAR1bSMlCo1ZaeW+BJ+D090e4hIIZLBcTDWe4Mh4jvUDajzQ==}
     engines: {node: '>= 0.4'}
 
-  aws-cdk-lib@2.269.0:
-    resolution: {integrity: sha512-Ob2EmB3faXGUMjXYhxsMvktZtaojr/aaeLqFjq9WbO+vOX1mx49OQPVB6NNNLfNKWF993Bb6nr4rsPblpUAJww==}
+  aws-cdk-lib@2.271.0:
+    resolution: {integrity: sha512-VdLda/mCneNUZkfKIYiTYSCbDdGaTmH9uhfGs5TYIfvIqKuyUcZK6S7+LaF+pRhkNnbTGgKqvCqRIMemZOvCnA==}
     engines: {node: '>= 20.0.0'}
     peerDependencies:
       constructs: ^10.5.0
@@ -3869,8 +3869,8 @@ packages:
       - yaml
       - mime-types
 
-  aws-cdk@2.1141.0:
-    resolution: {integrity: sha512-RIKueAoFNYUot/VmlUzPUbecxNCtLzJFqpy/O+vTpjrvDn4k2Uiu9Y/QlVlQzaSJw0qqNNY6ldusJVdkX8aBNA==}
+  aws-cdk@2.1143.0:
+    resolution: {integrity: sha512-bTbgEmNuN6UMDAyhGFWOAnriafSu7j0cAjaFKRw1/WEs6RE5g062D2v2+YE8Dw6qw7RgNGQPH5Nv47TsK5kZSQ==}
     engines: {node: '>= 18.0.0'}
     hasBin: true
 
@@ -7095,7 +7095,7 @@ snapshots:
 
   '@aws-cdk/asset-node-proxy-agent-v6@2.1.2': {}
 
-  '@aws-cdk/cloud-assembly-schema@54.20.0': {}
+  '@aws-cdk/cloud-assembly-schema@54.25.0': {}
 
   '@aws-sdk/checksums@3.1001.0':
     dependencies:
@@ -10197,14 +10197,14 @@ snapshots:
     dependencies:
       possible-typed-array-names: 1.1.0
 
-  aws-cdk-lib@2.269.0(constructs@10.8.1):
+  aws-cdk-lib@2.271.0(constructs@10.8.1):
     dependencies:
       '@aws-cdk/asset-awscli-v1': 2.2.292
       '@aws-cdk/asset-node-proxy-agent-v6': 2.1.2
-      '@aws-cdk/cloud-assembly-schema': 54.20.0
+      '@aws-cdk/cloud-assembly-schema': 54.25.0
       constructs: 10.8.1
 
-  aws-cdk@2.1141.0: {}
+  aws-cdk@2.1143.0: {}
 
   axe-core@4.13.0: {}
 
