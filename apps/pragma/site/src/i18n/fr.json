@@ -1,6 +1,15 @@
 {
   "account": {
     "addPasskey": "Ajouter une passkey",
+    "calendarFeed": "Agenda",
+    "calendarFeedAddress": "Adresse iCal secrète",
+    "calendarFeedConnected": "Agenda connecté.",
+    "calendarFeedHint": "Colle l’adresse iCal secrète de ton agenda. Google : Paramètres, ton agenda, « Adresse secrète au format iCal ». L’app lit seulement quand tu es occupé·e, et n’affiche plus jamais l’adresse.",
+    "calendarFeedInvalid": "Cette adresse ne peut pas être lue. Colle l’adresse secrète qui commence par https:// ou webcal://.",
+    "calendarFeedRemove": "Retirer",
+    "calendarFeedRemoved": "Agenda retiré.",
+    "calendarFeedReplace": "Remplacer",
+    "calendarFeedSaved": "Enregistré. Les créneaux libres de la page Sessions tiennent compte de ton agenda.",
     "changePassword": "Changer de mot de passe",
     "contactDetails": "Coordonnées",
     "contactDetailsHint": "Elles signent le message de démarchage copié depuis la page bars.",
@@ -350,6 +359,22 @@
     "unknownSong": "Morceau introuvable",
     "zoomIn": "Agrandir",
     "zoomOut": "Réduire"
+  },
+  "freeSlots": {
+    "title": "Prochains créneaux libres",
+    "subtitle": "Répétition de 2 h · 4 prochaines semaines",
+    "loading": "Lecture des agendas…",
+    "error": "Les créneaux libres n’ont pas pu être calculés.",
+    "none": "Aucun soir où tout le monde est libre 2 h dans les 4 prochaines semaines.",
+    "noCalendarAtAll": "Personne n’a encore connecté son agenda.",
+    "connectYours": "Connecter le tien",
+    "book": "Réserver une répétition",
+    "bookAria": "Réserver une répétition le {{day}}, {{hours}}",
+    "excluded": {
+      "noCalendar": "Sans {{name}}, qui n’a pas d’agenda",
+      "needsReconnecting": "L’agenda de {{name}} est à reconnecter",
+      "unavailable": "L’agenda de {{name}} est indisponible pour l’instant"
+    }
   },
   "sessions": {
     "capacity": "Jauge",

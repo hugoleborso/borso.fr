@@ -17,6 +17,10 @@ export function defaultDateTimeLocal(now: Date): string {
   return formatDateTimeLocal(tomorrow);
 }
 
+export function selectInitialDateTimeLocal(initialDate: Date | undefined, now: Date): string {
+  return initialDate === undefined ? defaultDateTimeLocal(now) : formatDateTimeLocal(initialDate);
+}
+
 // @FollowsBlueprint utils-pure-module
 export function formatDateTimeLocal(date: Date): string {
   const year = String(date.getFullYear()).padStart(YEAR_DIGITS, '0');

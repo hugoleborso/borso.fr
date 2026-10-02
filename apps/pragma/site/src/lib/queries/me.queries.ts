@@ -4,6 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { startPasskeyEnrolment } from '../passkey.adapter';
+import { freeSlotsKeys } from './free-slots.queries';
 
 export const meKeys = {
   all: ['me'] as const,
@@ -62,6 +63,51 @@ export function useSaveContactDetails() {
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: meKeys.profile() });
+    },
+  });
+}
+
+type CalendarFeedState = SignedInMember['calendarFeed'];
+
+function withCalendarFeed(
+  member: SignedInMember | null | undefined,
+  calendarFeed: CalendarFeedState,
+): SignedInMember | null | undefined {
+  return member === null || member === undefined ? member : { ...member, calendarFeed };
+}
+
+// @FollowsBlueprint query-settled-from-the-write-response
+export function useSaveCalendarFeed() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (variables: { address: string }) => {
+      const response = await api.api.me['calendar-feed'].$put({ json: variables });
+      await throwOnFailure(response, 'calendar-feed');
+      return await response.json();
+    },
+    onSuccess: async (body) => {
+      if (!('calendarFeed' in body)) return;
+      queryClient.setQueryData<SignedInMember | null>(meKeys.profile(), (member) =>
+        withCalendarFeed(member, body.calendarFeed),
+      );
+      await queryClient.invalidateQueries({ queryKey: freeSlotsKeys.all });
+    },
+  });
+}
+
+export function useRemoveCalendarFeed() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async () => {
+      const response = await api.api.me['calendar-feed'].$delete();
+      await throwOnFailure(response, 'calendar-feed-remove');
+      return await response.json();
+    },
+    onSuccess: async (body) => {
+      queryClient.setQueryData<SignedInMember | null>(meKeys.profile(), (member) =>
+        withCalendarFeed(member, body.calendarFeed),
+      );
+      await queryClient.invalidateQueries({ queryKey: freeSlotsKeys.all });
     },
   });
 }

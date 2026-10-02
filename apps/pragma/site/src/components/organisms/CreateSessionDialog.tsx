@@ -13,8 +13,8 @@ import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
 import {
   dateTimeLocalToIso,
-  defaultDateTimeLocal,
   filterFutureConcerts,
+  selectInitialDateTimeLocal,
 } from './create-session-dialog.utils';
 
 const VENUE_MAX = 256;
@@ -33,6 +33,8 @@ interface CreateSessionDialogProps {
   readonly onClose: () => void;
   readonly onCreated: (sessionId: string) => void;
   readonly existingConcerts?: readonly ExistingConcert[];
+  readonly initialDate?: Date;
+  readonly origin?: 'free_slot' | null;
 }
 
 const concertFormSchema = z.object({
@@ -53,11 +55,16 @@ export function CreateSessionDialog({
   onClose,
   onCreated,
   existingConcerts = [],
+  initialDate,
+  origin = null,
 }: CreateSessionDialogProps): JSX.Element {
   const { t } = useTranslation();
   const createSession = useCreateSession();
 
-  const initialDateLocal = useMemo(() => defaultDateTimeLocal(new Date()), []);
+  const initialDateLocal = useMemo(
+    () => selectInitialDateTimeLocal(initialDate, new Date()),
+    [initialDate],
+  );
   const futureConcerts = useMemo(
     () => filterFutureConcerts(existingConcerts, new Date()),
     [existingConcerts],
@@ -96,6 +103,7 @@ export function CreateSessionDialog({
         kind: 'practice',
         date: iso,
         preparedConcertId: value.preparedConcertId,
+        origin,
       });
       onCreated(created.session.id);
       onClose();
