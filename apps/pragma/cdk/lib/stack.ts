@@ -16,6 +16,7 @@ import {
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import type { Construct } from 'constructs';
 
+const API_TIMEOUT_SECONDS = 20;
 const APP_SLUG = 'pragma';
 const SPOTIFY_CREDENTIALS_PARAMETER = `/${APP_SLUG}/spotify-credentials`;
 
@@ -88,6 +89,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     frontend: { distPath: props.assetsPath },
     api: {
       entry: props.apiEntry,
+      timeoutSeconds: API_TIMEOUT_SECONDS,
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,
