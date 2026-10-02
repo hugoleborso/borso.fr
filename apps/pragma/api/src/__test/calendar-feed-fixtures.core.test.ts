@@ -79,8 +79,16 @@ describe('edge-case fixtures', () => {
     expect(selectFreeSlots(now, busy)).toStrictEqual([]);
   });
 
+  it.each(['declined', 'midnight', 'everything'] as const)(
+    'writes the %s feed exactly as recorded',
+    (name) => {
+      expect(buildFixtureFeed(name, now)).toMatchSnapshot();
+    },
+  );
+
   it('is over the feed size limit while still a calendar', () => {
     const huge = buildFixtureFeed('huge', now);
+    expect(huge.slice(0, 200)).toMatchSnapshot();
     expect(new TextEncoder().encode(huge).byteLength).toBeGreaterThan(5_767_168);
     expect(huge.startsWith('BEGIN:VCALENDAR')).toBe(true);
   });

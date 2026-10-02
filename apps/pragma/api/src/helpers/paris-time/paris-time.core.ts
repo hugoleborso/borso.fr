@@ -19,6 +19,7 @@ const formatterByZone = new Map<string, Intl.DateTimeFormat>();
 
 function wallClockFormatterOf(timeZone: string): Intl.DateTimeFormat {
   const cached = formatterByZone.get(timeZone);
+  // Stryker disable next-line ConditionalExpression: equivalent mutant. The cache only saves building the formatter again; a fresh formatter for the same zone formats every instant the same way.
   if (cached !== undefined) return cached;
   const formatter = new Intl.DateTimeFormat('en-US', {
     timeZone,

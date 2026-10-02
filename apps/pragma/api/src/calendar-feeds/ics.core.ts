@@ -37,6 +37,7 @@ interface EventZones {
 }
 
 function namedZoneOf(component: ICAL.Component, propertyName: string): string {
+  // Stryker disable next-line OptionalChaining: equivalent mutant. DTSTART is present on every event ical.js expands, and DTEND is only read after hasProperty says it is there, so the property is never null here.
   const timeZoneId: unknown = component.getFirstProperty(propertyName)?.getParameter(TZID);
   return typeof timeZoneId === 'string' && isKnownTimeZone(timeZoneId)
     ? timeZoneId

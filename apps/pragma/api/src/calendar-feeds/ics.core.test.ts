@@ -110,6 +110,17 @@ describe('readBusyIntervals', () => {
     expect(busyOf(body)).toStrictEqual([['2026-10-16T22:00:00.000Z', '2026-10-17T22:00:00.000Z']]);
   });
 
+  it('keeps an all-day event on the Paris day even when it names another zone', () => {
+    const body = calendar(
+      ...event(
+        'all-day-abroad',
+        'DTSTART;TZID=America/New_York;VALUE=DATE:20261017',
+        'DTEND;TZID=America/New_York;VALUE=DATE:20261018',
+      ),
+    );
+    expect(busyOf(body)).toStrictEqual([['2026-10-16T22:00:00.000Z', '2026-10-17T22:00:00.000Z']]);
+  });
+
   it('leaves out an event marked free, and a cancelled one', () => {
     const body = calendar(
       ...event(
