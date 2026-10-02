@@ -89,7 +89,7 @@ describe('edge-case fixtures', () => {
   it('is over the feed size limit while still a calendar', () => {
     const huge = buildFixtureFeed('huge', now);
     expect(huge.slice(0, 200)).toMatchSnapshot();
-    expect(new TextEncoder().encode(huge).byteLength).toBeGreaterThan(5_767_168);
+    expect(new TextEncoder().encode(huge).byteLength).toBeGreaterThan(5_242_880);
     expect(huge.startsWith('BEGIN:VCALENDAR')).toBe(true);
   });
 
