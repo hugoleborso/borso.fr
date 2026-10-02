@@ -8,6 +8,7 @@ import {
   readDetailsBlocks,
   readFencedBlocks,
   readMermaidNodes,
+  readUnclosedSlantedShapes,
   readTableRows,
   renderBody,
   stripAttribution,
@@ -107,6 +108,35 @@ describe('readMermaidNodes', () => {
 
   it('skips the subgraph and end keywords', () => {
     expect(readMermaidNodes(['subgraph one', 'end'])).toEqual([]);
+  });
+});
+
+describe('readUnclosedSlantedShapes', () => {
+  it('finds a route used as a bare label, which mermaid reads as an unclosed parallelogram', () => {
+    expect(readUnclosedSlantedShapes(['  login[/login] --> recover[/recover]'])).toEqual([
+      '[/login]',
+      '[/recover]',
+    ]);
+  });
+
+  it('finds the backslash opener too', () => {
+    expect(readUnclosedSlantedShapes(['a[\\path] --> b'])).toEqual(['[\\path]']);
+  });
+
+  it('accepts a quoted label, however it starts', () => {
+    expect(readUnclosedSlantedShapes(['login["/login"] --> recover["/recover"]'])).toEqual([]);
+  });
+
+  it('accepts the slanted shapes mermaid defines, which close on a slash', () => {
+    expect(readUnclosedSlantedShapes(['a[/input/] --> b[\\output\\] --> c[/trap\\]'])).toEqual([]);
+  });
+
+  it('accepts a slash anywhere but the first character', () => {
+    expect(readUnclosedSlantedShapes(['catalog[signed in at /catalog]'])).toEqual([]);
+  });
+
+  it('reads an empty slanted label as unclosed', () => {
+    expect(readUnclosedSlantedShapes(['a[/] --> b'])).toEqual(['[/]']);
   });
 });
 
@@ -395,6 +425,36 @@ describe('validateBody', () => {
 
   it('ignores the attribution footer when counting', () => {
     expect(validateBody(draft(MINIMAL, ...ATTRIBUTION))).toEqual([]);
+  });
+});
+
+describe('a flow diagram that would not render', () => {
+  it('refuses the diagram PR #107 shipped, naming the label and the fix', () => {
+    const violations = validateBody(
+      draft(MINIMAL, '## Flow', '```mermaid', 'flowchart LR', '  login[/login] --> recover', '```'),
+    );
+    expect(violations).toEqual([
+      {
+        where: 'Flow',
+        problem:
+          '[/login] opens a slanted shape it never closes, so the diagram fails to render; quote the label, as ["/login"]',
+      },
+    ]);
+  });
+
+  it('passes the same diagram once the label is quoted', () => {
+    expect(
+      validateBody(
+        draft(
+          MINIMAL,
+          '## Flow',
+          '```mermaid',
+          'flowchart LR',
+          '  login["/login"] --> recover',
+          '```',
+        ),
+      ),
+    ).toEqual([]);
   });
 });
 
