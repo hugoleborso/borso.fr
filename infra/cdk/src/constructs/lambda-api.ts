@@ -92,6 +92,7 @@ export class LambdaApi extends Construct {
           ? {
               DSQL_ENDPOINT: props.dsqlSchema.clusterEndpoint,
               DSQL_SCHEMA: props.dsqlSchema.schemaName,
+              DSQL_ROLE: props.dsqlSchema.apiRoleName,
             }
           : {}),
         ...props.environment,

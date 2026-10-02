@@ -4,7 +4,6 @@ import postgres, { type Sql } from 'postgres';
 import * as schema from './schema';
 
 const DSQL_PORT = 5432;
-const DSQL_USER = 'admin';
 const DSQL_DATABASE = 'postgres';
 
 type DrizzleClient = ReturnType<typeof drizzle<typeof schema>>;
@@ -14,6 +13,7 @@ export type DatabaseExecutor = Parameters<Parameters<Database['transaction']>[0]
 interface DatabaseConfig {
   readonly endpoint: string;
   readonly schemaName: string;
+  readonly roleName: string;
   readonly region: string;
 }
 
@@ -32,9 +32,10 @@ function readEnv(name: string): string | undefined {
 function readDsqlConfig(): DatabaseConfig | null {
   const endpoint = readEnv('DSQL_ENDPOINT');
   const schemaName = readEnv('DSQL_SCHEMA');
+  const roleName = readEnv('DSQL_ROLE');
   const region = readEnv('AWS_REGION') ?? 'eu-west-3';
-  if (endpoint === undefined || schemaName === undefined) return null;
-  return { endpoint, schemaName, region };
+  if (endpoint === undefined || schemaName === undefined || roleName === undefined) return null;
+  return { endpoint, schemaName, roleName, region };
 }
 
 function readLocalConfig(): LocalConfig | null {
@@ -49,9 +50,9 @@ function createDsqlClient(config: DatabaseConfig): Sql {
     host: config.endpoint,
     port: DSQL_PORT,
     database: DSQL_DATABASE,
-    user: DSQL_USER,
+    user: config.roleName,
     ssl: 'require',
-    password: () => signer.getDbConnectAdminAuthToken(),
+    password: () => signer.getDbConnectAuthToken(),
     types: { bigint: postgres.BigInt },
     connection: { search_path: config.schemaName },
   });
@@ -68,7 +69,9 @@ export function getDatabase(): Database {
   const client =
     dsql === null ? (local === null ? null : createLocalClient(local)) : createDsqlClient(dsql);
   if (client === null) {
-    throw new Error('Database not configured: set DSQL_ENDPOINT+DSQL_SCHEMA or DATABASE_URL.');
+    throw new Error(
+      'Database not configured: set DSQL_ENDPOINT+DSQL_SCHEMA+DSQL_ROLE or DATABASE_URL.',
+    );
   }
   cachedClient = client;
   cachedDatabase = drizzle(client, { schema });
