@@ -313,20 +313,16 @@ Check `mcp__github__list_pull_requests state=open` for a PR whose
 1. **Title** — rewrite to reflect what now lands. Conventional-commit
    format with the dominant scope (`feat(borso-fr): galaxy WebGL apex
    landing + dantotsu sweep`, not the original scope-of-day).
-2. **Body** — at minimum these sections, in order:
-   - `## Summary` — one paragraph + 3–5 bullets naming what the PR ships
-     vs. what it was originally intended to ship. Reference ADRs by
-     number.
-   - `## Validation gaps` — every `PASS_EXCEPT_UNVERIFIABLE` row from
-     the validators, named verbatim. Missing = the reader can't tell
-     whether the gate passed cleanly or with caveats.
-   - `## Visual evidence` — for UI work, SHA-pinned raw URLs to the
-     screenshots committed under
-     `docs/features/<app>/<slug>/validation/visual-validation-<ts>/`.
-     Pin to `head.sha` of the PR, not `main` (the latter changes when
-     the PR merges).
-   - `## Test plan` — checklist of manual checks the user runs on the
-     preview before merging.
+2. **Body** — redraft it through `/open-pr`, whose template and
+   `scripts/pr/check-pr-body.ts` are the only place the body's shape is
+   written down. Whatever the headings, the rewritten body has to say
+   what the PR ships against what it set out to ship, name its ADRs,
+   carry every `PASS_EXCEPT_UNVERIFIABLE` row verbatim (a reader who
+   cannot see them cannot tell a clean pass from a caveated one), name
+   the committed screenshots for UI work, and state what the operator
+   checks on the preview before merging. This list used to prescribe
+   `## Summary`, `## Validation gaps`, `## Visual evidence` and
+   `## Test plan`, which the checker refuses.
 
 If no PR is open, skip — the orchestrator never opens PRs on its own
 unless the user explicitly asks. The deploy reminder still fires.

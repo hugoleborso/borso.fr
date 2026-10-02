@@ -99,10 +99,10 @@
 ## Pre-flight gates
 
 1. `pnpm install`.
-2. `pnpm --filter @borso/skill-tech-lead-orchestrator typecheck && pnpm --filter @borso/skill-adr-writer typecheck`.
+2. *(retiré)* Le typecheck des paquets `skill-tech-lead-orchestrator` et `skill-adr-writer`. Les skills sont devenus du markdown pur (CLAUDE.md, *Layout*) et les deux paquets ont été supprimés : il n'y a plus rien à lancer.
 3. `pnpm exec biome lint`.
-4. `pnpm --filter @borso/skill-tech-lead-orchestrator test:coverage && pnpm --filter @borso/skill-adr-writer test:coverage` — gate 100% sur chaque `*.utils.ts`.
-5. `pnpm --filter @borso/skill-tech-lead-orchestrator test scenario.test.ts` — scenario E2E fixture-driven.
+4. *(retiré)* La couverture des mêmes paquets, supprimés avec eux.
+5. *(retiré)* Le scénario E2E de ces paquets, supprimé avec eux.
 6. (skip silencieux) `/visual-validation` — pas de surface UI. SKILL.md du tech lead intègre la règle "si la feature n'a pas de surface visuelle, log `tech_lead_visual_validation_skipped` dans le journal et passe". Pas de fichier verdict, pas d'extension du standard de `/visual-validation`. Décision Q-VIS-VAL.
 7. `pnpm exec knip`.
 8. `/technical-validation docs/features/meta/tech-lead-orchestrator/spec/spec.md` — code review vs spec.

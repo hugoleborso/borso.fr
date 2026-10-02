@@ -4,8 +4,8 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
-    "dev": "pnpm dev:db > /dev/null && concurrently -k -n api,site -c yellow,green 'pnpm dev:api' 'pnpm dev:site'",
-    "dev:db": "../../scripts/local-postgres.sh start banana-rush dev",
+    "dev": "pnpm dev:db && concurrently -k -n api,site -c yellow,green 'pnpm dev:api' 'pnpm dev:site'",
+    "dev:db": "DATABASE_URL=$(../../scripts/local-postgres.sh start banana-rush dev) tsx test/dev-database.setup.ts",
     "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start banana-rush dev) STAGE=dev tsx watch api/src/main.dev.ts",
     "dev:site": "vite",
     "db:local:start": "../../scripts/local-postgres.sh start banana-rush",

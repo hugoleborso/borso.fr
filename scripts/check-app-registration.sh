@@ -35,6 +35,21 @@ for app_directory in apps/*/; do
     echo "    Add '${slug}' to the scope list." >&2
     missing=$((missing + 1))
   fi
+
+  # An app that owns migrations must apply them when `pnpm dev` starts. Booting
+  # the cluster alone serves an API against an empty schema, where every route
+  # answers 500 "relation does not exist"; pragma shipped that way, and
+  # banana-rush copied it. See
+  # docs/dantotsus/pnpm-dev-served-an-empty-database.md.
+  if [ -d "${app_directory}api/src/database/migrations" ]; then
+    dev_database_script=$(node -e "process.stdout.write(require('./${app_directory}package.json').scripts?.['dev:db'] ?? '')")
+    if ! printf '%s' "$dev_database_script" | grep -qE 'test/dev-database\.setup\.ts|dev-db\.sh'; then
+      echo "[check-app-registration] $slug owns migrations but its dev:db does not apply them." >&2
+      echo "    Point dev:db at test/dev-database.setup.ts, which runs test/setup-postgres.ts first." >&2
+      echo "    Without it, pnpm dev serves an API against an empty schema." >&2
+      missing=$((missing + 1))
+    fi
+  fi
 done
 
 # The other direction: a slug declared for an application that no longer exists
