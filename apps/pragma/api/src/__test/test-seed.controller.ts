@@ -5,7 +5,7 @@ import {
   seedPreviewFixture,
 } from './test-seed.service';
 
-const ICS_CONTENT_TYPE = 'text/calendar; charset=utf-8';
+const PLAIN_TEXT_CONTENT_TYPE = 'text/plain; charset=utf-8';
 
 function waitFor(milliseconds: number): Promise<void> {
   return new Promise((resolve) => {
@@ -28,7 +28,7 @@ export function buildTestSeedRouter() {
       await waitFor(answer.delayMs);
       return new Response(answer.body, {
         status: answer.status,
-        headers: { 'content-type': ICS_CONTENT_TYPE },
+        headers: { 'content-type': PLAIN_TEXT_CONTENT_TYPE },
       });
     });
 }

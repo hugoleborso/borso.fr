@@ -131,7 +131,7 @@ describe('__test/test-seed.controller (back-e2e)', () => {
   it('serves the fixture calendars the seed attaches, and a reset address as 410', async () => {
     const feed = await createApp().request('/api/__test/calendar-feeds/hugo.ics');
     expect(feed.status).toBe(200);
-    expect(feed.headers.get('content-type')).toContain('text/calendar');
+    expect(feed.headers.get('content-type')).toContain('text/plain');
     expect(await feed.text()).toContain('BEGIN:VCALENDAR');
     const gone = await createApp().request('/api/__test/calendar-feeds/gone.ics');
     expect(gone.status).toBe(410);
