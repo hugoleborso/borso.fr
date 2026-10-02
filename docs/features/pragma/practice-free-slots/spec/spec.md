@@ -97,9 +97,9 @@ sequenceDiagram
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| 0022 (to write) | One database role per stage schema, mapped to the stage's API Lambda; Lambdas lose `DbConnectAdmin` | `DsqlSchema` takes the API's IAM role. The runner creates, grants and drops the role. The three `client.ts` files sign with `getDbConnectAuthToken` as the stage role. The Lambda deploys only after the schema custom resource. |
-| 0023 (to write) | The member's calendar feed address is a plain-text column in its own table, write-only through the API | No route returns the address. It never reaches a log. It is blocklisted from preview clones. |
-| 0024 (to write) | The ICS parsing library | A new runtime dependency of `apps/pragma`, used only from `calendar-feeds/ics.adapter.ts`. |
+| 0023 (to write) | One database role per stage schema, mapped to the stage's API Lambda; Lambdas lose `DbConnectAdmin` | `DsqlSchema` takes the API's IAM role. The runner creates, grants and drops the role. The three `client.ts` files sign with `getDbConnectAuthToken` as the stage role. The Lambda deploys only after the schema custom resource. |
+| 0024 (to write) | The member's calendar feed address is a plain-text column in its own table, write-only through the API | No route returns the address. It never reaches a log. It is blocklisted from preview clones. |
+| 0025 (to write) | The ICS parsing library | A new runtime dependency of `apps/pragma`, used only from `calendar-feeds/ics.adapter.ts`. |
 
 ## Changes
 
