@@ -67,7 +67,7 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: |
-            .eslintcache
+            .eslintcache-*
             node_modules/.cache/prettier
           key: lint-cache-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.js', '.prettierrc.json') }}-${{ github.sha }}
           restore-keys: |
@@ -78,7 +78,10 @@ jobs:
       # react-refresh/only-export-components all ship at `warn`, and eslint
       # exits 0 on a warning, so before this flag they printed into the log and
       # stopped nothing. Mirrors the .husky/pre-commit invocation.
-      - run: pnpm exec eslint . --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
+      # One process per workspace, because one `eslint .` holding five
+      # applications' TypeScript programs passed Node's 4 GB heap and main's
+      # build was red from PR #110 on; see scripts/lint-repository.sh.
+      - run: scripts/lint-repository.sh
       # Formatter drift is part of the gate. A commit made with hooks
       # skipped, or from an editor that is not on prettier, fails here.
       # `pnpm run` rather than `pnpm exec`: the agent harness's command rewriter
