@@ -86,7 +86,7 @@ sequenceDiagram
 | Who can read it? | every Lambda as `admin` (today) · one database role per stage schema | One role per stage. The migration runner creates it, maps it to that stage's API Lambda with `AWS IAM GRANT`, and grants it `USAGE` on its own schema plus table rights in it. API Lambdas move from `dsql:DbConnectAdmin` to `dsql:DbConnect`, and `admin` is left to the migration runner. This applies to every app on `DsqlSchema`: pragma, last-loop-lepin and banana-rush (2026-10-02). |
 | Does a preview get prod's addresses? | clone them · block the table | `member_calendar_feed` goes into pragma's `tableBlocklist`, so previews start with no feeds (2026-10-02). |
 | When are feeds read? | when the page opens · a scheduled sync | When the page opens. Nothing is stored except the address, and no scheduled job is added (2026-10-02). |
-| ICS parsing | hand-written parser · `ical.js` · `node-ical` | A library, because expanding recurring events (`RRULE`, `EXDATE`, `RECURRENCE-ID`) and time zones is where a hand-written parser goes wrong. Which library is chosen in the ADR (2026-10-02). |
+| ICS parsing | hand-written parser · `ical.js` · `node-ical` | A library, because expanding recurring events (`RRULE`, `EXDATE`, `RECURRENCE-ID`) and time zones is where a hand-written parser goes wrong. `ical.js`, see ADR-0025 (2026-10-02). |
 | SSRF: the Lambda fetches an address a member typed | no guard · https only, port 443, no IP literal, at most 3 redirects each checked again, a size limit and a time limit | The guard. The Lambda runtime API listens on a loopback address, and only the https-on-443 rule keeps it out of reach (2026-10-02). |
 | Measuring the output metric | an analytics event · a column on the session | A nullable `session.origin` column, set to `'free_slot'` by the button (2026-10-02). |
 | Fake calendars in the preview | an external ICS host · ICS served by the preview's own test router | `/api/__test/calendar-feeds/:fixture.ics`, which exists only when `ALLOW_TEST_SEED=1`. The seed attaches fixture feeds to the fixture members. The fixtures are written relative to `now`, so a known slot always exists (2026-10-02). |
@@ -97,9 +97,9 @@ sequenceDiagram
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| 0023 (to write) | One database role per stage schema, mapped to the stage's API Lambda; Lambdas lose `DbConnectAdmin` | `DsqlSchema` takes the API's IAM role. The runner creates, grants and drops the role. The three `client.ts` files sign with `getDbConnectAuthToken` as the stage role. The Lambda deploys only after the schema custom resource. |
-| 0024 (to write) | The member's calendar feed address is a plain-text column in its own table, write-only through the API | No route returns the address. It never reaches a log. It is blocklisted from preview clones. |
-| 0025 (to write) | The ICS parsing library | A new runtime dependency of `apps/pragma`, used only from `calendar-feeds/ics.adapter.ts`. |
+| [ADR-0023](../../../../adr/0023-one-database-role-per-stage-schema.md) | One database role per stage schema, mapped to the stage's API Lambda; Lambdas lose `DbConnectAdmin` | `DsqlSchema` takes the API's IAM role. The runner creates, grants and drops the role. The three `client.ts` files sign with `getDbConnectAuthToken` as the stage role. The Lambda deploys only after the schema custom resource. |
+| [ADR-0024](../../../../adr/0024-calendar-feed-address-in-its-own-table.md) | The member's calendar feed address is a plain-text column in its own table, write-only through the API | No route returns the address. It never reaches a log. It is blocklisted from preview clones. |
+| [ADR-0025](../../../../adr/0025-ical-js-parses-calendar-feeds.md) | `ical.js` parses the feeds | A new runtime dependency of `apps/pragma`, used only from `calendar-feeds/ics.adapter.ts`. |
 
 ## Changes
 
