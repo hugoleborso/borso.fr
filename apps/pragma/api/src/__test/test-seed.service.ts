@@ -27,7 +27,8 @@ import {
   selectInstrumentIds,
   selectPrimaryInstrumentIds,
 } from './test-seed.core';
-import { deleteAllDomainRows } from './test-seed.repository';
+import { classifySchemaBoundary, type SchemaBoundary } from './schema-boundary.core';
+import { deleteAllDomainRows, tryReadingProductionMembers } from './test-seed.repository';
 
 const CONCERT_DAYS_FROM_NOW = 7;
 const HOURS_PER_DAY = 24;
@@ -220,4 +221,8 @@ export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise
     adminCredentials: selectAdminCredentialsState(bootstrap.kind),
     calendarFeeds,
   };
+}
+
+export async function probeProductionBoundary(): Promise<SchemaBoundary> {
+  return classifySchemaBoundary(await tryReadingProductionMembers());
 }

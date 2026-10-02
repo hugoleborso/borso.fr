@@ -143,6 +143,16 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     expect(summary.calendarFeeds).toBe(0);
   });
 
+  it('reports whether this stage can read the production schema', async () => {
+    const response = await createApp().request('/api/__test/production-boundary');
+    const body = z
+      .object({
+        productionBoundary: z.enum(['enforced', 'open', 'nothing-to-read', 'inconclusive']),
+      })
+      .parse(await response.json());
+    expect(body.productionBoundary).toBe('nothing-to-read');
+  });
+
   it('is not mounted when ALLOW_TEST_SEED is unset', async () => {
     const saved = process.env[TEST_SEED_FLAG];
     delete process.env[TEST_SEED_FLAG];

@@ -1,5 +1,9 @@
 import { Hono } from 'hono';
-import { answerFixtureFeedRequest, seedPreviewFixture } from './test-seed.service';
+import {
+  answerFixtureFeedRequest,
+  probeProductionBoundary,
+  seedPreviewFixture,
+} from './test-seed.service';
 
 const ICS_CONTENT_TYPE = 'text/calendar; charset=utf-8';
 
@@ -15,6 +19,9 @@ export function buildTestSeedRouter() {
     .post('/seed', async (context) => {
       const summary = await seedPreviewFixture(new Date(), new URL(context.req.url).origin);
       return context.json(summary);
+    })
+    .get('/production-boundary', async (context) => {
+      return context.json({ productionBoundary: await probeProductionBoundary() });
     })
     .get('/calendar-feeds/:fileName', async (context) => {
       const answer = answerFixtureFeedRequest(context.req.param('fileName'), new Date());

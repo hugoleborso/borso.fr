@@ -5,7 +5,9 @@ import {
 } from '../auth/credentials.schema';
 import { barTable } from '../bars/bars.schema';
 import { memberCalendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
+import { sql } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
+import { PRODUCTION_SCHEMA, readErrorCode } from './schema-boundary.core';
 import { instrumentTable } from '../instruments/instruments.schema';
 import { masteryDefaultTable, masteryOverrideTable } from '../mastery/mastery.schema';
 import { memberInstrumentTable, memberTable } from '../members/members.schema';
@@ -41,4 +43,14 @@ export async function deleteAllDomainRows(): Promise<void> {
   await database.delete(memberCalendarFeedTable);
   await database.delete(memberTable);
   await database.delete(instrumentTable);
+}
+
+export async function tryReadingProductionMembers(): Promise<string | null> {
+  const database = getDatabase();
+  try {
+    await database.execute(sql.raw(`SELECT 1 FROM "${PRODUCTION_SCHEMA}"."member" LIMIT 1`));
+    return null;
+  } catch (error) {
+    return readErrorCode(error) || readErrorCode(Reflect.get(Object(error), 'cause'));
+  }
 }
