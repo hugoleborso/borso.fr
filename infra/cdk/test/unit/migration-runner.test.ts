@@ -20,6 +20,8 @@ vi.mock('@aws-sdk/dsql-signer', () => ({
 
 const { handler } = await import('../../src/internal/migration-runner/index.js');
 
+const API_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-app-ApiFnServiceRole-ABC';
+
 beforeEach(() => {
   resetMigrationRunnerMockState();
 });
@@ -89,6 +91,68 @@ describe('migration-runner handler', () => {
     ).toBe(true);
     expect(queries.some((query) => query.includes('CREATE SCHEMA'))).toBe(false);
     expect(state.ended).toBe(1);
+  });
+
+  it('Create: creates the API role after the migrations, maps it and grants the schema', async () => {
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: {
+        ...baseProps,
+        apiRoleName: 'api_test_app',
+        apiPrincipalArns: [API_ROLE_ARN],
+      },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    const lastMigration = queries.findIndex((query) =>
+      query.includes('CREATE TABLE IF NOT EXISTS b'),
+    );
+    const createRole = queries.indexOf('CREATE ROLE "api_test_app" WITH LOGIN');
+    expect(createRole).toBeGreaterThan(lastMigration);
+    expect(queries).toContain(`AWS IAM GRANT "api_test_app" TO '${API_ROLE_ARN}'`);
+    expect(queries).toContain('GRANT USAGE ON SCHEMA "test_app" TO "api_test_app"');
+    expect(queries.some((query) => query.includes('sys.iam_pg_role_mappings'))).toBe(false);
+  });
+
+  it('Update: re-grants an existing role and unmaps a principal the stack no longer lists', async () => {
+    state.existingRoles.add('api_test_app');
+    state.roleMappings = [{ arn: API_ROLE_ARN, pg_role_name: 'api_test_app' }];
+    await handler({
+      RequestType: 'Update',
+      PhysicalResourceId: 'dsql-schema:test_app',
+      ResourceProperties: { ...baseProps, apiRoleName: 'api_test_app' },
+      OldResourceProperties: baseProps,
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    expect(queries.some((query) => query.startsWith('CREATE ROLE'))).toBe(false);
+    expect(queries).toContain(`AWS IAM REVOKE "api_test_app" FROM '${API_ROLE_ARN}'`);
+    expect(queries).toContain(
+      'GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA "test_app" TO "api_test_app"',
+    );
+  });
+
+  it('Delete: drops the schema, then unmaps and drops the API role', async () => {
+    state.existingRoles.add('api_test_app');
+    state.roleMappings = [{ arn: API_ROLE_ARN, pg_role_name: 'api_test_app' }];
+    await handler({
+      RequestType: 'Delete',
+      PhysicalResourceId: 'dsql-schema:test_app',
+      ResourceProperties: { ...baseProps, apiRoleName: 'api_test_app' },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    const dropSchema = queries.findIndex((query) => query.includes('DROP SCHEMA'));
+    const dropRole = queries.indexOf('DROP ROLE IF EXISTS "api_test_app"');
+    expect(dropRole).toBeGreaterThan(dropSchema);
+    expect(queries).toContain(`AWS IAM REVOKE "api_test_app" FROM '${API_ROLE_ARN}'`);
+  });
+
+  it('Delete: leaves roles alone for a schema provisioned before roles existed', async () => {
+    await handler({
+      RequestType: 'Delete',
+      PhysicalResourceId: 'dsql-schema:test_app',
+      ResourceProperties: { ...baseProps, apiRoleName: 'api_test_app' },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    expect(queries.some((query) => query.includes('ROLE'))).toBe(false);
   });
 
   it('Create: rewrites ALTER TABLE ADD COLUMN to ADD COLUMN IF NOT EXISTS so partial retries are safe', async () => {

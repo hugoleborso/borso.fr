@@ -1,0 +1,117 @@
+// Vitest Snapshot v1, https://vitest.dev/guide/snapshot.html
+
+exports[`edge-case fixtures > is over the feed size limit while still a calendar 1`] = `
+"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//pragma//preview fixtures//EN
+BEGIN:VEVENT
+UID:huge@pragma-fixtures
+DTSTART;VALUE=DATE:20261013
+DTEND;VALUE=DATE:20261014
+X-PADDING:xxxxxxxxxxxxxxxxxxxxxxxx"
+`;
+
+exports[`edge-case fixtures > writes the declined feed exactly as recorded 1`] = `
+"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//pragma//preview fixtures//EN
+BEGIN:VEVENT
+UID:declined-invitation@pragma-fixtures
+DTSTART:20261015T190000
+DTEND:20261015T210000
+ATTENDEE;PARTSTAT=DECLINED;CN=Member:mailto:member@example.com
+END:VEVENT
+END:VCALENDAR
+"
+`;
+
+exports[`edge-case fixtures > writes the everything feed exactly as recorded 1`] = `
+"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//pragma//preview fixtures//EN
+BEGIN:VEVENT
+UID:every-day@pragma-fixtures
+DTSTART;VALUE=DATE:20261013
+DTEND;VALUE=DATE:20261014
+RRULE:FREQ=DAILY;COUNT=40
+END:VEVENT
+END:VCALENDAR
+"
+`;
+
+exports[`edge-case fixtures > writes the midnight feed exactly as recorded 1`] = `
+"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//pragma//preview fixtures//EN
+BEGIN:VEVENT
+UID:overnight@pragma-fixtures
+DTSTART:20261015T220000
+DTEND:20261016T200000
+END:VEVENT
+END:VCALENDAR
+"
+`;
+
+exports[`preview calendar fixtures > write the hugo feed exactly as recorded 1`] = `
+"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//pragma//preview fixtures//EN
+BEGIN:VEVENT
+UID:hugo-daily@pragma-fixtures
+DTSTART:20261013T000000
+DTEND:20261014T000000
+RRULE:FREQ=DAILY;COUNT=40
+EXDATE:20261015T000000
+EXDATE:20261018T000000
+END:VEVENT
+END:VCALENDAR
+"
+`;
+
+exports[`preview calendar fixtures > write the marc feed exactly as recorded 1`] = `
+"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//pragma//preview fixtures//EN
+BEGIN:VEVENT
+UID:marc-afternoon@pragma-fixtures
+DTSTART:20261015T000000
+DTEND:20261015T191000
+END:VEVENT
+BEGIN:VEVENT
+UID:marc-free-all-day@pragma-fixtures
+DTSTART;VALUE=DATE:20261015
+DTEND;VALUE=DATE:20261016
+TRANSP:TRANSPARENT
+END:VEVENT
+BEGIN:VEVENT
+UID:marc-busy-all-day@pragma-fixtures
+DTSTART;VALUE=DATE:20261018
+DTEND;VALUE=DATE:20261019
+END:VEVENT
+END:VCALENDAR
+"
+`;
+
+exports[`preview calendar fixtures > write the sarah feed exactly as recorded 1`] = `
+"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//pragma//preview fixtures//EN
+BEGIN:VEVENT
+UID:sarah-cancelled@pragma-fixtures
+DTSTART:20261015T200000
+DTEND:20261015T210000
+STATUS:CANCELLED
+END:VEVENT
+BEGIN:VEVENT
+UID:sarah-late@pragma-fixtures
+DTSTART:20261015T230000
+DTEND:20261015T235900
+END:VEVENT
+BEGIN:VEVENT
+UID:sarah-abroad@pragma-fixtures
+DTSTART;TZID=America/New_York:20261016T120000
+DURATION:PT1H
+END:VEVENT
+END:VCALENDAR
+"
+`;

@@ -11,7 +11,10 @@ export const sessionTable = pgTable('session', {
   capacity: integer('capacity'),
   gear: text('gear'),
   friendsCountPerMember: text('friends_count_per_member'),
+  origin: text('origin'),
 });
+
+export const SESSION_ORIGINS = ['free_slot'] as const;
 
 const FRIENDS_PER_MEMBER_MAX = 1_000;
 
@@ -40,6 +43,7 @@ export const practiceCreateSchema = z
     kind: z.literal('practice'),
     date: z.string().datetime(),
     preparedConcertId: z.string().uuid().nullable().default(null),
+    origin: z.enum(SESSION_ORIGINS).nullable().default(null),
   })
   .strict();
 

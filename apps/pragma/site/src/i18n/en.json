@@ -1,6 +1,15 @@
 {
   "account": {
     "addPasskey": "Add a passkey",
+    "calendarFeed": "Calendar",
+    "calendarFeedAddress": "Secret iCal address",
+    "calendarFeedConnected": "Calendar connected.",
+    "calendarFeedHint": "Paste your calendar's secret iCal address. Google: Settings, your calendar, “Secret address in iCal format”. The app only reads when you are busy, and never shows the address again.",
+    "calendarFeedInvalid": "This address cannot be read. Paste the secret address that starts with https:// or webcal://.",
+    "calendarFeedRemove": "Remove",
+    "calendarFeedRemoved": "Calendar removed.",
+    "calendarFeedReplace": "Replace",
+    "calendarFeedSaved": "Saved. The free slots on the Sessions page now count your calendar.",
     "changePassword": "Change password",
     "contactDetails": "Contact details",
     "contactDetailsHint": "These sign the outreach message you copy from the bars page.",
@@ -348,6 +357,22 @@
     "unknownSong": "Song not found",
     "zoomIn": "Zoom in",
     "zoomOut": "Zoom out"
+  },
+  "freeSlots": {
+    "title": "Next free slots",
+    "subtitle": "2 h practice · next 4 weeks",
+    "loading": "Reading the calendars…",
+    "error": "The free slots could not be computed.",
+    "none": "No evening where everyone is free for 2 hours in the next 4 weeks.",
+    "noCalendarAtAll": "Nobody has connected a calendar yet.",
+    "connectYours": "Connect yours",
+    "book": "Book a practice",
+    "bookAria": "Book a practice on {{day}}, {{hours}}",
+    "excluded": {
+      "noCalendar": "Without {{name}}, who has no calendar",
+      "needsReconnecting": "{{name}}'s calendar needs reconnecting",
+      "unavailable": "{{name}}'s calendar is unavailable right now"
+    }
   },
   "sessions": {
     "capacity": "Capacity",

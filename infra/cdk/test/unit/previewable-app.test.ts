@@ -62,6 +62,12 @@ describe('PreviewableApp (prod, full)', () => {
     stageTpl.resourceCountIs('AWS::DSQL::Cluster', 0);
   });
 
+  it('tells the API which database role to sign in as', () => {
+    stageTpl.hasResourceProperties('AWS::Lambda::Function', {
+      Environment: { Variables: { DSQL_SCHEMA: 'prod', DSQL_ROLE: 'api_prod' } },
+    });
+  });
+
   it('publishes the cluster ARN/endpoint SSM params from the cluster stack', () => {
     clusterTpl.hasResourceProperties('AWS::SSM::Parameter', {
       Name: '/borso/test-app/dsql-cluster-arn',

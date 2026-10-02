@@ -8,6 +8,7 @@ const WEBSOCKET_CALLBACK_URL_VARIABLE = 'WEBSOCKET_CALLBACK_URL';
 const WEBSOCKET_CLIENT_URL_VARIABLE = 'WEBSOCKET_CLIENT_URL';
 const DSQL_ENDPOINT_VARIABLE = 'DSQL_ENDPOINT';
 const DSQL_SCHEMA_VARIABLE = 'DSQL_SCHEMA';
+const DSQL_ROLE_VARIABLE = 'DSQL_ROLE';
 
 export interface BuildBananaRushAppStackProps {
   readonly scope: Construct;
@@ -48,6 +49,7 @@ export function buildBananaRushAppStack(props: BuildBananaRushAppStackProps): vo
           environment: {
             [DSQL_ENDPOINT_VARIABLE]: database.clusterEndpoint,
             [DSQL_SCHEMA_VARIABLE]: database.schemaName,
+            [DSQL_ROLE_VARIABLE]: database.apiRoleName,
           },
         }),
   });

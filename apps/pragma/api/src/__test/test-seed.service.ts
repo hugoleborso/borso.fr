@@ -1,6 +1,7 @@
 import type { Lineup } from '@domain/lineup.core';
 import { bootstrapAuth, rotatePassword } from '../auth/auth.service';
 import { createCredentialForMember } from '../auth/credentials.service';
+import { saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
 import { createSession } from '../sessions/sessions.service';
@@ -16,6 +17,9 @@ import {
   SEED_TRANSITION_COMMENT,
   type SeedSong,
 } from './test-seed-fixture.core';
+import { countSavedFeeds, listFixtureFeedAttachments } from './calendar-feed-fixtures.core';
+
+export { answerFixtureFeedRequest } from './calendar-feed-fixtures.core';
 import { SEED_TASKS } from './test-seed-task-board.core';
 import {
   buildSeedLineup,
@@ -23,7 +27,8 @@ import {
   selectInstrumentIds,
   selectPrimaryInstrumentIds,
 } from './test-seed.core';
-import { deleteAllDomainRows } from './test-seed.repository';
+import { classifySchemaBoundary, type SchemaBoundary } from './schema-boundary.core';
+import { deleteAllDomainRows, tryReadingProductionMembers } from './test-seed.repository';
 
 const CONCERT_DAYS_FROM_NOW = 7;
 const HOURS_PER_DAY = 24;
@@ -73,6 +78,23 @@ export interface SeedSummary {
   readonly setlistEntries: number;
   readonly adminPassword: string;
   readonly adminCredentials: 'created' | 'already-set';
+  readonly calendarFeeds: number;
+}
+
+async function seedCalendarFeeds(
+  memberIdByName: ReadonlyMap<string, string>,
+  feedOrigin: string,
+  now: Date,
+): Promise<number> {
+  const seededMembers = SEED_MEMBERS.map((seed) => ({
+    memberId: memberIdByName.get(seed.firstName) ?? '',
+    username: seed.username,
+  }));
+  const outcomes = [];
+  for (const attachment of listFixtureFeedAttachments(seededMembers, feedOrigin)) {
+    outcomes.push(await saveCalendarFeed(attachment.memberId, attachment.address, now));
+  }
+  return countSavedFeeds(outcomes);
 }
 
 async function seedInstruments(): Promise<Map<string, string>> {
@@ -174,7 +196,7 @@ async function seedTransitionComment(songIds: readonly string[], now: Date): Pro
   await saveTransitionComment(songB, songC, SEED_TRANSITION_COMMENT, now);
 }
 
-export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {
+export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise<SeedSummary> {
   await deleteAllDomainRows();
   const bootstrap = await bootstrapAuth(SEED_ADMIN_PASSWORD, now);
   await rotatePassword(SEED_ADMIN_PASSWORD, now);
@@ -187,6 +209,7 @@ export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {
   await seedTasks(memberIdByName, songIdByTitle, now);
   await seedConcertSetlist(songIds, now);
   await seedTransitionComment(songIds, now);
+  const calendarFeeds = await seedCalendarFeeds(memberIdByName, feedOrigin, now);
 
   return {
     instruments: SEED_INSTRUMENTS.length,
@@ -196,5 +219,10 @@ export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {
     setlistEntries: songIds.length,
     adminPassword: SEED_ADMIN_PASSWORD,
     adminCredentials: selectAdminCredentialsState(bootstrap.kind),
+    calendarFeeds,
   };
+}
+
+export async function probeProductionBoundary(): Promise<SchemaBoundary> {
+  return classifySchemaBoundary(await tryReadingProductionMembers());
 }

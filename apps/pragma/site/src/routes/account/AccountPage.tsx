@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/atoms/Card';
+import { CalendarFeedForm } from '../../components/organisms/CalendarFeedForm';
 import { ContactDetailsForm } from '../../components/organisms/ContactDetailsForm';
 import { PasskeyList } from '../../components/organisms/PasskeyList';
 import { PasswordChangeForm } from '../../components/organisms/PasswordChangeForm';
@@ -13,7 +14,9 @@ import {
   useChangePassword,
   usePasskeys,
   useRegisterPasskey,
+  useRemoveCalendarFeed,
   useRemovePasskey,
+  useSaveCalendarFeed,
   useSaveContactDetails,
   useSignedInMember,
 } from '../../lib/queries/me.queries';
@@ -28,6 +31,10 @@ export function AccountPage(): JSX.Element {
   const registerPasskey = useRegisterPasskey();
   const removePasskey = useRemovePasskey();
   const saveContactDetails = useSaveContactDetails();
+  const saveCalendarFeed = useSaveCalendarFeed();
+  const removeCalendarFeed = useRemoveCalendarFeed();
+  const [calendarFeedMessage, setCalendarFeedMessage] = useState<string | null>(null);
+  const [calendarFeedError, setCalendarFeedError] = useState<string | null>(null);
   const [contactMessage, setContactMessage] = useState<string | null>(null);
   const [passwordMessage, setPasswordMessage] = useState<string | null>(null);
   const [passwordError, setPasswordError] = useState<string | null>(null);
@@ -58,6 +65,34 @@ export function AccountPage(): JSX.Element {
               email: values.email.length === 0 ? null : values.email,
             });
             setContactMessage(t('account.contactDetailsSaved'));
+          }}
+        />
+      </Card>
+
+      <Card className="p-4 sm:p-6">
+        <h2 className="text-base text-ink-900 m-0 mb-3">{t('account.calendarFeed')}</h2>
+        <p className="text-xs text-ink-500 mt-0 mb-3">{t('account.calendarFeedHint')}</p>
+        <CalendarFeedForm
+          state={member.data?.calendarFeed ?? 'absent'}
+          message={calendarFeedMessage}
+          error={calendarFeedError}
+          isRemoving={removeCalendarFeed.isPending}
+          onSave={async (address) => {
+            setCalendarFeedMessage(null);
+            setCalendarFeedError(null);
+            try {
+              await saveCalendarFeed.mutateAsync({ address });
+              setCalendarFeedMessage(t('account.calendarFeedSaved'));
+            } catch {
+              setCalendarFeedError(t('account.calendarFeedInvalid'));
+            }
+          }}
+          onRemove={() => {
+            setCalendarFeedMessage(null);
+            setCalendarFeedError(null);
+            removeCalendarFeed.mutate(undefined, {
+              onSuccess: () => setCalendarFeedMessage(t('account.calendarFeedRemoved')),
+            });
           }}
         />
       </Card>

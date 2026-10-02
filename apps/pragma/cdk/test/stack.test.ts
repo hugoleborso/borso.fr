@@ -90,6 +90,7 @@ describe('pragma preview schema cloning', () => {
       tableBlocklist: [
         'auth_attempt',
         'app_config',
+        'member_calendar_feed',
         'member_credential',
         'member_passkey',
         'webauthn_challenge',
@@ -100,6 +101,13 @@ describe('pragma preview schema cloning', () => {
 });
 
 describe('pragma app stack', () => {
+  it('gives the API 20 seconds, enough to read every calendar feed in turn', () => {
+    synthAppStack('prod').hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: Match.stringLikeRegexp('api'),
+      Timeout: 20,
+    });
+  });
+
   it('declares no Secrets Manager resources — auth state lives in the DB (ADR-0004)', () => {
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);

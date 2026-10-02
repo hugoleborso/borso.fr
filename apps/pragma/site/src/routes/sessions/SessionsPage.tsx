@@ -9,11 +9,18 @@ import { composeClassName } from '../../components/atoms/class-name.utils';
 import { BottomActionBar } from '../../components/molecules/BottomActionBar';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
+import { FreeSlotsPanel } from '../../components/organisms/FreeSlotsPanel';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api.client';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions.queries';
+
+interface SessionDraft {
+  readonly kind: 'concert' | 'practice';
+  readonly initialDate?: Date;
+  readonly origin?: 'free_slot';
+}
 
 // @FollowsBlueprint route-list-page
 export function SessionsPage(): JSX.Element {
@@ -22,7 +29,7 @@ export function SessionsPage(): JSX.Element {
   const sessionsQuery = useSessionsList();
   const deleteSession = useDeleteSession();
 
-  const [creating, setCreating] = useState<'concert' | 'practice' | null>(null);
+  const [creating, setCreating] = useState<SessionDraft | null>(null);
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
 
   const sessions = sessionsQuery.data?.sessions ?? [];
@@ -44,11 +51,11 @@ export function SessionsPage(): JSX.Element {
       <PageHeader title={t('sessions.title')} subtitle={t('sessions.subtitle')} />
 
       <BottomActionBar>
-        <Button variant="default" onClick={() => setCreating('practice')}>
+        <Button variant="default" onClick={() => setCreating({ kind: 'practice' })}>
           <Icon name="plus" size={14} />
           {t('sessions.kindPractice')}
         </Button>
-        <Button variant="accent" onClick={() => setCreating('concert')}>
+        <Button variant="accent" onClick={() => setCreating({ kind: 'concert' })}>
           <Icon name="plus" size={14} />
           {t('sessions.kindConcert')}
         </Button>
@@ -62,6 +69,12 @@ export function SessionsPage(): JSX.Element {
       {sessionsQuery.isLoading ? (
         <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
       ) : null}
+
+      <FreeSlotsPanel
+        onBook={(start) =>
+          setCreating({ kind: 'practice', initialDate: start, origin: 'free_slot' })
+        }
+      />
 
       <ul className="relative pl-8 flex flex-col gap-1">
         <span
@@ -115,7 +128,9 @@ export function SessionsPage(): JSX.Element {
 
       {creating === null ? null : (
         <CreateSessionDialog
-          kind={creating}
+          kind={creating.kind}
+          {...(creating.initialDate === undefined ? {} : { initialDate: creating.initialDate })}
+          {...(creating.origin === undefined ? {} : { origin: creating.origin })}
           onClose={() => setCreating(null)}
           onCreated={(sessionId) => navigateTo(`/sessions/${sessionId}`)}
           existingConcerts={concerts.map((concert) => ({

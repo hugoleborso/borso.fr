@@ -78,7 +78,16 @@ jobs:
       # react-refresh/only-export-components all ship at `warn`, and eslint
       # exits 0 on a warning, so before this flag they printed into the log and
       # stopped nothing. Mirrors the .husky/pre-commit invocation.
+      # A cold run needs more than Node's default heap. Measured on 2026-10-02
+      # against main: with a 4 GB heap it aborts after about 200 s on "heap
+      # out of memory", and with 6 GB it passes at a peak of 5.5 GB resident.
+      # A restored cache hid this, because only the changed files build a
+      # TypeScript program; a branch touching four workspaces at once does not
+      # fit. A standard GitHub-hosted Linux runner for a public repository has
+      # 16 GB of memory.
       - run: pnpm exec eslint . --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
+        env:
+          NODE_OPTIONS: --max-old-space-size=6144
       # Formatter drift is part of the gate. A commit made with hooks
       # skipped, or from an editor that is not on prettier, fails here.
       # `pnpm run` rather than `pnpm exec`: the agent harness's command rewriter

@@ -128,6 +128,44 @@ Lives in: `api/src/outreach/`
 Not to be confused with: a bar's `notes`, which are what happened with
 that one venue.
 
+## Calendar feed
+
+A member's secret iCal address, which lets the API read that member's
+calendar.
+
+Lives in: `api/src/calendar-feeds/`
+
+- One per member at most, keyed on `memberId` in its own table,
+  `member_calendar_feed`, so no read of `member` carries it (ADR-0024).
+- Accepted only as `https`, or `webcal` rewritten to `https`, on port
+  443, with a public host name and no user info (`judgeFeedAddress`).
+  The same check runs again on every redirect when the feed is read.
+- Written and removed through `/api/me/calendar-feed`. No route ever
+  returns it: the API answers `connected` or `absent`, and logs only the
+  member id of a feed that failed.
+- Left out of every preview clone through `tableBlocklist`, and deleted
+  with its member.
+
+Not to be confused with: a **busy interval**, which is what the API keeps
+from the feed for one request and never stores.
+
+## Busy interval
+
+A span of time during which one member's calendar says they are taken.
+
+Lives in: `api/src/calendar-feeds/`
+
+- Read from a calendar feed by `readBusyIntervals` in `ics.core.ts`,
+  recurring events expanded, for the request that asked and never stored.
+- An event marked free (`TRANSP:TRANSPARENT`) or cancelled is not busy.
+  An all-day event is busy for the whole Paris day.
+- A named IANA zone is read in that zone even without a `VTIMEZONE`
+  block. A floating time, or a zone name that is not IANA, is read as
+  Europe/Paris time.
+
+Not to be confused with: a **session**, which is the band's own
+commitment, not one member's.
+
 ## Chord chart
 
 The written music for a song, in one of three forms.
@@ -197,6 +235,25 @@ Lives in: `api/src/songs/` (`baseEnergy`) and `api/src/setlists/`
   thumb taps or slides along; the value is the last number still filled,
   so the row shows it nowhere else
   (`site/src/components/atoms/EnergyBar.tsx`).
+
+## Free slot
+
+A span of at least two hours, inside the search windows, when no member
+with a readable calendar feed is busy.
+
+Lives in: `api/src/free-slots/`
+
+- Searched over 28 days, from 18:00 to midnight on weekdays and from
+  10:00 to midnight at weekends, Europe/Paris (`buildSearchWindows`).
+- Starts on the next quarter hour, and is shown whole, not cut to two
+  hours (`selectFreeSlots`).
+- A member without a feed, with a feed the provider no longer serves, or
+  with a feed that could not be read is left out of the calculation and
+  listed with the reason.
+- Booking one creates a practice whose `origin` is `free_slot`.
+
+Not to be confused with: a **practice**, which only exists once someone
+books the slot.
 
 ## Improvement
 
@@ -765,6 +822,11 @@ to.
   chart**, and its inline form is **ChordPro**.
 - **colour** in identifiers: the column and every field are spelled
   `color`. Prose may spell it either way; code may not.
+- **availability**, **dispo**, **free time** as an entity: what the
+  band books from is a **free slot**, and what a calendar contributes is
+  a **busy interval**.
+- **agenda**, **iCal link**, **calendar URL**: the member's address is a
+  **calendar feed**.
 - **voter**, **audience member**, **fan**: the person in the room is not
   modelled at all. What exists is a **ballot**, and it identifies a
   browser rather than anyone holding it.
