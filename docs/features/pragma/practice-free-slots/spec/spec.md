@@ -76,7 +76,8 @@ sequenceDiagram
 
 - The provider answers 401, 403, 404 or 410, which is what a reset or deleted address returns. The member is excluded and shown as "calendar needs reconnecting".
 - A timeout (4 s), a 5xx, a body that does not parse, or a body over the size limit (5 MiB). The member is excluded and shown as "calendar unavailable right now". The other feeds still count.
-- The address is not https, points to an IP literal or `localhost`, or redirects to one. It is rejected at save time and again when the feed is read (see the SSRF row below).
+- The address is not https, is not on port 443, or points to an IP literal or `localhost`. It is rejected at save time and again when the feed is read (see the SSRF row below).
+- The address redirects to such a target. Saving makes no request, so it is accepted at save time. Every redirect is checked when the feed is read, the request stops there, and the member shows as "calendar unavailable right now" (amended 2026-10-02 after visual validation row 32: the earlier wording promised a save-time rejection that only a request at save time could give).
 
 ## Questions, Options and Decisions
 
