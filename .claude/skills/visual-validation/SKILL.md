@@ -97,7 +97,7 @@ A reviewer reads the PR description without opening the report, so two things fr
 - **Every UNVERIFIABLE row, on a `PASS_EXCEPT_UNVERIFIABLE` verdict**: the row number, the assertion verbatim, the one-line reason from the report's Notes (a tool gap points at `docs/knowledge/`, a deferred row at the other validator's report), and the report path. A verdict that ships without this is a Dantotsu candidate against this skill: the gate exists so tool-side limits do not slip into main silently. A PASS needs only the report path.
 - **The screenshots, on any verdict**, named by their committed path. They render in the pull request's *Files changed* tab. Do not embed them as markdown images: the GitHub MCP server strips those from the body without failing, and `pretool-github-pr-body.sh` refuses the call — see [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../docs/knowledge/github-mcp-pr-body-sanitizer.md).
 
-This section used to prescribe a `## Validation gaps` and a `## Visual evidence` section with inline images. The checker refuses both headings and the server strips the images, so following it produced a body that could not be posted.
+This section used to prescribe a `## Validation gaps` and a `## Visual evidence` section with inline images. The checker refuses both headings and the server strips the images, so following it produced a body that could not be posted; see [`docs/dantotsus/two-skills-asked-for-sections-the-checker-refuses.md`](../../../docs/dantotsus/two-skills-asked-for-sections-the-checker-refuses.md).
 
 ## Failure modes to avoid
 

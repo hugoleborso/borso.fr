@@ -39,7 +39,8 @@ for app_directory in apps/*/; do
   # An app that owns migrations must apply them when `pnpm dev` starts. Booting
   # the cluster alone serves an API against an empty schema, where every route
   # answers 500 "relation does not exist"; pragma shipped that way, and
-  # banana-rush copied it.
+  # banana-rush copied it. See
+  # docs/dantotsus/pnpm-dev-served-an-empty-database.md.
   if [ -d "${app_directory}api/src/database/migrations" ]; then
     dev_database_script=$(node -e "process.stdout.write(require('./${app_directory}package.json').scripts?.['dev:db'] ?? '')")
     if ! printf '%s' "$dev_database_script" | grep -qE 'test/dev-database\.setup\.ts|dev-db\.sh'; then

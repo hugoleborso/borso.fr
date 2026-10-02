@@ -9,7 +9,8 @@
 #
 # APP has no default. It used to default to last-loop-lepin, written when that
 # was the only application with a cluster; with three, a forgotten APP opened
-# the wrong production database without saying so.
+# the wrong production database without saying so. See
+# docs/dantotsus/the-database-shell-that-opened-the-other-app.md.
 #
 # Defaults assume the borso-readonly profile is already exported in the
 # shell (or that AWS_ACCESS_KEY_ID/SECRET are set for `AI-Dev-ReadOnly`).

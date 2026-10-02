@@ -374,7 +374,11 @@ review.
   [`the-shell-gates-are-only-ever-run-where-they-pass`](../knowledge/the-shell-gates-are-only-ever-run-where-they-pass.md).
   They are the half of that surface a table can reach: a hook reads a command
   off stdin and answers with an exit code, so its inputs are strings rather
-  than a repository.
+  than a repository. It also fails a hook that can refuse and has no row:
+  each needs an allow row, and a block row unless it is declared
+  state-dependent with its reason. Three refusing hooks had none, and one of
+  them refused a harmless command three times in a session before anyone
+  looked ([dantotsu](../dantotsus/the-hook-that-was-missing-from-its-own-contract.md)).
 - `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
   variable no workflow sets, which Vite substitutes as `undefined` at build
   time while nothing else complains.
@@ -413,7 +417,8 @@ review.
   `spec/` that names no package — matched the way pnpm matches, so a name
   without its scope passes and a placeholder such as `<pkg>` is skipped. A
   plan is read by the validator that runs its gates, and PR #107's named a
-  package that never existed in four of them.
+  package that never existed in four of them
+  ([dantotsu](../dantotsus/the-workspace-name-that-was-never-checked.md)).
   [ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md)
   removed Biome and eleven files went on telling an agent to run its linter
   for a month, one of them the technical validator's own verdict row. Prose
@@ -446,6 +451,6 @@ review.
   `api/src/database/migrations/` while its `dev:db` script neither runs
   `test/dev-database.setup.ts` nor `dev-db.sh`: booting the cluster alone
   serves an API against an empty schema, which pragma did and banana-rush
-  copied.
+  copied ([dantotsu](../dantotsus/pnpm-dev-served-an-empty-database.md)).
 - `reviewer` checks that the reason on a disable comment is a claim about that
   line which a reader can check, and not "pre-existing" or "will fix later".
