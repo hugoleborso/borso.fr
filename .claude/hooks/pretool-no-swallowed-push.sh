@@ -57,11 +57,17 @@ block() {
   exit 2
 }
 
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+push([[:space:]][^|]*)?\|' <<<"$COMMAND_TO_RUN"; then
+# One pipeline per line before matching. A `;` or `&&` ends the pipeline the
+# git command belongs to, so a pipe in the next command has nothing to do with
+# its status; without the split, `git commit -F msg > log 2>&1; grep x log | head`
+# was refused three times in one session for a pipe the commit was never in.
+PIPELINES="$(sed -E 's/&&|;/\n/g' <<<"$COMMAND_TO_RUN")"
+
+if grep -qE '(^|[|[:space:]])git[[:space:]]+push([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
   block "git push piped into another command throws away the push's exit status."
 fi
 
-if grep -qE '(^|[;&|[:space:]])git[[:space:]]+commit([[:space:]][^|]*)?\|' <<<"$COMMAND_TO_RUN"; then
+if grep -qE '(^|[|[:space:]])git[[:space:]]+commit([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
   block "git commit piped into another command throws away the commit hook's exit status."
 fi
 

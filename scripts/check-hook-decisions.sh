@@ -91,6 +91,29 @@ docs: explain why pkill is refused
 killall has the same blast radius.
 MSG'
 
+# --- pretool-no-swallowed-push.sh -----------------------------------------
+#
+# Refuses a git push or commit whose own pipeline ends in another command, which
+# reports that command's status instead. Must not refuse a pipe that belongs to a
+# later command on the same line: this table had no row for this hook, and it
+# refused `git commit … > log 2>&1; grep … | head` three times in one session.
+
+run_case pretool-no-swallowed-push.sh block command \
+  'git push -u origin main | tail -5'
+run_case pretool-no-swallowed-push.sh block command \
+  'git commit -q -F msg.txt 2>&1 | grep -E "error"'
+run_case pretool-no-swallowed-push.sh block command \
+  'cd repo && git commit -m x | tail -3'
+
+run_case pretool-no-swallowed-push.sh allow command \
+  'git commit -q -F msg.txt > commit.log 2>&1; grep -B3 "failed" commit.log | head'
+run_case pretool-no-swallowed-push.sh allow command \
+  'git commit -q -F msg.txt && git log --oneline -3 | cat'
+run_case pretool-no-swallowed-push.sh allow command \
+  'set -o pipefail; git push -u origin main 2>&1 | tail -20'
+run_case pretool-no-swallowed-push.sh allow command \
+  'scripts/kaizen.sh "piped git push | tail and lost the status"'
+
 # --- pretool-github-pr-body.sh --------------------------------------------
 #
 # Refuses body markup the GitHub MCP server strips on the way in. Must not
