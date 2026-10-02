@@ -99,7 +99,7 @@ sequenceDiagram
 |---|---|---|
 | [ADR-0023](../../../../adr/0023-one-database-role-per-stage-schema.md) | One database role per stage schema, mapped to the stage's API Lambda; Lambdas lose `DbConnectAdmin` | `DsqlSchema` takes the API's IAM role. The runner creates, grants and drops the role. The three `client.ts` files sign with `getDbConnectAuthToken` as the stage role. The Lambda deploys only after the schema custom resource. |
 | [ADR-0024](../../../../adr/0024-calendar-feed-address-in-its-own-table.md) | The member's calendar feed address is a plain-text column in its own table, write-only through the API | No route returns the address. It never reaches a log. It is blocklisted from preview clones. |
-| [ADR-0025](../../../../adr/0025-ical-js-parses-calendar-feeds.md) | `ical.js` parses the feeds | A new runtime dependency of `apps/pragma`, used only from `calendar-feeds/ics.adapter.ts`. |
+| [ADR-0025](../../../../adr/0025-ical-js-parses-calendar-feeds.md) | `ical.js` parses the feeds | A new runtime dependency of `apps/pragma`, used only from `calendar-feeds/ics.core.ts`. |
 
 ## Changes
 
@@ -136,7 +136,7 @@ infra/cdk/src/internal/migration-runner/*.utils.ts      NEW: role-statement buil
 infra/cdk/src/constructs/{lambda-api,previewable-app}.ts UPDATE: wire the role name and the deploy dependency
 apps/{pragma,last-loop-lepin,banana-rush}/api/src/database/client.ts  UPDATE: stage role + DbConnect token
 apps/pragma/api/src/database/migrations/0015_calendar_feeds.sql       NEW
-apps/pragma/api/src/calendar-feeds/                     NEW: controller, service, repository, schema, ics.adapter, feed-address.core
+apps/pragma/api/src/calendar-feeds/                     NEW: service, repository, schema, calendar-feed.adapter, ics.core, feed-address.core, feed-response.core
 apps/pragma/api/src/free-slots/                         NEW: controller, service, free-slots.core (windows, intersection, rounding)
 apps/pragma/api/src/sessions/sessions.schema.ts         UPDATE: origin
 apps/pragma/api/src/__test/                             UPDATE: fixture feeds route + seed

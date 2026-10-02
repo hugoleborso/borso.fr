@@ -23,7 +23,7 @@
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
-    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"pragma-pr-${PR_NUMBER:?PR_NUMBER env var required \u2014 pragma destroy targets the per-PR app stack only, never the shared pragma-cluster stack}\" --force",
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"pragma-pr-${PR_NUMBER:?PR_NUMBER env var required — pragma destroy targets the per-PR app stack only, never the shared pragma-cluster stack}\" --force",
     "test:mutation": "stryker run"
   },
   "dependencies": {
@@ -51,6 +51,7 @@
     "hash-wasm": "^4.11.0",
     "hono": "catalog:",
     "i18next": "catalog:",
+    "ical.js": "2.2.1",
     "postgres": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

@@ -90,6 +90,7 @@ describe('pragma preview schema cloning', () => {
       tableBlocklist: [
         'auth_attempt',
         'app_config',
+        'member_calendar_feed',
         'member_credential',
         'member_passkey',
         'webauthn_challenge',

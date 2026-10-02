@@ -1,5 +1,6 @@
 import { eq, inArray, isNotNull } from 'drizzle-orm';
 import { deleteCredentialsOfMember } from '../auth/credentials.service';
+import { deleteCalendarFeedOfMember } from '../calendar-feeds/calendar-feeds.service';
 import { deleteVotesOfDeletedMember } from '../setlists/voting.service';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
@@ -127,6 +128,7 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await scrubMemberFromSetlistOverrides(transaction, id);
     await transaction.delete(memberInstrumentTable).where(eq(memberInstrumentTable.memberId, id));
     await deleteCredentialsOfMember(transaction, id);
+    await deleteCalendarFeedOfMember(transaction, id);
     await deleteVotesOfDeletedMember(transaction, id);
     await unassignTasksOfMemberBeingDeleted(transaction, id);
     const deleted = await transaction

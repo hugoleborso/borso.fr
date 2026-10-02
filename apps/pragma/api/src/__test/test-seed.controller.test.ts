@@ -128,6 +128,21 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     expect((await listSongsNewestFirst()).length).toBe(6);
   });
 
+  it('serves the fixture calendars the seed attaches, and a reset address as 410', async () => {
+    const feed = await createApp().request('/api/__test/calendar-feeds/hugo.ics');
+    expect(feed.status).toBe(200);
+    expect(feed.headers.get('content-type')).toContain('text/calendar');
+    expect(await feed.text()).toContain('BEGIN:VCALENDAR');
+    const gone = await createApp().request('/api/__test/calendar-feeds/gone.ics');
+    expect(gone.status).toBe(410);
+  });
+
+  it('attaches no fixture calendar to a seed served over plain http', async () => {
+    const response = await postSeed();
+    const summary = z.object({ calendarFeeds: z.number() }).parse(await response.json());
+    expect(summary.calendarFeeds).toBe(0);
+  });
+
   it('is not mounted when ALLOW_TEST_SEED is unset', async () => {
     const saved = process.env[TEST_SEED_FLAG];
     delete process.env[TEST_SEED_FLAG];

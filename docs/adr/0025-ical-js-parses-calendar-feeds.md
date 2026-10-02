@@ -15,7 +15,7 @@ The npm registry, read on 2026-10-02, lists `ical.js` 2.2.1 (MPL-2.0, no runtime
 
 ## Decision
 
-**`ical.js` parses the feeds, called only from `apps/pragma/api/src/calendar-feeds/ics.adapter.ts`, which returns plain busy intervals.** It has no runtime dependency, and only parses: it has no fetch API that could bypass the SSRF guard. It expands recurrences through its own iterator and resolves zones from the feed's `VTIMEZONE` blocks. A time whose `TZID` has no `VTIMEZONE` block, or a floating time, is read as Europe/Paris, the band's zone. Nothing outside the adapter imports the library, so replacing it later touches one file.
+**`ical.js` parses the feeds, called only from `apps/pragma/api/src/calendar-feeds/ics.core.ts`, which returns plain busy intervals.** It has no runtime dependency, and only parses: it has no fetch API that could bypass the SSRF guard. It expands recurrences through its own iterator and resolves zones from the feed's `VTIMEZONE` blocks. A time whose `TZID` has no `VTIMEZONE` block, or a floating time, is read as Europe/Paris, the band's zone. Nothing outside the adapter imports the library, so replacing it later touches one file.
 
 ## Consequences
 
@@ -79,5 +79,5 @@ The npm registry, read on 2026-10-02, lists `ical.js` 2.2.1 (MPL-2.0, no runtime
 - Spec: [`docs/features/pragma/practice-free-slots/spec/spec.md`](../features/pragma/practice-free-slots/spec/spec.md), the row "ICS parsing"
 - Plan: `docs/features/pragma/practice-free-slots/plan/plan.md`
 - Commit: stamped by `/after-task-dantotsus` on merge
-- Files: `apps/pragma/api/src/calendar-feeds/ics.adapter.ts`, `apps/pragma/package.json`
+- Files: `apps/pragma/api/src/calendar-feeds/ics.core.ts`, `apps/pragma/package.json`
 - Related ADRs: ADR-0024

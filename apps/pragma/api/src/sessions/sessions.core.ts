@@ -1,5 +1,5 @@
 import type { z } from 'zod';
-import type { sessionCreateSchema, sessionTable } from './sessions.schema';
+import type { SESSION_ORIGINS, sessionCreateSchema, sessionTable } from './sessions.schema';
 
 type SessionCreateInput = z.infer<typeof sessionCreateSchema>;
 type SessionInsertEncoded = typeof sessionTable.$inferInsert;
@@ -17,6 +17,7 @@ export interface PracticeInsertShape {
   kind: 'practice';
   date: Date;
   preparedConcertId: string | null;
+  origin: (typeof SESSION_ORIGINS)[number] | null;
 }
 
 export type SessionInsertShape = ConcertInsertShape | PracticeInsertShape;
@@ -37,6 +38,7 @@ export function buildSessionInsertShape(input: SessionCreateInput): SessionInser
     kind: 'practice',
     date: new Date(input.date),
     preparedConcertId: input.preparedConcertId,
+    origin: input.origin,
   };
 }
 
@@ -55,5 +57,6 @@ export function encodeSessionInsert(values: SessionInsertShape): SessionInsertEn
     kind: 'practice',
     date: values.date,
     preparedConcertId: values.preparedConcertId,
+    origin: values.origin,
   };
 }

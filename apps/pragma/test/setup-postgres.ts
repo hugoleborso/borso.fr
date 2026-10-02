@@ -15,6 +15,7 @@ const TRACKED_TABLES = [
   'audience_suggestion',
   'audience_vote',
   'voting_round',
+  'member_calendar_feed',
   'member_credential',
   'member_passkey',
   'webauthn_challenge',

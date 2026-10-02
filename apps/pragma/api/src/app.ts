@@ -5,6 +5,7 @@ import { buildAudienceRouter } from './audience/audience.controller';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
+import { buildFreeSlotsRouter } from './free-slots/free-slots.controller';
 import { buildImprovementsRouter } from './improvements/improvements.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
@@ -45,6 +46,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/songs', buildSongsRouter())
     .route('/api/mastery', buildMasteryRouter())
     .route('/api/sessions', buildSessionsRouter())
+    .route('/api/free-slots', buildFreeSlotsRouter())
     .route('/api/offline-manifest', buildOfflineManifestRouter())
     .route('/api/setlists', buildSetlistsRouter())
     .route('/api/transition-comments', buildTransitionCommentsRouter())

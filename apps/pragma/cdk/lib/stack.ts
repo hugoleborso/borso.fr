@@ -106,6 +106,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
               tableBlocklist: [
                 'auth_attempt',
                 'app_config',
+                'member_calendar_feed',
                 'member_credential',
                 'member_passkey',
                 'webauthn_challenge',

@@ -4,6 +4,7 @@ import {
   webauthnChallengeTable,
 } from '../auth/credentials.schema';
 import { barTable } from '../bars/bars.schema';
+import { memberCalendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
 import { getDatabase } from '../database/client';
 import { instrumentTable } from '../instruments/instruments.schema';
 import { masteryDefaultTable, masteryOverrideTable } from '../mastery/mastery.schema';
@@ -37,6 +38,7 @@ export async function deleteAllDomainRows(): Promise<void> {
   await database.delete(memberPasskeyTable);
   await database.delete(webauthnChallengeTable);
   await database.delete(memberCredentialTable);
+  await database.delete(memberCalendarFeedTable);
   await database.delete(memberTable);
   await database.delete(instrumentTable);
 }
