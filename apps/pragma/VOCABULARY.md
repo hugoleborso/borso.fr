@@ -157,7 +157,8 @@ Lives in: `api/src/calendar-feeds/`
   recurring events expanded, for the request that asked and never stored.
 - An event marked free (`TRANSP:TRANSPARENT`) or cancelled is not busy.
   An all-day event is busy for the whole Paris day.
-- A floating time, or a zone the feed does not define, is read as
+- A named IANA zone is read in that zone even without a `VTIMEZONE`
+  block. A floating time, or a zone name that is not IANA, is read as
   Europe/Paris time.
 
 Not to be confused with: a **session**, which is the band's own

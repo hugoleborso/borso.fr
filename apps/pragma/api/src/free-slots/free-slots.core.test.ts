@@ -113,6 +113,20 @@ describe('subtractBusyIntervals', () => {
   });
 });
 
+describe('an event crossing midnight', () => {
+  it('blocks both evenings it touches', () => {
+    const tuesdayEvening = interval('2026-10-13T16:00:00Z', '2026-10-13T22:00:00Z');
+    const wednesdayEvening = interval('2026-10-14T16:00:00Z', '2026-10-14T22:00:00Z');
+    const overnight = interval('2026-10-13T20:30:00Z', '2026-10-14T17:30:00Z');
+    expect(
+      asIso(subtractBusyIntervals([tuesdayEvening, wednesdayEvening], [overnight])),
+    ).toStrictEqual([
+      ['2026-10-13T16:00:00.000Z', '2026-10-13T20:30:00.000Z'],
+      ['2026-10-14T17:30:00.000Z', '2026-10-14T22:00:00.000Z'],
+    ]);
+  });
+});
+
 describe('roundUpToQuarterHour', () => {
   it('rounds up to the next quarter hour and leaves a quarter hour alone', () => {
     expect(roundUpToQuarterHour(new Date('2026-10-13T17:01:00Z')).toISOString()).toBe(

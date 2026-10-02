@@ -1,12 +1,19 @@
 import ICAL from 'ical.js';
 import { z } from 'zod';
-import { parisWallTimeToInstant } from '../helpers/paris-time/paris-time.core';
+import {
+  BAND_TIME_ZONE,
+  isKnownTimeZone,
+  zonedWallTimeToInstant,
+} from '../helpers/paris-time/paris-time.core';
 import type { BusyInterval } from './calendar-feeds.types';
 
 const TRANSPARENT = 'TRANSPARENT';
 const CANCELLED = 'CANCELLED';
 const FLOATING_ZONE_ID = 'floating';
 const RECURRENCE_ID = 'recurrence-id';
+const TZID = 'tzid';
+const DTSTART = 'dtstart';
+const DTEND = 'dtend';
 const UID = 'uid';
 const MILLISECONDS_PER_SECOND = 1_000;
 const MAX_OCCURRENCES_PER_EVENT = 100_000;
@@ -24,16 +31,45 @@ interface ReadRange {
   readonly end: Date;
 }
 
-function instantOf(time: ICAL.Time): Date {
-  const isWallClockOnly = time.isDate || time.zone.tzid === FLOATING_ZONE_ID;
-  if (!isWallClockOnly) return new Date(time.toUnixTime() * MILLISECONDS_PER_SECOND);
-  return parisWallTimeToInstant({
-    year: time.year,
-    month: time.month,
-    day: time.day,
-    hour: time.isDate ? 0 : time.hour,
-    minute: time.isDate ? 0 : time.minute,
-  });
+interface EventZones {
+  readonly start: string;
+  readonly end: string;
+}
+
+function namedZoneOf(component: ICAL.Component, propertyName: string): string {
+  const timeZoneId: unknown = component.getFirstProperty(propertyName)?.getParameter(TZID);
+  return typeof timeZoneId === 'string' && isKnownTimeZone(timeZoneId)
+    ? timeZoneId
+    : BAND_TIME_ZONE;
+}
+
+function zonesOf(component: ICAL.Component): EventZones {
+  const start = namedZoneOf(component, DTSTART);
+  return {
+    start,
+    end: component.hasProperty(DTEND) ? namedZoneOf(component, DTEND) : start,
+  };
+}
+
+function instantOf(time: ICAL.Time, wallClockZone: string): Date {
+  if (time.isDate) {
+    return zonedWallTimeToInstant(
+      { year: time.year, month: time.month, day: time.day, hour: 0, minute: 0 },
+      BAND_TIME_ZONE,
+    );
+  }
+  if (time.zone.tzid !== FLOATING_ZONE_ID) {
+    return new Date(time.toUnixTime() * MILLISECONDS_PER_SECOND);
+  }
+  return zonedWallTimeToInstant(
+    { year: time.year, month: time.month, day: time.day, hour: time.hour, minute: time.minute },
+    wallClockZone,
+  );
+}
+
+function intervalOf(start: ICAL.Time, end: ICAL.Time, component: ICAL.Component): BusyInterval {
+  const zones = zonesOf(component);
+  return { start: instantOf(start, zones.start), end: instantOf(end, zones.end) };
 }
 
 function isBusy(component: ICAL.Component): boolean {
@@ -49,7 +85,7 @@ function isOverlapping(interval: BusyInterval, range: ReadRange): boolean {
 
 function singleOccurrence(event: ICAL.Event, range: ReadRange): BusyInterval[] {
   if (!isBusy(event.component)) return [];
-  const single = { start: instantOf(event.startDate), end: instantOf(event.endDate) };
+  const single = intervalOf(event.startDate, event.endDate, event.component);
   return isOverlapping(single, range) ? [single] : [];
 }
 
@@ -61,7 +97,7 @@ function recurringOccurrences(event: ICAL.Event, range: ReadRange): BusyInterval
     const occurrenceStart = iterator.next();
     if (iterator.complete) break;
     const details = event.getOccurrenceDetails(occurrenceStart);
-    const occurrence = { start: instantOf(details.startDate), end: instantOf(details.endDate) };
+    const occurrence = intervalOf(details.startDate, details.endDate, details.item.component);
     if (occurrence.start >= range.end) break;
     if (isBusy(details.item.component) && occurrence.end > range.start) busy.push(occurrence);
   }

@@ -30,3 +30,7 @@ export function collectBusyIntervals(busyTimes: readonly BusyTimeOutcome[]): Bus
 export function countReadFeeds(busyTimes: readonly BusyTimeOutcome[]): number {
   return busyTimes.filter((busyTime) => busyTime.kind === 'read').length;
 }
+
+export function countFailedFeeds(busyTimes: readonly BusyTimeOutcome[]): number {
+  return busyTimes.length - countReadFeeds(busyTimes);
+}

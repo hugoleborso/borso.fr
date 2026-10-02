@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   addCalendarDays,
+  isKnownTimeZone,
+  zonedWallTimeToInstant,
   parisCalendarDayOf,
   parisInstantAt,
   parisOffsetMinutes,
@@ -98,5 +100,22 @@ describe('calendar days', () => {
     expect(parisInstantAt({ year: 2026, month: 10, day: 14 }, 18, 30).toISOString()).toBe(
       '2026-10-14T16:30:00.000Z',
     );
+  });
+});
+
+describe('other time zones', () => {
+  it('turns a wall time in another IANA zone into the right instant', () => {
+    expect(
+      zonedWallTimeToInstant(
+        { year: 2026, month: 10, day: 5, hour: 12, minute: 0 },
+        'America/New_York',
+      ).toISOString(),
+    ).toBe('2026-10-05T16:00:00.000Z');
+  });
+
+  it('knows the IANA zones and refuses a Windows zone name', () => {
+    expect(isKnownTimeZone('America/New_York')).toBe(true);
+    expect(isKnownTimeZone('America/New_York')).toBe(true);
+    expect(isKnownTimeZone('Romance Standard Time')).toBe(false);
   });
 });

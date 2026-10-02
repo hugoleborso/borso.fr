@@ -35,6 +35,8 @@ describe('judgeFeedAddress', () => {
     ['an IPv4 literal', 'https://169.254.169.254/latest/meta-data'],
     ['an IPv6 literal', 'https://[::1]/feed.ics'],
     ['localhost', 'https://localhost/feed.ics'],
+    ['localhost written as a fully qualified name', 'https://localhost./feed.ics'],
+    ['a localhost subdomain written as a fully qualified name', 'https://api.localhost./feed.ics'],
     ['a localhost subdomain', 'https://api.localhost/feed.ics'],
     ['a single-label host', 'https://intranet/feed.ics'],
     ['user info', 'https://someone:secret@calendar.example.com/feed.ics'],

@@ -17,7 +17,8 @@ const LOCATION_HEADER = 'location';
 export type FeedFetcher = (address: string, init: RequestInit) => Promise<Response>;
 
 export type FeedReadOutcome =
-  { readonly kind: 'ok'; readonly body: string } | { readonly kind: FeedFailure };
+  | { readonly kind: 'ok'; readonly body: string }
+  | { readonly kind: FeedFailure; readonly status: number | null };
 
 export interface ReadFeedOptions {
   readonly fetcher?: FeedFetcher;
@@ -25,8 +26,13 @@ export interface ReadFeedOptions {
   readonly maxBytes?: number;
 }
 
-const UNAVAILABLE: FeedReadOutcome = { kind: 'unavailable' };
-const NEEDS_RECONNECTING: FeedReadOutcome = { kind: 'needs-reconnecting' };
+function unavailable(status: number | null): FeedReadOutcome {
+  return { kind: 'unavailable', status };
+}
+
+function needsReconnecting(status: number | null): FeedReadOutcome {
+  return { kind: 'needs-reconnecting', status };
+}
 
 async function abandon(reader: ReadableStreamDefaultReader<Uint8Array>): Promise<null> {
   await reader.cancel();
@@ -64,7 +70,7 @@ function nextHop(response: Response, currentAddress: string, hopsLeft: number): 
 
 async function readFeedBody(response: Response, maxBytes: number): Promise<FeedReadOutcome> {
   const body = await readBodyWithin(response, maxBytes);
-  return body === null ? UNAVAILABLE : { kind: 'ok', body };
+  return body === null ? unavailable(response.status) : { kind: 'ok', body };
 }
 
 async function followRedirect(
@@ -74,7 +80,7 @@ async function followRedirect(
   hopsLeft: number,
 ): Promise<FeedReadOutcome> {
   const next = nextHop(response, currentAddress, hopsLeft);
-  if (next === null) return UNAVAILABLE;
+  if (next === null) return unavailable(response.status);
   return await followToTheFeed(next, request, hopsLeft - 1);
 }
 
@@ -85,8 +91,8 @@ async function followToTheFeed(
 ): Promise<FeedReadOutcome> {
   const response = await request.fetcher(address, { redirect: 'manual', signal: request.signal });
   const statusClass = classifyFeedStatus(response.status);
-  if (statusClass === 'gone') return NEEDS_RECONNECTING;
-  if (statusClass === 'failed') return UNAVAILABLE;
+  if (statusClass === 'gone') return needsReconnecting(response.status);
+  if (statusClass === 'failed') return unavailable(response.status);
   if (statusClass === 'redirect') return await followRedirect(response, address, request, hopsLeft);
   return await readFeedBody(response, request.maxBytes);
 }
@@ -97,7 +103,7 @@ export async function readCalendarFeed(
   options: ReadFeedOptions = {},
 ): Promise<FeedReadOutcome> {
   const verdict = judgeFeedAddress(storedAddress);
-  if (verdict.kind === 'rejected') return NEEDS_RECONNECTING;
+  if (verdict.kind === 'rejected') return needsReconnecting(null);
   const fetcher = options.fetcher ?? fetch;
   const signal = AbortSignal.timeout(options.timeoutMs ?? FEED_TIMEOUT_MS);
   try {
@@ -107,6 +113,6 @@ export async function readCalendarFeed(
       MAX_REDIRECTS,
     );
   } catch {
-    return UNAVAILABLE;
+    return unavailable(null);
   }
 }

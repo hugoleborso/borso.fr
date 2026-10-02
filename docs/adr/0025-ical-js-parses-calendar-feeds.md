@@ -15,13 +15,13 @@ The npm registry, read on 2026-10-02, lists `ical.js` 2.2.1 (MPL-2.0, no runtime
 
 ## Decision
 
-**`ical.js` parses the feeds, called only from `apps/pragma/api/src/calendar-feeds/ics.core.ts`, which returns plain busy intervals.** It has no runtime dependency, and only parses: it has no fetch API that could bypass the SSRF guard. It expands recurrences through its own iterator and resolves zones from the feed's `VTIMEZONE` blocks. A time whose `TZID` has no `VTIMEZONE` block, or a floating time, is read as Europe/Paris, the band's zone. Nothing outside the adapter imports the library, so replacing it later touches one file.
+**`ical.js` parses the feeds, called only from `apps/pragma/api/src/calendar-feeds/ics.core.ts`, which returns plain busy intervals.** It has no runtime dependency, and only parses: it has no fetch API that could bypass the SSRF guard. It expands recurrences through its own iterator and resolves zones from the feed's `VTIMEZONE` blocks. A `TZID` with no `VTIMEZONE` block is read in that zone when it is an IANA name the runtime knows, and as Europe/Paris, the band's zone, otherwise; a floating time is read as Europe/Paris. Nothing outside the adapter imports the library, so replacing it later touches one file.
 
 ## Consequences
 
 - `+` One new package with no transitive dependency in the Lambda bundle.
 - `+` The library cannot make a network call, so the SSRF guard is the only path to the network.
-- `-` A feed that names a zone it does not define, such as a Windows zone name with no `VTIMEZONE` block, is read as Paris time. That is correct for this band and wrong for a member travelling abroad.
+- `-` A feed that names a non-IANA zone it does not define, such as a Windows zone name with no `VTIMEZONE` block, is read as Paris time. That is correct for this band and wrong for a member travelling abroad.
 - `-` The latest release is from 2025-08-08. If a parsing bug appears, a fix may have to be patched locally under `patches/`.
 - `~` MPL-2.0 is file-level copyleft. Using the package unmodified asks nothing of this repository, and a local patch to its files would be published under MPL-2.0.
 

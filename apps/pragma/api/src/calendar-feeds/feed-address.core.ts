@@ -17,7 +17,10 @@ function parseAddress(raw: string): URL | null {
   }
 }
 
-function isPublicHostname(hostname: string): boolean {
+const TRAILING_DOT = /\.$/u;
+
+function isPublicHostname(hostnameAsTyped: string): boolean {
+  const hostname = hostnameAsTyped.replace(TRAILING_DOT, '');
   if (hostname.endsWith(LOCALHOST_SUFFIX)) return false;
   if (IPV4_LITERAL_PATTERN.test(hostname) || IPV6_LITERAL_PATTERN.test(hostname)) return false;
   return hostname.includes(HOSTNAME_LABEL_SEPARATOR);

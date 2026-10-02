@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   collectBusyIntervals,
+  countFailedFeeds,
   countReadFeeds,
   selectExcludedMembers,
 } from './member-busy-time.core';
@@ -43,7 +44,8 @@ describe('collectBusyIntervals and countReadFeeds', () => {
     expect(collectBusyIntervals(busyTimes)).toStrictEqual([EVENING]);
   });
 
-  it('counts the feeds that were read', () => {
+  it('counts the feeds that were read, and the ones that failed', () => {
     expect(countReadFeeds(busyTimes)).toBe(2);
+    expect(countFailedFeeds(busyTimes)).toBe(1);
   });
 });

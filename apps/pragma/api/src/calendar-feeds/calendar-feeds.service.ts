@@ -52,12 +52,16 @@ export async function readCalendarFeedState(memberId: string): Promise<CalendarF
 }
 
 const FAILURE_EVENT_BY_KIND: Readonly<Record<FeedFailure, string>> = {
-  'needs-reconnecting': 'calendar_feed_needs_reconnecting',
-  unavailable: 'calendar_feed_unavailable',
+  'needs-reconnecting': 'CalendarFeedNeedsReconnecting',
+  unavailable: 'CalendarFeedUnavailable',
 };
 
-function reportFeedFailure(memberId: string, kind: FeedFailure): MemberBusyTime {
-  console.warn(JSON.stringify({ event: FAILURE_EVENT_BY_KIND[kind], memberId }));
+function reportFeedFailure(
+  memberId: string,
+  kind: FeedFailure,
+  status: number | null,
+): MemberBusyTime {
+  console.warn(JSON.stringify({ event: FAILURE_EVENT_BY_KIND[kind], memberId, status }));
   return { memberId, kind };
 }
 
@@ -67,9 +71,11 @@ async function readBusyTimeOfOneFeed(
   range: ReadRange,
 ): Promise<MemberBusyTime> {
   const feed = await readCalendarFeed(address);
-  if (feed.kind !== 'ok') return reportFeedFailure(memberId, feed.kind);
+  if (feed.kind !== 'ok') return reportFeedFailure(memberId, feed.kind, feed.status);
   const busyIntervals = readBusyIntervals(feed.body, range);
-  if (busyIntervals.kind === 'unavailable') return reportFeedFailure(memberId, 'unavailable');
+  if (busyIntervals.kind === 'unavailable') {
+    return reportFeedFailure(memberId, 'unavailable', null);
+  }
   return { memberId, kind: 'read', intervals: busyIntervals.intervals };
 }
 

@@ -59,7 +59,40 @@ describe('readBusyIntervals', () => {
     expect(busyOf(body)).toStrictEqual([['2026-10-13T16:00:00.000Z', '2026-10-13T17:00:00.000Z']]);
   });
 
-  it('reads a floating time, or a zone the feed does not define, as Paris time', () => {
+  it('reads a named IANA zone the feed does not define in that zone', () => {
+    const body = calendar(
+      ...event(
+        'abroad',
+        'DTSTART;TZID=America/New_York:20261013T120000',
+        'DTEND;TZID=America/New_York:20261013T130000',
+      ),
+      ...event('abroad-duration', 'DTSTART;TZID=America/New_York:20261014T120000', 'DURATION:PT1H'),
+      ...event(
+        'abroad-weekly',
+        'DTSTART;TZID=America/New_York:20261015T120000',
+        'DURATION:PT1H',
+        'RRULE:FREQ=WEEKLY;COUNT=1',
+      ),
+    );
+    expect(busyOf(body)).toStrictEqual([
+      ['2026-10-13T16:00:00.000Z', '2026-10-13T17:00:00.000Z'],
+      ['2026-10-14T16:00:00.000Z', '2026-10-14T17:00:00.000Z'],
+      ['2026-10-15T16:00:00.000Z', '2026-10-15T17:00:00.000Z'],
+    ]);
+  });
+
+  it('reads the end in its own zone when it names a different one', () => {
+    const body = calendar(
+      ...event(
+        'two-zones',
+        'DTSTART;TZID=America/New_York:20261013T120000',
+        'DTEND;TZID=Europe/Paris:20261013T190000',
+      ),
+    );
+    expect(busyOf(body)).toStrictEqual([['2026-10-13T16:00:00.000Z', '2026-10-13T17:00:00.000Z']]);
+  });
+
+  it('reads a floating time, or a zone name that is not IANA, as Paris time', () => {
     const body = calendar(
       ...event('a', 'DTSTART:20261013T190000', 'DTEND:20261013T200000'),
       ...event('b', 'DTSTART;TZID=Romance Standard Time:20261014T190000', 'DURATION:PT1H'),

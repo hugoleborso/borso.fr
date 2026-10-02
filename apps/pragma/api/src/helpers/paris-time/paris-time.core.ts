@@ -15,15 +15,32 @@ export interface WallTime extends CalendarDay {
   readonly minute: number;
 }
 
-const wallClockFormatter = new Intl.DateTimeFormat('en-US', {
-  timeZone: BAND_TIME_ZONE,
-  hourCycle: 'h23',
-  year: 'numeric',
-  month: 'numeric',
-  day: 'numeric',
-  hour: 'numeric',
-  minute: 'numeric',
-});
+const formatterByZone = new Map<string, Intl.DateTimeFormat>();
+
+function wallClockFormatterOf(timeZone: string): Intl.DateTimeFormat {
+  const cached = formatterByZone.get(timeZone);
+  if (cached !== undefined) return cached;
+  const formatter = new Intl.DateTimeFormat('en-US', {
+    timeZone,
+    hourCycle: 'h23',
+    year: 'numeric',
+    month: 'numeric',
+    day: 'numeric',
+    hour: 'numeric',
+    minute: 'numeric',
+  });
+  formatterByZone.set(timeZone, formatter);
+  return formatter;
+}
+
+export function isKnownTimeZone(timeZone: string): boolean {
+  try {
+    wallClockFormatterOf(timeZone);
+    return true;
+  } catch {
+    return false;
+  }
+}
 
 function readParts(parts: readonly Intl.DateTimeFormatPart[]): Map<string, string> {
   return new Map(parts.map((part) => [part.type, part.value]));
@@ -40,8 +57,8 @@ function wallTimeAsUtcMilliseconds(wallTime: WallTime): number {
 }
 
 // @FollowsBlueprint helper-module
-export function parisWallTimeOf(instant: Date): WallTime {
-  const parts = readParts(wallClockFormatter.formatToParts(instant));
+export function zonedWallTimeOf(instant: Date, timeZone: string): WallTime {
+  const parts = readParts(wallClockFormatterOf(timeZone).formatToParts(instant));
   return {
     year: Number(parts.get('year')),
     month: Number(parts.get('month')),
@@ -51,18 +68,31 @@ export function parisWallTimeOf(instant: Date): WallTime {
   };
 }
 
-export function parisOffsetMinutes(instant: Date): number {
-  const wallMilliseconds = wallTimeAsUtcMilliseconds(parisWallTimeOf(instant));
+export function parisWallTimeOf(instant: Date): WallTime {
+  return zonedWallTimeOf(instant, BAND_TIME_ZONE);
+}
+
+export function zoneOffsetMinutes(instant: Date, timeZone: string): number {
+  const wallMilliseconds = wallTimeAsUtcMilliseconds(zonedWallTimeOf(instant, timeZone));
   const instantToTheMinute =
     Math.floor(instant.getTime() / MILLISECONDS_PER_MINUTE) * MILLISECONDS_PER_MINUTE;
   return (wallMilliseconds - instantToTheMinute) / MILLISECONDS_PER_MINUTE;
 }
 
-export function parisWallTimeToInstant(wallTime: WallTime): Date {
+export function parisOffsetMinutes(instant: Date): number {
+  return zoneOffsetMinutes(instant, BAND_TIME_ZONE);
+}
+
+export function zonedWallTimeToInstant(wallTime: WallTime, timeZone: string): Date {
   const wallMilliseconds = wallTimeAsUtcMilliseconds(wallTime);
   const shiftedBy = (instantMilliseconds: number): number =>
-    wallMilliseconds - parisOffsetMinutes(new Date(instantMilliseconds)) * MILLISECONDS_PER_MINUTE;
+    wallMilliseconds -
+    zoneOffsetMinutes(new Date(instantMilliseconds), timeZone) * MILLISECONDS_PER_MINUTE;
   return new Date(shiftedBy(shiftedBy(wallMilliseconds)));
+}
+
+export function parisWallTimeToInstant(wallTime: WallTime): Date {
+  return zonedWallTimeToInstant(wallTime, BAND_TIME_ZONE);
 }
 
 export function parisCalendarDayOf(instant: Date): CalendarDay {

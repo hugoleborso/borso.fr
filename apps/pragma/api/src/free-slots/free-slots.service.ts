@@ -3,6 +3,7 @@ import { getMembersSortedByFirstName } from '../members/members.service';
 import { SEARCH_DAYS, selectFreeSlots } from './free-slots.core';
 import {
   collectBusyIntervals,
+  countFailedFeeds,
   countReadFeeds,
   selectExcludedMembers,
 } from './member-busy-time.core';
@@ -28,6 +29,7 @@ export async function computeFreeSlots(now: Date): Promise<FreeSlotsResult> {
       event: COMPUTED_EVENT,
       members: memberIds.length,
       feedsRead: countReadFeeds(busyTimes),
+      feedsFailed: countFailedFeeds(busyTimes),
       excluded: excludedMembers.length,
       slots: slots.length,
       durationMs: Date.now() - startedAt,

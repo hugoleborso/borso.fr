@@ -41,6 +41,7 @@ describe('readCalendarFeed', () => {
       const fetcher = fetcherAnswering(respond(status));
       expect(await readCalendarFeed(FEED_ADDRESS, { fetcher })).toStrictEqual({
         kind: 'needs-reconnecting',
+        status,
       });
     },
   );
@@ -49,6 +50,7 @@ describe('readCalendarFeed', () => {
     const fetcher = fetcherAnswering(respond(503));
     expect(await readCalendarFeed(FEED_ADDRESS, { fetcher })).toStrictEqual({
       kind: 'unavailable',
+      status: 503,
     });
   });
 
@@ -56,6 +58,20 @@ describe('readCalendarFeed', () => {
     const fetcher = vi.fn<FeedFetcher>().mockRejectedValue(new DOMException('timed out'));
     expect(await readCalendarFeed(FEED_ADDRESS, { fetcher, timeoutMs: 1 })).toStrictEqual({
       kind: 'unavailable',
+      status: null,
+    });
+  });
+
+  it('gives up on a provider that does not answer within the time limit', async () => {
+    const fetcher = vi.fn<FeedFetcher>(
+      (_address, init) =>
+        new Promise<Response>((_resolve, reject) => {
+          init.signal?.addEventListener('abort', () => reject(new DOMException('aborted')));
+        }),
+    );
+    expect(await readCalendarFeed(FEED_ADDRESS, { fetcher, timeoutMs: 20 })).toStrictEqual({
+      kind: 'unavailable',
+      status: null,
     });
   });
 
@@ -63,6 +79,7 @@ describe('readCalendarFeed', () => {
     const fetcher = fetcherAnswering(respond(200, 'x'.repeat(64)));
     expect(await readCalendarFeed(FEED_ADDRESS, { fetcher, maxBytes: 16 })).toStrictEqual({
       kind: 'unavailable',
+      status: 200,
     });
   });
 
@@ -97,6 +114,7 @@ describe('readCalendarFeed', () => {
     );
     expect(await readCalendarFeed(FEED_ADDRESS, { fetcher })).toStrictEqual({
       kind: 'unavailable',
+      status: 307,
     });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
@@ -105,6 +123,7 @@ describe('readCalendarFeed', () => {
     const fetcher = fetcherAnswering(respond(308), respond(200, ICS_BODY));
     expect(await readCalendarFeed(FEED_ADDRESS, { fetcher })).toStrictEqual({
       kind: 'unavailable',
+      status: 308,
     });
     expect(fetcher).toHaveBeenCalledTimes(1);
   });
@@ -133,6 +152,7 @@ describe('readCalendarFeed', () => {
     const fetcher = fetcherAnswering(...redirects, respond(200, ICS_BODY));
     expect(await readCalendarFeed(FEED_ADDRESS, { fetcher })).toStrictEqual({
       kind: 'unavailable',
+      status: 303,
     });
     expect(fetcher).toHaveBeenCalledTimes(MAX_REDIRECTS + 1);
   });
@@ -141,6 +161,7 @@ describe('readCalendarFeed', () => {
     const fetcher = fetcherAnswering();
     expect(await readCalendarFeed('http://localhost/feed.ics', { fetcher })).toStrictEqual({
       kind: 'needs-reconnecting',
+      status: null,
     });
     expect(fetcher).not.toHaveBeenCalled();
   });

@@ -66,6 +66,7 @@ sequenceDiagram
 - An invitation the member declined still counts as busy, because the feed does not reliably say which attendee is the member. This is out of scope.
 - An event that crosses midnight blocks both evenings it touches.
 - The days when the clocks change (last Sunday of March and of October) are computed in Europe/Paris time, not UTC.
+- A time in a named IANA zone (`TZID=America/New_York`) is read in that zone even when the feed carries no `VTIMEZONE` block. A floating time, or a zone name that is not IANA (a Windows name such as `Romance Standard Time`), is read as Europe/Paris.
 - A member without a feed is excluded and named: "Without X, who has no calendar".
 - When no member has a feed, the block shows an empty state that links to the account page.
 - When no slot is found, the block says so and keeps the list of excluded members.
@@ -74,7 +75,7 @@ sequenceDiagram
 **Error cases**
 
 - The provider answers 401, 403, 404 or 410, which is what a reset or deleted address returns. The member is excluded and shown as "calendar needs reconnecting".
-- A timeout, a 5xx, a body that does not parse, or a body over the size limit. The member is excluded and shown as "calendar unavailable right now". The other feeds still count.
+- A timeout (4 s), a 5xx, a body that does not parse, or a body over the size limit (5 MiB). The member is excluded and shown as "calendar unavailable right now". The other feeds still count.
 - The address is not https, points to an IP literal or `localhost`, or redirects to one. It is rejected at save time and again when the feed is read (see the SSRF row below).
 
 ## Questions, Options and Decisions
@@ -89,7 +90,7 @@ sequenceDiagram
 | ICS parsing | hand-written parser · `ical.js` · `node-ical` | A library, because expanding recurring events (`RRULE`, `EXDATE`, `RECURRENCE-ID`) and time zones is where a hand-written parser goes wrong. `ical.js`, see ADR-0025 (2026-10-02). |
 | SSRF: the Lambda fetches an address a member typed | no guard · https only, port 443, no IP literal, at most 3 redirects each checked again, a size limit and a time limit | The guard. The Lambda runtime API listens on a loopback address, and only the https-on-443 rule keeps it out of reach (2026-10-02). |
 | Measuring the output metric | an analytics event · a column on the session | A nullable `session.origin` column, set to `'free_slot'` by the button (2026-10-02). |
-| Fake calendars in the preview | an external ICS host · ICS served by the preview's own test router | `/api/__test/calendar-feeds/:fixture.ics`, which exists only when `ALLOW_TEST_SEED=1`. The seed attaches fixture feeds to the fixture members. The fixtures are written relative to `now`, so a known slot always exists (2026-10-02). |
+| Fake calendars in the preview | an external ICS host · ICS served by the preview's own test router | `/api/__test/calendar-feeds/:fixture.ics`, which exists only when `ALLOW_TEST_SEED=1`. The seed attaches fixture feeds to the fixture members. The fixtures are written relative to `now`, so a known slot always exists. Beside the three seeded feeds, the router serves `declined.ics`, `midnight.ics`, `everything.ics` (no slot left), `huge.ics` (over the size limit), `gone.ics` (410) and `slow.ics` (past the time limit), which a member can paste on the account page (2026-10-02). |
 
 **Out of scope:** writing to calendars, invitations, sending reminders, practices longer than 2 hours, choosing a subset of members, per-member time windows, reading declined invitations, sessions that cross midnight.
 

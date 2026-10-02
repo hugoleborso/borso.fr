@@ -6,6 +6,9 @@ import {
 
 export const FIXTURE_FEED_NAMES = ['hugo', 'marc', 'sarah'] as const;
 export type FixtureFeedName = (typeof FIXTURE_FEED_NAMES)[number];
+const EDGE_CASE_FEED_NAMES = ['declined', 'midnight', 'everything', 'huge'] as const;
+type EdgeCaseFeedName = (typeof EDGE_CASE_FEED_NAMES)[number];
+type ServableFeedName = FixtureFeedName | EdgeCaseFeedName;
 
 export const FREE_DAY_OFFSET = 2;
 const SECOND_GAP_DAY_OFFSET = 5;
@@ -26,6 +29,13 @@ const NO_DELAY_MS = 0;
 const HTTP_OK = 200;
 const HTTP_NOT_FOUND = 404;
 const HTTP_GONE = 410;
+const DECLINED_FROM = { hour: 19, minute: 0 } as const;
+const DECLINED_UNTIL = { hour: 21, minute: 0 } as const;
+const OVERNIGHT_FROM = { hour: 22, minute: 0 } as const;
+const OVERNIGHT_UNTIL = { hour: 20, minute: 0 } as const;
+const HUGE_FEED_BYTES = 5_767_168;
+const PADDING_WIDTH = 70;
+const PADDING_LINE = `X-PADDING:${'x'.repeat(PADDING_WIDTH)}`;
 const LINE_BREAK = '\r\n';
 const TWO_DIGITS = 2;
 const FOUR_DIGITS = 4;
@@ -113,18 +123,68 @@ function busyLateWithACancellation(today: CalendarDay): string {
   ]);
 }
 
-const FIXTURE_BUILDERS: Readonly<Record<FixtureFeedName, (today: CalendarDay) => string>> = {
+function busyWithADeclinedInvitation(today: CalendarDay): string {
+  const freeDay = addCalendarDays(today, FREE_DAY_OFFSET);
+  return calendar([
+    event('declined-invitation', [
+      `DTSTART:${wallTimeValue(freeDay, DECLINED_FROM)}`,
+      `DTEND:${wallTimeValue(freeDay, DECLINED_UNTIL)}`,
+      'ATTENDEE;PARTSTAT=DECLINED;CN=Member:mailto:member@example.com',
+    ]),
+  ]);
+}
+
+function busyOvernight(today: CalendarDay): string {
+  const freeDay = addCalendarDays(today, FREE_DAY_OFFSET);
+  return calendar([
+    event('overnight', [
+      `DTSTART:${wallTimeValue(freeDay, OVERNIGHT_FROM)}`,
+      `DTEND:${wallTimeValue(addCalendarDays(freeDay, 1), OVERNIGHT_UNTIL)}`,
+    ]),
+  ]);
+}
+
+function busyEveryDay(today: CalendarDay): string {
+  return calendar([
+    event('every-day', [
+      `DTSTART;VALUE=DATE:${dateValue(today)}`,
+      `DTEND;VALUE=DATE:${dateValue(addCalendarDays(today, 1))}`,
+      `RRULE:FREQ=DAILY;COUNT=${DAILY_OCCURRENCES}`,
+    ]),
+  ]);
+}
+
+function overTheSizeLimit(today: CalendarDay): string {
+  const paddingLines = Math.ceil(HUGE_FEED_BYTES / PADDING_LINE.length);
+  return calendar([
+    event('huge', [
+      `DTSTART;VALUE=DATE:${dateValue(today)}`,
+      `DTEND;VALUE=DATE:${dateValue(addCalendarDays(today, 1))}`,
+      ...Array.from({ length: paddingLines }, () => PADDING_LINE),
+    ]),
+  ]);
+}
+
+const FIXTURE_BUILDERS: Readonly<Record<ServableFeedName, (today: CalendarDay) => string>> = {
   hugo: busyEveryDayButTwo,
   marc: busyUntilEarlyEvening,
   sarah: busyLateWithACancellation,
+  declined: busyWithADeclinedInvitation,
+  midnight: busyOvernight,
+  everything: busyEveryDay,
+  huge: overTheSizeLimit,
 };
 
 export function isFixtureFeedName(name: string): name is FixtureFeedName {
   return FIXTURE_FEED_NAMES.some((candidate) => candidate === name);
 }
 
+function isServableFeedName(name: string): name is ServableFeedName {
+  return isFixtureFeedName(name) || EDGE_CASE_FEED_NAMES.some((candidate) => candidate === name);
+}
+
 // @FollowsBlueprint core-decision
-export function buildFixtureFeed(name: FixtureFeedName, now: Date): string {
+export function buildFixtureFeed(name: ServableFeedName, now: Date): string {
   return FIXTURE_BUILDERS[name](parisCalendarDayOf(now));
 }
 
@@ -151,7 +211,7 @@ export function answerFixtureFeedRequest(fileName: string, now: Date): FixtureFe
   const name = fileName.endsWith(FEED_EXTENSION)
     ? fileName.slice(0, -FEED_EXTENSION.length)
     : fileName;
-  if (!isFixtureFeedName(name)) return NOT_A_FIXTURE;
+  if (!isServableFeedName(name)) return NOT_A_FIXTURE;
   return { status: HTTP_OK, body: buildFixtureFeed(name, now), delayMs: NO_DELAY_MS };
 }
 
