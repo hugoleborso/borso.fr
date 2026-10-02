@@ -278,7 +278,7 @@ two files at once:
 | `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
 | `check-pure-modules-have-callers.sh` | a `*.core.ts` or `*.utils.ts` is reached only from its own test, where coverage and mutation both score it at full marks while it runs nowhere |
 | `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which ships un-bundled and 404s |
-| `check-app-registration.sh` | a new application is missing its path filter or its commitlint scope, so it never deploys and nothing says so |
+| `check-app-registration.sh` | a new application is missing its path filter or its commitlint scope, so it never deploys and nothing says so; or it owns migrations that `pnpm dev` never applies, so its API answers 500 on every route |
 | `check-pwa-assets.sh` | a web app manifest names an icon that does not ship |
 | `check-negative-claims-are-dated.sh` | a knowledge entry says a tool does not work and carries no date |
 
@@ -437,6 +437,10 @@ review.
   that has no `.github/path-filters.yml` filter or no commitlint scope, and a
   filter naming an application that is not there. Both failures are silent
   otherwise: the application simply never gets a preview deploy, and no
-  workflow reports it.
+  workflow reports it. It also fails an application that owns
+  `api/src/database/migrations/` while its `dev:db` script neither runs
+  `test/dev-database.setup.ts` nor `dev-db.sh`: booting the cluster alone
+  serves an API against an empty schema, which pragma did and banana-rush
+  copied.
 - `reviewer` checks that the reason on a disable comment is a claim about that
   line which a reader can check, and not "pre-existing" or "will fix later".
