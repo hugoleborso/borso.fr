@@ -3,13 +3,12 @@ import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
 import { credentialsSchema } from './auth.schema';
 import { bootstrapAuth, rotatePassword } from './auth.service';
+import { attemptMemberLogin, type IssuedSession, recoverPassword } from './credentials.service';
 import {
-  attemptMemberLogin,
-  enrolMember,
-  type IssuedSession,
-  readEnrolmentWindow,
-} from './credentials.service';
-import { enrolSchema, memberLoginSchema, passkeyAuthenticationSchema } from './credentials.schema';
+  memberLoginSchema,
+  passkeyAuthenticationSchema,
+  recoverPasswordSchema,
+} from './credentials.schema';
 import { requireMemberSession } from './member-session.middleware';
 import { finishPasskeyAuthentication, startPasskeyAuthentication } from './passkey.service';
 import { type BucketStore, createBucketStore } from './rate-limit.utils';
@@ -20,6 +19,7 @@ const SESSION_COOKIE_MAX_AGE_S = SESSION_TTL_MS / MILLISECONDS_PER_SECOND;
 
 export interface BuildAuthRouterOptions {
   readonly bucketStore?: BucketStore;
+  readonly sharedPasswordBucketStore?: BucketStore;
   readonly clock?: () => Date;
 }
 
@@ -37,10 +37,11 @@ function writeSessionCookie(context: Parameters<typeof setCookie>[0], session: I
  * @Blueprint controller-split-routers
  * @BlueprintName Controller With Split Routers
  * @BlueprintUsage Use for a slice whose routes do not all share one gate, so an ungated route cannot be mounted by mistake.
- * @BlueprintDescription Returns three named routers rather than one: login, enrolment and the passkey challenge stay open, the bootstrap endpoint stays open because nothing exists yet to gate on, and rotate-password is built on a router that applies requireMemberSession to every route it carries. The rate-limit store and the clock arrive through the options argument, so a caller can drive the login window without a real clock.
+ * @BlueprintDescription Returns three named routers rather than one: login, password recovery and the passkey challenge stay open, the bootstrap endpoint stays open because nothing exists yet to gate on, and rotate-password is built on a router that applies requireMemberSession to every route it carries. The rate-limit store and the clock arrive through the options argument, so a caller can drive the login window without a real clock.
  */
 export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
   const bucketStore = options.bucketStore ?? createBucketStore();
+  const sharedPasswordBucketStore = options.sharedPasswordBucketStore ?? createBucketStore();
   const clock = options.clock ?? (() => new Date());
 
   const publicRouter = new Hono()
@@ -63,34 +64,23 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
       writeSessionCookie(context, outcome.session);
       return context.json({ expiresAt: outcome.session.expiresAt, memberId: outcome.memberId });
     })
-    .get('/enrolment', async (context) => {
-      const window = await readEnrolmentWindow();
-      if (window.kind === 'closed') return context.json({ error: 'enrolment-closed' }, 409);
-      return context.json({ offers: window.offers });
-    })
-    .post('/enrol', zValidator('json', enrolSchema), async (context) => {
+    .post('/recover-password', zValidator('json', recoverPasswordSchema), async (context) => {
       const body = context.req.valid('json');
-      const outcome = await enrolMember({ ...body, now: clock() });
+      const outcome = await recoverPassword({
+        ...body,
+        forwardedForHeader: context.req.header('x-forwarded-for'),
+        bucketStore: sharedPasswordBucketStore,
+        now: clock(),
+      });
+      if (outcome.kind === 'rate-limited') return context.json({ error: 'rate-limited' }, 429);
       if (outcome.kind === 'not-bootstrapped') {
         return context.json({ error: 'auth-not-bootstrapped' }, 503);
       }
-      if (outcome.kind === 'enrolment-closed') {
-        return context.json({ error: 'enrolment-closed' }, 409);
-      }
-      if (outcome.kind === 'already-enrolled') {
-        return context.json({ error: 'already-enrolled' }, 409);
-      }
-      if (outcome.kind === 'username-taken') {
-        return context.json({ error: 'username-taken' }, 409);
-      }
-      if (outcome.kind === 'unknown-member') {
-        return context.json({ error: 'unknown-member' }, 404);
-      }
-      if (outcome.kind === 'invalid-shared-password') {
-        return context.json({ error: 'invalid-shared-password' }, 401);
+      if (outcome.kind === 'invalid-recovery') {
+        return context.json({ error: 'invalid-recovery' }, 401);
       }
       writeSessionCookie(context, outcome.session);
-      return context.json({ expiresAt: outcome.session.expiresAt });
+      return context.json({ expiresAt: outcome.session.expiresAt, memberId: outcome.memberId });
     })
     .post('/passkey/authentication/options', async (context) => {
       const started = await startPasskeyAuthentication(clock());

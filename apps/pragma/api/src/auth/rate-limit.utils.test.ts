@@ -6,6 +6,9 @@ import {
   RATE_LIMIT_WINDOW_MS,
   recordAttempt,
   MEMBER_LOGIN_BUDGET,
+  SHARED_PASSWORD_BUDGET,
+  SHARED_PASSWORD_MAX_ATTEMPTS,
+  SHARED_PASSWORD_WINDOW_MS,
 } from './rate-limit.utils';
 
 const A_WIDER_BUDGET = { maxAttempts: 60, windowMs: 60_000 };
@@ -100,6 +103,33 @@ describe('rate-limit.utils', () => {
       store.write('alpha', { attempts: 4, windowStartedAt: 100 });
       store.clear('alpha');
       expect(store.read('alpha')).toBeUndefined();
+    });
+  });
+  describe('SHARED_PASSWORD_BUDGET', () => {
+    it('is stricter than the sign-in budget, because the band password opens every account', () => {
+      expect(SHARED_PASSWORD_BUDGET.maxAttempts).toBeLessThan(MEMBER_LOGIN_BUDGET.maxAttempts);
+      expect(SHARED_PASSWORD_BUDGET.windowMs).toBeGreaterThan(MEMBER_LOGIN_BUDGET.windowMs);
+      expect(SHARED_PASSWORD_BUDGET).toEqual({
+        maxAttempts: SHARED_PASSWORD_MAX_ATTEMPTS,
+        windowMs: SHARED_PASSWORD_WINDOW_MS,
+      });
+    });
+
+    it('lets three failures through and refuses the fourth', () => {
+      let bucket = recordAttempt(undefined, 1000, SHARED_PASSWORD_BUDGET);
+      for (let attempt = 1; attempt < SHARED_PASSWORD_MAX_ATTEMPTS; attempt += 1) {
+        expect(isRateLimited(bucket, SHARED_PASSWORD_BUDGET)).toBe(false);
+        bucket = recordAttempt(bucket, 1000, SHARED_PASSWORD_BUDGET);
+      }
+      expect(isRateLimited(bucket, SHARED_PASSWORD_BUDGET)).toBe(false);
+      const overBudget = recordAttempt(bucket, 1000, SHARED_PASSWORD_BUDGET);
+      expect(isRateLimited(overBudget, SHARED_PASSWORD_BUDGET)).toBe(true);
+    });
+
+    it('opens a fresh window once the hour is past', () => {
+      const bucket = recordAttempt(undefined, 1000, SHARED_PASSWORD_BUDGET);
+      const later = recordAttempt(bucket, 1000 + SHARED_PASSWORD_WINDOW_MS, SHARED_PASSWORD_BUDGET);
+      expect(later.attempts).toBe(1);
     });
   });
 });

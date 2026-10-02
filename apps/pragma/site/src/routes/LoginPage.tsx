@@ -65,8 +65,8 @@ export function LoginPage(): JSX.Element {
           </Button>
         ) : null}
         <p className="mt-4 text-sm text-ink-500">
-          <Link to="/enrol" className="underline">
-            {t('auth.enrolLink')}
+          <Link to="/recover" className="underline">
+            {t('auth.recoverLink')}
           </Link>
         </p>
       </Card>

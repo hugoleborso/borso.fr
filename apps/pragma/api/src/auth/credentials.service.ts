@@ -1,6 +1,5 @@
 import { randomBytes } from 'node:crypto';
 import { argon2id, argon2Verify } from 'hash-wasm';
-import { getMembersSortedByFirstName } from '../members/members.service';
 import { getAppConfig } from './auth.service';
 import type { DatabaseExecutor } from '../database/client';
 import {
@@ -8,10 +7,8 @@ import {
   findCredentialByMemberId,
   findCredentialByUsername,
   insertCredential,
-  listCredentials,
   updateCredentialSecret,
 } from './credentials.repository';
-import { type EnrolmentWindow, selectEnrolmentWindow, suggestUsername } from './enrolment.core';
 import { nextSessionEpoch } from './member-session.core';
 import { hashIp, readClientIp } from './ip-hash.utils';
 import {
@@ -19,6 +16,7 @@ import {
   isRateLimited,
   MEMBER_LOGIN_BUDGET,
   recordAttempt,
+  SHARED_PASSWORD_BUDGET,
 } from './rate-limit.utils';
 import { buildCookie, SESSION_TTL_MS } from './session-cookie.utils';
 
@@ -116,80 +114,45 @@ export async function issueSessionForMember(
   return await issueSession(memberId, credential.sessionEpoch, now.getTime());
 }
 
-export interface EnrolmentOffer {
-  readonly memberId: string;
-  readonly firstName: string;
-  readonly suggestedUsername: string;
-}
+export type RecoverPasswordOutcome =
+  | { kind: 'ok'; session: IssuedSession; memberId: string }
+  | { kind: 'rate-limited' }
+  | { kind: 'not-bootstrapped' }
+  | { kind: 'invalid-recovery' };
 
-export async function readEnrolmentWindow(): Promise<
-  { kind: 'open'; offers: EnrolmentOffer[] } | { kind: 'closed' }
-> {
-  const [members, credentials] = await Promise.all([
-    getMembersSortedByFirstName(),
-    listCredentials(),
-  ]);
-  const window: EnrolmentWindow = selectEnrolmentWindow(
-    members.map((member) => ({ memberId: member.id, firstName: member.firstName })),
-    credentials.map((credential) => credential.memberId),
-  );
-  if (window.kind === 'closed') return { kind: 'closed' };
-  const taken = credentials.map((credential) => credential.username);
-  return {
-    kind: 'open',
-    offers: window.candidates.map((candidate) => ({
-      memberId: candidate.memberId,
-      firstName: candidate.firstName,
-      suggestedUsername: suggestUsername(candidate.firstName, taken),
-    })),
-  };
-}
-
-export type EnrolOutcome =
-  | { kind: 'ok'; session: IssuedSession }
-  | { kind: 'enrolment-closed' }
-  | { kind: 'invalid-shared-password' }
-  | { kind: 'already-enrolled' }
-  | { kind: 'unknown-member' }
-  | { kind: 'username-taken' }
-  | { kind: 'not-bootstrapped' };
-
-export interface EnrolParams {
-  readonly memberId: string;
+export interface RecoverPasswordParams {
   readonly username: string;
-  readonly password: string;
   readonly sharedPassword: string;
+  readonly newPassword: string;
+  readonly forwardedForHeader: string | undefined;
+  readonly bucketStore: BucketStore;
   readonly now: Date;
 }
 
-export async function enrolMember(params: EnrolParams): Promise<EnrolOutcome> {
+// @FollowsBlueprint service-orchestration
+export async function recoverPassword(
+  params: RecoverPasswordParams,
+): Promise<RecoverPasswordOutcome> {
+  const ipHash = hashIp(readClientIp(params.forwardedForHeader));
+  const nowMillis = params.now.getTime();
+  const bucket = recordAttempt(params.bucketStore.read(ipHash), nowMillis, SHARED_PASSWORD_BUDGET);
+  params.bucketStore.write(ipHash, bucket);
+  if (isRateLimited(bucket, SHARED_PASSWORD_BUDGET)) return { kind: 'rate-limited' };
   const config = await getAppConfig();
   if (config === null) return { kind: 'not-bootstrapped' };
-  const window = await readEnrolmentWindow();
-  if (window.kind === 'closed') return { kind: 'enrolment-closed' };
   const isSharedPasswordOk = await argon2Verify({
     password: params.sharedPassword,
     hash: config.passwordHash,
   });
-  if (!isSharedPasswordOk) return { kind: 'invalid-shared-password' };
-  const offer = window.offers.find((candidate) => candidate.memberId === params.memberId);
-  if (offer === undefined) {
-    const existing = await findCredentialByMemberId(params.memberId);
-    return existing === null ? { kind: 'unknown-member' } : { kind: 'already-enrolled' };
-  }
-  const takenByAnother = await findCredentialByUsername(params.username);
-  if (takenByAnother !== null) return { kind: 'username-taken' };
-  const passwordHash = await hashPassword(params.password);
-  await insertCredential({
-    memberId: params.memberId,
-    username: params.username,
-    passwordHash,
-    sessionEpoch: FIRST_SESSION_EPOCH,
-    createdAt: params.now,
-  });
-  const session = await issueSession(params.memberId, FIRST_SESSION_EPOCH, params.now.getTime());
+  if (!isSharedPasswordOk) return { kind: 'invalid-recovery' };
+  const credential = await findCredentialByUsername(params.username);
+  if (credential === null) return { kind: 'invalid-recovery' };
+  const epoch = nextSessionEpoch(credential.sessionEpoch);
+  await updateCredentialSecret(credential.memberId, await hashPassword(params.newPassword), epoch);
+  const session = await issueSession(credential.memberId, epoch, nowMillis);
   if (session === null) return { kind: 'not-bootstrapped' };
-  return { kind: 'ok', session };
+  params.bucketStore.clear(ipHash);
+  return { kind: 'ok', session, memberId: credential.memberId };
 }
 
 export type CreateCredentialOutcome =
