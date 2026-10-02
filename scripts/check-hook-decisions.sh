@@ -165,9 +165,57 @@ run_case pretool-github-pr-body.sh allow body \
 run_case pretool-github-pr-body.sh allow body \
   'A link target past about 150 characters comes back wrapped in backticks, so link through /blob/main/.'
 
+# --- pretool-gh-pr-create.sh ----------------------------------------------
+#
+# Refuses a pull request opened with no body, or with one check-pr-body.ts
+# refuses. Must not refuse a command that names `gh pr create` without running it.
+
+run_case pretool-gh-pr-create.sh block command \
+  'gh pr create --title "feat: x"'
+
+run_case pretool-gh-pr-create.sh allow command \
+  'echo "never run gh pr create with a one-word body"'
+run_case pretool-gh-pr-create.sh allow command \
+  'gh pr create --title "feat: x" --body-file -'
+
+# --- pretool-no-discarding-reset.sh ---------------------------------------
+#
+# Refuses a reset, checkout or restore that would discard uncommitted tracked
+# changes. The refusal depends on whether the tree is dirty, which this table
+# cannot set up, so only the half that has gone wrong in every other hook —
+# letting a mention through — is exercised here.
+#
+# state-dependent: pretool-no-discarding-reset.sh
+
+run_case pretool-no-discarding-reset.sh allow command \
+  'scripts/kaizen.sh "a git reset --hard would have lost the work"'
+run_case pretool-no-discarding-reset.sh allow command \
+  'git commit -F - <<MSG
+docs: why git restore is refused on a dirty tree
+MSG'
+
+# Every hook that can refuse has to appear above, with both halves unless it
+# is declared state-dependent. pretool-no-swallowed-push.sh refused for weeks
+# with no row in this table, so its over-broad match was found by an agent
+# rewriting the same command three times rather than by this check; two other
+# refusing hooks had no row either. A hook that is missing here is a contract
+# nobody wrote.
+
+for hook_path in "$HOOK_DIR"/pretool-*.sh; do
+  hook_name="$(basename "$hook_path")"
+  grep -q 'exit 2' "$hook_path" || continue
+  if ! grep -q "^run_case $hook_name allow " "$0"; then
+    echo "[check-hook-decisions] $hook_name can refuse a call but has no allow row here." >&2
+    failed=1
+  fi
+  if ! grep -q "^run_case $hook_name block " "$0" && ! grep -q "^# state-dependent: $hook_name\$" "$0"; then
+    echo "[check-hook-decisions] $hook_name can refuse a call but has no block row here, and is not declared state-dependent." >&2
+    failed=1
+  fi
+done
 
 if [ "$failed" -ne 0 ]; then
-  echo "[check-hook-decisions] a hook decided against its own contract. A hook that refuses a mention is a hook the next agent works around." >&2
+  echo "[check-hook-decisions] a hook decided against its own contract, or has none. A hook that refuses a mention is a hook the next agent works around." >&2
   exit 1
 fi
 
