@@ -50,12 +50,13 @@ validation loop is the stage this task struggled with most.
 | 33 | post-merge | `main` refused every commit: PR #110 and PR #111 had both added ADR 0021, and a banana-rush test was collected by no Vitest project | pre-commit: `check-numbered-sequences`, `check-every-test-is-collected` | no-op with code: fixed here to unblock (`bdd93b7`, `b35a4b2`). Two parallel branches each pass alone; only "require branches to be up to date" catches the pair, and that is a branch-protection setting this repository cannot observe, so it is surfaced to the operator rather than claimed |
 | 34 | post-merge | A commit swept in files staged by two earlier attempts the hook had refused | transcript: `git show --stat` of the first ADR commit | no-op: caught by reading the commit before pushing, then split with `git reset --soft`; row 31's fix removes the refusals that left the staging behind |
 | 35 | post-merge | `no-broad-kill` refused a `pkill -f` used to stop the old dev server | kaizen: `hook:no-broad-kill` | no-op: a correct refusal; the server was stopped by PID instead, which is what the hook asks for |
+| 36 | post-merge | This kaizen PR's `build` failed: `eslint .` ran out of its 4 GB heap, and main had failed the same way on every push since PR #110 added a fifth application | ci: job 110880548375 on this PR, job 110858401079 on main; reproduced locally at 4 GB | dantotsu: `five-apps-did-not-fit-in-one-lint-heap` |
 
 ## Decisions
 
 | Decision | Rows |
 | --- | --- |
-| dantotsu | 7 |
+| dantotsu | 8 |
 | knowledge | 2 |
 | merge into another row | 6 |
 | no-op | 20 |

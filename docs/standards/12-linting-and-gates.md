@@ -317,6 +317,14 @@ review.
 
 - `gate:eslint` runs over the staged files on commit and over the repository in
   CI, both with `--max-warnings 0`.
+- `script:scripts/lint-repository.sh` is how CI and `pnpm run lint` reach the
+  whole repository: one ESLint process per workspace, then one for every file
+  outside them. Type-aware linting builds a TypeScript program per tsconfig,
+  and one `eslint .` holding five applications' programs passed Node's 4 GB
+  heap on the runner, so main's build was red from PR #110 on
+  ([dantotsu](../dantotsus/five-apps-did-not-fit-in-one-lint-heap.md)). The
+  peak is now the largest workspace rather than their sum, and a new
+  application is picked up without an edit.
 - `gate:prettier` runs over the staged files on commit and over the repository
   in CI.
 - `gate:typecheck` runs `tsc --noEmit` in every workspace, and again over the

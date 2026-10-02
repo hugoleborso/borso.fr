@@ -20,6 +20,8 @@
 #
 # Each run keeps its own cache file, `.eslintcache-<name>`, because runs
 # sharing one file would each overwrite the others' entries.
+#
+# See docs/dantotsus/five-apps-did-not-fit-in-one-lint-heap.md.
 
 set -euo pipefail
 
