@@ -274,7 +274,7 @@ two files at once:
 | `check-numbered-sequences.sh` | two files in a numbered sequence — a migrations folder, the ADRs — claim the same number, so the order the number was there to carry falls to the rest of the filename |
 | `check-gate-names-are-distinct.sh` | two gates' names fold to the same words, which is what one gate written twice looks like from outside |
 | `check-adr-numbers-resolve.sh` | an ADR's heading states a number other than its filename's, or the index is missing a record or links one that is gone |
-| `check-instructions-name-installed-tools.sh` | a skill, agent or standard tells an agent to run a command this repository does not install |
+| `check-instructions-name-installed-tools.sh` | a skill, agent or standard tells an agent to run a command this repository does not install, or a skill, standard, plan or spec filters on a workspace that does not exist |
 | `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
 | `check-pure-modules-have-callers.sh` | a `*.core.ts` or `*.utils.ts` is reached only from its own test, where coverage and mutation both score it at full marks while it runs nowhere |
 | `check-non-module-scripts.sh` | an application's HTML carries a `<script src>` without `type="module"`, which ships un-bundled and 404s |
@@ -408,7 +408,12 @@ review.
   numbers are right.
 - `script:scripts/check-instructions-name-installed-tools.sh` fails a
   `pnpm exec X`, `npx X` or `node_modules/.bin/X` under `.claude/` or
-  `docs/standards/` where `X` is not in `node_modules/.bin`.
+  `docs/standards/` where `X` is not in `node_modules/.bin`, and a
+  workspace filter under those two folders or in a feature's `plan/` or
+  `spec/` that names no package — matched the way pnpm matches, so a name
+  without its scope passes and a placeholder such as `<pkg>` is skipped. A
+  plan is read by the validator that runs its gates, and PR #107's named a
+  package that never existed in four of them.
   [ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md)
   removed Biome and eleven files went on telling an agent to run its linter
   for a month, one of them the technical validator's own verdict row. Prose
