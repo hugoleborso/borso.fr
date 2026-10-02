@@ -81,7 +81,7 @@ Both are committed. Do not gitignore them. Validation evidence rots and gets con
 
 The skill's textual return to the user is one of:
 - `Verdict: PASS — see <report_path>` — mergeable.
-- `Verdict: PASS_EXCEPT_UNVERIFIABLE (N unverifiable) — see <report_path>` — mergeable with PR disclosure (see below).
+- `Verdict: PASS_EXCEPT_UNVERIFIABLE (N unverifiable) — see <report_path>` — mergeable with PR disclosure (see *What the pull request has to carry*).
 - `Verdict: FAIL (N failing) — see <report_path>` — **not mergeable**, fix the implementation and re-run.
 
 ## Verdict acceptance rules
@@ -90,54 +90,14 @@ The skill's textual return to the user is one of:
 - **PASS_EXCEPT_UNVERIFIABLE is mergeable** when every UNVERIFIABLE row is a tool gap (something the validator could not exercise — see `docs/knowledge/` for the catalog) or a spec-deferred row (handled by another validator), not a "we couldn't test it because we couldn't think how" sidestep. The bar for accepting an UNVERIFIABLE row is that closing it would require either a vendor change or a workspace-scope refactor.
 - **PASS is mergeable** with no further disclosure.
 
-## PR disclosure (for PASS_EXCEPT_UNVERIFIABLE only)
+## What the pull request has to carry
 
-The operator opening the PR must surface the UNVERIFIABLE rows in the PR description under a `## Validation gaps` heading. Each row:
+A reviewer reads the PR description without opening the report, so two things from this skill have to reach it. **Where** they go is `/open-pr`'s to decide — its *Validation* step and `scripts/pr/check-pr-body.ts` own the body's shape, and this document does not name a heading.
 
-- Row number + the assertion text, verbatim from the report.
-- The one-line reason from the report's Notes (tool-gap pointer to `docs/knowledge/`, spec-deferred pointer to the other validator's report).
-- A link to the report path under `docs/features/<app>/<slug>/validation/`.
+- **Every UNVERIFIABLE row, on a `PASS_EXCEPT_UNVERIFIABLE` verdict**: the row number, the assertion verbatim, the one-line reason from the report's Notes (a tool gap points at `docs/knowledge/`, a deferred row at the other validator's report), and the report path. A verdict that ships without this is a Dantotsu candidate against this skill: the gate exists so tool-side limits do not slip into main silently. A PASS needs only the report path.
+- **The screenshots, on any verdict**, named by their committed path. They render in the pull request's *Files changed* tab. Do not embed them as markdown images: the GitHub MCP server strips those from the body without failing, and `pretool-github-pr-body.sh` refuses the call — see [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../docs/knowledge/github-mcp-pr-body-sanitizer.md).
 
-A reviewer reads the PR description without opening the report; the gap has to be visible up-front. A PASS_EXCEPT_UNVERIFIABLE validation that ships without this disclosure is a Dantotsu candidate against this skill — the gate exists so tool-side limitations don't slip through silently into main.
-
-A PASS verdict needs only a link to the report — no per-row disclosure.
-
-## Visual evidence in the PR body
-
-Regardless of verdict (PASS or PASS_EXCEPT_UNVERIFIABLE), the PR description includes a `## Visual evidence` section with the screenshots from the latest validation report embedded inline. Reviewers should see the rendered feature without leaving the PR page.
-
-GitHub does **not** render relative-path images in PR descriptions; they must be absolute URLs. The robust pattern is the raw blob URL pinned to a commit SHA — the SHA persists after the branch is deleted at merge time, so the URLs do not 404 on historical PRs.
-
-```
-https://github.com/<owner>/<repo>/raw/<sha>/<path-to-png>
-```
-
-Generator (run after all commits are in, before opening the PR):
-
-```bash
-slug_path=docs/features/<app>/<slug>/validation
-report_dir=$(ls -1td "$slug_path"/visual-validation-*/ 2>/dev/null | head -1)
-sha=$(git rev-parse HEAD)
-repo_path=$(gh repo view --json nameWithOwner --jq .nameWithOwner)
-for png in "$report_dir"*.png; do
-  rel=${png#./}
-  echo "![${png##*/}](https://github.com/$repo_path/raw/$sha/$rel)"
-done
-```
-
-The output is markdown ready to paste. Suggested PR-body shape:
-
-```markdown
-## Visual evidence
-
-<!-- output of the generator above -->
-
-## Validation gaps   <!-- only on PASS_EXCEPT_UNVERIFIABLE -->
-
-- Row 35: <verbatim assertion> — <one-line reason> — see [visual-validation-<ts>.md](docs/features/<app>/<slug>/validation/visual-validation-<ts>.md).
-```
-
-If the screenshot set is large (>5 PNGs), wrap the lower-priority breakpoints in `<details><summary>Mobile / edge cases</summary> … </details>` so the desktop hero stays above the fold.
+This section used to prescribe a `## Validation gaps` and a `## Visual evidence` section with inline images. The checker refuses both headings and the server strips the images, so following it produced a body that could not be posted.
 
 ## Failure modes to avoid
 
