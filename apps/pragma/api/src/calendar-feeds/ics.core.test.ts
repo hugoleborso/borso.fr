@@ -1,4 +1,3 @@
-import ICAL from 'ical.js';
 import { describe, expect, it } from 'vitest';
 import type { BusyInterval } from './calendar-feeds.types';
 import { readBusyIntervals } from './ics.core';
@@ -58,24 +57,6 @@ describe('readBusyIntervals', () => {
       ),
     );
     expect(busyOf(body)).toStrictEqual([['2026-10-13T16:00:00.000Z', '2026-10-13T17:00:00.000Z']]);
-  });
-
-  it('forgets the zones a feed defined once it is read', () => {
-    readBusyIntervals(calendar(...NEW_YORK_TIMEZONE), RANGE);
-    expect(ICAL.TimezoneService.has('America/New_York')).toBe(false);
-  });
-
-  it('keeps a zone it already knew, and skips a zone block without an identifier', () => {
-    const body = calendar(
-      'BEGIN:VTIMEZONE',
-      'TZID:UTC',
-      'END:VTIMEZONE',
-      'BEGIN:VTIMEZONE',
-      'END:VTIMEZONE',
-      ...event('a', 'DTSTART:20261013T170000Z', 'DTEND:20261013T180000Z'),
-    );
-    expect(busyOf(body)).toHaveLength(1);
-    expect(ICAL.TimezoneService.has('UTC')).toBe(true);
   });
 
   it('reads a floating time, or a zone the feed does not define, as Paris time', () => {
@@ -147,6 +128,73 @@ describe('readBusyIntervals', () => {
     expect(busyOf(body)).toStrictEqual([
       ['2026-10-13T19:00:00.000Z', '2026-10-13T20:00:00.000Z'],
       ['2026-10-20T17:00:00.000Z', '2026-10-20T18:00:00.000Z'],
+    ]);
+  });
+
+  it('leaves out an event that only touches the range at either end', () => {
+    const body = calendar(
+      ...event('before', 'DTSTART:20261011T230000Z', 'DTEND:20261012T000000Z'),
+      ...event('after', 'DTSTART:20261026T000000Z', 'DTEND:20261026T010000Z'),
+    );
+    expect(busyOf(body)).toStrictEqual([]);
+  });
+
+  it('leaves out recurring occurrences that only touch the range at either end', () => {
+    const body = calendar(
+      ...event(
+        'daily-touching',
+        'DTSTART:20261011T230000Z',
+        'DTEND:20261012T000000Z',
+        'RRULE:FREQ=DAILY;COUNT=1',
+      ),
+      ...event('weekly-from-end', 'DTSTART:20261026T000000Z', 'DURATION:PT1H', 'RRULE:FREQ=WEEKLY'),
+    );
+    expect(busyOf(body)).toStrictEqual([]);
+  });
+
+  it('keeps a recurring occurrence that started before the range and ends inside it', () => {
+    const body = calendar(
+      ...event(
+        'overnight',
+        'DTSTART:20261011T230000Z',
+        'DTEND:20261012T010000Z',
+        'RRULE:FREQ=DAILY;COUNT=1',
+      ),
+    );
+    expect(busyOf(body)).toStrictEqual([['2026-10-11T23:00:00.000Z', '2026-10-12T01:00:00.000Z']]);
+  });
+
+  it('still blocks today with a daily event created decades ago', () => {
+    const body = calendar(
+      ...event('ancient', 'DTSTART:19900101T170000Z', 'DTEND:19900101T180000Z', 'RRULE:FREQ=DAILY'),
+    );
+    expect(busyOf(body)).toHaveLength(14);
+  });
+
+  it('moves only the occurrence of the series its exception belongs to', () => {
+    const body = calendar(
+      ...event(
+        'first',
+        'DTSTART:20261013T170000Z',
+        'DTEND:20261013T180000Z',
+        'RRULE:FREQ=WEEKLY;COUNT=1',
+      ),
+      ...event(
+        'second',
+        'DTSTART:20261013T170000Z',
+        'DTEND:20261013T180000Z',
+        'RRULE:FREQ=WEEKLY;COUNT=1',
+      ),
+      ...event(
+        'first',
+        'RECURRENCE-ID:20261013T170000Z',
+        'DTSTART:20261014T170000Z',
+        'DTEND:20261014T180000Z',
+      ),
+    );
+    expect(busyOf(body)).toStrictEqual([
+      ['2026-10-14T17:00:00.000Z', '2026-10-14T18:00:00.000Z'],
+      ['2026-10-13T17:00:00.000Z', '2026-10-13T18:00:00.000Z'],
     ]);
   });
 

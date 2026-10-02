@@ -76,6 +76,11 @@ describe('subtractBusyIntervals', () => {
     ]);
   });
 
+  it('leaves nothing, not an empty interval, when busy time ends exactly at the window end', () => {
+    const tail = interval('2026-10-13T16:00:00Z', '2026-10-13T22:00:00Z');
+    expect(subtractBusyIntervals([window], [tail])).toStrictEqual([]);
+  });
+
   it('ignores busy time outside the window, and empties a fully busy one', () => {
     const outside = interval('2026-10-14T10:00:00Z', '2026-10-14T11:00:00Z');
     expect(asIso(subtractBusyIntervals([window], [outside]))).toHaveLength(1);

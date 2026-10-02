@@ -3,7 +3,6 @@ export const BAND_TIME_ZONE = 'Europe/Paris';
 const MILLISECONDS_PER_MINUTE = 60_000;
 const MONTH_INDEX_OFFSET = 1;
 const MIDNIGHT_HOUR = 24;
-const OFFSET_SETTLING_PASSES = 2;
 
 export interface CalendarDay {
   readonly year: number;
@@ -26,8 +25,8 @@ const wallClockFormatter = new Intl.DateTimeFormat('en-US', {
   minute: 'numeric',
 });
 
-function readPart(parts: readonly Intl.DateTimeFormatPart[], type: Intl.DateTimeFormatPartTypes) {
-  return Number(parts.find((part) => part.type === type)?.value);
+function readParts(parts: readonly Intl.DateTimeFormatPart[]): Map<string, string> {
+  return new Map(parts.map((part) => [part.type, part.value]));
 }
 
 function wallTimeAsUtcMilliseconds(wallTime: WallTime): number {
@@ -42,13 +41,13 @@ function wallTimeAsUtcMilliseconds(wallTime: WallTime): number {
 
 // @FollowsBlueprint helper-module
 export function parisWallTimeOf(instant: Date): WallTime {
-  const parts = wallClockFormatter.formatToParts(instant);
+  const parts = readParts(wallClockFormatter.formatToParts(instant));
   return {
-    year: readPart(parts, 'year'),
-    month: readPart(parts, 'month'),
-    day: readPart(parts, 'day'),
-    hour: readPart(parts, 'hour') % MIDNIGHT_HOUR,
-    minute: readPart(parts, 'minute'),
+    year: Number(parts.get('year')),
+    month: Number(parts.get('month')),
+    day: Number(parts.get('day')),
+    hour: Number(parts.get('hour')) % MIDNIGHT_HOUR,
+    minute: Number(parts.get('minute')),
   };
 }
 
@@ -61,12 +60,9 @@ export function parisOffsetMinutes(instant: Date): number {
 
 export function parisWallTimeToInstant(wallTime: WallTime): Date {
   const wallMilliseconds = wallTimeAsUtcMilliseconds(wallTime);
-  let candidate = wallMilliseconds;
-  for (let pass = 0; pass < OFFSET_SETTLING_PASSES; pass++) {
-    const offsetMinutes = parisOffsetMinutes(new Date(candidate));
-    candidate = wallMilliseconds - offsetMinutes * MILLISECONDS_PER_MINUTE;
-  }
-  return new Date(candidate);
+  const shiftedBy = (instantMilliseconds: number): number =>
+    wallMilliseconds - parisOffsetMinutes(new Date(instantMilliseconds)) * MILLISECONDS_PER_MINUTE;
+  return new Date(shiftedBy(shiftedBy(wallMilliseconds)));
 }
 
 export function parisCalendarDayOf(instant: Date): CalendarDay {

@@ -6,8 +6,10 @@ import type { BusyInterval } from './calendar-feeds.types';
 const TRANSPARENT = 'TRANSPARENT';
 const CANCELLED = 'CANCELLED';
 const FLOATING_ZONE_ID = 'floating';
+const RECURRENCE_ID = 'recurrence-id';
+const UID = 'uid';
 const MILLISECONDS_PER_SECOND = 1_000;
-const MAX_OCCURRENCES_PER_EVENT = 10_000;
+const MAX_OCCURRENCES_PER_EVENT = 100_000;
 
 export type BusyIntervalsOutcome =
   | { readonly kind: 'ok'; readonly intervals: readonly BusyInterval[] }
@@ -45,56 +47,53 @@ function isOverlapping(interval: BusyInterval, range: ReadRange): boolean {
   return interval.start < range.end && interval.end > range.start;
 }
 
-function occurrencesOf(event: ICAL.Event, range: ReadRange): BusyInterval[] {
-  if (!event.isRecurring()) {
-    if (!isBusy(event.component)) return [];
-    const single = { start: instantOf(event.startDate), end: instantOf(event.endDate) };
-    return isOverlapping(single, range) ? [single] : [];
-  }
+function singleOccurrence(event: ICAL.Event, range: ReadRange): BusyInterval[] {
+  if (!isBusy(event.component)) return [];
+  const single = { start: instantOf(event.startDate), end: instantOf(event.endDate) };
+  return isOverlapping(single, range) ? [single] : [];
+}
+
+function recurringOccurrences(event: ICAL.Event, range: ReadRange): BusyInterval[] {
   const busy: BusyInterval[] = [];
   const iterator = event.iterator();
+  // Stryker disable next-line EqualityOperator,UpdateOperator: equivalent mutants. The cap only guards against a rule ical.js cannot advance; every rule in a real feed ends on `iterator.complete` or on the range end first, so one more pass or a counter going down changes no output a test can observe.
   for (let index = 0; index < MAX_OCCURRENCES_PER_EVENT; index++) {
     const occurrenceStart = iterator.next();
     if (iterator.complete) break;
-    if (instantOf(occurrenceStart) >= range.end) break;
     const details = event.getOccurrenceDetails(occurrenceStart);
     const occurrence = { start: instantOf(details.startDate), end: instantOf(details.endDate) };
-    if (isBusy(details.item.component) && isOverlapping(occurrence, range)) busy.push(occurrence);
+    if (occurrence.start >= range.end) break;
+    if (isBusy(details.item.component) && occurrence.end > range.start) busy.push(occurrence);
   }
   return busy;
 }
 
-function relateExceptions(events: readonly ICAL.Event[]): ICAL.Event[] {
-  const masters = events.filter((event) => !event.isRecurrenceException());
-  for (const exception of events.filter((event) => event.isRecurrenceException())) {
-    masters.find((master) => master.uid === exception.uid)?.relateException(exception);
-  }
-  return masters;
+function occurrencesOf(event: ICAL.Event, range: ReadRange): BusyInterval[] {
+  return event.isRecurring() ? recurringOccurrences(event, range) : singleOccurrence(event, range);
 }
 
-function withFeedTimezones<T>(root: ICAL.Component, read: () => T): T {
-  const registered: string[] = [];
-  for (const timezone of root.getAllSubcomponents('vtimezone')) {
-    const timezoneId = timezone.getFirstPropertyValue('tzid');
-    if (typeof timezoneId !== 'string' || ICAL.TimezoneService.has(timezoneId)) continue;
-    ICAL.TimezoneService.register(timezone);
-    registered.push(timezoneId);
-  }
-  try {
-    return read();
-  } finally {
-    for (const timezoneId of registered) ICAL.TimezoneService.remove(timezoneId);
-  }
+function hasSameUid(left: ICAL.Component, right: ICAL.Component): boolean {
+  return left.getFirstPropertyValue(UID) === right.getFirstPropertyValue(UID);
+}
+
+function buildSeries(vevents: readonly ICAL.Component[]): ICAL.Event[] {
+  const exceptions = vevents.filter((vevent) => vevent.hasProperty(RECURRENCE_ID));
+  return vevents
+    .filter((vevent) => !vevent.hasProperty(RECURRENCE_ID))
+    .map(
+      (master) =>
+        new ICAL.Event(master, {
+          exceptions: exceptions.filter((exception) => hasSameUid(exception, master)),
+        }),
+    );
 }
 
 // @FollowsBlueprint core-external-payload-mapping
 export function readBusyIntervals(body: string, range: ReadRange): BusyIntervalsOutcome {
   try {
     const root = new ICAL.Component(jcalSchema.parse(ICAL.parse(body)));
-    const intervals = withFeedTimezones(root, () =>
-      relateExceptions(
-        root.getAllSubcomponents('vevent').map((vevent) => new ICAL.Event(vevent)),
-      ).flatMap((event) => occurrencesOf(event, range)),
+    const intervals = buildSeries(root.getAllSubcomponents('vevent')).flatMap((event) =>
+      occurrencesOf(event, range),
     );
     return { kind: 'ok', intervals };
   } catch {

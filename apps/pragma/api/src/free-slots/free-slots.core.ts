@@ -35,7 +35,7 @@ export function buildSearchWindows(now: Date, days: number): TimeInterval[] {
     const calendarDay = addCalendarDays(today, offset);
     const start = parisInstantAt(calendarDay, windowStartHourOf(calendarDay));
     const end = parisInstantAt(addCalendarDays(calendarDay, NEXT_DAY), MIDNIGHT_HOUR);
-    windows.push({ start: start < now ? now : start, end });
+    windows.push({ start: new Date(Math.max(start.getTime(), now.getTime())), end });
   }
   return windows;
 }
@@ -48,6 +48,7 @@ function subtractFromWindow(window: TimeInterval, busy: readonly TimeInterval[])
   const free: TimeInterval[] = [];
   let cursor = window.start;
   for (const interval of busy) {
+    // Stryker disable next-line EqualityOperator: equivalent mutants. A busy interval ending exactly at the cursor, or starting exactly at the window end, covers no time, so skipping it or carving it leaves the same free intervals.
     if (interval.end <= cursor || interval.start >= window.end) continue;
     if (interval.start > cursor) free.push({ start: cursor, end: interval.start });
     cursor = interval.end;

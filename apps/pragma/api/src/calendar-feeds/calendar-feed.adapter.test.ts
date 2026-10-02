@@ -102,9 +102,27 @@ describe('readCalendarFeed', () => {
   });
 
   it('refuses a redirect without a location', async () => {
-    const fetcher = fetcherAnswering(respond(308));
+    const fetcher = fetcherAnswering(respond(308), respond(200, ICS_BODY));
     expect(await readCalendarFeed(FEED_ADDRESS, { fetcher })).toStrictEqual({
       kind: 'unavailable',
+    });
+    expect(fetcher).toHaveBeenCalledTimes(1);
+  });
+
+  it('decodes a character split across two chunks', async () => {
+    const accented = new TextEncoder().encode('SUMMARY:Répétition');
+    const splitAt = accented.indexOf(0xc3) + 1;
+    const body = new ReadableStream<Uint8Array>({
+      start(controller) {
+        controller.enqueue(accented.slice(0, splitAt));
+        controller.enqueue(accented.slice(splitAt));
+        controller.close();
+      },
+    });
+    const fetcher = fetcherAnswering(new Response(body, { status: 200 }));
+    expect(await readCalendarFeed(FEED_ADDRESS, { fetcher })).toStrictEqual({
+      kind: 'ok',
+      body: 'SUMMARY:Répétition',
     });
   });
 

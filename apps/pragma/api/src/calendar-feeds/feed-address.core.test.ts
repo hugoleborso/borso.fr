@@ -13,7 +13,7 @@ describe('judgeFeedAddress', () => {
   });
 
   it('turns a webcal address into https', () => {
-    expect(judgeFeedAddress('webcal://p01-caldav.icloud.com/published/2/abc')).toStrictEqual({
+    expect(judgeFeedAddress('  webcal://p01-caldav.icloud.com/published/2/abc')).toStrictEqual({
       kind: 'accepted',
       address: 'https://p01-caldav.icloud.com/published/2/abc',
     });

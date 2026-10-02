@@ -38,6 +38,10 @@ describe('preview calendar fixtures', () => {
     ]);
   });
 
+  it.each(FIXTURE_FEED_NAMES)('write the %s feed exactly as recorded', (name) => {
+    expect(buildFixtureFeed(name, new Date('2026-10-13T08:00:00Z'))).toMatchSnapshot();
+  });
+
   it('name only the fixtures that exist', () => {
     expect(isFixtureFeedName('hugo')).toBe(true);
     expect(isFixtureFeedName('lea')).toBe(false);
@@ -54,6 +58,7 @@ describe('answerFixtureFeedRequest', () => {
       delayMs: 0,
     });
     expect(answerFixtureFeedRequest('marc', now).status).toBe(200);
+    expect(answerFixtureFeedRequest('sarah.ics', now).body).toBe(buildFixtureFeed('sarah', now));
   });
 
   it('answers 410 for the address a provider has reset, at once', () => {
@@ -98,6 +103,8 @@ describe('listFixtureFeedAttachments', () => {
 
 describe('countSavedFeeds', () => {
   it('counts only the saved outcomes', () => {
-    expect(countSavedFeeds([{ kind: 'saved' }, { kind: 'invalid-address' }])).toBe(1);
+    expect(
+      countSavedFeeds([{ kind: 'saved' }, { kind: 'saved' }, { kind: 'invalid-address' }]),
+    ).toBe(2);
   });
 });
