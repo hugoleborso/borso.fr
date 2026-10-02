@@ -219,6 +219,15 @@ e.g., a change that cannot alter behaviour, and say why on the line.
   are listed in the script rather than back-filled.
 - `eslint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
   `.utils.ts` file has no sibling test file.
+- `script:scripts/check-every-test-is-collected.sh` fails when a tracked
+  `*.test.ts` or `*.test.tsx` file is not collected by any project in its
+  workspace. `borso/test-file-has-sibling-source` reads source to test and asks
+  whether a gated file has a suite; nothing read test to suite until this,
+  and a test no project loads fails nothing, because a green run with one
+  fewer file looks exactly like a green run. The check asks
+  `vitest list --filesOnly` rather than matching the include globs itself, so
+  it cannot disagree with the runner, and listing starts no `globalSetup`, so
+  the back-e2e Postgres stays down. About a second per workspace.
 - `reviewer` checks that a test name states the behaviour and the condition,
   and that a service test asserts on what the database holds rather than on
   which method was called.
