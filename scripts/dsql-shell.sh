@@ -3,15 +3,19 @@
 # admin auth token. Token expires after 1 h — re-run the script to refresh.
 #
 # Usage:
-#   ./scripts/dsql-shell.sh                                # last-loop-lepin (prod by default)
-#   STAGE=preview PR_NUMBER=12 ./scripts/dsql-shell.sh     # a specific preview
+#   APP=pragma ./scripts/dsql-shell.sh                              # prod by default
+#   APP=pragma STAGE=preview PR_NUMBER=12 ./scripts/dsql-shell.sh   # a specific preview
 #   APP=last-loop-lepin REGION=eu-west-3 ./scripts/dsql-shell.sh
+#
+# APP has no default. It used to default to last-loop-lepin, written when that
+# was the only application with a cluster; with three, a forgotten APP opened
+# the wrong production database without saying so.
 #
 # Defaults assume the borso-readonly profile is already exported in the
 # shell (or that AWS_ACCESS_KEY_ID/SECRET are set for `AI-Dev-ReadOnly`).
 set -euo pipefail
 
-APP="${APP:-last-loop-lepin}"
+APP="${APP:?APP is required: name the application whose cluster to open, for example APP=pragma}"
 REGION="${REGION:-eu-west-3}"
 STAGE="${STAGE:-prod}"
 PR_NUMBER="${PR_NUMBER:-}"
@@ -59,10 +63,9 @@ TOKEN=$(aws dsql generate-db-connect-admin-auth-token \
   --expires-in 3600 \
   --output text)
 
-echo "+ psql against ${ENDPOINT} (schema: ${SCHEMA})"
-echo "  Aurora DSQL doesn't enforce FKs and the migration runner writes to the"
-echo "  per-stage schema. Tables: editions, runners, loop_punches, manual_dnfs,"
-echo "  auth_attempts, _migrations."
+echo "+ psql against ${APP}'s cluster at ${ENDPOINT} (schema: ${SCHEMA})"
+echo "  Aurora DSQL does not enforce foreign keys, and the migration runner writes"
+echo "  to the per-stage schema. \\dt lists this application's tables."
 echo
 PGPASSWORD="${TOKEN}" PGOPTIONS="--search_path=${SCHEMA},public" \
   psql "host=${ENDPOINT} port=5432 user=admin dbname=postgres sslmode=require"
