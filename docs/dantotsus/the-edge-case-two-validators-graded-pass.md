@@ -4,7 +4,7 @@ introduced-at: self-validation
 detected-at: review
 severity: medium
 related-pr: "#107"
-fix-pr: "lessons from PR #107"
+fix-pr: "#119"
 fix-commits: [aea99b0]
 eradication-level: 4
 time-to-detect: hours

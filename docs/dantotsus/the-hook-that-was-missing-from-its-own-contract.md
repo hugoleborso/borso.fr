@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: "#107"
-fix-pr: "lessons from PR #107"
+fix-pr: "#119"
 fix-commits: [9703c82, 1b060da]
 eradication-level: 2
 time-to-detect: weeks

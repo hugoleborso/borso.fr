@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: "#107"
-fix-pr: "lessons from PR #107"
+fix-pr: "#119"
 fix-commits: [cda3dd2]
 eradication-level: 1
 time-to-detect: weeks
