@@ -73,7 +73,7 @@ The skill's textual return is one of:
 Same rule as `/visual-validation`:
 
 - **FAIL is never accepted.** Code-cleanliness violations, missing `.utils.ts` tests, lint / knip / typecheck regressions, and correctness-vs-spec gaps are real defects — the operator fixes them and re-runs the validator. There is no "disclose-and-merge" path.
-- **PASS_EXCEPT_UNVERIFIABLE is mergeable** when each UNVERIFIABLE row is genuinely outside this validator's reach (e.g. a tooling limit, or a row legitimately deferred to `/visual-validation`). The PR description must surface those rows in a `## Validation gaps` section: row number + assertion text verbatim + one-line reason + report-path link.
+- **PASS_EXCEPT_UNVERIFIABLE is mergeable** when each UNVERIFIABLE row is genuinely outside this validator's reach (e.g. a tooling limit, or a row legitimately deferred to `/visual-validation`). The PR description must surface those rows (row number, assertion text verbatim, one-line reason, report-path link), placed where `/open-pr`'s *Validation* step puts them.
 - **PASS is mergeable** with no further disclosure.
 
 ## Failure modes to avoid

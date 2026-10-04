@@ -332,7 +332,7 @@ CLAUDE.md                                                          // UPDATE: la
 
 La couverture est asservie par **deux projets vitest** distincts dans `apps/last-loop-lepin/vitest.config.ts`. Aucune validation manuelle n'est admise comme gate.
 
-**Gate A — `pnpm --filter @borso/last-loop-lepin run test:core`**
+**Gate A — `pnpm --filter @borso-app/last-loop-lepin run test:core`**
 
 Périmètre : tous les fichiers `**/*.core.test.ts` (back) et `**/*.utils.test.ts` (front). Ne charge **pas** testcontainers, ne charge **pas** la stack AWS — tourne en process pur ; cible ~1 s sur la boucle de dev.
 
@@ -350,7 +350,7 @@ Suites attendues :
 | `edition/edition.core.ts` | `nextHourlyTop(now)` renvoie `null` après `endsAt`, gère DST Europe/Paris ; `isRaceEndReached(now)` ; `projectDnfCandidates(now)` au top horaire. |
 | `site/src/domain/initials.utils.ts` | Couleur déterministe par hash du nom (collision testée), génération initiales (1 mot, 2 mots, accents, espaces multiples). |
 
-**Gate B — `pnpm --filter @borso/last-loop-lepin run test`**
+**Gate B — `pnpm --filter @borso-app/last-loop-lepin run test`**
 
 Périmètre : `**/*.test.ts` complet, y compris les tests intégration qui montent l'app Hono (`createApp({ db })`) et tapent ses endpoints via `app.request()`. Un container Postgres 16 est lancé une fois par run via testcontainers (`test/setup-postgres.ts`), le schéma Drizzle est appliqué par `drizzle-kit push`, chaque suite récupère son schéma Postgres dédié pour l'isolation. Le temps est mocké via `vi.useFakeTimers({ shouldAdvanceTime: false })` + `vi.setSystemTime(iso)` dans chaque suite qui touche au métier ; le `new Date()` appelé par les services est ainsi piloté sans abstraction supplémentaire. Cible ~30 s, joué pre-push (hook) et CI.
 

@@ -1,4 +1,4 @@
-# ADR-0022: API Gateway WebSocket pushes Banana Rush round state
+# ADR-0021: API Gateway WebSocket pushes Banana Rush round state
 
 - **Status:** accepted
 - **Date:** 2026-09-19

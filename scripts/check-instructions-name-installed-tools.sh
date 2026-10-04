@@ -60,7 +60,43 @@ while IFS= read -r invocation; do
   fi
 done <<<"$invocations"
 
+# The same question for the workspace a command targets. `pnpm --filter X`
+# answers "No projects matched the filters" when X names no package, which is a
+# message about a filter rather than about a typo. PR #107's plan named
+# `@borso/pragma` four times in its pre-flight gates, and the audience-song-voting
+# brief had named the same package a month earlier; the real name is
+# `@borso-app/pragma`. A plan and a spec are instructions too — a validator runs
+# their gates — so they are read here beside the skills. pnpm also matches a
+# name without its scope, so `last-loop-lepin` resolves and is accepted.
+FILTER_SURFACES=('.claude/*' 'docs/standards/*' 'docs/features/*/*/plan/*' 'docs/features/*/*/spec/*')
+
+workspace_names="$(
+  git ls-files 'apps/*/package.json' 'infra/*/package.json' |
+    xargs -I{} node -e "process.stdout.write(require('./{}').name + '\n')"
+)"
+
+filters="$(
+  git ls-files "${FILTER_SURFACES[@]}" |
+    grep -E '\.(md|sh)$' |
+    xargs grep -onE 'pnpm --filter +"?[^ "`]+' 2>/dev/null |
+    sed -E 's/pnpm --filter +"?/ /' |
+    sort -u
+)"
+
+while IFS= read -r invocation; do
+  [ -n "$invocation" ] || continue
+  filter="${invocation##* }"
+  location="${invocation% *}"
+  location="${location%:}"
+  case "$filter" in *'<'* | *'$'* | *'*'* | *'...'* | ./*) continue ;; esac
+  if ! printf '%s\n' "$workspace_names" | grep -qxF -e "$filter" -e "@borso-app/$filter" -e "@borso/$filter"; then
+    failed=1
+    echo "[check-instructions-name-installed-tools] ${location}: filters on \`${filter}\`, which names no workspace" >&2
+  fi
+done <<<"$filters"
+
 if [ "$failed" -ne 0 ]; then
+  echo "[check-instructions-name-installed-tools] Workspaces: $(printf '%s ' $workspace_names)" >&2
   echo "[check-instructions-name-installed-tools] An instruction surface is read by an agent that" >&2
   echo "  will run what it is told. A command that does not exist costs it a turn and then makes" >&2
   echo "  it guess what the failure means. Either install the tool, or rewrite the instruction to" >&2
