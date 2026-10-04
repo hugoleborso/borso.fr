@@ -4,7 +4,7 @@
 
 - [x] **Client / business** — the operator asked for a new application at `banana-rush.borso.fr`, phone friendly before anything else, and chose a French and English interface so the game can be sent to friends who speak either one.
 - [x] **Product** — the operator chose a nickname and a join code over accounts, a per round countdown that auto bids one banana for anyone who has not answered, no bots in this first version, and a host who picks the number of seats, the timer and the winning score.
-- [x] **Tech-lead** — the operator chose an API Gateway WebSocket channel once we confirmed the billing is pay as you go with no fixed charge. That choice is recorded in [ADR-0021](../../../../adr/0021-api-gateway-websocket-pushes-banana-rush-round-state.md).
+- [x] **Tech-lead** — the operator chose an API Gateway WebSocket channel once we confirmed the billing is pay as you go with no fixed charge. That choice is recorded in [ADR-0022](../../../../adr/0022-api-gateway-websocket-pushes-banana-rush-round-state.md).
 - [x] **Developer** — the operator confirmed a player who cannot pay the tariff stays in the game at zero bananas and can win a later crate, which keeps the resolution rule a pure function over the whole table rather than a lifecycle with removals.
 - [x] **Designer** — the operator chose a bright flat look: large yellow shapes, thick rounded corners, one deep brown ink colour and monkey faces drawn as inline SVG.
 
@@ -108,7 +108,7 @@ The worked example the rules were explained with: three players holding ten bana
 
 | Question | Options | Decision (date) |
 | --- | --- | --- |
-| How do phones learn about each other's moves? | Polling on a timer, API Gateway WebSocket, streamed responses from Lambda | API Gateway WebSocket, because its billing is per message and per connection minute with no fixed charge. Recorded in ADR-0021 (2026-09-19) |
+| How do phones learn about each other's moves? | Polling on a timer, API Gateway WebSocket, streamed responses from Lambda | API Gateway WebSocket, because its billing is per message and per connection minute with no fixed charge. Recorded in ADR-0022 (2026-09-19) |
 | Who is a player? | Nickname and join code, passkey accounts | Nickname, a monkey avatar and a token in local storage. A party game cannot ask for a sign up (2026-09-19) |
 | What stops a round from hanging? | Wait for everybody, a countdown, a host button | A countdown the host picks, which enters one banana for anyone who has not answered (2026-09-19) |
 | What happens after a bust? | Out of the game, stays at zero, skips a round | Stays at zero and can win a later crate, because bids are not backed by the stash (2026-09-19) |
@@ -123,7 +123,7 @@ The worked example the rules were explained with: three players holding ten bana
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| [ADR-0021](../../../../adr/0021-api-gateway-websocket-pushes-banana-rush-round-state.md) | An API Gateway WebSocket API carries state to the phones, and a new `WebSocketChannel` construct owns it | Every write goes through the HTTP API and the WebSocket carries no commands. The front end learns the socket address from `GET /api/config` rather than from a build time variable |
+| [ADR-0022](../../../../adr/0022-api-gateway-websocket-pushes-banana-rush-round-state.md) | An API Gateway WebSocket API carries state to the phones, and a new `WebSocketChannel` construct owns it | Every write goes through the HTTP API and the WebSocket carries no commands. The front end learns the socket address from `GET /api/config` rather than from a build time variable |
 
 ## Changes
 
@@ -222,7 +222,7 @@ infra/cdk/test/unit/web-socket-channel.test.ts        // NEW
 apps/banana-rush/**                                   // NEW, the whole workspace
 .github/path-filters.yml                              // UPDATE: banana-rush filter
 commitlint.config.js                                  // UPDATE: banana-rush scope
-docs/adr/0021-...md                                   // NEW
+docs/adr/0022-...md                                   // NEW
 docs/adr/README.md                                    // UPDATE: index line
 ```
 
