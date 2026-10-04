@@ -102,6 +102,8 @@ Then a comparison matrix:
 
 Use `✓ <justification>` / `✗ <justification>` — not 1–5 scales, not stars. The audit value is the justification, not the score.
 
+**When the decision picks a source that people search, the rubric carries result relevance, and the score comes from a measurement.** That covers a song catalogue, a place search, an address lookup, or anything else where a person types a few words and expects the obvious thing first. Run the same set of realistic queries against every option, write down where the expected result ranks, and put those numbers in the matrix. Quota, keys and cost are easy to read from documentation. Relevance cannot be read from documentation, so it gets skipped, and it is often the criterion the user actually cares about. The song search in `pragma` ran on MusicBrainz from May to September 2026, and its ADR weighed burst tolerance, identifier continuity, operational surface, change cost and latency, but never relevance. Measured on twenty queries, Deezer put the original recording first nineteen times and MusicBrainz never did. See [`docs/knowledge/what-deezer-musicbrainz-and-spotify-each-carry.md`](../../../docs/knowledge/what-deezer-musicbrainz-and-spotify-each-carry.md#search-relevance-measured).
+
 ### 7. Implementation pointers
 
 Backlinks to the artefacts that operationalise the decision:
