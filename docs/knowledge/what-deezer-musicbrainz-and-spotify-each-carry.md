@@ -18,6 +18,73 @@ another does. They do not, and the gaps decide features.
 | Release year | no | yes | yes |
 | Tags / genres | no | yes | partial |
 
+## Search relevance, measured
+
+This was the criterion that decided the move from MusicBrainz to Deezer, and
+neither ADR on the subject scored it. Measured on 2026-10-04 from this sandbox.
+
+**Method.** Twenty queries of the kind a band or a room types: an artist and a
+title run together, a title alone, a typo, missing apostrophes, French songs.
+Each query went to both services, with the top ten results as returned and no
+ranking of our own on top. A query counts as found when a row's title and
+artist both match the original recording, case and accents folded.
+
+- Deezer: `GET https://api.deezer.com/search?q=<query>&limit=10`
+- MusicBrainz: `GET https://musicbrainz.org/ws/2/recording?query=<query>&limit=10&fmt=json&dismax=true`,
+  with the `dismax` parser the old adapter used
+
+| Result | Deezer | MusicBrainz |
+| --- | --- | --- |
+| Original ranked first | 19 / 20 | 0 / 20 |
+| Original in the top three | 19 / 20 | 4 / 20 |
+| Original missing from the top ten | 0 / 20 | 9 / 20 |
+
+Rank of the original per query, where a dash means it was not in the top ten:
+
+| Query | Deezer | MusicBrainz |
+| --- | --- | --- |
+| beggin maneskin | 1 | 3 |
+| smells like teen spirit | 7 | - |
+| valerie amy winehouse | 2 | 6 |
+| uprising muse | 1 | - |
+| wonderwall | 1 | 2 |
+| bohemian rapsody | 1 | - |
+| dont stop me now | 1 | - |
+| get lucky | 1 | - |
+| sweet child o mine | 1 | - |
+| la boheme aznavour | 1 | 3 |
+| seven nation army | 1 | - |
+| mr brightside | 1 | 2 |
+| dancing queen | 1 | 8 |
+| superstition stevie wonder | 1 | - |
+| alors on danse | 1 | 2 |
+| highway to hell | 1 | 4 |
+| hey jude | 1 | 2 |
+| take on me | 1 | - |
+| le sud nino ferrer | 1 | 2 |
+| feeling good nina simone | 1 | 7 |
+
+**Why the gap is structural.** MusicBrainz is an editorial database in which
+every recording counts the same: a karaoke cover, a brass band version and a
+mashup sit beside the original, and MusicBrainz publishes no popularity figure
+to tell them apart. Typing *uprising muse* returned a brass band, then two
+*Muse vs. Backstreet Boys* mashups. A typo is matched literally, so *bohemian
+rapsody* found covers whose titles carry the same typo. Deezer orders by
+listening, so the song a person has in mind comes first.
+
+**Where Deezer is weaker.** Rows for one song repeat as live takes, remasters
+and remixes; for *mr brightside* the top three were all remixes and live takes,
+with the studio version fourth. A title typed without its artist can lose to
+covers: *smells like teen spirit* put Nirvana seventh. The first problem is
+what [ADR-0019](../adr/0019-the-room-search-collapses-masters-into-songs.md)
+collapses.
+
+**Limit of this measurement.** The old adapter fetched 25 MusicBrainz rows and
+reordered them with its own ranking (commit `a769622`), which guessed fame from
+release, ISRC and tag counts and fixed several of these cases. No ranking can
+promote a recording the source did not return, and for 9 of these 20 queries it
+was not in the first ten.
+
 ## Deezer needs no key, and carries a BPM nobody expects
 
 `https://api.deezer.com/search?q=&limit=25` and the album image endpoint are
