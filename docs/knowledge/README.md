@@ -120,6 +120,8 @@ Two failure modes to watch for:
 - [`cloudwatch-retention-bounds-an-absence-claim.md`](./cloudwatch-retention-bounds-an-absence-claim.md) — `filter-log-events` accepts a window far older than the group's retention and says nothing, so "this never happened" is only ever a claim about the retained days. Read `retentionInDays` and the oldest event before quoting a period.
 - [`dsql-strong-consistency-is-per-connection.md`](./dsql-strong-consistency-is-per-connection.md) — read-after-write is consistent within a connection, not across them; a `PUT` then an immediate `GET` on a different Lambda/connection can read the pre-commit snapshot. A warm-connection `curl` loop won't reproduce it; reconcile from the mutation response, not a blind refetch.
 - [`drizzle-unique-index-is-not-a-unique-constraint.md`](./drizzle-unique-index-is-not-a-unique-constraint.md) — `uniqueIndex` lands in `getTableConfig().indexes`, not `.uniqueConstraints`; asserting against the wrong one passes on `undefined`.
+- [`the-production-database-is-out-of-reach-of-a-hosted-session.md`](./the-production-database-is-out-of-reach-of-a-hosted-session.md) — a hosted session reads SSM but the harness refuses the DSQL admin token as a production read; hand the query to a local session with `borso-admin`.
+
 ### Build / lint tooling
 
 - [`diff-driven-checks-that-choke-on-sql-and-case-statements.md`](./diff-driven-checks-that-choke-on-sql-and-case-statements.md) — prettier errors rather than skips on a `.sql` in a changed-file list, and the harness rewriter mangles a `case … esac` inside a loop; filter before piping, and put real control flow in a file.
@@ -146,6 +148,8 @@ Two failure modes to watch for:
 - [`visual-validator-image-size-limit.md`](./visual-validator-image-size-limit.md) — past ~20 high-res screenshots, the validator's API session crashes on the per-image 2000 px ceiling; cap screenshots at 10 and prefer viewport over full-page.
 - [`a-validator-can-name-a-cause-it-never-probed.md`](./a-validator-can-name-a-cause-it-never-probed.md) — a validation report's rows carry evidence by construction and its Notes carry prose; a cause written there is a hypothesis until a probe is cited, and one `curl` settled a claim that would otherwise have become a gate protecting nothing.
 - [`visual-validation-skill-vs-agent-browser-direct.md`](./visual-validation-skill-vs-agent-browser-direct.md) — `/visual-validation` is the feature-gate skill (full spec walk, separate agent, committed evidence); for single-fix iteration use `agent-browser` directly in the main session — minutes vs seconds.
+
+- [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, a fresh rate-limit bucket per `X-Forwarded-For`, why passkey claims belong in back-e2e, and running one named case.
 
 ### Spec & metrics framing
 
