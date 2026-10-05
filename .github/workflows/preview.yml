@@ -63,8 +63,14 @@ jobs:
           # workspace purely to run `pnpm ls`, about 25 s sitting in front of
           # every matrix that waits on this output.
           # All app slugs from the workspace (dynamic — no hard-coded list).
-          all_apps=$(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' \
-            | sort | jq -R . | jq -sc .)
+          # An app whose package.json says `"borso": { "previews": false }`
+          # deploys to prod only, so no pull request builds a preview of it:
+          # talos would otherwise serve its private content on a preview host.
+          # See docs/adr/0027-talos-deploys-to-prod-only.md.
+          all_apps=$(find apps -mindepth 1 -maxdepth 1 -type d -printf '%f\n' | sort \
+            | while read -r app; do
+                jq -e '.borso.previews == false' "apps/$app/package.json" >/dev/null || echo "$app"
+              done | jq -R . | jq -sc .)
 
           # If infra/cdk changed, redeploy every app's preview — constructs
           # are the contract.

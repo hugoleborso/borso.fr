@@ -1,6 +1,6 @@
 # Consuming borso.fr infra from another repo
 
-`@borso/infra` (the constructs in `infra/cdk/`) can deploy an app that lives in another repository, into the same AWS account, on a `*.borso.fr` hostname. The first and only consumer is the private repository `hugoleborso/talos`, which deploys a PWA at `talos.borso.fr`. This page is the exact setup it uses, and the limits of that setup.
+`@borso/infra` (the constructs in `infra/cdk/`) can deploy an app that lives in another repository, into the same AWS account, on a `*.borso.fr` hostname. The first consumer was the private repository `hugoleborso/talos`, which deployed a PWA at `talos.borso.fr`; that app now lives in [`apps/talos`](../apps/talos/README.md) and deploys through this repository's own workflow, so nothing consumes the constructs from outside today. This page is the setup talos used, kept for the next consumer, and the limits of that setup. `TalosDeployRole` below is now unused.
 
 ## What borso.fr provides
 

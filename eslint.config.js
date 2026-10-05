@@ -44,6 +44,40 @@ const API_FILES = ['apps/*/api/src/**/*.ts'];
 const CROSS_BOUNDARY_DOMAIN_FILES = ['apps/*/domain/**/*.ts'];
 const APPLICATION_AND_INFRASTRUCTURE_FILES = ['apps/**/*.{ts,tsx}', 'infra/**/*.ts'];
 const CHESS_APPLICATION_FILES = ['apps/borsouvertures/**/*.{ts,tsx}'];
+
+const TALOS_APPLICATION_FILES = ['apps/talos/**/*.{ts,tsx}'];
+
+const TALOS_CONTENT_FORMAT_FRENCH_WORDS = [
+  'abonnement',
+  'ajoute',
+  'aretes',
+  'aujourdhui',
+  'categorie',
+  'chemin',
+  'cible',
+  'cle',
+  'connecte',
+  'connexion',
+  'deconnexion',
+  'depuis',
+  'echeance',
+  'entete',
+  'entrants',
+  'erreur',
+  'extrait',
+  'fait',
+  'inscription',
+  'inscrit',
+  'jusqua',
+  'noeuds',
+  'pourquoi',
+  'priorite',
+  'recherche',
+  'sortants',
+  'statut',
+  'texte',
+  'titre',
+];
 const TEST_FILES = ['**/*.test.{ts,tsx,js}', '**/*.test-utils.ts', '**/test/**/*.ts'];
 
 const MODULE_LEVEL_SINGLETON_FILES = [
@@ -342,6 +376,17 @@ export default tseslint.config(
     plugins: { borso: borsoPlugin },
     rules: {
       'borso/no-french-identifiers': ['error', { allowedWords: ['piece'] }],
+    },
+  },
+
+  {
+    files: TALOS_APPLICATION_FILES,
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-french-identifiers': [
+        'error',
+        { additionalFrenchWords: TALOS_CONTENT_FORMAT_FRENCH_WORDS },
+      ],
     },
   },
 

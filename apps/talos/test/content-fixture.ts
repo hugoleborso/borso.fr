@@ -1,0 +1,65 @@
+export const TODAY = '2026-10-05';
+
+export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
+  'focus.md': [
+    '---',
+    'maj: 2026-10-04',
+    '---',
+    '# Focus du moment',
+    '',
+    '- **Acme** — appel lundi | horizon: 2026-10-05',
+    '',
+  ].join('\n'),
+  'todo.md': [
+    '# Todo',
+    '',
+    '- [ ] Envoyer le CV | échéance: 2026-10-05 | engagement: engagements/acme | ajouté: 2026-10-04',
+    '- [ ] Préparer le COPIL | échéance: 2026-10-14 | ajouté: 2026-10-04',
+    '- [x] Payer le loyer | échéance: 2026-10-05 | ajouté: 2026-10-04 | fait: 2026-10-05',
+    '- [ ] Clore les fils | échéance: statut: | ajouté: 2026-10-04',
+    '',
+  ].join('\n'),
+  'etat/propositions/2026-10-04-cv.md': [
+    '---',
+    'type: proposition',
+    'categorie: action',
+    'statut: proposee',
+    'titre: Envoyer ton CV',
+    'priorite: haute',
+    'cree: 2026-10-04',
+    'expire: 2026-10-06',
+    '---',
+    '## Pourquoi',
+    'Bruno attend.',
+    '',
+    '## Ce que Talos propose',
+    'Un message.',
+    '',
+    '## Décision',
+    '',
+  ].join('\n'),
+  'etat/propositions/2026-10-03-vieille.md': [
+    '---',
+    'type: proposition',
+    'statut: proposee',
+    'titre: Expirée',
+    'cree: 2026-10-03',
+    'expire: 2026-10-04',
+    '---',
+    '',
+  ].join('\n'),
+  'etat/propositions/2026-10-05.md': '---\ntype: journal\n---\n# Notes\n',
+  'journal/2026-10-05.md':
+    '# 2026-10-05\n\n## Brief envoyé\n\n**Lundi 5 octobre**\n\n## Fait\nrien\n',
+  'etat/graphe.jsonl': [
+    '{"source": "second-brain/moi", "relation": "travaille_sur", "cible": "second-brain/projets/refonte", "depuis": "2026-09-01", "jusqua": "", "vu": "2026-10-02", "src": "x"}',
+    '{"source": "second-brain/moi", "relation": "travaille_sur", "cible": "second-brain/projets/initech", "depuis": "2026-01", "jusqua": "2026-05", "vu": "2026-05-30", "src": "y"}',
+    '',
+  ].join('\n'),
+  'index.md': '# Index\n\n- [[second-brain/moi]]\n- [[second-brain/projets/refonte]]\n',
+  'second-brain/moi.md':
+    '---\ntype: moi\nmaj: 2026-10-02\n---\n# Alex Durand\n\nTravaille sur [[second-brain/projets/refonte|la refonte]] à Séville.\n',
+  'second-brain/projets/refonte.md':
+    '---\ntype: projet\n---\n# Refonte du site\n\nPilotée par [[second-brain/moi]].\n',
+  'etat/securite.md': '# Où sont les secrets\n',
+};
