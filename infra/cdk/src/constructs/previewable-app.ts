@@ -3,6 +3,7 @@ import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import {
   assertDeployStage,
+  type BucketNameSuffix,
   frontendOrigin,
   isProductionStage,
   previewApiHostname,
@@ -25,7 +26,10 @@ export interface PreviewableAppProps {
   readonly stage: Stage;
   readonly prNumber?: number;
   readonly domainName?: string;
-  readonly frontend: { readonly distPath: string };
+  readonly frontend: {
+    readonly distPath: string;
+    readonly bucketNameSuffix?: BucketNameSuffix;
+  };
   readonly api?: {
     readonly entry: string;
     readonly customDomainHostname?: string;
@@ -110,6 +114,9 @@ export class PreviewableApp extends Construct {
       domainName: props.domainName,
       assetsPath: props.frontend.distPath,
       spaFallback: true,
+      ...(props.frontend.bucketNameSuffix === undefined
+        ? {}
+        : { bucketNameSuffix: props.frontend.bucketNameSuffix }),
       ...(sameOriginApiDomainName === undefined
         ? {}
         : { api: { domainName: sameOriginApiDomainName } }),

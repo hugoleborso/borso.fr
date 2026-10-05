@@ -1,5 +1,5 @@
 import * as path from 'node:path';
-import { CfnOutput, Duration, RemovalPolicy } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy, Stack, Token } from 'aws-cdk-lib';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
 import {
   AllowedMethods,
@@ -25,7 +25,9 @@ import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import { STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE } from '../internal/cf-static-site-index-rewrite.js';
 import {
+  accountScopedBucketName,
   assertDeployStage,
+  type BucketNameSuffix,
   bucketName,
   isProductionStage,
   previewHostname,
@@ -54,6 +56,7 @@ export interface StaticSiteProps {
     readonly pathPattern?: string;
   };
   readonly spaFallback?: boolean;
+  readonly bucketNameSuffix?: BucketNameSuffix;
 }
 
 // @FollowsBlueprint reusable-cdk-construct
@@ -77,7 +80,7 @@ export class StaticSite extends Construct {
       throw new Error('StaticSite: domainName is required for stage="prod".');
     }
     const bucket = new Bucket(this, 'Bucket', {
-      bucketName: bucketName(props),
+      bucketName: this.prodBucketName(props),
       encryption: BucketEncryption.S3_MANAGED,
       blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
       enforceSSL: true,
@@ -213,6 +216,19 @@ export class StaticSite extends Construct {
     });
 
     return `https://${props.domainName}`;
+  }
+
+  private prodBucketName(props: StaticSiteProps): string {
+    if (props.bucketNameSuffix === undefined) {
+      return bucketName(props);
+    }
+    const account = Stack.of(this).account;
+    if (Token.isUnresolved(account)) {
+      throw new Error(
+        'StaticSite: bucketNameSuffix "account" needs a stack whose env.account is set.',
+      );
+    }
+    return accountScopedBucketName(props, account);
   }
 
   private buildPreview(props: StaticSiteProps): string {

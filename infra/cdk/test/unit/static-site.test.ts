@@ -1,3 +1,4 @@
+import { App, Stack } from 'aws-cdk-lib';
 import { Match } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { StaticSite } from '../../src/constructs/static-site.js';
@@ -24,6 +25,10 @@ describe('StaticSite (prod)', () => {
       Name: 'borso.fr.',
     });
     expect(JSON.stringify(tpl.toJSON())).not.toContain('borso.fr.borso.fr');
+  });
+
+  it('keeps the bucket named <app>-prod when no suffix is asked for, so no existing bucket is replaced', () => {
+    tpl.hasResourceProperties('AWS::S3::Bucket', { BucketName: 'borso-fr-prod' });
   });
 
   it('creates a private S3 bucket with TLS-only access', () => {
@@ -282,5 +287,47 @@ describe('StaticSite (prod) — the copies a browser holds of a deploy', () => {
         'cache-control': 'no-cache, must-revalidate',
       }),
     });
+  });
+});
+
+describe('StaticSite (prod, account-scoped bucket name)', () => {
+  it('appends the stack account to the bucket name, because S3 names are global across accounts', () => {
+    const tpl = synth((stack) => {
+      new StaticSite(stack, 'Site', {
+        app: 'talos',
+        stage: 'prod',
+        domainName: 'talos.borso.fr',
+        assetsPath: '.',
+        bucketNameSuffix: 'account',
+      });
+    });
+    tpl.hasResourceProperties('AWS::S3::Bucket', { BucketName: 'talos-prod-123456789012' });
+  });
+
+  it('refuses a stack with no env.account, whose account is only known at deploy time', () => {
+    const stack = new Stack(new App(), 'AgnosticStack');
+    expect(
+      () =>
+        new StaticSite(stack, 'Site', {
+          app: 'talos',
+          stage: 'prod',
+          domainName: 'talos.borso.fr',
+          assetsPath: '.',
+          bucketNameSuffix: 'account',
+        }),
+    ).toThrow('StaticSite: bucketNameSuffix "account" needs a stack whose env.account is set.');
+  });
+
+  it('ignores the suffix on a preview, which writes to the shared previews bucket', () => {
+    const tpl = synth((stack) => {
+      new StaticSite(stack, 'Site', {
+        app: 'talos',
+        stage: 'preview',
+        prNumber: 7,
+        assetsPath: '.',
+        bucketNameSuffix: 'account',
+      });
+    });
+    tpl.resourceCountIs('AWS::S3::Bucket', 0);
   });
 });

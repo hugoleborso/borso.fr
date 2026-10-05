@@ -130,12 +130,16 @@ new PreviewableApp(stack, 'Talos', {
   app: APP_SLUG,
   stage,
   domainName: PROD_DOMAIN,
-  frontend: { distPath: '../app/dist' },
+  frontend: { distPath: '../app/dist', bucketNameSuffix: 'account' },
   api: { entry: '../api/src/lambda.ts' },
 });
 ```
 
-`PreviewableApp` at the `prod` stage composes `StaticSite` and `LambdaApi` and serves the API on the same origin under `/api/*`. A site with no API uses `StaticSite` directly with the same `app`, `stage` and `domainName`. Synthesized from a workspace laid out this way, the stack holds one distribution aliased to `talos.borso.fr`, a bucket `talos-prod`, a function `talos-prod-api`, A and AAAA records for `talos.borso.fr.`, and the tags `Project=borso`, `App=talos`, `Stage=prod`, `ManagedBy=cdk`. The slug `talos` passes `validateAppSlug`. The `Project=borso` tag means talos counts against the account's `borso-monthly-*` budgets.
+`PreviewableApp` at the `prod` stage composes `StaticSite` and `LambdaApi` and serves the API on the same origin under `/api/*`. A site with no API uses `StaticSite` directly with the same `app`, `stage` and `domainName`. Synthesized from a workspace laid out this way, the stack holds one distribution aliased to `talos.borso.fr`, a bucket `talos-prod-<account id>`, a function `talos-prod-api`, A and AAAA records for `talos.borso.fr.`, and the tags `Project=borso`, `App=talos`, `Stage=prod`, `ManagedBy=cdk`. The slug `talos` passes `validateAppSlug`.
+
+### Bucket names are global
+
+S3 bucket names are unique across every AWS account, not only this one. `StaticSite` names the prod bucket `<app>-prod` by default, so a short slug can already belong to a stranger: the first talos deploy failed with `The requested bucket name is not available` because `talos-prod` was unavailable, although S3 answered `NoSuchBucket` for it, so a lookup cannot prove a name is free. Pass `bucketNameSuffix: 'account'` to `StaticSite`, or `frontend.bucketNameSuffix` to `PreviewableApp`, and the bucket becomes `<app>-prod-<account id>`, which nobody outside the account can hold. The stack must set `env.account`, because the name is computed at synth time; synth fails otherwise. The option changes nothing at the `preview` and `integ` stages, which write to the shared previews bucket. Existing borso.fr apps keep `<app>-prod`: renaming a bucket replaces it, and their names are already theirs. See [the dantotsu](./dantotsus/a-bucket-name-someone-else-already-owned.md). The `Project=borso` tag means talos counts against the account's `borso-monthly-*` budgets.
 
 ### 4. GitHub settings of the consumer
 

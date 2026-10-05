@@ -221,3 +221,31 @@ describe('PreviewableApp (preview, no api/db)', () => {
     tpl.resourceCountIs('AWS::DSQL::Cluster', 0);
   });
 });
+
+describe('PreviewableApp (prod, account-scoped bucket name)', () => {
+  it('forwards frontend.bucketNameSuffix to the site bucket', () => {
+    const stack = new Stack(new App(), 'P', { env: ENV });
+    new PreviewableApp(stack, 'App', {
+      app: 'test-app',
+      stage: 'prod',
+      domainName: 'test-app.borso.fr',
+      frontend: { distPath: '.', bucketNameSuffix: 'account' },
+    });
+    Template.fromStack(stack).hasResourceProperties('AWS::S3::Bucket', {
+      BucketName: 'test-app-prod-123456789012',
+    });
+  });
+
+  it('keeps the bucket named <app>-prod without the suffix', () => {
+    const stack = new Stack(new App(), 'P', { env: ENV });
+    new PreviewableApp(stack, 'App', {
+      app: 'test-app',
+      stage: 'prod',
+      domainName: 'test-app.borso.fr',
+      frontend: { distPath: '.' },
+    });
+    Template.fromStack(stack).hasResourceProperties('AWS::S3::Bucket', {
+      BucketName: 'test-app-prod',
+    });
+  });
+});
