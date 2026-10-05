@@ -4,8 +4,8 @@ introduced-at: self-validation
 detected-at: local
 severity: high
 related-pr: 94966245 (chore(deps): take every open Dependabot bump in one change, merged with PR #122)
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/TBD
-fix-commits: [TBD]
+fix-pr: https://github.com/hugoleborso/borso.fr/pull/130
+fix-commits: [d4cd29d8, f578e133]
 eradication-level: 2
 time-to-detect: hours (one day on main)
 tags: [stryker, vitest, mutation-testing, ci, github-actions, cache, dependencies, vendor-quirk]
@@ -93,7 +93,7 @@ did not have.
 
 **Type:** DevX check (level 2 — the gate refuses to report a score it did not measure)
 
-**Reference:** [PR #TBD](https://github.com/hugoleborso/borso.fr/pull/TBD) · commits TBD
+**Reference:** [PR #130](https://github.com/hugoleborso/borso.fr/pull/130) · commits [`d4cd29d8`](https://github.com/hugoleborso/borso.fr/commit/d4cd29d8), [`f578e133`](https://github.com/hugoleborso/borso.fr/commit/f578e133)
 
 **The actual fix:**
 
