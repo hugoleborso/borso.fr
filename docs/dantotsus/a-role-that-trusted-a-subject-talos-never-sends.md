@@ -4,8 +4,8 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: medium
 related-pr: 128
-fix-pr: this PR (claude/talos-immutable-oidc)
-fix-commits: [this PR's first commit]
+fix-pr: 137
+fix-commits: [99b73ba1e40b5e2e537165a44490ff6c28f997f5]
 eradication-level: 1
 time-to-detect: hours
 tags: [github-actions, oidc, iam, cdk, talos]
@@ -51,7 +51,7 @@ If #128 had known that, it would have read talos's setting and written the immut
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** this PR, first commit.
+**Reference:** [PR #137](https://github.com/hugoleborso/borso.fr/pull/137) · commit [`99b73ba1`](https://github.com/hugoleborso/borso.fr/commit/99b73ba1e40b5e2e537165a44490ff6c28f997f5)
 
 **The actual fix:** `GithubSubject.subjectFormat` is required and has no default, so a role cannot be written without choosing the format.
 
