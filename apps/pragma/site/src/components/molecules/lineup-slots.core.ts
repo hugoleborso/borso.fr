@@ -24,9 +24,9 @@ export const INSTRUMENT_ICON_GLYPH = {
   sun: 'sun',
 } satisfies Record<InstrumentIcon, IconName>;
 
-export const MINIMUM_OVERFLOW_WORTH_A_COUNTER = 1;
 export const LINEUP_SLOT_WIDTH_PX = 19;
 export const OVERFLOW_COUNTER_WIDTH_PX = 22;
+const NO_OVERFLOW = 0;
 
 export interface SlotInstrument {
   readonly id: string;
@@ -69,10 +69,6 @@ function byPositionThenName(left: SlotInstrument, right: SlotInstrument): number
   return left.name.localeCompare(right.name);
 }
 
-function hasOverflowWorthShowing(overflowCount: number): boolean {
-  return overflowCount >= MINIMUM_OVERFLOW_WORTH_A_COUNTER;
-}
-
 // @FollowsBlueprint core-projection
 export function buildLineupColumn(input: BuildLineupColumnInput): LineupColumnView {
   const slots = input.instruments.toSorted(byPositionThenName).flatMap((instrument) =>
@@ -109,7 +105,7 @@ export function sliceColumnToWidth(
   return {
     slots: column.slots.slice(0, fitting),
     overflowCount: overflowInstrumentNames.length,
-    hasOverflow: hasOverflowWorthShowing(overflowInstrumentNames.length),
+    hasOverflow: overflowInstrumentNames.length > NO_OVERFLOW,
     overflowInstrumentNames,
   };
 }
