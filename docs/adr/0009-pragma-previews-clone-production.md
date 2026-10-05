@@ -34,10 +34,10 @@ Preview and integ schemas clone `prod`, with:
 
 | | |
 |---|---|
-| `tableBlocklist` | `auth_attempt` — rate-limit counters, meaningless across schemas |
+| `tableBlocklist` | `auth_attempt` — rate-limit counters, meaningless across schemas; `member_passkey` and `webauthn_challenge` — a passkey is bound to production's relying-party id, so it cannot sign into a preview host |
 | `columnsToNullify` | `member.avatar_s3_key` — prod's key in the preview's bucket is a 404 |
-| **cloned deliberately** | `app_config` — the shared password hash *and* the HMAC key |
-| `tablesToReplace` | `app_config` — emptied in the target immediately before the copy |
+| **cloned deliberately** | `app_config` — the shared password hash *and* the HMAC key; `member_credential` — each member's own username and password hash |
+| `tablesToReplace` | `app_config`, `member_credential` — emptied in the target immediately before the copy |
 | **left alone deliberately** | `song.chart` — most charts are inline ChordPro text, which is the useful part; a PDF chart merely 404s |
 
 `app_config` appears twice on purpose. It is a singleton keyed on `id=1`, and the
@@ -97,6 +97,17 @@ upserts, keeps being seeded.
 **Guard rails.** `apps/pragma/cdk/test/stack.test.ts` pins both halves: prod
 never clones (a self-clone is destructive), and the exclusion list cannot
 shrink without failing a test.
+
+## Amendment, 2026-10-05: member credentials follow the same rule
+
+When pragma moved from one shared password to member accounts, commit
+`03bd354` blocklisted `app_config` and `member_credential` along with the
+passkeys, which contradicted this decision without amending it. Previews then
+started with no credential at all and could not be signed into except by
+calling `set-password` first. Both tables are cloned again, and replaced on
+every deploy, so a member signs into a preview with the name and password
+they use in production. Passkeys stay excluded because they cannot work on
+another host anyway.
 
 ## What would change this decision
 

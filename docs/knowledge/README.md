@@ -111,7 +111,7 @@ Two failure modes to watch for:
 
 - [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.
 - [`dsql-clone-from-prod.md`](./dsql-clone-from-prod.md) — cloning a production schema into a preview, and what the clone does not carry.
-- [`a-pragma-preview-cannot-be-signed-into.md`](./a-pragma-preview-cannot-be-signed-into.md) — the preview clones production's credentials and bootstrap refuses an already-bootstrapped instance, so no agent-reachable path signs in; what can still be validated there, and what has to move local.
+- [`a-pragma-preview-cannot-be-signed-into.md`](./a-pragma-preview-cannot-be-signed-into.md) — the preview clones production's group password and member accounts (not passkeys), so only someone holding a production account signs in; what can still be validated there, and what has to move local.
 - [`the-committed-template-snapshot-is-not-the-deployed-stack.md`](./the-committed-template-snapshot-is-not-the-deployed-stack.md) — the `borso-shared` snapshot is synthesized with stubbed certificates, so comparing it to the live template invents deletions that never happen; what the comparison *does* catch is a stack several merges behind its dispatch-only deploy.
 ### Aurora DSQL
 
