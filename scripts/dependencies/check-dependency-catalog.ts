@@ -71,7 +71,7 @@ const problems = listCatalogProblems(manifests, readCatalogs());
 if (problems.length > 0) {
   for (const problem of problems) console.error(`  ${problem.workspace}: ${problem.message}`);
   console.error(
-    `\n${String(problems.length)} dependency problem(s). Move the version into \`${WORKSPACE_FILE}\` and write \`catalog:\` in the workspace.`,
+    `\n${String(problems.length)} dependency problem(s). A shared version moves into \`${WORKSPACE_FILE}\` behind \`catalog:\`; packages that only work at one version move together.`,
   );
   process.exit(1);
 }

@@ -27,13 +27,22 @@ updates:
       # A major is a migration whichever week it lands in, so it waits for a
       # second week of other people finding the problems first.
       semver-major-days: 14
+    # Vitest 5 takes every Stryker mutation score to 0% under
+    # @stryker-mutator/vitest-runner 9.6.1 and 10.0.0 alike, measured
+    # 2026-10-05, so the major waits until a runner release reads its results.
+    ignore:
+      - dependency-name: 'vitest'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@vitest/*'
+        update-types: ['version-update:semver-major']
     # One developer. A queue longer than this is a queue that gets ignored,
     # which is worse than a shorter one that gets read.
     open-pull-requests-limit: 5
     groups:
-      # Grouped by the thing that breaks together. A vitest bump that leaves
-      # `@vitest/coverage-v8` behind fails the coverage gate rather than the
-      # install, so the two travel in one pull request or neither does.
+      # Grouped by the thing that breaks together. Grouping is not enough on
+      # its own: #115 bumped vitest to 5 and left `@vitest/coverage-v8` on 4
+      # inside this very group. scripts/dependencies/check-dependency-catalog.ts
+      # fails a catalog that holds the two at different versions.
       vitest:
         patterns:
           - 'vitest'

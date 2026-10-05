@@ -84,8 +84,11 @@ reading that lockfile's diff.
 
 - `script:scripts/dependencies/check-dependency-catalog.ts` fails when two
   workspaces name a version for the same dependency, when a `catalog:` marker
-  points at a catalog with no entry for it, and when a catalog holds an entry
-  no workspace reads.
+  points at a catalog with no entry for it, when a catalog holds an entry
+  no workspace reads, and when a catalog holds two packages that only work at
+  the same version, such as `vitest` and `@vitest/coverage-v8`, at different
+  versions. Dependabot's grouping did not prevent that split: #115 bumped one
+  and not the other.
 - `script:scripts/check-package-scripts-are-commands.sh` fails a `scripts`
   entry whose whole value is a bare semver, which is the shape a name-keyed
   regex leaves behind and never something a runner is called.
