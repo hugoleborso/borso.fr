@@ -98,12 +98,20 @@ jobs:
       # it and the hash of the source it came from. Restoring it means a run
       # re-tests the mutants whose source or tests moved and reuses the verdict
       # for the rest. A cache miss simply costs a full run.
+      #
+      # The verdicts are only as good as the toolchain that produced them, and
+      # the incremental differ hashes sources and tests, never node_modules. So
+      # the key carries the lockfile, the patches and the shared Stryker config:
+      # a Vitest or Stryker bump starts from an empty cache. Without it, the
+      # Vitest 5 bump that made every mutant run zero tests reused every old
+      # "Killed" and stayed green. See
+      # docs/dantotsus/vitest-5-ran-no-test-against-any-mutant.md.
       - uses: actions/cache@v6
         with:
           path: apps/${{ matrix.app }}/reports/mutation/incremental.json
-          key: stryker-${{ matrix.app }}-${{ github.sha }}
+          key: stryker-${{ matrix.app }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ github.sha }}
           restore-keys: |
-            stryker-${{ matrix.app }}-
+            stryker-${{ matrix.app }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-
 
       - name: Mutation testing, every pure file
         run: |
@@ -128,9 +136,9 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: reports/mutation/incremental.json
-          key: stryker-tooling-${{ github.sha }}
+          key: stryker-tooling-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ github.sha }}
           restore-keys: |
-            stryker-tooling-
+            stryker-tooling-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-
       - name: Mutation testing, every pure module under scripts/
         run: |
           pnpm exec stryker run \
@@ -154,9 +162,9 @@ jobs:
       - uses: actions/cache@v6
         with:
           path: infra/cdk/reports/mutation/incremental.json
-          key: stryker-infra-cdk-${{ github.sha }}
+          key: stryker-infra-cdk-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ github.sha }}
           restore-keys: |
-            stryker-infra-cdk-
+            stryker-infra-cdk-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-
       - name: Mutation testing, every pure module under infra/cdk
         run: |
           pnpm --filter @borso/infra exec stryker run \
