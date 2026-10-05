@@ -193,6 +193,10 @@ export class SharedStack extends Stack {
       parameterName: SHARED_SSM_PARAMETERS.sharedDeployRoleArn,
       stringValue: deployRoles.shared.roleArn,
     });
+    new StringParameter(this, 'TalosDeployRoleArnParam', {
+      parameterName: SHARED_SSM_PARAMETERS.talosDeployRoleArn,
+      stringValue: deployRoles.talos.roleArn,
+    });
   }
 
   private createMonthlyBudgets(budgetEmail: string): void {
