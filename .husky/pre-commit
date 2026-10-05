@@ -256,7 +256,7 @@ scripts/check-pwa-assets.sh
 # script enforces on the body. A template that drifts out of it teaches every
 # future body to be refused, and the drift is invisible until someone drafts.
 echo "[pre-commit] checking the pull-request template fits its own budget"
-pnpm exec tsx scripts/pr/check-pr-body.ts .claude/skills/open-pr/template.md
+pnpm exec tsx scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
 
 # A knowledge entry saying a tool is broken steers every future agent away from
 # it and never expires on its own — two phone audits obeyed one that was wrong.

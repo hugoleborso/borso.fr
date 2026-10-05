@@ -83,5 +83,5 @@ Both reminders are non-blocking — they do not auto-invoke the next skill. The 
 
 ## See also
 
-- [`.claude/skills/after-task-dantotsus/SKILL.md`](../../.claude/skills/after-task-dantotsus/SKILL.md) — the skill that should auto-trigger on merge; this dantotsu eradicates the trigger gap.
+- [`plugins/borso-harness/skills/after-task-dantotsus/SKILL.md`](../../plugins/borso-harness/skills/after-task-dantotsus/SKILL.md) — the skill that should auto-trigger on merge; this dantotsu eradicates the trigger gap.
 - CLAUDE.md *Self-improvement loop* section — names the kaizen-PR-on-merge contract that this dantotsu makes operational.

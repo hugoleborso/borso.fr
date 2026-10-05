@@ -1,0 +1,15 @@
+{
+  "name": "borso",
+  "description": "Plugins extracted from the borso.fr monorepo.",
+  "owner": {
+    "name": "Hugo Borsoni",
+    "url": "https://github.com/hugoleborso"
+  },
+  "plugins": [
+    {
+      "name": "borso-harness",
+      "source": "./plugins/borso-harness",
+      "description": "borso.fr's engineering harness: the feature pipeline skills, the isolated validators, the dantotsu and kaizen loop, and the guard hooks."
+    }
+  ]
+}

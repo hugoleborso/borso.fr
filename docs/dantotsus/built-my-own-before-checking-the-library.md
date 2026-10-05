@@ -95,7 +95,7 @@ this kaizen PR.
 **The actual fix:**
 
 ```diff
- # .claude/skills/implementation/SKILL.md
+ # plugins/borso-harness/skills/implementation/SKILL.md
    "Failure modes to avoid" section
 + - **Reinventing what the library already does.** Before writing a new
 +   utility / component that overlaps a vendor's domain (board renderer,

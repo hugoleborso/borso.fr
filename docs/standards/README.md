@@ -43,7 +43,7 @@ projecting when it should be returning rows. No rule can ask those.
 
 They are collected in the ledger under **What only a reviewer can check**, and
 that generated list is the entire scope of the
-[`/standards-review`](../../.claude/skills/standards-review/SKILL.md) skill.
+[`/standards-review`](../../plugins/borso-harness/skills/standards-review/SKILL.md) skill.
 The reviewer never repeats what lint already did, and widening what it checks
 means writing a `reviewer` bullet in a standard rather than editing the skill.
 
@@ -100,7 +100,7 @@ Every blueprint is listed in
 [`.claude/skills/blueprint/blueprint-index.md`](../../.claude/skills/blueprint/blueprint-index.md),
 along with how many places carry a `// @FollowsBlueprint` marker pointing at it,
 so the index shows which patterns have actually been adopted rather than which
-ones we intended. The [`/blueprint`](../../.claude/skills/blueprint/SKILL.md)
+ones we intended. The [`/blueprint`](../../plugins/borso-harness/skills/blueprint/SKILL.md)
 skill creates, indexes, and validates them.
 
 A blueprint's follower count answers how widely a pattern was copied, and read
@@ -133,7 +133,7 @@ author never sees it.
 
 ## Applying the standards
 
-The [`code-standards`](../../.claude/skills/code-standards/SKILL.md) skill
+The [`code-standards`](../../plugins/borso-harness/skills/code-standards/SKILL.md) skill
 walks an agent through the standards that apply to a change, and the
 `/implementation` and `/technical-validation` skills both defer to the same
 documents, so there is one source of truth.

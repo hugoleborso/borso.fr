@@ -85,7 +85,7 @@ friction is the hook that just refused a call, and it was silent.
 The five hooks that block a call now record what they refused, in the
 same run that refuses it.
 
-- **Code:** `.claude/hooks/kaizen-refusal.sh`, called from each
+- **Code:** `plugins/borso-harness/hooks/kaizen-refusal.sh`, called from each
   blocking branch of the five `pretool-*` hooks.
 
 ## Eradication (mandatory — code-level)
@@ -93,7 +93,7 @@ same run that refuses it.
 **Type:** DevX check (level 2 — devx check)
 
 **Reference:** PR #102 · commits on this branch adding
-`.claude/hooks/kaizen-refusal.sh` and wiring the five hooks
+`plugins/borso-harness/hooks/kaizen-refusal.sh` and wiring the five hooks
 
 **The actual fix:**
 

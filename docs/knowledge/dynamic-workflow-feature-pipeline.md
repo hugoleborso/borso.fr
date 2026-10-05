@@ -4,7 +4,7 @@ Operator runbook for `/feature-pipeline` — the Claude Code Dynamic Workflow
 that drives `plan → ship` for a ratified feature spec. The substrate
 choice is in [ADR-0005](../adr/0005-dynamic-workflows-for-orchestration.md);
 the stage-by-stage contract is in
-[`.claude/commands/feature-pipeline.md`](../../.claude/commands/feature-pipeline.md).
+[`plugins/borso-harness/commands/feature-pipeline.md`](../../plugins/borso-harness/commands/feature-pipeline.md).
 
 ## TL;DR
 
@@ -44,7 +44,7 @@ state file accumulates non-canonical entries.
 ## Possible exit outcomes
 
 The workflow surfaces a structured outcome at end-of-run. They map to
-the actions in [`.claude/commands/feature-pipeline.md`](../../.claude/commands/feature-pipeline.md)
+the actions in [`plugins/borso-harness/commands/feature-pipeline.md`](../../plugins/borso-harness/commands/feature-pipeline.md)
 § "Possible exit outcomes" (the full table is the source of truth).
 
 - `pr-opened` — happy path. PR URL is in the outcome. PR is draft if any
@@ -79,7 +79,7 @@ This is the moment the workflow becomes a repo artefact:
 
 From that commit onward, `/feature-pipeline <spec-path>` runs the saved
 JS directly; the `ultracode:` keyword and the launch prompt in
-`.claude/commands/feature-pipeline.md` are only needed for the first run
+`plugins/borso-harness/commands/feature-pipeline.md` are only needed for the first run
 or after the script is regenerated.
 
 ## When to regenerate the JS
@@ -122,7 +122,7 @@ regenerated script honours.
 ## See also
 
 - [ADR-0005](../adr/0005-dynamic-workflows-for-orchestration.md)
-- [`.claude/commands/feature-pipeline.md`](../../.claude/commands/feature-pipeline.md)
-- [`.claude/skills/tech-lead-orchestrator/standard.md`](../../.claude/skills/tech-lead-orchestrator/standard.md)
+- [`plugins/borso-harness/commands/feature-pipeline.md`](../../plugins/borso-harness/commands/feature-pipeline.md)
+- [`plugins/borso-harness/skills/tech-lead-orchestrator/standard.md`](../../plugins/borso-harness/skills/tech-lead-orchestrator/standard.md)
 - [`docs/knowledge/orchestrator-dispatch-hygiene.md`](./orchestrator-dispatch-hygiene.md)
 - [Anthropic — Orchestrate subagents at scale with dynamic workflows](https://code.claude.com/docs/en/workflows)

@@ -225,7 +225,7 @@ None. Site is fully client-side / static.
 
 ### Test strategy
 
-Autonomous pipeline. No manual sweeps; every assertion is checked by something the CI / a future Claude session can run unattended (see `.claude/skills/specification/SKILL.md` "Frontend apps don't need tests" failure mode).
+Autonomous pipeline. No manual sweeps; every assertion is checked by something the CI / a future Claude session can run unattended (see `plugins/borso-harness/skills/specification/SKILL.md` "Frontend apps don't need tests" failure mode).
 
 #### 1. Static gates
 
@@ -249,7 +249,7 @@ Workspace setup (NEW files, planned in the plan but listed here for traceability
 
 #### 3. UI behavioural assertions — `/visual-validation`
 
-Every numbered happy-path step and every edge / error case from *Use cases / edge cases* is asserted by the dedicated `visual-validator` agent driving the running app via `agent-browser` (see `.claude/skills/visual-validation/SKILL.md`). The agent reads this spec to build its assertion list. Coverage:
+Every numbered happy-path step and every edge / error case from *Use cases / edge cases* is asserted by the dedicated `visual-validator` agent driving the running app via `agent-browser` (see `plugins/borso-harness/skills/visual-validation/SKILL.md`). The agent reads this spec to build its assertion list. Coverage:
 
 - Default render with `?seed=DEADBEEF&palette=classic` — typography, layout, framed canvas at 1280×800.
 - Sliders (complexity / line weight / balance) update without reshuffling layout — visible delta on slider drag, no inkbloom replay.
@@ -272,7 +272,7 @@ The visual-validation report (with screenshot evidence) lands at `docs/features/
 
 #### 4. Diff review — `/technical-validation`
 
-The dedicated `technical-validator` agent (see `.claude/skills/technical-validation/SKILL.md`) reads this spec, the plan, and the diff against `origin/main`, then walks four categories: correctness vs spec, code cleanliness (lint + knip + clean-code rules), tests pass (the Vitest runner above, plus 100% coverage on every `*.utils.ts`), and test coverage of spec (every use case has a `*.utils.test.ts` row or a `/visual-validation` row). Verdict must be PASS before push.
+The dedicated `technical-validator` agent (see `plugins/borso-harness/skills/technical-validation/SKILL.md`) reads this spec, the plan, and the diff against `origin/main`, then walks four categories: correctness vs spec, code cleanliness (lint + knip + clean-code rules), tests pass (the Vitest runner above, plus 100% coverage on every `*.utils.ts`), and test coverage of spec (every use case has a `*.utils.test.ts` row or a `/visual-validation` row). Verdict must be PASS before push.
 
 #### 5. Coverage gates already in place
 
