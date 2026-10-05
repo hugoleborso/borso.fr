@@ -31,9 +31,10 @@ updates:
     # which is worse than a shorter one that gets read.
     open-pull-requests-limit: 5
     groups:
-      # Grouped by the thing that breaks together. A vitest bump that leaves
-      # `@vitest/coverage-v8` behind fails the coverage gate rather than the
-      # install, so the two travel in one pull request or neither does.
+      # Grouped by the thing that breaks together. Grouping is not enough on
+      # its own: #115 bumped vitest to 5 and left `@vitest/coverage-v8` on 4
+      # inside this very group. scripts/dependencies/check-dependency-catalog.ts
+      # fails a catalog that holds the two at different versions.
       vitest:
         patterns:
           - 'vitest'
