@@ -23,6 +23,7 @@
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
+    "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"talos-pr-${PR_NUMBER:?PR_NUMBER env var required — talos destroy targets a per-PR app stack only, never talos-prod or the shared talos-cluster stack}\" --force",
     "test:mutation": "stryker run"
   },
   "dependencies": {

@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, it } from 'vitest';
+import { isObject } from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const REPO_ROOT = path.resolve(HERE, '../../../..');
@@ -99,13 +100,21 @@ describe('eradication: the edge function knows every app that gets SPA routing',
   const APPS_DIR = path.resolve(REPO_ROOT, 'apps');
   const EDGE_FUNCTION = path.join(INTERNAL_DIR, 'cf-host-routing-function.code.js');
 
-  function appsComposingPreviewableApp(): string[] {
+  function hasOptedOutOfPreviews(appName: string): boolean {
+    const manifest: unknown = JSON.parse(
+      fs.readFileSync(path.join(APPS_DIR, appName, 'package.json'), 'utf-8'),
+    );
+    return isObject(manifest) && isObject(manifest.borso) && manifest.borso.previews === false;
+  }
+
+  function previewedAppsComposingPreviewableApp(): string[] {
     return fs
       .readdirSync(APPS_DIR)
       .filter((appName) => {
         const stackPath = path.join(APPS_DIR, appName, 'cdk/lib/stack.ts');
         return fs.existsSync(stackPath) && readStripped(stackPath).includes('new PreviewableApp');
       })
+      .filter((appName) => !hasOptedOutOfPreviews(appName))
       .sort();
   }
 
@@ -115,8 +124,8 @@ describe('eradication: the edge function knows every app that gets SPA routing',
     return [...(listed?.[1] ?? '').matchAll(/'([^']+)'/g)].map((entry) => entry[1] ?? '').sort();
   }
 
-  it('lists exactly the apps whose stack composes PreviewableApp, which sets spaFallback', () => {
-    expect(singlePageAppsInEdgeFunction()).toEqual(appsComposingPreviewableApp());
+  it('lists exactly the previewed apps whose stack composes PreviewableApp, which sets spaFallback', () => {
+    expect(singlePageAppsInEdgeFunction()).toEqual(previewedAppsComposingPreviewableApp());
   });
 });
 
