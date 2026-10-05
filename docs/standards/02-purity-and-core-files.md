@@ -242,7 +242,9 @@ at zero over a changed-only selection. See [10. Testing](./10-testing.md).
   nothing out to module scope.
 - `gate:vitest-coverage` holds every pure file at full statement, branch,
   function and line coverage.
-- `gate:stryker` fails when a mutant survives in a changed pure file.
+- `gate:stryker` fails when a mutant survives in a changed pure file, and its
+  shared `stryker-zero-test-guard.js` reporter fails a run in which a covered
+  mutant executed no test, because that score was never measured.
 - `script:scripts/check-pure-modules-have-callers.sh` fails a pure module whose
   only consumer is its own test, which otherwise scores full marks on both
   gates while running nowhere.
