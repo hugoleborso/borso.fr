@@ -19,13 +19,13 @@ interface BottomActionBarVisibilityStore {
   readonly isShowing: () => boolean;
 }
 
-function findShellScrollRegion(): HTMLElement | null {
-  return document.querySelector('main');
+function findDocumentScrollRegion(): Element | null {
+  return document.scrollingElement;
 }
 
 function createBottomActionBarVisibilityStore(): BottomActionBarVisibilityStore {
   let state: BottomActionBarState = BOTTOM_ACTION_BAR_AT_REST;
-  let listenedRegion: HTMLElement | null = null;
+  let listenedRegion: Element | null = null;
   const subscribers = new Set<() => void>();
 
   const reconsiderVisibility = (): void => {
@@ -41,15 +41,15 @@ function createBottomActionBarVisibilityStore(): BottomActionBarVisibilityStore 
   };
 
   const startListening = (): void => {
-    const region = findShellScrollRegion();
+    const region = findDocumentScrollRegion();
     listenedRegion = region;
     state = region === null ? BOTTOM_ACTION_BAR_AT_REST : anchorStateAt(region.scrollTop);
-    region?.addEventListener(SCROLL_EVENT, reconsiderVisibility, PASSIVE);
+    window.addEventListener(SCROLL_EVENT, reconsiderVisibility, PASSIVE);
     window.addEventListener(RESIZE_EVENT, reconsiderVisibility, PASSIVE);
   };
 
   const stopListening = (): void => {
-    listenedRegion?.removeEventListener(SCROLL_EVENT, reconsiderVisibility);
+    window.removeEventListener(SCROLL_EVENT, reconsiderVisibility);
     window.removeEventListener(RESIZE_EVENT, reconsiderVisibility);
     listenedRegion = null;
     state = BOTTOM_ACTION_BAR_AT_REST;
