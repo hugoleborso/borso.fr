@@ -15,6 +15,12 @@ export const INSTRUMENT_ICON_LABEL_KEY = {
   strings: 'instruments.iconStrings',
   synth: 'instruments.iconSynth',
   stage: 'instruments.iconStage',
+  sparkles: 'instruments.iconSparkles',
+  heart: 'instruments.iconHeart',
+  flame: 'instruments.iconFlame',
+  lightning: 'instruments.iconLightning',
+  crown: 'instruments.iconCrown',
+  sun: 'instruments.iconSun',
 } as const satisfies Record<InstrumentIcon, string>;
 
 export const INSTRUMENT_FAMILY_LABEL_KEY = {

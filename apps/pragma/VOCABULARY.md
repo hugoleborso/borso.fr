@@ -245,7 +245,7 @@ Lives in: `api/src/instruments/`
   the older `is_harmonic` boolean from the same value (`encodeFamily`),
   and every read resolves the two through `resolveInstrumentFamily`, which
   falls back to the boolean for rows written before the column existed.
-- `icon` names one of the twelve glyphs the application ships and is nullable
+- `icon` names one of the eighteen glyphs the application ships and is nullable
   in the database, like `family`. Reads resolve it through
   `resolveInstrumentIcon`, which falls back to `music`. It is a stored
   value such as `mic-vocal`, never the camelCase key of the icon registry.

@@ -33,6 +33,12 @@ export const INSTRUMENT_ICONS = [
   'wind',
   'drum',
   'stage',
+  'sparkles',
+  'heart',
+  'flame',
+  'lightning',
+  'crown',
+  'sun',
   'music',
 ] as const;
 

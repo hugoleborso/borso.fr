@@ -16,6 +16,12 @@ export const INSTRUMENT_ICON_GLYPH = {
   strings: 'strings',
   synth: 'synth',
   stage: 'stage',
+  sparkles: 'sparkles',
+  heart: 'heart',
+  flame: 'flame',
+  lightning: 'lightning',
+  crown: 'crown',
+  sun: 'sun',
 } satisfies Record<InstrumentIcon, IconName>;
 
 export const SLOTS_BEYOND_MEMBER_COUNT = 2;

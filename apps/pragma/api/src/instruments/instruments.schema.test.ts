@@ -74,7 +74,7 @@ describe('instrumentFamilySchema', () => {
 });
 
 describe('instrumentIconSchema', () => {
-  it('knows exactly the twelve glyphs the application ships', () => {
+  it('knows exactly the eighteen glyphs the application ships', () => {
     for (const icon of [
       'mic-vocal',
       'choir',
@@ -87,6 +87,12 @@ describe('instrumentIconSchema', () => {
       'wind',
       'drum',
       'stage',
+      'sparkles',
+      'heart',
+      'flame',
+      'lightning',
+      'crown',
+      'sun',
       'music',
     ]) {
       expect(instrumentIconSchema.safeParse(icon).success).toBe(true);
