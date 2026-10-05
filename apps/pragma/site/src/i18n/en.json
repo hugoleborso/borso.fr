@@ -246,6 +246,18 @@
     "familyPercussive": "percussive",
     "familyVocal": "vocal",
     "icon": "Icon",
+    "iconChoir": "Choir",
+    "iconBrass": "Brass",
+    "iconWind": "Woodwind",
+    "iconStrings": "Strings",
+    "iconSynth": "Synth",
+    "iconStage": "Stage presence",
+    "iconSparkles": "Sparkles",
+    "iconHeart": "Heart",
+    "iconFlame": "Flame",
+    "iconLightning": "Lightning",
+    "iconCrown": "Crown",
+    "iconSun": "Sun",
     "iconBass": "Bass",
     "iconDrum": "Drums",
     "iconGuitar": "Guitar",
@@ -277,7 +289,8 @@
     "notPlaying": "— not playing —",
     "override": "Override",
     "resetToDefault": "Reset to song default",
-    "save": "Save"
+    "save": "Save",
+    "saveAsSongDefault": "Save as song default"
   },
   "mastery": {
     "noData": "Add members and instruments to populate the matrix.",

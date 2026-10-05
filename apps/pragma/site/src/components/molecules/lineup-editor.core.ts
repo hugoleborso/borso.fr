@@ -49,3 +49,19 @@ export function toLineupPayload(lineup: LineupRecord | null): Record<string, str
   }
   return body;
 }
+
+export type LineupSaveTarget = 'song-default' | 'entry-override' | 'entry-cleared';
+
+function isStaffed(lineup: LineupRecord): boolean {
+  return Object.values(lineup).some((instrumentIds) => instrumentIds.length > 0);
+}
+
+export function selectLineupSaveTarget(
+  songDefaultLineup: LineupRecord,
+  editedLineup: LineupRecord | null,
+  wasReset: boolean,
+): LineupSaveTarget {
+  if (wasReset || editedLineup === null) return 'entry-cleared';
+  if (!isStaffed(songDefaultLineup)) return 'song-default';
+  return 'entry-override';
+}

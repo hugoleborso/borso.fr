@@ -246,6 +246,18 @@
     "familyPercussive": "percussif",
     "familyVocal": "chant",
     "icon": "Icône",
+    "iconChoir": "Chœurs",
+    "iconBrass": "Cuivres",
+    "iconWind": "Bois",
+    "iconStrings": "Cordes",
+    "iconSynth": "Synthé",
+    "iconStage": "Présence scénique",
+    "iconSparkles": "Étincelles",
+    "iconHeart": "Cœur",
+    "iconFlame": "Flamme",
+    "iconLightning": "Éclair",
+    "iconCrown": "Couronne",
+    "iconSun": "Soleil",
     "iconBass": "Basse",
     "iconDrum": "Batterie",
     "iconGuitar": "Guitare",
@@ -277,7 +289,8 @@
     "notPlaying": "— ne joue pas —",
     "override": "Exception",
     "resetToDefault": "Revenir au défaut du morceau",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "saveAsSongDefault": "Enregistrer comme défaut du morceau"
   },
   "mastery": {
     "noData": "Crée des membres et des instruments pour remplir la matrice.",

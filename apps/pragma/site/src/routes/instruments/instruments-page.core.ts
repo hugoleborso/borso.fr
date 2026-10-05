@@ -9,6 +9,18 @@ export const INSTRUMENT_ICON_LABEL_KEY = {
   piano: 'instruments.iconPiano',
   drum: 'instruments.iconDrum',
   music: 'instruments.iconMusic',
+  choir: 'instruments.iconChoir',
+  brass: 'instruments.iconBrass',
+  wind: 'instruments.iconWind',
+  strings: 'instruments.iconStrings',
+  synth: 'instruments.iconSynth',
+  stage: 'instruments.iconStage',
+  sparkles: 'instruments.iconSparkles',
+  heart: 'instruments.iconHeart',
+  flame: 'instruments.iconFlame',
+  lightning: 'instruments.iconLightning',
+  crown: 'instruments.iconCrown',
+  sun: 'instruments.iconSun',
 } as const satisfies Record<InstrumentIcon, string>;
 
 export const INSTRUMENT_FAMILY_LABEL_KEY = {
