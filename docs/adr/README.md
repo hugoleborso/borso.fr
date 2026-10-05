@@ -71,7 +71,7 @@ No:
 | [0019](./0019-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | proposed | 2026-09-16 |
 | [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
 | [0022](./0022-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
-| [0026](./0026-the-harness-ships-as-a-plugin-loaded-from-the-skills-directory.md) | The harness ships as a plugin, loaded from the skills directory | proposed | 2026-10-05 |
+| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | proposed | 2026-10-05 |
 
 ### Data layer
 
@@ -97,7 +97,7 @@ No:
 
 ### Harness
 
-- 0026 — the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, loaded in borso.fr and in a repository that vendors it through a symlink under `.claude/skills/`, because a cloud session does not install a marketplace a repository declares.
+- 0026 — the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
 
 ### Observability
 

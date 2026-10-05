@@ -1,0 +1,1 @@
+../../plugins/borso-harness/agents/visual-validator.md

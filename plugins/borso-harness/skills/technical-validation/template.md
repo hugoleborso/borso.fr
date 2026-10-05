@@ -11,7 +11,7 @@ The dedicated agent definition (with its own frontmatter, tools, and full proced
 
 ## 1. Dispatch-brief template
 
-Pass via `Agent({ subagent_type: "borso-harness:technical-validator", description: "Technical validation against spec + plan", prompt: <below> })`. Substitute `{{…}}` placeholders.
+Pass via `Agent({ subagent_type: "technical-validator", description: "Technical validation against spec + plan", prompt: <below> })`. Substitute `{{…}}` placeholders.
 
 ```
 You are validating a feature implementation against its spec and plan, on the current git branch.

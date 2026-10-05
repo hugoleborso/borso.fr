@@ -9,9 +9,10 @@ holds:
   `/standards-review`, `/code-standards`, `/blueprint`, `/open-pr`,
   `/dantotsu`, `/after-task-dantotsus`, `/tech-lead-orchestrator`,
   `/plain-writing` and `/writing-for-agents`.
-- **Agents.** `borso-harness:technical-validator`,
-  `borso-harness:visual-validator` and `borso-harness:standards-reviewer`, each
-  of which reviews a branch without the main session's context.
+- **Agents.** `technical-validator`, `visual-validator` and
+  `standards-reviewer`, each of which reviews a branch without the main
+  session's context. A session that installs the harness as a plugin lists
+  them with the `borso-harness:` prefix.
 - **Command.** `/feature-pipeline`, the contract a Dynamic Workflow follows from
   a ratified spec to an opened pull request.
 - **Hooks.** Guards that refuse a `git push` piped into another command, a
@@ -59,20 +60,48 @@ The file holds one object, `paths`:
 }
 ```
 
-`harness-path.sh`, in the plugin's `scripts/` folder, prints the resolved table, or one path when you pass
-a key. The skills tell the agent to run it. The hooks call it directly.
+`harness-path.sh`, in the plugin's `scripts/` folder, prints the resolved
+table, or one path when you pass a key. The skills tell the agent to run it.
+The hooks call it directly.
 
 When a key points at a script that is not there, the skills report the step as
 unverifiable instead of failing, and the `gh pr create` hook skips the budget
 check. It still refuses a pull request with no body.
 
+## Why the parts are linked rather than the plugin loaded
+
+A cloud session never shows the workspace trust dialog, and Claude Code loads a
+plugin that a repository ships only in a trusted workspace. It skips a
+marketplace declared in `.claude/settings.json`, and it skips a plugin
+directory placed under `.claude/skills/`. On this harness's first pull request
+the second one was measured: the plugin was skipped, and a `git reset --hard`
+over tracked changes went through because the guard hook had not loaded.
+
+What a cloud session does load is a skill directory in `.claude/skills/`, an
+agent file in `.claude/agents/`, a command in `.claude/commands/`, and a hook
+in `.claude/settings.json`. So a repository links each part of the plugin into
+those places, and declares the hooks in its settings.
+`link-into.sh`, in the plugin's `scripts/` folder, does both halves:
+
+```sh
+link-into.sh <repo-root> <prefix>            # create or repair the links
+link-into.sh --hooks <repo-root> <prefix>    # print the settings.json hooks
+link-into.sh --check <repo-root> <prefix>    # fail when anything is out of step
+```
+
+`<prefix>` is where the plugin sits in that repository. The links are
+relative, so they survive a fresh clone. A skill directory that already exists
+as a real directory gets its `SKILL.md` linked instead.
+
+The skills refer to their own files as `${CLAUDE_PLUGIN_ROOT}/…`. Claude Code
+fills that in only for a plugin, so the harness's SessionStart hook exports
+`CLAUDE_PLUGIN_ROOT` to the session's shell when the parts are linked, and each
+skill says how to find the folder if the variable still reads unexpanded.
+
 ## Install it in a repository that vendors borso.fr
 
 This is the setup for `hugoleborso/talos`, and for any repository that keeps
-borso.fr as a git submodule. The plugin loads from the submodule as a
-skills-directory plugin, which needs no marketplace. A cloud session does not
-install a marketplace that a repository declares, so this is the route that
-works in cloud sessions as well as local ones.
+borso.fr as a git submodule.
 
 1. Add the submodule.
 
@@ -80,17 +109,24 @@ works in cloud sessions as well as local ones.
    git submodule add https://github.com/hugoleborso/borso.fr.git vendor/borso.fr
    ```
 
-2. Link the plugin into the project's skills directory. Claude Code loads a
-   directory under `.claude/skills/` that holds a `.claude-plugin/plugin.json`
-   as a plugin, and it follows the symlink.
+2. Link the parts and add the hooks. Run the script from the submodule, then
+   merge the printed `hooks` object into `.claude/settings.json`:
 
    ```sh
-   ln -s ../../vendor/borso.fr/plugins/borso-harness .claude/skills/borso-harness
+   vendor/borso.fr/plugins/borso-harness/scripts/link-into.sh . vendor/borso.fr/plugins/borso-harness
+   vendor/borso.fr/plugins/borso-harness/scripts/link-into.sh --hooks . vendor/borso.fr/plugins/borso-harness
    ```
 
-3. Write `borso-harness.json` in the `.claude/` folder. Talos applies borso.fr's standards to its
-   own application and keeps its own records, so it reads the standards from
-   the submodule and everything else from its own tree:
+   Each hook entry runs a script through
+   `"$CLAUDE_PROJECT_DIR"/vendor/borso.fr/plugins/borso-harness/hooks/`. Commit
+   the links and the settings. Run the `--check` form in the repository's own
+   pre-commit hook or CI, so that a harness update that adds a skill or a hook
+   is noticed.
+
+3. Write `borso-harness.json` in the `.claude/` folder. Talos applies
+   borso.fr's standards to its own application and keeps its own records, so
+   it reads the standards from the submodule and everything else from its own
+   tree:
 
    ```json
    {
@@ -115,30 +151,21 @@ works in cloud sessions as well as local ones.
 4. Add `KAIZEN.md` to `.gitignore`. The session hook creates it at the
    repository root, and `/after-task-dantotsus` reads and deletes it.
 
-5. Make sure the submodule is checked out before Claude Code starts. Claude
-   Code reads the plugin when the session starts, so a SessionStart hook that
-   runs `git submodule update` is too late for that session. Locally, clone
-   with `--recurse-submodules`. In a cloud environment, put
-   `git submodule update --init` in the environment's setup script. Whether a
-   cloud session checks out submodules without it is unverified from here.
+5. Check the submodule out before Claude Code starts. The links point into
+   `vendor/borso.fr`, so they resolve only once the submodule is there, and
+   Claude Code reads skills and agents when the session starts. A SessionStart
+   hook that runs `git submodule update` is too late for that session. Locally,
+   clone with `--recurse-submodules`. In the cloud environment, make the setup
+   script run `bash scripts/setup-cloud.sh`, and have that script run
+   `git submodule update --init`.
 
-6. Trust the folder once in a local session. A project skills-directory plugin
-   loads only in a workspace you have trusted. Then check that it loaded:
+To move to a newer harness, update the submodule, rerun `link-into.sh` with
+`--check`, and commit the new pointer with any new links or hook entries.
 
-   ```sh
-   claude plugin list
-   ```
+## Install it as a plugin, for local sessions
 
-   The output lists `borso-harness@skills-dir` with `Status: ✔ loaded`.
-
-To move to a newer harness, update the submodule and commit the new pointer.
-The plugin has no `version` field, so Claude Code always loads the files that
-are checked out.
-
-## Install it in a repository that does not vendor borso.fr
-
-Declare the marketplace and enable the plugin in the repository's
-`.claude/settings.json`:
+A repository that does not vendor borso.fr can install the plugin itself.
+Declare the marketplace and enable the plugin in `.claude/settings.json`:
 
 ```json
 {
@@ -153,24 +180,25 @@ Declare the marketplace and enable the plugin in the repository's
 }
 ```
 
-Claude Code adds the marketplace after you trust the folder, and loads the
+Claude Code adds the marketplace once you trust the folder, and loads the
 plugin from the marketplace's copy of `main`. Cloud sessions skip this step, so
-the harness is missing there. Use the submodule route when cloud sessions
-matter. For one person rather than a whole repository, run
-`claude plugin marketplace add hugoleborso/borso.fr` and then
+the harness is missing there. For one person rather than a whole repository,
+run `claude plugin marketplace add hugoleborso/borso.fr` and then
 `claude plugin install borso-harness@borso`.
 
 Steps 3 and 4 of the submodule route apply here too. Every path key that names
 a borso.fr script needs a copy of that script in the repository, or stays
-unset.
+unset. Do not combine the two routes in one repository: the hooks would run
+twice.
 
 ## How borso.fr loads it
 
-borso.fr links `.claude/skills/borso-harness` to `../../plugins/borso-harness`,
-so it loads the plugin the same way Talos does, from its own working tree. An
-edit to the plugin on a branch takes effect at the next session on that
-branch. [ADR-0026](../../docs/adr/0026-the-harness-ships-as-a-plugin-loaded-from-the-skills-directory.md)
-records why this route was chosen over the marketplace.
+borso.fr links its own plugin the same way Talos does, with the prefix
+`plugins/borso-harness`, and `scripts/check-harness-links.sh` runs the
+`--check` form in pre-commit and CI. An edit to the plugin on a branch takes
+effect at the next session on that branch.
+[ADR-0026](../../docs/adr/0026-the-harness-ships-as-a-plugin-linked-into-claude.md)
+records why the parts are linked.
 
 ## What is not in the plugin
 
@@ -190,9 +218,9 @@ each repository:
 
 ## Check the hooks
 
-`check-hook-decisions.sh`, in the plugin's `scripts/` folder, feeds every refusing hook a command it must
-refuse and a mention of that command it must let through. borso.fr runs it in
-pre-commit. A repository that changes a hook can run it the same way:
+`check-hook-decisions.sh`, in the plugin's `scripts/` folder, feeds every
+refusing hook a command it must refuse and a mention of that command it must
+let through. borso.fr runs it in pre-commit. A repository that changes a hook can run it the same way:
 
 ```sh
 vendor/borso.fr/plugins/borso-harness/scripts/check-hook-decisions.sh

@@ -11,7 +11,7 @@ The dedicated agent definition (with its own frontmatter, tools, and instruction
 
 ## 1. Dispatch-brief template
 
-Pass via `Agent({ subagent_type: "borso-harness:visual-validator", description: "Visual validation against spec", prompt: <below> })`. Substitute `{{…}}` placeholders.
+Pass via `Agent({ subagent_type: "visual-validator", description: "Visual validation against spec", prompt: <below> })`. Substitute `{{…}}` placeholders.
 
 ```
 You are validating a feature spec against a running implementation.

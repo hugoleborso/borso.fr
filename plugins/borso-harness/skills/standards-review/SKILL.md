@@ -3,7 +3,7 @@ name: standards-review
 description: Review the branch's changed source against the rules in docs/standards/ that no lint rule can check, and seal what passes so CI can gate on the review without running a model. Use when the user says "/standards-review", "review this against the standards", "seal this branch", when `scripts/standards/seal.ts verify` fails, or before opening a PR. Dispatches the standalone `standards-reviewer` agent, which reads the generated reviewer checklist in docs/standards/enforcement-ledger.md rather than a remembered list of rules.
 ---
 
-> **Paths.** Repository paths in this file are borso.fr's layout, which is the plugin's default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Standards review
 
@@ -43,7 +43,7 @@ The seal is an attestation, not a signature. Nothing in a checkout can sign anyt
 
 ## Dispatching
 
-Send the `borso-harness:standards-reviewer` agent with a brief carrying exactly these fields:
+Send the `standards-reviewer` agent with a brief carrying exactly these fields:
 
 - `base_ref` — usually `origin/main`.
 - `report_path` — `docs/standards/reviews/<branch>-<timestamp>.md`.

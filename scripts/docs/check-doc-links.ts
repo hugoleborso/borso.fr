@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { readFileSync } from 'node:fs';
+import { lstatSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
 import { dirname, join, normalize } from 'node:path';
 import { listBrokenLinks, type BrokenLink } from './doc-links.core';
@@ -15,11 +15,16 @@ function isDatedRecord(path: string): boolean {
   return DATED_RECORD_SEGMENT.test(path);
 }
 
+function isSymbolicLink(path: string): boolean {
+  return lstatSync(join(REPOSITORY_ROOT, path)).isSymbolicLink();
+}
+
 function listDocuments(): readonly string[] {
   return execFileSync('git', ['ls-files', '*.md'], { cwd: REPOSITORY_ROOT, encoding: 'utf8' })
     .split('\n')
     .filter((path) => path.length > 0)
     .filter((path) => !isDatedRecord(path))
+    .filter((path) => !isSymbolicLink(path))
     .filter((path) => !path.endsWith(TEMPLATE_SUFFIX));
 }
 

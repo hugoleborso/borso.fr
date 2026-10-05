@@ -61,23 +61,34 @@ REPO_ROOT="$("$HARNESS_PATH" --root)"
 KAIZEN_FILE="$REPO_ROOT/$("$HARNESS_PATH" kaizenFile)"
 FEATURES_DIRECTORY="$("$HARNESS_PATH" features)"
 
-HEADER='# KAIZEN — friction log for this task
+# The command the log tells its readers to run, written as they can type it
+# from the repository root: borso.fr's wrapper when there is one, otherwise
+# this script's own path, which in a repository that vendors borso.fr runs
+# through the submodule.
+script_command() {
+  if [ -x "$REPO_ROOT/scripts/kaizen.sh" ]; then
+    printf 'scripts/kaizen.sh'
+    return
+  fi
+  python3 -c 'import os, sys; p = os.path.relpath(os.path.realpath(sys.argv[1]), sys.argv[2]); print(os.path.realpath(sys.argv[1]) if p.startswith("..") else p)' \
+    "${BASH_SOURCE[0]}" "$REPO_ROOT"
+}
+KAIZEN_COMMAND="$(script_command)"
+
+HEADER="# KAIZEN — friction log for this task
 
 Append one line per friction event, as it happens, with:
 
-    scripts/kaizen.sh "what went wrong, in one sentence"
-    scripts/kaizen.sh --from <your-agent-label> "..."   # from a subagent
+    $KAIZEN_COMMAND \"what went wrong, in one sentence\"
+    $KAIZEN_COMMAND --from <your-agent-label> \"...\"   # from a subagent
 
-Outside borso.fr the script is scripts/kaizen.sh inside the borso-harness
-plugin; the skills name its full path.
-
-The problem only, never the fix. `/after-task-dantotsus` sweeps this file when
+The problem only, never the fix. \`/after-task-dantotsus\` sweeps this file when
 the work merges, classifies each line, and designs the eradication. Subagents
 should append here too, naming themselves, so the sweep can tell one agent
 struggling from four agents hitting the same wall.
 
 This file is gitignored and is deleted once the kaizen pull request is open.
-'
+"
 
 ensure_file() {
   [ -f "$KAIZEN_FILE" ] || printf '%s\n' "$HEADER" > "$KAIZEN_FILE"

@@ -10,6 +10,18 @@
             "command": "$CLAUDE_PROJECT_DIR/.claude/hooks/session-start.sh"
           }
         ]
+      },
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/session-env.sh"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/scripts/kaizen.sh init"
+          }
+        ]
       }
     ],
     "PreToolUse": [
@@ -39,6 +51,68 @@
             "type": "command",
             "command": ".claude/hooks/pretool-merge-deploys-prod.sh",
             "statusMessage": "Naming what this merge deploys"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/pretool-gh-pr-create.sh"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/pretool-no-broad-kill.sh"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/pretool-no-swallowed-push.sh"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/pretool-no-discarding-reset.sh"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__github__create_pull_request|mcp__github__update_pull_request",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/pretool-github-pr-body.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUse": [
+      {
+        "matcher": "Edit|Write|MultiEdit",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/posttool-format-write.sh",
+            "statusMessage": "Formatting with Prettier"
+          }
+        ]
+      },
+      {
+        "matcher": "mcp__github__pull_request_read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/posttool-empty-checks-means-conflict.sh",
+            "statusMessage": "Checking whether an empty checks list means a conflict"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/posttool-eslint-cache-replays-a-fixed-error.sh",
+            "statusMessage": "Checking whether a type-aware error is a cache replay"
           }
         ]
       }

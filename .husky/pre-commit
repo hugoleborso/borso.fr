@@ -319,6 +319,11 @@ scripts/check-no-racy-pipelines.sh
 echo "[pre-commit] checking the hooks decide what they promise"
 scripts/check-hook-decisions.sh
 
+# The harness lives once, in plugins/borso-harness/, and reaches a session only
+# through the links in .claude/ and the hook entries in .claude/settings.json.
+echo "[pre-commit] checking the harness is linked into .claude/"
+scripts/check-harness-links.sh
+
 # Two lists that have to say the same thing. Both halves read correctly alone
 # and only the pair is wrong, which is why review never caught either of the two
 # that shipped in PR #49. Rung-2 eradication of

@@ -3,7 +3,7 @@ name: technical-validation
 description: Dispatch the dedicated `technical-validator` agent to read the spec, the plan, and the diff on the current branch, and produce a code-review verdict covering correctness-vs-spec, code cleanliness vs repo rules, test pass status, and whether tests cover what the spec asks. Use when the user says "/technical-validation", "review the code", "code review against the spec", or as the gate-7 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the matching plan, the workspace package, and the base ref. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md` and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/technical-validation/standard.md` before dispatching.
 ---
 
-> **Paths.** Repository paths in this file are borso.fr's layout, which is the plugin's default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Technical-validation skill
 
@@ -26,7 +26,7 @@ Use the dedicated `technical-validator` agent at `${CLAUDE_PLUGIN_ROOT}/agents/t
 
 ```
 Agent({
-  subagent_type: "borso-harness:technical-validator",
+  subagent_type: "technical-validator",
   description: "Technical validation against spec + plan",
   prompt: <self-contained brief — see template.md>,
 })
