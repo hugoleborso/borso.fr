@@ -1,0 +1,148 @@
+#!/usr/bin/env bash
+# Log one piece of friction to KAIZEN.md, the scratch file `/after-task-dantotsus`
+# sweeps when the work merges.
+#
+#   scripts/kaizen.sh "blueprint generators fail from an app dir, error names a path that never existed"
+#   scripts/kaizen.sh --from audit-stage-r2 "tapping +1 twice moves the counter and not the chart"
+#   scripts/kaizen.sh show
+#   scripts/kaizen.sh archive <docs-slug>/<feature>
+#
+# `--from` names the writer, because the sweep reads differently depending on
+# who hit the friction: the same line from four different agents is a systemic
+# problem, and from one is a local one. Nothing in the environment identifies a
+# subagent, so an agent has to name itself — the prompt that spawns it should
+# say which label to use. Defaults to $KAIZEN_AGENT, then to `main`.
+#
+# Why a script rather than "append to the file":
+#
+#   * Subagents can call it. A workflow round runs a dozen agents that each hit
+#     friction and report it in a return value nobody keeps; one command per
+#     agent turns that into the sweep's raw material. PR 50 ran 22 agents and
+#     kept none of what they learned the hard way.
+#   * Concurrent writers do not corrupt it. Every entry is a single short line
+#     opened O_APPEND, which the kernel writes atomically under PIPE_BUF, so a
+#     dozen agents appending at once interleave lines rather than characters.
+#     Editing the file with a text tool from several agents does not survive
+#     that.
+#   * It fixes the format, so the sweep reads rows instead of prose.
+#
+# What belongs here: a defect, a vendor surprise, a correction you were given
+# twice, a tool that failed in a way that named the wrong problem, an
+# instruction you misread. **The problem only.** Do not write the fix — the
+# sweep designs the eradication, and a solution written in the moment is the
+# one you already thought of, which is usually the smallest one.
+#
+# The file is gitignored, so it never lands in a commit; the sweep removes it
+# once the kaizen pull request is open.
+#
+# It lives in the repository being worked on, not beside this script: the
+# borso-harness plugin may be installed from a cache or vendored in a
+# submodule, and `harness-path.sh` says which root and which file name apply.
+#
+# `archive` exists because that arrangement assumes the sweep runs on the same
+# machine that logged the friction. On a hosted session it does not: the
+# container is reclaimed when the session ends, the sweep happens later in a
+# fresh one, and a gitignored file cannot travel between them. So the log's
+# primary input reaches the sweep only if somebody copies it into the branch
+# first. `archive` is that copy, into the feature folder where the sweep will
+# look for it.
+#
+# It merges rather than overwrites. It used to `cp`, and a task where three
+# agents each archived in turn ended with only the last one's entries — eight
+# lines from two earlier agents had to be merged back by hand. A command whose
+# entire purpose is to stop the sweep losing its input must not be the thing
+# that loses it. Entries are one line each carrying a writer and a timestamp,
+# so an exact-line match identifies a duplicate reliably.
+
+set -euo pipefail
+
+HARNESS_PATH="$(dirname "${BASH_SOURCE[0]}")/harness-path.sh"
+REPO_ROOT="$("$HARNESS_PATH" --root)"
+KAIZEN_FILE="$REPO_ROOT/$("$HARNESS_PATH" kaizenFile)"
+FEATURES_DIRECTORY="$("$HARNESS_PATH" features)"
+
+# The command the log tells its readers to run, written as they can type it
+# from the repository root: borso.fr's wrapper when there is one, otherwise
+# this script's own path, which in a repository that vendors borso.fr runs
+# through the submodule.
+script_command() {
+  if [ -x "$REPO_ROOT/scripts/kaizen.sh" ]; then
+    printf 'scripts/kaizen.sh'
+    return
+  fi
+  python3 -c 'import os, sys; p = os.path.relpath(os.path.realpath(sys.argv[1]), sys.argv[2]); print(os.path.realpath(sys.argv[1]) if p.startswith("..") else p)' \
+    "${BASH_SOURCE[0]}" "$REPO_ROOT"
+}
+KAIZEN_COMMAND="$(script_command)"
+
+HEADER="# KAIZEN — friction log for this task
+
+Append one line per friction event, as it happens, with:
+
+    $KAIZEN_COMMAND \"what went wrong, in one sentence\"
+    $KAIZEN_COMMAND --from <your-agent-label> \"...\"   # from a subagent
+
+The problem only, never the fix. \`/after-task-dantotsus\` sweeps this file when
+the work merges, classifies each line, and designs the eradication. Subagents
+should append here too, naming themselves, so the sweep can tell one agent
+struggling from four agents hitting the same wall.
+
+This file is gitignored and is deleted once the kaizen pull request is open.
+"
+
+ensure_file() {
+  [ -f "$KAIZEN_FILE" ] || printf '%s\n' "$HEADER" > "$KAIZEN_FILE"
+}
+
+WRITER="${KAIZEN_AGENT:-main}"
+if [ "${1:-}" = '--from' ]; then
+  [ -n "${2:-}" ] || { printf 'usage: scripts/kaizen.sh --from <label> "<what went wrong>"\n' >&2; exit 1; }
+  WRITER="$2"
+  shift 2
+fi
+
+case "${1:-}" in
+  '')
+    printf 'usage: scripts/kaizen.sh [--from <label>] "<what went wrong, one sentence>" | show\n' >&2
+    exit 1
+    ;;
+  show)
+    [ -f "$KAIZEN_FILE" ] || { printf 'no KAIZEN.md yet\n'; exit 0; }
+    cat "$KAIZEN_FILE"
+    ;;
+  archive)
+    [ -n "${2:-}" ] || { printf 'usage: scripts/kaizen.sh archive <docs-slug>/<feature>\n' >&2; exit 1; }
+    [ -f "$KAIZEN_FILE" ] || { printf 'no KAIZEN.md to archive\n' >&2; exit 1; }
+    destination="$REPO_ROOT/$FEATURES_DIRECTORY/$2/kaizen.md"
+    mkdir -p "$(dirname "$destination")"
+    if [ -f "$destination" ]; then
+      # An archive that overwrote destroyed the previous agents' entries, which
+      # is the one thing this command exists to prevent. Merge: keep the file
+      # that is there, append only the entry lines it does not already hold.
+      # Entries are one line each and carry their writer and timestamp, so an
+      # exact-line match is a reliable identity.
+      added=0
+      while IFS= read -r entry; do
+        grep -Fxq -- "$entry" "$destination" || { printf '%s\n' "$entry" >> "$destination"; added=$((added + 1)); }
+      done < <(grep '^- \[' "$KAIZEN_FILE" || true)
+      printf '\033[36m[kaizen]\033[0m merged %s new entry/entries into %s/%s/kaizen.md (%s total) — commit it, or the sweep will never see it\n' \
+        "$added" "$FEATURES_DIRECTORY" "$2" "$(grep -c '^- \[' "$destination" || true)"
+    else
+      cp "$KAIZEN_FILE" "$destination"
+      printf '\033[36m[kaizen]\033[0m archived %s entry/entries to %s/%s/kaizen.md — commit it, or the sweep will never see it\n' \
+        "$(grep -c '^- \[' "$KAIZEN_FILE" || true)" "$FEATURES_DIRECTORY" "$2"
+    fi
+    ;;
+  init)
+    ensure_file
+    ;;
+  *)
+    ensure_file
+    # One line, one write. Newlines in the argument would break that guarantee,
+    # so they collapse to spaces.
+    entry="$(printf '%s' "$*" | tr '\n' ' ')"
+    writer="$(printf '%s' "$WRITER" | tr '\n ' '--')"
+    printf -- '- [%s] `%s` %s\n' "$(date -u +%H:%M)" "$writer" "$entry" >> "$KAIZEN_FILE"
+    printf '\033[36m[kaizen]\033[0m logged as %s: %s\n' "$writer" "$entry"
+    ;;
+esac

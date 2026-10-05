@@ -75,7 +75,7 @@ The misconception (*"the on-mount mirror is implied by the user-driven assertion
 + - <subsystem>: <state> mirrored via <call> on mount with <push|replace|other>.
 ```
 
-`.claude/skills/specification/template.md` and `.claude/skills/specification/SKILL.md` updated.
+`plugins/borso-harness/skills/specification/template.md` and `plugins/borso-harness/skills/specification/SKILL.md` updated.
 
 **Sibling defects swept:** the same shape exists at any future feature where state lives in a non-React store. The template change applies prospectively.
 

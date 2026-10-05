@@ -98,7 +98,7 @@ Commit `959b1e7` does the structural removal:
 
 - Delete `src/`, `tests/`, `bin/`, `package.json`, `tsconfig.json`,
   `biome.jsonc`, `vitest.config.ts` from `.claude/skills/adr-writer/`
-  and `.claude/skills/tech-lead-orchestrator/`.
+  and `plugins/borso-harness/skills/tech-lead-orchestrator/`.
 - Rewrite `SKILL.md` + `standard.md` so the procedures (pick number,
   conflict check, render template / derive verdictKind, retry
   policy, journal schema) live in prose with full tables.

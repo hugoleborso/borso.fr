@@ -46,4 +46,4 @@ When the tool returns `InputValidationError` listing missing `questions[<n>].que
 ## See also
 
 - The `AskUserQuestion` tool's JSON schema appears in the deferred-tool list when it's first surfaced; the schema is the source of truth.
-- [`.claude/skills/specification/SKILL.md`](../../.claude/skills/specification/SKILL.md) — heaviest user of `AskUserQuestion` in the repo, where this gotcha is most likely to bite.
+- [`plugins/borso-harness/skills/specification/SKILL.md`](../../plugins/borso-harness/skills/specification/SKILL.md) — heaviest user of `AskUserQuestion` in the repo, where this gotcha is most likely to bite.

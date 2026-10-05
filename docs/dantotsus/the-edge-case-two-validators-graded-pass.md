@@ -60,7 +60,7 @@ inherits whatever the author forgot.
 
 **Reference:** commit `aea99b0`
 
-**The actual fix:** category D of `.claude/agents/technical-validator.md`
+**The actual fix:** category D of `plugins/borso-harness/agents/technical-validator.md`
 now requires walking *Use cases / edge cases* bullet by bullet, splitting
 a bullet that makes two claims, and never substituting the *Test strategy*
 list; each row quotes the assertion that would fail if the claim were

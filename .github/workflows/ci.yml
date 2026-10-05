@@ -139,6 +139,9 @@ jobs:
       # And that a document a script, hook or workflow cites is there. The
       # markdown link check does not read them, so their citations went unread.
       - run: ./scripts/check-named-paths-exist.sh
+      # And that every harness skill, agent and hook in plugins/borso-harness/
+      # is linked into .claude/, which is the only place a session reads it.
+      - run: ./scripts/check-harness-links.sh
       # One stylesheet per application, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.
       - run: ./scripts/check-single-stylesheet.sh

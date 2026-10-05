@@ -5,8 +5,8 @@ as a named workflow, and `/feature-pipeline <spec-path>` executes it instead of
 generating a script from scratch.
 
 **Nothing is saved here yet.** Three documents — `CLAUDE.md`, the
-[`/feature-pipeline` contract](../commands/feature-pipeline.md) and the
-[orchestrator standard](../skills/tech-lead-orchestrator/standard.md) — each
+[`/feature-pipeline` contract](../../plugins/borso-harness/commands/feature-pipeline.md) and the
+[orchestrator standard](../../plugins/borso-harness/skills/tech-lead-orchestrator/standard.md) — each
 described `feature-pipeline.js` as a file that lives here, and the
 [operator runbook](../../docs/knowledge/dynamic-workflow-feature-pipeline.md)
 step 6 says to commit it after the first successful run. Nobody ever did, so

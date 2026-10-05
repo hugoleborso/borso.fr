@@ -107,7 +107,7 @@ The history belongs in `git log`, in the pull request, and in
 ## How these documents are written
 
 The prose follows the rules in
-[`.claude/skills/plain-writing/SKILL.md`](../../.claude/skills/plain-writing/SKILL.md),
+[`plugins/borso-harness/skills/plain-writing/SKILL.md`](../../plugins/borso-harness/skills/plain-writing/SKILL.md),
 which is installed in this repository so that every agent session applies it by
 default.
 

@@ -79,7 +79,7 @@ docs/features/<app>/<slug>/
   validation/visual-validation-<ts>.md
   validation/visual-validation-<ts>/  # screenshots
 docs/adr/NNNN-<slug>.md  # un ou plusieurs, référencés depuis spec.md / plan.md
-.claude/skills/tech-lead-orchestrator/runs/<run-id>/journal.md  # status updates persistés
+plugins/borso-harness/skills/tech-lead-orchestrator/runs/<run-id>/journal.md  # status updates persistés
 ```
 
 Dans le terminal : status concis ("→ /specification lancé", "← ADR-007 écrit sur cache invalidation", "→ implementer, run 1/3", "← validation FAIL, j'analyse le plan", "↑ escalation : conflit spec/plan sur use case #3"). Pas de gros chat.
@@ -142,7 +142,7 @@ flowchart TD
 
 | Question | Options | Decision (2026-05-12) |
 | --- | --- | --- |
-| Où vit le tech lead dans le pipeline ? | (a) Remplace l'auto-chain (b) S'insère entre conception et implem (c) Agent résident en parallèle | **(a) Remplace l'auto-chain.** `/specification` ne chaîne plus à `/technical-conception` automatiquement ; c'est le tech lead qui décide. Mise à jour requise dans `.claude/skills/specification/SKILL.md` *Auto-chain* section. |
+| Où vit le tech lead dans le pipeline ? | (a) Remplace l'auto-chain (b) S'insère entre conception et implem (c) Agent résident en parallèle | **(a) Remplace l'auto-chain.** `/specification` ne chaîne plus à `/technical-conception` automatiquement ; c'est le tech lead qui décide. Mise à jour requise dans `plugins/borso-harness/skills/specification/SKILL.md` *Auto-chain* section. |
 | Comment le sous-agent interroge le tech lead ? | (a) Sous-agent termine sa run avec une question structurée (b) Outil `ask-tech-lead` interne (c) Sous-agent escalade direct au human | **(a)** Le sous-agent termine sa run. Contrat : sortie JSON dans son rapport final (`status: "done" | "question" | "blocked"` + payload). Plus simple à tracer, pas de session imbriquée. |
 | Quand écrire un ADR ? | Triggers ADR | **4 triggers, OR** : (1) choix entre ≥ 2 alternatives sérieuses ; (2) impact cross-cutting (≥ 2 apps ou modules) ; (3) divergence avec une convention (CLAUDE.md, ADR existant, docs/knowledge) ; (4) feature qui semble standard / déjà exister ailleurs (ADR justifie "réutilise" ou "réinvente parce que"). |
 | Comment détecter (4) "déjà existe" ? | (a) Recherche `docs/` + code repo (b) + web search (c) Skill `/pattern-scout` dédié | **(a)** Recherche locale d'abord. Web search seulement si la décision touche un standard industrie clair (ex. cache invalidation, tenant isolation). `/pattern-scout` hors-scope. |
@@ -205,17 +205,17 @@ Aucune. Skill local, état sur disque uniquement.
 ### Files to change
 
 ```
-.claude/skills/tech-lead-orchestrator/SKILL.md                            # NEW
-.claude/skills/tech-lead-orchestrator/standard.md                         # NEW
-.claude/skills/tech-lead-orchestrator/sub-agent-contract.md               # NEW — contrat YAML pour sous-agents
-.claude/skills/tech-lead-orchestrator/src/state.utils.ts                  # NEW — load/save OrchestratorState
-.claude/skills/tech-lead-orchestrator/src/state.utils.test.ts             # NEW — 100% coverage
-.claude/skills/tech-lead-orchestrator/src/verdict-parser.utils.ts         # NEW — parse YAML front-matter
-.claude/skills/tech-lead-orchestrator/src/verdict-parser.utils.test.ts    # NEW
-.claude/skills/tech-lead-orchestrator/src/adr-trigger.utils.ts            # NEW — détecte si un choix mérite un ADR (4 triggers)
-.claude/skills/tech-lead-orchestrator/src/adr-trigger.utils.test.ts       # NEW
-.claude/skills/tech-lead-orchestrator/src/retry-budget.utils.ts           # NEW — borne MAX_RETRIES
-.claude/skills/tech-lead-orchestrator/src/retry-budget.utils.test.ts      # NEW
+plugins/borso-harness/skills/tech-lead-orchestrator/SKILL.md                            # NEW
+plugins/borso-harness/skills/tech-lead-orchestrator/standard.md                         # NEW
+plugins/borso-harness/skills/tech-lead-orchestrator/sub-agent-contract.md               # NEW — contrat YAML pour sous-agents
+plugins/borso-harness/skills/tech-lead-orchestrator/src/state.utils.ts                  # NEW — load/save OrchestratorState
+plugins/borso-harness/skills/tech-lead-orchestrator/src/state.utils.test.ts             # NEW — 100% coverage
+plugins/borso-harness/skills/tech-lead-orchestrator/src/verdict-parser.utils.ts         # NEW — parse YAML front-matter
+plugins/borso-harness/skills/tech-lead-orchestrator/src/verdict-parser.utils.test.ts    # NEW
+plugins/borso-harness/skills/tech-lead-orchestrator/src/adr-trigger.utils.ts            # NEW — détecte si un choix mérite un ADR (4 triggers)
+plugins/borso-harness/skills/tech-lead-orchestrator/src/adr-trigger.utils.test.ts       # NEW
+plugins/borso-harness/skills/tech-lead-orchestrator/src/retry-budget.utils.ts           # NEW — borne MAX_RETRIES
+plugins/borso-harness/skills/tech-lead-orchestrator/src/retry-budget.utils.test.ts      # NEW
 
 .claude/skills/adr-writer/SKILL.md                                        # NEW
 .claude/skills/adr-writer/standard.md                                     # NEW — format ADR (Context/Decision/Consequences)
@@ -228,11 +228,11 @@ Aucune. Skill local, état sur disque uniquement.
 docs/adr/README.md                                                        # NEW — index des ADRs
 docs/adr/0001-tech-lead-orchestrator-replaces-auto-chain.md               # NEW — premier ADR meta, dogfooding
 
-.claude/skills/specification/SKILL.md                                     # UPDATE — auto-chain conditionnel (lit runs/<run-id>/state.json)
-.claude/skills/technical-conception/SKILL.md                              # UPDATE — idem + émet verdict YAML en fin de run
-.claude/skills/implementation/SKILL.md                                    # UPDATE — émet verdict YAML en fin de run (status/next/summary/artifacts)
-.claude/skills/technical-validation/SKILL.md                              # UPDATE — verdict YAML, mappe PASS/FAIL/PASS_EXCEPT_UNVERIFIABLE → status
-.claude/skills/visual-validation/SKILL.md                                 # UPDATE — verdict YAML idem
+plugins/borso-harness/skills/specification/SKILL.md                                     # UPDATE — auto-chain conditionnel (lit runs/<run-id>/state.json)
+plugins/borso-harness/skills/technical-conception/SKILL.md                              # UPDATE — idem + émet verdict YAML en fin de run
+plugins/borso-harness/skills/implementation/SKILL.md                                    # UPDATE — émet verdict YAML en fin de run (status/next/summary/artifacts)
+plugins/borso-harness/skills/technical-validation/SKILL.md                              # UPDATE — verdict YAML, mappe PASS/FAIL/PASS_EXCEPT_UNVERIFIABLE → status
+plugins/borso-harness/skills/visual-validation/SKILL.md                                 # UPDATE — verdict YAML idem
 
 CLAUDE.md                                                                 # UPDATE — `meta` workspace slug autorisé pour docs/features
 commitlint.config.js                                                      # UPDATE — ajouter `meta` au scope-enum

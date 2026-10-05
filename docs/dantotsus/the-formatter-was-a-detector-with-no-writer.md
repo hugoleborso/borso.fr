@@ -84,7 +84,7 @@ commit [`ebabfe7`](https://github.com/hugoleborso/borso.fr/commit/ebabfe7)
 +        "hooks": [
 +          {
 +            "type": "command",
-+            "command": ".claude/hooks/posttool-format-write.sh",
++            "command": "plugins/borso-harness/hooks/posttool-format-write.sh",
 +            "statusMessage": "Formatting with Prettier"
 +          }
 +        ]

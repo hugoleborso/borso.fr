@@ -100,7 +100,7 @@ evidence, Test plan — before issuing the deploy reminder. When the
 branch has no open PR, the step is skipped (the orchestrator never
 opens PRs on its own).
 
-- **Code:** commit `<sha>` — `.claude/skills/tech-lead-orchestrator/
+- **Code:** commit `<sha>` — `plugins/borso-harness/skills/tech-lead-orchestrator/
   standard.md` gains a *PR description maintenance (stage `ship`)*
   section, plus the `ship` row in the stage-transition table now
   reads "Push successful, deploy reminder issued, **PR description
@@ -116,8 +116,8 @@ checklist the agent can't compress past)
 **The actual fix:**
 
 ```diff
---- a/.claude/skills/tech-lead-orchestrator/standard.md
-+++ b/.claude/skills/tech-lead-orchestrator/standard.md
+--- a/plugins/borso-harness/skills/tech-lead-orchestrator/standard.md
++++ b/plugins/borso-harness/skills/tech-lead-orchestrator/standard.md
 @@ -22,2 +22,2 @@
  | arbitrate | ship | All verdicts PASS. |
 -| ship | (end) | Push successful, deploy reminder issued. |

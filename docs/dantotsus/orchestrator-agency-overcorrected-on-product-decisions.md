@@ -76,7 +76,7 @@ surface and ADR-triggering changes are the human's.
 
 **Reference:** [PR #30](https://github.com/hugoleborso/borso.fr/pull/30) · commit `docs(meta): orchestrator decision-boundary + ADR-trigger stop list`
 
-**The actual fix:** extended `.claude/skills/tech-lead-orchestrator/standard.md`'s
+**The actual fix:** extended `plugins/borso-harness/skills/tech-lead-orchestrator/standard.md`'s
 *Decisions stay with the orchestrator* section with a **NOT
 orchestrator** counterpart naming: new third-party dependency,
 secret/credential management, UI obligations to a third party

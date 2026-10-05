@@ -387,6 +387,12 @@ review.
   state-dependent with its reason. Three refusing hooks had none, and one of
   them refused a harmless command three times in a session before anyone
   looked ([dantotsu](../dantotsus/the-hook-that-was-missing-from-its-own-contract.md)).
+- `script:scripts/check-harness-links.sh` fails a skill, agent or command of
+  the harness plugin that has no link in `.claude/`, a link that points
+  somewhere else, and a plugin hook that `.claude/settings.json` does not
+  declare. Claude Code reads the harness only through those links and entries,
+  because a cloud session skips a plugin shipped under `.claude/skills/` as
+  untrusted ([ADR-0026](../adr/0026-the-harness-ships-as-a-plugin-linked-into-claude.md)).
 - `script:scripts/check-frontend-env-vars.sh` fails a site reading a `VITE_*`
   variable no workflow sets, which Vite substitutes as `undefined` at build
   time while nothing else complains.

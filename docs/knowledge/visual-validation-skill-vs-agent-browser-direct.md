@@ -63,5 +63,5 @@ of the skill.
 
 - [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) —
   daemon / executable-path notes when running locally.
-- `.claude/skills/visual-validation/SKILL.md` — the full skill's
+- `plugins/borso-harness/skills/visual-validation/SKILL.md` — the full skill's
   brief, for when you *do* need the heavy gate.
