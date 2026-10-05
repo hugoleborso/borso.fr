@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
@@ -7,6 +8,27 @@ import { SharedStack } from '../../lib/shared-stack.js';
 import { isObject, resourcesOfType, serializeTemplateForSnapshot } from './helpers/template.js';
 
 const BUDGET_EMAIL = 'hugo@example.com';
+const OIDC_SUB_CLAIM_KEY = 'token.actions.githubusercontent.com:sub';
+const RECORDED_SUBJECT_PREFIXES_PATH = new URL('../../oidc-subject-prefixes.json', import.meta.url);
+
+function recordedSubjectPrefixes(): string[] {
+  const recorded: unknown = JSON.parse(readFileSync(RECORDED_SUBJECT_PREFIXES_PATH, 'utf8'));
+  if (!isObject(recorded)) return [];
+  return Object.values(recorded).filter((prefix) => typeof prefix === 'string');
+}
+
+function trustedSubClaims(template: Template): string[] {
+  return resourcesOfType(template, 'AWS::IAM::Role').flatMap((role) => {
+    const document = role.Properties?.AssumeRolePolicyDocument;
+    if (!isObject(document) || !Array.isArray(document.Statement)) return [];
+    return document.Statement.flatMap((statement): unknown[] => {
+      if (!isObject(statement) || !isObject(statement.Condition)) return [];
+      const stringLike = statement.Condition.StringLike;
+      if (!isObject(stringLike)) return [];
+      return [stringLike[OIDC_SUB_CLAIM_KEY]].flat();
+    }).filter((claim) => typeof claim === 'string');
+  });
+}
 
 function synth(opts?: { budgetEmail?: string }): Template {
   const app = new App();
@@ -77,6 +99,19 @@ describe('SharedStack', () => {
       expect(json).toContain('repo:hugoleborso/borso.fr:environment:prod-shared');
     });
 
+    it('trusts only sub claims whose repository prefix was read from GitHub with scripts/print-oidc-subject.sh', () => {
+      const prefixes = recordedSubjectPrefixes();
+      const claims = trustedSubClaims(tpl);
+      expect(claims.length).toBeGreaterThan(0);
+      const unrecorded = claims.filter(
+        (claim) => !prefixes.some((prefix) => claim.startsWith(`${prefix}:`)),
+      );
+      expect(
+        unrecorded,
+        'Run scripts/print-oidc-subject.sh <owner/repo> --record and use the subjectFormat it prints.',
+      ).toStrictEqual([]);
+    });
+
     it('does NOT create an IntegTestRole (dropped vs upstream)', () => {
       const ids = Object.keys(tpl.toJSON().Resources ?? {}).filter((id) =>
         id.includes('IntegTestRole'),
@@ -122,7 +157,7 @@ describe('SharedStack', () => {
       expect(talosRoleLogicalIds).toHaveLength(1);
     });
 
-    it('trusts only the prod environment of hugoleborso/talos', () => {
+    it('trusts only the prod environment of hugoleborso/talos, in the immutable subject format its tokens carry', () => {
       tpl.hasResourceProperties('AWS::IAM::Role', {
         RoleName: 'TalosDeployRole',
         AssumeRolePolicyDocument: Match.objectLike({
@@ -133,7 +168,7 @@ describe('SharedStack', () => {
                 StringEquals: { 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com' },
                 StringLike: {
                   'token.actions.githubusercontent.com:sub': [
-                    'repo:hugoleborso/talos:environment:prod',
+                    'repo:hugoleborso@44852104/talos@1401805496:environment:prod',
                   ],
                 },
               },

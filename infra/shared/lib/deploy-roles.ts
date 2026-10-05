@@ -1,10 +1,16 @@
-import { githubActionsPrincipal } from '@borso/infra';
+import { githubActionsPrincipal, type SubjectFormat } from '@borso/infra';
 import { Duration } from 'aws-cdk-lib';
 import { Effect, ManagedPolicy, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
 import type { Construct } from 'constructs';
 
 const CONSUMER_REPO = 'hugoleborso/borso.fr';
 const TALOS_REPO = 'hugoleborso/talos';
+const CONSUMER_SUBJECT_FORMAT: SubjectFormat = { kind: 'name' };
+const TALOS_SUBJECT_FORMAT: SubjectFormat = {
+  kind: 'immutable',
+  ownerId: 44852104,
+  repositoryId: 1401805496,
+};
 const CDK_BOOTSTRAP_QUALIFIER = 'hnb659fds';
 const CDK_BOOTSTRAP_ROLE_KINDS = ['deploy', 'file-publishing', 'image-publishing', 'lookup'];
 const DEFAULT_BRANCH = 'main';
@@ -94,6 +100,7 @@ function createProdDeployRole(scope: Construct, props: DeployRolesProps): Role {
     roleName: 'ProdDeployRole',
     assumedBy: githubActionsPrincipal(props.oidcProviderArn, {
       repo: CONSUMER_REPO,
+      subjectFormat: CONSUMER_SUBJECT_FORMAT,
       subjects: [{ kind: 'environment', environment: 'prod' }],
     }),
     maxSessionDuration: Duration.hours(DEPLOY_ROLE_MAX_SESSION_HOURS),
@@ -120,6 +127,7 @@ function createPreviewDeployRole(scope: Construct, props: DeployRolesProps): Rol
     roleName: 'PreviewDeployRole',
     assumedBy: githubActionsPrincipal(props.oidcProviderArn, {
       repo: CONSUMER_REPO,
+      subjectFormat: CONSUMER_SUBJECT_FORMAT,
       subjects: [{ kind: 'pull_request' }, { kind: 'branch', branch: DEFAULT_BRANCH }],
     }),
     maxSessionDuration: Duration.hours(PREVIEW_ROLE_MAX_SESSION_HOURS),
@@ -158,6 +166,7 @@ function createSharedInfraDeployRole(scope: Construct, props: DeployRolesProps):
     roleName: 'SharedInfraDeployRole',
     assumedBy: githubActionsPrincipal(props.oidcProviderArn, {
       repo: CONSUMER_REPO,
+      subjectFormat: CONSUMER_SUBJECT_FORMAT,
       subjects: [{ kind: 'environment', environment: 'prod-shared' }],
     }),
     maxSessionDuration: Duration.hours(DEPLOY_ROLE_MAX_SESSION_HOURS),
@@ -203,6 +212,7 @@ function createTalosDeployRole(scope: Construct, props: DeployRolesProps): Role 
     roleName: 'TalosDeployRole',
     assumedBy: githubActionsPrincipal(props.oidcProviderArn, {
       repo: TALOS_REPO,
+      subjectFormat: TALOS_SUBJECT_FORMAT,
       subjects: [{ kind: 'environment', environment: 'prod' }],
     }),
     maxSessionDuration: Duration.hours(DEPLOY_ROLE_MAX_SESSION_HOURS),
