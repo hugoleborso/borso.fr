@@ -283,7 +283,8 @@
     "notPlaying": "— ne joue pas —",
     "override": "Exception",
     "resetToDefault": "Revenir au défaut du morceau",
-    "save": "Enregistrer"
+    "save": "Enregistrer",
+    "saveAsSongDefault": "Enregistrer comme défaut du morceau"
   },
   "mastery": {
     "noData": "Crée des membres et des instruments pour remplir la matrice.",

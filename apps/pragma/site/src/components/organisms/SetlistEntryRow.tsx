@@ -13,7 +13,7 @@ import {
   type LineupEditorInstrument,
   type LineupRecord,
 } from '../molecules/LineupEditor';
-import { toLineupPayload } from '../molecules/lineup-editor.core';
+import { selectLineupSaveTarget, toLineupPayload } from '../molecules/lineup-editor.core';
 import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { SetlistEntryActions } from '../molecules/SetlistEntryActions';
@@ -109,10 +109,18 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     notes: props.notes,
   };
   const form = useSetlistEntryForm(defaultValues);
+  const saveLineupAsSongDefault = (lineup: LineupRecord | null): void => {
+    props.onUpdateSongDefaults({ defaultLineup: toLineupPayload(lineup) });
+    if (props.lineupOverride !== null) props.onUpdate(props.entryId, { lineupOverride: null });
+  };
   const saveLineupOverride = (lineup: LineupRecord | null, wasReset: boolean): void => {
-    props.onUpdate(props.entryId, {
-      lineupOverride: wasReset || lineup === null ? null : toLineupPayload(lineup),
-    });
+    const saveTo = {
+      'song-default': () => saveLineupAsSongDefault(lineup),
+      'entry-override': () =>
+        props.onUpdate(props.entryId, { lineupOverride: toLineupPayload(lineup) }),
+      'entry-cleared': () => props.onUpdate(props.entryId, { lineupOverride: null }),
+    } as const;
+    saveTo[selectLineupSaveTarget(props.songDefaultLineup, lineup, wasReset)]();
   };
   const saveDefaultLineup = (lineup: LineupRecord | null): void => {
     props.onUpdateSongDefaults({ defaultLineup: toLineupPayload(lineup ?? {}) });
@@ -237,6 +245,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         defaultLineup={props.songDefaultLineup}
         overridesSongDefault={isOverriding}
         onSave={saveLineupOverride}
+        onSaveAsSongDefault={saveLineupAsSongDefault}
         onClose={() => setLineupEditorOpen(false)}
       />
       <LineupEditor

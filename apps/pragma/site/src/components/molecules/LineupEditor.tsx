@@ -43,6 +43,7 @@ export interface LineupEditorProps {
   readonly defaultLineup?: LineupRecord;
   readonly overridesSongDefault?: boolean;
   readonly onSave: (lineup: LineupRecord | null, wasReset: boolean) => void;
+  readonly onSaveAsSongDefault?: (lineup: LineupRecord | null) => void;
   readonly onClose: () => void;
 }
 
@@ -65,6 +66,7 @@ function LineupEditorContent({
   defaultLineup,
   overridesSongDefault = false,
   onSave,
+  onSaveAsSongDefault,
   onClose,
 }: LineupEditorProps): JSX.Element {
   const { t } = useTranslation();
@@ -84,6 +86,11 @@ function LineupEditorContent({
     for (const [memberId, value] of Object.entries(nextValues)) {
       form.setFieldValue(memberId, value);
     }
+  };
+
+  const saveAsSongDefault = (): void => {
+    onSaveAsSongDefault?.(formValuesToLineup(form.state.values));
+    onClose();
   };
 
   const modalTitle =
@@ -176,13 +183,18 @@ function LineupEditorContent({
           </ul>
         </div>
         <div className="shrink-0 px-4 py-3 flex flex-wrap gap-2 justify-between border-t border-line bg-bg-elev">
-          {defaultLineup === undefined ? (
-            <span />
-          ) : (
-            <Button type="button" variant="ghost" onClick={resetToDefaultLineup}>
-              {t('lineup.resetToDefault')}
-            </Button>
-          )}
+          <div className="flex flex-wrap gap-2">
+            {defaultLineup === undefined ? null : (
+              <Button type="button" variant="ghost" onClick={resetToDefaultLineup}>
+                {t('lineup.resetToDefault')}
+              </Button>
+            )}
+            {onSaveAsSongDefault === undefined ? null : (
+              <Button type="button" variant="ghost" onClick={saveAsSongDefault}>
+                {t('lineup.saveAsSongDefault')}
+              </Button>
+            )}
+          </div>
           <div className="flex gap-2">
             <Button type="button" variant="ghost" onClick={onClose}>
               {t('lineup.cancel')}

@@ -283,7 +283,8 @@
     "notPlaying": "— not playing —",
     "override": "Override",
     "resetToDefault": "Reset to song default",
-    "save": "Save"
+    "save": "Save",
+    "saveAsSongDefault": "Save as song default"
   },
   "mastery": {
     "noData": "Add members and instruments to populate the matrix.",
