@@ -27,6 +27,14 @@ updates:
       # A major is a migration whichever week it lands in, so it waits for a
       # second week of other people finding the problems first.
       semver-major-days: 14
+    # Vitest 5 takes every Stryker mutation score to 0% under
+    # @stryker-mutator/vitest-runner 9.6.1 and 10.0.0 alike, measured
+    # 2026-10-05, so the major waits until a runner release reads its results.
+    ignore:
+      - dependency-name: 'vitest'
+        update-types: ['version-update:semver-major']
+      - dependency-name: '@vitest/*'
+        update-types: ['version-update:semver-major']
     # One developer. A queue longer than this is a queue that gets ignored,
     # which is worse than a shorter one that gets read.
     open-pull-requests-limit: 5
