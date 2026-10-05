@@ -4,6 +4,9 @@ import { Effect, ManagedPolicy, PolicyStatement, Role } from 'aws-cdk-lib/aws-ia
 import type { Construct } from 'constructs';
 
 const CONSUMER_REPO = 'hugoleborso/borso.fr';
+const TALOS_REPO = 'hugoleborso/talos';
+const CDK_BOOTSTRAP_QUALIFIER = 'hnb659fds';
+const CDK_BOOTSTRAP_ROLE_KINDS = ['deploy', 'file-publishing', 'image-publishing', 'lookup'];
 const DEFAULT_BRANCH = 'main';
 const PREVIEW_ROLE_MAX_SESSION_HOURS = 2;
 const DEPLOY_ROLE_MAX_SESSION_HOURS = 1;
@@ -70,6 +73,7 @@ interface DeployRoles {
   readonly prod: Role;
   readonly preview: Role;
   readonly shared: Role;
+  readonly talos: Role;
 }
 
 interface DeployRolesProps {
@@ -142,6 +146,7 @@ function rolesAndPoliciesThisStackOwns(account: string): string[] {
     `arn:aws:iam::${account}:role/ProdDeployRole`,
     `arn:aws:iam::${account}:role/PreviewDeployRole`,
     `arn:aws:iam::${account}:role/SharedInfraDeployRole`,
+    `arn:aws:iam::${account}:role/TalosDeployRole`,
     `arn:aws:iam::${account}:role/borso-shared-*`,
     `arn:aws:iam::${account}:role/cdk-*`,
     `arn:aws:iam::${account}:policy/*`,
@@ -186,10 +191,46 @@ function createSharedInfraDeployRole(scope: Construct, props: DeployRolesProps):
   return shared;
 }
 
+function cdkBootstrapRoleArns(account: string): string[] {
+  return CDK_BOOTSTRAP_ROLE_KINDS.map(
+    (kind) =>
+      `arn:aws:iam::${account}:role/cdk-${CDK_BOOTSTRAP_QUALIFIER}-${kind}-role-${account}-*`,
+  );
+}
+
+function createTalosDeployRole(scope: Construct, props: DeployRolesProps): Role {
+  const talos = new Role(scope, 'TalosDeployRole', {
+    roleName: 'TalosDeployRole',
+    assumedBy: githubActionsPrincipal(props.oidcProviderArn, {
+      repo: TALOS_REPO,
+      subjects: [{ kind: 'environment', environment: 'prod' }],
+    }),
+    maxSessionDuration: Duration.hours(DEPLOY_ROLE_MAX_SESSION_HOURS),
+    description:
+      'Used by the hugoleborso/talos deploy workflow, from its prod GitHub environment. It holds no resource permissions of its own: it can only hand off to the CDK bootstrap roles and list CloudFront distributions for the alias preflight.',
+  });
+  talos.addToPolicy(
+    new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ['sts:AssumeRole', 'sts:TagSession'],
+      resources: cdkBootstrapRoleArns(props.account),
+    }),
+  );
+  talos.addToPolicy(
+    new PolicyStatement({
+      effect: Effect.ALLOW,
+      actions: ['cloudfront:ListDistributions'],
+      resources: RESOURCES_NOT_SCOPABLE_BY_ARN,
+    }),
+  );
+  return talos;
+}
+
 export function createDeployRoles(scope: Construct, props: DeployRolesProps): DeployRoles {
   return {
     prod: createProdDeployRole(scope, props),
     preview: createPreviewDeployRole(scope, props),
     shared: createSharedInfraDeployRole(scope, props),
+    talos: createTalosDeployRole(scope, props),
   };
 }
