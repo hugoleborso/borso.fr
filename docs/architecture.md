@@ -35,7 +35,7 @@ One AWS account. Two regions:
 
 | Construct | What it makes | Used by |
 | --- | --- | --- |
-| `StaticSite` | Prod: dedicated S3 bucket + CloudFront + Route 53 alias. Preview/integ: uploads to the shared previews bucket at a key prefix; URL is host-routed to the prefix. | Apex-style apps. |
+| `StaticSite` | Prod: dedicated S3 bucket + CloudFront + Route 53 alias. The bucket is named `<app>-prod`, or `<app>-prod-<account id>` with `bucketNameSuffix: 'account'` when the short name is taken in S3's global namespace. Preview/integ: uploads to the shared previews bucket at a key prefix; URL is host-routed to the prefix. | Apex-style apps. |
 | `LambdaApi` | One Lambda + one HTTP API. CORS preflight, error alarm, single-handler routing. | API-style apps. |
 | `DsqlCluster` | Aurora DSQL cluster, deletion-protected by default. Publishes ARN + endpoint to `/borso/<app>/dsql-cluster-{arn,endpoint}` so other stages can find it. | One per app, owned by the prod stack. |
 | `DsqlSchema` | Postgres schema in the app's DSQL cluster (resolved via SSM in preview/integ). Forward-only migrations, advisory-locked, DROP CASCADE on stack delete. | Apps with persistence. |
