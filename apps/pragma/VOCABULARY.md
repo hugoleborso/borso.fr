@@ -293,30 +293,26 @@ Lives in: `domain/lineup.core.ts`
 - A lineup says who holds what on one song. Which instruments a member
   plays at all is the `member_instrument` link, and that link carries
   `is_primary`: whether this is one of that member's main instruments.
-  Primacy is what decides which instruments get a column, so a member
-  form that saves without naming it keeps what was there
+  A member form that saves without naming primacy keeps what was there
   (`decidePrimaryInstrumentIds`).
 
 ## Lineup slot
 
-One fixed position in the instrument column a setlist card draws, always
-the same instrument at the same place, tinted with the colour of the
-member holding it on that song.
+One icon in the lineup a setlist card draws: one instrument held by one
+member on that song, tinted with that member's colour.
 
 Lives in: `site/src/components/molecules/`
 
-- The column is the instruments at least one member calls primary,
-  ordered by `position`, capped at the number of members plus two and
-  further capped by the width budget the breakpoint gives.
-- What the cap drops is counted as `+N`, whose title names the
-  instruments that fell off. The column yields; the song title never
-  truncates to make room for it.
-- A slot with nobody holding it on this song still renders, in the empty
-  tint. That is what makes the column positional: a gap in a column is a
-  reading, not an absence.
-- Not to be confused with **Lineup**, which is per song and names members.
-  A slot is per instrument and exists whether or not anybody plays it
-  tonight.
+- A song draws one slot per instrument held, so two singers draw two
+  microphones. An instrument nobody holds on that song draws nothing;
+  there is no empty slot.
+- Slots are ordered by the instrument's `position`, then by member order
+  for a shared instrument.
+- The whole lineup is drawn when the row has room. What the width drops
+  is counted as `+N`, whose title names the instruments that fell off.
+  The column yields; the song title never truncates to make room for it.
+- Not to be confused with **Lineup**, which is the record a slot is drawn
+  from.
 
 ## Mastery
 
