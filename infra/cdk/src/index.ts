@@ -23,6 +23,7 @@ export {
   requirePrNumber,
 } from './internal/env.js';
 export { frontendOrigin, isProductionStage, type Stage } from './internal/naming.utils.js';
-export type { GithubSubject, SubjectKind } from './internal/oidc.js';
-export { GITHUB_OIDC_ISSUER, githubActionsPrincipal, githubSubClaims } from './internal/oidc.js';
+export type { GithubSubject, SubjectFormat, SubjectKind } from './internal/oidc-subject.utils.js';
+export { githubSubClaims } from './internal/oidc-subject.utils.js';
+export { GITHUB_OIDC_ISSUER, githubActionsPrincipal } from './internal/oidc.js';
 export { SHARED_SSM_PARAMETERS } from './internal/shared-ssm.js';

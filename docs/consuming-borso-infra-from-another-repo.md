@@ -7,9 +7,27 @@
 | Piece | Where | Note |
 | --- | --- | --- |
 | The constructs | `infra/cdk/` as the pnpm package `@borso/infra` | Built with `tsc` from the package's own `tsconfig.build.json`. Nothing at the borso.fr root is read at build time. |
-| A deploy role | `TalosDeployRole`, created by `infra/shared/lib/deploy-roles.ts`, ARN published at SSM `/borso/shared/talos-deploy-role-arn` | Trusts only `repo:hugoleborso/talos:environment:prod`. |
+| A deploy role | `TalosDeployRole`, created by `infra/shared/lib/deploy-roles.ts`, ARN published at SSM `/borso/shared/talos-deploy-role-arn` | Trusts only `repo:hugoleborso@44852104/talos@1401805496:environment:prod`, the immutable subject talos tokens carry. See [the subject format](#the-subject-format-of-the-consumers-tokens). |
 | Certificate, zone, SSM values | the `borso-shared` and `borso-shared-certs` stacks | `cert-borso-fr-arn` covers `borso.fr` and `*.borso.fr`, so `talos.borso.fr` needs no new certificate. |
 | The alias preflight | `scripts/preflight-cloudfront-aliases.sh` | A plain bash script; it needs `aws` and `jq` and nothing from the borso.fr workspace. |
+
+## The subject format of the consumer's tokens
+
+The `sub` claim of a GitHub Actions token starts with a prefix that each repository configures, and a deploy role must trust exactly that prefix. Read it before writing the role:
+
+```sh
+scripts/print-oidc-subject.sh hugoleborso/talos --record
+```
+
+The script calls `gh api repos/<owner/repo>/actions/oidc/customization/sub`, prints the prefix and the `subjectFormat` to pass to `githubActionsPrincipal`, and with `--record` writes the prefix to `infra/shared/oidc-subject-prefixes.json`. The shared-stack test fails on any trusted claim whose prefix is not recorded there, so a role cannot ship with a guessed format. The API returns one of three shapes:
+
+| API answer | Prefix | `subjectFormat` |
+| --- | --- | --- |
+| `use_immutable_subject: false` | `repo:<owner>/<name>` | `{ kind: 'name' }` |
+| `use_immutable_subject: true` | `repo:<owner>@<ownerId>/<name>@<repoId>` | `{ kind: 'immutable', ownerId, repositoryId }` |
+| `use_default: false` | a custom claim template | not supported; the script fails |
+
+borso.fr is on the name format. talos is on the immutable format (`repo:hugoleborso@44852104/talos@1401805496`), so `TalosDeployRole` trusts only that form. The name form is left out on purpose: talos never emits it, and the ids pin the trust to this exact repository, so a renamed or recreated repository under the same name cannot obtain the role. If a consumer changes the setting, its next deploy fails with `Not authorized to perform sts:AssumeRoleWithWebIdentity` until the role is updated and `shared-deploy` is dispatched.
 
 ## What the deploy role can and cannot do
 
@@ -124,6 +142,7 @@ new PreviewableApp(stack, 'Talos', {
 | Setting | Value |
 | --- | --- |
 | Environment | `prod`. The name is the literal string `TalosDeployRole` trusts. It needs no reviewer rule. |
+| OIDC subject customization | leave it as it is, or rerun `scripts/print-oidc-subject.sh` and update the role after changing it. |
 | Variable `AWS_REGION` | `eu-west-3` |
 | Variable `AWS_ACCOUNT_ID` | the 12-digit account id |
 | Variable `TALOS_DEPLOY_ROLE_ARN` | the value of SSM `/borso/shared/talos-deploy-role-arn`, which is `arn:aws:iam::<account>:role/TalosDeployRole` |
@@ -172,11 +191,11 @@ jobs:
       - run: pnpm --filter @talos/infra run deploy
 ```
 
-The job must declare `environment: prod`. Without it the token's subject is `repo:hugoleborso/talos:ref:refs/heads/main` and the role refuses it; see [`knowledge/github-oidc-sub-claim-per-trigger.md`](./knowledge/github-oidc-sub-claim-per-trigger.md). Use `pnpm run deploy`, never `pnpm deploy`, which is a pnpm built-in.
+The job must declare `environment: prod`. Without it the token's subject is `repo:hugoleborso@44852104/talos@1401805496:ref:refs/heads/main` and the role refuses it; see [`knowledge/github-oidc-sub-claim-per-trigger.md`](./knowledge/github-oidc-sub-claim-per-trigger.md). Use `pnpm run deploy`, never `pnpm deploy`, which is a pnpm built-in.
 
 ## Order of operations
 
-1. Merge the borso.fr change that adds `TalosDeployRole`.
+1. Read the consumer's subject format with `scripts/print-oidc-subject.sh <owner/repo> --record`, then merge the borso.fr change that adds or updates its deploy role.
 2. Dispatch `shared-deploy` in borso.fr. It is `workflow_dispatch` only, so nothing creates the role or the SSM parameter until this runs.
 3. Read the ARN: `aws ssm get-parameter --name /borso/shared/talos-deploy-role-arn --query Parameter.Value --output text --region eu-west-3`.
 4. Set the talos variables and environment, then push to talos `main`.

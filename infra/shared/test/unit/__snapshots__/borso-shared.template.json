@@ -740,7 +740,7 @@
                 },
                 "StringLike": {
                   "token.actions.githubusercontent.com:sub": [
-                    "repo:hugoleborso/talos:environment:prod"
+                    "repo:hugoleborso@44852104/talos@1401805496:environment:prod"
                   ]
                 }
               },

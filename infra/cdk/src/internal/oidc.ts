@@ -1,34 +1,7 @@
 import { FederatedPrincipal } from 'aws-cdk-lib/aws-iam';
+import { githubSubClaims, type GithubSubject } from './oidc-subject.utils.js';
 
 export const GITHUB_OIDC_ISSUER = 'token.actions.githubusercontent.com';
-
-export type SubjectKind =
-  | { readonly kind: 'environment'; readonly environment: string }
-  | { readonly kind: 'pull_request' }
-  | { readonly kind: 'branch'; readonly branch: string }
-  | { readonly kind: 'any' };
-
-export interface GithubSubject {
-  readonly repo: string;
-  readonly subjects: readonly SubjectKind[];
-}
-
-function subClaimFor(repo: string, subject: SubjectKind): string {
-  switch (subject.kind) {
-    case 'environment':
-      return `repo:${repo}:environment:${subject.environment}`;
-    case 'pull_request':
-      return `repo:${repo}:pull_request`;
-    case 'branch':
-      return `repo:${repo}:ref:refs/heads/${subject.branch}`;
-    case 'any':
-      return `repo:${repo}:*`;
-  }
-}
-
-export function githubSubClaims(subject: GithubSubject): string[] {
-  return subject.subjects.map((kind) => subClaimFor(subject.repo, kind));
-}
 
 export function githubActionsPrincipal(
   oidcProviderArn: string,
