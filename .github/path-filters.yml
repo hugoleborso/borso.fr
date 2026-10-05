@@ -30,6 +30,7 @@ borso-fr: 'apps/borso-fr/**'
 borsouvertures: 'apps/borsouvertures/**'
 last-loop-lepin: 'apps/last-loop-lepin/**'
 pragma: 'apps/pragma/**'
+talos: 'apps/talos/**'
 infra: 'infra/cdk/**'
 deps:
   - 'pnpm-workspace.yaml'
