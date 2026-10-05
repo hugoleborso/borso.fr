@@ -1,6 +1,10 @@
 const CATALOG_PREFIX = 'catalog:';
 const DEFAULT_CATALOG = 'default';
 const WORKSPACE_PREFIX = 'workspace:';
+const LOCKSTEP_FAMILIES: readonly (readonly string[])[] = [
+  ['vitest', '@vitest/coverage-v8'],
+  ['@stryker-mutator/core', '@stryker-mutator/vitest-runner'],
+];
 
 export interface Declaration {
   readonly name: string;
@@ -104,6 +108,25 @@ function listUnusedEntries(
   return problems;
 }
 
+function listLockstepDrift(catalogs: Catalogs): readonly CatalogProblem[] {
+  const problems: CatalogProblem[] = [];
+  for (const [catalog, entries] of catalogs) {
+    for (const family of LOCKSTEP_FAMILIES) {
+      const present = family.flatMap((name) => {
+        const range = entries.get(name);
+        return range === undefined ? [] : [{ name, range }];
+      });
+      if (new Set(present.map(({ range }) => range)).size <= 1) continue;
+      const listed = present.map(({ name, range }) => `\`${name}\` at \`${range}\``).join(' and ');
+      problems.push({
+        workspace: 'pnpm-workspace.yaml',
+        message: `the ${catalog} catalog holds ${listed}, which only work at the same version`,
+      });
+    }
+  }
+  return problems;
+}
+
 export function listCatalogProblems(
   manifests: readonly WorkspaceManifest[],
   catalogs: Catalogs,
@@ -114,5 +137,6 @@ export function listCatalogProblems(
     ...listUncatalogued(manifests, sharedNames),
     ...listDanglingReferences(manifests, catalogs),
     ...listUnusedEntries(manifests, catalogs),
+    ...listLockstepDrift(catalogs),
   ];
 }

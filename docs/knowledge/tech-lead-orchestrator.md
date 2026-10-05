@@ -1,7 +1,7 @@
 # `/tech-lead-orchestrator` — operator notes
 
-Run-time companion to [`.claude/skills/tech-lead-orchestrator/SKILL.md`](../../.claude/skills/tech-lead-orchestrator/SKILL.md)
-and [`standard.md`](../../.claude/skills/tech-lead-orchestrator/standard.md).
+Run-time companion to [`plugins/borso-harness/skills/tech-lead-orchestrator/SKILL.md`](../../plugins/borso-harness/skills/tech-lead-orchestrator/SKILL.md)
+and [`standard.md`](../../plugins/borso-harness/skills/tech-lead-orchestrator/standard.md).
 What this file covers that the SKILL.md doesn't: **what an operator sees,
 where to look when something goes wrong, how to read the journal.**
 
@@ -29,7 +29,7 @@ runs stay in the tree.
 
 `journal.md.jsonl` is the source of truth for any post-mortem. Each line
 is a JSON object — see
-[`standard.md` *Journal event schema*](../../.claude/skills/tech-lead-orchestrator/standard.md#journal-event-schema)
+[`standard.md` *Journal event schema*](../../plugins/borso-harness/skills/tech-lead-orchestrator/standard.md#journal-event-schema)
 for the full list. The dominant events:
 
 | kind | what it means | where to look next |
@@ -98,7 +98,7 @@ did not see `state.json#pilotedByTechLead`. Verify:
 
 The orchestrator emits an `escalation` event with reason
 `unparseable-verdict: <why>` and stops. The `<why>` values are listed in
-[`sub-agent-contract.md`](../../.claude/skills/tech-lead-orchestrator/sub-agent-contract.md).
+[`sub-agent-contract.md`](../../plugins/borso-harness/skills/tech-lead-orchestrator/sub-agent-contract.md).
 In every case the fix is in the sub-skill's output template, not in the
 orchestrator.
 

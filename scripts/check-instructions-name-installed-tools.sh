@@ -37,7 +37,7 @@ if [ ! -d "$BIN_DIR" ]; then
   exit 0
 fi
 
-INSTRUCTION_SURFACES=('.claude/*' 'docs/standards/*')
+INSTRUCTION_SURFACES=('.claude/*' 'plugins/*' 'docs/standards/*')
 
 invocations="$(
   git ls-files "${INSTRUCTION_SURFACES[@]}" |
@@ -68,7 +68,7 @@ done <<<"$invocations"
 # `@borso-app/pragma`. A plan and a spec are instructions too — a validator runs
 # their gates — so they are read here beside the skills. pnpm also matches a
 # name without its scope, so `last-loop-lepin` resolves and is accepted.
-FILTER_SURFACES=('.claude/*' 'docs/standards/*' 'docs/features/*/*/plan/*' 'docs/features/*/*/spec/*')
+FILTER_SURFACES=('.claude/*' 'plugins/*' 'docs/standards/*' 'docs/features/*/*/plan/*' 'docs/features/*/*/spec/*')
 
 workspace_names="$(
   git ls-files 'apps/*/package.json' 'infra/*/package.json' |

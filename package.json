@@ -53,9 +53,6 @@
   "pnpm": {
     "onlyBuiltDependencies": [
       "esbuild"
-    ],
-    "patchedDependencies": {
-      "@stryker-mutator/vitest-runner@9.6.1": "patches/stryker-mutator-vitest-runner/vitest-5-test-name-separator.patch"
-    }
+    ]
   }
 }

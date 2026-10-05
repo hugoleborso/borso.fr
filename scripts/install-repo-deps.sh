@@ -169,7 +169,7 @@ else
 fi
 
 # 6. agent-browser — LLM-oriented browser automation CLI used by the
-# /visual-validation skill (see .claude/agents/visual-validator.md). Global
+# /visual-validation skill (see plugins/borso-harness/agents/visual-validator.md). Global
 # npm install + a one-shot post-install that provisions Chromium for the
 # daemon. Skipped on machines without npm (rare in this repo, but the
 # install is non-fatal there — the validator surfaces the missing tool as

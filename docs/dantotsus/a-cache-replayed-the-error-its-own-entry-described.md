@@ -102,7 +102,7 @@ surface — no lint rule can see another tool's cache.
 
 So the sentence moves to where the wrong conclusion is formed, exactly as the
 empty-checks hook did for conflicted pull requests.
-`.claude/hooks/posttool-eslint-cache-replays-a-fixed-error.sh` fires only when
+`plugins/borso-harness/hooks/posttool-eslint-cache-replays-a-fixed-error.sh` fires only when
 a lint command reports an error from one of ten type-aware rules **and**
 `.eslintcache` exists **and** the command did not already clear it.
 

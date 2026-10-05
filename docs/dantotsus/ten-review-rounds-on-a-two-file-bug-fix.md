@@ -85,7 +85,7 @@ it stops being ad hoc.
 **Reference:** [PR #85](https://github.com/hugoleborso/borso.fr/pull/85) · commits [`7747353`](https://github.com/hugoleborso/borso.fr/commit/7747353), [`2672da6`](https://github.com/hugoleborso/borso.fr/commit/2672da6)
 
 **The actual fix — the report contract.** Every finding now carries two
-required lines, in `.claude/agents/standards-reviewer.md`:
+required lines, in `plugins/borso-harness/agents/standards-reviewer.md`:
 
 ```diff
  <Why it fails the bullet, in one or two sentences. What would satisfy it.>

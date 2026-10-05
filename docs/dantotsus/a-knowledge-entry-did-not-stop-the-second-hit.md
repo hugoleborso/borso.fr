@@ -85,7 +85,7 @@ kaizen branch commits below.
 
 The entry could not be found by someone who did not already know the answer, so
 the eradication moves the sentence to where the wrong conclusion is formed: the
-tool result. `.claude/hooks/posttool-empty-checks-means-conflict.sh` matches
+tool result. `plugins/borso-harness/hooks/posttool-empty-checks-means-conflict.sh` matches
 `mcp__github__pull_request_read`, fires only when `total_count` is `0` on
 `get_check_runs` or `get_status`, and names the one field that settles it. It
 asserts nothing — a pull request can legitimately have no checks in its first

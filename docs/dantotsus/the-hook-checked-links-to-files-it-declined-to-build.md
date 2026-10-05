@@ -19,7 +19,7 @@ A commit touching a lockfile and a workspace manifest was refused by
 pre-commit with five dead links nobody had touched:
 
 ```
-.claude/skills/blueprint/SKILL.md:76 links `./blueprint-coverage.html`, which is not there.
+plugins/borso-harness/skills/blueprint/SKILL.md:76 links `./blueprint-coverage.html`, which is not there.
 CLAUDE.md:7 links `./.claude/skills/blueprint/blueprint-coverage.html`, which is not there.
 docs/standards/README.md:114 links `../../.claude/skills/blueprint/blueprint-coverage.html`, …
 5 dead link(s). Fix the path, or drop the link if the target is gone.

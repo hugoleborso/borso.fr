@@ -117,8 +117,8 @@ docs/features/borso-fr/front-page-redesign/spec/design-*           # 4 fichiers 
 docs/adr/0002-vendor-react-bits-galaxy-shader.md                   # marqué superseded
 docs/adr/0003-react-bits-galaxy-as-react-component.md              # NEW
 docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md  # NEW — racine du défaut détecté
-.claude/skills/specification/standard.md                            # éradication (level 2)
-.claude/skills/technical-conception/standard.md                     # éradication (level 2)
+plugins/borso-harness/skills/specification/standard.md                            # éradication (level 2)
+plugins/borso-harness/skills/technical-conception/standard.md                     # éradication (level 2)
 ```
 
 Pas de changement `apps/borso-fr/package.json` (pas de nouvelle dépendance). Pas de changement `bin/app.ts` ou CDK (le `StaticSite` route le `dist/` qui contient tout le `site/`).

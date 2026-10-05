@@ -52,8 +52,8 @@ metrics; humans review monthly whether the input metrics still proxy the output 
 
 ## Where this is enforced
 
-- [`.claude/skills/specification/standard.md`](../../.claude/skills/specification/standard.md#input-vs-output-metrics-amazon-flywheel) — the rule.
-- [`.claude/skills/specification/template.md`](../../.claude/skills/specification/template.md) — *Why* and *Production strategy → Analytics* sections require both.
+- [`plugins/borso-harness/skills/specification/standard.md`](../../plugins/borso-harness/skills/specification/standard.md#input-vs-output-metrics-amazon-flywheel) — the rule.
+- [`plugins/borso-harness/skills/specification/template.md`](../../plugins/borso-harness/skills/specification/template.md) — *Why* and *Production strategy → Analytics* sections require both.
 - The `specification` skill's step-12 inconsistency sweep flags any "measurable objective" that
   reads like an output metric without a paired input metric.
 

@@ -70,7 +70,7 @@ reviewer bullet that kept producing the same finding became the
 
 ## Countermeasure
 
-`.claude/hooks/pretool-no-discarding-reset.sh`, a `PreToolUse` hook on `Bash`
+`plugins/borso-harness/hooks/pretool-no-discarding-reset.sh`, a `PreToolUse` hook on `Bash`
 that refuses `git reset --hard|--merge|--keep`, `git checkout -- <path>` and
 `git restore <path>` **while tracked modifications exist**, lists the files at
 stake, and names the two ways through:

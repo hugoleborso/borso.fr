@@ -10,9 +10,9 @@ decision becomes code` table ("where it lands"). A plan row that says
 + criteria + justification go here, not in a commit message or a code
 comment that rots.
 
-Conventions live in [`.claude/skills/adr/standard.md`](../../.claude/skills/adr/standard.md).
+Conventions live in [`plugins/borso-harness/skills/adr/standard.md`](../../plugins/borso-harness/skills/adr/standard.md).
 Drafting is `/adr` — the skill has two entry modes (see
-[`.claude/skills/adr/SKILL.md`](../../.claude/skills/adr/SKILL.md)):
+[`plugins/borso-harness/skills/adr/SKILL.md`](../../plugins/borso-harness/skills/adr/SKILL.md)):
 the interactive decision-support walk when a human invokes it, or a
 piloted mode that takes a pre-built payload when
 `/tech-lead-orchestrator` calls it.
@@ -71,6 +71,7 @@ No:
 | [0019](./0019-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | proposed | 2026-09-16 |
 | [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
 | [0022](./0022-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
+| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | proposed | 2026-10-05 |
 
 ### Data layer
 
@@ -94,6 +95,10 @@ No:
 
 - [`0021-api-gateway-websocket-pushes-banana-rush-round-state.md`](./0021-api-gateway-websocket-pushes-banana-rush-round-state.md) — an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
 
+### Harness
+
+- 0026 — the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
+
 ### Observability
 
 _(no entries yet)_
@@ -114,5 +119,5 @@ referenced in the diff. The ADR's *Decision* paragraph sits at level 1
 (always visible); its *Alternatives considered* + *Evaluation rubric*
 sit at level 2 (`<details>`); its *Implementation pointers* sit at
 level 3 (nested `<details>`). The skill at
-[`.claude/skills/open-pr/SKILL.md`](../../.claude/skills/open-pr/SKILL.md) carries the
+[`plugins/borso-harness/skills/open-pr/SKILL.md`](../../plugins/borso-harness/skills/open-pr/SKILL.md) carries the
 exact mapping.

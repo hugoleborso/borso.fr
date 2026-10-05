@@ -81,11 +81,13 @@ did not have.
 
 ## Countermeasure
 
-- **Vendor patch** `patches/stryker-mutator-vitest-runner/vitest-5-test-name-separator.patch`,
-  applied through `pnpm.patchedDependencies`: the runner picks `' > '` on
-  Vitest 5 and `' '` below it, and uses the same separator for the test ids it
-  records in the dry run and for the filter regex, so the two cannot disagree.
-  It ports stryker-js#6214; drop it once a release carries that fix.
+- **Vitest back on 4.1.11** (commit `fe902b76`, PR #129), and Dependabot
+  ignores the Vitest major until a runner release reads its results. A pnpm
+  patch porting stryker-js#6214 to 9.6.1 was written and verified on this
+  branch (23 of 23 killed on Vitest 5, every workspace at 100), then dropped
+  when `main` chose the pin: on Vitest 4 it changed nothing, and an unexercised
+  vendor patch is code nobody tests. Porting it again is the way to take
+  Vitest 5 before upstream releases.
 - `stryker.shared.js` resolves the sandbox with `realpathSync(tmpdir())`, so
   the path Stryker hands to Vitest is the one Vitest computes.
 
@@ -108,7 +110,7 @@ did not have.
 `stryker-zero-test-guard.js` is a Stryker reporter that every workspace loads
 through the shared config. It fails the run when any mutant is `Survived`, has
 covering tests, and completed zero of them, which no healthy runner can
-produce. With the patch reverted it prints:
+produce. On Vitest 5 without the upstream fix it prints:
 
 ```
 ERROR ZeroTestGuardReporter 23 mutant(s) have covering tests but their run executed none, ...
@@ -128,11 +130,8 @@ A lockfile change now starts the incremental file from empty, so the next
 Vitest or Stryker bump is measured in full on `main` instead of inheriting the
 verdicts of the previous toolchain.
 
-**Type:** vendor patch (level 3) — see Countermeasure. The upstream pull request
-already exists, so there is nothing for the operator to send.
-
 **Sibling defects swept:** every workspace's mutation config goes through
-`defineStrykerConfig`, so the guard, the patch and the sandbox path cover
+`defineStrykerConfig`, so the guard and the sandbox path cover
 `borso-fr`, `borsouvertures`, `last-loop-lepin`, `banana-rush`, `pragma`,
 `infra/cdk` and the root tooling at once.
 
