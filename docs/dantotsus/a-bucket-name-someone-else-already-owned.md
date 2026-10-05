@@ -4,8 +4,8 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: medium
 related-pr: 128
-fix-pr: TBD
-fix-commits: []
+fix-pr: 138
+fix-commits: [bdca2bf859a50487316d1f2b20c49c3cae61c5a0]
 eradication-level: 1
 time-to-detect: hours
 tags: [cdk, s3, talos]
@@ -52,7 +52,7 @@ If the constructs had known that, `StaticSite` would have offered a name only th
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** [PR #TBD](https://github.com/hugoleborso/borso.fr/pulls)
+**Reference:** [PR #138](https://github.com/hugoleborso/borso.fr/pull/138) · commit [`bdca2bf8`](https://github.com/hugoleborso/borso.fr/commit/bdca2bf859a50487316d1f2b20c49c3cae61c5a0)
 
 **The actual fix:** a name that contains the account id cannot be held by another account.
 
