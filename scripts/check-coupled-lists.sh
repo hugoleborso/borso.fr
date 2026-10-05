@@ -39,6 +39,8 @@ if [ -z "$workflow_paths" ]; then
   fail "read no trigger paths out of .github/workflows/architecture.yml — the shape of that file changed and this check went blind"
 fi
 
+hook_without_backslashes=$(tr -d '\\' <.husky/pre-commit)
+
 while IFS= read -r path; do
   [ -n "$path" ] || continue
   token=${path%\*\*}
@@ -46,7 +48,7 @@ while IFS= read -r path; do
   # The hook writes the path into a `grep -E` pattern, where a dot is escaped.
   # Compare against the hook with its backslashes removed, so `blueprint-utils\.ts`
   # and `blueprint-utils.ts` are the same path rather than two.
-  if ! tr -d '\\' <.husky/pre-commit | grep -qF -- "$token"; then
+  if ! grep -qF -- "$token" <<<"$hook_without_backslashes"; then
     fail "architecture.yml watches '$path' and .husky/pre-commit does not mention '$token'. A commit changing only that path reaches CI with a stale map."
   fi
 done <<<"$workflow_paths"
