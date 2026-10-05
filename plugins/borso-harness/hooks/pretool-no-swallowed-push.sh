@@ -49,10 +49,12 @@ block() {
   echo "[no-swallowed-push] $1" >&2
   echo "[no-swallowed-push] pipefail is off here, so the pipeline reports the last stage's status," >&2
   echo "[no-swallowed-push] and the gate's own message goes to stderr, which is not piped." >&2
+  echo "[no-swallowed-push] Nothing in this command ran, including any step before the $2," >&2
+  echo "[no-swallowed-push] so a \`git add\` chained in front of it staged nothing." >&2
   echo "[no-swallowed-push] Run it bare and read the tail afterwards:" >&2
-  echo "[no-swallowed-push]   git push -u origin <branch>" >&2
+  echo "[no-swallowed-push]   $3" >&2
   echo "[no-swallowed-push] or keep the status if the output is genuinely too long:" >&2
-  echo "[no-swallowed-push]   set -o pipefail; git push -u origin <branch> 2>&1 | tail -20" >&2
+  echo "[no-swallowed-push]   set -o pipefail; $3 2>&1 | tail -20" >&2
   "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "piped git push or git commit into another command, throwing away its exit status"
   exit 2
 }
@@ -64,11 +66,13 @@ block() {
 PIPELINES="$(sed -E 's/&&|;/\n/g' <<<"$COMMAND_TO_RUN")"
 
 if grep -qE '(^|[|[:space:]])git[[:space:]]+push([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
-  block "git push piped into another command throws away the push's exit status."
+  block "git push piped into another command throws away the push's exit status." \
+    "git push" "git push -u origin <branch>"
 fi
 
 if grep -qE '(^|[|[:space:]])git[[:space:]]+commit([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
-  block "git commit piped into another command throws away the commit hook's exit status."
+  block "git commit piped into another command throws away the commit hook's exit status." \
+    "git commit" "git commit -F <message-file>"
 fi
 
 exit 0
