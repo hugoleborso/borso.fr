@@ -5,7 +5,7 @@ detected-at: operator-deploy
 severity: medium
 related-pr: "#131"
 fix-pr: "#131"
-fix-commits: [a0cf303, ERADICATION_COMMIT]
+fix-commits: [a0cf303, bf93d2d]
 eradication-level: 2
 time-to-detect: weeks
 tags: [pragma, adr, cdk, dsql, gates]
@@ -86,7 +86,7 @@ that amends the decision. Run against the stack as it was before
 `a0cf303`, the check fails on both lists.
 
 **Reference:** [PR #131](https://github.com/hugoleborso/borso.fr/pull/131) ·
-commits `a0cf303`, `ERADICATION_COMMIT`
+commits `a0cf303`, `bf93d2d`
 
 **The actual fix:**
 

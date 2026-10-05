@@ -103,7 +103,7 @@ fi
 
 case "${1:-}" in
   '')
-    printf 'usage: scripts/kaizen.sh [--from <label>] "<what went wrong, one sentence>" | show\n' >&2
+    printf 'usage: scripts/kaizen.sh [--from <label>] "<what went wrong, one sentence>" | show | archive <docs-slug>/<feature>\n' >&2
     exit 1
     ;;
   show)

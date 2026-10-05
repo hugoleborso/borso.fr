@@ -5,7 +5,7 @@ detected-at: production
 severity: medium
 related-pr: "#131"
 fix-pr: "#131"
-fix-commits: [a727402, ERADICATION_COMMIT]
+fix-commits: [a727402, bf93d2d]
 eradication-level: 2
 time-to-detect: weeks
 tags: [pragma, react, css, tailwind, eslint]
@@ -76,7 +76,7 @@ and scenes are `div`s and stay allowed. Run against the shell as it was
 before `a727402`, the rule reports line 182.
 
 **Reference:** [PR #131](https://github.com/hugoleborso/borso.fr/pull/131) ·
-commits `a727402`, `ERADICATION_COMMIT`
+commits `a727402`, `bf93d2d`
 
 **The actual fix:**
 
