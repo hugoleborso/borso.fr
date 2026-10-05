@@ -44,15 +44,15 @@ for entry in "${SEQUENCE_GLOBS[@]}"; do
     [ -d "$directory" ] || continue
 
     duplicates="$(
-      find "$directory" -maxdepth 1 -name "*.${extension}" -exec basename {} \; |
-        sed -n 's/^\([0-9][0-9]*\)[-_].*/\1/p' |
+      find "$directory" -maxdepth 1 -name "*.${extension}" |
+        sed -n 's|^.*/\([0-9][0-9]*\)[-_][^/]*$|\1|p' |
         sort | uniq -d
     )"
 
     for number in $duplicates; do
       failed=1
       echo "[check-numbered-sequences] $directory: ${number} is claimed by more than one ${subject}:" >&2
-      find "$directory" -maxdepth 1 -name "${number}[-_]*.${extension}" -exec basename {} \; | sed 's/^/  /' | sort >&2
+      find "$directory" -maxdepth 1 -name "${number}[-_]*.${extension}" | sed 's|^.*/|  |' | sort >&2
     done
   done
 done
