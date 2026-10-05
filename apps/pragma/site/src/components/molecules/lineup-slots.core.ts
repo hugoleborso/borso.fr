@@ -10,6 +10,12 @@ export const INSTRUMENT_ICON_GLYPH = {
   piano: 'piano',
   drum: 'drum',
   music: 'music',
+  choir: 'choir',
+  brass: 'brass',
+  wind: 'wind',
+  strings: 'strings',
+  synth: 'synth',
+  stage: 'stage',
 } satisfies Record<InstrumentIcon, IconName>;
 
 export const SLOTS_BEYOND_MEMBER_COUNT = 2;

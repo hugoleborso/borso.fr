@@ -74,8 +74,21 @@ describe('instrumentFamilySchema', () => {
 });
 
 describe('instrumentIconSchema', () => {
-  it('knows exactly the six glyphs the application ships', () => {
-    for (const icon of ['mic-vocal', 'guitar', 'bass', 'piano', 'drum', 'music']) {
+  it('knows exactly the twelve glyphs the application ships', () => {
+    for (const icon of [
+      'mic-vocal',
+      'choir',
+      'guitar',
+      'bass',
+      'strings',
+      'piano',
+      'synth',
+      'brass',
+      'wind',
+      'drum',
+      'stage',
+      'music',
+    ]) {
       expect(instrumentIconSchema.safeParse(icon).success).toBe(true);
     }
     expect(instrumentIconSchema.safeParse('bouzouki').success).toBe(false);

@@ -2,7 +2,7 @@
 
 import { Avatar } from '../atoms/Avatar';
 import { composeClassName } from '../atoms/class-name.utils';
-import { memberInitial, paletteColorFromHex } from '../atoms/member-palette.utils';
+import { memberInitial } from '../atoms/member-palette.utils';
 
 export interface MemberChipProps {
   memberName: string;
@@ -22,13 +22,12 @@ export function MemberChip({
   title,
   className,
 }: MemberChipProps): JSX.Element {
-  const color = paletteColorFromHex(memberColor);
   return (
     <span
       className={composeClassName('inline-flex items-center gap-1.5', className)}
       title={title ?? memberName}
     >
-      <Avatar initials={memberInitial(memberName)} color={color} size={size} />
+      <Avatar initials={memberInitial(memberName)} color={memberColor} size={size} />
       {withName && <span className="text-xs font-medium text-ink-700">{memberName}</span>}
     </span>
   );
