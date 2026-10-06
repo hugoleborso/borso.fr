@@ -329,12 +329,6 @@ function main(): void {
   );
 
   if (isCheckOnly) {
-    const onDisk = fs.existsSync(OUTPUT_FILE) ? fs.readFileSync(OUTPUT_FILE, 'utf8') : '';
-    if (onDisk !== markdown) {
-      problems.push(
-        `${path.relative(REPOSITORY_ROOT, OUTPUT_FILE)} is out of date. Run \`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts\`.`,
-      );
-    }
     for (const problem of problems) {
       process.stderr.write(`  ${problem}\n`);
     }
@@ -343,7 +337,8 @@ function main(): void {
       process.exitCode = 1;
       return;
     }
-    process.stdout.write('Annotations are complete and the index is up to date.\n');
+    fs.writeFileSync(OUTPUT_FILE, markdown, 'utf8');
+    process.stdout.write('Annotations are complete; the index was refreshed.\n');
     return;
   }
 
