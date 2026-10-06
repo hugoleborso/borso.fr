@@ -155,7 +155,6 @@ Note the values for:
 - `/borso/shared/prod-deploy-role-arn`
 - `/borso/shared/preview-deploy-role-arn`
 - `/borso/shared/shared-deploy-role-arn`
-- `/borso/shared/talos-deploy-role-arn` (goes to the `hugoleborso/talos` repository, not this one; see [`consuming-borso-infra-from-another-repo.md`](./consuming-borso-infra-from-another-repo.md))
 
 You'll paste them into GitHub in the next step.
 
@@ -431,7 +430,6 @@ screenshot, which is the behaviour from before ADR-0023 rather than a failure.
 | `/borso/shared/prod-deploy-role-arn` | `ProdDeployRole` | step 9 (GitHub Variable) |
 | `/borso/shared/preview-deploy-role-arn` | `PreviewDeployRole` | step 9 |
 | `/borso/shared/shared-deploy-role-arn` | `SharedInfraDeployRole` | step 9 (reserved) |
-| `/borso/shared/talos-deploy-role-arn` | `TalosDeployRole` | the `TALOS_DEPLOY_ROLE_ARN` variable of `hugoleborso/talos` |
 
 ### Published by each app's prod stack (`/borso/<app>/*`)
 

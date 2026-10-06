@@ -85,10 +85,16 @@ export async function flushTasks(): Promise<void> {
   });
 }
 
-const MAXIMUM_FLUSHES = 200;
+const WALL_CLOCK_SETTLE_BUDGET_MS = 4000;
 
 export async function flushUntil(isSettled: () => boolean): Promise<void> {
-  for (let flush = 0; flush < MAXIMUM_FLUSHES && !isSettled(); flush += 1) {
+  const deadline = Date.now() + WALL_CLOCK_SETTLE_BUDGET_MS;
+  while (!isSettled()) {
+    if (Date.now() > deadline) {
+      throw new Error(
+        `flushUntil: the condition did not hold within ${WALL_CLOCK_SETTLE_BUDGET_MS} ms.`,
+      );
+    }
     await flushTasks();
   }
 }

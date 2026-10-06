@@ -690,7 +690,6 @@
                 "arn:aws:iam::123456789012:role/ProdDeployRole",
                 "arn:aws:iam::123456789012:role/PreviewDeployRole",
                 "arn:aws:iam::123456789012:role/SharedInfraDeployRole",
-                "arn:aws:iam::123456789012:role/TalosDeployRole",
                 "arn:aws:iam::123456789012:role/borso-shared-*",
                 "arn:aws:iam::123456789012:role/cdk-*",
                 "arn:aws:iam::123456789012:policy/*"
@@ -723,72 +722,6 @@
         "Roles": [
           {
             "Ref": "SharedInfraDeployRoleFB0650A2"
-          }
-        ]
-      }
-    },
-    "TalosDeployRoleA130F831": {
-      "Type": "AWS::IAM::Role",
-      "Properties": {
-        "AssumeRolePolicyDocument": {
-          "Statement": [
-            {
-              "Action": "sts:AssumeRoleWithWebIdentity",
-              "Condition": {
-                "StringEquals": {
-                  "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
-                },
-                "StringLike": {
-                  "token.actions.githubusercontent.com:sub": [
-                    "repo:hugoleborso@44852104/talos@1401805496:environment:prod"
-                  ]
-                }
-              },
-              "Effect": "Allow",
-              "Principal": {
-                "Federated": {
-                  "Ref": "GithubOidc86785739"
-                }
-              }
-            }
-          ],
-          "Version": "2012-10-17"
-        },
-        "Description": "Used by the hugoleborso/talos deploy workflow, from its prod GitHub environment. It holds no resource permissions of its own: it can only hand off to the CDK bootstrap roles and list CloudFront distributions for the alias preflight.",
-        "MaxSessionDuration": 3600,
-        "RoleName": "TalosDeployRole"
-      }
-    },
-    "TalosDeployRoleDefaultPolicyBE420AB6": {
-      "Type": "AWS::IAM::Policy",
-      "Properties": {
-        "PolicyDocument": {
-          "Statement": [
-            {
-              "Action": [
-                "sts:AssumeRole",
-                "sts:TagSession"
-              ],
-              "Effect": "Allow",
-              "Resource": [
-                "arn:aws:iam::123456789012:role/cdk-hnb659fds-deploy-role-123456789012-*",
-                "arn:aws:iam::123456789012:role/cdk-hnb659fds-file-publishing-role-123456789012-*",
-                "arn:aws:iam::123456789012:role/cdk-hnb659fds-image-publishing-role-123456789012-*",
-                "arn:aws:iam::123456789012:role/cdk-hnb659fds-lookup-role-123456789012-*"
-              ]
-            },
-            {
-              "Action": "cloudfront:ListDistributions",
-              "Effect": "Allow",
-              "Resource": "*"
-            }
-          ],
-          "Version": "2012-10-17"
-        },
-        "PolicyName": "TalosDeployRoleDefaultPolicyBE420AB6",
-        "Roles": [
-          {
-            "Ref": "TalosDeployRoleA130F831"
           }
         ]
       }
@@ -1032,19 +965,6 @@
         "Value": {
           "Fn::GetAtt": [
             "SharedInfraDeployRoleFB0650A2",
-            "Arn"
-          ]
-        }
-      }
-    },
-    "TalosDeployRoleArnParam73C9AB7F": {
-      "Type": "AWS::SSM::Parameter",
-      "Properties": {
-        "Name": "/borso/shared/talos-deploy-role-arn",
-        "Type": "String",
-        "Value": {
-          "Fn::GetAtt": [
-            "TalosDeployRoleA130F831",
             "Arn"
           ]
         }
