@@ -72,7 +72,18 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col">
-      <BackLink to="/setlists" label={t('setlist.title')} />
+      <div className="flex items-center justify-between gap-2 mb-1 sm:mb-3">
+        <BackLink to="/setlists" label={t('setlist.title')} />
+        <SetlistHeaderActions
+          setlistId={setlistId}
+          name={setlist.name}
+          displayedName={displayedName}
+          onDeleted={() => navigateTo('/setlists')}
+          trailing={
+            <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
+          }
+        />
+      </div>
       <PageHeader
         crumb={t('setlist.crumb')}
         title={displayedName}
@@ -82,16 +93,6 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
             : `${t('setlist.playedIn')} ${sessions
                 .map((session) => session.venue ?? formatSessionDate(session.date, i18n.language))
                 .join(' · ')}`
-        }
-      />
-
-      <SetlistHeaderActions
-        setlistId={setlistId}
-        name={setlist.name}
-        displayedName={displayedName}
-        onDeleted={() => navigateTo('/setlists')}
-        trailing={
-          <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
         }
       />
 

@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import type { SongTally } from '../../lib/queries/voting.utils';
 import { moveWithin, reorderByDrop } from '../../routes/setlists/vote-proposal.core';
 import { Button } from '../atoms/Button';
+import { StickyFormActions } from '../atoms/StickyFormActions';
 import type { TallySong } from './VoteTally';
 import { VoteProposalRow } from './VoteProposalRow';
 
@@ -129,14 +130,17 @@ export function VoteClosePanel({
           </ul>
         </div>
       )}
-      <Button
-        type="button"
-        variant="accent"
-        disabled={keptSongIds.length === 0 || isClosing}
-        onClick={() => onClose(keptSongIds)}
-      >
-        {t('voting.closeSubmit')}
-      </Button>
+      <StickyFormActions>
+        <Button
+          type="button"
+          variant="accent"
+          className="flex-1"
+          disabled={keptSongIds.length === 0 || isClosing}
+          onClick={() => onClose(keptSongIds)}
+        >
+          {t('voting.closeSubmit')}
+        </Button>
+      </StickyFormActions>
     </section>
   );
 }

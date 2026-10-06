@@ -26,6 +26,8 @@ const NEW_TASK_TITLE = 'Change the snare skin';
 const NEW_BAR_NAME = 'Le Supersonic';
 const SEEDED_SETLIST_NAME = 'Set principal';
 const VOTE_TARGET_SONG_COUNT = 5;
+const SCORED_SONG_COUNT = 2;
+const VOTE_PAGE_SUFFIX = '/vote';
 const SCENE_ROUTE_SUFFIX = '/scene';
 
 function bottomTab(page: Page, name: string) {
@@ -41,7 +43,7 @@ function isSetlistList(value: unknown): value is { setlists: SeededSetlist[] } {
   return typeof value === 'object' && value !== null && 'setlists' in value;
 }
 
-async function openVoteOnSeededSetlist(request: APIRequestContext): Promise<void> {
+async function openVoteOnSeededSetlist(request: APIRequestContext): Promise<string> {
   const listed: unknown = await (await request.get('/api/setlists')).json();
   const setlist = isSetlistList(listed)
     ? listed.setlists.find((candidate) => candidate.name === SEEDED_SETLIST_NAME)
@@ -50,6 +52,22 @@ async function openVoteOnSeededSetlist(request: APIRequestContext): Promise<void
   await request.put(`/api/setlists/${setlist.id}/vote-status`, {
     data: { status: 'voting', targetSongCount: VOTE_TARGET_SONG_COUNT },
   });
+  return setlist.id;
+}
+
+async function openVoteWithTwoScores(request: APIRequestContext): Promise<void> {
+  const setlistId = await openVoteOnSeededSetlist(request);
+  const listed: unknown = await (await request.get(`/api/setlists/${setlistId}/entries`)).json();
+  const songIds = isEntryList(listed) ? listed.entries.map((entry) => entry.songId) : [];
+  for (const [index, songId] of songIds.slice(0, SCORED_SONG_COUNT).entries()) {
+    await request.put(`/api/setlists/${setlistId}/votes/${songId}`, {
+      data: { points: SCORED_SONG_COUNT - index },
+    });
+  }
+}
+
+function isEntryList(value: unknown): value is { entries: { songId: string }[] } {
+  return typeof value === 'object' && value !== null && 'entries' in value;
 }
 
 async function addSongOutsideTheSetlist(request: APIRequestContext): Promise<void> {
@@ -94,7 +112,9 @@ export const JOURNEYS: readonly Journey[] = [
     id: 'vote',
     title: 'Give points in the open setlist vote',
     budget: { taps: 3, huntedTaps: 0, modelledSeconds: 9 },
-    prepare: openVoteOnSeededSetlist,
+    prepare: async (request) => {
+      await openVoteOnSeededSetlist(request);
+    },
     run: async ({ page, driver }) => {
       await driver.tap(nextConcertAction(page, 'Vote now'), 'Vote now');
       await driver.tap(page.getByRole('button', { name: /^Score / }).first(), 'score a song');
@@ -169,6 +189,31 @@ export const JOURNEYS: readonly Journey[] = [
       await driver.type(page.getByPlaceholder('New bar'), NEW_BAR_NAME, 'name');
       await driver.tap(page.getByRole('button', { name: 'Add', exact: true }), 'Add');
       await page.getByText(NEW_BAR_NAME).first().waitFor();
+    },
+  },
+  {
+    id: 'close-vote',
+    title: 'Close the vote and keep its result',
+    budget: { taps: 3, huntedTaps: 0, modelledSeconds: 9 },
+    prepare: openVoteWithTwoScores,
+    run: async ({ page, driver }) => {
+      await driver.tap(nextConcertAction(page, 'Vote now'), 'Vote now');
+      await driver.tap(page.getByRole('button', { name: 'Close the vote' }), 'Close the vote');
+      await driver.tap(page.getByRole('button', { name: 'Make this the setlist' }), 'confirm');
+      await page.waitForURL((url) => !url.pathname.endsWith(VOTE_PAGE_SUFFIX));
+    },
+  },
+  {
+    id: 'close-empty-vote',
+    title: 'Close a vote nobody scored',
+    budget: { taps: 2, huntedTaps: 0, modelledSeconds: 6 },
+    prepare: async (request) => {
+      await openVoteOnSeededSetlist(request);
+    },
+    run: async ({ page, driver }) => {
+      await driver.tap(nextConcertAction(page, 'Vote now'), 'Vote now');
+      await driver.tap(page.getByRole('button', { name: 'Close the vote' }), 'Close the vote');
+      await page.waitForURL((url) => !url.pathname.endsWith(VOTE_PAGE_SUFFIX));
     },
   },
 ];

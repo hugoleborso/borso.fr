@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { EnergySparkline } from '../molecules/EnergySparkline';
 import { type FilterPillMember, MemberFilterPills } from '../molecules/MemberFilterPills';
 
-const ENERGY_HEIGHT_COMPACT_PX = 56;
+const ENERGY_HEIGHT_COMPACT_PX = 40;
 const ENERGY_HEIGHT_PX = 72;
 
 export interface SetlistToolbarProps {

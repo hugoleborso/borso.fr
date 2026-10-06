@@ -34,7 +34,10 @@ export function MemberFilterPills({
   const isAllActive = selectedMemberId === null;
   return (
     <div
-      className={composeClassName('flex flex-wrap gap-2', className)}
+      className={composeClassName(
+        '-mx-4 px-4 sm:mx-0 sm:px-0 flex flex-nowrap sm:flex-wrap gap-2 overflow-x-auto sm:overflow-visible [scrollbar-width:none]',
+        className,
+      )}
       role="tablist"
       aria-label={t('lineup.filterByMember')}
     >

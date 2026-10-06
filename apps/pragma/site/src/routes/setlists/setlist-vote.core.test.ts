@@ -4,6 +4,8 @@ import {
   indexSongsById,
   isVotingPageState,
   projectPointsBySongId,
+  selectCloseIntent,
+  selectVoteHeaderAction,
   selectVotePageState,
 } from './setlist-vote.core';
 
@@ -71,5 +73,24 @@ describe('the vote page projections', () => {
       'song-b': 0,
     });
     expect(projectPointsBySongId([], () => 0)).toEqual({});
+  });
+});
+
+describe('selectCloseIntent', () => {
+  it('reviews the proposal once a song carries points', () => {
+    expect(selectCloseIntent(1)).toBe('review-proposal');
+  });
+
+  it('locks the setlist as it stands when nobody scored', () => {
+    expect(selectCloseIntent(0)).toBe('lock-unchanged');
+  });
+});
+
+describe('selectVoteHeaderAction', () => {
+  it('offers to close a running vote, to go back while closing, and to open one otherwise', () => {
+    expect(selectVoteHeaderAction('voting')).toBe('close-vote');
+    expect(selectVoteHeaderAction('closing')).toBe('back-to-vote');
+    expect(selectVoteHeaderAction('locked')).toBe('open-vote');
+    expect(selectVoteHeaderAction('loading')).toBe('open-vote');
   });
 });

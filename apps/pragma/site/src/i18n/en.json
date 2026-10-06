@@ -262,7 +262,7 @@
     "togglePrimary": "Main instrument"
   },
   "lineup": {
-    "allMembers": "All members",
+    "allMembers": "All",
     "cancel": "Cancel",
     "editDefault": "Default lineup",
     "editOverride": "Lineup (this set)",
@@ -464,7 +464,8 @@
     "transitionCovered": "Transition held",
     "transitionNobody": "nobody keeps an instrument across these two songs",
     "transitionRisky": "Risky transition",
-    "untitled": "Untitled setlist"
+    "untitled": "Untitled setlist",
+    "moreActions": "More actions"
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
@@ -523,7 +524,8 @@
     "tallyEmpty": "Nobody has scored a song yet.",
     "tapToScore": "Score {{title}}",
     "targetSongCount": "How many songs?",
-    "untitled": "Unnamed setlist"
+    "untitled": "Unnamed setlist",
+    "backToVote": "Back to the vote"
   },
   "audience": {
     "pageCrumb": "Tonight",
