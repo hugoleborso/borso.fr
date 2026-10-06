@@ -140,7 +140,8 @@ Existing history is left alone. The decision stops the growth; it does not try t
 - Skill contract: [`plugins/borso-harness/skills/visual-validation/standard.md`](../../plugins/borso-harness/skills/visual-validation/standard.md)
   § *Where evidence lives*.
 - Skill steps: [`plugins/borso-harness/skills/visual-validation/SKILL.md`](../../plugins/borso-harness/skills/visual-validation/SKILL.md)
-  steps 8 and 9, and § *Visual evidence in the PR body*.
+  steps 8 and 9, and [`plugins/borso-harness/skills/open-pr/SKILL.md`](../../plugins/borso-harness/skills/open-pr/SKILL.md)
+  step 5b, which runs the upload and writes the folder link.
 - Commit: {{SHA — stamped by /after-task-dantotsus on merge}}
 - Related ADRs: ADR-0014 (generated files are not committed) — the same input/output split,
   applied to evidence rather than to generator output.

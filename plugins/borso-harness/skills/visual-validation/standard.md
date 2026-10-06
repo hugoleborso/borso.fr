@@ -94,7 +94,7 @@ There is no rounding up. PASS_EXCEPT_UNVERIFIABLE is its own verdict, not a flav
 ## Where evidence lives
 
 The report is always committed. Its screenshots split by verdict, per
-[ADR-0022](../../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md):
+[ADR-0023](../../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md):
 
 - **A screenshot a FAIL row references is committed**, beside the report, as before. A FAIL
   report without the screenshot it references is unrebuttable, and that argument is the whole
