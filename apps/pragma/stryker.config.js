@@ -9,6 +9,7 @@ export default defineStrykerConfig({
     'site/src/**/*.core.ts',
     'site/src/**/*.utils.ts',
     'site/src/**/*.adapter.ts',
+    'scripts/**/*.core.ts',
   ],
   vitest: { configFile: 'vitest.mutation.config.ts' },
 });

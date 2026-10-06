@@ -24,7 +24,8 @@
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all && ../../scripts/preflight-cloudfront-aliases.sh cdk.out && cdk deploy --all --require-approval never",
     "destroy": "pnpm --filter @borso/infra run build && pnpm build && cdk destroy \"pragma-pr-${PR_NUMBER:?PR_NUMBER env var required — pragma destroy targets the per-PR app stack only, never the shared pragma-cluster stack}\" --force",
-    "test:mutation": "stryker run"
+    "test:mutation": "stryker run",
+    "task-speed": "tsx scripts/task-speed/task-speed.setup.ts"
   },
   "dependencies": {
     "@aws-sdk/client-s3": "catalog:",
@@ -76,6 +77,7 @@
     "constructs": "catalog:",
     "drizzle-kit": "catalog:",
     "jsdom": "catalog:",
+    "playwright": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",

@@ -46,7 +46,7 @@
     "aws-cdk-lib": "catalog:",
     "constructs": "catalog:",
     "jsdom": "catalog:",
-    "playwright": "^1.62.1",
+    "playwright": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
     "vite": "catalog:",
