@@ -52,9 +52,11 @@ fi
 # Blueprint annotations, whenever source changed. A `@Blueprint` missing a tag
 # still lands in the index with an empty cell, and a `// @FollowsBlueprint` that
 # names nothing still reads as adoption, so neither fails anything on its own.
-# The check also refuses a stale index, which is what stops an annotation from
-# being added without the generated file catching up. One pass over the tree,
-# well under a second, so it belongs on the commit.
+# A passing check rewrites the index rather than comparing it: the index is a
+# gitignored output, so a stale copy is never something the commit got wrong,
+# and refusing it only made the author run the generator by hand and commit
+# again (docs/dantotsus/the-gate-that-refused-its-own-output.md). One pass over
+# the tree, well under a second, so it belongs on the commit.
 #
 # The three generated artefacts are checked together, and every stale one is
 # named in a single rejection. Run under `set -e` as three consecutive
@@ -150,7 +152,7 @@ if git diff --cached --name-only |
 fi
 
 if [ -n "$generator_failures" ]; then
-  echo "[pre-commit] ERROR: generated files are stale. Run all of these, then commit again:" >&2
+  echo "[pre-commit] ERROR: these checks refused the commit; each printed its reason above. Fix that, then rerun with --check to confirm:" >&2
   printf '%s' "$generator_failures" >&2
   exit 1
 fi
