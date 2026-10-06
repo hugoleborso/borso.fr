@@ -11,5 +11,4 @@ export const SHARED_SSM_PARAMETERS = {
   prodDeployRoleArn: '/borso/shared/prod-deploy-role-arn',
   previewDeployRoleArn: '/borso/shared/preview-deploy-role-arn',
   sharedDeployRoleArn: '/borso/shared/shared-deploy-role-arn',
-  talosDeployRoleArn: '/borso/shared/talos-deploy-role-arn',
 } as const;

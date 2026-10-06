@@ -99,6 +99,21 @@ describe('SharedStack', () => {
       expect(json).toContain('repo:hugoleborso/borso.fr:environment:prod-shared');
     });
 
+    it('trusts no repository other than hugoleborso/borso.fr', () => {
+      const foreignClaims = trustedSubClaims(tpl).filter(
+        (claim) => !claim.startsWith('repo:hugoleborso/borso.fr:'),
+      );
+      expect(foreignClaims).toStrictEqual([]);
+    });
+
+    it('no longer creates TalosDeployRole, since talos deploys from apps/talos with ProdDeployRole', () => {
+      expect(
+        Object.keys(
+          tpl.findResources('AWS::IAM::Role', { Properties: { RoleName: 'TalosDeployRole' } }),
+        ),
+      ).toStrictEqual([]);
+    });
+
     it('trusts only sub claims whose repository prefix was read from GitHub with scripts/print-oidc-subject.sh', () => {
       const prefixes = recordedSubjectPrefixes();
       const claims = trustedSubClaims(tpl);
@@ -132,82 +147,6 @@ describe('SharedStack', () => {
         });
       });
       expect(hasDsql).toBe(true);
-    });
-  });
-
-  describe('TalosDeployRole', () => {
-    const tpl = synth();
-    const talosRoleLogicalIds = Object.keys(
-      tpl.findResources('AWS::IAM::Role', { Properties: { RoleName: 'TalosDeployRole' } }),
-    );
-    const talosRoleLogicalId = talosRoleLogicalIds[0] ?? '';
-    const talosPolicyStatements = resourcesOfType(tpl, 'AWS::IAM::Policy')
-      .filter((policy) => JSON.stringify(policy.Properties?.Roles).includes(talosRoleLogicalId))
-      .flatMap((policy) => {
-        const policyDocument = policy.Properties?.PolicyDocument;
-        return isObject(policyDocument) && Array.isArray(policyDocument.Statement)
-          ? policyDocument.Statement.filter(isObject)
-          : [];
-      });
-    const grantedActions = talosPolicyStatements.flatMap((statement): unknown[] =>
-      Array.isArray(statement.Action) ? statement.Action : [statement.Action],
-    );
-
-    it('exists exactly once', () => {
-      expect(talosRoleLogicalIds).toHaveLength(1);
-    });
-
-    it('trusts only the prod environment of hugoleborso/talos, in the immutable subject format its tokens carry', () => {
-      tpl.hasResourceProperties('AWS::IAM::Role', {
-        RoleName: 'TalosDeployRole',
-        AssumeRolePolicyDocument: Match.objectLike({
-          Statement: [
-            Match.objectLike({
-              Action: 'sts:AssumeRoleWithWebIdentity',
-              Condition: {
-                StringEquals: { 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com' },
-                StringLike: {
-                  'token.actions.githubusercontent.com:sub': [
-                    'repo:hugoleborso@44852104/talos@1401805496:environment:prod',
-                  ],
-                },
-              },
-            }),
-          ],
-        }),
-      });
-    });
-
-    it('carries no managed policy, so PowerUserAccess never reaches the talos repository', () => {
-      tpl.hasResourceProperties('AWS::IAM::Role', {
-        RoleName: 'TalosDeployRole',
-        ManagedPolicyArns: Match.absent(),
-      });
-    });
-
-    it('grants only the hand-off to the CDK bootstrap roles and the alias preflight listing', () => {
-      expect(
-        [...new Set(grantedActions.map(String))].sort((left, right) => left.localeCompare(right)),
-      ).toEqual(['cloudfront:ListDistributions', 'sts:AssumeRole', 'sts:TagSession']);
-    });
-
-    it('can assume only the four CDK bootstrap roles of this account', () => {
-      const assumeStatement = talosPolicyStatements.find((statement) =>
-        JSON.stringify(statement.Action).includes('sts:AssumeRole'),
-      );
-      const resources = JSON.stringify(assumeStatement?.Resource);
-      for (const kind of ['deploy', 'file-publishing', 'image-publishing', 'lookup']) {
-        expect(resources).toContain(`:role/cdk-hnb659fds-${kind}-role-`);
-      }
-      expect(resources).not.toContain(':role/*');
-      expect(resources).not.toContain('ProdDeployRole');
-    });
-
-    it('is a role the shared stack can create and update with its own deploy role', () => {
-      const sharedDeployResources = JSON.stringify(
-        resourcesOfType(tpl, 'AWS::IAM::Policy').map((policy) => policy.Properties),
-      );
-      expect(sharedDeployResources).toContain(':role/TalosDeployRole');
     });
   });
 
@@ -315,19 +254,21 @@ describe('SharedStack', () => {
       '/borso/shared/prod-deploy-role-arn',
       '/borso/shared/preview-deploy-role-arn',
       '/borso/shared/shared-deploy-role-arn',
-      '/borso/shared/talos-deploy-role-arn',
     ];
 
     it.each(expectedParams)('publishes %s', (name) => {
       tpl.hasResourceProperties('AWS::SSM::Parameter', { Name: name });
     });
 
-    it('does NOT publish /borso/shared/integ-role-arn (dropped)', () => {
-      const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map(
-        (param) => param.Properties?.Name,
-      );
-      expect(names).not.toContain('/borso/shared/integ-role-arn');
-    });
+    it.each(['/borso/shared/integ-role-arn', '/borso/shared/talos-deploy-role-arn'])(
+      'does NOT publish %s (dropped)',
+      (droppedName) => {
+        const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map(
+          (param) => param.Properties?.Name,
+        );
+        expect(names).not.toContain(droppedName);
+      },
+    );
   });
 
   describe('budgets', () => {
