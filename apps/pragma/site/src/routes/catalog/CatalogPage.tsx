@@ -153,15 +153,20 @@ export function CatalogPage(): JSX.Element {
   return (
     <div className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
       <NextConcertStrip />
-      <PageHeader crumb={t('catalog.crumb')} title={t('catalog.title')} />
+      <PageHeader
+        crumb={t('catalog.crumb')}
+        title={t('catalog.title')}
+        inline={
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder={t('catalog.searchPlaceholder')}
+          />
+        }
+      />
       {newSongControl}
 
       <div className="flex gap-2 sm:gap-3.5 items-center mb-3 sm:mb-5 flex-wrap">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder={t('catalog.searchPlaceholder')}
-        />
         <FilterPillGroup options={filterOptions} value={statusFilter} onChange={setStatusFilter} />
       </div>
 

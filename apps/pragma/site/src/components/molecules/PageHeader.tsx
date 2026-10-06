@@ -7,6 +7,7 @@ export interface PageHeaderProps {
   title: ReactNode;
   subtitle?: ReactNode;
   actions?: ReactNode;
+  inline?: ReactNode;
   className?: string;
 }
 
@@ -16,6 +17,7 @@ export function PageHeader({
   title,
   subtitle,
   actions,
+  inline,
   className,
 }: PageHeaderProps): JSX.Element {
   return (
@@ -24,12 +26,22 @@ export function PageHeader({
         <Crumb className="hidden sm:block mb-2">{crumb}</Crumb>
       )}
       <div className="flex items-end justify-between gap-x-4 gap-y-2 flex-wrap">
-        <div className="min-w-0">
-          <h1 className="font-display italic text-[26px] sm:text-[44px] lg:text-[56px] leading-[0.98] sm:leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 sm:mb-1">
-            {title}
-          </h1>
-          {subtitle !== undefined && subtitle !== null && (
-            <div className="text-xs sm:text-[13px] text-ink-500">{subtitle}</div>
+        <div
+          className={composeClassName(
+            'min-w-0',
+            inline !== undefined && 'flex-1 flex items-center gap-3 sm:gap-6',
+          )}
+        >
+          <div className="min-w-0 shrink-0">
+            <h1 className="font-display italic text-[26px] sm:text-[44px] lg:text-[56px] leading-[0.98] sm:leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 sm:mb-1">
+              {title}
+            </h1>
+            {subtitle !== undefined && subtitle !== null && (
+              <div className="text-xs sm:text-[13px] text-ink-500">{subtitle}</div>
+            )}
+          </div>
+          {inline === undefined ? null : (
+            <div className="flex-1 min-w-0 sm:max-w-[380px]">{inline}</div>
           )}
         </div>
         {actions !== undefined && actions !== null && (
