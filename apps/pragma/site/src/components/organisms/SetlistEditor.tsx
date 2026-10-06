@@ -259,17 +259,23 @@ export function SetlistEditor({
       ) : null}
       <BottomActionBar>
         <Button
-          variant="ghost"
-          size="sm"
+          variant="default"
+          size="icon"
+          aria-label={orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
+          title={t('setlist.copyOrder')}
           onClick={() => void copyOrderToClipboard()}
           disabled={setlistEntries.length === 0}
         >
-          <Icon name={orderCopied ? 'check' : 'text'} size={14} />
-          {orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
+          <Icon name={orderCopied ? 'check' : 'copy'} size={20} />
         </Button>
-        <Button variant="accent" size="sm" onClick={() => setPickerOpen(true)}>
-          <Icon name="plus" size={14} />
-          {t('setlist.addSong')}
+        <Button
+          variant="accent"
+          size="icon"
+          aria-label={t('setlist.addSong')}
+          title={t('setlist.addSong')}
+          onClick={() => setPickerOpen(true)}
+        >
+          <Icon name="plus" size={22} />
         </Button>
       </BottomActionBar>
       <SetlistSongPicker

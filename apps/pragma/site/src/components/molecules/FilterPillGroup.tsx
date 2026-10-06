@@ -23,7 +23,7 @@ export function FilterPillGroup<TValue extends string>({
   return (
     <div
       className={composeClassName(
-        'flex flex-wrap max-w-full gap-1 p-[3px] bg-bg-sunk rounded-lg',
+        'flex flex-nowrap sm:flex-wrap w-full sm:w-auto max-w-full overflow-x-auto sm:overflow-visible [scrollbar-width:none] gap-1 p-[3px] bg-bg-sunk rounded-lg',
         className,
       )}
       role="tablist"

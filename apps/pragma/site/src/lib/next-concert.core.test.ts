@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { buildMemberPartPath, joinConcertHeading, selectNextConcert } from './next-concert.core';
+import { buildMemberPartPath, selectNextConcert, splitConcertHeading } from './next-concert.core';
 
 const NOW = Date.parse('2026-05-01T12:00:00.000Z');
 
@@ -41,13 +41,17 @@ describe('buildMemberPartPath', () => {
   });
 });
 
-describe('joinConcertHeading', () => {
-  it('puts the venue before the date', () => {
-    expect(joinConcertHeading('Le Petit Bain', 'Tue, Oct 13')).toBe('Le Petit Bain · Tue, Oct 13');
+describe('splitConcertHeading', () => {
+  it('puts the venue first and the date under it', () => {
+    expect(splitConcertHeading('Le Petit Bain', 'Tue, Oct 13')).toStrictEqual({
+      primary: 'Le Petit Bain',
+      secondary: 'Tue, Oct 13',
+    });
   });
 
-  it('falls back to the date alone when no venue is known', () => {
-    expect(joinConcertHeading(null, 'Tue, Oct 13')).toBe('Tue, Oct 13');
-    expect(joinConcertHeading('', 'Tue, Oct 13')).toBe('Tue, Oct 13');
+  it('shows the date alone when no venue is known', () => {
+    const dateOnly = { primary: 'Tue, Oct 13', secondary: null };
+    expect(splitConcertHeading(null, 'Tue, Oct 13')).toStrictEqual(dateOnly);
+    expect(splitConcertHeading('', 'Tue, Oct 13')).toStrictEqual(dateOnly);
   });
 });

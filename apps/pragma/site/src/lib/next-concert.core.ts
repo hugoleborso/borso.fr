@@ -40,6 +40,12 @@ export function buildMemberPartPath(setlistId: string, memberId: string): string
   return `/setlists/${setlistId}?${query.toString()}`;
 }
 
-export function joinConcertHeading(venue: string | null, dateLabel: string): string {
-  return venue === null || venue === '' ? dateLabel : `${venue} · ${dateLabel}`;
+export interface ConcertHeading {
+  readonly primary: string;
+  readonly secondary: string | null;
+}
+
+export function splitConcertHeading(venue: string | null, dateLabel: string): ConcertHeading {
+  if (venue === null || venue === '') return { primary: dateLabel, secondary: null };
+  return { primary: venue, secondary: dateLabel };
 }

@@ -232,10 +232,9 @@ export function BarsPage(): JSX.Element {
   };
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
       <PageHeader
         title={t('bars.title')}
-        subtitle={t('bars.subtitle')}
         actions={
           <div className="hidden lg:inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg">
             <button

@@ -3,7 +3,6 @@
     "addPasskey": "Ajouter une passkey",
     "changePassword": "Changer de mot de passe",
     "contactDetails": "Coordonnées",
-    "contactDetailsHint": "Elles signent le message de démarchage copié depuis la page bars.",
     "contactDetailsSaved": "Coordonnées enregistrées.",
     "currentPassword": "Mot de passe actuel",
     "email": "E-mail",
@@ -83,16 +82,14 @@
     "statusContacted": "Contacté",
     "statusLead": "Piste",
     "statusPlayed": "Joué",
-    "subtitle": "Pistes, contacts et historique des relances.",
     "support": "Aide disponible",
     "supportLights": "Lumières",
-    "supportNoneHint": "Ne coche rien si le bar ne prête rien.",
     "supportPaSystem": "Sono",
     "supportSoundEngineer": "Ingénieur du son",
     "title": "Bars",
     "viewKanban": "Kanban",
     "viewList": "Liste",
-    "quickAddLabel": "Nouveau bar à démarcher, juste le nom",
+    "quickAddLabel": "Nouveau bar",
     "quickAddSubmit": "Ajouter",
     "outreachTemplateSave": "Enregistrer le message"
   },
@@ -108,7 +105,6 @@
     "createSearched": "Créer « {{title}} »",
     "crumb": "Répertoire",
     "deezerTrackId": "Identifiant Deezer",
-    "deezerTrackIdHint": "Le nombre dans une adresse deezer.com/track/…. Rempli par la recherche ci-dessus ; saisis-le ici pour lier un morceau à la main.",
     "deezerTrackIdPlaceholder": "ex. 67238735",
     "defaultLineup": "Lineup par défaut",
     "deleteConfirm": "Supprimer ce morceau ? Sa grille, ses notes et ses liens partent avec.",
@@ -153,8 +149,6 @@
     "searchNoResults": "Aucun résultat.",
     "searchPlaceholder": "Chercher un titre, un artiste…",
     "searchSong": "Chercher un morceau",
-    "searchSongHint": "Tape un titre ou un interprète — résultats Deezer",
-    "searchSongLinkHint": "Choisir un résultat lie ce morceau à Deezer sans toucher à son titre ni à son interprète.",
     "songNotFound": "Ce morceau n'est plus au catalogue.",
     "songTitle": "Titre",
     "status": "Statut",
@@ -162,8 +156,6 @@
     "statusIdea": "Idée",
     "statusRehearsed": "Répété",
     "statusWip": "En travail",
-    "subtitle_one": "{{total}} titre, dont {{ready}} prêt pour la scène",
-    "subtitle_other": "{{total}} titres, dont {{ready}} prêts pour la scène",
     "tags": "Tags",
     "title": "Catalogue",
     "tonalityEnd": "Tonalité — fin",
@@ -203,7 +195,6 @@
     "noTasks": "Rien à faire sur cette compo.",
     "notes": "Notes et commentaires",
     "openInCatalog": "Ouvrir dans le catalogue",
-    "subtitle": "Les morceaux écrits par le groupe, avec leur grille, leur lineup et ce qu’il reste à y faire.",
     "tasks": "Tâches",
     "title": "Compos"
   },
@@ -233,7 +224,6 @@
     "statusIdea": "idée",
     "statusPlanned": "prévue",
     "statusShipped": "livrée",
-    "subtitle": "Ce que le groupe veut changer dans cette application. L'idée la plus votée est en haut.",
     "title": "Améliorations",
     "titleField": "Titre",
     "voteFor": "Voter pour {{title}}"
@@ -244,7 +234,6 @@
     "editTitle": "Modifier l'instrument",
     "family": "Famille",
     "familyHarmonic": "harmonique",
-    "familyHint": "Un instrument harmonique porte les accords : celui qui en garde un peut tenir une transition.",
     "familyOther": "autre",
     "familyPercussive": "percussif",
     "familyVocal": "chant",
@@ -269,8 +258,6 @@
     "iconPiano": "Clavier",
     "name": "Nom",
     "newTitle": "Nouvel instrument",
-    "orderHint": "Glisse pour fixer l’ordre des colonnes sur une setlist. Entoure un membre pour en faire son instrument principal.",
-    "subtitle": "La famille d’un instrument alimente l’analyse des transitions.",
     "title": "Instruments",
     "togglePrimary": "Instrument principal"
   },
@@ -288,7 +275,6 @@
         "setlistEntry": "Lineup pour ce morceau"
       }
     },
-    "multiInstrumentHint": "Touchez chaque instrument tenu par la personne sur ce morceau. Deux à la fois, c’est possible.",
     "notPlaying": "— ne joue pas —",
     "override": "Exception",
     "resetToDefault": "Revenir au défaut du morceau",
@@ -313,7 +299,6 @@
     "newTitle": "Nouveau membre",
     "noInstrumentsYet": "Aucun instrument assigné",
     "rowAverage": "Moy.",
-    "subtitle": "Membres et leur palette de maîtrise par instrument.",
     "title": "Membres"
   },
   "nav": {
@@ -402,7 +387,6 @@
     "sessionNotFound": "Cette session n'est plus au planning.",
     "setlist": "Setlist",
     "setlists": "Setlists",
-    "subtitle": "Concerts à venir et répétitions de préparation.",
     "title": "Sessions",
     "venue": "Lieu"
   },
@@ -455,7 +439,6 @@
       "detach": "La setlist n’a pas été détachée. Vérifie la connexion et réessaie."
     },
     "indexEmpty": "Aucune setlist pour l’instant — crée la première.",
-    "indexSubtitle": "Toutes les setlists du groupe. Une même setlist peut être jouée dans plusieurs sessions.",
     "keyOverride": "Tonalité (override)",
     "missingId": "Identifiant de setlist manquant.",
     "moveDown": "Descendre",
@@ -487,7 +470,6 @@
     "meVersion": "Pragma · v0.1"
   },
   "songDefaults": {
-    "hint": "Ces valeurs viennent du morceau lui-même. Les changer touche toutes les setlists qui le jouent.",
     "open": "Défauts du morceau",
     "title": "Défauts — {{title}}"
   },
@@ -505,12 +487,11 @@
     "statusDoing": "en cours",
     "statusDone": "faite",
     "statusTodo": "à faire",
-    "subtitle": "Une colonne par membre, pour que chacun voie ce qu’il doit à la prochaine répétition.",
     "title": "Tâches",
     "titleField": "Intitulé",
     "toggleDone": "Marquer comme faite",
     "unassigned": "Non assignées",
-    "quickAddLabel": "Nouvelle tâche, juste le titre",
+    "quickAddLabel": "Nouvelle tâche",
     "quickAddSubmit": "Ajouter"
   },
   "voting": {

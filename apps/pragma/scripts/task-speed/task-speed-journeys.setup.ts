@@ -150,7 +150,7 @@ export const JOURNEYS: readonly Journey[] = [
     run: async ({ page, driver }) => {
       await driver.tap(page.getByRole('button', { name: 'More' }), 'More tab');
       await driver.tap(page.getByRole('link', { name: 'Tasks' }), 'Tasks');
-      await driver.type(page.getByPlaceholder('New task, just the title'), NEW_TASK_TITLE, 'title');
+      await driver.type(page.getByPlaceholder('New task'), NEW_TASK_TITLE, 'title');
       await driver.tap(page.getByRole('button', { name: 'Add', exact: true }), 'Add');
       await page.getByText(NEW_TASK_TITLE).first().waitFor();
     },
@@ -161,7 +161,7 @@ export const JOURNEYS: readonly Journey[] = [
     budget: { taps: 4, huntedTaps: 0, modelledSeconds: 12 },
     run: async ({ page, driver }) => {
       await driver.tap(bottomTab(page, 'Bars'), 'Bars tab');
-      await driver.type(page.getByPlaceholder('New bar lead, just the name'), NEW_BAR_NAME, 'name');
+      await driver.type(page.getByPlaceholder('New bar'), NEW_BAR_NAME, 'name');
       await driver.tap(page.getByRole('button', { name: 'Add', exact: true }), 'Add');
       await page.getByText(NEW_BAR_NAME).first().waitFor();
     },

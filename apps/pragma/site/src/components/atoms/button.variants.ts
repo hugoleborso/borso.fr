@@ -9,7 +9,7 @@ const COARSE_POINTER_MIN_HEIGHT = 'min-h-11';
  * @BlueprintDescription Declares the variants as one cva table in a sibling `.variants.ts` module, so a reviewer reads every combination in a single typed object and the component file exports nothing but the component. The atom composes classes through composeClassName rather than string concatenation, which Tailwind cannot see through, and it imports no other component.
  */
 export const buttonVariants = cva(
-  'inline-flex items-center justify-center gap-1.5 rounded-md font-medium ' +
+  'inline-flex items-center justify-center gap-1.5 font-medium ' +
     'transition-colors cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed ' +
     'focus-visible:outline focus-visible:outline-2 focus-visible:outline-accent',
   {
@@ -27,9 +27,10 @@ export const buttonVariants = cva(
           'hover:bg-[rgba(255,255,255,0.16)]',
       },
       size: {
-        sm: `${COARSE_POINTER_MIN_HEIGHT} px-2 py-1 text-xs`,
-        md: `${COARSE_POINTER_MIN_HEIGHT} px-3 py-1.5 text-[13px]`,
-        lg: `${COARSE_POINTER_MIN_HEIGHT} px-4 py-2 text-sm`,
+        sm: `${COARSE_POINTER_MIN_HEIGHT} rounded-md px-2 py-1 text-xs`,
+        md: `${COARSE_POINTER_MIN_HEIGHT} rounded-md px-3 py-1.5 text-[13px]`,
+        lg: `${COARSE_POINTER_MIN_HEIGHT} rounded-md px-4 py-2 text-sm`,
+        icon: 'size-12 rounded-full p-0 shadow-lg',
       },
     },
     defaultVariants: { variant: 'default', size: 'md' },

@@ -2,7 +2,6 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { HintText } from '../atoms/HintText';
 import { Input } from '../atoms/Input';
 
 export interface SongDeezerTrackIdFieldProps {
@@ -37,7 +36,6 @@ export function SongDeezerTrackIdField({
         onBlur={onBlur}
         placeholder={t('catalog.deezerTrackIdPlaceholder')}
       />
-      <HintText tone="muted">{t('catalog.deezerTrackIdHint')}</HintText>
     </>
   );
 }

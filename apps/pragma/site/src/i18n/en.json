@@ -3,7 +3,6 @@
     "addPasskey": "Add a passkey",
     "changePassword": "Change password",
     "contactDetails": "Contact details",
-    "contactDetailsHint": "These sign the outreach message you copy from the bars page.",
     "contactDetailsSaved": "Contact details saved.",
     "currentPassword": "Current password",
     "email": "Email",
@@ -83,16 +82,14 @@
     "statusContacted": "Contacted",
     "statusLead": "Lead",
     "statusPlayed": "Played",
-    "subtitle": "Leads, contacts and follow-up history.",
     "support": "Support available",
     "supportLights": "Lights",
-    "supportNoneHint": "Leave everything unticked when the bar lends nothing.",
     "supportPaSystem": "PA system",
     "supportSoundEngineer": "Sound engineer",
     "title": "Bars",
     "viewKanban": "Kanban",
     "viewList": "List",
-    "quickAddLabel": "New bar lead, just the name",
+    "quickAddLabel": "New bar",
     "quickAddSubmit": "Add",
     "outreachTemplateSave": "Save the message"
   },
@@ -108,7 +105,6 @@
     "createSearched": "Create “{{title}}”",
     "crumb": "Repertoire",
     "deezerTrackId": "Deezer track ID",
-    "deezerTrackIdHint": "The number in a deezer.com/track/… address. Filled by the search above; type it here to link a song by hand.",
     "deezerTrackIdPlaceholder": "e.g. 67238735",
     "defaultLineup": "Default lineup",
     "deleteConfirm": "Delete this song? Its chart, notes and links go with it.",
@@ -153,8 +149,6 @@
     "searchNoResults": "No results.",
     "searchPlaceholder": "Search a title or an artist…",
     "searchSong": "Search a song",
-    "searchSongHint": "Type a title or an artist — results from Deezer",
-    "searchSongLinkHint": "Picking a result links this song to Deezer without touching its title or artist.",
     "songNotFound": "This song is no longer in the catalog.",
     "songTitle": "Title",
     "status": "Status",
@@ -162,8 +156,6 @@
     "statusIdea": "Idea",
     "statusRehearsed": "Rehearsed",
     "statusWip": "In progress",
-    "subtitle_one": "{{total}} song, including {{ready}} ready for the stage",
-    "subtitle_other": "{{total}} songs, including {{ready}} ready for the stage",
     "tags": "Tags",
     "title": "Catalog",
     "tonalityEnd": "Key — end",
@@ -203,7 +195,6 @@
     "noTasks": "Nothing to do on this composition.",
     "notes": "Notes and comments",
     "openInCatalog": "Open in the catalog",
-    "subtitle": "The songs the band wrote itself, with their chart, their lineup and what is left to do on them.",
     "tasks": "Tasks",
     "title": "Compositions"
   },
@@ -233,7 +224,6 @@
     "statusIdea": "idea",
     "statusPlanned": "planned",
     "statusShipped": "shipped",
-    "subtitle": "What the band wants changed in this application. The most voted idea is at the top.",
     "title": "Improvements",
     "titleField": "Title",
     "voteFor": "Vote for {{title}}"
@@ -244,7 +234,6 @@
     "editTitle": "Edit instrument",
     "family": "Family",
     "familyHarmonic": "harmonic",
-    "familyHint": "A harmonic instrument carries the chords, so whoever keeps one can hold a transition.",
     "familyOther": "other",
     "familyPercussive": "percussive",
     "familyVocal": "vocal",
@@ -269,8 +258,6 @@
     "iconPiano": "Keys",
     "name": "Name",
     "newTitle": "New instrument",
-    "orderHint": "Drag to set the column order on a setlist. Ring a member to mark this their main instrument.",
-    "subtitle": "The family of an instrument feeds the transition analysis.",
     "title": "Instruments",
     "togglePrimary": "Main instrument"
   },
@@ -288,7 +275,6 @@
         "setlistEntry": "Lineup for this entry"
       }
     },
-    "multiInstrumentHint": "Tap every instrument a member holds on this song. Two at once is fine.",
     "notPlaying": "— not playing —",
     "override": "Override",
     "resetToDefault": "Reset to song default",
@@ -313,7 +299,6 @@
     "newTitle": "New member",
     "noInstrumentsYet": "No instruments assigned",
     "rowAverage": "Avg",
-    "subtitle": "Members and their per-instrument mastery palette.",
     "title": "Members"
   },
   "nav": {
@@ -402,7 +387,6 @@
     "sessionNotFound": "This session is no longer in the schedule.",
     "setlist": "Setlist",
     "setlists": "Setlists",
-    "subtitle": "Upcoming concerts and preparation rehearsals.",
     "title": "Sessions",
     "venue": "Venue"
   },
@@ -455,7 +439,6 @@
       "detach": "The setlist was not detached. Check the connection and try again."
     },
     "indexEmpty": "No setlist yet — write the first one.",
-    "indexSubtitle": "Every setlist the band has written. One setlist can be played in several sessions.",
     "keyOverride": "Key (override)",
     "missingId": "Missing setlist identifier.",
     "moveDown": "Move down",
@@ -487,7 +470,6 @@
     "meVersion": "Pragma · v0.1"
   },
   "songDefaults": {
-    "hint": "These values come from the song itself. Changing them reaches every setlist that plays it.",
     "open": "Song defaults",
     "title": "Defaults — {{title}}"
   },
@@ -505,12 +487,11 @@
     "statusDoing": "in progress",
     "statusDone": "done",
     "statusTodo": "to do",
-    "subtitle": "One column per member, so everyone sees what they owe the next rehearsal.",
     "title": "Tasks",
     "titleField": "Title",
     "toggleDone": "Mark as done",
     "unassigned": "Unclaimed",
-    "quickAddLabel": "New task, just the title",
+    "quickAddLabel": "New task",
     "quickAddSubmit": "Add"
   },
   "voting": {

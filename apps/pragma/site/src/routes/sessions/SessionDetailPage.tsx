@@ -113,7 +113,9 @@ export function SessionDetailPage(): JSX.Element {
   const isLoading = sessionQuery.isLoading || membersQuery.isLoading || sessionsQuery.isLoading;
 
   if (isLoading) {
-    return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
+    return (
+      <p className="px-4 sm:px-9 py-4 sm:py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
+    );
   }
   if (session === null) {
     return (
@@ -137,7 +139,7 @@ export function SessionDetailPage(): JSX.Element {
   const titleText = isConcert ? (session.venue ?? formattedDate) : t('sessions.kindPractice');
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
       <BackLink to="/sessions" label={t('common.back')} />
 
       <PageHeader

@@ -30,7 +30,7 @@ export function SetlistEditorPage(): JSX.Element {
   const { setlistId } = useParams<{ setlistId: string }>();
   const { t } = useTranslation();
   if (setlistId === undefined) {
-    return <p className="px-4 sm:px-9 py-7 text-danger">{t('setlist.missingId')}</p>;
+    return <p className="px-4 sm:px-9 py-4 sm:py-7 text-danger">{t('setlist.missingId')}</p>;
   }
   return <SetlistDetail setlistId={setlistId} />;
 }
@@ -53,7 +53,9 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   }, [setlistsQuery.data, sessionsQuery.data, setlistId]);
 
   if (setlistQuery.isLoading) {
-    return <p className="px-4 sm:px-9 py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>;
+    return (
+      <p className="px-4 sm:px-9 py-4 sm:py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>
+    );
   }
 
   if (setlist === null) {
@@ -69,7 +71,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   const displayedName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col">
       <BackLink to="/setlists" label={t('setlist.title')} />
       <PageHeader
         crumb={t('setlist.crumb')}

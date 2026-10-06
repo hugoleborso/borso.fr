@@ -110,8 +110,8 @@ export function TasksPage(): JSX.Element {
     lastError instanceof ApiError ? lastError.message : lastError === null ? null : 'unknown-error';
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
-      <PageHeader title={t('tasks.title')} subtitle={t('tasks.subtitle')} />
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+      <PageHeader title={t('tasks.title')} />
       <QuickAddForm
         inputId="task-quick-add"
         label={t('tasks.quickAddLabel')}
