@@ -20,6 +20,7 @@ const NEW_SONG_TITLE = 'Seven Nation Army';
 const NEW_SONG_ARTIST = 'The White Stripes';
 const SEARCHED_SONG = 'Last Call';
 const SEARCH_PREFIX = 'last';
+const SEARCH_OPENER_NAME = /^Search$/;
 const PICKED_SONG_PREFIX = 'seven';
 const NEW_TASK_TITLE = 'Change the snare skin';
 const NEW_BAR_NAME = 'Le Supersonic';
@@ -113,7 +114,11 @@ export const JOURNEYS: readonly Journey[] = [
     title: "Open a song's chord chart",
     budget: { taps: 3, huntedTaps: 0, modelledSeconds: 9 },
     run: async ({ page, driver }) => {
-      await driver.type(page.getByRole('searchbox').first(), SEARCH_PREFIX, 'search');
+      const searchField = page.getByRole('searchbox').first();
+      if (!(await searchField.isVisible())) {
+        await driver.tap(page.getByRole('button', { name: SEARCH_OPENER_NAME }), 'open search');
+      }
+      await driver.type(searchField, SEARCH_PREFIX, 'search');
       await driver.tap(page.getByRole('link', { name: new RegExp(SEARCHED_SONG) }).first(), 'song');
       await page
         .getByText(/chord chart/i)

@@ -30,6 +30,7 @@ interface RunOptions {
   readonly screenshotDirectory: string | undefined;
   readonly videoDirectory: string | undefined;
   readonly videoLabel: string;
+  readonly landingPath: string;
 }
 
 function isEffortIndex(value: unknown): value is Record<string, JourneyEffort> {
@@ -92,7 +93,7 @@ async function runJourney(
   let result: JourneyResult;
   try {
     await journey.prepare?.(page.request);
-    await page.goto(LANDING_PATH);
+    await page.goto(options.landingPath);
     await page.waitForTimeout(SETTLE_AFTER_LANDING_MS);
     await presenter?.showTitleCard(journey.title, 'From the screen the app opens on');
     const driver = createJourneyDriver(page, presenter);
@@ -127,6 +128,7 @@ async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
       'base-url': { type: 'string', default: DEFAULT_BASE_URL },
+      landing: { type: 'string', default: LANDING_PATH },
       baseline: { type: 'string' },
       out: { type: 'string' },
       screenshots: { type: 'string' },
@@ -145,6 +147,7 @@ async function main(): Promise<void> {
   }
   const options: RunOptions = {
     baseUrl: values['base-url'],
+    landingPath: values.landing,
     screenshotDirectory: values.screenshots,
     videoDirectory: values.videos,
     videoLabel: values['video-label'],
