@@ -30,7 +30,7 @@ import { SetlistSongPicker } from './SetlistSongPicker';
 import { SetlistToolbar } from './SetlistToolbar';
 import { formatSetlistOrder, instrumentFamilyMap, lineupOf } from './setlist-editor.utils';
 import type { SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
-import { filterEntriesForMember } from './setlist-filter.core';
+import { filterEntriesForMember, nameInstrumentsByEntryId } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import { VotingRoundPanel } from './VotingRoundPanel';
 import { buildTransitionView, indexTransitionComments } from './transition-view.core';
@@ -38,6 +38,7 @@ import { buildTransitionView, indexTransitionComments } from './transition-view.
 interface SetlistEditorProps {
   readonly setlistId: string;
   readonly concertSessionId: string | null;
+  readonly initialMemberId: string | null;
 }
 
 const NO_ROWS: readonly never[] = [];
@@ -53,7 +54,11 @@ type SetlistFailureKey =
   | 'setlist.failure.copyOrder';
 
 // @FollowsBlueprint organism-query-owning
-export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProps): JSX.Element {
+export function SetlistEditor({
+  setlistId,
+  concertSessionId,
+  initialMemberId,
+}: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
   const entriesQuery = useSetlistEntries(setlistId);
   const songsQuery = useSongsList();
@@ -73,7 +78,7 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
     songBId: string;
   } | null>(null);
   const [failureKey, setFailureKey] = useState<SetlistFailureKey | null>(null);
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialMemberId);
   const [orderCopied, setOrderCopied] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -150,6 +155,10 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
   const filtered = useMemo(
     () => filterEntriesForMember(setlistEntries, songsById, selectedMemberId),
     [setlistEntries, songsById, selectedMemberId],
+  );
+  const memberPartByEntryId = useMemo(
+    () => nameInstrumentsByEntryId(filtered.instrumentIdsByEntryId, instrumentsById),
+    [filtered, instrumentsById],
   );
   const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
 
@@ -233,6 +242,7 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
           transitionNotesByPair={transitionNotesByPair}
           meanMasteryBySongId={meanMasteryBySongId}
           inFilteredMode={isInFilteredMode}
+          memberPartByEntryId={memberPartByEntryId}
           lineupMembers={lineupMembers}
           instruments={instruments}
           slotInstruments={instruments}

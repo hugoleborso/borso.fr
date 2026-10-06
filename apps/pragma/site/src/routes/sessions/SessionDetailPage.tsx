@@ -160,6 +160,13 @@ export function SessionDetailPage(): JSX.Element {
         </p>
       )}
 
+      <h3 className="font-display italic text-2xl text-ink-900 m-0">{t('sessions.setlists')}</h3>
+      <SessionSetlists
+        sessionId={session.id}
+        setlists={setlists}
+        isLoading={setlistsQuery.isLoading}
+      />
+
       {isConcert ? (
         editingConcert ? (
           <ConcertEditForm
@@ -188,15 +195,6 @@ export function SessionDetailPage(): JSX.Element {
           language={i18n.language}
         />
       )}
-
-      <h3 className="font-display italic text-2xl text-ink-900 m-0 mt-4">
-        {t('sessions.setlists')}
-      </h3>
-      <SessionSetlists
-        sessionId={session.id}
-        setlists={setlists}
-        isLoading={setlistsQuery.isLoading}
-      />
 
       {isConcert ? <VotingRoundPanel sessionId={session.id} /> : null}
     </section>

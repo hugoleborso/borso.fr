@@ -4,6 +4,7 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
+import { StickyFormActions } from '../atoms/StickyFormActions';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
@@ -284,7 +285,7 @@ export function BarForm({
             />
           )}
         </form.Field>
-        <div className="flex gap-2 mt-2">
+        <StickyFormActions>
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
               <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
@@ -293,7 +294,7 @@ export function BarForm({
             )}
           </form.Subscribe>
           <CancelButton label={t('common.cancel')} onCancel={onCancel} />
-        </div>
+        </StickyFormActions>
         <form.Subscribe selector={(state) => state.values.name}>
           {(barName) => (
             <Button type="button" variant="ghost" onClick={() => onCopyMessage(barName)}>

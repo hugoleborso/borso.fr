@@ -21,6 +21,7 @@ import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useOutreachTemplate, useSaveOutreachTemplate } from '../../lib/queries/outreach.queries';
 import { BarPlaceSearch } from '../../components/organisms/BarPlaceSearch';
 import { OutreachTemplateCard } from '../../components/organisms/OutreachTemplateCard';
+import { BarQuickAdd } from '../../components/organisms/BarQuickAdd';
 import { renderOutreachMessage, selectOutreachTemplate } from './outreach-message.core';
 import {
   useBarsList,
@@ -279,6 +280,7 @@ export function BarsPage(): JSX.Element {
         </div>
       ) : null}
 
+      <BarQuickAdd onError={reportError} />
       <BarPlaceSearch
         onPick={(hit) => {
           setFormInitial(buildBarFormFromPlace(hit, BLANK_BAR_FORM));

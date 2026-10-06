@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import type { SetlistEditorSong } from './setlist-editor.utils';
-import { type FilterableEntry, filterEntriesForMember } from './setlist-filter.core';
+import {
+  type FilterableEntry,
+  filterEntriesForMember,
+  nameInstrumentsByEntryId,
+} from './setlist-filter.core';
 
 const HUGO = 'hugo-id';
 const PAULINE = 'pauline-id';
@@ -115,5 +119,16 @@ describe('filterEntriesForMember', () => {
       visibleEntries: [],
       instrumentIdsByEntryId: {},
     });
+  });
+});
+
+describe('nameInstrumentsByEntryId', () => {
+  it('names what the member plays on each entry, dropping an instrument the list no longer has', () => {
+    expect(
+      nameInstrumentsByEntryId(
+        { e1: [DRUMS, GUITAR], e2: ['gone'] },
+        { [DRUMS]: { name: 'Batterie' }, [GUITAR]: { name: 'Guitare' } },
+      ),
+    ).toEqual({ e1: ['Batterie', 'Guitare'], e2: [] });
   });
 });

@@ -7,6 +7,7 @@ import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { QuickAddForm } from '../../components/organisms/QuickAddForm';
 import { MemberTaskColumn } from '../../components/organisms/MemberTaskColumn';
 import { TaskForm, type TaskFormValues } from '../../components/organisms/TaskForm';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
@@ -86,6 +87,12 @@ export function TasksPage(): JSX.Element {
     closeForm();
   };
 
+  const addTaskByTitle = async (title: string): Promise<void> => {
+    const taskWrite = payloadFromFormValues({ ...BLANK_TASK_FORM, title });
+    if (taskWrite === null) return;
+    await createTask.mutateAsync(taskWrite);
+  };
+
   const applyDeletionEffect = {
     'keep-form': (): void => undefined,
     'clear-form': closeForm,
@@ -105,6 +112,12 @@ export function TasksPage(): JSX.Element {
   return (
     <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
       <PageHeader title={t('tasks.title')} subtitle={t('tasks.subtitle')} />
+      <QuickAddForm
+        inputId="task-quick-add"
+        label={t('tasks.quickAddLabel')}
+        submitLabel={t('tasks.quickAddSubmit')}
+        onAdd={addTaskByTitle}
+      />
       {errorMessage === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {errorMessage}

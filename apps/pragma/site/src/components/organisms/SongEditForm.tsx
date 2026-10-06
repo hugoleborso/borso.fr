@@ -5,6 +5,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
+import { StickyFormActions } from '../atoms/StickyFormActions';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { HintText } from '../atoms/HintText';
@@ -293,7 +294,7 @@ export function SongEditForm({
             </form.Field>
           </SongLinkAdder>
 
-          <div className="flex gap-2 mt-3">
+          <StickyFormActions>
             <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
               {([canSubmit, isSubmitting]) => (
                 <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
@@ -301,7 +302,7 @@ export function SongEditForm({
                 </Button>
               )}
             </form.Subscribe>
-          </div>
+          </StickyFormActions>
           {isNew ? null : <SongDeleteAction onDelete={onDelete} />}
         </form>
       </Card>

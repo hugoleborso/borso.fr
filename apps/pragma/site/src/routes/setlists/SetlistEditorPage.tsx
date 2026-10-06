@@ -3,7 +3,7 @@
 import type { JSX } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -12,6 +12,7 @@ import { resolveSetlistStatus } from './setlist-status.core';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { SetlistHeaderActions } from '../../components/organisms/SetlistHeaderActions';
 import { formatSessionDate } from '../../lib/formatters.utils';
+import { MEMBER_FILTER_PARAM } from '../../lib/next-concert.core';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
@@ -38,6 +39,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   const { t, i18n } = useTranslation();
   const navigateTo = useNavigateTo();
   const setlistQuery = useSetlist(setlistId);
+  const [searchParams] = useSearchParams();
   const setlistsQuery = useSetlistsList();
   const sessionsQuery = useSessionsList();
   const setlist = setlistQuery.data?.setlist ?? null;
@@ -91,7 +93,11 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
         }
       />
 
-      <SetlistEditor setlistId={setlist.id} concertSessionId={selectConcertSessionId(sessions)} />
+      <SetlistEditor
+        setlistId={setlist.id}
+        concertSessionId={selectConcertSessionId(sessions)}
+        initialMemberId={searchParams.get(MEMBER_FILTER_PARAM)}
+      />
     </section>
   );
 }
