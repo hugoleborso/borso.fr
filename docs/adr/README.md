@@ -71,6 +71,7 @@ No:
 | [0019](./0019-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | proposed | 2026-09-16 |
 | [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
 | [0022](./0022-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
+| [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | proposed | 2026-09-21 |
 | [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | proposed | 2026-10-05 |
 | [0027](./0027-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | proposed | 2026-10-06 |
 
@@ -113,6 +114,7 @@ _(no entries yet)_
 - 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
 - 0011 — ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
 - 0014 — generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.
+- 0023 — a passing validation's screenshots go to the previews CDN and expire after 60 days, while a FAIL row's stay committed; screenshots were 82% of `.git`.
 
 ## How `/open-pr` uses ADRs
 

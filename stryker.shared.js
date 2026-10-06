@@ -22,6 +22,8 @@ const ZERO_TEST_GUARD_PLUGIN = fileURLToPath(
 
 const ZERO_SURVIVING_MUTANTS = { high: 100, low: 100, break: 100 };
 
+const SANDBOX_EXCLUSIONS = ['.claude/**', 'docs/**'];
+
 function sandboxOutsideTheWorkspace() {
   const slug = process
     .cwd()
@@ -42,6 +44,7 @@ export function defineStrykerConfig({ mutate, vitest }) {
     concurrency: workersThatLeaveRoomForTheOtherRuns(),
     tempDirName: sandboxOutsideTheWorkspace(),
     cleanTempDir: true,
+    ignorePatterns: SANDBOX_EXCLUSIONS,
     disableTypeChecks: '{src,site,api,test}/**/*.{js,ts,jsx,tsx}',
     ignoreStatic: true,
     mutate,
