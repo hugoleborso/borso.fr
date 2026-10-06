@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: "#108"
-fix-pr: "#PRNUM"
+fix-pr: "#141"
 fix-commits: [a515b15]
 eradication-level: 5
 time-to-detect: weeks
@@ -69,7 +69,7 @@ decisions for proposed changes would be level 2, but deciding whether a
 sentence proposes a change is not something a grep can do reliably; the skill
 rule is what the sweep reads at the moment it writes the row.
 
-**Reference:** [PR #PRNUM](https://github.com/hugoleborso/borso.fr/pull/PRNUM) · commit `a515b15`
+**Reference:** [PR #141](https://github.com/hugoleborso/borso.fr/pull/141) · commit `a515b15`
 
 **The actual fix:**
 

@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: local
 severity: low
 related-pr: "#136"
-fix-pr: "#PRNUM"
+fix-pr: "#141"
 fix-commits: [a1ca9ef]
 eradication-level: 1
 time-to-detect: minutes
@@ -71,7 +71,7 @@ that added a source file made it fail.
 stale index. It refuses only what a person wrote wrong: an annotation missing a
 tag, a follower naming no blueprint, a marker detached from its subject.
 
-**Reference:** [PR #PRNUM](https://github.com/hugoleborso/borso.fr/pull/PRNUM) · commit `a1ca9ef`
+**Reference:** [PR #141](https://github.com/hugoleborso/borso.fr/pull/141) · commit `a1ca9ef`
 
 **The actual fix:**
 
