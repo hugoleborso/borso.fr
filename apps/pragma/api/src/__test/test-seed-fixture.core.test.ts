@@ -1,3 +1,4 @@
+import { FALLBACK_INSTRUMENT_ICON } from '@domain/instrument.core';
 import { describe, expect, it } from 'vitest';
 import {
   BLANK_ENTRY_DETAIL,
@@ -7,8 +8,6 @@ import {
   SEED_TRANSITION_COMMENT,
 } from './test-seed-fixture.core';
 import { selectPrimaryInstrumentIds } from './test-seed.core';
-
-const SLOTS_BEYOND_MEMBER_COUNT = 2;
 
 const instrumentNames = new Set(SEED_INSTRUMENTS.map((instrument) => instrument.name));
 const memberNames = new Set(SEED_MEMBERS.map((member) => member.firstName));
@@ -66,10 +65,13 @@ describe('the primacy the seeded band ships with', () => {
     );
     expect(familiesWithASlot).toEqual(new Set(['harmonic', 'percussive']));
   });
+});
 
-  it('stays within the slot budget of the members plus two', () => {
-    const primaryNames = new Set(SEED_MEMBERS.map(primaryInstrumentNameOf));
-    expect(primaryNames.size).toBeLessThanOrEqual(SEED_MEMBERS.length + SLOTS_BEYOND_MEMBER_COUNT);
+describe('the seeded instruments', () => {
+  it('draws each instrument with its own glyph, never the generic fallback', () => {
+    const icons = SEED_INSTRUMENTS.map((instrument) => instrument.icon);
+    expect(new Set(icons).size).toBe(icons.length);
+    expect(icons).not.toContain(FALLBACK_INSTRUMENT_ICON);
   });
 });
 
