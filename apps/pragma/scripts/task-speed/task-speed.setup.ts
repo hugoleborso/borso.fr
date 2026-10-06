@@ -1,7 +1,8 @@
-import { mkdir, readFile, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, rename, writeFile } from 'node:fs/promises';
 import { parseArgs } from 'node:util';
 import { type Browser, chromium } from 'playwright';
 import { createJourneyDriver } from './journey-driver.setup';
+import { createJourneyPresenter } from './journey-presenter.setup';
 import { JOURNEYS, type Journey } from './task-speed-journeys.setup';
 import {
   formatEffortTable,
@@ -9,6 +10,7 @@ import {
   type JourneyEffort,
   type JourneyResult,
   measureJourneyEffort,
+  summariseEffort,
 } from './task-speed.core';
 
 const PHONE_VIEWPORT = { width: 375, height: 667 };
@@ -21,6 +23,14 @@ const LOGIN_PATH = '/login';
 const SETTLE_AFTER_LANDING_MS = 1000;
 const JSON_INDENT = 2;
 const STEP_TIMEOUT_MS = 8000;
+const DEFAULT_VIDEO_LABEL = 'Run';
+
+interface RunOptions {
+  readonly baseUrl: string;
+  readonly screenshotDirectory: string | undefined;
+  readonly videoDirectory: string | undefined;
+  readonly videoLabel: string;
+}
 
 function isEffortIndex(value: unknown): value is Record<string, JourneyEffort> {
   return typeof value === 'object' && value !== null;
@@ -32,22 +42,9 @@ async function readBaseline(path: string | undefined): Promise<Record<string, Jo
   return isEffortIndex(parsed) ? parsed : {};
 }
 
-async function runJourney(
-  browser: Browser,
-  baseUrl: string,
-  journey: Journey,
-  screenshotDirectory: string | undefined,
-): Promise<JourneyResult> {
-  const context = await browser.newContext({
-    viewport: PHONE_VIEWPORT,
-    hasTouch: true,
-    isMobile: true,
-    locale: 'en-US',
-    baseURL: baseUrl,
-  });
-  await context.addInitScript(() => window.localStorage.setItem('pragma.locale', 'en'));
+async function signIn(browser: Browser, baseUrl: string) {
+  const context = await browser.newContext({ baseURL: baseUrl });
   const page = await context.newPage();
-  page.setDefaultTimeout(STEP_TIMEOUT_MS);
   try {
     await page.request.post('/api/__test/seed');
     await page.goto(LOGIN_PATH);
@@ -55,38 +52,75 @@ async function runJourney(
     await page.locator('#login-password').fill(SEED_PASSWORD);
     await page.locator('button[type=submit]').click();
     await page.waitForURL((url) => url.pathname !== LOGIN_PATH);
+    return await context.storageState();
+  } finally {
+    await context.close();
+  }
+}
+
+function describePath(steps: ReturnType<ReturnType<typeof createJourneyDriver>['steps']>): string {
+  return steps
+    .map(
+      (step) =>
+        `${step.label}${step.scrolledPixels > 0 ? ` (scrolled ${String(step.scrolledPixels)}px)` : ''}`,
+    )
+    .join(' → ');
+}
+
+async function runJourney(
+  browser: Browser,
+  journey: Journey,
+  options: RunOptions,
+): Promise<JourneyResult> {
+  const storageState = await signIn(browser, options.baseUrl);
+  const context = await browser.newContext({
+    viewport: PHONE_VIEWPORT,
+    hasTouch: true,
+    isMobile: true,
+    locale: 'en-US',
+    baseURL: options.baseUrl,
+    storageState,
+    ...(options.videoDirectory === undefined
+      ? {}
+      : { recordVideo: { dir: options.videoDirectory, size: PHONE_VIEWPORT } }),
+  });
+  await context.addInitScript(() => window.localStorage.setItem('pragma.locale', 'en'));
+  const page = await context.newPage();
+  page.setDefaultTimeout(STEP_TIMEOUT_MS);
+  const presenter =
+    options.videoDirectory === undefined ? null : createJourneyPresenter(page, options.videoLabel);
+  let result: JourneyResult;
+  try {
     await journey.prepare?.(page.request);
     await page.goto(LANDING_PATH);
     await page.waitForTimeout(SETTLE_AFTER_LANDING_MS);
-    const driver = createJourneyDriver(page);
+    await presenter?.showTitleCard(journey.title, 'From the screen the app opens on');
+    const driver = createJourneyDriver(page, presenter);
     await journey.run({ page, driver, memberName: SEED_MEMBER_NAME });
-    if (screenshotDirectory !== undefined) {
-      await page.screenshot({ path: `${screenshotDirectory}/${journey.id}.png` });
-    }
     const effort = measureJourneyEffort({
       viewportHeight: PHONE_VIEWPORT.height,
       steps: driver.steps(),
     });
-    process.stderr.write(
-      `${journey.id}: ${driver
-        .steps()
-        .map(
-          (step) =>
-            `${step.label}${step.scrolledPixels > 0 ? ` (scrolled ${step.scrolledPixels}px)` : ''}`,
-        )
-        .join(' → ')}\n`,
-    );
-    return { ...journey, effort, failure: null };
+    if (options.screenshotDirectory !== undefined) {
+      await page.screenshot({ path: `${options.screenshotDirectory}/${journey.id}.png` });
+    }
+    await presenter?.showSummary(summariseEffort(effort));
+    process.stderr.write(`${journey.id}: ${describePath(driver.steps())}\n`);
+    result = { ...journey, effort, failure: null };
   } catch (error) {
-    if (screenshotDirectory !== undefined) {
-      await page.screenshot({ path: `${screenshotDirectory}/${journey.id}-failed.png` });
+    if (options.screenshotDirectory !== undefined) {
+      await page.screenshot({ path: `${options.screenshotDirectory}/${journey.id}-failed.png` });
     }
     const failure =
       error instanceof Error ? (error.message.split('\n')[0] ?? error.name) : 'unknown';
-    return { ...journey, effort: null, failure };
-  } finally {
-    await context.close();
+    result = { ...journey, effort: null, failure };
   }
+  const video = page.video();
+  await context.close();
+  if (video !== null && options.videoDirectory !== undefined) {
+    await rename(await video.path(), `${options.videoDirectory}/${journey.id}.webm`);
+  }
+  return result;
 }
 
 async function main(): Promise<void> {
@@ -98,20 +132,30 @@ async function main(): Promise<void> {
       screenshots: { type: 'string' },
       only: { type: 'string' },
       chromium: { type: 'string' },
+      videos: { type: 'string' },
+      'video-label': { type: 'string', default: DEFAULT_VIDEO_LABEL },
     },
   });
   const baseline = await readBaseline(values.baseline);
   const selected = JOURNEYS.filter(
     (journey) => values.only === undefined || values.only.split(',').includes(journey.id),
   );
-  if (values.screenshots !== undefined) await mkdir(values.screenshots, { recursive: true });
+  for (const directory of [values.screenshots, values.videos]) {
+    if (directory !== undefined) await mkdir(directory, { recursive: true });
+  }
+  const options: RunOptions = {
+    baseUrl: values['base-url'],
+    screenshotDirectory: values.screenshots,
+    videoDirectory: values.videos,
+    videoLabel: values['video-label'],
+  };
   const browser = await chromium.launch(
     values.chromium === undefined ? {} : { executablePath: values.chromium },
   );
   const results: JourneyResult[] = [];
   try {
     for (const journey of selected) {
-      results.push(await runJourney(browser, values['base-url'], journey, values.screenshots));
+      results.push(await runJourney(browser, journey, options));
     }
   } finally {
     await browser.close();

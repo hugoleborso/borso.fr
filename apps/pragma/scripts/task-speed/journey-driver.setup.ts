@@ -1,8 +1,12 @@
 import type { Locator, Page } from 'playwright';
+import type { JourneyPresenter } from './journey-presenter.setup';
 import type { StepObservation } from './task-speed.core';
 
 const SETTLE_AFTER_TAP_MS = 400;
 const CENTRE_DIVISOR = 2;
+const SMOOTH_SCROLL_SETTLE_MS = 900;
+const SMOOTH: ScrollBehavior = 'smooth';
+const INSTANT: ScrollBehavior = 'instant';
 
 export interface JourneyDriver {
   readonly tap: (target: Locator, label: string) => Promise<void>;
@@ -18,6 +22,7 @@ interface ScreenSignature {
 
 interface Reach {
   readonly scrolledPixels: number;
+  readonly targetCentreX: number;
   readonly targetCentreY: number;
 }
 
@@ -43,27 +48,32 @@ async function isReachableWithoutScrolling(target: Locator): Promise<boolean> {
   }, CENTRE_DIVISOR);
 }
 
-async function readCentreY(target: Locator): Promise<number> {
+async function readCentre(target: Locator): Promise<{ x: number; y: number }> {
   const box = await target.boundingBox();
   if (box === null) throw new Error('target has no box');
-  return box.y + box.height / CENTRE_DIVISOR;
+  return { x: box.x + box.width / CENTRE_DIVISOR, y: box.y + box.height / CENTRE_DIVISOR };
 }
 
-async function reach(target: Locator): Promise<Reach> {
+async function reach(target: Locator, isSmooth: boolean): Promise<Reach> {
   await target.waitFor({ state: 'visible' });
-  const centreBefore = await readCentreY(target);
+  const centreBefore = await readCentre(target);
   if (await isReachableWithoutScrolling(target)) {
-    return { scrolledPixels: 0, targetCentreY: centreBefore };
+    return { scrolledPixels: 0, targetCentreX: centreBefore.x, targetCentreY: centreBefore.y };
   }
-  await target.evaluate((element) => element.scrollIntoView({ block: 'center' }));
-  const centreAfter = await readCentreY(target);
+  await target.evaluate(
+    (element, behavior) => element.scrollIntoView({ block: 'center', behavior }),
+    isSmooth ? SMOOTH : INSTANT,
+  );
+  if (isSmooth) await target.page().waitForTimeout(SMOOTH_SCROLL_SETTLE_MS);
+  const centreAfter = await readCentre(target);
   return {
-    scrolledPixels: Math.max(1, Math.round(Math.abs(centreBefore - centreAfter))),
-    targetCentreY: centreAfter,
+    scrolledPixels: Math.max(1, Math.round(Math.abs(centreBefore.y - centreAfter.y))),
+    targetCentreX: centreAfter.x,
+    targetCentreY: centreAfter.y,
   };
 }
 
-export function createJourneyDriver(page: Page): JourneyDriver {
+export function createJourneyDriver(page: Page, presenter: JourneyPresenter | null): JourneyDriver {
   const recorded: StepObservation[] = [];
 
   async function act(
@@ -74,7 +84,11 @@ export function createJourneyDriver(page: Page): JourneyDriver {
     perform: () => Promise<void>,
   ): Promise<void> {
     const before = await readScreenSignature(page);
-    const { scrolledPixels, targetCentreY } = await reach(target);
+    const { scrolledPixels, targetCentreX, targetCentreY } = await reach(
+      target,
+      presenter !== null,
+    );
+    await presenter?.showStep(label, targetCentreX, targetCentreY);
     await perform();
     await page.waitForTimeout(SETTLE_AFTER_TAP_MS);
     const after = await readScreenSignature(page);
@@ -93,7 +107,7 @@ export function createJourneyDriver(page: Page): JourneyDriver {
     type: (field, text, label) =>
       act(field, label, 'type', text.length, async () => {
         await field.tap();
-        await field.fill(text);
+        await field.pressSequentially(text, { delay: presenter?.typingDelayMs ?? 0 });
       }),
     choose: async (field, value, label) => {
       await act(field, label, 'tap', 0, async () => {

@@ -148,3 +148,11 @@ export function indexEffortById(
   }
   return index;
 }
+
+export function summariseEffort(effort: JourneyEffort): string[] {
+  return [
+    `${String(effort.taps)} taps, ${String(effort.typedCharacters)} characters typed`,
+    `${String(effort.huntedTaps)} taps needing a scroll first`,
+    `${String(effort.modelledSeconds)} s modelled`,
+  ];
+}

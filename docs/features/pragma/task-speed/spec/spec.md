@@ -101,6 +101,11 @@ pnpm run task-speed -- --chromium /opt/pw-browsers/chromium \
   --screenshots /tmp/task-speed
 ```
 
+`--videos <dir>` records one video per job, with the step name on screen, a
+red ring on each tap and the job's numbers at the end; `--video-label` names
+the run on the title card (*Before*, *After*). Recording slows the journey
+down for a viewer and leaves the numbers unchanged.
+
 `--baseline` adds the change against an earlier run to each row, `--out` writes
 this run's numbers as the next baseline, and `--only add-song,vote` runs a
 subset. The `--chromium` flag is only needed in a sandbox whose Playwright

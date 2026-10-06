@@ -9,6 +9,7 @@ import {
   listBudgetOverruns,
   measureJourneyEffort,
   roundSeconds,
+  summariseEffort,
   type StepObservation,
 } from './task-speed.core';
 
@@ -167,5 +168,15 @@ describe('formatEffortTable', () => {
 describe('indexEffortById', () => {
   it('keeps the journeys that produced an effort', () => {
     expect(indexEffortById([PASSING, BROKEN])).toEqual({ quick: QUICK_EFFORT });
+  });
+});
+
+describe('summariseEffort', () => {
+  it('says the taps, the typing, the hunted taps and the modelled time', () => {
+    expect(summariseEffort(QUICK_EFFORT)).toEqual([
+      '2 taps, 0 characters typed',
+      '0 taps needing a scroll first',
+      '4.9 s modelled',
+    ]);
   });
 });
