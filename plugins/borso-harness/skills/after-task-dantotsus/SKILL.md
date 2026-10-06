@@ -135,10 +135,17 @@ Conventions:
   - `knowledge: <slug>` — vendor surprise or operator confusion.
     Spawn a `docs/knowledge/<slug>.md` entry.
   - `merge into <slug>` — covered by another row's entry.
+  - `fixed: <commit>` — a small change with no entry of its own,
+    shipped in the kaizen PR.
   - `no-op: <one-line reason>` — friction was real but already
     eradicated by an upstream rule, or genuinely too small. **The
     reason is required.** "Already covered by the `*.utils.ts`
     rule landed earlier in the same PR" is fine; "skipped" is not.
+    **A reason that names a change is not a no-op.** "Worth a line in
+    the hook's message" is a fix someone has to make, so make it in
+    this PR and record the row as `fixed: <commit>`. PR #108's sweep
+    wrote exactly that about the kill hook's `ss` advice, shipped
+    nothing, and PR #136 hit the same missing `ss` again.
 
 **Hard floor: every row has a decision. No `?` cells. No "we'll
 think about this later".**
