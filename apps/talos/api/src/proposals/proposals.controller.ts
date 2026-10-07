@@ -5,7 +5,7 @@ import {
   proposalSlugValidator,
   proposalStatusQueryValidator,
 } from './proposals.schema';
-import { decideProposal, listProposals } from './proposals.service';
+import { cancelProposalDecision, decideProposal, listProposals } from './proposals.service';
 
 // @FollowsBlueprint controller-guarded-router
 export function buildProposalsRouter() {
@@ -20,6 +20,13 @@ export function buildProposalsRouter() {
         slug: context.req.valid('param').slug,
         decision,
         comment,
+        now: new Date(),
+      });
+      return context.json(proposal);
+    })
+    .delete('/:slug/decision', proposalSlugValidator, async (context) => {
+      const proposal = await cancelProposalDecision({
+        slug: context.req.valid('param').slug,
         now: new Date(),
       });
       return context.json(proposal);

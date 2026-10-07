@@ -2,14 +2,21 @@ import { describe, expect, it } from 'vitest';
 import { buildFailureToast, selectToastDuration } from './toast.core';
 
 describe('selectToastDuration', () => {
+  const undo = { label: 'Annuler', onAction: () => undefined };
+
   it('lets a confirmation go after four seconds', () => {
-    expect(selectToastDuration('neutral')).toBe(4000);
-    expect(selectToastDuration('success')).toBe(4000);
-    expect(selectToastDuration('info')).toBe(4000);
+    expect(selectToastDuration({ tone: 'neutral' })).toBe(4000);
+    expect(selectToastDuration({ tone: 'success' })).toBe(4000);
+    expect(selectToastDuration({ tone: 'info' })).toBe(4000);
+  });
+
+  it('leaves six seconds to a confirmation that can be undone', () => {
+    expect(selectToastDuration({ tone: 'success', action: undo })).toBe(6000);
   });
 
   it('keeps a failure on screen until the owner closes it', () => {
-    expect(selectToastDuration('danger')).toBeNull();
+    expect(selectToastDuration({ tone: 'danger' })).toBeNull();
+    expect(selectToastDuration({ tone: 'danger', action: undo })).toBeNull();
   });
 });
 

@@ -28,6 +28,7 @@ import {
   Sun,
   Trash2,
   TriangleAlert,
+  Undo2,
   Waypoints,
   WifiOff,
   X,
@@ -66,6 +67,7 @@ const ICONS = {
   'sign-out': LogOut,
   passkey: KeyRound,
   remove: Trash2,
+  undo: Undo2,
   'bell-off': BellOff,
 } as const satisfies Record<string, LucideIcon>;
 

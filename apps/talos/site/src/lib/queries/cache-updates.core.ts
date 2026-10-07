@@ -56,14 +56,12 @@ export interface CachedProposal {
   readonly status: string;
 }
 
-export function applyProposalDecision<Proposal extends CachedProposal>(
+export function setProposalStatus<Proposal extends CachedProposal>(
   proposals: readonly Proposal[],
   slug: string,
-  decision: string,
+  status: string,
 ): Proposal[] {
-  return proposals.map((proposal) =>
-    proposal.slug === slug ? { ...proposal, status: decision } : proposal,
-  );
+  return proposals.map((proposal) => (proposal.slug === slug ? { ...proposal, status } : proposal));
 }
 
 export function replaceProposal<Proposal extends CachedProposal>(

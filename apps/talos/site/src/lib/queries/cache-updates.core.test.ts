@@ -1,12 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyProposalDecision,
   applyTodoPatch,
   buildPendingTodo,
   isKeptAfterSignOut,
   removeById,
   replaceProposal,
   replaceTodo,
+  setProposalStatus,
 } from './cache-updates.core';
 
 const TODAY = '2026-10-05';
@@ -78,7 +78,7 @@ describe('the proposal cache', () => {
   const other = { slug: 'y', status: 'proposee', title: 'Y' };
 
   it('moves the decided proposal to its new status only', () => {
-    expect(applyProposalDecision([pending, other], 'x', 'acceptee')).toEqual([
+    expect(setProposalStatus([pending, other], 'x', 'acceptee')).toEqual([
       { ...pending, status: 'acceptee' },
       other,
     ]);

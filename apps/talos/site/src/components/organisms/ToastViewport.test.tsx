@@ -56,4 +56,25 @@ describe('the toast viewport', () => {
     expect([...shown].map((toast) => toast.textContent)).toEqual(['Proposition acceptée.']);
     tree.unmount();
   });
+
+  it('runs the undo action once and closes the toast', () => {
+    const onAction = vi.fn();
+    const tree = mountWithClient(createIsolatedQueryClient(), <ToastViewport />);
+    act(() => {
+      showToast({
+        tone: 'success',
+        message: 'Proposition acceptée.',
+        action: { label: 'Annuler', onAction },
+      });
+    });
+    const undo = [...tree.container.querySelectorAll('button')].find(
+      (button) => button.textContent === 'Annuler',
+    );
+    act(() => {
+      undo?.click();
+    });
+    expect(onAction).toHaveBeenCalledOnce();
+    expect(tree.container.querySelector('[role="status"]')).toBeNull();
+    tree.unmount();
+  });
 });

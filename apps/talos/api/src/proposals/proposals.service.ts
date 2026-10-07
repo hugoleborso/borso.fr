@@ -9,6 +9,8 @@ import { TalosError } from '../helpers/errors/talos-error.types';
 import { fireRoutine } from '../helpers/routine/routine-fire.adapter';
 import {
   buildProposalPath,
+  type CancellationOutcome,
+  cancelProposalDecisionFile,
   type DecisionOutcome,
   decideProposalFile,
   isProposalFile,
@@ -20,6 +22,12 @@ const PROPOSALS_DIRECTORY = 'etat/propositions';
 function readDecidedProposal(outcome: DecisionOutcome): Proposal {
   if (outcome.kind === 'not-found') throw new TalosError('proposal-not-found');
   if (outcome.kind === 'already-decided') throw new TalosError('proposal-already-decided');
+  return outcome.proposal;
+}
+
+function readReopenedProposal(outcome: CancellationOutcome): Proposal {
+  if (outcome.kind === 'not-found') throw new TalosError('proposal-not-found');
+  if (outcome.kind === 'not-revocable') throw new TalosError('proposal-not-revocable');
   return outcome.proposal;
 }
 
@@ -47,4 +55,15 @@ export async function decideProposal(params: {
   const proposal = readDecidedProposal(outcome);
   await fireRoutine('proposition', path);
   return proposal;
+}
+
+export async function cancelProposalDecision(params: {
+  readonly slug: string;
+  readonly now: Date;
+}): Promise<Proposal> {
+  const cancelledAt = formatParisMinute(params.now);
+  const outcome = await editContentFile(buildProposalPath(params.slug), (current) =>
+    cancelProposalDecisionFile(params.slug, current, cancelledAt),
+  );
+  return readReopenedProposal(outcome);
 }

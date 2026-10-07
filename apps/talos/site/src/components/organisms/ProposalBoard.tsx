@@ -5,13 +5,19 @@ import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { PageTitle } from '../atoms/PageTitle';
 import { DecidedProposalRow } from '../molecules/DecidedProposalRow';
+import { RevokeDecisionButton } from '../molecules/RevokeDecisionButton';
 import { ProposalCard } from '../molecules/ProposalCard';
 import { ProposalOutcome } from '../molecules/ProposalOutcome';
 import { EmptyState } from '../molecules/EmptyState';
 import { QueryState } from '../molecules/QueryState';
 import { DISPLAY_LOCALE, formatShortDay } from '../../lib/calendar-day.utils';
 import { renderMarkdownToSafeHtml } from '../../lib/markdown.utils';
-import { useDecideProposal, useProposals } from '../../lib/queries/proposals.queries';
+import { isDecisionRevocable } from '@domain/proposal.core';
+import {
+  useCancelProposalDecision,
+  useDecideProposal,
+  useProposals,
+} from '../../lib/queries/proposals.queries';
 import { ProposalDecisionForm } from './ProposalDecisionForm';
 import {
   countAwaitingDecision,
@@ -31,9 +37,31 @@ export function ProposalBoard(): JSX.Element {
   const { t } = useTranslation();
   const proposals = useProposals();
   const decideProposal = useDecideProposal();
+  const cancelDecision = useCancelProposalDecision();
   const [decidedHereSlugs, setDecidedHereSlugs] = useState<ReadonlySet<string>>(new Set());
   const { pending, decided } = partitionProposals(proposals.data ?? [], decidedHereSlugs);
   const pendingCount = countAwaitingDecision(pending);
+  const keepOnBoard = (slug: string): void => {
+    setDecidedHereSlugs((slugs) => new Set([...slugs, slug]));
+  };
+  const isWriting = decideProposal.isPending || cancelDecision.isPending;
+  const renderRevokeButton = (proposal: {
+    slug: string;
+    status: string;
+  }): JSX.Element | undefined => {
+    const isRevocable = isDecisionRevocable(proposal.status);
+    if (!isRevocable) return undefined;
+    return (
+      <RevokeDecisionButton
+        label={t('proposals.revoke')}
+        isDisabled={isWriting}
+        onRevoke={() => {
+          keepOnBoard(proposal.slug);
+          cancelDecision.mutate({ slug: proposal.slug });
+        }}
+      />
+    );
+  };
 
   return (
     <>
@@ -69,8 +97,9 @@ export function ProposalBoard(): JSX.Element {
                   <ProposalDecisionForm
                     slug={proposal.slug}
                     isPending={decideProposal.isPending}
+                    startsCommenting={decidedHereSlugs.has(proposal.slug)}
                     onDecided={(payload) => {
-                      setDecidedHereSlugs((slugs) => new Set([...slugs, proposal.slug]));
+                      keepOnBoard(proposal.slug);
                       decideProposal.mutate({ slug: proposal.slug, ...payload });
                     }}
                   />
@@ -78,6 +107,7 @@ export function ProposalBoard(): JSX.Element {
                   <ProposalOutcome
                     isAccepted={isAcceptedOutcome(proposal.status)}
                     label={t(selectOutcomeKey(proposal.status))}
+                    action={renderRevokeButton(proposal)}
                   />
                 )}
               </ProposalCard>
@@ -110,6 +140,7 @@ export function ProposalBoard(): JSX.Element {
                     statusLabel={t(selectStatusLabelKey(proposal.status))}
                     statusTone={selectStatusTone(proposal.status)}
                     decisions={proposal.decisions}
+                    action={renderRevokeButton(proposal)}
                   />
                 ))}
               </ul>

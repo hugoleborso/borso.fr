@@ -64,6 +64,8 @@ The exact draft (email, message, change) that runs if the owner accepts.
 
 On a decision the API sets `statut` to `acceptee` or `refusee`, appends a line `- 2026-10-05 10:12 : acceptée — <comment>` under « Décision », and fires the "message" run (see below). Talos later sets the status to `faite`.
 
+While the status is still `acceptee` or `refusee`, the owner can cancel the decision: the API sets `statut` back to `proposee` and appends a line `- 2026-10-05 10:13 : décision annulée` under « Décision », without firing any run. Earlier lines are never removed, so the section keeps the whole history. A proposal that is `faite` or `expiree` can no longer be cancelled. A run that reads a proposal must therefore take its status from the front matter, not from the last line it finds under « Décision ».
+
 ### Daily brief
 
 The `## Brief envoyé` section of `journal/AAAA-MM-JJ.md`.
@@ -112,7 +114,8 @@ The two registration routes also accept a session: that is how a second passkey 
 | POST | `/todos` | `{ text, dueDate? }` | `Todo`, status 201 |
 | PATCH | `/todos/:id` | `{ done?, text?, dueDate? }` | `Todo` |
 | GET | `/proposals?status=proposee` | | `Proposal[]` (newest first) |
-| POST | `/proposals/:slug/decision` | `{ decision: "acceptee" \| "refusee", comment? }` | `Proposal` |
+| POST | `/proposals/:slug/decision` | `{ decision: "acceptee" \| "refusee", comment? }` | `Proposal`; 409 when the proposal is not `proposee` |
+| DELETE | `/proposals/:slug/decision` | | `Proposal` back to `proposee`; 409 when the status is not `acceptee` or `refusee`, 404 when unknown. Fires no run |
 | GET | `/graph?date=AAAA-MM-JJ` | | `{ nodes: { id, title, type }[], edges: { source, target, relation, since?, until? }[] }` (with `date`, only the relations true on that date) |
 | GET | `/pages/*` (path without `.md`) | | `{ path, title, type, frontMatter: Record<string,string>, markdown, outgoingLinks: string[], incomingLinks: string[] }` |
 | GET | `/search?q=` | | `{ path, title, excerpt }[]` (20 at most, title matches before content matches) |
@@ -141,13 +144,13 @@ type Proposal = { slug: string; category: string; status: string; title: string;
 
 ### Firing a run
 
-A decision on a proposal, or a message, calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<type>: <path of the file in the repository>" }`. Without `fire-url`, the file is still committed and the next scheduled run picks it up.
+A decision on a proposal, or a message, calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<type>: <path of the file in the repository>" }`. Without `fire-url`, the file is still committed and the next scheduled run picks it up. Cancelling a decision fires nothing.
 
 ## Screens
 
 - **Aujourd'hui**: the focus (editable), today's brief, today's todos, the number of pending proposals.
 - **Todo**: quick add, check, due date, done or not filter.
-- **Propositions**: cards with the reason, the draft, and Accept, Refuse, Comment buttons.
+- **Propositions**: cards with the reason, the draft, and Accept, Refuse, Comment buttons. A decided proposal that is not yet `faite` shows « Revenir sur ma décision », on its card and in the history; after it, the card is decidable again with the comment field open. The toast that confirms a decision carries « Annuler » for six seconds, which does the same.
 - **Second brain**: search, a page rendered from markdown with clickable `[[…]]` links, incoming links, and an interactive graph with a date slider.
 - **Message**: one field to write to Talos.
 - **Réglages** (from the header of Aujourd'hui): registered passkeys (date added, add one, remove any but the last), notifications (state, test, turn off), sign out.

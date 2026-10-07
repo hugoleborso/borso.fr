@@ -91,4 +91,54 @@ describe('the proposal routes', () => {
     });
     expect(response.status).toBe(404);
   });
+  it('cancels a decision: back to proposee, history kept, no routine fired', async () => {
+    const fetcher = vi.fn(async () => await Promise.resolve(new Response('{}', { status: 200 })));
+    vi.stubGlobal('fetch', fetcher);
+    const { app, overlay } = buildTestContext(CONTENT_FIXTURE);
+    const cookie = await signIn();
+    await requestJson(app, '/api/proposals/2026-10-04-cv/decision', {
+      method: 'POST',
+      body: { decision: 'acceptee' },
+      cookie,
+    });
+    useTestSecrets({
+      'fire-url': 'https://api.anthropic.com/v1/routines/r1/fire',
+      'fire-token': 'jeton',
+      'secret-phrase': 'phrase',
+    });
+    const response = await requestJson(app, '/api/proposals/2026-10-04-cv/decision', {
+      method: 'DELETE',
+      cookie,
+    });
+    expect(response.status).toBe(200);
+    const proposal: { status: string; decisions: string[] } = await response.json();
+    expect(proposal.status).toBe('proposee');
+    expect(proposal.decisions).toHaveLength(2);
+    expect(proposal.decisions[1]).toMatch(/ : décision annulée$/);
+    const file = overlay.get('etat/propositions/2026-10-04-cv.md');
+    expect(file).toContain('statut: proposee');
+    expect(file).toMatch(/: acceptée\n- .* : décision annulée\n/);
+    expect(fetcher).not.toHaveBeenCalled();
+  });
+
+  it('refuses to cancel a proposal that has no decision', async () => {
+    const { app } = buildTestContext(CONTENT_FIXTURE);
+    const response = await requestJson(app, '/api/proposals/2026-10-04-cv/decision', {
+      method: 'DELETE',
+      cookie: await signIn(),
+    });
+    expect(response.status).toBe(409);
+    expect(await response.json()).toEqual({
+      error: 'Aucune décision à annuler : la proposition est en attente ou déjà traitée.',
+    });
+  });
+
+  it('answers 404 when cancelling on an unknown proposal', async () => {
+    const { app } = buildTestContext(CONTENT_FIXTURE);
+    const response = await requestJson(app, '/api/proposals/2026-01-01-absente/decision', {
+      method: 'DELETE',
+      cookie: await signIn(),
+    });
+    expect(response.status).toBe(404);
+  });
 });
