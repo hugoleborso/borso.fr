@@ -9,7 +9,9 @@ export type SecretName =
   | 'notify-secret'
   | 'fire-url'
   | 'fire-token'
-  | 'secret-phrase';
+  | 'secret-phrase'
+  | 'claude-environment-talos'
+  | 'claude-environment-build';
 
 export type SecretReader = (name: SecretName) => Promise<string | undefined>;
 

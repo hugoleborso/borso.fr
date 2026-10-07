@@ -73,11 +73,14 @@ Lives in: `api/src/pages/`
 
 ## Message
 
-A note from the owner to Talos, written to `boite/messages/`.
+A note from the owner to Talos. It is not stored: the Message screen opens a Claude Code session on the web with the message as its prompt.
 
-Lives in: `api/src/messages/`
+Lives in: `api/src/messages/`, `site/src/components/organisms/message-composer.core.ts`
 
-- Code: `Message` (`text`).
+- Code: `ClaudeCodeTarget` (`repository`, `environments`), what the API answers so the screen can build the link; `ClaudeCodeEnvironment` (`talos` to read and answer, `build` to code and deploy); `buildClaudeCodeAddress` and `composeTalosPrompt` build the link.
+- The repository is `GITHUB_REPO`; the environment ids are deployment settings under `/talos/`, never written in this repository.
+
+Not to be confused with: a run, which Talos starts on a schedule or after a proposal decision.
 
 ## Passkey, session, push subscription
 

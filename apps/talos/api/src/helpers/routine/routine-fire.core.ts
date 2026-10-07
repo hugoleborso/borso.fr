@@ -1,4 +1,4 @@
-export type RoutineTrigger = 'proposition' | 'message';
+export type RoutineTrigger = 'proposition';
 
 export type FireOutcome =
   | { readonly kind: 'fired' }

@@ -1,38 +1,45 @@
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import { buildTestContext, requestJson, signIn } from '../../../test/app-utils';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { buildTestContext, requestJson, signIn, useTestSecrets } from '../../../test/app-utils';
 import { truncateAllTables } from '../../../test/database-utils';
 
 beforeEach(async () => {
   await truncateAllTables();
-  vi.useFakeTimers({ toFake: ['Date'] });
-  vi.setSystemTime(new Date('2026-10-05T08:12:30Z'));
-  return () => {
-    vi.useRealTimers();
-  };
+});
+
+afterEach(() => {
+  vi.unstubAllEnvs();
 });
 
 // @FollowsBlueprint test-back-e2e
-describe('POST /api/messages', () => {
-  it('drops the message in the inbox under its Paris timestamp', async () => {
-    const { app, overlay } = buildTestContext({});
-    const response = await requestJson(app, '/api/messages', {
-      method: 'POST',
-      body: { text: 'Rappelle-moi Julie' },
+describe('GET /api/messages/claude-code', () => {
+  it('answers the content repository and both environments from the deployment settings', async () => {
+    vi.stubEnv('GITHUB_REPO', 'proprietaire/notes');
+    const { app } = buildTestContext({});
+    useTestSecrets({
+      'claude-environment-talos': 'env_lecture',
+      'claude-environment-build': 'env_construction',
+    });
+    const response = await requestJson(app, '/api/messages/claude-code', {
       cookie: await signIn(),
     });
-    expect(await response.json()).toEqual({ ok: true });
-    expect(overlay.get('boite/messages/2026-10-05-101230.md')).toBe(
-      '---\norigine: pwa\ndate: 2026-10-05T08:12:30.000Z\n---\n\nRappelle-moi Julie\n',
-    );
+    expect(response.status).toBe(200);
+    expect(await response.json()).toEqual({
+      repository: 'proprietaire/notes',
+      environments: { talos: 'env_lecture', build: 'env_construction' },
+    });
   });
 
-  it('refuses an empty message', async () => {
+  it('answers null environments while the settings are not set', async () => {
     const { app } = buildTestContext({});
-    const response = await requestJson(app, '/api/messages', {
-      method: 'POST',
-      body: { text: '  ' },
+    const response = await requestJson(app, '/api/messages/claude-code', {
       cookie: await signIn(),
     });
-    expect(response.status).toBe(400);
+    expect(await response.json()).toMatchObject({ environments: { talos: null, build: null } });
+  });
+
+  it('refuses a caller without a session', async () => {
+    const { app } = buildTestContext({});
+    const response = await requestJson(app, '/api/messages/claude-code');
+    expect(response.status).toBe(401);
   });
 });

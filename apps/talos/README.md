@@ -1,6 +1,6 @@
 # talos
 
-PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief, a searchable notes graph, messages and push notifications. Its content is a private GitHub repository that the API reads and writes at runtime (`GITHUB_REPO`); nothing from it lives here. Full-stack triplet (`site` / `api` / `cdk`, plus `domain/`) modelled on `pragma`.
+PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief, a searchable notes graph, a message screen that opens Claude Code on the web, and push notifications. Its content is a private GitHub repository that the API reads and writes at runtime (`GITHUB_REPO`); nothing from it lives here. Full-stack triplet (`site` / `api` / `cdk`, plus `domain/`) modelled on `pragma`.
 
 - Contract and file formats: [`CONTRAT.md`](./CONTRAT.md). Words to use in code: [`VOCABULARY.md`](./VOCABULARY.md).
 - Deploys to prod only, never to a preview ([ADR-0027](../../docs/adr/0027-talos-deploys-to-prod-only.md)). Stacks `talos-cluster` and `talos-prod`; the site bucket is `talos-prod-<account id>` because `talos-prod` is unavailable in S3.

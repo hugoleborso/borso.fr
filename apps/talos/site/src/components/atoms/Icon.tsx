@@ -8,6 +8,7 @@ import {
   ChevronLeft,
   ChevronRight,
   Clock,
+  Hammer,
   Info,
   KeyRound,
   Lightbulb,
@@ -69,6 +70,7 @@ const ICONS = {
   remove: Trash2,
   undo: Undo2,
   'bell-off': BellOff,
+  build: Hammer,
 } as const satisfies Record<string, LucideIcon>;
 
 export type IconName = keyof typeof ICONS;

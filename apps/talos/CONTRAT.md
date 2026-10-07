@@ -8,7 +8,7 @@ The file formats below belong to the private repository, so their keys and secti
 
 - **Git is the only source of truth for content.** The API reads and writes the files of the private repository named by `GITHUB_REPO` through the GitHub API, with a fine-grained token limited to "contents" read and write on that one repository. Every write is a commit with a French message, such as `pwa : todo cochée …`. The scheduled runs and the app share the same state that way.
 - **What is not content lives in the database**: passkeys, WebAuthn challenges, push subscriptions, sessions and sign-in attempts. It follows [`docs/standards/11-database.md`](../../docs/standards/11-database.md): an Aurora DSQL cluster of its own, `talos-cluster` (`DsqlClusterStack`), and the `prod` schema (`DsqlSchema` through `PreviewableApp`), as pragma does. Drizzle tables live in each slice's `<slice>.schema.ts`; `pnpm --filter @borso-app/talos run db:generate` writes the migrations into `api/src/database/migrations/`, and the migration runner of `@borso/infra` applies them on deploy. Only `*.repository.ts` files reach the database.
-- **Secrets** are SSM Parameter Store SecureStrings under the `/talos/` prefix (`TALOS_SSM_PREFIX`; the Lambda may read `/talos/*` and nothing wider): `github-token`, `vapid-public`, `vapid-private`, `session-hmac`, `bootstrap-code`, `notify-secret`, and optionally `fire-url`, `fire-token`, `secret-phrase`.
+- **Secrets** are SSM Parameter Store SecureStrings under the `/talos/` prefix (`TALOS_SSM_PREFIX`; the Lambda may read `/talos/*` and nothing wider): `github-token`, `vapid-public`, `vapid-private`, `session-hmac`, `bootstrap-code`, `notify-secret`, and optionally `fire-url`, `fire-token`, `secret-phrase`. Two settings that are not secret live under the same prefix as plain `String` parameters, so that this public repository holds neither: `claude-environment-talos` and `claude-environment-build`, the ids of the two Claude Code environments the Message screen opens.
 - **One user.** Sign-in is by passkey (WebAuthn, `@simplewebauthn/server` 13, relying party `TALOS_RP_ID` = `talos.borso.fr`). The first registration requires the bootstrap code read from SSM. Once a passkey exists, registration closes; a second passkey is added from a signed-in session.
 - **The interface is in French only**, from one catalogue, `site/src/i18n/fr.json`. Identifiers, routes and API JSON fields are in English, per `borso/no-french-identifiers`. [`VOCABULARY.md`](./VOCABULARY.md) maps each French file key to its English name.
 - **Production only.** There is no preview stage: a preview would serve the private repository's content on a `preview.borso.fr` host. See [ADR-0027](../../docs/adr/0027-talos-deploys-to-prod-only.md).
@@ -76,7 +76,13 @@ The `## Brief envoyé` section of `journal/AAAA-MM-JJ.md`.
 
 ### Messages to Talos
 
-`boite/messages/AAAA-MM-JJ-HHMMSS.md` (front matter `origine: pwa`, `date`), handled by the "message" run.
+A message is not a file. The Message screen opens a Claude Code session on the web, on the private repository, with the message as its prompt. The link is the one documented under "Pre-fill sessions" in the Claude Code web quickstart:
+
+```
+https://claude.ai/code?repositories=<GITHUB_REPO>&environment=<environment id>&prompt=<preamble, a blank line, the message>
+```
+
+Each value is encoded with `encodeURIComponent`. The preamble is « Tu es Talos. Lis CLAUDE.md puis réponds à ce message de Hugo : », from the French catalogue. A blank message sends the preamble alone. An environment whose setting is missing is left out of the link, and Claude Code then picks its default one. Beyond 6000 characters the screen warns that the link may be cut.
 
 ## API
 
@@ -119,7 +125,7 @@ The two registration routes also accept a session: that is how a second passkey 
 | GET | `/graph?date=AAAA-MM-JJ` | | `{ nodes: { id, title, type }[], edges: { source, target, relation, since?, until? }[] }` (with `date`, only the relations true on that date) |
 | GET | `/pages/*` (path without `.md`) | | `{ path, title, type, frontMatter: Record<string,string>, markdown, outgoingLinks: string[], incomingLinks: string[] }` |
 | GET | `/search?q=` | | `{ path, title, excerpt }[]` (20 at most, title matches before content matches) |
-| POST | `/messages` | `{ text }` | `{ ok: true }` |
+| GET | `/messages/claude-code` | | `{ repository, environments: { talos: string \| null, build: string \| null } }`: `GITHUB_REPO` and the two environment settings, `null` when a setting is missing |
 | GET | `/push/public-key` | | `{ key }` (public VAPID key) |
 | POST | `/push/subscriptions` | `PushSubscriptionJSON` | `{ ok: true }` |
 | DELETE | `/push/subscriptions` | `{ endpoint }` | `{ ok: true }` |
@@ -144,7 +150,7 @@ type Proposal = { slug: string; category: string; status: string; title: string;
 
 ### Firing a run
 
-A decision on a proposal, or a message, calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<type>: <path of the file in the repository>" }`. Without `fire-url`, the file is still committed and the next scheduled run picks it up. Cancelling a decision fires nothing.
+A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<type>: <path of the file in the repository>" }`. Without `fire-url`, the file is still committed and the next scheduled run picks it up. Cancelling a decision fires nothing.
 
 ## Screens
 
@@ -152,7 +158,7 @@ A decision on a proposal, or a message, calls `POST <fire-url>` with `Authorizat
 - **Todo**: quick add, check, due date, done or not filter.
 - **Propositions**: cards with the reason, the draft, and Accept, Refuse, Comment buttons. A decided proposal that is not yet `faite` shows « Revenir sur ma décision », on its card and in the history; after it, the card is decidable again with the comment field open. The toast that confirms a decision carries « Annuler » for six seconds, which does the same.
 - **Second brain**: search, a page rendered from markdown with clickable `[[…]]` links, incoming links, and an interactive graph with a date slider.
-- **Message**: one field to write to Talos.
+- **Message**: one field and two links, « Talos » (the reading environment, the main one) and « Construire » (the build environment). Each opens Claude Code in a new tab with the message prefilled; nothing is written to the repository.
 - **Réglages** (from the header of Aujourd'hui): registered passkeys (date added, add one, remove any but the last), notifications (state, test, turn off), sign out.
 - Every write confirms or reports its failure with a toast, one at a time, an error staying until closed.
 - Installable (manifest, icons, service worker), push notifications after a user gesture (iOS requires it), readable offline on the last loaded state.

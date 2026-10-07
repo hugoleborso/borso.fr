@@ -12,7 +12,7 @@ export const talosManifest: ArchitectureManifest = {
       icon: '🧑',
       name: 'Owner',
       description:
-        'The one person the application serves. Signs in with a passkey, reads the day, checks todos, accepts or refuses proposals and writes messages to the assistant.',
+        'The one person the application serves. Signs in with a passkey, reads the day, checks todos, accepts or refuses proposals and opens a Claude Code session to write to the assistant.',
     },
     {
       id: 'scheduled-run',
@@ -108,9 +108,19 @@ export const talosManifest: ArchitectureManifest = {
       name: 'Agent routine trigger',
       technology: 'HTTPS POST with a bearer token',
       description:
-        'Fired after a proposal decision or a message, so the assistant acts without waiting for its next scheduled run. Optional: without it the committed file waits for that run.',
+        'Fired after a proposal decision, so the assistant acts without waiting for its next scheduled run. Optional: without it the committed file waits for that run.',
       boundary: 'third-party',
       access: 'credential',
+    },
+    {
+      id: 'claude-code-web',
+      icon: '💬',
+      name: 'Claude Code on the web',
+      technology: 'Prefilled session link, opened in a new tab',
+      description:
+        'The Message screen links to claude.ai/code with the repository, the environment and the prompt in the query string. The application never calls it; the browser follows the link.',
+      boundary: 'third-party',
+      access: 'open',
     },
     {
       id: 'web-push',
@@ -149,7 +159,7 @@ export const talosManifest: ArchitectureManifest = {
       name: 'SSM Parameter Store',
       technology: 'AWS SDK, GetParameter with decryption',
       description:
-        'Holds every secret under /talos/ as a SecureString: the GitHub token, the VAPID keys, the session key, the bootstrap code and the notify secret.',
+        'Holds every secret under /talos/ as a SecureString (the GitHub token, the VAPID keys, the session key, the bootstrap code and the notify secret), and the two Claude Code environment ids as plain parameters.',
       boundary: 'aws',
       access: 'credential',
     },

@@ -10,10 +10,6 @@ export const FOCUS_SAVED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.focus-saved',
 };
-export const MESSAGE_SENT_TOAST: TranslatableToast = {
-  tone: 'success',
-  messageKey: 'toast.message-sent',
-};
 export const PASSKEY_ADDED_TOAST: TranslatableToast = {
   tone: 'success',
   messageKey: 'toast.passkey-added',
