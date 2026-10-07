@@ -4,6 +4,7 @@ import { readSection } from './markdown-page.core';
 
 export const PROPOSAL_DECISIONS = ['acceptee', 'refusee'] as const;
 export const PENDING_PROPOSAL_STATUS = 'proposee';
+const REVOCABLE_STATUSES: readonly string[] = PROPOSAL_DECISIONS;
 
 export type ProposalDecision = (typeof PROPOSAL_DECISIONS)[number];
 
@@ -36,6 +37,7 @@ const DECISION_HEADING_LINE = `## ${DECISION_HEADING}`;
 const LIST_ITEM_PREFIX = '- ';
 const LINE_BREAK = '\n';
 const LINE_BREAKS_PATTERN = /\s*[\r\n]+\s*/g;
+const CANCELLATION_LABEL = 'décision annulée';
 const DECISION_LABELS: Readonly<Record<ProposalDecision, string>> = {
   acceptee: 'acceptée',
   refusee: 'refusée',
@@ -71,6 +73,10 @@ export function parseProposal(slug: string, markdown: string): Proposal | null {
 export function isProposalPending(proposal: Proposal, today: string): boolean {
   const isActive = proposal.expiresOn === undefined || proposal.expiresOn >= today;
   return proposal.status === PENDING_PROPOSAL_STATUS && isActive;
+}
+
+export function isDecisionRevocable(status: string): boolean {
+  return REVOCABLE_STATUSES.includes(status);
 }
 
 export function sortProposalsNewestFirst(proposals: readonly Proposal[]): Proposal[] {
@@ -119,4 +125,12 @@ function insertDecisionLine(markdown: string, decisionLine: string): string {
 export function applyProposalDecision(markdown: string, record: DecisionRecord): string {
   const withStatus = setFrontMatterValue(markdown, 'statut', record.decision);
   return insertDecisionLine(withStatus, formatDecisionLine(record));
+}
+
+export function applyDecisionCancellation(markdown: string, cancelledAt: string): string {
+  const withStatus = setFrontMatterValue(markdown, 'statut', PENDING_PROPOSAL_STATUS);
+  return insertDecisionLine(
+    withStatus,
+    `${LIST_ITEM_PREFIX}${cancelledAt} : ${CANCELLATION_LABEL}`,
+  );
 }

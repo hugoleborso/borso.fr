@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next';
 import {
   buildFailureToast,
   selectToastDuration,
+  type ToastAction,
   type ToastContent,
   type TranslatableToast,
 } from './toast.core';
@@ -35,7 +36,7 @@ export function showToast(content: ToastContent): void {
   clearTimeout(toastStore.dismissTimer);
   publishToast({ ...content, id: toastStore.nextToastId });
   toastStore.nextToastId += 1;
-  const duration = selectToastDuration(content.tone);
+  const duration = selectToastDuration(content);
   if (duration !== null) toastStore.dismissTimer = setTimeout(dismissToast, duration);
 }
 
@@ -55,16 +56,27 @@ export function useShownToast(): ShownToast | null {
   return useSyncExternalStore(subscribeToToasts, readShownToast, readShownToast);
 }
 
+export interface TranslatableToastAction {
+  readonly labelKey: ParseKeys;
+  readonly onAction: ToastAction['onAction'];
+}
+
 export interface MutationToasts {
-  readonly confirm: (toast: TranslatableToast) => void;
+  readonly confirm: (toast: TranslatableToast, action?: TranslatableToastAction) => void;
   readonly fail: (failure: unknown, fallbackKey: ParseKeys) => void;
 }
 
 export function useMutationToasts(): MutationToasts {
   const { t } = useTranslation();
   return {
-    confirm: (toast) => {
-      showToast({ tone: toast.tone, message: t(toast.messageKey) });
+    confirm: (toast, action) => {
+      showToast({
+        tone: toast.tone,
+        message: t(toast.messageKey),
+        ...(action === undefined
+          ? {}
+          : { action: { label: t(action.labelKey), onAction: action.onAction } }),
+      });
     },
     fail: (failure, fallbackKey) => {
       showToast(buildFailureToast(failure, t(fallbackKey)));

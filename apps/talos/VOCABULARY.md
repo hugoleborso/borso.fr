@@ -35,6 +35,7 @@ Lives in: `api/src/proposals/`
 - Code: `Proposal` (`category`, `status`, `priority`, `createdOn`, `expiresOn`, `why`, `draft` for « Ce que Talos propose », `decisions`).
 - The values `proposee`, `acceptee`, `refusee` stay in French: they are data the repository holds, not identifiers.
 - A decision appends a line under « Décision » and fires a run (`api/src/helpers/routine/`).
+- A cancellation (`cancelProposalDecision`) takes back an `acceptee` or `refusee` decision before Talos acts on it: the status returns to `proposee`, a `décision annulée` line is appended, and no run fires. It is not a third decision, which is why it is not in `PROPOSAL_DECISIONS`.
 
 Not to be confused with: a message, which the owner writes and Talos reads.
 

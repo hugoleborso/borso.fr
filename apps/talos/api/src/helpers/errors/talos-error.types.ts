@@ -21,6 +21,10 @@ export const TALOS_ERRORS = {
   'passkey-not-found': { status: 404, message: 'Passkey introuvable.' },
   'todo-duplicate': { status: 409, message: 'Cette tâche existe déjà.' },
   'proposal-already-decided': { status: 409, message: 'Cette proposition est déjà tranchée.' },
+  'proposal-not-revocable': {
+    status: 409,
+    message: 'Aucune décision à annuler : la proposition est en attente ou déjà traitée.',
+  },
   'last-passkey': {
     status: 409,
     message: 'Impossible de supprimer la dernière passkey : ajoutes-en une autre avant.',

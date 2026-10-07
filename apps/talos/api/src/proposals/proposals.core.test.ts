@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildProposalPath,
+  cancelProposalDecisionFile,
   decideProposalFile,
   isProposalFile,
   readProposalSlug,
@@ -88,4 +89,44 @@ describe('decideProposalFile', () => {
       outcome: { kind: 'already-decided' },
     });
   });
+});
+
+describe('cancelProposalDecisionFile', () => {
+  const decided = decideProposalFile('p', proposalFile('proposee', '2026-10-04'), RECORD).content;
+
+  it('puts the proposal back to proposee and keeps the decision in the history', () => {
+    const edit = cancelProposalDecisionFile('p', decided, '2026-10-05 10:13');
+    expect(edit).toMatchObject({
+      commitMessage: 'pwa : décision annulée p',
+      outcome: {
+        kind: 'cancelled',
+        proposal: {
+          slug: 'p',
+          status: 'proposee',
+          decisions: ['2026-10-05 10:12 : acceptée — ok', '2026-10-05 10:13 : décision annulée'],
+        },
+      },
+    });
+    expect(edit.content).toContain('statut: proposee');
+  });
+
+  it('answers not-found for a missing file or a file that is not a proposal', () => {
+    expect(cancelProposalDecisionFile('p', null, '2026-10-05 10:13')).toEqual({
+      content: null,
+      outcome: { kind: 'not-found' },
+    });
+    expect(cancelProposalDecisionFile('p', '# Notes', '2026-10-05 10:13')).toEqual({
+      content: null,
+      outcome: { kind: 'not-found' },
+    });
+  });
+
+  it.each([['proposee'], ['faite'], ['expiree']])(
+    'refuses to cancel a proposal whose status is %s',
+    (status) => {
+      expect(
+        cancelProposalDecisionFile('p', proposalFile(status, '2026-10-04'), '2026-10-05 10:13'),
+      ).toEqual({ content: null, outcome: { kind: 'not-revocable' } });
+    },
+  );
 });

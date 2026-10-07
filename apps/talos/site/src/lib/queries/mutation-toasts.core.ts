@@ -26,6 +26,10 @@ export const PUSH_ENABLED_TOAST: TranslatableToast = {
   tone: 'success',
   messageKey: 'toast.push-enabled',
 };
+export const DECISION_CANCELLED_TOAST: TranslatableToast = {
+  tone: 'neutral',
+  messageKey: 'toast.proposal-decision-cancelled',
+};
 export const PUSH_DISABLED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.push-disabled',

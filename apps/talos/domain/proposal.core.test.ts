@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
+  applyDecisionCancellation,
   applyProposalDecision,
+  isDecisionRevocable,
   isProposalPending,
   parseProposal,
   type Proposal,
@@ -203,6 +205,34 @@ describe('applyProposalDecision', () => {
       }),
     ).toBe(
       '---\nstatut: acceptee\n---\n## Pourquoi\nx\n\n## Décision\n- 2026-10-05 09:00 : acceptée\n',
+    );
+  });
+});
+
+describe('isDecisionRevocable', () => {
+  it.each([
+    ['acceptee', true],
+    ['refusee', true],
+    ['proposee', false],
+    ['faite', false],
+    ['expiree', false],
+  ])('answers %s → %s', (status, expected) => {
+    expect(isDecisionRevocable(status)).toBe(expected);
+  });
+});
+
+describe('applyDecisionCancellation', () => {
+  it('puts the status back to proposee and appends the cancellation after the decision', () => {
+    const decided = applyProposalDecision(PROPOSAL_FILE, {
+      decision: 'acceptee',
+      decidedAt: '2026-10-05 10:12',
+    });
+    const cancelled = applyDecisionCancellation(decided, '2026-10-05 10:13');
+    expect(cancelled).toBe(
+      PROPOSAL_FILE.replace(
+        '## Décision\n',
+        '## Décision\n- 2026-10-05 10:12 : acceptée\n- 2026-10-05 10:13 : décision annulée\n',
+      ),
     );
   });
 });
