@@ -1,9 +1,11 @@
 /** @Feature setlists */
 
 import type { JSX } from 'react';
-import { useMemo } from 'react';
+import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
+import { Button } from '../../components/atoms/Button';
+import { Icon } from '../../components/atoms/Icon';
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -40,6 +42,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   const navigateTo = useNavigateTo();
   const setlistQuery = useSetlist(setlistId);
   const [searchParams] = useSearchParams();
+  const [isEnergyShown, setIsEnergyShown] = useState(true);
   const setlistsQuery = useSetlistsList();
   const sessionsQuery = useSessionsList();
   const setlist = setlistQuery.data?.setlist ?? null;
@@ -80,7 +83,19 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
           displayedName={displayedName}
           onDeleted={() => navigateTo('/setlists')}
           trailing={
-            <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
+            <>
+              <Button
+                variant={isEnergyShown ? 'default' : 'ghost'}
+                aria-label={t('setlist.energy')}
+                aria-pressed={isEnergyShown}
+                title={t('setlist.energy')}
+                className="w-11 px-0"
+                onClick={() => setIsEnergyShown((isShown) => !isShown)}
+              >
+                <Icon name="chart" size={18} />
+              </Button>
+              <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
+            </>
           }
         />
       </div>
@@ -100,6 +115,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
         setlistId={setlist.id}
         concertSessionId={selectConcertSessionId(sessions)}
         initialMemberId={searchParams.get(MEMBER_FILTER_PARAM)}
+        isEnergyShown={isEnergyShown}
       />
     </section>
   );

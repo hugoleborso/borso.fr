@@ -39,6 +39,7 @@ interface SetlistEditorProps {
   readonly setlistId: string;
   readonly concertSessionId: string | null;
   readonly initialMemberId: string | null;
+  readonly isEnergyShown: boolean;
 }
 
 const NO_ROWS: readonly never[] = [];
@@ -58,6 +59,7 @@ export function SetlistEditor({
   setlistId,
   concertSessionId,
   initialMemberId,
+  isEnergyShown,
 }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
   const entriesQuery = useSetlistEntries(setlistId);
@@ -226,6 +228,7 @@ export function SetlistEditor({
       <SetlistToolbar
         energyValues={energyValues}
         isCompact={isNarrow}
+        isEnergyShown={isEnergyShown}
         members={lineupMembers}
         selectedMemberId={selectedMemberId}
         failureMessage={displayFailureKey === null ? null : t(displayFailureKey)}
