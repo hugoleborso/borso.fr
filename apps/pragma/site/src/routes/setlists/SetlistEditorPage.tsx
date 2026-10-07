@@ -15,6 +15,10 @@ import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { SetlistHeaderActions } from '../../components/organisms/SetlistHeaderActions';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { MEMBER_FILTER_PARAM } from '../../lib/next-concert.core';
+import {
+  isEnergyCurveShownIn,
+  didStoreEnergyCurveChoice,
+} from '../../lib/energy-curve-preference.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
@@ -42,7 +46,13 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   const navigateTo = useNavigateTo();
   const setlistQuery = useSetlist(setlistId);
   const [searchParams] = useSearchParams();
-  const [isEnergyShown, setIsEnergyShown] = useState(true);
+  const [isEnergyShown, setIsEnergyShown] = useState(() =>
+    isEnergyCurveShownIn(window.localStorage),
+  );
+  const toggleEnergyCurve = (): void => {
+    didStoreEnergyCurveChoice(window.localStorage, !isEnergyShown);
+    setIsEnergyShown(!isEnergyShown);
+  };
   const setlistsQuery = useSetlistsList();
   const sessionsQuery = useSessionsList();
   const setlist = setlistQuery.data?.setlist ?? null;
@@ -90,7 +100,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
                 aria-pressed={isEnergyShown}
                 title={t('setlist.energy')}
                 className="w-11 px-0"
-                onClick={() => setIsEnergyShown((isShown) => !isShown)}
+                onClick={toggleEnergyCurve}
               >
                 <Icon name="chart" size={18} />
               </Button>
