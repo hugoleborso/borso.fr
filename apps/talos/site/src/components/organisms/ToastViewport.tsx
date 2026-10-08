@@ -21,7 +21,7 @@ export function ToastViewport(): JSX.Element {
   return (
     <div
       aria-live="polite"
-      className="fixed inset-x-0 z-50 px-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] pointer-events-none"
+      className="fixed inset-x-0 z-50 px-4 bottom-[calc(4.5rem+env(safe-area-inset-bottom))] [body:has([data-docked-composer])_&]:bottom-[calc(8.25rem+env(safe-area-inset-bottom))] pointer-events-none"
     >
       <div className="max-w-[560px] mx-auto pointer-events-auto">
         {toast === null ? null : (

@@ -51,6 +51,36 @@ export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
   'etat/propositions/2026-10-05.md': '---\ntype: journal\n---\n# Notes\n',
   'journal/2026-10-05.md':
     '# 2026-10-05\n\n## Brief envoyé\n\n**Lundi 5 octobre**\n\n## Fait\nrien\n',
+  'journal/2026-10-04.md': '# 2026-10-04\n\n## Scan (18:00)\n\nrien\n',
+  'engagements/2026-10-06-devis-acme.md': [
+    '---',
+    'type: engagement',
+    'sens: moi->eux',
+    'qui: "[[second-brain/moi]]"',
+    'echeance: 2026-10-06 09:00',
+    'statut: ouvert',
+    '---',
+    '# Envoyer le devis à Acme',
+    '',
+  ].join('\n'),
+  'engagements/sans-date-retour-bruno.md': [
+    '---',
+    'type: engagement',
+    'sens: eux->moi',
+    'quoi: Bruno renvoie le contrat',
+    'statut: ouvert',
+    '---',
+    '',
+  ].join('\n'),
+  'etat/dernier-scan.json': JSON.stringify({
+    scan: {
+      date: '2026-10-05T07:30:00+02:00',
+      par: 'brief',
+      sources_ok: 8,
+      sources_ko: ['Strava'],
+    },
+  }),
+  'engagements/2026-09-01-ancien.md': '---\ntype: engagement\nstatut: fait\n---\n# Ancien\n',
   'etat/graphe.jsonl': [
     '{"source": "second-brain/moi", "relation": "travaille_sur", "cible": "second-brain/projets/refonte", "depuis": "2026-09-01", "jusqua": "", "vu": "2026-10-02", "src": "x"}',
     '{"source": "second-brain/moi", "relation": "travaille_sur", "cible": "second-brain/projets/initech", "depuis": "2026-01", "jusqua": "2026-05", "vu": "2026-05-30", "src": "y"}',

@@ -10,10 +10,6 @@ export const FOCUS_SAVED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.focus-saved',
 };
-export const MESSAGE_SENT_TOAST: TranslatableToast = {
-  tone: 'success',
-  messageKey: 'toast.message-sent',
-};
 export const PASSKEY_ADDED_TOAST: TranslatableToast = {
   tone: 'success',
   messageKey: 'toast.passkey-added',
@@ -55,4 +51,11 @@ export function selectPushTestToast(delivered: number): TranslatableToast {
   return delivered > 0
     ? { tone: 'success', messageKey: 'toast.push-test-sent' }
     : { tone: 'info', messageKey: 'toast.push-test-none' };
+}
+
+export function selectTodoReversal(
+  update: { readonly id: string } & TodoPatch,
+): { readonly id: string; readonly done: boolean } | null {
+  if (update.done === undefined) return null;
+  return { id: update.id, done: !update.done };
 }

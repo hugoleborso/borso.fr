@@ -1,6 +1,6 @@
 # talos
 
-PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief, a searchable notes graph, messages and push notifications. Its content is a private GitHub repository that the API reads and writes at runtime (`GITHUB_REPO`); nothing from it lives here. Full-stack triplet (`site` / `api` / `cdk`, plus `domain/`) modelled on `pragma`.
+PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief, a searchable notes graph, a message screen that opens Claude Code on the web, and push notifications. Its content is a private GitHub repository that the API reads and writes at runtime (`GITHUB_REPO`); nothing from it lives here. Full-stack triplet (`site` / `api` / `cdk`, plus `domain/`) modelled on `pragma`.
 
 - Contract and file formats: [`CONTRAT.md`](./CONTRAT.md). Words to use in code: [`VOCABULARY.md`](./VOCABULARY.md).
 - Deploys to prod only, never to a preview ([ADR-0027](../../docs/adr/0027-talos-deploys-to-prod-only.md)). Stacks `talos-cluster` and `talos-prod`; the site bucket is `talos-prod-<account id>` because `talos-prod` is unavailable in S3.
@@ -13,7 +13,7 @@ PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief
 
 ## Scripts
 
-- `pnpm dev` — local Postgres, Hono API on port 3001, Vite on port 5180 with `/api` proxied.
+- `pnpm dev` — local Postgres, Hono API on port 3001, Vite on port 5180 with `/api` proxied. The API reads its content from the monorepo root, or from the folder `TALOS_DEV_CONTENT_ROOT` names (a copy of the private repository, or demonstration files); writes stay in memory.
 - `pnpm test:core` — pure suites and the CDK stack test, 100% per-file coverage on `*.core.ts`, `*.utils.ts`, `*.adapter.ts`, `*.schema.ts`.
 - `pnpm test` — back-e2e suite against the local Postgres.
 - `pnpm test:mutation` — Stryker, 100% of mutants killed.

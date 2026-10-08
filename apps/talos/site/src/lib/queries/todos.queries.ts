@@ -9,7 +9,11 @@ import {
   type TodoPatch,
 } from './cache-updates.core';
 import { useMutationToasts } from '../toast.hook';
-import { selectTodoUpdateToast, TODO_ADDED_TOAST } from './mutation-toasts.core';
+import {
+  selectTodoReversal,
+  selectTodoUpdateToast,
+  TODO_ADDED_TOAST,
+} from './mutation-toasts.core';
 import { todayKeys } from './today.queries';
 
 export const todoKeys = {
@@ -83,7 +87,7 @@ export function useCreateTodo() {
 export function useUpdateTodo() {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
-  return useMutation({
+  const updateTodo = useMutation({
     mutationFn: async (variables: { id: string } & TodoPatch) => {
       const { id, ...patch } = variables;
       const response = await api.api.todos[':id'].$patch({ param: { id }, json: patch });
@@ -116,7 +120,13 @@ export function useUpdateTodo() {
       return { previousList, previousOverview };
     },
     onSuccess: (savedTodo, variables) => {
-      toasts.confirm(selectTodoUpdateToast(variables));
+      const reversal = selectTodoReversal(variables);
+      toasts.confirm(
+        selectTodoUpdateToast(variables),
+        reversal === null
+          ? undefined
+          : { labelKey: 'toast.undo', onAction: () => updateTodo.mutate(reversal) },
+      );
       queryClient.setQueryData<TodosResponse>(todoKeys.list(), (old) => {
         if (old === undefined) return old;
         return { items: replaceTodo(old.items, variables.id, savedTodo) };
@@ -136,4 +146,5 @@ export function useUpdateTodo() {
       }
     },
   });
+  return updateTodo;
 }

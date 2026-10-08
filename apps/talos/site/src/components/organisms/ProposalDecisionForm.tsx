@@ -33,8 +33,8 @@ export function ProposalDecisionForm({
     <div className="flex flex-col gap-3">
       {isCommenting ? (
         <div className="flex flex-col gap-1.5">
-          <label htmlFor={commentId} className="text-label text-ink-muted">
-            {t('proposals.comment-label')}
+          <label htmlFor={commentId} className="sr-only">
+            {t('proposals.comment')}
           </label>
           <form.Field name="comment">
             {(field) => (

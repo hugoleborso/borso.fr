@@ -2,6 +2,7 @@ export const loadLoginPage = async () => await import('./routes/LoginPage');
 export const loadTodayPage = async () => await import('./routes/TodayPage');
 export const loadTodosPage = async () => await import('./routes/TodosPage');
 export const loadProposalsPage = async () => await import('./routes/ProposalsPage');
+export const loadCommitmentsPage = async () => await import('./routes/CommitmentsPage');
 export const loadBrainPage = async () => await import('./routes/BrainPage');
 export const loadBrainEntryPage = async () => await import('./routes/BrainEntryPage');
 export const loadGraphPage = async () => await import('./routes/GraphPage');
@@ -12,6 +13,7 @@ const SCREENS_KEPT_FOR_OFFLINE = [
   loadTodayPage,
   loadTodosPage,
   loadProposalsPage,
+  loadCommitmentsPage,
   loadBrainPage,
   loadBrainEntryPage,
   loadMessagePage,

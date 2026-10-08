@@ -7,21 +7,28 @@ import { Icon } from '../atoms/Icon';
 export function InstallHint(): JSX.Element {
   const { t } = useTranslation();
   return (
-    <Card>
-      <p className="m-0 text-heading text-ink">{t('today.install.title')}</p>
-      <p className="m-0 mt-1 text-body-sm text-ink-soft">{t('today.install.body')}</p>
-      <ol className="m-0 mt-3 p-0 list-none flex flex-col gap-2 text-body-sm text-ink">
-        <li className="flex items-center gap-3">
-          <Icon name="share" size={20} className="text-patina" />
-          {t('today.install.step-share')}
+    <Card padding="none">
+      <ol
+        aria-label={t('today.install.title')}
+        className="m-0 px-4 py-3 list-none flex items-center justify-center gap-3 text-patina"
+      >
+        <li className="flex items-center">
+          <Icon name="share" size={22} />
+          <span className="sr-only">{t('today.install.step-share')}</span>
         </li>
-        <li className="flex items-center gap-3">
-          <Icon name="square-plus" size={20} className="text-patina" />
-          {t('today.install.step-add')}
+        <li aria-hidden="true" className="text-ink-faint">
+          <Icon name="chevron" size={16} />
         </li>
-        <li className="flex items-center gap-3">
-          <img src="/icons/icon-192.png" alt="" width={20} height={20} className="rounded-sm" />
-          {t('today.install.step-open')}
+        <li className="flex items-center">
+          <Icon name="square-plus" size={22} />
+          <span className="sr-only">{t('today.install.step-add')}</span>
+        </li>
+        <li aria-hidden="true" className="text-ink-faint">
+          <Icon name="chevron" size={16} />
+        </li>
+        <li className="flex items-center">
+          <img src="/icons/icon-192.png" alt="" width={22} height={22} className="rounded-sm" />
+          <span className="sr-only">{t('today.install.step-open')}</span>
         </li>
       </ol>
     </Card>

@@ -1,6 +1,11 @@
-import { PENDING_PROPOSAL_STATUS, type ProposalDecision } from '@domain/proposal.core';
+import {
+  isDecisionRevocable,
+  PENDING_PROPOSAL_STATUS,
+  type ProposalDecision,
+} from '@domain/proposal.core';
 import type { ParseKeys } from 'i18next';
 import type { ChipTone } from '../atoms/chip.variants';
+import type { IconName } from '../atoms/Icon';
 
 export interface ProposalShape {
   readonly slug: string;
@@ -121,10 +126,21 @@ export function buildDecisionPayload(
   return trimmed.length > 0 ? { decision, comment: trimmed } : { decision };
 }
 
-export function hasPendingProposals(count: number): boolean {
-  return count > 0;
-}
-
 export function countAwaitingDecision(proposals: readonly ProposalShape[]): number {
   return proposals.filter((proposal) => isAwaitingDecision(proposal.status)).length;
+}
+
+export type ProposalSheetIntent = ProposalDecision | 'revoke';
+
+export const PROPOSAL_SHEET_ACTION: Readonly<
+  Record<ProposalSheetIntent, { readonly labelKey: ParseKeys; readonly icon: IconName }>
+> = {
+  acceptee: { labelKey: 'proposals.accept', icon: 'check' },
+  refusee: { labelKey: 'proposals.refuse', icon: 'close' },
+  revoke: { labelKey: 'proposals.revoke', icon: 'undo' },
+};
+
+export function selectProposalSheetActions(status: string): ProposalSheetIntent[] {
+  if (isAwaitingDecision(status)) return ['acceptee', 'refusee'];
+  return isDecisionRevocable(status) ? ['revoke'] : [];
 }

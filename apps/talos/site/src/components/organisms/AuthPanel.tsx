@@ -58,7 +58,6 @@ function RegisterStep({ onSignedIn, onFailure }: StepProps): JSX.Element {
         void form.handleSubmit();
       }}
     >
-      <p className="m-0 text-body-sm text-ink-soft">{t('auth.register.lead')}</p>
       <label htmlFor="bootstrap-code" className="text-body-sm font-medium text-ink-soft">
         {t('auth.register.code-label')}
       </label>
@@ -107,7 +106,6 @@ export function AuthPanel(): JSX.Element {
       <div className="flex flex-col items-center text-center mb-6">
         <img src="/icons/icon.svg" alt="" width={64} height={64} className="rounded-lg mb-4" />
         <h1 className="m-0 font-display text-display text-ink">{t('auth.title')}</h1>
-        <p className="m-0 mt-1 text-body-sm text-ink-muted">{t('auth.subtitle')}</p>
       </div>
       {session.isPending ? <Spinner label={t('common.loading')} /> : null}
       {isSupported ? null : <Notice tone="danger">{t('auth.unsupported')}</Notice>}

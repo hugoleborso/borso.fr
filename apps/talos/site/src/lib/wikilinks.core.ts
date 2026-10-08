@@ -7,6 +7,8 @@ const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
 const LEADING_SLASHES_PATTERN = /^\/+/;
 const ANCHOR_PATTERN = /#.*$/s;
 const PATH_SEPARATOR = '/';
+const SLUG_SEPARATOR = '-';
+const DISPLAY_LANGUAGE = 'fr';
 
 export function normalisePagePath(target: string): string {
   return stripMarkdownExtension(
@@ -22,6 +24,14 @@ export function buildPageHref(pagePath: string): string {
 export function selectPageLabel(pagePath: string): string {
   const normalised = normalisePagePath(pagePath);
   return normalised.slice(normalised.lastIndexOf(PATH_SEPARATOR) + 1);
+}
+
+export function selectPageName(pagePath: string): string {
+  return selectPageLabel(pagePath)
+    .split(SLUG_SEPARATOR)
+    .filter((word) => word !== '')
+    .map((word) => `${word.charAt(0).toLocaleUpperCase(DISPLAY_LANGUAGE)}${word.slice(1)}`)
+    .join(' ');
 }
 
 export function convertWikilinksToMarkdown(markdown: string): string {

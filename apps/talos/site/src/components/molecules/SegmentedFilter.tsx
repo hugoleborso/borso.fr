@@ -29,7 +29,7 @@ export function SegmentedFilter<Value extends string>({
           <Button
             key={option.value}
             variant="quiet"
-            size="sm"
+            size="md"
             aria-pressed={isSelected}
             onClick={() => onSelected(option.value)}
             className={composeClassName(

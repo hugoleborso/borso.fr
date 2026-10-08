@@ -16,11 +16,15 @@ export function useContentStore(store: ContentStore): void {
   holder.chosen = store;
 }
 
+export function readContentRepository(): string {
+  return process.env[REPOSITORY_VARIABLE] ?? DEFAULT_REPOSITORY;
+}
+
 // @FollowsBlueprint adapter-chosen-by-the-composition-root
 export function resolveContentStore(): ContentStore {
   if (holder.chosen !== null) return holder.chosen;
   holder.fromEnvironment ??= createGithubContentStore({
-    repository: process.env[REPOSITORY_VARIABLE] ?? DEFAULT_REPOSITORY,
+    repository: readContentRepository(),
     readToken: async () => await readTalosSecret('github-token'),
   });
   return holder.fromEnvironment;

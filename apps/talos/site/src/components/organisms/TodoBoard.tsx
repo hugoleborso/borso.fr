@@ -13,6 +13,7 @@ import {
   formatShortDay,
   toIsoDay,
 } from '../../lib/calendar-day.utils';
+import { openActionSheet } from '../../lib/action-sheet.hook';
 import { useTodos, useUpdateTodo } from '../../lib/queries/todos.queries';
 import { TodoEditForm } from './TodoEditForm';
 import { TodoQuickAdd } from './TodoQuickAdd';
@@ -46,8 +47,7 @@ export function TodoBoard(): JSX.Element {
       <PageTitle subtitle={t('todo.open-count', { count: countOpenTodos(allTodos) })}>
         {t('todo.title')}
       </PageTitle>
-      <div className="flex flex-col gap-4">
-        <TodoQuickAdd />
+      <div className="flex flex-col gap-4 pb-16">
         <SegmentedFilter
           label={t('todo.filter.label')}
           options={TODO_FILTERS.map((value) => ({
@@ -65,6 +65,12 @@ export function TodoBoard(): JSX.Element {
               {visibleTodos.map((todo) => {
                 const status = selectDueStatus(todo, today, tomorrow);
                 const isEditing = todo.id === editingId;
+                const toggle = (): void => {
+                  updateTodo.mutate({ id: todo.id, done: !todo.done });
+                };
+                const edit = (): void => {
+                  setEditingId(todo.id);
+                };
                 return isEditing ? (
                   <TodoEditForm
                     key={todo.id}
@@ -90,18 +96,33 @@ export function TodoBoard(): JSX.Element {
                     dueTone={selectDueTone(status)}
                     dueIcon={selectDueIcon(status)}
                     hasCommitment={todo.commitment !== undefined}
-                    onToggle={() => updateTodo.mutate({ id: todo.id, done: !todo.done })}
-                    onEdit={() => setEditingId(todo.id)}
+                    onToggle={toggle}
+                    onEdit={edit}
+                    onLongPress={() => {
+                      openActionSheet({
+                        title: todo.text,
+                        subject: { kind: 'todo' },
+                        actions: [
+                          {
+                            labelKey: todo.done ? 'todo.row.uncheck' : 'todo.row.check',
+                            icon: todo.done ? 'undo' : 'check',
+                            onSelect: toggle,
+                          },
+                          { labelKey: 'common.edit', icon: 'edit', onSelect: edit },
+                        ],
+                      });
+                    }}
                   />
                 );
               })}
             </ul>
             {visibleTodos.length === 0 ? (
-              <EmptyState icon="check" title={t(selectTodoEmptyLabelKey(filter))} />
+              <EmptyState icon="check" label={t(selectTodoEmptyLabelKey(filter))} />
             ) : null}
           </Card>
         )}
       </div>
+      <TodoQuickAdd />
     </>
   );
 }

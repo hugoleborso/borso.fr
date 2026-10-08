@@ -51,7 +51,26 @@ Lives in: `api/src/today/`
 
 A promise, made by or to the owner, one file under `engagements/`.
 
-- Code: `commitment`. The app only links to it from a todo and shows it as a page; it has no slice of its own.
+Lives in: `api/src/commitments/`
+
+- Code: `Commitment` (`path`, `title`, `direction`, `counterpart` for `qui`, `dueDate` for `echeance`). `direction` is `owed` for `moi->eux` (the owner promised) and `awaited` for `eux->moi`.
+- Read only, open ones only (`statut: ouvert`).
+
+## Run report
+
+When a scheduled run last went through, from `etat/dernier-scan.json`.
+
+Lives in: `api/src/today/last-runs.core.ts`
+
+- Code: `LastRuns` (`scan`, `macCollection` for `collecte_mac`), `RunReport` (`at` for `date`, `trigger` for `par`, `failedSources` for `sources_ko`).
+
+## Discussion subject
+
+The item of data a long press opens the action sheet on, and that « Discuter » hands to Claude Code.
+
+Lives in: `site/src/lib/discussion-subject.core.ts`, `site/src/lib/action-sheet.hook.ts`
+
+- Code: `DiscussionSubjectReference` (one kind per file of the private repository), `selectSubjectFile` names that file.
 
 ## Graph
 
@@ -73,11 +92,14 @@ Lives in: `api/src/pages/`
 
 ## Message
 
-A note from the owner to Talos, written to `boite/messages/`.
+A note from the owner to Talos. It is not stored: the Message screen opens a Claude Code session on the web with the message as its prompt.
 
-Lives in: `api/src/messages/`
+Lives in: `api/src/messages/`, `site/src/lib/claude-code-address.core.ts`
 
-- Code: `Message` (`text`).
+- Code: `ClaudeCodeTarget` (`repository`, `environments`), what the API answers so the screen can build the link; `ClaudeCodeEnvironment` (`talos` to read and answer, `build` to code and deploy); `buildClaudeCodeAddress` and `composeTalosPrompt` build the link.
+- The repository is `GITHUB_REPO`; the environment ids are deployment settings under `/talos/`, never written in this repository.
+
+Not to be confused with: a run, which Talos starts on a schedule or after a proposal decision.
 
 ## Passkey, session, push subscription
 

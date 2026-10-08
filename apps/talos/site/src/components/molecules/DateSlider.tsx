@@ -25,10 +25,7 @@ export function DateSlider({
   return (
     <div className="flex flex-col gap-1">
       <div className="flex items-center justify-between gap-2 min-h-9">
-        <p className="m-0 text-caption text-ink-muted">
-          {t('graph.date-label')}{' '}
-          <span className="font-display text-prose-heading text-ink">{dateLabel}</span>
-        </p>
+        <p className="m-0 font-display text-prose-heading text-ink">{dateLabel}</p>
         {isToday ? (
           <Chip tone="patina">{t('graph.today')}</Chip>
         ) : (

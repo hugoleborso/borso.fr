@@ -1,10 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  addDaysToDate,
-  formatParisDate,
-  formatParisFileStamp,
-  formatParisMinute,
-} from './paris-clock.utils';
+import { addDaysToDate, formatParisDate, formatParisMinute } from './paris-clock.utils';
 
 const SUMMER_EVENING_UTC = new Date('2026-10-05T22:30:05Z');
 const WINTER_MORNING_UTC = new Date('2026-12-01T07:04:09Z');
@@ -22,12 +17,6 @@ describe('formatParisMinute', () => {
 
   it('writes the Paris wall clock two hours ahead of UTC in summer', () => {
     expect(formatParisMinute(SUMMER_EVENING_UTC)).toBe('2026-10-06 00:30');
-  });
-});
-
-describe('formatParisFileStamp', () => {
-  it('writes a stamp usable in a file name', () => {
-    expect(formatParisFileStamp(WINTER_MORNING_UTC)).toBe('2026-12-01-080409');
   });
 });
 

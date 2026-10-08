@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { PageTitle } from '../atoms/PageTitle';
 import { DateSlider } from '../molecules/DateSlider';
@@ -16,6 +17,8 @@ import {
   toIsoDay,
 } from '../../lib/calendar-day.utils';
 import { useDebouncedValue } from '../../lib/debounced-value.hook';
+import { openActionSheet } from '../../lib/action-sheet.hook';
+import { PRESSABLE_CLASS_NAME, usePressGesture } from '../../lib/press-gesture.hook';
 import { useGraph } from '../../lib/queries/brain.queries';
 import { buildPageHref } from '../../lib/wikilinks.core';
 import {
@@ -73,6 +76,8 @@ export function KnowledgeGraph(): JSX.Element {
   const graphRef = useRef<GraphInstance | null>(null);
   const focusedIdRef = useRef<string | null>(null);
   const isFitPendingRef = useRef(false);
+  const hoveredNodeRef = useRef<GraphNode | null>(null);
+  const isNodeClickSuppressedRef = useRef(false);
   const today = toIsoDay(new Date());
   const timeline = buildMonthlyTimeline(today);
   const lastPosition = timeline.length - 1;
@@ -92,6 +97,32 @@ export function KnowledgeGraph(): JSX.Element {
   );
   const focusedTitle = findNodeTitle(fullGraph.nodes, focusedId);
   const isToday = isLatestTimelineIndex(timeline, position.value);
+  const discussNode = (nodeId: string, title: string): void => {
+    openActionSheet({
+      title,
+      subject: { kind: 'page', path: nodeId },
+      actions: [
+        {
+          labelKey: 'discuss.action.open',
+          icon: 'open',
+          onSelect: () => void navigate(buildPageHref(nodeId)),
+        },
+      ],
+    });
+  };
+  const canvasPress = usePressGesture({
+    onLongPress: () => {
+      const node = hoveredNodeRef.current;
+      if (node === null) return;
+      isNodeClickSuppressedRef.current = true;
+      discussNode(node.id, node.title);
+    },
+  });
+  const focusPress = usePressGesture({
+    onLongPress: () => {
+      if (focusedId !== null && focusedTitle !== null) discussNode(focusedId, focusedTitle);
+    },
+  });
 
   const attachGraph = useCallback((container: HTMLDivElement) => {
     const inkColor = readToken(container, '--color-ink-soft');
@@ -105,6 +136,9 @@ export function KnowledgeGraph(): JSX.Element {
       .nodeLabel('title')
       .linkColor(() => lineColor)
       .linkWidth(1)
+      .onNodeHover((node) => {
+        hoveredNodeRef.current = node;
+      })
       .cooldownTicks(COOLDOWN_TICKS)
       .onEngineStop(() => {
         if (!isFitPendingRef.current) return;
@@ -165,6 +199,10 @@ export function KnowledgeGraph(): JSX.Element {
       focus: setFocusedId,
     } as const;
     instance.graphData(renderable).onNodeClick((node) => {
+      if (isNodeClickSuppressedRef.current) {
+        isNodeClickSuppressedRef.current = false;
+        return;
+      }
       actOnNode[selectNodeClickIntent(focusedId, node.id)](node.id);
     });
   }, [visibleGraph, focusedId, navigate]);
@@ -198,25 +236,37 @@ export function KnowledgeGraph(): JSX.Element {
           onPositionChanged={position.onValueChanged}
         />
         {focusedTitle === null ? null : (
-          <div className="flex flex-col gap-2 p-3 rounded-md bg-patina-soft">
-            <span className="text-body-sm font-semibold text-patina">
-              {t('graph.focus', { title: focusedTitle })}
-            </span>
-            <div className="flex items-center gap-2">
-              <Link
-                to={buildPageHref(focusedId ?? '')}
-                className="inline-flex items-center gap-1 min-h-9 px-3 rounded-md bg-surface text-body-sm font-semibold text-bronze no-underline"
-              >
-                {t('graph.open-page')}
-                <Icon name="chevron" size={14} />
-              </Link>
-              <Button size="sm" variant="quiet" onClick={() => setFocusedId(null)}>
-                {t('graph.focus-clear')}
-              </Button>
-            </div>
+          <div
+            {...focusPress.handlers}
+            className={composeClassName(
+              'flex items-center gap-1 pl-3 pr-1 rounded-md bg-patina-soft',
+              PRESSABLE_CLASS_NAME,
+            )}
+          >
+            <Link
+              to={buildPageHref(focusedId ?? '')}
+              className="flex-1 min-w-0 inline-flex items-center gap-1 min-h-11 text-body-sm font-semibold text-patina no-underline"
+            >
+              <span className="truncate">{focusedTitle}</span>
+              <Icon name="chevron" size={14} />
+            </Link>
+            <Button
+              size="icon"
+              variant="quiet"
+              aria-label={t('graph.focus-clear')}
+              onClick={() => setFocusedId(null)}
+            >
+              <Icon name="close" size={18} />
+            </Button>
           </div>
         )}
-        <div className="relative h-[56dvh] rounded-lg border border-line bg-surface shadow-1 overflow-hidden touch-none">
+        <div
+          {...canvasPress.handlers}
+          className={composeClassName(
+            'relative h-[60dvh] rounded-lg border border-line bg-surface shadow-1 overflow-hidden touch-none',
+            PRESSABLE_CLASS_NAME,
+          )}
+        >
           <div ref={attachGraph} className="absolute inset-0" />
           {graph.data === undefined ? (
             <div className="absolute inset-0 flex items-center justify-center p-4">
@@ -224,7 +274,6 @@ export function KnowledgeGraph(): JSX.Element {
             </div>
           ) : null}
         </div>
-        <p className="m-0 text-caption text-ink-muted">{t('graph.hint')}</p>
         <GraphLegend
           label={t('graph.legend')}
           entries={countNodeTypes(neighbourhood.nodes).map(({ type, count }) => ({
