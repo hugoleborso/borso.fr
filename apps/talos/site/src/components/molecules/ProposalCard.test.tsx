@@ -36,6 +36,7 @@ describe('ProposalCard', () => {
           dateLabel="Expire le lun. 5 oct."
           whyHtml="<p>Conflit avec l'appel</p>"
           draft={'Bonjour,\nje décale.'}
+          onLongPress={() => undefined}
         >
           <button type="button">slot</button>
         </ProposalCard>,
@@ -44,7 +45,7 @@ describe('ProposalCard', () => {
     expect(container.querySelector('h2')?.textContent).toBe('Déplacer le bloc Umbrella');
     expect(container.querySelector('pre')?.textContent).toBe('Bonjour,\nje décale.');
     expect(container.textContent).toContain("Conflit avec l'appel");
-    expect(container.textContent).toContain('Ce que Talos propose');
+    expect(container.textContent).toContain('Brouillon');
     expect(container.querySelector('button')?.textContent).toBe('slot');
   });
 });

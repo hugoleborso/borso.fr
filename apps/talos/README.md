@@ -13,7 +13,7 @@ PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief
 
 ## Scripts
 
-- `pnpm dev` — local Postgres, Hono API on port 3001, Vite on port 5180 with `/api` proxied.
+- `pnpm dev` — local Postgres, Hono API on port 3001, Vite on port 5180 with `/api` proxied. The API reads its content from the monorepo root, or from the folder `TALOS_DEV_CONTENT_ROOT` names (a copy of the private repository, or demonstration files); writes stay in memory.
 - `pnpm test:core` — pure suites and the CDK stack test, 100% per-file coverage on `*.core.ts`, `*.utils.ts`, `*.adapter.ts`, `*.schema.ts`.
 - `pnpm test` — back-e2e suite against the local Postgres.
 - `pnpm test:mutation` — Stryker, 100% of mutants killed.

@@ -52,3 +52,10 @@ export function selectPushTestToast(delivered: number): TranslatableToast {
     ? { tone: 'success', messageKey: 'toast.push-test-sent' }
     : { tone: 'info', messageKey: 'toast.push-test-none' };
 }
+
+export function selectTodoReversal(
+  update: { readonly id: string } & TodoPatch,
+): { readonly id: string; readonly done: boolean } | null {
+  if (update.done === undefined) return null;
+  return { id: update.id, done: !update.done };
+}

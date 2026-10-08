@@ -8,7 +8,7 @@ import { type SecretName, useSecretReader } from './helpers/secrets/secrets.setu
 
 const DEFAULT_PORT = 3001;
 const HERE = dirname(fileURLToPath(import.meta.url));
-const REPOSITORY_ROOT = resolve(HERE, '..', '..', '..', '..');
+const REPOSITORY_ROOT = process.env.TALOS_DEV_CONTENT_ROOT ?? resolve(HERE, '..', '..', '..', '..');
 const DEVELOPMENT_SECRETS: Partial<Record<SecretName, string>> = {
   'session-hmac': 'talos-dev-session-hmac',
   'bootstrap-code': process.env.TALOS_DEV_BOOTSTRAP_CODE ?? 'talos-dev',

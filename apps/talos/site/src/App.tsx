@@ -5,6 +5,7 @@ import { RequireSession } from './components/organisms/RequireSession';
 import {
   loadBrainEntryPage,
   loadBrainPage,
+  loadCommitmentsPage,
   loadGraphPage,
   loadLoginPage,
   loadMessagePage,
@@ -18,6 +19,9 @@ const LoginPage = lazy(async () => ({ default: (await loadLoginPage()).LoginPage
 const TodayPage = lazy(async () => ({ default: (await loadTodayPage()).TodayPage }));
 const TodosPage = lazy(async () => ({ default: (await loadTodosPage()).TodosPage }));
 const ProposalsPage = lazy(async () => ({ default: (await loadProposalsPage()).ProposalsPage }));
+const CommitmentsPage = lazy(async () => ({
+  default: (await loadCommitmentsPage()).CommitmentsPage,
+}));
 const BrainPage = lazy(async () => ({ default: (await loadBrainPage()).BrainPage }));
 const BrainEntryPage = lazy(async () => ({
   default: (await loadBrainEntryPage()).BrainEntryPage,
@@ -37,6 +41,7 @@ export function App(): JSX.Element {
               <Route path="/" element={<TodayPage />} />
               <Route path="/todos" element={<TodosPage />} />
               <Route path="/proposals" element={<ProposalsPage />} />
+              <Route path="/commitments" element={<CommitmentsPage />} />
               <Route path="/brain" element={<BrainPage />} />
               <Route path="/brain/graph" element={<GraphPage />} />
               <Route path="/brain/page/*" element={<BrainEntryPage />} />

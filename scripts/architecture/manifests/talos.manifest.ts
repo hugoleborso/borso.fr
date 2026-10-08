@@ -210,5 +210,15 @@ export const talosManifest: ArchitectureManifest = {
       boundary: 'browser-platform',
       access: 'open',
     },
+    {
+      id: 'browser-vibration',
+      icon: '📳',
+      name: 'Vibration',
+      technology: 'navigator.vibrate',
+      description:
+        'Gives a short haptic pulse when a long press opens the action sheet, on the devices that offer it; iOS does not.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
   ],
 };

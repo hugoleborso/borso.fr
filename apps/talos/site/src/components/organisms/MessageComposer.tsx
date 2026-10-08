@@ -13,9 +13,8 @@ import {
   buildClaudeCodeAddress,
   type ClaudeCodeEnvironment,
   composeTalosPrompt,
-  isMessageTooLong,
-  LONG_MESSAGE_THRESHOLD,
-} from './message-composer.core';
+} from '../../lib/claude-code-address.core';
+import { isMessageTooLong, LONG_MESSAGE_THRESHOLD } from './message-composer.core';
 
 interface EnvironmentChoice {
   readonly environment: ClaudeCodeEnvironment;
@@ -37,7 +36,7 @@ export function MessageComposer(): JSX.Element {
 
   return (
     <>
-      <PageTitle subtitle={t('message.lead')}>{t('message.title')}</PageTitle>
+      <PageTitle>{t('message.title')}</PageTitle>
       <div className="flex flex-col gap-3">
         <label htmlFor="message-text" className="sr-only">
           {t('message.label')}
@@ -47,7 +46,6 @@ export function MessageComposer(): JSX.Element {
             <Textarea
               id="message-text"
               rows={7}
-              placeholder={t('message.placeholder')}
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               className="min-h-44"
@@ -62,6 +60,7 @@ export function MessageComposer(): JSX.Element {
                 {isTooLong ? (
                   <Notice>
                     {t('message.too-long', {
+                      length: new Intl.NumberFormat(DISPLAY_LOCALE).format(text.length),
                       limit: new Intl.NumberFormat(DISPLAY_LOCALE).format(LONG_MESSAGE_THRESHOLD),
                     })}
                   </Notice>

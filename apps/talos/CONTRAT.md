@@ -66,9 +66,36 @@ On a decision the API sets `statut` to `acceptee` or `refusee`, appends a line `
 
 While the status is still `acceptee` or `refusee`, the owner can cancel the decision: the API sets `statut` back to `proposee` and appends a line `- 2026-10-05 10:13 : décision annulée` under « Décision », without firing any run. Earlier lines are never removed, so the section keeps the whole history. A proposal that is `faite` or `expiree` can no longer be cancelled. A run that reads a proposal must therefore take its status from the front matter, not from the last line it finds under « Décision ».
 
-### Daily brief
+### Daily brief and activity
 
-The `## Brief envoyé` section of `journal/AAAA-MM-JJ.md`.
+The `## Brief envoyé` section of `journal/AAAA-MM-JJ.md`. The other `## ` headings of today's and yesterday's journal, newest first, are what the today screen lists as Talos's recent activity.
+
+### Commitments: `engagements/*.md`
+
+```markdown
+---
+type: engagement
+sens: moi->eux      # moi->eux (the owner promised) | eux->moi (owed to the owner)
+qui: "[[second-brain/personnes/alice-martin]]"
+quoi: Envoyer le devis
+echeance: 2026-10-14        # a day, optionally followed by a time
+statut: ouvert      # ouvert | fait | abandonne
+---
+# Envoyer le devis à Acme
+```
+
+The app reads the open ones only (`statut: ouvert`). Title = first `# ` heading, else `quoi`, else the path. It never writes them.
+
+### Last runs: `etat/dernier-scan.json`
+
+```json
+{
+  "scan": { "date": "2026-10-09T03:24:10+02:00", "par": "nuit", "sources_ok": 9, "sources_ko": ["Strava"] },
+  "collecte_mac": { "date": "2026-10-08T23:10:00+02:00", "sources_ok": 5, "sources_ko": [] }
+}
+```
+
+Written by the runs, read by the app. `par` is `nuit`, `brief` or `session`. A missing key means that run never happened; a missing or unreadable file shows nothing.
 
 ### Graph
 
@@ -113,7 +140,8 @@ The two registration routes also accept a session: that is how a second passkey 
 
 | Method | Route | Body | Response |
 |---|---|---|---|
-| GET | `/today` | | `{ date, focus: Focus, brief: { date, markdown } \| null, todos: Todo[] (not done, due within two days or undated, 8 at most), pendingProposalCount: number }` |
+| GET | `/today` | | `{ date, focus: Focus, brief: { date, markdown } \| null, todos: Todo[] (not done: every one due within seven days or overdue, then five undated at most), commitments: Commitment[] (open, due within seven days or overdue), commitmentCounts: { owed, awaited } (all open ones), activity: { date, heading }[] (6 at most), lastRuns: { scan: RunReport \| null, macCollection: RunReport \| null } \| null, pendingProposalCount: number }` |
+| GET | `/commitments` | | `{ items: Commitment[] }`: the open commitments, soonest due first, undated last |
 | GET | `/focus` | | `Focus` |
 | PUT | `/focus` | `{ items: FocusItem[] }` (3 at most) | `Focus` |
 | GET | `/todos` | | `{ items: Todo[] }` |
@@ -139,6 +167,8 @@ The types are inferred from `AppRouter` and each slice's Zod schemas, never writ
 type FocusItem = { title: string; why?: string; horizon?: string };
 type Focus = { updatedOn: string | null; items: FocusItem[] };
 type Todo = { id: string; text: string; done: boolean; dueDate?: string; commitment?: string; addedOn?: string; doneOn?: string };
+type Commitment = { path: string; title: string; direction: 'owed' | 'awaited' | null; counterpart?: string; dueDate?: string };
+type RunReport = { at: string; trigger?: string; failedSources: string[] };
 type Proposal = { slug: string; category: string; status: string; title: string; priority: string; createdOn: string; expiresOn?: string; why: string; draft: string; decisions: string[] };
 ```
 
@@ -152,10 +182,17 @@ type Proposal = { slug: string; category: string; status: string; title: string;
 
 A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<type>: <path of the file in the repository>" }`. Without `fire-url`, the file is still committed and the next scheduled run picks it up. Cancelling a decision fires nothing.
 
+## Discussing an item with Talos
+
+A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis ouvre ce fichier du dépôt et discutons-en avec Hugo : » followed by the kind, the title and the file of the item in the private repository (`todo.md`, `focus.md`, `etat/propositions/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `<page>.md`, `etat/dernier-scan.json`).
+
 ## Screens
 
-- **Aujourd'hui**: the focus (editable), today's brief, today's todos, the number of pending proposals.
-- **Todo**: quick add, check, due date, done or not filter.
+No screen explains its interface: only data, one- or two-word labels and icons. An empty list shows a faint icon.
+
+- **Aujourd'hui**: a dashboard. Header: the day, the age of the last scan and of the last Mac collection with the number of failed sources (a tap or a long press lists them), a « Scanner » icon that opens Claude Code with the prompt « Tu es Talos. Lis CLAUDE.md puis lance le skill talos-scan sur toutes les sources depuis le dernier curseur, traite les décisions et messages de la PWA, puis commit et push. », and the settings. Then four counters (proposals to decide, overdue todos, commitments owed, commitments awaited), the focus (editable), the week's agenda grouped by day (overdue, today, tomorrow, later days, undated todos), the brief, and Talos's recent activity. Everything opens its detail on a tap.
+- **Todo**: check, swipe right to check or uncheck (the toast offers « Annuler »), tap the text to edit, done or not filter, quick add docked above the tab bar.
+- **Engagements** (from the counters): the open commitments, filtered by direction.
 - **Propositions**: cards with the reason, the draft, and Accept, Refuse, Comment buttons. A decided proposal that is not yet `faite` shows « Revenir sur ma décision », on its card and in the history; after it, the card is decidable again with the comment field open. The toast that confirms a decision carries « Annuler » for six seconds, which does the same.
 - **Second brain**: search, a page rendered from markdown with clickable `[[…]]` links, incoming links, and an interactive graph with a date slider.
 - **Message**: one field and two links, « Talos » (the reading environment, the main one) and « Construire » (the build environment). Each opens Claude Code in a new tab with the message prefilled; nothing is written to the repository.

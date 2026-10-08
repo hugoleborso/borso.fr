@@ -5,9 +5,9 @@ import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { SectionTitle } from '../atoms/SectionTitle';
-import { EmptyState } from '../molecules/EmptyState';
 import { FocusItemCard } from '../molecules/FocusItemCard';
 import { DISPLAY_LOCALE, formatShortDay } from '../../lib/calendar-day.utils';
+import { openActionSheet } from '../../lib/action-sheet.hook';
 import { useUpdateFocus } from '../../lib/queries/today.queries';
 import { FocusEditor } from './FocusEditor';
 import { type FocusItemShape, isHorizonPast } from './focus-editor.core';
@@ -65,13 +65,19 @@ export function TodayFocus({ items, today }: TodayFocusProps): JSX.Element {
                     : formatShortDay(item.horizon, DISPLAY_LOCALE)
                 }
                 isHorizonPast={isHorizonPast(item.horizon ?? today, today)}
+                onLongPress={() => {
+                  openActionSheet({
+                    title: item.title,
+                    subject: { kind: 'focus' },
+                    actions: [
+                      { labelKey: 'common.edit', icon: 'edit', onSelect: () => setIsEditing(true) },
+                    ],
+                  });
+                }}
               />
             ))}
           </ol>
         )}
-        {items.length === 0 && !isEditing ? (
-          <EmptyState icon="sparkles" title={t('today.focus.empty')} />
-        ) : null}
       </section>
     </Card>
   );

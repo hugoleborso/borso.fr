@@ -28,6 +28,7 @@
   --color-danger-soft: #f7e1dc;
   --color-info: #2b5b8a;
   --color-info-soft: #dfe8f1;
+  --color-scrim: #191b1666;
   --color-focus: var(--color-bronze);
   --color-node-person: #b9531c;
   --color-node-organization: #2a62a3;
@@ -114,6 +115,8 @@
       --color-danger-soft: #3d1a15;
       --color-info: #7fb0e0;
       --color-info-soft: #152739;
+      --color-scrim: #000000a6;
+      --color-scrim: #000000a6;
       --color-focus: var(--color-bronze-strong);
       --color-node-person: #f08f55;
       --color-node-organization: #79a9e6;

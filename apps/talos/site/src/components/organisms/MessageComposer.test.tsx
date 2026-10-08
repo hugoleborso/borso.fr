@@ -66,7 +66,7 @@ describe('MessageComposer', () => {
     expect(build.getAttribute('href')).toBe(
       `https://claude.ai/code?repositories=proprietaire%2Fnotes&prompt=${PREAMBLE}%0A%0ARappelle%20Julie`,
     );
-    expect(screen.queryByText(/Message très long/)).toBeNull();
+    expect(screen.queryByText(/caractères/)).toBeNull();
   });
 
   it('warns about a message too long for a link', async () => {
@@ -75,6 +75,6 @@ describe('MessageComposer', () => {
     const field = screen.getByLabelText('Ton message');
     field.focus();
     await userEvent.paste('x'.repeat(6001));
-    expect(await screen.findByText(/Message très long/)).toBeTruthy();
+    expect(await screen.findByText('6 001 / 6 000 caractères')).toBeTruthy();
   });
 });

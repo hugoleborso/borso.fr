@@ -1,6 +1,7 @@
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
+import { buildCommitmentsRouter } from './commitments/commitments.controller';
 import { buildFocusRouter } from './focus/focus.controller';
 import { buildGraphRouter } from './graph/graph.controller';
 import { selectErrorResponse } from './helpers/errors/error-response.core';
@@ -34,6 +35,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/focus', buildFocusRouter())
     .route('/api/todos', buildTodosRouter())
     .route('/api/proposals', buildProposalsRouter())
+    .route('/api/commitments', buildCommitmentsRouter())
     .route('/api/graph', buildGraphRouter())
     .route('/api/pages', buildPagesRouter())
     .route('/api/search', buildSearchRouter())

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   selectDecisionToast,
   selectPushTestToast,
+  selectTodoReversal,
   selectTodoUpdateToast,
 } from './mutation-toasts.core';
 
@@ -51,5 +52,13 @@ describe('selectPushTestToast', () => {
 
   it('says no device is subscribed when nothing was delivered', () => {
     expect(selectPushTestToast(0)).toEqual({ tone: 'info', messageKey: 'toast.push-test-none' });
+  });
+});
+
+describe('selectTodoReversal', () => {
+  it('undoes a check or a reopening, and offers nothing for an edit', () => {
+    expect(selectTodoReversal({ id: 'a', done: true })).toEqual({ id: 'a', done: false });
+    expect(selectTodoReversal({ id: 'a', done: false })).toEqual({ id: 'a', done: true });
+    expect(selectTodoReversal({ id: 'a', text: 'x' })).toBeNull();
   });
 });
