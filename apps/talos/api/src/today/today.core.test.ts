@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { buildJournalPath, readBrief, selectRecentActivity, selectTodayTodos } from './today.core';
+import {
+  buildJournalPath,
+  readBrief,
+  selectRecentActivity,
+  selectTodayTodos,
+  selectUnclaimedCommitments,
+} from './today.core';
 
 function todo(text: string, overrides: { done?: boolean; dueDate?: string } = {}) {
   return {
@@ -37,6 +43,24 @@ describe('selectTodayTodos', () => {
       todo(`d${String(index)}`, { dueDate: '2026-10-06' }),
     );
     expect(selectTodayTodos([...undated, ...dated], '2026-10-07')).toHaveLength(12);
+  });
+});
+
+describe('selectUnclaimedCommitments', () => {
+  it('leaves out every commitment a task points at, however the task writes the path', () => {
+    const commitments = [
+      { path: 'engagements/devis' },
+      { path: 'engagements/livre' },
+      { path: 'engagements/contrat' },
+      { path: 'engagements/libre' },
+    ];
+    const todos = [
+      { commitment: 'engagements/devis' },
+      { commitment: '[[engagements/livre]]' },
+      { commitment: ' /engagements/contrat.md ' },
+      {},
+    ];
+    expect(selectUnclaimedCommitments(commitments, todos)).toEqual([{ path: 'engagements/libre' }]);
   });
 });
 

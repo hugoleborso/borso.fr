@@ -35,11 +35,20 @@ Three items at most. `pourquoi` (the text after the dash) and `horizon` are opti
 ```markdown
 # Todo
 
-- [ ] Envoyer le devis à Acme | échéance: 2026-10-05 | engagement: engagements/2026-10-05-devis-acme | ajouté: 2026-10-04
-- [x] Réserver la salle de sport | échéance: 2026-10-05 | ajouté: 2026-10-04 | fait: 2026-10-05
+- [ ] Envoyer le devis à Acme | échéance: 2026-10-05 | engagement: engagements/2026-10-05-devis-acme | src: sources/2026/10/04/appel-acme.md | ajouté: 2026-10-04
+- [ ] Relire le contrat | src: https://exemple.fr/fil/42 | ajouté: 2026-10-04
+- [x] Réserver la salle de sport | échéance: 2026-10-05 | src: gmail 19c56c593c4f42c8 | ajouté: 2026-10-04 | fait: 2026-10-05
 ```
 
 A line's id is `sha1(text + "|" + ajouté)` cut to 10 hexadecimal characters. Attributes after `|` are optional and in any order; unknown attributes are kept as they are when the line is rewritten.
+
+`src` names the item the todo came from, and is optional. The app reads it three ways:
+
+- a path of the repository, with or without `.md`, such as `sources/2026/10/04/appel-acme.md`: shown rendered from markdown;
+- a web address starting with `http://` or `https://`: shown as a link;
+- anything else, such as a mail identifier: shown as it is written.
+
+The `sources` key of a commitment's front matter follows the same three rules, one value or a list in brackets (`sources: ["sources/…md", "gmail 1a0f…", "https://…"]`).
 
 ### Proposals: `etat/propositions/AAAA-MM-JJ-<slug>.md`
 
@@ -84,7 +93,9 @@ statut: ouvert      # ouvert | fait | abandonne
 # Envoyer le devis à Acme
 ```
 
-The app reads the open ones only (`statut: ouvert`). Title = first `# ` heading, else `quoi`, else the path. It never writes them.
+The app reads the open ones only (`statut: ouvert`). Title = first `# ` heading, else `quoi`, else the path. `qui` is a wikilink to a person's page or a plain name. It never writes them.
+
+A todo whose `engagement` names a commitment stands for it: the today screen shows the todo and not the commitment.
 
 ### Last runs: `etat/dernier-scan.json`
 
@@ -140,18 +151,20 @@ The two registration routes also accept a session: that is how a second passkey 
 
 | Method | Route | Body | Response |
 |---|---|---|---|
-| GET | `/today` | | `{ date, focus: Focus, brief: { date, markdown } \| null, todos: Todo[] (not done: every one due within seven days or overdue, then five undated at most), commitments: Commitment[] (open, due within seven days or overdue), commitmentCounts: { owed, awaited } (all open ones), activity: { date, heading }[] (6 at most), lastRuns: { scan: RunReport \| null, macCollection: RunReport \| null } \| null, pendingProposalCount: number }` |
+| GET | `/today` | | `{ date, focus: Focus, brief: { date, markdown } \| null, todos: Todo[] (not done: every one due within seven days or overdue, then five undated at most), commitments: Commitment[] (open, due within seven days or overdue, and named by no todo's `engagement`), commitmentCounts: { owed, awaited } (all open ones), activity: { date, heading }[] (6 at most), lastRuns: { scan: RunReport \| null, macCollection: RunReport \| null } \| null, pendingProposalCount: number }` |
 | GET | `/commitments` | | `{ items: Commitment[] }`: the open commitments, soonest due first, undated last |
 | GET | `/focus` | | `Focus` |
 | PUT | `/focus` | `{ items: FocusItem[] }` (3 at most) | `Focus` |
 | GET | `/todos` | | `{ items: Todo[] }` |
 | POST | `/todos` | `{ text, dueDate? }` | `Todo`, status 201 |
 | PATCH | `/todos/:id` | `{ done?, text?, dueDate? }` | `Todo` |
+| DELETE | `/todos/:id` | | `{ todo: Todo, line, position }`: the line is removed from `todo.md` (commit `pwa : todo supprimée « … »`); `line` is the removed line and `position` its rank among the task lines, from 0. 404 when unknown |
+| POST | `/todos/restorations` | `{ line, position }` | `Todo`, status 201: the line goes back before the task now at `position`, or after the last task (commit `pwa : todo restaurée « … »`). 409 when the same task is already there, 400 when `line` is not a task line |
 | GET | `/proposals?status=proposee` | | `Proposal[]` (newest first) |
 | POST | `/proposals/:slug/decision` | `{ decision: "acceptee" \| "refusee", comment? }` | `Proposal`; 409 when the proposal is not `proposee` |
 | DELETE | `/proposals/:slug/decision` | | `Proposal` back to `proposee`; 409 when the status is not `acceptee` or `refusee`, 404 when unknown. Fires no run |
 | GET | `/graph?date=AAAA-MM-JJ` | | `{ nodes: { id, title, type }[], edges: { source, target, relation, since?, until? }[] }` (with `date`, only the relations true on that date) |
-| GET | `/pages/*` (path without `.md`) | | `{ path, title, type, frontMatter: Record<string,string>, markdown, outgoingLinks: string[], incomingLinks: string[] }` |
+| GET | `/pages/*` (path without `.md`, under `second-brain/`, `engagements/`, `objectifs/`, `journal/` or `sources/`, or `index`) | | `{ path, title, type, frontMatter: Record<string,string>, markdown, outgoingLinks: string[], incomingLinks: string[] }` |
 | GET | `/search?q=` | | `{ path, title, excerpt }[]` (20 at most, title matches before content matches) |
 | GET | `/messages/claude-code` | | `{ repository, environments: { talos: string \| null, build: string \| null } }`: `GITHUB_REPO` and the two environment settings, `null` when a setting is missing |
 | GET | `/push/public-key` | | `{ key }` (public VAPID key) |
@@ -166,8 +179,8 @@ The types are inferred from `AppRouter` and each slice's Zod schemas, never writ
 ```ts
 type FocusItem = { title: string; why?: string; horizon?: string };
 type Focus = { updatedOn: string | null; items: FocusItem[] };
-type Todo = { id: string; text: string; done: boolean; dueDate?: string; commitment?: string; addedOn?: string; doneOn?: string };
-type Commitment = { path: string; title: string; direction: 'owed' | 'awaited' | null; counterpart?: string; dueDate?: string };
+type Todo = { id: string; text: string; done: boolean; dueDate?: string; commitment?: string; source?: string; addedOn?: string; doneOn?: string };
+type Commitment = { path: string; title: string; direction: 'owed' | 'awaited' | null; counterpart?: string; counterpartName?: string; action?: string; dueDate?: string };
 type RunReport = { at: string; trigger?: string; failedSources: string[] };
 type Proposal = { slug: string; category: string; status: string; title: string; priority: string; createdOn: string; expiresOn?: string; why: string; draft: string; decisions: string[] };
 ```
@@ -184,14 +197,16 @@ A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fi
 
 ## Discussing an item with Talos
 
-A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis ouvre ce fichier du dépôt et discutons-en avec Hugo : » followed by the kind, the title and the file of the item in the private repository (`todo.md`, `focus.md`, `etat/propositions/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `<page>.md`, `etat/dernier-scan.json`).
+A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis ouvre ce fichier du dépôt et discutons-en avec Hugo : » followed by the kind, the title and the file of the item in the private repository (`todo.md`, `focus.md`, `etat/propositions/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `<page>.md`, `etat/dernier-scan.json`).
 
 ## Screens
 
 No screen explains its interface: only data, one- or two-word labels and icons. An empty list shows a faint icon.
 
 - **Aujourd'hui**: a dashboard. Header: the day, the age of the last scan and of the last Mac collection with the number of failed sources (a tap or a long press lists them), a « Scanner » icon that opens Claude Code with the prompt « Tu es Talos. Lis CLAUDE.md puis lance le skill talos-scan sur toutes les sources depuis le dernier curseur, traite les décisions et messages de la PWA, puis commit et push. », and the settings. Then four counters (proposals to decide, overdue todos, commitments owed, commitments awaited), the focus (editable), the week's agenda grouped by day (overdue, today, tomorrow, later days, undated todos), the brief, and Talos's recent activity. Everything opens its detail on a tap.
-- **Todo**: check, swipe right to check or uncheck (the toast offers « Annuler »), tap the text to edit, done or not filter, quick add docked above the tab bar.
+- **Todo**: check, swipe right to check or uncheck, swipe left to delete (both toasts offer « Annuler »; undoing a deletion puts the line back where it was), tap the text to open the detail, done or not filter, quick add docked above the tab bar.
+- **Détail d'une todo** (`/todos/:id`): the todo with check, edit and delete, then its `src` (a repository page rendered, a link, or the identifier as written), then its commitment rendered with the commitment's `sources`, each page folded until tapped.
+- **Détail d'un engagement** (`/commitments/<path>`): the commitment rendered and its `sources`, as above.
 - **Engagements** (from the counters): the open commitments, filtered by direction.
 - **Propositions**: cards with the reason, the draft, and Accept, Refuse, Comment buttons. A decided proposal that is not yet `faite` shows « Revenir sur ma décision », on its card and in the history; after it, the card is decidable again with the comment field open. The toast that confirms a decision carries « Annuler » for six seconds, which does the same.
 - **Second brain**: search, a page rendered from markdown with clickable `[[…]]` links, incoming links, and an interactive graph with a date slider.

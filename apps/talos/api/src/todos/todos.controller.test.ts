@@ -93,4 +93,34 @@ describe('the todo routes', () => {
     });
     expect(response.status).toBe(400);
   });
+
+  it('deletes a task, commits it, and puts it back in place on restoration', async () => {
+    const { app, overlay } = buildTestContext(CONTENT_FIXTURE);
+    const cookie = await signIn();
+    const deletion = await requestJson(app, `/api/todos/${CV_ID}`, { method: 'DELETE', cookie });
+    const removed: { line: string; position: number; todo: { id: string } } = await deletion.json();
+    expect(removed).toMatchObject({ position: 0, todo: { id: CV_ID } });
+    expect(overlay.get('todo.md')).not.toContain('Envoyer le CV');
+    const restoration = await requestJson(app, '/api/todos/restorations', {
+      method: 'POST',
+      body: { line: removed.line, position: removed.position },
+      cookie,
+    });
+    expect(restoration.status).toBe(201);
+    expect(await restoration.json()).toMatchObject({ id: CV_ID, text: 'Envoyer le CV' });
+    expect(overlay.get('todo.md')).toBe(CONTENT_FIXTURE['todo.md']);
+  });
+
+  it('answers 404 when deleting an unknown task, and 400 for a line that is not one', async () => {
+    const { app } = buildTestContext(CONTENT_FIXTURE);
+    const cookie = await signIn();
+    const deletion = await requestJson(app, '/api/todos/0000000000', { method: 'DELETE', cookie });
+    expect(deletion.status).toBe(404);
+    const restoration = await requestJson(app, '/api/todos/restorations', {
+      method: 'POST',
+      body: { line: '# Todo', position: 0 },
+      cookie,
+    });
+    expect(restoration.status).toBe(400);
+  });
 });

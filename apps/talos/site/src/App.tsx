@@ -5,6 +5,7 @@ import { RequireSession } from './components/organisms/RequireSession';
 import {
   loadBrainEntryPage,
   loadBrainPage,
+  loadCommitmentDetailPage,
   loadCommitmentsPage,
   loadGraphPage,
   loadLoginPage,
@@ -12,6 +13,7 @@ import {
   loadProposalsPage,
   loadSettingsPage,
   loadTodayPage,
+  loadTodoDetailPage,
   loadTodosPage,
 } from './screen-loaders.setup';
 
@@ -21,6 +23,12 @@ const TodosPage = lazy(async () => ({ default: (await loadTodosPage()).TodosPage
 const ProposalsPage = lazy(async () => ({ default: (await loadProposalsPage()).ProposalsPage }));
 const CommitmentsPage = lazy(async () => ({
   default: (await loadCommitmentsPage()).CommitmentsPage,
+}));
+const TodoDetailPage = lazy(async () => ({
+  default: (await loadTodoDetailPage()).TodoDetailPage,
+}));
+const CommitmentDetailPage = lazy(async () => ({
+  default: (await loadCommitmentDetailPage()).CommitmentDetailPage,
 }));
 const BrainPage = lazy(async () => ({ default: (await loadBrainPage()).BrainPage }));
 const BrainEntryPage = lazy(async () => ({
@@ -41,7 +49,9 @@ export function App(): JSX.Element {
               <Route path="/" element={<TodayPage />} />
               <Route path="/todos" element={<TodosPage />} />
               <Route path="/proposals" element={<ProposalsPage />} />
+              <Route path="/todos/:id" element={<TodoDetailPage />} />
               <Route path="/commitments" element={<CommitmentsPage />} />
+              <Route path="/commitments/*" element={<CommitmentDetailPage />} />
               <Route path="/brain" element={<BrainPage />} />
               <Route path="/brain/graph" element={<GraphPage />} />
               <Route path="/brain/page/*" element={<BrainEntryPage />} />

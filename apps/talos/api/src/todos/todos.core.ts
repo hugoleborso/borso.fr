@@ -1,4 +1,4 @@
-import type { TodoChanges, TodoEdit } from '@domain/todo.core';
+import type { TodoChanges, TodoEdit, TodoRemoval } from '@domain/todo.core';
 import type { FileEdit } from '../content/content.service';
 
 // @FollowsBlueprint core-decision
@@ -10,6 +10,23 @@ export function describeTodoChange(changes: TodoChanges, text: string): string {
 
 export function describeTodoAddition(text: string): string {
   return `pwa : todo ajoutée « ${text} »`;
+}
+
+export function describeTodoRemoval(text: string): string {
+  return `pwa : todo supprimée « ${text} »`;
+}
+
+export function describeTodoRestoration(text: string): string {
+  return `pwa : todo restaurée « ${text} »`;
+}
+
+export function buildTodoRemovalFileEdit(removal: TodoRemoval): FileEdit<TodoRemoval> {
+  if (removal.kind !== 'removed') return { content: null, outcome: removal };
+  return {
+    content: removal.markdown,
+    commitMessage: describeTodoRemoval(removal.todo.text),
+    outcome: removal,
+  };
 }
 
 export function buildTodoFileEdit(

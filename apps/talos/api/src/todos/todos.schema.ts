@@ -1,4 +1,4 @@
-import { isoDateSchema, todoTextSchema } from '@domain/todo.core';
+import { isoDateSchema, todoLineSchema, todoTextSchema } from '@domain/todo.core';
 import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { rejectInvalidInput } from '../helpers/validation/invalid-input.hook';
@@ -17,8 +17,14 @@ export const updateTodoSchema = z.object({
   dueDate: isoDateSchema.nullable().optional(),
 });
 
+export const restoreTodoSchema = z.object({
+  line: todoLineSchema,
+  position: z.number().int().min(0),
+});
+
 export const todoIdSchema = z.object({ id: z.string().regex(TODO_ID_PATTERN) });
 
 export const createTodoValidator = zValidator('json', createTodoSchema, rejectInvalidInput);
 export const updateTodoValidator = zValidator('json', updateTodoSchema, rejectInvalidInput);
+export const restoreTodoValidator = zValidator('json', restoreTodoSchema, rejectInvalidInput);
 export const todoIdValidator = zValidator('param', todoIdSchema, rejectInvalidInput);

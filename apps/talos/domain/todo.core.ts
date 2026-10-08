@@ -20,6 +20,9 @@ const DUE_DATE_KEY = normalizeAttributeKey('échéance');
 const COMMITMENT_KEY = normalizeAttributeKey('engagement');
 const ADDED_ON_KEY = normalizeAttributeKey('ajouté');
 const DONE_ON_KEY = normalizeAttributeKey('fait');
+const SOURCE_KEY = normalizeAttributeKey('src');
+const MAXIMUM_TODO_LINE_LENGTH = 2000;
+const RESTORABLE_LINE_PATTERN = /^- \[[ xX]\] [^\n\r]+$/;
 
 export const isoDateSchema = z.string().regex(ISO_DATE_PATTERN);
 
@@ -30,12 +33,18 @@ export const todoTextSchema = z
   .max(MAXIMUM_TODO_TEXT_LENGTH)
   .regex(SINGLE_LINE_WITHOUT_SEPARATOR);
 
+export const todoLineSchema = z
+  .string()
+  .max(MAXIMUM_TODO_LINE_LENGTH)
+  .regex(RESTORABLE_LINE_PATTERN);
+
 export const todoSchema = z.object({
   id: z.string(),
   text: z.string(),
   done: z.boolean(),
   dueDate: isoDateSchema.optional(),
   commitment: z.string().optional(),
+  source: z.string().optional(),
   addedOn: z.string().optional(),
   doneOn: z.string().optional(),
 });
@@ -57,6 +66,16 @@ export type TodoEdit =
   | { readonly kind: 'saved'; readonly markdown: string; readonly todo: Todo }
   | { readonly kind: 'not-found' }
   | { readonly kind: 'duplicate' };
+
+export type TodoRemoval =
+  | {
+      readonly kind: 'removed';
+      readonly markdown: string;
+      readonly todo: Todo;
+      readonly line: string;
+      readonly position: number;
+    }
+  | { readonly kind: 'not-found' };
 
 interface TodoLine {
   readonly lineIndex: number;
@@ -102,6 +121,7 @@ function readDueDate(line: TodoLine): string | undefined {
 function projectTodo(line: TodoLine): Todo {
   const dueDate = readDueDate(line);
   const commitment = readPresentAttribute(line, COMMITMENT_KEY);
+  const source = readPresentAttribute(line, SOURCE_KEY);
   const addedOn = readPresentAttribute(line, ADDED_ON_KEY);
   const doneOn = readPresentAttribute(line, DONE_ON_KEY);
   return {
@@ -110,6 +130,7 @@ function projectTodo(line: TodoLine): Todo {
     done: line.isDone,
     ...(dueDate === undefined ? {} : { dueDate }),
     ...(commitment === undefined ? {} : { commitment }),
+    ...(source === undefined ? {} : { source }),
     ...(addedOn === undefined ? {} : { addedOn }),
     ...(doneOn === undefined ? {} : { doneOn }),
   };
@@ -223,6 +244,51 @@ export function appendTodo(markdown: string, newTodo: NewTodo, today: string): T
   return {
     kind: 'saved',
     markdown: insertLineAfter(markdown, lines.at(-1)?.lineIndex, formatTodoLine(line)),
+    todo,
+  };
+}
+
+function removeLine(markdown: string, lineIndex: number): string {
+  return markdown
+    .split(LINE_BREAK)
+    .filter((_line, index) => index !== lineIndex)
+    .join(LINE_BREAK);
+}
+
+// @FollowsBlueprint core-decision
+export function removeTodo(markdown: string, id: string): TodoRemoval {
+  const lines = readTodoLines(markdown);
+  const position = lines.findIndex((line) => projectTodo(line).id === id);
+  const target = lines[position];
+  if (target === undefined) return { kind: 'not-found' };
+  return {
+    kind: 'removed',
+    markdown: removeLine(markdown, target.lineIndex),
+    todo: projectTodo(target),
+    line: formatTodoLine(target),
+    position,
+  };
+}
+
+function insertLineBefore(markdown: string, lineIndex: number, line: string): string {
+  const lines = markdown.split(LINE_BREAK);
+  return [...lines.slice(0, lineIndex), line, ...lines.slice(lineIndex)].join(LINE_BREAK);
+}
+
+export function restoreTodo(markdown: string, line: string, position: number): TodoEdit {
+  const restored = readTodoLine(line, position);
+  if (restored === null) return { kind: 'not-found' };
+  const lines = readTodoLines(markdown);
+  const todo = projectTodo(restored);
+  if (isIdTaken(lines, todo.id)) return { kind: 'duplicate' };
+  const formatted = formatTodoLine(restored);
+  const successor = lines[position];
+  return {
+    kind: 'saved',
+    markdown:
+      successor === undefined
+        ? insertLineAfter(markdown, lines.at(-1)?.lineIndex, formatted)
+        : insertLineBefore(markdown, successor.lineIndex, formatted),
     todo,
   };
 }

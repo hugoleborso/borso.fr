@@ -8,6 +8,8 @@ export interface Commitment {
   readonly title: string;
   readonly direction: CommitmentDirection | null;
   readonly counterpart?: string;
+  readonly counterpartName?: string;
+  readonly action?: string;
   readonly dueDate?: string;
 }
 
@@ -31,6 +33,11 @@ function readDueDate(rawDueDate: string | undefined): string | undefined {
   return ISO_DAY_PATTERN.exec(rawDueDate ?? '')?.[0];
 }
 
+function readPresent(value: string | undefined): string | undefined {
+  const trimmed = value?.trim();
+  return trimmed === '' ? undefined : trimmed;
+}
+
 export function isCommitmentFile(path: string): boolean {
   return path.endsWith(MARKDOWN_EXTENSION);
 }
@@ -42,13 +49,17 @@ export function parseOpenCommitment(file: string, markdown: string): Commitment 
   const path = file.slice(0, -MARKDOWN_EXTENSION.length);
   // Stryker disable next-line StringLiteral: equivalent mutant, any fallback without a wikilink yields no counterpart exactly like the empty string.
   const counterpart = listWikilinkTargets(frontMatter.qui ?? '')[0];
+  const counterpartName = counterpart === undefined ? readPresent(frontMatter.qui) : undefined;
+  const action = readPresent(frontMatter.quoi);
   const dueDate = readDueDate(frontMatter.echeance);
   return {
     path,
-    title: readPageTitle(body, frontMatter.quoi ?? path),
+    title: readPageTitle(body, action ?? path),
     // Stryker disable next-line StringLiteral: equivalent mutant, any fallback that is not an arrow of the table reads as no direction exactly like the empty string.
     direction: DIRECTION_BY_ARROW[frontMatter.sens ?? ''] ?? null,
     ...(counterpart === undefined ? {} : { counterpart }),
+    ...(counterpartName === undefined ? {} : { counterpartName }),
+    ...(action === undefined ? {} : { action }),
     ...(dueDate === undefined ? {} : { dueDate }),
   };
 }

@@ -26,6 +26,7 @@ describe('GET /api/commitments', () => {
           path: 'engagements/sans-date-retour-bruno',
           title: 'Bruno renvoie le contrat',
           direction: 'awaited',
+          action: 'Bruno renvoie le contrat',
         },
       ],
     });

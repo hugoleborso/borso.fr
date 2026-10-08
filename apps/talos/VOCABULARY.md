@@ -20,7 +20,8 @@ One task, one line of `todo.md`.
 
 Lives in: `api/src/todos/`
 
-- Code: `Todo` (`text`, `done`, `dueDate` for `échéance`, `commitment` for `engagement`, `addedOn` for `ajouté`, `doneOn` for `fait`).
+- Code: `Todo` (`text`, `done`, `dueDate` for `échéance`, `commitment` for `engagement`, `source` for `src`, `addedOn` for `ajouté`, `doneOn` for `fait`).
+- Deleting one answers the removed `line` and its `position` among the task lines, which is what a restoration (`reinstateTodo`) needs to put it back.
 - Its id is `sha1(text + "|" + addedOn)` cut to 10 hexadecimal characters (`domain/todo-id.core.ts`), so it survives a reordering of the file.
 - Attributes the code does not know are kept on rewrite (`domain/line-attributes.core.ts`).
 
@@ -53,8 +54,19 @@ A promise, made by or to the owner, one file under `engagements/`.
 
 Lives in: `api/src/commitments/`
 
-- Code: `Commitment` (`path`, `title`, `direction`, `counterpart` for `qui`, `dueDate` for `echeance`). `direction` is `owed` for `moi->eux` (the owner promised) and `awaited` for `eux->moi`.
+- Code: `Commitment` (`path`, `title`, `direction`, `counterpart` for a wikilink in `qui`, `counterpartName` for a plain name in `qui`, `action` for `quoi`, `dueDate` for `echeance`). `direction` is `owed` for `moi->eux` (the owner promised) and `awaited` for `eux->moi`.
+- A todo whose `engagement` names it claims it, and the agenda shows only the todo (`selectUnclaimedCommitments`).
 - Read only, open ones only (`statut: ouvert`).
+
+## Source
+
+What a todo or a commitment came from: `src` on a todo line, `sources` in a commitment's front matter.
+
+Lives in: `site/src/components/organisms/source-reference.core.ts`
+
+- Code: `SourceReference`, one of `page` (a path of the repository), `link` (a web address) or `text` (anything else, such as a mail identifier), read by `classifySource`.
+
+Not to be confused with: a page, which is any markdown file of the repository; a source is a pointer that may or may not lead to one.
 
 ## Run report
 

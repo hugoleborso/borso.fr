@@ -21,6 +21,7 @@ import {
   readBrief,
   selectRecentActivity,
   selectTodayTodos,
+  selectUnclaimedCommitments,
 } from './today.core';
 
 const AGENDA_HORIZON_DAYS = 7;
@@ -59,7 +60,7 @@ export async function readToday(now: Date): Promise<Today> {
     focus,
     brief: readBrief(date, journal ?? ''),
     todos: selectTodayTodos(todos, horizon),
-    commitments: selectCommitmentsDueBy(commitments, horizon),
+    commitments: selectUnclaimedCommitments(selectCommitmentsDueBy(commitments, horizon), todos),
     commitmentCounts: countCommitments(commitments),
     activity: selectRecentActivity([
       { date, journal: journal ?? '' },

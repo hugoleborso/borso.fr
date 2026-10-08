@@ -13,9 +13,9 @@ export interface TodoRowProps {
   readonly dueLabel: string | null;
   readonly dueTone: ChipTone;
   readonly dueIcon?: IconName;
-  readonly hasCommitment: boolean;
   readonly onToggle: () => void;
-  readonly onEdit?: () => void;
+  readonly onOpen?: () => void;
+  readonly onDelete?: () => void;
   readonly onLongPress?: () => void;
 }
 
@@ -26,42 +26,53 @@ export function TodoRow({
   dueLabel,
   dueTone,
   dueIcon = 'calendar',
-  hasCommitment,
   onToggle,
-  onEdit,
+  onOpen,
+  onDelete,
   onLongPress,
 }: TodoRowProps): JSX.Element {
   const { t } = useTranslation();
   const press = usePressGesture({
-    onSwipe: onToggle,
+    onSwipeRight: onToggle,
+    ...(onDelete === undefined ? {} : { onSwipeLeft: onDelete }),
     ...(onLongPress === undefined ? {} : { onLongPress }),
   });
-  const isSwiping = press.swipeOffset > 0;
+  const isSwipingRight = press.swipeOffset > 0;
+  const isSwipingLeft = press.swipeOffset < 0;
   return (
     <li className="relative overflow-hidden border-b border-line last:border-b-0">
       <span
         aria-hidden="true"
         className={composeClassName(
           'absolute inset-0 flex items-center pl-4 bg-success-soft text-success',
-          isSwiping ? 'opacity-100' : 'opacity-0',
+          isSwipingRight ? 'opacity-100' : 'opacity-0',
         )}
       >
         <Icon name={isDone ? 'undo' : 'check'} size={22} />
+      </span>
+      <span
+        aria-hidden="true"
+        className={composeClassName(
+          'absolute inset-0 flex items-center justify-end pr-4 bg-danger-soft text-danger',
+          isSwipingLeft ? 'opacity-100' : 'opacity-0',
+        )}
+      >
+        <Icon name="remove" size={22} />
       </span>
       <div
         {...press.handlers}
         style={{ transform: `translateX(${String(press.swipeOffset)}px)` }}
         className={composeClassName(
           'relative flex items-start gap-1 min-h-13 bg-surface touch-pan-y',
-          isSwiping ? '' : 'transition-transform duration-150',
+          isSwipingRight || isSwipingLeft ? '' : 'transition-transform duration-150',
           PRESSABLE_CLASS_NAME,
         )}
       >
         <Checkbox isChecked={isDone} label={t('todo.row.toggle', { text })} onToggle={onToggle} />
         <button
           type="button"
-          tabIndex={onEdit === undefined ? -1 : 0}
-          onClick={onEdit}
+          tabIndex={onOpen === undefined ? -1 : 0}
+          onClick={onOpen}
           className="min-w-0 flex-1 py-3 pr-2 text-left bg-transparent border-0 font-[inherit] text-[inherit] cursor-pointer"
         >
           <p
@@ -72,20 +83,14 @@ export function TodoRow({
           >
             {text}
           </p>
-          <div className="flex flex-wrap gap-1.5 empty:hidden mt-1.5">
-            {dueLabel === null ? null : (
+          {dueLabel === null ? null : (
+            <div className="flex flex-wrap gap-1.5 mt-1.5">
               <Chip tone={isDone ? 'neutral' : dueTone}>
                 <Icon name={dueIcon} size={13} />
                 {dueLabel}
               </Chip>
-            )}
-            {hasCommitment ? (
-              <Chip tone="neutral">
-                <Icon name="commitment" size={13} />
-                <span className="sr-only">{t('todo.row.commitment')}</span>
-              </Chip>
-            ) : null}
-          </div>
+            </div>
+          )}
         </button>
       </div>
     </li>
