@@ -75,9 +75,47 @@ On a decision the API sets `statut` to `acceptee` or `refusee`, appends a line `
 
 While the status is still `acceptee` or `refusee`, the owner can cancel the decision: the API sets `statut` back to `proposee` and appends a line `- 2026-10-05 10:13 : décision annulée` under « Décision », without firing any run. Earlier lines are never removed, so the section keeps the whole history. A proposal that is `faite` or `expiree` can no longer be cancelled. A run that reads a proposal must therefore take its status from the front matter, not from the last line it finds under « Décision ».
 
-### Daily brief and activity
+### Daily brief and activity: `journal/AAAA-MM-JJ.md`
 
-The `## Brief envoyé` section of `journal/AAAA-MM-JJ.md`. The other `## ` headings of today's and yesterday's journal, newest first, are what the today screen lists as Talos's recent activity.
+One file per day, starting with `# 2026-10-08`, then `## ` sections. The brief is the section whose line is exactly `## Brief envoyé`. It ends at the next line starting with `## ` or at the end of the file; it holds markdown without an inner `## ` heading, and a `---` inside it does not end it. A file holds one brief at most. The other `## ` headings of today's and yesterday's journal, newest first, are what the today screen lists as Talos's recent activity.
+
+The history lists the files whose name matches `^\d{4}-\d{2}-\d{2}\.md$` and that hold the section; the date is the file name.
+
+### Weekly reviews: `journal/AAAA-Sxx-hebdo.md`
+
+One file per ISO week, named after `^\d{4}-S\d{2}-hebdo\.md$`. The whole file is the review. Its title is the first `# ` line, such as `# Revue hebdo 2026-S41 (5 – 11 octobre 2026)`, and its `## ` sections are optional. The history sorts them by file name, newest first.
+
+### Relations: `etat/relations.json`
+
+```json
+{
+  "genere": "2026-10-08T03:03:00+02:00",
+  "a_recontacter": [{ "page": "second-brain/personnes/alice-martin", "titre": "Alice Martin", "proximite": 5, "dernier_contact": "2026-08-29", "jours": 40 }],
+  "anniversaires": [{ "page": "second-brain/personnes/bruno-petit", "titre": "Bruno Petit", "date": "2026-10-20", "dans_jours": 12, "age": 58 }]
+}
+```
+
+Written by the runs, read by the app. `a_recontacter` is sorted by relative delay, the most overdue first; `anniversaires` holds the birthdays of the next 15 days, sorted by `dans_jours`; `age` may be `null`; `page` has no `.md`. The file may date from the day before, so the API moves `jours` and `dans_jours` by the days elapsed since `genere` and drops a birthday that has passed. A missing or unreadable file shows nothing; an entry the API cannot read is skipped.
+
+### Drafts: `etat/brouillons/AAAA-MM-JJ-<slug>.md`
+
+```markdown
+---
+type: brouillon
+canal: gmail              # gmail | slack | linkedin | whatsapp | imessage | autre
+destinataire: "Alice Martin [[second-brain/personnes/alice-martin]]"
+sujet: Un café ?          # the subject of an email, empty for the other channels
+lien:                     # URL of the Gmail or Slack draft, else empty
+statut: pret              # pret | envoye | abandonne
+cree: 2026-10-08
+src: sources/2026/10/08/relance.md
+proposition:              # slug of a linked proposal, optional
+envoye:                   # AAAA-MM-JJ, set with statut: envoye
+---
+The body is the exact text to copy.
+```
+
+Only the `.md` files of the folder are drafts (it also holds a `.gitkeep`). `destinataire` may name several people separated by commas, each with an optional `[[page]]` link. The app writes `statut` and `envoye` and nothing else: never another field, never the body. « Envoyé » sets `statut: envoye` and `envoye: <today>`, « Abandonner » sets `statut: abandonne`, and the « Annuler » of the toast sets `statut: pret` back and empties `envoye`.
 
 ### Commitments: `engagements/*.md`
 
@@ -151,8 +189,14 @@ The two registration routes also accept a session: that is how a second passkey 
 
 | Method | Route | Body | Response |
 |---|---|---|---|
-| GET | `/today` | | `{ date, focus: Focus, brief: { date, markdown } \| null, todos: Todo[] (not done: every one due within seven days or overdue, then five undated at most), commitments: Commitment[] (open, due within seven days or overdue, and named by no todo's `engagement`), commitmentCounts: { owed, awaited } (all open ones), activity: { date, heading }[] (6 at most), lastRuns: { scan: RunReport \| null, macCollection: RunReport \| null } \| null, pendingProposalCount: number }` |
+| GET | `/today` | | `{ date, focus: Focus, brief: { date, markdown } \| null, todos: Todo[] (not done: every one due within seven days or overdue, then five undated at most), commitments: Commitment[] (open, due within seven days or overdue, and named by no todo's `engagement`), commitmentCounts: { owed, awaited } (all open ones), activity: { date, heading }[] (6 at most), lastRuns: { scan: RunReport \| null, macCollection: RunReport \| null } \| null, pendingProposalCount: number, soonBirthdays: UpcomingBirthday[] (three days away or closer), reconnectCount: number, readyDraftCount: number }` |
 | GET | `/commitments` | | `{ items: Commitment[] }`: the open commitments, soonest due first, undated last |
+| GET | `/relations` | | `{ generatedAt: string \| null, toReconnect: PersonToReconnect[], birthdays: UpcomingBirthday[] }`, counted from today |
+| GET | `/drafts` | | `{ items: Draft[] }` (newest first) |
+| PATCH | `/drafts/:slug` | `{ status: "envoye" \| "abandonne" \| "pret" }` | `Draft`. `envoye` and `abandonne` only from `pret`, `pret` only from `envoye` or `abandonne`; 409 otherwise, 404 when unknown. Commits `pwa : brouillon envoyé <slug>`, `pwa : brouillon abandonné <slug>` or `pwa : brouillon remis prêt <slug>` |
+| GET | `/history` | | `{ briefs: { date }[], reviews: { week, title }[] }`, newest first |
+| GET | `/history/briefs/:date` | | `{ date, markdown }`; 404 when that day has no brief |
+| GET | `/history/reviews/:week` (`AAAA-Sxx`) | | `{ week, title, markdown }`; 404 when unknown |
 | GET | `/focus` | | `Focus` |
 | PUT | `/focus` | `{ items: FocusItem[] }` (3 at most) | `Focus` |
 | GET | `/todos` | | `{ items: Todo[] }` |
@@ -172,7 +216,7 @@ The two registration routes also accept a session: that is how a second passkey 
 | DELETE | `/push/subscriptions` | `{ endpoint }` | `{ ok: true }` |
 | POST | `/push/test` | | `{ ok: true, delivered, removed }`: a test notification to every subscription, with the same expiry rules as `/notify` |
 
-The values `proposee`, `acceptee`, `refusee`, the categories and the priorities are the repository's: data, not identifiers.
+The values `proposee`, `acceptee`, `refusee`, `pret`, `envoye`, `abandonne`, the categories, the priorities and the channels are the repository's: data, not identifiers.
 
 The types are inferred from `AppRouter` and each slice's Zod schemas, never written twice by hand:
 
@@ -183,6 +227,9 @@ type Todo = { id: string; text: string; done: boolean; dueDate?: string; commitm
 type Commitment = { path: string; title: string; direction: 'owed' | 'awaited' | null; counterpart?: string; counterpartName?: string; action?: string; dueDate?: string };
 type RunReport = { at: string; trigger?: string; failedSources: string[] };
 type Proposal = { slug: string; category: string; status: string; title: string; priority: string; createdOn: string; expiresOn?: string; why: string; draft: string; decisions: string[] };
+type PersonToReconnect = { page: string; title: string; closeness: number | null; lastContactOn: string | null; silentDays: number };
+type UpcomingBirthday = { page: string; title: string; date: string; daysUntil: number; age: number | null };
+type Draft = { slug: string; channel: string; recipients: { name: string; page?: string }[]; subject?: string; link?: string; status: string; createdOn: string; source?: string; proposal?: string; sentOn?: string; body: string };
 ```
 
 ### Machine (no session, bearer token)
@@ -197,17 +244,20 @@ A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fi
 
 ## Discussing an item with Talos
 
-A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis ouvre ce fichier du dépôt et discutons-en avec Hugo : » followed by the kind, the title and the file of the item in the private repository (`todo.md`, `focus.md`, `etat/propositions/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `<page>.md`, `etat/dernier-scan.json`).
+A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis ouvre ce fichier du dépôt et discutons-en avec Hugo : » followed by the kind, the title and the file of the item in the private repository (`todo.md`, `focus.md`, `etat/propositions/<slug>.md`, `etat/brouillons/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `journal/<week>-hebdo.md`, `<page>.md`, `etat/dernier-scan.json`, `etat/relations.json`). On a person to reconnect with, the prompt also asks for a message to get back in touch; on a birthday, for a message and a gift idea.
 
 ## Screens
 
 No screen explains its interface: only data, one- or two-word labels and icons. An empty list shows a faint icon.
 
-- **Aujourd'hui**: a dashboard. Header: the day, the age of the last scan and of the last Mac collection with the number of failed sources (a tap or a long press lists them), a « Scanner » icon that opens Claude Code with the prompt « Tu es Talos. Lis CLAUDE.md puis lance le skill talos-scan sur toutes les sources depuis le dernier curseur, traite les décisions et messages de la PWA, puis commit et push. », and the settings. Then four counters (proposals to decide, overdue todos, commitments owed, commitments awaited), the focus (editable), the week's agenda grouped by day (overdue, today, tomorrow, later days, undated todos), the brief, and Talos's recent activity. Everything opens its detail on a tap.
+- **Aujourd'hui**: a dashboard. Header: the day, the age of the last scan and of the last Mac collection with the number of failed sources (a tap or a long press lists them), a « Scanner » icon that opens Claude Code with the prompt « Tu es Talos. Lis CLAUDE.md puis lance le skill talos-scan sur toutes les sources depuis le dernier curseur, traite les décisions et messages de la PWA, puis commit et push. », and the settings. The birthdays three days away or closer come first, then four counters (proposals to decide, overdue todos, commitments owed, commitments awaited) and three shortcuts (ready drafts, people to reconnect with, history), the focus (editable), the week's agenda grouped by day (overdue, today, tomorrow, later days, undated todos), the brief, and Talos's recent activity. Everything opens its detail on a tap.
 - **Todo**: check, swipe right to check or uncheck, swipe left to delete (both toasts offer « Annuler »; undoing a deletion puts the line back where it was), tap the text to open the detail, done or not filter, quick add docked above the tab bar.
 - **Détail d'une todo** (`/todos/:id`): the todo with check, edit and delete, then its `src` (a repository page rendered, a link, or the identifier as written), then its commitment rendered with the commitment's `sources`, each page folded until tapped.
 - **Détail d'un engagement** (`/commitments/<path>`): the commitment rendered and its `sources`, as above.
 - **Engagements** (from the counters): the open commitments, filtered by direction.
+- **Relations** (from the shortcuts): the coming birthdays (relative day, age when known), then the people to reconnect with (name, days of silence, a closeness dot). A tap opens the person's page.
+- **Brouillons** (from the shortcuts): the ready drafts, newest first, then the sent and abandoned ones folded under « Historique ». Each row shows the channel icon, the recipients, the subject and the start of the text. A tap opens the whole text with « Copier », « Ouvrir » when there is a link, and « Envoyé » and « Abandonner » on a ready draft; the toast carries « Annuler ».
+- **Historique** (from the shortcuts): the past briefs and the weekly reviews, two filters, newest first, each read as rendered markdown.
 - **Propositions**: cards with the reason, the draft, and Accept, Refuse, Comment buttons. A decided proposal that is not yet `faite` shows « Revenir sur ma décision », on its card and in the history; after it, the card is decidable again with the comment field open. The toast that confirms a decision carries « Annuler » for six seconds, which does the same.
 - **Second brain**: search, a page rendered from markdown with clickable `[[…]]` links, incoming links, and an interactive graph with a date slider.
 - **Message**: one field and two links, « Talos » (the reading environment, the main one) and « Construire » (the build environment). Each opens Claude Code in a new tab with the message prefilled; nothing is written to the repository.

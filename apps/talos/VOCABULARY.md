@@ -68,6 +68,37 @@ Lives in: `site/src/components/organisms/source-reference.core.ts`
 
 Not to be confused with: a page, which is any markdown file of the repository; a source is a pointer that may or may not lead to one.
 
+## Relations
+
+The people the owner should get back in touch with and the coming birthdays, read from `etat/relations.json`, which the runs write.
+
+Lives in: `api/src/relations/`
+
+- Code: `RelationsDigest` (`generatedAt` for `genere`, `toReconnect` for `a_recontacter`, `birthdays` for `anniversaires`), `PersonToReconnect` (`page`, `title` for `titre`, `closeness` for `proximite`, `lastContactOn` for `dernier_contact`, `silentDays` for `jours`), `UpcomingBirthday` (`date`, `daysUntil` for `dans_jours`, `age`).
+- `silentDays` and `daysUntil` are moved to today from the day of `genere`, so a file written the day before still reads right.
+
+Not to be confused with: a relation of the graph, which links two pages.
+
+## Draft
+
+A message Talos prepared for the owner to send by hand, one file under `etat/brouillons/`.
+
+Lives in: `api/src/drafts/`
+
+- Code: `Draft` (`channel` for `canal`, `recipients` for `destinataire`, `subject` for `sujet`, `link` for `lien`, `status` for `statut`, `createdOn` for `cree`, `source` for `src`, `proposal` for `proposition`, `sentOn` for `envoye`, `body`), `DraftRecipient` (`name`, `page`).
+- The app writes `statut` and `envoye` only (`applyDraftStatus`). The values `pret`, `envoye`, `abandonne` stay in French: they are data.
+
+Not to be confused with: the draft of a proposal (« Ce que Talos propose »), which runs when the owner accepts it, while a draft is sent by the owner.
+
+## History
+
+The past briefs and the weekly reviews of `journal/`.
+
+Lives in: `api/src/history/`
+
+- Code: `HistoryIndex` (`briefs`, `reviews`), `BriefEntry` (`date`), `ReviewEntry` (`week` for the `AAAA-Sxx` of the file name, `title`), `Review` (`markdown`).
+- A brief is read with `readBrief` of `api/src/today/today.core.ts`, the same rule as the today screen.
+
 ## Run report
 
 When a scheduled run last went through, from `etat/dernier-scan.json`.
@@ -130,3 +161,6 @@ Lives in: `api/src/auth/`
 - **note**, **document**, **article**: a markdown file of the repository is a **page**.
 - **digest**, **summary**, **report** for the daily text: it is the **brief**.
 - **promise**, **engagement** in identifiers: the word is **commitment**.
+- **contact**, **friend** for an entry of `etat/relations.json`: it is a **person to reconnect** with.
+- **message** for a file of `etat/brouillons/`: it is a **draft**; a message is what the owner writes to Talos.
+- **archive**, **log** for the past briefs and reviews: it is the **history**.

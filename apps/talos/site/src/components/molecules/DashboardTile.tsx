@@ -7,7 +7,7 @@ import { PRESSABLE_CLASS_NAME, usePressGesture } from '../../lib/press-gesture.h
 export interface DashboardTileProps {
   readonly to: string;
   readonly icon: IconName;
-  readonly count: number;
+  readonly count?: number;
   readonly label: string;
   readonly isAlert: boolean;
   readonly onLongPress: () => void;
@@ -34,8 +34,14 @@ export function DashboardTile({
       )}
     >
       <span className="flex items-center justify-between gap-1">
-        <span className="font-display text-display tabular-nums">{count}</span>
-        <Icon name={icon} size={18} className={isAlert ? 'text-danger' : 'text-ink-muted'} />
+        {count === undefined ? (
+          <Icon name={icon} size={26} className="text-ink-soft" />
+        ) : (
+          <>
+            <span className="font-display text-display tabular-nums">{count}</span>
+            <Icon name={icon} size={18} className={isAlert ? 'text-danger' : 'text-ink-muted'} />
+          </>
+        )}
       </span>
       <span className="text-[12px] leading-[15px] font-semibold">{label}</span>
     </Link>

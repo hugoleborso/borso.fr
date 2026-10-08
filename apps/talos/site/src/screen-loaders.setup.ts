@@ -10,6 +10,12 @@ export const loadBrainEntryPage = async () => await import('./routes/BrainEntryP
 export const loadGraphPage = async () => await import('./routes/GraphPage');
 export const loadMessagePage = async () => await import('./routes/MessagePage');
 export const loadSettingsPage = async () => await import('./routes/SettingsPage');
+export const loadRelationsPage = async () => await import('./routes/RelationsPage');
+export const loadDraftsPage = async () => await import('./routes/DraftsPage');
+export const loadDraftPage = async () => await import('./routes/DraftPage');
+export const loadHistoryPage = async () => await import('./routes/HistoryPage');
+export const loadPastBriefPage = async () => await import('./routes/PastBriefPage');
+export const loadWeeklyReviewPage = async () => await import('./routes/WeeklyReviewPage');
 
 const SCREENS_KEPT_FOR_OFFLINE = [
   loadTodayPage,
@@ -22,6 +28,12 @@ const SCREENS_KEPT_FOR_OFFLINE = [
   loadBrainEntryPage,
   loadMessagePage,
   loadSettingsPage,
+  loadRelationsPage,
+  loadDraftsPage,
+  loadDraftPage,
+  loadHistoryPage,
+  loadPastBriefPage,
+  loadWeeklyReviewPage,
 ];
 
 function preloadScreensForOffline(): void {

@@ -31,3 +31,8 @@ export function addDaysToDate(isoDate: string, days: number): string {
   const shifted = new Date(Date.parse(`${isoDate}T00:00:00Z`) + days * MILLISECONDS_PER_DAY);
   return shifted.toISOString().slice(0, ISO_DATE_LENGTH);
 }
+
+export function countDaysBetween(fromIsoDate: string, toIsoDate: string): number {
+  const elapsed = Date.parse(`${toIsoDate}T00:00:00Z`) - Date.parse(`${fromIsoDate}T00:00:00Z`);
+  return Math.round(elapsed / MILLISECONDS_PER_DAY);
+}

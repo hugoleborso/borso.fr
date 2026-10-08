@@ -9,9 +9,13 @@ import {
 } from '../commitments/commitments.core';
 import { listOpenCommitments } from '../commitments/commitments.service';
 import { readContentFile } from '../content/content.service';
+import { countReadyDrafts } from '../drafts/drafts.core';
+import { listDrafts } from '../drafts/drafts.service';
 import { readFocus } from '../focus/focus.service';
 import { addDaysToDate, formatParisDate } from '../helpers/calendar/paris-clock.utils';
 import { listProposals } from '../proposals/proposals.service';
+import { selectSoonBirthdays, type UpcomingBirthday } from '../relations/relations.core';
+import { readRelations } from '../relations/relations.service';
 import { listTodos } from '../todos/todos.service';
 import { type LastRuns, parseLastRuns } from './last-runs.core';
 import {
@@ -38,6 +42,9 @@ export interface Today {
   readonly activity: ActivityEntry[];
   readonly lastRuns: LastRuns | null;
   readonly pendingProposalCount: number;
+  readonly soonBirthdays: UpcomingBirthday[];
+  readonly reconnectCount: number;
+  readonly readyDraftCount: number;
 }
 
 // @FollowsBlueprint service-read-model
@@ -45,16 +52,27 @@ export async function readToday(now: Date): Promise<Today> {
   const date = formatParisDate(now);
   const yesterday = addDaysToDate(date, PREVIOUS_DAY);
   const horizon = addDaysToDate(date, AGENDA_HORIZON_DAYS);
-  const [focus, todos, proposals, commitments, journal, previousJournal, lastRuns] =
-    await Promise.all([
-      readFocus(),
-      listTodos(),
-      listProposals(undefined),
-      listOpenCommitments(),
-      readContentFile(buildJournalPath(date)),
-      readContentFile(buildJournalPath(yesterday)),
-      readContentFile(LAST_RUNS_PATH),
-    ]);
+  const [
+    focus,
+    todos,
+    proposals,
+    commitments,
+    journal,
+    previousJournal,
+    lastRuns,
+    relations,
+    drafts,
+  ] = await Promise.all([
+    readFocus(),
+    listTodos(),
+    listProposals(undefined),
+    listOpenCommitments(),
+    readContentFile(buildJournalPath(date)),
+    readContentFile(buildJournalPath(yesterday)),
+    readContentFile(LAST_RUNS_PATH),
+    readRelations(now),
+    listDrafts(),
+  ]);
   return {
     date,
     focus,
@@ -68,5 +86,8 @@ export async function readToday(now: Date): Promise<Today> {
     ]),
     lastRuns: lastRuns === null ? null : parseLastRuns(lastRuns),
     pendingProposalCount: proposals.filter((proposal) => isProposalPending(proposal, date)).length,
+    soonBirthdays: selectSoonBirthdays(relations.birthdays),
+    reconnectCount: relations.toReconnect.length,
+    readyDraftCount: countReadyDrafts(drafts),
   };
 }

@@ -35,7 +35,7 @@ function readScalar(rawValue: string): string {
   const trimmed = rawValue.trim();
   const quoted = QUOTED_VALUE_PATTERN.exec(trimmed);
   if (quoted !== null) return readCapture(quoted, 'value');
-  return trimmed.replace(INLINE_COMMENT_PATTERN, '');
+  return rawValue.replace(INLINE_COMMENT_PATTERN, '').trim();
 }
 
 function readKeyValue(line: string): readonly [string, string] | null {
@@ -64,7 +64,7 @@ function isLineForKey(line: string, key: string): boolean {
 
 export function setFrontMatterValue(markdown: string, key: string, value: string): string {
   const range = findFencedRange(markdown);
-  const assignment = `${key}: ${value}`;
+  const assignment = value === '' ? `${key}:` : `${key}: ${value}`;
   if (range === null) return [FENCE, assignment, FENCE, markdown].join(LINE_BREAK);
   const header = range.lines.slice(1, range.closingIndex);
   const existingIndex = header.findIndex((line) => isLineForKey(line, key));

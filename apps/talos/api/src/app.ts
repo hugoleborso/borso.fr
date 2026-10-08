@@ -2,14 +2,17 @@ import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildCommitmentsRouter } from './commitments/commitments.controller';
+import { buildDraftsRouter } from './drafts/drafts.controller';
 import { buildFocusRouter } from './focus/focus.controller';
 import { buildGraphRouter } from './graph/graph.controller';
 import { selectErrorResponse } from './helpers/errors/error-response.core';
+import { buildHistoryRouter } from './history/history.controller';
 import { buildMessagesRouter } from './messages/messages.controller';
 import { buildNotifyRouter } from './notify/notify.controller';
 import { buildPagesRouter } from './pages/pages.controller';
 import { buildProposalsRouter } from './proposals/proposals.controller';
 import { buildPushRouter } from './push/push.controller';
+import { buildRelationsRouter } from './relations/relations.controller';
 import { buildSearchRouter } from './search/search.controller';
 import { buildTodayRouter } from './today/today.controller';
 import { buildTodosRouter } from './todos/todos.controller';
@@ -36,6 +39,9 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/todos', buildTodosRouter())
     .route('/api/proposals', buildProposalsRouter())
     .route('/api/commitments', buildCommitmentsRouter())
+    .route('/api/relations', buildRelationsRouter())
+    .route('/api/drafts', buildDraftsRouter())
+    .route('/api/history', buildHistoryRouter())
     .route('/api/graph', buildGraphRouter())
     .route('/api/pages', buildPagesRouter())
     .route('/api/search', buildSearchRouter())

@@ -129,6 +129,9 @@ describe('the application shell', () => {
           macCollection: null,
         },
         pendingProposalCount: 3,
+        soonBirthdays: [],
+        reconnectCount: 0,
+        readyDraftCount: 0,
       },
     };
     restoreFetch = stubFetch((request) => {

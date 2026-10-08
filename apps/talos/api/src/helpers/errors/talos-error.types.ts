@@ -19,12 +19,16 @@ export const TALOS_ERRORS = {
   'todo-not-found': { status: 404, message: 'Tâche introuvable.' },
   'proposal-not-found': { status: 404, message: 'Proposition introuvable.' },
   'passkey-not-found': { status: 404, message: 'Passkey introuvable.' },
+  'draft-not-found': { status: 404, message: 'Brouillon introuvable.' },
+  'brief-not-found': { status: 404, message: 'Brief introuvable.' },
+  'review-not-found': { status: 404, message: 'Revue introuvable.' },
   'todo-duplicate': { status: 409, message: 'Cette tâche existe déjà.' },
   'proposal-already-decided': { status: 409, message: 'Cette proposition est déjà tranchée.' },
   'proposal-not-revocable': {
     status: 409,
     message: 'Aucune décision à annuler : la proposition est en attente ou déjà traitée.',
   },
+  'draft-status-conflict': { status: 409, message: 'Ce brouillon a déjà changé de statut.' },
   'last-passkey': {
     status: 409,
     message: 'Impossible de supprimer la dernière passkey : ajoutes-en une autre avant.',

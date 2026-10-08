@@ -6,7 +6,7 @@ import { closeActionSheet, useShownActionSheet } from '../../lib/action-sheet.ho
 import { buildEnvironmentAddress, composeTalosPrompt } from '../../lib/claude-code-address.core';
 import { selectSubjectFile } from '../../lib/discussion-subject.core';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
-import { selectSubjectKindLabelKey } from './action-sheet.core';
+import { composeDiscussionText, selectSubjectKindLabelKey } from './action-sheet.core';
 
 const SHEET_ROW_CLASS_NAME = 'w-full justify-start min-h-13 px-4 text-body';
 
@@ -19,11 +19,14 @@ export function ActionSheet(): JSX.Element | null {
   const file = selectSubjectFile(sheet.subject);
   const prompt = composeTalosPrompt(
     t('discuss.preamble'),
-    t('discuss.context', {
-      kind: t(selectSubjectKindLabelKey(sheet.subject.kind)),
-      title: sheet.title,
-      file,
-    }),
+    composeDiscussionText(
+      t('discuss.context', {
+        kind: t(selectSubjectKindLabelKey(sheet.subject.kind)),
+        title: sheet.title,
+        file,
+      }),
+      sheet.request,
+    ),
   );
   return (
     <div className="fixed inset-0 z-[60] flex flex-col justify-end">

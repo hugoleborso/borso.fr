@@ -18,6 +18,13 @@ describe('selectSubjectFile', () => {
     expect(selectSubjectFile({ kind: 'page', path: 'second-brain/moi' })).toBe(
       'second-brain/moi.md',
     );
+    expect(selectSubjectFile({ kind: 'relations' })).toBe('etat/relations.json');
+    expect(selectSubjectFile({ kind: 'draft', slug: '2026-10-08-relance' })).toBe(
+      'etat/brouillons/2026-10-08-relance.md',
+    );
+    expect(selectSubjectFile({ kind: 'review', week: '2026-S41' })).toBe(
+      'journal/2026-S41-hebdo.md',
+    );
     expect(selectSubjectFile({ kind: 'folder', path: 'etat/propositions' })).toBe(
       'etat/propositions/',
     );

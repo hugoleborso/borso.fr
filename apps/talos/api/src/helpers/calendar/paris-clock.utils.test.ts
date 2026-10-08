@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { addDaysToDate, formatParisDate, formatParisMinute } from './paris-clock.utils';
+import {
+  addDaysToDate,
+  countDaysBetween,
+  formatParisDate,
+  formatParisMinute,
+} from './paris-clock.utils';
 
 const SUMMER_EVENING_UTC = new Date('2026-10-05T22:30:05Z');
 const WINTER_MORNING_UTC = new Date('2026-12-01T07:04:09Z');
@@ -27,5 +32,19 @@ describe('addDaysToDate', () => {
 
   it('moves a date backward', () => {
     expect(addDaysToDate('2026-03-01', -1)).toBe('2026-02-28');
+  });
+});
+
+describe('countDaysBetween', () => {
+  it('counts the calendar days from one date to a later one, across a month end', () => {
+    expect(countDaysBetween('2026-09-29', '2026-10-02')).toBe(3);
+  });
+
+  it('counts whole days across the change to winter time', () => {
+    expect(countDaysBetween('2026-10-24', '2026-10-26')).toBe(2);
+  });
+
+  it('answers a negative count when the second date comes first', () => {
+    expect(countDaysBetween('2026-10-08', '2026-10-07')).toBe(-1);
   });
 });

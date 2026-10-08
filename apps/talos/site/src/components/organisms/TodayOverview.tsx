@@ -12,9 +12,11 @@ import { ScanStatus } from './ScanStatus';
 import { countOverdueTodos } from './today-agenda.core';
 import { TodayActivity } from './TodayActivity';
 import { TodayAgenda } from './TodayAgenda';
+import { TodayBirthdays } from './TodayBirthdays';
 import { TodayBrief } from './TodayBrief';
 import { TodayCounters } from './TodayCounters';
 import { TodayFocus } from './TodayFocus';
+import { TodayShortcuts } from './TodayShortcuts';
 
 // @FollowsBlueprint organism-query-owning
 export function TodayOverview(): JSX.Element {
@@ -46,11 +48,16 @@ export function TodayOverview(): JSX.Element {
       ) : (
         <div className="flex flex-col gap-4">
           <NotificationsPrompt />
+          <TodayBirthdays birthdays={today.data.soonBirthdays} />
           <TodayCounters
             pendingProposalCount={today.data.pendingProposalCount}
             overdueTodoCount={countOverdueTodos(today.data.todos, date)}
             owedCommitmentCount={today.data.commitmentCounts.owed}
             awaitedCommitmentCount={today.data.commitmentCounts.awaited}
+          />
+          <TodayShortcuts
+            readyDraftCount={today.data.readyDraftCount}
+            reconnectCount={today.data.reconnectCount}
           />
           <TodayFocus items={today.data.focus.items} today={date} />
           <TodayAgenda todos={today.data.todos} commitments={today.data.commitments} today={date} />
