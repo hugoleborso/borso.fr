@@ -40,6 +40,10 @@ export const PUSH_DISABLED_TOAST: TranslatableToast = {
 };
 
 export const COPIED_TOAST: TranslatableToast = { tone: 'neutral', messageKey: 'toast.copied' };
+export const PROMPT_COPIED_TOAST: TranslatableToast = {
+  tone: 'neutral',
+  messageKey: 'toast.prompt-copied',
+};
 export const COPY_FAILED_TOAST: TranslatableToast = {
   tone: 'danger',
   messageKey: 'toast.copy-failed',

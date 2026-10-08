@@ -1,24 +1,25 @@
 import type { DiscussionSubjectKind } from '../../lib/discussion-subject.core';
 
-const SUBJECT_KIND_LABEL_KEYS = {
-  todo: 'discuss.kind.todo',
-  focus: 'discuss.kind.focus',
-  scan: 'discuss.kind.scan',
-  relations: 'discuss.kind.relations',
-  draft: 'discuss.kind.draft',
-  review: 'discuss.kind.review',
-  proposal: 'discuss.kind.proposal',
-  journal: 'discuss.kind.journal',
-  commitment: 'discuss.kind.commitment',
-  page: 'discuss.kind.page',
-  folder: 'discuss.kind.folder',
+const SUBJECT_PHRASE_KEYS = {
+  todo: 'discuss.subject.todo',
+  todos: 'discuss.subject.todos',
+  focus: 'discuss.subject.focus',
+  scan: 'discuss.subject.scan',
+  relations: 'discuss.subject.relations',
+  draft: 'discuss.subject.draft',
+  review: 'discuss.subject.review',
+  proposal: 'discuss.subject.proposal',
+  journal: 'discuss.subject.journal',
+  commitment: 'discuss.subject.commitment',
+  page: 'discuss.subject.page',
+  folder: 'discuss.subject.folder',
 } as const satisfies Record<DiscussionSubjectKind, string>;
 
 // @FollowsBlueprint core-view-intent
-export function selectSubjectKindLabelKey(
+export function selectSubjectPhraseKey(
   kind: DiscussionSubjectKind,
-): (typeof SUBJECT_KIND_LABEL_KEYS)[DiscussionSubjectKind] {
-  return SUBJECT_KIND_LABEL_KEYS[kind];
+): (typeof SUBJECT_PHRASE_KEYS)[DiscussionSubjectKind] {
+  return SUBJECT_PHRASE_KEYS[kind];
 }
 
 const REQUEST_SEPARATOR = '\n\n';

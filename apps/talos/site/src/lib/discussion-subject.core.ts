@@ -1,5 +1,6 @@
 export type DiscussionSubjectReference =
   | { readonly kind: 'todo' }
+  | { readonly kind: 'todos' }
   | { readonly kind: 'focus' }
   | { readonly kind: 'scan' }
   | { readonly kind: 'relations' }
@@ -14,6 +15,7 @@ export type DiscussionSubjectKind = DiscussionSubjectReference['kind'];
 const MARKDOWN_EXTENSION = '.md';
 const FIXED_FILES = {
   todo: 'todo.md',
+  todos: 'todo.md',
   focus: 'focus.md',
   scan: 'etat/dernier-scan.json',
   relations: 'etat/relations.json',
@@ -23,6 +25,7 @@ const FIXED_FILES = {
 export function selectSubjectFile(subject: DiscussionSubjectReference): string {
   switch (subject.kind) {
     case 'todo':
+    case 'todos':
     case 'focus':
     case 'scan':
     case 'relations':

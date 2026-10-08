@@ -175,7 +175,15 @@ describe('the application shell', () => {
     const address = new URL(discuss?.getAttribute('href') ?? '');
     expect(address.searchParams.get('repositories')).toBe('proprietaire/notes');
     expect(address.searchParams.get('environment')).toBe('env_lecture');
-    expect(address.searchParams.get('prompt')).toContain('Todo « Appeler Bruno » (todo.md)');
+    expect(address.searchParams.get('prompt')).toContain(
+      'Tu vas discuter de la tâche « Appeler Bruno » (todo.md).',
+    );
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    if (discuss === undefined || discuss === null) throw new Error('no discuss link');
+    fireEvent.click(discuss);
+    expect(writeText).toHaveBeenCalledWith(address.searchParams.get('prompt'));
+    Reflect.deleteProperty(navigator, 'clipboard');
     vi.useRealTimers();
     tree.unmount();
   });

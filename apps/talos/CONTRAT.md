@@ -164,6 +164,8 @@ https://claude.ai/code?repositories=<GITHUB_REPO>&environment=<environment id>&p
 
 Each value is encoded with `encodeURIComponent`. The preamble is « Tu es Talos. Lis CLAUDE.md puis réponds à ce message de Hugo : », from the French catalogue. A blank message sends the preamble alone. An environment whose setting is missing is left out of the link, and Claude Code then picks its default one. Beyond 6000 characters the screen warns that the link may be cut.
 
+Every link that opens Claude Code (the Message screen, « Discuter », the scan button) also copies its prompt to the clipboard on the tap, and a toast says so. Opened from the home-screen app on a phone, the link can land in the Claude app with an empty prompt; Hugo then pastes it.
+
 ## API
 
 Every route is under `/api`, JSON, and needs the `talos_session` cookie (HttpOnly, Secure, SameSite=Strict, HMAC-signed, 30 days) unless stated otherwise. Errors are `{ "error": "<French message>" }` with the matching HTTP status. The `AppRouter` type exported by `api/src/app.ts` is the contract the site's Hono client compiles against.
@@ -248,7 +250,7 @@ A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fi
 
 ## Discussing an item with Talos
 
-A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis ouvre ce fichier du dépôt et discutons-en avec Hugo : » followed by the kind, the title and the file of the item in the private repository (`todo.md`, `focus.md`, `etat/propositions/<slug>.md`, `etat/brouillons/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `journal/<week>-hebdo.md`, `<page>.md`, `etat/dernier-scan.json`, `etat/relations.json`). On a person to reconnect with, the prompt also asks for a message to get back in touch; on a birthday, for a message and a gift idea.
+A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis le fichier du dépôt cité ci-dessous, et discutes-en avec Hugo. » followed by the sentence « Tu vas discuter <phrase of the kind> « <title> » (<file>). », where the phrase names the kind (« de la tâche » for one todo, « de la todo » for the whole list, « de l'engagement », « de la proposition »…) and the file is the item's file in the private repository (`todo.md` for one todo and for the list, `focus.md`, `etat/propositions/<slug>.md`, `etat/brouillons/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `journal/<week>-hebdo.md`, `<page>.md`, `etat/dernier-scan.json`, `etat/relations.json`). On a person to reconnect with, the prompt also asks for a message to get back in touch; on a birthday, for a message and a gift idea.
 
 ## Screens
 

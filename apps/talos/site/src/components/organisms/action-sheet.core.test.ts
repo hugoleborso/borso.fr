@@ -1,12 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import { composeDiscussionText, selectSubjectKindLabelKey } from './action-sheet.core';
+import { composeDiscussionText, selectSubjectPhraseKey } from './action-sheet.core';
 
-describe('selectSubjectKindLabelKey', () => {
-  it('names each kind of subject with its own label', () => {
-    expect(selectSubjectKindLabelKey('todo')).toBe('discuss.kind.todo');
-    expect(selectSubjectKindLabelKey('commitment')).toBe('discuss.kind.commitment');
-    expect(selectSubjectKindLabelKey('folder')).toBe('discuss.kind.folder');
-    expect(selectSubjectKindLabelKey('draft')).toBe('discuss.kind.draft');
+describe('selectSubjectPhraseKey', () => {
+  it('names each kind of subject with its own phrase', () => {
+    expect(selectSubjectPhraseKey('todo')).toBe('discuss.subject.todo');
+    expect(selectSubjectPhraseKey('todos')).toBe('discuss.subject.todos');
+    expect(selectSubjectPhraseKey('commitment')).toBe('discuss.subject.commitment');
+    expect(selectSubjectPhraseKey('folder')).toBe('discuss.subject.folder');
+    expect(selectSubjectPhraseKey('draft')).toBe('discuss.subject.draft');
   });
 });
 
