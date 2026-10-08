@@ -13,6 +13,7 @@ export interface ActionSheetContent {
   readonly title: string;
   readonly subject: DiscussionSubjectReference;
   readonly details?: readonly string[];
+  readonly request?: string;
   readonly actions?: readonly ActionSheetAction[];
 }
 

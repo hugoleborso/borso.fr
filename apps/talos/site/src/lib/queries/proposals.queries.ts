@@ -3,7 +3,7 @@ import type { InferResponseType } from 'hono/client';
 import { PENDING_PROPOSAL_STATUS } from '@domain/proposal.core';
 import { ApiError, api, readFailureBody } from '../api.client';
 import { useMutationToasts } from '../toast.hook';
-import { replaceProposal, setProposalStatus } from './cache-updates.core';
+import { replaceBySlug, setStatusBySlug } from './cache-updates.core';
 import { DECISION_CANCELLED_TOAST, selectDecisionToast } from './mutation-toasts.core';
 import { todayKeys } from './today.queries';
 
@@ -45,7 +45,7 @@ async function overlayProposalStatus(
   const previousOverview = queryClient.getQueryData<TodayResponse>(overviewKey);
   queryClient.setQueryData<ProposalsResponse>(listKey, (old) => {
     if (old === undefined) return old;
-    return setProposalStatus(old, change.slug, change.status);
+    return setStatusBySlug(old, change.slug, change.status);
   });
   queryClient.setQueryData<TodayResponse>(overviewKey, (old) => {
     if (old === undefined) return old;
@@ -70,7 +70,7 @@ function restoreProposalCaches(
 function storeSavedProposal(queryClient: QueryClient, saved: ProposalsResponse[number]): void {
   queryClient.setQueryData<ProposalsResponse>(proposalKeys.list(), (old) => {
     if (old === undefined) return old;
-    return replaceProposal(old, saved);
+    return replaceBySlug(old, saved);
   });
 }
 

@@ -2,7 +2,9 @@ export type DiscussionSubjectReference =
   | { readonly kind: 'todo' }
   | { readonly kind: 'focus' }
   | { readonly kind: 'scan' }
-  | { readonly kind: 'proposal'; readonly slug: string }
+  | { readonly kind: 'relations' }
+  | { readonly kind: 'proposal' | 'draft'; readonly slug: string }
+  | { readonly kind: 'review'; readonly week: string }
   | { readonly kind: 'journal'; readonly date: string }
   | { readonly kind: 'commitment' | 'page'; readonly path: string }
   | { readonly kind: 'folder'; readonly path: string };
@@ -14,6 +16,7 @@ const FIXED_FILES = {
   todo: 'todo.md',
   focus: 'focus.md',
   scan: 'etat/dernier-scan.json',
+  relations: 'etat/relations.json',
 } as const;
 
 // @FollowsBlueprint core-view-intent
@@ -22,9 +25,14 @@ export function selectSubjectFile(subject: DiscussionSubjectReference): string {
     case 'todo':
     case 'focus':
     case 'scan':
+    case 'relations':
       return FIXED_FILES[subject.kind];
     case 'proposal':
       return `etat/propositions/${subject.slug}${MARKDOWN_EXTENSION}`;
+    case 'draft':
+      return `etat/brouillons/${subject.slug}${MARKDOWN_EXTENSION}`;
+    case 'review':
+      return `journal/${subject.week}-hebdo${MARKDOWN_EXTENSION}`;
     case 'journal':
       return `journal/${subject.date}${MARKDOWN_EXTENSION}`;
     case 'folder':

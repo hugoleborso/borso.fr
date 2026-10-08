@@ -6,9 +6,10 @@ import {
   insertAt,
   isKeptAfterSignOut,
   removeById,
-  replaceProposal,
+  selectReadyDraftCountDelta,
+  replaceBySlug,
   replaceTodo,
-  setProposalStatus,
+  setStatusBySlug,
 } from './cache-updates.core';
 
 const TODAY = '2026-10-05';
@@ -80,7 +81,7 @@ describe('the proposal cache', () => {
   const other = { slug: 'y', status: 'proposee', title: 'Y' };
 
   it('moves the decided proposal to its new status only', () => {
-    expect(setProposalStatus([pending, other], 'x', 'acceptee')).toEqual([
+    expect(setStatusBySlug([pending, other], 'x', 'acceptee')).toEqual([
       { ...pending, status: 'acceptee' },
       other,
     ]);
@@ -88,7 +89,7 @@ describe('the proposal cache', () => {
 
   it('replaces a proposal by its slug', () => {
     const saved = { ...pending, status: 'refusee', title: 'X saved' };
-    expect(replaceProposal([pending, other], saved)).toEqual([saved, other]);
+    expect(replaceBySlug([pending, other], saved)).toEqual([saved, other]);
   });
 });
 
@@ -121,5 +122,13 @@ describe('isKeptAfterSignOut', () => {
     expect(isKeptAfterSignOut(['session', 'current'], 'session')).toBe(true);
     expect(isKeptAfterSignOut(['today', 'overview'], 'session')).toBe(false);
     expect(isKeptAfterSignOut([], 'session')).toBe(false);
+  });
+});
+
+describe('selectReadyDraftCountDelta', () => {
+  it('adds a ready draft back and takes a settled one off the count', () => {
+    expect(selectReadyDraftCountDelta('pret')).toBe(1);
+    expect(selectReadyDraftCountDelta('envoye')).toBe(-1);
+    expect(selectReadyDraftCountDelta('abandonne')).toBe(-1);
   });
 });

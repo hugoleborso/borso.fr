@@ -39,6 +39,20 @@ export const PUSH_DISABLED_TOAST: TranslatableToast = {
   messageKey: 'toast.push-disabled',
 };
 
+export const COPIED_TOAST: TranslatableToast = { tone: 'neutral', messageKey: 'toast.copied' };
+export const COPY_FAILED_TOAST: TranslatableToast = {
+  tone: 'danger',
+  messageKey: 'toast.copy-failed',
+};
+
+export type DraftStatusTarget = 'envoye' | 'abandonne' | 'pret';
+
+const DRAFT_STATUS_TOAST: Readonly<Record<DraftStatusTarget, TranslatableToast>> = {
+  envoye: { tone: 'success', messageKey: 'toast.draft-sent' },
+  abandonne: { tone: 'neutral', messageKey: 'toast.draft-abandoned' },
+  pret: { tone: 'neutral', messageKey: 'toast.draft-restored' },
+};
+
 const DECISION_TOAST: Readonly<Record<ProposalDecision, TranslatableToast>> = {
   acceptee: { tone: 'success', messageKey: 'toast.proposal-accepted' },
   refusee: { tone: 'neutral', messageKey: 'toast.proposal-refused' },
@@ -66,4 +80,12 @@ export function selectTodoReversal(
 ): { readonly id: string; readonly done: boolean } | null {
   if (update.done === undefined) return null;
   return { id: update.id, done: !update.done };
+}
+
+export function selectDraftStatusToast(target: DraftStatusTarget): TranslatableToast {
+  return DRAFT_STATUS_TOAST[target];
+}
+
+export function selectDraftReversal(target: DraftStatusTarget): DraftStatusTarget | null {
+  return target === 'pret' ? null : 'pret';
 }

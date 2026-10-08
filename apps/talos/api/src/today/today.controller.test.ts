@@ -34,6 +34,17 @@ describe('GET /api/today', () => {
         macCollection: null,
       },
       pendingProposalCount: 1,
+      soonBirthdays: [
+        {
+          page: 'second-brain/personnes/bruno-petit',
+          title: 'Bruno Petit',
+          date: '2026-10-07',
+          daysUntil: 2,
+          age: 41,
+        },
+      ],
+      reconnectCount: 1,
+      readyDraftCount: 1,
     });
   });
 
@@ -64,6 +75,9 @@ describe('GET /api/today', () => {
       activity: [],
       lastRuns: null,
       pendingProposalCount: 0,
+      soonBirthdays: [],
+      reconnectCount: 0,
+      readyDraftCount: 0,
     });
   });
 });

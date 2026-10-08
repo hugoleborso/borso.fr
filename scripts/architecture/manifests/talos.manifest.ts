@@ -211,6 +211,16 @@ export const talosManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'browser-clipboard',
+      icon: '📋',
+      name: 'Clipboard',
+      technology: 'Browser clipboard API',
+      description:
+        'Puts the text of a draft message on the clipboard, answering whether the write happened so a refused permission is a toast rather than an error.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'browser-vibration',
       icon: '📳',
       name: 'Vibration',

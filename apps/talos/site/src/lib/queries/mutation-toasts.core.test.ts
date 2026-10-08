@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   selectDecisionToast,
+  selectDraftReversal,
+  selectDraftStatusToast,
   selectPushTestToast,
   selectTodoReversal,
   selectTodoUpdateToast,
@@ -60,5 +62,30 @@ describe('selectTodoReversal', () => {
     expect(selectTodoReversal({ id: 'a', done: true })).toEqual({ id: 'a', done: false });
     expect(selectTodoReversal({ id: 'a', done: false })).toEqual({ id: 'a', done: true });
     expect(selectTodoReversal({ id: 'a', text: 'x' })).toBeNull();
+  });
+});
+
+describe('selectDraftStatusToast', () => {
+  it('celebrates a sent draft and simply confirms the other changes', () => {
+    expect(selectDraftStatusToast('envoye')).toEqual({
+      tone: 'success',
+      messageKey: 'toast.draft-sent',
+    });
+    expect(selectDraftStatusToast('abandonne')).toEqual({
+      tone: 'neutral',
+      messageKey: 'toast.draft-abandoned',
+    });
+    expect(selectDraftStatusToast('pret')).toEqual({
+      tone: 'neutral',
+      messageKey: 'toast.draft-restored',
+    });
+  });
+});
+
+describe('selectDraftReversal', () => {
+  it('puts a settled draft back to ready, and offers nothing after that', () => {
+    expect(selectDraftReversal('envoye')).toBe('pret');
+    expect(selectDraftReversal('abandonne')).toBe('pret');
+    expect(selectDraftReversal('pret')).toBeNull();
   });
 });

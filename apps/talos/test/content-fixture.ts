@@ -1,5 +1,7 @@
 export const TODAY = '2026-10-05';
 
+const TITLE_FIELD = 'titre';
+
 export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
   'focus.md': [
     '---',
@@ -92,4 +94,65 @@ export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
   'second-brain/projets/refonte.md':
     '---\ntype: projet\nproximite: 4\n---\n# Refonte du site\n\nPilotée par [[second-brain/moi]].\n',
   'etat/securite.md': '# Où sont les secrets\n',
+  'etat/relations.json': JSON.stringify({
+    genere: '2026-10-04T03:03:00+02:00',
+    a_recontacter: [
+      {
+        page: 'second-brain/personnes/alice-martin',
+        [TITLE_FIELD]: 'Alice Martin',
+        proximite: 4,
+        dernier_contact: '2026-08-25',
+        jours: 40,
+      },
+    ],
+    anniversaires: [
+      {
+        page: 'second-brain/personnes/bruno-petit',
+        [TITLE_FIELD]: 'Bruno Petit',
+        date: '2026-10-07',
+        dans_jours: 3,
+        age: 41,
+      },
+      {
+        page: 'second-brain/personnes/claire-roux',
+        [TITLE_FIELD]: 'Claire Roux',
+        date: '2026-10-15',
+        dans_jours: 11,
+        age: null,
+      },
+    ],
+  }),
+  'etat/brouillons/.gitkeep': '',
+  'etat/brouillons/2026-10-04-relance-alice.md': [
+    '---',
+    'type: brouillon',
+    'canal: gmail',
+    'destinataire: "Alice Martin [[second-brain/personnes/alice-martin]]"',
+    'sujet: Un café ?',
+    'lien:',
+    'statut: pret',
+    'cree: 2026-10-04',
+    'src: sources/2026/10/04/relance.md',
+    'proposition:',
+    'envoye:',
+    '---',
+    'Bonjour Alice,',
+    '',
+    'Un café la semaine prochaine ?',
+    '',
+  ].join('\n'),
+  'etat/brouillons/2026-10-03-merci-bruno.md': [
+    '---',
+    'type: brouillon',
+    'canal: slack',
+    'destinataire: Bruno',
+    'statut: envoye',
+    'cree: 2026-10-03',
+    'envoye: 2026-10-03',
+    '---',
+    'Merci !',
+    '',
+  ].join('\n'),
+  'journal/2026-S40-hebdo.md':
+    '# Revue hebdo 2026-S40 (28 septembre – 4 octobre 2026)\n\n## Semaine écoulée\n\nCalme.\n',
 };
