@@ -15,13 +15,13 @@ import {
   toIsoDay,
 } from '../../lib/calendar-day.utils';
 import { useOpenCommitments } from '../../lib/queries/commitments.queries';
-import { buildPageHref, selectPageName } from '../../lib/wikilinks.core';
+import { buildCommitmentHref, selectPageName } from '../../lib/wikilinks.core';
 import {
   COMMITMENT_FILTERS,
   type CommitmentFilter,
   readCommitmentFilter,
   selectCommitmentFilterLabelKey,
-  selectDirectionIcon,
+  selectCommitmentHeadline,
   selectVisibleCommitments,
 } from './commitment-board.core';
 import { describeDue, selectDueStatus, selectDueTone } from './todo-list.core';
@@ -66,7 +66,8 @@ export function CommitmentBoard(): JSX.Element {
           <Card padding="none" className="px-1">
             <ul className="m-0 p-0 list-none">
               {visible.map((commitment) => {
-                const href = buildPageHref(commitment.path);
+                const href = buildCommitmentHref(commitment.path);
+                const headline = selectCommitmentHeadline(commitment, selectPageName);
                 const status = selectDueStatus(
                   { done: false, dueDate: commitment.dueDate },
                   today,
@@ -82,14 +83,9 @@ export function CommitmentBoard(): JSX.Element {
                   <CommitmentRow
                     key={commitment.path}
                     href={href}
-                    title={commitment.title}
-                    icon={selectDirectionIcon(commitment.direction)}
-                    directionLabel={t(
-                      selectCommitmentFilterLabelKey(commitment.direction ?? 'all'),
-                    )}
-                    {...(commitment.counterpart === undefined
-                      ? {}
-                      : { counterpartLabel: selectPageName(commitment.counterpart) })}
+                    variant={headline.variant}
+                    lead={headline.lead}
+                    text={headline.text}
                     {...(dueLabel === null ? {} : { dueLabel, dueTone: selectDueTone(status) })}
                     onLongPress={() => {
                       openActionSheet({

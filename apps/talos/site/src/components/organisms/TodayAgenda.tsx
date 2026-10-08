@@ -6,9 +6,9 @@ import { CommitmentRow } from '../molecules/CommitmentRow';
 import { TodoRow } from '../molecules/TodoRow';
 import { openActionSheet } from '../../lib/action-sheet.hook';
 import { addDaysToIsoDay, DISPLAY_LOCALE, formatShortDay } from '../../lib/calendar-day.utils';
-import { useUpdateTodo } from '../../lib/queries/todos.queries';
-import { buildPageHref, selectPageName } from '../../lib/wikilinks.core';
-import { type CommitmentDirection, selectDirectionIcon } from './commitment-board.core';
+import { useDeleteTodo, useUpdateTodo } from '../../lib/queries/todos.queries';
+import { buildCommitmentHref, buildTodoHref, selectPageName } from '../../lib/wikilinks.core';
+import { type CommitmentDirection, selectCommitmentHeadline } from './commitment-board.core';
 import { buildAgenda, describeAgendaDay, selectOverdueDay } from './today-agenda.core';
 import {
   selectDueIcon,
@@ -22,11 +22,13 @@ export interface AgendaCommitment {
   readonly title: string;
   readonly direction: CommitmentDirection | null;
   readonly counterpart?: string;
+  readonly counterpartName?: string;
+  readonly action?: string;
   readonly dueDate?: string;
 }
 
 export interface TodayAgendaProps {
-  readonly todos: readonly (SchedulableTodo & { readonly commitment?: string })[];
+  readonly todos: readonly SchedulableTodo[];
   readonly commitments: readonly AgendaCommitment[];
   readonly today: string;
 }
@@ -40,6 +42,7 @@ export function TodayAgenda({ todos, commitments, today }: TodayAgendaProps): JS
   const { t } = useTranslation();
   const navigate = useNavigate();
   const updateTodo = useUpdateTodo();
+  const deleteTodo = useDeleteTodo();
   const tomorrow = addDaysToIsoDay(today, 1);
   const days = buildAgenda(todos, commitments, today, tomorrow);
   if (days.length === 0) return null;
@@ -59,6 +62,9 @@ export function TodayAgenda({ todos, commitments, today }: TodayAgendaProps): JS
                 const toggle = (): void => {
                   updateTodo.mutate({ id: todo.id, done: !todo.done });
                 };
+                const remove = (): void => {
+                  deleteTodo.mutate({ id: todo.id });
+                };
                 return (
                   <TodoRow
                     key={entry.key}
@@ -67,30 +73,32 @@ export function TodayAgenda({ todos, commitments, today }: TodayAgendaProps): JS
                     dueLabel={selectOverdueDay(day.bucket, todo.dueDate, formatDay)}
                     dueTone={selectDueTone(status)}
                     dueIcon={selectDueIcon(status)}
-                    hasCommitment={todo.commitment !== undefined}
                     onToggle={toggle}
+                    onOpen={() => void navigate(buildTodoHref(todo.id))}
+                    onDelete={remove}
                     onLongPress={() => {
                       openActionSheet({
                         title: todo.text,
                         subject: { kind: 'todo' },
-                        actions: [{ labelKey: 'todo.row.check', icon: 'check', onSelect: toggle }],
+                        actions: [
+                          { labelKey: 'todo.row.check', icon: 'check', onSelect: toggle },
+                          { labelKey: 'todo.row.delete', icon: 'remove', onSelect: remove },
+                        ],
                       });
                     }}
                   />
                 );
               }
               const { commitment } = entry;
-              const href = buildPageHref(commitment.path);
+              const href = buildCommitmentHref(commitment.path);
+              const headline = selectCommitmentHeadline(commitment, selectPageName);
               return (
                 <CommitmentRow
                   key={entry.key}
                   href={href}
-                  title={commitment.title}
-                  icon={selectDirectionIcon(commitment.direction)}
-                  directionLabel={t('discuss.kind.commitment')}
-                  {...(commitment.counterpart === undefined
-                    ? {}
-                    : { counterpartLabel: selectPageName(commitment.counterpart) })}
+                  variant={headline.variant}
+                  lead={headline.lead}
+                  text={headline.text}
                   onLongPress={() => {
                     openActionSheet({
                       title: commitment.title,

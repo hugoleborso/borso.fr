@@ -29,7 +29,27 @@ describe('parseOpenCommitment', () => {
       title: 'Le devis Acme',
       direction: 'owed',
       counterpart: 'second-brain/personnes/alice',
+      action: 'Envoyer le devis',
       dueDate: '2026-10-14',
+    });
+  });
+
+  it('keeps the name of a counterpart who has no page', () => {
+    expect(
+      parseOpenCommitment(
+        'engagements/f.md',
+        commitmentFile([
+          'type: engagement',
+          'qui: "  Bruno Martin "',
+          'quoi: " "',
+          'statut: ouvert',
+        ]),
+      ),
+    ).toStrictEqual({
+      path: 'engagements/f',
+      title: 'engagements/f',
+      direction: null,
+      counterpartName: 'Bruno Martin',
     });
   });
 
@@ -44,7 +64,12 @@ describe('parseOpenCommitment', () => {
           'statut: ouvert',
         ]),
       ),
-    ).toStrictEqual({ path: 'engagements/a', title: 'Rendre le livre', direction: 'awaited' });
+    ).toStrictEqual({
+      path: 'engagements/a',
+      title: 'Rendre le livre',
+      direction: 'awaited',
+      action: 'Rendre le livre',
+    });
     expect(
       parseOpenCommitment(
         'engagements/b.md',

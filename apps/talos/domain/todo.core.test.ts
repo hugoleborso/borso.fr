@@ -1,6 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import { buildTodoId } from './todo-id.core';
-import { appendTodo, parseTodos, todoSchema, todoTextSchema, updateTodo } from './todo.core';
+import {
+  appendTodo,
+  parseTodos,
+  removeTodo,
+  restoreTodo,
+  todoLineSchema,
+  todoSchema,
+  todoTextSchema,
+  updateTodo,
+} from './todo.core';
 
 const TODAY = '2026-10-05';
 
@@ -60,6 +69,23 @@ describe('parseTodos', () => {
   it('reads a line ending with a windows line break', () => {
     expect(parseTodos('- [ ] Texte | ajouté: 2026-10-01\r\n')).toStrictEqual([
       { id: buildTodoId('Texte', '2026-10-01'), text: 'Texte', done: false, addedOn: '2026-10-01' },
+    ]);
+  });
+
+  it('reads the source of a task, and ignores an empty one', () => {
+    expect(
+      parseTodos(
+        '- [ ] Lire | src: sources/2026/10/02/appel.md | ajouté: 2026-10-01\n- [ ] Vide | src: \n',
+      ),
+    ).toStrictEqual([
+      {
+        id: buildTodoId('Lire', '2026-10-01'),
+        text: 'Lire',
+        done: false,
+        source: 'sources/2026/10/02/appel.md',
+        addedOn: '2026-10-01',
+      },
+      { id: buildTodoId('Vide', undefined), text: 'Vide', done: false },
     ]);
   });
 
@@ -195,6 +221,84 @@ describe('appendTodo', () => {
     expect(appendTodo(savedMarkdown(today), { text: 'Rappeler Julie' }, TODAY)).toEqual({
       kind: 'duplicate',
     });
+  });
+});
+
+function savedRestoration(edit: ReturnType<typeof restoreTodo>): string {
+  if (edit.kind !== 'saved') throw new Error(`expected a saved edit, got ${edit.kind}`);
+  return edit.markdown;
+}
+
+describe('removeTodo', () => {
+  it('removes the line and answers it with its rank among the tasks', () => {
+    const removal = removeTodo(TODO_FILE, RENT_ID);
+    expect(removal).toStrictEqual({
+      kind: 'removed',
+      markdown: TODO_FILE.split('\n')
+        .filter((_, index) => index !== 3)
+        .join('\n'),
+      todo: parseTodos(TODO_FILE)[1],
+      line: '- [x] Payer le loyer | échéance: 2026-10-05 | ajouté: 2026-10-04 | fait: 2026-10-05',
+      position: 1,
+    });
+  });
+
+  it('answers not-found for an unknown identifier', () => {
+    expect(removeTodo(TODO_FILE, '0000000000')).toEqual({ kind: 'not-found' });
+  });
+});
+
+describe('restoreTodo', () => {
+  it('puts a removed task back where it was', () => {
+    const removal = removeTodo(TODO_FILE, RENT_ID);
+    if (removal.kind !== 'removed') throw new Error('expected a removal');
+    const edit = restoreTodo(removal.markdown, removal.line, removal.position);
+    expect(savedRestoration(edit)).toBe(TODO_FILE);
+    expect(edit).toMatchObject({ todo: { id: RENT_ID, done: true } });
+  });
+
+  it('puts the first task back first', () => {
+    const removal = removeTodo(TODO_FILE, CV_ID);
+    if (removal.kind !== 'removed') throw new Error('expected a removal');
+    expect(savedRestoration(restoreTodo(removal.markdown, removal.line, 0))).toBe(TODO_FILE);
+  });
+
+  it('appends the task after the last one when its rank is beyond the list', () => {
+    const lines = savedRestoration(
+      restoreTodo(TODO_FILE, '- [ ] Revenue | ajouté: 2026-10-01', 9),
+    ).split('\n');
+    expect(lines[7]).toBe('- [ ] Revenue | ajouté: 2026-10-01');
+  });
+
+  it('creates the list when the file holds no task any more', () => {
+    expect(savedRestoration(restoreTodo('# Todo\n', '- [ ] Seule', 0))).toBe(
+      '# Todo\n\n- [ ] Seule\n',
+    );
+  });
+
+  it('refuses a task that is already in the file', () => {
+    expect(
+      restoreTodo(TODO_FILE, '- [x] Payer le loyer | échéance: 2026-10-05 | ajouté: 2026-10-04', 1),
+    ).toEqual({ kind: 'duplicate' });
+  });
+
+  it('answers not-found for a line that is not a task', () => {
+    expect(restoreTodo(TODO_FILE, 'pas une tâche', 0)).toEqual({ kind: 'not-found' });
+  });
+});
+
+describe('todoLineSchema', () => {
+  it('accepts a task line', () => {
+    expect(todoLineSchema.safeParse('- [x] Fait | ajouté: 2026-10-01').success).toBe(true);
+  });
+
+  it.each([
+    ['a line that is not a task', 'texte'],
+    ['an empty task', '- [ ] '],
+    ['two lines', '- [ ] a\n- [ ] b'],
+    ['a line longer than allowed', `- [ ] ${'a'.repeat(2000)}`],
+  ])('refuses %s', (_label, candidate) => {
+    expect(todoLineSchema.safeParse(candidate).success).toBe(false);
   });
 });
 

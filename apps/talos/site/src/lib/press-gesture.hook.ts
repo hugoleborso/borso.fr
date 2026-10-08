@@ -2,15 +2,16 @@ import { type MouseEvent, type PointerEvent, useRef, useState } from 'react';
 import { pulseHaptic } from './haptic.adapter';
 import {
   hasMovedBeyondTolerance,
-  isSwipeCommitted,
   LONG_PRESS_DELAY_MS,
   type PointerPoint,
+  selectCommittedSwipe,
   selectSwipeOffset,
 } from './press-gesture.core';
 
 export interface PressGestureOptions {
   readonly onLongPress?: () => void;
-  readonly onSwipe?: () => void;
+  readonly onSwipeRight?: () => void;
+  readonly onSwipeLeft?: () => void;
 }
 
 export interface PressGestureHandlers {
@@ -33,7 +34,14 @@ function readPoint(event: PointerEvent<HTMLElement>): PointerPoint {
   return { x: event.clientX, y: event.clientY };
 }
 
-export function usePressGesture({ onLongPress, onSwipe }: PressGestureOptions): PressGesture {
+export function usePressGesture({
+  onLongPress,
+  onSwipeRight,
+  onSwipeLeft,
+}: PressGestureOptions): PressGesture {
+  const swipeDirections = { right: onSwipeRight !== undefined, left: onSwipeLeft !== undefined };
+  const isSwipeOffered = swipeDirections.right || swipeDirections.left;
+  const swipeHandlers = { right: onSwipeRight, left: onSwipeLeft };
   const startRef = useRef<PointerPoint | null>(null);
   const timerRef = useRef<ReturnType<typeof setTimeout> | undefined>(undefined);
   const hasFiredRef = useRef(false);
@@ -74,11 +82,12 @@ export function usePressGesture({ onLongPress, onSwipe }: PressGestureOptions): 
         const current = readPoint(event);
         const hasMoved = hasMovedBeyondTolerance(start, current);
         if (hasMoved) cancelTimer();
-        if (onSwipe !== undefined) setSwipeOffset(selectSwipeOffset(start, current));
+        if (isSwipeOffered) setSwipeOffset(selectSwipeOffset(start, current, swipeDirections));
       },
       onPointerUp: () => {
-        const isCommitted = isSwipeCommitted(swipeOffset);
-        if (isCommitted && onSwipe !== undefined) fire(onSwipe);
+        const committed = selectCommittedSwipe(swipeOffset);
+        const swipe = committed === null ? undefined : swipeHandlers[committed];
+        if (swipe !== undefined) fire(swipe);
         reset();
       },
       onPointerCancel: reset,

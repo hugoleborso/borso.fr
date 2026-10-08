@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   readCommitmentFilter,
   selectCommitmentFilterLabelKey,
-  selectDirectionIcon,
+  selectCommitmentHeadline,
   selectVisibleCommitments,
 } from './commitment-board.core';
 
@@ -39,9 +39,49 @@ describe('selectCommitmentFilterLabelKey', () => {
   });
 });
 
-describe('selectDirectionIcon', () => {
-  it('draws the direction, or a plain commitment when it is unknown', () => {
-    expect(selectDirectionIcon('owed')).toBe('owed');
-    expect(selectDirectionIcon(null)).toBe('commitment');
+function nameOfPage(pagePath: string): string {
+  return `Nom de ${pagePath}`;
+}
+
+describe('selectCommitmentHeadline', () => {
+  it('shows a commitment the owner owes, or of unknown direction, as a task', () => {
+    expect(
+      selectCommitmentHeadline(
+        { direction: 'owed', title: 'Envoyer le devis', action: 'Devis', counterpart: 'p' },
+        nameOfPage,
+      ),
+    ).toEqual({ variant: 'task', lead: null, text: 'Envoyer le devis' });
+    expect(selectCommitmentHeadline({ direction: null, title: 'Rendre' }, nameOfPage)).toEqual({
+      variant: 'task',
+      lead: null,
+      text: 'Rendre',
+    });
+  });
+
+  it('leads an awaited commitment with the first name of the person who owes it', () => {
+    expect(
+      selectCommitmentHeadline(
+        { direction: 'awaited', title: 'Titre', action: 'Plan IA', counterpart: 'marine' },
+        nameOfPage,
+      ),
+    ).toEqual({ variant: 'awaited', lead: 'Nom', text: 'Plan IA' });
+    expect(
+      selectCommitmentHeadline(
+        { direction: 'awaited', title: 'Contrat', counterpartName: '  Bruno Martin (Acme)' },
+        nameOfPage,
+      ),
+    ).toEqual({ variant: 'awaited', lead: 'Bruno', text: 'Contrat' });
+  });
+
+  it('leaves out the lead when nobody is named', () => {
+    expect(
+      selectCommitmentHeadline({ direction: 'awaited', title: 'Contrat' }, nameOfPage),
+    ).toEqual({ variant: 'awaited', lead: null, text: 'Contrat' });
+    expect(
+      selectCommitmentHeadline(
+        { direction: 'awaited', title: 'Contrat', counterpartName: ' ' },
+        nameOfPage,
+      ),
+    ).toEqual({ variant: 'awaited', lead: null, text: 'Contrat' });
   });
 });

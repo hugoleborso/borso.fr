@@ -33,6 +33,20 @@ describe('GET /api/pages/*', () => {
     expect(response.status).toBe(200);
   });
 
+  it('reads a source a task points at', async () => {
+    const { app } = buildTestContext({
+      ...CONTENT_FIXTURE,
+      'sources/2026/10/02/appel.md': '# Appel avec Bruno\n\nIl attend le CV.\n',
+    });
+    const response = await requestJson(app, '/api/pages/sources/2026/10/02/appel', {
+      cookie: await signIn(),
+    });
+    expect(await response.json()).toMatchObject({
+      title: 'Appel avec Bruno',
+      markdown: '# Appel avec Bruno\n\nIl attend le CV.\n',
+    });
+  });
+
   it('answers 404 for a missing page', async () => {
     const { app } = buildTestContext(CONTENT_FIXTURE);
     const response = await requestJson(app, '/api/pages/second-brain/absente', {

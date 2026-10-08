@@ -37,6 +37,20 @@ describe('GET /api/today', () => {
     });
   });
 
+  it('leaves out of the agenda a commitment a task already points at', async () => {
+    const { app } = buildTestContext({
+      ...CONTENT_FIXTURE,
+      'todo.md':
+        '- [ ] Envoyer le devis | engagement: engagements/2026-10-06-devis-acme | ajouté: 2026-10-04\n',
+    });
+    const response = await requestJson(app, '/api/today', { cookie: await signIn() });
+    expect(await response.json()).toMatchObject({
+      todos: [{ text: 'Envoyer le devis' }],
+      commitments: [],
+      commitmentCounts: { owed: 1, awaited: 1 },
+    });
+  });
+
   it('answers a null brief and empty lists on a quiet repository', async () => {
     const { app } = buildTestContext({});
     const response = await requestJson(app, '/api/today', { cookie: await signIn() });

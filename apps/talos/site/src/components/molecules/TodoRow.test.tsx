@@ -13,7 +13,6 @@ function renderRow(overrides: Partial<Parameters<typeof TodoRow>[0]> = {}) {
     dueLabel: "Aujourd'hui",
     dueTone: 'warning' as const,
     dueIcon: 'clock' as const,
-    hasCommitment: true,
     onToggle: vi.fn(),
     ...overrides,
   };
@@ -38,28 +37,26 @@ describe('TodoRow', () => {
     vi.useRealTimers();
   });
 
-  it('shows the text, the due date and the commitment marker, and reports a check', async () => {
+  it('shows the text and the due date, and reports a check', async () => {
     const { onToggle } = renderRow();
     expect(screen.getByText("Aujourd'hui")).toBeTruthy();
-    expect(screen.getByText('Engagement')).toBeTruthy();
     await userEvent.click(screen.getByRole('checkbox', { name: 'Cocher « Envoyer le CV »' }));
     expect(onToggle).toHaveBeenCalledOnce();
   });
 
-  it('opens the editor on a tap of the text, and shows a done todo checked', async () => {
-    const onEdit = vi.fn();
-    renderRow({ isDone: true, hasCommitment: false, dueLabel: null, onEdit });
+  it('opens the detail on a tap of the text, and shows a done todo checked', async () => {
+    const onOpen = vi.fn();
+    renderRow({ isDone: true, dueLabel: null, onOpen });
     await userEvent.click(screen.getByText('Envoyer le CV'));
-    expect(onEdit).toHaveBeenCalledOnce();
+    expect(onOpen).toHaveBeenCalledOnce();
     expect(screen.getByRole<HTMLInputElement>('checkbox').checked).toBe(true);
-    expect(screen.queryByText('Engagement')).toBeNull();
   });
 
   it('reports a long press and swallows the tap that ends it', () => {
     vi.useFakeTimers();
     const onLongPress = vi.fn();
-    const onEdit = vi.fn();
-    renderRow({ onLongPress, onEdit });
+    const onOpen = vi.fn();
+    renderRow({ onLongPress, onOpen });
     const surface = pressSurface();
     fireEvent.pointerDown(surface, { button: 0, clientX: 10, clientY: 10 });
     act(() => {
@@ -68,7 +65,7 @@ describe('TodoRow', () => {
     fireEvent.pointerUp(surface);
     fireEvent.click(screen.getByText('Envoyer le CV'));
     expect(onLongPress).toHaveBeenCalledOnce();
-    expect(onEdit).not.toHaveBeenCalled();
+    expect(onOpen).not.toHaveBeenCalled();
   });
 
   it('gives up the long press when the finger moves, as when scrolling', () => {
@@ -98,6 +95,24 @@ describe('TodoRow', () => {
     fireEvent.pointerUp(surface);
     expect(onToggle).toHaveBeenCalledOnce();
     expect(surface.style.transform).toBe('translateX(0px)');
+  });
+
+  it('deletes the todo on a swipe to the left, and only when deletion is offered', () => {
+    const onDelete = vi.fn();
+    const { onToggle } = renderRow({ onDelete });
+    const surface = pressSurface();
+    fireEvent.pointerDown(surface, { button: 0, clientX: 200, clientY: 10 });
+    fireEvent.pointerMove(surface, { clientX: 100, clientY: 14 });
+    expect(surface.style.transform).toBe('translateX(-100px)');
+    fireEvent.pointerUp(surface);
+    expect(onDelete).toHaveBeenCalledOnce();
+    expect(onToggle).not.toHaveBeenCalled();
+    cleanup();
+    renderRow();
+    const withoutDeletion = pressSurface();
+    fireEvent.pointerDown(withoutDeletion, { button: 0, clientX: 200, clientY: 10 });
+    fireEvent.pointerMove(withoutDeletion, { clientX: 100, clientY: 14 });
+    expect(withoutDeletion.style.transform).toBe('translateX(0px)');
   });
 
   it('ignores a secondary button and keeps the native menu only where nothing is bound', () => {

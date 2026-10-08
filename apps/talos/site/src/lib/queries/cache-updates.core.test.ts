@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   applyTodoPatch,
   buildPendingTodo,
+  findIndexById,
+  insertAt,
   isKeptAfterSignOut,
   removeById,
   replaceProposal,
@@ -95,6 +97,22 @@ describe('removeById', () => {
     const passkeys = [{ id: 'a' }, { id: 'b' }, { id: 'c' }];
     expect(removeById(passkeys, 'b')).toEqual([{ id: 'a' }, { id: 'c' }]);
     expect(removeById(passkeys, 'z')).toEqual(passkeys);
+  });
+});
+
+describe('insertAt', () => {
+  it('puts the item back at its rank, or last when the rank is beyond the list', () => {
+    expect(insertAt(['a', 'c'], 1, 'b')).toEqual(['a', 'b', 'c']);
+    expect(insertAt(['a', 'b'], 0, 'z')).toEqual(['z', 'a', 'b']);
+    expect(insertAt(['a'], 5, 'b')).toEqual(['a', 'b']);
+  });
+});
+
+describe('findIndexById', () => {
+  it('answers the rank of an item, or null when it is absent', () => {
+    expect(findIndexById([{ id: 'a' }, { id: 'b' }], 'b')).toBe(1);
+    expect(findIndexById([{ id: 'a' }], 'a')).toBe(0);
+    expect(findIndexById([{ id: 'a' }], 'z')).toBeNull();
   });
 });
 

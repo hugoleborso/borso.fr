@@ -6,6 +6,14 @@ export const TODO_ADDED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.todo-added',
 };
+export const TODO_DELETED_TOAST: TranslatableToast = {
+  tone: 'neutral',
+  messageKey: 'toast.todo-deleted',
+};
+export const TODO_RESTORED_TOAST: TranslatableToast = {
+  tone: 'neutral',
+  messageKey: 'toast.todo-restored',
+};
 export const FOCUS_SAVED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.focus-saved',

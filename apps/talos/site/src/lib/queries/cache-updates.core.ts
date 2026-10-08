@@ -78,6 +78,18 @@ export function removeById<Item extends { readonly id: string }>(
   return items.filter((item) => item.id !== itemId);
 }
 
+export function insertAt<Item>(items: readonly Item[], index: number, item: Item): Item[] {
+  return [...items.slice(0, index), item, ...items.slice(index)];
+}
+
+export function findIndexById(
+  items: readonly { readonly id: string }[],
+  itemId: string,
+): number | null {
+  const index = items.findIndex((item) => item.id === itemId);
+  return index === -1 ? null : index;
+}
+
 export function isKeptAfterSignOut(queryKey: readonly unknown[], sessionRoot: string): boolean {
   return queryKey[0] === sessionRoot;
 }

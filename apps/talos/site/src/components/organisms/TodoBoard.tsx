@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../atoms/Card';
 import { PageTitle } from '../atoms/PageTitle';
 import { EmptyState } from '../molecules/EmptyState';
@@ -14,7 +15,8 @@ import {
   toIsoDay,
 } from '../../lib/calendar-day.utils';
 import { openActionSheet } from '../../lib/action-sheet.hook';
-import { useTodos, useUpdateTodo } from '../../lib/queries/todos.queries';
+import { useDeleteTodo, useTodos, useUpdateTodo } from '../../lib/queries/todos.queries';
+import { buildTodoHref } from '../../lib/wikilinks.core';
 import { TodoEditForm } from './TodoEditForm';
 import { TodoQuickAdd } from './TodoQuickAdd';
 import {
@@ -35,6 +37,8 @@ export function TodoBoard(): JSX.Element {
   const { t } = useTranslation();
   const todos = useTodos();
   const updateTodo = useUpdateTodo();
+  const deleteTodo = useDeleteTodo();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<TodoFilter>('open');
   const [editingId, setEditingId] = useState<string | null>(null);
   const today = toIsoDay(new Date());
@@ -71,6 +75,9 @@ export function TodoBoard(): JSX.Element {
                 const edit = (): void => {
                   setEditingId(todo.id);
                 };
+                const remove = (): void => {
+                  deleteTodo.mutate({ id: todo.id });
+                };
                 return isEditing ? (
                   <TodoEditForm
                     key={todo.id}
@@ -95,9 +102,9 @@ export function TodoBoard(): JSX.Element {
                     )}
                     dueTone={selectDueTone(status)}
                     dueIcon={selectDueIcon(status)}
-                    hasCommitment={todo.commitment !== undefined}
                     onToggle={toggle}
-                    onEdit={edit}
+                    onOpen={() => void navigate(buildTodoHref(todo.id))}
+                    onDelete={remove}
                     onLongPress={() => {
                       openActionSheet({
                         title: todo.text,
@@ -109,6 +116,7 @@ export function TodoBoard(): JSX.Element {
                             onSelect: toggle,
                           },
                           { labelKey: 'common.edit', icon: 'edit', onSelect: edit },
+                          { labelKey: 'todo.row.delete', icon: 'remove', onSelect: remove },
                         ],
                       });
                     }}

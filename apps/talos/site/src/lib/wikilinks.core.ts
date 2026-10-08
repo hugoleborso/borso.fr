@@ -1,6 +1,8 @@
 import { stripMarkdownExtension } from '@domain/markdown-page.core';
 
 const PAGE_ROUTE_PREFIX = '/brain/page/';
+const COMMITMENT_ROUTE_PREFIX = '/commitments/';
+const TODO_ROUTE_PREFIX = '/todos/';
 const MARKDOWN_EXTENSION = '.md';
 const WIKILINK_PATTERN = /\[\[([^\]|#]+)(#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
 const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
@@ -19,6 +21,14 @@ export function normalisePagePath(target: string): string {
 // @FollowsBlueprint core-view-projection
 export function buildPageHref(pagePath: string): string {
   return `${PAGE_ROUTE_PREFIX}${encodeURI(normalisePagePath(pagePath))}`;
+}
+
+export function buildCommitmentHref(commitmentPath: string): string {
+  return `${COMMITMENT_ROUTE_PREFIX}${encodeURI(normalisePagePath(commitmentPath))}`;
+}
+
+export function buildTodoHref(todoId: string): string {
+  return `${TODO_ROUTE_PREFIX}${encodeURIComponent(todoId)}`;
 }
 
 export function selectPageLabel(pagePath: string): string {

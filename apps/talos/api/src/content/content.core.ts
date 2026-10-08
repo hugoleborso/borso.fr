@@ -1,7 +1,7 @@
 const MARKDOWN_EXTENSION = '.md';
 const PATH_SEPARATOR = '/';
 const CORPUS_FOLDERS = ['second-brain/', 'engagements/', 'objectifs/'];
-const READABLE_ONLY_FOLDERS = ['journal/'];
+const READABLE_ONLY_FOLDERS = ['journal/', 'sources/'];
 const INDEX_FILE = 'index.md';
 const SAFE_PAGE_PATH_PATTERN = /^[\w.-]+(?:\/[\w.-]+)*$/;
 const PARENT_SEGMENT = '..';

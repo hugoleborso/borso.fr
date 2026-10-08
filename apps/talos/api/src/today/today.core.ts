@@ -1,5 +1,5 @@
 import { splitFrontMatter } from '@domain/front-matter.core';
-import { readSection } from '@domain/markdown-page.core';
+import { readSection, stripMarkdownExtension } from '@domain/markdown-page.core';
 import type { Todo } from '@domain/todo.core';
 
 export interface Brief {
@@ -17,6 +17,7 @@ const MAXIMUM_ACTIVITY_ENTRIES = 6;
 const BRIEF_HEADING = 'Brief envoyé';
 const LINE_BREAK = '\n';
 const SECTION_PREFIX = '## ';
+const REFERENCE_DECORATION_PATTERN = /^\[\[|\]\]$|^\/+/g;
 
 type DatedTodo = Todo & { readonly dueDate: string };
 
@@ -33,6 +34,23 @@ export function selectTodayTodos(todos: readonly Todo[], horizon: string): Todo[
     .toSorted((left, right) => left.dueDate.localeCompare(right.dueDate));
   const undated = open.filter((todo) => !isDated(todo)).slice(0, MAXIMUM_UNDATED_TODOS);
   return [...dueSoon, ...undated];
+}
+
+function normalizeCommitmentReference(reference: string): string {
+  return stripMarkdownExtension(reference.trim().replaceAll(REFERENCE_DECORATION_PATTERN, ''));
+}
+
+export function selectUnclaimedCommitments<Commitment extends { readonly path: string }>(
+  commitments: readonly Commitment[],
+  todos: readonly Pick<Todo, 'commitment'>[],
+): Commitment[] {
+  const claimed = new Set(
+    todos
+      .map((todo) => todo.commitment)
+      .filter((reference) => reference !== undefined)
+      .map(normalizeCommitmentReference),
+  );
+  return commitments.filter((commitment) => !claimed.has(commitment.path));
 }
 
 export function readBrief(date: string, journal: string): Brief | null {
