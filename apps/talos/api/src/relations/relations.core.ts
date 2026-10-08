@@ -91,12 +91,13 @@ export function parseRelations(raw: string | null, today: string): RelationsDige
   if (raw === null) return EMPTY_RELATIONS;
   const relationsFile = relationsFileSchema.safeParse(parseJsonOrNull(raw));
   if (!relationsFile.success) return EMPTY_RELATIONS;
-  // Stryker disable next-line ArrayDeclaration: equivalent mutant, an entry the schemas cannot read is skipped, so a filled fallback reads exactly like the empty one.
+  // Stryker disable ArrayDeclaration: equivalent mutants, an entry the schemas cannot read is skipped, so a filled fallback reads exactly like the empty one.
   const {
     genere,
     a_recontacter: toReconnect = [],
     anniversaires: birthdays = [],
   } = relationsFile.data;
+  // Stryker restore ArrayDeclaration
   const elapsedDays = measureElapsedDays(genere, today);
   return {
     generatedAt: genere,
