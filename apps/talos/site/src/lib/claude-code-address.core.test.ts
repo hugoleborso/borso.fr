@@ -26,14 +26,14 @@ describe('buildClaudeCodeAddress', () => {
         prompt: 'Tu es Talos :\n\nÉcris & envoie 50 % ?',
       }),
     ).toBe(
-      'https://claude.ai/code?repositories=proprietaire%2Fnotes&environment=env_01abc' +
-        '&prompt=Tu%20es%20Talos%20%3A%0A%0A%C3%89cris%20%26%20envoie%2050%20%25%20%3F',
+      'https://claude.ai/code/new?repo=proprietaire%2Fnotes&environment=env_01abc' +
+        '&q=Tu%20es%20Talos%20%3A%0A%0A%C3%89cris%20%26%20envoie%2050%20%25%20%3F',
     );
   });
 
   it('leaves the environment out when none is configured', () => {
     expect(buildClaudeCodeAddress({ repository: 'a/b', environmentId: null, prompt: 'p' })).toBe(
-      'https://claude.ai/code?repositories=a%2Fb&prompt=p',
+      'https://claude.ai/code/new?repo=a%2Fb&q=p',
     );
   });
 });
@@ -43,10 +43,10 @@ describe('buildEnvironmentAddress', () => {
 
   it('opens the chosen environment of the deployment settings', () => {
     expect(buildEnvironmentAddress(target, 'talos', 'p')).toBe(
-      'https://claude.ai/code?repositories=a%2Fb&environment=env_lecture&prompt=p',
+      'https://claude.ai/code/new?repo=a%2Fb&environment=env_lecture&q=p',
     );
     expect(buildEnvironmentAddress(target, 'build', 'p')).toBe(
-      'https://claude.ai/code?repositories=a%2Fb&prompt=p',
+      'https://claude.ai/code/new?repo=a%2Fb&q=p',
     );
   });
 

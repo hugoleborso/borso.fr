@@ -51,7 +51,7 @@ describe('MessageComposer', () => {
     expect(talos.getAttribute('target')).toBe('_blank');
     expect(talos.getAttribute('rel')).toBe('noopener');
     expect(talos.getAttribute('href')).toBe(
-      `https://claude.ai/code?repositories=proprietaire%2Fnotes&environment=env_lecture&prompt=${PREAMBLE}`,
+      `https://claude.ai/code/new?repo=proprietaire%2Fnotes&environment=env_lecture&q=${PREAMBLE}`,
     );
     expect(screen.getByRole('link', { name: 'Construire' }).getAttribute('href')).toContain(
       'environment=env_construction&',
@@ -64,7 +64,7 @@ describe('MessageComposer', () => {
     await userEvent.type(screen.getByLabelText('Ton message'), 'Rappelle Julie');
     const build = await screen.findByRole('link', { name: 'Construire' });
     expect(build.getAttribute('href')).toBe(
-      `https://claude.ai/code?repositories=proprietaire%2Fnotes&prompt=${PREAMBLE}%0A%0ARappelle%20Julie`,
+      `https://claude.ai/code/new?repo=proprietaire%2Fnotes&q=${PREAMBLE}%0A%0ARappelle%20Julie`,
     );
     expect(screen.queryByText(/caractères/)).toBeNull();
   });

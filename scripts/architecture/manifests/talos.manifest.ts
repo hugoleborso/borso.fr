@@ -118,7 +118,7 @@ export const talosManifest: ArchitectureManifest = {
       name: 'Claude Code on the web',
       technology: 'Prefilled session link, opened in a new tab',
       description:
-        'The Message screen links to claude.ai/code with the repository, the environment and the prompt in the query string. The application never calls it; the browser follows the link.',
+        'The Message screen, « Discuter » and the scan button link to claude.ai/code/new with the repository, the environment and the prompt in the query string. The application never calls it; the browser or the Claude app follows the link.',
       boundary: 'third-party',
       access: 'open',
     },
