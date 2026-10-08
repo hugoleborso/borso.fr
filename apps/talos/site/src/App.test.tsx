@@ -173,9 +173,17 @@ describe('the application shell', () => {
     expect(dialog?.getAttribute('aria-label')).toBe('Appeler Bruno');
     const discuss = dialog?.querySelector('a');
     const address = new URL(discuss?.getAttribute('href') ?? '');
-    expect(address.searchParams.get('repositories')).toBe('proprietaire/notes');
+    expect(address.searchParams.get('repo')).toBe('proprietaire/notes');
     expect(address.searchParams.get('environment')).toBe('env_lecture');
-    expect(address.searchParams.get('prompt')).toContain('Todo « Appeler Bruno » (todo.md)');
+    expect(address.searchParams.get('q')).toContain(
+      'Tu vas discuter de la tâche « Appeler Bruno » (todo.md).',
+    );
+    const writeText = vi.fn(() => Promise.resolve());
+    Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });
+    if (discuss === undefined || discuss === null) throw new Error('no discuss link');
+    fireEvent.click(discuss);
+    expect(writeText).toHaveBeenCalledWith(address.searchParams.get('q'));
+    Reflect.deleteProperty(navigator, 'clipboard');
     vi.useRealTimers();
     tree.unmount();
   });

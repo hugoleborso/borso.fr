@@ -113,7 +113,7 @@ The item of data a long press opens the action sheet on, and that « Discuter »
 
 Lives in: `site/src/lib/discussion-subject.core.ts`, `site/src/lib/action-sheet.hook.ts`
 
-- Code: `DiscussionSubjectReference` (one kind per file of the private repository), `selectSubjectFile` names that file.
+- Code: `DiscussionSubjectReference` (one kind per file of the private repository, plus `todos` for the whole list beside `todo` for one line, both in `todo.md`), `selectSubjectFile` names that file, `selectSubjectPhraseKey` the words the prompt names its kind with.
 
 ## Graph
 

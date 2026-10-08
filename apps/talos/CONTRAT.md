@@ -156,13 +156,17 @@ The relation decides how long a link wants to be: short for couple and family (`
 
 ### Messages to Talos
 
-A message is not a file. The Message screen opens a Claude Code session on the web, on the private repository, with the message as its prompt. The link is the one documented under "Pre-fill sessions" in the Claude Code web quickstart:
+A message is not a file. The Message screen opens a new Claude Code session on the private repository, with the message as its prompt:
 
 ```
-https://claude.ai/code?repositories=<GITHUB_REPO>&environment=<environment id>&prompt=<preamble, a blank line, the message>
+https://claude.ai/code/new?repo=<GITHUB_REPO>&environment=<environment id>&q=<preamble, a blank line, the message>
 ```
+
+The path and the parameter names are the ones both readers of the link accept. `https://claude.ai/code/...` is a universal link: on a phone with the Claude app installed, the app opens it and reads only the `code/new` route with `q` and `repo` (support article « Open the Claude mobile app with a link »), so the older `https://claude.ai/code?prompt=` form landed in the app with an empty prompt. Without the app, the browser opens the same link, and the web reads `q` and `repo` as aliases of `prompt` and `repositories` (Claude Code web quickstart, « Pre-fill sessions »). The app documents no `environment` parameter, so a session started from the app may run in its default environment.
 
 Each value is encoded with `encodeURIComponent`. The preamble is « Tu es Talos. Lis CLAUDE.md puis réponds à ce message de Hugo : », from the French catalogue. A blank message sends the preamble alone. An environment whose setting is missing is left out of the link, and Claude Code then picks its default one. Beyond 6000 characters the screen warns that the link may be cut.
+
+Every link that opens Claude Code (the Message screen, « Discuter », the scan button) also copies its prompt to the clipboard on the tap, and a toast says so. Opened from the home-screen app on a phone, the link can land in the Claude app with an empty prompt; Hugo then pastes it.
 
 ## API
 
@@ -248,7 +252,7 @@ A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fi
 
 ## Discussing an item with Talos
 
-A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis ouvre ce fichier du dépôt et discutons-en avec Hugo : » followed by the kind, the title and the file of the item in the private repository (`todo.md`, `focus.md`, `etat/propositions/<slug>.md`, `etat/brouillons/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `journal/<week>-hebdo.md`, `<page>.md`, `etat/dernier-scan.json`, `etat/relations.json`). On a person to reconnect with, the prompt also asks for a message to get back in touch; on a birthday, for a message and a gift idea.
+A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis CLAUDE.md, puis le fichier du dépôt cité ci-dessous, et discutes-en avec Hugo. » followed by the sentence « Tu vas discuter <phrase of the kind> « <title> » (<file>). », where the phrase names the kind (« de la tâche » for one todo, « de la todo » for the whole list, « de l'engagement », « de la proposition »…) and the file is the item's file in the private repository (`todo.md` for one todo and for the list, `focus.md`, `etat/propositions/<slug>.md`, `etat/brouillons/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `journal/<week>-hebdo.md`, `<page>.md`, `etat/dernier-scan.json`, `etat/relations.json`). On a person to reconnect with, the prompt also asks for a message to get back in touch; on a birthday, for a message and a gift idea.
 
 ## Screens
 

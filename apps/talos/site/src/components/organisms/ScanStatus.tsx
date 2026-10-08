@@ -6,6 +6,7 @@ import { Icon, type IconName } from '../atoms/Icon';
 import { openActionSheet } from '../../lib/action-sheet.hook';
 import { buildEnvironmentAddress } from '../../lib/claude-code-address.core';
 import { PRESSABLE_CLASS_NAME, usePressGesture } from '../../lib/press-gesture.hook';
+import { useCopyPromptOnLaunch } from '../../lib/prompt-copy.hook';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
 import { measureAge } from '../../lib/relative-age.utils';
 import {
@@ -76,13 +77,16 @@ function LastRunsPill({ lastRuns }: { readonly lastRuns: LastRunsShape }): JSX.E
 export function ScanStatus({ lastRuns }: ScanStatusProps): JSX.Element {
   const { t } = useTranslation();
   const target = useClaudeCodeTarget();
+  const copyPrompt = useCopyPromptOnLaunch();
+  const prompt = t('scan.prompt');
   return (
     <div className="flex items-center gap-1">
       {lastRuns === null ? null : <LastRunsPill lastRuns={lastRuns} />}
       <a
-        href={buildEnvironmentAddress(target.data, 'talos', t('scan.prompt'))}
+        href={buildEnvironmentAddress(target.data, 'talos', prompt)}
         target="_blank"
         rel="noopener"
+        onClick={() => copyPrompt(prompt)}
         aria-label={t('scan.open')}
         className={buttonVariants({ variant: 'quiet', size: 'icon' })}
       >

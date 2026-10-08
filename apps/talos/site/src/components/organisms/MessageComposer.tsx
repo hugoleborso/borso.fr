@@ -8,6 +8,7 @@ import { PageTitle } from '../atoms/PageTitle';
 import { Textarea } from '../atoms/Textarea';
 import { QueryState } from '../molecules/QueryState';
 import { DISPLAY_LOCALE } from '../../lib/calendar-day.utils';
+import { useCopyPromptOnLaunch } from '../../lib/prompt-copy.hook';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
 import {
   buildClaudeCodeAddress,
@@ -32,6 +33,7 @@ const ENVIRONMENT_CHOICES: readonly EnvironmentChoice[] = [
 export function MessageComposer(): JSX.Element {
   const { t } = useTranslation();
   const target = useClaudeCodeTarget();
+  const copyPrompt = useCopyPromptOnLaunch();
   const form = useForm({ defaultValues: { text: '' } });
 
   return (
@@ -55,6 +57,7 @@ export function MessageComposer(): JSX.Element {
         <form.Subscribe selector={(state) => state.values.text}>
           {(text) => {
             const isTooLong = isMessageTooLong(text);
+            const prompt = composeTalosPrompt(t('message.preamble'), text);
             return (
               <>
                 {isTooLong ? (
@@ -75,10 +78,11 @@ export function MessageComposer(): JSX.Element {
                         href={buildClaudeCodeAddress({
                           repository: target.data.repository,
                           environmentId: target.data.environments[choice.environment],
-                          prompt: composeTalosPrompt(t('message.preamble'), text),
+                          prompt,
                         })}
                         target="_blank"
                         rel="noopener"
+                        onClick={() => copyPrompt(prompt)}
                         className={buttonVariants({
                           variant: choice.variant,
                           className: 'sm:flex-1',

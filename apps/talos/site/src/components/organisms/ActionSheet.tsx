@@ -5,8 +5,9 @@ import { Icon } from '../atoms/Icon';
 import { closeActionSheet, useShownActionSheet } from '../../lib/action-sheet.hook';
 import { buildEnvironmentAddress, composeTalosPrompt } from '../../lib/claude-code-address.core';
 import { selectSubjectFile } from '../../lib/discussion-subject.core';
+import { useCopyPromptOnLaunch } from '../../lib/prompt-copy.hook';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
-import { composeDiscussionText, selectSubjectKindLabelKey } from './action-sheet.core';
+import { composeDiscussionText, selectSubjectPhraseKey } from './action-sheet.core';
 
 const SHEET_ROW_CLASS_NAME = 'w-full justify-start min-h-13 px-4 text-body';
 
@@ -15,13 +16,14 @@ export function ActionSheet(): JSX.Element | null {
   const { t } = useTranslation();
   const sheet = useShownActionSheet();
   const target = useClaudeCodeTarget();
+  const copyPrompt = useCopyPromptOnLaunch();
   if (sheet === null) return null;
   const file = selectSubjectFile(sheet.subject);
   const prompt = composeTalosPrompt(
     t('discuss.preamble'),
     composeDiscussionText(
       t('discuss.context', {
-        kind: t(selectSubjectKindLabelKey(sheet.subject.kind)),
+        subject: t(selectSubjectPhraseKey(sheet.subject.kind)),
         title: sheet.title,
         file,
       }),
@@ -68,7 +70,10 @@ export function ActionSheet(): JSX.Element | null {
               aria-disabled={target.data === undefined}
               // eslint-disable-next-line jsx-a11y/no-autofocus -- the sheet opens on a long press, and the first action is where a keyboard or a screen reader has to land.
               autoFocus
-              onClick={closeActionSheet}
+              onClick={() => {
+                copyPrompt(prompt);
+                closeActionSheet();
+              }}
               className={buttonVariants({ variant: 'primary', className: SHEET_ROW_CLASS_NAME })}
             >
               <Icon name="discuss" size={20} />
