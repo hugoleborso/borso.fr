@@ -112,6 +112,10 @@ Written by the runs, read by the app. `par` is `nuit`, `brief` or `session`. A m
 
 `etat/graphe.jsonl` (one relation per line: `source`, `relation`, `cible`, `depuis`, `jusqua`, `vu`, `src`), the pages `second-brain/**.md`, `engagements/*.md`, `objectifs/*.md` (simple YAML front matter, title = first `# ` heading), and `index.md`.
 
+A page may carry `proximite:` in its front matter, an integer from 1 to 5 that Talos computes: 5 is intimate or at the heart of the owner's priorities, 1 is functional or contextual. Any other value is ignored, and a page without a valid score counts as 2. The graph pins the page of type `moi` at the centre and pulls every other page towards a circle whose radius shrinks as the score grows, so the score decides the distance to the owner, not the number of hops.
+
+The relation decides how long a link wants to be: short for couple and family (`en_couple_avec`, `parent_de`, `frere_soeur_de`, `cousin_de`, `parrain_de`), medium for friendship and shared flats (`ami_de`, `colocataire_de`, `cofondateur_potentiel`), long for work and projects (every other verb of the vocabulary). A relation whose `jusqua` has passed is longer still and drawn paler. `vu` travels with each edge; the app can weaken a link as its `vu` ages (half-life of six months), a choice fixed by a constant in `site/src/components/organisms/graph-layout.core.ts`.
+
 ### Messages to Talos
 
 A message is not a file. The Message screen opens a Claude Code session on the web, on the private repository, with the message as its prompt. The link is the one documented under "Pre-fill sessions" in the Claude Code web quickstart:
@@ -163,7 +167,7 @@ The two registration routes also accept a session: that is how a second passkey 
 | GET | `/proposals?status=proposee` | | `Proposal[]` (newest first) |
 | POST | `/proposals/:slug/decision` | `{ decision: "acceptee" \| "refusee", comment? }` | `Proposal`; 409 when the proposal is not `proposee` |
 | DELETE | `/proposals/:slug/decision` | | `Proposal` back to `proposee`; 409 when the status is not `acceptee` or `refusee`, 404 when unknown. Fires no run |
-| GET | `/graph?date=AAAA-MM-JJ` | | `{ nodes: { id, title, type }[], edges: { source, target, relation, since?, until? }[] }` (with `date`, only the relations true on that date) |
+| GET | `/graph?date=AAAA-MM-JJ` | | `{ nodes: { id, title, type, proximity? }[], edges: { source, target, relation, since?, until?, seen?, isClosed }[] }`: `proximity` is the page's valid `proximite`, absent otherwise; with `date`, only the relations begun by that date, and `isClosed` when their `jusqua` ended before it; without `date`, `isClosed` for every relation with a `jusqua` |
 | GET | `/pages/*` (path without `.md`, under `second-brain/`, `engagements/`, `objectifs/`, `journal/` or `sources/`, or `index`) | | `{ path, title, type, frontMatter: Record<string,string>, markdown, outgoingLinks: string[], incomingLinks: string[] }` |
 | GET | `/search?q=` | | `{ path, title, excerpt }[]` (20 at most, title matches before content matches) |
 | GET | `/messages/claude-code` | | `{ repository, environments: { talos: string \| null, build: string \| null } }`: `GITHUB_REPO` and the two environment settings, `null` when a setting is missing |

@@ -18,7 +18,7 @@ describe('GET /api/pages/*', () => {
       path: 'second-brain/projets/refonte',
       title: 'Refonte du site',
       type: 'projet',
-      frontMatter: { type: 'projet' },
+      frontMatter: { type: 'projet', proximite: '4' },
       markdown: '# Refonte du site\n\nPilotée par [[second-brain/moi]].\n',
       outgoingLinks: ['second-brain/moi'],
       incomingLinks: ['index', 'second-brain/moi'],

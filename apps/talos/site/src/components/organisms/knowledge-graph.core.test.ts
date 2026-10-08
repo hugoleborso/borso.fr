@@ -13,7 +13,6 @@ import {
   selectNodeClickIntent,
   selectTimelineDate,
   shouldDrawLabels,
-  toRenderableGraph,
 } from './knowledge-graph.core';
 
 const NODES = ['a', 'b', 'c', 'd', 'e'].map((id) => ({
@@ -158,19 +157,6 @@ describe('selectTimelineDate', () => {
   it('answers the first month for a position before the start', () => {
     expect(selectTimelineDate(timeline, -1)).toBe('2017-01-31');
     expect(selectTimelineDate(timeline, 0)).toBe('2017-01-31');
-  });
-});
-
-describe('toRenderableGraph', () => {
-  it('copies the nodes with their colour and the edges as links', () => {
-    const renderable = toRenderableGraph({
-      nodes: [{ id: 'p', title: 'Lucie', type: 'personne' }],
-      edges: [{ source: 'p', target: 'q', relation: 'ami_de' }],
-    });
-    expect(renderable).toEqual({
-      nodes: [{ id: 'p', title: 'Lucie', colorVariable: '--color-node-person' }],
-      links: [{ source: 'p', target: 'q' }],
-    });
   });
 });
 

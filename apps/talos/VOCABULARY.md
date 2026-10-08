@@ -90,8 +90,9 @@ The relations between pages, `etat/graphe.jsonl`.
 
 Lives in: `api/src/graph/`
 
-- Code: `Graph`, `GraphNode` (`id`, `title`, `type`), `GraphEdge` (`source`, `target`, `relation`, `since` for `depuis`, `until` for `jusqu'à`).
-- With a date, only the relations true on that date are returned (`domain/graph.core.ts`).
+- Code: `Graph`, `GraphNode` (`id`, `title`, `type`, `proximity` for `proximite`), `GraphEdge` (`source`, `target`, `relation`, `since` for `depuis`, `until` for `jusqu'à`, `seen` for `vu`, `isClosed`).
+- With a date, only the relations begun by that date are returned, those already ended marked `isClosed` (`domain/graph.core.ts`).
+- `RelationTie` (`family`, `friendship`, `work`, `other`) groups the relation verbs by how close they hold two pages; it sets link length and pull (`site/src/components/organisms/graph-layout.core.ts`).
 
 ## Page
 

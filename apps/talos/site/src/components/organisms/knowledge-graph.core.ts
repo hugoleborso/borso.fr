@@ -182,31 +182,6 @@ export function findNodeTitle(
   return nodes.find((node) => node.id === nodeId)?.title ?? null;
 }
 
-export interface RenderableNode {
-  readonly id: string;
-  readonly title: string;
-  readonly colorVariable: string;
-}
-
-export interface RenderableLink {
-  readonly source: string;
-  readonly target: string;
-}
-
-export function toRenderableGraph(graph: GraphShape<GraphNodeShape, GraphEdgeShape>): {
-  nodes: RenderableNode[];
-  links: RenderableLink[];
-} {
-  return {
-    nodes: graph.nodes.map((node) => ({
-      id: node.id,
-      title: node.title,
-      colorVariable: selectNodeColorVariable(node.type),
-    })),
-    links: graph.edges.map((edge) => ({ source: edge.source, target: edge.target })),
-  };
-}
-
 const LABELLED_NODE_LIMIT = 40;
 const LABEL_ZOOM_THRESHOLD = 2;
 
