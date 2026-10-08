@@ -3,8 +3,12 @@ import {
   buildGraph,
   computeLowerBound,
   computeUpperBound,
+  hasRelationStartedBy,
+  isRelationClosedOn,
   isRelationTrueOn,
   parseGraphRelations,
+  projectPageNode,
+  readProximity,
 } from './graph.core';
 
 const GRAPH_FILE = [
@@ -33,6 +37,7 @@ describe('parseGraphRelations', () => {
         target: 'second-brain/projets/audit-initech',
         since: '2026-01',
         until: '2026-05',
+        seen: '2026-05-30',
       },
       {
         source: 'second-brain/moi',
@@ -40,6 +45,7 @@ describe('parseGraphRelations', () => {
         target: 'second-brain/projets/refonte-du-site-globex',
         since: '2026-09-01',
         until: '',
+        seen: '2026-10-02',
       },
       {
         source: 'second-brain/projets/refonte-du-site-globex',
@@ -47,6 +53,7 @@ describe('parseGraphRelations', () => {
         target: 'second-brain/organisations/globex',
         since: '~2026-07',
         until: '',
+        seen: '',
       },
     ]);
   });
@@ -116,24 +123,29 @@ describe('buildGraph', () => {
           relation: 'travaille_sur',
           since: '2026-01',
           until: '2026-05',
+          seen: '2026-05-30',
+          isClosed: true,
         },
         {
           source: 'second-brain/moi',
           target: 'second-brain/projets/refonte-du-site-globex',
           relation: 'travaille_sur',
           since: '2026-09-01',
+          seen: '2026-10-02',
+          isClosed: false,
         },
         {
           source: 'second-brain/projets/refonte-du-site-globex',
           target: 'second-brain/organisations/globex',
           relation: 'client',
           since: '~2026-07',
+          isClosed: false,
         },
       ],
     });
   });
 
-  it('keeps only the edges true on the asked date', () => {
+  it('keeps only the edges begun by the asked date', () => {
     const graph = buildGraph(pages, RELATIONS, '2026-03-15');
     expect(graph.edges.map((edge) => edge.target)).toEqual(['second-brain/projets/audit-initech']);
     expect(graph.nodes.map((node) => node.id)).toEqual([
@@ -143,10 +155,87 @@ describe('buildGraph', () => {
     ]);
   });
 
-  it('writes an edge without dates when the relation has none', () => {
-    const undated = { source: 'a', relation: 'ami_de', target: 'b', since: '', until: '' };
-    expect(buildGraph([], [undated], null).edges).toEqual([
-      { source: 'a', target: 'b', relation: 'ami_de' },
+  it('keeps a relation ended before the asked date, marked closed', () => {
+    const graph = buildGraph(pages, RELATIONS, '2026-10-08');
+    expect(graph.edges.map((edge) => [edge.target, edge.isClosed])).toEqual([
+      ['second-brain/projets/audit-initech', true],
+      ['second-brain/projets/refonte-du-site-globex', false],
+      ['second-brain/organisations/globex', false],
     ]);
+  });
+
+  it('writes an edge without dates when the relation has none', () => {
+    const undated = {
+      source: 'a',
+      relation: 'ami_de',
+      target: 'b',
+      since: '',
+      until: '',
+      seen: '',
+    };
+    expect(buildGraph([], [undated], null).edges).toEqual([
+      { source: 'a', target: 'b', relation: 'ami_de', isClosed: false },
+    ]);
+  });
+});
+
+describe('hasRelationStartedBy', () => {
+  const relation = RELATIONS[0]!;
+
+  it('counts the first day of a partial start as begun', () => {
+    expect(hasRelationStartedBy(relation, '2026-01-01')).toBe(true);
+    expect(hasRelationStartedBy(relation, '2025-12-31')).toBe(false);
+  });
+});
+
+describe('isRelationClosedOn', () => {
+  const ended = RELATIONS[0]!;
+  const ongoing = RELATIONS[1]!;
+
+  it('closes a relation the day after the end of its partial end date', () => {
+    expect(isRelationClosedOn(ended, '2026-05-31')).toBe(false);
+    expect(isRelationClosedOn(ended, '2026-06-01')).toBe(true);
+  });
+
+  it('closes any ended relation when no date is asked', () => {
+    expect(isRelationClosedOn(ended, null)).toBe(true);
+  });
+
+  it('never closes a relation without an end', () => {
+    expect(isRelationClosedOn(ongoing, null)).toBe(false);
+    expect(isRelationClosedOn(ongoing, '2030-01-01')).toBe(false);
+  });
+});
+
+describe('readProximity', () => {
+  it.each(['1', '3', '5'])('reads %s as a score', (declared) => {
+    expect(readProximity({ proximite: declared })).toBe(Number(declared));
+  });
+
+  it.each(['0', '6', '4.5', ' 4', 'haute', '', '45'])('ignores %j', (declared) => {
+    expect(readProximity({ proximite: declared })).toBeNull();
+  });
+
+  it('answers null without the key', () => {
+    expect(readProximity({ type: 'personne' })).toBeNull();
+  });
+});
+
+describe('projectPageNode', () => {
+  it('carries the proximity of a page that declares one', () => {
+    expect(
+      projectPageNode({
+        path: 'second-brain/personnes/lea',
+        title: 'Léa',
+        type: 'personne',
+        frontMatter: { type: 'personne', proximite: '5' },
+      }),
+    ).toEqual({ id: 'second-brain/personnes/lea', title: 'Léa', type: 'personne', proximity: 5 });
+  });
+
+  it('leaves the proximity out when the page has none', () => {
+    expect(
+      projectPageNode({ path: 'index', title: 'Index', type: 'page', frontMatter: {} }),
+    ).toEqual({ id: 'index', title: 'Index', type: 'page' });
   });
 });

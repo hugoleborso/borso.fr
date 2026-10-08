@@ -90,6 +90,6 @@ export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
   'second-brain/moi.md':
     '---\ntype: moi\nmaj: 2026-10-02\n---\n# Alex Durand\n\nTravaille sur [[second-brain/projets/refonte|la refonte]] à Séville.\n',
   'second-brain/projets/refonte.md':
-    '---\ntype: projet\n---\n# Refonte du site\n\nPilotée par [[second-brain/moi]].\n',
+    '---\ntype: projet\nproximite: 4\n---\n# Refonte du site\n\nPilotée par [[second-brain/moi]].\n',
   'etat/securite.md': '# Où sont les secrets\n',
 };
