@@ -41,8 +41,8 @@ function formatDay(isoDay: string): string {
 export function TodayAgenda({ todos, commitments, today }: TodayAgendaProps): JSX.Element | null {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const updateTodo = useUpdateTodo();
-  const deleteTodo = useDeleteTodo();
+  const updateTodo = useUpdateTodo('main');
+  const deleteTodo = useDeleteTodo('main');
   const tomorrow = addDaysToIsoDay(today, 1);
   const days = buildAgenda(todos, commitments, today, tomorrow);
   if (days.length === 0) return null;
@@ -74,12 +74,12 @@ export function TodayAgenda({ todos, commitments, today }: TodayAgendaProps): JS
                     dueTone={selectDueTone(status)}
                     dueIcon={selectDueIcon(status)}
                     onToggle={toggle}
-                    onOpen={() => void navigate(buildTodoHref(todo.id))}
+                    onOpen={() => void navigate(buildTodoHref(todo.id, 'main'))}
                     onDelete={remove}
                     onLongPress={() => {
                       openActionSheet({
                         title: todo.text,
-                        subject: { kind: 'todo' },
+                        subject: { kind: 'todo', list: 'main' },
                         actions: [
                           { labelKey: 'todo.row.check', icon: 'check', onSelect: toggle },
                           { labelKey: 'todo.row.delete', icon: 'remove', onSelect: remove },
