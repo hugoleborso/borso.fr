@@ -44,12 +44,15 @@ interface SiteOrigin {
   readonly hostname: string;
 }
 
+const SOURCE_MAPPED_STACK_TRACES = '--enable-source-maps';
+
 function buildErrorReportingEnvironment(
   project: ErrorReportingProject | undefined,
 ): Record<string, string> {
   if (project === undefined) return {};
   return {
     SENTRY_DSN: project.dsn,
+    NODE_OPTIONS: SOURCE_MAPPED_STACK_TRACES,
     ...(project.release === undefined ? {} : { SENTRY_RELEASE: project.release }),
   };
 }

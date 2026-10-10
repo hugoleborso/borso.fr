@@ -246,9 +246,11 @@ describe('pragma app stack', () => {
     expect(readApiVariables('prod')).toMatchObject({
       SENTRY_DSN: PROD_ERROR_REPORTING.dsn,
       SENTRY_RELEASE: PROD_ERROR_REPORTING.release,
+      NODE_OPTIONS: '--enable-source-maps',
     });
     expect(readApiVariables('preview')).not.toHaveProperty('SENTRY_DSN');
     expect(readApiVariables('preview')).not.toHaveProperty('SENTRY_RELEASE');
+    expect(readApiVariables('preview')).not.toHaveProperty('NODE_OPTIONS');
   });
 
   it('declares the custom prod domain alias on the CloudFront distribution', () => {

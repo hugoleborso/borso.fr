@@ -5,6 +5,7 @@ import { buildAudienceRouter } from './audience/audience.controller';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
+import { traceRequests } from './helpers/observability/request-tracing.middleware';
 import { answerUnhandledError } from './helpers/observability/unhandled-error.middleware';
 import { buildImprovementsRouter } from './improvements/improvements.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
@@ -33,6 +34,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
   const { publicRouter, bootstrapRouter, rotateRouter } = buildAuthRouter(options.auth ?? {});
   const audience = buildAudienceRouter();
   return new Hono()
+    .use('*', traceRequests)
     .use('*', logger())
     .use('*', cors())
     .onError(answerUnhandledError)

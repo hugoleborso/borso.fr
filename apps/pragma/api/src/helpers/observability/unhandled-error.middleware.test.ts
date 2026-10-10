@@ -5,7 +5,7 @@ import { buildUnhandledErrorAnswer } from './unhandled-error.middleware';
 
 const TEAPOT_STATUS = 418;
 
-function buildFailingApp(failure: Error, reportFailure: (error: unknown) => Promise<void>): Hono {
+function buildFailingApp(failure: Error, reportFailure: (error: unknown) => void): Hono {
   return new Hono().onError(buildUnhandledErrorAnswer(reportFailure)).get('/fail', () => {
     throw failure;
   });
@@ -19,7 +19,7 @@ describe('buildUnhandledErrorAnswer', () => {
 
   it('reports an unexpected failure and answers 500 without its message', async () => {
     vi.spyOn(console, 'error').mockImplementation(() => undefined);
-    const reportFailure = vi.fn(() => Promise.resolve());
+    const reportFailure = vi.fn();
     const failure = new Error('secret detail');
 
     const response = await buildFailingApp(failure, reportFailure).request('/fail');
@@ -30,7 +30,7 @@ describe('buildUnhandledErrorAnswer', () => {
   });
 
   it('answers a deliberate refusal with its own response and reports nothing', async () => {
-    const reportFailure = vi.fn(() => Promise.resolve());
+    const reportFailure = vi.fn();
     const refusal = new HTTPException(TEAPOT_STATUS, { message: 'short and stout' });
 
     const response = await buildFailingApp(refusal, reportFailure).request('/fail');

@@ -3,6 +3,14 @@
  */
 
 import * as Sentry from '@sentry/react';
+import { useEffect } from 'react';
+import {
+  createRoutesFromChildren,
+  matchRoutes,
+  Routes,
+  useLocation,
+  useNavigationType,
+} from 'react-router-dom';
 import type { ErrorReportingSettings } from './error-reporting.core';
 
 type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
@@ -22,6 +30,17 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     dsn: settings.dsn,
     environment: settings.environment,
     dataCollection: PRIVATE_DATA_COLLECTION,
+    tracesSampleRate: settings.tracesSampleRate,
+    tracePropagationTargets: [...settings.tracePropagationTargets],
+    integrations: [
+      Sentry.reactRouterBrowserTracingIntegration({
+        useEffect,
+        useLocation,
+        useNavigationType,
+        createRoutesFromChildren,
+        matchRoutes,
+      }),
+    ],
   });
 }
 
@@ -31,3 +50,5 @@ export function reportRenderFailure(
 ): void {
   Sentry.captureReactException(error, { componentStack });
 }
+
+export const TracedRoutes = Sentry.wrapReactRouterRouting(Routes);
