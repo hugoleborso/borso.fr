@@ -80,6 +80,7 @@ export function useClosingProposal(setlistId: string, isEnabled: boolean) {
   return useQuery({
     queryKey: votingKeys.proposal(setlistId),
     enabled: isEnabled,
+    retry: false,
     queryFn: async () => {
       const response = await api.api.setlists[':id']['closing-proposal'].$get({
         param: { id: setlistId },

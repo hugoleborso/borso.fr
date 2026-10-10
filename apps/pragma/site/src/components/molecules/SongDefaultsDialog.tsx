@@ -85,7 +85,6 @@ function SongDefaultsDialogContent({
         }}
       >
         <div className="min-h-0 flex-auto overflow-y-auto flex flex-col gap-3 p-4">
-          <p className="text-xs text-ink-500 m-0">{t('songDefaults.hint')}</p>
           <form.Field name="status">
             {(field) => (
               <label className={LABEL_CLASS}>

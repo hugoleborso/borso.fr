@@ -41,3 +41,21 @@ function resolveInstrumentsForMember(
   if (song === undefined) return [];
   return instrumentsHeldBy(resolveLineup(song.defaultLineup, entry.lineupOverride), memberId);
 }
+
+interface NamedInstrument {
+  readonly name: string;
+}
+
+export function nameInstrumentsByEntryId(
+  instrumentIdsByEntryId: Readonly<Record<string, readonly string[]>>,
+  instrumentsById: Readonly<Record<string, NamedInstrument>>,
+): Readonly<Record<string, readonly string[]>> {
+  const namesByEntryId: Record<string, readonly string[]> = {};
+  for (const [entryId, instrumentIds] of Object.entries(instrumentIdsByEntryId)) {
+    namesByEntryId[entryId] = instrumentIds.flatMap((instrumentId) => {
+      const instrument = instrumentsById[instrumentId];
+      return instrument === undefined ? [] : [instrument.name];
+    });
+  }
+  return namesByEntryId;
+}

@@ -43,17 +43,18 @@ export function SetlistsPage(): JSX.Element {
         : null;
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
-      <PageHeader
-        crumb={t('nav.setlists')}
-        title={t('setlist.title')}
-        subtitle={t('setlist.indexSubtitle')}
-      />
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+      <PageHeader crumb={t('nav.setlists')} title={t('setlist.title')} />
 
       <BottomActionBar>
-        <Button variant="accent" onClick={() => setIsCreating(true)}>
-          <Icon name="plus" size={14} />
-          {t('setlist.new')}
+        <Button
+          variant="accent"
+          size="icon"
+          aria-label={t('setlist.new')}
+          title={t('setlist.new')}
+          onClick={() => setIsCreating(true)}
+        >
+          <Icon name="plus" size={22} />
         </Button>
       </BottomActionBar>
 

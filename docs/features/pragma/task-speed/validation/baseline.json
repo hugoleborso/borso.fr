@@ -1,0 +1,74 @@
+{
+  "add-song": {
+    "taps": 4,
+    "typedCharacters": 34,
+    "swipes": 3,
+    "screens": 3,
+    "huntedTaps": 1,
+    "stretchTaps": 1,
+    "modelledSeconds": 21.3
+  },
+  "my-part": {
+    "taps": 4,
+    "typedCharacters": 0,
+    "swipes": 1,
+    "screens": 4,
+    "huntedTaps": 1,
+    "stretchTaps": 1,
+    "modelledSeconds": 10.9
+  },
+  "vote": {
+    "taps": 4,
+    "typedCharacters": 0,
+    "swipes": 0,
+    "screens": 4,
+    "huntedTaps": 0,
+    "stretchTaps": 0,
+    "modelledSeconds": 9.8
+  },
+  "stage": {
+    "taps": 4,
+    "typedCharacters": 0,
+    "swipes": 1,
+    "screens": 5,
+    "huntedTaps": 1,
+    "stretchTaps": 1,
+    "modelledSeconds": 12.3
+  },
+  "find-chart": {
+    "taps": 2,
+    "typedCharacters": 4,
+    "swipes": 0,
+    "screens": 2,
+    "huntedTaps": 0,
+    "stretchTaps": 0,
+    "modelledSeconds": 6
+  },
+  "add-to-setlist": {
+    "taps": 6,
+    "typedCharacters": 5,
+    "swipes": 1,
+    "screens": 5,
+    "huntedTaps": 1,
+    "stretchTaps": 2,
+    "modelledSeconds": 15.9
+  },
+  "add-task": {
+    "taps": 4,
+    "typedCharacters": 21,
+    "swipes": 3,
+    "screens": 3,
+    "huntedTaps": 2,
+    "stretchTaps": 0,
+    "modelledSeconds": 17.6
+  },
+  "add-bar": {
+    "taps": 3,
+    "typedCharacters": 13,
+    "swipes": 4,
+    "screens": 2,
+    "huntedTaps": 2,
+    "stretchTaps": 0,
+    "modelledSeconds": 14
+  }
+}

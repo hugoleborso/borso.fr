@@ -75,6 +75,7 @@ export interface SetlistEntryRowProps {
   readonly lineupOverride: LineupRecord | null;
   readonly members: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
+  readonly memberPart: readonly string[];
   readonly transitionBefore: ReactNode;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
   readonly onUpdateSongDefaults: (patch: SongDefaultsPatch) => void;
@@ -162,6 +163,11 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           </span>
           <div className={TITLE_COLUMN_CLASS} {...longPress}>
             <span className={TITLE_CLASS}>{props.title}</span>
+            {props.memberPart.length === 0 ? null : (
+              <span className="font-mono text-[11px] uppercase tracking-wider text-accent">
+                {props.memberPart.join(' + ')}
+              </span>
+            )}
             <span className="hidden min-w-0 items-center gap-1.5 text-[11px] text-ink-500 sm:flex">
               <span className="truncate">{props.artist}</span>
               {props.tonalityLabel === null ? null : (

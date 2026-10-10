@@ -154,8 +154,8 @@ export function InstrumentsPage(): JSX.Element {
     lastError instanceof ApiError ? lastError.message : lastError ? 'unknown-error' : null;
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
-      <PageHeader title={t('instruments.title')} subtitle={t('instruments.subtitle')} />
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+      <PageHeader title={t('instruments.title')} />
       {errorMessage === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {errorMessage}
@@ -166,7 +166,6 @@ export function InstrumentsPage(): JSX.Element {
           {list.isLoading ? (
             <p className="text-ink-400 italic text-sm m-0">{t('common.loading')}</p>
           ) : null}
-          <p className="text-xs text-ink-500 m-0">{t('instruments.orderHint')}</p>
           <InstrumentsList
             rows={rows}
             listLabel={t('instruments.title')}
@@ -250,7 +249,6 @@ export function InstrumentsPage(): JSX.Element {
                 </div>
               )}
             </form.Field>
-            <p className="text-xs text-ink-500 m-0">{t('instruments.familyHint')}</p>
             <div className="flex gap-2 mt-2">
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (

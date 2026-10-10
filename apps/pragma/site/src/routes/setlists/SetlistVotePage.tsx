@@ -30,6 +30,8 @@ import {
   indexMembersById,
   indexSongsById,
   isVotingPageState,
+  selectCloseIntent,
+  selectVoteHeaderAction,
   projectPointsBySongId,
   selectVotePageState,
 } from './setlist-vote.core';
@@ -41,11 +43,14 @@ import {
   type VoteMode,
 } from './vote-deck.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
+import { useNavigateTo } from '../../lib/navigation.hook';
+import { Icon } from '../../components/atoms/Icon';
 
 // @FollowsBlueprint organism-query-owning
 export function SetlistVotePage(): JSX.Element {
   const { t } = useTranslation();
   const { setlistId = '' } = useParams<{ setlistId: string }>();
+  const navigateTo = useNavigateTo();
   const signedInMember = useSignedInMember();
   const memberId = signedInMember.data?.memberId ?? '';
   const board = useVoteBoard(setlistId);
@@ -87,6 +92,49 @@ export function SetlistVotePage(): JSX.Element {
     boardData === undefined ? 0 : readMemberPoints(boardData, memberId, songId),
   );
   const scoredSongs = selectScoredSongs(songList, pointsBySongId);
+  const closeOrReview = {
+    'review-proposal': () => setIsClosingOpen(true),
+    'lock-unchanged': () =>
+      setVoteStatus.mutate(
+        { status: 'locked', targetSongCount },
+        { onSuccess: () => navigateTo(`/setlists/${setlistId}`) },
+      ),
+  } as const;
+
+  const headerActionByKind = {
+    'back-to-vote': (
+      <Button
+        type="button"
+        variant="ghost"
+        aria-label={t('voting.backToVote')}
+        title={t('voting.backToVote')}
+        className="w-11 px-0"
+        onClick={() => setIsClosingOpen(false)}
+      >
+        <Icon name="close" size={18} />
+      </Button>
+    ),
+    'close-vote': (
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={setVoteStatus.isPending}
+        onClick={() => closeOrReview[selectCloseIntent(board.data?.tallies.length ?? 0)]()}
+      >
+        {t('voting.openClosing')}
+      </Button>
+    ),
+    'open-vote': (
+      <Button
+        type="button"
+        variant="ghost"
+        disabled={setVoteStatus.isPending}
+        onClick={() => setVoteStatus.mutate({ status: 'voting', targetSongCount })}
+      >
+        {t('voting.openVote')}
+      </Button>
+    ),
+  } as const;
 
   return (
     <section className="flex flex-col gap-4 pb-8">
@@ -94,20 +142,7 @@ export function SetlistVotePage(): JSX.Element {
         <h1 className="font-display italic text-[28px] leading-none text-ink-900 m-0">
           {selectSetlistDisplayName(setlist.data?.setlist.name ?? '', t('voting.untitled'))}
         </h1>
-        {isVoting ? (
-          <Button type="button" variant="ghost" onClick={() => setIsClosingOpen(true)}>
-            {t('voting.openClosing')}
-          </Button>
-        ) : (
-          <Button
-            type="button"
-            variant="ghost"
-            disabled={setVoteStatus.isPending}
-            onClick={() => setVoteStatus.mutate({ status: 'voting', targetSongCount })}
-          >
-            {t('voting.openVote')}
-          </Button>
-        )}
+        {headerActionByKind[selectVoteHeaderAction(pageState)]}
       </header>
 
       <TargetSongCountField
@@ -131,7 +166,7 @@ export function SetlistVotePage(): JSX.Element {
               { songIds },
               {
                 onSuccess: () => {
-                  setIsClosingOpen(false);
+                  navigateTo(`/setlists/${setlistId}`);
                 },
               },
             );

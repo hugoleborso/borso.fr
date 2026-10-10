@@ -153,6 +153,8 @@ const ICONS = {
     </>
   ),
   check: <path d="M4 12l5 5L20 6" />,
+  copy: <path d="M9 9h11v11H9zM15 5V4H4v11h1" />,
+  chart: <path d="M3 17l5-6 4 3 5-7 4 4M3 21h18" />,
   vote: (
     <>
       <path d="m9 12 2 2 4-4" />
