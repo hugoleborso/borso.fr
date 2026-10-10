@@ -3,12 +3,14 @@ date: 2026-08-08
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [39c7588cd2]
 eradication-level: 2
+eradication-paths: [eslint-rules/impurity.js]
 time-to-detect: days
 tags: [eslint, custom-rules, purity, standards, false-positives]
+zone: eslint-rules/impurity.js
 blueprints: [test-lint-rule]
 ---
 

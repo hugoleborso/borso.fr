@@ -3,12 +3,16 @@ date: 2026-09-18
 introduced-at: implementation
 detected-at: local
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/108
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/109
-fix-commits: [2d5502d]
+related-pr: '#108'
+fix-pr: '#109'
+fix-commits: [2d5502de8f]
 eradication-level: 2
+eradication-paths: [scripts/check-every-test-is-collected.sh]
 time-to-detect: months
 tags: [gates, testing, vitest, pragma, last-loop-lepin, meta]
+zone: apps/last-loop-lepin/vitest.config.ts
+weak-point: gate-measures-nothing
+recurs: [three-green-gates-on-code-that-ran-nowhere]
 ---
 
 # The test that no project collected

@@ -5,10 +5,14 @@ detected-at: review
 severity: low
 related-pr: '#83'
 fix-pr: '#86'
-fix-commits: [a7f4378]
+fix-commits: [a7f4378899]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/pretool-github-pr-body.sh, scripts/check-hook-decisions.sh]
 time-to-detect: days
 tags: [hooks, github, harness, meta, self-improvement-loop]
+zone: plugins/borso-harness/hooks/pretool-github-pr-body.sh
+weak-point: gate-measures-nothing
+recurs: [two-guard-hooks-that-never-guarded]
 ---
 
 # The hook guarded every form but the documented one

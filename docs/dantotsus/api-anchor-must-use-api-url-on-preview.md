@@ -3,12 +3,15 @@ date: 2026-05-25
 introduced-at: implementation
 detected-at: qa
 severity: medium
-related-pr: 27
-fix-pr: ./lessons-from-pr-27
-fix-commits: [e36b217]
+related-pr: '#27'
+fix-pr: '#29'
+fix-commits: [e36b217eda]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-api-anchor-in-site.js]
 time-to-detect: 30m
 tags: [frontend, vite, cloudfront, preview, cross-origin, biome, grit, plugins, last-loop-lepin]
+zone: apps/last-loop-lepin/site/src/routes/ArchivesPage.tsx
+recurs: [frontend-fetch-must-go-through-api-client]
 ---
 
 # A download button opened the SPA's 404 page while the API said 200
@@ -121,7 +124,7 @@ first attempt).
 pre-commit + in CI)
 
 **Reference:** PR ./lessons-from-pr-27 · commits
-[`<this-pr-sha>`] (`biome-plugins/no-api-anchor-in-site.grit` +
+[`e36b217eda`](https://github.com/hugoleborso/borso.fr/commit/e36b217eda) (`biome-plugins/no-api-anchor-in-site.grit` +
 `apps/last-loop-lepin/biome.jsonc`)
 
 **The actual fix:**

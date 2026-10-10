@@ -5,10 +5,13 @@ detected-at: review
 severity: medium
 related-pr: '#89'
 fix-pr: '#106'
-fix-commits: [79562bd0]
+fix-commits: [79562bd0a3]
 eradication-level: 2
+eradication-paths: [scripts/check-instructions-name-installed-tools.sh]
 time-to-detect: days
 tags: [agents, skills, eslint, biome, tooling, gates, meta, documentation]
+zone: plugins/borso-harness/skills
+weak-point: prose-stands-in-for-a-check
 ---
 
 # The skill that named the linter the repository had deleted

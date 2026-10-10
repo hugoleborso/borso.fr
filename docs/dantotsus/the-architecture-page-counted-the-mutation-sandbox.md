@@ -3,11 +3,14 @@ date: 2026-08-15
 introduced-at: implementation
 detected-at: local
 severity: medium
-related-pr: 55
-fix-pr: 55
+related-pr: '#55'
+fix-pr: '#55'
+fix-commits: [f27096f865]
 eradication-level: 1
+eradication-paths: [scripts/architecture/architecture-graph.ts]
 time-to-detect: minutes
 tags: [generators, stryker, ci, meta]
+zone: scripts/architecture/architecture-graph.ts
 blueprints: []
 ---
 

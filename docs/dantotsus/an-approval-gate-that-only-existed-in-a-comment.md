@@ -3,12 +3,15 @@ date: 2026-08-10
 introduced-at: conception
 detected-at: operator-deploy
 severity: medium
-related-pr: 40
-fix-pr: 45
-fix-commits: [1595450, 4e485c8]
-eradication-level: 2
+related-pr: '#40'
+fix-pr: '#45'
+fix-commits: [1595450b14, 4e485c8f1a]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: months
 tags: [github-actions, deploy, claude-md, harness, self-improvement-loop]
+zone: CLAUDE.md
+weak-point: prose-stands-in-for-a-check
 ---
 
 # An approval gate that only existed in a comment

@@ -1,14 +1,18 @@
 ---
 date: 2026-08-09
-introduced-at: mutation-sweep
+introduced-at: implementation
 detected-at: ci
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [d49af83ae0]
 eradication-level: 2
+eradication-paths: [.husky/pre-push]
 time-to-detect: one push
 tags: [stryker, vitest, coverage, mutation, gates, pre-push]
+zone: .husky/pre-push
+weak-point: gate-measures-nothing
+recurs: [a-gate-that-reported-success-while-measuring-nothing]
 ---
 
 # A green mutation gate is not a green coverage gate

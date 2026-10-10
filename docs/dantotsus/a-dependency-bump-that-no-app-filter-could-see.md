@@ -5,10 +5,12 @@ detected-at: review
 severity: high
 related-pr: '#65, #66'
 fix-pr: '#80'
-fix-commits: [21ed4b0]
+fix-commits: [21ed4b0b46]
 eradication-level: 2
+eradication-paths: [.github/path-filters.yml, scripts/check-app-registration.sh]
 time-to-detect: days
 tags: [ci, gates, github-actions, pnpm, deploy]
+zone: .github/path-filters.yml
 ---
 
 # A dependency bump that no app filter could see

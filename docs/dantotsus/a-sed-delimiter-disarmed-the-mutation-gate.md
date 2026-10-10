@@ -3,12 +3,16 @@ date: 2026-08-15
 introduced-at: implementation
 detected-at: local
 severity: low
-related-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-commits: []
+related-pr: '#49'
+fix-pr: '#49'
+fix-commits: [4935e7c0c9]
 eradication-level: 1
+eradication-paths: [.husky/pre-push]
 time-to-detect: months
 tags: [ci, husky, stryker, mutation-testing, shell, sed]
+zone: .husky/pre-push
+weak-point: gate-measures-nothing
+recurs: [a-green-mutation-gate-is-not-a-green-coverage-gate]
 ---
 
 # A sed delimiter disarmed the mutation gate

@@ -5,10 +5,14 @@ detected-at: local
 severity: medium
 related-pr: '#63'
 fix-pr: '#71'
-fix-commits: [957846c]
+fix-commits: [957846c4d2]
 eradication-level: 2
+eradication-paths: [.husky/pre-push]
 time-to-detect: 1 hour
 tags: [ci, github-actions, git, knowledge-corpus, tooling]
+zone: docs/knowledge
+weak-point: prose-stands-in-for-a-check
+recurs: [a-knowledge-entry-did-not-stop-the-second-hit]
 ---
 
 # The entry existed, and I lost the hour anyway

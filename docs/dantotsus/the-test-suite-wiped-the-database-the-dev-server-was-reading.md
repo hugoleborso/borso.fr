@@ -5,10 +5,12 @@ detected-at: local
 severity: medium
 related-pr: '#104'
 fix-pr: '#105'
-fix-commits: []
+fix-commits: [60fcd964e8]
 eradication-level: 1
+eradication-paths: [scripts/local-postgres.sh]
 time-to-detect: minutes
 tags: [testing, postgres, agents, sandbox, harness, pragma]
+zone: scripts/local-postgres.sh
 ---
 
 # The suite that pulled the database out from under the browser

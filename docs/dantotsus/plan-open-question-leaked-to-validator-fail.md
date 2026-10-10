@@ -3,12 +3,14 @@ date: 2026-05-05
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/8
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/9
-fix-commits: []
-eradication-level: 2
+related-pr: '#8'
+fix-pr: '#9'
+fix-commits: [3a6a89c64c]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [spec, plan, implementation, validators]
+zone: plugins/borso-harness/skills/technical-conception
 ---
 
 # Open question in the plan leaked all the way to a technical-validator FAIL

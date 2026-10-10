@@ -1,14 +1,17 @@
 ---
 date: 2026-08-09
-introduced-at: parallelisation
-detected-at: the-first-parallel-push
+introduced-at: implementation
+detected-at: local
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [64d0ce43b9]
 eradication-level: 1
+eradication-paths: [scripts/vitest-cdk-outdir-teardown.js]
 time-to-detect: one push
 tags: [vitest, cdk, concurrency, temp-files, hooks]
+zone: scripts/vitest-cdk-outdir-teardown.js
+recurs: [cdk-tests-leak-a-temp-assembly-per-synth]
 ---
 
 # A teardown deleted another run's live files, and its docstring said it would not

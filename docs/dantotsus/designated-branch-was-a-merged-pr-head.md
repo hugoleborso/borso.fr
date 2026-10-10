@@ -3,12 +3,14 @@ date: 2026-05-21
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/24
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/<TBD>
-fix-commits: []
+related-pr: '#24'
+fix-pr: '#28'
+fix-commits: [9199b11e70]
 eradication-level: 2
+eradication-paths: [scripts/check-branch-context.sh]
 time-to-detect: hours
 tags: [harness, orchestrator, conception, hooks]
+zone: plugins/borso-harness/skills/tech-lead-orchestrator
 ---
 
 # Orchestrator routed me to a branch that was already merged
@@ -113,7 +115,7 @@ points at the merge commit of a closed PR. The agent's first
 response in the next turn will see the warning in the SessionStart
 hook output and ask the user before committing.
 
-**Reference:** [PR #<TBD>](https://github.com/hugoleborso/borso.fr/pulls?q=is%3Apr+head%3Aclaude%2Flessons-from-pr-24) ·
+**Reference:** [PR #28](https://github.com/hugoleborso/borso.fr/pull/28) ·
 this kaizen PR.
 
 **The actual fix:**

@@ -3,12 +3,14 @@ date: 2026-08-21
 introduced-at: implementation
 detected-at: review
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/81
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/82
-fix-commits: [pending]
+related-pr: '#81'
+fix-pr: '#82'
+fix-commits: [03e16d4d6d]
 eradication-level: 1
+eradication-paths: [eslint-rules/no-comments.js]
 time-to-detect: hours (only an annotation-count diff against HEAD found it)
 tags: [eslint, custom-rule, gates, meta, tooling, blueprint]
+zone: eslint-rules/no-comments.js
 ---
 
 # A finding that named the whole block ate the tag inside it

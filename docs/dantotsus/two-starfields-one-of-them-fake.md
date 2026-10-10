@@ -5,10 +5,12 @@ detected-at: review
 severity: medium
 related-pr: '#63'
 fix-pr: '#71'
-fix-commits: [957846c]
-eradication-level: 4
+fix-commits: [957846c4d2]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: 40 minutes
 tags: [frontend, animation, webgl, conception, tailwind]
+zone: apps/borso-fr/site/src
 ---
 
 # Two starfields, one of them fake

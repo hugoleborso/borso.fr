@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: implementation
 detected-at: production
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
-fix-commits: [a3cd942, 92d6ae2, d5714ae]
+related-pr: '#2'
+fix-pr: '#4'
+fix-commits: [a3cd942c34, 92d6ae2442, d5714aebf0]
 eradication-level: 4
+eradication-paths: [infra/cdk/src/internal/cf-host-routing-function.code.js, infra/cdk/test/unit/eradication-checks.test.ts]
 time-to-detect: minutes (first hit on the live preview URL)
 tags: [cloudfront, javascript, edge-runtime]
+zone: infra/cdk/src/internal/cf-host-routing-function.code.js
 blueprints: [cloudfront-function-source]
 ---
 

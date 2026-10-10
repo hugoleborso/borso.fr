@@ -3,12 +3,14 @@ date: 2026-10-05
 introduced-at: conception
 detected-at: production
 severity: medium
-related-pr: "#131"
-fix-pr: "#131"
-fix-commits: [a727402, bf93d2d]
+related-pr: '#131'
+fix-pr: '#131'
+fix-commits: [a7274029bd, bf93d2d593]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-scroll-container-on-main.js]
 time-to-detect: weeks
 tags: [pragma, react, css, tailwind, eslint]
+zone: apps/pragma/site/src/components/organisms/AppShell.tsx
 ---
 
 # The shell that scrolled inside a window that still could

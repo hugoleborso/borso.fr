@@ -3,12 +3,14 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: production
 severity: medium
-related-pr: 12
-fix-pr: 16
-fix-commits: [cd3aab2]
+related-pr: '#12'
+fix-pr: '#16'
+fix-commits: [cd3aab2b31]
 eradication-level: 1
+eradication-paths: [.github/workflows/deploy.yml]
 time-to-detect: minutes
 tags: [github-actions, ci, deploy]
+zone: .github/workflows/deploy.yml
 ---
 
 # Deploy matrix cancelled `last-loop-lepin` because `borsouvertures` failed first

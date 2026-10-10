@@ -3,12 +3,14 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: #14
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [<to-be-filled-by-kaizen-commit>]
-eradication-level: 2
+related-pr: '#14'
+fix-pr: '#15'
+fix-commits: [6b16fa535f]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: minutes (user asked)
 tags: [orchestrator, skill, pr-description, github]
+zone: plugins/borso-harness/skills/tech-lead-orchestrator
 ---
 
 # The orchestrator shipped a feature, then went silent while the PR's description still said something else
@@ -111,7 +113,7 @@ opens PRs on its own).
 **Type:** DevX check (level 2 — skill standard update with explicit
 checklist the agent can't compress past)
 
-**Reference:** this kaizen PR · commit `<this-commit>`
+**Reference:** this kaizen PR · commit `6b16fa535f`
 
 **The actual fix:**
 

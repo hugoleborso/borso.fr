@@ -3,12 +3,15 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: #14
-fix-pr: #15
-fix-commits: [<to-be-filled-by-kaizen-commit>]
+related-pr: '#14'
+fix-pr: '#15'
+fix-commits: [6b16fa535f]
 eradication-level: 1
+eradication-paths: [.husky/pre-commit, scripts/lint-repository.sh]
 time-to-detect: weeks (3 PRs in)
 tags: [biome, ci, hooks, pre-commit]
+zone: .husky/pre-commit
+weak-point: gate-measures-nothing
 ---
 
 # `biome lint` at root scope was gated by no one — 47 errors sat on `main` in plain sight
@@ -126,11 +129,15 @@ problems we don't actually want to fix.
 
 ## Eradication (mandatory — code-level)
 
+**Status, 2026-10-10:** Biome was removed in 314f2482. The same two gates
+now run ESLint: `.husky/pre-commit` on the staged files and
+`scripts/lint-repository.sh` in CI.
+
 **Type:** Structural impossibility (level 1 — biome errors at
 root scope cannot land on `main` because two independent gates
 must both fail for that to happen)
 
-**Reference:** PR #15 · commits `<this-commit>`
+**Reference:** PR #15 · commits `6b16fa535f`
 
 **The actual fix:**
 

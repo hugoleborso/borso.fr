@@ -3,12 +3,15 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: production
 severity: medium
-related-pr: n/a (present since the StaticSite construct was first written)
-fix-pr: TBD
-fix-commits: [3df59de]
+related-pr: none (present since the StaticSite construct was first written)
+fix-pr: '#17'
+fix-commits: [3df59de902]
 eradication-level: 4
+eradication-paths: [infra/cdk/test/unit/static-site.test.ts]
 time-to-detect: ~10 days
 tags: [cdk, route53, cloudfront, static-site, drift]
+zone: infra/cdk/src/constructs/static-site.ts
+recurs: [cdk-route53-doubled-zone-on-token-zonename]
 ---
 
 # The DNS record that pointed nowhere: CDK's relative recordName trap

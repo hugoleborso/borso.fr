@@ -246,9 +246,18 @@ For each surviving subject:
 1. Pick a slug `kebab-case` whose title sparks curiosity, not the
    user-story name.
 2. Copy `docs/dantotsus/_template.md`.
-3. Fill the frontmatter. Tag pool: `grep -h '^tags:'
-   docs/dantotsus/*.md | sort -u` — only add a new tag if no
-   existing one fits.
+3. Fill the frontmatter by the rules in
+   [`/dantotsu`](../dantotsu/SKILL.md)'s *Output* section, which
+   `scripts/quality/check-dantotsu-front-matter.ts` enforces on the
+   commit. Tag pool: `grep -h '^tags:' docs/dantotsus/*.md | sort -u`
+   — only add a new tag if no existing one fits. Three fields place
+   the entry on the weak-point map: `zone:` where the defect lived
+   (not where the eradication landed), `weak-point:` when it belongs
+   to a row of `docs/quality/weak-points.md`, and `recurs:` naming the
+   earlier entry it repeats, or `none (<reason>)`. The eradication
+   usually ships in the same commit as the entry, so `fix-commits:
+   [self]` is the usual value: a branch hash does not survive the
+   squash merge.
 4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
 5. **Ship the eradication** — code, in this PR. Pick the highest
    feasible level of the ladder (1 = structural impossibility, 5 =
@@ -344,8 +353,14 @@ not its volume, is what keeps the system improving.
       `eradication-level` ≥ 1 backed by a commit reference.
 - [ ] Each surviving vendor-surprise / operator-confusion /
       reusable-insight subject has a file under `docs/knowledge/`.
-- [ ] Frontmatter on every new dantotsu file is filled (no
-      `<placeholder>` strings).
+- [ ] Frontmatter on every new dantotsu file passes
+      `pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts`:
+      no placeholder, a `zone:`, `eradication-paths:` naming code
+      for levels 1 to 4, and `recurs:` where tags overlap.
+- [ ] `pnpm exec tsx scripts/quality/working-conditions.ts --check`
+      passes once the friction log is archived; three unfiled lines
+      about the same wall are a wall to add to
+      `docs/quality/working-conditions.md`.
 - [ ] Both READMEs updated.
 - [ ] Cross-links to existing entries added where chains overlap.
 - [ ] All eradication commits exist on the kaizen branch (verify

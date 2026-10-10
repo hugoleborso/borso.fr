@@ -5,10 +5,12 @@ detected-at: ci
 severity: low
 related-pr: '#51'
 fix-pr: '#51'
-fix-commits: [69574f6]
+fix-commits: [69574f6e88]
 eradication-level: 4
+eradication-paths: [.github/workflows/preview.yml]
 time-to-detect: 3 days
 tags: [ci, github-actions, cdk, preview]
+zone: .github/workflows/preview.yml
 ---
 
 # Redeployed four previews to move one markdown file

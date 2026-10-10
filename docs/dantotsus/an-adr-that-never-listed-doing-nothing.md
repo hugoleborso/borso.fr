@@ -1,14 +1,16 @@
 ---
 date: 2026-09-16
 introduced-at: conception
-detected-at: post-merge
+detected-at: review
 severity: medium
 related-pr: '#101'
 fix-pr: '#101'
-fix-commits: [c718c65]
-eradication-level: 2
+fix-commits: [c718c65ed3]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: days
 tags: [adr, process, secrets, pragma]
+zone: plugins/borso-harness/skills/adr
 ---
 
 # An ADR that never listed doing nothing

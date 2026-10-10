@@ -3,11 +3,14 @@ date: 2026-06-05
 introduced-at: implementation
 detected-at: review
 severity: high
-related-pr: "#26"
-fix-pr: "#30"
-fix-commits: [0618e8b]
-eradication-level: 2
+related-pr: '#26'
+fix-pr: '#30'
+fix-commits: [0618e8b839]
+eradication-level: 5
+eradication-paths: []
 tags: [orchestrator, skill, state-machine, technical-validation, self-improvement-loop]
+zone: plugins/borso-harness/skills/tech-lead-orchestrator
+recurs: [orchestrator-agency-overcorrected-on-product-decisions]
 ---
 
 # The orchestrator stopped running the gate that catches "verdict says done, code says otherwise"

@@ -3,12 +3,15 @@ date: 2026-09-18
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/108
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/109
-fix-commits: [2d5502d]
+related-pr: '#108'
+fix-pr: '#109'
+fix-commits: [2d5502de8f]
 eradication-level: 1
+eradication-paths: [apps/pragma/site/src/sw/service-worker.test-utils.ts, apps/pragma/api/src/mastery/mastery.core.ts]
 time-to-detect: months
 tags: [gates, testing, coverage, mutation, pragma, dead-code, process]
+zone: scripts/check-pure-modules-have-callers.sh
+recurs: [three-green-gates-on-code-that-ran-nowhere]
 ---
 
 # The allowance that parked a duplicate, and then let it grow

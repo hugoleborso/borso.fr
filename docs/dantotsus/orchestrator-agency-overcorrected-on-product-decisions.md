@@ -3,11 +3,13 @@ date: 2026-06-05
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: "#26"
-fix-pr: "#30"
-fix-commits: [0618e8b]
-eradication-level: 2
+related-pr: '#26'
+fix-pr: '#30'
+fix-commits: [0618e8b839]
+eradication-level: 5
+eradication-paths: []
 tags: [orchestrator, skill, adr, conception-pivot]
+zone: plugins/borso-harness/skills/tech-lead-orchestrator
 ---
 
 # The orchestrator swung from too-timid to deciding what was the human's to decide

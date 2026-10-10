@@ -472,5 +472,29 @@ review.
   without `bucketNameSuffix: 'account'`: S3 names are global, and talos's
   first deploy found `talos-prod` taken
   ([dantotsu](../dantotsus/a-bucket-name-someone-else-already-owned.md)).
+- `script:scripts/quality/check-dantotsu-front-matter.ts` fails a dantotsu
+  whose front matter a tool cannot read: a `detected-at`, `introduced-at`,
+  `severity` or `eradication-level` outside its fixed list, a fix commit that
+  does not resolve to one commit on `main`, a placeholder such as `<TBD>`, a
+  level from 1 to 4 whose `eradication-paths` names no file other than
+  markdown, and, from 2026-10-10, a new entry sharing two tags with an earlier
+  one and not saying in `recurs:` whether it repeats it. An audit of the 168
+  entries found 53 with no resolvable fix commit, 26 with a placeholder, and
+  23 claiming a level their eradication did not ship; an instruction edit is
+  level 5, however it is described. On a commit it resolves only the staged
+  entries' commits; CI resolves all of them, from a full clone
+  ([ADR-0029](../adr/0029-weak-point-management-from-the-dantotsu-record.md)).
+- `generator:scripts/quality/weak-points.ts` draws every dantotsu as a dot at
+  its `zone:` on two maps, the product by application and layer and the
+  factory by station, with a weekly count for each weak point engaged in
+  `docs/quality/weak-points.md` and the groups joined by `recurs:`. Its
+  `--check` fails a zone that names no path in the repository and a
+  `weak-point:` the file does not list, because either one drops a dot from
+  the count without a word.
+- `generator:scripts/quality/working-conditions.ts` files every archived
+  friction line under the walls declared in
+  `docs/quality/working-conditions.md` and ranks them by how many distinct
+  agents hit each one. Its `--check` fails a wall outside Build, Observe and
+  Ship, a wall with no terms, a duplicated wall and a wall that files nothing.
 - `reviewer` checks that the reason on a disable comment is a claim about that
   line which a reader can check, and not "pre-existing" or "will fix later".

@@ -32,7 +32,11 @@ jobs:
   build:
     runs-on: ubuntu-latest
     steps:
+      # Whole history: the dantotsu check resolves every fix commit an entry
+      # names against origin/main, and a shallow clone holds one commit.
       - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
         with:
@@ -106,6 +110,8 @@ jobs:
             scripts/standards/hotspots.ts \
             scripts/standards/temporal-coupling.ts \
             scripts/standards/enforcement-ledger.ts \
+            scripts/quality/weak-points.ts \
+            scripts/quality/working-conditions.ts \
             scripts/architecture/architecture-graph.ts; do
             pnpm exec tsx "$generator"
           done
@@ -224,6 +230,15 @@ jobs:
       # A dantotsu naming a blueprint that does not exist reads as fine until
       # someone follows the link.
       - run: pnpm exec tsx scripts/blueprints/blueprint-defects.ts --check
+      # The dantotsu record: fixed value lists, fix commits that resolve on
+      # main, no placeholder, a level its eradication paths support, and a
+      # recurrence linked rather than retold. Then the weak-point map and the
+      # working-conditions board, which fail on a zone, a weak point or a wall
+      # that names nothing. Mirrors the pre-commit hook, which resolves only the
+      # staged entries' commits; this resolves all of them.
+      - run: pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts
+      - run: pnpm exec tsx scripts/quality/weak-points.ts --check
+      - run: pnpm exec tsx scripts/quality/working-conditions.ts --check
       - run: pnpm exec tsx scripts/standards/convention-drift.ts --check
       # Every `## Enforced by` bullet in docs/standards/ resolves against the
       # live ESLint configuration and the checked-in hooks. Fails on a rule

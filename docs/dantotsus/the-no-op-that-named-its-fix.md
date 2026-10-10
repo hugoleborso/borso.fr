@@ -3,12 +3,14 @@ date: 2026-10-06
 introduced-at: conception
 detected-at: local
 severity: low
-related-pr: "#108"
-fix-pr: "#141"
-fix-commits: [a515b15]
+related-pr: '#108'
+fix-pr: '#141'
+fix-commits: [a515b155cd]
 eradication-level: 5
+eradication-paths: []
 time-to-detect: weeks
 tags: [self-improvement-loop, hooks, harness, skill]
+zone: plugins/borso-harness/skills/after-task-dantotsus
 ---
 
 # The no-op that named its fix

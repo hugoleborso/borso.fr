@@ -5,10 +5,13 @@ detected-at: qa
 severity: high
 related-pr: '#83'
 fix-pr: '#86'
-fix-commits: [ba27e49]
+fix-commits: [ba27e49627]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-flex-one-in-auto-height-dialog.js]
 time-to-detect: hours
 tags: [pragma, frontend, react, eslint, css, mobile, visual-validation]
+zone: apps/pragma/site/src/components/organisms
+recurs: [two-audits-that-sent-no-touch-events]
 ---
 
 # A dialog that only collapsed on a phone

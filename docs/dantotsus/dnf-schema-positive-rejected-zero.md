@@ -3,12 +3,14 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: production
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/12
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/12
-fix-commits: [d347ab1]
+related-pr: '#12'
+fix-pr: '#12'
+fix-commits: [d347ab1477]
 eradication-level: 4
+eradication-paths: [apps/last-loop-lepin/api/src/punch/punch.schema.ts]
 time-to-detect: live race-day usage — Hugo couldn't validate auto-DNFs from the admin UI; surfaced as 400s in CloudWatch
 tags: [last-loop-lepin, validation, zod, dsql]
+zone: apps/last-loop-lepin/api/src/punch/punch.schema.ts
 ---
 
 # `outAtLoop: 0` rejected because the schema demanded `positive()`

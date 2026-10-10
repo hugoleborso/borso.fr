@@ -3,12 +3,14 @@ date: 2026-05-04
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: #6
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [<to-be-filled>]
-eradication-level: 2
+related-pr: '#6'
+fix-pr: '#7'
+fix-commits: [88b1178cf6]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: minutes
 tags: [spec, skill, perspectives]
+zone: plugins/borso-harness/skills/specification
 ---
 
 # `/specification` skill let the agent fill in client + designer perspectives without asking
@@ -61,7 +63,7 @@ The agent re-confronted client / product / designer perspectives via `AskUserQue
 
 **Type:** DevX check (level 2 — skill-side enforcement)
 
-**Reference:** PR (this kaizen) · commit `<kaizen-commit>`
+**Reference:** PR (this kaizen) · commit `88b1178cf6`
 
 **The actual fix:** the `/specification` skill's `SKILL.md` and `standard.md` gain an explicit *Confront-or-justify checklist* at the top of *Operating mode*. For each of the five perspectives, the agent must, **before drafting any section**, either:
 

@@ -3,12 +3,14 @@ date: 2026-05-03
 introduced-at: conception
 detected-at: operator-deploy
 severity: high
-related-pr: #6
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [<to-be-filled>]
+related-pr: '#6'
+fix-pr: '#7'
+fix-commits: [88b1178cf6]
 eradication-level: 2
+eradication-paths: [scripts/preflight-cloudfront-aliases.sh]
 time-to-detect: minutes
 tags: [cdk, cloudfront, route53, deploy]
+zone: .github/workflows/deploy.yml
 ---
 
 # A CloudFront CNAME is single-distribution; cutover deploys must release it first
@@ -78,7 +80,7 @@ aws cloudfront update-distribution \
 
 **Type:** DevX check (level 2 — pre-deploy preflight script)
 
-**Reference:** PR (this kaizen) · commit `<kaizen-commit>`
+**Reference:** PR (this kaizen) · commit `88b1178cf6`
 
 **The actual fix:** add a preflight script run by `pnpm --filter @borso-app/<app> run deploy` *before* `cdk deploy`. The script:
 

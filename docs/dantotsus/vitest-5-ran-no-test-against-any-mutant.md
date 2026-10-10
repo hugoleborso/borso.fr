@@ -3,12 +3,16 @@ date: 2026-10-05
 introduced-at: self-validation
 detected-at: local
 severity: high
-related-pr: 94966245 (chore(deps): take every open Dependabot bump in one change, merged with PR #122)
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/130
-fix-commits: [d4cd29d8, f578e133]
+related-pr: '#122'
+fix-pr: '#130'
+fix-commits: [d4cd29d898, f578e1332c]
 eradication-level: 2
+eradication-paths: [stryker-zero-test-guard.js]
 time-to-detect: hours (one day on main)
 tags: [stryker, vitest, mutation-testing, ci, github-actions, cache, dependencies, vendor-quirk]
+zone: stryker.shared.js
+weak-point: gate-measures-nothing
+recurs: [the-mutants-were-judged-by-the-wrong-jury]
 ---
 
 # Vitest 5 ran no test against any mutant, and the backstop reused last week's verdicts

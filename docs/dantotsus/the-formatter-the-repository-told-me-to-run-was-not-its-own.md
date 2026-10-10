@@ -3,12 +3,15 @@ date: 2026-08-17
 introduced-at: conception
 detected-at: local
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/59
-fix-commits: []
+related-pr: '#49'
+fix-pr: '#59'
+fix-commits: [86f23945ab]
 eradication-level: 2
+eradication-paths: [scripts/check-coupled-lists.sh]
 time-to-detect: hours
 tags: [prettier, pnpm, tooling, agent-harness, gates]
+zone: .husky/pre-commit
+recurs: [the-formatter-was-a-detector-with-no-writer]
 ---
 
 # The formatter the repository told me to run was not the one it pins

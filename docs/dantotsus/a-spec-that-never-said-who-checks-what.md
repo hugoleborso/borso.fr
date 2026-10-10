@@ -5,10 +5,12 @@ detected-at: review
 severity: medium
 related-pr: '#104'
 fix-pr: '#105'
-fix-commits: []
+fix-commits: [60fcd964e8]
 eradication-level: 2
+eradication-paths: [scripts/check-spec-test-strategy.sh]
 time-to-detect: hours
 tags: [validation, agents, spec, process, meta]
+zone: plugins/borso-harness/skills/specification
 ---
 
 # A spec that never said who checks what

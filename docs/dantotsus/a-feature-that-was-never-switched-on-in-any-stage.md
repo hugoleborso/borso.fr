@@ -3,12 +3,14 @@ date: 2026-08-14
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/33
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/46
-fix-commits: [882ab2b]
+related-pr: '#33'
+fix-pr: '#46'
+fix-commits: [882ab2bf51]
 eradication-level: 2
+eradication-paths: [scripts/check-frontend-env-vars.sh]
 time-to-detect: months
 tags: [vite, observability, ci, github-actions, gates, process]
+zone: .github/workflows/deploy.yml
 blueprints: [observability-adapter]
 ---
 

@@ -3,11 +3,14 @@ date: 2026-06-05
 introduced-at: implementation
 detected-at: ci
 severity: medium
-related-pr: "#26"
-fix-pr: "#30"
-fix-commits: [8776ee2]
+related-pr: '#26'
+fix-pr: '#30'
+fix-commits: [8776ee26d6]
 eradication-level: 2
+eradication-paths: [scripts/check-migration-sql-dsql-compat.sh]
 tags: [dsql, postgres, drizzle, ddl, deploy]
+zone: apps/last-loop-lepin/api/src/database/migrations
+recurs: [dsql-alter-table-only-add-column]
 ---
 
 # A `jsonb` column sailed through local Postgres and blew up at the DSQL migration

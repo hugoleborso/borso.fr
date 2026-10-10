@@ -3,12 +3,16 @@ date: 2026-05-25
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: 27
-fix-pr: 27
-fix-commits: [82f0e29, cfb24e2]
+related-pr: '#27'
+fix-pr: '#27'
+fix-commits: [e138811ba9, cfb24e26a9]
 eradication-level: 1
+eradication-paths: [.husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: hours
 tags: [biome, formatter, hooks, pre-commit, ci, self-improvement-loop]
+zone: .husky/pre-commit
+weak-point: gate-measures-nothing
+recurs: [biome-lint-was-not-gated-anywhere]
 ---
 
 # A whole PR of formatter drift accumulated invisibly because only `biome lint` was gated
@@ -77,6 +81,10 @@ debt landed in `cfb24e2 chore(meta): repo-wide biome formatter
 pass` (120 files, pure mise en forme, no semantic change).
 
 ## Eradication shipped
+
+**Status, 2026-10-10:** Biome was removed in 314f2482. The formatter gate
+now runs Prettier from the same two places, `.husky/pre-commit` and
+`.github/workflows/ci.yml`.
 
 **Type:** code diff (level 1 — formatter drift is now structurally
 unable to land without failing pre-commit / CI)

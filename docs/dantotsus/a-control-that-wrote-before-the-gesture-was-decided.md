@@ -5,10 +5,12 @@ detected-at: review
 severity: high
 related-pr: '#64'
 fix-pr: '#64'
-fix-commits: [3b7b123]
-eradication-level: 4
+fix-commits: [3b7b123e55]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [react, pragma, ux, harness]
+zone: apps/pragma/site/src/components/atoms/EnergyBar.tsx
 ---
 
 # Scrolling past a song re-scored it
