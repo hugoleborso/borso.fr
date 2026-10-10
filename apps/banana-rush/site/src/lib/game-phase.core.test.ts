@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { isJoinable, isRoundOver, isLastRoundShowing } from './game-phase.core';
+import { isRoundOver, isLastRoundShowing } from './game-phase.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('isRoundOver', () => {
@@ -25,24 +25,6 @@ describe('isRoundOver', () => {
 
   it('is false before the game has been read at all', () => {
     expect(isRoundOver(0, null)).toBe(false);
-  });
-});
-
-describe('isJoinable', () => {
-  it('is true for a newcomer at a lobby', () => {
-    expect(isJoinable(false, 'lobby')).toBe(true);
-  });
-
-  it('is false for somebody already seated', () => {
-    expect(isJoinable(true, 'lobby')).toBe(false);
-  });
-
-  it('is false once the game has started', () => {
-    expect(isJoinable(false, 'playing')).toBe(false);
-  });
-
-  it('is false once the game is over', () => {
-    expect(isJoinable(false, 'finished')).toBe(false);
   });
 });
 

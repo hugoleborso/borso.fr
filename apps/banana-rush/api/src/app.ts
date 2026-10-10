@@ -11,9 +11,11 @@ import { selectErrorResponse } from './helpers/errors/error-response.core';
  * @BlueprintUsage Use for the single module that mounts every slice router and turns the application's named refusals into statuses.
  * @BlueprintDescription Chains every `.route()` call in one unbroken expression, because assigning the app to a variable and calling `.route` on it separately drops the accumulated route types that `hc<AppRouter>` reads on the front end. The error handler delegates the whole decision to a pure function, so this file branches nowhere and the failure contract is covered by ordinary unit tests. Every refusal reaches the client as a code from a closed union rather than a sentence, so the translation happens in the interface catalogue and the API never carries a language.
  */
-function buildAppRouter() {
+type PrintLogLine = (line: string) => void;
+
+function buildAppRouter(printLogLine?: PrintLogLine) {
   return new Hono()
-    .use('*', logger())
+    .use('*', logger(printLogLine))
     .use('*', cors())
     .onError((failure, context) => {
       const answer = selectErrorResponse(failure);
@@ -26,6 +28,6 @@ function buildAppRouter() {
 
 export type AppRouter = ReturnType<typeof buildAppRouter>;
 
-export function createApp(): Hono {
-  return buildAppRouter();
+export function createApp(printLogLine?: PrintLogLine): Hono {
+  return buildAppRouter(printLogLine);
 }

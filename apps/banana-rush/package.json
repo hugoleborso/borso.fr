@@ -8,6 +8,7 @@
     "dev:db": "DATABASE_URL=$(../../scripts/local-postgres.sh start banana-rush dev) tsx test/dev-database.setup.ts",
     "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start banana-rush dev) STAGE=dev tsx watch api/src/main.dev.ts",
     "dev:site": "vite",
+    "cli": "DATABASE_URL=$(../../scripts/local-postgres.sh start banana-rush dev) tsx api/src/main.cli.ts",
     "db:local:start": "../../scripts/local-postgres.sh start banana-rush",
     "db:local:stop": "../../scripts/local-postgres.sh stop banana-rush",
     "db:local:wipe": "../../scripts/local-postgres.sh wipe banana-rush",

@@ -11,12 +11,8 @@ import {
   SNAPPY_ROUND_SECONDS,
   WINNING_SCORE_CHOICES,
 } from '@domain/game-setup.core';
+import { JOIN_CODE_LENGTH, normalizeJoinCode } from '@domain/join-code.core';
 import { MONKEY_AVATARS, NICKNAME_MAX_LENGTH } from '@domain/monkey.core';
-
-export const GAME_STATUSES = ['lobby', 'playing', 'finished'] as const;
-export type GameStatus = (typeof GAME_STATUSES)[number];
-
-export const JOIN_CODE_LENGTH = 4;
 
 /**
  * @Blueprint schema-identity-free-of-database-constraints
@@ -93,7 +89,7 @@ export const createGameSchema = z
 export const joinGameSchema = z.object({ nickname: nicknameSchema, avatar: avatarSchema }).strict();
 
 export const joinCodeParamSchema = z.object({
-  code: z.string().trim().length(JOIN_CODE_LENGTH),
+  code: z.string().trim().length(JOIN_CODE_LENGTH).transform(normalizeJoinCode),
 });
 
 export const outcomesSchema = z.array(
@@ -130,3 +126,62 @@ export const placeBidSchema = z
     amount: z.number().int().min(MINIMUM_BID_BANANAS).max(MAXIMUM_BID_BANANAS),
   })
   .strict();
+
+function numericFlag<Target extends z.ZodTypeAny>(target: Target) {
+  return z.coerce.number().pipe(target);
+}
+
+const codeFlagSchema = joinCodeParamSchema.shape.code;
+const tokenFlagSchema = z.string().min(1);
+
+export const gameCommandSchema = z.discriminatedUnion('command', [
+  z
+    .object({
+      command: z.literal('create'),
+      nickname: nicknameSchema,
+      avatar: avatarSchema,
+      maxPlayers: numericFlag(createGameSchema.shape.maxPlayers),
+      winningScore: numericFlag(createGameSchema.shape.winningScore),
+      roundTimerSeconds: numericFlag(
+        createGameSchema.shape.roundTimerSeconds.removeDefault(),
+      ).optional(),
+    })
+    .strict(),
+  z
+    .object({
+      command: z.literal('join'),
+      code: codeFlagSchema,
+      nickname: nicknameSchema,
+      avatar: avatarSchema,
+    })
+    .strict(),
+  z.object({ command: z.literal('start'), code: codeFlagSchema, token: tokenFlagSchema }).strict(),
+  z
+    .object({
+      command: z.literal('bid'),
+      code: codeFlagSchema,
+      token: tokenFlagSchema,
+      amount: numericFlag(placeBidSchema.shape.amount),
+    })
+    .strict(),
+  z
+    .object({
+      command: z.literal('resolve'),
+      code: codeFlagSchema,
+      token: tokenFlagSchema.optional(),
+    })
+    .strict(),
+  z
+    .object({ command: z.literal('show'), code: codeFlagSchema, token: tokenFlagSchema.optional() })
+    .strict(),
+  z.object({ command: z.literal('rounds'), code: codeFlagSchema }).strict(),
+  z
+    .object({ command: z.literal('rematch'), code: codeFlagSchema, token: tokenFlagSchema })
+    .strict(),
+]);
+
+export type GameCommand = z.infer<typeof gameCommandSchema>;
+export type GameCommandName = GameCommand['command'];
+export type GameCommandOf<Name extends GameCommandName> = {
+  [Candidate in GameCommandName]: Extract<GameCommand, { command: Candidate }>;
+}[Name];

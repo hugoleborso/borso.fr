@@ -9,11 +9,6 @@ export function isRoundOver(secondsRemaining: number | null, status: GameStatus 
   return secondsRemaining === NO_TIME_LEFT;
 }
 
-export function isJoinable(areYouSeated: boolean, status: GameStatus): boolean {
-  if (areYouSeated) return false;
-  return status === 'lobby';
-}
-
 export function isLastRoundShowing(hasLastRound: boolean, hasViewerBid: boolean): boolean {
   if (!hasLastRound) return false;
   return !hasViewerBid;

@@ -1,13 +1,11 @@
 import { MINIMUM_BID_BANANAS } from '@domain/bid.core';
-import { MINIMUM_SEATS } from '@domain/game-setup.core';
-import { GAME_STATUSES, type GameStatus } from './games.schema';
+import { GAME_STATUSES, type GameStatus } from '@domain/game-lifecycle.core';
 
 export interface StandingPlayer {
   readonly playerId: string;
   readonly stash: number;
 }
 
-export type StartRefusal = 'not-in-lobby' | 'not-enough-players';
 export type JoinRefusal = 'already-started' | 'game-full' | 'avatar-taken';
 
 const NO_SEATS_LEFT = 0;
@@ -18,12 +16,6 @@ const NO_SEATS_LEFT = 0;
  * @BlueprintUsage Use for the rules that say whether a state change is allowed, when the answer has to reach a screen as a named reason rather than a thrown error.
  * @BlueprintDescription Returns a named refusal or null instead of a boolean, so the caller has the reason without a second call and a translation key falls straight out of the union. Every function takes the facts it needs as plain arguments and never a record from the database, which is what keeps the file pure and lets the same rules answer for a row, for a draft the player has not saved, and for a test fixture written by hand. `null` means allowed, which reads the same way in every one of these functions.
  */
-export function refuseStart(status: GameStatus, playerCount: number): StartRefusal | null {
-  if (status !== 'lobby') return 'not-in-lobby';
-  if (playerCount < MINIMUM_SEATS) return 'not-enough-players';
-  return null;
-}
-
 export function refuseJoin(
   status: GameStatus,
   seatedCount: number,
