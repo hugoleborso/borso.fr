@@ -1,3 +1,4 @@
+import type { TodoListName } from '@domain/todo-list.core';
 import { act } from 'react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, describe, expect, it } from 'vitest';
@@ -41,14 +42,14 @@ function page(path: string, markdown: string, frontMatter: Record<string, string
   };
 }
 
-function serveTodo(restorations: unknown[]): FetchStub {
+function serveTodo(restorations: unknown[], prefix = '/api/todos'): FetchStub {
   return stubFetch(async (request) => {
     const path = new URL(request.url).pathname;
-    if (path === '/api/todos') return jsonResponse({ items: [TODO] });
-    if (path === `/api/todos/${TODO_ID}` && request.method === 'DELETE') {
+    if (path === prefix) return jsonResponse({ items: [TODO] });
+    if (path === `${prefix}/${TODO_ID}` && request.method === 'DELETE') {
       return jsonResponse({ todo: TODO, line: TODO_LINE, position: 0 });
     }
-    if (path === '/api/todos/restorations') {
+    if (path === `${prefix}/restorations`) {
       restorations.push(restorationSchema.parse(await request.json()));
       return jsonResponse(TODO, 201);
     }
@@ -66,13 +67,13 @@ function serveTodo(restorations: unknown[]): FetchStub {
   });
 }
 
-function mountDetail(): MountedTree {
+function mountDetail(list: TodoListName = 'main'): MountedTree {
   return mountWithClient(
     createIsolatedQueryClient(),
-    <MemoryRouter initialEntries={['/todos', `/todos/${TODO_ID}`]} initialIndex={1}>
+    <MemoryRouter initialEntries={['/liste', `/liste/${TODO_ID}`]} initialIndex={1}>
       <Routes>
-        <Route path="/todos" element={<p>liste</p>} />
-        <Route path="/todos/:id" element={<TodoDetail id={TODO_ID} />} />
+        <Route path="/liste" element={<p>liste</p>} />
+        <Route path="/liste/:id" element={<TodoDetail id={TODO_ID} list={list} />} />
       </Routes>
       <ToastViewport />
     </MemoryRouter>,
@@ -118,6 +119,24 @@ describe('the detail of a todo', () => {
     await flushUntil(() => findButton(mounted, 'Annuler') !== undefined);
     expect(mounted.container.textContent).toContain('liste');
     expect(mounted.container.textContent).toContain('Supprimée');
+    act(() => {
+      findButton(mounted, 'Annuler')?.click();
+    });
+    await flushUntil(() => restorations.length === 1);
+    expect(restorations).toEqual([{ line: TODO_LINE, position: 0 }]);
+  });
+
+  it('reads and restores a work todo through the work list routes', async () => {
+    const restorations: unknown[] = [];
+    stub = serveTodo(restorations, '/api/work-todos');
+    tree = mountDetail('work');
+    const mounted = tree;
+    await flushUntil(() => findButton(mounted, 'Supprimer') !== undefined);
+    expect(mounted.container.querySelector('h1')?.textContent).toBe('Envoyer le devis');
+    act(() => {
+      findButton(mounted, 'Supprimer')?.click();
+    });
+    await flushUntil(() => findButton(mounted, 'Annuler') !== undefined);
     act(() => {
       findButton(mounted, 'Annuler')?.click();
     });

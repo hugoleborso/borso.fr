@@ -1,3 +1,4 @@
+import type { TodoListName } from '@domain/todo-list.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -29,20 +30,22 @@ const SECTION_LABEL_CLASS_NAME = 'm-0 px-1 pb-1 text-label text-ink-muted';
 
 export interface TodoDetailProps {
   readonly id: string;
+  readonly list: TodoListName;
 }
 
 // @FollowsBlueprint organism-mutation-panel
-export function TodoDetail({ id }: TodoDetailProps): JSX.Element {
+export function TodoDetail({ id, list }: TodoDetailProps): JSX.Element {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  const todos = useTodos();
-  const updateTodo = useUpdateTodo();
-  const deleteTodo = useDeleteTodo();
+  const todos = useTodos(list);
+  const updateTodo = useUpdateTodo(list);
+  const deleteTodo = useDeleteTodo(list);
   const [isEditing, setIsEditing] = useState(false);
   const todo = todos.data?.items.find((candidate) => candidate.id === id);
   const press = usePressGesture({
     onLongPress: () => {
-      if (todo !== undefined) openActionSheet({ title: todo.text, subject: { kind: 'todo' } });
+      if (todo !== undefined)
+        openActionSheet({ title: todo.text, subject: { kind: 'todo', list } });
     },
   });
   const today = toIsoDay(new Date());
@@ -91,7 +94,7 @@ export function TodoDetail({ id }: TodoDetailProps): JSX.Element {
                       { id: todo.id, ...patch },
                       {
                         onSuccess: (savedTodo) => {
-                          void navigate(buildTodoHref(savedTodo.id), { replace: true });
+                          void navigate(buildTodoHref(savedTodo.id, list), { replace: true });
                         },
                       },
                     );
