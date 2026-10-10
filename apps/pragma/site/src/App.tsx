@@ -20,6 +20,7 @@ import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistScenePage } from './routes/setlists/SetlistScenePage';
+import { SetlistAudiencePage } from './routes/setlists/SetlistAudiencePage';
 import { SetlistVotePage } from './routes/setlists/SetlistVotePage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
 import { VotePage } from './routes/vote/VotePage';
@@ -48,6 +49,7 @@ export function App(): JSX.Element {
               <Route path="/setlists" element={<SetlistsPage />} />
               <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
               <Route path="/setlists/:setlistId/vote" element={<SetlistVotePage />} />
+              <Route path="/setlists/:setlistId/audience" element={<SetlistAudiencePage />} />
               <Route path="/bars" element={<BarsPage />} />
               <Route path="/improvements" element={<ImprovementsPage />} />
               <Route path="/tasks" element={<TasksPage />} />

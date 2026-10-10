@@ -1,7 +1,7 @@
 /** @Feature setlists */
 
 import type { JSX } from 'react';
-import { useMemo, useState } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
@@ -21,15 +21,10 @@ import {
 } from '../../lib/energy-curve-preference.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
-import { useSessionsList } from '../../lib/queries/sessions.queries';
-import { useSetlist, useSetlistsList } from '../../lib/queries/setlists.queries';
-import {
-  buildSetlistIndexRows,
-  type IndexSession,
-  selectConcertSessionId,
-} from '../../lib/setlist-index.core';
-
-const NO_ROWS: readonly never[] = [];
+import { useSetlist } from '../../lib/queries/setlists.queries';
+import { selectConcertSessionId } from '../../lib/setlist-index.core';
+import { useSetlistSessions } from '../../lib/setlist-sessions.hook';
+import { AudienceVoteLink } from '../../components/molecules/AudienceVoteLink';
 
 // @FollowsBlueprint route-detail-page
 export function SetlistEditorPage(): JSX.Element {
@@ -53,17 +48,8 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
     didStoreEnergyCurveChoice(window.localStorage, !isEnergyShown);
     setIsEnergyShown(!isEnergyShown);
   };
-  const setlistsQuery = useSetlistsList();
-  const sessionsQuery = useSessionsList();
   const setlist = setlistQuery.data?.setlist ?? null;
-
-  const sessions = useMemo(() => {
-    const row = buildSetlistIndexRows<IndexSession>(
-      setlistsQuery.data?.setlists ?? NO_ROWS,
-      sessionsQuery.data?.sessions ?? NO_ROWS,
-    ).find((candidate) => candidate.id === setlistId);
-    return row?.sessions ?? NO_ROWS;
-  }, [setlistsQuery.data, sessionsQuery.data, setlistId]);
+  const sessions = useSetlistSessions(setlistId);
 
   if (setlistQuery.isLoading) {
     return (
@@ -104,6 +90,9 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
               >
                 <Icon name="chart" size={18} />
               </Button>
+              {selectConcertSessionId(sessions) === null ? null : (
+                <AudienceVoteLink setlistId={setlist.id} />
+              )}
               <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
             </>
           }
@@ -123,7 +112,6 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
 
       <SetlistEditor
         setlistId={setlist.id}
-        concertSessionId={selectConcertSessionId(sessions)}
         initialMemberId={searchParams.get(MEMBER_FILTER_PARAM)}
         isEnergyShown={isEnergyShown}
       />
