@@ -5,7 +5,7 @@ detected-at: review
 severity: medium
 related-pr: 157
 fix-pr: pending
-fix-commits: []
+fix-commits: [84891d2d]
 eradication-level: 2
 time-to-detect: months
 tags: [eslint, domain, adr-0010, forms, zod, banana-rush, last-loop-lepin, pragma, talos, blueprints]
@@ -111,7 +111,7 @@ every limit inside it from `domain/`.
 
 **Type:** DevX check (level 2 — custom lint rules)
 
-**Reference:** this PR · commit listed in `fix-commits`
+**Reference:** this PR · commit `84891d2d`
 
 **The actual fix:**
 
