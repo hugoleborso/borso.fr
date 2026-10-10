@@ -11,9 +11,7 @@ import {
 } from '../../lib/queries/queries.test-utils';
 import { MessageComposer } from './MessageComposer';
 
-const PREAMBLE = encodeURIComponent(
-  'Tu es Talos. Lis CLAUDE.md puis réponds à ce message de Hugo :',
-);
+const PREAMBLE = encodeURIComponent('Tu es Talos. Réponds à ce message de Hugo :');
 
 function serveTarget(build: string | null): FetchStub {
   return stubFetch(
