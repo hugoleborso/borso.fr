@@ -22,8 +22,9 @@ Lives in: `api/src/games/`
 - `game` holds `join_code`, `status`, `max_players`, `winning_score`,
   `round_timer_seconds`, `crate_bananas`, `current_round` and
   `round_opened_at`.
-- `status` is `lobby`, `playing` or `finished`, and `narrowGameStatus` in
-  `game.core.ts` is the only place a stored string becomes one of them.
+- `status` is `lobby`, `playing` or `finished`, listed in
+  `domain/game-lifecycle.core.ts`, and `narrowGameStatus` in `game.core.ts`
+  is the only place a stored string becomes one of them.
 - A game is never deleted. A finished game keeps its rows and releases its
   join code, which `reserveJoinCode` relies on.
 
@@ -143,8 +144,24 @@ Lives in: `api/src/games/`
 
 - Built by `buildJoinCode` in `join-code.utils.ts` from an alphabet that
   leaves out the characters people read back wrongly.
-- `normalizeJoinCode` accepts what a person actually types, in any case
-  and with any spacing.
+- `normalizeJoinCode` in `domain/join-code.core.ts` accepts what a person
+  actually types, in any case and with any spacing. The route, the command
+  line and the home screen all read it from there.
+
+## Move
+
+One thing a viewer may do next at one game: `join`, `start`, `bid` or
+`rematch`. It is what a screen offers as a control and what the command line
+prints beside the game, so an agent decides from the same list a player sees.
+
+Lives in: `domain/`
+
+- `selectViewerMoves` in `game-lifecycle.core.ts` derives the list from the
+  game view alone, so the screen and the command line cannot disagree.
+- A move is an offer, not a permission. The API still refuses a move that is
+  no longer allowed by the time it arrives, with the same code either way.
+
+Often confused with **bid**. A bid is the number written during one move.
 
 ## Connection
 

@@ -5,27 +5,12 @@ import {
   hasRoundTimerExpired,
   narrowGameStatus,
   refuseJoin,
-  refuseStart,
   selectGameWinners,
   selectMissingBidders,
   selectWinnersWhenFinished,
 } from './game.core';
 
 // @FollowsBlueprint test-pure-unit
-describe('refuseStart', () => {
-  it('allows a lobby holding enough players', () => {
-    expect(refuseStart('lobby', 2)).toBeNull();
-  });
-
-  it('refuses a game that is already running', () => {
-    expect(refuseStart('playing', 4)).toBe('not-in-lobby');
-  });
-
-  it('refuses a lobby holding one player', () => {
-    expect(refuseStart('lobby', 1)).toBe('not-enough-players');
-  });
-});
-
 describe('refuseJoin', () => {
   it('allows a free seat in a lobby', () => {
     expect(refuseJoin('lobby', 2, 4, ['chimp'], 'gibbon')).toBeNull();

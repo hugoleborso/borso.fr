@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { normalizeJoinCode } from '@api/games/join-code.utils';
+import { isMoveAvailable } from '@domain/game-lifecycle.core';
+import { normalizeJoinCode } from '@domain/join-code.core';
 import { ChunkyButton } from '@site/components/atoms/ChunkyButton';
 import { ErrorNote } from '@site/components/atoms/ErrorNote';
 import { AppShell } from '@site/components/organisms/AppShell';
@@ -24,7 +25,7 @@ import {
   useStartGame,
 } from '@site/lib/queries/game.queries';
 import { useRoundClock } from '@site/lib/round-clock.hook';
-import { isJoinable, isRoundOver } from '@site/lib/game-phase.core';
+import { isRoundOver } from '@site/lib/game-phase.core';
 
 /**
  * @Blueprint route-owning-its-live-connection
@@ -94,8 +95,6 @@ export function GamePage() {
     });
   }, [rematchJoinCode, token, claimRematchSeat, navigate]);
 
-  const areYouSeated =
-    seat !== null && game?.players.some((player) => player.id === seat.playerId) === true;
   const isHost = game?.players.find((player) => player.id === seat?.playerId)?.isHost ?? false;
 
   if (gameQuery.isPending) {
@@ -124,7 +123,7 @@ export function GamePage() {
     );
   }
 
-  if (isJoinable(areYouSeated, game.status)) {
+  if (isMoveAvailable(game, 'join')) {
     return (
       <AppShell>
         <div className="flex min-h-0 flex-1 flex-col gap-3">
