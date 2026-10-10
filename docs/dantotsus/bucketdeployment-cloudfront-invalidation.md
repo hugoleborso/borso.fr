@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: conception
 detected-at: production
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commits: [2a4aef4]
+related-pr: '#2'
+fix-pr: '#2'
+fix-commits: [2a4aef4902]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/constructs/static-site.ts]
 time-to-detect: hours per redeploy (bug surfaced every iteration)
 tags: [cdk, cloudfront, s3, bucketdeployment, caching]
+zone: infra/cdk/src/constructs/static-site.ts
 ---
 
 # `BucketDeployment` doesn't invalidate CloudFront unless you tell it to

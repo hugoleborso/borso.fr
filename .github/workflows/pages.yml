@@ -24,6 +24,10 @@ on:
       - 'apps/**'
       - 'scripts/architecture/**'
       - 'docs/standards/**'
+      - 'docs/dantotsus/**'
+      - 'docs/quality/**'
+      - 'docs/features/**'
+      - 'scripts/quality/**'
       - '.claude/skills/blueprint/blueprint-utils.ts'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
@@ -81,7 +85,9 @@ jobs:
             scripts/standards/rule-provenance.ts \
             scripts/standards/hotspots.ts \
             scripts/standards/temporal-coupling.ts \
-            scripts/standards/enforcement-ledger.ts; do
+            scripts/standards/enforcement-ledger.ts \
+            scripts/quality/weak-points.ts \
+            scripts/quality/working-conditions.ts; do
             pnpm exec tsx "$generator"
           done
           mkdir -p docs/architecture/reports
@@ -93,6 +99,8 @@ jobs:
              docs/standards/hotspots.md \
              docs/standards/temporal-coupling.md \
              docs/standards/enforcement-ledger.md \
+             docs/quality/weak-points.html \
+             docs/quality/working-conditions.html \
              docs/architecture/reports/
 
       - uses: actions/configure-pages@v6

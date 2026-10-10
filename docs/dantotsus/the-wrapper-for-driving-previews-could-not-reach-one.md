@@ -5,10 +5,13 @@ detected-at: qa
 severity: medium
 related-pr: '#95'
 fix-pr: '#97'
-fix-commits: [5d14095]
+fix-commits: [5d140956dd]
 eradication-level: 2
+eradication-paths: [scripts/argent.sh]
 time-to-detect: minutes
 tags: [agent-browser, agents, harness, mobile, sandbox, tooling, documentation, validation]
+zone: scripts/argent.sh
+recurs: [two-audits-that-sent-no-touch-events]
 ---
 
 # The phone-testing wrapper could not open the previews it is named after

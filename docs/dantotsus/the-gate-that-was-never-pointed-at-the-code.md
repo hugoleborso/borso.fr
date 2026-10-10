@@ -3,12 +3,16 @@ date: 2026-08-15
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-commits: [01e8a28]
+related-pr: '#49'
+fix-pr: '#49'
+fix-commits: [01e8a281d5]
 eradication-level: 2
-tags: [stryker, mutation, coverage, gates, infra, pre-push]
+eradication-paths: [scripts/check-mutation-covers-gated-files.sh]
 time-to-detect: months
+tags: [stryker, mutation, coverage, gates, infra, pre-push]
+zone: stryker.shared.js
+weak-point: gate-measures-nothing
+recurs: [a-green-mutation-gate-is-not-a-green-coverage-gate]
 ---
 
 # The gate that was never pointed at the code, and the number that covered for it

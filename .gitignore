@@ -73,6 +73,8 @@ docs/standards/convention-drift.md
 docs/standards/rule-provenance.md
 docs/standards/hotspots.md
 docs/standards/temporal-coupling.md
+docs/quality/weak-points.html
+docs/quality/working-conditions.html
 
 # A passing validation's screenshots wait here between /visual-validation and
 # /open-pr, which uploads them to the previews CDN once the pull request number

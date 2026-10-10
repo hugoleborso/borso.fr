@@ -3,12 +3,14 @@ date: 2026-08-21
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: 84
-fix-pr: 85
-fix-commits: [7747353, 2672da6]
+related-pr: '#84'
+fix-pr: '#85'
+fix-commits: [77473535c1, 2672da66f9]
 eradication-level: 2
+eradication-paths: [scripts/standards/seal.core.ts]
 time-to-detect: hours
 tags: [standards, review, seals, meta]
+zone: plugins/borso-harness/skills/standards-review
 ---
 
 # Ten review rounds on a two-file bug fix

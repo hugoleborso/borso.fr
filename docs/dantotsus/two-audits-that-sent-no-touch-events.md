@@ -5,10 +5,13 @@ detected-at: review
 severity: high
 related-pr: '#50'
 fix-pr: '#51'
-fix-commits: [e792240, 2e581bc]
+fix-commits: [e79224055f, 2e581bcfec]
 eradication-level: 2
+eradication-paths: [scripts/argent.sh, scripts/check-negative-claims-are-dated.sh]
 time-to-detect: 14 hours
 tags: [harness, tooling, ux, validation, claude-md, process]
+zone: plugins/borso-harness/skills/visual-validation
+recurs: [described-screenshot-without-checking-pixels]
 ---
 
 # Two phone audits, six rounds, zero touch events

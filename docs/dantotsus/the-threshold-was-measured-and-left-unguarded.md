@@ -4,11 +4,15 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#100'
-fix-pr: '#102'
-fix-commits: []
+fix-pr: '#103'
+fix-commits: [948204d50a]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/pretool-github-pr-body.sh]
 time-to-detect: minutes
 tags: [github, hooks, gates, meta, tooling]
+zone: plugins/borso-harness/hooks/pretool-github-pr-body.sh
+weak-point: gate-measures-nothing
+recurs: [the-hook-guarded-every-form-but-the-documented-one]
 ---
 
 # The threshold was measured, written down, and guarded by nobody

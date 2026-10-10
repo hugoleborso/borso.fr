@@ -5,10 +5,14 @@ detected-at: qa
 severity: medium
 related-pr: '#50'
 fix-pr: '#51'
-fix-commits: [531e6e4, 4065faa]
+fix-commits: [531e6e472f, 4065faa447]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-discarded-await-before-navigation.js]
 time-to-detect: 3 months
 tags: [react, tanstack-query, optimistic-update, frontend, pragma, custom-rule]
+zone: apps/pragma/site/src/lib/queries
+weak-point: optimistic-write-undone
+recurs: [optimistic-reorder-reverted-by-stale-dsql-read]
 blueprints: [query-optimistic-mutation]
 ---
 

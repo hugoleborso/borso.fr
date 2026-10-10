@@ -3,12 +3,14 @@ date: 2026-05-25
 introduced-at: implementation
 detected-at: production
 severity: medium
-related-pr: 25
-fix-pr: ./lessons-from-pr-27
-fix-commits: [<this-pr-claude-md-rule>]
+related-pr: '#25'
+fix-pr: '#29'
+fix-commits: [79ffc6ac6a]
 eradication-level: 5
+eradication-paths: []
 time-to-detect: days
 tags: [claude-md, refactor, observability, last-loop-lepin, dsql, auth, self-improvement-loop]
+zone: CLAUDE.md
 ---
 
 # A refactor commit said "drop both Secrets Manager secrets" — and silently dropped the *shared-across-stages* property of one of them
@@ -125,7 +127,7 @@ without being noticed*.
 the next refactor author and the next reviewer see the rule)
 
 **Reference:** PR ./lessons-from-pr-27 · CLAUDE.md commit
-[`<this-pr-sha>`] (new bullet under *Tone & rigor*)
+[`79ffc6ac6a`](https://github.com/hugoleborso/borso.fr/commit/79ffc6ac6a) (new bullet under *Tone & rigor*)
 
 **The actual fix:**
 

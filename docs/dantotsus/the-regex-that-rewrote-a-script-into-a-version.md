@@ -5,10 +5,12 @@ detected-at: review
 severity: medium
 related-pr: '#95'
 fix-pr: '#97'
-fix-commits: [5d14095]
+fix-commits: [5d140956dd]
 eradication-level: 2
+eradication-paths: [scripts/check-package-scripts-are-commands.sh]
 time-to-detect: minutes
 tags: [deps, pnpm, pnpm-scripts, knip, pre-commit, gates, tooling, dependabot]
+zone: package.json
 ---
 
 # The bump that turned a script into a version number

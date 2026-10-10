@@ -3,12 +3,14 @@ date: 2026-05-21
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/24
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/<TBD>
-fix-commits: []
+related-pr: '#24'
+fix-pr: '#28'
+fix-commits: [9199b11e70]
 eradication-level: 4
+eradication-paths: [.husky/pre-push]
 time-to-detect: hours
 tags: [harness, github, hooks, pre-push, workflow]
+zone: CLAUDE.md
 ---
 
 # Pushed two commits to a PR branch without reading any review thread
@@ -89,7 +91,7 @@ the session; the harness gives no telemetry surface to inspect
 block legitimate first-pushes (no PR exists yet) or rely on a
 heuristic the agent can game.
 
-**Reference:** [PR #<TBD>](https://github.com/hugoleborso/borso.fr/pulls?q=is%3Apr+head%3Aclaude%2Flessons-from-pr-24) ·
+**Reference:** [PR #28](https://github.com/hugoleborso/borso.fr/pull/28) ·
 this kaizen PR.
 
 **The actual fix:**

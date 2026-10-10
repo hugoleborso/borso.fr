@@ -5,10 +5,12 @@ detected-at: local
 severity: low
 related-pr: '#70'
 fix-pr: '#80'
-fix-commits: [e8746f9]
+fix-commits: [e8746f923b]
 eradication-level: 1
+eradication-paths: [scripts/reports.sh]
 time-to-detect: minutes
 tags: [hooks, pre-commit, meta, gates, tooling]
+zone: .husky/pre-commit
 ---
 
 # The hook checked links to files it declined to build

@@ -5,10 +5,12 @@ detected-at: production
 severity: high
 related-pr: '#101'
 fix-pr: '#101'
-fix-commits: [48120e6]
+fix-commits: [48120e6780]
 eradication-level: 1
+eradication-paths: [apps/pragma/api/src/songs/spotify.adapter.ts]
 time-to-detect: hours
 tags: [aws-ssm, pragma, adapter, blueprint, secrets]
+zone: apps/pragma/api/src/songs/spotify.adapter.ts
 ---
 
 # The escape hatch was the only thing that could throw

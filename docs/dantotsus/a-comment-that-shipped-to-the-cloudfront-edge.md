@@ -3,12 +3,14 @@ date: 2026-08-10
 introduced-at: implementation
 detected-at: operator-deploy
 severity: low
-related-pr: 40
-fix-pr: 45
-fix-commits: [1fad0d7]
+related-pr: '#40'
+fix-pr: '#45'
+fix-commits: [1fad0d792d]
 eradication-level: 1
+eradication-paths: [infra/shared/test/unit/shared-stack.test.ts, infra/shared/test/unit/__snapshots__/borso-shared.template.json]
 time-to-detect: hours
 tags: [cdk, cloudfront, cloudformation, drift, vitest, snapshot, ci]
+zone: infra/cdk/src/internal/cf-host-routing-function.code.js
 blueprints: [cloudfront-function-source]
 ---
 

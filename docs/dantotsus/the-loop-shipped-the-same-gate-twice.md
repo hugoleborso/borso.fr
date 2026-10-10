@@ -5,10 +5,13 @@ detected-at: review
 severity: medium
 related-pr: '#105'
 fix-pr: '#106'
-fix-commits: [4154b33a]
+fix-commits: [4154b33a23]
 eradication-level: 2
+eradication-paths: [scripts/check-gate-names-are-distinct.sh]
 time-to-detect: days
 tags: [gates, pre-commit, ci, meta, self-improvement-loop, shell]
+zone: plugins/borso-harness/skills/after-task-dantotsus
+recurs: [two-branches-that-both-claimed-migration-0006]
 ---
 
 # The loop shipped the same gate twice, a day apart, and both ran

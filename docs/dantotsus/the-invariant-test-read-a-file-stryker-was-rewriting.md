@@ -3,12 +3,16 @@ date: 2026-08-21
 introduced-at: implementation
 detected-at: ci
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/81
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/81
-fix-commits: [93142d2]
-eradication-level: 2
+related-pr: '#81'
+fix-pr: '#82'
+fix-commits: [03e16d4d6d]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: ~25 minutes (one full pre-push wave)
 tags: [stryker, mutation, vitest, testing, gates, blueprint]
+zone: infra/cdk/test/unit/eradication-checks.test.ts
+weak-point: gate-measures-nothing
+recurs: [the-mutants-were-judged-by-the-wrong-jury]
 ---
 
 # The invariant test read a file Stryker was rewriting

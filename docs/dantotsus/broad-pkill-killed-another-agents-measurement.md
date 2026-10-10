@@ -1,14 +1,16 @@
 ---
 date: 2026-08-08
-introduced-at: agent-behaviour
-detected-at: victim-side-exit-code
+introduced-at: implementation
+detected-at: local
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [cac22f1e9b]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/pretool-no-broad-kill.sh]
 time-to-detect: minutes
 tags: [agents, sandbox, processes, hooks, tooling]
+zone: plugins/borso-harness/hooks
 ---
 
 # A broad `pkill` killed another agent's twenty-minute measurement

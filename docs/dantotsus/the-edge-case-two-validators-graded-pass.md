@@ -3,12 +3,14 @@ date: 2026-10-02
 introduced-at: self-validation
 detected-at: review
 severity: medium
-related-pr: "#107"
-fix-pr: "#119"
-fix-commits: [aea99b0]
-eradication-level: 4
+related-pr: '#107'
+fix-pr: '#119'
+fix-commits: [aea99b0cc8]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [agents, validation, testing, spec]
+zone: plugins/borso-harness/agents/technical-validator.md
 ---
 
 # The edge case two validators graded PASS

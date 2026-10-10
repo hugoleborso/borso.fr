@@ -186,6 +186,14 @@ through these steps with everyone who might make the same mistake.
 Use **Weak Point Management** to track recurring patterns and defect
 categories.
 
+In this repository, an entry joins that map through its front matter:
+`zone:` is where the defect lived, `weak-point:` names an engaged weak
+point from `docs/quality/weak-points.md`, and `recurs:` names the entry it
+repeats. `scripts/quality/weak-points.ts` draws the map and the weekly
+count from those fields, and `scripts/quality/check-dantotsu-front-matter.ts`
+refuses an entry that leaves them unusable. The *Output* section of
+[`SKILL.md`](./SKILL.md) gives the rules for each field.
+
 ## Reframes
 
 | Misconception | Reframe |

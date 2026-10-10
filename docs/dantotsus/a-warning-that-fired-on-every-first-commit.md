@@ -5,10 +5,13 @@ detected-at: local
 severity: low
 related-pr: '#24'
 fix-pr: '#62'
-fix-commits: [866e0cb]
+fix-commits: [866e0cbb11]
 eradication-level: 2
+eradication-paths: [scripts/check-branch-context.sh]
 time-to-detect: 3 months
 tags: [harness, gates, meta, git, self-improvement-loop]
+zone: scripts/check-branch-context.sh
+recurs: [designated-branch-was-a-merged-pr-head]
 ---
 
 # A warning that fired on every first commit

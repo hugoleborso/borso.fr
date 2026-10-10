@@ -3,12 +3,16 @@ date: 2026-08-21
 introduced-at: implementation
 detected-at: local
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/81
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/82
-fix-commits: [pending]
+related-pr: '#81'
+fix-pr: '#82'
+fix-commits: [caeb858e41]
 eradication-level: 1
+eradication-paths: [.husky/pre-push]
 time-to-detect: one push — the first docs-only one after the defect shipped
 tags: [shell, hooks, pre-commit, gates, ci, stryker, mutation]
+zone: .husky/pre-push
+weak-point: gate-measures-nothing
+recurs: [a-sed-delimiter-disarmed-the-mutation-gate]
 ---
 
 # `grep -c` prints its zero and then fails

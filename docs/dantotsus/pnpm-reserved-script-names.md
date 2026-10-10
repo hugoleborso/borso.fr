@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: implementation
 detected-at: ci
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
-fix-commits: [10f3f10, 181f266]
+related-pr: '#2'
+fix-pr: '#4'
+fix-commits: [10f3f10e3a, 181f2667ac]
 eradication-level: 2
+eradication-paths: [.husky/pre-commit, .github/workflows/ci.yml]
 time-to-detect: minutes (first preview deploy attempt in CI)
 tags: [pnpm, ci, github-actions]
+zone: .github/workflows/deploy.yml
 ---
 
 # `deploy` and `destroy` are pnpm built-ins, not script names

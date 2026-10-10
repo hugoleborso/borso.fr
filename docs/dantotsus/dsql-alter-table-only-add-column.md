@@ -3,13 +3,15 @@ date: 2026-05-15
 introduced-at: implementation
 detected-at: operator-deploy
 severity: high
-related-pr: 23
-fix-pr: this PR (branch `claude/lessons-from-pr-23`)
-fix-commits: [<pending — pushed in this kaizen PR>]
-prior-fix-commits: [20bbed6, 0d4fc0e, dd47f3b]
+related-pr: '#23'
+fix-pr: '#24'
+fix-commits: [c5eb3e0b3d]
 eradication-level: 2
+eradication-paths: [scripts/check-migration-sql-dsql-compat.sh]
 time-to-detect: hours
 tags: [dsql, postgres, drizzle, ddl, deploy]
+zone: apps/last-loop-lepin/api/src/database/migrations
+prior-fix-commits: [20bbed6, 0d4fc0e, dd47f3b]
 ---
 
 # DSQL's ALTER TABLE surface is far narrower than Postgres — and the local Postgres hides it

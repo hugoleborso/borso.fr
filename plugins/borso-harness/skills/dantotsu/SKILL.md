@@ -173,7 +173,12 @@ expressible in code if you push hard enough.
 ### 7. Spread the lesson
 
 - Title the entry to **spark curiosity**, not the user-story name.
-- Cross-link to other entries when chains overlap.
+- Cross-link to other entries when chains overlap, and name the one this
+  repeats in `recurs:`.
+- Place it: `zone:` puts a dot on the weak-point map that
+  `scripts/quality/weak-points.ts` draws, and `weak-point:` counts it
+  against an engaged weak point
+  ([ADR-0029](../../../../docs/adr/0029-weak-point-management-from-the-dantotsu-record.md)).
 - If a coaching opportunity exists (a developer would benefit from
   walking through the chain), name it.
 
@@ -184,9 +189,36 @@ Drop a Markdown file at `docs/dantotsus/<slug>.md`. Use
 as the starting point — it has the YAML frontmatter and section
 shape pre-filled.
 
-Frontmatter MUST include the eradication's commit hash and PR (or
-"this PR" with the PR-creation command spelled out for the operator).
-Without that link the dantotsu doesn't qualify.
+The frontmatter is read by tools, and
+`scripts/quality/check-dantotsu-front-matter.ts` refuses an entry that
+gets it wrong, in pre-commit and in CI. Fill it this way:
+
+- **Fixed lists.** `introduced-at`, `detected-at`, `severity` and
+  `eradication-level` take only the values the template lists.
+- **Pull requests** are `'#<n>'`, or `none (<reason>)`.
+- **`fix-commits`** names commits that resolve on `main`. Write `[self]`
+  when the eradication ships in the same commit as this entry: a squash
+  merge renames every branch commit, so a branch hash written now will not
+  resolve after the merge. Write `none (<reason>)` when nothing was
+  committed, and then the level is 5.
+- **`eradication-paths`** lists the files the eradication lives in. Levels 1
+  to 4 need at least one that is not markdown. An edit to a skill, an agent,
+  CLAUDE.md or a standard is an instruction, which is level 5 however it is
+  described.
+- **`zone`** is the repository path where the defect *lived*: the component,
+  the construct, the gate, the skill. It is not where the fix landed, which
+  for a kaizen pull request is usually `.husky/` or `scripts/`. It must
+  exist in the tree. It places the entry's dot on the weak-point map.
+- **`weak-point`**, optional, names a row of
+  [`docs/quality/weak-points.md`](../../../../docs/quality/weak-points.md)
+  when the defect belongs to an engaged weak point. That is what counts it.
+- **`recurs`** names the earlier entry this one repeats, found with the
+  listing script below. When the entry shares two or more tags with an
+  earlier one and is not a repeat, write `recurs: none (<why it is a
+  different class>)`. A repeat retold as a new story is how the same class
+  was written up three times in one day.
+- **No placeholder** anywhere: no `<TBD>`, no `pending`, no
+  `<kaizen-commit>`.
 
 ## Hard rules (the skill enforces these)
 

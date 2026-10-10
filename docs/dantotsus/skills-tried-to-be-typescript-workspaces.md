@@ -1,14 +1,16 @@
 ---
 date: 2026-05-14
 introduced-at: conception
-detected-at: implementation
+detected-at: local
 severity: medium
-related-pr: #14
-fix-pr: #14
-fix-commits: [959b1e7]
+related-pr: '#14'
+fix-pr: '#14'
+fix-commits: [959b1e747d]
 eradication-level: 1
+eradication-paths: [pnpm-workspace.yaml, knip.json]
 time-to-detect: hours (mid-implementation)
 tags: [skills, harness, pnpm, workspaces, conception-pivot]
+zone: pnpm-workspace.yaml
 ---
 
 # I tried to make a Claude Code skill a pnpm workspace. It is not one.

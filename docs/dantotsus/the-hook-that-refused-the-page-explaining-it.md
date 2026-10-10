@@ -4,11 +4,13 @@ introduced-at: implementation
 detected-at: local
 severity: low
 related-pr: '#40'
-fix-pr: '#74'
-fix-commits: [df47cd5]
+fix-pr: '#58'
+fix-commits: [239b78b6d1]
 eradication-level: 2
+eradication-paths: [scripts/check-hook-decisions.sh]
 time-to-detect: 12 days
 tags: [hooks, agent-harness, meta]
+zone: plugins/borso-harness/hooks
 ---
 
 # The hook that refused the page explaining it

@@ -8,7 +8,7 @@
 #
 #   scripts/reports.sh                # everything, ~20s
 #   scripts/reports.sh blueprints     # the index, the heatmap, the defects page, the hook's lookup
-#   scripts/reports.sh standards      # the enforcement ledger, drift, provenance, hotspots, coupling
+#   scripts/reports.sh standards      # the enforcement ledger, drift, provenance, hotspots, coupling, weak points, working conditions
 #   scripts/reports.sh maps           # the architecture maps and models
 #   scripts/reports.sh all --missing-only   # only the ones absent from the tree
 #
@@ -38,6 +38,8 @@ output_of() {
     *hotspots.ts) echo docs/standards/hotspots.md ;;
     *temporal-coupling.ts) echo docs/standards/temporal-coupling.md ;;
     *enforcement-ledger.ts) echo docs/standards/enforcement-ledger.md ;;
+    *weak-points.ts) echo docs/quality/weak-points.html ;;
+    *working-conditions.ts) echo docs/quality/working-conditions.html ;;
     *architecture-graph.ts) echo docs/architecture/pragma-architecture.json ;;
     *) echo '' ;;
   esac
@@ -56,6 +58,8 @@ STANDARDS_GENERATORS=(
   scripts/standards/hotspots.ts
   scripts/standards/temporal-coupling.ts
   scripts/standards/enforcement-ledger.ts
+  scripts/quality/weak-points.ts
+  scripts/quality/working-conditions.ts
 )
 
 MAP_GENERATORS=(

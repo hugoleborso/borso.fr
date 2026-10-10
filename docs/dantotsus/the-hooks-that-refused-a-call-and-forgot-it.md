@@ -4,11 +4,13 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#100'
-fix-pr: '#102'
-fix-commits: []
+fix-pr: '#103'
+fix-commits: [948204d50a]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/kaizen-refusal.sh]
 time-to-detect: days
 tags: [meta, hooks, self-improvement-loop, harness, process]
+zone: plugins/borso-harness/hooks
 ---
 
 # The hooks refused five calls and the friction log heard about none of them

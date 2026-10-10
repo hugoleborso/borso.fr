@@ -1,14 +1,16 @@
 ---
 date: 2026-05-14
 introduced-at: conception
-detected-at: implementation
+detected-at: local
 severity: medium
-related-pr: #14
-fix-pr: #14
-fix-commits: [2e64172]
-eradication-level: 1
+related-pr: '#14'
+fix-pr: '#14'
+fix-commits: [2e64172625]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours (mid-implementation)
 tags: [orchestrator, skill, adr, state-machine, conception-pivot]
+zone: plugins/borso-harness/skills/tech-lead-orchestrator
 ---
 
 # The orchestrator was going to mine ADRs *out of* the plan. ADRs constrain the plan.

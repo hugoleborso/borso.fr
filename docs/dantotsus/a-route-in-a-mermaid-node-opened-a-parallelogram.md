@@ -3,12 +3,14 @@ date: 2026-10-02
 introduced-at: implementation
 detected-at: review
 severity: low
-related-pr: "#107"
-fix-pr: "#119"
-fix-commits: [bbf11f9]
+related-pr: '#107'
+fix-pr: '#119'
+fix-commits: [bbf11f9969]
 eradication-level: 2
+eradication-paths: [scripts/pr/pr-body.core.ts]
 time-to-detect: hours
 tags: [pr-body, mermaid, gates, documentation]
+zone: plugins/borso-harness/skills/open-pr
 ---
 
 # A route in a mermaid node opened a parallelogram

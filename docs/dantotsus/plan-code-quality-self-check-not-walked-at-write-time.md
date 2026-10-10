@@ -3,12 +3,14 @@ date: 2026-05-12
 introduced-at: implementation
 detected-at: ci
 severity: medium
-related-pr: 11
-fix-pr: 11
-fix-commits: [17782f1]
-eradication-level: 2
+related-pr: '#11'
+fix-pr: '#11'
+fix-commits: [17782f10ec]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [skill, implementation, plan, code-quality, technical-validation]
+zone: plugins/borso-harness/skills/implementation
 ---
 
 # Plan's §3 Code-quality self-check was authored but never re-walked at write time

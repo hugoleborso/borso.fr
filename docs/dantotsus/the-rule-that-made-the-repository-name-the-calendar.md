@@ -3,12 +3,14 @@ date: 2026-08-19
 introduced-at: implementation
 detected-at: review
 severity: low
-related-pr: https://github.com/hugoleborso/borso.fr/pull/55
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/55
-fix-commits: []
+related-pr: '#55'
+fix-pr: '#73'
+fix-commits: [8c08c5d872]
 eradication-level: 2
+eradication-paths: [eslint.config.js]
 time-to-detect: days
 tags: [eslint, naming, standards, meta]
+zone: eslint.config.js
 ---
 
 # The naming standard's own example failed the rule the naming standard cites

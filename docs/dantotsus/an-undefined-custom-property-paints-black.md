@@ -3,12 +3,14 @@ date: 2026-08-15
 introduced-at: implementation
 detected-at: operator-deploy
 severity: low
-related-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-commits: [3f7264b]
+related-pr: '#49'
+fix-pr: '#49'
+fix-commits: [3f7264b624]
 eradication-level: 1
+eradication-paths: [scripts/architecture/architecture-page.ts]
 time-to-detect: days
 tags: [css, custom-properties, architecture-map, generated-files]
+zone: scripts/architecture/architecture-page.ts
 ---
 
 # An undefined custom property paints black, and nothing about black says "undefined"

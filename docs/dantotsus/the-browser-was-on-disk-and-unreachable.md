@@ -5,10 +5,12 @@ detected-at: local
 severity: medium
 related-pr: '#60'
 fix-pr: '#62'
-fix-commits: [f6463f6]
+fix-commits: [f6463f6071]
 eradication-level: 1
+eradication-paths: [scripts/install-repo-deps.sh, scripts/browser.sh]
 time-to-detect: minutes
 tags: [harness, agent-browser, tooling, meta, visual-validation]
+zone: scripts/browser.sh
 ---
 
 # The browser was on disk and unreachable

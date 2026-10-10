@@ -1,18 +1,20 @@
 ---
 date: 2026-05-04
-revised: 2026-05-11
 introduced-at: conception
 detected-at: operator-deploy
 severity: high
-related-pr: 6
-fix-pr: this PR (branch `claude/stale-previews-budget-forecast-j3sPS`)
-fix-commits: [a1bcefe3856143b12eb0ae4ad494073fba0f3a59]
-prior-fix-pr: 7
-prior-fix-commits: [knowledge-floor only — see Revision history]
+related-pr: '#6'
+fix-pr: '#7'
+fix-commits: [a1bcefe385]
 eradication-level: 1
-prior-eradication-level: 5
+eradication-paths: [infra/cdk/src/constructs/static-site.ts, infra/cdk/test/unit/eradication-checks.test.ts]
 time-to-detect: minutes
 tags: [cdk, s3, cloudformation, deploy]
+zone: infra/cdk/src/constructs/static-site.ts
+revised: 2026-05-11
+prior-fix-pr: 7
+prior-fix-commits: [knowledge-floor only — see Revision history]
+prior-eradication-level: 5
 ---
 
 > ### Revised 2026-05-11 — eradication upgraded rung 5 → rung 1

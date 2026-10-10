@@ -5,10 +5,13 @@ detected-at: review
 severity: low
 related-pr: '#105'
 fix-pr: '#106'
-fix-commits: [24eaf9b2]
+fix-commits: [24eaf9b2d2]
 eradication-level: 2
+eradication-paths: [scripts/check-named-paths-exist.sh]
 time-to-detect: days
 tags: [meta, claude-md, skills, agents, gates, documentation]
+zone: CLAUDE.md
+weak-point: prose-stands-in-for-a-check
 ---
 
 # Three documents agreed about a file that was never written

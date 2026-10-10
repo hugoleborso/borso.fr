@@ -3,12 +3,14 @@ date: 2026-06-05
 introduced-at: implementation
 detected-at: production
 severity: high
-related-pr: "#26"
-fix-pr: "#30"
-fix-commits: [b35a066, 3a5c9f6]
+related-pr: '#26'
+fix-pr: '#30'
+fix-commits: [b35a066dc8, 3a5c9f6e01]
 eradication-level: 2
+eradication-paths: [apps/last-loop-lepin/package.json, apps/pragma/package.json]
 time-to-detect: days
 tags: [cdk, cloudformation, dsql, deploy, github-actions, last-loop-lepin]
+zone: apps/last-loop-lepin/package.json
 ---
 
 # `cdk destroy --all` aimed at a per-PR stack also fired at the shared DSQL cluster

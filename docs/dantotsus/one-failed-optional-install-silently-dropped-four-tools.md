@@ -1,14 +1,16 @@
 ---
 date: 2026-08-09
 introduced-at: conception
-detected-at: a-gate-that-skipped-itself
+detected-at: local
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [1cf220368d]
 eradication-level: 2
+eradication-paths: [scripts/install-repo-deps.sh]
 time-to-detect: months
 tags: [tooling, hooks, session-start, actionlint, gates]
+zone: scripts/install-repo-deps.sh
 ---
 
 # One failed optional install silently dropped the four tools after it

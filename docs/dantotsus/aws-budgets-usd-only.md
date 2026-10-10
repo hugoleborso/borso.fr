@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: conception
 detected-at: operator-deploy
 severity: low
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commits: [5c47cc2]
+related-pr: '#2'
+fix-pr: '#2'
+fix-commits: [5c47cc223c]
 eradication-level: 5
+eradication-paths: []
 time-to-detect: minutes (failed at first cdk deploy of shared)
 tags: [aws-budgets, cfn, currency]
+zone: infra/shared/lib/shared-stack.ts
 ---
 
 # AWS Budgets evaluates spend in USD only — `EUR` is rejected at deploy
