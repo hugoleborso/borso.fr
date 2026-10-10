@@ -22,6 +22,11 @@ const SPOTIFY_CREDENTIALS_PARAMETER = `/${APP_SLUG}/spotify-credentials`;
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
 
+export interface ErrorReportingProject {
+  readonly dsn: string;
+  readonly release?: string;
+}
+
 export interface BuildPragmaAppStackProps {
   readonly scope: Construct;
   readonly stage: Stage;
@@ -31,11 +36,22 @@ export interface BuildPragmaAppStackProps {
   readonly apiEntry: string;
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
+  readonly errorReporting?: ErrorReportingProject;
 }
 
 interface SiteOrigin {
   readonly origin: string;
   readonly hostname: string;
+}
+
+function buildErrorReportingEnvironment(
+  project: ErrorReportingProject | undefined,
+): Record<string, string> {
+  if (project === undefined) return {};
+  return {
+    SENTRY_DSN: project.dsn,
+    ...(project.release === undefined ? {} : { SENTRY_RELEASE: project.release }),
+  };
 }
 
 function readSiteOrigin(props: BuildPragmaAppStackProps): SiteOrigin {
@@ -93,6 +109,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,
         WEBAUTHN_ORIGIN: siteOrigin.origin,
         SPOTIFY_CREDENTIALS_PARAMETER,
+        ...buildErrorReportingEnvironment(props.errorReporting),
       },
     },
     database: {

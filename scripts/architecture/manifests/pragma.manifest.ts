@@ -177,6 +177,17 @@ export const pragmaManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'sentry',
+      icon: '🚨',
+      name: 'Sentry',
+      technology:
+        'Error monitoring SaaS, @sentry/react in the browser and @sentry/aws-serverless in the Lambda',
+      description:
+        'Receives the failures nobody saw: a render that crashed the page, an uncaught error in the browser, and any API error that reached the 500 answer. Both sides start it only on a deployed stage with a project address configured, so a missing project leaves the application unchanged. Every personal data category the SDK collects by default is switched off: no user, cookie, header, body, query string or local variable leaves the process. The site build uploads its source maps with a token and deletes them before the bundle ships.',
+      boundary: 'third-party',
+      access: 'account',
+    },
+    {
       id: 'aws-dsql',
       icon: '🗄️',
       name: 'Aurora DSQL',

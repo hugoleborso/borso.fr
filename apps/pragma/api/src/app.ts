@@ -5,6 +5,7 @@ import { buildAudienceRouter } from './audience/audience.controller';
 import { buildTestSeedRouter } from './__test/test-seed.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildBarsRouter } from './bars/bars.controller';
+import { answerUnhandledError } from './helpers/observability/unhandled-error.middleware';
 import { buildImprovementsRouter } from './improvements/improvements.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
@@ -34,6 +35,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
   return new Hono()
     .use('*', logger())
     .use('*', cors())
+    .onError(answerUnhandledError)
     .get('/api/health', (context) => context.json({ ok: true }))
     .route('/api/auth', publicRouter)
     .route('/api/admin', bootstrapRouter)

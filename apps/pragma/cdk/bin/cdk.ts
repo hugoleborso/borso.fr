@@ -33,6 +33,14 @@ if (stage === 'integ') {
   throw new Error("pragma: stage 'integ' is reserved and not deployable from this app.");
 }
 
+function readOptionalSetting(name: string): string | undefined {
+  const value = process.env[name];
+  return value === undefined || value === '' ? undefined : value;
+}
+
+const errorReportingDsn = readOptionalSetting('PRAGMA_SENTRY_DSN');
+const release = readOptionalSetting('GITHUB_SHA');
+
 const prNumber = stage === 'preview' ? requirePrNumber() : undefined;
 const stackSuffix = stage === 'prod' ? 'prod' : `pr-${prNumber}`;
 const appStackName = `${APP_SLUG}-${stackSuffix}`;
@@ -54,4 +62,12 @@ buildPragmaAppStack({
   apiEntry: API_ENTRY,
   migrationsPath: MIGRATIONS_PATH,
   cluster: clusterStack.cluster,
+  ...(errorReportingDsn === undefined
+    ? {}
+    : {
+        errorReporting: {
+          dsn: errorReportingDsn,
+          ...(release === undefined ? {} : { release }),
+        },
+      }),
 });
