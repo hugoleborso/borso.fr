@@ -33,3 +33,12 @@ The cache is worth keeping despite this — the measurement behind that choice i
 in
 [`eslint-cache-useless-on-a-fresh-checkout.md`](../dantotsus/eslint-cache-useless-on-a-fresh-checkout.md),
 which is about the other half of the story, a cache that hit and saved nothing.
+
+The same replay happens when the *installed packages* change rather than the
+code: a lint run made before `pnpm install` caches errors about types it could
+not resolve, and replays them after the install. The app and infra `lint`
+scripts go through `scripts/lint-workspace.sh`, which refuses to run on a stale
+install and starts a new cache after each one; see
+[`the-cache-outlived-the-install-it-was-built-against.md`](../dantotsus/the-cache-outlived-the-install-it-was-built-against.md).
+The caches this repository writes are `.eslintcache`, `.eslintcache-<name>` and
+`node_modules/.cache/eslint-workspaces/`.
