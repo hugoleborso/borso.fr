@@ -96,6 +96,15 @@ describe('rate-limit.utils', () => {
       expect(store.record('beta', 200, A_WIDER_BUDGET).attempts).toBe(1);
     });
 
+    it('keeps live buckets when it evicts', () => {
+      const store = createBucketStore();
+      for (let index = 0; index < MAXIMUM_BUCKETS_BEFORE_EVICTION; index += 1) {
+        store.record(`live-${index}`, 1, A_WIDER_BUDGET);
+      }
+      store.record('fresh', A_WIDER_BUDGET.windowMs, A_WIDER_BUDGET);
+      expect(store.size()).toBe(MAXIMUM_BUCKETS_BEFORE_EVICTION + 1);
+    });
+
     it('keeps expired buckets while it holds few', () => {
       const store = createBucketStore();
       store.record('alpha', 0, A_WIDER_BUDGET);
@@ -108,10 +117,8 @@ describe('rate-limit.utils', () => {
       for (let index = 0; index < MAXIMUM_BUCKETS_BEFORE_EVICTION; index += 1) {
         store.record(`stale-${index}`, 0, A_WIDER_BUDGET);
       }
-      store.record('live', A_WIDER_BUDGET.windowMs - 1, A_WIDER_BUDGET);
-      expect(store.size()).toBe(MAXIMUM_BUCKETS_BEFORE_EVICTION + 1);
       store.record('fresh', A_WIDER_BUDGET.windowMs, A_WIDER_BUDGET);
-      expect(store.size()).toBe(2);
+      expect(store.size()).toBe(1);
     });
   });
 
