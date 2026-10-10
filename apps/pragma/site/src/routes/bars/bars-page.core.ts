@@ -1,12 +1,10 @@
+import { type AvailableSupport, type BarStatus, type ConcertMood } from '@domain/bar-profile.core';
 /** @Feature bars */
 
 import {
-  type AvailableSupport,
   type BarFormInitial,
   type BarFormSubmitPayload,
-  type BarStatus,
   buildBarFormInitial,
-  type ConcertMood,
 } from './bar-form.core';
 
 export interface BarRow {

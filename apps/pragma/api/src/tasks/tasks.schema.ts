@@ -1,3 +1,4 @@
+import { TASK_NOTES_MAX_LENGTH, TASK_TITLE_MAX_LENGTH } from '@domain/input-limits.core';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { DEFAULT_TASK_STATUS, TASK_STATUSES } from '@domain/task-status.core';
@@ -13,12 +14,9 @@ export const taskTable = pgTable('task', {
   dueDate: timestamp('due_date', { withTimezone: true, mode: 'date' }),
 });
 
-const TITLE_MAX = 256;
-const NOTES_MAX = 4_096;
-
 export const taskCreateSchema = z.object({
-  title: z.string().trim().min(1).max(TITLE_MAX),
-  notes: z.string().max(NOTES_MAX).default(''),
+  title: z.string().trim().min(1).max(TASK_TITLE_MAX_LENGTH),
+  notes: z.string().max(TASK_NOTES_MAX_LENGTH).default(''),
   status: z.enum(TASK_STATUSES).default(DEFAULT_TASK_STATUS),
   assigneeId: z.string().uuid().nullable().default(null),
   songId: z.string().uuid().nullable().default(null),

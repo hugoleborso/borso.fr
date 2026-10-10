@@ -1,7 +1,7 @@
 import { MONKEY_AVATARS } from '@domain/monkey.core';
 import { describe, expect, it } from 'vitest';
 import fr from '../i18n/fr.json';
-import { GAME_ERROR_CODES } from './error-codes.core';
+import { DISPLAYED_ERROR_CODES } from './error-codes.core';
 import {
   ERROR_KEYS,
   LANGUAGE_KEYS,
@@ -30,7 +30,7 @@ describe('selectErrorKey', () => {
   });
 
   it('answers a key the catalogue actually holds, for every known code', () => {
-    for (const code of GAME_ERROR_CODES) {
+    for (const code of DISPLAYED_ERROR_CODES) {
       expect(isKeyInCatalogue(selectErrorKey(code))).toBe(true);
     }
   });

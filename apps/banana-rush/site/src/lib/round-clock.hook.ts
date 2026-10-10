@@ -1,5 +1,5 @@
 import { useSyncExternalStore } from 'react';
-import { secondsLeft } from './countdown.core';
+import { secondsLeftInRound } from '@domain/round-clock.core';
 
 const TICK_MS = 250;
 
@@ -25,5 +25,5 @@ export function useRoundClock(
   roundTimerSeconds: number | null,
 ): number | null {
   const tick = useSyncExternalStore(subscribeToTicks, readCoarseTick, readCoarseTick);
-  return secondsLeft(roundOpenedAt, roundTimerSeconds, new Date(tick * TICK_MS));
+  return secondsLeftInRound(roundOpenedAt, roundTimerSeconds, new Date(tick * TICK_MS));
 }

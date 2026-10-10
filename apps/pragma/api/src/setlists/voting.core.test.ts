@@ -1,7 +1,7 @@
+import { DEFAULT_TARGET_SONG_COUNT } from '@domain/setlist-vote.core';
 import { describe, expect, it } from 'vitest';
 import {
   computeBudget,
-  DEFAULT_TARGET_SONG_COUNT,
   judgeScore,
   POINTS_PER_TARGET_SONG,
   proposeClosing,

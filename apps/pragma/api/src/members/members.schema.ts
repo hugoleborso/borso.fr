@@ -1,3 +1,8 @@
+import {
+  MEMBER_EMAIL_MAX_LENGTH,
+  MEMBER_FIRST_NAME_MAX_LENGTH,
+  MEMBER_PHONE_MAX_LENGTH,
+} from '@domain/input-limits.core';
 import { boolean, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
@@ -22,19 +27,16 @@ export const memberInstrumentTable = pgTable(
   (table) => [primaryKey({ columns: [table.memberId, table.instrumentId] })],
 );
 
-const FIRST_NAME_MAX = 64;
 const AVATAR_S3_KEY_MAX = 512;
-const PHONE_MAX = 32;
-const EMAIL_MAX = 254;
 
-export const firstNameSchema = z.string().trim().min(1).max(FIRST_NAME_MAX);
+export const firstNameSchema = z.string().trim().min(1).max(MEMBER_FIRST_NAME_MAX_LENGTH);
 export const colorSchema = z
   .string()
   .regex(HEX_COLOR_PATTERN, 'expected hex color like #abc or #aabbcc');
 export const avatarS3KeySchema = z.string().min(1).max(AVATAR_S3_KEY_MAX).nullable();
 
-export const phoneSchema = z.string().trim().max(PHONE_MAX).nullable();
-export const emailSchema = z.string().trim().email().max(EMAIL_MAX).nullable();
+export const phoneSchema = z.string().trim().max(MEMBER_PHONE_MAX_LENGTH).nullable();
+export const emailSchema = z.string().trim().email().max(MEMBER_EMAIL_MAX_LENGTH).nullable();
 
 export const memberContactSchema = z.object({
   phone: phoneSchema.optional(),

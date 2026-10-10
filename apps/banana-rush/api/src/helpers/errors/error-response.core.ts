@@ -1,4 +1,5 @@
-import { type GameErrorCode, type GameErrorStatus, isGameError } from './game-error.types';
+import type { GameErrorCode } from '@domain/game-error.core';
+import { type GameErrorStatus, isGameError } from './game-error.types';
 
 const UNEXPECTED_FAILURE_STATUS = 500;
 

@@ -1,3 +1,4 @@
+import { isDraftReady } from '@domain/draft-status.core';
 export interface CachedTodo {
   readonly id: string;
   readonly text: string;
@@ -94,8 +95,6 @@ export function isKeptAfterSignOut(queryKey: readonly unknown[], sessionRoot: st
   return queryKey[0] === sessionRoot;
 }
 
-const READY_DRAFT_STATUS = 'pret';
-
 export function selectReadyDraftCountDelta(status: string): number {
-  return status === READY_DRAFT_STATUS ? 1 : -1;
+  return isDraftReady(status) ? 1 : -1;
 }

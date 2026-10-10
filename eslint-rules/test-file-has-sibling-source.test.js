@@ -5,9 +5,7 @@ import rule from './test-file-has-sibling-source.js';
 const repositoryRoot = path.resolve(import.meta.dirname, '..');
 const pureFile = (relativePath) => path.join(repositoryRoot, relativePath);
 
-const sourceWithSiblingTest = pureFile(
-  'apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.ts',
-);
+const sourceWithSiblingTest = pureFile('apps/pragma/api/src/members/member-palette.utils.ts');
 const coreWithSiblingTest = pureFile('apps/last-loop-lepin/api/src/ranking/ranking.core.ts');
 const sourceWithoutSiblingTest = pureFile(
   'apps/last-loop-lepin/api/src/ranking/imaginary-ranking.core.ts',

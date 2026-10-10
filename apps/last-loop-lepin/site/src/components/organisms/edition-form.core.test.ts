@@ -1,3 +1,4 @@
+import { DEFAULT_INTERVAL_MINUTES } from '@domain/edition-limits.core';
 import { describe, expect, it } from 'vitest';
 import type { RaceEditionDto } from '../../lib/race.types';
 import {
@@ -5,7 +6,6 @@ import {
   buildCreateFormDefaults,
   buildEditFormDefaults,
   buildReplaceEditionPayload,
-  DEFAULT_INTERVAL_MINUTES,
   editionFormValuesSchema,
   type EditionFormValues,
   readIntervalMinutes,

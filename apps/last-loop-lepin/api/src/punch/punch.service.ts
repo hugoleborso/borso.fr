@@ -3,7 +3,7 @@ import type { DatabaseExecutor } from '../database/client';
 import { loopIndexAt } from '../edition/edition.core';
 import { getEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
-import { haversineDistanceMeters } from '../helpers/geo/haversine.utils';
+import { haversineDistanceMeters } from '@domain/haversine.core';
 
 import { z } from 'zod';
 import { hourlyTopOfLoopMs, type PunchRejectReason, validatePunchTiming } from './punch.core';

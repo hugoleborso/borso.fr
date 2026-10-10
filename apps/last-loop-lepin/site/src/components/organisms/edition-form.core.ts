@@ -1,15 +1,16 @@
+import {
+  DEFAULT_INTERVAL_MINUTES,
+  MAXIMUM_EDITION_NAME_LENGTH,
+  MAXIMUM_EDITION_SLUG_LENGTH,
+  MAXIMUM_INTERVAL_MINUTES,
+  MINIMUM_EDITION_SLUG_LENGTH,
+  MINIMUM_INTERVAL_MINUTES,
+  SLUG_CHARACTERS_PATTERN,
+} from '@domain/edition-limits.core';
 import { z } from 'zod';
 import type { CreateEditionVariables, ReplaceEditionVariables } from '../../lib/queries/editions';
 import type { RaceEditionDto } from '../../lib/race.types';
 import { defaultEndsAt, defaultStartsAt, isoLocal, suggestNextSlug } from './setup-form.utils';
-
-const SLUG_PATTERN = /^[a-z0-9-]+$/;
-const MINIMUM_SLUG_LENGTH = 3;
-const MAXIMUM_SLUG_LENGTH = 64;
-const MAXIMUM_NAME_LENGTH = 120;
-const MINIMUM_INTERVAL_MINUTES = 1;
-const MAXIMUM_INTERVAL_MINUTES = 240;
-export const DEFAULT_INTERVAL_MINUTES = 60;
 
 export const DEFAULT_EDITION_NAME = 'Last Loop Lépin';
 
@@ -25,15 +26,15 @@ export interface EditionFormValues {
  * @Blueprint core-form-schema
  * @BlueprintName Core Form Schema And Payload
  * @BlueprintUsage Use for the validation, the starting values and the request body of a form, kept out of the component that renders it.
- * @BlueprintDescription Declares the Zod schema the form's `validators` wrap, beside `buildCreateFormDefaults` and `buildEditFormDefaults` for the starting values and `buildCreateEditionPayload` and `buildReplaceEditionPayload` for the request bodies. All of it is pure, so the module carries the full coverage gate and two components share one contract. The schema restates the back end's input schema rather than importing it, because that file also declares the Drizzle tables, and the header says so.
+ * @BlueprintDescription Declares the Zod schema the form's `validators` wrap, beside `buildCreateFormDefaults` and `buildEditFormDefaults` for the starting values and `buildCreateEditionPayload` and `buildReplaceEditionPayload` for the request bodies. All of it is pure, so the module carries the full coverage gate and two components share one contract. Every limit comes from `domain/`, which the back end's input schema reads too, so the form refuses exactly what the API would refuse. The schema itself stays here, because its fields are the strings a person types rather than the values the API receives, and importing the back end's would pull its Drizzle tables into the browser.
  */
 export const editionFormValuesSchema = z.object({
   slug: z
     .string()
-    .min(MINIMUM_SLUG_LENGTH)
-    .max(MAXIMUM_SLUG_LENGTH)
-    .regex(SLUG_PATTERN, 'lowercase letters, digits and dashes only'),
-  displayName: z.string().min(1).max(MAXIMUM_NAME_LENGTH),
+    .min(MINIMUM_EDITION_SLUG_LENGTH)
+    .max(MAXIMUM_EDITION_SLUG_LENGTH)
+    .regex(SLUG_CHARACTERS_PATTERN, 'lowercase letters, digits and dashes only'),
+  displayName: z.string().min(1).max(MAXIMUM_EDITION_NAME_LENGTH),
   startsAt: z.string().min(1),
   endsAt: z.string().min(1),
   intervalMinutes: z.string().refine(

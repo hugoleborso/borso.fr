@@ -1,6 +1,6 @@
 import { findSocketSubject } from '../games/games.service';
 import type { GameView } from '../games/games.types';
-import { normalizeJoinCode } from '../games/join-code.utils';
+import { normalizeJoinCode } from '@domain/join-code.core';
 import { postToConnection } from './broadcast.adapter';
 import { resolveConnectionPoster } from './connection-poster.setup';
 import {

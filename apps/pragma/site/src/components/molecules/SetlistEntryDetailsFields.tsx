@@ -1,3 +1,9 @@
+import {
+  CAPO_MAX,
+  CAPO_MIN,
+  KEY_OVERRIDE_MAX_LENGTH,
+  SETLIST_ENTRY_NOTES_MAX_LENGTH,
+} from '@domain/input-limits.core';
 /** @Feature setlists */
 
 import type { JSX } from 'react';
@@ -6,13 +12,7 @@ import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { composeClassName } from '../atoms/class-name.utils';
 import { inputVariants } from '../atoms/input.variants';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
-import {
-  CAPO_MAX,
-  CAPO_MIN,
-  KEY_OVERRIDE_MAX,
-  NOTES_MAX,
-  type SetlistEntryForm,
-} from './setlist-entry-form.hook';
+import { type SetlistEntryForm } from './setlist-entry-form.hook';
 
 const FIELD_CLASS = composeClassName(inputVariants({ size: 'sm' }), 'font-mono');
 const LABEL_CLASS = 'flex flex-col gap-1 text-xs tracking-wider uppercase text-ink-400 font-medium';
@@ -44,7 +44,7 @@ export function SetlistEntryDetailsFields({
                 onPatch({ keyOverride: next.length === 0 ? null : next });
               }}
               onBlur={field.handleBlur}
-              maxLength={KEY_OVERRIDE_MAX}
+              maxLength={KEY_OVERRIDE_MAX_LENGTH}
               className={FIELD_CLASS}
             />
           </label>
@@ -84,7 +84,7 @@ export function SetlistEntryDetailsFields({
                 onPatch({ notes: next });
               }}
               onBlur={field.handleBlur}
-              maxLength={NOTES_MAX}
+              maxLength={SETLIST_ENTRY_NOTES_MAX_LENGTH}
               className="font-mono"
             />
           </label>

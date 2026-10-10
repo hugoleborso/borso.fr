@@ -1,3 +1,4 @@
+import { GAME_STATUSES, type GameStatus } from '@domain/game-lifecycle.core';
 import { z } from 'zod';
 
 const playerSchema = z.object({
@@ -22,7 +23,7 @@ const outcomeSchema = z.object({
 
 export const broadcastGameSchema = z.object({
   joinCode: z.string(),
-  status: z.enum(['lobby', 'playing', 'finished']),
+  status: z.enum(GAME_STATUSES),
   maxPlayers: z.number(),
   freeSeats: z.number(),
   winningScore: z.number(),
@@ -82,7 +83,7 @@ export interface BroadcastRound {
  */
 export interface BroadcastGame {
   readonly joinCode: string;
-  readonly status: 'lobby' | 'playing' | 'finished';
+  readonly status: GameStatus;
   readonly maxPlayers: number;
   readonly freeSeats: number;
   readonly winningScore: number;

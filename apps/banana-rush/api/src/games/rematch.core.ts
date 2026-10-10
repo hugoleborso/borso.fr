@@ -1,5 +1,5 @@
 import { STARTING_STASH_BANANAS } from '@domain/game-setup.core';
-import type { GameStatus } from './games.schema';
+import type { GameStatus } from '@domain/game-lifecycle.core';
 
 export type RematchRefusal = 'not-finished' | 'not-host';
 

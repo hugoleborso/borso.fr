@@ -1,5 +1,6 @@
 /** @Feature setlist-voting */
 
+import { TARGET_SONG_COUNT_MAX, TARGET_SONG_COUNT_MIN } from '@domain/setlist-vote.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
@@ -13,9 +14,6 @@ export interface TargetSongCountFieldProps {
   readonly onChange: (value: number) => void;
   readonly onCommit: () => void;
 }
-
-const TARGET_SONG_COUNT_MIN = 1;
-const TARGET_SONG_COUNT_MAX = 60;
 
 // @FollowsBlueprint molecule-field
 export function TargetSongCountField(props: TargetSongCountFieldProps): JSX.Element {

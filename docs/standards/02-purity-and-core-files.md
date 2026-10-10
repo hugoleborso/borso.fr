@@ -133,7 +133,7 @@ formatter, a parser, a palette builder, or a URL composer.
 ```
 site/src/lib/formatters.utils.ts
 site/src/components/atoms/class-name.utils.ts
-api/src/helpers/geo/haversine.utils.ts
+api/src/helpers/calendar/paris-clock.utils.ts
 ```
 
 When you cannot decide, ask whether a product manager would recognise the
@@ -177,6 +177,36 @@ apps/pragma/domain/tonality.core.ts
 # Don't
 apps/pragma/api/src/domain/tonality.core.ts
 ```
+
+## A site takes the router type from its API and nothing else
+
+When a screen needs a rule the API applies, there are two quick answers, and
+both are wrong. The first imports the rule from `@api/*`, which puts a module of
+the back end in the browser bundle and ties the screen to how a slice is laid
+out. The second writes the rule again in the site, which compiles, passes its
+own tests, and then drifts. The person filling the form learns about the drift
+from a refused request: pragma's bar form let a phone number run to 256
+characters while the API stopped at 32.
+
+The rule both sides apply moves to `apps/<app>/domain/`, and both import it
+from `@domain/*`. That covers the input limits a form and a Zod schema share,
+the vocabulary of a status, and a decision such as "may this lobby start". The
+one import from `@api/*` a site keeps is the router type, which the compiler
+erases:
+
+```ts
+// Do
+import type { AppRouter } from '@api/app';
+import { JOIN_CODE_LENGTH, normalizeJoinCode } from '@domain/join-code.core';
+
+// Don't
+import { normalizeJoinCode } from '@api/games/join-code.utils';
+const JOIN_CODE_LENGTH = 4;
+```
+
+A form keeps its own Zod schema, because its fields are the strings a person
+types rather than the values the API receives. It takes every limit inside
+that schema from `domain/`.
 
 ## An adapter imports pure functions and holds none
 
@@ -235,6 +265,16 @@ at zero over a changed-only selection. See [10. Testing](./10-testing.md).
 - `eslint:borso/no-adapter-import-in-pure-module` rejects an `.adapter.ts`
   import from a `.core.ts` or `.utils.ts`, which is the one way a pure file
   reaches the network while both pure gates still score full marks.
+- `eslint:borso/no-api-import-in-site` rejects any import from a site into its
+  API, through `@api/*` or a relative path, except a type-only import from
+  `@api/app`.
+- `eslint:borso/no-api-declaration-repeated-in-site` rejects a module level
+  constant or function in a site whose name the same application's API or
+  `domain/` already declares: an exported constant, any constant in a
+  `.schema.ts`, or an exported function in a `.core.ts` or `.utils.ts`. A
+  unit conversion such as `SECONDS_PER_MINUTE` is exempt. It compares names,
+  so a copy under a new name passes it, and the reviewer bullet below is what
+  catches that.
 - `eslint:borso/no-impure-calls-in-core-files` rejects `Date.now`, a zero
   argument `new Date()`, `Math.random`, `fetch`, `process.env`, `localStorage`,
   and the console methods inside a `.core.ts` or `.utils.ts` file.
@@ -248,6 +288,9 @@ at zero over a changed-only selection. See [10. Testing](./10-testing.md).
 - `script:scripts/check-pure-modules-have-callers.sh` fails a pure module whose
   only consumer is its own test, which otherwise scores full marks on both
   gates while running nowhere.
+- `reviewer` checks that a limit or a rule written in a site does not restate
+  one the API enforces under another name, because the lint rule above only
+  compares names.
 - `reviewer` checks the choice between `.core.ts` and `.utils.ts`, because the
   question is whether the name is one the band or the race would recognise, and
   no rule can ask that.

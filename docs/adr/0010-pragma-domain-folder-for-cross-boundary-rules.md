@@ -143,6 +143,14 @@ dependency to acquire by accident than the other direction.
 
 ## How this is enforced
 
+- `borso/no-api-import-in-site` rejects a site import from its API other than
+  the router type. Until it existed, Option B's "the lint rules already hold"
+  was not true: nothing read the boundary, and banana-rush's site imported
+  `normalizeJoinCode` from `@api/*` in three files. See
+  [the dantotsu](../dantotsus/the-boundary-a-sentence-held-and-a-copy-crossed.md).
+- `borso/no-api-declaration-repeated-in-site` rejects a site constant or pure
+  function whose name the API or `domain/` already declares, which is the copy
+  a forbidden import turns into.
 - `borso/no-database-client-outside-repository` keeps the client out of
   anything the front end could reach, whichever alias it reaches through.
 - The per-file coverage gate names `domain/**/*.core.ts` in

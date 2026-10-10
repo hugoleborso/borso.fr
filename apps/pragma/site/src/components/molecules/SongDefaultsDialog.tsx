@@ -1,3 +1,4 @@
+import { ENERGY_MAX, ENERGY_MIN, SONG_TONALITY_MAX_LENGTH } from '@domain/input-limits.core';
 /** @Feature songs */
 
 import { useForm } from '@tanstack/react-form';
@@ -10,14 +11,11 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
 import {
-  BASE_ENERGY_MAX,
-  BASE_ENERGY_MIN,
   type SongDefaults,
   type SongDefaultsPatch,
   songDefaultsFormSchema,
   songDefaultsFromFormValues,
   songDefaultsToFormValues,
-  TONALITY_MAX,
 } from './song-defaults.core';
 
 export type { SongDefaults, SongDefaultsPatch };
@@ -120,7 +118,7 @@ function SongDefaultsDialogContent({
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onBlur={field.handleBlur}
-                    maxLength={TONALITY_MAX}
+                    maxLength={SONG_TONALITY_MAX_LENGTH}
                     className={FIELD_CLASS}
                   />
                 </label>
@@ -136,7 +134,7 @@ function SongDefaultsDialogContent({
                     value={field.state.value}
                     onChange={(event) => field.handleChange(event.target.value)}
                     onBlur={field.handleBlur}
-                    maxLength={TONALITY_MAX}
+                    maxLength={SONG_TONALITY_MAX_LENGTH}
                     className={FIELD_CLASS}
                   />
                 </label>
@@ -150,8 +148,8 @@ function SongDefaultsDialogContent({
                 <Input
                   type="number"
                   size="sm"
-                  min={BASE_ENERGY_MIN}
-                  max={BASE_ENERGY_MAX}
+                  min={ENERGY_MIN}
+                  max={ENERGY_MAX}
                   value={field.state.value}
                   onChange={(event) => field.handleChange(event.target.value)}
                   onBlur={field.handleBlur}

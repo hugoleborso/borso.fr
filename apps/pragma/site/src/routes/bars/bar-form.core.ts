@@ -1,16 +1,19 @@
 /** @Feature bars */
 
+import {
+  AVAILABLE_SUPPORTS,
+  BAR_CITY_MAX_LENGTH,
+  BAR_CONTACT_NAME_MAX_LENGTH,
+  BAR_CONTACT_PHONE_MAX_LENGTH,
+  BAR_NAME_MAX_LENGTH,
+  BAR_NOTES_MAX_LENGTH,
+  BAR_STATUSES,
+  CONCERT_MOODS,
+  type AvailableSupport,
+  type BarStatus,
+  type ConcertMood,
+} from '@domain/bar-profile.core';
 import { z } from 'zod';
-
-export const BAR_STATUSES = ['lead', 'contacted', 'booked', 'played', 'cold'] as const;
-
-export type BarStatus = (typeof BAR_STATUSES)[number];
-
-export const CONCERT_MOODS = ['chill', 'gig', 'ticketed'] as const;
-export const AVAILABLE_SUPPORTS = ['pa-system', 'lights', 'sound-engineer'] as const;
-
-export type ConcertMood = (typeof CONCERT_MOODS)[number];
-export type AvailableSupport = (typeof AVAILABLE_SUPPORTS)[number];
 
 export const CONCERT_MOOD_KEY = {
   chill: 'bars.moodChill',
@@ -32,19 +35,17 @@ export const BAR_STATUS_KEY = {
   cold: 'bars.statusCold',
 } as const satisfies Record<BarStatus, string>;
 
-export const BAR_NAME_MAX_LENGTH = 256;
-export const BAR_NOTES_MAX_LENGTH = 4_096;
-const BAR_FIELD_MAX_LENGTH = 256;
+const CONTACT_EMAIL_MAX_LENGTH = 256;
 
 export const barFormValuesSchema = z.object({
   name: z.string().trim().min(1).max(BAR_NAME_MAX_LENGTH),
   status: z.enum(BAR_STATUSES),
   notes: z.string().max(BAR_NOTES_MAX_LENGTH),
-  city: z.string().max(BAR_FIELD_MAX_LENGTH),
+  city: z.string().max(BAR_CITY_MAX_LENGTH),
   capacity: z.string().regex(/^\d*$/u),
-  contactName: z.string().max(BAR_FIELD_MAX_LENGTH),
-  contactEmail: z.string().max(BAR_FIELD_MAX_LENGTH),
-  contactPhone: z.string().max(BAR_FIELD_MAX_LENGTH),
+  contactName: z.string().max(BAR_CONTACT_NAME_MAX_LENGTH),
+  contactEmail: z.string().max(CONTACT_EMAIL_MAX_LENGTH),
+  contactPhone: z.string().max(BAR_CONTACT_PHONE_MAX_LENGTH),
   ownerMemberId: z.string(),
   concertMood: z.union([z.enum(CONCERT_MOODS), z.literal('')]),
   availableSupport: z.array(z.enum(AVAILABLE_SUPPORTS)),

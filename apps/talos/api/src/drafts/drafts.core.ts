@@ -3,13 +3,15 @@ import {
   setFrontMatterValue,
   splitFrontMatter,
 } from '@domain/front-matter.core';
+import {
+  type DraftStatusChange,
+  isDraftReady,
+  isDraftStatusChangeAllowed,
+  READY_DRAFT_STATUS,
+  SENT_DRAFT_STATUS,
+} from '@domain/draft-status.core';
 import { listWikilinkTargets } from '@domain/markdown-page.core';
 import type { FileEdit } from '../content/content.service';
-
-export const READY_DRAFT_STATUS = 'pret';
-export const DRAFT_STATUS_CHANGES = ['envoye', 'abandonne', READY_DRAFT_STATUS] as const;
-
-export type DraftStatusChange = (typeof DRAFT_STATUS_CHANGES)[number];
 
 export interface DraftRecipient {
   readonly name: string;
@@ -37,8 +39,6 @@ export type DraftStatusOutcome =
 
 const DRAFTS_DIRECTORY = 'etat/brouillons';
 const DRAFT_TYPE = 'brouillon';
-const SENT_STATUS = 'envoye';
-const SETTLED_STATUSES: ReadonlySet<string> = new Set(['envoye', 'abandonne']);
 const MARKDOWN_EXTENSION = '.md';
 const PATH_SEPARATOR = '/';
 const RECIPIENT_SEPARATOR = ',';
@@ -123,12 +123,7 @@ export function selectDrafts(files: ReadonlyMap<string, string>): Draft[] {
 }
 
 export function countReadyDrafts(drafts: readonly Draft[]): number {
-  return drafts.filter((draft) => draft.status === READY_DRAFT_STATUS).length;
-}
-
-export function isDraftStatusChangeAllowed(current: string, target: DraftStatusChange): boolean {
-  if (target === READY_DRAFT_STATUS) return SETTLED_STATUSES.has(current);
-  return current === READY_DRAFT_STATUS;
+  return drafts.filter((draft) => isDraftReady(draft.status)).length;
 }
 
 // @FollowsBlueprint core-serializer
@@ -138,7 +133,7 @@ export function applyDraftStatus(
   today: string,
 ): string {
   const withStatus = setFrontMatterValue(markdown, STATUS_KEY, target);
-  if (target === SENT_STATUS) return setFrontMatterValue(withStatus, SENT_ON_KEY, today);
+  if (target === SENT_DRAFT_STATUS) return setFrontMatterValue(withStatus, SENT_ON_KEY, today);
   const sentOn = readFilledValue(splitFrontMatter(withStatus).frontMatter[SENT_ON_KEY]);
   const isSentOnToClear = target === READY_DRAFT_STATUS && sentOn !== undefined;
   return isSentOnToClear ? setFrontMatterValue(withStatus, SENT_ON_KEY, '') : withStatus;

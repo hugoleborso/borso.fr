@@ -10,7 +10,7 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
 import { isPositiveCount } from '../../lib/counts.utils';
 import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
-import { MEMBER_PALETTE, memberInitial } from '../atoms/member-palette.utils';
+import { MEMBER_COLOR_TOKENS, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
 import {
@@ -66,7 +66,7 @@ export function AppShell(): JSX.Element {
   const badges = useNavigationBadges();
   const signedInMember = useSignedInMember();
   const signedInName = signedInMember.data?.firstName ?? '';
-  const signedInColor = signedInMember.data?.color ?? MEMBER_PALETTE.teal;
+  const signedInColor = signedInMember.data?.color ?? MEMBER_COLOR_TOKENS.teal;
 
   const closeMobileNav = (): void => setIsMobileNavOpen(false);
 

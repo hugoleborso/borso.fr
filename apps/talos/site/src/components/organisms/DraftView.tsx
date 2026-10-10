@@ -1,3 +1,4 @@
+import { isDraftReady } from '@domain/draft-status.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
@@ -15,7 +16,6 @@ import { useDrafts } from '../../lib/queries/drafts.queries';
 import { buildPageHref } from '../../lib/wikilinks.core';
 import {
   findDraft,
-  isDraftReady,
   selectChannelAppearance,
   selectDraftStatusAppearance,
 } from './draft-board.core';

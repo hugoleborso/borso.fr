@@ -16,7 +16,6 @@ import {
   startGame,
 } from './games.service';
 import { claimRematchSeat, startRematch } from './rematch.service';
-import { normalizeJoinCode } from './join-code.utils';
 import { readPlayerToken, requirePlayerToken } from './player-token.middleware';
 
 const CREATED = 201;
@@ -30,7 +29,7 @@ export function buildGamesRouter() {
     })
     .get('/:code', zValidator('param', joinCodeParamSchema), async (context) => {
       const { code } = context.req.valid('param');
-      const game = await readGame(normalizeJoinCode(code), readPlayerToken(context));
+      const game = await readGame(code, readPlayerToken(context));
       return context.json({ game });
     })
     .post(
@@ -39,21 +38,13 @@ export function buildGamesRouter() {
       zValidator('json', joinGameSchema),
       async (context) => {
         const { code } = context.req.valid('param');
-        const seated = await joinGame(
-          normalizeJoinCode(code),
-          context.req.valid('json'),
-          new Date(),
-        );
+        const seated = await joinGame(code, context.req.valid('json'), new Date());
         return context.json(seated, CREATED);
       },
     )
     .post('/:code/start', zValidator('param', joinCodeParamSchema), async (context) => {
       const { code } = context.req.valid('param');
-      const game = await startGame(
-        normalizeJoinCode(code),
-        requirePlayerToken(context),
-        new Date(),
-      );
+      const game = await startGame(code, requirePlayerToken(context), new Date());
       return context.json({ game });
     })
     .post(
@@ -63,41 +54,28 @@ export function buildGamesRouter() {
       async (context) => {
         const { code } = context.req.valid('param');
         const { amount } = context.req.valid('json');
-        const game = await placeBid(
-          normalizeJoinCode(code),
-          requirePlayerToken(context),
-          amount,
-          new Date(),
-        );
+        const game = await placeBid(code, requirePlayerToken(context), amount, new Date());
         return context.json({ game });
       },
     )
     .get('/:code/rounds', zValidator('param', joinCodeParamSchema), async (context) => {
       const { code } = context.req.valid('param');
-      const rounds = await readGameRounds(normalizeJoinCode(code));
+      const rounds = await readGameRounds(code);
       return context.json({ rounds });
     })
     .post('/:code/rematch', zValidator('param', joinCodeParamSchema), async (context) => {
       const { code } = context.req.valid('param');
-      const game = await startRematch(
-        normalizeJoinCode(code),
-        requirePlayerToken(context),
-        new Date(),
-      );
+      const game = await startRematch(code, requirePlayerToken(context), new Date());
       return context.json({ game });
     })
     .post('/:code/seat', zValidator('param', joinCodeParamSchema), async (context) => {
       const { code } = context.req.valid('param');
-      const seated = await claimRematchSeat(normalizeJoinCode(code), requirePlayerToken(context));
+      const seated = await claimRematchSeat(code, requirePlayerToken(context));
       return context.json(seated, CREATED);
     })
     .post('/:code/resolve', zValidator('param', joinCodeParamSchema), async (context) => {
       const { code } = context.req.valid('param');
-      const game = await resolveExpiredRound(
-        normalizeJoinCode(code),
-        readPlayerToken(context),
-        new Date(),
-      );
+      const game = await resolveExpiredRound(code, readPlayerToken(context), new Date());
       return context.json({ game });
     });
 }

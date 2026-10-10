@@ -1,3 +1,9 @@
+import {
+  CONCERT_CAPACITY_MAX,
+  CONCERT_GEAR_MAX_LENGTH,
+  CONCERT_VENUE_MAX_LENGTH,
+  FRIENDS_PER_MEMBER_MAX,
+} from '@domain/input-limits.core';
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
@@ -13,24 +19,18 @@ export const sessionTable = pgTable('session', {
   friendsCountPerMember: text('friends_count_per_member'),
 });
 
-const FRIENDS_PER_MEMBER_MAX = 1_000;
-
 export const friendsCountSchema = z.record(
   z.string().uuid(),
   z.number().int().min(0).max(FRIENDS_PER_MEMBER_MAX),
 );
 
-const VENUE_MAX = 256;
-const CAPACITY_MAX = 100_000;
-const GEAR_MAX = 2_048;
-
 export const concertCreateSchema = z
   .object({
     kind: z.literal('concert'),
     date: z.string().datetime(),
-    venue: z.string().trim().min(1).max(VENUE_MAX),
-    capacity: z.number().int().min(0).max(CAPACITY_MAX),
-    gear: z.string().max(GEAR_MAX).default(''),
+    venue: z.string().trim().min(1).max(CONCERT_VENUE_MAX_LENGTH),
+    capacity: z.number().int().min(0).max(CONCERT_CAPACITY_MAX),
+    gear: z.string().max(CONCERT_GEAR_MAX_LENGTH).default(''),
     friendsCountPerMember: friendsCountSchema.default({}),
   })
   .strict();
@@ -59,9 +59,9 @@ export const sessionUpdateSchema = z.union([concertUpdateSchema, practiceUpdateS
 export const sessionPersistedUpdateSchema = z
   .object({
     date: z.date(),
-    venue: z.string().trim().min(1).max(VENUE_MAX),
-    capacity: z.number().int().min(0).max(CAPACITY_MAX),
-    gear: z.string().max(GEAR_MAX),
+    venue: z.string().trim().min(1).max(CONCERT_VENUE_MAX_LENGTH),
+    capacity: z.number().int().min(0).max(CONCERT_CAPACITY_MAX),
+    gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
     friendsCountPerMember: friendsCountSchema,
     preparedConcertId: z.string().uuid().nullable(),
   })

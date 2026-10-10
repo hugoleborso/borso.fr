@@ -1,5 +1,10 @@
 /** @Feature sessions */
 
+import {
+  CONCERT_CAPACITY_MAX,
+  CONCERT_GEAR_MAX_LENGTH,
+  CONCERT_VENUE_MAX_LENGTH,
+} from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -17,9 +22,6 @@ import {
   filterFutureConcerts,
 } from './create-session-dialog.utils';
 
-const VENUE_MAX = 256;
-const GEAR_MAX = 2_048;
-const CAPACITY_MAX = 100_000;
 const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 interface ExistingConcert {
@@ -37,9 +39,9 @@ interface CreateSessionDialogProps {
 
 const concertFormSchema = z.object({
   dateLocal: z.string().min(1),
-  venue: z.string().trim().min(1).max(VENUE_MAX),
+  venue: z.string().trim().min(1).max(CONCERT_VENUE_MAX_LENGTH),
   capacity: z.string().regex(/^\d*$/u),
-  gear: z.string().max(GEAR_MAX),
+  gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
 });
 
 const practiceFormSchema = z.object({
@@ -73,7 +75,8 @@ export function CreateSessionDialog({
         kind: 'concert',
         date: iso,
         venue: value.venue.trim(),
-        capacity: value.capacity === '' ? 0 : Math.min(CAPACITY_MAX, Number(value.capacity)),
+        capacity:
+          value.capacity === '' ? 0 : Math.min(CONCERT_CAPACITY_MAX, Number(value.capacity)),
         gear: value.gear,
         friendsCountPerMember: {},
       });
@@ -140,7 +143,7 @@ export function CreateSessionDialog({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              maxLength={VENUE_MAX}
+              maxLength={CONCERT_VENUE_MAX_LENGTH}
               required
             />
           )}
@@ -154,7 +157,7 @@ export function CreateSessionDialog({
               id="create-session-capacity"
               type="number"
               min={0}
-              max={CAPACITY_MAX}
+              max={CONCERT_CAPACITY_MAX}
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
@@ -173,7 +176,7 @@ export function CreateSessionDialog({
               onBlur={field.handleBlur}
               className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
               rows={3}
-              maxLength={GEAR_MAX}
+              maxLength={CONCERT_GEAR_MAX_LENGTH}
             />
           )}
         </concertForm.Field>

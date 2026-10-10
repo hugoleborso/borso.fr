@@ -1,3 +1,18 @@
+import {
+  MAX_POINTS_PER_SONG,
+  SETLIST_STATUSES,
+  TARGET_SONG_COUNT_MAX,
+  TARGET_SONG_COUNT_MIN,
+} from '@domain/setlist-vote.core';
+import {
+  CAPO_MAX,
+  CAPO_MIN,
+  ENERGY_MAX,
+  ENERGY_MIN,
+  KEY_OVERRIDE_MAX_LENGTH,
+  SETLIST_ENTRY_NOTES_MAX_LENGTH,
+  SETLIST_NAME_MAX_LENGTH,
+} from '@domain/input-limits.core';
 import { integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
@@ -53,26 +68,17 @@ export const setlistEntryTable = pgTable('setlist_entry', {
   notes: text('notes').notNull().default(''),
 });
 
-const ENERGY_MIN = 1;
-const ENERGY_MAX = 10;
-const CAPO_MIN = 0;
-const CAPO_MAX = 11;
-const NAME_MAX = 120;
-
 export const lineupOverrideSchema = z
   .record(z.string().uuid(), z.union([z.array(z.string().uuid()), z.string().uuid(), z.null()]))
   .transform((stored: Record<string, StoredLineupValue>) => normalizeLineup(stored));
-
-const KEY_OVERRIDE_MAX = 16;
-const NOTES_MAX = 2_048;
 
 export const setlistEntryCreateSchema = z.object({
   songId: z.string().uuid(),
   energy: z.number().int().min(ENERGY_MIN).max(ENERGY_MAX).nullable().default(null),
   lineupOverride: lineupOverrideSchema.nullable().default(null),
-  keyOverride: z.string().max(KEY_OVERRIDE_MAX).nullable().default(null),
+  keyOverride: z.string().max(KEY_OVERRIDE_MAX_LENGTH).nullable().default(null),
   capo: z.number().int().min(CAPO_MIN).max(CAPO_MAX).nullable().default(null),
-  notes: z.string().max(NOTES_MAX).default(''),
+  notes: z.string().max(SETLIST_ENTRY_NOTES_MAX_LENGTH).default(''),
 });
 
 export const setlistEntryUpdateSchema = setlistEntryCreateSchema.partial();
@@ -84,19 +90,15 @@ export const setlistReorderSchema = z.object({
 });
 
 export const setlistCreateSchema = z.object({
-  name: z.string().trim().max(NAME_MAX).default(''),
+  name: z.string().trim().max(SETLIST_NAME_MAX_LENGTH).default(''),
   sessionId: z.string().uuid().nullable().default(null),
 });
 
-export const setlistRenameSchema = z.object({ name: z.string().trim().max(NAME_MAX) });
+export const setlistRenameSchema = z.object({
+  name: z.string().trim().max(SETLIST_NAME_MAX_LENGTH),
+});
 
 export const setlistLinkSchema = z.object({ sessionId: z.string().uuid() });
-
-export const SETLIST_STATUSES = ['voting', 'locked'] as const;
-
-export const TARGET_SONG_COUNT_MIN = 1;
-export const TARGET_SONG_COUNT_MAX = 60;
-export const MAX_POINTS_PER_SONG = 3;
 
 export const setlistVoteStatusSchema = z.object({
   status: z.enum(SETLIST_STATUSES),

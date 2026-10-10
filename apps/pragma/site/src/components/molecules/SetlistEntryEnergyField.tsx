@@ -1,11 +1,10 @@
+import { ENERGY_MAX, ENERGY_MIN } from '@domain/input-limits.core';
 /** @Feature setlists */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { EnergyMeter } from '../atoms/EnergyMeter';
 import {
-  ENERGY_MAX,
-  ENERGY_MIN,
   isEnergyStored,
   resolveEnergyLevel,
   selectEnergyMeterAppearance,

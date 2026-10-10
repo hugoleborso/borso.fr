@@ -1,5 +1,6 @@
 /** @Feature songs */
 
+import { CHORDPRO_TEXT_MAX_LENGTH } from '@domain/input-limits.core';
 import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Input } from '../atoms/Input';
@@ -120,7 +121,6 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
   );
 }
 
-const CHORDPRO_MAX_LENGTH = 64_000;
 const CHORDPRO_ROWS = 10;
 
 function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
@@ -136,7 +136,7 @@ function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
         onChange={(event) => props.onChordproChange(event.target.value)}
         className="mt-3 font-mono"
         rows={CHORDPRO_ROWS}
-        maxLength={CHORDPRO_MAX_LENGTH}
+        maxLength={CHORDPRO_TEXT_MAX_LENGTH}
       />
     );
   }

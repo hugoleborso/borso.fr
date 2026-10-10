@@ -453,6 +453,8 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'borso/no-direct-api-fetch-in-site': 'error',
       'borso/no-api-anchor-in-site': 'error',
+      'borso/no-api-import-in-site': 'error',
+      'borso/no-api-declaration-repeated-in-site': 'error',
       'borso/no-circle-in-non-uniform-svg': 'error',
     },
   },

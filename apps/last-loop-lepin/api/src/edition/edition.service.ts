@@ -1,3 +1,4 @@
+import { DEFAULT_INTERVAL_MINUTES } from '@domain/edition-limits.core';
 import { selectCurrentEdition } from '@domain/edition-selection.core';
 import { type GpxTrack, parseGpx } from '../helpers/gpx/gpx.core';
 import { computeSunriseSunset } from '../helpers/sun/sun.core';
@@ -14,8 +15,6 @@ import {
   upsertEdition,
 } from './edition.repository';
 import type { GpxMetadata, RaceEdition } from './edition.types';
-
-const DEFAULT_INTERVAL_MINUTES = 60;
 
 function trackJsonOmittingAbsentSeries(track: GpxTrack): GpxMetadata['trackJson'] {
   const base: GpxMetadata['trackJson'] = { points: track.points };

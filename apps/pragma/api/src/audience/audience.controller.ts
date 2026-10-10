@@ -26,10 +26,9 @@ import {
   AUDIENCE_WRITE_BUDGET,
   buildAudienceRateLimiter,
 } from './audience-rate-limit.middleware';
-import { readBallotToken } from './ballot-token.utils';
 import {
-  BALLOT_TOKEN_HEADER,
   type BallotEnvironment,
+  readOptionalBallotToken,
   requireBallot,
 } from './open-ballot.middleware';
 
@@ -65,7 +64,7 @@ export function buildAudienceRouter() {
       const { sessionId } = context.req.valid('param');
       const state = await readConcertState({
         sessionId,
-        ballotToken: readBallotToken(context.req.header(BALLOT_TOKEN_HEADER)),
+        ballotToken: readOptionalBallotToken(context),
         now: new Date(),
       });
       if (state === null) return context.json({ error: 'not-found' }, 404);

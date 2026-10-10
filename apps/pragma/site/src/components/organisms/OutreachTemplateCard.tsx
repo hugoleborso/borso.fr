@@ -1,5 +1,6 @@
 /** @Feature bars */
 
+import { OUTREACH_TEMPLATE_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -13,7 +14,6 @@ import { inputVariants } from '../atoms/input.variants';
 
 const TEXTAREA_CLASS = composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y');
 const TEMPLATE_ROWS = 8;
-const TEMPLATE_MAX_LENGTH = 4_096;
 
 export interface OutreachTemplateCardProps {
   readonly template: string;
@@ -63,7 +63,7 @@ export function OutreachTemplateCard(props: OutreachTemplateCardProps): JSX.Elem
                 onChange={(event) => field.handleChange(event.target.value)}
                 onBlur={field.handleBlur}
                 rows={TEMPLATE_ROWS}
-                maxLength={TEMPLATE_MAX_LENGTH}
+                maxLength={OUTREACH_TEMPLATE_MAX_LENGTH}
                 className={TEXTAREA_CLASS}
               />
             )}

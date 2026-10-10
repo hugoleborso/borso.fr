@@ -1,11 +1,12 @@
 /** @Feature auth */
 
+import {
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from '@domain/input-limits.core';
 import { z } from 'zod';
-
-const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 256;
-const USERNAME_MIN_LENGTH = 2;
-const USERNAME_MAX_LENGTH = 64;
 
 // @FollowsBlueprint core-form-schema
 export const credentialsFormSchema = z.object({

@@ -1,3 +1,4 @@
+import { DEFAULT_TARGET_SONG_COUNT } from '@domain/setlist-vote.core';
 /** @Feature setlist-voting */
 
 import type { JSX } from 'react';
@@ -26,7 +27,6 @@ import {
 } from '../../lib/queries/voting.queries';
 import { readMemberPoints } from '../../lib/queries/voting.utils';
 import {
-  DEFAULT_TARGET_SONG_COUNT,
   indexMembersById,
   indexSongsById,
   isVotingPageState,

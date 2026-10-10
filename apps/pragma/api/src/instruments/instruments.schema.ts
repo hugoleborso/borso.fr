@@ -1,3 +1,4 @@
+import { INSTRUMENT_NAME_MAX_LENGTH } from '@domain/input-limits.core';
 import { boolean, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { INSTRUMENT_FAMILIES, INSTRUMENT_ICONS } from '@domain/instrument.core';
@@ -11,10 +12,9 @@ export const instrumentTable = pgTable('instrument', {
   position: integer('position'),
 });
 
-const INSTRUMENT_NAME_MAX = 64;
 const INSTRUMENT_POSITION_MAX = 999;
 
-const instrumentNameSchema = z.string().trim().min(1).max(INSTRUMENT_NAME_MAX);
+const instrumentNameSchema = z.string().trim().min(1).max(INSTRUMENT_NAME_MAX_LENGTH);
 
 export const instrumentFamilySchema = z.enum(INSTRUMENT_FAMILIES);
 

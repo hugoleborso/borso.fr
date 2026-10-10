@@ -1,0 +1,41 @@
+export const USERNAME_MIN_LENGTH = 2;
+export const USERNAME_MAX_LENGTH = 64;
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 256;
+export const PASSKEY_LABEL_MAX_LENGTH = 64;
+
+export const MEMBER_FIRST_NAME_MAX_LENGTH = 64;
+export const MEMBER_PHONE_MAX_LENGTH = 32;
+export const MEMBER_EMAIL_MAX_LENGTH = 254;
+
+export const ENERGY_MIN = 1;
+export const ENERGY_MAX = 10;
+
+export const SONG_TEXT_FIELD_MAX_LENGTH = 256;
+export const SONG_TONALITY_MAX_LENGTH = 16;
+export const SONG_NOTE_MAX_LENGTH = 4_096;
+export const CHORDPRO_TEXT_MAX_LENGTH = 64_000;
+
+export const SETLIST_NAME_MAX_LENGTH = 120;
+export const CAPO_MIN = 0;
+export const CAPO_MAX = 11;
+export const KEY_OVERRIDE_MAX_LENGTH = 16;
+export const SETLIST_ENTRY_NOTES_MAX_LENGTH = 2_048;
+
+export const CONCERT_VENUE_MAX_LENGTH = 256;
+export const CONCERT_CAPACITY_MAX = 100_000;
+export const CONCERT_GEAR_MAX_LENGTH = 2_048;
+export const FRIENDS_PER_MEMBER_MAX = 1_000;
+
+export const TASK_TITLE_MAX_LENGTH = 256;
+export const TASK_NOTES_MAX_LENGTH = 4_096;
+
+export const TRANSITION_COMMENT_MAX_LENGTH = 4_096;
+export const OUTREACH_TEMPLATE_MAX_LENGTH = 4_096;
+export const INSTRUMENT_NAME_MAX_LENGTH = 64;
+export const IMPROVEMENT_TITLE_MAX_LENGTH = 200;
+
+export const MASTERY_SCORE_MIN = 0;
+export const MASTERY_SCORE_MAX = 10;
+
+export const MAX_UPLOAD_MEBIBYTES = 10;
