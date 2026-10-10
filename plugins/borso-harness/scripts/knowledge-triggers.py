@@ -45,6 +45,7 @@ import tempfile
 SCRIPTS_DIRECTORY = os.path.dirname(os.path.abspath(__file__))
 TRIGGER_KINDS = ("paths", "commands", "output")
 SUMMARY_LIMIT = 400
+LOOKUP_MODE = 0o644
 FRONT_MATTER = re.compile(r"\A---\n(.*?)\n---\n", re.DOTALL)
 LIST_ITEM = re.compile(r"^    - (.*)$")
 TRIGGER_KEY = re.compile(r"^  ([a-z]+):\s*$")
@@ -204,6 +205,7 @@ def write_lookup(root, entries):
     descriptor, temporary = tempfile.mkstemp(dir=os.path.dirname(destination), prefix=".knowledge-triggers.")
     with os.fdopen(descriptor, "w", encoding="utf-8") as handle:
         json.dump({"entries": entries}, handle, indent=1)
+    os.chmod(temporary, LOOKUP_MODE)
     os.replace(temporary, destination)
     return destination
 

@@ -109,6 +109,7 @@ jobs:
             scripts/architecture/architecture-graph.ts; do
             pnpm exec tsx "$generator"
           done
+          python3 plugins/borso-harness/scripts/knowledge-triggers.py compile
 
       - run: pnpm run format:check
       # The custom ESLint rules under eslint-rules/ each ship a RuleTester
