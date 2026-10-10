@@ -1,4 +1,6 @@
 import { randomUUID } from 'node:crypto';
+import { refuseStart } from '@domain/game-lifecycle.core';
+import { hasRoundTimerExpired } from '@domain/round-clock.core';
 import { STARTING_CRATE_BANANAS, STARTING_STASH_BANANAS } from '@domain/game-setup.core';
 import { GameError } from '../helpers/errors/game-error.types';
 import { broadcastGame } from '../realtime/realtime.service';
@@ -6,10 +8,8 @@ import { buildGameView } from './game-view.core';
 import {
   assembleBidTable,
   AUTOMATIC_BID_BANANAS,
-  hasRoundTimerExpired,
   narrowGameStatus,
   refuseJoin,
-  refuseStart,
   selectGameWinners,
   selectMissingBidders,
   selectWinnersWhenFinished,

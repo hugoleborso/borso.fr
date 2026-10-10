@@ -76,6 +76,8 @@ git.
 | `borso/no-api-anchor-in-site`                          | [06](./06-data-fetching.md)                                |
 | `borso/no-vendor-sdk-outside-adapter`                  | [06](./06-data-fetching.md)                                |
 | `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |
+| `borso/no-api-import-in-site`                          | a dantotsu, [02](./02-purity-and-core-files.md)            |
+| `borso/no-api-declaration-repeated-in-site`            | a dantotsu, [02](./02-purity-and-core-files.md)            |
 | `borso/no-outbound-call-outside-adapter`               | [06](./06-data-fetching.md), ADR-0012                      |
 | `borso/test-file-has-sibling-source`                   | [10](./10-testing.md)                                      |
 | `borso/no-cross-slice-repository-imports`              | [04](./04-backend-architecture.md)                         |

@@ -1,14 +1,16 @@
+import {
+  AVAILABLE_SUPPORTS,
+  type AvailableSupport,
+  CONCERT_MOODS,
+  type ConcertMood,
+} from '@domain/bar-profile.core';
 /** @Feature bars */
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   AVAILABLE_SUPPORT_KEY,
-  AVAILABLE_SUPPORTS,
-  type AvailableSupport,
   CONCERT_MOOD_KEY,
-  CONCERT_MOODS,
-  type ConcertMood,
   parseConcertMood,
   toggleSupport,
 } from '../../routes/bars/bar-form.core';

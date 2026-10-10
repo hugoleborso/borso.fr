@@ -3,13 +3,17 @@ import { z } from 'zod';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
+  BAR_STATUSES,
   type AvailableSupport,
-  availableSupportSchema,
+  type BarStatus,
   type ConcertMood,
+} from '@domain/bar-profile.core';
+import {
+  availableSupportSchema,
   orderAvailableSupport,
   resolveConcertMood,
 } from './bar-support.core';
-import { BAR_STATUSES, type BarStatus, barTable } from './bars.schema';
+import { barTable } from './bars.schema';
 
 const barStatusSchema = z.enum(BAR_STATUSES);
 

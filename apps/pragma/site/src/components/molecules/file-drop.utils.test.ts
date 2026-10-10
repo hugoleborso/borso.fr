@@ -1,7 +1,6 @@
+import { CHART_IMAGE_CONTENT_TYPES, CHART_PDF_CONTENT_TYPE } from '@domain/chart-upload.core';
 import { describe, expect, it } from 'vitest';
 import {
-  ALLOWED_IMAGE_MIMES,
-  ALLOWED_PDF_MIME,
   FILE_DROP_ACCEPT_ATTRIBUTE,
   FILE_DROP_MAX_BYTES,
   FILE_DROP_MAX_MEBIBYTES,
@@ -16,11 +15,11 @@ function fakeFile(type: string, size: number): File {
 // @FollowsBlueprint test-pure-unit
 describe('validateChartFile', () => {
   it('accepts application/pdf as the pdf kind', () => {
-    const verdict = validateChartFile(fakeFile(ALLOWED_PDF_MIME, 1024));
-    expect(verdict).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
+    const verdict = validateChartFile(fakeFile(CHART_PDF_CONTENT_TYPE, 1024));
+    expect(verdict).toEqual({ ok: true, kind: 'pdf', contentType: CHART_PDF_CONTENT_TYPE });
   });
 
-  it.each(ALLOWED_IMAGE_MIMES)('accepts %s as the image kind', (mime) => {
+  it.each(CHART_IMAGE_CONTENT_TYPES)('accepts %s as the image kind', (mime) => {
     expect(validateChartFile(fakeFile(mime, 1024))).toEqual({
       ok: true,
       kind: 'image',
@@ -39,12 +38,12 @@ describe('validateChartFile', () => {
   });
 
   it('accepts a file sitting exactly on the ceiling', () => {
-    const verdict = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES));
-    expect(verdict).toEqual({ ok: true, kind: 'pdf', contentType: ALLOWED_PDF_MIME });
+    const verdict = validateChartFile(fakeFile(CHART_PDF_CONTENT_TYPE, FILE_DROP_MAX_BYTES));
+    expect(verdict).toEqual({ ok: true, kind: 'pdf', contentType: CHART_PDF_CONTENT_TYPE });
   });
 
   it('rejects files over the 10 MiB ceiling', () => {
-    const verdict = validateChartFile(fakeFile(ALLOWED_PDF_MIME, FILE_DROP_MAX_BYTES + 1));
+    const verdict = validateChartFile(fakeFile(CHART_PDF_CONTENT_TYPE, FILE_DROP_MAX_BYTES + 1));
     expect(verdict).toEqual({ ok: false, reason: 'too-large' });
   });
 });
@@ -64,8 +63,8 @@ describe('FILE_DROP_MAX_MEBIBYTES', () => {
 
 describe('FILE_DROP_ACCEPT_ATTRIBUTE', () => {
   it('lists pdf and every allowed image MIME', () => {
-    expect(FILE_DROP_ACCEPT_ATTRIBUTE).toContain(ALLOWED_PDF_MIME);
-    for (const mime of ALLOWED_IMAGE_MIMES) {
+    expect(FILE_DROP_ACCEPT_ATTRIBUTE).toContain(CHART_PDF_CONTENT_TYPE);
+    for (const mime of CHART_IMAGE_CONTENT_TYPES) {
       expect(FILE_DROP_ACCEPT_ATTRIBUTE).toContain(mime);
     }
   });

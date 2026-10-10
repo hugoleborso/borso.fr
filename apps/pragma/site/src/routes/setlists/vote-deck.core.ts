@@ -1,5 +1,6 @@
 /** @Feature setlist-voting */
 
+import { MAX_POINTS_PER_SONG } from '@domain/setlist-vote.core';
 export type DeckZone = 'discard' | 'one' | 'two' | 'three' | 'none';
 
 export interface DeckGeometry {
@@ -118,7 +119,6 @@ export function judgeRelease(zone: DeckZone, remainingPoints: number): ReleaseIn
   return { kind: 'score', points };
 }
 
-const MAX_POINTS_PER_SONG = 3;
 const POINT_STEPS = MAX_POINTS_PER_SONG + 1;
 
 export function cycleSongPoints(currentPoints: number): number {

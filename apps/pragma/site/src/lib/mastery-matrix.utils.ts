@@ -1,5 +1,6 @@
 /** @Feature mastery */
 
+import { MASTERY_SCORE_MAX, MASTERY_SCORE_MIN } from '@domain/input-limits.core';
 // @FollowsBlueprint utils-pure-module
 export function cellKey(memberId: string, instrumentId: string): string {
   return `${memberId}/${instrumentId}`;
@@ -38,9 +39,6 @@ export function columnAverage(
   if (count === 0) return null;
   return sum / count;
 }
-
-export const MASTERY_SCORE_MIN = 0;
-export const MASTERY_SCORE_MAX = 10;
 
 export function clampScore(value: number): number {
   return Math.min(Math.max(Math.round(value), MASTERY_SCORE_MIN), MASTERY_SCORE_MAX);

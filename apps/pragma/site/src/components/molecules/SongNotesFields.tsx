@@ -1,10 +1,10 @@
 /** @Feature songs */
 
+import { SONG_NOTE_MAX_LENGTH } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 
-const NOTE_MAX_LENGTH = 4_096;
 const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 interface SongNotesFieldsProps {
@@ -33,7 +33,7 @@ export function SongNotesFields(props: SongNotesFieldsProps): JSX.Element {
         value={props.structureNotes}
         onChange={(event) => props.onStructureChange(event.target.value)}
         rows={STRUCTURE_ROWS}
-        maxLength={NOTE_MAX_LENGTH}
+        maxLength={SONG_NOTE_MAX_LENGTH}
         placeholder={t('catalog.notesStructurePlaceholder')}
       />
       <label className={LABEL_CLASS} htmlFor="song-gimmick-notes">
@@ -44,7 +44,7 @@ export function SongNotesFields(props: SongNotesFieldsProps): JSX.Element {
         value={props.gimmickNotes}
         onChange={(event) => props.onGimmickChange(event.target.value)}
         rows={GIMMICK_ROWS}
-        maxLength={NOTE_MAX_LENGTH}
+        maxLength={SONG_NOTE_MAX_LENGTH}
         placeholder={t('catalog.notesGimmicksPlaceholder')}
       />
       <label className={LABEL_CLASS} htmlFor="song-free-notes">
@@ -55,7 +55,7 @@ export function SongNotesFields(props: SongNotesFieldsProps): JSX.Element {
         value={props.notes}
         onChange={(event) => props.onNotesChange(event.target.value)}
         rows={NOTES_ROWS}
-        maxLength={NOTE_MAX_LENGTH}
+        maxLength={SONG_NOTE_MAX_LENGTH}
         placeholder={t('catalog.notesFreePlaceholder')}
       />
     </div>

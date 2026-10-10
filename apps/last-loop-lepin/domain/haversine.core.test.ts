@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { haversineDistanceMeters } from './haversine.utils';
+import { haversineDistanceMeters } from './haversine.core';
 
 const PARIS = { lat: 48.8566, lng: 2.3522 };
 const LYON = { lat: 45.764, lng: 4.8357 };
@@ -9,7 +9,6 @@ const PARIS_LYON_TOLERANCE_RATIO = 0.005;
 const ANTIPODE_OF_PARIS = { lat: -48.8566, lng: 2.3522 + 180 };
 const EARTH_HALF_CIRCUMFERENCE_METERS = 20_015_086;
 const ANTIPODE_TOLERANCE_METERS = 50_000;
-const LATITUDE_DEGREES_WORTH_ABOUT_89_METERS = 0.0008;
 
 // @FollowsBlueprint test-pure-unit
 describe('haversineDistanceMeters', () => {
@@ -36,8 +35,9 @@ describe('haversineDistanceMeters', () => {
     );
   });
 
-  it('keeps points ≤100 m apart inside the 100 m geofence (frontier vector)', () => {
-    const nearby = { lat: PARIS.lat + LATITUDE_DEGREES_WORTH_ABOUT_89_METERS, lng: PARIS.lng };
+  it('reads eighty-nine metres between two points 0.0008 degrees of latitude apart', () => {
+    const EIGHTY_NINE_METRES_OF_LATITUDE_DEGREES = 0.0008;
+    const nearby = { lat: PARIS.lat + EIGHTY_NINE_METRES_OF_LATITUDE_DEGREES, lng: PARIS.lng };
     const distance = haversineDistanceMeters(PARIS, nearby);
     expect(distance).toBeLessThan(100);
     expect(distance).toBeGreaterThan(50);

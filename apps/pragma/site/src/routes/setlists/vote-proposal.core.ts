@@ -1,5 +1,6 @@
 /** @Feature setlist-voting */
 
+import { TARGET_SONG_COUNT_MAX, TARGET_SONG_COUNT_MIN } from '@domain/setlist-vote.core';
 export function moveWithin(songIds: readonly string[], from: number, target: number): string[] {
   const reordered = [...songIds];
   const [moved] = reordered.splice(from, 1);
@@ -18,9 +19,6 @@ export function reorderByDrop(
   if (from === -1 || target === -1) return [...songIds];
   return moveWithin(songIds, from, target);
 }
-
-const TARGET_SONG_COUNT_MIN = 1;
-const TARGET_SONG_COUNT_MAX = 60;
 
 export function readTargetSongCount(typed: string, fallback: number): number {
   const typedCount = Number.parseInt(typed, 10);

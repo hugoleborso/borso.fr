@@ -1,0 +1,17 @@
+export const GAME_ERROR_CODES = [
+  'game-not-found',
+  'game-full',
+  'already-started',
+  'avatar-taken',
+  'not-in-lobby',
+  'not-enough-players',
+  'not-host',
+  'not-a-player',
+  'not-playing',
+  'already-bid',
+  'round-still-open',
+  'not-finished',
+  'no-rematch',
+] as const;
+
+export type GameErrorCode = (typeof GAME_ERROR_CODES)[number];

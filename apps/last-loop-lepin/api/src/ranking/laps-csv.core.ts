@@ -13,7 +13,7 @@ function pad(value: number): string {
   return value.toString().padStart(TWO_DIGITS, '0');
 }
 
-export function formatLoopDuration(durationMs: number | null): string {
+export function formatCsvLoopDuration(durationMs: number | null): string {
   if (durationMs === null) return '';
   if (durationMs < 0) return '';
   const totalSeconds = Math.floor(durationMs / MILLISECONDS_PER_SECOND);
@@ -66,7 +66,7 @@ export function renderLapsCsv(
     ];
     for (let loopIndex = 1; loopIndex <= loopCount; loopIndex += 1) {
       const punch = lookupPunch(entry.runner.slug, loopIndex);
-      cells.push(punch === undefined ? '' : formatLoopDuration(loopDurationMs(edition, punch)));
+      cells.push(punch === undefined ? '' : formatCsvLoopDuration(loopDurationMs(edition, punch)));
     }
     return cells.join(',');
   });

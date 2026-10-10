@@ -1,3 +1,10 @@
+import {
+  PASSKEY_LABEL_MAX_LENGTH,
+  PASSWORD_MAX_LENGTH,
+  PASSWORD_MIN_LENGTH,
+  USERNAME_MAX_LENGTH,
+  USERNAME_MIN_LENGTH,
+} from '@domain/input-limits.core';
 import { customType, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
@@ -33,11 +40,6 @@ export const webauthnChallengeTable = pgTable('webauthn_challenge', {
   expiresAt: timestamp('expires_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
 
-const USERNAME_MIN_LENGTH = 2;
-const USERNAME_MAX_LENGTH = 64;
-const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 256;
-const PASSKEY_LABEL_MAX_LENGTH = 64;
 const USERNAME_PATTERN = /^[a-z0-9][a-z0-9._-]*$/;
 
 export const usernameSchema = z

@@ -40,7 +40,7 @@ Lives in: `api/src/bars/`
 - `name` and `status` are `NOT NULL`; `notes` is `NOT NULL` and defaults
   to the empty string.
 - `status` is one of `lead`, `contacted`, `booked`, `played`, `cold`
-  (`BAR_STATUSES` in `bars.schema.ts`), and the bars page groups the rows
+  (`BAR_STATUSES` in `domain/bar-profile.core.ts`), and the bars page groups the rows
   into one kanban column per status.
 - `ownerMemberId` names the one band member carrying the conversation
   with that venue, and may be null: a bar nobody has taken on is a normal
@@ -48,7 +48,7 @@ Lives in: `api/src/bars/`
   (`unassignBarsOwnedByMember` in `api/src/members/members.repository.ts`)
   and deletes no bar.
 - `concertMood` is how big a night the bar is up for: `chill`, `gig` or
-  `ticketed` (`CONCERT_MOODS` in `bar-support.core.ts`). It may be null,
+  `ticketed` (`CONCERT_MOODS` in `domain/bar-profile.core.ts`). It may be null,
   which means nobody has judged the venue yet and is not a fourth mood.
 - `availableSupport` is what the bar lends the band, any number of
   `pa-system`, `lights` and `sound-engineer`, held as JSON in a TEXT
@@ -522,7 +522,7 @@ Lives in: `api/src/setlists/`
 Whether a setlist is being voted on or is a running order.
 
 Lives in: `api/src/setlists/` (the `status` column), resolved by
-`resolveSetlistStatus`
+`resolveSetlistStatus` in `domain/setlist-vote.core.ts`
 
 - Exactly two values: `voting` and `locked`. The column is nullable with
   no default, because Aurora DSQL cannot add a `NOT NULL` column after

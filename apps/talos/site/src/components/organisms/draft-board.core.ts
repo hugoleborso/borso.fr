@@ -1,3 +1,4 @@
+import { isDraftReady } from '@domain/draft-status.core';
 import type { ParseKeys } from 'i18next';
 import type { ChipTone } from '../atoms/chip.variants';
 import type { IconName } from '../atoms/Icon';
@@ -22,7 +23,6 @@ interface StatusAppearance {
   readonly tone: ChipTone;
 }
 
-const READY_STATUS = 'pret';
 const WHITESPACE_PATTERN = /\s+/g;
 
 const CHANNEL_APPEARANCES: Readonly<Record<string, ChannelAppearance>> = {
@@ -40,10 +40,6 @@ const STATUS_APPEARANCES: Readonly<Record<string, StatusAppearance>> = {
   abandonne: { labelKey: 'drafts.status.abandoned', tone: 'neutral' },
 };
 const UNKNOWN_STATUS: StatusAppearance = { labelKey: 'drafts.status.other', tone: 'outline' };
-
-export function isDraftReady(status: string): boolean {
-  return status === READY_STATUS;
-}
 
 // @FollowsBlueprint core-view-intent
 export function partitionDrafts<Draft extends DraftShape>(

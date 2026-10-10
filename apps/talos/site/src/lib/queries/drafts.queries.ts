@@ -1,13 +1,10 @@
+import type { DraftStatusChange } from '@domain/draft-status.core';
 import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, readFailureBody } from '../api.client';
 import { useMutationToasts } from '../toast.hook';
 import { replaceBySlug, selectReadyDraftCountDelta, setStatusBySlug } from './cache-updates.core';
-import {
-  type DraftStatusTarget,
-  selectDraftReversal,
-  selectDraftStatusToast,
-} from './mutation-toasts.core';
+import { selectDraftReversal, selectDraftStatusToast } from './mutation-toasts.core';
 import { todayKeys } from './today.queries';
 
 export const draftKeys = {
@@ -25,7 +22,7 @@ interface DraftCacheSnapshot {
 
 async function overlayDraftStatus(
   queryClient: QueryClient,
-  change: { readonly slug: string; readonly status: DraftStatusTarget },
+  change: { readonly slug: string; readonly status: DraftStatusChange },
 ): Promise<DraftCacheSnapshot> {
   const listKey = draftKeys.list();
   const overviewKey = todayKeys.overview();
@@ -77,7 +74,7 @@ export function useChangeDraftStatus() {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   const changeDraftStatus = useMutation({
-    mutationFn: async (variables: { slug: string; status: DraftStatusTarget }) => {
+    mutationFn: async (variables: { slug: string; status: DraftStatusChange }) => {
       const response = await api.api.drafts[':slug'].$patch({
         param: { slug: variables.slug },
         json: { status: variables.status },

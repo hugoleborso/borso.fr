@@ -1,8 +1,6 @@
 /** @Feature setlists */
 
 export const ENERGY_DEFAULT = 5;
-export const ENERGY_MIN = 1;
-export const ENERGY_MAX = 10;
 
 export interface EnergyAppearance {
   readonly filledClassName: string;

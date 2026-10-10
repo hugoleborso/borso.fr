@@ -1,3 +1,4 @@
+import { MASTERY_SCORE_MAX, MASTERY_SCORE_MIN } from '@domain/input-limits.core';
 /** @Feature mastery */
 
 import {
@@ -15,8 +16,6 @@ import {
   cellKey,
   clampScore,
   columnAverage,
-  MASTERY_SCORE_MAX,
-  MASTERY_SCORE_MIN,
   rowAverage,
   selectScoreEditIntent,
 } from '../../lib/mastery-matrix.utils';

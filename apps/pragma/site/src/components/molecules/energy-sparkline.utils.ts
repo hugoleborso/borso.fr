@@ -1,10 +1,10 @@
 /** @Feature setlists */
 
+import { ENERGY_MAX } from '@domain/input-limits.core';
 const VERTICAL_PADDING = 6;
 const VERTICALLY_PADDED_EDGES = 2;
 const MIDPOINT_FRACTION = 0.5;
 const ENERGY_FALLBACK = 5;
-const ENERGY_MAX = 10;
 
 export interface SparklineGeometry {
   path: string;

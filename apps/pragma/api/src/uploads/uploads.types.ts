@@ -1,3 +1,4 @@
+import { MAX_UPLOAD_MEBIBYTES } from '@domain/input-limits.core';
 export interface PresignedPutUrl {
   readonly uploadUrl: string;
   readonly objectKey: string;
@@ -9,19 +10,8 @@ export interface PresignedGetUrl {
   readonly expiresAt: string;
 }
 
-export const ALLOWED_UPLOAD_CONTENT_TYPES = [
-  'application/pdf',
-  'image/png',
-  'image/jpeg',
-  'image/webp',
-  'image/heic',
-] as const;
-
-export type AllowedUploadContentType = (typeof ALLOWED_UPLOAD_CONTENT_TYPES)[number];
-
 const BYTES_PER_KIBIBYTE = 1_024;
 const BYTES_PER_MEBIBYTE = BYTES_PER_KIBIBYTE * BYTES_PER_KIBIBYTE;
-const MAX_UPLOAD_MEBIBYTES = 10;
 const SECONDS_PER_MINUTE = 60;
 const UPLOAD_URL_EXPIRES_MINUTES = 5;
 

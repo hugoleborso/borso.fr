@@ -1,5 +1,6 @@
 /** @Feature tasks */
 
+import { TASK_NOTES_MAX_LENGTH, TASK_TITLE_MAX_LENGTH } from '@domain/input-limits.core';
 import { TASK_STATUSES, type TaskStatus } from '@domain/task-status.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
@@ -38,8 +39,6 @@ const PILL_CLASS_BY_STATE = {
 } as const;
 const SELECT_CLASS =
   'min-h-11 px-2.5 rounded-md border border-line bg-bg text-[13.5px] text-ink-900';
-const TITLE_MAX_LENGTH = 256;
-const NOTES_MAX_LENGTH = 4_096;
 const NO_COMPOSITION_VALUE = '';
 const NOTES_ROWS = 3;
 
@@ -86,7 +85,7 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
               required
-              maxLength={TITLE_MAX_LENGTH}
+              maxLength={TASK_TITLE_MAX_LENGTH}
             />
           )}
         </form.Field>
@@ -181,7 +180,7 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
               id="task-notes"
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
-              maxLength={NOTES_MAX_LENGTH}
+              maxLength={TASK_NOTES_MAX_LENGTH}
               rows={NOTES_ROWS}
               className="px-2.5 py-2 rounded-md border border-line bg-bg text-[13.5px] text-ink-900 resize-y"
             />

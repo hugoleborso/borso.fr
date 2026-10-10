@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { RaceEdition } from '../edition/edition.types';
 import type { LoopPunch } from '../punch/punch.types';
 import type { Runner } from '../runner/runner.types';
-import { formatLoopDuration, renderLapsCsv } from './laps-csv.core';
+import { formatCsvLoopDuration, renderLapsCsv } from './laps-csv.core';
 import type { RankedRunner } from './ranking.types';
 
 const EDITION: RaceEdition = {
@@ -78,41 +78,41 @@ function rankedOf(runner: Runner, rank: RankedRunner['rank']): RankedRunner {
 }
 
 // @FollowsBlueprint test-pure-unit
-describe('formatLoopDuration', () => {
+describe('formatCsvLoopDuration', () => {
   it('returns the empty string for null', () => {
-    expect(formatLoopDuration(null)).toBe('');
+    expect(formatCsvLoopDuration(null)).toBe('');
   });
 
   it('returns the empty string for negative ms (clock-skew degenerate)', () => {
-    expect(formatLoopDuration(-1)).toBe('');
+    expect(formatCsvLoopDuration(-1)).toBe('');
   });
 
   it('formats zero as 00:00', () => {
-    expect(formatLoopDuration(0)).toBe('00:00');
+    expect(formatCsvLoopDuration(0)).toBe('00:00');
   });
 
   it('zero-pads single-digit minutes and seconds', () => {
-    expect(formatLoopDuration(5 * 60_000 + 7_000)).toBe('05:07');
+    expect(formatCsvLoopDuration(5 * 60_000 + 7_000)).toBe('05:07');
   });
 
   it('floors sub-second remainders so 59.9s stays 00:59 and never rolls to 01:00', () => {
-    expect(formatLoopDuration(59_900)).toBe('00:59');
+    expect(formatCsvLoopDuration(59_900)).toBe('00:59');
   });
 
   it('formats a typical 58:14 loop without an hour prefix', () => {
-    expect(formatLoopDuration(58 * 60_000 + 14_000)).toBe('58:14');
+    expect(formatCsvLoopDuration(58 * 60_000 + 14_000)).toBe('58:14');
   });
 
   it('switches to Hh MM:SS at the 60-minute mark', () => {
-    expect(formatLoopDuration(60 * 60_000)).toBe('1h00:00');
+    expect(formatCsvLoopDuration(60 * 60_000)).toBe('1h00:00');
   });
 
   it('keeps minutes-within-the-hour zero-padded past the hour mark', () => {
-    expect(formatLoopDuration(60 * 60_000 + 2 * 60_000 + 13_000)).toBe('1h02:13');
+    expect(formatCsvLoopDuration(60 * 60_000 + 2 * 60_000 + 13_000)).toBe('1h02:13');
   });
 
   it('handles multi-hour durations', () => {
-    expect(formatLoopDuration(3 * 60 * 60_000 + 45 * 60_000 + 6_000)).toBe('3h45:06');
+    expect(formatCsvLoopDuration(3 * 60 * 60_000 + 45 * 60_000 + 6_000)).toBe('3h45:06');
   });
 });
 

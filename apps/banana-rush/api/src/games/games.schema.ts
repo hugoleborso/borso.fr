@@ -11,12 +11,8 @@ import {
   SNAPPY_ROUND_SECONDS,
   WINNING_SCORE_CHOICES,
 } from '@domain/game-setup.core';
+import { JOIN_CODE_LENGTH, normalizeJoinCode } from '@domain/join-code.core';
 import { MONKEY_AVATARS, NICKNAME_MAX_LENGTH } from '@domain/monkey.core';
-
-export const GAME_STATUSES = ['lobby', 'playing', 'finished'] as const;
-export type GameStatus = (typeof GAME_STATUSES)[number];
-
-export const JOIN_CODE_LENGTH = 4;
 
 /**
  * @Blueprint schema-identity-free-of-database-constraints
@@ -93,7 +89,7 @@ export const createGameSchema = z
 export const joinGameSchema = z.object({ nickname: nicknameSchema, avatar: avatarSchema }).strict();
 
 export const joinCodeParamSchema = z.object({
-  code: z.string().trim().length(JOIN_CODE_LENGTH),
+  code: z.string().trim().length(JOIN_CODE_LENGTH).transform(normalizeJoinCode),
 });
 
 export const outcomesSchema = z.array(

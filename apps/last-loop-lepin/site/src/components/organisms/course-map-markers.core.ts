@@ -1,3 +1,4 @@
+import { MINIMUM_INTERVAL_MINUTES } from '@domain/edition-limits.core';
 import { formatPercent } from '../../lib/formatters.utils';
 import type { LatLngDto, RaceEditionDto, RankedRunnerDto } from '../../lib/race.types';
 import { selectRunnerStatusLoop } from '../../lib/runner-status.utils';
@@ -12,7 +13,6 @@ import {
 } from './course-map.utils';
 
 const MINUTES_TO_MS = 60_000;
-const MINIMUM_INTERVAL_MINUTES = 1;
 
 export type ProjectionMode = 'recorded-pace' | 'linear-fallback';
 

@@ -1,5 +1,5 @@
+import { compareSongTallies, DEFAULT_TARGET_SONG_COUNT } from '@domain/setlist-vote.core';
 export const POINTS_PER_TARGET_SONG = 3;
-export const DEFAULT_TARGET_SONG_COUNT = 15;
 
 export interface CastVote {
   readonly memberId: string;
@@ -7,9 +7,6 @@ export interface CastVote {
   readonly points: number;
   readonly updatedAt?: Date;
 }
-
-const BEFORE = -1;
-const AFTER = 1;
 
 export interface VoteBudget {
   readonly total: number;
@@ -78,17 +75,7 @@ export function tally(votes: readonly CastVote[]): SongTally[] {
       voterCount: Object.keys(running.pointsByMember).length,
       pointsByMember: running.pointsByMember,
     }))
-    .toSorted(compareTallies);
-}
-
-function compareTallies(left: SongTally, right: SongTally): number {
-  // Stryker disable next-line EqualityOperator: equivalent mutant. The guard on this very line has established that the two point counts differ, so `>` and `>=` answer the same.
-  if (right.points !== left.points) return right.points > left.points ? AFTER : BEFORE;
-  if (right.voterCount !== left.voterCount) {
-    // Stryker disable next-line EqualityOperator: equivalent mutant. The guard above has established that the two voter counts differ, so `>` and `>=` answer the same.
-    return right.voterCount > left.voterCount ? AFTER : BEFORE;
-  }
-  return left.songId.localeCompare(right.songId);
+    .toSorted(compareSongTallies);
 }
 
 export function proposeClosing(
@@ -96,7 +83,7 @@ export function proposeClosing(
   targetSongCount: number | null,
 ): SongTally[] {
   const target = resolveTargetSongCount(targetSongCount);
-  const ranked = [...tallies].toSorted(compareTallies);
+  const ranked = [...tallies].toSorted(compareSongTallies);
   const boundaryPoints = ranked[target - 1]?.points;
   return ranked.filter((entry, index) => index < target || entry.points === boundaryPoints);
 }

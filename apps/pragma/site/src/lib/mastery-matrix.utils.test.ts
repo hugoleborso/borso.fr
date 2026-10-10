@@ -1,10 +1,9 @@
+import { MASTERY_SCORE_MAX, MASTERY_SCORE_MIN } from '@domain/input-limits.core';
 import { describe, expect, it } from 'vitest';
 import {
   cellKey,
   clampScore,
   columnAverage,
-  MASTERY_SCORE_MAX,
-  MASTERY_SCORE_MIN,
   rowAverage,
   selectScoreEditIntent,
 } from './mastery-matrix.utils';

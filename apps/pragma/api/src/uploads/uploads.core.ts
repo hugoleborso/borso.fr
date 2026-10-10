@@ -1,4 +1,4 @@
-import type { AllowedUploadContentType } from './uploads.types';
+import type { AllowedUploadContentType } from '@domain/chart-upload.core';
 import { CHART_OBJECT_PREFIX } from './uploads.types';
 
 const EXTENSION_BY_CONTENT_TYPE: Readonly<Record<AllowedUploadContentType, string>> = {

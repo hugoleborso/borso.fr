@@ -1,3 +1,4 @@
+import { MAXIMUM_INTERVAL_MINUTES, MINIMUM_INTERVAL_MINUTES } from '@domain/edition-limits.core';
 import type { ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { MonoNote } from '../atoms/MonoNote';
@@ -8,8 +9,6 @@ const WIDE_FIELD_STYLE = { flex: 1 } as const;
 const INTERVAL_FIELD_STYLE = { flex: '0 0 140px' } as const;
 
 const MINIMUM_SLUG_LENGTH = 3;
-const MINIMUM_INTERVAL_MINUTES = 1;
-const MAXIMUM_INTERVAL_MINUTES = 240;
 const INTERVAL_STEP_MINUTES = 1;
 
 export interface EditionFieldBinding {
