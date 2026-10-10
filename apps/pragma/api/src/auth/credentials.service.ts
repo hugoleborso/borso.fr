@@ -1,5 +1,6 @@
 import { randomBytes } from 'node:crypto';
 import { argon2id, argon2Verify } from 'hash-wasm';
+import { deleteAttemptBucket, incrementAttemptBucket } from './auth.repository';
 import { getAppConfig } from './auth.service';
 import type { DatabaseExecutor } from '../database/client';
 import {
@@ -10,13 +11,14 @@ import {
   updateCredentialSecret,
 } from './credentials.repository';
 import { nextSessionEpoch } from './member-session.core';
-import { hashIp, readClientIp } from './ip-hash.utils';
 import {
-  type BucketStore,
+  bucketKeyFor,
   isRateLimited,
   MEMBER_LOGIN_BUDGET,
-  recordAttempt,
+  type RateBucket,
+  type RateLimitBudget,
   SHARED_PASSWORD_BUDGET,
+  windowFloorFor,
 } from './rate-limit.utils';
 import { buildCookie, SESSION_TTL_MS } from './session-cookie.utils';
 
@@ -26,6 +28,28 @@ const ARGON2_MEMORY_KIB = 65536;
 const ARGON2_ITERATIONS = 3;
 const ARGON2_PARALLELISM = 4;
 const FIRST_SESSION_EPOCH = 1;
+
+// @FollowsBlueprint service-facade-reexport
+export { readClientAddress } from '../helpers/client-address/client-address.environment';
+
+interface ConsumedAttempt {
+  readonly bucketKey: string;
+  readonly isLimited: boolean;
+}
+
+async function consumeAttempt(
+  budget: RateLimitBudget,
+  clientAddress: string,
+  now: Date,
+): Promise<ConsumedAttempt> {
+  const bucketKey = bucketKeyFor(budget, clientAddress);
+  const row = await incrementAttemptBucket(bucketKey, now, windowFloorFor(now, budget));
+  const bucket: RateBucket = {
+    attempts: row.count,
+    windowStartedAt: row.windowStartedAt.getTime(),
+  };
+  return { bucketKey, isLimited: isRateLimited(bucket, budget) };
+}
 
 export async function hashPassword(password: string): Promise<string> {
   return await argon2id({
@@ -78,8 +102,7 @@ export type MemberLoginOutcome =
 export interface AttemptMemberLoginParams {
   readonly username: string;
   readonly password: string;
-  readonly forwardedForHeader: string | undefined;
-  readonly bucketStore: BucketStore;
+  readonly clientAddress: string;
   readonly now: Date;
 }
 
@@ -87,11 +110,9 @@ export interface AttemptMemberLoginParams {
 export async function attemptMemberLogin(
   params: AttemptMemberLoginParams,
 ): Promise<MemberLoginOutcome> {
-  const ipHash = hashIp(readClientIp(params.forwardedForHeader));
+  const attempt = await consumeAttempt(MEMBER_LOGIN_BUDGET, params.clientAddress, params.now);
+  if (attempt.isLimited) return { kind: 'rate-limited' };
   const nowMillis = params.now.getTime();
-  const bucket = recordAttempt(params.bucketStore.read(ipHash), nowMillis, MEMBER_LOGIN_BUDGET);
-  params.bucketStore.write(ipHash, bucket);
-  if (isRateLimited(bucket, MEMBER_LOGIN_BUDGET)) return { kind: 'rate-limited' };
   const credential = await findCredentialByUsername(params.username);
   if (credential === null) return { kind: 'invalid-credentials' };
   const isPasswordOk = await argon2Verify({
@@ -101,7 +122,7 @@ export async function attemptMemberLogin(
   if (!isPasswordOk) return { kind: 'invalid-credentials' };
   const session = await issueSession(credential.memberId, credential.sessionEpoch, nowMillis);
   if (session === null) return { kind: 'not-bootstrapped' };
-  params.bucketStore.clear(ipHash);
+  await deleteAttemptBucket(attempt.bucketKey);
   return { kind: 'ok', session, memberId: credential.memberId };
 }
 
@@ -124,8 +145,7 @@ export interface RecoverPasswordParams {
   readonly username: string;
   readonly sharedPassword: string;
   readonly newPassword: string;
-  readonly forwardedForHeader: string | undefined;
-  readonly bucketStore: BucketStore;
+  readonly clientAddress: string;
   readonly now: Date;
 }
 
@@ -133,11 +153,9 @@ export interface RecoverPasswordParams {
 export async function recoverPassword(
   params: RecoverPasswordParams,
 ): Promise<RecoverPasswordOutcome> {
-  const ipHash = hashIp(readClientIp(params.forwardedForHeader));
+  const attempt = await consumeAttempt(SHARED_PASSWORD_BUDGET, params.clientAddress, params.now);
+  if (attempt.isLimited) return { kind: 'rate-limited' };
   const nowMillis = params.now.getTime();
-  const bucket = recordAttempt(params.bucketStore.read(ipHash), nowMillis, SHARED_PASSWORD_BUDGET);
-  params.bucketStore.write(ipHash, bucket);
-  if (isRateLimited(bucket, SHARED_PASSWORD_BUDGET)) return { kind: 'rate-limited' };
   const config = await getAppConfig();
   if (config === null) return { kind: 'not-bootstrapped' };
   const isSharedPasswordOk = await argon2Verify({
@@ -151,7 +169,7 @@ export async function recoverPassword(
   await updateCredentialSecret(credential.memberId, await hashPassword(params.newPassword), epoch);
   const session = await issueSession(credential.memberId, epoch, nowMillis);
   if (session === null) return { kind: 'not-bootstrapped' };
-  params.bucketStore.clear(ipHash);
+  await deleteAttemptBucket(attempt.bucketKey);
   return { kind: 'ok', session, memberId: credential.memberId };
 }
 

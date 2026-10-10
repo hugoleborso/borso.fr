@@ -2,7 +2,11 @@ import { App, Stack } from 'aws-cdk-lib';
 import { Match } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { StaticSite } from '../../src/constructs/static-site.js';
+import { API_VIEWER_ADDRESS_FUNCTION_CODE } from '../../src/internal/cf-api-viewer-address.js';
+import { ORIGIN_VERIFY_HEADER } from '../../src/internal/client-address.js';
 import { outputValues, synthTemplate as synth } from './helpers/template.js';
+
+const ORIGIN_VERIFY_VALUE = 'origin-verify-test-value';
 
 // @FollowsBlueprint test-cdk-synth
 describe('StaticSite (prod)', () => {
@@ -109,7 +113,10 @@ describe('StaticSite (prod, with same-origin /api/* routing)', () => {
       stage: 'prod',
       domainName: 'last-loop-lepin.borso.fr',
       assetsPath: '.',
-      api: { domainName: 'reocri5iel.execute-api.eu-west-3.amazonaws.com' },
+      api: {
+        domainName: 'reocri5iel.execute-api.eu-west-3.amazonaws.com',
+        originVerifyValue: ORIGIN_VERIFY_VALUE,
+      },
     });
   });
 
@@ -128,6 +135,36 @@ describe('StaticSite (prod, with same-origin /api/* routing)', () => {
     expect(JSON.stringify(tpl.toJSON())).toContain(CACHING_DISABLED_ID);
   });
 
+  it('sends the origin-verify header to the API origin', () => {
+    tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        Origins: Match.arrayWith([
+          Match.objectLike({
+            OriginCustomHeaders: [
+              { HeaderName: ORIGIN_VERIFY_HEADER, HeaderValue: ORIGIN_VERIFY_VALUE },
+            ],
+          }),
+        ]),
+      }),
+    });
+  });
+
+  it('runs the viewer-address function on every /api/* viewer request', () => {
+    tpl.hasResourceProperties('AWS::CloudFront::Function', {
+      FunctionCode: API_VIEWER_ADDRESS_FUNCTION_CODE,
+    });
+    tpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        CacheBehaviors: Match.arrayWith([
+          Match.objectLike({
+            PathPattern: '/api/*',
+            FunctionAssociations: [Match.objectLike({ EventType: 'viewer-request' })],
+          }),
+        ]),
+      }),
+    });
+  });
+
   it('respects a custom pathPattern', () => {
     const customTpl = synth((stack) => {
       new StaticSite(stack, 'Site', {
@@ -135,7 +172,11 @@ describe('StaticSite (prod, with same-origin /api/* routing)', () => {
         stage: 'prod',
         domainName: 'borso.fr',
         assetsPath: '.',
-        api: { domainName: 'x.execute-api.eu-west-3.amazonaws.com', pathPattern: '/v1/*' },
+        api: {
+          domainName: 'x.execute-api.eu-west-3.amazonaws.com',
+          originVerifyValue: ORIGIN_VERIFY_VALUE,
+          pathPattern: '/v1/*',
+        },
       });
     });
     customTpl.hasResourceProperties('AWS::CloudFront::Distribution', {

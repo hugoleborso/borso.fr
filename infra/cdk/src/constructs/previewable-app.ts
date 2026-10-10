@@ -1,4 +1,5 @@
-import { CfnOutput, Stack } from 'aws-cdk-lib';
+import { CfnOutput, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { Secret } from 'aws-cdk-lib/aws-secretsmanager';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
 import {
@@ -10,12 +11,16 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
+import { ORIGIN_VERIFY_ENVIRONMENT_VARIABLE } from '../internal/client-address.js';
 import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import {
+  isApiServedThroughCloudFront,
   selectSameOriginApiDomainName,
   selectTestSeedEnvironment,
 } from '../internal/stage-wiring.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
+
+const ORIGIN_VERIFY_SECRET_LENGTH = 64;
 import type { IDsqlCluster } from './dsql-cluster.js';
 import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
@@ -71,6 +76,12 @@ export class PreviewableApp extends Construct {
       });
     }
 
+    const isApiBehindCloudFront = isApiServedThroughCloudFront(
+      props.stage,
+      props.api !== undefined,
+    );
+    const originVerifyValue = isApiBehindCloudFront ? createOriginVerifyValue(this) : undefined;
+
     if (props.api) {
       if (isProductionStage(props.stage) && !props.domainName) {
         throw new Error('domainName is required for stage="prod".');
@@ -97,6 +108,9 @@ export class PreviewableApp extends Construct {
         environment: {
           ...selectTestSeedEnvironment(props.stage),
           ...props.api.environment,
+          ...(originVerifyValue === undefined
+            ? {}
+            : { [ORIGIN_VERIFY_ENVIRONMENT_VARIABLE]: originVerifyValue }),
         },
         dsqlSchema: this.database,
       });
@@ -117,9 +131,9 @@ export class PreviewableApp extends Construct {
       ...(props.frontend.bucketNameSuffix === undefined
         ? {}
         : { bucketNameSuffix: props.frontend.bucketNameSuffix }),
-      ...(sameOriginApiDomainName === undefined
+      ...(sameOriginApiDomainName === undefined || originVerifyValue === undefined
         ? {}
-        : { api: { domainName: sameOriginApiDomainName } }),
+        : { api: { domainName: sameOriginApiDomainName, originVerifyValue } }),
     });
 
     new CfnOutput(this, 'FrontendUrl', { value: this.site.url });
@@ -130,6 +144,18 @@ export class PreviewableApp extends Construct {
       new CfnOutput(this, 'DbSchema', { value: this.database.schemaName });
     }
   }
+}
+
+function createOriginVerifyValue(scope: Construct): string {
+  const secret = new Secret(scope, 'OriginVerifySecret', {
+    description: 'Shared between CloudFront and the API: proves a request came through CloudFront',
+    generateSecretString: {
+      excludePunctuation: true,
+      passwordLength: ORIGIN_VERIFY_SECRET_LENGTH,
+    },
+    removalPolicy: RemovalPolicy.DESTROY,
+  });
+  return secret.secretValue.unsafeUnwrap();
 }
 
 function apiHttpHostname(api: LambdaApi): string {

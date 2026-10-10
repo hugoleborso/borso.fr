@@ -95,11 +95,13 @@ describe('pragma preview schema cloning', () => {
 });
 
 describe('pragma app stack', () => {
-  it('declares no Secrets Manager resources — auth state lives in the DB (ADR-0004)', () => {
-    for (const stage of ['prod', 'preview'] as const) {
-      const template = synthAppStack(stage);
-      expect(template.findResources('AWS::SecretsManager::Secret')).toEqual({});
-    }
+  it('keeps auth state in the DB (ADR-0004): the only secret is the CloudFront origin-verify value', () => {
+    expect(synthAppStack('preview').findResources('AWS::SecretsManager::Secret')).toEqual({});
+    const prodSecretIds = Object.keys(
+      synthAppStack('prod').findResources('AWS::SecretsManager::Secret'),
+    );
+    expect(prodSecretIds).toHaveLength(1);
+    expect(prodSecretIds[0]).toContain('OriginVerifySecret');
   });
 
   it('declares the uploads bucket with the expected name on prod', () => {

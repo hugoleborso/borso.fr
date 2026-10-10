@@ -8,7 +8,7 @@ import {
   httpStatusForAuthDenial,
   login,
   logout,
-  readClientIp,
+  readClientAddress,
 } from './auth.service';
 
 const SECONDS_PER_MINUTE = 60;
@@ -19,7 +19,7 @@ const ADMIN_COOKIE_TTL_SECONDS = ADMIN_COOKIE_TTL_HOURS * MINUTES_PER_HOUR * SEC
 // @FollowsBlueprint controller-public-router
 const authRouter = new Hono()
   .post('/login', zValidator('json', loginInputSchema), async (context) => {
-    const ipAddress = readClientIp(context.req.header('x-forwarded-for'));
+    const ipAddress = readClientAddress(context);
     try {
       const attempt = await login({ pin: context.req.valid('json').pin, ipAddress }, new Date());
       setCookie(context, AUTH_COOKIE_NAME, attempt.sessionId, {

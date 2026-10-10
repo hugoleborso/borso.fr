@@ -1,15 +1,31 @@
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { App, Stack } from 'aws-cdk-lib';
-import { Template } from 'aws-cdk-lib/assertions';
+import { Match, Template } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { DsqlClusterStack } from '../../src/constructs/dsql-cluster-stack.js';
 import { PreviewableApp } from '../../src/constructs/previewable-app.js';
+import { ORIGIN_VERIFY_ENVIRONMENT_VARIABLE } from '../../src/internal/client-address.js';
 import { isObject, resourcesOfType, TEST_ENV as ENV } from './helpers/template.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ENTRY = path.join(HERE, 'fixtures', 'handler.ts');
 const MIGRATIONS = path.join(HERE, 'fixtures', 'migrations');
+
+function readEnvironmentVariables(resource: unknown): Record<string, unknown> | null {
+  if (!isObject(resource)) return null;
+  const properties = resource.Properties;
+  if (!isObject(properties)) return null;
+  const environment = properties.Environment;
+  if (!isObject(environment)) return null;
+  const variables = environment.Variables;
+  return isObject(variables) ? variables : null;
+}
+
+function hasOriginVerifySecret(resource: unknown): boolean {
+  const variables = readEnvironmentVariables(resource);
+  return variables !== null && ORIGIN_VERIFY_ENVIRONMENT_VARIABLE in variables;
+}
 
 function hasTestSeedFlag(resource: unknown): boolean {
   if (!isObject(resource)) return false;
@@ -100,6 +116,21 @@ describe('PreviewableApp (prod, full)', () => {
   it('never sets ALLOW_TEST_SEED on a prod Lambda', () => {
     const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
     expect(lambdas.some(hasTestSeedFlag)).toBe(false);
+  });
+
+  it('generates one origin-verify secret and hands it to both CloudFront and the API', () => {
+    stageTpl.resourceCountIs('AWS::SecretsManager::Secret', 1);
+    const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
+    expect(lambdas.some(hasOriginVerifySecret)).toBe(true);
+    stageTpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        Origins: Match.arrayWith([
+          Match.objectLike({
+            OriginCustomHeaders: [Match.objectLike({ HeaderValue: Match.anyValue() })],
+          }),
+        ]),
+      }),
+    });
   });
 });
 
@@ -200,6 +231,12 @@ describe('PreviewableApp (preview with api → custom domain)', () => {
   it('injects ALLOW_TEST_SEED=1 on the non-prod API Lambda', () => {
     const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
     expect(lambdas.some(hasTestSeedFlag)).toBe(true);
+  });
+
+  it('creates no origin-verify secret, because no CloudFront sits in front of a preview API', () => {
+    stageTpl.resourceCountIs('AWS::SecretsManager::Secret', 0);
+    const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
+    expect(lambdas.some(hasOriginVerifySecret)).toBe(false);
   });
 });
 

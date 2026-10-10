@@ -70,6 +70,49 @@ describe('member auth controller (back-e2e)', () => {
     expect(blocked.status).toBe(429);
   });
 
+  it('keeps the sign-in limit when every attempt forges a fresh X-Forwarded-For', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+    const ipAddress = '198.51.100.43';
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      const response = await loginAsMember(app, 'tester', WRONG_PASSWORD, ipAddress, {
+        'x-forwarded-for': `10.0.0.${attempt}`,
+        'x-borso-viewer-address': `10.1.0.${attempt}`,
+      });
+      expect(response.status).toBe(401);
+    }
+    const blocked = await loginAsMember(app, 'tester', WRONG_PASSWORD, ipAddress, {
+      'x-forwarded-for': '10.0.0.99',
+    });
+    expect(blocked.status).toBe(429);
+  });
+
+  it('counts sign-in attempts across Lambda instances, because the buckets live in the database', async () => {
+    await bootstrapSharedPassword(createApp());
+    await signInOneMember(createApp());
+    const ipAddress = '198.51.100.44';
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await loginAsMember(createApp(), 'tester', WRONG_PASSWORD, ipAddress);
+    }
+    const blocked = await loginAsMember(createApp(), 'tester', WRONG_PASSWORD, ipAddress);
+    expect(blocked.status).toBe(429);
+  });
+
+  it('counts concurrent attempts one by one rather than once', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+    const ipAddress = '198.51.100.45';
+    const statuses = await Promise.all(
+      Array.from(
+        { length: 8 },
+        async () => (await loginAsMember(app, 'tester', WRONG_PASSWORD, ipAddress)).status,
+      ),
+    );
+    expect(statuses.filter((status) => status === 429).length).toBe(3);
+  });
+
   it('replaces a forgotten password with the band password and signs the member in', async () => {
     const app = buildAppWithProtectedRoute();
     await bootstrapSharedPassword(app);
@@ -160,6 +203,28 @@ describe('member auth controller (back-e2e)', () => {
     const blocked = await recoverPassword(app, {
       sharedPassword: WRONG_SHARED_PASSWORD,
       ipAddress,
+    });
+    expect(blocked.status).toBe(429);
+  });
+
+  it('keeps the recovery door closed when each try forges a new X-Forwarded-For', async () => {
+    const app = buildAppWithProtectedRoute();
+    await bootstrapSharedPassword(app);
+    await signInOneMember(app);
+    const ipAddress = '198.51.100.71';
+
+    for (let attempt = 0; attempt < SHARED_PASSWORD_MAX_FAILURES; attempt += 1) {
+      await recoverPassword(app, {
+        sharedPassword: WRONG_SHARED_PASSWORD,
+        ipAddress,
+        extraHeaders: { 'x-forwarded-for': `10.0.0.${attempt}` },
+      });
+    }
+
+    const blocked = await recoverPassword(app, {
+      sharedPassword: WRONG_SHARED_PASSWORD,
+      ipAddress,
+      extraHeaders: { 'x-forwarded-for': '10.0.0.99' },
     });
     expect(blocked.status).toBe(429);
   });

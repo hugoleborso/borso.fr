@@ -1,19 +1,25 @@
 import { randomBytes, scryptSync, timingSafeEqual } from 'node:crypto';
-import type { AuthDenialReason } from './auth.core';
+import {
+  type AuthDenialReason,
+  isOverBudget,
+  type RateLimitBudget,
+  windowFloorFor,
+} from './auth.core';
 import {
   type AdminSession,
   createSession,
+  deleteAllBuckets,
+  deleteBucket,
   deleteSession,
   findAdminPinHash,
-  findBucket,
   findValidSession,
+  incrementBucket,
   purgeExpiredSessions,
-  type RateLimitBucket,
-  upsertBucket,
 } from './auth.repository';
 
 // @FollowsBlueprint service-facade-reexport
-export { httpStatusForAuthDenial, readClientIp } from './auth.core';
+export { httpStatusForAuthDenial } from './auth.core';
+export { readClientAddress } from '../helpers/client-address/client-address.environment';
 
 const MILLISECONDS_PER_SECOND = 1_000;
 const SECONDS_PER_MINUTE = 60;
@@ -28,6 +34,10 @@ const SCRYPT_PARTS_COUNT = 3;
 const SESSION_TTL_HOURS = 12;
 const SESSION_TTL_MS = SESSION_TTL_HOURS * MILLISECONDS_PER_HOUR;
 const SESSION_ID_BYTES = 32;
+const ADMIN_LOGIN_BUDGET: RateLimitBudget = {
+  maxAttempts: RATE_LIMIT_MAX_ATTEMPTS,
+  windowMs: RATE_LIMIT_WINDOW_MS,
+};
 
 // @FollowsBlueprint named-domain-error
 export class AuthDeniedError extends Error {
@@ -51,26 +61,14 @@ function isPinMatchingHash(pin: string, hashedPin: string): boolean {
 }
 
 async function consumeRateLimit(ipAddress: string, now: Date): Promise<void> {
-  const existing = await findBucket(ipAddress);
-  const windowStartedAt =
-    existing !== null && now.getTime() - existing.windowStartedAt.getTime() < RATE_LIMIT_WINDOW_MS
-      ? existing.windowStartedAt
-      : now;
-  const previousCount =
-    existing !== null && windowStartedAt === existing.windowStartedAt ? existing.count : 0;
-  if (previousCount >= RATE_LIMIT_MAX_ATTEMPTS) {
+  const bucket = await incrementBucket(ipAddress, now, windowFloorFor(now, ADMIN_LOGIN_BUDGET));
+  if (isOverBudget(bucket.count, ADMIN_LOGIN_BUDGET)) {
     throw new AuthDeniedError('rate-limited');
   }
-  const next: RateLimitBucket = {
-    ipAddress,
-    count: previousCount + 1,
-    windowStartedAt,
-  };
-  await upsertBucket(next);
 }
 
-async function resetRateLimit(ipAddress: string, now: Date): Promise<void> {
-  await upsertBucket({ ipAddress, count: 0, windowStartedAt: now });
+export async function resetAllRateLimits(): Promise<void> {
+  await deleteAllBuckets();
 }
 
 export interface LoginInput {
@@ -93,7 +91,7 @@ export async function login(input: LoginInput, now: Date): Promise<LoginResult> 
   if (!isPinMatchingHash(input.pin, pinHash)) {
     throw new AuthDeniedError('invalid-pin');
   }
-  await resetRateLimit(input.ipAddress, now);
+  await deleteBucket(input.ipAddress);
   await purgeExpiredSessions(now);
   const sessionId = randomBytes(SESSION_ID_BYTES).toString('hex');
   const expiresAt = new Date(now.getTime() + SESSION_TTL_MS);

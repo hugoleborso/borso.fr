@@ -1,4 +1,4 @@
-import { asc, count, eq, lt } from 'drizzle-orm';
+import { asc, count, eq, lt, sql } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import {
   authAttemptTable,
@@ -97,22 +97,25 @@ export async function deleteExpiredSessions(now: Date): Promise<void> {
   await getDatabase().delete(sessionTable).where(lt(sessionTable.expiresAt, now));
 }
 
-export async function findAttempt(ipHash: string): Promise<AttemptRow | null> {
+// @FollowsBlueprint repository-atomic-counter
+export async function incrementAttempt(
+  ipHash: string,
+  now: Date,
+  windowFloor: Date,
+): Promise<AttemptRow> {
+  const isWindowExpired = sql`${authAttemptTable.windowStartedAt} <= ${windowFloor.toISOString()}::timestamptz`;
   const rows = await getDatabase()
-    .select()
-    .from(authAttemptTable)
-    .where(eq(authAttemptTable.ipHash, ipHash))
-    .limit(1);
-  return rows[0] ?? null;
-}
-
-// @FollowsBlueprint repository-idempotent-upsert
-export async function saveAttempt(values: AttemptRow): Promise<void> {
-  await getDatabase()
     .insert(authAttemptTable)
-    .values(values)
+    .values({ ipHash, attempts: 1, windowStartedAt: now })
     .onConflictDoUpdate({
       target: authAttemptTable.ipHash,
-      set: { attempts: values.attempts, windowStartedAt: values.windowStartedAt },
-    });
+      set: {
+        attempts: sql`CASE WHEN ${isWindowExpired} THEN 1 ELSE ${authAttemptTable.attempts} + 1 END`,
+        windowStartedAt: sql`CASE WHEN ${isWindowExpired} THEN ${now.toISOString()}::timestamptz ELSE ${authAttemptTable.windowStartedAt} END`,
+      },
+    })
+    .returning();
+  const row = rows[0];
+  if (row === undefined) throw new Error('auth_attempt upsert returned no row');
+  return row;
 }

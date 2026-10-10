@@ -23,7 +23,9 @@ import { BlockPublicAccess, Bucket, BucketEncryption } from 'aws-cdk-lib/aws-s3'
 import { BucketDeployment, CacheControl, Source } from 'aws-cdk-lib/aws-s3-deployment';
 import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import { Construct } from 'constructs';
+import { API_VIEWER_ADDRESS_FUNCTION_CODE } from '../internal/cf-api-viewer-address.js';
 import { STATIC_SITE_INDEX_REWRITE_FUNCTION_CODE } from '../internal/cf-static-site-index-rewrite.js';
+import { ORIGIN_VERIFY_HEADER } from '../internal/client-address.js';
 import {
   accountScopedBucketName,
   assertDeployStage,
@@ -53,6 +55,7 @@ export interface StaticSiteProps {
   readonly assetsPath: string;
   readonly api?: {
     readonly domainName: string;
+    readonly originVerifyValue: string;
     readonly pathPattern?: string;
   };
   readonly spaFallback?: boolean;
@@ -140,14 +143,24 @@ export class StaticSite extends Construct {
     });
 
     if (props.api) {
+      const viewerAddressFunction = new CloudFrontFunction(this, 'ApiViewerAddressFunction', {
+        runtime: FunctionRuntime.JS_2_0,
+        code: FunctionCode.fromInline(API_VIEWER_ADDRESS_FUNCTION_CODE),
+        comment: 'Overwrite the viewer address header the API keys its rate limits on',
+      });
       distribution.addBehavior(
         props.api.pathPattern ?? DEFAULT_API_PATH_PATTERN,
-        new HttpOrigin(props.api.domainName),
+        new HttpOrigin(props.api.domainName, {
+          customHeaders: { [ORIGIN_VERIFY_HEADER]: props.api.originVerifyValue },
+        }),
         {
           allowedMethods: AllowedMethods.ALLOW_ALL,
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: CachePolicy.CACHING_DISABLED,
           originRequestPolicy: OriginRequestPolicy.ALL_VIEWER_EXCEPT_HOST_HEADER,
+          functionAssociations: [
+            { function: viewerAddressFunction, eventType: FunctionEventType.VIEWER_REQUEST },
+          ],
         },
       );
     }
