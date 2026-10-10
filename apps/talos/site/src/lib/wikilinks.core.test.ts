@@ -41,8 +41,9 @@ describe('buildCommitmentHref and buildTodoHref', () => {
     expect(buildCommitmentHref('engagements/2026-10-05-appel é.md')).toBe(
       '/commitments/engagements/2026-10-05-appel%20%C3%A9',
     );
-    expect(buildTodoHref('4e6590b574')).toBe('/todos/4e6590b574');
-    expect(buildTodoHref('a/b')).toBe('/todos/a%2Fb');
+    expect(buildTodoHref('4e6590b574', 'main')).toBe('/todos/4e6590b574');
+    expect(buildTodoHref('a/b', 'main')).toBe('/todos/a%2Fb');
+    expect(buildTodoHref('4e6590b574', 'work')).toBe('/work-todos/4e6590b574');
   });
 });
 

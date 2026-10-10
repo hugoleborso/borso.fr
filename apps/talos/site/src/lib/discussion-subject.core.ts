@@ -1,6 +1,7 @@
+import { TODO_LISTS, type TodoListName } from '@domain/todo-list.core';
+
 export type DiscussionSubjectReference =
-  | { readonly kind: 'todo' }
-  | { readonly kind: 'todos' }
+  | { readonly kind: 'todo' | 'todos'; readonly list: TodoListName }
   | { readonly kind: 'focus' }
   | { readonly kind: 'scan' }
   | { readonly kind: 'relations' }
@@ -14,8 +15,6 @@ export type DiscussionSubjectKind = DiscussionSubjectReference['kind'];
 
 const MARKDOWN_EXTENSION = '.md';
 const FIXED_FILES = {
-  todo: 'todo.md',
-  todos: 'todo.md',
   focus: 'focus.md',
   scan: 'etat/dernier-scan.json',
   relations: 'etat/relations.json',
@@ -26,6 +25,7 @@ export function selectSubjectFile(subject: DiscussionSubjectReference): string {
   switch (subject.kind) {
     case 'todo':
     case 'todos':
+      return TODO_LISTS[subject.list].path;
     case 'focus':
     case 'scan':
     case 'relations':

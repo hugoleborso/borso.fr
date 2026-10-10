@@ -1,3 +1,4 @@
+import { TODO_LISTS } from '@domain/todo-list.core';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
@@ -36,7 +37,8 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/auth/passkeys', passkeysRouter)
     .route('/api/today', buildTodayRouter())
     .route('/api/focus', buildFocusRouter())
-    .route('/api/todos', buildTodosRouter())
+    .route('/api/todos', buildTodosRouter(TODO_LISTS.main))
+    .route('/api/work-todos', buildTodosRouter(TODO_LISTS.work))
     .route('/api/proposals', buildProposalsRouter())
     .route('/api/commitments', buildCommitmentsRouter())
     .route('/api/relations', buildRelationsRouter())

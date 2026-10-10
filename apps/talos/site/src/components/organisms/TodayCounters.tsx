@@ -47,7 +47,7 @@ export function TodayCounters({
       count: overdueTodoCount,
       label: t('today.counters.overdue'),
       isAlert: overdueTodoCount > 0,
-      subject: { kind: 'todos' },
+      subject: { kind: 'todos', list: 'main' },
     },
     {
       key: 'owed',
