@@ -26,7 +26,7 @@ const LATER_PRACTICE: IndexSession = {
 };
 
 function setlist(overrides: Partial<IndexSetlist> & { id: string }): IndexSetlist {
-  return { name: '', songCount: 0, sessionIds: [], ...overrides };
+  return { name: '', status: 'locked', songCount: 0, sessionIds: [], ...overrides };
 }
 
 describe('buildSetlistIndexRows', () => {
@@ -36,8 +36,19 @@ describe('buildSetlistIndexRows', () => {
       [EARLIER_CONCERT, LATER_PRACTICE],
     );
     expect(rows).toEqual([
-      { id: 'a', name: 'Set 1', songCount: 4, sessions: [LATER_PRACTICE, EARLIER_CONCERT] },
+      {
+        id: 'a',
+        name: 'Set 1',
+        isVoting: false,
+        songCount: 4,
+        sessions: [LATER_PRACTICE, EARLIER_CONCERT],
+      },
     ]);
+  });
+
+  it('marks a setlist still under vote', () => {
+    const rows = buildSetlistIndexRows([setlist({ id: 'a', status: 'voting' })], []);
+    expect(rows[0]?.isVoting).toBe(true);
   });
 
   it('drops a session identifier no loaded session answers', () => {

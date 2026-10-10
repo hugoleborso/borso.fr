@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   indexMembersById,
   indexSongsById,
+  isLockedPageState,
   isVotingPageState,
   projectPointsBySongId,
   selectVotePageState,
@@ -43,6 +44,15 @@ describe('isVotingPageState', () => {
     expect(isVotingPageState('voting', true, true)).toBe(false);
     expect(isVotingPageState('locked', false, true)).toBe(false);
     expect(isVotingPageState('voting', false, false)).toBe(false);
+  });
+});
+
+describe('isLockedPageState', () => {
+  it('is true only once the vote is closed, so the closing panel offers no reopen', () => {
+    expect(isLockedPageState('locked')).toBe(true);
+    expect(isLockedPageState('closing')).toBe(false);
+    expect(isLockedPageState('loading')).toBe(false);
+    expect(isLockedPageState('voting')).toBe(false);
   });
 });
 

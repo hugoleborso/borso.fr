@@ -25,6 +25,10 @@ export function isVotingPageState(
   return selectVotePageState({ hasBoard, status, isClosingOpen }) === 'voting';
 }
 
+export function isLockedPageState(pageState: VotePageState): boolean {
+  return pageState === 'locked';
+}
+
 export interface VotePageSong {
   readonly id: string;
   readonly title: string;

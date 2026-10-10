@@ -29,6 +29,7 @@ import {
   DEFAULT_TARGET_SONG_COUNT,
   indexMembersById,
   indexSongsById,
+  isLockedPageState,
   isVotingPageState,
   projectPointsBySongId,
   selectVotePageState,
@@ -74,6 +75,7 @@ export function SetlistVotePage(): JSX.Element {
     isClosingOpen,
   });
 
+  const isLocked = isLockedPageState(pageState);
   const targetSongCount = typedTarget ?? board.data?.targetSongCount ?? DEFAULT_TARGET_SONG_COUNT;
   const isDeck = isDeckMode(voteMode);
   const isShowingClosing = pageState === 'closing' && proposal.data !== undefined;
@@ -98,7 +100,8 @@ export function SetlistVotePage(): JSX.Element {
           <Button type="button" variant="ghost" onClick={() => setIsClosingOpen(true)}>
             {t('voting.openClosing')}
           </Button>
-        ) : (
+        ) : null}
+        {isLocked ? (
           <Button
             type="button"
             variant="ghost"
@@ -107,7 +110,7 @@ export function SetlistVotePage(): JSX.Element {
           >
             {t('voting.openVote')}
           </Button>
-        )}
+        ) : null}
       </header>
 
       <TargetSongCountField
@@ -126,6 +129,7 @@ export function SetlistVotePage(): JSX.Element {
           addableSongs={songList}
           targetSongCount={board.data?.targetSongCount ?? 0}
           isClosing={closeVote.isPending}
+          onCancel={() => setIsClosingOpen(false)}
           onClose={(songIds) => {
             closeVote.mutate(
               { songIds },
