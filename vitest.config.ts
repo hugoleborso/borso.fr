@@ -7,8 +7,7 @@ export default defineConfig({
     coverage: {
       provider: 'v8',
       include: ['scripts/**/*.{core,utils}.ts'],
-      perFile: true,
-      thresholds: { statements: 100, branches: 100, functions: 100, lines: 100 },
+      thresholds: { perFile: true, statements: 100, branches: 100, functions: 100, lines: 100 },
     },
   },
 });

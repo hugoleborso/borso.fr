@@ -305,6 +305,45 @@ tests call `build<App>Stack()` directly, so a break in the entry point that
 reads `STAGE` and names the stacks passes every other gate and surfaces in the
 automatic production deploy after the merge.
 
+### Every gate has to fail once, on purpose
+
+A gate that has never failed has not shown that it can. Sixteen dantotsus
+between May and October 2026 found a gate that was green while it measured
+nothing: a coverage threshold in a block Vitest ignores, a mutation run that
+reached no test, a hook that let every command through, a test file no project
+collected. Each was found by accident and fixed alone, and nothing stopped the
+next one ([dantotsu](../dantotsus/sixteen-gates-were-trusted-because-they-had-never-failed.md)).
+
+So each gate carries a canary: a small defect the gate must refuse.
+`scripts/standards/gate-canaries.ts` copies the tree into a temporary
+directory, plants each canary there, runs the gate the way its hook or
+workflow runs it, and fails when the gate exits 0, or exits non-zero without
+naming the planted defect. The second case matters as much as the first: a
+gate that fails for an unrelated reason has not shown that it saw the defect.
+
+Which gates need a canary is not a list someone keeps. The runner takes every
+mechanism the enforcement ledger resolves, every `scripts/**/check-*` file and
+every generator a hook or workflow runs with `--check`, and fails on any of
+them without a canary. A gate that gates nothing is named in
+`MECHANISMS_THAT_GATE_NOTHING` in `scripts/standards/canary-registry.ts`, with
+the reason. Each custom ESLint rule's canary is the first invalid case of its
+own RuleTester suite, linted through the real configuration at the path the
+case names, so a rule that is correct in its suite and switched off where it
+matters fails here. The other canaries live in the same registry.
+
+It runs in the `gate-canaries` job of `ci.yml`, once per tier: `fast` holds
+the lint-rule canaries and the checks that answer in seconds, `slow` the
+coverage, mutation, type-check and database suites. It does not run in a
+hook. The inventory alone, `--inventory`, runs every rule suite and builds the
+ledger. It measured 32 s on 2026-10-10, and two minutes while other agents
+loaded the same machine; the fast tier measured over five minutes. Neither is
+a commit-time cost.
+
+What it does not prove: it runs each gate's command, not the hook around it,
+so a hook that calls a gate and then discards its exit code still passes. The
+ledger checks that the hook names the gate; nothing yet checks what the hook
+does with the answer.
+
 ## Suppressing a rule
 
 Write `// eslint-disable-next-line <rule> -- <reason>` with a reason after the
@@ -388,6 +427,12 @@ review.
   state-dependent with its reason. Three refusing hooks had none, and one of
   them refused a harmless command three times in a session before anyone
   looked ([dantotsu](../dantotsus/the-hook-that-was-missing-from-its-own-contract.md)).
+- `script:scripts/standards/gate-canaries.ts` plants a defect for every gate
+  above, and every other check script or `--check` generator a hook or
+  workflow runs, and fails on a gate that does not refuse its defect or a gate
+  that has no canary. Sixteen gates were found passing while measuring
+  nothing, one at a time, before this existed
+  ([dantotsu](../dantotsus/sixteen-gates-were-trusted-because-they-had-never-failed.md)).
 - `script:scripts/check-harness-links.sh` fails a skill, agent or command of
   the harness plugin that has no link in `.claude/`, a link that points
   somewhere else, and a plugin hook that `.claude/settings.json` does not
