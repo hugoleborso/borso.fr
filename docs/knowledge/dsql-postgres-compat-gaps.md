@@ -1,3 +1,17 @@
+---
+summary: 'Aurora DSQL is not Postgres: no jsonb, no foreign keys, one DDL per transaction, no partial indexes, no advisory locks, retries need `IF NOT EXISTS`.'
+triggers:
+  paths:
+    - 'apps/*/api/src/database/migrations/*.sql'
+  output:
+    - 'datatype \w+ not supported'
+    - 'unsupported ALTER TABLE'
+    - 'multiple ddl statements not supported'
+    - '(USING|WHERE) not supported for CREATE INDEX'
+    - 'function pg_\w+ not supported'
+    - 'unsupported mode\. please use CREATE INDEX ASYNC'
+---
+
 # Aurora DSQL is not a drop-in for Postgres
 
 DSQL ships a Postgres wire protocol, accepts most DML, and reads like

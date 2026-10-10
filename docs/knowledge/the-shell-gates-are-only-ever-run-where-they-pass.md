@@ -1,3 +1,11 @@
+---
+summary: 'The shell gates have no tests and only ever run on a tree where they pass; plant the defect and watch the gate fail before trusting it.'
+triggers:
+  paths:
+    - 'scripts/check-*.sh'
+    - '.husky/*'
+---
+
 # The shell gates have no tests, and CI only ever runs them on a green tree
 
 Every custom ESLint rule in this repository ships a `RuleTester` suite — that is

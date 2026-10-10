@@ -1,3 +1,10 @@
+---
+summary: 'react-bits Galaxy listens on `mousemove` only, so touch breaks silently; use pointer events and `touch-action: none` on the container.'
+triggers:
+  paths:
+    - 'apps/borso-fr/site/src/**/Galaxy*'
+---
+
 # react-bits `<Galaxy />` listens for `mousemove`, not `pointermove` — touch breaks silently
 
 The upstream [react-bits Galaxy

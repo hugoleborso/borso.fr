@@ -1,3 +1,10 @@
+---
+summary: 'A generated UI label that reuses an internal id names the mechanism; keep the id and add a label.'
+triggers:
+  paths:
+    - 'scripts/architecture/**'
+---
+
 # A generated label that reuses an internal id names the mechanism, not the thing
 
 Observed 2026-08-15 on the architecture map's user-action level, over two

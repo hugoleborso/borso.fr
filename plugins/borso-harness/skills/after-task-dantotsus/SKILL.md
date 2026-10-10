@@ -260,10 +260,23 @@ For each surviving subject:
 **Vendor surprises / operator confusion / reusable insights →
 `docs/knowledge/<slug>.md`:**
 
-1. Pick a slug.
-2. Write whatever helps the next reader. No frontmatter required;
-   no fixed sections required. Keep it concrete and short.
-3. Add a one-line entry to `docs/knowledge/README.md` index.
+1. Pick a slug. First search the corpus for an entry on the same
+   tool or symptom (`grep -ril <tool> docs/knowledge/`); extending it
+   beats a second entry the hook would print beside the first.
+2. Write whatever helps the next reader. No fixed sections required;
+   keep it concrete and short.
+3. **Give it front matter with a `summary:` and `triggers:`**, as
+   described in `docs/knowledge/README.md`. The summary is the one
+   sentence a hook prints. The triggers are the moment the subject bit
+   in this task, read off the inventory row: the file being written
+   (`paths`), the command that was about to run (`commands`), or the
+   error text a tool printed (`output`). Prefer the narrowest one that
+   would have fired at that moment. If no path, command or output
+   recognises the moment, the entry would have no reader: fold the
+   lesson into an existing entry that has one, or into a hook, a gate
+   or a skill instead. `scripts/check-knowledge-triggers.sh` refuses an
+   entry without triggers.
+4. Add a one-line entry to `docs/knowledge/README.md` index.
 
 ### 4. Cross-link
 
@@ -343,7 +356,9 @@ not its volume, is what keeps the system improving.
       under `docs/dantotsus/` matching `_template.md`, with
       `eradication-level` ≥ 1 backed by a commit reference.
 - [ ] Each surviving vendor-surprise / operator-confusion /
-      reusable-insight subject has a file under `docs/knowledge/`.
+      reusable-insight subject has a file under `docs/knowledge/`
+      with a `summary:` and `triggers:` that would have fired at the
+      moment it bit, and `scripts/check-knowledge-triggers.sh` passes.
 - [ ] Frontmatter on every new dantotsu file is filled (no
       `<placeholder>` strings).
 - [ ] Both READMEs updated.

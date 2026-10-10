@@ -1,3 +1,12 @@
+---
+summary: 'The `borso-shared` snapshot is synthesized with stub certificates, so diffing it against the live template invents deletions.'
+triggers:
+  paths:
+    - 'infra/shared/test/unit/__snapshots__/*.json'
+  commands:
+    - 'cloudformation\s+get-template\s+.*borso-shared'
+---
+
 # The committed template snapshot is not the deployed stack
 
 `infra/shared/test/unit/__snapshots__/borso-shared.template.json` is

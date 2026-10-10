@@ -1,3 +1,11 @@
+---
+summary: 'Four cores and gates in parallel: a test timeout under the pre-push wave is usually contention, not a regression; re-run the suite alone first.'
+triggers:
+  output:
+    - 'Test timed out in \d+ms'
+    - 'Hook timed out in \d+ms'
+---
+
 # A timeout under parallel gates is not a regression
 
 The pre-push hook now starts every gate at once — knip, the infra coverage

@@ -1,3 +1,11 @@
+---
+summary: 'A 375 px Chromium resize is not a phone test; `scripts/argent.sh` drives real touch here, and the sandbox has no `/dev/kvm` and no Xcode for simulators.'
+triggers:
+  commands:
+    - '\bargent\b'
+    - 'scripts/argent\.sh'
+---
+
 # Agentic device testing with argent
 
 `@swmansion/argent` is the agentic toolkit this repository uses to drive real

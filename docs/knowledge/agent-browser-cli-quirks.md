@@ -1,3 +1,14 @@
+---
+summary: 'agent-browser traps: `--executable-path` ignored once the daemon runs, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, and a click below a nested scroller that reports success and does nothing.'
+triggers:
+  commands:
+    - '\bagent-browser\b'
+    - 'scripts/browser\.sh'
+  output:
+    - 'daemon already running'
+    - 'Identifier ''\w+'' has already been declared'
+---
+
 # `agent-browser` CLI quirks worth remembering
 
 CLI footguns hit during PR #8 and PR #60 that cost more time than they

@@ -7,6 +7,11 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-commit: n/a (GitHub behaviour; no code fix)
 time-to-detect: minutes (Hugo couldn't find the workflow in the UI)
 tags: [github-actions, workflow-dispatch, vendor-quirk]
+summary: 'A `workflow_dispatch` workflow shows in the Actions UI only once it is on the default branch.'
+triggers:
+  paths:
+    - '.github/workflows/shared-deploy.yml'
+    - '.github/workflows/*dispatch*.yml'
 ---
 
 # `workflow_dispatch` workflows only show in the UI once on the default branch

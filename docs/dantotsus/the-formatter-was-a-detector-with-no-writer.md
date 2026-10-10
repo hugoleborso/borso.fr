@@ -114,4 +114,4 @@ can differ from what was just written. Layout moves; semantics do not.
   This entry adds the *writer* above it.
 - [`biome-lint-was-not-gated-anywhere.md`](./biome-lint-was-not-gated-anywhere.md)
   — the original gap in the same lineage.
-- [`biome-formatter-trips-line-count-ceiling.md`](../knowledge/biome-formatter-trips-line-count-ceiling.md)
+- [`biome-formatter-trips-line-count-ceiling.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-formatter-trips-line-count-ceiling.md)

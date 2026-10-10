@@ -1,3 +1,10 @@
+---
+summary: '`--cache-strategy content` keys on the linted file, so a type-aware error you already fixed is replayed; `rm -f .eslintcache` and lint again.'
+triggers:
+  output:
+    - '@typescript-eslint/no-unsafe-(argument|assignment|call|member-access|return)'
+---
+
 # The ESLint content cache replays a type-aware error after you fixed it
 
 `.husky/pre-commit` runs

@@ -1,3 +1,10 @@
+---
+summary: 'The GitHub MCP server rewrites pull request bodies: long link targets and image URLs come back backtick-wrapped and `<details>` is stripped; a PreToolUse hook refuses such a body.'
+triggers:
+  paths:
+    - 'plugins/borso-harness/skills/open-pr/template.md'
+---
+
 _Earlier versions of this entry catalogued three patterns
 (`<details>` stripped, `![alt](url)` wrapped in backticks,
 pseudo-HTML in backticks stripped) as if they were stable

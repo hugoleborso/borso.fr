@@ -84,4 +84,4 @@ If the constructs had known that, `StaticSite` would have offered a name only th
 
 - [`consuming-borso-infra-from-another-repo.md`](../consuming-borso-infra-from-another-repo.md#bucket-names-are-global)
 - [`adding-an-app.md`](../adding-an-app.md#pick-a-slug)
-- [`cdk-retain-buckets-orphan-on-failed-create.md`](../knowledge/cdk-retain-buckets-orphan-on-failed-create.md)
+- [`cdk-retain-buckets-orphan-on-failed-create.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md)

@@ -5,6 +5,10 @@ detected-at: linter
 severity: low
 related-pr: https://github.com/hugoleborso/borso.fr/pull/81
 tags: [eslint, code-quality, tooling, frontend]
+summary: '`no-empty` and `no-empty-function` count a comment as content, so stripping one makes the block illegal; name the intent as a function.'
+triggers:
+  output:
+    - '\bno-empty(-function)?\b'
 ---
 
 # Removing a comment can turn a lint rule red

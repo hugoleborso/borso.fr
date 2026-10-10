@@ -1,3 +1,10 @@
+---
+summary: '`preserveAspectRatio="none"` turns circles into ellipses when the box and the viewBox differ in aspect; keep the default and letterbox.'
+triggers:
+  output:
+    - 'no-circle-in-non-uniform-svg'
+---
+
 # SVG `preserveAspectRatio="none"` distorts shapes when the container aspect ≠ viewBox aspect
 
 Brief explainer + the lesson from PR #23's elevation profile.
@@ -77,4 +84,4 @@ knowledge doc has no teeth. It's now a lint:
 
 - [MDN — `preserveAspectRatio`](https://developer.mozilla.org/en-US/docs/Web/SVG/Attribute/preserveAspectRatio) — the canonical reference.
 - PR #23 commit `a0b4622` (`fix(last-loop-lepin): circular profile pastilles + plug onerror HTML leak`) — worked example.
-- [`biome-grit-jsx-matching.md`](./biome-grit-jsx-matching.md) — how the enforcing GritQL plugin matches JSX.
+- [`biome-grit-jsx-matching.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-grit-jsx-matching.md) — how the enforcing GritQL plugin matches JSX.

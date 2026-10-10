@@ -113,7 +113,7 @@ matchable node when `engine biome(1.0)` + `language js(jsx)` are
 declared at the top of the .grit file ; the regex `r".*[\"']/api/.*"`
 on the matched node's literal text catches both `href="/api/foo"`
 and `href='/api/foo'`. See
-[`docs/knowledge/biome-grit-jsx-matching.md`](../knowledge/biome-grit-jsx-matching.md)
+[`docs/knowledge/biome-grit-jsx-matching.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-grit-jsx-matching.md)
 for the working pattern shape (and the dead ends that fooled the
 first attempt).
 
@@ -164,7 +164,7 @@ Fixed in the same commit (`e36b217`).
 - [`docs/dantotsus/frontend-fetch-must-go-through-api-client.md`](./frontend-fetch-must-go-through-api-client.md)
   — sibling on the fetch surface, same root cause, different
   Grit pattern shape.
-- [`docs/knowledge/biome-grit-jsx-matching.md`](../knowledge/biome-grit-jsx-matching.md)
+- [`docs/knowledge/biome-grit-jsx-matching.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-grit-jsx-matching.md)
   — JSX-specific Grit syntax that took a while to find.
 - [`docs/knowledge/preview-api-cross-origin.md`](../knowledge/preview-api-cross-origin.md)
   — why preview is cross-origin in the first place.

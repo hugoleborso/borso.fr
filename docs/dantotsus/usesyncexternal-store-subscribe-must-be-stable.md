@@ -114,7 +114,7 @@ hooks now wrap `useQuery` from `@tanstack/react-query`, which owns
 the subscription lifecycle internally. The misconception that caused
 the original bug can't be expressed — there is no developer-written
 subscribe arrow to be unstable. See the companion knowledge entry
-[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](../knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
+[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
 *Layer 2 — anyone who reaches for `useSyncExternalStore` directly in
 the future gets a lint error if they pass an inline arrow.* The

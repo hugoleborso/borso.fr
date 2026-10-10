@@ -18,7 +18,7 @@ tags: [cdk, s3, cloudformation, deploy]
 > ### Revised 2026-05-11 — eradication upgraded rung 5 → rung 1
 >
 > The original entry (2026-05-04) shipped a **rung-5 knowledge entry**
-> ([`docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md`](../knowledge/cdk-retain-buckets-orphan-on-failed-create.md))
+> ([`docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md))
 > after rolling back a heavier-handed preflight gate. The reasoning at
 > the time: "rare failure mode, three-command manual recovery,
 > preflight is overkill."
@@ -204,7 +204,7 @@ user-data bucket where RETAIN is genuinely the right choice).
 
 ## See also
 
-- [`docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md`](../knowledge/cdk-retain-buckets-orphan-on-failed-create.md) —
+- [`docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md) —
   the prior knowledge entry. Now carries a banner pointing back here;
   kept for the audit trail of the original level-5 stance.
 - [`docs/dantotsus/cloudfront-cname-must-be-released-before-redeploy.md`](./cloudfront-cname-must-be-released-before-redeploy.md) —
@@ -224,7 +224,7 @@ user-data bucket where RETAIN is genuinely the right choice).
 
 **Type:** Knowledge entry (level 5 — floor)
 
-**Reference:** PR #7 · [`docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md`](../knowledge/cdk-retain-buckets-orphan-on-failed-create.md)
+**Reference:** PR #7 · [`docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md)
 
 **Decision (at the time):** an earlier draft shipped a
 `scripts/preflight-orphan-buckets.sh` (level 2 DevX check) that scanned

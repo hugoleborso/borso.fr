@@ -1,3 +1,10 @@
+---
+summary: 'Proving an eradication by breaking the code, then `git checkout --` or `reset --hard`, reverts the eradication with the probe; commit first.'
+triggers:
+  commands:
+    - '\bgit\s+(-C\s+\S+\s+)?(checkout\s+--|checkout\s+\S+\s+--|restore\b|reset\s+--hard|stash\s+(pop|drop|apply))'
+---
+
 # Verifying a fix by breaking the code costs you the fix, three times running
 
 Observed 2026-08-15, three times in one session, each time losing 10–20 minutes.

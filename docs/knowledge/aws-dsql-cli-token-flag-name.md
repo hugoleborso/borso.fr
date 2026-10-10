@@ -1,3 +1,12 @@
+---
+summary: '`aws dsql generate-db-connect-admin-auth-token` wants `--hostname <endpoint>`; the older `--identifier` form is rejected.'
+triggers:
+  commands:
+    - 'generate-db-connect(-admin)?-auth-token'
+  output:
+    - 'the following arguments are required: --hostname'
+---
+
 # `aws dsql generate-db-connect-admin-auth-token` wants `--hostname`, not `--identifier`
 
 Symptom on a current AWS CLI v2 (`aws-cli/2.34.x`) :

@@ -1,3 +1,11 @@
+---
+summary: 'A hosted session reads SSM, but the harness refuses the DSQL admin token as a production read; hand the query to a local session.'
+triggers:
+  commands:
+    - 'dsql-shell\.sh'
+    - 'generate-db-connect-admin-auth-token'
+---
+
 # The production database is out of reach of a hosted session
 
 _Last verified: 2026-09-17, on claude.ai/code as `AI-Dev-ReadOnly`._

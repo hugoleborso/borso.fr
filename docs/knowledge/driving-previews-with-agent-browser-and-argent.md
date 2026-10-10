@@ -1,3 +1,10 @@
+---
+summary: 'Which of agent-browser and argent answers which question, and the traps in each; a synthetic click is not a tap.'
+triggers:
+  commands:
+    - '\.preview\.borso\.fr'
+---
+
 # Driving the previews with agent-browser and argent
 
 Both tools are installed and both work in this sandbox, argent's touch gestures
@@ -27,7 +34,7 @@ Reach for it for touch behaviour and phone-shaped interaction.
 **`gesture-swipe` is not among them on Chromium.** It is listed, it returns a
 success object, and it moves nothing — scroll with `gesture-scroll` and drag
 with `gesture-drag` instead. Full contract and what that costs a phone pass:
-[`argent-gesture-swipe-does-nothing-on-chromium.md`](./argent-gesture-swipe-does-nothing-on-chromium.md).
+[`real-touch-gestures-over-cdp.md`](./real-touch-gestures-over-cdp.md).
 
 ## The two launch flags that are not optional
 

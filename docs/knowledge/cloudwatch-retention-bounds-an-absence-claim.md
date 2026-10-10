@@ -1,3 +1,11 @@
+---
+summary: '`filter-log-events` accepts a window older than the group''s retention and says nothing; read `retentionInDays` before claiming something never happened.'
+triggers:
+  commands:
+    - 'logs\s+filter-log-events'
+    - 'logs\s+tail\b'
+---
+
 # A "this never happened" claim from CloudWatch is only as old as the retention
 
 `aws logs filter-log-events` accepts any `--start-time` you give it. It does

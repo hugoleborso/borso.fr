@@ -1,3 +1,11 @@
+---
+summary: 'Operator notes for `/tech-lead-orchestrator`: where a run''s artefacts live, how to read its journal, and recipes for its common failures.'
+triggers:
+  paths:
+    - 'docs/features/*/*/runs/*/state.json'
+    - 'docs/features/*/*/runs/*/journal.md*'
+---
+
 # `/tech-lead-orchestrator` — operator notes
 
 Run-time companion to [`plugins/borso-harness/skills/tech-lead-orchestrator/SKILL.md`](../../plugins/borso-harness/skills/tech-lead-orchestrator/SKILL.md)

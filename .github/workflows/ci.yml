@@ -179,6 +179,9 @@ jobs:
       # away from the tool and fails silently forever, because nobody runs the
       # command it warned them off. Mirrors the pre-commit hook.
       - run: ./scripts/check-negative-claims-are-dated.sh
+      # Every knowledge entry declares the paths, commands or output it applies
+      # to, so a hook can deliver it. Mirrors the pre-commit hook.
+      - run: ./scripts/check-knowledge-triggers.sh
       # Two lists that have to say the same thing — the generator's trigger
       # paths, and the suffixes the coverage gate and the sibling-test rule both
       # name. Each half reads correctly alone; only the pair is wrong.

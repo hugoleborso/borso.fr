@@ -1,3 +1,11 @@
+---
+summary: '`agent-browser set device` does not make `(pointer: coarse)` match; touch assertions need `scripts/argent.sh`, which sends real touch.'
+triggers:
+  commands:
+    - '(agent-browser|scripts/browser\.sh)\s+(\S+\s+)*set\s+device\b'
+    - 'pointer:\s*coarse'
+---
+
 # `agent-browser` device emulation does not propagate `(pointer: coarse)` to `matchMedia`
 
 ## Symptom

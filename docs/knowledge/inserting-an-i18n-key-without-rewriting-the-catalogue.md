@@ -1,3 +1,10 @@
+---
+summary: 'Parsing and re-serialising a translation catalogue rewrites unrelated lines because it is only mostly sorted; splice the lines in.'
+triggers:
+  paths:
+    - 'apps/*/site/src/i18n/*.json'
+---
+
 # Inserting an i18n key without rewriting the catalogue
 
 Adding one translation key to `apps/pragma/site/src/i18n/{en,fr}.json` with a

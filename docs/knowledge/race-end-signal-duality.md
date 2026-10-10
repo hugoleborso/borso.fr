@@ -1,3 +1,12 @@
+---
+summary: 'last-loop-lepin has two end-of-race signals, `edition.status === ''finished''` for admin intent and `standings.raceEnded` for the engine; which caller reads which.'
+triggers:
+  paths:
+    - 'apps/last-loop-lepin/api/src/ranking/**'
+    - 'apps/last-loop-lepin/api/src/edition/**'
+    - 'apps/last-loop-lepin/site/src/routes/**'
+---
+
 # Two end-of-race signals on `last-loop-lepin` — what to consume when
 
 The race-engine carries two distinct "is this race over?" signals.

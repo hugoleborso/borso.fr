@@ -7,6 +7,11 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/76
 fix-commit: n/a (vendor constraint; the fix is picking the right front door)
 time-to-detect: minutes (reading the API Gateway limits page)
 tags: [api-gateway, lambda, hono, streaming, vendor-quirk]
+summary: 'An API Gateway HTTP API buffers the whole response, so `streamifyResponse` does nothing behind `LambdaApi`; streaming needs a Function URL, which is an ADR.'
+triggers:
+  paths:
+    - 'apps/*/api/src/main.ts'
+    - 'infra/cdk/src/constructs/lambda-api*.ts'
 ---
 
 # API Gateway HTTP API has no end-to-end response streaming

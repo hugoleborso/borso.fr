@@ -1,3 +1,11 @@
+---
+summary: 'What the human pasted into the session is on disk; `scripts/session-attachments.sh list` shows it and `extract <dir>` writes it out.'
+triggers:
+  commands:
+    - '\.claude/uploads'
+    - 'session-attachments\.sh'
+---
+
 # Claude Code chat attachments are accessible from the session JSONL
 
 > **Just run [`scripts/session-attachments.sh`](../../scripts/session-attachments.sh).**

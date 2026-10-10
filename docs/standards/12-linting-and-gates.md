@@ -282,6 +282,7 @@ two files at once:
 | `check-app-registration.sh` | a new application is missing its path filter or its commitlint scope, so it never deploys and nothing says so; or it owns migrations that `pnpm dev` never applies, so its API answers 500 on every route; or it deploys a prod bucket under a short name another AWS account may own |
 | `check-pwa-assets.sh` | a web app manifest names an icon that does not ship |
 | `check-negative-claims-are-dated.sh` | a knowledge entry says a tool does not work and carries no date |
+| `check-knowledge-triggers.sh` | a knowledge entry declares no `summary:` or no trigger a hook can match, or a trigger pattern that does not compile |
 
 `check-frontend-env-vars.sh` and `check-pure-modules-have-callers.sh` each
 carry an allowlist keyed by variable or by path, and every entry in one states
@@ -388,6 +389,16 @@ review.
   state-dependent with its reason. Three refusing hooks had none, and one of
   them refused a harmless command three times in a session before anyone
   looked ([dantotsu](../dantotsus/the-hook-that-was-missing-from-its-own-contract.md)).
+- `script:scripts/check-knowledge-triggers.sh` fails a knowledge entry with no
+  `summary:` or no `triggers:` a hook can match, and a trigger pattern that
+  compiles in Python and not in jq, which is what the hook matches with.
+  `knowledge-triggers.sh` prints an entry into the agent's context when a
+  Write or Edit target, a command about to run, or a call's output matches it.
+  Of 123 entries only the few a hook or a gate printed ever stopped a repeat,
+  and nine dantotsus record an entry that existed and was not read
+  ([ADR-0030](../adr/0030-knowledge-is-delivered-by-trigger.md)). The same
+  table that holds the refusing hooks to their contract holds this one to its
+  two halves: a call it must speak on, and a mention it must stay silent on.
 - `script:scripts/check-harness-links.sh` fails a skill, agent or command of
   the harness plugin that has no link in `.claude/`, a link that points
   somewhere else, and a plugin hook that `.claude/settings.json` does not
