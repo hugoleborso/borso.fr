@@ -94,5 +94,5 @@ What this makes harder / what now needs remembering:
   orchestrated feature is larger than its code diff.
 - The orchestrator itself is bootstrapped manually in its inaugural PR
   (this one). Subsequent features should be driven through it, and the
-  `/after-task-dantotsus` kaizen sweep is expected to surface its first
+  `/after-task-kaizen` kaizen sweep is expected to surface its first
   rough edges as Dantotsu candidates.

@@ -60,7 +60,7 @@ change, and nobody is left to make it.
 
 **Type:** knowledge addition (level 5 — knowledge)
 
-**Where:** `plugins/borso-harness/skills/after-task-dantotsus/SKILL.md`
+**Where:** `plugins/borso-harness/skills/after-task-kaizen/SKILL.md`
 
 **What changed:** a no-op whose reason names a change is no longer a no-op.
 The change is made in the kaizen PR, and the row is recorded as

@@ -127,6 +127,6 @@ orchestrator with `--no-verify` semantics — CLAUDE.md *Hooks* rule.
 The orchestrator's inaugural PR (this one) is **not** itself
 orchestrator-driven: the orchestrator didn't exist yet. Subsequent
 features are expected to be driven through `/tech-lead-orchestrator`
-and the `/after-task-dantotsus` kaizen sweep should surface the
+and the `/after-task-kaizen` kaizen sweep should surface the
 orchestrator's first rough edges. Until 3 successful runs have shipped,
 treat any oddity as a Dantotsu candidate.

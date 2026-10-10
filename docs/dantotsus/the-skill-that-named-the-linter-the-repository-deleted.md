@@ -109,7 +109,7 @@ runs rather than deleted and left vague:
   `--no-warn-ignored --max-warnings 0`, because ESLint exits 0 on a warning
   and a warning nobody has to clear is a rule that is off.
 - **`technical-conception`, `technical-validation`, `implementation`, `adr`,
-  `dantotsu`, `after-task-dantotsus`** — same substitution, with the
+  `dantotsu`, `after-task-kaizen`** — same substitution, with the
   type-assertion rule named as `borso/no-type-assertion-except-unknown`
   rather than "the Biome plugin".
 - **The dispatch-hygiene rule** rewritten to the lesson rather than the tool:

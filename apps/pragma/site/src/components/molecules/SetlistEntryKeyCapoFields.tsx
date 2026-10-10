@@ -2,39 +2,35 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
-import { composeClassName } from '../atoms/class-name.utils';
-import { inputVariants } from '../atoms/input.variants';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import {
   CAPO_MAX,
   CAPO_MIN,
   KEY_OVERRIDE_MAX,
-  NOTES_MAX,
   type SetlistEntryForm,
 } from './setlist-entry-form.hook';
 
-const FIELD_CLASS = composeClassName(inputVariants({ size: 'sm' }), 'font-mono');
-const LABEL_CLASS = 'flex flex-col gap-1 text-xs tracking-wider uppercase text-ink-400 font-medium';
-const NOTES_ROWS = 2;
+const FIELD_CLASS =
+  'min-h-11 w-12 rounded-md border border-line bg-bg-elev px-1 text-center font-mono text-base text-ink-900 outline-none transition-colors focus:border-ink-700';
+const LABEL_CLASS = 'flex items-center gap-1.5 text-[11px] tracking-wider uppercase text-ink-400';
 
-interface SetlistEntryDetailsFieldsProps {
+interface SetlistEntryKeyCapoFieldsProps {
   readonly form: SetlistEntryForm;
   readonly onPatch: (patch: SetlistEntryPatch) => void;
 }
 
 // @FollowsBlueprint molecule-presentational
-export function SetlistEntryDetailsFields({
+export function SetlistEntryKeyCapoFields({
   form,
   onPatch,
-}: SetlistEntryDetailsFieldsProps): JSX.Element {
+}: SetlistEntryKeyCapoFieldsProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+    <div className="flex flex-wrap items-center gap-x-3 gap-y-1">
       <form.Field name="keyOverride">
         {(field) => (
           <label className={LABEL_CLASS}>
-            {t('setlist.keyOverride')}
+            {t('setlist.key')}
             <input
               type="text"
               value={field.state.value}
@@ -56,6 +52,7 @@ export function SetlistEntryDetailsFields({
             {t('setlist.capo')}
             <input
               type="number"
+              inputMode="numeric"
               min={CAPO_MIN}
               max={CAPO_MAX}
               value={field.state.value}
@@ -66,26 +63,6 @@ export function SetlistEntryDetailsFields({
               }}
               onBlur={field.handleBlur}
               className={FIELD_CLASS}
-            />
-          </label>
-        )}
-      </form.Field>
-      <form.Field name="notes">
-        {(field) => (
-          <label className={composeClassName(LABEL_CLASS, 'sm:col-span-3')}>
-            {t('setlist.notes')}
-            <AutoGrowTextarea
-              size="sm"
-              rows={NOTES_ROWS}
-              value={field.state.value}
-              onChange={(event) => {
-                const next = event.target.value;
-                field.handleChange(next);
-                onPatch({ notes: next });
-              }}
-              onBlur={field.handleBlur}
-              maxLength={NOTES_MAX}
-              className="font-mono"
             />
           </label>
         )}

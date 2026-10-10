@@ -1,5 +1,5 @@
 #!/usr/bin/env bash
-# Log one piece of friction to KAIZEN.md, the scratch file `/after-task-dantotsus`
+# Log one piece of friction to KAIZEN.md, the scratch file `/after-task-kaizen`
 # sweeps when the work merges.
 #
 #   scripts/kaizen.sh "blueprint generators fail from an app dir, error names a path that never existed"
@@ -82,7 +82,7 @@ Append one line per friction event, as it happens, with:
     $KAIZEN_COMMAND \"what went wrong, in one sentence\"
     $KAIZEN_COMMAND --from <your-agent-label> \"...\"   # from a subagent
 
-The problem only, never the fix. \`/after-task-dantotsus\` sweeps this file when
+The problem only, never the fix. \`/after-task-kaizen\` sweeps this file when
 the work merges, classifies each line, and designs the eradication. Subagents
 should append here too, naming themselves, so the sweep can tell one agent
 struggling from four agents hitting the same wall.

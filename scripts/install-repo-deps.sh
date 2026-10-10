@@ -232,7 +232,7 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 # docs/dantotsus/designated-branch-was-a-merged-pr-head.md.
 "$REPO_ROOT/scripts/check-branch-context.sh" || true
 
-# 9. KAIZEN.md — the friction log `/after-task-dantotsus` sweeps at merge.
+# 9. KAIZEN.md — the friction log `/after-task-kaizen` sweeps at merge.
 # Created empty here rather than on first use, because a file that already
 # exists gets appended to and a file somebody has to remember to create does
 # not: PR 50 maintained none, and its inventory had to be rebuilt from the

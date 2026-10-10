@@ -133,13 +133,6 @@ const ICONS = {
       <path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
     </>
   ),
-  deezer: <path d="M4 16v4M9 12v8M14 8v12M19 4v16" />,
-  spotify: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M7 9.5c3-1 7-1 10 .5M7.5 12.5c2.5-.8 6-.6 8.5.8M8 15.5c2-.5 4.5-.4 6.5.6" />
-    </>
-  ),
   youtube: (
     <>
       <rect x="3" y="6" width="18" height="12" rx="3" />
@@ -155,6 +148,16 @@ const ICONS = {
   check: <path d="M4 12l5 5L20 6" />,
   copy: <path d="M9 9h11v11H9zM15 5V4H4v11h1" />,
   chart: <path d="M3 17l5-6 4 3 5-7 4 4M3 21h18" />,
+  audience: (
+    <>
+      <circle cx="6" cy="10" r="2" />
+      <circle cx="12" cy="8" r="2.5" />
+      <circle cx="18" cy="10" r="2" />
+      <path d="M2 19c.5-2.4 2-3.8 4-3.8s3.5 1.4 4 3.8" />
+      <path d="M8 19c.4-3 2-4.8 4-4.8s3.6 1.8 4 4.8" />
+      <path d="M14 19c.5-2.4 2-3.8 4-3.8s3.5 1.4 4 3.8" />
+    </>
+  ),
   vote: (
     <>
       <path d="m9 12 2 2 4-4" />

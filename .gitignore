@@ -21,7 +21,7 @@ coverage/
 .claude/worktrees/
 
 # Per-session kaizen scratch file. Maintained during a task, consumed by
-# /after-task-dantotsus once the work merges. Local-only by design.
+# /after-task-kaizen once the work merges. Local-only by design.
 KAIZEN.md
 
 # Working file for the current refactoring branch (see the PR description).

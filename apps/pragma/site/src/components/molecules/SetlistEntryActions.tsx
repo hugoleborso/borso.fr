@@ -6,8 +6,6 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 
 export interface SetlistEntryActionsProps {
-  readonly onEditLineupOverride: () => void;
-  readonly onEditDefaultLineup: () => void;
   readonly onEditSongDefaults: () => void;
   readonly onRemove: () => void;
 }
@@ -18,22 +16,12 @@ const ACTION_CLASS =
 
 // @FollowsBlueprint molecule-presentational
 export function SetlistEntryActions({
-  onEditLineupOverride,
-  onEditDefaultLineup,
   onEditSongDefaults,
   onRemove,
 }: SetlistEntryActionsProps): JSX.Element {
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" onClick={onEditLineupOverride} className={ACTION_CLASS}>
-        <Icon name="members" size={15} />
-        {t('lineup.editOverride')}
-      </button>
-      <button type="button" onClick={onEditDefaultLineup} className={ACTION_CLASS}>
-        <Icon name="members" size={15} />
-        {t('lineup.editDefault')}
-      </button>
       <button type="button" onClick={onEditSongDefaults} className={ACTION_CLASS}>
         <Icon name="edit" size={14} />
         {t('songDefaults.open')}

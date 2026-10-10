@@ -66,7 +66,7 @@ automatically. The merge is the gate, and this call is the merge.
 
 Merge only on an explicit instruction from the operator for THIS pull request.
 After it lands, surface both post-merge follow-ups CLAUDE.md requires: the
-shared-deploy dispatch when the snapshot moved, and /after-task-dantotsus.
+shared-deploy dispatch when the snapshot moved, and /after-task-kaizen.
 NOTE
 
 exit 0

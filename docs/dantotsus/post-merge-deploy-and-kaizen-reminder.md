@@ -17,7 +17,7 @@ tags: [harness, workflow, claude-md, deploy, kaizen, self-improvement-loop]
 
 PR #24 merged, a `<github-webhook-activity>` event with
 `Outcome: merged` arrived in the session. The agent's response
-mentioned the deploy reminder *and* the `/after-task-dantotsus`
+mentioned the deploy reminder *and* the `/after-task-kaizen`
 follow-up — but only because the agent happened to remember
 both. CLAUDE.md prescribes the deploy reminder explicitly, but
 the *Self-improvement loop* rule (open the kaizen PR after every
@@ -38,7 +38,7 @@ the failure mode the *Self-improvement loop* rule exists to
 prevent.
 
 The matching gap is the *library-search* habit codified in
-[`/after-task-dantotsus`](../../plugins/borso-harness/skills/after-task-dantotsus/SKILL.md)
+[`/after-task-kaizen`](../../plugins/borso-harness/skills/after-task-kaizen/SKILL.md)
 step 2c (added in commit `a0b7f27`): the rule exists, but the
 kaizen skill itself only fires when the operator invokes it.
 The "next layer" of automation — *the harness proposes the right
@@ -54,7 +54,7 @@ skill on a merge webhook* — is the underlying gap.
    loop* section says *"open a follow-up PR labelled `kaizen`"* —
    which is one section away and reads as a description of the
    loop, not as an action item paired with the deploy reminder.
-2. **Why doesn't the harness auto-propose `/after-task-dantotsus`
+2. **Why doesn't the harness auto-propose `/after-task-kaizen`
    on a `merged` webhook event?**
    The webhook-handling rule in the system prompt covers PR
    activity events (comments, CI, reviews) but treats
@@ -72,7 +72,7 @@ skill on a merge webhook* — is the underlying gap.
 
 **Root cause:** *thought* the *Self-improvement loop* rule
 self-applies on merge, *actually* it depends on the agent
-remembering to propose `/after-task-dantotsus` at exactly the
+remembering to propose `/after-task-kaizen` at exactly the
 moment the merge webhook arrives. CLAUDE.md doesn't pair the
 two follow-ups in one rule, and the system prompt's
 webhook-handling section doesn't list the kaizen proposal as a
@@ -92,7 +92,7 @@ mandatory action on merge.
 
 ## Countermeasure
 
-The user invoked `/after-task-dantotsus` directly, which produced
+The user invoked `/after-task-kaizen` directly, which produced
 this PR.
 
 ## Eradication (mandatory — code-level)
@@ -119,7 +119,7 @@ this kaizen PR.
 +- **Prod deploys run from CI on push to `main`, gated by manual approval of the `prod` GitHub environment.** The workflow `.github/workflows/deploy.yml` does the work; Claude never runs `pnpm --filter ... run deploy` locally.
 +- **On every merge webhook, Claude surfaces TWO paired follow-ups in the same response — not one, not optional:**
 +  1. *Approve the pending prod deploy* in GitHub Actions (the deploy sits in the queue until approved; this is the reminder described above).
-+  2. *Propose `/after-task-dantotsus`* to capture lessons in a kaizen PR (per *Self-improvement loop* below).
++  2. *Propose `/after-task-kaizen`* to capture lessons in a kaizen PR (per *Self-improvement loop* below).
 +  The asymmetry where one fires but the other relies on memory is the failure mode this rule exists to prevent. If either step is genuinely a no-op (no infra/app changes for the deploy step ; a trivial PR for the kaizen step), say so explicitly in the same response — silence is not equivalent to "no action needed".
  - **Migration cutovers (alias takeovers, bucket renames, CDK construct rewrites) are higher-risk prod deploys.** They additionally require the operator to walk the migration runbook for the affected resource. CloudFront alias takeovers are gated by `scripts/preflight-cloudfront-aliases.sh`; see [`docs/knowledge/cloudfront-cname-uniqueness.md`](../knowledge/cloudfront-cname-uniqueness.md).
 ```

@@ -177,7 +177,7 @@ it sees every artefact, every retry, every escalation. To keep it small:
   16 / … KiB). There is **no hard cap** (decision Q-CONTEXT) — the
   signal is post-hoc, fed to the metrics aggregation recipe in
   [`docs/knowledge/tech-lead-orchestrator.md`](../../../../docs/knowledge/tech-lead-orchestrator.md)
-  and feeds the post-merge `/after-task-dantotsus` kaizen pass.
+  and feeds the post-merge `/after-task-kaizen` kaizen pass.
 
 ### Human-message classification
 
