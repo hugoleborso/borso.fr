@@ -9,6 +9,7 @@ export interface StandingPlayer {
 
 export type StartRefusal = 'not-in-lobby' | 'not-enough-players';
 export type JoinRefusal = 'already-started' | 'game-full' | 'avatar-taken';
+export type SeatingLoss = 'seat' | 'avatar';
 
 const NO_SEATS_LEFT = 0;
 
@@ -35,6 +36,19 @@ export function refuseJoin(
   if (seatedCount >= maxPlayers) return 'game-full';
   if (takenAvatars.includes(wantedAvatar)) return 'avatar-taken';
   return null;
+}
+
+export function listOpenSeats(
+  takenSeatOrders: readonly number[],
+  maxPlayers: number,
+): readonly number[] {
+  return Array.from({ length: maxPlayers }, (_, seatOrder) => seatOrder).filter(
+    (seatOrder) => !takenSeatOrders.includes(seatOrder),
+  );
+}
+
+export function refuseLostSeating(loss: SeatingLoss): JoinRefusal {
+  return loss === 'avatar' ? 'avatar-taken' : 'game-full';
 }
 
 export function countFreeSeats(seatedCount: number, maxPlayers: number): number {

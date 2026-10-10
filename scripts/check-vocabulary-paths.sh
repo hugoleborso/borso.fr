@@ -14,6 +14,14 @@
 # vocabulary repeated the claim, and the geofence had been removed months
 # earlier in 4bb4b78. See docs/dantotsus/a-comment-decayed-and-took-the-vocabulary-with-it.md.
 #
+# The third fact is a test. A term may name the test that holds one of its
+# invariants on a `Held by: `<test file>` › <test title>` line, and this script
+# fails when that file or that title is gone. The vocabulary promised "voiding is
+# what lets a runner be punched again" while no test asserted it and
+# the code refused it; see
+# docs/dantotsus/a-voided-punch-still-held-its-loop.md. A promise bound to a test
+# title cannot outlive the test unnoticed.
+#
 # The rest of the document is a reviewer's job, and deliberately so. A gate that
 # tried to check whether a definition is still true would be checking prose
 # against code, which is the thing no rule can do.
@@ -34,6 +42,22 @@ for vocabulary in apps/*/VOCABULARY.md; do
     fi
   done < <(grep -oE '^Lives in: `[^`]+`' "$vocabulary" | sed -E 's/^Lives in: `([^`]+)`/\1/')
 
+  while IFS= read -r held_by; do
+    [ -n "$held_by" ] || continue
+    test_file=$(printf '%s' "$held_by" | sed -E 's/^Held by: `([^`]+)` › .*$/\1/')
+    test_title=$(printf '%s' "$held_by" | sed -E 's/^Held by: `[^`]+` › (.*)$/\1/')
+    if [ "$test_file" = "$held_by" ] || [ -z "$test_title" ]; then
+      echo "  $vocabulary has a Held by line that is not \`<test file>\` › <test title>: $held_by" >&2
+      failed=1
+    elif [ ! -f "$app_directory/$test_file" ]; then
+      echo "  $vocabulary holds an invariant with $test_file, which is not in $app_directory" >&2
+      failed=1
+    elif ! grep -qF -- "'$test_title'" "$app_directory/$test_file"; then
+      echo "  $vocabulary holds an invariant with a test $test_file does not have: $test_title" >&2
+      failed=1
+    fi
+  done < <(grep -E '^Held by:' "$vocabulary" || true)
+
   while IFS= read -r citation; do
     [ -n "$citation" ] || continue
     echo "  $vocabulary sources a claim from a comment: $citation" >&2
@@ -50,8 +74,9 @@ if [ "$failed" -ne 0 ]; then
   echo >&2
   echo "A term whose folder moved is a term nobody will trust again, and a" >&2
   echo "definition sourced from a comment cites something this repository" >&2
-  echo "no longer has. State the rule, or point at the test that holds it." >&2
+  echo "no longer has, and a Held by line naming a test that is gone is a" >&2
+  echo "promise nothing checks. State the rule, and point at the test that holds it." >&2
   exit 1
 fi
 
-echo "[check-vocabulary-paths] every term names a folder that exists and cites no comment"
+echo "[check-vocabulary-paths] every term names a folder that exists, every Held by names a test that exists, and none cites a comment"

@@ -1,5 +1,9 @@
 import { beforeEach, describe, expect, it } from 'vitest';
-import { truncateAllTables } from '../../../test/database-utils';
+import {
+  listSeatOrders,
+  openConnectionsForConcurrentRequests,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import {
   askForARematch,
   bid,
@@ -122,6 +126,10 @@ describe('a game of Banana Rush, end to end', () => {
   });
 });
 
+function byAscendingStatus(left: number, right: number): number {
+  return left - right;
+}
+
 describe('the refusals a player can hit', () => {
   beforeEach(async () => {
     await truncateAllTables();
@@ -144,6 +152,42 @@ describe('the refusals a player can hit', () => {
 
     expect(response.status).toBe(409);
     expect(await readError(response)).toBe('game-full');
+  });
+
+  it('seats exactly as many players as the table holds when they all arrive at once', async () => {
+    const host = await hostAGame({ maxPlayers: 3 });
+    await openConnectionsForConcurrentRequests();
+
+    const arrivals = await Promise.all(
+      ['lemur', 'gibbon', 'macaque', 'mandrill'].map((avatar) =>
+        request('POST', `/api/games/${host.game.joinCode}/players`, {
+          body: { nickname: avatar, avatar },
+        }),
+      ),
+    );
+
+    expect(arrivals.map((response) => response.status).toSorted(byAscendingStatus)).toEqual([
+      201, 201, 409, 409,
+    ]);
+    expect(await listSeatOrders(host.game.joinCode)).toEqual([0, 1, 2]);
+  });
+
+  it('seats one of two players who pick the same monkey at the same moment', async () => {
+    const host = await hostAGame();
+    await openConnectionsForConcurrentRequests();
+
+    const arrivals = await Promise.all(
+      ['Zoe', 'Sam'].map((nickname) =>
+        request('POST', `/api/games/${host.game.joinCode}/players`, {
+          body: { nickname, avatar: 'lemur' },
+        }),
+      ),
+    );
+
+    expect(arrivals.map((response) => response.status).toSorted(byAscendingStatus)).toEqual([
+      201, 409,
+    ]);
+    expect(await listSeatOrders(host.game.joinCode)).toEqual([0, 1]);
   });
 
   it('refuses a monkey somebody already picked', async () => {

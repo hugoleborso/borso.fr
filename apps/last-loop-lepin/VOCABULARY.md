@@ -238,14 +238,21 @@ Lives in: `api/src/punch/`
   `finished_at` are not null.
 - `source` is `admin` or `self`. The column is nullable, and the repository
   reads anything other than `self` as `admin`.
-- `validatePunchTiming` is the single place a live punch is accepted. It
-  refuses before `startsAt` (`race-not-started`), after `endsAt`
-  (`race-finished`), and when the runner already holds a non-voided punch for
-  the target loop (`already-punched-this-loop`).
-- One punch per runner and loop is held by that check rather than by the
-  database. Aurora DSQL takes neither the partial unique index nor the foreign
-  keys, so `punch.schema.ts` declares neither, and the gaps themselves are
-  listed in `docs/knowledge/dsql-postgres-compat-gaps.md`.
+- `validatePunchTiming` decides the race window and the loop. It refuses
+  before `startsAt` (`race-not-started`) and after `endsAt` (`race-finished`),
+  and it reads no punch.
+- One active punch per runner and loop is held by the primary key of
+  `loop_punch_claims`, keyed on `(edition_slug, runner_slug, loop_index)`. The
+  claim is written in the same transaction as the punch, so of two punches for
+  the same loop arriving together one is refused (`already-punched-this-loop`)
+  and nothing is written for it. A check over punches read beforehand cannot
+  hold this rule, because both requests pass it before either writes.
+- Aurora DSQL takes neither the partial unique index nor the foreign keys, so
+  `punch.schema.ts` declares neither, and the gaps themselves are listed in
+  `docs/knowledge/dsql-postgres-compat-gaps.md`.
+
+Held by: `api/src/punch/punch.service.test.ts` › keeps one punch when the same runner is punched twice at the same instant
+Held by: `api/src/punch/punch.service.test.ts` › keeps one punch when a catch-up and a live punch land on the same loop at once
 
 ## Rank
 
@@ -364,11 +371,16 @@ Marking a punch as no longer counting, while keeping the row.
 
 Lives in: `api/src/punch/`
 
-- `voidPunch` stamps `voided_at` and leaves everything else in place.
-- Every projection filters on `voidedAt === null` before counting anything.
-- Voiding is what lets a runner be punched again for the same loop, which is
-  why one punch per runner and loop is an application rule rather than a
-  database constraint.
+- `voidPunch` stamps `voided_at` and deletes the punch's row in
+  `loop_punch_claims`, in one transaction, and leaves the punch itself in
+  place.
+- Every projection filters on `voidedAt === null` before counting anything,
+  and a core function taking punches filters them itself rather than trusting
+  its caller to have done it.
+- Voiding is what lets a runner be punched again for the same loop: the claim
+  is gone, so the next punch for that loop can take it.
+
+Held by: `api/src/punch/punch.service.test.ts` › punches a runner again for a loop whose punch was voided
 
 ## Words we do not use
 

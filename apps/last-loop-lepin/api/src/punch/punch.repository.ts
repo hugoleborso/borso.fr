@@ -1,6 +1,6 @@
 import { and, eq, isNull } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { loopPunchesTable, manualDidNotFinishesTable } from './punch.schema';
+import { loopPunchClaimsTable, loopPunchesTable, manualDidNotFinishesTable } from './punch.schema';
 import type { LoopPunch, ManualDidNotFinish, PunchSource } from './punch.types';
 
 /**
@@ -63,6 +63,25 @@ export async function insertPunch(executor: DatabaseExecutor, punch: LoopPunch):
   });
 }
 
+// @FollowsBlueprint repository-write-refused-by-the-primary-key
+export async function didClaimLoop(executor: DatabaseExecutor, punch: LoopPunch): Promise<boolean> {
+  const written = await executor
+    .insert(loopPunchClaimsTable)
+    .values({
+      editionSlug: punch.editionSlug,
+      runnerSlug: punch.runnerSlug,
+      loopIndex: punch.loopIndex,
+      punchId: punch.id,
+    })
+    .onConflictDoNothing()
+    .returning({ punchId: loopPunchClaimsTable.punchId });
+  return written.length > 0;
+}
+
+export async function releaseLoopClaim(executor: DatabaseExecutor, punchId: string): Promise<void> {
+  await executor.delete(loopPunchClaimsTable).where(eq(loopPunchClaimsTable.punchId, punchId));
+}
+
 export async function findActivePunchForLoop(
   editionSlug: string,
   runnerSlug: string,
@@ -113,8 +132,12 @@ export async function markPunchCorrected(
     .where(eq(loopPunchesTable.id, id));
 }
 
-export async function markPunchVoided(id: string, voidedAt: Date): Promise<void> {
-  await getDatabase().update(loopPunchesTable).set({ voidedAt }).where(eq(loopPunchesTable.id, id));
+export async function markPunchVoided(
+  executor: DatabaseExecutor,
+  id: string,
+  voidedAt: Date,
+): Promise<void> {
+  await executor.update(loopPunchesTable).set({ voidedAt }).where(eq(loopPunchesTable.id, id));
 }
 
 export async function insertManualDidNotFinish(didNotFinish: ManualDidNotFinish): Promise<void> {
@@ -141,6 +164,9 @@ export async function deleteAllEditionPunchesAndDidNotFinishes(
   editionSlug: string,
 ): Promise<void> {
   await executor.delete(loopPunchesTable).where(eq(loopPunchesTable.editionSlug, editionSlug));
+  await executor
+    .delete(loopPunchClaimsTable)
+    .where(eq(loopPunchClaimsTable.editionSlug, editionSlug));
   await executor
     .delete(manualDidNotFinishesTable)
     .where(eq(manualDidNotFinishesTable.editionSlug, editionSlug));

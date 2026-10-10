@@ -51,6 +51,24 @@ export const playerTable = pgTable('player', {
   joinedAt: timestamp('joined_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
 });
 
+export const seatClaimTable = pgTable(
+  'seat_claim',
+  {
+    gameId: uuid('game_id').notNull(),
+    seatOrder: integer('seat_order').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.gameId, table.seatOrder] })],
+);
+
+export const avatarClaimTable = pgTable(
+  'avatar_claim',
+  {
+    gameId: uuid('game_id').notNull(),
+    avatar: text('avatar').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.gameId, table.avatar] })],
+);
+
 export const roundResultTable = pgTable(
   'round_result',
   {

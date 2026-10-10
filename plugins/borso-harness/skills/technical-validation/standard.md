@@ -8,12 +8,15 @@
 
 ## What a technical validation is
 
-A technical validation **reads the diff on the current branch and asks four questions about it**:
+A technical validation **reads the diff on the current branch and asks five questions about it**:
 
 1. **Correctness** — does the code do what the spec said it would? Quote the code, cross-reference the Q.O.D. or Changes entry.
 2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, ESLint including `borso/no-type-assertion-except-unknown`)? Run lint, search for forbidden patterns, sample names.
 3. **Tests pass** — `pnpm test` succeeds on every touched workspace. For coverage-gated workspaces, `test:coverage` succeeds at 100%.
 4. **Coverage** — every use case the spec lists is exercised by a test that exists.
+5. **Scale** — when the same request arrives twice at once, or the code runs on two processes, does every rule still hold?
+
+Every finding states a concrete failing case: this input, or this pair of requests, leads to this wrong result. A concern that cannot be put that way is a question in the report's Notes, not a FAIL row.
 
 A passing technical validation is high confidence the feature ships *clean*. A failing one is grounds to halt push, same as visual-validation.
 
@@ -88,6 +91,25 @@ The spec's *Test strategy* section enumerates which assertions go where. The **"
 
 Trivially-static features that have no behaviour to test (e.g. a static-content page with no logic) skip category D entirely with a note in the preamble.
 
+### E. Scale (required)
+
+Required on every diff that writes to a database or keeps state in a process. Three checks, each one row per subject:
+
+- **Check-then-write.** Every write that depends on a decision computed from rows read earlier in the request (a count against a limit, an existence check, an "already has one") is held at write time, by a primary key the write claims in the same transaction or by one conditional `UPDATE … WHERE` whose `RETURNING` decides. A check in code passes for both of two concurrent requests, a read inside the transaction sees the same snapshot for both, and a unique index on Aurora DSQL is built asynchronously. A FAIL names the two requests and the duplicated or overfilled result.
+- **Per-process state.** A module-level cache, counter, rate limit or map is per Lambda instance. It FAILs when the spec states the rule for the application rather than for one instance.
+- **Concurrent proof.** Every rule held by a key has a back-e2e test that fires the competing requests at once and asserts the refusal and the row count.
+
+This category exists because two defects passed every other category: a double tap recorded two punches for one loop, and four players arriving together at a table with two free seats were all seated. Each was correct for one request at a time. See [`docs/dantotsus/five-monkeys-at-a-three-seat-table.md`](../../../../docs/dantotsus/five-monkeys-at-a-three-seat-table.md).
+
+## What counts as a finding
+
+A FAIL row carries a concrete failing case, or it is not a finding.
+
+- **Behaviour rows** (A, D, E): an input or a sequence of requests, and the wrong result it produces, precise enough to become a test.
+- **Rule rows** (B, C): the offending line with `file:line` and the rule it breaks, or the command and its output.
+
+"This might not scale", "this looks fragile" and "consider handling X" are not findings. They go in Notes as questions. The rule keeps a report actionable: every FAIL can be reproduced by whoever fixes it, and a validator that has to write the failing case down finds out, while writing it, whether the concern was real.
+
 ## What does not get validated
 
 - **Performance** — bundle size, runtime profile, memory. Out of scope; observability concern.
@@ -103,7 +125,7 @@ The agent assigns one tag per row:
 - **FAIL** — the agent observed the assertion to *not* hold.
 - **UNVERIFIABLE** — the agent could not determine pass/fail (missing input, missing test, ambiguous spec).
 
-Final verdict, aggregated across categories A–D:
+Final verdict, aggregated across categories A–E:
 
 - All rows PASS → **PASS**.
 - ≥ 1 FAIL row → **FAIL**.
@@ -120,6 +142,8 @@ PASS_EXCEPT_UNVERIFIABLE is its own verdict — mergeable only if the operator c
 | Agent reports "tests pass" without running them | First post-merge regression catches the team off-guard. |
 | Agent quotes evidence without file:line | Reviewers can't audit the verdict. |
 | Conflating C and D | A workspace with one trivial test passes C and silently masks gaps in D. |
+| Skipping E because the tests pass | Tests run one request at a time; a check-then-write race passes all of them. |
+| A FAIL row with no failing case | Nobody can reproduce it, so it is argued about instead of fixed. |
 | Validating against the implementation, not the spec | Implementer's bug is laundered through validation. |
 | Missing-plan UNVERIFIABLE noise | When the plan is missing, the report should say so once, not echo it across every row. |
 | Skipping the run on infra workspaces because they're slow | Coverage gate matters most where coverage is mandatory. |
