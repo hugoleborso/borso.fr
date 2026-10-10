@@ -15,6 +15,8 @@ const AUDIT_COLUMNS_WITH_DEFAULT_NOW: ReadonlySet<string> = new Set([
   'loop_punches.created_at',
   'manual_dnfs.created_at',
   'auth_attempts.created_at',
+  'admin_credentials.updated_at',
+  'admin_sessions.created_at',
 ]);
 
 interface NowDefaultOccurrence {
@@ -23,8 +25,11 @@ interface NowDefaultOccurrence {
   readonly file: string;
 }
 
-const CREATE_TABLE_PATTERN = /CREATE\s+TABLE\s+"?(\w+)"?\s*\(([\s\S]*?)\);/gi;
+const CREATE_TABLE_PATTERN =
+  /CREATE\s+TABLE\s+(?:IF\s+NOT\s+EXISTS\s+)?"?(\w+)"?\s*\(([\s\S]*?)\);/gi;
 const COLUMN_LINE_PATTERN = /^\s*"?(\w+)"?\s+[\w()\s]+DEFAULT\s+now\(\)/i;
+const ADD_COLUMN_PATTERN =
+  /ALTER\s+TABLE\s+"?(\w+)"?\s+ADD\s+COLUMN\s+(?:IF\s+NOT\s+EXISTS\s+)?"?(\w+)"?[\w()\s]*DEFAULT\s+now\(\)/gi;
 
 function scanFileForNowDefaults(
   filePath: string,
@@ -43,6 +48,9 @@ function scanFileForNowDefaults(
         occurrences.push({ tableName, columnName, file: fileName });
       }
     }
+  }
+  for (const match of content.matchAll(ADD_COLUMN_PATTERN)) {
+    occurrences.push({ tableName: match[1] ?? '', columnName: match[2] ?? '', file: fileName });
   }
   return occurrences;
 }
