@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: 157
-fix-pr: pending
+fix-pr: 166
 fix-commits: [84891d2d]
 eradication-level: 2
 time-to-detect: months
@@ -111,7 +111,7 @@ every limit inside it from `domain/`.
 
 **Type:** DevX check (level 2 — custom lint rules)
 
-**Reference:** this PR · commit `84891d2d`
+**Reference:** [PR #166](https://github.com/hugoleborso/borso.fr/pull/166) · commit `84891d2d`
 
 **The actual fix:**
 
