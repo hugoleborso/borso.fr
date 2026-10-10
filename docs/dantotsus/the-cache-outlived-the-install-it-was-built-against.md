@@ -5,7 +5,7 @@ detected-at: linter
 severity: low
 related-pr: '#153'
 fix-pr: '#154'
-fix-commits: []
+fix-commits: [4bcf314c]
 eradication-level: 1
 time-to-detect: minutes
 tags: [eslint, cache, pnpm, deps, hooks, harness, pragma]
@@ -79,7 +79,7 @@ before an install keeps its errors after it.
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154)
+**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154) · commit [`4bcf314c`](https://github.com/hugoleborso/borso.fr/commit/4bcf314c)
 
 Every app and infra `lint` script now runs `scripts/lint-workspace.sh`, which
 makes the sequence above impossible in two ways. It refuses to lint while
