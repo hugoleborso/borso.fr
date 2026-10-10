@@ -222,6 +222,12 @@ scripts/check-package-scripts-are-commands.sh
 echo "[pre-commit] checking every shared dependency reads the catalog"
 pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
 
+# Text that explains the interface, by the name of its message key: a hint, a
+# subtitle, an intro. The reviewer bullet in standard 05 asked for this by eye
+# and the operator still corrected it three times in one pull request.
+echo "[pre-commit] checking every explanatory message carries a reason"
+pnpm exec tsx scripts/standards/check-explanatory-copy.ts
+
 # The enforcement ledger, whenever a standard or one of the mechanisms it can
 # cite changed. It resolves every `## Enforced by` bullet against the live
 # ESLint configuration and the checked-in hooks, so it fails on a rule cited

@@ -283,7 +283,6 @@
   },
   "mastery": {
     "noData": "Add members and instruments to populate the matrix.",
-    "subtitle": "Member × Instrument — 0 = does not play, 10 = excellent.",
     "title": "Mastery matrix"
   },
   "members": {
@@ -329,7 +328,6 @@
     "vote": "Vote now"
   },
   "scaffold": {
-    "subtitle": "First slice: auth, schema, design tokens, i18n. UI surfaces ship in follow-up PRs.",
     "title": "Pragma — scaffold ready"
   },
   "scene": {

@@ -283,7 +283,6 @@
   },
   "mastery": {
     "noData": "Crée des membres et des instruments pour remplir la matrice.",
-    "subtitle": "Membre × Instrument — 0 = ne joue pas, 10 = excellent.",
     "title": "Matrice de maîtrise"
   },
   "members": {
@@ -329,7 +328,6 @@
     "vote": "Voter"
   },
   "scaffold": {
-    "subtitle": "Première tranche : auth, schéma, design tokens, i18n. Les surfaces UI arrivent dans les PR suivantes.",
     "title": "Pragma — squelette prêt"
   },
   "scene": {
