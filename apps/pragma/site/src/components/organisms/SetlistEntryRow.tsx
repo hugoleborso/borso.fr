@@ -86,7 +86,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
-  const [defaultLineupEditorOpen, setDefaultLineupEditorOpen] = useState<boolean>(false);
   const [songDefaultsOpen, setSongDefaultsOpen] = useState<boolean>(false);
   const [isRemovalPending, setIsRemovalPending] = useState<boolean>(false);
   const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
@@ -115,9 +114,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
       'entry-cleared': () => props.onUpdate(props.entryId, { lineupOverride: null }),
     } as const;
     saveTo[selectLineupSaveTarget(props.songDefaultLineup, lineup, wasReset)]();
-  };
-  const saveDefaultLineup = (lineup: LineupRecord | null): void => {
-    props.onUpdateSongDefaults({ defaultLineup: toLineupPayload(lineup ?? {}) });
   };
   const openFromSheet = (open: (isOpen: boolean) => void): void => {
     setIsSheetOpen(false);
@@ -229,7 +225,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           onPublishEnergy={publishEnergy}
           onPatch={(patch) => props.onUpdate(props.entryId, patch)}
           onEditLineupOverride={() => openFromSheet(setLineupEditorOpen)}
-          onEditDefaultLineup={() => openFromSheet(setDefaultLineupEditorOpen)}
           onEditSongDefaults={() => openFromSheet(setSongDefaultsOpen)}
           onRemove={() => openFromSheet(setIsRemovalPending)}
           onClose={() => setIsSheetOpen(false)}
@@ -246,15 +241,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
         onSave={saveLineupOverride}
         onSaveAsSongDefault={saveLineupAsSongDefault}
         onClose={() => setLineupEditorOpen(false)}
-      />
-      <LineupEditor
-        open={defaultLineupEditorOpen}
-        surface="song"
-        members={lineupEditorMembers}
-        instruments={props.instruments}
-        currentLineup={props.songDefaultLineup}
-        onSave={saveDefaultLineup}
-        onClose={() => setDefaultLineupEditorOpen(false)}
       />
       <SongDefaultsDialog
         open={songDefaultsOpen}

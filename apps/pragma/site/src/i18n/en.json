@@ -265,7 +265,6 @@
   "lineup": {
     "allMembers": "All",
     "cancel": "Cancel",
-    "editDefault": "Default lineup",
     "editOverride": "Lineup (this set)",
     "emptyForMember": "Nothing to play tonight.",
     "filterByMember": "Filter by member",

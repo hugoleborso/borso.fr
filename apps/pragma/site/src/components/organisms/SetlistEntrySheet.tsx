@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { type ListenSubject, selectListenTargets } from '../../lib/listen-links.utils';
 import { AlbumCover } from '../atoms/AlbumCover';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { LineupSlots } from '../molecules/LineupSlots';
@@ -17,6 +18,12 @@ import type { SetlistEntryForm } from '../molecules/setlist-entry-form.hook';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 
+const LISTEN_LINK_CLASS =
+  'inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-bg-sunk';
+const PROVIDER_COLOR_CLASS = {
+  deezer: 'text-[#a238ff]',
+  spotify: 'text-[#1db954]',
+} as const;
 const PROVIDER_LABEL_KEYS = {
   deezer: 'catalog.listenOnDeezer',
   spotify: 'catalog.listenOnSpotify',
@@ -33,7 +40,6 @@ export interface SetlistEntrySheetProps {
   readonly onPublishEnergy: (level: number) => void;
   readonly onPatch: (patch: SetlistEntryPatch) => void;
   readonly onEditLineupOverride: () => void;
-  readonly onEditDefaultLineup: () => void;
   readonly onEditSongDefaults: () => void;
   readonly onRemove: () => void;
   readonly onClose: () => void;
@@ -68,28 +74,31 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
             <h2 className="m-0 pr-9 font-display text-2xl italic leading-tight text-ink-900">
               {props.subject.title}
             </h2>
-            <p className="m-0 text-sm text-ink-500">{props.subject.artist}</p>
+            <div className="flex items-center gap-2">
+              <p className="m-0 min-w-0 truncate text-sm text-ink-500">{props.subject.artist}</p>
+              {selectListenTargets(props.subject).map((target) => (
+                <a
+                  key={target.provider}
+                  href={target.address}
+                  target="_blank"
+                  rel="noreferrer noopener"
+                  aria-label={t(PROVIDER_LABEL_KEYS[target.provider])}
+                  title={t(PROVIDER_LABEL_KEYS[target.provider])}
+                  className={composeClassName(
+                    LISTEN_LINK_CLASS,
+                    PROVIDER_COLOR_CLASS[target.provider],
+                  )}
+                >
+                  <Icon name={target.provider} size={22} />
+                </a>
+              ))}
+            </div>
             {props.memberPart.length === 0 ? null : (
               <MemberPartGlyphs parts={props.memberPart} size={18} />
             )}
             <SetlistEntryKeyCapoFields form={props.form} onPatch={props.onPatch} />
           </div>
         </div>
-        <ul className="m-0 grid list-none grid-cols-2 gap-2 p-0">
-          {selectListenTargets(props.subject).map((target) => (
-            <li key={target.provider}>
-              <a
-                href={target.address}
-                target="_blank"
-                rel="noreferrer noopener"
-                className="flex min-h-11 items-center gap-2 rounded-md border border-line px-2.5 text-[13px] text-ink-900 no-underline hover:border-line-strong hover:bg-bg"
-              >
-                <Icon name={target.provider} />
-                {t(PROVIDER_LABEL_KEYS[target.provider])}
-              </a>
-            </li>
-          ))}
-        </ul>
         <button
           type="button"
           onClick={props.onEditLineupOverride}
@@ -108,8 +117,6 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
         </div>
         <SetlistEntryNotesField form={props.form} onPatch={props.onPatch} />
         <SetlistEntryActions
-          onEditLineupOverride={props.onEditLineupOverride}
-          onEditDefaultLineup={props.onEditDefaultLineup}
           onEditSongDefaults={props.onEditSongDefaults}
           onRemove={props.onRemove}
         />
