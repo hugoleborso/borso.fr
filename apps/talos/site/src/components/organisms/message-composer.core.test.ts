@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { canSendMessage } from './message-composer.core';
+import { isMessageTooLong, LONG_MESSAGE_THRESHOLD } from './message-composer.core';
 
-describe('canSendMessage', () => {
-  it('refuses a blank message and accepts any text', () => {
-    expect(canSendMessage(' \n ')).toBe(false);
-    expect(canSendMessage('Rappelle-moi')).toBe(true);
+describe('isMessageTooLong', () => {
+  it('warns only beyond the threshold', () => {
+    expect(isMessageTooLong('x'.repeat(LONG_MESSAGE_THRESHOLD))).toBe(false);
+    expect(isMessageTooLong('x'.repeat(LONG_MESSAGE_THRESHOLD + 1))).toBe(true);
   });
 });

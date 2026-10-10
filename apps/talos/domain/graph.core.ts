@@ -6,12 +6,14 @@ export interface GraphRelation {
   readonly target: string;
   readonly since: string;
   readonly until: string;
+  readonly seen: string;
 }
 
 export interface GraphNode {
   readonly id: string;
   readonly title: string;
   readonly type: string;
+  readonly proximity?: number;
 }
 
 export interface GraphEdge {
@@ -20,6 +22,8 @@ export interface GraphEdge {
   readonly relation: string;
   readonly since?: string;
   readonly until?: string;
+  readonly seen?: string;
+  readonly isClosed: boolean;
 }
 
 export interface Graph {
@@ -36,6 +40,12 @@ const PATH_SEPARATOR = '/';
 const TARGET_FIELD = 'cible';
 const SINCE_FIELD = 'depuis';
 const UNTIL_FIELD = 'jusqua';
+const SEEN_FIELD = 'vu';
+const PROXIMITY_FIELD = 'proximite';
+const HIGHEST_PROXIMITY = 5;
+const PROXIMITY_BY_DECLARATION: ReadonlyMap<string | undefined, number> = new Map(
+  Array.from({ length: HIGHEST_PROXIMITY }, (_unused, index) => [String(index + 1), index + 1]),
+);
 
 const relationLineSchema = z.object({
   source: z.string().min(1),
@@ -43,6 +53,7 @@ const relationLineSchema = z.object({
   [TARGET_FIELD]: z.string().min(1),
   [SINCE_FIELD]: z.string().default(''),
   [UNTIL_FIELD]: z.string().default(''),
+  [SEEN_FIELD]: z.string().default(''),
 });
 
 function readJsonLine(line: string): unknown {
@@ -62,6 +73,7 @@ function readRelation(line: string): GraphRelation | null {
     target: relationLine.data[TARGET_FIELD],
     since: relationLine.data[SINCE_FIELD],
     until: relationLine.data[UNTIL_FIELD],
+    seen: relationLine.data[SEEN_FIELD],
   };
 }
 
@@ -93,13 +105,45 @@ export function isRelationTrueOn(relation: GraphRelation, date: string): boolean
   return relation.until === '' || computeUpperBound(relation.until) >= date;
 }
 
-function projectEdge(relation: GraphRelation): GraphEdge {
+export function hasRelationStartedBy(relation: GraphRelation, date: string): boolean {
+  return computeLowerBound(relation.since) <= date;
+}
+
+export function isRelationClosedOn(relation: GraphRelation, date: string | null): boolean {
+  if (relation.until === '') return false;
+  return date === null || computeUpperBound(relation.until) < date;
+}
+
+export function readProximity(frontMatter: Readonly<Record<string, string>>): number | null {
+  return PROXIMITY_BY_DECLARATION.get(frontMatter[PROXIMITY_FIELD]) ?? null;
+}
+
+export interface GraphPageSummary {
+  readonly path: string;
+  readonly title: string;
+  readonly type: string;
+  readonly frontMatter: Readonly<Record<string, string>>;
+}
+
+export function projectPageNode(page: GraphPageSummary): GraphNode {
+  const proximity = readProximity(page.frontMatter);
+  return {
+    id: page.path,
+    title: page.title,
+    type: page.type,
+    ...(proximity === null ? {} : { proximity }),
+  };
+}
+
+function projectEdge(relation: GraphRelation, date: string | null): GraphEdge {
   return {
     source: relation.source,
     target: relation.target,
     relation: relation.relation,
     ...(relation.since === '' ? {} : { since: relation.since }),
     ...(relation.until === '' ? {} : { until: relation.until }),
+    ...(relation.seen === '' ? {} : { seen: relation.seen }),
+    isClosed: isRelationClosedOn(relation, date),
   };
 }
 
@@ -114,12 +158,14 @@ export function buildGraph(
   date: string | null,
 ): Graph {
   const keptRelations =
-    date === null ? relations : relations.filter((relation) => isRelationTrueOn(relation, date));
+    date === null
+      ? relations
+      : relations.filter((relation) => hasRelationStartedBy(relation, date));
   const knownIds = new Set(pages.map((page) => page.id));
   const endpoints = keptRelations.flatMap((relation) => [relation.source, relation.target]);
   const unknownIds = [...new Set(endpoints)].filter((id) => !knownIds.has(id));
   return {
     nodes: [...pages, ...unknownIds.map(buildUnknownNode)],
-    edges: keptRelations.map(projectEdge),
+    edges: keptRelations.map((relation) => projectEdge(relation, date)),
   };
 }

@@ -27,6 +27,7 @@ describe('isReadablePagePath', () => {
     ['second-brain/moi', true],
     ['index', true],
     ['journal/2026-10-05', true],
+    ['sources/2026/10/02/appel', true],
     ['etat/securite', false],
     ['second-brain/../etat/securite', false],
     ['second-brain/..', false],

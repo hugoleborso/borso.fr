@@ -1,6 +1,7 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useNavigate } from 'react-router-dom';
 import { Card } from '../atoms/Card';
 import { PageTitle } from '../atoms/PageTitle';
 import { EmptyState } from '../molecules/EmptyState';
@@ -13,7 +14,9 @@ import {
   formatShortDay,
   toIsoDay,
 } from '../../lib/calendar-day.utils';
-import { useTodos, useUpdateTodo } from '../../lib/queries/todos.queries';
+import { openActionSheet } from '../../lib/action-sheet.hook';
+import { useDeleteTodo, useTodos, useUpdateTodo } from '../../lib/queries/todos.queries';
+import { buildTodoHref } from '../../lib/wikilinks.core';
 import { TodoEditForm } from './TodoEditForm';
 import { TodoQuickAdd } from './TodoQuickAdd';
 import {
@@ -34,6 +37,8 @@ export function TodoBoard(): JSX.Element {
   const { t } = useTranslation();
   const todos = useTodos();
   const updateTodo = useUpdateTodo();
+  const deleteTodo = useDeleteTodo();
+  const navigate = useNavigate();
   const [filter, setFilter] = useState<TodoFilter>('open');
   const [editingId, setEditingId] = useState<string | null>(null);
   const today = toIsoDay(new Date());
@@ -46,8 +51,7 @@ export function TodoBoard(): JSX.Element {
       <PageTitle subtitle={t('todo.open-count', { count: countOpenTodos(allTodos) })}>
         {t('todo.title')}
       </PageTitle>
-      <div className="flex flex-col gap-4">
-        <TodoQuickAdd />
+      <div className="flex flex-col gap-4 pb-16">
         <SegmentedFilter
           label={t('todo.filter.label')}
           options={TODO_FILTERS.map((value) => ({
@@ -65,6 +69,15 @@ export function TodoBoard(): JSX.Element {
               {visibleTodos.map((todo) => {
                 const status = selectDueStatus(todo, today, tomorrow);
                 const isEditing = todo.id === editingId;
+                const toggle = (): void => {
+                  updateTodo.mutate({ id: todo.id, done: !todo.done });
+                };
+                const edit = (): void => {
+                  setEditingId(todo.id);
+                };
+                const remove = (): void => {
+                  deleteTodo.mutate({ id: todo.id });
+                };
                 return isEditing ? (
                   <TodoEditForm
                     key={todo.id}
@@ -89,19 +102,35 @@ export function TodoBoard(): JSX.Element {
                     )}
                     dueTone={selectDueTone(status)}
                     dueIcon={selectDueIcon(status)}
-                    hasCommitment={todo.commitment !== undefined}
-                    onToggle={() => updateTodo.mutate({ id: todo.id, done: !todo.done })}
-                    onEdit={() => setEditingId(todo.id)}
+                    onToggle={toggle}
+                    onOpen={() => void navigate(buildTodoHref(todo.id))}
+                    onDelete={remove}
+                    onLongPress={() => {
+                      openActionSheet({
+                        title: todo.text,
+                        subject: { kind: 'todo' },
+                        actions: [
+                          {
+                            labelKey: todo.done ? 'todo.row.uncheck' : 'todo.row.check',
+                            icon: todo.done ? 'undo' : 'check',
+                            onSelect: toggle,
+                          },
+                          { labelKey: 'common.edit', icon: 'edit', onSelect: edit },
+                          { labelKey: 'todo.row.delete', icon: 'remove', onSelect: remove },
+                        ],
+                      });
+                    }}
                   />
                 );
               })}
             </ul>
             {visibleTodos.length === 0 ? (
-              <EmptyState icon="check" title={t(selectTodoEmptyLabelKey(filter))} />
+              <EmptyState icon="check" label={t(selectTodoEmptyLabelKey(filter))} />
             ) : null}
           </Card>
         )}
       </div>
+      <TodoQuickAdd />
     </>
   );
 }

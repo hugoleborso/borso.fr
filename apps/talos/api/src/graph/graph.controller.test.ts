@@ -5,7 +5,7 @@ import { truncateAllTables } from '../../../test/database-utils';
 
 interface GraphBody {
   nodes: { id: string; title: string; type: string }[];
-  edges: { target: string }[];
+  edges: { target: string; isClosed: boolean }[];
 }
 
 beforeEach(async () => {
@@ -28,13 +28,35 @@ describe('GET /api/graph', () => {
     expect(graph.edges).toHaveLength(2);
   });
 
-  it('keeps only the relations true on the asked date', async () => {
+  it('keeps only the relations begun by the asked date', async () => {
     const { app } = buildTestContext(CONTENT_FIXTURE);
     const response = await requestJson(app, '/api/graph?date=2026-03-15', {
       cookie: await signIn(),
     });
     const graph: GraphBody = await response.json();
     expect(graph.edges.map((edge) => edge.target)).toEqual(['second-brain/projets/initech']);
+  });
+
+  it('marks a relation ended before the asked date as closed and carries the proximity', async () => {
+    const { app } = buildTestContext(CONTENT_FIXTURE);
+    const response = await requestJson(app, '/api/graph?date=2026-10-08', {
+      cookie: await signIn(),
+    });
+    const graph: GraphBody = await response.json();
+    expect(graph.edges.map((edge) => [edge.target, edge.isClosed])).toEqual([
+      ['second-brain/projets/refonte', false],
+      ['second-brain/projets/initech', true],
+    ]);
+    expect(graph.nodes).toEqual(
+      expect.arrayContaining([
+        {
+          id: 'second-brain/projets/refonte',
+          title: 'Refonte du site',
+          type: 'projet',
+          proximity: 4,
+        },
+      ]),
+    );
   });
 
   it('refuses a date that is not one', async () => {

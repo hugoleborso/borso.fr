@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
   selectDecisionToast,
+  selectDraftReversal,
+  selectDraftStatusToast,
   selectPushTestToast,
+  selectTodoReversal,
   selectTodoUpdateToast,
 } from './mutation-toasts.core';
 
@@ -51,5 +54,38 @@ describe('selectPushTestToast', () => {
 
   it('says no device is subscribed when nothing was delivered', () => {
     expect(selectPushTestToast(0)).toEqual({ tone: 'info', messageKey: 'toast.push-test-none' });
+  });
+});
+
+describe('selectTodoReversal', () => {
+  it('undoes a check or a reopening, and offers nothing for an edit', () => {
+    expect(selectTodoReversal({ id: 'a', done: true })).toEqual({ id: 'a', done: false });
+    expect(selectTodoReversal({ id: 'a', done: false })).toEqual({ id: 'a', done: true });
+    expect(selectTodoReversal({ id: 'a', text: 'x' })).toBeNull();
+  });
+});
+
+describe('selectDraftStatusToast', () => {
+  it('celebrates a sent draft and simply confirms the other changes', () => {
+    expect(selectDraftStatusToast('envoye')).toEqual({
+      tone: 'success',
+      messageKey: 'toast.draft-sent',
+    });
+    expect(selectDraftStatusToast('abandonne')).toEqual({
+      tone: 'neutral',
+      messageKey: 'toast.draft-abandoned',
+    });
+    expect(selectDraftStatusToast('pret')).toEqual({
+      tone: 'neutral',
+      messageKey: 'toast.draft-restored',
+    });
+  });
+});
+
+describe('selectDraftReversal', () => {
+  it('puts a settled draft back to ready, and offers nothing after that', () => {
+    expect(selectDraftReversal('envoye')).toBe('pret');
+    expect(selectDraftReversal('abandonne')).toBe('pret');
+    expect(selectDraftReversal('pret')).toBeNull();
   });
 });

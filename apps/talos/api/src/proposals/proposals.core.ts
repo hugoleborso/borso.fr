@@ -1,6 +1,8 @@
 import {
+  applyDecisionCancellation,
   applyProposalDecision,
   type DecisionRecord,
+  isDecisionRevocable,
   parseProposal,
   PENDING_PROPOSAL_STATUS,
   type Proposal,
@@ -12,6 +14,11 @@ export type DecisionOutcome =
   | { readonly kind: 'decided'; readonly proposal: Proposal }
   | { readonly kind: 'not-found' }
   | { readonly kind: 'already-decided' };
+
+export type CancellationOutcome =
+  | { readonly kind: 'cancelled'; readonly proposal: Proposal }
+  | { readonly kind: 'not-found' }
+  | { readonly kind: 'not-revocable' };
 
 const PROPOSALS_DIRECTORY = 'etat/propositions';
 const MARKDOWN_EXTENSION = '.md';
@@ -57,5 +64,24 @@ export function decideProposalFile(
     content,
     commitMessage: `pwa : proposition ${DECISION_VERBS[record.decision]} ${slug}`,
     outcome: { kind: 'decided', proposal: { ...proposal, ...parseProposal(slug, content) } },
+  };
+}
+
+export function cancelProposalDecisionFile(
+  slug: string,
+  current: string | null,
+  cancelledAt: string,
+): FileEdit<CancellationOutcome> {
+  if (current === null) return { content: null, outcome: { kind: 'not-found' } };
+  const proposal = parseProposal(slug, current);
+  if (proposal === null) return { content: null, outcome: { kind: 'not-found' } };
+  if (!isDecisionRevocable(proposal.status)) {
+    return { content: null, outcome: { kind: 'not-revocable' } };
+  }
+  const content = applyDecisionCancellation(current, cancelledAt);
+  return {
+    content,
+    commitMessage: `pwa : décision annulée ${slug}`,
+    outcome: { kind: 'cancelled', proposal: { ...proposal, ...parseProposal(slug, content) } },
   };
 }

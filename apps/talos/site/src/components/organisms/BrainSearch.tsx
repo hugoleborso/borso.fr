@@ -6,8 +6,10 @@ import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { PageTitle } from '../atoms/PageTitle';
 import { Spinner } from '../atoms/Spinner';
+import { EmptyState } from '../molecules/EmptyState';
 import { QueryState } from '../molecules/QueryState';
 import { SearchResultRow } from '../molecules/SearchResultRow';
+import { openActionSheet } from '../../lib/action-sheet.hook';
 import { useDebouncedValue } from '../../lib/debounced-value.hook';
 import { useBrainSearch } from '../../lib/queries/brain.queries';
 import { buildPageHref } from '../../lib/wikilinks.core';
@@ -58,9 +60,6 @@ export function BrainSearch(): JSX.Element {
             {t('brain.home-link')}
           </Link>
         </div>
-        {isSearchable ? null : (
-          <p className="m-0 text-sm text-ink-faint">{t('brain.search.hint')}</p>
-        )}
         {isSearchable && searchHits.isError ? (
           <QueryState isPending={false} onRetry={() => void searchHits.refetch()} />
         ) : null}
@@ -75,10 +74,18 @@ export function BrainSearch(): JSX.Element {
                   title={result.title}
                   path={result.path}
                   excerpt={result.excerpt}
+                  onLongPress={() => {
+                    openActionSheet({
+                      title: result.title,
+                      subject: { kind: 'page', path: result.path },
+                    });
+                  }}
                 />
               ))}
               {searchHits.data.length === 0 ? (
-                <li className="py-4 text-sm text-ink-faint">{t('brain.search.empty')}</li>
+                <li>
+                  <EmptyState icon="search" label={t('brain.search.empty')} />
+                </li>
               ) : null}
             </ul>
           </Card>

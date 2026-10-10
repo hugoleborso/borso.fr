@@ -1,14 +1,22 @@
-import { editContentFile } from '../content/content.service';
-import { formatParisFileStamp } from '../helpers/calendar/paris-clock.utils';
-import { fireRoutine } from '../helpers/routine/routine-fire.adapter';
-import { buildMessageFileEdit, buildMessagePath } from './messages.core';
+import { readContentRepository } from '../content/content-store.setup';
+import { readTalosSecret } from '../helpers/secrets/secrets.setup';
 
-// @FollowsBlueprint service-orchestration
-export async function sendMessageToTalos(text: string, now: Date): Promise<{ ok: true }> {
-  const path = buildMessagePath(formatParisFileStamp(now));
-  const outcome = await editContentFile(path, (current) =>
-    buildMessageFileEdit(current, text, now.toISOString()),
-  );
-  await fireRoutine('message', path);
-  return outcome;
+export interface ClaudeCodeTarget {
+  readonly repository: string;
+  readonly environments: {
+    readonly talos: string | null;
+    readonly build: string | null;
+  };
+}
+
+// @FollowsBlueprint service-read-model
+export async function readClaudeCodeTarget(): Promise<ClaudeCodeTarget> {
+  const [talos, build] = await Promise.all([
+    readTalosSecret('claude-environment-talos'),
+    readTalosSecret('claude-environment-build'),
+  ]);
+  return {
+    repository: readContentRepository(),
+    environments: { talos: talos ?? null, build: build ?? null },
+  };
 }

@@ -1,8 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   addDaysToDate,
+  countDaysBetween,
   formatParisDate,
-  formatParisFileStamp,
   formatParisMinute,
 } from './paris-clock.utils';
 
@@ -25,12 +25,6 @@ describe('formatParisMinute', () => {
   });
 });
 
-describe('formatParisFileStamp', () => {
-  it('writes a stamp usable in a file name', () => {
-    expect(formatParisFileStamp(WINTER_MORNING_UTC)).toBe('2026-12-01-080409');
-  });
-});
-
 describe('addDaysToDate', () => {
   it('moves a date forward across a month end', () => {
     expect(addDaysToDate('2026-10-30', 2)).toBe('2026-11-01');
@@ -38,5 +32,19 @@ describe('addDaysToDate', () => {
 
   it('moves a date backward', () => {
     expect(addDaysToDate('2026-03-01', -1)).toBe('2026-02-28');
+  });
+});
+
+describe('countDaysBetween', () => {
+  it('counts the calendar days from one date to a later one, across a month end', () => {
+    expect(countDaysBetween('2026-09-29', '2026-10-02')).toBe(3);
+  });
+
+  it('counts whole days across the change to winter time', () => {
+    expect(countDaysBetween('2026-10-24', '2026-10-26')).toBe(2);
+  });
+
+  it('answers a negative count when the second date comes first', () => {
+    expect(countDaysBetween('2026-10-08', '2026-10-07')).toBe(-1);
   });
 });

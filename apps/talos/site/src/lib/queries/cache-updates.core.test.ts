@@ -1,12 +1,15 @@
 import { describe, expect, it } from 'vitest';
 import {
-  applyProposalDecision,
   applyTodoPatch,
   buildPendingTodo,
+  findIndexById,
+  insertAt,
   isKeptAfterSignOut,
   removeById,
-  replaceProposal,
+  selectReadyDraftCountDelta,
+  replaceBySlug,
   replaceTodo,
+  setStatusBySlug,
 } from './cache-updates.core';
 
 const TODAY = '2026-10-05';
@@ -78,7 +81,7 @@ describe('the proposal cache', () => {
   const other = { slug: 'y', status: 'proposee', title: 'Y' };
 
   it('moves the decided proposal to its new status only', () => {
-    expect(applyProposalDecision([pending, other], 'x', 'acceptee')).toEqual([
+    expect(setStatusBySlug([pending, other], 'x', 'acceptee')).toEqual([
       { ...pending, status: 'acceptee' },
       other,
     ]);
@@ -86,7 +89,7 @@ describe('the proposal cache', () => {
 
   it('replaces a proposal by its slug', () => {
     const saved = { ...pending, status: 'refusee', title: 'X saved' };
-    expect(replaceProposal([pending, other], saved)).toEqual([saved, other]);
+    expect(replaceBySlug([pending, other], saved)).toEqual([saved, other]);
   });
 });
 
@@ -98,10 +101,34 @@ describe('removeById', () => {
   });
 });
 
+describe('insertAt', () => {
+  it('puts the item back at its rank, or last when the rank is beyond the list', () => {
+    expect(insertAt(['a', 'c'], 1, 'b')).toEqual(['a', 'b', 'c']);
+    expect(insertAt(['a', 'b'], 0, 'z')).toEqual(['z', 'a', 'b']);
+    expect(insertAt(['a'], 5, 'b')).toEqual(['a', 'b']);
+  });
+});
+
+describe('findIndexById', () => {
+  it('answers the rank of an item, or null when it is absent', () => {
+    expect(findIndexById([{ id: 'a' }, { id: 'b' }], 'b')).toBe(1);
+    expect(findIndexById([{ id: 'a' }], 'a')).toBe(0);
+    expect(findIndexById([{ id: 'a' }], 'z')).toBeNull();
+  });
+});
+
 describe('isKeptAfterSignOut', () => {
   it('keeps only the session query, so the sign-in screen knows a passkey exists', () => {
     expect(isKeptAfterSignOut(['session', 'current'], 'session')).toBe(true);
     expect(isKeptAfterSignOut(['today', 'overview'], 'session')).toBe(false);
     expect(isKeptAfterSignOut([], 'session')).toBe(false);
+  });
+});
+
+describe('selectReadyDraftCountDelta', () => {
+  it('adds a ready draft back and takes a settled one off the count', () => {
+    expect(selectReadyDraftCountDelta('pret')).toBe(1);
+    expect(selectReadyDraftCountDelta('envoye')).toBe(-1);
+    expect(selectReadyDraftCountDelta('abandonne')).toBe(-1);
   });
 });

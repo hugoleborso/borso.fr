@@ -1,12 +1,16 @@
 import { stripMarkdownExtension } from '@domain/markdown-page.core';
 
 const PAGE_ROUTE_PREFIX = '/brain/page/';
+const COMMITMENT_ROUTE_PREFIX = '/commitments/';
+const TODO_ROUTE_PREFIX = '/todos/';
 const MARKDOWN_EXTENSION = '.md';
 const WIKILINK_PATTERN = /\[\[([^\]|#]+)(#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
 const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
 const LEADING_SLASHES_PATTERN = /^\/+/;
 const ANCHOR_PATTERN = /#.*$/s;
 const PATH_SEPARATOR = '/';
+const SLUG_SEPARATOR = '-';
+const DISPLAY_LANGUAGE = 'fr';
 
 export function normalisePagePath(target: string): string {
   return stripMarkdownExtension(
@@ -19,9 +23,25 @@ export function buildPageHref(pagePath: string): string {
   return `${PAGE_ROUTE_PREFIX}${encodeURI(normalisePagePath(pagePath))}`;
 }
 
+export function buildCommitmentHref(commitmentPath: string): string {
+  return `${COMMITMENT_ROUTE_PREFIX}${encodeURI(normalisePagePath(commitmentPath))}`;
+}
+
+export function buildTodoHref(todoId: string): string {
+  return `${TODO_ROUTE_PREFIX}${encodeURIComponent(todoId)}`;
+}
+
 export function selectPageLabel(pagePath: string): string {
   const normalised = normalisePagePath(pagePath);
   return normalised.slice(normalised.lastIndexOf(PATH_SEPARATOR) + 1);
+}
+
+export function selectPageName(pagePath: string): string {
+  return selectPageLabel(pagePath)
+    .split(SLUG_SEPARATOR)
+    .filter((word) => word !== '')
+    .map((word) => `${word.charAt(0).toLocaleUpperCase(DISPLAY_LANGUAGE)}${word.slice(1)}`)
+    .join(' ');
 }
 
 export function convertWikilinksToMarkdown(markdown: string): string {

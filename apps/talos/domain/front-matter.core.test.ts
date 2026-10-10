@@ -7,6 +7,7 @@ const PROPOSAL = [
   'categorie: action        # action | initiative',
   'titre: "Déplacer le bloc # Umbrella"',
   "qui: 'Alex'",
+  'sujet:                    # vide hors gmail',
   'projet:',
   '  - liste ignorée',
   '1nombre: ignoré',
@@ -25,6 +26,7 @@ describe('splitFrontMatter', () => {
         ['categorie', 'action'],
         ['titre', 'Déplacer le bloc # Umbrella'],
         ['qui', 'Alex'],
+        ['sujet', ''],
         ['projet', ''],
         ["jusqu'à", '2026-12'],
         ['échéance', '2026-10-05'],
@@ -95,6 +97,12 @@ describe('setFrontMatterValue', () => {
   it('does not mistake a longer key for the one being written', () => {
     const updated = setFrontMatterValue('---\nstatut_ancien: x\n---\nbody', 'statut', 'acceptee');
     expect(updated).toBe('---\nstatut_ancien: x\nstatut: acceptee\n---\nbody');
+  });
+
+  it('empties a key without leaving a trailing space', () => {
+    expect(setFrontMatterValue('---\nenvoye: 2026-10-08\n---\n', 'envoye', '')).toBe(
+      '---\nenvoye:\n---\n',
+    );
   });
 
   it('appends the key at the end of the header when it is missing', () => {

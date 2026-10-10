@@ -5,11 +5,20 @@ import { toIsoDay } from '../calendar-day.utils';
 import {
   applyTodoPatch,
   buildPendingTodo,
+  findIndexById,
+  insertAt,
+  removeById,
   replaceTodo,
   type TodoPatch,
 } from './cache-updates.core';
 import { useMutationToasts } from '../toast.hook';
-import { selectTodoUpdateToast, TODO_ADDED_TOAST } from './mutation-toasts.core';
+import {
+  selectTodoReversal,
+  selectTodoUpdateToast,
+  TODO_ADDED_TOAST,
+  TODO_DELETED_TOAST,
+  TODO_RESTORED_TOAST,
+} from './mutation-toasts.core';
 import { todayKeys } from './today.queries';
 
 export const todoKeys = {
@@ -20,6 +29,7 @@ export const todoKeys = {
 type TodosResponse = InferResponseType<typeof api.api.todos.$get, 200>;
 type TodayResponse = InferResponseType<typeof api.api.today.$get, 200>;
 type TodoCreation = Parameters<typeof api.api.todos.$post>[0]['json'];
+type TodoRestoration = Parameters<typeof api.api.todos.restorations.$post>[0]['json'];
 
 // @FollowsBlueprint query-module
 export function useTodos() {
@@ -83,7 +93,7 @@ export function useCreateTodo() {
 export function useUpdateTodo() {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
-  return useMutation({
+  const updateTodo = useMutation({
     mutationFn: async (variables: { id: string } & TodoPatch) => {
       const { id, ...patch } = variables;
       const response = await api.api.todos[':id'].$patch({ param: { id }, json: patch });
@@ -116,7 +126,13 @@ export function useUpdateTodo() {
       return { previousList, previousOverview };
     },
     onSuccess: (savedTodo, variables) => {
-      toasts.confirm(selectTodoUpdateToast(variables));
+      const reversal = selectTodoReversal(variables);
+      toasts.confirm(
+        selectTodoUpdateToast(variables),
+        reversal === null
+          ? undefined
+          : { labelKey: 'toast.undo', onAction: () => updateTodo.mutate(reversal) },
+      );
       queryClient.setQueryData<TodosResponse>(todoKeys.list(), (old) => {
         if (old === undefined) return old;
         return { items: replaceTodo(old.items, variables.id, savedTodo) };
@@ -124,6 +140,99 @@ export function useUpdateTodo() {
       queryClient.setQueryData<TodayResponse>(todayKeys.overview(), (old) => {
         if (old === undefined) return old;
         return { ...old, todos: replaceTodo(old.todos, variables.id, savedTodo) };
+      });
+    },
+    onError: (failure, _variables, context) => {
+      toasts.fail(failure, 'todo.error');
+      if (context?.previousList !== undefined) {
+        queryClient.setQueryData(todoKeys.list(), context.previousList);
+      }
+      if (context?.previousOverview !== undefined) {
+        queryClient.setQueryData(todayKeys.overview(), context.previousOverview);
+      }
+    },
+  });
+  return updateTodo;
+}
+
+export function useRestoreTodo() {
+  const queryClient = useQueryClient();
+  const toasts = useMutationToasts();
+  return useMutation({
+    mutationFn: async (variables: TodoRestoration & { readonly overviewIndex: number | null }) => {
+      const response = await api.api.todos.restorations.$post({
+        json: { line: variables.line, position: variables.position },
+      });
+      const { status } = response;
+      if (!isResponseSuccessful(response)) {
+        throw new ApiError(status, `todo ${status}`, await readFailureBody(response));
+      }
+      return await response.json();
+    },
+    onSuccess: (restoredTodo, variables) => {
+      toasts.confirm(TODO_RESTORED_TOAST);
+      queryClient.setQueryData<TodosResponse>(todoKeys.list(), (old) => {
+        if (old === undefined) return old;
+        return { items: insertAt(old.items, variables.position, restoredTodo) };
+      });
+      const { overviewIndex } = variables;
+      if (overviewIndex === null) return;
+      queryClient.setQueryData<TodayResponse>(todayKeys.overview(), (old) => {
+        if (old === undefined) return old;
+        return { ...old, todos: insertAt(old.todos, overviewIndex, restoredTodo) };
+      });
+    },
+    onError: (failure) => {
+      toasts.fail(failure, 'todo.error');
+    },
+  });
+}
+
+// @FollowsBlueprint query-optimistic-mutation
+export function useDeleteTodo() {
+  const queryClient = useQueryClient();
+  const toasts = useMutationToasts();
+  const restoreTodo = useRestoreTodo();
+  return useMutation({
+    mutationFn: async (variables: { readonly id: string }) => {
+      const response = await api.api.todos[':id'].$delete({ param: { id: variables.id } });
+      if (!response.ok) {
+        throw new ApiError(
+          response.status,
+          `todo ${response.status}`,
+          await readFailureBody(response),
+        );
+      }
+      return await response.json();
+    },
+    onMutate: async (variables) => {
+      const listKey = todoKeys.list();
+      const overviewKey = todayKeys.overview();
+      await queryClient.cancelQueries({ queryKey: listKey });
+      await queryClient.cancelQueries({ queryKey: overviewKey });
+      const previousList = queryClient.getQueryData<TodosResponse>(listKey);
+      const previousOverview = queryClient.getQueryData<TodayResponse>(overviewKey);
+      const overviewIndex = findIndexById(previousOverview?.todos ?? [], variables.id);
+      queryClient.setQueryData<TodosResponse>(listKey, (old) => {
+        if (old === undefined) return old;
+        return { items: removeById(old.items, variables.id) };
+      });
+      queryClient.setQueryData<TodayResponse>(overviewKey, (old) => {
+        if (old === undefined) return old;
+        return { ...old, todos: removeById(old.todos, variables.id) };
+      });
+      return { previousList, previousOverview, overviewIndex };
+    },
+    onSuccess: (removal, _variables, context) => {
+      toasts.confirm(TODO_DELETED_TOAST, {
+        labelKey: 'toast.undo',
+        onAction: () => {
+          restoreTodo.mutate({
+            line: removal.line,
+            position: removal.position,
+            overviewIndex: context.overviewIndex,
+          });
+        },
       });
     },
     onError: (failure, _variables, context) => {

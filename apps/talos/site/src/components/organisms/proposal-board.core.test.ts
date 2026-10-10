@@ -3,7 +3,6 @@ import {
   buildDecisionPayload,
   isAcceptedOutcome,
   countAwaitingDecision,
-  hasPendingProposals,
   isAwaitingDecision,
   partitionProposals,
   selectOutcomeKey,
@@ -13,6 +12,8 @@ import {
   selectStatusLabelKey,
   selectStatusTone,
   type ProposalShape,
+  PROPOSAL_SHEET_ACTION,
+  selectProposalSheetActions,
 } from './proposal-board.core';
 
 function proposal(
@@ -136,13 +137,6 @@ describe('buildDecisionPayload', () => {
   });
 });
 
-describe('hasPendingProposals', () => {
-  it('is true from one pending proposal', () => {
-    expect(hasPendingProposals(1)).toBe(true);
-    expect(hasPendingProposals(0)).toBe(false);
-  });
-});
-
 describe('countAwaitingDecision', () => {
   it('counts only the proposals still pending', () => {
     expect(
@@ -151,5 +145,15 @@ describe('countAwaitingDecision', () => {
         proposal('b', 'acceptee', 'haute', '2026-10-05'),
       ]),
     ).toBe(1);
+  });
+});
+
+describe('selectProposalSheetActions', () => {
+  it('offers to decide a pending proposal, to take back a decision, and nothing once Talos acted', () => {
+    expect(selectProposalSheetActions('proposee')).toEqual(['acceptee', 'refusee']);
+    expect(selectProposalSheetActions('acceptee')).toEqual(['revoke']);
+    expect(selectProposalSheetActions('refusee')).toEqual(['revoke']);
+    expect(selectProposalSheetActions('faite')).toEqual([]);
+    expect(PROPOSAL_SHEET_ACTION.revoke.labelKey).toBe('proposals.revoke');
   });
 });

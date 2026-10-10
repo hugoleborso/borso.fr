@@ -12,7 +12,7 @@ export const talosManifest: ArchitectureManifest = {
       icon: '🧑',
       name: 'Owner',
       description:
-        'The one person the application serves. Signs in with a passkey, reads the day, checks todos, accepts or refuses proposals and writes messages to the assistant.',
+        'The one person the application serves. Signs in with a passkey, reads the day, checks todos, accepts or refuses proposals and opens a Claude Code session to write to the assistant.',
     },
     {
       id: 'scheduled-run',
@@ -108,9 +108,19 @@ export const talosManifest: ArchitectureManifest = {
       name: 'Agent routine trigger',
       technology: 'HTTPS POST with a bearer token',
       description:
-        'Fired after a proposal decision or a message, so the assistant acts without waiting for its next scheduled run. Optional: without it the committed file waits for that run.',
+        'Fired after a proposal decision, so the assistant acts without waiting for its next scheduled run. Optional: without it the committed file waits for that run.',
       boundary: 'third-party',
       access: 'credential',
+    },
+    {
+      id: 'claude-code-web',
+      icon: '💬',
+      name: 'Claude Code on the web',
+      technology: 'Prefilled session link, opened in a new tab',
+      description:
+        'The Message screen, « Discuter » and the scan button link to claude.ai/code/new with the repository, the environment and the prompt in the query string. The application never calls it; the browser or the Claude app follows the link.',
+      boundary: 'third-party',
+      access: 'open',
     },
     {
       id: 'web-push',
@@ -149,7 +159,7 @@ export const talosManifest: ArchitectureManifest = {
       name: 'SSM Parameter Store',
       technology: 'AWS SDK, GetParameter with decryption',
       description:
-        'Holds every secret under /talos/ as a SecureString: the GitHub token, the VAPID keys, the session key, the bootstrap code and the notify secret.',
+        'Holds every secret under /talos/ as a SecureString (the GitHub token, the VAPID keys, the session key, the bootstrap code and the notify secret), and the two Claude Code environment ids as plain parameters.',
       boundary: 'aws',
       access: 'credential',
     },
@@ -197,6 +207,26 @@ export const talosManifest: ArchitectureManifest = {
       technology: 'display-mode media query',
       description:
         'Tells whether the application runs installed on the home screen, which iOS requires before it offers notifications.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
+      id: 'browser-clipboard',
+      icon: '📋',
+      name: 'Clipboard',
+      technology: 'Browser clipboard API',
+      description:
+        'Puts the text of a draft message on the clipboard, answering whether the write happened so a refused permission is a toast rather than an error.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
+      id: 'browser-vibration',
+      icon: '📳',
+      name: 'Vibration',
+      technology: 'navigator.vibrate',
+      description:
+        'Gives a short haptic pulse when a long press opens the action sheet, on the devices that offer it; iOS does not.',
       boundary: 'browser-platform',
       access: 'open',
     },

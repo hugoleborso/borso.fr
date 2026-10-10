@@ -51,26 +51,24 @@ export function buildPendingTodo(
   return { id: temporaryId, text: text.trim(), done: false, dueDate, addedOn: today };
 }
 
-export interface CachedProposal {
+export interface CachedSlugRecord {
   readonly slug: string;
   readonly status: string;
 }
 
-export function applyProposalDecision<Proposal extends CachedProposal>(
-  proposals: readonly Proposal[],
+export function setStatusBySlug<Item extends CachedSlugRecord>(
+  items: readonly Item[],
   slug: string,
-  decision: string,
-): Proposal[] {
-  return proposals.map((proposal) =>
-    proposal.slug === slug ? { ...proposal, status: decision } : proposal,
-  );
+  status: string,
+): Item[] {
+  return items.map((item) => (item.slug === slug ? { ...item, status } : item));
 }
 
-export function replaceProposal<Proposal extends CachedProposal>(
-  proposals: readonly Proposal[],
-  replacement: Proposal,
-): Proposal[] {
-  return proposals.map((proposal) => (proposal.slug === replacement.slug ? replacement : proposal));
+export function replaceBySlug<Item extends CachedSlugRecord>(
+  items: readonly Item[],
+  replacement: Item,
+): Item[] {
+  return items.map((item) => (item.slug === replacement.slug ? replacement : item));
 }
 
 export function removeById<Item extends { readonly id: string }>(
@@ -80,6 +78,24 @@ export function removeById<Item extends { readonly id: string }>(
   return items.filter((item) => item.id !== itemId);
 }
 
+export function insertAt<Item>(items: readonly Item[], index: number, item: Item): Item[] {
+  return [...items.slice(0, index), item, ...items.slice(index)];
+}
+
+export function findIndexById(
+  items: readonly { readonly id: string }[],
+  itemId: string,
+): number | null {
+  const index = items.findIndex((item) => item.id === itemId);
+  return index === -1 ? null : index;
+}
+
 export function isKeptAfterSignOut(queryKey: readonly unknown[], sessionRoot: string): boolean {
   return queryKey[0] === sessionRoot;
+}
+
+const READY_DRAFT_STATUS = 'pret';
+
+export function selectReadyDraftCountDelta(status: string): number {
+  return status === READY_DRAFT_STATUS ? 1 : -1;
 }

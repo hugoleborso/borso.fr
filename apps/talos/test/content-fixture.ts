@@ -1,5 +1,7 @@
 export const TODAY = '2026-10-05';
 
+const TITLE_FIELD = 'titre';
+
 export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
   'focus.md': [
     '---',
@@ -51,6 +53,36 @@ export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
   'etat/propositions/2026-10-05.md': '---\ntype: journal\n---\n# Notes\n',
   'journal/2026-10-05.md':
     '# 2026-10-05\n\n## Brief envoyé\n\n**Lundi 5 octobre**\n\n## Fait\nrien\n',
+  'journal/2026-10-04.md': '# 2026-10-04\n\n## Scan (18:00)\n\nrien\n',
+  'engagements/2026-10-06-devis-acme.md': [
+    '---',
+    'type: engagement',
+    'sens: moi->eux',
+    'qui: "[[second-brain/moi]]"',
+    'echeance: 2026-10-06 09:00',
+    'statut: ouvert',
+    '---',
+    '# Envoyer le devis à Acme',
+    '',
+  ].join('\n'),
+  'engagements/sans-date-retour-bruno.md': [
+    '---',
+    'type: engagement',
+    'sens: eux->moi',
+    'quoi: Bruno renvoie le contrat',
+    'statut: ouvert',
+    '---',
+    '',
+  ].join('\n'),
+  'etat/dernier-scan.json': JSON.stringify({
+    scan: {
+      date: '2026-10-05T07:30:00+02:00',
+      par: 'brief',
+      sources_ok: 8,
+      sources_ko: ['Strava'],
+    },
+  }),
+  'engagements/2026-09-01-ancien.md': '---\ntype: engagement\nstatut: fait\n---\n# Ancien\n',
   'etat/graphe.jsonl': [
     '{"source": "second-brain/moi", "relation": "travaille_sur", "cible": "second-brain/projets/refonte", "depuis": "2026-09-01", "jusqua": "", "vu": "2026-10-02", "src": "x"}',
     '{"source": "second-brain/moi", "relation": "travaille_sur", "cible": "second-brain/projets/initech", "depuis": "2026-01", "jusqua": "2026-05", "vu": "2026-05-30", "src": "y"}',
@@ -60,6 +92,67 @@ export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
   'second-brain/moi.md':
     '---\ntype: moi\nmaj: 2026-10-02\n---\n# Alex Durand\n\nTravaille sur [[second-brain/projets/refonte|la refonte]] à Séville.\n',
   'second-brain/projets/refonte.md':
-    '---\ntype: projet\n---\n# Refonte du site\n\nPilotée par [[second-brain/moi]].\n',
+    '---\ntype: projet\nproximite: 4\n---\n# Refonte du site\n\nPilotée par [[second-brain/moi]].\n',
   'etat/securite.md': '# Où sont les secrets\n',
+  'etat/relations.json': JSON.stringify({
+    genere: '2026-10-04T03:03:00+02:00',
+    a_recontacter: [
+      {
+        page: 'second-brain/personnes/alice-martin',
+        [TITLE_FIELD]: 'Alice Martin',
+        proximite: 4,
+        dernier_contact: '2026-08-25',
+        jours: 40,
+      },
+    ],
+    anniversaires: [
+      {
+        page: 'second-brain/personnes/bruno-petit',
+        [TITLE_FIELD]: 'Bruno Petit',
+        date: '2026-10-07',
+        dans_jours: 3,
+        age: 41,
+      },
+      {
+        page: 'second-brain/personnes/claire-roux',
+        [TITLE_FIELD]: 'Claire Roux',
+        date: '2026-10-15',
+        dans_jours: 11,
+        age: null,
+      },
+    ],
+  }),
+  'etat/brouillons/.gitkeep': '',
+  'etat/brouillons/2026-10-04-relance-alice.md': [
+    '---',
+    'type: brouillon',
+    'canal: gmail',
+    'destinataire: "Alice Martin [[second-brain/personnes/alice-martin]]"',
+    'sujet: Un café ?',
+    'lien:',
+    'statut: pret',
+    'cree: 2026-10-04',
+    'src: sources/2026/10/04/relance.md',
+    'proposition:',
+    'envoye:',
+    '---',
+    'Bonjour Alice,',
+    '',
+    'Un café la semaine prochaine ?',
+    '',
+  ].join('\n'),
+  'etat/brouillons/2026-10-03-merci-bruno.md': [
+    '---',
+    'type: brouillon',
+    'canal: slack',
+    'destinataire: Bruno',
+    'statut: envoye',
+    'cree: 2026-10-03',
+    'envoye: 2026-10-03',
+    '---',
+    'Merci !',
+    '',
+  ].join('\n'),
+  'journal/2026-S40-hebdo.md':
+    '# Revue hebdo 2026-S40 (28 septembre – 4 octobre 2026)\n\n## Semaine écoulée\n\nCalme.\n',
 };

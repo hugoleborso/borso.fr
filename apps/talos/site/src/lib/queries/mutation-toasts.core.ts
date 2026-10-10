@@ -6,13 +6,17 @@ export const TODO_ADDED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.todo-added',
 };
+export const TODO_DELETED_TOAST: TranslatableToast = {
+  tone: 'neutral',
+  messageKey: 'toast.todo-deleted',
+};
+export const TODO_RESTORED_TOAST: TranslatableToast = {
+  tone: 'neutral',
+  messageKey: 'toast.todo-restored',
+};
 export const FOCUS_SAVED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.focus-saved',
-};
-export const MESSAGE_SENT_TOAST: TranslatableToast = {
-  tone: 'success',
-  messageKey: 'toast.message-sent',
 };
 export const PASSKEY_ADDED_TOAST: TranslatableToast = {
   tone: 'success',
@@ -26,9 +30,31 @@ export const PUSH_ENABLED_TOAST: TranslatableToast = {
   tone: 'success',
   messageKey: 'toast.push-enabled',
 };
+export const DECISION_CANCELLED_TOAST: TranslatableToast = {
+  tone: 'neutral',
+  messageKey: 'toast.proposal-decision-cancelled',
+};
 export const PUSH_DISABLED_TOAST: TranslatableToast = {
   tone: 'neutral',
   messageKey: 'toast.push-disabled',
+};
+
+export const COPIED_TOAST: TranslatableToast = { tone: 'neutral', messageKey: 'toast.copied' };
+export const PROMPT_COPIED_TOAST: TranslatableToast = {
+  tone: 'neutral',
+  messageKey: 'toast.prompt-copied',
+};
+export const COPY_FAILED_TOAST: TranslatableToast = {
+  tone: 'danger',
+  messageKey: 'toast.copy-failed',
+};
+
+export type DraftStatusTarget = 'envoye' | 'abandonne' | 'pret';
+
+const DRAFT_STATUS_TOAST: Readonly<Record<DraftStatusTarget, TranslatableToast>> = {
+  envoye: { tone: 'success', messageKey: 'toast.draft-sent' },
+  abandonne: { tone: 'neutral', messageKey: 'toast.draft-abandoned' },
+  pret: { tone: 'neutral', messageKey: 'toast.draft-restored' },
 };
 
 const DECISION_TOAST: Readonly<Record<ProposalDecision, TranslatableToast>> = {
@@ -51,4 +77,19 @@ export function selectPushTestToast(delivered: number): TranslatableToast {
   return delivered > 0
     ? { tone: 'success', messageKey: 'toast.push-test-sent' }
     : { tone: 'info', messageKey: 'toast.push-test-none' };
+}
+
+export function selectTodoReversal(
+  update: { readonly id: string } & TodoPatch,
+): { readonly id: string; readonly done: boolean } | null {
+  if (update.done === undefined) return null;
+  return { id: update.id, done: !update.done };
+}
+
+export function selectDraftStatusToast(target: DraftStatusTarget): TranslatableToast {
+  return DRAFT_STATUS_TOAST[target];
+}
+
+export function selectDraftReversal(target: DraftStatusTarget): DraftStatusTarget | null {
+  return target === 'pret' ? null : 'pret';
 }

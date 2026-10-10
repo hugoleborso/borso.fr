@@ -2,9 +2,15 @@ import type { ParseKeys } from 'i18next';
 
 export type ToastTone = 'neutral' | 'success' | 'danger' | 'info';
 
+export interface ToastAction {
+  readonly label: string;
+  readonly onAction: () => void;
+}
+
 export interface ToastContent {
   readonly tone: ToastTone;
   readonly message: string;
+  readonly action?: ToastAction;
 }
 
 export interface TranslatableToast {
@@ -13,6 +19,7 @@ export interface TranslatableToast {
 }
 
 const CONFIRMATION_DURATION_MS = 4000;
+const UNDOABLE_CONFIRMATION_DURATION_MS = 6000;
 
 const TOAST_DURATION_MS: Readonly<Record<ToastTone, number | null>> = {
   neutral: CONFIRMATION_DURATION_MS,
@@ -22,8 +29,10 @@ const TOAST_DURATION_MS: Readonly<Record<ToastTone, number | null>> = {
 };
 
 // @FollowsBlueprint core-view-intent
-export function selectToastDuration(tone: ToastTone): number | null {
-  return TOAST_DURATION_MS[tone];
+export function selectToastDuration(toast: Pick<ToastContent, 'tone' | 'action'>): number | null {
+  const duration = TOAST_DURATION_MS[toast.tone];
+  if (duration === null || toast.action === undefined) return duration;
+  return UNDOABLE_CONFIRMATION_DURATION_MS;
 }
 
 function readServerMessage(failure: unknown): string | null {

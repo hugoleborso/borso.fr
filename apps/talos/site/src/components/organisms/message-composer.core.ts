@@ -1,4 +1,6 @@
+export const LONG_MESSAGE_THRESHOLD = 6000;
+
 // @FollowsBlueprint core-view-intent
-export function canSendMessage(text: string): boolean {
-  return text.trim().length > 0;
+export function isMessageTooLong(text: string): boolean {
+  return text.length > LONG_MESSAGE_THRESHOLD;
 }

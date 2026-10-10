@@ -1,17 +1,23 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { PageTitle } from '../atoms/PageTitle';
 import { DecidedProposalRow } from '../molecules/DecidedProposalRow';
+import { RevokeDecisionButton } from '../molecules/RevokeDecisionButton';
 import { ProposalCard } from '../molecules/ProposalCard';
 import { ProposalOutcome } from '../molecules/ProposalOutcome';
 import { EmptyState } from '../molecules/EmptyState';
 import { QueryState } from '../molecules/QueryState';
 import { DISPLAY_LOCALE, formatShortDay } from '../../lib/calendar-day.utils';
+import { openActionSheet } from '../../lib/action-sheet.hook';
 import { renderMarkdownToSafeHtml } from '../../lib/markdown.utils';
-import { useDecideProposal, useProposals } from '../../lib/queries/proposals.queries';
+import { isDecisionRevocable } from '@domain/proposal.core';
+import {
+  useCancelProposalDecision,
+  useDecideProposal,
+  useProposals,
+} from '../../lib/queries/proposals.queries';
 import { ProposalDecisionForm } from './ProposalDecisionForm';
 import {
   countAwaitingDecision,
@@ -24,6 +30,9 @@ import {
   selectStatusLabelKey,
   selectOutcomeKey,
   selectStatusTone,
+  PROPOSAL_SHEET_ACTION,
+  type ProposalSheetIntent,
+  selectProposalSheetActions,
 } from './proposal-board.core';
 
 // @FollowsBlueprint organism-mutation-panel
@@ -31,9 +40,40 @@ export function ProposalBoard(): JSX.Element {
   const { t } = useTranslation();
   const proposals = useProposals();
   const decideProposal = useDecideProposal();
+  const cancelDecision = useCancelProposalDecision();
   const [decidedHereSlugs, setDecidedHereSlugs] = useState<ReadonlySet<string>>(new Set());
   const { pending, decided } = partitionProposals(proposals.data ?? [], decidedHereSlugs);
   const pendingCount = countAwaitingDecision(pending);
+  const keepOnBoard = (slug: string): void => {
+    setDecidedHereSlugs((slugs) => new Set([...slugs, slug]));
+  };
+  const runSheetIntent = (slug: string, intent: ProposalSheetIntent): void => {
+    keepOnBoard(slug);
+    const intents: Readonly<Record<ProposalSheetIntent, () => void>> = {
+      acceptee: () => decideProposal.mutate({ slug, decision: 'acceptee' }),
+      refusee: () => decideProposal.mutate({ slug, decision: 'refusee' }),
+      revoke: () => cancelDecision.mutate({ slug }),
+    };
+    intents[intent]();
+  };
+  const isWriting = decideProposal.isPending || cancelDecision.isPending;
+  const renderRevokeButton = (proposal: {
+    slug: string;
+    status: string;
+  }): JSX.Element | undefined => {
+    const isRevocable = isDecisionRevocable(proposal.status);
+    if (!isRevocable) return undefined;
+    return (
+      <RevokeDecisionButton
+        label={t('proposals.revoke')}
+        isDisabled={isWriting}
+        onRevoke={() => {
+          keepOnBoard(proposal.slug);
+          cancelDecision.mutate({ slug: proposal.slug });
+        }}
+      />
+    );
+  };
 
   return (
     <>
@@ -64,13 +104,26 @@ export function ProposalBoard(): JSX.Element {
                 }
                 whyHtml={renderMarkdownToSafeHtml(proposal.why)}
                 draft={proposal.draft}
+                onLongPress={() => {
+                  openActionSheet({
+                    title: proposal.title,
+                    subject: { kind: 'proposal', slug: proposal.slug },
+                    actions: selectProposalSheetActions(proposal.status).map((intent) => ({
+                      ...PROPOSAL_SHEET_ACTION[intent],
+                      onSelect: () => {
+                        runSheetIntent(proposal.slug, intent);
+                      },
+                    })),
+                  });
+                }}
               >
                 {isOpen ? (
                   <ProposalDecisionForm
                     slug={proposal.slug}
                     isPending={decideProposal.isPending}
+                    startsCommenting={decidedHereSlugs.has(proposal.slug)}
                     onDecided={(payload) => {
-                      setDecidedHereSlugs((slugs) => new Set([...slugs, proposal.slug]));
+                      keepOnBoard(proposal.slug);
                       decideProposal.mutate({ slug: proposal.slug, ...payload });
                     }}
                   />
@@ -78,19 +131,14 @@ export function ProposalBoard(): JSX.Element {
                   <ProposalOutcome
                     isAccepted={isAcceptedOutcome(proposal.status)}
                     label={t(selectOutcomeKey(proposal.status))}
+                    action={renderRevokeButton(proposal)}
                   />
                 )}
               </ProposalCard>
             );
           })}
           {pending.length === 0 ? (
-            <Card tone="flat">
-              <EmptyState
-                icon="proposals"
-                title={t('proposals.empty')}
-                body={t('proposals.empty-body')}
-              />
-            </Card>
+            <EmptyState icon="proposals" label={t('proposals.empty')} />
           ) : null}
           {decided.length === 0 ? null : (
             <details className="group rounded-lg border border-line bg-surface">
@@ -110,6 +158,7 @@ export function ProposalBoard(): JSX.Element {
                     statusLabel={t(selectStatusLabelKey(proposal.status))}
                     statusTone={selectStatusTone(proposal.status)}
                     decisions={proposal.decisions}
+                    action={renderRevokeButton(proposal)}
                   />
                 ))}
               </ul>

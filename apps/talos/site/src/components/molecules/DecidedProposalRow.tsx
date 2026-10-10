@@ -1,4 +1,4 @@
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { Chip } from '../atoms/Chip';
 import type { ChipTone } from '../atoms/chip.variants';
 
@@ -7,6 +7,7 @@ export interface DecidedProposalRowProps {
   readonly statusLabel: string;
   readonly statusTone: ChipTone;
   readonly decisions: readonly string[];
+  readonly action?: ReactNode;
 }
 
 // @FollowsBlueprint molecule-presentational
@@ -15,6 +16,7 @@ export function DecidedProposalRow({
   statusLabel,
   statusTone,
   decisions,
+  action,
 }: DecidedProposalRowProps): JSX.Element {
   return (
     <li className="py-3 border-b border-line last:border-b-0">
@@ -27,6 +29,7 @@ export function DecidedProposalRow({
           {decision}
         </p>
       ))}
+      {action === undefined ? null : <div className="mt-1 -ml-3">{action}</div>}
     </li>
   );
 }

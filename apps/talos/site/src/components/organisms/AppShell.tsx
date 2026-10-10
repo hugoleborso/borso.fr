@@ -6,6 +6,7 @@ import { OfflineBanner } from '../molecules/OfflineBanner';
 import { useIsOnline } from '../molecules/online-status.hook';
 import { useToday } from '../../lib/queries/today.queries';
 import { type BottomTab, BottomTabBar } from './BottomTabBar';
+import { ActionSheet } from './ActionSheet';
 import { ToastViewport } from './ToastViewport';
 
 const PROPOSALS_PATH = '/proposals';
@@ -39,6 +40,7 @@ export function AppShell(): JSX.Element {
         </Suspense>
       </main>
       <ToastViewport />
+      <ActionSheet />
       <BottomTabBar
         tabs={TABS}
         activePath={location.pathname}

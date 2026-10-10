@@ -26,7 +26,7 @@ describe('fireRoutine', () => {
   it('skips the call when no fire url is configured', async () => {
     const fetcher = vi.fn();
     expect(
-      await fireRoutine('message', 'boite/messages/a.md', {
+      await fireRoutine('proposition', 'etat/propositions/a.md', {
         fetcher,
         readSecret: readsSecrets({}),
       }),
@@ -56,7 +56,7 @@ describe('fireRoutine', () => {
 
   it('reports a refused call', async () => {
     const fetcher = vi.fn(async () => await Promise.resolve(new Response('{}', { status: 401 })));
-    expect(await fireRoutine('message', 'm.md', { fetcher, readSecret: CONFIGURED })).toEqual({
+    expect(await fireRoutine('proposition', 'p.md', { fetcher, readSecret: CONFIGURED })).toEqual({
       kind: 'failed',
       status: 401,
     });
@@ -65,7 +65,7 @@ describe('fireRoutine', () => {
   it('reports a network failure without throwing, since the file is already committed', async () => {
     const warn = vi.spyOn(console, 'warn').mockImplementation(() => undefined);
     const fetcher = vi.fn(async () => await Promise.reject(new Error('réseau coupé')));
-    expect(await fireRoutine('message', 'm.md', { fetcher, readSecret: CONFIGURED })).toEqual({
+    expect(await fireRoutine('proposition', 'p.md', { fetcher, readSecret: CONFIGURED })).toEqual({
       kind: 'failed',
       status: 0,
     });
@@ -78,7 +78,7 @@ describe('fireRoutine', () => {
   it('uses the global fetch by default', async () => {
     const fetcher = vi.fn(async () => await Promise.resolve(new Response('{}', { status: 200 })));
     vi.stubGlobal('fetch', fetcher);
-    expect(await fireRoutine('message', 'm.md', { readSecret: CONFIGURED })).toEqual({
+    expect(await fireRoutine('proposition', 'p.md', { readSecret: CONFIGURED })).toEqual({
       kind: 'fired',
     });
     expect(fetcher).toHaveBeenCalledOnce();
@@ -89,6 +89,6 @@ describe('fireRoutine without an injected secret reader', () => {
   it('reads the fire url through the installed secret reader', async () => {
     useSecretReader(readsSecrets({}));
     const fetcher = vi.fn();
-    expect(await fireRoutine('message', 'm.md', { fetcher })).toEqual({ kind: 'skipped' });
+    expect(await fireRoutine('proposition', 'p.md', { fetcher })).toEqual({ kind: 'skipped' });
   });
 });

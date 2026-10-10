@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { createTodoSchema, todoIdSchema, updateTodoSchema } from './todos.schema';
+import {
+  createTodoSchema,
+  restoreTodoSchema,
+  todoIdSchema,
+  updateTodoSchema,
+} from './todos.schema';
 
 describe('createTodoSchema', () => {
   it('accepts a text with an optional due date', () => {
@@ -28,5 +33,17 @@ describe('todoIdSchema', () => {
     expect(todoIdSchema.safeParse({ id: '4e6590b574' }).success).toBe(true);
     expect(todoIdSchema.safeParse({ id: '4e6590b57' }).success).toBe(false);
     expect(todoIdSchema.safeParse({ id: '4E6590B574' }).success).toBe(false);
+  });
+});
+
+describe('restoreTodoSchema', () => {
+  it('accepts a task line and its rank', () => {
+    expect(restoreTodoSchema.safeParse({ line: '- [ ] Payer', position: 0 }).success).toBe(true);
+  });
+
+  it('refuses a negative or fractional rank, and a line that is not a task', () => {
+    expect(restoreTodoSchema.safeParse({ line: '- [ ] Payer', position: -1 }).success).toBe(false);
+    expect(restoreTodoSchema.safeParse({ line: '- [ ] Payer', position: 0.5 }).success).toBe(false);
+    expect(restoreTodoSchema.safeParse({ line: '# Todo', position: 0 }).success).toBe(false);
   });
 });

@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildCommitmentHref,
   buildPageHref,
+  buildTodoHref,
   convertWikilinksToMarkdown,
   normalisePagePath,
   selectInAppPath,
   selectPageLabel,
+  selectPageName,
 } from './wikilinks.core';
 
 describe('normalisePagePath', () => {
@@ -30,6 +33,16 @@ describe('buildPageHref', () => {
 
   it('encodes characters a URL cannot carry', () => {
     expect(buildPageHref('a b')).toBe('/brain/page/a%20b');
+  });
+});
+
+describe('buildCommitmentHref and buildTodoHref', () => {
+  it('address the detail of a commitment and of a todo', () => {
+    expect(buildCommitmentHref('engagements/2026-10-05-appel é.md')).toBe(
+      '/commitments/engagements/2026-10-05-appel%20%C3%A9',
+    );
+    expect(buildTodoHref('4e6590b574')).toBe('/todos/4e6590b574');
+    expect(buildTodoHref('a/b')).toBe('/todos/a%2Fb');
   });
 });
 
@@ -94,5 +107,13 @@ describe('selectInAppPath', () => {
 
   it('leaves a link to something other than a markdown file', () => {
     expect(selectInAppPath('/assets/photo.png')).toBeNull();
+  });
+});
+
+describe('selectPageName', () => {
+  it('turns the slug of a page into words a person reads', () => {
+    expect(selectPageName('second-brain/personnes/alice-martin')).toBe('Alice Martin');
+    expect(selectPageName('second-brain/organisations/acme--sa.md')).toBe('Acme Sa');
+    expect(selectPageName('index')).toBe('Index');
   });
 });

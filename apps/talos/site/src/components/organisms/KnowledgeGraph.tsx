@@ -4,6 +4,7 @@ import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
+import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { PageTitle } from '../atoms/PageTitle';
 import { DateSlider } from '../molecules/DateSlider';
@@ -16,6 +17,8 @@ import {
   toIsoDay,
 } from '../../lib/calendar-day.utils';
 import { useDebouncedValue } from '../../lib/debounced-value.hook';
+import { openActionSheet } from '../../lib/action-sheet.hook';
+import { PRESSABLE_CLASS_NAME, usePressGesture } from '../../lib/press-gesture.hook';
 import { useGraph } from '../../lib/queries/brain.queries';
 import { buildPageHref } from '../../lib/wikilinks.core';
 import {
@@ -25,7 +28,6 @@ import {
   hideNodeTypes,
   isLatestTimelineIndex,
   NEIGHBOURHOOD_HOP_LIMIT,
-  type RenderableNode,
   selectNeighbourhood,
   selectNodeClickIntent,
   selectNodeColorVariable,
@@ -33,20 +35,17 @@ import {
   selectTimelineDate,
   shouldDrawLabels,
   toggleHiddenType,
-  toRenderableGraph,
 } from './knowledge-graph.core';
-
-interface GraphNode extends RenderableNode {
-  x?: number;
-  y?: number;
-}
-
-interface GraphLink {
-  source: string | GraphNode;
-  target: string | GraphNode;
-}
-
-type GraphInstance = ForceGraph<GraphNode, GraphLink>;
+import { computeCentredZoom, selectLinkColorVariable } from './graph-layout.core';
+import {
+  arrangeAroundOwner,
+  relayout,
+  releaseHeldNodes,
+  rememberPositions,
+  type GraphInstance,
+  type GraphLink,
+  type GraphNode,
+} from '../../lib/graph-forces.adapter';
 
 const NODE_RADIUS = 4;
 const FOCUS_RING_RADIUS = 7;
@@ -55,9 +54,7 @@ const TOUCH_TARGET_RADIUS = 12;
 const LABEL_FONT_SIZE = 11;
 const LABEL_OFFSET = 7;
 const FULL_CIRCLE = Math.PI + Math.PI;
-const COOLDOWN_TICKS = 120;
-const FIT_DURATION_MS = 400;
-const FIT_PADDING_PX = 24;
+const FIT_PADDING_PX = 40;
 const SLIDER_SETTLE_MS = 250;
 const EMPTY_GRAPH = { nodes: [], edges: [] };
 const LABEL_FONT_FAMILY = "'Atkinson Hyperlegible Next', -apple-system, system-ui, sans-serif";
@@ -72,7 +69,10 @@ export function KnowledgeGraph(): JSX.Element {
   const navigate = useNavigate();
   const graphRef = useRef<GraphInstance | null>(null);
   const focusedIdRef = useRef<string | null>(null);
-  const isFitPendingRef = useRef(false);
+  const fitDurationRef = useRef<number | null>(null);
+  const hasFramedRef = useRef(false);
+  const hoveredNodeRef = useRef<GraphNode | null>(null);
+  const isNodeClickSuppressedRef = useRef(false);
   const today = toIsoDay(new Date());
   const timeline = buildMonthlyTimeline(today);
   const lastPosition = timeline.length - 1;
@@ -80,7 +80,8 @@ export function KnowledgeGraph(): JSX.Element {
   const [focusedId, setFocusedId] = useState<string | null>(null);
   const [hiddenTypes, setHiddenTypes] = useState<ReadonlySet<string>>(new Set());
   const shownDate = selectTimelineDate(timeline, position.value);
-  const graph = useGraph(selectTimelineDate(timeline, position.settledValue));
+  const graphDate = selectTimelineDate(timeline, position.settledValue);
+  const graph = useGraph(graphDate);
   const fullGraph = graph.data ?? EMPTY_GRAPH;
   const neighbourhood = useMemo(
     () => selectNeighbourhood(fullGraph, focusedId, NEIGHBOURHOOD_HOP_LIMIT),
@@ -92,10 +93,35 @@ export function KnowledgeGraph(): JSX.Element {
   );
   const focusedTitle = findNodeTitle(fullGraph.nodes, focusedId);
   const isToday = isLatestTimelineIndex(timeline, position.value);
+  const discussNode = (nodeId: string, title: string): void => {
+    openActionSheet({
+      title,
+      subject: { kind: 'page', path: nodeId },
+      actions: [
+        {
+          labelKey: 'discuss.action.open',
+          icon: 'open',
+          onSelect: () => void navigate(buildPageHref(nodeId)),
+        },
+      ],
+    });
+  };
+  const canvasPress = usePressGesture({
+    onLongPress: () => {
+      const node = hoveredNodeRef.current;
+      if (node === null) return;
+      isNodeClickSuppressedRef.current = true;
+      discussNode(node.id, node.title);
+    },
+  });
+  const focusPress = usePressGesture({
+    onLongPress: () => {
+      if (focusedId !== null && focusedTitle !== null) discussNode(focusedId, focusedTitle);
+    },
+  });
 
   const attachGraph = useCallback((container: HTMLDivElement) => {
     const inkColor = readToken(container, '--color-ink-soft');
-    const lineColor = readToken(container, '--color-line-strong');
     const patinaColor = readToken(container, '--color-patina');
     const instance = new ForceGraph<GraphNode, GraphLink>(container)
       .width(container.clientWidth)
@@ -103,13 +129,25 @@ export function KnowledgeGraph(): JSX.Element {
       .backgroundColor('rgba(0,0,0,0)')
       .nodeId('id')
       .nodeLabel('title')
-      .linkColor(() => lineColor)
+      .linkColor((link) => readToken(container, selectLinkColorVariable(link.isClosed)))
       .linkWidth(1)
-      .cooldownTicks(COOLDOWN_TICKS)
+      .onNodeHover((node) => {
+        hoveredNodeRef.current = node;
+      })
       .onEngineStop(() => {
-        if (!isFitPendingRef.current) return;
-        isFitPendingRef.current = false;
-        instance.zoomToFit(FIT_DURATION_MS, FIT_PADDING_PX);
+        const { nodes } = instance.graphData();
+        rememberPositions(nodes);
+        releaseHeldNodes(nodes);
+        const fitDuration = fitDurationRef.current;
+        if (fitDuration === null) return;
+        fitDurationRef.current = null;
+        hasFramedRef.current = nodes.length > 0;
+        const zoom = computeCentredZoom(
+          nodes,
+          { width: instance.width(), height: instance.height() },
+          FIT_PADDING_PX,
+        );
+        instance.centerAt(0, 0, fitDuration).zoom(zoom, fitDuration);
       })
       .nodePointerAreaPaint((node, paintColor, context) => {
         context.beginPath();
@@ -140,6 +178,7 @@ export function KnowledgeGraph(): JSX.Element {
         });
         context.fillText(node.title, nodeX, nodeY + LABEL_OFFSET / zoomScale);
       });
+    arrangeAroundOwner(instance);
     graphRef.current = instance;
     const observer = new ResizeObserver(() => {
       instance.width(container.clientWidth).height(container.clientHeight);
@@ -158,16 +197,19 @@ export function KnowledgeGraph(): JSX.Element {
     const instance = graphRef.current;
     if (instance === null) return;
     focusedIdRef.current = focusedId;
-    isFitPendingRef.current = true;
-    const renderable: { nodes: GraphNode[]; links: GraphLink[] } = toRenderableGraph(visibleGraph);
+    fitDurationRef.current = relayout(instance, visibleGraph, graphDate, hasFramedRef.current);
     const actOnNode = {
       open: (nodeId: string) => void navigate(buildPageHref(nodeId)),
       focus: setFocusedId,
     } as const;
-    instance.graphData(renderable).onNodeClick((node) => {
+    instance.onNodeClick((node) => {
+      if (isNodeClickSuppressedRef.current) {
+        isNodeClickSuppressedRef.current = false;
+        return;
+      }
       actOnNode[selectNodeClickIntent(focusedId, node.id)](node.id);
     });
-  }, [visibleGraph, focusedId, navigate]);
+  }, [visibleGraph, graphDate, focusedId, navigate]);
 
   return (
     <div className="lg:-mx-40">
@@ -198,25 +240,37 @@ export function KnowledgeGraph(): JSX.Element {
           onPositionChanged={position.onValueChanged}
         />
         {focusedTitle === null ? null : (
-          <div className="flex flex-col gap-2 p-3 rounded-md bg-patina-soft">
-            <span className="text-body-sm font-semibold text-patina">
-              {t('graph.focus', { title: focusedTitle })}
-            </span>
-            <div className="flex items-center gap-2">
-              <Link
-                to={buildPageHref(focusedId ?? '')}
-                className="inline-flex items-center gap-1 min-h-9 px-3 rounded-md bg-surface text-body-sm font-semibold text-bronze no-underline"
-              >
-                {t('graph.open-page')}
-                <Icon name="chevron" size={14} />
-              </Link>
-              <Button size="sm" variant="quiet" onClick={() => setFocusedId(null)}>
-                {t('graph.focus-clear')}
-              </Button>
-            </div>
+          <div
+            {...focusPress.handlers}
+            className={composeClassName(
+              'flex items-center gap-1 pl-3 pr-1 rounded-md bg-patina-soft',
+              PRESSABLE_CLASS_NAME,
+            )}
+          >
+            <Link
+              to={buildPageHref(focusedId ?? '')}
+              className="flex-1 min-w-0 inline-flex items-center gap-1 min-h-11 text-body-sm font-semibold text-patina no-underline"
+            >
+              <span className="truncate">{focusedTitle}</span>
+              <Icon name="chevron" size={14} />
+            </Link>
+            <Button
+              size="icon"
+              variant="quiet"
+              aria-label={t('graph.focus-clear')}
+              onClick={() => setFocusedId(null)}
+            >
+              <Icon name="close" size={18} />
+            </Button>
           </div>
         )}
-        <div className="relative h-[56dvh] rounded-lg border border-line bg-surface shadow-1 overflow-hidden touch-none">
+        <div
+          {...canvasPress.handlers}
+          className={composeClassName(
+            'relative h-[60dvh] rounded-lg border border-line bg-surface shadow-1 overflow-hidden touch-none',
+            PRESSABLE_CLASS_NAME,
+          )}
+        >
           <div ref={attachGraph} className="absolute inset-0" />
           {graph.data === undefined ? (
             <div className="absolute inset-0 flex items-center justify-center p-4">
@@ -224,7 +278,6 @@ export function KnowledgeGraph(): JSX.Element {
             </div>
           ) : null}
         </div>
-        <p className="m-0 text-caption text-ink-muted">{t('graph.hint')}</p>
         <GraphLegend
           label={t('graph.legend')}
           entries={countNodeTypes(neighbourhood.nodes).map(({ type, count }) => ({

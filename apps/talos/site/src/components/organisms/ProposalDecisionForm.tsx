@@ -11,6 +11,7 @@ import { buildDecisionPayload } from './proposal-board.core';
 export interface ProposalDecisionFormProps {
   readonly slug: string;
   readonly isPending: boolean;
+  readonly startsCommenting: boolean;
   readonly onDecided: (payload: { decision: ProposalDecision; comment?: string }) => void;
 }
 
@@ -18,10 +19,11 @@ export interface ProposalDecisionFormProps {
 export function ProposalDecisionForm({
   slug,
   isPending,
+  startsCommenting,
   onDecided,
 }: ProposalDecisionFormProps): JSX.Element {
   const { t } = useTranslation();
-  const [isCommenting, setIsCommenting] = useState(false);
+  const [isCommenting, setIsCommenting] = useState(startsCommenting);
   const form = useForm({ defaultValues: { comment: '' } });
   const commentId = `decision-comment-${slug}`;
   const decide = (decision: ProposalDecision): void => {
@@ -31,8 +33,8 @@ export function ProposalDecisionForm({
     <div className="flex flex-col gap-3">
       {isCommenting ? (
         <div className="flex flex-col gap-1.5">
-          <label htmlFor={commentId} className="text-label text-ink-muted">
-            {t('proposals.comment-label')}
+          <label htmlFor={commentId} className="sr-only">
+            {t('proposals.comment')}
           </label>
           <form.Field name="comment">
             {(field) => (

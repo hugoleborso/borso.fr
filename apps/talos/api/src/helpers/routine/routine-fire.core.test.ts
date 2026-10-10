@@ -18,8 +18,8 @@ describe('buildFireHeaders', () => {
 
 describe('buildFireBody', () => {
   it('writes the secret phrase, then the type and the path of the file', () => {
-    expect(JSON.parse(buildFireBody('phrase', 'message', 'boite/messages/a.md'))).toEqual({
-      text: 'phrase\nmessage: boite/messages/a.md',
+    expect(JSON.parse(buildFireBody('phrase', 'proposition', 'etat/propositions/a.md'))).toEqual({
+      text: 'phrase\nproposition: etat/propositions/a.md',
     });
   });
 

@@ -13,7 +13,6 @@ export function SessionSettings(): JSX.Element {
   return (
     <Card>
       <SectionTitle>{t('settings.session.title')}</SectionTitle>
-      <p className="m-0 mb-3 text-body-sm text-ink-soft">{t('settings.session.lead')}</p>
       <Button
         variant="danger"
         className="w-full"
