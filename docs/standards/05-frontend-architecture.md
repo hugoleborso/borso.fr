@@ -172,14 +172,9 @@ with no visible affordance, a licence attribution, an error.
 - `reviewer` checks that a route composes organisms and owns no layout
   primitive, because the atomic rules read the bucket out of the path and a
   route is in no bucket.
-- `script:scripts/standards/check-explanatory-copy.ts` fails on a message key
-  named like an explanation (a hint, a subtitle, an intro, a description) that
-  `docs/standards/explanatory-copy-exceptions.json` does not list with a
-  reason, and on an exception whose key is gone.
-- `reviewer` checks that no new button label explains the interface, and that
-  a sentence filed under another key name does not either: a create action is
-  an icon button with an `aria-label`, and a sentence survives only for what
-  the screen cannot show.
+- `reviewer` checks that no new page subtitle, field hint or button label
+  explains the interface: a create action is an icon button with an
+  `aria-label`, and a sentence survives only for what the screen cannot show.
 - `reviewer` checks that every screen holds together at 375 pixels, using
   `agent-browser` for anything measurable and `scripts/argent.sh` for anything
   touched, because a synthetic click is not a tap.

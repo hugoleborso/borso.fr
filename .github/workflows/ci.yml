@@ -166,7 +166,6 @@ jobs:
       - run: ./scripts/check-vocabulary-paths.sh
       - run: ./scripts/check-no-null-bytes.sh
       - run: pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
-      - run: pnpm exec tsx scripts/standards/check-explanatory-copy.ts
       # Every `VITE_` variable a site reads is set by a workflow or written
       # down as deliberately unset, mirroring the pre-commit hook so a push
       # made with hooks skipped still gets caught.

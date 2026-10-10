@@ -8,7 +8,7 @@ Every friction event from Hugo's first request (« Do a UX pass on pragma… »)
 | 02 | implementation | Two unused messages, `mastery.subtitle` and `scaffold.subtitle`, found while listing explanatory keys. | this sweep | fixed: commit d26622c, merge into the-projection-nobody-rendered |
 | 03 | implementation | The bars page had two *Save* buttons, the first saving the outreach template; the earlier mobile audit passed both. | kaizen 08:56, commit:c229a98 | dantotsu: the-audit-that-measured-buttons-not-jobs |
 | 04 | conception | The operator corrected explanatory UI text three times: a page subtitle, a labelled create button, a procedural placeholder. | transcript: « Une UI qui explique ce qu'elle fait c'est un smell d'une mauvaise UI » | dantotsu: the-interface-that-explained-itself |
-| 05 | implementation | `members.masteryMatrixSubtitle`, a paragraph of instructions, survived the pass. | this sweep | merge into the-interface-that-explained-itself; listed as a redesign candidate, the redesign is a product call |
+| 05 | implementation | `members.masteryMatrixSubtitle`, a paragraph of instructions, survived the pass. | this sweep | merge into the-interface-that-explained-itself; removing it is a product call |
 | 06 | validation | A vote nobody scored could not be closed: the proposal answered 409 and the page had no other ending. | transcript: « close the vote ne marche pas ? », commit:2c4e615 | dantotsu: the-empty-vote-nobody-could-close |
 | 07 | post-merge | A dev dependency added to pragma only deployed every app, to previews and to prod. | transcript: « Why does a development dep launches a redeploy of all apps ? » | dantotsu: a-dev-dependency-that-redeployed-every-app |
 | 08 | post-merge | The preview run deployed `banana-rush`, which the operator asked about. | transcript: « Pourquoi une preview banana rush ? » | merge into a-dev-dependency-that-redeployed-every-app |
@@ -26,8 +26,9 @@ Every friction event from Hugo's first request (« Do a UX pass on pragma… »)
 | 20 | validation | `add-task` stays 0.3 s over budget. | `validation/after.json` | no-op: the fix is moving the Tasks tab, a product decision left with the operator |
 | 21 | post-merge | `merge_pull_request` refused a short `expectedHeadSha`. | transcript | no-op: the error named the fix, a full 40-character SHA |
 | 22 | implementation | A scratch helper script hung and was killed. | transcript | no-op: scratch code, not in the tree |
+| 23 | post-merge | The first eradication for row 04, a gate on message key names with an exception list, was rejected by the operator as « une usine à gaz ». | transcript, commit:d26622c | merge into the-interface-that-explained-itself; gate removed, level 5 |
 
 ## Decisions
 
-- 5 dantotsus, 1 knowledge entry, 1 fix, 13 no-ops, 2 merges.
+- 5 dantotsus, 1 knowledge entry, 1 fix, 13 no-ops, 3 merges.
 - Rows 01, 03 and 06 share a shape: every control passed its own check and the job through them was broken. That is the pattern the task-speed harness addresses, and why its limit, running by hand only, is named in each entry.

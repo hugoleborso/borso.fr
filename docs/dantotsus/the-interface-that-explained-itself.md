@@ -5,8 +5,8 @@ detected-at: review
 severity: low
 related-pr: '#151'
 fix-pr: '#154'
-fix-commits: [eb092d9, d26622c]
-eradication-level: 2
+fix-commits: [eb092d9]
+eradication-level: 5
 time-to-detect: hours
 tags: [pragma, frontend, i18n, standards]
 ---
@@ -50,30 +50,26 @@ one.
 
 ## Eradication (mandatory — code-level)
 
-**Type:** DevX check (level 2 — pre-commit and CI script)
+**Type:** knowledge addition (level 5 — a written rule with a reviewer bullet)
 
-**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154) · commit `d26622c`
+**Reference:** [PR #151](https://github.com/hugoleborso/borso.fr/pull/151) · commit `eb092d9`
 
-**The actual fix:**
+**The actual fix:** standard 05 gained « The interface does not explain
+itself », with a `reviewer` bullet so `/standards-review` asks for it on every
+screen change.
 
-```diff
-+- `script:scripts/standards/check-explanatory-copy.ts` fails on a message key
-+  named like an explanation (a hint, a subtitle, an intro, a description) that
-+  `docs/standards/explanatory-copy-exceptions.json` does not list with a
-+  reason, and on an exception whose key is gone.
-```
+**A gate was tried and withdrawn.** `d26622c` added a script failing on any
+message key named like an explanation (`*Hint`, `*subtitle`, `*Intro`) unless
+a JSON file listed it with a reason. The operator rejected it the same day as
+« une usine à gaz »: it depends on a list of key names, which a sentence filed
+under any other name walks past, and it asks for a second file to be kept in
+step with the messages. It was removed before merge. The rule stays a
+reviewer's call.
 
-A new `*Hint` or `*subtitle` key now needs a written reason before it can be
-committed. Pragma's nine survivors carry theirs: a template's placeholder
-syntax, an upload's accepted formats, a gesture with no visible affordance.
-The seventeen keys of the other apps are listed as not yet reviewed.
-
-**Limits:** a sentence filed under a neutral key (`members.title`) passes. The
-reviewer bullet stays for that, and for button labels.
-
-**Sibling defects swept:** `members.masteryMatrixSubtitle` is a paragraph of
-instructions that survived the pass. It stays as an exception marked as a
-redesign candidate, because removing it is a product decision.
+**Sibling defects swept:** `mastery.subtitle` and `scaffold.subtitle`, two
+messages nothing rendered, were removed in `d26622c` and stay removed.
+`members.masteryMatrixSubtitle` is a paragraph of instructions that survived
+the pass; removing it is a product decision.
 
 ## See also
 
