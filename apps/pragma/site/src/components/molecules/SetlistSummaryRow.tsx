@@ -9,6 +9,7 @@ import { Icon } from '../atoms/Icon';
 interface SetlistSummaryRowProps {
   readonly id: string;
   readonly name: string;
+  readonly isVoting: boolean;
   readonly songCount: number;
   readonly sessionsLabel: string | null;
   readonly action?: ReactNode;
@@ -17,6 +18,7 @@ interface SetlistSummaryRowProps {
 export function SetlistSummaryRow({
   id,
   name,
+  isVoting,
   songCount,
   sessionsLabel,
   action,
@@ -34,7 +36,7 @@ export function SetlistSummaryRow({
             {selectSetlistDisplayName(name, t('setlist.untitled'))}
           </div>
           <div className="text-[12px] text-ink-500 mt-0.5 truncate">
-            {t('setlist.songCount', { count: songCount })}
+            {isVoting ? t('setlist.voting') : t('setlist.songCount', { count: songCount })}
             {sessionsLabel === null ? null : ` · ${sessionsLabel}`}
           </div>
         </div>

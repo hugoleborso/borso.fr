@@ -32,6 +32,7 @@ export interface VoteClosePanelProps {
   readonly targetSongCount: number;
   readonly isClosing: boolean;
   readonly onClose: (songIds: readonly string[]) => void;
+  readonly onCancel: () => void;
 }
 
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
@@ -46,6 +47,7 @@ export function VoteClosePanel({
   targetSongCount,
   isClosing,
   onClose,
+  onCancel,
 }: VoteClosePanelProps): JSX.Element {
   const { t } = useTranslation();
   const [keptSongIds, setKeptSongIds] = useState<string[]>(() =>
@@ -131,6 +133,9 @@ export function VoteClosePanel({
         </div>
       )}
       <StickyFormActions>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          {t('common.cancel')}
+        </Button>
         <Button
           type="button"
           variant="accent"
