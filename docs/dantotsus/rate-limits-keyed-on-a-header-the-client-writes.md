@@ -5,7 +5,7 @@ detected-at: review
 severity: high
 related-pr: e2693a3e (pragma), 5353b6de (last-loop-lepin)
 fix-pr: this branch, claude/rate-limit-client-ip
-fix-commits: [the commit that adds this file]
+fix-commits: [1dfffcff]
 eradication-level: 2
 time-to-detect: months
 tags: [security, rate-limit, cloudfront, api-gateway, dsql, lambda]
@@ -138,7 +138,7 @@ The address is no longer read from any header the client controls:
 
 **Type:** DevX check (level 2), plus a shared shape
 
-**Reference:** branch `claude/rate-limit-client-ip`, the commit that adds this
+**Reference:** branch `claude/rate-limit-client-ip`, commit [`1dfffcff`](https://github.com/hugoleborso/borso.fr/commit/1dfffcff), which also adds this
 file.
 
 - **`borso/no-client-supplied-address-header`** rejects the string literals
