@@ -39,7 +39,7 @@ describe('punch.repository', () => {
   it('findActivePunchForLoop skips voided punches', async () => {
     const punch = makePunch('alice', 1, '2026-09-19T06:55:00+02:00');
     await insertPunch(getDatabase(), punch);
-    await markPunchVoided(punch.id, new Date('2026-09-19T07:00:00+02:00'));
+    await markPunchVoided(getDatabase(), punch.id, new Date('2026-09-19T07:00:00+02:00'));
     const active = await findActivePunchForLoop('lepin-2026', 'alice', 1);
     expect(active).toBeNull();
   });

@@ -5,6 +5,7 @@ import { getDatabase } from '../api/src/database/client';
 
 const ALL_TABLES: readonly string[] = [
   'loop_punches',
+  'loop_punch_claims',
   'manual_dnfs',
   'runners',
   'editions',
@@ -29,6 +30,15 @@ export async function truncateAllTables(): Promise<void> {
     sql.raw(
       `TRUNCATE ${ALL_TABLES.map((name) => `"${name}"`).join(', ')} RESTART IDENTITY CASCADE`,
     ),
+  );
+}
+
+const CONCURRENT_CONNECTIONS_TO_OPEN = 4;
+
+export async function openConnectionsForConcurrentRequests(): Promise<void> {
+  const database = getDatabase();
+  await Promise.all(
+    Array.from({ length: CONCURRENT_CONNECTIONS_TO_OPEN }, () => database.execute(sql`SELECT 1`)),
   );
 }
 
