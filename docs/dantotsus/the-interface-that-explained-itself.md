@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#151'
-fix-pr: '#152'
+fix-pr: '#154'
 fix-commits: [eb092d9, d26622c]
 eradication-level: 2
 time-to-detect: hours
@@ -52,7 +52,7 @@ one.
 
 **Type:** DevX check (level 2 — pre-commit and CI script)
 
-**Reference:** [PR #152](https://github.com/hugoleborso/borso.fr/pull/152) · commit `d26622c`
+**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154) · commit `d26622c`
 
 **The actual fix:**
 

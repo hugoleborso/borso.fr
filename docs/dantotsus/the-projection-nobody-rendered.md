@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '9a94594'
-fix-pr: '#152'
+fix-pr: '#154'
 fix-commits: [c229a98, bd60cb7]
 eradication-level: 4
 time-to-detect: days
@@ -50,7 +50,7 @@ actually only a test on the rendered row can say the member sees it.
 
 **Type:** detection (level 4 — a component test on the rendered row)
 
-**Reference:** [PR #152](https://github.com/hugoleborso/borso.fr/pull/152) · commit `bd60cb7`
+**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154) · commit `bd60cb7`
 
 **The actual fix:**
 

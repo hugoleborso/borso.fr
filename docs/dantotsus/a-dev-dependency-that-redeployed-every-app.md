@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: medium
 related-pr: '#151'
-fix-pr: '#152'
+fix-pr: '#154'
 fix-commits: [e4e34d2]
 eradication-level: 2
 time-to-detect: minutes
@@ -54,7 +54,7 @@ set of versions it resolves.
 **Type:** DevX check (level 2 — a CI script decides the deploy set from the
 resolved graph)
 
-**Reference:** [PR #152](https://github.com/hugoleborso/borso.fr/pull/152) · commit `e4e34d2`
+**Reference:** [PR #154](https://github.com/hugoleborso/borso.fr/pull/154) · commit `e4e34d2`
 
 **The actual fix:**
 
