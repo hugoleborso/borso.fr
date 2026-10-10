@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: review
 severity: high
 related-pr: 12
-fix-pr: pending
+fix-pr: 161
 fix-commits: [243ee9e8, bb1d646d]
 eradication-level: 1
 time-to-detect: months
