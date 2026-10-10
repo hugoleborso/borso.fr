@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { resetAllRateLimits } from '../auth/auth.service';
 import { computeSunriseSunset, seedEdition } from '../edition/edition.service';
 import type { RaceEdition } from '../edition/edition.types';
 import {
@@ -104,4 +105,8 @@ export async function applySeedFixture(fixture: SeedFixtureName, now: Date): Pro
 
   const runners = await listRunners(EDITION_SLUG);
   return { fixture, editionSlug: EDITION_SLUG, runnerCount: runners.length };
+}
+
+export async function resetRateLimits(): Promise<void> {
+  await resetAllRateLimits();
 }

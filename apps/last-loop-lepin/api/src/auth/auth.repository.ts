@@ -1,4 +1,4 @@
-import { and, eq, gt, lt } from 'drizzle-orm';
+import { and, eq, gt, lt, sql } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import { adminCredentialsTable, adminSessionsTable, authAttemptsTable } from './auth.schema';
 
@@ -10,24 +10,39 @@ export interface RateLimitBucket {
   readonly windowStartedAt: Date;
 }
 
-export async function findBucket(ipAddress: string): Promise<RateLimitBucket | null> {
+// @FollowsBlueprint repository-atomic-counter
+export async function incrementBucket(
+  ipAddress: string,
+  now: Date,
+  windowFloor: Date,
+): Promise<RateLimitBucket> {
+  const isWindowExpired = sql`${authAttemptsTable.windowStartedAt} <= ${windowFloor.toISOString()}::timestamptz`;
   const rows = await getDatabase()
-    .select()
-    .from(authAttemptsTable)
-    .where(eq(authAttemptsTable.ipAddress, ipAddress))
-    .limit(1);
-  return rows[0] ?? null;
-}
-
-// @FollowsBlueprint repository-idempotent-upsert
-export async function upsertBucket(bucket: RateLimitBucket): Promise<void> {
-  await getDatabase()
     .insert(authAttemptsTable)
-    .values(bucket)
+    .values({ ipAddress, count: 1, windowStartedAt: now })
     .onConflictDoUpdate({
       target: authAttemptsTable.ipAddress,
-      set: { count: bucket.count, windowStartedAt: bucket.windowStartedAt },
+      set: {
+        count: sql`CASE WHEN ${isWindowExpired} THEN 1 ELSE ${authAttemptsTable.count} + 1 END`,
+        windowStartedAt: sql`CASE WHEN ${isWindowExpired} THEN ${now.toISOString()}::timestamptz ELSE ${authAttemptsTable.windowStartedAt} END`,
+      },
+    })
+    .returning({
+      ipAddress: authAttemptsTable.ipAddress,
+      count: authAttemptsTable.count,
+      windowStartedAt: authAttemptsTable.windowStartedAt,
     });
+  const row = rows[0];
+  if (row === undefined) throw new Error('auth_attempts upsert returned no row');
+  return row;
+}
+
+export async function deleteBucket(ipAddress: string): Promise<void> {
+  await getDatabase().delete(authAttemptsTable).where(eq(authAttemptsTable.ipAddress, ipAddress));
+}
+
+export async function deleteAllBuckets(): Promise<void> {
+  await getDatabase().delete(authAttemptsTable);
 }
 
 export async function findAdminPinHash(): Promise<string | null> {

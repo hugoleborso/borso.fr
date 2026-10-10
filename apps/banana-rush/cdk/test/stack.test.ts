@@ -116,10 +116,13 @@ describe('banana-rush app stack', () => {
     }
   });
 
-  it('declares no Secrets Manager resources', () => {
-    for (const stage of ['prod', 'preview'] as const) {
-      expect(synthAppStack(stage).findResources('AWS::SecretsManager::Secret')).toEqual({});
-    }
+  it('declares no Secrets Manager resource beyond the CloudFront origin-verify value on prod', () => {
+    expect(synthAppStack('preview').findResources('AWS::SecretsManager::Secret')).toEqual({});
+    const prodSecretIds = Object.keys(
+      synthAppStack('prod').findResources('AWS::SecretsManager::Secret'),
+    );
+    expect(prodSecretIds).toHaveLength(1);
+    expect(prodSecretIds[0]).toContain('OriginVerifySecret');
   });
 
   it('declares one WebSocket API per stage, named after the stage', () => {

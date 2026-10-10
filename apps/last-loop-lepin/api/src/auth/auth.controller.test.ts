@@ -21,12 +21,20 @@ function readCookieValue(setCookie: string | null, name: string): string | null 
   return valuePart ?? null;
 }
 
-async function login(pin: string, ipAddress = '127.0.0.1') {
-  return createApp().request('/api/admin/auth/login', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
-    body: JSON.stringify({ pin }),
-  });
+async function login(
+  pin: string,
+  ipAddress = '127.0.0.1',
+  extraHeaders: Record<string, string> = {},
+) {
+  return createApp().request(
+    '/api/admin/auth/login',
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...extraHeaders },
+      body: JSON.stringify({ pin }),
+    },
+    { event: { requestContext: { http: { sourceIp: ipAddress } } } },
+  );
 }
 
 function restoreAllowedOriginForTheSuitesThatFollow(original: string | undefined): void {
@@ -95,6 +103,23 @@ describe('admin auth controller', () => {
     expect(blocked.status).toBe(429);
     const body = errorResponseSchema.parse(await blocked.json());
     expect(body.reason).toBe('rate-limited');
+  });
+
+  it('keeps the limit when every attempt forges a fresh X-Forwarded-For', async () => {
+    const ipAddress = '198.51.100.44';
+    for (let attempt = 0; attempt < 5; attempt += 1) {
+      await login('totallywrong', ipAddress, { 'x-forwarded-for': `10.0.0.${attempt}` });
+    }
+    const blocked = await login('totallywrong', ipAddress, { 'x-forwarded-for': '10.0.0.99' });
+    expect(blocked.status).toBe(429);
+  });
+
+  it('counts concurrent attempts one by one rather than once', async () => {
+    const ipAddress = '198.51.100.45';
+    const statuses = await Promise.all(
+      Array.from({ length: 8 }, async () => (await login('totallywrong', ipAddress)).status),
+    );
+    expect(statuses.filter((status) => status === 429).length).toBe(3);
   });
 
   it('resets the rate-limit window after a successful login', async () => {

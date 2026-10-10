@@ -107,9 +107,12 @@ describe('last-loop-lepin app stack', () => {
       expect(variables).not.toHaveProperty('JWT_SECRET');
     }
 
-    for (const stage of ['prod', 'preview'] as const) {
-      synthAppStack(stage).resourceCountIs('AWS::SecretsManager::Secret', 0);
-    }
+    synthAppStack('preview').resourceCountIs('AWS::SecretsManager::Secret', 0);
+    const prodSecretIds = Object.keys(
+      synthAppStack('prod').findResources('AWS::SecretsManager::Secret'),
+    );
+    expect(prodSecretIds).toHaveLength(1);
+    expect(prodSecretIds[0]).toContain('OriginVerifySecret');
   });
 
   it('injects ALLOWED_ORIGIN on the API Lambda — prod=apex, preview=per-PR host', () => {

@@ -22,13 +22,23 @@ next one.
 
 ## The rate limiters key on the address
 
-Sign-in allows five failures per quarter-hour, recovery three per hour, and
-both count per IP hash, where the IP is the first hop of
-`X-Forwarded-For`. A browser run that walks every error case locks itself
-out after the third wrong band password, for an hour. A validator gets a
-fresh bucket by sending a different `X-Forwarded-For` value per case, which
-is how the PR #107 run covered every refusal in one session. The buckets
-live in the API process's memory, so restarting `pnpm dev` clears them too.
+Sign-in allows five failures per quarter-hour and recovery three per hour,
+both counted per hash of the client address in the `auth_attempt` table.
+The address comes from `readClientAddress`, never from a request header, so
+sending a different `X-Forwarded-For` per case no longer buys a fresh
+bucket. This entry used to recommend exactly that, which was the bypass
+[the dantotsu](../dantotsus/rate-limits-keyed-on-a-header-the-client-writes.md)
+closed. On a preview the address is the one API Gateway saw, and on
+`pnpm dev` there is no Lambda event, so every local request shares one
+`unknown` bucket.
+
+A browser run that walks every error case therefore locks itself out after
+the third wrong band password. Reset the buckets between cases with
+`POST /api/__test/rate-limits/reset`, which exists wherever
+`ALLOW_TEST_SEED=1` mounts the fixture routes: `pnpm dev` and every preview,
+never prod. Restarting `pnpm dev` no longer clears them, because they live in
+the database rather than in the process; reseeding does not clear them
+either.
 
 ## Passkeys cannot be exercised in a browser here
 

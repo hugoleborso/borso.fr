@@ -152,7 +152,7 @@ Two failure modes to watch for:
 - [`a-validator-can-name-a-cause-it-never-probed.md`](./a-validator-can-name-a-cause-it-never-probed.md) — a validation report's rows carry evidence by construction and its Notes carry prose; a cause written there is a hypothesis until a probe is cited, and one `curl` settled a claim that would otherwise have become a gate protecting nothing.
 - [`visual-validation-skill-vs-agent-browser-direct.md`](./visual-validation-skill-vs-agent-browser-direct.md) — `/visual-validation` is the feature-gate skill (full spec walk, separate agent, committed evidence); for single-fix iteration use `agent-browser` directly in the main session — minutes vs seconds.
 
-- [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, a fresh rate-limit bucket per `X-Forwarded-For`, why passkey claims belong in back-e2e, and running one named case.
+- [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, resetting rate-limit buckets with the test-only reset route, why passkey claims belong in back-e2e, and running one named case.
 
 ### Spec & metrics framing
 

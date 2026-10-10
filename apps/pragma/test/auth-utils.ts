@@ -7,6 +7,11 @@ export const TEST_PASSWORD = 'correct-horse-battery';
 export const TEST_SHARED_PASSWORD = 'shared-horse-battery';
 export const TEST_USERNAME = 'tester';
 export const SESSION_COOKIE_NAME = 'pragma_session';
+export const DEFAULT_CLIENT_ADDRESS = '203.0.113.250';
+
+export function lambdaEnvironmentFrom(sourceIp: string): unknown {
+  return { event: { requestContext: { http: { sourceIp } } } };
+}
 
 export function extractSessionCookie(response: Response): string | null {
   const setCookie = response.headers.get('set-cookie');
@@ -57,33 +62,40 @@ export async function recoverPassword(
     sharedPassword?: string;
     newPassword?: string;
     ipAddress?: string;
+    extraHeaders?: Record<string, string>;
   } = {},
 ): Promise<Response> {
-  return app.request(`${TEST_HOST}/api/auth/recover-password`, {
-    method: 'POST',
-    headers: {
-      'content-type': 'application/json',
-      'x-forwarded-for': params.ipAddress ?? '203.0.113.250',
+  return app.request(
+    `${TEST_HOST}/api/auth/recover-password`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...params.extraHeaders },
+      body: JSON.stringify({
+        username: params.username ?? TEST_USERNAME,
+        sharedPassword: params.sharedPassword ?? TEST_SHARED_PASSWORD,
+        newPassword: params.newPassword ?? TEST_PASSWORD,
+      }),
     },
-    body: JSON.stringify({
-      username: params.username ?? TEST_USERNAME,
-      sharedPassword: params.sharedPassword ?? TEST_SHARED_PASSWORD,
-      newPassword: params.newPassword ?? TEST_PASSWORD,
-    }),
-  });
+    lambdaEnvironmentFrom(params.ipAddress ?? DEFAULT_CLIENT_ADDRESS),
+  );
 }
 
 export async function loginAsMember(
   app: Hono,
   username = TEST_USERNAME,
   password = TEST_PASSWORD,
-  ipAddress = '203.0.113.250',
+  ipAddress = DEFAULT_CLIENT_ADDRESS,
+  extraHeaders: Record<string, string> = {},
 ): Promise<Response> {
-  return app.request(`${TEST_HOST}/api/auth/login`, {
-    method: 'POST',
-    headers: { 'content-type': 'application/json', 'x-forwarded-for': ipAddress },
-    body: JSON.stringify({ username, password }),
-  });
+  return app.request(
+    `${TEST_HOST}/api/auth/login`,
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json', ...extraHeaders },
+      body: JSON.stringify({ username, password }),
+    },
+    lambdaEnvironmentFrom(ipAddress),
+  );
 }
 
 export interface AuthenticatedApp {
@@ -112,6 +124,7 @@ export interface JsonRequestOptions {
   readonly body?: unknown;
   readonly cookieHeader?: string;
   readonly extraHeaders?: Readonly<Record<string, string>>;
+  readonly clientAddress?: string;
 }
 
 export async function jsonRequest(
@@ -131,7 +144,11 @@ export async function jsonRequest(
   if (options.body !== undefined) {
     init.body = JSON.stringify(options.body);
   }
-  return app.request(`${TEST_HOST}${path}`, init);
+  return app.request(
+    `${TEST_HOST}${path}`,
+    init,
+    lambdaEnvironmentFrom(options.clientAddress ?? DEFAULT_CLIENT_ADDRESS),
+  );
 }
 
 export async function readJson<Output>(

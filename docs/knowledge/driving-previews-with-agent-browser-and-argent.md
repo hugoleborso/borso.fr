@@ -292,9 +292,10 @@ in — and if a run needs a clean slate, sign in again afterwards rather than
 assuming the session survived.
 
 A consequence worth knowing: five failed sign-ins from one address trip the
-API's fifteen-minute rate limiter. The limiter keys on the forwarded-for
-header, so a stuck run can be unblocked by setting a different one on the
-browser rather than by waiting it out.
+API's fifteen-minute rate limiter. The limiter keys on an address the client
+cannot set, so changing a header no longer helps; a stuck run is unblocked
+with `POST /api/__test/rate-limits/reset`, which previews mount and prod
+never does.
 
 **`screenshot --full` captures the window, not the scrolled container.**
 Where a page scrolls an inner element rather than the document — which is how

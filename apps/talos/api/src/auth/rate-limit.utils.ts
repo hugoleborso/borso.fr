@@ -17,15 +17,8 @@ export const AUTHENTICATION_BUDGET: RateLimitBudget = {
 };
 
 // @FollowsBlueprint utils-pure-module
-export function recordAttempt(
-  existing: RateBucket | null,
-  nowMillis: number,
-  budget: RateLimitBudget,
-): RateBucket {
-  if (existing === null || nowMillis - existing.windowStartedAt >= budget.windowMs) {
-    return { attempts: 1, windowStartedAt: nowMillis };
-  }
-  return { attempts: existing.attempts + 1, windowStartedAt: existing.windowStartedAt };
+export function windowFloorFor(now: Date, budget: RateLimitBudget): Date {
+  return new Date(now.getTime() - budget.windowMs);
 }
 
 export function isRateLimited(bucket: RateBucket, budget: RateLimitBudget): boolean {

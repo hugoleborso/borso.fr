@@ -1,5 +1,5 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
-import { truncateAllTables } from '../../../test/database-utils';
+import { seedAdminCredentials, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { findEditionBySlug } from '../edition/edition.repository';
 import { listRunnersForEdition } from '../runner/runner.repository';
@@ -11,6 +11,21 @@ async function seed(fixture: string) {
   return app.request(`/api/__test/seed?fixture=${encodeURIComponent(fixture)}`, {
     method: 'POST',
   });
+}
+
+const VALIDATOR_ADDRESS = '198.51.100.90';
+const LOGIN_BUDGET = 5;
+
+async function loginWithWrongPin() {
+  return createApp().request(
+    '/api/admin/auth/login',
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ pin: 'totallywrong' }),
+    },
+    { event: { requestContext: { http: { sourceIp: VALIDATOR_ADDRESS } } } },
+  );
 }
 
 // @FollowsBlueprint test-back-e2e
@@ -52,5 +67,16 @@ describe('__test/test-seed.controller', () => {
     expect(response.status).toBe(200);
     const edition = await findEditionBySlug('lepin-2026');
     expect(edition).not.toBeNull();
+  });
+
+  it('lets a validator reopen the admin sign-in after exhausting its budget', async () => {
+    await seedAdminCredentials();
+    for (let attempt = 0; attempt < LOGIN_BUDGET; attempt += 1) {
+      await loginWithWrongPin();
+    }
+    expect((await loginWithWrongPin()).status).toBe(429);
+    const reset = await createApp().request('/api/__test/rate-limits/reset', { method: 'POST' });
+    expect(reset.status).toBe(200);
+    expect((await loginWithWrongPin()).status).toBe(401);
   });
 });

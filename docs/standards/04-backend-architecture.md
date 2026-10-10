@@ -147,6 +147,26 @@ export class PunchRejectedError extends Error {
 The mapping from error to status code is a lookup table in a `.core.ts` file,
 so it is a pure function of the error and it has tests.
 
+## Who the client is
+
+A limit that counts per client, such as a sign-in rate limit, keys on
+`readClientAddress(context)` from `helpers/client-address/`, never on a request
+header. `X-Forwarded-For` begins with whatever the client sent and CloudFront
+only appends after it, so a key read from it is chosen by the attacker. The
+helper trusts the viewer address that the CloudFront function writes only when
+the request also carries the origin-verify secret, and otherwise uses the
+address API Gateway accepted the connection from.
+
+```ts
+const clientAddress = readClientAddress(context);
+```
+
+A bucket that has to hold across Lambda instances lives in the database and
+is bumped by one `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` statement, so
+two concurrent requests cannot both read the old count. See the
+`repository-atomic-counter` blueprint and
+[the dantotsu](../dantotsus/rate-limits-keyed-on-a-header-the-client-writes.md).
+
 ## Enforced by
 
 - `eslint:borso/no-controller-imports-outside-service` keeps a controller to its
@@ -164,6 +184,12 @@ so it is a pure function of the error and it has tests.
   has an owning bounded context. It does not touch `apps/<app>/domain/`, which
   sits beside `api/` rather than inside it and holds only what both sides read.
   See [ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md).
+- `eslint:borso/no-client-supplied-address-header` rejects `X-Forwarded-For`,
+  `X-Real-IP`, `Forwarded` and the other client-written address headers as
+  string literals in API source, and the trusted viewer address header outside
+  the one file that checks it against the origin secret.
+- `reviewer` checks that a rate-limit bucket meant to hold across instances is
+  bumped in one statement rather than read and then written.
 - `eslint:borso/conditions-live-in-pure-functions` covers business branches
   everywhere else. See
   [02. Purity and core files](./02-purity-and-core-files.md).
