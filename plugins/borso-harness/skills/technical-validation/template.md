@@ -24,11 +24,14 @@ INPUTS:
 - app_pkg:      {{app_pkg}}          # e.g. @borso-app/borso-fr
 - report_path:  {{report_path}}      # absolute path you must write to
 
-Read the spec, read the plan if present, resolve the diff against base_ref, and walk the four validation categories per your standard:
+Read the spec, read the plan if present, resolve the diff against base_ref, and walk the five validation categories per your standard:
   A. Correctness vs spec
   B. Code cleanliness (repo rules + eslint + knip)
   C. Tests pass
   D. Test coverage of spec
+  E. Scale (required): check-then-write races, per-process state, concurrent tests
+
+Every FAIL row states a concrete failing case: this input leads to this wrong result. A concern without one goes in Notes as a question.
 
 Run lint and tests; do not assume. Quote code with file:line. Tag every row PASS / FAIL / UNVERIFIABLE. Aggregate to PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL.
 
@@ -79,9 +82,15 @@ The agent writes this at `docs/features/<app>/<slug>/validation/technical-valida
 |---|---|---|---|
 | D01 | <use case> | `<describe/it text>` at <file:line> | PASS / FAIL |
 
+## E. Scale
+
+| # | Write path or state | Question | Failing case, or the key or test that holds it | Verdict |
+|---|---|---|---|---|
+| E01 | <service function → write> | Check-then-write / per-process state / concurrent proof | <two requests → wrong result, or the key and the test> | PASS / FAIL / UNVERIFIABLE |
+
 ## Notes
 
-> *One bullet per FAIL or UNVERIFIABLE row, expanding what was observed and what was missing. PASS rows do not need a note.*
+> *One bullet per FAIL or UNVERIFIABLE row, expanding what was observed and what was missing, plus any concern with no failing case yet, phrased as a question. PASS rows do not need a note.*
 
 -
 

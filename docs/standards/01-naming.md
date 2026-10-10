@@ -212,6 +212,20 @@ It closes the same gap the English-only rule leaves open. The rule says not to
 write `porteurTonal`, and it cannot say what to write instead; the vocabulary
 can, because the word already exists somewhere in the tree.
 
+An invariant that promises behaviour, something a person is allowed to do or
+is refused, names the test that holds it on a line of its own under the term:
+
+```markdown
+Held by: `api/src/punch/punch.service.test.ts` › punches a runner again for a loop whose punch was voided
+```
+
+The path is relative to the application folder and the title is the test's
+title exactly. A promise with no test is a sentence nothing checks, and
+`last-loop-lepin` shipped one: its vocabulary said voiding a punch let the
+runner be punched again, the code refused exactly that, and no test had ever
+tried it. See
+[the dantotsu](../dantotsus/a-voided-punch-still-held-its-loop.md).
+
 The last section of each file, *Words we do not use*, is the part that pays off
 fastest. It names the term a reader would reach for and the term this
 application actually uses, which is exactly the substitution a new contributor
@@ -264,11 +278,15 @@ meanings each. None of that is visible from any one file.
   [the dantotsu](../dantotsus/the-rule-that-made-the-repository-name-the-calendar.md). Off in a test file, where a
   fixture literal belongs next to the assertion that gives it meaning.
 - `script:scripts/check-vocabulary-paths.sh` fails a `VOCABULARY.md` whose term
-  points at a folder that is not there. That line is the only mechanically
-  checkable fact in the document, and the one that rots first, because a slice
-  gets renamed by a change with no reason to open the vocabulary.
+  points at a folder that is not there, and one whose `Held by:` line names a
+  test file or a test title that is not there. Those two lines are the only
+  mechanically checkable facts in the document, and the ones that rot first,
+  because a slice gets renamed, or a test retitled, by a change with no reason
+  to open the vocabulary.
 - `reviewer` checks that a definition in a `VOCABULARY.md` is still true, which
   is prose against code and therefore nothing a rule can do.
+- `reviewer` checks that an invariant promising behaviour carries a `Held by:`
+  line, because telling a promise from a definition is reading prose.
 - `reviewer` checks the half of the verb table the rule above cannot reach: that
   a `find…` actually returns `null` rather than throwing, that a `get…` throws,
   and that a `build…`, `project…` or `select…` returns what its verb says. Those

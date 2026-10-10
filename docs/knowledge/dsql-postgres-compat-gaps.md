@@ -87,8 +87,16 @@ We used a partial unique on
 support the void-then-re-punch flow. DSQL refuses the WHERE; a
 non-partial unique on the same columns would block re-punch.
 
-**Adaptation:** drop the partial unique entirely; rely on app-side
-`validatePunchTiming` for re-punch checks.
+**Adaptation:** a second table whose primary key is the triple the
+partial index covered, `loop_punch_claims` on `(edition_slug, runner_slug,
+loop_index)`. The claim is inserted in the same transaction as the punch and
+deleted in the same transaction as the void, which gives back both
+properties the partial index had: a voided punch no longer counts, and a
+second active punch is refused at write time. The first adaptation, from
+May 2026 to October 2026, moved the rule into `validatePunchTiming` instead,
+which held neither property; see
+[`docs/dantotsus/a-voided-punch-still-held-its-loop.md`](../dantotsus/a-voided-punch-still-held-its-loop.md)
+and [`docs/dantotsus/five-monkeys-at-a-three-seat-table.md`](../dantotsus/five-monkeys-at-a-three-seat-table.md).
 
 ## 7. `pg_advisory_lock` is not in the supported subset
 
