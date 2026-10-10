@@ -5,7 +5,7 @@ detected-at: operator-deploy
 severity: medium
 related-pr: '#151'
 fix-pr: '#152'
-fix-commits: [CI_SHA]
+fix-commits: [e4e34d2]
 eradication-level: 2
 time-to-detect: minutes
 tags: [ci, github-actions, pnpm, deploy]
@@ -47,14 +47,14 @@ set of versions it resolves.
 
 ## Countermeasure
 
-- **Code:** commit `CI_SHA` — the workflows ask the lockfile which apps moved.
+- **Code:** commit `e4e34d2` — the workflows ask the lockfile which apps moved.
 
 ## Eradication (mandatory — code-level)
 
 **Type:** DevX check (level 2 — a CI script decides the deploy set from the
 resolved graph)
 
-**Reference:** [PR #152](https://github.com/hugoleborso/borso.fr/pull/152) · commit `CI_SHA`
+**Reference:** [PR #152](https://github.com/hugoleborso/borso.fr/pull/152) · commit `e4e34d2`
 
 **The actual fix:**
 
