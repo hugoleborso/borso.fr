@@ -1,3 +1,11 @@
+---
+summary: 'A still has no speed in it and `getComputedStyle` lags under throttling; pin `currentTime` and capture through CDP to judge an animation.'
+triggers:
+  paths:
+    - 'apps/borso-fr/site/src/**/*Galaxy*'
+    - 'apps/*/site/src/**/*.animation*.ts'
+---
+
 # Judging an animation you cannot watch
 
 Observed 2026-08-19 and 2026-08-20 while building the lightspeed departure on

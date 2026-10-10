@@ -1,3 +1,10 @@
+---
+summary: '`sleep` returns early in the hosted sandbox, so polls read as a long hang; check `date -u` before diagnosing a remote hang.'
+triggers:
+  commands:
+    - '\bsleep\s+\d'
+---
+
 # `sleep` does not sleep in the hosted sandbox
 
 **Symptom.** Waiting on a CI run from a claude.ai/code session, eight

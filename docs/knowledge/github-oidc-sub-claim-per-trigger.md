@@ -1,3 +1,13 @@
+---
+summary: 'The GitHub OIDC `sub` claim describes the triggering event, so a new trigger presents a different credential to the trust policy.'
+triggers:
+  paths:
+    - '.github/workflows/*.yml'
+    - 'infra/shared/lib/**'
+  output:
+    - 'Not authorized to perform sts:AssumeRoleWithWebIdentity'
+---
+
 # The GitHub OIDC `sub` claim depends on the trigger, not the workflow
 
 An IAM role federated to GitHub Actions trusts a `sub` claim. That claim

@@ -1,3 +1,11 @@
+---
+summary: 'arXiv `/abs/` parses and `/pdf/` does not, and a third-party GitHub repository is reachable only through the rendered page or `add_repo`.'
+triggers:
+  commands:
+    - 'arxiv\.org/pdf'
+    - 'raw\.githubusercontent\.com'
+---
+
 # Reading a paper or a third-party repository from inside a session
 
 Two things a research pass reaches for, and how each actually works here.
@@ -20,7 +28,7 @@ A public third-party repository is not readable the obvious ways:
 | Attempt | Result |
 | --- | --- |
 | `raw.githubusercontent.com/<owner>/<repo>/main/…` | 404 whenever the default branch is not `main`, and there is no way to ask |
-| `api.github.com/repos/…` | 403 — unauthenticated calls are refused, see [`github-api-direct-calls-return-403.md`](./github-api-direct-calls-return-403.md) |
+| `api.github.com/repos/…` | 403 — unauthenticated calls are refused, see [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) |
 | `gh` CLI | not installed in this image |
 | `mcp__github__*` | refuses any repository outside `hugoleborso/*` |
 

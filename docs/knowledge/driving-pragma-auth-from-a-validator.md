@@ -1,3 +1,14 @@
+---
+summary: 'Driving pragma sign-in from a validator: the seeded logins, a fresh rate-limit bucket per `X-Forwarded-For`, and why passkey claims belong in back-e2e.'
+triggers:
+  paths:
+    - 'docs/features/pragma/*/validation/**'
+  commands:
+    - 'localhost:\d+/api/auth'
+  output:
+    - '"error":\s*"rate-limited"'
+---
+
 # Driving pragma's sign-in flows from a validator
 
 _Last verified: 2026-09-18, against the PR #107 dev server, by the

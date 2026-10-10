@@ -26,6 +26,39 @@ Two failure modes to watch for:
 - **Dantotsu-as-knowledge:** writing "captured as follow-up; not implemented" in a knowledge entry. That's a Dantotsu without an eradication. Move to `dantotsus/` and ship the fix.
 - **Knowledge-as-handover-doc:** if a knowledge entry grows beyond ~100 lines or starts walking through a multi-step recipe, it's probably outgrown this folder. Promote it to its own file under `docs/` (e.g. `docs/local-dev.md`, `docs/aws-setup.md`).
 
+## Every entry has a trigger
+
+An entry is read when a hook prints it at the moment it applies, and almost
+never otherwise. So every entry opens with front matter naming that moment:
+
+```yaml
+---
+summary: 'One sentence the hook prints, saying what the trap is.'
+triggers:
+  paths:
+    - 'infra/cdk/src/constructs/static-site.ts'
+  commands:
+    - 'cloudfront\s+get-function\b'
+  output:
+    - 'FunctionThrottledError'
+---
+```
+
+- `paths` are globs matched against the file a Write or an Edit targets.
+- `commands` are regular expressions searched in a Bash command, with its
+  quoted strings and heredoc bodies removed so a mention does not count.
+- `output` are regular expressions searched in what a Bash or MCP call printed
+  or failed with.
+
+[`knowledge-triggers.sh`](../../plugins/borso-harness/hooks/knowledge-triggers.sh)
+does the matching and prints the summary and the path, once per entry per
+session. [`check-knowledge-triggers.sh`](../../scripts/check-knowledge-triggers.sh)
+fails an entry with no summary or no trigger, in pre-commit and in CI. If you
+cannot name a path, a command or an output that recognises the moment an entry
+applies, the entry has no reader: merge it into one that has, or do not write
+it. [ADR-0030](../adr/0030-knowledge-is-delivered-by-trigger.md) records the
+decision.
+
 ## Index
 
 ### CloudFront
@@ -47,12 +80,9 @@ Two failure modes to watch for:
 
 ### CDK / S3
 
-- [`esbuild-esm-dynamic-require-of-buffer.md`](./esbuild-esm-dynamic-require-of-buffer.md) — an ESM-bundled Lambda that inlines `@aws-sdk/dsql-signer` dies at cold start with `Dynamic require of "buffer" is not supported`; the `createRequire` banner is what prevents it, and the stack deploys green either way.
 - [`integ-test-tag-must-be-absent-not-false.md`](./integ-test-tag-must-be-absent-not-false.md) — the integ role's IAM policy keys off the *presence* of the `IntegTest` tag, so setting it to `false` elsewhere widens the role rather than narrowing it.
 - [`vitest-4-invokes-mock-implementations-as-constructors.md`](./vitest-4-invokes-mock-implementations-as-constructors.md) — a mock for a class reached with `new` must be a function declaration; an arrow has no `[[Construct]]` and fails with "is not a constructor".
 - [`preview-deploys-never-delete-what-you-removed.md`](./preview-deploys-never-delete-what-you-removed.md) — `prune: false` on the preview `BucketDeployment` keeps serving files a commit deleted; prod is unaffected because it takes the CDK default.
-- [`cdk-retain-buckets-orphan-on-failed-create.md`](./cdk-retain-buckets-orphan-on-failed-create.md) — `RemovalPolicy.RETAIN` on a literal-named bucket leaves an orphan if the first deploy of the stack fails post-bucket-create; manual `aws s3 rb` recovery.
-- [`cfn-rollback-blocks-redeploys.md`](./cfn-rollback-blocks-redeploys.md) — `UPDATE_ROLLBACK_IN_PROGRESS` rejects new deploys; a CI retry fails in ~40 s and looks like a code regression. Poll status, wait for terminal state, then trigger.
 - [`cfn-update-rollback-recovery.md`](./cfn-update-rollback-recovery.md) — recipe for unsticking a stack from `*_ROLLBACK_IN_PROGRESS`: wait → describe → continue-update-rollback with `--resources-to-skip` if needed. Includes the queued-`delete-stack`-races-CI-redeploy trap from PR #23.
 
 ### GitHub Actions
@@ -89,15 +119,12 @@ Two failure modes to watch for:
 - [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `plugins/borso-harness/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
 - [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.
 - [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) — `curl https://api.github.com` answers 403 and there is no `gh`; the MCP returns bodies HTML-escaped, which makes splicing a long PR description riskier than adding a comment.
-- [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
 - [`claude-code-session-attachments-on-disk.md`](./claude-code-session-attachments-on-disk.md) — chat attachments live at `/root/.claude/uploads/<session>/...` (uploads) and inside `/root/.claude/projects/<workspace>/<session>.jsonl` (inlined base64 images); extractable without an explicit tool.
-- [`pr-body-from-cc-ui-skips-skill-sections.md`](./pr-body-from-cc-ui-skips-skill-sections.md) — PRs opened from the Claude Code UI auto-generate a body that omits `## Visual evidence` and `## Validation gaps`; retrofit via `mcp__github__update_pull_request` after open.
 - [`github-mcp-pr-body-sanitizer.md`](./github-mcp-pr-body-sanitizer.md) — _rewritten 2026-05-21, first confirmed behaviour added 2026-08-14_: the three originally-asserted patterns were not reproducible (PR #26 has working `<details>` and `![]()`), so the entry ships a round-trip verification procedure and names PR #26 as the control sample. One behaviour has now survived it: markdown links come back wrapped in double backticks, inside the parentheses, so the anchor is dead — observed four times across PRs #46 and #48 while other links in the same bodies survived. The trigger is URL length: six samples separate cleanly at about 150 characters. Mitigation: link through `/blob/main/` rather than a long agent branch name, which takes 38 characters off every link. _2026-08-18_: a second, sharper behaviour — every URL ending in an image extension is backtick-wrapped, `<img>` loses its `src`, `<details>` is stripped and an autolink is removed, so no screenshot can be embedded in a body written through this server. A PreToolUse hook now refuses such a body before the call. _2026-09-16_: the length rule from 2026-08-14 caught PR #100 on a `.md` target at about 180 characters — the extension never mattered outside images — and the hook enforces the threshold now rather than leaving it to whoever writes the body.
 - [`cdk-out-tmp-fills-the-sandbox-disk.md`](./cdk-out-tmp-fills-the-sandbox-disk.md) — `vitest run` on `infra/cdk/` accretes `/tmp/cdk.out*` staging dirs (~24 MB each, 100s+ on a long-running sandbox), eventually exhausting `/tmp` and breaking the suite with `ENOSPC`. SessionStart now sweeps them; recovery + cause documented.
 - [`subagents-that-were-never-told-their-label.md`](./subagents-that-were-never-told-their-label.md) — every `KAIZEN.md` line saying `main` after a task that spawned agents means the sweep cannot tell one agent's wall from four agents' wall.
 - [`a-generated-label-should-name-the-thing.md`](./a-generated-label-should-name-the-thing.md) — a generated UI label that reuses an internal id names the mechanism; keep the id, add a label.
 - [`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md) — which of the two tools answers which question, and the traps in each.
-- [`argent-gesture-swipe-does-nothing-on-chromium.md`](./argent-gesture-swipe-does-nothing-on-chromium.md) — `gesture-swipe` is not implemented on a Chromium target, returns a success object and moves nothing; scroll with `gesture-scroll`, drag with `gesture-drag`, and `gesture-tap` remains a real touch event.
 - [`dynamic-workflow-feature-pipeline.md`](./dynamic-workflow-feature-pipeline.md) — the operator runbook for the `plan → ship` Dynamic Workflow.
 - [`claude-code-built-in-output-styles.md`](./claude-code-built-in-output-styles.md) — the `outputStyle` setting, why it belongs in the committed settings file rather than the local one a hosted session never sees, and how to read the built-in names out of the installed binary when the published page is a release behind.
 - [`sleep-is-compressed-in-the-hosted-sandbox.md`](./sleep-is-compressed-in-the-hosted-sandbox.md) — `sleep` returns early whatever duration you ask for, so eight polls of a CI job read as a 40-minute hang when four minutes had passed; `python3 -c "import time; time.sleep(n)"` waits for real, and `date -u` is the check before you diagnose any remote hang.
@@ -134,13 +161,8 @@ Two failure modes to watch for:
 - [`authoring-the-architecture-page-runtime-script.md`](./authoring-the-architecture-page-runtime-script.md) — the page's browser script is emitted from a template literal, so a literal backtick closes it and a comment inside it is invisible to `borso/no-comments`; plus why `git log --follow` makes a moved file read as new in the hotspots report.
 - [`stryker-sandbox-and-plugin-resolution-under-pnpm.md`](./stryker-sandbox-and-plugin-resolution-under-pnpm.md) — pnpm's symlinked store defeats Stryker's plugin glob, so the runner must be named; and a sandbox inside the workspace makes `infra/cdk` snapshot tests fail with `ENOENT` in `AssetStaging.calculateHash` under the parallel pre-push wave.
 - [`eslint-rule-tester-needs-vitest-globals.md`](./eslint-rule-tester-needs-vitest-globals.md) — Vitest installs no test globals without `globals: true`, so a `RuleTester` suite registers zero cases and passes vacuously; plus why an `eslint-disable` valid case fails as an unused directive.
-- [`biome-stack-overflow-on-dist-binaries.md`](./biome-stack-overflow-on-dist-binaries.md) — Biome 2.x stack-overflows on woff/png binaries in `dist/`; turn on `vcs.useIgnoreFile`.
-- [`biome-ignore-must-be-single-line.md`](./biome-ignore-must-be-single-line.md) — Biome `lint:` suppression comments must be a single line directly above the diagnostic; multi-line forms silently no-op.
-- [`biome-grit-jsx-matching.md`](./biome-grit-jsx-matching.md) — Grit plugins targeting JSX need `engine biome(1.0)` + `language js(jsx)` + the `JsxString()` node ; the JS-string templates from the docs match nothing on JSX attribute literals.
-- [`biome-formatter-trips-line-count-ceiling.md`](./biome-formatter-trips-line-count-ceiling.md) — a `biome check --write` pass can split JSX/ternaries enough to push an untouched file past `noExcessiveLinesPerFile` ; option set + escape hatch.
 - [`ts-narrowing-lost-in-function-declarations.md`](./ts-narrowing-lost-in-function-declarations.md) — TS preserves narrowing in arrow expressions but not in `function` declarations inside the same scope; convert helpers in `useEffect` to arrow form.
 - [`lambda-esm-native-modules.md`](./lambda-esm-native-modules.md) — ESM-bundled Lambdas crash at cold start on `__dirname is not defined`; the shared banner restores `require`, `__filename`, `__dirname`, and prefer pure-WASM (`hash-wasm`) over native modules (`argon2`, `bcrypt`).
-- [`stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md`](./stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md) — Stryker runs from a sandbox copy, so a Vitest `globalSetup` at `../../scripts/` resolves to a file that is genuinely absent; plus the pnpm `--` forwarding trap and the `.stryker-tmp` leftovers.
 ### Validation tooling
 
 - [`judging-an-animation-you-cannot-watch.md`](./judging-an-animation-you-cannot-watch.md) — stills have no speed in them, `getComputedStyle` lags under throttling; pin `currentTime` and capture through CDP instead.
@@ -164,8 +186,6 @@ Two failure modes to watch for:
 - [`tech-lead-orchestrator.md`](./tech-lead-orchestrator.md) — operator notes for `/tech-lead-orchestrator`: artefact layout under `runs/<run-id>/`, how to read `journal.md.jsonl`, common debugging recipes (double auto-chain, unparseable verdict, spec mutation, hook failure), dogfooding expectations.
 - [`orchestrator-dispatch-hygiene.md`](./orchestrator-dispatch-hygiene.md) — sub-agent dispatch knobs: pin `model: 'opus'` on implementation rounds; `isolation: "worktree"` for ≥4-commit rounds (and verify it took); escalate on lack-of-progress not a retry count; briefs say `biome check` not `biome lint`; verdict claims about routing/auth name the stage.
 - [`fresh-prod-bootstrap-503.md`](./fresh-prod-bootstrap-503.md) — a freshly-deployed pragma prod returns `503 auth-not-bootstrapped` on every API route until you `POST /api/admin/set-password` once; `read -rsp` keeps the secret off-screen; in prod the API is same-origin (no `-api` subdomain).
-- [`ultimate-guitar-scraping-cgu.md`](./ultimate-guitar-scraping-cgu.md) — UG's CGU §2.6 forbids scraping; sanctioned chord-chart import is manual paste / file upload / OCR-assist, and metadata enrichment goes through MusicBrainz.
-- [`github-api-direct-calls-return-403.md`](./github-api-direct-calls-return-403.md) — the proxy answers a direct `api.github.com` call with 403 and a JSON body carrying no `total_count`, so a polling loop doing `?? 0` reads *the request failed* as *there are zero checks*; use the `mcp__github__*` tools, and never default a missing count.
 - [`free-chord-grid-sources.md`](./free-chord-grid-sources.md) — the three open corpora that between them cover two thirds of a working repertoire (ChoCo CC BY, Chordonomicon CC BY-NC, lmd_chords), why a "freer site" never helps for chords-with-lyrics, and the notation traps that silently corrupt a grid: `-` is a flat in music21 and a minor in iReal, a Spotify track id names a recording rather than a song, and iReal stores artists as `Lastname Firstname`. Also covers deriving chords from a Deezer preview with librosa, and why that is a draft rather than a transcription.
 
 ### Browser / forms
@@ -183,14 +203,11 @@ Two failure modes to watch for:
 ### pragma / MusicBrainz
 
 - [`spotify-credentials-for-pragma.md`](./spotify-credentials-for-pragma.md) — creating the Spotify application, writing the one SSM parameter every stage reads, and the fact that a missing credential looks exactly like a song Spotify does not carry.
-- [`musicbrainz-search-parser-and-missing-tonality.md`](./musicbrainz-search-parser-and-missing-tonality.md) — the default Lucene parser misses what a person actually types, so the adapter asks for `dismax`; and key/tonality lives only on `work` entities, never on the `recording` a search returns, so it cannot be enriched from here.
 - [`instrument-icon-provenance.md`](./instrument-icon-provenance.md) — five of the six instrument glyphs are Lucide path data copied into the icon registry under ISC, with the notice; the sixth is a bass built parametrically here, whose two fretboard edges are parallel by construction and must not be nudged by hand.
 
 ### Frontend / React
 
 - [`tailwind-v4-theme-and-preflight-traps.md`](./tailwind-v4-theme-and-preflight-traps.md) — `@theme` blocks collapse into `:root` so a media-nested second one wins unconditionally; a variable outside a namespace needs `bg-[image:var(--x)]` and `@theme static`; an inline `animation` shorthand pulls in no keyframes; and what preflight zeroes on `<dialog>`, buttons and file inputs.
-- [`tailwind-v4-fails-quietly-in-two-places.md`](./tailwind-v4-fails-quietly-in-two-places.md) — a `var()` in an `@theme` entry resolves against `:root`, and a variant bracket opening on a bare word compiles to nothing.
-- [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
 - [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes. Now enforced in pragma by the `no-circle-in-non-uniform-svg.grit` Biome plugin (see [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md)).
 - [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md) — a single `PointerSensor` loses touch-drag to native page scroll on phones; split into `MouseSensor` (6px distance) + `TouchSensor` (200ms delay) + `KeyboardSensor`, and `touch-none` on the handle.
 - [`debug-client-state-reverts-in-the-browser-first.md`](./debug-client-state-reverts-in-the-browser-first.md) — when the server is right but the UI reverts, reproduce in a real browser and diff the write's request body against the next read's response *before* theorizing; don't ship a fix you never watched fail then pass.

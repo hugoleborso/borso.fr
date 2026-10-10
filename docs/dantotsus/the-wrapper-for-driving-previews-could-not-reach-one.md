@@ -121,7 +121,7 @@ It now advertises `gesture-scroll` and `gesture-drag` and says what
 
 ## See also
 
-- [`../knowledge/argent-gesture-swipe-does-nothing-on-chromium.md`](../knowledge/argent-gesture-swipe-does-nothing-on-chromium.md)
+- [`../knowledge/real-touch-gestures-over-cdp.md`](../knowledge/real-touch-gestures-over-cdp.md)
   — the second half of this: the verb that returns success and moves nothing.
 - [`../knowledge/driving-previews-with-agent-browser-and-argent.md`](../knowledge/driving-previews-with-agent-browser-and-argent.md)
   — corrected by this commit.

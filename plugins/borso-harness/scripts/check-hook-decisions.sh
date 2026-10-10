@@ -19,6 +19,12 @@ set -euo pipefail
 
 SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 
+# The hooks that read the repository find it through CLAUDE_PROJECT_DIR, and
+# otherwise through `git rev-parse`, which answers for the wrong directory
+# inside a git hook, where git has set GIT_DIR. Pre-commit and CI both call this
+# from the repository root, so that is the project the cases run against.
+export CLAUDE_PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
+
 cd "$(dirname "$0")/.."
 
 HOOK_DIR=hooks
@@ -196,6 +202,99 @@ run_case pretool-no-discarding-reset.sh allow command \
 docs: why git restore is refused on a dirty tree
 MSG'
 
+# --- hooks that inform rather than refuse ----------------------------------
+#
+# A hook that adds context answers the same question as one that refuses —
+# invocation or mention? — and gets it wrong the same way, except that the
+# failure is noise rather than a blocked call, and noise is what teaches a
+# reader to skip the message. Its two halves: a call it must speak on, naming
+# what it must name, and the mention of that call it must stay silent on.
+#
+# Each case is <hook>|<inform|silent>|<text the context must carry>|<payload>.
+# The payload is the whole hook input, because these hooks read the event, the
+# tool and the tool's output as well as its input.
+HOOK_PATH="$PWD/$HOOK_DIR"
+
+run_context_case() {
+  hook="$1"
+  expected="$2"
+  needle="$3"
+  payload="$4"
+
+  set +e
+  output="$(cd "${CASE_DIRECTORY:-.}" && printf '%s' "$payload" | "$HOOK_PATH/$hook" 2>/dev/null)"
+  status=$?
+  set -e
+
+  context="$(jq -r '.hookSpecificOutput.additionalContext // empty' <<<"$output" 2>/dev/null || true)"
+  case "$expected" in
+    inform) [ "$status" -eq 0 ] && grep -qF -- "$needle" <<<"$context" && verdict=ok || verdict=wrong ;;
+    silent) [ "$status" -eq 0 ] && [ -z "$output" ] && verdict=ok || verdict=wrong ;;
+    *)
+      echo "[check-hook-decisions] unknown expectation '$expected'" >&2
+      exit 1
+      ;;
+  esac
+
+  checked=$((checked + 1))
+  if [ "$verdict" = wrong ]; then
+    echo "[check-hook-decisions] $hook should $expected${needle:+ ($needle)}, exited $status:" >&2
+    echo "    $payload" | head -c 300 >&2
+    echo >&2
+    [ -n "$output" ] && printf '    %s\n' "$output" | head -5 >&2
+    failed=1
+  fi
+}
+
+# --- knowledge-triggers.sh --------------------------------------------------
+#
+# Speaks when a Write target, a command about to run, or what a call printed
+# matches an entry's triggers. Stays silent on a command that only quotes the
+# trigger, and on output that comes from reading a markdown document, because a
+# document quoting an error is not the error happening.
+
+run_context_case knowledge-triggers.sh inform 'cloudfront-get-function-binary-output.md' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"aws --region us-east-1 cloudfront get-function --name x --stage LIVE"}}'
+run_context_case knowledge-triggers.sh inform 'integ-test-tag-must-be-absent-not-false.md' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Edit","tool_input":{"file_path":"/home/user/repo/infra/cdk/src/internal/tags.ts"}}'
+run_context_case knowledge-triggers.sh inform 'cdk-out-tmp-fills-the-sandbox-disk.md' \
+  '{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"pnpm --filter @borso/infra test"},"error":"Exit code 1\nError: ENOSPC: no space left on device, copyfile"}'
+run_context_case knowledge-triggers.sh inform 'fresh-prod-bootstrap-503.md' \
+  '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"curl -s https://pragma.borso.fr/api/bars"},"tool_response":{"stdout":"{\"error\":\"auth-not-bootstrapped\"}","stderr":""}}'
+
+run_context_case knowledge-triggers.sh silent '' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"scripts/kaizen.sh \"aws cloudfront get-function printed only metadata\""}}'
+run_context_case knowledge-triggers.sh silent '' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git commit -F - <<MSG\ndocs: why aws cloudfront get-function needs an outfile\nMSG"}}'
+run_context_case knowledge-triggers.sh silent '' \
+  '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"cat docs/knowledge/cdk-out-tmp-fills-the-sandbox-disk.md"},"tool_response":{"stdout":"Error: ENOSPC: no space left on device","stderr":""}}'
+run_context_case knowledge-triggers.sh silent '' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"/home/user/repo/apps/pragma/site/src/routes/Home.tsx"}}'
+
+# --- posttool-eslint-cache-replays-a-fixed-error.sh ------------------------
+#
+# A lint run with errors exits non-zero, so the case it exists for arrives as
+# PostToolUseFailure. It ran only on PostToolUse, and printed to stdout, until
+# 2026-10-10: it never once spoke on the run it was written for. It looks for
+# the cache file in the directory it runs from, so its cases run from a scratch
+# directory holding an empty one.
+
+CASE_DIRECTORY="$(mktemp -d)"
+: >"$CASE_DIRECTORY/.eslintcache"
+run_context_case posttool-eslint-cache-replays-a-fixed-error.sh inform 'rm -f .eslintcache' \
+  '{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"pnpm run lint"},"error":"Exit code 1\n  3:1  error  Unsafe call  @typescript-eslint/no-unsafe-call"}'
+run_context_case posttool-eslint-cache-replays-a-fixed-error.sh silent '' \
+  '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"grep -rn no-unsafe-call docs/"},"tool_response":{"stdout":"@typescript-eslint/no-unsafe-call","stderr":""}}'
+rm -rf "$CASE_DIRECTORY"
+CASE_DIRECTORY=''
+
+# --- posttool-empty-checks-means-conflict.sh -------------------------------
+
+run_context_case posttool-empty-checks-means-conflict.sh inform 'mergeable_state' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__github__pull_request_read","tool_input":{"method":"get_check_runs","pullNumber":7},"tool_response":"{\"total_count\": 0}"}'
+run_context_case posttool-empty-checks-means-conflict.sh silent '' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__github__pull_request_read","tool_input":{"method":"get_check_runs","pullNumber":7},"tool_response":"{\"total_count\": 3}"}'
+
 # Every hook that can refuse has to appear above, with both halves unless it
 # is declared state-dependent. pretool-no-swallowed-push.sh refused for weeks
 # with no row in this table, so its over-broad match was found by an agent
@@ -214,6 +313,19 @@ for hook_path in "$HOOK_DIR"/pretool-*.sh; do
     echo "[check-hook-decisions] $hook_name can refuse a call but has no block row here, and is not declared state-dependent." >&2
     failed=1
   fi
+done
+
+# And every hook that informs has both halves too: a context hook with no
+# silent row is a hook nobody has checked for noise.
+for hook_path in "$HOOK_DIR"/*.sh; do
+  hook_name="$(basename "$hook_path")"
+  grep -q 'additionalContext' "$hook_path" || continue
+  for half in inform silent; do
+    if ! grep -q "^run_context_case $hook_name $half " "$SELF"; then
+      echo "[check-hook-decisions] $hook_name adds context but has no $half row here." >&2
+      failed=1
+    fi
+  done
 done
 
 if [ "$failed" -ne 0 ]; then

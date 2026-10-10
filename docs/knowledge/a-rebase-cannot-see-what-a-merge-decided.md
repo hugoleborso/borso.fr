@@ -1,3 +1,10 @@
+---
+summary: 'A rebase replays the work and drops every reconciliation the merge commits carried; merge instead of rebasing a branch that merged its upstream.'
+triggers:
+  commands:
+    - '\bgit\s+(-C\s+\S+\s+)?rebase\b'
+---
+
 # A rebase replays the work and drops the reconciliation
 
 A long branch that merges its upstream in repeatedly carries two kinds of

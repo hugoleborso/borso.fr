@@ -1,3 +1,12 @@
+---
+summary: 'Blueprint generators run from the repository root and vitest from the app workspace; the wrong directory fails with an error naming a path that never existed.'
+triggers:
+  output:
+    - 'No test files found, exiting with code 1'
+    - 'ERR_PNPM_RECURSIVE_EXEC_NO_PACKAGE'
+    - 'apps/\w[\w-]*/\.claude/skills'
+---
+
 # Every repo tool has a directory it expects, and says so badly
 
 Four tools in this monorepo fail in four different unhelpful ways when run from

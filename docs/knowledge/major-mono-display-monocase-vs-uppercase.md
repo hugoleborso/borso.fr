@@ -1,3 +1,11 @@
+---
+summary: 'Major Mono Display draws its decorative caps only from uppercase source, so `text-transform: uppercase` is mandatory.'
+triggers:
+  paths:
+    - 'apps/borso-fr/site/src/styles/*.css'
+    - 'apps/borso-fr/site/index.html'
+---
+
 # Major Mono Display ships two glyph families — `text-transform: uppercase` is mandatory for the decorative one
 
 Google Fonts' [Major Mono Display](https://fonts.google.com/specimen/Major+Mono+Display)

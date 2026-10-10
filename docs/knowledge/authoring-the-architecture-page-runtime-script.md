@@ -6,6 +6,11 @@ severity: low
 related-pr: https://github.com/hugoleborso/borso.fr/pull/76
 fix-commit: n/a
 tags: [architecture-maps, template-literals, tooling]
+summary: 'The architecture page''s browser script is a template literal: a literal backtick closes it, and a comment inside it is invisible to borso/no-comments.'
+triggers:
+  paths:
+    - 'scripts/architecture/architecture-graph-view.ts'
+    - 'scripts/architecture/*-view*.ts'
 ---
 
 # Editing the architecture page's runtime script

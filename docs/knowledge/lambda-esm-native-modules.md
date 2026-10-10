@@ -1,3 +1,14 @@
+---
+summary: 'ESM-bundled Lambdas need the `createRequire` banner: without it a cold start dies on `__dirname is not defined` or `Dynamic require of "buffer"`, after a green deploy.'
+triggers:
+  paths:
+    - 'infra/cdk/src/constructs/lambda-api*.ts'
+    - 'infra/cdk/src/internal/*bundling*.ts'
+  output:
+    - '__dirname is not defined'
+    - 'Dynamic require of \"\w+\" is not supported'
+---
+
 # Native modules in ESM-bundled Lambdas need `__dirname` (and prefer a WASM swap)
 
 esbuild's ESM output (`OutputFormat.ESM` in `NodejsFunction`'s
@@ -75,3 +86,39 @@ Symptoms from the live API side:
 - [`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) — the
   visual-validator agent runs from `agent-browser`; this trap was
   surfaced via a round-3 visual-validation run.
+
+## `Dynamic require of "buffer" is not supported` at Lambda cold start
+
+_Merged from `lambda-esm-native-modules.md` on 2026-10-10, when every entry gained a trigger._
+
+Every `NodejsFunction` in `infra/cdk` is bundled by esbuild as **ESM**, and two
+of them ship a banner that injects `createRequire`. That banner is load-bearing:
+without it the Lambda deploys successfully and then **fails at cold start**,
+which is the worst place to find out.
+
+### The chain
+
+1. `@aws-sdk/dsql-signer` is bundled inline rather than taken from the runtime.
+2. It pulls in `@smithy/util-buffer-from`, which calls `require('buffer')`.
+3. esbuild's ESM output replaces CJS `require` with an internal `__require`
+   shim, and that shim **cannot resolve Node built-ins**.
+4. First invocation throws `Dynamic require of "buffer" is not supported`.
+
+The banner defines a real `require` via `node:module`'s `createRequire`, so the
+built-in resolves normally.
+
+### Where it lives
+
+The constant is named `NODE_BUILTIN_REQUIRE_SHIM_BANNER`, in
+`infra/cdk/src/constructs/dsql-schema.ts` and
+`infra/cdk/src/constructs/lambda-api.ts`. The name says what it is; this entry
+is what says that deleting it produces a runtime crash rather than a slightly
+larger bundle.
+
+### Recognising it
+
+`Dynamic require of "X" is not supported` in CloudWatch on the first invoke
+after a deploy, with a green CloudFormation stack. Any Node built-in can appear
+as `X`; `buffer` is simply the one this dependency chain reaches first. Adding
+a new AWS SDK client to a bundled function is the change most likely to
+reintroduce it.

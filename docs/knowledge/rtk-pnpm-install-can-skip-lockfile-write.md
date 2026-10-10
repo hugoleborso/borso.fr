@@ -1,3 +1,10 @@
+---
+summary: '`pnpm install` through rtk can skip writing the lockfile; mirror it from `node_modules/.pnpm/lock.yaml`.'
+triggers:
+  commands:
+    - '\bpnpm\s+(i|install|add|update|up|remove)\b'
+---
+
 # `rtk`-wrapped `pnpm install` can silently no-op the lockfile write
 
 The repo's PreToolUse hook routes `pnpm` commands through `rtk pnpm` for
@@ -47,6 +54,6 @@ pnpm-lock.yaml`.
 
 ## Related
 
-- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](./biome-stack-overflow-on-dist-binaries.md) —
+- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-stack-overflow-on-dist-binaries.md) —
   another tool-wrapper quirk where the wrapper's output didn't match
   the underlying tool's behaviour.

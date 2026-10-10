@@ -1,3 +1,10 @@
+---
+summary: 'Working here from a session started on another repository: the husky gates hold, SessionStart and the .claude hooks do not, and a shallow clone cannot record an upstream.'
+triggers:
+  output:
+    - 'not stored as a remote-tracking branch'
+---
+
 # borso.fr attached to another repository's session
 
 A Claude Code session started on another repository can add this one with `add_repo`, clone it, and work in it. PR #149 was made that way, from a session started on `talos`. The git gates still hold; the Claude Code harness of this repository does not.

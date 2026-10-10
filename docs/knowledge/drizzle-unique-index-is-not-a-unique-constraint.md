@@ -1,3 +1,10 @@
+---
+summary: 'A Drizzle `uniqueIndex` lands in `getTableConfig().indexes`, not `.uniqueConstraints`.'
+triggers:
+  paths:
+    - 'apps/*/api/src/**/*.schema.test.ts'
+---
+
 # A Drizzle `uniqueIndex` lands in `indexes`, not in `uniqueConstraints`
 
 Observed 2026-08-15 while writing schema tests for `pragma` and

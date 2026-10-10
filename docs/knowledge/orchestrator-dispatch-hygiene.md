@@ -1,3 +1,10 @@
+---
+summary: 'Subagent dispatch knobs: pin the model on implementation rounds, use worktree isolation and check it took, escalate on lack of progress rather than a retry count.'
+triggers:
+  paths:
+    - 'docs/features/*/*/runs/**'
+---
+
 # Tech-lead-orchestrator dispatch hygiene
 
 Hard-won mechanics for how the orchestrator should spawn its

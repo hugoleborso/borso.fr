@@ -1,3 +1,10 @@
+---
+summary: 'Measured: a hosted session can merge and push to any branch, cannot dispatch a workflow, and the `merged` field and `get_diff` size mislead.'
+triggers:
+  commands:
+    - 'workflow_dispatch|actions_run_trigger'
+---
+
 # What a hosted session cannot do on GitHub
 
 Measured on claude.ai/code against `hugoleborso/borso.fr`, 2026-08-20.

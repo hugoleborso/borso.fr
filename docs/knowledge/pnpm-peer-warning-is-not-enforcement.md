@@ -1,3 +1,11 @@
+---
+summary: 'pnpm only warns on a peer dependency mismatch; the install succeeds and the combination crashes at runtime.'
+triggers:
+  output:
+    - 'Issues with peer dependencies found'
+    - 'unmet peer'
+---
+
 # `pnpm install` warns on incompatible peer deps but installs anyway
 
 A dependency whose `peerDependencies` field doesn't match the resolved

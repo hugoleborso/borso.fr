@@ -107,7 +107,7 @@ a *presigned absolute URL* returned by the API, which is by
 definition not a `/api/...` path. End-to-end typing of every front
 call comes from the back's Hono types ; no hand-rolled Zod schema
 on the read side. See the companion knowledge entry
-[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](../knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
+[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
 *Layer 2 — anyone reintroducing a bare `fetch('/api/...')` in site/
 code gets a lint error.* Shipped as the Biome Grit plugin

@@ -1,3 +1,15 @@
+---
+summary: '`ARecord(recordName: ''<host>'')` doubles the zone suffix when `zoneName` is a token; end the `recordName` with a dot.'
+triggers:
+  paths:
+    - 'infra/cdk/src/constructs/photos-cdn.ts'
+    - 'infra/cdk/src/constructs/lambda-api.ts'
+    - 'infra/cdk/src/constructs/static-site.ts'
+    - 'infra/shared/lib/shared-stack.ts'
+  output:
+    - '\.borso\.fr\.borso\.fr'
+---
+
 # CDK Route 53: trailing-dot `recordName` when the zone is a CFN token
 
 ## The trap

@@ -1,3 +1,12 @@
+---
+summary: 'On a phone with the Claude app, a `claude.ai/code` link opens in the app, which prefills only `code/new` with `q` and `repo`.'
+triggers:
+  paths:
+    - 'apps/talos/site/src/**'
+  commands:
+    - 'claude\.ai/code\?'
+---
+
 # Claude Code links open in the app on a phone
 
 A link to `https://claude.ai/code` has two readers, and they do not accept the same parameters.

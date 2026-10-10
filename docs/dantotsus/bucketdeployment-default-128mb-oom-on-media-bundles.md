@@ -92,6 +92,6 @@ The same change landed on the preview-path `BucketDeployment` a few lines down. 
 
 ## See also
 
-- [`docs/knowledge/cfn-rollback-blocks-redeploys.md`](../knowledge/cfn-rollback-blocks-redeploys.md) — the secondary symptom (next CI deploy failing in 42 s) that made this defect look like a regression.
+- [`docs/knowledge/cfn-update-rollback-recovery.md`](../knowledge/cfn-update-rollback-recovery.md) — the secondary symptom (next CI deploy failing in 42 s) that made this defect look like a regression.
 - [`docs/dantotsus/bucketdeployment-prune-default.md`](./bucketdeployment-prune-default.md) — sibling default-footgun on the same construct (`prune: true` wipes co-tenant prefixes); precedent for adjusting CDK construct defaults at the wrapper boundary.
 - [`docs/dantotsus/bucketdeployment-cloudfront-invalidation.md`](./bucketdeployment-cloudfront-invalidation.md) — third reason the `BucketDeployment` construct's defaults need wrapping (invalidation scope).

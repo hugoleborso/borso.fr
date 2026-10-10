@@ -1,3 +1,11 @@
+---
+summary: 'Ways a mutant survives a test that looks sufficient: a `Stryker disable` covering one line, `toContain` blind to a prepended digit, an equivalent mutant, and dead code to delete.'
+triggers:
+  output:
+    - '#\d+\.\s*\[Survived\]'
+    - 'Survived\s*\|?\s*[1-9]'
+---
+
 # Three ways a mutant survives a test that looks like it covers it
 
 From the hardening pass that took this repository's own tooling from 77.40% to

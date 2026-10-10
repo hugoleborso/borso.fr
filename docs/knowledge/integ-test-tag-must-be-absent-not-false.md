@@ -7,6 +7,10 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/76
 fix-commit: n/a (STAGE_ONLY_TAGS already encodes it)
 time-to-detect: n/a
 tags: [iam, tagging, cdk, integ]
+summary: 'The integ role''s policy keys on the presence of the `IntegTest` tag, so `IntegTest=false` widens it; leave the tag absent.'
+triggers:
+  paths:
+    - 'infra/cdk/src/internal/tags.ts'
 ---
 
 # The `IntegTest` tag must be absent elsewhere, not set to `false`

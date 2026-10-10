@@ -1,3 +1,10 @@
+---
+summary: 'Prettier errors rather than skips on a `.sql` in a changed-file list, and the rewriter mangles a `case … esac` in a loop; filter before piping and put control flow in a file.'
+triggers:
+  output:
+    - 'No parser could be inferred for file'
+---
+
 # Two tool shapes that break a diff-driven check
 
 Both of these cost a validator time in one task. Neither is a defect in this

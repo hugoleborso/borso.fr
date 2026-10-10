@@ -7,6 +7,11 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/76
 fix-commit: n/a (the wiring in rule-tester.js is the fix)
 time-to-detect: minutes
 tags: [eslint, vitest, rule-tester, testing]
+summary: 'Vitest installs no test globals, so a RuleTester suite without the wiring registers zero cases and passes; an `eslint-disable` valid case fails as unused.'
+triggers:
+  paths:
+    - 'eslint-rules/*.test.js'
+    - 'eslint-rules/*.test.ts'
 ---
 
 # ESLint's RuleTester needs Vitest's globals wired by hand

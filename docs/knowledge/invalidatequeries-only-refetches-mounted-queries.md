@@ -1,3 +1,11 @@
+---
+summary: '`invalidateQueries` refetches mounted queries only, so a test probe that does not mount the read cannot reproduce an invalidation bug.'
+triggers:
+  paths:
+    - 'apps/*/site/src/**/*.queries.test.ts'
+    - 'apps/*/site/src/**/*.queries.test.tsx'
+---
+
 # A probe that does not mount the read cannot reproduce an invalidation defect
 
 TanStack Query's `invalidateQueries` marks matching queries stale and refetches

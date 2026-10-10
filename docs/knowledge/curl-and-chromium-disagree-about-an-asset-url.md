@@ -1,3 +1,12 @@
+---
+summary: 'A Deezer cover answers 403 to curl and renders in Chromium; on that endpoint the command line is the unreliable witness.'
+triggers:
+  commands:
+    - 'curl\s.*(dzcdn|deezer)'
+  output:
+    - 'server: AkamaiGHost'
+---
+
 # curl and Chromium disagree about an asset URL
 
 Two probes of the same Deezer cover from the same container, 2026-09-16:

@@ -1,3 +1,11 @@
+---
+summary: 'TypeScript keeps narrowing inside an arrow function after a guard and loses it inside a `function` declaration in the same scope.'
+triggers:
+  output:
+    - 'TS18047|is possibly ''null'''
+    - 'TS18048|is possibly ''undefined'''
+---
+
 # TypeScript loses narrowing inside `function` declarations, keeps it inside arrow expressions
 
 Inside a function scope, TypeScript narrows a `const`-bound variable

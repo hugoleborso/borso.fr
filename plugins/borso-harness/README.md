@@ -19,8 +19,11 @@ holds:
   `pkill` or `killall`, a `git reset --hard` over uncommitted work, and a
   pull-request body the GitHub MCP server would strip or the body checker would
   refuse. Diagnostic hooks explain an empty checks list and a replayed ESLint
-  cache error. A formatting hook runs Prettier on each edited file when the
-  repository has Prettier installed. A session hook creates the friction log.
+  cache error. A knowledge hook prints the knowledge entry whose `triggers:`
+  match the file being written, the command about to run, or what a call
+  printed; `scripts/knowledge-triggers.py check` is its gate. A formatting hook
+  runs Prettier on each edited file when the repository has Prettier installed.
+  A session hook creates the friction log.
 
 Each skill and agent opens with a short note on paths. The paths these files
 name are borso.fr's layout, and the plugin reads every one of them through the
@@ -148,8 +151,10 @@ borso.fr as a git submodule.
    `seal.ts` index and seal borso.fr's own layout. Leave those keys unset until
    Talos has its own, and the skills that need them will say so.
 
-4. Add `KAIZEN.md` to `.gitignore`. The session hook creates it at the
-   repository root, and `/after-task-dantotsus` reads and deletes it.
+4. Add `KAIZEN.md` and `.claude/knowledge-triggers.json` to `.gitignore`. The
+   session hook creates the first at the repository root, and
+   `/after-task-dantotsus` reads and deletes it. The knowledge hook compiles the
+   second from the `knowledge` folder's front matter whenever an entry is newer.
 
 5. Check the submodule out before Claude Code starts. The links point into
    `vendor/borso.fr`, so they resolve only once the submodule is there, and
