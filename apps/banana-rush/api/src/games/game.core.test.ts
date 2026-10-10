@@ -3,8 +3,10 @@ import {
   assembleBidTable,
   countFreeSeats,
   hasRoundTimerExpired,
+  listOpenSeats,
   narrowGameStatus,
   refuseJoin,
+  refuseLostSeating,
   refuseStart,
   selectGameWinners,
   selectMissingBidders,
@@ -51,6 +53,30 @@ describe('countFreeSeats', () => {
 
   it('never counts below zero', () => {
     expect(countFreeSeats(9, 8)).toBe(0);
+  });
+});
+
+describe('listOpenSeats', () => {
+  it('lists every seat of an empty table, first seat first', () => {
+    expect(listOpenSeats([], 3)).toEqual([0, 1, 2]);
+  });
+
+  it('leaves out the seats already taken, wherever they are', () => {
+    expect(listOpenSeats([0, 2], 4)).toEqual([1, 3]);
+  });
+
+  it('lists nothing at a full table', () => {
+    expect(listOpenSeats([0, 1], 2)).toEqual([]);
+  });
+});
+
+describe('refuseLostSeating', () => {
+  it('names the monkey when another player claimed it first', () => {
+    expect(refuseLostSeating('avatar')).toBe('avatar-taken');
+  });
+
+  it('names a full table when every open seat was claimed first', () => {
+    expect(refuseLostSeating('seat')).toBe('game-full');
   });
 });
 

@@ -7,8 +7,10 @@ import {
   assembleBidTable,
   AUTOMATIC_BID_BANANAS,
   hasRoundTimerExpired,
+  listOpenSeats,
   narrowGameStatus,
   refuseJoin,
+  refuseLostSeating,
   refuseStart,
   selectGameWinners,
   selectMissingBidders,
@@ -25,11 +27,11 @@ import {
   type GameRow,
   insertBidsForMissingPlayers,
   insertGame,
-  insertPlayer,
   listBidsForRound,
   listPlayers,
   listRoundResults,
   type PlayerRow,
+  seatPlayer,
   updateGame,
 } from './games.repository';
 import type { GameView, RoundResultView, SeatedPlayer } from './games.types';
@@ -118,16 +120,20 @@ export async function createGame(input: CreateGameInput, now: Date): Promise<Sea
   });
 
   const playerToken = randomUUID();
-  const player = await insertPlayer({
-    gameId: game.id,
-    tokenHash: hashPlayerToken(playerToken),
-    nickname: input.nickname,
-    avatar: input.avatar,
-    stashBananas: STARTING_STASH_BANANAS,
-    seatOrder: FIRST_SEAT,
-    isHost: true,
-    joinedAt: now,
-  });
+  const seating = await seatPlayer(
+    {
+      gameId: game.id,
+      tokenHash: hashPlayerToken(playerToken),
+      nickname: input.nickname,
+      avatar: input.avatar,
+      stashBananas: STARTING_STASH_BANANAS,
+      isHost: true,
+      joinedAt: now,
+    },
+    [FIRST_SEAT],
+  );
+  if (seating.kind === 'lost') throw new Error(`a new game refused its host: ${seating.loss}`);
+  const player = seating.player;
 
   return { game: await describeGame(game, player.id), playerId: player.id, playerToken };
 }
@@ -149,16 +155,25 @@ export async function joinGame(
   if (refusal !== null) throw new GameError(refusal);
 
   const playerToken = randomUUID();
-  const player = await insertPlayer({
-    gameId: game.id,
-    tokenHash: hashPlayerToken(playerToken),
-    nickname: input.nickname,
-    avatar: input.avatar,
-    stashBananas: STARTING_STASH_BANANAS,
-    seatOrder: players.length,
-    isHost: false,
-    joinedAt: now,
-  });
+  const seating = await seatPlayer(
+    {
+      gameId: game.id,
+      tokenHash: hashPlayerToken(playerToken),
+      nickname: input.nickname,
+      avatar: input.avatar,
+      stashBananas: STARTING_STASH_BANANAS,
+      isHost: false,
+      joinedAt: now,
+    },
+    listOpenSeats(
+      players.map((seated) => seated.seatOrder),
+      game.maxPlayers,
+    ),
+  );
+  if (seating.kind === 'lost') {
+    throw new GameError(refuseLostSeating(seating.loss));
+  }
+  const player = seating.player;
 
   await publishGame(game);
   return { game: await describeGame(game, player.id), playerId: player.id, playerToken };
