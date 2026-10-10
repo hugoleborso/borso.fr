@@ -1,11 +1,11 @@
 ---
-name: after-task-dantotsus
-description: Use after a PR has merged or closed to sweep what happened during the task and produce one Dantotsu (under `docs/dantotsus/`) per real defect AND one Knowledge entry (under `docs/knowledge/`) per vendor surprise or reusable insight, then open a follow-up PR labelled `kaizen`. Implements CLAUDE.md's Self-improvement loop rule end-to-end. Triggered by the user saying any of "/after-task-dantotsus", "post-merge dantotsus", "kaizen pass on PR #N", "let's capture the lessons from that PR", or by a PR-merged webhook event in a session that was watching the PR. Hard rule — every Dantotsu in the output PR ships a code-level eradication (structural impossibility / DevX check / vendor patch / detection); knowledge-only is the last-resort floor and pure-knowledge subjects go to `docs/knowledge/` instead. Hard rule — agent never opens PRs against repos outside `hugoleborso/*`. The follow-up PR is the dev's sole and last goal between the merged PR and starting any new work — give it your all.
+name: after-task-kaizen
+description: Use after a PR has merged or closed to sweep what happened during the task and produce one Dantotsu (under `docs/dantotsus/`) per real defect AND one Knowledge entry (under `docs/knowledge/`) per vendor surprise or reusable insight, then open a follow-up PR labelled `kaizen`. Implements CLAUDE.md's Self-improvement loop rule end-to-end. Triggered by the user saying any of "/after-task-kaizen", "post-merge dantotsus", "kaizen pass on PR #N", "let's capture the lessons from that PR", or by a PR-merged webhook event in a session that was watching the PR. Hard rule — every Dantotsu in the output PR ships a code-level eradication (structural impossibility / DevX check / vendor patch / detection); knowledge-only is the last-resort floor and pure-knowledge subjects go to `docs/knowledge/` instead. Hard rule — agent never opens PRs against repos outside `hugoleborso/*`. The follow-up PR is the dev's sole and last goal between the merged PR and starting any new work — give it your all.
 ---
 
 > **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
-# After-task Dantotsu sweep → `kaizen` PR
+# After-task kaizen sweep → `kaizen` PR
 
 The closing move of every PR. CLAUDE.md's **Self-improvement loop**
 rule says: when a PR merges or closes, capture the lessons and open
@@ -24,7 +24,7 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 ## When to invoke
 
 - A PR you've been working on just merged or closed.
-- The user says any of: "/after-task-dantotsus", "kaizen pass",
+- The user says any of: "/after-task-kaizen", "kaizen pass",
   "post-merge dantotsus", "capture lessons from PR #N", "what
   should we add from that PR".
 - A `<github-webhook-activity>` event reports a merge or close

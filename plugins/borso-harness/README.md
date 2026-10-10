@@ -7,7 +7,7 @@ holds:
 - **Skills.** `/route`, `/specification`, `/technical-conception`, `/adr`,
   `/implementation`, `/technical-validation`, `/visual-validation`,
   `/standards-review`, `/code-standards`, `/blueprint`, `/open-pr`,
-  `/dantotsu`, `/after-task-dantotsus`, `/tech-lead-orchestrator`,
+  `/dantotsu`, `/after-task-kaizen`, `/tech-lead-orchestrator`,
   `/plain-writing` and `/writing-for-agents`.
 - **Agents.** `technical-validator`, `visual-validator` and
   `standards-reviewer`, each of which reviews a branch without the main
@@ -37,8 +37,8 @@ keeps borso.fr's default, so borso.fr itself has no such file.
 | Key | Default | What reads it |
 | --- | --- | --- |
 | `standards` | `docs/standards` | `/code-standards`, `/standards-review`, the validators |
-| `dantotsus` | `docs/dantotsus` | `/dantotsu`, `/after-task-dantotsus` |
-| `knowledge` | `docs/knowledge` | `/dantotsu`, `/after-task-dantotsus` |
+| `dantotsus` | `docs/dantotsus` | `/dantotsu`, `/after-task-kaizen` |
+| `knowledge` | `docs/knowledge` | `/dantotsu`, `/after-task-kaizen` |
 | `adr` | `docs/adr` | `/adr`, `/open-pr`, `/tech-lead-orchestrator` |
 | `features` | `docs/features` | the feature pipeline skills, `kaizen.sh archive` |
 | `kaizenFile` | `KAIZEN.md` | `kaizen.sh`, the refusal logger in the hooks |
@@ -149,7 +149,7 @@ borso.fr as a git submodule.
    Talos has its own, and the skills that need them will say so.
 
 4. Add `KAIZEN.md` to `.gitignore`. The session hook creates it at the
-   repository root, and `/after-task-dantotsus` reads and deletes it.
+   repository root, and `/after-task-kaizen` reads and deletes it.
 
 5. Check the submodule out before Claude Code starts. The links point into
    `vendor/borso.fr`, so they resolve only once the submodule is there, and

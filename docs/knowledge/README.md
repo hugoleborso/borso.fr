@@ -215,6 +215,6 @@ write whatever helps the next reader. Keep it concrete and short
 (short enough to re-read every time you suspect it applies). Title
 should hint at the lesson, not the symptom.
 
-If the entry is the result of a `/after-task-dantotsus` sweep that
+If the entry is the result of a `/after-task-kaizen` sweep that
 classified a subject as "vendor surprise" or "operator confusion",
 the skill writes it here automatically.

@@ -171,4 +171,4 @@ The body is free-form (full report, diff summary, debugging notes) — the orche
 
 ## After this skill
 
-Step 8 ends `/implementation`. The chain continues with `/visual-validation` (UI work) and `/technical-validation` (always) — both validators carry the post-merge auto-chain to `/after-task-dantotsus`.
+Step 8 ends `/implementation`. The chain continues with `/visual-validation` (UI work) and `/technical-validation` (always) — both validators carry the post-merge auto-chain to `/after-task-kaizen`.

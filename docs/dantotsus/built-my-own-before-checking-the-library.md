@@ -133,7 +133,7 @@ react-dnd already does."
 > PR #23 sweep: the agent classified two friction rows as *"ship a
 > Biome plugin (level 2)"* without first asking *"is there a library
 > that would delete the code hosting the bug (level 1)?"*. The
-> `/after-task-dantotsus` skill now carries a parallel rule —
+> `/after-task-kaizen` skill now carries a parallel rule —
 > Step 2c, *Library-search pass — before writing custom anything*.
 > The operator's quote that triggered the update:
 >

@@ -215,7 +215,7 @@ template that a Lambda environment variable would publish in plaintext.
 
 - Spec: none — this arrived as a direct request during the Deezer migration.
 - Plan: none; the change is one column, one adapter and one resolution call.
-- Commit: {{SHA — stamped by /after-task-dantotsus on merge}}
+- Commit: {{SHA — stamped by /after-task-kaizen on merge}}
 - Files: `apps/pragma/api/src/songs/spotify.adapter.ts` (token mint plus ISRC
   lookup), `apps/pragma/api/src/songs/spotify.core.ts` (parsing the response),
   `apps/pragma/api/src/songs/songs.schema.ts` (the `spotify_track_id` column),
