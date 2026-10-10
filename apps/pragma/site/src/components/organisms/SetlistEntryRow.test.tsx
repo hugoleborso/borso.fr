@@ -1,6 +1,7 @@
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
+import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 import { SetlistEntryRow, type SetlistEntryRowProps } from './SetlistEntryRow';
 
 const NO_LINEUP = {};
@@ -20,7 +21,20 @@ function stubDialogs(): void {
   });
 }
 
-function buildProps(memberPart: readonly string[]): SetlistEntryRowProps {
+const BASS_PART: MemberPartGlyph = {
+  instrumentId: 'bass',
+  name: 'Bass',
+  icon: 'bass',
+  isNameNeeded: false,
+};
+const LEAD_VOCALS_PART: MemberPartGlyph = {
+  instrumentId: 'lead-vocals',
+  name: 'Lead vocals',
+  icon: 'mic-vocal',
+  isNameNeeded: true,
+};
+
+function buildProps(memberPart: readonly MemberPartGlyph[]): SetlistEntryRowProps {
   return {
     position: 1,
     entryId: 'entry-1',
@@ -71,18 +85,25 @@ describe('a setlist row filtered to one member', () => {
     vi.unstubAllGlobals();
   });
 
-  it('names what that member plays on the song', () => {
-    render(<SetlistEntryRow {...buildProps(['Bass', 'Backing vocals'])} />);
-    expect(screen.getByText('Bass + Backing vocals')).toBeTruthy();
+  it('shows the icon of what that member plays, named for screen readers', () => {
+    render(<SetlistEntryRow {...buildProps([BASS_PART, LEAD_VOCALS_PART])} />);
+    expect(screen.getByRole('img', { name: 'Bass' })).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Lead vocals' })).toBeTruthy();
+  });
+
+  it('writes the name only for an instrument whose icon stands for another one too', () => {
+    render(<SetlistEntryRow {...buildProps([BASS_PART, LEAD_VOCALS_PART])} />);
+    expect(screen.queryByText('Bass')).toBeNull();
+    expect(screen.getByText('Lead vocals')).toBeTruthy();
   });
 
   it('names nothing when no member is chosen', () => {
     render(<SetlistEntryRow {...buildProps([])} />);
-    expect(screen.queryByText(/Bass/)).toBeNull();
+    expect(screen.queryByRole('img', { name: 'Bass' })).toBeNull();
   });
 
   it('leaves the band lineup out of a member view', () => {
-    render(<SetlistEntryRow {...buildProps(['Bass'])} />);
+    render(<SetlistEntryRow {...buildProps([BASS_PART])} />);
     expect(screen.queryAllByTitle('Drums')).toHaveLength(0);
   });
 

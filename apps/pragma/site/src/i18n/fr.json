@@ -438,7 +438,7 @@
       "detach": "La setlist n’a pas été détachée. Vérifie la connexion et réessaie."
     },
     "indexEmpty": "Aucune setlist pour l’instant — crée la première.",
-    "keyOverride": "Tonalité (override)",
+    "key": "Ton",
     "missingId": "Identifiant de setlist manquant.",
     "moveDown": "Descendre",
     "moveUp": "Monter",

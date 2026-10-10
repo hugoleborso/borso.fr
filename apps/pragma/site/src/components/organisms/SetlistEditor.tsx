@@ -30,7 +30,7 @@ import { SetlistSongPicker } from './SetlistSongPicker';
 import { SetlistToolbar } from './SetlistToolbar';
 import { formatSetlistOrder, instrumentFamilyMap, lineupOf } from './setlist-editor.utils';
 import type { SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
-import { filterEntriesForMember, nameInstrumentsByEntryId } from './setlist-filter.core';
+import { describeMemberPartsByEntryId, filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import { buildTransitionView, indexTransitionComments } from './transition-view.core';
 
@@ -156,8 +156,8 @@ export function SetlistEditor({
     [setlistEntries, songsById, selectedMemberId],
   );
   const memberPartByEntryId = useMemo(
-    () => nameInstrumentsByEntryId(filtered.instrumentIdsByEntryId, instrumentsById),
-    [filtered, instrumentsById],
+    () => describeMemberPartsByEntryId(filtered.instrumentIdsByEntryId, instruments),
+    [filtered, instruments],
   );
   const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
 

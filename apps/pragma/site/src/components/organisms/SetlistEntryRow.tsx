@@ -39,6 +39,7 @@ import {
   OVERFLOW_COUNTER_WIDTH_PX,
 } from '../molecules/lineup-slots.core';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
+import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 
 const POSITION_DIGITS = 2;
 const OPEN_SHEET_BUTTON_CLASS =
@@ -72,7 +73,7 @@ export interface SetlistEntryRowProps {
   readonly lineupOverride: LineupRecord | null;
   readonly members: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
-  readonly memberPart: readonly string[];
+  readonly memberPart: readonly MemberPartGlyph[];
   readonly isMemberView: boolean;
   readonly transitionBefore: ReactNode;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
@@ -164,11 +165,6 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             </span>
             <span className={TITLE_COLUMN_CLASS}>
               <span className={TITLE_CLASS}>{props.title}</span>
-              {props.memberPart.length === 0 ? null : (
-                <span className="block font-mono text-[11px] uppercase tracking-wider text-accent">
-                  {props.memberPart.join(' + ')}
-                </span>
-              )}
               <span className="hidden min-w-0 items-center gap-1.5 text-[11px] text-ink-500 sm:flex">
                 <span className="truncate">{props.artist}</span>
                 {props.tonalityLabel === null ? null : (
@@ -198,7 +194,11 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 </span>
               )}
             </span>
-            {props.isMemberView ? null : (
+            {props.isMemberView ? (
+              <span className="flex shrink-0 items-center pr-2">
+                <MemberPartGlyphs parts={props.memberPart} size={18} />
+              </span>
+            ) : (
               <span
                 className={WIDE_LINEUP_CLASS}
                 style={{

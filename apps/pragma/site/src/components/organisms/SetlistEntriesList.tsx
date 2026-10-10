@@ -37,9 +37,10 @@ import type { SongDefaults, SongDefaultsPatch } from '../molecules/SongDefaultsD
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
+import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];
-const NO_MEMBER_PART: readonly string[] = [];
+const NO_MEMBER_PART: readonly MemberPartGlyph[] = [];
 const STATUS_OF_A_SONG_THE_CATALOG_LOST = 'idea';
 const SONG_ID_FALLBACK_LENGTH = 8;
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
@@ -62,7 +63,7 @@ export interface SetlistEntriesListProps {
   readonly transitionNotesByPair: Readonly<Record<string, string>>;
   readonly meanMasteryBySongId: Readonly<Record<string, number | null>>;
   readonly inFilteredMode: boolean;
-  readonly memberPartByEntryId: Readonly<Record<string, readonly string[]>>;
+  readonly memberPartByEntryId: Readonly<Record<string, readonly MemberPartGlyph[]>>;
   readonly lineupMembers: readonly LineupMember[];
   readonly instruments: readonly LineupEditorInstrument[];
   readonly slotInstruments: readonly SlotInstrument[];

@@ -438,7 +438,7 @@
       "detach": "The setlist was not detached. Check the connection and try again."
     },
     "indexEmpty": "No setlist yet — write the first one.",
-    "keyOverride": "Key (override)",
+    "key": "Key",
     "missingId": "Missing setlist identifier.",
     "moveDown": "Move down",
     "moveUp": "Move up",
