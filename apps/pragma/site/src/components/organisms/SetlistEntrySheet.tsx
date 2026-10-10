@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { type ListenSubject, selectListenTargets } from '../../lib/listen-links.utils';
 import { AlbumCover } from '../atoms/AlbumCover';
-import { composeClassName } from '../atoms/class-name.utils';
+import { BrandLogo } from '../atoms/BrandLogo';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { LineupSlots } from '../molecules/LineupSlots';
@@ -20,10 +20,6 @@ import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartG
 
 const LISTEN_LINK_CLASS =
   'inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-bg-sunk';
-const PROVIDER_COLOR_CLASS = {
-  deezer: 'text-[#a238ff]',
-  spotify: 'text-[#1db954]',
-} as const;
 const PROVIDER_LABEL_KEYS = {
   deezer: 'catalog.listenOnDeezer',
   spotify: 'catalog.listenOnSpotify',
@@ -84,12 +80,9 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
                   rel="noreferrer noopener"
                   aria-label={t(PROVIDER_LABEL_KEYS[target.provider])}
                   title={t(PROVIDER_LABEL_KEYS[target.provider])}
-                  className={composeClassName(
-                    LISTEN_LINK_CLASS,
-                    PROVIDER_COLOR_CLASS[target.provider],
-                  )}
+                  className={LISTEN_LINK_CLASS}
                 >
-                  <Icon name={target.provider} size={22} />
+                  <BrandLogo brand={target.provider} size={24} />
                 </a>
               ))}
             </div>

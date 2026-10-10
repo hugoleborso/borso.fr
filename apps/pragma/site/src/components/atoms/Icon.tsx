@@ -133,13 +133,6 @@ const ICONS = {
       <path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
     </>
   ),
-  deezer: <path d="M4 16v4M9 12v8M14 8v12M19 4v16" />,
-  spotify: (
-    <>
-      <circle cx="12" cy="12" r="9" />
-      <path d="M7 9.5c3-1 7-1 10 .5M7.5 12.5c2.5-.8 6-.6 8.5.8M8 15.5c2-.5 4.5-.4 6.5.6" />
-    </>
-  ),
   youtube: (
     <>
       <rect x="3" y="6" width="18" height="12" rx="3" />

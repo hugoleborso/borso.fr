@@ -9,7 +9,7 @@ import {
   selectListenTargets,
 } from '../../lib/listen-links.utils';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
+import { BrandLogo } from '../atoms/BrandLogo';
 
 export interface ListenLinksDialogProps {
   readonly subject: ListenSubject;
@@ -53,7 +53,7 @@ export function ListenLinksDialog({ subject, onClose }: ListenLinksDialogProps):
                 onClick={onClose}
                 className="flex items-center gap-3 rounded-md border border-line px-3 py-2.5 text-sm text-ink-900 hover:border-line-strong hover:bg-bg"
               >
-                <Icon name={target.provider} />
+                <BrandLogo brand={target.provider} size={20} />
                 <span className="flex-1">{t(PROVIDER_LABEL_KEYS[target.provider])}</span>
                 <span className="text-xs text-ink-400">{t(targetHintKey(target))}</span>
               </a>
