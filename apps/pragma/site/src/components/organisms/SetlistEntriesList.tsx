@@ -156,6 +156,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 key={entry.id}
                 position={props.inFilteredMode ? visibleIndex + 1 : fullIndex + 1}
                 memberPart={props.memberPartByEntryId[entry.id] ?? NO_MEMBER_PART}
+                isMemberView={props.inFilteredMode}
                 entryId={entry.id}
                 title={song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}
                 deezerAlbumId={song?.deezerAlbumId ?? null}
