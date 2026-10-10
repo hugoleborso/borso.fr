@@ -110,6 +110,15 @@ jobs:
       # Surfaces non-prod-only UI affordances (test fixture seeders, etc.).
       # Stage value also drives Sentry environment tagging.
       VITE_STAGE: preview
+      # Error reporting, for pragma only. The DSN is a public
+      # ingest key, so it is a repository variable; the upload token is a
+      # secret and reaches no other application's build. Unset values leave
+      # Sentry off: the site and the API both treat an empty DSN as no project.
+      VITE_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.PRAGMA_SENTRY_DSN || '' }}
+      PRAGMA_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.PRAGMA_SENTRY_DSN || '' }}
+      SENTRY_AUTH_TOKEN: ${{ matrix.app == 'pragma' && secrets.SENTRY_AUTH_TOKEN || '' }}
+      SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ vars.PRAGMA_SENTRY_PROJECT }}
     steps:
       - uses: actions/checkout@v7
       # Digest of everything this app's preview is built from. Tree hashes

@@ -19,9 +19,7 @@ cd "$(dirname "$0")/.."
 
 # Read but deliberately not set, with the reason. Removing a line from here
 # without setting the variable is what the check is for.
-declare -A ALLOWED_UNSET=(
-  [VITE_SENTRY_DSN]="reporting is off until a Sentry project and secret exist; see docs/adr/ and the sentry.ts header"
-)
+declare -A ALLOWED_UNSET=()
 
 readonly VARIABLE_PATTERN='VITE_[A-Z0-9_]*'
 

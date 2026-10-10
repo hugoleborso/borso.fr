@@ -74,6 +74,7 @@ No:
 | [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | proposed | 2026-09-21 |
 | [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | proposed | 2026-10-05 |
 | [0027](./0027-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | proposed | 2026-10-06 |
+| [0028](./0028-pragma-reports-errors-and-traces-to-sentry-eu.md) | pragma sends errors and traces to Sentry's EU region with personal data collection off | proposed | 2026-10-10 |
 
 ### Data layer
 
@@ -104,7 +105,7 @@ No:
 
 ### Observability
 
-_(no entries yet)_
+- 0028 — pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
 
 ### Tooling / DevX
 

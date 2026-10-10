@@ -1,7 +1,8 @@
-import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
+import { BrowserRouter, Navigate, Route } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
 import { ListenLinksProvider } from './components/organisms/ListenLinksProvider';
 import { RequireSession } from './components/organisms/RequireSession';
+import { TracedRoutes } from './observability/error-reporting.adapter';
 import { AccountPage } from './routes/account/AccountPage';
 import { BarsPage } from './routes/bars/BarsPage';
 import { CatalogPage } from './routes/catalog/CatalogPage';
@@ -28,7 +29,7 @@ export function App(): JSX.Element {
   return (
     <BrowserRouter>
       <ListenLinksProvider>
-        <Routes>
+        <TracedRoutes>
           <Route path="/login" element={<LoginPage />} />
           <Route path="/recover" element={<RecoverPage />} />
           <Route path="/vote" element={<VotePage />} />
@@ -57,7 +58,7 @@ export function App(): JSX.Element {
               <Route path="/account" element={<AccountPage />} />
             </Route>
           </Route>
-        </Routes>
+        </TracedRoutes>
       </ListenLinksProvider>
     </BrowserRouter>
   );
