@@ -128,6 +128,7 @@ export function useCreateSetlist() {
       const created: SetlistSummary = {
         id: data.setlist.id,
         name: data.setlist.name,
+        status: 'locked',
         songCount: 0,
         sessionIds: variables.sessionId === null ? [] : [variables.sessionId],
       };

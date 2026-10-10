@@ -161,6 +161,7 @@ export function SetlistVotePage(): JSX.Element {
           addableSongs={songList}
           targetSongCount={board.data?.targetSongCount ?? 0}
           isClosing={closeVote.isPending}
+          onCancel={() => setIsClosingOpen(false)}
           onClose={(songIds) => {
             closeVote.mutate(
               { songIds },

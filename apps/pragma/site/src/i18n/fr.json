@@ -465,7 +465,8 @@
     "transitionNobody": "personne ne garde d’instrument entre ces deux morceaux",
     "transitionRisky": "Transition risquée",
     "untitled": "Setlist sans titre",
-    "moreActions": "Plus d’actions"
+    "moreActions": "Plus d’actions",
+    "voting": "En cours de vote"
   },
   "shell": {
     "meVersion": "Pragma · v0.1"

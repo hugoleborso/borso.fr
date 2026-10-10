@@ -465,7 +465,8 @@
     "transitionNobody": "nobody keeps an instrument across these two songs",
     "transitionRisky": "Risky transition",
     "untitled": "Untitled setlist",
-    "moreActions": "More actions"
+    "moreActions": "More actions",
+    "voting": "Voting in progress"
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
