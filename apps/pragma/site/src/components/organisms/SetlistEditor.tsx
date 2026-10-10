@@ -30,7 +30,7 @@ import { SetlistSongPicker } from './SetlistSongPicker';
 import { SetlistToolbar } from './SetlistToolbar';
 import { formatSetlistOrder, instrumentFamilyMap, lineupOf } from './setlist-editor.utils';
 import type { SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
-import { filterEntriesForMember } from './setlist-filter.core';
+import { filterEntriesForMember, nameInstrumentsByEntryId } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import { VotingRoundPanel } from './VotingRoundPanel';
 import { buildTransitionView, indexTransitionComments } from './transition-view.core';
@@ -38,6 +38,8 @@ import { buildTransitionView, indexTransitionComments } from './transition-view.
 interface SetlistEditorProps {
   readonly setlistId: string;
   readonly concertSessionId: string | null;
+  readonly initialMemberId: string | null;
+  readonly isEnergyShown: boolean;
 }
 
 const NO_ROWS: readonly never[] = [];
@@ -53,7 +55,12 @@ type SetlistFailureKey =
   | 'setlist.failure.copyOrder';
 
 // @FollowsBlueprint organism-query-owning
-export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProps): JSX.Element {
+export function SetlistEditor({
+  setlistId,
+  concertSessionId,
+  initialMemberId,
+  isEnergyShown,
+}: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
   const entriesQuery = useSetlistEntries(setlistId);
   const songsQuery = useSongsList();
@@ -73,7 +80,7 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
     songBId: string;
   } | null>(null);
   const [failureKey, setFailureKey] = useState<SetlistFailureKey | null>(null);
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(null);
+  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialMemberId);
   const [orderCopied, setOrderCopied] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
 
@@ -151,6 +158,10 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
     () => filterEntriesForMember(setlistEntries, songsById, selectedMemberId),
     [setlistEntries, songsById, selectedMemberId],
   );
+  const memberPartByEntryId = useMemo(
+    () => nameInstrumentsByEntryId(filtered.instrumentIdsByEntryId, instrumentsById),
+    [filtered, instrumentsById],
+  );
   const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
 
   const failWith = (key: SetlistFailureKey) => (): void => setFailureKey(key);
@@ -217,6 +228,7 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
       <SetlistToolbar
         energyValues={energyValues}
         isCompact={isNarrow}
+        isEnergyShown={isEnergyShown}
         members={lineupMembers}
         selectedMemberId={selectedMemberId}
         failureMessage={displayFailureKey === null ? null : t(displayFailureKey)}
@@ -233,6 +245,7 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
           transitionNotesByPair={transitionNotesByPair}
           meanMasteryBySongId={meanMasteryBySongId}
           inFilteredMode={isInFilteredMode}
+          memberPartByEntryId={memberPartByEntryId}
           lineupMembers={lineupMembers}
           instruments={instruments}
           slotInstruments={instruments}
@@ -249,17 +262,23 @@ export function SetlistEditor({ setlistId, concertSessionId }: SetlistEditorProp
       ) : null}
       <BottomActionBar>
         <Button
-          variant="ghost"
-          size="sm"
+          variant="default"
+          size="icon"
+          aria-label={orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
+          title={t('setlist.copyOrder')}
           onClick={() => void copyOrderToClipboard()}
           disabled={setlistEntries.length === 0}
         >
-          <Icon name={orderCopied ? 'check' : 'text'} size={14} />
-          {orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
+          <Icon name={orderCopied ? 'check' : 'copy'} size={20} />
         </Button>
-        <Button variant="accent" size="sm" onClick={() => setPickerOpen(true)}>
-          <Icon name="plus" size={14} />
-          {t('setlist.addSong')}
+        <Button
+          variant="accent"
+          size="icon"
+          aria-label={t('setlist.addSong')}
+          title={t('setlist.addSong')}
+          onClick={() => setPickerOpen(true)}
+        >
+          <Icon name="plus" size={22} />
         </Button>
       </BottomActionBar>
       <SetlistSongPicker

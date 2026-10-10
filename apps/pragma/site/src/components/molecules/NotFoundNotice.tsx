@@ -12,7 +12,7 @@ export interface NotFoundNoticeProps {
 // @FollowsBlueprint molecule-presentational
 export function NotFoundNotice({ message, backTo, backLabel }: NotFoundNoticeProps): JSX.Element {
   return (
-    <section className="px-4 sm:px-9 py-7 flex flex-col items-start gap-4">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 flex flex-col items-start gap-4">
       <p className="m-0 text-sm text-ink-700" role="alert">
         {message}
       </p>

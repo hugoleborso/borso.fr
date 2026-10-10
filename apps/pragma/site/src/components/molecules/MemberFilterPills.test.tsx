@@ -9,7 +9,7 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-const ALL_MEMBERS_LABEL_EN = 'All members';
+const ALL_MEMBERS_LABEL_EN = 'All';
 
 const HUGO_MEMBER: FilterPillMember = { id: 'hugo-id', name: 'Hugo', color: '#d96f5a' };
 const PAULINE_MEMBER: FilterPillMember = { id: 'pauline-id', name: 'Pauline', color: '#7a8f5a' };
@@ -46,7 +46,7 @@ describe('MemberFilterPills', () => {
     container.remove();
   });
 
-  it('renders one pill per member plus an "All members" pill', () => {
+  it('renders one pill per member plus an "All" pill', () => {
     renderPills(
       root,
       <MemberFilterPills
@@ -60,7 +60,7 @@ describe('MemberFilterPills', () => {
     expect(findPillByText(container, 'Pauline')).not.toBeNull();
   });
 
-  it('marks the "All members" pill as selected when no member is selected', () => {
+  it('marks the "All" pill as selected when no member is selected', () => {
     renderPills(
       root,
       <MemberFilterPills members={[HUGO_MEMBER]} selectedMemberId={null} onChange={vi.fn()} />,
@@ -99,7 +99,7 @@ describe('MemberFilterPills', () => {
     expect(onChange).toHaveBeenCalledWith(HUGO_MEMBER.id);
   });
 
-  it('calls onChange with null when the "All members" pill is clicked', () => {
+  it('calls onChange with null when the "All" pill is clicked', () => {
     const onChange = vi.fn();
     renderPills(
       root,

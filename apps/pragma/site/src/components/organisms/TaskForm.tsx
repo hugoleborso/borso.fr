@@ -5,6 +5,7 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
+import { StickyFormActions } from '../atoms/StickyFormActions';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
@@ -187,7 +188,7 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
           )}
         </form.Field>
 
-        <div className="flex gap-2 mt-2">
+        <StickyFormActions>
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
               <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
@@ -200,7 +201,7 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
               {t('common.cancel')}
             </Button>
           ) : null}
-        </div>
+        </StickyFormActions>
       </form>
     </Card>
   );

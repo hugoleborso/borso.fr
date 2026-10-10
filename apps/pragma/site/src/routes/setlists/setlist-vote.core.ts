@@ -25,8 +25,23 @@ export function isVotingPageState(
   return selectVotePageState({ hasBoard, status, isClosingOpen }) === 'voting';
 }
 
-export function isLockedPageState(pageState: VotePageState): boolean {
-  return pageState === 'locked';
+export type VoteHeaderAction = 'back-to-vote' | 'close-vote' | 'open-vote';
+
+const HEADER_ACTION_BY_STATE = {
+  loading: 'open-vote',
+  voting: 'close-vote',
+  closing: 'back-to-vote',
+  locked: 'open-vote',
+} as const satisfies Readonly<Record<VotePageState, VoteHeaderAction>>;
+
+export function selectVoteHeaderAction(state: VotePageState): VoteHeaderAction {
+  return HEADER_ACTION_BY_STATE[state];
+}
+
+export type CloseIntent = 'review-proposal' | 'lock-unchanged';
+
+export function selectCloseIntent(scoredSongCount: number): CloseIntent {
+  return scoredSongCount > 0 ? 'review-proposal' : 'lock-unchanged';
 }
 
 export interface VotePageSong {

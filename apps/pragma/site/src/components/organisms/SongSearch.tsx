@@ -55,7 +55,6 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
           aria-label={t('catalog.searchSong')}
         />
       </div>
-      <p className="text-xs text-ink-400">{t('catalog.searchSongHint')}</p>
       {isLoading ? <p className="text-xs text-ink-500 italic">{t('common.loading')}</p> : null}
       {error === null ? null : (
         <p className="text-xs text-danger" role="alert">

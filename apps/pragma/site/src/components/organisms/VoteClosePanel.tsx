@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import type { SongTally } from '../../lib/queries/voting.utils';
 import { moveWithin, reorderByDrop } from '../../routes/setlists/vote-proposal.core';
 import { Button } from '../atoms/Button';
+import { StickyFormActions } from '../atoms/StickyFormActions';
 import type { TallySong } from './VoteTally';
 import { VoteProposalRow } from './VoteProposalRow';
 
@@ -71,20 +72,6 @@ export function VoteClosePanel({
           {keptSongIds.length} / {targetSongCount}
         </span>
       </header>
-      <div className="flex gap-2">
-        <Button type="button" variant="ghost" onClick={onCancel}>
-          {t('common.cancel')}
-        </Button>
-        <Button
-          type="button"
-          variant="accent"
-          className="flex-1"
-          disabled={keptSongIds.length === 0 || isClosing}
-          onClick={() => onClose(keptSongIds)}
-        >
-          {t('voting.closeSubmit')}
-        </Button>
-      </div>
       {isOverTarget ? (
         <p className="text-sm text-ink-500 m-0" role="status">
           {t('voting.closeOverTarget')}
@@ -121,11 +108,11 @@ export function VoteClosePanel({
         </SortableContext>
       </DndContext>
       {leftOutSongs.length === 0 ? null : (
-        <details className="flex flex-col gap-2">
-          <summary className="cursor-pointer text-xs tracking-wider uppercase text-ink-400">
-            {t('voting.closeAddLabel')} ({leftOutSongs.length})
-          </summary>
-          <ul className="list-none p-0 m-0 mt-2 flex flex-col gap-2">
+        <div className="flex flex-col gap-2">
+          <span className="text-xs tracking-wider uppercase text-ink-400">
+            {t('voting.closeAddLabel')}
+          </span>
+          <ul className="list-none p-0 m-0 flex flex-col gap-2">
             {leftOutSongs.map((song) => (
               <li
                 key={song.id}
@@ -143,8 +130,22 @@ export function VoteClosePanel({
               </li>
             ))}
           </ul>
-        </details>
+        </div>
       )}
+      <StickyFormActions>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          {t('common.cancel')}
+        </Button>
+        <Button
+          type="button"
+          variant="accent"
+          className="flex-1"
+          disabled={keptSongIds.length === 0 || isClosing}
+          onClick={() => onClose(keptSongIds)}
+        >
+          {t('voting.closeSubmit')}
+        </Button>
+      </StickyFormActions>
     </section>
   );
 }

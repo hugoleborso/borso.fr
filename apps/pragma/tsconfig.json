@@ -28,6 +28,7 @@
     "api/scripts/**/*.ts",
     "cdk/test/**/*.ts",
     "test/**/*.ts",
+    "scripts/**/*.ts",
     "vite.config.ts",
     "vitest.config.ts",
     "drizzle.config.ts"

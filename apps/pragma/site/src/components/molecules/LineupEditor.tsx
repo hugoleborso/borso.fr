@@ -132,7 +132,6 @@ function LineupEditorContent({
         }}
       >
         <div className={MEMBER_SCROLLER_CLASS}>
-          <p className="text-xs text-ink-500 m-0">{t('lineup.multiInstrumentHint')}</p>
           <ul className="flex flex-col gap-3 m-0 p-0 list-none">
             {members.map((member) => (
               <li key={member.id} className="flex flex-col gap-1.5">

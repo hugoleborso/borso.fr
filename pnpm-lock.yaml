@@ -105,6 +105,9 @@ catalogs:
     jsdom:
       specifier: ^30.1.1
       version: 30.1.2
+    playwright:
+      specifier: ^1.62.1
+      version: 1.63.0
     postgres:
       specifier: ^3.4.5
       version: 3.4.9
@@ -442,7 +445,7 @@ importers:
         specifier: 'catalog:'
         version: 30.1.2
       playwright:
-        specifier: ^1.62.1
+        specifier: 'catalog:'
         version: 1.63.0
       tsx:
         specifier: 'catalog:'
@@ -819,6 +822,9 @@ importers:
       jsdom:
         specifier: 'catalog:'
         version: 30.1.2
+      playwright:
+        specifier: 'catalog:'
+        version: 1.63.0
       tsx:
         specifier: 'catalog:'
         version: 4.23.13

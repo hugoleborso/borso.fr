@@ -2,9 +2,10 @@ import { describe, expect, it } from 'vitest';
 import {
   indexMembersById,
   indexSongsById,
-  isLockedPageState,
   isVotingPageState,
   projectPointsBySongId,
+  selectCloseIntent,
+  selectVoteHeaderAction,
   selectVotePageState,
 } from './setlist-vote.core';
 
@@ -47,15 +48,6 @@ describe('isVotingPageState', () => {
   });
 });
 
-describe('isLockedPageState', () => {
-  it('is true only once the vote is closed, so the closing panel offers no reopen', () => {
-    expect(isLockedPageState('locked')).toBe(true);
-    expect(isLockedPageState('closing')).toBe(false);
-    expect(isLockedPageState('loading')).toBe(false);
-    expect(isLockedPageState('voting')).toBe(false);
-  });
-});
-
 describe('the vote page projections', () => {
   const SONGS = [
     { id: 'song-a', title: 'A', artist: 'Artist A' },
@@ -81,5 +73,24 @@ describe('the vote page projections', () => {
       'song-b': 0,
     });
     expect(projectPointsBySongId([], () => 0)).toEqual({});
+  });
+});
+
+describe('selectCloseIntent', () => {
+  it('reviews the proposal once a song carries points', () => {
+    expect(selectCloseIntent(1)).toBe('review-proposal');
+  });
+
+  it('locks the setlist as it stands when nobody scored', () => {
+    expect(selectCloseIntent(0)).toBe('lock-unchanged');
+  });
+});
+
+describe('selectVoteHeaderAction', () => {
+  it('offers to close a running vote, to go back while closing, and to open one otherwise', () => {
+    expect(selectVoteHeaderAction('voting')).toBe('close-vote');
+    expect(selectVoteHeaderAction('closing')).toBe('back-to-vote');
+    expect(selectVoteHeaderAction('locked')).toBe('open-vote');
+    expect(selectVoteHeaderAction('loading')).toBe('open-vote');
   });
 });

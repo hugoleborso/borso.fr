@@ -46,7 +46,6 @@ export function AccountPage(): JSX.Element {
 
       <Card className="p-4 sm:p-6">
         <h2 className="text-base text-ink-900 m-0 mb-3">{t('account.contactDetails')}</h2>
-        <p className="text-xs text-ink-500 mt-0 mb-3">{t('account.contactDetailsHint')}</p>
         <ContactDetailsForm
           key={`${member.data?.phone ?? ''}-${member.data?.email ?? ''}`}
           initial={{ phone: member.data?.phone ?? '', email: member.data?.email ?? '' }}

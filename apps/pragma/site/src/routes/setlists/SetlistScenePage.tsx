@@ -48,7 +48,7 @@ export function SetlistScenePage(): JSX.Element {
   const { setlistId } = useParams<{ setlistId: string }>();
   const { t } = useTranslation();
   if (setlistId === undefined) {
-    return <p className="px-4 sm:px-9 py-7 text-danger">{t('setlist.missingId')}</p>;
+    return <p className="px-4 sm:px-9 py-4 sm:py-7 text-danger">{t('setlist.missingId')}</p>;
   }
   return <SetlistScene setlistId={setlistId} />;
 }
