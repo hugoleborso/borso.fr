@@ -5,6 +5,7 @@ import { Spinner } from '../atoms/Spinner';
 import { OfflineBanner } from '../molecules/OfflineBanner';
 import { useIsOnline } from '../molecules/online-status.hook';
 import { useToday } from '../../lib/queries/today.queries';
+import { TODO_LIST_ROUTES } from '../../lib/wikilinks.core';
 import { type BottomTab, BottomTabBar } from './BottomTabBar';
 import { ActionSheet } from './ActionSheet';
 import { ToastViewport } from './ToastViewport';
@@ -13,7 +14,8 @@ const PROPOSALS_PATH = '/proposals';
 
 const TABS: readonly BottomTab[] = [
   { to: '/', labelKey: 'nav.today', icon: 'today' },
-  { to: '/todos', labelKey: 'nav.todo', icon: 'todo' },
+  { to: TODO_LIST_ROUTES.main, labelKey: 'nav.todo', icon: 'todo' },
+  { to: TODO_LIST_ROUTES.work, labelKey: 'nav.work-todo', icon: 'briefcase' },
   { to: PROPOSALS_PATH, labelKey: 'nav.proposals', icon: 'proposals' },
   { to: '/brain', labelKey: 'nav.brain', icon: 'brain' },
   { to: '/message', labelKey: 'nav.message', icon: 'message' },

@@ -1,5 +1,6 @@
 import { type Focus } from '@domain/focus.core';
 import { isProposalPending } from '@domain/proposal.core';
+import { TODO_LISTS } from '@domain/todo-list.core';
 import type { Todo } from '@domain/todo.core';
 import {
   type Commitment,
@@ -64,7 +65,7 @@ export async function readToday(now: Date): Promise<Today> {
     drafts,
   ] = await Promise.all([
     readFocus(),
-    listTodos(),
+    listTodos(TODO_LISTS.main),
     listProposals(undefined),
     listOpenCommitments(),
     readContentFile(buildJournalPath(date)),

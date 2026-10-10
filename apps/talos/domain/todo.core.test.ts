@@ -12,6 +12,7 @@ import {
 } from './todo.core';
 
 const TODAY = '2026-10-05';
+const HEADING = '# Todo';
 
 const TODO_FILE = [
   '# Todo',
@@ -177,7 +178,12 @@ describe('updateTodo', () => {
 
 describe('appendTodo', () => {
   it('inserts the task after the last task line, dated today', () => {
-    const edit = appendTodo(TODO_FILE, { text: 'Rappeler Julie', dueDate: '2026-10-09' }, TODAY);
+    const edit = appendTodo(
+      TODO_FILE,
+      { text: 'Rappeler Julie', dueDate: '2026-10-09' },
+      TODAY,
+      HEADING,
+    );
     expect(edit).toMatchObject({
       kind: 'saved',
       todo: {
@@ -194,31 +200,33 @@ describe('appendTodo', () => {
   });
 
   it('creates the list under the heading when the file holds no task yet', () => {
-    expect(savedMarkdown(appendTodo('# Todo\n\n', { text: 'Premier' }, TODAY))).toBe(
+    expect(savedMarkdown(appendTodo('# Todo\n\n', { text: 'Premier' }, TODAY, HEADING))).toBe(
       '# Todo\n\n- [ ] Premier | ajouté: 2026-10-05\n',
     );
   });
 
   it('keeps the existing introduction of a file without tasks', () => {
-    expect(savedMarkdown(appendTodo('# Mes tâches\n\nIntro\n', { text: 'Premier' }, TODAY))).toBe(
-      '# Mes tâches\n\nIntro\n\n- [ ] Premier | ajouté: 2026-10-05\n',
-    );
+    expect(
+      savedMarkdown(appendTodo('# Mes tâches\n\nIntro\n', { text: 'Premier' }, TODAY, HEADING)),
+    ).toBe('# Mes tâches\n\nIntro\n\n- [ ] Premier | ajouté: 2026-10-05\n');
   });
 
   it('refuses a task identical to the first line of the file', () => {
     const markdown = '- [ ] Premier | ajouté: 2026-10-05\n';
-    expect(appendTodo(markdown, { text: 'Premier' }, TODAY)).toEqual({ kind: 'duplicate' });
+    expect(appendTodo(markdown, { text: 'Premier' }, TODAY, HEADING)).toEqual({
+      kind: 'duplicate',
+    });
   });
 
-  it('writes the heading when the file is empty', () => {
-    expect(savedMarkdown(appendTodo('  ', { text: 'Premier' }, TODAY))).toBe(
-      '# Todo\n\n- [ ] Premier | ajouté: 2026-10-05\n',
+  it('writes the heading of the list when the file is empty', () => {
+    expect(savedMarkdown(appendTodo('  ', { text: 'Premier' }, TODAY, '# Todo taff'))).toBe(
+      '# Todo taff\n\n- [ ] Premier | ajouté: 2026-10-05\n',
     );
   });
 
   it('refuses a task identical to one already added today', () => {
-    const today = appendTodo(TODO_FILE, { text: 'Rappeler Julie' }, TODAY);
-    expect(appendTodo(savedMarkdown(today), { text: 'Rappeler Julie' }, TODAY)).toEqual({
+    const today = appendTodo(TODO_FILE, { text: 'Rappeler Julie' }, TODAY, HEADING);
+    expect(appendTodo(savedMarkdown(today), { text: 'Rappeler Julie' }, TODAY, HEADING)).toEqual({
       kind: 'duplicate',
     });
   });
@@ -252,7 +260,7 @@ describe('restoreTodo', () => {
   it('puts a removed task back where it was', () => {
     const removal = removeTodo(TODO_FILE, RENT_ID);
     if (removal.kind !== 'removed') throw new Error('expected a removal');
-    const edit = restoreTodo(removal.markdown, removal.line, removal.position);
+    const edit = restoreTodo(removal.markdown, removal.line, removal.position, HEADING);
     expect(savedRestoration(edit)).toBe(TODO_FILE);
     expect(edit).toMatchObject({ todo: { id: RENT_ID, done: true } });
   });
@@ -260,30 +268,37 @@ describe('restoreTodo', () => {
   it('puts the first task back first', () => {
     const removal = removeTodo(TODO_FILE, CV_ID);
     if (removal.kind !== 'removed') throw new Error('expected a removal');
-    expect(savedRestoration(restoreTodo(removal.markdown, removal.line, 0))).toBe(TODO_FILE);
+    expect(savedRestoration(restoreTodo(removal.markdown, removal.line, 0, HEADING))).toBe(
+      TODO_FILE,
+    );
   });
 
   it('appends the task after the last one when its rank is beyond the list', () => {
     const lines = savedRestoration(
-      restoreTodo(TODO_FILE, '- [ ] Revenue | ajouté: 2026-10-01', 9),
+      restoreTodo(TODO_FILE, '- [ ] Revenue | ajouté: 2026-10-01', 9, HEADING),
     ).split('\n');
     expect(lines[7]).toBe('- [ ] Revenue | ajouté: 2026-10-01');
   });
 
   it('creates the list when the file holds no task any more', () => {
-    expect(savedRestoration(restoreTodo('# Todo\n', '- [ ] Seule', 0))).toBe(
+    expect(savedRestoration(restoreTodo('# Todo\n', '- [ ] Seule', 0, HEADING))).toBe(
       '# Todo\n\n- [ ] Seule\n',
     );
   });
 
   it('refuses a task that is already in the file', () => {
     expect(
-      restoreTodo(TODO_FILE, '- [x] Payer le loyer | échéance: 2026-10-05 | ajouté: 2026-10-04', 1),
+      restoreTodo(
+        TODO_FILE,
+        '- [x] Payer le loyer | échéance: 2026-10-05 | ajouté: 2026-10-04',
+        1,
+        HEADING,
+      ),
     ).toEqual({ kind: 'duplicate' });
   });
 
   it('answers not-found for a line that is not a task', () => {
-    expect(restoreTodo(TODO_FILE, 'pas une tâche', 0)).toEqual({ kind: 'not-found' });
+    expect(restoreTodo(TODO_FILE, 'pas une tâche', 0, HEADING)).toEqual({ kind: 'not-found' });
   });
 });
 

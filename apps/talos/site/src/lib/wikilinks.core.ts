@@ -1,8 +1,12 @@
 import { stripMarkdownExtension } from '@domain/markdown-page.core';
+import type { TodoListName } from '@domain/todo-list.core';
 
 const PAGE_ROUTE_PREFIX = '/brain/page/';
 const COMMITMENT_ROUTE_PREFIX = '/commitments/';
-const TODO_ROUTE_PREFIX = '/todos/';
+export const TODO_LIST_ROUTES = {
+  main: '/todos',
+  work: '/work-todos',
+} as const satisfies Record<TodoListName, string>;
 const MARKDOWN_EXTENSION = '.md';
 const WIKILINK_PATTERN = /\[\[([^\]|#]+)(#[^\]|]*)?(?:\|([^\]]+))?\]\]/g;
 const SCHEME_PATTERN = /^[a-z][a-z\d+.-]*:/i;
@@ -27,8 +31,8 @@ export function buildCommitmentHref(commitmentPath: string): string {
   return `${COMMITMENT_ROUTE_PREFIX}${encodeURI(normalisePagePath(commitmentPath))}`;
 }
 
-export function buildTodoHref(todoId: string): string {
-  return `${TODO_ROUTE_PREFIX}${encodeURIComponent(todoId)}`;
+export function buildTodoHref(todoId: string, list: TodoListName): string {
+  return `${TODO_LIST_ROUTES[list]}${PATH_SEPARATOR}${encodeURIComponent(todoId)}`;
 }
 
 export function selectPageLabel(pagePath: string): string {
