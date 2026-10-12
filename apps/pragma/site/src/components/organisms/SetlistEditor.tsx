@@ -30,14 +30,12 @@ import { SetlistSongPicker } from './SetlistSongPicker';
 import { SetlistToolbar } from './SetlistToolbar';
 import { formatSetlistOrder, instrumentFamilyMap, lineupOf } from './setlist-editor.utils';
 import type { SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
-import { filterEntriesForMember, nameInstrumentsByEntryId } from './setlist-filter.core';
+import { describeMemberPartsByEntryId, filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
-import { VotingRoundPanel } from './VotingRoundPanel';
 import { buildTransitionView, indexTransitionComments } from './transition-view.core';
 
 interface SetlistEditorProps {
   readonly setlistId: string;
-  readonly concertSessionId: string | null;
   readonly initialMemberId: string | null;
   readonly isEnergyShown: boolean;
 }
@@ -57,7 +55,6 @@ type SetlistFailureKey =
 // @FollowsBlueprint organism-query-owning
 export function SetlistEditor({
   setlistId,
-  concertSessionId,
   initialMemberId,
   isEnergyShown,
 }: SetlistEditorProps): JSX.Element {
@@ -159,8 +156,8 @@ export function SetlistEditor({
     [setlistEntries, songsById, selectedMemberId],
   );
   const memberPartByEntryId = useMemo(
-    () => nameInstrumentsByEntryId(filtered.instrumentIdsByEntryId, instrumentsById),
-    [filtered, instrumentsById],
+    () => describeMemberPartsByEntryId(filtered.instrumentIdsByEntryId, instruments),
+    [filtered, instruments],
   );
   const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
 
@@ -287,11 +284,6 @@ export function SetlistEditor({
         onPick={addEntry}
         onClose={() => setPickerOpen(false)}
       />
-      {concertSessionId === null ? null : (
-        <div className="mt-8">
-          <VotingRoundPanel sessionId={concertSessionId} />
-        </div>
-      )}
       {transitionEditing === null ? null : (
         <TransitionCommentModal
           songAId={transitionEditing.songAId}

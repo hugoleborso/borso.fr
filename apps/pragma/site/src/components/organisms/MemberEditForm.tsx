@@ -1,5 +1,6 @@
 /** @Feature members */
 
+import { MEMBER_FIRST_NAME_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -21,7 +22,6 @@ const CHECKBOX_ROW_CLASS =
   'flex items-center gap-2.5 min-h-11 text-sm text-ink-700 cursor-pointer select-none';
 const CHECKBOX_CLASS = 'w-5 h-5 accent-accent';
 const FIRST_NAME_MIN_LENGTH = 1;
-const FIRST_NAME_MAX_LENGTH = 64;
 
 interface MemberEditFormProps {
   readonly mode: MemberFormMode;
@@ -170,7 +170,7 @@ export function MemberEditForm({
               onBlur={field.handleBlur}
               required
               minLength={FIRST_NAME_MIN_LENGTH}
-              maxLength={FIRST_NAME_MAX_LENGTH}
+              maxLength={MEMBER_FIRST_NAME_MAX_LENGTH}
             />
           )}
         </form.Field>

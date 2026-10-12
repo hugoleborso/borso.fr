@@ -1,3 +1,10 @@
+---
+summary: 'commitlint caps the whole commit header at 100 characters, scope and type included.'
+triggers:
+  output:
+    - 'header must not be longer than 100 characters'
+---
+
 # commitlint enforces a hard 100-char cap on the commit *header*
 
 ## Symptom

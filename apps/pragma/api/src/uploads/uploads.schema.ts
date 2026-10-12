@@ -1,5 +1,6 @@
 import { z } from 'zod';
-import { ALLOWED_UPLOAD_CONTENT_TYPES, MAX_UPLOAD_BYTES } from './uploads.types';
+import { ALLOWED_UPLOAD_CONTENT_TYPES } from '@domain/chart-upload.core';
+import { MAX_UPLOAD_BYTES } from './uploads.types';
 
 /**
  * @Blueprint schema-input-only

@@ -3,12 +3,15 @@ date: 2026-08-14
 introduced-at: conception
 detected-at: review
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/46
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/46
-fix-commits: [f4e1247]
+related-pr: '#46'
+fix-pr: '#46'
+fix-commits: [f4e1247bf1]
 eradication-level: 1
+eradication-paths: [eslint-rules/module-source.js]
 time-to-detect: months
 tags: [eslint, gates, architecture, code-quality, process]
+zone: eslint-rules
+recurs: [purity-rule-was-wrong-four-times]
 blueprints: [test-lint-rule]
 ---
 

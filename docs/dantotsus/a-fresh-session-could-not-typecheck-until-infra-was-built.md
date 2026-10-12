@@ -3,12 +3,14 @@ date: 2026-08-10
 introduced-at: implementation
 detected-at: local
 severity: low
-related-pr: 36
-fix-pr: 45
-fix-commits: [ebabfe7]
+related-pr: '#36'
+fix-pr: '#45'
+fix-commits: [ebabfe7650]
 eradication-level: 2
+eradication-paths: [scripts/install-repo-deps.sh]
 time-to-detect: minutes
 tags: [pnpm, ci, hooks, session-start, tooling, monorepo]
+zone: scripts/install-repo-deps.sh
 ---
 
 # A fresh session could not typecheck until infra was built

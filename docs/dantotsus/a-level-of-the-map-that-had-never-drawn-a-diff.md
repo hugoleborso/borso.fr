@@ -5,10 +5,12 @@ detected-at: review
 severity: medium
 related-pr: '#83'
 fix-pr: '#86'
-fix-commits: [a89d6aa]
+fix-commits: [a89d6aadaa]
 eradication-level: 4
+eradication-paths: [scripts/architecture/architecture-graph.ts]
 time-to-detect: days
 tags: [meta, tooling, architecture, gates, generator]
+zone: scripts/architecture/architecture-journeys.ts
 ---
 
 # A level of the map that had never drawn a diff

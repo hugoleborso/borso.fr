@@ -3,12 +3,16 @@ date: 2026-08-21
 introduced-at: implementation
 detected-at: qa
 severity: high
-related-pr: 31
-fix-pr: pending
-fix-commits: []
+related-pr: '#31'
+fix-pr: '#84'
+fix-commits: [c933140e0f, a5f609da82]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-refetch-of-optimistically-written-query.js]
 time-to-detect: months
 tags: [react, tanstack-query, dsql, optimistic-updates, pragma, last-loop-lepin, blueprints]
+zone: apps/pragma/site/src/lib/queries
+weak-point: optimistic-write-undone
+recurs: [optimistic-reorder-reverted-by-stale-dsql-read, the-optimistic-update-nobody-could-see]
 blueprints: [query-optimistic-mutation]
 ---
 

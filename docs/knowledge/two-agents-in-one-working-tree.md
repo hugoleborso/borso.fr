@@ -1,3 +1,10 @@
+---
+summary: 'A concurrent writer in the same checkout shows as a `git diff` that moves between two reads; stage explicit paths, and check a background run is really dead.'
+triggers:
+  commands:
+    - '\bgit\s+add\s+(-A|--all|\.)(\s|$)'
+---
+
 # Two agents in one working tree, and how to tell one is there
 
 PR 50 ran two audit-and-fix workflows against the same checkout at the same

@@ -49,7 +49,7 @@ export function selectTracePropagationTargets(
 }
 
 // @FollowsBlueprint core-decision
-export function selectErrorReportingSettings(
+export function selectBrowserReportingSettings(
   inputs: ErrorReportingInputs,
 ): ErrorReportingSettings | undefined {
   if (!isConfiguredText(inputs.dsn) || !isReportingStage(inputs.stage)) return undefined;

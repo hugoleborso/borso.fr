@@ -3,12 +3,15 @@ date: 2026-10-02
 introduced-at: conception
 detected-at: local
 severity: low
-related-pr: "#107"
-fix-pr: "#119"
-fix-commits: [57fb0a3]
+related-pr: '#107'
+fix-pr: '#119'
+fix-commits: [57fb0a3834]
 eradication-level: 2
+eradication-paths: [scripts/check-instructions-name-installed-tools.sh]
 time-to-detect: hours
 tags: [pnpm, gates, pre-commit, agents, spec]
+zone: plugins/borso-harness/skills
+recurs: [the-skill-that-named-the-linter-the-repository-deleted]
 ---
 
 # The workspace name that was never checked

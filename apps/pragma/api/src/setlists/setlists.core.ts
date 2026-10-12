@@ -1,3 +1,4 @@
+import { resolveSetlistStatus, type SetlistStatus } from '@domain/setlist-vote.core';
 import {
   AUDIENCE_CHOICE_SETLIST_KIND,
   DEFAULT_SETLIST_KIND,
@@ -82,14 +83,4 @@ export function resolveSetlistKind(storedKind: string | null): SetlistKind {
 
 export function isSetlistRenamable(kind: SetlistKind): boolean {
   return kind !== AUDIENCE_CHOICE_SETLIST_KIND;
-}
-
-export const SETLIST_LOCKED = 'locked';
-export const SETLIST_VOTING = 'voting';
-
-export type SetlistStatus = typeof SETLIST_LOCKED | typeof SETLIST_VOTING;
-
-// @FollowsBlueprint core-decision
-export function resolveSetlistStatus(stored: string | null): SetlistStatus {
-  return stored === SETLIST_VOTING ? SETLIST_VOTING : SETLIST_LOCKED;
 }

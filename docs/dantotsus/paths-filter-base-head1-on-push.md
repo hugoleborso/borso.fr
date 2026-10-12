@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: implementation
 detected-at: production
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
-fix-commits: [b13966a, 181f266]
+related-pr: '#2'
+fix-pr: '#4'
+fix-commits: [b13966a29e, 181f2667ac]
 eradication-level: 2
+eradication-paths: [.husky/pre-push, .github/workflows/deploy.yml]
 time-to-detect: minutes (first push to main after merging PR #2)
 tags: [github-actions, paths-filter, ci]
+zone: .github/workflows/deploy.yml
 ---
 
 # `dorny/paths-filter@v3` with `base: HEAD~1` fails on push events

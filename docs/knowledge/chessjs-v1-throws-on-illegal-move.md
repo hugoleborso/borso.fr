@@ -1,3 +1,13 @@
+---
+summary: '`chess.js` v1 throws on an illegal move where v0 returned `null`; wrap every `chess.move` in try/catch.'
+triggers:
+  paths:
+    - 'apps/borsouvertures/site/src/**/*.ts'
+    - 'apps/borsouvertures/site/src/**/*.tsx'
+  output:
+    - 'Invalid move:'
+---
+
 # `chess.js` v1 throws on illegal moves (it used to return `null`)
 
 `chess.js` v0.x returned `null` from `.move()` when the move was

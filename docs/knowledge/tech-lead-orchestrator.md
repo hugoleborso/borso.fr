@@ -1,3 +1,11 @@
+---
+summary: 'Operator notes for `/tech-lead-orchestrator`: where a run''s artefacts live, how to read its journal, and recipes for its common failures.'
+triggers:
+  paths:
+    - 'docs/features/*/*/runs/*/state.json'
+    - 'docs/features/*/*/runs/*/journal.md*'
+---
+
 # `/tech-lead-orchestrator` — operator notes
 
 Run-time companion to [`plugins/borso-harness/skills/tech-lead-orchestrator/SKILL.md`](../../plugins/borso-harness/skills/tech-lead-orchestrator/SKILL.md)
@@ -127,6 +135,6 @@ orchestrator with `--no-verify` semantics — CLAUDE.md *Hooks* rule.
 The orchestrator's inaugural PR (this one) is **not** itself
 orchestrator-driven: the orchestrator didn't exist yet. Subsequent
 features are expected to be driven through `/tech-lead-orchestrator`
-and the `/after-task-dantotsus` kaizen sweep should surface the
+and the `/after-task-kaizen` kaizen sweep should surface the
 orchestrator's first rough edges. Until 3 successful runs have shipped,
 treat any oddity as a Dantotsu candidate.

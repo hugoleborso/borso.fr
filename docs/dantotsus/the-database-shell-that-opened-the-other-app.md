@@ -3,12 +3,14 @@ date: 2026-10-02
 introduced-at: conception
 detected-at: local
 severity: medium
-related-pr: "#107"
-fix-pr: "#119"
-fix-commits: [cda3dd2]
+related-pr: '#107'
+fix-pr: '#119'
+fix-commits: [cda3dd2c41]
 eradication-level: 1
+eradication-paths: [scripts/dsql-shell.sh]
 time-to-detect: weeks
 tags: [dsql, tooling, operator]
+zone: scripts/dsql-shell.sh
 ---
 
 # The database shell that opened the other app

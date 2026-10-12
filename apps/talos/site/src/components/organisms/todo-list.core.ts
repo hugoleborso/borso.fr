@@ -1,3 +1,4 @@
+import type { TodoListName } from '@domain/todo-list.core';
 import type { ParseKeys } from 'i18next';
 import type { ChipTone } from '../atoms/chip.variants';
 
@@ -125,6 +126,15 @@ const EMPTY_LABEL_KEY: Readonly<Record<TodoFilter, ParseKeys>> = {
 
 export function selectTodoEmptyLabelKey(filter: TodoFilter): ParseKeys {
   return EMPTY_LABEL_KEY[filter];
+}
+
+const LIST_TITLE_KEY: Readonly<Record<TodoListName, ParseKeys>> = {
+  main: 'todo.title',
+  work: 'todo.work-title',
+};
+
+export function selectTodoListTitleKey(list: TodoListName): ParseKeys {
+  return LIST_TITLE_KEY[list];
 }
 
 export function hasTodoTextChanged(original: string, draft: string): boolean {

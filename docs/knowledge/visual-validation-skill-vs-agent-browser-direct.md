@@ -1,3 +1,10 @@
+---
+summary: '`/visual-validation` is the feature gate; to check one fix, drive agent-browser directly in the main session.'
+triggers:
+  paths:
+    - 'docs/features/*/*/validation/visual-validation-*'
+---
+
 # `/visual-validation` is for feature gates, not single-fix iteration
 
 ## The operator rule

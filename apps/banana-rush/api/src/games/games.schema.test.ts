@@ -3,6 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { MAXIMUM_BID_BANANAS, MINIMUM_BID_BANANAS } from '@domain/bid.core';
 import { ROUND_TIMER_CHOICES_SECONDS } from '@domain/game-setup.core';
 import {
+  avatarClaimTable,
   bidTable,
   createGameSchema,
   gameTable,
@@ -12,6 +13,7 @@ import {
   placeBidSchema,
   playerTable,
   roundResultTable,
+  seatClaimTable,
 } from './games.schema';
 
 const validCreate = {
@@ -124,6 +126,10 @@ describe('joinCodeParamSchema', () => {
   it('refuses a code of the wrong length', () => {
     expect(joinCodeParamSchema.safeParse({ code: 'ABC' }).success).toBe(false);
   });
+
+  it('hands the route a code in the case the games are stored under', () => {
+    expect(joinCodeParamSchema.parse({ code: 'abcd' }).code).toBe('ABCD');
+  });
 });
 
 describe('outcomesSchema', () => {
@@ -204,5 +210,21 @@ describe('the table the secret bids land in', () => {
       'player_id',
       'round_number',
     ]);
+  });
+});
+
+describe('the tables that hold a seat and a monkey to one player', () => {
+  it('keys a seat on the game and the seat number together', () => {
+    const config = getTableConfig(seatClaimTable);
+    const [primaryKey] = config.primaryKeys;
+    expect(config.name).toBe('seat_claim');
+    expect(primaryKey?.columns.map((column) => column.name)).toEqual(['game_id', 'seat_order']);
+  });
+
+  it('keys a monkey on the game and the avatar together', () => {
+    const config = getTableConfig(avatarClaimTable);
+    const [primaryKey] = config.primaryKeys;
+    expect(config.name).toBe('avatar_claim');
+    expect(primaryKey?.columns.map((column) => column.name)).toEqual(['game_id', 'avatar']);
   });
 });

@@ -14,8 +14,8 @@ import { runnerSlugSchema } from '../runner/runner.schema';
 /**
  * @Blueprint schema-dsql-constraints
  * @BlueprintName Schema With DSQL Constraints Written Down
- * @BlueprintUsage Use for a table on Aurora DSQL, so every constraint the engine refuses carries an application level guard instead of a database one.
- * @BlueprintDescription Declares the table without the foreign keys and the partial unique index Aurora DSQL rejects, and leaves the rules they would have held to the slice's own code, where `validatePunchTiming` keeps one punch per runner and loop. The engine gaps are listed in docs/knowledge/dsql-postgres-compat-gaps.md and the invariants in the application's VOCABULARY.md.
+ * @BlueprintUsage Use for a table on Aurora DSQL whose rows carry a uniqueness rule the engine will not hold as a partial unique index or a foreign key.
+ * @BlueprintDescription Declares the punch table without the foreign keys and the partial unique index Aurora DSQL rejects, and holds the rule the partial index would have held, one active punch per runner and loop, with a second table whose primary key is exactly that triple. The claim row is written in the same transaction as the punch and deleted in the same transaction as the void, so the primary key refuses a second active punch from the first write. A check in application code cannot do that, because two requests can both pass it before either writes, and neither can a unique index, which Aurora DSQL builds asynchronously. The engine gaps are listed in docs/knowledge/dsql-postgres-compat-gaps.md and the invariants in the application's VOCABULARY.md.
  */
 export const loopPunchesTable = pgTable('loop_punches', {
   id: uuid('id').primaryKey().defaultRandom(),
@@ -33,6 +33,17 @@ export const loopPunchesTable = pgTable('loop_punches', {
   distanceFromCenterM: doublePrecision('distance_from_center_m'),
   userAgent: text('user_agent'),
 });
+
+export const loopPunchClaimsTable = pgTable(
+  'loop_punch_claims',
+  {
+    editionSlug: text('edition_slug').notNull(),
+    runnerSlug: text('runner_slug').notNull(),
+    loopIndex: integer('loop_index').notNull(),
+    punchId: uuid('punch_id').notNull(),
+  },
+  (table) => [primaryKey({ columns: [table.editionSlug, table.runnerSlug, table.loopIndex] })],
+);
 
 export const manualDidNotFinishesTable = pgTable(
   'manual_dnfs',

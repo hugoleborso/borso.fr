@@ -3,12 +3,14 @@ date: 2026-08-21
 introduced-at: implementation
 detected-at: linter
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/81
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/82
-fix-commits: [pending]
+related-pr: '#81'
+fix-pr: '#82'
+fix-commits: [03e16d4d6d]
 eradication-level: 1
+eradication-paths: [eslint-rules/no-comments.js]
 time-to-detect: minutes, twice, by two different agents
 tags: [eslint, custom-rule, stryker, gates, meta, tooling]
+zone: eslint-rules/no-comments.js
 ---
 
 # A rule that forbade its own escape hatch from wrapping

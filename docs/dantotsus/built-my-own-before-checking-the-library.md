@@ -3,12 +3,14 @@ date: 2026-05-05
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/8
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/9
-fix-commits: []
-eradication-level: 4
+related-pr: '#8'
+fix-pr: '#9'
+fix-commits: [3a6a89c64c]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [implementation, skills, deps, react-chessboard]
+zone: plugins/borso-harness/skills/implementation
 ---
 
 # Started writing my own L-arrow util before checking the library
@@ -133,7 +135,7 @@ react-dnd already does."
 > PR #23 sweep: the agent classified two friction rows as *"ship a
 > Biome plugin (level 2)"* without first asking *"is there a library
 > that would delete the code hosting the bug (level 1)?"*. The
-> `/after-task-dantotsus` skill now carries a parallel rule —
+> `/after-task-kaizen` skill now carries a parallel rule —
 > Step 2c, *Library-search pass — before writing custom anything*.
 > The operator's quote that triggered the update:
 >

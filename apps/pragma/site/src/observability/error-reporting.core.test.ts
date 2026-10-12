@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
-  selectErrorReportingSettings,
+  selectBrowserReportingSettings,
   selectTracePropagationTargets,
 } from './error-reporting.core';
 
@@ -13,10 +13,10 @@ function isMatchedByAny(targets: readonly RegExp[], url: string): boolean {
   return targets.some((target) => target.test(url));
 }
 
-describe('selectErrorReportingSettings', () => {
+describe('selectBrowserReportingSettings', () => {
   it.each(['preview', 'integ', 'prod'])('reports and traces from the %s stage', (stage) => {
     expect(
-      selectErrorReportingSettings({ dsn: DSN, stage, apiBase: '', pageOrigin: PROD_ORIGIN }),
+      selectBrowserReportingSettings({ dsn: DSN, stage, apiBase: '', pageOrigin: PROD_ORIGIN }),
     ).toEqual({
       dsn: DSN,
       environment: stage,
@@ -27,13 +27,13 @@ describe('selectErrorReportingSettings', () => {
 
   it.each([undefined, '', 42])('stays off when the project address is %s', (dsn) => {
     expect(
-      selectErrorReportingSettings({ dsn, stage: 'prod', apiBase: '', pageOrigin: PROD_ORIGIN }),
+      selectBrowserReportingSettings({ dsn, stage: 'prod', apiBase: '', pageOrigin: PROD_ORIGIN }),
     ).toBeUndefined();
   });
 
   it.each([undefined, 'dev', 'test'])('stays off on the %s stage', (stage) => {
     expect(
-      selectErrorReportingSettings({ dsn: DSN, stage, apiBase: '', pageOrigin: PROD_ORIGIN }),
+      selectBrowserReportingSettings({ dsn: DSN, stage, apiBase: '', pageOrigin: PROD_ORIGIN }),
     ).toBeUndefined();
   });
 });

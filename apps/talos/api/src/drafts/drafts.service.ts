@@ -1,3 +1,4 @@
+import type { DraftStatusChange } from '@domain/draft-status.core';
 import {
   editContentFile,
   listContentDirectory,
@@ -9,7 +10,6 @@ import {
   buildDraftPath,
   changeDraftStatusFile,
   type Draft,
-  type DraftStatusChange,
   type DraftStatusOutcome,
   isDraftFile,
   selectDrafts,

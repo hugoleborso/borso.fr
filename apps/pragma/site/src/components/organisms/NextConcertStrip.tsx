@@ -17,7 +17,7 @@ import {
 import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
 import { useSetlist, useSetlistsList } from '../../lib/queries/setlists.queries';
-import { resolveSetlistStatus, SETLIST_VOTING } from '../../routes/setlists/setlist-status.core';
+import { resolveSetlistStatus, SETLIST_VOTING } from '@domain/setlist-vote.core';
 
 const NO_ROWS: readonly never[] = [];
 const ACTION_CLASS = composeClassName(

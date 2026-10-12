@@ -1,5 +1,6 @@
 /** @Feature songs */
 
+import { SONG_TONALITY_MAX_LENGTH } from '@domain/input-limits.core';
 import { AlbumCover } from '../../components/atoms/AlbumCover';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
@@ -35,7 +36,6 @@ import { selectSongNoteSections } from './song-notes.core';
 import { buildTonalityLabel } from './tonality-label.utils';
 
 const NO_ROWS: readonly never[] = [];
-const MAX_TONALITY_RENDER_LENGTH = 16;
 
 // @FollowsBlueprint route-detail-page
 export function SongDetailPage(): JSX.Element {
@@ -145,7 +145,7 @@ export function SongDetailPage(): JSX.Element {
                 <>
                   <span className="text-ink-300">·</span>
                   <span className="font-mono text-xs">
-                    {tonality.slice(0, MAX_TONALITY_RENDER_LENGTH)}
+                    {tonality.slice(0, SONG_TONALITY_MAX_LENGTH)}
                   </span>
                 </>
               )}

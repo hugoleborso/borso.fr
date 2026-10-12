@@ -5,10 +5,12 @@ detected-at: ci
 severity: medium
 related-pr: '#59'
 fix-pr: '#62'
-fix-commits: [0770ef3]
+fix-commits: [0770ef3fe4]
 eradication-level: 1
+eradication-paths: [scripts/check-no-racy-pipelines.sh]
 time-to-detect: hours
 tags: [ci, gates, shell, meta, self-improvement-loop]
+zone: scripts/check-mutation-covers-gated-files.sh
 ---
 
 # The gate that failed on a broken pipe

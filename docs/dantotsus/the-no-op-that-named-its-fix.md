@@ -3,12 +3,14 @@ date: 2026-10-06
 introduced-at: conception
 detected-at: local
 severity: low
-related-pr: "#108"
-fix-pr: "#141"
-fix-commits: [a515b15]
+related-pr: '#108'
+fix-pr: '#141'
+fix-commits: [a515b155cd]
 eradication-level: 5
+eradication-paths: []
 time-to-detect: weeks
 tags: [self-improvement-loop, hooks, harness, skill]
+zone: plugins/borso-harness/skills/after-task-kaizen
 ---
 
 # The no-op that named its fix
@@ -60,7 +62,7 @@ change, and nobody is left to make it.
 
 **Type:** knowledge addition (level 5 — knowledge)
 
-**Where:** `plugins/borso-harness/skills/after-task-dantotsus/SKILL.md`
+**Where:** `plugins/borso-harness/skills/after-task-kaizen/SKILL.md`
 
 **What changed:** a no-op whose reason names a change is no longer a no-op.
 The change is made in the kaizen PR, and the row is recorded as

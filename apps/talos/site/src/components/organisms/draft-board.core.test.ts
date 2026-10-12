@@ -2,7 +2,6 @@ import { describe, expect, it } from 'vitest';
 import {
   describeRecipients,
   findDraft,
-  isDraftReady,
   partitionDrafts,
   selectDraftSheetIntents,
   selectChannelAppearance,
@@ -20,13 +19,6 @@ describe('partitionDrafts', () => {
       ready: [ready],
       settled: [sent, abandoned],
     });
-  });
-});
-
-describe('isDraftReady', () => {
-  it('knows a draft is ready only from its status', () => {
-    expect(isDraftReady('pret')).toBe(true);
-    expect(isDraftReady('envoye')).toBe(false);
   });
 });
 

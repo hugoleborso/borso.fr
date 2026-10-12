@@ -21,6 +21,12 @@ export const CONTENT_FIXTURE: Readonly<Record<string, string>> = {
     '- [ ] Clore les fils | échéance: statut: | ajouté: 2026-10-04',
     '',
   ].join('\n'),
+  'todo-taff.md': [
+    '# Todo taff',
+    '',
+    '- [ ] Relire la recette | échéance: 2026-10-05 | ajouté: 2026-10-04',
+    '',
+  ].join('\n'),
   'etat/propositions/2026-10-04-cv.md': [
     '---',
     'type: proposition',

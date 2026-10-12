@@ -1,3 +1,10 @@
+---
+summary: 'Measured: a hosted session can merge and push to any branch, cannot dispatch a workflow, and the `merged` field and `get_diff` size mislead.'
+triggers:
+  commands:
+    - 'workflow_dispatch|actions_run_trigger'
+---
+
 # What a hosted session cannot do on GitHub
 
 Measured on claude.ai/code against `hugoleborso/borso.fr`, 2026-08-20.
@@ -32,6 +39,13 @@ not a policy that cannot change.
 both rejected at the agent proxy, so a non-empty token is not evidence
 of anything. There is no `gh` or `hub` CLI and no git credential
 helper to borrow from.
+
+**Queue a merge for when CI goes green.** `mcp__github__enable_pr_auto_merge`
+answers `Auto-merge is not enabled for this repository`, measured on PR #153 on
+2026-10-10: the setting is off in the repository, not refused to the session.
+When the operator says "merge" while checks still run, wait for the
+`check_suite.completed` event on the subscribed pull request, read the check
+runs, then call `merge_pull_request` with `expectedHeadSha`.
 
 The practical consequence: **`workflow_dispatch`-only workflows are
 operator-only.** `shared-deploy` is the one that matters here. An

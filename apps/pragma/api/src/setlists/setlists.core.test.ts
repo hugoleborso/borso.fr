@@ -5,7 +5,6 @@ import {
   resolveSetlistKind,
   selectNextLinkPosition,
   tallySongsPerSetlist,
-  resolveSetlistStatus,
 } from './setlists.core';
 
 describe('selectNextLinkPosition', () => {
@@ -132,19 +131,5 @@ describe('isSetlistRenamable', () => {
 
   it('refuses to rename the audience-choice setlist', () => {
     expect(isSetlistRenamable('audience_choice')).toBe(false);
-  });
-});
-
-describe('resolveSetlistStatus', () => {
-  it('reads a row written before the column existed as locked', () => {
-    expect(resolveSetlistStatus(null)).toBe('locked');
-  });
-
-  it('reads the voting phase back', () => {
-    expect(resolveSetlistStatus('voting')).toBe('voting');
-  });
-
-  it('reads anything else as locked rather than throwing', () => {
-    expect(resolveSetlistStatus('counting')).toBe('locked');
   });
 });

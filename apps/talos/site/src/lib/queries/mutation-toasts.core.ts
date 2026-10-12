@@ -1,3 +1,8 @@
+import {
+  type DraftStatusChange,
+  isDraftReady,
+  READY_DRAFT_STATUS,
+} from '@domain/draft-status.core';
 import type { ProposalDecision } from '@domain/proposal.core';
 import type { TranslatableToast } from '../toast.core';
 import type { TodoPatch } from './cache-updates.core';
@@ -49,9 +54,7 @@ export const COPY_FAILED_TOAST: TranslatableToast = {
   messageKey: 'toast.copy-failed',
 };
 
-export type DraftStatusTarget = 'envoye' | 'abandonne' | 'pret';
-
-const DRAFT_STATUS_TOAST: Readonly<Record<DraftStatusTarget, TranslatableToast>> = {
+const DRAFT_STATUS_TOAST: Readonly<Record<DraftStatusChange, TranslatableToast>> = {
   envoye: { tone: 'success', messageKey: 'toast.draft-sent' },
   abandonne: { tone: 'neutral', messageKey: 'toast.draft-abandoned' },
   pret: { tone: 'neutral', messageKey: 'toast.draft-restored' },
@@ -86,10 +89,10 @@ export function selectTodoReversal(
   return { id: update.id, done: !update.done };
 }
 
-export function selectDraftStatusToast(target: DraftStatusTarget): TranslatableToast {
+export function selectDraftStatusToast(target: DraftStatusChange): TranslatableToast {
   return DRAFT_STATUS_TOAST[target];
 }
 
-export function selectDraftReversal(target: DraftStatusTarget): DraftStatusTarget | null {
-  return target === 'pret' ? null : 'pret';
+export function selectDraftReversal(target: DraftStatusChange): DraftStatusChange | null {
+  return isDraftReady(target) ? null : READY_DRAFT_STATUS;
 }
