@@ -1,3 +1,13 @@
+---
+summary: 'The agent registry is read once at session start, so an agent definition that arrives mid-session is on disk and still *agent type not found*.'
+triggers:
+  paths:
+    - 'plugins/borso-harness/agents/*.md'
+    - '.claude/agents/*.md'
+  output:
+    - '(?i)agent type .* not found'
+---
+
 # An agent `main` added is not dispatchable in a session that predates it
 
 Observed on PR #63. `plugins/borso-harness/agents/standards-reviewer.md` landed on `main` in

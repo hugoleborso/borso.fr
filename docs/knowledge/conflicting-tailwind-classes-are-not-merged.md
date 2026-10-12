@@ -1,3 +1,11 @@
+---
+summary: '`composeClassName` in pragma and talos runs clsx through twMerge, so the last class per property wins; an app composing classes another way still lets the stylesheet order decide.'
+triggers:
+  paths:
+    - 'apps/*/site/src/components/atoms/class-name.utils.ts'
+    - 'apps/*/site/src/**/*.variants.ts'
+---
+
 # Conflicting Tailwind classes are not merged
 
 `composeClassName` in pragma and talos is `clsx`: it joins class strings and

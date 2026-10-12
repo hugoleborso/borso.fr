@@ -1,3 +1,10 @@
+---
+summary: 'DSQL bills per DPU and per GB-month, not per cluster, so an idle cluster costs close to nothing.'
+triggers:
+  paths:
+    - 'infra/cdk/src/constructs/dsql-cluster*.ts'
+---
+
 # DSQL prices per DPU, not per cluster (unlike Aurora provisioned)
 
 ## The mental model that nearly cost us a refactor

@@ -1,3 +1,10 @@
+---
+summary: '`net::ERR_ABORTED` on a local navigation usually means the server answered `application/octet-stream`, which Chromium treats as a download.'
+triggers:
+  output:
+    - 'net::ERR_ABORTED'
+---
+
 # agent-browser aborts a navigation served as octet-stream
 
 `scripts/browser.sh open http://localhost:8099/` answered:

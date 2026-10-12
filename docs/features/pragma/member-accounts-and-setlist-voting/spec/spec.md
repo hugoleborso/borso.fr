@@ -313,7 +313,7 @@ untouched.
   does not count for the deck. What this cannot prove is the difference between a mouse drag
   and a thumb: `gesture-swipe` is not implemented on Chromium and reports success while moving
   nothing, per
-  [`argent-gesture-swipe-does-nothing-on-chromium`](../../../../knowledge/argent-gesture-swipe-does-nothing-on-chromium.md).
+  [`real-touch-gestures-over-cdp`](../../../../knowledge/real-touch-gestures-over-cdp.md).
   The deck listens to Pointer Events, which a mouse drag raises too, so the zone mapping and
   the budget refusal are reachable here; a touch-specific failure, such as the page scrolling
   away with the gesture, is reachable only on a real device and ships as a named gap on the

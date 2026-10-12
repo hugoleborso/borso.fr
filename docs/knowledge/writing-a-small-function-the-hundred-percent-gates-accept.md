@@ -1,3 +1,12 @@
+---
+summary: 'Shapes the 100% coverage and mutation gates reject: a `noUncheckedIndexedAccess` guard no test reaches, a named no-op that is an equivalent mutant, a surviving conditional that signals a design problem.'
+triggers:
+  paths:
+    - '**/*.core.ts'
+    - '**/*.utils.ts'
+    - '**/*.adapter.ts'
+---
+
 # Writing a small function the 100% gates accept
 
 Two gates run on every `*.core.ts`, `*.utils.ts` and `*.adapter.ts`: 100% on

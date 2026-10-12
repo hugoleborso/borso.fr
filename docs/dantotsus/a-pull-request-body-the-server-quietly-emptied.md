@@ -131,4 +131,4 @@ document.
 
 - [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../knowledge/github-mcp-pr-body-sanitizer.md) — the probe table and the full list of forms.
 - [`orchestrator-shipped-with-stale-pr-description`](./orchestrator-shipped-with-stale-pr-description.md) — the other way a description stops matching the work.
-- [`docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md`](../knowledge/pr-body-from-cc-ui-skips-skill-sections.md) — a third path that produces a body the standard never saw.
+- [`docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md) — a third path that produces a body the standard never saw.

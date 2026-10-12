@@ -1,3 +1,15 @@
+---
+summary: 'A single dnd-kit `PointerSensor` loses a touch drag to page scroll; split into mouse, touch and keyboard sensors and put `touch-none` on the handle.'
+triggers:
+  paths:
+    - 'apps/pragma/site/src/components/organisms/InstrumentsList.tsx'
+    - 'apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx'
+    - 'apps/pragma/site/src/components/organisms/VoteClosePanel.tsx'
+    - 'apps/*/site/src/**/*Sortable*.tsx'
+  commands:
+    - '@dnd-kit/'
+---
+
 # dnd-kit: a single PointerSensor loses the drag to page scroll on touch
 
 ## The trap

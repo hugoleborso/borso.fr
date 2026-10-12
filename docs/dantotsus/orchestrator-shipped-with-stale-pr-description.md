@@ -173,5 +173,5 @@ walk the new checklist.
   ancestor: feature-flow skills not auto-firing was the seed that
   created the orchestrator. This dantotsu is the orchestrator
   catching its own next blind spot.
-- [`docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md`](../knowledge/pr-body-from-cc-ui-skips-skill-sections.md) —
+- [`docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md) —
   adjacent: PR body composition has its own pitfalls.

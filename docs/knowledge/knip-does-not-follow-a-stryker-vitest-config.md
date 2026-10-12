@@ -1,3 +1,13 @@
+---
+summary: 'knip''s Stryker plugin never follows `vitest.configFile`, so the config it names reads as an unused file.'
+triggers:
+  paths:
+    - '**/stryker.config.js'
+    - '**/vitest.mutation.config.ts'
+  output:
+    - 'vitest\.mutation\.config\.ts'
+---
+
 # knip's Stryker plugin reads the runner, not the config the runner points at
 
 `stryker.config.js` can name the vitest config the runner should use:
@@ -31,4 +41,4 @@ unreferenced.
 
 Related, and worth reading together because both are about Stryker's config
 reaching further than the tools around it expect:
-[`stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md`](./stryker-sandbox-breaks-a-global-setup-outside-the-workspace.md).
+[`stryker-sandbox-and-plugin-resolution-under-pnpm.md`](./stryker-sandbox-and-plugin-resolution-under-pnpm.md).

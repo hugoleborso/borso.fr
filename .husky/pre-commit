@@ -266,6 +266,13 @@ pnpm exec tsx scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/t
 echo "[pre-commit] checking every \"does not work\" carries a date"
 scripts/check-negative-claims-are-dated.sh
 
+# A knowledge entry is read when a hook prints it at the moment it applies, and
+# almost never otherwise, so every entry declares that moment as triggers. One
+# pass over one directory, so it costs nothing and belongs on the commit. See
+# docs/adr/0030-knowledge-is-delivered-by-trigger.md.
+echo "[pre-commit] checking every knowledge entry has a trigger a hook can match"
+scripts/check-knowledge-triggers.sh
+
 # A document that links a file which is not there sends the reader looking for a
 # stale document rather than a stale link. The routing table in
 # `/code-standards` carried thirteen of them, one `../` short of the repository
