@@ -61,6 +61,19 @@ jobs:
         run: |
           all_apps=$(pnpm ls -r --depth -1 --filter "./apps/*" --json \
             | jq -c '[.[] | .name | sub("@borso-app/"; "")]')
+          # A package.json edit that only rewrites a check script (lint,
+          # typecheck, test, dev) changes nothing a deploy runs, yet matches
+          # its app's own key, and `infra/cdk/package.json` matches `infra`,
+          # which fans out to every app. PR #155 redeployed all six apps to
+          # production for a lint script. Such keys are dropped here; any
+          # error keeps the changes as they were.
+          # See docs/dantotsus/a-lint-script-redeployed-every-app.md.
+          if jq -e 'index("deps")' <<<"$CHANGES" >/dev/null; then
+            if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
+              "$BASE" "$CHANGES"); then
+              CHANGES="$kept"
+            fi
+          fi
           # `infra` fans out: constructs are the contract every app builds on.
           if jq -e 'index("infra")' <<<"$CHANGES" >/dev/null; then
             echo "apps=$all_apps" >> "$GITHUB_OUTPUT"
