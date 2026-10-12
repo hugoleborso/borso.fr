@@ -1,3 +1,12 @@
+---
+summary: 'react-chessboard v5 draws L-shaped knight arrows natively, takes one `options` prop, and needs React 19.'
+triggers:
+  paths:
+    - 'apps/borsouvertures/site/src/components/**'
+  commands:
+    - 'react-chessboard'
+---
+
 # `react-chessboard@^5.4.0` ships L-shaped knight arrows natively
 
 `react-chessboard@4.x` draws every arrow in `customArrows` as a

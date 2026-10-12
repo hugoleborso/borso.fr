@@ -608,6 +608,15 @@ const SCRIPT_CANARIES: readonly CommandCanary[] = [
     tier: 'fast',
   },
   {
+    mechanism: 'scripts/check-knowledge-triggers.sh',
+    label: 'knowledge entries carry triggers',
+    defect: 'a knowledge entry with no summary and no trigger',
+    plant: { [`${DOCUMENTS}/knowledge/gate-canary-untriggered.md`]: '# Gate canary\n' },
+    command: SCRIPT('check-knowledge-triggers.sh'),
+    refusal: /gate-canary-untriggered\.md declares no trigger/,
+    tier: 'fast',
+  },
+  {
     mechanism: 'scripts/check-dated-records-are-append-only.sh',
     label: 'dated records',
     defect: 'an edit to a dated validation report',

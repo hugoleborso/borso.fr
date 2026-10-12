@@ -7,6 +7,11 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/76
 fix-commit: n/a (upstream data shape; the fix is how we key and match it)
 time-to-detect: hours (a silently smaller dataset says nothing)
 tags: [borsouvertures, lichess, dataset, identity, vendor-quirk]
+summary: 'The Lichess openings data reuses one name across several lines, so identity needs the moves; a `FAMILIES` entry matching nothing shrinks the dataset silently.'
+triggers:
+  paths:
+    - 'apps/borsouvertures/scripts/**'
+    - 'apps/borsouvertures/site/src/**/openingIds.utils.ts'
 ---
 
 # The Lichess openings dataset: a name is not an identifier, and a build that drops a family says nothing

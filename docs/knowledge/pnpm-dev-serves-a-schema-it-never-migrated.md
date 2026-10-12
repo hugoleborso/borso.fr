@@ -1,3 +1,11 @@
+---
+summary: '`pnpm dev` applies no migrations, so a new column answers 500 `errorMissingColumn` until the back-e2e setup runs.'
+triggers:
+  output:
+    - 'errorMissingColumn'
+    - 'column \"\w+\" of relation \"\w+\" does not exist'
+---
+
 # `pnpm dev` serves a schema it never migrated
 
 Two ways the local Postgres will lie to you, both measured on `pragma` on

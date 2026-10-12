@@ -1,3 +1,11 @@
+---
+summary: 'What every gate costs, measured around the ESLint migration; read it before moving a gate between pre-commit, pre-push and CI.'
+triggers:
+  paths:
+    - '.husky/pre-commit'
+    - '.husky/pre-push'
+---
+
 # What the gates cost, before and after the ESLint migration
 
 Every number here was measured on the sandbox that ran the refactor, on the

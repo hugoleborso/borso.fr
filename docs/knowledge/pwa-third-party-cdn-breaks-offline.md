@@ -1,3 +1,11 @@
+---
+summary: 'An image from a third-party CDN breaks a PWA offline and often online through hotlink blocking; bundle the asset.'
+triggers:
+  paths:
+    - 'apps/*/site/vite.config.ts'
+    - 'apps/*/site/public/manifest.webmanifest'
+---
+
 # Third-party image CDNs break PWAs — and often break online too
 
 A PWA that fetches sprites / icons / fonts from a third-party CDN

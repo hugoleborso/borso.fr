@@ -1,3 +1,10 @@
+---
+summary: 'Pre-commit reads the whole tree, so split commits with stash --keep-index --include-untracked, and stage a rename only when its commit is next.'
+triggers:
+  commands:
+    - 'stash\s+push\s+.*--keep-index'
+---
+
 # Splitting commits when pre-commit reads the whole tree
 
 Several pre-commit checks read the working tree, not only the staged files:

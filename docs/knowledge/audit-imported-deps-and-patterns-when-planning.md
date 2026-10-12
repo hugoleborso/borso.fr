@@ -1,3 +1,10 @@
+---
+summary: 'When planning over ported code, question every dependency and every state pattern instead of carrying it forward.'
+triggers:
+  paths:
+    - 'docs/features/*/*/plan/plan.md'
+---
+
 # Audit imported deps and patterns when planning
 
 When a feature plan touches code that came in from a port (or a previous iteration that
