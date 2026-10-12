@@ -86,7 +86,7 @@ operational reality, or a prior ADR / Dantotsu}} |
 
 - Spec: {{path to spec.md, with anchor if relevant}}
 - Plan: {{path to plan.md (mention the row)}}
-- Commit: {{SHA — stamped by /after-task-dantotsus on merge}}
+- Commit: {{SHA — stamped by /after-task-kaizen on merge}}
 - Files: {{path:line, path:line — the load-bearing call sites}}
 - Related ADRs: {{ADR-XXXX, ADR-YYYY — supersedes/superseded-by/builds-on}}
 

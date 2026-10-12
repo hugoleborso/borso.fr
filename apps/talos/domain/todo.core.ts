@@ -14,7 +14,6 @@ const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const SINGLE_LINE_WITHOUT_SEPARATOR = /^[^|\n\r]*$/;
 const ATTRIBUTE_SEPARATOR = ' | ';
 const LINE_BREAK = '\n';
-const EMPTY_TODO_FILE = '# Todo';
 const TRAILING_BREAKS_PATTERN = /\n*$/;
 const DUE_DATE_KEY = normalizeAttributeKey('échéance');
 const COMMITMENT_KEY = normalizeAttributeKey('engagement');
@@ -220,16 +219,26 @@ export function updateTodo(
   };
 }
 
-function insertLineAfter(markdown: string, lineIndex: number | undefined, line: string): string {
+function insertLineAfter(
+  markdown: string,
+  lineIndex: number | undefined,
+  line: string,
+  heading: string,
+): string {
   if (lineIndex === undefined) {
-    const base = markdown.trim() === '' ? EMPTY_TODO_FILE : markdown;
+    const base = markdown.trim() === '' ? heading : markdown;
     return `${base.replace(TRAILING_BREAKS_PATTERN, '')}${LINE_BREAK}${LINE_BREAK}${line}${LINE_BREAK}`;
   }
   const lines = markdown.split(LINE_BREAK);
   return [...lines.slice(0, lineIndex + 1), line, ...lines.slice(lineIndex + 1)].join(LINE_BREAK);
 }
 
-export function appendTodo(markdown: string, newTodo: NewTodo, today: string): TodoEdit {
+export function appendTodo(
+  markdown: string,
+  newTodo: NewTodo,
+  today: string,
+  heading: string,
+): TodoEdit {
   const lines = readTodoLines(markdown);
   const dueDateAttributes =
     newTodo.dueDate === undefined ? [] : setAttribute([], DUE_DATE_KEY, newTodo.dueDate);
@@ -243,7 +252,7 @@ export function appendTodo(markdown: string, newTodo: NewTodo, today: string): T
   if (isIdTaken(lines, todo.id)) return { kind: 'duplicate' };
   return {
     kind: 'saved',
-    markdown: insertLineAfter(markdown, lines.at(-1)?.lineIndex, formatTodoLine(line)),
+    markdown: insertLineAfter(markdown, lines.at(-1)?.lineIndex, formatTodoLine(line), heading),
     todo,
   };
 }
@@ -275,7 +284,12 @@ function insertLineBefore(markdown: string, lineIndex: number, line: string): st
   return [...lines.slice(0, lineIndex), line, ...lines.slice(lineIndex)].join(LINE_BREAK);
 }
 
-export function restoreTodo(markdown: string, line: string, position: number): TodoEdit {
+export function restoreTodo(
+  markdown: string,
+  line: string,
+  position: number,
+  heading: string,
+): TodoEdit {
   const restored = readTodoLine(line, position);
   if (restored === null) return { kind: 'not-found' };
   const lines = readTodoLines(markdown);
@@ -287,7 +301,7 @@ export function restoreTodo(markdown: string, line: string, position: number): T
     kind: 'saved',
     markdown:
       successor === undefined
-        ? insertLineAfter(markdown, lines.at(-1)?.lineIndex, formatted)
+        ? insertLineAfter(markdown, lines.at(-1)?.lineIndex, formatted, heading)
         : insertLineBefore(markdown, successor.lineIndex, formatted),
     todo,
   };

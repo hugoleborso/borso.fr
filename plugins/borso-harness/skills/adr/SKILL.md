@@ -163,7 +163,7 @@ That's the contract: the walk (or the orchestrator's payload) produces a record 
 
 ## Auto-chain & maintenance
 
-- On PR merge (`/after-task-dantotsus`), every ADR whose status is `proposed` and whose commit SHA matches the merge gets stamped to `accepted`.
+- On PR merge (`/after-task-kaizen`), every ADR whose status is `proposed` and whose commit SHA matches the merge gets stamped to `accepted`.
 - ADRs are append-only. To replace, the new ADR carries `**Supersedes:** ADR-XXXX` and the old one's status flips to `superseded by ADR-NNNN`. Both files stay.
 
 ## Repo-specific notes
