@@ -1,3 +1,11 @@
+---
+summary: 'A merged pull request''s preview host still answers 200 with a stale SPA and no API; a 403 saying *supports only cachable requests* is a dead stack, not auth.'
+triggers:
+  output:
+    - 'supports only cachable requests'
+    - 'FunctionGeneratedResponse from cloudfront'
+---
+
 # A preview host answers after its stack is gone
 
 _Measured 2026-08-21 against `pragma-pr-83.preview.borso.fr`, after PR #83

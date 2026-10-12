@@ -1,5 +1,6 @@
 /** @Feature audience-voting */
 
+import { BALLOT_TOKEN_HEADER } from '@domain/ballot-token.core';
 import {
   type QueryClient,
   useIsMutating,
@@ -8,7 +9,11 @@ import {
   useQueryClient,
 } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
-import { forgetBallotToken, readBallotToken, writeBallotToken } from '../ballot-token.adapter';
+import {
+  forgetBallotToken,
+  readStoredBallotToken,
+  writeBallotToken,
+} from '../ballot-token.adapter';
 import { setlistKeys } from './setlists.queries';
 import {
   addSuggestedSongToPool,
@@ -22,7 +27,6 @@ import {
   withRoundAppended,
 } from './audience.utils';
 
-const BALLOT_TOKEN_HEADER = 'x-ballot-token';
 const BALLOT_REJECTED_STATUS = 401;
 
 export const audienceKeys = {
@@ -53,7 +57,7 @@ export function useLiveConcert(isEnabled: boolean) {
   });
 }
 
-async function mintBallotToken(sessionId: string): Promise<{ ballotToken: string }> {
+async function requestBallotToken(sessionId: string): Promise<{ ballotToken: string }> {
   const response = await api.api.audience.concerts[':sessionId'].ballot.$post({
     param: { sessionId },
   });
@@ -68,9 +72,9 @@ export function useBallot(sessionId: string, isEnabled = true) {
   return useQuery({
     queryKey: audienceKeys.ballot(sessionId),
     queryFn: async () => {
-      const remembered = readBallotToken(sessionId);
+      const remembered = readStoredBallotToken(sessionId);
       if (remembered !== null) return { ballotToken: remembered };
-      return await mintBallotToken(sessionId);
+      return await requestBallotToken(sessionId);
     },
     staleTime: Number.POSITIVE_INFINITY,
     enabled: isEnabled,
@@ -96,7 +100,7 @@ async function sendCarryingABallot<TAnswer extends { readonly status: number }>(
   const answer = await write.send(write.ballotToken);
   if (answer.status !== BALLOT_REJECTED_STATUS) return answer;
   forgetBallotToken(write.sessionId);
-  const minted = await mintBallotToken(write.sessionId);
+  const minted = await requestBallotToken(write.sessionId);
   write.queryClient.setQueryData(audienceKeys.ballot(write.sessionId), minted);
   return await write.send(minted.ballotToken);
 }

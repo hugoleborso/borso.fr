@@ -5,10 +5,14 @@ detected-at: linter
 severity: medium
 related-pr: '#95'
 fix-pr: '#97'
-fix-commits: [5d14095]
+fix-commits: [5d140956dd]
 eradication-level: 4
+eradication-paths: [plugins/borso-harness/hooks/posttool-eslint-cache-replays-a-fixed-error.sh]
 time-to-detect: minutes
 tags: [eslint, cache, typescript, deps, hooks, harness, knowledge-corpus, self-improvement-loop]
+zone: .husky/pre-commit
+weak-point: prose-stands-in-for-a-check
+recurs: [a-knowledge-entry-did-not-stop-the-second-hit]
 ---
 
 # Twenty-four errors that were already fixed, and the entry that had said so all along

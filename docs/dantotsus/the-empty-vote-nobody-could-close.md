@@ -5,10 +5,13 @@ detected-at: production
 severity: high
 related-pr: '#151'
 fix-pr: '#151'
-fix-commits: [2c4e615]
+fix-commits: [67bab828]
 eradication-level: 4
 time-to-detect: days
 tags: [pragma, voting, frontend]
+eradication-paths: [apps/pragma/site/src/routes/setlists/setlist-vote.core.ts, apps/pragma/site/src/routes/setlists/setlist-vote.core.test.ts]
+zone: apps/pragma/site/src/routes/setlists
+recurs: none (a missing rule in the vote close flow, not an audit or layout defect)
 ---
 
 # The empty vote nobody could close

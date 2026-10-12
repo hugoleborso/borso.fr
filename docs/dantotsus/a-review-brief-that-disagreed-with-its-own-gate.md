@@ -4,11 +4,14 @@ introduced-at: implementation
 detected-at: review
 severity: medium
 related-pr: '#64'
-fix-pr: '#64'
-fix-commits: []
-eradication-level: 2
+fix-pr: '#75'
+fix-commits: [de7a3458dc]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [skill, standards, gates, harness, meta]
+zone: plugins/borso-harness/skills/standards-review
+weak-point: prose-stands-in-for-a-check
 ---
 
 # The brief said four files, the gate said five

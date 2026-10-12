@@ -5,6 +5,11 @@ detected-at: audit
 severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/81
 tags: [harness, tooling, rtk, claude-code]
+summary: 'rtk compresses long output, and the `[N more lines]` marker reads as content; ask with `grep -c` when completeness is the question.'
+triggers:
+  output:
+    - '\[\d+ more lines\]'
+    - '\+\d+ hidden: rtk recall'
 ---
 
 # rtk truncates command output, and the truncation reads as content

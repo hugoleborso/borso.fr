@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { buildJoinCode, JOIN_CODE_ALPHABET, normalizeJoinCode } from './join-code.utils';
-import { JOIN_CODE_LENGTH } from './games.schema';
+import { JOIN_CODE_LENGTH } from '@domain/join-code.core';
+import { buildJoinCode, JOIN_CODE_ALPHABET } from './join-code.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('buildJoinCode', () => {
@@ -30,19 +30,5 @@ describe('buildJoinCode', () => {
     expect(JOIN_CODE_ALPHABET).not.toContain('O');
     expect(JOIN_CODE_ALPHABET).not.toContain('0');
     expect(JOIN_CODE_ALPHABET).not.toContain('1');
-  });
-});
-
-describe('normalizeJoinCode', () => {
-  it('accepts a code typed in lower case', () => {
-    expect(normalizeJoinCode('abcd')).toBe('ABCD');
-  });
-
-  it('drops the spaces and the punctuation a player types', () => {
-    expect(normalizeJoinCode('  a b-c d ')).toBe('ABCD');
-  });
-
-  it('drops leading and trailing spaces', () => {
-    expect(normalizeJoinCode('  ABCD  ')).toBe('ABCD');
   });
 });

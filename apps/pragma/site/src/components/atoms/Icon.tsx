@@ -133,12 +133,6 @@ const ICONS = {
       <path d="M14 10a5 5 0 0 0-7 0l-3 3a5 5 0 0 0 7 7l1-1" />
     </>
   ),
-  youtube: (
-    <>
-      <rect x="3" y="6" width="18" height="12" rx="3" />
-      <path d="M11 9.5l4 2.5-4 2.5v-5z" fill="currentColor" />
-    </>
-  ),
   install: (
     <>
       <rect x="4" y="3" width="16" height="18" rx="2" />

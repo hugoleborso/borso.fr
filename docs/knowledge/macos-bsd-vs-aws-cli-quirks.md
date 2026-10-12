@@ -7,6 +7,13 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-commit: n/a (operator-script convention; not a code defect)
 time-to-detect: seconds-to-minutes per snippet
 tags: [aws-cli, macos, shell, operator-quirk]
+summary: 'Snippets for the operator''s macOS shell: BSD `date` has no `-d`, the AWS CLI wants repeated list values, and binary inputs need `fileb://`.'
+triggers:
+  commands:
+    - 'date\s+(-u\s+)?-d\b'
+  output:
+    - 'date: illegal option'
+    - 'Invalid base64'
 ---
 
 # Diagnostic snippets that worked locally for the agent broke on macOS

@@ -5,10 +5,14 @@ detected-at: review
 severity: medium
 related-pr: '#50'
 fix-pr: '#51'
-fix-commits: [8f609a7]
+fix-commits: [8f609a79eb]
 eradication-level: 2
+eradication-paths: [scripts/session-attachments.sh]
 time-to-detect: 25 minutes
 tags: [harness, tooling, process, claude-md]
+zone: CLAUDE.md
+weak-point: prose-stands-in-for-a-check
+recurs: [lectured-without-reading-the-code]
 ---
 
 # Drew the logo by hand because I said the file was unreachable

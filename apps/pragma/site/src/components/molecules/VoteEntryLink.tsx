@@ -3,7 +3,7 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigateTo } from '../../lib/navigation.hook';
-import type { SetlistStatus } from '../../routes/setlists/setlist-status.core';
+import type { SetlistStatus } from '@domain/setlist-vote.core';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 

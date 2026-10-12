@@ -7,6 +7,12 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-commit: n/a (vendor behaviour; nothing to fix)
 time-to-detect: minutes per affected request, ~10 min total recovery
 tags: [cloudfront, edge-runtime, throttling, vendor-quirk]
+summary: 'A CloudFront Function''s throttle state outlives a code update, so a fixed function keeps returning 503 for five to fifteen minutes.'
+triggers:
+  paths:
+    - 'infra/cdk/src/internal/cf-host-routing-function.code.js'
+  output:
+    - 'FunctionThrottledError'
 ---
 
 # A CloudFront Function's throttle state outlives a code update

@@ -4,11 +4,13 @@ introduced-at: conception
 detected-at: local
 severity: medium
 related-pr: '#49'
-fix-pr: '#74'
-fix-commits: [df47cd5]
+fix-pr: '#58'
+fix-commits: [239b78b6d1]
 eradication-level: 2
+eradication-paths: [.husky/pre-push]
 time-to-detect: 11 minutes
 tags: [ci, git, hooks, gates]
+zone: .husky/pre-push
 ---
 
 # The push that paid for twenty-five commits it was not pushing

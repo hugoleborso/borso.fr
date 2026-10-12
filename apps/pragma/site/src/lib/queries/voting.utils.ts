@@ -1,8 +1,6 @@
+import { compareSongTallies } from '@domain/setlist-vote.core';
 import type { InferResponseType } from 'hono/client';
 import { api } from '../api.client';
-
-const BEFORE = -1;
-const AFTER = 1;
 
 type VoteBoardResponse = InferResponseType<(typeof api.api.setlists)[':id']['votes']['$get']>;
 
@@ -56,16 +54,6 @@ export function applyScoreToBoard(
   return {
     ...board,
     budget: { total: board.budget.total, spent, remaining: board.budget.total - spent },
-    tallies: tallies.toSorted(compareTallies),
+    tallies: tallies.toSorted(compareSongTallies),
   };
-}
-
-function compareTallies(left: SongTally, right: SongTally): number {
-  // Stryker disable next-line EqualityOperator: equivalent mutant. The guard on this very line has established that the two point counts differ, so `>` and `>=` answer the same.
-  if (right.points !== left.points) return right.points > left.points ? AFTER : BEFORE;
-  if (right.voterCount !== left.voterCount) {
-    // Stryker disable next-line EqualityOperator: equivalent mutant. The guard above has established that the two voter counts differ, so `>` and `>=` answer the same.
-    return right.voterCount > left.voterCount ? AFTER : BEFORE;
-  }
-  return left.songId.localeCompare(right.songId);
 }

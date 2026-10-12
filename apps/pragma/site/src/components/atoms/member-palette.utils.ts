@@ -1,4 +1,4 @@
-export const MEMBER_PALETTE = {
+export const MEMBER_COLOR_TOKENS = {
   coral: 'var(--color-member-coral)',
   teal: 'var(--color-member-teal)',
   mustard: 'var(--color-member-mustard)',

@@ -3,12 +3,14 @@ date: 2026-05-25
 introduced-at: implementation
 detected-at: ci
 severity: medium
-related-pr: 27
-fix-pr: 27
-fix-commits: [82f0e29]
+related-pr: '#27'
+fix-pr: '#27'
+fix-commits: [e138811ba9]
 eradication-level: 1
+eradication-paths: [.prettierignore]
 time-to-detect: 30m
 tags: [biome, formatter, drizzle, dsql, knip, deps, last-loop-lepin]
+zone: apps/last-loop-lepin/api/src/database/migrations
 ---
 
 # Biome reformatted drizzle's JSON snapshots and broke knip
@@ -92,6 +94,10 @@ snapshots ; biome stays out ; knip continues to follow the same
 graph it always followed.
 
 ## Eradication shipped
+
+**Status, 2026-10-10:** Biome was removed in 314f2482. The exclusion now
+lives in `.prettierignore`, which keeps `migrations/meta` out of the
+formatter.
 
 **Type:** code diff (level 1 — biome can no longer touch the
 drizzle-generated files)

@@ -3,12 +3,16 @@ date: 2026-08-14
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/46
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/46
-fix-commits: [28fd613]
+related-pr: '#46'
+fix-pr: '#46'
+fix-commits: [28fd613e01]
 eradication-level: 2
+eradication-paths: [scripts/check-pure-modules-have-callers.sh]
 time-to-detect: months
 tags: [gates, testing, coverage, mutation, knip, dead-code, process]
+zone: apps/pragma/domain
+weak-point: gate-measures-nothing
+recurs: [a-green-mutation-gate-is-not-a-green-coverage-gate]
 ---
 
 # Three green gates on fifty-eight lines that ran nowhere

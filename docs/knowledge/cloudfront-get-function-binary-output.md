@@ -7,6 +7,10 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-commit: n/a (CLI contract; nothing to fix)
 time-to-detect: minutes (the missing source led to confusion mid-debug)
 tags: [aws-cli, cloudfront, vendor-quirk]
+summary: '`aws cloudfront get-function` writes the source to a positional outfile, not to stdout.'
+triggers:
+  commands:
+    - 'cloudfront\s+get-function\b'
 ---
 
 # `aws cloudfront get-function` writes the source to a positional outfile

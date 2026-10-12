@@ -3,12 +3,15 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: #14
-fix-pr: #15
-fix-commits: [<to-be-filled-by-kaizen-commit>]
+related-pr: '#14'
+fix-pr: '#15'
+fix-commits: [6b16fa535f]
 eradication-level: 1
+eradication-paths: [.husky/pre-commit, scripts/lint-repository.sh]
 time-to-detect: weeks (3 PRs in)
 tags: [biome, ci, hooks, pre-commit]
+zone: .husky/pre-commit
+weak-point: gate-measures-nothing
 ---
 
 # `biome lint` at root scope was gated by no one — 47 errors sat on `main` in plain sight
@@ -126,11 +129,15 @@ problems we don't actually want to fix.
 
 ## Eradication (mandatory — code-level)
 
+**Status, 2026-10-10:** Biome was removed in 314f2482. The same two gates
+now run ESLint: `.husky/pre-commit` on the staged files and
+`scripts/lint-repository.sh` in CI.
+
 **Type:** Structural impossibility (level 1 — biome errors at
 root scope cannot land on `main` because two independent gates
 must both fail for that to happen)
 
-**Reference:** PR #15 · commits `<this-commit>`
+**Reference:** PR #15 · commits `6b16fa535f`
 
 **The actual fix:**
 
@@ -221,8 +228,8 @@ that failure mode entirely.
   (a missing pre-push check let workflow bugs through).
 - [`docs/dantotsus/vite-non-module-script-tags-arent-bundled.md`](./vite-non-module-script-tags-arent-bundled.md) — neighbour
   in the pre-push hook script (the gate that was already there).
-- [`docs/knowledge/biome-ignore-must-be-single-line.md`](../knowledge/biome-ignore-must-be-single-line.md) — biome quirk
+- [`docs/knowledge/biome-ignore-must-be-single-line.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-ignore-must-be-single-line.md) — biome quirk
   that occasionally collides with the new gate.
-- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](../knowledge/biome-stack-overflow-on-dist-binaries.md) — neighbour:
+- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-stack-overflow-on-dist-binaries.md) — neighbour:
   biome scope hygiene, but at the workspace level (excluding
   `dist/`). This dantotsu is the matching root-level story.

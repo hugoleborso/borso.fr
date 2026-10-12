@@ -1,3 +1,11 @@
+---
+summary: '`outputStyle` belongs in the committed `.claude/settings.json`, not the local file a hosted session never sees; the built-in names live in the installed binary.'
+triggers:
+  paths:
+    - '.claude/settings.json'
+    - '.claude/settings.local.json'
+---
+
 # Claude Code's built-in output styles live in the binary, not in the docs
 
 An output style changes how Claude Code writes, not what it knows: it is

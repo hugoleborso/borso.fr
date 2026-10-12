@@ -5,10 +5,12 @@ detected-at: production
 severity: high
 related-pr: '#37'
 fix-pr: '#60'
-fix-commits: [a991fc9, 4e660b4]
-eradication-level: 4
+fix-commits: [a991fc965d, 4e660b46e6]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: 3 months
 tags: [pragma, frontend, spec, product, visual-validation]
+zone: apps/pragma/site/src/routes/sessions/SessionDetailPage.tsx
 ---
 
 # The page that listed what it could not create

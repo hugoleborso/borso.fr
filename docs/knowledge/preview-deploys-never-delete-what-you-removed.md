@@ -1,3 +1,12 @@
+---
+summary: 'The preview `BucketDeployment` has `prune: false`, so a file a commit deleted stays served on the preview.'
+triggers:
+  paths:
+    - 'infra/cdk/src/constructs/static-site.ts'
+  commands:
+    - 's3\s+ls\s+s3://borso-previews'
+---
+
 # A preview keeps serving files your commit deleted
 
 `infra/cdk/src/constructs/static-site.ts` sets `prune: false` on the preview

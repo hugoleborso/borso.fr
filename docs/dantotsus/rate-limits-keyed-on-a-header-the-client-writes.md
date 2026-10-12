@@ -3,13 +3,15 @@ date: 2026-10-10
 introduced-at: conception
 detected-at: review
 severity: high
-related-pr: e2693a3e (pragma), 5353b6de (last-loop-lepin)
-fix-pr: this branch, claude/rate-limit-client-ip
-fix-commits: [1dfffcff]
+related-pr: none (introduced by commits e2693a3e in pragma and 5353b6de in last-loop-lepin)
+fix-pr: '#165'
+fix-commits: [self]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-client-supplied-address-header.js, apps/pragma/api/src/helpers/client-address/client-address.core.ts, infra/cdk/src/internal/cf-api-viewer-address.code.js]
 time-to-detect: months
 tags: [security, rate-limit, cloudfront, api-gateway, dsql, lambda]
 blueprints: [repository-idempotent-upsert, middleware-public-rate-limit]
+zone: apps/pragma/api/src/auth
 ---
 
 # The rate limit that let the attacker pick the bucket

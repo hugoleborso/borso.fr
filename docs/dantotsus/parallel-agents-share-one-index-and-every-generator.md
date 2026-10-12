@@ -1,13 +1,16 @@
 ---
 date: 2026-08-15
 introduced-at: implementation
-detected-at: implementation
+detected-at: local
 severity: medium
-related-pr: 55
-fix-pr: 55
-eradication-level: 2
+related-pr: '#55'
+fix-pr: '#55'
+fix-commits: [a9c72cedd1]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: minutes
 tags: [agents, git, generators, meta]
+zone: CLAUDE.md
 ---
 
 # Six agents, one index, and four generators that read the whole tree

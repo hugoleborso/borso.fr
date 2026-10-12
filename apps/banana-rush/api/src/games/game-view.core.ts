@@ -1,5 +1,5 @@
 import { countFreeSeats } from './game.core';
-import type { GameStatus } from './games.schema';
+import type { GameStatus } from '@domain/game-lifecycle.core';
 import type { GameView, PlayerView, RoundResultView } from './games.types';
 
 export interface GameFacts {

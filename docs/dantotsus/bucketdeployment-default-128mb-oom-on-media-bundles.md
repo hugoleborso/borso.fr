@@ -3,12 +3,14 @@ date: 2026-05-12
 introduced-at: conception
 detected-at: ci
 severity: high
-related-pr: 11
-fix-pr: 11
-fix-commits: [c2eea65, 374c8c9]
+related-pr: '#11'
+fix-pr: '#11'
+fix-commits: [c2eea65058, 374c8c9fe1]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/constructs/static-site.ts]
 time-to-detect: hours
 tags: [cdk, s3, bucket-deployment, lambda, preview, deploy]
+zone: infra/cdk/src/constructs/static-site.ts
 ---
 
 # CDK BucketDeployment Lambda OOMs on multi-MiB bundles with cryptic SSL EOFs
@@ -92,6 +94,6 @@ The same change landed on the preview-path `BucketDeployment` a few lines down. 
 
 ## See also
 
-- [`docs/knowledge/cfn-rollback-blocks-redeploys.md`](../knowledge/cfn-rollback-blocks-redeploys.md) — the secondary symptom (next CI deploy failing in 42 s) that made this defect look like a regression.
+- [`docs/knowledge/cfn-update-rollback-recovery.md`](../knowledge/cfn-update-rollback-recovery.md) — the secondary symptom (next CI deploy failing in 42 s) that made this defect look like a regression.
 - [`docs/dantotsus/bucketdeployment-prune-default.md`](./bucketdeployment-prune-default.md) — sibling default-footgun on the same construct (`prune: true` wipes co-tenant prefixes); precedent for adjusting CDK construct defaults at the wrapper boundary.
 - [`docs/dantotsus/bucketdeployment-cloudfront-invalidation.md`](./bucketdeployment-cloudfront-invalidation.md) — third reason the `BucketDeployment` construct's defaults need wrapping (invalidation scope).

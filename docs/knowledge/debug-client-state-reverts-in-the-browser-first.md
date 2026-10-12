@@ -1,3 +1,10 @@
+---
+summary: 'When the server is right and the UI reverts, reproduce in a real browser and diff the write''s body against the next read before theorising.'
+triggers:
+  paths:
+    - 'apps/*/site/src/**/*.queries.ts'
+---
+
 # When client state reverts but the server is right, reproduce in the browser before theorizing
 
 ## The shape

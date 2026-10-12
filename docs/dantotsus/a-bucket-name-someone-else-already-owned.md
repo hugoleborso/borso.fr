@@ -3,12 +3,14 @@ date: 2026-10-06
 introduced-at: conception
 detected-at: operator-deploy
 severity: medium
-related-pr: 128
-fix-pr: 138
-fix-commits: [bdca2bf859a50487316d1f2b20c49c3cae61c5a0]
+related-pr: '#128'
+fix-pr: '#138'
+fix-commits: [bdca2bf859]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/internal/naming.utils.ts, scripts/check-app-registration.sh]
 time-to-detect: hours
 tags: [cdk, s3, talos]
+zone: infra/cdk/src/constructs/static-site.ts
 ---
 
 # A bucket name someone else already owned
@@ -84,4 +86,4 @@ If the constructs had known that, `StaticSite` would have offered a name only th
 
 - [`consuming-borso-infra-from-another-repo.md`](../consuming-borso-infra-from-another-repo.md#bucket-names-are-global)
 - [`adding-an-app.md`](../adding-an-app.md#pick-a-slug)
-- [`cdk-retain-buckets-orphan-on-failed-create.md`](../knowledge/cdk-retain-buckets-orphan-on-failed-create.md)
+- [`cdk-retain-buckets-orphan-on-failed-create.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/cdk-retain-buckets-orphan-on-failed-create.md)

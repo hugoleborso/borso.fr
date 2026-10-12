@@ -1,14 +1,16 @@
 ---
 date: 2026-05-04
 introduced-at: conception
-detected-at: operator-deploy
+detected-at: review
 severity: medium
-related-pr: #6
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [<to-be-filled>]
-eradication-level: 4
+related-pr: '#6'
+fix-pr: none (never shipped)
+fix-commits: none (the Stop hook this entry describes was never committed; no commit on main contains it)
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [skills, harness, workflow]
+zone: plugins/borso-harness/skills
 ---
 
 # Feature-flow skills do not auto-trigger; the human becomes the loop
@@ -60,9 +62,14 @@ The user explicitly invoked each skill at each transition during PR #6. The agen
 
 ## Eradication (mandatory — code-level)
 
+**Status, 2026-10-10:** The Stop hook described above was never committed:
+no commit in the history of `main` contains
+`.claude/hooks/stop-skill-chain-reminder.sh`. The entry is re-levelled to
+5 to say so.
+
 **Type:** Detection (level 4 — Stop-hook reminder of the next skill in the chain)
 
-**Reference:** PR (this kaizen) · commit `<kaizen-commit>`
+**Reference:** PR (this kaizen) · commit: none, the hook was never committed
 
 **The actual fix:** add a Stop-hook (`.claude/hooks/stop-skill-chain-reminder.sh`) that fires every time the agent finishes its turn. The hook inspects the recent transcript for the last `Skill` tool invocation; if the previous skill was one of the feature-flow skills (`specification`, `technical-conception`, `implementation`, `visual-validation`, `technical-validation`), the hook prints a single-line reminder of the next skill in the chain and which condition must hold to invoke it. The hook output is surfaced to the agent on the next turn, so the chain progresses without the user having to type the next slash command.
 

@@ -1,3 +1,10 @@
+---
+summary: 'A conflicted pull request gets no workflow run at all, so an empty checks list means `mergeable_state: dirty` far more often than an outage; merge the base in and push.'
+triggers:
+  output:
+    - '"total_count":\s*0'
+---
+
 # A pull request with no checks at all is telling you it conflicts
 
 A `pull_request` workflow does not run against your branch. It runs against

@@ -1,13 +1,12 @@
 /** @Feature auth */
 
+import { PASSKEY_LABEL_MAX_LENGTH } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { PasskeySummary } from '../../lib/queries/me.queries';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
-
-const DEVICE_LABEL_MAX_LENGTH = 64;
 
 export interface PasskeyListProps {
   readonly passkeys: readonly PasskeySummary[];
@@ -49,7 +48,7 @@ export function PasskeyList(props: PasskeyListProps): JSX.Element {
               id="passkey-label"
               type="text"
               value={deviceLabel}
-              maxLength={DEVICE_LABEL_MAX_LENGTH}
+              maxLength={PASSKEY_LABEL_MAX_LENGTH}
               onChange={(event) => setDeviceLabel(event.target.value)}
             />
           </div>

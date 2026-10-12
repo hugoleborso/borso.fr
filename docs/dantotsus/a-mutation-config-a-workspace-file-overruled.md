@@ -1,14 +1,18 @@
 ---
 date: 2026-08-08
 introduced-at: conception
-detected-at: first-real-run
+detected-at: local
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [11d9c490d1]
 eradication-level: 1
+eradication-paths: [apps/pragma/vitest.mutation.config.ts, apps/last-loop-lepin/vitest.mutation.config.ts]
 time-to-detect: one branch
 tags: [vitest, stryker, mutation, gates, testing, workspaces]
+zone: apps/pragma/vitest.mutation.config.ts
+weak-point: gate-measures-nothing
+recurs: [a-gate-that-reported-success-while-measuring-nothing]
 ---
 
 # The mutation gate on the two full-stack apps could never have run

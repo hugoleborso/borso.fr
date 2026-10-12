@@ -5,10 +5,13 @@ detected-at: review
 severity: low
 related-pr: '#104'
 fix-pr: '#105'
-fix-commits: []
+fix-commits: [60fcd964e8, 4154b33a23]
 eradication-level: 2
+eradication-paths: [scripts/check-numbered-sequences.sh]
 time-to-detect: days
 tags: [migrations, git, dsql, pragma, meta]
+zone: apps/pragma/api/src/database/migrations
+recurs: [two-branches-took-the-same-migration-number]
 ---
 
 # Two branches that both claimed migration 0006
