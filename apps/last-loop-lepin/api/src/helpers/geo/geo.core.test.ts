@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { polylineDistanceMeters, smoothedElevationGainMeters } from './geo.core';
-import { haversineDistanceMeters } from './haversine.utils';
+import { haversineDistanceMeters } from '@domain/haversine.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('polylineDistanceMeters', () => {

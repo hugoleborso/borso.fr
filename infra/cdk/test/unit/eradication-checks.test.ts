@@ -128,25 +128,3 @@ describe('eradication: the edge function knows every app that gets SPA routing',
     expect(singlePageAppsInEdgeFunction()).toEqual(previewedAppsComposingPreviewableApp());
   });
 });
-
-function withoutAnnotations(relativePath: string): string {
-  return fs
-    .readFileSync(path.resolve(REPO_ROOT, relativePath), 'utf-8')
-    .split('\n')
-    .filter((line) => !line.trimStart().startsWith('//'))
-    .join('\n')
-    .trim();
-}
-
-// @FollowsBlueprint test-artifact-audit
-describe('eradication: the two copies of haversine.utils.ts agree', () => {
-  const COPIES = [
-    'apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.ts',
-    'apps/last-loop-lepin/site/src/lib/haversine.utils.ts',
-  ];
-
-  it('compute distance from the same source, which no import path enforces', () => {
-    const [apiCopy, siteCopy] = COPIES.map(withoutAnnotations);
-    expect(siteCopy).toBe(apiCopy);
-  });
-});

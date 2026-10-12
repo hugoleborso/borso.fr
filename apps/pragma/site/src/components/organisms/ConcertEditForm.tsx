@@ -1,5 +1,10 @@
 /** @Feature sessions */
 
+import {
+  CONCERT_GEAR_MAX_LENGTH,
+  CONCERT_VENUE_MAX_LENGTH,
+  FRIENDS_PER_MEMBER_MAX,
+} from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -33,15 +38,12 @@ interface ConcertEditFormProps {
   readonly onCancel: () => void;
 }
 
-const FRIENDS_PER_MEMBER_MAX = 1_000;
-const VENUE_MAX = 256;
-const GEAR_MAX = 2_048;
 const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 const concertFormSchema = z.object({
-  venue: z.string().max(VENUE_MAX),
+  venue: z.string().max(CONCERT_VENUE_MAX_LENGTH),
   capacity: z.string().regex(/^\d*$/u),
-  gear: z.string().max(GEAR_MAX),
+  gear: z.string().max(CONCERT_GEAR_MAX_LENGTH),
   friends: z.record(z.string(), z.number().int().min(0).max(FRIENDS_PER_MEMBER_MAX)),
 });
 
@@ -79,7 +81,7 @@ export function ConcertEditForm({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              maxLength={VENUE_MAX}
+              maxLength={CONCERT_VENUE_MAX_LENGTH}
             />
           )}
         </form.Field>
@@ -110,7 +112,7 @@ export function ConcertEditForm({
               onBlur={field.handleBlur}
               className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
               rows={4}
-              maxLength={GEAR_MAX}
+              maxLength={CONCERT_GEAR_MAX_LENGTH}
             />
           )}
         </form.Field>

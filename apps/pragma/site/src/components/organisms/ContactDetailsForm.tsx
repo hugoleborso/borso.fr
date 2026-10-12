@@ -1,5 +1,6 @@
 /** @Feature auth */
 
+import { MEMBER_EMAIL_MAX_LENGTH, MEMBER_PHONE_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -8,8 +9,6 @@ import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 
 const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
-const PHONE_MAX_LENGTH = 32;
-const EMAIL_MAX_LENGTH = 254;
 
 export interface ContactDetailsValues {
   readonly phone: string;
@@ -50,7 +49,7 @@ export function ContactDetailsForm(props: ContactDetailsFormProps): JSX.Element 
             id="account-phone"
             type="tel"
             autoComplete="tel"
-            maxLength={PHONE_MAX_LENGTH}
+            maxLength={MEMBER_PHONE_MAX_LENGTH}
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             onBlur={field.handleBlur}
@@ -66,7 +65,7 @@ export function ContactDetailsForm(props: ContactDetailsFormProps): JSX.Element 
             id="account-email"
             type="email"
             autoComplete="email"
-            maxLength={EMAIL_MAX_LENGTH}
+            maxLength={MEMBER_EMAIL_MAX_LENGTH}
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             onBlur={field.handleBlur}

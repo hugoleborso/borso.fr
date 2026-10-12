@@ -2,7 +2,7 @@ import { serve } from '@hono/node-server';
 import { WebSocketServer, type WebSocket } from 'ws';
 import { createApp } from './app';
 import { findGameByJoinCode, findPlayerByTokenHash } from './games/games.repository';
-import { normalizeJoinCode } from './games/join-code.utils';
+import { normalizeJoinCode } from '@domain/join-code.core';
 import { hashPlayerToken } from './games/player-token.utils';
 import { useConnectionPoster } from './realtime/connection-poster.setup';
 import { sendWhenOpen } from './realtime/local-socket.core';

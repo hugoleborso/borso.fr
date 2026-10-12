@@ -1,5 +1,6 @@
 /** @Feature improvements */
 
+import { IMPROVEMENT_TITLE_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useState } from 'react';
@@ -43,7 +44,6 @@ interface SelectedImprovement {
 
 const DEFAULT_STATUS: ImprovementStatus = 'idea';
 const ALL_STATUSES: StatusFilter = 'all';
-const TITLE_MAX_LENGTH = 200;
 
 const VOTE_BUTTON_CLASS =
   'flex flex-col items-center justify-center min-w-12 rounded-md border px-2 py-1 leading-tight';
@@ -217,7 +217,7 @@ export function ImprovementsPage(): JSX.Element {
                 {t('improvements.titleField')}
                 <Input
                   value={field.state.value}
-                  maxLength={TITLE_MAX_LENGTH}
+                  maxLength={IMPROVEMENT_TITLE_MAX_LENGTH}
                   onChange={(event) => field.handleChange(event.target.value)}
                 />
               </label>

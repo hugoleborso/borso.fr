@@ -1,5 +1,5 @@
 import { MONKEY_AVATARS, type MonkeyAvatar } from '@domain/monkey.core';
-import { GAME_ERROR_CODES } from './error-codes.core';
+import { DISPLAYED_ERROR_CODES } from './error-codes.core';
 
 export const MONKEY_NAME_KEYS = {
   chimp: 'monkeys.chimp',
@@ -46,7 +46,7 @@ export type ErrorTranslationKey = (typeof ERROR_KEYS)[keyof typeof ERROR_KEYS];
 
 // @FollowsBlueprint core-label-key
 export function selectErrorKey(code: string): ErrorTranslationKey {
-  const known = GAME_ERROR_CODES.find((candidate) => candidate === code);
+  const known = DISPLAYED_ERROR_CODES.find((candidate) => candidate === code);
   return ERROR_KEYS[known ?? 'unexpected-failure'];
 }
 

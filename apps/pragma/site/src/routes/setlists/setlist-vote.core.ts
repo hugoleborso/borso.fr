@@ -1,7 +1,5 @@
 /** @Feature setlist-voting */
 
-export const DEFAULT_TARGET_SONG_COUNT = 15;
-
 export type VotePageState = 'loading' | 'voting' | 'closing' | 'locked';
 
 export interface VotePageInputs {

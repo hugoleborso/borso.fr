@@ -1,3 +1,4 @@
+import { CAPO_MAX, CAPO_MIN, KEY_OVERRIDE_MAX_LENGTH } from '@domain/input-limits.core';
 /** @Feature setlists */
 
 import type { JSX } from 'react';
@@ -5,12 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
 import { inputVariants } from '../atoms/input.variants';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
-import {
-  CAPO_MAX,
-  CAPO_MIN,
-  KEY_OVERRIDE_MAX,
-  type SetlistEntryForm,
-} from './setlist-entry-form.hook';
+import { type SetlistEntryForm } from './setlist-entry-form.hook';
 
 const FIELD_CLASS = composeClassName(
   inputVariants({ size: 'sm' }),
@@ -44,7 +40,7 @@ export function SetlistEntryKeyCapoFields({
                 onPatch({ keyOverride: next.length === 0 ? null : next });
               }}
               onBlur={field.handleBlur}
-              maxLength={KEY_OVERRIDE_MAX}
+              maxLength={KEY_OVERRIDE_MAX_LENGTH}
               className={FIELD_CLASS}
             />
           </label>

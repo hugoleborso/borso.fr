@@ -1,4 +1,4 @@
-import { haversineDistanceMeters, type LatLng } from './haversine.utils';
+import { haversineDistanceMeters, type LatLng } from '@domain/haversine.core';
 
 const ELEVATION_NOISE_THRESHOLD_METERS = 3;
 

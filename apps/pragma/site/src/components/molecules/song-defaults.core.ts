@@ -1,16 +1,13 @@
 /** @Feature songs */
 
+import { ENERGY_MAX, ENERGY_MIN, SONG_TONALITY_MAX_LENGTH } from '@domain/input-limits.core';
 import { z } from 'zod';
 import { songStatuses, type SongStatus } from '../../routes/catalog/song-draft.core';
 
-export const TONALITY_MAX = 16;
-export const BASE_ENERGY_MIN = 1;
-export const BASE_ENERGY_MAX = 10;
-
 export const songDefaultsFormSchema = z.object({
   status: z.enum(songStatuses),
-  tonalityStart: z.string().max(TONALITY_MAX),
-  tonalityEnd: z.string().max(TONALITY_MAX),
+  tonalityStart: z.string().max(SONG_TONALITY_MAX_LENGTH),
+  tonalityEnd: z.string().max(SONG_TONALITY_MAX_LENGTH),
   baseEnergy: z.string().regex(/^(\d+)?$/u),
 });
 
@@ -49,7 +46,7 @@ function trimmedOrNull(value: string): string | null {
 function boundedEnergyOrNull(value: string): number | null {
   const energy = Number(value);
   if (!Number.isInteger(energy)) return null;
-  if (energy < BASE_ENERGY_MIN || energy > BASE_ENERGY_MAX) return null;
+  if (energy < ENERGY_MIN || energy > ENERGY_MAX) return null;
   return energy;
 }
 

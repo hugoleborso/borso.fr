@@ -1,3 +1,4 @@
+import { PHOTO_CONTENT_TYPES } from '@domain/runner-limits.core';
 import { useForm } from '@tanstack/react-form';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -35,7 +36,7 @@ const BIB_DIGITS = 0;
 const NAME_FIELD_ID = 'runner-name';
 const BIB_FIELD_ID = 'runner-bib';
 const PHOTO_FIELD_ID = 'runner-photo';
-const ACCEPTED_PHOTO_TYPES = 'image/jpeg,image/png,image/webp';
+const ACCEPTED_PHOTO_TYPES = PHOTO_CONTENT_TYPES.join(',');
 const NAME_FIELD_STYLE = { flex: 1, minWidth: 180 } as const;
 const BIB_FIELD_STYLE = { width: 80 } as const;
 
