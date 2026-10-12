@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { selectErrorReportingSettings, selectRouteName } from './error-reporting.core';
+import {
+  isUnrecordedOutgoingRequest,
+  selectErrorReportingSettings,
+  selectRouteName,
+} from './error-reporting.core';
 
 const DSN = 'https://public-key@o1.ingest.de.sentry.io/2';
 const RELEASE = '0123abcd';
@@ -56,5 +60,31 @@ describe('selectRouteName', () => {
 
   it('names a request no handler matched without echoing its path', () => {
     expect(selectRouteName([{ method: 'ALL', path: '*' }])).toBe('unmatched route');
+  });
+});
+
+describe('isUnrecordedOutgoingRequest', () => {
+  it.each([
+    'https://api.deezer.com/search?q=song',
+    'https://accounts.spotify.com/api/token',
+    'https://api.spotify.com/v1/search',
+  ])('records a call to a fixed service the API names itself: %s', (url) => {
+    expect(isUnrecordedOutgoingRequest(url)).toBe(false);
+  });
+
+  it('never records a calendar feed, whose path is the member secret', () => {
+    expect(
+      isUnrecordedOutgoingRequest(
+        'https://calendar.google.com/calendar/ical/member%40example.com/private-0123abcd/basic.ics',
+      ),
+    ).toBe(true);
+  });
+
+  it('never records a host that only ends like a recorded one', () => {
+    expect(isUnrecordedOutgoingRequest('https://evil-api.deezer.com.example.net/x')).toBe(true);
+  });
+
+  it('never records an address it cannot read', () => {
+    expect(isUnrecordedOutgoingRequest('not a url')).toBe(true);
   });
 });
