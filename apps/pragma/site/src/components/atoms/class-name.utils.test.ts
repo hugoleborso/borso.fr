@@ -22,4 +22,8 @@ describe('composeClassName', () => {
   it('returns an empty string when no inputs are truthy', () => {
     expect(composeClassName(false, null, undefined)).toBe('');
   });
+
+  it('keeps the last of two classes that set the same property', () => {
+    expect(composeClassName('w-full px-3', 'w-12')).toBe('px-3 w-12');
+  });
 });

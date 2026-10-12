@@ -2,6 +2,8 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { composeClassName } from '../atoms/class-name.utils';
+import { inputVariants } from '../atoms/input.variants';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import {
   CAPO_MAX,
@@ -10,8 +12,10 @@ import {
   type SetlistEntryForm,
 } from './setlist-entry-form.hook';
 
-const FIELD_CLASS =
-  'min-h-11 w-12 rounded-md border border-line bg-bg-elev px-1 text-center font-mono text-base text-ink-900 outline-none transition-colors focus:border-ink-700';
+const FIELD_CLASS = composeClassName(
+  inputVariants({ size: 'sm' }),
+  'w-12 px-1 text-center font-mono',
+);
 const LABEL_CLASS = 'flex items-center gap-1.5 text-[11px] tracking-wider uppercase text-ink-400';
 
 interface SetlistEntryKeyCapoFieldsProps {

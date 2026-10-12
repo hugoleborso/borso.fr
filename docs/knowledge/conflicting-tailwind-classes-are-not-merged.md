@@ -12,15 +12,15 @@ Hit twice:
 - PR #154: the key and capo fields composed `inputVariants()` (`w-full`) with
   `w-12`; the field stayed full width.
 
-## What to do
+## Since ADR-0028
 
-- Give the base no opinion on what callers change. #151's fix removed the
-  260 px minimum from `SearchBar`'s base class.
-- Or do not compose the variant at all; #154's fields write their own class
-  string.
-- A `!` prefix (`!w-12`) wins regardless of order. It works and hides the
-  conflict rather than removing it.
+`composeClassName` now runs `clsx` through `twMerge` from `tailwind-merge`, so
+the last class per property wins, in pragma and talos. The two fields from
+PR #154 compose `inputVariants()` with `w-12` again, and it applies. Switching
+it on also fixed a third case nobody had reported: the remove action in the
+setlist song sheet carried `text-danger`, which had always lost to the
+action's `text-ink-700` and rendered grey.
 
-The library that removes the conflict is `tailwind-merge` (`twMerge`), which
-keeps the last class per property. It is not a dependency here; adding it
-would change `composeClassName` in both applications.
+[ADR-0028](../adr/0028-tailwind-merge-resolves-class-conflicts.md) has the
+alternatives. An application that composes classes some other way still has
+the old behaviour: a later class does not override an earlier one.
