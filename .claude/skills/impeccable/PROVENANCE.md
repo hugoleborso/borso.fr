@@ -29,4 +29,5 @@ Then update the commit and the versions above.
 - The edit hook that upstream's installer writes into the machine-local Claude Code settings is not installed. Run `scripts/impeccable detect --json <files>` by hand once a UI change is finished.
 - Its session files under `.impeccable/questions/`, `.impeccable/review/` and `.impeccable/mocks/` are gitignored.
 - The launcher downloads its engine binary into `~/.impeccable/bin/` on first use. A hosted container starts without it, so the first command of a session fetches it.
+- In a hosted session the decision page that `serve-question --start` serves on localhost cannot be opened by the operator. Present the directions as a published Artifact instead, and collect the choice with the structured question tool, which the skill names as its fallback.
 - Mock-ups of `talos` use fictional content only, because talos has no preview stage and its real content is private.
