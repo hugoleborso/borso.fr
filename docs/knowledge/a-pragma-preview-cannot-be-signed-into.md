@@ -1,3 +1,10 @@
+---
+summary: 'A pragma preview clones production''s credentials, so only someone holding a production account signs in; validate sign-in locally instead.'
+triggers:
+  commands:
+    - 'pragma-pr-\d+(-api)?\.preview\.borso\.fr'
+---
+
 # A pragma preview cannot be signed into
 
 _Last verified: 2026-10-05 — by reading `apps/pragma/cdk/lib/stack.ts` and

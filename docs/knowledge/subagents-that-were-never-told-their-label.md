@@ -1,3 +1,10 @@
+---
+summary: 'A subagent not told its kaizen label writes as `main`, and the sweep cannot tell one agent''s wall from four agents'' wall.'
+triggers:
+  commands:
+    - 'scripts/kaizen\.sh\s+archive'
+---
+
 # A subagent that was not told its kaizen label writes as `main`, and the sweep goes blind
 
 Observed on PR #49. `KAIZEN.md` ended the task with nine entries. Every one was

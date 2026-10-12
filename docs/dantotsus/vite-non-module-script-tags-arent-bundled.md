@@ -87,4 +87,4 @@ A CI job running the same script on PR open is a sibling defence-in-depth, but t
 
 ## See also
 
-- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](../knowledge/biome-stack-overflow-on-dist-binaries.md) — another Vite-build / repo-tooling interaction, where Biome scanning the build output caused a different class of failure.
+- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-stack-overflow-on-dist-binaries.md) — another Vite-build / repo-tooling interaction, where Biome scanning the build output caused a different class of failure.

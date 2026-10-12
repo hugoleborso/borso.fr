@@ -83,6 +83,16 @@
             "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/pretool-github-pr-body.sh"
           }
         ]
+      },
+      {
+        "matcher": "Write|Edit|MultiEdit|NotebookEdit|Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/knowledge-triggers.sh",
+            "statusMessage": "Matching the call against the knowledge triggers"
+          }
+        ]
       }
     ],
     "PostToolUse": [
@@ -113,6 +123,33 @@
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/posttool-eslint-cache-replays-a-fixed-error.sh",
             "statusMessage": "Checking whether a type-aware error is a cache replay"
+          }
+        ]
+      },
+      {
+        "matcher": "Bash|mcp__.*",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/knowledge-triggers.sh",
+            "statusMessage": "Matching the output against the knowledge triggers"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "Bash",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/posttool-eslint-cache-replays-a-fixed-error.sh",
+            "statusMessage": "Checking whether a type-aware error is a cache replay"
+          },
+          {
+            "type": "command",
+            "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/knowledge-triggers.sh",
+            "statusMessage": "Matching the failure against the knowledge triggers"
           }
         ]
       }

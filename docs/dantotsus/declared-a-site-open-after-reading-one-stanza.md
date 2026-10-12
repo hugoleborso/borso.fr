@@ -117,7 +117,7 @@ is caught by attention, not by an exit code.
 
 - [`docs/knowledge/free-chord-grid-sources.md`](../knowledge/free-chord-grid-sources.md)
   — the corrected list, and what each source actually covers.
-- [`docs/knowledge/ultimate-guitar-scraping-cgu.md`](../knowledge/ultimate-guitar-scraping-cgu.md)
+- [`docs/knowledge/free-chord-grid-sources.md`](../knowledge/free-chord-grid-sources.md)
   — the entry whose conclusion was wrongly generalised to every other chord
   site in the first place.
 - [`docs/dantotsus/lectured-without-reading-the-code.md`](./lectured-without-reading-the-code.md)

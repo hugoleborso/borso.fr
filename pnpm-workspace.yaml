@@ -42,6 +42,7 @@ catalog:
   react-dom: '^19.3.0'
   react-i18next: '^15.4.0'
   react-router-dom: '^7'
+  tailwind-merge: '3.6.0'
   tailwindcss: '^4'
   tsx: '^4.23.13'
   typescript: '^5.7.2'

@@ -20,7 +20,7 @@ piloted mode that takes a pre-built payload when
 ## Status lifecycle
 
 - **proposed** — drafted, not yet shipped. Default on creation.
-- **accepted** — merged into main. Stamped by `/after-task-dantotsus`.
+- **accepted** — merged into main. Stamped by `/after-task-kaizen`.
 - **superseded by ADR-XXXX** — replaced. Forward link mandatory; old
   file stays for audit.
 - **deprecated** — surrounding system is gone; preserved as historical.
@@ -74,6 +74,8 @@ No:
 | [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | proposed | 2026-09-21 |
 | [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | proposed | 2026-10-05 |
 | [0027](./0027-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | proposed | 2026-10-06 |
+| [0028](./0028-tailwind-merge-resolves-class-conflicts.md) | tailwind-merge resolves conflicting classes in composeClassName | accepted | 2026-10-12 |
+| [0030](./0030-knowledge-is-delivered-by-trigger.md) | Knowledge is delivered by trigger, and an entry without one is not written | proposed | 2026-10-10 |
 
 ### Data layer
 
@@ -93,6 +95,8 @@ No:
 - 0020 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
 - 0022 — the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
 
+- 0028 — `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
+
 ### CDK / infra
 
 - [`0021-api-gateway-websocket-pushes-banana-rush-round-state.md`](./0021-api-gateway-websocket-pushes-banana-rush-round-state.md) — an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
@@ -101,6 +105,7 @@ No:
 ### Harness
 
 - 0026 — the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
+- 0030 — every knowledge entry declares `triggers:` (paths, commands, output), `knowledge-triggers.sh` prints the matching entry into the agent's context at that moment, and a gate refuses an entry without one, because entries were read only when a hook printed them.
 
 ### Observability
 

@@ -1,3 +1,10 @@
+---
+summary: 'This repository''s nightly cron fires one to three hours after its declared time; never key a wait on the cron expression.'
+triggers:
+  paths:
+    - '.github/workflows/cleanup-orphans.yml'
+---
+
 # Scheduled workflows fire late, so never key a check on the cron time
 
 `cleanup-orphans.yml` declares `cron: '17 3 * * *'`. It has never once run

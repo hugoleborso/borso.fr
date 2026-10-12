@@ -134,11 +134,11 @@ different mechanism — a `var()` inside an `@theme` entry, which resolves again
 `:root` and bakes in the fallback, so every per-element duration took the
 default. That one is not mechanically checkable, because the same syntax is
 correct when the property really is global; it is written up in
-[`../knowledge/tailwind-v4-fails-quietly-in-two-places.md`](../knowledge/tailwind-v4-fails-quietly-in-two-places.md).
+[`../knowledge/tailwind-v4-theme-and-preflight-traps.md`](../knowledge/tailwind-v4-theme-and-preflight-traps.md).
 
 ## See also
 
-- [`../knowledge/tailwind-v4-fails-quietly-in-two-places.md`](../knowledge/tailwind-v4-fails-quietly-in-two-places.md)
+- [`../knowledge/tailwind-v4-theme-and-preflight-traps.md`](../knowledge/tailwind-v4-theme-and-preflight-traps.md)
   — both silent no-ops from this PR, side by side.
 - [`../knowledge/judging-an-animation-you-cannot-watch.md`](../knowledge/judging-an-animation-you-cannot-watch.md)
   — why the first measurement of this bug was misread.

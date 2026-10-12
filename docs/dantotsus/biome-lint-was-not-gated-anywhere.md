@@ -221,8 +221,8 @@ that failure mode entirely.
   (a missing pre-push check let workflow bugs through).
 - [`docs/dantotsus/vite-non-module-script-tags-arent-bundled.md`](./vite-non-module-script-tags-arent-bundled.md) — neighbour
   in the pre-push hook script (the gate that was already there).
-- [`docs/knowledge/biome-ignore-must-be-single-line.md`](../knowledge/biome-ignore-must-be-single-line.md) — biome quirk
+- [`docs/knowledge/biome-ignore-must-be-single-line.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-ignore-must-be-single-line.md) — biome quirk
   that occasionally collides with the new gate.
-- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](../knowledge/biome-stack-overflow-on-dist-binaries.md) — neighbour:
+- [`docs/knowledge/biome-stack-overflow-on-dist-binaries.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-stack-overflow-on-dist-binaries.md) — neighbour:
   biome scope hygiene, but at the workspace level (excluding
   `dist/`). This dantotsu is the matching root-level story.

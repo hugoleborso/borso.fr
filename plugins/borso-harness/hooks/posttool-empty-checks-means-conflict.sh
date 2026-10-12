@@ -21,6 +21,10 @@
 # conflict — it names the one field that settles it. A pull request can also
 # legitimately have no checks before its first workflow starts, and telling the
 # reader to go and look is right in both cases.
+#
+# It answers with `additionalContext`: plain stdout from a PostToolUse hook
+# reaches the debug log and not the model, which is what this hook printed into
+# until 2026-10-10. See docs/adr/0030-knowledge-is-delivered-by-trigger.md.
 
 if ! command -v jq >/dev/null 2>&1; then
   exit 0
@@ -42,7 +46,8 @@ TOTAL=$(jq -r 'if type == "string" then (fromjson? // {}) else . end | .total_co
 
 PR=$(jq -r '.tool_input.pullNumber // "the pull request"' <<<"$INPUT")
 
-cat <<NOTE
+NOTE=$(
+  cat <<NOTE
 [empty-checks] $METHOD returned no checks for pull request $PR.
 
 A conflicted pull request gets NO workflow run at all — GitHub cannot build
@@ -57,5 +62,9 @@ Read the one field that settles it before concluding anything else:
 "dirty" means conflict: merge the base branch in, resolve, push, and the checks
 come back. See https://github.com/hugoleborso/borso.fr/blob/main/docs/knowledge/a-conflicted-pull-request-gets-no-checks.md.
 NOTE
+)
+
+jq -n --arg context "$NOTE" \
+  '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $context}}'
 
 exit 0

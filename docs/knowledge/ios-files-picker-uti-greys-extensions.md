@@ -1,3 +1,11 @@
+---
+summary: 'iOS Files filters a file input by Apple UTI, so an `accept` listing `.gpx` greys the file out; drop `accept` and validate on the server.'
+triggers:
+  paths:
+    - 'apps/*/site/src/components/atoms/FileInput.tsx'
+    - 'apps/*/site/src/components/molecules/FileDropZone.tsx'
+---
+
 # iOS Files greys out file inputs filtered by extensions it doesn't recognise
 
 ## Symptom
