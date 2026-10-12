@@ -51,6 +51,15 @@ describe('hasOnlyCheckScriptChanges', () => {
     expect(hasOnlyCheckScriptChanges(MANIFEST, reordered)).toBe(true);
   });
 
+  it('ignores key order inside the objects of an array', () => {
+    expect(
+      hasOnlyCheckScriptChanges(
+        { name: 'a', exports: [{ types: 't', import: 'i' }] },
+        { name: 'a', exports: [{ import: 'i', types: 't' }] },
+      ),
+    ).toBe(true);
+  });
+
   it('counts a changed build script', () => {
     const after = { ...MANIFEST, scripts: { ...MANIFEST.scripts, build: 'vite build --mode x' } };
     expect(hasOnlyCheckScriptChanges(MANIFEST, after)).toBe(false);
