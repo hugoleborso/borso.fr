@@ -163,7 +163,7 @@ the entry rather than derived from its fix commits.
 
 - Spec: [`docs/features/meta/weak-point-management/spec/spec.md`](../features/meta/weak-point-management/spec/spec.md)
 - Plan: [`docs/features/meta/weak-point-management/plan/plan.md`](../features/meta/weak-point-management/plan/plan.md)
-- Commit: stamped by `/after-task-dantotsus` on merge
+- Commit: stamped by `/after-task-kaizen` on merge
 - Files: `scripts/quality/dantotsu-schema.core.ts`,
   `scripts/quality/check-dantotsu-front-matter.ts`,
   `scripts/quality/weak-points.core.ts`, `scripts/quality/weak-points.ts`,

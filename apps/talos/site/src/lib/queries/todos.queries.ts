@@ -1,4 +1,5 @@
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { isTodoListShownOnToday, type TodoListName } from '@domain/todo-list.core';
+import { type QueryClient, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful, readFailureBody } from '../api.client';
 import { toIsoDay } from '../calendar-day.utils';
@@ -23,8 +24,37 @@ import { todayKeys } from './today.queries';
 
 export const todoKeys = {
   all: ['todos'] as const,
-  list: () => [...todoKeys.all, 'list'] as const,
+  list: (list: TodoListName) => [...todoKeys.all, list, 'list'] as const,
 };
+
+function selectTodoEndpoint(list: TodoListName) {
+  return list === 'work' ? api.api['work-todos'] : api.api.todos;
+}
+
+async function takeOverviewSnapshot(
+  queryClient: QueryClient,
+  list: TodoListName,
+): Promise<TodayResponse | undefined> {
+  if (!isTodoListShownOnToday(list)) return undefined;
+  await queryClient.cancelQueries({ queryKey: todayKeys.overview() });
+  return queryClient.getQueryData<TodayResponse>(todayKeys.overview());
+}
+
+function updateOverviewTodos(
+  queryClient: QueryClient,
+  list: TodoListName,
+  transform: (todos: TodayResponse['todos']) => TodayResponse['todos'],
+): void {
+  if (!isTodoListShownOnToday(list)) return;
+  queryClient.setQueryData<TodayResponse>(todayKeys.overview(), (old) => {
+    if (old === undefined) return old;
+    return { ...old, todos: transform(old.todos) };
+  });
+}
+
+function rollBackOverview(queryClient: QueryClient, previous: TodayResponse | undefined): void {
+  if (previous !== undefined) queryClient.setQueryData(todayKeys.overview(), previous);
+}
 
 type TodosResponse = InferResponseType<typeof api.api.todos.$get, 200>;
 type TodayResponse = InferResponseType<typeof api.api.today.$get, 200>;
@@ -32,11 +62,11 @@ type TodoCreation = Parameters<typeof api.api.todos.$post>[0]['json'];
 type TodoRestoration = Parameters<typeof api.api.todos.restorations.$post>[0]['json'];
 
 // @FollowsBlueprint query-module
-export function useTodos() {
+export function useTodos(list: TodoListName) {
   return useQuery({
-    queryKey: todoKeys.list(),
+    queryKey: todoKeys.list(list),
     queryFn: async () => {
-      const response = await api.api.todos.$get();
+      const response = await selectTodoEndpoint(list).$get();
       if (!response.ok) throw new ApiError(response.status, `todos ${response.status}`, null);
       return await response.json();
     },
@@ -44,12 +74,12 @@ export function useTodos() {
 }
 
 // @FollowsBlueprint query-optimistic-insert
-export function useCreateTodo() {
+export function useCreateTodo(list: TodoListName) {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   return useMutation({
     mutationFn: async (variables: TodoCreation) => {
-      const response = await api.api.todos.$post({ json: variables });
+      const response = await selectTodoEndpoint(list).$post({ json: variables });
       const { status } = response;
       if (!isResponseSuccessful(response)) {
         throw new ApiError(status, `todo ${status}`, await readFailureBody(response));
@@ -57,7 +87,7 @@ export function useCreateTodo() {
       return await response.json();
     },
     onMutate: async (variables) => {
-      const listKey = todoKeys.list();
+      const listKey = todoKeys.list(list);
       await queryClient.cancelQueries({ queryKey: listKey });
       const previousList = queryClient.getQueryData<TodosResponse>(listKey);
       const temporaryId = crypto.randomUUID();
@@ -75,7 +105,7 @@ export function useCreateTodo() {
     },
     onSuccess: (savedTodo, _variables, context) => {
       toasts.confirm(TODO_ADDED_TOAST);
-      queryClient.setQueryData<TodosResponse>(todoKeys.list(), (old) => {
+      queryClient.setQueryData<TodosResponse>(todoKeys.list(list), (old) => {
         if (old === undefined) return old;
         return { items: replaceTodo(old.items, context.temporaryId, savedTodo) };
       });
@@ -83,20 +113,20 @@ export function useCreateTodo() {
     onError: (failure, _variables, context) => {
       toasts.fail(failure, 'todo.error');
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(todoKeys.list(), context.previousList);
+        queryClient.setQueryData(todoKeys.list(list), context.previousList);
       }
     },
   });
 }
 
 // @FollowsBlueprint query-optimistic-mutation
-export function useUpdateTodo() {
+export function useUpdateTodo(list: TodoListName) {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   const updateTodo = useMutation({
     mutationFn: async (variables: { id: string } & TodoPatch) => {
       const { id, ...patch } = variables;
-      const response = await api.api.todos[':id'].$patch({ param: { id }, json: patch });
+      const response = await selectTodoEndpoint(list)[':id'].$patch({ param: { id }, json: patch });
       if (!response.ok) {
         throw new ApiError(
           response.status,
@@ -107,22 +137,17 @@ export function useUpdateTodo() {
       return await response.json();
     },
     onMutate: async (variables) => {
-      const listKey = todoKeys.list();
-      const overviewKey = todayKeys.overview();
+      const listKey = todoKeys.list(list);
       await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: overviewKey });
       const previousList = queryClient.getQueryData<TodosResponse>(listKey);
-      const previousOverview = queryClient.getQueryData<TodayResponse>(overviewKey);
+      const previousOverview = await takeOverviewSnapshot(queryClient, list);
       const { id, ...patch } = variables;
       const today = toIsoDay(new Date());
       queryClient.setQueryData<TodosResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return { items: applyTodoPatch(old.items, id, patch, today) };
       });
-      queryClient.setQueryData<TodayResponse>(overviewKey, (old) => {
-        if (old === undefined) return old;
-        return { ...old, todos: applyTodoPatch(old.todos, id, patch, today) };
-      });
+      updateOverviewTodos(queryClient, list, (todos) => applyTodoPatch(todos, id, patch, today));
       return { previousList, previousOverview };
     },
     onSuccess: (savedTodo, variables) => {
@@ -133,34 +158,31 @@ export function useUpdateTodo() {
           ? undefined
           : { labelKey: 'toast.undo', onAction: () => updateTodo.mutate(reversal) },
       );
-      queryClient.setQueryData<TodosResponse>(todoKeys.list(), (old) => {
+      queryClient.setQueryData<TodosResponse>(todoKeys.list(list), (old) => {
         if (old === undefined) return old;
         return { items: replaceTodo(old.items, variables.id, savedTodo) };
       });
-      queryClient.setQueryData<TodayResponse>(todayKeys.overview(), (old) => {
-        if (old === undefined) return old;
-        return { ...old, todos: replaceTodo(old.todos, variables.id, savedTodo) };
-      });
+      updateOverviewTodos(queryClient, list, (todos) =>
+        replaceTodo(todos, variables.id, savedTodo),
+      );
     },
     onError: (failure, _variables, context) => {
       toasts.fail(failure, 'todo.error');
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(todoKeys.list(), context.previousList);
+        queryClient.setQueryData(todoKeys.list(list), context.previousList);
       }
-      if (context?.previousOverview !== undefined) {
-        queryClient.setQueryData(todayKeys.overview(), context.previousOverview);
-      }
+      rollBackOverview(queryClient, context?.previousOverview);
     },
   });
   return updateTodo;
 }
 
-export function useRestoreTodo() {
+export function useRestoreTodo(list: TodoListName) {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   return useMutation({
     mutationFn: async (variables: TodoRestoration & { readonly overviewIndex: number | null }) => {
-      const response = await api.api.todos.restorations.$post({
+      const response = await selectTodoEndpoint(list).restorations.$post({
         json: { line: variables.line, position: variables.position },
       });
       const { status } = response;
@@ -171,16 +193,15 @@ export function useRestoreTodo() {
     },
     onSuccess: (restoredTodo, variables) => {
       toasts.confirm(TODO_RESTORED_TOAST);
-      queryClient.setQueryData<TodosResponse>(todoKeys.list(), (old) => {
+      queryClient.setQueryData<TodosResponse>(todoKeys.list(list), (old) => {
         if (old === undefined) return old;
         return { items: insertAt(old.items, variables.position, restoredTodo) };
       });
       const { overviewIndex } = variables;
       if (overviewIndex === null) return;
-      queryClient.setQueryData<TodayResponse>(todayKeys.overview(), (old) => {
-        if (old === undefined) return old;
-        return { ...old, todos: insertAt(old.todos, overviewIndex, restoredTodo) };
-      });
+      updateOverviewTodos(queryClient, list, (todos) =>
+        insertAt(todos, overviewIndex, restoredTodo),
+      );
     },
     onError: (failure) => {
       toasts.fail(failure, 'todo.error');
@@ -189,13 +210,15 @@ export function useRestoreTodo() {
 }
 
 // @FollowsBlueprint query-optimistic-mutation
-export function useDeleteTodo() {
+export function useDeleteTodo(list: TodoListName) {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
-  const restoreTodo = useRestoreTodo();
+  const restoreTodo = useRestoreTodo(list);
   return useMutation({
     mutationFn: async (variables: { readonly id: string }) => {
-      const response = await api.api.todos[':id'].$delete({ param: { id: variables.id } });
+      const response = await selectTodoEndpoint(list)[':id'].$delete({
+        param: { id: variables.id },
+      });
       if (!response.ok) {
         throw new ApiError(
           response.status,
@@ -206,21 +229,16 @@ export function useDeleteTodo() {
       return await response.json();
     },
     onMutate: async (variables) => {
-      const listKey = todoKeys.list();
-      const overviewKey = todayKeys.overview();
+      const listKey = todoKeys.list(list);
       await queryClient.cancelQueries({ queryKey: listKey });
-      await queryClient.cancelQueries({ queryKey: overviewKey });
       const previousList = queryClient.getQueryData<TodosResponse>(listKey);
-      const previousOverview = queryClient.getQueryData<TodayResponse>(overviewKey);
+      const previousOverview = await takeOverviewSnapshot(queryClient, list);
       const overviewIndex = findIndexById(previousOverview?.todos ?? [], variables.id);
       queryClient.setQueryData<TodosResponse>(listKey, (old) => {
         if (old === undefined) return old;
         return { items: removeById(old.items, variables.id) };
       });
-      queryClient.setQueryData<TodayResponse>(overviewKey, (old) => {
-        if (old === undefined) return old;
-        return { ...old, todos: removeById(old.todos, variables.id) };
-      });
+      updateOverviewTodos(queryClient, list, (todos) => removeById(todos, variables.id));
       return { previousList, previousOverview, overviewIndex };
     },
     onSuccess: (removal, _variables, context) => {
@@ -238,11 +256,9 @@ export function useDeleteTodo() {
     onError: (failure, _variables, context) => {
       toasts.fail(failure, 'todo.error');
       if (context?.previousList !== undefined) {
-        queryClient.setQueryData(todoKeys.list(), context.previousList);
+        queryClient.setQueryData(todoKeys.list(list), context.previousList);
       }
-      if (context?.previousOverview !== undefined) {
-        queryClient.setQueryData(todayKeys.overview(), context.previousOverview);
-      }
+      rollBackOverview(queryClient, context?.previousOverview);
     },
   });
 }

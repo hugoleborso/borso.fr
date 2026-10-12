@@ -24,6 +24,7 @@ Lives in: `api/src/todos/`
 - Deleting one answers the removed `line` and its `position` among the task lines, which is what a restoration (`reinstateTodo`) needs to put it back.
 - Its id is `sha1(text + "|" + addedOn)` cut to 10 hexadecimal characters (`domain/todo-id.core.ts`), so it survives a reordering of the file.
 - Attributes the code does not know are kept on rewrite (`domain/line-attributes.core.ts`).
+- Two files hold todos, each a `TodoList` named by `TodoListName` (`domain/todo-list.core.ts`): `main` for `todo.md`, `work` for `todo-taff.md`, the day-to-day work of the owner's assignments. Only `main` reaches the today screen (`isTodoListShownOnToday`).
 
 Not to be confused with: a commitment, which is a promise with a page of its own that a todo may point at.
 
@@ -113,7 +114,7 @@ The item of data a long press opens the action sheet on, and that « Discuter »
 
 Lives in: `site/src/lib/discussion-subject.core.ts`, `site/src/lib/action-sheet.hook.ts`
 
-- Code: `DiscussionSubjectReference` (one kind per file of the private repository, plus `todos` for the whole list beside `todo` for one line, both in `todo.md`), `selectSubjectFile` names that file, `selectSubjectPhraseKey` the words the prompt names its kind with.
+- Code: `DiscussionSubjectReference` (one kind per file of the private repository, plus `todos` for the whole list beside `todo` for one line, both carrying the `list` whose file they name), `selectSubjectFile` names that file, `selectSubjectPhraseKey` the words the prompt names its kind with.
 
 ## Graph
 

@@ -67,6 +67,7 @@ Two failure modes to watch for:
 
 ### Operator / shell
 
+- [`splitting-commits-when-pre-commit-reads-the-tree.md`](./splitting-commits-when-pre-commit-reads-the-tree.md) — hiding the next commit's files with `git stash --keep-index --include-untracked`, and the staged `git mv` that rides along.
 - [`macos-bsd-vs-aws-cli-quirks.md`](./macos-bsd-vs-aws-cli-quirks.md) — BSD `date`, AWS CLI v2 list-parsing, `fileb://` for binary inputs.
 - [`commitlint-header-100-char-cap.md`](./commitlint-header-100-char-cap.md) — `header-max-length` is hard-capped at 100 chars regardless of scope-enum richness.
 - [`gate-timings-before-and-after.md`](./gate-timings-before-and-after.md) — what every gate costs, measured: ESLint is 23x slower than biome cold and identical warm; CI went from a 97 s median to ~180 s cache-cold; test suites roughly doubled.
@@ -88,6 +89,7 @@ Two failure modes to watch for:
 - [`parallel-agents-share-one-scratchpad.md`](./parallel-agents-share-one-scratchpad.md) — a fan-out gets one scratchpad, not one each, and agents pick the same obvious filename; three of eight agents on PR #81 lost a file to it, one seeing another agent's traceback from its own tool. Give each agent `<scratchpad>/<label>/`.
 - [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `plugins/borso-harness/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
 - [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.
+- [`git-push-internal-server-error-while-fetch-works.md`](./git-push-internal-server-error-while-fetch-works.md) — a push the remote rejects with *Internal Server Error* while fetch works; push through `mcp__github__push_files`, then `git reset --keep` onto the remote branch, and know what that drops.
 - [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) — `curl https://api.github.com` answers 403 and there is no `gh`; the MCP returns bodies HTML-escaped, which makes splicing a long PR description riskier than adding a comment.
 - [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
 - [`claude-code-session-attachments-on-disk.md`](./claude-code-session-attachments-on-disk.md) — chat attachments live at `/root/.claude/uploads/<session>/...` (uploads) and inside `/root/.claude/projects/<workspace>/<session>.jsonl` (inlined base64 images); extractable without an explicit tool.
@@ -188,6 +190,7 @@ Two failure modes to watch for:
 
 ### Frontend / React
 
+- [`conflicting-tailwind-classes-are-not-merged.md`](./conflicting-tailwind-classes-are-not-merged.md) — `composeClassName` is `clsx`, so `w-full` and `w-12` together keep whichever Tailwind emits last; hit in PR #151 and #154; fixed by `twMerge` since ADR-0028.
 - [`tailwind-v4-theme-and-preflight-traps.md`](./tailwind-v4-theme-and-preflight-traps.md) — `@theme` blocks collapse into `:root` so a media-nested second one wins unconditionally; a variable outside a namespace needs `bg-[image:var(--x)]` and `@theme static`; an inline `animation` shorthand pulls in no keyframes; and what preflight zeroes on `<dialog>`, buttons and file inputs.
 - [`tailwind-v4-fails-quietly-in-two-places.md`](./tailwind-v4-fails-quietly-in-two-places.md) — a `var()` in an `@theme` entry resolves against `:root`, and a variant bracket opening on a bare word compiles to nothing.
 - [`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](./rolled-our-own-data-fetching-instead-of-tanstack-query.md) — the cost of writing custom `useStandingsPoll` / `useResource` hooks instead of TanStack Query: each new bug found in our hooks (the PR #23 polling storm) would've been a library author's problem already. Migration sketch when the data layer needs to grow.
@@ -214,6 +217,6 @@ write whatever helps the next reader. Keep it concrete and short
 (short enough to re-read every time you suspect it applies). Title
 should hint at the lesson, not the symptom.
 
-If the entry is the result of a `/after-task-dantotsus` sweep that
+If the entry is the result of a `/after-task-kaizen` sweep that
 classified a subject as "vendor surprise" or "operator confusion",
 the skill writes it here automatically.

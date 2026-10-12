@@ -28,7 +28,7 @@ export function TodayBrief({ brief }: TodayBriefProps): JSX.Element {
   });
   return (
     <Card>
-      <details open className="group">
+      <details className="group">
         <summary
           {...press.handlers}
           className={composeClassName(

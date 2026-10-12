@@ -156,6 +156,7 @@ fi
 # and was never mutated. The suite is 13 s whole, so it needs no `--changed`.
 if echo "$changed" | grep -qE '^(scripts|eslint-rules)/'; then
   start_gate tooling pnpm run test:coverage
+  start_gate typecheck-tooling pnpm run typecheck
 fi
 
 # Only the tests this push affects. `--changed <base>` walks Vitest's module
@@ -175,6 +176,13 @@ fi
 # would report every untouched pure file at 0 %. It runs in CI on each changed
 # app, and unscoped on main in full-suite.yml.
 changed_app_slugs=$(echo "$changed" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u)
+# The type checker, per changed app. Vitest strips types without checking them,
+# so a test passing a value its props do not accept ran green here and failed
+# CI's typecheck. pragma's takes about 28 s and runs beside the other gates.
+# See docs/dantotsus/the-test-only-ci-typechecked.md.
+for app in $changed_app_slugs; do
+  start_gate "typecheck-$app" pnpm --filter "@borso-app/$app" run typecheck
+done
 for app in $changed_app_slugs; do
   if grep -q '"test:core"' "apps/$app/package.json"; then
     start_gate "tests-$app" \

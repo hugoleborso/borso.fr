@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/check-gate-names-are-distinct.sh]
 time-to-detect: days
 tags: [gates, pre-commit, ci, meta, self-improvement-loop, shell]
-zone: plugins/borso-harness/skills/after-task-dantotsus
+zone: plugins/borso-harness/skills/after-task-kaizen
 recurs: [two-branches-that-both-claimed-migration-0006]
 ---
 

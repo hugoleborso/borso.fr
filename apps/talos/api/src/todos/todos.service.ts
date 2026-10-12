@@ -10,6 +10,7 @@ import {
   type TodoRemoval,
   updateTodo,
 } from '@domain/todo.core';
+import type { TodoList } from '@domain/todo-list.core';
 import { editContentFile, readContentFile } from '../content/content.service';
 import { formatParisDate } from '../helpers/calendar/paris-clock.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
@@ -21,7 +22,7 @@ import {
   describeTodoRestoration,
 } from './todos.core';
 
-const TODO_PATH = 'todo.md';
+export type { TodoList } from '@domain/todo-list.core';
 
 function readSavedTodo(edit: TodoEdit): Todo {
   if (edit.kind === 'not-found') throw new TalosError('todo-not-found');
@@ -46,40 +47,47 @@ function readRemovedTodo(removal: TodoRemoval): RemovedTodo {
 }
 
 // @FollowsBlueprint service-orchestration
-export async function listTodos(): Promise<Todo[]> {
-  return parseTodos((await readContentFile(TODO_PATH)) ?? '');
+export async function listTodos(list: TodoList): Promise<Todo[]> {
+  return parseTodos((await readContentFile(list.path)) ?? '');
 }
 
-export async function addTodo(newTodo: NewTodo, now: Date): Promise<Todo> {
+export async function addTodo(list: TodoList, newTodo: NewTodo, now: Date): Promise<Todo> {
   const today = formatParisDate(now);
-  const edit = await editContentFile(TODO_PATH, (current) =>
-    buildTodoFileEdit(appendTodo(current ?? '', newTodo, today), describeTodoAddition),
-  );
-  return readSavedTodo(edit);
-}
-
-export async function changeTodo(id: string, changes: TodoChanges, now: Date): Promise<Todo> {
-  const today = formatParisDate(now);
-  const edit = await editContentFile(TODO_PATH, (current) =>
-    buildTodoFileEdit(updateTodo(current ?? '', id, changes, today), (text) =>
-      describeTodoChange(changes, text),
+  const edit = await editContentFile(list.path, (current) =>
+    buildTodoFileEdit(appendTodo(current ?? '', newTodo, today, list.heading), (text) =>
+      describeTodoAddition(list, text),
     ),
   );
   return readSavedTodo(edit);
 }
 
-export async function deleteTodo(id: string): Promise<RemovedTodo> {
-  const removal = await editContentFile(TODO_PATH, (current) =>
-    buildTodoRemovalFileEdit(removeTodo(current ?? '', id)),
+export async function changeTodo(
+  list: TodoList,
+  id: string,
+  changes: TodoChanges,
+  now: Date,
+): Promise<Todo> {
+  const today = formatParisDate(now);
+  const edit = await editContentFile(list.path, (current) =>
+    buildTodoFileEdit(updateTodo(current ?? '', id, changes, today), (text) =>
+      describeTodoChange(list, changes, text),
+    ),
+  );
+  return readSavedTodo(edit);
+}
+
+export async function deleteTodo(list: TodoList, id: string): Promise<RemovedTodo> {
+  const removal = await editContentFile(list.path, (current) =>
+    buildTodoRemovalFileEdit(list, removeTodo(current ?? '', id)),
   );
   return readRemovedTodo(removal);
 }
 
-export async function reinstateTodo(restoration: TodoRestoration): Promise<Todo> {
-  const edit = await editContentFile(TODO_PATH, (current) =>
+export async function reinstateTodo(list: TodoList, restoration: TodoRestoration): Promise<Todo> {
+  const edit = await editContentFile(list.path, (current) =>
     buildTodoFileEdit(
-      restoreTodo(current ?? '', restoration.line, restoration.position),
-      describeTodoRestoration,
+      restoreTodo(current ?? '', restoration.line, restoration.position, list.heading),
+      (text) => describeTodoRestoration(list, text),
     ),
   );
   return readSavedTodo(edit);

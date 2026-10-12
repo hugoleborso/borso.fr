@@ -107,7 +107,7 @@ Trivially-static features (no app logic) where the spec lists no behaviour to te
    ${CLAUDE_PLUGIN_ROOT}/scripts/kaizen.sh --from technical-validator "<what went wrong, one sentence>"
    ```
 
-   The problem only, never the fix. It is swept at merge by `/after-task-dantotsus`.
+   The problem only, never the fix. It is swept at merge by `/after-task-kaizen`.
 9. **Return only the report path.** Do not summarise findings.
 
 ## Report format

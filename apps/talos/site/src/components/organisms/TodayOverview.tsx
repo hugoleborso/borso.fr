@@ -60,8 +60,8 @@ export function TodayOverview(): JSX.Element {
             reconnectCount={today.data.reconnectCount}
           />
           <TodayFocus items={today.data.focus.items} today={date} />
-          <TodayAgenda todos={today.data.todos} commitments={today.data.commitments} today={date} />
           {today.data.brief === null ? null : <TodayBrief brief={today.data.brief} />}
+          <TodayAgenda todos={today.data.todos} commitments={today.data.commitments} today={date} />
           <TodayActivity entries={today.data.activity} today={date} />
         </div>
       )}
