@@ -77,6 +77,7 @@ No:
 | [0028](./0028-tailwind-merge-resolves-class-conflicts.md) | tailwind-merge resolves conflicting classes in composeClassName | accepted | 2026-10-12 |
 | [0029](./0029-weak-point-management-from-the-dantotsu-record.md) | Weak point management reads the dantotsu record, made checkable | proposed | 2026-10-10 |
 | [0030](./0030-knowledge-is-delivered-by-trigger.md) | Knowledge is delivered by trigger, and an entry without one is not written | proposed | 2026-10-10 |
+| [0031](./0031-pragma-reports-errors-and-traces-to-sentry-eu.md) | pragma sends errors and traces to Sentry's EU region with personal data collection off | proposed | 2026-10-10 |
 
 ### Data layer
 
@@ -110,7 +111,7 @@ No:
 
 ### Observability
 
-_(no entries yet)_
+- 0031 — pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
 
 ### Tooling / DevX
 

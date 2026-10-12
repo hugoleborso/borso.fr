@@ -32,7 +32,7 @@
     "@aws-sdk/s3-request-presigner": "catalog:",
     "@borso/infra": "workspace:*",
     "@hono/zod-validator": "catalog:",
-    "@sentry/react": "^8.50.0",
+    "@sentry/react": "catalog:sentry8",
     "@tailwindcss/vite": "catalog:",
     "@tanstack/react-form": "catalog:",
     "@tanstack/react-query": "catalog:",
