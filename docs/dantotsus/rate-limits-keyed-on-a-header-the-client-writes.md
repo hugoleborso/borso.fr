@@ -115,8 +115,10 @@ The address is no longer read from any header the client controls:
   `x-borso-viewer-address` to `event.viewer.ip`, overwriting anything the
   client sent under that name.
 - CloudFront also sends `x-borso-origin-verify`, an origin custom header whose
-  value is a generated Secrets Manager secret. The same secret reaches the API
-  Lambda as `ORIGIN_VERIFY_SECRET`.
+  value is 32 random bytes that a custom resource generates once, at the
+  first deploy of each prod stack, and returns with `NoEcho`. The same value
+  reaches the API Lambda as `ORIGIN_VERIFY_SECRET`. How that value is made is
+  the one choice this fix had to argue for; see below.
 - `resolveClientAddress` trusts the viewer address only when the request
   carries that secret. Otherwise it uses `requestContext.http.sourceIp`, the
   TCP peer API Gateway accepted. A direct `execute-api` caller is therefore
@@ -133,6 +135,29 @@ The address is no longer read from any header the client controls:
   concurrency times wider than written, which the blueprint description says.
 - Validators reset buckets with `POST /api/__test/rate-limits/reset`, mounted
   only where `ALLOW_TEST_SEED=1`, never in prod.
+
+### Where the origin-verify value comes from
+
+The value has to be something an attacker cannot learn or guess, known to
+both CloudFront and the Lambda. The operator ruled out Secrets Manager, so
+the options were:
+
+| Option | Holds? | Why |
+| --- | --- | --- |
+| Make `execute-api` reachable only from CloudFront, then trust `sourceIp` plus the CloudFront header | No | An HTTP API supports neither a resource policy nor WAF. A Lambda function URL with origin access control would close it, but AWS requires the client to send a SHA-256 of every `POST` body, which a browser form does not. A CloudFront IP-range check fails too: an attacker's own distribution egresses from the same ranges and can set our header. |
+| Derive it from the stack ID | No | The prod stack IDs are UUID version 1 (`…-11f1-…`, read with `aws cloudformation describe-stacks` on 2026-10-12): a creation timestamp plus a host field, not random. |
+| A synth-time random value | Works, at a cost | Every synth differs, so every prod deploy rewrites the distribution and the Lambda and `cdk diff` is never clean. |
+| An SSM parameter or a CloudFront KeyValueStore | Moves the problem | Each stores a value; something still has to generate it, and the Lambda cannot read a KeyValueStore. |
+| A custom resource that generates the value at deploy time | Yes | Runs once on create, returns 32 bytes from `crypto.randomBytes` with `NoEcho`, and the template only ever holds `Fn::GetAtt`. |
+
+The custom resource is the simplest option that holds: one small Lambda per
+prod stack, following the `cdk-custom-resource` blueprint, and no stored
+secret to pay for or rotate. A new value is made only when the resource is
+replaced, and CloudFront and the Lambda change together in that deploy. The
+value is still readable by anyone in the account who can read the Lambda's
+environment or the distribution's configuration, which is the same exposure a
+Secrets Manager value given to both would have had. The threat it answers is
+a caller on the internet.
 
 ## Eradication (mandatory — code-level)
 
@@ -154,7 +179,7 @@ file.
   writes the next one.
 - **`repository-atomic-counter`** is a blueprint for the single-statement
   bucket, so the next counter does not reach for the idempotent upsert.
-- **`infra/cdk`** sets the viewer header and the origin secret on every
+- **`infra/cdk`** sets the viewer header and the origin-verify value on every
   `PreviewableApp` whose API sits behind CloudFront. `StaticSite` now requires
   `originVerifyValue` whenever it routes `/api/*`, so an API behaviour cannot
   be wired without it.

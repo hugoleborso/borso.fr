@@ -118,8 +118,9 @@ describe('PreviewableApp (prod, full)', () => {
     expect(lambdas.some(hasTestSeedFlag)).toBe(false);
   });
 
-  it('generates one origin-verify secret and hands it to both CloudFront and the API', () => {
-    stageTpl.resourceCountIs('AWS::SecretsManager::Secret', 1);
+  it('generates one origin-verify value and hands it to both CloudFront and the API', () => {
+    stageTpl.resourceCountIs('AWS::SecretsManager::Secret', 0);
+    stageTpl.resourceCountIs('Custom::OriginVerifyValue', 1);
     const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
     expect(lambdas.some(hasOriginVerifySecret)).toBe(true);
     stageTpl.hasResourceProperties('AWS::CloudFront::Distribution', {
@@ -233,8 +234,8 @@ describe('PreviewableApp (preview with api → custom domain)', () => {
     expect(lambdas.some(hasTestSeedFlag)).toBe(true);
   });
 
-  it('creates no origin-verify secret, because no CloudFront sits in front of a preview API', () => {
-    stageTpl.resourceCountIs('AWS::SecretsManager::Secret', 0);
+  it('creates no origin-verify value, because no CloudFront sits in front of a preview API', () => {
+    stageTpl.resourceCountIs('Custom::OriginVerifyValue', 0);
     const lambdas = resourcesOfType(stageTpl, 'AWS::Lambda::Function');
     expect(lambdas.some(hasOriginVerifySecret)).toBe(false);
   });
