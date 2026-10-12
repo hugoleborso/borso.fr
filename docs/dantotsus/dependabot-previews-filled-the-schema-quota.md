@@ -4,8 +4,8 @@ introduced-at: conception
 detected-at: ci
 severity: medium
 related-pr: commit a285b836 (feat(ci): add dependabot with a cooldown before updates are proposed)
-fix-pr: <to-be-filled>
-fix-commits: []
+fix-pr: https://github.com/hugoleborso/borso.fr/pull/169
+fix-commits: [ef189834]
 eradication-level: 1
 time-to-detect: days (Dependabot previews from 2026-10-05, first refused deploy 2026-10-10)
 tags: [dsql, github-actions, dependabot, previews, quota, commitlint]
@@ -54,7 +54,7 @@ If that had been known, the preview job would have been limited to pull requests
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** fix PR · commits listed in the front matter once merged
+**Reference:** [PR #169](https://github.com/hugoleborso/borso.fr/pull/169)
 
 **The actual fix:**
 
