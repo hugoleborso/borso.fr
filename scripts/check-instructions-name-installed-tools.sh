@@ -37,7 +37,10 @@ if [ ! -d "$BIN_DIR" ]; then
   exit 0
 fi
 
-INSTRUCTION_SURFACES=('.claude/*' 'plugins/*' 'docs/standards/*')
+# The vendored impeccable skill is upstream's text, kept verbatim so an update
+# is a file copy (ADR-0032). It tells its reader to `npx impeccable`, which
+# here means its own launcher; PROVENANCE.md beside it says so.
+INSTRUCTION_SURFACES=('.claude/*' 'plugins/*' 'docs/standards/*' ':!.claude/skills/impeccable/*')
 
 invocations="$(
   git ls-files "${INSTRUCTION_SURFACES[@]}" |
