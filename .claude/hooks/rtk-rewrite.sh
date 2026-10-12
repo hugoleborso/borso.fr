@@ -64,6 +64,27 @@ case " $CMD " in
     ;;
 esac
 
+# A subagent dispatched with worktree isolation runs behind Claude Code's own
+# guard, which lets a command through only when it can see that no git inside
+# it escapes that worktree. `rtk git status` hides git behind a launcher, and
+# `rtk grep` inside a loop or a pipeline is a launcher the guard cannot read
+# past, so it refused both and only `/usr/bin/git`, which rtk leaves alone,
+# ever reached the repository. Most of the twelve agents of one weekend found
+# that out separately. In a linked worktree, a command that names git or is
+# more than one plain command therefore goes through unrewritten.
+# See docs/dantotsus/the-rewrite-that-hid-git-from-the-guard.md.
+GIT_COMMAND_WORD='(^|[^[:alnum:]_./-])git($|[^[:alnum:]_.-])'
+COMPOUND_COMMAND=$'[;|&<>`\n]|\\$\\('
+if [[ "$CMD" =~ $GIT_COMMAND_WORD ]] || [[ "$CMD" =~ $COMPOUND_COMMAND ]]; then
+  HOOK_CWD=$(jq -r '.cwd // empty' <<<"$INPUT")
+  HOOK_CWD=${HOOK_CWD:-$PWD}
+  OWN_GIT_DIR=$(git -C "$HOOK_CWD" rev-parse --path-format=absolute --git-dir 2>/dev/null || true)
+  SHARED_GIT_DIR=$(git -C "$HOOK_CWD" rev-parse --path-format=absolute --git-common-dir 2>/dev/null || true)
+  if [ -n "$OWN_GIT_DIR" ] && [ "$OWN_GIT_DIR" != "$SHARED_GIT_DIR" ]; then
+    exit 0
+  fi
+fi
+
 # Delegate all rewrite + permission logic to the Rust binary.
 REWRITTEN=$(rtk rewrite "$CMD" 2>/dev/null)
 EXIT_CODE=$?

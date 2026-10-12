@@ -82,6 +82,16 @@ log "building @borso/infra (its dist is what app cdk typechecks resolve)"
 pnpm --filter @borso/infra run build ||
   note_missing '@borso/infra dist' "@borso/infra did not build. Every app cdk typecheck and cdk/test/stack.test.ts will fail on \"Cannot find module '@borso/infra'\" until you run: pnpm --filter @borso/infra run build"
 
+# 3c. Full history. A hosted session can start from a shallow clone, and then
+# every commit older than the cut-off is absent: a dantotsu audit read 53 fix
+# commits as dangling until someone ran the fetch by hand. The dantotsu check
+# refuses a shallow clone; this makes sure a session never starts in one.
+if [ "$(git rev-parse --is-shallow-repository 2>/dev/null)" = true ]; then
+  log "this clone is shallow; fetching the full history so old commits resolve"
+  git fetch --quiet --unshallow origin ||
+    note_missing 'full git history' "git fetch --unshallow failed, so commits older than the clone's cut-off do not resolve. Run it by hand before reading any dantotsu's fix-commits."
+fi
+
 # 4. AWS CLI v2 — only if the session has AWS creds that can actually authenticate.
 #
 # The gate used to be `[ -n "$AWS_ACCESS_KEY_ID" ]`, which a placeholder satisfies.
