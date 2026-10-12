@@ -143,8 +143,8 @@ catalogs:
       version: 4.1.11
   zod3:
     zod:
-      specifier: ^3.24.0
-      version: 3.25.76
+      specifier: ^4.6.5
+      version: 4.6.6
   zod4:
     zod:
       specifier: ^4.4.3
@@ -261,7 +261,7 @@ importers:
         version: 5.2.5
       '@hono/zod-validator':
         specifier: 'catalog:'
-        version: 0.9.1(hono@4.13.7)(zod@3.25.76)
+        version: 0.9.1(hono@4.13.7)(zod@4.6.6)
       '@tailwindcss/vite':
         specifier: 'catalog:'
         version: 4.3.3(vite@6.4.2(@types/node@22.19.17)(jiti@2.7.0)(lightningcss@1.32.0)(terser@5.51.2)(tsx@4.23.13)(yaml@2.9.0))
@@ -306,7 +306,7 @@ importers:
         version: 4.3.0
       zod:
         specifier: catalog:zod3
-        version: 3.25.76
+        version: 4.6.6
     devDependencies:
       '@hono/node-server':
         specifier: 'catalog:'
@@ -567,7 +567,7 @@ importers:
         version: link:../../infra/cdk
       '@hono/zod-validator':
         specifier: 'catalog:'
-        version: 0.9.1(hono@4.13.7)(zod@3.25.76)
+        version: 0.9.1(hono@4.13.7)(zod@4.6.6)
       '@sentry/react':
         specifier: ^8.50.0
         version: 8.55.2(react@19.3.0)
@@ -612,7 +612,7 @@ importers:
         version: 4.3.0
       zod:
         specifier: catalog:zod3
-        version: 3.25.76
+        version: 4.6.6
     devDependencies:
       '@hono/node-server':
         specifier: 'catalog:'
@@ -718,7 +718,7 @@ importers:
         version: 5.3.0
       '@hono/zod-validator':
         specifier: 'catalog:'
-        version: 0.9.1(hono@4.13.7)(zod@3.25.76)
+        version: 0.9.1(hono@4.13.7)(zod@4.6.6)
       '@simplewebauthn/browser':
         specifier: 'catalog:'
         version: 13.3.0
@@ -778,7 +778,7 @@ importers:
         version: 4.3.0
       zod:
         specifier: catalog:zod3
-        version: 3.25.76
+        version: 4.6.6
     devDependencies:
       '@hono/node-server':
         specifier: 'catalog:'
@@ -7368,11 +7368,11 @@ packages:
     peerDependencies:
       zod: ^3.25.0 || ^4.0.0
 
-  zod@3.25.76:
-    resolution: {integrity: sha512-gzUt/qt81nXsFGKIFcC3YnfEAx5NkunCfnDlvuBSSFS02bcXu4Lmea0AFIUwbLWxWPx3d9p8S5QoaujKcNQxcQ==}
-
   zod@4.4.3:
     resolution: {integrity: sha512-ytENFjIJFl2UwYglde2jchW2Hwm4GJFLDiSXWdTrJQBIN9Fcyp7n4DhxJEiWNAJMV1/BqWfW/kkg71UDcHJyTQ==}
+
+  zod@4.6.6:
+    resolution: {integrity: sha512-4UmzQUF5fxvfcYHlbjBmejU+w+hbDnWFx4aS8kBx7nPBHcO2SqPbpAG8snbdg+Xse4pRefR98hgjFgIMCI/UhA==}
 
 snapshots:
 
@@ -8986,15 +8986,15 @@ snapshots:
     dependencies:
       hono: 4.13.7
 
-  '@hono/zod-validator@0.9.1(hono@4.13.7)(zod@3.25.76)':
-    dependencies:
-      hono: 4.13.7
-      zod: 3.25.76
-
   '@hono/zod-validator@0.9.1(hono@4.13.7)(zod@4.4.3)':
     dependencies:
       hono: 4.13.7
       zod: 4.4.3
+
+  '@hono/zod-validator@0.9.1(hono@4.13.7)(zod@4.6.6)':
+    dependencies:
+      hono: 4.13.7
+      zod: 4.6.6
 
   '@humanfs/core@0.19.2':
     dependencies:
@@ -12485,7 +12485,7 @@ snapshots:
 
   mutation-server-protocol@0.4.1:
     dependencies:
-      zod: 4.4.3
+      zod: 4.6.6
 
   mutation-testing-elements@3.7.3: {}
 
@@ -14069,6 +14069,6 @@ snapshots:
     dependencies:
       zod: 4.4.3
 
-  zod@3.25.76: {}
-
   zod@4.4.3: {}
+
+  zod@4.6.6: {}
