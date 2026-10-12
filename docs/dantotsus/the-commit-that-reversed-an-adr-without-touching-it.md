@@ -3,12 +3,14 @@ date: 2026-10-05
 introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
-related-pr: "#131"
-fix-pr: "#131"
-fix-commits: [a0cf303, bf93d2d]
+related-pr: '#131'
+fix-pr: '#131'
+fix-commits: [a0cf303c8d, bf93d2d593]
 eradication-level: 2
+eradication-paths: [scripts/check-coupled-lists.sh]
 time-to-detect: weeks
 tags: [pragma, adr, cdk, dsql, gates]
+zone: apps/pragma/cdk/lib/stack.ts
 ---
 
 # The commit that reversed an ADR without touching it

@@ -5,10 +5,14 @@ detected-at: review
 severity: low
 related-pr: '#63'
 fix-pr: '#71'
-fix-commits: [957846c]
+fix-commits: [957846c4d2]
 eradication-level: 2
+eradication-paths: [scripts/standards/seal.core.ts]
 time-to-detect: 3 hours
 tags: [standards, documentation, tooling, ci]
+zone: scripts/standards/seal.core.ts
+weak-point: prose-stands-in-for-a-check
+recurs: [an-approval-gate-that-only-existed-in-a-comment]
 ---
 
 # Prose the seal never asked anyone to read

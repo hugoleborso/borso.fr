@@ -3,12 +3,14 @@ date: 2026-05-21
 introduced-at: conception
 detected-at: review
 severity: low
-related-pr: https://github.com/hugoleborso/borso.fr/pull/24
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/<TBD>
-fix-commits: []
+related-pr: '#24'
+fix-pr: '#28'
+fix-commits: [9199b11e70]
 eradication-level: 5
+eradication-paths: []
 time-to-detect: minutes
 tags: [harness, workflow, claude-md, deploy, kaizen, self-improvement-loop]
+zone: CLAUDE.md
 ---
 
 # Post-merge follow-ups were implicit, so they almost slipped
@@ -106,7 +108,7 @@ delivered as messages to the agent, not as harness events with
 hookable surface; the agent itself is the only place the rule
 can fire.
 
-**Reference:** [PR #<TBD>](https://github.com/hugoleborso/borso.fr/pulls?q=is%3Apr+head%3Aclaude%2Flessons-from-pr-24) ·
+**Reference:** [PR #28](https://github.com/hugoleborso/borso.fr/pull/28) ·
 this kaizen PR.
 
 **The actual fix:**

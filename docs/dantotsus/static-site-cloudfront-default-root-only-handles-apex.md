@@ -3,12 +3,14 @@ date: 2026-05-04
 introduced-at: implementation
 detected-at: production
 severity: high
-related-pr: #6
-fix-pr: #7
-fix-commits: [<to-be-filled>]
+related-pr: '#6'
+fix-pr: '#7'
+fix-commits: [d736fbb22d]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/internal/cf-static-site-index-rewrite.code.js, infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts]
 time-to-detect: minutes
 tags: [cdk, cloudfront, s3, static-site]
+zone: infra/cdk/src/constructs/static-site.ts
 ---
 
 # CloudFront's `defaultRootObject` only handles the apex `/`; nested directories need a viewer-request Function
@@ -70,7 +72,7 @@ The function is the same shape as the directory-rewrite branch already living in
 
 **Type:** Structural impossibility (level 1 — every `StaticSite` distribution gets the rewrite by construction)
 
-**Reference:** PR #7 · commit `<kaizen-commit>`
+**Reference:** PR #7 · commit `d736fbb22d`
 
 **The actual fix:** the `StaticSite` construct ships a default `viewer-request` CloudFront Function that performs the directory-style rewrite. **Every consumer of the construct** (current: `borso-fr` prod, future: `borsouvertures` after its migration, the previewable-app) inherits the rewrite — there is no way to instantiate `StaticSite` without it. The misconception (*"`defaultRootObject` handles directory URIs"*) becomes structurally impossible to ship because the function is wired by the construct itself, not by each consumer.
 

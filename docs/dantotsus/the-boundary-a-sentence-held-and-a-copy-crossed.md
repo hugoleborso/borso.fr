@@ -3,13 +3,16 @@ date: 2026-10-10
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: 157
-fix-pr: 166
-fix-commits: [84891d2d]
+related-pr: '#157'
+fix-pr: '#166'
+fix-commits: [self]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-api-import-in-site.js, eslint-rules/no-api-declaration-repeated-in-site.js]
 time-to-detect: months
 tags: [eslint, domain, adr-0010, forms, zod, banana-rush, last-loop-lepin, pragma, talos, blueprints]
 blueprints: [core-form-schema]
+zone: apps/pragma/site/src
+recurs: none (the first entry where a site copied an API rule across the boundary; the overlapping entries share only lint and app tags)
 ---
 
 # The boundary a sentence held and a copy crossed

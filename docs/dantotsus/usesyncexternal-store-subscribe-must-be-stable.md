@@ -3,13 +3,15 @@ date: 2026-05-15
 introduced-at: implementation
 detected-at: operator-deploy
 severity: high
-related-pr: 23
-fix-pr: this PR (branch `claude/lessons-from-pr-23`)
-fix-commits: [<pending — pushed in this kaizen PR>]
-prior-fix-commits: [4426fe4]
+related-pr: '#23'
+fix-pr: '#24'
+fix-commits: [c5eb3e0b3d]
 eradication-level: 1
+eradication-paths: [eslint-rules/no-inline-subscribe-in-use-sync-external-store.js]
 time-to-detect: hours
 tags: [react, performance, observability]
+zone: apps/last-loop-lepin/site/src
+prior-fix-commits: [4426fe4]
 ---
 
 # `useSyncExternalStore` re-subscribed on every render because the callback was a fresh arrow

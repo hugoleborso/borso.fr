@@ -5,10 +5,14 @@ detected-at: ci
 severity: medium
 related-pr: '#49'
 fix-pr: '#79'
-fix-commits: [fae5f30, bf04c32]
+fix-commits: [fae5f30a5d, bf04c32fb1]
 eradication-level: 1
+eradication-paths: [stryker.shared.js]
 time-to-detect: days
 tags: [testing, vitest, gates, ci, last-loop-lepin]
+zone: stryker.shared.js
+weak-point: gate-measures-nothing
+recurs: [the-tooling-that-gates-everything-was-checked-by-nothing]
 blueprints: [core-lookup-table]
 ---
 

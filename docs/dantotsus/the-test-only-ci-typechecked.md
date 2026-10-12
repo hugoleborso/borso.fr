@@ -5,10 +5,13 @@ detected-at: ci
 severity: low
 related-pr: '#154'
 fix-pr: '#167'
-fix-commits: [d5c7fbb]
+fix-commits: [1145b2b4]
 eradication-level: 2
 time-to-detect: minutes
 tags: [ci, hooks, typescript, testing]
+eradication-paths: [.husky/pre-push]
+zone: .husky/pre-push
+recurs: none (a gate that did not exist at push time, not a gate that ran and measured nothing)
 ---
 
 # The test only CI type-checked

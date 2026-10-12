@@ -3,12 +3,14 @@ date: 2026-10-06
 introduced-at: conception
 detected-at: operator-deploy
 severity: medium
-related-pr: 128
-fix-pr: 138
-fix-commits: [bdca2bf859a50487316d1f2b20c49c3cae61c5a0]
+related-pr: '#128'
+fix-pr: '#138'
+fix-commits: [bdca2bf859]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/internal/naming.utils.ts, scripts/check-app-registration.sh]
 time-to-detect: hours
 tags: [cdk, s3, talos]
+zone: infra/cdk/src/constructs/static-site.ts
 ---
 
 # A bucket name someone else already owned

@@ -3,12 +3,16 @@ date: 2026-08-21
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/81
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/82
-fix-commits: [pending]
+related-pr: '#81'
+fix-pr: '#82'
+fix-commits: [03e16d4d6d]
 eradication-level: 2
+eradication-paths: [scripts/check-vocabulary-paths.sh, eslint-rules/no-comments.js]
 time-to-detect: months
 tags: [documentation, last-loop-lepin, meta, gates, domain-model, code-quality]
+zone: apps/last-loop-lepin/VOCABULARY.md
+weak-point: prose-stands-in-for-a-check
+recurs: [an-approval-gate-that-only-existed-in-a-comment]
 ---
 
 # A comment decayed and took the vocabulary with it

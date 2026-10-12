@@ -3,12 +3,14 @@ date: 2026-10-02
 introduced-at: implementation
 detected-at: local
 severity: medium
-related-pr: "#107"
-fix-pr: "#119"
-fix-commits: [a28ffcf, 75d966d, 40af66d]
+related-pr: '#107'
+fix-pr: '#119'
+fix-commits: [a28ffcfdb9, 75d966d8c8, 40af66de99]
 eradication-level: 2
+eradication-paths: [scripts/check-app-registration.sh, apps/pragma/test/dev-database.setup.ts]
 time-to-detect: weeks
 tags: [pragma, banana-rush, local-dev, dsql, gates, pre-commit]
+zone: apps/pragma/package.json
 ---
 
 # `pnpm dev` served an empty database, and the next app copied it

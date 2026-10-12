@@ -3,12 +3,15 @@ date: 2026-06-06
 introduced-at: implementation
 detected-at: qa
 severity: high
-related-pr: 31
-fix-pr: 31
-fix-commits: [12bf7d9]
-eradication-level: 2
+related-pr: '#31'
+fix-pr: '#31'
+fix-commits: [12bf7d9a91]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [react, tanstack-query, dsql, optimistic-updates, pragma]
+zone: apps/pragma/site/src/lib/queries
+weak-point: optimistic-write-undone
 blueprints: [query-optimistic-mutation]
 ---
 

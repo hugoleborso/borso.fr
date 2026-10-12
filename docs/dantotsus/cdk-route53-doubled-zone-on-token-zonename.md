@@ -3,12 +3,14 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: production
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/12
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/12
-fix-commits: [902c4b7]
+related-pr: '#12'
+fix-pr: '#12'
+fix-commits: [902c4b7215]
 eradication-level: 4
+eradication-paths: [infra/cdk/src/constructs/lambda-api.ts]
 time-to-detect: ~30 minutes (preview API hostname resolved but served the wrong content; only DNS inspection caught the doubled suffix)
 tags: [cdk, route53, cloudformation, dns]
+zone: infra/cdk/src/constructs/lambda-api.ts
 ---
 
 # Route 53 record with `.borso.fr.borso.fr` after CDK appended the zone twice

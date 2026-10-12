@@ -5,10 +5,13 @@ detected-at: operator-deploy
 severity: low
 related-pr: '#155'
 fix-pr: '#168'
-fix-commits: [20475f41]
+fix-commits: [0e0d2acf]
 eradication-level: 1
 time-to-detect: minutes
 tags: [ci, github-actions, deploy, pnpm]
+eradication-paths: [scripts/dependencies/check-only-change.core.ts, scripts/dependencies/drop-check-only-changes.ts]
+zone: .github/path-filters.yml
+recurs: [a-dev-dependency-that-redeployed-every-app]
 ---
 
 # A lint script that redeployed every app

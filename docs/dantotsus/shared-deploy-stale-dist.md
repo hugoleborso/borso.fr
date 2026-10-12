@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: conception
 detected-at: operator-deploy
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commits: [daf6ebb]
+related-pr: '#2'
+fix-pr: '#2'
+fix-commits: [daf6ebbde6]
 eradication-level: 1
+eradication-paths: [infra/shared/package.json]
 time-to-detect: 30+ minutes of debugging (the symptom looked like AWS, not local)
 tags: [pnpm, cdk, monorepo, build-graph]
+zone: infra/shared/package.json
 ---
 
 # `pnpm shared-infra deploy` shipped a stale `@borso/infra` dist/

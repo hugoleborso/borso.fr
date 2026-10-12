@@ -5,10 +5,12 @@ detected-at: local
 severity: low
 related-pr: '#63'
 fix-pr: '#71'
-fix-commits: [957846c]
+fix-commits: [957846c4d2]
 eradication-level: 2
+eradication-paths: [scripts/check-tailwind-arbitrary-variants.sh]
 time-to-detect: 25 minutes
 tags: [tailwind, frontend, css, tooling]
+zone: apps/pragma/site/src/components
 ---
 
 # A Tailwind variant that compiled to nothing

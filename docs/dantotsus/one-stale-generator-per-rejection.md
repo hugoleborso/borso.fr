@@ -5,10 +5,12 @@ detected-at: local
 severity: low
 related-pr: '#60'
 fix-pr: '#62'
-fix-commits: [59867d4]
+fix-commits: [59867d4e77]
 eradication-level: 2
+eradication-paths: [.husky/pre-commit]
 time-to-detect: minutes
 tags: [pre-commit, gates, hooks, meta, developer-experience]
+zone: .husky/pre-commit
 ---
 
 # One stale generator per rejection

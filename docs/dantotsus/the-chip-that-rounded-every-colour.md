@@ -3,12 +3,14 @@ date: 2026-10-06
 introduced-at: implementation
 detected-at: production
 severity: medium
-related-pr: "#136"
-fix-pr: "#136"
-fix-commits: [acd8d10]
+related-pr: '#136'
+fix-pr: '#136'
+fix-commits: [acd8d100a5]
 eradication-level: 1
+eradication-paths: [apps/pragma/site/src/components/atoms/member-palette.utils.ts, apps/pragma/site/src/components/molecules/MemberChip.tsx]
 time-to-detect: months
 tags: [pragma, react, testing]
+zone: apps/pragma/site/src/components/atoms/member-palette.utils.ts
 ---
 
 # The chip that rounded every colour

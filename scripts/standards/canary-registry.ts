@@ -513,6 +513,49 @@ const GENERATOR_CANARIES: readonly CommandCanary[] = [
     tier: 'fast',
   },
   {
+    mechanism: 'scripts/quality/check-dantotsu-front-matter.ts',
+    label: 'dantotsu front matter',
+    defect: 'a dantotsu with no zone and no eradication level',
+    plant: {
+      [`${DOCUMENTS}/dantotsus/gate-canary-record.md`]:
+        '---\ndate: 2026-10-10\n---\n\n# Gate canary\n',
+    },
+    stage: true,
+    command: IN_SHELL(
+      'git update-ref refs/remotes/origin/main HEAD && pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts --staged',
+    ),
+    refusal: /gate-canary-record: `zone:` is missing/,
+    tier: 'fast',
+  },
+  {
+    mechanism: 'scripts/quality/weak-points.ts',
+    label: 'weak-point map',
+    defect: 'a dantotsu whose zone names no path in the repository',
+    plant: {
+      [`${DOCUMENTS}/dantotsus/gate-canary-zone.md`]:
+        '---\ndate: 2026-10-10\nzone: gate-canary/no-such-zone\n---\n\n# Gate canary\n',
+    },
+    command: TSX('scripts/quality/weak-points.ts', '--check'),
+    refusal: /gate-canary-zone: zone gate-canary\/no-such-zone names no path/,
+    tier: 'fast',
+  },
+  {
+    mechanism: 'scripts/quality/working-conditions.ts',
+    label: 'working-conditions board',
+    defect: 'a declared wall that no friction line matches',
+    edits: [
+      {
+        path: `${DOCUMENTS}/quality/working-conditions.md`,
+        find: '',
+        replace:
+          '- `gate-canary-wall` · Build · A wall nothing files\n  match: gate-canary-term-nobody-writes\n\n',
+      },
+    ],
+    command: TSX('scripts/quality/working-conditions.ts', '--check'),
+    refusal: /wall gate-canary-wall files no friction line/,
+    tier: 'fast',
+  },
+  {
     mechanism: 'scripts/architecture/architecture-graph.ts',
     label: 'architecture maps',
     defect: 'a file depending on an external system no manifest declares',

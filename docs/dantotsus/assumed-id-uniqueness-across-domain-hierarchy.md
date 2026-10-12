@@ -3,12 +3,14 @@ date: 2026-05-05
 introduced-at: implementation
 detected-at: qa
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/8
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/8
-fix-commits: [6833755, f97e162]
+related-pr: '#8'
+fix-pr: '#8'
+fix-commits: [683375572c, f97e162c9b]
 eradication-level: 1
+eradication-paths: [apps/borsouvertures/site/src/openings/bookEngine.utils.ts, apps/borsouvertures/site/src/openings/bookEngine.utils.test.ts]
 time-to-detect: hours
 tags: [react, identifiers, domain-model, borsouvertures]
+zone: apps/borsouvertures/site/src/openings/bookEngine.utils.ts
 ---
 
 # Assumed variation IDs were globally unique — they aren't

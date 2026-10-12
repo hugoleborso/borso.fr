@@ -5,10 +5,14 @@ detected-at: operator-deploy
 severity: high
 related-pr: '#95'
 fix-pr: '#97'
-fix-commits: [5d14095]
+fix-commits: [5d140956dd]
 eradication-level: 4
+eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh]
 time-to-detect: days
 tags: [claude-md, deploy, ci, harness, github, process, documentation]
+zone: CLAUDE.md
+weak-point: prose-stands-in-for-a-check
+recurs: [an-approval-gate-that-only-existed-in-a-comment]
 ---
 
 # The gate for every production deploy was a sentence about what Claude could not do

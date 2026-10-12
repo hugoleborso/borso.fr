@@ -3,12 +3,15 @@ date: 2026-08-10
 introduced-at: implementation
 detected-at: local
 severity: low
-related-pr: 36
-fix-pr: 45
-fix-commits: [ebabfe7]
+related-pr: '#36'
+fix-pr: '#45'
+fix-commits: [ebabfe7650]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/posttool-format-write.sh]
 time-to-detect: minutes
 tags: [prettier, formatter, hooks, pre-commit, self-improvement-loop]
+zone: plugins/borso-harness/hooks
+recurs: [biome-formatter-was-not-gated]
 ---
 
 # The formatter was a detector with no writer

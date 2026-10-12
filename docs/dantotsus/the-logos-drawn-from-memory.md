@@ -5,10 +5,13 @@ detected-at: review
 severity: low
 related-pr: '#154'
 fix-pr: '#154'
-fix-commits: [a166a4f, d6bb88f]
+fix-commits: [21a850ab]
 eradication-level: 5
 time-to-detect: hours
 tags: [pragma, frontend, reuse]
+eradication-paths: [CLAUDE.md]
+zone: apps/pragma/site/src/components/atoms
+recurs: [built-my-own-before-checking-the-library]
 ---
 
 # The logos drawn from memory
