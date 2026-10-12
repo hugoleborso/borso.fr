@@ -23,6 +23,8 @@ export function buildStudiesRouter() {
         now: readNow(),
       });
       if (outcome.kind === 'song-not-found') return context.json({ error: outcome.kind }, 404);
+      if (outcome.kind === 'instrument-not-found')
+        return context.json({ error: outcome.kind }, 404);
       if (outcome.kind === 'study-not-in-lineup') return context.json({ error: outcome.kind }, 422);
       return context.json({ study: outcome.study, myStreak: outcome.myStreak }, 201);
     })

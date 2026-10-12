@@ -170,6 +170,40 @@ describe('studies controller (back-e2e)', () => {
     expect(response.status).toBe(404);
   });
 
+  it('answers 404 for an unknown instrument', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const { songId } = await seedSongPlayedBy(app, cookieHeader, memberId);
+    const response = await jsonRequest(app, '/api/studies', {
+      method: 'POST',
+      body: { songId, instrumentId: '22222222-2222-2222-2222-222222222222' },
+      cookieHeader,
+    });
+    expect(response.status).toBe(404);
+  });
+
+  it('refuses to undo another member study of today', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
+    const otherMemberId = await createId(app, cookieHeader, '/api/members', 'member', {
+      firstName: 'Other',
+      color: '#abc',
+    });
+    const overview = await readOverview(app, cookieHeader);
+    await testDatabase().insert(studyTable).values({
+      memberId: otherMemberId,
+      songId,
+      instrumentId,
+      studiedOn: overview.today,
+      createdAt: new Date(),
+    });
+    const response = await jsonRequest(app, `/api/studies/${songId}/${instrumentId}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+    expect(response.status).toBe(404);
+    expect(await testDatabase().select().from(studyTable)).toHaveLength(1);
+  });
+
   it('undoes my own study of today and refuses one that is not there', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
     const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
@@ -236,6 +270,39 @@ describe('studies controller (back-e2e)', () => {
     expect(before.readiness).toEqual({ concertId, songs: [{ songId, isReady: false }] });
     expect(after.readiness?.songs).toEqual([{ songId, isReady: true }]);
     expect(after.queue[0]?.score).toBe(7);
+  });
+
+  it('counts the songs of every setlist linked to the next concert, once each', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
+    const secondSongId = await createId(app, cookieHeader, '/api/songs', 'song', {
+      title: 'Second',
+      status: 'idea',
+      defaultLineup: { [memberId]: [instrumentId] },
+    });
+    const concertId = await createId(app, cookieHeader, '/api/sessions', 'session', {
+      kind: 'concert',
+      date: FUTURE_CONCERT_DATE,
+      venue: 'Bar',
+      capacity: 50,
+    });
+    for (const songIds of [[songId], [songId, secondSongId]]) {
+      const setlistId = await createId(app, cookieHeader, '/api/setlists', 'setlist', {
+        name: 'Set',
+        sessionId: concertId,
+      });
+      for (const entrySongId of songIds) {
+        await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+          method: 'POST',
+          body: { songId: entrySongId },
+          cookieHeader,
+        });
+      }
+    }
+    const overview = await readOverview(app, cookieHeader);
+    expect(overview.readiness?.songs.map((song) => song.songId).sort()).toEqual(
+      [songId, secondSongId].sort(),
+    );
   });
 
   it('lists every band member with a streak', async () => {

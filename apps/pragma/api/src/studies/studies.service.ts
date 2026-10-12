@@ -2,6 +2,7 @@ import type { Lineup } from '@domain/lineup.core';
 import type { DatabaseExecutor } from '../database/client';
 import { indexDefaultScores, indexOverrideScores } from '../mastery/mastery.core';
 import { getAllMasteryOverrides, getMasteryDefaults } from '../mastery/mastery.service';
+import { isKnownInstrument } from '../instruments/instruments.service';
 import { getMembersSortedByFirstName } from '../members/members.service';
 import { getSessions } from '../sessions/sessions.service';
 import {
@@ -66,6 +67,7 @@ async function readLineupsOfSong(song: SongRow): Promise<Lineup[]> {
 export async function logStudy(command: StudyCommand): Promise<StudyWriteOutcome> {
   const song = await getSongById(command.songId);
   if (song === null) return { kind: 'song-not-found' };
+  if (!(await isKnownInstrument(command.instrumentId))) return { kind: 'instrument-not-found' };
   const lineups = await readLineupsOfSong(song);
   if (!hasInstrumentInAnyLineup(lineups, command.memberId, command.instrumentId)) {
     return { kind: 'study-not-in-lineup' };

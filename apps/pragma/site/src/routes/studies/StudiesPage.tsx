@@ -57,6 +57,10 @@ export function StudiesPage(): JSX.Element {
             />
           </section>
           <section>
+            <h2 className={SECTION_TITLE_CLASS}>{t('studies.bandTitle')}</h2>
+            <BandStreaks members={overview.band} />
+          </section>
+          <section>
             <h2 className={SECTION_TITLE_CLASS}>{t('studies.readinessTitle')}</h2>
             {overview.readiness === null ? (
               <p className="text-sm text-ink-500 italic">{t('studies.noConcert')}</p>
@@ -67,10 +71,6 @@ export function StudiesPage(): JSX.Element {
                 songs={overview.readiness.songs}
               />
             )}
-          </section>
-          <section>
-            <h2 className={SECTION_TITLE_CLASS}>{t('studies.bandTitle')}</h2>
-            <BandStreaks members={overview.band} />
           </section>
         </div>
       )}

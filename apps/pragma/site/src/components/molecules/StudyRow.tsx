@@ -51,30 +51,34 @@ export function StudyRow({
       </div>
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1" aria-label={t('studies.scoreLabel')}>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="w-11"
-            aria-label={t('studies.scoreDown')}
-            onClick={() => onScoreStep(-1)}
-          >
-            −
-          </Button>
+          {isStudiedToday ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-11"
+              aria-label={t('studies.scoreDown')}
+              onClick={() => onScoreStep(-1)}
+            >
+              −
+            </Button>
+          ) : null}
           <span
             className="w-8 text-center font-mono text-sm text-ink-900"
             data-testid="study-score"
           >
             {score ?? '—'}
           </span>
-          <Button
-            size="sm"
-            variant="ghost"
-            className="w-11"
-            aria-label={t('studies.scoreUp')}
-            onClick={() => onScoreStep(1)}
-          >
-            +
-          </Button>
+          {isStudiedToday ? (
+            <Button
+              size="sm"
+              variant="ghost"
+              className="w-11"
+              aria-label={t('studies.scoreUp')}
+              onClick={() => onScoreStep(1)}
+            >
+              +
+            </Button>
+          ) : null}
         </div>
         {isStudiedToday ? (
           <Button size="md" variant="default" onClick={onUndo}>

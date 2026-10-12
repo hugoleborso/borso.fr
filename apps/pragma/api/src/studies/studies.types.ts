@@ -40,6 +40,7 @@ export interface StudiesOverview {
 export type StudyWriteOutcome =
   | { readonly kind: 'ok'; readonly study: StudyRow; readonly myStreak: Streak }
   | { readonly kind: 'song-not-found' }
+  | { readonly kind: 'instrument-not-found' }
   | { readonly kind: 'study-not-in-lineup' };
 
 export type StudyUndoOutcome =

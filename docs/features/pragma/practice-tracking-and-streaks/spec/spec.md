@@ -131,7 +131,7 @@ apps/pragma/api/src/studies/studies.{controller,service,repository,schema,types}
 apps/pragma/api/src/studies/streak.core.ts                                             // NEW: streak + joker, takes now
 apps/pragma/api/src/studies/paris-day.core.ts                                          // NEW: Europe/Paris calendar day of an instant
 apps/pragma/api/src/studies/study-queue.core.ts                                        // NEW: ordering of the to-study list
-apps/pragma/domain/concert-readiness.core.ts                                           // NEW: ready rule, read by the API and the site
+apps/pragma/api/src/studies/concert-readiness.core.ts                                  // NEW: ready rule; only the API reads it, the site gets the answer from the overview
 apps/pragma/api/src/mastery/mastery.{repository,service,schema}.ts                     // UPDATE: append history on override upsert; history read
 apps/pragma/api/src/songs/ + members/ delete cascades                                  // UPDATE: delete studies and history
 apps/pragma/api/src/database/migrations/0015_studies.sql                               // NEW
@@ -156,10 +156,10 @@ apps/pragma/VOCABULARY.md                                                       
 
 ### Analytics
 
-**Input metrics**, from named events in the API log carrying the member id:
+**Input metrics**, from the request lines the API's request logger already writes, with their status (decided at implementation, 2026-10-13: the repository's lint rule allows no `console.info`, and no application here emits named events yet, so the richer fields below wait for the first event pipeline):
 
-- `study_logged` and `study_undone`, carrying the song, the instrument and whether the song was ready at that moment.
-- `mastery_score_changed`, carrying the previous score, the new score and the source screen.
+- `study_logged` is `POST /api/studies` answering 201, and `study_undone` is `DELETE /api/studies/…` answering 200. Whether the song was ready at that moment is not recorded.
+- `mastery_score_changed` is `PUT /api/mastery/overrides`, and the `mastery_score_change` table holds every value with its time. The source screen is not recorded.
 - Thresholds: at least 3 of 5 members log a study in the week after the deploy; `study_undone` stays under 10% of `study_logged`, or the button is too easy to hit by mistake.
 
 **Output metrics**, reviewed by the operator, not gated: the readiness bar shows N of N on the morning of each of the next three concerts.
