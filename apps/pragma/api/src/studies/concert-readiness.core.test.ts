@@ -78,6 +78,23 @@ describe('concert-readiness.core', () => {
       ).toBe(false);
     });
 
+    it('is not ready with one silent player even when the others would carry the mean', () => {
+      expect(
+        isSongReady(
+          { hugo: { guitar: 10 }, lea: { drums: 10 }, marc: { bass: 10 } },
+          {},
+          {
+            songId: 'songA',
+            lineups: [{ hugo: ['guitar'], lea: ['drums'], marc: ['bass'], sam: ['voice'] }],
+          },
+        ),
+      ).toBe(false);
+    });
+
+    it('is not ready for a lineup with nobody in it', () => {
+      expect(isSongReady(DEFAULTS, {}, { songId: 'songA', lineups: [{}] })).toBe(false);
+    });
+
     it('is not ready when nothing is recorded or when there is no lineup', () => {
       expect(isSongReady({}, {}, { songId: 'songA', lineups: [{ hugo: ['guitar'] }] })).toBe(false);
       expect(isSongReady(DEFAULTS, {}, { songId: 'songA', lineups: [] })).toBe(false);
