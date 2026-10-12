@@ -22,6 +22,8 @@ All colours are tokens in `site/src/styles/tokens.css`. Token names predate this
 
 Light is the daytime scene, outdoors; dark is the morning scene, in bed. Neither is a default: both are first-class.
 
+Each colour is written once, as `light-dark(<light>, <dark>)`, and `color-scheme` on the root picks the side: the system setting by default, `data-theme` when the owner forces one. There is no second dark block to keep in step with the first; the one the theme used to have had already lost `--color-scrim`. Shadows are built from the `shadow-umbra` and `shadow-edge` colour tokens for the same reason.
+
 ## Type
 
 - Display, interface and body: **Atkinson Hyperlegible Next**, one family throughout. Titles and the date are set in bold, tracked slightly tight. The world comes from the palette and the meander line, not from the lettering; a Greek display face (GFS Neohellenic) was tried first and dropped for a plainer, more professional voice.
