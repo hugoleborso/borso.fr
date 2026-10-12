@@ -12,6 +12,7 @@ import {
   type IssuedSession,
   isSecureCookieStage,
   listRegisteredPasskeys,
+  readClientAddress,
   readSessionStatus,
   readStage,
   removePasskey,
@@ -23,7 +24,6 @@ import {
 import { requireSession } from './session.middleware';
 
 const SESSION_COOKIE_MAX_AGE_SECONDS = SESSION_LIFETIME_MS / 1000;
-const FORWARDED_FOR_HEADER = 'x-forwarded-for';
 
 export interface BuildAuthRouterOptions {
   readonly clock?: () => Date;
@@ -53,7 +53,7 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
         await startRegistration({
           code: context.req.valid('json').code,
           cookie: getCookie(context, SESSION_COOKIE_NAME),
-          forwardedFor: context.req.header(FORWARDED_FOR_HEADER),
+          clientAddress: readClientAddress(context),
           now: clock(),
         }),
       ),
@@ -71,7 +71,7 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
     .post('/login/verification', webauthnResponseValidator, async (context) => {
       const session = await finishAuthentication({
         response: context.req.valid('json').response,
-        forwardedFor: context.req.header(FORWARDED_FOR_HEADER),
+        clientAddress: readClientAddress(context),
         now: clock(),
       });
       writeSessionCookie(context, session);

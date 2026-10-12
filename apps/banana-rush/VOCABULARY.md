@@ -44,6 +44,16 @@ Lives in: `api/src/games/`
   sha-256 digest is, through `hashPlayerToken` in `player-token.utils.ts`.
 - `is_host` marks the player who created the game. It grants exactly one
   power: starting it.
+- A game never seats more players than `max_players`, and no two players of
+  one game share a seat or a monkey. Those are held by the primary keys of
+  `seat_claim`, on `(game_id, seat_order)`, and `avatar_claim`, on
+  `(game_id, avatar)`, written in the same transaction as the player by
+  `seatPlayer`. `refuseJoin` answers the common case with a named reason, but
+  it reads players counted before the write, so it cannot hold the limit when
+  players arrive together.
+
+Held by: `api/src/games/games.controller.test.ts` › seats exactly as many players as the table holds when they all arrive at once
+Held by: `api/src/games/games.controller.test.ts` › seats one of two players who pick the same monkey at the same moment
 
 Often confused with **viewer**. A viewer is whoever is reading a game
 right now, which may be a player or may be somebody who only has the code.
@@ -58,6 +68,8 @@ Lives in: `api/src/games/`
 
 - `bid` is keyed on `(game_id, player_id, round_number)`, which is what
   refuses a second bid in the same round rather than an application check.
+
+Held by: `api/src/games/games.controller.test.ts` › refuses a second bid in the same round
 - `refuseBid` in `domain/bid.core.ts` holds the bounds, and both the form
   and the API schema read them from there.
 - A bid is never shown to another player before the round resolves.

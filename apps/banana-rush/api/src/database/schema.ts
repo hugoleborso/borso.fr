@@ -1,3 +1,10 @@
 // @FollowsBlueprint database-schema-barrel
-export { bidTable, gameTable, playerTable, roundResultTable } from '../games/games.schema';
+export {
+  avatarClaimTable,
+  bidTable,
+  gameTable,
+  playerTable,
+  roundResultTable,
+  seatClaimTable,
+} from '../games/games.schema';
 export { socketConnectionTable } from '../realtime/realtime.schema';

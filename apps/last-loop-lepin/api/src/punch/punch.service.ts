@@ -16,6 +16,7 @@ import {
 import {
   deleteAllEditionPunchesAndDidNotFinishes,
   deleteManualDidNotFinish,
+  didClaimLoop,
   findActivePunchForLoop,
   findPunchById,
   insertManualDidNotFinish,
@@ -24,6 +25,7 @@ import {
   listPunchesForEdition,
   markPunchCorrected,
   markPunchVoided,
+  releaseLoopClaim,
   runInOneTransaction,
 } from './punch.repository';
 import type { LoopPunch, ManualDidNotFinish } from './punch.types';
@@ -56,36 +58,44 @@ export class PunchRejectedError extends Error {
 
 export type RegisterPunchInput = z.infer<typeof createPunchInputSchema>;
 
-async function buildPunchRejectionError(
-  edition: RaceEdition,
-  input: RegisterPunchInput,
-  reason: PunchRejectReason,
-  now: Date,
+async function buildConflictError(
+  punch: LoopPunch,
 ): Promise<PunchConflictError | PunchRejectedError> {
-  if (reason !== 'already-punched-this-loop') return new PunchRejectedError(reason);
-  const conflictLoop = Math.max(1, loopIndexAt(edition, now));
-  const existing = await findActivePunchForLoop(input.editionSlug, input.runnerSlug, conflictLoop);
+  const existing = await findActivePunchForLoop(
+    punch.editionSlug,
+    punch.runnerSlug,
+    punch.loopIndex,
+  );
   if (existing !== null) return new PunchConflictError(existing);
-  return new PunchRejectedError(reason);
+  return new PunchRejectedError('already-punched-this-loop');
+}
+
+async function recordPunchUnlessLoopTaken(
+  punch: LoopPunch,
+  alsoWithin?: (executor: DatabaseExecutor) => Promise<void>,
+): Promise<LoopPunch> {
+  const isRecorded = await runInOneTransaction(async (executor) => {
+    if (!(await didClaimLoop(executor, punch))) return false;
+    await insertPunch(executor, punch);
+    await alsoWithin?.(executor);
+    return true;
+  });
+  if (!isRecorded) throw await buildConflictError(punch);
+  return punch;
 }
 
 /**
  * @Blueprint service-orchestration
  * @BlueprintName Service Orchestration
  * @BlueprintUsage Use for a workflow that reads, decides, then writes. The service is the only impure layer allowed to be interesting.
- * @BlueprintDescription Reads the edition and the runner's existing punches through the repository, hands them to a pure decision function in punch.core.ts, throws a named domain error when the decision rejects, and writes through the repository. The branches live in the core file, so the service reads as a sequence of steps.
+ * @BlueprintDescription Reads the edition through the repository, hands it to a pure decision function in punch.core.ts, throws a named domain error when the decision rejects, and writes through the repository. A rule that depends on rows other requests can write at the same moment, here one active punch per runner and loop, is never decided from a read: the write itself claims it under a primary key in the same transaction, and losing the claim is what raises the conflict. The branches live in the core file and the uniqueness lives in the key, so the service reads as a sequence of steps.
  */
 export async function registerPunch(input: RegisterPunchInput, now: Date): Promise<LoopPunch> {
   const edition: RaceEdition = await getEdition(input.editionSlug);
-  const existingPunches = await listPunchesForEdition(input.editionSlug);
-  const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);
+  const validation = validatePunchTiming(edition, now);
+  if (!validation.ok) throw new PunchRejectedError(validation.reason);
 
-  const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
-  if (!validation.ok) {
-    throw await buildPunchRejectionError(edition, input, validation.reason, now);
-  }
-
-  const punch: LoopPunch = {
+  return await recordPunchUnlessLoopTaken({
     id: randomUUID(),
     editionSlug: input.editionSlug,
     runnerSlug: input.runnerSlug,
@@ -99,10 +109,7 @@ export async function registerPunch(input: RegisterPunchInput, now: Date): Promi
     clientAccuracyM: null,
     distanceFromCenterM: null,
     userAgent: null,
-  };
-
-  await runInOneTransaction((executor) => insertPunch(executor, punch));
-  return punch;
+  });
 }
 
 export type SelfPunchInput = z.infer<typeof selfPunchInputSchema>;
@@ -121,15 +128,10 @@ export async function registerSelfPunch(
           edition.gpx.startLatLng,
         );
 
-  const existingPunches = await listPunchesForEdition(input.editionSlug);
-  const runnerPunches = existingPunches.filter((punch) => punch.runnerSlug === input.runnerSlug);
+  const validation = validatePunchTiming(edition, now);
+  if (!validation.ok) throw new PunchRejectedError(validation.reason);
 
-  const validation = validatePunchTiming(edition, input.runnerSlug, runnerPunches, now);
-  if (!validation.ok) {
-    throw await buildPunchRejectionError(edition, input, validation.reason, now);
-  }
-
-  const punch: LoopPunch = {
+  return await recordPunchUnlessLoopTaken({
     id: randomUUID(),
     editionSlug: input.editionSlug,
     runnerSlug: input.runnerSlug,
@@ -143,9 +145,7 @@ export async function registerSelfPunch(
     clientAccuracyM: input.clientAccuracyM,
     distanceFromCenterM: distanceFromCenter,
     userAgent,
-  };
-  await runInOneTransaction((executor) => insertPunch(executor, punch));
-  return punch;
+  });
 }
 
 export async function correctPunch(
@@ -163,7 +163,10 @@ export async function correctPunch(
 export async function voidPunch(id: string, now: Date): Promise<LoopPunch> {
   const existing = await findPunchById(id);
   if (existing === null) throw new PunchNotFoundError(id);
-  await markPunchVoided(id, now);
+  await runInOneTransaction(async (executor) => {
+    await markPunchVoided(executor, id, now);
+    await releaseLoopClaim(executor, id);
+  });
   return { ...existing, voidedAt: now };
 }
 
@@ -201,33 +204,24 @@ export async function catchupPunch(input: CatchupPunchInput, now: Date): Promise
   if (input.loopIndex > currentLoopFloor) {
     throw new PunchRejectedError('race-not-started');
   }
-  const existing = await findActivePunchForLoop(
-    input.editionSlug,
-    input.runnerSlug,
-    input.loopIndex,
+  return await recordPunchUnlessLoopTaken(
+    {
+      id: randomUUID(),
+      editionSlug: input.editionSlug,
+      runnerSlug: input.runnerSlug,
+      loopIndex: input.loopIndex,
+      finishedAt: new Date(lastInstantOfLoop(edition, input.loopIndex)),
+      correctedAt: now,
+      voidedAt: null,
+      source: 'admin',
+      clientLat: null,
+      clientLng: null,
+      clientAccuracyM: null,
+      distanceFromCenterM: null,
+      userAgent: null,
+    },
+    (executor) => deleteManualDidNotFinish(executor, input.editionSlug, input.runnerSlug),
   );
-  if (existing !== null) throw new PunchConflictError(existing);
-
-  const punch: LoopPunch = {
-    id: randomUUID(),
-    editionSlug: input.editionSlug,
-    runnerSlug: input.runnerSlug,
-    loopIndex: input.loopIndex,
-    finishedAt: new Date(lastInstantOfLoop(edition, input.loopIndex)),
-    correctedAt: now,
-    voidedAt: null,
-    source: 'admin',
-    clientLat: null,
-    clientLng: null,
-    clientAccuracyM: null,
-    distanceFromCenterM: null,
-    userAgent: null,
-  };
-  await runInOneTransaction(async (executor) => {
-    await insertPunch(executor, punch);
-    await deleteManualDidNotFinish(executor, input.editionSlug, input.runnerSlug);
-  });
-  return punch;
 }
 
 export async function clearEditionPunchHistory(editionSlug: string): Promise<void> {
@@ -244,7 +238,7 @@ export async function clearEditionPunchHistoryWithin(
 }
 
 export async function seedPunch(punch: LoopPunch): Promise<void> {
-  await runInOneTransaction((executor) => insertPunch(executor, punch));
+  await recordPunchUnlessLoopTaken(punch);
 }
 
 export async function seedManualDidNotFinish(didNotFinish: ManualDidNotFinish): Promise<void> {

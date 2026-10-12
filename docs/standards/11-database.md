@@ -130,6 +130,17 @@ return the state from before the commit. The front end therefore reconciles
 from the mutation response rather than refetching. See
 [06. Data fetching](./06-data-fetching.md).
 
+A uniqueness rule is held by a primary key, never by a unique index and never
+by a check in code. DSQL refuses a partial index, builds every other index
+asynchronously so it refuses nothing while the build runs, and a check over rows
+read earlier is passed by two concurrent requests alike. When the natural key
+cannot be the table's own primary key, because the rule covers only some rows
+or the row needs a surrogate id, a claim table whose primary key is the unique
+triple holds it, written and deleted in the same transaction as the row it
+guards. `loop_punch_claims` in `last-loop-lepin` and `seat_claim` in
+`banana-rush` are the shape, and
+[04. Back-end architecture](./04-backend-architecture.md) has the service side.
+
 Foreign keys are not enforced by DSQL, so a cascade that Postgres would give
 you for free has to be written explicitly in a service, and the decision is
 recorded in

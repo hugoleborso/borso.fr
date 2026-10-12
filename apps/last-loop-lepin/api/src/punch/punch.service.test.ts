@@ -1,10 +1,15 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it, vi } from 'vitest';
-import { truncateAllTables } from '../../../test/database-utils';
+import {
+  openConnectionsForConcurrentRequests,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { makeEdition, makeRunner } from '../../../test/fixtures';
 import { insertEdition } from '../edition/edition.repository';
 import { insertRunner } from '../runner/runner.repository';
 import {
+  catchupPunch,
   correctPunch,
+  listEditionPunches,
   PunchConflictError,
   PunchRejectedError,
   recordManualDidNotFinish,
@@ -52,6 +57,55 @@ describe('punch.service', () => {
     await expect(
       registerPunch({ editionSlug: 'lepin-2026', runnerSlug: 'alice' }, new Date()),
     ).rejects.toBeInstanceOf(PunchConflictError);
+  });
+
+  it('punches a runner again for a loop whose punch was voided', async () => {
+    vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
+    const mistaken = await registerPunch(
+      { editionSlug: 'lepin-2026', runnerSlug: 'alice' },
+      new Date(),
+    );
+    await voidPunch(mistaken.id, new Date());
+
+    const repunched = await registerPunch(
+      { editionSlug: 'lepin-2026', runnerSlug: 'alice' },
+      new Date(),
+    );
+
+    expect(repunched.loopIndex).toBe(mistaken.loopIndex);
+    expect(repunched.id).not.toBe(mistaken.id);
+  });
+
+  it('keeps one punch when the same runner is punched twice at the same instant', async () => {
+    vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
+    const input = { editionSlug: 'lepin-2026', runnerSlug: 'alice' };
+    await openConnectionsForConcurrentRequests();
+
+    const outcomes = await Promise.allSettled([
+      registerPunch(input, new Date()),
+      registerPunch(input, new Date()),
+    ]);
+
+    const accepted = outcomes.filter((outcome) => outcome.status === 'fulfilled');
+    const refusedAsConflicts = outcomes.flatMap((outcome) =>
+      outcome.status === 'rejected' ? [outcome.reason instanceof PunchConflictError] : [],
+    );
+    expect(accepted).toHaveLength(1);
+    expect(refusedAsConflicts).toEqual([true]);
+    expect(await listEditionPunches('lepin-2026')).toHaveLength(1);
+  });
+
+  it('keeps one punch when a catch-up and a live punch land on the same loop at once', async () => {
+    vi.setSystemTime(new Date('2026-09-19T06:30:00+02:00'));
+    await openConnectionsForConcurrentRequests();
+
+    const outcomes = await Promise.allSettled([
+      registerPunch({ editionSlug: 'lepin-2026', runnerSlug: 'alice' }, new Date()),
+      catchupPunch({ editionSlug: 'lepin-2026', runnerSlug: 'alice', loopIndex: 1 }, new Date()),
+    ]);
+
+    expect(outcomes.filter((outcome) => outcome.status === 'fulfilled')).toHaveLength(1);
+    expect(await listEditionPunches('lepin-2026')).toHaveLength(1);
   });
 
   it('void + correct: marks the rows accordingly', async () => {

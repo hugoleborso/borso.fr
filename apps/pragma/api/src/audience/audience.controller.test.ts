@@ -341,11 +341,15 @@ describe('audience controller (back-e2e)', () => {
 
   it('bars an address that hammers the public write routes, sharing one budget across them', async () => {
     const { app } = await buildAuthenticatedApp();
-    const fromOneAddress = () =>
-      jsonRequest(app, `/api/audience/rounds/${UNKNOWN_ID}/votes/${UNKNOWN_ID}`, {
+    let forgedSuffix = 0;
+    const fromOneAddress = () => {
+      forgedSuffix += 1;
+      return jsonRequest(app, `/api/audience/rounds/${UNKNOWN_ID}/votes/${UNKNOWN_ID}`, {
         method: 'DELETE',
-        extraHeaders: { ...ballotHeaders(A_BALLOT), 'x-forwarded-for': '203.0.113.9' },
+        clientAddress: '203.0.113.9',
+        extraHeaders: { ...ballotHeaders(A_BALLOT), 'x-forwarded-for': `10.0.${forgedSuffix}.1` },
       });
+    };
     let lastStatus = (await fromOneAddress()).status;
     expect(lastStatus).toBe(409);
     for (let attempt = 1; attempt <= AUDIENCE_WRITE_BUDGET.maxAttempts; attempt += 1) {
@@ -355,7 +359,8 @@ describe('audience controller (back-e2e)', () => {
 
     const suggestion = await jsonRequest(app, `/api/audience/concerts/${UNKNOWN_ID}/suggestions`, {
       method: 'POST',
-      extraHeaders: { ...ballotHeaders(A_BALLOT), 'x-forwarded-for': '203.0.113.9' },
+      clientAddress: '203.0.113.9',
+      extraHeaders: ballotHeaders(A_BALLOT),
       body: { trackId: UNKNOWN_SONG_TRACK.trackId },
     });
     expect(suggestion.status).toBe(429);
@@ -425,9 +430,7 @@ describe('audience controller (back-e2e)', () => {
     const { app } = await buildAuthenticatedApp();
     stubProviders();
     const fromOneAddress = () =>
-      jsonRequest(app, '/api/audience/search?q=lucky', {
-        extraHeaders: { 'x-forwarded-for': '203.0.113.7' },
-      });
+      jsonRequest(app, '/api/audience/search?q=lucky', { clientAddress: '203.0.113.7' });
     const first = await fromOneAddress();
     expect(first.status).toBe(200);
 

@@ -1,5 +1,5 @@
 import type { Lineup } from '@domain/lineup.core';
-import { bootstrapAuth, rotatePassword } from '../auth/auth.service';
+import { bootstrapAuth, resetAllRateLimits, rotatePassword } from '../auth/auth.service';
 import { createCredentialForMember } from '../auth/credentials.service';
 import { saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
 import { createInstrument } from '../instruments/instruments.service';
@@ -225,4 +225,8 @@ export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise
 
 export async function probeProductionBoundary(): Promise<SchemaBoundary> {
   return classifySchemaBoundary(await tryReadingProductionMembers());
+}
+
+export async function resetRateLimits(): Promise<void> {
+  await resetAllRateLimits();
 }

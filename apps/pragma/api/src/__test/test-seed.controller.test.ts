@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { lambdaEnvironmentFrom } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { listInstruments, listInstrumentsWithPlayers } from '../instruments/instruments.repository';
@@ -27,12 +28,19 @@ async function postSeed(): Promise<Response> {
   return createApp().request('/api/__test/seed', { method: 'POST' });
 }
 
+const VALIDATOR_ADDRESS = '198.51.100.90';
+const LOGIN_BUDGET = 5;
+
 async function postLogin(password: string, username = 'hugo'): Promise<Response> {
-  return createApp().request('/api/auth/login', {
-    method: 'POST',
-    headers: { 'content-type': 'application/json' },
-    body: JSON.stringify({ username, password }),
-  });
+  return createApp().request(
+    '/api/auth/login',
+    {
+      method: 'POST',
+      headers: { 'content-type': 'application/json' },
+      body: JSON.stringify({ username, password }),
+    },
+    lambdaEnvironmentFrom(VALIDATOR_ADDRESS),
+  );
 }
 
 // @FollowsBlueprint test-back-e2e
@@ -120,6 +128,17 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     await postSeed();
     const loginResponse = await postLogin(SEED_ADMIN_PASSWORD);
     expect(loginResponse.status).toBe(200);
+  });
+
+  it('lets a validator reopen sign-in after exhausting its budget', async () => {
+    await postSeed();
+    for (let attempt = 0; attempt < LOGIN_BUDGET; attempt += 1) {
+      await postLogin('not-the-password');
+    }
+    expect((await postLogin(SEED_ADMIN_PASSWORD)).status).toBe(429);
+    const reset = await createApp().request('/api/__test/rate-limits/reset', { method: 'POST' });
+    expect(reset.status).toBe(200);
+    expect((await postLogin(SEED_ADMIN_PASSWORD)).status).toBe(200);
   });
 
   it('is idempotent — re-seeding replaces rather than appends', async () => {

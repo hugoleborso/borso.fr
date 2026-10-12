@@ -68,21 +68,54 @@ the same time, which is why every decision inside it delegates to a pure
 function.
 
 ```ts
-export async function recordPunch(input: CreatePunchInput): Promise<Punch> {
-  const edition = await editionRepository.getActive();
-  const existingPunches = await punchRepository.listForRunner(input.runnerId);
+export async function registerPunch(input: RegisterPunchInput, now: Date): Promise<LoopPunch> {
+  const edition = await getEdition(input.editionSlug);
 
-  const decision = decidePunchAcceptance(existingPunches, input, edition, new Date());
-  if (decision.kind === 'rejected') {
-    throw new PunchRejectedError(decision.reason);
-  }
+  const validation = validatePunchTiming(edition, now);
+  if (!validation.ok) throw new PunchRejectedError(validation.reason);
 
-  return punchRepository.insert(decision.punchToInsert);
+  return await recordPunchUnlessLoopTaken(buildPunch(input, validation.loopIndex, now));
 }
 ```
 
-`decidePunchAcceptance` is pure, it lives in `punch.core.ts`, and it holds
-every branch, so the service reads as a sentence.
+`validatePunchTiming` is pure, it lives in `punch.core.ts`, and it holds every
+branch, so the service reads as a sentence.
+
+## A rule about rows another request can write is held by a key
+
+A decision computed from rows the service read is already stale when the
+service writes. Two requests for the same thing arrive together, both read the
+same rows, both pass the same pure check, and both write. That is how
+`last-loop-lepin` recorded two punches for one loop from a double tap, and how
+`banana-rush` seated five players at a three seat table. See
+[the dantotsu](../dantotsus/five-monkeys-at-a-three-seat-table.md).
+
+So "at most one of these", "no more than N of these" and "nobody else has this
+one" are never decided from a read. The write claims them: a row whose primary
+key is exactly the thing that must be unique, inserted with
+`onConflictDoNothing` in the same transaction as the real write, and losing the
+claim is the refusal. Voiding or releasing the thing deletes the claim in the
+same transaction. The pure check may still run first, to answer the ordinary
+case with a named reason, but the key is what holds the rule.
+
+```ts
+const isRecorded = await runInOneTransaction(async (executor) => {
+  if (!(await didClaimLoop(executor, punch))) return false;
+  await insertPunch(executor, punch);
+  return true;
+});
+if (!isRecorded) throw await buildConflictError(punch);
+```
+
+A unique index is not a substitute on Aurora DSQL, which builds every non
+primary index asynchronously, and a partial one is refused outright. The
+blueprints are `repository-write-refused-by-the-primary-key`,
+`repository-owned-transaction-losing-a-race-quietly` and
+`schema-dsql-constraints`.
+
+The same question applies to anything a process keeps for itself, such as a
+counter or a cache in a module variable: two Lambda instances each hold their
+own copy, so a rule held there holds per instance and not for the application.
 
 ## The repository reads and writes
 
@@ -147,6 +180,26 @@ export class PunchRejectedError extends Error {
 The mapping from error to status code is a lookup table in a `.core.ts` file,
 so it is a pure function of the error and it has tests.
 
+## Who the client is
+
+A limit that counts per client, such as a sign-in rate limit, keys on
+`readClientAddress(context)` from `helpers/client-address/`, never on a request
+header. `X-Forwarded-For` begins with whatever the client sent and CloudFront
+only appends after it, so a key read from it is chosen by the attacker. The
+helper trusts the viewer address that the CloudFront function writes only when
+the request also carries the origin-verify secret, and otherwise uses the
+address API Gateway accepted the connection from.
+
+```ts
+const clientAddress = readClientAddress(context);
+```
+
+A bucket that has to hold across Lambda instances lives in the database and
+is bumped by one `INSERT ... ON CONFLICT DO UPDATE ... RETURNING` statement, so
+two concurrent requests cannot both read the old count. See the
+`repository-atomic-counter` blueprint and
+[the dantotsu](../dantotsus/rate-limits-keyed-on-a-header-the-client-writes.md).
+
 ## Enforced by
 
 - `eslint:borso/no-controller-imports-outside-service` keeps a controller to its
@@ -164,6 +217,12 @@ so it is a pure function of the error and it has tests.
   has an owning bounded context. It does not touch `apps/<app>/domain/`, which
   sits beside `api/` rather than inside it and holds only what both sides read.
   See [ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md).
+- `eslint:borso/no-client-supplied-address-header` rejects `X-Forwarded-For`,
+  `X-Real-IP`, `Forwarded` and the other client-written address headers as
+  string literals in API source, and the trusted viewer address header outside
+  the one file that checks it against the origin secret.
+- `reviewer` checks that a rate-limit bucket meant to hold across instances is
+  bumped in one statement rather than read and then written.
 - `eslint:borso/conditions-live-in-pure-functions` covers business branches
   everywhere else. See
   [02. Purity and core files](./02-purity-and-core-files.md).
@@ -174,3 +233,11 @@ so it is a pure function of the error and it has tests.
   than a shape it derived, because a repository that projects is a service.
 - `reviewer` checks that a multi-table write is wrapped in one transaction owned
   by the service.
+- `test:punch.service.test.ts` fires the same punch twice at once against the
+  back-e2e Postgres and asserts that one is refused and one punch was written.
+- `test:games.controller.test.ts` seats more players at once than the table
+  holds, and two players on one monkey, and asserts the extra ones are refused.
+- `reviewer` checks that a rule about rows another request can write, or state
+  another process holds, is held by a primary key or a single conditional write
+  rather than by a check over rows read earlier. It is the scale pass of
+  `/technical-validation`.

@@ -3,7 +3,12 @@ import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
 import { credentialsSchema } from './auth.schema';
 import { bootstrapAuth, rotatePassword } from './auth.service';
-import { attemptMemberLogin, type IssuedSession, recoverPassword } from './credentials.service';
+import {
+  attemptMemberLogin,
+  type IssuedSession,
+  readClientAddress,
+  recoverPassword,
+} from './credentials.service';
 import {
   memberLoginSchema,
   passkeyAuthenticationSchema,
@@ -11,15 +16,12 @@ import {
 } from './credentials.schema';
 import { requireMemberSession } from './member-session.middleware';
 import { finishPasskeyAuthentication, startPasskeyAuthentication } from './passkey.service';
-import { type BucketStore, createBucketStore } from './rate-limit.utils';
 import { SESSION_COOKIE_NAME, SESSION_TTL_MS } from './session-cookie.utils';
 
 const MILLISECONDS_PER_SECOND = 1_000;
 const SESSION_COOKIE_MAX_AGE_S = SESSION_TTL_MS / MILLISECONDS_PER_SECOND;
 
 export interface BuildAuthRouterOptions {
-  readonly bucketStore?: BucketStore;
-  readonly sharedPasswordBucketStore?: BucketStore;
   readonly clock?: () => Date;
 }
 
@@ -37,11 +39,9 @@ function writeSessionCookie(context: Parameters<typeof setCookie>[0], session: I
  * @Blueprint controller-split-routers
  * @BlueprintName Controller With Split Routers
  * @BlueprintUsage Use for a slice whose routes do not all share one gate, so an ungated route cannot be mounted by mistake.
- * @BlueprintDescription Returns three named routers rather than one: login, password recovery and the passkey challenge stay open, the bootstrap endpoint stays open because nothing exists yet to gate on, and rotate-password is built on a router that applies requireMemberSession to every route it carries. The rate-limit store and the clock arrive through the options argument, so a caller can drive the login window without a real clock.
+ * @BlueprintDescription Returns three named routers rather than one: login, password recovery and the passkey challenge stay open, the bootstrap endpoint stays open because nothing exists yet to gate on, and rotate-password is built on a router that applies requireMemberSession to every route it carries. The clock arrives through the options argument, so a caller can drive the login window without a real clock, and the rate-limit buckets live in the database so every Lambda instance counts the same attempts.
  */
 export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
-  const bucketStore = options.bucketStore ?? createBucketStore();
-  const sharedPasswordBucketStore = options.sharedPasswordBucketStore ?? createBucketStore();
   const clock = options.clock ?? (() => new Date());
 
   const publicRouter = new Hono()
@@ -50,8 +50,7 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
       const outcome = await attemptMemberLogin({
         username,
         password,
-        forwardedForHeader: context.req.header('x-forwarded-for'),
-        bucketStore,
+        clientAddress: readClientAddress(context),
         now: clock(),
       });
       if (outcome.kind === 'rate-limited') return context.json({ error: 'rate-limited' }, 429);
@@ -68,8 +67,7 @@ export function buildAuthRouter(options: BuildAuthRouterOptions = {}) {
       const body = context.req.valid('json');
       const outcome = await recoverPassword({
         ...body,
-        forwardedForHeader: context.req.header('x-forwarded-for'),
-        bucketStore: sharedPasswordBucketStore,
+        clientAddress: readClientAddress(context),
         now: clock(),
       });
       if (outcome.kind === 'rate-limited') return context.json({ error: 'rate-limited' }, 429);

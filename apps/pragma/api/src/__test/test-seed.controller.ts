@@ -2,6 +2,7 @@ import { Hono } from 'hono';
 import {
   answerFixtureFeedRequest,
   probeProductionBoundary,
+  resetRateLimits,
   seedPreviewFixture,
 } from './test-seed.service';
 
@@ -30,5 +31,9 @@ export function buildTestSeedRouter() {
         status: answer.status,
         headers: { 'content-type': PLAIN_TEXT_CONTENT_TYPE },
       });
+    })
+    .post('/rate-limits/reset', async (context) => {
+      await resetRateLimits();
+      return context.json({ ok: true });
     });
 }

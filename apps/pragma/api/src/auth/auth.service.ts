@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { argon2id } from 'hash-wasm';
 import {
   type AppConfig,
+  deleteAllAttemptBuckets,
   insertInitialAppConfig,
   loadAppConfig,
   updateAppConfig,
@@ -50,4 +51,8 @@ export async function rotatePassword(password: string, now: Date): Promise<Rotat
   const hmacKey = randomBytes(HMAC_KEY_BYTES);
   await updateAppConfig(hash, hmacKey, now);
   return { kind: 'ok' };
+}
+
+export async function resetAllRateLimits(): Promise<void> {
+  await deleteAllAttemptBuckets();
 }

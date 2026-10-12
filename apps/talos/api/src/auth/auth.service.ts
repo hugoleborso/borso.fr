@@ -14,8 +14,8 @@ import {
   deleteExpiredChallenges,
   deleteExpiredSessions,
   deletePasskey,
+  incrementAttempt,
   deleteSession,
-  findAttempt,
   findPasskeyByCredentialId,
   findPasskeyById,
   findSession,
@@ -23,11 +23,10 @@ import {
   insertPasskey,
   insertSession,
   listPasskeys,
-  saveAttempt,
   takeChallenge,
   updatePasskeyCounter,
 } from './auth.repository';
-import { hashIp, readClientIp } from './ip-hash.utils';
+import { hashIp } from './ip-hash.utils';
 import {
   type AuthenticationOptions,
   buildAuthenticationOptions,
@@ -43,7 +42,7 @@ import {
   readCredentialIdFromResponse,
   readTransportsFromResponse,
 } from './passkey.core';
-import { AUTHENTICATION_BUDGET, isRateLimited, recordAttempt } from './rate-limit.utils';
+import { AUTHENTICATION_BUDGET, isRateLimited, windowFloorFor } from './rate-limit.utils';
 import { buildSessionCookie, verifySessionCookie } from './session-cookie.utils';
 import { isStoredSessionLive, SESSION_LIFETIME_MS } from './session.core';
 
@@ -51,6 +50,7 @@ export { SESSION_COOKIE_NAME } from './session-cookie.utils';
 export { SESSION_LIFETIME_MS } from './session.core';
 export { isSecureCookieStage } from './auth.core';
 export { readStage } from './auth.environment';
+export { readClientAddress } from '../helpers/client-address/client-address.environment';
 
 const CHALLENGE_LIFETIME_MINUTES = 5;
 const CHALLENGE_LIFETIME_MS = CHALLENGE_LIFETIME_MINUTES * 60 * 1000;
@@ -73,7 +73,7 @@ export interface SessionStatus {
 interface RegistrationRequest {
   readonly code?: string | undefined;
   readonly cookie?: string | undefined;
-  readonly forwardedFor?: string | undefined;
+  readonly clientAddress: string;
   readonly now: Date;
 }
 
@@ -105,21 +105,13 @@ async function issueSession(now: Date): Promise<IssuedSession> {
   return { cookieValue: buildSessionCookie(await readSessionKey(), now.getTime(), sessionId) };
 }
 
-async function consumeAttempt(forwardedFor: string | undefined, now: Date): Promise<void> {
-  const ipHash = hashIp(readClientIp(forwardedFor));
-  const existing = await findAttempt(ipHash);
-  const bucket = recordAttempt(
-    existing === null
-      ? null
-      : { attempts: existing.attempts, windowStartedAt: existing.windowStartedAt.getTime() },
-    now.getTime(),
-    AUTHENTICATION_BUDGET,
+async function consumeAttempt(clientAddress: string, now: Date): Promise<void> {
+  const attempt = await incrementAttempt(
+    hashIp(clientAddress),
+    now,
+    windowFloorFor(now, AUTHENTICATION_BUDGET),
   );
-  await saveAttempt({
-    ipHash,
-    attempts: bucket.attempts,
-    windowStartedAt: new Date(bucket.windowStartedAt),
-  });
+  const bucket = { attempts: attempt.attempts, windowStartedAt: attempt.windowStartedAt.getTime() };
   if (isRateLimited(bucket, AUTHENTICATION_BUDGET)) throw new TalosError('rate-limited');
 }
 
@@ -151,7 +143,7 @@ async function takeUsableChallenge(
 }
 
 async function verifyBootstrapCode(request: RegistrationRequest): Promise<void> {
-  await consumeAttempt(request.forwardedFor, request.now);
+  await consumeAttempt(request.clientAddress, request.now);
   const expected = await readTalosSecret('bootstrap-code');
   if (expected === undefined) throw new TalosError('not-configured');
   if (!areSecretsEqual(request.code ?? '', expected)) {
@@ -241,10 +233,10 @@ export async function startAuthentication(now: Date): Promise<AuthenticationOpti
 
 export async function finishAuthentication(params: {
   readonly response: unknown;
-  readonly forwardedFor: string | undefined;
+  readonly clientAddress: string;
   readonly now: Date;
 }): Promise<IssuedSession> {
-  await consumeAttempt(params.forwardedFor, params.now);
+  await consumeAttempt(params.clientAddress, params.now);
   const challenge = await takeUsableChallenge(params.response, 'authentication', params.now);
   const credentialId = readCredentialIdFromResponse(params.response) ?? '';
   const passkey = await findPasskeyByCredentialId(credentialId);

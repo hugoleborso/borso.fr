@@ -97,19 +97,35 @@ describe('registering the first passkey', () => {
     expect(await response.json()).toEqual({ error: "Talos n'est pas encore configuré." });
   });
 
-  it('stops a script guessing the code after ten attempts', async () => {
+  it('stops a script guessing the code after ten attempts, whatever X-Forwarded-For it forges', async () => {
     const { app } = buildTestContext();
     const statuses: number[] = [];
     for (let attempt = 0; attempt < 11; attempt += 1) {
       const response = await requestJson(app, '/api/auth/registration/options', {
         method: 'POST',
         body: { code: 'mauvais' },
-        headers: { 'x-forwarded-for': '203.0.113.9' },
+        clientAddress: '203.0.113.9',
+        headers: { 'x-forwarded-for': `10.0.0.${attempt}` },
       });
       statuses.push(response.status);
     }
     expect(statuses.slice(0, 10).every((status) => status === 401)).toBe(true);
     expect(statuses[10]).toBe(429);
+  });
+
+  it('counts concurrent guesses one by one rather than once', async () => {
+    const { app } = buildTestContext();
+    const statuses = await Promise.all(
+      Array.from({ length: 14 }, async () => {
+        const response = await requestJson(app, '/api/auth/registration/options', {
+          method: 'POST',
+          body: { code: 'mauvais' },
+          clientAddress: '203.0.113.10',
+        });
+        return response.status;
+      }),
+    );
+    expect(statuses.filter((status) => status === 429).length).toBe(4);
   });
 
   it('registers a passkey with the code and signs the owner in with a strict cookie', async () => {
