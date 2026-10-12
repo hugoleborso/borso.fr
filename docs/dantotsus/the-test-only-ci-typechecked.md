@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: ci
 severity: low
 related-pr: '#154'
-fix-pr: '#155'
+fix-pr: '#167'
 fix-commits: [d5c7fbb]
 eradication-level: 2
 time-to-detect: minutes
@@ -57,7 +57,7 @@ never checks them, so only `tsc` can.
 
 **Type:** DevX check (level 2 — pre-push gate)
 
-**Reference:** [PR #155](https://github.com/hugoleborso/borso.fr/pull/155) · commit `d5c7fbb`
+**Reference:** [PR #167](https://github.com/hugoleborso/borso.fr/pull/167) · commit `d5c7fbb`
 
 **The actual fix:**
 
