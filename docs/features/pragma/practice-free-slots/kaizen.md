@@ -31,3 +31,7 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [15:00] `visual-validator-3` After POST /api/__test/seed the browser's old session cookie gets 401 on /api/me while the app shell still renders as signed in, and login.sh cannot sign in because the login form is not shown, so every reseed needs a manual cookie clear.
 - [16:08] `visual-validator-2` After an 80-minute idle wait, the agent-browser session answered every in-page fetch with 'TypeError: Failed to fetch' until the daemon was restarted.
 - [16:21] `hook:pr-body` wrote a pull-request body carrying markup the server silently strips
+- [00:33] `pr-118` pre-commit eslint reported unresolved-type errors across talos and infra/shared in a fresh worktree because @borso/infra had no dist yet, and the message never names the missing build
+- [00:53] `pr-118` pre-push on a branch push that merges main in mutated 81 talos files and every other changed core from main's 100 commits, instead of narrowing to the branch's own changes
+- [01:48] `pr-118` pre-push runs the talos mutation of 81 files concurrently with every app's tests, and the starved CPU times out four unrelated tests (infra-cdk synth, infra-shared synth, borso-fr, talos) that pass alone
+- [02:48] `pr-118` pre-push typecheck of pragma and last-loop-lepin was OOM-killed (exit 137) while sibling agents ran mutation in the same container; four pushes failed on load alone
