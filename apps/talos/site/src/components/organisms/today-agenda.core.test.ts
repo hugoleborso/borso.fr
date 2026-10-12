@@ -3,8 +3,12 @@ import {
   buildAgenda,
   countOverdueTodos,
   describeAgendaDay,
+  locateAgendaRow,
   selectEarlierDay,
+  selectMeanderLane,
+  selectMeanderTone,
   selectOverdueDay,
+  selectStationEmphasis,
 } from './today-agenda.core';
 
 const TODAY = '2026-10-08';
@@ -139,5 +143,36 @@ describe('selectEarlierDay', () => {
   it('keeps a day only when it is not today', () => {
     expect(selectEarlierDay('2026-10-07', TODAY)).toBe('2026-10-07');
     expect(selectEarlierDay(TODAY, TODAY)).toBeNull();
+  });
+});
+
+describe('the agenda meander', () => {
+  it('alternates lanes so the line turns at a right angle on every row', () => {
+    expect([0, 1, 2, 3].map(selectMeanderLane)).toEqual(['inner', 'outer', 'inner', 'outer']);
+  });
+
+  it('draws the overdue and today stretch in the now tone and the rest ahead', () => {
+    expect(selectMeanderTone('overdue')).toBe('now');
+    expect(selectMeanderTone('today')).toBe('now');
+    expect(selectMeanderTone('tomorrow')).toBe('ahead');
+    expect(selectMeanderTone('later')).toBe('ahead');
+    expect(selectMeanderTone('undated')).toBe('ahead');
+  });
+
+  it('rings the stations that are overdue or due today and leaves the others plain', () => {
+    expect(selectStationEmphasis('overdue')).toBe('overdue');
+    expect(selectStationEmphasis('today')).toBe('today');
+    expect(selectStationEmphasis('tomorrow')).toBe('none');
+    expect(selectStationEmphasis('later')).toBe('none');
+    expect(selectStationEmphasis('undated')).toBe('none');
+  });
+
+  it('numbers headings and entries as one continuous run of rows', () => {
+    const days = [{ entries: ['a', 'b'] }, { entries: ['c'] }, { entries: ['d'] }];
+    expect(locateAgendaRow(days, 0, null)).toBe(0);
+    expect(locateAgendaRow(days, 0, 1)).toBe(2);
+    expect(locateAgendaRow(days, 1, null)).toBe(3);
+    expect(locateAgendaRow(days, 1, 0)).toBe(4);
+    expect(locateAgendaRow(days, 2, null)).toBe(5);
   });
 });

@@ -174,7 +174,7 @@ describe('sw.js, the worker that ships', () => {
 
   it('does not keep a font the network refused', async () => {
     const worker = loadServiceWorker(serveAlways(buildResponse('', 'text/plain', 404)));
-    await worker.respondTo({ url: 'https://fonts.googleapis.com/css2?family=Newsreader' });
+    await worker.respondTo({ url: 'https://fonts.googleapis.com/css2?family=GFS+Neohellenic' });
     expect(worker.caches.namedCaches.size).toBe(0);
   });
 
