@@ -60,7 +60,7 @@ sequenceDiagram
 - The day boundary is midnight in `Europe/Paris`, whatever the device time zone.
 - No back-dating: the server stamps the day from its own clock, and the body carries no date.
 - Undo deletes only a study of mine logged today. Undoing the only study of today leaves today uncounted again.
-- A song is ready when `meanForSong` over its lineup is 7 or more. A song with no mastery recorded at all is not ready.
+- A song is ready when every member and instrument of its lineup has a score and the lineup mean is 7 or more. A song where one player has recorded nothing is not ready, even when the others average 7.
 - The next concert is the earliest concert strictly after now. The readiness set is the union of the songs in every setlist linked to that concert, counted once each.
 - A mastery default change writes no history row, because it is not about a song; only override writes are history.
 - Deleting a song deletes its studies and its history rows; deleting a member deletes theirs.
@@ -82,6 +82,7 @@ sequenceDiagram
 | Back-dating | Up to yesterday; today only; unlimited | Today only. It keeps the streak honest. |
 | Undo | Own studies; none | Own studies, today's only. Undoing an older study would rewrite a streak. |
 | Does undo revert a score changed during the study? | Yes; no | No. The study and the score are two independent writes, and the history keeps both rows. |
+| A lineup member with no score at all (found at implementation, 2026-10-13) | Skip them, as `meanForSong` does; count the song not ready | Not ready. `meanForSong` skips unscored players, so one drummer at 7 made a four-person song ready while three people had said nothing. Readiness is the band's answer, so a silent player blocks it. |
 | Score inflation: readiness reads self-assessed scores | Trust; a feed of who raised what | Trust, and keep the competition on showing up every day rather than on how well one plays. The streak rewards the daily study, never a score. Known risk, accepted. |
 | Visibility | All to all; personal private | All to all. Five members, one shared app, and the comparison is the point. |
 | Mastery history source | Every override write; studies only | Every override write, from the matrix, the song page or the Studies tab. Otherwise the curve has holes. |

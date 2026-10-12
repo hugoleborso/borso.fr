@@ -8,6 +8,7 @@ const OVERVIEW = {
     { songId: 'song', instrumentId: 'guitar', isStudiedToday: false },
     { songId: 'song', instrumentId: 'voice', isStudiedToday: false },
     { songId: 'other', instrumentId: 'guitar', isStudiedToday: false },
+    { songId: 'other', instrumentId: 'voice', isStudiedToday: false },
   ],
   band: [
     { memberId: 'me', streak: { days: 1 } },
@@ -19,7 +20,7 @@ const OVERVIEW = {
 describe('studies.utils', () => {
   it('marks only the targeted song and instrument', () => {
     const marked = markStudied(OVERVIEW, { songId: 'song', instrumentId: 'voice' }, true);
-    expect(marked.queue.map((row) => row.isStudiedToday)).toEqual([false, true, false]);
+    expect(marked.queue.map((row) => row.isStudiedToday)).toEqual([false, true, false, false]);
     expect(marked.today).toBe('2026-10-12');
   });
 

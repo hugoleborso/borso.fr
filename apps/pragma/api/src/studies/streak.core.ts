@@ -37,8 +37,6 @@ export function computeStreak(studiedDays: readonly CalendarDay[], today: Calend
     cursor = dayBefore;
   }
   const isJokerAvailable =
-    days === 0 ||
-    newestForgivenDay === null ||
-    daysBetween(today, newestForgivenDay) >= JOKER_WINDOW_DAYS;
+    newestForgivenDay === null || daysBetween(today, newestForgivenDay) >= JOKER_WINDOW_DAYS;
   return { days, isTodayCounted, isJokerAvailable };
 }

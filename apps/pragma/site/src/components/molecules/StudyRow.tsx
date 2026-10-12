@@ -33,7 +33,7 @@ export function StudyRow({
   return (
     <li
       className={composeClassName(
-        'flex flex-col sm:flex-row sm:items-center gap-2 sm:gap-4 px-3 py-2.5 rounded-md border',
+        'flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 px-3 py-2 rounded-md border',
         isStudiedToday ? 'border-accent bg-bg-elev' : 'border-line bg-bg',
       )}
       data-testid="study-row"

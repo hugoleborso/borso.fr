@@ -23,19 +23,34 @@ export function StreakBadge({
 }: StreakBadgeProps): JSX.Element {
   const { t } = useTranslation();
   const isLarge = size === 'large';
+  const tone = isTodayCounted ? 'text-accent' : 'text-ink-500';
+  if (!isLarge) {
+    return (
+      <span
+        className={composeClassName(
+          'inline-flex items-center gap-1 font-display italic text-lg',
+          tone,
+        )}
+        aria-label={t('studies.streakDays', { count: days })}
+        data-testid="streak-badge"
+      >
+        <Icon name="bolt" size={COMPACT_ICON_SIZE} />
+        {days}
+      </span>
+    );
+  }
   return (
     <div className="flex items-center gap-2" data-testid="streak-badge">
       <span
         className={composeClassName(
-          'inline-flex items-center gap-1 font-display italic',
-          isLarge ? 'text-[40px] leading-none' : 'text-lg',
-          isTodayCounted ? 'text-accent' : 'text-ink-500',
+          'inline-flex items-center gap-1 font-display italic text-[40px] leading-none',
+          tone,
         )}
       >
-        <Icon name="bolt" size={isLarge ? LARGE_ICON_SIZE : COMPACT_ICON_SIZE} />
+        <Icon name="bolt" size={LARGE_ICON_SIZE} />
         {days}
       </span>
-      <span className={composeClassName('flex flex-col', isLarge ? 'text-[13px]' : 'text-xs')}>
+      <span className="flex flex-col text-[13px]">
         <span className="text-ink-900">{t('studies.streakDays', { count: days })}</span>
         <span className="text-ink-500">
           {isTodayCounted ? t('studies.todayCounted') : t('studies.todayPending')}

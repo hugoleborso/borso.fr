@@ -8,9 +8,9 @@ describe('study-queue.core', () => {
       memberId: 'hugo',
       songs: [
         { songId: 'ready', title: 'Alpha', lineups: [{ hugo: ['guitar'] }], isReady: true },
+        { songId: 'same', title: 'Charlie', lineups: [{ hugo: ['guitar'] }], isReady: false },
         { songId: 'two', title: 'Bravo', lineups: [{ hugo: ['guitar', 'voice'] }], isReady: false },
         { songId: 'unknown', title: 'Zulu', lineups: [{ hugo: ['bass'] }], isReady: false },
-        { songId: 'same', title: 'Charlie', lineups: [{ hugo: ['guitar'] }], isReady: false },
         { songId: 'notmine', title: 'Delta', lineups: [{ lea: ['drums'] }], isReady: false },
       ],
       defaults: { hugo: { guitar: 5, voice: 3 } },

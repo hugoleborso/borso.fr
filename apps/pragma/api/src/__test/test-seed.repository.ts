@@ -6,7 +6,11 @@ import {
 import { barTable } from '../bars/bars.schema';
 import { getDatabase } from '../database/client';
 import { instrumentTable } from '../instruments/instruments.schema';
-import { masteryDefaultTable, masteryOverrideTable } from '../mastery/mastery.schema';
+import {
+  masteryDefaultTable,
+  masteryOverrideTable,
+  masteryScoreChangeTable,
+} from '../mastery/mastery.schema';
 import { memberInstrumentTable, memberTable } from '../members/members.schema';
 import { sessionTable } from '../sessions/sessions.schema';
 import {
@@ -16,6 +20,7 @@ import {
   setlistVoteTable,
 } from '../setlists/setlists.schema';
 import { songTable } from '../songs/songs.schema';
+import { studyTable } from '../studies/studies.schema';
 import { taskTable } from '../tasks/tasks.schema';
 import { transitionCommentTable } from '../transitions/transitions.schema';
 
@@ -29,6 +34,8 @@ export async function deleteAllDomainRows(): Promise<void> {
   await database.delete(setlistTable);
   await database.delete(sessionTable);
   await database.delete(memberInstrumentTable);
+  await database.delete(studyTable);
+  await database.delete(masteryScoreChangeTable);
   await database.delete(masteryOverrideTable);
   await database.delete(masteryDefaultTable);
   await database.delete(transitionCommentTable);

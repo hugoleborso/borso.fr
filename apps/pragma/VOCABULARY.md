@@ -648,9 +648,10 @@ Lives in: `api/src/studies/` (`concert-readiness.core.ts`)
 
 - The next concert is the earliest concert strictly after now; its songs
   are those of every setlist linked to it, counted once.
-- A song is ready when its lineup mean mastery is 7 or more for every
-  lineup it is played with in those setlists, and is not ready when
-  nothing is recorded.
+- A song is ready when, for every lineup it is played with in those
+  setlists, each member and instrument has a score and the mean is 7 or
+  more. One player with nothing recorded keeps the song not ready, unlike
+  `meanForSong`, which skips them.
 
 ## Task
 

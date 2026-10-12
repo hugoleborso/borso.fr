@@ -1,6 +1,6 @@
-import { type Lineup, resolveLineup } from '@domain/lineup.core';
+import { type Lineup, memberInstrumentPairs, resolveLineup } from '@domain/lineup.core';
 import { selectUpcomingConcerts } from '@domain/upcoming-concerts.core';
-import { type DefaultMap, meanForSong, type OverrideMap } from '../mastery/mastery.core';
+import { type DefaultMap, effective, meanForSong, type OverrideMap } from '../mastery/mastery.core';
 
 export const READINESS_THRESHOLD = 7;
 
@@ -40,8 +40,12 @@ export function isSongReady(
 ): boolean {
   if (song.lineups.length === 0) return false;
   return song.lineups.every((lineup) => {
+    const isEveryPairScored = memberInstrumentPairs(lineup).every(
+      ([memberId, instrumentId]) =>
+        effective(defaults, overrides, { memberId, instrumentId, songId: song.songId }) !== null,
+    );
     const mean = meanForSong(defaults, overrides, song.songId, lineup);
-    return mean !== null && mean >= READINESS_THRESHOLD;
+    return isEveryPairScored && mean !== null && mean >= READINESS_THRESHOLD;
   });
 }
 
