@@ -4,8 +4,8 @@ introduced-at: conception
 detected-at: operator-deploy
 severity: low
 related-pr: '#155'
-fix-pr: '#155'
-fix-commits: []
+fix-pr: '#168'
+fix-commits: [20475f41]
 eradication-level: 1
 time-to-detect: minutes
 tags: [ci, github-actions, deploy, pnpm]
@@ -61,7 +61,7 @@ None for #155 itself: its deploys were harmless and already done.
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** [PR #155](https://github.com/hugoleborso/borso.fr/pull/155)
+**Reference:** [PR #168](https://github.com/hugoleborso/borso.fr/pull/168) · commit [`20475f41`](https://github.com/hugoleborso/borso.fr/commit/20475f41)
 
 `scripts/dependencies/drop-check-only-changes.ts` runs in the `detect` job of
 `deploy.yml` and `preview.yml`, right after the path filter and before the
