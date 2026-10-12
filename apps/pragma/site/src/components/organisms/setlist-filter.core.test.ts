@@ -3,7 +3,8 @@ import type { SetlistEditorSong } from './setlist-editor.utils';
 import {
   type FilterableEntry,
   filterEntriesForMember,
-  nameInstrumentsByEntryId,
+  describeMemberPartsByEntryId,
+  type PartInstrument,
 } from './setlist-filter.core';
 
 const HUGO = 'hugo-id';
@@ -122,13 +123,23 @@ describe('filterEntriesForMember', () => {
   });
 });
 
-describe('nameInstrumentsByEntryId', () => {
-  it('names what the member plays on each entry, dropping an instrument the list no longer has', () => {
-    expect(
-      nameInstrumentsByEntryId(
-        { e1: [DRUMS, GUITAR], e2: ['gone'] },
-        { [DRUMS]: { name: 'Batterie' }, [GUITAR]: { name: 'Guitare' } },
-      ),
-    ).toEqual({ e1: ['Batterie', 'Guitare'], e2: [] });
+describe('describeMemberPartsByEntryId', () => {
+  const instruments: readonly PartInstrument[] = [
+    { id: DRUMS, name: 'Batterie', icon: 'drum' },
+    { id: GUITAR, name: 'Guitare', icon: 'guitar' },
+    { id: 'lead-guitar-id', name: 'Guitare lead', icon: 'guitar' },
+  ];
+
+  it('names an instrument only when its icon stands for another one too', () => {
+    expect(describeMemberPartsByEntryId({ e1: [DRUMS, GUITAR] }, instruments)).toEqual({
+      e1: [
+        { instrumentId: DRUMS, name: 'Batterie', icon: 'drum', isNameNeeded: false },
+        { instrumentId: GUITAR, name: 'Guitare', icon: 'guitar', isNameNeeded: true },
+      ],
+    });
+  });
+
+  it('drops an instrument the list no longer has', () => {
+    expect(describeMemberPartsByEntryId({ e2: ['gone'] }, instruments)).toEqual({ e2: [] });
   });
 });

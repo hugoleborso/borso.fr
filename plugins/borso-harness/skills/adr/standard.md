@@ -29,7 +29,7 @@ The template at [`template.md`](./template.md) enforces this. Every ADR carries 
 
 Status transitions:
 - `proposed` → drafted but not shipped. Default on first commit.
-- `accepted` → shipped. `/after-task-dantotsus` stamps this on merge.
+- `accepted` → shipped. `/after-task-kaizen` stamps this on merge.
 - `superseded by ADR-XXXX` → replaced. Forward link mandatory. Old file stays.
 - `deprecated` → the surrounding system is gone; the ADR is historical.
 

@@ -20,7 +20,7 @@ piloted mode that takes a pre-built payload when
 ## Status lifecycle
 
 - **proposed** — drafted, not yet shipped. Default on creation.
-- **accepted** — merged into main. Stamped by `/after-task-dantotsus`.
+- **accepted** — merged into main. Stamped by `/after-task-kaizen`.
 - **superseded by ADR-XXXX** — replaced. Forward link mandatory; old
   file stays for audit.
 - **deprecated** — surrounding system is gone; preserved as historical.
