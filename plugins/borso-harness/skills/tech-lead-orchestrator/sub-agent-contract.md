@@ -68,7 +68,7 @@ runs/<run-id>/agents/<agent>-<step>.md
 ## Body (free-form, ignored by the orchestrator)
 
 The body is whatever the sub-skill wants to record for the human or for
-`/after-task-dantotsus`: full report, diff summary, screenshot links,
+`/after-task-kaizen`: full report, diff summary, screenshot links,
 debugging notes. The orchestrator only reads the front-matter; the body
 stays on disk, committed to the PR, and is the raw material for any
 post-merge Dantotsu.

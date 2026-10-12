@@ -2,7 +2,7 @@
 
 Every friction event of the task that shipped the tasks-by-member and
 compositions screens, in the order it happened. The decision column is what
-`/after-task-dantotsus` did with it. The body of PR #102 links here rather
+`/after-task-kaizen` did with it. The body of PR #102 links here rather
 than carrying the table, because the PR-body budget refuses a table this
 size — which is row 16.
 
@@ -29,7 +29,7 @@ exist.
 | 13 | merge | Two branches numbered a migration `0006`; git merged both cleanly and the apply order fell to alphabetical luck | `commit:13f1a84`, the merged directory listing | dantotsu: `two-branches-took-the-same-migration-number` |
 | 14 | merge | `SongEditForm.tsx` crossed the 300-line ceiling because both sides added fields to it | `pnpm lint` after the merge; resolved by extracting `SongClassificationFields` | no-op: the ceiling did its job twice in one PR; the file is now three components lighter than it was |
 | 15 | post-merge | The friction log held one line for a day of work, and none of the five hook refusals above wrote themselves down | `KAIZEN.md`, rows 09 / 10 / 12 of this table | dantotsu: `the-hooks-that-refused-a-call-and-forgot-it` |
-| 16 | post-merge | The sweep's own skill requires the inventory table at the top of the kaizen PR body, and the PR-body budget landed by PR #101 refuses a body that size | `plugins/borso-harness/skills/after-task-dantotsus/SKILL.md` step 5 against `scripts/pr/check-pr-body.ts` | dantotsu: merged into `the-hooks-that-refused-a-call-and-forgot-it` as a sibling sweep — the skill now sends the inventory to a committed file and the body links it |
+| 16 | post-merge | The sweep's own skill requires the inventory table at the top of the kaizen PR body, and the PR-body budget landed by PR #101 refuses a body that size | `plugins/borso-harness/skills/after-task-kaizen/SKILL.md` step 5 against `scripts/pr/check-pr-body.ts` | dantotsu: merged into `the-hooks-that-refused-a-call-and-forgot-it` as a sibling sweep — the skill now sends the inventory to a committed file and the body links it |
 
 ## Patterns
 

@@ -40,7 +40,7 @@ end up structurally unable to host the same defect again.
 - The user says any of: "let's do a Dantotsu" / "RCA" / "five whys" /
   "post-mortem" / "/dantotsu".
 - The user pastes an error or stack trace and asks "what went wrong here".
-- A PR just fixed a non-trivial bug — the [`/after-task-dantotsus`](../after-task-dantotsus/SKILL.md)
+- A PR just fixed a non-trivial bug — the [`/after-task-kaizen`](../after-task-kaizen/SKILL.md)
   skill calls this one once per surviving subject.
 
 ## When NOT to
@@ -255,7 +255,7 @@ Sorted newest-first. Skips `_template.md` and `README.md`.
 - **`docs/dantotsus/_template.md`** — copy this when starting a new
   entry.
 - **CLAUDE.md's Self-improvement loop** rule: when a PR merges, run
-  [`/after-task-dantotsus`](../after-task-dantotsus/SKILL.md) →
+  [`/after-task-kaizen`](../after-task-kaizen/SKILL.md) →
   produces one Dantotsu per real defect (with eradication shipped)
   and one Knowledge entry per vendor surprise → opens the follow-up
   PR with the `kaizen` label.

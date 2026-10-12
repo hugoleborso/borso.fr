@@ -88,7 +88,7 @@ If `scripts/browser.sh` itself fails, surface it as a single FAIL row at the top
    ${CLAUDE_PLUGIN_ROOT}/scripts/kaizen.sh --from visual-validator "<what went wrong, one sentence>"
    ```
 
-   The problem only, never the fix. It is swept at merge by `/after-task-dantotsus`, and a validator's friction is the kind most likely to be lost, because your report is about the app rather than about the run.
+   The problem only, never the fix. It is swept at merge by `/after-task-kaizen`, and a validator's friction is the kind most likely to be lost, because your report is about the app rather than about the run.
 8. **Return only the report path** as your final message. Do not summarise findings — the skill reads the report.
 
 ## Report format

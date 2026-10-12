@@ -78,7 +78,7 @@ The rubric differentiates: shared wins 2/4 on the highest-weighted criteria; ind
 
 - Spec: [`docs/features/pragma/first-features/spec/spec.md`](../features/pragma/first-features/spec/spec.md) — Q.O.D. row "Auth model", *Zero-defect strategy* section (`ip_hash` rate-limit), and *Out of scope* item "Per-user audit trail (shared password)".
 - Plan: `docs/features/pragma/first-features/plan/plan.md` — auth-middleware row (to be added in stage `plan`).
-- Commit: stamped by `/after-task-dantotsus` on merge.
+- Commit: stamped by `/after-task-kaizen` on merge.
 - Files (anticipated, written under `/implementation` — names not contractual, the `/implementation` agent may pick neighbouring paths):
   - `apps/pragma/api/src/db/schema.ts` — Drizzle definition of the `app_config` singleton table (`id INT PK CHECK (id = 1)`, `password_hash TEXT NOT NULL`, `hmac_key BYTEA NOT NULL`, `rotated_at TIMESTAMPTZ NOT NULL DEFAULT now()`).
   - `apps/pragma/api/src/auth/shared-password.middleware.ts` — Hono middleware verifying the signed cookie's HMAC against `app_config.hmac_key`, and (on POST `/api/auth`) the argon2id password hash against `app_config.password_hash`.

@@ -16,6 +16,11 @@
 # entry is only reachable by someone who already suspects the cache, and the
 # symptom argues the other way — it reads as "my fix did not work".
 #
+# PR #153 hit it a third time and this hook stayed silent: it looked for
+# .eslintcache in the working directory, and the run was `pnpm run lint` from
+# apps/pragma, whose cache lived under the root node_modules. It now looks for
+# every cache this repository writes, from the repository root.
+#
 # Best-effort by contract: it ALWAYS exits 0, and it never asserts staleness —
 # these errors are usually real. It names the one command that tells them apart.
 
@@ -33,10 +38,12 @@ esac
 
 # A command that already clears the cache has nothing to be warned about.
 case "$COMMAND" in
-  *.eslintcache*) exit 0 ;;
+  *.eslintcache* | *.cache/eslint*) exit 0 ;;
 esac
 
-[ -f .eslintcache ] || exit 0
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+CACHES=$(cd "$ROOT" && ls -d .eslintcache* node_modules/.cache/eslint* 2>/dev/null | tr '\n' ' ')
+[ -n "$CACHES" ] || exit 0
 
 RESPONSE=$(jq -r '
   if type == "string" then .
@@ -53,7 +60,7 @@ COUNT=$(printf '%s' "$RESPONSE" | grep -cE "@typescript-eslint/($TYPE_AWARE)" ||
 [ "${COUNT:-0}" -gt 0 ] || exit 0
 
 cat <<NOTE
-[eslint-cache] that run reported $COUNT type-aware error(s) and .eslintcache exists.
+[eslint-cache] that run reported $COUNT type-aware error(s), and an ESLint cache exists: $CACHES
 
 Type-aware rules read the whole type graph; --cache-strategy content keys on
 each file's own bytes. So when the types a file DEPENDS ON change — another
@@ -63,7 +70,7 @@ Re-running reproduces it exactly, which is what makes it read as a real error.
 
 Before treating these as real, settle it in one command:
 
-  rm -f .eslintcache && pnpm run lint
+  (cd "$ROOT" && rm -rf $CACHES) && pnpm run lint
 
 If they survive that, they are real. See
 https://github.com/hugoleborso/borso.fr/blob/main/docs/knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md.

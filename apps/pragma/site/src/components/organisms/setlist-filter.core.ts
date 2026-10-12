@@ -1,5 +1,6 @@
 /** @Feature setlists */
 
+import type { InstrumentIcon } from '@domain/instrument.core';
 import { instrumentsHeldBy, resolveLineup } from '@domain/lineup.core';
 import type { SetlistEditorEntry, SetlistEditorSong } from './setlist-editor.utils';
 
@@ -42,20 +43,49 @@ function resolveInstrumentsForMember(
   return instrumentsHeldBy(resolveLineup(song.defaultLineup, entry.lineupOverride), memberId);
 }
 
-interface NamedInstrument {
+export interface PartInstrument {
+  readonly id: string;
   readonly name: string;
+  readonly icon: InstrumentIcon;
 }
 
-export function nameInstrumentsByEntryId(
+export interface MemberPart {
+  readonly instrumentId: string;
+  readonly name: string;
+  readonly icon: InstrumentIcon;
+  readonly isNameNeeded: boolean;
+}
+
+function selectSharedIcons(instruments: readonly PartInstrument[]): ReadonlySet<InstrumentIcon> {
+  const seen = new Set<InstrumentIcon>();
+  const shared = new Set<InstrumentIcon>();
+  for (const instrument of instruments) {
+    if (seen.has(instrument.icon)) shared.add(instrument.icon);
+    seen.add(instrument.icon);
+  }
+  return shared;
+}
+
+export function describeMemberPartsByEntryId(
   instrumentIdsByEntryId: Readonly<Record<string, readonly string[]>>,
-  instrumentsById: Readonly<Record<string, NamedInstrument>>,
-): Readonly<Record<string, readonly string[]>> {
-  const namesByEntryId: Record<string, readonly string[]> = {};
+  instruments: readonly PartInstrument[],
+): Readonly<Record<string, readonly MemberPart[]>> {
+  const instrumentsById = new Map(instruments.map((instrument) => [instrument.id, instrument]));
+  const sharedIcons = selectSharedIcons(instruments);
+  const partsByEntryId: Record<string, readonly MemberPart[]> = {};
   for (const [entryId, instrumentIds] of Object.entries(instrumentIdsByEntryId)) {
-    namesByEntryId[entryId] = instrumentIds.flatMap((instrumentId) => {
-      const instrument = instrumentsById[instrumentId];
-      return instrument === undefined ? [] : [instrument.name];
+    partsByEntryId[entryId] = instrumentIds.flatMap((instrumentId) => {
+      const instrument = instrumentsById.get(instrumentId);
+      if (instrument === undefined) return [];
+      return [
+        {
+          instrumentId,
+          name: instrument.name,
+          icon: instrument.icon,
+          isNameNeeded: sharedIcons.has(instrument.icon),
+        },
+      ];
     });
   }
-  return namesByEntryId;
+  return partsByEntryId;
 }
