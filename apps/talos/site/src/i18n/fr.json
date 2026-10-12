@@ -17,6 +17,7 @@
   "nav.pending-count_one": "{{count}} proposition en attente",
   "nav.pending-count_other": "{{count}} propositions en attente",
   "auth.title": "Talos",
+  "auth.tagline": "Ton chief of staff personnel.",
   "auth.sign-in": "Se connecter avec une passkey",
   "auth.register.code-label": "Code de démarrage",
   "auth.register.submit": "Créer la passkey",
