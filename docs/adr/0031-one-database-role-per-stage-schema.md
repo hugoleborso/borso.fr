@@ -22,6 +22,8 @@ The Aurora DSQL documentation describes custom roles: `CREATE ROLE … WITH LOGI
 - `+` A preview cannot read or write production, or another preview, whatever code it runs. That covers the calendar addresses, and also the phone numbers and e-mail addresses that exist today.
 - `+` A table-level boundary exists, so later sensitive data can be isolated by putting it in its own table.
 - `-` The change touches all three applications on DSQL and `infra/cdk`, which is gated at 100 % coverage. Merging deploys all three to production at once.
+- `-` talos reached main after this decision was written and connects through the same `LambdaApi`, so its `client.ts` moved to the stage role in the merge that brought it in (2026-10-12). talos has no preview ([ADR-0027](./0027-talos-deploys-to-prod-only.md)), so production is the first place its role path runs.
+- `-` During the production deploy, CloudFormation replaces the Lambda's policy before it replaces the Lambda's code, because the function depends on its policy. Between the two, the old code still signs as `admin` and no longer holds `dsql:DbConnectAdmin`, so the API answers 5xx until the new code is live. The gap ends on its own when the update finishes. A rollback restores both the old policy and the old code.
 - `-` The deploy has a new ordering dependency. A Lambda that switches to its role before the runner has created it fails every query, so the Lambda has to depend on the schema's custom resource. A bug in this path takes the whole API down, not one feature.
 - `-` Reading production by hand for debugging now needs `admin` explicitly, which is the point but is also friction.
 - `~` Column-level grants are still unverified on DSQL. This decision does not rely on them.
