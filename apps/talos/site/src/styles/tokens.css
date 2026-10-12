@@ -1,4 +1,4 @@
-@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400&family=GFS+Neohellenic:wght@400;700&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible+Mono:wght@400;500&family=Atkinson+Hyperlegible+Next:ital,wght@0,400;0,500;0,600;0,700;1,400&display=swap');
 @import 'tailwindcss';
 
 @theme static {
@@ -50,14 +50,14 @@
   --shadow-2: 0 8px 20px -6px #1c171233, 0 2px 4px #1c17121a;
   --shadow-focus-ring: 0 0 0 2px #f5e6d1, 0 0 0 4px #1c1712;
 
-  --font-display: 'GFS Neohellenic', 'Gill Sans', 'Trebuchet MS', sans-serif;
+  --font-display: 'Atkinson Hyperlegible Next', -apple-system, system-ui, sans-serif;
   --font-sans: 'Atkinson Hyperlegible Next', -apple-system, system-ui, sans-serif;
   --font-mono: 'Atkinson Hyperlegible Mono', ui-monospace, 'SF Mono', Menlo, monospace;
 
   --text-display: 28px;
   --text-display--line-height: 32px;
   --text-display--font-weight: 700;
-  --text-display--letter-spacing: -0.01em;
+  --text-display--letter-spacing: -0.02em;
   --text-focus: 22px;
   --text-focus--line-height: 28px;
   --text-focus--font-weight: 700;
