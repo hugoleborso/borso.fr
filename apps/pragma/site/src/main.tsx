@@ -1,3 +1,4 @@
+import './observability/error-reporting.setup';
 import '@fontsource/instrument-serif/400.css';
 import '@fontsource/instrument-serif/400-italic.css';
 import '@fontsource-variable/geist/index.css';

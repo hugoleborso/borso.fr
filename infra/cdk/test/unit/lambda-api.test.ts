@@ -73,13 +73,19 @@ describe('LambdaApi', () => {
     tpl.resourceCountIs('AWS::Route53::RecordSet', 2);
   });
 
-  it('allows the ballot-token header through the credentialed CORS preflight', () => {
+  it('allows the ballot-token and trace headers through the credentialed CORS preflight', () => {
     const tpl = synth({ allowedOrigins: ['https://pragma-pr-42.preview.borso.fr'] });
     tpl.hasResourceProperties('AWS::ApiGatewayV2::Api', {
       CorsConfiguration: Match.objectLike({
         AllowCredentials: true,
         AllowOrigins: ['https://pragma-pr-42.preview.borso.fr'],
-        AllowHeaders: ['content-type', 'authorization', 'x-ballot-token'],
+        AllowHeaders: [
+          'content-type',
+          'authorization',
+          'x-ballot-token',
+          'sentry-trace',
+          'baggage',
+        ],
       }),
     });
   });

@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { discardCachesAndReload, reload } from '../../lib/recovery.adapter';
+import { reportRenderFailure } from '../../observability/error-reporting.adapter';
 
 interface AppErrorBoundaryProps {
   readonly children: ReactNode;
@@ -55,6 +56,7 @@ export class AppErrorBoundary extends Component<AppErrorBoundaryProps, AppErrorB
 
   override componentDidCatch(error: Error, info: ErrorInfo): void {
     console.error('pragma crashed while rendering', error, info.componentStack);
+    reportRenderFailure(error, info.componentStack);
   }
 
   override render(): ReactNode {
