@@ -23,3 +23,7 @@ export function selectSameOriginApiDomainName(
   if (!isProductionStage(stage)) return undefined;
   return apiDomainName;
 }
+
+export function isApiServedThroughCloudFront(stage: Stage, hasApi: boolean): boolean {
+  return hasApi && isProductionStage(stage);
+}

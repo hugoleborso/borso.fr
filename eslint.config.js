@@ -264,6 +264,7 @@ export default tseslint.config(
       'borso/no-cross-slice-repository-imports': 'error',
       'borso/no-database-client-outside-repository': 'error',
       'borso/no-raw-sql-outside-migrations': 'error',
+      'borso/no-client-supplied-address-header': 'error',
     },
   },
 

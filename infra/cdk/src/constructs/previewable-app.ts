@@ -10,8 +10,11 @@ import {
   type Stage,
   validateAppSlug,
 } from '../internal/naming.utils.js';
+import { ORIGIN_VERIFY_ENVIRONMENT_VARIABLE } from '../internal/client-address.js';
+import { createOriginVerifyValue } from '../internal/origin-verify.js';
 import { SHARED_SSM_PARAMETERS } from '../internal/shared-ssm.js';
 import {
+  isApiServedThroughCloudFront,
   selectSameOriginApiDomainName,
   selectTestSeedEnvironment,
 } from '../internal/stage-wiring.utils.js';
@@ -71,6 +74,12 @@ export class PreviewableApp extends Construct {
       });
     }
 
+    const isApiBehindCloudFront = isApiServedThroughCloudFront(
+      props.stage,
+      props.api !== undefined,
+    );
+    const originVerifyValue = isApiBehindCloudFront ? createOriginVerifyValue(this) : undefined;
+
     if (props.api) {
       if (isProductionStage(props.stage) && !props.domainName) {
         throw new Error('domainName is required for stage="prod".');
@@ -97,6 +106,9 @@ export class PreviewableApp extends Construct {
         environment: {
           ...selectTestSeedEnvironment(props.stage),
           ...props.api.environment,
+          ...(originVerifyValue === undefined
+            ? {}
+            : { [ORIGIN_VERIFY_ENVIRONMENT_VARIABLE]: originVerifyValue }),
         },
         dsqlSchema: this.database,
       });
@@ -117,9 +129,9 @@ export class PreviewableApp extends Construct {
       ...(props.frontend.bucketNameSuffix === undefined
         ? {}
         : { bucketNameSuffix: props.frontend.bucketNameSuffix }),
-      ...(sameOriginApiDomainName === undefined
+      ...(sameOriginApiDomainName === undefined || originVerifyValue === undefined
         ? {}
-        : { api: { domainName: sameOriginApiDomainName } }),
+        : { api: { domainName: sameOriginApiDomainName, originVerifyValue } }),
     });
 
     new CfnOutput(this, 'FrontendUrl', { value: this.site.url });

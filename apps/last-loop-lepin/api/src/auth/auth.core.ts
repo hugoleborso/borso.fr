@@ -43,13 +43,15 @@ export function isRequestOriginRejected(
   return !allowed.some((allowedOrigin) => allowedOrigin === origin);
 }
 
-const FORWARDED_FOR_SEPARATOR = ',';
-const SEPARATOR_ABSENT_INDEX = -1;
-const UNKNOWN_CLIENT_IP = 'unknown';
+export interface RateLimitBudget {
+  readonly maxAttempts: number;
+  readonly windowMs: number;
+}
 
-export function readClientIp(headerValue: string | undefined): string {
-  if (headerValue === undefined) return UNKNOWN_CLIENT_IP;
-  const separatorIndex = headerValue.indexOf(FORWARDED_FOR_SEPARATOR);
-  if (separatorIndex === SEPARATOR_ABSENT_INDEX) return headerValue.trim();
-  return headerValue.slice(0, separatorIndex).trim();
+export function windowFloorFor(now: Date, budget: RateLimitBudget): Date {
+  return new Date(now.getTime() - budget.windowMs);
+}
+
+export function isOverBudget(attemptsInWindow: number, budget: RateLimitBudget): boolean {
+  return attemptsInWindow > budget.maxAttempts;
 }
