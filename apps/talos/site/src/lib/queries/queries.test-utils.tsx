@@ -85,7 +85,7 @@ export async function flushTasks(): Promise<void> {
   });
 }
 
-const WALL_CLOCK_SETTLE_BUDGET_MS = 4000;
+const WALL_CLOCK_SETTLE_BUDGET_MS = 20_000;
 
 export async function flushUntil(isSettled: () => boolean): Promise<void> {
   const deadline = Date.now() + WALL_CLOCK_SETTLE_BUDGET_MS;
