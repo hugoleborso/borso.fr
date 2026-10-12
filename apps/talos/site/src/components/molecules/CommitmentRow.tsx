@@ -4,6 +4,7 @@ import { Chip } from '../atoms/Chip';
 import type { ChipTone } from '../atoms/chip.variants';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
+import { MeanderRail, type MeanderRailProps } from '../atoms/MeanderRail';
 import { PRESSABLE_CLASS_NAME, usePressGesture } from '../../lib/press-gesture.hook';
 
 export interface CommitmentRowProps {
@@ -14,6 +15,7 @@ export interface CommitmentRowProps {
   readonly dueLabel?: string;
   readonly dueTone?: ChipTone;
   readonly onLongPress: () => void;
+  readonly rail?: MeanderRailProps;
 }
 
 const VARIANT_ICON = { task: 'owed', awaited: 'awaited' } as const;
@@ -28,6 +30,7 @@ export function CommitmentRow({
   dueLabel,
   dueTone = 'neutral',
   onLongPress,
+  rail,
 }: CommitmentRowProps): JSX.Element {
   const press = usePressGesture({ onLongPress });
   const isAwaited = variant === 'awaited';
@@ -37,13 +40,16 @@ export function CommitmentRow({
         to={href}
         {...press.handlers}
         className={composeClassName(
-          'flex items-start gap-1 min-h-13 no-underline',
+          'relative flex items-start gap-1 min-h-13 no-underline',
           isAwaited ? 'text-ink-muted' : 'text-ink',
           PRESSABLE_CLASS_NAME,
         )}
       >
-        <span className="flex items-center justify-center w-11 h-11 shrink-0 text-ink-faint">
-          <Icon name={VARIANT_ICON[variant]} size={VARIANT_ICON_SIZE[variant]} />
+        {rail === undefined ? null : <MeanderRail {...rail} />}
+        <span className="relative flex items-center justify-center w-11 h-11 shrink-0 text-ink-faint">
+          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-surface">
+            <Icon name={VARIANT_ICON[variant]} size={VARIANT_ICON_SIZE[variant]} />
+          </span>
         </span>
         <span className="min-w-0 flex-1 py-3 pr-2">
           <span className="block text-body-sm break-words">

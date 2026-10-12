@@ -4,10 +4,10 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useNavigate } from 'react-router-dom';
 import { Button } from '../atoms/Button';
-import { Card } from '../atoms/Card';
 import { Input } from '../atoms/Input';
 import { Notice } from '../atoms/Notice';
 import { Spinner } from '../atoms/Spinner';
+import { Tondo } from '../atoms/Tondo';
 import { ApiError } from '../../lib/api.client';
 import { isPasskeySupported } from '../../lib/passkey.adapter';
 import { usePasskeySignIn, useRegisterPasskey } from '../../lib/queries/passkey.queries';
@@ -102,10 +102,12 @@ export function AuthPanel(): JSX.Element {
   if (session.data?.signedIn === true) return <Navigate to="/" replace />;
 
   return (
-    <Card padding="lg" className="w-full max-w-sm">
-      <div className="flex flex-col items-center text-center mb-6">
-        <img src="/icons/icon.svg" alt="" width={64} height={64} className="rounded-lg mb-4" />
-        <h1 className="m-0 font-display text-display text-ink">{t('auth.title')}</h1>
+    <div className="w-full max-w-sm flex flex-col gap-4">
+      <div className="flex flex-col items-center text-center gap-3 mb-6">
+        <h1 className="m-0">
+          <Tondo title={t('auth.title')} />
+        </h1>
+        <p className="m-0 text-body text-ink-muted">{t('auth.tagline')}</p>
       </div>
       {session.isPending ? <Spinner label={t('common.loading')} /> : null}
       {isSupported ? null : <Notice tone="danger">{t('auth.unsupported')}</Notice>}
@@ -120,10 +122,8 @@ export function AuthPanel(): JSX.Element {
         />
       ) : null}
       {failureStatus === undefined ? null : (
-        <div className="mt-3">
-          <Notice tone="danger">{t(selectAuthErrorKey(failureStatus))}</Notice>
-        </div>
+        <Notice tone="danger">{t(selectAuthErrorKey(failureStatus))}</Notice>
       )}
-    </Card>
+    </div>
   );
 }
