@@ -89,7 +89,7 @@ sequenceDiagram
 | Granularity | Song × instrument; song only | Song × instrument, matching mastery. |
 | Naming | `revision`, `practice`, `study` | `study`. `practice` is already a session kind (a band rehearsal) and `revision` reads as a version in code. |
 
-**Out of scope**: study duration; notifications or reminders; badges and rewards beyond the streak; a configurable threshold; back-dated studies; history for mastery defaults; a ranking by study count.
+**Out of scope**: the alarms in the zero-defect table below (decided at implementation, 2026-10-13: no metric filter or alarm exists for any handled 4xx in this application, and building the first one is infrastructure work on `infra/cdk`, which this feature does not otherwise touch; the error classes are answered and logged, and the operator decides whether the alarms come next); study duration; notifications or reminders; badges and rewards beyond the streak; a configurable threshold; back-dated studies; history for mastery defaults; a ranking by study count.
 
 ## Architectural choices
 
@@ -165,6 +165,8 @@ apps/pragma/VOCABULARY.md                                                       
 **Output metrics**, reviewed by the operator, not gated: the readiness bar shows N of N on the morning of each of the next three concerts.
 
 ### Zero-defect strategy
+
+Each class below is answered with its status code and appears in the request log. The alerting column is the intended behaviour once alarms exist, and is out of scope for this iteration.
 
 | Error class | Fires when | Surfaces as |
 | --- | --- | --- |

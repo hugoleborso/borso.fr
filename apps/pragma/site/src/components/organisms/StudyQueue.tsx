@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next';
 import {
   type StudyQueueRow,
   useLogStudy,
-  useSaveSongScore,
+  useStepSongScore,
   useUndoStudy,
 } from '../../lib/queries/studies.queries';
 import { keepPinnedOrder, targetKey } from '../../lib/queries/studies.utils';
@@ -23,7 +23,7 @@ export function StudyQueue({ memberId, rows, instrumentNames }: StudyQueueProps)
   const { t } = useTranslation();
   const logStudy = useLogStudy(memberId);
   const undoStudy = useUndoStudy(memberId);
-  const saveScore = useSaveSongScore();
+  const stepSongScore = useStepSongScore(memberId);
   const [pinnedKeys] = useState(() => rows.map((row) => targetKey(row)));
   const orderedRows = keepPinnedOrder(rows, pinnedKeys);
   if (rows.length === 0) {
@@ -44,7 +44,7 @@ export function StudyQueue({ memberId, rows, instrumentNames }: StudyQueueProps)
             onStudied={() => logStudy.mutate(target)}
             onUndo={() => undoStudy.mutate(target)}
             onScoreStep={(direction) =>
-              saveScore.mutate({ ...target, memberId, score: stepScore(row.score, direction) })
+              stepSongScore(target, (current) => stepScore(current, direction))
             }
           />
         );

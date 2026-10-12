@@ -3,16 +3,19 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
-import { markStudied, settleOwnLine } from './studies.utils';
+import { markStudied, readRowScore, settleOwnLine, withRowScore } from './studies.utils';
 
 export const studyKeys = {
   all: ['studies'] as const,
   overview: () => [...studyKeys.all, 'overview'] as const,
   historyOf: (songId: string) => [...studyKeys.all, 'history', songId] as const,
   overridesOf: (songId: string) => [...studyKeys.all, 'overrides', songId] as const,
+  scoreWrites: () => [...studyKeys.all, 'score-writes'] as const,
 };
 
 const CREATED_STATUS = 201;
+const SCORE_WRITE_SCOPE = 'studies-score';
+const LAST_WRITE_COUNT = 1;
 const OK_STATUS = 200;
 
 export type StudiesOverview = InferResponseType<typeof api.api.studies.overview.$get, 200>;
@@ -131,16 +134,20 @@ export function useUndoStudy(memberId: string) {
 }
 
 // @FollowsBlueprint query-pessimistic-mutation
-export function useSaveSongScore() {
+export function useStepSongScore(memberId: string) {
   const queryClient = useQueryClient();
-  return useMutation({
-    mutationKey: studyKeys.all,
+  const mutation = useMutation({
+    mutationKey: studyKeys.scoreWrites(),
+    scope: { id: SCORE_WRITE_SCOPE },
     mutationFn: async (variables: ScoreVariables) => {
       const response = await api.api.mastery.overrides.$put({ json: variables });
       if (!response.ok) throw new ApiError(response.status, `score ${response.status}`, null);
       return await response.json();
     },
-    onSuccess: async (_data, variables) => {
+    onSettled: async (_data, _error, variables) => {
+      const isLastQueuedWrite =
+        queryClient.isMutating({ mutationKey: studyKeys.scoreWrites() }) === LAST_WRITE_COUNT;
+      if (!isLastQueuedWrite) return;
       await Promise.all([
         queryClient.invalidateQueries({ queryKey: studyKeys.overview() }),
         queryClient.invalidateQueries({ queryKey: studyKeys.historyOf(variables.songId) }),
@@ -148,4 +155,12 @@ export function useSaveSongScore() {
       ]);
     },
   });
+  return (target: StudyTarget, nextScoreOf: (current: number | null) => number): void => {
+    const overview = queryClient.getQueryData<StudiesOverview>(studyKeys.overview());
+    const score = nextScoreOf(readRowScore(overview?.queue ?? [], target));
+    queryClient.setQueryData<StudiesOverview>(studyKeys.overview(), (old) =>
+      old === undefined ? old : withRowScore(old, target, score),
+    );
+    mutation.mutate({ ...target, memberId, score });
+  };
 }
