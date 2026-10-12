@@ -13,6 +13,7 @@ import {
 import { useFreeSlots } from '../../lib/queries/free-slots.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { FreeSlotRow } from '../molecules/FreeSlotRow';
+import { CALENDAR_SECTION_PATH } from './calendar-feed-form.utils';
 
 export interface FreeSlotsPanelProps {
   readonly onBook: (start: Date) => void;
@@ -61,7 +62,7 @@ function NoCalendarAtAllView(): JSX.Element {
   return (
     <p className="text-sm text-ink-500">
       {t('freeSlots.noCalendarAtAll')}{' '}
-      <Link to="/account" className="underline text-ink-900">
+      <Link to={CALENDAR_SECTION_PATH} className="underline text-ink-900">
         {t('freeSlots.connectYours')}
       </Link>
     </p>

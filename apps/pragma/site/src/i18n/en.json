@@ -7,6 +7,7 @@
     "calendarFeedHint": "Paste your calendar's secret iCal address. Google: Settings, your calendar, “Secret address in iCal format”. The app only reads when you are busy, and never shows the address again.",
     "calendarFeedInvalid": "This address cannot be read. Paste the secret address that starts with https:// or webcal://.",
     "calendarFeedRemove": "Remove",
+    "calendarFeedRemoveQuestion": "Remove your calendar? The free slots will then be computed without you, and reconnecting needs the secret address again.",
     "calendarFeedRemoved": "Calendar removed.",
     "calendarFeedReplace": "Replace",
     "calendarFeedSaved": "Saved. The free slots on the Sessions page now count your calendar.",

@@ -7,6 +7,7 @@
     "calendarFeedHint": "Colle l’adresse iCal secrète de ton agenda. Google : Paramètres, ton agenda, « Adresse secrète au format iCal ». L’app lit seulement quand tu es occupé·e, et n’affiche plus jamais l’adresse.",
     "calendarFeedInvalid": "Cette adresse ne peut pas être lue. Colle l’adresse secrète qui commence par https:// ou webcal://.",
     "calendarFeedRemove": "Retirer",
+    "calendarFeedRemoveQuestion": "Retirer ton agenda ? Les créneaux libres seront alors calculés sans toi, et il faudra de nouveau l’adresse secrète pour le reconnecter.",
     "calendarFeedRemoved": "Agenda retiré.",
     "calendarFeedReplace": "Remplacer",
     "calendarFeedSaved": "Enregistré. Les créneaux libres de la page Sessions tiennent compte de ton agenda.",

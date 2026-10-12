@@ -8,6 +8,8 @@ import { CalendarFeedForm } from '../../components/organisms/CalendarFeedForm';
 import { ContactDetailsForm } from '../../components/organisms/ContactDetailsForm';
 import { PasskeyList } from '../../components/organisms/PasskeyList';
 import { PasswordChangeForm } from '../../components/organisms/PasswordChangeForm';
+import { CALENDAR_SECTION_ID } from '../../components/organisms/calendar-feed-form.utils';
+import { scrollIntoViewWhenAddressed } from '../../lib/anchor-scroll.adapter';
 import { ApiError } from '../../lib/api.client';
 import { isPasskeySupported } from '../../lib/passkey.adapter';
 import {
@@ -68,7 +70,11 @@ export function AccountPage(): JSX.Element {
         />
       </Card>
 
-      <Card className="p-4 sm:p-6">
+      <Card
+        id={CALENDAR_SECTION_ID}
+        ref={scrollIntoViewWhenAddressed}
+        className="p-4 sm:p-6 scroll-mt-4"
+      >
         <h2 className="text-base text-ink-900 m-0 mb-3">{t('account.calendarFeed')}</h2>
         <p className="text-xs text-ink-500 mt-0 mb-3">{t('account.calendarFeedHint')}</p>
         <CalendarFeedForm

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
+import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { type CalendarFeedFormMode, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
 
 const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
@@ -88,6 +89,7 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
 export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
   const { t } = useTranslation();
   const [isReplacing, setIsReplacing] = useState(false);
+  const [isConfirmingRemoval, setIsConfirmingRemoval] = useState(false);
   const saveAndClose = async (address: string): Promise<void> => {
     await props.onSave(address);
     setIsReplacing(false);
@@ -102,7 +104,12 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
         <Button type="button" variant="default" onClick={() => setIsReplacing(true)}>
           {t('account.calendarFeedReplace')}
         </Button>
-        <Button type="button" variant="ghost" onClick={props.onRemove} disabled={props.isRemoving}>
+        <Button
+          type="button"
+          variant="ghost"
+          onClick={() => setIsConfirmingRemoval(true)}
+          disabled={props.isRemoving}
+        >
           {t('account.calendarFeedRemove')}
         </Button>
       </div>
@@ -112,6 +119,17 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
   return (
     <div className="flex flex-col gap-3">
       {viewByMode[mode]}
+      {isConfirmingRemoval ? (
+        <ConfirmDialog
+          question={t('account.calendarFeedRemoveQuestion')}
+          confirmLabel={t('account.calendarFeedRemove')}
+          onConfirm={() => {
+            setIsConfirmingRemoval(false);
+            props.onRemove();
+          }}
+          onCancel={() => setIsConfirmingRemoval(false)}
+        />
+      ) : null}
       {props.error === null ? null : (
         <p className="text-danger text-sm m-0" role="alert">
           {props.error}
