@@ -42,15 +42,14 @@ export async function listStudiesSince(firstDay: CalendarDay): Promise<StudyRow[
     .where(gte(studyTable.studiedOn, firstDay));
 }
 
-export async function listStudyDaysOfMemberSince(
+export async function listStudiesOfMemberSince(
   memberId: string,
   firstDay: CalendarDay,
-): Promise<CalendarDay[]> {
-  const rows = await getDatabase()
-    .selectDistinct({ studiedOn: studyTable.studiedOn })
+): Promise<StudyRow[]> {
+  return await getDatabase()
+    .select(STUDY_PROJECTION)
     .from(studyTable)
     .where(and(eq(studyTable.memberId, memberId), gte(studyTable.studiedOn, firstDay)));
-  return rows.map((row) => row.studiedOn);
 }
 
 export async function deleteStudiesOfMember(

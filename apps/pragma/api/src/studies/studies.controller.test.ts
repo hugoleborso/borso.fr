@@ -221,8 +221,16 @@ describe('studies controller (back-e2e)', () => {
       cookieHeader,
     });
     expect(undone.status).toBe(200);
-    expect(await readJson(undone, z.object({ myStreak: streakSchema }))).toEqual({
-      myStreak: { days: 0, isTodayCounted: false, isJokerAvailable: true },
+    expect(
+      await readJson(
+        undone,
+        z.object({ myLine: z.object({ streak: streakSchema, studiesThisWeek: z.number() }) }),
+      ),
+    ).toEqual({
+      myLine: {
+        streak: { days: 0, isTodayCounted: false, isJokerAvailable: true },
+        studiesThisWeek: 0,
+      },
     });
     expect(again.status).toBe(404);
   });

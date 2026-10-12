@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
-import { markStudied, settleOwnStreak } from './studies.utils';
+import { markStudied, settleOwnLine } from './studies.utils';
 
 export const studyKeys = {
   all: ['studies'] as const,
@@ -103,7 +103,7 @@ export function useLogStudy(memberId: string) {
     onError: toggle.onError,
     onSuccess: (data) => {
       toggle.queryClient.setQueryData<StudiesOverview>(studyKeys.overview(), (old) =>
-        old === undefined ? old : settleOwnStreak(old, memberId, data.myStreak),
+        old === undefined ? old : settleOwnLine(old, memberId, data.myLine),
       );
     },
   });
@@ -124,7 +124,7 @@ export function useUndoStudy(memberId: string) {
     onError: toggle.onError,
     onSuccess: (data) => {
       toggle.queryClient.setQueryData<StudiesOverview>(studyKeys.overview(), (old) =>
-        old === undefined ? old : settleOwnStreak(old, memberId, data.myStreak),
+        old === undefined ? old : settleOwnLine(old, memberId, data.myLine),
       );
     },
   });

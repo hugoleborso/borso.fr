@@ -1,5 +1,6 @@
 /** @Feature studies */
 
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   type StudyQueueRow,
@@ -7,6 +8,7 @@ import {
   useSaveSongScore,
   useUndoStudy,
 } from '../../lib/queries/studies.queries';
+import { keepPinnedOrder, targetKey } from '../../lib/queries/studies.utils';
 import { stepScore } from '../../routes/studies/studies-page.core';
 import { StudyRow } from '../molecules/StudyRow';
 
@@ -22,12 +24,14 @@ export function StudyQueue({ memberId, rows, instrumentNames }: StudyQueueProps)
   const logStudy = useLogStudy(memberId);
   const undoStudy = useUndoStudy(memberId);
   const saveScore = useSaveSongScore();
+  const [pinnedKeys] = useState(() => rows.map((row) => targetKey(row)));
+  const orderedRows = keepPinnedOrder(rows, pinnedKeys);
   if (rows.length === 0) {
     return <p className="text-sm text-ink-500 italic">{t('studies.queueEmpty')}</p>;
   }
   return (
     <ul className="flex flex-col gap-2 m-0 p-0 list-none">
-      {rows.map((row) => {
+      {orderedRows.map((row) => {
         const target = { songId: row.songId, instrumentId: row.instrumentId };
         return (
           <StudyRow

@@ -11,7 +11,7 @@ import {
   getEntriesOfSong,
 } from '../setlists/setlists.service';
 import { getSongById, getSongs, type SongRow } from '../songs/songs.service';
-import { buildMemberStreaks } from './band-streaks.core';
+import { buildMemberStreaks, type MemberStreak } from './band-streaks.core';
 import {
   groupLineupsBySong,
   isSongReady,
@@ -19,14 +19,14 @@ import {
   type SongLineups,
 } from './concert-readiness.core';
 import { type CalendarDay, parisCalendarDay, shiftCalendarDay } from './paris-day.core';
-import { computeStreak, type Streak } from './streak.core';
+import { computeStreak } from './streak.core';
 import {
   deleteStudiesOfMember,
   deleteStudiesOfSong,
   deleteStudy,
   insertStudyIfAbsent,
   listStudiesSince,
-  listStudyDaysOfMemberSince,
+  listStudiesOfMemberSince,
 } from './studies.repository';
 import type { StudyLogInput } from './studies.schema';
 import type {
@@ -49,9 +49,13 @@ function firstLookbackDay(today: CalendarDay): CalendarDay {
   return shiftCalendarDay(today, -STREAK_LOOKBACK_DAYS);
 }
 
-async function readOwnStreak(memberId: string, today: CalendarDay): Promise<Streak> {
-  const days = await listStudyDaysOfMemberSince(memberId, firstLookbackDay(today));
-  return computeStreak(days, today);
+async function readOwnLine(memberId: string, today: CalendarDay): Promise<MemberStreak> {
+  const ownStudies = await listStudiesOfMemberSince(memberId, firstLookbackDay(today));
+  const [ownLine] = buildMemberStreaks([{ memberId }], ownStudies, today);
+  return {
+    streak: ownLine?.streak ?? computeStreak([], today),
+    studiesThisWeek: ownLine?.studiesThisWeek ?? 0,
+  };
 }
 
 async function readLineupsOfSong(song: SongRow): Promise<Lineup[]> {
@@ -80,7 +84,7 @@ export async function logStudy(command: StudyCommand): Promise<StudyWriteOutcome
     studiedOn: today,
   };
   await insertStudyIfAbsent(study, command.now);
-  return { kind: 'ok', study, myStreak: await readOwnStreak(command.memberId, today) };
+  return { kind: 'ok', study, myLine: await readOwnLine(command.memberId, today) };
 }
 
 export async function undoStudy(command: StudyCommand): Promise<StudyUndoOutcome> {
@@ -92,7 +96,7 @@ export async function undoStudy(command: StudyCommand): Promise<StudyUndoOutcome
     studiedOn: today,
   });
   if (deletedCount === 0) return { kind: 'study-not-found' };
-  return { kind: 'ok', myStreak: await readOwnStreak(command.memberId, today) };
+  return { kind: 'ok', myLine: await readOwnLine(command.memberId, today) };
 }
 
 interface ConcertScope {

@@ -38,10 +38,10 @@ export interface StudiesOverview {
 }
 
 export type StudyWriteOutcome =
-  | { readonly kind: 'ok'; readonly study: StudyRow; readonly myStreak: Streak }
+  | { readonly kind: 'ok'; readonly study: StudyRow; readonly myLine: MemberStreak }
   | { readonly kind: 'song-not-found' }
   | { readonly kind: 'instrument-not-found' }
   | { readonly kind: 'study-not-in-lineup' };
 
 export type StudyUndoOutcome =
-  { readonly kind: 'ok'; readonly myStreak: Streak } | { readonly kind: 'study-not-found' };
+  { readonly kind: 'ok'; readonly myLine: MemberStreak } | { readonly kind: 'study-not-found' };
