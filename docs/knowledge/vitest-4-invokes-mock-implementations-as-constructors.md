@@ -7,6 +7,10 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/76
 fix-commit: n/a (the mock must stay a function declaration)
 time-to-detect: minutes
 tags: [vitest, mocking, testing, vendor-quirk]
+summary: 'Vitest 4 calls a mock''s implementation as a constructor, so a mock for a class reached with `new` must be a function declaration, not an arrow.'
+triggers:
+  output:
+    - 'is not a constructor'
 ---
 
 # Vitest 4 invokes a mock's implementation as a constructor

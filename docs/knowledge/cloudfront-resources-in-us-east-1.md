@@ -7,6 +7,12 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/2
 fix-commit: n/a (vendor constraint; the fix is operator awareness)
 time-to-detect: minutes (first cloudfront API call from the wrong region)
 tags: [cloudfront, aws-cli, region-pinning, vendor-quirk]
+summary: 'CloudFront''s control plane is in `us-east-1`; a lookup from `eu-west-3` answers that the resource does not exist.'
+triggers:
+  commands:
+    - '\baws\s+(\S+\s+)*cloudfront\s'
+  output:
+    - 'NoSuchFunctionExists'
 ---
 
 # CloudFront resources are global; the API endpoint is `us-east-1`

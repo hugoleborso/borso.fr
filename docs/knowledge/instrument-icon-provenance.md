@@ -1,3 +1,10 @@
+---
+summary: 'Five instrument glyphs are Lucide path data under ISC; the bass is built parametrically and its fretboard edges must not be nudged by hand.'
+triggers:
+  paths:
+    - 'apps/pragma/site/src/components/atoms/Icon.tsx'
+---
+
 # Where pragma's instrument glyphs come from
 
 The lineup column on a setlist card draws one glyph per instrument at

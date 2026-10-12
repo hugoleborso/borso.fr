@@ -8,6 +8,7 @@ import {
   selectDueIcon,
   selectTodoEmptyLabelKey,
   selectTodoFilterLabelKey,
+  selectTodoListTitleKey,
   selectVisibleTodos,
   type SchedulableTodo,
 } from './todo-list.core';
@@ -169,6 +170,8 @@ describe('the filter labels', () => {
     expect(selectTodoFilterLabelKey('open')).toBe('todo.filter.open');
     expect(selectTodoFilterLabelKey('done')).toBe('todo.filter.done');
     expect(selectTodoFilterLabelKey('all')).toBe('todo.filter.all');
+    expect(selectTodoListTitleKey('main')).toBe('todo.title');
+    expect(selectTodoListTitleKey('work')).toBe('todo.work-title');
     expect(selectTodoEmptyLabelKey('open')).toBe('todo.empty.open');
     expect(selectTodoEmptyLabelKey('done')).toBe('todo.empty.done');
     expect(selectTodoEmptyLabelKey('all')).toBe('todo.empty.all');

@@ -3,12 +3,14 @@ date: 2026-05-05
 introduced-at: implementation
 detected-at: review
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/8
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/9
-fix-commits: []
-eradication-level: 2
+related-pr: '#8'
+fix-pr: '#9'
+fix-commits: [3a6a89c64c]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [visual-validation, agent-browser, screenshots, react]
+zone: plugins/borso-harness/skills/visual-validation
 ---
 
 # Described the screenshot, never looked at the pixels

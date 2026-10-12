@@ -5,10 +5,13 @@ detected-at: review
 severity: medium
 related-pr: '#89'
 fix-pr: '#106'
-fix-commits: [79562bd0]
+fix-commits: [79562bd0a3]
 eradication-level: 2
+eradication-paths: [scripts/check-instructions-name-installed-tools.sh]
 time-to-detect: days
 tags: [agents, skills, eslint, biome, tooling, gates, meta, documentation]
+zone: plugins/borso-harness/skills
+weak-point: prose-stands-in-for-a-check
 ---
 
 # The skill that named the linter the repository had deleted
@@ -109,7 +112,7 @@ runs rather than deleted and left vague:
   `--no-warn-ignored --max-warnings 0`, because ESLint exits 0 on a warning
   and a warning nobody has to clear is a rule that is off.
 - **`technical-conception`, `technical-validation`, `implementation`, `adr`,
-  `dantotsu`, `after-task-dantotsus`** — same substitution, with the
+  `dantotsu`, `after-task-kaizen`** — same substitution, with the
   type-assertion rule named as `borso/no-type-assertion-except-unknown`
   rather than "the Biome plugin".
 - **The dispatch-hygiene rule** rewritten to the lesson rather than the tool:

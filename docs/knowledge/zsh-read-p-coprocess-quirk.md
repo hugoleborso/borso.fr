@@ -1,3 +1,12 @@
+---
+summary: '`read -rsp` is bash-only; zsh reads `-p` as a coprocess flag. Use printf, `stty -echo` and `read -r` in a snippet for the operator.'
+triggers:
+  commands:
+    - '\bread\s+-\w*p'
+  output:
+    - 'no coprocess'
+---
+
 # `read -rsp "prompt: " var` works in bash, fails in zsh
 
 zsh's `read` reserves `-p <fd>` for *coprocess input*, not for

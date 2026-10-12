@@ -1,3 +1,10 @@
+---
+summary: '`get_files` returns every patch and overflows the budget on a large pull request; the result is already saved as JSON, so parse that file.'
+triggers:
+  output:
+    - 'exceeds maximum allowed tokens'
+---
+
 # Reading a large pull request through the GitHub MCP
 
 `mcp__github__pull_request_read` with `method: get_files` returns the full

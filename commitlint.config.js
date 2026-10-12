@@ -1,5 +1,10 @@
+const DEPENDABOT_SIGN_OFF = /^Signed-off-by: dependabot\[bot\] <support@github\.com>$/m;
+
+const isWrittenByDependabot = (message) => DEPENDABOT_SIGN_OFF.test(message);
+
 export default {
   extends: ['@commitlint/config-conventional'],
+  ignores: [isWrittenByDependabot],
   rules: {
     'header-max-length': [2, 'always', 100],
     'body-max-line-length': [0],

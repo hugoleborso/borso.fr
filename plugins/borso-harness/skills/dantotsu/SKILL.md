@@ -1,6 +1,6 @@
 ---
 name: dantotsu
-description: Use when the user asks for a Dantotsu, root-cause analysis (RCA), five-whys, post-mortem of a defect, or "lean quality investigation" — including the explicit `/dantotsu` invocation. Walks the seven Dantotsu steps and produces a Markdown entry under `docs/dantotsus/`. CRITICAL — eradication is non-optional and must land code, not docs alone. The skill has a hard rule: every dantotsu finishes with at least one of (a) a structural change that makes the defect impossible to reintroduce, (b) a DevX check (linter, type guard, pre-commit hook) that catches the misconception, (c) a vendor patch in `patches/` plus a flag for the human to open the upstream PR, OR — only if none of the above is feasible — (d) a knowledge entry under `docs/knowledge/`. Each dantotsu links the commit hash, PR, and code diff that fixed it. Agent never opens PRs against repos outside `hugoleborso/*`. Read the standard at `${CLAUDE_PLUGIN_ROOT}/skills/dantotsu/standard.md` before facilitating one.
+description: Use when the user asks for a Dantotsu, root-cause analysis (RCA), five-whys, post-mortem of a defect, or "lean quality investigation" — including the explicit `/dantotsu` invocation. Walks the seven Dantotsu steps and produces a Markdown entry under `docs/dantotsus/`. CRITICAL — eradication is non-optional and must land code, not docs alone. The skill has a hard rule: every dantotsu finishes with at least one of (a) a structural change that makes the defect impossible to reintroduce, (b) a DevX check (linter, type guard, pre-commit hook) that catches the misconception, (c) a vendor patch in `patches/` plus a flag for the human to open the upstream PR, OR — only if none of the above is feasible — (d) a triggered knowledge entry under `docs/knowledge/`, whose `triggers:` front matter names the paths, commands or output at which a hook prints it. Each dantotsu links the commit hash, PR, and code diff that fixed it. Agent never opens PRs against repos outside `hugoleborso/*`. Read the standard at `${CLAUDE_PLUGIN_ROOT}/skills/dantotsu/standard.md` before facilitating one.
 ---
 
 > **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
@@ -40,7 +40,7 @@ end up structurally unable to host the same defect again.
 - The user says any of: "let's do a Dantotsu" / "RCA" / "five whys" /
   "post-mortem" / "/dantotsu".
 - The user pastes an error or stack trace and asks "what went wrong here".
-- A PR just fixed a non-trivial bug — the [`/after-task-dantotsus`](../after-task-dantotsus/SKILL.md)
+- A PR just fixed a non-trivial bug — the [`/after-task-kaizen`](../after-task-kaizen/SKILL.md)
   skill calls this one once per surviving subject.
 
 ## When NOT to
@@ -156,10 +156,20 @@ top is best):
 4. **Detection improvement.** A CloudWatch alarm, a synth-time test,
    an integration test that exercises the previously-untested path.
    Catches the next instance after it ships, before users see it.
-5. **Knowledge entry.** A new file under `docs/knowledge/` — only
-   if 1–4 are genuinely impossible. Knowledge alone is *not enough*
-   for a Dantotsu; pure-knowledge subjects belong in
-   `docs/knowledge/` directly, not in `docs/dantotsus/`.
+5. **Triggered knowledge entry.** A file under `docs/knowledge/` —
+   only if 1–4 are genuinely impossible — **with `triggers:` in its
+   front matter** naming the moment the misconception shows: the file
+   a Write or Edit targets, the command about to run, or the error text
+   a tool prints. `knowledge-triggers.sh` puts the entry's summary in
+   front of the agent at that moment. An entry with no trigger is not
+   this rung, and `scripts/check-knowledge-triggers.sh` refuses it:
+   nine dantotsus record an entry that existed, was correct, and was
+   not read, because a document reaches only someone who already
+   suspects its answer. Pick the trigger from the symptom in step 1,
+   not from the cause: the agent who repeats the mistake sees the
+   symptom. Knowledge alone is *not enough* for a Dantotsu;
+   pure-knowledge subjects belong in `docs/knowledge/` directly, not in
+   `docs/dantotsus/`.
 
 For each item picked, **include the actual diff or commit
 reference** in the entry — not a placeholder. The dantotsu file
@@ -173,7 +183,12 @@ expressible in code if you push hard enough.
 ### 7. Spread the lesson
 
 - Title the entry to **spark curiosity**, not the user-story name.
-- Cross-link to other entries when chains overlap.
+- Cross-link to other entries when chains overlap, and name the one this
+  repeats in `recurs:`.
+- Place it: `zone:` puts a dot on the weak-point map that
+  `scripts/quality/weak-points.ts` draws, and `weak-point:` counts it
+  against an engaged weak point
+  ([ADR-0029](../../../../docs/adr/0029-weak-point-management-from-the-dantotsu-record.md)).
 - If a coaching opportunity exists (a developer would benefit from
   walking through the chain), name it.
 
@@ -184,9 +199,36 @@ Drop a Markdown file at `docs/dantotsus/<slug>.md`. Use
 as the starting point — it has the YAML frontmatter and section
 shape pre-filled.
 
-Frontmatter MUST include the eradication's commit hash and PR (or
-"this PR" with the PR-creation command spelled out for the operator).
-Without that link the dantotsu doesn't qualify.
+The frontmatter is read by tools, and
+`scripts/quality/check-dantotsu-front-matter.ts` refuses an entry that
+gets it wrong, in pre-commit and in CI. Fill it this way:
+
+- **Fixed lists.** `introduced-at`, `detected-at`, `severity` and
+  `eradication-level` take only the values the template lists.
+- **Pull requests** are `'#<n>'`, or `none (<reason>)`.
+- **`fix-commits`** names commits that resolve on `main`. Write `[self]`
+  when the eradication ships in the same commit as this entry: a squash
+  merge renames every branch commit, so a branch hash written now will not
+  resolve after the merge. Write `none (<reason>)` when nothing was
+  committed, and then the level is 5.
+- **`eradication-paths`** lists the files the eradication lives in. Levels 1
+  to 4 need at least one that is not markdown. An edit to a skill, an agent,
+  CLAUDE.md or a standard is an instruction, which is level 5 however it is
+  described.
+- **`zone`** is the repository path where the defect *lived*: the component,
+  the construct, the gate, the skill. It is not where the fix landed, which
+  for a kaizen pull request is usually `.husky/` or `scripts/`. It must
+  exist in the tree. It places the entry's dot on the weak-point map.
+- **`weak-point`**, optional, names a row of
+  [`docs/quality/weak-points.md`](../../../../docs/quality/weak-points.md)
+  when the defect belongs to an engaged weak point. That is what counts it.
+- **`recurs`** names the earlier entry this one repeats, found with the
+  listing script below. When the entry shares two or more tags with an
+  earlier one and is not a repeat, write `recurs: none (<why it is a
+  different class>)`. A repeat retold as a new story is how the same class
+  was written up three times in one day.
+- **No placeholder** anywhere: no `<TBD>`, no `pending`, no
+  `<kaizen-commit>`.
 
 ## Hard rules (the skill enforces these)
 
@@ -255,7 +297,7 @@ Sorted newest-first. Skips `_template.md` and `README.md`.
 - **`docs/dantotsus/_template.md`** — copy this when starting a new
   entry.
 - **CLAUDE.md's Self-improvement loop** rule: when a PR merges, run
-  [`/after-task-dantotsus`](../after-task-dantotsus/SKILL.md) →
+  [`/after-task-kaizen`](../after-task-kaizen/SKILL.md) →
   produces one Dantotsu per real defect (with eradication shipped)
   and one Knowledge entry per vendor surprise → opens the follow-up
   PR with the `kaizen` label.

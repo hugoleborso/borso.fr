@@ -51,7 +51,6 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
 
   return (
     <section className="flex flex-col gap-4">
-      <h3 className="font-display italic text-2xl text-ink-900 m-0">{t('audience.panelTitle')}</h3>
       <div className="grid grid-cols-1 gap-4 items-start">
         <Card className="flex flex-col gap-3">
           {isRoundOpen ? (

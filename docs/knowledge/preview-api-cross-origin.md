@@ -1,3 +1,11 @@
+---
+summary: 'A preview''s API is cross-origin, at `<app>-pr-<n>-api.preview.borso.fr`, because the shared previews distribution cannot route `/api/*` per app.'
+triggers:
+  paths:
+    - 'apps/*/site/src/api/client.ts'
+    - '.github/workflows/preview.yml'
+---
+
 # Preview API access is cross-origin (custom domain per PR)
 
 **Why this exists:** the original plan was "frontend hits `/api/*` same-origin, CloudFront routes to the Lambda". The plan was documented but never wired — neither in the per-app prod distribution (StaticSite) nor in the shared previews distribution. Result: every preview returned the S3 404 fallback (a JPEG) for `/api/*` calls, the Lambda was never invoked, and the dashboard showed _"Le serveur ne répond pas pour l'instant"_. CloudWatch was empty for the API log group.

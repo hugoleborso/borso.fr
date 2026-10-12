@@ -129,7 +129,7 @@ Quote the code for each row. When the diff predates the rule (an existing write 
    ${CLAUDE_PLUGIN_ROOT}/scripts/kaizen.sh --from technical-validator "<what went wrong, one sentence>"
    ```
 
-   The problem only, never the fix. It is swept at merge by `/after-task-dantotsus`.
+   The problem only, never the fix. It is swept at merge by `/after-task-kaizen`.
 11. **Return only the report path.** Do not summarise findings.
 
 ## Report format

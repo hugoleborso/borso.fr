@@ -16,8 +16,20 @@
 # entry is only reachable by someone who already suspects the cache, and the
 # symptom argues the other way — it reads as "my fix did not work".
 #
+# PR #153 hit it a third time and this hook stayed silent: it looked for
+# .eslintcache in the working directory, and the run was `pnpm run lint` from
+# apps/pragma, whose cache lived under the root node_modules. It now looks for
+# every cache this repository writes, from the repository root.
+#
 # Best-effort by contract: it ALWAYS exits 0, and it never asserts staleness —
 # these errors are usually real. It names the one command that tells them apart.
+#
+# A lint run that reports an error exits non-zero, and a failing Bash call fires
+# PostToolUseFailure with the output in `.error`, not PostToolUse with a
+# `.tool_response`. Plain stdout from either event reaches the debug log and not
+# the model. This hook did both wrong until 2026-10-10, so it never spoke on the
+# run it was written for; it is registered on both events now and answers with
+# `additionalContext`. See docs/adr/0030-knowledge-is-delivered-by-trigger.md.
 
 if ! command -v jq >/dev/null 2>&1; then
   exit 0
@@ -33,15 +45,20 @@ esac
 
 # A command that already clears the cache has nothing to be warned about.
 case "$COMMAND" in
-  *.eslintcache*) exit 0 ;;
+  *.eslintcache* | *.cache/eslint*) exit 0 ;;
 esac
 
-[ -f .eslintcache ] || exit 0
+ROOT=$(git rev-parse --show-toplevel 2>/dev/null) || exit 0
+CACHES=$(cd "$ROOT" && ls -d .eslintcache* node_modules/.cache/eslint* 2>/dev/null | tr '\n' ' ')
+[ -n "$CACHES" ] || exit 0
 
+EVENT=$(jq -r '.hook_event_name // "PostToolUse"' <<<"$INPUT")
 RESPONSE=$(jq -r '
-  if type == "string" then .
-  else (.stdout // "") + "\n" + (.stderr // "") + "\n" + (.output // "")
-  end' <<<"$(jq -r '.tool_response // empty' <<<"$INPUT")" 2>/dev/null)
+  .error // (.tool_response
+    | if . == null then ""
+      elif type == "string" then .
+      else (.stdout // "") + "\n" + (.stderr // "") + "\n" + (.output // "")
+      end)' <<<"$INPUT" 2>/dev/null)
 [ -z "$RESPONSE" ] && exit 0
 
 # The rules whose verdict depends on the whole type graph rather than on the
@@ -52,8 +69,9 @@ TYPE_AWARE='no-unsafe-argument|no-unsafe-assignment|no-unsafe-call|no-unsafe-mem
 COUNT=$(printf '%s' "$RESPONSE" | grep -cE "@typescript-eslint/($TYPE_AWARE)" || true)
 [ "${COUNT:-0}" -gt 0 ] || exit 0
 
-cat <<NOTE
-[eslint-cache] that run reported $COUNT type-aware error(s) and .eslintcache exists.
+NOTE=$(
+  cat <<NOTE
+[eslint-cache] that run reported $COUNT type-aware error(s), and an ESLint cache exists: $CACHES
 
 Type-aware rules read the whole type graph; --cache-strategy content keys on
 each file's own bytes. So when the types a file DEPENDS ON change — another
@@ -63,10 +81,14 @@ Re-running reproduces it exactly, which is what makes it read as a real error.
 
 Before treating these as real, settle it in one command:
 
-  rm -f .eslintcache && pnpm run lint
+  (cd "$ROOT" && rm -rf $CACHES) && pnpm run lint
 
 If they survive that, they are real. See
 https://github.com/hugoleborso/borso.fr/blob/main/docs/knowledge/eslint-content-cache-replays-a-stale-type-aware-error.md.
 NOTE
+)
+
+jq -n --arg event "$EVENT" --arg context "$NOTE" \
+  '{hookSpecificOutput: {hookEventName: $event, additionalContext: $context}}'
 
 exit 0

@@ -3,12 +3,15 @@ date: 2026-10-02
 introduced-at: conception
 detected-at: local
 severity: low
-related-pr: "#107"
-fix-pr: "#119"
-fix-commits: [50410b2]
+related-pr: '#107'
+fix-pr: '#119'
+fix-commits: [50410b2179]
 eradication-level: 1
+eradication-paths: [scripts/pr/check-pr-body.ts]
 time-to-detect: weeks
 tags: [skill, pr-body, process, meta]
+zone: plugins/borso-harness/skills/open-pr
+weak-point: prose-stands-in-for-a-check
 ---
 
 # Two skills asked for sections the checker refuses

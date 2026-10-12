@@ -1,3 +1,10 @@
+---
+summary: 'A freshly deployed pragma prod answers `503 auth-not-bootstrapped` on every route until `POST /api/admin/set-password` runs once.'
+triggers:
+  output:
+    - 'auth-not-bootstrapped'
+---
+
 # A freshly-deployed pragma prod returns 503 on every API route until you bootstrap the password
 
 ## Symptom

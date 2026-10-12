@@ -4,11 +4,14 @@ introduced-at: implementation
 detected-at: ci
 severity: medium
 related-pr: '#64'
-fix-pr: '#64'
-fix-commits: []
+fix-pr: '#75'
+fix-commits: [de7a3458dc]
 eradication-level: 4
+eradication-paths: [plugins/borso-harness/hooks/posttool-empty-checks-means-conflict.sh]
 time-to-detect: hours
 tags: [github-actions, ci, harness, hooks, self-improvement-loop]
+zone: docs/knowledge
+weak-point: prose-stands-in-for-a-check
 ---
 
 # The entry that already said it, two days before it cost another hour
@@ -119,3 +122,20 @@ symptom argues against the cause. When it does, level 5 is not enough.
 - [`a-gate-that-reported-success-while-measuring-nothing.md`](./a-gate-that-reported-success-while-measuring-nothing.md)
   — the same shape one layer down: a signal that reads as "fine" when it means
   "nothing happened".
+
+## Update 2026-10-10: the class, and the hook that never spoke
+
+The level-5 entry above was one of nine. An audit of the corpus found the same
+event recorded nine times: an entry existed, was correct, and the trap hit
+anyway. The class fix is
+[ADR-0030](../adr/0030-knowledge-is-delivered-by-trigger.md): every knowledge
+entry now declares `triggers:`, `knowledge-triggers.sh` prints the matching
+entry at that moment, and `scripts/check-knowledge-triggers.sh` refuses an
+entry with no trigger. A triggered entry is now what rung 5 means.
+
+The same audit found that `posttool-empty-checks-means-conflict.sh`, the
+eradication shipped here, printed its note to stdout. Claude Code sends plain
+stdout from a `PostToolUse` hook to the debug log, not to the model, so the
+note never reached an agent. It answers with `additionalContext` now, and
+`check-hook-decisions.sh` holds every hook that informs to a call it must speak
+on and one it must stay silent on.

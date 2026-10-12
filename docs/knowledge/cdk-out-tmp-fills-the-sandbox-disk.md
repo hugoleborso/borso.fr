@@ -1,3 +1,11 @@
+---
+summary: 'CDK tests leave `/tmp/cdk.out*` staging folders that eventually fill `/tmp` and fail the suite with `ENOSPC`; SessionStart sweeps them, and the entry has the recovery.'
+triggers:
+  output:
+    - 'ENOSPC'
+    - 'no space left on device'
+---
+
 # `/tmp/cdk.out*` leftover directories silently fill the sandbox disk
 
 ## Symptom

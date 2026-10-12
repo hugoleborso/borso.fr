@@ -3,13 +3,16 @@ date: 2026-10-10
 introduced-at: implementation
 detected-at: review
 severity: high
-related-pr: 12
-fix-pr: 161
-fix-commits: [243ee9e8, bb1d646d]
+related-pr: '#12'
+fix-pr: '#161'
+fix-commits: [self]
 eradication-level: 1
 time-to-detect: months
 tags: [last-loop-lepin, dsql, domain-model, vocabulary, gates, testing]
 blueprints: [core-decision, schema-dsql-constraints]
+eradication-paths: [apps/last-loop-lepin/api/src/punch/punch.repository.ts, apps/last-loop-lepin/api/src/punch/punch.schema.ts]
+zone: apps/last-loop-lepin/api/src/punch
+recurs: none (a constraint that refused a legal write after a void, not a gate or vocabulary defect)
 ---
 
 # A voided punch still held its loop

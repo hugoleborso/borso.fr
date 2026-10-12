@@ -5,10 +5,12 @@ detected-at: local
 severity: medium
 related-pr: '#104'
 fix-pr: '#105'
-fix-commits: []
+fix-commits: [60fcd964e8]
 eradication-level: 2
+eradication-paths: [scripts/check-coupled-lists.sh]
 time-to-detect: minutes
 tags: [testing, postgres, dsql, migrations, harness, pragma]
+zone: apps/pragma/api/src/__test
 ---
 
 # A table the harness never dropped, and the second run that found it

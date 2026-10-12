@@ -124,3 +124,52 @@ describe('the todo routes', () => {
     expect(restoration.status).toBe(400);
   });
 });
+
+describe('the work todo routes', () => {
+  const REVIEW_ID = buildTodoId('Relire la recette', '2026-10-04');
+
+  it('read and write todo-taff.md and leave todo.md alone', async () => {
+    const { app, overlay } = buildTestContext(CONTENT_FIXTURE);
+    const cookie = await signIn();
+    const listed = await requestJson(app, '/api/work-todos', { cookie });
+    const body: { items: { text: string }[] } = await listed.json();
+    expect(body.items.map((todo) => todo.text)).toEqual(['Relire la recette']);
+
+    await requestJson(app, `/api/work-todos/${REVIEW_ID}`, {
+      method: 'PATCH',
+      body: { done: true },
+      cookie,
+    });
+    const added = await requestJson(app, '/api/work-todos', {
+      method: 'POST',
+      body: { text: 'Chiffrer le lot 2' },
+      cookie,
+    });
+    expect(added.status).toBe(201);
+    expect(overlay.get('todo-taff.md')).toBe(
+      [
+        '# Todo taff',
+        '',
+        '- [x] Relire la recette | échéance: 2026-10-05 | ajouté: 2026-10-04 | fait: 2026-10-05',
+        '- [ ] Chiffrer le lot 2 | ajouté: 2026-10-05',
+        '',
+      ].join('\n'),
+    );
+    expect(overlay.has('todo.md')).toBe(false);
+  });
+
+  it('starts todo-taff.md under its own heading when it does not exist', async () => {
+    const withoutWorkList = Object.fromEntries(
+      Object.entries(CONTENT_FIXTURE).filter(([path]) => path !== 'todo-taff.md'),
+    );
+    const { app, overlay } = buildTestContext(withoutWorkList);
+    await requestJson(app, '/api/work-todos', {
+      method: 'POST',
+      body: { text: 'Chiffrer le lot 2' },
+      cookie: await signIn(),
+    });
+    expect(overlay.get('todo-taff.md')).toBe(
+      '# Todo taff\n\n- [ ] Chiffrer le lot 2 | ajouté: 2026-10-05\n',
+    );
+  });
+});

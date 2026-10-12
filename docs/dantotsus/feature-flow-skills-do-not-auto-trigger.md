@@ -1,14 +1,16 @@
 ---
 date: 2026-05-04
 introduced-at: conception
-detected-at: operator-deploy
+detected-at: review
 severity: medium
-related-pr: #6
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [<to-be-filled>]
-eradication-level: 4
+related-pr: '#6'
+fix-pr: none (never shipped)
+fix-commits: none (the Stop hook this entry describes was never committed; no commit on main contains it)
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [skills, harness, workflow]
+zone: plugins/borso-harness/skills
 ---
 
 # Feature-flow skills do not auto-trigger; the human becomes the loop
@@ -22,9 +24,9 @@ Across PR #6 the user had to nudge the agent to invoke each skill in the chain a
 | Spec finished, planning phase | Agent did not invoke `/technical-conception`. User said "now create the [plan]". |
 | Plan finished, implementation | Agent did not invoke `/implementation`. User said "Using /implementation yes". |
 | Implementation finished, validation | `/visual-validation` and `/technical-validation` were invoked manually each round. |
-| PR merged | `/after-task-dantotsus` did not auto-trigger. User said "You should auto start the use of the tool /after-task-dantotsus. You did not." |
+| PR merged | `/after-task-kaizen` did not auto-trigger. User said "You should auto start the use of the tool /after-task-kaizen. You did not." |
 
-The chain `/specification → /technical-conception → /implementation → /visual-validation → /technical-validation → /after-task-dantotsus` is documented end-to-end in CLAUDE.md and in each skill's own SKILL.md, but each transition relies on the agent *remembering* the next step at the right moment. Across a long session, that memory fails.
+The chain `/specification → /technical-conception → /implementation → /visual-validation → /technical-validation → /after-task-kaizen` is documented end-to-end in CLAUDE.md and in each skill's own SKILL.md, but each transition relies on the agent *remembering* the next step at the right moment. Across a long session, that memory fails.
 
 ## Root-cause chain
 
@@ -37,7 +39,7 @@ The chain `/specification → /technical-conception → /implementation → /vis
 3. **Why** doesn't the agent reliably make that call?
    At each transition the agent has just finished a long stretch of work. It exits the current skill into the main session, sees the user's last message (often "looks good"), and treats that as a natural stop. The follow-up skill is one slot of working memory away; absent a hard prompt, it doesn't fire.
 
-4. **Why** is `/after-task-dantotsus` the most-skipped of all?
+4. **Why** is `/after-task-kaizen` the most-skipped of all?
    Because the trigger is *external* — a PR merge happens on GitHub, often after the agent's session has effectively wound down. The agent isn't watching for the merge; the user is.
 
 5. **Why** is this category recurring, not one-off?
@@ -60,13 +62,18 @@ The user explicitly invoked each skill at each transition during PR #6. The agen
 
 ## Eradication (mandatory — code-level)
 
+**Status, 2026-10-10:** The Stop hook described above was never committed:
+no commit in the history of `main` contains
+`.claude/hooks/stop-skill-chain-reminder.sh`. The entry is re-levelled to
+5 to say so.
+
 **Type:** Detection (level 4 — Stop-hook reminder of the next skill in the chain)
 
-**Reference:** PR (this kaizen) · commit `<kaizen-commit>`
+**Reference:** PR (this kaizen) · commit: none, the hook was never committed
 
 **The actual fix:** add a Stop-hook (`.claude/hooks/stop-skill-chain-reminder.sh`) that fires every time the agent finishes its turn. The hook inspects the recent transcript for the last `Skill` tool invocation; if the previous skill was one of the feature-flow skills (`specification`, `technical-conception`, `implementation`, `visual-validation`, `technical-validation`), the hook prints a single-line reminder of the next skill in the chain and which condition must hold to invoke it. The hook output is surfaced to the agent on the next turn, so the chain progresses without the user having to type the next slash command.
 
-For the merge-time transition (`/after-task-dantotsus`), a complementary GitHub webhook handler — already on the harness when `subscribe_pr_activity` is active — fires on `pull_request.closed` with `merged: true`. The hook turns that webhook event into a Stop-hook reminder: *"PR #N merged. Next: invoke /after-task-dantotsus."*
+For the merge-time transition (`/after-task-kaizen`), a complementary GitHub webhook handler — already on the harness when `subscribe_pr_activity` is active — fires on `pull_request.closed` with `merged: true`. The hook turns that webhook event into a Stop-hook reminder: *"PR #N merged. Next: invoke /after-task-kaizen."*
 
 ```bash
 # .claude/hooks/stop-skill-chain-reminder.sh — invoked by the harness on Stop event
@@ -83,5 +90,5 @@ Both reminders are non-blocking — they do not auto-invoke the next skill. The 
 
 ## See also
 
-- [`plugins/borso-harness/skills/after-task-dantotsus/SKILL.md`](../../plugins/borso-harness/skills/after-task-dantotsus/SKILL.md) — the skill that should auto-trigger on merge; this dantotsu eradicates the trigger gap.
+- [`plugins/borso-harness/skills/after-task-kaizen/SKILL.md`](../../plugins/borso-harness/skills/after-task-kaizen/SKILL.md) — the skill that should auto-trigger on merge; this dantotsu eradicates the trigger gap.
 - CLAUDE.md *Self-improvement loop* section — names the kaizen-PR-on-merge contract that this dantotsu makes operational.

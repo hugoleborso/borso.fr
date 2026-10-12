@@ -3,13 +3,16 @@ date: 2026-10-10
 introduced-at: conception
 detected-at: review
 severity: high
-related-pr: 110
-fix-pr: 161
-fix-commits: [243ee9e8, 161cc464, bb1d646d]
+related-pr: '#110'
+fix-pr: '#161'
+fix-commits: [self]
 eradication-level: 1
 time-to-detect: weeks
 tags: [last-loop-lepin, banana-rush, dsql, concurrency, blueprints, review, testing]
 blueprints: [service-orchestration, schema-dsql-constraints]
+eradication-paths: [apps/banana-rush/api/src/games/games.repository.ts, apps/banana-rush/api/src/games/games.schema.ts]
+zone: apps/banana-rush/api/src/games
+recurs: none (no key held the seat count, so concurrent joins overfilled it; the voided punch was a key that refused too much)
 ---
 
 # Five monkeys at a three seat table

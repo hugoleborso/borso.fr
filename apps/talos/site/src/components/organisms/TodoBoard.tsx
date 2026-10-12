@@ -1,3 +1,4 @@
+import type { TodoListName } from '@domain/todo-list.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -27,17 +28,22 @@ import {
   selectDueTone,
   selectTodoEmptyLabelKey,
   selectTodoFilterLabelKey,
+  selectTodoListTitleKey,
   selectVisibleTodos,
   TODO_FILTERS,
   type TodoFilter,
 } from './todo-list.core';
 
+export interface TodoBoardProps {
+  readonly list: TodoListName;
+}
+
 // @FollowsBlueprint organism-mutation-panel
-export function TodoBoard(): JSX.Element {
+export function TodoBoard({ list }: TodoBoardProps): JSX.Element {
   const { t } = useTranslation();
-  const todos = useTodos();
-  const updateTodo = useUpdateTodo();
-  const deleteTodo = useDeleteTodo();
+  const todos = useTodos(list);
+  const updateTodo = useUpdateTodo(list);
+  const deleteTodo = useDeleteTodo(list);
   const navigate = useNavigate();
   const [filter, setFilter] = useState<TodoFilter>('open');
   const [editingId, setEditingId] = useState<string | null>(null);
@@ -49,7 +55,7 @@ export function TodoBoard(): JSX.Element {
   return (
     <>
       <PageTitle subtitle={t('todo.open-count', { count: countOpenTodos(allTodos) })}>
-        {t('todo.title')}
+        {t(selectTodoListTitleKey(list))}
       </PageTitle>
       <div className="flex flex-col gap-4 pb-16">
         <SegmentedFilter
@@ -103,12 +109,12 @@ export function TodoBoard(): JSX.Element {
                     dueTone={selectDueTone(status)}
                     dueIcon={selectDueIcon(status)}
                     onToggle={toggle}
-                    onOpen={() => void navigate(buildTodoHref(todo.id))}
+                    onOpen={() => void navigate(buildTodoHref(todo.id, list))}
                     onDelete={remove}
                     onLongPress={() => {
                       openActionSheet({
                         title: todo.text,
-                        subject: { kind: 'todo' },
+                        subject: { kind: 'todo', list },
                         actions: [
                           {
                             labelKey: todo.done ? 'todo.row.uncheck' : 'todo.row.check',
@@ -130,7 +136,7 @@ export function TodoBoard(): JSX.Element {
           </Card>
         )}
       </div>
-      <TodoQuickAdd />
+      <TodoQuickAdd list={list} />
     </>
   );
 }

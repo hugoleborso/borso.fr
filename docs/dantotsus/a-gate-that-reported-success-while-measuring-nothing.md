@@ -1,14 +1,18 @@
 ---
 date: 2026-08-08
 introduced-at: conception
-detected-at: measurement
+detected-at: local
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [0bf0ad517b]
 eradication-level: 2
+eradication-paths: [.github/workflows/ci.yml, apps/last-loop-lepin/vitest.config.ts]
 time-to-detect: months
 tags: [gates, ci, testing, coverage, mutation, process]
+zone: .github/workflows/ci.yml
+weak-point: gate-measures-nothing
+recurs: [per-file-coverage-gate-was-never-armed]
 ---
 
 # Four gates reported success while measuring nothing
