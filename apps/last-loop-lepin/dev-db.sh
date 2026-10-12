@@ -22,7 +22,7 @@ import { join } from 'node:path';
 import postgres from 'postgres';
 const dir = './api/src/database/migrations';
 const sql = postgres(process.env.DATABASE_URL, { max: 1, onnotice: () => undefined });
-await sql.unsafe('DROP TABLE IF EXISTS loop_punches, manual_dnfs, runners, editions, auth_attempts, admin_credentials, admin_sessions CASCADE');
+await sql.unsafe('DROP TABLE IF EXISTS loop_punches, loop_punch_claims, manual_dnfs, runners, editions, auth_attempts, admin_credentials, admin_sessions CASCADE');
 for (const file of readdirSync(dir).filter((n) => n.endsWith('.sql')).toSorted()) {
   for (const stmt of readFileSync(join(dir, file), 'utf8').split('--> statement-breakpoint').map((s) => s.trim()).filter((s) => s.length > 0)) {
     await sql.unsafe(stmt);

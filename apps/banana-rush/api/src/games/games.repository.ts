@@ -1,6 +1,16 @@
 import { and, asc, desc, eq } from 'drizzle-orm';
+import type { DatabaseTransaction } from '../database/client';
 import { getDatabase } from '../database/client';
-import { bidTable, gameTable, outcomesSchema, playerTable, roundResultTable } from './games.schema';
+import {
+  avatarClaimTable,
+  bidTable,
+  gameTable,
+  outcomesSchema,
+  playerTable,
+  roundResultTable,
+  seatClaimTable,
+} from './games.schema';
+import type { SeatingLoss } from './game.core';
 import type { RoundResolution } from './round.core';
 
 export type GameRow = typeof gameTable.$inferSelect;
@@ -54,11 +64,80 @@ export async function insertGame(values: typeof gameTable.$inferInsert): Promise
   return row;
 }
 
-export async function insertPlayer(values: typeof playerTable.$inferInsert): Promise<PlayerRow> {
+export type PlayerToSeat = Omit<typeof playerTable.$inferInsert, 'seatOrder'>;
+export type SeatingOutcome =
+  | { readonly kind: 'seated'; readonly player: PlayerRow }
+  | { readonly kind: 'lost'; readonly loss: SeatingLoss };
+
+class SeatingLostError extends Error {
+  override readonly name = 'SeatingLostError';
+  constructor(public readonly loss: SeatingLoss) {
+    super(`seating lost: ${loss}`);
+  }
+}
+
+async function didClaimAvatar(
+  transaction: DatabaseTransaction,
+  gameId: string,
+  avatar: string,
+): Promise<boolean> {
+  const written = await transaction
+    .insert(avatarClaimTable)
+    .values({ gameId, avatar })
+    .onConflictDoNothing()
+    .returning({ avatar: avatarClaimTable.avatar });
+  return written.length > 0;
+}
+
+async function didClaimSeat(
+  transaction: DatabaseTransaction,
+  gameId: string,
+  seatOrder: number,
+): Promise<boolean> {
+  const written = await transaction
+    .insert(seatClaimTable)
+    .values({ gameId, seatOrder })
+    .onConflictDoNothing()
+    .returning({ seatOrder: seatClaimTable.seatOrder });
+  return written.length > 0;
+}
+
+async function findFirstSeatClaimed(
+  transaction: DatabaseTransaction,
+  gameId: string,
+  openSeats: readonly number[],
+): Promise<number | null> {
+  for (const seatOrder of openSeats) {
+    if (await didClaimSeat(transaction, gameId, seatOrder)) return seatOrder;
+  }
+  return null;
+}
+
+// @FollowsBlueprint repository-owned-transaction-losing-a-race-quietly
+export async function seatPlayer(
+  values: PlayerToSeat,
+  openSeats: readonly number[],
+): Promise<SeatingOutcome> {
   const database = getDatabase();
-  const [row] = await database.insert(playerTable).values(values).returning();
-  if (row === undefined) throw new Error('insert returned no player row');
-  return row;
+  try {
+    const player = await database.transaction(async (transaction) => {
+      if (!(await didClaimAvatar(transaction, values.gameId, values.avatar))) {
+        throw new SeatingLostError('avatar');
+      }
+      const seatOrder = await findFirstSeatClaimed(transaction, values.gameId, openSeats);
+      if (seatOrder === null) throw new SeatingLostError('seat');
+      const [row] = await transaction
+        .insert(playerTable)
+        .values({ ...values, seatOrder })
+        .returning();
+      if (row === undefined) throw new Error('insert returned no player row');
+      return row;
+    });
+    return { kind: 'seated', player };
+  } catch (error) {
+    if (error instanceof SeatingLostError) return { kind: 'lost', loss: error.loss };
+    throw error;
+  }
 }
 
 export async function insertPlayers(
@@ -66,7 +145,15 @@ export async function insertPlayers(
 ): Promise<void> {
   if (values.length === 0) return;
   const database = getDatabase();
-  await database.insert(playerTable).values([...values]);
+  await database.transaction(async (transaction) => {
+    await transaction
+      .insert(seatClaimTable)
+      .values(values.map((player) => ({ gameId: player.gameId, seatOrder: player.seatOrder })));
+    await transaction
+      .insert(avatarClaimTable)
+      .values(values.map((player) => ({ gameId: player.gameId, avatar: player.avatar })));
+    await transaction.insert(playerTable).values([...values]);
+  });
 }
 
 export async function updatePlayerToken(

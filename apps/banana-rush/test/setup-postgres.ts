@@ -10,7 +10,15 @@ const MIGRATIONS_DIR = join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migration
 const MIGRATION_FILE_PATTERN = /^\d+_[A-Za-z0-9_-]+\.sql$/;
 const STATEMENT_BREAKPOINT = '--> statement-breakpoint';
 
-const TRACKED_TABLES = ['bid', 'round_result', 'socket_connection', 'player', 'game'];
+const TRACKED_TABLES = [
+  'bid',
+  'round_result',
+  'socket_connection',
+  'seat_claim',
+  'avatar_claim',
+  'player',
+  'game',
+];
 
 function readMigrationStatements(): readonly string[] {
   const files = readdirSync(MIGRATIONS_DIR)
