@@ -5,10 +5,13 @@ detected-at: operator-deploy
 severity: medium
 related-pr: '#151'
 fix-pr: '#154'
-fix-commits: [e4e34d2]
+fix-commits: [21a850ab]
 eradication-level: 2
 time-to-detect: minutes
 tags: [ci, github-actions, pnpm, deploy]
+eradication-paths: [scripts/dependencies/dependency-closure.core.ts, scripts/dependencies/apps-with-changed-dependencies.ts]
+zone: .github/path-filters.yml
+recurs: none (the earlier entry ran too few app suites on a bump; this one deployed every app on a change that touched none)
 ---
 
 # A dev dependency that redeployed every app

@@ -5,10 +5,12 @@ detected-at: ci
 severity: medium
 related-pr: '#101'
 fix-pr: '#101'
-fix-commits: [ee6308b]
+fix-commits: [ee6308b8ec]
 eradication-level: 1
+eradication-paths: [scripts/standards/enforcement-ledger.ts]
 time-to-detect: minutes
 tags: [ci, standards, hooks, tooling]
+zone: scripts/standards/enforcement-ledger.ts
 ---
 
 # The ledger could not see the hooks it was built for

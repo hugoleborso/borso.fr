@@ -3,12 +3,15 @@ date: 2026-06-06
 introduced-at: implementation
 detected-at: qa
 severity: low
-related-pr: 31
-fix-pr: 31
-fix-commits: [f209f36, d7ff9d0]
+related-pr: '#31'
+fix-pr: '#31'
+fix-commits: [f209f3665c, d7ff9d0647]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-circle-in-non-uniform-svg.js]
 time-to-detect: hours
 tags: [react, svg, biome, grit, plugins, pragma]
+zone: apps/pragma/site/src/components/molecules/EnergySparkline.tsx
+weak-point: prose-stands-in-for-a-check
 ---
 
 # The circle went oval in a stretched SVG — the second time

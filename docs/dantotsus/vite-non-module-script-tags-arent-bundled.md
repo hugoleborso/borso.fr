@@ -3,12 +3,14 @@ date: 2026-05-03
 introduced-at: implementation
 detected-at: staging
 severity: high
-related-pr: #6
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [7c62539]
+related-pr: '#6'
+fix-pr: '#7'
+fix-commits: [7c62539f2c]
 eradication-level: 2
+eradication-paths: [scripts/check-non-module-scripts.sh]
 time-to-detect: hours
 tags: [vite, ci, frontend]
+zone: apps/borso-fr/site/index.html
 ---
 
 # Vite quietly leaves non-module `<script src>` tags un-bundled
@@ -57,7 +59,7 @@ Add `type="module"` to the script tag so Vite picks it up, bundles it into `dist
 
 **Type:** DevX check (level 2 — pre-push hook)
 
-**Reference:** PR (this kaizen) · commit `<kaizen-commit>`
+**Reference:** PR (this kaizen) · commit `7c62539f2c`
 
 **The actual fix:** add a pre-push grep guard that fails if any HTML in `apps/*/site/**` references a script without `type="module"`. The check is shell, not JS, so it costs nothing on every push.
 

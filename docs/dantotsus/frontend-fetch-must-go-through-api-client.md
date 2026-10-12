@@ -3,13 +3,15 @@ date: 2026-05-15
 introduced-at: implementation
 detected-at: operator-deploy
 severity: high
-related-pr: 23
-fix-pr: this PR (branch `claude/lessons-from-pr-23`)
-fix-commits: [<pending — pushed in this kaizen PR>]
-prior-fix-commits: [3415a37]
+related-pr: '#23'
+fix-pr: '#24'
+fix-commits: [c5eb3e0b3d]
 eradication-level: 1
+eradication-paths: [eslint-rules/no-direct-api-fetch-in-site.js]
 time-to-detect: minutes
 tags: [react, cloudfront, frontend, api]
+zone: apps/last-loop-lepin/site/src/routes/SpectatorPage.tsx
+prior-fix-commits: [3415a37]
 ---
 
 # A relative `fetch('/api/...')` hit the static-site CloudFront and got 403'd

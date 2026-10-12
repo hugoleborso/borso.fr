@@ -5,10 +5,12 @@ detected-at: review
 severity: medium
 related-pr: '#60'
 fix-pr: '#62'
-fix-commits: [0f55859]
+fix-commits: [0f55859e99]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/strip-markdown-code.py, plugins/borso-harness/hooks/pretool-github-pr-body.sh]
 time-to-detect: 3 days
 tags: [github, harness, hooks, gates, meta, open-pr]
+zone: plugins/borso-harness/skills/open-pr
 ---
 
 # A pull request body the server quietly emptied

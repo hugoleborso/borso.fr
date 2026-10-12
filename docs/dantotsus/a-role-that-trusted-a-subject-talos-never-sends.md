@@ -3,12 +3,15 @@ date: 2026-10-05
 introduced-at: conception
 detected-at: operator-deploy
 severity: medium
-related-pr: 128
-fix-pr: 137
-fix-commits: [99b73ba1e40b5e2e537165a44490ff6c28f997f5]
+related-pr: '#128'
+fix-pr: '#137'
+fix-commits: [99b73ba1e4]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/internal/oidc-subject.utils.ts, infra/shared/oidc-subject-prefixes.json]
 time-to-detect: hours
 tags: [github-actions, oidc, iam, cdk, talos]
+zone: infra/shared/lib/deploy-roles.ts
+recurs: [the-nightly-sweeper-never-had-permission-to-run]
 ---
 
 # A role that trusted a subject talos never sends

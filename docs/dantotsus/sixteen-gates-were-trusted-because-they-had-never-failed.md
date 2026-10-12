@@ -1,15 +1,18 @@
 ---
 date: 2026-10-10
 introduced-at: conception
-detected-at: measurement
+detected-at: review
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: this PR (claude/gate-canaries)
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#164'
+fix-commits: [2e656e8e]
 eradication-level: 2
 time-to-detect: months, sixteen times
 tags: [gates, ci, hooks, coverage, mutation, eslint, testing, process]
 blueprints: [test-artifact-audit]
+eradication-paths: [scripts/standards/gate-canaries.ts, scripts/standards/canary-registry.ts]
+zone: scripts/standards
+recurs: [a-gate-that-reported-success-while-measuring-nothing]
 ---
 
 # Sixteen gates were trusted because they had never failed

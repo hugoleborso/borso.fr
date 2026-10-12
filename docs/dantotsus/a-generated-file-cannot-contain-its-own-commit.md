@@ -1,14 +1,16 @@
 ---
 date: 2026-08-15
 introduced-at: conception
-detected-at: gate
+detected-at: local
 severity: low
-related-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-commits: []
+related-pr: '#49'
+fix-pr: '#49'
+fix-commits: [256c89f06e]
 eradication-level: 1
+eradication-paths: [.gitignore, scripts/architecture/architecture-graph.ts]
 time-to-detect: hours
 tags: [architecture-map, tooling, generated-files, git]
+zone: scripts/architecture/architecture-graph.ts
 ---
 
 # A generated file cannot contain its own commit, so a byte gate on it failed the commit after the one that moved it

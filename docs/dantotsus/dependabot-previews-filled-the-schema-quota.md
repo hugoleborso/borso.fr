@@ -3,12 +3,15 @@ date: 2026-10-12
 introduced-at: conception
 detected-at: ci
 severity: medium
-related-pr: commit a285b836 (feat(ci): add dependabot with a cooldown before updates are proposed)
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/169
-fix-commits: [ef189834]
+related-pr: none (introduced by commit a285b836, pushed without a pull request)
+fix-pr: '#169'
+fix-commits: [20004695]
 eradication-level: 1
 time-to-detect: days (Dependabot previews from 2026-10-05, first refused deploy 2026-10-10)
 tags: [dsql, github-actions, dependabot, previews, quota, commitlint]
+eradication-paths: [.github/dependabot.yml, scripts/preflight-preview-schema-budget.sh]
+zone: .github/dependabot.yml
+recurs: none (the destroy-all entry deleted the shared cluster stack; this one exhausted its schema quota)
 ---
 
 # Five pull requests nobody read held the database three people needed

@@ -1,3 +1,18 @@
+---
+date: 2026-08-15
+introduced-at: conception
+detected-at: ci
+severity: medium
+related-pr: '#49'
+fix-pr: '#49'
+fix-commits: [450e82316d]
+eradication-level: 1
+eradication-paths: [infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts]
+time-to-detect: one preview deploy
+tags: [dsql, cdk, preview, migrations, clone]
+zone: infra/cdk/src/internal/migration-runner
+---
+
 # A preview schema that could be created but never updated
 
 ## Symptom

@@ -1,16 +1,18 @@
 ---
 date: 2026-05-11
-revised: 2026-05-11
 introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
-related-pr: 2
-fix-pr: PR #9 (branch `claude/stale-previews-budget-forecast-j3sPS`)
-fix-commits: [8b581dc9eb390c3b62dadc8dd0036576f1ddd19e, 663267998ba86c91d5e91817831547e85090fcf5]
-prior-eradication-level: 4
+related-pr: '#2'
+fix-pr: '#9'
+fix-commits: [8b581dc9eb, 663267998b]
 eradication-level: 2
+eradication-paths: [apps/borso-fr/package.json, infra/cdk/test/unit/eradication-checks.test.ts]
 time-to-detect: 8 days
 tags: [github-actions, cdk, cloudformation, ci, idempotency, pnpm-scripts]
+zone: .github/workflows/cleanup-orphans.yml
+revised: 2026-05-11
+prior-eradication-level: 4
 ---
 
 > ### Revised same day — root cause was one level deeper, eradication upgraded rung 4 → rung 2

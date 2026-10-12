@@ -1,14 +1,16 @@
 ---
 date: 2026-05-15
 introduced-at: conception
-detected-at: code-review
+detected-at: review
 severity: medium
-related-pr: 23
-fix-pr: this PR (branch `claude/lessons-from-pr-23`)
-fix-commits: [<pending — pushed in this kaizen PR>]
+related-pr: '#23'
+fix-pr: '#24'
+fix-commits: [c5eb3e0b3d]
 eradication-level: 1
+eradication-paths: [apps/last-loop-lepin/site/src/routes/SpectatorPage.tsx]
 time-to-detect: hours
 tags: [react, ux, race-engine]
+zone: apps/last-loop-lepin/site/src/routes/SpectatorPage.tsx
 ---
 
 # The "Course terminée" banner missed the backyard-rule end-state

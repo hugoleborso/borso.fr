@@ -1,14 +1,17 @@
 ---
 date: 2026-05-14
 introduced-at: conception
-detected-at: implementation
+detected-at: local
 severity: medium
-related-pr: branch `claude/tech-lead-orchestrator-skill-dVKSm` (PR not yet opened)
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [<to-be-filled-by-kaizen-commit>]
-eradication-level: 2
+related-pr: '#14'
+fix-pr: '#14'
+fix-commits: [853780e1c8]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: ~50 minutes (spec → implement)
 tags: [spec, technical-conception, skill, orchestrator, imported-briefs, adr]
+zone: plugins/borso-harness/skills/specification
+weak-point: prose-stands-in-for-a-check
 ---
 
 # Believed the design bundle's README; never opened the live `package.json`
@@ -66,7 +69,7 @@ Two work items.
 
 **Type:** DevX check (level 2 — skill-side enforcement, two standards updated in one PR)
 
-**Reference:** PR (this kaizen) · commit `<this-commit>`
+**Reference:** PR (this kaizen) · commit `853780e1c8`
 
 **The actual fix:**
 

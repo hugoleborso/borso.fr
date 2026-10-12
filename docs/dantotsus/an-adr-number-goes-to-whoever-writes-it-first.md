@@ -5,10 +5,13 @@ detected-at: review
 severity: medium
 related-pr: '#89'
 fix-pr: '#106'
-fix-commits: [4154b33a]
+fix-commits: [4154b33a23]
 eradication-level: 2
+eradication-paths: [scripts/check-adr-numbers-resolve.sh, scripts/check-numbered-sequences.sh]
 time-to-detect: days
 tags: [adr, git, gates, pre-commit, ci, meta, documentation]
+zone: docs/adr
+recurs: [two-branches-took-the-same-migration-number]
 ---
 
 # An ADR number goes to whoever writes it first, and both branches were first

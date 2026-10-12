@@ -1,14 +1,18 @@
 ---
 date: 2026-08-08
 introduced-at: conception
-detected-at: measurement
+detected-at: local
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [0bf0ad517b]
 eradication-level: 1
+eradication-paths: [.github/workflows/ci.yml, apps/borso-fr/vitest.config.ts]
 time-to-detect: months
 tags: [vitest, coverage, gates, ci, testing, purity]
+zone: .github/workflows/ci.yml
+weak-point: gate-measures-nothing
+recurs: [biome-formatter-was-not-gated]
 ---
 
 # The 100% coverage gate on pure files was never armed

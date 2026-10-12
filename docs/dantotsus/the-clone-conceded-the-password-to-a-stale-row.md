@@ -3,12 +3,14 @@ date: 2026-08-10
 introduced-at: implementation
 detected-at: staging
 severity: high
-related-pr: 40
-fix-pr: 40
-fix-commits: [e3af9d2, 4aaab63]
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [e3af9d248a, 4aaab634c7]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/constructs/dsql-schema.ts]
 time-to-detect: minutes
 tags: [dsql, cdk, preview, auth, pragma, clone]
+zone: infra/cdk/src/internal/migration-runner
 ---
 
 # The clone conceded the password to a stale row

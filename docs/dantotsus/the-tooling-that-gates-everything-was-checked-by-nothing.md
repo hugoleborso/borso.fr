@@ -3,12 +3,16 @@ date: 2026-08-19
 introduced-at: conception
 detected-at: ci
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/55
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/55
-fix-commits: []
+related-pr: '#55'
+fix-pr: '#73'
+fix-commits: [24a70649df]
 eradication-level: 1
+eradication-paths: [tsconfig.json, .husky/pre-commit]
 time-to-detect: days
 tags: [typescript, tooling, gates, ci, meta]
+zone: tsconfig.json
+weak-point: gate-measures-nothing
+recurs: [two-guard-hooks-that-never-guarded]
 ---
 
 # Every gate in this repository was written in TypeScript that nothing type-checked
