@@ -22,6 +22,13 @@
       "when": 1779060947051,
       "tag": "0002_admin_auth_tables",
       "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791638598485,
+      "tag": "0003_loop_punch_claims",
+      "breakpoints": true
     }
   ]
 }

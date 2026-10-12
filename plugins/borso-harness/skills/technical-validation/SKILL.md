@@ -7,12 +7,15 @@ description: Dispatch the dedicated `technical-validator` agent to read the spec
 
 # Technical-validation skill
 
-A spec is a contract. A plan is the engineering projection of the contract onto the codebase. A technical validation **reads the diff and asks four questions**:
+A spec is a contract. A plan is the engineering projection of the contract onto the codebase. A technical validation **reads the diff and asks five questions**:
 
 1. **Correctness** — does the code do what the spec says?
 2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, ESLint including `borso/no-type-assertion-except-unknown`)?
 3. **Tests pass** — does `pnpm test` succeed on every touched workspace?
 4. **Coverage** — does each use case in the spec have a test that exercises it?
+5. **Scale** — does every rule still hold when the same request arrives twice at once, or runs on two processes? Required on any diff that writes or keeps state.
+
+Every FAIL row states a concrete failing case: this input leads to this wrong result. A concern without one is a question in the report's Notes, not a finding.
 
 It is the engineering counterpart of `/visual-validation`. Same standalone-agent posture; same evidence-required discipline; same no-rounding-up verdict semantics — applied to source code rather than rendered pixels.
 
@@ -57,7 +60,7 @@ Do **not** invoke when:
    report_path      = <validation_dir>/technical-validation-<timestamp>.md
    ```
    `mkdir -p` the validation directory.
-6. **Dispatch the `technical-validator` agent** with `spec_path`, `plan_path`, `base_ref`, `app_pkg`, `report_path`. The agent reads the diff, runs lint + tests, walks the four validation categories, writes the report.
+6. **Dispatch the `technical-validator` agent** with `spec_path`, `plan_path`, `base_ref`, `app_pkg`, `report_path`. The agent reads the diff, runs lint + tests, walks the five validation categories, writes the report.
 7. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — fix the implementation (or the spec), do not ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule.
 8. **Stage the report for commit.** It lives under `docs/features/<app>/<slug>/validation/` alongside any visual-validation report from the same feature.
 
@@ -84,6 +87,8 @@ Same rule as `/visual-validation`:
 - **Dispatching `general-purpose`.** A generic agent has none of the dedicated agent's structural rules.
 - **Skipping tests because they're slow.** The validator runs them. If a workspace has no test script and the spec implies test coverage, the row is UNVERIFIABLE — not "fine because no tests exist".
 - **Quoting evidence without line numbers.** Every code citation in the report needs a `file:line` reference; otherwise reviewers can't audit the verdict.
+- **Skipping the scale pass.** Every test runs one request at a time, so a check-then-write race passes categories A to D. Category E is required, not optional.
+- **A FAIL with no failing case.** A row saying "might race" without the two requests and the wrong result is a question, and belongs in Notes.
 - **Treating "tests pass" as "tests exist".** Categories C (tests pass) and D (test coverage of spec) are separate columns. A workspace with one trivial smoke test passes C but fails D for every uncovered use case.
 - **Validating against the implementation, not the spec.** Same anti-pattern as visual-validation: if a feature exists in code but isn't in the spec, the validator does not validate it (and notes that the spec is incomplete).
 - **Missing plan → silent UNVERIFIABLE everywhere.** When the plan is missing, the report's first finding should call it out and recommend running `/technical-conception`. UNVERIFIABLE rows that all stem from the same root cause should be summarised.

@@ -33,7 +33,7 @@ async function applyMigrations(connectionString: string): Promise<void> {
   const sql = postgres(connectionString, { max: 1, onnotice: () => undefined });
   try {
     await sql.unsafe(
-      'DROP TABLE IF EXISTS loop_punches, manual_dnfs, runners, editions, auth_attempts, admin_credentials, admin_sessions CASCADE',
+      'DROP TABLE IF EXISTS loop_punches, loop_punch_claims, manual_dnfs, runners, editions, auth_attempts, admin_credentials, admin_sessions CASCADE',
     );
     for (const statement of readMigrationStatements()) {
       await sql.unsafe(statement);

@@ -15,6 +15,13 @@
       "when": 1789931750819,
       "tag": "0001_rematch_join_code",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791638721945,
+      "tag": "0002_seat_and_avatar_claims",
+      "breakpoints": true
     }
   ]
 }
