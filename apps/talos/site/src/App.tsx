@@ -2,6 +2,7 @@ import { type JSX, lazy, Suspense } from 'react';
 import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom';
 import { AppShell } from './components/organisms/AppShell';
 import { RequireSession } from './components/organisms/RequireSession';
+import { TODO_LIST_ROUTES } from './lib/wikilinks.core';
 import {
   loadBrainEntryPage,
   loadBrainPage,
@@ -61,9 +62,17 @@ export function App(): JSX.Element {
           <Route element={<RequireSession />}>
             <Route element={<AppShell />}>
               <Route path="/" element={<TodayPage />} />
-              <Route path="/todos" element={<TodosPage />} />
+              <Route path={TODO_LIST_ROUTES.main} element={<TodosPage list="main" />} />
+              <Route path={TODO_LIST_ROUTES.work} element={<TodosPage list="work" />} />
               <Route path="/proposals" element={<ProposalsPage />} />
-              <Route path="/todos/:id" element={<TodoDetailPage />} />
+              <Route
+                path={`${TODO_LIST_ROUTES.main}/:id`}
+                element={<TodoDetailPage list="main" />}
+              />
+              <Route
+                path={`${TODO_LIST_ROUTES.work}/:id`}
+                element={<TodoDetailPage list="work" />}
+              />
               <Route path="/commitments" element={<CommitmentsPage />} />
               <Route path="/commitments/*" element={<CommitmentDetailPage />} />
               <Route path="/relations" element={<RelationsPage />} />

@@ -1,4 +1,5 @@
 import { useForm } from '@tanstack/react-form';
+import type { TodoListName } from '@domain/todo-list.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
@@ -8,10 +9,14 @@ import { DISPLAY_LOCALE, formatShortDay } from '../../lib/calendar-day.utils';
 import { useCreateTodo } from '../../lib/queries/todos.queries';
 import { buildTodoCreation, canCreateTodo } from './todo-form.core';
 
+export interface TodoQuickAddProps {
+  readonly list: TodoListName;
+}
+
 // @FollowsBlueprint organism-form
-export function TodoQuickAdd(): JSX.Element {
+export function TodoQuickAdd({ list }: TodoQuickAddProps): JSX.Element {
   const { t } = useTranslation();
-  const createTodo = useCreateTodo();
+  const createTodo = useCreateTodo(list);
   const form = useForm({
     defaultValues: { text: '', dueDate: '' },
     onSubmit: ({ value, formApi }) => {

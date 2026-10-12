@@ -235,7 +235,7 @@ the orchestrator surfaces the question to the human via
 - The cap is **deliberately absent** (decision Q-CONTEXT). The signal
   is post-hoc, fed to the metrics recipe in
   [`docs/knowledge/tech-lead-orchestrator.md`](../../../../docs/knowledge/tech-lead-orchestrator.md)
-  and surfaced by `/after-task-dantotsus`.
+  and surfaced by `/after-task-kaizen`.
 
 ## Human-message classification
 

@@ -276,12 +276,13 @@ run_context_case knowledge-triggers.sh silent '' \
 # A lint run with errors exits non-zero, so the case it exists for arrives as
 # PostToolUseFailure. It ran only on PostToolUse, and printed to stdout, until
 # 2026-10-10: it never once spoke on the run it was written for. It looks for
-# the cache file in the directory it runs from, so its cases run from a scratch
+# every ESLint cache under the repository root, so its cases run from a scratch
 # directory holding an empty one.
 
 CASE_DIRECTORY="$(mktemp -d)"
 : >"$CASE_DIRECTORY/.eslintcache"
-run_context_case posttool-eslint-cache-replays-a-fixed-error.sh inform 'rm -f .eslintcache' \
+env -u GIT_DIR -u GIT_WORK_TREE -u GIT_INDEX_FILE git -C "$CASE_DIRECTORY" init -q
+run_context_case posttool-eslint-cache-replays-a-fixed-error.sh inform 'rm -rf .eslintcache' \
   '{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"pnpm run lint"},"error":"Exit code 1\n  3:1  error  Unsafe call  @typescript-eslint/no-unsafe-call"}'
 run_context_case posttool-eslint-cache-replays-a-fixed-error.sh silent '' \
   '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"grep -rn no-unsafe-call docs/"},"tool_response":{"stdout":"@typescript-eslint/no-unsafe-call","stderr":""}}'

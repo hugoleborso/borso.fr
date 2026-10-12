@@ -68,4 +68,4 @@ Patterns to watch as the corpus grows:
 The [`/dantotsu`](../../plugins/borso-harness/skills/dantotsu/SKILL.md) skill walks
 the seven steps and produces a complete entry that matches
 [`_template.md`](./_template.md). After-task sweep: see
-[`/after-task-dantotsus`](../../plugins/borso-harness/skills/after-task-dantotsus/SKILL.md).
+[`/after-task-kaizen`](../../plugins/borso-harness/skills/after-task-kaizen/SKILL.md).

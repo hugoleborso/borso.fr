@@ -97,6 +97,7 @@ decision.
 
 ### Operator / shell
 
+- [`splitting-commits-when-pre-commit-reads-the-tree.md`](./splitting-commits-when-pre-commit-reads-the-tree.md) — hiding the next commit's files with `git stash --keep-index --include-untracked`, and the staged `git mv` that rides along.
 - [`macos-bsd-vs-aws-cli-quirks.md`](./macos-bsd-vs-aws-cli-quirks.md) — BSD `date`, AWS CLI v2 list-parsing, `fileb://` for binary inputs.
 - [`commitlint-header-100-char-cap.md`](./commitlint-header-100-char-cap.md) — `header-max-length` is hard-capped at 100 chars regardless of scope-enum richness.
 - [`gate-timings-before-and-after.md`](./gate-timings-before-and-after.md) — what every gate costs, measured: ESLint is 23x slower than biome cold and identical warm; CI went from a 97 s median to ~180 s cache-cold; test suites roughly doubled.
@@ -118,6 +119,7 @@ decision.
 - [`parallel-agents-share-one-scratchpad.md`](./parallel-agents-share-one-scratchpad.md) — a fan-out gets one scratchpad, not one each, and agents pick the same obvious filename; three of eight agents on PR #81 lost a file to it, one seeing another agent's traceback from its own tool. Give each agent `<scratchpad>/<label>/`.
 - [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `plugins/borso-harness/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
 - [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.
+- [`git-push-internal-server-error-while-fetch-works.md`](./git-push-internal-server-error-while-fetch-works.md) — a push the remote rejects with *Internal Server Error* while fetch works; push through `mcp__github__push_files`, then `git reset --keep` onto the remote branch, and know what that drops.
 - [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) — `curl https://api.github.com` answers 403 and there is no `gh`; the MCP returns bodies HTML-escaped, which makes splicing a long PR description riskier than adding a comment.
 - [`claude-code-session-attachments-on-disk.md`](./claude-code-session-attachments-on-disk.md) — chat attachments live at `/root/.claude/uploads/<session>/...` (uploads) and inside `/root/.claude/projects/<workspace>/<session>.jsonl` (inlined base64 images); extractable without an explicit tool.
 - [`github-mcp-pr-body-sanitizer.md`](./github-mcp-pr-body-sanitizer.md) — _rewritten 2026-05-21, first confirmed behaviour added 2026-08-14_: the three originally-asserted patterns were not reproducible (PR #26 has working `<details>` and `![]()`), so the entry ships a round-trip verification procedure and names PR #26 as the control sample. One behaviour has now survived it: markdown links come back wrapped in double backticks, inside the parentheses, so the anchor is dead — observed four times across PRs #46 and #48 while other links in the same bodies survived. The trigger is URL length: six samples separate cleanly at about 150 characters. Mitigation: link through `/blob/main/` rather than a long agent branch name, which takes 38 characters off every link. _2026-08-18_: a second, sharper behaviour — every URL ending in an image extension is backtick-wrapped, `<img>` loses its `src`, `<details>` is stripped and an autolink is removed, so no screenshot can be embedded in a body written through this server. A PreToolUse hook now refuses such a body before the call. _2026-09-16_: the length rule from 2026-08-14 caught PR #100 on a `.md` target at about 180 characters — the extension never mattered outside images — and the hook enforces the threshold now rather than leaving it to whoever writes the body.
@@ -207,6 +209,7 @@ decision.
 
 ### Frontend / React
 
+- [`conflicting-tailwind-classes-are-not-merged.md`](./conflicting-tailwind-classes-are-not-merged.md) — `composeClassName` is `clsx`, so `w-full` and `w-12` together keep whichever Tailwind emits last; hit in PR #151 and #154; fixed by `twMerge` since ADR-0028.
 - [`tailwind-v4-theme-and-preflight-traps.md`](./tailwind-v4-theme-and-preflight-traps.md) — `@theme` blocks collapse into `:root` so a media-nested second one wins unconditionally; a variable outside a namespace needs `bg-[image:var(--x)]` and `@theme static`; an inline `animation` shorthand pulls in no keyframes; and what preflight zeroes on `<dialog>`, buttons and file inputs.
 - [`svg-preserveaspectratio-distorts-non-uniform.md`](./svg-preserveaspectratio-distorts-non-uniform.md) — `preserveAspectRatio="none"` distorts circles into ellipses when the container aspect ≠ viewBox aspect. Default (`xMidYMid meet`) preserves and letterboxes. Now enforced in pragma by the `no-circle-in-non-uniform-svg.grit` Biome plugin (see [`../dantotsus/circle-went-oval-in-a-stretched-svg-again.md`](../dantotsus/circle-went-oval-in-a-stretched-svg-again.md)).
 - [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md) — a single `PointerSensor` loses touch-drag to native page scroll on phones; split into `MouseSensor` (6px distance) + `TouchSensor` (200ms delay) + `KeyboardSensor`, and `touch-none` on the handle.
@@ -231,6 +234,6 @@ write whatever helps the next reader. Keep it concrete and short
 (short enough to re-read every time you suspect it applies). Title
 should hint at the lesson, not the symptom.
 
-If the entry is the result of a `/after-task-dantotsus` sweep that
+If the entry is the result of a `/after-task-kaizen` sweep that
 classified a subject as "vendor surprise" or "operator confusion",
 the skill writes it here automatically.

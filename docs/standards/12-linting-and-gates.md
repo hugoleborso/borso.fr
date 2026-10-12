@@ -295,11 +295,15 @@ should have been `pnpm --filter <pkg> run deploy`, because seven script names
 are pnpm built-ins and pnpm silently prefers its own.
 
 The pre-push hook runs `knip` for dead code, `actionlint` for the workflows,
-the tests each pushed commit affects, and the mutation tests for the pure files
-those commits changed.
+`tsc --noEmit` for each application the pushed commits change, the tests those
+commits affect, and the mutation tests for the pure files they changed. The
+type check is there because Vitest strips types without checking them: a test
+handing a component a prop it does not accept passes every test run and fails
+only the type checker.
 
 CI mirrors every one of the whole-repository checks above, so skipping a hook
-delays the failure rather than removing it, and adds `tsc --noEmit`, the test
+delays the failure rather than removing it, and adds `tsc --noEmit` over every
+workspace, the test
 suites for each changed application, the coverage gate, and `cdk synth` for
 every application. The synth is what covers `cdk/bin/*.ts`: the per-app stack
 tests call `build<App>Stack()` directly, so a break in the entry point that
