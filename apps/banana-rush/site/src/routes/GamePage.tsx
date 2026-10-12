@@ -1,7 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigate, useParams } from 'react-router-dom';
-import { normalizeJoinCode } from '@api/games/join-code.utils';
+import { normalizeJoinCode } from '@domain/join-code.core';
 import { ChunkyButton } from '@site/components/atoms/ChunkyButton';
 import { ErrorNote } from '@site/components/atoms/ErrorNote';
 import { AppShell } from '@site/components/organisms/AppShell';

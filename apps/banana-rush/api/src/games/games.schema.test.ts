@@ -124,6 +124,10 @@ describe('joinCodeParamSchema', () => {
   it('refuses a code of the wrong length', () => {
     expect(joinCodeParamSchema.safeParse({ code: 'ABC' }).success).toBe(false);
   });
+
+  it('hands the route a code in the case the games are stored under', () => {
+    expect(joinCodeParamSchema.parse({ code: 'abcd' }).code).toBe('ABCD');
+  });
 });
 
 describe('outcomesSchema', () => {

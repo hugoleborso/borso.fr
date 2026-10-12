@@ -1,6 +1,7 @@
 /** @Feature sessions */
 
-const BAND_TIME_ZONE = 'Europe/Paris';
+import { BAND_TIME_ZONE } from '@domain/band-time-zone.core';
+
 const RANGE_SEPARATOR = ' – ';
 
 export type ExclusionReason = 'no-calendar' | 'needs-reconnecting' | 'unavailable';

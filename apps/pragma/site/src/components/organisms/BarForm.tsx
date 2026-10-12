@@ -1,3 +1,4 @@
+import { BAR_NAME_MAX_LENGTH, BAR_NOTES_MAX_LENGTH, BAR_STATUSES } from '@domain/bar-profile.core';
 /** @Feature bars */
 
 import { useForm } from '@tanstack/react-form';
@@ -11,10 +12,7 @@ import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
 import { AvailableSupportField, ConcertMoodField } from '../molecules/BarQualificationFields';
 import {
-  BAR_NAME_MAX_LENGTH,
-  BAR_NOTES_MAX_LENGTH,
   BAR_STATUS_KEY,
-  BAR_STATUSES,
   type BarFormInitial,
   type BarFormSubmitPayload,
   type BarFormTitleKind,

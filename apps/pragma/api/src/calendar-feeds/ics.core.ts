@@ -1,10 +1,7 @@
 import ICAL from 'ical.js';
 import { z } from 'zod';
-import {
-  BAND_TIME_ZONE,
-  isKnownTimeZone,
-  zonedWallTimeToInstant,
-} from '../helpers/paris-time/paris-time.core';
+import { BAND_TIME_ZONE } from '@domain/band-time-zone.core';
+import { isKnownTimeZone, zonedWallTimeToInstant } from '../helpers/paris-time/paris-time.core';
 import type { BusyInterval } from './calendar-feeds.types';
 
 const TRANSPARENT = 'TRANSPARENT';

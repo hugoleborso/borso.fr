@@ -1,7 +1,7 @@
+import { BAR_STATUSES } from '@domain/bar-profile.core';
 import { describe, expect, it } from 'vitest';
 import {
   BAR_STATUS_KEY,
-  BAR_STATUSES,
   type BarFormValues,
   barFormValuesSchema,
   BLANK_BAR_FORM,

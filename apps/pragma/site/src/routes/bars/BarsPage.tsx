@@ -1,3 +1,4 @@
+import { BAR_STATUSES, type BarStatus, type ConcertMood } from '@domain/bar-profile.core';
 /** @Feature bars */
 
 import type { JSX } from 'react';
@@ -33,12 +34,9 @@ import { countStale, isStale } from '@domain/bar-staleness.core';
 import { BarForm, type BarOwnerOption } from '../../components/organisms/BarForm';
 import {
   BAR_STATUS_KEY,
-  BAR_STATUSES,
   CONCERT_MOOD_KEY,
-  type ConcertMood,
   type BarFormInitial,
   type BarFormSubmitPayload,
-  type BarStatus,
   BLANK_BAR_FORM,
   buildBarFormFromPlace,
 } from './bar-form.core';

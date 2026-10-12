@@ -1,4 +1,4 @@
-export const BAND_TIME_ZONE = 'Europe/Paris';
+import { BAND_TIME_ZONE } from '@domain/band-time-zone.core';
 
 const MILLISECONDS_PER_MINUTE = 60_000;
 const MONTH_INDEX_OFFSET = 1;

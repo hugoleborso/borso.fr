@@ -1,3 +1,4 @@
+import type { PhotoContentType } from '@domain/runner-limits.core';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api';
 
@@ -8,8 +9,6 @@ export const runnerKeys = {
   detail: (editionSlug: string, runnerSlug: string) =>
     [...runnerKeys.all, 'detail', editionSlug, runnerSlug] as const,
 };
-
-export type RunnerPhotoContentType = 'image/jpeg' | 'image/png' | 'image/webp';
 
 export interface CreateRunnerVariables {
   readonly editionSlug: string;
@@ -22,7 +21,7 @@ export interface CreateRunnerVariables {
 export interface PresignRunnerPhotoVariables {
   readonly editionSlug: string;
   readonly runnerSlug: string;
-  readonly contentType: RunnerPhotoContentType;
+  readonly contentType: PhotoContentType;
 }
 
 export function useRunnerRoster(editionSlug: string) {

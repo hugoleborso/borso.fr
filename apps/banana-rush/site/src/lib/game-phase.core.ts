@@ -1,4 +1,4 @@
-import { NO_TIME_LEFT } from './countdown.core';
+import { NO_TIME_LEFT } from '@domain/round-clock.core';
 import type { BroadcastGame } from './game-broadcast.core';
 
 type GameStatus = BroadcastGame['status'];

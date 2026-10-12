@@ -1,10 +1,10 @@
+import {
+  AVAILABLE_SUPPORTS,
+  CONCERT_MOODS,
+  type AvailableSupport,
+  type ConcertMood,
+} from '@domain/bar-profile.core';
 import { z } from 'zod';
-
-export const CONCERT_MOODS = ['chill', 'gig', 'ticketed'] as const;
-export const AVAILABLE_SUPPORTS = ['pa-system', 'lights', 'sound-engineer'] as const;
-
-export type ConcertMood = (typeof CONCERT_MOODS)[number];
-export type AvailableSupport = (typeof AVAILABLE_SUPPORTS)[number];
 
 export const concertMoodSchema = z.enum(CONCERT_MOODS);
 export const availableSupportSchema = z.array(z.enum(AVAILABLE_SUPPORTS));

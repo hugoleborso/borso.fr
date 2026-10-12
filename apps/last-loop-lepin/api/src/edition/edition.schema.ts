@@ -1,5 +1,14 @@
 import { integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import {
+  DEFAULT_INTERVAL_MINUTES,
+  MAXIMUM_EDITION_NAME_LENGTH,
+  MAXIMUM_EDITION_SLUG_LENGTH,
+  MAXIMUM_INTERVAL_MINUTES,
+  MINIMUM_EDITION_SLUG_LENGTH,
+  MINIMUM_INTERVAL_MINUTES,
+  SLUG_CHARACTERS_PATTERN,
+} from '@domain/edition-limits.core';
 import { isMonotonicZeroToOne } from './edition.schema.utils';
 import type { EditionStatus, GpxMetadata } from './edition.types';
 
@@ -39,13 +48,6 @@ export const gpxMetadataSchema: z.ZodType<GpxMetadata> = z.object({
 
 const editionStatusValues: ReadonlySet<string> = new Set(['setup', 'live', 'finished']);
 
-const DEFAULT_INTERVAL_MINUTES = 60;
-const MIN_INTERVAL_MINUTES = 1;
-const MAX_INTERVAL_MINUTES = 240;
-const SLUG_MIN_LENGTH = 3;
-const SLUG_MAX_LENGTH = 64;
-const DISPLAY_NAME_MAX_LENGTH = 120;
-
 export function isEditionStatus(value: unknown): value is EditionStatus {
   return typeof value === 'string' && editionStatusValues.has(value);
 }
@@ -72,16 +74,21 @@ export const editionsTable = pgTable('editions', {
  */
 export const editionSlugSchema = z
   .string()
-  .min(SLUG_MIN_LENGTH)
-  .max(SLUG_MAX_LENGTH)
-  .regex(/^[a-z0-9-]+$/, 'lowercase letters, digits and dashes only');
+  .min(MINIMUM_EDITION_SLUG_LENGTH)
+  .max(MAXIMUM_EDITION_SLUG_LENGTH)
+  .regex(SLUG_CHARACTERS_PATTERN, 'lowercase letters, digits and dashes only');
 
 export const createEditionInputSchema = z.object({
   slug: editionSlugSchema,
-  displayName: z.string().min(1).max(DISPLAY_NAME_MAX_LENGTH),
+  displayName: z.string().min(1).max(MAXIMUM_EDITION_NAME_LENGTH),
   startsAt: z.string().datetime({ offset: true }),
   endsAt: z.string().datetime({ offset: true }),
-  intervalMinutes: z.number().int().min(MIN_INTERVAL_MINUTES).max(MAX_INTERVAL_MINUTES).optional(),
+  intervalMinutes: z
+    .number()
+    .int()
+    .min(MINIMUM_INTERVAL_MINUTES)
+    .max(MAXIMUM_INTERVAL_MINUTES)
+    .optional(),
   gpxXml: z.string().min(1),
 });
 

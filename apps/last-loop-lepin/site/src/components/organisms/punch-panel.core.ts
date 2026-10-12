@@ -1,7 +1,7 @@
+import { MINIMUM_INTERVAL_MINUTES } from '@domain/edition-limits.core';
 import type { RankedRunnerDto } from '../../lib/race.types';
 
 const MINUTES_TO_MS = 60_000;
-const MINIMUM_INTERVAL_MINUTES = 1;
 const LATE_PROGRESS_THRESHOLD = 0.85;
 
 export interface PunchLoopClock {
