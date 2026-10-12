@@ -1,4 +1,4 @@
-# ADR-0031: One database role per stage schema, and API Lambdas lose admin access
+# ADR-0032: One database role per stage schema, and API Lambdas lose admin access
 
 - **Status:** proposed
 - **Date:** 2026-10-02
@@ -57,7 +57,7 @@ The Aurora DSQL documentation describes custom roles: `CREATE ROLE … WITH LOGI
 - **Costs:**
   - A KMS key with a fixed monthly fee plus a per-call fee, and an encryption call on every write and read.
   - Every other column stays readable and writable from any preview.
-- **Rejection rationale:** It loses on breadth. It protects one column and leaves the boundary open. The operator chose plain text for the address on 2026-10-02 once the boundary was fixed ([ADR-0032](./0032-calendar-feed-address-in-its-own-table.md)).
+- **Rejection rationale:** It loses on breadth. It protects one column and leaves the boundary open. The operator chose plain text for the address on 2026-10-02 once the boundary was fixed ([ADR-0033](./0033-calendar-feed-address-in-its-own-table.md)).
 
 ## Evaluation rubric
 
@@ -81,4 +81,4 @@ The Aurora DSQL documentation describes custom roles: `CREATE ROLE … WITH LOGI
 - Plan: `docs/features/pragma/practice-free-slots/plan/plan.md`
 - Commit: stamped by `/after-task-dantotsus` on merge
 - Files: `infra/cdk/src/constructs/dsql-schema.ts`, `infra/cdk/src/internal/migration-runner/index.ts`, `infra/cdk/src/constructs/lambda-api.ts`, `apps/*/api/src/database/client.ts`
-- Related ADRs: ADR-0009 (previews clone production), ADR-0032
+- Related ADRs: ADR-0009 (previews clone production), ADR-0033

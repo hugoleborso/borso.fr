@@ -77,16 +77,16 @@ No:
 | [0028](./0028-tailwind-merge-resolves-class-conflicts.md) | tailwind-merge resolves conflicting classes in composeClassName | accepted | 2026-10-12 |
 | [0029](./0029-weak-point-management-from-the-dantotsu-record.md) | Weak point management reads the dantotsu record, made checkable | proposed | 2026-10-10 |
 | [0030](./0030-knowledge-is-delivered-by-trigger.md) | Knowledge is delivered by trigger, and an entry without one is not written | proposed | 2026-10-10 |
-| [0031](./0031-one-database-role-per-stage-schema.md) | One database role per stage schema, and API Lambdas lose admin access | proposed | 2026-10-02 |
-| [0032](./0032-calendar-feed-address-in-its-own-table.md) | A member's calendar feed address is plain text in its own table, write-only through the API | proposed | 2026-10-02 |
-| [0033](./0033-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | proposed | 2026-10-02 |
+| [0032](./0032-one-database-role-per-stage-schema.md) | One database role per stage schema, and API Lambdas lose admin access | proposed | 2026-10-02 |
+| [0033](./0033-calendar-feed-address-in-its-own-table.md) | A member's calendar feed address is plain text in its own table, write-only through the API | proposed | 2026-10-02 |
+| [0034](./0034-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | proposed | 2026-10-02 |
 
 ### Data layer
 
 - 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
 - 0009 — pragma previews clone production, credentials included.
-- 0031 — every stage schema gets its own login role, mapped to that stage's API Lambda; API Lambdas connect with `dsql:DbConnect` and `admin` is left to the migration runner, so a preview can no longer reach production.
-- 0032 — a member's secret calendar address is plain text in a table of its own, never returned by the API and blocklisted from preview clones.
+- 0032 — every stage schema gets its own login role, mapped to that stage's API Lambda; API Lambdas connect with `dsql:DbConnect` and `admin` is left to the migration runner, so a preview can no longer reach production.
+- 0033 — a member's secret calendar address is plain text in a table of its own, never returned by the API and blocklisted from preview clones.
 
 ### App architecture
 
@@ -100,7 +100,7 @@ No:
 - 0019 — the room's search collapses a provider that indexes masters down to one row per song, and reads a refusal Deezer states inside a 200 body.
 - 0020 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
 - 0022 — the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
-- 0033 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
+- 0034 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
 - 0028 — `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
 
 ### CDK / infra

@@ -1,4 +1,4 @@
-# ADR-0033: `ical.js` parses the members' calendar feeds
+# ADR-0034: `ical.js` parses the members' calendar feeds
 
 - **Status:** proposed
 - **Date:** 2026-10-02
@@ -80,4 +80,4 @@ The npm registry, read on 2026-10-02, lists `ical.js` 2.2.1 (MPL-2.0, no runtime
 - Plan: `docs/features/pragma/practice-free-slots/plan/plan.md`
 - Commit: stamped by `/after-task-dantotsus` on merge
 - Files: `apps/pragma/api/src/calendar-feeds/ics.core.ts`, `apps/pragma/package.json`
-- Related ADRs: ADR-0032
+- Related ADRs: ADR-0033

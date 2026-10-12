@@ -136,7 +136,7 @@ calendar.
 Lives in: `api/src/calendar-feeds/`
 
 - One per member at most, keyed on `memberId` in its own table,
-  `member_calendar_feed`, so no read of `member` carries it (ADR-0032).
+  `member_calendar_feed`, so no read of `member` carries it (ADR-0033).
 - Accepted only as `https`, or `webcal` rewritten to `https`, on port
   443, with a public host name and no user info (`judgeFeedAddress`).
   The same check runs again on every redirect when the feed is read.
