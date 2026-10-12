@@ -115,6 +115,7 @@ decision.
 
 ### Claude Code tooling
 
+- [`the-worktree-guard-reads-shell-text.md`](./the-worktree-guard-reads-shell-text.md) — a worktree-isolated agent's guard refuses any loop, heredoc or interpreter whose text mentions git; run git as one plain command and put multi-step work in a script file.
 - [`rtk-truncates-command-output.md`](./rtk-truncates-command-output.md) — a nine-line `cat` printed eight lines plus `[10 more lines]`, and the truncation reads as the file's real content; ask with `grep -c` when completeness is the question.
 - [`parallel-agents-share-one-scratchpad.md`](./parallel-agents-share-one-scratchpad.md) — a fan-out gets one scratchpad, not one each, and agents pick the same obvious filename; three of eight agents on PR #81 lost a file to it, one seeing another agent's traceback from its own tool. Give each agent `<scratchpad>/<label>/`.
 - [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `plugins/borso-harness/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.

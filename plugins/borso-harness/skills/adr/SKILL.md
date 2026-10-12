@@ -107,7 +107,7 @@ The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alter
 
 1. **Read** the latest version of [`standard.md`](./standard.md) and [`template.md`](./template.md).
 2. **List existing ADRs:** `ls docs/adr/`. Filter for filenames matching `NNNN-<slug>.md`.
-3. **Pick the number.** Find the highest 4-digit prefix across the listing and add 1. Pad to 4 digits. If the directory has no matching files, the next number is `0001`.
+3. **Pick the number.** Run `${CLAUDE_PLUGIN_ROOT}/scripts/next-adr-number.sh` and take the number it prints. It reads the ADR folder of this checkout and of every branch on origin, so a number another open branch has already pushed is never handed out twice. Do not take a number someone reserved by message, and do not reserve numbers for other agents: a branch that is pushed is the reservation, and a message is one that nobody outside the conversation can read. If two branches still collide before either pushes, `check-numbered-sequences.sh` refuses the second, which renumbers before merging.
 4. **Check conflicts.** Iterate the existing ADRs. An ADR conflicts when **all** of:
    - its slug equals the new ADR's slug, **and**
    - its status is `accepted`, **and**

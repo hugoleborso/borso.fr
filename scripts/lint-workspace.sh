@@ -42,6 +42,8 @@ cache_prefix="${workspace//\//-}"
 mkdir -p "$cache_directory"
 find "$cache_directory" -name "${cache_prefix}-*" ! -name "${cache_prefix}-${digest}" -delete
 
+"$root/scripts/ensure-infra-built.sh"
+
 cd "$root"
 exec pnpm exec eslint "$workspace" "$@" --cache \
   --cache-location "$cache_directory/${cache_prefix}-${digest}"

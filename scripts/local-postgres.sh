@@ -6,7 +6,7 @@
 # claude.ai/code sandbox doesn't ship. This script uses the system
 # `/usr/lib/postgresql/16/bin/initdb` + `pg_ctl` to spin up a private
 # cluster under `/tmp/borso-pg-<app>` on a per-app port, with trust auth
-# and the `<app>_test` database pre-created.
+# and a `<app>_test_<checkout>` database pre-created, one per git checkout.
 #
 # Reusability contract (for the next app):
 #   1. Add a `pretest` script that calls `scripts/local-postgres.sh start
@@ -19,7 +19,7 @@
 #
 # Subcommands:
 #   start <app-slug> [purpose]  init + start cluster, create
-#                        `<app>_<purpose>` db, print DATABASE_URL to
+#                        `<app>_<purpose>_<checkout>` db, print DATABASE_URL to
 #                        stdout. Idempotent. `purpose` defaults to
 #                        `test`; a dev server passes `dev` so the test
 #                        harness, which drops every table it knows
@@ -44,7 +44,7 @@ usage: $0 <start|stop|wipe|url> <app-slug> [purpose]
 start <app> [purpose]   init + start a private Postgres cluster, print
               DATABASE_URL. Hashes the app slug to pick a stable port in
               [50000, 65000). One cluster per app, one database per
-              purpose: \`test\` (the default) is the harness's to drop,
+              purpose and checkout: \`test\` (the default) is the harness's to drop,
               \`dev\` is a dev server's to keep.
 stop  <app>   stop the cluster (kept on disk; restart is fast).
 wipe  <app>   stop and rm -rf the cluster data dir.
@@ -68,7 +68,16 @@ resolve_paths() {
   PORT_RANGE=15000
   HASH=$(printf '%s' "$APP_SLUG" | cksum | awk '{print $1}')
   PG_PORT=$(( PORT_BASE + (HASH % PORT_RANGE) ))
-  DB_NAME="${APP_SLUG//-/_}_${DB_PURPOSE}"
+  # One database per checkout, not per app. Parallel agents each run in their
+  # own git worktree, and with one `<app>_test` database between them every
+  # back-e2e run truncated and re-migrated the tables another run was using:
+  # four agents of one weekend saw 49 to 76 tests fail on duplicate app_config
+  # rows and missing relations that a rerun alone did not reproduce. The
+  # cluster stays shared, so the port and the start-up cost do not multiply.
+  # See docs/dantotsus/four-worktrees-one-test-database.md.
+  CHECKOUT_ROOT=$(git rev-parse --show-toplevel 2>/dev/null || pwd -P)
+  CHECKOUT_KEY=$(printf '%s' "$CHECKOUT_ROOT" | cksum | awk '{print $1}')
+  DB_NAME="${APP_SLUG//-/_}_${DB_PURPOSE}_${CHECKOUT_KEY}"
 }
 
 ensure_pg_installed() {

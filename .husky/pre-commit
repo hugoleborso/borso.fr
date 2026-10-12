@@ -31,6 +31,10 @@ changed=$(git diff --cached --name-only --diff-filter=ACMR)
 # nothing stopped. A warning nobody has to clear is a rule that is off.
 staged_lintable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs)$' || true)
 if [ -n "$staged_lintable" ]; then
+  # The type-aware rules resolve @borso/infra through its dist/, which a fresh
+  # worktree does not have; without it every cdk file reports unresolved types
+  # and nothing names the missing build.
+  scripts/ensure-infra-built.sh
   echo "[pre-commit] running eslint on staged files"
   echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
 fi
