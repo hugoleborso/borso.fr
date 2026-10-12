@@ -35,3 +35,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [00:53] `pr-118` pre-push on a branch push that merges main in mutated 81 talos files and every other changed core from main's 100 commits, instead of narrowing to the branch's own changes
 - [01:48] `pr-118` pre-push runs the talos mutation of 81 files concurrently with every app's tests, and the starved CPU times out four unrelated tests (infra-cdk synth, infra-shared synth, borso-fr, talos) that pass alone
 - [02:48] `pr-118` pre-push typecheck of pragma and last-loop-lepin was OOM-killed (exit 137) while sibling agents ran mutation in the same container; four pushes failed on load alone
+- [04:32] `pr-118` scripts/local-postgres.sh keys the cluster on the app slug only, so parallel agents in separate worktrees run pragma back-e2e against the same /tmp/borso-pg-pragma database and 76 tests fail on duplicate app_config rows
