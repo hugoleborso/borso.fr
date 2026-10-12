@@ -358,6 +358,63 @@ jobs:
         if: hashFiles(format('apps/{0}/api/**', matrix.app)) != ''
         run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e
 
+  # Every gate the enforcement ledger lists, plus every check script and every
+  # generator a hook or workflow runs with --check, is handed a defect it must
+  # refuse: scripts/standards/gate-canaries.ts plants each one in a throwaway
+  # copy of the tree, runs the gate the way its hook or workflow runs it, and
+  # fails when the gate passes. A gate with no canary fails it too. Sixteen
+  # dantotsus found a gate green while measuring nothing, one at a time; see
+  # docs/dantotsus/sixteen-gates-were-trusted-because-they-had-never-failed.md.
+  #
+  # Two jobs: `fast` holds every lint-rule canary and the checks that answer in
+  # seconds, `slow` the coverage, mutation, type-check and database suites.
+  gate-canaries:
+    runs-on: ubuntu-latest
+    timeout-minutes: 90
+    strategy:
+      matrix:
+        tier: [fast, slow]
+      fail-fast: false
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      GATE_CANARY_POSTGRES: postgres://app:app@localhost:5432
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - name: Install actionlint, which the pre-push hook runs
+        run: |
+          mkdir -p "$HOME/.local/bin"
+          curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz |
+            tar -xz -C "$HOME/.local/bin" actionlint
+          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
+      # test/setup-postgres.ts trusts DATABASE_URL verbatim, so each full-stack
+      # application gets a database of its own on the one server.
+      - name: One database per full-stack application
+        run: |
+          for database in banana_rush last_loop_lepin pragma talos; do
+            psql "$GATE_CANARY_POSTGRES/app" -c "CREATE DATABASE $database"
+          done
+      - run: pnpm exec tsx scripts/standards/gate-canaries.ts --tier "${{ matrix.tier }}"
+
   commitlint:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
