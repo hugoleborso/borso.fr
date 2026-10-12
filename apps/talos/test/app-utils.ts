@@ -59,6 +59,13 @@ export interface JsonRequestOptions {
   readonly body?: unknown;
   readonly cookie?: string;
   readonly headers?: Readonly<Record<string, string>>;
+  readonly clientAddress?: string;
+}
+
+export const DEFAULT_CLIENT_ADDRESS = '203.0.113.250';
+
+export function lambdaEnvironmentFrom(sourceIp: string): unknown {
+  return { event: { requestContext: { http: { sourceIp } } } };
 }
 
 export async function requestJson(
@@ -66,13 +73,17 @@ export async function requestJson(
   path: string,
   options: JsonRequestOptions = {},
 ): Promise<Response> {
-  return await app.request(`${TEST_HOST}${path}`, {
-    method: options.method ?? 'GET',
-    headers: {
-      'content-type': 'application/json',
-      ...(options.cookie === undefined ? {} : { cookie: options.cookie }),
-      ...options.headers,
+  return await app.request(
+    `${TEST_HOST}${path}`,
+    {
+      method: options.method ?? 'GET',
+      headers: {
+        'content-type': 'application/json',
+        ...(options.cookie === undefined ? {} : { cookie: options.cookie }),
+        ...options.headers,
+      },
+      ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
     },
-    ...(options.body === undefined ? {} : { body: JSON.stringify(options.body) }),
-  });
+    lambdaEnvironmentFrom(options.clientAddress ?? DEFAULT_CLIENT_ADDRESS),
+  );
 }
