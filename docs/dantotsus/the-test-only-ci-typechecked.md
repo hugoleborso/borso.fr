@@ -5,7 +5,7 @@ detected-at: ci
 severity: low
 related-pr: '#154'
 fix-pr: '#155'
-fix-commits: [PREPUSH_SHA]
+fix-commits: [d5c7fbb]
 eradication-level: 2
 time-to-detect: minutes
 tags: [ci, hooks, typescript, testing]
@@ -57,7 +57,7 @@ never checks them, so only `tsc` can.
 
 **Type:** DevX check (level 2 — pre-push gate)
 
-**Reference:** [PR #155](https://github.com/hugoleborso/borso.fr/pull/155) · commit `PREPUSH_SHA`
+**Reference:** [PR #155](https://github.com/hugoleborso/borso.fr/pull/155) · commit `d5c7fbb`
 
 **The actual fix:**
 
