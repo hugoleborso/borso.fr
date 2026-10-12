@@ -3,12 +3,15 @@ date: 2026-10-02
 introduced-at: implementation
 detected-at: local
 severity: low
-related-pr: "#107"
-fix-pr: "#119"
-fix-commits: [9703c82, 1b060da]
+related-pr: '#107'
+fix-pr: '#119'
+fix-commits: [9703c82c8e, 1b060daaf3]
 eradication-level: 2
+eradication-paths: [scripts/check-hook-decisions.sh]
 time-to-detect: weeks
 tags: [hooks, harness, gates, pre-commit]
+zone: plugins/borso-harness/hooks
+recurs: [the-hook-that-refused-the-page-explaining-it]
 ---
 
 # The hook that was missing from its own contract

@@ -3,12 +3,14 @@ date: 2026-05-03
 introduced-at: conception
 detected-at: qa
 severity: high
-related-pr: #6
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [e5cb098]
-eradication-level: 2
+related-pr: '#6'
+fix-pr: '#7'
+fix-commits: [e5cb098bf0]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [react, spec, validators, url-state]
+zone: plugins/borso-harness/skills/specification
 ---
 
 # Mount-time side-effects must be asserted in the spec, not implied
@@ -59,7 +61,7 @@ Add a mount-time `useEffect` that calls `window.history.replaceState({ seed, pal
 
 **Type:** DevX check (level 2 — `/specification` template requirement)
 
-**Reference:** PR (this kaizen) · commit `<kaizen-commit>`
+**Reference:** PR (this kaizen) · commit `e5cb098bf0`
 
 **The actual fix:** the `/specification` skill template gains a required *On-mount side-effects* sub-section under *Use cases / edge cases*. Every spec that mirrors React state to an external system (URL, storage, document title, focus, analytics, …) must list each on-mount mirror as a discrete assertion — same status as a happy-path step. The technical-validator then has a category-A row to verify the code exists; the visual-validator has a row to verify the *observable effect* on first paint.
 

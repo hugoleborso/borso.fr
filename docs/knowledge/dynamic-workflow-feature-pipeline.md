@@ -1,3 +1,11 @@
+---
+summary: 'The operator runbook for the `/feature-pipeline` Dynamic Workflow.'
+triggers:
+  paths:
+    - '.claude/workflows/**'
+    - 'plugins/borso-harness/commands/feature-pipeline.md'
+---
+
 # Running the feature-pipeline Dynamic Workflow
 
 Operator runbook for `/feature-pipeline` — the Claude Code Dynamic Workflow

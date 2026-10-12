@@ -5,10 +5,13 @@ detected-at: local
 severity: medium
 related-pr: '#63'
 fix-pr: '#71'
-fix-commits: [cb69f25]
+fix-commits: [cb69f25248]
 eradication-level: 2
+eradication-paths: [.husky/pre-push]
 time-to-detect: 40 minutes
 tags: [git, tooling, ci, husky, testing]
+zone: .husky/pre-push
+recurs: [a-stale-ref-priced-a-one-line-push-at-fifty-minutes]
 ---
 
 # The scoped gate that charged me for all of main

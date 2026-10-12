@@ -1,3 +1,10 @@
+---
+summary: 'Split a spec''s measurable objective into output metrics you care about and input metrics a validator can check; visual validation drives inputs only.'
+triggers:
+  paths:
+    - 'docs/features/*/*/spec/spec.md'
+---
+
 # Input vs output metrics — Amazon flywheel
 
 When framing the *measurable objective* of a feature spec — and the test strategy that validates

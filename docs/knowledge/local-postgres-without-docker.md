@@ -1,3 +1,14 @@
+---
+summary: '`scripts/local-postgres.sh` boots a sandbox-private Postgres when Docker is unreachable; `pnpm run test` wires `DATABASE_URL`.'
+triggers:
+  commands:
+    - '\bdocker\b'
+    - '\bdockerd\b'
+  output:
+    - 'failed to connect to the docker API'
+    - 'Cannot connect to the Docker daemon'
+---
+
 # Local Postgres without Docker
 
 > Pattern for running the back-e2e gate (or `pnpm dev:api`) on a sandbox

@@ -3,12 +3,16 @@ date: 2026-05-21
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/24
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/<TBD>
-fix-commits: []
+related-pr: '#24'
+fix-pr: '#28'
+fix-commits: [9199b11e70]
 eradication-level: 5
+eradication-paths: []
 time-to-detect: minutes
 tags: [harness, skill, conception, code-quality, claude-md]
+zone: CLAUDE.md
+weak-point: prose-stands-in-for-a-check
+recurs: [believed-the-bundle-readme-not-the-live-package-json]
 ---
 
 # Lectured for four turns on CloudFront behaviour before reading the file
@@ -125,7 +129,7 @@ tool-output. The corpus of sibling dantotsus (see *Sibling
 defects swept* below) is the reminder that the failure mode is
 recurring, not isolated.
 
-**Reference:** [PR #<TBD>](https://github.com/hugoleborso/borso.fr/pulls?q=is%3Apr+head%3Aclaude%2Flessons-from-pr-24) ·
+**Reference:** [PR #28](https://github.com/hugoleborso/borso.fr/pull/28) ·
 this kaizen PR.
 
 **The actual fix:**

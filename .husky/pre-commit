@@ -133,6 +133,27 @@ if git diff --cached --name-only | grep -qE '^(apps/|infra/|docs/dantotsus/)'; t
   set -e
 fi
 
+# The dantotsu record and the two weak-point pages read from it. The schema
+# check refuses a field outside its fixed list, a placeholder, a level the
+# eradication paths do not support and a recurrence left unlinked; on a commit
+# it resolves the fix commits of the staged entries only, so a clone whose
+# origin/main is old pays nothing for entries it did not touch. The two
+# generators refuse a zone, a weak point or a wall that names nothing. A rename
+# or a deletion anywhere can orphan a zone or an eradication path, so those
+# trigger the run too. See docs/adr/0029-weak-point-management-from-the-dantotsu-record.md.
+if git diff --cached --name-only | grep -qE '^(docs/dantotsus/|docs/quality/|docs/features/|scripts/quality/)' ||
+  [ -n "$(git diff --cached --name-only --diff-filter=DR)" ]; then
+  echo "[pre-commit] checking the dantotsu record and the weak-point pages"
+  set +e
+  if ! pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts --staged; then
+    generator_failures="${generator_failures}  pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts
+"
+  fi
+  run_generator_check scripts/quality/weak-points.ts
+  run_generator_check scripts/quality/working-conditions.ts
+  set -e
+fi
+
 # The architecture pages, whenever any application changed. The generator
 # derives each graph from paths, imports and the Hono call chain, so a rename or
 # a new route moves the page without anyone editing it, and a stale page is a
@@ -265,6 +286,13 @@ pnpm exec tsx scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/t
 # A grep over one directory, so it costs nothing and belongs on the commit.
 echo "[pre-commit] checking every \"does not work\" carries a date"
 scripts/check-negative-claims-are-dated.sh
+
+# A knowledge entry is read when a hook prints it at the moment it applies, and
+# almost never otherwise, so every entry declares that moment as triggers. One
+# pass over one directory, so it costs nothing and belongs on the commit. See
+# docs/adr/0030-knowledge-is-delivered-by-trigger.md.
+echo "[pre-commit] checking every knowledge entry has a trigger a hook can match"
+scripts/check-knowledge-triggers.sh
 
 # A document that links a file which is not there sends the reader looking for a
 # stale document rather than a stale link. The routing table in

@@ -3,12 +3,15 @@ date: 2026-10-06
 introduced-at: conception
 detected-at: local
 severity: low
-related-pr: "#136"
-fix-pr: "#141"
-fix-commits: [a1ca9ef]
+related-pr: '#136'
+fix-pr: '#141'
+fix-commits: [a1ca9efee5]
 eradication-level: 1
+eradication-paths: [.claude/skills/blueprint/blueprint-indexing.ts]
 time-to-detect: minutes
 tags: [pre-commit, gates, generated-files, blueprints, harness]
+zone: .husky/pre-commit
+recurs: [a-generated-file-cannot-contain-its-own-commit]
 ---
 
 # The gate that refused its own output

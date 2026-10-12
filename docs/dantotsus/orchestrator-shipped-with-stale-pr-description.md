@@ -3,12 +3,14 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: #14
-fix-pr: <to-be-filled-by-kaizen-pr>
-fix-commits: [<to-be-filled-by-kaizen-commit>]
-eradication-level: 2
+related-pr: '#14'
+fix-pr: '#15'
+fix-commits: [6b16fa535f]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: minutes (user asked)
 tags: [orchestrator, skill, pr-description, github]
+zone: plugins/borso-harness/skills/tech-lead-orchestrator
 ---
 
 # The orchestrator shipped a feature, then went silent while the PR's description still said something else
@@ -111,7 +113,7 @@ opens PRs on its own).
 **Type:** DevX check (level 2 — skill standard update with explicit
 checklist the agent can't compress past)
 
-**Reference:** this kaizen PR · commit `<this-commit>`
+**Reference:** this kaizen PR · commit `6b16fa535f`
 
 **The actual fix:**
 
@@ -173,5 +175,5 @@ walk the new checklist.
   ancestor: feature-flow skills not auto-firing was the seed that
   created the orchestrator. This dantotsu is the orchestrator
   catching its own next blind spot.
-- [`docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md`](../knowledge/pr-body-from-cc-ui-skips-skill-sections.md) —
+- [`docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/pr-body-from-cc-ui-skips-skill-sections.md) —
   adjacent: PR body composition has its own pitfalls.

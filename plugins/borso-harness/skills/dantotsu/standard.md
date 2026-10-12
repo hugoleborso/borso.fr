@@ -170,7 +170,11 @@ detection failure causes.
 **Examples:**
 - Change the code pattern so the mistake is no longer possible
 - Configure the linter to catch this type of issue
-- Train the team again on the correct pattern and reasoning
+- Train the team again on the correct pattern and reasoning. In this
+  repository that training is a knowledge entry only when it carries
+  `triggers:` a hook can match, so it reaches the next person at the
+  moment they repeat the mistake rather than waiting to be searched
+  (see the ladder in [`SKILL.md`](./SKILL.md#6-eradication--non-optional-code-level))
 - Update the alerting so the issue is visible earlier (e.g. in
   staging)
 - Clean up excessive alerts to avoid developer fatigue
@@ -185,6 +189,14 @@ through these steps with everyone who might make the same mistake.
 
 Use **Weak Point Management** to track recurring patterns and defect
 categories.
+
+In this repository, an entry joins that map through its front matter:
+`zone:` is where the defect lived, `weak-point:` names an engaged weak
+point from `docs/quality/weak-points.md`, and `recurs:` names the entry it
+repeats. `scripts/quality/weak-points.ts` draws the map and the weekly
+count from those fields, and `scripts/quality/check-dantotsu-front-matter.ts`
+refuses an entry that leaves them unusable. The *Output* section of
+[`SKILL.md`](./SKILL.md) gives the rules for each field.
 
 ## Reframes
 

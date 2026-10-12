@@ -3,12 +3,14 @@ date: 2026-05-14
 introduced-at: implementation
 detected-at: production
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/12
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/12
-fix-commits: [a257e83]
+related-pr: '#12'
+fix-pr: '#12'
+fix-commits: [a257e83d71]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/constructs/dsql-schema.ts]
 time-to-detect: 30 minutes (live Lambda 500s — empty response — looked like a routing bug at first)
 tags: [dsql, iam, cdk, auth]
+zone: infra/cdk/src/constructs/dsql-schema.ts
 ---
 
 # Granted `dsql:DbConnect`, but the app authenticated as admin

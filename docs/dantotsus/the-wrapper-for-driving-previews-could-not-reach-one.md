@@ -5,10 +5,13 @@ detected-at: qa
 severity: medium
 related-pr: '#95'
 fix-pr: '#97'
-fix-commits: [5d14095]
+fix-commits: [5d140956dd]
 eradication-level: 2
+eradication-paths: [scripts/argent.sh]
 time-to-detect: minutes
 tags: [agent-browser, agents, harness, mobile, sandbox, tooling, documentation, validation]
+zone: scripts/argent.sh
+recurs: [two-audits-that-sent-no-touch-events]
 ---
 
 # The phone-testing wrapper could not open the previews it is named after
@@ -121,7 +124,7 @@ It now advertises `gesture-scroll` and `gesture-drag` and says what
 
 ## See also
 
-- [`../knowledge/argent-gesture-swipe-does-nothing-on-chromium.md`](../knowledge/argent-gesture-swipe-does-nothing-on-chromium.md)
+- [`../knowledge/real-touch-gestures-over-cdp.md`](../knowledge/real-touch-gestures-over-cdp.md)
   — the second half of this: the verb that returns success and moves nothing.
 - [`../knowledge/driving-previews-with-agent-browser-and-argent.md`](../knowledge/driving-previews-with-agent-browser-and-argent.md)
   — corrected by this commit.

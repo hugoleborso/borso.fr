@@ -5,6 +5,10 @@ detected-at: mid-run
 severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/82
 tags: [harness, orchestrator, subagents, tooling]
+summary: 'Every agent in a fan-out gets the same scratchpad and picks the same filename; work in `<scratchpad>/<label>/`.'
+triggers:
+  commands:
+    - '/scratchpad/[^/\s]+\.(py|sh|mjs|js|txt|json)\b'
 ---
 
 # Parallel agents share one scratchpad, and they pick the same filename

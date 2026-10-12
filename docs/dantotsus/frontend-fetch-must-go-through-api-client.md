@@ -3,13 +3,15 @@ date: 2026-05-15
 introduced-at: implementation
 detected-at: operator-deploy
 severity: high
-related-pr: 23
-fix-pr: this PR (branch `claude/lessons-from-pr-23`)
-fix-commits: [<pending — pushed in this kaizen PR>]
-prior-fix-commits: [3415a37]
+related-pr: '#23'
+fix-pr: '#24'
+fix-commits: [c5eb3e0b3d]
 eradication-level: 1
+eradication-paths: [eslint-rules/no-direct-api-fetch-in-site.js]
 time-to-detect: minutes
 tags: [react, cloudfront, frontend, api]
+zone: apps/last-loop-lepin/site/src/routes/SpectatorPage.tsx
+prior-fix-commits: [3415a37]
 ---
 
 # A relative `fetch('/api/...')` hit the static-site CloudFront and got 403'd
@@ -107,7 +109,7 @@ a *presigned absolute URL* returned by the API, which is by
 definition not a `/api/...` path. End-to-end typing of every front
 call comes from the back's Hono types ; no hand-rolled Zod schema
 on the read side. See the companion knowledge entry
-[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](../knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
+[`rolled-our-own-data-fetching-instead-of-tanstack-query.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/rolled-our-own-data-fetching-instead-of-tanstack-query.md).
 
 *Layer 2 — anyone reintroducing a bare `fetch('/api/...')` in site/
 code gets a lint error.* Shipped as the Biome Grit plugin

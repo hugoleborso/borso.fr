@@ -1,3 +1,11 @@
+---
+summary: 'A preview''s DSQL schema is cloned from prod at deploy time; what the clone carries and what it does not.'
+triggers:
+  paths:
+    - 'infra/cdk/src/constructs/dsql-schema*.ts'
+    - 'infra/cdk/src/constructs/previewable-app*.ts'
+---
+
 # DSQL "clone from prod" — Neon-branch-style preview databases
 
 Preview / integ DSQL schemas can be seeded as a snapshot of `prod` at

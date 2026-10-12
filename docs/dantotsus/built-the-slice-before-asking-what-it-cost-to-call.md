@@ -5,10 +5,12 @@ detected-at: review
 severity: high
 related-pr: '#104'
 fix-pr: '#105'
-fix-commits: []
+fix-commits: [60fcd964e8]
 eradication-level: 1
+eradication-paths: [scripts/architecture/architecture-manifest.ts]
 time-to-detect: hours
 tags: [adr, architecture-map, third-party, conception, pragma]
+zone: plugins/borso-harness/skills/technical-conception
 ---
 
 # Built the slice before asking what it cost to call

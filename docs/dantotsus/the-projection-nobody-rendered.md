@@ -3,12 +3,15 @@ date: 2026-10-10
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: '9a94594'
+related-pr: none (introduced by commit 9a945946, pushed without a pull request)
 fix-pr: '#154'
-fix-commits: [c229a98, bd60cb7]
+fix-commits: [67bab828, 21a850ab]
 eradication-level: 4
 time-to-detect: days
 tags: [pragma, react, testing]
+eradication-paths: [apps/pragma/site/src/components/organisms/SetlistEntryRow.test.tsx]
+zone: apps/pragma/site/src/components/organisms
+recurs: none (a computed value no component rendered, not a dialog or harness defect)
 ---
 
 # The projection nobody rendered

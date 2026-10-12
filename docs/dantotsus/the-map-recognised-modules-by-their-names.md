@@ -3,12 +3,14 @@ date: 2026-08-15
 introduced-at: conception
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/49
-fix-commits: []
+related-pr: '#49'
+fix-pr: '#49'
+fix-commits: [a5bdfb5356]
 eradication-level: 1
+eradication-paths: [scripts/architecture/architecture-model.ts]
 time-to-detect: days
 tags: [architecture-map, static-analysis, naming, tooling]
+zone: scripts/architecture
 ---
 
 # The map recognised modules by their names, so an application that had not been renamed read as empty

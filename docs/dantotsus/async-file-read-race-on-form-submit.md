@@ -1,14 +1,16 @@
 ---
 date: 2026-05-14
 introduced-at: implementation
-detected-at: production (user-reported)
+detected-at: production
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/12
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/12
-fix-commits: [5c61a2b]
+related-pr: '#12'
+fix-pr: '#12'
+fix-commits: [5c61a2bd1d]
 eradication-level: 1
+eradication-paths: [apps/last-loop-lepin/site/src/components/organisms/SetupPanel.tsx]
 time-to-detect: hours — Hugo hit it on the second submit-after-pick cycle
 tags: [react, forms, async, file-upload]
+zone: apps/last-loop-lepin/site/src/components/organisms/SetupPanel.tsx
 ---
 
 # `file.text()` started in `onChange`, lost the race with the submit click

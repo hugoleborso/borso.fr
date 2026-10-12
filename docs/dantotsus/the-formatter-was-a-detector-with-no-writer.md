@@ -3,12 +3,15 @@ date: 2026-08-10
 introduced-at: implementation
 detected-at: local
 severity: low
-related-pr: 36
-fix-pr: 45
-fix-commits: [ebabfe7]
+related-pr: '#36'
+fix-pr: '#45'
+fix-commits: [ebabfe7650]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/posttool-format-write.sh]
 time-to-detect: minutes
 tags: [prettier, formatter, hooks, pre-commit, self-improvement-loop]
+zone: plugins/borso-harness/hooks
+recurs: [biome-formatter-was-not-gated]
 ---
 
 # The formatter was a detector with no writer
@@ -114,4 +117,4 @@ can differ from what was just written. Layout moves; semantics do not.
   This entry adds the *writer* above it.
 - [`biome-lint-was-not-gated-anywhere.md`](./biome-lint-was-not-gated-anywhere.md)
   — the original gap in the same lineage.
-- [`biome-formatter-trips-line-count-ceiling.md`](../knowledge/biome-formatter-trips-line-count-ceiling.md)
+- [`biome-formatter-trips-line-count-ceiling.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-formatter-trips-line-count-ceiling.md)

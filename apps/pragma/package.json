@@ -58,6 +58,7 @@
     "react-dom": "catalog:",
     "react-i18next": "catalog:",
     "react-router-dom": "catalog:",
+    "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
     "zod": "catalog:zod3"
   },

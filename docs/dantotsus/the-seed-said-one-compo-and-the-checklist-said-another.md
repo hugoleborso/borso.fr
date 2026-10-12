@@ -4,11 +4,13 @@ introduced-at: self-validation
 detected-at: qa
 severity: medium
 related-pr: '#100'
-fix-pr: '#102'
-fix-commits: []
+fix-pr: '#103'
+fix-commits: [948204d50a]
 eradication-level: 2
+eradication-paths: [apps/pragma/api/src/__test/test-seed.service.ts]
 time-to-detect: minutes
 tags: [pragma, testing, process, harness, gates]
+zone: apps/pragma/api/src/__test
 ---
 
 # The seed said one compo, the checklist said another, and the screen was right all along

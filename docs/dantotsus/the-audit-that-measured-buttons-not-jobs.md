@@ -5,10 +5,13 @@ detected-at: review
 severity: medium
 related-pr: '#151'
 fix-pr: '#151'
-fix-commits: [4d18fb9]
+fix-commits: [67bab828]
 eradication-level: 4
 time-to-detect: days
 tags: [pragma, frontend, validation, mobile]
+eradication-paths: [apps/pragma/scripts/task-speed/task-speed.setup.ts, apps/pragma/scripts/task-speed/task-speed-journeys.setup.ts]
+zone: apps/pragma/site/src
+recurs: none (the touch-event entry sent the wrong input; this one measured the wrong unit, buttons instead of jobs)
 ---
 
 # The audit that measured buttons, not jobs

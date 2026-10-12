@@ -1,14 +1,16 @@
 ---
 date: 2026-08-08
 introduced-at: conception
-detected-at: gate-failure
+detected-at: local
 severity: high
-related-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/40
-fix-commits: []
+related-pr: '#40'
+fix-pr: '#40'
+fix-commits: [f4f14f2ff5]
 eradication-level: 1
+eradication-paths: [scripts/vitest-cdk-outdir-teardown.js, infra/cdk/vitest.config.ts]
 time-to-detect: months
 tags: [cdk, vitest, disk, sandbox, gates, ci]
+zone: infra/cdk/test/unit
 blueprints: [test-cdk-synth]
 ---
 

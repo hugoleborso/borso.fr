@@ -1,3 +1,10 @@
+---
+summary: 'A CDP `click @ref` does not always fire a React `onClick`; fall back to `element.click()` through `eval` before calling the button dead.'
+triggers:
+  commands:
+    - '(agent-browser|scripts/browser\.sh)\s+(\S+\s+)*click\b'
+---
+
 # `agent-browser click @ref` no-ops on some React `onClick` handlers; `element.click()` via `eval` works
 
 ## Symptom

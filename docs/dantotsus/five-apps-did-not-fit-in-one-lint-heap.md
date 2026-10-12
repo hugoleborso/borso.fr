@@ -3,12 +3,14 @@ date: 2026-10-02
 introduced-at: implementation
 detected-at: ci
 severity: medium
-related-pr: "#110"
-fix-pr: "#119"
-fix-commits: [3d7adaa]
+related-pr: '#110'
+fix-pr: '#119'
+fix-commits: [3d7adaa065]
 eradication-level: 1
+eradication-paths: [scripts/lint-repository.sh]
 time-to-detect: days
 tags: [ci, eslint, gates, banana-rush]
+zone: .github/workflows/ci.yml
 ---
 
 # Five apps did not fit in one lint heap
