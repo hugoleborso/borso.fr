@@ -1,16 +1,4 @@
-export const GAME_ERROR_CODES = [
-  'game-not-found',
-  'game-full',
-  'already-started',
-  'avatar-taken',
-  'not-in-lobby',
-  'not-enough-players',
-  'not-host',
-  'not-a-player',
-  'not-playing',
-  'already-bid',
-  'round-still-open',
-  'not-finished',
-  'no-rematch',
-  'unexpected-failure',
-] as const;
+import { GAME_ERROR_CODES } from '@domain/game-error.core';
+import { UNKNOWN_FAILURE_CODE } from './api-failure.core';
+
+export const DISPLAYED_ERROR_CODES = [...GAME_ERROR_CODES, UNKNOWN_FAILURE_CODE] as const;

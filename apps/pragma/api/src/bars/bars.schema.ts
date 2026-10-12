@@ -1,8 +1,15 @@
+import {
+  BAR_CAPACITY_MAX,
+  BAR_CITY_MAX_LENGTH,
+  BAR_CONTACT_NAME_MAX_LENGTH,
+  BAR_CONTACT_PHONE_MAX_LENGTH,
+  BAR_NAME_MAX_LENGTH,
+  BAR_NOTES_MAX_LENGTH,
+  BAR_STATUSES,
+} from '@domain/bar-profile.core';
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { availableSupportSchema, concertMoodSchema } from './bar-support.core';
-
-export const BAR_STATUSES = ['lead', 'contacted', 'booked', 'played', 'cold'] as const;
 
 /**
  * @Blueprint schema-table-and-input
@@ -26,23 +33,16 @@ export const barTable = pgTable('bar', {
   availableSupport: text('available_support'),
 });
 
-const NAME_MAX = 256;
-const NOTES_MAX = 8_192;
-const CITY_MAX = 128;
-const CAPACITY_MAX = 100_000;
-const CONTACT_NAME_MAX = 128;
-const CONTACT_PHONE_MAX = 32;
-
 export const barCreateSchema = z.object({
-  name: z.string().trim().min(1).max(NAME_MAX),
+  name: z.string().trim().min(1).max(BAR_NAME_MAX_LENGTH),
   status: z.enum(BAR_STATUSES),
-  notes: z.string().max(NOTES_MAX).default(''),
+  notes: z.string().max(BAR_NOTES_MAX_LENGTH).default(''),
   lastInteractionAt: z.string().datetime().nullable().default(null),
-  city: z.string().max(CITY_MAX).nullable().default(null),
-  capacity: z.number().int().min(0).max(CAPACITY_MAX).nullable().default(null),
-  contactName: z.string().max(CONTACT_NAME_MAX).nullable().default(null),
+  city: z.string().max(BAR_CITY_MAX_LENGTH).nullable().default(null),
+  capacity: z.number().int().min(0).max(BAR_CAPACITY_MAX).nullable().default(null),
+  contactName: z.string().max(BAR_CONTACT_NAME_MAX_LENGTH).nullable().default(null),
   contactEmail: z.string().email().nullable().default(null),
-  contactPhone: z.string().max(CONTACT_PHONE_MAX).nullable().default(null),
+  contactPhone: z.string().max(BAR_CONTACT_PHONE_MAX_LENGTH).nullable().default(null),
   ownerMemberId: z.string().uuid().nullable().default(null),
   concertMood: concertMoodSchema.nullable().default(null),
   availableSupport: availableSupportSchema.default([]),
@@ -56,5 +56,3 @@ export const barSearchQuerySchema = z.object({
 });
 
 export const barIdParamSchema = z.object({ id: z.string().uuid() });
-
-export type BarStatus = (typeof BAR_STATUSES)[number];

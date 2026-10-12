@@ -1,0 +1,9 @@
+export const SLUG_CHARACTERS_PATTERN = /^[a-z0-9-]+$/;
+
+export const MINIMUM_EDITION_SLUG_LENGTH = 3;
+export const MAXIMUM_EDITION_SLUG_LENGTH = 64;
+export const MAXIMUM_EDITION_NAME_LENGTH = 120;
+
+export const MINIMUM_INTERVAL_MINUTES = 1;
+export const MAXIMUM_INTERVAL_MINUTES = 240;
+export const DEFAULT_INTERVAL_MINUTES = 60;

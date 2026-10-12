@@ -1,3 +1,4 @@
+import { PASSWORD_MAX_LENGTH, PASSWORD_MIN_LENGTH } from '@domain/input-limits.core';
 import { customType, integer, pgTable, text, timestamp } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
@@ -20,9 +21,6 @@ export const authAttemptTable = pgTable('auth_attempt', {
   count: integer('count').notNull().default(0),
   windowStartedAt: timestamp('window_started_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
-
-const PASSWORD_MIN_LENGTH = 8;
-const PASSWORD_MAX_LENGTH = 256;
 
 export const credentialsSchema = z.object({
   password: z.string().min(PASSWORD_MIN_LENGTH).max(PASSWORD_MAX_LENGTH),

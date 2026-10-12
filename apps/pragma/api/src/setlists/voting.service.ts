@@ -1,5 +1,5 @@
 import { findSetlistById } from './setlists.repository';
-import { resolveSetlistStatus, SETLIST_LOCKED, SETLIST_VOTING } from './setlists.core';
+import { resolveSetlistStatus, SETLIST_LOCKED, SETLIST_VOTING } from '@domain/setlist-vote.core';
 import {
   computeBudget,
   type ScoreWriteIntent,

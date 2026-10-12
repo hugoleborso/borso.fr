@@ -1,4 +1,4 @@
-import { MINIMUM_SEATS } from '@domain/game-setup.core';
+import { refuseStart } from '@domain/game-lifecycle.core';
 import { useTranslation } from 'react-i18next';
 import type { BroadcastGame } from '@site/lib/game-broadcast.core';
 import { NO_FREE_SEATS } from '@site/lib/game-summary.core';
@@ -23,7 +23,7 @@ export interface LobbyPanelProps {
  */
 export function LobbyPanel({ game, isHost, starting, onStart }: LobbyPanelProps) {
   const { t } = useTranslation();
-  const isEnoughPlayers = game.players.length >= MINIMUM_SEATS;
+  const isEnoughPlayers = refuseStart(game.status, game.players.length) !== 'not-enough-players';
   const isTableFull = game.freeSeats === NO_FREE_SEATS;
   const fullLabel = t('lobby.full');
   const seatsLeftLabel = t('lobby.seatsLeft', { count: game.freeSeats });

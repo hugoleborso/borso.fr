@@ -1,3 +1,4 @@
+import { OUTREACH_TEMPLATE_MAX_LENGTH } from '@domain/input-limits.core';
 import { integer, pgTable, text } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
@@ -9,8 +10,6 @@ export const outreachTemplateTable = pgTable('outreach_template', {
 
 export const OUTREACH_TEMPLATE_ROW_ID = 1;
 
-const TEMPLATE_BODY_MAX = 4_096;
-
 export const outreachTemplateSaveSchema = z.object({
-  body: z.string().trim().min(1).max(TEMPLATE_BODY_MAX),
+  body: z.string().trim().min(1).max(OUTREACH_TEMPLATE_MAX_LENGTH),
 });

@@ -2,30 +2,14 @@ import { describe, expect, it } from 'vitest';
 import {
   assembleBidTable,
   countFreeSeats,
-  hasRoundTimerExpired,
   narrowGameStatus,
   refuseJoin,
-  refuseStart,
   selectGameWinners,
   selectMissingBidders,
   selectWinnersWhenFinished,
 } from './game.core';
 
 // @FollowsBlueprint test-pure-unit
-describe('refuseStart', () => {
-  it('allows a lobby holding enough players', () => {
-    expect(refuseStart('lobby', 2)).toBeNull();
-  });
-
-  it('refuses a game that is already running', () => {
-    expect(refuseStart('playing', 4)).toBe('not-in-lobby');
-  });
-
-  it('refuses a lobby holding one player', () => {
-    expect(refuseStart('lobby', 1)).toBe('not-enough-players');
-  });
-});
-
 describe('refuseJoin', () => {
   it('allows a free seat in a lobby', () => {
     expect(refuseJoin('lobby', 2, 4, ['chimp'], 'gibbon')).toBeNull();
@@ -97,26 +81,6 @@ describe('selectGameWinners', () => {
         200,
       ),
     ).toEqual(['me', 'you']);
-  });
-});
-
-describe('hasRoundTimerExpired', () => {
-  const opened = new Date('2026-09-19T12:00:00.000Z');
-
-  it('is false before the deadline', () => {
-    expect(hasRoundTimerExpired(opened, 60, new Date('2026-09-19T12:00:59.000Z'))).toBe(false);
-  });
-
-  it('is true on the deadline', () => {
-    expect(hasRoundTimerExpired(opened, 60, new Date('2026-09-19T12:01:00.000Z'))).toBe(true);
-  });
-
-  it('is false for a game played without a timer', () => {
-    expect(hasRoundTimerExpired(opened, null, new Date('2027-01-01T00:00:00.000Z'))).toBe(false);
-  });
-
-  it('is false while no round is open', () => {
-    expect(hasRoundTimerExpired(null, 60, new Date('2027-01-01T00:00:00.000Z'))).toBe(false);
   });
 });
 

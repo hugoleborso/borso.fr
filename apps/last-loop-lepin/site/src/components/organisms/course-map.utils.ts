@@ -1,4 +1,4 @@
-import { haversineDistanceMeters } from '../../lib/haversine.utils';
+import { haversineDistanceMeters } from '@domain/haversine.core';
 import {
   buildRunnerAvatar,
   MAP_AVATAR_CLASS,

@@ -5,7 +5,6 @@ import {
   changeDraftStatusFile,
   countReadyDrafts,
   isDraftFile,
-  isDraftStatusChangeAllowed,
   parseDraft,
   parseRecipients,
   readDraftSlug,
@@ -119,22 +118,6 @@ describe('countReadyDrafts', () => {
       body: '',
     }));
     expect(countReadyDrafts(drafts)).toBe(3);
-  });
-});
-
-describe('isDraftStatusChangeAllowed', () => {
-  it('settles a ready draft, and puts back a settled one', () => {
-    expect(isDraftStatusChangeAllowed('pret', 'envoye')).toBe(true);
-    expect(isDraftStatusChangeAllowed('pret', 'abandonne')).toBe(true);
-    expect(isDraftStatusChangeAllowed('envoye', 'pret')).toBe(true);
-    expect(isDraftStatusChangeAllowed('abandonne', 'pret')).toBe(true);
-  });
-
-  it('refuses any other change', () => {
-    expect(isDraftStatusChangeAllowed('pret', 'pret')).toBe(false);
-    expect(isDraftStatusChangeAllowed('envoye', 'abandonne')).toBe(false);
-    expect(isDraftStatusChangeAllowed('abandonne', 'envoye')).toBe(false);
-    expect(isDraftStatusChangeAllowed('', 'pret')).toBe(false);
   });
 });
 

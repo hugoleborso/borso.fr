@@ -143,8 +143,9 @@ Lives in: `api/src/games/`
 
 - Built by `buildJoinCode` in `join-code.utils.ts` from an alphabet that
   leaves out the characters people read back wrongly.
-- `normalizeJoinCode` accepts what a person actually types, in any case
-  and with any spacing.
+- `normalizeJoinCode` in `domain/join-code.core.ts` accepts what a person
+  actually types, in any case and with any spacing. The screen and the API
+  both read it, with `JOIN_CODE_LENGTH`, from there.
 
 ## Connection
 

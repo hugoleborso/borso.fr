@@ -1,5 +1,6 @@
 /** @Feature songs */
 
+import { SONG_TEXT_FIELD_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -28,9 +29,6 @@ import {
   detectProvider,
   type SongDraftState,
 } from '../../routes/catalog/song-draft.core';
-
-const TITLE_MAX = 256;
-const ARTIST_MAX = 256;
 
 interface SongEditFormProps {
   readonly isNew: boolean;
@@ -196,7 +194,7 @@ export function SongEditForm({
                 onChange={(event) => field.handleChange(event.target.value)}
                 onBlur={field.handleBlur}
                 required
-                maxLength={TITLE_MAX}
+                maxLength={SONG_TEXT_FIELD_MAX_LENGTH}
               />
             )}
           </form.Field>
@@ -212,7 +210,7 @@ export function SongEditForm({
                 value={field.state.value}
                 onChange={(event) => field.handleChange(event.target.value)}
                 onBlur={field.handleBlur}
-                maxLength={ARTIST_MAX}
+                maxLength={SONG_TEXT_FIELD_MAX_LENGTH}
               />
             )}
           </form.Field>

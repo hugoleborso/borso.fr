@@ -1,7 +1,8 @@
 import { randomUUID } from 'node:crypto';
 import { buildChartObjectKey } from './uploads.core';
 import { presignGetObject, presignPutObject } from './uploads.adapter';
-import type { AllowedUploadContentType, PresignedGetUrl, PresignedPutUrl } from './uploads.types';
+import type { AllowedUploadContentType } from '@domain/chart-upload.core';
+import type { PresignedGetUrl, PresignedPutUrl } from './uploads.types';
 import { UPLOAD_URL_EXPIRES_SECONDS } from './uploads.types';
 
 const MILLISECONDS_PER_SECOND = 1_000;

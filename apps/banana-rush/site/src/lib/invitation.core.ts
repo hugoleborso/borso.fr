@@ -1,5 +1,4 @@
-import { normalizeJoinCode } from '@api/games/join-code.utils';
-import { JOIN_CODE_LENGTH } from '@api/games/games.schema';
+import { isCompleteJoinCode, normalizeJoinCode } from '@domain/join-code.core';
 
 export const INVITATION_PARAMETER = 'partie';
 
@@ -18,5 +17,5 @@ export function buildInvitationUrl(origin: string, joinCode: string): string {
 export function readInvitedCode(rawParameter: string | null): string | null {
   if (rawParameter === null) return null;
   const code = normalizeJoinCode(rawParameter);
-  return code.length === JOIN_CODE_LENGTH ? code : null;
+  return isCompleteJoinCode(code) ? code : null;
 }

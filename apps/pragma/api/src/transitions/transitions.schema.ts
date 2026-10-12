@@ -1,3 +1,4 @@
+import { TRANSITION_COMMENT_MAX_LENGTH } from '@domain/input-limits.core';
 import { pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
@@ -19,8 +20,6 @@ export const transitionPairParamSchema = z.object({
   b: z.string().uuid(),
 });
 
-const COMMENT_MAX = 4_096;
-
 export const transitionCommentBodySchema = z.object({
-  comment: z.string().trim().min(1).max(COMMENT_MAX),
+  comment: z.string().trim().min(1).max(TRANSITION_COMMENT_MAX_LENGTH),
 });

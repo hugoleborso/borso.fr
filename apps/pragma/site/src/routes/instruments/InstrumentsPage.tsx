@@ -1,5 +1,6 @@
 /** @Feature instruments */
 
+import { INSTRUMENT_NAME_MAX_LENGTH } from '@domain/input-limits.core';
 import {
   FALLBACK_INSTRUMENT_ICON,
   INSTRUMENT_FAMILIES,
@@ -44,7 +45,6 @@ interface SelectedInstrument {
 
 const DEFAULT_NEW_INSTRUMENT_FAMILY: InstrumentFamily = 'harmonic';
 const INSTRUMENT_NAME_MIN_LENGTH = 1;
-const INSTRUMENT_NAME_MAX_LENGTH = 64;
 const NO_ROWS: readonly never[] = [];
 
 // @FollowsBlueprint route-list-page

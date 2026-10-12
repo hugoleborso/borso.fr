@@ -1,5 +1,6 @@
 /** @Feature transitions */
 
+import { TRANSITION_COMMENT_MAX_LENGTH } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -12,8 +13,6 @@ import {
   useSaveTransitionComment,
   useTransitionComment,
 } from '../../lib/queries/transitions.queries';
-
-const COMMENT_MAX_LENGTH = 4_096;
 
 export interface TransitionCommentModalProps {
   readonly songAId: string;
@@ -78,7 +77,7 @@ export function TransitionCommentModal({
             value={draft}
             onChange={(event) => setEditedDraft(event.target.value)}
             rows={6}
-            maxLength={COMMENT_MAX_LENGTH}
+            maxLength={TRANSITION_COMMENT_MAX_LENGTH}
             className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
           />
         )}

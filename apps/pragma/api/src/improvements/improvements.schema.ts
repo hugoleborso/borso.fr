@@ -1,3 +1,4 @@
+import { IMPROVEMENT_TITLE_MAX_LENGTH } from '@domain/input-limits.core';
 import { pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
@@ -23,11 +24,10 @@ export const improvementVoteTable = pgTable(
   (table) => [primaryKey({ columns: [table.improvementId, table.memberId] })],
 );
 
-const TITLE_MAX = 200;
 const DETAILS_MAX = 8_192;
 
 export const improvementCreateSchema = z.object({
-  title: z.string().trim().min(1).max(TITLE_MAX),
+  title: z.string().trim().min(1).max(IMPROVEMENT_TITLE_MAX_LENGTH),
   details: z.string().max(DETAILS_MAX).default(''),
   status: z.enum(IMPROVEMENT_STATUSES).default('idea'),
 });

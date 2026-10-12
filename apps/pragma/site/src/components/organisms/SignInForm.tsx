@@ -1,5 +1,6 @@
 /** @Feature auth */
 
+import { PASSWORD_MIN_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -11,8 +12,6 @@ import {
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { PasswordField } from '../molecules/PasswordField';
-
-const PASSWORD_MIN_LENGTH = 8;
 
 export interface SignInFormProps {
   readonly serverError: string | null;
