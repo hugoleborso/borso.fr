@@ -3,12 +3,14 @@ date: 2026-08-19
 introduced-at: implementation
 detected-at: local
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/55
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/55
-fix-commits: []
+related-pr: '#55'
+fix-pr: '#73'
+fix-commits: [50545c5bc1]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/pretool-no-swallowed-push.sh]
 time-to-detect: hours
 tags: [bash, git, hooks, gates, meta]
+zone: plugins/borso-harness/hooks
 ---
 
 # A push rejected by the pre-push gate read as a successful one for two hours

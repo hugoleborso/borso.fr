@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: conception
 detected-at: operator-deploy
 severity: low
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-commits: [2a4aef4]
+related-pr: '#2'
+fix-pr: '#2'
+fix-commits: [2a4aef4902]
 eradication-level: 4
+eradication-paths: [infra/cdk/src/constructs/static-site.ts, infra/cdk/test/unit/static-site.test.ts]
 time-to-detect: minutes (next CI deploy after manual upload)
 tags: [cdk, s3, bucketdeployment]
+zone: infra/cdk/src/constructs/static-site.ts
 ---
 
 # `BucketDeployment.prune` defaults to true and wipes out-of-band uploads

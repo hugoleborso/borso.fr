@@ -5,10 +5,13 @@ detected-at: linter
 severity: low
 related-pr: '#153'
 fix-pr: '#155'
-fix-commits: [4bcf314c]
+fix-commits: [24b9318e]
 eradication-level: 1
 time-to-detect: minutes
 tags: [eslint, cache, pnpm, deps, hooks, harness, pragma]
+eradication-paths: [scripts/lint-workspace.sh]
+zone: scripts/lint-workspace.sh
+recurs: [a-cache-replayed-the-error-its-own-entry-described]
 ---
 
 # Two hundred and ninety-one errors for a package that was already installed

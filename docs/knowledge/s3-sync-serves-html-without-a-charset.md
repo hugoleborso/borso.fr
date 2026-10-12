@@ -7,6 +7,12 @@ related-pr: https://github.com/hugoleborso/borso.fr/pull/76
 fix-commit: n/a (the meta charset in document-shell.core.ts is the fix)
 time-to-detect: minutes, but only if someone opens the published copy
 tags: [s3, cloudfront, encoding, architecture-maps, vendor-quirk]
+summary: '`aws s3 sync` sends a bare `text/html` with no charset, so non-ASCII renders as mojibake; the page itself must declare `<meta charset>`.'
+triggers:
+  paths:
+    - 'scripts/architecture/document-shell.core.ts'
+  commands:
+    - 's3\s+(sync|cp)\b'
 ---
 
 # `aws s3 sync` serves HTML with no charset, so the same bytes render as mojibake

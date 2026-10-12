@@ -3,12 +3,14 @@ date: 2026-10-08
 introduced-at: conception
 detected-at: production
 severity: medium
-related-pr: "#149"
-fix-pr: "#149"
-fix-commits: [7921a44]
+related-pr: '#149'
+fix-pr: '#149'
+fix-commits: [7921a44c5c]
 eradication-level: 4
+eradication-paths: [apps/talos/site/src/lib/claude-code-address.core.ts]
 time-to-detect: days
 tags: [talos, claude-code, pwa]
+zone: apps/talos/site/src/lib/claude-code-address.core.ts
 ---
 
 # The link the app opened without its prompt

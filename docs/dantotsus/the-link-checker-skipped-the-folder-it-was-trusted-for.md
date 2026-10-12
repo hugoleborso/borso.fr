@@ -5,10 +5,12 @@ detected-at: review
 severity: low
 related-pr: '#89'
 fix-pr: '#106'
-fix-commits: [96a3ed4a]
+fix-commits: [96a3ed4ad5]
 eradication-level: 2
+eradication-paths: [scripts/check-named-paths-exist.sh, scripts/docs/check-doc-links.ts]
 time-to-detect: days
 tags: [documentation, gates, ci, pre-commit, meta, tooling]
+zone: scripts/docs/check-doc-links.ts
 ---
 
 # The link checker skipped the folder it was most trusted for

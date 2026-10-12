@@ -1,3 +1,12 @@
+---
+summary: 'pragma''s Spotify credential lives in one SSM parameter per stage, and a missing one looks exactly like a song Spotify does not carry.'
+triggers:
+  paths:
+    - 'apps/pragma/api/src/songs/spotify*.ts'
+  commands:
+    - 'open\.spotify\.com|api\.spotify\.com'
+---
+
 # Spotify credentials for pragma
 
 pragma resolves a song's Spotify track once, from the ISRC Deezer returned, and

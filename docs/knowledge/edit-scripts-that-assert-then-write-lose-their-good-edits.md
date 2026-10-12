@@ -1,3 +1,12 @@
+---
+summary: 'An edit script that asserts every replacement and writes once at the end loses the edits that worked when a later assert fails.'
+triggers:
+  commands:
+    - 'python3?\s+(-\s*)?<<'
+  output:
+    - 'Traceback \(most recent call last\):[\s\S]*\nAssertionError'
+---
+
 # An edit script that asserts then writes at the end loses the edits that worked
 
 The convenient shape for a multi-part text edit is to collect the replacements,

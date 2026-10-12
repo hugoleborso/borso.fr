@@ -1,3 +1,10 @@
+---
+summary: 'A push rejected with Internal Server Error while fetch works: retry with backoff, then push through mcp__github__push_files and reset --keep onto the remote branch.'
+triggers:
+  output:
+    - 'remote rejected\].*\(Internal Server Error\)'
+---
+
 # `git push` answers Internal Server Error while fetch works
 
 Seen on 2026-10-10, PR #151, from a hosted session: `git push -u origin

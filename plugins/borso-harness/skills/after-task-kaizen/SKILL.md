@@ -246,9 +246,18 @@ For each surviving subject:
 1. Pick a slug `kebab-case` whose title sparks curiosity, not the
    user-story name.
 2. Copy `docs/dantotsus/_template.md`.
-3. Fill the frontmatter. Tag pool: `grep -h '^tags:'
-   docs/dantotsus/*.md | sort -u` — only add a new tag if no
-   existing one fits.
+3. Fill the frontmatter by the rules in
+   [`/dantotsu`](../dantotsu/SKILL.md)'s *Output* section, which
+   `scripts/quality/check-dantotsu-front-matter.ts` enforces on the
+   commit. Tag pool: `grep -h '^tags:' docs/dantotsus/*.md | sort -u`
+   — only add a new tag if no existing one fits. Three fields place
+   the entry on the weak-point map: `zone:` where the defect lived
+   (not where the eradication landed), `weak-point:` when it belongs
+   to a row of `docs/quality/weak-points.md`, and `recurs:` naming the
+   earlier entry it repeats, or `none (<reason>)`. The eradication
+   usually ships in the same commit as the entry, so `fix-commits:
+   [self]` is the usual value: a branch hash does not survive the
+   squash merge.
 4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
 5. **Ship the eradication** — code, in this PR. Pick the highest
    feasible level of the ladder (1 = structural impossibility, 5 =
@@ -260,10 +269,23 @@ For each surviving subject:
 **Vendor surprises / operator confusion / reusable insights →
 `docs/knowledge/<slug>.md`:**
 
-1. Pick a slug.
-2. Write whatever helps the next reader. No frontmatter required;
-   no fixed sections required. Keep it concrete and short.
-3. Add a one-line entry to `docs/knowledge/README.md` index.
+1. Pick a slug. First search the corpus for an entry on the same
+   tool or symptom (`grep -ril <tool> docs/knowledge/`); extending it
+   beats a second entry the hook would print beside the first.
+2. Write whatever helps the next reader. No fixed sections required;
+   keep it concrete and short.
+3. **Give it front matter with a `summary:` and `triggers:`**, as
+   described in `docs/knowledge/README.md`. The summary is the one
+   sentence a hook prints. The triggers are the moment the subject bit
+   in this task, read off the inventory row: the file being written
+   (`paths`), the command that was about to run (`commands`), or the
+   error text a tool printed (`output`). Prefer the narrowest one that
+   would have fired at that moment. If no path, command or output
+   recognises the moment, the entry would have no reader: fold the
+   lesson into an existing entry that has one, or into a hook, a gate
+   or a skill instead. `scripts/check-knowledge-triggers.sh` refuses an
+   entry without triggers.
+4. Add a one-line entry to `docs/knowledge/README.md` index.
 
 ### 4. Cross-link
 
@@ -343,9 +365,17 @@ not its volume, is what keeps the system improving.
       under `docs/dantotsus/` matching `_template.md`, with
       `eradication-level` ≥ 1 backed by a commit reference.
 - [ ] Each surviving vendor-surprise / operator-confusion /
-      reusable-insight subject has a file under `docs/knowledge/`.
-- [ ] Frontmatter on every new dantotsu file is filled (no
-      `<placeholder>` strings).
+      reusable-insight subject has a file under `docs/knowledge/`
+      with a `summary:` and `triggers:` that would have fired at the
+      moment it bit, and `scripts/check-knowledge-triggers.sh` passes.
+- [ ] Frontmatter on every new dantotsu file passes
+      `pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts`:
+      no placeholder, a `zone:`, `eradication-paths:` naming code
+      for levels 1 to 4, and `recurs:` where tags overlap.
+- [ ] `pnpm exec tsx scripts/quality/working-conditions.ts --check`
+      passes once the friction log is archived; three unfiled lines
+      about the same wall are a wall to add to
+      `docs/quality/working-conditions.md`.
 - [ ] Both READMEs updated.
 - [ ] Cross-links to existing entries added where chains overlap.
 - [ ] All eradication commits exist on the kaizen branch (verify

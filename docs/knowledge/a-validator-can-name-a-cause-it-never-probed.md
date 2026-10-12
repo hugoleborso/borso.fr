@@ -1,3 +1,10 @@
+---
+summary: 'A cause written in a validation report''s notes is a hypothesis until a probe is cited; probe it before it becomes a gate protecting nothing.'
+triggers:
+  paths:
+    - 'docs/features/*/*/validation/**'
+---
+
 # A validator can name a cause it never probed
 
 A visual-validation run on `pragma` logged this, twice, as friction:

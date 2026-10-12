@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: implementation
 detected-at: ci
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
-fix-commits: [1758f91, d5714ae]
+related-pr: '#2'
+fix-pr: '#4'
+fix-commits: [1758f91690, d5714aebf0]
 eradication-level: 4
+eradication-paths: [infra/cdk/src/constructs/dsql-schema.ts, infra/cdk/test/unit/eradication-checks.test.ts]
 time-to-detect: hours (every CI run was slow + flaky)
 tags: [cdk, nodejs-function, esbuild, vitest]
+zone: infra/cdk/src/constructs/dsql-schema.ts
 ---
 
 # `NodejsFunction.bundling.nodeModules` runs `pnpm install` per synth

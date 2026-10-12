@@ -6,8 +6,8 @@
 #   deploy → matrix per affected app, skip the ones whose inputs are
 #            already deployed, otherwise cdk deploy <app>-pr-<n> and
 #            sticky comment the preview URL on the PR
-#   teardown → on PR close, iterate every app and cdk destroy. Failures
-#              are swallowed (the stack might never have existed).
+#   teardown → on PR close, and on every push of a Dependabot PR, iterate
+#              every app and cdk destroy the stacks that exist.
 #
 # `detect` answers "what does this pull request touch", not "what changed
 # since this preview was last built": dorny/paths-filter on a pull_request
@@ -41,9 +41,14 @@ concurrency:
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
 
+# A pull request Dependabot opened gets no preview, and an earlier push of one
+# that did is torn down on its next push: a full-stack preview holds one of the
+# nine preview schemas its DSQL cluster has, and five unread Dependabot
+# previews left three human pull requests without one. CI still runs on them.
+# See docs/dantotsus/dependabot-previews-filled-the-schema-quota.md.
 jobs:
   detect:
-    if: github.event.action != 'closed'
+    if: github.event.action != 'closed' && github.event.pull_request.user.login != 'dependabot[bot]'
     runs-on: ubuntu-latest
     outputs:
       apps: ${{ steps.compute.outputs.apps }}
@@ -88,6 +93,20 @@ jobs:
             | while read -r app; do
                 jq -e '.borso.previews == false' "apps/$app/package.json" >/dev/null || echo "$app"
               done | jq -R . | jq -sc .)
+
+          # A package.json edit that only rewrites a check script (lint,
+          # typecheck, test, dev) changes nothing a deploy runs, yet matches
+          # its app's own key, and `infra/cdk/package.json` matches `infra`,
+          # which fans out to every app. PR #155 redeployed all six apps to
+          # production for a lint script. Such keys are dropped here; any
+          # error keeps the changes as they were.
+          # See docs/dantotsus/a-lint-script-redeployed-every-app.md.
+          if jq -e 'index("deps")' <<<"$CHANGES" >/dev/null; then
+            if kept=$(pnpm exec tsx scripts/dependencies/drop-check-only-changes.ts \
+              "$BASE" "$CHANGES"); then
+              CHANGES="$kept"
+            fi
+          fi
 
           # If infra/cdk changed, redeploy every app's preview — constructs
           # are the contract.
@@ -275,6 +294,12 @@ jobs:
               log_url: `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
             });
             core.setOutput('id', data.id);
+      - name: Preview schema budget
+        if: steps.plan.outputs.skip != 'true'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          GH_REPO: ${{ github.repository }}
+        run: ./scripts/preflight-preview-schema-budget.sh "${{ matrix.app }}" "$PR_NUMBER"
       # Clean state left by previous failed runs (stack stuck in
       # ROLLBACK_COMPLETE, orphan log groups, orphan named buckets).
       # Idempotent — no-op on a clean account.
@@ -405,7 +430,7 @@ jobs:
             });
 
   teardown:
-    if: github.event.action == 'closed'
+    if: github.event.action == 'closed' || github.event.pull_request.user.login == 'dependabot[bot]'
     runs-on: ubuntu-latest
     env:
       STAGE: preview

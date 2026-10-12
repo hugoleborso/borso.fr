@@ -3,12 +3,14 @@ date: 2026-05-25
 introduced-at: implementation
 detected-at: review
 severity: low
-related-pr: 27
-fix-pr: 27
-fix-commits: [dc6684d, 82f0e29]
+related-pr: '#27'
+fix-pr: '#27'
+fix-commits: [e138811ba9]
 eradication-level: 2
+eradication-paths: [apps/borso-fr/package.json]
 time-to-detect: minutes
 tags: [claude-md, harness, hooks, pre-commit, ci, self-improvement-loop]
+zone: CLAUDE.md
 ---
 
 # Wrote off a failing test as "preexisting" and moved on

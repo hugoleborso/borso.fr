@@ -3,12 +3,14 @@ date: 2026-05-02
 introduced-at: conception
 detected-at: ci
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/2
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/4
-fix-commits: [9e78acb]
+related-pr: '#2'
+fix-pr: '#4'
+fix-commits: [9e78acb176]
 eradication-level: 1
+eradication-paths: [infra/cdk/src/constructs/dsql-cluster-stack.ts, infra/cdk/src/constructs/previewable-app.ts]
 time-to-detect: minutes (first preview push of a DB-using app)
 tags: [dsql, ssm, cdk, ordering]
+zone: infra/cdk/src/constructs/previewable-app.ts
 ---
 
 # A DB-using app's first deploy must be to prod (chicken-and-egg)

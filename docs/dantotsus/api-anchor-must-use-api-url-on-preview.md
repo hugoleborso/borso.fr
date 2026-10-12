@@ -3,12 +3,15 @@ date: 2026-05-25
 introduced-at: implementation
 detected-at: qa
 severity: medium
-related-pr: 27
-fix-pr: ./lessons-from-pr-27
-fix-commits: [e36b217]
+related-pr: '#27'
+fix-pr: '#29'
+fix-commits: [e36b217eda]
 eradication-level: 2
+eradication-paths: [eslint-rules/no-api-anchor-in-site.js]
 time-to-detect: 30m
 tags: [frontend, vite, cloudfront, preview, cross-origin, biome, grit, plugins, last-loop-lepin]
+zone: apps/last-loop-lepin/site/src/routes/ArchivesPage.tsx
+recurs: [frontend-fetch-must-go-through-api-client]
 ---
 
 # A download button opened the SPA's 404 page while the API said 200
@@ -113,7 +116,7 @@ matchable node when `engine biome(1.0)` + `language js(jsx)` are
 declared at the top of the .grit file ; the regex `r".*[\"']/api/.*"`
 on the matched node's literal text catches both `href="/api/foo"`
 and `href='/api/foo'`. See
-[`docs/knowledge/biome-grit-jsx-matching.md`](../knowledge/biome-grit-jsx-matching.md)
+[`docs/knowledge/biome-grit-jsx-matching.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-grit-jsx-matching.md)
 for the working pattern shape (and the dead ends that fooled the
 first attempt).
 
@@ -121,7 +124,7 @@ first attempt).
 pre-commit + in CI)
 
 **Reference:** PR ./lessons-from-pr-27 · commits
-[`<this-pr-sha>`] (`biome-plugins/no-api-anchor-in-site.grit` +
+[`e36b217eda`](https://github.com/hugoleborso/borso.fr/commit/e36b217eda) (`biome-plugins/no-api-anchor-in-site.grit` +
 `apps/last-loop-lepin/biome.jsonc`)
 
 **The actual fix:**
@@ -164,7 +167,7 @@ Fixed in the same commit (`e36b217`).
 - [`docs/dantotsus/frontend-fetch-must-go-through-api-client.md`](./frontend-fetch-must-go-through-api-client.md)
   — sibling on the fetch surface, same root cause, different
   Grit pattern shape.
-- [`docs/knowledge/biome-grit-jsx-matching.md`](../knowledge/biome-grit-jsx-matching.md)
+- [`docs/knowledge/biome-grit-jsx-matching.md`](https://github.com/hugoleborso/borso.fr/blob/6c975b3d770a1938c04fb5d91730f34501797a89/docs/knowledge/biome-grit-jsx-matching.md)
   — JSX-specific Grit syntax that took a while to find.
 - [`docs/knowledge/preview-api-cross-origin.md`](../knowledge/preview-api-cross-origin.md)
   — why preview is cross-origin in the first place.

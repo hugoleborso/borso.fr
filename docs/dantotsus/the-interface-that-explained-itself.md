@@ -4,11 +4,14 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#151'
-fix-pr: '#154'
-fix-commits: [eb092d9]
+fix-pr: '#151'
+fix-commits: [67bab828]
 eradication-level: 5
 time-to-detect: hours
 tags: [pragma, frontend, i18n, standards]
+eradication-paths: [docs/standards/05-frontend-architecture.md]
+zone: apps/pragma/site/src
+recurs: none (screen copy that explains the interface, not a layout or audit defect)
 ---
 
 # The interface that explained itself

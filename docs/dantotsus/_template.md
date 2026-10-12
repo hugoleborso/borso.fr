@@ -3,12 +3,16 @@ date: <YYYY-MM-DD>                  # when the Dantotsu was written
 introduced-at: <stage>              # conception | implementation | self-validation | code-review
 detected-at: <layer>                # typing | linter | local | ci | review | qa | staging | production | operator-deploy
 severity: <level>                   # low | medium | high
-related-pr: <#n or url>             # the PR where the defect first lived
-fix-pr: <#n or url>                 # the PR that landed the eradication (often the kaizen PR for this dantotsu)
-fix-commits: [<sha>, …]             # the commits on fix-pr that actually moved the eradication
-eradication-level: <1-5>             # 1=structural impossibility | 2=devx check | 3=vendor patch | 4=detection | 5=knowledge
+related-pr: '#<n>'                  # the PR where the defect first lived, or none (<reason>)
+fix-pr: '#<n>'                      # the PR that landed the eradication, or none (<reason>)
+fix-commits: [<sha>, …]             # commits on main that moved the eradication; [self] = the commit adding this file; or none (<reason>)
+eradication-level: <1-5>            # 1=structural impossibility | 2=devx check | 3=vendor patch | 4=detection | 5=knowledge
+eradication-paths: [<path>, …]      # the files the eradication lives in; levels 1-4 need one that is not markdown
 time-to-detect: <minutes/hours/days>
-tags: [<topic>, …]                  # cdk, cloudfront, s3, ci, pnpm, dsql, github-actions, …
+tags: [<topic>, …]                  # reuse existing tags: cdk, cloudfront, s3, ci, pnpm, dsql, github-actions, …
+zone: <path>                        # where the defect LIVED (not where the fix landed); must exist in the tree
+weak-point: <id>                    # optional; an id from docs/quality/weak-points.md
+recurs: [<earlier-slug>, …]         # the entry this repeats, or none (<why it is a different class>)
 ---
 
 # <Title — sparks curiosity, hints at the lesson, NOT the user-story name>

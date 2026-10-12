@@ -1,3 +1,10 @@
+---
+summary: 'DSQL read-after-write holds within one connection, so a GET right after a PUT on another Lambda can read the old row; reconcile from the mutation response.'
+triggers:
+  paths:
+    - 'apps/*/site/src/**/*.queries.ts'
+---
+
 # Aurora DSQL read-after-write is per-connection — a fresh GET can miss a just-committed PUT
 
 ## The trap

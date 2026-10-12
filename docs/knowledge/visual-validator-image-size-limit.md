@@ -1,3 +1,12 @@
+---
+summary: 'Past about twenty high-resolution screenshots a session crashes on the 2000 px many-image limit; cap screenshots and prefer the viewport.'
+triggers:
+  commands:
+    - '(agent-browser|scripts/browser\.sh)\s+(\S+\s+)*screenshot\b'
+  output:
+    - 'exceeds the dimension limit'
+---
+
 # `/visual-validation` crashes when too many high-res screenshots accumulate
 
 A `/visual-validation` run can take a screenshot per assertion, capture it via

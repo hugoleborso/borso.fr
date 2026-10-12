@@ -1,3 +1,11 @@
+---
+summary: 'A CloudFront alias belongs to one distribution at a time; release it from the old one before the new one can claim it.'
+triggers:
+  output:
+    - 'One or more of the CNAMEs you provided are already associated with a different resource'
+    - 'CNAMEAlreadyExists'
+---
+
 # CloudFront aliases (CNAMEs) are unique account-wide and must be released before being claimed by a different distribution
 
 ## Symptom

@@ -5,10 +5,14 @@ detected-at: ci
 severity: medium
 related-pr: '#89'
 fix-pr: '#89'
-fix-commits: [a36b358d]
+fix-commits: [a36b358d27]
 eradication-level: 1
+eradication-paths: [apps/pragma/site/src/lib/queries/audience.utils.ts]
 time-to-detect: hours
 tags: [pragma, react, tanstack-query, dsql, optimistic-updates, ci, flake]
+zone: apps/pragma/site/src/lib/queries/audience.queries.ts
+weak-point: optimistic-write-undone
+recurs: [the-blueprint-that-mandated-the-refetch-that-undid-it]
 blueprints: [query-optimistic-mutation]
 ---
 

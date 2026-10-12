@@ -5,10 +5,14 @@ detected-at: local
 severity: high
 related-pr: '#60'
 fix-pr: '#62'
-fix-commits: [195b354]
+fix-commits: [195b354e2d]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/strip-heredocs.py]
 time-to-detect: 3 months
 tags: [harness, hooks, gates, meta, self-improvement-loop]
+zone: plugins/borso-harness/hooks
+weak-point: gate-measures-nothing
+recurs: [three-green-gates-on-code-that-ran-nowhere]
 ---
 
 # Two guard hooks that never guarded

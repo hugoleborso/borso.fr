@@ -3,12 +3,14 @@ date: 2026-05-05
 introduced-at: implementation
 detected-at: review
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/8
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/9
-fix-commits: []
-eradication-level: 4
+related-pr: '#8'
+fix-pr: '#9'
+fix-commits: [3a6a89c64c]
+eradication-level: 5
+eradication-paths: []
 time-to-detect: hours
 tags: [implementation, skills, deps, react-chessboard]
+zone: plugins/borso-harness/skills/implementation
 ---
 
 # Started writing my own L-arrow util before checking the library

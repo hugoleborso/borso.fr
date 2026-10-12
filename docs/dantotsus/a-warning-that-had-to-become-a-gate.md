@@ -3,12 +3,15 @@ date: 2026-08-19
 introduced-at: self-validation
 detected-at: local
 severity: medium
-related-pr: https://github.com/hugoleborso/borso.fr/pull/55
-fix-pr: https://github.com/hugoleborso/borso.fr/pull/55
-fix-commits: []
+related-pr: '#55'
+fix-pr: '#73'
+fix-commits: [50545c5bc1]
 eradication-level: 2
+eradication-paths: [plugins/borso-harness/hooks/pretool-no-discarding-reset.sh]
 time-to-detect: minutes
 tags: [git, hooks, meta, self-improvement-loop]
+zone: plugins/borso-harness/hooks
+weak-point: prose-stands-in-for-a-check
 ---
 
 # The knowledge entry warning about this was open in the same session that did it again
