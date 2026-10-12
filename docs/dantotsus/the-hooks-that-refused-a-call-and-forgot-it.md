@@ -75,7 +75,7 @@ friction is the hook that just refused a call, and it was silent.
 - **CI:** the file never reaches CI by design.
 - **Code review:** an empty friction log looks identical to a smooth
   task. There is no artefact that says "five refusals happened here".
-- **The sweep itself:** `/after-task-dantotsus` treats a thin
+- **The sweep itself:** `/after-task-kaizen` treats a thin
   `KAIZEN.md` as a finding, which is the right instinct and the wrong
   moment — it fires after the context that would have filled the file
   is gone.
@@ -85,7 +85,7 @@ friction is the hook that just refused a call, and it was silent.
 The five hooks that block a call now record what they refused, in the
 same run that refuses it.
 
-- **Code:** `.claude/hooks/kaizen-refusal.sh`, called from each
+- **Code:** `plugins/borso-harness/hooks/kaizen-refusal.sh`, called from each
   blocking branch of the five `pretool-*` hooks.
 
 ## Eradication (mandatory — code-level)
@@ -93,7 +93,7 @@ same run that refuses it.
 **Type:** DevX check (level 2 — devx check)
 
 **Reference:** PR #102 · commits on this branch adding
-`.claude/hooks/kaizen-refusal.sh` and wiring the five hooks
+`plugins/borso-harness/hooks/kaizen-refusal.sh` and wiring the five hooks
 
 **The actual fix:**
 
@@ -115,7 +115,7 @@ that, running the commit gate would have filled the file with rows for
 calls nobody made.
 
 **Sibling defects swept:** the sweep's own skill was the second casualty
-of the same blindness. `/after-task-dantotsus` requires its friction
+of the same blindness. `/after-task-kaizen` requires its friction
 inventory at the top of the kaizen PR body, and PR #101 landed
 `scripts/pr/check-pr-body.ts`, whose budget refuses a body that size.
 Two documents contradicted each other from that moment and nothing

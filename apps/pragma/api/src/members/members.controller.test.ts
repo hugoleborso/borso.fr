@@ -1,5 +1,6 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
+import { INSTRUMENT_ICONS } from '@domain/instrument.core';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 
@@ -16,7 +17,7 @@ const instrumentSchema = z.object({
   id: z.string().uuid(),
   name: z.string(),
   family: z.enum(['harmonic', 'percussive', 'vocal', 'other']),
-  icon: z.enum(['mic-vocal', 'guitar', 'bass', 'piano', 'drum', 'music']),
+  icon: z.enum(INSTRUMENT_ICONS),
   position: z.number().int(),
   isPrimary: z.boolean(),
 });

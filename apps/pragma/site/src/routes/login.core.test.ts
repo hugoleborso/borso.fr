@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_POST_LOGIN_PATH,
-  selectEnrolErrorMessageKey,
+  selectRecoverErrorMessageKey,
   selectLoginErrorMessageKey,
   selectPostLoginPath,
   UNKNOWN_LOGIN_ERROR_KEY,
@@ -40,25 +40,20 @@ describe('selectLoginErrorMessageKey', () => {
   });
 });
 
-describe('selectEnrolErrorMessageKey', () => {
-  it('names the reason the body carries', () => {
-    expect(selectEnrolErrorMessageKey(409, { error: 'enrolment-closed' })).toBe('auth.enrolClosed');
-    expect(selectEnrolErrorMessageKey(409, { error: 'username-taken' })).toBe('auth.usernameTaken');
-    expect(selectEnrolErrorMessageKey(409, { error: 'already-enrolled' })).toBe(
-      'auth.alreadyEnrolled',
-    );
-    expect(selectEnrolErrorMessageKey(401, { error: 'invalid-shared-password' })).toBe(
-      'auth.invalidSharedPassword',
-    );
+describe('selectRecoverErrorMessageKey', () => {
+  it('names the three failures the recovery flow plans for', () => {
+    expect(selectRecoverErrorMessageKey(429)).toBe('auth.recoveryRateLimited');
+    expect(selectRecoverErrorMessageKey(401)).toBe('auth.invalidRecovery');
+    expect(selectRecoverErrorMessageKey(503)).toBe('auth.notBootstrapped');
   });
 
-  it('falls back to the conflict message when the body names no known reason', () => {
-    expect(selectEnrolErrorMessageKey(409, { error: 'something-else' })).toBe('auth.enrolClosed');
-    expect(selectEnrolErrorMessageKey(409, null)).toBe('auth.enrolClosed');
+  it('says an hour where the sign-in copy says a few minutes', () => {
+    expect(selectRecoverErrorMessageKey(429)).not.toBe(selectLoginErrorMessageKey(429));
   });
 
-  it('falls back to the login messages for every other status', () => {
-    expect(selectEnrolErrorMessageKey(429, null)).toBe('auth.rateLimited');
-    expect(selectEnrolErrorMessageKey(null, null)).toBe('auth.unknownError');
+  it('reads every other status as unknown', () => {
+    expect(selectRecoverErrorMessageKey(500)).toBe(UNKNOWN_LOGIN_ERROR_KEY);
+    expect(selectRecoverErrorMessageKey(200)).toBe(UNKNOWN_LOGIN_ERROR_KEY);
+    expect(selectRecoverErrorMessageKey(null)).toBe(UNKNOWN_LOGIN_ERROR_KEY);
   });
 });

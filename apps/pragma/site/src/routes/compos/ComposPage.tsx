@@ -76,8 +76,8 @@ export function ComposPage(): JSX.Element {
         : 'unknown-error';
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
-      <PageHeader title={t('compos.title')} subtitle={t('compos.subtitle')} />
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+      <PageHeader title={t('compos.title')} />
       {errorMessage === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {errorMessage}

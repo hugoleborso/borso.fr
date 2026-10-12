@@ -6,7 +6,7 @@ ADR ratifié associé : [`docs/adr/0003-react-bits-galaxy-as-react-component.md`
 
 ## Revision 2 — 2026-05-14 (post-shipping)
 
-The first revision of this plan shipped against ADR 0002 (vendor vanilla WebGL). Hugo's review surfaced that the ADR's premise ("avoid forcing Vite + React into apps/borso-fr") was invalidated by the live workspace — Vite + React were already in place. The defect is captured in [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../../../../dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). The structural eradication lands in the same kaizen PR (`.claude/skills/specification/standard.md` and `.claude/skills/technical-conception/standard.md` now mandate a live-workspace cross-check before locking toolchain-shaped Q.O.D. rows).
+The first revision of this plan shipped against ADR 0002 (vendor vanilla WebGL). Hugo's review surfaced that the ADR's premise ("avoid forcing Vite + React into apps/borso-fr") was invalidated by the live workspace — Vite + React were already in place. The defect is captured in [`docs/dantotsus/believed-the-bundle-readme-not-the-live-package-json.md`](../../../../dantotsus/believed-the-bundle-readme-not-the-live-package-json.md). The structural eradication lands in the same kaizen PR (`plugins/borso-harness/skills/specification/standard.md` and `plugins/borso-harness/skills/technical-conception/standard.md` now mandate a live-workspace cross-check before locking toolchain-shaped Q.O.D. rows).
 
 The code-level correction is this revision:
 

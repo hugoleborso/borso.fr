@@ -5,9 +5,9 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
+import { StickyFormActions } from '../atoms/StickyFormActions';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
-import { HintText } from '../atoms/HintText';
 import { Input } from '../atoms/Input';
 import { BackLink } from '../molecules/BackLink';
 import { PageHeader } from '../molecules/PageHeader';
@@ -97,7 +97,7 @@ export function SongEditForm({
   const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
       <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
       <form.Subscribe selector={(state) => [state.values.artist, state.values.title] as const}>
         {([artistValue, titleValue]) => (
@@ -151,7 +151,6 @@ export function SongEditForm({
             }}
             className="mb-2"
           />
-          {isNew ? null : <HintText tone="muted">{t('catalog.searchSongLinkHint')}</HintText>}
 
           <form.Subscribe
             selector={(state) =>
@@ -293,7 +292,7 @@ export function SongEditForm({
             </form.Field>
           </SongLinkAdder>
 
-          <div className="flex gap-2 mt-3">
+          <StickyFormActions>
             <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
               {([canSubmit, isSubmitting]) => (
                 <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
@@ -301,7 +300,7 @@ export function SongEditForm({
                 </Button>
               )}
             </form.Subscribe>
-          </div>
+          </StickyFormActions>
           {isNew ? null : <SongDeleteAction onDelete={onDelete} />}
         </form>
       </Card>

@@ -2,7 +2,7 @@
 -- It lives in a table of its own, not as a column on "member", so the
 -- per-stage database role and the preview clone's tableBlocklist can
 -- treat it on its own, and no read of "member" ever carries it. See
--- ADR-0023 and ADR-0024.
+-- ADR-0031 and ADR-0032.
 CREATE TABLE "member_calendar_feed" (
 	"member_id" uuid PRIMARY KEY NOT NULL,
 	"address" text NOT NULL,

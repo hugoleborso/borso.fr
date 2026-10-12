@@ -1,9 +1,11 @@
 /** @Feature setlists */
 
 import type { JSX } from 'react';
-import { useMemo } from 'react';
+import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
+import { Button } from '../../components/atoms/Button';
+import { Icon } from '../../components/atoms/Icon';
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -12,24 +14,24 @@ import { resolveSetlistStatus } from './setlist-status.core';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { SetlistHeaderActions } from '../../components/organisms/SetlistHeaderActions';
 import { formatSessionDate } from '../../lib/formatters.utils';
+import { MEMBER_FILTER_PARAM } from '../../lib/next-concert.core';
+import {
+  isEnergyCurveShownIn,
+  didStoreEnergyCurveChoice,
+} from '../../lib/energy-curve-preference.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
-import { useSessionsList } from '../../lib/queries/sessions.queries';
-import { useSetlist, useSetlistsList } from '../../lib/queries/setlists.queries';
-import {
-  buildSetlistIndexRows,
-  type IndexSession,
-  selectConcertSessionId,
-} from '../../lib/setlist-index.core';
-
-const NO_ROWS: readonly never[] = [];
+import { useSetlist } from '../../lib/queries/setlists.queries';
+import { selectConcertSessionId } from '../../lib/setlist-index.core';
+import { useSetlistSessions } from '../../lib/setlist-sessions.hook';
+import { AudienceVoteLink } from '../../components/molecules/AudienceVoteLink';
 
 // @FollowsBlueprint route-detail-page
 export function SetlistEditorPage(): JSX.Element {
   const { setlistId } = useParams<{ setlistId: string }>();
   const { t } = useTranslation();
   if (setlistId === undefined) {
-    return <p className="px-4 sm:px-9 py-7 text-danger">{t('setlist.missingId')}</p>;
+    return <p className="px-4 sm:px-9 py-4 sm:py-7 text-danger">{t('setlist.missingId')}</p>;
   }
   return <SetlistDetail setlistId={setlistId} />;
 }
@@ -38,20 +40,21 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   const { t, i18n } = useTranslation();
   const navigateTo = useNavigateTo();
   const setlistQuery = useSetlist(setlistId);
-  const setlistsQuery = useSetlistsList();
-  const sessionsQuery = useSessionsList();
+  const [searchParams] = useSearchParams();
+  const [isEnergyShown, setIsEnergyShown] = useState(() =>
+    isEnergyCurveShownIn(window.localStorage),
+  );
+  const toggleEnergyCurve = (): void => {
+    didStoreEnergyCurveChoice(window.localStorage, !isEnergyShown);
+    setIsEnergyShown(!isEnergyShown);
+  };
   const setlist = setlistQuery.data?.setlist ?? null;
-
-  const sessions = useMemo(() => {
-    const row = buildSetlistIndexRows<IndexSession>(
-      setlistsQuery.data?.setlists ?? NO_ROWS,
-      sessionsQuery.data?.sessions ?? NO_ROWS,
-    ).find((candidate) => candidate.id === setlistId);
-    return row?.sessions ?? NO_ROWS;
-  }, [setlistsQuery.data, sessionsQuery.data, setlistId]);
+  const sessions = useSetlistSessions(setlistId);
 
   if (setlistQuery.isLoading) {
-    return <p className="px-4 sm:px-9 py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>;
+    return (
+      <p className="px-4 sm:px-9 py-4 sm:py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>
+    );
   }
 
   if (setlist === null) {
@@ -67,8 +70,34 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   const displayedName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col">
-      <BackLink to="/setlists" label={t('setlist.title')} />
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col">
+      <div className="flex items-center justify-between gap-2 mb-1 sm:mb-3">
+        <BackLink to="/setlists" label={t('setlist.title')} />
+        <SetlistHeaderActions
+          setlistId={setlistId}
+          name={setlist.name}
+          displayedName={displayedName}
+          onDeleted={() => navigateTo('/setlists')}
+          trailing={
+            <>
+              <Button
+                variant={isEnergyShown ? 'default' : 'ghost'}
+                aria-label={t('setlist.energy')}
+                aria-pressed={isEnergyShown}
+                title={t('setlist.energy')}
+                className="w-11 px-0"
+                onClick={toggleEnergyCurve}
+              >
+                <Icon name="chart" size={18} />
+              </Button>
+              {selectConcertSessionId(sessions) === null ? null : (
+                <AudienceVoteLink setlistId={setlist.id} />
+              )}
+              <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
+            </>
+          }
+        />
+      </div>
       <PageHeader
         crumb={t('setlist.crumb')}
         title={displayedName}
@@ -81,17 +110,11 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
         }
       />
 
-      <SetlistHeaderActions
-        setlistId={setlistId}
-        name={setlist.name}
-        displayedName={displayedName}
-        onDeleted={() => navigateTo('/setlists')}
-        trailing={
-          <VoteEntryLink setlistId={setlist.id} status={resolveSetlistStatus(setlist.status)} />
-        }
+      <SetlistEditor
+        setlistId={setlist.id}
+        initialMemberId={searchParams.get(MEMBER_FILTER_PARAM)}
+        isEnergyShown={isEnergyShown}
       />
-
-      <SetlistEditor setlistId={setlist.id} concertSessionId={selectConcertSessionId(sessions)} />
     </section>
   );
 }

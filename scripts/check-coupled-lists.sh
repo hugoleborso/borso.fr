@@ -39,6 +39,8 @@ if [ -z "$workflow_paths" ]; then
   fail "read no trigger paths out of .github/workflows/architecture.yml — the shape of that file changed and this check went blind"
 fi
 
+hook_without_backslashes=$(tr -d '\\' <.husky/pre-commit)
+
 while IFS= read -r path; do
   [ -n "$path" ] || continue
   token=${path%\*\*}
@@ -46,7 +48,7 @@ while IFS= read -r path; do
   # The hook writes the path into a `grep -E` pattern, where a dot is escaped.
   # Compare against the hook with its backslashes removed, so `blueprint-utils\.ts`
   # and `blueprint-utils.ts` are the same path rather than two.
-  if ! tr -d '\\' <.husky/pre-commit | grep -qF -- "$token"; then
+  if ! grep -qF -- "$token" <<<"$hook_without_backslashes"; then
     fail "architecture.yml watches '$path' and .husky/pre-commit does not mention '$token'. A commit changing only that path reaches CI with a stale map."
   fi
 done <<<"$workflow_paths"
@@ -152,6 +154,43 @@ for migrations_dir in apps/*/api/src/database/migrations; do
       fail "$migrations_dir creates '$table' and $truncate_file does not list it. Rows written by one case stay visible to the next."
     fi
   done <<<"$created_tables"
+done
+
+# 5. pragma's preview clone and the decision that sets it.
+#
+# ADR-0009 says which production tables a preview copies and which it leaves
+# behind, and `apps/pragma/cdk/lib/stack.ts` is what actually does it. Commit
+# 03bd354 moved `app_config` and `member_credential` from one list to the other
+# without touching the ADR, and every preview lost its credentials for three
+# weeks while the decision still read as in force. Each list in the stack has to
+# name exactly the tables on the ADR row of the same name, in both directions,
+# so moving a table between lists fails until the ADR moves it too. See
+# docs/dantotsus/the-commit-that-reversed-an-adr-without-touching-it.md.
+pragma_stack=apps/pragma/cdk/lib/stack.ts
+pragma_clone_adr=docs/adr/0009-pragma-previews-clone-production.md
+
+read_stack_clone_list() {
+  tr -d '\n' <"$pragma_stack" |
+    grep -oE "$1: \[[^]]*\]" |
+    grep -oE "'[a-z_]+'" | tr -d "'" | sort -u || true
+}
+
+read_adr_clone_row() {
+  grep -E "^\| \`$1\` \|" "$pragma_clone_adr" |
+    cut -d'|' -f3 |
+    grep -oE '`[a-z_]+`' | tr -d '`' | sort -u || true
+}
+
+for clone_list in tableBlocklist tablesToReplace; do
+  stack_tables=$(read_stack_clone_list "$clone_list")
+  adr_tables=$(read_adr_clone_row "$clone_list")
+  if [ -z "$adr_tables" ]; then
+    fail "$pragma_clone_adr has no '| \`$clone_list\` |' row naming a table — the shape of that table changed and this check went blind"
+    continue
+  fi
+  if [ "$stack_tables" != "$adr_tables" ]; then
+    fail "$pragma_stack puts [$(echo $stack_tables)] in $clone_list and $pragma_clone_adr puts [$(echo $adr_tables)] there. Amend the ADR in the same commit that changes what a preview copies."
+  fi
 done
 
 if [ "$failed" -ne 0 ]; then

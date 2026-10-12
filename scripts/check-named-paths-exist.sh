@@ -44,7 +44,7 @@ report() {
 
 # 1. `docs/….md` written anywhere in a script, hook or workflow.
 documents="$(
-  git ls-files 'scripts/*' '.husky/*' '.github/*' |
+  git ls-files 'scripts/*' '.husky/*' '.github/*' 'plugins/*.sh' 'plugins/*.py' |
     grep -vE '\.test\.(ts|tsx|js)$' |
     xargs grep -onE 'docs/[A-Za-z0-9/._-]+\.md' 2>/dev/null |
     sort -u
@@ -59,11 +59,15 @@ done <<<"$documents"
 
 # 2. A backticked repository path in an instruction surface — CLAUDE.md, a
 #    skill, an agent brief, a command. These are read by a model that will open
-#    what it is told to open.
+#    what it is told to open. The plugin's own files name each other through
+#    `${CLAUDE_PLUGIN_ROOT}`, which Claude Code substitutes with the plugin's
+#    directory, so that prefix is read as `plugins/borso-harness/`.
+PLUGIN_DIRECTORY=plugins/borso-harness
 paths="$(
-  git ls-files 'CLAUDE.md' '.claude/*' |
+  git ls-files 'CLAUDE.md' '.claude/*' 'plugins/*' |
     grep -E '\.md$' |
-    xargs grep -onE '`(\.claude|scripts|apps|infra|docs|eslint-rules)/[A-Za-z0-9/._*<>-]+`' 2>/dev/null |
+    xargs grep -onE '`(\.claude|scripts|apps|infra|docs|eslint-rules|\$\{CLAUDE_PLUGIN_ROOT\})/[A-Za-z0-9/._*<>-]+`' 2>/dev/null |
+    sed -E "s|\\$\\{CLAUDE_PLUGIN_ROOT\\}/|${PLUGIN_DIRECTORY}/|" |
     sort -u
 )"
 

@@ -77,7 +77,7 @@ Rung 2, a DevX check in the instructions the agents actually read, because the
 thing to prevent is an instruction being written rather than a line of code
 being wrong.
 
-- [`.claude/skills/route/SKILL.md`](../../.claude/skills/route/SKILL.md) gains a
+- [`plugins/borso-harness/skills/route/SKILL.md`](../../plugins/borso-harness/skills/route/SKILL.md) gains a
   *Parallel agents* section naming both traps, and its Tier 3 requires a
   disjoint file ownership list and a no-commit instruction per agent.
 - [`CLAUDE.md`](../../CLAUDE.md) carries the same two traps under *Sizing a task

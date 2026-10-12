@@ -92,6 +92,27 @@
       ],
       "ignoreDependencies": ["tailwindcss"]
     },
+    "apps/talos": {
+      "entry": [
+        "cdk/bin/cdk.ts",
+        "api/src/main.ts",
+        "api/src/**/*.test.ts",
+        "domain/**/*.core.test.ts",
+        "site/src/**/*.test.{ts,tsx}",
+        "cdk/test/**/*.test.ts",
+        "test/**/*.ts",
+        "vitest.mutation.config.ts"
+      ],
+      "project": [
+        "cdk/**/*.ts",
+        "domain/**/*.ts",
+        "site/src/**/*.ts",
+        "site/src/**/*.tsx",
+        "api/src/**/*.ts",
+        "test/**/*.ts"
+      ],
+      "ignoreDependencies": ["tailwindcss"]
+    },
     "infra/cdk": {
       "entry": [
         "src/index.ts",

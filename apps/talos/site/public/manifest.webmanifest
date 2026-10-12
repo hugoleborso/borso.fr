@@ -1,0 +1,30 @@
+{
+  "id": "/",
+  "name": "Talos",
+  "short_name": "Talos",
+  "description": "Un chief of staff personnel : focus, todo, propositions, second brain.",
+  "start_url": "/",
+  "scope": "/",
+  "display": "standalone",
+  "orientation": "portrait",
+  "background_color": "#0e1311",
+  "theme_color": "#0e1311",
+  "lang": "fr",
+  "dir": "ltr",
+  "categories": ["productivity"],
+  "icons": [
+    { "src": "/icons/icon-192.png", "sizes": "192x192", "type": "image/png", "purpose": "any" },
+    { "src": "/icons/icon-512.png", "sizes": "512x512", "type": "image/png", "purpose": "any" },
+    {
+      "src": "/icons/icon-maskable-512.png",
+      "sizes": "512x512",
+      "type": "image/png",
+      "purpose": "maskable"
+    }
+  ],
+  "shortcuts": [
+    { "name": "Todo", "url": "/todos" },
+    { "name": "Propositions", "url": "/proposals" },
+    { "name": "Message", "url": "/message" }
+  ]
+}

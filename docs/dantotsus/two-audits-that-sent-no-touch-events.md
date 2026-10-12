@@ -81,7 +81,7 @@ its cause and quietly redirects every agent that reads it"*.
   is not a tap.
 - **Code:** commit `2e581bc` — `scripts/argent.sh` makes the correct setup one
   command, and the sweep corrects every other place the claim had spread:
-  `.claude/agents/visual-validator.md` (which told every validation run to check
+  `plugins/borso-harness/agents/visual-validator.md` (which told every validation run to check
   touch with `agent-browser set device`, a call this repository's own knowledge
   says leaves `matchMedia('(pointer: coarse)')` false), the visual-validation
   standard, `docs/knowledge/agentic-device-testing.md`, the knowledge index, and
@@ -128,7 +128,7 @@ Deliberate limits, so the gate stays cheap and never fires spuriously:
 Wired into `.husky/pre-commit` and `.github/workflows/ci.yml`, next to the other
 one-directory greps.
 
-**Sibling defects swept:** `.claude/agents/visual-validator.md` carried the same
+**Sibling defects swept:** `plugins/borso-harness/agents/visual-validator.md` carried the same
 shape of false instruction from a different source — it told every visual
 validation run to check touch affordances with `agent-browser set device
 "iPhone 14"`, contradicting `agent-browser-coarse-pointer-emulation.md` in the

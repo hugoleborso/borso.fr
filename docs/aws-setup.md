@@ -303,6 +303,116 @@ Then:
 - **Bootstrap key + Secrets Manager / Vault**: worth it once compliance matters, multiple people have edit access on the Claude project, or the read scope grows beyond truly read-only. Single-developer scope doesn't earn the complexity yet.
 - **STS-issued short-lived creds via a hosted endpoint**: would need to host a tiny Lambda that issues 1 h sessions; a 90-day rotation cadence on a static key is a simpler trade for now.
 
+### 12.6 Let a session publish validation screenshots
+
+[ADR-0023](./adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md) moves a passing
+validation's screenshots out of git and onto the previews CDN. The upload has to happen in the
+session, because that is where the files are produced and a branch commit becomes an ancestor
+of `main` on merge — so anything committed to be picked up by CI is already in history for
+good. That makes this the one write `AI-Dev-ReadOnly` is allowed.
+
+**The grant is one verb on one prefix.** `s3:PutObject` under
+`arn:aws:s3:::borso-previews/screenshots/*`, and nothing else. `s3:Delete*` stays denied
+everywhere, so a session cannot remove another run's evidence; the bucket's own
+`expire-previews` lifecycle rule deletes objects after 60 days, which is why no teardown is
+needed. `cloudfront:Create*` also stays denied: screenshot keys carry a timestamp and are
+never overwritten, so nothing ever needs invalidating.
+
+An explicit `Deny` beats any `Allow`, so the existing deny has to carve the prefix out before
+an allow can do anything. That is two statements, and the S3 verbs move out of the blanket
+statement into their own:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "DenyEverythingElse",
+      "Effect": "Deny",
+      "Action": [
+        "iam:*",
+        "cloudformation:Create*",
+        "cloudformation:Update*",
+        "cloudformation:Delete*",
+        "cloudformation:Execute*",
+        "s3:Delete*",
+        "lambda:Create*",
+        "lambda:Update*",
+        "lambda:Delete*",
+        "lambda:Invoke*",
+        "cloudfront:Create*",
+        "cloudfront:Update*",
+        "cloudfront:Delete*",
+        "route53:Change*",
+        "route53:Create*",
+        "route53:Delete*",
+        "dsql:*"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Sid": "DenyS3WritesOutsideTheScreenshotPrefix",
+      "Effect": "Deny",
+      "Action": "s3:Put*",
+      "NotResource": "arn:aws:s3:::borso-previews/screenshots/*"
+    }
+  ]
+}
+```
+
+`NotResource` on a `Deny` means *deny this action everywhere except here*. The prefix is the
+only hole, and `s3:Delete*` stays in the blanket statement so the hole is write-once.
+
+Denying less does not grant anything — `ReadOnlyAccess` carries no write verb — so the allow
+is a second inline policy:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "PublishValidationScreenshots",
+      "Effect": "Allow",
+      "Action": "s3:PutObject",
+      "Resource": "arn:aws:s3:::borso-previews/screenshots/*"
+    }
+  ]
+}
+```
+
+Apply both to the IAM user, and the same pair to the `ClaudeDev` permission set so the two
+stay in sync as step 12.1 requires:
+
+```bash
+aws --profile borso-admin iam put-user-policy \
+  --user-name AI-Dev-ReadOnly \
+  --policy-name Explicit-write-deny \
+  --policy-document file://deny.json
+
+aws --profile borso-admin iam put-user-policy \
+  --user-name AI-Dev-ReadOnly \
+  --policy-name Screenshots-publish \
+  --policy-document file://screenshots-publish.json
+```
+
+Verify from a session — this is the probe, and it is the only way to know, since `iam:*` is
+denied and no session can read the policy that binds it:
+
+```bash
+echo probe > /tmp/probe.png
+aws s3 cp /tmp/probe.png s3://borso-previews/screenshots/_probe.png   # must succeed
+aws s3 cp /tmp/probe.png s3://borso-previews/architecture/_probe.png  # must still be denied
+aws s3 rm s3://borso-previews/screenshots/_probe.png                  # must still be denied
+```
+
+The second and third commands failing is the point of the test, not a problem with it. If the
+first one fails with `explicit deny in an identity-based policy`, the carve-out did not land —
+most often because the deny still lists `s3:Put*` in the blanket statement, where `Resource:
+"*"` overrides the second statement's `NotResource`.
+
+Until this is applied, `/visual-validation` finds the upload denied and commits every
+screenshot, which is the behaviour from before ADR-0023 rather than a failure.
+
 ## Reference: SSM parameters
 
 ### Published by the shared stack (`/borso/shared/*`)

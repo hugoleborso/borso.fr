@@ -99,7 +99,7 @@ this kaizen PR.
 **The actual fix:**
 
 ```diff
- # .claude/skills/implementation/SKILL.md
+ # plugins/borso-harness/skills/implementation/SKILL.md
    "Procedure" section
    1. **Read** `spec.md` and `plan.md` end-to-end. Build a mental model.
 + 1a. **Verify the plan's open questions are closed.** Read the plan's
@@ -122,7 +122,7 @@ this kaizen PR.
 Plus the matching cross-link from the `/technical-conception` standard:
 
 ```diff
- # .claude/skills/technical-conception/standard.md
+ # plugins/borso-harness/skills/technical-conception/standard.md
    "Open questions / missing technical skills" subsection
 + Open questions that remain unresolved when the plan ships block
 + `/implementation` (see the precondition added to that skill). Either

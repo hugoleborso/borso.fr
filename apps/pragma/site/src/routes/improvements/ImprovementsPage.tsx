@@ -122,8 +122,8 @@ export function ImprovementsPage(): JSX.Element {
   ];
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
-      <PageHeader title={t('improvements.title')} subtitle={t('improvements.subtitle')} />
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+      <PageHeader title={t('improvements.title')} />
       {lastError === null ? null : (
         <p className="text-danger text-sm mb-3" role="alert">
           {t(selectErrorMessageKey(failureStatus))}

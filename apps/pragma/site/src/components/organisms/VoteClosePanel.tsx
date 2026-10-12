@@ -21,6 +21,7 @@ import { useTranslation } from 'react-i18next';
 import type { SongTally } from '../../lib/queries/voting.utils';
 import { moveWithin, reorderByDrop } from '../../routes/setlists/vote-proposal.core';
 import { Button } from '../atoms/Button';
+import { StickyFormActions } from '../atoms/StickyFormActions';
 import type { TallySong } from './VoteTally';
 import { VoteProposalRow } from './VoteProposalRow';
 
@@ -31,6 +32,7 @@ export interface VoteClosePanelProps {
   readonly targetSongCount: number;
   readonly isClosing: boolean;
   readonly onClose: (songIds: readonly string[]) => void;
+  readonly onCancel: () => void;
 }
 
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
@@ -45,6 +47,7 @@ export function VoteClosePanel({
   targetSongCount,
   isClosing,
   onClose,
+  onCancel,
 }: VoteClosePanelProps): JSX.Element {
   const { t } = useTranslation();
   const [keptSongIds, setKeptSongIds] = useState<string[]>(() =>
@@ -129,14 +132,20 @@ export function VoteClosePanel({
           </ul>
         </div>
       )}
-      <Button
-        type="button"
-        variant="accent"
-        disabled={keptSongIds.length === 0 || isClosing}
-        onClick={() => onClose(keptSongIds)}
-      >
-        {t('voting.closeSubmit')}
-      </Button>
+      <StickyFormActions>
+        <Button type="button" variant="ghost" onClick={onCancel}>
+          {t('common.cancel')}
+        </Button>
+        <Button
+          type="button"
+          variant="accent"
+          className="flex-1"
+          disabled={keptSongIds.length === 0 || isClosing}
+          onClick={() => onClose(keptSongIds)}
+        >
+          {t('voting.closeSubmit')}
+        </Button>
+      </StickyFormActions>
     </section>
   );
 }

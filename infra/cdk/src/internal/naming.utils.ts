@@ -74,6 +74,26 @@ export function bucketName(context: NameContext): string {
   return `${integPrefix}${context.app}-${stagePart}`;
 }
 
+export type BucketNameSuffix = 'account';
+
+const AWS_ACCOUNT_ID_PATTERN = /^\d{12}$/;
+const S3_BUCKET_NAME_MAX_LENGTH = 63;
+
+export function accountScopedBucketName(context: NameContext, accountId: string): string {
+  if (!AWS_ACCOUNT_ID_PATTERN.test(accountId)) {
+    throw new Error(
+      `Account id "${accountId}" is not a 12-digit AWS account id; set env.account on the stack.`,
+    );
+  }
+  const name = `${bucketName(context)}-${accountId}`;
+  if (name.length > S3_BUCKET_NAME_MAX_LENGTH) {
+    throw new Error(
+      `Bucket name "${name}" exceeds the ${S3_BUCKET_NAME_MAX_LENGTH} characters S3 allows.`,
+    );
+  }
+  return name;
+}
+
 export function lambdaFunctionName(context: NameContext, handler: string): string {
   validateAppSlug(context.app);
   validateAppSlug(handler);

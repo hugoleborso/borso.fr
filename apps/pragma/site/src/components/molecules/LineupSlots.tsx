@@ -3,7 +3,7 @@
 import { type JSX, useState } from 'react';
 import { Icon } from '../atoms/Icon';
 import { useElementWidth } from './element-width.hook';
-import { type LineupColumnView, sliceColumnToWidth, slotTintColor } from './lineup-slots.core';
+import { type LineupColumnView, sliceColumnToWidth } from './lineup-slots.core';
 
 const LINEUP_SLOT_ICON_SIZE_PX = 17;
 const OVERFLOW_NAME_SEPARATOR = ', ';
@@ -22,9 +22,9 @@ export function LineupSlots({ column }: LineupSlotsProps): JSX.Element {
     <span ref={setMeasuredColumn} className={COLUMN_CLASS}>
       {view.slots.map((slot) => (
         <span
-          key={slot.instrumentId}
+          key={slot.slotKey}
           className={SLOT_CLASS}
-          style={{ color: slotTintColor(slot.holderColor) }}
+          style={{ color: slot.holderColor }}
           title={slot.instrumentName}
         >
           <Icon name={slot.glyph} size={LINEUP_SLOT_ICON_SIZE_PX} />

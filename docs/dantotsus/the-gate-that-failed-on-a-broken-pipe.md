@@ -84,7 +84,7 @@ and whether that ends the script depends on how much it still had to say"*.
 so no signal can be raised, and it stops the walk instead of filtering every
 remaining path — the check is also faster for it.
 
-**Sibling defects swept:** `.claude/hooks/pretool-gh-pr-create.sh` had the same
+**Sibling defects swept:** `plugins/borso-harness/hooks/pretool-gh-pr-create.sh` had the same
 shape, `find docs/features -type d -name validation | head -n1` under
 `pipefail`, and now uses `-print -quit`. In a hook the consequence is worse than
 a red build: 141 is not 2, so the gate would have skipped silently rather than

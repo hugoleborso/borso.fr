@@ -37,7 +37,7 @@ The symmetric hazard, already recorded:
 Two more losses happened after this entry was written, the second of them in the
 sweep that read it. A written warning about a command you have typed a thousand
 times is consulted by nobody at the moment it matters, so
-`.claude/hooks/pretool-no-discarding-reset.sh` refuses `git reset --hard`,
+`plugins/borso-harness/hooks/pretool-no-discarding-reset.sh` refuses `git reset --hard`,
 `git checkout -- <path>` and `git restore <path>` while tracked modifications
 exist, lists them, and names the two ways through. On a clean tree the command
 runs untouched.

@@ -116,6 +116,13 @@ and `lg:` for wider screens. See
   bare title bar. `flex-auto` starts from the content instead. The rule stays
   quiet on a dialog carrying `h-dvh` or `h-[85vh]`, and on a `flex-1` inside a
   row, where the main axis is the width the dialog already has.
+- `eslint:borso/no-scroll-container-on-main` rejects an `overflow-auto` or
+  `overflow-scroll` class on a `<main>` element. The document is the one thing
+  that scrolls: a shell that is exactly one screen tall and scrolls inside
+  `<main>` still has a window iOS can scroll to show a focused field, and on an
+  installed app that offset can stay after the keyboard closes, lifting the
+  shell over an empty band. Scroll areas inside dialogs and scenes are `div`s
+  and are not affected.
 - `script:scripts/check-single-stylesheet.sh` fails an application that ships
   more than one `.css` file under its site directory. It reads the git index
   rather than walking the filesystem, because `coverage/` and `.stryker-tmp/`

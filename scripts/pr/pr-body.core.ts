@@ -79,6 +79,8 @@ const MERMAID_KEYWORD = /^(flowchart|graph|sequenceDiagram|subgraph|end)\b/;
 const MERMAID_EDGE = /--+>|==+>|-\.->|--+|:::/;
 const MERMAID_IDENTIFIER = /^[A-Za-z0-9_]+/;
 const EDGE_LABEL = /\|[^|]*\|/g;
+const SLANTED_SHAPE_LABEL = /\[[/\\][^\]"]*\]/g;
+const CLOSED_SLANTED_SHAPE = /^\[[/\\].*[/\\]\]$/;
 const SEPARATOR_CELL = /^:?-{2,}:?$/;
 const SUMMARY_TAG = /<summary>.*<\/summary>/;
 const SUMMARY_TAGS = /<\/?summary>/g;
@@ -144,6 +146,14 @@ export function readMermaidNodes(lines: readonly string[]): readonly string[] {
     }
   }
   return [...identifiers];
+}
+
+export function readUnclosedSlantedShapes(lines: readonly string[]): readonly string[] {
+  return lines.flatMap((line) =>
+    [...line.matchAll(SLANTED_SHAPE_LABEL)]
+      .map((match) => match[0])
+      .filter((label) => !CLOSED_SLANTED_SHAPE.test(label)),
+  );
 }
 
 export function readHeadingBlocks(lines: readonly string[]): readonly DetailsBlock[] {
@@ -286,6 +296,12 @@ function checkFlow(lines: readonly string[], violations: Violation[]): void {
     violations.push({
       where: 'Flow',
       problem: `${String(nodes.length)} nodes, limit ${String(LIMITS.flowNodes)}`,
+    });
+  }
+  for (const label of readUnclosedSlantedShapes(lines)) {
+    violations.push({
+      where: 'Flow',
+      problem: `${label} opens a slanted shape it never closes, so the diagram fails to render; quote the label, as ["${label.slice(1, -1)}"]`,
     });
   }
 }

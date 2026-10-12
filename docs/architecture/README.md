@@ -2,8 +2,9 @@
 
 `index.html` lists one generated map per application, each at five levels, from
 the same generator and the same rules: `pragma-architecture.html`,
-`last-loop-lepin-architecture.html`, `borsouvertures-architecture.html` and
-`borso-fr-architecture.html`.
+`last-loop-lepin-architecture.html`, `banana-rush-architecture.html`,
+`borsouvertures-architecture.html`, `borso-fr-architecture.html` and
+`talos-architecture.html`.
 
 **None of them is in this repository**, which is why they are named above and
 not linked. Build them with:

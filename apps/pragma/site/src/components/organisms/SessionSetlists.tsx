@@ -44,6 +44,7 @@ export function SessionSetlists({
               <SetlistSummaryRow
                 id={setlist.id}
                 name={setlist.name}
+                isVoting={setlist.status === 'voting'}
                 songCount={setlist.songCount}
                 sessionsLabel={null}
                 action={

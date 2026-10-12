@@ -55,11 +55,10 @@ export const memberLoginSchema = z.object({
   password: passwordSchema,
 });
 
-export const enrolSchema = z.object({
-  memberId: z.string().uuid(),
+export const recoverPasswordSchema = z.object({
   username: usernameSchema,
-  password: passwordSchema,
   sharedPassword: passwordSchema,
+  newPassword: passwordSchema,
 });
 
 export const passwordChangeSchema = z.object({

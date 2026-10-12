@@ -120,7 +120,7 @@ instance of the same mention-versus-use confusion found in one sitting,
 after both guard hooks in
 [`two-guard-hooks-that-never-guarded`](./two-guard-hooks-that-never-guarded.md).
 It now reads the body with its code spans and fenced blocks removed, via
-`.claude/hooks/strip-markdown-code.py`, because prose about a tag quotes
+`plugins/borso-harness/hooks/strip-markdown-code.py`, because prose about a tag quotes
 the tag. Seven cases cover both directions. The pattern is worth naming
 for the next hook anyone writes here: **a text-matching gate needs to
 know which parts of its input are quoted**, and in this repository the

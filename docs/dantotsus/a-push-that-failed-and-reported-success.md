@@ -66,7 +66,7 @@ anything at all discards the only thing you were checking.
 
 ## Countermeasure
 
-`.claude/hooks/pretool-no-swallowed-push.sh`, a `PreToolUse` hook on `Bash`
+`plugins/borso-harness/hooks/pretool-no-swallowed-push.sh`, a `PreToolUse` hook on `Bash`
 that refuses `git push` or `git commit` appearing anywhere in a pipeline, and
 says what to write instead:
 

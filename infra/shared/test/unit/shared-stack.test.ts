@@ -1,3 +1,4 @@
+import { readFileSync } from 'node:fs';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { Certificate } from 'aws-cdk-lib/aws-certificatemanager';
@@ -7,6 +8,27 @@ import { SharedStack } from '../../lib/shared-stack.js';
 import { isObject, resourcesOfType, serializeTemplateForSnapshot } from './helpers/template.js';
 
 const BUDGET_EMAIL = 'hugo@example.com';
+const OIDC_SUB_CLAIM_KEY = 'token.actions.githubusercontent.com:sub';
+const RECORDED_SUBJECT_PREFIXES_PATH = new URL('../../oidc-subject-prefixes.json', import.meta.url);
+
+function recordedSubjectPrefixes(): string[] {
+  const recorded: unknown = JSON.parse(readFileSync(RECORDED_SUBJECT_PREFIXES_PATH, 'utf8'));
+  if (!isObject(recorded)) return [];
+  return Object.values(recorded).filter((prefix) => typeof prefix === 'string');
+}
+
+function trustedSubClaims(template: Template): string[] {
+  return resourcesOfType(template, 'AWS::IAM::Role').flatMap((role) => {
+    const document = role.Properties?.AssumeRolePolicyDocument;
+    if (!isObject(document) || !Array.isArray(document.Statement)) return [];
+    return document.Statement.flatMap((statement): unknown[] => {
+      if (!isObject(statement) || !isObject(statement.Condition)) return [];
+      const stringLike = statement.Condition.StringLike;
+      if (!isObject(stringLike)) return [];
+      return [stringLike[OIDC_SUB_CLAIM_KEY]].flat();
+    }).filter((claim) => typeof claim === 'string');
+  });
+}
 
 function synth(opts?: { budgetEmail?: string }): Template {
   const app = new App();
@@ -75,6 +97,34 @@ describe('SharedStack', () => {
       });
       const json = JSON.stringify(tpl.toJSON());
       expect(json).toContain('repo:hugoleborso/borso.fr:environment:prod-shared');
+    });
+
+    it('trusts no repository other than hugoleborso/borso.fr', () => {
+      const foreignClaims = trustedSubClaims(tpl).filter(
+        (claim) => !claim.startsWith('repo:hugoleborso/borso.fr:'),
+      );
+      expect(foreignClaims).toStrictEqual([]);
+    });
+
+    it('no longer creates TalosDeployRole, since talos deploys from apps/talos with ProdDeployRole', () => {
+      expect(
+        Object.keys(
+          tpl.findResources('AWS::IAM::Role', { Properties: { RoleName: 'TalosDeployRole' } }),
+        ),
+      ).toStrictEqual([]);
+    });
+
+    it('trusts only sub claims whose repository prefix was read from GitHub with scripts/print-oidc-subject.sh', () => {
+      const prefixes = recordedSubjectPrefixes();
+      const claims = trustedSubClaims(tpl);
+      expect(claims.length).toBeGreaterThan(0);
+      const unrecorded = claims.filter(
+        (claim) => !prefixes.some((prefix) => claim.startsWith(`${prefix}:`)),
+      );
+      expect(
+        unrecorded,
+        'Run scripts/print-oidc-subject.sh <owner/repo> --record and use the subjectFormat it prints.',
+      ).toStrictEqual([]);
     });
 
     it('does NOT create an IntegTestRole (dropped vs upstream)', () => {
@@ -210,12 +260,15 @@ describe('SharedStack', () => {
       tpl.hasResourceProperties('AWS::SSM::Parameter', { Name: name });
     });
 
-    it('does NOT publish /borso/shared/integ-role-arn (dropped)', () => {
-      const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map(
-        (param) => param.Properties?.Name,
-      );
-      expect(names).not.toContain('/borso/shared/integ-role-arn');
-    });
+    it.each(['/borso/shared/integ-role-arn', '/borso/shared/talos-deploy-role-arn'])(
+      'does NOT publish %s (dropped)',
+      (droppedName) => {
+        const names = resourcesOfType(tpl, 'AWS::SSM::Parameter').map(
+          (param) => param.Properties?.Name,
+        );
+        expect(names).not.toContain(droppedName);
+      },
+    );
   });
 
   describe('budgets', () => {

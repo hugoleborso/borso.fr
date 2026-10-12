@@ -169,4 +169,36 @@ describe('listCatalogProblems', () => {
       },
     ]);
   });
+
+  it('reports vitest and its coverage provider held at different versions', () => {
+    const manifests = [
+      buildManifest('apps/pragma', { vitest: 'catalog:', '@vitest/coverage-v8': 'catalog:' }),
+    ];
+    const split = buildCatalogs({
+      default: { vitest: '^5.0.1', '@vitest/coverage-v8': '^4.1.11' },
+    });
+    expect(listCatalogProblems(manifests, split)).toEqual([
+      {
+        workspace: 'pnpm-workspace.yaml',
+        message:
+          'the default catalog holds `vitest` at `^5.0.1` and `@vitest/coverage-v8` at `^4.1.11`, which only work at the same version',
+      },
+    ]);
+  });
+
+  it('accepts vitest and its coverage provider held at the same version', () => {
+    const manifests = [
+      buildManifest('apps/pragma', { vitest: 'catalog:', '@vitest/coverage-v8': 'catalog:' }),
+    ];
+    const aligned = buildCatalogs({
+      default: { vitest: '^5.0.3', '@vitest/coverage-v8': '^5.0.3' },
+    });
+    expect(listCatalogProblems(manifests, aligned)).toEqual([]);
+  });
+
+  it('leaves a family alone when the catalog holds only one of its members', () => {
+    const manifests = [buildManifest('apps/pragma', { vitest: 'catalog:' })];
+    const alone = buildCatalogs({ default: { vitest: '^5.0.3' } });
+    expect(listCatalogProblems(manifests, alone)).toEqual([]);
+  });
 });

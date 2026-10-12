@@ -19,9 +19,9 @@ apps/borsouvertures/site/src/openings/openings.json
 apps/borsouvertures/site/public/openings.json
 
 # Vendored verbatim from upstream, so a later update is a file copy rather
-# than a merge. See .claude/skills/plain-writing/PROVENANCE.md.
-.claude/skills/plain-writing/SKILL.md
-.claude/skills/plain-writing/LICENSE
+# than a merge. See plugins/borso-harness/skills/plain-writing/PROVENANCE.md.
+plugins/borso-harness/skills/plain-writing/SKILL.md
+plugins/borso-harness/skills/plain-writing/LICENSE
 .claude/skills/writing-great-skills/references/
 
 # Prettier rewrites `*emphasis*` to `_emphasis_` and pads every table cell, and

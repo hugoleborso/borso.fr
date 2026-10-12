@@ -1,27 +1,24 @@
 # A pragma preview cannot be signed into
 
-_Last verified: 2026-09-14 — against `pragma-pr-95-api.preview.borso.fr`, by
-reading `auth.service.ts` and by probing `/api/auth/login` and
-`/api/admin/set-password`._
+_Last verified: 2026-10-05 — by reading `apps/pragma/cdk/lib/stack.ts` and
+`auth/credentials.service.ts`._
 
-Everything behind pragma's shared-password gate — catalog, setlists, mastery,
-bars, members, sessions — is unreachable on a preview unless you already hold
-the production password. This is not a bug in any one place; it is three
-correct decisions meeting.
+A pragma preview is signed into with production's credentials, which an agent
+does not hold. This is deliberate ([ADR-0009](../adr/0009-pragma-previews-clone-production.md)).
 
-1. **The preview clones production.** `preview.yml` skips the seed for pragma
-   with a comment that says why: the fixture seed wipes before it writes, and
-   pragma's database is cloned from prod, so seeding would throw the clone
+1. **The preview clones production.** `preview.yml` skips the seed for pragma,
+   because the fixture seed wipes before it writes and would throw the clone
    away. See [`dsql-clone-from-prod.md`](./dsql-clone-from-prod.md).
-2. **So the `app_config` row comes from production**, carrying production's
-   scrypt hash.
-3. **And bootstrap refuses an instance that already has one.**
-   `bootstrapAuth` returns `already-bootstrapped` when `loadAppConfig()` is
-   non-null, and `rotatePassword` sits behind `requireSharedPasswordSession`,
-   so it needs the session you are trying to obtain.
+2. **`app_config` and `member_credential` are cloned and replaced on every
+   deploy**, so the group password and each member's own password are
+   production's.
+3. **Passkeys are not cloned.** A passkey is bound to production's
+   relying-party id and cannot sign into a preview host.
 
-The net effect: `POST /api/auth/login` answers `401 invalid-password` for every
-password you can construct, and there is no unauthenticated path to change it.
+Between 2026-09-14 (commit `03bd354`) and 2026-10-05 both credential tables
+were blocklisted instead, so a preview had no credential at all and answered
+every login and recovery with `503 auth-not-bootstrapped`, shown as
+*L'application n'est pas encore initialisée*.
 
 ## What can still be tested on a pragma preview
 
@@ -49,8 +46,8 @@ Two options, in order of preference:
 
 - **Locally.** `scripts/local-postgres.sh`, then seed and write your own
   credential row. This is what PR #95 did for last-loop-lepin's admin forms.
-- **On the preview.** Ask the operator for the shared password. There is no
-  agent-reachable path.
+- **On the preview.** The operator signs in with their production account.
+  There is no agent-reachable path.
 
 `last-loop-lepin` is not in the same position: its seed only upserts, so its
 preview is seeded with a fixture — but the seed does **not** write an

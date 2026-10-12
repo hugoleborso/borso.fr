@@ -13,8 +13,11 @@ The slug is what shows up in:
 - per-app DSQL cluster SSM path (`/borso/<slug>/dsql-cluster-{arn,endpoint}`)
 - IAM resource patterns (`*-prod-*` and `*-pr-*`)
 - the commitlint scope-enum
+- the prod S3 bucket (`<slug>-prod`)
 
 It must be lowercase kebab-case starting with a letter, max 32 chars (validated by `validateAppSlug` in `@borso/infra`).
+
+S3 bucket names are global across every AWS account, so `<slug>-prod` may already belong to someone else, and the first prod deploy then fails with `The requested bucket name is not available`. Asking S3 does not settle it: `talos-prod` answered `NoSuchBucket` and its creation still failed. So every new app passes `bucketNameSuffix: 'account'` to `StaticSite` (or `frontend.bucketNameSuffix` to `PreviewableApp`), and its bucket is `<slug>-prod-<account id>`. `scripts/check-app-registration.sh` fails an app that does not, except the five that already own their short name. Never add the option to an app already in prod: a new bucket name replaces the bucket.
 
 ## Per-app files
 

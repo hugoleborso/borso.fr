@@ -100,6 +100,7 @@ export function toEntryPatch(input: EntryPatchInput): Partial<MinimalSetlistEntr
 export interface MinimalSetlistSummary {
   readonly id: string;
   readonly name: string;
+  readonly status: 'voting' | 'locked';
   readonly songCount: number;
   readonly sessionIds: readonly string[];
 }

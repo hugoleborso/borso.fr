@@ -106,7 +106,9 @@ export function SongDetailPage(): JSX.Element {
   };
 
   if (isLoading) {
-    return <p className="px-4 sm:px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
+    return (
+      <p className="px-4 sm:px-9 py-4 sm:py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
+    );
   }
   if (song === null) {
     return (
@@ -124,7 +126,7 @@ export function SongDetailPage(): JSX.Element {
   const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
       <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
 
       <header className="flex items-end justify-between gap-4 flex-wrap">

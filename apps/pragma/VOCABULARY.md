@@ -101,12 +101,14 @@ Lives in: `api/src/auth/`
   epoch stops verifying, which signs that member out everywhere else.
 - `phone` and `email` are the member's own contact details, both nullable,
   filled in on the account page and used to sign the outreach message.
-- Created either through the enrolment window or by another member.
-  Deleted with the member, in the same transaction that scrubs them from
-  the lineups.
+- Created by another member, from the members page. Deleted with the
+  member, in the same transaction that scrubs them from the lineups.
+- Recovered rather than recreated: a member who forgot their password
+  proves the shared password on the recovery route, and the same row is
+  updated in place, which is why their passkeys survive it.
 
 Not to be confused with: the shared password in `app_config`, which now
-opens the enrolment route and nothing else.
+opens the recovery route and nothing else.
 
 ## Outreach template
 
@@ -134,7 +136,7 @@ calendar.
 Lives in: `api/src/calendar-feeds/`
 
 - One per member at most, keyed on `memberId` in its own table,
-  `member_calendar_feed`, so no read of `member` carries it (ADR-0024).
+  `member_calendar_feed`, so no read of `member` carries it (ADR-0032).
 - Accepted only as `https`, or `webcal` rewritten to `https`, on port
   443, with a public host name and no user info (`judgeFeedAddress`).
   The same check runs again on every redirect when the feed is read.
@@ -300,7 +302,7 @@ Lives in: `api/src/instruments/`
   the older `is_harmonic` boolean from the same value (`encodeFamily`),
   and every read resolves the two through `resolveInstrumentFamily`, which
   falls back to the boolean for rows written before the column existed.
-- `icon` names one of the six glyphs the application ships and is nullable
+- `icon` names one of the eighteen glyphs the application ships and is nullable
   in the database, like `family`. Reads resolve it through
   `resolveInstrumentIcon`, which falls back to `music`. It is a stored
   value such as `mic-vocal`, never the camelCase key of the icon registry.
@@ -348,30 +350,26 @@ Lives in: `domain/lineup.core.ts`
 - A lineup says who holds what on one song. Which instruments a member
   plays at all is the `member_instrument` link, and that link carries
   `is_primary`: whether this is one of that member's main instruments.
-  Primacy is what decides which instruments get a column, so a member
-  form that saves without naming it keeps what was there
+  A member form that saves without naming primacy keeps what was there
   (`decidePrimaryInstrumentIds`).
 
 ## Lineup slot
 
-One fixed position in the instrument column a setlist card draws, always
-the same instrument at the same place, tinted with the colour of the
-member holding it on that song.
+One icon in the lineup a setlist card draws: one instrument held by one
+member on that song, tinted with that member's colour.
 
 Lives in: `site/src/components/molecules/`
 
-- The column is the instruments at least one member calls primary,
-  ordered by `position`, capped at the number of members plus two and
-  further capped by the width budget the breakpoint gives.
-- What the cap drops is counted as `+N`, whose title names the
-  instruments that fell off. The column yields; the song title never
-  truncates to make room for it.
-- A slot with nobody holding it on this song still renders, in the empty
-  tint. That is what makes the column positional: a gap in a column is a
-  reading, not an absence.
-- Not to be confused with **Lineup**, which is per song and names members.
-  A slot is per instrument and exists whether or not anybody plays it
-  tonight.
+- A song draws one slot per instrument held, so two singers draw two
+  microphones. An instrument nobody holds on that song draws nothing;
+  there is no empty slot.
+- Slots are ordered by the instrument's `position`, then by member order
+  for a shared instrument.
+- The whole lineup is drawn when the row has room. What the width drops
+  is counted as `+N`, whose title names the instruments that fell off.
+  The column yields; the song title never truncates to make room for it.
+- Not to be confused with **Lineup**, which is the record a slot is drawn
+  from.
 
 ## Mastery
 
@@ -614,7 +612,7 @@ Proof that this browser is a named member.
 Lives in: `api/src/auth/`
 
 - One `app_config` row, keyed `id = 1`, still holds the HMAC key that
-  signs cookies, and a password hash the enrolment route alone reads.
+  signs cookies, and a password hash the recovery route alone reads.
 - The cookie is named `pragma_session` and is `payload.signature`, where
   the payload carries the member id, that member's session epoch, and the
   issue and expiry times. It lasts 30 days.

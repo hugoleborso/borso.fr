@@ -10,9 +10,9 @@ decision becomes code` table ("where it lands"). A plan row that says
 + criteria + justification go here, not in a commit message or a code
 comment that rots.
 
-Conventions live in [`.claude/skills/adr/standard.md`](../../.claude/skills/adr/standard.md).
+Conventions live in [`plugins/borso-harness/skills/adr/standard.md`](../../plugins/borso-harness/skills/adr/standard.md).
 Drafting is `/adr` — the skill has two entry modes (see
-[`.claude/skills/adr/SKILL.md`](../../.claude/skills/adr/SKILL.md)):
+[`plugins/borso-harness/skills/adr/SKILL.md`](../../plugins/borso-harness/skills/adr/SKILL.md)):
 the interactive decision-support walk when a human invokes it, or a
 piloted mode that takes a pre-built payload when
 `/tech-lead-orchestrator` calls it.
@@ -20,7 +20,7 @@ piloted mode that takes a pre-built payload when
 ## Status lifecycle
 
 - **proposed** — drafted, not yet shipped. Default on creation.
-- **accepted** — merged into main. Stamped by `/after-task-dantotsus`.
+- **accepted** — merged into main. Stamped by `/after-task-kaizen`.
 - **superseded by ADR-XXXX** — replaced. Forward link mandatory; old
   file stays for audit.
 - **deprecated** — surrounding system is gone; preserved as historical.
@@ -70,18 +70,20 @@ No:
 | [0018](./0018-nominatim-answers-the-bar-search.md) | Nominatim answers the bar search, proxied through the API | proposed | 2026-09-15 |
 | [0019](./0019-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | proposed | 2026-09-16 |
 | [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
-| [0021](./0021-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
-| [0022](./0022-api-gateway-websocket-pushes-banana-rush-round-state.md) | API Gateway WebSocket pushes Banana Rush round state | accepted | 2026-09-19 |
-| [0023](./0023-one-database-role-per-stage-schema.md) | One database role per stage schema, and API Lambdas lose admin access | proposed | 2026-10-02 |
-| [0024](./0024-calendar-feed-address-in-its-own-table.md) | A member's calendar feed address is plain text in its own table, write-only through the API | proposed | 2026-10-02 |
-| [0025](./0025-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | proposed | 2026-10-02 |
+| [0022](./0022-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
+| [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | proposed | 2026-09-21 |
+| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | proposed | 2026-10-05 |
+| [0027](./0027-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | proposed | 2026-10-06 |
+| [0031](./0031-one-database-role-per-stage-schema.md) | One database role per stage schema, and API Lambdas lose admin access | proposed | 2026-10-02 |
+| [0032](./0032-calendar-feed-address-in-its-own-table.md) | A member's calendar feed address is plain text in its own table, write-only through the API | proposed | 2026-10-02 |
+| [0033](./0033-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | proposed | 2026-10-02 |
 
 ### Data layer
 
 - 0006 — cascade-on-delete via JSON-blob scrub, the substitute for foreign keys DSQL does not enforce.
 - 0009 — pragma previews clone production, credentials included.
-- 0023 — every stage schema gets its own login role mapped to its API Lambda, and API Lambdas lose `DbConnectAdmin`, so a preview can no longer read or write production.
-- 0024 — a member's calendar feed address is plain text in its own table, never returned by any route, and blocklisted from preview clones.
+- 0031 — every stage schema gets its own login role, mapped to that stage's API Lambda; API Lambdas connect with `dsql:DbConnect` and `admin` is left to the migration runner, so a preview can no longer reach production.
+- 0032 — a member's secret calendar address is plain text in a table of its own, never returned by the API and blocklisted from preview clones.
 
 ### App architecture
 
@@ -94,12 +96,17 @@ No:
 - 0018 — Nominatim answers the bar search, proxied through the API; no key and no billing account, in exchange for a rate limit, a cache and an attribution line the code carries.
 - 0019 — the room's search collapses a provider that indexes masters down to one row per song, and reads a refusal Deezer states inside a 200 body.
 - 0020 — `qrcode.react` was chosen to render the audience-vote QR code, then **deprecated** when the QR code itself was withdrawn: the audience reaches the vote page by typing a short address that never changes. The library comparison is kept for the day a QR code is genuinely wanted.
-- 0021 — the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
-- 0025 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
+- 0022 — the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
+- 0033 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
 
 ### CDK / infra
 
-- [`0022-api-gateway-websocket-pushes-banana-rush-round-state.md`](./0022-api-gateway-websocket-pushes-banana-rush-round-state.md) — an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
+- [`0021-api-gateway-websocket-pushes-banana-rush-round-state.md`](./0021-api-gateway-websocket-pushes-banana-rush-round-state.md) — an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
+- 0027 — talos deploys to prod only; an app opts out of previews with `"borso": { "previews": false }`, because a talos preview would serve private content on a public host.
+
+### Harness
+
+- 0026 — the skills, validator agents, feature-pipeline command and guard hooks ship as the `borso-harness` plugin under `plugins/`, and each part is linked into `.claude/` with its hooks declared in `.claude/settings.json`, because a cloud session skips both a declared marketplace and a plugin under `.claude/skills/` as untrusted.
 
 ### Observability
 
@@ -113,6 +120,7 @@ _(no entries yet)_
 - 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
 - 0011 — ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
 - 0014 — generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.
+- 0023 — a passing validation's screenshots go to the previews CDN and expire after 60 days, while a FAIL row's stay committed; screenshots were 82% of `.git`.
 
 ## How `/open-pr` uses ADRs
 
@@ -121,5 +129,5 @@ referenced in the diff. The ADR's *Decision* paragraph sits at level 1
 (always visible); its *Alternatives considered* + *Evaluation rubric*
 sit at level 2 (`<details>`); its *Implementation pointers* sit at
 level 3 (nested `<details>`). The skill at
-[`.claude/skills/open-pr/SKILL.md`](../../.claude/skills/open-pr/SKILL.md) carries the
+[`plugins/borso-harness/skills/open-pr/SKILL.md`](../../plugins/borso-harness/skills/open-pr/SKILL.md) carries the
 exact mapping.

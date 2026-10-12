@@ -40,7 +40,7 @@ Reference: <https://code.claude.com/docs/en/workflows>. Dynamic Workflows are a 
 
 ### Trigger
 
-A saved project workflow at `.claude/workflows/feature-pipeline.js` runs as `/feature-pipeline <spec-path>` once dogfooded. Until the `.js` is saved, the launch surface is a slash command at `.claude/commands/feature-pipeline.md` that expands to the `ultracode:` prompt for Claude to generate the script.
+A saved project workflow at `.claude/workflows/feature-pipeline.js` runs as `/feature-pipeline <spec-path>` once dogfooded. Until the `.js` is saved, the launch surface is a slash command at `plugins/borso-harness/commands/feature-pipeline.md` that expands to the `ultracode:` prompt for Claude to generate the script.
 
 ## Alternatives considered
 
@@ -70,8 +70,8 @@ A saved project workflow at `.claude/workflows/feature-pipeline.js` runs as `/fe
 ## Implementation in this PR
 
 - `docs/adr/0005-dynamic-workflows-for-orchestration.md` (this file).
-- `.claude/commands/feature-pipeline.md` — slash-command launch surface; expands to the `ultracode:` prompt that triggers workflow generation.
-- `.claude/skills/tech-lead-orchestrator/standard.md` — updated to reflect that the Skill is now the chat-bound preface (`spec → adrs`) before handoff to the workflow; the workflow owns `plan → ship`.
+- `plugins/borso-harness/commands/feature-pipeline.md` — slash-command launch surface; expands to the `ultracode:` prompt that triggers workflow generation.
+- `plugins/borso-harness/skills/tech-lead-orchestrator/standard.md` — updated to reflect that the Skill is now the chat-bound preface (`spec → adrs`) before handoff to the workflow; the workflow owns `plan → ship`.
 - `docs/knowledge/dynamic-workflow-feature-pipeline.md` — operator runbook for launch, dogfood, save.
 - `CLAUDE.md` — orchestrator pipeline section reflects the new substrate.
 

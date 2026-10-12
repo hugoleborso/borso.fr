@@ -7,7 +7,7 @@ Chrome DevTools Protocol. It is a root devDependency, so `pnpm exec argent` work
 from anywhere in the workspace.
 
 `agent-browser` is also installed and is what
-[`/visual-validation`](../../.claude/skills/visual-validation/SKILL.md) drives.
+[`/visual-validation`](../../plugins/borso-harness/skills/visual-validation/SKILL.md) drives.
 The two do different jobs. Use `agent-browser` for a desktop browser check
 against a specification, and use `argent` when the question is about a phone, a
 tablet, or a TV, because a viewport resize is not a device.

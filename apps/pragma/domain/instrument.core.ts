@@ -21,7 +21,26 @@ export function resolveInstrumentFamily(
   return familyFromHarmonicFlag(isHarmonic);
 }
 
-export const INSTRUMENT_ICONS = ['mic-vocal', 'guitar', 'bass', 'piano', 'drum', 'music'] as const;
+export const INSTRUMENT_ICONS = [
+  'mic-vocal',
+  'choir',
+  'guitar',
+  'bass',
+  'strings',
+  'piano',
+  'synth',
+  'brass',
+  'wind',
+  'drum',
+  'stage',
+  'sparkles',
+  'heart',
+  'flame',
+  'lightning',
+  'crown',
+  'sun',
+  'music',
+] as const;
 
 export type InstrumentIcon = (typeof INSTRUMENT_ICONS)[number];
 

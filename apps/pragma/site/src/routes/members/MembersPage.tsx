@@ -103,8 +103,8 @@ export function MembersPage(): JSX.Element {
   };
 
   return (
-    <section className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px] flex flex-col gap-6">
-      <PageHeader title={t('members.title')} subtitle={t('members.subtitle')} />
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-6">
+      <PageHeader title={t('members.title')} />
       {firstError === null ? null : (
         <p className="text-danger text-sm" role="alert">
           {firstError}

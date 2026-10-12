@@ -1,6 +1,6 @@
 # An agent `main` added is not dispatchable in a session that predates it
 
-Observed on PR #63. `.claude/agents/standards-reviewer.md` landed on `main` in
+Observed on PR #63. `plugins/borso-harness/agents/standards-reviewer.md` landed on `main` in
 commit `a9c72ce`. A session that had started before that commit merged the
 branch in, checked out the file, read it, confirmed it was on disk — and every
 attempt to dispatch it failed with *agent type not found*.
@@ -11,7 +11,7 @@ that validates them — is fixed for the life of the session. Pulling a new
 definition into the working tree changes the filesystem and nothing else.
 
 The same holds for a definition you write yourself mid-session: authoring
-`.claude/agents/<name>.md` does not make `<name>` dispatchable in the session
+`plugins/borso-harness/agents/<name>.md` does not make `<name>` dispatchable in the session
 that authored it.
 
 ## What it looks like

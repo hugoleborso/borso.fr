@@ -3,6 +3,7 @@ import {
   formValuesToLineup,
   type LineupEditorMember,
   lineupToFormValues,
+  selectLineupSaveTarget,
   toggleInstrumentHeld,
   toLineupPayload,
 } from './lineup-editor.core';
@@ -65,5 +66,26 @@ describe('toLineupPayload', () => {
 
   it('answers an empty record for no lineup at all', () => {
     expect(toLineupPayload(null)).toEqual({});
+  });
+});
+
+describe('selectLineupSaveTarget', () => {
+  const STAFFED_DEFAULT = { ada: ['guitar'], bob: [] };
+  const EDITED = { ada: ['bass'], bob: [] };
+
+  it('writes a lineup into the song default when the song has none yet', () => {
+    expect(selectLineupSaveTarget({}, EDITED, false)).toBe('song-default');
+    expect(selectLineupSaveTarget({ ada: [], bob: [] }, EDITED, false)).toBe('song-default');
+  });
+
+  it('keeps an edit on the entry when the song already has a default', () => {
+    expect(selectLineupSaveTarget(STAFFED_DEFAULT, EDITED, false)).toBe('entry-override');
+  });
+
+  it('clears the entry override on a reset or when nobody plays', () => {
+    expect(selectLineupSaveTarget(STAFFED_DEFAULT, EDITED, true)).toBe('entry-cleared');
+    expect(selectLineupSaveTarget({}, EDITED, true)).toBe('entry-cleared');
+    expect(selectLineupSaveTarget(STAFFED_DEFAULT, null, false)).toBe('entry-cleared');
+    expect(selectLineupSaveTarget({}, null, false)).toBe('entry-cleared');
   });
 });

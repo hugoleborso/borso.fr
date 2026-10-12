@@ -4,7 +4,8 @@ import { z } from 'zod';
 import {
   buildAuthenticatedApp,
   createMemberDirectly,
-  enrol,
+  giveMemberCredentials,
+  loginAsMember,
   extractSessionCookie,
   jsonRequest,
   readJson,
@@ -145,8 +146,9 @@ describe('setlist voting (back-e2e)', () => {
     await score(app, cookieHeader, setlistId, songId, 2);
 
     const graceId = await createMemberDirectly(app, 'Grace');
-    const graceEnrolment = await enrol(app, { memberId: graceId, username: 'grace' });
-    const graceCookie = `${SESSION_COOKIE_NAME}=${extractSessionCookie(graceEnrolment)}`;
+    await giveMemberCredentials({ memberId: graceId, username: 'grace' });
+    const graceLogin = await loginAsMember(app, 'grace');
+    const graceCookie = `${SESSION_COOKIE_NAME}=${extractSessionCookie(graceLogin)}`;
     await score(app, graceCookie, setlistId, songId, 3);
 
     const board = await readJson(
@@ -278,8 +280,9 @@ describe('setlist voting (back-e2e)', () => {
     await score(app, cookieHeader, setlistId, songId, 3);
 
     const otherId = await createMemberDirectly(app, 'Grace');
-    const otherEnrolment = await enrol(app, { memberId: otherId, username: 'grace' });
-    const otherCookie = `${SESSION_COOKIE_NAME}=${extractSessionCookie(otherEnrolment)}`;
+    await giveMemberCredentials({ memberId: otherId, username: 'grace' });
+    const otherLogin = await loginAsMember(app, 'grace');
+    const otherCookie = `${SESSION_COOKIE_NAME}=${extractSessionCookie(otherLogin)}`;
     await jsonRequest(app, `/api/members/${memberId}`, {
       method: 'DELETE',
       cookieHeader: otherCookie,

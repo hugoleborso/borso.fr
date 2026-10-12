@@ -68,7 +68,7 @@ matched all three Stryker processes on the machine.
 
 ## Countermeasure
 
-A `PreToolUse(Bash)` hook, `.claude/hooks/pretool-no-broad-kill.sh`, refuses
+A `PreToolUse(Bash)` hook, `plugins/borso-harness/hooks/pretool-no-broad-kill.sh`, refuses
 `pkill`, `killall`, `killall5`, and `pgrep … | xargs kill`. The rejection
 message names the two safe alternatives rather than only stating the ban:
 

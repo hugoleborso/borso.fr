@@ -30,7 +30,7 @@ opposite complaint, from the same run:
 12-linting-and-gates.md: `scripts/pr/check-pr-body.ts` exists but runs nowhere
 ```
 
-The script did run. `.claude/hooks/pretool-gh-pr-create.sh` calls it on every
+The script did run. `plugins/borso-harness/hooks/pretool-gh-pr-create.sh` calls it on every
 `gh pr create` it guards, and that call is the hook's entire body.
 
 ## Root-cause chain

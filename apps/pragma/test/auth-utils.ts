@@ -35,23 +35,40 @@ export async function createMemberDirectly(app: Hono, firstName: string): Promis
   return member.id;
 }
 
-export async function enrol(
+export async function giveMemberCredentials(params: {
+  memberId: string;
+  username?: string;
+  password?: string;
+}): Promise<void> {
+  const { createCredentialForMember } = await import('../api/src/auth/credentials.service');
+  const outcome = await createCredentialForMember({
+    memberId: params.memberId,
+    username: params.username ?? TEST_USERNAME,
+    password: params.password ?? TEST_PASSWORD,
+    now: new Date(),
+  });
+  if (outcome.kind !== 'ok') throw new Error(`could not create credentials: ${outcome.kind}`);
+}
+
+export async function recoverPassword(
   app: Hono,
   params: {
-    memberId: string;
     username?: string;
-    password?: string;
     sharedPassword?: string;
-  },
+    newPassword?: string;
+    ipAddress?: string;
+  } = {},
 ): Promise<Response> {
-  return app.request(`${TEST_HOST}/api/auth/enrol`, {
+  return app.request(`${TEST_HOST}/api/auth/recover-password`, {
     method: 'POST',
-    headers: { 'content-type': 'application/json' },
+    headers: {
+      'content-type': 'application/json',
+      'x-forwarded-for': params.ipAddress ?? '203.0.113.250',
+    },
     body: JSON.stringify({
-      memberId: params.memberId,
       username: params.username ?? TEST_USERNAME,
-      password: params.password ?? TEST_PASSWORD,
       sharedPassword: params.sharedPassword ?? TEST_SHARED_PASSWORD,
+      newPassword: params.newPassword ?? TEST_PASSWORD,
     }),
   });
 }
@@ -75,19 +92,18 @@ export interface AuthenticatedApp {
   readonly memberId: string;
 }
 
-let enrolmentCounter = 0;
+let credentialCounter = 0;
 
 export async function buildAuthenticatedApp(firstName = 'Tester'): Promise<AuthenticatedApp> {
   const app = createApp();
   await bootstrapSharedPassword(app);
   const memberId = await createMemberDirectly(app, firstName);
-  enrolmentCounter += 1;
-  const enrolResponse = await enrol(app, {
-    memberId,
-    username: `${TEST_USERNAME}${String(enrolmentCounter)}`,
-  });
-  const value = extractSessionCookie(enrolResponse);
-  if (value === null) throw new Error('enrolment did not return a session cookie');
+  credentialCounter += 1;
+  const username = `${TEST_USERNAME}${String(credentialCounter)}`;
+  await giveMemberCredentials({ memberId, username });
+  const loginResponse = await loginAsMember(app, username);
+  const value = extractSessionCookie(loginResponse);
+  if (value === null) throw new Error('signing in did not return a session cookie');
   return { app, cookieHeader: `${SESSION_COOKIE_NAME}=${value}`, memberId };
 }
 

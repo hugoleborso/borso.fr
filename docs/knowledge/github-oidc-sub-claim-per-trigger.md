@@ -32,6 +32,16 @@ Two consequences worth stating separately:
   `repo:OWNER/REPO:ref:refs/heads/main` here. A workflow mixing
   `pull_request` with either needs its role to trust two claims.
 
+## The prefix is a per-repository setting
+
+The `repo:OWNER/REPO` prefix above is the default. A repository can opt into
+GitHub's immutable subjects, and then every claim starts with
+`repo:OWNER@OWNER_ID/REPO@REPO_ID` instead. `hugoleborso/talos` does; a role
+written for the name form refused every talos token (PR #128). Read the prefix
+with `scripts/print-oidc-subject.sh OWNER/REPO` and pass the `subjectFormat` it
+prints; see
+[`a-role-that-trusted-a-subject-talos-never-sends.md`](../dantotsus/a-role-that-trusted-a-subject-talos-never-sends.md).
+
 ## Trusting more than one
 
 IAM evaluates a `StringLike` whose value is a list as "matches any entry",
@@ -41,6 +51,7 @@ this repo that is `githubActionsPrincipal`'s `subjects` array:
 ```ts
 assumedBy: githubActionsPrincipal(oidcProviderArn, {
   repo: CONSUMER_REPO,
+  subjectFormat: CONSUMER_SUBJECT_FORMAT,
   subjects: [{ kind: 'pull_request' }, { kind: 'branch', branch: 'main' }],
 }),
 ```

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  accountScopedBucketName,
   assertDeployStage,
   bucketName,
   dsqlClusterSsmPaths,
@@ -99,6 +100,49 @@ describe('bucketName', () => {
     expect(bucketName({ app: 'test-app', stage: 'integ', prNumber: 3 })).toBe(
       'bp-integ-test-app-pr-3',
     );
+  });
+});
+
+describe('accountScopedBucketName', () => {
+  const ACCOUNT_ID = '123456789012';
+
+  it('appends the account id to the stage bucket name', () => {
+    expect(accountScopedBucketName({ app: 'talos', stage: 'prod' }, ACCOUNT_ID)).toBe(
+      'talos-prod-123456789012',
+    );
+  });
+
+  it('keeps the preview and integ prefixes of bucketName', () => {
+    expect(
+      accountScopedBucketName({ app: 'test-app', stage: 'integ', prNumber: 3 }, ACCOUNT_ID),
+    ).toBe('bp-integ-test-app-pr-3-123456789012');
+  });
+
+  it.each(['12345678901', '1234567890123', '12345678901a', 'x123456789012', '123456789012x', ''])(
+    'rejects the account id %s',
+    (accountId) => {
+      expect(() => accountScopedBucketName({ app: 'talos', stage: 'prod' }, accountId)).toThrow(
+        `Account id "${accountId}" is not a 12-digit AWS account id; set env.account on the stack.`,
+      );
+    },
+  );
+
+  it('accepts a name of exactly 63 characters, the S3 maximum', () => {
+    const name = accountScopedBucketName(
+      { app: 'a'.repeat(32), stage: 'integ', prNumber: 12345 },
+      ACCOUNT_ID,
+    );
+    expect(name).toHaveLength(63);
+  });
+
+  it('rejects a name over 63 characters', () => {
+    const name = `bp-integ-${'a'.repeat(32)}-pr-123456-${ACCOUNT_ID}`;
+    expect(() =>
+      accountScopedBucketName(
+        { app: 'a'.repeat(32), stage: 'integ', prNumber: 123456 },
+        ACCOUNT_ID,
+      ),
+    ).toThrow(`Bucket name "${name}" exceeds the 63 characters S3 allows.`);
   });
 });
 

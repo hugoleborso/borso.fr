@@ -36,13 +36,19 @@ export interface SetlistSummary {
   readonly id: string;
   readonly name: string;
   readonly kind: SetlistKind;
+  readonly status: SetlistStatus;
   readonly songCount: number;
   readonly sessionIds: string[];
 }
 
 // @FollowsBlueprint core-projection
 export function buildSetlistSummaries(
-  setlists: readonly { readonly id: string; readonly name: string; readonly kind: string | null }[],
+  setlists: readonly {
+    readonly id: string;
+    readonly name: string;
+    readonly kind: string | null;
+    readonly status: string | null;
+  }[],
   songCounts: readonly SetlistSongCount[],
   links: readonly { readonly setlistId: string; readonly sessionId: string }[],
 ): SetlistSummary[] {
@@ -62,6 +68,7 @@ export function buildSetlistSummaries(
     id: setlist.id,
     name: setlist.name,
     kind: resolveSetlistKind(setlist.kind),
+    status: resolveSetlistStatus(setlist.status),
     songCount: songCountBySetlistId.get(setlist.id) ?? 0,
     sessionIds: sessionIdsBySetlistId.get(setlist.id) ?? [],
   }));

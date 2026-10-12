@@ -45,9 +45,22 @@ The skip list fixes the first symptom only. Moving the sandbox out of the
 workspace is what fixes the class, which is why `tempDirName` is computed
 rather than left at its default.
 
-## Recognising either one
+### The sandbox path must be the real path
+
+`tempDirName` is `realpathSync(tmpdir())` plus a slug, not `tmpdir()` alone. On
+macOS `tmpdir()` returns `/var/folders/...`, a symlink to
+`/private/var/folders/...`. Stryker hands Vitest the mutated file under the
+first spelling, Vitest resolves its own module graph under the second, and
+`vitest.related` compares the two as strings. It finds no related test, the dry
+run is empty, and the run dies with *"No tests were executed"*. Linux has no
+such symlink, which is why CI never saw it.
+
+## Recognising each one
 
 - *"No test runner"* / plugin not found, on a machine where the package is
   plainly installed → §1.
 - `ENOENT` from `AssetStaging.calculateHash` in `infra/cdk`, only under the
   parallel pre-push wave, passing when the suite runs alone → §2.
+- *"Vitest failed to find test files related to mutated files"* then *"No tests
+  were executed"*, on macOS only, for a file whose test plainly imports it →
+  the real path, §2.

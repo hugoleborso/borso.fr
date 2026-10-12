@@ -39,7 +39,7 @@ sanitiser claims, custom-script justification).
    review context was invisible.
 2. **Why isn't there such a step?**
    The repo's *outbound* PR-creation flow has the
-   [`/open-pr`](../../.claude/skills/open-pr/SKILL.md) skill that
+   [`/open-pr`](../../plugins/borso-harness/skills/open-pr/SKILL.md) skill that
    walks the body before posting. The *follow-up* flow — pushing
    new commits to an *existing* PR — has no symmetric anchor.
    The agent's mental model treated the second push as "more of

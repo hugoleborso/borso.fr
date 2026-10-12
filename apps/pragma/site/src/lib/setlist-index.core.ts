@@ -10,6 +10,7 @@ export interface IndexSession {
 export interface IndexSetlist {
   readonly id: string;
   readonly name: string;
+  readonly status: 'voting' | 'locked';
   readonly songCount: number;
   readonly sessionIds: readonly string[];
 }
@@ -19,6 +20,7 @@ const CONCERT_SESSION_KIND = 'concert';
 export interface SetlistIndexRow<TSession extends IndexSession> {
   readonly id: string;
   readonly name: string;
+  readonly isVoting: boolean;
   readonly songCount: number;
   readonly sessions: TSession[];
 }
@@ -48,6 +50,7 @@ export function buildSetlistIndexRows<TSession extends IndexSession>(
   const rows = setlists.map((setlist) => ({
     id: setlist.id,
     name: setlist.name,
+    isVoting: setlist.status === 'voting',
     songCount: setlist.songCount,
     sessions: setlist.sessionIds
       .map((sessionId) => sessionById.get(sessionId))

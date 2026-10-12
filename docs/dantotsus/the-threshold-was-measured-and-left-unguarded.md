@@ -79,7 +79,7 @@ the link was replaced by a sentence naming the file in words.
 **Type:** DevX check (level 2 — devx check)
 
 **Reference:** PR #102 · commit on this branch extending
-`.claude/hooks/pretool-github-pr-body.sh`
+`plugins/borso-harness/hooks/pretool-github-pr-body.sh`
 
 **The actual fix:**
 

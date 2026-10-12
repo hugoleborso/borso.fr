@@ -17,6 +17,11 @@ const LABEL_BY_STATUS = {
   locked: 'voting.openVote',
 } as const satisfies Readonly<Record<SetlistStatus, string>>;
 
+const VARIANT_BY_STATUS = {
+  voting: 'accent',
+  locked: 'ghost',
+} as const satisfies Readonly<Record<SetlistStatus, 'accent' | 'ghost'>>;
+
 // @FollowsBlueprint molecule-presentational
 export function VoteEntryLink({ setlistId, status }: VoteEntryLinkProps): JSX.Element {
   const { t } = useTranslation();
@@ -25,13 +30,13 @@ export function VoteEntryLink({ setlistId, status }: VoteEntryLinkProps): JSX.El
   return (
     <Button
       type="button"
-      variant="accent"
+      variant={VARIANT_BY_STATUS[status]}
       aria-label={t(LABEL_BY_STATUS[status])}
       title={t(LABEL_BY_STATUS[status])}
+      className="w-11 px-0"
       onClick={() => navigateTo(`/setlists/${setlistId}/vote`)}
     >
-      <Icon name="vote" size={14} />
-      <span className="hidden sm:inline">{t(LABEL_BY_STATUS[status])}</span>
+      <Icon name="vote" size={18} />
     </Button>
   );
 }

@@ -169,7 +169,7 @@ else
 fi
 
 # 6. agent-browser — LLM-oriented browser automation CLI used by the
-# /visual-validation skill (see .claude/agents/visual-validator.md). Global
+# /visual-validation skill (see plugins/borso-harness/agents/visual-validator.md). Global
 # npm install + a one-shot post-install that provisions Chromium for the
 # daemon. Skipped on machines without npm (rare in this repo, but the
 # install is non-fatal there — the validator surfaces the missing tool as
@@ -232,7 +232,7 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 # docs/dantotsus/designated-branch-was-a-merged-pr-head.md.
 "$REPO_ROOT/scripts/check-branch-context.sh" || true
 
-# 9. KAIZEN.md — the friction log `/after-task-dantotsus` sweeps at merge.
+# 9. KAIZEN.md — the friction log `/after-task-kaizen` sweeps at merge.
 # Created empty here rather than on first use, because a file that already
 # exists gets appended to and a file somebody has to remember to create does
 # not: PR 50 maintained none, and its inventory had to be rebuilt from the

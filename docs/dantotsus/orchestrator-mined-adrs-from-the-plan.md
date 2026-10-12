@@ -128,8 +128,8 @@ populated and each entry is referenced in the plan)
 **The actual fix:**
 
 ```diff
---- a/.claude/skills/tech-lead-orchestrator/standard.md
-+++ b/.claude/skills/tech-lead-orchestrator/standard.md
+--- a/plugins/borso-harness/skills/tech-lead-orchestrator/standard.md
++++ b/plugins/borso-harness/skills/tech-lead-orchestrator/standard.md
 @@ -<line>,4 +<line>,4 @@
  The 8 stages are: `spec`, `adrs`, `plan`, `implement`, `validate`,
  `arbitrate`, `ship`, `escalated`. **ADRs come before the plan** — they

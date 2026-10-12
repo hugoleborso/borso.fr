@@ -35,7 +35,7 @@ In short: the plan called out the exact risks. The implementation, written from 
    The clock-sensitive flows (`pickDefaultMonth`, `pickDefaultYear`) and error-throw paths were inside the React component. To unit-test them, they had to be extracted to `data.utils.ts` with `today: Date` injected as a parameter. The plan said "extract", the implementer didn't. The validator did its job — caught it at gate 6 (FAIL), not at gate 5 (write-time).
 
 4. **Why does the plan have a §3 Code-quality self-check if nobody re-reads it?**
-   The `/technical-conception` standard ([`.claude/skills/technical-conception/standard.md` §3](../../.claude/skills/technical-conception/standard.md)) requires plan authors to write a checkbox list of standing rules the implementation must satisfy. The `/implementation` skill's standard mentions the rules abstractly ("live with the clean-code rules") but does not require the implementer to *re-walk the plan's specific checklist* before push. The two skills compile their own copies of the rules without a hand-off.
+   The `/technical-conception` standard ([`plugins/borso-harness/skills/technical-conception/standard.md` §3](../../plugins/borso-harness/skills/technical-conception/standard.md)) requires plan authors to write a checkbox list of standing rules the implementation must satisfy. The `/implementation` skill's standard mentions the rules abstractly ("live with the clean-code rules") but does not require the implementer to *re-walk the plan's specific checklist* before push. The two skills compile their own copies of the rules without a hand-off.
 
 **Root cause:** thought "write the code per the plan + run the gates" was the whole loop; actually the plan's §3 checklist is a third gate the implementation skill never instructed the implementer to re-walk before pushing. The checklist existed, named the right risks, and was never read again.
 
@@ -62,7 +62,7 @@ This restored the FAIL → PASS on re-run, but it doesn't stop the next implemen
 
 **The actual fix:**
 
-Adds a procedure step to `.claude/skills/implementation/SKILL.md` between gate-running and validation: *"Re-walk the plan's §3 Code-quality self-check section bullet by bullet, verifying each is satisfied by the diff. Unchecked bullets are blockers — fix the diff, do not run validators."* The standard at [`.claude/skills/implementation/standard.md`](../../.claude/skills/implementation/standard.md) gains a matching paragraph in the "Required behaviours" section.
+Adds a procedure step to `plugins/borso-harness/skills/implementation/SKILL.md` between gate-running and validation: *"Re-walk the plan's §3 Code-quality self-check section bullet by bullet, verifying each is satisfied by the diff. Unchecked bullets are blockers — fix the diff, do not run validators."* The standard at [`plugins/borso-harness/skills/implementation/standard.md`](../../plugins/borso-harness/skills/implementation/standard.md) gains a matching paragraph in the "Required behaviours" section.
 
 ```diff
    3. **Walk the plan's "How each spec decision becomes code" table top-down.** For each row:

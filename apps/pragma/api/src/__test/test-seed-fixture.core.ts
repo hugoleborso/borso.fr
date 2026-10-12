@@ -1,4 +1,4 @@
-import type { InstrumentFamily } from '@domain/instrument.core';
+import type { InstrumentFamily, InstrumentIcon } from '@domain/instrument.core';
 import type { SongOrigin } from '@domain/song-origin.core';
 import { SONG_STATUSES } from '../songs/songs.schema';
 import type { SeedLineupByMemberName } from './test-seed.core';
@@ -8,14 +8,15 @@ type SeedSongStatus = (typeof SONG_STATUSES)[number];
 export interface SeedInstrument {
   readonly name: string;
   readonly family: InstrumentFamily;
+  readonly icon: InstrumentIcon;
 }
 
 export const SEED_INSTRUMENTS: readonly SeedInstrument[] = [
-  { name: 'Guitare', family: 'harmonic' },
-  { name: 'Clavier', family: 'harmonic' },
-  { name: 'Basse', family: 'harmonic' },
-  { name: 'Batterie', family: 'percussive' },
-  { name: 'Chant', family: 'vocal' },
+  { name: 'Guitare', family: 'harmonic', icon: 'guitar' },
+  { name: 'Clavier', family: 'harmonic', icon: 'piano' },
+  { name: 'Basse', family: 'harmonic', icon: 'bass' },
+  { name: 'Batterie', family: 'percussive', icon: 'drum' },
+  { name: 'Chant', family: 'vocal', icon: 'mic-vocal' },
 ];
 
 export interface SeedMember {

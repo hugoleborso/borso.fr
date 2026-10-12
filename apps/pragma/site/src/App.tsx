@@ -11,7 +11,7 @@ import { SongEditPage } from './routes/catalog/SongEditPage';
 import { SongScenePage } from './routes/catalog/SongScenePage';
 import { ImprovementsPage } from './routes/improvements/ImprovementsPage';
 import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
-import { EnrolPage } from './routes/EnrolPage';
+import { RecoverPage } from './routes/RecoverPage';
 import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { TasksPage } from './routes/tasks/TasksPage';
@@ -20,6 +20,7 @@ import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
 import { SetlistEditorPage } from './routes/setlists/SetlistEditorPage';
 import { SetlistScenePage } from './routes/setlists/SetlistScenePage';
+import { SetlistAudiencePage } from './routes/setlists/SetlistAudiencePage';
 import { SetlistVotePage } from './routes/setlists/SetlistVotePage';
 import { SetlistsPage } from './routes/setlists/SetlistsPage';
 import { VotePage } from './routes/vote/VotePage';
@@ -30,7 +31,7 @@ export function App(): JSX.Element {
       <ListenLinksProvider>
         <Routes>
           <Route path="/login" element={<LoginPage />} />
-          <Route path="/enrol" element={<EnrolPage />} />
+          <Route path="/recover" element={<RecoverPage />} />
           <Route path="/vote" element={<VotePage />} />
           <Route path="/vote/:sessionId" element={<VotePage />} />
           <Route element={<RequireSession />}>
@@ -48,6 +49,7 @@ export function App(): JSX.Element {
               <Route path="/setlists" element={<SetlistsPage />} />
               <Route path="/setlists/:setlistId" element={<SetlistEditorPage />} />
               <Route path="/setlists/:setlistId/vote" element={<SetlistVotePage />} />
+              <Route path="/setlists/:setlistId/audience" element={<SetlistAudiencePage />} />
               <Route path="/bars" element={<BarsPage />} />
               <Route path="/improvements" element={<ImprovementsPage />} />
               <Route path="/tasks" element={<TasksPage />} />

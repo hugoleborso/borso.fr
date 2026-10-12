@@ -2,7 +2,7 @@
 
 > Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all (planning gap), or named it correctly and the defect comes from elsewhere.
 
-The work splits into two slices that ship in one pull request: **A**, the database roles in `infra/cdk` and the three `client.ts` files ([ADR-0023](../../../../adr/0023-one-database-role-per-stage-schema.md)); **B**, the pragma feature ([ADR-0024](../../../../adr/0024-calendar-feed-address-in-its-own-table.md), [ADR-0025](../../../../adr/0025-ical-js-parses-calendar-feeds.md)). Slice A lands first in the commit order, so the preview deploy proves it before slice B depends on it.
+The work splits into two slices that ship in one pull request: **A**, the database roles in `infra/cdk` and the three `client.ts` files ([ADR-0031](../../../../adr/0031-one-database-role-per-stage-schema.md)); **B**, the pragma feature ([ADR-0032](../../../../adr/0032-calendar-feed-address-in-its-own-table.md), [ADR-0033](../../../../adr/0033-ical-js-parses-calendar-feeds.md)). Slice A lands first in the commit order, so the preview deploy proves it before slice B depends on it.
 
 ## How each spec decision becomes code
 
@@ -64,7 +64,7 @@ The work splits into two slices that ship in one pull request: **A**, the databa
 Run, in order, before push:
 1. `pnpm install`.
 2. `pnpm --filter @borso/infra build && pnpm --filter @borso/infra test:coverage` (100 % gate).
-3. `pnpm --filter @borso-app/{pragma,last-loop-lepin,banana-rush} typecheck`.
+3. `pnpm --filter @borso-app/pragma --filter @borso-app/last-loop-lepin --filter @borso-app/banana-rush run typecheck`.
 4. `pnpm exec eslint --no-warn-ignored --max-warnings 0` on the changed files.
 5. `pnpm --filter @borso-app/pragma test:coverage` (core plus back-e2e on local Postgres), and `test:core` plus `test` for last-loop-lepin and banana-rush.
 6. `grep -rn getDbConnectAdminAuthToken apps/*/api/src` returns nothing.

@@ -165,8 +165,10 @@ export function AppShell(): JSX.Element {
   };
 
   return (
-    <div className="h-dvh flex bg-bg text-ink-900">
-      <div className="hidden lg:block">{renderSidebar('desktop')}</div>
+    <div className="min-h-dvh flex bg-bg text-ink-900">
+      <div className="hidden lg:block sticky top-0 h-dvh self-start">
+        {renderSidebar('desktop')}
+      </div>
 
       {isNarrow && isMobileNavOpen ? (
         <dialog
@@ -179,7 +181,7 @@ export function AppShell(): JSX.Element {
         </dialog>
       ) : null}
 
-      <main className="flex-1 overflow-y-auto overflow-x-hidden [&:has(dialog[open])]:overflow-hidden relative pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
+      <main className="flex-1 min-w-0 relative pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
         <OfflineBanner isVisible={!isOnline} />
         <Outlet />
       </main>

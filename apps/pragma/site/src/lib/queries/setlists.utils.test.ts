@@ -170,10 +170,17 @@ describe('setlist list cache transforms', () => {
   const first: MinimalSetlistSummary = {
     id: 'a',
     name: 'Set 1',
+    status: 'locked',
     songCount: 2,
     sessionIds: ['concert-1'],
   };
-  const second: MinimalSetlistSummary = { id: 'b', name: 'Set 2', songCount: 0, sessionIds: [] };
+  const second: MinimalSetlistSummary = {
+    id: 'b',
+    name: 'Set 2',
+    status: 'locked',
+    songCount: 0,
+    sessionIds: [],
+  };
   const cache: SetlistsCache = { setlists: [first] };
 
   it('appends a created setlist', () => {
@@ -223,10 +230,17 @@ describe('selectSetlistsNotOnSession', () => {
   const attached: MinimalSetlistSummary = {
     id: 'a',
     name: '',
+    status: 'locked',
     songCount: 0,
     sessionIds: ['concert-1'],
   };
-  const loose: MinimalSetlistSummary = { id: 'b', name: '', songCount: 0, sessionIds: [] };
+  const loose: MinimalSetlistSummary = {
+    id: 'b',
+    name: '',
+    status: 'locked',
+    songCount: 0,
+    sessionIds: [],
+  };
 
   it('offers only the setlists the session does not carry', () => {
     expect(selectSetlistsNotOnSession([attached, loose], 'concert-1')).toEqual([loose]);

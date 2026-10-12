@@ -84,7 +84,6 @@ export function AvailableSupportField({
             {t(AVAILABLE_SUPPORT_KEY[support])}
           </label>
         ))}
-        <span className="text-xs text-ink-400">{t('bars.supportNoneHint')}</span>
       </div>
     </>
   );

@@ -107,12 +107,11 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
               sourceSchemaName: 'prod',
               tableBlocklist: [
                 'auth_attempt',
-                'app_config',
                 'member_calendar_feed',
-                'member_credential',
                 'member_passkey',
                 'webauthn_challenge',
               ],
+              tablesToReplace: ['app_config', 'member_credential'],
               columnsToNullify: { member: ['avatar_s3_key'] },
             },
           }),

@@ -1,7 +1,6 @@
 /** @Feature auth */
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { startPasskeyLogin } from '../passkey.adapter';
 import { forgetSessionMarker, rememberSessionMarker } from '../session-marker.adapter';
@@ -9,7 +8,6 @@ import { forgetSessionMarker, rememberSessionMarker } from '../session-marker.ad
 export const authKeys = {
   all: ['auth'] as const,
   session: () => [...authKeys.all, 'session'] as const,
-  enrolment: () => [...authKeys.all, 'enrolment'] as const,
 };
 
 export interface SessionProbeResult {
@@ -32,25 +30,6 @@ export function useSessionProbe(isEnabled: boolean) {
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
     enabled: isEnabled,
-  });
-}
-
-type EnrolmentResponse = InferResponseType<typeof api.api.auth.enrolment.$get>;
-
-export type EnrolmentOffer = Extract<EnrolmentResponse, { offers: unknown }>['offers'][number];
-
-async function readEnrolmentOffers(): Promise<EnrolmentOffer[]> {
-  const response = await api.api.auth.enrolment.$get();
-  if (!response.ok) return [];
-  const body = await response.json();
-  return 'offers' in body ? body.offers : [];
-}
-
-export function useEnrolmentOffers() {
-  return useQuery({
-    queryKey: authKeys.enrolment(),
-    queryFn: readEnrolmentOffers,
-    retry: false,
   });
 }
 
@@ -79,23 +58,23 @@ export function useLogin() {
   });
 }
 
-export interface EnrolVariables {
-  readonly memberId: string;
+export interface RecoverPasswordVariables {
   readonly username: string;
-  readonly password: string;
   readonly sharedPassword: string;
+  readonly newPassword: string;
 }
 
-async function postEnrol(variables: EnrolVariables) {
-  const response = await api.api.auth.enrol.$post({ json: variables });
-  await throwOnFailure(response, 'enrol');
+async function postRecoverPassword(variables: RecoverPasswordVariables) {
+  const response = await api.api.auth['recover-password'].$post({ json: variables });
+  await throwOnFailure(response, 'recover-password');
   return await response.json();
 }
 
-export function useEnrol() {
+// @FollowsBlueprint query-pessimistic-mutation
+export function useRecoverPassword() {
   const queryClient = useQueryClient();
   return useMutation({
-    mutationFn: postEnrol,
+    mutationFn: postRecoverPassword,
     onSuccess: () => {
       rememberSessionMarker();
       queryClient.setQueryData<SessionProbeResult>(authKeys.session(), { authenticated: true });

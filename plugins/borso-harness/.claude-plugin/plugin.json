@@ -1,0 +1,12 @@
+{
+  "name": "borso-harness",
+  "displayName": "borso harness",
+  "description": "borso.fr's engineering harness: the feature pipeline skills, the isolated validators, the dantotsu and kaizen loop, and the guard hooks.",
+  "author": {
+    "name": "Hugo Borsoni",
+    "url": "https://github.com/hugoleborso"
+  },
+  "homepage": "https://github.com/hugoleborso/borso.fr/tree/main/plugins/borso-harness",
+  "repository": "https://github.com/hugoleborso/borso.fr",
+  "keywords": ["harness", "specification", "validation", "dantotsu", "kaizen", "hooks"]
+}

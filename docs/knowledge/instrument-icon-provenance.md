@@ -9,7 +9,7 @@ notice that lives nowhere is a licence notice nobody honours.
 The glyphs live in the `ICONS` map in
 [`apps/pragma/site/src/components/atoms/Icon.tsx`](../../apps/pragma/site/src/components/atoms/Icon.tsx),
 under the keys `micVocal`, `guitar`, `bass`, `piano`, `drum` and
-`music`. [ADR-0021](../adr/0021-instruments-carry-their-own-icon-order-and-primacy.md)
+`music`. [ADR-0022](../adr/0022-instruments-carry-their-own-icon-order-and-primacy.md)
 is the decision to copy path data into that map rather than add an
 icon library as a dependency.
 

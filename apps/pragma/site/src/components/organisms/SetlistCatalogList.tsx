@@ -25,6 +25,7 @@ export function SetlistCatalogList({ rows }: SetlistCatalogListProps): JSX.Eleme
           <SetlistSummaryRow
             id={row.id}
             name={row.name}
+            isVoting={row.isVoting}
             songCount={row.songCount}
             sessionsLabel={describeSessions(row.sessions, i18n.language, t('setlist.noSession'))}
           />

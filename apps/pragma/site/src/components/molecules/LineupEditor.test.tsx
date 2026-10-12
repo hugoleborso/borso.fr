@@ -23,6 +23,7 @@ const DRUMS: LineupEditorInstrument = { id: 'drums-id', name: 'Drums' };
 const RESET_BUTTON_TEXT_EN = 'Reset to song default';
 const OVERRIDE_BADGE_TEXT_EN = 'Override';
 const CANCEL_BUTTON_TEXT_EN = 'Cancel';
+const SAVE_AS_DEFAULT_BUTTON_TEXT_EN = 'Save as song default';
 
 // @FollowsBlueprint test-jsdom-gap-stub
 function stubDialogModalMissingFromJsdom(): void {
@@ -271,6 +272,51 @@ describe('LineupEditor', () => {
       form?.dispatchEvent(new Event('submit', { bubbles: true, cancelable: true }));
     });
     expect(onSave).toHaveBeenCalledWith({ [HUGO.id]: [GUITAR.id] }, true);
+  });
+
+  it('hands the edited lineup to onSaveAsSongDefault, not onSave, and closes', async () => {
+    const onSave = vi.fn();
+    const onSaveAsSongDefault = vi.fn();
+    const onClose = vi.fn();
+    renderEditor(
+      root,
+      <LineupEditor
+        open
+        surface="setlist-entry"
+        members={[HUGO, PAULINE]}
+        instruments={[GUITAR, BASS]}
+        currentLineup={{}}
+        defaultLineup={{}}
+        onSave={onSave}
+        onSaveAsSongDefault={onSaveAsSongDefault}
+        onClose={onClose}
+      />,
+    );
+    await act(async () => {
+      findInstrumentToggle(container, PAULINE.name, BASS.name).click();
+    });
+    await act(async () => {
+      findButtonByText(container, SAVE_AS_DEFAULT_BUTTON_TEXT_EN)?.click();
+    });
+    expect(onSaveAsSongDefault).toHaveBeenCalledWith({ [HUGO.id]: [], [PAULINE.id]: [BASS.id] });
+    expect(onSave).not.toHaveBeenCalled();
+    expect(onClose).toHaveBeenCalledTimes(1);
+  });
+
+  it('omits Save as song default when no handler is supplied', () => {
+    renderEditor(
+      root,
+      <LineupEditor
+        open
+        surface="song"
+        members={[HUGO]}
+        instruments={[GUITAR]}
+        currentLineup={{}}
+        onSave={vi.fn()}
+        onClose={vi.fn()}
+      />,
+    );
+    expect(findButtonByText(container, SAVE_AS_DEFAULT_BUTTON_TEXT_EN)).toBeNull();
   });
 
   it('omits the Reset button when defaultLineup is not supplied (song surface)', () => {

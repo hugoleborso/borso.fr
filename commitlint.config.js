@@ -12,6 +12,7 @@ export default {
         'borsouvertures',
         'last-loop-lepin',
         'pragma',
+        'talos',
         'infra',
         'ci',
         'docs',

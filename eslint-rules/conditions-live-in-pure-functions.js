@@ -9,8 +9,9 @@ import {
 import { isPureFile, isTestPath } from './impurity.js';
 
 const MESSAGE =
-  'Move this decision into a pure function in a `.core.ts` or `.utils.ts` file, and call it ' +
-  'from here. A decision in impure code cannot be tested without standing up whatever the ' +
+  'Move this decision into a pure function in a `.core.ts` or `.utils.ts` file, and store its ' +
+  'answer in a named const here (`const isLocked = isLockedPage(state)`) that the condition ' +
+  'reads: calling the function inside the condition is still a decision. A decision in impure code cannot be tested without standing up whatever the ' +
   'surrounding code touches. A presence test, a guard clause, a test that reads an already ' +
   'named result such as `isConcert` or `props.hasOverride`, and a choice between two plain ' +
   'values are all exempt. See docs/standards/02-purity-and-core-files.md.';

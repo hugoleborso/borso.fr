@@ -30,11 +30,6 @@ const PASSKEY_PROJECTION = {
 } as const;
 
 // @FollowsBlueprint repository-query
-export async function listCredentials(): Promise<CredentialRow[]> {
-  const database = getDatabase();
-  return await database.select(CREDENTIAL_PROJECTION).from(memberCredentialTable);
-}
-
 export async function findCredentialByUsername(username: string): Promise<CredentialRow | null> {
   const database = getDatabase();
   const rows = await database

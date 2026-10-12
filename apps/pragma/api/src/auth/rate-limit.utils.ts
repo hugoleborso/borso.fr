@@ -1,10 +1,15 @@
 const SECONDS_PER_MINUTE = 60;
 const MILLISECONDS_PER_SECOND = 1_000;
 const RATE_LIMIT_WINDOW_MINUTES = 15;
+const SHARED_PASSWORD_WINDOW_MINUTES = 60;
 
 export const RATE_LIMIT_MAX_ATTEMPTS = 5;
 export const RATE_LIMIT_WINDOW_MS =
   RATE_LIMIT_WINDOW_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+
+export const SHARED_PASSWORD_MAX_ATTEMPTS = 3;
+export const SHARED_PASSWORD_WINDOW_MS =
+  SHARED_PASSWORD_WINDOW_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
 
 export interface RateLimitBudget {
   readonly maxAttempts: number;
@@ -14,6 +19,11 @@ export interface RateLimitBudget {
 export const MEMBER_LOGIN_BUDGET: RateLimitBudget = {
   maxAttempts: RATE_LIMIT_MAX_ATTEMPTS,
   windowMs: RATE_LIMIT_WINDOW_MS,
+};
+
+export const SHARED_PASSWORD_BUDGET: RateLimitBudget = {
+  maxAttempts: SHARED_PASSWORD_MAX_ATTEMPTS,
+  windowMs: SHARED_PASSWORD_WINDOW_MS,
 };
 
 export interface RateBucket {

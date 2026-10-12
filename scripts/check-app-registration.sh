@@ -35,6 +35,38 @@ for app_directory in apps/*/; do
     echo "    Add '${slug}' to the scope list." >&2
     missing=$((missing + 1))
   fi
+
+  # An app that owns migrations must apply them when `pnpm dev` starts. Booting
+  # the cluster alone serves an API against an empty schema, where every route
+  # answers 500 "relation does not exist"; pragma shipped that way, and
+  # banana-rush copied it. See
+  # docs/dantotsus/pnpm-dev-served-an-empty-database.md.
+  if [ -d "${app_directory}api/src/database/migrations" ]; then
+    dev_database_script=$(node -e "process.stdout.write(require('./${app_directory}package.json').scripts?.['dev:db'] ?? '')")
+    if ! printf '%s' "$dev_database_script" | grep -qE 'test/dev-database\.setup\.ts|dev-db\.sh'; then
+      echo "[check-app-registration] $slug owns migrations but its dev:db does not apply them." >&2
+      echo "    Point dev:db at test/dev-database.setup.ts, which runs test/setup-postgres.ts first." >&2
+      echo "    Without it, pnpm dev serves an API against an empty schema." >&2
+      missing=$((missing + 1))
+    fi
+  fi
+
+  # S3 bucket names are global, and a NoSuchBucket answer does not prove a name
+  # is free, so a new app cannot check that <slug>-prod is available before its
+  # first deploy. The apps listed here already own their short bucket name,
+  # and renaming it would replace the bucket. See
+  # docs/dantotsus/a-bucket-name-someone-else-already-owned.md.
+  case "$slug" in
+    borso-fr | borsouvertures | last-loop-lepin | pragma | banana-rush) ;;
+    *)
+      if grep -rlqE '\b(StaticSite|PreviewableApp)\b' "${app_directory}"bin "${app_directory}"cdk 2>/dev/null &&
+        ! grep -rqE "bucketNameSuffix: 'account'" "${app_directory}"bin "${app_directory}"cdk 2>/dev/null; then
+        echo "[check-app-registration] $slug deploys a prod bucket named $slug-prod, a name S3 may already have given to another account." >&2
+        echo "    Pass bucketNameSuffix: 'account' to StaticSite, or frontend.bucketNameSuffix to PreviewableApp." >&2
+        missing=$((missing + 1))
+      fi
+      ;;
+  esac
 done
 
 # The other direction: a slug declared for an application that no longer exists

@@ -125,6 +125,17 @@ wait_for_gates() {
   fi
 }
 
+# Every gate below reads node_modules, and a branch restarted from a newer main
+# carries a lockfile the session never installed: knip then reports the new
+# application's dependencies as unused and its binaries as unlisted. PR #107's
+# sweep answered that with a warning on one restart path; PR #136 restarted by
+# another and hit it again. pnpm keeps a copy of the lockfile it installed, so
+# comparing the two is exact and costs nothing when they agree.
+if ! cmp -s pnpm-lock.yaml node_modules/.pnpm/lock.yaml; then
+  echo "[pre-push] pnpm-lock.yaml changed since the last install; installing before the gates read node_modules"
+  pnpm install --frozen-lockfile
+fi
+
 # Dead-code detection across the workspace. Push time rather than commit time,
 # because a multi-commit branch legitimately passes through intermediate states
 # where an export is written before its caller exists. Runs alongside the infra

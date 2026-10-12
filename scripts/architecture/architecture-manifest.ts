@@ -3,6 +3,7 @@ import { borsoFrManifest } from './manifests/borso-fr.manifest';
 import { borsouverturesManifest } from './manifests/borsouvertures.manifest';
 import { lastLoopLepinManifest } from './manifests/last-loop-lepin.manifest';
 import { pragmaManifest } from './manifests/pragma.manifest';
+import { talosManifest } from './manifests/talos.manifest';
 
 export interface ManifestActor {
   readonly id: string;
@@ -52,6 +53,7 @@ export const ARCHITECTURE_MANIFESTS: readonly ArchitectureManifest[] = [
   bananaRushManifest,
   borsouverturesManifest,
   borsoFrManifest,
+  talosManifest,
 ];
 
 export function manifestFor(application: string): ArchitectureManifest | undefined {

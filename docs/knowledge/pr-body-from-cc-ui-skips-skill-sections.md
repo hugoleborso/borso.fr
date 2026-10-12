@@ -50,5 +50,5 @@ and grep the `body` field for `## Visual evidence` and `## Validation gaps`. Eit
 
 ## Related
 
-- `.claude/skills/visual-validation/SKILL.md` — *"Visual evidence in the PR body"* section: the source of truth for what the PR body should look like.
-- `.claude/skills/technical-validation/SKILL.md` — same disclosure rule for the technical side (when verdict is `PASS_EXCEPT_UNVERIFIABLE` for the technical gate).
+- `plugins/borso-harness/skills/visual-validation/SKILL.md` — *"Visual evidence in the PR body"* section: the source of truth for what the PR body should look like.
+- `plugins/borso-harness/skills/technical-validation/SKILL.md` — same disclosure rule for the technical side (when verdict is `PASS_EXCEPT_UNVERIFIABLE` for the technical gate).

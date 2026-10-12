@@ -5,11 +5,14 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
+import { buttonVariants } from '../../components/atoms/button.variants';
 import { Icon } from '../../components/atoms/Icon';
+import { BottomActionBar } from '../../components/molecules/BottomActionBar';
 import { FilterPillGroup } from '../../components/molecules/FilterPillGroup';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SearchBar } from '../../components/molecules/SearchBar';
 import { CatalogGrid } from '../../components/organisms/CatalogGrid';
+import { NextConcertStrip } from '../../components/organisms/NextConcertStrip';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError } from '../../lib/api.client';
 import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.core';
@@ -134,37 +137,36 @@ export function CatalogPage(): JSX.Element {
     [filteredSongs, lineupMembers, instruments, masteryDefaults],
   );
 
-  const readyCount = countSongsWithStatus(songs, 'concert_ready');
-  const subtitle = t('catalog.subtitle', {
-    count: songs.length,
-    total: songs.length,
-    ready: readyCount,
-  });
-
   const newSongControl = (
-    <Link to={buildNewSongPath(search)} className="no-underline self-center justify-self-center">
-      <Button variant="accent" type="button">
-        <Icon name="plus" size={14} />
-        {t('catalog.newSong')}
-      </Button>
-    </Link>
+    <BottomActionBar>
+      <Link
+        to={buildNewSongPath(search)}
+        aria-label={t('catalog.newSong')}
+        title={t('catalog.newSong')}
+        className={buttonVariants({ variant: 'accent', size: 'icon' })}
+      >
+        <Icon name="plus" size={22} />
+      </Link>
+    </BottomActionBar>
   );
 
   return (
-    <div className="px-4 sm:px-9 py-7 pb-20 max-w-[1280px]">
+    <div className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+      <NextConcertStrip />
       <PageHeader
         crumb={t('catalog.crumb')}
         title={t('catalog.title')}
-        subtitle={subtitle}
-        actions={newSongControl}
+        inline={
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder={t('catalog.searchPlaceholder')}
+          />
+        }
       />
+      {newSongControl}
 
-      <div className="flex gap-3.5 items-center mb-5 flex-wrap">
-        <SearchBar
-          value={search}
-          onChange={setSearch}
-          placeholder={t('catalog.searchPlaceholder')}
-        />
+      <div className="flex gap-2 sm:gap-3.5 items-center mb-3 sm:mb-5 flex-wrap">
         <FilterPillGroup options={filterOptions} value={statusFilter} onChange={setStatusFilter} />
       </div>
 
@@ -198,7 +200,7 @@ export function CatalogPage(): JSX.Element {
           </Link>
         </div>
       )}
-      {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} trailing={newSongControl} />}
+      {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} />}
     </div>
   );
 }

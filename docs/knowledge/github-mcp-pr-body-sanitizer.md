@@ -160,7 +160,7 @@ _2026-09-16, PR #100: hit again, on a `.md` target at about 180
 characters, which is why the list of forms further down says a `.md`
 link is untouched and this section is the one that governs — the rule is
 the length, and the extension only ever mattered for images. The
-threshold is now enforced by `.claude/hooks/pretool-github-pr-body.sh`
+threshold is now enforced by `plugins/borso-harness/hooks/pretool-github-pr-body.sh`
 rather than left to the writer; see
 `docs/dantotsus/the-threshold-was-measured-and-left-unguarded.md`._
 
@@ -206,7 +206,7 @@ shortening or re-pinning the URL does not help.
 Files changed tab, which renders committed images inline; use `###` headings
 where the standard asks for `<details>`; then read the body back. Since
 2026-08-18 a PreToolUse hook refuses a body carrying any of the defused forms
-before the call is made — `.claude/hooks/pretool-github-pr-body.sh`, wired for
+before the call is made — `plugins/borso-harness/hooks/pretool-github-pr-body.sh`, wired for
 `mcp__github__create_pull_request` and `mcp__github__update_pull_request`.
 
 A body posted through the claude.ai web UI or by `gh` is not affected; the

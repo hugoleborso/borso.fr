@@ -52,9 +52,11 @@ fi
 # Blueprint annotations, whenever source changed. A `@Blueprint` missing a tag
 # still lands in the index with an empty cell, and a `// @FollowsBlueprint` that
 # names nothing still reads as adoption, so neither fails anything on its own.
-# The check also refuses a stale index, which is what stops an annotation from
-# being added without the generated file catching up. One pass over the tree,
-# well under a second, so it belongs on the commit.
+# A passing check rewrites the index rather than comparing it: the index is a
+# gitignored output, so a stale copy is never something the commit got wrong,
+# and refusing it only made the author run the generator by hand and commit
+# again (docs/dantotsus/the-gate-that-refused-its-own-output.md). One pass over
+# the tree, well under a second, so it belongs on the commit.
 #
 # The three generated artefacts are checked together, and every stale one is
 # named in a single rejection. Run under `set -e` as three consecutive
@@ -150,7 +152,7 @@ if git diff --cached --name-only |
 fi
 
 if [ -n "$generator_failures" ]; then
-  echo "[pre-commit] ERROR: generated files are stale. Run all of these, then commit again:" >&2
+  echo "[pre-commit] ERROR: these checks refused the commit; each printed its reason above. Fix that, then rerun with --check to confirm:" >&2
   printf '%s' "$generator_failures" >&2
   exit 1
 fi
@@ -256,7 +258,7 @@ scripts/check-pwa-assets.sh
 # script enforces on the body. A template that drifts out of it teaches every
 # future body to be refused, and the drift is invisible until someone drafts.
 echo "[pre-commit] checking the pull-request template fits its own budget"
-pnpm exec tsx scripts/pr/check-pr-body.ts .claude/skills/open-pr/template.md
+pnpm exec tsx scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
 
 # A knowledge entry saying a tool is broken steers every future agent away from
 # it and never expires on its own — two phone audits obeyed one that was wrong.
@@ -291,6 +293,14 @@ pnpm exec tsx scripts/docs/check-doc-links.ts
 echo "[pre-commit] checking each pure module has a caller"
 scripts/check-pure-modules-have-callers.sh
 
+# A test file no project collects never runs, and a suite one file lighter looks
+# exactly like a suite that passed. Asks vitest itself, per workspace, which
+# files it would collect. About six seconds over six workspaces and no
+# globalSetup, so no database starts. Rung-2 eradication of
+# docs/dantotsus/the-test-that-no-project-collected.md.
+echo "[pre-commit] checking every test file is collected by a project"
+scripts/check-every-test-is-collected.sh
+
 # A non-module <script src> tag ships un-bundled and 404s in preview and
 # production. A grep over the app HTML, so it costs nothing and belongs on the
 # commit rather than the push. Rung-2 eradication of
@@ -310,6 +320,11 @@ scripts/check-no-racy-pipelines.sh
 # eradication of docs/dantotsus/the-hook-that-refused-the-page-explaining-it.md.
 echo "[pre-commit] checking the hooks decide what they promise"
 scripts/check-hook-decisions.sh
+
+# The harness lives once, in plugins/borso-harness/, and reaches a session only
+# through the links in .claude/ and the hook entries in .claude/settings.json.
+echo "[pre-commit] checking the harness is linked into .claude/"
+scripts/check-harness-links.sh
 
 # Two lists that have to say the same thing. Both halves read correctly alone
 # and only the pair is wrong, which is why review never caught either of the two

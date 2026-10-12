@@ -86,8 +86,9 @@ Two failure modes to watch for:
 
 - [`rtk-truncates-command-output.md`](./rtk-truncates-command-output.md) — a nine-line `cat` printed eight lines plus `[10 more lines]`, and the truncation reads as the file's real content; ask with `grep -c` when completeness is the question.
 - [`parallel-agents-share-one-scratchpad.md`](./parallel-agents-share-one-scratchpad.md) — a fan-out gets one scratchpad, not one each, and agents pick the same obvious filename; three of eight agents on PR #81 lost a file to it, one seeing another agent's traceback from its own tool. Give each agent `<scratchpad>/<label>/`.
-- [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `.claude/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
+- [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `plugins/borso-harness/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
 - [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.
+- [`git-push-internal-server-error-while-fetch-works.md`](./git-push-internal-server-error-while-fetch-works.md) — a push the remote rejects with *Internal Server Error* while fetch works; push through `mcp__github__push_files`, then `git reset --keep` onto the remote branch, and know what that drops.
 - [`github-is-reachable-only-through-the-mcp-server.md`](./github-is-reachable-only-through-the-mcp-server.md) — `curl https://api.github.com` answers 403 and there is no `gh`; the MCP returns bodies HTML-escaped, which makes splicing a long PR description riskier than adding a comment.
 - [`askuserquestion-tool-requires-question-field.md`](./askuserquestion-tool-requires-question-field.md) — `AskUserQuestion` rejects calls that omit the `question` field per item; `header` alone is not enough.
 - [`claude-code-session-attachments-on-disk.md`](./claude-code-session-attachments-on-disk.md) — chat attachments live at `/root/.claude/uploads/<session>/...` (uploads) and inside `/root/.claude/projects/<workspace>/<session>.jsonl` (inlined base64 images); extractable without an explicit tool.
@@ -103,11 +104,18 @@ Two failure modes to watch for:
 - [`sleep-is-compressed-in-the-hosted-sandbox.md`](./sleep-is-compressed-in-the-hosted-sandbox.md) — `sleep` returns early whatever duration you ask for, so eight polls of a CI job read as a 40-minute hang when four minutes had passed; `python3 -c "import time; time.sleep(n)"` waits for real, and `date -u` is the check before you diagnose any remote hang.
 - [`what-a-hosted-session-cannot-do-on-github.md`](./what-a-hosted-session-cannot-do-on-github.md) — measured capabilities of a claude.ai/code session: it can merge pull requests and push to a `dependabot/*` branch, it cannot dispatch a workflow by any of three routes, and two API fields (`merged`, and the size of `get_diff`) will mislead you.
 - [`edit-scripts-that-assert-then-write-lose-their-good-edits.md`](./edit-scripts-that-assert-then-write-lose-their-good-edits.md) — a script that collects replacements, asserts each, and writes once at the end discards every edit that already succeeded when a later assert fails, and reports a different edit's name while doing it.
+- [`agent-browser-aborts-a-navigation-served-as-octet-stream.md`](./agent-browser-aborts-a-navigation-served-as-octet-stream.md) — `net::ERR_ABORTED` on a local navigation usually means the server answered `application/octet-stream`, which Chromium treats as a download; the proxy trap next door makes this one easy to misdiagnose.
+- [`reading-a-large-pull-request-through-the-github-mcp.md`](./reading-a-large-pull-request-through-the-github-mcp.md) — `get_files` returns every patch and blows the token budget on a 47-file PR; the result is already saved as JSON, so parse it rather than re-calling or slicing it.
+- [`inserting-an-i18n-key-without-rewriting-the-catalogue.md`](./inserting-an-i18n-key-without-rewriting-the-catalogue.md) — parse-and-re-serialise turned a 6-line translation addition into a 68-line diff, because the catalogues are only mostly sorted; splice the lines in instead.
+- [`writing-a-small-function-the-hundred-percent-gates-accept.md`](./writing-a-small-function-the-hundred-percent-gates-accept.md) — the shapes the coverage and mutation gates reject: a `noUncheckedIndexedAccess` guard that no test can reach, a named no-op helper that is an equivalent mutant, and a surviving conditional that is really a design signal.
+- [`claude-code-links-open-in-the-app-on-a-phone.md`](./claude-code-links-open-in-the-app-on-a-phone.md) — on a phone with the Claude app, a `claude.ai/code` link opens in the app, which prefills only `code/new` with `q` and `repo` and documents no `environment`.
+- [`borso-fr-attached-to-another-repositorys-session.md`](./borso-fr-attached-to-another-repositorys-session.md) — working here from a session started on another repository: the husky gates hold, SessionStart, `.claude/` hooks and `KAIZEN.md` do not, and the shallow clone cannot record an upstream.
+
 ### Local dev / Postgres
 
 - [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.
 - [`dsql-clone-from-prod.md`](./dsql-clone-from-prod.md) — cloning a production schema into a preview, and what the clone does not carry.
-- [`a-pragma-preview-cannot-be-signed-into.md`](./a-pragma-preview-cannot-be-signed-into.md) — the preview clones production's credentials and bootstrap refuses an already-bootstrapped instance, so no agent-reachable path signs in; what can still be validated there, and what has to move local.
+- [`a-pragma-preview-cannot-be-signed-into.md`](./a-pragma-preview-cannot-be-signed-into.md) — the preview clones production's group password and member accounts (not passkeys), so only someone holding a production account signs in; what can still be validated there, and what has to move local.
 - [`the-committed-template-snapshot-is-not-the-deployed-stack.md`](./the-committed-template-snapshot-is-not-the-deployed-stack.md) — the `borso-shared` snapshot is synthesized with stubbed certificates, so comparing it to the live template invents deletions that never happen; what the comparison *does* catch is a stack several merges behind its dispatch-only deploy.
 ### Aurora DSQL
 
@@ -116,6 +124,8 @@ Two failure modes to watch for:
 - [`cloudwatch-retention-bounds-an-absence-claim.md`](./cloudwatch-retention-bounds-an-absence-claim.md) — `filter-log-events` accepts a window far older than the group's retention and says nothing, so "this never happened" is only ever a claim about the retained days. Read `retentionInDays` and the oldest event before quoting a period.
 - [`dsql-strong-consistency-is-per-connection.md`](./dsql-strong-consistency-is-per-connection.md) — read-after-write is consistent within a connection, not across them; a `PUT` then an immediate `GET` on a different Lambda/connection can read the pre-commit snapshot. A warm-connection `curl` loop won't reproduce it; reconcile from the mutation response, not a blind refetch.
 - [`drizzle-unique-index-is-not-a-unique-constraint.md`](./drizzle-unique-index-is-not-a-unique-constraint.md) — `uniqueIndex` lands in `getTableConfig().indexes`, not `.uniqueConstraints`; asserting against the wrong one passes on `undefined`.
+- [`the-production-database-is-out-of-reach-of-a-hosted-session.md`](./the-production-database-is-out-of-reach-of-a-hosted-session.md) — a hosted session reads SSM but the harness refuses the DSQL admin token as a production read; hand the query to a local session with `borso-admin`.
+
 ### Build / lint tooling
 
 - [`diff-driven-checks-that-choke-on-sql-and-case-statements.md`](./diff-driven-checks-that-choke-on-sql-and-case-statements.md) — prettier errors rather than skips on a `.sql` in a changed-file list, and the harness rewriter mangles a `case … esac` inside a loop; filter before piping, and put real control flow in a file.
@@ -142,6 +152,8 @@ Two failure modes to watch for:
 - [`visual-validator-image-size-limit.md`](./visual-validator-image-size-limit.md) — past ~20 high-res screenshots, the validator's API session crashes on the per-image 2000 px ceiling; cap screenshots at 10 and prefer viewport over full-page.
 - [`a-validator-can-name-a-cause-it-never-probed.md`](./a-validator-can-name-a-cause-it-never-probed.md) — a validation report's rows carry evidence by construction and its Notes carry prose; a cause written there is a hypothesis until a probe is cited, and one `curl` settled a claim that would otherwise have become a gate protecting nothing.
 - [`visual-validation-skill-vs-agent-browser-direct.md`](./visual-validation-skill-vs-agent-browser-direct.md) — `/visual-validation` is the feature-gate skill (full spec walk, separate agent, committed evidence); for single-fix iteration use `agent-browser` directly in the main session — minutes vs seconds.
+
+- [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, a fresh rate-limit bucket per `X-Forwarded-For`, why passkey claims belong in back-e2e, and running one named case.
 
 ### Spec & metrics framing
 
@@ -203,6 +215,6 @@ write whatever helps the next reader. Keep it concrete and short
 (short enough to re-read every time you suspect it applies). Title
 should hint at the lesson, not the symptom.
 
-If the entry is the result of a `/after-task-dantotsus` sweep that
+If the entry is the result of a `/after-task-kaizen` sweep that
 classified a subject as "vendor surprise" or "operator confusion",
 the skill writes it here automatically.
