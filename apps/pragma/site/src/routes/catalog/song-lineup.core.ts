@@ -38,6 +38,23 @@ export function buildMasteryKey(memberId: string, instrumentId: string): string 
   return `${memberId}::${instrumentId}`;
 }
 
+interface MasteryScoreRow {
+  readonly memberId: string;
+  readonly instrumentId: string;
+  readonly score: number;
+}
+
+export function buildEffectiveMasteryLookup(
+  defaults: readonly MasteryScoreRow[],
+  songOverrides: readonly MasteryScoreRow[],
+): Map<string, number> {
+  const lookup = new Map<string, number>();
+  for (const row of [...defaults, ...songOverrides]) {
+    lookup.set(buildMasteryKey(row.memberId, row.instrumentId), row.score);
+  }
+  return lookup;
+}
+
 // @FollowsBlueprint core-view-projection
 export function buildSongLineupRows(
   defaultLineup: Lineup,

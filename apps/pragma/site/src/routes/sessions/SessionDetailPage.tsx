@@ -8,7 +8,7 @@ import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
-import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
+import { selectUpcomingConcerts } from '@domain/upcoming-concerts.core';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useSession, useSessionsList, useUpdateSession } from '../../lib/queries/sessions.queries';

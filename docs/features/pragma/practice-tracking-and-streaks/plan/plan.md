@@ -29,7 +29,7 @@
 | Result *nav* | A Studies tab | `AppShell.tsx` gains one item in the first section, `{ to: '/studies', labelKey: 'nav.studies', icon: … }`, using an existing icon from the registry | visual validation |
 | Edge *cascades* | Deleting a song or a member removes its studies and history | `songs.repository.ts` `deleteSongWithCascade` and `members.repository.ts` member delete, in their existing transactions; `api/src/__test/test-seed.repository.ts` clears both tables | back-e2e |
 | Changes *migration* | `0015_studies.sql`: two `CREATE TABLE IF NOT EXISTS` and one `CREATE INDEX ASYNC` | `api/src/database/migrations/` and the drizzle journal | `migrations.audit.test.ts` plus the pre-commit DSQL migration check |
-| Production *events* | `study_logged`, `study_undone`, `mastery_score_changed` | `console.info(JSON.stringify(...))` in the services, following how the existing events are logged | back-e2e asserts that the logger was called |
+| Production *events* | `study_logged`, `study_undone`, `mastery_score_changed` | read from the request lines the Hono `logger()` already writes for `POST /api/studies`, `DELETE /api/studies/…` and `PUT /api/mastery/overrides`, with their status. No `console.info`: the root ESLint config allows only `warn` and `error`, and no application in this repository emits named events yet | the request lines appear in the Lambda log group after the preview deploy |
 | Changes *vocabulary* | Study, Streak, Mastery score change | `apps/pragma/VOCABULARY.md` | `scripts/check-vocabulary-paths.sh` |
 | i18n | Every label | `site/src/i18n/{en,fr}.json` under `studies.*` and `nav.studies` | `i18n-parity.core.test.ts` |
 

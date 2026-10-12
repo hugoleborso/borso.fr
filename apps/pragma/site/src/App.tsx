@@ -15,6 +15,7 @@ import { RecoverPage } from './routes/RecoverPage';
 import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { TasksPage } from './routes/tasks/TasksPage';
+import { StudiesPage } from './routes/studies/StudiesPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
@@ -52,6 +53,7 @@ export function App(): JSX.Element {
               <Route path="/setlists/:setlistId/audience" element={<SetlistAudiencePage />} />
               <Route path="/bars" element={<BarsPage />} />
               <Route path="/improvements" element={<ImprovementsPage />} />
+              <Route path="/studies" element={<StudiesPage />} />
               <Route path="/tasks" element={<TasksPage />} />
               <Route path="/compos" element={<ComposPage />} />
               <Route path="/members" element={<MembersPage />} />

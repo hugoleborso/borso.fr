@@ -4,8 +4,10 @@ import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { resolveSongOrigin, type SongOrigin } from '@domain/song-origin.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
+import { deleteScoreHistoryOfDeletedSong } from '../mastery/mastery.service';
 import { setlistEntryTable } from '../setlists/setlists.schema';
 import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
+import { deleteStudiesOfDeletedSong } from '../studies/studies.service';
 import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
 import {
   chordChartSchema,
@@ -262,6 +264,8 @@ export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome
   const database = getDatabase();
   return await database.transaction(async (transaction) => {
     await transaction.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
+    await deleteScoreHistoryOfDeletedSong(transaction, id);
+    await deleteStudiesOfDeletedSong(transaction, id);
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
     await deleteVotesOfDeletedSong(transaction, id);
     await detachTasksOfSongBeingDeleted(transaction, id);

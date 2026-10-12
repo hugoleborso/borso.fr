@@ -54,3 +54,32 @@ export function isRedundantOverride(
   const fallback = defaults[query.memberId]?.[query.instrumentId];
   return fallback === override;
 }
+
+export interface DefaultScoreRow {
+  readonly memberId: MemberId;
+  readonly instrumentId: InstrumentId;
+  readonly score: number;
+}
+
+export interface OverrideScoreRow extends DefaultScoreRow {
+  readonly songId: SongId;
+}
+
+// @FollowsBlueprint core-projection
+export function indexDefaultScores(rows: readonly DefaultScoreRow[]): DefaultMap {
+  const indexed: Record<MemberId, Record<InstrumentId, number>> = {};
+  for (const row of rows) {
+    indexed[row.memberId] = { ...indexed[row.memberId], [row.instrumentId]: row.score };
+  }
+  return indexed;
+}
+
+export function indexOverrideScores(rows: readonly OverrideScoreRow[]): OverrideMap {
+  const indexed: Record<SongId, Record<MemberId, Record<InstrumentId, number>>> = {};
+  for (const row of rows) {
+    const ofSong = indexed[row.songId] ?? {};
+    ofSong[row.memberId] = { ...ofSong[row.memberId], [row.instrumentId]: row.score };
+    indexed[row.songId] = ofSong;
+  }
+  return indexed;
+}

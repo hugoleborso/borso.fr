@@ -333,6 +333,23 @@ Lives in: `api/src/mastery/`
 - Deleting a song deletes its override rows
   (`deleteSongWithCascade`).
 
+## Mastery score change
+
+One row of mastery history: the score a member gave themselves on one
+instrument for one song, and when.
+
+Lives in: `api/src/mastery/` (the `mastery_score_change` table)
+
+- Appended in the same transaction as every write of a per-song score, and
+  never updated. Removing a per-song score appends the default it falls
+  back to, when there is one.
+- A change to a default score appends nothing, because a default is not
+  about any one song.
+- Deleted with its song and with its member.
+
+Not to be confused with: the per-song score itself, which holds only the
+latest value.
+
 ## Member
 
 One person in the band.
@@ -592,6 +609,49 @@ Lives in: `api/src/songs/`
 - Deleting a song first deletes its mastery overrides and every setlist
   entry that points at it (`deleteSongWithCascade`).
 
+## Study
+
+One member saying they worked one song on one instrument on one day.
+
+Lives in: `api/src/studies/`
+
+- Keyed on member, song, instrument and `studied_on`, so a second tap on the
+  same day changes nothing.
+- `studied_on` is the calendar day in `Europe/Paris` of the server clock
+  (`parisCalendarDay`). The request carries no date, so a study cannot be
+  back-dated, and only a study of today can be undone.
+- Accepted only for an instrument the member holds in the song's default
+  lineup or in a lineup override of one of its setlist entries.
+- A study never changes a score; the two are separate writes.
+
+Not to be confused with: a **practice**, which is the band rehearsing
+together and is a kind of session.
+
+## Streak
+
+How many days a member has kept studying, read from their studies.
+
+Lives in: `api/src/studies/` (`computeStreak` in `streak.core.ts`)
+
+- A day counts when it holds at least one study. Today never ends a streak
+  before it is over.
+- One missed day in any seven is forgiven, which the screen calls the
+  joker; a second missed day inside that window ends the streak.
+- Not stored: it is computed on every read from the last 400 days of
+  studies.
+
+## Concert readiness
+
+Whether the band can play the next concert's songs.
+
+Lives in: `api/src/studies/` (`concert-readiness.core.ts`)
+
+- The next concert is the earliest concert strictly after now; its songs
+  are those of every setlist linked to it, counted once.
+- A song is ready when its lineup mean mastery is 7 or more for every
+  lineup it is played with in those setlists, and is not ready when
+  nothing is recorded.
+
 ## Task
 
 Something one member owes the band, with an optional date and an optional
@@ -750,6 +810,9 @@ to.
   `voting` status carries **votes**, each worth **points**.
 - **skill**, **level**, **rating**, **proficiency**: the measure is
   **mastery** and the number is a **score**.
+- **revision**, **review**, **practice session**, **homework**: a member's
+  own work on a song is a **study**. **revision** reads as a version in
+  code, and **practice** is already the band rehearsing.
 - **role**, **part**, **station**: what a member holds on a song is an
   **instrument**, and the whole map is a **lineup**. The word *station*
   survives in one comment in `members.schema.ts` and should not spread.
