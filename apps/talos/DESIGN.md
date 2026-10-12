@@ -24,8 +24,7 @@ Light is the daytime scene, outdoors; dark is the morning scene, in bed. Neither
 
 ## Type
 
-- Display: **GFS Neohellenic** bold, from the Greek Font Society, for page titles, the date and the sign-in roundel.
-- Interface and body: **Atkinson Hyperlegible Next**, kept from before for legibility.
+- Display, interface and body: **Atkinson Hyperlegible Next**, one family throughout. Titles and the date are set in bold, tracked slightly tight. The world comes from the palette and the meander line, not from the lettering; a Greek display face (GFS Neohellenic) was tried first and dropped for a plainer, more professional voice.
 - Data: **Atkinson Hyperlegible Mono**, tabular figures.
 
 ## Depth
