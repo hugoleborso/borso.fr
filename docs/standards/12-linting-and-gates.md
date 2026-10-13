@@ -76,10 +76,13 @@ git.
 | `borso/no-api-anchor-in-site`                          | [06](./06-data-fetching.md)                                |
 | `borso/no-vendor-sdk-outside-adapter`                  | [06](./06-data-fetching.md)                                |
 | `borso/no-adapter-import-in-pure-module`               | [02](./02-purity-and-core-files.md)                        |
+| `borso/no-api-import-in-site`                          | a dantotsu, [02](./02-purity-and-core-files.md)            |
+| `borso/no-api-declaration-repeated-in-site`            | a dantotsu, [02](./02-purity-and-core-files.md)            |
 | `borso/no-outbound-call-outside-adapter`               | [06](./06-data-fetching.md), ADR-0012                      |
 | `borso/test-file-has-sibling-source`                   | [10](./10-testing.md)                                      |
 | `borso/no-cross-slice-repository-imports`              | [04](./04-backend-architecture.md)                         |
 | `borso/no-raw-sql-outside-migrations`                  | [11](./11-database.md)                                     |
+| `borso/no-client-supplied-address-header`              | a dantotsu, [04](./04-backend-architecture.md)             |
 | `borso/no-server-state-in-use-state`                   | [06](./06-data-fetching.md)                                |
 | `borso/no-refetch-of-optimistically-written-query`      | [06](./06-data-fetching.md)                                |
 | `borso/no-flat-components-folder`                      | [05](./05-frontend-architecture.md)                        |

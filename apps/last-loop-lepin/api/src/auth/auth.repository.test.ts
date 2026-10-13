@@ -6,12 +6,13 @@ import {
 } from '../../../test/database-utils';
 import {
   createSession,
+  deleteAllBuckets,
+  deleteBucket,
   deleteSession,
   findAdminPinHash,
-  findBucket,
+  incrementBucket,
   findValidSession,
   purgeExpiredSessions,
-  upsertBucket,
 } from './auth.repository';
 
 // @FollowsBlueprint test-repository-integration
@@ -20,24 +21,33 @@ describe('auth.repository — rate limit buckets', () => {
     await truncateAllTables();
   });
 
-  it('upsertBucket inserts then findBucket reads it back', async () => {
-    const now = new Date('2026-09-19T06:00:00+02:00');
-    await upsertBucket({ ipAddress: '10.1.1.1', count: 1, windowStartedAt: now });
-    const found = await findBucket('10.1.1.1');
-    expect(found?.count).toBe(1);
+  const windowStart = new Date('2026-09-19T06:00:00+02:00');
+  const insideWindowFloor = new Date(windowStart.getTime() - 1);
+
+  it('incrementBucket opens a bucket at one and counts up inside the window', async () => {
+    expect((await incrementBucket('10.1.1.1', windowStart, insideWindowFloor)).count).toBe(1);
+    const later = new Date(windowStart.getTime() + 1_000);
+    const bumped = await incrementBucket('10.1.1.1', later, insideWindowFloor);
+    expect(bumped.count).toBe(2);
+    expect(bumped.windowStartedAt).toEqual(windowStart);
   });
 
-  it('upsertBucket overwrites existing rows', async () => {
-    const now = new Date('2026-09-19T06:00:00+02:00');
-    await upsertBucket({ ipAddress: '10.1.1.2', count: 1, windowStartedAt: now });
-    await upsertBucket({ ipAddress: '10.1.1.2', count: 4, windowStartedAt: now });
-    const found = await findBucket('10.1.1.2');
-    expect(found?.count).toBe(4);
+  it('incrementBucket restarts the window once the stored start is at or before the floor', async () => {
+    await incrementBucket('10.1.1.2', windowStart, insideWindowFloor);
+    await incrementBucket('10.1.1.2', windowStart, insideWindowFloor);
+    const later = new Date(windowStart.getTime() + 60_000);
+    const restarted = await incrementBucket('10.1.1.2', later, windowStart);
+    expect(restarted.count).toBe(1);
+    expect(restarted.windowStartedAt).toEqual(later);
   });
 
-  it('findBucket returns null on unknown IP', async () => {
-    const found = await findBucket('unseen');
-    expect(found).toBeNull();
+  it('deleteBucket and deleteAllBuckets drop the counts', async () => {
+    await incrementBucket('10.1.1.3', windowStart, insideWindowFloor);
+    await incrementBucket('10.1.1.4', windowStart, insideWindowFloor);
+    await deleteBucket('10.1.1.3');
+    expect((await incrementBucket('10.1.1.3', windowStart, insideWindowFloor)).count).toBe(1);
+    await deleteAllBuckets();
+    expect((await incrementBucket('10.1.1.4', windowStart, insideWindowFloor)).count).toBe(1);
   });
 });
 

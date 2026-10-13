@@ -15,7 +15,7 @@ import { buildMemberStreaks, type MemberStreak } from './band-streaks.core';
 import {
   groupLineupsBySong,
   isSongReady,
-  selectNextConcert,
+  selectEarliestUpcomingConcert,
   type SongLineups,
 } from './concert-readiness.core';
 import { type CalendarDay, parisCalendarDay, shiftCalendarDay } from './paris-day.core';
@@ -121,7 +121,7 @@ async function readConcertScope(
   now: Date,
   isReady: (song: SongLineups) => boolean,
 ): Promise<ConcertScope> {
-  const nextConcert = selectNextConcert(await getSessions(), now);
+  const nextConcert = selectEarliestUpcomingConcert(await getSessions(), now);
   if (nextConcert === null) return buildCatalogueScope(songs);
   const setlistIds = (await getAllSetlists())
     .filter((setlist) => setlist.sessionIds.includes(nextConcert.id))

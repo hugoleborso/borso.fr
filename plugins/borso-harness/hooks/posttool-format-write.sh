@@ -39,6 +39,18 @@ esac
 
 cd "${CLAUDE_PROJECT_DIR:-.}" || exit 0
 
+# Only files of this repository. An agent's scratchpad lives outside it, and
+# formatting a mock-up there with this repository's Prettier tripled two
+# agents' files past the size budget they had been given. See
+# docs/dantotsus/the-formatter-reached-outside-the-repository.md.
+PROJECT_ROOT=$(pwd -P)
+FILE_DIRECTORY=$(cd -- "$(dirname -- "$FILE")" 2>/dev/null && pwd -P) || exit 0
+FILE_PATH="$FILE_DIRECTORY/$(basename -- "$FILE")"
+case "$FILE_PATH" in
+  "$PROJECT_ROOT"/*) ;;
+  *) exit 0 ;;
+esac
+
 # A repository without Prettier installed has nothing to format with, and this
 # hook ships in a plugin that such a repository can install.
 [ -x node_modules/.bin/prettier ] || exit 0

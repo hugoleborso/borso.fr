@@ -1,6 +1,10 @@
 import type { Lineup } from '@domain/lineup.core';
 import { describe, expect, it } from 'vitest';
-import { groupLineupsBySong, isSongReady, selectNextConcert } from './concert-readiness.core';
+import {
+  groupLineupsBySong,
+  isSongReady,
+  selectEarliestUpcomingConcert,
+} from './concert-readiness.core';
 
 const DEFAULTS = { hugo: { guitar: 7 }, lea: { drums: 6, voice: 9 } };
 const OVERRIDES = { songB: { lea: { drums: 8 } } };
@@ -114,7 +118,7 @@ describe('concert-readiness.core', () => {
     });
   });
 
-  describe('selectNextConcert', () => {
+  describe('selectEarliestUpcomingConcert', () => {
     const now = new Date('2026-10-12T12:00:00Z');
 
     it('picks the earliest concert strictly after now and ignores practices', () => {
@@ -125,11 +129,11 @@ describe('concert-readiness.core', () => {
         { id: 'past', kind: 'concert', date: new Date('2026-10-01T20:00:00Z') },
         { id: 'now', kind: 'concert', date: now },
       ];
-      expect(selectNextConcert(sessions, now)?.id).toBe('early');
+      expect(selectEarliestUpcomingConcert(sessions, now)?.id).toBe('early');
     });
 
     it('answers null when no concert is ahead', () => {
-      expect(selectNextConcert([], now)).toBeNull();
+      expect(selectEarliestUpcomingConcert([], now)).toBeNull();
     });
   });
 });

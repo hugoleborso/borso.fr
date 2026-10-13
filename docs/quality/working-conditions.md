@@ -64,10 +64,12 @@ that was fixed and should be removed.
   match: applies no migrations | wrong password | re-bootstrap | adminpassword | earlier seed | admin_credentials | fixture | seed
 - `review-scope-disagrees-with-the-seal` · Build · The review brief, the seal predicate and the diff disagree about which files are in scope
   match: seal | dispatching brief | reviewer brief | review pass | brief named | brief the agent
-- `gates-blind-to-a-real-failure` · Build · Coverage or mutation report full marks on code that a real test never exercised
-  match: mutant | mutation | stryker | coverage passed | counts as covered | vacuous | substring assertion | passed against the exact bug
 - `push-regates-what-main-carried` · Build · A push after merging main re-runs every gate over everything main brought in
   match: re-gate | merging main | after merging main
+- `push-gates-saturate-the-machine` · Build · Pre-push gates and other agents' pushes starve each other until passing tests time out
+  match: timed out | time out | timeout | oom-killed | exit 137 | load average | starved cpu
+- `gates-blind-to-a-real-failure` · Build · Coverage or mutation report full marks on code that a real test never exercised
+  match: mutant | mutation | stryker | coverage passed | counts as covered | vacuous | substring assertion | passed against the exact bug
 - `vendor-failures-read-as-something-else` · Observe · An external service answers in a way that reads as a different fault
   match: 502 bad gateway | answers 200 with an error | proxy's ca | err_cert | err_connection_reset | webfetch | raw.githubusercontent | publickey
 - `failures-that-render-nothing` · Observe · A failure shows a blank or frozen screen, or a success, instead of an error

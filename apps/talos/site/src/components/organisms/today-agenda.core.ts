@@ -118,3 +118,48 @@ export function selectOverdueDay(
 export function selectEarlierDay(date: string, today: string): string | null {
   return date === today ? null : date;
 }
+
+export type AgendaMeanderLane = 'inner' | 'outer';
+export type AgendaMeanderTone = 'now' | 'ahead';
+export type AgendaStationEmphasis = 'none' | 'today' | 'overdue';
+
+const LANES_IN_A_TURN = 2;
+
+const BUCKET_TONE: Readonly<Record<AgendaBucket, AgendaMeanderTone>> = {
+  overdue: 'now',
+  today: 'now',
+  tomorrow: 'ahead',
+  later: 'ahead',
+  undated: 'ahead',
+};
+
+const BUCKET_EMPHASIS: Readonly<Record<AgendaBucket, AgendaStationEmphasis>> = {
+  overdue: 'overdue',
+  today: 'today',
+  tomorrow: 'none',
+  later: 'none',
+  undated: 'none',
+};
+
+export function selectMeanderLane(rowPosition: number): AgendaMeanderLane {
+  return rowPosition % LANES_IN_A_TURN === 0 ? 'inner' : 'outer';
+}
+
+export function selectMeanderTone(bucket: AgendaBucket): AgendaMeanderTone {
+  return BUCKET_TONE[bucket];
+}
+
+export function selectStationEmphasis(bucket: AgendaBucket): AgendaStationEmphasis {
+  return BUCKET_EMPHASIS[bucket];
+}
+
+export function locateAgendaRow(
+  days: readonly { readonly entries: readonly unknown[] }[],
+  dayIndex: number,
+  entryIndex: number | null,
+): number {
+  const rowsBefore = days
+    .slice(0, dayIndex)
+    .reduce((total, day) => total + 1 + day.entries.length, 0);
+  return entryIndex === null ? rowsBefore : rowsBefore + 1 + entryIndex;
+}

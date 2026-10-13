@@ -5,8 +5,11 @@ import functionNamesAreVerbPhrases from './function-names-are-verb-phrases.js';
 import noAbbreviatedIdentifier from './no-abbreviated-identifier.js';
 import noAdapterImportInPureModule from './no-adapter-import-in-pure-module.js';
 import noApiAnchorInSite from './no-api-anchor-in-site.js';
+import noApiDeclarationRepeatedInSite from './no-api-declaration-repeated-in-site.js';
+import noApiImportInSite from './no-api-import-in-site.js';
 import noArrayMethodsInControllers from './no-array-methods-in-controllers.js';
 import noCircleInNonUniformSvg from './no-circle-in-non-uniform-svg.js';
+import noClientSuppliedAddressHeader from './no-client-supplied-address-header.js';
 import noComments from './no-comments.js';
 import noComponentCssImports from './no-component-css-imports.js';
 import noComponentsOutsideBuckets from './no-components-outside-buckets.js';
@@ -48,8 +51,11 @@ export const borsoPlugin = {
     'no-abbreviated-identifier': noAbbreviatedIdentifier,
     'no-adapter-import-in-pure-module': noAdapterImportInPureModule,
     'no-api-anchor-in-site': noApiAnchorInSite,
+    'no-api-declaration-repeated-in-site': noApiDeclarationRepeatedInSite,
+    'no-api-import-in-site': noApiImportInSite,
     'no-array-methods-in-controllers': noArrayMethodsInControllers,
     'no-circle-in-non-uniform-svg': noCircleInNonUniformSvg,
+    'no-client-supplied-address-header': noClientSuppliedAddressHeader,
     'no-comments': noComments,
     'no-component-css-imports': noComponentCssImports,
     'no-components-outside-buckets': noComponentsOutsideBuckets,

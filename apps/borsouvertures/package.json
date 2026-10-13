@@ -8,7 +8,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "../../scripts/lint-workspace.sh",
-    "typecheck": "tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
+    "typecheck": "../../scripts/ensure-infra-built.sh && tsc -p tsconfig.cdk.json --noEmit && tsc --noEmit",
     "test": "vitest run",
     "test:coverage": "vitest run --coverage",
     "build:openings": "tsx scripts/build-openings.ts",

@@ -337,6 +337,47 @@ const AUDIT_CANARIES: readonly CommandCanary[] = APPLICATIONS_WITH_AUDITED_MIGRA
   }),
 );
 
+const CLAIM_CANARIES: readonly CommandCanary[] = [
+  {
+    mechanism: 'punch.service.test.ts',
+    label: 'concurrent punches in last-loop-lepin',
+    defect: 'a loop claim that reports success even when another punch already holds the loop',
+    edits: [
+      {
+        path: 'apps/last-loop-lepin/api/src/punch/punch.repository.ts',
+        find: '.returning({ punchId: loopPunchClaimsTable.punchId });\n  return written.length > 0;',
+        replace:
+          '.returning({ punchId: loopPunchClaimsTable.punchId });\n  return written.length >= 0;',
+      },
+    ],
+    command: readDatabaseUrlThen(
+      'last-loop-lepin',
+      'pnpm exec vitest run --project back-e2e api/src/punch/punch.service.test.ts',
+    ),
+    refusal: /keeps one punch when the same runner is punched twice at the same instant/,
+    tier: 'slow',
+  },
+  {
+    mechanism: 'games.controller.test.ts',
+    label: 'concurrent joins in banana-rush',
+    defect: 'a seat claim that reports success even when another player already holds the seat',
+    edits: [
+      {
+        path: 'apps/banana-rush/api/src/games/games.repository.ts',
+        find: '.returning({ seatOrder: seatClaimTable.seatOrder });\n  return written.length > 0;',
+        replace:
+          '.returning({ seatOrder: seatClaimTable.seatOrder });\n  return written.length >= 0;',
+      },
+    ],
+    command: readDatabaseUrlThen(
+      'banana-rush',
+      'pnpm exec vitest run --project back-e2e api/src/games/games.controller.test.ts',
+    ),
+    refusal: /seats exactly as many players as the table holds when they all arrive at once/,
+    tier: 'slow',
+  },
+];
+
 const FAILING_REPOSITORY_TEST = `import { describe, expect, it } from 'vitest';
 
 describe('gate canary repository', () => {
@@ -1041,5 +1082,6 @@ export const COMMAND_CANARIES: readonly CommandCanary[] = [
   SHARED_INFRA_COVERAGE_CANARY,
   ...MUTATION_CANARIES,
   ...AUDIT_CANARIES,
+  ...CLAIM_CANARIES,
   ...BACK_END_SUITE_CANARIES,
 ];

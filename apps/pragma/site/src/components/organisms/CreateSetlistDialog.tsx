@@ -1,5 +1,6 @@
 /** @Feature setlists */
 
+import { SETLIST_NAME_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -10,7 +11,6 @@ import { useCreateSetlist } from '../../lib/queries/setlists.queries';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 
-const NAME_MAX = 120;
 const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
 
 interface CreateSetlistDialogProps {
@@ -20,7 +20,7 @@ interface CreateSetlistDialogProps {
   readonly onCreated: (setlistId: string) => void;
 }
 
-const createSetlistFormSchema = z.object({ name: z.string().trim().max(NAME_MAX) });
+const createSetlistFormSchema = z.object({ name: z.string().trim().max(SETLIST_NAME_MAX_LENGTH) });
 
 // @FollowsBlueprint organism-form
 export function CreateSetlistDialog({
@@ -85,7 +85,7 @@ export function CreateSetlistDialog({
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
               placeholder={t('setlist.create.namePlaceholder')}
-              maxLength={NAME_MAX}
+              maxLength={SETLIST_NAME_MAX_LENGTH}
             />
           )}
         </form.Field>

@@ -1,7 +1,6 @@
 /** @Feature studies */
 
-export const SCORE_MIN = 0;
-export const SCORE_MAX = 10;
+import { MASTERY_SCORE_MAX, MASTERY_SCORE_MIN } from '@domain/input-limits.core';
 
 export interface ReadinessSongView {
   readonly isReady: boolean;
@@ -32,8 +31,8 @@ export function readyShareInPercent(count: ReadinessCount): number {
 }
 
 export function stepScore(current: number | null, direction: 1 | -1): number {
-  const start = current ?? SCORE_MIN;
-  return Math.min(SCORE_MAX, Math.max(SCORE_MIN, start + direction));
+  const start = current ?? MASTERY_SCORE_MIN;
+  return Math.min(MASTERY_SCORE_MAX, Math.max(MASTERY_SCORE_MIN, start + direction));
 }
 
 export function indexInstrumentNames(

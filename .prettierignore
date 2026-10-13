@@ -24,6 +24,11 @@ plugins/borso-harness/skills/plain-writing/SKILL.md
 plugins/borso-harness/skills/plain-writing/LICENSE
 .claude/skills/writing-great-skills/references/
 
+# The impeccable design skill and its four agents, vendored verbatim from
+# pbakaus/impeccable. See .claude/skills/impeccable/PROVENANCE.md.
+.claude/skills/impeccable/
+.claude/agents/impeccable-*.md
+
 # Prettier rewrites `*emphasis*` to `_emphasis_` and pads every table cell, and
 # neither behaviour can be switched off. Running it over this repository's
 # markdown produced 236 files of pure churn, so markdown is formatted by hand.

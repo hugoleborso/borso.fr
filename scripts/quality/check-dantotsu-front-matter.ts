@@ -6,7 +6,17 @@ import { selectSchemaProblems } from './dantotsu-schema.core';
 const MAIN_REFERENCE = 'origin/main';
 const STAGED_DANTOTSU_PATTERN = /^docs\/dantotsus\/(.+)\.md$/;
 
+function refuseShallowClone(): void {
+  if (runGit(['rev-parse', '--is-shallow-repository']).trim() !== 'true') return;
+  process.stderr.write(
+    '[check-dantotsu-front-matter] this clone is shallow, so every fix commit older than its ' +
+      'cut-off would read as missing from main. Run `git fetch --unshallow origin` and check again.\n',
+  );
+  process.exit(1);
+}
+
 function readMainCommits(): readonly string[] {
+  refuseShallowClone();
   try {
     return runGit(['rev-list', MAIN_REFERENCE])
       .split('\n')
@@ -49,8 +59,7 @@ function main(): void {
       'The fields above are what the weak-point map and the recurrence list read, ' +
       'and a commit that does not resolve on main, a placeholder, or a level the ' +
       'eradication paths do not support is a record nobody can check. ' +
-      'The contract is in plugins/borso-harness/skills/dantotsu/standard.md. ' +
-      'A shallow clone resolves no old commit: run `git fetch --unshallow` first.\n',
+      'The contract is in plugins/borso-harness/skills/dantotsu/standard.md.\n',
   );
   process.exitCode = 1;
 }

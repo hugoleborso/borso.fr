@@ -111,6 +111,8 @@ const HTTP_STATUS_CODES = [
 
 const TIME_UNIT_FACTORS = [1000, 60, 24, 7, 365];
 
+const VENDORED_THIRD_PARTY_FILES = ['.claude/skills/impeccable/**'];
+
 export default tseslint.config(
   {
     ignores: [
@@ -125,6 +127,7 @@ export default tseslint.config(
       'docs/**',
       'apps/*/api/src/database/migrations/**',
       'apps/*/site/src/openings/openings.json',
+      ...VENDORED_THIRD_PARTY_FILES,
     ],
   },
 
@@ -264,6 +267,7 @@ export default tseslint.config(
       'borso/no-cross-slice-repository-imports': 'error',
       'borso/no-database-client-outside-repository': 'error',
       'borso/no-raw-sql-outside-migrations': 'error',
+      'borso/no-client-supplied-address-header': 'error',
     },
   },
 
@@ -453,6 +457,8 @@ export default tseslint.config(
       'react-refresh/only-export-components': ['warn', { allowConstantExport: true }],
       'borso/no-direct-api-fetch-in-site': 'error',
       'borso/no-api-anchor-in-site': 'error',
+      'borso/no-api-import-in-site': 'error',
+      'borso/no-api-declaration-repeated-in-site': 'error',
       'borso/no-circle-in-non-uniform-svg': 'error',
     },
   },

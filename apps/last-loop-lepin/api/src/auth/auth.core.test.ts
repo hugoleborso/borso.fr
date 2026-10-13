@@ -3,7 +3,8 @@ import {
   httpStatusForAuthDenial,
   isRequestOriginRejected,
   parseAllowedOrigins,
-  readClientIp,
+  isOverBudget,
+  windowFloorFor,
 } from './auth.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -80,26 +81,18 @@ describe('isRequestOriginRejected', () => {
   });
 });
 
-// @FollowsBlueprint test-pure-unit
-describe('readClientIp', () => {
-  it('answers unknown when the header is absent', () => {
-    expect(readClientIp(undefined)).toBe('unknown');
+describe('windowFloorFor', () => {
+  it('is one window before now', () => {
+    expect(windowFloorFor(new Date(10_000), { maxAttempts: 5, windowMs: 4_000 })).toEqual(
+      new Date(6_000),
+    );
   });
+});
 
-  it('answers the whole header when it carries a single address', () => {
-    expect(readClientIp('203.0.113.7')).toBe('203.0.113.7');
-  });
-
-  it('answers the leftmost address when proxies appended their hops', () => {
-    expect(readClientIp('203.0.113.7, 70.41.3.18, 150.172.238.178')).toBe('203.0.113.7');
-  });
-
-  it('trims the surrounding whitespace of the address it answers', () => {
-    expect(readClientIp('  203.0.113.7  ')).toBe('203.0.113.7');
-    expect(readClientIp('  203.0.113.7 , 70.41.3.18')).toBe('203.0.113.7');
-  });
-
-  it('answers an empty string for an empty header, which buckets as one caller', () => {
-    expect(readClientIp('')).toBe('');
+describe('isOverBudget', () => {
+  it('lets the last allowed attempt through and refuses the next', () => {
+    const budget = { maxAttempts: 5, windowMs: 1_000 };
+    expect(isOverBudget(5, budget)).toBe(false);
+    expect(isOverBudget(6, budget)).toBe(true);
   });
 });

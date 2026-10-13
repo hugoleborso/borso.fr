@@ -22,6 +22,21 @@ export interface BottomTabBarProps {
 
 const ACTIVE_STROKE = 2;
 const IDLE_STROKE = 1.75;
+const MEANDER_MARK_PATH = 'M1 7 H6 V2 H11 V7 H16 V2 H21 V7 H26';
+
+function MeanderMark(): JSX.Element {
+  return (
+    <svg
+      aria-hidden="true"
+      width={27}
+      height={9}
+      viewBox="0 0 27 9"
+      className="absolute bottom-0.5 left-1/2 -translate-x-1/2"
+    >
+      <path d={MEANDER_MARK_PATH} fill="none" stroke="currentColor" strokeWidth={1.5} />
+    </svg>
+  );
+}
 
 // @FollowsBlueprint organism-presentational
 export function BottomTabBar({
@@ -34,7 +49,7 @@ export function BottomTabBar({
   return (
     <nav
       aria-label={t('nav.bar')}
-      className="fixed bottom-0 inset-x-0 z-40 border-t border-line bg-surface shadow-2 pb-[max(8px,env(safe-area-inset-bottom))]"
+      className="fixed bottom-0 inset-x-0 z-40 border-t border-shell-line bg-shell pb-[max(8px,env(safe-area-inset-bottom))]"
     >
       <ul className="m-0 p-0 list-none flex max-w-[560px] mx-auto">
         {tabs.map((tab) => {
@@ -46,16 +61,11 @@ export function BottomTabBar({
                 to={tab.to}
                 aria-current={isActive ? 'page' : undefined}
                 className={composeClassName(
-                  'relative flex flex-col items-center justify-center gap-0.5 min-h-14 pt-1.5 text-[11px] leading-[14px] font-semibold no-underline transition-colors duration-[120ms]',
-                  isActive ? 'text-bronze' : 'text-ink-muted',
+                  'relative flex flex-col items-center justify-center gap-0.5 min-h-14 pt-1.5 pb-2.5 text-[11px] leading-[14px] font-semibold no-underline transition-colors duration-[120ms]',
+                  isActive ? 'text-on-shell' : 'text-on-shell-muted',
                 )}
               >
-                <span
-                  className={composeClassName(
-                    'flex items-center justify-center w-12 h-7 rounded-full',
-                    isActive ? 'bg-bronze-soft' : 'bg-transparent',
-                  )}
-                >
+                <span className="flex items-center justify-center w-12 h-7">
                   <Icon
                     name={tab.icon}
                     size={22}
@@ -63,6 +73,7 @@ export function BottomTabBar({
                   />
                 </span>
                 <span>{t(tab.labelKey)}</span>
+                {isActive ? <MeanderMark /> : null}
                 {isBadgeShown ? (
                   <span className="absolute top-0.5 left-1/2 ml-3">
                     <CountBadge

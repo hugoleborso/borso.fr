@@ -1,5 +1,5 @@
 import type { Lineup } from '@domain/lineup.core';
-import { bootstrapAuth, rotatePassword } from '../auth/auth.service';
+import { bootstrapAuth, resetAllRateLimits, rotatePassword } from '../auth/auth.service';
 import { createCredentialForMember } from '../auth/credentials.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
@@ -197,4 +197,8 @@ export async function seedPreviewFixture(now: Date): Promise<SeedSummary> {
     adminPassword: SEED_ADMIN_PASSWORD,
     adminCredentials: selectAdminCredentialsState(bootstrap.kind),
   };
+}
+
+export async function resetRateLimits(): Promise<void> {
+  await resetAllRateLimits();
 }

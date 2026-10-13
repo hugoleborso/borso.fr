@@ -64,7 +64,7 @@ export interface ConcertCandidate {
   readonly date: Date;
 }
 
-export function selectNextConcert<TSession extends ConcertCandidate>(
+export function selectEarliestUpcomingConcert<TSession extends ConcertCandidate>(
   sessions: readonly TSession[],
   now: Date,
 ): TSession | null {

@@ -1,5 +1,5 @@
 import type { PlayerOutcome } from './round.core';
-import type { GameStatus } from './games.schema';
+import type { GameStatus } from '@domain/game-lifecycle.core';
 
 export interface PlayerView {
   readonly id: string;

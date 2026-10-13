@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   ALLOW_TEST_SEED_ENV_VAR,
+  isApiServedThroughCloudFront,
   selectSameOriginApiDomainName,
   selectTestSeedEnvironment,
 } from './stage-wiring.utils.js';
@@ -25,5 +26,14 @@ describe('selectSameOriginApiDomainName', () => {
   it('leaves preview and integ cross-origin', () => {
     expect(selectSameOriginApiDomainName('preview', 'api.borso.fr')).toBeUndefined();
     expect(selectSameOriginApiDomainName('integ', 'api.borso.fr')).toBeUndefined();
+  });
+});
+
+describe('isApiServedThroughCloudFront', () => {
+  it('is true only for a prod stage that has an API', () => {
+    expect(isApiServedThroughCloudFront('prod', true)).toBe(true);
+    expect(isApiServedThroughCloudFront('prod', false)).toBe(false);
+    expect(isApiServedThroughCloudFront('preview', true)).toBe(false);
+    expect(isApiServedThroughCloudFront('integ', true)).toBe(false);
   });
 });

@@ -1,4 +1,4 @@
-export const PHOTO_CONTENT_TYPES = ['image/jpeg', 'image/png', 'image/webp'] as const;
+import { PHOTO_CONTENT_TYPES } from '@domain/runner-limits.core';
 
 export const ALLOWED_PHOTO_CONTENT_TYPES: ReadonlySet<string> = new Set(PHOTO_CONTENT_TYPES);
 

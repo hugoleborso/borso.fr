@@ -1,8 +1,6 @@
+import { MASTERY_SCORE_MAX, MASTERY_SCORE_MIN } from '@domain/input-limits.core';
 import { integer, pgTable, primaryKey, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
-
-const SCORE_MIN = 0;
-const SCORE_MAX = 10;
 
 // @FollowsBlueprint schema-table-and-input
 export const masteryDefaultTable = pgTable(
@@ -35,7 +33,7 @@ export const masteryScoreChangeTable = pgTable('mastery_score_change', {
   changedAt: timestamp('changed_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
 
-const scoreSchema = z.number().int().min(SCORE_MIN).max(SCORE_MAX);
+const scoreSchema = z.number().int().min(MASTERY_SCORE_MIN).max(MASTERY_SCORE_MAX);
 
 export const masteryDefaultRowSchema = z.object({
   memberId: z.string().uuid(),

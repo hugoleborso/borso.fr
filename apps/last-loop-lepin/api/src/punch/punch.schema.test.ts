@@ -5,6 +5,7 @@ import {
   correctPunchInputSchema,
   createDidNotFinishInputSchema,
   createPunchInputSchema,
+  loopPunchClaimsTable,
   manualDidNotFinishesTable,
   selfPunchInputSchema,
 } from './punch.schema';
@@ -139,5 +140,18 @@ describe('the manual abandon table', () => {
   it('is keyed by edition and runner, so one runner leaves a race once', () => {
     const [primary] = getTableConfig(manualDidNotFinishesTable).primaryKeys;
     expect(primary?.columns.map((column) => column.name)).toEqual(['edition_slug', 'runner_slug']);
+  });
+});
+
+describe('loopPunchClaimsTable', () => {
+  it('keys a claim on the edition, the runner and the loop together', () => {
+    const config = getTableConfig(loopPunchClaimsTable);
+    const [primaryKey] = config.primaryKeys;
+    expect(config.name).toBe('loop_punch_claims');
+    expect(primaryKey?.columns.map((column) => column.name)).toEqual([
+      'edition_slug',
+      'runner_slug',
+      'loop_index',
+    ]);
   });
 });

@@ -10,7 +10,7 @@ import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { VoteEntryLink } from '../../components/molecules/VoteEntryLink';
-import { resolveSetlistStatus } from './setlist-status.core';
+import { resolveSetlistStatus } from '@domain/setlist-vote.core';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { SetlistHeaderActions } from '../../components/organisms/SetlistHeaderActions';
 import { formatSessionDate } from '../../lib/formatters.utils';
