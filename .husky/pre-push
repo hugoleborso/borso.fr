@@ -42,8 +42,20 @@ done
 # costs one round-trip and buys back the scoping this file exists for.
 git fetch --quiet origin main 2>/dev/null || true
 
-if [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null; then
+# A remote sha that HEAD does not descend from means the push rewrites the
+# branch: a force push after `git checkout -B <branch> origin/main`, which is
+# how a branch whose pull request was squash-merged starts its next piece of
+# work. Diffing against that sha gates everything main changed between the two
+# bases. Measured on PR #174: a one-commit branch gated 774 files, four
+# applications of tests and six mutation suites over 79 files, and the push
+# outlived its ten-minute command timeout. Such a branch is new work on main, so its base is main.
+# See docs/dantotsus/a-force-push-re-gated-everything-main-had-merged.md.
+if [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null &&
+  git merge-base --is-ancestor "$push_base" HEAD 2>/dev/null; then
   range_label="this push"
+elif [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null; then
+  push_base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
+  range_label="the whole branch since main (the push rewrites the branch)"
 else
   push_base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
   range_label="the whole branch since main (no remote ref for this branch yet)"

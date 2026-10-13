@@ -178,6 +178,7 @@ decision.
 - [`visual-validation-skill-vs-agent-browser-direct.md`](./visual-validation-skill-vs-agent-browser-direct.md) — `/visual-validation` is the feature-gate skill (full spec walk, separate agent, committed evidence); for single-fix iteration use `agent-browser` directly in the main session — minutes vs seconds.
 
 - [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, resetting rate-limit buckets with the test-only reset route, why passkey claims belong in back-e2e, and running one named case.
+- [`screenshotting-talos-behind-its-passkey.md`](./screenshotting-talos-behind-its-passkey.md) — every talos screen but sign-in sits behind a passkey: fictional content in `TALOS_DEV_CONTENT_ROOT`, a CDP virtual authenticator, and a wiped local database before each new browser context, or every screenshot is the login screen.
 
 ### Spec & metrics framing
 
@@ -201,6 +202,7 @@ decision.
 
 ### Vendored React components
 
+- [`vendoring-a-third-party-skill.md`](./vendoring-a-third-party-skill.md) — a skill copied verbatim trips ESLint, Prettier and two instruction gates that read `.claude/`; scope all four in one commit with the reason beside each, and keep local notes in `PROVENANCE.md`.
 - [`react-bits-galaxy-mouse-events-vs-touch.md`](./react-bits-galaxy-mouse-events-vs-touch.md) — react-bits Galaxy listens on `mousemove` only; touch is silently broken on mobile. Swap to `pointermove`/`pointerleave` + `touch-action: none` on the container; also set `pointer-events: auto` if a parent has `none`.
 
 ### pragma / MusicBrainz
