@@ -44,7 +44,7 @@
     "hono": "catalog:",
     "i18next": "catalog:",
     "lucide-react": "1.52.0",
-    "marked": "18.0.14",
+    "marked": "18.1.0",
     "postgres": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",
