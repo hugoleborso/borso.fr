@@ -93,9 +93,9 @@ Out of scope: user reports outside pragma (WhatsApp messages count only once ent
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| ADR-0033 (to write) | `QualityReadRole` in `infra/shared`, `cloudwatch:GetMetricData` and `ListMetrics` only, trusted for `pages.yml` in the `github-pages` environment | `shared-deploy` must be dispatched by the operator before the first run that reads CloudWatch |
-| ADR-0034 (to write) | `SENTRY_READ_TOKEN` repository secret, read scopes only | The operator creates the token in Sentry (EU region) and adds the secret |
-| ADR-0035 (to write) | The CI job connects to pragma's production DSQL with a read-only database role granted `SELECT` on `improvement` | `QualityReadRole` also gets `dsql:DbConnect` on the pragma cluster; pragma gets a migration for the role and the `kind` column |
+| [ADR-0033](../../../../adr/0033-quality-dashboard-reads-cloudwatch-through-its-own-role.md) | `QualityReadRole` in `infra/shared`, `cloudwatch:GetMetricData` and `ListMetrics` only, trusted for `pages.yml` in the `github-pages` environment | `shared-deploy` must be dispatched by the operator before the first run that reads CloudWatch |
+| [ADR-0034](../../../../adr/0034-quality-dashboard-reads-sentry-with-a-read-only-token.md) | `SENTRY_READ_TOKEN` repository secret, read scopes only | The operator creates the token in Sentry (EU region) and adds the secret |
+| [ADR-0035](../../../../adr/0035-quality-dashboard-reads-pragma-bug-reports-with-a-read-only-database-role.md) | The CI job connects to pragma's production DSQL as `quality_reader`, granted `SELECT` on `prod.improvement` only | `QualityReadRole` also gets `dsql:DbConnect` on the pragma cluster; the operator runs `grant-quality-reader.sql` once, because a role is cluster state and migrations run per schema |
 
 ## Changes
 
@@ -114,9 +114,13 @@ type SourceStatus = { kind: 'ok' } | { kind: 'unavailable'; since: string; reaso
 ### Database changes
 
 ```sql
+-- migration, every schema
 ALTER TABLE improvement ADD COLUMN kind text NOT NULL DEFAULT 'idea';
+-- apps/pragma/scripts/grant-quality-reader.sql, run once on the cluster by the operator
 CREATE ROLE quality_reader WITH LOGIN;
-GRANT SELECT ON improvement TO quality_reader;
+AWS IAM GRANT quality_reader TO 'arn:aws:iam::<account>:role/QualityReadRole';
+GRANT USAGE ON SCHEMA prod TO quality_reader;
+GRANT SELECT ON prod.improvement TO quality_reader;
 ```
 
 ### Files to change

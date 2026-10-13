@@ -79,6 +79,9 @@ No:
 | [0030](./0030-knowledge-is-delivered-by-trigger.md) | Knowledge is delivered by trigger, and an entry without one is not written | proposed | 2026-10-10 |
 | [0031](./0031-pragma-reports-errors-and-traces-to-sentry-eu.md) | pragma sends errors and traces to Sentry's EU region with personal data collection off | proposed | 2026-10-10 |
 | [0032](./0032-impeccable-is-vendored-as-a-project-skill.md) | impeccable is vendored as a project skill, without its edit hook | proposed | 2026-10-12 |
+| [0033](./0033-quality-dashboard-reads-cloudwatch-through-its-own-role.md) | The quality dashboard reads CloudWatch through a role of its own | proposed | 2026-10-13 |
+| [0034](./0034-quality-dashboard-reads-sentry-with-a-read-only-token.md) | The quality dashboard reads Sentry with a read-only token | proposed | 2026-10-13 |
+| [0035](./0035-quality-dashboard-reads-pragma-bug-reports-with-a-read-only-database-role.md) | The quality dashboard reads pragma bug reports with a read-only database role | proposed | 2026-10-13 |
 
 ### Data layer
 
@@ -112,6 +115,10 @@ No:
 - 0032 — the third-party impeccable design skill and its four agents are copied verbatim into `.claude/` at a pinned upstream commit, because a cloud session loads a plain skill folder and skips a marketplace; its edit hook is left out so sessions that do no design work pay nothing.
 
 ### Observability
+
+- 0033 — the quality dashboard assumes `QualityReadRole`, which may only read CloudWatch metrics and trusts only the `github-pages` environment, because the job that publishes a public page must not hold a deploy role.
+- 0034 — the quality dashboard reads Sentry with `SENTRY_READ_TOKEN`, read scopes only, kept apart from the source-map upload token.
+- 0035 — the quality dashboard reads pragma's `improvement` table as `quality_reader`, a database role granted `SELECT` on that one table and created once by hand, because a migration runs per schema and the role is cluster state.
 
 - 0031 — pragma sends browser and API errors and one end-to-end trace per request to Sentry's free plan in the EU region, with every personal data category off; database spans wait on a bundling change.
 
