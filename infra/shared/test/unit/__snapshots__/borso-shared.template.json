@@ -690,6 +690,7 @@
                 "arn:aws:iam::123456789012:role/ProdDeployRole",
                 "arn:aws:iam::123456789012:role/PreviewDeployRole",
                 "arn:aws:iam::123456789012:role/SharedInfraDeployRole",
+                "arn:aws:iam::123456789012:role/QualityReadRole",
                 "arn:aws:iam::123456789012:role/borso-shared-*",
                 "arn:aws:iam::123456789012:role/cdk-*",
                 "arn:aws:iam::123456789012:policy/*"
@@ -722,6 +723,72 @@
         "Roles": [
           {
             "Ref": "SharedInfraDeployRoleFB0650A2"
+          }
+        ]
+      }
+    },
+    "QualityReadRoleC2D63BD8": {
+      "Type": "AWS::IAM::Role",
+      "Properties": {
+        "AssumeRolePolicyDocument": {
+          "Statement": [
+            {
+              "Action": "sts:AssumeRoleWithWebIdentity",
+              "Condition": {
+                "StringEquals": {
+                  "token.actions.githubusercontent.com:aud": "sts.amazonaws.com"
+                },
+                "StringLike": {
+                  "token.actions.githubusercontent.com:sub": [
+                    "repo:hugoleborso/borso.fr:environment:github-pages"
+                  ]
+                }
+              },
+              "Effect": "Allow",
+              "Principal": {
+                "Federated": {
+                  "Ref": "GithubOidc86785739"
+                }
+              }
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "Description": "Used by pages.yml to build the quality dashboard. Reads CloudWatch metrics, lists HTTP APIs to name them, and connects to DSQL as a non-admin database role; the database grant to quality_reader is the data boundary.",
+        "MaxSessionDuration": 3600,
+        "RoleName": "QualityReadRole"
+      }
+    },
+    "QualityReadRoleDefaultPolicyCA2D1A99": {
+      "Type": "AWS::IAM::Policy",
+      "Properties": {
+        "PolicyDocument": {
+          "Statement": [
+            {
+              "Action": [
+                "cloudwatch:GetMetricData",
+                "cloudwatch:ListMetrics"
+              ],
+              "Effect": "Allow",
+              "Resource": "*"
+            },
+            {
+              "Action": "apigateway:GET",
+              "Effect": "Allow",
+              "Resource": "arn:aws:apigateway:eu-west-3::/apis"
+            },
+            {
+              "Action": "dsql:DbConnect",
+              "Effect": "Allow",
+              "Resource": "arn:aws:dsql:eu-west-3:123456789012:cluster/*"
+            }
+          ],
+          "Version": "2012-10-17"
+        },
+        "PolicyName": "QualityReadRoleDefaultPolicyCA2D1A99",
+        "Roles": [
+          {
+            "Ref": "QualityReadRoleC2D63BD8"
           }
         ]
       }
@@ -978,6 +1045,16 @@
       },
       "aws-cn": {
         "zoneId": "Z3RFFRIM2A3IF5"
+      }
+    }
+  },
+  "Outputs": {
+    "QualityReadRoleArn": {
+      "Value": {
+        "Fn::GetAtt": [
+          "QualityReadRoleC2D63BD8",
+          "Arn"
+        ]
       }
     }
   },

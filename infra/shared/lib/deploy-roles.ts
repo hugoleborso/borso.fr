@@ -2,6 +2,7 @@ import { githubActionsPrincipal, type SubjectFormat } from '@borso/infra';
 import { Duration } from 'aws-cdk-lib';
 import { Effect, ManagedPolicy, PolicyStatement, Role } from 'aws-cdk-lib/aws-iam';
 import type { Construct } from 'constructs';
+import { QUALITY_READ_ROLE_NAME } from './quality-read-role.js';
 
 const CONSUMER_REPO = 'hugoleborso/borso.fr';
 const CONSUMER_SUBJECT_FORMAT: SubjectFormat = { kind: 'name' };
@@ -145,6 +146,7 @@ function rolesAndPoliciesThisStackOwns(account: string): string[] {
     `arn:aws:iam::${account}:role/ProdDeployRole`,
     `arn:aws:iam::${account}:role/PreviewDeployRole`,
     `arn:aws:iam::${account}:role/SharedInfraDeployRole`,
+    `arn:aws:iam::${account}:role/${QUALITY_READ_ROLE_NAME}`,
     `arn:aws:iam::${account}:role/borso-shared-*`,
     `arn:aws:iam::${account}:role/cdk-*`,
     `arn:aws:iam::${account}:policy/*`,

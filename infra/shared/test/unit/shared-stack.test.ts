@@ -150,6 +150,102 @@ describe('SharedStack', () => {
     });
   });
 
+  describe('QualityReadRole', () => {
+    const tpl = synth();
+    const qualityRoleIds = Object.keys(
+      tpl.findResources('AWS::IAM::Role', { Properties: { RoleName: 'QualityReadRole' } }),
+    );
+    const qualityRoleId = qualityRoleIds[0] ?? '';
+
+    function qualityRoleStatements(): Record<string, unknown>[] {
+      return resourcesOfType(tpl, 'AWS::IAM::Policy')
+        .filter((policy) =>
+          JSON.stringify(policy.Properties?.Roles ?? []).includes(`"${qualityRoleId}"`),
+        )
+        .flatMap((policy) => {
+          const document = policy.Properties?.PolicyDocument;
+          if (!isObject(document) || !Array.isArray(document.Statement)) return [];
+          return document.Statement.filter(isObject);
+        });
+    }
+
+    function qualityRoleActions(): unknown[] {
+      return qualityRoleStatements().flatMap((statement) => [statement.Action].flat());
+    }
+
+    it('creates exactly one role named QualityReadRole', () => {
+      expect(qualityRoleIds).toHaveLength(1);
+    });
+
+    it('trusts only the github-pages environment of hugoleborso/borso.fr, for the sts audience', () => {
+      tpl.hasResourceProperties('AWS::IAM::Role', {
+        RoleName: 'QualityReadRole',
+        AssumeRolePolicyDocument: Match.objectLike({
+          Statement: [
+            Match.objectLike({
+              Action: 'sts:AssumeRoleWithWebIdentity',
+              Condition: {
+                StringEquals: { 'token.actions.githubusercontent.com:aud': 'sts.amazonaws.com' },
+                StringLike: {
+                  [OIDC_SUB_CLAIM_KEY]: ['repo:hugoleborso/borso.fr:environment:github-pages'],
+                },
+              },
+            }),
+          ],
+        }),
+      });
+    });
+
+    it('carries no managed policy, so it holds only the statements below', () => {
+      const role = resourcesOfType(tpl, 'AWS::IAM::Role').find(
+        (candidate) => candidate.Properties?.RoleName === 'QualityReadRole',
+      );
+      expect(role?.Properties?.ManagedPolicyArns).toBeUndefined();
+    });
+
+    it('may call exactly the metric reads, the API listing and the non-admin database connect', () => {
+      const expectedActions = [
+        'apigateway:GET',
+        'cloudwatch:GetMetricData',
+        'cloudwatch:ListMetrics',
+        'dsql:DbConnect',
+      ];
+      const actions = qualityRoleActions();
+      expect(actions).toHaveLength(expectedActions.length);
+      expect(actions).toEqual(expect.arrayContaining(expectedActions));
+    });
+
+    it('never holds dsql:DbConnectAdmin', () => {
+      expect(qualityRoleActions()).not.toContain('dsql:DbConnectAdmin');
+    });
+
+    it('lists HTTP APIs on the /apis collection only', () => {
+      const apiStatement = qualityRoleStatements().find(
+        (statement) => statement.Action === 'apigateway:GET',
+      );
+      expect(apiStatement?.Resource).toBe('arn:aws:apigateway:eu-west-3::/apis');
+    });
+
+    it('connects only to DSQL clusters of this account and region', () => {
+      const connectStatement = qualityRoleStatements().find(
+        (statement) => statement.Action === 'dsql:DbConnect',
+      );
+      expect(connectStatement?.Resource).toBe('arn:aws:dsql:eu-west-3:123456789012:cluster/*');
+    });
+
+    it('outputs the role ARN as QualityReadRoleArn for the QUALITY_READ_ROLE_ARN repository variable', () => {
+      tpl.hasOutput('QualityReadRoleArn', {
+        Value: { 'Fn::GetAtt': [qualityRoleId, 'Arn'] },
+      });
+    });
+
+    it('lets SharedInfraDeployRole manage QualityReadRole, so shared-deploy can create it', () => {
+      expect(JSON.stringify(tpl.toJSON())).toContain(
+        'arn:aws:iam::123456789012:role/QualityReadRole',
+      );
+    });
+  });
+
   describe('previews CDN', () => {
     const tpl = synth();
 

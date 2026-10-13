@@ -1,5 +1,5 @@
 import { HOST_ROUTING_FUNCTION_CODE, SHARED_SSM_PARAMETERS } from '@borso/infra';
-import { Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
+import { CfnOutput, Duration, RemovalPolicy, Stack, type StackProps } from 'aws-cdk-lib';
 import { CfnBudget } from 'aws-cdk-lib/aws-budgets';
 import {
   Certificate,
@@ -25,6 +25,7 @@ import { StringParameter } from 'aws-cdk-lib/aws-ssm';
 import type { Construct } from 'constructs';
 import { HOSTED_ZONE_NAME } from './certs-stack.js';
 import { createDeployRoles } from './deploy-roles.js';
+import { createQualityReadRole } from './quality-read-role.js';
 
 const PREVIEWS_DOMAIN = `*.preview.${HOSTED_ZONE_NAME}`;
 const PREVIEW_OBJECT_EXPIRATION_DAYS = 60;
@@ -142,6 +143,13 @@ export class SharedStack extends Stack {
       oidcProviderArn: oidcProvider.openIdConnectProviderArn,
       account: this.account,
     });
+
+    const qualityReadRole = createQualityReadRole(this, {
+      oidcProviderArn: oidcProvider.openIdConnectProviderArn,
+      account: this.account,
+      region: this.region,
+    });
+    new CfnOutput(this, 'QualityReadRoleArn', { value: qualityReadRole.roleArn });
 
     this.createMonthlyBudgets(props.budgetEmail);
 
