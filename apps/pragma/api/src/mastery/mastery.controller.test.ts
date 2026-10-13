@@ -24,6 +24,10 @@ const overridesEnvelope = z.object({
   ),
 });
 
+const historyEnvelope = z.object({
+  changes: z.array(z.object({ score: z.number(), changedAt: z.string() })),
+});
+
 const memberEnvelope = z.object({ member: z.object({ id: z.string().uuid() }) });
 const instrumentEnvelope = z.object({ instrument: z.object({ id: z.string().uuid() }) });
 const songEnvelope = z.object({ song: z.object({ id: z.string().uuid() }) });
@@ -166,5 +170,55 @@ describe('mastery controller (back-e2e)', () => {
     );
     expect(removeDefault.status).toBe(404);
     expect(removeOverride.status).toBe(404);
+  });
+
+  it('appends one history row per override write and none for a default write', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { memberId, instrumentId, songId } = await seedTriple(app, cookieHeader);
+    await jsonRequest(app, '/api/mastery/defaults', {
+      method: 'PUT',
+      body: { memberId, instrumentId, score: 5 },
+      cookieHeader,
+    });
+    await jsonRequest(app, '/api/mastery/overrides', {
+      method: 'PUT',
+      body: { memberId, instrumentId, songId, score: 6 },
+      cookieHeader,
+    });
+    await jsonRequest(app, '/api/mastery/overrides', {
+      method: 'PUT',
+      body: { memberId, instrumentId, songId, score: 8 },
+      cookieHeader,
+    });
+    await jsonRequest(app, `/api/mastery/overrides/${memberId}/${instrumentId}/${songId}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+
+    const history = await readJson(
+      await jsonRequest(app, `/api/mastery/history/${songId}`, { cookieHeader }),
+      historyEnvelope,
+    );
+    expect(history.changes.map((change) => change.score)).toEqual([6, 8, 5]);
+  });
+
+  it('writes no history row when deleting an override with no default behind it', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { memberId, instrumentId, songId } = await seedTriple(app, cookieHeader);
+    await jsonRequest(app, '/api/mastery/overrides', {
+      method: 'PUT',
+      body: { memberId, instrumentId, songId, score: 6 },
+      cookieHeader,
+    });
+    await jsonRequest(app, `/api/mastery/overrides/${memberId}/${instrumentId}/${songId}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+
+    const history = await readJson(
+      await jsonRequest(app, `/api/mastery/history/${songId}`, { cookieHeader }),
+      historyEnvelope,
+    );
+    expect(history.changes.map((change) => change.score)).toEqual([6]);
   });
 });

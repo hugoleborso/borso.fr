@@ -15,6 +15,8 @@ import {
   insertEntry,
   insertEntryWithin,
   listEntries,
+  listEntriesOfSetlists,
+  listEntriesOfSong,
   listEntryIds,
   listEntryOwners,
   type SetlistEntryRow,
@@ -156,6 +158,16 @@ export async function unlinkSetlistFromSession(
 
 export async function getEntries(setlistId: string): Promise<SetlistEntryRow[]> {
   return await listEntries(setlistId);
+}
+
+export async function getEntriesOfSong(songId: string): Promise<SetlistEntryRow[]> {
+  return await listEntriesOfSong(songId);
+}
+
+export async function getEntriesOfSetlists(
+  setlistIds: readonly string[],
+): Promise<SetlistEntryRow[]> {
+  return await listEntriesOfSetlists(setlistIds);
 }
 
 export async function appendEntry(

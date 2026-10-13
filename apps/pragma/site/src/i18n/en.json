@@ -318,6 +318,7 @@
     "more": "More",
     "sessions": "Sessions",
     "setlists": "Setlists",
+    "studies": "Studies",
     "tasks": "Tasks",
     "workshopSection": "Workshop"
   },
@@ -556,5 +557,33 @@
     "blankRound": "no vote cast",
     "roundRunning": "vote in progress",
     "winnerUnnamed": "winner not found"
+  },
+  "studies": {
+    "title": "Studies",
+    "subtitle": "What everyone worked on, and whether we are ready for the next concert.",
+    "streakDays_one": "day streak",
+    "streakDays_other": "day streak",
+    "todayCounted": "today counted",
+    "todayPending": "today not yet",
+    "jokerAvailable": "joker available",
+    "jokerUsed": "joker used",
+    "notReady": "not ready",
+    "ready": "ready",
+    "scoreLabel": "My mastery",
+    "scoreDown": "Lower my mastery",
+    "scoreUp": "Raise my mastery",
+    "studied": "Studied",
+    "undo": "Undo",
+    "queueEmpty": "You play on no song here.",
+    "queueConcert": "To study for the next concert",
+    "queueCatalogue": "My least mastered songs",
+    "readinessTitle": "Next concert",
+    "readyCount": "{{ready}} of {{total}} songs ready",
+    "readinessLabel": "Songs ready for the concert",
+    "noConcert": "No concert planned.",
+    "bandTitle": "The band",
+    "thisWeek_one": "{{count}} study this week",
+    "thisWeek_other": "{{count}} studies this week",
+    "progressTitle": "Progress"
   }
 }

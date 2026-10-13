@@ -3,6 +3,7 @@ import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { comparePositionThenName } from './instrument-players.core';
 import {
   deleteInstrument,
+  findInstrument,
   type InstrumentUpdates,
   type InstrumentWithPlayersRow,
   insertInstrument,
@@ -11,6 +12,10 @@ import {
   setInstrumentPosition,
   updateInstrument,
 } from './instruments.repository';
+
+export async function isKnownInstrument(id: string): Promise<boolean> {
+  return (await findInstrument(id)) !== null;
+}
 
 export async function getInstrumentsSorted(): Promise<InstrumentWithPlayersRow[]> {
   const rows = await listInstrumentsWithPlayers();

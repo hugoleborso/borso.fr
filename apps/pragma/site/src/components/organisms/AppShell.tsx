@@ -34,6 +34,7 @@ const PRIMARY_NAV: readonly NavItem[] = [
   { to: '/sessions', labelKey: 'nav.sessions', icon: 'sessions' },
   { to: '/setlists', labelKey: 'nav.setlists', icon: 'setlist' },
   { to: '/bars', labelKey: 'nav.bars', icon: 'bars' },
+  { to: '/studies', labelKey: 'nav.studies', icon: 'bolt' },
 ];
 
 const WORKSHOP_NAV: readonly NavItem[] = [

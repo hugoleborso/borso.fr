@@ -31,6 +31,8 @@ const TRACKED_TABLES = [
   'setlist_sheet',
   'setlist',
   'session',
+  'study',
+  'mastery_score_change',
   'mastery_override',
   'mastery_default',
   'song',

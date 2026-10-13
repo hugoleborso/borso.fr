@@ -21,17 +21,19 @@ import { SongNotes } from '../../components/molecules/SongNotes';
 import { StatusChip } from '../../components/molecules/StatusChip';
 import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
+import { MasteryProgressChart } from '../../components/organisms/MasteryProgressChart';
 import { SongDetailSidebar } from '../../components/organisms/SongDetailSidebar';
 import { ApiError } from '../../lib/api.client';
 import { resolveEmbed } from '../../lib/embed.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
+import { useMasteryOverridesOfSong } from '../../lib/queries/studies.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useDidLastSongWriteFail, useSong, useUpdateSong } from '../../lib/queries/songs.queries';
 import { useSignedChartUrl } from '../../lib/queries/uploads.queries';
 import { extractChartKind, selectChordProText } from './chart-kind.utils';
 import { selectMissingSongMessageKey } from './missing-song.core';
-import { buildMasteryKey, buildSongLineupRows } from './song-lineup.core';
+import { buildEffectiveMasteryLookup, buildSongLineupRows } from './song-lineup.core';
 import { selectSongNoteSections } from './song-notes.core';
 import { buildTonalityLabel } from './tonality-label.utils';
 
@@ -45,6 +47,7 @@ export function SongDetailPage(): JSX.Element {
   const membersQuery = useMembersList();
   const instrumentsQuery = useInstrumentsList();
   const masteryQuery = useMasteryDefaults();
+  const songOverridesQuery = useMasteryOverridesOfSong(songId ?? '', songId !== undefined);
   const updateSong = useUpdateSong();
   const hasFailedWrite = useDidLastSongWriteFail(songId ?? '');
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
@@ -71,13 +74,14 @@ export function SongDetailPage(): JSX.Element {
   const hasSideLoadFailed =
     (membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error) !== null;
 
-  const masteryLookup = useMemo(() => {
-    const lookup = new Map<string, number>();
-    for (const row of masteryDefaults) {
-      lookup.set(buildMasteryKey(row.memberId, row.instrumentId), row.score);
-    }
-    return lookup;
-  }, [masteryDefaults]);
+  const songOverrides = useMemo(
+    () => songOverridesQuery.data?.overrides ?? NO_ROWS,
+    [songOverridesQuery.data],
+  );
+  const masteryLookup = useMemo(
+    () => buildEffectiveMasteryLookup(masteryDefaults, songOverrides),
+    [masteryDefaults, songOverrides],
+  );
 
   const lineupRows = useMemo(
     () => buildSongLineupRows(song?.defaultLineup ?? {}, members, instruments, masteryLookup),
@@ -270,6 +274,7 @@ export function SongDetailPage(): JSX.Element {
           onEditDefaultLineup={() => setLineupEditorOpen(true)}
         />
       </div>
+      <MasteryProgressChart songId={song.id} members={members} instruments={instruments} />
       <LineupEditor
         open={lineupEditorOpen}
         surface="song"

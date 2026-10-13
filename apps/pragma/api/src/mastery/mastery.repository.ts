@@ -1,7 +1,11 @@
-import { and, eq } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { and, asc, eq } from 'drizzle-orm';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { masteryDefaultTable, masteryOverrideTable } from './mastery.schema';
+import {
+  masteryDefaultTable,
+  masteryOverrideTable,
+  masteryScoreChangeTable,
+} from './mastery.schema';
 
 export interface MasteryDefaultRow {
   memberId: string;
@@ -14,6 +18,10 @@ export interface MasteryOverrideRow {
   instrumentId: string;
   songId: string;
   score: number;
+}
+
+export interface MasteryScoreChangeRow extends MasteryOverrideRow {
+  changedAt: Date;
 }
 
 // @FollowsBlueprint repository-query
@@ -70,36 +78,102 @@ export async function listMasteryOverridesForSong(songId: string): Promise<Maste
     .where(eq(masteryOverrideTable.songId, songId));
 }
 
-export async function upsertMasteryOverride(row: MasteryOverrideRow): Promise<void> {
+export async function listAllMasteryOverrides(): Promise<MasteryOverrideRow[]> {
   const database = getDatabase();
-  await database
-    .insert(masteryOverrideTable)
-    .values(row)
-    .onConflictDoUpdate({
-      target: [
-        masteryOverrideTable.memberId,
-        masteryOverrideTable.instrumentId,
-        masteryOverrideTable.songId,
-      ],
-      set: { score: row.score },
-    });
+  return await database
+    .select({
+      memberId: masteryOverrideTable.memberId,
+      instrumentId: masteryOverrideTable.instrumentId,
+      songId: masteryOverrideTable.songId,
+      score: masteryOverrideTable.score,
+    })
+    .from(masteryOverrideTable);
+}
+
+export async function listScoreChangesForSong(songId: string): Promise<MasteryScoreChangeRow[]> {
+  const database = getDatabase();
+  return await database
+    .select({
+      memberId: masteryScoreChangeTable.memberId,
+      instrumentId: masteryScoreChangeTable.instrumentId,
+      songId: masteryScoreChangeTable.songId,
+      score: masteryScoreChangeTable.score,
+      changedAt: masteryScoreChangeTable.changedAt,
+    })
+    .from(masteryScoreChangeTable)
+    .where(eq(masteryScoreChangeTable.songId, songId))
+    .orderBy(asc(masteryScoreChangeTable.changedAt));
+}
+
+export async function upsertMasteryOverride(
+  row: MasteryOverrideRow,
+  changedAt: Date,
+): Promise<void> {
+  const database = getDatabase();
+  await database.transaction(async (transaction) => {
+    await transaction
+      .insert(masteryOverrideTable)
+      .values(row)
+      .onConflictDoUpdate({
+        target: [
+          masteryOverrideTable.memberId,
+          masteryOverrideTable.instrumentId,
+          masteryOverrideTable.songId,
+        ],
+        set: { score: row.score },
+      });
+    await transaction.insert(masteryScoreChangeTable).values({ ...row, changedAt });
+  });
 }
 
 export async function deleteMasteryOverride(
   memberId: string,
   instrumentId: string,
   songId: string,
+  changedAt: Date,
 ): Promise<DeletionOutcome> {
   const database = getDatabase();
-  const deleted = await database
-    .delete(masteryOverrideTable)
-    .where(
-      and(
-        eq(masteryOverrideTable.memberId, memberId),
-        eq(masteryOverrideTable.instrumentId, instrumentId),
-        eq(masteryOverrideTable.songId, songId),
-      ),
-    )
-    .returning({ memberId: masteryOverrideTable.memberId });
-  return selectDeletionOutcome(deleted.length);
+  return await database.transaction(async (transaction) => {
+    const deleted = await transaction
+      .delete(masteryOverrideTable)
+      .where(
+        and(
+          eq(masteryOverrideTable.memberId, memberId),
+          eq(masteryOverrideTable.instrumentId, instrumentId),
+          eq(masteryOverrideTable.songId, songId),
+        ),
+      )
+      .returning({ memberId: masteryOverrideTable.memberId });
+    const [fallback] = await transaction
+      .select({ score: masteryDefaultTable.score })
+      .from(masteryDefaultTable)
+      .where(
+        and(
+          eq(masteryDefaultTable.memberId, memberId),
+          eq(masteryDefaultTable.instrumentId, instrumentId),
+        ),
+      );
+    if (deleted.length > 0 && fallback !== undefined) {
+      await transaction
+        .insert(masteryScoreChangeTable)
+        .values({ memberId, instrumentId, songId, score: fallback.score, changedAt });
+    }
+    return selectDeletionOutcome(deleted.length);
+  });
+}
+
+export async function deleteScoreHistoryOfMember(
+  executor: DatabaseExecutor,
+  memberId: string,
+): Promise<void> {
+  await executor
+    .delete(masteryScoreChangeTable)
+    .where(eq(masteryScoreChangeTable.memberId, memberId));
+}
+
+export async function deleteScoreHistoryOfSong(
+  executor: DatabaseExecutor,
+  songId: string,
+): Promise<void> {
+  await executor.delete(masteryScoreChangeTable).where(eq(masteryScoreChangeTable.songId, songId));
 }

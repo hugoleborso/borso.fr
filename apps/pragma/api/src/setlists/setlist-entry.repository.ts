@@ -114,6 +114,26 @@ export async function listEntries(setlistId: string): Promise<SetlistEntryRow[]>
   return rows.map((row) => rowToEntry(row));
 }
 
+export async function listEntriesOfSong(songId: string): Promise<SetlistEntryRow[]> {
+  const rows = await getDatabase()
+    .select(ENTRY_PROJECTION)
+    .from(setlistEntryTable)
+    .where(eq(setlistEntryTable.songId, songId));
+  return rows.map((row) => rowToEntry(row));
+}
+
+export async function listEntriesOfSetlists(
+  setlistIds: readonly string[],
+): Promise<SetlistEntryRow[]> {
+  if (setlistIds.length === 0) return [];
+  const rows = await getDatabase()
+    .select(ENTRY_PROJECTION)
+    .from(setlistEntryTable)
+    .where(inArray(setlistEntryTable.setlistId, [...setlistIds]))
+    .orderBy(asc(setlistEntryTable.position));
+  return rows.map((row) => rowToEntry(row));
+}
+
 export async function insertEntry(values: EntryInsertShape): Promise<SetlistEntryRow> {
   const database = getDatabase();
   const [row] = await database

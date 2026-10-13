@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   type DefaultMap,
   effective,
+  indexDefaultScores,
+  indexOverrideScores,
   isRedundantOverride,
   meanForSong,
   type OverrideMap,
@@ -166,6 +168,30 @@ describe('mastery.core', () => {
           songId: 'songA',
         }),
       ).toBe(true);
+    });
+  });
+
+  describe('indexDefaultScores', () => {
+    it('indexes rows by member then instrument', () => {
+      expect(
+        indexDefaultScores([
+          { memberId: 'hugo', instrumentId: 'guitar', score: 8 },
+          { memberId: 'hugo', instrumentId: 'piano', score: 5 },
+          { memberId: 'gui', instrumentId: 'drums', score: 9 },
+        ]),
+      ).toEqual(DEFAULTS);
+    });
+  });
+
+  describe('indexOverrideScores', () => {
+    it('indexes rows by song, member then instrument', () => {
+      expect(
+        indexOverrideScores([
+          { songId: 'songA', memberId: 'hugo', instrumentId: 'guitar', score: 6 },
+          { songId: 'songA', memberId: 'hugo', instrumentId: 'piano', score: 1 },
+          { songId: 'songB', memberId: 'hugo', instrumentId: 'piano', score: 0 },
+        ]),
+      ).toEqual({ songA: { hugo: { guitar: 6, piano: 1 } }, songB: { hugo: { piano: 0 } } });
     });
   });
 });

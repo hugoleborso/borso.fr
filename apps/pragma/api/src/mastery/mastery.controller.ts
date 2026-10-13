@@ -11,11 +11,16 @@ import {
 import {
   getMasteryDefaults,
   getMasteryOverridesForSong,
+  getScoreHistoryOfSong,
   removeMasteryDefault,
   removeMasteryOverride,
   saveMasteryDefault,
   saveMasteryOverride,
 } from './mastery.service';
+
+function readNow(): Date {
+  return new Date();
+}
 
 // @FollowsBlueprint controller-dispatch
 export function buildMasteryRouter() {
@@ -45,9 +50,14 @@ export function buildMasteryRouter() {
       const overrides = await getMasteryOverridesForSong(songId);
       return context.json({ overrides });
     })
+    .get('/history/:songId', zValidator('param', masterySongIdParamSchema), async (context) => {
+      const { songId } = context.req.valid('param');
+      const changes = await getScoreHistoryOfSong(songId);
+      return context.json({ changes });
+    })
     .put('/overrides', zValidator('json', masteryOverrideRowSchema), async (context) => {
       const row = context.req.valid('json');
-      await saveMasteryOverride(row);
+      await saveMasteryOverride(row, readNow());
       return context.json(row);
     })
     .delete(
@@ -55,7 +65,7 @@ export function buildMasteryRouter() {
       zValidator('param', masteryOverridePathSchema),
       async (context) => {
         const { memberId, instrumentId, songId } = context.req.valid('param');
-        const outcome = await removeMasteryOverride(memberId, instrumentId, songId);
+        const outcome = await removeMasteryOverride({ memberId, instrumentId, songId }, readNow());
         if (outcome === 'not-found') return context.json({ error: 'not-found' }, 404);
         return context.json({ memberId, instrumentId, songId, deleted: true });
       },

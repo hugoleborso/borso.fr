@@ -5,7 +5,7 @@ import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.stor
 import { useBarsList } from '../../lib/queries/bars.queries';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
-import { selectUpcomingConcerts } from '../../lib/upcoming-concerts.core';
+import { selectUpcomingConcerts } from '@domain/upcoming-concerts.core';
 
 export type NavigationBadgeMap = Readonly<Record<string, number | undefined>>;
 

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildEffectiveMasteryLookup,
   buildMasteryKey,
   buildSongLineupRows,
   flattenMasteryRows,
@@ -21,6 +22,20 @@ const INSTRUMENTS = [
 describe('buildMasteryKey', () => {
   it('joins the pair the mastery lookup is keyed by', () => {
     expect(buildMasteryKey('ana', 'guitar')).toBe('ana::guitar');
+  });
+});
+
+describe('buildEffectiveMasteryLookup', () => {
+  it('lets the per-song score win over the default, including a zero', () => {
+    const lookup = buildEffectiveMasteryLookup(
+      [
+        { memberId: 'hugo', instrumentId: 'guitar', score: 5 },
+        { memberId: 'lea', instrumentId: 'drums', score: 6 },
+      ],
+      [{ memberId: 'hugo', instrumentId: 'guitar', score: 0 }],
+    );
+    expect(lookup.get(buildMasteryKey('hugo', 'guitar'))).toBe(0);
+    expect(lookup.get(buildMasteryKey('lea', 'drums'))).toBe(6);
   });
 });
 

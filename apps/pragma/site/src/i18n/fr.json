@@ -318,6 +318,7 @@
     "more": "Plus",
     "sessions": "Sessions",
     "setlists": "Setlists",
+    "studies": "Révisions",
     "tasks": "Tâches",
     "workshopSection": "Atelier"
   },
@@ -556,5 +557,33 @@
     "blankRound": "aucune voix",
     "roundRunning": "vote en cours",
     "winnerUnnamed": "gagnant introuvable"
+  },
+  "studies": {
+    "title": "Révisions",
+    "subtitle": "Ce que chacun a bossé, et si on est prêts pour le prochain concert.",
+    "streakDays_one": "jour de série",
+    "streakDays_other": "jours de série",
+    "todayCounted": "aujourd'hui compté",
+    "todayPending": "aujourd'hui pas encore",
+    "jokerAvailable": "joker dispo",
+    "jokerUsed": "joker utilisé",
+    "notReady": "pas prêt",
+    "ready": "prêt",
+    "scoreLabel": "Ma maîtrise",
+    "scoreDown": "Baisser ma maîtrise",
+    "scoreUp": "Monter ma maîtrise",
+    "studied": "Révisé",
+    "undo": "Annuler",
+    "queueEmpty": "Tu ne joues sur aucun morceau ici.",
+    "queueConcert": "À réviser pour le prochain concert",
+    "queueCatalogue": "Mes morceaux les moins maîtrisés",
+    "readinessTitle": "Prochain concert",
+    "readyCount": "{{ready}} morceaux prêts sur {{total}}",
+    "readinessLabel": "Morceaux prêts pour le concert",
+    "noConcert": "Aucun concert prévu.",
+    "bandTitle": "Le groupe",
+    "thisWeek_one": "{{count}} révision cette semaine",
+    "thisWeek_other": "{{count}} révisions cette semaine",
+    "progressTitle": "Progression"
   }
 }
