@@ -30,6 +30,8 @@ on:
       - 'scripts/quality/**'
       - '.claude/skills/blueprint/blueprint-utils.ts'
       - '.github/workflows/pages.yml'
+  schedule:
+    - cron: '47 5 * * *'
   workflow_dispatch:
 
 concurrency:
@@ -40,6 +42,7 @@ permissions:
   contents: read
   pages: write
   id-token: write
+  security-events: read
 
 env:
   FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
@@ -102,6 +105,29 @@ jobs:
              docs/quality/weak-points.html \
              docs/quality/working-conditions.html \
              docs/architecture/reports/
+
+      # The dashboard reads live sources, so the daily schedule above is what
+      # moves its numbers between merges. Without the role variable, or before
+      # shared-deploy has created the role, the step fails and the dashboard
+      # marks CloudWatch and the pragma bug reports unavailable instead of
+      # failing the whole publish. ADR-0033, ADR-0034, ADR-0035.
+      - name: Assume the quality read role
+        if: vars.QUALITY_READ_ROLE_ARN != ''
+        continue-on-error: true
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.QUALITY_READ_ROLE_ARN }}
+          aws-region: eu-west-3
+      - name: Build the quality dashboard
+        env:
+          AWS_REGION: eu-west-3
+          GITHUB_TOKEN: ${{ github.token }}
+          SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+          SENTRY_READ_TOKEN: ${{ secrets.SENTRY_READ_TOKEN }}
+          PRAGMA_DSQL_ENDPOINT: ${{ vars.PRAGMA_DSQL_ENDPOINT }}
+        run: |
+          pnpm exec tsx scripts/quality/quality-dashboard.ts
+          cp docs/quality/dashboard.html docs/architecture/reports/
 
       - uses: actions/configure-pages@v6
       - uses: actions/upload-pages-artifact@v5

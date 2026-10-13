@@ -6,6 +6,30 @@ import {
 } from './dantotsu-record.core';
 import { requireAt } from './require-at.core';
 
+export type Stage = 'A' | 'B' | 'C' | 'D' | 'E';
+
+export const STAGES: readonly Stage[] = ['A', 'B', 'C', 'D', 'E'];
+
+export const STAGE_MEANINGS: Readonly<Record<Stage, string>> = {
+  A: 'caught locally or by a gate',
+  B: 'caught in review',
+  C: 'caught on a preview',
+  D: 'found in production by the operator or an agent',
+  E: 'reported by a user',
+};
+
+const STAGE_BY_DETECTED_AT: ReadonlyMap<string, Stage> = new Map([
+  ['typing', 'A'],
+  ['linter', 'A'],
+  ['local', 'A'],
+  ['ci', 'A'],
+  ['review', 'B'],
+  ['qa', 'C'],
+  ['staging', 'C'],
+  ['production', 'D'],
+  ['operator-deploy', 'D'],
+]);
+
 export interface DefectDot {
   readonly slug: string;
   readonly title: string;
@@ -13,6 +37,8 @@ export interface DefectDot {
   readonly zone: string;
   readonly weakPoint: string | null;
   readonly recurs: readonly string[];
+  readonly stage: Stage | null;
+  readonly link: string;
 }
 
 export interface EngagedWeakPoint {
@@ -97,6 +123,12 @@ const MILLISECONDS_PER_DAY = 86_400_000;
 const DAYS_PER_WEEK = 7;
 const MONDAY_OFFSET_FROM_THURSDAY_EPOCH = 3;
 const ISO_DATE_LENGTH = 10;
+const DANTOTSU_ADDRESS = 'https://github.com/hugoleborso/borso.fr/blob/main/docs/dantotsus/';
+
+export function selectStage(detectedAt: string | undefined): Stage | null {
+  if (detectedAt === undefined) return null;
+  return STAGE_BY_DETECTED_AT.get(stripQuotes(detectedAt)) ?? null;
+}
 
 export function readDefectDot(document: DantotsuDocument): DefectDot | null {
   const date = readField(document, 'date');
@@ -110,6 +142,8 @@ export function readDefectDot(document: DantotsuDocument): DefectDot | null {
     zone: stripQuotes(zone),
     weakPoint: weakPoint === undefined ? null : stripQuotes(weakPoint),
     recurs: readListValue(readField(document, 'recurs')) ?? [],
+    stage: selectStage(readField(document, 'detected-at')),
+    link: `${DANTOTSU_ADDRESS}${document.slug}.md`,
   };
 }
 

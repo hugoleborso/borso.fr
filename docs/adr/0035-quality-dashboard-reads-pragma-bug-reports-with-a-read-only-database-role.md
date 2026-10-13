@@ -11,7 +11,7 @@ The varicelle map colours each defect by the stage that caught it, and stage E i
 
 ## Decision
 
-**A `quality_reader` database role, mapped to `QualityReadRole`, granted `SELECT` on `prod.improvement` only.** `QualityReadRole` gains `dsql:DbConnect` (not `DbConnectAdmin`) on the pragma cluster. The role is created once by the operator with `apps/pragma/scripts/grant-quality-reader.sql` through `scripts/dsql-shell.sh`, because it is cluster state, not schema state. The collector opens a read-only transaction regardless.
+**A `quality_reader` database role, mapped to `QualityReadRole`, granted `SELECT` on `prod.improvement` only.** `QualityReadRole` gains `dsql:DbConnect` (not `DbConnectAdmin`). The role is created once by the operator with `apps/pragma/scripts/grant-quality-reader.sql` through `scripts/dsql-shell.sh`, because it is cluster state, not schema state.
 
 ## Consequences
 
@@ -19,7 +19,7 @@ The varicelle map colours each defect by the stage that caught it, and stage E i
 - `+` The bug count arrives without anyone copying it.
 - `-` A one-time manual grant the repository cannot verify; until it runs, the E cells read "unavailable".
 - `-` A second consumer of pragma's production database, outside the application.
-- `~` The `pragma-cluster` stack's ARN must be known to `infra/shared`; it is read from an SSM parameter the cluster stack already publishes, or passed as context.
+- `~` The `dsql:DbConnect` statement names `cluster/*` rather than pragma's cluster, so `infra/shared` does not depend on an application stack. A non-admin connect authenticates only as a database role mapped to the IAM role with `AWS IAM GRANT`, and only pragma's cluster carries such a mapping, so the database grant is the boundary.
 
 ## Alternatives considered
 

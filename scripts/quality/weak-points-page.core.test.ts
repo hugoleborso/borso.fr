@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   renderGrid,
+  renderVaricelle,
   renderWeakPointPage,
   type PlacedDot,
   type WeakPointPageInput,
@@ -17,6 +18,8 @@ function buildDot(slug: string, overrides: Partial<DefectDot> = {}): DefectDot {
     zone: 'CLAUDE.md',
     weakPoint: null,
     recurs: [],
+    stage: null,
+    link: `https://github.com/hugoleborso/borso.fr/blob/main/docs/dantotsus/${slug}.md`,
     ...overrides,
   };
 }
@@ -105,6 +108,41 @@ describe('renderGrid', () => {
     expect(html).toContain(
       '<a class="dot" href="https://github.com/hugoleborso/borso.fr/blob/main/docs/dantotsus/past.md"',
     );
+  });
+});
+
+describe('stage colouring', () => {
+  it('colours a dot by its stage, rings an engaged one and names the stage in its label', () => {
+    const placed = [
+      place(
+        buildDot('caught', { stage: 'C', weakPoint: 'gate-measures-nothing' }),
+        'factory',
+        'gates',
+        'defects',
+      ),
+      place(
+        buildDot('linked', { link: 'https://example.test/x?a=1&b=2' }),
+        'factory',
+        'gates',
+        'defects',
+      ),
+    ];
+    const html = renderGrid(placed, ['gates'], ['defects'], NOW);
+    expect(html).toContain('<a class="dot recent stage-c engaged"');
+    expect(html).toContain('title="2026-10-01 · stage C · Title of caught"');
+    expect(html).toContain('href="https://example.test/x?a=1&amp;b=2"');
+  });
+
+  it('draws a legend naming every stage', () => {
+    const html = renderVaricelle([], NOW);
+    expect(html).toContain('<span class="dot stage-a"></span> A: caught locally or by a gate');
+    expect(html).toContain('<span class="dot stage-e"></span> E: reported by a user');
+    expect(html).toContain('<span class="dot engaged"></span> engaged weak point');
+    expect(html).toContain(
+      'a gate</span><span><span class="dot stage-b"></span> B: caught in review</span>',
+    );
+    expect(html).toContain('<h3>Product map</h3>');
+    expect(html).toContain('<h3>Factory map</h3>');
   });
 });
 

@@ -62,7 +62,9 @@ sequenceDiagram
 
 Edge cases:
 
-- Preview errors are the sum over every `<app>-pr-<n>-api` that existed in the window, including stacks torn down since.
+- Preview errors are the sum over every `<app>-preview-api` still deployed when the job runs. An API Gateway API's name carries no pull request number and CloudWatch keys its metrics by API id only, so the errors of a preview torn down during the week cannot be attributed to an application and are not counted.
+- An application with no preview deployed shows "no preview deployed", not zero; talos never has one (ADR-0027).
+- The page is public, so Security shows counts by severity and never a package or secret name.
 - An app with no API (`borso-fr`, `borsouvertures`) shows Security only, and "no API" in Stability and Speed rather than zero.
 - An app without Sentry shows CloudWatch errors only, and says that Sentry is not connected.
 - A week with no traffic shows "no traffic", never a p95 of zero.
@@ -80,7 +82,8 @@ Error cases:
 | Where does the page live? | Pages + daily schedule; Pages on push only; live artifact | Pages + daily schedule. Consistent with ADR-0014 and the Notion ADR 0018. |
 | Error source | CloudWatch + Sentry; CloudWatch only; Sentry only | Both. CloudWatch covers the four APIs; Sentry adds front-end errors on pragma and last-loop-lepin. |
 | Which CloudWatch error metric? | Lambda `Errors`; API Gateway `5xx` | API Gateway `5xx`. Hono turns a thrown error into a 500 response, so Lambda `Errors` stays at zero (pragma prod: 0 over 765 calls). |
-| Latency measure | mean; p50 + p95; mean + p95 | p50 + p95 over 7 days, from API Gateway `Latency`, which is what the caller waits. |
+| Latency measure | mean; p50 + p95; mean + p95 | p50 + p95 over 7 days, from API Gateway `Latency`, which is what the caller waits. With two production APIs for one application, the slower one is shown. |
+| Unverified from here | | Whether `GITHUB_TOKEN` with `security-events: read` may list Dependabot and secret scanning alerts. A refusal shows as "unavailable" in the banner, and the fix is a token with those scopes. |
 | AWS access from CI | new read role; reuse `PreviewDeployRole`; local snapshot | New `QualityReadRole`. Its trust must match the `github-pages` environment subject, since `pages.yml` runs in that environment. |
 | Sentry access | new read token; reuse upload token; no Sentry in v1 | New `SENTRY_READ_TOKEN`, scopes `event:read` and `project:read`. |
 | Source of stage E | a dantotsu with `detected-at: user-report`; read the `improvement` table; both | Read the `improvement` table, with a new `kind` column (`bug` or `idea`). |
@@ -155,4 +158,4 @@ The page is its own analytics. The job summary of each run lists every source wi
 
 ### Zero-defect strategy
 
-A source unavailable for three consecutive daily runs shows a red banner at the top of the page naming it. No other alerting in v1.
+Every run names each unavailable source in a banner at the top of the page and in the job log. The generated page keeps no state between runs, so it cannot count consecutive failures; the banner shows on every run a source fails. No other alerting in v1.

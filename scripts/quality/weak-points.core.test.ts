@@ -6,6 +6,7 @@ import {
   placeOnProductMap,
   readDefectDot,
   readEngagedWeakPoints,
+  selectStage,
   selectStation,
   selectUnresolvedReferences,
   startOfWeek,
@@ -20,6 +21,8 @@ function buildDot(slug: string, overrides: Partial<DefectDot> = {}): DefectDot {
     zone: 'CLAUDE.md',
     weakPoint: null,
     recurs: [],
+    stage: null,
+    link: `https://example.test/${slug}`,
     ...overrides,
   };
 }
@@ -28,7 +31,7 @@ describe('readDefectDot', () => {
   it('reads the date, the zone, the weak point and the recurrences', () => {
     const document = readDantotsuDocument(
       'a-slug',
-      "---\ndate: 2026-10-07\nzone: 'CLAUDE.md'\nweak-point: 'gate-measures-nothing'\nrecurs: [earlier]\n---\n# A title\n",
+      "---\ndate: 2026-10-07\nzone: 'CLAUDE.md'\nweak-point: 'gate-measures-nothing'\nrecurs: [earlier]\ndetected-at: review\n---\n# A title\n",
     );
     expect(readDefectDot(document)).toEqual({
       slug: 'a-slug',
@@ -37,6 +40,8 @@ describe('readDefectDot', () => {
       zone: 'CLAUDE.md',
       weakPoint: 'gate-measures-nothing',
       recurs: ['earlier'],
+      stage: 'B',
+      link: 'https://github.com/hugoleborso/borso.fr/blob/main/docs/dantotsus/a-slug.md',
     });
   });
 
@@ -46,11 +51,34 @@ describe('readDefectDot', () => {
     );
     expect(dot?.weakPoint).toBeNull();
     expect(dot?.recurs).toEqual([]);
+    expect(dot?.stage).toBeNull();
   });
 
   it('places nothing for an entry with no date or no zone', () => {
     expect(readDefectDot(readDantotsuDocument('s', '---\nzone: CLAUDE.md\n---\n'))).toBeNull();
     expect(readDefectDot(readDantotsuDocument('s', '---\ndate: 2026-10-07\n---\n'))).toBeNull();
+  });
+});
+
+describe('selectStage', () => {
+  it.each([
+    ['typing', 'A'],
+    ['linter', 'A'],
+    ['local', 'A'],
+    ['ci', 'A'],
+    ['review', 'B'],
+    ['qa', 'C'],
+    ['staging', 'C'],
+    ['production', 'D'],
+    ['operator-deploy', 'D'],
+    ["'qa'", 'C'],
+  ])('places detected-at %s at stage %s', (detectedAt, stage) => {
+    expect(selectStage(detectedAt)).toBe(stage);
+  });
+
+  it('answers no stage for a missing or unknown detected-at', () => {
+    expect(selectStage(undefined)).toBeNull();
+    expect(selectStage('somewhere')).toBeNull();
   });
 });
 
