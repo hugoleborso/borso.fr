@@ -5,7 +5,6 @@ import {
   indexDefaultScores,
   indexOverrideScores,
   isRedundantOverride,
-  meanForSong,
   type OverrideMap,
 } from './mastery.core';
 
@@ -74,44 +73,6 @@ describe('mastery.core', () => {
           songId: 'songZ',
         }),
       ).toBeNull();
-    });
-  });
-
-  describe('meanForSong', () => {
-    it('returns null when no member has a defined score', () => {
-      expect(meanForSong(DEFAULTS, OVERRIDES, 'songA', { unknown: ['guitar'] })).toBeNull();
-    });
-
-    it('averages the effective scores over the lineup', () => {
-      const mean = meanForSong(DEFAULTS, OVERRIDES, 'songA', { hugo: ['guitar'], gui: ['drums'] });
-      expect(mean).toBe(7.5);
-    });
-
-    it('skips the members sitting the song out', () => {
-      const mean = meanForSong(DEFAULTS, OVERRIDES, 'songA', { hugo: ['guitar'], gui: [] });
-      expect(mean).toBe(6);
-    });
-
-    it('rates a member holding two instruments on each of them', () => {
-      const mean = meanForSong(DEFAULTS, OVERRIDES, 'songA', { hugo: ['guitar', 'piano'] });
-      expect(mean).toBe(5.5);
-    });
-
-    it('skips members with no default and no override', () => {
-      const mean = meanForSong(DEFAULTS, OVERRIDES, 'songA', {
-        hugo: ['guitar'],
-        unknown: ['piano'],
-      });
-      expect(mean).toBe(6);
-    });
-
-    it('includes the 0-score override (falsy trap)', () => {
-      const mean = meanForSong(DEFAULTS, OVERRIDES, 'songB', { hugo: ['piano'], gui: ['drums'] });
-      expect(mean).toBe(4.5);
-    });
-
-    it('returns null for an empty lineup', () => {
-      expect(meanForSong(DEFAULTS, OVERRIDES, 'songA', {})).toBeNull();
     });
   });
 

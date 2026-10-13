@@ -22,6 +22,12 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# Specs first committed before this date name the split in prose; from it on,
+# every case carries one row in a | Case | Checked by | table, because a prose
+# split routed every case to the browser and to a unit test at once, and three
+# validators each had to guess which one owned it.
+ROUTING_TABLE_SINCE="2026-10-14"
+
 PREDATES_THE_RULE="
 docs/features/borsouvertures/learn-by-tree/spec/spec.md
 docs/features/pragma/album-artwork/spec/spec.md
@@ -37,6 +43,15 @@ for spec in docs/features/*/*/spec/spec.md; do
   fi
   if ! grep -qi '^#\+ .*test strategy' "$spec"; then
     echo "[check-spec-test-strategy] $spec has no Test strategy section, so nothing says which assertions are a code reviewer's and which are a browser's." >&2
+    failed=1
+    continue
+  fi
+  first_added="$(git log --diff-filter=A --format=%as -- "$spec" | tail -n 1)"
+  if [ -n "$first_added" ] && [[ "$first_added" < "$ROUTING_TABLE_SINCE" ]]; then
+    continue
+  fi
+  if ! grep -qiE '^\|[[:space:]]*case[[:space:]]*\|[[:space:]]*checked by[[:space:]]*\|' "$spec"; then
+    echo "[check-spec-test-strategy] $spec routes no case to a checker: its Test strategy needs the | Case | Checked by | table from the spec template, one checker per case." >&2
     failed=1
   fi
 done

@@ -106,7 +106,15 @@ src/.../Existing.ts                  // UPDATE: <what>
 > *The validation pipeline must be **autonomous** — a future Claude session running `/visual-validation` and `/technical-validation` should be able to clear the spec without a human-in-the-loop manual sweep. "I'll click around to check it" is **not** a valid test strategy. List the autonomous pieces below; each pure helper goes through unit tests, each behavioural use case goes through `/visual-validation`, the diff goes through `/technical-validation`.*
 
 - **Unit tests on pure utilities.** Every file matching `**/*.utils.ts` ships at 100% coverage (statement / branch / function / line). List the new utility files this feature introduces, and any pure helpers extracted from existing modules.
-- **Visual validation.** Every numbered happy-path step and every edge / error case under *Use cases / edge cases* is asserted by the `/visual-validation` agent driving the running app via agent-browser. The agent reads this section to build its assertion list, so phrasing matters. *Visual-validation drives **input metrics only.** Output metrics named in the Why are **not** in scope for this gate — call this out explicitly so a green visual-validation run is not mistaken for proof that the output metric has moved.*
+- **Who checks each case.** Every numbered happy-path step and every edge / error case under *Use cases / edge cases* has exactly one row below, and exactly one checker. Pick the one that can produce the case: a browser cannot create a study dated yesterday or move the clock past midnight, so those rows belong to `unit` or `back-e2e`, and routing them to `visual` makes them unverifiable in every run. `scripts/check-spec-test-strategy.sh` refuses a new spec without this table.
+
+  | Case | Checked by |
+  | --- | --- |
+  | Happy path 1 | visual |
+  | Edge: <case> | unit |
+
+  `Checked by` is one of `unit` (a `*.core.ts` / `*.utils.ts` test), `back-e2e` (the API against a local Postgres), `visual` (the running app in a browser), or `touch` (`scripts/argent.sh`).
+- **Visual validation.** Drives the `visual` and `touch` rows above through the running app. *Visual-validation drives **input metrics only.** Output metrics named in the Why are **not** in scope for this gate — call this out explicitly so a green visual-validation run is not mistaken for proof that the output metric has moved.*
 - **Technical validation.** `/technical-validation` runs after the implementation lands: lint + knip + typecheck + build + the unit-test runner above, plus a per-Q.O.D. correctness pass on the diff.
 - **Coverage gates already in place** stay in place: `infra/cdk/**` and `infra/shared/**` are 100% line-coverage gated and any change here must restate the impact.
 - **Manual sweeps are not allowed as the test strategy.** They are at most a *belt* on top of the automated suspenders, called out under "Production strategy → Manual smoke after deploy" if relevant.
@@ -114,6 +122,8 @@ src/.../Existing.ts                  // UPDATE: <what>
 ## Production strategy
 
 > *Include what analytics you will add and the key metrics to consider to make the feature a success. Include error cases you manage and how it reflects in your alerting system.*
+>
+> *Name the mechanism that exists today for each event and each alarm, by its path, before promising it: `grep` for it. If the application has none, say so and mark the item out of scope or as new infrastructure to build here. A promise with no mechanism behind it is a FAIL row at validation and a spec rewritten mid-pull-request.*
 
 ### Analytics
 

@@ -75,6 +75,16 @@ function readApiVariables(stage: 'prod' | 'preview'): Record<string, unknown> {
   return apiFunction === undefined ? {} : readEnvVars(apiFunction);
 }
 
+function readApiTimeout(stage: 'prod' | 'preview'): unknown {
+  const functions = synthAppStack(stage).findResources('AWS::Lambda::Function');
+  const apiFunction = Object.entries(functions).find(([logicalId]) =>
+    logicalId.includes('AppApiFn'),
+  )?.[1];
+  const properties: unknown = apiFunction?.Properties;
+  if (typeof properties !== 'object' || properties === null) return undefined;
+  return 'Timeout' in properties ? properties.Timeout : undefined;
+}
+
 function readSchemaCloneConfig(template: Template): unknown {
   for (const resource of Object.values(
     template.findResources('AWS::CloudFormation::CustomResource'),
@@ -161,6 +171,11 @@ describe('pragma app stack', () => {
         }),
       }),
     );
+  });
+
+  it('gives the seedable API long enough to finish the fixture, and keeps prod at the default', () => {
+    expect(readApiTimeout('preview')).toBe(29);
+    expect(readApiTimeout('prod')).toBe(10);
   });
 
   it('mounts the test-seed flag only on non-prod stacks', () => {

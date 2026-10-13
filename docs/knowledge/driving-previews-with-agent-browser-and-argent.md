@@ -200,6 +200,11 @@ pnpm exec argent run describe --udid chromium-cdp-9222 --json
 pnpm exec argent run screenshot --udid chromium-cdp-9222 --out ./shot.png --json
 ```
 
+`screenshot --out` writes the file you asked for, but its JSON reply names a
+copy under `/tmp/argent-chromium-media/`. Read the path you passed, not the one
+in the reply: a validator on PR #172 followed the reply, concluded `--out` was
+ignored, and logged a defect it had to retract.
+
 ## The two tools must not share one browser
 
 Pointing `ARGENT_CHROMIUM_PORTS` at the port from `agent-browser get cdp-url`
