@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api.client';
+import { setlistKeys } from './setlists.queries';
 import { applyScoreToBoard, type VoteBoard } from './voting.utils';
 
 export const votingKeys = {
@@ -107,7 +108,10 @@ export function useSetVoteStatus(setlistId: string) {
       return await response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: votingKeys.board(setlistId) });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: votingKeys.board(setlistId) }),
+        queryClient.invalidateQueries({ queryKey: setlistKeys.all }),
+      ]);
     },
   });
 }
@@ -124,7 +128,10 @@ export function useCloseVote(setlistId: string) {
       return await response.json();
     },
     onSuccess: async () => {
-      await queryClient.invalidateQueries({ queryKey: votingKeys.all });
+      await Promise.all([
+        queryClient.invalidateQueries({ queryKey: votingKeys.all }),
+        queryClient.invalidateQueries({ queryKey: setlistKeys.all }),
+      ]);
     },
   });
 }
