@@ -1,13 +1,22 @@
 /** @Feature improvements */
 
 import {
+  DEFAULT_IMPROVEMENT_KIND,
+  IMPROVEMENT_KINDS,
   IMPROVEMENT_STATUSES,
+  type ImprovementKind,
   type ImprovementStatus,
   resolveImprovementStatus,
 } from '@domain/improvement.core';
 import type { ParseKeys } from 'i18next';
 
-export { IMPROVEMENT_STATUSES, type ImprovementStatus };
+export {
+  DEFAULT_IMPROVEMENT_KIND,
+  IMPROVEMENT_KINDS,
+  IMPROVEMENT_STATUSES,
+  type ImprovementKind,
+  type ImprovementStatus,
+};
 
 // @FollowsBlueprint core-label-key
 const STATUS_LABEL_KEY = {
@@ -20,6 +29,25 @@ const STATUS_LABEL_KEY = {
 
 export function selectStatusLabelKey(status: ImprovementStatus): ParseKeys {
   return STATUS_LABEL_KEY[status];
+}
+
+// @FollowsBlueprint core-label-key
+const KIND_LABEL_KEY = {
+  idea: 'improvements.kindIdea',
+  bug: 'improvements.kindBug',
+} as const satisfies Record<ImprovementKind, ParseKeys>;
+
+export function selectKindLabelKey(kind: ImprovementKind): ParseKeys {
+  return KIND_LABEL_KEY[kind];
+}
+
+const KIND_BADGE_KEY = {
+  idea: null,
+  bug: 'improvements.kindBug',
+} as const satisfies Record<ImprovementKind, ParseKeys | null>;
+
+export function selectKindBadgeKey(kind: ImprovementKind): ParseKeys | null {
+  return KIND_BADGE_KEY[kind];
 }
 
 export function readStatus(value: string): ImprovementStatus {

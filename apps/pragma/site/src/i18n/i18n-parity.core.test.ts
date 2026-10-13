@@ -44,6 +44,10 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     key: 'compos.lineup',
     readsTheSameBecause: 'the band says lineup in French too, and the vocabulary keeps that word',
   },
+  {
+    key: 'improvements.kindBug',
+    readsTheSameBecause: 'French speakers say "un bug", and the operator chose that label',
+  },
   { key: 'instruments.title', readsTheSameBecause: 'same word, same spelling' },
   { key: 'lineup.instruments', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.administrationSection', readsTheSameBecause: 'same word, same spelling' },

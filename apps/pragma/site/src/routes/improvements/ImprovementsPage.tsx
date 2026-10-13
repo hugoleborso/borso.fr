@@ -12,6 +12,8 @@ import { Input } from '../../components/atoms/Input';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { FilterPillGroup } from '../../components/molecules/FilterPillGroup';
+import { ImprovementKindBadge } from '../../components/molecules/ImprovementKindBadge';
+import { ImprovementKindToggle } from '../../components/molecules/ImprovementKindToggle';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api.client';
 import {
@@ -24,7 +26,9 @@ import {
 } from '../../lib/queries/improvements.queries';
 import { selectVoteIntent } from '../../lib/queries/improvements.utils';
 import {
+  DEFAULT_IMPROVEMENT_KIND,
   IMPROVEMENT_STATUSES,
+  type ImprovementKind,
   type ImprovementStatus,
   type StatusFilter,
   filterByStatus,
@@ -40,6 +44,7 @@ interface SelectedImprovement {
   title: string;
   details: string;
   status: ImprovementStatus;
+  kind: ImprovementKind;
 }
 
 const DEFAULT_STATUS: ImprovementStatus = 'idea';
@@ -64,18 +69,25 @@ export function ImprovementsPage(): JSX.Element {
       title: selected?.title ?? '',
       details: selected?.details ?? '',
       status: selected?.status ?? DEFAULT_STATUS,
+      kind: selected?.kind ?? DEFAULT_IMPROVEMENT_KIND,
     },
     onSubmit: async ({ value }) => {
       const title = value.title.trim();
       if (title.length === 0) return;
       if (selected === null) {
-        await create.mutateAsync({ title, details: value.details, status: value.status });
+        await create.mutateAsync({
+          title,
+          details: value.details,
+          status: value.status,
+          kind: value.kind,
+        });
       } else {
         await update.mutateAsync({
           id: selected.id,
           title,
           details: value.details,
           status: value.status,
+          kind: value.kind,
         });
       }
       setSelected(null);
@@ -85,10 +97,11 @@ export function ImprovementsPage(): JSX.Element {
 
   const selectImprovement = (row: ImprovementRow): void => {
     const status = readStatus(row.status);
-    setSelected({ id: row.id, title: row.title, details: row.details, status });
+    setSelected({ id: row.id, title: row.title, details: row.details, status, kind: row.kind });
     form.setFieldValue('title', row.title);
     form.setFieldValue('details', row.details);
     form.setFieldValue('status', status);
+    form.setFieldValue('kind', row.kind);
   };
 
   const clearSelection = (): void => {
@@ -179,6 +192,7 @@ export function ImprovementsPage(): JSX.Element {
                   >
                     {row.title}
                   </button>
+                  <ImprovementKindBadge kind={row.kind} />
                   <Badge tone={row.status === 'shipped' ? 'accent' : 'default'}>
                     {t(selectStatusLabelKey(readStatus(row.status)))}
                   </Badge>
@@ -221,6 +235,11 @@ export function ImprovementsPage(): JSX.Element {
                   onChange={(event) => field.handleChange(event.target.value)}
                 />
               </label>
+            )}
+          </form.Field>
+          <form.Field name="kind">
+            {(field) => (
+              <ImprovementKindToggle kind={field.state.value} onChange={field.handleChange} />
             )}
           </form.Field>
           <form.Field name="details">

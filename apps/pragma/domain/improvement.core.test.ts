@@ -1,7 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import {
+  IMPROVEMENT_KINDS,
   IMPROVEMENT_STATUSES,
+  isImprovementKind,
   isImprovementStatus,
+  resolveImprovementKind,
   rankImprovements,
   resolveImprovementStatus,
   selectStatusRank,
@@ -13,6 +16,26 @@ describe('isImprovementStatus', () => {
       expect(isImprovementStatus(status)).toBe(true);
     }
     expect(isImprovementStatus('wontfix')).toBe(false);
+  });
+});
+
+describe('isImprovementKind', () => {
+  it('knows exactly the kinds the backlog declares', () => {
+    expect(IMPROVEMENT_KINDS).toEqual(['idea', 'bug']);
+    for (const kind of IMPROVEMENT_KINDS) {
+      expect(isImprovementKind(kind)).toBe(true);
+    }
+    expect(isImprovementKind('feature')).toBe(false);
+    expect(isImprovementKind(null)).toBe(false);
+  });
+});
+
+describe('resolveImprovementKind', () => {
+  it('keeps a stored kind and reads a row written before the column as an idea', () => {
+    expect(resolveImprovementKind('bug')).toBe('bug');
+    expect(resolveImprovementKind('idea')).toBe('idea');
+    expect(resolveImprovementKind(null)).toBe('idea');
+    expect(resolveImprovementKind('feature')).toBe('idea');
   });
 });
 

@@ -1,6 +1,7 @@
 import { IMPROVEMENT_TITLE_MAX_LENGTH } from '@domain/input-limits.core';
 import { pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { DEFAULT_IMPROVEMENT_KIND, IMPROVEMENT_KINDS } from '@domain/improvement.core';
 
 export const IMPROVEMENT_STATUSES = ['idea', 'planned', 'building', 'shipped', 'declined'] as const;
 
@@ -10,6 +11,7 @@ export const improvementTable = pgTable('improvement', {
   title: text('title').notNull(),
   details: text('details').notNull().default(''),
   status: text('status').notNull(),
+  kind: text('kind'),
   authorMemberId: uuid('author_member_id').notNull(),
   createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
@@ -30,6 +32,7 @@ export const improvementCreateSchema = z.object({
   title: z.string().trim().min(1).max(IMPROVEMENT_TITLE_MAX_LENGTH),
   details: z.string().max(DETAILS_MAX).default(''),
   status: z.enum(IMPROVEMENT_STATUSES).default('idea'),
+  kind: z.enum(IMPROVEMENT_KINDS).default(DEFAULT_IMPROVEMENT_KIND),
 });
 
 export const improvementUpdateSchema = improvementCreateSchema.partial();
