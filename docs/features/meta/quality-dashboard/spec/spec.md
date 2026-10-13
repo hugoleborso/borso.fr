@@ -118,10 +118,12 @@ type SourceStatus = { kind: 'ok' } | { kind: 'unavailable'; since: string; reaso
 
 ```sql
 -- migration, every schema
-ALTER TABLE improvement ADD COLUMN kind text NOT NULL DEFAULT 'idea';
+ALTER TABLE "improvement" ADD COLUMN IF NOT EXISTS "kind" text;
+-- DSQL refuses NOT NULL DEFAULT on an added column; the API writes kind on every
+-- insert and reads a null, from a row filed before this migration, as 'idea'.
 -- apps/pragma/scripts/grant-quality-reader.sql, run once on the cluster by the operator
 CREATE ROLE quality_reader WITH LOGIN;
-AWS IAM GRANT quality_reader TO 'arn:aws:iam::<account>:role/QualityReadRole';
+AWS IAM GRANT quality_reader TO :'quality_read_role_arn';
 GRANT USAGE ON SCHEMA prod TO quality_reader;
 GRANT SELECT ON prod.improvement TO quality_reader;
 ```
