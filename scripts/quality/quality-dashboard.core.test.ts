@@ -229,7 +229,7 @@ describe('buildGatewayIndicators', () => {
     const previews = find(indicators, 'errors-preview', 'pragma');
     expect(previews).toMatchObject({
       pillar: 'stability',
-      label: 'API 5xx on previews, 7 days',
+      label: '5xx, previews',
       unit: 'count',
       current: 5,
       status: { kind: 'ok' },
@@ -239,7 +239,7 @@ describe('buildGatewayIndicators', () => {
     const production = find(indicators, 'errors-prod', 'pragma');
     expect(production).toMatchObject({
       pillar: 'stability',
-      label: 'API 5xx in production, 7 days',
+      label: '5xx, production',
       unit: 'count',
       current: 20,
     });
@@ -251,7 +251,7 @@ describe('buildGatewayIndicators', () => {
     const median = find(indicators, 'latency-p50', 'pragma');
     expect(median).toMatchObject({
       pillar: 'speed',
-      label: 'API latency p50, 7 days',
+      label: 'p50',
       unit: 'ms',
       current: 90,
     });
@@ -263,7 +263,7 @@ describe('buildGatewayIndicators', () => {
     const tail = find(indicators, 'latency-p95', 'pragma');
     expect(tail).toMatchObject({
       pillar: 'speed',
-      label: 'API latency p95, 7 days',
+      label: 'p95',
       unit: 'ms',
       current: 1391,
     });
@@ -296,7 +296,7 @@ describe('buildGatewayIndicators', () => {
     expect(find(indicators, 'errors-preview', 'talos')).toEqual({
       id: 'errors-preview',
       pillar: 'stability',
-      label: 'API 5xx on previews, 7 days',
+      label: '5xx, previews',
       unit: 'count',
       app: 'talos',
       current: null,
@@ -357,7 +357,7 @@ describe('Sentry', () => {
     const indicators = buildSentryIndicators(reading, ['pragma', 'banana-rush'], NOW);
     expect(find(indicators, 'sentry-errors-prod', 'pragma')).toMatchObject({
       pillar: 'stability',
-      label: 'Sentry errors in production, 7 days',
+      label: 'Sentry, production',
       unit: 'count',
       current: 5,
       status: { kind: 'ok' },
@@ -367,18 +367,18 @@ describe('Sentry', () => {
       { weekStart: '2026-10-12', value: null },
     ]);
     expect(find(indicators, 'sentry-errors-preview', 'pragma')).toMatchObject({
-      label: 'Sentry errors on previews, 7 days',
+      label: 'Sentry, previews',
       current: 4,
     });
     expect(find(indicators, 'sentry-errors-preview', 'banana-rush')).toEqual({
       id: 'sentry-errors-preview',
       pillar: 'stability',
-      label: 'Sentry errors on previews, 7 days',
+      label: 'Sentry, previews',
       unit: 'count',
       app: 'banana-rush',
       current: null,
       weeks: EMPTY_WEEKS,
-      status: { kind: 'not-applicable', reason: 'Sentry not connected' },
+      status: { kind: 'not-applicable', reason: 'no Sentry' },
     });
   });
 
@@ -425,7 +425,7 @@ describe('bug reports', () => {
     const pragma = find(indicators, 'user-bug-reports-open', 'pragma');
     expect(pragma).toMatchObject({
       pillar: 'stability',
-      label: 'Bug reports from users, open',
+      label: 'User bugs open',
       unit: 'count',
       current: 2,
       status: { kind: 'ok' },
@@ -438,7 +438,7 @@ describe('bug reports', () => {
     expect(find(indicators, 'user-bug-reports-open', 'talos')).toMatchObject({
       current: null,
       weeks: EMPTY_WEEKS,
-      status: { kind: 'not-applicable', reason: 'bug reports are collected in pragma only' },
+      status: { kind: 'not-applicable', reason: 'pragma only' },
     });
   });
 
@@ -501,11 +501,11 @@ describe('security', () => {
     expect(
       indicators.map((indicator) => [indicator.id, indicator.label, indicator.current]),
     ).toEqual([
-      ['dependabot-critical-high', 'Dependabot alerts, critical or high', 1],
-      ['dependabot-other', 'Dependabot alerts, moderate or low', 2],
+      ['dependabot-critical-high', 'Dependabot, critical or high', 1],
+      ['dependabot-other', 'Dependabot, moderate or low', 2],
       ['audit-critical-high', 'pnpm audit, critical or high', null],
       ['audit-other', 'pnpm audit, moderate or lower', null],
-      ['secret-scanning-open', 'Secret scanning alerts, open', 0],
+      ['secret-scanning-open', 'Secret scanning, open', 0],
     ]);
     expect(indicators.at(0)).toMatchObject({
       pillar: 'security',

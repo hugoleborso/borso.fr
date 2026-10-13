@@ -104,8 +104,8 @@ const TARGET_ROW_PATTERN = /^\|\s*`([a-z0-9-]+)`\s*\|\s*([a-z0-9-]+)\s*\|\s*([0-
 const NO_API_REASON = 'no API';
 const NO_PREVIEW_REASON = 'no preview deployed';
 const NO_PRODUCTION_API_REASON = 'no production API deployed';
-const NO_SENTRY_REASON = 'Sentry not connected';
-const NO_BUG_REPORTS_REASON = 'bug reports are collected in pragma only';
+const NO_SENTRY_REASON = 'no Sentry';
+const NO_BUG_REPORTS_REASON = 'pragma only';
 
 export const METRIC_KINDS = ['latencyP50', 'latencyP95', 'serverErrors'] as const;
 type MetricKind = (typeof METRIC_KINDS)[number];
@@ -265,7 +265,7 @@ export function buildGatewayIndicators(
       {
         id: 'errors-preview',
         pillar: 'stability',
-        label: 'API 5xx on previews, 7 days',
+        label: '5xx, previews',
         unit: 'count',
       },
       'serverErrors',
@@ -278,7 +278,7 @@ export function buildGatewayIndicators(
       {
         id: 'errors-prod',
         pillar: 'stability',
-        label: 'API 5xx in production, 7 days',
+        label: '5xx, production',
         unit: 'count',
       },
       'serverErrors',
@@ -288,7 +288,7 @@ export function buildGatewayIndicators(
       weekStarts,
     ),
     buildGatewayIndicator(
-      { id: 'latency-p50', pillar: 'speed', label: 'API latency p50, 7 days', unit: 'ms' },
+      { id: 'latency-p50', pillar: 'speed', label: 'p50', unit: 'ms' },
       'latencyP50',
       'prod',
       app,
@@ -296,7 +296,7 @@ export function buildGatewayIndicators(
       weekStarts,
     ),
     buildGatewayIndicator(
-      { id: 'latency-p95', pillar: 'speed', label: 'API latency p95, 7 days', unit: 'ms' },
+      { id: 'latency-p95', pillar: 'speed', label: 'p95', unit: 'ms' },
       'latencyP95',
       'prod',
       app,
@@ -340,9 +340,9 @@ export function buildSentryIndicators(
     {
       id: 'sentry-errors-preview',
       environment: 'preview',
-      label: 'Sentry errors on previews, 7 days',
+      label: 'Sentry, previews',
     },
-    { id: 'sentry-errors-prod', environment: 'prod', label: 'Sentry errors in production, 7 days' },
+    { id: 'sentry-errors-prod', environment: 'prod', label: 'Sentry, production' },
   ];
   return apps.flatMap((app) =>
     definitions.map((definition): Indicator => {
@@ -404,7 +404,7 @@ export function buildBugReportIndicators(
     const base = {
       id: 'user-bug-reports-open',
       pillar: 'stability' as const,
-      label: 'Bug reports from users, open',
+      label: 'User bugs open',
       unit: 'count' as const,
       app,
     };
@@ -507,12 +507,12 @@ export function buildSecurityIndicators(
   const weekStarts = listWeekStarts(now);
   return [
     currentOnly(
-      { id: 'dependabot-critical-high', label: 'Dependabot alerts, critical or high' },
+      { id: 'dependabot-critical-high', label: 'Dependabot, critical or high' },
       mapResult(reading.dependabot, (counts) => counts.criticalOrHigh),
       weekStarts,
     ),
     currentOnly(
-      { id: 'dependabot-other', label: 'Dependabot alerts, moderate or low' },
+      { id: 'dependabot-other', label: 'Dependabot, moderate or low' },
       mapResult(reading.dependabot, (counts) => counts.other),
       weekStarts,
     ),
@@ -527,7 +527,7 @@ export function buildSecurityIndicators(
       weekStarts,
     ),
     currentOnly(
-      { id: 'secret-scanning-open', label: 'Secret scanning alerts, open' },
+      { id: 'secret-scanning-open', label: 'Secret scanning, open' },
       reading.secretScanning,
       weekStarts,
     ),

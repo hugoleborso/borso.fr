@@ -8,7 +8,7 @@ function indicator(overrides: Partial<Indicator>): Indicator {
   return {
     id: 'latency-p95',
     pillar: 'speed',
-    label: 'API latency p95, 7 days',
+    label: 'p95',
     unit: 'ms',
     app: 'pragma',
     current: 1391,
@@ -72,10 +72,21 @@ describe('renderDashboardPage', () => {
     expect(html.indexOf('<h2>Security</h2>')).toBeLessThan(html.indexOf('<h2>Stability</h2>'));
     expect(html.indexOf('<h2>Stability</h2>')).toBeLessThan(html.indexOf('<h2>Speed</h2>'));
     expect(html).toContain(
-      '<section class="pillar"><h2>Security</h2><p>Known vulnerable dependencies and exposed secrets, counted, never named.</p><div class="scroll"><table><tr><th></th><th>Alerts</th></tr><tr><th>repository</th><td><span class="value">0</span></td></tr></table></div></section>',
+      '<section class="pillar pillar-security"><h2>Security</h2><p>Known vulnerable dependencies and exposed secrets, counted, never named.</p><div class="scroll"><table><tr><th>Alerts</th><td><span class="value">0</span></td></tr></table></div></section>',
     );
-    expect(html).toContain('<tr><th>pragma</th><td><span class="value">3</span>');
+    expect(html).toContain('<tr><th>Errors</th><td><span class="value">3</span>');
     expect(html).toContain('<span class="value">1391 ms</span>');
+    const transposed = renderDashboardPage(
+      buildInput({
+        indicators: [
+          indicator({ pillar: 'security', label: 'One', app: 'repository', current: 1, weeks: [] }),
+          indicator({ pillar: 'security', label: 'Two', app: 'repository', current: 2, weeks: [] }),
+        ],
+      }),
+    );
+    expect(transposed).toContain(
+      '<table><tr><th>One</th><td><span class="value">1 ms</span></td></tr><tr><th>Two</th>',
+    );
   });
 
   it('scales the trend to the busiest week and marks an empty week as missing', () => {
@@ -128,7 +139,7 @@ describe('renderDashboardPage', () => {
         ],
       }),
     );
-    expect(html).toContain('<span class="status">unavailable: token &lt;expired&gt;</span>');
+    expect(html).toContain('<span class="status" title="token &lt;expired&gt;">unavailable</span>');
     expect(html).toContain('<tr><th>b</th><td><span class="status">no API</span></td></tr>');
     expect(html).toContain('<tr><th>c</th><td><span class="status">no traffic</span></td></tr>');
   });
@@ -139,11 +150,9 @@ describe('renderDashboardPage', () => {
         indicators: [indicator({ app: 'a' }), indicator({ app: 'b', label: 'Other' })],
       }),
     );
-    expect(html).toContain(
-      '<tr><th></th><th>API latency p95, 7 days</th><th>Other</th></tr><tr><th>a</th>',
-    );
+    expect(html).toContain('<tr><th></th><th>p95</th><th>Other</th></tr><tr><th>a</th>');
     expect(html).toContain('</td></tr><tr><th>b</th><td></td><td>');
-    expect(html).toContain('</section><section class="pillar"><h2>Stability</h2>');
+    expect(html).toContain('</section><section class="pillar pillar-stability"><h2>Stability</h2>');
   });
 
   it('colours a value against its target', () => {

@@ -29,9 +29,13 @@ const PILLARS: readonly { readonly id: Pillar; readonly title: string; readonly 
     {
       id: 'stability',
       title: 'Stability',
-      intent: 'Errors on previews and in production, and bugs users reported.',
+      intent: 'API 5xx and Sentry errors on previews and in production, and bugs users reported.',
     },
-    { id: 'speed', title: 'Speed', intent: 'What a caller of each production API waits.' },
+    {
+      id: 'speed',
+      title: 'Speed',
+      intent: 'Latency of each production API, in milliseconds.',
+    },
   ];
 
 const UNIT_SUFFIX: Readonly<Record<Indicator['unit'], string>> = { count: '', ms: ' ms' };
@@ -52,9 +56,11 @@ function renderTrend(weeks: readonly WeeklyValue[]): string {
 }
 
 function renderValue(indicator: Indicator, targets: readonly Target[]): string {
-  if (indicator.status.kind !== 'ok') {
-    const prefix = indicator.status.kind === 'unavailable' ? 'unavailable: ' : '';
-    return `<span class="status">${escapeHtml(prefix + indicator.status.reason)}</span>`;
+  if (indicator.status.kind === 'unavailable') {
+    return `<span class="status" title="${escapeHtml(indicator.status.reason)}">unavailable</span>`;
+  }
+  if (indicator.status.kind === 'not-applicable') {
+    return `<span class="status">${escapeHtml(indicator.status.reason)}</span>`;
   }
   if (indicator.current === null) return '<span class="status">no traffic</span>';
   const verdict = judgeAgainstTarget(indicator, targets);
@@ -66,7 +72,7 @@ function orderedUnique(values: readonly string[]): readonly string[] {
   return [...new Set(values)];
 }
 
-export function renderPillar(
+function renderPillar(
   pillar: (typeof PILLARS)[number],
   indicators: readonly Indicator[],
   targets: readonly Target[],
@@ -74,6 +80,26 @@ export function renderPillar(
   const own = indicators.filter((indicator) => indicator.pillar === pillar.id);
   const labels = orderedUnique(own.map((indicator) => indicator.label));
   const apps = orderedUnique(own.map((indicator) => indicator.app));
+  const table =
+    apps.length === 1 ? renderByLabel(own, targets) : renderByApp(own, labels, apps, targets);
+  return `<section class="pillar pillar-${pillar.id}"><h2>${pillar.title}</h2><p>${pillar.intent}</p><div class="scroll"><table>${table}</table></div></section>`;
+}
+
+function renderByLabel(own: readonly Indicator[], targets: readonly Target[]): string {
+  return own
+    .map(
+      (indicator) =>
+        `<tr><th>${escapeHtml(indicator.label)}</th><td>${renderValue(indicator, targets)}</td></tr>`,
+    )
+    .join('');
+}
+
+function renderByApp(
+  own: readonly Indicator[],
+  labels: readonly string[],
+  apps: readonly string[],
+  targets: readonly Target[],
+): string {
   const header = `<tr><th></th>${labels.map((label) => `<th>${escapeHtml(label)}</th>`).join('')}</tr>`;
   const rows = apps.map((app) => {
     const cells = labels.map((label) => {
@@ -82,7 +108,7 @@ export function renderPillar(
     });
     return `<tr><th>${escapeHtml(app)}</th>${cells.join('')}</tr>`;
   });
-  return `<section class="pillar"><h2>${pillar.title}</h2><p>${pillar.intent}</p><div class="scroll"><table>${header}${rows.join('')}</table></div></section>`;
+  return `${header}${rows.join('')}`;
 }
 
 function renderBanner(unavailableSources: readonly string[]): string {
