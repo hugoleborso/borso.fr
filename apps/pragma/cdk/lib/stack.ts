@@ -21,6 +21,7 @@ const SPOTIFY_CREDENTIALS_PARAMETER = `/${APP_SLUG}/spotify-credentials`;
 
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
+const SEEDABLE_API_TIMEOUT_SECONDS = 29;
 
 export interface ErrorReportingProject {
   readonly dsn: string;
@@ -107,6 +108,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     frontend: { distPath: props.assetsPath },
     api: {
       entry: props.apiEntry,
+      ...(isProduction ? {} : { timeoutSeconds: SEEDABLE_API_TIMEOUT_SECONDS }),
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,

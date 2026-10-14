@@ -909,6 +909,18 @@ const SCRIPT_CANARIES: readonly CommandCanary[] = [
     tier: 'fast',
   },
   {
+    mechanism: 'scripts/check-spec-test-strategy.sh',
+    label: 'new specs route each case to one checker',
+    defect: 'a new feature spec whose Test strategy has no Case / Checked by table',
+    plant: {
+      [`${DOCUMENTS}/features/meta/gate-canary/spec/spec.md`]:
+        '# Gate canary\n\n### Test strategy\n\nEvery case is checked visually and by a unit test.\n',
+    },
+    command: SCRIPT('check-spec-test-strategy.sh'),
+    refusal: /gate-canary\/spec\/spec\.md routes no case/,
+    tier: 'fast',
+  },
+  {
     mechanism: 'scripts/check-stylesheet-contents.sh',
     label: 'stylesheets hold tokens only',
     defect: 'a global class rule in the token stylesheet',

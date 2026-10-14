@@ -123,7 +123,7 @@ Walk the user through these 13 steps, in order. Do not skip ahead — each step 
 | 5 | Conduct research (external + internal) | Why | Industry standards + repo `docs/` + any internal blueprint material the user can share. Reduces test-and-learn. |
 | 6 | Collect use cases | Use cases / edge cases | Normal + edge + error. Anything missing here will break in production. |
 | 7 | Define the business model | Changes | Entities, relationships, shared vocabulary (DDD). Stabilises business/tech terminology. |
-| 8 | Identify data sources | Changes | Verify required data actually exists before designing around it. |
+| 8 | Identify data sources | Changes | Verify required data actually exists before designing around it: for each piece of data the feature reads, `grep` for the code that **writes** it today and cite the path. A column that exists but that no screen writes is not a data source. |
 | 9 | Define the interface | Result | Mockups, screens, before/after. Forces a visible result. |
 | 10 | Make component choices | Changes / Q.O.D. | 2–3 alternatives, justified pick. Avoids premature constraints. |
 | 11 | Identify key implementation points | Changes / Q.O.D. | Sequence, risks, critical dependencies. |

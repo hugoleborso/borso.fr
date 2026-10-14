@@ -1,5 +1,3 @@
-import { type Lineup, memberInstrumentPairs } from '@domain/lineup.core';
-
 export type MemberId = string;
 export type InstrumentId = string;
 export type SongId = string;
@@ -25,23 +23,6 @@ export function effective(
   if (override !== undefined) return override;
   const fallback = defaults[query.memberId]?.[query.instrumentId];
   return fallback ?? null;
-}
-
-export function meanForSong(
-  defaults: DefaultMap,
-  overrides: OverrideMap,
-  songId: SongId,
-  lineup: Lineup,
-): number | null {
-  const scores: number[] = [];
-  for (const [memberId, instrumentId] of memberInstrumentPairs(lineup)) {
-    const score = effective(defaults, overrides, { memberId, instrumentId, songId });
-    if (score === null) continue;
-    scores.push(score);
-  }
-  if (scores.length === 0) return null;
-  const sum = scores.reduce((accumulator, score) => accumulator + score, 0);
-  return sum / scores.length;
 }
 
 export function isRedundantOverride(

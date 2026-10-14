@@ -57,7 +57,7 @@ cd "$REPO_ROOT"
 BROWSER_ARGS='--ssl-version-max=tls1.2,--enable-unsafe-swiftshader,--use-gl=angle,--use-angle=swiftshader,--no-sandbox'
 
 note() {
-  printf '\033[36m[browser]\033[0m %s\n' "$1"
+  printf '\033[36m[browser]\033[0m %s\n' "$1" >&2
 }
 
 find_chromium() {
