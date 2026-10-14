@@ -1,24 +1,14 @@
-import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { QueryClientProvider } from '@tanstack/react-query';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import 'leaflet/dist/leaflet.css';
 import { App } from './App';
+import { queryClient } from './lib/query-client.setup';
 import './i18n/i18n';
 import { initSentry } from './observability/sentry';
 import './styles/tokens.css';
 
 initSentry();
-
-const RETRY_COUNT = 1;
-
-const queryClient = new QueryClient({
-  defaultOptions: {
-    queries: {
-      refetchOnWindowFocus: false,
-      retry: RETRY_COUNT,
-    },
-  },
-});
 
 // @FollowsBlueprint site-entrypoint
 const rootElement = document.getElementById('root');
