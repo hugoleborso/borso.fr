@@ -21,6 +21,16 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 > the developer's sole and last goal between the merged work and
 > starting anything new — invest accordingly.
 
+> **The output is an eradication, not a lesson.** A defect the
+> operator saw ends in a mechanism that comes from tools, ideally
+> code: a rule, a test, a type, a library setting. A knowledge entry
+> is never the eradication of a defect; it is only for a vendor
+> surprise where nothing in this repository was wrong. Every
+> dantotsu is written against [`dantotsu-frame.md`](./dantotsu-frame.md),
+> the agentic dantotsu frame, and passes each of its checkpoints:
+> the mechanism fails without the change and passes with it, and the
+> similar instances across every application are found and covered.
+
 ## When to invoke
 
 - A PR you've been working on just merged or closed.
@@ -258,10 +268,17 @@ For each surviving subject:
    usually ships in the same commit as the entry, so `fix-commits:
    [self]` is the usual value: a branch hash does not survive the
    squash merge.
-4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)).
+4. Walk the seven Dantotsu steps (see [`/dantotsu`](../dantotsu/SKILL.md)),
+   then tick every checkpoint of [`dantotsu-frame.md`](./dantotsu-frame.md)
+   against the draft and fix each one that fails.
 5. **Ship the eradication** — code, in this PR. Pick the highest
-   feasible level of the ladder (1 = structural impossibility, 5 =
-   knowledge as last resort). The frontmatter records
+   feasible level of the ladder (1 = structural impossibility, 4 =
+   detection). Level 5, a knowledge entry, is not accepted for a
+   defect from this skill. Before writing it, grep every application
+   for the same shape and cover each instance the mechanism reaches;
+   list them in the *Eradication* section. Prove it: run the new test
+   or rule once with the fix removed and once with it, and quote both
+   results in the entry. The frontmatter records
    `eradication-level`. Each entry links the commit SHA + diff
    snippet of the eradication.
 6. Add a one-line entry to `docs/dantotsus/README.md` index.
