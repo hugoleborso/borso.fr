@@ -1,5 +1,5 @@
 ---
-summary: 'agent-browser traps: `--executable-path` ignored once the daemon runs, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, and a click below a nested scroller that reports success and does nothing.'
+summary: 'agent-browser traps: `--executable-path` ignored once the daemon runs, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, and a click below a nested scroller that reports success and does nothing, a label fill that reports `Done` and fills nothing, and a session that stops fetching after a long idle.'
 triggers:
   commands:
     - '\bagent-browser\b'
@@ -170,6 +170,23 @@ looks frozen, restart the daemon and check whether the symptom survives it.**
 itself rejects `--restart` after `--session` with `Unknown command: --restart`,
 which is the kind of order-sensitivity its help does not state). A restart also
 resets the count.
+
+## `find label … fill` can print `Done` and leave the field empty
+
+On PR #118's account page, `find label "SECRET ICAL ADDRESS" fill <url>`
+printed `Done`, and the input stayed empty. The `Save` that followed sent an
+empty address, and the server's refusal read as a validation defect in the
+application. Read the field back with `get value <ref>` after every fill, or
+fill by the ref from a fresh `snapshot`, before treating what the server says
+as a finding.
+
+## A long idle wedges the session the same way forty drives do
+
+After an eighty-minute wait on PR #118, every `fetch` the page made answered
+`TypeError: Failed to fetch` until the daemon was restarted. The application
+was fine, and a fresh session loaded it at once. If a validator has to wait
+for a time window, close the session and open a new one afterwards rather than
+reuse the one that sat idle.
 
 ## `--session` silently discards the page when a later call omits a launch flag
 
