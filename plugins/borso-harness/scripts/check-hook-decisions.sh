@@ -270,6 +270,12 @@ run_context_case knowledge-triggers.sh silent '' \
   '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"cat docs/knowledge/cdk-out-tmp-fills-the-sandbox-disk.md"},"tool_response":{"stdout":"Error: ENOSPC: no space left on device","stderr":""}}'
 run_context_case knowledge-triggers.sh silent '' \
   '{"hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"/home/user/repo/apps/pragma/site/src/routes/Home.tsx"}}'
+run_context_case knowledge-triggers.sh inform 'dsql-postgres-compat-gaps.md' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"git mv apps/pragma/api/src/database/migrations/0015_feeds.sql apps/pragma/api/src/database/migrations/0016_feeds.sql"}}'
+run_context_case knowledge-triggers.sh inform 'dsql-postgres-compat-gaps.md' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"cd /home/user/repo && sed -i s/a/b/ apps/pragma/api/src/database/migrations/0016_feeds.sql"}}'
+run_context_case knowledge-triggers.sh silent '' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"scripts/kaizen.sh \\"renamed apps/pragma/api/src/database/migrations/0016_feeds.sql\\""}}'
 
 # --- posttool-eslint-cache-replays-a-fixed-error.sh ------------------------
 #
