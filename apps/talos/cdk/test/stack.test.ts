@@ -101,13 +101,21 @@ describe('talos app stack', () => {
     );
   });
 
-  it('lets the api connect to the talos cluster', () => {
-    synthAppStack().hasResourceProperties(
+  it('lets the api connect to the talos cluster as its stage role, never as admin', () => {
+    const template = synthAppStack();
+    template.hasResourceProperties(
       'AWS::IAM::Policy',
       Match.objectLike({
         PolicyDocument: Match.objectLike({
-          Statement: Match.arrayWith([Match.objectLike({ Action: 'dsql:DbConnectAdmin' })]),
+          Statement: Match.arrayWith([Match.objectLike({ Action: 'dsql:DbConnect' })]),
         }),
+      }),
+    );
+    template.hasResourceProperties(
+      'AWS::Lambda::Function',
+      Match.objectLike({
+        FunctionName: Match.stringLikeRegexp('api'),
+        Environment: { Variables: Match.objectLike({ DSQL_ROLE: 'api_prod' }) },
       }),
     );
   });

@@ -54,6 +54,7 @@
     "hash-wasm": "^4.11.0",
     "hono": "catalog:",
     "i18next": "catalog:",
+    "ical.js": "2.2.1",
     "postgres": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

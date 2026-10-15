@@ -101,6 +101,16 @@ export const pragmaManifest: ArchitectureManifest = {
   ],
   externals: [
     {
+      id: 'calendar-providers',
+      icon: '📅',
+      name: 'Calendar providers',
+      technology: 'HTTPS iCalendar feeds (Google, iCloud, Outlook)',
+      description:
+        "Serves each member's calendar from the secret iCal address the member pasted on the account page. The API reads every feed when the Sessions page asks for free slots, keeps only the busy intervals, and never returns or logs the address. Each request is limited to https on port 443 with a public host name, re-checked on every redirect, with a size limit and a time limit.",
+      boundary: 'third-party',
+      access: 'credential',
+    },
+    {
       id: 'webauthn',
       icon: '🔑',
       name: 'WebAuthn authenticator',

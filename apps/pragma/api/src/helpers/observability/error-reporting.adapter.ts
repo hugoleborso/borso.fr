@@ -3,7 +3,7 @@
  */
 
 import * as Sentry from '@sentry/aws-serverless';
-import type { ErrorReportingSettings } from './error-reporting.core';
+import { type ErrorReportingSettings, isUnrecordedOutgoingRequest } from './error-reporting.core';
 
 const FLUSH_TIMEOUT_MILLISECONDS = 2_000;
 
@@ -44,6 +44,9 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: OUTGOING_TRACE_PROPAGATION_TARGETS,
     dataCollection: PRIVATE_DATA_COLLECTION,
+    integrations: [
+      Sentry.nativeNodeFetchIntegration({ ignoreOutgoingRequests: isUnrecordedOutgoingRequest }),
+    ],
   });
 }
 

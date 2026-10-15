@@ -4,6 +4,7 @@ import {
   defaultDateTimeLocal,
   filterFutureConcerts,
   formatDateTimeLocal,
+  selectInitialDateTimeLocal,
 } from './create-session-dialog.utils';
 
 // @FollowsBlueprint test-pure-unit
@@ -82,5 +83,17 @@ describe('filterFutureConcerts', () => {
   it('returns an empty list when nothing is in the future', () => {
     const concerts = [{ id: 'a', date: '2020-01-01T00:00:00Z' }];
     expect(filterFutureConcerts(concerts, now)).toEqual([]);
+  });
+});
+
+describe('selectInitialDateTimeLocal', () => {
+  it('starts from the date a free slot hands over', () => {
+    const slotStart = new Date(2026, 9, 14, 19, 15);
+    expect(selectInitialDateTimeLocal(slotStart, new Date(2026, 9, 1))).toBe('2026-10-14T19:15');
+  });
+
+  it('falls back to tomorrow evening without one', () => {
+    const now = new Date(2026, 9, 1, 9, 0);
+    expect(selectInitialDateTimeLocal(undefined, now)).toBe(defaultDateTimeLocal(now));
   });
 });

@@ -1,14 +1,15 @@
 import * as fs from 'node:fs';
 import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { CfnOutput, CustomResource, Duration, Stack } from 'aws-cdk-lib';
-import { Effect, type IGrantable, PolicyStatement } from 'aws-cdk-lib/aws-iam';
-import { Architecture, Runtime } from 'aws-cdk-lib/aws-lambda';
+import { CfnOutput, CfnResource, CustomResource, Duration, Lazy, Stack } from 'aws-cdk-lib';
+import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import { Architecture, type IFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { listUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
+import { apiRoleName } from '../internal/migration-runner/database-role.utils.js';
 import {
   assertDeployStage,
   dsqlSchemaName,
@@ -58,6 +59,7 @@ interface MigrationFile {
 }
 
 const DSQL_ADMIN_CONNECT_ACTION = 'dsql:DbConnectAdmin';
+const DSQL_CONNECT_ACTION = 'dsql:DbConnect';
 const MIGRATION_FILE_PATTERN = /^(\d+)_[A-Za-z0-9_-]+\.sql$/;
 const MIGRATION_RUNNER_TIMEOUT_MINUTES = 5;
 const MIGRATION_RUNNER_MEMORY_MIB = 512;
@@ -109,8 +111,11 @@ export class DsqlSchema extends Construct {
   public readonly schemaName: string;
   public readonly clusterArn: string;
   public readonly clusterEndpoint: string;
+  public readonly apiRoleName: string;
 
   private readonly runnerFn: NodejsFunction;
+  private readonly schemaResource: CustomResource;
+  private readonly apiPrincipalArns: string[] = [];
 
   constructor(scope: Construct, id: string, props: DsqlSchemaProps) {
     super(scope, id);
@@ -124,6 +129,7 @@ export class DsqlSchema extends Construct {
     this.schemaName = dsqlSchemaName(props);
     this.clusterArn = props.cluster.clusterArn;
     this.clusterEndpoint = props.cluster.clusterEndpoint;
+    this.apiRoleName = apiRoleName(this.schemaName);
 
     const runnerLogGroup = new LogGroup(this, 'MigrationRunnerLogs', {
       retention: RetentionDays.ONE_WEEK,
@@ -158,7 +164,7 @@ export class DsqlSchema extends Construct {
       logGroup: providerLogGroup,
     });
 
-    new CustomResource(this, 'Schema', {
+    this.schemaResource = new CustomResource(this, 'Schema', {
       serviceToken: provider.serviceToken,
       properties: {
         clusterEndpoint: this.clusterEndpoint,
@@ -166,6 +172,8 @@ export class DsqlSchema extends Construct {
         schemaName: this.schemaName,
         migrations,
         migrationsDigest: digestMigrations(migrations),
+        apiRoleName: this.apiRoleName,
+        apiPrincipalArns: Lazy.list({ produce: () => this.apiPrincipalArns }),
         ...(props.cloneFromSchema === undefined ? {} : { cloneFromSchema: props.cloneFromSchema }),
       },
     });
@@ -173,15 +181,32 @@ export class DsqlSchema extends Construct {
     new CfnOutput(this, 'SchemaName', { value: this.schemaName });
   }
 
-  public grantConnect(grantable: IGrantable): void {
-    grantable.grantPrincipal.addToPrincipalPolicy(
+  public grantConnect(handler: IFunction): void {
+    const role = handler.role;
+    if (role === undefined) {
+      throw new Error('DsqlSchema.grantConnect: the function has no execution role to map.');
+    }
+    role.addToPrincipalPolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: [DSQL_ADMIN_CONNECT_ACTION],
+        actions: [DSQL_CONNECT_ACTION],
         resources: [this.clusterArn],
       }),
     );
+    this.apiPrincipalArns.push(role.roleArn);
+    deployAfter(handler, this.schemaResource);
   }
+}
+
+function deployAfter(handler: IFunction, schemaResource: CustomResource): void {
+  const functionResource = handler.node.defaultChild;
+  const schemaCfnResource = schemaResource.node.defaultChild;
+  if (!(functionResource instanceof CfnResource) || !(schemaCfnResource instanceof CfnResource)) {
+    throw new TypeError(
+      'DsqlSchema.grantConnect: expected a function defined in this application.',
+    );
+  }
+  functionResource.addResourceDependency(schemaCfnResource);
 }
 
 function digestMigrations(migrations: readonly MigrationFile[]): string {

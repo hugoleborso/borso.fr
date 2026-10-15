@@ -1,7 +1,10 @@
 import { readCredentialOfMember } from '../auth/credentials.service';
+import { readCalendarFeedState } from '../calendar-feeds/calendar-feeds.service';
+import type { CalendarFeedState } from '../calendar-feeds/calendar-feeds.types';
 import { getMembersSortedByFirstName, patchMember } from '../members/members.service';
 
 export { changePassword } from '../auth/credentials.service';
+export { removeCalendarFeed, saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
 export { SESSION_COOKIE_NAME, SESSION_TTL_MS } from '../auth/session-cookie.utils';
 export {
   finishPasskeyRegistration,
@@ -17,13 +20,15 @@ export interface SignedInMember {
   readonly username: string;
   readonly phone: string | null;
   readonly email: string | null;
+  readonly calendarFeed: CalendarFeedState;
 }
 
 // @FollowsBlueprint service-orchestration
 export async function readSignedInMember(memberId: string): Promise<SignedInMember | null> {
-  const [credential, members] = await Promise.all([
+  const [credential, members, calendarFeed] = await Promise.all([
     readCredentialOfMember(memberId),
     getMembersSortedByFirstName(),
+    readCalendarFeedState(memberId),
   ]);
   if (credential === null) return null;
   const member = members.find((candidate) => candidate.id === memberId);
@@ -35,6 +40,7 @@ export async function readSignedInMember(memberId: string): Promise<SignedInMemb
     username: credential.username,
     phone: member.phone,
     email: member.email,
+    calendarFeed,
   };
 }
 

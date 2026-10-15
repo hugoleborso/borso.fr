@@ -11,10 +11,20 @@ const YEAR_DIGITS = 4;
 const TWO_DIGIT_FIELD = 2;
 const DATETIME_LOCAL_LENGTH = 16;
 
+export interface ExistingConcert {
+  readonly id: string;
+  readonly date: string;
+  readonly venue: string | null;
+}
+
 export function defaultDateTimeLocal(now: Date): string {
   const tomorrow = new Date(now.getTime() + ONE_DAY_MS);
   tomorrow.setHours(TOMORROW_HOUR, TOMORROW_MINUTE, 0, 0);
   return formatDateTimeLocal(tomorrow);
+}
+
+export function selectInitialDateTimeLocal(initialDate: Date | undefined, now: Date): string {
+  return initialDate === undefined ? defaultDateTimeLocal(now) : formatDateTimeLocal(initialDate);
 }
 
 // @FollowsBlueprint utils-pure-module

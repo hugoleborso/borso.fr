@@ -7,6 +7,7 @@ const ALL_TABLES: readonly string[] = [
   'audience_vote',
   'voting_round',
   'member_credential',
+  'member_calendar_feed',
   'member_passkey',
   'webauthn_challenge',
   'setlist_vote',

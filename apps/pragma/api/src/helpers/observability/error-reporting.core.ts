@@ -6,6 +6,12 @@ const MIDDLEWARE_METHOD = 'ALL';
 
 const UNMATCHED_ROUTE = 'unmatched route';
 
+const RECORDED_OUTGOING_HOSTS: ReadonlySet<string> = new Set([
+  'api.deezer.com',
+  'accounts.spotify.com',
+  'api.spotify.com',
+]);
+
 export type ReportingStage = (typeof REPORTING_STAGES)[number];
 
 export interface ErrorReportingInputs {
@@ -46,4 +52,9 @@ export function selectErrorReportingSettings(
 export function selectRouteName(matchedRoutes: readonly MatchedRoute[]): string {
   const handlerRoutes = matchedRoutes.filter((route) => route.method !== MIDDLEWARE_METHOD);
   return handlerRoutes.at(-1)?.path ?? UNMATCHED_ROUTE;
+}
+
+export function isUnrecordedOutgoingRequest(url: string): boolean {
+  if (!URL.canParse(url)) return true;
+  return !RECORDED_OUTGOING_HOSTS.has(new URL(url).hostname);
 }

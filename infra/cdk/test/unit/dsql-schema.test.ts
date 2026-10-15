@@ -4,6 +4,8 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { App, Stack } from 'aws-cdk-lib';
 import { Template } from 'aws-cdk-lib/assertions';
+import { Role } from 'aws-cdk-lib/aws-iam';
+import { Code, Function as LambdaFunction, Runtime } from 'aws-cdk-lib/aws-lambda';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { DsqlCluster } from '../../src/constructs/dsql-cluster.js';
 import { DsqlSchema } from '../../src/constructs/dsql-schema.js';
@@ -158,7 +160,38 @@ describe('DsqlSchema', () => {
     ).toThrow(/migrationsPath does not exist/);
   });
 
-  it('grantConnect adds dsql:DbConnectAdmin to the principal policy', () => {
+  it('grantConnect gives the function dsql:DbConnect, never DbConnectAdmin', () => {
+    const { template } = synthWithGrantedFunction();
+    const apiPolicy = resourcesOfType(template, 'AWS::IAM::Policy').find((policy) =>
+      JSON.stringify(policy.Properties?.Roles).includes('ApiServiceRole'),
+    );
+    const statements = JSON.stringify(apiPolicy?.Properties?.PolicyDocument);
+    expect(statements).toContain('"dsql:DbConnect"');
+    expect(statements).not.toContain('DbConnectAdmin');
+  });
+
+  it('grantConnect passes the role name and the function role ARN to the schema resource', () => {
+    const { template } = synthWithGrantedFunction();
+    const [customResource] = resourcesOfType(template, 'AWS::CloudFormation::CustomResource');
+    expect(customResource?.Properties?.apiRoleName).toBe('api_prod');
+    expect(JSON.stringify(customResource?.Properties?.apiPrincipalArns)).toContain(
+      'ApiServiceRole',
+    );
+  });
+
+  it('grantConnect makes the function deploy after the schema resource', () => {
+    const { template } = synthWithGrantedFunction();
+    const functions = template.findResources('AWS::Lambda::Function');
+    const apiFunction = Object.entries(functions).find(([logicalId]) =>
+      logicalId.startsWith('Api'),
+    );
+    const [schemaLogicalId] = Object.keys(
+      template.findResources('AWS::CloudFormation::CustomResource'),
+    );
+    expect(apiFunction?.[1].DependsOn).toContain(schemaLogicalId);
+  });
+
+  it('grantConnect refuses a function without an execution role', () => {
     const app = new App();
     const stack = new Stack(app, 'S', { env: TEST_ENV });
     const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
@@ -168,10 +201,53 @@ describe('DsqlSchema', () => {
       migrationsPath: MIGRATIONS,
       cluster,
     });
-    expect(schema.schemaName).toBe('prod');
-    expect(typeof schema.grantConnect).toBe('function');
+    const imported = LambdaFunction.fromFunctionArn(
+      stack,
+      'Imported',
+      'arn:aws:lambda:eu-west-3:123456789012:function:elsewhere',
+    );
+    expect(() => schema.grantConnect(imported)).toThrow('has no execution role to map');
+  });
+
+  it('grantConnect refuses a function defined outside this application', () => {
+    const app = new App();
+    const stack = new Stack(app, 'S', { env: TEST_ENV });
+    const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
+    const schema = new DsqlSchema(stack, 'Db', {
+      app: 'test-app',
+      stage: 'prod',
+      migrationsPath: MIGRATIONS,
+      cluster,
+    });
+    const imported = LambdaFunction.fromFunctionAttributes(stack, 'Imported', {
+      functionArn: 'arn:aws:lambda:eu-west-3:123456789012:function:elsewhere',
+      role: Role.fromRoleArn(stack, 'ImportedRole', 'arn:aws:iam::123456789012:role/elsewhere'),
+    });
+    expect(() => schema.grantConnect(imported)).toThrow(
+      'expected a function defined in this application',
+    );
   });
 });
+
+function synthWithGrantedFunction(): { template: Template } {
+  const app = new App();
+  const stack = new Stack(app, 'S', { env: TEST_ENV });
+  const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
+  const schema = new DsqlSchema(stack, 'Db', {
+    app: 'test-app',
+    stage: 'prod',
+    migrationsPath: MIGRATIONS,
+    cluster,
+  });
+  const handler = new LambdaFunction(stack, 'Api', {
+    runtime: Runtime.NODEJS_22_X,
+    handler: 'index.handler',
+    code: Code.fromInline('export const handler = () => {};'),
+  });
+  schema.grantConnect(handler);
+  expect(schema.apiRoleName).toBe('api_prod');
+  return { template: Template.fromStack(stack) };
+}
 
 const MIGRATION_FILES = {
   '0001_init.sql': 'CREATE TABLE x (id INT);',

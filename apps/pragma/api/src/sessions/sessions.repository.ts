@@ -16,7 +16,7 @@ export interface SessionRow {
   friendsCountPerMember: unknown;
 }
 
-type SessionRawRow = typeof sessionTable.$inferSelect;
+type SessionRawRow = Omit<typeof sessionTable.$inferSelect, 'origin'>;
 
 // @FollowsBlueprint repository-projection
 const PROJECTION = {

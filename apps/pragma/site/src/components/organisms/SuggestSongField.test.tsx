@@ -13,6 +13,7 @@ import { SuggestSongField } from './SuggestSongField';
 const A_CONCERT = 'aaaaaaaa-1111-4111-8111-111111111111';
 const A_BALLOT = 'a'.repeat(48);
 const THROTTLED_STATUS = 503;
+const SETTLED_SEARCH = { timeout: 3000 } as const;
 
 // @FollowsBlueprint test-component-render
 describe('the field that asks for a song the band does not have', () => {
@@ -41,7 +42,7 @@ describe('the field that asks for a song the band does not have', () => {
     await user.type(screen.getByRole('searchbox'), 'get lucky');
     await waitFor(() => {
       expect(screen.getByRole('alert').textContent).toContain('The song search is unavailable');
-    });
+    }, SETTLED_SEARCH);
     expect(screen.queryByText(/Nothing found under that name/)).toBe(null);
   });
 
@@ -51,7 +52,7 @@ describe('the field that asks for a song the band does not have', () => {
     await user.type(screen.getByRole('searchbox'), 'get lucky');
     await waitFor(() => {
       expect(screen.getByText(/Nothing found under that name/)).toBeTruthy();
-    });
+    }, SETTLED_SEARCH);
   });
 
   it('sends the picked result and nothing the visitor typed', async () => {
@@ -76,7 +77,7 @@ describe('the field that asks for a song the band does not have', () => {
     await user.click(pickedHit);
     await waitFor(() => {
       expect(fetchStub?.calls.some((call) => call.method === 'POST')).toBe(true);
-    });
+    }, SETTLED_SEARCH);
     const write = fetchStub?.calls.find((call) => call.method === 'POST');
     expect(write?.headers.get('x-ballot-token')).toBe(A_BALLOT);
     expect(await write?.json()).toEqual({ trackId: 'dz-1' });

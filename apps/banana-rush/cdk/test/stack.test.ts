@@ -24,7 +24,7 @@ const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
 const API_FUNCTION_LOGICAL_ID_FRAGMENT = 'AppApiFn';
 const WEBSOCKET_FUNCTION_LOGICAL_ID_FRAGMENT = 'RealtimeFn';
 const MANAGE_CONNECTIONS_ACTION = 'execute-api:ManageConnections';
-const DSQL_CONNECT_ACTION = 'dsql:DbConnectAdmin';
+const DSQL_CONNECT_ACTION = 'dsql:DbConnect';
 
 const templateByStage = new Map<string, Template>();
 

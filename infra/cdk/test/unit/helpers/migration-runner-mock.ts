@@ -12,6 +12,8 @@ export const state: {
   existingSchemas: Set<string>;
   tablesPerSchema: Map<string, readonly string[]>;
   columnsPerTable: Map<string, readonly string[]>;
+  existingRoles: Set<string>;
+  roleMappings: { readonly arn: string; readonly pg_role_name: string }[];
 } = {
   unsafeCalls: [],
   taggedCalls: [],
@@ -21,6 +23,8 @@ export const state: {
   existingSchemas: new Set(),
   tablesPerSchema: new Map(),
   columnsPerTable: new Map(),
+  existingRoles: new Set(),
+  roleMappings: [],
 };
 
 export function resetMigrationRunnerMockState(): void {
@@ -32,6 +36,8 @@ export function resetMigrationRunnerMockState(): void {
   state.existingSchemas = new Set();
   state.tablesPerSchema = new Map();
   state.columnsPerTable = new Map();
+  state.existingRoles = new Set();
+  state.roleMappings = [];
 }
 
 export type SqlMock = ((
@@ -62,6 +68,14 @@ export function makeSql(): SqlMock {
       if (schemaExistsMatch !== null) {
         const probedSchema = schemaExistsMatch[1] ?? '';
         return Promise.resolve(state.existingSchemas.has(probedSchema) ? [{ count: 1 }] : []);
+      }
+      const roleExistsMatch = /FROM pg_roles WHERE rolname = '([^']+)'/i.exec(query);
+      if (roleExistsMatch !== null) {
+        const probedRole = roleExistsMatch[1] ?? '';
+        return Promise.resolve(state.existingRoles.has(probedRole) ? [{ present: 1 }] : []);
+      }
+      if (/FROM sys\.iam_pg_role_mappings/i.test(query)) {
+        return Promise.resolve(state.roleMappings);
       }
       const listTablesMatch = /information_schema\.tables WHERE table_schema = '([^']+)'/i.exec(
         query,

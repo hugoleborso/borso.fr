@@ -100,7 +100,12 @@ describe('pragma preview schema cloning', () => {
   it('clones prod into a preview with its passwords, but no passkey and no avatar key', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
-      tableBlocklist: ['auth_attempt', 'member_passkey', 'webauthn_challenge'],
+      tableBlocklist: [
+        'auth_attempt',
+        'member_calendar_feed',
+        'member_passkey',
+        'webauthn_challenge',
+      ],
       tablesToReplace: ['app_config', 'member_credential'],
       columnsToNullify: { member: ['avatar_s3_key'] },
     });
@@ -108,6 +113,13 @@ describe('pragma preview schema cloning', () => {
 });
 
 describe('pragma app stack', () => {
+  it('gives the API 20 seconds, enough to read every calendar feed in turn', () => {
+    synthAppStack('prod').hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: Match.stringLikeRegexp('api'),
+      Timeout: 20,
+    });
+  });
+
   it('declares no Secrets Manager resources — auth state lives in the DB (ADR-0004)', () => {
     for (const stage of ['prod', 'preview'] as const) {
       const template = synthAppStack(stage);

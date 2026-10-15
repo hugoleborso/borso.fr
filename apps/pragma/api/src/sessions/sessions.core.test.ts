@@ -27,17 +27,19 @@ describe('buildSessionInsertShape', () => {
     });
   });
 
-  it('keeps only the prepared concert for a practice', () => {
+  it('keeps only the prepared concert and the origin for a practice', () => {
     expect(
       buildSessionInsertShape({
         kind: 'practice',
         date: '2026-04-20T18:00:00.000Z',
         preparedConcertId: '22222222-2222-2222-2222-222222222222',
+        origin: 'free_slot',
       }),
     ).toStrictEqual({
       kind: 'practice',
       date: new Date('2026-04-20T18:00:00.000Z'),
       preparedConcertId: '22222222-2222-2222-2222-222222222222',
+      origin: 'free_slot',
     });
   });
 });
@@ -82,11 +84,13 @@ describe('encodeSessionInsert', () => {
         kind: 'practice',
         date: new Date('2026-04-20T18:00:00.000Z'),
         preparedConcertId: null,
+        origin: null,
       }),
     ).toStrictEqual({
       kind: 'practice',
       date: new Date('2026-04-20T18:00:00.000Z'),
       preparedConcertId: null,
+      origin: null,
     });
   });
 });

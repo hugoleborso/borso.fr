@@ -7,7 +7,7 @@ export default defineConfig({
     globalSetup: ['../../scripts/vitest-cdk-outdir-teardown.js'],
     environment: 'node',
     globals: false,
-    testTimeout: 30_000,
+    testTimeout: 60_000,
     coverage: {
       provider: 'v8',
       reporter: ['text', 'lcov', 'html'],

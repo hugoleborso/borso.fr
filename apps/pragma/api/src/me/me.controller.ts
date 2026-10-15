@@ -7,13 +7,16 @@ import {
   passwordChangeSchema,
 } from '../auth/credentials.schema';
 import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
+import { calendarFeedBodySchema } from '../calendar-feeds/calendar-feeds.schema';
 import { memberContactSchema } from '../members/members.schema';
 import {
   changePassword,
   finishPasskeyRegistration,
   listPasskeys,
   readSignedInMember,
+  removeCalendarFeed,
   removePasskey,
+  saveCalendarFeed,
   saveOwnContactDetails,
   SESSION_COOKIE_NAME,
   SESSION_TTL_MS,
@@ -44,6 +47,26 @@ export function buildMeRouter() {
       const member = await readSignedInMember(memberId);
       if (member === null) return context.json({ error: 'unknown-member' }, 404);
       return context.json(member);
+    })
+    .put(
+      '/calendar-feed',
+      zValidator('json', calendarFeedBodySchema, (result, context) => {
+        if (!result.success) return context.json({ error: 'invalid-feed-address' }, 400);
+      }),
+      async (context) => {
+        const outcome = await saveCalendarFeed(
+          readMemberId(context),
+          context.req.valid('json').address,
+          readNow(),
+        );
+        if (outcome.kind === 'invalid-address') {
+          return context.json({ error: 'invalid-feed-address' }, 400);
+        }
+        return context.json({ calendarFeed: outcome.calendarFeed });
+      },
+    )
+    .delete('/calendar-feed', async (context) => {
+      return context.json({ calendarFeed: await removeCalendarFeed(readMemberId(context)) });
     })
     .put('/password', zValidator('json', passwordChangeSchema), async (context) => {
       const { currentPassword, newPassword } = context.req.valid('json');

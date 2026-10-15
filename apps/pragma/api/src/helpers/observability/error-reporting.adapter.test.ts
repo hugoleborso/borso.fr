@@ -4,6 +4,7 @@ import {
   startErrorReporting,
   traceIncomingRequest,
 } from './error-reporting.adapter';
+import { isUnrecordedOutgoingRequest } from './error-reporting.core';
 
 const requestSpan = vi.hoisted(() => ({ setAttribute: vi.fn() }));
 
@@ -19,6 +20,7 @@ const sentry = vi.hoisted(() => ({
   ),
   updateSpanName: vi.fn(),
   setHttpStatus: vi.fn(),
+  nativeNodeFetchIntegration: vi.fn((options: unknown) => ({ name: 'NodeFetch', options })),
 }));
 
 vi.mock('@sentry/aws-serverless', () => sentry);
@@ -56,6 +58,9 @@ describe('startErrorReporting', () => {
         databaseQueryData: false,
         stackFrameVariables: false,
       },
+      integrations: [
+        { name: 'NodeFetch', options: { ignoreOutgoingRequests: isUnrecordedOutgoingRequest } },
+      ],
     });
   });
 

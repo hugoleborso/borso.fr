@@ -12,6 +12,14 @@ import {
   selectCloneableDataTables,
   selectMissingColumns,
 } from './clone-from-schema.utils.js';
+import {
+  buildRoleExistsQuery,
+  buildRoleMappingsQuery,
+  buildRoleProvisioningStatements,
+  buildRoleRemovalStatements,
+  type RoleMappingRow,
+  selectMappedArns,
+} from './database-role.utils.js';
 import { selectPendingMigrations } from './pending-migrations.utils.js';
 import { splitStatements } from './statement-rewrites.utils.js';
 
@@ -33,6 +41,8 @@ interface ResourceProps {
   readonly schemaName: string;
   readonly migrations: readonly Migration[];
   readonly cloneFromSchema?: CloneFromSchemaProps;
+  readonly apiRoleName?: string;
+  readonly apiPrincipalArns?: readonly string[];
 }
 
 interface CfnEvent {
@@ -204,12 +214,56 @@ async function dropSchema(sql: postgres.Sql, schemaName: string): Promise<void> 
   await sql.unsafe(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
 }
 
+interface ApiRoleState {
+  readonly roleExists: boolean;
+  readonly mappedArns: readonly string[];
+}
+
+async function readApiRoleState(sql: postgres.Sql, roleName: string): Promise<ApiRoleState> {
+  const present = await sql.unsafe<{ present: number }[]>(buildRoleExistsQuery(roleName));
+  if (present.length === 0) return { roleExists: false, mappedArns: [] };
+  const mappings = await sql.unsafe<RoleMappingRow[]>(buildRoleMappingsQuery(roleName));
+  return { roleExists: true, mappedArns: selectMappedArns(mappings, roleName) };
+}
+
+async function runEach(sql: postgres.Sql, statements: readonly string[]): Promise<void> {
+  for (const statement of statements) {
+    await sql.unsafe(statement);
+  }
+}
+
+async function provisionApiRole(sql: postgres.Sql, props: ResourceProps): Promise<void> {
+  if (props.apiRoleName === undefined) return;
+  const roleState = await readApiRoleState(sql, props.apiRoleName);
+  await runEach(
+    sql,
+    buildRoleProvisioningStatements({
+      schemaName: props.schemaName,
+      roleName: props.apiRoleName,
+      principalArns: props.apiPrincipalArns ?? [],
+      ...roleState,
+    }),
+  );
+}
+
+async function removeApiRole(sql: postgres.Sql, roleName: string | undefined): Promise<void> {
+  if (roleName === undefined) return;
+  const roleState = await readApiRoleState(sql, roleName);
+  await runEach(sql, buildRoleRemovalStatements({ roleName, ...roleState }));
+}
+
 async function provisionSchema(sql: postgres.Sql, props: ResourceProps): Promise<void> {
   await ensureSchema(sql, props.schemaName);
   if (props.cloneFromSchema !== undefined) {
     await cloneFromSchema(sql, props.schemaName, props.cloneFromSchema);
   }
   await applyMigrations(sql, props.schemaName, props.migrations);
+  await provisionApiRole(sql, props);
+}
+
+async function deprovisionSchema(sql: postgres.Sql, props: ResourceProps): Promise<void> {
+  await dropSchema(sql, props.schemaName);
+  await removeApiRole(sql, props.apiRoleName);
 }
 
 /**
@@ -225,7 +279,7 @@ export async function handler(event: CfnEvent): Promise<CfnResponse> {
   const applyByRequestType = {
     Create: async (sql: postgres.Sql) => provisionSchema(sql, props),
     Update: async (sql: postgres.Sql) => provisionSchema(sql, props),
-    Delete: async (sql: postgres.Sql) => dropSchema(sql, props.schemaName),
+    Delete: async (sql: postgres.Sql) => deprovisionSchema(sql, props),
   } as const;
 
   const sql = await connect(props);
