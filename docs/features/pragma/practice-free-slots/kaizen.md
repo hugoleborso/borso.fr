@@ -36,3 +36,9 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [01:48] `pr-118` pre-push runs the talos mutation of 81 files concurrently with every app's tests, and the starved CPU times out four unrelated tests (infra-cdk synth, infra-shared synth, borso-fr, talos) that pass alone
 - [02:48] `pr-118` pre-push typecheck of pragma and last-loop-lepin was OOM-killed (exit 137) while sibling agents ran mutation in the same container; four pushes failed on load alone
 - [04:32] `pr-118` scripts/local-postgres.sh keys the cluster on the app slug only, so parallel agents in separate worktrees run pragma back-e2e against the same /tmp/borso-pg-pragma database and 76 tests fail on duplicate app_config rows
+- [02:27] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [02:48] `main` pre-push failed a talos stack test after merging main because infra/cdk dist was built before the merge; the assertion named a bucket name, not a stale build
+- [02:59] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [05:12] `main` merging main brought Sentry tracing into pragma, whose fetch spans keep URL paths; nothing flagged that a secret calendar address lives in a path
+- [05:52] `main` a wait loop using pgrep -f on a pattern matched its own command line, so it never ended and ran until the background time limit
+- [13:23] `main` merging main gave pragma two migrations numbered 0015; ours had run on previews and was not re-runnable, so renaming it would have failed the preview
