@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: qa
 severity: medium
 related-pr: '#118'
-fix-pr: none (shipped by the kaizen pull request that adds this entry)
+fix-pr: '#181'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [apps/pragma/site/src/lib/api.client.ts, apps/pragma/site/src/lib/session-end.core.ts, apps/pragma/site/src/lib/query-client.setup.ts, apps/talos/site/src/lib/session-end.core.ts, apps/talos/site/src/lib/query-client.setup.ts]
@@ -67,7 +67,7 @@ application: the marker is forgotten and the probe's cached answer becomes
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** the kaizen pull request for PR #118 · commit [self]
+**Reference:** [PR #181](https://github.com/hugoleborso/borso.fr/pull/181) · commit [self]
 
 **The actual fix:**
 

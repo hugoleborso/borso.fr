@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: review
 severity: low
 related-pr: '#118'
-fix-pr: none (shipped by the kaizen pull request that adds this entry)
+fix-pr: '#181'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [plugins/borso-harness/hooks/knowledge-triggers.sh, plugins/borso-harness/scripts/check-hook-decisions.sh, scripts/check-numbered-sequences.sh]
@@ -73,7 +73,7 @@ makes renumbering safe.
 
 **Type:** DevX check (level 2 — devx check)
 
-**Reference:** the kaizen pull request for PR #118 · commit [self]
+**Reference:** [PR #181](https://github.com/hugoleborso/borso.fr/pull/181) · commit [self]
 
 **The actual fix:**
 
