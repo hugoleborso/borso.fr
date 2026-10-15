@@ -61,8 +61,11 @@ if [ "$failed" -ne 0 ]; then
   echo "[check-numbered-sequences] In these folders the number is the order, so two files" >&2
   echo "  sharing one order nothing. Renumber the one that landed second to the next free" >&2
   echo "  number. A migration is safe to renumber while it has only run against a preview:" >&2
-  echo "  every statement is re-runnable, so the file runs again as a no-op under its new" >&2
-  echo "  name. An ADR is safe to renumber until it is merged, after which its number is" >&2
+  echo "  the runner rewrites CREATE TABLE, CREATE INDEX and ADD COLUMN to IF NOT EXISTS" >&2
+  echo "  before running them (makeIdempotent in" >&2
+  echo "  infra/cdk/src/internal/migration-runner/statement-rewrites.utils.ts), so the file" >&2
+  echo "  runs again as a no-op under its new name, and the SQL needs no edit." >&2
+  echo "  An ADR is safe to renumber until it is merged, after which its number is" >&2
   echo "  cited elsewhere and never recycled." >&2
   exit 1
 fi

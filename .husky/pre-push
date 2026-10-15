@@ -21,16 +21,31 @@ set -e
 # The cheap per-commit invariants live in .husky/pre-commit.
 
 push_base=''
-while read -r _local_ref local_sha _remote_ref remote_sha; do
+pushed_ref=''
+while read -r _local_ref local_sha remote_ref remote_sha; do
   [ -z "$local_sha" ] && continue
   # A remote sha of all zeros means the branch does not exist upstream yet.
   case "$remote_sha" in
     *[!0]*)
       push_base="$remote_sha"
+      pushed_ref="${remote_ref#refs/heads/}"
       break
       ;;
   esac
 done
+
+# The remote branch sits on a commit this checkout has never fetched: another
+# session pushed to the same branch. Git refuses a plain push over it only after
+# every gate below has run, and a force push would discard that session's work,
+# so stop before either. Twice on PR #118 two sessions merged main into one
+# branch at once and the second push waited out ten minutes of gates to be
+# rejected. See docs/dantotsus/two-sessions-one-branch.md.
+if [ -n "$push_base" ] && ! git cat-file -e "$push_base^{commit}" 2>/dev/null; then
+  echo "[pre-push] origin/$pushed_ref is at $push_base, a commit this checkout has never fetched:" >&2
+  echo "  another session pushed to this branch. Bring its work in, then push again:" >&2
+  echo "    git fetch origin $pushed_ref && git merge origin/$pushed_ref" >&2
+  exit 1
+fi
 
 # Both bases below are read off the local `origin/main`, and nothing in an
 # ordinary session updates that ref. A hosted container clones once and never

@@ -10,7 +10,7 @@ export const sessionKeys = {
 };
 
 export const SIGNED_IN = { signedIn: true, registered: true } as const;
-const SIGNED_OUT = { signedIn: false, registered: true } as const;
+export const SIGNED_OUT = { signedIn: false, registered: true } as const;
 
 // @FollowsBlueprint query-module
 export function useSession() {

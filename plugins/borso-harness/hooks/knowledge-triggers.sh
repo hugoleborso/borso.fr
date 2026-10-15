@@ -11,8 +11,14 @@
 # the call against them.
 #
 #   PreToolUse  (Write, Edit, MultiEdit, NotebookEdit)  the target path
-#   PreToolUse  (Bash)                                   the command, minus mentions
+#   PreToolUse  (Bash)                                   the command, minus mentions,
+#                                                        and every path it names
 #   PostToolUse / PostToolUseFailure (Bash, mcp__*)      what the call printed
+#
+# A Bash command is matched against `paths` too, because `git mv` and `sed -i`
+# rewrite a file without a Write or an Edit: a renamed migration never showed
+# the entry whose path trigger named it. See
+# docs/dantotsus/the-file-renamed-where-its-entry-could-not-see.md.
 #
 # The answer goes back as `additionalContext`. Plain stdout from these events
 # reaches the debug log and not the model, and a failing Bash command fires
@@ -88,16 +94,31 @@ matching_entries() {
   ' "$LOOKUP" 2>/dev/null
 }
 
-MATCHED="$(matching_entries "$SUBJECT")"
-[ -n "$MATCHED" ] || exit 0
+paths_named_by() {
+  printf '%s' "$1" | tr -s " \t;|&<>()=" '\n' | jq -R . | jq -s . |
+    jq -r --slurpfile lookup "$LOOKUP" '
+      . as $tokens
+      | $lookup[0].entries[]
+      | select(any(.paths[]?; . as $pattern | any($tokens[]; test($pattern))))
+      | .path
+    ' 2>/dev/null
+}
 
 if [ "$KIND" = commands ]; then
+  [ -n "$(matching_entries "$SUBJECT")$(paths_named_by "$SUBJECT")" ] || exit 0
   INVOKED="$(printf '%s' "$SUBJECT" |
     python3 "$HOOK_DIRECTORY/strip-heredocs.py" |
     python3 "$HOOK_DIRECTORY/strip-quoted-strings.py")"
-  MATCHED="$(matching_entries "$INVOKED")"
-  [ -n "$MATCHED" ] || exit 0
+  MATCHED="$(
+    {
+      matching_entries "$INVOKED"
+      paths_named_by "$INVOKED"
+    } | awk 'NF && !seen[$0]++'
+  )"
+else
+  MATCHED="$(matching_entries "$SUBJECT")"
 fi
+[ -n "$MATCHED" ] || exit 0
 
 SESSION="$(jq -r '.session_id // ""' <<<"$INPUT" | tr -cd 'A-Za-z0-9_-')"
 SEEN=""

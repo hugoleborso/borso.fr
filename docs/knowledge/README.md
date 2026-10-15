@@ -107,6 +107,7 @@ decision.
 - [`zsh-read-p-coprocess-quirk.md`](./zsh-read-p-coprocess-quirk.md) — `read -rsp "prompt: " var` is bash-only ; zsh reads `-p` as a coprocess flag and errors. Use `printf` + `stty -echo` + `read -r` for portable interactive prompts.
 - [`aws-dsql-cli-token-flag-name.md`](./aws-dsql-cli-token-flag-name.md) — `aws dsql generate-db-connect-admin-auth-token` wants `--hostname <endpoint>` ; the older `--identifier <cluster-id>` form is rejected.
 - [`destructive-git-with-uncommitted-verification-work.md`](./destructive-git-with-uncommitted-verification-work.md) — proving an eradication works means breaking the code, and `git checkout --` then reverts the eradication with the probe. Commit first; three losses in one session. _2026-08-21_: a `-u` stash is three commits and a pathspec checkout of `stash@{0}` reads only the first, so the untracked half stays behind; a dropped stash is still recoverable through `git fsck --unreachable`.
+- [`pgrep-f-matches-its-own-wait-loop.md`](./pgrep-f-matches-its-own-wait-loop.md) — `until ! pgrep -f <pattern>` never ends because the waiting shell's own command line holds the pattern; wait on a PID or on a file the command writes.
 ### pnpm / package management
 
 - [`pnpm-dev-serves-a-schema-it-never-migrated.md`](./pnpm-dev-serves-a-schema-it-never-migrated.md) — `pnpm dev` applies no migrations (only the back-e2e setup does), so a new one answers 500 with `errorMissingColumn` until that suite runs; and the dev API shares its Postgres with that suite, so seeding by hand mid-run fails an unrelated test.
@@ -209,6 +210,8 @@ decision.
 
 - [`spotify-credentials-for-pragma.md`](./spotify-credentials-for-pragma.md) — creating the Spotify application, writing the one SSM parameter every stage reads, and the fact that a missing credential looks exactly like a song Spotify does not carry.
 - [`instrument-icon-provenance.md`](./instrument-icon-provenance.md) — five of the six instrument glyphs are Lucide path data copied into the icon registry under ISC, with the notice; the sixth is a bass built parametrically here, whose two fretboard edges are parallel by construction and must not be nudged by hand.
+- [`hono-lambda-base64-encodes-text-calendar.md`](./hono-lambda-base64-encodes-text-calendar.md) — Hono's Lambda adapter base64-encodes every content type outside its short text list, `text/calendar` included, so a 5.3 MB feed crossed Lambda's 6 MB response limit.
+- [`ical-js-relates-exceptions-without-checking-the-uid.md`](./ical-js-relates-exceptions-without-checking-the-uid.md) — ical.js attaches every exception it is handed to the series, whatever its UID, and reads a TZID with no VTIMEZONE as floating time.
 
 ### Frontend / React
 

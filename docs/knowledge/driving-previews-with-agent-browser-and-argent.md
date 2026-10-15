@@ -3,6 +3,7 @@ summary: 'Which of agent-browser and argent answers which question, and the trap
 triggers:
   commands:
     - '\.preview\.borso\.fr'
+    - 'argent run screenshot'
 ---
 
 # Driving the previews with agent-browser and argent
@@ -199,6 +200,10 @@ pnpm exec argent run open-url --udid chromium-cdp-9222 --url <url> --json
 pnpm exec argent run describe --udid chromium-cdp-9222 --json
 pnpm exec argent run screenshot --udid chromium-cdp-9222 --out ./shot.png --json
 ```
+
+`--out` is ignored: on PR #118 the screenshot landed in
+`/tmp/argent-chromium-media/` and the JSON answer named that path instead.
+Read the path from the answer and copy the file from there.
 
 ## The two tools must not share one browser
 
