@@ -122,3 +122,16 @@ So the triage on a survivor is one question before writing any test: **would
 the original and the mutant ever answer differently?** If no, the code is
 redundant and the fix is a deletion. If yes, the inputs are too symmetric and
 the fix is a better case.
+
+## A subject rendered at `describe` level hides every mutant in it
+
+Stryker activates one mutant per test and judges it by the tests that run
+while it is active. A test file that renders or computes its subject in the
+body of a `describe`, outside any `it`, runs that code once while the file is
+collected, before any mutant is active, and every `it` then asserts on that
+one unmutated result. On PR #162 66 mutants survived in a module whose tests
+all passed, and every one was killed once the call moved inside the tests.
+
+The tell: a whole file's mutants survive at once, including ones that would
+obviously change the output. Look for work done at `describe` level before
+writing a single new assertion.

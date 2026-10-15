@@ -23,6 +23,8 @@ const ALL_TABLES: readonly string[] = [
   'setlist_sheet',
   'setlist',
   'session',
+  'study',
+  'mastery_score_change',
   'mastery_override',
   'mastery_default',
   'song',

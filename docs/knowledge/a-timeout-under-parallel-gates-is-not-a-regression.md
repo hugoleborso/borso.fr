@@ -175,3 +175,16 @@ synths in `beforeAll`, with an explicit generous timeout of their own, so each
 **The tell:** one test in a file is far slower than its siblings and its
 duration matches the file's total, while the assertions inside it are trivial.
 Look for a lazily-memoised fixture before looking at the test.
+
+## The fourth time, and the wave is gone
+
+On 2026-10-12 five agents in one fan-out were refused for timeouts that passed
+alone, with the load average at 40. Dividing Stryker's workers had bounded
+Stryker against itself, not against the test gates, and not against another
+agent's hook in the next worktree.
+
+Pre-push no longer starts everything at once. Gates run at most `nproc / 2` at
+a time, mutation runs follow the other gates one at a time with the whole
+machine, and a lock lets one checkout's pre-push run its gates at a time. A
+timeout during pre-push is now worth reading as a real slow test first. See
+[`the-gates-that-timed-each-other-out.md`](../dantotsus/the-gates-that-timed-each-other-out.md).

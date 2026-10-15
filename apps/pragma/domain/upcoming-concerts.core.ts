@@ -1,8 +1,6 @@
-/** @Feature sessions */
-
 export interface DatedSession {
   readonly kind: string;
-  readonly date: string;
+  readonly date: string | Date;
 }
 
 const CONCERT_KIND = 'concert';

@@ -2,8 +2,8 @@
 -- It lives in a table of its own, not as a column on "member", so the
 -- per-stage database role and the preview clone's tableBlocklist can
 -- treat it on its own, and no read of "member" ever carries it. See
--- ADR-0032 and ADR-0033.
-CREATE TABLE "member_calendar_feed" (
+-- ADR-0036 and ADR-0037.
+CREATE TABLE IF NOT EXISTS "member_calendar_feed" (
 	"member_id" uuid PRIMARY KEY NOT NULL,
 	"address" text NOT NULL,
 	"updated_at" timestamp with time zone NOT NULL
@@ -12,4 +12,4 @@ CREATE TABLE "member_calendar_feed" (
 -- Records where a session was created from, so the share of practices
 -- booked from a free slot can be read back. Nullable for every session
 -- created before this column, and for every session created by hand.
-ALTER TABLE "session" ADD COLUMN "origin" text;
+ALTER TABLE "session" ADD COLUMN IF NOT EXISTS "origin" text;

@@ -1,6 +1,6 @@
 /** @Feature sessions */
 
-import { selectUpcomingConcerts, type DatedSession } from './upcoming-concerts.core';
+import { selectUpcomingConcerts, type DatedSession } from '@domain/upcoming-concerts.core';
 
 export interface NextConcertSession extends DatedSession {
   readonly id: string;

@@ -69,6 +69,14 @@ export async function listInstruments(): Promise<InstrumentRow[]> {
   return rows.map((row) => rowToInstrument(row));
 }
 
+export async function findInstrument(id: string): Promise<InstrumentRow | null> {
+  const [row] = await getDatabase()
+    .select(PROJECTION)
+    .from(instrumentTable)
+    .where(eq(instrumentTable.id, id));
+  return row === undefined ? null : rowToInstrument(row);
+}
+
 export async function listInstrumentsWithPlayers(): Promise<InstrumentWithPlayersRow[]> {
   const database = getDatabase();
   const [instrumentRows, linkRows] = await Promise.all([

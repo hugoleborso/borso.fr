@@ -42,8 +42,20 @@ done
 # costs one round-trip and buys back the scoping this file exists for.
 git fetch --quiet origin main 2>/dev/null || true
 
-if [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null; then
+# A remote sha that HEAD does not descend from means the push rewrites the
+# branch: a force push after `git checkout -B <branch> origin/main`, which is
+# how a branch whose pull request was squash-merged starts its next piece of
+# work. Diffing against that sha gates everything main changed between the two
+# bases. Measured on PR #174: a one-commit branch gated 774 files, four
+# applications of tests and six mutation suites over 79 files, and the push
+# outlived its ten-minute command timeout. Such a branch is new work on main, so its base is main.
+# See docs/dantotsus/a-force-push-re-gated-everything-main-had-merged.md.
+if [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null &&
+  git merge-base --is-ancestor "$push_base" HEAD 2>/dev/null; then
   range_label="this push"
+elif [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null; then
+  push_base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
+  range_label="the whole branch since main (the push rewrites the branch)"
 else
   push_base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
   range_label="the whole branch since main (no remote ref for this branch yet)"
@@ -58,22 +70,29 @@ fi
 # mutated files, and the push timed out twice before anyone understood it was
 # working as designed.
 #
-# When origin/main is reachable from HEAD it has been merged in, and diffing
-# against its tip rather than the remote sha leaves exactly the branch's own
-# work: the same push drops from 491 files to 23. It cannot under-gate. A file
-# main changed and this branch took verbatim is identical to main's tip, so it
-# falls out of the range — which is right, main gated it. A file both sides
-# touched, or the branch alone touched, still differs and is still gated.
+# The newest main commit this branch has merged is `git merge-base HEAD
+# origin/main`, and diffing against it rather than the remote sha leaves exactly
+# the branch's own work: the same push drops from 491 files to 23. It cannot
+# under-gate. A file main changed and this branch took verbatim is identical to
+# that commit, so it falls out of the range, which is right, main gated it. A
+# file both sides touched, or the branch alone touched, still differs and is
+# still gated.
 #
-# The second test is what keeps this off an ordinary push: on a branch that has
-# not merged main, origin/main is not an ancestor of HEAD at all; on one that
-# merged it in an *earlier* push, main's tip is already an ancestor of the
-# remote sha and the remote sha is the tighter base.
-main_tip=$(git rev-parse --verify --quiet origin/main 2>/dev/null || true)
-if [ -n "$main_tip" ] &&
-  git merge-base --is-ancestor "$main_tip" HEAD 2>/dev/null &&
-  ! git merge-base --is-ancestor "$main_tip" "$push_base" 2>/dev/null; then
-  push_base="$main_tip"
+# It is the merge base and not main's tip because the fetch above moves the
+# tip. This used to diff against origin/main itself, after checking that the
+# tip was an ancestor of HEAD; whenever main moved between the merge and the
+# push, which in a session merging nine pull requests was every push, the
+# check failed, the narrowing never happened, and one push mutated 81 talos
+# files that main had brought in. See
+# docs/dantotsus/the-fetch-that-undid-the-narrowing.md.
+#
+# The ancestry test is what keeps this off an ordinary push: on a branch that
+# has not merged main since its last push, the merge base is already an
+# ancestor of the remote sha, and the remote sha is the tighter base.
+main_merged=$(git merge-base HEAD origin/main 2>/dev/null || true)
+if [ -n "$main_merged" ] &&
+  ! git merge-base --is-ancestor "$main_merged" "$push_base" 2>/dev/null; then
+  push_base="$main_merged"
   range_label="this push, minus the commits it merged from origin/main"
 fi
 
@@ -86,44 +105,84 @@ fi
 
 # Runs a labelled gate in the background, capturing its output so parallel jobs
 # do not interleave. Logs are printed only for the gates that fail.
+#
+# At most `gate_limit` gates run at once. Starting all of them together put
+# four Stryker runs, a coverage suite, the typechecks and every app's tests on
+# a four-core sandbox at once, and the tests that lost the race for CPU timed
+# out: the infra-cdk synth tests, talos App.test.tsx, the eslint-rules suites,
+# each passing alone. A timeout reads as a failing test, so five agents in one
+# weekend pushed two and three times over failures that were only load.
+# BORSO_PRE_PUSH_JOBS overrides the limit. See
+# docs/dantotsus/the-gates-that-timed-each-other-out.md.
 gate_log_dir=$(mktemp -d)
-gate_pids=''
-gate_names=''
+running_pids=''
+running_names=''
+failed=''
+cores=$(nproc 2>/dev/null || echo 2)
+gate_limit=${BORSO_PRE_PUSH_JOBS:-$((cores / 2))}
+[ "$gate_limit" -ge 1 ] 2>/dev/null || gate_limit=1
+
+running_count() {
+  set -- $running_pids
+  echo $#
+}
+
+reap_oldest_gate() {
+  set -- $running_pids
+  pid=$1
+  shift
+  running_pids="$*"
+  set -- $running_names
+  name=$1
+  shift
+  running_names="$*"
+  if wait "$pid"; then
+    echo "[pre-push] pass: $name"
+  else
+    failed="$failed $name"
+  fi
+}
 
 start_gate() {
   gate_name="$1"
   shift
+  while [ "$(running_count)" -ge "$gate_limit" ]; do
+    reap_oldest_gate
+  done
   echo "[pre-push] start: $gate_name"
-  ( "$@" ) >"$gate_log_dir/$gate_name.log" 2>&1 &
-  gate_pids="$gate_pids $!"
-  gate_names="$gate_names $gate_name"
+  ( "$@" ) 8>&- >"$gate_log_dir/$gate_name.log" 2>&1 &
+  running_pids="$running_pids $!"
+  running_names="$running_names $gate_name"
 }
 
 wait_for_gates() {
-  failed=''
-  set -- $gate_pids
-  index=1
-  for name in $gate_names; do
-    eval "pid=\${$index}"
-    index=$((index + 1))
-    if wait "$pid"; then
-      echo "[pre-push] pass: $name"
-    else
-      failed="$failed $name"
-    fi
+  while [ "$(running_count)" -gt 0 ]; do
+    reap_oldest_gate
   done
   for name in $failed; do
     echo "" >&2
     echo "[pre-push] FAILED: $name" >&2
     cat "$gate_log_dir/$name.log" >&2
   done
-  gate_pids=''
-  gate_names=''
   if [ -n "$failed" ]; then
     rm -rf "$gate_log_dir"
     exit 1
   fi
 }
+
+# One pre-push at a time on this machine. Parallel agents each push from their
+# own worktree, and a limit inside one hook cannot see the others: the load
+# average reached 40 with three of them pushing, and their gates timed out on
+# each other. The lock is per machine, so a second push waits for the first
+# instead of racing it. The gates are started with the lock's descriptor
+# closed, so nothing they leave running can hold it.
+if command -v flock >/dev/null 2>&1; then
+  exec 8>"${TMPDIR:-/tmp}/borso-pre-push.lock"
+  if ! flock -n 8; then
+    echo "[pre-push] another checkout's pre-push is running its gates on this machine; waiting for it rather than racing it"
+    flock 8
+  fi
+fi
 
 # Every gate below reads node_modules, and a branch restarted from a newer main
 # carries a lockfile the session never installed: knip then reports the new
@@ -140,6 +199,9 @@ fi
 # because a multi-commit branch legitimately passes through intermediate states
 # where an export is written before its caller exists. Runs alongside the infra
 # suites rather than in front of them.
+# Built once here, before the typecheck gates below all reach for it.
+scripts/ensure-infra-built.sh
+
 start_gate knip pnpm exec knip
 
 if echo "$changed" | grep -q '^infra/cdk/'; then
@@ -215,19 +277,14 @@ done
 #     nothing, and `{a}` alone matches nothing either because a single-element
 #     brace never expands. Stryker then instruments zero files and exits 1 on
 #     "No tests were executed". Comma-separated plain paths, no braces.
-# Stryker defaults to four workers per run, and this gate starts one run per
-# changed app plus tooling plus infra, each of which would then take four. On a
-# four-core machine that is twenty-eight processes against four cores, and the
-# victims are the CDK synth tests in the *other* gates: one measured 5s alone
-# and timed out past 60s under the wave. Handing each run the number in flight
-# lets it take a share instead of the whole machine. An upper bound is enough
-# and costs no second pass over the file selection below, so an app with no
-# gated files is counted too.
-# `grep -c` prints its count and *then* exits 1 when nothing matched, so a
-# `|| echo 0` fallback appends a second zero and the arithmetic below sees
-# "0\n0". That only bites when no app changed, which is every docs-only push.
-changed_app_count=$(printf '%s\n' "$changed_app_slugs" | grep -c . || true)
-BORSO_MUTATION_RUNS_IN_FLIGHT=$(( ${changed_app_count:-0} + 2 ))
+# The mutation runs come after every other gate has finished, one at a time.
+# Stryker takes every core it is given, and sharing the machine with the test
+# gates is what timed those tests out: one CDK synth test measured 5s alone and
+# passed 60s under the wave. Run alone, each Stryker run takes the whole machine
+# and nothing else is waiting on a clock.
+wait_for_gates
+gate_limit=1
+BORSO_MUTATION_RUNS_IN_FLIGHT=1
 export BORSO_MUTATION_RUNS_IN_FLIGHT
 
 if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
@@ -284,14 +341,12 @@ if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
   fi
 fi
 
-# One wait for the whole wave — knip, the infra suites, every app's affected
-# tests and every app's scoped mutation run all at once. It has to sit outside
-# the SKIP_MUTATION_GATE branch above: with the mutation gate skipped, a wait
-# nested inside it would leave the test gates started and never awaited, and
-# the hook would exit 0 without reading a single result.
+# The wait for the mutation runs. It sits outside the SKIP_MUTATION_GATE branch
+# above so that every gate this hook started is always awaited.
 wait_for_gates
 
 rm -rf "$gate_log_dir"
+exec 8>&-
 
 # Workflow lint. Catches paths-filter base misuses, deprecated action versions,
 # and shell-quoting bugs in `run:` blocks. Stays on push because it needs a

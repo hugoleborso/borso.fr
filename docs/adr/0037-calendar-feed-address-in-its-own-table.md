@@ -1,4 +1,4 @@
-# ADR-0033: A member's calendar feed address is plain text in its own table, write-only through the API
+# ADR-0037: A member's calendar feed address is plain text in its own table, write-only through the API
 
 - **Status:** proposed
 - **Date:** 2026-10-02
@@ -9,7 +9,7 @@
 
 The free-slot calculator ([spec](../features/pragma/practice-free-slots/spec/spec.md)) reads each member's calendar from its secret iCal address. That address is a credential: anyone who has it can read the whole calendar until its owner resets it in the provider. The server must read it in clear to fetch the feed, so hashing it the way `member_credential.password_hash` is hashed is not possible.
 
-Previews clone production ([ADR-0009](./0009-pragma-previews-clone-production.md)), and only the tables in `tableBlocklist` stay behind. With [ADR-0032](./0032-one-database-role-per-stage-schema.md), each stage's API reaches its own schema only, and grants are known to work at table level. Column-level grants are unverified on DSQL.
+Previews clone production ([ADR-0009](./0009-pragma-previews-clone-production.md)), and only the tables in `tableBlocklist` stay behind. With [ADR-0036](./0036-one-database-role-per-stage-schema.md), each stage's API reaches its own schema only, and grants are known to work at table level. Column-level grants are unverified on DSQL.
 
 ## Decision
 
@@ -30,11 +30,11 @@ Previews clone production ([ADR-0009](./0009-pragma-previews-clone-production.md
 
 - **Summary:** As described in *Decision*.
 - **Strengths:**
-  - The simplest storage that still sits behind ADR-0032's boundary.
+  - The simplest storage that still sits behind ADR-0036's boundary.
   - Blocklisting the table is already supported.
 - **Costs:**
   - The address is readable by `admin`.
-- **Rationale:** With the boundary from ADR-0032, the remaining exposure is the operator's own `admin` access, which the operator accepted on 2026-10-02.
+- **Rationale:** With the boundary from ADR-0036, the remaining exposure is the operator's own `admin` access, which the operator accepted on 2026-10-02.
 
 ### Option B — A KMS-encrypted column (rejected)
 
@@ -84,5 +84,5 @@ Previews clone production ([ADR-0009](./0009-pragma-previews-clone-production.md
 - Spec: [`docs/features/pragma/practice-free-slots/spec/spec.md`](../features/pragma/practice-free-slots/spec/spec.md), the row "How is the address stored?"
 - Plan: `docs/features/pragma/practice-free-slots/plan/plan.md`
 - Commit: stamped by `/after-task-dantotsus` on merge
-- Files: `apps/pragma/api/src/calendar-feeds/`, `apps/pragma/api/src/database/migrations/0015_calendar_feeds.sql`, `apps/pragma/cdk/lib/stack.ts` (`tableBlocklist`)
-- Related ADRs: ADR-0009, ADR-0032
+- Files: `apps/pragma/api/src/calendar-feeds/`, `apps/pragma/api/src/database/migrations/0016_calendar_feeds.sql`, `apps/pragma/cdk/lib/stack.ts` (`tableBlocklist`)
+- Related ADRs: ADR-0009, ADR-0036

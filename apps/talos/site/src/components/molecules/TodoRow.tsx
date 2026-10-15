@@ -1,10 +1,11 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Checkbox } from '../atoms/Checkbox';
+import { Checkbox, type CheckboxEmphasis } from '../atoms/Checkbox';
 import { Chip } from '../atoms/Chip';
 import type { ChipTone } from '../atoms/chip.variants';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
+import { MeanderRail, type MeanderRailProps } from '../atoms/MeanderRail';
 import { PRESSABLE_CLASS_NAME, usePressGesture } from '../../lib/press-gesture.hook';
 
 export interface TodoRowProps {
@@ -17,6 +18,8 @@ export interface TodoRowProps {
   readonly onOpen?: () => void;
   readonly onDelete?: () => void;
   readonly onLongPress?: () => void;
+  readonly emphasis?: CheckboxEmphasis;
+  readonly rail?: MeanderRailProps;
 }
 
 // @FollowsBlueprint molecule-presentational
@@ -30,6 +33,8 @@ export function TodoRow({
   onOpen,
   onDelete,
   onLongPress,
+  emphasis = 'none',
+  rail,
 }: TodoRowProps): JSX.Element {
   const { t } = useTranslation();
   const press = usePressGesture({
@@ -68,7 +73,13 @@ export function TodoRow({
           PRESSABLE_CLASS_NAME,
         )}
       >
-        <Checkbox isChecked={isDone} label={t('todo.row.toggle', { text })} onToggle={onToggle} />
+        {rail === undefined ? null : <MeanderRail {...rail} />}
+        <Checkbox
+          isChecked={isDone}
+          label={t('todo.row.toggle', { text })}
+          onToggle={onToggle}
+          emphasis={emphasis}
+        />
         <button
           type="button"
           tabIndex={onOpen === undefined ? -1 : 0}

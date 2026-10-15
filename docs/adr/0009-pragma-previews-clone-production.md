@@ -34,7 +34,7 @@ Preview and integ schemas clone `prod`, with:
 
 | | |
 |---|---|
-| `tableBlocklist` | `auth_attempt` — rate-limit counters, meaningless across schemas; `member_passkey` and `webauthn_challenge` — a passkey is bound to production's relying-party id, so it cannot sign into a preview host; `member_calendar_feed` — a secret address that reads a member's whole calendar, so a preview starts with no feeds ([ADR-0033](./0033-calendar-feed-address-in-its-own-table.md)) |
+| `tableBlocklist` | `auth_attempt` — rate-limit counters, meaningless across schemas; `member_passkey` and `webauthn_challenge` — a passkey is bound to production's relying-party id, so it cannot sign into a preview host; `member_calendar_feed` — a secret address that reads a member's whole calendar, so a preview starts with no feeds ([ADR-0037](./0037-calendar-feed-address-in-its-own-table.md)) |
 | `columnsToNullify` | `member.avatar_s3_key` — prod's key in the preview's bucket is a 404 |
 | **cloned deliberately** | `app_config` — the shared password hash *and* the HMAC key; `member_credential` — each member's own username and password hash |
 | `tablesToReplace` | `app_config`, `member_credential` — emptied in the target immediately before the copy |

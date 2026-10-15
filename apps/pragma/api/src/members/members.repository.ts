@@ -2,6 +2,8 @@ import { eq, inArray, isNotNull } from 'drizzle-orm';
 import { deleteCredentialsOfMember } from '../auth/credentials.service';
 import { deleteCalendarFeedOfMember } from '../calendar-feeds/calendar-feeds.service';
 import { deleteVotesOfDeletedMember } from '../setlists/voting.service';
+import { deleteScoreHistoryOfDeletedMember } from '../mastery/mastery.service';
+import { deleteStudiesOfDeletedMember } from '../studies/studies.service';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { barTable } from '../bars/bars.schema';
@@ -131,6 +133,8 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await deleteCalendarFeedOfMember(transaction, id);
     await deleteVotesOfDeletedMember(transaction, id);
     await unassignTasksOfMemberBeingDeleted(transaction, id);
+    await deleteScoreHistoryOfDeletedMember(transaction, id);
+    await deleteStudiesOfDeletedMember(transaction, id);
     const deleted = await transaction
       .delete(memberTable)
       .where(eq(memberTable.id, id))

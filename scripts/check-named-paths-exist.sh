@@ -63,8 +63,10 @@ done <<<"$documents"
 #    `${CLAUDE_PLUGIN_ROOT}`, which Claude Code substitutes with the plugin's
 #    directory, so that prefix is read as `plugins/borso-harness/`.
 PLUGIN_DIRECTORY=plugins/borso-harness
+# The vendored impeccable references and agents are upstream's text, kept
+# verbatim (ADR-0032); they name paths of a project that installs its hook.
 paths="$(
-  git ls-files 'CLAUDE.md' '.claude/*' 'plugins/*' |
+  git ls-files 'CLAUDE.md' '.claude/*' 'plugins/*' ':!.claude/skills/impeccable/reference/*' ':!.claude/agents/impeccable-*' |
     grep -E '\.md$' |
     xargs grep -onE '`(\.claude|scripts|apps|infra|docs|eslint-rules|\$\{CLAUDE_PLUGIN_ROOT\})/[A-Za-z0-9/._*<>-]+`' 2>/dev/null |
     sed -E "s|\\$\\{CLAUDE_PLUGIN_ROOT\\}/|${PLUGIN_DIRECTORY}/|" |

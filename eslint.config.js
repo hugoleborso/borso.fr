@@ -111,6 +111,8 @@ const HTTP_STATUS_CODES = [
 
 const TIME_UNIT_FACTORS = [1000, 60, 24, 7, 365];
 
+const VENDORED_THIRD_PARTY_FILES = ['.claude/skills/impeccable/**'];
+
 export default tseslint.config(
   {
     ignores: [
@@ -125,6 +127,7 @@ export default tseslint.config(
       'docs/**',
       'apps/*/api/src/database/migrations/**',
       'apps/*/site/src/openings/openings.json',
+      ...VENDORED_THIRD_PARTY_FILES,
     ],
   },
 
