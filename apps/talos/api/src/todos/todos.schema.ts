@@ -3,7 +3,7 @@ import { zValidator } from '@hono/zod-validator';
 import { z } from 'zod';
 import { rejectInvalidInput } from '../helpers/validation/invalid-input.hook';
 
-const TODO_ID_PATTERN = /^[0-9a-f]{10}$/;
+const TODO_ID_PATTERN = /^(?:[0-9a-f]{10}|[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12})$/;
 
 // @FollowsBlueprint schema-input-only
 export const createTodoSchema = z.object({

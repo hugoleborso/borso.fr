@@ -31,3 +31,23 @@ export function projectPage(page: MarkdownPage, corpus: readonly MarkdownPage[])
       .map((other) => other.path),
   };
 }
+
+export interface StoredPageView {
+  readonly slug: string;
+  readonly markdown: string;
+  readonly outgoing: readonly string[];
+  readonly incoming: readonly string[];
+}
+
+export function projectStoredPage(view: StoredPageView): Page {
+  const summary = summarizePage(view.slug, view.markdown);
+  return {
+    path: summary.path,
+    title: summary.title,
+    type: summary.type,
+    frontMatter: { ...summary.frontMatter },
+    markdown: summary.body,
+    outgoingLinks: [...view.outgoing],
+    incomingLinks: [...view.incoming],
+  };
+}

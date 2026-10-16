@@ -86,7 +86,7 @@ export function sortProposalsNewestFirst(proposals: readonly Proposal[]): Propos
   );
 }
 
-function formatDecisionLine(record: DecisionRecord): string {
+export function formatDecisionLine(record: DecisionRecord): string {
   const comment = (record.comment ?? '').replaceAll(LINE_BREAKS_PATTERN, ' ').trim();
   const suffix = comment === '' ? '' : ` — ${comment}`;
   return `${LIST_ITEM_PREFIX}${record.decidedAt} : ${DECISION_LABELS[record.decision]}${suffix}`;
@@ -127,10 +127,11 @@ export function applyProposalDecision(markdown: string, record: DecisionRecord):
   return insertDecisionLine(withStatus, formatDecisionLine(record));
 }
 
+export function formatCancellationLine(cancelledAt: string): string {
+  return `${LIST_ITEM_PREFIX}${cancelledAt} : ${CANCELLATION_LABEL}`;
+}
+
 export function applyDecisionCancellation(markdown: string, cancelledAt: string): string {
   const withStatus = setFrontMatterValue(markdown, 'statut', PENDING_PROPOSAL_STATUS);
-  return insertDecisionLine(
-    withStatus,
-    `${LIST_ITEM_PREFIX}${cancelledAt} : ${CANCELLATION_LABEL}`,
-  );
+  return insertDecisionLine(withStatus, formatCancellationLine(cancelledAt));
 }

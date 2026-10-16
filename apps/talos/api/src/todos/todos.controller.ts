@@ -24,10 +24,10 @@ export function buildTodosRouter(list: TodoList) {
       context.json(await addTodo(list, context.req.valid('json'), new Date()), 201),
     )
     .post('/restorations', restoreTodoValidator, async (context) =>
-      context.json(await reinstateTodo(list, context.req.valid('json')), 201),
+      context.json(await reinstateTodo(list, context.req.valid('json'), new Date()), 201),
     )
     .delete('/:id', todoIdValidator, async (context) =>
-      context.json(await deleteTodo(list, context.req.valid('param').id)),
+      context.json(await deleteTodo(list, context.req.valid('param').id, new Date())),
     )
     .patch('/:id', todoIdValidator, updateTodoValidator, async (context) =>
       context.json(

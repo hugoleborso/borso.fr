@@ -1,3 +1,4 @@
+import { isDatabaseStorage, type StorageMode } from '@domain/storage-mode.core';
 import type { DiscussionSubjectKind } from '../../lib/discussion-subject.core';
 
 const SUBJECT_PHRASE_KEYS = {
@@ -26,4 +27,10 @@ const REQUEST_SEPARATOR = '\n\n';
 
 export function composeDiscussionText(context: string, request: string | undefined): string {
   return request === undefined ? context : `${context}${REQUEST_SEPARATOR}${request}`;
+}
+
+export function selectDiscussionPreambleKey(
+  storage: StorageMode | undefined,
+): 'discuss.memoryPreamble' | 'discuss.preamble' {
+  return isDatabaseStorage(storage) ? 'discuss.memoryPreamble' : 'discuss.preamble';
 }

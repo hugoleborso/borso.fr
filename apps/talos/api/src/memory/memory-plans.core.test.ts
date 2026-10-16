@@ -2,9 +2,11 @@ import { describe, expect, it } from 'vitest';
 import {
   isSourceConflicting,
   planEntityUpsert,
+  planDraftStatus,
   planFactInsert,
   planFocusSlots,
   planRelationInsert,
+  planStatusAttributes,
   planTodoInsert,
   planTodoUpdate,
 } from './memory-plans.core';
@@ -281,5 +283,69 @@ describe('planFocusSlots', () => {
       { rank: 2, title: '', why: null, horizon: null },
       { rank: 3, title: '', why: null, horizon: null },
     ]);
+  });
+});
+
+const STATUS_KEY = 'statut';
+const SENT_ON_KEY = 'envoye';
+const TYPE_KEY = 'type';
+
+describe('planning statuses', () => {
+  it('writes the new status into the front matter attributes', () => {
+    expect(
+      JSON.parse(planStatusAttributes('{"type":"proposition","statut":"proposee"}', 'acceptee')),
+    ).toEqual({
+      [TYPE_KEY]: 'proposition',
+      [STATUS_KEY]: 'acceptee',
+    });
+  });
+
+  it('dates a sent draft and records the day in its attributes', () => {
+    const plan = planDraftStatus(
+      { sentOn: null, attributes: '{"statut":"pret","envoye":""}' },
+      'envoye',
+      '2026-10-08',
+    );
+    expect(plan.sentOn).toBe('2026-10-08');
+    expect(JSON.parse(plan.attributes)).toEqual({
+      [STATUS_KEY]: 'envoye',
+      [SENT_ON_KEY]: '2026-10-08',
+    });
+  });
+
+  it('adds the sending day to a draft whose front matter had none', () => {
+    const plan = planDraftStatus({ sentOn: null, attributes: '{}' }, 'envoye', '2026-10-08');
+    expect(JSON.parse(plan.attributes)).toEqual({
+      [STATUS_KEY]: 'envoye',
+      [SENT_ON_KEY]: '2026-10-08',
+    });
+  });
+
+  it('keeps the known sending day when none is given again', () => {
+    const plan = planDraftStatus(
+      { sentOn: '2026-10-07', attributes: '{"statut":"envoye","envoye":"2026-10-07"}' },
+      'envoye',
+      undefined,
+    );
+    expect(plan.sentOn).toBe('2026-10-07');
+  });
+
+  it('empties the sending day of a draft put back to ready', () => {
+    const plan = planDraftStatus(
+      { sentOn: '2026-10-07', attributes: '{"statut":"envoye","envoye":"2026-10-07"}' },
+      'pret',
+      undefined,
+    );
+    expect(plan.sentOn).toBeNull();
+    expect(JSON.parse(plan.attributes)).toEqual({ [STATUS_KEY]: 'pret', [SENT_ON_KEY]: '' });
+  });
+
+  it('adds no sending day to a draft that never had one', () => {
+    const plan = planDraftStatus(
+      { sentOn: null, attributes: '{"statut":"pret"}' },
+      'abandonne',
+      undefined,
+    );
+    expect(JSON.parse(plan.attributes)).toEqual({ [STATUS_KEY]: 'abandonne' });
   });
 });

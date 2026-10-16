@@ -157,3 +157,12 @@ export function changeDraftStatusFile(
     outcome: { kind: 'changed', draft: readDraft(slug, splitFrontMatter(content)) },
   };
 }
+
+export interface StoredDraftStatus {
+  readonly status: DraftStatusChange;
+  readonly sentOn?: string;
+}
+
+export function planStoredDraftStatus(target: DraftStatusChange, today: string): StoredDraftStatus {
+  return target === SENT_DRAFT_STATUS ? { status: target, sentOn: today } : { status: target };
+}

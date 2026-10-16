@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { buildTestContext, requestJson, signIn } from '../../../test/app-utils';
 import { CONTENT_FIXTURE } from '../../../test/content-fixture';
 import { truncateAllTables } from '../../../test/database-utils';
+import { readMemoryEvents, seedMemoryInDatabase } from '../../../test/memory-fixture';
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -41,5 +42,32 @@ describe('the focus routes', () => {
     });
     expect(response.status).toBe(400);
     expect(await response.json()).toEqual({ error: 'Requête invalide.' });
+  });
+});
+
+describe('the focus routes once the memory is in the database', () => {
+  beforeEach(async () => {
+    await seedMemoryInDatabase();
+  });
+
+  it('reads and replaces the stored focus', async () => {
+    const { app, overlay } = buildTestContext(CONTENT_FIXTURE);
+    const cookie = await signIn();
+    expect(await (await requestJson(app, '/api/focus', { cookie })).json()).toEqual({
+      updatedOn: '2026-10-04',
+      items: [{ title: 'Atelier Acme', why: 'la date approche', horizon: '2026-10-09' }],
+    });
+    const replaced = await requestJson(app, '/api/focus', {
+      method: 'PUT',
+      body: { items: [{ title: 'Rappeler Alice Martin' }, { title: 'Devis Acme' }] },
+      cookie,
+    });
+    const focus: { items: { title: string }[] } = await replaced.json();
+    expect(focus.items).toEqual([{ title: 'Rappeler Alice Martin' }, { title: 'Devis Acme' }]);
+    expect(overlay.size).toBe(0);
+    const events = await readMemoryEvents();
+    expect(events.filter((event) => event.actor === 'pwa').map((event) => event.operation)).toEqual(
+      ['focus.replace'],
+    );
   });
 });

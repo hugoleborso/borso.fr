@@ -2,6 +2,7 @@ import { formatParisDate } from '../helpers/calendar/paris-clock.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
 import { decodeJsonColumns, decodeJsonText } from './memory-changes.core';
 import { composeContext } from './memory-context.core';
+import { CUTOVER_STATE_KEY } from './memory-cutover.core';
 import {
   buildNeighbourhood,
   findShortestPath,
@@ -47,7 +48,6 @@ import { runReadOnlyQuery } from './memory-sql.repository';
 
 const RECENT_EVENT_COUNT = 30;
 const SQL_TIMEOUT_MILLISECONDS = 10_000;
-const CUTOVER_KEY = 'cutover';
 const DATABASE_CUTOVER = 'database';
 const PREFERENCES_PREFIX = 'preferences/';
 
@@ -75,7 +75,7 @@ const COUNTED_TABLES: readonly [string, MemoryTableName][] = [
 ];
 
 export async function readCutover(): Promise<'git' | 'database'> {
-  const state = await findStateByKey(CUTOVER_KEY);
+  const state = await findStateByKey(CUTOVER_STATE_KEY);
   return decodeJsonText(state?.value ?? null) === DATABASE_CUTOVER ? 'database' : 'git';
 }
 

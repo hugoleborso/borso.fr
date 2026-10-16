@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { selectSubjectFile } from './discussion-subject.core';
+import { selectSubjectFile, selectSubjectReference } from './discussion-subject.core';
 
 describe('selectSubjectFile', () => {
   it('names the file of the private repository each kind of subject lives in', () => {
@@ -30,6 +30,42 @@ describe('selectSubjectFile', () => {
     );
     expect(selectSubjectFile({ kind: 'folder', path: 'etat/propositions' })).toBe(
       'etat/propositions/',
+    );
+  });
+});
+
+function cite(subject: Parameters<typeof selectSubjectReference>[0]): string {
+  return selectSubjectReference(subject, 'database');
+}
+
+describe('selectSubjectReference', () => {
+  it('names the file while the memory lives in git', () => {
+    expect(selectSubjectReference({ kind: 'focus' }, 'git')).toBe('focus.md');
+    expect(selectSubjectReference({ kind: 'focus' }, undefined)).toBe('focus.md');
+  });
+
+  it('cites the type and slug once the memory is in the database', () => {
+    expect(cite({ kind: 'todo', list: 'main' })).toBe('todo: personal');
+    expect(cite({ kind: 'todos', list: 'work' })).toBe('todo: work');
+    expect(cite({ kind: 'focus' })).toBe('focus');
+    expect(cite({ kind: 'scan' })).toBe('état: last_scan');
+    expect(cite({ kind: 'relations' })).toBe('état: relations');
+    expect(cite({ kind: 'proposal', slug: '2026-10-04-atelier' })).toBe(
+      'proposition: etat/propositions/2026-10-04-atelier',
+    );
+    expect(cite({ kind: 'draft', slug: '2026-10-04-cafe' })).toBe(
+      'brouillon: etat/brouillons/2026-10-04-cafe',
+    );
+    expect(cite({ kind: 'review', week: '2026-S40' })).toBe('journal: journal/2026-S40-hebdo');
+    expect(cite({ kind: 'journal', date: '2026-10-05' })).toBe('journal: journal/2026-10-05');
+    expect(cite({ kind: 'folder', path: 'second-brain/personnes' })).toBe(
+      'dossier: second-brain/personnes/',
+    );
+    expect(cite({ kind: 'commitment', path: 'engagements/2026-10-07-devis-acme' })).toBe(
+      'engagement: engagements/2026-10-07-devis-acme',
+    );
+    expect(cite({ kind: 'page', path: 'second-brain/personnes/alice-martin' })).toBe(
+      'page: second-brain/personnes/alice-martin',
     );
   });
 });
