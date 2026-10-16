@@ -95,7 +95,10 @@ describe('runRestoreDrill', () => {
   it('names every missing setting', async () => {
     await expect(
       runRestoreDrill({ environment: { BACKUP_VAULT_NAME: 'v', AWS_REGION: 'eu-west-3' } }),
-    ).rejects.toThrow(new RestoreDrillError('missing BACKUP_ROLE_ARN, CLUSTER_ARN'));
+    ).rejects.toMatchObject({
+      name: 'RestoreDrillError',
+      message: 'missing BACKUP_ROLE_ARN, CLUSTER_ARN',
+    });
   });
 
   it('fails when AWS Backup returns no backup job id', async () => {
@@ -115,6 +118,6 @@ describe('runRestoreDrill', () => {
         startRestore: answersJob(undefined),
         environment: ENVIRONMENT,
       }),
-    ).rejects.toMatchObject({ name: 'RestoreDrillError' });
+    ).rejects.toThrow(new RestoreDrillError('AWS Backup returned no restore job id'));
   });
 });

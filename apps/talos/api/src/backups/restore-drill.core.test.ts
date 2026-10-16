@@ -27,6 +27,15 @@ describe('latestCompletedRecoveryPoint', () => {
     ).toBe('done');
   });
 
+  it('keeps the first listed of two points taken at the same time', () => {
+    expect(
+      latestCompletedRecoveryPoint([
+        point('first', 'COMPLETED', '2026-10-16T03:00:00Z'),
+        point('second', 'COMPLETED', '2026-10-16T03:00:00Z'),
+      ]),
+    ).toBe('first');
+  });
+
   it('answers null when nothing can be restored', () => {
     expect(
       latestCompletedRecoveryPoint([point('x', 'PARTIAL', '2026-10-16T03:00:00Z')]),
