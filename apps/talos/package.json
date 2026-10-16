@@ -27,6 +27,7 @@
     "test:mutation": "stryker run"
   },
   "dependencies": {
+    "@aws-sdk/client-s3": "catalog:",
     "@aws-sdk/client-ssm": "catalog:",
     "@aws-sdk/dsql-signer": "catalog:",
     "@borso/infra": "workspace:*",

@@ -164,6 +164,16 @@ export const talosManifest: ArchitectureManifest = {
       access: 'credential',
     },
     {
+      id: 'aws-s3',
+      icon: '🪣',
+      name: 'Amazon S3',
+      technology: 'AWS SDK, PutObject',
+      description:
+        'Holds the weekly JSON export of the memory tables, written by the export Lambda every Sunday into a private versioned bucket.',
+      boundary: 'aws',
+      access: 'credential',
+    },
+    {
       id: 'browser-service-worker',
       icon: '📴',
       name: 'Service worker registration',

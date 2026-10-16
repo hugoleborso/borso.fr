@@ -278,3 +278,22 @@ No screen explains its interface: only data, one- or two-word labels and icons. 
 - **Réglages** (from the header of Aujourd'hui): registered passkeys (date added, add one, remove any but the last), notifications (state, test, turn off), sign out.
 - Every write confirms or reports its failure with a toast, one at a time, an error staying until closed.
 - Installable (manifest, icons, service worker), push notifications after a user gesture (iOS requires it), readable offline on the last loaded state.
+
+## Backups
+
+- **Cluster snapshots.** AWS Backup takes a full snapshot of the talos DSQL cluster every day at 03:00 UTC and keeps each one 35 days, in the vault `talos-dsql-backups` (AWS managed key). The vault, the plan and the backup service role live in the `talos-cluster` stack (`DsqlClusterBackup` from `@borso/infra`); the stack outputs the vault name and the role ARN.
+- **Weekly export.** Every Sunday at 02:00 UTC a Lambda calls `GET https://talos.borso.fr/api/agent/export` with the token in SSM `/talos/agent-token-build` and writes the body to `exports/<AAAA-MM-JJ>.json` in a private bucket of the `talos-prod` stack: versioned, SSE-S3, TLS only, retained when the stack is deleted, older versions expire after 90 days. The stack outputs the bucket name.
+- **Restore.** A restore never overwrites the cluster: it creates a new one, which the app is then pointed at.
+
+```sh
+VAULT=talos-dsql-backups
+ROLE=$(aws cloudformation describe-stacks --stack-name talos-cluster --region eu-west-3 \
+  --query "Stacks[0].Outputs[?contains(OutputKey,'ServiceRoleArn')].OutputValue" --output text)
+POINT=$(aws backup list-recovery-points-by-backup-vault --backup-vault-name $VAULT --region eu-west-3 \
+  --query 'reverse(sort_by(RecoveryPoints,&CreationDate))[0].RecoveryPointArn' --output text)
+JOB=$(aws backup start-restore-job --region eu-west-3 --recovery-point-arn "$POINT" --iam-role-arn "$ROLE" \
+  --metadata '{"regionalConfig":"[{\"region\":\"eu-west-3\",\"isDeletionProtectionEnabled\":false}]"}' \
+  --copy-source-tags-to-restored-resource --query RestoreJobId --output text)
+aws backup describe-restore-job --restore-job-id "$JOB" --region eu-west-3 \
+  --query '{status:Status,cluster:CreatedResourceArn}'
+```

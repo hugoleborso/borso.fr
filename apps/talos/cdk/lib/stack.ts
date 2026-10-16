@@ -2,6 +2,7 @@ import { type IDsqlCluster, PreviewableApp } from '@borso/infra';
 import { Stack } from 'aws-cdk-lib';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
 import type { Construct } from 'constructs';
+import { TalosExportJob } from './constructs/export-job.js';
 
 const APP_SLUG = 'talos';
 const GITHUB_REPOSITORY = 'hugoleborso/talos';
@@ -14,6 +15,7 @@ export interface BuildTalosAppStackProps {
   readonly domainName: string;
   readonly assetsPath: string;
   readonly apiEntry: string;
+  readonly exportEntry: string;
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
 }
@@ -50,4 +52,9 @@ export function buildTalosAppStack(props: BuildTalosAppStackProps): void {
       ],
     }),
   );
+
+  new TalosExportJob(props.scope, 'Export', {
+    domainName: props.domainName,
+    handlerEntry: props.exportEntry,
+  });
 }

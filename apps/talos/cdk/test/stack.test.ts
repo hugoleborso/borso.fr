@@ -35,6 +35,7 @@ function buildAppStackTemplate(): Template {
     domainName: 'talos.borso.fr',
     assetsPath: path.join(WORKSPACE_ROOT, 'site'),
     apiEntry: path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts'),
+    exportEntry: path.join(WORKSPACE_ROOT, 'api', 'src', 'main.export.ts'),
     migrationsPath: path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations'),
     cluster: clusterStack.cluster,
   });
@@ -131,5 +132,98 @@ describe('talos app stack', () => {
 
   it('carries the database schema of the talos cluster', () => {
     synthAppStack().resourceCountIs('AWS::CloudFormation::CustomResource', 1);
+  });
+  it('keeps the weekly export in a private, versioned bucket that outlives the stack', () => {
+    const template = synthAppStack();
+    template.hasResource('AWS::S3::Bucket', {
+      DeletionPolicy: 'Retain',
+      Properties: Match.objectLike({
+        VersioningConfiguration: { Status: 'Enabled' },
+        BucketEncryption: {
+          ServerSideEncryptionConfiguration: [
+            { ServerSideEncryptionByDefault: { SSEAlgorithm: 'AES256' } },
+          ],
+        },
+        PublicAccessBlockConfiguration: {
+          BlockPublicAcls: true,
+          BlockPublicPolicy: true,
+          IgnorePublicAcls: true,
+          RestrictPublicBuckets: true,
+        },
+        LifecycleConfiguration: {
+          Rules: [
+            Match.objectLike({
+              NoncurrentVersionExpiration: { NoncurrentDays: 90 },
+              Status: 'Enabled',
+            }),
+          ],
+        },
+      }),
+    });
+    template.hasResourceProperties('AWS::S3::BucketPolicy', {
+      PolicyDocument: Match.objectLike({
+        Statement: Match.arrayWith([
+          Match.objectLike({
+            Effect: 'Deny',
+            Condition: { Bool: { 'aws:SecureTransport': 'false' } },
+          }),
+        ]),
+      }),
+    });
+  });
+
+  it('runs the export every Sunday at 02:00 UTC against the production api', () => {
+    const template = synthAppStack();
+    template.hasResourceProperties('AWS::Events::Rule', {
+      ScheduleExpression: 'cron(0 2 ? * SUN *)',
+    });
+    template.hasResourceProperties(
+      'AWS::Lambda::Function',
+      Match.objectLike({
+        Environment: {
+          Variables: Match.objectLike({
+            EXPORT_URL: 'https://talos.borso.fr/api/agent/export',
+            AGENT_TOKEN_PARAMETER: '/talos/agent-token-build',
+          }),
+        },
+      }),
+    );
+  });
+
+  it('lets the export read one parameter and write objects, nothing else', () => {
+    synthAppStack().hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: {
+        Statement: [
+          Match.objectLike({
+            Action: 'ssm:GetParameter',
+            Resource: Match.objectLike({
+              'Fn::Join': Match.arrayWith([
+                Match.arrayWith([Match.stringLikeRegexp(':parameter/talos/agent-token-build$')]),
+              ]),
+            }),
+          }),
+          Match.objectLike({ Action: 's3:PutObject' }),
+        ],
+      },
+    });
+  });
+
+  it('keeps 35 days of daily backups of the talos cluster in the cluster stack', () => {
+    const app = new App();
+    const env = { account: '123456789012', region: 'eu-west-3' };
+    const clusterStack = new DsqlClusterStack(app, 'talos-cluster', {
+      app: 'talos',
+      env,
+      backup: {},
+    });
+    const template = Template.fromStack(clusterStack);
+    template.hasResourceProperties('AWS::Backup::BackupVault', {
+      BackupVaultName: 'talos-dsql-backups',
+    });
+    template.hasResourceProperties('AWS::Backup::BackupPlan', {
+      BackupPlan: Match.objectLike({
+        BackupPlanRule: [Match.objectLike({ Lifecycle: { DeleteAfterDays: 35 } })],
+      }),
+    });
   });
 });
