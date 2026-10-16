@@ -113,7 +113,7 @@ Operations (`op` field; other fields camelCase):
 | `citation.add` | `slug`, `sourceRef` | idempotent |
 | `commitment.upsert` | `slug`, `direction?`, `counterpart?`, `action?`, `due?`, `status`, `attributes?`, `body?` | |
 | `commitment.status` | `slug`, `status`, `note?` | `note` appended to « Suivi » as `- <today> : <note>` |
-| `todo.add` | `list`, `text`, `dueDate?`, `commitmentSlug?`, `sourceRef?`, `addedOn?`, `id?`, `position?`, `done?`, `doneOn?`, `extra?` | returns `id` |
+| `todo.add` | `list`, `text`, `dueDate?`, `commitmentSlug?`, `sourceRef?`, `addedOn?`, `id?`, `position?`, `done?`, `doneOn?`, `extra?` | returns `id`. `doneOn` is stored as given, never defaulted (an imported done todo may have no day) |
 | `todo.update` | `id`, `text?`, `done?`, `dueDate?` (null clears), `doneOn?` | `done: true` without `doneOn` sets today |
 | `todo.remove` | `id` | `removed = true` |
 | `focus.replace` | `items` (≤ 3 `{ title, why?, horizon? }`), `updatedOn?` | |

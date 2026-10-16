@@ -88,6 +88,12 @@ describe('selectReturnedRows', () => {
     const exactly = Array.from({ length: MAXIMUM_SQL_ROWS }, (_unused, index) => [index]);
     expect(selectReturnedRows(exactly).truncated).toBe(false);
   });
+
+  it('turns a count into a number and a huge integer into its digits, so the answer serialises', () => {
+    expect(selectReturnedRows([[3n, 'a', 12345678901234567890n, null, 1.5]]).rows).toEqual([
+      [3, 'a', '12345678901234567890', null, 1.5],
+    ]);
+  });
 });
 
 describe('describeDatabaseFailure', () => {

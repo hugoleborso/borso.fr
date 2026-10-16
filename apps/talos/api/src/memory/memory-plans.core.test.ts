@@ -185,7 +185,7 @@ describe('planning todos', () => {
     });
   });
 
-  it('keeps an imported id and marks a done todo done today unless told', () => {
+  it('keeps an imported id and never invents the done day of an added todo', () => {
     expect(
       planTodoInsert(
         { op: 'todo.add', list: 'personal', text: 'x', id: 'a1b2c3d4e5', done: true },
@@ -194,7 +194,7 @@ describe('planning todos', () => {
         TODAY,
         NOW,
       ),
-    ).toMatchObject({ id: 'a1b2c3d4e5', position: 0, doneOn: TODAY });
+    ).toMatchObject({ id: 'a1b2c3d4e5', position: 0, doneOn: null });
     expect(
       planTodoInsert(
         {
