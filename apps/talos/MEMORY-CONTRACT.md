@@ -72,7 +72,7 @@ Commitments, proposals and drafts render the same way from `attributes` + `body`
 | POST | `/sql` | `{ query: string }` | `{ columns: string[], rows: unknown[][], truncated: boolean }`. Only one statement, must start with `SELECT` or `WITH` (after comments/whitespace), refused if it contains `;` outside the end, or any of `insert update delete drop alter create grant revoke truncate copy call do set` as a keyword; run inside a `READ ONLY` transaction; 500 rows max; 10 s timeout (client side abort if the server cannot set one). 400 `{ error }` on refusal or SQL error (message of the database) |
 | POST | `/changes` | see §6 | see §6 |
 | GET | `/lint` | | `{ issues: { code, slug, message }[] }`: codes `missing-closeness`, `broken-link` (a `[[…]]` in a body or a relation target that resolves to nothing), `unknown-verb`, `since-after-until`, `stale-relation` (`seen` older than 180 days), `overdue-commitment` (open, due < today), `todo-commitment-mismatch` (todo done but its commitment open, or the reverse), `orphan-page` (entity with no relation and no incoming link) |
-| GET | `/export` | | `{ exportedAt, tables: { <table name>: row[] } }`, every memory table, events included |
+| GET | `/export` | | `{ exportedAt, tables: { <table name>: row[] } }`, every memory table, events included. Gzipped when the client sends `Accept-Encoding: gzip`, which it must: the raw export outgrows the 6 MB Lambda response limit |
 | GET | `/document?slug=` | | `{ slug, content, contentType }`; 404 when unknown |
 | GET | `/state?key=` | | `{ key, value }`; 404 when unknown |
 

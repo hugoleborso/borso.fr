@@ -8,10 +8,11 @@ describe('exportObjectKey', () => {
 });
 
 describe('buildExportRequestHeaders', () => {
-  it('presents the agent token as a bearer credential', () => {
+  it('presents the agent token as a bearer credential and asks for a compressed export, which only fits a Lambda response gzipped', () => {
     expect(buildExportRequestHeaders('jeton')).toEqual({
       Authorization: 'Bearer jeton',
       Accept: 'application/json',
+      'Accept-Encoding': 'gzip',
     });
   });
 });

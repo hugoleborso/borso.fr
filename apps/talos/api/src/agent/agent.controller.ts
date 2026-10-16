@@ -1,4 +1,5 @@
 import { Hono } from 'hono';
+import { compress } from 'hono/compress';
 import { type AgentEnvironment, requireAgentToken } from './agent.middleware';
 import {
   changeRequestValidator,
@@ -57,7 +58,7 @@ export function buildAgentRouter() {
       context.json(await recordAgentChanges(context.req.valid('json'), context.get('tokenName'))),
     )
     .get('/lint', async (context) => context.json(await lintAgentMemory()))
-    .get('/export', async (context) => context.json(await exportAgentMemory()))
+    .get('/export', compress(), async (context) => context.json(await exportAgentMemory()))
     .get('/document', slugQueryValidator, async (context) =>
       context.json(await readMemoryDocument(context.req.valid('query').slug)),
     )
