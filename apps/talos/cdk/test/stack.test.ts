@@ -259,7 +259,11 @@ describe('talos app stack', () => {
             Action: ['backup:ListRecoveryPointsByBackupVault', 'backup:StartBackupJob'],
           }),
           Match.objectLike({
-            Action: 'backup:StartRestoreJob',
+            Action: [
+              'backup:StartRestoreJob',
+              'backup:DescribeRecoveryPoint',
+              'backup:GetRecoveryPointRestoreMetadata',
+            ],
             Resource: {
               'Fn::Join': Match.arrayWith([
                 Match.arrayWith([Match.stringLikeRegexp(':recovery-point:\\*$')]),

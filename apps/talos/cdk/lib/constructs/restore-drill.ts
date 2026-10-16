@@ -59,7 +59,11 @@ export class TalosRestoreDrill extends Construct {
     this.handler.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,
-        actions: ['backup:StartRestoreJob'],
+        actions: [
+          'backup:StartRestoreJob',
+          'backup:DescribeRecoveryPoint',
+          'backup:GetRecoveryPointRestoreMetadata',
+        ],
         resources: [
           Stack.of(this).formatArn({
             service: 'backup',
