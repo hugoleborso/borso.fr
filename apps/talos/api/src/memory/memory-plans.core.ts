@@ -135,7 +135,7 @@ export function planTodoInsert(
     commitmentSlug: operation.commitmentSlug ?? null,
     sourceRef: operation.sourceRef ?? null,
     addedOn: operation.addedOn ?? today,
-    doneOn: operation.doneOn ?? (isDone ? today : null),
+    doneOn: operation.doneOn ?? null,
     extra: JSON.stringify(operation.extra ?? []),
     removed: false,
     updatedAt: now,
