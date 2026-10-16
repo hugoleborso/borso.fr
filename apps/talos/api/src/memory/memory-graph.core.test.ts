@@ -50,6 +50,7 @@ describe('buildNeighbourhood', () => {
       ['r1', true],
       ['r2', false],
     ]);
+    expect(oneHop.nodes[0]).toEqual(PAGES[0]);
     expect(oneHop.nodes[2]).toEqual({
       slug: BRUNO,
       title: 'bruno-petit',
@@ -59,6 +60,25 @@ describe('buildNeighbourhood', () => {
     expect(
       buildNeighbourhood(PAGES, RELATIONS, ALICE, null, 2).nodes.map((node) => node.slug),
     ).toContain(CLARA);
+  });
+});
+
+describe('buildNeighbourhood without a date', () => {
+  it('closes only the relations that carry an until date', () => {
+    const edges = buildNeighbourhood(PAGES, RELATIONS, ALICE, null, 1).edges;
+    expect(edges.map((edge) => [edge.id, edge.isClosed])).toEqual([
+      ['r1', true],
+      ['r2', false],
+    ]);
+  });
+
+  it('keeps a page with no relation as its own neighbourhood', () => {
+    expect(buildNeighbourhood(PAGES, RELATIONS, 'second-brain/concepts/seul', null, 3)).toEqual({
+      nodes: [
+        { slug: 'second-brain/concepts/seul', title: 'seul', kind: 'inconnu', closeness: null },
+      ],
+      edges: [],
+    });
   });
 });
 

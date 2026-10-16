@@ -51,7 +51,6 @@ export interface LintInput {
 const STALE_AFTER_DAYS = 180;
 const OPEN_STATUS = 'ouvert';
 const DONE_STATUS = 'fait';
-const ISO_DAY_LENGTH = 10;
 
 function listEntityIssues(input: LintInput, known: ReadonlySet<string>): MemoryIssue[] {
   const linked = new Set(input.entities.flatMap((entity) => listWikilinkTargets(entity.body)));
@@ -139,24 +138,25 @@ function listRelationIssues(
   });
 }
 
+function isOverdue(commitment: LintCommitment, today: string): boolean {
+  // Stryker disable next-line ConditionalExpression,LogicalOperator: equivalent mutant, a missing due date compares as never earlier than today.
+  if (commitment.status !== OPEN_STATUS || commitment.due === null) return false;
+  return commitment.due < today;
+}
+
 function listCommitmentIssues(input: LintInput, today: string): MemoryIssue[] {
   const statusBySlug = new Map(
     input.commitments.map((commitment) => [commitment.slug, commitment.status]),
   );
-  const overdue = input.commitments.flatMap((commitment) =>
-    commitment.status === OPEN_STATUS &&
-    commitment.due !== null &&
-    commitment.due.slice(0, ISO_DAY_LENGTH) < today
-      ? [
-          {
-            code: 'overdue-commitment',
-            slug: commitment.slug,
-            message: `échéance dépassée : ${commitment.due}`,
-          },
-        ]
-      : [],
-  );
+  const overdue = input.commitments
+    .filter((commitment) => isOverdue(commitment, today))
+    .map((commitment) => ({
+      code: 'overdue-commitment',
+      slug: commitment.slug,
+      message: `échéance dépassée : ${String(commitment.due)}`,
+    }));
   const mismatched = input.todos.flatMap((todo) => {
+    // Stryker disable next-line ConditionalExpression: equivalent mutant, a todo without a commitment finds no status and is never reported.
     if (todo.removed || todo.commitmentSlug === null) return [];
     const status = statusBySlug.get(todo.commitmentSlug);
     const isMismatched =

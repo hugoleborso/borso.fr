@@ -19,6 +19,12 @@ const STATE: ChangeOperation = { op: 'state.set', key: 'cursors', value: {} };
 const SLUG = 'second-brain/personnes/alice-martin';
 const UUID = '6f1c2b0e-3a4d-4e5f-8a9b-0c1d2e3f4a5b';
 
+function buildDocumentOfBytes(serializedBytes: number): ChangeOperation {
+  const empty = { op: 'document.write' as const, slug: 'archives/x', content: '' };
+  const overhead = JSON.stringify(empty).length;
+  return { ...empty, content: 'x'.repeat(serializedBytes - overhead) };
+}
+
 describe('chunkOperations', () => {
   it('keeps a small call in one chunk', () => {
     expect(chunkOperations([STATE, STATE])).toEqual([{ from: 0, to: 1 }]);
@@ -33,13 +39,24 @@ describe('chunkOperations', () => {
     ]);
   });
 
-  it('splits when the estimated bytes pass the transaction limit, never leaving a chunk empty', () => {
-    const large: ChangeOperation = {
-      op: 'document.write',
-      slug: 'archives/x',
-      content: 'x'.repeat(MAXIMUM_BYTES_PER_TRANSACTION / 4),
-    };
-    expect(chunkOperations([large, large])).toEqual([
+  it('fills a chunk up to exactly the row limit', () => {
+    const operations = Array.from({ length: MAXIMUM_ROWS_PER_TRANSACTION / 2 }, () => STATE);
+    expect(chunkOperations(operations)).toHaveLength(1);
+  });
+
+  it('fills a chunk up to exactly the byte limit and splits one byte beyond', () => {
+    const half = buildDocumentOfBytes(MAXIMUM_BYTES_PER_TRANSACTION / 4);
+    expect(chunkOperations([half, half])).toEqual([{ from: 0, to: 1 }]);
+    const overHalf = buildDocumentOfBytes(MAXIMUM_BYTES_PER_TRANSACTION / 4 + 1);
+    expect(chunkOperations([overHalf, overHalf])).toEqual([
+      { from: 0, to: 0 },
+      { from: 1, to: 1 },
+    ]);
+  });
+
+  it('never opens an empty chunk for an operation larger than the limit on its own', () => {
+    const huge = buildDocumentOfBytes(MAXIMUM_BYTES_PER_TRANSACTION);
+    expect(chunkOperations([huge, STATE])).toEqual([
       { from: 0, to: 0 },
       { from: 1, to: 1 },
     ]);
@@ -169,15 +186,25 @@ describe('appendLineUnderHeading', () => {
     expect(appendLineUnderHeading('## Décision\n- a\n\n## Autre\n', 'Décision', '- b')).toBe(
       '## Décision\n- a\n- b\n\n## Autre\n',
     );
-    expect(appendLineUnderHeading('## Suivi\n', 'Suivi', '- b')).toBe('## Suivi\n- b\n');
+    expect(appendLineUnderHeading('## Suivi  \n', 'Suivi', '- b')).toBe('## Suivi  \n- b\n');
+    expect(appendLineUnderHeading('## Suivi\n- a\n   \n## Autre', 'Suivi', '- b')).toBe(
+      '## Suivi\n- a\n- b\n   \n## Autre',
+    );
     expect(appendLineUnderHeading('# T\n## Suivi\n# Fin', 'Suivi', '- b')).toBe(
       '# T\n## Suivi\n- b\n# Fin',
     );
   });
 
+  it('appends after the last line of a section that runs to the end of the body', () => {
+    expect(appendLineUnderHeading('## Suivi\n- a', 'Suivi', '- b')).toBe('## Suivi\n- a\n- b');
+  });
+
   it('adds the heading when the body has none', () => {
     expect(appendLineUnderHeading('# Devis', 'Suivi', '- b')).toBe('# Devis\n\n## Suivi\n\n- b\n');
     expect(appendLineUnderHeading('', 'Suivi', '- b')).toBe('\n## Suivi\n\n- b\n');
+    expect(appendLineUnderHeading('\n# Devis', 'Suivi', '- b')).toBe(
+      '\n# Devis\n\n## Suivi\n\n- b\n',
+    );
   });
 });
 
@@ -202,6 +229,6 @@ describe('decoding json text columns', () => {
     });
     expect(decodeJsonColumns('memory_fact', { extra: 'libre' })).toEqual({ extra: 'libre' });
     expect(decodeJsonColumns('memory_event', { before: null })).toEqual({ before: null });
-    expect(decodeJsonColumns('inconnue', { value: '1' })).toEqual({ value: '1' });
+    expect(decodeJsonColumns('memory_document', { content: '"x"' })).toEqual({ content: '"x"' });
   });
 });

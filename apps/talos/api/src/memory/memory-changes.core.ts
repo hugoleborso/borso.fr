@@ -12,7 +12,7 @@ const SERIALIZATION_FAILURE_CODE = '40001';
 const ROWS_PER_SIMPLE_OPERATION = 2;
 const ROWS_PER_FOCUS_REPLACEMENT = 4;
 const ROWS_PER_RENAME = 500;
-const BYTES_PER_COPY_OF_A_ROW = 3;
+const BYTES_PER_COPY_OF_A_ROW = 2;
 const LINE_BREAK = '\n';
 
 export interface OperationChunk {
@@ -142,10 +142,10 @@ export function appendLineUnderHeading(body: string, heading: string, line: stri
     .slice(headingIndex + 1)
     .findIndex((candidate) => candidate.startsWith('## ') || candidate.startsWith('# '));
   const sectionEnd = nextHeadingOffset === -1 ? lines.length : headingIndex + 1 + nextHeadingOffset;
-  let insertionIndex = sectionEnd;
-  while (insertionIndex > headingIndex + 1 && lines[insertionIndex - 1]?.trim() === '') {
-    insertionIndex -= 1;
-  }
+  const lastFilledOffset = lines
+    .slice(headingIndex + 1, sectionEnd)
+    .findLastIndex((candidate) => candidate.trim() !== '');
+  const insertionIndex = headingIndex + 1 + lastFilledOffset + 1;
   return [...lines.slice(0, insertionIndex), line, ...lines.slice(insertionIndex)].join(LINE_BREAK);
 }
 
@@ -155,32 +155,45 @@ export function decodeAttributes(text: string): AttributeMap {
 }
 
 export function decodeJsonText(text: string | null): unknown {
-  if (text === null) return null;
-  const stored: unknown = JSON.parse(text);
+  const stored: unknown = JSON.parse(text ?? 'null');
   return stored;
 }
 
-const JSON_COLUMNS_BY_TABLE: Readonly<Record<string, readonly string[]>> = {
+const JSON_COLUMNS_BY_TABLE = {
   memory_entity: ['attributes'],
+  memory_alias: [],
+  memory_fact: [],
+  memory_relation: [],
+  memory_verb: [],
   memory_source: ['metadata'],
+  memory_citation: [],
   memory_commitment: ['attributes'],
   memory_todo: ['extra'],
+  memory_focus_item: [],
   memory_proposal: ['attributes'],
   memory_draft: ['attributes'],
+  memory_journal_entry: [],
+  memory_document: [],
   memory_state: ['value'],
   memory_event: ['before', 'after'],
   memory_change_batch: ['result'],
-};
+} as const satisfies Record<string, readonly string[]>;
+
+export type StoredTableName = keyof typeof JSON_COLUMNS_BY_TABLE;
 
 const storedRowSchema = z.record(z.string(), z.unknown());
+const storedJsonTextSchema = z.string().nullable();
 
-export function decodeJsonColumns(tableName: string, row: unknown): Record<string, unknown> {
-  const jsonColumns = JSON_COLUMNS_BY_TABLE[tableName] ?? [];
+export function decodeJsonColumns(
+  tableName: StoredTableName,
+  row: unknown,
+): Record<string, unknown> {
+  const jsonColumns: readonly string[] = JSON_COLUMNS_BY_TABLE[tableName];
   const columns = storedRowSchema.parse(row);
   return Object.fromEntries(
     Object.entries(columns).map(([column, value]) => [
       column,
-      jsonColumns.includes(column) && typeof value === 'string' ? decodeJsonText(value) : value,
+      jsonColumns.includes(column) ? decodeJsonText(storedJsonTextSchema.parse(value)) : value,
     ]),
   );
 }

@@ -98,6 +98,20 @@ describe('renderFrontMatter for a page created through the API', () => {
   });
 });
 
+describe('renderFrontMatter without closeness', () => {
+  it('writes no closeness line when neither the column nor the attributes hold one', () => {
+    expect(
+      renderFrontMatter({
+        kind: 'concept',
+        body: '',
+        attributes: {},
+        closeness: null,
+        closenessReason: null,
+      }),
+    ).toBe('---\ntype: concept\n---');
+  });
+});
+
 describe('composing a line from its fields', () => {
   it('writes a fact with every attribute and the inferred mark', () => {
     expect(
@@ -141,6 +155,12 @@ describe('closeRaw', () => {
 });
 
 describe('insertSectionLines', () => {
+  it('finds a heading written with trailing spaces', () => {
+    expect(insertSectionLines('## Faits  \n## Suite', 'Faits', ['x'])).toBe(
+      '## Faits  \n- x\n## Suite',
+    );
+  });
+
   it('puts the lines after the heading and its blank line', () => {
     expect(insertSectionLines('## Faits\n\n## Suite', 'Faits', ['x'])).toBe(
       '## Faits\n\n- x\n## Suite',

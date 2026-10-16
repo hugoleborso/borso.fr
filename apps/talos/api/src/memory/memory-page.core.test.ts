@@ -15,8 +15,16 @@ describe('selectRecord', () => {
 describe('selectContentPage', () => {
   it('prefers a source, then a journal entry, then a document', () => {
     const content = { content: 'x' };
-    expect(selectContentPage(content, content, content)?.type).toBe('source');
-    expect(selectContentPage(null, content, content)?.type).toBe('journal');
+    expect(selectContentPage(content, content, content)).toEqual({
+      type: 'source',
+      markdown: 'x',
+      targets: [],
+    });
+    expect(selectContentPage(null, content, content)).toEqual({
+      type: 'journal',
+      markdown: 'x',
+      targets: [],
+    });
     expect(selectContentPage(null, null, content)).toEqual({
       type: 'document',
       markdown: 'x',
@@ -41,6 +49,10 @@ describe('composePageView', () => {
         [
           { fromSlug: slug, toSlug: 'second-brain/personnes/bruno-petit' },
           { fromSlug: 'second-brain/organisations/acme', toSlug: slug },
+          {
+            fromSlug: 'second-brain/personnes/clara-roux',
+            toSlug: 'second-brain/organisations/acme',
+          },
         ],
         ['journal/2026-10-08', slug],
       ),

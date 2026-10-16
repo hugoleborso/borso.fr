@@ -27,7 +27,7 @@ export async function authorizeAgent(
       value: await readTalosSecret(`agent-token-${name}`),
     })),
   );
-  const tokenName = selectAgentTokenName(authorizationHeader, configured);
+  const tokenName = selectAgentTokenName(authorizationHeader ?? '', configured);
   if (tokenName === null) throw new TalosError('invalid-agent-token');
   return tokenName;
 }

@@ -28,6 +28,7 @@ describe('memory text rules', () => {
     expect(hasFoldedMatch('Réunion Acme', 'reunion')).toBe(true);
     expect(hasFoldedMatch('Réunion Acme', 'bureau')).toBe(false);
     expect(hasFoldedMatch(null, 'acme')).toBe(false);
+    expect(hasFoldedMatch('Réunion Acme', ' acme ')).toBe(true);
   });
 
   it('cuts an excerpt of 80 characters around the first hit, with ellipses where it cuts', () => {
@@ -38,6 +39,12 @@ describe('memory text rules', () => {
     expect(excerpt).toContain('Acme');
     expect(excerpt.length).toBe(1 + 80 + 4 + 80 + 1);
     expect(buildExcerpt('court  texte\nAcme', 'acme')).toBe('court texte Acme');
+  });
+
+  it('ignores the spaces around the query and trims the excerpt', () => {
+    const text = `${'a'.repeat(100)} Acme ${'b'.repeat(100)}`;
+    expect(buildExcerpt(text, '  acme  ')).toBe(buildExcerpt(text, 'acme'));
+    expect(buildExcerpt(`  Acme  ${'c'.repeat(100)}`, 'acme')).toBe(`Acme ${'c'.repeat(78)}…`);
   });
 
   it('starts the excerpt at the beginning when the query is absent', () => {

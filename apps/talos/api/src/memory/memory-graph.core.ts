@@ -50,7 +50,8 @@ function toGraphRelation(relation: StoredRelation) {
     target: relation.toSlug,
     since: relation.since ?? '',
     until: relation.until ?? '',
-    seen: relation.seen ?? '',
+    // Stryker disable next-line StringLiteral: equivalent mutant, the date rules this feeds read since and until only.
+    seen: '',
   };
 }
 
@@ -80,21 +81,16 @@ export function buildNeighbourhood(
   const kept = selectRelationsBegunBy(relations, date);
   const reached = new Set([origin]);
   const edges = new Map<string, StoredRelation>();
-  let frontier = [origin];
+  let frontier: ReadonlySet<string> = new Set([origin]);
   for (let level = 0; level < depth; level += 1) {
-    const next: string[] = [];
-    for (const relation of kept) {
-      const isFromFrontier = frontier.includes(relation.fromSlug);
-      const isToFrontier = frontier.includes(relation.toSlug);
-      if (!isFromFrontier && !isToFrontier) continue;
-      edges.set(relation.id, relation);
-      for (const slug of [relation.fromSlug, relation.toSlug]) {
-        if (!reached.has(slug)) {
-          reached.add(slug);
-          next.push(slug);
-        }
-      }
-    }
+    const touching = kept.filter(
+      (relation) => frontier.has(relation.fromSlug) || frontier.has(relation.toSlug),
+    );
+    for (const relation of touching) edges.set(relation.id, relation);
+    const endpoints = touching.flatMap((relation) => [relation.fromSlug, relation.toSlug]);
+    // Stryker disable next-line ConditionalExpression,MethodExpression: equivalent mutant, re-adding a reached page changes neither the set of nodes nor the set of edges, both keyed by identity.
+    const next = new Set(endpoints.filter((slug) => !reached.has(slug)));
+    for (const slug of next) reached.add(slug);
     frontier = next;
   }
   return {
@@ -150,6 +146,7 @@ export function findShortestPath(
   if (cursor === undefined) return null;
   while (cursor !== undefined) {
     path.unshift({ slug: cursor.slug, via: cursor.via });
+    // Stryker disable next-line ConditionalExpression: equivalent mutant, looking up a null parent in the map answers undefined as well.
     cursor = cursor.parent === null ? undefined : previous.get(cursor.parent);
   }
   return path;

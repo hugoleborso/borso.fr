@@ -58,9 +58,11 @@ function selectEntityMatch(entity: SearchableEntity, query: string): SearchHit |
     ['summary', entity.summary],
     ['body', entity.body],
   ];
+  // Stryker disable MethodExpression,ConditionalExpression: equivalent mutant, an empty column never matches a query, which the schema keeps non-blank.
   const columns = candidates.filter(
     (candidate): candidate is [MatchedIn, string] => candidate[1] !== null,
   );
+  // Stryker restore MethodExpression,ConditionalExpression
   const match = columns.find(([, text]) => hasFoldedMatch(text, query));
   if (match === undefined) return null;
   const [matchedIn, text] = match;

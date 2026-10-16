@@ -22,6 +22,13 @@ const INPUT: LintInput = {
     },
     { slug: LONELY, body: '', closeness: 2, archived: false },
     { slug: 'second-brain/archives/x', body: '[[nulle-part]]', closeness: null, archived: true },
+    {
+      slug: 'second-brain/concepts/cite',
+      body: 'Voir [[second-brain/concepts/lie]]',
+      closeness: 2,
+      archived: true,
+    },
+    { slug: 'second-brain/concepts/lie', body: '', closeness: 2, archived: false },
   ],
   relations: [
     {
@@ -58,12 +65,25 @@ const INPUT: LintInput = {
       seen: '2025-01',
       until: '2025-06',
     },
+    {
+      ...RELATION,
+      id: 'r6',
+      fromSlug: ACME,
+      verb: 'client',
+      toSlug: ALICE,
+      since: '2026-10-01',
+      until: '2026-10-01',
+    },
+    { ...RELATION, id: 'r7', fromSlug: ACME, verb: 'client', toSlug: ALICE, since: '2026-09' },
+    { ...RELATION, id: 'r8', fromSlug: ACME, verb: 'client', toSlug: ALICE, seen: '2026-04-19' },
+    { ...RELATION, id: 'r9', fromSlug: ACME, verb: 'client', toSlug: ALICE, until: '2026-01' },
   ],
   verbs: ['travaille_chez', 'client'],
   commitments: [
     { slug: 'engagements/devis', status: 'ouvert', due: '2026-10-15 18:00' },
     { slug: 'engagements/futur', status: 'ouvert', due: '2026-10-20' },
     { slug: 'engagements/sans-date', status: 'ouvert', due: null },
+    { slug: 'engagements/aujourdhui', status: 'ouvert', due: '2026-10-16' },
     { slug: 'engagements/fait', status: 'fait', due: '2026-01-01' },
   ],
   todos: [
@@ -72,8 +92,10 @@ const INPUT: LintInput = {
     { id: 't3', done: false, removed: false, commitmentSlug: 'engagements/futur' },
     { id: 't4', done: true, removed: true, commitmentSlug: 'engagements/devis' },
     { id: 't5', done: true, removed: false, commitmentSlug: null },
+    { id: 't6', done: true, removed: false, commitmentSlug: 'engagements/fait' },
+    { id: 't7', done: false, removed: false, commitmentSlug: 'engagements/inconnu' },
   ],
-  knownSlugs: [ALICE, ACME, LONELY, 'engagements/devis'],
+  knownSlugs: [ALICE, ACME, LONELY, 'engagements/devis', 'second-brain/concepts/lie'],
 };
 
 describe('listMemoryIssues', () => {

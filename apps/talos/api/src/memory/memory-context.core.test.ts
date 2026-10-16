@@ -76,6 +76,68 @@ describe('listIndexLines', () => {
   });
 });
 
+describe('composeContext on a small memory', () => {
+  it('writes the exact document', () => {
+    const small: ContextInput = {
+      preferences: [{ slug: 'preferences/ton', content: '\nDirect.\n' }],
+      focus: [{ title: '', why: null, horizon: null }],
+      todos: [],
+      commitments: [],
+      cursors: null,
+      lastScan: { par: 'nuit' },
+      events: [],
+      entities: [
+        {
+          slug: 'second-brain/x',
+          kind: 'concept',
+          title: 'X',
+          summary: ` ${'y'.repeat(78)}\nz `,
+          closeness: 1,
+          archived: false,
+        },
+      ],
+    };
+    expect(composeContext(small, NOW, 80_000)).toBe(
+      [
+        '# Contexte Talos (2026-10-16T06:00:00.000Z)',
+        '',
+        '## Préférences',
+        '',
+        '### preferences/ton\n\nDirect.\n',
+        '',
+        '## Focus',
+        '',
+        '',
+        '## Todo',
+        '',
+        '',
+        '## Todo taff',
+        '',
+        '',
+        '## Engagements ouverts',
+        '',
+        '',
+        '## État',
+        '',
+        '- curseurs : null',
+        '- dernier scan : {"par":"nuit"}',
+        '',
+        '## Derniers événements',
+        '',
+        '',
+        '## Index',
+        '',
+        `- [[second-brain/x]] (p1) — X : ${'y'.repeat(78)} z`,
+      ].join('\n'),
+    );
+  });
+
+  it('keeps an index line that fits the budget to the byte', () => {
+    const full = composeContext(INPUT, NOW, 80_000);
+    expect(composeContext(INPUT, NOW, new TextEncoder().encode(full).length)).toBe(full);
+  });
+});
+
 describe('composeContext', () => {
   it('writes every section in order', () => {
     const markdown = composeContext(INPUT, NOW, 80_000);

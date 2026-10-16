@@ -76,6 +76,9 @@ describe('planEntityUpsert', () => {
         createdAt: EXISTING.createdAt,
       },
     });
+    expect(planEntityUpsert(EXISTING, { ...UPSERT, confidentiality: 'privé' }, NOW)).toMatchObject({
+      values: { confidentiality: 'privé' },
+    });
     expect(planEntityUpsert(EXISTING, UPSERT, NOW)).toMatchObject({
       values: { attributes: '{"type":"personne"}' },
     });

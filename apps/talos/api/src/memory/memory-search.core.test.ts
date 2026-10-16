@@ -34,6 +34,17 @@ describe('rankSearchHits', () => {
       documents: [{ slug: 'etat/questions', content: '# Questions\nAcme ?' }],
     };
     const hits = rankSearchHits(corpus, 'acme', 50);
+    expect(hits.map((hit) => hit.type)).toEqual([
+      'entity',
+      'entity',
+      'entity',
+      'entity',
+      'entity',
+      'commitment',
+      'source',
+      'journal',
+      'document',
+    ]);
     expect(hits.map((hit) => [hit.slug, hit.matchedIn])).toEqual([
       ['second-brain/x/title', 'title'],
       ['second-brain/x/alias', 'alias'],

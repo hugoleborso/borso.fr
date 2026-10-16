@@ -27,6 +27,11 @@ describe('hasSecret', () => {
     expect(hasSecret('sk-court')).toBe(false);
   });
 
+  it('reads a bare string and nothing at all', () => {
+    expect(hasSecret('ghp_abcdefghijklmnop')).toBe(true);
+    expect(hasSecret(undefined)).toBe(false);
+  });
+
   it('walks arrays and objects and ignores numbers and nulls', () => {
     expect(hasSecret([{ items: ['ok', 'ghp_abcdefghijklmnop'] }])).toBe(true);
     expect(hasSecret({ count: 3, nothing: null, label: 'password:' })).toBe(false);
@@ -66,6 +71,11 @@ describe('assessReadOnlyQuery', () => {
     expect(assessReadOnlyQuery('select \'drop; set\' as "update" /* create */').kind).toBe(
       'accepted',
     );
+    expect(assessReadOnlyQuery('select 1/* x */drop')).toEqual({
+      kind: 'refused',
+      reason: 'mot-clé interdit : drop',
+    });
+    expect(assessReadOnlyQuery('select/**/drop').kind).toBe('refused');
   });
 });
 
@@ -75,6 +85,8 @@ describe('selectReturnedRows', () => {
     expect(selectReturnedRows(rows).rows).toHaveLength(MAXIMUM_SQL_ROWS);
     expect(selectReturnedRows(rows).truncated).toBe(true);
     expect(selectReturnedRows([[1]])).toEqual({ rows: [[1]], truncated: false });
+    const exactly = Array.from({ length: MAXIMUM_SQL_ROWS }, (_unused, index) => [index]);
+    expect(selectReturnedRows(exactly).truncated).toBe(false);
   });
 });
 
