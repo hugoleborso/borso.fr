@@ -43,4 +43,23 @@ describe('DsqlClusterStack', () => {
     expect(typeof stack.cluster.clusterEndpoint).toBe('string');
     expect(typeof stack.cluster.grantConnect).toBe('function');
   });
+  it('backs nothing up unless asked', () => {
+    const app = new App();
+    const stack = new DsqlClusterStack(app, 'test-app-cluster', { env: ENV, app: 'test-app' });
+    Template.fromStack(stack).resourceCountIs('AWS::Backup::BackupPlan', 0);
+    expect(stack.backup).toBeUndefined();
+  });
+
+  it('keeps daily backups of its own cluster when asked', () => {
+    const app = new App();
+    const stack = new DsqlClusterStack(app, 'test-app-cluster', {
+      env: ENV,
+      app: 'test-app',
+      backup: {},
+    });
+    const tpl = Template.fromStack(stack);
+    tpl.resourceCountIs('AWS::Backup::BackupPlan', 1);
+    tpl.resourceCountIs('AWS::Backup::BackupSelection', 1);
+    expect(stack.backup?.vault.backupVaultName).toBeDefined();
+  });
 });

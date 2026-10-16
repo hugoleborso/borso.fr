@@ -1,5 +1,7 @@
 export type { DsqlClusterProps, IDsqlCluster } from './constructs/dsql-cluster.js';
 export { DsqlCluster, lookupDsqlCluster } from './constructs/dsql-cluster.js';
+export type { DsqlClusterBackupProps } from './constructs/dsql-cluster-backup.js';
+export { DsqlClusterBackup } from './constructs/dsql-cluster-backup.js';
 export type { DsqlClusterStackProps } from './constructs/dsql-cluster-stack.js';
 export { DsqlClusterStack } from './constructs/dsql-cluster-stack.js';
 export type { DsqlSchemaCloneFromConfig, DsqlSchemaProps } from './constructs/dsql-schema.js';

@@ -22,7 +22,11 @@ if (requireDeployStage() !== 'prod') {
 const app = new App();
 const env = { account, region: REGION };
 
-const clusterStack = new DsqlClusterStack(app, `${APP_SLUG}-cluster`, { app: APP_SLUG, env });
+const clusterStack = new DsqlClusterStack(app, `${APP_SLUG}-cluster`, {
+  app: APP_SLUG,
+  env,
+  backup: {},
+});
 const appStack = new Stack(app, `${APP_SLUG}-prod`, { env });
 
 buildTalosAppStack({
@@ -30,6 +34,7 @@ buildTalosAppStack({
   domainName: PROD_DOMAIN,
   assetsPath: path.join(WORKSPACE_ROOT, 'dist'),
   apiEntry: path.join(WORKSPACE_ROOT, 'api', 'src', 'main.ts'),
+  exportEntry: path.join(WORKSPACE_ROOT, 'api', 'src', 'main.export.ts'),
   migrationsPath: path.join(WORKSPACE_ROOT, 'api', 'src', 'database', 'migrations'),
   cluster: clusterStack.cluster,
 });
