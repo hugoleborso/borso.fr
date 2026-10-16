@@ -1,8 +1,4 @@
-import {
-  isDecisionRevocable,
-  PENDING_PROPOSAL_STATUS,
-  type ProposalDecision,
-} from '@domain/proposal.core';
+import { isProposalExpired, isProposalPending, type ProposalDecision } from '@domain/proposal.core';
 import type { ParseKeys } from 'i18next';
 import type { ChipTone } from '../atoms/chip.variants';
 import type { IconName } from '../atoms/Icon';
@@ -13,6 +9,7 @@ export interface ProposalShape {
   readonly priority: string;
   readonly category: string;
   readonly createdOn: string;
+  readonly expiresOn?: string;
 }
 
 const PRIORITY_RANK: Readonly<Record<string, number>> = { haute: 0, normale: 1, basse: 2 };
@@ -35,18 +32,17 @@ function comparePending(left: ProposalShape, right: ProposalShape): number {
 // @FollowsBlueprint core-view-projection
 export function partitionProposals<Proposal extends ProposalShape>(
   proposals: readonly Proposal[],
-  decidedHereSlugs: ReadonlySet<string>,
-): { pending: Proposal[]; decided: Proposal[] } {
-  const isOnBoard = (proposal: Proposal): boolean =>
-    proposal.status === PENDING_PROPOSAL_STATUS || decidedHereSlugs.has(proposal.slug);
+  today: string,
+): { pending: Proposal[]; expired: Proposal[]; decided: Proposal[] } {
+  const isPending = (proposal: Proposal): boolean => isProposalPending(proposal, today);
+  const isExpired = (proposal: Proposal): boolean => isProposalExpired(proposal, today);
   return {
-    pending: proposals.filter(isOnBoard).toSorted(comparePending),
-    decided: proposals.filter((proposal) => !isOnBoard(proposal)).toSorted(compareNewestFirst),
+    pending: proposals.filter(isPending).toSorted(comparePending),
+    expired: proposals.filter(isExpired).toSorted(compareNewestFirst),
+    decided: proposals
+      .filter((proposal) => !isPending(proposal) && !isExpired(proposal))
+      .toSorted(compareNewestFirst),
   };
-}
-
-export function isAwaitingDecision(status: string): boolean {
-  return status === PENDING_PROPOSAL_STATUS;
 }
 
 const PRIORITY_TONE: Readonly<Record<string, ChipTone>> = {
@@ -104,20 +100,6 @@ export function selectStatusTone(status: string): ChipTone {
   return STATUS_TONE[status] ?? 'bronze';
 }
 
-const OUTCOME_KEY: Readonly<Record<string, ParseKeys>> = {
-  acceptee: 'proposals.outcome.accepted',
-  faite: 'proposals.outcome.accepted',
-  refusee: 'proposals.outcome.refused',
-};
-
-export function selectOutcomeKey(status: string): ParseKeys {
-  return OUTCOME_KEY[status] ?? 'proposals.outcome.refused';
-}
-
-export function isAcceptedOutcome(status: string): boolean {
-  return status === 'acceptee' || status === 'faite';
-}
-
 export function buildDecisionPayload(
   decision: ProposalDecision,
   comment: string,
@@ -126,21 +108,9 @@ export function buildDecisionPayload(
   return trimmed.length > 0 ? { decision, comment: trimmed } : { decision };
 }
 
-export function countAwaitingDecision(proposals: readonly ProposalShape[]): number {
-  return proposals.filter((proposal) => isAwaitingDecision(proposal.status)).length;
-}
-
-export type ProposalSheetIntent = ProposalDecision | 'revoke';
-
 export const PROPOSAL_SHEET_ACTION: Readonly<
-  Record<ProposalSheetIntent, { readonly labelKey: ParseKeys; readonly icon: IconName }>
+  Record<ProposalDecision, { readonly labelKey: ParseKeys; readonly icon: IconName }>
 > = {
   acceptee: { labelKey: 'proposals.accept', icon: 'check' },
   refusee: { labelKey: 'proposals.refuse', icon: 'close' },
-  revoke: { labelKey: 'proposals.revoke', icon: 'undo' },
 };
-
-export function selectProposalSheetActions(status: string): ProposalSheetIntent[] {
-  if (isAwaitingDecision(status)) return ['acceptee', 'refusee'];
-  return isDecisionRevocable(status) ? ['revoke'] : [];
-}

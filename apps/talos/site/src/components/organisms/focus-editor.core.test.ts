@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  summarizeFocus,
   buildFocusPayload,
   canAddFocusItem,
   focusFormSchema,
@@ -76,5 +77,19 @@ describe('isHorizonPast', () => {
   it('flags a horizon before today only', () => {
     expect(isHorizonPast('2026-10-04', '2026-10-05')).toBe(true);
     expect(isHorizonPast('2026-10-05', '2026-10-05')).toBe(false);
+  });
+});
+
+describe('summarizeFocus', () => {
+  it('folds the focus into its first title and how many follow', () => {
+    expect(summarizeFocus([{ title: 'A' }, { title: 'B' }, { title: 'C' }])).toEqual({
+      firstTitle: 'A',
+      moreCount: 2,
+    });
+  });
+
+  it('shows a lone item alone, and nothing for an empty focus', () => {
+    expect(summarizeFocus([{ title: 'A' }])).toEqual({ firstTitle: 'A', moreCount: null });
+    expect(summarizeFocus([])).toEqual({ firstTitle: null, moreCount: null });
   });
 });

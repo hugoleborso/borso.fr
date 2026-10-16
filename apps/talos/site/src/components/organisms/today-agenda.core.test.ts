@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  keepDueByToday,
   buildAgenda,
   countOverdueTodos,
   describeAgendaDay,
@@ -174,5 +175,18 @@ describe('the agenda meander', () => {
     expect(locateAgendaRow(days, 1, null)).toBe(3);
     expect(locateAgendaRow(days, 1, 0)).toBe(4);
     expect(locateAgendaRow(days, 2, null)).toBe(5);
+  });
+});
+
+describe('keepDueByToday', () => {
+  it('keeps the overdue and today groups only', () => {
+    const days = [
+      { key: 'overdue', bucket: 'overdue' as const },
+      { key: '2026-10-05', bucket: 'today' as const },
+      { key: '2026-10-06', bucket: 'tomorrow' as const },
+      { key: '2026-10-09', bucket: 'later' as const },
+      { key: 'undated', bucket: 'undated' as const },
+    ];
+    expect(keepDueByToday(days).map((day) => day.key)).toEqual(['overdue', '2026-10-05']);
   });
 });

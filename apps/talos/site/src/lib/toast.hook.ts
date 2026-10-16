@@ -72,7 +72,7 @@ export function useMutationToasts(): MutationToasts {
     confirm: (toast, action) => {
       showToast({
         tone: toast.tone,
-        message: t(toast.messageKey),
+        message: t(toast.messageKey, toast.values),
         ...(action === undefined
           ? {}
           : { action: { label: t(action.labelKey), onAction: action.onAction } }),

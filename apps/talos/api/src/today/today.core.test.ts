@@ -97,6 +97,13 @@ describe('selectRecentActivity', () => {
     ]);
   });
 
+  it('drops a bare section title such as « Fait », which says nothing on its own', () => {
+    const journal = '## Fait\nune ligne de texte\n## Vu\n## Relance envoyée à Acme\n';
+    expect(selectRecentActivity([{ date: '2026-10-05', journal }])).toEqual([
+      { date: '2026-10-05', heading: 'Relance envoyée à Acme' },
+    ]);
+  });
+
   it('stops at six entries', () => {
     const journal = Array.from({ length: 8 }, (_, index) => `## Scan ${String(index)}`).join('\n');
     expect(selectRecentActivity([{ date: '2026-10-05', journal }])).toHaveLength(6);

@@ -86,6 +86,14 @@ export function buildAgenda<Todo extends SchedulableTodo, Commitment extends Sch
   return [...days.values()].toSorted(compareDays);
 }
 
+const BUCKETS_DUE_BY_TODAY: ReadonlySet<AgendaBucket> = new Set(['overdue', 'today']);
+
+export function keepDueByToday<Day extends { readonly bucket: AgendaBucket }>(
+  days: readonly Day[],
+): Day[] {
+  return days.filter((day) => BUCKETS_DUE_BY_TODAY.has(day.bucket));
+}
+
 export function countOverdueTodos(todos: readonly SchedulableTodo[], today: string): number {
   return todos.filter((todo) => !todo.done && (todo.dueDate ?? LAST_DAY) < today).length;
 }

@@ -1,4 +1,4 @@
-import type { ParseKeys } from 'i18next';
+import type { ParseKeys, TOptions } from 'i18next';
 
 export type ToastTone = 'neutral' | 'success' | 'danger' | 'info';
 
@@ -16,6 +16,7 @@ export interface ToastContent {
 export interface TranslatableToast {
   readonly tone: ToastTone;
   readonly messageKey: ParseKeys;
+  readonly values?: TOptions;
 }
 
 const CONFIRMATION_DURATION_MS = 4000;

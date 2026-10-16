@@ -12,6 +12,7 @@ import { buildCommitmentHref, buildTodoHref, selectPageName } from '../../lib/wi
 import { type CommitmentDirection, selectCommitmentHeadline } from './commitment-board.core';
 import {
   buildAgenda,
+  keepDueByToday,
   describeAgendaDay,
   locateAgendaRow,
   selectMeanderLane,
@@ -53,7 +54,7 @@ export function TodayAgenda({ todos, commitments, today }: TodayAgendaProps): JS
   const updateTodo = useUpdateTodo('main');
   const deleteTodo = useDeleteTodo('main');
   const tomorrow = addDaysToIsoDay(today, 1);
-  const days = buildAgenda(todos, commitments, today, tomorrow);
+  const days = keepDueByToday(buildAgenda(todos, commitments, today, tomorrow));
   if (days.length === 0) return null;
   return (
     <Card padding="none" className="pb-1">
@@ -123,6 +124,7 @@ export function TodayAgenda({ todos, commitments, today }: TodayAgendaProps): JS
                     variant={headline.variant}
                     lead={headline.lead}
                     text={headline.text}
+                    kindLabel={t('today.agenda.commitment')}
                     rail={rail}
                     onLongPress={() => {
                       openActionSheet({

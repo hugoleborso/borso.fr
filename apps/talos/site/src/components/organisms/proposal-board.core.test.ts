@@ -1,11 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildDecisionPayload,
-  isAcceptedOutcome,
-  countAwaitingDecision,
-  isAwaitingDecision,
   partitionProposals,
-  selectOutcomeKey,
   selectCategoryLabelKey,
   selectPriorityLabelKey,
   selectPriorityTone,
@@ -13,7 +9,6 @@ import {
   selectStatusTone,
   type ProposalShape,
   PROPOSAL_SHEET_ACTION,
-  selectProposalSheetActions,
 } from './proposal-board.core';
 
 function proposal(
@@ -24,6 +19,12 @@ function proposal(
 ): ProposalShape {
   return { slug, status, priority, category: 'action', createdOn };
 }
+
+function expiring(slug: string, status: string, expiresOn: string): ProposalShape {
+  return { ...proposal(slug, status, 'normale', '2026-10-01'), expiresOn };
+}
+
+const TODAY = '2026-10-05';
 
 describe('partitionProposals', () => {
   const proposals = [
@@ -37,7 +38,7 @@ describe('partitionProposals', () => {
   ];
 
   it('orders the pending proposals by priority, then newest first', () => {
-    expect(partitionProposals(proposals, new Set()).pending.map((item) => item.slug)).toEqual([
+    expect(partitionProposals(proposals, TODAY).pending.map((item) => item.slug)).toEqual([
       'high-new',
       'high-old',
       'normal',
@@ -47,41 +48,36 @@ describe('partitionProposals', () => {
   });
 
   it('puts every decided proposal in the history, newest first', () => {
-    expect(partitionProposals(proposals, new Set()).decided.map((item) => item.slug)).toEqual([
+    expect(partitionProposals(proposals, TODAY).decided.map((item) => item.slug)).toEqual([
       'refused',
       'done',
     ]);
   });
 });
 
-describe('partitionProposals with proposals decided on this screen', () => {
-  it('keeps a proposal the owner just decided on the board, the rest in the history', () => {
-    const board = partitionProposals(
-      [
-        proposal('just', 'acceptee', 'haute', '2026-10-05'),
-        proposal('old', 'refusee', 'haute', '2026-10-01'),
-      ],
-      new Set(['just']),
-    );
-    expect(board.pending.map((item) => item.slug)).toEqual(['just']);
-    expect(board.decided.map((item) => item.slug)).toEqual(['old']);
-  });
-});
+function partitionExpiring() {
+  return partitionProposals(
+    [
+      expiring('last-day', 'proposee', TODAY),
+      { ...expiring('gone-old', 'proposee', '2026-10-02'), createdOn: '2026-09-20' },
+      expiring('gone', 'proposee', '2026-10-04'),
+      expiring('decided-late', 'acceptee', '2026-10-01'),
+    ],
+    TODAY,
+  );
+}
 
-describe('the decision outcome', () => {
-  it('tells a pending proposal from a decided one', () => {
-    expect(isAwaitingDecision('proposee')).toBe(true);
-    expect(isAwaitingDecision('acceptee')).toBe(false);
+describe('partitionProposals with expiry dates', () => {
+  it('keeps a proposal open on its last day, by the same rule as the counter', () => {
+    expect(partitionExpiring().pending.map((item) => item.slug)).toEqual(['last-day']);
   });
 
-  it('words and classifies the outcome', () => {
-    expect(selectOutcomeKey('acceptee')).toBe('proposals.outcome.accepted');
-    expect(selectOutcomeKey('faite')).toBe('proposals.outcome.accepted');
-    expect(selectOutcomeKey('refusee')).toBe('proposals.outcome.refused');
-    expect(selectOutcomeKey('bizarre')).toBe('proposals.outcome.refused');
-    expect(isAcceptedOutcome('acceptee')).toBe(true);
-    expect(isAcceptedOutcome('faite')).toBe(true);
-    expect(isAcceptedOutcome('refusee')).toBe(false);
+  it('folds the undecided proposals past their date apart, newest first', () => {
+    expect(partitionExpiring().expired.map((item) => item.slug)).toEqual(['gone', 'gone-old']);
+  });
+
+  it('leaves a decided proposal in the history even past its date', () => {
+    expect(partitionExpiring().decided.map((item) => item.slug)).toEqual(['decided-late']);
   });
 });
 
@@ -137,23 +133,9 @@ describe('buildDecisionPayload', () => {
   });
 });
 
-describe('countAwaitingDecision', () => {
-  it('counts only the proposals still pending', () => {
-    expect(
-      countAwaitingDecision([
-        proposal('a', 'proposee', 'haute', '2026-10-05'),
-        proposal('b', 'acceptee', 'haute', '2026-10-05'),
-      ]),
-    ).toBe(1);
-  });
-});
-
-describe('selectProposalSheetActions', () => {
-  it('offers to decide a pending proposal, to take back a decision, and nothing once Talos acted', () => {
-    expect(selectProposalSheetActions('proposee')).toEqual(['acceptee', 'refusee']);
-    expect(selectProposalSheetActions('acceptee')).toEqual(['revoke']);
-    expect(selectProposalSheetActions('refusee')).toEqual(['revoke']);
-    expect(selectProposalSheetActions('faite')).toEqual([]);
-    expect(PROPOSAL_SHEET_ACTION.revoke.labelKey).toBe('proposals.revoke');
+describe('PROPOSAL_SHEET_ACTION', () => {
+  it('offers to accept or refuse from the long-press sheet', () => {
+    expect(PROPOSAL_SHEET_ACTION.acceptee.labelKey).toBe('proposals.accept');
+    expect(PROPOSAL_SHEET_ACTION.refusee.labelKey).toBe('proposals.refuse');
   });
 });

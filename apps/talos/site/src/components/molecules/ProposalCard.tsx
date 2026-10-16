@@ -15,7 +15,7 @@ export interface ProposalCardProps {
   readonly priorityTone: ChipTone;
   readonly dateLabel: string;
   readonly whyHtml: string;
-  readonly draft: string;
+  readonly draft?: string;
   readonly children: ReactNode;
   readonly onLongPress: () => void;
 }
@@ -60,12 +60,14 @@ export function ProposalCard({
             <MarkdownContent html={whyHtml} />
           </div>
         </section>
-        <section>
-          <h3 className="m-0 mb-1.5 text-label text-ink-muted">{t('proposals.draft')}</h3>
-          <pre className="m-0 p-3 rounded-sm bg-sunk font-mono text-mono text-ink whitespace-pre-wrap break-words">
-            {draft}
-          </pre>
-        </section>
+        {draft === undefined ? null : (
+          <section>
+            <h3 className="m-0 mb-1.5 text-label text-ink-muted">{t('proposals.draft')}</h3>
+            <pre className="m-0 p-3 rounded-sm bg-sunk font-mono text-mono text-ink whitespace-pre-wrap break-words">
+              {draft}
+            </pre>
+          </section>
+        )}
         {children}
       </article>
     </Card>

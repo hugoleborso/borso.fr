@@ -9,17 +9,19 @@ import {
 } from './mutation-toasts.core';
 
 describe('selectDecisionToast', () => {
-  it('celebrates an accepted proposal, since Talos acts on it', () => {
-    expect(selectDecisionToast('acceptee')).toEqual({
+  it('celebrates an accepted proposal by name, since Talos acts on it', () => {
+    expect(selectDecisionToast('acceptee', 'Envoyer ton CV')).toEqual({
       tone: 'success',
       messageKey: 'toast.proposal-accepted',
+      values: { title: 'Envoyer ton CV' },
     });
   });
 
-  it('simply confirms a refused proposal', () => {
-    expect(selectDecisionToast('refusee')).toEqual({
+  it('simply confirms a refused proposal, naming it', () => {
+    expect(selectDecisionToast('refusee', 'Réserver la salle')).toEqual({
       tone: 'neutral',
       messageKey: 'toast.proposal-refused',
+      values: { title: 'Réserver la salle' },
     });
   });
 });

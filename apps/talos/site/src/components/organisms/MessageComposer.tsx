@@ -21,12 +21,29 @@ interface EnvironmentChoice {
   readonly environment: ClaudeCodeEnvironment;
   readonly labelKey: 'message.open-talos' | 'message.open-build';
   readonly icon: IconName;
-  readonly variant: 'primary' | 'secondary';
+  readonly className: string;
+  readonly iconSize: number;
 }
 
+const MAIN_ICON_SIZE = 18;
+const DISCREET_ICON_SIZE = 14;
+
 const ENVIRONMENT_CHOICES: readonly EnvironmentChoice[] = [
-  { environment: 'talos', labelKey: 'message.open-talos', icon: 'send', variant: 'primary' },
-  { environment: 'build', labelKey: 'message.open-build', icon: 'build', variant: 'secondary' },
+  {
+    environment: 'talos',
+    labelKey: 'message.open-talos',
+    icon: 'send',
+    className: buttonVariants({ variant: 'primary', size: 'lg' }),
+    iconSize: MAIN_ICON_SIZE,
+  },
+  {
+    environment: 'build',
+    labelKey: 'message.open-build',
+    icon: 'build',
+    className:
+      'self-end inline-flex items-center gap-1.5 min-h-11 px-1 text-caption text-ink-muted underline underline-offset-2',
+    iconSize: DISCREET_ICON_SIZE,
+  },
 ];
 
 // @FollowsBlueprint organism-form
@@ -51,6 +68,7 @@ export function MessageComposer(): JSX.Element {
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               className="min-h-44"
+              placeholder={t('message.placeholder')}
             />
           )}
         </form.Field>
@@ -71,7 +89,7 @@ export function MessageComposer(): JSX.Element {
                 {target.data === undefined ? (
                   <QueryState isPending={target.isPending} onRetry={() => void target.refetch()} />
                 ) : (
-                  <div className="flex flex-col gap-3 sm:flex-row">
+                  <div className="flex flex-col gap-1">
                     {ENVIRONMENT_CHOICES.map((choice) => (
                       <a
                         key={choice.environment}
@@ -83,12 +101,9 @@ export function MessageComposer(): JSX.Element {
                         target="_blank"
                         rel="noopener"
                         onClick={() => copyPrompt(prompt)}
-                        className={buttonVariants({
-                          variant: choice.variant,
-                          className: 'sm:flex-1',
-                        })}
+                        className={choice.className}
                       >
-                        <Icon name={choice.icon} size={18} />
+                        <Icon name={choice.icon} size={choice.iconSize} />
                         {t(choice.labelKey)}
                       </a>
                     ))}
