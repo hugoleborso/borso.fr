@@ -52,7 +52,11 @@ describe('archiveExport', () => {
     });
     expect(fetcher).toHaveBeenCalledWith('https://talos.borso.fr/api/agent/export', {
       method: 'GET',
-      headers: { Authorization: 'Bearer jeton', Accept: 'application/json' },
+      headers: {
+        Authorization: 'Bearer jeton',
+        Accept: 'application/json',
+        'Accept-Encoding': 'gzip',
+      },
     });
     expect(storeObject).toHaveBeenCalledWith(
       'export-bucket',

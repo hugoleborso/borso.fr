@@ -19,7 +19,11 @@ export function exportObjectKey(now: Date): string {
 }
 
 export function buildExportRequestHeaders(token: string): Record<string, string> {
-  return { Authorization: `Bearer ${token}`, Accept: 'application/json' };
+  return {
+    Authorization: `Bearer ${token}`,
+    Accept: 'application/json',
+    'Accept-Encoding': 'gzip',
+  };
 }
 
 // @FollowsBlueprint core-parse-untrusted

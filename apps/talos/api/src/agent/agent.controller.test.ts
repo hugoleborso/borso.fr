@@ -264,6 +264,10 @@ describe('/api/agent', () => {
       tables: { memory_state: [{ key: 'cursors', value: { gmail: '2026-10-15' } }] },
     });
     const { app } = buildTestContext({});
+    const compressed = await app.request('/api/agent/export', {
+      headers: { ...MAC, 'Accept-Encoding': 'gzip' },
+    });
+    expect(compressed.headers.get('Content-Encoding')).toBe('gzip');
     expect((await requestJson(app, '/api/agent/state?key=absent', { headers: MAC })).status).toBe(
       404,
     );
