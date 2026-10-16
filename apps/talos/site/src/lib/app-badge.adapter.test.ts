@@ -6,25 +6,16 @@ describe('showAppBadge', () => {
     vi.unstubAllGlobals();
   });
 
-  it('puts the count on the app icon', () => {
+  it('puts the count on the app icon, zero clearing it', async () => {
     const setAppBadge = vi.fn(() => Promise.resolve());
     vi.stubGlobal('navigator', { setAppBadge });
-    showAppBadge(3);
-    expect(setAppBadge).toHaveBeenCalledWith(3);
+    await showAppBadge(3);
+    await showAppBadge(0);
+    expect(setAppBadge.mock.calls).toEqual([[3], [0]]);
   });
 
-  it('swallows a refusal, a count of zero clearing the icon', async () => {
-    const setAppBadge = vi.fn(() => Promise.reject(new Error('refusé')));
-    vi.stubGlobal('navigator', { setAppBadge });
-    showAppBadge(0);
-    expect(setAppBadge).toHaveBeenCalledWith(0);
-    await Promise.resolve();
-  });
-
-  it('does nothing where the browser has no badge', () => {
+  it('does nothing where the browser has no badge', async () => {
     vi.stubGlobal('navigator', {});
-    expect(() => {
-      showAppBadge(2);
-    }).not.toThrow();
+    await expect(showAppBadge(2)).resolves.toBeUndefined();
   });
 });

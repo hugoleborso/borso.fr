@@ -32,7 +32,8 @@ const TODAY_OVERVIEW_HASH = hashKey(todayKeys.overview());
 function mirrorPendingCountOnAppIcon(event: QueryCacheNotifyEvent): void {
   if (event.type !== 'updated' || event.query.queryHash !== TODAY_OVERVIEW_HASH) return;
   const overview = queryClient.getQueryData<TodayOverview>(todayKeys.overview());
-  if (overview !== undefined) showAppBadge(overview.pendingProposalCount);
+  if (overview === undefined) return;
+  showAppBadge(overview.pendingProposalCount).catch(() => undefined);
 }
 
 queryClient.getQueryCache().subscribe(mirrorPendingCountOnAppIcon);

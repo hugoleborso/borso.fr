@@ -55,8 +55,8 @@ describe('partitionProposals', () => {
   });
 });
 
-describe('partitionProposals with expiry dates', () => {
-  const board = partitionProposals(
+function partitionExpiring() {
+  return partitionProposals(
     [
       expiring('last-day', 'proposee', TODAY),
       { ...expiring('gone-old', 'proposee', '2026-10-02'), createdOn: '2026-09-20' },
@@ -65,17 +65,19 @@ describe('partitionProposals with expiry dates', () => {
     ],
     TODAY,
   );
+}
 
+describe('partitionProposals with expiry dates', () => {
   it('keeps a proposal open on its last day, by the same rule as the counter', () => {
-    expect(board.pending.map((item) => item.slug)).toEqual(['last-day']);
+    expect(partitionExpiring().pending.map((item) => item.slug)).toEqual(['last-day']);
   });
 
   it('folds the undecided proposals past their date apart, newest first', () => {
-    expect(board.expired.map((item) => item.slug)).toEqual(['gone', 'gone-old']);
+    expect(partitionExpiring().expired.map((item) => item.slug)).toEqual(['gone', 'gone-old']);
   });
 
   it('leaves a decided proposal in the history even past its date', () => {
-    expect(board.decided.map((item) => item.slug)).toEqual(['decided-late']);
+    expect(partitionExpiring().decided.map((item) => item.slug)).toEqual(['decided-late']);
   });
 });
 

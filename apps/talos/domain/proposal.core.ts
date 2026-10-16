@@ -70,10 +70,12 @@ export function parseProposal(slug: string, markdown: string): Proposal | null {
   };
 }
 
+const NEVER_EXPIRES = '9999-12-31';
+
 type ProposalLifecycle = Pick<Proposal, 'status' | 'expiresOn'>;
 
 function hasExpired(proposal: ProposalLifecycle, today: string): boolean {
-  return proposal.expiresOn !== undefined && proposal.expiresOn < today;
+  return (proposal.expiresOn ?? NEVER_EXPIRES) < today;
 }
 
 export function isProposalPending(proposal: ProposalLifecycle, today: string): boolean {

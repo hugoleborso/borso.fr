@@ -1,11 +1,7 @@
 /** @DependsOnExternal browser-badging */
 
-function ignoreRefusal(): undefined {
-  return undefined;
-}
-
 // @FollowsBlueprint browser-clipboard-write
-export function showAppBadge(count: number): void {
+export async function showAppBadge(count: number): Promise<void> {
   if (typeof navigator.setAppBadge !== 'function') return;
-  navigator.setAppBadge(count).catch(ignoreRefusal);
+  await navigator.setAppBadge(count);
 }

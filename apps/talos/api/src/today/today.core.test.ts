@@ -98,7 +98,7 @@ describe('selectRecentActivity', () => {
   });
 
   it('drops a bare section title such as « Fait », which says nothing on its own', () => {
-    const journal = '## Fait\n## Vu\n## Relance envoyée à Acme\n';
+    const journal = '## Fait\nune ligne de texte\n## Vu\n## Relance envoyée à Acme\n';
     expect(selectRecentActivity([{ date: '2026-10-05', journal }])).toEqual([
       { date: '2026-10-05', heading: 'Relance envoyée à Acme' },
     ]);
