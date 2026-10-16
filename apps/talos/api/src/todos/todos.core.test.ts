@@ -118,7 +118,7 @@ const STORED_TODO: StoredTodo = {
 
 describe('stored todos', () => {
   it('projects a stored todo onto the shape of the API', () => {
-    expect(projectStoredTodo(STORED_TODO)).toEqual({
+    expect(projectStoredTodo(STORED_TODO)).toStrictEqual({
       id: STORED_TODO.id,
       text: 'Envoyer le devis à Acme',
       done: false,
@@ -140,7 +140,7 @@ describe('stored todos', () => {
         addedOn: null,
         doneOn: '2026-10-06',
       }),
-    ).toEqual({
+    ).toStrictEqual({
       id: STORED_TODO.id,
       text: 'Envoyer le devis à Acme',
       done: true,
@@ -180,6 +180,18 @@ describe('stored todos', () => {
     expect(
       isTaskTaken([{ ...STORED_TODO, addedOn: null }], 'Envoyer le devis à Acme', undefined),
     ).toBe(true);
+  });
+
+  it('tells tasks apart by their text and their day of addition', () => {
+    expect(isTaskTaken([STORED_TODO], 'Rappeler Alice Martin', '2026-10-04')).toBe(false);
+    expect(isTaskTaken([STORED_TODO], 'Envoyer le devis à Acme', '2026-10-05')).toBe(false);
+  });
+
+  it('restores nothing from a removed todo of another task', () => {
+    const otherRemoved = { ...STORED_TODO, text: 'Autre tâche', removed: true };
+    expect(matchRestoredTodo([otherRemoved], projectStoredTodo(STORED_TODO))).toEqual({
+      kind: 'none',
+    });
   });
 
   it('matches a restored line to the removed todo it came from', () => {

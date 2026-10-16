@@ -25,17 +25,12 @@ export interface StoredGraphSource {
 }
 
 const COMMITMENT_TYPE = 'engagement';
-const LOWEST_PROXIMITY = 1;
 const HIGHEST_PROXIMITY = 5;
+const VALID_PROXIMITIES = Array.from({ length: HIGHEST_PROXIMITY }, (_unused, index) => index + 1);
 const PATH_SEPARATOR = '/';
 
-function isValidProximity(closeness: number | null): closeness is number {
-  return (
-    closeness !== null &&
-    Number.isInteger(closeness) &&
-    closeness >= LOWEST_PROXIMITY &&
-    closeness <= HIGHEST_PROXIMITY
-  );
+function readProximity(closeness: number | null): number | undefined {
+  return VALID_PROXIMITIES.find((level) => level === closeness);
 }
 
 function readSlugTail(slug: string): string {
@@ -46,12 +41,15 @@ function readSlugTail(slug: string): string {
 export function projectStoredGraph(source: StoredGraphSource, date: string | null): Graph {
   const entityNodes = source.entities
     .filter((entity) => !entity.archived)
-    .map((entity): GraphNode => ({
-      id: entity.slug,
-      title: entity.title,
-      type: entity.kind,
-      ...(isValidProximity(entity.closeness) ? { proximity: entity.closeness } : {}),
-    }));
+    .map((entity): GraphNode => {
+      const proximity = readProximity(entity.closeness);
+      return {
+        id: entity.slug,
+        title: entity.title,
+        type: entity.kind,
+        ...(proximity === undefined ? {} : { proximity }),
+      };
+    });
   const commitmentNodes = source.commitments.map((commitment): GraphNode => ({
     id: commitment.slug,
     title: readPageTitle(commitment.body, commitment.action ?? readSlugTail(commitment.slug)),

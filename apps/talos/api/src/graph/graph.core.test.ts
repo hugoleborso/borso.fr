@@ -71,7 +71,7 @@ const SOURCE: StoredGraphSource = {
 
 describe('projectStoredGraph', () => {
   it('turns live entities and commitments into nodes and keeps a valid closeness only', () => {
-    expect(projectStoredGraph(SOURCE, null).nodes).toEqual([
+    expect(projectStoredGraph(SOURCE, null).nodes).toStrictEqual([
       { id: 'second-brain/hugo', title: 'Hugo', type: 'moi', proximity: 5 },
       { id: 'second-brain/personnes/alice-martin', title: 'Alice Martin', type: 'personne' },
       { id: 'second-brain/organisations/acme', title: 'Acme', type: 'organisation' },

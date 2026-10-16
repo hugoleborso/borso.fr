@@ -313,6 +313,14 @@ describe('planning statuses', () => {
     });
   });
 
+  it('adds the sending day to a draft whose front matter had none', () => {
+    const plan = planDraftStatus({ sentOn: null, attributes: '{}' }, 'envoye', '2026-10-08');
+    expect(JSON.parse(plan.attributes)).toEqual({
+      [STATUS_KEY]: 'envoye',
+      [SENT_ON_KEY]: '2026-10-08',
+    });
+  });
+
   it('keeps the known sending day when none is given again', () => {
     const plan = planDraftStatus(
       { sentOn: '2026-10-07', attributes: '{"statut":"envoye","envoye":"2026-10-07"}' },
