@@ -8,6 +8,7 @@ import { DsqlClusterStack } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { RESTORE_DRILL_FUNCTION_NAME, TalosRestoreDrill } from '../lib/constructs/restore-drill.js';
 import { buildTalosAppStack } from '../lib/stack.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -224,6 +225,54 @@ describe('talos app stack', () => {
       BackupPlan: Match.objectLike({
         BackupPlanRule: [Match.objectLike({ Lifecycle: { DeleteAfterDays: 35 } })],
       }),
+    });
+  });
+
+  it('lets the restore drill start backups and restores of the talos vault, passing only the backup role', () => {
+    const app = new App();
+    const env = { account: '123456789012', region: 'eu-west-3' };
+    const clusterStack = new DsqlClusterStack(app, 'talos-cluster', {
+      app: 'talos',
+      env,
+      backup: {},
+    });
+    const backup = clusterStack.backup;
+    if (backup === undefined) throw new Error('the cluster stack carries no backup');
+    new TalosRestoreDrill(clusterStack, 'RestoreDrill', {
+      handlerEntry: path.join(WORKSPACE_ROOT, 'api', 'src', 'main.restore-drill.ts'),
+      clusterArn: clusterStack.cluster.clusterArn,
+      vaultName: backup.vault.backupVaultName,
+      vaultArn: backup.vault.backupVaultArn,
+      serviceRoleArn: backup.serviceRoleArn,
+    });
+    const template = Template.fromStack(clusterStack);
+    template.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: RESTORE_DRILL_FUNCTION_NAME,
+      Environment: {
+        Variables: Match.objectLike({ BACKUP_VAULT_NAME: Match.anyValue() }),
+      },
+    });
+    template.hasResourceProperties('AWS::IAM::Policy', {
+      PolicyDocument: {
+        Statement: [
+          Match.objectLike({
+            Action: ['backup:ListRecoveryPointsByBackupVault', 'backup:StartBackupJob'],
+          }),
+          Match.objectLike({
+            Action: 'backup:StartRestoreJob',
+            Resource: {
+              'Fn::Join': Match.arrayWith([
+                Match.arrayWith([Match.stringLikeRegexp(':recovery-point:\\*$')]),
+              ]),
+            },
+          }),
+          Match.objectLike({
+            Action: 'iam:PassRole',
+            Condition: { StringEquals: { 'iam:PassedToService': 'backup.amazonaws.com' } },
+            Resource: Match.objectLike({ 'Fn::GetAtt': Match.anyValue() }),
+          }),
+        ],
+      },
     });
   });
 });
