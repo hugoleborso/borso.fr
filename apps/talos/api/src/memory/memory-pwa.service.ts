@@ -19,8 +19,6 @@ import { renderRecordPage } from './page-rendering.core';
 
 export { readMemoryPage } from './memory-page.service';
 export { searchMemory } from './memory-read.service';
-export type { MemoryPageView } from './memory-page.core';
-export type { SearchHit } from './memory-search.core';
 
 const PWA_ACTOR = 'pwa';
 const FOCUS_UPDATED_ON_KEY = 'focus.updated_on';
