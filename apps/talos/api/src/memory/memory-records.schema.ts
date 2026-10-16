@@ -118,14 +118,3 @@ export const memoryChangeBatchTable = pgTable('memory_change_batch', {
   appliedAt: timestamp('applied_at', { withTimezone: true, mode: 'date' }).notNull(),
   result: text('result').notNull(),
 });
-
-export type MemoryCommitmentRow = typeof memoryCommitmentTable.$inferSelect;
-export type MemoryTodoRow = typeof memoryTodoTable.$inferSelect;
-export type MemoryFocusItemRow = typeof memoryFocusItemTable.$inferSelect;
-export type MemoryProposalRow = typeof memoryProposalTable.$inferSelect;
-export type MemoryDraftRow = typeof memoryDraftTable.$inferSelect;
-export type MemoryJournalEntryRow = typeof memoryJournalEntryTable.$inferSelect;
-export type MemoryDocumentRow = typeof memoryDocumentTable.$inferSelect;
-export type MemoryStateRow = typeof memoryStateTable.$inferSelect;
-export type MemoryEventRow = typeof memoryEventTable.$inferSelect;
-export type MemoryChangeBatchRow = typeof memoryChangeBatchTable.$inferSelect;

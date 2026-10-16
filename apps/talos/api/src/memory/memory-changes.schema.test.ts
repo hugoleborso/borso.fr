@@ -1,12 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
+  type ChangeOperation,
+  type ChangeRequest,
   changeOperationSchema,
   changeRequestSchema,
   MAXIMUM_OPERATIONS_PER_CALL,
 } from './memory-changes.schema';
 
 describe('changeRequestSchema', () => {
-  const request = {
+  const request: ChangeRequest = {
     idempotencyKey: 'nuit-2026-10-17-1',
     actor: 'routine:nuit',
     operations: [{ op: 'state.set', key: 'cursors', value: {} }],
@@ -71,8 +73,7 @@ describe('changeOperationSchema', () => {
   });
 
   it('lets a todo update clear the due date with null', () => {
-    expect(
-      changeOperationSchema.parse({ op: 'todo.update', id: 'a1b2c3d4e5', dueDate: null }),
-    ).toEqual({ op: 'todo.update', id: 'a1b2c3d4e5', dueDate: null });
+    const cleared: ChangeOperation = { op: 'todo.update', id: 'a1b2c3d4e5', dueDate: null };
+    expect(changeOperationSchema.parse(cleared)).toEqual(cleared);
   });
 });

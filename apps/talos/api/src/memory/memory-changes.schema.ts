@@ -233,6 +233,4 @@ export const changeRequestSchema = z.object({
 });
 
 export type ChangeOperation = z.infer<typeof changeOperationSchema>;
-export type ChangeOperationName = ChangeOperation['op'];
 export type ChangeRequest = z.infer<typeof changeRequestSchema>;
-export type Attributes = z.infer<typeof attributesSchema>;

@@ -116,11 +116,3 @@ export const memoryCitationTable = pgTable(
     index('memory_citation_source_ref_idx').on(table.sourceRef),
   ],
 );
-
-export type MemoryEntityRow = typeof memoryEntityTable.$inferSelect;
-export type MemoryAliasRow = typeof memoryAliasTable.$inferSelect;
-export type MemoryFactRow = typeof memoryFactTable.$inferSelect;
-export type MemoryRelationRow = typeof memoryRelationTable.$inferSelect;
-export type MemoryVerbRow = typeof memoryVerbTable.$inferSelect;
-export type MemorySourceRow = typeof memorySourceTable.$inferSelect;
-export type MemoryCitationRow = typeof memoryCitationTable.$inferSelect;
