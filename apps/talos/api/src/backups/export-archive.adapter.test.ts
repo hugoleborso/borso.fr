@@ -79,6 +79,12 @@ describe('archiveExport', () => {
     );
   });
 
+  it('names its failures so the Lambda log tells them from a crash', async () => {
+    await expect(archiveExport({ environment: {} })).rejects.toMatchObject({
+      name: 'ExportArchiveError',
+    });
+  });
+
   it('fails when the token cannot be read', async () => {
     await expect(
       archiveExport({
@@ -107,7 +113,7 @@ describe('archiveExport', () => {
         storeObject,
         environment: ENVIRONMENT,
       }),
-    ).rejects.toThrow(ExportArchiveError);
+    ).rejects.toThrow('the export body is not { exportedAt, tables }');
     expect(storeObject).not.toHaveBeenCalled();
   });
 });
