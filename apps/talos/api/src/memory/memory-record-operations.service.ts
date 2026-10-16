@@ -2,8 +2,16 @@ import { randomUUID } from 'node:crypto';
 import { TalosError } from '../helpers/errors/talos-error.types';
 import { appendJournalSection, appendLineUnderHeading } from './memory-changes.core';
 import type { ChangeOperation } from './memory-changes.schema';
+import { isCutoverKey } from './memory-cutover.core';
+import { forgetStorageMode } from './memory-cutover.service';
 import type { OperationContext, OperationOutcome } from './memory-entity-operations.service';
-import { planFocusSlots, planTodoInsert, planTodoUpdate } from './memory-plans.core';
+import {
+  planDraftStatus,
+  planFocusSlots,
+  planStatusAttributes,
+  planTodoInsert,
+  planTodoUpdate,
+} from './memory-plans.core';
 import {
   findCommitment,
   findDocument,
@@ -74,7 +82,13 @@ export async function changeCommitmentStatusOperation(
           FOLLOW_UP_HEADING,
           `- ${context.today} : ${operation.note}`,
         );
-  const after = { ...before, status: operation.status, body, updatedAt: context.now };
+  const after = {
+    ...before,
+    status: operation.status,
+    attributes: planStatusAttributes(before.attributes, operation.status),
+    body,
+    updatedAt: context.now,
+  };
   await upsertCommitment(context.executor, after);
   return { status: 'updated', before, after };
 }
@@ -160,7 +174,13 @@ export async function changeProposalStatusOperation(
     operation.decisionLine === undefined
       ? before.body
       : appendLineUnderHeading(before.body, DECISION_HEADING, operation.decisionLine);
-  const after = { ...before, status: operation.status, body, updatedAt: context.now };
+  const after = {
+    ...before,
+    status: operation.status,
+    attributes: planStatusAttributes(before.attributes, operation.status),
+    body,
+    updatedAt: context.now,
+  };
   await upsertProposal(context.executor, after);
   return { status: 'updated', before, after };
 }
@@ -198,8 +218,8 @@ export async function changeDraftStatusOperation(
     refuseUnknown('brouillon', operation.slug);
   const after = {
     ...before,
+    ...planDraftStatus(before, operation.status, operation.sentOn),
     status: operation.status,
-    sentOn: operation.sentOn ?? before.sentOn,
     updatedAt: context.now,
   };
   await upsertDraft(context.executor, after);
@@ -268,5 +288,7 @@ export async function setStateOperation(
     updatedAt: context.now,
   };
   await upsertState(context.executor, after);
+  const isCutoverChange = isCutoverKey(operation.key);
+  if (isCutoverChange) forgetStorageMode();
   return { status: before === null ? 'created' : 'updated', before, after };
 }

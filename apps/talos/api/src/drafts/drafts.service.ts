@@ -1,17 +1,22 @@
 import type { DraftStatusChange } from '@domain/draft-status.core';
+import { stripMarkdownExtension } from '@domain/markdown-page.core';
 import {
   editContentFile,
+  type FileEditor,
   listContentDirectory,
   readContentFiles,
 } from '../content/content.service';
 import { formatParisDate } from '../helpers/calendar/paris-clock.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
+import { isMemoryInDatabase } from '../memory/memory-cutover.service';
+import { recordPwaChanges, renderMemoryDraft } from '../memory/memory-pwa.service';
 import {
   buildDraftPath,
   changeDraftStatusFile,
   type Draft,
   type DraftStatusOutcome,
   isDraftFile,
+  planStoredDraftStatus,
   selectDrafts,
 } from './drafts.core';
 
@@ -29,14 +34,38 @@ export async function listDrafts(): Promise<Draft[]> {
   return selectDrafts(await readContentFiles(files));
 }
 
-export async function changeDraftStatus(params: {
+interface DraftChange {
   readonly slug: string;
   readonly target: DraftStatusChange;
   readonly now: Date;
-}): Promise<Draft> {
-  const change = { target: params.target, today: formatParisDate(params.now) };
-  const outcome = await editContentFile(buildDraftPath(params.slug), (current) =>
-    changeDraftStatusFile(params.slug, current, change),
+}
+
+async function editStoredDraft(
+  change: DraftChange,
+  editor: FileEditor<DraftStatusOutcome>,
+): Promise<DraftStatusOutcome> {
+  const memorySlug = stripMarkdownExtension(buildDraftPath(change.slug));
+  const fileEdit = editor(await renderMemoryDraft(memorySlug));
+  if (fileEdit.content === null) return fileEdit.outcome;
+  const today = formatParisDate(change.now);
+  await recordPwaChanges(
+    fileEdit.commitMessage,
+    [
+      {
+        op: 'draft.status',
+        slug: memorySlug,
+        ...planStoredDraftStatus(change.target, today),
+      },
+    ],
+    change.now,
   );
-  return readChangedDraft(outcome);
+  return fileEdit.outcome;
+}
+
+export async function changeDraftStatus(change: DraftChange): Promise<Draft> {
+  const today = formatParisDate(change.now);
+  const editor: FileEditor<DraftStatusOutcome> = (current) =>
+    changeDraftStatusFile(change.slug, current, { target: change.target, today });
+  if (await isMemoryInDatabase()) return readChangedDraft(await editStoredDraft(change, editor));
+  return readChangedDraft(await editContentFile(buildDraftPath(change.slug), editor));
 }

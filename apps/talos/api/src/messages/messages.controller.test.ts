@@ -25,6 +25,7 @@ describe('GET /api/messages/claude-code', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       repository: 'proprietaire/notes',
+      storage: 'git',
       environments: { talos: 'env_lecture', build: 'env_construction' },
     });
   });

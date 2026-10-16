@@ -37,6 +37,10 @@ export const TALOS_ERRORS = {
     status: 409,
     message: 'Impossible de supprimer la dernière passkey : ajoutes-en une autre avant.',
   },
+  'content-moved': {
+    status: 409,
+    message: 'La mémoire est en base : le dépôt n’est plus écrit.',
+  },
   'content-conflict': { status: 409, message: 'Le fichier a changé entre-temps, réessaie.' },
   'rate-limited': { status: 429, message: 'Trop de tentatives, réessaie plus tard.' },
   'content-unavailable': { status: 502, message: 'GitHub ne répond pas.' },

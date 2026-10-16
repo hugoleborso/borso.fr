@@ -2,12 +2,18 @@ import { describe, expect, it } from 'vitest';
 import { isTodoListShownOnToday, TODO_LISTS } from './todo-list.core';
 
 describe('the todo lists', () => {
-  it('give each list its own file, heading and commit noun', () => {
-    expect(TODO_LISTS.main).toEqual({ path: 'todo.md', heading: '# Todo', commitNoun: 'todo' });
+  it('give each list its own file, heading, commit noun and memory list', () => {
+    expect(TODO_LISTS.main).toEqual({
+      path: 'todo.md',
+      heading: '# Todo',
+      commitNoun: 'todo',
+      memoryList: 'personal',
+    });
     expect(TODO_LISTS.work).toEqual({
       path: 'todo-taff.md',
       heading: '# Todo taff',
       commitNoun: 'todo taff',
+      memoryList: 'work',
     });
   });
 

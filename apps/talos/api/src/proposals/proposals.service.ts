@@ -1,12 +1,22 @@
-import type { Proposal, ProposalDecision } from '@domain/proposal.core';
+import { stripMarkdownExtension } from '@domain/markdown-page.core';
+import {
+  formatCancellationLine,
+  formatDecisionLine,
+  PENDING_PROPOSAL_STATUS,
+  type Proposal,
+  type ProposalDecision,
+} from '@domain/proposal.core';
 import {
   editContentFile,
+  type FileEditor,
   listContentDirectory,
   readContentFiles,
 } from '../content/content.service';
 import { formatParisMinute } from '../helpers/calendar/paris-clock.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
 import { fireRoutine } from '../helpers/routine/routine-fire.adapter';
+import { isMemoryInDatabase } from '../memory/memory-cutover.service';
+import { recordPwaChanges, renderMemoryProposal } from '../memory/memory-pwa.service';
 import {
   buildProposalPath,
   type CancellationOutcome,
@@ -18,6 +28,7 @@ import {
 } from './proposals.core';
 
 const PROPOSALS_DIRECTORY = 'etat/propositions';
+const ROUTINE_TRIGGER = 'proposition';
 
 function readDecidedProposal(outcome: DecisionOutcome): Proposal {
   if (outcome.kind === 'not-found') throw new TalosError('proposal-not-found');
@@ -29,6 +40,44 @@ function readReopenedProposal(outcome: CancellationOutcome): Proposal {
   if (outcome.kind === 'not-found') throw new TalosError('proposal-not-found');
   if (outcome.kind === 'not-revocable') throw new TalosError('proposal-not-revocable');
   return outcome.proposal;
+}
+
+interface ProposalEdit<Outcome> {
+  readonly slug: string;
+  readonly editor: FileEditor<Outcome>;
+  readonly status: string;
+  readonly decisionLine: string;
+  readonly now: Date;
+}
+
+async function editStoredProposal<Outcome>(edit: ProposalEdit<Outcome>): Promise<Outcome> {
+  const memorySlug = stripMarkdownExtension(buildProposalPath(edit.slug));
+  const fileEdit = edit.editor(await renderMemoryProposal(memorySlug));
+  if (fileEdit.content === null) return fileEdit.outcome;
+  await recordPwaChanges(
+    fileEdit.commitMessage,
+    [
+      {
+        op: 'proposal.status',
+        slug: memorySlug,
+        status: edit.status,
+        decisionLine: edit.decisionLine,
+      },
+    ],
+    edit.now,
+  );
+  return fileEdit.outcome;
+}
+
+async function editProposal<Outcome>(edit: ProposalEdit<Outcome>): Promise<Outcome> {
+  if (await isMemoryInDatabase()) return await editStoredProposal(edit);
+  return await editContentFile(buildProposalPath(edit.slug), edit.editor);
+}
+
+async function selectFiredReference(slug: string): Promise<string> {
+  const path = buildProposalPath(slug);
+  if (await isMemoryInDatabase()) return stripMarkdownExtension(path);
+  return path;
 }
 
 // @FollowsBlueprint service-orchestration
@@ -43,17 +92,20 @@ export async function decideProposal(params: {
   readonly comment?: string | undefined;
   readonly now: Date;
 }): Promise<Proposal> {
-  const path = buildProposalPath(params.slug);
   const record = {
     decision: params.decision,
     comment: params.comment,
     decidedAt: formatParisMinute(params.now),
   };
-  const outcome = await editContentFile(path, (current) =>
-    decideProposalFile(params.slug, current, record),
-  );
+  const outcome = await editProposal({
+    slug: params.slug,
+    editor: (current) => decideProposalFile(params.slug, current, record),
+    status: params.decision,
+    decisionLine: formatDecisionLine(record),
+    now: params.now,
+  });
   const proposal = readDecidedProposal(outcome);
-  await fireRoutine('proposition', path);
+  await fireRoutine(ROUTINE_TRIGGER, await selectFiredReference(params.slug));
   return proposal;
 }
 
@@ -62,8 +114,12 @@ export async function cancelProposalDecision(params: {
   readonly now: Date;
 }): Promise<Proposal> {
   const cancelledAt = formatParisMinute(params.now);
-  const outcome = await editContentFile(buildProposalPath(params.slug), (current) =>
-    cancelProposalDecisionFile(params.slug, current, cancelledAt),
-  );
+  const outcome = await editProposal({
+    slug: params.slug,
+    editor: (current) => cancelProposalDecisionFile(params.slug, current, cancelledAt),
+    status: PENDING_PROPOSAL_STATUS,
+    decisionLine: formatCancellationLine(cancelledAt),
+    now: params.now,
+  });
   return readReopenedProposal(outcome);
 }

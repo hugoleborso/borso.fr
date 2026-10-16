@@ -7,6 +7,7 @@ import {
   isDraftFile,
   parseDraft,
   parseRecipients,
+  planStoredDraftStatus,
   readDraftSlug,
   selectDrafts,
 } from './drafts.core';
@@ -223,5 +224,18 @@ describe('the draft paths', () => {
     expect(readDraftSlug('etat/brouillons/2026-10-08-a.md')).toBe('2026-10-08-a');
     expect(isDraftFile('etat/brouillons/2026-10-08-a.md')).toBe(true);
     expect(isDraftFile('etat/brouillons/.gitkeep')).toBe(false);
+  });
+});
+
+describe('planStoredDraftStatus', () => {
+  it('dates a sent draft', () => {
+    expect(planStoredDraftStatus('envoye', '2026-10-08')).toEqual({
+      status: 'envoye',
+      sentOn: '2026-10-08',
+    });
+  });
+
+  it('gives no day to the other statuses', () => {
+    expect(planStoredDraftStatus('pret', '2026-10-08')).toEqual({ status: 'pret' });
   });
 });

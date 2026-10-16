@@ -1,3 +1,4 @@
+import { decodeAttributes } from './memory-changes.core';
 import type { ChangeOperation } from './memory-changes.schema';
 import type { memoryTodoTable } from './memory-records.schema';
 import type { memoryEntityTable, memoryFactTable, memoryRelationTable } from './memory.schema';
@@ -177,4 +178,35 @@ export function planFocusSlots(operation: OperationOf<'focus.replace'>): FocusSl
       horizon: focusItem?.horizon ?? null,
     };
   });
+}
+
+const STATUS_ATTRIBUTE = 'statut';
+const SENT_ON_ATTRIBUTE = 'envoye';
+const SENT_DRAFT_STATUS = 'envoye';
+
+export function planStatusAttributes(attributesText: string, status: string): string {
+  return JSON.stringify({ ...decodeAttributes(attributesText), [STATUS_ATTRIBUTE]: status });
+}
+
+export interface DraftStatusPlan {
+  readonly sentOn: string | null;
+  readonly attributes: string;
+}
+
+export function planDraftStatus(
+  existing: { readonly sentOn: string | null; readonly attributes: string },
+  status: string,
+  requestedSentOn: string | undefined,
+): DraftStatusPlan {
+  const sentOn = status === SENT_DRAFT_STATUS ? (requestedSentOn ?? existing.sentOn) : null;
+  const attributes = decodeAttributes(existing.attributes);
+  const hasSentOnAttribute = SENT_ON_ATTRIBUTE in attributes || sentOn !== null;
+  return {
+    sentOn,
+    attributes: JSON.stringify({
+      ...attributes,
+      [STATUS_ATTRIBUTE]: status,
+      ...(hasSentOnAttribute ? { [SENT_ON_ATTRIBUTE]: sentOn ?? '' } : {}),
+    }),
+  };
 }
