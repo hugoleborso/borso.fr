@@ -1,3 +1,4 @@
+import { isDatabaseStorage, type StorageMode } from '@domain/storage-mode.core';
 import type { AgeUnit } from '../../lib/relative-age.utils';
 
 export interface RunReportShape {
@@ -26,4 +27,10 @@ const AGE_LABEL_KEY = {
 
 export function selectAgeLabelKey(unit: AgeUnit): (typeof AGE_LABEL_KEY)[AgeUnit] {
   return AGE_LABEL_KEY[unit];
+}
+
+export function selectScanPromptKey(
+  storage: StorageMode | undefined,
+): 'scan.memoryPrompt' | 'scan.prompt' {
+  return isDatabaseStorage(storage) ? 'scan.memoryPrompt' : 'scan.prompt';
 }

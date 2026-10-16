@@ -14,6 +14,7 @@ import {
   listFailedSources,
   type RunReportShape,
   selectAgeLabelKey,
+  selectScanPromptKey,
 } from './scan-status.core';
 
 export interface ScanStatusProps {
@@ -78,7 +79,7 @@ export function ScanStatus({ lastRuns }: ScanStatusProps): JSX.Element {
   const { t } = useTranslation();
   const target = useClaudeCodeTarget();
   const copyPrompt = useCopyPromptOnLaunch();
-  const prompt = t('scan.prompt');
+  const prompt = t(selectScanPromptKey(target.data?.storage));
   return (
     <div className="flex items-center gap-1">
       {lastRuns === null ? null : <LastRunsPill lastRuns={lastRuns} />}

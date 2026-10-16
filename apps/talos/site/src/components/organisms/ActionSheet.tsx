@@ -4,10 +4,14 @@ import { buttonVariants } from '../atoms/button.variants';
 import { Icon } from '../atoms/Icon';
 import { closeActionSheet, useShownActionSheet } from '../../lib/action-sheet.hook';
 import { buildEnvironmentAddress, composeTalosPrompt } from '../../lib/claude-code-address.core';
-import { selectSubjectFile } from '../../lib/discussion-subject.core';
+import { selectSubjectReference } from '../../lib/discussion-subject.core';
 import { useCopyPromptOnLaunch } from '../../lib/prompt-copy.hook';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
-import { composeDiscussionText, selectSubjectPhraseKey } from './action-sheet.core';
+import {
+  composeDiscussionText,
+  selectDiscussionPreambleKey,
+  selectSubjectPhraseKey,
+} from './action-sheet.core';
 
 const SHEET_ROW_CLASS_NAME = 'w-full justify-start min-h-13 px-4 text-body';
 
@@ -18,9 +22,10 @@ export function ActionSheet(): JSX.Element | null {
   const target = useClaudeCodeTarget();
   const copyPrompt = useCopyPromptOnLaunch();
   if (sheet === null) return null;
-  const file = selectSubjectFile(sheet.subject);
+  const storage = target.data?.storage;
+  const file = selectSubjectReference(sheet.subject, storage);
   const prompt = composeTalosPrompt(
-    t('discuss.preamble'),
+    t(selectDiscussionPreambleKey(storage)),
     composeDiscussionText(
       t('discuss.context', {
         subject: t(selectSubjectPhraseKey(sheet.subject.kind)),

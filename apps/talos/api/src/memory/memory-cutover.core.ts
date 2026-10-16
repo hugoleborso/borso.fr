@@ -1,7 +1,7 @@
+import type { StorageMode } from '@domain/storage-mode.core';
+
 export const CUTOVER_CACHE_MILLISECONDS = 30_000;
 export const CUTOVER_STATE_KEY = 'cutover';
-
-export type StorageMode = 'git' | 'database';
 
 export interface StorageModeReading {
   readonly mode: StorageMode;

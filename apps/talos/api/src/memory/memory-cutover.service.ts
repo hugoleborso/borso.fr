@@ -1,11 +1,8 @@
-import {
-  isStorageModeReadingFresh,
-  type StorageMode,
-  type StorageModeReading,
-} from './memory-cutover.core';
+import { isDatabaseStorage, type StorageMode } from '@domain/storage-mode.core';
+import { isStorageModeReadingFresh, type StorageModeReading } from './memory-cutover.core';
 import { readCutover } from './memory-read.service';
 
-export type { StorageMode } from './memory-cutover.core';
+export type { StorageMode } from '@domain/storage-mode.core';
 
 interface StorageModeHolder {
   latest: StorageModeReading | null;
@@ -23,7 +20,7 @@ export async function readStorageMode(): Promise<StorageMode> {
 }
 
 export async function isMemoryInDatabase(): Promise<boolean> {
-  return (await readStorageMode()) === 'database';
+  return isDatabaseStorage(await readStorageMode());
 }
 
 export function forgetStorageMode(): void {

@@ -1,3 +1,4 @@
+import { isDatabaseStorage, type StorageMode } from '@domain/storage-mode.core';
 import { TODO_LISTS, type TodoListName } from '@domain/todo-list.core';
 
 export type DiscussionSubjectReference =
@@ -44,4 +45,40 @@ export function selectSubjectFile(subject: DiscussionSubjectReference): string {
     case 'page':
       return `${subject.path}${MARKDOWN_EXTENSION}`;
   }
+}
+
+const STATE_KEYS = { scan: 'last_scan', relations: 'relations' } as const;
+
+function selectSubjectSlug(subject: DiscussionSubjectReference): string {
+  switch (subject.kind) {
+    case 'todo':
+    case 'todos':
+      return `todo: ${TODO_LISTS[subject.list].memoryList}`;
+    case 'focus':
+      return 'focus';
+    case 'scan':
+    case 'relations':
+      return `état: ${STATE_KEYS[subject.kind]}`;
+    case 'proposal':
+      return `proposition: etat/propositions/${subject.slug}`;
+    case 'draft':
+      return `brouillon: etat/brouillons/${subject.slug}`;
+    case 'review':
+      return `journal: journal/${subject.week}-hebdo`;
+    case 'journal':
+      return `journal: journal/${subject.date}`;
+    case 'folder':
+      return `dossier: ${subject.path}/`;
+    case 'commitment':
+      return `engagement: ${subject.path}`;
+    case 'page':
+      return `page: ${subject.path}`;
+  }
+}
+
+export function selectSubjectReference(
+  subject: DiscussionSubjectReference,
+  storage: StorageMode | undefined,
+): string {
+  return isDatabaseStorage(storage) ? selectSubjectSlug(subject) : selectSubjectFile(subject);
 }
