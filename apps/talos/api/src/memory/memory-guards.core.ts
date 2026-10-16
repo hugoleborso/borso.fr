@@ -96,7 +96,16 @@ export function selectReturnedRows(rows: readonly unknown[][]): {
   readonly rows: unknown[][];
   readonly truncated: boolean;
 } {
-  return { rows: rows.slice(0, MAXIMUM_SQL_ROWS), truncated: rows.length > MAXIMUM_SQL_ROWS };
+  return {
+    rows: rows.slice(0, MAXIMUM_SQL_ROWS).map((row) => row.map(selectSerializableCell)),
+    truncated: rows.length > MAXIMUM_SQL_ROWS,
+  };
+}
+
+function selectSerializableCell(cell: unknown): unknown {
+  if (typeof cell !== 'bigint') return cell;
+  const asNumber = Number(cell);
+  return Number.isSafeInteger(asNumber) ? asNumber : cell.toString();
 }
 
 export function describeDatabaseFailure(failure: unknown): string {
