@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { buildTestContext, requestJson, signIn } from '../../../test/app-utils';
 import { CONTENT_FIXTURE } from '../../../test/content-fixture';
 import { truncateAllTables } from '../../../test/database-utils';
+import { seedMemoryInDatabase } from '../../../test/memory-fixture';
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -50,5 +51,29 @@ describe('the history routes', () => {
   it('refuses a request without a session', async () => {
     const { app } = buildTestContext(CONTENT_FIXTURE);
     expect((await requestJson(app, '/api/history')).status).toBe(401);
+  });
+});
+
+describe('the history routes once the memory is in the database', () => {
+  beforeEach(async () => {
+    await seedMemoryInDatabase();
+  });
+
+  it('lists and reads the stored briefs and weekly reviews', async () => {
+    const { app } = buildTestContext(CONTENT_FIXTURE);
+    const cookie = await signIn();
+    expect(await (await requestJson(app, '/api/history', { cookie })).json()).toEqual({
+      briefs: [{ date: '2026-10-05' }],
+      reviews: [{ week: '2026-S40', title: 'Revue hebdo 2026-S40' }],
+    });
+    expect(
+      await (await requestJson(app, '/api/history/briefs/2026-10-05', { cookie })).json(),
+    ).toEqual({ date: '2026-10-05', markdown: 'Journée Acme.' });
+    const review: { markdown: string } = await (
+      await requestJson(app, '/api/history/reviews/2026-S40', { cookie })
+    ).json();
+    expect(review.markdown).toContain('Semaine calme.');
+    const missing = await requestJson(app, '/api/history/briefs/2026-10-01', { cookie });
+    expect(missing.status).toBe(404);
   });
 });

@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { buildTestContext, requestJson, signIn } from '../../../test/app-utils';
 import { CONTENT_FIXTURE } from '../../../test/content-fixture';
 import { truncateAllTables } from '../../../test/database-utils';
+import { seedMemoryInDatabase } from '../../../test/memory-fixture';
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -36,5 +37,28 @@ describe('GET /api/commitments', () => {
     const { app } = buildTestContext(CONTENT_FIXTURE);
     const response = await requestJson(app, '/api/commitments');
     expect(response.status).toBe(401);
+  });
+});
+
+describe('the commitment routes once the memory is in the database', () => {
+  beforeEach(async () => {
+    await seedMemoryInDatabase();
+  });
+
+  it('lists the open stored commitments only', async () => {
+    const { app } = buildTestContext(CONTENT_FIXTURE);
+    const response = await requestJson(app, '/api/commitments', { cookie: await signIn() });
+    expect(await response.json()).toEqual({
+      items: [
+        {
+          path: 'engagements/2026-10-07-devis-acme',
+          title: 'Envoyer le devis à Acme',
+          direction: 'owed',
+          counterpart: 'second-brain/personnes/alice-martin',
+          action: 'Envoyer le devis',
+          dueDate: '2026-10-07',
+        },
+      ],
+    });
   });
 });

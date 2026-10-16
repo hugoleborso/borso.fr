@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestContext, requestJson, signIn } from '../../../test/app-utils';
 import { CONTENT_FIXTURE } from '../../../test/content-fixture';
 import { truncateAllTables } from '../../../test/database-utils';
+import { seedMemoryInDatabase } from '../../../test/memory-fixture';
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -57,5 +58,29 @@ describe('GET /api/relations', () => {
   it('refuses a request without a session', async () => {
     const { app } = buildTestContext(CONTENT_FIXTURE);
     expect((await requestJson(app, '/api/relations')).status).toBe(401);
+  });
+});
+
+describe('the relations route once the memory is in the database', () => {
+  beforeEach(async () => {
+    await seedMemoryInDatabase();
+  });
+
+  it('reads the stored relations state', async () => {
+    const { app } = buildTestContext(CONTENT_FIXTURE);
+    const response = await requestJson(app, '/api/relations', { cookie: await signIn() });
+    expect(await response.json()).toEqual({
+      generatedAt: '2026-10-05T03:00:00+02:00',
+      toReconnect: [
+        {
+          page: 'second-brain/personnes/alice-martin',
+          title: 'Alice Martin',
+          closeness: 4,
+          lastContactOn: '2026-08-29',
+          silentDays: 37,
+        },
+      ],
+      birthdays: [],
+    });
   });
 });

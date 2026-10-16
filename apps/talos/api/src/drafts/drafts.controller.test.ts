@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestContext, requestJson, signIn } from '../../../test/app-utils';
 import { CONTENT_FIXTURE } from '../../../test/content-fixture';
 import { truncateAllTables } from '../../../test/database-utils';
+import { seedMemoryInDatabase } from '../../../test/memory-fixture';
 
 const READY_PATH = 'etat/brouillons/2026-10-04-relance-alice.md';
 
@@ -107,5 +108,61 @@ describe('the draft routes', () => {
   it('refuses a request without a session', async () => {
     const { app } = buildTestContext(CONTENT_FIXTURE);
     expect((await requestJson(app, '/api/drafts')).status).toBe(401);
+  });
+});
+
+describe('the draft routes once the memory is in the database', () => {
+  beforeEach(async () => {
+    await seedMemoryInDatabase();
+  });
+
+  it('lists the stored drafts and changes their status in the memory', async () => {
+    const { app, overlay } = buildTestContext(CONTENT_FIXTURE);
+    const cookie = await signIn();
+    const listed: { items: unknown[] } = await (
+      await requestJson(app, '/api/drafts', { cookie })
+    ).json();
+    expect(listed.items).toEqual([
+      {
+        slug: '2026-10-04-cafe',
+        channel: 'gmail',
+        recipients: [{ name: 'Alice Martin', page: 'second-brain/personnes/alice-martin' }],
+        subject: 'Un café ?',
+        status: 'pret',
+        createdOn: '2026-10-04',
+        body: 'Bonjour Alice, un café la semaine prochaine ?',
+      },
+    ]);
+    const sent = await requestJson(app, '/api/drafts/2026-10-04-cafe', {
+      method: 'PATCH',
+      body: { status: 'envoye' },
+      cookie,
+    });
+    expect(await sent.json()).toMatchObject({ status: 'envoye', sentOn: '2026-10-05' });
+    const conflict = await requestJson(app, '/api/drafts/2026-10-04-cafe', {
+      method: 'PATCH',
+      body: { status: 'abandonne' },
+      cookie,
+    });
+    expect(conflict.status).toBe(409);
+    const undone = await requestJson(app, '/api/drafts/2026-10-04-cafe', {
+      method: 'PATCH',
+      body: { status: 'pret' },
+      cookie,
+    });
+    const ready: { status: string; sentOn?: string } = await undone.json();
+    expect(ready.status).toBe('pret');
+    expect(ready.sentOn).toBeUndefined();
+    expect(overlay.size).toBe(0);
+  });
+
+  it('answers 404 for a draft the memory does not hold', async () => {
+    const { app } = buildTestContext(CONTENT_FIXTURE);
+    const response = await requestJson(app, '/api/drafts/inconnu', {
+      method: 'PATCH',
+      body: { status: 'envoye' },
+      cookie: await signIn(),
+    });
+    expect(response.status).toBe(404);
   });
 });

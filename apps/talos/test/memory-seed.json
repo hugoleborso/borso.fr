@@ -1,0 +1,175 @@
+[
+  { "op": "verb.add", "name": "travaille_chez", "description": "emploi", "linkLength": "long" },
+  { "op": "verb.add", "name": "ami_de", "description": "amitié", "linkLength": "medium" },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/hugo",
+    "kind": "moi",
+    "title": "Hugo",
+    "body": "# Hugo\n\n## Relations\n",
+    "attributes": { "type": "moi" },
+    "closeness": 5
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/personnes/alice-martin",
+    "kind": "personne",
+    "title": "Alice Martin",
+    "summary": "Cheffe de projet chez Acme",
+    "body": "# Alice Martin\n\nCheffe de projet chez [[second-brain/organisations/acme]].\n\n## Relations\n",
+    "attributes": { "type": "personne" },
+    "closeness": 4
+  },
+  {
+    "op": "entity.upsert",
+    "slug": "second-brain/organisations/acme",
+    "kind": "organisation",
+    "title": "Acme",
+    "body": "# Acme\n\nClient fictif.\n",
+    "attributes": { "type": "organisation" },
+    "closeness": 3
+  },
+  {
+    "op": "relation.add",
+    "from": "second-brain/personnes/alice-martin",
+    "verb": "travaille_chez",
+    "to": "second-brain/organisations/acme",
+    "since": "2026-09",
+    "seen": "2026-10-02"
+  },
+  {
+    "op": "relation.add",
+    "from": "second-brain/hugo",
+    "verb": "ami_de",
+    "to": "second-brain/personnes/alice-martin",
+    "since": "2027-01"
+  },
+  {
+    "op": "commitment.upsert",
+    "slug": "engagements/2026-10-07-devis-acme",
+    "direction": "moi->eux",
+    "counterpart": "[[second-brain/personnes/alice-martin]]",
+    "action": "Envoyer le devis",
+    "due": "2026-10-07",
+    "status": "ouvert",
+    "attributes": {
+      "type": "engagement",
+      "sens": "moi->eux",
+      "qui": "[[second-brain/personnes/alice-martin]]",
+      "quoi": "Envoyer le devis",
+      "echeance": "2026-10-07",
+      "statut": "ouvert"
+    },
+    "body": "# Envoyer le devis à Acme\n"
+  },
+  {
+    "op": "commitment.upsert",
+    "slug": "engagements/2026-09-01-ancien",
+    "status": "fait",
+    "attributes": { "type": "engagement", "quoi": "Ancien engagement", "statut": "fait" },
+    "body": "# Ancien engagement\n"
+  },
+  {
+    "op": "todo.add",
+    "list": "personal",
+    "id": "a1b2c3d4e5",
+    "text": "Envoyer le devis à Acme",
+    "dueDate": "2026-10-07",
+    "commitmentSlug": "engagements/2026-10-07-devis-acme",
+    "addedOn": "2026-10-04",
+    "extra": [["priorite", "haute"]]
+  },
+  {
+    "op": "todo.add",
+    "list": "personal",
+    "id": "0f3c2a1b-4d5e-4f60-8a7b-9c0d1e2f3a4b",
+    "text": "Rappeler Alice Martin",
+    "addedOn": "2026-10-04"
+  },
+  { "op": "todo.add", "list": "work", "text": "Relire la recette Acme", "addedOn": "2026-10-04" },
+  {
+    "op": "focus.replace",
+    "items": [{ "title": "Atelier Acme", "why": "la date approche", "horizon": "2026-10-09" }],
+    "updatedOn": "2026-10-04"
+  },
+  {
+    "op": "proposal.upsert",
+    "slug": "etat/propositions/2026-10-04-atelier",
+    "category": "action",
+    "status": "proposee",
+    "title": "Décaler la réunion pour l'atelier Acme",
+    "priority": "haute",
+    "createdOn": "2026-10-04",
+    "expiresOn": "2026-10-09",
+    "attributes": {
+      "type": "proposition",
+      "categorie": "action",
+      "statut": "proposee",
+      "titre": "Décaler la réunion pour l'atelier Acme",
+      "priorite": "haute",
+      "cree": "2026-10-04",
+      "expire": "2026-10-09"
+    },
+    "body": "## Pourquoi\nL'atelier Acme approche.\n\n## Ce que Talos propose\nDécaler la réunion d'équipe.\n\n## Décision\n"
+  },
+  {
+    "op": "draft.upsert",
+    "slug": "etat/brouillons/2026-10-04-cafe",
+    "channel": "gmail",
+    "recipients": "Alice Martin [[second-brain/personnes/alice-martin]]",
+    "subject": "Un café ?",
+    "status": "pret",
+    "createdOn": "2026-10-04",
+    "attributes": {
+      "type": "brouillon",
+      "canal": "gmail",
+      "destinataire": "Alice Martin [[second-brain/personnes/alice-martin]]",
+      "sujet": "Un café ?",
+      "lien": "",
+      "statut": "pret",
+      "cree": "2026-10-04",
+      "envoye": ""
+    },
+    "body": "Bonjour Alice, un café la semaine prochaine ?\n"
+  },
+  {
+    "op": "journal.write",
+    "slug": "journal/2026-10-05",
+    "content": "# 2026-10-05\n\n## Brief envoyé\n\nJournée Acme.\n\n## Scan de nuit\n\n3 sources lues.\n"
+  },
+  {
+    "op": "journal.write",
+    "slug": "journal/2026-S40-hebdo",
+    "content": "# Revue hebdo 2026-S40\n\nSemaine calme.\n"
+  },
+  {
+    "op": "state.set",
+    "key": "relations",
+    "value": {
+      "genere": "2026-10-05T03:00:00+02:00",
+      "a_recontacter": [
+        {
+          "page": "second-brain/personnes/alice-martin",
+          "titre": "Alice Martin",
+          "proximite": 4,
+          "dernier_contact": "2026-08-29",
+          "jours": 37
+        }
+      ],
+      "anniversaires": []
+    }
+  },
+  {
+    "op": "state.set",
+    "key": "last_scan",
+    "value": {
+      "scan": {
+        "date": "2026-10-05T03:24:10+02:00",
+        "par": "nuit",
+        "sources_ok": 9,
+        "sources_ko": ["Strava"]
+      }
+    }
+  },
+  { "op": "state.set", "key": "cutover", "value": "database" }
+]

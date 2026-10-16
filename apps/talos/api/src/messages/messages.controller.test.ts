@@ -1,6 +1,7 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestContext, requestJson, signIn, useTestSecrets } from '../../../test/app-utils';
 import { truncateAllTables } from '../../../test/database-utils';
+import { seedMemoryInDatabase } from '../../../test/memory-fixture';
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -42,5 +43,16 @@ describe('GET /api/messages/claude-code', () => {
     const { app } = buildTestContext({});
     const response = await requestJson(app, '/api/messages/claude-code');
     expect(response.status).toBe(401);
+  });
+});
+
+describe('the Claude Code target once the memory is in the database', () => {
+  it('says the memory is in the database', async () => {
+    await seedMemoryInDatabase();
+    const { app } = buildTestContext({});
+    const response = await requestJson(app, '/api/messages/claude-code', {
+      cookie: await signIn(),
+    });
+    expect(await response.json()).toMatchObject({ storage: 'database' });
   });
 });
