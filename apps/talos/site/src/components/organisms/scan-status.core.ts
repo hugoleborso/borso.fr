@@ -34,3 +34,11 @@ export function selectScanPromptKey(
 ): 'scan.memoryPrompt' | 'scan.prompt' {
   return isDatabaseStorage(storage) ? 'scan.memoryPrompt' : 'scan.prompt';
 }
+
+const STALE_AFTER_MILLISECONDS = 24 * 60 * 60 * 1000;
+
+export function isRunStale(report: RunReportShape | null, nowMilliseconds: number): boolean {
+  if (report === null) return true;
+  const ranAt = Date.parse(report.at);
+  return Number.isNaN(ranAt) || nowMilliseconds - ranAt > STALE_AFTER_MILLISECONDS;
+}

@@ -112,14 +112,15 @@ describe('the application shell', () => {
         brief: { date: '2026-10-08', markdown: 'Journée calme' },
         todos: [
           { id: 'a1', text: 'Envoyer le devis', done: false, dueDate: '2026-10-06' },
-          { id: 'b2', text: 'Appeler Bruno', done: false },
+          { id: 'b2', text: 'Appeler Bruno', done: false, dueDate: '2026-10-08' },
+          { id: 'c3', text: 'Ranger le garage', done: false },
         ],
         commitments: [
           {
             path: 'engagements/2026-10-09-dossier',
             title: 'Rendre le dossier',
             direction: 'owed',
-            dueDate: '2026-10-09',
+            dueDate: '2026-10-08',
           },
         ],
         commitmentCounts: { owed: 4, awaited: 2 },
@@ -152,11 +153,13 @@ describe('the application shell', () => {
       'Rendre le dossier',
       'Journée calme',
       'Scan (07:00)',
-      'Sans date',
-      'Demain',
+      "Aujourd'hui",
+      'Engagement',
+      'Scan il y a',
     ]) {
       expect(text).toContain(expected);
     }
+    expect(text).not.toContain('Ranger le garage');
     const scanLink = tree.container.querySelector('a[aria-label="Scanner"]');
     expect(scanLink?.getAttribute('href')).toContain('environment=env_lecture');
     expect(scanLink?.getAttribute('href')).toContain('talos-scan');

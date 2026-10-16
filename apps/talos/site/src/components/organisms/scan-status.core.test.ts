@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { listFailedSources, selectAgeLabelKey, selectScanPromptKey } from './scan-status.core';
+import {
+  isRunStale,
+  listFailedSources,
+  selectAgeLabelKey,
+  selectScanPromptKey,
+} from './scan-status.core';
 
 describe('listFailedSources', () => {
   it('lists the failed sources of the scan, then those of the Mac collection, prefixed', () => {
@@ -31,5 +36,23 @@ describe('selectScanPromptKey', () => {
   it('drops the commit and push once the memory is in the database', () => {
     expect(selectScanPromptKey('database')).toBe('scan.memoryPrompt');
     expect(selectScanPromptKey(undefined)).toBe('scan.prompt');
+  });
+});
+
+describe('isRunStale', () => {
+  const now = Date.parse('2026-10-16T12:00:00Z');
+
+  it('calls a scan older than a day stale', () => {
+    expect(isRunStale({ at: '2026-10-15T11:59:00Z', failedSources: [] }, now)).toBe(true);
+  });
+
+  it('keeps a scan of exactly a day, or fresher, current', () => {
+    expect(isRunStale({ at: '2026-10-15T12:00:00Z', failedSources: [] }, now)).toBe(false);
+    expect(isRunStale({ at: '2026-10-16T09:00:00Z', failedSources: [] }, now)).toBe(false);
+  });
+
+  it('calls a missing or unreadable scan stale', () => {
+    expect(isRunStale(null, now)).toBe(true);
+    expect(isRunStale({ at: 'hier', failedSources: [] }, now)).toBe(true);
   });
 });

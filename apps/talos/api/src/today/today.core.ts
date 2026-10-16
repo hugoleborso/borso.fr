@@ -17,6 +17,8 @@ const MAXIMUM_ACTIVITY_ENTRIES = 6;
 const BRIEF_HEADING = 'Brief envoyé';
 const LINE_BREAK = '\n';
 const SECTION_PREFIX = '## ';
+const WORD_SEPARATOR_PATTERN = /\s+/;
+const MINIMUM_HEADING_WORDS = 2;
 const REFERENCE_DECORATION_PATTERN = /^\[\[|\]\]$|^\/+/g;
 
 type DatedTodo = Todo & { readonly dueDate: string };
@@ -58,12 +60,16 @@ export function readBrief(date: string, journal: string): Brief | null {
   return markdown === null ? null : { date, markdown };
 }
 
+function isTellingHeading(heading: string): boolean {
+  return heading.split(WORD_SEPARATOR_PATTERN).length >= MINIMUM_HEADING_WORDS;
+}
+
 function listJournalHeadings(journal: string): string[] {
   return splitFrontMatter(journal)
     .body.split(LINE_BREAK)
     .filter((line) => line.startsWith(SECTION_PREFIX))
     .map((line) => line.slice(SECTION_PREFIX.length).trim())
-    .filter((heading) => heading !== '' && heading !== BRIEF_HEADING);
+    .filter((heading) => heading !== BRIEF_HEADING && isTellingHeading(heading));
 }
 
 export function selectRecentActivity(

@@ -58,3 +58,14 @@ export function canAddFocusItem(itemCount: number): boolean {
 export function isHorizonPast(horizon: string, today: string): boolean {
   return horizon < today;
 }
+
+export function summarizeFocus(items: readonly { readonly title: string }[]): {
+  readonly firstTitle: string | null;
+  readonly moreCount: number | null;
+} {
+  const [first, ...rest] = items;
+  return {
+    firstTitle: first?.title ?? null,
+    moreCount: rest.length === 0 ? null : rest.length,
+  };
+}

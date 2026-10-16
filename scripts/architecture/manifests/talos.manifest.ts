@@ -231,6 +231,16 @@ export const talosManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'browser-badging',
+      icon: '🔴',
+      name: 'Badging',
+      technology: 'navigator.setAppBadge',
+      description:
+        'Shows the number of proposals waiting for a decision on the installed app icon, where the platform offers it.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'browser-vibration',
       icon: '📳',
       name: 'Vibration',

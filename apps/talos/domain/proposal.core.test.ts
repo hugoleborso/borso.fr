@@ -3,6 +3,7 @@ import {
   applyDecisionCancellation,
   applyProposalDecision,
   isDecisionRevocable,
+  isProposalExpired,
   isProposalPending,
   parseProposal,
   type Proposal,
@@ -103,6 +104,26 @@ describe('isProposalPending', () => {
 
   it('drops a proposal already decided', () => {
     expect(isProposalPending(buildProposal({ status: 'acceptee' }), '2026-10-01')).toBe(false);
+  });
+});
+
+describe('isProposalExpired', () => {
+  it('folds a proposed proposal past its expiry', () => {
+    expect(isProposalExpired(buildProposal({ expiresOn: '2026-10-04' }), '2026-10-05')).toBe(true);
+  });
+
+  it('keeps a proposal on its last day, or without expiry, out of the expired ones', () => {
+    expect(isProposalExpired(buildProposal({ expiresOn: '2026-10-05' }), '2026-10-05')).toBe(false);
+    expect(isProposalExpired(buildProposal({}), '2026-12-31')).toBe(false);
+  });
+
+  it('leaves a decided proposal in its history, whatever its expiry', () => {
+    expect(
+      isProposalExpired(
+        buildProposal({ status: 'refusee', expiresOn: '2026-10-01' }),
+        '2026-10-05',
+      ),
+    ).toBe(false);
   });
 });
 

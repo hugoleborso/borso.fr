@@ -14,12 +14,12 @@ export interface CommitmentRowProps {
   readonly text: string;
   readonly dueLabel?: string;
   readonly dueTone?: ChipTone;
+  readonly kindLabel?: string;
   readonly onLongPress: () => void;
   readonly rail?: MeanderRailProps;
 }
 
-const VARIANT_ICON = { task: 'owed', awaited: 'awaited' } as const;
-const VARIANT_ICON_SIZE = { task: 22, awaited: 18 } as const;
+const VARIANT_ICON = { task: 'commitment', awaited: 'awaited' } as const;
 
 // @FollowsBlueprint molecule-presentational
 export function CommitmentRow({
@@ -29,6 +29,7 @@ export function CommitmentRow({
   text,
   dueLabel,
   dueTone = 'neutral',
+  kindLabel,
   onLongPress,
   rail,
 }: CommitmentRowProps): JSX.Element {
@@ -46,12 +47,15 @@ export function CommitmentRow({
         )}
       >
         {rail === undefined ? null : <MeanderRail {...rail} />}
-        <span className="relative flex items-center justify-center w-11 h-11 shrink-0 text-ink-faint">
-          <span className="flex items-center justify-center w-7 h-7 rounded-full bg-surface">
-            <Icon name={VARIANT_ICON[variant]} size={VARIANT_ICON_SIZE[variant]} />
+        <span className="relative flex items-center justify-center w-11 h-11 shrink-0">
+          <span className="flex items-center justify-center w-7 h-7 rounded-md bg-patina-soft text-patina">
+            <Icon name={VARIANT_ICON[variant]} size={16} />
           </span>
         </span>
         <span className="min-w-0 flex-1 py-3 pr-2">
+          {kindLabel === undefined ? null : (
+            <span className="block text-caption text-patina">{kindLabel}</span>
+          )}
           <span className="block text-body-sm break-words">
             {lead === null ? null : (
               <>

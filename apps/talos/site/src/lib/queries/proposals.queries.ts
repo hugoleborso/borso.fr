@@ -102,7 +102,7 @@ export function useDecideProposal() {
         pendingCountDelta: -1,
       }),
     onSuccess: (savedProposal, variables) => {
-      toasts.confirm(selectDecisionToast(variables.decision), {
+      toasts.confirm(selectDecisionToast(variables.decision, savedProposal.title), {
         labelKey: 'toast.undo',
         onAction: () => cancelDecision.mutate({ slug: variables.slug }),
       });

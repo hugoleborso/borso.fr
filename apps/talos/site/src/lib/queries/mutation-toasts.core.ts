@@ -66,8 +66,11 @@ const DECISION_TOAST: Readonly<Record<ProposalDecision, TranslatableToast>> = {
 };
 
 // @FollowsBlueprint core-view-intent
-export function selectDecisionToast(decision: ProposalDecision): TranslatableToast {
-  return DECISION_TOAST[decision];
+export function selectDecisionToast(
+  decision: ProposalDecision,
+  proposalTitle: string,
+): TranslatableToast {
+  return { ...DECISION_TOAST[decision], values: { title: proposalTitle } };
 }
 
 export function selectTodoUpdateToast(patch: TodoPatch): TranslatableToast {

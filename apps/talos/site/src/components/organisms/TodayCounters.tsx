@@ -1,22 +1,25 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { DashboardTile } from '../molecules/DashboardTile';
+import type { IconName } from '../atoms/Icon';
+import { CounterPill } from '../molecules/CounterPill';
 import { openActionSheet } from '../../lib/action-sheet.hook';
 import type { DiscussionSubjectReference } from '../../lib/discussion-subject.core';
-import type { IconName } from '../atoms/Icon';
+import { keepNonZeroCounters } from './today-counters.core';
 
 export interface TodayCountersProps {
   readonly pendingProposalCount: number;
   readonly overdueTodoCount: number;
   readonly owedCommitmentCount: number;
   readonly awaitedCommitmentCount: number;
+  readonly readyDraftCount: number;
+  readonly reconnectCount: number;
 }
 
-interface CounterTile {
+interface Counter {
   readonly key: string;
   readonly to: string;
   readonly icon: IconName;
-  readonly count: number;
+  readonly count?: number;
   readonly label: string;
   readonly isAlert: boolean;
   readonly subject: DiscussionSubjectReference;
@@ -28,9 +31,11 @@ export function TodayCounters({
   overdueTodoCount,
   owedCommitmentCount,
   awaitedCommitmentCount,
+  readyDraftCount,
+  reconnectCount,
 }: TodayCountersProps): JSX.Element {
   const { t } = useTranslation();
-  const tiles: readonly CounterTile[] = [
+  const counters: readonly Counter[] = [
     {
       key: 'proposals',
       to: '/proposals',
@@ -46,13 +51,13 @@ export function TodayCounters({
       icon: 'clock',
       count: overdueTodoCount,
       label: t('today.counters.overdue'),
-      isAlert: overdueTodoCount > 0,
+      isAlert: true,
       subject: { kind: 'todos', list: 'main' },
     },
     {
       key: 'owed',
       to: '/commitments?direction=owed',
-      icon: 'owed',
+      icon: 'commitment',
       count: owedCommitmentCount,
       label: t('today.counters.owed'),
       isAlert: false,
@@ -67,25 +72,54 @@ export function TodayCounters({
       isAlert: false,
       subject: { kind: 'folder', path: 'engagements' },
     },
+    {
+      key: 'drafts',
+      to: '/drafts',
+      icon: 'draft',
+      count: readyDraftCount,
+      label: t('today.shortcuts.drafts'),
+      isAlert: false,
+      subject: { kind: 'folder', path: 'etat/brouillons' },
+    },
+    {
+      key: 'relations',
+      to: '/relations',
+      icon: 'users',
+      count: reconnectCount,
+      label: t('today.shortcuts.relations'),
+      isAlert: false,
+      subject: { kind: 'relations' },
+    },
+    {
+      key: 'history',
+      to: '/history',
+      icon: 'activity',
+      label: t('today.shortcuts.history'),
+      isAlert: false,
+      subject: { kind: 'folder', path: 'journal' },
+    },
   ];
   return (
-    <div className="grid grid-cols-4 gap-2">
-      {tiles.map((tile) => (
-        <DashboardTile
-          key={tile.key}
-          to={tile.to}
-          icon={tile.icon}
-          count={tile.count}
-          label={tile.label}
-          isAlert={tile.isAlert}
+    <nav aria-label={t('today.counters.title')} className="flex flex-wrap gap-2">
+      {keepNonZeroCounters(counters).map((counter) => (
+        <CounterPill
+          key={counter.key}
+          to={counter.to}
+          icon={counter.icon}
+          {...(counter.count === undefined ? {} : { count: counter.count })}
+          label={counter.label}
+          isAlert={counter.isAlert}
           onLongPress={() => {
             openActionSheet({
-              title: `${tile.label} · ${String(tile.count)}`,
-              subject: tile.subject,
+              title:
+                counter.count === undefined
+                  ? counter.label
+                  : `${counter.label} · ${String(counter.count)}`,
+              subject: counter.subject,
             });
           }}
         />
       ))}
-    </div>
+    </nav>
   );
 }

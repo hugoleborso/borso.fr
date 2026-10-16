@@ -70,9 +70,18 @@ export function parseProposal(slug: string, markdown: string): Proposal | null {
   };
 }
 
-export function isProposalPending(proposal: Proposal, today: string): boolean {
-  const isActive = proposal.expiresOn === undefined || proposal.expiresOn >= today;
-  return proposal.status === PENDING_PROPOSAL_STATUS && isActive;
+type ProposalLifecycle = Pick<Proposal, 'status' | 'expiresOn'>;
+
+function hasExpired(proposal: ProposalLifecycle, today: string): boolean {
+  return proposal.expiresOn !== undefined && proposal.expiresOn < today;
+}
+
+export function isProposalPending(proposal: ProposalLifecycle, today: string): boolean {
+  return proposal.status === PENDING_PROPOSAL_STATUS && !hasExpired(proposal, today);
+}
+
+export function isProposalExpired(proposal: ProposalLifecycle, today: string): boolean {
+  return proposal.status === PENDING_PROPOSAL_STATUS && hasExpired(proposal, today);
 }
 
 export function isDecisionRevocable(status: string): boolean {

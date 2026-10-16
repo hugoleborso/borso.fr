@@ -25,6 +25,7 @@ interface StoredProposal {
   why: string;
   draft: string;
   decisions: string[];
+  expiresOn?: string;
 }
 
 function buildProposal(slug: string, status: string, title: string): StoredProposal {
@@ -124,6 +125,31 @@ describe('going back on a proposal decision', () => {
     const tree = mountBoard();
     await flushUntil(() => tree.container.textContent.includes('Déjà fait'));
     expect(findButton(tree, 'Revenir sur ma décision')).toBeUndefined();
+    tree.unmount();
+  });
+
+  it('takes a decided card off the board at once and names it in the toast', async () => {
+    fetchStub = serveProposals([buildProposal('2026-10-04-cv', 'proposee', 'Envoyer le CV')]);
+    const tree = mountBoard();
+    await flushUntil(() => findButton(tree, 'Accepter') !== undefined);
+    act(() => {
+      findButton(tree, 'Accepter')?.click();
+    });
+    await flushUntil(() => findButton(tree, 'Accepter') === undefined);
+    await flushUntil(() => tree.container.textContent.includes('Acceptée : Envoyer le CV'));
+    expect(tree.container.textContent).toContain('Historique (1)');
+    expect(findButton(tree, 'Annuler')).toBeDefined();
+    tree.unmount();
+  });
+
+  it('folds an expired proposal under « Expirées », with no way to decide it', async () => {
+    fetchStub = serveProposals([
+      { ...buildProposal('2026-09-01-vieux', 'proposee', 'Vieux sujet'), expiresOn: '2026-09-02' },
+    ]);
+    const tree = mountBoard();
+    await flushUntil(() => tree.container.textContent.includes('Expirée (1)'));
+    expect(tree.container.textContent).toContain('0 en attente');
+    expect(findButton(tree, 'Accepter')).toBeUndefined();
     tree.unmount();
   });
 });

@@ -16,7 +16,7 @@ import { TodayBirthdays } from './TodayBirthdays';
 import { TodayBrief } from './TodayBrief';
 import { TodayCounters } from './TodayCounters';
 import { TodayFocus } from './TodayFocus';
-import { TodayShortcuts } from './TodayShortcuts';
+import { TodayProposal } from './TodayProposal';
 
 // @FollowsBlueprint organism-query-owning
 export function TodayOverview(): JSX.Element {
@@ -49,19 +49,18 @@ export function TodayOverview(): JSX.Element {
         <div className="flex flex-col gap-4">
           <NotificationsPrompt />
           <TodayBirthdays birthdays={today.data.soonBirthdays} />
+          {today.data.brief === null ? null : <TodayBrief brief={today.data.brief} />}
+          <TodayProposal today={date} />
+          <TodayAgenda todos={today.data.todos} commitments={today.data.commitments} today={date} />
           <TodayCounters
             pendingProposalCount={today.data.pendingProposalCount}
             overdueTodoCount={countOverdueTodos(today.data.todos, date)}
             owedCommitmentCount={today.data.commitmentCounts.owed}
             awaitedCommitmentCount={today.data.commitmentCounts.awaited}
-          />
-          <TodayShortcuts
             readyDraftCount={today.data.readyDraftCount}
             reconnectCount={today.data.reconnectCount}
           />
           <TodayFocus items={today.data.focus.items} today={date} />
-          {today.data.brief === null ? null : <TodayBrief brief={today.data.brief} />}
-          <TodayAgenda todos={today.data.todos} commitments={today.data.commitments} today={date} />
           <TodayActivity entries={today.data.activity} today={date} />
         </div>
       )}
