@@ -1,6 +1,7 @@
 import { TODO_LISTS } from '@domain/todo-list.core';
 import { Hono } from 'hono';
 import { logger } from 'hono/logger';
+import { buildAgentRouter } from './agent/agent.controller';
 import { type BuildAuthRouterOptions, buildAuthRouter } from './auth/auth.controller';
 import { buildCommitmentsRouter } from './commitments/commitments.controller';
 import { buildDraftsRouter } from './drafts/drafts.controller';
@@ -49,7 +50,8 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/search', buildSearchRouter())
     .route('/api/messages', buildMessagesRouter())
     .route('/api/push', buildPushRouter())
-    .route('/api/notify', buildNotifyRouter());
+    .route('/api/notify', buildNotifyRouter())
+    .route('/api/agent', buildAgentRouter());
 }
 
 export type AppRouter = ReturnType<typeof buildAppRouter>;

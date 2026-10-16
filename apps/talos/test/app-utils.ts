@@ -14,6 +14,8 @@ export const TEST_SECRETS: Partial<Record<SecretName, string>> = {
   'session-hmac': 'test-session-hmac',
   'bootstrap-code': 'code-de-test',
   'notify-secret': 'secret-de-notification',
+  'agent-token-lecture': 'jeton-agent-lecture',
+  'agent-token-mac': 'jeton-agent-mac',
   'vapid-public':
     'BETuWdutrn7_RTt1NXs7g5lGCtPBs9g7cfeZlYtFmaSaDzDaWnPnBfWCZFxi8lBChY9S6kMLWGySeXdwmyv9LQ4',
   'vapid-private': '1QIrIuxi_wMMNHRAiyIY6XKW6UsnRDmf38w-yg13VxU',

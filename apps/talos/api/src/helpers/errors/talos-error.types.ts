@@ -11,6 +11,10 @@ export const TALOS_ERRORS = {
   'invalid-bootstrap-code': { status: 401, message: 'Code de démarrage invalide.' },
   'passkey-verification-failed': { status: 401, message: "La passkey n'a pas été reconnue." },
   'invalid-bearer-token': { status: 401, message: 'Jeton invalide.' },
+  'invalid-agent-token': { status: 401, message: 'jeton invalide' },
+  'memory-refused': { status: 400, message: 'requête refusée' },
+  'memory-not-found': { status: 404, message: 'introuvable' },
+  'memory-conflict': { status: 409, message: 'conflit' },
   'registration-closed': {
     status: 403,
     message: 'Inscription fermée : connecte-toi pour ajouter une passkey.',
@@ -42,13 +46,20 @@ export const TALOS_ERRORS = {
 export type TalosErrorCode = keyof typeof TALOS_ERRORS;
 
 // @FollowsBlueprint named-domain-error
+export interface TalosErrorDetail {
+  readonly message?: string;
+  readonly extra?: Readonly<Record<string, unknown>>;
+}
+
 export class TalosError extends Error {
   public readonly code: TalosErrorCode;
+  public readonly detail: TalosErrorDetail;
 
-  constructor(code: TalosErrorCode) {
-    super(code);
+  constructor(code: TalosErrorCode, detail: TalosErrorDetail = {}) {
+    super(detail.message ?? code);
     this.name = 'TalosError';
     this.code = code;
+    this.detail = detail;
   }
 }
 

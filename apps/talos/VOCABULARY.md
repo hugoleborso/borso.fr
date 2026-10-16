@@ -155,14 +155,40 @@ Lives in: `api/src/auth/`
 - Code: `Passkey`, `Session`, `PushSubscription` (the last in `api/src/push/`).
 - The last passkey cannot be removed, so the owner cannot lock themselves out.
 
+## Memory
+
+The owner's memory once it lives in the database: the `memory_*` tables of [`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md).
+
+Lives in: `api/src/memory/`
+
+- Code: `memory_entity` rows are **entities** (a page of `second-brain/`: a person, an organisation, a project…; `kind` for the front-matter `type`, `closeness` for `proximite`), with their **aliases**, **facts** (a dated line of « Faits » or « Historique », `section` `facts` or `history`) and **relations** (a dated line of « Relations », `verb` from the **verb** table). A **source** is an immutable file of `sources/`, a **citation** links an entity to the source reference it cites, a **journal entry** is a file of `journal/`, and a **memory document** is any other file kept whole (`preferences/…`, `etat/questions`…).
+- A **slug** is the repository path without `.md`, so every `[[…]]` link stays valid.
+- A **memory event** records one applied operation (actor, token, run, before and after); a **change batch** remembers the answer to one idempotency key. Nothing is deleted: an entity is archived, a todo is removed by a flag.
+- `renderEntityPage` (`page-rendering.core.ts`) writes an entity back as the markdown file it came from.
+- The **cutover** is the `memory_state` key that says whether git or the database is the truth.
+
+Not to be confused with: a **page** of the git repository, which the PWA reads through `api/src/pages/` until the cutover; a **memory document** is the database row that holds such a file once it is not modelled by a table of its own.
+
+## Agent
+
+A scheduled run or a session of Talos calling the memory API with a bearer token.
+
+Lives in: `api/src/agent/`
+
+- Code: `AgentTokenName` (`lecture`, `build`, `mac`), the environment a token belongs to, recorded as `token_name` on every memory event. `requireAgentToken` gates every `/api/agent/*` route.
+
+Not to be confused with: the owner, who uses the PWA with a passkey session.
+
 ## Terms this application does not use
 
 - **user**, **account**: there is one person, the **owner**.
 - **task**, **item** for a line of `todo.md`: it is a **todo**.
 - **suggestion**, **recommendation**: what Talos asks the owner to decide is a **proposal**.
-- **note**, **document**, **article**: a markdown file of the repository is a **page**.
+- **note**, **document**, **article**: a markdown file of the repository is a **page**; in the database, a file kept whole is a **memory document**.
 - **digest**, **summary**, **report** for the daily text: it is the **brief**.
 - **promise**, **engagement** in identifiers: the word is **commitment**.
 - **contact**, **friend** for an entry of `etat/relations.json`: it is a **person to reconnect** with.
 - **message** for a file of `etat/brouillons/`: it is a **draft**; a message is what the owner writes to Talos.
 - **archive**, **log** for the past briefs and reviews: it is the **history**.
+- **log** for the record of writes to the memory: it is a **memory event**.
+- **node**, **record** for a page of `second-brain/` in the database: it is an **entity**.

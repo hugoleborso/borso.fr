@@ -11,16 +11,26 @@ export type SecretName =
   | 'fire-token'
   | 'secret-phrase'
   | 'claude-environment-talos'
-  | 'claude-environment-build';
+  | 'claude-environment-build'
+  | 'agent-token-lecture'
+  | 'agent-token-build'
+  | 'agent-token-mac';
 
 export type SecretReader = (name: SecretName) => Promise<string | undefined>;
 
 const PREFIX_VARIABLE = 'TALOS_SSM_PREFIX';
 const DEFAULT_PREFIX = '/talos/';
+const CACHE_LIFETIME_MINUTES = 5;
+const CACHE_LIFETIME_MILLISECONDS = CACHE_LIFETIME_MINUTES * 60 * 1000;
+
+interface CachedSecret {
+  readonly value: string;
+  readonly readAt: number;
+}
 
 interface SecretHolder {
   chosen: SecretReader | null;
-  readonly cache: Map<SecretName, string>;
+  readonly cache: Map<SecretName, CachedSecret>;
 }
 
 const holder: SecretHolder = { chosen: null, cache: new Map() };
@@ -30,11 +40,13 @@ export function useSecretReader(reader: SecretReader): void {
 }
 
 async function readFromParameterStore(name: SecretName): Promise<string | undefined> {
+  const now = Date.now();
   const cached = holder.cache.get(name);
-  if (cached !== undefined) return cached;
+  if (cached !== undefined && now - cached.readAt < CACHE_LIFETIME_MILLISECONDS)
+    return cached.value;
   const prefix = process.env[PREFIX_VARIABLE] ?? DEFAULT_PREFIX;
   const value = await readSecureParameter(`${prefix}${name}`);
-  if (value !== undefined) holder.cache.set(name, value);
+  if (value !== undefined) holder.cache.set(name, { value, readAt: now });
   return value;
 }
 
