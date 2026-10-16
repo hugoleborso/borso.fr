@@ -28,7 +28,6 @@ export function TodayOverview(): JSX.Element {
       <PageTitle
         trailing={
           <div className="flex items-center shrink-0">
-            <ScanStatus lastRuns={today.data?.lastRuns ?? null} />
             <Link
               to="/settings"
               aria-label={t('settings.open')}
@@ -43,6 +42,9 @@ export function TodayOverview(): JSX.Element {
           {formatLongDay(date, DISPLAY_LOCALE)}
         </span>
       </PageTitle>
+      <div className="flex items-center -mt-2 mb-3">
+        <ScanStatus lastRuns={today.data?.lastRuns ?? null} />
+      </div>
       {today.data === undefined ? (
         <QueryState isPending={today.isPending} onRetry={() => void today.refetch()} />
       ) : (
