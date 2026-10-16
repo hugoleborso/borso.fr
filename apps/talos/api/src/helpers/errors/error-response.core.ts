@@ -11,14 +11,17 @@ const clientFailureSchema = z.object({
 });
 
 export interface ErrorResponse {
-  readonly body: { readonly error: string };
+  readonly body: { readonly error: string; readonly [detail: string]: unknown };
   readonly status: TalosErrorStatus | typeof UNEXPECTED_FAILURE_STATUS;
 }
 
 function selectTalosErrorResponse(failure: unknown): ErrorResponse | null {
   if (isTalosError(failure)) {
     const definition = TALOS_ERRORS[failure.code];
-    return { body: { error: definition.message }, status: definition.status };
+    return {
+      body: { ...failure.detail.extra, error: failure.detail.message ?? definition.message },
+      status: definition.status,
+    };
   }
   if (clientFailureSchema.safeParse(failure).success) {
     const invalidInput = TALOS_ERRORS['invalid-input'];

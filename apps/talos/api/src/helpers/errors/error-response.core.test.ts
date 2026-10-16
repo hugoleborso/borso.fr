@@ -10,6 +10,17 @@ describe('selectErrorResponse', () => {
     });
   });
 
+  it('answers the detail message and extra fields a refusal carries', () => {
+    expect(
+      selectErrorResponse(
+        new TalosError('memory-refused', {
+          message: 'opération invalide',
+          extra: { operationIndex: 2, error: 'ignored' },
+        }),
+      ),
+    ).toEqual({ body: { error: 'opération invalide', operationIndex: 2 }, status: 400 });
+  });
+
   it('hides the message of any other failure behind an unexpected error', () => {
     expect(selectErrorResponse(new Error('connection refused to 10.0.0.1'))).toEqual({
       body: { error: 'Erreur inattendue.' },

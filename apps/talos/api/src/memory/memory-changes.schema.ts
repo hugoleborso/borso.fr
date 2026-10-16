@@ -43,6 +43,7 @@ const datedLineFields = {
   inferred: z.boolean().optional(),
   raw: longTextSchema.optional(),
   learnedOn: dateTextSchema.optional(),
+  extra: longTextSchema.optional(),
   position: z.number().int().min(0).optional(),
 };
 

@@ -85,11 +85,7 @@
       "compositePrimaryKeys": {
         "memory_alias_pk": {
           "name": "memory_alias_pk",
-          "columns": [
-            "entity_slug",
-            "kind",
-            "normalized_value"
-          ]
+          "columns": ["entity_slug", "kind", "normalized_value"]
         }
       },
       "uniqueConstraints": {},
@@ -184,10 +180,7 @@
       "compositePrimaryKeys": {
         "memory_citation_pk": {
           "name": "memory_citation_pk",
-          "columns": [
-            "entity_slug",
-            "source_ref"
-          ]
+          "columns": ["entity_slug", "source_ref"]
         }
       },
       "uniqueConstraints": {},

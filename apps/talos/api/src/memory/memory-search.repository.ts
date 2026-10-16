@@ -4,8 +4,12 @@ import { getDatabase } from '../database/client';
 import {
   memoryCommitmentTable,
   memoryDocumentTable,
+  memoryDraftTable,
   memoryJournalEntryTable,
+  memoryProposalTable,
+  memoryStateTable,
 } from './memory-records.schema';
+import { findDocument, findState, type MemoryExecutor } from './memory.repository';
 import {
   memoryAliasTable,
   memoryEntityTable,
@@ -116,4 +120,34 @@ export async function searchDocuments(
     .from(memoryDocumentTable)
     .where(matchesFolded(memoryDocumentTable.content, foldedPattern))
     .limit(limit);
+}
+
+export async function findDocumentBySlug(
+  slug: string,
+): Promise<typeof memoryDocumentTable.$inferSelect | null> {
+  return await findDocument(getDatabase(), slug);
+}
+
+export async function findStateByKey(
+  key: string,
+): Promise<typeof memoryStateTable.$inferSelect | null> {
+  return await findState(getDatabase(), key);
+}
+
+export async function listKnownSlugs(): Promise<string[]> {
+  const database = getDatabase();
+  const slugLists = await Promise.all([
+    database.select({ slug: memoryEntityTable.slug }).from(memoryEntityTable),
+    database.select({ slug: memoryCommitmentTable.slug }).from(memoryCommitmentTable),
+    database.select({ slug: memorySourceTable.slug }).from(memorySourceTable),
+    database.select({ slug: memoryJournalEntryTable.slug }).from(memoryJournalEntryTable),
+    database.select({ slug: memoryDocumentTable.slug }).from(memoryDocumentTable),
+    database.select({ slug: memoryProposalTable.slug }).from(memoryProposalTable),
+    database.select({ slug: memoryDraftTable.slug }).from(memoryDraftTable),
+  ]);
+  return slugLists.flat().map((row) => row.slug);
+}
+
+export function readExecutor(): MemoryExecutor {
+  return getDatabase();
 }

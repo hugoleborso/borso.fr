@@ -41,7 +41,7 @@ import {
   insertEvent,
   insertFact,
   insertRelation,
-  insertSource,
+  didInsertSource,
   updateEntity,
   updateFact,
   updateRelation,
@@ -114,7 +114,7 @@ describe('memory write repository', () => {
       createdAt: NOW,
     });
     await updateRelation(database, relationId, { seen: '2026-10-01' });
-    await insertSource(database, {
+    await didInsertSource(database, {
       slug: 'sources/2026/10/04/appel-acme',
       metadata: '{}',
       content: 'Appel avec Acme',

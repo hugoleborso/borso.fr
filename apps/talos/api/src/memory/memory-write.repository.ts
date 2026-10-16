@@ -35,6 +35,14 @@ export async function runInMemoryTransaction<Outcome>(
   return await getDatabase().transaction(work);
 }
 
+export async function upsertEntity(executor: MemoryExecutor, values: EntityInsert): Promise<void> {
+  const { slug: _slug, createdAt: _createdAt, ...changes } = values;
+  await executor
+    .insert(memoryEntityTable)
+    .values(values)
+    .onConflictDoUpdate({ target: memoryEntityTable.slug, set: changes });
+}
+
 export async function insertEntity(executor: MemoryExecutor, values: EntityInsert): Promise<void> {
   await executor.insert(memoryEntityTable).values(values);
 }
@@ -107,11 +115,16 @@ export async function upsertVerb(
     });
 }
 
-export async function insertSource(
+export async function didInsertSource(
   executor: MemoryExecutor,
   values: typeof memorySourceTable.$inferInsert,
-): Promise<void> {
-  await executor.insert(memorySourceTable).values(values);
+): Promise<boolean> {
+  const inserted = await executor
+    .insert(memorySourceTable)
+    .values(values)
+    .onConflictDoNothing()
+    .returning({ slug: memorySourceTable.slug });
+  return inserted.length > 0;
 }
 
 export async function didInsertCitation(
