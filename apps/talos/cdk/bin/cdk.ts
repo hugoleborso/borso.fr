@@ -4,6 +4,7 @@ import * as path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { DsqlClusterStack, requireAwsAccount, requireDeployStage } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
+import { TalosRestoreDrill } from '../lib/constructs/restore-drill.js';
 import { buildTalosAppStack } from '../lib/stack.js';
 
 const APP_SLUG = 'talos';
@@ -26,6 +27,16 @@ const clusterStack = new DsqlClusterStack(app, `${APP_SLUG}-cluster`, {
   app: APP_SLUG,
   env,
   backup: {},
+});
+if (clusterStack.backup === undefined) {
+  throw new Error('talos: the cluster stack must carry its backup plan.');
+}
+new TalosRestoreDrill(clusterStack, 'RestoreDrill', {
+  handlerEntry: path.join(WORKSPACE_ROOT, 'api', 'src', 'main.restore-drill.ts'),
+  clusterArn: clusterStack.cluster.clusterArn,
+  vaultName: clusterStack.backup.vault.backupVaultName,
+  vaultArn: clusterStack.backup.vault.backupVaultArn,
+  serviceRoleArn: clusterStack.backup.serviceRoleArn,
 });
 const appStack = new Stack(app, `${APP_SLUG}-prod`, { env });
 

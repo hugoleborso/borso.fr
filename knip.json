@@ -98,6 +98,7 @@
         "cdk/bin/cdk.ts",
         "api/src/main.ts",
         "api/src/main.export.ts",
+        "api/src/main.restore-drill.ts",
         "api/src/**/*.test.ts",
         "domain/**/*.core.test.ts",
         "site/src/**/*.test.{ts,tsx}",

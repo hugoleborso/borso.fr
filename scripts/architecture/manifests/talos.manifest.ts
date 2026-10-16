@@ -174,6 +174,16 @@ export const talosManifest: ArchitectureManifest = {
       access: 'credential',
     },
     {
+      id: 'aws-backup',
+      icon: '🛟',
+      name: 'AWS Backup',
+      technology: 'AWS SDK, recovery points, backup and restore jobs',
+      description:
+        'Holds the daily snapshots of the talos cluster. The restore drill Lambda starts an on-demand backup or restores the latest point to a new cluster, passing the backup service role.',
+      boundary: 'aws',
+      access: 'credential',
+    },
+    {
       id: 'browser-service-worker',
       icon: '📴',
       name: 'Service worker registration',

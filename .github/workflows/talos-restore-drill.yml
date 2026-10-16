@@ -1,0 +1,104 @@
+# Proves the talos DSQL backups restore, without a human AWS login.
+# Run by hand: gh workflow run talos-restore-drill.yml
+#
+# ProdDeployRole is PowerUserAccess, so it cannot pass the backup service
+# role. The talos-restore-drill Lambda (talos-cluster stack) can: it starts
+# an on-demand backup when the vault holds no completed point, otherwise it
+# restores the latest point to a new cluster. This job polls both jobs,
+# checks the new cluster is ACTIVE and tags it. It never deletes anything:
+# the owner deletes the drill cluster.
+
+name: talos-restore-drill
+
+on:
+  workflow_dispatch:
+
+permissions:
+  id-token: write
+  contents: read
+
+concurrency: talos-restore-drill
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  drill:
+    runs-on: ubuntu-latest
+    environment: prod # scopes the OIDC subject ProdDeployRole trusts
+    timeout-minutes: 240
+    env:
+      AWS_REGION: ${{ vars.AWS_REGION }}
+      FUNCTION_NAME: talos-restore-drill
+      POLL_SECONDS: '30'
+    steps:
+      - uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.PROD_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: Back up if needed, restore, check the new cluster
+        run: |
+          set -euo pipefail
+
+          invoke_drill() {
+            local metadata
+            metadata=$(aws lambda invoke --function-name "$FUNCTION_NAME" drill.json)
+            if jq -e '.FunctionError != null' <<<"$metadata" >/dev/null; then
+              echo "::error::the drill Lambda failed: $(cat drill.json)"
+              exit 1
+            fi
+            cat drill.json
+            echo
+          }
+
+          wait_for_job() {
+            local describe=$1 id_flag=$2 job_id=$3 field=$4 state
+            while true; do
+              state=$(aws backup "$describe" "$id_flag" "$job_id" --query "$field" --output text)
+              echo "$describe $job_id: $state"
+              case "$state" in
+                COMPLETED) return 0 ;;
+                ABORTED | FAILED | EXPIRED | PARTIAL)
+                  aws backup "$describe" "$id_flag" "$job_id" --query StatusMessage --output text
+                  echo "::error::$describe $job_id ended $state"
+                  exit 1
+                  ;;
+              esac
+              sleep "$POLL_SECONDS"
+            done
+          }
+
+          invoke_drill
+          if [ "$(jq -r .step drill.json)" = backup-started ]; then
+            backup_job=$(jq -r .backupJobId drill.json)
+            wait_for_job describe-backup-job --backup-job-id "$backup_job" State
+            invoke_drill
+          fi
+          if [ "$(jq -r .step drill.json)" != restore-started ]; then
+            echo "::error::no restore started after the backup completed"
+            exit 1
+          fi
+          restore_job=$(jq -r .restoreJobId drill.json)
+          recovery_point=$(jq -r .recoveryPointArn drill.json)
+          wait_for_job describe-restore-job --restore-job-id "$restore_job" Status
+
+          cluster_arn=$(aws backup describe-restore-job --restore-job-id "$restore_job" \
+            --query CreatedResourceArn --output text)
+          cluster_id=${cluster_arn##*/}
+          until [ "$(aws dsql get-cluster --identifier "$cluster_id" --query status --output text)" = ACTIVE ]; do
+            echo "cluster $cluster_id is not ACTIVE yet"
+            sleep "$POLL_SECONDS"
+          done
+          aws dsql tag-resource --resource-arn "$cluster_arn" \
+            --tags "talos-restore-drill=$(date -u +%F)"
+
+          {
+            echo "## talos restore drill"
+            echo
+            echo "- Recovery point: \`$recovery_point\`"
+            echo "- Restore job: \`$restore_job\`"
+            echo "- Restored cluster (ACTIVE): \`$cluster_arn\`"
+            echo
+            echo "Delete it when done: \`aws dsql delete-cluster --identifier $cluster_id\`"
+          } >>"$GITHUB_STEP_SUMMARY"
