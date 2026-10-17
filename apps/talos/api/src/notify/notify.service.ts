@@ -1,3 +1,4 @@
+import { authorizeAgent } from '../agent/agent.service';
 import { areSecretsEqual } from '../helpers/crypto/secret-comparison.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
 import { readBearerToken } from '../helpers/http/bearer-token.core';
@@ -11,10 +12,18 @@ import {
 // @FollowsBlueprint service-orchestration
 export async function authorizeNotifier(authorizationHeader: string | undefined): Promise<void> {
   const expected = await readTalosSecret('notify-secret');
-  if (expected === undefined) throw new TalosError('not-configured');
   const provided = readBearerToken(authorizationHeader ?? '');
-  if (provided === null || !areSecretsEqual(provided, expected)) {
-    throw new TalosError('invalid-bearer-token');
+  if (provided !== null && expected !== undefined && areSecretsEqual(provided, expected)) return;
+  if (await isAgentToken(authorizationHeader)) return;
+  throw new TalosError(expected === undefined ? 'not-configured' : 'invalid-bearer-token');
+}
+
+async function isAgentToken(authorizationHeader: string | undefined): Promise<boolean> {
+  try {
+    await authorizeAgent(authorizationHeader);
+    return true;
+  } catch {
+    return false;
   }
 }
 

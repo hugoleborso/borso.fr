@@ -252,7 +252,7 @@ type Draft = { slug: string; channel: string; recipients: { name: string; page?:
 
 | Method | Route | Auth | Body | Effect |
 |---|---|---|---|---|
-| POST | `/notify` | `Authorization: Bearer <notify-secret>` | `{ title, message, urgent?: boolean, url?: string }` | Web push to every subscription; expired subscriptions (404/410) are deleted. Answers `{ ok: true, delivered, removed }`. Called by the scheduled runs |
+| POST | `/notify` | `Authorization: Bearer <notify-secret>`, or any agent token (`/talos/agent-token-*`), so a run that holds the agent token needs no second secret | `{ title, message, urgent?: boolean, url?: string }` | Web push to every subscription; expired subscriptions (404/410) are deleted. Answers `{ ok: true, delivered, removed }`. Called by the scheduled runs |
 
 ### Machine: memory API
 

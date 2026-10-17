@@ -86,6 +86,17 @@ describe('POST /api/notify', () => {
     expect(response.status).toBe(503);
   });
 
+  it('accepts an agent token, so a run needs no second secret, even with no notify secret configured', async () => {
+    const { app } = buildTestContext({});
+    useTestSecrets({ 'notify-secret': undefined });
+    const response = await requestJson(app, '/api/notify', {
+      method: 'POST',
+      body: NOTIFICATION,
+      headers: { authorization: `Bearer ${TEST_SECRETS['agent-token-lecture'] ?? ''}` },
+    });
+    expect(response.status).toBe(200);
+  });
+
   it('refuses an invalid notification', async () => {
     const { app } = buildTestContext({});
     const response = await requestJson(app, '/api/notify', {
