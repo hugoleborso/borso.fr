@@ -89,7 +89,6 @@ export const takeCommentUpdateSchema = z
     message: 'nothing to update',
   });
 
-export type TakeSource = (typeof TAKE_SOURCES)[number];
 export type TakeSignInput = z.infer<typeof takeSignSchema>;
 export type TakeCreateInput = z.infer<typeof takeCreateSchema>;
 export type TakeCommentCreateInput = z.infer<typeof takeCommentCreateSchema>;

@@ -1,1 +1,2 @@
 {"label":"technical-conception-01","status":"done","summary":"plan.md written with four slices; operator owes four VAPID SecureStrings (prod + preview)"}
+{"label":"implementation-01-takes-api","status":"done","summary":"takes API, comments, cascades and the five tables shipped; source/queued added to POST /api/takes for analytics; ADR-0009 blocklist amended"}
