@@ -8,6 +8,7 @@ import { DsqlClusterStack } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { buildPragmaAppStack } from '../lib/stack.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -24,6 +25,14 @@ const PROD_ERROR_REPORTING = {
 const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
 
 const templateByStage = new Map<string, Template>();
+
+const policyStatementSchema = z.object({
+  Properties: z.object({
+    PolicyDocument: z.object({
+      Statement: z.array(z.object({ Action: z.unknown(), Resource: z.unknown() })),
+    }),
+  }),
+});
 
 // @FollowsBlueprint test-cdk-synth
 function synthAppStack(stage: 'prod' | 'preview'): Template {
@@ -65,6 +74,16 @@ function readEnvVars(resource: { readonly Properties?: unknown }): Record<string
   if (!('Variables' in environment)) return {};
   const variables = environment.Variables;
   return typeof variables === 'object' && variables !== null ? { ...variables } : {};
+}
+
+function readParameterReadGrant(stage: 'prod' | 'preview'): string {
+  const policies = synthAppStack(stage).findResources('AWS::IAM::Policy');
+  const statements = Object.values(policies).flatMap(
+    (policy) => policyStatementSchema.parse(policy).Properties.PolicyDocument.Statement,
+  );
+  const grants = statements.filter((statement) => statement.Action === 'ssm:GetParameter');
+  expect(grants).toHaveLength(1);
+  return JSON.stringify(grants[0]?.Resource);
 }
 
 function readApiVariables(stage: 'prod' | 'preview'): Record<string, unknown> {
@@ -222,33 +241,38 @@ describe('pragma app stack', () => {
   });
 
   it('names the Spotify parameter and grants the API permission to read it', () => {
-    const template = synthAppStack('prod');
-    const functions = template.findResources('AWS::Lambda::Function');
-    const apiFunction = Object.entries(functions).find(([logicalId]) =>
-      logicalId.includes('AppApiFn'),
-    )?.[1];
-    const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
-    expect(variables.SPOTIFY_CREDENTIALS_PARAMETER).toBe('/pragma/spotify-credentials');
-    template.hasResourceProperties(
-      'AWS::IAM::Policy',
-      Match.objectLike({
-        PolicyDocument: Match.objectLike({
-          Statement: Match.arrayWith([
-            Match.objectLike({
-              Action: 'ssm:GetParameter',
-              Effect: 'Allow',
-              Resource: Match.objectLike({
-                'Fn::Join': Match.arrayWith([
-                  Match.arrayWith([
-                    Match.stringLikeRegexp(':parameter/pragma/spotify-credentials'),
-                  ]),
-                ]),
-              }),
-            }),
-          ]),
-        }),
-      }),
+    expect(readApiVariables('prod').SPOTIFY_CREDENTIALS_PARAMETER).toBe(
+      '/pragma/spotify-credentials',
     );
+    expect(readParameterReadGrant('prod')).toContain(':parameter/pragma/spotify-credentials');
+  });
+
+  it('names the VAPID parameters of its own stage, so no preview signs with the production key', () => {
+    expect(readApiVariables('prod')).toMatchObject({
+      VAPID_PUBLIC_PARAMETER: '/pragma/prod/vapid-public',
+      VAPID_PRIVATE_PARAMETER: '/pragma/prod/vapid-private',
+    });
+    expect(readApiVariables('preview')).toMatchObject({
+      VAPID_PUBLIC_PARAMETER: '/pragma/preview/vapid-public',
+      VAPID_PRIVATE_PARAMETER: '/pragma/preview/vapid-private',
+    });
+  });
+
+  it('grants reading exactly the Spotify parameter and the two VAPID parameters of the stage', () => {
+    for (const stage of ['prod', 'preview'] as const) {
+      const grant = readParameterReadGrant(stage);
+      expect(grant.match(/:parameter\//g)).toHaveLength(3);
+      expect(grant).toContain(`:parameter/pragma/${stage}/vapid-public`);
+      expect(grant).toContain(`:parameter/pragma/${stage}/vapid-private`);
+    }
+  });
+
+  it('keeps the VAPID keys themselves out of the synthesized template', () => {
+    const template = synthAppStack('prod');
+    const rendered = JSON.stringify(template.toJSON());
+    expect(rendered).not.toContain('VAPID_PUBLIC_KEY');
+    expect(rendered).not.toContain('VAPID_PRIVATE_KEY');
+    expect(template.findResources('AWS::SSM::Parameter')).toEqual({});
   });
 
   it('lets the API delete objects from the uploads bucket, so a deleted song takes its audio with it', () => {

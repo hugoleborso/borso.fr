@@ -209,12 +209,22 @@ export const pragmaManifest: ArchitectureManifest = {
       realisedBy: 'database',
     },
     {
+      id: 'web-push',
+      icon: '🔔',
+      name: 'Web push services',
+      technology: 'VAPID-signed web push through the web-push library',
+      description:
+        "Delivers a notification to each band member's device through that browser vendor's push service, inline after the write that caused it and bounded by a deadline, so a slow or failing push service never fails the write. A subscription answering 404 or 410 is deleted. The VAPID key pair is one pair per stage, read from SSM.",
+      boundary: 'third-party',
+      access: 'credential',
+    },
+    {
       id: 'aws-ssm',
       icon: '🔐',
       name: 'SSM Parameter Store',
       technology: 'AWS SDK, GetParameter with decryption',
       description:
-        'Holds the Spotify client credentials as a SecureString, read once per warm Lambda through helpers/secrets/parameter-store.client.ts. Chosen over a Lambda environment variable because CDK writes those into the deployed CloudFormation template in plaintext; see ADR-0017.',
+        'Holds the Spotify client credentials and the VAPID key pair of each stage as SecureStrings, read through helpers/secrets/parameter-store.client.ts. Chosen over a Lambda environment variable because CDK writes those into the deployed CloudFormation template in plaintext; see ADR-0017.',
       boundary: 'aws',
       access: 'credential',
     },

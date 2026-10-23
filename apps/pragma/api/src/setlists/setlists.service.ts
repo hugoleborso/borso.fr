@@ -1,6 +1,7 @@
 import type { z } from 'zod';
 import type { DatabaseExecutor } from '../database/client';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
+import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import { getSessionById } from '../sessions/sessions.service';
 import {
   buildSetlistSummaries,
@@ -51,6 +52,27 @@ type SetlistCreateInput = z.infer<typeof setlistCreateSchema>;
 
 export type LinkOutcome = { kind: 'ok' } | { kind: 'not-found' };
 
+async function notifySetlistChanged(
+  setlist: Pick<SetlistRow, 'id' | 'name'>,
+  actor: WriteActor,
+): Promise<void> {
+  await notifyBand(
+    {
+      kind: 'setlist-changed',
+      actorMemberId: actor.memberId,
+      setlistId: setlist.id,
+      setlistName: setlist.name,
+    },
+    actor.now,
+  );
+}
+
+async function notifySetlistChangedById(setlistId: string, actor: WriteActor): Promise<void> {
+  const setlist = await findSetlistById(setlistId);
+  if (setlist === null) return;
+  await notifySetlistChanged(setlist, actor);
+}
+
 // @FollowsBlueprint service-read-model
 export async function getAllSetlists(): Promise<SetlistSummary[]> {
   const setlists = await listSetlists();
@@ -79,12 +101,14 @@ export async function findSetlist(setlistId: string): Promise<SetlistRow | null>
 
 export async function createSetlist(
   input: SetlistCreateInput,
+  actor: WriteActor,
 ): Promise<{ kind: 'ok'; setlist: SetlistRow } | { kind: 'session-not-found' }> {
   if (input.sessionId !== null) {
     const session = await getSessionById(input.sessionId);
     if (session === null) return { kind: 'session-not-found' };
   }
   const setlist = await insertSetlist(input.name, input.sessionId, DEFAULT_SETLIST_KIND);
+  await notifySetlistChanged(setlist, actor);
   return { kind: 'ok', setlist };
 }
 
@@ -92,12 +116,17 @@ export type RenameOutcome =
   { kind: 'ok'; setlist: SetlistRow } | { kind: 'not-found' } | { kind: 'not-renamable' };
 
 // @FollowsBlueprint service-crud-update
-export async function renameSetlist(setlistId: string, name: string): Promise<RenameOutcome> {
+export async function renameSetlist(
+  setlistId: string,
+  name: string,
+  actor: WriteActor,
+): Promise<RenameOutcome> {
   const existing = await findSetlistById(setlistId);
   if (existing === null) return { kind: 'not-found' };
   if (!isSetlistRenamable(resolveSetlistKind(existing.kind))) return { kind: 'not-renamable' };
   const setlist = await updateSetlistName(setlistId, name);
   if (setlist === null) return { kind: 'not-found' };
+  await notifySetlistChanged(setlist, actor);
   return { kind: 'ok', setlist };
 }
 
@@ -139,6 +168,7 @@ export async function removeSetlist(setlistId: string): Promise<DeletionOutcome>
 export async function linkSetlistToSession(
   setlistId: string,
   sessionId: string,
+  actor: WriteActor,
 ): Promise<LinkOutcome> {
   const [setlist, session] = await Promise.all([
     findSetlistById(setlistId),
@@ -146,14 +176,19 @@ export async function linkSetlistToSession(
   ]);
   if (setlist === null || session === null) return { kind: 'not-found' };
   await insertSessionLink(sessionId, setlistId);
+  await notifySetlistChanged(setlist, actor);
   return { kind: 'ok' };
 }
 
 export async function unlinkSetlistFromSession(
   setlistId: string,
   sessionId: string,
+  actor: WriteActor,
 ): Promise<DeletionOutcome> {
-  return await deleteSessionLink(sessionId, setlistId);
+  const outcome = await deleteSessionLink(sessionId, setlistId);
+  if (outcome === 'not-found') return outcome;
+  await notifySetlistChangedById(setlistId, actor);
+  return outcome;
 }
 
 export async function getEntries(setlistId: string): Promise<SetlistEntryRow[]> {
@@ -173,9 +208,10 @@ export async function getEntriesOfSetlists(
 export async function appendEntry(
   setlistId: string,
   input: EntryCreateInput,
+  actor: WriteActor,
 ): Promise<SetlistEntryRow> {
   const existing = await listEntries(setlistId);
-  return await insertEntry({
+  const entry = await insertEntry({
     setlistId,
     songId: input.songId,
     position: existing.length,
@@ -185,6 +221,8 @@ export async function appendEntry(
     capo: input.capo,
     notes: input.notes,
   });
+  await notifySetlistChangedById(setlistId, actor);
+  return entry;
 }
 
 // @FollowsBlueprint service-crud-update
@@ -192,10 +230,12 @@ export async function patchEntry(
   setlistId: string,
   entryId: string,
   input: SetlistEntryPersistedUpdate,
+  actor: WriteActor,
 ): Promise<{ kind: 'ok'; entry: SetlistEntryRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   if (Object.keys(input).length === 0) return { kind: 'empty' };
   const entry = await updateEntry(setlistId, entryId, input);
   if (entry === null) return { kind: 'not-found' };
+  await notifySetlistChangedById(setlistId, actor);
   return { kind: 'ok', entry };
 }
 
@@ -211,10 +251,12 @@ async function compactEntryPositions(setlistId: string): Promise<void> {
 export async function removeEntryAndCompact(
   setlistId: string,
   entryId: string,
+  actor: WriteActor,
 ): Promise<DeletionOutcome> {
   const outcome = await deleteEntry(setlistId, entryId);
   if (outcome === 'not-found') return outcome;
   await compactEntryPositions(setlistId);
+  await notifySetlistChangedById(setlistId, actor);
   return outcome;
 }
 
@@ -223,6 +265,7 @@ export type ReorderResult = { kind: 'ok' } | { kind: 'stale' };
 export async function reorderEntries(
   setlistId: string,
   entryIds: readonly string[],
+  actor: WriteActor,
 ): Promise<ReorderResult> {
   const existing = await listEntryIds(setlistId);
   if (entryIds.length !== existing.length) return { kind: 'stale' };
@@ -235,5 +278,6 @@ export async function reorderEntries(
     if (entryId === undefined) continue;
     await setEntryPosition(entryId, position);
   }
+  await notifySetlistChangedById(setlistId, actor);
   return { kind: 'ok' };
 }

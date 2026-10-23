@@ -20,6 +20,13 @@ const API_TIMEOUT_SECONDS = 20;
 const APP_SLUG = 'pragma';
 const SPOTIFY_CREDENTIALS_PARAMETER = `/${APP_SLUG}/spotify-credentials`;
 
+function buildVapidParameterNames(stage: Stage) {
+  return {
+    VAPID_PUBLIC_PARAMETER: `/${APP_SLUG}/${stage}/vapid-public`,
+    VAPID_PRIVATE_PARAMETER: `/${APP_SLUG}/${stage}/vapid-private`,
+  };
+}
+
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
 
@@ -99,6 +106,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   });
 
   const siteOrigin = readSiteOrigin(props);
+  const vapidParameterNames = buildVapidParameterNames(props.stage);
 
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
@@ -114,6 +122,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,
         WEBAUTHN_ORIGIN: siteOrigin.origin,
         SPOTIFY_CREDENTIALS_PARAMETER,
+        ...vapidParameterNames,
         ...buildErrorReportingEnvironment(props.errorReporting),
       },
     },
@@ -150,12 +159,16 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         effect: Effect.ALLOW,
         actions: ['ssm:GetParameter'],
         resources: [
+          SPOTIFY_CREDENTIALS_PARAMETER,
+          vapidParameterNames.VAPID_PUBLIC_PARAMETER,
+          vapidParameterNames.VAPID_PRIVATE_PARAMETER,
+        ].map((parameterName) =>
           Stack.of(props.scope).formatArn({
             service: 'ssm',
             resource: 'parameter',
-            resourceName: SPOTIFY_CREDENTIALS_PARAMETER.slice(1),
+            resourceName: parameterName.slice(1),
           }),
-        ],
+        ),
       }),
     );
   }

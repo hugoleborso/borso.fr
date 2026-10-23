@@ -77,8 +77,13 @@ async function withCommentCounts(takes: readonly TakeRow[]): Promise<TakeView[]>
 }
 
 // @FollowsBlueprint repository-idempotent-upsert
-export async function insertTakeIfAbsent(take: TakeInsert): Promise<void> {
-  await getDatabase().insert(takeTable).values(take).onConflictDoNothing();
+export async function hasInsertedTake(take: TakeInsert): Promise<boolean> {
+  const inserted = await getDatabase()
+    .insert(takeTable)
+    .values(take)
+    .onConflictDoNothing()
+    .returning({ id: takeTable.id });
+  return inserted.length > 0;
 }
 
 export async function findTake(id: string): Promise<TakeView | null> {

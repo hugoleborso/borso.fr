@@ -1,6 +1,7 @@
 import type { DatabaseExecutor } from '../database/client';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
+import { notifyBand } from '../notifications/notifications.service';
 import { getSessionById } from '../sessions/sessions.service';
 import { getSongById } from '../songs/songs.service';
 import { deleteStoredObjects, mintObjectUpload } from '../uploads/uploads.service';
@@ -12,7 +13,7 @@ import {
   detachTakesOfSessionWithin,
   findTake,
   insertComment,
-  insertTakeIfAbsent,
+  hasInsertedTake,
   listCommentsOfTake,
   listTakesOfSongNewestFirst,
   updateComment,
@@ -69,9 +70,10 @@ export async function createTake(
     contentType: input.contentType,
   });
   if (input.objectKey !== expectedObjectKey) return { kind: 'object-key-mismatch' };
-  if ((await getSongById(input.songId)) === null) return { kind: 'song-not-found' };
+  const song = await getSongById(input.songId);
+  if (song === null) return { kind: 'song-not-found' };
   if (!(await isKnownSession(input.sessionId))) return { kind: 'session-not-found' };
-  await insertTakeIfAbsent({
+  const isNewTake = await hasInsertedTake({
     id: input.id,
     songId: input.songId,
     sessionId: input.sessionId,
@@ -84,7 +86,18 @@ export async function createTake(
   });
   const take = await findTake(input.id);
   if (take === null) return { kind: 'song-not-found' };
+  if (!isNewTake) return { kind: 'ok', take };
   recordProductEvent({ event: 'take_created', source: input.source, queued: input.queued });
+  await notifyBand(
+    {
+      kind: 'take-created',
+      actorMemberId: command.memberId,
+      takeId: take.id,
+      songId: song.id,
+      songTitle: song.title,
+    },
+    command.now,
+  );
   return { kind: 'ok', take };
 }
 
@@ -117,6 +130,21 @@ export async function getCommentsOfTake(takeId: string): Promise<TakeCommentsOut
   return { kind: 'ok', comments: orderCommentsByTime(await listCommentsOfTake(takeId)) };
 }
 
+async function notifyCommentOnTake(take: TakeView, command: ActorCommand): Promise<void> {
+  const song = await getSongById(take.songId);
+  if (song === null) return;
+  await notifyBand(
+    {
+      kind: 'take-comment-created',
+      actorMemberId: command.memberId,
+      takeId: take.id,
+      songId: song.id,
+      songTitle: song.title,
+    },
+    command.now,
+  );
+}
+
 export async function createTakeComment(
   takeId: string,
   input: TakeCommentCreateInput,
@@ -136,6 +164,7 @@ export async function createTakeComment(
   });
   if (comment === null) return { kind: 'take-not-found' };
   recordProductEvent({ event: 'take_comment_created', hasMoment: input.atSeconds !== null });
+  await notifyCommentOnTake(take, command);
   return { kind: 'ok', comment };
 }
 

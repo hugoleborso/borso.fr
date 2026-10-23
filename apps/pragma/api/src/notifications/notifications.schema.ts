@@ -7,6 +7,12 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
+import { z } from 'zod';
+import { NOTIFICATION_CATEGORIES } from './notifications.core';
+
+const ENDPOINT_MAX_LENGTH = 2000;
+const DEVICE_KEY_MAX_LENGTH = 500;
+const SECURE_SCHEME_PREFIX = 'https://';
 
 // @FollowsBlueprint schema-dsql-constraints
 export const pushSubscriptionTable = pgTable(
@@ -38,3 +44,27 @@ export const notificationDispatchTable = pgTable('notification_dispatch', {
   groupKey: text('group_key').primaryKey(),
   lastSentAt: timestamp('last_sent_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
+
+const endpointSchema = z
+  .string()
+  .url()
+  .max(ENDPOINT_MAX_LENGTH)
+  .refine((endpoint) => endpoint.startsWith(SECURE_SCHEME_PREFIX), {
+    message: 'a push endpoint is https',
+  });
+const deviceKeySchema = z.string().min(1).max(DEVICE_KEY_MAX_LENGTH);
+
+export const pushSubscriptionInputSchema = z.object({
+  endpoint: endpointSchema,
+  expirationTime: z.number().nullable().optional(),
+  keys: z.object({ p256dh: deviceKeySchema, auth: deviceKeySchema }),
+});
+
+export const pushUnsubscriptionSchema = z.object({ endpoint: endpointSchema }).strict();
+
+export const preferencesUpdateSchema = z
+  .object({ category: z.enum(NOTIFICATION_CATEGORIES), enabled: z.boolean() })
+  .strict();
+
+export type PushSubscriptionInput = z.infer<typeof pushSubscriptionInputSchema>;
+export type PreferencesUpdateInput = z.infer<typeof preferencesUpdateSchema>;

@@ -5,7 +5,9 @@ import { readDeezerTrack, searchExternal, type SearchExternalOptions } from './d
 import { findCatalogueMatch } from './song-identity.core';
 import { resolveSpotifyTrackId, type ResolveSpotifyOptions } from './spotify.adapter';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
+import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import { deleteAudioOfDeletedSong } from '../takes/takes.service';
+import { hasLineupChanged } from './song-lineup.core';
 export type { SongRow } from './songs.repository';
 import {
   deleteSongWithCascade,
@@ -77,15 +79,35 @@ export async function createSong(
   return await insertSong(valuesFromCreate(await withResolvedSpotifyTrack(input, options)));
 }
 
+async function notifyIfLineupChanged(
+  previous: SongRow | null,
+  song: SongRow,
+  actor: WriteActor,
+): Promise<void> {
+  if (previous === null || !hasLineupChanged(previous.defaultLineup, song.defaultLineup)) return;
+  await notifyBand(
+    {
+      kind: 'song-lineup-changed',
+      actorMemberId: actor.memberId,
+      songId: song.id,
+      songTitle: song.title,
+    },
+    actor.now,
+  );
+}
+
 // @FollowsBlueprint service-crud-update
 export async function patchSong(
   id: string,
   input: SongUpdateInput,
+  actor: WriteActor,
   options: ResolveSpotifyOptions = {},
 ): Promise<{ kind: 'ok'; song: SongRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   if (Object.keys(input).length === 0) return { kind: 'empty' };
+  const previous = input.defaultLineup === undefined ? null : await findSongById(id);
   const song = await updateSong(id, await withResolvedSpotifyTrack(input, options));
   if (song === null) return { kind: 'not-found' };
+  await notifyIfLineupChanged(previous, song, actor);
   return { kind: 'ok', song };
 }
 

@@ -6,6 +6,7 @@ import {
   type OfflineManifestPayload,
 } from './offline-manifest.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
+import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import {
   deleteSessionWithCascade,
   findSessionById,
@@ -47,19 +48,42 @@ export async function getSessionById(id: string): Promise<SessionRow | null> {
   return await findSessionById(id);
 }
 
-export async function createSession(input: SessionCreateInput): Promise<SessionRow> {
-  return await insertSession(buildSessionInsertShape(input));
+async function notifySessionWritten(
+  kind: 'session-created' | 'session-changed',
+  session: SessionRow,
+  actor: WriteActor,
+): Promise<void> {
+  await notifyBand(
+    {
+      kind,
+      actorMemberId: actor.memberId,
+      sessionId: session.id,
+      sessionDate: session.date.toISOString(),
+    },
+    actor.now,
+  );
+}
+
+export async function createSession(
+  input: SessionCreateInput,
+  actor: WriteActor,
+): Promise<SessionRow> {
+  const session = await insertSession(buildSessionInsertShape(input));
+  await notifySessionWritten('session-created', session, actor);
+  return session;
 }
 
 // @FollowsBlueprint service-crud-update
 export async function patchSession(
   id: string,
   input: SessionUpdateInput,
+  actor: WriteActor,
 ): Promise<{ kind: 'ok'; session: SessionRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   const updates = valuesFromUpdate(input);
   if (Object.keys(updates).length === 0) return { kind: 'empty' };
   const session = await updateSession(id, updates);
   if (session === null) return { kind: 'not-found' };
+  await notifySessionWritten('session-changed', session, actor);
   return { kind: 'ok', session };
 }
 

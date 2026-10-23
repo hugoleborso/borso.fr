@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireMemberSession } from '../auth/member-session.middleware';
+import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
 import { transitionCommentBodySchema, transitionPairParamSchema } from './transitions.schema';
 import {
   getTransitionComment,
@@ -30,7 +30,10 @@ export function buildTransitionCommentsRouter() {
       async (context) => {
         const { a, b } = context.req.valid('param');
         const { comment } = context.req.valid('json');
-        await saveTransitionComment(a, b, comment, new Date());
+        await saveTransitionComment(a, b, comment, {
+          memberId: readMemberId(context),
+          now: new Date(),
+        });
         return context.json({ songAId: a, songBId: b, comment });
       },
     )

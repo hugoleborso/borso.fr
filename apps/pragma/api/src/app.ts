@@ -13,6 +13,7 @@ import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
 import { buildMeRouter } from './me/me.controller';
 import { buildMembersRouter } from './members/members.controller';
+import { buildNotificationsRouter } from './notifications/notifications.controller';
 import { buildOutreachRouter } from './outreach/outreach.controller';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
@@ -62,6 +63,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/studies', buildStudiesRouter())
     .route('/api/uploads', buildUploadsRouter())
     .route('/api/takes', buildTakesRouter())
+    .route('/api/notifications', buildNotificationsRouter())
     .route('/api/audience', audience.publicRouter)
     .route('/api/audience', audience.gatedRouter);
 }

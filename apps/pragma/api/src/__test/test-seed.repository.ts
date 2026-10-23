@@ -5,6 +5,11 @@ import {
 } from '../auth/credentials.schema';
 import { barTable } from '../bars/bars.schema';
 import { memberCalendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
+import {
+  notificationDispatchTable,
+  notificationPreferenceTable,
+  pushSubscriptionTable,
+} from '../notifications/notifications.schema';
 import { sql } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import { PRODUCTION_SCHEMA, readErrorCode } from './schema-boundary.core';
@@ -51,6 +56,9 @@ export async function deleteAllDomainRows(): Promise<void> {
   await database.delete(webauthnChallengeTable);
   await database.delete(memberCredentialTable);
   await database.delete(memberCalendarFeedTable);
+  await database.delete(pushSubscriptionTable);
+  await database.delete(notificationPreferenceTable);
+  await database.delete(notificationDispatchTable);
   await database.delete(memberTable);
   await database.delete(instrumentTable);
 }
