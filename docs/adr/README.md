@@ -84,6 +84,8 @@ No:
 | [0038](./0038-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | proposed | 2026-10-02 |
 | [0039](./0039-talos-memory-in-the-database.md) | The talos memory moves into the database, behind an agent API | proposed | 2026-10-16 |
 | [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | proposed | 2026-10-23 |
+| [0041](./0041-pragma-serves-mcp-from-its-api-lambda.md) | pragma serves MCP from its API Lambda, stateless, with the official SDK behind @hono/mcp | proposed | 2026-10-23 |
+| [0042](./0042-pragma-is-its-own-oauth-authorization-server.md) | pragma is its own OAuth 2.1 authorization server, and an assistant signs in through the member's existing session | proposed | 2026-10-23 |
 
 ### Data layer
 
@@ -108,6 +110,8 @@ No:
 - 0038 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
 - 0028 — `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
 - 0040 — pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage in SSM and push subscriptions kept out of preview clones.
+- 0041 — pragma serves MCP at `/mcp` on its API Lambda, stateless, with `@modelcontextprotocol/sdk` behind `@hono/mcp`; every tool is a schema plus one service call.
+- 0042 — pragma is its own OAuth 2.1 authorization server for assistants (discovery, dynamic registration, PKCE S256, rotating refresh tokens), signing members in through their existing session rather than a hosted provider.
 
 ### CDK / infra
 
