@@ -123,7 +123,7 @@ sequenceDiagram
 
 | ADR | Decision | What it constrains downstream |
 |---|---|---|
-| ADR-0040 (to write) | pragma sends Web Push with the `web-push` library, inline from the API Lambda, with its VAPID key pair in an SSM SecureString like `SPOTIFY_CREDENTIALS_PARAMETER` | a new dependency and a new secret; a send never fails the write that triggered it; one key pair per stage so a preview cannot sign for prod's subscriptions |
+| [ADR-0040](../../../../adr/0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push with the `web-push` library, inline from the API Lambda, as talos does, with its VAPID key pair in two SSM SecureStrings per stage | a new dependency and a new secret; a send never fails the write that triggered it; one key pair per stage (`/pragma/<stage>/vapid-*`), and `push_subscription` stays out of preview clones |
 
 ## Changes
 
