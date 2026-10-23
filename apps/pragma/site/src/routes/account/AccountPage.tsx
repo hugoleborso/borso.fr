@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Card } from '../../components/atoms/Card';
 import { CalendarFeedForm } from '../../components/organisms/CalendarFeedForm';
 import { ContactDetailsForm } from '../../components/organisms/ContactDetailsForm';
+import { NotificationSettings } from '../../components/organisms/NotificationSettings';
 import { PasskeyList } from '../../components/organisms/PasskeyList';
 import { PasswordChangeForm } from '../../components/organisms/PasswordChangeForm';
 import { CALENDAR_SECTION_ID } from '../../components/organisms/calendar-feed-form.utils';
@@ -100,6 +101,10 @@ export function AccountPage(): JSX.Element {
             });
           }}
         />
+      </Card>
+
+      <Card className="p-4 sm:p-6">
+        <NotificationSettings />
       </Card>
 
       <Card className="p-4 sm:p-6">

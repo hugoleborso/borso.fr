@@ -338,6 +338,16 @@ export const pragmaManifest: ArchitectureManifest = {
       access: 'open',
     },
     {
+      id: 'browser-push-manager',
+      icon: '🔔',
+      name: 'Notifications and PushManager',
+      technology: 'Browser Notification and Push APIs',
+      description:
+        "Asks the member for the notification permission and subscribes this device with the stage's VAPID public key, then the service worker shows each push in the device language and opens what changed when it is tapped. On an iPhone it only exists once pragma is installed on the home screen.",
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
       id: 'browser-indexeddb',
       icon: '🗄️',
       name: 'IndexedDB',

@@ -5,10 +5,46 @@ import serviceWorkerSource from '../../public/sw.js?raw';
 
 export type ServiceWorkerListener = (event: unknown) => void;
 
+export interface FakeNotification {
+  readonly title: string;
+  readonly options: Record<string, unknown>;
+}
+
+export interface FakeWindowClient {
+  readonly focus: () => Promise<FakeWindowClient>;
+  readonly navigate: (url: string) => Promise<unknown>;
+  readonly visited: string[];
+  focusCount: number;
+}
+
 export interface ServiceWorkerHarness {
   readonly listeners: ReadonlyMap<string, ServiceWorkerListener>;
   readonly caches: FakeCacheStorage;
+  readonly notifications: FakeNotification[];
+  readonly openedWindows: string[];
   readonly respondTo: (request: FakeRequest) => Promise<FakeResponse | undefined>;
+  readonly dispatch: (name: string, event: Record<string, unknown>) => Promise<unknown>;
+}
+
+export interface ServiceWorkerSurroundings {
+  readonly windowClients?: readonly unknown[];
+  readonly language?: string;
+}
+
+export function buildWindowClient(): FakeWindowClient {
+  const client: FakeWindowClient = {
+    visited: [],
+    focusCount: 0,
+    focus: () => {
+      client.focusCount += 1;
+      return Promise.resolve(client);
+    },
+    navigate: (url) => {
+      client.visited.push(url);
+      return Promise.resolve(client);
+    },
+  };
+  return client;
 }
 
 export interface FakeRequest {
@@ -95,15 +131,33 @@ function keyOf(key: string | FakeRequest): string {
 
 export function loadServiceWorker(
   fetchStub: (request: FakeRequest | string) => Promise<FakeResponse>,
+  surroundings: ServiceWorkerSurroundings = {},
 ): ServiceWorkerHarness {
   const listeners = new Map<string, ServiceWorkerListener>();
   const cacheStorage = new FakeCacheStorage();
+  const notifications: FakeNotification[] = [];
+  const openedWindows: string[] = [];
   const serviceWorkerScope = {
     addEventListener: (name: string, listener: ServiceWorkerListener) => {
       listeners.set(name, listener);
     },
     skipWaiting: () => undefined,
-    clients: { claim: () => Promise.resolve() },
+    navigator:
+      surroundings.language === undefined ? undefined : { language: surroundings.language },
+    registration: {
+      showNotification: (title: string, options: Record<string, unknown>) => {
+        notifications.push({ title, options });
+        return Promise.resolve();
+      },
+    },
+    clients: {
+      claim: () => Promise.resolve(),
+      matchAll: () => Promise.resolve(surroundings.windowClients ?? []),
+      openWindow: (url: string) => {
+        openedWindows.push(url);
+        return Promise.resolve(null);
+      },
+    },
   };
   const context = createContext({
     self: serviceWorkerScope,
@@ -114,6 +168,19 @@ export function loadServiceWorker(
     console,
   });
   runInContext(serviceWorkerSource, context);
+
+  const dispatch = async (name: string, event: Record<string, unknown>): Promise<unknown> => {
+    const listener = listeners.get(name);
+    if (listener === undefined) throw new Error(`the worker registered no ${name} listener`);
+    let finished: Promise<unknown> = Promise.resolve();
+    listener({
+      ...event,
+      waitUntil: (work: Promise<unknown>) => {
+        finished = work;
+      },
+    });
+    return await finished;
+  };
 
   const respondTo = async (request: FakeRequest): Promise<FakeResponse | undefined> => {
     const fetchListener = listeners.get('fetch');
@@ -128,5 +195,12 @@ export function loadServiceWorker(
     return answered === undefined ? undefined : await answered;
   };
 
-  return { listeners, caches: cacheStorage, respondTo };
+  return {
+    listeners,
+    caches: cacheStorage,
+    notifications,
+    openedWindows,
+    respondTo,
+    dispatch,
+  };
 }

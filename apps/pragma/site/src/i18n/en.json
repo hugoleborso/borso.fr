@@ -672,5 +672,24 @@
       "deleteComment": "Delete comment",
       "commentFailed": "The comment could not be sent."
     }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "offer": "Get a notification on this device when the band posts a take, comments on one, or changes a session or a setlist.",
+    "enabled": "Notifications are on for this device.",
+    "denied": "This browser blocks notifications for pragma. Allow them in the browser's site settings, then come back here.",
+    "unsupported": "This browser cannot receive notifications.",
+    "installHint": "On an iPhone, notifications only reach pragma once it is installed on the home screen. In Safari, tap Share, then Add to Home Screen, and open pragma from there.",
+    "enable": "Enable on this device",
+    "notConfigured": "Notifications are not set up on this server yet.",
+    "enableFailed": "Notifications could not be enabled. Try again.",
+    "saveFailed": "That change could not be saved.",
+    "categoriesTitle": "Notify me about",
+    "categories": {
+      "takes": "New takes",
+      "takeComments": "Comments on takes",
+      "sessions": "Sessions",
+      "setlists": "Setlists, lineups and transitions"
+    }
   }
 }
