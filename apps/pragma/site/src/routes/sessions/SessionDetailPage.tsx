@@ -27,6 +27,7 @@ import { parseFriendsCounts } from './friends-count.core';
 import { selectMissingSessionMessageKey } from './missing-session.core';
 import { selectSessionFacts } from './session-facts.core';
 import { PracticeReadView } from '../../components/molecules/PracticeReadView';
+import { PracticeRecordingList } from '../../components/organisms/PracticeRecordingList';
 
 const NO_ROWS: readonly never[] = [];
 
@@ -168,6 +169,8 @@ export function SessionDetailPage(): JSX.Element {
         setlists={setlists}
         isLoading={setlistsQuery.isLoading}
       />
+
+      {isConcert ? null : <PracticeRecordingList sessionId={session.id} setlists={setlists} />}
 
       {isConcert ? (
         editingConcert ? (

@@ -611,5 +611,66 @@
     "thisWeek_one": "{{count}} study this week",
     "thisWeek_other": "{{count}} studies this week",
     "progressTitle": "Progress"
+  },
+  "takes": {
+    "title": "Takes",
+    "record": "Record",
+    "recordAria": "Record a take of {{title}}",
+    "upload": "Upload",
+    "download": "Download",
+    "empty": "No take of this song yet.",
+    "noSession": "no session",
+    "practice": "Practice",
+    "practiceList": {
+      "title": "Record takes",
+      "empty": "Attach a setlist to record its songs."
+    },
+    "concert": "Concert",
+    "unknownSession": "session removed",
+    "formerMember": "former member",
+    "commentCount_one": "{{count}} comment",
+    "commentCount_other": "{{count}} comments",
+    "pending": "pending upload",
+    "failed": "upload failed",
+    "retry": "Retry",
+    "recording": {
+      "title": "Recording {{title}}",
+      "stop": "Stop",
+      "screenAwake": "screen kept awake",
+      "starting": "Starting the microphone…",
+      "saving": "Saving the take…",
+      "denied": "The microphone is not allowed. Allow it in the browser settings, or upload a file instead.",
+      "unsupported": "This browser cannot record here. Upload a file instead.",
+      "interrupted": "The recording was cut when the phone locked. What was recorded until then is saved as the take.",
+      "quotaExceeded": "The device storage is full, so the take could not be kept. Download it so it is not lost.",
+      "queueFailed": "The take could not be stored on this device. Download it so it is not lost.",
+      "unplayable": "This browser recorded a format the band cannot play back. Download it instead."
+    },
+    "uploadForm": {
+      "title": "Upload a take of {{title}}",
+      "file": "Audio file",
+      "recordedAt": "Recorded at",
+      "session": "Session",
+      "noSession": "No session"
+    },
+    "fileErrors": {
+      "tooLarge": "This file is over {{maxMebibytes}} MiB.",
+      "notAudio": "This file is not an audio file.",
+      "empty": "This file is empty."
+    },
+    "player": {
+      "title": "Take",
+      "delete": "Delete take",
+      "deleteConfirm": "Delete this take and its comments for everyone?",
+      "loadFailed": "The recording could not be loaded.",
+      "marks": "Comments on the timeline",
+      "markAria": "Go to {{moment}}",
+      "noComments": "No comment yet.",
+      "commentPlaceholder": "Write a comment",
+      "momentToggle": "At {{moment}}",
+      "send": "Send",
+      "deleteComment": "Delete comment",
+      "commentFailed": "The comment could not be sent."
+    }
   }
 }

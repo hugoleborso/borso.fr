@@ -23,6 +23,7 @@ import { UploadedChartPreview } from '../../components/molecules/UploadedChartPr
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
 import { MasteryProgressChart } from '../../components/organisms/MasteryProgressChart';
 import { SongDetailSidebar } from '../../components/organisms/SongDetailSidebar';
+import { SongTakes } from '../../components/organisms/SongTakes';
 import { ApiError } from '../../lib/api.client';
 import { resolveEmbed } from '../../lib/embed.utils';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
@@ -35,6 +36,7 @@ import { extractChartKind, selectChordProText } from './chart-kind.utils';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import { buildEffectiveMasteryLookup, buildSongLineupRows } from './song-lineup.core';
 import { selectSongNoteSections } from './song-notes.core';
+import { useTakeSelection } from './take-selection.hook';
 import { buildTonalityLabel } from './tonality-label.utils';
 
 const NO_ROWS: readonly never[] = [];
@@ -51,6 +53,7 @@ export function SongDetailPage(): JSX.Element {
   const updateSong = useUpdateSong();
   const hasFailedWrite = useDidLastSongWriteFail(songId ?? '');
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
+  const { selectedTakeId, selectTake } = useTakeSelection();
 
   const song = songQuery.data?.song ?? null;
   const chart = song?.chart ?? null;
@@ -238,6 +241,13 @@ export function SongDetailPage(): JSX.Element {
               </div>
             </Card>
           )}
+
+          <SongTakes
+            songId={song.id}
+            songTitle={song.title}
+            selectedTakeId={selectedTakeId}
+            onSelectTake={selectTake}
+          />
 
           <SongNotesCard song={song} />
 

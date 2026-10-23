@@ -611,5 +611,66 @@
     "thisWeek_one": "{{count}} révision cette semaine",
     "thisWeek_other": "{{count}} révisions cette semaine",
     "progressTitle": "Progression"
+  },
+  "takes": {
+    "title": "Prises",
+    "record": "Enregistrer",
+    "recordAria": "Enregistrer une prise de {{title}}",
+    "upload": "Importer",
+    "download": "Télécharger",
+    "empty": "Aucune prise de ce morceau pour l’instant.",
+    "noSession": "sans séance",
+    "practice": "Répétition",
+    "practiceList": {
+      "title": "Enregistrer des prises",
+      "empty": "Rattachez une setlist pour enregistrer ses morceaux."
+    },
+    "concert": "Concert",
+    "unknownSession": "séance supprimée",
+    "formerMember": "ancien membre",
+    "commentCount_one": "{{count}} commentaire",
+    "commentCount_other": "{{count}} commentaires",
+    "pending": "envoi en attente",
+    "failed": "envoi échoué",
+    "retry": "Réessayer",
+    "recording": {
+      "title": "Enregistrement de {{title}}",
+      "stop": "Arrêter",
+      "screenAwake": "écran maintenu allumé",
+      "starting": "Démarrage du micro…",
+      "saving": "Enregistrement de la prise…",
+      "denied": "Le micro n’est pas autorisé. Autorisez-le dans les réglages du navigateur, ou importez un fichier.",
+      "unsupported": "Ce navigateur ne peut pas enregistrer ici. Importez un fichier.",
+      "interrupted": "L’enregistrement a été coupé au verrouillage du téléphone. Ce qui a été enregistré jusque-là est gardé comme prise.",
+      "quotaExceeded": "Le stockage de l’appareil est plein, la prise n’a pas pu être gardée. Téléchargez-la pour ne pas la perdre.",
+      "queueFailed": "La prise n’a pas pu être stockée sur cet appareil. Téléchargez-la pour ne pas la perdre.",
+      "unplayable": "Ce navigateur a enregistré un format que le groupe ne peut pas relire. Téléchargez-la plutôt."
+    },
+    "uploadForm": {
+      "title": "Importer une prise de {{title}}",
+      "file": "Fichier audio",
+      "recordedAt": "Enregistrée le",
+      "session": "Séance",
+      "noSession": "Sans séance"
+    },
+    "fileErrors": {
+      "tooLarge": "Ce fichier dépasse {{maxMebibytes}} Mio.",
+      "notAudio": "Ce fichier n’est pas un fichier audio.",
+      "empty": "Ce fichier est vide."
+    },
+    "player": {
+      "title": "Prise",
+      "delete": "Supprimer la prise",
+      "deleteConfirm": "Supprimer cette prise et ses commentaires pour tout le monde ?",
+      "loadFailed": "L’enregistrement n’a pas pu être chargé.",
+      "marks": "Commentaires sur la frise",
+      "markAria": "Aller à {{moment}}",
+      "noComments": "Aucun commentaire pour l’instant.",
+      "commentPlaceholder": "Écrire un commentaire",
+      "momentToggle": "À {{moment}}",
+      "send": "Envoyer",
+      "deleteComment": "Supprimer le commentaire",
+      "commentFailed": "Le commentaire n’a pas pu être envoyé."
+    }
   }
 }

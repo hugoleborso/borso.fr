@@ -327,5 +327,25 @@ export const pragmaManifest: ArchitectureManifest = {
       boundary: 'browser-platform',
       access: 'open',
     },
+    {
+      id: 'browser-media-recorder',
+      icon: '🎙️',
+      name: 'Microphone and MediaRecorder',
+      technology: 'Browser getUserMedia and MediaRecorder APIs',
+      description:
+        'Records a take from the phone microphone during a practice, in whatever format the browser produces. Absent or refused, the recording sheet offers an upload instead.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
+      id: 'browser-indexeddb',
+      icon: '🗄️',
+      name: 'IndexedDB',
+      technology: 'Browser IndexedDB',
+      description:
+        'Holds each recorded take and its audio on the device until it is uploaded and created, so a take made without network is sent the next time the application opens or comes back online.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
   ],
 };
