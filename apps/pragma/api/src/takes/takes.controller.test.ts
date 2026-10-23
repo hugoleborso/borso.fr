@@ -292,6 +292,24 @@ describe('takes controller (back-e2e)', () => {
       expect(await testDatabase().select().from(takeTable)).toHaveLength(1);
     });
 
+    it('keeps one take when two tabs send the same create at the same moment', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const takeId = randomUUID();
+
+      const answers = await Promise.all([
+        postTake(band, buildTakeBody({ id: takeId, songId })),
+        postTake(band, buildTakeBody({ id: takeId, songId })),
+      ]);
+
+      expect(answers.map((answer) => answer.status)).toEqual([201, 201]);
+      const takeIds = await Promise.all(
+        answers.map(async (answer) => (await readJson(answer, takeEnvelope)).take.id),
+      );
+      expect(takeIds).toEqual([takeId, takeId]);
+      expect(await testDatabase().select().from(takeTable)).toHaveLength(1);
+    });
+
     it('refuses a take without a song', async () => {
       const band = await buildAuthenticatedApp();
       const { songId: _songId, ...withoutSong } = buildTakeBody({
