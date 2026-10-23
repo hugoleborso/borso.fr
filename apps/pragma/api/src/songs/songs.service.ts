@@ -5,6 +5,7 @@ import { readDeezerTrack, searchExternal, type SearchExternalOptions } from './d
 import { findCatalogueMatch } from './song-identity.core';
 import { resolveSpotifyTrackId, type ResolveSpotifyOptions } from './spotify.adapter';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
+import { deleteAudioOfDeletedSong } from '../takes/takes.service';
 export type { SongRow } from './songs.repository';
 import {
   deleteSongWithCascade,
@@ -89,7 +90,9 @@ export async function patchSong(
 }
 
 export async function removeSong(id: string): Promise<DeletionOutcome> {
-  return await deleteSongWithCascade(id);
+  const deletion = await deleteSongWithCascade(id);
+  await deleteAudioOfDeletedSong(deletion.takeObjectKeys);
+  return deletion.outcome;
 }
 
 export type SongSearchOutcome = { kind: 'ok'; hits: ExternalSongHit[] } | { kind: 'unavailable' };

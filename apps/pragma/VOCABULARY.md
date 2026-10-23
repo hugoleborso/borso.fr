@@ -426,6 +426,31 @@ Lives in: `api/src/members/`
 Not to be confused with: the member ids inside a lineup, which say who
 plays on one song rather than who is in the band.
 
+## Notification preference
+
+One member's toggle for one category of notification.
+
+Lives in: `api/src/notifications/` (`notification_preference`)
+
+- Keyed on `(member_id, category)`. A missing row reads as enabled, so a
+  member who turns push on gets every category without a write per
+  category.
+- Deleted with the member.
+
+## Push subscription
+
+One device of one member that accepted notifications.
+
+Lives in: `api/src/notifications/` (`push_subscription`)
+
+- One row per push `endpoint`, unique, so a device that subscribes again
+  replaces its row rather than adding one. A member with two devices has
+  two rows and is notified on both.
+- Kept out of every preview's copy of the production schema, so a preview
+  never pushes to the band's phones (ADR-0040).
+- Deleted with the member, and when the push service answers that the
+  endpoint is gone.
+
 ## Offline manifest
 
 The list of URLs the service worker pre-caches so the band can read the
@@ -710,6 +735,45 @@ Lives in: `api/src/studies/` (`concert-readiness.core.ts`)
   more. One player with nothing recorded keeps the song not ready, unlike
   `meanForSong`, which skips them.
 
+## Take
+
+One recording of one song, optionally from one session.
+
+Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
+
+- The id is chosen by the device that recorded it, so a create retried
+  after a lost answer lands on the same row (`insertTakeIfAbsent`).
+- `song_id` is required and `session_id` is optional. Deleting the session
+  keeps the take and clears `session_id`; deleting the song deletes the
+  take, its comments and its audio object.
+- The audio is one of the types in `TAKE_CONTENT_TYPES`, at most 50 MiB,
+  and S3 enforces that length because the signed upload carries it. The
+  object key is `take/<songId>/<takeId>.<extension>` (`buildTakeObjectKey`),
+  and a create naming any other key is refused.
+- Listed by `recorded_at` descending, not by upload time, so a take
+  uploaded a week late sits where it happened.
+- Deleting its author keeps the take; `authorName` reads null and the
+  screen says *former member*. Any member can delete any take.
+
+Not to be confused with: a **study**, which records that a member worked a
+song and holds no audio.
+
+## Take comment
+
+A note on a take, with an optional moment in seconds.
+
+Lives in: `api/src/takes/` (`take_comment`)
+
+- `at_seconds` is null for a comment in the thread only, and otherwise a
+  whole number from 0 to the take's duration (`isMomentWithinTake`).
+- `body` is trimmed, 1 to 4 096 characters. Comments are listed oldest
+  first, a tie broken on id (`orderCommentsByTime`).
+- Deleted with its take; kept, with no author name, when its author is
+  deleted.
+
+Not to be confused with: a **transition comment**, which is about the gap
+between two songs and belongs to no take.
+
 ## Task
 
 Something one member owes the band, with an optional date and an optional
@@ -871,6 +935,10 @@ to.
 - **revision**, **review**, **practice session**, **homework**: a member's
   own work on a song is a **study**. **revision** reads as a version in
   code, and **practice** is already the band rehearsing.
+- **recording**, **version**, **track** for audio: one recorded
+  performance of a song is a **take**. *recording* is the act of making
+  one, which the screen may say, and *version* is refused for the same
+  reason as *revision*.
 - **role**, **part**, **station**: what a member holds on a song is an
   **instrument**, and the whole map is a **lineup**. The word *station*
   survives in one comment in `members.schema.ts` and should not spread.

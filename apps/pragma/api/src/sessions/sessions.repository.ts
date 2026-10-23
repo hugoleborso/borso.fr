@@ -2,6 +2,7 @@ import { desc, eq } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
+import { detachTakesOfDeletedSession } from '../takes/takes.service';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
 
@@ -104,6 +105,7 @@ export async function deleteSessionWithCascade(id: string): Promise<DeletionOutc
   const database = getDatabase();
   return await database.transaction(async (transaction) => {
     await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
+    await detachTakesOfDeletedSession(transaction, id);
     const deleted = await transaction
       .delete(sessionTable)
       .where(eq(sessionTable.id, id))

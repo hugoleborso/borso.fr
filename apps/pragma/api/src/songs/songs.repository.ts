@@ -8,6 +8,7 @@ import { deleteScoreHistoryOfDeletedSong } from '../mastery/mastery.service';
 import { setlistEntryTable } from '../setlists/setlists.schema';
 import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
 import { deleteStudiesOfDeletedSong } from '../studies/studies.service';
+import { deleteTakesOfDeletedSong } from '../takes/takes.service';
 import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
 import {
   chordChartSchema,
@@ -260,7 +261,12 @@ export async function updateSong(id: string, updates: SongPersistedShape): Promi
   return row === undefined ? null : rowToSong(row);
 }
 
-export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome> {
+export interface SongDeletion {
+  readonly outcome: DeletionOutcome;
+  readonly takeObjectKeys: readonly string[];
+}
+
+export async function deleteSongWithCascade(id: string): Promise<SongDeletion> {
   const database = getDatabase();
   return await database.transaction(async (transaction) => {
     await transaction.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
@@ -269,10 +275,11 @@ export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
     await deleteVotesOfDeletedSong(transaction, id);
     await detachTasksOfSongBeingDeleted(transaction, id);
+    const takeObjectKeys = await deleteTakesOfDeletedSong(transaction, id);
     const deleted = await transaction
       .delete(songTable)
       .where(eq(songTable.id, id))
       .returning({ id: songTable.id });
-    return selectDeletionOutcome(deleted.length);
+    return { outcome: selectDeletionOutcome(deleted.length), takeObjectKeys };
   });
 }

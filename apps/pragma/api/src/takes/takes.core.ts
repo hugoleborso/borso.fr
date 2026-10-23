@@ -1,0 +1,47 @@
+import type { TakeContentType } from '@domain/take-upload.core';
+
+export const TAKE_OBJECT_PREFIX = 'take';
+
+const EXTENSION_BY_CONTENT_TYPE: Readonly<Record<TakeContentType, string>> = {
+  'audio/mp4': 'mp4',
+  'audio/x-m4a': 'm4a',
+  'audio/mpeg': 'mp3',
+  'audio/webm': 'webm',
+  'audio/ogg': 'ogg',
+  'audio/wav': 'wav',
+  'audio/aac': 'aac',
+};
+
+export interface TakeObjectKeyParams {
+  readonly songId: string;
+  readonly takeId: string;
+  readonly contentType: TakeContentType;
+}
+
+// @FollowsBlueprint core-lookup-table
+export function buildTakeObjectKey(params: TakeObjectKeyParams): string {
+  const extension = EXTENSION_BY_CONTENT_TYPE[params.contentType];
+  return `${TAKE_OBJECT_PREFIX}/${params.songId}/${params.takeId}.${extension}`;
+}
+
+// @FollowsBlueprint core-decision
+export function isMomentWithinTake(atSeconds: number | null, durationSeconds: number): boolean {
+  if (atSeconds === null) return true;
+  return Number.isInteger(atSeconds) && atSeconds >= 0 && atSeconds <= durationSeconds;
+}
+
+export interface TimedComment {
+  readonly id: string;
+  readonly createdAt: Date;
+}
+
+// @FollowsBlueprint core-canonical-ordering
+export function orderCommentsByTime<Comment extends TimedComment>(
+  comments: readonly Comment[],
+): Comment[] {
+  return comments.toSorted((first, second) => {
+    const timeDifference = first.createdAt.getTime() - second.createdAt.getTime();
+    if (timeDifference !== 0) return timeDifference;
+    return first.id.localeCompare(second.id);
+  });
+}

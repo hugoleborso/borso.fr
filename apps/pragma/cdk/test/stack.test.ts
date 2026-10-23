@@ -97,13 +97,16 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
 
-  it('clones prod into a preview with its passwords, but no passkey and no avatar key', () => {
+  it('clones prod into a preview with its passwords, but no passkey, no avatar key, no push subscription and no take', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
       tableBlocklist: [
         'auth_attempt',
         'member_calendar_feed',
         'member_passkey',
+        'push_subscription',
+        'take',
+        'take_comment',
         'webauthn_challenge',
       ],
       tablesToReplace: ['app_config', 'member_credential'],
@@ -241,6 +244,22 @@ describe('pragma app stack', () => {
                   ]),
                 ]),
               }),
+            }),
+          ]),
+        }),
+      }),
+    );
+  });
+
+  it('lets the API delete objects from the uploads bucket, so a deleted song takes its audio with it', () => {
+    synthAppStack('prod').hasResourceProperties(
+      'AWS::IAM::Policy',
+      Match.objectLike({
+        PolicyDocument: Match.objectLike({
+          Statement: Match.arrayWith([
+            Match.objectLike({
+              Action: Match.arrayWith(['s3:DeleteObject*']),
+              Effect: 'Allow',
             }),
           ]),
         }),

@@ -129,6 +129,9 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
                 'auth_attempt',
                 'member_calendar_feed',
                 'member_passkey',
+                'push_subscription',
+                'take',
+                'take_comment',
                 'webauthn_challenge',
               ],
               tablesToReplace: ['app_config', 'member_credential'],
@@ -141,6 +144,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   if (previewableApp.api !== undefined) {
     uploadsBucket.grantPut(previewableApp.api.handler);
     uploadsBucket.grantRead(previewableApp.api.handler);
+    uploadsBucket.grantDelete(previewableApp.api.handler);
     previewableApp.api.handler.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,

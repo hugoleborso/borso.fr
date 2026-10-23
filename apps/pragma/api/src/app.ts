@@ -18,6 +18,7 @@ import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sess
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
 import { buildStudiesRouter } from './studies/studies.controller';
+import { buildTakesRouter } from './takes/takes.controller';
 import { buildTasksRouter } from './tasks/tasks.controller';
 import { buildTransitionCommentsRouter } from './transitions/transitions.controller';
 import { buildUploadsRouter } from './uploads/uploads.controller';
@@ -60,6 +61,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/tasks', buildTasksRouter())
     .route('/api/studies', buildStudiesRouter())
     .route('/api/uploads', buildUploadsRouter())
+    .route('/api/takes', buildTakesRouter())
     .route('/api/audience', audience.publicRouter)
     .route('/api/audience', audience.gatedRouter);
 }

@@ -24,6 +24,7 @@ import {
 } from '../setlists/setlists.schema';
 import { songTable } from '../songs/songs.schema';
 import { studyTable } from '../studies/studies.schema';
+import { takeCommentTable, takeTable } from '../takes/takes.schema';
 import { taskTable } from '../tasks/tasks.schema';
 import { transitionCommentTable } from '../transitions/transitions.schema';
 
@@ -31,6 +32,8 @@ import { transitionCommentTable } from '../transitions/transitions.schema';
 export async function deleteAllDomainRows(): Promise<void> {
   const database = getDatabase();
   await database.delete(taskTable);
+  await database.delete(takeCommentTable);
+  await database.delete(takeTable);
   await database.delete(setlistVoteTable);
   await database.delete(setlistEntryTable);
   await database.delete(sessionSetlistTable);
