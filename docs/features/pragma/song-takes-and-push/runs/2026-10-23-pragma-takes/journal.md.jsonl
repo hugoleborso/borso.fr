@@ -1,3 +1,4 @@
 {"label":"technical-conception-01","status":"done","summary":"plan.md written with four slices; operator owes four VAPID SecureStrings (prod + preview)"}
 {"label":"implementation-01-takes-api","status":"done","summary":"takes API, comments, cascades and the five tables shipped; source/queued added to POST /api/takes for analytics; ADR-0009 blocklist amended"}
 {"label":"implementation-02-push-api","status":"done","summary":"push API shipped: /api/notifications, notifyBand fan-out from takes, sessions, setlists, transitions and song lineup, 10-minute grouping, deadline-bounded sends, web-push in the catalog, VAPID parameters per stage"}
+{"label":"implementation-03-takes-site","status":"done","summary":"takes site shipped: Takes section on the song page, practice microphones, recording sheet, upload form, player with moment comments, IndexedDB queue with retry; built on worktree-wf_035cd72e-a86-3 since the main checkout fast-forward is refused from a worktree"}
