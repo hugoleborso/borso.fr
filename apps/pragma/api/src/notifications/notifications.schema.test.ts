@@ -17,10 +17,11 @@ const SUBSCRIPTION = {
 
 // @FollowsBlueprint test-pure-unit
 describe('notification tables', () => {
-  it('keep one subscription per push endpoint', () => {
-    const [endpointIndex] = getTableConfig(pushSubscriptionTable).indexes;
-    expect(endpointIndex?.config.name).toBe('push_subscription_endpoint_idx');
-    expect(endpointIndex?.config.unique).toBe(true);
+  it('key a subscription on its push endpoint, which DSQL holds under concurrency', () => {
+    const { columns, indexes } = getTableConfig(pushSubscriptionTable);
+    const primaryColumns = columns.filter((column) => column.primary).map((column) => column.name);
+    expect(primaryColumns).toEqual(['endpoint']);
+    expect(indexes).toEqual([]);
   });
 
   it('keep one preference per member and category', () => {

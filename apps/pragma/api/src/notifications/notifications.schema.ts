@@ -1,12 +1,4 @@
-import {
-  boolean,
-  pgTable,
-  primaryKey,
-  text,
-  timestamp,
-  uniqueIndex,
-  uuid,
-} from 'drizzle-orm/pg-core';
+import { boolean, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { NOTIFICATION_CATEGORIES } from './notifications.core';
 
@@ -15,18 +7,13 @@ const DEVICE_KEY_MAX_LENGTH = 500;
 const SECURE_SCHEME_PREFIX = 'https://';
 
 // @FollowsBlueprint schema-dsql-constraints
-export const pushSubscriptionTable = pgTable(
-  'push_subscription',
-  {
-    id: uuid('id').primaryKey().defaultRandom(),
-    memberId: uuid('member_id').notNull(),
-    endpoint: text('endpoint').notNull(),
-    p256dh: text('p256dh').notNull(),
-    auth: text('auth').notNull(),
-    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
-  },
-  (table) => [uniqueIndex('push_subscription_endpoint_idx').on(table.endpoint)],
-);
+export const pushSubscriptionTable = pgTable('push_subscription', {
+  endpoint: text('endpoint').primaryKey(),
+  memberId: uuid('member_id').notNull(),
+  p256dh: text('p256dh').notNull(),
+  auth: text('auth').notNull(),
+  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull(),
+});
 
 export const notificationPreferenceTable = pgTable(
   'notification_preference',

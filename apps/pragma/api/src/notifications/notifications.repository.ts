@@ -9,10 +9,9 @@ import {
 } from './notifications.schema';
 
 export type PushSubscriptionRow = typeof pushSubscriptionTable.$inferSelect;
-export type PushSubscriptionInsertShape = Omit<PushSubscriptionRow, 'id'>;
+export type PushSubscriptionInsertShape = PushSubscriptionRow;
 
 const SUBSCRIPTION_PROJECTION = {
-  id: pushSubscriptionTable.id,
   memberId: pushSubscriptionTable.memberId,
   endpoint: pushSubscriptionTable.endpoint,
   p256dh: pushSubscriptionTable.p256dh,

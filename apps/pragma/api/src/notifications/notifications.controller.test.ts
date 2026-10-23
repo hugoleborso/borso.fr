@@ -19,6 +19,7 @@ import {
   VAPID_PUBLIC_KEY,
 } from '../../../test/push-utils';
 import { buildTakeObjectKey } from '../takes/takes.core';
+import { takeTable } from '../takes/takes.schema';
 import { hasClaimedDispatch } from './notifications.repository';
 import { notificationPreferenceTable, pushSubscriptionTable } from './notifications.schema';
 
@@ -153,6 +154,16 @@ describe('notifications controller (back-e2e)', () => {
       ]);
     });
 
+    it('keeps one subscription when a device subscribes twice at the same moment', async () => {
+      const hugo = await buildAuthenticatedApp('Hugo');
+      const answers = await Promise.all([
+        subscribeDevice(hugo, 'hugo-phone'),
+        subscribeDevice(hugo, 'hugo-phone'),
+      ]);
+      expect(answers.map((answer) => answer.status)).toEqual([201, 201]);
+      expect(await listStoredEndpoints()).toEqual([deviceEndpoint('hugo-phone')]);
+    });
+
     it('refuses an endpoint that is not https', async () => {
       const hugo = await buildAuthenticatedApp('Hugo');
       const response = await jsonRequest(hugo.app, '/api/notifications/subscriptions', {
@@ -264,6 +275,36 @@ describe('notifications controller (back-e2e)', () => {
       vi.useFakeTimers({ toFake: ['Date'] });
       vi.setSystemTime(Date.now() + ELEVEN_MINUTES_MILLISECONDS);
       expect((await sendTake()).status).toBe(201);
+      expect(send).toHaveBeenCalledTimes(3);
+    });
+
+    it('sends one round for a take two tabs send at the same moment', async () => {
+      configureVapidKeys();
+      const send = stubPushService();
+      const { hugo } = await buildBand();
+      const songId = await createSong(hugo);
+      const id = randomUUID();
+      const body = {
+        id,
+        objectKey: buildTakeObjectKey({ songId, takeId: id, contentType: 'audio/webm' }),
+        songId,
+        recordedAt: '2026-10-23T19:00:00.000Z',
+        durationSeconds: 232,
+        contentType: 'audio/webm',
+        source: 'live',
+        queued: true,
+      };
+      const sendTake = async () =>
+        await jsonRequest(hugo.app, '/api/takes', {
+          method: 'POST',
+          body,
+          cookieHeader: hugo.cookieHeader,
+        });
+
+      const answers = await Promise.all([sendTake(), sendTake()]);
+
+      expect(answers.map((answer) => answer.status)).toEqual([201, 201]);
+      expect(await testDatabase().select().from(takeTable)).toHaveLength(1);
       expect(send).toHaveBeenCalledTimes(3);
     });
 

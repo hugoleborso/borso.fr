@@ -35,17 +35,16 @@ CREATE INDEX IF NOT EXISTS "take_comment_take_created_idx" ON "take_comment" ("t
 --> statement-breakpoint
 -- One device of one member that accepted notifications. ADR-0040 keeps
 -- this table out of every preview clone, so a preview never pushes to the
--- band's phones.
+-- band's phones. The endpoint is the primary key, because DSQL builds a
+-- unique index asynchronously and two concurrent subscribes of the same
+-- device would otherwise both insert.
 CREATE TABLE IF NOT EXISTS "push_subscription" (
-	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
+	"endpoint" text PRIMARY KEY NOT NULL,
 	"member_id" uuid NOT NULL,
-	"endpoint" text NOT NULL,
 	"p256dh" text NOT NULL,
 	"auth" text NOT NULL,
 	"created_at" timestamp with time zone NOT NULL
 );
---> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "push_subscription_endpoint_idx" ON "push_subscription" ("endpoint");
 --> statement-breakpoint
 -- A missing row reads as enabled, so a member who turns push on for the
 -- first time needs no row per category.
