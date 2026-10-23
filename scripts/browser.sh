@@ -61,7 +61,7 @@ note() {
 }
 
 find_chromium() {
-  ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome 2>/dev/null | head -1
+  ls -d /opt/pw-browsers/chromium-*/chrome-linux*/chrome 2>/dev/null | head -1
 }
 
 DRIVE_STATE_DIR="${TMPDIR:-/tmp}/borso-browser-drives"
