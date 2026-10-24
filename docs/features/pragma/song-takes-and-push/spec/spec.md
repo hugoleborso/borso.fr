@@ -166,13 +166,15 @@ CREATE TABLE take (id uuid PRIMARY KEY, song_id uuid NOT NULL, session_id uuid, 
 CREATE INDEX ASYNC take_song_recorded_idx ON take (song_id, recorded_at);
 CREATE TABLE take_comment (id uuid PRIMARY KEY, take_id uuid NOT NULL, member_id uuid NOT NULL,
   body text NOT NULL, at_seconds integer, created_at timestamptz NOT NULL DEFAULT now());
-CREATE TABLE push_subscription (id uuid PRIMARY KEY, member_id uuid NOT NULL, endpoint text NOT NULL UNIQUE,
-  p256dh text NOT NULL, auth text NOT NULL, created_at timestamptz NOT NULL DEFAULT now());
+CREATE TABLE push_subscription (endpoint text PRIMARY KEY, member_id uuid NOT NULL,
+  p256dh text NOT NULL, auth text NOT NULL, created_at timestamptz NOT NULL);
 CREATE TABLE notification_preference (member_id uuid NOT NULL, category text NOT NULL, enabled boolean NOT NULL,
   PRIMARY KEY (member_id, category));
 CREATE TABLE notification_dispatch (group_key text PRIMARY KEY, last_sent_at timestamptz NOT NULL);
 CREATE TABLE vapid_key_pair (id integer PRIMARY KEY, public_key text NOT NULL, private_key text NOT NULL);
 ```
+
+`push_subscription` is keyed on the endpoint rather than on an id: DSQL builds a unique index asynchronously, so under an id key two subscribes of one device at the same moment would both insert.
 
 Previews clone prod's schema. `push_subscription` joins `tableBlocklist`, otherwise a preview would push to the band's real phones. `vapid_key_pair` joins it too, so a preview generates a pair of its own and never signs with production's. `take` and `take_comment` join it too, because their object keys point at prod's bucket, which a preview cannot read.
 
