@@ -11,7 +11,19 @@
 # It happened three times in one session while an agent wrote files through a
 # tool transport that turned a space into a NUL. Nothing in the repository
 # noticed, and the only thing that found it was `cat -A`.
+#
+# With paths as arguments it reads those files only, which is how pre-commit
+# calls it with the staged files; with none it reads every tracked file, which
+# is how CI calls it. The whole-tree read is about twelve seconds.
 set -euo pipefail
+
+list_subjects() {
+  if [ "$#" -gt 0 ]; then
+    printf '%s\n' "$@"
+  else
+    git ls-files
+  fi
+}
 
 failed=0
 while IFS= read -r path; do
@@ -23,7 +35,7 @@ while IFS= read -r path; do
     echo "  $path carries a NUL byte" >&2
     failed=1
   fi
-done < <(git ls-files)
+done < <(list_subjects "$@")
 
 if [ "$failed" -ne 0 ]; then
   echo >&2

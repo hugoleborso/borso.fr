@@ -1,15 +1,40 @@
 #!/usr/bin/env tsx
 
-import { lstatSync, readFileSync } from 'node:fs';
+import { existsSync, lstatSync, readFileSync } from 'node:fs';
 import { execFileSync } from 'node:child_process';
-import { dirname, join, normalize } from 'node:path';
+import { basename, dirname, join, normalize } from 'node:path';
 import { listBrokenLinks, type BrokenLink } from './doc-links.core';
 
 const REPOSITORY_ROOT = process.cwd();
 const LIST_FILES_BUFFER_BYTES = 16 * 1024 * 1024;
 const DATED_RECORD_SEGMENT = /\/(validation|runs)\//;
+const STAGED_FLAG = '--staged';
+const MARKDOWN_SUFFIX = '.md';
 
 const TEMPLATE_SUFFIX = '/template.md';
+
+const isStaged = process.argv.includes(STAGED_FLAG);
+
+function runGit(argumentsList: readonly string[], input?: string): string {
+  try {
+    return execFileSync('git', argumentsList, {
+      cwd: REPOSITORY_ROOT,
+      encoding: 'utf8',
+      maxBuffer: LIST_FILES_BUFFER_BYTES,
+      input,
+    });
+  } catch (error: unknown) {
+    if (typeof error === 'object' && error !== null && 'stdout' in error) {
+      const { stdout } = error;
+      if (typeof stdout === 'string') return stdout;
+    }
+    throw error;
+  }
+}
+
+function splitLines(output: string): readonly string[] {
+  return output.split('\n').filter((line) => line.length > 0);
+}
 
 function isDatedRecord(path: string): boolean {
   return DATED_RECORD_SEGMENT.test(path);
@@ -19,47 +44,70 @@ function isSymbolicLink(path: string): boolean {
   return lstatSync(join(REPOSITORY_ROOT, path)).isSymbolicLink();
 }
 
-function listDocuments(): readonly string[] {
-  return execFileSync('git', ['ls-files', '*.md'], { cwd: REPOSITORY_ROOT, encoding: 'utf8' })
-    .split('\n')
-    .filter((path) => path.length > 0)
-    .filter((path) => !isDatedRecord(path))
-    .filter((path) => !isSymbolicLink(path))
-    .filter((path) => !path.endsWith(TEMPLATE_SUFFIX));
+function isCheckedDocument(path: string): boolean {
+  return (
+    path.endsWith(MARKDOWN_SUFFIX) &&
+    existsSync(join(REPOSITORY_ROOT, path)) &&
+    !isDatedRecord(path) &&
+    !isSymbolicLink(path) &&
+    !path.endsWith(TEMPLATE_SUFFIX)
+  );
 }
 
 function listIgnoredFilesOnDisk(): readonly string[] {
-  return execFileSync('git', ['ls-files', '--others', '--ignored', '--exclude-standard'], {
-    cwd: REPOSITORY_ROOT,
-    encoding: 'utf8',
-    maxBuffer: LIST_FILES_BUFFER_BYTES,
-  })
-    .split('\n')
-    .filter((path) => path.length > 0);
+  return splitLines(runGit(['ls-files', '--others', '--ignored', '--exclude-standard']));
 }
 
-function buildTrackedPaths(): ReadonlySet<string> {
-  const tracked = new Set<string>();
-  const files = execFileSync('git', ['ls-files'], {
-    cwd: REPOSITORY_ROOT,
-    encoding: 'utf8',
-    maxBuffer: LIST_FILES_BUFFER_BYTES,
-  })
-    .split('\n')
-    .concat(listIgnoredFilesOnDisk());
-  for (const file of files) {
-    if (file.length === 0) continue;
-    tracked.add(file);
+function addWithParents(paths: Set<string>, file: string): void {
+  paths.add(file);
+  let directory = dirname(file);
+  while (directory !== '.') {
+    paths.add(directory);
+    directory = dirname(directory);
+  }
+}
+
+function buildPresentPaths(files: readonly string[]): ReadonlySet<string> {
+  const present = new Set<string>();
+  for (const file of files) addWithParents(present, file);
+  return present;
+}
+
+function listRemovedPaths(present: ReadonlySet<string>): readonly string[] {
+  const removed = new Set<string>();
+  for (const file of splitLines(
+    runGit(['diff', '--cached', '--name-only', '--no-renames', '--diff-filter=D']),
+  )) {
+    removed.add(file);
     let directory = dirname(file);
-    while (directory !== '.') {
-      tracked.add(directory);
+    while (directory !== '.' && !present.has(directory)) {
+      removed.add(directory);
       directory = dirname(directory);
     }
   }
-  return tracked;
+  return [...removed];
 }
 
-const trackedPaths = buildTrackedPaths();
+function listDocumentsNaming(removed: readonly string[]): readonly string[] {
+  if (removed.length === 0) return [];
+  const patterns = [...new Set(removed.map((path) => basename(path)))].flatMap((name) => [
+    '-e',
+    name,
+  ]);
+  return splitLines(runGit(['grep', '-l', '-F', ...patterns, '--', `*${MARKDOWN_SUFFIX}`]));
+}
+
+function listStagedDocuments(present: ReadonlySet<string>): readonly string[] {
+  const staged = splitLines(
+    runGit(['diff', '--cached', '--name-only', '--diff-filter=ACMR', '--', `*${MARKDOWN_SUFFIX}`]),
+  );
+  const naming = listDocumentsNaming(listRemovedPaths(present));
+  return [...new Set([...staged, ...naming])].filter(isCheckedDocument).sort();
+}
+
+function listAllDocuments(): readonly string[] {
+  return splitLines(runGit(['ls-files', `*${MARKDOWN_SUFFIX}`])).filter(isCheckedDocument);
+}
 
 const TRAILING_SEPARATOR = /\/+$/;
 
@@ -67,15 +115,41 @@ function withoutTrailingSeparator(path: string): string {
   return path.replace(TRAILING_SEPARATOR, '');
 }
 
-function isPresent(documentPath: string, target: string): boolean {
-  return trackedPaths.has(withoutTrailingSeparator(normalize(join(dirname(documentPath), target))));
+function resolveTarget(documentPath: string, target: string): string {
+  return withoutTrailingSeparator(normalize(join(dirname(documentPath), target)));
 }
 
-const broken: BrokenLink[] = [];
-for (const path of listDocuments()) {
-  const markdown = readFileSync(join(REPOSITORY_ROOT, path), 'utf8');
-  broken.push(...listBrokenLinks({ path, markdown }, isPresent));
+function selectJudgeable(broken: readonly BrokenLink[]): readonly BrokenLink[] {
+  if (broken.length === 0) return broken;
+  const ignored = new Set(
+    splitLines(
+      runGit(
+        ['check-ignore', '--no-index', '--stdin'],
+        broken.map((link) => resolveTarget(link.document, link.target)).join('\n'),
+      ),
+    ),
+  );
+  return broken.filter((link) => !ignored.has(resolveTarget(link.document, link.target)));
 }
+
+const trackedFiles = splitLines(runGit(['ls-files']));
+const presentPaths = buildPresentPaths(
+  isStaged ? trackedFiles : [...trackedFiles, ...listIgnoredFilesOnDisk()],
+);
+
+function isPresent(documentPath: string, target: string): boolean {
+  const resolved = resolveTarget(documentPath, target);
+  if (presentPaths.has(resolved)) return true;
+  return isStaged && existsSync(join(REPOSITORY_ROOT, resolved));
+}
+
+const documents = isStaged ? listStagedDocuments(presentPaths) : listAllDocuments();
+const found: BrokenLink[] = [];
+for (const path of documents) {
+  const markdown = readFileSync(join(REPOSITORY_ROOT, path), 'utf8');
+  found.push(...listBrokenLinks({ path, markdown }, isPresent));
+}
+const broken = isStaged ? selectJudgeable(found) : found;
 
 if (broken.length > 0) {
   for (const link of broken) {
@@ -88,4 +162,8 @@ if (broken.length > 0) {
   );
   process.exit(1);
 }
-console.log('[check-doc-links] every document link names a file that exists');
+console.log(
+  isStaged
+    ? `[check-doc-links] every link in the ${String(documents.length)} document(s) this commit touches names a file that exists`
+    : '[check-doc-links] every document link names a file that exists',
+);
