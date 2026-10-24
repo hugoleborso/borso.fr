@@ -315,9 +315,19 @@ Lives in: `api/src/instruments/`
   never sorted by name alone, because an alphabetical column hides an
   instrument changing hands, which is the whole point of the column.
 - Deleting an instrument removes its row and then every `member_instrument`
-  link naming it, in one transaction (`deleteInstrumentWithLinks`).
+  link naming it, in one retried transaction (`deleteInstrumentWithLinks`).
+- A reorder names every instrument, each once, or is refused as `stale`
+  (`isReorderOfTheSameIds`). It claims every named instrument row, reads
+  the ids again and writes every position in one transaction, which runs
+  again when Aurora DSQL aborts it at commit
+  (`runInOneInstrumentTransaction`). An instrument deleted before the claim
+  reaches it makes the reorder stale and moves nothing; one created at the
+  same moment keeps the position it was created with.
 
 Held by: `api/src/members/members.controller.test.ts` › removes the links of a deleted instrument from every member who played it
+Held by: `api/src/instruments/instruments.controller.test.ts` › refuses a reorder that does not name every instrument, with 409
+Held by: `api/src/instruments/instruments.controller.test.ts` › refuses a reorder naming an instrument deleted while it was being written, and moves nothing
+Held by: `api/src/instruments/instruments.controller.test.ts` › reorders once when the first commit loses a conflict on the claimed instruments
 
 ## Instrument family
 
@@ -721,7 +731,7 @@ Lives in: `api/src/setlists/`
   run (`removeEntryAndCompact`).
 - A reorder is refused as `stale` unless the submitted ids are exactly the
   ids already stored for that setlist, each once
-  (`isReorderOfTheSameEntries`).
+  (`isReorderOfTheSameIds`).
 - An append, a delete and a reorder each run in one transaction that first
   writes the setlist's own row (`didClaimSetlistWithin`), so two of them on
   one setlist cannot interleave: Postgres makes the second wait, and

@@ -1,30 +1,32 @@
-import type { InstrumentFamily, InstrumentIcon } from '@domain/instrument.core';
+import { isReorderOfTheSameIds } from '../helpers/ordering/reorder.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
-import { comparePositionThenName } from './instrument-players.core';
+import { comparePositionThenName, foldPlayersIntoInstruments } from './instrument-players.core';
 import {
   deleteInstrumentWithLinks,
+  didClaimInstrumentsWithin,
+  type InstrumentCreateInput,
   type InstrumentUpdates,
   type InstrumentWithPlayersRow,
   insertInstrument,
-  listInstrumentsWithPlayers,
+  listInstrumentIdsWithin,
+  listInstrumentPlayerLinks,
+  listInstruments,
   listPlayersOfInstrument,
-  setInstrumentPosition,
+  runInOneInstrumentTransaction,
+  setInstrumentPositionWithin,
   updateInstrument,
 } from './instruments.repository';
 
 export { didClaimInstrumentsWithin } from './instruments.repository';
 
 export async function getInstrumentsSorted(): Promise<InstrumentWithPlayersRow[]> {
-  const rows = await listInstrumentsWithPlayers();
-  return rows.toSorted(comparePositionThenName);
+  const [instruments, links] = await Promise.all([listInstruments(), listInstrumentPlayerLinks()]);
+  return foldPlayersIntoInstruments(instruments, links).toSorted(comparePositionThenName);
 }
 
-export async function createInstrument(input: {
-  name: string;
-  family: InstrumentFamily;
-  icon?: InstrumentIcon;
-  position?: number;
-}): Promise<InstrumentWithPlayersRow> {
+export async function createInstrument(
+  input: InstrumentCreateInput,
+): Promise<InstrumentWithPlayersRow> {
   return { ...(await insertInstrument(input)), players: [] };
 }
 
@@ -50,20 +52,25 @@ export async function patchInstrument(
 export type ReorderInstrumentsResult =
   { kind: 'ok'; instruments: InstrumentWithPlayersRow[] } | { kind: 'stale' };
 
+type InstrumentReorder = { kind: 'ok' } | { kind: 'stale' };
+
 export async function reorderInstruments(
   instrumentIds: readonly string[],
 ): Promise<ReorderInstrumentsResult> {
-  const existing = await listInstrumentsWithPlayers();
-  if (instrumentIds.length !== existing.length) return { kind: 'stale' };
-  const existingIds = new Set(existing.map((row) => row.id));
-  for (const instrumentId of instrumentIds) {
-    if (!existingIds.has(instrumentId)) return { kind: 'stale' };
-  }
-  for (let position = 0; position < instrumentIds.length; position += 1) {
-    const instrumentId = instrumentIds[position];
-    if (instrumentId === undefined) continue;
-    await setInstrumentPosition(instrumentId, position);
-  }
+  const reorder = await runInOneInstrumentTransaction(
+    async (executor): Promise<InstrumentReorder> => {
+      const areInstrumentsClaimed = await didClaimInstrumentsWithin(executor, instrumentIds);
+      if (!areInstrumentsClaimed) return { kind: 'stale' };
+      const existingIds = await listInstrumentIdsWithin(executor);
+      const isCurrent = isReorderOfTheSameIds(existingIds, instrumentIds);
+      if (!isCurrent) return { kind: 'stale' };
+      for (const [position, instrumentId] of instrumentIds.entries()) {
+        await setInstrumentPositionWithin(executor, instrumentId, position);
+      }
+      return { kind: 'ok' };
+    },
+  );
+  if (reorder.kind === 'stale') return reorder;
   return { kind: 'ok', instruments: await getInstrumentsSorted() };
 }
 

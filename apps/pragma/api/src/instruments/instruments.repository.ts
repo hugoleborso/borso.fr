@@ -1,4 +1,5 @@
 import { eq, inArray, sql } from 'drizzle-orm';
+import type { z } from 'zod';
 import {
   defaultPositionForFamily,
   type InstrumentFamily,
@@ -11,29 +12,29 @@ import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { memberInstrumentTable } from '../members/members.schema';
-import { foldPlayersIntoInstruments, type InstrumentPlayer } from './instrument-players.core';
-import { instrumentTable } from './instruments.schema';
+import type { InstrumentPlayer, InstrumentPlayerLink } from './instrument-players.core';
+import {
+  type createInstrumentSchema,
+  instrumentTable,
+  type updateInstrumentSchema,
+} from './instruments.schema';
 
-export interface InstrumentRow {
-  id: string;
-  name: string;
+type InstrumentRawRow = typeof instrumentTable.$inferSelect;
+
+export type InstrumentRow = Omit<
+  InstrumentRawRow,
+  'isHarmonic' | 'family' | 'icon' | 'position'
+> & {
   family: InstrumentFamily;
   icon: InstrumentIcon;
   position: number;
-}
+};
 
-export interface InstrumentWithPlayersRow extends InstrumentRow {
-  players: readonly InstrumentPlayer[];
-}
+export type InstrumentWithPlayersRow = InstrumentRow & { players: readonly InstrumentPlayer[] };
 
-interface InstrumentRawRow {
-  id: string;
-  name: string;
-  isHarmonic: boolean;
-  family: string | null;
-  icon: string | null;
-  position: number | null;
-}
+export type InstrumentCreateInput = z.infer<typeof createInstrumentSchema>;
+
+export type InstrumentUpdates = z.infer<typeof updateInstrumentSchema>;
 
 /**
  * @Blueprint repository-projection
@@ -60,6 +61,13 @@ function rowToInstrument(row: InstrumentRawRow): InstrumentRow {
   };
 }
 
+// @FollowsBlueprint repository-owned-transaction
+export async function runInOneInstrumentTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
+
 function encodeFamily(family: InstrumentFamily): { family: string; isHarmonic: boolean } {
   return { family, isHarmonic: family === 'harmonic' };
 }
@@ -70,27 +78,22 @@ export async function listInstruments(): Promise<InstrumentRow[]> {
   return rows.map((row) => rowToInstrument(row));
 }
 
-export async function listInstrumentsWithPlayers(): Promise<InstrumentWithPlayersRow[]> {
-  const database = getDatabase();
-  const [instrumentRows, linkRows] = await Promise.all([
-    listInstruments(),
-    database
-      .select({
-        instrumentId: memberInstrumentTable.instrumentId,
-        memberId: memberInstrumentTable.memberId,
-        isPrimary: memberInstrumentTable.isPrimary,
-      })
-      .from(memberInstrumentTable),
-  ]);
-  return foldPlayersIntoInstruments(instrumentRows, linkRows);
+export async function listInstrumentPlayerLinks(): Promise<InstrumentPlayerLink[]> {
+  return await getDatabase()
+    .select({
+      instrumentId: memberInstrumentTable.instrumentId,
+      memberId: memberInstrumentTable.memberId,
+      isPrimary: memberInstrumentTable.isPrimary,
+    })
+    .from(memberInstrumentTable);
 }
 
-export async function insertInstrument(input: {
-  name: string;
-  family: InstrumentFamily;
-  icon?: InstrumentIcon;
-  position?: number;
-}): Promise<InstrumentRow> {
+export async function listInstrumentIdsWithin(executor: DatabaseExecutor): Promise<string[]> {
+  const rows = await executor.select({ id: instrumentTable.id }).from(instrumentTable);
+  return rows.map((row) => row.id);
+}
+
+export async function insertInstrument(input: InstrumentCreateInput): Promise<InstrumentRow> {
   const database = getDatabase();
   const [row] = await database
     .insert(instrumentTable)
@@ -103,13 +106,6 @@ export async function insertInstrument(input: {
     .returning(PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return rowToInstrument(row);
-}
-
-export interface InstrumentUpdates {
-  name?: string;
-  family?: InstrumentFamily;
-  icon?: InstrumentIcon;
-  position?: number;
 }
 
 export async function updateInstrument(
@@ -142,9 +138,12 @@ export async function listPlayersOfInstrument(instrumentId: string): Promise<Ins
   return rows.map((row) => ({ memberId: row.memberId, isPrimary: row.isPrimary === true }));
 }
 
-export async function setInstrumentPosition(id: string, position: number): Promise<void> {
-  const database = getDatabase();
-  await database.update(instrumentTable).set({ position }).where(eq(instrumentTable.id, id));
+export async function setInstrumentPositionWithin(
+  executor: DatabaseExecutor,
+  id: string,
+  position: number,
+): Promise<void> {
+  await executor.update(instrumentTable).set({ position }).where(eq(instrumentTable.id, id));
 }
 
 export async function didClaimInstrumentsWithin(
@@ -162,17 +161,14 @@ export async function didClaimInstrumentsWithin(
 }
 
 export async function deleteInstrumentWithLinks(id: string): Promise<DeletionOutcome> {
-  return await retryingConflictAborts(
-    async () =>
-      await getDatabase().transaction(async (transaction) => {
-        const deleted = await transaction
-          .delete(instrumentTable)
-          .where(eq(instrumentTable.id, id))
-          .returning({ id: instrumentTable.id });
-        await transaction
-          .delete(memberInstrumentTable)
-          .where(eq(memberInstrumentTable.instrumentId, id));
-        return selectDeletionOutcome(deleted.length);
-      }),
-  );
+  return await runInOneInstrumentTransaction(async (transaction) => {
+    const deleted = await transaction
+      .delete(instrumentTable)
+      .where(eq(instrumentTable.id, id))
+      .returning({ id: instrumentTable.id });
+    await transaction
+      .delete(memberInstrumentTable)
+      .where(eq(memberInstrumentTable.instrumentId, id));
+    return selectDeletionOutcome(deleted.length);
+  });
 }

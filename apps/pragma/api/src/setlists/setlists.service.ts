@@ -1,11 +1,11 @@
 import type { z } from 'zod';
 import type { DatabaseExecutor } from '../database/client';
+import { isReorderOfTheSameIds } from '../helpers/ordering/reorder.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import { didClaimSessionWithin } from '../sessions/sessions.service';
 import {
   buildSetlistSummaries,
-  isReorderOfTheSameEntries,
   isSetlistRenamable,
   resolveSetlistKind,
   type SetlistSummary,
@@ -313,7 +313,7 @@ export async function reorderEntries(
     const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
     if (!isSetlistClaimed) return { kind: 'not-found' };
     const existingIds = await listEntryIdsInOrderWithin(executor, setlistId);
-    const isCurrent = isReorderOfTheSameEntries(existingIds, entryIds);
+    const isCurrent = isReorderOfTheSameIds(existingIds, entryIds);
     if (!isCurrent) return { kind: 'stale' };
     await writeEntryPositionsWithin(executor, entryIds);
     return { kind: 'ok' };
