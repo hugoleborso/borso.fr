@@ -20,6 +20,7 @@ export type ExternalSongHit = InferResponseType<
   200
 >['hits'][number];
 type SongByIdResponse = InferResponseType<(typeof api.api.songs)[':id']['$get']>;
+export type SongRecord = InferResponseType<(typeof api.api.songs)[':id']['$get'], 200>['song'];
 type SongCreateVariables = Parameters<typeof api.api.songs.$post>[0]['json'];
 type SongUpdateVariables = { id: string } & Parameters<
   (typeof api.api.songs)[':id']['$put']

@@ -1,43 +1,19 @@
 /** @Feature songs */
 
-import { SONG_TONALITY_MAX_LENGTH } from '@domain/input-limits.core';
-import { AlbumCover } from '../../components/atoms/AlbumCover';
 import type { JSX } from 'react';
-import { useMemo, useState } from 'react';
+import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSongLongPress } from '../../lib/song-long-press.hook';
-import { Link, useParams } from 'react-router-dom';
-import { Button } from '../../components/atoms/Button';
-import { Card } from '../../components/atoms/Card';
-import { composeClassName } from '../../components/atoms/class-name.utils';
-import { Icon } from '../../components/atoms/Icon';
-import { BackLink } from '../../components/molecules/BackLink';
-import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
+import { useParams } from 'react-router-dom';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
-import { LineupEditor, type LineupRecord } from '../../components/molecules/LineupEditor';
-import { toLineupPayload } from '../../components/molecules/lineup-editor.core';
-import { SongEmbed } from '../../components/molecules/SongEmbed';
-import { SongNotes } from '../../components/molecules/SongNotes';
-import { StatusChip } from '../../components/molecules/StatusChip';
-import { UploadedChartPreview } from '../../components/molecules/UploadedChartPreview';
-import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
-import { MasteryProgressChart } from '../../components/organisms/MasteryProgressChart';
-import { SongDetailSidebar } from '../../components/organisms/SongDetailSidebar';
-import { SongTakes } from '../../components/organisms/SongTakes';
-import { ApiError } from '../../lib/api.client';
-import { resolveEmbed } from '../../lib/embed.utils';
+import { SongDetail } from '../../components/organisms/SongDetail';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
 import { useMasteryOverridesOfSong } from '../../lib/queries/studies.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
-import { useDidLastSongWriteFail, useSong, useUpdateSong } from '../../lib/queries/songs.queries';
-import { useSignedChartUrl } from '../../lib/queries/uploads.queries';
-import { extractChartKind, selectChordProText } from './chart-kind.utils';
+import { useSong } from '../../lib/queries/songs.queries';
 import { selectMissingSongMessageKey } from './missing-song.core';
 import { buildEffectiveMasteryLookup, buildSongLineupRows } from './song-lineup.core';
-import { selectSongNoteSections } from './song-notes.core';
 import { useTakeSelection } from './take-selection.hook';
-import { buildTonalityLabel } from './tonality-label.utils';
 
 const NO_ROWS: readonly never[] = [];
 
@@ -50,16 +26,9 @@ export function SongDetailPage(): JSX.Element {
   const instrumentsQuery = useInstrumentsList();
   const masteryQuery = useMasteryDefaults();
   const songOverridesQuery = useMasteryOverridesOfSong(songId ?? '', songId !== undefined);
-  const updateSong = useUpdateSong();
-  const hasFailedWrite = useDidLastSongWriteFail(songId ?? '');
-  const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
   const { selectedTakeId, selectTake } = useTakeSelection();
 
   const song = songQuery.data?.song ?? null;
-  const chart = song?.chart ?? null;
-  const uploadedChart =
-    chart !== null && (chart.kind === 'pdf' || chart.kind === 'image') ? chart : null;
-  const signedChartUrlQuery = useSignedChartUrl(uploadedChart?.s3Key ?? null);
   const members = useMemo(() => membersQuery.data?.members ?? NO_ROWS, [membersQuery.data]);
   const instruments = useMemo(
     () => instrumentsQuery.data?.instruments ?? NO_ROWS,
@@ -85,32 +54,10 @@ export function SongDetailPage(): JSX.Element {
     () => buildEffectiveMasteryLookup(masteryDefaults, songOverrides),
     [masteryDefaults, songOverrides],
   );
-
   const lineupRows = useMemo(
     () => buildSongLineupRows(song?.defaultLineup ?? {}, members, instruments, masteryLookup),
     [song, members, instruments, masteryLookup],
   );
-
-  const lineupEditorMembers = useMemo(
-    () => members.map((member) => ({ id: member.id, name: member.firstName, color: member.color })),
-    [members],
-  );
-  const lineupEditorInstruments = useMemo(
-    () => instruments.map((instrument) => ({ id: instrument.id, name: instrument.name })),
-    [instruments],
-  );
-
-  const longPress = useSongLongPress({
-    title: song?.title ?? '',
-    artist: song?.artist ?? '',
-    deezerTrackId: song?.deezerTrackId ?? null,
-    spotifyTrackId: song?.spotifyTrackId ?? null,
-  });
-
-  const saveSongLineup = (lineup: LineupRecord | null): void => {
-    if (song === null) return;
-    updateSong.mutate({ id: song.id, defaultLineup: toLineupPayload(lineup) });
-  };
 
   if (isLoading) {
     return (
@@ -127,195 +74,15 @@ export function SongDetailPage(): JSX.Element {
     );
   }
 
-  const chartKind = extractChartKind(song.chart ?? null);
-  const chordProText = selectChordProText(song.chart ?? null);
-  const tonality = buildTonalityLabel(song.tonalityStart, song.tonalityEnd);
-  const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
-
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
-      <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
-
-      <header className="flex items-end justify-between gap-4 flex-wrap">
-        <div className="flex items-start gap-4 min-w-0 select-none" {...longPress}>
-          <AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="lg" />
-          <div className="min-w-0">
-            <div className="text-xs tracking-wider uppercase text-ink-500 mb-1">
-              {song.artist.length > 0 ? song.artist : t('catalog.crumb')}
-            </div>
-            <h1 className="font-display italic text-[40px] sm:text-[56px] leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 mb-2">
-              {song.title}
-            </h1>
-            <div className="flex items-center gap-2.5 text-[13px] text-ink-500 flex-wrap">
-              <span>{song.artist}</span>
-              {tonality === null ? null : (
-                <>
-                  <span className="text-ink-300">·</span>
-                  <span className="font-mono text-xs">
-                    {tonality.slice(0, SONG_TONALITY_MAX_LENGTH)}
-                  </span>
-                </>
-              )}
-              <span className="text-ink-300">·</span>
-              <StatusChip status={song.status} />
-              <span className="text-ink-300">·</span>
-              <ChartKindIcon kind={chartKind} />
-            </div>
-          </div>
-        </div>
-        <div className="flex items-center gap-2 flex-wrap">
-          <Link to={`/catalog/${song.id}/edit`}>
-            <Button variant="default" type="button">
-              <Icon name="edit" size={14} />
-              {t('common.edit')}
-            </Button>
-          </Link>
-          <Link to={`/catalog/${song.id}/scene`}>
-            <Button variant="accent" type="button">
-              <Icon name="play" size={14} />
-              {t('catalog.openScene')}
-            </Button>
-          </Link>
-        </div>
-      </header>
-
-      {hasSideLoadFailed ? (
-        <p className="text-danger text-sm" role="alert">
-          {t('common.loadFailed')}
-        </p>
-      ) : null}
-
-      {hasFailedWrite ? (
-        <p
-          className="text-danger text-sm border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
-          role="alert"
-        >
-          <Icon name="warn" size={14} />
-          {t('catalog.lastSaveFailed')}
-        </p>
-      ) : null}
-
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_280px] gap-6 items-start">
-        <div className="flex flex-col gap-4 min-w-0">
-          {chordProText === null ? null : (
-            <Card variant="bare">
-              <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
-                <Icon name="text" size={14} className="text-ink-500" />
-                <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
-                <span className="flex-1" />
-                <Link
-                  to={`/catalog/${song.id}/scene`}
-                  className="inline-flex items-center gap-1 min-h-11 px-2 -mr-1 rounded-md text-xs text-ink-500 hover:text-ink-900 no-underline"
-                >
-                  <Icon name="play" size={12} />
-                  {t('catalog.openScene')}
-                </Link>
-              </div>
-              <div className="p-4">
-                <ChordChartViewer source={chordProText} compact />
-              </div>
-            </Card>
-          )}
-
-          {uploadedChart === null ? null : (
-            <Card variant="bare">
-              <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
-                <Icon
-                  name={uploadedChart.kind === 'pdf' ? 'pdf' : 'image'}
-                  size={14}
-                  className="text-ink-500"
-                />
-                <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
-              </div>
-              <div className="p-4">
-                <UploadedChartPreview
-                  kind={uploadedChart.kind}
-                  objectKey={uploadedChart.s3Key}
-                  signedPreviewUrl={signedChartUrlQuery.data?.getUrl ?? null}
-                  errorMessage={
-                    signedChartUrlQuery.error instanceof ApiError
-                      ? signedChartUrlQuery.error.message
-                      : null
-                  }
-                />
-              </div>
-            </Card>
-          )}
-
-          <SongTakes
-            songId={song.id}
-            songTitle={song.title}
-            selectedTakeId={selectedTakeId}
-            onSelectTake={selectTake}
-          />
-
-          <SongNotesCard song={song} />
-
-          {song.links.length > 0 ? (
-            <Card>
-              <div className={composeClassName(labelClass, 'mb-2.5')}>
-                {t('catalog.linksTitle')}
-              </div>
-              <ul className="flex flex-col gap-2">
-                {song.links.map((link) => {
-                  const embed = resolveEmbed(link.url);
-                  return (
-                    <li
-                      key={link.url}
-                      className="bg-bg border border-line rounded-md p-2 flex items-start gap-2"
-                    >
-                      <div className="flex-1 min-w-0">
-                        <SongEmbed embed={embed} title={`${link.provider}-${link.url}`} />
-                        {link.comment.length > 0 ? (
-                          <div className="text-xs text-ink-500 mt-1">{link.comment}</div>
-                        ) : null}
-                      </div>
-                    </li>
-                  );
-                })}
-              </ul>
-            </Card>
-          ) : null}
-        </div>
-
-        <SongDetailSidebar
-          lineupRows={lineupRows}
-          baseEnergy={song.baseEnergy}
-          onEditDefaultLineup={() => setLineupEditorOpen(true)}
-        />
-      </div>
-      <MasteryProgressChart songId={song.id} members={members} instruments={instruments} />
-      <LineupEditor
-        open={lineupEditorOpen}
-        surface="song"
-        members={lineupEditorMembers}
-        instruments={lineupEditorInstruments}
-        currentLineup={song.defaultLineup}
-        onSave={(lineup) => saveSongLineup(lineup)}
-        onClose={() => setLineupEditorOpen(false)}
-      />
-    </section>
-  );
-}
-
-interface SongNotesCardProps {
-  readonly song: {
-    readonly structureNotes: string;
-    readonly gimmickNotes: string;
-    readonly notes: string;
-  };
-}
-
-function SongNotesCard({ song }: SongNotesCardProps): JSX.Element | null {
-  const { t } = useTranslation();
-  const sections = selectSongNoteSections(song);
-  if (sections.length === 0) return null;
-  return (
-    <Card>
-      <div className="text-xs tracking-wider uppercase text-ink-400 font-medium mb-2.5">
-        {t('catalog.notesTitle')}
-      </div>
-      <SongNotes song={song} />
-    </Card>
+    <SongDetail
+      song={song}
+      members={members}
+      instruments={instruments}
+      lineupRows={lineupRows}
+      hasSideLoadFailed={hasSideLoadFailed}
+      selectedTakeId={selectedTakeId}
+      onSelectTake={selectTake}
+    />
   );
 }

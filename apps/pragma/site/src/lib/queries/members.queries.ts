@@ -22,7 +22,8 @@ export const memberKeys = {
 };
 
 type MembersListResponse = InferResponseType<typeof api.api.members.$get>;
-type MemberRow = MembersListResponse['members'][number];
+export type ListedMember = MembersListResponse['members'][number];
+type MemberRow = ListedMember;
 type MemberInstrumentsResponse = InferResponseType<
   (typeof api.api.members)[':id']['instruments']['$get'],
   200
