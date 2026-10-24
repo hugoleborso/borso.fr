@@ -1,3 +1,4 @@
+import type { z } from 'zod';
 import { pickNextPaletteHex } from './member-palette.utils';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
@@ -14,25 +15,19 @@ import {
   updateMember,
 } from './members.repository';
 
+import type { createMemberSchema, updateMemberSchema } from './members.schema';
+
 export { findMemberById } from './members.repository';
+
+type MemberCreateInput = z.infer<typeof createMemberSchema>;
+type MemberUpdateInput = z.infer<typeof updateMemberSchema>;
 
 export async function getMembersSortedByFirstName(): Promise<MemberRow[]> {
   const rows = await listMembers();
   return rows.toSorted((left, right) => left.firstName.localeCompare(right.firstName));
 }
 
-export interface MemberContactInput {
-  phone?: string | null;
-  email?: string | null;
-}
-
-export async function createMember(
-  input: {
-    firstName: string;
-    color?: string;
-    avatarS3Key?: string | null;
-  } & MemberContactInput,
-): Promise<MemberRow> {
+export async function createMember(input: MemberCreateInput): Promise<MemberRow> {
   let color = input.color;
   if (color === undefined) {
     const existing = await listMembers();
@@ -50,7 +45,7 @@ export async function createMember(
 // @FollowsBlueprint service-crud-update
 export async function patchMember(
   id: string,
-  input: { firstName?: string; color?: string; avatarS3Key?: string | null } & MemberContactInput,
+  input: MemberUpdateInput,
 ): Promise<{ kind: 'ok'; member: MemberRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   const updates: Partial<MemberPersistedShape> = {};
   if (input.firstName !== undefined) updates.firstName = input.firstName;
