@@ -26,6 +26,10 @@ const device = vi.hoisted(() => ({
   subscribeToPush: vi.fn(),
 }));
 
+vi.mock('../../lib/display-mode.adapter', () => ({
+  readInstallContext: device.readInstallContext,
+}));
+
 vi.mock('../../lib/push-subscription.adapter', async (importOriginal) => ({
   ...(await importOriginal<object>()),
   ...device,

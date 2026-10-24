@@ -1,13 +1,7 @@
-/**
- * @DependsOnExternal browser-push-manager
- * @DependsOnExternal browser-media-query
- */
+/** @DependsOnExternal browser-push-manager */
 
 import { z } from 'zod';
-import {
-  isIosDevice,
-  type NotificationPermissionState,
-} from '../components/organisms/notifications-offer.core';
+import type { NotificationPermissionState } from '../components/organisms/notifications-offer.core';
 import { decodeBase64Url } from './vapid-key.utils';
 
 interface BrowserPushSubscription {
@@ -28,20 +22,6 @@ export interface PushEnvironment {
     };
   }>;
 }
-
-export interface DisplayEnvironment {
-  readonly userAgent: string;
-  readonly maxTouchPoints: number;
-  readonly isHomeScreenApp: boolean;
-  readonly matchesStandaloneDisplay: boolean;
-}
-
-export interface InstallContext {
-  readonly isIos: boolean;
-  readonly isStandalone: boolean;
-}
-
-const STANDALONE_DISPLAY_QUERY = '(display-mode: standalone)';
 
 const savedSubscriptionSchema = z.object({
   endpoint: z.string().min(1),
@@ -68,15 +48,6 @@ function readBrowserPushEnvironment(): PushEnvironment | null {
   };
 }
 
-export function readBrowserDisplayEnvironment(): DisplayEnvironment {
-  return {
-    userAgent: navigator.userAgent,
-    maxTouchPoints: navigator.maxTouchPoints,
-    isHomeScreenApp: 'standalone' in navigator && navigator.standalone === true,
-    matchesStandaloneDisplay: window.matchMedia(STANDALONE_DISPLAY_QUERY).matches,
-  };
-}
-
 // @FollowsBlueprint injected-browser-api
 export function isPushSupported(
   environment: PushEnvironment | null = readBrowserPushEnvironment(),
@@ -88,15 +59,6 @@ export function readNotificationPermission(
   environment: PushEnvironment | null = readBrowserPushEnvironment(),
 ): NotificationPermissionState {
   return environment?.notification.permission ?? 'default';
-}
-
-export function readInstallContext(
-  environment: DisplayEnvironment = readBrowserDisplayEnvironment(),
-): InstallContext {
-  return {
-    isIos: isIosDevice(environment.userAgent, environment.maxTouchPoints),
-    isStandalone: environment.isHomeScreenApp || environment.matchesStandaloneDisplay,
-  };
 }
 
 export async function readExistingPushSubscription(

@@ -10,7 +10,7 @@ import {
   type DisplayEnvironment,
   readBrowserDisplayEnvironment,
   readInstallContext,
-} from './push-subscription.adapter';
+} from './display-mode.adapter';
 
 export interface DeferredInstallPrompt {
   readonly prompt: () => Promise<unknown>;

@@ -4,10 +4,10 @@ import type { ParseKeys } from 'i18next';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ApiError } from '../../lib/api.client';
+import { readInstallContext } from '../../lib/display-mode.adapter';
 import {
   isPushSupported,
   NotificationPermissionRefusedError,
-  readInstallContext,
   readNotificationPermission,
 } from '../../lib/push-subscription.adapter';
 import {

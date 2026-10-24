@@ -1,6 +1,6 @@
 /** @Feature install-offer */
 
-import { isIosDevice } from '../components/organisms/notifications-offer.core';
+import { isIosDevice } from './device.utils';
 
 export type InstallChoice = 'accepted' | 'dismissed';
 
