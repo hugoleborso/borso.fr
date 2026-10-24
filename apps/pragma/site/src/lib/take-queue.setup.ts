@@ -14,7 +14,7 @@ import {
 } from './queries/takes.queries';
 import { queryClient } from './query-client.setup';
 import { readBrowserTakeQueueStorage } from './take-queue.adapter';
-import { buildQueuedTake, type TakeDraft } from './take-queue.core';
+import { buildQueuedTake, type QueueTakeOutcome, type TakeDraft } from './take-queue.core';
 import { createTakeQueue, type TakeTransportResult } from './take-queue.store';
 
 const ONLINE_EVENT = 'online';
@@ -54,8 +54,6 @@ export function startTakeQueue(): void {
     .catch((error: unknown) => console.warn({ surface: SURFACE, error }));
   window.addEventListener(ONLINE_EVENT, drainTakeQueue);
 }
-
-export type QueueTakeOutcome = 'queued' | 'quota-exceeded' | 'failed' | 'unplayable';
 
 export type TakeRecordingDetails = Omit<TakeDraft, 'id' | 'byteLength' | 'isOnline'>;
 

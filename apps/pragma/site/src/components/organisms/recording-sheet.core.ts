@@ -1,8 +1,7 @@
 /** @Feature takes */
 
 import { normalizeTakeContentType, takeFileExtensionOf } from '@domain/take-upload.core';
-
-export type NotSavedReason = 'quota-exceeded' | 'failed' | 'unplayable';
+import type { QueueTakeOutcome, TakeNotSavedReason } from '../../lib/take-queue.core';
 
 export interface TakeDownload {
   readonly url: string;
@@ -19,7 +18,7 @@ export type RecordingSheetPhase =
   | { readonly kind: 'interrupted' }
   | {
       readonly kind: 'not-saved';
-      readonly reason: NotSavedReason;
+      readonly reason: TakeNotSavedReason;
       readonly download: TakeDownload;
     };
 
@@ -57,7 +56,7 @@ const QUIET: RecordingSheetView = {
   download: null,
 };
 
-const NOT_SAVED_MESSAGE: Record<NotSavedReason, RecordingMessageKey> = {
+const NOT_SAVED_MESSAGE: Record<TakeNotSavedReason, RecordingMessageKey> = {
   'quota-exceeded': 'takes.recording.quotaExceeded',
   failed: 'takes.recording.queueFailed',
   unplayable: 'takes.recording.unplayable',
@@ -118,13 +117,11 @@ export function selectPhaseAfterStart(answer: RecordingStartAnswer): RecordingSh
   };
 }
 
-export type QueueingResult = 'queued' | NotSavedReason;
-
 export type RecordingEnd = 'stopped' | 'interrupted';
 
 export interface QueueingReport {
   readonly end: RecordingEnd;
-  readonly result: QueueingResult;
+  readonly result: QueueTakeOutcome;
   readonly songTitle: string;
   readonly contentType: string;
   readonly readDownloadUrl: () => string;

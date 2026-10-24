@@ -10,7 +10,7 @@ import {
   readAudioDurationMilliseconds,
   readBrowserAudioDurationEnvironment,
 } from '../../lib/recorder.adapter';
-import { roundDurationSeconds } from '../../lib/take-queue.core';
+import { roundDurationSeconds, type TakeNotSavedReason } from '../../lib/take-queue.core';
 import { queueTake } from '../../lib/take-queue.setup';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
@@ -22,7 +22,6 @@ import {
   selectPracticeOptions,
   selectQueueFailure,
   selectTakeFileMessage,
-  type TakeQueueing,
   type TakeUploadFormValues,
   takeUploadFormSchema,
   toDateTimeLocalValue,
@@ -40,13 +39,11 @@ const SELECT_CLASS = inputVariants({ size: 'md' });
 const AUDIO_ACCEPT = 'audio/*';
 const NO_SESSIONS: readonly never[] = [];
 
-type FailedQueueOutcome = Exclude<TakeQueueing, 'queued'>;
-
 const QUEUE_FAILURE_KEY = {
   'quota-exceeded': 'takes.recording.quotaExceeded',
   failed: 'takes.recording.queueFailed',
   unplayable: 'takes.recording.unplayable',
-} as const satisfies Record<FailedQueueOutcome, string>;
+} as const satisfies Record<TakeNotSavedReason, string>;
 
 // @FollowsBlueprint route-form
 export function TakeUploadForm({
@@ -59,7 +56,7 @@ export function TakeUploadForm({
   const sessionsQuery = useSessionsList();
   const sessions = sessionsQuery.data?.sessions ?? NO_SESSIONS;
   const practices = useMemo(() => selectPracticeOptions(sessions), [sessions]);
-  const [queueFailure, setQueueFailure] = useState<FailedQueueOutcome | null>(null);
+  const [queueFailure, setQueueFailure] = useState<TakeNotSavedReason | null>(null);
 
   const defaultValues: TakeUploadFormValues = {
     file: null,

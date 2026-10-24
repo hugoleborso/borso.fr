@@ -5,12 +5,16 @@ import {
   type TakeContentType,
   type TakeSource,
 } from '@domain/take-upload.core';
+import type { InferResponseType } from 'hono/client';
+import type { api } from './api.client';
 
-export interface SignedTakeUpload {
-  readonly uploadUrl: string;
-  readonly objectKey: string;
-  readonly expiresAt: string;
-}
+export type SignedTakeUpload = Readonly<InferResponseType<typeof api.api.takes.sign.$post, 200>>;
+
+export type TakeCreateBody = Parameters<typeof api.api.takes.$post>[0]['json'];
+
+export type TakeNotSavedReason = 'quota-exceeded' | 'failed' | 'unplayable';
+
+export type QueueTakeOutcome = 'queued' | TakeNotSavedReason;
 
 export interface QueuedTake {
   readonly id: string;
@@ -109,18 +113,6 @@ export function withFailure(take: QueuedTake): QueuedTake {
 
 export function withRetryRequested(take: QueuedTake): QueuedTake {
   return { ...take, hasFailed: false, upload: null };
-}
-
-export interface TakeCreateBody {
-  readonly id: string;
-  readonly objectKey: string;
-  readonly songId: string;
-  readonly sessionId: string | null;
-  readonly recordedAt: string;
-  readonly durationSeconds: number;
-  readonly contentType: TakeContentType;
-  readonly source: TakeSource;
-  readonly queued: boolean;
 }
 
 export function buildTakeCreateBody(take: QueuedTake, objectKey: string): TakeCreateBody {

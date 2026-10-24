@@ -11,6 +11,7 @@ import {
   useLocation,
   useNavigationType,
 } from 'react-router-dom';
+import type { TakeStepFailure } from '../lib/take-queue.core';
 import type { ErrorReportingSettings } from './error-reporting.core';
 
 type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
@@ -51,17 +52,12 @@ export function reportRenderFailure(
   Sentry.captureReactException(error, { componentStack });
 }
 
-export interface TakeUploadFailure {
-  readonly stage: 'sign' | 'put' | 'create';
-  readonly status: number | null;
-}
-
 const TAKE_UPLOAD_FAILED = 'TakeUploadFailed';
 const TAKE_QUEUE_WRITE_FAILED = 'TakeQueueWriteFailed';
 const TAKES_BREADCRUMB_CATEGORY = 'takes';
 const NO_STATUS = 'none';
 
-export function reportTakeUploadFailed(failure: TakeUploadFailure): void {
+export function reportTakeUploadFailed(failure: TakeStepFailure): void {
   Sentry.captureMessage(TAKE_UPLOAD_FAILED, {
     level: 'error',
     tags: { 'take.stage': failure.stage, 'take.status': String(failure.status ?? NO_STATUS) },

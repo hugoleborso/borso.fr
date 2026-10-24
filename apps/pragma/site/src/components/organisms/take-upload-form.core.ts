@@ -2,6 +2,7 @@
 
 import { type TakeFileCandidate, validateTakeFile } from '@domain/take-upload.core';
 import { z } from 'zod';
+import type { QueueTakeOutcome, TakeNotSavedReason } from '../../lib/take-queue.core';
 
 export interface PracticeCandidate {
   readonly id: string;
@@ -96,8 +97,6 @@ export function readSessionChoice(sessionId: string): string | null {
   return sessionId === '' ? null : sessionId;
 }
 
-export type TakeQueueing = 'queued' | 'quota-exceeded' | 'failed' | 'unplayable';
-
-export function selectQueueFailure(queueing: TakeQueueing): Exclude<TakeQueueing, 'queued'> | null {
+export function selectQueueFailure(queueing: QueueTakeOutcome): TakeNotSavedReason | null {
   return queueing === 'queued' ? null : queueing;
 }

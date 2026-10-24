@@ -1,9 +1,9 @@
 import { describe, expect, it } from 'vitest';
+import type { TakeNotSavedReason } from '../../lib/take-queue.core';
 import {
   buildTakeDownloadName,
   decidePhaseAfterQueueing,
   formatElapsedClock,
-  type NotSavedReason,
   type QueueingReport,
   selectPhaseAfterStart,
   selectRecordingSheetView,
@@ -23,7 +23,7 @@ const QUIET_VIEW = {
   download: null,
 };
 
-function viewOfNotSaved(reason: NotSavedReason) {
+function viewOfNotSaved(reason: TakeNotSavedReason) {
   return selectRecordingSheetView({ kind: 'not-saved', reason, download: DOWNLOAD });
 }
 
