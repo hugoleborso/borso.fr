@@ -68,7 +68,7 @@ function readBrowserPushEnvironment(): PushEnvironment | null {
   };
 }
 
-function readBrowserDisplayEnvironment(): DisplayEnvironment {
+export function readBrowserDisplayEnvironment(): DisplayEnvironment {
   return {
     userAgent: navigator.userAgent,
     maxTouchPoints: navigator.maxTouchPoints,

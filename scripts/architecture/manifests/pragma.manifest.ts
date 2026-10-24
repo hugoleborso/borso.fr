@@ -244,7 +244,7 @@ export const pragmaManifest: ArchitectureManifest = {
       name: 'localStorage',
       technology: 'Browser storage API',
       description:
-        'Holds the chosen locale and the marker saying this browser has signed in before. Never holds an authorisation.',
+        'Holds the chosen locale, the marker saying this browser has signed in before, and the marker saying the member dismissed the install banner on this device. Never holds an authorisation.',
       boundary: 'browser-platform',
       access: 'open',
     },
@@ -344,6 +344,16 @@ export const pragmaManifest: ArchitectureManifest = {
       technology: 'Browser Notification and Push APIs',
       description:
         "Asks the member for the notification permission and subscribes this device with the stage's VAPID public key, then the service worker shows each push in the device language and opens what changed when it is tapped. On an iPhone it only exists once pragma is installed on the home screen.",
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
+      id: 'browser-install-prompt',
+      icon: '📲',
+      name: 'Install prompt',
+      technology: 'Browser beforeinstallprompt and appinstalled events',
+      description:
+        "Keeps the install prompt Chrome on Android defers, so the install walkthrough can offer a real Install button that opens Chrome's own dialog. Safari on iOS has no such event, and the walkthrough there is drawn only.",
       boundary: 'browser-platform',
       access: 'open',
     },

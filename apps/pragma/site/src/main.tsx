@@ -10,12 +10,14 @@ import { App } from './App';
 import { AppErrorBoundary } from './components/organisms/AppErrorBoundary';
 import './i18n/i18n.setup';
 import './styles/tokens.css';
+import { captureInstallPrompt } from './lib/install-prompt.adapter';
 import { queryClient } from './lib/query-client.setup';
 import { startTakeQueue } from './lib/take-queue.setup';
 import { registerServiceWorker } from './sw/service-worker.setup';
 
 registerServiceWorker();
 startTakeQueue();
+captureInstallPrompt();
 
 /**
  * @Blueprint site-entrypoint
