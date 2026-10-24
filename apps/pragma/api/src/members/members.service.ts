@@ -17,7 +17,7 @@ import {
 
 import type { createMemberSchema, updateMemberSchema } from './members.schema';
 
-export { findMemberById } from './members.repository';
+export { didClaimMemberWithin, findMemberById } from './members.repository';
 
 type MemberCreateInput = z.infer<typeof createMemberSchema>;
 type MemberUpdateInput = z.infer<typeof updateMemberSchema>;

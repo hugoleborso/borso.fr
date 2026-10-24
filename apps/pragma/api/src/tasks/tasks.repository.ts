@@ -7,24 +7,11 @@ import { taskTable } from './tasks.schema';
 
 const taskStatusSchema = z.enum(TASK_STATUSES);
 
-export interface TaskRow {
-  id: string;
-  title: string;
-  notes: string;
-  status: TaskStatus;
-  assigneeId: string | null;
-  songId: string | null;
-  dueDate: Date | null;
-}
+type TaskTableRow = typeof taskTable.$inferSelect;
 
-export interface TaskPersistedShape {
-  title?: string;
-  notes?: string;
-  status?: TaskStatus;
-  assigneeId?: string | null;
-  songId?: string | null;
-  dueDate?: Date | null;
-}
+export type TaskRow = Omit<TaskTableRow, 'status'> & { status: TaskStatus };
+
+export type TaskPersistedShape = Partial<Omit<TaskRow, 'id'>>;
 
 // @FollowsBlueprint repository-projection
 const PROJECTION = {
@@ -37,16 +24,15 @@ const PROJECTION = {
   dueDate: taskTable.dueDate,
 } as const;
 
-function toTaskRow(row: {
-  id: string;
-  title: string;
-  notes: string;
-  status: string;
-  assigneeId: string | null;
-  songId: string | null;
-  dueDate: Date | null;
-}): TaskRow {
+function toTaskRow(row: TaskTableRow): TaskRow {
   return { ...row, status: taskStatusSchema.parse(row.status) };
+}
+
+// @FollowsBlueprint repository-owned-transaction
+export async function runInOneTaskTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await getDatabase().transaction(work);
 }
 
 export async function listTasks(): Promise<TaskRow[]> {
@@ -55,9 +41,11 @@ export async function listTasks(): Promise<TaskRow[]> {
   return rows.map(toTaskRow);
 }
 
-export async function insertTask(values: TaskPersistedShape): Promise<TaskRow> {
-  const database = getDatabase();
-  const [row] = await database
+export async function insertTaskWithin(
+  executor: DatabaseExecutor,
+  values: TaskPersistedShape,
+): Promise<TaskRow> {
+  const [row] = await executor
     .insert(taskTable)
     .values({
       title: values.title ?? '',
@@ -72,9 +60,12 @@ export async function insertTask(values: TaskPersistedShape): Promise<TaskRow> {
   return toTaskRow(row);
 }
 
-export async function updateTask(id: string, updates: TaskPersistedShape): Promise<TaskRow | null> {
-  const database = getDatabase();
-  const [row] = await database
+export async function updateTaskWithin(
+  executor: DatabaseExecutor,
+  id: string,
+  updates: TaskPersistedShape,
+): Promise<TaskRow | null> {
+  const [row] = await executor
     .update(taskTable)
     .set(updates)
     .where(eq(taskTable.id, id))

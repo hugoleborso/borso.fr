@@ -1,7 +1,14 @@
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  type LockHold,
+  runSecondWhileFirstWaitsOnHold,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
+import { taskTable } from './tasks.schema';
 
 const taskSchema = z.object({
   id: z.string().uuid(),
@@ -16,6 +23,15 @@ const singleTaskEnvelope = z.object({ task: taskSchema });
 const taskListEnvelope = z.object({ tasks: z.array(taskSchema) });
 
 const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
+
+function holdTaskRow(taskId: string): LockHold {
+  return async (transaction) =>
+    await transaction
+      .select({ id: taskTable.id })
+      .from(taskTable)
+      .where(eq(taskTable.id, taskId))
+      .for('update');
+}
 
 // @FollowsBlueprint test-back-e2e
 describe('tasks controller (back-e2e)', () => {
@@ -172,5 +188,42 @@ describe('tasks controller (back-e2e)', () => {
     const tasks = (await readJson(list, taskListEnvelope)).tasks;
     expect(tasks).toHaveLength(1);
     expect(tasks[0]).toMatchObject({ id: created.task.id, assigneeId: null });
+  });
+
+  it('never leaves a task assigned to a member deleted while the assignment was written', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const addMember = await jsonRequest(app, '/api/members', {
+      method: 'POST',
+      body: { firstName: 'Alma' },
+      cookieHeader,
+    });
+    const added = await readJson(addMember, z.object({ member: z.object({ id: z.string() }) }));
+    const create = await jsonRequest(app, '/api/tasks', {
+      method: 'POST',
+      body: { title: 'Buy strings' },
+      cookieHeader,
+    });
+    const created = await readJson(create, singleTaskEnvelope);
+
+    const [, removal] = await runSecondWhileFirstWaitsOnHold(
+      holdTaskRow(created.task.id),
+      async () =>
+        await jsonRequest(app, `/api/tasks/${created.task.id}`, {
+          method: 'PUT',
+          body: { assigneeId: added.member.id },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/members/${added.member.id}`, {
+          method: 'DELETE',
+          cookieHeader,
+        }),
+    );
+    expect(removal.status).toBe(200);
+
+    const stored = await testDatabase()
+      .select({ assigneeId: taskTable.assigneeId })
+      .from(taskTable);
+    expect(stored).toEqual([{ assigneeId: null }]);
   });
 });

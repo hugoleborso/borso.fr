@@ -1,4 +1,4 @@
-import { eq, inArray, isNotNull } from 'drizzle-orm';
+import { eq, inArray, isNotNull, sql } from 'drizzle-orm';
 import { deleteCredentialsOfMember } from '../auth/credentials.service';
 import { deleteCalendarFeedOfMember } from '../calendar-feeds/calendar-feeds.service';
 import { deleteVotesOfDeletedMember } from '../setlists/voting.service';
@@ -110,9 +110,25 @@ export async function updateMember(
   return row ?? null;
 }
 
+export async function didClaimMemberWithin(
+  executor: DatabaseExecutor,
+  memberId: string,
+): Promise<boolean> {
+  const claimed = await executor
+    .update(memberTable)
+    .set({ firstName: sql`${memberTable.firstName}` })
+    .where(eq(memberTable.id, memberId))
+    .returning({ id: memberTable.id });
+  return claimed.length > 0;
+}
+
 export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
   return await database.transaction(async (transaction) => {
+    const deleted = await transaction
+      .delete(memberTable)
+      .where(eq(memberTable.id, id))
+      .returning({ id: memberTable.id });
     await unassignBarsOwnedByMember(transaction, id);
     await scrubMemberFromSongDefaults(transaction, id);
     await scrubMemberFromSetlistOverrides(transaction, id);
@@ -124,10 +140,6 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await deleteScoreHistoryOfDeletedMember(transaction, id);
     await deleteStudiesOfDeletedMember(transaction, id);
     await deletePushStateOfDeletedMember(transaction, id);
-    const deleted = await transaction
-      .delete(memberTable)
-      .where(eq(memberTable.id, id))
-      .returning({ id: memberTable.id });
     return selectDeletionOutcome(deleted.length);
   });
 }

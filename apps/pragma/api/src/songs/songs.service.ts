@@ -10,7 +10,7 @@ import { notifyBand, type WriteActor } from '../notifications/notifications.serv
 import { deleteAudioOfDeletedSong } from '../takes/takes.service';
 import { hasLineupChanged } from './song-lineup.core';
 export type { SongRow } from './songs.repository';
-export { findSongById } from './songs.repository';
+export { didClaimSongWithin, findSongById } from './songs.repository';
 import {
   deleteSongWithCascade,
   findSongByDeezerTrackId,

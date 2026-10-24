@@ -1,6 +1,6 @@
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { resolveSongOrigin, type SongOrigin } from '@domain/song-origin.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
@@ -218,6 +218,18 @@ export async function updateSong(id: string, updates: SongPersistedShape): Promi
   return row === undefined ? null : rowToSong(row);
 }
 
+export async function didClaimSongWithin(
+  executor: DatabaseExecutor,
+  songId: string,
+): Promise<boolean> {
+  const claimed = await executor
+    .update(songTable)
+    .set({ title: sql`${songTable.title}` })
+    .where(eq(songTable.id, songId))
+    .returning({ id: songTable.id });
+  return claimed.length > 0;
+}
+
 export interface SongDeletion {
   readonly outcome: DeletionOutcome;
   readonly takeObjectKeys: readonly string[];
@@ -226,6 +238,10 @@ export interface SongDeletion {
 export async function deleteSongWithCascade(id: string): Promise<SongDeletion> {
   const database = getDatabase();
   return await database.transaction(async (transaction) => {
+    const deleted = await transaction
+      .delete(songTable)
+      .where(eq(songTable.id, id))
+      .returning({ id: songTable.id });
     await transaction.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
     await deleteScoreHistoryOfDeletedSong(transaction, id);
     await deleteStudiesOfDeletedSong(transaction, id);
@@ -233,10 +249,6 @@ export async function deleteSongWithCascade(id: string): Promise<SongDeletion> {
     await deleteVotesOfDeletedSong(transaction, id);
     await detachTasksOfSongBeingDeleted(transaction, id);
     const takeObjectKeys = await deleteTakesOfDeletedSong(transaction, id);
-    const deleted = await transaction
-      .delete(songTable)
-      .where(eq(songTable.id, id))
-      .returning({ id: songTable.id });
     return { outcome: selectDeletionOutcome(deleted.length), takeObjectKeys };
   });
 }

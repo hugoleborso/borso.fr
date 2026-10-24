@@ -851,10 +851,13 @@ Lives in: `api/src/tasks/`
 - `status` is one of `todo`, `doing`, `done` (`TASK_STATUSES` in
   `domain/task-status.core.ts`). Every status but `done` counts as open.
 - `assigneeId` and `songId` are both nullable, and neither carries a
-  foreign key, because DSQL has none. The service checks the member and
-  the song exist before the write; deleting a member nulls the assignee
-  out and deleting a song nulls the link out, in the same transaction
-  that deletes the row.
+  foreign key, because DSQL has none. A task names only a member and a
+  song that still exist: the write claims both rows in the same
+  transaction as the task, and is refused with `assignee-not-found` or
+  `song-not-found` when a claim finds no row. Deleting a member or a song
+  removes its row first and then nulls the tasks naming it, in one
+  transaction, so a task write that claimed the row first is nulled with
+  the rest.
 - The list comes back ordered by what is most urgent: in progress first,
   then waiting, then done; within a status, by the nearest due date, with
   a task carrying no date behind every dated one; then by title
@@ -862,6 +865,8 @@ Lives in: `api/src/tasks/`
 - The tasks screen draws one column per member, in the order the members
   come back, and adds an unclaimed column only when something is
   unassigned.
+
+Held by: `api/src/tasks/tasks.controller.test.ts` › never leaves a task assigned to a member deleted while the assignment was written
 
 Not to be confused with: a **setlist entry**, which is a decision about
 one song for one night rather than work owed by a person.
