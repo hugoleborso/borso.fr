@@ -60,6 +60,15 @@ describe('SongEditForm', () => {
     expect(within(alert).queryByRole('link')).toBeNull();
   });
 
+  it('shows a refused save beside the Save button rather than above the fields', () => {
+    renderForm({ failureMessage: null, takenTrack: { songId: HOLDER_ID, songTitle: 'Get Lucky' } });
+
+    const actions = screen.getByRole('alert').parentElement;
+    if (actions === null) throw new Error('the alert has no container');
+    expect(within(actions).getByRole('button', { name: 'Save' })).toBeDefined();
+    expect(within(actions).queryByRole('textbox')).toBeNull();
+  });
+
   it('shows no alert before a save is refused', () => {
     renderForm(NO_SAVE_REFUSAL);
 

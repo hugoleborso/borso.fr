@@ -118,16 +118,6 @@ export function SongEditForm({
         )}
       </form.Subscribe>
 
-      {refusal.failureMessage === null ? null : (
-        <p className="text-danger text-sm" role="alert">
-          {refusal.failureMessage}
-        </p>
-      )}
-
-      {refusal.takenTrack === null ? null : (
-        <DeezerTrackTakenNotice takenTrack={refusal.takenTrack} />
-      )}
-
       <form.Subscribe
         selector={(state) => [state.values.chartKind, state.values.chordproText] as const}
       >
@@ -297,13 +287,23 @@ export function SongEditForm({
           </SongLinkAdder>
 
           <StickyFormActions>
-            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-              {([canSubmit, isSubmitting]) => (
-                <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
-                  {t('common.save')}
-                </Button>
+            <div className="flex flex-col items-start gap-2 w-full">
+              {refusal.failureMessage === null ? null : (
+                <p className="text-danger text-sm" role="alert">
+                  {refusal.failureMessage}
+                </p>
               )}
-            </form.Subscribe>
+              {refusal.takenTrack === null ? null : (
+                <DeezerTrackTakenNotice takenTrack={refusal.takenTrack} />
+              )}
+              <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+                {([canSubmit, isSubmitting]) => (
+                  <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+                    {t('common.save')}
+                  </Button>
+                )}
+              </form.Subscribe>
+            </div>
           </StickyFormActions>
           {isNew ? null : <SongDeleteAction onDelete={onDelete} />}
         </form>
