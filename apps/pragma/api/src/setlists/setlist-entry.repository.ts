@@ -76,9 +76,9 @@ function encodeEntryUpdate(updates: SetlistEntryPersistedUpdate): EntryUpdateEnc
   };
 }
 
-export async function listEntryOwners(
-  setlistIds: readonly string[],
-): Promise<{ setlistId: string }[]> {
+type SetlistEntryOwner = Pick<SetlistEntryRawRow, 'setlistId'>;
+
+export async function listEntryOwners(setlistIds: readonly string[]): Promise<SetlistEntryOwner[]> {
   if (setlistIds.length === 0) return [];
   const database = getDatabase();
   return await database

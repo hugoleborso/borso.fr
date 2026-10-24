@@ -155,10 +155,10 @@ export async function deleteSetlistWithEntries(setlistId: string): Promise<Delet
   });
 }
 
-export interface SetlistSessionLink {
-  setlistId: string;
-  sessionId: string;
-}
+export type SetlistSessionLink = Pick<
+  typeof sessionSetlistTable.$inferSelect,
+  'setlistId' | 'sessionId'
+>;
 
 export async function listAllSessionLinks(): Promise<SetlistSessionLink[]> {
   const database = getDatabase();
