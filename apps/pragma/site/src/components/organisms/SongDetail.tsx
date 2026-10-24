@@ -4,7 +4,7 @@ import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import {
   type SongRecord,
-  useDidLastSongWriteFail,
+  useLastSongWriteFailure,
   useUpdateSong,
 } from '../../lib/queries/songs.queries';
 import type {
@@ -13,6 +13,7 @@ import type {
   SongLineupRow,
 } from '../../routes/catalog/song-lineup.core';
 import { Icon } from '../atoms/Icon';
+import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
 import { BackLink } from '../molecules/BackLink';
 import { LineupEditor, type LineupRecord } from '../molecules/LineupEditor';
 import { toLineupPayload } from '../molecules/lineup-editor.core';
@@ -39,7 +40,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
   const { song, members, instruments } = props;
   const { t } = useTranslation();
   const updateSong = useUpdateSong();
-  const hasFailedWrite = useDidLastSongWriteFail(song.id);
+  const lastWriteFailure = useLastSongWriteFailure(song.id);
   const [lineupEditorOpen, setLineupEditorOpen] = useState<boolean>(false);
 
   const lineupEditorMembers = useMemo(
@@ -67,7 +68,11 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
         </p>
       ) : null}
 
-      {hasFailedWrite ? (
+      {lastWriteFailure.takenTrack === null ? null : (
+        <DeezerTrackTakenNotice takenTrack={lastWriteFailure.takenTrack} />
+      )}
+
+      {lastWriteFailure.isGenericFailureShown ? (
         <p
           className="text-danger text-sm border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
           role="alert"

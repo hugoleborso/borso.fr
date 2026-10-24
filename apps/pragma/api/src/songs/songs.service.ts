@@ -5,7 +5,7 @@ import { readDeezerTrack, searchExternal, type SearchExternalOptions } from './d
 import { findCatalogueMatch } from './song-identity.core';
 import { resolveSpotifyTrackId, type ResolveSpotifyOptions } from './spotify.adapter';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
-import { isLostInsertRace } from '../helpers/persistence/conflict-abort.core';
+import { isLostInsertRace, isUniqueViolation } from '../helpers/persistence/conflict-abort.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import { deleteAudioOfDeletedSong } from '../takes/takes.service';
 import { hasLineupChanged } from './song-lineup.core';
@@ -71,11 +71,34 @@ async function withResolvedSpotifyTrack<Input extends SpotifyResolvable>(
   return { ...input, spotifyTrackId };
 }
 
+export interface DeezerTrackTaken {
+  readonly kind: 'deezer-track-taken';
+  readonly holder: SongRow;
+}
+
+export type SongCreateOutcome = { kind: 'ok'; song: SongRow } | DeezerTrackTaken;
+
+async function refuseTakenDeezerTrack(
+  error: unknown,
+  deezerTrackId: string | null | undefined,
+  writtenSongId: string | null,
+): Promise<DeezerTrackTaken> {
+  if (!isUniqueViolation(error) || deezerTrackId == null) throw error;
+  const holder = await findSongByDeezerTrackId(deezerTrackId);
+  if (holder === null || holder.id === writtenSongId) throw error;
+  return { kind: 'deezer-track-taken', holder };
+}
+
 export async function createSong(
   input: SongCreateInput,
   options: ResolveSpotifyOptions = {},
-): Promise<SongRow> {
-  return await insertSong(valuesFromCreate(await withResolvedSpotifyTrack(input, options)));
+): Promise<SongCreateOutcome> {
+  const values = valuesFromCreate(await withResolvedSpotifyTrack(input, options));
+  try {
+    return { kind: 'ok', song: await insertSong(values) };
+  } catch (error) {
+    return await refuseTakenDeezerTrack(error, values.deezerTrackId, null);
+  }
 }
 
 async function notifyIfLineupChanged(
@@ -101,10 +124,17 @@ export async function patchSong(
   input: SongUpdateInput,
   actor: WriteActor,
   options: ResolveSpotifyOptions = {},
-): Promise<{ kind: 'ok'; song: SongRow } | { kind: 'empty' } | { kind: 'not-found' }> {
+): Promise<
+  { kind: 'ok'; song: SongRow } | { kind: 'empty' } | { kind: 'not-found' } | DeezerTrackTaken
+> {
   if (Object.keys(input).length === 0) return { kind: 'empty' };
   const previous = input.defaultLineup === undefined ? null : await findSongById(id);
-  const song = await updateSong(id, await withResolvedSpotifyTrack(input, options));
+  let song: SongRow | null;
+  try {
+    song = await updateSong(id, await withResolvedSpotifyTrack(input, options));
+  } catch (error) {
+    return await refuseTakenDeezerTrack(error, input.deezerTrackId, id);
+  }
   if (song === null) return { kind: 'not-found' };
   await notifyIfLineupChanged(previous, song, actor);
   return { kind: 'ok', song };
@@ -140,7 +170,7 @@ export async function searchAudienceSongs(
 
 const SUGGESTED_SONG_STATUS = 'idea';
 
-async function insertSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
+async function insertSuggestedSong(track: ExternalSongHit): Promise<SongCreateOutcome> {
   return await createSong({
     title: track.title,
     artist: track.artist,
@@ -167,7 +197,8 @@ async function insertSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
 
 async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
   try {
-    return await insertSuggestedSong(track);
+    const outcome = await insertSuggestedSong(track);
+    return outcome.kind === 'ok' ? outcome.song : outcome.holder;
   } catch (error) {
     if (!isLostInsertRace(error)) throw error;
     const winner = await findSongByDeezerTrackId(track.deezerTrackId);

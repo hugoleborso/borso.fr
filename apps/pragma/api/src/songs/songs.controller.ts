@@ -45,8 +45,14 @@ export function buildSongsRouter() {
     })
     .post('/', zValidator('json', songCreateInputSchema), async (context) => {
       const input = context.req.valid('json');
-      const song = await createSong(input);
-      return context.json({ song }, 201);
+      const outcome = await createSong(input);
+      if (outcome.kind === 'deezer-track-taken') {
+        return context.json(
+          { error: outcome.kind, songId: outcome.holder.id, songTitle: outcome.holder.title },
+          409,
+        );
+      }
+      return context.json({ song: outcome.song }, 201);
     })
     .put(
       '/:id',
@@ -61,6 +67,16 @@ export function buildSongsRouter() {
         });
         if (updatedSong.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
         if (updatedSong.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        if (updatedSong.kind === 'deezer-track-taken') {
+          return context.json(
+            {
+              error: updatedSong.kind,
+              songId: updatedSong.holder.id,
+              songTitle: updatedSong.holder.title,
+            },
+            409,
+          );
+        }
         return context.json({ song: updatedSong.song });
       },
     )

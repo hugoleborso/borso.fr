@@ -136,8 +136,9 @@ async function seedSongs(
   const songIds: string[] = [];
   for (const seed of SEED_SONGS) {
     const lineup = buildSeedLineup(seed.lineup, memberIdByName, instrumentIdByName);
-    const song = await createSong(buildSongInput(seed, lineup));
-    songIds.push(song.id);
+    const created = await createSong(buildSongInput(seed, lineup));
+    if (created.kind !== 'ok') throw new Error(`seed song ${seed.title} names a taken track`);
+    songIds.push(created.song.id);
   }
   return songIds;
 }

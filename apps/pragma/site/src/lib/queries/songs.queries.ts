@@ -2,10 +2,15 @@
 
 import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
-import { ApiError, api, isResponseSuccessful } from '../api.client';
+import { ApiError, api, isResponseSuccessful, readErrorBody } from '../api.client';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 import { buildOptimisticSong, mergeSongUpdate } from './song-cache.core';
-import { didLastSongWriteFail, selectSongThatLostItsLastWrite } from './song-write-failure.core';
+import {
+  didLastSongWriteFail,
+  selectLastSongWriteError,
+  selectSongThatLostItsLastWrite,
+} from './song-write-failure.core';
+import { type LastSongWriteFailure, selectLastSongWriteFailure } from './song-save-refusal.core';
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -79,8 +84,13 @@ export function useCreateSong() {
     mutationKey: songKeys.all,
     mutationFn: async (variables: SongCreateVariables) => {
       const response = await api.api.songs.$post({ json: variables });
-      if (!isResponseSuccessful(response))
-        throw new ApiError(response.status, `create ${response.status}`, null);
+      if (!isResponseSuccessful(response)) {
+        throw new ApiError(
+          response.status,
+          `create ${response.status}`,
+          await readErrorBody(response),
+        );
+      }
       return response.json();
     },
     onMutate: async (variables) => {
@@ -130,7 +140,13 @@ export function useUpdateSong() {
         param: { id },
         json: rest,
       });
-      if (!response.ok) throw new ApiError(response.status, `update ${response.status}`, null);
+      if (!response.ok) {
+        throw new ApiError(
+          response.status,
+          `update ${response.status}`,
+          await readErrorBody(response),
+        );
+      }
       return response.json();
     },
     onMutate: async (variables) => {
@@ -172,8 +188,12 @@ export function useUpdateSong() {
   });
 }
 
-export function useDidLastSongWriteFail(songId: string): boolean {
-  return didLastSongWriteFail(useSongWrites(), songId);
+export function useLastSongWriteFailure(songId: string): LastSongWriteFailure {
+  const songWrites = useSongWrites();
+  return selectLastSongWriteFailure(
+    didLastSongWriteFail(songWrites, songId),
+    selectLastSongWriteError(songWrites, songId),
+  );
 }
 
 export function useSongThatLostItsLastWrite(): string | null {
@@ -186,6 +206,7 @@ function useSongWrites() {
     select: (mutation) => ({
       variables: mutation.state.variables,
       status: mutation.state.status,
+      error: mutation.state.error,
     }),
   });
 }

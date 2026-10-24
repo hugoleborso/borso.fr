@@ -116,6 +116,7 @@
     "crumb": "Répertoire",
     "deezerTrackId": "Identifiant Deezer",
     "deezerTrackIdPlaceholder": "ex. 67238735",
+    "deezerTrackTaken": "Ce titre Deezer appartient déjà à un autre morceau du catalogue :",
     "defaultLineup": "Lineup par défaut",
     "deleteConfirm": "Supprimer ce morceau ? Sa grille, ses notes et ses liens partent avec.",
     "duration": "Durée",

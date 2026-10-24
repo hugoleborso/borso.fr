@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { didLastSongWriteFail, selectSongThatLostItsLastWrite } from './song-write-failure.core';
+import {
+  didLastSongWriteFail,
+  selectLastSongWriteError,
+  selectSongThatLostItsLastWrite,
+} from './song-write-failure.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('didLastSongWriteFail', () => {
@@ -49,6 +53,42 @@ describe('didLastSongWriteFail', () => {
         'song-1',
       ),
     ).toBe(false);
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('selectLastSongWriteError', () => {
+  const refusal = new Error('update 409');
+
+  it('answers the error of the last write for this song when it failed', () => {
+    expect(
+      selectLastSongWriteError(
+        [
+          { variables: { id: 'song-1' }, status: 'success' },
+          { variables: { id: 'song-2' }, status: 'error', error: new Error('other song') },
+          { variables: { id: 'song-1' }, status: 'error', error: refusal },
+        ],
+        'song-1',
+      ),
+    ).toBe(refusal);
+  });
+
+  it('answers nothing once a later write for this song went through', () => {
+    expect(
+      selectLastSongWriteError(
+        [
+          { variables: { id: 'song-1' }, status: 'error', error: refusal },
+          { variables: { id: 'song-1' }, status: 'success' },
+        ],
+        'song-1',
+      ),
+    ).toBe(null);
+  });
+
+  it('answers nothing for a failed write that carries no error', () => {
+    expect(
+      selectLastSongWriteError([{ variables: { id: 'song-1' }, status: 'error' }], 'song-1'),
+    ).toBe(null);
   });
 });
 

@@ -6,6 +6,7 @@ import { z } from 'zod';
 interface SongWrite {
   readonly variables: unknown;
   readonly status: MutationStatus;
+  readonly error?: unknown;
 }
 
 const songWriteVariablesSchema = z.object({ id: z.string() });
@@ -23,6 +24,19 @@ export function didLastSongWriteFail(songWrites: readonly SongWrite[], songId: s
     hasFailed = songWrite.status === 'error';
   }
   return hasFailed;
+}
+
+// @FollowsBlueprint core-view-projection
+export function selectLastSongWriteError(
+  songWrites: readonly SongWrite[],
+  songId: string,
+): unknown {
+  let lastError: unknown = null;
+  for (const songWrite of songWrites) {
+    if (readSongId(songWrite.variables) !== songId) continue;
+    lastError = songWrite.status === 'error' ? (songWrite.error ?? null) : null;
+  }
+  return lastError;
 }
 
 // @FollowsBlueprint core-view-projection

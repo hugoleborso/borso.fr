@@ -37,6 +37,15 @@ const masteryOverrideSchema = z.object({
   score: z.number(),
 });
 const overridesEnvelope = z.object({ overrides: z.array(masteryOverrideSchema) });
+const deezerTrackTakenEnvelope = z.object({
+  error: z.literal('deezer-track-taken'),
+  songId: z.string().uuid(),
+  songTitle: z.string(),
+});
+
+const HELD_DEEZER_TRACK_ID = '67238735';
+const OTHER_DEEZER_TRACK_ID = '3135556';
+const CONFLICT = 409;
 
 // @FollowsBlueprint test-back-e2e
 describe('songs controller (back-e2e)', () => {
@@ -249,6 +258,68 @@ describe('songs controller (back-e2e)', () => {
       const response = await jsonRequest(app, '/api/songs/search?q=', { cookieHeader });
       expect(response.status).toBe(400);
     });
+  });
+
+  it('refuses a second song naming a Deezer track another song holds, and names the holder', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const createWithHeldTrack = (title: string) =>
+      jsonRequest(app, '/api/songs', {
+        method: 'POST',
+        body: { title, status: 'idea', deezerTrackId: HELD_DEEZER_TRACK_ID },
+        cookieHeader,
+      });
+    const holder = await readJson(await createWithHeldTrack('Get Lucky'), singleEnvelope);
+
+    const refused = await createWithHeldTrack('Get Lucky (again)');
+
+    expect(refused.status).toBe(CONFLICT);
+    expect(await readJson(refused, deezerTrackTakenEnvelope)).toEqual({
+      error: 'deezer-track-taken',
+      songId: holder.song.id,
+      songTitle: 'Get Lucky',
+    });
+    const listed = await readJson(
+      await jsonRequest(app, '/api/songs', { cookieHeader }),
+      listEnvelope,
+    );
+    expect(listed.songs.map((song) => song.id)).toEqual([holder.song.id]);
+  });
+
+  it('refuses moving a song onto a Deezer track another song holds, and lets a song keep its own', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const create = async (title: string, deezerTrackId: string) =>
+      readJson(
+        await jsonRequest(app, '/api/songs', {
+          method: 'POST',
+          body: { title, status: 'idea', deezerTrackId },
+          cookieHeader,
+        }),
+        singleEnvelope,
+      );
+    const holder = await create('Get Lucky', HELD_DEEZER_TRACK_ID);
+    const mover = await create('Around the World', OTHER_DEEZER_TRACK_ID);
+    const put = (songId: string, body: Record<string, unknown>) =>
+      jsonRequest(app, `/api/songs/${songId}`, { method: 'PUT', body, cookieHeader });
+
+    const refused = await put(mover.song.id, { deezerTrackId: HELD_DEEZER_TRACK_ID });
+    const kept = await put(holder.song.id, {
+      title: 'Get Lucky (radio edit)',
+      deezerTrackId: HELD_DEEZER_TRACK_ID,
+    });
+
+    expect(refused.status).toBe(CONFLICT);
+    expect(await readJson(refused, deezerTrackTakenEnvelope)).toEqual({
+      error: 'deezer-track-taken',
+      songId: holder.song.id,
+      songTitle: 'Get Lucky',
+    });
+    expect(kept.status).toBe(200);
+    expect((await readJson(kept, singleEnvelope)).song.title).toBe('Get Lucky (radio edit)');
+    const unmoved = await readJson(
+      await jsonRequest(app, `/api/songs/${mover.song.id}`, { cookieHeader }),
+      singleEnvelope,
+    );
+    expect(unmoved.song.deezerTrackId).toBe(OTHER_DEEZER_TRACK_ID);
   });
 
   it('returns 404 on get / update / delete of a missing id', async () => {

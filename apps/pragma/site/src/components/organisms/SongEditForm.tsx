@@ -23,12 +23,14 @@ import { SongLinkAdder } from '../molecules/SongLinkAdder';
 import { SongDeezerTrackIdField } from '../molecules/SongDeezerTrackIdField';
 import { SongExternalMetadataPanel } from '../molecules/SongExternalMetadataPanel';
 import { SongNotesFields } from '../molecules/SongNotesFields';
+import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
 import {
   applyExternalIdentityToDraft,
   applyExternalPickToDraft,
   detectProvider,
   type SongDraftState,
 } from '../../routes/catalog/song-draft.core';
+import type { SongSaveRefusal } from '../../lib/queries/song-save-refusal.core';
 
 interface SongEditFormProps {
   readonly isNew: boolean;
@@ -38,7 +40,7 @@ interface SongEditFormProps {
   readonly onDelete: () => void;
   readonly newLinkUrl: string;
   readonly setNewLinkUrl: (value: string) => void;
-  readonly error: string | null;
+  readonly refusal: SongSaveRefusal;
 }
 
 // @FollowsBlueprint route-form
@@ -50,7 +52,7 @@ export function SongEditForm({
   onDelete,
   newLinkUrl,
   setNewLinkUrl,
-  error,
+  refusal,
 }: SongEditFormProps): JSX.Element {
   const { t } = useTranslation();
   const form = useForm({
@@ -116,10 +118,14 @@ export function SongEditForm({
         )}
       </form.Subscribe>
 
-      {error === null ? null : (
+      {refusal.failureMessage === null ? null : (
         <p className="text-danger text-sm" role="alert">
-          {error}
+          {refusal.failureMessage}
         </p>
+      )}
+
+      {refusal.takenTrack === null ? null : (
+        <DeezerTrackTakenNotice takenTrack={refusal.takenTrack} />
       )}
 
       <form.Subscribe
