@@ -42,6 +42,19 @@ Opening a take shows a player, the comments that carry a moment as marks on the 
 
 **Account page.** A "Notifications" section has an "Enable on this device" button and four toggles: takes, comments, sessions, setlists and lineups and transitions. On an iPhone where pragma is not installed on the home screen, the section says that iOS only delivers push to an installed app, and how to install it.
 
+**Install banner** (amendment of 2026-10-24, asked by the operator). Push on an iPhone needs pragma installed on the home screen, and the installed app is the better experience on Android too. While pragma runs in a browser tab on a phone, a dismissible banner sits at the top of every signed-in page:
+
+```
+Install pragma as an app, for notifications and full screen   [Show me]  [×]
+```
+
+"Show me" opens a sheet with a short looping walkthrough drawn in code and animated with CSS only. It matches the device:
+
+- **iOS Safari:** tap Share → scroll → "Add to Home Screen" → Add.
+- **Android Chrome:** tap ⋮ → "Install app" (or "Add to Home screen") → Install. When Chrome has offered the `beforeinstallprompt` event, the sheet also shows a real **Install** button that opens Chrome's own prompt.
+
+The steps are captioned through i18n (fr, en). The banner never shows in the installed app, on a desktop browser, or after the member dismissed it on that device.
+
 ## Use cases / edge cases
 
 ```mermaid
@@ -80,6 +93,8 @@ sequenceDiagram
 3. A comment sent with the toggle off has no moment and sits in the thread only.
 
 **Edge cases**
+- The install banner shows only on a phone or tablet browser that is not running pragma installed (`display-mode: standalone`, or `navigator.standalone` on iOS); dismissing it is remembered on that device in local storage, and a storage that refuses the write only means the banner comes back next time.
+- An iOS browser other than Safari (Chrome, Firefox on iOS) shows the iOS walkthrough with a first step "open this page in Safari", because only Safari can add to the home screen there.
 - Takes sort by `recordedAt` descending, not by upload time, so a take uploaded a week late lands where it happened.
 - A take recorded offline shows "pending upload" on that device only; other members see it once it is created.
 - The queue retries when the application opens and on the browser's `online` event. iOS has no background sync, so a take waits for the next time the application is opened.
@@ -114,6 +129,7 @@ sequenceDiagram
 | Burst of setlist edits | group 10 min / every write / daily digest | One notification per setlist per 10 minutes. |
 | Preferences | per category / all or nothing | One toggle per category, all on when push is first enabled. |
 | How is push sent? | inline in the API Lambda / queue and worker Lambda | Inline, after the write commits, every send bounded by a timeout. Five or six members means a handful of sends per event; a queue is infrastructure with no matching need yet. Ratified in the ADR below. |
+| How to explain installing the app? | member films the system screens / animated walkthrough in code / annotated screenshots | Animated walkthrough in code, in a dismissible banner (2026-10-24). It is a drawing of the system menus, so it needs updating when Apple or Google change them. |
 | A member is deleted | keep their takes / delete them | Keep: takes are the band's history. Subscriptions and preferences go. |
 | Which recording format? | one fixed format / whatever the browser records | Whatever `MediaRecorder` produces (`audio/mp4` on Safari, `audio/webm` on Chromium). Both play in every browser the band uses; transcoding would need a server-side job. |
 
@@ -179,6 +195,8 @@ apps/pragma/VOCABULARY.md                                 // UPDATE
 ```
 
 ### Test strategy
+
+- **Install banner:** the platform and installed-mode decision is a pure `install-offer.utils.ts` at 100% coverage, reusing `isIosDevice`; visual validation at 375 px with an iPhone Safari user agent, an iPhone Chrome user agent and an Android Chrome user agent checks the matching walkthrough, checks the banner is absent at 1280 px desktop and under `display-mode: standalone` emulation, and checks it stays dismissed after a reload.
 
 - **Pure cores at 100% coverage and mutation-gated:** take ordering, comment moment validation, take object key, upload limits, recipient selection (author excluded, category off excluded), the 10-minute grouping rule taking `now` as a parameter, and the session preselection by nearest date.
 - **Back-end e2e on the local Postgres:** create, list newest first, delete with cascade; a song and a session deletion; the fan-out with the push adapter faked, asserting one send per eligible subscription, none to the author, deletion on 410, and a write that succeeds while the adapter throws.
