@@ -798,6 +798,14 @@ Lives in: `api/src/studies/`
 - Accepted only for an instrument the member holds in the song's default
   lineup or in a lineup override of one of its setlist entries.
 - A study never changes a score; the two are separate writes.
+- A study names only a song and an instrument that still exist: the write
+  claims both rows, reads the lineups and inserts in one retried
+  transaction, and is refused with `song-not-found` or
+  `instrument-not-found` when a claim finds no row.
+
+Held by: `api/src/studies/studies.controller.test.ts` › refuses a study of a song deleted while the study was being written
+Held by: `api/src/studies/studies.controller.test.ts` › refuses a study on an instrument deleted while the study was being written
+Held by: `api/src/studies/studies.controller.test.ts` › logs the study once when its first commit loses a conflict on the claimed song
 
 Not to be confused with: a **practice**, which is the band rehearsing
 together and is a kind of session.

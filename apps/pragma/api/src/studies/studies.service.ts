@@ -2,15 +2,20 @@ import type { Lineup } from '@domain/lineup.core';
 import type { DatabaseExecutor } from '../database/client';
 import { indexDefaultScores, indexOverrideScores } from '../mastery/mastery.core';
 import { getAllMasteryOverrides, getMasteryDefaults } from '../mastery/mastery.service';
-import { isKnownInstrument } from '../instruments/instruments.service';
+import { didClaimInstrumentsWithin } from '../instruments/instruments.service';
 import { getMembersSortedByFirstName } from '../members/members.service';
 import { getSessions } from '../sessions/sessions.service';
 import {
   getAllSetlists,
   getEntriesOfSetlists,
-  getEntriesOfSong,
+  getEntriesOfSongWithin,
 } from '../setlists/setlists.service';
-import { findSongById, getSongs, type SongRow } from '../songs/songs.service';
+import {
+  didClaimSongWithin,
+  findSongByIdWithin,
+  getSongs,
+  type SongRow,
+} from '../songs/songs.service';
 import { buildMemberStreaks, type MemberStreak } from './band-streaks.core';
 import {
   groupLineupsBySong,
@@ -24,13 +29,15 @@ import {
   deleteStudiesOfMember,
   deleteStudiesOfSong,
   deleteStudy,
-  insertStudyIfAbsent,
+  insertStudyIfAbsentWithin,
   listStudiesSince,
   listStudiesOfMemberSince,
+  runInOneStudyTransaction,
 } from './studies.repository';
 import type { StudyLogInput } from './studies.schema';
 import type {
   ConcertReadiness,
+  StudyRow,
   StudiesOverview,
   StudyUndoOutcome,
   StudyWriteOutcome,
@@ -58,8 +65,11 @@ async function readOwnLine(memberId: string, today: CalendarDay): Promise<Member
   };
 }
 
-async function readLineupsOfSong(song: SongRow): Promise<Lineup[]> {
-  const songEntries = await getEntriesOfSong(song.id);
+async function readLineupsOfSongWithin(
+  executor: DatabaseExecutor,
+  song: SongRow,
+): Promise<Lineup[]> {
+  const songEntries = await getEntriesOfSongWithin(executor, song.id);
   const lineupsWithOverrides = groupLineupsBySong(
     songEntries,
     new Map([[song.id, song.defaultLineup]]),
@@ -67,23 +77,36 @@ async function readLineupsOfSong(song: SongRow): Promise<Lineup[]> {
   return [song.defaultLineup, ...lineupsWithOverrides.flatMap((grouped) => grouped.lineups)];
 }
 
+type StudyRecording = { readonly kind: 'recorded' } | Exclude<StudyWriteOutcome, { kind: 'ok' }>;
+
+async function recordStudy(study: StudyRow, createdAt: Date): Promise<StudyRecording> {
+  return await runInOneStudyTransaction(async (executor): Promise<StudyRecording> => {
+    const isSongClaimed = await didClaimSongWithin(executor, study.songId);
+    if (!isSongClaimed) return { kind: 'song-not-found' };
+    const isInstrumentClaimed = await didClaimInstrumentsWithin(executor, [study.instrumentId]);
+    if (!isInstrumentClaimed) return { kind: 'instrument-not-found' };
+    const song = await findSongByIdWithin(executor, study.songId);
+    if (song === null) return { kind: 'song-not-found' };
+    const lineups = await readLineupsOfSongWithin(executor, song);
+    if (!hasInstrumentInAnyLineup(lineups, study.memberId, study.instrumentId)) {
+      return { kind: 'study-not-in-lineup' };
+    }
+    await insertStudyIfAbsentWithin(executor, study, createdAt);
+    return { kind: 'recorded' };
+  });
+}
+
 // @FollowsBlueprint service-clock-injected
 export async function logStudy(command: StudyCommand): Promise<StudyWriteOutcome> {
-  const song = await findSongById(command.songId);
-  if (song === null) return { kind: 'song-not-found' };
-  if (!(await isKnownInstrument(command.instrumentId))) return { kind: 'instrument-not-found' };
-  const lineups = await readLineupsOfSong(song);
-  if (!hasInstrumentInAnyLineup(lineups, command.memberId, command.instrumentId)) {
-    return { kind: 'study-not-in-lineup' };
-  }
   const today = parisCalendarDay(command.now);
-  const study = {
+  const study: StudyRow = {
     memberId: command.memberId,
     songId: command.songId,
     instrumentId: command.instrumentId,
     studiedOn: today,
   };
-  await insertStudyIfAbsent(study, command.now);
+  const recording = await recordStudy(study, command.now);
+  if (recording.kind !== 'recorded') return recording;
   return { kind: 'ok', study, myLine: await readOwnLine(command.memberId, today) };
 }
 

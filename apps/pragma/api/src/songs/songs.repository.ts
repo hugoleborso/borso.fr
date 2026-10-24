@@ -187,8 +187,14 @@ export async function listSongsNewestFirst(): Promise<SongRow[]> {
 }
 
 export async function findSongById(id: string): Promise<SongRow | null> {
-  const database = getDatabase();
-  const rows = await database
+  return await findSongByIdWithin(getDatabase(), id);
+}
+
+export async function findSongByIdWithin(
+  executor: DatabaseExecutor,
+  id: string,
+): Promise<SongRow | null> {
+  const rows = await executor
     .select(PROJECTION)
     .from(songTable)
     .where(eq(songTable.id, id))

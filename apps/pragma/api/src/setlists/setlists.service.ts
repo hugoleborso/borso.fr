@@ -17,7 +17,7 @@ import {
   insertEntryWithin,
   listEntries,
   listEntriesOfSetlists,
-  listEntriesOfSong,
+  listEntriesOfSongWithin,
   listEntryIdsInOrderWithin,
   listEntryOwners,
   type SetlistEntryRow,
@@ -223,8 +223,11 @@ export async function getEntries(setlistId: string): Promise<SetlistEntryRow[]> 
   return await listEntries(setlistId);
 }
 
-export async function getEntriesOfSong(songId: string): Promise<SetlistEntryRow[]> {
-  return await listEntriesOfSong(songId);
+export async function getEntriesOfSongWithin(
+  executor: DatabaseExecutor,
+  songId: string,
+): Promise<SetlistEntryRow[]> {
+  return await listEntriesOfSongWithin(executor, songId);
 }
 
 export async function getEntriesOfSetlists(

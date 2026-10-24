@@ -1,7 +1,13 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  abortCommitsWritingTable,
+  holdWritesToTable,
+  runSecondWhileFirstWaitsOnHold,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { masteryScoreChangeTable } from '../mastery/mastery.schema';
 import { studyTable } from './studies.schema';
 
@@ -362,5 +368,63 @@ describe('studies controller (back-e2e)', () => {
 
     expect(await testDatabase().select().from(studyTable)).toHaveLength(0);
     expect(await testDatabase().select().from(masteryScoreChangeTable)).toHaveLength(0);
+  });
+
+  it('refuses a study of a song deleted while the study was being written', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
+    const [deletion, study] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable('study'),
+      async () =>
+        await jsonRequest(app, `/api/songs/${songId}`, { method: 'DELETE', cookieHeader }),
+      async () =>
+        await jsonRequest(app, '/api/studies', {
+          method: 'POST',
+          body: { songId, instrumentId },
+          cookieHeader,
+        }),
+    );
+    expect(deletion.status).toBe(200);
+    expect(study.status).toBe(404);
+    expect(await testDatabase().select().from(studyTable)).toEqual([]);
+  });
+
+  it('refuses a study on an instrument deleted while the study was being written', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
+    const [deletion, study] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable('member_instrument'),
+      async () =>
+        await jsonRequest(app, `/api/instruments/${instrumentId}`, {
+          method: 'DELETE',
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, '/api/studies', {
+          method: 'POST',
+          body: { songId, instrumentId },
+          cookieHeader,
+        }),
+    );
+    expect(deletion.status).toBe(200);
+    expect(study.status).toBe(404);
+    expect(await testDatabase().select().from(studyTable)).toEqual([]);
+  });
+
+  it('logs the study once when its first commit loses a conflict on the claimed song', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
+    const removeSimulatedConflict = await abortCommitsWritingTable('song', 1);
+    try {
+      const study = await jsonRequest(app, '/api/studies', {
+        method: 'POST',
+        body: { songId, instrumentId },
+        cookieHeader,
+      });
+      expect(study.status).toBe(201);
+    } finally {
+      await removeSimulatedConflict();
+    }
+    expect(await testDatabase().select().from(studyTable)).toHaveLength(1);
   });
 });
