@@ -6,18 +6,11 @@ import { detachTakesOfDeletedSession } from '../takes/takes.service';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
 
-export interface SessionRow {
-  id: string;
-  kind: string;
-  date: Date;
-  preparedConcertId: string | null;
-  venue: string | null;
-  capacity: number | null;
-  gear: string | null;
-  friendsCountPerMember: unknown;
-}
-
 type SessionRawRow = Omit<typeof sessionTable.$inferSelect, 'origin'>;
+
+export type SessionRow = Omit<SessionRawRow, 'friendsCountPerMember'> & {
+  friendsCountPerMember: unknown;
+};
 
 // @FollowsBlueprint repository-projection
 const PROJECTION = {

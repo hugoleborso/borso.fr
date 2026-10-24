@@ -27,80 +27,26 @@ export type SongLink = z.infer<typeof songExternalLinkSchema>;
 export type SongChart = z.infer<typeof chordChartSchema>;
 export type SongDefaultLineup = z.infer<typeof defaultLineupSchema>;
 
-export interface SongRow {
-  id: string;
-  title: string;
-  artist: string;
+type SongTableRow = typeof songTable.$inferSelect;
+
+interface SongDecodedColumns {
   status: SongStatus;
   origin: SongOrigin;
   links: SongLink[];
   chart: SongChart | null;
-  tonalityStart: string | null;
-  tonalityEnd: string | null;
   defaultLineup: SongDefaultLineup;
-  baseEnergy: number | null;
-  deezerTrackId: string | null;
-  deezerAlbumId: string | null;
-  spotifyTrackId: string | null;
-  album: string | null;
-  durationSeconds: number | null;
   isrcs: string[];
   tags: string[];
   structureNotes: string;
   gimmickNotes: string;
   notes: string;
-  createdAt: Date;
 }
 
-export interface SongInsertShape {
-  title: string;
-  artist: string;
-  status: SongStatus;
-  origin: SongOrigin;
-  links: SongLink[];
-  chart: SongChart | null;
-  tonalityStart: string | null;
-  tonalityEnd: string | null;
-  defaultLineup: SongDefaultLineup;
-  baseEnergy: number | null;
-  deezerTrackId: string | null;
-  deezerAlbumId: string | null;
-  spotifyTrackId: string | null;
-  album: string | null;
-  durationSeconds: number | null;
-  isrcs: string[];
-  tags: string[];
-  structureNotes: string;
-  gimmickNotes: string;
-  notes: string;
-}
+export type SongRow = Omit<SongTableRow, keyof SongDecodedColumns> & SongDecodedColumns;
+
+export type SongInsertShape = Omit<SongRow, 'id' | 'createdAt'>;
 
 export type SongPersistedShape = Partial<SongInsertShape>;
-
-interface SongRawRow {
-  id: string;
-  title: string;
-  artist: string;
-  status: string;
-  origin: string | null;
-  links: string;
-  chart: string | null;
-  tonalityStart: string | null;
-  tonalityEnd: string | null;
-  defaultLineup: string;
-  baseEnergy: number | null;
-  deezerTrackId: string | null;
-  deezerAlbumId: string | null;
-  spotifyTrackId: string | null;
-  album: string | null;
-  durationSeconds: number | null;
-  isrcs: string | null;
-  tags: string | null;
-  structureNotes: string | null;
-  gimmickNotes: string | null;
-  notes: string | null;
-  createdAt: Date;
-}
 
 // @FollowsBlueprint repository-projection
 const PROJECTION = {
@@ -140,7 +86,7 @@ function parseJsonArrayColumn<T>(raw: string | null, schema: z.ZodSchema<T[]>): 
  * @BlueprintUsage Use for a column holding json as text, which is what Aurora DSQL forces because it has no jsonb type.
  * @BlueprintDescription Decodes every text-encoded column in one place: `JSON.parse` into a value annotated `unknown`, then a Zod schema that narrows it, which is why no type assertion is needed. `encodeInsert` and `encodeUpdate` are the matching write side, so the encoded string never leaves this file.
  */
-function rowToSong(row: SongRawRow): SongRow {
+function rowToSong(row: SongTableRow): SongRow {
   const linksRaw: unknown = JSON.parse(row.links);
   const chartRaw: unknown = row.chart === null ? null : JSON.parse(row.chart);
   const defaultLineupRaw: unknown = JSON.parse(row.defaultLineup);

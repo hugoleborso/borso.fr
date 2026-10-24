@@ -23,14 +23,7 @@ import {
 } from '@domain/instrument.core';
 import { memberInstrumentTable, memberTable } from './members.schema';
 
-export interface MemberRow {
-  id: string;
-  firstName: string;
-  color: string;
-  avatarS3Key: string | null;
-  phone: string | null;
-  email: string | null;
-}
+export type MemberRow = typeof memberTable.$inferSelect;
 
 export interface MemberInstrumentRow {
   id: string;
@@ -95,13 +88,7 @@ export async function findMemberById(id: string): Promise<MemberRow | null> {
   return rows[0] ?? null;
 }
 
-export interface MemberPersistedShape {
-  firstName: string;
-  color: string;
-  avatarS3Key: string | null;
-  phone: string | null;
-  email: string | null;
-}
+export type MemberPersistedShape = Omit<MemberRow, 'id'>;
 
 export async function insertMember(values: MemberPersistedShape): Promise<MemberRow> {
   const database = getDatabase();
