@@ -6,7 +6,7 @@ import {
   SONG_TEXT_FIELD_MAX_LENGTH,
   SONG_TONALITY_MAX_LENGTH,
 } from '@domain/input-limits.core';
-import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { integer, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS } from '@domain/song-origin.core';
@@ -15,30 +15,34 @@ export const SONG_STATUSES = ['idea', 'wip', 'rehearsed', 'concert_ready'] as co
 export const LINK_PROVIDERS = ['spotify', 'deezer', 'youtube', 'other'] as const;
 
 // @FollowsBlueprint schema-table-and-input
-export const songTable = pgTable('song', {
-  id: uuid('id').primaryKey().defaultRandom(),
-  title: text('title').notNull(),
-  artist: text('artist').notNull().default(''),
-  status: text('status').notNull(),
-  origin: text('origin'),
-  links: text('links').notNull().default('[]'),
-  chart: text('chart'),
-  tonalityStart: text('tonality_start'),
-  tonalityEnd: text('tonality_end'),
-  defaultLineup: text('default_lineup').notNull().default('{}'),
-  baseEnergy: integer('base_energy'),
-  deezerTrackId: text('deezer_track_id'),
-  deezerAlbumId: text('deezer_album_id'),
-  spotifyTrackId: text('spotify_track_id'),
-  album: text('album'),
-  durationSeconds: integer('duration_seconds'),
-  isrcs: text('isrcs'),
-  tags: text('tags'),
-  structureNotes: text('structure_notes'),
-  gimmickNotes: text('gimmick_notes'),
-  notes: text('notes'),
-  createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
-});
+export const songTable = pgTable(
+  'song',
+  {
+    id: uuid('id').primaryKey().defaultRandom(),
+    title: text('title').notNull(),
+    artist: text('artist').notNull().default(''),
+    status: text('status').notNull(),
+    origin: text('origin'),
+    links: text('links').notNull().default('[]'),
+    chart: text('chart'),
+    tonalityStart: text('tonality_start'),
+    tonalityEnd: text('tonality_end'),
+    defaultLineup: text('default_lineup').notNull().default('{}'),
+    baseEnergy: integer('base_energy'),
+    deezerTrackId: text('deezer_track_id'),
+    deezerAlbumId: text('deezer_album_id'),
+    spotifyTrackId: text('spotify_track_id'),
+    album: text('album'),
+    durationSeconds: integer('duration_seconds'),
+    isrcs: text('isrcs'),
+    tags: text('tags'),
+    structureNotes: text('structure_notes'),
+    gimmickNotes: text('gimmick_notes'),
+    notes: text('notes'),
+    createdAt: timestamp('created_at', { withTimezone: true, mode: 'date' }).notNull().defaultNow(),
+  },
+  (table) => [uniqueIndex('song_deezer_track_id_unique').on(table.deezerTrackId)],
+);
 
 const LINK_COMMENT_MAX = 2_048;
 const S3_KEY_MAX = 512;

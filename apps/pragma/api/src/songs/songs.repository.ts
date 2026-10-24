@@ -190,6 +190,17 @@ export async function findSongById(id: string): Promise<SongRow | null> {
   return row === undefined ? null : rowToSong(row);
 }
 
+export async function findSongByDeezerTrackId(deezerTrackId: string): Promise<SongRow | null> {
+  const database = getDatabase();
+  const rows = await database
+    .select(PROJECTION)
+    .from(songTable)
+    .where(eq(songTable.deezerTrackId, deezerTrackId))
+    .limit(1);
+  const row = rows[0];
+  return row === undefined ? null : rowToSong(row);
+}
+
 export async function insertSong(values: SongInsertShape): Promise<SongRow> {
   const database = getDatabase();
   const [row] = await database.insert(songTable).values(encodeInsert(values)).returning(PROJECTION);

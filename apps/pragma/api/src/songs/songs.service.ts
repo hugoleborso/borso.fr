@@ -5,6 +5,7 @@ import { readDeezerTrack, searchExternal, type SearchExternalOptions } from './d
 import { findCatalogueMatch } from './song-identity.core';
 import { resolveSpotifyTrackId, type ResolveSpotifyOptions } from './spotify.adapter';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
+import { isLostInsertRace } from '../helpers/persistence/conflict-abort.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import { deleteAudioOfDeletedSong } from '../takes/takes.service';
 import { hasLineupChanged } from './song-lineup.core';
@@ -12,6 +13,7 @@ export type { SongRow } from './songs.repository';
 export { findSongById } from './songs.repository';
 import {
   deleteSongWithCascade,
+  findSongByDeezerTrackId,
   findSongById,
   insertSong,
   listSongsNewestFirst,
@@ -138,7 +140,7 @@ export async function searchAudienceSongs(
 
 const SUGGESTED_SONG_STATUS = 'idea';
 
-async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
+async function insertSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
   return await createSong({
     title: track.title,
     artist: track.artist,
@@ -161,6 +163,17 @@ async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
     gimmickNotes: '',
     notes: '',
   });
+}
+
+async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
+  try {
+    return await insertSuggestedSong(track);
+  } catch (error) {
+    if (!isLostInsertRace(error)) throw error;
+    const winner = await findSongByDeezerTrackId(track.deezerTrackId);
+    if (winner === null) throw error;
+    return winner;
+  }
 }
 
 export type TrackResolution =

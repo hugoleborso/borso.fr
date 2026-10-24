@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest';
 import {
   CONFLICTED_WRITE_MAX_ATTEMPTS,
   isConflictAbort,
+  isLostInsertRace,
+  isUniqueViolation,
   isWorthRetrying,
 } from './conflict-abort.core';
 
@@ -21,6 +23,33 @@ describe('isConflictAbort', () => {
     expect(isConflictAbort({ cause: new Error('no code') })).toBe(false);
     expect(isConflictAbort(new Error('timeout'))).toBe(false);
     expect(isConflictAbort('OC000')).toBe(false);
+  });
+});
+
+describe('isUniqueViolation', () => {
+  it('reads a duplicate key on the error or on its cause as a unique violation', () => {
+    expect(isUniqueViolation({ code: '23505' })).toBe(true);
+    expect(isUniqueViolation({ message: 'wrapped', cause: { code: '23505' } })).toBe(true);
+  });
+
+  it('reads anything else as something other than a unique violation', () => {
+    expect(isUniqueViolation({ code: 'OC000' })).toBe(false);
+    expect(isUniqueViolation({ code: 'OC000', cause: { code: '23505' } })).toBe(false);
+    expect(isUniqueViolation({ cause: new Error('no code') })).toBe(false);
+    expect(isUniqueViolation('23505')).toBe(false);
+  });
+});
+
+describe('isLostInsertRace', () => {
+  it('reads a duplicate key or a commit conflict as an insert another writer won', () => {
+    expect(isLostInsertRace({ code: '23505' })).toBe(true);
+    expect(isLostInsertRace({ cause: { code: 'OC000' } })).toBe(true);
+    expect(isLostInsertRace({ code: '40001' })).toBe(true);
+  });
+
+  it('reads any other failure as one no re-read can answer', () => {
+    expect(isLostInsertRace({ code: '23502' })).toBe(false);
+    expect(isLostInsertRace(new Error('timeout'))).toBe(false);
   });
 });
 

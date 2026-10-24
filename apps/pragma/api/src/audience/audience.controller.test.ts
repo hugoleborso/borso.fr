@@ -12,6 +12,7 @@ const ANOTHER_BALLOT = 'b'.repeat(48);
 const UNAUTHORISED = 401;
 const ROUND_DURATION_MS = 30_000;
 const SETTLEMENT_TEST_TIMEOUT_MS = 90_000;
+const SIMULTANEOUS_SUGGESTION_COUNT = 2;
 
 const roundSchema = z.object({
   id: z.string().uuid(),
@@ -220,6 +221,22 @@ function stubProviders(...tracks: readonly ProviderTrack[]): void {
   vi.stubGlobal('fetch', (url: string) =>
     Promise.resolve(providerResponse(selectProviderPayload(url, tracks))),
   );
+}
+
+function stubProvidersReleasingTrackReadsTogether(
+  heldReadCount: number,
+  ...tracks: readonly ProviderTrack[]
+): void {
+  const heldReads: (() => void)[] = [];
+  vi.stubGlobal('fetch', async (url: string) => {
+    if (url.includes('/track/')) {
+      await new Promise<void>((release) => {
+        heldReads.push(release);
+        if (heldReads.length === heldReadCount) for (const held of heldReads) held();
+      });
+    }
+    return providerResponse(selectProviderPayload(url, tracks));
+  });
 }
 
 // @FollowsBlueprint test-back-e2e
@@ -665,6 +682,28 @@ describe('audience controller (back-e2e)', () => {
     );
     expect(state.state.pool.map((entry) => entry.songId)).toEqual([body.song.id]);
     expect(state.state.pool.map((entry) => entry.isSuggestion)).toEqual([true]);
+  });
+
+  it('imports one song when two audience members suggest the same unknown track at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const before = await countCatalogSongs(app, cookieHeader);
+    await openRoundOn(app, cookieHeader, sessionId);
+    stubProvidersReleasingTrackReadsTogether(SIMULTANEOUS_SUGGESTION_COUNT, UNKNOWN_SONG_TRACK);
+
+    const suggest = (ballotToken: string) =>
+      jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
+        method: 'POST',
+        extraHeaders: ballotHeaders(ballotToken),
+        body: { trackId: UNKNOWN_SONG_TRACK.trackId },
+      });
+    const [first, second] = await Promise.all([suggest(A_BALLOT), suggest(ANOTHER_BALLOT)]);
+
+    expect([first.status, second.status]).toEqual([201, 201]);
+    const firstSong = (await readJson(first, suggestedSongEnvelope)).song;
+    const secondSong = (await readJson(second, suggestedSongEnvelope)).song;
+    expect(secondSong.id).toBe(firstSong.id);
+    expect(await countCatalogSongs(app, cookieHeader)).toBe(before + 1);
   });
 
   it(

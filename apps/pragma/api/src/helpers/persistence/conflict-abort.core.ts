@@ -1,6 +1,7 @@
 import { z } from 'zod';
 
 const CONFLICT_ABORT_CODES: ReadonlySet<string | null> = new Set<string | null>(['OC000', '40001']);
+const UNIQUE_VIOLATION_CODES: ReadonlySet<string | null> = new Set<string | null>(['23505']);
 
 export const CONFLICTED_WRITE_MAX_ATTEMPTS = 3;
 
@@ -12,13 +13,25 @@ function readErrorCode(error: unknown): string | null {
   return withCode.success ? withCode.data.code : null;
 }
 
-// @FollowsBlueprint helper-module
-export function isConflictAbort(error: unknown): boolean {
+function hasCodeAmong(error: unknown, codes: ReadonlySet<string | null>): boolean {
   const ownCode = readErrorCode(error);
-  if (ownCode !== null) return CONFLICT_ABORT_CODES.has(ownCode);
+  if (ownCode !== null) return codes.has(ownCode);
   const withCause = causeSchema.safeParse(error);
   if (!withCause.success) return false;
-  return CONFLICT_ABORT_CODES.has(readErrorCode(withCause.data.cause));
+  return codes.has(readErrorCode(withCause.data.cause));
+}
+
+// @FollowsBlueprint helper-module
+export function isConflictAbort(error: unknown): boolean {
+  return hasCodeAmong(error, CONFLICT_ABORT_CODES);
+}
+
+export function isUniqueViolation(error: unknown): boolean {
+  return hasCodeAmong(error, UNIQUE_VIOLATION_CODES);
+}
+
+export function isLostInsertRace(error: unknown): boolean {
+  return isUniqueViolation(error) || isConflictAbort(error);
 }
 
 export function isWorthRetrying(error: unknown, attempt: number): boolean {

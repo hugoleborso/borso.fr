@@ -1,3 +1,4 @@
+import { getTableConfig } from 'drizzle-orm/pg-core';
 import { describe, expect, it } from 'vitest';
 import {
   chordChartSchema,
@@ -8,6 +9,7 @@ import {
   songIdParamSchema,
   songIsrcsRowSchema,
   songLinksRowSchema,
+  songTable,
   songTagsRowSchema,
   songUpdateInputSchema,
 } from './songs.schema';
@@ -150,5 +152,16 @@ describe('songIdParamSchema', () => {
   it('accepts a uuid and refuses anything else', () => {
     expect(songIdParamSchema.safeParse({ id: crypto.randomUUID() }).success).toBe(true);
     expect(songIdParamSchema.safeParse({ id: 'song-1' }).success).toBe(false);
+  });
+});
+
+describe('songTable', () => {
+  it('holds one song per Deezer track with a unique index on the track id', () => {
+    const [trackIndex] = getTableConfig(songTable).indexes;
+    expect(trackIndex?.config.name).toBe('song_deezer_track_id_unique');
+    expect(trackIndex?.config.unique).toBe(true);
+    expect(
+      trackIndex?.config.columns.map((column) => ('name' in column ? column.name : '')),
+    ).toEqual(['deezer_track_id']);
   });
 });
