@@ -12,6 +12,7 @@ import {
 import {
   abortCommitsWritingTable,
   holdWritesToTable,
+  type LockHold,
   runSecondWhileFirstWaitsOnHold,
   testDatabase,
   truncateAllTables,
@@ -143,6 +144,15 @@ async function postComment(
     body,
     cookieHeader: band.cookieHeader,
   });
+}
+
+function holdTakeRow(takeId: string): LockHold {
+  return async (transaction) =>
+    await transaction
+      .select({ id: takeTable.id })
+      .from(takeTable)
+      .where(eq(takeTable.id, takeId))
+      .for('update');
 }
 
 function stubStorage(answer: () => Promise<unknown>) {
@@ -435,6 +445,24 @@ describe('takes controller (back-e2e)', () => {
       expect(response.status).toBe(404);
     });
 
+    it('deletes the take once when its first commit loses a conflict', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const takeId = await createTake(band, { id: randomUUID(), songId });
+      stubObjectDeletion();
+      const removeSimulatedConflict = await abortCommitsWritingTable('take', 1);
+      try {
+        const response = await jsonRequest(band.app, `/api/takes/${takeId}`, {
+          method: 'DELETE',
+          cookieHeader: band.cookieHeader,
+        });
+        expect(response.status).toBe(200);
+      } finally {
+        await removeSimulatedConflict();
+      }
+      expect(await listTakes(band, songId)).toEqual([]);
+    });
+
     it('still deletes the take when the audio cannot be deleted, and reports it', async () => {
       const band = await buildAuthenticatedApp();
       const songId = await createSong(band);
@@ -522,6 +550,38 @@ describe('takes controller (back-e2e)', () => {
         cookieHeader: band.cookieHeader,
       });
       expect(listed.status).toBe(404);
+    });
+
+    it('leaves no comment on a take deleted while the comment was being written', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const takeId = await createTake(band, { id: randomUUID(), songId });
+      stubObjectDeletion();
+      const [deletion] = await runSecondWhileFirstWaitsOnHold(
+        holdWritesToTable('take'),
+        async () =>
+          await jsonRequest(band.app, `/api/takes/${takeId}`, {
+            method: 'DELETE',
+            cookieHeader: band.cookieHeader,
+          }),
+        async () => await postComment(band, takeId, { body: 'the bass comes in late' }),
+      );
+      expect(deletion.status).toBe(200);
+      expect(await testDatabase().select().from(takeCommentTable)).toEqual([]);
+    });
+
+    it('writes one comment when its first commit loses a conflict', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const takeId = await createTake(band, { id: randomUUID(), songId });
+      const removeSimulatedConflict = await abortCommitsWritingTable('take_comment', 1);
+      try {
+        const creation = await postComment(band, takeId, { body: 'the bass comes in late' });
+        expect(creation.status).toBe(201);
+      } finally {
+        await removeSimulatedConflict();
+      }
+      expect(await testDatabase().select().from(takeCommentTable)).toHaveLength(1);
     });
 
     it('edits a comment’s body and moment, and refuses a moment past the end', async () => {
@@ -634,6 +694,24 @@ describe('takes controller (back-e2e)', () => {
       expect(readDeletedObjectKeys(send).toSorted()).toEqual(
         [`take/${songId}/${firstTake}.webm`, `take/${songId}/${secondTake}.webm`].toSorted(),
       );
+    });
+
+    it('leaves no comment on a take whose song is deleted while the comment was being written', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const takeId = await createTake(band, { id: randomUUID(), songId });
+      stubObjectDeletion();
+      const [, deletion] = await runSecondWhileFirstWaitsOnHold(
+        holdTakeRow(takeId),
+        async () => await postComment(band, takeId, { body: 'the bass comes in late' }),
+        async () =>
+          await jsonRequest(band.app, `/api/songs/${songId}`, {
+            method: 'DELETE',
+            cookieHeader: band.cookieHeader,
+          }),
+      );
+      expect(deletion.status).toBe(200);
+      expect(await testDatabase().select().from(takeCommentTable)).toEqual([]);
     });
 
     it('deleting a song with no take reaches no storage', async () => {

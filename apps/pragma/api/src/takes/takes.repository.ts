@@ -1,5 +1,5 @@
 import { TAKE_CONTENT_TYPES } from '@domain/take-upload.core';
-import { and, count, desc, eq, inArray, type SQL } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, type SQL, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
@@ -56,6 +56,8 @@ const COMMENT_PROJECTION = {
 
 type TakeRawRow = Omit<TakeView, 'contentType'> & { readonly contentType: string };
 
+export type ClaimedTake = Pick<typeof takeTable.$inferSelect, 'id' | 'songId' | 'durationSeconds'>;
+
 // @FollowsBlueprint repository-row-mapper
 function rowToTake(row: TakeRawRow): TakeView {
   return { ...row, contentType: takeContentTypeSchema.parse(row.contentType) };
@@ -103,6 +105,22 @@ export async function findTake(id: string): Promise<TakeView | null> {
   return row === undefined ? null : rowToTake(row);
 }
 
+export async function findClaimedTakeWithin(
+  executor: DatabaseExecutor,
+  id: string,
+): Promise<ClaimedTake | null> {
+  const [claimed] = await executor
+    .update(takeTable)
+    .set({ objectKey: sql`${takeTable.objectKey}` })
+    .where(eq(takeTable.id, id))
+    .returning({
+      id: takeTable.id,
+      songId: takeTable.songId,
+      durationSeconds: takeTable.durationSeconds,
+    });
+  return claimed ?? null;
+}
+
 export async function listTakesOfSongNewestFirst(songId: string): Promise<TakeView[]> {
   const rows = await selectTakesWithCommentCounts(
     getDatabase(),
@@ -112,12 +130,12 @@ export async function listTakesOfSongNewestFirst(songId: string): Promise<TakeVi
 }
 
 export async function deleteTakeWithComments(id: string): Promise<string | null> {
-  return await getDatabase().transaction(async (transaction) => {
-    await transaction.delete(takeCommentTable).where(eq(takeCommentTable.takeId, id));
+  return await runInOneTakeTransaction(async (transaction) => {
     const [deleted] = await transaction
       .delete(takeTable)
       .where(eq(takeTable.id, id))
       .returning({ objectKey: takeTable.objectKey });
+    await transaction.delete(takeCommentTable).where(eq(takeCommentTable.takeId, id));
     return deleted?.objectKey ?? null;
   });
 }
@@ -126,19 +144,26 @@ export async function listCommentsOfTake(takeId: string): Promise<TakeCommentVie
   return await selectComments(getDatabase()).where(eq(takeCommentTable.takeId, takeId));
 }
 
-async function findComment(takeId: string, commentId: string): Promise<TakeCommentView | null> {
+export async function findComment(
+  takeId: string,
+  commentId: string,
+): Promise<TakeCommentView | null> {
   const [comment] = await selectComments(getDatabase())
     .where(and(eq(takeCommentTable.takeId, takeId), eq(takeCommentTable.id, commentId)))
     .limit(1);
   return comment ?? null;
 }
 
-export async function insertComment(comment: TakeCommentInsert): Promise<TakeCommentView | null> {
-  const [inserted] = await getDatabase()
+export async function insertCommentWithin(
+  executor: DatabaseExecutor,
+  comment: TakeCommentInsert,
+): Promise<string> {
+  const [inserted] = await executor
     .insert(takeCommentTable)
     .values(comment)
     .returning({ id: takeCommentTable.id });
-  return inserted === undefined ? null : await findComment(comment.takeId, inserted.id);
+  if (inserted === undefined) throw new Error('insert returned no row');
+  return inserted.id;
 }
 
 export async function updateComment(
@@ -166,15 +191,13 @@ export async function deleteTakesOfSongWithin(
   executor: DatabaseExecutor,
   songId: string,
 ): Promise<string[]> {
-  const takeIdsOfSong = executor
-    .select({ id: takeTable.id })
-    .from(takeTable)
-    .where(eq(takeTable.songId, songId));
-  await executor.delete(takeCommentTable).where(inArray(takeCommentTable.takeId, takeIdsOfSong));
   const deleted = await executor
     .delete(takeTable)
     .where(eq(takeTable.songId, songId))
-    .returning({ objectKey: takeTable.objectKey });
+    .returning({ id: takeTable.id, objectKey: takeTable.objectKey });
+  if (deleted.length === 0) return [];
+  const deletedTakeIds = deleted.map((row) => row.id);
+  await executor.delete(takeCommentTable).where(inArray(takeCommentTable.takeId, deletedTakeIds));
   return deleted.map((row) => row.objectKey);
 }
 

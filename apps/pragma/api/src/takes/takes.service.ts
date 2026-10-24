@@ -7,13 +7,16 @@ import { didClaimSongWithin, findSongById } from '../songs/songs.service';
 import { deleteStoredObjects, mintObjectUpload } from '../uploads/uploads.service';
 import { buildTakeObjectKey, isMomentWithinTake, orderCommentsByTime } from './takes.core';
 import {
+  type ClaimedTake,
   deleteComment,
   deleteTakeWithComments,
   deleteTakesOfSongWithin,
   detachTakesOfSessionWithin,
+  findClaimedTakeWithin,
+  findComment,
   findTake,
   hasInsertedTakeWithin,
-  insertComment,
+  insertCommentWithin,
   listCommentsOfTake,
   listTakesOfSongNewestFirst,
   runInOneTakeTransaction,
@@ -91,7 +94,7 @@ async function recordTake(input: TakeCreateInput, command: ActorCommand): Promis
 
 async function notifyBandAboutTake(
   kind: 'take-created' | 'take-comment-created',
-  take: TakeView,
+  take: Pick<TakeView, 'id' | 'songId'>,
   command: ActorCommand,
 ): Promise<void> {
   const song = await findSongById(take.songId);
@@ -158,26 +161,44 @@ export async function getCommentsOfTake(takeId: string): Promise<TakeCommentsOut
   return { kind: 'ok', comments: orderCommentsByTime(await listCommentsOfTake(takeId)) };
 }
 
+type CommentRecording =
+  | { readonly kind: 'recorded'; readonly take: ClaimedTake; readonly commentId: string }
+  | { readonly kind: 'take-not-found' }
+  | { readonly kind: 'moment-past-end' };
+
+async function recordComment(
+  takeId: string,
+  input: TakeCommentCreateInput,
+  command: ActorCommand,
+): Promise<CommentRecording> {
+  return await runInOneTakeTransaction(async (executor): Promise<CommentRecording> => {
+    const take = await findClaimedTakeWithin(executor, takeId);
+    if (take === null) return { kind: 'take-not-found' };
+    if (!isMomentWithinTake(input.atSeconds, take.durationSeconds)) {
+      return { kind: 'moment-past-end' };
+    }
+    const commentId = await insertCommentWithin(executor, {
+      takeId,
+      memberId: command.memberId,
+      body: input.body,
+      atSeconds: input.atSeconds,
+      createdAt: command.now,
+    });
+    return { kind: 'recorded', take, commentId };
+  });
+}
+
 export async function createTakeComment(
   takeId: string,
   input: TakeCommentCreateInput,
   command: ActorCommand,
 ): Promise<TakeCommentWriteOutcome> {
-  const take = await findTake(takeId);
-  if (take === null) return { kind: 'take-not-found' };
-  if (!isMomentWithinTake(input.atSeconds, take.durationSeconds)) {
-    return { kind: 'moment-past-end' };
-  }
-  const comment = await insertComment({
-    takeId,
-    memberId: command.memberId,
-    body: input.body,
-    atSeconds: input.atSeconds,
-    createdAt: command.now,
-  });
+  const recording = await recordComment(takeId, input, command);
+  if (recording.kind !== 'recorded') return recording;
+  const comment = await findComment(takeId, recording.commentId);
   if (comment === null) return { kind: 'take-not-found' };
   recordProductEvent({ event: 'take_comment_created', hasMoment: input.atSeconds !== null });
-  await notifyBandAboutTake('take-comment-created', take, command);
+  await notifyBandAboutTake('take-comment-created', recording.take, command);
   return { kind: 'ok', comment };
 }
 

@@ -777,10 +777,11 @@ Lives in: `api/src/songs/`
   `structureNotes`, `gimmickNotes` and `notes`, all read back as the empty
   string when the column is null.
 - The catalogue is listed newest first by `createdAt`.
-- Deleting a song first deletes its mastery overrides, every setlist
-  entry that points at it, and its takes with their comments
-  (`deleteSongWithCascade`); the takes' audio objects are deleted once the
-  transaction commits.
+- Deleting a song removes its row, its mastery overrides, its score
+  history, its studies, every setlist entry and vote naming it, and its
+  takes with their comments, and clears it from the tasks naming it, all in
+  one transaction (`deleteSongWithCascade`); the takes' audio objects are
+  deleted once the transaction commits.
 
 Held by: `api/src/takes/takes.controller.test.ts` › deleting the song deletes its takes, their comments and their audio
 
@@ -888,10 +889,20 @@ Lives in: `api/src/takes/` (`take_comment`)
   first, a tie broken on id (`orderCommentsByTime`).
 - Deleted with its take; kept, with no author name, when its author is
   deleted.
+- A comment names only a take that still exists: the create claims the take
+  row, checks the moment against it and inserts in one retried transaction
+  (`findClaimedTakeWithin`), and is refused with `take-not-found` when the
+  claim finds no row. Deleting a take, alone or with its song, removes the
+  take row before its comments, so a comment that claimed the row first is
+  removed with the rest.
 
 Held by: `api/src/takes/takes.controller.test.ts` › accepts a moment at the very end and refuses one a second past it
 Held by: `api/src/takes/takes.controller.test.ts` › keeps a comment with a moment and one without, oldest first, and counts them
 Held by: `api/src/takes/takes.controller.test.ts` › lets another member delete a comment, once
+Held by: `api/src/takes/takes.controller.test.ts` › leaves no comment on a take deleted while the comment was being written
+Held by: `api/src/takes/takes.controller.test.ts` › leaves no comment on a take whose song is deleted while the comment was being written
+Held by: `api/src/takes/takes.controller.test.ts` › writes one comment when its first commit loses a conflict
+Held by: `api/src/takes/takes.controller.test.ts` › deletes the take once when its first commit loses a conflict
 
 Not to be confused with: a **transition comment**, which is about the gap
 between two songs and belongs to no take.
