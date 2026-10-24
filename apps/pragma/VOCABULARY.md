@@ -1087,8 +1087,9 @@ to.
   and inside `deezer.core.ts`.
 - **set**, **programme**, **running order**: the ordered run is a
   **setlist**, and each row in it is a **setlist entry**.
-- **ballot**, **poll**, **election**, **scrutin**: a setlist in its
-  `voting` status carries **votes**, each worth **points**.
+- **poll**, **election**, **scrutin**: a setlist in its `voting` status
+  carries **votes**, each worth **points**. **ballot** is reserved for the
+  audience's browser token and never names a member's setlist votes.
 - **skill**, **level**, **rating**, **proficiency**: the measure is
   **mastery** and the number is a **score**.
 - **revision**, **review**, **practice session**, **homework**: a member's
@@ -1099,8 +1100,7 @@ to.
   one, which the screen may say, and *version* is refused for the same
   reason as *revision*.
 - **role**, **part**, **station**: what a member holds on a song is an
-  **instrument**, and the whole map is a **lineup**. The word *station*
-  survives in one comment in `members.schema.ts` and should not spread.
+  **instrument**, and the whole map is a **lineup**.
 - **ticket**, **issue**, **feature request**, **bug**: what the band wants
   changed in this application is an **improvement**, and its votes are
   **improvement votes**.
