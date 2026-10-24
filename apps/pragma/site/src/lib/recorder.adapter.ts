@@ -4,9 +4,12 @@
  */
 
 import {
-  beginRecording,
+  type ActiveRecording,
+  isEndedByTheSystem,
   isPermissionRefusal,
+  isStoppedOnReturn,
   type MicrophoneCapture,
+  type RecordedAudio,
   type RecorderLike,
   type RecordingOutcome,
   type RecordingStart,
@@ -22,6 +25,71 @@ const DENIED: RecordingStart = { kind: 'denied' };
 const UNSUPPORTED: RecordingStart = { kind: 'unsupported' };
 const NOT_SUPPORTED_ERROR = 'NotSupportedError';
 const RECORDING_UNAVAILABLE = 'recording is not available here';
+
+export function beginRecording(
+  environment: RecordingSurroundings,
+  capture: MicrophoneCapture,
+  onInterrupted: (outcome: RecordingOutcome) => void,
+): ActiveRecording {
+  const { recorder } = capture;
+  const chunks: Blob[] = [];
+  const startedAtEpochMilliseconds = environment.now();
+  const stopRequests: ((outcome: RecordingOutcome) => void)[] = [];
+  let isFinished = false;
+
+  const collect = (): RecordedAudio => {
+    const contentType = recorder.readMimeType();
+    return {
+      audio: new Blob(chunks, { type: contentType }),
+      contentType,
+      startedAtEpochMilliseconds,
+      durationMilliseconds: environment.now() - startedAtEpochMilliseconds,
+    };
+  };
+
+  const finish = (): void => {
+    if (isFinished) return;
+    isFinished = true;
+    environment.visibility.removeEventListener('visibilitychange', checkAfterReturn);
+    capture.release();
+    const recorded = collect();
+    const isInterrupted = isEndedByTheSystem(stopRequests.length);
+    if (isInterrupted) {
+      onInterrupted({ kind: 'interrupted', ...recorded });
+      return;
+    }
+    for (const settle of stopRequests) settle({ kind: 'recorded', ...recorded });
+  };
+
+  function checkAfterReturn(): void {
+    const hasStoppedWhileAway = isStoppedOnReturn(
+      environment.visibility.visibilityState,
+      recorder.isInactive(),
+    );
+    if (hasStoppedWhileAway) finish();
+  }
+
+  recorder.onChunk((chunk) => {
+    chunks.push(chunk);
+  });
+  recorder.onStop(finish);
+  environment.visibility.addEventListener('visibilitychange', checkAfterReturn);
+  recorder.start();
+
+  return {
+    startedAtEpochMilliseconds,
+    stop: () =>
+      new Promise((resolve) => {
+        stopRequests.push(resolve);
+        const isAlreadyStopped = recorder.isInactive();
+        if (isAlreadyStopped) {
+          finish();
+          return;
+        }
+        recorder.stop();
+      }),
+  };
+}
 
 // @FollowsBlueprint adapter-outcome-instead-of-a-throw
 export async function startRecording(

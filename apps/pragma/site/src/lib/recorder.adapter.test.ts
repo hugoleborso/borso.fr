@@ -1,6 +1,7 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   type AudioProbe,
+  beginRecording,
   readAudioDurationMilliseconds,
   readBrowserAudioDurationEnvironment,
   readBrowserRecorderEnvironment,
@@ -335,5 +336,49 @@ describe('readBrowserAudioDurationEnvironment', () => {
     environment.revokeObjectUrl('blob:x');
     expect(revoke).toHaveBeenCalledWith('blob:x');
     expect(environment.createAudio()).toBeInstanceOf(HTMLAudioElement);
+  });
+});
+
+describe('beginRecording', () => {
+  it('starts the recorder and stamps the start from the clock it is given', async () => {
+    let isInactive = true;
+    const stopListeners: (() => void)[] = [];
+    const recorder: RecorderLike = {
+      readMimeType: () => 'audio/mp4',
+      isInactive: () => isInactive,
+      start: () => {
+        isInactive = false;
+      },
+      stop: () => {
+        isInactive = true;
+        for (const listener of stopListeners) listener();
+      },
+      onChunk: vi.fn(),
+      onStop: (listener) => stopListeners.push(listener),
+    };
+    const visibility = {
+      visibilityState: 'visible' as const,
+      addEventListener: vi.fn(),
+      removeEventListener: vi.fn(),
+    };
+    const release = vi.fn();
+    const onInterrupted = vi.fn();
+
+    const recording = beginRecording(
+      { visibility, now: () => 42 },
+      { recorder, release },
+      onInterrupted,
+    );
+
+    expect(recording.startedAtEpochMilliseconds).toBe(42);
+    expect(isInactive).toBe(false);
+    const outcome = await recording.stop();
+    expect(outcome).toMatchObject({ kind: 'recorded', contentType: 'audio/mp4' });
+    expect(onInterrupted).not.toHaveBeenCalled();
+    expect(release).toHaveBeenCalledTimes(1);
+    expect(visibility.removeEventListener).toHaveBeenCalledWith(
+      'visibilitychange',
+      expect.any(Function),
+    );
   });
 });
