@@ -645,7 +645,7 @@
       "quotaExceeded": "Le stockage de l’appareil est plein, la prise n’a pas pu être gardée. Téléchargez-la pour ne pas la perdre.",
       "queueFailed": "La prise n’a pas pu être stockée sur cet appareil. Téléchargez-la pour ne pas la perdre.",
       "unplayable": "Ce navigateur a enregistré un format que le groupe ne peut pas relire. Téléchargez-la plutôt.",
-      "empty": "Rien n’a été enregistré avant la coupure, aucune prise n’a donc été gardée."
+      "empty": "Rien n’a été enregistré, aucune prise n’a donc été gardée."
     },
     "uploadForm": {
       "title": "Importer une prise de {{title}}",

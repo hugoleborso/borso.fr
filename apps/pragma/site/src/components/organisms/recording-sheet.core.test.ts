@@ -95,7 +95,7 @@ describe('selectRecordingSheetView', () => {
     expect(viewOfNotSaved('unplayable').messageKey).toBe('takes.recording.unplayable');
   });
 
-  it('says nothing was recorded, with no download, for a recording cut before any audio', () => {
+  it('says nothing was recorded, with no download, for a recording stopped before any audio arrived', () => {
     expect(
       selectRecordingSheetView({ kind: 'not-saved', reason: 'empty', download: null }),
     ).toEqual({ ...QUIET_VIEW, messageKey: 'takes.recording.empty', isAlert: true });

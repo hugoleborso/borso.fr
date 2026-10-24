@@ -120,6 +120,21 @@ describe('RecordingSheet', () => {
     expect(queue.queueTake).toHaveBeenCalledTimes(1);
   });
 
+  it('says nothing was recorded when Stop comes before any audio, and offers no download', async () => {
+    const user = userEvent.setup();
+    recorder.startRecording.mockResolvedValue(startedWith({ ...RECORDED, audio: new Blob([]) }));
+    queue.queueTake.mockResolvedValue('empty');
+    renderSheet();
+
+    await user.click(screen.getByRole('button', { name: 'Record a take of Seven Nation Army' }));
+    await user.click(await screen.findByRole('button', { name: 'Stop' }));
+
+    expect((await screen.findByRole('alert')).textContent).toBe(
+      'Nothing was recorded, so no take was saved.',
+    );
+    expect(screen.queryByRole('link', { name: 'Download' })).toBeNull();
+  });
+
   it('offers the take as a download when the device is full', async () => {
     const user = userEvent.setup();
     recorder.startRecording.mockResolvedValue(startedWith(RECORDED));
