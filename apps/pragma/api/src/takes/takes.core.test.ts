@@ -18,8 +18,8 @@ describe('buildTakeObjectKey', () => {
     ).toBe(`take/${SONG_ID}/${TAKE_ID}.webm`);
   });
 
-  it('gives each accepted type its usual file extension', () => {
-    expect(extensionOf('audio/mp4')).toBe('mp4');
+  it('gives each accepted type the extension the site names its download with', () => {
+    expect(extensionOf('audio/mp4')).toBe('m4a');
     expect(extensionOf('audio/x-m4a')).toBe('m4a');
     expect(extensionOf('audio/mpeg')).toBe('mp3');
     expect(extensionOf('audio/ogg')).toBe('ogg');

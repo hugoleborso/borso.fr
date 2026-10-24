@@ -1,16 +1,6 @@
-import type { TakeContentType } from '@domain/take-upload.core';
+import { takeFileExtensionOf, type TakeContentType } from '@domain/take-upload.core';
 
 export const TAKE_OBJECT_PREFIX = 'take';
-
-const EXTENSION_BY_CONTENT_TYPE: Readonly<Record<TakeContentType, string>> = {
-  'audio/mp4': 'mp4',
-  'audio/x-m4a': 'm4a',
-  'audio/mpeg': 'mp3',
-  'audio/webm': 'webm',
-  'audio/ogg': 'ogg',
-  'audio/wav': 'wav',
-  'audio/aac': 'aac',
-};
 
 export interface TakeObjectKeyParams {
   readonly songId: string;
@@ -18,9 +8,8 @@ export interface TakeObjectKeyParams {
   readonly contentType: TakeContentType;
 }
 
-// @FollowsBlueprint core-lookup-table
 export function buildTakeObjectKey(params: TakeObjectKeyParams): string {
-  const extension = EXTENSION_BY_CONTENT_TYPE[params.contentType];
+  const extension = takeFileExtensionOf(params.contentType);
   return `${TAKE_OBJECT_PREFIX}/${params.songId}/${params.takeId}.${extension}`;
 }
 

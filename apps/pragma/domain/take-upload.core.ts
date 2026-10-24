@@ -10,6 +10,23 @@ export const TAKE_CONTENT_TYPES = [
 
 export type TakeContentType = (typeof TAKE_CONTENT_TYPES)[number];
 
+const TAKE_FILE_EXTENSIONS = {
+  'audio/mp4': 'm4a',
+  'audio/x-m4a': 'm4a',
+  'audio/mpeg': 'mp3',
+  'audio/webm': 'webm',
+  'audio/ogg': 'ogg',
+  'audio/wav': 'wav',
+  'audio/aac': 'aac',
+} as const satisfies Record<TakeContentType, string>;
+
+export type TakeFileExtension = (typeof TAKE_FILE_EXTENSIONS)[TakeContentType];
+
+// @FollowsBlueprint core-lookup-table
+export function takeFileExtensionOf(contentType: TakeContentType): TakeFileExtension {
+  return TAKE_FILE_EXTENSIONS[contentType];
+}
+
 export const TAKE_SOURCES = ['live', 'upload'] as const;
 
 export type TakeSource = (typeof TAKE_SOURCES)[number];

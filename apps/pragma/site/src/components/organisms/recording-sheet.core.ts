@@ -1,6 +1,6 @@
 /** @Feature takes */
 
-import { normalizeTakeContentType, type TakeContentType } from '@domain/take-upload.core';
+import { normalizeTakeContentType, takeFileExtensionOf } from '@domain/take-upload.core';
 
 export type NotSavedReason = 'quota-exceeded' | 'failed' | 'unplayable';
 
@@ -156,19 +156,10 @@ export function formatElapsedClock(elapsedMilliseconds: number): string {
   return `${String(minutes).padStart(CLOCK_PAD, '0')}:${String(seconds).padStart(CLOCK_PAD, '0')}`;
 }
 
-const TAKE_FILE_EXTENSION: Record<TakeContentType, string> = {
-  'audio/mp4': 'm4a',
-  'audio/x-m4a': 'm4a',
-  'audio/mpeg': 'mp3',
-  'audio/webm': 'webm',
-  'audio/ogg': 'ogg',
-  'audio/wav': 'wav',
-  'audio/aac': 'aac',
-};
 const FALLBACK_EXTENSION = 'audio';
 
 export function buildTakeDownloadName(songTitle: string, contentType: string): string {
   const normalized = normalizeTakeContentType(contentType);
-  const extension = normalized === null ? FALLBACK_EXTENSION : TAKE_FILE_EXTENSION[normalized];
+  const extension = normalized === null ? FALLBACK_EXTENSION : takeFileExtensionOf(normalized);
   return `${songTitle}.${extension}`;
 }

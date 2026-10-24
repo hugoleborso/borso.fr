@@ -6,6 +6,7 @@ import {
   TAKE_DURATION_MAX_SECONDS,
   TAKE_MAX_BYTES,
   TAKE_MAX_MEBIBYTES,
+  takeFileExtensionOf,
   validateTakeFile,
 } from './take-upload.core';
 
@@ -33,6 +34,23 @@ describe('take upload limits', () => {
       'audio/wav',
       'audio/aac',
     ]);
+  });
+});
+
+describe('takeFileExtensionOf', () => {
+  it('names a Safari recording .m4a, the extension both the stored object and the download use', () => {
+    expect(takeFileExtensionOf('audio/mp4')).toBe('m4a');
+  });
+
+  it.each([
+    ['audio/x-m4a', 'm4a'],
+    ['audio/mpeg', 'mp3'],
+    ['audio/webm', 'webm'],
+    ['audio/ogg', 'ogg'],
+    ['audio/wav', 'wav'],
+    ['audio/aac', 'aac'],
+  ] as const)('gives %s the extension %s', (contentType, extension) => {
+    expect(takeFileExtensionOf(contentType)).toBe(extension);
   });
 });
 
