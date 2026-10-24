@@ -40,6 +40,8 @@ const STARTING: RecordingSheetPhase = { kind: 'starting' };
 const RECORDING_DOT_COLOR = 'var(--color-danger)';
 const ALERT_CLASS = 'text-sm text-danger m-0';
 const STATUS_CLASS = 'text-sm text-ink-500 m-0';
+const COMPACT_ICON_SIZE = 14;
+const ICON_BUTTON_ICON_SIZE = 22;
 
 interface ElapsedClockProps {
   readonly startedAtEpochMilliseconds: number;
@@ -131,13 +133,13 @@ export function RecordingSheet({
     <>
       <Button
         variant={isCompact ? 'ghost' : 'default'}
-        size={isCompact ? 'sm' : 'md'}
+        size={isCompact ? 'sm' : 'icon'}
         aria-label={t('takes.recordAria', { title: songTitle })}
+        title={t('takes.recordAria', { title: songTitle })}
         disabled={view.isOpen}
         onClick={() => void start()}
       >
-        <Icon name="mic" size={14} />
-        {isCompact ? null : t('takes.record')}
+        <Icon name="mic" size={isCompact ? COMPACT_ICON_SIZE : ICON_BUTTON_ICON_SIZE} />
       </Button>
       {view.isOpen ? (
         <dialog

@@ -66,8 +66,6 @@ export function InstallWalkthroughSheet({
         </button>
       </div>
       <div className="p-4 flex flex-col gap-4">
-        <p className="m-0 text-sm text-ink-700">{t('install.intro')}</p>
-
         <section
           aria-label={t('install.walkthrough')}
           className="motion-reduce:hidden overflow-hidden"

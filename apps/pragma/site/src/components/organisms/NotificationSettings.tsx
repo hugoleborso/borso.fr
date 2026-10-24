@@ -18,6 +18,7 @@ import {
   useUpdateNotificationPreference,
 } from '../../lib/queries/notifications.queries';
 import { Button } from '../atoms/Button';
+import { Card } from '../atoms/Card';
 import { HintText } from '../atoms/HintText';
 import { Icon } from '../atoms/Icon';
 import {
@@ -28,11 +29,11 @@ import {
   selectNotificationOffer,
 } from './notifications-offer.core';
 
-const OFFER_MESSAGE_KEY: Readonly<Record<NotificationOffer, ParseKeys>> = {
+const OFFER_MESSAGE_KEY: Readonly<Record<NotificationOffer, ParseKeys | null>> = {
   install: 'notifications.installHint',
   unsupported: 'notifications.unsupported',
   denied: 'notifications.denied',
-  offer: 'notifications.offer',
+  offer: null,
   enabled: 'notifications.enabled',
 };
 
@@ -127,12 +128,15 @@ export function NotificationSettings(): JSX.Element {
     isStandalone: installContext.isStandalone,
   });
   const isEnableShown = isEnableOffered(offer);
+  const offerMessageKey = OFFER_MESSAGE_KEY[offer];
   return (
-    <>
+    <Card className="p-4 sm:p-6">
       <h2 className="text-base text-ink-900 m-0 mb-3">{t('notifications.title')}</h2>
-      <p className="text-sm text-ink-500 mt-0 mb-3">{t(OFFER_MESSAGE_KEY[offer])}</p>
+      {offerMessageKey === null ? null : (
+        <p className="text-sm text-ink-500 mt-0 mb-3">{t(offerMessageKey)}</p>
+      )}
       {isEnableShown ? <EnableOnThisDevice /> : null}
       <CategoryToggles />
-    </>
+    </Card>
   );
 }

@@ -614,7 +614,6 @@
   },
   "takes": {
     "title": "Prises",
-    "record": "Enregistrer",
     "recordAria": "Enregistrer une prise de {{title}}",
     "upload": "Importer",
     "download": "Télécharger",
@@ -675,7 +674,6 @@
   },
   "notifications": {
     "title": "Notifications",
-    "offer": "Recevez une notification sur cet appareil quand le groupe publie une prise, la commente, ou modifie une session ou une setlist.",
     "enabled": "Les notifications sont activées sur cet appareil.",
     "denied": "Ce navigateur bloque les notifications de pragma. Autorisez-les dans les réglages du site du navigateur, puis revenez ici.",
     "unsupported": "Ce navigateur ne peut pas recevoir de notifications.",
@@ -697,7 +695,6 @@
     "showMe": "Me montrer",
     "dismiss": "Masquer cette suggestion",
     "title": "Installer pragma",
-    "intro": "À faire une seule fois. pragma s’ouvre ensuite depuis l’écran d’accueil, en plein écran, et peut vous envoyer des notifications.",
     "installNow": "Installer",
     "walkthrough": "Comment installer pragma",
     "steps": {

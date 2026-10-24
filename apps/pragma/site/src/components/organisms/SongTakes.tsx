@@ -56,9 +56,14 @@ export function SongTakes({
           {t('takes.title')}
         </h2>
         <RecordingSheet songId={songId} songTitle={songTitle} sessionId={null} />
-        <Button variant="default" onClick={() => setIsUploadOpen(true)}>
-          <Icon name="upload" size={14} />
-          {t('takes.upload')}
+        <Button
+          variant="default"
+          size="icon"
+          aria-label={t('takes.upload')}
+          title={t('takes.upload')}
+          onClick={() => setIsUploadOpen(true)}
+        >
+          <Icon name="upload" size={22} />
         </Button>
       </div>
       {takesQuery.isError ? (
