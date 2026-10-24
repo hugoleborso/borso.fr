@@ -84,6 +84,7 @@ No:
 | [0038](./0038-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | proposed | 2026-10-02 |
 | [0039](./0039-talos-memory-in-the-database.md) | The talos memory moves into the database, behind an agent API | proposed | 2026-10-16 |
 | [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | proposed | 2026-10-23 |
+| [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | proposed | 2026-10-24 |
 
 ### Data layer
 
@@ -92,6 +93,7 @@ No:
 - 0036 — every stage schema gets its own login role, mapped to that stage's API Lambda; API Lambdas connect with `dsql:DbConnect` and `admin` is left to the migration runner, so a preview can no longer reach production.
 - 0037 — a member's secret calendar address is plain text in a table of its own, never returned by the API and blocklisted from preview clones.
 - 0039 — the talos memory moves from a private git repository to `memory_*` tables, reached by agents through `/api/agent/*` with one token per environment; the read-only SQL route relies on a keyword guard and a `READ ONLY` transaction rather than a second database role.
+- 0043 — one catalogue song per Deezer track is held by a unique index on `song.deezer_track_id`; DSQL builds it asynchronously and the migration runner does not wait, so the operator counts prod duplicates before merging and checks the build after deploying.
 
 ### App architecture
 
