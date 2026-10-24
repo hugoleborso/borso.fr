@@ -37,6 +37,10 @@ function stubDevice(userAgent: string, isStandalone = false): void {
   vi.stubGlobal('matchMedia', (query: string) => ({ matches: isStandalone, media: query }));
 }
 
+function refuseStorageWrite(): never {
+  throw new DOMException('quota exceeded', 'QuotaExceededError');
+}
+
 function resolvePrompt(): Promise<void> {
   return Promise.resolve();
 }
@@ -133,6 +137,15 @@ describe('InstallOffer', () => {
     root = createRoot(container);
     renderOffer();
     expect(container.textContent).toBe('');
+  });
+
+  it('hides for this visit when the storage refuses to remember the dismissal', () => {
+    stubDevice(ANDROID_CHROME);
+    vi.spyOn(Storage.prototype, 'setItem').mockImplementation(refuseStorageWrite);
+    renderOffer();
+    act(() => findButton('Hide this suggestion')?.click());
+    expect(container.textContent).toBe('');
+    expect(localStorage.getItem(INSTALL_BANNER_DISMISSED_KEY)).toBeNull();
   });
 
   it('offers Chrome its own prompt on Android once it was deferred, and hides after an install', async () => {

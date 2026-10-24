@@ -42,7 +42,7 @@ Opening a take shows a player, the comments that carry a moment as marks on the 
 
 **Account page.** A "Notifications" section has an "Enable on this device" button and four toggles: takes, comments, sessions, setlists and lineups and transitions. On an iPhone where pragma is not installed on the home screen, the section says that iOS only delivers push to an installed app, and how to install it.
 
-**Install banner** (amendment of 2026-10-24, asked by the operator). Push on an iPhone needs pragma installed on the home screen, and the installed app is the better experience on Android too. While pragma runs in a browser tab on a phone, a dismissible banner sits at the top of every signed-in page:
+**Install banner** (amendment of 2026-10-24, asked by the operator). Push on an iPhone needs pragma installed on the home screen, and the installed app is the better experience on Android too. While pragma runs in a browser tab on a phone, a dismissible banner sits at the top of every page inside the application shell. The two scene views, which are a full-screen stage mode, carry none:
 
 ```
 Install pragma as an app, for notifications and full screen   [Show me]  [×]
@@ -94,7 +94,7 @@ sequenceDiagram
 
 **Edge cases**
 - The install banner shows only on a phone or tablet browser that is not running pragma installed (`display-mode: standalone`, or `navigator.standalone` on iOS); dismissing it is remembered on that device in local storage, and a storage that refuses the write only means the banner comes back next time.
-- An iOS browser other than Safari (Chrome, Firefox on iOS) shows the iOS walkthrough with a first step "open this page in Safari", because only Safari can add to the home screen there.
+- An iOS browser other than Safari (Chrome, Firefox on iOS) shows the iOS walkthrough with a first step "open this page in Safari", because Safari's menu is the one path every iOS version has. Since iOS 16.4 some other browsers can add to the home screen from their own menu, but their menus differ and are not drawn.
 - Takes sort by `recordedAt` descending, not by upload time, so a take uploaded a week late lands where it happened.
 - A take recorded offline shows "pending upload" on that device only; other members see it once it is created.
 - The queue retries when the application opens and on the browser's `online` event. iOS has no background sync, so a take waits for the next time the application is opened.
