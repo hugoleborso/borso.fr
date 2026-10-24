@@ -41,10 +41,10 @@ describe('buildClaudeCodeAddress', () => {
     ).toBe('https://claude.ai/code/new?repo=a%2Fb&q=p');
   });
 
-  it('hands the same parameters to the Claude app through its own scheme', () => {
+  it('hands the Claude app its own scheme without the environment, which makes it drop the whole link', () => {
     expect(
       buildClaudeCodeAddress({ repository: 'a/b', environmentId: 'env_1', prompt: 'p' }, 'app'),
-    ).toBe('claude://code/new?repo=a%2Fb&environment=env_1&q=p');
+    ).toBe('claude://code/new?repo=a%2Fb&q=p');
   });
 });
 

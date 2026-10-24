@@ -26,7 +26,9 @@ export function composeTalosPrompt(preamble: string, text: string): string {
 
 export function buildClaudeCodeAddress(launch: ClaudeCodeLaunch, opener: ClaudeCodeOpener): string {
   const parameters: [string, string][] = [['repo', launch.repository]];
-  if (launch.environmentId !== null) parameters.push(['environment', launch.environmentId]);
+  if (launch.environmentId !== null && opener === 'web') {
+    parameters.push(['environment', launch.environmentId]);
+  }
   parameters.push(['q', launch.prompt]);
   const query = parameters.map(([name, value]) => `${name}=${encodeURIComponent(value)}`).join('&');
   return `${CLAUDE_CODE_ADDRESS[opener]}?${query}`;
