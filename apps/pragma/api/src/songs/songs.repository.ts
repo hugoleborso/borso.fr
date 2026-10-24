@@ -215,19 +215,23 @@ export async function findSongByDeezerTrackId(deezerTrackId: string): Promise<So
 }
 
 export async function insertSong(values: SongInsertShape): Promise<SongRow> {
-  const database = getDatabase();
-  const [row] = await database.insert(songTable).values(encodeInsert(values)).returning(PROJECTION);
+  const [row] = await retryingConflictAborts(
+    async () =>
+      await getDatabase().insert(songTable).values(encodeInsert(values)).returning(PROJECTION),
+  );
   if (row === undefined) throw new Error('insert returned no row');
   return rowToSong(row);
 }
 
 export async function updateSong(id: string, updates: SongPersistedShape): Promise<SongRow | null> {
-  const database = getDatabase();
-  const [row] = await database
-    .update(songTable)
-    .set(encodeUpdate(updates))
-    .where(eq(songTable.id, id))
-    .returning(PROJECTION);
+  const [row] = await retryingConflictAborts(
+    async () =>
+      await getDatabase()
+        .update(songTable)
+        .set(encodeUpdate(updates))
+        .where(eq(songTable.id, id))
+        .returning(PROJECTION),
+  );
   return row === undefined ? null : rowToSong(row);
 }
 
