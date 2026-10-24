@@ -106,11 +106,8 @@ const EXPIRED_SUBSCRIPTION_STATUSES: ReadonlySet<number | null> = new Set<number
   NOT_FOUND_STATUS,
   GONE_STATUS,
 ]);
-const CONFLICT_ABORT_CODES: ReadonlySet<string | null> = new Set<string | null>(['OC000', '40001']);
 
 const statusCodeSchema = z.object({ statusCode: z.number() });
-const codeSchema = z.object({ code: z.string() });
-const causeSchema = z.object({ cause: z.unknown() });
 
 export function readPushFailureStatus(failure: unknown): number | null {
   const withStatus = statusCodeSchema.safeParse(failure);
@@ -273,17 +270,4 @@ export function buildNotificationPayload(
     url: buildNotificationUrl(event),
     tag: buildGroupKey(event),
   };
-}
-
-function readErrorCode(error: unknown): string | null {
-  const withCode = codeSchema.safeParse(error);
-  return withCode.success ? withCode.data.code : null;
-}
-
-export function isConflictAbort(error: unknown): boolean {
-  const ownCode = readErrorCode(error);
-  if (ownCode !== null) return CONFLICT_ABORT_CODES.has(ownCode);
-  const withCause = causeSchema.safeParse(error);
-  if (!withCause.success) return false;
-  return CONFLICT_ABORT_CODES.has(readErrorCode(withCause.data.cause));
 }

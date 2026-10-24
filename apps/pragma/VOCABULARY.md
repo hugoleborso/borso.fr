@@ -614,6 +614,13 @@ Lives in: `api/src/setlists/`
 - An `audience_choice` setlist is created at the first voting round of a
   concert and refuses `renameSetlist`: its title is the band's promise to
   the room, not an editable field.
+- A concert has one `audience_choice` setlist. The setlist is created with
+  the concert's id as its own (`selectAudienceChoiceSetlistId`), so the
+  primary key refuses a second one when two first rounds open together.
+  One created before that rule keeps its random id and is found by its
+  link to the concert.
+
+Held by: `api/src/audience/audience.controller.test.ts` › creates one audience-choice setlist when two first rounds are opened at the same moment
 
 ## Session setlist link
 
@@ -656,7 +663,17 @@ Lives in: `api/src/setlists/`
 - Deleting an entry compacts the remaining positions back to a gapless
   run (`removeEntryAndCompact`).
 - A reorder is refused as `stale` unless the submitted ids are exactly the
-  ids already stored for that setlist (`reorderEntries`).
+  ids already stored for that setlist, each once
+  (`isReorderOfTheSameEntries`).
+- An append, a delete and a reorder each run in one transaction that first
+  writes the setlist's own row (`claimSetlistWithin`), so two of them on
+  one setlist cannot interleave: Postgres makes the second wait, and
+  Aurora DSQL aborts it at commit and `runInOneSetlistTransaction` runs it
+  again.
+
+Held by: `api/src/setlists/setlists.controller.test.ts` › gives each of two entries appended at the same moment a position of its own
+Held by: `api/src/setlists/setlists.controller.test.ts` › applies one of two reorders sent at the same moment whole, never a mix of both
+Held by: `api/src/setlists/setlists.controller.test.ts` › keeps positions distinct when an append and a reorder land at the same moment
 
 ## Sign-in session
 

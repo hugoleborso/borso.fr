@@ -5,6 +5,7 @@ import { notifyBand, type WriteActor } from '../notifications/notifications.serv
 import { findSessionById } from '../sessions/sessions.service';
 import {
   buildSetlistSummaries,
+  isReorderOfTheSameEntries,
   isSetlistRenamable,
   resolveSetlistKind,
   type SetlistSummary,
@@ -12,35 +13,35 @@ import {
 } from './setlists.core';
 import {
   countEntriesWithin,
-  deleteEntry,
-  insertEntry,
+  deleteEntryWithin,
   insertEntryWithin,
   listEntries,
   listEntriesOfSetlists,
   listEntriesOfSong,
-  listEntryIds,
+  listEntryIdsInOrderWithin,
   listEntryOwners,
   type SetlistEntryRow,
-  setEntryPosition,
+  setEntryPositionWithin,
   updateEntry,
 } from './setlist-entry.repository';
 import {
+  claimSetlistWithin,
   deleteSessionLink,
   deleteSetlistWithEntries,
   findAudienceChoiceSetlistOfSession,
   findSetlistById,
+  insertAudienceChoiceSetlist,
   insertSessionLink,
   insertSetlist,
   listAllSessionLinks,
   listManualSetlistSongIdsOfSession,
   listSetlists,
   listSetlistsOfSession,
+  runInOneSetlistTransaction,
   type SetlistRow,
   updateSetlistName,
 } from './setlists.repository';
 import {
-  AUDIENCE_CHOICE_SETLIST_KIND,
-  AUDIENCE_CHOICE_SETLIST_NAME,
   DEFAULT_SETLIST_KIND,
   type SetlistEntryPersistedUpdate,
   type setlistCreateSchema,
@@ -137,7 +138,7 @@ export async function getManualSetlistSongIdsOfSession(sessionId: string): Promi
 export async function findOrCreateAudienceChoiceSetlist(sessionId: string): Promise<SetlistRow> {
   const existing = await findAudienceChoiceSetlistOfSession(sessionId);
   if (existing !== null) return existing;
-  return await insertSetlist(AUDIENCE_CHOICE_SETLIST_NAME, sessionId, AUDIENCE_CHOICE_SETLIST_KIND);
+  return await insertAudienceChoiceSetlist(sessionId);
 }
 
 // @FollowsBlueprint service-facade-reexport
@@ -148,6 +149,7 @@ export async function appendSongWithin(
   setlistId: string,
   songId: string,
 ): Promise<void> {
+  await claimSetlistWithin(executor, setlistId);
   const position = await countEntriesWithin(executor, setlistId);
   await insertEntryWithin(executor, {
     setlistId,
@@ -210,16 +212,18 @@ export async function appendEntry(
   input: EntryCreateInput,
   actor: WriteActor,
 ): Promise<SetlistEntryRow> {
-  const existing = await listEntries(setlistId);
-  const entry = await insertEntry({
-    setlistId,
-    songId: input.songId,
-    position: existing.length,
-    energy: input.energy,
-    lineupOverride: input.lineupOverride,
-    keyOverride: input.keyOverride,
-    capo: input.capo,
-    notes: input.notes,
+  const entry = await runInOneSetlistTransaction(async (executor) => {
+    await claimSetlistWithin(executor, setlistId);
+    return await insertEntryWithin(executor, {
+      setlistId,
+      songId: input.songId,
+      position: await countEntriesWithin(executor, setlistId),
+      energy: input.energy,
+      lineupOverride: input.lineupOverride,
+      keyOverride: input.keyOverride,
+      capo: input.capo,
+      notes: input.notes,
+    });
   });
   await notifySetlistChangedById(setlistId, actor);
   return entry;
@@ -239,12 +243,12 @@ export async function patchEntry(
   return { kind: 'ok', entry };
 }
 
-async function compactEntryPositions(setlistId: string): Promise<void> {
-  const remaining = await listEntries(setlistId);
-  for (let position = 0; position < remaining.length; position += 1) {
-    const entry = remaining[position];
-    if (entry === undefined) continue;
-    await setEntryPosition(entry.id, position);
+async function writeEntryPositionsWithin(
+  executor: DatabaseExecutor,
+  entryIds: readonly string[],
+): Promise<void> {
+  for (const [position, entryId] of entryIds.entries()) {
+    await setEntryPositionWithin(executor, entryId, position);
   }
 }
 
@@ -253,9 +257,13 @@ export async function removeEntryAndCompact(
   entryId: string,
   actor: WriteActor,
 ): Promise<DeletionOutcome> {
-  const outcome = await deleteEntry(setlistId, entryId);
+  const outcome = await runInOneSetlistTransaction(async (executor) => {
+    await claimSetlistWithin(executor, setlistId);
+    const deletion = await deleteEntryWithin(executor, setlistId, entryId);
+    await writeEntryPositionsWithin(executor, await listEntryIdsInOrderWithin(executor, setlistId));
+    return deletion;
+  });
   if (outcome === 'not-found') return outcome;
-  await compactEntryPositions(setlistId);
   await notifySetlistChangedById(setlistId, actor);
   return outcome;
 }
@@ -267,17 +275,15 @@ export async function reorderEntries(
   entryIds: readonly string[],
   actor: WriteActor,
 ): Promise<ReorderResult> {
-  const existing = await listEntryIds(setlistId);
-  if (entryIds.length !== existing.length) return { kind: 'stale' };
-  const existingIds = new Set(existing.map((row) => row.id));
-  for (const entryId of entryIds) {
-    if (!existingIds.has(entryId)) return { kind: 'stale' };
-  }
-  for (let position = 0; position < entryIds.length; position += 1) {
-    const entryId = entryIds[position];
-    if (entryId === undefined) continue;
-    await setEntryPosition(entryId, position);
-  }
+  const reorder = await runInOneSetlistTransaction(async (executor): Promise<ReorderResult> => {
+    await claimSetlistWithin(executor, setlistId);
+    const existingIds = await listEntryIdsInOrderWithin(executor, setlistId);
+    const isCurrent = isReorderOfTheSameEntries(existingIds, entryIds);
+    if (!isCurrent) return { kind: 'stale' };
+    await writeEntryPositionsWithin(executor, entryIds);
+    return { kind: 'ok' };
+  });
+  if (reorder.kind === 'stale') return reorder;
   await notifySetlistChangedById(setlistId, actor);
-  return { kind: 'ok' };
+  return reorder;
 }

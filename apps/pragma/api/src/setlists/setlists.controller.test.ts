@@ -155,6 +155,92 @@ describe('setlists controller (back-e2e)', () => {
     expect(after.entries.map((row) => row.position)).toEqual([0, 1]);
   });
 
+  it('gives each of two entries appended at the same moment a position of its own', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const appended = await Promise.all(
+      songIds.map(
+        async (songId) =>
+          await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+            method: 'POST',
+            body: { songId },
+            cookieHeader,
+          }),
+      ),
+    );
+    expect(appended.map((response) => response.status)).toEqual([201, 201, 201]);
+    const after = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+      entryListEnvelope,
+    );
+    expect(after.entries.map((row) => row.position)).toEqual([0, 1, 2]);
+  });
+
+  it('applies one of two reorders sent at the same moment whole, never a mix of both', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const entryIds: string[] = [];
+    for (const songId of songIds) {
+      const response = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId },
+        cookieHeader,
+      });
+      entryIds.push((await readJson(response, singleEntryEnvelope)).entry.id);
+    }
+    const reversed = [...entryIds].reverse();
+    const rotated = [...entryIds.slice(1), ...entryIds.slice(0, 1)];
+    const reorders = await Promise.all(
+      [reversed, rotated].map(
+        async (order) =>
+          await jsonRequest(app, `/api/setlists/${setlistId}/reorder`, {
+            method: 'PUT',
+            body: { entryIds: order },
+            cookieHeader,
+          }),
+      ),
+    );
+    expect(reorders.map((response) => response.status)).toEqual([200, 200]);
+    const after = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+      entryListEnvelope,
+    );
+    expect(after.entries.map((row) => row.position)).toEqual([0, 1, 2]);
+    expect([reversed, rotated]).toContainEqual(after.entries.map((row) => row.id));
+  });
+
+  it('keeps positions distinct when an append and a reorder land at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const [firstSongId, secondSongId, thirdSongId] = songIds;
+    const entryIds: string[] = [];
+    for (const songId of [firstSongId, secondSongId]) {
+      const response = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId },
+        cookieHeader,
+      });
+      entryIds.push((await readJson(response, singleEntryEnvelope)).entry.id);
+    }
+    await Promise.all([
+      jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId: thirdSongId },
+        cookieHeader,
+      }),
+      jsonRequest(app, `/api/setlists/${setlistId}/reorder`, {
+        method: 'PUT',
+        body: { entryIds: [...entryIds].reverse() },
+        cookieHeader,
+      }),
+    ]);
+    const after = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+      entryListEnvelope,
+    );
+    expect(after.entries.map((row) => row.position)).toEqual([0, 1, 2]);
+  });
+
   it('updates an entry partially', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const { setlistId, songIds } = await seed(app, cookieHeader);

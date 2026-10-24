@@ -1,3 +1,4 @@
+import { isConflictAbort } from '../helpers/persistence/conflict-abort.core';
 import type { DatabaseExecutor } from '../database/client';
 import { reportTaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
@@ -7,7 +8,6 @@ import {
   buildNotificationPayload,
   type CategoryToggle,
   countDelivered,
-  isConflictAbort,
   isGroupDue,
   type NotificationEvent,
   type PushDeliveryOutcome,

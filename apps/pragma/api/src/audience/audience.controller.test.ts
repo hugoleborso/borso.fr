@@ -426,6 +426,22 @@ describe('audience controller (back-e2e)', () => {
     expect(rename.status).toBe(409);
   });
 
+  it('creates one audience-choice setlist when two first rounds are opened at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+
+    await Promise.all([
+      openRoundOn(app, cookieHeader, sessionId),
+      openRoundOn(app, cookieHeader, sessionId),
+    ]);
+
+    const after = await readJson(
+      await jsonRequest(app, `/api/setlists/by-session/${sessionId}`, { cookieHeader }),
+      setlistsEnvelope,
+    );
+    expect(after.setlists.map((setlist) => setlist.kind)).toEqual(['audience_choice']);
+  });
+
   it('answers the public search without a session cookie and bars an address that hammers it', async () => {
     const { app } = await buildAuthenticatedApp();
     stubProviders();

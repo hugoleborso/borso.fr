@@ -7,7 +7,6 @@ import {
   classifyPushFailure,
   countDelivered,
   isCategoryEnabled,
-  isConflictAbort,
   isGroupDue,
   NOTIFICATION_CATEGORIES,
   NOTIFICATION_GROUP_WINDOW_MINUTES,
@@ -287,23 +286,5 @@ describe('buildNotificationPayload', () => {
       actorName: 'Léa',
       ...parameters,
     });
-  });
-});
-
-describe('isConflictAbort', () => {
-  it('reads a DSQL or Postgres serialization failure as a conflict', () => {
-    expect(isConflictAbort({ code: 'OC000' })).toBe(true);
-    expect(isConflictAbort({ code: '40001' })).toBe(true);
-    expect(isConflictAbort({ message: 'wrapped', cause: { code: 'OC000' } })).toBe(true);
-    expect(isConflictAbort({ cause: { code: '40001' } })).toBe(true);
-  });
-
-  it('reads anything else as a real failure', () => {
-    expect(isConflictAbort({ code: '23505' })).toBe(false);
-    expect(isConflictAbort({ code: '23505', cause: { code: 'OC000' } })).toBe(false);
-    expect(isConflictAbort({ cause: { code: '23505' } })).toBe(false);
-    expect(isConflictAbort({ cause: new Error('no code') })).toBe(false);
-    expect(isConflictAbort(new Error('timeout'))).toBe(false);
-    expect(isConflictAbort('OC000')).toBe(false);
   });
 });

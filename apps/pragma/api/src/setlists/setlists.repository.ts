@@ -1,9 +1,11 @@
-import { and, asc, eq, isNull, max, ne, or } from 'drizzle-orm';
+import { and, asc, eq, isNull, max, ne, or, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { isWorthRetrying } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { selectNextLinkPosition } from './setlists.core';
+import { selectAudienceChoiceSetlistId, selectNextLinkPosition } from './setlists.core';
 import {
   AUDIENCE_CHOICE_SETLIST_KIND,
+  AUDIENCE_CHOICE_SETLIST_NAME,
   sessionSetlistTable,
   setlistEntryTable,
   type SetlistKind,
@@ -190,9 +192,54 @@ export async function deleteSessionLink(
   return selectDeletionOutcome(deleted.length);
 }
 
+async function retryingConflictAborts<Result>(
+  write: () => Promise<Result>,
+  attempt = 1,
+): Promise<Result> {
+  try {
+    return await write();
+  } catch (error) {
+    const isRetried = isWorthRetrying(error, attempt);
+    if (!isRetried) throw error;
+    return await retryingConflictAborts(write, attempt + 1);
+  }
+}
+
 // @FollowsBlueprint repository-owned-transaction
 export async function runInOneSetlistTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
-  return await getDatabase().transaction(work);
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
+
+export async function claimSetlistWithin(
+  executor: DatabaseExecutor,
+  setlistId: string,
+): Promise<void> {
+  await executor
+    .update(setlistTable)
+    .set({ name: sql`${setlistTable.name}` })
+    .where(eq(setlistTable.id, setlistId));
+}
+
+export async function insertAudienceChoiceSetlist(sessionId: string): Promise<SetlistRow> {
+  const setlistId = selectAudienceChoiceSetlistId(sessionId);
+  return await runInOneSetlistTransaction(async (executor) => {
+    await executor
+      .insert(setlistTable)
+      .values({
+        id: setlistId,
+        name: AUDIENCE_CHOICE_SETLIST_NAME,
+        kind: AUDIENCE_CHOICE_SETLIST_KIND,
+      })
+      .onConflictDoNothing();
+    await attachAtEnd(executor, sessionId, setlistId);
+    const [row] = await executor
+      .select(SETLIST_PROJECTION)
+      .from(setlistTable)
+      .where(eq(setlistTable.id, setlistId))
+      .limit(1);
+    if (row === undefined) throw new Error('audience-choice setlist missing after its insert');
+    return row;
+  });
 }

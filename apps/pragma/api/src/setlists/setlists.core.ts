@@ -13,6 +13,22 @@ export interface SetlistSongCount {
 const FIRST_POSITION = 0;
 
 // @FollowsBlueprint core-decision
+export function selectAudienceChoiceSetlistId(concertId: string): string {
+  return concertId;
+}
+
+// @FollowsBlueprint core-decision
+export function isReorderOfTheSameEntries(
+  currentEntryIds: readonly string[],
+  requestedEntryIds: readonly string[],
+): boolean {
+  const current = new Set(currentEntryIds);
+  const requested = new Set(requestedEntryIds);
+  const isSameSize = requested.size === requestedEntryIds.length && requested.size === current.size;
+  return isSameSize && requestedEntryIds.every((entryId) => current.has(entryId));
+}
+
+// @FollowsBlueprint core-decision
 export function selectNextLinkPosition(highestTakenPosition: number | null): number {
   if (highestTakenPosition === null) return FIRST_POSITION;
   return highestTakenPosition + 1;
