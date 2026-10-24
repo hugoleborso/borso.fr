@@ -3,7 +3,7 @@ import { pickNextPaletteHex } from './member-palette.utils';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteMemberWithLinks,
-  findMemberById,
+  didReplaceMemberInstruments,
   insertMember,
   areInstrumentsKnown,
   listInstrumentsForMember,
@@ -11,13 +11,12 @@ import {
   type MemberInstrumentRow,
   type MemberPersistedShape,
   type MemberRow,
-  replaceMemberInstruments,
   updateMember,
 } from './members.repository';
 
 import type { createMemberSchema, updateMemberSchema } from './members.schema';
 
-export { didClaimMemberWithin, findMemberById } from './members.repository';
+export { didClaimMemberWithin } from './members.repository';
 
 type MemberCreateInput = z.infer<typeof createMemberSchema>;
 type MemberUpdateInput = z.infer<typeof updateMemberSchema>;
@@ -76,10 +75,13 @@ export async function assignInstrumentsToMember(
   instrumentIds: readonly string[],
   primaryInstrumentIds?: readonly string[],
 ): Promise<AssignInstrumentsResult> {
-  const member = await findMemberById(memberId);
-  if (member === null) return { kind: 'member-not-found' };
   const isKnown = await areInstrumentsKnown(instrumentIds);
   if (!isKnown) return { kind: 'instrument-not-found' };
-  await replaceMemberInstruments(memberId, instrumentIds, primaryInstrumentIds);
+  const isReplaced = await didReplaceMemberInstruments(
+    memberId,
+    instrumentIds,
+    primaryInstrumentIds,
+  );
+  if (!isReplaced) return { kind: 'member-not-found' };
   return { kind: 'ok' };
 }

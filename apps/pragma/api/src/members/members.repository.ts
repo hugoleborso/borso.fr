@@ -25,14 +25,20 @@ import { memberInstrumentTable, memberTable } from './members.schema';
 
 export type MemberRow = typeof memberTable.$inferSelect;
 
-export interface MemberInstrumentRow {
-  id: string;
-  name: string;
+type InstrumentTableRow = typeof instrumentTable.$inferSelect;
+
+export type MemberInstrumentRow = Pick<InstrumentTableRow, 'id' | 'name'> & {
   family: InstrumentFamily;
   icon: InstrumentIcon;
   position: number;
   isPrimary: boolean;
-}
+};
+
+type MemberInstrumentJoinedRow = Pick<
+  InstrumentTableRow,
+  'id' | 'name' | 'isHarmonic' | 'family' | 'icon' | 'position'
+> &
+  Pick<typeof memberInstrumentTable.$inferSelect, 'isPrimary'>;
 
 // @FollowsBlueprint repository-projection
 const MEMBER_PROJECTION = {
@@ -54,15 +60,7 @@ const INSTRUMENT_PROJECTION = {
   isPrimary: memberInstrumentTable.isPrimary,
 } as const;
 
-function rowToMemberInstrument(row: {
-  id: string;
-  name: string;
-  isHarmonic: boolean;
-  family: string | null;
-  icon: string | null;
-  position: number | null;
-  isPrimary: boolean | null;
-}): MemberInstrumentRow {
+function rowToMemberInstrument(row: MemberInstrumentJoinedRow): MemberInstrumentRow {
   return {
     id: row.id,
     name: row.name,
@@ -76,16 +74,6 @@ function rowToMemberInstrument(row: {
 export async function listMembers(): Promise<MemberRow[]> {
   const database = getDatabase();
   return await database.select(MEMBER_PROJECTION).from(memberTable);
-}
-
-export async function findMemberById(id: string): Promise<MemberRow | null> {
-  const database = getDatabase();
-  const rows = await database
-    .select(MEMBER_PROJECTION)
-    .from(memberTable)
-    .where(eq(memberTable.id, id))
-    .limit(1);
-  return rows[0] ?? null;
 }
 
 export type MemberPersistedShape = Omit<MemberRow, 'id'>;
@@ -214,13 +202,15 @@ export async function areInstrumentsKnown(instrumentIds: readonly string[]): Pro
   return rows.length === instrumentIds.length;
 }
 
-export async function replaceMemberInstruments(
+export async function didReplaceMemberInstruments(
   memberId: string,
   instrumentIds: readonly string[],
   requestedPrimaryInstrumentIds?: readonly string[],
-): Promise<void> {
+): Promise<boolean> {
   const database = getDatabase();
-  await database.transaction(async (transaction) => {
+  return await database.transaction(async (transaction) => {
+    const isMemberClaimed = await didClaimMemberWithin(transaction, memberId);
+    if (!isMemberClaimed) return false;
     const existing = await transaction
       .select({
         instrumentId: memberInstrumentTable.instrumentId,
@@ -250,5 +240,6 @@ export async function replaceMemberInstruments(
         })),
       );
     }
+    return true;
   });
 }

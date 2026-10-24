@@ -422,7 +422,12 @@ Lives in: `api/src/members/`
 - `member_instrument` links a member to the instruments they can play. Its
   primary key is `(memberId, instrumentId)`, so the pair cannot repeat.
 - Assigning instruments replaces the whole set, and is refused when any of
-  the ids is unknown (`assignInstrumentsToMember`).
+  the ids is unknown (`assignInstrumentsToMember`). The replacement claims
+  the member row in its own transaction and writes nothing when the claim
+  finds no row, and deleting a member removes its row before its
+  `member_instrument` links, so no link outlives its member.
+
+Held by: `api/src/members/members.controller.test.ts` › writes no instrument rows for a member deleted while the assignment was being checked
 
 Not to be confused with: the member ids inside a lineup, which say who
 plays on one song rather than who is in the band.

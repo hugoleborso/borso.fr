@@ -1,8 +1,16 @@
+import { sql } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { INSTRUMENT_ICONS } from '@domain/instrument.core';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  type LockHold,
+  runSecondWhileFirstWaitsOnHold,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
+import { instrumentTable } from '../instruments/instruments.schema';
+import { memberInstrumentTable } from './members.schema';
 
 const memberSchema = z.object({
   id: z.string().uuid(),
@@ -29,6 +37,9 @@ const assignmentResponseSchema = z.object({
   id: z.string().uuid(),
   instrumentIds: z.array(z.string().uuid()),
 });
+
+const holdEveryReadOfInstruments: LockHold = async (transaction) =>
+  await transaction.execute(sql`LOCK TABLE ${instrumentTable} IN ACCESS EXCLUSIVE MODE`);
 
 async function createInstrument(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
@@ -245,6 +256,31 @@ describe('members controller (back-e2e)', () => {
       { method: 'PUT', body: { instrumentIds: [] }, cookieHeader },
     );
     expect(response.status).toBe(404);
+  });
+
+  it('writes no instrument rows for a member deleted while the assignment was being checked', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const memberCreate = await jsonRequest(app, '/api/members', {
+      method: 'POST',
+      body: { firstName: 'Gui', color: '#7b5786' },
+      cookieHeader,
+    });
+    const memberId = (await readJson(memberCreate, singleMemberEnvelope)).member.id;
+    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
+
+    const [, removal] = await runSecondWhileFirstWaitsOnHold(
+      holdEveryReadOfInstruments,
+      async () =>
+        await jsonRequest(app, `/api/members/${memberId}/instruments`, {
+          method: 'PUT',
+          body: { instrumentIds: [guitarId] },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/members/${memberId}`, { method: 'DELETE', cookieHeader }),
+    );
+    expect(removal.status).toBe(200);
+    expect(await testDatabase().select().from(memberInstrumentTable)).toEqual([]);
   });
 
   it('scrubs the member from every song default lineup and setlist entry override on delete', async () => {
