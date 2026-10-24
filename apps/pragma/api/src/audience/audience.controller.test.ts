@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { AUDIENCE_SEARCH_BUDGET, AUDIENCE_WRITE_BUDGET } from './audience-rate-limit.middleware';
+import { votingRoundTable } from './audience.schema';
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
 const A_BALLOT = 'a'.repeat(48);
@@ -397,6 +398,27 @@ describe('audience controller (back-e2e)', () => {
     });
     expect(first.status).toBe(201);
     expect(second.status).toBe(409);
+  });
+
+  it('opens one round when two are asked for on the same concert at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+
+    const answers = await Promise.all([
+      jsonRequest(app, `/api/audience/concerts/${sessionId}/rounds`, {
+        method: 'POST',
+        cookieHeader,
+      }),
+      jsonRequest(app, `/api/audience/concerts/${sessionId}/rounds`, {
+        method: 'POST',
+        cookieHeader,
+      }),
+    ]);
+
+    expect(
+      answers.map((answer) => answer.status).toSorted((first, second) => first - second),
+    ).toEqual([201, 409]);
+    expect(await testDatabase().select().from(votingRoundTable)).toHaveLength(1);
   });
 
   it('creates the audience-choice setlist at the first round and refuses to rename it', async () => {

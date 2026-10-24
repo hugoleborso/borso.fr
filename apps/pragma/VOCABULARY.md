@@ -945,7 +945,10 @@ Lives in: `api/src/audience/`
   `settled_at` and `winning_song_id`. `ROUND_DURATION_MS` in
   `round.core.ts` is the window.
 - A second round is refused while one is open on that concert, and a round
-  is refused on a session whose `kind` is `practice`.
+  is refused on a session whose `kind` is `practice`. The check and the
+  insert run in one transaction that first writes the concert's
+  audience-choice setlist row (`claimSetlistWithin`), so two rounds asked
+  for at the same moment cannot both pass it.
 - Settlement is lazy: the first read after `closes_at` settles the round,
   and settling twice changes nothing (`settleRound`).
 - The winner is the song with the most surviving votes; a tie goes to the
@@ -955,6 +958,8 @@ Lives in: `api/src/audience/`
   `winning_song_id` stays null, and nothing is appended.
 - **The person voting is deliberately not modelled.** There is no row for
   a voter and no field that identifies one; only the ballot exists.
+
+Held by: `api/src/audience/audience.controller.test.ts` › opens one round when two are asked for on the same concert at the same moment
 
 Not to be confused with: a session, which is the concert the round belongs
 to.

@@ -60,11 +60,11 @@ const VOTE_PROJECTION = {
 } as const;
 
 // @FollowsBlueprint repository-query
-export async function insertRound(values: RoundInsertShape): Promise<VotingRoundRow> {
-  const [row] = await getDatabase()
-    .insert(votingRoundTable)
-    .values(values)
-    .returning(ROUND_PROJECTION);
+export async function insertRoundWithin(
+  executor: DatabaseExecutor,
+  values: RoundInsertShape,
+): Promise<VotingRoundRow> {
+  const [row] = await executor.insert(votingRoundTable).values(values).returning(ROUND_PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return row;
 }
@@ -74,7 +74,15 @@ export async function findOpenRoundOfConcert(
   sessionId: string,
   now: Date,
 ): Promise<VotingRoundRow | null> {
-  const rows = await getDatabase()
+  return await findOpenRoundOfConcertWithin(getDatabase(), sessionId, now);
+}
+
+export async function findOpenRoundOfConcertWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+  now: Date,
+): Promise<VotingRoundRow | null> {
+  const rows = await executor
     .select(ROUND_PROJECTION)
     .from(votingRoundTable)
     .where(

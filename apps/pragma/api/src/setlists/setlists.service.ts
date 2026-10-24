@@ -142,7 +142,7 @@ export async function findOrCreateAudienceChoiceSetlist(sessionId: string): Prom
 }
 
 // @FollowsBlueprint service-facade-reexport
-export { runInOneSetlistTransaction } from './setlists.repository';
+export { claimSetlistWithin, runInOneSetlistTransaction } from './setlists.repository';
 
 export async function appendSongWithin(
   executor: DatabaseExecutor,

@@ -2,6 +2,7 @@ import { randomBytes } from 'node:crypto';
 import { findSessionById } from '../sessions/sessions.service';
 import {
   appendSongWithin,
+  claimSetlistWithin,
   findOrCreateAudienceChoiceSetlist,
   getManualSetlistSongIdsOfSession,
   runInOneSetlistTransaction,
@@ -19,8 +20,9 @@ import {
   findConcertWithOpenRound,
   findLatestRoundOfConcert,
   findOpenRoundOfConcert,
+  findOpenRoundOfConcertWithin,
   findRoundById,
-  insertRound,
+  insertRoundWithin,
   insertSuggestion,
   recordVote,
   listRoundsOfConcert,
@@ -95,12 +97,18 @@ export async function openRound(params: OpenRoundParams): Promise<OpenRoundOutco
   if (session.kind !== CONCERT_SESSION_KIND) return refuse('not-a-concert');
   const running = await findOpenRoundOfConcert(params.sessionId, params.now);
   if (running !== null) return refuse('round-already-open');
-  await findOrCreateAudienceChoiceSetlist(params.sessionId);
-  const round = await insertRound({
-    sessionId: params.sessionId,
-    openedAt: params.now,
-    closesAt: selectRoundClosesAt(params.now),
+  const setlist = await findOrCreateAudienceChoiceSetlist(params.sessionId);
+  const round = await runInOneSetlistTransaction(async (executor) => {
+    await claimSetlistWithin(executor, setlist.id);
+    const runningNow = await findOpenRoundOfConcertWithin(executor, params.sessionId, params.now);
+    if (runningNow !== null) return null;
+    return await insertRoundWithin(executor, {
+      sessionId: params.sessionId,
+      openedAt: params.now,
+      closesAt: selectRoundClosesAt(params.now),
+    });
   });
+  if (round === null) return refuse('round-already-open');
   return { kind: 'ok', round: projectRound(round, params.now) };
 }
 
