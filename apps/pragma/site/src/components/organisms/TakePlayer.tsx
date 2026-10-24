@@ -18,12 +18,7 @@ import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { formatDuration } from '../molecules/song-duration.utils';
-import {
-  orderThread,
-  placeMomentMarks,
-  isMomentToggleOn,
-  selectCommentMoment,
-} from './take-player.core';
+import { placeMomentMarks, isMomentToggleOn, selectCommentMoment } from './take-player.core';
 
 export interface TakePlayerProps {
   readonly take: ListedTake;
@@ -72,7 +67,6 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
   const [isConfirmingDelete, setIsConfirmingDelete] = useState(false);
 
   const comments = commentsQuery.data?.comments ?? NO_COMMENTS;
-  const thread = useMemo(() => orderThread(comments), [comments]);
   const marks = useMemo(
     () => placeMomentMarks(comments, take.durationSeconds),
     [comments, take.durationSeconds],
@@ -160,11 +154,11 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
         ))}
       </div>
 
-      {thread.length === 0 ? (
+      {comments.length === 0 ? (
         <p className="text-sm text-ink-400 italic m-0">{t('takes.player.noComments')}</p>
       ) : (
         <ul className="flex flex-col gap-2 m-0 p-0 list-none">
-          {thread.map((comment) => {
+          {comments.map((comment) => {
             return (
               <li key={comment.id} className="flex items-start gap-2 text-sm">
                 {comment.atSeconds === null ? null : (

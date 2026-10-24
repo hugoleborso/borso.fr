@@ -3,7 +3,6 @@
 export interface MomentComment {
   readonly id: string;
   readonly atSeconds: number | null;
-  readonly createdAt: string;
 }
 
 export interface MomentMark {
@@ -49,15 +48,5 @@ export function placeMomentMarks(
       (comment.atSeconds / durationSeconds) * FULL_PERCENT,
     );
     return [{ id: comment.id, atSeconds: comment.atSeconds, offsetPercent }];
-  });
-}
-
-export function orderThread<TComment extends MomentComment>(
-  comments: readonly TComment[],
-): TComment[] {
-  return comments.toSorted((left, right) => {
-    const byCreation = Date.parse(left.createdAt) - Date.parse(right.createdAt);
-    if (byCreation !== 0) return byCreation;
-    return left.id.localeCompare(right.id);
   });
 }
