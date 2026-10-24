@@ -82,3 +82,32 @@ pragma previews clone the production schema ([ADR-0009](./0009-pragma-previews-c
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/talos/api/src/push/web-push.adapter.ts`, `apps/talos/api/src/push/push.service.ts` (precedent); `apps/pragma/cdk/lib/stack.ts` (parameters, blocklist); `pnpm-workspace.yaml` (catalog)
 - Related ADRs: builds on ADR-0009, ADR-0017 (a credential in SSM)
+
+## Revisions
+
+### Revision 2026-10-24 — the key pair moves from SSM into the database
+
+What changed: the VAPID key pair is no longer two SSM SecureStrings per stage.
+It lives in a `vapid_key_pair` table, one row under id 1, which the API fills
+the first time push needs a key: it calls `webPush.generateVAPIDKeys()` and
+inserts the pair with `ON CONFLICT DO NOTHING`, so two first uses at the same
+moment keep one pair, and both read back the one that was written. The stack
+names no VAPID parameter and grants `ssm:GetParameter` on the Spotify
+credential alone. `vapid_key_pair` joins the preview clone's `tableBlocklist`
+([ADR-0009](./0009-pragma-previews-clone-production.md)), so each preview
+generates a pair of its own and keeps it across its deploys. A stage can no
+longer be without a key, so the key route no longer answers 503
+`push-not-configured`.
+
+Why: the operator wants push to need no AWS secret and no manual step. Every
+stage needed four SecureStrings created by hand before push worked there, and
+nothing in the repository could check that they existed. The standard SSM tier
+was already free, so cost was never the reason.
+
+Implication for the original decision: still valid. The library, the inline
+send, the one adapter and the preview isolation are unchanged. Two of its
+consequences change: no stage needs a manual key step, and the private key is
+now readable by the API's database role, as the session HMAC key in
+`app_config` already is, instead of sitting under SSM's KMS encryption. A
+leaked database dump now also yields the push signing key, which lets its
+holder push to the band's subscribed devices until the pair is replaced.
