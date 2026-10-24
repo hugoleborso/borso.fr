@@ -20,10 +20,11 @@ Lives in: `api/src/audience/`
 - `audience_suggestion` holds `session_id`, `song_id`, `ballot_token` and
   `suggested_at`. It anchors on the concert, never on a setlist.
 - Only a picked search result is accepted: `suggestionCreateSchema` is
-  `.strict()` and takes an `mbid` and nothing else, so no free text the
-  band has not seen can ever be displayed.
-- An `mbid` already in the catalogue resolves to that song; an unknown one
-  creates a song with status `idea` (`acceptSuggestion`).
+  `.strict()` and takes a Deezer `trackId` and nothing else, so no free
+  text the band has not seen can ever be displayed.
+- The track is read from Deezer first. One a catalogue song already links
+  resolves to that song; any other creates a song with status `idea`
+  (`acceptSuggestion` through `resolveCatalogueSongForTrack`).
 - A song already in a manual setlist attached to tonight is refused: the
   band is playing it anyway.
 
@@ -504,6 +505,12 @@ Lives in: `api/src/songs/` (the `deezer_track_id` column), read by
   by, and from the **Spotify track**, which the API resolves from this
   track's ISRC. Picking a search result sets the first two and clears the
   third, which is then resolved again on save.
+- One track belongs to at most one song: `song_deezer_track_id_unique`
+  refuses a second. A create or an update naming a track another song
+  holds answers 409 `deezer-track-taken` with that song's id and title.
+
+Held by: `api/src/songs/songs.controller.test.ts` › refuses a second song naming a Deezer track another song holds, and names the holder
+Held by: `api/src/songs/songs.controller.test.ts` › refuses moving a song onto a Deezer track another song holds, and lets a song keep its own
 
 ## Spotify track
 
@@ -597,7 +604,8 @@ prepared in a rehearsal is the same one played at the concert.
 
 Lives in: `api/src/setlists/`
 
-- The row holds `id` and `name` only. `name` is `NOT NULL` and defaults
+- The row holds `id`, `name`, `kind`, `status` and `targetSongCount`.
+  `name` is `NOT NULL` and defaults
   to the empty string, because a set is often written in a hurry and
   named afterwards.
 - The physical table is `setlist_sheet`. The original `setlist` table
