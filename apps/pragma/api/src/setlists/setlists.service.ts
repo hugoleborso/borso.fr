@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { DatabaseExecutor } from '../database/client';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
-import { claimSessionWithin, findSessionById } from '../sessions/sessions.service';
+import { didClaimSessionWithin } from '../sessions/sessions.service';
 import {
   buildSetlistSummaries,
   isReorderOfTheSameEntries,
@@ -103,26 +103,27 @@ export async function findSetlist(setlistId: string): Promise<SetlistRow | null>
 async function attachToSessionWithin(
   executor: DatabaseExecutor,
   sessionId: string,
-  setlistId: string,
-): Promise<void> {
-  await claimSessionWithin(executor, sessionId);
-  await insertSessionLinkAtEndWithin(executor, sessionId, setlistId);
+  writeSetlist: () => Promise<SetlistRow>,
+): Promise<SetlistRow | null> {
+  const isSessionClaimed = await didClaimSessionWithin(executor, sessionId);
+  if (!isSessionClaimed) return null;
+  const setlist = await writeSetlist();
+  await insertSessionLinkAtEndWithin(executor, sessionId, setlist.id);
+  return setlist;
 }
 
 export async function createSetlist(
   input: SetlistCreateInput,
   actor: WriteActor,
 ): Promise<{ kind: 'ok'; setlist: SetlistRow } | { kind: 'session-not-found' }> {
-  if (input.sessionId !== null) {
-    const session = await findSessionById(input.sessionId);
-    if (session === null) return { kind: 'session-not-found' };
-  }
   const { sessionId } = input;
   const setlist = await runInOneSetlistTransaction(async (executor) => {
-    const created = await insertSetlistWithin(executor, input.name, DEFAULT_SETLIST_KIND);
-    if (sessionId !== null) await attachToSessionWithin(executor, sessionId, created.id);
-    return created;
+    const insertSetlist = async (): Promise<SetlistRow> =>
+      await insertSetlistWithin(executor, input.name, DEFAULT_SETLIST_KIND);
+    if (sessionId === null) return await insertSetlist();
+    return await attachToSessionWithin(executor, sessionId, insertSetlist);
   });
+  if (setlist === null) return { kind: 'session-not-found' };
   await notifySetlistChanged(setlist, actor);
   return { kind: 'ok', setlist };
 }
@@ -149,14 +150,19 @@ export async function getManualSetlistSongIdsOfSession(sessionId: string): Promi
   return await listManualSetlistSongIdsOfSession(sessionId);
 }
 
-export async function findOrCreateAudienceChoiceSetlist(sessionId: string): Promise<SetlistRow> {
+export async function findOrCreateAudienceChoiceSetlist(
+  sessionId: string,
+): Promise<SetlistRow | null> {
   const existing = await findAudienceChoiceSetlistOfSession(sessionId);
   if (existing !== null) return existing;
-  return await runInOneSetlistTransaction(async (executor) => {
-    const setlist = await insertAudienceChoiceSetlistWithin(executor, sessionId);
-    await attachToSessionWithin(executor, sessionId, setlist.id);
-    return setlist;
-  });
+  return await runInOneSetlistTransaction(
+    async (executor) =>
+      await attachToSessionWithin(
+        executor,
+        sessionId,
+        async () => await insertAudienceChoiceSetlistWithin(executor, sessionId),
+      ),
+  );
 }
 
 // @FollowsBlueprint service-facade-reexport
@@ -190,14 +196,13 @@ export async function linkSetlistToSession(
   sessionId: string,
   actor: WriteActor,
 ): Promise<LinkOutcome> {
-  const [setlist, session] = await Promise.all([
-    findSetlistById(setlistId),
-    findSessionById(sessionId),
-  ]);
-  if (setlist === null || session === null) return { kind: 'not-found' };
-  await runInOneSetlistTransaction(async (executor) => {
-    await attachToSessionWithin(executor, sessionId, setlistId);
-  });
+  const setlist = await findSetlistById(setlistId);
+  if (setlist === null) return { kind: 'not-found' };
+  const linked = await runInOneSetlistTransaction(
+    async (executor) =>
+      await attachToSessionWithin(executor, sessionId, () => Promise.resolve(setlist)),
+  );
+  if (linked === null) return { kind: 'not-found' };
   await notifySetlistChanged(setlist, actor);
   return { kind: 'ok' };
 }

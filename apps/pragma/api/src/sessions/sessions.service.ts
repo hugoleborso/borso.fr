@@ -14,7 +14,7 @@ import {
   type SessionRow,
   updateSession,
 } from './sessions.repository';
-export { claimSessionWithin, findSessionById } from './sessions.repository';
+export { didClaimSessionWithin, findSessionById } from './sessions.repository';
 import {
   type SessionPersistedUpdate,
   type sessionCreateSchema,

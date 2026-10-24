@@ -98,6 +98,7 @@ export async function openRound(params: OpenRoundParams): Promise<OpenRoundOutco
   const running = await findOpenRoundOfConcert(params.sessionId, params.now);
   if (running !== null) return refuse('round-already-open');
   const setlist = await findOrCreateAudienceChoiceSetlist(params.sessionId);
+  if (setlist === null) return refuse('not-a-concert');
   const round = await runInOneSetlistTransaction(async (executor) => {
     await claimSetlistWithin(executor, setlist.id);
     const runningNow = await findOpenRoundOfConcertWithin(executor, params.sessionId, params.now);
@@ -136,6 +137,7 @@ async function settleIfDue(round: VotingRoundRow, now: Date): Promise<void> {
   if (!write.shouldClaimTheRound) return;
   const winningSongId = write.winningSongId;
   const setlist = await findOrCreateAudienceChoiceSetlist(round.sessionId);
+  if (setlist === null) return;
   await runInOneSetlistTransaction(async (executor) => {
     const hasClaimedTheRound = await hasClaimedRoundForSettlement(
       executor,

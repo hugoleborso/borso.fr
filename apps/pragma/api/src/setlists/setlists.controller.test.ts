@@ -1,12 +1,15 @@
+import { getTableName } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import {
+  holdWritesToTable,
+  runSecondWhileFirstWaitsOnHold,
   runWithWritesToTableHeld,
   testDatabase,
   truncateAllTables,
 } from '../../../test/database-utils';
-import { sessionSetlistTable } from './setlists.schema';
+import { sessionSetlistTable, setlistTable } from './setlists.schema';
 
 const entrySchema = z.object({
   id: z.string().uuid(),
@@ -393,6 +396,24 @@ describe('setlists controller (back-e2e)', () => {
     expect(links.map((link) => link.position).toSorted((first, second) => first - second)).toEqual([
       0, 1,
     ]);
+  });
+
+  it('leaves no link behind when the session is deleted while a setlist joins it', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPractice(app, cookieHeader);
+    const [, deletion] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable(getTableName(setlistTable)),
+      async () =>
+        await jsonRequest(app, '/api/setlists', {
+          method: 'POST',
+          body: { name: 'Filage', sessionId },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/sessions/${sessionId}`, { method: 'DELETE', cookieHeader }),
+    );
+    expect(deletion.status).toBe(200);
+    expect(await testDatabase().select().from(sessionSetlistTable)).toEqual([]);
   });
 
   it('detaches a setlist from one session and leaves it in the other', async () => {

@@ -644,8 +644,14 @@ Lives in: `api/src/setlists/`
   the session row in the same retried transaction, so two setlists joining
   one session at the same moment read the highest position one after the
   other and never share it.
+- A setlist joins only a session that still exists. The claim reports
+  whether it found the session row, and when it did not the attach is
+  refused before anything is written, so the answer is the same 404 as for
+  an unknown session. Deleting a session removes its row before its links,
+  so an attach that claimed the row first has its link removed with it.
 
 Held by: `api/src/setlists/setlists.controller.test.ts` › gives two setlists joining one session at the same moment a position each
+Held by: `api/src/setlists/setlists.controller.test.ts` › leaves no link behind when the session is deleted while a setlist joins it
 
 ## Setlist status
 

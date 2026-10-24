@@ -1,6 +1,6 @@
 import { sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { type Database, getDatabase } from '../api/src/database/client';
+import { type Database, type DatabaseExecutor, getDatabase } from '../api/src/database/client';
 
 const ALL_TABLES: readonly string[] = [
   'app_config',
@@ -71,6 +71,30 @@ async function waitForLockWaiters(database: Database, expected: number): Promise
   }
 }
 
+async function waitUntilSettledOrWaiting(
+  database: Database,
+  pending: Promise<unknown>,
+  expected: number,
+): Promise<void> {
+  const progress = { isSettled: false };
+  const markSettled = (): void => {
+    progress.isSettled = true;
+  };
+  void pending.then(markSettled, markSettled);
+  const deadline = Date.now() + LOCK_WAITER_DEADLINE_MILLISECONDS;
+  while (!progress.isSettled && (await countLockWaiters(database)) < expected) {
+    if (Date.now() > deadline) throw new Error(`neither settled nor among ${expected} waiters`);
+    await new Promise((resolve) => setTimeout(resolve, LOCK_WAITER_POLL_MILLISECONDS));
+  }
+}
+
+export type LockHold = (transaction: DatabaseExecutor) => Promise<unknown>;
+
+export function holdWritesToTable(tableName: string): LockHold {
+  return async (transaction) =>
+    await transaction.execute(sql.raw(`LOCK TABLE "${tableName}" IN SHARE MODE`));
+}
+
 export async function runWithWritesToTableHeld<Result>(
   tableName: string,
   writers: number,
@@ -78,10 +102,27 @@ export async function runWithWritesToTableHeld<Result>(
 ): Promise<Result> {
   const database = getDatabase();
   const started = await database.transaction(async (transaction) => {
-    await transaction.execute(sql.raw(`LOCK TABLE "${tableName}" IN SHARE MODE`));
+    await holdWritesToTable(tableName)(transaction);
     const pending = start();
     await waitForLockWaiters(database, writers);
     return { pending };
   });
   return await started.pending;
+}
+
+export async function runSecondWhileFirstWaitsOnHold<First, Second>(
+  hold: LockHold,
+  first: () => Promise<First>,
+  second: () => Promise<Second>,
+): Promise<readonly [First, Second]> {
+  const database = getDatabase();
+  const started = await database.transaction(async (transaction) => {
+    await hold(transaction);
+    const firstPending = first();
+    await waitForLockWaiters(database, 1);
+    const secondPending = second();
+    await waitUntilSettledOrWaiting(database, secondPending, 2);
+    return { firstPending, secondPending };
+  });
+  return [await started.firstPending, await started.secondPending];
 }

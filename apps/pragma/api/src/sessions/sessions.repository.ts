@@ -94,25 +94,27 @@ export async function updateSession(
   return row === undefined ? null : rowToSession(row);
 }
 
-export async function claimSessionWithin(
+export async function didClaimSessionWithin(
   executor: DatabaseExecutor,
   sessionId: string,
-): Promise<void> {
-  await executor
+): Promise<boolean> {
+  const claimed = await executor
     .update(sessionTable)
     .set({ kind: sql`${sessionTable.kind}` })
-    .where(eq(sessionTable.id, sessionId));
+    .where(eq(sessionTable.id, sessionId))
+    .returning({ id: sessionTable.id });
+  return claimed.length > 0;
 }
 
 export async function deleteSessionWithCascade(id: string): Promise<DeletionOutcome> {
   const database = getDatabase();
   return await database.transaction(async (transaction) => {
-    await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
-    await detachTakesOfDeletedSession(transaction, id);
     const deleted = await transaction
       .delete(sessionTable)
       .where(eq(sessionTable.id, id))
       .returning({ id: sessionTable.id });
+    await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
+    await detachTakesOfDeletedSession(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });
 }
