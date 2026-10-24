@@ -691,5 +691,32 @@
       "sessions": "Les sessions",
       "setlists": "Les setlists, compositions et transitions"
     }
+  },
+  "install": {
+    "banner": "Installez pragma comme une appli, pour les notifications et le plein écran",
+    "showMe": "Me montrer",
+    "dismiss": "Masquer cette suggestion",
+    "title": "Installer pragma",
+    "intro": "À faire une seule fois. pragma s’ouvre ensuite depuis l’écran d’accueil, en plein écran, et peut vous envoyer des notifications.",
+    "installNow": "Installer",
+    "walkthrough": "Comment installer pragma",
+    "steps": {
+      "openInSafari": "Copiez l’adresse de cette page et ouvrez-la dans Safari. Seul Safari peut ajouter pragma à l’écran d’accueil.",
+      "tapShare": "Dans Safari, touchez Partager.",
+      "scrollShareSheet": "Faites défiler la liste des actions.",
+      "tapAddToHomeScreen": "Touchez « Sur l’écran d’accueil ».",
+      "confirmAdd": "Touchez Ajouter. pragma est sur votre écran d’accueil.",
+      "tapBrowserMenu": "Dans Chrome, touchez ⋮ en haut à droite.",
+      "tapInstallApp": "Touchez « Installer l’application » (ou « Ajouter à l’écran d’accueil »).",
+      "confirmInstall": "Touchez Installer. pragma est sur votre écran d’accueil."
+    },
+    "screen": {
+      "addToHomeScreen": "Sur l’écran d’accueil",
+      "add": "Ajouter",
+      "cancel": "Annuler",
+      "installApp": "Installer l’application",
+      "installQuestion": "Installer l’application ?",
+      "install": "Installer"
+    }
   }
 }

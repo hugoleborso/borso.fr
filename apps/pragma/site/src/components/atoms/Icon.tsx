@@ -134,6 +134,25 @@ const ICONS = {
       <circle cx="18" cy="12" r="1.3" fill="currentColor" />
     </>
   ),
+  moreVertical: (
+    <>
+      <circle cx="12" cy="6" r="1.3" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.3" fill="currentColor" />
+      <circle cx="12" cy="18" r="1.3" fill="currentColor" />
+    </>
+  ),
+  share: (
+    <>
+      <path d="M12 3v12M8 7l4-4 4 4" />
+      <path d="M8 10H6v11h12V10h-2" />
+    </>
+  ),
+  addSquare: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="3" />
+      <path d="M12 8v8M8 12h8" />
+    </>
+  ),
   link: (
     <>
       <path d="M10 14a5 5 0 0 0 7 0l3-3a5 5 0 0 0-7-7l-1 1" />

@@ -691,5 +691,32 @@
       "sessions": "Sessions",
       "setlists": "Setlists, lineups and transitions"
     }
+  },
+  "install": {
+    "banner": "Install pragma as an app, for notifications and full screen",
+    "showMe": "Show me",
+    "dismiss": "Hide this suggestion",
+    "title": "Install pragma",
+    "intro": "Do this once. pragma then opens from your home screen, full screen, and can send you notifications.",
+    "installNow": "Install",
+    "walkthrough": "How to install pragma",
+    "steps": {
+      "openInSafari": "Copy this page's address and open it in Safari. Only Safari can add pragma to the home screen.",
+      "tapShare": "In Safari, tap Share.",
+      "scrollShareSheet": "Scroll down the list of actions.",
+      "tapAddToHomeScreen": "Tap “Add to Home Screen”.",
+      "confirmAdd": "Tap Add. pragma is now on your home screen.",
+      "tapBrowserMenu": "In Chrome, tap ⋮ at the top right.",
+      "tapInstallApp": "Tap “Install app” (or “Add to Home screen”).",
+      "confirmInstall": "Tap Install. pragma is now on your home screen."
+    },
+    "screen": {
+      "addToHomeScreen": "Add to Home Screen",
+      "add": "Add",
+      "cancel": "Cancel",
+      "installApp": "Install app",
+      "installQuestion": "Install app?",
+      "install": "Install"
+    }
   }
 }
