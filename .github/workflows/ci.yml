@@ -31,6 +31,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       # Whole history: the dantotsu check resolves every fix commit an entry
       # names against origin/main, and a shallow clone holds one commit.
@@ -208,6 +209,18 @@ jobs:
       # turns the losing side into a failing script — which is how this one was
       # found, green locally and red here on the same commit.
       - run: ./scripts/check-no-racy-pipelines.sh
+      # The whole-tree runs of the checks the commit hook reads only a slice of,
+      # or no longer runs at all, so that no check lost coverage when the hook
+      # was held to its budget. See docs/standards/14-tool-runtime-budgets.md,
+      # which says where each check's whole-tree run lives.
+      - run: ./scripts/check-hook-decisions.sh
+      - run: ./scripts/check-ci-job-timeouts.sh
+      - run: ./scripts/check-every-test-is-collected.sh
+      - run: ./scripts/check-spec-test-strategy.sh
+      - run: ./scripts/check-no-comments-in-styles-and-markup.sh
+      - run: ./scripts/check-tailwind-arbitrary-variants.sh
+      - run: ./scripts/check-package-scripts-are-commands.sh
+      - run: pnpm exec tsx scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
       # `deploy`, `destroy`, `install`, `update`, `sync`, `fetch` and `publish`
       # are pnpm built-ins: without `run`, pnpm shadows the package's scripts
       # entry and silently does the wrong thing. Mirrors the pre-commit hook,
@@ -282,12 +295,30 @@ jobs:
           CDK_DEFAULT_ACCOUNT: '000000000000'
       - run: pnpm exec knip
 
+  # The commit hook on a fixture commit that touches one file of every common
+  # kind, inside the three seconds docs/standards/14-tool-runtime-budgets.md
+  # gives a commit. The hook holds each check to its CPU budget itself; the
+  # wall-clock total is only measurable on a machine nothing else is using.
+  pre-commit-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: ./scripts/check-pre-commit-budget.sh
+
   # Which apps this change actually touches. An `infra/cdk` change means all of
   # them, because the constructs are the contract. No `base:` on paths-filter —
   # it defaults to github.event.before on push, and naming HEAD~1 fails with
   # git exit 128. See docs/dantotsus/paths-filter-base-head1-on-push.md.
   detect:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       apps: ${{ steps.compute.outputs.apps }}
     steps:
@@ -326,6 +357,7 @@ jobs:
     needs: detect
     if: needs.detect.outputs.apps != '[]'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         app: ${{ fromJson(needs.detect.outputs.apps) }}
@@ -389,7 +421,7 @@ jobs:
   # seconds, `slow` the coverage, mutation, type-check and database suites.
   gate-canaries:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 10
     strategy:
       matrix:
         tier: [fast, slow]
@@ -437,6 +469,7 @@ jobs:
   commitlint:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:
