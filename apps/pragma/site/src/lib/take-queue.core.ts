@@ -1,8 +1,10 @@
 /** @Feature takes */
 
-import { normalizeTakeContentType, type TakeContentType } from '@domain/take-upload.core';
-
-export type TakeSource = 'live' | 'upload';
+import {
+  normalizeTakeContentType,
+  type TakeContentType,
+  type TakeSource,
+} from '@domain/take-upload.core';
 
 export interface SignedTakeUpload {
   readonly uploadUrl: string;

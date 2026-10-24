@@ -742,7 +742,7 @@ One recording of one song, optionally from one session.
 Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
 
 - The id is chosen by the device that recorded it, so a create retried
-  after a lost answer lands on the same row (`insertTakeIfAbsent`).
+  after a lost answer lands on the same row (`hasInsertedTake`).
 - `song_id` is required and `session_id` is optional. Deleting the session
   keeps the take and clears `session_id`; deleting the song deletes the
   take, its comments and its audio object.

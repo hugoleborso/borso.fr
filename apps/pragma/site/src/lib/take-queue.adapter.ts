@@ -3,7 +3,7 @@
  * @Feature takes
  */
 
-import { TAKE_CONTENT_TYPES } from '@domain/take-upload.core';
+import { TAKE_CONTENT_TYPES, TAKE_SOURCES } from '@domain/take-upload.core';
 import { z } from 'zod';
 import { isQuotaExceededError, type QueuedTake } from './take-queue.core';
 
@@ -67,7 +67,7 @@ const storedTakeSchema = z.object({
   durationSeconds: z.number(),
   contentType: z.enum(TAKE_CONTENT_TYPES),
   byteLength: z.number(),
-  source: z.enum(['live', 'upload']),
+  source: z.enum(TAKE_SOURCES),
   upload: z
     .object({ uploadUrl: z.string(), objectKey: z.string(), expiresAt: z.string() })
     .nullable(),

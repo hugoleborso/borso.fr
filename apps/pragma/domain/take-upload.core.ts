@@ -10,6 +10,10 @@ export const TAKE_CONTENT_TYPES = [
 
 export type TakeContentType = (typeof TAKE_CONTENT_TYPES)[number];
 
+export const TAKE_SOURCES = ['live', 'upload'] as const;
+
+export type TakeSource = (typeof TAKE_SOURCES)[number];
+
 const BYTES_PER_KIBIBYTE = 1_024;
 const BYTES_PER_MEBIBYTE = BYTES_PER_KIBIBYTE * BYTES_PER_KIBIBYTE;
 const SECONDS_PER_HOUR = 3_600;

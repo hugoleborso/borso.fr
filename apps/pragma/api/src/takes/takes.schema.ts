@@ -3,13 +3,12 @@ import {
   TAKE_CONTENT_TYPES,
   TAKE_DURATION_MAX_SECONDS,
   TAKE_MAX_BYTES,
+  TAKE_SOURCES,
 } from '@domain/take-upload.core';
 import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 
 const OBJECT_KEY_MAX_LENGTH = 512;
-
-export const TAKE_SOURCES = ['live', 'upload'] as const;
 
 // @FollowsBlueprint schema-table-and-input
 export const takeTable = pgTable(

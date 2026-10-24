@@ -1,56 +1,28 @@
 import type { TakeContentType } from '@domain/take-upload.core';
+import type { takeCommentTable, takeTable } from './takes.schema';
 
-export interface TakeRow {
-  readonly id: string;
-  readonly songId: string;
-  readonly sessionId: string | null;
-  readonly memberId: string;
+type TakeTableRow = typeof takeTable.$inferSelect;
+type TakeCommentTableRow = typeof takeCommentTable.$inferSelect;
+type TakeCommentTableInsert = typeof takeCommentTable.$inferInsert;
+
+interface WithAuthorName {
   readonly authorName: string | null;
-  readonly objectKey: string;
+}
+
+export type TakeRow = Omit<TakeTableRow, 'contentType'> &
+  WithAuthorName & { readonly contentType: TakeContentType };
+
+export type TakeView = TakeRow & { readonly commentCount: number };
+
+export type TakeCommentView = TakeCommentTableRow & WithAuthorName;
+
+export type TakeInsert = Omit<typeof takeTable.$inferInsert, 'contentType'> & {
   readonly contentType: TakeContentType;
-  readonly durationSeconds: number;
-  readonly recordedAt: Date;
-  readonly createdAt: Date;
-}
+};
 
-export interface TakeView extends TakeRow {
-  readonly commentCount: number;
-}
+export type TakeCommentInsert = Omit<TakeCommentTableInsert, 'id'>;
 
-export interface TakeCommentView {
-  readonly id: string;
-  readonly takeId: string;
-  readonly memberId: string;
-  readonly authorName: string | null;
-  readonly body: string;
-  readonly atSeconds: number | null;
-  readonly createdAt: Date;
-}
-
-export interface TakeInsert {
-  readonly id: string;
-  readonly songId: string;
-  readonly sessionId: string | null;
-  readonly memberId: string;
-  readonly objectKey: string;
-  readonly contentType: TakeContentType;
-  readonly durationSeconds: number;
-  readonly recordedAt: Date;
-  readonly createdAt: Date;
-}
-
-export interface TakeCommentInsert {
-  readonly takeId: string;
-  readonly memberId: string;
-  readonly body: string;
-  readonly atSeconds: number | null;
-  readonly createdAt: Date;
-}
-
-export interface TakeCommentChanges {
-  readonly body?: string;
-  readonly atSeconds?: number | null;
-}
+export type TakeCommentChanges = Partial<Pick<TakeCommentTableInsert, 'body' | 'atSeconds'>>;
 
 export type TakeUploadOutcome =
   | {
