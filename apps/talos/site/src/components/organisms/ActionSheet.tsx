@@ -3,7 +3,12 @@ import { useTranslation } from 'react-i18next';
 import { buttonVariants } from '../atoms/button.variants';
 import { Icon } from '../atoms/Icon';
 import { closeActionSheet, useShownActionSheet } from '../../lib/action-sheet.hook';
-import { buildEnvironmentAddress, composeTalosPrompt } from '../../lib/claude-code-address.core';
+import { detectClaudeCodeOpener } from '../../lib/claude-code-opener.adapter';
+import {
+  buildEnvironmentAddress,
+  composeTalosPrompt,
+  selectClaudeCodeLinkTarget,
+} from '../../lib/claude-code-address.core';
 import { selectSubjectReference } from '../../lib/discussion-subject.core';
 import { useCopyPromptOnLaunch } from '../../lib/prompt-copy.hook';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
@@ -21,6 +26,7 @@ export function ActionSheet(): JSX.Element | null {
   const sheet = useShownActionSheet();
   const target = useClaudeCodeTarget();
   const copyPrompt = useCopyPromptOnLaunch();
+  const opener = detectClaudeCodeOpener();
   if (sheet === null) return null;
   const storage = target.data?.storage;
   const file = selectSubjectReference(sheet.subject, storage);
@@ -69,8 +75,8 @@ export function ActionSheet(): JSX.Element | null {
         <ul className="m-0 mt-2 p-0 list-none flex flex-col gap-1">
           <li>
             <a
-              href={buildEnvironmentAddress(target.data, 'talos', prompt)}
-              target="_blank"
+              href={buildEnvironmentAddress(target.data, 'talos', prompt, opener)}
+              target={selectClaudeCodeLinkTarget(opener)}
               rel="noopener"
               aria-disabled={target.data === undefined}
               // eslint-disable-next-line jsx-a11y/no-autofocus -- the sheet opens on a long press, and the first action is where a keyboard or a screen reader has to land.
