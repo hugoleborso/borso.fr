@@ -196,6 +196,17 @@ describe('notifications controller (back-e2e)', () => {
       expect(await listStoredEndpoints()).toEqual([deviceEndpoint('hugo-phone')]);
     });
 
+    it('stores the subscription once when its first write loses a conflict', async () => {
+      const hugo = await buildAuthenticatedApp('Hugo');
+      const removeSimulatedConflict = await abortCommitsWritingTable('push_subscription', 1);
+      try {
+        expect((await subscribeDevice(hugo, 'hugo-phone')).status).toBe(201);
+      } finally {
+        await removeSimulatedConflict();
+      }
+      expect(await listStoredEndpoints()).toEqual([deviceEndpoint('hugo-phone')]);
+    });
+
     it('refuses an endpoint that is not https', async () => {
       const hugo = await buildAuthenticatedApp('Hugo');
       const response = await jsonRequest(hugo.app, '/api/notifications/subscriptions', {
@@ -251,6 +262,21 @@ describe('notifications controller (back-e2e)', () => {
         category: 'sessions',
         enabled: true,
       });
+    });
+
+    it('saves the toggle when its first write loses a conflict', async () => {
+      const hugo = await buildAuthenticatedApp('Hugo');
+      const removeSimulatedConflict = await abortCommitsWritingTable('notification_preference', 1);
+      let response: Response;
+      try {
+        response = await turnCategory(hugo, 'sessions', false);
+      } finally {
+        await removeSimulatedConflict();
+      }
+      expect(response.status).toBe(200);
+      expect(await testDatabase().select().from(notificationPreferenceTable)).toMatchObject([
+        { memberId: hugo.memberId, category: 'sessions', enabled: false },
+      ]);
     });
 
     it('refuses an unknown category', async () => {

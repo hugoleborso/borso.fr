@@ -32,13 +32,16 @@ const PREFERENCE_PROJECTION = {
 
 // @FollowsBlueprint repository-idempotent-upsert
 export async function saveSubscription(values: PushSubscriptionInsertShape): Promise<void> {
-  await getDatabase()
-    .insert(pushSubscriptionTable)
-    .values(values)
-    .onConflictDoUpdate({
-      target: pushSubscriptionTable.endpoint,
-      set: { memberId: values.memberId, p256dh: values.p256dh, auth: values.auth },
-    });
+  await retryingConflictAborts(
+    async () =>
+      await getDatabase()
+        .insert(pushSubscriptionTable)
+        .values(values)
+        .onConflictDoUpdate({
+          target: pushSubscriptionTable.endpoint,
+          set: { memberId: values.memberId, p256dh: values.p256dh, auth: values.auth },
+        }),
+  );
 }
 
 export async function deleteSubscription(endpoint: string): Promise<void> {
@@ -75,13 +78,16 @@ export async function listPreferencesOfCategory(
 }
 
 export async function savePreference(preference: CategoryPreference): Promise<void> {
-  await getDatabase()
-    .insert(notificationPreferenceTable)
-    .values(preference)
-    .onConflictDoUpdate({
-      target: [notificationPreferenceTable.memberId, notificationPreferenceTable.category],
-      set: { enabled: preference.enabled },
-    });
+  await retryingConflictAborts(
+    async () =>
+      await getDatabase()
+        .insert(notificationPreferenceTable)
+        .values(preference)
+        .onConflictDoUpdate({
+          target: [notificationPreferenceTable.memberId, notificationPreferenceTable.category],
+          set: { enabled: preference.enabled },
+        }),
+  );
 }
 
 export async function findMemberFirstName(memberId: string): Promise<string | null> {
