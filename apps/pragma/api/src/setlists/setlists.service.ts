@@ -25,8 +25,8 @@ import {
   updateEntry,
 } from './setlist-entry.repository';
 import {
-  claimSetlistWithin,
   deleteSessionLink,
+  didClaimSetlistWithin,
   deleteSetlistWithEntries,
   findAudienceChoiceSetlistOfSession,
   findSetlistById,
@@ -166,14 +166,13 @@ export async function findOrCreateAudienceChoiceSetlist(
 }
 
 // @FollowsBlueprint service-facade-reexport
-export { claimSetlistWithin, runInOneSetlistTransaction } from './setlists.repository';
+export { didClaimSetlistWithin, runInOneSetlistTransaction } from './setlists.repository';
 
-export async function appendSongWithin(
+export async function appendSongToClaimedSetlistWithin(
   executor: DatabaseExecutor,
   setlistId: string,
   songId: string,
 ): Promise<void> {
-  await claimSetlistWithin(executor, setlistId);
   const position = await countEntriesWithin(executor, setlistId);
   await insertEntryWithin(executor, {
     setlistId,
@@ -196,14 +195,16 @@ export async function linkSetlistToSession(
   sessionId: string,
   actor: WriteActor,
 ): Promise<LinkOutcome> {
-  const setlist = await findSetlistById(setlistId);
-  if (setlist === null) return { kind: 'not-found' };
-  const linked = await runInOneSetlistTransaction(
-    async (executor) =>
-      await attachToSessionWithin(executor, sessionId, () => Promise.resolve(setlist)),
-  );
-  if (linked === null) return { kind: 'not-found' };
-  await notifySetlistChanged(setlist, actor);
+  const isLinked = await runInOneSetlistTransaction(async (executor) => {
+    const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
+    if (!isSetlistClaimed) return false;
+    const isSessionClaimed = await didClaimSessionWithin(executor, sessionId);
+    if (!isSessionClaimed) return false;
+    await insertSessionLinkAtEndWithin(executor, sessionId, setlistId);
+    return true;
+  });
+  if (!isLinked) return { kind: 'not-found' };
+  await notifySetlistChangedById(setlistId, actor);
   return { kind: 'ok' };
 }
 
@@ -232,13 +233,16 @@ export async function getEntriesOfSetlists(
   return await listEntriesOfSetlists(setlistIds);
 }
 
+export type AppendEntryOutcome = { kind: 'ok'; entry: SetlistEntryRow } | { kind: 'not-found' };
+
 export async function appendEntry(
   setlistId: string,
   input: EntryCreateInput,
   actor: WriteActor,
-): Promise<SetlistEntryRow> {
+): Promise<AppendEntryOutcome> {
   const entry = await runInOneSetlistTransaction(async (executor) => {
-    await claimSetlistWithin(executor, setlistId);
+    const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
+    if (!isSetlistClaimed) return null;
     return await insertEntryWithin(executor, {
       setlistId,
       songId: input.songId,
@@ -250,8 +254,9 @@ export async function appendEntry(
       notes: input.notes,
     });
   });
+  if (entry === null) return { kind: 'not-found' };
   await notifySetlistChangedById(setlistId, actor);
-  return entry;
+  return { kind: 'ok', entry };
 }
 
 // @FollowsBlueprint service-crud-update
@@ -282,8 +287,9 @@ export async function removeEntryAndCompact(
   entryId: string,
   actor: WriteActor,
 ): Promise<DeletionOutcome> {
-  const outcome = await runInOneSetlistTransaction(async (executor) => {
-    await claimSetlistWithin(executor, setlistId);
+  const outcome = await runInOneSetlistTransaction(async (executor): Promise<DeletionOutcome> => {
+    const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
+    if (!isSetlistClaimed) return 'not-found';
     const deletion = await deleteEntryWithin(executor, setlistId, entryId);
     await writeEntryPositionsWithin(executor, await listEntryIdsInOrderWithin(executor, setlistId));
     return deletion;
@@ -293,7 +299,7 @@ export async function removeEntryAndCompact(
   return outcome;
 }
 
-export type ReorderResult = { kind: 'ok' } | { kind: 'stale' };
+export type ReorderResult = { kind: 'ok' } | { kind: 'stale' } | { kind: 'not-found' };
 
 export async function reorderEntries(
   setlistId: string,
@@ -301,14 +307,15 @@ export async function reorderEntries(
   actor: WriteActor,
 ): Promise<ReorderResult> {
   const reorder = await runInOneSetlistTransaction(async (executor): Promise<ReorderResult> => {
-    await claimSetlistWithin(executor, setlistId);
+    const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
+    if (!isSetlistClaimed) return { kind: 'not-found' };
     const existingIds = await listEntryIdsInOrderWithin(executor, setlistId);
     const isCurrent = isReorderOfTheSameEntries(existingIds, entryIds);
     if (!isCurrent) return { kind: 'stale' };
     await writeEntryPositionsWithin(executor, entryIds);
     return { kind: 'ok' };
   });
-  if (reorder.kind === 'stale') return reorder;
+  if (reorder.kind !== 'ok') return reorder;
   await notifySetlistChangedById(setlistId, actor);
   return reorder;
 }

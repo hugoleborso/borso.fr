@@ -3,14 +3,13 @@ import { pickNextPaletteHex } from './member-palette.utils';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteMemberWithLinks,
-  didReplaceMemberInstruments,
   insertMember,
-  areInstrumentsKnown,
   listInstrumentsForMember,
   listMembers,
   type MemberInstrumentRow,
   type MemberPersistedShape,
   type MemberRow,
+  replaceMemberInstruments,
   updateMember,
 } from './members.repository';
 
@@ -75,13 +74,7 @@ export async function assignInstrumentsToMember(
   instrumentIds: readonly string[],
   primaryInstrumentIds?: readonly string[],
 ): Promise<AssignInstrumentsResult> {
-  const isKnown = await areInstrumentsKnown(instrumentIds);
-  if (!isKnown) return { kind: 'instrument-not-found' };
-  const isReplaced = await didReplaceMemberInstruments(
-    memberId,
-    instrumentIds,
-    primaryInstrumentIds,
-  );
-  if (!isReplaced) return { kind: 'member-not-found' };
-  return { kind: 'ok' };
+  const replacement = await replaceMemberInstruments(memberId, instrumentIds, primaryInstrumentIds);
+  if (replacement === 'replaced') return { kind: 'ok' };
+  return { kind: replacement };
 }

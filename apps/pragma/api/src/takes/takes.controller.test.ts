@@ -9,7 +9,13 @@ import {
   jsonRequest,
   readJson,
 } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  abortCommitsWritingTable,
+  holdWritesToTable,
+  runSecondWhileFirstWaitsOnHold,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { takeCommentTable, takeTable } from './takes.schema';
 
 const PRESIGNER_ENV = {
@@ -348,6 +354,55 @@ describe('takes controller (back-e2e)', () => {
       expect(await readJson(missingSession, errorEnvelope)).toEqual({
         error: 'session-not-found',
       });
+    });
+
+    it('refuses a take for a song deleted while the take was being written', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const [deletion, creation] = await runSecondWhileFirstWaitsOnHold(
+        holdWritesToTable('take'),
+        async () =>
+          await jsonRequest(band.app, `/api/songs/${songId}`, {
+            method: 'DELETE',
+            cookieHeader: band.cookieHeader,
+          }),
+        async () => await postTake(band, buildTakeBody({ id: randomUUID(), songId })),
+      );
+      expect(deletion.status).toBe(200);
+      expect(creation.status).toBe(404);
+      expect(await testDatabase().select().from(takeTable)).toEqual([]);
+    });
+
+    it('refuses a take for a session deleted while the take was being written', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const sessionId = await createPractice(band);
+      const [deletion, creation] = await runSecondWhileFirstWaitsOnHold(
+        holdWritesToTable('take'),
+        async () =>
+          await jsonRequest(band.app, `/api/sessions/${sessionId}`, {
+            method: 'DELETE',
+            cookieHeader: band.cookieHeader,
+          }),
+        async () => await postTake(band, buildTakeBody({ id: randomUUID(), songId, sessionId })),
+      );
+      expect(deletion.status).toBe(200);
+      expect(creation.status).toBe(404);
+      expect(await readJson(creation, errorEnvelope)).toEqual({ error: 'session-not-found' });
+      expect(await testDatabase().select().from(takeTable)).toEqual([]);
+    });
+
+    it('writes the take once when its first commit loses a conflict on the claimed song', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const removeSimulatedConflict = await abortCommitsWritingTable('song', 1);
+      try {
+        const creation = await postTake(band, buildTakeBody({ id: randomUUID(), songId }));
+        expect(creation.status).toBe(201);
+      } finally {
+        await removeSimulatedConflict();
+      }
+      expect(await listTakes(band, songId)).toHaveLength(1);
     });
   });
 

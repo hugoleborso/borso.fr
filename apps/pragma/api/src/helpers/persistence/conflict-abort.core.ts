@@ -37,3 +37,16 @@ export function isLostInsertRace(error: unknown): boolean {
 export function isWorthRetrying(error: unknown, attempt: number): boolean {
   return attempt < CONFLICTED_WRITE_MAX_ATTEMPTS && isConflictAbort(error);
 }
+
+export async function retryingConflictAborts<Result>(
+  write: () => Promise<Result>,
+  attempt = 1,
+): Promise<Result> {
+  try {
+    return await write();
+  } catch (error) {
+    const isRetried = isWorthRetrying(error, attempt);
+    if (!isRetried) throw error;
+    return await retryingConflictAborts(write, attempt + 1);
+  }
+}

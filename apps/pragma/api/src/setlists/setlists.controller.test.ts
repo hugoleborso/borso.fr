@@ -1,15 +1,17 @@
-import { getTableName } from 'drizzle-orm';
+import { eq, getTableName } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import {
   holdWritesToTable,
+  type LockHold,
   runSecondWhileFirstWaitsOnHold,
   runWithWritesToTableHeld,
   testDatabase,
   truncateAllTables,
 } from '../../../test/database-utils';
-import { sessionSetlistTable, setlistTable } from './setlists.schema';
+import { sessionTable } from '../sessions/sessions.schema';
+import { sessionSetlistTable, setlistEntryTable, setlistTable } from './setlists.schema';
 
 const entrySchema = z.object({
   id: z.string().uuid(),
@@ -39,6 +41,26 @@ const singleEntryEnvelope = z.object({ entry: entrySchema });
 const entryListEnvelope = z.object({ entries: z.array(entrySchema) });
 const sessionEnvelope = z.object({ session: z.object({ id: z.string().uuid() }) });
 const songEnvelope = z.object({ song: z.object({ id: z.string().uuid() }) });
+
+const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
+
+function holdSetlistRow(setlistId: string): LockHold {
+  return async (transaction) =>
+    await transaction
+      .select({ id: setlistTable.id })
+      .from(setlistTable)
+      .where(eq(setlistTable.id, setlistId))
+      .for('update');
+}
+
+function holdSessionRow(sessionId: string): LockHold {
+  return async (transaction) =>
+    await transaction
+      .select({ id: sessionTable.id })
+      .from(sessionTable)
+      .where(eq(sessionTable.id, sessionId))
+      .for('update');
+}
 
 async function createPractice(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
@@ -506,5 +528,74 @@ describe('setlists controller (back-e2e)', () => {
     expect(listed.setlists).toEqual([]);
     const gone = await jsonRequest(app, `/api/setlists/${setlistId}`, { cookieHeader });
     expect(gone.status).toBe(404);
+  });
+
+  it('answers 404 when writing the entries of a setlist that does not exist', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { songIds } = await seed(app, cookieHeader);
+    const append = await jsonRequest(app, `/api/setlists/${UNKNOWN_ID}/entries`, {
+      method: 'POST',
+      body: { songId: songIds[0] },
+      cookieHeader,
+    });
+    const reorder = await jsonRequest(app, `/api/setlists/${UNKNOWN_ID}/reorder`, {
+      method: 'PUT',
+      body: { entryIds: [UNKNOWN_ID] },
+      cookieHeader,
+    });
+    const removal = await jsonRequest(app, `/api/setlists/${UNKNOWN_ID}/entries/${UNKNOWN_ID}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+    expect([append.status, reorder.status, removal.status]).toEqual([404, 404, 404]);
+    expect(await testDatabase().select().from(setlistEntryTable)).toEqual([]);
+  });
+
+  it('refuses an entry for a setlist deleted while the entry was being written', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const [deletion, append] = await runSecondWhileFirstWaitsOnHold(
+      holdSetlistRow(setlistId),
+      async () =>
+        await jsonRequest(app, `/api/setlists/${setlistId}`, { method: 'DELETE', cookieHeader }),
+      async () =>
+        await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+          method: 'POST',
+          body: { songId: songIds[0] },
+          cookieHeader,
+        }),
+    );
+    expect(deletion.status).toBe(200);
+    expect(append.status).toBe(404);
+    expect(await testDatabase().select().from(setlistEntryTable)).toEqual([]);
+  });
+
+  it('leaves no link to a setlist deleted while it was joining a session', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPractice(app, cookieHeader);
+    const loose = await readJson(
+      await jsonRequest(app, '/api/setlists', {
+        method: 'POST',
+        body: { name: 'Rappel', sessionId: null },
+        cookieHeader,
+      }),
+      setlistEnvelope,
+    );
+    const [, deletion] = await runSecondWhileFirstWaitsOnHold(
+      holdSessionRow(sessionId),
+      async () =>
+        await jsonRequest(app, `/api/setlists/${loose.setlist.id}/sessions`, {
+          method: 'POST',
+          body: { sessionId },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/setlists/${loose.setlist.id}`, {
+          method: 'DELETE',
+          cookieHeader,
+        }),
+    );
+    expect(deletion.status).toBe(200);
+    expect(await testDatabase().select().from(sessionSetlistTable)).toEqual([]);
   });
 });

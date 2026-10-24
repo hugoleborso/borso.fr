@@ -1,10 +1,11 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import {
   CONFLICTED_WRITE_MAX_ATTEMPTS,
   isConflictAbort,
   isLostInsertRace,
   isUniqueViolation,
   isWorthRetrying,
+  retryingConflictAborts,
 } from './conflict-abort.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -68,5 +69,37 @@ describe('isWorthRetrying', () => {
 
   it('never retries a real failure', () => {
     expect(isWorthRetrying(new Error('timeout'), 1)).toBe(false);
+  });
+});
+
+describe('retryingConflictAborts', () => {
+  const conflict = { code: 'OC000' };
+
+  it('answers the first attempt that commits, after a conflict abort', async () => {
+    const write = vi
+      .fn<() => Promise<string>>()
+      .mockRejectedValueOnce(conflict)
+      .mockResolvedValueOnce('committed');
+    await expect(retryingConflictAborts(write)).resolves.toBe('committed');
+    expect(write).toHaveBeenCalledTimes(2);
+  });
+
+  it('runs the write once when it commits straight away', async () => {
+    const write = vi.fn<() => Promise<string>>().mockResolvedValue('committed');
+    await expect(retryingConflictAborts(write)).resolves.toBe('committed');
+    expect(write).toHaveBeenCalledTimes(1);
+  });
+
+  it('rethrows the conflict once every attempt has been aborted', async () => {
+    const write = vi.fn<() => Promise<string>>().mockRejectedValue(conflict);
+    await expect(retryingConflictAborts(write)).rejects.toBe(conflict);
+    expect(write).toHaveBeenCalledTimes(CONFLICTED_WRITE_MAX_ATTEMPTS);
+  });
+
+  it('rethrows any other failure without trying again', async () => {
+    const failure = new Error('timeout');
+    const write = vi.fn<() => Promise<string>>().mockRejectedValue(failure);
+    await expect(retryingConflictAborts(write)).rejects.toBe(failure);
+    expect(write).toHaveBeenCalledTimes(1);
   });
 });

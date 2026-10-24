@@ -191,8 +191,9 @@ export function buildSetlistsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const entry = await appendEntry(id, input, readActor(context));
-        return context.json({ entry }, 201);
+        const appended = await appendEntry(id, input, readActor(context));
+        if (appended.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ entry: appended.entry }, 201);
       },
     )
     .put(
@@ -226,6 +227,7 @@ export function buildSetlistsRouter() {
         const { id } = context.req.valid('param');
         const { entryIds } = context.req.valid('json');
         const updated = await reorderEntries(id, entryIds, readActor(context));
+        if (updated.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
         if (updated.kind === 'stale') return context.json({ error: 'reorder-stale' }, 409);
         return context.json({ id, entryIds });
       },

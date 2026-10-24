@@ -1,4 +1,4 @@
-import { eq } from 'drizzle-orm';
+import { eq, inArray, sql } from 'drizzle-orm';
 import {
   defaultPositionForFamily,
   type InstrumentFamily,
@@ -7,7 +7,8 @@ import {
   resolveInstrumentIcon,
   resolveInstrumentPosition,
 } from '@domain/instrument.core';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { memberInstrumentTable } from '../members/members.schema';
 import { foldPlayersIntoInstruments, type InstrumentPlayer } from './instrument-players.core';
@@ -154,11 +155,32 @@ export async function setInstrumentPosition(id: string, position: number): Promi
   await database.update(instrumentTable).set({ position }).where(eq(instrumentTable.id, id));
 }
 
-export async function deleteInstrument(id: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  const deleted = await database
-    .delete(instrumentTable)
-    .where(eq(instrumentTable.id, id))
+export async function didClaimInstrumentsWithin(
+  executor: DatabaseExecutor,
+  instrumentIds: readonly string[],
+): Promise<boolean> {
+  const distinctIds = [...new Set(instrumentIds)];
+  if (distinctIds.length === 0) return true;
+  const claimed = await executor
+    .update(instrumentTable)
+    .set({ name: sql`${instrumentTable.name}` })
+    .where(inArray(instrumentTable.id, distinctIds))
     .returning({ id: instrumentTable.id });
-  return selectDeletionOutcome(deleted.length);
+  return claimed.length === distinctIds.length;
+}
+
+export async function deleteInstrumentWithLinks(id: string): Promise<DeletionOutcome> {
+  return await retryingConflictAborts(
+    async () =>
+      await getDatabase().transaction(async (transaction) => {
+        const deleted = await transaction
+          .delete(instrumentTable)
+          .where(eq(instrumentTable.id, id))
+          .returning({ id: instrumentTable.id });
+        await transaction
+          .delete(memberInstrumentTable)
+          .where(eq(memberInstrumentTable.instrumentId, id));
+        return selectDeletionOutcome(deleted.length);
+      }),
+  );
 }

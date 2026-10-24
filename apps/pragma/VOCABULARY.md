@@ -314,6 +314,10 @@ Lives in: `api/src/instruments/`
 - The list is sorted by `position`, then by `name` to break a tie. It is
   never sorted by name alone, because an alphabetical column hides an
   instrument changing hands, which is the whole point of the column.
+- Deleting an instrument removes its row and then every `member_instrument`
+  link naming it, in one transaction (`deleteInstrumentWithLinks`).
+
+Held by: `api/src/members/members.controller.test.ts` › removes the links of a deleted instrument from every member who played it
 
 ## Instrument family
 
@@ -423,11 +427,14 @@ Lives in: `api/src/members/`
   primary key is `(memberId, instrumentId)`, so the pair cannot repeat.
 - Assigning instruments replaces the whole set, and is refused when any of
   the ids is unknown (`assignInstrumentsToMember`). The replacement claims
-  the member row in its own transaction and writes nothing when the claim
-  finds no row, and deleting a member removes its row before its
-  `member_instrument` links, so no link outlives its member.
+  every named instrument row and then the member row in one retried
+  transaction, and writes nothing when a claim finds no row. Deleting a
+  member or an instrument removes its row before its `member_instrument`
+  links, so no link outlives either end.
 
 Held by: `api/src/members/members.controller.test.ts` › writes no instrument rows for a member deleted while the assignment was being checked
+Held by: `api/src/members/members.controller.test.ts` › leaves no link to an instrument deleted while it was being assigned
+Held by: `api/src/members/members.controller.test.ts` › assigns the instruments once when the first commit loses a conflict on the claimed member
 
 Not to be confused with: the member ids inside a lineup, which say who
 plays on one song rather than who is in the band.
@@ -649,14 +656,17 @@ Lives in: `api/src/setlists/`
   the session row in the same retried transaction, so two setlists joining
   one session at the same moment read the highest position one after the
   other and never share it.
-- A setlist joins only a session that still exists. The claim reports
-  whether it found the session row, and when it did not the attach is
-  refused before anything is written, so the answer is the same 404 as for
-  an unknown session. Deleting a session removes its row before its links,
-  so an attach that claimed the row first has its link removed with it.
+- A link joins a setlist and a session that both still exist. Attaching an
+  existing setlist claims the setlist row and then the session row, each
+  claim reporting whether it found its row, and when either did not the
+  attach is refused before anything is written, with the same 404 as for
+  an unknown id. Deleting a session or a setlist removes its row before
+  its links, so an attach that claimed the row first has its link removed
+  with it.
 
 Held by: `api/src/setlists/setlists.controller.test.ts` › gives two setlists joining one session at the same moment a position each
 Held by: `api/src/setlists/setlists.controller.test.ts` › leaves no link behind when the session is deleted while a setlist joins it
+Held by: `api/src/setlists/setlists.controller.test.ts` › leaves no link to a setlist deleted while it was joining a session
 
 ## Setlist status
 
@@ -690,11 +700,15 @@ Lives in: `api/src/setlists/`
   ids already stored for that setlist, each once
   (`isReorderOfTheSameEntries`).
 - An append, a delete and a reorder each run in one transaction that first
-  writes the setlist's own row (`claimSetlistWithin`), so two of them on
+  writes the setlist's own row (`didClaimSetlistWithin`), so two of them on
   one setlist cannot interleave: Postgres makes the second wait, and
   Aurora DSQL aborts it at commit and `runInOneSetlistTransaction` runs it
-  again.
+  again. When the claim finds no row the write is refused with a 404, and
+  deleting a setlist removes its row before its entries, so no entry
+  outlives its setlist.
 
+Held by: `api/src/setlists/setlists.controller.test.ts` › answers 404 when writing the entries of a setlist that does not exist
+Held by: `api/src/setlists/setlists.controller.test.ts` › refuses an entry for a setlist deleted while the entry was being written
 Held by: `api/src/setlists/setlists.controller.test.ts` › gives each of two entries appended at the same moment a position of its own
 Held by: `api/src/setlists/setlists.controller.test.ts` › applies one of two reorders sent at the same moment whole, never a mix of both
 Held by: `api/src/setlists/setlists.controller.test.ts` › keeps positions distinct when an append and a reorder land at the same moment
@@ -798,10 +812,14 @@ One recording of one song, optionally from one session.
 Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
 
 - The id is chosen by the device that recorded it, so a create retried
-  after a lost answer lands on the same row (`hasInsertedTake`).
+  after a lost answer lands on the same row (`hasInsertedTakeWithin`).
 - `song_id` is required and `session_id` is optional. Deleting the session
   keeps the take and clears `session_id`; deleting the song deletes the
   take, its comments and its audio object.
+- A take names only a song and a session that still exist: the create
+  claims both rows in the same retried transaction as the insert, and is
+  refused with `song-not-found` or `session-not-found` when a claim finds
+  no row.
 - The audio is one of the types in `TAKE_CONTENT_TYPES`, at most 50 MiB,
   and S3 enforces that length because the signed upload carries it. The
   object key is `take/<songId>/<takeId>.<extension>` (`buildTakeObjectKey`),
@@ -820,6 +838,9 @@ Held by: `api/src/takes/takes.controller.test.ts` › lets any member delete ano
 Held by: `api/src/takes/takes.controller.test.ts` › deleting the song deletes its takes, their comments and their audio
 Held by: `api/src/takes/takes.controller.test.ts` › deleting the session keeps its takes and clears their session
 Held by: `api/src/takes/takes.controller.test.ts` › deleting the author keeps their takes and comments, with no name to show
+Held by: `api/src/takes/takes.controller.test.ts` › refuses a take for a song deleted while the take was being written
+Held by: `api/src/takes/takes.controller.test.ts` › refuses a take for a session deleted while the take was being written
+Held by: `api/src/takes/takes.controller.test.ts` › writes the take once when its first commit loses a conflict on the claimed song
 
 Not to be confused with: a **study**, which records that a member worked a
 song and holds no audio.
@@ -858,7 +879,8 @@ Lives in: `api/src/tasks/`
 - `assigneeId` and `songId` are both nullable, and neither carries a
   foreign key, because DSQL has none. A task names only a member and a
   song that still exist: the write claims both rows in the same
-  transaction as the task, and is refused with `assignee-not-found` or
+  transaction as the task, which runs again when Aurora DSQL aborts it at
+  commit, and is refused with `assignee-not-found` or
   `song-not-found` when a claim finds no row. Deleting a member or a song
   removes its row first and then nulls the tasks naming it, in one
   transaction, so a task write that claimed the row first is nulled with
@@ -872,6 +894,8 @@ Lives in: `api/src/tasks/`
   unassigned.
 
 Held by: `api/src/tasks/tasks.controller.test.ts` › never leaves a task assigned to a member deleted while the assignment was written
+Held by: `api/src/tasks/tasks.controller.test.ts` › writes the task once when its first two commits lose a conflict on the claimed member
+Held by: `api/src/tasks/tasks.controller.test.ts` › gives up and writes nothing once every commit has lost a conflict
 
 Not to be confused with: a **setlist entry**, which is a decision about
 one song for one night rather than work owed by a person.
@@ -976,8 +1000,11 @@ Lives in: `api/src/audience/`
 - A second round is refused while one is open on that concert, and a round
   is refused on a session whose `kind` is `practice`. The check and the
   insert run in one transaction that first writes the concert's
-  audience-choice setlist row (`claimSetlistWithin`), so two rounds asked
-  for at the same moment cannot both pass it.
+  audience-choice setlist row (`didClaimSetlistWithin`), so two rounds
+  asked for at the same moment cannot both pass it. When that setlist was
+  deleted in the meantime the round is refused as `not-a-concert`, and a
+  settlement whose setlist is gone writes nothing, so the next read
+  settles the round into a new one.
 - Settlement is lazy: the first read after `closes_at` settles the round,
   and settling twice changes nothing (`settleRound`).
 - The winner is the song with the most surviving votes; a tie goes to the

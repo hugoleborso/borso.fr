@@ -1,4 +1,4 @@
-import { eq, inArray, isNotNull, sql } from 'drizzle-orm';
+import { eq, isNotNull, sql } from 'drizzle-orm';
 import { deleteCredentialsOfMember } from '../auth/credentials.service';
 import { deleteCalendarFeedOfMember } from '../calendar-feeds/calendar-feeds.service';
 import { deleteVotesOfDeletedMember } from '../setlists/voting.service';
@@ -6,9 +6,11 @@ import { deleteScoreHistoryOfDeletedMember } from '../mastery/mastery.service';
 import { deleteStudiesOfDeletedMember } from '../studies/studies.service';
 import { deletePushStateOfDeletedMember } from '../notifications/notifications.service';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { barTable } from '../bars/bars.schema';
 import { instrumentTable } from '../instruments/instruments.schema';
+import { didClaimInstrumentsWithin } from '../instruments/instruments.service';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
 import { defaultLineupSchema, songTable } from '../songs/songs.schema';
 import { unassignTasksOfMemberBeingDeleted } from '../tasks/tasks.service';
@@ -71,6 +73,12 @@ function rowToMemberInstrument(row: MemberInstrumentJoinedRow): MemberInstrument
   };
 }
 
+async function runInOneMemberTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
+
 export async function listMembers(): Promise<MemberRow[]> {
   const database = getDatabase();
   return await database.select(MEMBER_PROJECTION).from(memberTable);
@@ -111,8 +119,7 @@ export async function didClaimMemberWithin(
 }
 
 export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
+  return await runInOneMemberTransaction(async (transaction) => {
     const deleted = await transaction
       .delete(memberTable)
       .where(eq(memberTable.id, id))
@@ -192,25 +199,18 @@ export async function listInstrumentsForMember(memberId: string): Promise<Member
   return rows.map((row) => rowToMemberInstrument(row));
 }
 
-export async function areInstrumentsKnown(instrumentIds: readonly string[]): Promise<boolean> {
-  const database = getDatabase();
-  if (instrumentIds.length === 0) return true;
-  const rows = await database
-    .select({ id: instrumentTable.id })
-    .from(instrumentTable)
-    .where(inArray(instrumentTable.id, [...instrumentIds]));
-  return rows.length === instrumentIds.length;
-}
+export type MemberInstrumentsReplacement = 'replaced' | 'member-not-found' | 'instrument-not-found';
 
-export async function didReplaceMemberInstruments(
+export async function replaceMemberInstruments(
   memberId: string,
   instrumentIds: readonly string[],
   requestedPrimaryInstrumentIds?: readonly string[],
-): Promise<boolean> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
+): Promise<MemberInstrumentsReplacement> {
+  return await runInOneMemberTransaction(async (transaction) => {
+    const areInstrumentsClaimed = await didClaimInstrumentsWithin(transaction, instrumentIds);
+    if (!areInstrumentsClaimed) return 'instrument-not-found';
     const isMemberClaimed = await didClaimMemberWithin(transaction, memberId);
-    if (!isMemberClaimed) return false;
+    if (!isMemberClaimed) return 'member-not-found';
     const existing = await transaction
       .select({
         instrumentId: memberInstrumentTable.instrumentId,
@@ -240,6 +240,6 @@ export async function didReplaceMemberInstruments(
         })),
       );
     }
-    return true;
+    return 'replaced';
   });
 }

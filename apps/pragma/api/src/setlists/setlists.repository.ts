@@ -1,6 +1,6 @@
 import { and, asc, eq, isNull, max, ne, or, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { isWorthRetrying } from '../helpers/persistence/conflict-abort.core';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { selectAudienceChoiceSetlistId, selectNextLinkPosition } from './setlists.core';
 import {
@@ -22,6 +22,13 @@ const SETLIST_PROJECTION = {
   status: setlistTable.status,
   targetSongCount: setlistTable.targetSongCount,
 } as const;
+
+// @FollowsBlueprint repository-owned-transaction
+export async function runInOneSetlistTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
 
 export async function listSetlists(): Promise<SetlistRow[]> {
   const database = getDatabase();
@@ -135,16 +142,15 @@ export async function updateSetlistName(
 }
 
 export async function deleteSetlistWithEntries(setlistId: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
-    await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
-    await transaction
-      .delete(sessionSetlistTable)
-      .where(eq(sessionSetlistTable.setlistId, setlistId));
+  return await runInOneSetlistTransaction(async (transaction) => {
     const deleted = await transaction
       .delete(setlistTable)
       .where(eq(setlistTable.id, setlistId))
       .returning({ id: setlistTable.id });
+    await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
+    await transaction
+      .delete(sessionSetlistTable)
+      .where(eq(sessionSetlistTable.setlistId, setlistId));
     return selectDeletionOutcome(deleted.length);
   });
 }
@@ -181,34 +187,16 @@ export async function deleteSessionLink(
   return selectDeletionOutcome(deleted.length);
 }
 
-async function retryingConflictAborts<Result>(
-  write: () => Promise<Result>,
-  attempt = 1,
-): Promise<Result> {
-  try {
-    return await write();
-  } catch (error) {
-    const isRetried = isWorthRetrying(error, attempt);
-    if (!isRetried) throw error;
-    return await retryingConflictAborts(write, attempt + 1);
-  }
-}
-
-// @FollowsBlueprint repository-owned-transaction
-export async function runInOneSetlistTransaction<Result>(
-  work: (executor: DatabaseExecutor) => Promise<Result>,
-): Promise<Result> {
-  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
-}
-
-export async function claimSetlistWithin(
+export async function didClaimSetlistWithin(
   executor: DatabaseExecutor,
   setlistId: string,
-): Promise<void> {
-  await executor
+): Promise<boolean> {
+  const claimed = await executor
     .update(setlistTable)
     .set({ name: sql`${setlistTable.name}` })
-    .where(eq(setlistTable.id, setlistId));
+    .where(eq(setlistTable.id, setlistId))
+    .returning({ id: setlistTable.id });
+  return claimed.length > 0;
 }
 
 export async function insertAudienceChoiceSetlistWithin(

@@ -2,6 +2,7 @@ import { TAKE_CONTENT_TYPES } from '@domain/take-upload.core';
 import { and, count, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { memberTable } from '../members/members.schema';
 import { takeCommentTable, takeTable } from './takes.schema';
@@ -77,9 +78,19 @@ function selectComments(executor: DatabaseExecutor) {
     .leftJoin(memberTable, eq(memberTable.id, takeCommentTable.memberId));
 }
 
+// @FollowsBlueprint repository-owned-transaction
+export async function runInOneTakeTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
+
 // @FollowsBlueprint repository-idempotent-upsert
-export async function hasInsertedTake(take: TakeInsert): Promise<boolean> {
-  const inserted = await getDatabase()
+export async function hasInsertedTakeWithin(
+  executor: DatabaseExecutor,
+  take: TakeInsert,
+): Promise<boolean> {
+  const inserted = await executor
     .insert(takeTable)
     .values(take)
     .onConflictDoNothing()

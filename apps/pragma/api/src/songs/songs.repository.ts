@@ -1,6 +1,7 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { resolveSongOrigin, type SongOrigin } from '@domain/song-origin.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
@@ -173,6 +174,12 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   return encoded;
 }
 
+async function runInOneSongTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
+
 export async function listSongsNewestFirst(): Promise<SongRow[]> {
   const database = getDatabase();
   const rows = await database.select(PROJECTION).from(songTable).orderBy(desc(songTable.createdAt));
@@ -236,8 +243,7 @@ export interface SongDeletion {
 }
 
 export async function deleteSongWithCascade(id: string): Promise<SongDeletion> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
+  return await runInOneSongTransaction(async (transaction) => {
     const deleted = await transaction
       .delete(songTable)
       .where(eq(songTable.id, id))

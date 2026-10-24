@@ -1,5 +1,6 @@
 import { desc, eq, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
 import { detachTakesOfDeletedSession } from '../takes/takes.service';
@@ -49,6 +50,12 @@ function encodeUpdate(updates: SessionPersistedUpdate): SessionUpdateEncoded {
   const { friendsCountPerMember, ...columns } = updates;
   if (friendsCountPerMember === undefined) return columns;
   return { ...columns, friendsCountPerMember: JSON.stringify(friendsCountPerMember) };
+}
+
+async function runInOneSessionTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
 }
 
 export async function listSessions(): Promise<SessionRow[]> {
@@ -107,8 +114,7 @@ export async function didClaimSessionWithin(
 }
 
 export async function deleteSessionWithCascade(id: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
+  return await runInOneSessionTransaction(async (transaction) => {
     const deleted = await transaction
       .delete(sessionTable)
       .where(eq(sessionTable.id, id))

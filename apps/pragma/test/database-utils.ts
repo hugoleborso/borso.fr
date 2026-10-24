@@ -126,3 +126,39 @@ export async function runSecondWhileFirstWaitsOnHold<First, Second>(
   });
   return [await started.firstPending, await started.secondPending];
 }
+
+const SIMULATED_CONFLICT_SEQUENCE = 'simulated_conflict_attempt';
+const SIMULATED_CONFLICT_FUNCTION = 'abort_with_simulated_conflict';
+const SIMULATED_CONFLICT_TRIGGER = 'simulated_conflict_at_commit';
+
+export type SimulatedConflictRemoval = () => Promise<void>;
+
+export async function abortCommitsWritingTable(
+  tableName: string,
+  abortedCommits: number,
+): Promise<SimulatedConflictRemoval> {
+  const database = getDatabase();
+  await database.execute(sql.raw(`CREATE SEQUENCE "${SIMULATED_CONFLICT_SEQUENCE}"`));
+  await database.execute(
+    sql.raw(`CREATE FUNCTION "${SIMULATED_CONFLICT_FUNCTION}"() RETURNS trigger AS $$
+      BEGIN
+        IF nextval('"${SIMULATED_CONFLICT_SEQUENCE}"') <= ${String(abortedCommits)} THEN
+          RAISE EXCEPTION 'simulated commit conflict' USING ERRCODE = 'serialization_failure';
+        END IF;
+        RETURN NULL;
+      END $$ LANGUAGE plpgsql`),
+  );
+  await database.execute(
+    sql.raw(`CREATE CONSTRAINT TRIGGER "${SIMULATED_CONFLICT_TRIGGER}"
+      AFTER INSERT OR UPDATE OR DELETE ON "${tableName}"
+      DEFERRABLE INITIALLY DEFERRED FOR EACH ROW
+      EXECUTE FUNCTION "${SIMULATED_CONFLICT_FUNCTION}"()`),
+  );
+  return async () => {
+    await database.execute(
+      sql.raw(`DROP TRIGGER "${SIMULATED_CONFLICT_TRIGGER}" ON "${tableName}"`),
+    );
+    await database.execute(sql.raw(`DROP FUNCTION "${SIMULATED_CONFLICT_FUNCTION}"()`));
+    await database.execute(sql.raw(`DROP SEQUENCE "${SIMULATED_CONFLICT_SEQUENCE}"`));
+  };
+}

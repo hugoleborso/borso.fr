@@ -1,8 +1,8 @@
 import { randomBytes } from 'node:crypto';
 import { findSessionById } from '../sessions/sessions.service';
 import {
-  appendSongWithin,
-  claimSetlistWithin,
+  appendSongToClaimedSetlistWithin,
+  didClaimSetlistWithin,
   findOrCreateAudienceChoiceSetlist,
   getManualSetlistSongIdsOfSession,
   runInOneSetlistTransaction,
@@ -99,18 +99,18 @@ export async function openRound(params: OpenRoundParams): Promise<OpenRoundOutco
   if (running !== null) return refuse('round-already-open');
   const setlist = await findOrCreateAudienceChoiceSetlist(params.sessionId);
   if (setlist === null) return refuse('not-a-concert');
-  const round = await runInOneSetlistTransaction(async (executor) => {
-    await claimSetlistWithin(executor, setlist.id);
+  return await runInOneSetlistTransaction(async (executor): Promise<OpenRoundOutcome> => {
+    const isSetlistClaimed = await didClaimSetlistWithin(executor, setlist.id);
+    if (!isSetlistClaimed) return refuse('not-a-concert');
     const runningNow = await findOpenRoundOfConcertWithin(executor, params.sessionId, params.now);
-    if (runningNow !== null) return null;
-    return await insertRoundWithin(executor, {
+    if (runningNow !== null) return refuse('round-already-open');
+    const round = await insertRoundWithin(executor, {
       sessionId: params.sessionId,
       openedAt: params.now,
       closesAt: selectRoundClosesAt(params.now),
     });
+    return { kind: 'ok', round: projectRound(round, params.now) };
   });
-  if (round === null) return refuse('round-already-open');
-  return { kind: 'ok', round: projectRound(round, params.now) };
 }
 
 export interface RoundHistoryParams {
@@ -139,6 +139,8 @@ async function settleIfDue(round: VotingRoundRow, now: Date): Promise<void> {
   const setlist = await findOrCreateAudienceChoiceSetlist(round.sessionId);
   if (setlist === null) return;
   await runInOneSetlistTransaction(async (executor) => {
+    const isSetlistClaimed = await didClaimSetlistWithin(executor, setlist.id);
+    if (!isSetlistClaimed) return;
     const hasClaimedTheRound = await hasClaimedRoundForSettlement(
       executor,
       round.id,
@@ -147,7 +149,7 @@ async function settleIfDue(round: VotingRoundRow, now: Date): Promise<void> {
     );
     if (!hasClaimedTheRound) return;
     if (winningSongId === null) return;
-    await appendSongWithin(executor, setlist.id, winningSongId);
+    await appendSongToClaimedSetlistWithin(executor, setlist.id, winningSongId);
   });
 }
 

@@ -2,7 +2,7 @@ import type { InstrumentFamily, InstrumentIcon } from '@domain/instrument.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { comparePositionThenName } from './instrument-players.core';
 import {
-  deleteInstrument,
+  deleteInstrumentWithLinks,
   findInstrument,
   type InstrumentUpdates,
   type InstrumentWithPlayersRow,
@@ -12,6 +12,8 @@ import {
   setInstrumentPosition,
   updateInstrument,
 } from './instruments.repository';
+
+export { didClaimInstrumentsWithin } from './instruments.repository';
 
 export async function isKnownInstrument(id: string): Promise<boolean> {
   return (await findInstrument(id)) !== null;
@@ -71,5 +73,5 @@ export async function reorderInstruments(
 }
 
 export async function removeInstrument(id: string): Promise<DeletionOutcome> {
-  return await deleteInstrument(id);
+  return await deleteInstrumentWithLinks(id);
 }

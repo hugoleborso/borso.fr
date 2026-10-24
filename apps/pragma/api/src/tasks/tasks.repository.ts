@@ -1,6 +1,7 @@
 import { eq } from 'drizzle-orm';
 import { z } from 'zod';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { DEFAULT_TASK_STATUS, TASK_STATUSES, type TaskStatus } from '@domain/task-status.core';
 import { taskTable } from './tasks.schema';
@@ -32,7 +33,7 @@ function toTaskRow(row: TaskTableRow): TaskRow {
 export async function runInOneTaskTransaction<Result>(
   work: (executor: DatabaseExecutor) => Promise<Result>,
 ): Promise<Result> {
-  return await getDatabase().transaction(work);
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
 }
 
 export async function listTasks(): Promise<TaskRow[]> {

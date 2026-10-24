@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import {
+  abortCommitsWritingTable,
   type LockHold,
   runSecondWhileFirstWaitsOnHold,
   testDatabase,
@@ -225,5 +226,38 @@ describe('tasks controller (back-e2e)', () => {
       .select({ assigneeId: taskTable.assigneeId })
       .from(taskTable);
     expect(stored).toEqual([{ assigneeId: null }]);
+  });
+
+  it('writes the task once when its first two commits lose a conflict on the claimed member', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const removeSimulatedConflict = await abortCommitsWritingTable('member', 2);
+    try {
+      const create = await jsonRequest(app, '/api/tasks', {
+        method: 'POST',
+        body: { title: 'Buy strings', assigneeId: memberId },
+        cookieHeader,
+      });
+      expect(create.status).toBe(201);
+    } finally {
+      await removeSimulatedConflict();
+    }
+    const stored = await testDatabase().select({ title: taskTable.title }).from(taskTable);
+    expect(stored).toEqual([{ title: 'Buy strings' }]);
+  });
+
+  it('gives up and writes nothing once every commit has lost a conflict', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const removeSimulatedConflict = await abortCommitsWritingTable('member', 3);
+    try {
+      const create = await jsonRequest(app, '/api/tasks', {
+        method: 'POST',
+        body: { title: 'Buy strings', assigneeId: memberId },
+        cookieHeader,
+      });
+      expect(create.status).toBe(500);
+    } finally {
+      await removeSimulatedConflict();
+    }
+    expect(await testDatabase().select().from(taskTable)).toEqual([]);
   });
 });
