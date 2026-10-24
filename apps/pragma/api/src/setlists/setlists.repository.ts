@@ -89,31 +89,20 @@ export async function listManualSetlistSongIdsOfSession(sessionId: string): Prom
   return rows.map((row) => row.songId);
 }
 
-export async function insertSetlist(
+export async function insertSetlistWithin(
+  executor: DatabaseExecutor,
   name: string,
-  sessionId: string | null,
   kind: SetlistKind,
 ): Promise<SetlistRow> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
-    const [row] = await transaction
-      .insert(setlistTable)
-      .values({ name, kind })
-      .returning(SETLIST_PROJECTION);
-    if (row === undefined) throw new Error('insert returned no row');
-    if (sessionId !== null) await attachAtEnd(transaction, sessionId, row.id);
-    return row;
-  });
+  const [row] = await executor
+    .insert(setlistTable)
+    .values({ name, kind })
+    .returning(SETLIST_PROJECTION);
+  if (row === undefined) throw new Error('insert returned no row');
+  return row;
 }
 
-export async function insertSessionLink(sessionId: string, setlistId: string): Promise<void> {
-  const database = getDatabase();
-  await database.transaction(async (transaction) => {
-    await attachAtEnd(transaction, sessionId, setlistId);
-  });
-}
-
-async function attachAtEnd(
+export async function insertSessionLinkAtEndWithin(
   executor: DatabaseExecutor,
   sessionId: string,
   setlistId: string,
@@ -222,24 +211,24 @@ export async function claimSetlistWithin(
     .where(eq(setlistTable.id, setlistId));
 }
 
-export async function insertAudienceChoiceSetlist(sessionId: string): Promise<SetlistRow> {
+export async function insertAudienceChoiceSetlistWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+): Promise<SetlistRow> {
   const setlistId = selectAudienceChoiceSetlistId(sessionId);
-  return await runInOneSetlistTransaction(async (executor) => {
-    await executor
-      .insert(setlistTable)
-      .values({
-        id: setlistId,
-        name: AUDIENCE_CHOICE_SETLIST_NAME,
-        kind: AUDIENCE_CHOICE_SETLIST_KIND,
-      })
-      .onConflictDoNothing();
-    await attachAtEnd(executor, sessionId, setlistId);
-    const [row] = await executor
-      .select(SETLIST_PROJECTION)
-      .from(setlistTable)
-      .where(eq(setlistTable.id, setlistId))
-      .limit(1);
-    if (row === undefined) throw new Error('audience-choice setlist missing after its insert');
-    return row;
-  });
+  await executor
+    .insert(setlistTable)
+    .values({
+      id: setlistId,
+      name: AUDIENCE_CHOICE_SETLIST_NAME,
+      kind: AUDIENCE_CHOICE_SETLIST_KIND,
+    })
+    .onConflictDoNothing();
+  const [row] = await executor
+    .select(SETLIST_PROJECTION)
+    .from(setlistTable)
+    .where(eq(setlistTable.id, setlistId))
+    .limit(1);
+  if (row === undefined) throw new Error('audience-choice setlist missing after its insert');
+  return row;
 }

@@ -1,4 +1,5 @@
 import { sql } from 'drizzle-orm';
+import { z } from 'zod';
 import { type Database, getDatabase } from '../api/src/database/client';
 
 const ALL_TABLES: readonly string[] = [
@@ -48,4 +49,39 @@ export async function truncateAllTables(database: Database): Promise<void> {
       `TRUNCATE ${ALL_TABLES.map((name) => `"${name}"`).join(', ')} RESTART IDENTITY CASCADE`,
     ),
   );
+}
+
+const LOCK_WAITER_POLL_MILLISECONDS = 10;
+const LOCK_WAITER_DEADLINE_MILLISECONDS = 10_000;
+const lockWaiterCountSchema = z.array(z.object({ waiting: z.coerce.number() }));
+
+async function countLockWaiters(database: Database): Promise<number> {
+  const rows: unknown = await database.execute(
+    sql`SELECT count(*) AS waiting FROM pg_stat_activity
+        WHERE datname = current_database() AND wait_event_type = 'Lock'`,
+  );
+  return lockWaiterCountSchema.parse(rows)[0]?.waiting ?? 0;
+}
+
+async function waitForLockWaiters(database: Database, expected: number): Promise<void> {
+  const deadline = Date.now() + LOCK_WAITER_DEADLINE_MILLISECONDS;
+  while ((await countLockWaiters(database)) < expected) {
+    if (Date.now() > deadline) throw new Error(`fewer than ${expected} writers ever waited`);
+    await new Promise((resolve) => setTimeout(resolve, LOCK_WAITER_POLL_MILLISECONDS));
+  }
+}
+
+export async function runWithWritesToTableHeld<Result>(
+  tableName: string,
+  writers: number,
+  start: () => Promise<Result>,
+): Promise<Result> {
+  const database = getDatabase();
+  const started = await database.transaction(async (transaction) => {
+    await transaction.execute(sql.raw(`LOCK TABLE "${tableName}" IN SHARE MODE`));
+    const pending = start();
+    await waitForLockWaiters(database, writers);
+    return { pending };
+  });
+  return await started.pending;
 }

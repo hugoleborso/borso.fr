@@ -640,7 +640,12 @@ Lives in: `api/src/setlists/`
   on the first two, so one pair is stored once however many times it is
   attached.
 - A setlist joining a session lands one past the highest position already
-  taken, so the order the band wrote survives.
+  taken, so the order the band wrote survives. Every attach first claims
+  the session row in the same retried transaction, so two setlists joining
+  one session at the same moment read the highest position one after the
+  other and never share it.
+
+Held by: `api/src/setlists/setlists.controller.test.ts` › gives two setlists joining one session at the same moment a position each
 
 ## Setlist status
 

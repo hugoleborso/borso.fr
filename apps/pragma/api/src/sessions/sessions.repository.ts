@@ -1,5 +1,5 @@
-import { desc, eq } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { desc, eq, sql } from 'drizzle-orm';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
 import { detachTakesOfDeletedSession } from '../takes/takes.service';
@@ -92,6 +92,16 @@ export async function updateSession(
     .where(eq(sessionTable.id, id))
     .returning(PROJECTION);
   return row === undefined ? null : rowToSession(row);
+}
+
+export async function claimSessionWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+): Promise<void> {
+  await executor
+    .update(sessionTable)
+    .set({ kind: sql`${sessionTable.kind}` })
+    .where(eq(sessionTable.id, sessionId));
 }
 
 export async function deleteSessionWithCascade(id: string): Promise<DeletionOutcome> {

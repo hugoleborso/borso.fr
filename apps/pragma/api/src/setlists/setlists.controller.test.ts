@@ -1,7 +1,12 @@
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  runWithWritesToTableHeld,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
+import { sessionSetlistTable } from './setlists.schema';
 
 const entrySchema = z.object({
   id: z.string().uuid(),
@@ -353,6 +358,41 @@ describe('setlists controller (back-e2e)', () => {
       );
       expect(listed.setlists.map((setlist) => setlist.id)).toEqual([created.setlist.id]);
     }
+  });
+
+  it('gives two setlists joining one session at the same moment a position each', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPractice(app, cookieHeader);
+    const loose = await readJson(
+      await jsonRequest(app, '/api/setlists', {
+        method: 'POST',
+        body: { name: 'Rappel', sessionId: null },
+        cookieHeader,
+      }),
+      setlistEnvelope,
+    );
+    const answers = await runWithWritesToTableHeld(
+      'session_setlist',
+      2,
+      async () =>
+        await Promise.all([
+          jsonRequest(app, '/api/setlists', {
+            method: 'POST',
+            body: { name: 'Filage', sessionId },
+            cookieHeader,
+          }),
+          jsonRequest(app, `/api/setlists/${loose.setlist.id}/sessions`, {
+            method: 'POST',
+            body: { sessionId },
+            cookieHeader,
+          }),
+        ]),
+    );
+    expect(answers.map((answer) => answer.status)).toEqual([201, 201]);
+    const links = await testDatabase().select().from(sessionSetlistTable);
+    expect(links.map((link) => link.position).toSorted((first, second) => first - second)).toEqual([
+      0, 1,
+    ]);
   });
 
   it('detaches a setlist from one session and leaves it in the other', async () => {

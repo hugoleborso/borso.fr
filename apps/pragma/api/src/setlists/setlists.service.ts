@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { DatabaseExecutor } from '../database/client';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
-import { findSessionById } from '../sessions/sessions.service';
+import { claimSessionWithin, findSessionById } from '../sessions/sessions.service';
 import {
   buildSetlistSummaries,
   isReorderOfTheSameEntries,
@@ -30,9 +30,9 @@ import {
   deleteSetlistWithEntries,
   findAudienceChoiceSetlistOfSession,
   findSetlistById,
-  insertAudienceChoiceSetlist,
-  insertSessionLink,
-  insertSetlist,
+  insertAudienceChoiceSetlistWithin,
+  insertSessionLinkAtEndWithin,
+  insertSetlistWithin,
   listAllSessionLinks,
   listManualSetlistSongIdsOfSession,
   listSetlists,
@@ -100,6 +100,15 @@ export async function findSetlist(setlistId: string): Promise<SetlistRow | null>
   return await findSetlistById(setlistId);
 }
 
+async function attachToSessionWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+  setlistId: string,
+): Promise<void> {
+  await claimSessionWithin(executor, sessionId);
+  await insertSessionLinkAtEndWithin(executor, sessionId, setlistId);
+}
+
 export async function createSetlist(
   input: SetlistCreateInput,
   actor: WriteActor,
@@ -108,7 +117,12 @@ export async function createSetlist(
     const session = await findSessionById(input.sessionId);
     if (session === null) return { kind: 'session-not-found' };
   }
-  const setlist = await insertSetlist(input.name, input.sessionId, DEFAULT_SETLIST_KIND);
+  const { sessionId } = input;
+  const setlist = await runInOneSetlistTransaction(async (executor) => {
+    const created = await insertSetlistWithin(executor, input.name, DEFAULT_SETLIST_KIND);
+    if (sessionId !== null) await attachToSessionWithin(executor, sessionId, created.id);
+    return created;
+  });
   await notifySetlistChanged(setlist, actor);
   return { kind: 'ok', setlist };
 }
@@ -138,7 +152,11 @@ export async function getManualSetlistSongIdsOfSession(sessionId: string): Promi
 export async function findOrCreateAudienceChoiceSetlist(sessionId: string): Promise<SetlistRow> {
   const existing = await findAudienceChoiceSetlistOfSession(sessionId);
   if (existing !== null) return existing;
-  return await insertAudienceChoiceSetlist(sessionId);
+  return await runInOneSetlistTransaction(async (executor) => {
+    const setlist = await insertAudienceChoiceSetlistWithin(executor, sessionId);
+    await attachToSessionWithin(executor, sessionId, setlist.id);
+    return setlist;
+  });
 }
 
 // @FollowsBlueprint service-facade-reexport
@@ -177,7 +195,9 @@ export async function linkSetlistToSession(
     findSessionById(sessionId),
   ]);
   if (setlist === null || session === null) return { kind: 'not-found' };
-  await insertSessionLink(sessionId, setlistId);
+  await runInOneSetlistTransaction(async (executor) => {
+    await attachToSessionWithin(executor, sessionId, setlistId);
+  });
   await notifySetlistChanged(setlist, actor);
   return { kind: 'ok' };
 }
