@@ -21,7 +21,7 @@ SELF="$(cd "$(dirname "$0")" && pwd)/$(basename "$0")"
 
 # The hooks that read the repository find it through CLAUDE_PROJECT_DIR, and
 # otherwise through `git rev-parse`, which answers for the wrong directory
-# inside a git hook, where git has set GIT_DIR. Pre-commit and CI both call this
+# inside a git hook, where git has set GIT_DIR. Pre-push and CI both call this
 # from the repository root, so that is the project the cases run against.
 export CLAUDE_PROJECT_DIR="${CLAUDE_PROJECT_DIR:-$PWD}"
 

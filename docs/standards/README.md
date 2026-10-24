@@ -84,6 +84,7 @@ read the rest.
 | 11     | [Database](./11-database.md)                            | Drizzle, migrations, and transactions                  |
 | 12     | [Lint and gates](./12-linting-and-gates.md)             | ESLint, hooks, and CI                                  |
 | 13     | [Dependencies](./13-dependencies.md)                    | One version per dependency, in the pnpm catalog        |
+| 14     | [Tool runtime budgets](./14-tool-runtime-budgets.md)    | How long each hook, check and CI job may run           |
 
 ## How a standard differs from a blueprint
 
@@ -117,7 +118,7 @@ before adding a blueprint: a layer sitting at nought per cent is either a
 pattern nobody has written down yet or a layer whose files are genuinely all
 one-offs, and those two need different responses.
 
-Both files are generated, and the pre-commit hook and CI both run the generator
+Both files are generated, and the pre-push hook and CI both run the generator
 in `--check` mode. That fails a blueprint missing one of its four tags, a
 duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not
 exist, and either generated file left stale.

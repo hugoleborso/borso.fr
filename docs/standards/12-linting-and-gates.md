@@ -258,18 +258,26 @@ The blueprint for the replacement shape is annotated at
 
 ## The gates, in the order they run
 
-The pre-commit hook runs `eslint --cache` and `prettier --check` on the staged
-files. It is the cheap hook: nothing in it reads the whole repository's tests.
+The pre-commit hook runs `prettier --check` on the staged files, and each of the
+checks below when the commit touches something that check reads. It is held to
+a budget of 300 ms of CPU per check and about three seconds in total, and it
+times every check and refuses a commit that went over;
+[14. Tool runtime budgets](./14-tool-runtime-budgets.md) gives the budgets, the
+scope each check declares, and where each check's whole-tree run lives.
 
-Both eslint invocations, here and in CI, pass `--max-warnings 0`. Several rules
+ESLint is not on the commit. It is type-aware, so it builds a TypeScript program
+for the workspace before it runs a single rule, and that measured 2.8 s on a
+cache hit and 21 s for one changed file in pragma. It runs in the pre-push hook
+over the files the push changes, and in CI over the repository.
+
+Both eslint invocations, on push and in CI, pass `--max-warnings 0`. Several rules
 the standards lean on ship at `warn` from their plugin's recommended preset,
 `react-hooks/exhaustive-deps` and `react-hooks/incompatible-library` among
 them, and eslint exits 0 on a warning. Without the flag those rules print into
 a log nobody reads and stop nothing, which makes them advice again.
 
-It also runs the cheap whole-repository checks, each a git-index read plus a
-grep, and each guarding a class no linter sees because the evidence lives in
-two files at once:
+The pre-commit hook also runs these checks, each guarding a class no linter sees
+because the evidence lives in two files at once:
 
 | Script | Fails when |
 |--------|------------|
@@ -298,8 +306,11 @@ should have been `pnpm --filter <pkg> run deploy`, because seven script names
 are pnpm built-ins and pnpm silently prefers its own.
 
 The pre-push hook runs `knip` for dead code, `actionlint` for the workflows,
-`tsc --noEmit` for each application the pushed commits change, the tests those
-commits affect, and the mutation tests for the pure files they changed. The
+`tsc --noEmit` for each application the pushed commits change, ESLint over the
+files they change, the tests those commits affect, the mutation tests for the
+pure files they changed, and the generators that left the commit for its
+budget: the blueprint index, the convention baseline, the dantotsu record and
+the enforcement ledger. The
 type check is there because Vitest strips types without checking them: a test
 handing a component a prop it does not accept passes every test run and fails
 only the type checker.
@@ -363,7 +374,7 @@ review.
 
 ## Enforced by
 
-- `gate:eslint` runs over the staged files on commit and over the repository in
+- `gate:eslint` runs over the files a push changes and over the repository in
   CI, both with `--max-warnings 0`.
 - `script:scripts/lint-repository.sh` is how CI and `pnpm run lint` reach the
   whole repository: one ESLint process per workspace, then one for every file

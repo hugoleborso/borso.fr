@@ -225,7 +225,7 @@ each repository:
 
 `check-hook-decisions.sh`, in the plugin's `scripts/` folder, feeds every
 refusing hook a command it must refuse and a mention of that command it must
-let through. borso.fr runs it in pre-commit. A repository that changes a hook can run it the same way:
+let through. borso.fr runs it in pre-push when a hook changes, and in CI. A repository that changes a hook can run it the same way:
 
 ```sh
 vendor/borso.fr/plugins/borso-harness/scripts/check-hook-decisions.sh

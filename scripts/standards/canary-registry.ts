@@ -881,6 +881,36 @@ const SCRIPT_CANARIES: readonly CommandCanary[] = [
     tier: 'fast',
   },
   {
+    mechanism: 'scripts/check-ci-job-timeouts.sh',
+    label: 'CI jobs stop within the budget',
+    defect: 'a CI job allowed ninety minutes',
+    edits: [
+      {
+        path: '.github/workflows/ci.yml',
+        find: '    timeout-minutes: 10\n',
+        replace: '    timeout-minutes: 90\n',
+      },
+    ],
+    command: SCRIPT('check-ci-job-timeouts.sh'),
+    refusal: /may run 90 minutes/,
+    tier: 'fast',
+  },
+  {
+    mechanism: 'scripts/check-pre-commit-budget.sh',
+    label: 'pre-commit runtime budget',
+    defect: 'a commit check that spends a second of CPU',
+    edits: [
+      {
+        path: '.husky/pre-commit',
+        find: 'launch harness-active "$CHECK_BUDGET_MS" scripts/check-claude-harness-active.sh',
+        replace: `launch harness-active "$CHECK_BUDGET_MS" sh -c 'i=0; while [ "$i" -lt 2000000 ]; do i=$((i + 1)); done'`,
+      },
+    ],
+    command: SCRIPT('check-pre-commit-budget.sh'),
+    refusal: /harness-active used \d+ ms of CPU/,
+    tier: 'fast',
+  },
+  {
     mechanism: 'scripts/check-pwa-assets.sh',
     label: 'PWA icons ship',
     defect: 'a manifest naming an icon that is not there',

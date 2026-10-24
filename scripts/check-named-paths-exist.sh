@@ -116,7 +116,8 @@ paths="$(
 
 while IFS= read -r mention; do
   [ -n "$mention" ] || continue
-  named="$(printf '%s' "${mention##*:\`}" | tr -d '`')"
+  named="${mention##*:\`}"
+  named="${named%\`}"
   location="${mention%:\`*}"
   case "$named" in
     *'*'* | *'<'* | *'>'*) continue ;;

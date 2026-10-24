@@ -47,7 +47,7 @@ The blueprint and the standard are two halves of the same answer. [`docs/standar
 
 When the layer genuinely has no blueprint, write the file against the standard and propose the blueprint in the same change rather than handing the next author the same gap. Run `/blueprint create` for the annotation and `/blueprint index` afterwards.
 
-Both generators take `--check` and both run in pre-commit and in CI, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a generated file left stale fails the gate rather than reaching review.
+Both generators take `--check` and both run in pre-push and in CI, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a generated file left stale fails the gate rather than reaching review.
 
 ## Load-bearing rules (enforced as you write)
 
@@ -154,7 +154,7 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 
 - pnpm always; no npm/yarn.
 - Conventional-commit scopes: `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `infra`, `ci`, `docs`, `deps`, `meta`. Multi-commit per feature is fine; small, focused commits beat one giant landing.
-- `infra/cdk` and `infra/shared` are 100%-coverage gated by hook; their pre-commit runs `test:coverage` before letting the commit through.
+- `infra/cdk` and `infra/shared` are 100%-coverage gated by hook; pre-push runs their `test:coverage` when the push changes them.
 - Reports from validators land at `docs/features/<app>/<slug>/validation/`; commit them alongside the implementation diff in the same PR.
 
 ## Verdict émis (when piloted by `/tech-lead-orchestrator`)
