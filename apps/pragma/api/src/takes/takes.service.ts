@@ -14,7 +14,7 @@ import {
   detachTakesOfSessionWithin,
   findClaimedTakeWithin,
   findTake,
-  findWrittenTakeWithin,
+  getWrittenTakeWithin,
   hasInsertedTakeWithin,
   insertCommentWithin,
   listCommentsOfTake,
@@ -89,7 +89,7 @@ async function recordTake(input: TakeCreateInput, command: ActorCommand): Promis
       recordedAt: new Date(input.recordedAt),
       createdAt: command.now,
     });
-    return { kind: 'recorded', take: await findWrittenTakeWithin(executor, input.id), isNewTake };
+    return { kind: 'recorded', take: await getWrittenTakeWithin(executor, input.id), isNewTake };
   });
 }
 

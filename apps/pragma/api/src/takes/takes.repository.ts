@@ -109,7 +109,7 @@ export async function findTake(id: string): Promise<TakeView | null> {
   return await findTakeOn(getDatabase(), id);
 }
 
-export async function findWrittenTakeWithin(
+export async function getWrittenTakeWithin(
   executor: DatabaseExecutor,
   id: string,
 ): Promise<TakeView> {
@@ -157,7 +157,7 @@ export async function listCommentsOfTake(takeId: string): Promise<TakeCommentVie
   return await selectComments(getDatabase()).where(eq(takeCommentTable.takeId, takeId));
 }
 
-async function findWrittenCommentWithin(
+async function getWrittenCommentWithin(
   executor: DatabaseExecutor,
   takeId: string,
   commentId: string,
@@ -180,7 +180,7 @@ export async function insertCommentWithin(
     .values(comment)
     .returning({ id: takeCommentTable.id });
   if (inserted === undefined) throw new Error('insert returned no row');
-  return await findWrittenCommentWithin(executor, comment.takeId, inserted.id);
+  return await getWrittenCommentWithin(executor, comment.takeId, inserted.id);
 }
 
 export async function updateComment(
@@ -195,7 +195,7 @@ export async function updateComment(
       .where(and(eq(takeCommentTable.takeId, takeId), eq(takeCommentTable.id, commentId)))
       .returning({ id: takeCommentTable.id });
     if (updated.length === 0) return null;
-    return await findWrittenCommentWithin(executor, takeId, commentId);
+    return await getWrittenCommentWithin(executor, takeId, commentId);
   });
 }
 

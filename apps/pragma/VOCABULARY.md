@@ -338,8 +338,8 @@ Held by: `api/src/improvements/improvements.controller.test.ts` › files a new 
 Held by: `api/src/improvements/improvements.controller.test.ts` › ranks the open statuses first and the most voted first inside a status
 Held by: `api/src/improvements/improvements.controller.test.ts` › deletes an improvement with its votes and answers 404 the second time
 
-Not to be confused with: a **song note**, which is about the music rather
-than about the tool that tracks it.
+Not to be confused with: a song's notes (`structureNotes`, `gimmickNotes`,
+`notes`), which are about the music rather than about the tool that tracks it.
 
 ## Improvement vote
 
@@ -1033,7 +1033,7 @@ Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
 - Deleting its author keeps the take; `authorName` reads null and the
   screen says *former member*. Any member can delete any take.
 - The answer to a create is the take read back inside the transaction that
-  stored it (`findWrittenTakeWithin`), never a second read on another
+  stored it (`getWrittenTakeWithin`), never a second read on another
   connection, so a stored take is never answered 404 and the device's
   queue never gives it up.
 
