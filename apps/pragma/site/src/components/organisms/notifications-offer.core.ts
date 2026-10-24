@@ -10,18 +10,14 @@ export interface NotificationDevice {
   readonly isStandalone: boolean;
 }
 
-export type EnableFailure = 'not-configured' | 'refused' | 'failed';
+export type EnableFailure = 'refused' | 'failed';
 
 export interface EnableFailureFacts {
-  readonly status: number | null;
   readonly isPermissionRefusal: boolean;
 }
 
-const SERVICE_UNAVAILABLE_STATUS = 503;
-
 export function selectEnableFailure(facts: EnableFailureFacts): EnableFailure {
-  if (facts.isPermissionRefusal) return 'refused';
-  return facts.status === SERVICE_UNAVAILABLE_STATUS ? 'not-configured' : 'failed';
+  return facts.isPermissionRefusal ? 'refused' : 'failed';
 }
 
 export function isEnableOffered(offer: NotificationOffer): boolean {

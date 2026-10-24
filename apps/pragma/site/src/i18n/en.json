@@ -680,7 +680,6 @@
     "unsupported": "This browser cannot receive notifications.",
     "installHint": "On an iPhone, notifications only reach pragma once it is installed on the home screen. In Safari, tap Share, then Add to Home Screen, and open pragma from there.",
     "enable": "Enable on this device",
-    "notConfigured": "Notifications are not set up on this server yet.",
     "enableFailed": "Notifications could not be enabled. Try again.",
     "saveFailed": "That change could not be saved.",
     "categoriesTitle": "Notify me about",

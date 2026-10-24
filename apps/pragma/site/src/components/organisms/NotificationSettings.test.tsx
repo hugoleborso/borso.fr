@@ -81,7 +81,7 @@ function answerApi(keyStatus = 200): ReturnType<typeof stubFetch> {
       return Promise.resolve(
         keyStatus === 200
           ? jsonResponse({ key: 'AQID' })
-          : jsonResponse({ error: 'push-not-configured' }, keyStatus),
+          : jsonResponse({ error: 'internal' }, keyStatus),
       );
     }
     if (request.url.endsWith('/subscriptions')) {
@@ -133,11 +133,11 @@ describe('NotificationSettings', () => {
     expect(screen.queryByRole('button', { name: ENABLE_LABEL })).toBeNull();
   });
 
-  it('says the server has no push yet when the key route answers 503', async () => {
-    api = answerApi(503);
+  it('says enabling failed, before asking the browser, when the key route fails', async () => {
+    api = answerApi(500);
     renderSettings();
     await userEvent.click(await screen.findByRole('button', { name: ENABLE_LABEL }));
-    expect(await readAlertText()).toBe('Notifications are not set up on this server yet.');
+    expect(await readAlertText()).toBe('Notifications could not be enabled. Try again.');
     expect(device.subscribeToPush).not.toHaveBeenCalled();
   });
 

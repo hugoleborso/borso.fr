@@ -127,13 +127,13 @@ describe('notifications queries', () => {
     tree.unmount();
   });
 
-  it('stops before asking the browser when push is not configured on this stage', async () => {
-    stub = stubFetch(() => Promise.resolve(jsonResponse({ error: 'push-not-configured' }, 503)));
+  it('stops before asking the browser when the key route fails', async () => {
+    stub = stubFetch(() => Promise.resolve(jsonResponse({ error: 'internal' }, 500)));
     const queryClient = createIsolatedQueryClient();
     const slot = createMutateSlot<ReturnType<typeof useEnablePush>['mutateAsync']>();
     const tree = mountWithClient(queryClient, <ProbeEnable sink={slot.sink} />);
 
-    await expect(slot.read()()).rejects.toMatchObject({ status: 503 });
+    await expect(slot.read()()).rejects.toMatchObject({ status: 500 });
     expect(subscribeToPush).not.toHaveBeenCalled();
     expect(queryClient.getQueryData(notificationKeys.subscription())).toBeUndefined();
     tree.unmount();

@@ -3,7 +3,6 @@
 import type { ParseKeys } from 'i18next';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api.client';
 import { readInstallContext } from '../../lib/display-mode.adapter';
 import {
   isPushSupported,
@@ -38,7 +37,6 @@ const OFFER_MESSAGE_KEY: Readonly<Record<NotificationOffer, ParseKeys | null>> =
 };
 
 const ENABLE_FAILURE_KEY: Readonly<Record<EnableFailure, ParseKeys>> = {
-  'not-configured': 'notifications.notConfigured',
   refused: 'notifications.denied',
   failed: 'notifications.enableFailed',
 };
@@ -52,7 +50,6 @@ const CATEGORY_LABEL_KEY: Readonly<Record<NotificationCategory, ParseKeys>> = {
 
 function readEnableFailure(failure: Error): EnableFailure {
   return selectEnableFailure({
-    status: failure instanceof ApiError ? failure.status : null,
     isPermissionRefusal: failure instanceof NotificationPermissionRefusedError,
   });
 }

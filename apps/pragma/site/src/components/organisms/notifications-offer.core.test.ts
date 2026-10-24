@@ -15,18 +15,12 @@ const DESKTOP_DEVICE: NotificationDevice = {
 };
 
 describe('selectEnableFailure', () => {
-  it('names a refused permission whatever the status', () => {
-    expect(selectEnableFailure({ status: 503, isPermissionRefusal: true })).toBe('refused');
-  });
-
-  it('names a stage without its VAPID keys by the 503 it answers', () => {
-    expect(selectEnableFailure({ status: 503, isPermissionRefusal: false })).toBe('not-configured');
+  it('names a refused permission', () => {
+    expect(selectEnableFailure({ isPermissionRefusal: true })).toBe('refused');
   });
 
   it('reads any other failure as a plain failure', () => {
-    expect(selectEnableFailure({ status: 500, isPermissionRefusal: false })).toBe('failed');
-    expect(selectEnableFailure({ status: 502, isPermissionRefusal: false })).toBe('failed');
-    expect(selectEnableFailure({ status: null, isPermissionRefusal: false })).toBe('failed');
+    expect(selectEnableFailure({ isPermissionRefusal: false })).toBe('failed');
   });
 });
 
