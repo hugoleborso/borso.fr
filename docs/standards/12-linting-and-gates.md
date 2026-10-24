@@ -511,6 +511,11 @@ review.
 - `script:scripts/check-non-module-scripts.sh` fails an application's HTML
   carrying a `<script src>` without `type="module"`, which ships un-bundled and
   404s.
+- `script:scripts/check-claude-harness-active.sh` fails a commit made from a
+  Claude Code session whose SessionStart never ran in this clone, because the
+  session started in a parent folder holding several clones and so loaded none
+  of `.claude/settings.json`. It refuses once per session; `--acknowledge` runs
+  the install SessionStart would have run and records the session.
 - `script:scripts/check-no-null-bytes.sh` fails a tracked text file carrying a
   NUL byte. A NUL is legal inside a string, renders as nothing in an editor,
   shows as unchanged whitespace in a diff, and passes ESLint, Prettier and
