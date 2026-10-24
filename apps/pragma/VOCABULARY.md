@@ -213,7 +213,7 @@ Lives in: `api/src/sessions/`
 - `concertCreateSchema` is `.strict()`, so a body carrying a practice-only
   key is rejected at the controller.
 - A concert is upcoming when its date is strictly after now
-  (`selectUpcomingConcerts` in `site/src/lib/upcoming-concerts.core.ts`).
+  (`selectUpcomingConcerts` in `domain/upcoming-concerts.core.ts`).
 
 Not to be confused with: a practice, which is the other `kind` of session.
 
@@ -437,6 +437,9 @@ Lives in: `api/src/notifications/` (`notification_preference`)
   category.
 - Deleted with the member.
 
+Held by: `api/src/notifications/notifications.controller.test.ts` › reads every category as on before the member touches one
+Held by: `api/src/notifications/notifications.controller.test.ts` › takes their devices and toggles with them
+
 ## Push subscription
 
 One device of one member that accepted notifications.
@@ -450,6 +453,11 @@ Lives in: `api/src/notifications/` (`push_subscription`)
   never pushes to the band's phones (ADR-0040).
 - Deleted with the member, and when the push service answers that the
   endpoint is gone.
+
+Held by: `api/src/notifications/notifications.controller.test.ts` › keeps one subscription per device, owned by the member who last subscribed it
+Held by: `api/src/notifications/notifications.controller.test.ts` › keeps one subscription when a device subscribes twice at the same moment
+Held by: `api/src/notifications/notifications.controller.test.ts` › deletes a subscription its push service says is gone, and the write still succeeds
+Held by: `api/src/notifications/notifications.controller.test.ts` › takes their devices and toggles with them
 
 ## Offline manifest
 
@@ -573,7 +581,10 @@ Lives in: `api/src/sessions/`
 - Sessions are listed newest first by date.
 - Deleting a session detaches the setlists it carried and keeps them
   (`deleteSessionWithCascade`). Another session may be playing the same
-  one, and the setlists index holds it either way.
+  one, and the setlists index holds it either way. It also keeps the takes
+  recorded in it and clears their `session_id`.
+
+Held by: `api/src/takes/takes.controller.test.ts` › deleting the session keeps its takes and clears their session
 
 Not to be confused with: a sign-in session, which is a browser cookie and
 has nothing to do with a date in the calendar.
@@ -688,8 +699,12 @@ Lives in: `api/src/songs/`
   `structureNotes`, `gimmickNotes` and `notes`, all read back as the empty
   string when the column is null.
 - The catalogue is listed newest first by `createdAt`.
-- Deleting a song first deletes its mastery overrides and every setlist
-  entry that points at it (`deleteSongWithCascade`).
+- Deleting a song first deletes its mastery overrides, every setlist
+  entry that points at it, and its takes with their comments
+  (`deleteSongWithCascade`); the takes' audio objects are deleted once the
+  transaction commits.
+
+Held by: `api/src/takes/takes.controller.test.ts` › deleting the song deletes its takes, their comments and their audio
 
 ## Study
 
@@ -755,6 +770,16 @@ Lives in: `api/src/takes/`, with its limits in `domain/take-upload.core.ts`
 - Deleting its author keeps the take; `authorName` reads null and the
   screen says *former member*. Any member can delete any take.
 
+Held by: `api/src/takes/takes.controller.test.ts` › answers the same take when a create is retried with the same id
+Held by: `api/src/takes/takes.controller.test.ts` › keeps one take when two tabs send the same create at the same moment
+Held by: `api/src/takes/takes.controller.test.ts` › refuses an object key other than the one the take was signed for
+Held by: `api/src/takes/takes.controller.test.ts` › refuses a take one byte over 50 MiB
+Held by: `api/src/takes/takes.controller.test.ts` › lists takes by recording time, newest first, whatever order they were uploaded in
+Held by: `api/src/takes/takes.controller.test.ts` › lets any member delete another member’s take, its comments and its audio
+Held by: `api/src/takes/takes.controller.test.ts` › deleting the song deletes its takes, their comments and their audio
+Held by: `api/src/takes/takes.controller.test.ts` › deleting the session keeps its takes and clears their session
+Held by: `api/src/takes/takes.controller.test.ts` › deleting the author keeps their takes and comments, with no name to show
+
 Not to be confused with: a **study**, which records that a member worked a
 song and holds no audio.
 
@@ -770,6 +795,10 @@ Lives in: `api/src/takes/` (`take_comment`)
   first, a tie broken on id (`orderCommentsByTime`).
 - Deleted with its take; kept, with no author name, when its author is
   deleted.
+
+Held by: `api/src/takes/takes.controller.test.ts` › accepts a moment at the very end and refuses one a second past it
+Held by: `api/src/takes/takes.controller.test.ts` › keeps a comment with a moment and one without, oldest first, and counts them
+Held by: `api/src/takes/takes.controller.test.ts` › lets another member delete a comment, once
 
 Not to be confused with: a **transition comment**, which is about the gap
 between two songs and belongs to no take.
