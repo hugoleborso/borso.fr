@@ -128,6 +128,22 @@ export async function runSecondWhileFirstWaitsOnHold<First, Second>(
   return [await started.firstPending, await started.secondPending];
 }
 
+export async function runWhileWaitingOnHold<Result>(
+  hold: LockHold,
+  start: () => Promise<Result>,
+  whileWaiting: LockHold,
+): Promise<Result> {
+  const database = getDatabase();
+  const started = await database.transaction(async (transaction) => {
+    await hold(transaction);
+    const pending = start();
+    await waitForLockWaiters(database, 1);
+    await whileWaiting(transaction);
+    return { pending };
+  });
+  return await started.pending;
+}
+
 const SIMULATED_CONFLICT_SEQUENCE = 'simulated_conflict_attempt';
 const SIMULATED_CONFLICT_FUNCTION = 'abort_with_simulated_conflict';
 const SIMULATED_CONFLICT_TRIGGER = 'simulated_conflict_at_commit';

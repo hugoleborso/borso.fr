@@ -13,8 +13,8 @@ import {
   deleteTakesOfSongWithin,
   detachTakesOfSessionWithin,
   findClaimedTakeWithin,
-  findComment,
   findTake,
+  findWrittenTakeWithin,
   hasInsertedTakeWithin,
   insertCommentWithin,
   listCommentsOfTake,
@@ -30,6 +30,7 @@ import type {
 } from './takes.schema';
 import type {
   TakeCommentsOutcome,
+  TakeCommentView,
   TakeCommentWriteOutcome,
   TakeCreateOutcome,
   TakeUploadOutcome,
@@ -60,7 +61,7 @@ export async function mintTakeUpload(input: TakeSignInput, now: Date): Promise<T
 }
 
 type TakeRecording =
-  | { readonly kind: 'recorded'; readonly isNewTake: boolean }
+  | { readonly kind: 'recorded'; readonly take: TakeView; readonly isNewTake: boolean }
   | { readonly kind: 'song-not-found' }
   | { readonly kind: 'session-not-found' };
 
@@ -88,7 +89,7 @@ async function recordTake(input: TakeCreateInput, command: ActorCommand): Promis
       recordedAt: new Date(input.recordedAt),
       createdAt: command.now,
     });
-    return { kind: 'recorded', isNewTake };
+    return { kind: 'recorded', take: await findWrittenTakeWithin(executor, input.id), isNewTake };
   });
 }
 
@@ -124,8 +125,7 @@ export async function createTake(
   if (input.objectKey !== expectedObjectKey) return { kind: 'object-key-mismatch' };
   const recording = await recordTake(input, command);
   if (recording.kind !== 'recorded') return recording;
-  const take = await findTake(input.id);
-  if (take === null) return { kind: 'song-not-found' };
+  const { take } = recording;
   if (!recording.isNewTake) return { kind: 'ok', take };
   recordProductEvent({ event: 'take_created', source: input.source, queued: input.queued });
   await notifyBandAboutTake('take-created', take, command);
@@ -162,7 +162,7 @@ export async function getCommentsOfTake(takeId: string): Promise<TakeCommentsOut
 }
 
 type CommentRecording =
-  | { readonly kind: 'recorded'; readonly take: ClaimedTake; readonly commentId: string }
+  | { readonly kind: 'recorded'; readonly take: ClaimedTake; readonly comment: TakeCommentView }
   | { readonly kind: 'take-not-found' }
   | { readonly kind: 'moment-past-end' };
 
@@ -177,14 +177,14 @@ async function recordComment(
     if (!isMomentWithinTake(input.atSeconds, take.durationSeconds)) {
       return { kind: 'moment-past-end' };
     }
-    const commentId = await insertCommentWithin(executor, {
+    const comment = await insertCommentWithin(executor, {
       takeId,
       memberId: command.memberId,
       body: input.body,
       atSeconds: input.atSeconds,
       createdAt: command.now,
     });
-    return { kind: 'recorded', take, commentId };
+    return { kind: 'recorded', take, comment };
   });
 }
 
@@ -195,11 +195,9 @@ export async function createTakeComment(
 ): Promise<TakeCommentWriteOutcome> {
   const recording = await recordComment(takeId, input, command);
   if (recording.kind !== 'recorded') return recording;
-  const comment = await findComment(takeId, recording.commentId);
-  if (comment === null) return { kind: 'take-not-found' };
   recordProductEvent({ event: 'take_comment_created', hasMoment: input.atSeconds !== null });
   await notifyBandAboutTake('take-comment-created', recording.take, command);
-  return { kind: 'ok', comment };
+  return { kind: 'ok', comment: recording.comment };
 }
 
 export async function patchTakeComment(

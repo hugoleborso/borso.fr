@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { S3Client } from '@aws-sdk/client-s3';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import {
@@ -14,6 +14,7 @@ import {
   holdWritesToTable,
   type LockHold,
   runSecondWhileFirstWaitsOnHold,
+  runWhileWaitingOnHold,
   testDatabase,
   truncateAllTables,
 } from '../../../test/database-utils';
@@ -153,6 +154,18 @@ function holdTakeRow(takeId: string): LockHold {
       .from(takeTable)
       .where(eq(takeTable.id, takeId))
       .for('update');
+}
+
+const holdReadsOfMembers: LockHold = async (transaction) =>
+  await transaction.execute(sql.raw('LOCK TABLE "member" IN ACCESS EXCLUSIVE MODE'));
+
+function deleteTakeRow(takeId: string): LockHold {
+  return async (transaction) => await transaction.delete(takeTable).where(eq(takeTable.id, takeId));
+}
+
+function deleteCommentsOfTake(takeId: string): LockHold {
+  return async (transaction) =>
+    await transaction.delete(takeCommentTable).where(eq(takeCommentTable.takeId, takeId));
 }
 
 function stubStorage(answer: () => Promise<unknown>) {
@@ -402,6 +415,19 @@ describe('takes controller (back-e2e)', () => {
       expect(await testDatabase().select().from(takeTable)).toEqual([]);
     });
 
+    it('answers the take it stored even when another connection deletes it before the answer is read', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const takeId = randomUUID();
+      const creation = await runWhileWaitingOnHold(
+        holdReadsOfMembers,
+        async () => await postTake(band, buildTakeBody({ id: takeId, songId })),
+        deleteTakeRow(takeId),
+      );
+      expect(creation.status).toBe(201);
+      expect((await readJson(creation, takeEnvelope)).take.id).toBe(takeId);
+    });
+
     it('writes the take once when its first commit loses a conflict on the claimed song', async () => {
       const band = await buildAuthenticatedApp();
       const songId = await createSong(band);
@@ -568,6 +594,21 @@ describe('takes controller (back-e2e)', () => {
       );
       expect(deletion.status).toBe(200);
       expect(await testDatabase().select().from(takeCommentTable)).toEqual([]);
+    });
+
+    it('answers the comment it stored even when another connection deletes it before the answer is read', async () => {
+      const band = await buildAuthenticatedApp();
+      const songId = await createSong(band);
+      const takeId = await createTake(band, { id: randomUUID(), songId });
+      const creation = await runWhileWaitingOnHold(
+        holdReadsOfMembers,
+        async () => await postComment(band, takeId, { body: 'the bass comes in late' }),
+        deleteCommentsOfTake(takeId),
+      );
+      expect(creation.status).toBe(201);
+      expect((await readJson(creation, commentEnvelope)).comment.body).toBe(
+        'the bass comes in late',
+      );
     });
 
     it('writes one comment when its first commit loses a conflict', async () => {

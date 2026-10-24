@@ -100,9 +100,22 @@ export async function hasInsertedTakeWithin(
   return inserted.length > 0;
 }
 
-export async function findTake(id: string): Promise<TakeView | null> {
-  const [row] = await selectTakesWithCommentCounts(getDatabase(), eq(takeTable.id, id)).limit(1);
+async function findTakeOn(executor: DatabaseExecutor, id: string): Promise<TakeView | null> {
+  const [row] = await selectTakesWithCommentCounts(executor, eq(takeTable.id, id)).limit(1);
   return row === undefined ? null : rowToTake(row);
+}
+
+export async function findTake(id: string): Promise<TakeView | null> {
+  return await findTakeOn(getDatabase(), id);
+}
+
+export async function findWrittenTakeWithin(
+  executor: DatabaseExecutor,
+  id: string,
+): Promise<TakeView> {
+  const take = await findTakeOn(executor, id);
+  if (take === null) throw new Error('the written take is not visible to its own transaction');
+  return take;
 }
 
 export async function findClaimedTakeWithin(
@@ -144,26 +157,30 @@ export async function listCommentsOfTake(takeId: string): Promise<TakeCommentVie
   return await selectComments(getDatabase()).where(eq(takeCommentTable.takeId, takeId));
 }
 
-export async function findComment(
+async function findWrittenCommentWithin(
+  executor: DatabaseExecutor,
   takeId: string,
   commentId: string,
-): Promise<TakeCommentView | null> {
-  const [comment] = await selectComments(getDatabase())
+): Promise<TakeCommentView> {
+  const [comment] = await selectComments(executor)
     .where(and(eq(takeCommentTable.takeId, takeId), eq(takeCommentTable.id, commentId)))
     .limit(1);
-  return comment ?? null;
+  if (comment === undefined) {
+    throw new Error('the written comment is not visible to its own transaction');
+  }
+  return comment;
 }
 
 export async function insertCommentWithin(
   executor: DatabaseExecutor,
   comment: TakeCommentInsert,
-): Promise<string> {
+): Promise<TakeCommentView> {
   const [inserted] = await executor
     .insert(takeCommentTable)
     .values(comment)
     .returning({ id: takeCommentTable.id });
   if (inserted === undefined) throw new Error('insert returned no row');
-  return inserted.id;
+  return await findWrittenCommentWithin(executor, comment.takeId, inserted.id);
 }
 
 export async function updateComment(
@@ -171,12 +188,15 @@ export async function updateComment(
   commentId: string,
   changes: TakeCommentChanges,
 ): Promise<TakeCommentView | null> {
-  const updated = await getDatabase()
-    .update(takeCommentTable)
-    .set(changes)
-    .where(and(eq(takeCommentTable.takeId, takeId), eq(takeCommentTable.id, commentId)))
-    .returning({ id: takeCommentTable.id });
-  return updated.length === 0 ? null : await findComment(takeId, commentId);
+  return await runInOneTakeTransaction(async (executor) => {
+    const updated = await executor
+      .update(takeCommentTable)
+      .set(changes)
+      .where(and(eq(takeCommentTable.takeId, takeId), eq(takeCommentTable.id, commentId)))
+      .returning({ id: takeCommentTable.id });
+    if (updated.length === 0) return null;
+    return await findWrittenCommentWithin(executor, takeId, commentId);
+  });
 }
 
 export async function deleteComment(takeId: string, commentId: string): Promise<DeletionOutcome> {
