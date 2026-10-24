@@ -73,6 +73,18 @@ describe('selectLastSongWriteError', () => {
     ).toBe(refusal);
   });
 
+  it('keeps the refusal of this song when another song is written after it', () => {
+    expect(
+      selectLastSongWriteError(
+        [
+          { variables: { id: 'song-1' }, status: 'error', error: refusal },
+          { variables: { id: 'song-2' }, status: 'success', error: null },
+        ],
+        'song-1',
+      ),
+    ).toBe(refusal);
+  });
+
   it('answers nothing once a later write for this song went through', () => {
     expect(
       selectLastSongWriteError(

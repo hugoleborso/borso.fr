@@ -34,7 +34,7 @@ export function selectLastSongWriteError(
   let lastError: unknown = null;
   for (const songWrite of songWrites) {
     if (readSongId(songWrite.variables) !== songId) continue;
-    lastError = songWrite.status === 'error' ? (songWrite.error ?? null) : null;
+    lastError = songWrite.error ?? null;
   }
   return lastError;
 }
