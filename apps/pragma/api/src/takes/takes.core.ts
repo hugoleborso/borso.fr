@@ -24,7 +24,7 @@ export interface TimedComment {
   readonly createdAt: Date;
 }
 
-// @FollowsBlueprint core-canonical-ordering
+// @FollowsBlueprint core-decision
 export function orderCommentsByTime<Comment extends TimedComment>(
   comments: readonly Comment[],
 ): Comment[] {

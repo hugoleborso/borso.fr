@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
-import { getMemberById } from '../members/members.service';
+import { findMemberById } from '../members/members.service';
 import { findSongById } from '../songs/songs.service';
 import type { DatabaseExecutor } from '../database/client';
 import { sortTasksByUrgency } from './tasks.core';
@@ -51,7 +51,7 @@ function valuesFromUpdate(input: TaskUpdateInput): TaskPersistedShape {
 
 async function isAssigneeKnown(assigneeId: string | null | undefined): Promise<boolean> {
   if (assigneeId === null || assigneeId === undefined) return true;
-  return (await getMemberById(assigneeId)) !== null;
+  return (await findMemberById(assigneeId)) !== null;
 }
 
 async function isLinkedSongKnown(songId: string | null | undefined): Promise<boolean> {
