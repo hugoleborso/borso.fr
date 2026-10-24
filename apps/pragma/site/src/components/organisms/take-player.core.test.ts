@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  type MomentMark,
   isMomentToggleOnByDefault,
   placeMomentMarks,
   isMomentToggleOn,
@@ -44,19 +45,62 @@ describe('selectCommentMoment', () => {
   });
 });
 
+function readPlacement(marks: readonly MomentMark[]): [string, number, number][] {
+  return marks.map((mark) => [mark.id, mark.atSeconds, mark.offsetPercent]);
+}
+
 describe('placeMomentMarks', () => {
   const COMMENTS = [
-    { id: 'a', atSeconds: 50 },
-    { id: 'b', atSeconds: null },
-    { id: 'c', atSeconds: 300 },
-    { id: 'd', atSeconds: 0 },
+    { id: 'late', atSeconds: 80 },
+    { id: 'free', atSeconds: null },
+    { id: 'early', atSeconds: 20 },
+    { id: 'same-second-as-late', atSeconds: 80 },
+    { id: 'start', atSeconds: 0 },
   ];
 
-  it('marks each pinned comment at its share of the take, the free ones nowhere', () => {
-    expect(placeMomentMarks(COMMENTS, 200)).toEqual([
-      { id: 'a', atSeconds: 50, offsetPercent: 25 },
-      { id: 'c', atSeconds: 300, offsetPercent: 100 },
-      { id: 'd', atSeconds: 0, offsetPercent: 0 },
+  it('marks each pinned second once, in time order, the free comments nowhere', () => {
+    expect(readPlacement(placeMomentMarks(COMMENTS, 200))).toEqual([
+      ['start', 0, 0],
+      ['early', 20, 10],
+      ['late', 80, 40],
+    ]);
+  });
+
+  it('gives a tap between two marks to the nearer one, splitting the track halfway', () => {
+    const [start, early, late] = placeMomentMarks(COMMENTS, 200);
+    expect([start?.reachEndPercent, early?.reachStartPercent]).toEqual([5, 5]);
+    expect([early?.reachEndPercent, late?.reachStartPercent]).toEqual([25, 25]);
+  });
+
+  it('lets the first and last marks reach past the ends of the track', () => {
+    const marks = placeMomentMarks(COMMENTS, 200);
+    expect(marks[0]?.reachStartPercent).toBe(-100);
+    expect(marks.at(-1)?.reachEndPercent).toBe(200);
+  });
+
+  it('places each mark inside its own reach', () => {
+    const [start, early, late] = placeMomentMarks(COMMENTS, 200);
+    expect(start?.offsetInReachPercent).toBeCloseTo((100 / 105) * 100);
+    expect(early?.offsetInReachPercent).toBe(25);
+    expect(late?.offsetInReachPercent).toBeCloseTo((15 / 175) * 100);
+  });
+
+  it('reaches the whole track either side of a lone mark', () => {
+    expect(placeMomentMarks([{ id: 'only', atSeconds: 50 }], 100)).toEqual([
+      {
+        id: 'only',
+        atSeconds: 50,
+        offsetPercent: 50,
+        reachStartPercent: -100,
+        reachEndPercent: 200,
+        offsetInReachPercent: 50,
+      },
+    ]);
+  });
+
+  it('never marks past the end of the take', () => {
+    expect(readPlacement(placeMomentMarks([{ id: 'after', atSeconds: 300 }], 200))).toEqual([
+      ['after', 200, 100],
     ]);
   });
 

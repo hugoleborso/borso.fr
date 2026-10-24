@@ -44,7 +44,7 @@ function MomentButton({ atSeconds, onSeek }: MomentButtonProps): JSX.Element {
   return (
     <button
       type="button"
-      className="font-mono text-xs text-accent min-h-11 px-1 bg-transparent border-0 cursor-pointer"
+      className="min-h-11 min-w-11 px-1 font-mono text-xs text-accent bg-transparent border-0 cursor-pointer"
       onClick={() => onSeek(atSeconds)}
     >
       {formatDuration(atSeconds)}
@@ -115,7 +115,13 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
           <Icon name="trash" size={12} />
           {t('takes.player.delete')}
         </Button>
-        <Button variant="ghost" size="sm" aria-label={t('common.close')} onClick={onClose}>
+        <Button
+          variant="ghost"
+          size="sm"
+          className="min-w-11"
+          aria-label={t('common.close')}
+          onClick={onClose}
+        >
           <Icon name="close" size={12} />
         </Button>
       </div>
@@ -141,17 +147,40 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
         />
       )}
 
-      <div className="relative h-6 rounded bg-bg-sunk" aria-label={t('takes.player.marks')}>
-        {marks.map((mark) => (
-          <button
-            key={mark.id}
-            type="button"
-            className="absolute top-0 h-6 w-3 -ml-1.5 rounded-sm bg-accent cursor-pointer border-0"
-            style={{ left: `${mark.offsetPercent}%` }}
-            aria-label={t('takes.player.markAria', { moment: formatDuration(mark.atSeconds) })}
-            onClick={() => seek(mark.atSeconds)}
-          />
-        ))}
+      <div className="relative h-11" role="group" aria-label={t('takes.player.marks')}>
+        <div aria-hidden="true" className="absolute inset-x-0 top-2.5 h-6 rounded bg-bg-sunk">
+          {marks.map((mark) => (
+            <span
+              key={mark.id}
+              className="absolute top-0 h-6 w-3 -ml-1.5 rounded-sm bg-accent"
+              style={{ left: `${mark.offsetPercent}%` }}
+            />
+          ))}
+        </div>
+        <div className="absolute inset-y-0 -inset-x-5.5 overflow-hidden pointer-events-none">
+          <div className="absolute inset-y-0 inset-x-5.5">
+            {marks.map((mark) => (
+              <div
+                key={mark.id}
+                className="absolute inset-y-0 overflow-hidden"
+                style={{
+                  left: `${mark.reachStartPercent}%`,
+                  width: `${mark.reachEndPercent - mark.reachStartPercent}%`,
+                }}
+              >
+                <button
+                  type="button"
+                  className="absolute top-0 h-11 w-11 -ml-5.5 p-0 bg-transparent border-0 cursor-pointer pointer-events-auto"
+                  style={{ left: `${mark.offsetInReachPercent}%` }}
+                  aria-label={t('takes.player.markAria', {
+                    moment: formatDuration(mark.atSeconds),
+                  })}
+                  onClick={() => seek(mark.atSeconds)}
+                />
+              </div>
+            ))}
+          </div>
+        </div>
       </div>
 
       {comments.length === 0 ? (
@@ -175,6 +204,7 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
                 <Button
                   variant="ghost"
                   size="sm"
+                  className="min-w-11"
                   aria-label={t('takes.player.deleteComment')}
                   onClick={() =>
                     deleteComment.mutate({
