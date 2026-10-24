@@ -56,11 +56,12 @@ const QUIET: RecordingSheetView = {
   download: null,
 };
 
-const NOT_SAVED_MESSAGE: Record<TakeNotSavedReason, RecordingMessageKey> = {
-  'quota-exceeded': 'takes.recording.quotaExceeded',
-  failed: 'takes.recording.queueFailed',
-  unplayable: 'takes.recording.unplayable',
-};
+export const TAKE_NOT_SAVED_MESSAGE_KEY: Readonly<Record<TakeNotSavedReason, RecordingMessageKey>> =
+  {
+    'quota-exceeded': 'takes.recording.quotaExceeded',
+    failed: 'takes.recording.queueFailed',
+    unplayable: 'takes.recording.unplayable',
+  };
 
 // @FollowsBlueprint core-message-selection
 export function selectRecordingSheetView(phase: RecordingSheetPhase): RecordingSheetView {
@@ -93,7 +94,7 @@ export function selectRecordingSheetView(phase: RecordingSheetPhase): RecordingS
     case 'not-saved':
       return {
         ...QUIET,
-        messageKey: NOT_SAVED_MESSAGE[phase.reason],
+        messageKey: TAKE_NOT_SAVED_MESSAGE_KEY[phase.reason],
         isAlert: true,
         download: phase.download,
       };

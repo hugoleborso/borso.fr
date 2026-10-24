@@ -15,6 +15,7 @@ import { queueTake } from '../../lib/take-queue.setup';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
+import { TAKE_NOT_SAVED_MESSAGE_KEY } from './recording-sheet.core';
 import {
   parseDateTimeLocalValue,
   readSessionChoice,
@@ -38,12 +39,6 @@ const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-me
 const SELECT_CLASS = inputVariants({ size: 'md' });
 const AUDIO_ACCEPT = 'audio/*';
 const NO_SESSIONS: readonly never[] = [];
-
-const QUEUE_FAILURE_KEY = {
-  'quota-exceeded': 'takes.recording.quotaExceeded',
-  failed: 'takes.recording.queueFailed',
-  unplayable: 'takes.recording.unplayable',
-} as const satisfies Record<TakeNotSavedReason, string>;
 
 // @FollowsBlueprint route-form
 export function TakeUploadForm({
@@ -181,7 +176,7 @@ export function TakeUploadForm({
         </form.Field>
         {queueFailure === null ? null : (
           <p className="text-sm text-danger m-0" role="alert">
-            {t(QUEUE_FAILURE_KEY[queueFailure])}
+            {t(TAKE_NOT_SAVED_MESSAGE_KEY[queueFailure])}
           </p>
         )}
         <div className="flex flex-wrap justify-end gap-2 mt-2">
@@ -190,14 +185,14 @@ export function TakeUploadForm({
           </Button>
           <form.Subscribe
             selector={(state) =>
-              [state.canSubmit, state.isSubmitting, state.values.file === null] as const
+              [state.canSubmit, state.isSubmitting, state.values.file !== null] as const
             }
           >
-            {([canSubmit, isSubmitting, hasNoFile]) => (
+            {([canSubmit, isSubmitting, hasFile]) => (
               <Button
                 type="submit"
                 variant="accent"
-                disabled={!canSubmit || isSubmitting || hasNoFile}
+                disabled={!canSubmit || isSubmitting || !hasFile}
               >
                 {t('common.save')}
               </Button>
