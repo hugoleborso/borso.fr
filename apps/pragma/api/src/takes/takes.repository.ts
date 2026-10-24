@@ -1,5 +1,5 @@
 import { TAKE_CONTENT_TYPES } from '@domain/take-upload.core';
-import { and, count, desc, eq, inArray } from 'drizzle-orm';
+import { and, count, desc, eq, inArray, type SQL } from 'drizzle-orm';
 import { z } from 'zod';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
@@ -10,7 +10,6 @@ import type {
   TakeCommentInsert,
   TakeCommentView,
   TakeInsert,
-  TakeRow,
   TakeView,
 } from './takes.types';
 
@@ -28,7 +27,21 @@ const TAKE_PROJECTION = {
   durationSeconds: takeTable.durationSeconds,
   recordedAt: takeTable.recordedAt,
   createdAt: takeTable.createdAt,
+  commentCount: count(takeCommentTable.id),
 } as const;
+
+const TAKE_GROUPING = [
+  takeTable.id,
+  takeTable.songId,
+  takeTable.sessionId,
+  takeTable.memberId,
+  memberTable.firstName,
+  takeTable.objectKey,
+  takeTable.contentType,
+  takeTable.durationSeconds,
+  takeTable.recordedAt,
+  takeTable.createdAt,
+] as const;
 
 const COMMENT_PROJECTION = {
   id: takeCommentTable.id,
@@ -40,18 +53,21 @@ const COMMENT_PROJECTION = {
   createdAt: takeCommentTable.createdAt,
 } as const;
 
-type TakeRawRow = Omit<TakeRow, 'contentType'> & { readonly contentType: string };
+type TakeRawRow = Omit<TakeView, 'contentType'> & { readonly contentType: string };
 
 // @FollowsBlueprint repository-row-mapper
-function rowToTake(row: TakeRawRow): TakeRow {
+function rowToTake(row: TakeRawRow): TakeView {
   return { ...row, contentType: takeContentTypeSchema.parse(row.contentType) };
 }
 
-function selectTakes(executor: DatabaseExecutor) {
+function selectTakesWithCommentCounts(executor: DatabaseExecutor, condition: SQL) {
   return executor
     .select(TAKE_PROJECTION)
     .from(takeTable)
-    .leftJoin(memberTable, eq(memberTable.id, takeTable.memberId));
+    .leftJoin(memberTable, eq(memberTable.id, takeTable.memberId))
+    .leftJoin(takeCommentTable, eq(takeCommentTable.takeId, takeTable.id))
+    .where(condition)
+    .groupBy(...TAKE_GROUPING);
 }
 
 function selectComments(executor: DatabaseExecutor) {
@@ -59,21 +75,6 @@ function selectComments(executor: DatabaseExecutor) {
     .select(COMMENT_PROJECTION)
     .from(takeCommentTable)
     .leftJoin(memberTable, eq(memberTable.id, takeCommentTable.memberId));
-}
-
-async function countCommentsOfTakes(takeIds: readonly string[]): Promise<Map<string, number>> {
-  if (takeIds.length === 0) return new Map();
-  const counted = await getDatabase()
-    .select({ takeId: takeCommentTable.takeId, commentCount: count() })
-    .from(takeCommentTable)
-    .where(inArray(takeCommentTable.takeId, [...takeIds]))
-    .groupBy(takeCommentTable.takeId);
-  return new Map(counted.map((row) => [row.takeId, row.commentCount]));
-}
-
-async function withCommentCounts(takes: readonly TakeRow[]): Promise<TakeView[]> {
-  const commentCounts = await countCommentsOfTakes(takes.map((take) => take.id));
-  return takes.map((take) => ({ ...take, commentCount: commentCounts.get(take.id) ?? 0 }));
 }
 
 // @FollowsBlueprint repository-idempotent-upsert
@@ -87,17 +88,16 @@ export async function hasInsertedTake(take: TakeInsert): Promise<boolean> {
 }
 
 export async function findTake(id: string): Promise<TakeView | null> {
-  const [row] = await selectTakes(getDatabase()).where(eq(takeTable.id, id)).limit(1);
-  if (row === undefined) return null;
-  const [take] = await withCommentCounts([rowToTake(row)]);
-  return take ?? null;
+  const [row] = await selectTakesWithCommentCounts(getDatabase(), eq(takeTable.id, id)).limit(1);
+  return row === undefined ? null : rowToTake(row);
 }
 
 export async function listTakesOfSongNewestFirst(songId: string): Promise<TakeView[]> {
-  const rows = await selectTakes(getDatabase())
-    .where(eq(takeTable.songId, songId))
-    .orderBy(desc(takeTable.recordedAt), desc(takeTable.id));
-  return await withCommentCounts(rows.map(rowToTake));
+  const rows = await selectTakesWithCommentCounts(
+    getDatabase(),
+    eq(takeTable.songId, songId),
+  ).orderBy(desc(takeTable.recordedAt), desc(takeTable.id));
+  return rows.map(rowToTake);
 }
 
 export async function deleteTakeWithComments(id: string): Promise<string | null> {
