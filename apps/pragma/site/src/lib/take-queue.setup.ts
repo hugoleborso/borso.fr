@@ -67,7 +67,7 @@ export async function queueTake(
     byteLength: audio.size,
     isOnline: navigator.onLine,
   });
-  if (take === null) return 'unplayable';
+  if (typeof take === 'string') return take;
   const outcome = await takeQueue.enqueue({ take, audio });
   if ('error' in outcome) reportTakeQueueWriteFailed(outcome.error);
   return outcome.kind;

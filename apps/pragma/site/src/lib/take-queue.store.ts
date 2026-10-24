@@ -8,6 +8,8 @@ import type {
 import {
   buildTakeCreateBody,
   decideNextTakeMove,
+  EMPTY_AUDIO_FAILURE,
+  hasRecordedAudio,
   isTakeDrainable,
   type QueuedTake,
   selectNextTakeStep,
@@ -16,6 +18,7 @@ import {
   type TakeStep,
   type TakeStepFailure,
   type TakeStepOutcome,
+  withFailure,
   withRetryRequested,
   withSignedUpload,
   withUploadedAudio,
@@ -133,6 +136,9 @@ export function createTakeQueue<TCreated>(settings: TakeQueueSettings<TCreated>)
   };
 
   const send = async (entry: QueuedTakeEntry): Promise<void> => {
+    if (!hasRecordedAudio(entry.audio.size)) {
+      return stopSending(withFailure(entry.take), EMPTY_AUDIO_FAILURE);
+    }
     const audio = toAudioFile(entry);
     let take = entry.take;
     let attempt = 0;

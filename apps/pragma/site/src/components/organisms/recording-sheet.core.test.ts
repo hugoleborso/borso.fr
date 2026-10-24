@@ -1,4 +1,4 @@
-import { describe, expect, it } from 'vitest';
+import { describe, expect, it, vi } from 'vitest';
 import type { TakeNotSavedReason } from '../../lib/take-queue.core';
 import {
   buildTakeDownloadName,
@@ -94,6 +94,12 @@ describe('selectRecordingSheetView', () => {
     expect(viewOfNotSaved('failed').messageKey).toBe('takes.recording.queueFailed');
     expect(viewOfNotSaved('unplayable').messageKey).toBe('takes.recording.unplayable');
   });
+
+  it('says nothing was recorded, with no download, for a recording cut before any audio', () => {
+    expect(
+      selectRecordingSheetView({ kind: 'not-saved', reason: 'empty', download: null }),
+    ).toEqual({ ...QUIET_VIEW, messageKey: 'takes.recording.empty', isAlert: true });
+  });
 });
 
 describe('selectPhaseAfterStart', () => {
@@ -137,6 +143,14 @@ describe('decidePhaseAfterQueueing', () => {
     expect(
       decidePhaseAfterQueueing({ ...REPORT, end: 'interrupted', result: 'failed' }),
     ).toMatchObject({ kind: 'not-saved', reason: 'failed' });
+  });
+
+  it('says no take was saved, and offers no download, when the recording kept no audio', () => {
+    const readDownloadUrl = vi.fn(() => 'blob:take');
+    expect(
+      decidePhaseAfterQueueing({ ...REPORT, end: 'interrupted', result: 'empty', readDownloadUrl }),
+    ).toEqual({ kind: 'not-saved', reason: 'empty', download: null });
+    expect(readDownloadUrl).not.toHaveBeenCalled();
   });
 });
 

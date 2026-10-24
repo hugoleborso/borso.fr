@@ -19,7 +19,7 @@ export type RecordingSheetPhase =
   | {
       readonly kind: 'not-saved';
       readonly reason: TakeNotSavedReason;
-      readonly download: TakeDownload;
+      readonly download: TakeDownload | null;
     };
 
 export type RecordingMessageKey =
@@ -30,7 +30,8 @@ export type RecordingMessageKey =
   | 'takes.recording.interrupted'
   | 'takes.recording.quotaExceeded'
   | 'takes.recording.queueFailed'
-  | 'takes.recording.unplayable';
+  | 'takes.recording.unplayable'
+  | 'takes.recording.empty';
 
 export interface RecordingSheetView {
   readonly isOpen: boolean;
@@ -61,6 +62,7 @@ export const TAKE_NOT_SAVED_MESSAGE_KEY: Readonly<Record<TakeNotSavedReason, Rec
     'quota-exceeded': 'takes.recording.quotaExceeded',
     failed: 'takes.recording.queueFailed',
     unplayable: 'takes.recording.unplayable',
+    empty: 'takes.recording.empty',
   };
 
 // @FollowsBlueprint core-message-selection
@@ -130,6 +132,7 @@ export interface QueueingReport {
 
 // @FollowsBlueprint core-decision
 export function decidePhaseAfterQueueing(report: QueueingReport): RecordingSheetPhase {
+  if (report.result === 'empty') return { kind: 'not-saved', reason: 'empty', download: null };
   if (report.result !== 'queued') {
     return {
       kind: 'not-saved',

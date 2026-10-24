@@ -226,6 +226,25 @@ describe('createTakeQueue', () => {
     expect(queue.read()).toEqual([]);
   });
 
+  it('marks a take holding no audio as failed without sending anything', async () => {
+    const { transport } = createTransport();
+    const settings = createSettings(transport);
+    const queue = createTakeQueue(settings);
+
+    await queue.enqueue({ take: { ...TAKE, byteLength: 0 }, audio: new Blob([]) });
+    await queue.drain();
+
+    expect(transport.sign).not.toHaveBeenCalled();
+    expect(transport.put).not.toHaveBeenCalled();
+    expect(queue.read()[0]?.take.hasFailed).toBe(true);
+    expect(settings.onExhausted).toHaveBeenCalledWith(
+      { stage: 'queue', status: null },
+      expect.objectContaining({ id: 'take-1', hasFailed: true }),
+    );
+    const [stored] = await settings.storage.list();
+    expect(stored?.take.hasFailed).toBe(true);
+  });
+
   it('ignores a retry for a take it does not hold', async () => {
     const { transport } = createTransport();
     const queue = createTakeQueue(createSettings(transport));

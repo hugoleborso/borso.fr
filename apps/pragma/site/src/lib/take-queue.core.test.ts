@@ -5,6 +5,7 @@ import {
   computeTakeRetryDelayMilliseconds,
   decideAfterTakeFailure,
   decideNextTakeMove,
+  hasRecordedAudio,
   isQuotaExceededError,
   isTakeDrainable,
   type QueuedTake,
@@ -211,11 +212,23 @@ describe('buildQueuedTake', () => {
   });
 
   it('counts a take made offline as deferred', () => {
-    expect(buildQueuedTake({ ...DRAFT, isOnline: false })?.wasDeferred).toBe(true);
+    expect(buildQueuedTake({ ...DRAFT, isOnline: false })).toMatchObject({ wasDeferred: true });
   });
 
   it('refuses a recording whose type is not one the band can play', () => {
-    expect(buildQueuedTake({ ...DRAFT, rawContentType: 'video/mp4' })).toBeNull();
+    expect(buildQueuedTake({ ...DRAFT, rawContentType: 'video/mp4' })).toBe('unplayable');
+  });
+
+  it('refuses a recording cut before any audio was kept', () => {
+    expect(buildQueuedTake({ ...DRAFT, byteLength: 0 })).toBe('empty');
+    expect(buildQueuedTake({ ...DRAFT, byteLength: 0, rawContentType: 'video/mp4' })).toBe('empty');
+  });
+});
+
+describe('hasRecordedAudio', () => {
+  it('counts one byte as audio and none as nothing recorded', () => {
+    expect(hasRecordedAudio(1)).toBe(true);
+    expect(hasRecordedAudio(0)).toBe(false);
   });
 });
 

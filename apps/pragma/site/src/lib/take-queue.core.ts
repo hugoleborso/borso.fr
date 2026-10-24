@@ -12,7 +12,9 @@ export type SignedTakeUpload = Readonly<InferResponseType<typeof api.api.takes.s
 
 export type TakeCreateBody = Parameters<typeof api.api.takes.$post>[0]['json'];
 
-export type TakeNotSavedReason = 'quota-exceeded' | 'failed' | 'unplayable';
+export type TakeNotSavedReason = 'quota-exceeded' | 'failed' | 'unplayable' | 'empty';
+
+export type TakeDraftRefusal = Extract<TakeNotSavedReason, 'unplayable' | 'empty'>;
 
 export type QueueTakeOutcome = 'queued' | TakeNotSavedReason;
 
@@ -33,7 +35,7 @@ export interface QueuedTake {
 
 export type TakeStep = 'sign' | 'put' | 'create';
 
-export type TakeStage = TakeStep;
+export type TakeStage = TakeStep | 'queue';
 
 export interface TakeStepFailure {
   readonly stage: TakeStage;
@@ -148,10 +150,17 @@ export function roundDurationSeconds(durationMilliseconds: number): number {
   return Math.max(0, Math.round(durationMilliseconds / MILLISECONDS_PER_SECOND));
 }
 
+export const EMPTY_AUDIO_FAILURE: TakeStepFailure = { stage: 'queue', status: null };
+
+export function hasRecordedAudio(byteLength: number): boolean {
+  return byteLength > 0;
+}
+
 // @FollowsBlueprint core-decision
-export function buildQueuedTake(draft: TakeDraft): QueuedTake | null {
+export function buildQueuedTake(draft: TakeDraft): QueuedTake | TakeDraftRefusal {
+  if (!hasRecordedAudio(draft.byteLength)) return 'empty';
   const contentType = normalizeTakeContentType(draft.rawContentType);
-  if (contentType === null) return null;
+  if (contentType === null) return 'unplayable';
   return {
     id: draft.id,
     songId: draft.songId,

@@ -644,7 +644,8 @@
       "interrupted": "The recording was cut when the phone locked. What was recorded until then is saved as the take.",
       "quotaExceeded": "The device storage is full, so the take could not be kept. Download it so it is not lost.",
       "queueFailed": "The take could not be stored on this device. Download it so it is not lost.",
-      "unplayable": "This browser recorded a format the band cannot play back. Download it instead."
+      "unplayable": "This browser recorded a format the band cannot play back. Download it instead.",
+      "empty": "Nothing was recorded before the recording was cut, so no take was saved."
     },
     "uploadForm": {
       "title": "Upload a take of {{title}}",
