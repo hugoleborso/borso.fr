@@ -1,15 +1,20 @@
 import { and, eq, inArray } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { memberTable } from '../members/members.schema';
 import type { CategoryPreference, NotificationCategory } from './notifications.core';
 import {
   notificationDispatchTable,
   notificationPreferenceTable,
   pushSubscriptionTable,
+  vapidKeyPairTable,
 } from './notifications.schema';
 
 export type PushSubscriptionRow = typeof pushSubscriptionTable.$inferSelect;
 export type PushSubscriptionInsertShape = PushSubscriptionRow;
+export type VapidKeyPairRow = Omit<typeof vapidKeyPairTable.$inferSelect, 'id'>;
+
+const VAPID_KEY_PAIR_ID = 1;
 
 const SUBSCRIPTION_PROJECTION = {
   memberId: pushSubscriptionTable.memberId,
@@ -132,4 +137,22 @@ export async function deletePushStateOfMemberWithin(
   await executor
     .delete(notificationPreferenceTable)
     .where(eq(notificationPreferenceTable.memberId, memberId));
+}
+
+export async function findVapidKeyPair(): Promise<VapidKeyPairRow | null> {
+  const [pair] = await getDatabase()
+    .select({ publicKey: vapidKeyPairTable.publicKey, privateKey: vapidKeyPairTable.privateKey })
+    .from(vapidKeyPairTable)
+    .where(eq(vapidKeyPairTable.id, VAPID_KEY_PAIR_ID));
+  return pair ?? null;
+}
+
+export async function insertVapidKeyPairUnlessPresent(pair: VapidKeyPairRow): Promise<void> {
+  await retryingConflictAborts(
+    async () =>
+      await getDatabase()
+        .insert(vapidKeyPairTable)
+        .values({ id: VAPID_KEY_PAIR_ID, ...pair })
+        .onConflictDoNothing(),
+  );
 }

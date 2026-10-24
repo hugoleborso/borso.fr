@@ -8,20 +8,27 @@ import {
   jsonRequest,
   readJson,
 } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import {
-  configureVapidKeys,
+  abortCommitsWritingTable,
+  runWithWritesToTableHeld,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
+import {
   deviceEndpoint,
   readSentNotifications,
   stubPushService,
   subscribeDevice,
   turnCategory,
-  VAPID_PUBLIC_KEY,
 } from '../../../test/push-utils';
 import { buildTakeObjectKey } from '../takes/takes.core';
 import { takeTable } from '../takes/takes.schema';
 import { hasClaimedDispatch } from './notifications.repository';
-import { notificationPreferenceTable, pushSubscriptionTable } from './notifications.schema';
+import {
+  notificationPreferenceTable,
+  pushSubscriptionTable,
+  vapidKeyPairTable,
+} from './notifications.schema';
 
 const PUSH_SEND_DEADLINE_MILLISECONDS = 5_000;
 const ELEVEN_MINUTES_MILLISECONDS = 11 * 60 * 1000;
@@ -29,6 +36,7 @@ const ELEVEN_MINUTES_MILLISECONDS = 11 * 60 * 1000;
 const preferencesEnvelope = z.object({
   preferences: z.array(z.object({ category: z.string(), enabled: z.boolean() })),
 });
+const vapidKeyEnvelope = z.object({ key: z.string().min(1) });
 const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.string().uuid() }) });
 
 interface Band {
@@ -89,6 +97,14 @@ async function buildBand(): Promise<Band> {
   return { hugo, lea, sam };
 }
 
+async function readVapidKey(member: AuthenticatedApp): Promise<string> {
+  const response = await jsonRequest(member.app, '/api/notifications/vapid-public-key', {
+    cookieHeader: member.cookieHeader,
+  });
+  expect(response.status).toBe(200);
+  return (await readJson(response, vapidKeyEnvelope)).key;
+}
+
 async function listStoredEndpoints(): Promise<string[]> {
   const rows = await testDatabase()
     .select({ endpoint: pushSubscriptionTable.endpoint })
@@ -105,29 +121,45 @@ beforeEach(async () => {
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
-  vi.unstubAllEnvs();
 });
 
 // @FollowsBlueprint test-back-e2e
 describe('notifications controller (back-e2e)', () => {
   describe('the VAPID public key', () => {
-    it('is given to a member once the stage holds its key pair', async () => {
-      configureVapidKeys();
+    it('is generated on first use, stored, and given unchanged afterwards', async () => {
       const hugo = await buildAuthenticatedApp('Hugo');
-      const response = await jsonRequest(hugo.app, '/api/notifications/vapid-public-key', {
-        cookieHeader: hugo.cookieHeader,
-      });
-      expect(response.status).toBe(200);
-      expect(await response.json()).toEqual({ key: VAPID_PUBLIC_KEY });
+      const first = await readVapidKey(hugo);
+      const second = await readVapidKey(hugo);
+      expect(second).toBe(first);
+      const stored = await testDatabase()
+        .select({ publicKey: vapidKeyPairTable.publicKey })
+        .from(vapidKeyPairTable);
+      expect(stored).toEqual([{ publicKey: first }]);
     });
 
-    it('answers 503 push-not-configured while the stage holds no key pair', async () => {
+    it('keeps one pair when two members ask for the first key at the same moment', async () => {
       const hugo = await buildAuthenticatedApp('Hugo');
-      const response = await jsonRequest(hugo.app, '/api/notifications/vapid-public-key', {
-        cookieHeader: hugo.cookieHeader,
-      });
-      expect(response.status).toBe(503);
-      expect(await response.json()).toEqual({ error: 'push-not-configured' });
+      const lea = await buildAuthenticatedApp('Léa');
+      const keys = await runWithWritesToTableHeld(
+        'vapid_key_pair',
+        2,
+        async () => await Promise.all([readVapidKey(hugo), readVapidKey(lea)]),
+      );
+      expect(keys[1]).toBe(keys[0]);
+      expect(await testDatabase().select().from(vapidKeyPairTable)).toHaveLength(1);
+    });
+
+    it('stores the pair once when its first insert loses a conflict', async () => {
+      const hugo = await buildAuthenticatedApp('Hugo');
+      const removeSimulatedConflict = await abortCommitsWritingTable('vapid_key_pair', 1);
+      try {
+        const key = await readVapidKey(hugo);
+        expect(await testDatabase().select().from(vapidKeyPairTable)).toMatchObject([
+          { publicKey: key },
+        ]);
+      } finally {
+        await removeSimulatedConflict();
+      }
     });
 
     it('refuses a visitor without a member session', async () => {
@@ -229,7 +261,6 @@ describe('notifications controller (back-e2e)', () => {
 
   describe('sending after a write', () => {
     it('sends once per device of every other member with the category on, never to the author', async () => {
-      configureVapidKeys();
       const send = stubPushService();
       const { hugo, sam } = await buildBand();
       await turnCategory(sam, 'takes', false);
@@ -250,7 +281,6 @@ describe('notifications controller (back-e2e)', () => {
     });
 
     it('sends nothing for a take the device sends a second time', async () => {
-      configureVapidKeys();
       const send = stubPushService();
       const { hugo } = await buildBand();
       const songId = await createSong(hugo);
@@ -279,7 +309,6 @@ describe('notifications controller (back-e2e)', () => {
     });
 
     it('sends one round for a take two tabs send at the same moment', async () => {
-      configureVapidKeys();
       const send = stubPushService();
       const { hugo } = await buildBand();
       const songId = await createSong(hugo);
@@ -309,7 +338,6 @@ describe('notifications controller (back-e2e)', () => {
     });
 
     it('deletes a subscription its push service says is gone, and the write still succeeds', async () => {
-      configureVapidKeys();
       const send = stubPushService(
         async () => await Promise.reject(Object.assign(new Error('gone'), { statusCode: 410 })),
       );
@@ -323,7 +351,6 @@ describe('notifications controller (back-e2e)', () => {
     });
 
     it('keeps a subscription whose push service failed, and reports the failure', async () => {
-      configureVapidKeys();
       stubPushService(
         async () =>
           await Promise.reject(Object.assign(new Error('unavailable'), { statusCode: 503 })),
@@ -340,7 +367,6 @@ describe('notifications controller (back-e2e)', () => {
     });
 
     it('answers the write even when sending fails outright', async () => {
-      configureVapidKeys();
       const send = stubPushService();
       const { hugo } = await buildBand();
       const songId = await createSong(hugo);
@@ -362,7 +388,6 @@ describe('notifications controller (back-e2e)', () => {
     });
 
     it('answers the write once the deadline passes, even if a push service never answers', async () => {
-      configureVapidKeys();
       stubPushService(async () => await new Promise(() => undefined));
       const { hugo } = await buildBand();
       const songId = await createSong(hugo);
@@ -376,18 +401,24 @@ describe('notifications controller (back-e2e)', () => {
       );
     });
 
-    it('sends nothing, and still saves, while the stage holds no key pair', async () => {
+    it('generates the stage key pair at the first send and signs every push with it', async () => {
       const send = stubPushService();
       const { hugo } = await buildBand();
       const songId = await createSong(hugo);
 
       expect((await postTake(hugo, songId)).status).toBe(201);
 
-      expect(send).not.toHaveBeenCalled();
+      const [stored] = await testDatabase().select().from(vapidKeyPairTable);
+      expect(send).toHaveBeenCalledTimes(3);
+      for (const call of send.mock.calls) {
+        expect(call[2]?.vapidDetails).toMatchObject({
+          publicKey: stored?.publicKey,
+          privateKey: stored?.privateKey,
+        });
+      }
     });
 
     it('sends one notification for a burst of writes to one setlist, and again after ten minutes', async () => {
-      configureVapidKeys();
       const send = stubPushService();
       const { hugo, lea } = await buildBand();
       const setlistId = await createId(hugo, '/api/setlists', 'setlist', { name: 'Summer' });

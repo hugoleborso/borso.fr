@@ -10,7 +10,6 @@ import {
 } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import {
-  configureVapidKeys,
   deviceEndpoint,
   readSentNotifications,
   type SentNotification,
@@ -70,7 +69,6 @@ function sentCount(band: FanOutContext): number {
 }
 
 async function prepareBand(): Promise<FanOutContext> {
-  configureVapidKeys();
   const send = stubPushService();
   const hugo = await buildAuthenticatedApp('Hugo');
   const lea = await buildAuthenticatedApp('Léa');
@@ -89,7 +87,6 @@ beforeEach(async () => {
 afterEach(() => {
   vi.useRealTimers();
   vi.restoreAllMocks();
-  vi.unstubAllEnvs();
 });
 
 // @FollowsBlueprint test-back-e2e

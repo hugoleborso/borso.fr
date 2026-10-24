@@ -14,19 +14,13 @@ import {
   updatePreference,
 } from './notifications.service';
 
-const SERVICE_UNAVAILABLE_STATUS = 503;
-const PUSH_NOT_CONFIGURED = 'push-not-configured';
-
 // @FollowsBlueprint controller-dispatch
 export function buildNotificationsRouter() {
   return new Hono()
     .use('*', requireMemberSession)
     .get('/vapid-public-key', async (context) => {
-      const outcome = await readVapidPublicKey();
-      if (outcome.kind === 'not-configured') {
-        return context.json({ error: PUSH_NOT_CONFIGURED }, SERVICE_UNAVAILABLE_STATUS);
-      }
-      return context.json({ key: outcome.key });
+      const key = await readVapidPublicKey();
+      return context.json({ key });
     })
     .post('/subscriptions', zValidator('json', pushSubscriptionInputSchema), async (context) => {
       await subscribeToPush(context.req.valid('json'), {

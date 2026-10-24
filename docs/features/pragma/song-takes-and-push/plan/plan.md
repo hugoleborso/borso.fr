@@ -13,8 +13,7 @@ Read from `apps/pragma/` on 2026-10-23, not from the spec. Each line is a correc
 - **`DEFAULT now()` is refused** by `api/src/database/migrations.audit.test.ts` for any column outside its allowlist. `created_at` gets no default; the service passes `now`.
 - **DSQL has no foreign keys** ([`docs/knowledge/dsql-postgres-compat-gaps.md`](../../../../knowledge/dsql-postgres-compat-gaps.md)), so every cascade is code: the owning service exports `…OfDeletedSong(transaction, id)`, called inside the existing `deleteSongWithCascade` / `deleteSessionWithCascade` / `deleteMemberWithLinks` transactions, as `deleteStudiesOfDeletedSong` already is.
 - **The uploads adapter cannot delete and does not bind the length.** `presignPutObject` signs no `ContentLength`, so the 10 MiB chart cap is only checked in Zod; and the Lambda role has `grantPut` + `grantRead` only. Takes need both: the 50 MiB cap enforced by S3, and object deletion on song deletion.
-- **The VAPID SecureStrings cannot be created by CDK** (CloudFormation has no SecureString resource). The stack passes the two names and grants `ssm:GetParameter`; the operator creates the values (see *Operator steps*).
-- **Previews share one stage name** (`preview`, with a PR number), so the parameter path `/pragma/preview/vapid-*` is one pair for every preview, distinct from `/pragma/prod/vapid-*`. That still satisfies ADR-0040's isolation: no preview signs with the production key.
+- **The VAPID key pair lives in the database** (ADR-0040, revision 2026-10-24). The API generates it with `webPush.generateVAPIDKeys()` the first time push needs it and stores it in the `vapid_key_pair` singleton under id 1, with an `ON CONFLICT DO NOTHING` insert so two first uses keep one pair. The table is in the preview clone's `tableBlocklist`, so each preview generates a pair of its own and keeps it across deploys, and no preview signs with the production key. There is no SSM parameter, no environment variable and no operator step.
 - **`web-push`'s `timeout` option is a socket idle timeout**, not a deadline (`@types/web-push` 3.6.4, lines 247 to 255). The send is bounded by that option *and* by a `Promise.race` deadline.
 
 ## How each spec decision becomes code
@@ -46,7 +45,7 @@ Read from `apps/pragma/` on 2026-10-23, not from the spec. Each line is a correc
 | Error "over 50 MiB or not audio" | Refused before upload | `validateTakeFile(file)` in `domain/take-upload.core.ts`, read by the form and by the API schema | unit |
 | Error "storage full" | Offer a download | `take-queue.adapter.ts` returns `{ kind: 'quota-exceeded' }`; sheet renders a download link over `URL.createObjectURL(blob)` | unit on the core; `TakeQueueWriteFailed` reported |
 | Error "404 / 410" | Delete that subscription | copy of talos `classifyPushFailure` + `selectExpiredEndpoints` in `notifications.core.ts` | unit; back-e2e with the fake answering 410 |
-| ADR-0040 | One adapter, catalog version, per-stage keys, blocklist | `web-push.adapter.ts` only importer; `pnpm-workspace.yaml` catalog `web-push: 3.6.7`, `@types/web-push: 3.6.4`; `talos` and `pragma` both `catalog:`; `VAPID_PUBLIC_PARAMETER` / `VAPID_PRIVATE_PARAMETER` env; `tableBlocklist` gains `push_subscription`, `take`, `take_comment` | `grep -rn "from 'web-push'" apps/*/api/src` lists two adapters; `stack.test.ts` asserts parameter names, grant, and blocklist |
+| ADR-0040 | One adapter, catalog version, per-stage keys, blocklist | `web-push.adapter.ts` only importer; `pnpm-workspace.yaml` catalog `web-push: 3.6.7`, `@types/web-push: 3.6.4`; `talos` and `pragma` both `catalog:`; the pair in `vapid_key_pair`, generated on first use; `tableBlocklist` gains `push_subscription`, `take`, `take_comment`, `vapid_key_pair` | `grep -rn "from 'web-push'" apps/*/api/src` lists two adapters; `stack.test.ts` asserts the blocklist and that no VAPID parameter is named or granted |
 | Changes → `app.ts` | Mount two routers | `.route('/api/takes', buildTakesRouter())`, `.route('/api/notifications', buildNotificationsRouter())` inside the one chain | `tsc --noEmit` on the site sees `api.api.takes` |
 | Analytics | Input events | API: one structured `console.info({ event: 'take_created', source, queued })` per event through a named helper in `helpers/observability/`; site: Sentry breadcrumbs. No new pipeline; the output metric is read from `take.session_id` | grep for each event name in the diff |
 | Zero-defect | Four alerts | site: `reportTakeFailure(stage, error)` added to `site/src/observability/error-reporting.adapter.ts`, tags `take.stage`; API: `PushSendFailed` through `reportUnhandledError`-style capture with host and status tags, 404/410 skipped | unit on tag selection core |
@@ -114,7 +113,7 @@ Run, in order, before push:
 
 ## Operator steps (before push works on a stage)
 
-- Generate one VAPID pair per stage (`pnpm dlx web-push generate-vapid-keys`) and create four SSM SecureStrings in eu-west-3: `/pragma/prod/vapid-public`, `/pragma/prod/vapid-private`, `/pragma/preview/vapid-public`, `/pragma/preview/vapid-private`. Until they exist, that stage answers "push not configured" and every write still succeeds.
+- None since the 2026-10-24 revision of ADR-0040: each stage generates its VAPID pair the first time push needs it.
 
 ## Open questions / unknowns
 
@@ -166,15 +165,15 @@ Files:
 - `apps/pragma/api/src/notifications/notifications.core.ts` + `.test.ts` — `NotificationCategory`, `NotificationEvent` (discriminated union per source), `classifyPushFailure`, `selectExpiredEndpoints`, `isCategoryEnabled`, `selectRecipients` (actor excluded, category off excluded, one per subscription), `buildGroupKey`, `isGroupDue(lastSentAt, now)` with `NOTIFICATION_GROUP_WINDOW_MINUTES = 10`, `buildNotificationUrl`, `buildNotificationPayload` (the server does not know a device's language, so the payload carries a message key, its parameters and the URL, and `sw.js` renders the text in English or French from `navigator.language` with a key table it ships).
 - `apps/pragma/api/src/notifications/notifications.schema.ts` — Zod `pushSubscriptionInputSchema`, `preferencesUpdateSchema`.
 - `apps/pragma/api/src/notifications/notifications.repository.ts` — subscriptions (upsert on endpoint, delete by endpoint, list), preferences (list, upsert), `claimDispatch(groupKey, now, windowStart)`, `deletePushStateOfMemberWithin(transaction, memberId)`.
-- `apps/pragma/api/src/notifications/notifications.service.ts` — `readVapidPublicKey` (`not-configured` outcome), subscribe/unsubscribe, preferences read/update, `notifyBand(event, now)` (claim, select, send with deadline, delete expired, report failures, never throw).
-- `apps/pragma/api/src/notifications/notifications.controller.ts` + `.test.ts` — `GET /vapid-public-key` (503 `push-not-configured`), `POST /subscriptions`, `DELETE /subscriptions`, `GET /preferences`, `PUT /preferences`.
+- `apps/pragma/api/src/notifications/notifications.service.ts` — `readVapidPublicKey` (generates and stores the pair on first use), subscribe/unsubscribe, preferences read/update, `notifyBand(event, now)` (claim, select, send with deadline, delete expired, report failures, never throw).
+- `apps/pragma/api/src/notifications/notifications.controller.ts` + `.test.ts` — `GET /vapid-public-key`, `POST /subscriptions`, `DELETE /subscriptions`, `GET /preferences`, `PUT /preferences`.
 - `apps/pragma/api/src/app.ts` — mount `/api/notifications`.
 - Fan-out callers, each passing `actorMemberId` from the controller: `takes.service` (create take, create comment), `sessions.service` (create, patch), `setlists.service` (create, rename, append, patch entry including `lineupOverride`, remove, reorder, link and unlink), `transitions.service` (save), `songs.service` (patch when `defaultLineup` changed). Their controllers pass `readMemberId(context)`.
 - `apps/pragma/api/src/members/members.repository.ts` — call `deletePushStateOfMemberWithin`.
-- `apps/pragma/cdk/lib/stack.ts` + test — `VAPID_PUBLIC_PARAMETER=/pragma/<stage>/vapid-public`, `VAPID_PRIVATE_PARAMETER=/pragma/<stage>/vapid-private`, `ssm:GetParameter` on exactly those two ARNs, no value in the template.
+- `apps/pragma/cdk/lib/stack.ts` + test — `vapid_key_pair` in the preview `tableBlocklist`; `ssm:GetParameter` stays on the Spotify parameter alone.
 - `scripts/architecture/manifests/pragma.manifest.ts` — `web-push`.
 
-Tests: core units at 100% and mutation-scoped; adapter test with an injected sender (delivered, 410 → expired, other → failed, timeout passed); back-e2e with the adapter replaced through the composition root: one send per eligible subscription, none to the actor, none with the category off, 410 deletes the subscription, the adapter throwing leaves the write at 2xx, two setlist writes inside 10 minutes send once, missing VAPID parameters answer 503 on the key route and skip sends; stack test for the two parameter names and grant.
+Tests: core units at 100% and mutation-scoped; adapter test with an injected sender (delivered, 410 → expired, other → failed, timeout passed); back-e2e with the adapter replaced through the composition root: one send per eligible subscription, none to the actor, none with the category off, 410 deletes the subscription, the adapter throwing leaves the write at 2xx, two setlist writes inside 10 minutes send once, the key route generates one pair on first use, also when two members ask at the same moment; stack test for the blocklist and the absence of any VAPID parameter.
 
 ### 3. takes-site
 

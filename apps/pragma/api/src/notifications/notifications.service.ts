@@ -23,7 +23,9 @@ import {
   deleteSubscriptions,
   findDispatchLastSentAt,
   findMemberFirstName,
+  findVapidKeyPair,
   hasClaimedDispatch,
+  insertVapidKeyPairUnlessPresent,
   listPreferencesOfCategory,
   listPreferencesOfMember,
   listSubscriptions,
@@ -32,14 +34,11 @@ import {
   saveSubscription,
 } from './notifications.repository';
 import type { PreferencesUpdateInput, PushSubscriptionInput } from './notifications.schema';
-import { deliverWebPush, readVapidKeys, type VapidKeys } from './web-push.adapter';
+import { deliverWebPush, generateVapidKeyPair, type VapidKeys } from './web-push.adapter';
 
 export type { NotificationEvent, WriteActor } from './notifications.core';
 
-export type VapidPublicKeyOutcome = { kind: 'ok'; key: string } | { kind: 'not-configured' };
-
-export type NotifyOutcome =
-  'no-recipients' | 'not-configured' | 'grouped' | 'sent' | 'timed-out' | 'failed';
+export type NotifyOutcome = 'no-recipients' | 'grouped' | 'sent' | 'timed-out' | 'failed';
 
 const PUSH_SEND_DEADLINE_MILLISECONDS = 5_000;
 const PUSH_SEND_FAILED = 'PushSendFailed';
@@ -47,11 +46,19 @@ const PUSH_SEND_TIMED_OUT = 'PushSendTimedOut';
 const NOTIFY_BAND_FAILED = 'NotifyBandFailed';
 const UNKNOWN_STATUS = 'none';
 
+async function readVapidKeys(): Promise<VapidKeys> {
+  const stored = await findVapidKeyPair();
+  if (stored !== null) return stored;
+  await insertVapidKeyPairUnlessPresent(generateVapidKeyPair());
+  const kept = await findVapidKeyPair();
+  if (kept === null) throw new Error('the VAPID key pair is missing after its insert');
+  return kept;
+}
+
 // @FollowsBlueprint service-orchestration
-export async function readVapidPublicKey(): Promise<VapidPublicKeyOutcome> {
+export async function readVapidPublicKey(): Promise<string> {
   const vapidKeys = await readVapidKeys();
-  if (vapidKeys === null) return { kind: 'not-configured' };
-  return { kind: 'ok', key: vapidKeys.publicKey };
+  return vapidKeys.publicKey;
 }
 
 export async function subscribeToPush(
@@ -168,7 +175,6 @@ async function notifyRecipients(event: NotificationEvent, now: Date): Promise<No
   });
   if (recipients.length === 0) return 'no-recipients';
   const vapidKeys = await readVapidKeys();
-  if (vapidKeys === null) return 'not-configured';
   if (!(await hasClaimedGroup(buildGroupKey(event), now))) return 'grouped';
   return await deliverToRecipients(recipients, event, vapidKeys);
 }

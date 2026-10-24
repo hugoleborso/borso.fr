@@ -472,6 +472,29 @@ Held by: `api/src/notifications/notifications.controller.test.ts` › keeps one 
 Held by: `api/src/notifications/notifications.controller.test.ts` › deletes a subscription its push service says is gone, and the write still succeeds
 Held by: `api/src/notifications/notifications.controller.test.ts` › takes their devices and toggles with them
 
+## VAPID key pair
+
+The key pair a stage signs every push with, and whose public half a device
+subscribes with.
+
+Lives in: `api/src/notifications/` (`vapid_key_pair`)
+
+- One row, always under id 1. The API generates the pair with `web-push`
+  the first time push needs it, inserts it with `ON CONFLICT DO NOTHING`
+  and reads back what was stored, so two first uses at the same moment
+  keep one pair (ADR-0040, revision 2026-10-24).
+- Kept out of every preview's copy of the production schema, so a preview
+  generates its own pair and never signs as production.
+- Replacing the pair would orphan every subscription made with the old
+  public key, so nothing in the application rewrites the row.
+
+Held by: `api/src/notifications/notifications.controller.test.ts` › is generated on first use, stored, and given unchanged afterwards
+Held by: `api/src/notifications/notifications.controller.test.ts` › keeps one pair when two members ask for the first key at the same moment
+Held by: `api/src/notifications/notifications.controller.test.ts` › stores the pair once when its first insert loses a conflict
+
+Not to be confused with: a **push subscription**, which is the device's own
+key and address rather than the stage's.
+
 ## Offline manifest
 
 The list of URLs the service worker pre-caches so the band can read the

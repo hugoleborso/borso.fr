@@ -116,7 +116,7 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
 
-  it('clones prod into a preview with its passwords, but no passkey, no avatar key, no push subscription and no take', () => {
+  it('clones prod into a preview with its passwords, but no passkey, no avatar key, no push subscription or key pair, and no take', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
       tableBlocklist: [
@@ -126,6 +126,7 @@ describe('pragma preview schema cloning', () => {
         'push_subscription',
         'take',
         'take_comment',
+        'vapid_key_pair',
         'webauthn_challenge',
       ],
       tablesToReplace: ['app_config', 'member_credential'],
@@ -247,32 +248,14 @@ describe('pragma app stack', () => {
     expect(readParameterReadGrant('prod')).toContain(':parameter/pragma/spotify-credentials');
   });
 
-  it('names the VAPID parameters of its own stage, so no preview signs with the production key', () => {
-    expect(readApiVariables('prod')).toMatchObject({
-      VAPID_PUBLIC_PARAMETER: '/pragma/prod/vapid-public',
-      VAPID_PRIVATE_PARAMETER: '/pragma/prod/vapid-private',
-    });
-    expect(readApiVariables('preview')).toMatchObject({
-      VAPID_PUBLIC_PARAMETER: '/pragma/preview/vapid-public',
-      VAPID_PRIVATE_PARAMETER: '/pragma/preview/vapid-private',
-    });
-  });
-
-  it('grants reading exactly the Spotify parameter and the two VAPID parameters of the stage', () => {
+  it('grants reading exactly the Spotify parameter, and names no VAPID parameter', () => {
     for (const stage of ['prod', 'preview'] as const) {
       const grant = readParameterReadGrant(stage);
-      expect(grant.match(/:parameter\//g)).toHaveLength(3);
-      expect(grant).toContain(`:parameter/pragma/${stage}/vapid-public`);
-      expect(grant).toContain(`:parameter/pragma/${stage}/vapid-private`);
+      expect(grant.match(/:parameter\//g)).toHaveLength(1);
+      expect(grant).not.toContain('vapid');
+      expect(Object.keys(readApiVariables(stage)).join()).not.toContain('VAPID');
     }
-  });
-
-  it('keeps the VAPID keys themselves out of the synthesized template', () => {
-    const template = synthAppStack('prod');
-    const rendered = JSON.stringify(template.toJSON());
-    expect(rendered).not.toContain('VAPID_PUBLIC_KEY');
-    expect(rendered).not.toContain('VAPID_PRIVATE_KEY');
-    expect(template.findResources('AWS::SSM::Parameter')).toEqual({});
+    expect(synthAppStack('prod').findResources('AWS::SSM::Parameter')).toEqual({});
   });
 
   it('lets the API delete objects from the uploads bucket, so a deleted song takes its audio with it', () => {

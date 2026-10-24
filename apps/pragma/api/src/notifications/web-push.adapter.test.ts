@@ -3,13 +3,14 @@
  */
 
 import webPush from 'web-push';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { deliverWebPush, type PushSender, readVapidKeys } from './web-push.adapter';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import { deliverWebPush, generateVapidKeyPair, type PushSender } from './web-push.adapter';
 
 const TARGET = { endpoint: 'https://push.example/abc', p256dh: 'device-key', auth: 'device-auth' };
 const VAPID_KEYS = { publicKey: 'public', privateKey: 'private' };
-const PUBLIC_PARAMETER = '/pragma/preview/vapid-public';
-const PRIVATE_PARAMETER = '/pragma/preview/vapid-private';
+const BASE64URL = /^[\w-]+$/;
+const UNCOMPRESSED_P256_POINT_BYTES = 65;
+const P256_PRIVATE_KEY_BYTES = 32;
 
 function succeeding(): PushSender {
   return vi.fn(async () => await Promise.resolve({ statusCode: 201, body: '', headers: {} }));
@@ -21,7 +22,6 @@ function rejectingWith(failure: Error): PushSender {
 
 afterEach(() => {
   vi.restoreAllMocks();
-  vi.unstubAllEnvs();
 });
 
 // @FollowsBlueprint test-node-adapter
@@ -85,45 +85,17 @@ describe('deliverWebPush', () => {
   });
 });
 
-describe('readVapidKeys', () => {
-  beforeEach(() => {
-    vi.stubEnv('VAPID_PUBLIC_PARAMETER', PUBLIC_PARAMETER);
-    vi.stubEnv('VAPID_PRIVATE_PARAMETER', PRIVATE_PARAMETER);
+describe('generateVapidKeyPair', () => {
+  it('generates a P-256 pair in the base64url form web-push signs with', () => {
+    const pair = generateVapidKeyPair();
+    expect(Object.keys(pair).sort()).toEqual(['privateKey', 'publicKey']);
+    expect(pair.publicKey).toMatch(BASE64URL);
+    expect(pair.privateKey).toMatch(BASE64URL);
+    expect(Buffer.from(pair.publicKey, 'base64url')).toHaveLength(UNCOMPRESSED_P256_POINT_BYTES);
+    expect(Buffer.from(pair.privateKey, 'base64url')).toHaveLength(P256_PRIVATE_KEY_BYTES);
   });
 
-  it('reads both keys from the parameters the stage names', async () => {
-    const readParameter = vi.fn(async (name: string) => await Promise.resolve(`value of ${name}`));
-    expect(await readVapidKeys(readParameter)).toEqual({
-      publicKey: `value of ${PUBLIC_PARAMETER}`,
-      privateKey: `value of ${PRIVATE_PARAMETER}`,
-    });
-    expect(readParameter).toHaveBeenCalledTimes(2);
-  });
-
-  it('answers no keys while either parameter is missing or empty', async () => {
-    expect(
-      await readVapidKeys(
-        async (name) => await Promise.resolve(name === PUBLIC_PARAMETER ? 'public' : undefined),
-      ),
-    ).toBeNull();
-    expect(
-      await readVapidKeys(
-        async (name) => await Promise.resolve(name === PRIVATE_PARAMETER ? 'private' : ''),
-      ),
-    ).toBeNull();
-  });
-
-  it('reads nothing while the stage names no parameter', async () => {
-    vi.stubEnv('VAPID_PUBLIC_PARAMETER', '');
-    vi.stubEnv('VAPID_PRIVATE_PARAMETER', undefined);
-    const readParameter = vi.fn(async () => await Promise.resolve('value'));
-    expect(await readVapidKeys(readParameter)).toBeNull();
-    expect(readParameter).not.toHaveBeenCalled();
-  });
-
-  it('reads through the parameter store by default', async () => {
-    vi.stubEnv('VAPID_PUBLIC_PARAMETER', undefined);
-    vi.stubEnv('VAPID_PRIVATE_PARAMETER', undefined);
-    expect(await readVapidKeys()).toBeNull();
+  it('generates a different pair each time', () => {
+    expect(generateVapidKeyPair().privateKey).not.toBe(generateVapidKeyPair().privateKey);
   });
 });

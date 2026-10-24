@@ -24,6 +24,7 @@ export {
   notificationDispatchTable,
   notificationPreferenceTable,
   pushSubscriptionTable,
+  vapidKeyPairTable,
 } from '../notifications/notifications.schema';
 export { outreachTemplateTable } from '../outreach/outreach.schema';
 export { sessionTable } from '../sessions/sessions.schema';
