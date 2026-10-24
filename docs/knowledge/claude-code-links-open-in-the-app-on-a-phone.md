@@ -36,6 +36,10 @@ https://claude.ai/code/new?repo=<owner/name>&environment=<env id>&q=<prompt>
 
 The app reads `q` and `repo` on `code/new`. The support article presents the https form as the universal-link equivalent of `claude://code/new`, which opens in the browser when the app is absent. This repository builds that link in one place, `apps/talos/site/src/lib/claude-code-address.core.ts`.
 
+## From the iOS home-screen app
+
+On 2026-10-24 the `https://claude.ai/code/new?…` link, tapped in Talos installed on the home screen, opened the Claude app on its home with no prompt, although the link matched the support article. Talos now writes `claude://code/new?…` when `navigator.standalone` is true and leaves out `target="_blank"`, so iOS hands the custom scheme straight to the app instead of resolving a universal link from a standalone web app. Unverified from here: nothing in a hosted session can tap it.
+
 ## What still does not work
 
 Last verified: 2026-10-08 — read support.claude.com article 14898120 and the web quickstart's « Pre-fill sessions »; no phone was available to tap the link.
