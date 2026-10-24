@@ -22,7 +22,8 @@ export interface TakeListProps {
   readonly onRetry: (takeId: string) => void;
 }
 
-const SEPARATOR = ' · ';
+const NO_BREAK_SPACE = ' ';
+const SEPARATOR = `${NO_BREAK_SPACE}· `;
 const SELECTED_ROW_CLASS = 'border-accent bg-accent-soft';
 const ROW_CLASS = 'border-line bg-bg';
 
@@ -67,12 +68,12 @@ export function TakeList({
                 onClick={() => onSelect(row.id)}
               >
                 <Icon name="play" size={12} className="text-ink-500" />
-                <span className="truncate">{summary}</span>
+                <span className="min-w-0 break-words">{summary}</span>
               </button>
             ) : (
               <span className="flex flex-1 min-w-0 items-center gap-2 min-h-11 text-sm text-ink-500">
                 <Icon name="cloudOff" size={12} />
-                <span className="truncate">{summary}</span>
+                <span className="min-w-0 break-words">{summary}</span>
               </span>
             )}
             {view.commentCount === null ? null : (
