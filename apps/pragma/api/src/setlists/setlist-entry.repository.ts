@@ -10,30 +10,13 @@ import {
 
 export type LineupOverride = z.infer<typeof lineupOverrideSchema>;
 
-export interface SetlistEntryRow {
-  id: string;
-  setlistId: string;
-  songId: string;
-  position: number;
-  lineupOverride: LineupOverride | null;
-  energy: number | null;
-  keyOverride: string | null;
-  capo: number | null;
-  notes: string;
-}
-
-export interface EntryInsertShape {
-  setlistId: string;
-  songId: string;
-  position: number;
-  energy: number | null;
-  lineupOverride: LineupOverride | null;
-  keyOverride: string | null;
-  capo: number | null;
-  notes: string;
-}
-
 type SetlistEntryRawRow = typeof setlistEntryTable.$inferSelect;
+
+export type SetlistEntryRow = Omit<SetlistEntryRawRow, 'lineupOverride'> & {
+  lineupOverride: LineupOverride | null;
+};
+
+export type EntryInsertShape = Omit<SetlistEntryRow, 'id'>;
 
 // @FollowsBlueprint repository-projection
 const ENTRY_PROJECTION = {

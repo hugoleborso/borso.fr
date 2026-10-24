@@ -7,40 +7,15 @@ import {
 } from '../helpers/persistence/insertion.core';
 import { audienceSuggestionTable, audienceVoteTable, votingRoundTable } from './audience.schema';
 
-export interface VotingRoundRow {
-  id: string;
-  sessionId: string;
-  openedAt: Date;
-  closesAt: Date;
-  settledAt: Date | null;
-  winningSongId: string | null;
-}
+export type VotingRoundRow = typeof votingRoundTable.$inferSelect;
 
-export interface AudienceVoteRow {
-  ballotToken: string;
-  songId: string;
-  castAt: Date;
-}
+export type AudienceVoteRow = Omit<typeof audienceVoteTable.$inferSelect, 'roundId'>;
 
-export interface RoundInsertShape {
-  sessionId: string;
-  openedAt: Date;
-  closesAt: Date;
-}
+export type RoundInsertShape = Pick<VotingRoundRow, 'sessionId' | 'openedAt' | 'closesAt'>;
 
-export interface VoteInsertShape {
-  roundId: string;
-  ballotToken: string;
-  songId: string;
-  castAt: Date;
-}
+export type VoteInsertShape = typeof audienceVoteTable.$inferInsert;
 
-export interface SuggestionInsertShape {
-  sessionId: string;
-  songId: string;
-  ballotToken: string;
-  suggestedAt: Date;
-}
+export type SuggestionInsertShape = Omit<typeof audienceSuggestionTable.$inferInsert, 'id'>;
 
 // @FollowsBlueprint repository-projection
 const ROUND_PROJECTION = {
