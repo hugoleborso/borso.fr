@@ -12,6 +12,8 @@ set -e
 
 changed=$(git diff --cached --name-only --diff-filter=ACMR)
 
+scripts/check-claude-harness-active.sh
+
 # ESLint and Prettier over the STAGED files only. Linting the whole repository
 # here would not be a small check: the type-aware rules build a TypeScript
 # program per workspace, so a cold full run is about 80 s, and a branch that

@@ -84,7 +84,8 @@ classify_target() {
 
 find_chromium() {
   local candidate
-  candidate="$(ls -d /opt/pw-browsers/chromium-*/chrome-linux*/chrome 2>/dev/null | head -1)"
+  candidate=/opt/pw-browsers/chromium
+  [ -x "$candidate" ] || candidate="$(find /opt/pw-browsers -maxdepth 3 -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort | tail -n1 || true)"
   [ -n "$candidate" ] || fail "no Chromium under /opt/pw-browsers — is this the sandbox image?"
   printf '%s' "$candidate"
 }

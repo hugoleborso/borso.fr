@@ -14,7 +14,9 @@ import {
   buildClaudeCodeAddress,
   type ClaudeCodeEnvironment,
   composeTalosPrompt,
+  selectClaudeCodeLinkTarget,
 } from '../../lib/claude-code-address.core';
+import { detectClaudeCodeOpener } from '../../lib/claude-code-opener.adapter';
 import { isMessageTooLong, LONG_MESSAGE_THRESHOLD } from './message-composer.core';
 
 interface EnvironmentChoice {
@@ -51,6 +53,7 @@ export function MessageComposer(): JSX.Element {
   const { t } = useTranslation();
   const target = useClaudeCodeTarget();
   const copyPrompt = useCopyPromptOnLaunch();
+  const opener = detectClaudeCodeOpener();
   const form = useForm({ defaultValues: { text: '' } });
 
   return (
@@ -93,12 +96,15 @@ export function MessageComposer(): JSX.Element {
                     {ENVIRONMENT_CHOICES.map((choice) => (
                       <a
                         key={choice.environment}
-                        href={buildClaudeCodeAddress({
-                          repository: target.data.repository,
-                          environmentId: target.data.environments[choice.environment],
-                          prompt,
-                        })}
-                        target="_blank"
+                        href={buildClaudeCodeAddress(
+                          {
+                            repository: target.data.repository,
+                            environmentId: target.data.environments[choice.environment],
+                            prompt,
+                          },
+                          opener,
+                        )}
+                        target={selectClaudeCodeLinkTarget(opener)}
                         rel="noopener"
                         onClick={() => copyPrompt(prompt)}
                         className={choice.className}

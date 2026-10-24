@@ -140,7 +140,7 @@ decision.
 - [`inserting-an-i18n-key-without-rewriting-the-catalogue.md`](./inserting-an-i18n-key-without-rewriting-the-catalogue.md) — parse-and-re-serialise turned a 6-line translation addition into a 68-line diff, because the catalogues are only mostly sorted; splice the lines in instead.
 - [`writing-a-small-function-the-hundred-percent-gates-accept.md`](./writing-a-small-function-the-hundred-percent-gates-accept.md) — the shapes the coverage and mutation gates reject: a `noUncheckedIndexedAccess` guard that no test can reach, a named no-op helper that is an equivalent mutant, and a surviving conditional that is really a design signal.
 - [`claude-code-links-open-in-the-app-on-a-phone.md`](./claude-code-links-open-in-the-app-on-a-phone.md) — on a phone with the Claude app, a `claude.ai/code` link opens in the app, which prefills only `code/new` with `q` and `repo` and documents no `environment`.
-- [`borso-fr-attached-to-another-repositorys-session.md`](./borso-fr-attached-to-another-repositorys-session.md) — working here from a session started on another repository: the husky gates hold, SessionStart, `.claude/` hooks and `KAIZEN.md` do not, and the shallow clone cannot record an upstream.
+- [`borso-fr-attached-to-another-repositorys-session.md`](./borso-fr-attached-to-another-repositorys-session.md) — working here from a session started on another repository: the husky gates hold, SessionStart, `.claude/` hooks and `KAIZEN.md` do not, as in a session started in the folder above several clones; the first commit now stops on it, and the shallow clone cannot record an upstream.
 
 ### Local dev / Postgres
 

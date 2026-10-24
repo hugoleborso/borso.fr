@@ -805,6 +805,15 @@ const SCRIPT_CANARIES: readonly CommandCanary[] = [
     tier: 'fast',
   },
   {
+    mechanism: 'scripts/check-claude-harness-active.sh',
+    label: 'Claude Code session without the hooks',
+    defect: 'a commit from a Claude Code session whose SessionStart never ran here',
+    command: SCRIPT('check-claude-harness-active.sh'),
+    environment: { CLAUDECODE: '1', CLAUDE_CODE_SESSION_ID: 'gate-canary-session' },
+    refusal: /never ran borso\.fr's \.claude hooks/,
+    tier: 'fast',
+  },
+  {
     mechanism: 'scripts/check-no-null-bytes.sh',
     label: 'no NUL bytes',
     defect: 'a tracked text file carrying a NUL byte',
