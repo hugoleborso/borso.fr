@@ -3,6 +3,7 @@ summary: 'Working here from a session started on another repository: the husky g
 triggers:
   output:
     - 'not stored as a remote-tracking branch'
+    - 'never ran borso\.fr''s \.claude hooks'
 ---
 
 # borso.fr attached to another repository's session
@@ -19,6 +20,12 @@ The husky hooks live in the clone itself: pre-commit (ESLint, Prettier, blueprin
 - **`.claude/settings.json` hooks.** The session carries the settings of the repository it started on. So the pre-write blueprint context, the rtk rewrite and this repository's guard hooks are absent, and the other repository's guards apply instead.
 - **This CLAUDE.md.** `register_repo_root` asks for a reload on the next turn; until it arrives, read `CLAUDE.md` yourself before the first edit.
 - **The friction log.** Nothing creates `KAIZEN.md` or reminds the agent to write to it, so the after-task sweep starts from the transcript alone. Run `scripts/kaizen.sh` from the start like in a native session.
+
+## A session started in the folder above the clones
+
+The same holds, with no `add_repo`, when a hosted session holds several clones side by side and starts in their parent folder: PR #194 ran from `/home/user`, holding `borso.fr` and `talos`. Both `CLAUDE.md` files load, and neither repository's `.claude/settings.json` does. `CLAUDE_PROJECT_DIR` is empty in the Bash tool and the shell keeps resetting to the parent. The talos SessionStart is silent too, so its `.contexte/session.md` is never written.
+
+Since PR #194's kaizen, the first commit from such a session stops at `scripts/check-claude-harness-active.sh`. Run `scripts/check-claude-harness-active.sh --acknowledge`, which runs the install SessionStart would have run, then reread the knowledge entries for what you ran. See [the dantotsu](../dantotsus/the-hooks-that-never-loaded.md).
 
 ## A shallow clone has no tracking branch
 

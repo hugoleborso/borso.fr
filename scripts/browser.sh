@@ -60,8 +60,14 @@ note() {
   printf '\033[36m[browser]\033[0m %s\n' "$1"
 }
 
+STABLE_CHROMIUM=/opt/pw-browsers/chromium
+
 find_chromium() {
-  ls -d /opt/pw-browsers/chromium-*/chrome-linux/chrome 2>/dev/null | head -1
+  if [ -x "$STABLE_CHROMIUM" ]; then
+    printf '%s\n' "$STABLE_CHROMIUM"
+    return 0
+  fi
+  find /opt/pw-browsers -maxdepth 3 -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort | tail -n1 || true
 }
 
 DRIVE_STATE_DIR="${TMPDIR:-/tmp}/borso-browser-drives"

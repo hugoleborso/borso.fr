@@ -6,10 +6,11 @@ severity: medium
 related-pr: https://github.com/hugoleborso/borso.fr/pull/76
 fix-commit: n/a (each stylesheet is already written around these)
 tags: [tailwind, css, design-tokens, preflight, vendor-quirk]
-summary: 'Tailwind v4 fails quietly: `@theme` blocks collapse into `:root`, a `var()` in `@theme` resolves there, a bare-word variant compiles to nothing, and preflight resets dialogs and buttons.'
+summary: 'Tailwind v4 fails quietly: `@theme` blocks collapse into `:root`, a `var()` in `@theme` resolves there, a bare-word variant compiles to nothing, preflight resets dialogs and buttons, and talos''s `--color-*: initial` makes `white` and `black` generate nothing.'
 triggers:
   paths:
     - 'apps/*/site/src/styles/tokens.css'
+    - 'apps/talos/site/src/components/**'
 ---
 
 # Tailwind v4: what `@theme` does to a stylesheet, and what preflight does to a page
@@ -162,3 +163,7 @@ curl -s "$PREVIEW/assets/<chunk>.css" | grep -o "jumping[^{,]*" | sort -u
 - [`../dantotsus/a-tailwind-variant-that-compiled-to-nothing.md`](../dantotsus/a-tailwind-variant-that-compiled-to-nothing.md)
 - [`judging-an-animation-you-cannot-watch.md`](./judging-an-animation-you-cannot-watch.md)
   — the measurement artefacts that made the second failure hard to read.
+
+## `--color-*: initial` removes `white` and `black` too
+
+`apps/talos/site/src/styles/tokens.css` opens its `@theme` with `--color-*: initial`, which drops the whole default palette. A class such as `border-white/25` then generates no rule, the border falls back to the current text colour, and nothing warns. PR #194 shipped a black outline on the tab bar this way until a screenshot showed it. In talos, write colours from the theme only (`border-on-shell/10`, `bg-shell/60`). The other applications keep the default palette.
