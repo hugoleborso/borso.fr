@@ -1,24 +1,17 @@
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
-import { getSongById } from '../songs/songs.service';
+import { findSongById } from '../songs/songs.service';
 import {
   deleteTransitionComment,
-  findTransitionComment,
   listTransitionComments,
   type TransitionCommentRow,
   upsertTransitionComment,
 } from './transitions.repository';
+export { findTransitionComment } from './transitions.repository';
 
 // @FollowsBlueprint service-passthrough
 export async function getTransitionComments(): Promise<TransitionCommentRow[]> {
   return await listTransitionComments();
-}
-
-export async function getTransitionComment(
-  songAId: string,
-  songBId: string,
-): Promise<TransitionCommentRow | null> {
-  return await findTransitionComment(songAId, songBId);
 }
 
 async function notifyTransitionChanged(
@@ -26,7 +19,7 @@ async function notifyTransitionChanged(
   songBId: string,
   actor: WriteActor,
 ): Promise<void> {
-  const [songA, songB] = await Promise.all([getSongById(songAId), getSongById(songBId)]);
+  const [songA, songB] = await Promise.all([findSongById(songAId), findSongById(songBId)]);
   if (songA === null || songB === null) return;
   await notifyBand(
     {

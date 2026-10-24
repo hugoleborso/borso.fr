@@ -5,7 +5,7 @@ import { sessionCreateSchema, sessionIdParamSchema, sessionUpdateSchema } from '
 import {
   createSession,
   getNextSessionOfflineManifest,
-  getSessionById,
+  findSessionById,
   getSessions,
   patchSession,
   removeSession,
@@ -28,7 +28,7 @@ export function buildSessionsRouter() {
     })
     .get('/:id', zValidator('param', sessionIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const session = await getSessionById(id);
+      const session = await findSessionById(id);
       if (session === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ session });
     })

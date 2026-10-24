@@ -9,7 +9,7 @@ import {
 } from './songs.schema';
 import {
   createSong,
-  getSongById,
+  findSongById,
   getSongs,
   patchSong,
   removeSong,
@@ -39,7 +39,7 @@ export function buildSongsRouter() {
     })
     .get('/:id', zValidator('param', songIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const song = await getSongById(id);
+      const song = await findSongById(id);
       if (song === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ song });
     })

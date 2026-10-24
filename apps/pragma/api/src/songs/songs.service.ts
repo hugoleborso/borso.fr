@@ -9,6 +9,7 @@ import { notifyBand, type WriteActor } from '../notifications/notifications.serv
 import { deleteAudioOfDeletedSong } from '../takes/takes.service';
 import { hasLineupChanged } from './song-lineup.core';
 export type { SongRow } from './songs.repository';
+export { findSongById } from './songs.repository';
 import {
   deleteSongWithCascade,
   findSongById,
@@ -55,10 +56,6 @@ function valuesFromCreate(input: SongCreateInput): SongInsertShape {
 
 export async function getSongs(): Promise<SongRow[]> {
   return await listSongsNewestFirst();
-}
-
-export async function getSongById(id: string): Promise<SongRow | null> {
-  return await findSongById(id);
 }
 
 async function withResolvedSpotifyTrack<Input extends SpotifyResolvable>(

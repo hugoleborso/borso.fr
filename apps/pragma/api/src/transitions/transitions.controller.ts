@@ -3,7 +3,7 @@ import { Hono } from 'hono';
 import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
 import { transitionCommentBodySchema, transitionPairParamSchema } from './transitions.schema';
 import {
-  getTransitionComment,
+  findTransitionComment,
   getTransitionComments,
   removeTransitionComment,
   saveTransitionComment,
@@ -19,7 +19,7 @@ export function buildTransitionCommentsRouter() {
     })
     .get('/:a/:b', zValidator('param', transitionPairParamSchema), async (context) => {
       const { a, b } = context.req.valid('param');
-      const comment = await getTransitionComment(a, b);
+      const comment = await findTransitionComment(a, b);
       if (comment === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ comment });
     })

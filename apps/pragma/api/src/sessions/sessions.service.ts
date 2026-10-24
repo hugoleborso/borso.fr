@@ -9,12 +9,12 @@ import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import {
   deleteSessionWithCascade,
-  findSessionById,
   insertSession,
   listSessions,
   type SessionRow,
   updateSession,
 } from './sessions.repository';
+export { findSessionById } from './sessions.repository';
 import {
   type SessionPersistedUpdate,
   type sessionCreateSchema,
@@ -42,10 +42,6 @@ function valuesFromUpdate(input: SessionUpdateInput): SessionPersistedUpdate {
 
 export async function getSessions(): Promise<SessionRow[]> {
   return await listSessions();
-}
-
-export async function getSessionById(id: string): Promise<SessionRow | null> {
-  return await findSessionById(id);
 }
 
 async function notifySessionWritten(

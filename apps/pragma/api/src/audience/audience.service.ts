@@ -1,5 +1,5 @@
 import { randomBytes } from 'node:crypto';
-import { getSessionById } from '../sessions/sessions.service';
+import { findSessionById } from '../sessions/sessions.service';
 import {
   appendSongWithin,
   findOrCreateAudienceChoiceSetlist,
@@ -90,7 +90,7 @@ export type OpenRoundOutcome = { kind: 'ok'; round: RoundView } | Refused;
 
 // @FollowsBlueprint service-orchestration
 export async function openRound(params: OpenRoundParams): Promise<OpenRoundOutcome> {
-  const session = await getSessionById(params.sessionId);
+  const session = await findSessionById(params.sessionId);
   if (session === null) return refuse('not-a-concert');
   if (session.kind !== CONCERT_SESSION_KIND) return refuse('not-a-concert');
   const running = await findOpenRoundOfConcert(params.sessionId, params.now);
@@ -163,7 +163,7 @@ export interface ReadConcertStateParams {
 export async function readConcertState(
   params: ReadConcertStateParams,
 ): Promise<ConcertVoteState | null> {
-  const session = await getSessionById(params.sessionId);
+  const session = await findSessionById(params.sessionId);
   if (session === null) return null;
   if (session.kind !== CONCERT_SESSION_KIND) return null;
   const lastKnownRound = await findLatestRoundOfConcert(params.sessionId);
@@ -205,7 +205,7 @@ async function readOpenRound(roundId: string, now: Date): Promise<OpenRoundRead>
 }
 
 async function readConcertRunningARound(sessionId: string, now: Date): Promise<OpenRoundRead> {
-  const session = await getSessionById(sessionId);
+  const session = await findSessionById(sessionId);
   if (session === null) return refuse('not-a-concert');
   if (session.kind !== CONCERT_SESSION_KIND) return refuse('not-a-concert');
   const running = await findOpenRoundOfConcert(sessionId, now);

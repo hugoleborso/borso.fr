@@ -10,7 +10,7 @@ import {
   getEntriesOfSetlists,
   getEntriesOfSong,
 } from '../setlists/setlists.service';
-import { getSongById, getSongs, type SongRow } from '../songs/songs.service';
+import { findSongById, getSongs, type SongRow } from '../songs/songs.service';
 import { buildMemberStreaks, type MemberStreak } from './band-streaks.core';
 import {
   groupLineupsBySong,
@@ -69,7 +69,7 @@ async function readLineupsOfSong(song: SongRow): Promise<Lineup[]> {
 
 // @FollowsBlueprint service-clock-injected
 export async function logStudy(command: StudyCommand): Promise<StudyWriteOutcome> {
-  const song = await getSongById(command.songId);
+  const song = await findSongById(command.songId);
   if (song === null) return { kind: 'song-not-found' };
   if (!(await isKnownInstrument(command.instrumentId))) return { kind: 'instrument-not-found' };
   const lineups = await readLineupsOfSong(song);

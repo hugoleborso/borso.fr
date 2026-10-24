@@ -2,8 +2,8 @@ import type { DatabaseExecutor } from '../database/client';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
 import { notifyBand } from '../notifications/notifications.service';
-import { getSessionById } from '../sessions/sessions.service';
-import { getSongById } from '../songs/songs.service';
+import { findSessionById } from '../sessions/sessions.service';
+import { findSongById } from '../songs/songs.service';
 import { deleteStoredObjects, mintObjectUpload } from '../uploads/uploads.service';
 import { buildTakeObjectKey, isMomentWithinTake, orderCommentsByTime } from './takes.core';
 import {
@@ -41,7 +41,7 @@ interface ActorCommand {
 
 // @FollowsBlueprint service-clock-injected
 export async function mintTakeUpload(input: TakeSignInput, now: Date): Promise<TakeUploadOutcome> {
-  if ((await getSongById(input.songId)) === null) return { kind: 'song-not-found' };
+  if ((await findSongById(input.songId)) === null) return { kind: 'song-not-found' };
   const minted = await mintObjectUpload({
     objectKey: buildTakeObjectKey({
       songId: input.songId,
@@ -56,7 +56,7 @@ export async function mintTakeUpload(input: TakeSignInput, now: Date): Promise<T
 }
 
 async function isKnownSession(sessionId: string | null): Promise<boolean> {
-  return sessionId === null || (await getSessionById(sessionId)) !== null;
+  return sessionId === null || (await findSessionById(sessionId)) !== null;
 }
 
 // @FollowsBlueprint service-orchestration
@@ -70,7 +70,7 @@ export async function createTake(
     contentType: input.contentType,
   });
   if (input.objectKey !== expectedObjectKey) return { kind: 'object-key-mismatch' };
-  const song = await getSongById(input.songId);
+  const song = await findSongById(input.songId);
   if (song === null) return { kind: 'song-not-found' };
   if (!(await isKnownSession(input.sessionId))) return { kind: 'session-not-found' };
   const isNewTake = await hasInsertedTake({
@@ -131,7 +131,7 @@ export async function getCommentsOfTake(takeId: string): Promise<TakeCommentsOut
 }
 
 async function notifyCommentOnTake(take: TakeView, command: ActorCommand): Promise<void> {
-  const song = await getSongById(take.songId);
+  const song = await findSongById(take.songId);
   if (song === null) return;
   await notifyBand(
     {

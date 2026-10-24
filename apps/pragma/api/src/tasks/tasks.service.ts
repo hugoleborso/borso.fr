@@ -1,7 +1,7 @@
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { getMemberById } from '../members/members.service';
-import { getSongById } from '../songs/songs.service';
+import { findSongById } from '../songs/songs.service';
 import type { DatabaseExecutor } from '../database/client';
 import { sortTasksByUrgency } from './tasks.core';
 import {
@@ -56,7 +56,7 @@ async function isAssigneeKnown(assigneeId: string | null | undefined): Promise<b
 
 async function isLinkedSongKnown(songId: string | null | undefined): Promise<boolean> {
   if (songId === null || songId === undefined) return true;
-  return (await getSongById(songId)) !== null;
+  return (await findSongById(songId)) !== null;
 }
 
 export async function getTasksSortedByUrgency(): Promise<readonly TaskRow[]> {

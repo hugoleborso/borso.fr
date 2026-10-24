@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { DatabaseExecutor } from '../database/client';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
-import { getSessionById } from '../sessions/sessions.service';
+import { findSessionById } from '../sessions/sessions.service';
 import {
   buildSetlistSummaries,
   isSetlistRenamable,
@@ -104,7 +104,7 @@ export async function createSetlist(
   actor: WriteActor,
 ): Promise<{ kind: 'ok'; setlist: SetlistRow } | { kind: 'session-not-found' }> {
   if (input.sessionId !== null) {
-    const session = await getSessionById(input.sessionId);
+    const session = await findSessionById(input.sessionId);
     if (session === null) return { kind: 'session-not-found' };
   }
   const setlist = await insertSetlist(input.name, input.sessionId, DEFAULT_SETLIST_KIND);
@@ -172,7 +172,7 @@ export async function linkSetlistToSession(
 ): Promise<LinkOutcome> {
   const [setlist, session] = await Promise.all([
     findSetlistById(setlistId),
-    getSessionById(sessionId),
+    findSessionById(sessionId),
   ]);
   if (setlist === null || session === null) return { kind: 'not-found' };
   await insertSessionLink(sessionId, setlistId);
