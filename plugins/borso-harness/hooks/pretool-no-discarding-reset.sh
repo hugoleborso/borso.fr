@@ -38,7 +38,7 @@ COMMAND_TO_RUN="$(printf '%s' "$COMMAND" \
   | python3 "$(dirname "$0")/strip-heredocs.py" \
   | python3 "$(dirname "$0")/strip-quoted-strings.py")"
 
-GIT_INVOCATION='(^|[;&|[:space:]])git([[:space:]]+-C[[:space:]]+[^[:space:];&|]+)?[[:space:]]+'
+GIT_INVOCATION='(^|[;&|({[:space:]])git([[:space:]]+-C[[:space:]]+[^[:space:];&|]+)?[[:space:]]+'
 DISCARDS_WORKING_TREE="${GIT_INVOCATION}(reset[[:space:]]+(--hard|--merge|--keep)|checkout[[:space:]]+--[[:space:]]|restore[[:space:]])"
 if ! grep -qE "$DISCARDS_WORKING_TREE" <<<"$COMMAND_TO_RUN"; then
   exit 0

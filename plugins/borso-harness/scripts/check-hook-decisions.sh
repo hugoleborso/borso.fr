@@ -244,6 +244,10 @@ run_case pretool-no-discarding-reset.sh block command \
   'cd $HOME/x && git reset --hard'
 run_case pretool-no-discarding-reset.sh block command \
   "git -C $RESET_CASES/missing reset --hard"
+run_case pretool-no-discarding-reset.sh block command \
+  "cd $RESET_CASES/dirty && (git reset --hard)"
+run_case pretool-no-discarding-reset.sh block command \
+  "(cd $RESET_CASES/dirty && git reset --hard)"
 
 run_case pretool-no-discarding-reset.sh allow command \
   "cd \"$RESET_CASES/dirty\" && git restore --staged tracked.txt"
