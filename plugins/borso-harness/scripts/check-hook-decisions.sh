@@ -231,6 +231,45 @@ run_case pretool-no-discarding-reset.sh allow command \
   "cd $RESET_CASES/clean && git reset --hard"
 run_case pretool-no-discarding-reset.sh allow command \
   "git -C $RESET_CASES/dirty restore --staged tracked.txt"
+
+# A checkout the hook cannot read is a checkout it cannot vouch for, so the
+# command is refused rather than let through on a git error. The hook sees the
+# command before the shell expands it, and quoted bodies are stripped first.
+
+run_case pretool-no-discarding-reset.sh block command \
+  "cd \"$RESET_CASES/dirty\" && git reset --hard"
+run_case pretool-no-discarding-reset.sh block command \
+  'git -C $PWD reset --hard'
+run_case pretool-no-discarding-reset.sh block command \
+  'cd $HOME/x && git reset --hard'
+run_case pretool-no-discarding-reset.sh block command \
+  "git -C $RESET_CASES/missing reset --hard"
+
+run_case pretool-no-discarding-reset.sh allow command \
+  "cd \"$RESET_CASES/dirty\" && git restore --staged tracked.txt"
+
+# Every discarding command in a chain is judged, not only the first one.
+
+run_case pretool-no-discarding-reset.sh block command \
+  "git -C $RESET_CASES/dirty restore --staged tracked.txt && git -C $RESET_CASES/dirty restore tracked.txt"
+run_case pretool-no-discarding-reset.sh block command \
+  "git -C $RESET_CASES/dirty restore --staged tracked.txt; git -C $RESET_CASES/dirty restore tracked.txt"
+run_case pretool-no-discarding-reset.sh block command \
+  "git -C $RESET_CASES/dirty restore --staged tracked.txt || git -C $RESET_CASES/dirty restore tracked.txt"
+run_case pretool-no-discarding-reset.sh block command \
+  "git -C $RESET_CASES/dirty restore --staged tracked.txt
+git -C $RESET_CASES/dirty restore tracked.txt"
+run_case pretool-no-discarding-reset.sh block command \
+  "cd $RESET_CASES/dirty && git restore --staged tracked.txt && git restore tracked.txt"
+run_case pretool-no-discarding-reset.sh block command \
+  "git -C $RESET_CASES/clean restore tracked.txt && git -C $RESET_CASES/dirty checkout -- tracked.txt"
+
+run_case pretool-no-discarding-reset.sh allow command \
+  "git -C $RESET_CASES/dirty restore --staged tracked.txt && git -C $RESET_CASES/clean restore tracked.txt"
+run_case pretool-no-discarding-reset.sh allow command \
+  "cd $RESET_CASES/dirty && git restore --staged tracked.txt; git status"
+run_case pretool-no-discarding-reset.sh allow command \
+  "git -C $RESET_CASES/clean restore --staged tracked.txt; git -C $RESET_CASES/clean restore tracked.txt"
 rm -rf "$RESET_CASES"
 
 run_case pretool-no-discarding-reset.sh allow command \

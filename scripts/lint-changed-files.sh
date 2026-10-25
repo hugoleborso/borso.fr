@@ -2,11 +2,9 @@
 # Lint a list of files, one ESLint process per workspace they belong to.
 #
 # ESLint here builds a TypeScript program for every tsconfig a file reaches,
-# and holds them all in one heap. scripts/lint-repository.sh splits the whole
-# tree by workspace for that reason; the commit hook did not, and on
-# 2026-10-25 a commit touching one file in apps/pragma, one in apps/talos and
-# two in eslint-rules/ died with "JavaScript heap out of memory" before any
-# rule ran. Grouping the same way puts the peak at the largest workspace the
+# and holds them all in one heap, so one run over files from several
+# workspaces can run out of memory before any rule runs. Grouping by workspace,
+# as scripts/lint-repository.sh does, puts the peak at the largest workspace the
 # change touches rather than at the sum of them.
 #
 # Reads newline-separated paths on stdin; extra arguments go to every ESLint
