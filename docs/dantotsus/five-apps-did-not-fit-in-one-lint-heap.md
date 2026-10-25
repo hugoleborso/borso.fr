@@ -93,6 +93,13 @@ depends on the runner's memory, which nothing in this repository can see.
 **Sibling defects swept:** `pnpm run lint` and `lint:fix` called the same
 single run and now call the script.
 
+**Missed sibling, found 2026-10-25:** the pre-commit hook still linted every
+staged file in one process. A kaizen commit touching one file in
+`apps/pragma`, one in `apps/talos` and two in `eslint-rules/` died with
+`JavaScript heap out of memory` before any rule ran. Pre-commit now pipes the
+staged files to `scripts/lint-changed-files.sh`, which groups them by
+workspace the way `lint-repository.sh` does.
+
 ## See also
 
 - [`the-hook-that-was-missing-from-its-own-contract.md`](./the-hook-that-was-missing-from-its-own-contract.md) — found in the same sweep.
