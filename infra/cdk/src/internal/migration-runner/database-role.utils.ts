@@ -15,6 +15,11 @@ export interface RoleMappingRow {
   readonly pg_role_name: string;
 }
 
+export interface TableScope {
+  readonly tableNames: readonly string[];
+  readonly tableBlocklist: readonly string[];
+}
+
 export interface RoleProvisioningInput {
   readonly schemaName: string;
   readonly roleName: string;
@@ -22,6 +27,7 @@ export interface RoleProvisioningInput {
   readonly principalArns: readonly string[];
   readonly roleExists: boolean;
   readonly mappedArns: readonly string[];
+  readonly tableScope?: TableScope;
 }
 
 export interface RoleRemovalInput {
@@ -52,6 +58,25 @@ function buildMapStatement(roleName: string, arn: string): string {
 
 function buildUnmapStatement(roleName: string, arn: string): string {
   return `AWS IAM REVOKE ${quote(roleName)} FROM '${arn}'`;
+}
+
+function buildTableGrantStatements(input: RoleProvisioningInput): string[] {
+  const privileges = TABLE_PRIVILEGES_BY_ACCESS[input.tableAccess];
+  const schema = quote(input.schemaName);
+  const role = quote(input.roleName);
+  const scope = input.tableScope;
+  if (scope === undefined)
+    return [`GRANT ${privileges} ON ALL TABLES IN SCHEMA ${schema} TO ${role}`];
+  for (const table of [...scope.tableNames, ...scope.tableBlocklist])
+    assertIdentifier(table, 'table');
+  const blocked = new Set(scope.tableBlocklist);
+  const revocations = scope.tableNames
+    .filter((table) => blocked.has(table))
+    .map((table) => `REVOKE ALL ON ${schema}.${quote(table)} FROM ${role}`);
+  const grants = scope.tableNames
+    .filter((table) => !blocked.has(table))
+    .map((table) => `GRANT ${privileges} ON ${schema}.${quote(table)} TO ${role}`);
+  return [...revocations, ...grants];
 }
 
 // @FollowsBlueprint utils-pure-module
@@ -97,7 +122,7 @@ export function buildRoleProvisioningStatements(input: RoleProvisioningInput): s
     ...staleMappings,
     ...newMappings,
     `GRANT USAGE ON SCHEMA ${quote(input.schemaName)} TO ${quote(input.roleName)}`,
-    `GRANT ${TABLE_PRIVILEGES_BY_ACCESS[input.tableAccess]} ON ALL TABLES IN SCHEMA ${quote(input.schemaName)} TO ${quote(input.roleName)}`,
+    ...buildTableGrantStatements(input),
   ];
 }
 

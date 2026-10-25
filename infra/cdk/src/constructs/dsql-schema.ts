@@ -8,7 +8,10 @@ import { NodejsFunction, OutputFormat } from 'aws-cdk-lib/aws-lambda-nodejs';
 import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
-import { listUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
+import {
+  listTablesNoMigrationCreates,
+  listUndecidedCredentialTables,
+} from '../internal/migration-runner/clone-from-schema.utils.js';
 import { apiRoleName, readerRoleName } from '../internal/migration-runner/database-role.utils.js';
 import {
   assertDeployStage,
@@ -52,6 +55,7 @@ export interface DsqlSchemaProps {
   readonly cluster: IDsqlCluster;
   readonly cloneFromSchema?: DsqlSchemaCloneFromConfig;
   readonly readerPrincipalArns?: readonly string[];
+  readonly readerTableBlocklist?: readonly string[];
 }
 
 interface MigrationFile {
@@ -102,6 +106,22 @@ function assertCredentialTablesDecided(
   );
 }
 
+function assertReaderBlocklistNamesTables(
+  blocklist: readonly string[] | undefined,
+  migrations: readonly MigrationFile[],
+): void {
+  if (blocklist === undefined) return;
+  const unknown = listTablesNoMigrationCreates(
+    blocklist,
+    migrations.map((migration) => migration.sql),
+  );
+  if (unknown.length === 0) return;
+  throw new Error(
+    `DsqlSchema: readerTableBlocklist names ${unknown.join(', ')}, which no migration creates. ` +
+      `A misspelt name would leave the real table readable.`,
+  );
+}
+
 /**
  * @Blueprint cdk-custom-resource
  * @BlueprintName CDK Custom Resource
@@ -125,6 +145,7 @@ export class DsqlSchema extends Construct {
     assertDeployStage(props.stage);
     const migrations = readMigrations(props.migrationsPath);
     assertCredentialTablesDecided(props.cloneFromSchema, migrations);
+    assertReaderBlocklistNamesTables(props.readerTableBlocklist, migrations);
     applyStandardTags(this, props);
 
     const stack = Stack.of(this);
@@ -182,7 +203,13 @@ export class DsqlSchema extends Construct {
         ...(props.cloneFromSchema === undefined ? {} : { cloneFromSchema: props.cloneFromSchema }),
         ...(this.readerRoleName === undefined
           ? {}
-          : { readerRoleName: this.readerRoleName, readerPrincipalArns }),
+          : {
+              readerRoleName: this.readerRoleName,
+              readerPrincipalArns,
+              ...(props.readerTableBlocklist === undefined
+                ? {}
+                : { readerTableBlocklist: props.readerTableBlocklist }),
+            }),
       },
     });
 

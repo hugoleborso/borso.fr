@@ -231,7 +231,10 @@ describe('DsqlSchema', () => {
 
 const AGENT_USER_ARN = 'arn:aws:iam::123456789012:user/AI-Dev-ReadOnly';
 
-function synthSchemaResource(readerPrincipalArns?: readonly string[]) {
+function synthSchemaResource(
+  readerPrincipalArns?: readonly string[],
+  readerTableBlocklist?: readonly string[],
+) {
   const app = new App();
   const stack = new Stack(app, 'S', { env: TEST_ENV });
   const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
@@ -241,6 +244,7 @@ function synthSchemaResource(readerPrincipalArns?: readonly string[]) {
     migrationsPath: MIGRATIONS,
     cluster,
     ...(readerPrincipalArns === undefined ? {} : { readerPrincipalArns }),
+    ...(readerTableBlocklist === undefined ? {} : { readerTableBlocklist }),
   });
   const [customResource] = resourcesOfType(
     Template.fromStack(stack),
@@ -255,6 +259,21 @@ describe('DsqlSchema reader role', () => {
     expect(schema.readerRoleName).toBe('ai_reader_prod');
     expect(properties?.readerRoleName).toBe('ai_reader_prod');
     expect(properties?.readerPrincipalArns).toStrictEqual([AGENT_USER_ARN]);
+  });
+
+  it('passes the reader table blocklist when one is given', () => {
+    expect(
+      synthSchemaResource([AGENT_USER_ARN], ['hello']).properties?.readerTableBlocklist,
+    ).toStrictEqual(['hello']);
+    expect(synthSchemaResource([AGENT_USER_ARN]).properties).not.toHaveProperty(
+      'readerTableBlocklist',
+    );
+  });
+
+  it('refuses a reader table blocklist naming a table no migration creates', () => {
+    expect(() => synthSchemaResource([AGENT_USER_ARN], ['hello', 'helo'])).toThrow(
+      'DsqlSchema: readerTableBlocklist names helo, which no migration creates.',
+    );
   });
 
   it('sends no reader when no principal is listed', () => {

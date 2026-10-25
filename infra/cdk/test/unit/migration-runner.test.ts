@@ -181,6 +181,38 @@ describe('migration-runner handler', () => {
     ).toBe(false);
   });
 
+  it('Create: grants the reader every table but its blocklist, which it revokes', async () => {
+    state.tablesPerSchema.set('test_app', ['_migrations', 'a', 'b']);
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: { ...baseProps, ...READER_PROPS, readerTableBlocklist: ['b'] },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    expect(queries).toContain('REVOKE ALL ON "test_app"."b" FROM "ai_reader_test_app"');
+    expect(queries).toContain('GRANT SELECT ON "test_app"."a" TO "ai_reader_test_app"');
+    expect(queries).toContain('GRANT SELECT ON "test_app"."_migrations" TO "ai_reader_test_app"');
+    expect(queries).not.toContain('GRANT SELECT ON "test_app"."b" TO "ai_reader_test_app"');
+    expect(queries).not.toContain(
+      'GRANT SELECT ON ALL TABLES IN SCHEMA "test_app" TO "ai_reader_test_app"',
+    );
+  });
+
+  it('Update: revokes a table newly added to the blocklist from an existing reader', async () => {
+    state.existingRoles.add('ai_reader_test_app');
+    state.roleMappings = [{ arn: AGENT_USER_ARN, pg_role_name: 'ai_reader_test_app' }];
+    state.tablesPerSchema.set('test_app', ['a', 'b']);
+    await handler({
+      RequestType: 'Update',
+      PhysicalResourceId: 'dsql-schema:test_app',
+      ResourceProperties: { ...baseProps, ...READER_PROPS, readerTableBlocklist: ['a', 'b'] },
+      OldResourceProperties: { ...baseProps, ...READER_PROPS },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    expect(queries).toContain('REVOKE ALL ON "test_app"."a" FROM "ai_reader_test_app"');
+    expect(queries).toContain('REVOKE ALL ON "test_app"."b" FROM "ai_reader_test_app"');
+    expect(queries.some((query) => query.startsWith('GRANT SELECT ON "test_app"'))).toBe(false);
+  });
+
   it('Update: unmaps the reader when the stack stops listing it, and keeps the role', async () => {
     state.existingRoles.add('ai_reader_test_app');
     state.roleMappings = [{ arn: AGENT_USER_ARN, pg_role_name: 'ai_reader_test_app' }];

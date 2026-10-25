@@ -140,6 +140,68 @@ describe('buildRoleProvisioningStatements', () => {
     ]);
   });
 
+  it('grants the reader every listed table but the blocklisted ones, and revokes those', () => {
+    expect(
+      buildRoleProvisioningStatements({
+        schemaName: 'prod',
+        roleName: 'ai_reader_prod',
+        tableAccess: 'read-only',
+        principalArns: [AGENT_USER_ARN],
+        roleExists: true,
+        mappedArns: [AGENT_USER_ARN],
+        tableScope: {
+          tableNames: ['admin_sessions', 'runners', '_migrations'],
+          tableBlocklist: ['admin_sessions', 'not_created_yet'],
+        },
+      }),
+    ).toStrictEqual([
+      'GRANT USAGE ON SCHEMA "prod" TO "ai_reader_prod"',
+      'REVOKE ALL ON "prod"."admin_sessions" FROM "ai_reader_prod"',
+      'GRANT SELECT ON "prod"."runners" TO "ai_reader_prod"',
+      'GRANT SELECT ON "prod"."_migrations" TO "ai_reader_prod"',
+    ]);
+  });
+
+  it('grants table by table when the scope blocks nothing', () => {
+    expect(
+      buildRoleProvisioningStatements({
+        schemaName: 'prod',
+        roleName: 'ai_reader_prod',
+        tableAccess: 'read-only',
+        principalArns: [],
+        roleExists: true,
+        mappedArns: [],
+        tableScope: { tableNames: ['game'], tableBlocklist: [] },
+      }),
+    ).toStrictEqual([
+      'GRANT USAGE ON SCHEMA "prod" TO "ai_reader_prod"',
+      'GRANT SELECT ON "prod"."game" TO "ai_reader_prod"',
+    ]);
+  });
+
+  it('refuses a table name that is not a plain identifier, listed or blocklisted', () => {
+    const valid = {
+      schemaName: 'prod',
+      roleName: 'ai_reader_prod',
+      tableAccess: 'read-only',
+      principalArns: [],
+      roleExists: true,
+      mappedArns: [],
+    } as const;
+    expect(() =>
+      buildRoleProvisioningStatements({
+        ...valid,
+        tableScope: { tableNames: ['a"b'], tableBlocklist: [] },
+      }),
+    ).toThrow('Invalid table name: "a"b"');
+    expect(() =>
+      buildRoleProvisioningStatements({
+        ...valid,
+        tableScope: { tableNames: [], tableBlocklist: ['x; DROP'] },
+      }),
+    ).toThrow('Invalid table name: "x; DROP"');
+  });
+
   it('refuses an ARN that is not an IAM role or user', () => {
     const valid = {
       schemaName: 'prod',

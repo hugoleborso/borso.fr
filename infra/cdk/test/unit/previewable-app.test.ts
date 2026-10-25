@@ -180,6 +180,7 @@ new PreviewableApp(readerStacks.stageStack, 'App', {
     migrationsPath: MIGRATIONS,
     cluster: readerStacks.clusterStack.cluster,
     readerPrincipalArns: [READER_USER_ARN],
+    readerTableBlocklist: ['hello'],
   },
 });
 const readerTemplate = Template.fromStack(readerStacks.stageStack);
@@ -210,6 +211,7 @@ describe('PreviewableApp (database reader)', () => {
     );
     expect(getProperties(schemaCustomResource)?.readerRoleName).toBe('ai_reader_pr_7');
     expect(getProperties(schemaCustomResource)?.readerPrincipalArns).toEqual([READER_USER_ARN]);
+    expect(getProperties(schemaCustomResource)?.readerTableBlocklist).toEqual(['hello']);
   });
 
   it('sends no reader when the application lists none', () => {

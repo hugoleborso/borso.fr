@@ -4,11 +4,8 @@ import {
   buildAddColumnSql,
   buildCloneInsertSql,
   buildReplaceBeforeCloneSql,
-  type ColumnDefinition,
   isReplacedBeforeClone,
   buildCreateTableLikeSql,
-  type CatalogueColumnRow,
-  formatColumnType,
   selectCloneableDataTables,
   selectMissingColumns,
 } from './clone-from-schema.utils.js';
@@ -23,6 +20,12 @@ import {
   type TableAccess,
 } from './database-role.utils.js';
 import { selectPendingMigrations } from './pending-migrations.utils.js';
+import {
+  hasSchema,
+  listColumnDefinitions,
+  listColumns,
+  listTablesInSchema,
+} from './schema-catalogue.js';
 import { splitStatements } from './statement-rewrites.utils.js';
 
 interface Migration {
@@ -47,6 +50,7 @@ interface ResourceProps {
   readonly apiPrincipalArns?: readonly string[];
   readonly readerRoleName?: string;
   readonly readerPrincipalArns?: readonly string[];
+  readonly readerTableBlocklist?: readonly string[];
 }
 
 interface CfnEvent {
@@ -93,45 +97,6 @@ async function ensureSchema(sql: postgres.Sql, schemaName: string): Promise<void
       applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `);
-}
-
-async function hasSchema(sql: postgres.Sql, schemaName: string): Promise<boolean> {
-  const rows = await sql.unsafe<{ count: number }[]>(
-    `SELECT 1 AS count FROM information_schema.schemata WHERE schema_name = '${schemaName.replace(/'/g, "''")}'`,
-  );
-  return rows.length > 0;
-}
-
-async function listTablesInSchema(
-  sql: postgres.Sql,
-  schemaName: string,
-): Promise<readonly string[]> {
-  const rows = await sql.unsafe<{ table_name: string }[]>(
-    `SELECT table_name FROM information_schema.tables WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_type = 'BASE TABLE' ORDER BY table_name`,
-  );
-  return rows.map((row) => row.table_name);
-}
-
-async function listColumns(
-  sql: postgres.Sql,
-  schemaName: string,
-  tableName: string,
-): Promise<readonly string[]> {
-  const rows = await sql.unsafe<{ column_name: string }[]>(
-    `SELECT column_name FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
-  );
-  return rows.map((row) => row.column_name);
-}
-
-async function listColumnDefinitions(
-  sql: postgres.Sql,
-  schemaName: string,
-  tableName: string,
-): Promise<readonly ColumnDefinition[]> {
-  const rows = await sql.unsafe<CatalogueColumnRow[]>(
-    `SELECT column_name, data_type, character_maximum_length, numeric_precision, numeric_scale FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
-  );
-  return rows.map(formatColumnType);
 }
 
 async function cloneFromSchema(
@@ -227,6 +192,7 @@ interface RoleGrant {
   readonly roleName: string | undefined;
   readonly principalArns: readonly string[] | undefined;
   readonly tableAccess: TableAccess;
+  readonly tableBlocklist?: readonly string[];
 }
 
 async function readRoleState(sql: postgres.Sql, roleName: string): Promise<RoleState> {
@@ -249,6 +215,13 @@ async function provisionRole(
 ): Promise<void> {
   if (grant.roleName === undefined) return;
   const roleState = await readRoleState(sql, grant.roleName);
+  const tableScope =
+    grant.tableBlocklist === undefined
+      ? undefined
+      : {
+          tableNames: await listTablesInSchema(sql, schemaName),
+          tableBlocklist: grant.tableBlocklist,
+        };
   await runEach(
     sql,
     buildRoleProvisioningStatements({
@@ -257,6 +230,7 @@ async function provisionRole(
       tableAccess: grant.tableAccess,
       principalArns: grant.principalArns ?? [],
       ...roleState,
+      ...(tableScope === undefined ? {} : { tableScope }),
     }),
   );
 }
@@ -297,6 +271,9 @@ async function provisionSchema(
     roleName: props.readerRoleName,
     principalArns: props.readerPrincipalArns,
     tableAccess: 'read-only',
+    ...(props.readerTableBlocklist === undefined
+      ? {}
+      : { tableBlocklist: props.readerTableBlocklist }),
   });
   await retireDroppedReader(sql, props, oldProps);
 }
