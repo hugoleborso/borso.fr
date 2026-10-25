@@ -208,7 +208,7 @@ The account already has this user:
 | --- | --- |
 | User name | `AI-Dev-ReadOnly` |
 | Attached | `ReadOnlyAccess` **and** `job-function/ViewOnlyAccess` |
-| Inline policy | `Explicit-write-deny` |
+| Inline policies | `Explicit-write-deny`, plus `Screenshots-publish` once §12.6 is applied and `Pragma-prod-read` once §12.7 is applied |
 
 **Read the account before acting on that table.** It has drifted before — a stale user name here reads back as `NoSuchEntity`, which looks like a deleted user and isn't.
 
@@ -244,7 +244,7 @@ Describe/list across CloudFormation, S3, SSM, CloudFront, Lambda, Logs, ACM and 
 
 Two error shapes, worth telling apart:
 
-- **explicit deny** → the inline policy refused (`iam:*`, `dsql:*`, writes).
+- **explicit deny** → the inline policy refused (`iam:*`, `dsql:*` apart from the one connect right §12.7 opens, writes).
 - **"no identity-based policy allows"** → nothing granted it. `secretsmanager:GetSecretValue` lands here: `ReadOnlyAccess` excludes secret values by design.
 
 **`iam:*` being denied does not block trust-policy debugging.** Use CloudFormation:
@@ -412,6 +412,113 @@ most often because the deny still lists `s3:Put*` in the blanket statement, wher
 
 Until this is applied, `/visual-validation` finds the upload denied and commits every
 screenshot, which is the behaviour from before ADR-0023 rather than a failure.
+
+### 12.7 Let a session read pragma production
+
+[ADR-0044](./adr/0044-read-only-production-database-access-for-agents.md) gives a hosted
+session one read path into pragma's `prod` schema: `scripts/db-read.sh "<sql>"`, signed in as
+the database role `ai_reader_prod`, which holds `SELECT` only. The migration runner creates that
+role and maps it to this user on pragma's production deploy. The IAM half is manual, because
+the user is not managed by any stack.
+
+**The grant is one verb on one cluster.** `dsql:DbConnect` on pragma's cluster, and never
+`dsql:DbConnectAdmin`, so the only database identity the user can sign in as is the one its
+mapping names. Read the cluster ARN rather than copying it, since a rebuilt cluster gets a
+new one:
+
+```bash
+aws ssm get-parameter --name /borso/pragma/dsql-cluster-arn --query Parameter.Value --output text
+```
+
+On 2026-10-25 that returned
+`arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi`, which the JSON
+below uses.
+
+**An explicit `Deny` beats any `Allow`**, and §12.6's deny lists `dsql:*` on `Resource: "*"`.
+That line has to leave the blanket statement and come back as two statements that cover
+everything except `DbConnect` on this one cluster. The deployed deny is unreadable from a
+session (`iam:GetUserPolicy` is inside it), so its content is unverified from here. Read it
+first, and change only the `dsql:*` entry:
+
+```bash
+aws --profile borso-admin iam get-user-policy \
+  --user-name AI-Dev-ReadOnly --policy-name Explicit-write-deny \
+  --query PolicyDocument > deny.json
+```
+
+In `deny.json`, remove `"dsql:*"` from the statement whose `Resource` is `"*"`, and add these
+two statements to the `Statement` array:
+
+```json
+{
+  "Sid": "DenyDsqlOutsideThePragmaCluster",
+  "Effect": "Deny",
+  "Action": "dsql:*",
+  "NotResource": "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi"
+},
+{
+  "Sid": "DenyEveryDsqlActionOnThePragmaClusterButDbConnect",
+  "Effect": "Deny",
+  "NotAction": "dsql:DbConnect",
+  "Resource": "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi"
+}
+```
+
+The first keeps every other cluster, and every call whose resource is not a cluster, denied
+exactly as before. The second keeps `DbConnectAdmin`, `GetCluster`, `UpdateCluster`,
+`DeleteCluster` and the rest denied on pragma's cluster. Only `DbConnect` on that one ARN is
+left undenied. If `dsql:*` appears in any other statement with `Resource: "*"`, the hole stays
+shut, and the probe below says so.
+
+Denying less grants nothing, so the allow is a third inline policy, `Pragma-prod-read`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ConnectAsThePragmaProductionReader",
+      "Effect": "Allow",
+      "Action": "dsql:DbConnect",
+      "Resource": "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi"
+    }
+  ]
+}
+```
+
+Apply both:
+
+```bash
+aws --profile borso-admin iam put-user-policy \
+  --user-name AI-Dev-ReadOnly \
+  --policy-name Explicit-write-deny \
+  --policy-document file://deny.json
+
+aws --profile borso-admin iam put-user-policy \
+  --user-name AI-Dev-ReadOnly \
+  --policy-name Pragma-prod-read \
+  --policy-document file://pragma-prod-read.json
+```
+
+In the console the same two edits are: **IAM → Users → `AI-Dev-ReadOnly` → Permissions**. Open
+the inline policy `Explicit-write-deny`, choose **Edit**, switch to **JSON**, make the change
+above and save. Then choose **Add permissions → Create inline policy**, switch to **JSON**,
+paste the allow, choose **Next**, name it `Pragma-prod-read` and create it.
+
+Do not copy either change to the `ClaudeDev` permission set. The database role is mapped to
+this user's ARN only, so the permission set's role would get a connect right with nothing to
+sign in as.
+
+Verify from a hosted session, after pragma's production deploy has created the role:
+
+```bash
+scripts/db-read.sh "SELECT count(*) FROM member"      # must print one number
+scripts/db-read.sh "SELECT 1 FROM member FOR UPDATE"  # must be refused by the script
+```
+
+If the first command fails with `AccessDeniedException` naming an explicit deny, the `dsql:*`
+entry is still in a statement with `Resource: "*"`. If it fails with an authentication error
+from Postgres, the deploy has not run yet, or the role mapping did not land.
 
 ## Reference: SSM parameters
 

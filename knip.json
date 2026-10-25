@@ -3,12 +3,13 @@
   "ignoreExportsUsedInFile": true,
   "workspaces": {
     ".": {
-      "ignoreBinaries": ["build"],
+      "ignoreBinaries": ["build", "psql"],
       "ignoreDependencies": ["@swmansion/argent", "agent-browser", "esbuild"],
       "entry": [
         ".claude/skills/blueprint/blueprint-*.ts",
         "scripts/architecture/*.ts",
         "scripts/blueprints/*.ts",
+        "scripts/database/*.ts",
         "scripts/standards/*.ts",
         "scripts/pr/*.ts",
         "scripts/quality/*.ts",
