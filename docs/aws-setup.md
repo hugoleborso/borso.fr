@@ -418,7 +418,8 @@ screenshot, which is the behaviour from before ADR-0023 rather than a failure.
 [ADR-0044](./adr/0044-read-only-production-database-access-for-agents.md) gives a hosted
 session one read path into the `prod` schema of pragma, last-loop-lepin and banana-rush:
 `APP=<app> scripts/db-read.sh "<sql>"`, signed in as the database role `ai_reader_prod`, which
-holds `SELECT` only. The migration runner creates that role on each application's cluster and
+holds `SELECT` only, and not on the tables that hold credentials, keys or tokens (ADR-0044's
+*Tables the reader never sees*). The migration runner creates that role on each application's cluster and
 maps it to this user on that application's production deploy. The IAM half is manual, because
 the user is not managed by any stack. talos is not part of it: its data is private, and agents
 read it through its own API ([ADR-0039](./adr/0039-talos-memory-in-the-database.md)).
@@ -566,8 +567,12 @@ APP=pragma scripts/db-read.sh "SELECT count(*) FROM member"             # one nu
 APP=last-loop-lepin scripts/db-read.sh "SELECT count(*) FROM runners"   # one number
 APP=banana-rush scripts/db-read.sh "SELECT count(*) FROM game"          # one number
 APP=talos scripts/db-read.sh "SELECT 1"                                 # refused by the script
+APP=last-loop-lepin scripts/db-read.sh "SELECT 1 FROM admin_sessions"   # refused by the script
 scripts/db-read.sh "SELECT 1 FROM member FOR UPDATE"                    # refused by the script
 ```
+
+A session that skips the script and asks for a blocklisted table directly gets `permission denied
+for table` from Postgres, which is the database half of the same rule.
 
 If a command fails with `AccessDeniedException` naming an explicit deny, the `dsql:*` entry is
 still in a statement with `Resource: "*"`. If it fails with an authentication error from

@@ -64,6 +64,7 @@ export const DEFAULT_STAGE = 'prod';
 export const ROW_CAP = 200;
 
 const READER_ROLE_PREFIX = 'ai_reader_';
+const SCHEMA_RESOURCE_TYPE = 'AWS::CloudFormation::CustomResource';
 
 const READABLE_SCHEMA_BY_TARGET: ReadonlyMap<string, string> = new Map([
   ['pragma/prod', 'prod'],
@@ -87,6 +88,7 @@ export type TargetDecision =
       readonly app: string;
       readonly schemaName: string;
       readonly roleName: string;
+      readonly stackName: string;
     }
   | { readonly accepted: false; readonly reason: string };
 
@@ -152,7 +154,18 @@ function kindOfUnterminatedSpan(opener: string): string {
   return 'dollar-quoted string';
 }
 
-export function maskLiteralsAndComments(source: string, from = 0): MaskedSource {
+function maskSpan(span: string, opener: string, shouldKeepQuotedIdentifiers: boolean): string {
+  if (shouldKeepQuotedIdentifiers && opener === DOUBLE_QUOTE) {
+    return BLANK + span.slice(1, -1) + BLANK;
+  }
+  return blankOut(span);
+}
+
+export function maskLiteralsAndComments(
+  source: string,
+  from = 0,
+  shouldKeepQuotedIdentifiers = false,
+): MaskedSource {
   SPAN_OPENER_PATTERN.lastIndex = from;
   const opener = SPAN_OPENER_PATTERN.exec(source);
   if (opener === null) return { code: source.slice(from), unterminated: undefined };
@@ -161,9 +174,12 @@ export function maskLiteralsAndComments(source: string, from = 0): MaskedSource 
   if (end === NOT_FOUND) {
     return { code: leadingCode, unterminated: kindOfUnterminatedSpan(opener[0]) };
   }
-  const rest = maskLiteralsAndComments(source, end);
+  const rest = maskLiteralsAndComments(source, end, shouldKeepQuotedIdentifiers);
   return {
-    code: leadingCode + blankOut(source.slice(opener.index, end)) + rest.code,
+    code:
+      leadingCode +
+      maskSpan(source.slice(opener.index, end), opener[0], shouldKeepQuotedIdentifiers) +
+      rest.code,
     unterminated: rest.unterminated,
   };
 }
@@ -209,6 +225,41 @@ export function decideReadOnlyQuery(source: string): QueryDecision {
   return { accepted: true, statement: source.slice(0, code.trimEnd().length) };
 }
 
+export function listBlocklistedTables(source: string, blocklist: readonly string[]): string[] {
+  const { code } = maskLiteralsAndComments(source, 0, true);
+  const words = new Set(Array.from(code.matchAll(WORD_PATTERN), ([word]) => word.toLowerCase()));
+  return blocklist.filter((table) => words.has(table));
+}
+
+export function decideTableAccess(source: string, blocklist: readonly string[]): QueryDecision {
+  const named = listBlocklistedTables(source, blocklist);
+  if (named.length > 0) {
+    return refuse(
+      `the query names ${named.join(', ')}, which the reader cannot read: those tables hold credentials, keys or tokens (ADR-0044).`,
+    );
+  }
+  return { accepted: true, statement: source };
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null;
+}
+
+function isStringList(value: unknown): value is string[] {
+  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
+}
+
+export function readReaderTableBlocklist(template: unknown): string[] {
+  if (!isRecord(template) || !isRecord(template.Resources)) return [];
+  for (const resource of Object.values(template.Resources)) {
+    if (!isRecord(resource) || resource.Type !== SCHEMA_RESOURCE_TYPE) continue;
+    if (!isRecord(resource.Properties)) continue;
+    const blocklist = resource.Properties.readerTableBlocklist;
+    if (isStringList(blocklist)) return blocklist;
+  }
+  return [];
+}
+
 export function decideReadTarget(app: string, stage: string): TargetDecision {
   if (app === PRIVATE_APP) return { accepted: false, reason: PRIVATE_APP_REFUSAL };
   const schemaName = READABLE_SCHEMA_BY_TARGET.get(`${app}/${stage}`);
@@ -218,7 +269,13 @@ export function decideReadTarget(app: string, stage: string): TargetDecision {
       reason: `no read-only role exists for APP=${app} STAGE=${stage}. Readable: ${READABLE_TARGETS_LABEL} (ADR-0044).`,
     };
   }
-  return { accepted: true, app, schemaName, roleName: `${READER_ROLE_PREFIX}${schemaName}` };
+  return {
+    accepted: true,
+    app,
+    schemaName,
+    roleName: `${READER_ROLE_PREFIX}${schemaName}`,
+    stackName: `${app}-${stage}`,
+  };
 }
 
 export function buildReadOnlySessionCommands(statement: string, rowCap: number): string[] {

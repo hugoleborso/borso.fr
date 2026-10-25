@@ -1,5 +1,5 @@
 ---
-summary: 'A hosted session reads the prod schema of pragma, last-loop-lepin and banana-rush only through scripts/db-read.sh, as a SELECT-only role; talos goes through its agent API, the admin token stays refused, and every other stage or write goes to a local session.'
+summary: 'A hosted session reads the prod schema of pragma, last-loop-lepin and banana-rush only through scripts/db-read.sh, as a SELECT-only role that cannot see credential, key or token tables; talos goes through its agent API, the admin token stays refused, and every other stage or write goes to a local session.'
 triggers:
   commands:
     - 'dsql-shell\.sh'
@@ -7,6 +7,8 @@ triggers:
     - 'generate-db-connect-auth-token'
     - 'db-read\.sh'
     - 'db:read'
+  output:
+    - 'which the reader cannot read'
 ---
 
 # The production database is out of reach of a hosted session, except through one read path
@@ -47,7 +49,14 @@ APP=banana-rush scripts/db-read.sh "SELECT count(*) FROM game"
 ```
 
 - It signs in as `ai_reader_prod`, a database role that holds `SELECT` on
-  the `prod` schema and nothing else, one per application's cluster. `AI-Dev-ReadOnly` may connect as that
+  the `prod` schema and nothing else, one per application's cluster.
+- It cannot read the tables that hold credentials, keys or tokens, such as
+  pragma's `app_config` and `vapid_key_pair` or last-loop-lepin's
+  `admin_sessions`. The script refuses a query naming one, using the list in
+  the deployed stack's template, and the database refuses it anyway with
+  `permission denied for table`. ADR-0044 lists them per application; a
+  migration that adds a secret-bearing table should add it to the
+  application's reader blocklist in `cdk/lib/stack.ts`. `AI-Dev-ReadOnly` may connect as that
   role (`dsql:DbConnect`) and never as `admin`.
 - It accepts one `SELECT` or `WITH … SELECT` statement, refuses write,
   session and transaction keywords outside literals and comments, runs

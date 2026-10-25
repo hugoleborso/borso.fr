@@ -5,7 +5,9 @@ import {
   DEFAULT_STAGE,
   decideReadOnlyQuery,
   decideReadTarget,
+  decideTableAccess,
   readQueryArguments,
+  readReaderTableBlocklist,
   ROW_CAP,
 } from './read-only-query.utils';
 
@@ -22,8 +24,8 @@ function fail(message: string, exitCode: number): never {
   process.exit(exitCode);
 }
 
-function runAws(argumentsForAws: readonly string[]): string {
-  return execFileSync('aws', [...argumentsForAws, '--region', REGION, '--output', 'text'], {
+function runAws(argumentsForAws: readonly string[], output = 'text'): string {
+  return execFileSync('aws', [...argumentsForAws, '--region', REGION, '--output', output], {
     encoding: 'utf8',
     stdio: ['ignore', 'pipe', 'inherit'],
   }).trim();
@@ -44,6 +46,18 @@ if (!queryDecision.accepted) fail(`refused: ${queryDecision.reason}`, REFUSAL_EX
 
 const target = decideReadTarget(process.env.APP ?? DEFAULT_APP, process.env.STAGE ?? DEFAULT_STAGE);
 if (!target.accepted) fail(`refused: ${target.reason}`, REFUSAL_EXIT_CODE);
+
+const deployedTemplate: unknown = JSON.parse(
+  runAws(
+    ['cloudformation', 'get-template', '--stack-name', target.stackName, '--query', 'TemplateBody'],
+    'json',
+  ),
+);
+const tableAccess = decideTableAccess(
+  queryDecision.statement,
+  readReaderTableBlocklist(deployedTemplate),
+);
+if (!tableAccess.accepted) fail(`refused: ${tableAccess.reason}`, REFUSAL_EXIT_CODE);
 
 const endpoint = runAws([
   'ssm',

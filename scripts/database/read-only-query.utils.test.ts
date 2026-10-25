@@ -5,8 +5,11 @@ import {
   DEFAULT_STAGE,
   decideReadOnlyQuery,
   decideReadTarget,
+  decideTableAccess,
+  listBlocklistedTables,
   maskLiteralsAndComments,
   readQueryArguments,
+  readReaderTableBlocklist,
   ROW_CAP,
 } from './read-only-query.utils';
 
@@ -273,6 +276,7 @@ describe('decideReadTarget', () => {
       app: 'pragma',
       schemaName: 'prod',
       roleName: 'ai_reader_prod',
+      stackName: 'pragma-prod',
     });
   });
 
@@ -283,6 +287,7 @@ describe('decideReadTarget', () => {
         app,
         schemaName: 'prod',
         roleName: 'ai_reader_prod',
+        stackName: `${app}-prod`,
       });
     }
   });
@@ -301,6 +306,114 @@ describe('decideReadTarget', () => {
       'talos holds private data and has no read-only role by design (ADR-0044). Query it through its agent API, POST /api/agent/sql with an agent token (ADR-0039).';
     expect(decideReadTarget('talos', 'prod')).toStrictEqual({ accepted: false, reason });
     expect(decideReadTarget('talos', 'preview')).toStrictEqual({ accepted: false, reason });
+  });
+});
+
+describe('listBlocklistedTables', () => {
+  const blocklist = ['member_passkey', 'app_config'];
+
+  it('finds a blocklisted table named bare, qualified, quoted or in capitals', () => {
+    expect(listBlocklistedTables('SELECT * FROM member_passkey', blocklist)).toStrictEqual([
+      'member_passkey',
+    ]);
+    expect(listBlocklistedTables('SELECT 1 FROM prod.APP_CONFIG', blocklist)).toStrictEqual([
+      'app_config',
+    ]);
+    expect(
+      listBlocklistedTables(
+        'SELECT 1 FROM "prod"."member_passkey" JOIN app_config ON true',
+        blocklist,
+      ),
+    ).toStrictEqual(['member_passkey', 'app_config']);
+  });
+
+  it('ignores a name inside a string or a comment, and a longer name that contains it', () => {
+    expect(
+      listBlocklistedTables(
+        "SELECT 'member_passkey' FROM member -- app_config\n/* app_config */",
+        blocklist,
+      ),
+    ).toStrictEqual([]);
+    expect(listBlocklistedTables('SELECT 1 FROM member_passkey_audit', blocklist)).toStrictEqual(
+      [],
+    );
+  });
+});
+
+describe('maskLiteralsAndComments keeping quoted identifiers', () => {
+  it('keeps the inside of a quoted identifier and blanks its quotes', () => {
+    expect(maskLiteralsAndComments('SELECT "A b" FROM t', 0, true).code).toBe(
+      'SELECT  A b  FROM t',
+    );
+  });
+
+  it('still blanks strings and comments', () => {
+    expect(maskLiteralsAndComments("SELECT 'x' -- y", 0, true).code).toBe(
+      `SELECT ${blanks("'x'")} ${blanks('-- y')}`,
+    );
+  });
+});
+
+describe('decideTableAccess', () => {
+  it('refuses a query naming a blocklisted table, and says why', () => {
+    expect(decideTableAccess('SELECT id FROM admin_sessions', ['admin_sessions'])).toStrictEqual({
+      accepted: false,
+      reason:
+        'the query names admin_sessions, which the reader cannot read: those tables hold credentials, keys or tokens (ADR-0044).',
+    });
+  });
+
+  it('lists every blocklisted table the query names', () => {
+    expect(
+      decideTableAccess('SELECT 1 FROM admin_sessions, admin_credentials', [
+        'admin_sessions',
+        'admin_credentials',
+      ]),
+    ).toMatchObject({
+      reason: expect.stringContaining('names admin_sessions, admin_credentials,'),
+    });
+  });
+
+  it('accepts a query that names none', () => {
+    expect(decideTableAccess('SELECT count(*) FROM runners', ['admin_sessions'])).toStrictEqual({
+      accepted: true,
+      statement: 'SELECT count(*) FROM runners',
+    });
+  });
+});
+
+describe('readReaderTableBlocklist', () => {
+  const schemaResource = {
+    Type: 'AWS::CloudFormation::CustomResource',
+    Properties: { readerTableBlocklist: ['admin_sessions'] },
+  };
+
+  it('reads the blocklist from the schema resource of a deployed template', () => {
+    expect(
+      readReaderTableBlocklist({
+        Resources: {
+          Other: 'not a resource',
+          Bucket: { Type: 'AWS::S3::Bucket', Properties: { readerTableBlocklist: ['x'] } },
+          Bare: { Type: 'AWS::CloudFormation::CustomResource' },
+          Malformed: {
+            Type: 'AWS::CloudFormation::CustomResource',
+            Properties: { readerTableBlocklist: ['ok', 1] },
+          },
+          Unlisted: { Type: 'AWS::CloudFormation::CustomResource', Properties: {} },
+          Schema: schemaResource,
+        },
+      }),
+    ).toStrictEqual(['admin_sessions']);
+  });
+
+  it('reads nothing from a template without one', () => {
+    expect(readReaderTableBlocklist(null)).toStrictEqual([]);
+    expect(readReaderTableBlocklist('{}')).toStrictEqual([]);
+    expect(readReaderTableBlocklist({})).toStrictEqual([]);
+    expect(readReaderTableBlocklist({ Resources: null })).toStrictEqual([]);
+    expect(readReaderTableBlocklist({ Resources: { Bare: schemaResource.Type } })).toStrictEqual(
+      [],
+    );
   });
 });
 
