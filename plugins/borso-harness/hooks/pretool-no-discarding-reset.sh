@@ -38,16 +38,38 @@ COMMAND_TO_RUN="$(printf '%s' "$COMMAND" \
   | python3 "$(dirname "$0")/strip-heredocs.py" \
   | python3 "$(dirname "$0")/strip-quoted-strings.py")"
 
-DISCARDS_WORKING_TREE='(^|[;&|[:space:]])git[[:space:]]+(reset[[:space:]]+(--hard|--merge|--keep)|checkout[[:space:]]+--[[:space:]]|restore[[:space:]])'
+GIT_INVOCATION='(^|[;&|[:space:]])git([[:space:]]+-C[[:space:]]+[^[:space:];&|]+)?[[:space:]]+'
+DISCARDS_WORKING_TREE="${GIT_INVOCATION}(reset[[:space:]]+(--hard|--merge|--keep)|checkout[[:space:]]+--[[:space:]]|restore[[:space:]])"
 if ! grep -qE "$DISCARDS_WORKING_TREE" <<<"$COMMAND_TO_RUN"; then
   exit 0
 fi
 
+# `git restore --staged <path>` only unstages: it rewrites the index from HEAD
+# and leaves the working tree alone, unless --worktree (or -W) is also given.
+# The hook refused exactly that on PR #193, naming another checkout's work.
+RESTORE_LINE="$(grep -oE "${GIT_INVOCATION}restore[[:space:]][^;&|]*" <<<"$COMMAND_TO_RUN" | head -n1 || true)"
+if [[ -n "$RESTORE_LINE" ]] && ! grep -qE "${GIT_INVOCATION}(reset|checkout)[[:space:]]" <<<"$COMMAND_TO_RUN" \
+  && grep -qE '(^|[[:space:]])(--staged|-S)([[:space:]]|$)' <<<"$RESTORE_LINE" \
+  && ! grep -qE '(^|[[:space:]])(--worktree|-W)([[:space:]]|$)' <<<"$RESTORE_LINE"; then
+  exit 0
+fi
+
+# The command acts on the checkout it names, which is not always the one this
+# hook runs in: a `git -C <path>` or a leading `cd <path> &&` points it at
+# another worktree, and the dirty files that matter are that worktree's. Reading
+# the hook's own directory refused a call for work it would never have touched.
+TARGET_DIRECTORY="$(grep -oE 'git[[:space:]]+-C[[:space:]]+[^[:space:];&|]+' <<<"$COMMAND_TO_RUN" | head -n1 | sed -E 's/^git[[:space:]]+-C[[:space:]]+//' || true)"
+if [[ -z "$TARGET_DIRECTORY" ]]; then
+  TARGET_DIRECTORY="$(grep -oE '^[[:space:]]*cd[[:space:]]+[^[:space:];&|]+' <<<"$COMMAND_TO_RUN" | head -n1 | sed -E 's/^[[:space:]]*cd[[:space:]]+//' || true)"
+fi
+TARGET_DIRECTORY="${TARGET_DIRECTORY:-.}"
+TARGET_DIRECTORY="${TARGET_DIRECTORY/#\~/$HOME}"
+
 # Only tracked modifications are at stake. An untracked file survives all three
 # commands, and a staged-only change is recoverable from the index.
-if ! git diff --quiet 2>/dev/null; then
-  echo "[no-discarding-reset] this discards tracked changes that are not committed:" >&2
-  git diff --name-only 2>/dev/null | sed 's/^/[no-discarding-reset]     /' >&2
+if ! git -C "$TARGET_DIRECTORY" diff --quiet 2>/dev/null; then
+  echo "[no-discarding-reset] this discards tracked changes that are not committed in $TARGET_DIRECTORY:" >&2
+  git -C "$TARGET_DIRECTORY" diff --name-only 2>/dev/null | sed 's/^/[no-discarding-reset]     /' >&2
   echo "[no-discarding-reset] Commit them first — a commit is cheap and amendable:" >&2
   echo "[no-discarding-reset]   git add -A && git commit -m 'wip'   …   git reset --soft HEAD~1" >&2
   echo "[no-discarding-reset] Or park them where the command cannot reach:" >&2
