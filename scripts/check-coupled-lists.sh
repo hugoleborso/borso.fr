@@ -169,10 +169,26 @@ done
 pragma_stack=apps/pragma/cdk/lib/stack.ts
 pragma_clone_adr=docs/adr/0009-pragma-previews-clone-production.md
 
+# A list may spread a named constant (`[...SECRET_TABLES, 'take']`), which the
+# stack shares with the reader blocklist of ADR-0044, so each `...NAME` is
+# resolved to the `const NAME = [...]` it names. A name that resolves to nothing
+# stands in the list as `unresolved_<name>`, so the comparison below fails
+# rather than reading it as an empty list.
 read_stack_clone_list() {
-  tr -d '\n' <"$pragma_stack" |
-    grep -oE "$1: \[[^]]*\]" |
-    grep -oE "'[a-z_]+'" | tr -d "'" | sort -u || true
+  local flat list reference resolved
+  flat=$(tr -d '\n' <"$pragma_stack")
+  list=$(grep -oE "$1: \[[^]]*\]" <<<"$flat" || true)
+  {
+    grep -oE "'[a-z_]+'" <<<"$list" || true
+    for reference in $(grep -oE '\.\.\.[A-Z_]+' <<<"$list" | tr -d '.' || true); do
+      resolved=$(grep -oE "const $reference = \[[^]]*\]" <<<"$flat" || true)
+      if [ -z "$resolved" ]; then
+        echo "[check-coupled-lists] $pragma_stack spreads $reference into $1 and declares no 'const $reference = [...]' this check can read" >&2
+        echo "'unresolved_${reference,,}'"
+      fi
+      grep -oE "'[a-z_]+'" <<<"$resolved" || true
+    done
+  } | tr -d "'" | sort -u
 }
 
 read_adr_clone_row() {
