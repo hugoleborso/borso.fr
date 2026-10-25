@@ -1,4 +1,5 @@
 import {
+  agentReaderPrincipalArn,
   frontendOrigin,
   type IDsqlCluster,
   isProductionStage,
@@ -95,7 +96,7 @@ export function buildLastLoopLepinAppStack(props: BuildLastLoopLepinAppStackProp
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
       ...(isProduction
-        ? {}
+        ? { readerPrincipalArns: [agentReaderPrincipalArn(props.scope)] }
         : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
