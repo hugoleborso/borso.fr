@@ -5,7 +5,7 @@ import {
   PreviewableApp,
   type Stage,
 } from '@borso/infra';
-import { Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { ArnFormat, Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
 import {
   BlockPublicAccess,
   Bucket,
@@ -19,6 +19,7 @@ import type { Construct } from 'constructs';
 const API_TIMEOUT_SECONDS = 20;
 const APP_SLUG = 'pragma';
 const SPOTIFY_CREDENTIALS_PARAMETER = `/${APP_SLUG}/spotify-credentials`;
+const AGENT_READER_IAM_USER = 'AI-Dev-ReadOnly';
 
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
@@ -56,6 +57,16 @@ function buildErrorReportingEnvironment(
     NODE_OPTIONS: SOURCE_MAPPED_STACK_TRACES,
     ...(project.release === undefined ? {} : { SENTRY_RELEASE: project.release }),
   };
+}
+
+function agentReaderArn(scope: Construct): string {
+  return Stack.of(scope).formatArn({
+    service: 'iam',
+    region: '',
+    resource: 'user',
+    resourceName: AGENT_READER_IAM_USER,
+    arnFormat: ArnFormat.SLASH_RESOURCE_NAME,
+  });
 }
 
 function readSiteOrigin(props: BuildPragmaAppStackProps): SiteOrigin {
@@ -121,7 +132,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
       ...(isProduction
-        ? {}
+        ? { readerPrincipalArns: [agentReaderArn(props.scope)] }
         : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
