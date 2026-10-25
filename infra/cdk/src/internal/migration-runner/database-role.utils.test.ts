@@ -1,16 +1,19 @@
 import { describe, expect, it } from 'vitest';
 import {
   apiRoleName,
+  buildMappingRetirementStatements,
   buildRoleExistsQuery,
   buildRoleMappingsQuery,
   buildRoleProvisioningStatements,
   buildRoleRemovalStatements,
+  readerRoleName,
   selectMappedArns,
 } from './database-role.utils.js';
 
 const LAMBDA_ROLE_ARN = 'arn:aws:iam::123456789012:role/pragma-pr-42-ApiFnServiceRole-ABC';
 const OTHER_ROLE_ARN = 'arn:aws:iam::123456789012:role/pragma-pr-42-ChannelRole-XYZ';
 const STALE_ROLE_ARN = 'arn:aws:iam::123456789012:role/pragma-pr-42-OldRole-OLD';
+const AGENT_USER_ARN = 'arn:aws:iam::123456789012:user/AI-Dev-ReadOnly';
 
 describe('apiRoleName', () => {
   it('prefixes the schema name', () => {
@@ -20,6 +23,16 @@ describe('apiRoleName', () => {
 
   it('refuses a schema name that is not a plain identifier', () => {
     expect(() => apiRoleName('pr-42')).toThrow('Invalid schema name: "pr-42"');
+  });
+});
+
+describe('readerRoleName', () => {
+  it('prefixes the schema name', () => {
+    expect(readerRoleName('prod')).toBe('ai_reader_prod');
+  });
+
+  it('refuses a schema name that is not a plain identifier', () => {
+    expect(() => readerRoleName('prod;')).toThrow('Invalid schema name: "prod;"');
   });
 });
 
@@ -62,6 +75,7 @@ describe('buildRoleProvisioningStatements', () => {
       buildRoleProvisioningStatements({
         schemaName: 'pr_42',
         roleName: 'api_pr_42',
+        tableAccess: 'read-write',
         principalArns: [LAMBDA_ROLE_ARN, OTHER_ROLE_ARN],
         roleExists: false,
         mappedArns: [],
@@ -80,6 +94,7 @@ describe('buildRoleProvisioningStatements', () => {
       buildRoleProvisioningStatements({
         schemaName: 'prod',
         roleName: 'api_prod',
+        tableAccess: 'read-write',
         principalArns: [LAMBDA_ROLE_ARN],
         roleExists: true,
         mappedArns: [LAMBDA_ROLE_ARN],
@@ -95,6 +110,7 @@ describe('buildRoleProvisioningStatements', () => {
       buildRoleProvisioningStatements({
         schemaName: 'prod',
         roleName: 'api_prod',
+        tableAccess: 'read-write',
         principalArns: [LAMBDA_ROLE_ARN],
         roleExists: true,
         mappedArns: [STALE_ROLE_ARN, LAMBDA_ROLE_ARN],
@@ -106,35 +122,67 @@ describe('buildRoleProvisioningStatements', () => {
     ]);
   });
 
-  it('refuses an ARN that is not an IAM role', () => {
-    expect(() =>
+  it('creates a reader that may only select, mapped to an IAM user', () => {
+    expect(
       buildRoleProvisioningStatements({
         schemaName: 'prod',
-        roleName: 'api_prod',
+        roleName: 'ai_reader_prod',
+        tableAccess: 'read-only',
+        principalArns: [AGENT_USER_ARN],
+        roleExists: false,
+        mappedArns: [],
+      }),
+    ).toStrictEqual([
+      'CREATE ROLE "ai_reader_prod" WITH LOGIN',
+      `AWS IAM GRANT "ai_reader_prod" TO '${AGENT_USER_ARN}'`,
+      'GRANT USAGE ON SCHEMA "prod" TO "ai_reader_prod"',
+      'GRANT SELECT ON ALL TABLES IN SCHEMA "prod" TO "ai_reader_prod"',
+    ]);
+  });
+
+  it('refuses an ARN that is not an IAM role or user', () => {
+    const valid = {
+      schemaName: 'prod',
+      roleName: 'api_prod',
+      tableAccess: 'read-write',
+      roleExists: true,
+      mappedArns: [],
+    } as const;
+    expect(() =>
+      buildRoleProvisioningStatements({
+        ...valid,
         principalArns: ["arn:aws:iam::123456789012:role/x'; DROP SCHEMA prod; --"],
-        roleExists: true,
-        mappedArns: [],
       }),
-    ).toThrow('Invalid IAM role ARN');
+    ).toThrow('Invalid IAM principal ARN');
     expect(() =>
       buildRoleProvisioningStatements({
-        schemaName: 'prod',
-        roleName: 'api_prod',
-        principalArns: ['arn:aws:iam::123456789012:user/someone'],
-        roleExists: true,
-        mappedArns: [],
+        ...valid,
+        principalArns: ['arn:aws:iam::123456789012:group/someone'],
       }),
-    ).toThrow('Invalid IAM role ARN');
+    ).toThrow('Invalid IAM principal ARN');
+    expect(() =>
+      buildRoleProvisioningStatements({
+        ...valid,
+        principalArns: [`prefix ${AGENT_USER_ARN}`],
+      }),
+    ).toThrow('Invalid IAM principal ARN');
+    expect(() =>
+      buildRoleProvisioningStatements({
+        ...valid,
+        principalArns: [`${AGENT_USER_ARN}'`],
+      }),
+    ).toThrow('Invalid IAM principal ARN');
   });
 
   it('refuses an invalid schema or role name', () => {
     const valid = {
       schemaName: 'prod',
       roleName: 'api_prod',
+      tableAccess: 'read-write',
       principalArns: [],
       roleExists: true,
       mappedArns: [],
-    };
+    } as const;
     expect(() => buildRoleProvisioningStatements({ ...valid, schemaName: 'a b' })).toThrow(
       'Invalid schema name',
     );
@@ -167,6 +215,24 @@ describe('buildRoleRemovalStatements', () => {
   it('refuses an invalid role name', () => {
     expect(() =>
       buildRoleRemovalStatements({ roleName: 'x y', roleExists: true, mappedArns: [] }),
+    ).toThrow('Invalid role name');
+  });
+});
+
+describe('buildMappingRetirementStatements', () => {
+  it('unmaps every principal and keeps the role', () => {
+    expect(
+      buildMappingRetirementStatements({
+        roleName: 'ai_reader_prod',
+        roleExists: true,
+        mappedArns: [AGENT_USER_ARN],
+      }),
+    ).toStrictEqual([`AWS IAM REVOKE "ai_reader_prod" FROM '${AGENT_USER_ARN}'`]);
+  });
+
+  it('refuses an invalid role name', () => {
+    expect(() =>
+      buildMappingRetirementStatements({ roleName: 'x y', roleExists: true, mappedArns: [] }),
     ).toThrow('Invalid role name');
   });
 });

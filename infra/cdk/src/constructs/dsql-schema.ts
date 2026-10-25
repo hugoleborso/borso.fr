@@ -9,7 +9,7 @@ import { LogGroup, RetentionDays } from 'aws-cdk-lib/aws-logs';
 import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { listUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
-import { apiRoleName } from '../internal/migration-runner/database-role.utils.js';
+import { apiRoleName, readerRoleName } from '../internal/migration-runner/database-role.utils.js';
 import {
   assertDeployStage,
   dsqlSchemaName,
@@ -51,6 +51,7 @@ export interface DsqlSchemaProps {
   readonly migrationsPath: string;
   readonly cluster: IDsqlCluster;
   readonly cloneFromSchema?: DsqlSchemaCloneFromConfig;
+  readonly readerPrincipalArns?: readonly string[];
 }
 
 interface MigrationFile {
@@ -112,6 +113,7 @@ export class DsqlSchema extends Construct {
   public readonly clusterArn: string;
   public readonly clusterEndpoint: string;
   public readonly apiRoleName: string;
+  public readonly readerRoleName: string | undefined;
 
   private readonly runnerFn: NodejsFunction;
   private readonly schemaResource: CustomResource;
@@ -130,6 +132,9 @@ export class DsqlSchema extends Construct {
     this.clusterArn = props.cluster.clusterArn;
     this.clusterEndpoint = props.cluster.clusterEndpoint;
     this.apiRoleName = apiRoleName(this.schemaName);
+    const readerPrincipalArns = props.readerPrincipalArns ?? [];
+    this.readerRoleName =
+      readerPrincipalArns.length === 0 ? undefined : readerRoleName(this.schemaName);
 
     const runnerLogGroup = new LogGroup(this, 'MigrationRunnerLogs', {
       retention: RetentionDays.ONE_WEEK,
@@ -175,6 +180,9 @@ export class DsqlSchema extends Construct {
         apiRoleName: this.apiRoleName,
         apiPrincipalArns: Lazy.list({ produce: () => this.apiPrincipalArns }),
         ...(props.cloneFromSchema === undefined ? {} : { cloneFromSchema: props.cloneFromSchema }),
+        ...(this.readerRoleName === undefined
+          ? {}
+          : { readerRoleName: this.readerRoleName, readerPrincipalArns }),
       },
     });
 

@@ -229,6 +229,44 @@ describe('DsqlSchema', () => {
   });
 });
 
+const AGENT_USER_ARN = 'arn:aws:iam::123456789012:user/AI-Dev-ReadOnly';
+
+function synthSchemaResource(readerPrincipalArns?: readonly string[]) {
+  const app = new App();
+  const stack = new Stack(app, 'S', { env: TEST_ENV });
+  const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
+  const schema = new DsqlSchema(stack, 'Db', {
+    app: 'test-app',
+    stage: 'prod',
+    migrationsPath: MIGRATIONS,
+    cluster,
+    ...(readerPrincipalArns === undefined ? {} : { readerPrincipalArns }),
+  });
+  const [customResource] = resourcesOfType(
+    Template.fromStack(stack),
+    'AWS::CloudFormation::CustomResource',
+  );
+  return { schema, properties: customResource?.Properties };
+}
+
+describe('DsqlSchema reader role', () => {
+  it('passes the reader role and its principals to the schema resource', () => {
+    const { schema, properties } = synthSchemaResource([AGENT_USER_ARN]);
+    expect(schema.readerRoleName).toBe('ai_reader_prod');
+    expect(properties?.readerRoleName).toBe('ai_reader_prod');
+    expect(properties?.readerPrincipalArns).toStrictEqual([AGENT_USER_ARN]);
+  });
+
+  it('sends no reader when no principal is listed', () => {
+    for (const readerPrincipalArns of [undefined, []]) {
+      const { schema, properties } = synthSchemaResource(readerPrincipalArns);
+      expect(schema.readerRoleName).toBeUndefined();
+      expect(properties).not.toHaveProperty('readerRoleName');
+      expect(properties).not.toHaveProperty('readerPrincipalArns');
+    }
+  });
+});
+
 function synthWithGrantedFunction(): { template: Template } {
   const app = new App();
   const stack = new Stack(app, 'S', { env: TEST_ENV });

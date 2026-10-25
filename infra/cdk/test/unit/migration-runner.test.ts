@@ -21,6 +21,11 @@ vi.mock('@aws-sdk/dsql-signer', () => ({
 const { handler } = await import('../../src/internal/migration-runner/index.js');
 
 const API_ROLE_ARN = 'arn:aws:iam::123456789012:role/test-app-ApiFnServiceRole-ABC';
+const AGENT_USER_ARN = 'arn:aws:iam::123456789012:user/AI-Dev-ReadOnly';
+const READER_PROPS = {
+  readerRoleName: 'ai_reader_test_app',
+  readerPrincipalArns: [AGENT_USER_ARN],
+} as const;
 
 beforeEach(() => {
   resetMigrationRunnerMockState();
@@ -153,6 +158,75 @@ describe('migration-runner handler', () => {
     });
     const queries = state.unsafeCalls.map((call) => call.query);
     expect(queries.some((query) => query.includes('ROLE'))).toBe(false);
+  });
+
+  it('Create: creates the reader after the migrations with SELECT only', async () => {
+    await handler({
+      RequestType: 'Create',
+      ResourceProperties: { ...baseProps, ...READER_PROPS },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    const lastMigration = queries.findIndex((query) =>
+      query.includes('CREATE TABLE IF NOT EXISTS b'),
+    );
+    const createReader = queries.indexOf('CREATE ROLE "ai_reader_test_app" WITH LOGIN');
+    expect(createReader).toBeGreaterThan(lastMigration);
+    expect(queries).toContain(`AWS IAM GRANT "ai_reader_test_app" TO '${AGENT_USER_ARN}'`);
+    expect(queries).toContain('GRANT USAGE ON SCHEMA "test_app" TO "ai_reader_test_app"');
+    expect(queries).toContain(
+      'GRANT SELECT ON ALL TABLES IN SCHEMA "test_app" TO "ai_reader_test_app"',
+    );
+    expect(
+      queries.some((query) => query.includes('INSERT, UPDATE') && query.includes('ai_reader')),
+    ).toBe(false);
+  });
+
+  it('Update: unmaps the reader when the stack stops listing it, and keeps the role', async () => {
+    state.existingRoles.add('ai_reader_test_app');
+    state.roleMappings = [{ arn: AGENT_USER_ARN, pg_role_name: 'ai_reader_test_app' }];
+    await handler({
+      RequestType: 'Update',
+      PhysicalResourceId: 'dsql-schema:test_app',
+      ResourceProperties: baseProps,
+      OldResourceProperties: { ...baseProps, ...READER_PROPS },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    expect(queries).toContain(`AWS IAM REVOKE "ai_reader_test_app" FROM '${AGENT_USER_ARN}'`);
+    expect(queries.some((query) => query.startsWith('DROP ROLE'))).toBe(false);
+    expect(queries.some((query) => query.startsWith('GRANT') && query.includes('ai_reader'))).toBe(
+      false,
+    );
+  });
+
+  it('Update: leaves the reader mapped while the stack still lists it', async () => {
+    state.existingRoles.add('ai_reader_test_app');
+    state.roleMappings = [{ arn: AGENT_USER_ARN, pg_role_name: 'ai_reader_test_app' }];
+    await handler({
+      RequestType: 'Update',
+      PhysicalResourceId: 'dsql-schema:test_app',
+      ResourceProperties: { ...baseProps, ...READER_PROPS },
+      OldResourceProperties: { ...baseProps, ...READER_PROPS },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    expect(queries.some((query) => query.startsWith('AWS IAM REVOKE'))).toBe(false);
+    expect(queries).toContain(
+      'GRANT SELECT ON ALL TABLES IN SCHEMA "test_app" TO "ai_reader_test_app"',
+    );
+  });
+
+  it('Delete: drops the schema, then unmaps and drops the reader', async () => {
+    state.existingRoles.add('ai_reader_test_app');
+    state.roleMappings = [{ arn: AGENT_USER_ARN, pg_role_name: 'ai_reader_test_app' }];
+    await handler({
+      RequestType: 'Delete',
+      PhysicalResourceId: 'dsql-schema:test_app',
+      ResourceProperties: { ...baseProps, ...READER_PROPS },
+    });
+    const queries = state.unsafeCalls.map((call) => call.query);
+    const dropSchema = queries.findIndex((query) => query.includes('DROP SCHEMA'));
+    const dropReader = queries.indexOf('DROP ROLE IF EXISTS "ai_reader_test_app"');
+    expect(dropReader).toBeGreaterThan(dropSchema);
+    expect(queries).toContain(`AWS IAM REVOKE "ai_reader_test_app" FROM '${AGENT_USER_ARN}'`);
   });
 
   it('Create: rewrites ALTER TABLE ADD COLUMN to ADD COLUMN IF NOT EXISTS so partial retries are safe', async () => {
