@@ -67,7 +67,7 @@ function listInstrumentToggles(container: HTMLElement, memberName: string): HTML
   return Array.from(group.querySelectorAll('button'));
 }
 
-function findInstrumentToggle(
+function getInstrumentToggle(
   container: HTMLElement,
   memberName: string,
   instrumentName: string,
@@ -207,7 +207,7 @@ describe('LineupEditor', () => {
       />,
     );
     await act(async () => {
-      findInstrumentToggle(container, HUGO.name, GUITAR.name).click();
+      getInstrumentToggle(container, HUGO.name, GUITAR.name).click();
     });
     await act(async () => {
       const form = container.querySelector('form');
@@ -232,7 +232,7 @@ describe('LineupEditor', () => {
       />,
     );
     await act(async () => {
-      findInstrumentToggle(container, HUGO.name, GUITAR.name).click();
+      getInstrumentToggle(container, HUGO.name, GUITAR.name).click();
     });
     await act(async () => {
       const form = container.querySelector('form');
@@ -293,7 +293,7 @@ describe('LineupEditor', () => {
       />,
     );
     await act(async () => {
-      findInstrumentToggle(container, PAULINE.name, BASS.name).click();
+      getInstrumentToggle(container, PAULINE.name, BASS.name).click();
     });
     await act(async () => {
       findButtonByText(container, SAVE_AS_DEFAULT_BUTTON_TEXT_EN)?.click();

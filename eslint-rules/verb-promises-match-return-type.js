@@ -4,6 +4,10 @@ const ARRAY_MESSAGE =
   '`{{name}}` starts with `{{verb}}`, which promises {{promise}}, and the return type is {{actual}}. ' +
   'Rename it or change what it returns. See docs/standards/01-naming.md.';
 
+const THROWING_FIND_MESSAGE =
+  '`{{name}}` starts with `find…`, which promises `null` when the thing is absent, and it throws. ' +
+  'Return `null` instead, or rename it `get…`, the verb that throws. See docs/standards/01-naming.md.';
+
 const LIST_PREFIX = /^list(?=[A-Z])/;
 const FIND_PREFIX = /^find(?=[A-Z])/;
 const BOOLEAN_PREFIX = /^(is|has|can)(?=[A-Z])/;
@@ -52,6 +56,28 @@ const CHECKS = [
   },
 ];
 
+const FUNCTION_NODES = new Set([
+  'FunctionDeclaration',
+  'FunctionExpression',
+  'ArrowFunctionExpression',
+]);
+
+function isInsideCaughtTryBlock(node, child) {
+  return node.type === 'TryStatement' && node.handler !== null && node.block === child;
+}
+
+function findEnclosingUncaughtFunction(throwStatement) {
+  let child = throwStatement;
+  let ancestor = throwStatement.parent;
+  while (ancestor !== undefined && ancestor !== null) {
+    if (FUNCTION_NODES.has(ancestor.type)) return ancestor;
+    if (isInsideCaughtTryBlock(ancestor, child)) return null;
+    child = ancestor;
+    ancestor = ancestor.parent;
+  }
+  return null;
+}
+
 function describeType(node, sourceCode) {
   return `\`${sourceCode.getText(node)}\``;
 }
@@ -63,7 +89,7 @@ export default {
     type: 'problem',
     docs: { description: "Require a function's return type to keep the promise its verb makes." },
     schema: [],
-    messages: { brokenPromise: ARRAY_MESSAGE },
+    messages: { brokenPromise: ARRAY_MESSAGE, throwingFind: THROWING_FIND_MESSAGE },
   },
   create(context) {
     const sourceCode = context.sourceCode;
@@ -89,7 +115,16 @@ export default {
       }
     }
 
+    function checkThrow(node) {
+      const enclosing = findEnclosingUncaughtFunction(node);
+      if (enclosing === null) return;
+      const name = readFunctionName(enclosing);
+      if (name === null || !FIND_PREFIX.test(name)) return;
+      context.report({ node, messageId: 'throwingFind', data: { name } });
+    }
+
     return {
+      ThrowStatement: checkThrow,
       FunctionDeclaration: checkFunction,
       FunctionExpression: checkFunction,
       ArrowFunctionExpression: checkFunction,
