@@ -265,7 +265,7 @@ describe('decideReadOnlyQuery', () => {
 });
 
 describe('decideReadTarget', () => {
-  it('defaults to the one schema a reader exists for', () => {
+  it('defaults to pragma prod', () => {
     expect(DEFAULT_APP).toBe('pragma');
     expect(DEFAULT_STAGE).toBe('prod');
     expect(decideReadTarget(DEFAULT_APP, DEFAULT_STAGE)).toStrictEqual({
@@ -276,13 +276,31 @@ describe('decideReadTarget', () => {
     });
   });
 
+  it('reads the prod schema of pragma, last-loop-lepin and banana-rush', () => {
+    for (const app of ['pragma', 'last-loop-lepin', 'banana-rush']) {
+      expect(decideReadTarget(app, 'prod')).toStrictEqual({
+        accepted: true,
+        app,
+        schemaName: 'prod',
+        roleName: 'ai_reader_prod',
+      });
+    }
+  });
+
   it('refuses a stage or an application without a reader', () => {
     const reason =
-      'no read-only role exists for APP=pragma STAGE=preview. Only APP=pragma STAGE=prod is readable (ADR-0044).';
+      'no read-only role exists for APP=pragma STAGE=preview. Readable: APP=pragma STAGE=prod, APP=last-loop-lepin STAGE=prod, APP=banana-rush STAGE=prod (ADR-0044).';
     expect(decideReadTarget('pragma', 'preview')).toStrictEqual({ accepted: false, reason });
-    expect(decideReadTarget('talos', 'prod')).toMatchObject({ accepted: false });
+    expect(decideReadTarget('borso-fr', 'prod')).toMatchObject({ accepted: false });
     expect(decideReadTarget('toString', 'prod')).toMatchObject({ accepted: false });
     expect(decideReadTarget('pragma', 'constructor')).toMatchObject({ accepted: false });
+  });
+
+  it('refuses talos on every stage and points to its agent API', () => {
+    const reason =
+      'talos holds private data and has no read-only role by design (ADR-0044). Query it through its agent API, POST /api/agent/sql with an agent token (ADR-0039).';
+    expect(decideReadTarget('talos', 'prod')).toStrictEqual({ accepted: false, reason });
+    expect(decideReadTarget('talos', 'preview')).toStrictEqual({ accepted: false, reason });
   });
 });
 

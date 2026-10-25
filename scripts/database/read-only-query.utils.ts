@@ -65,7 +65,17 @@ export const ROW_CAP = 200;
 
 const READER_ROLE_PREFIX = 'ai_reader_';
 
-const READABLE_SCHEMA_BY_TARGET: ReadonlyMap<string, string> = new Map([['pragma/prod', 'prod']]);
+const READABLE_SCHEMA_BY_TARGET: ReadonlyMap<string, string> = new Map([
+  ['pragma/prod', 'prod'],
+  ['last-loop-lepin/prod', 'prod'],
+  ['banana-rush/prod', 'prod'],
+]);
+const READABLE_TARGETS_LABEL = [...READABLE_SCHEMA_BY_TARGET.keys()]
+  .map((target) => `APP=${target.replace('/', ' STAGE=')}`)
+  .join(', ');
+const PRIVATE_APP = 'talos';
+const PRIVATE_APP_REFUSAL =
+  'talos holds private data and has no read-only role by design (ADR-0044). Query it through its agent API, POST /api/agent/sql with an agent token (ADR-0039).';
 
 export type QueryDecision =
   | { readonly accepted: true; readonly statement: string }
@@ -200,11 +210,12 @@ export function decideReadOnlyQuery(source: string): QueryDecision {
 }
 
 export function decideReadTarget(app: string, stage: string): TargetDecision {
+  if (app === PRIVATE_APP) return { accepted: false, reason: PRIVATE_APP_REFUSAL };
   const schemaName = READABLE_SCHEMA_BY_TARGET.get(`${app}/${stage}`);
   if (schemaName === undefined) {
     return {
       accepted: false,
-      reason: `no read-only role exists for APP=${app} STAGE=${stage}. Only APP=pragma STAGE=prod is readable (ADR-0044).`,
+      reason: `no read-only role exists for APP=${app} STAGE=${stage}. Readable: ${READABLE_TARGETS_LABEL} (ADR-0044).`,
     };
   }
   return { accepted: true, app, schemaName, roleName: `${READER_ROLE_PREFIX}${schemaName}` };

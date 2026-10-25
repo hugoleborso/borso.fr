@@ -1,5 +1,5 @@
 ---
-summary: 'A hosted session reads pragma prod only through scripts/db-read.sh, as a SELECT-only role; the admin token stays refused, and every other app or stage goes to a local session.'
+summary: 'A hosted session reads the prod schema of pragma, last-loop-lepin and banana-rush only through scripts/db-read.sh, as a SELECT-only role; talos goes through its agent API, the admin token stays refused, and every other stage or write goes to a local session.'
 triggers:
   commands:
     - 'dsql-shell\.sh'
@@ -13,7 +13,7 @@ triggers:
 
 _Last verified: 2026-09-17, on claude.ai/code as `AI-Dev-ReadOnly`, for the admin token.
 The read path below was written on 2026-10-25 and had not run end to end when this was
-written, because it needs pragma's production deploy and the manual IAM step first._
+written, because it needs each application's production deploy and the manual IAM step first._
 
 A hosted session can read most of AWS. It cannot open a production DSQL
 database as `admin`, and the refusal does not come from IAM.
@@ -35,17 +35,19 @@ is true of the AWS API and false of the data behind it. A token for the
 database is a key to every row, and the harness treats minting one as
 reading them.
 
-## The read path for pragma `prod`
+## The read path for pragma, last-loop-lepin and banana-rush `prod`
 
 [ADR-0044](../adr/0044-read-only-production-database-access-for-agents.md)
-added one path, for pragma's `prod` schema only:
+added one path, for the `prod` schema of pragma, last-loop-lepin and banana-rush:
 
 ```bash
-scripts/db-read.sh "SELECT count(*) FROM member"
+scripts/db-read.sh "SELECT count(*) FROM member"                      # pragma, the default
+APP=last-loop-lepin scripts/db-read.sh "SELECT count(*) FROM runners"
+APP=banana-rush scripts/db-read.sh "SELECT count(*) FROM game"
 ```
 
 - It signs in as `ai_reader_prod`, a database role that holds `SELECT` on
-  the `prod` schema and nothing else. `AI-Dev-ReadOnly` may connect as that
+  the `prod` schema and nothing else, one per application's cluster. `AI-Dev-ReadOnly` may connect as that
   role (`dsql:DbConnect`) and never as `admin`.
 - It accepts one `SELECT` or `WITH … SELECT` statement, refuses write,
   session and transaction keywords outside literals and comments, runs
@@ -61,16 +63,22 @@ scripts/db-read.sh "SELECT count(*) FROM member"
   not `*` on a table that holds e-mail addresses, phone numbers or calendar
   addresses.
 
-It needs two things that only the operator can do: pragma's production
-deploy, which creates the role, and the IAM change in
-[`aws-setup.md` §12.7](../aws-setup.md#127-let-a-session-read-pragma-production).
+It needs two things that only the operator can do: each application's
+production deploy, which creates its role, and the IAM change in
+[`aws-setup.md` §12.7](../aws-setup.md#127-let-a-session-read-production).
 An `AccessDeniedException` naming an explicit deny means the IAM change is
 not applied. A Postgres authentication error means the role or its mapping
 is not there yet.
 
+## talos: its own agent API
+
+`APP=talos` is refused by the script, and the IAM grant does not name its
+cluster. Its data is private. Agents read it through `POST /api/agent/sql`
+with an agent token ([ADR-0039](../adr/0039-talos-memory-in-the-database.md)).
+
 ## Everything else: hand the query to a local session
 
-Any other application, any preview, and any write still need a local Claude
+borso-fr and borsouvertures have no database. Any preview, and any write, still need a local Claude
 Code session running with the operator's own `borso-admin` SSO profile.
 PR #107's handoff carried:
 

@@ -33,7 +33,7 @@ const query = readQueryArguments(process.argv.slice(2));
 if (query === '') {
   fail(
     'usage: pnpm run db:read -- "<one SELECT or WITH … SELECT statement>"\n' +
-      `  APP (default ${DEFAULT_APP}) and STAGE (default ${DEFAULT_STAGE}) pick the schema.\n` +
+      `  APP (pragma, last-loop-lepin or banana-rush; default ${DEFAULT_APP}) and STAGE (default ${DEFAULT_STAGE}) pick the schema.\n` +
       `  The statement runs as a SELECT-only role in a READ ONLY transaction, capped at ${String(ROW_CAP)} rows.`,
     USAGE_EXIT_CODE,
   );

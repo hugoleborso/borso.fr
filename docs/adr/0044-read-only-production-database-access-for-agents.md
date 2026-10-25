@@ -1,4 +1,4 @@
-# ADR-0044: Agents read pragma production through a SELECT-only database role
+# ADR-0044: Agents read production through a SELECT-only database role
 
 - **Status:** proposed
 - **Date:** 2026-10-25
@@ -19,13 +19,15 @@ The operator ratified the design on 2026-10-25.
 
 **A SELECT-only database role, an IAM grant that can only reach it, and a script the project allows by name.** The read-only property holds at three levels.
 
-1. **Database.** The migration runner creates `ai_reader_prod` on pragma's cluster, maps it with `AWS IAM GRANT` to `arn:aws:iam::<account>:user/AI-Dev-ReadOnly`, and grants it `USAGE` on the `prod` schema and `SELECT` on every table in it. It repeats the grant after every migration run, as it does for the API role of [ADR-0036](./0036-one-database-role-per-stage-schema.md), because the DSQL documentation does not describe default privileges and a table added later would otherwise be unreadable. When the stack stops listing the user, the runner revokes the mapping. When the schema is deleted, it drops the role.
-2. **IAM.** `AI-Dev-ReadOnly` gets `dsql:DbConnect` on pragma's cluster ARN and nothing else from DSQL. It never gets `dsql:DbConnectAdmin`, so the only database identity it can sign in as is the one its mapping names. The user is managed by hand, so this is a manual step ([`aws-setup.md` §12.7](../aws-setup.md#127-let-a-session-read-pragma-production)).
-3. **Script.** `scripts/db-read.sh "<sql>"`, also reachable as `pnpm run db:read -- "<sql>"`, accepts one statement that starts with `SELECT` or `WITH` and holds no write, session or transaction keyword outside literals and comments. It mints a non-admin token, connects as `ai_reader_prod`, runs the statement inside `BEGIN READ ONLY … ROLLBACK`, wraps it in `LIMIT 200`, cancels it after 30 seconds and prints to stdout only. `.claude/settings.json` allows `Bash(scripts/db-read.sh *)` and `Bash(pnpm run db:read *)`. Agents call the shell path, because the documentation leaves open whether auto mode drops a rule that names a package-manager run.
+1. **Database.** The migration runner creates `ai_reader_prod` on the cluster of pragma, last-loop-lepin and banana-rush, maps it with `AWS IAM GRANT` to `arn:aws:iam::<account>:user/AI-Dev-ReadOnly`, and grants it `USAGE` on the `prod` schema and `SELECT` on every table in it. It repeats the grant after every migration run, as it does for the API role of [ADR-0036](./0036-one-database-role-per-stage-schema.md), because the DSQL documentation does not describe default privileges and a table added later would otherwise be unreadable. When the stack stops listing the user, the runner revokes the mapping. When the schema is deleted, it drops the role.
+2. **IAM.** `AI-Dev-ReadOnly` gets `dsql:DbConnect` on those three cluster ARNs and nothing else from DSQL. It never gets `dsql:DbConnectAdmin`, so the only database identity it can sign in as is the one its mapping names. The user is managed by hand, so this is a manual step ([`aws-setup.md` §12.7](../aws-setup.md#127-let-a-session-read-production)).
+3. **Script.** `scripts/db-read.sh "<sql>"`, also reachable as `pnpm run db:read -- "<sql>"`, takes the application from `APP` (pragma by default), refuses talos by name, and accepts one statement that starts with `SELECT` or `WITH` and holds no write, session or transaction keyword outside literals and comments. It mints a non-admin token, connects as `ai_reader_prod`, runs the statement inside `BEGIN READ ONLY … ROLLBACK`, wraps it in `LIMIT 200`, cancels it after 30 seconds and prints to stdout only. `.claude/settings.json` allows `Bash(scripts/db-read.sh *)` and `Bash(pnpm run db:read *)`. Agents call the shell path, because the documentation leaves open whether auto mode drops a rule that names a package-manager run.
 
 The time limit is enforced by the client. [ADR-0039](./0039-talos-memory-in-the-database.md) recorded that DSQL refuses `SET LOCAL statement_timeout`. The script sends `SIGINT` to `psql`, which asks the server to cancel the query.
 
-The reader exists for pragma `prod` only. A preview is a copy of production with the credential tables removed ([ADR-0009](./0009-pragma-previews-clone-production.md)), so a preview reader would answer nothing the production one cannot. It would also mean mapping one IAM user to a new role on every pull request, and the documentation does not say that one IAM identity may hold several mappings. last-loop-lepin, banana-rush and talos would each need a production deploy of their own, so they are left out until one of them needs it.
+The reader exists on the `prod` schema of pragma, last-loop-lepin and banana-rush. Previews get no reader. A pragma or last-loop-lepin preview is a copy of production with the credential tables removed ([ADR-0009](./0009-pragma-previews-clone-production.md)), so a preview reader would answer nothing the production one cannot, and a banana-rush preview starts empty. A preview reader would also mean mapping one IAM user to a new role on every pull request, and the documentation does not say that one IAM identity may hold several mappings. Each cluster is its own database, so the role has the same name, `ai_reader_prod`, in all three.
+
+talos is left out on purpose. Its data is the owner's private memory, and [ADR-0027](./0027-talos-deploys-to-prod-only.md) keeps it off previews for that reason. Agents already reach it through its own API, `POST /api/agent/sql`, behind a bearer token the owner controls ([ADR-0039](./0039-talos-memory-in-the-database.md)). A standing read path for any session holding the `AI-Dev-ReadOnly` keys would widen who can read it, so the script refuses `APP=talos` and points to that API, and the IAM grant does not name talos's cluster.
 
 ### Why this differs from ADR-0039
 
@@ -35,7 +37,8 @@ ADR-0039 rejected a second, read-only role for talos's SQL route. Its reason was
 
 - `+` A hosted session can answer a question about production data that gates a merge, without handing the question to a local session.
 - `+` Every write is refused by the database itself. A statement that passes the guard, or a session that skips the script and calls `psql` directly, still runs as a role that holds `SELECT` only.
-- `-` Any session of this repository, and anyone holding the `AI-Dev-ReadOnly` keys, now has a standing read path to pragma's production data. That data includes members' e-mail addresses, phone numbers and calendar addresses ([ADR-0037](./0037-calendar-feed-address-in-its-own-table.md)). Before, reading it took the operator's own SSO profile.
+- `-` Any session of this repository, and anyone holding the `AI-Dev-ReadOnly` keys, now has a standing read path to the production data of three applications. Pragma's includes members' e-mail addresses, phone numbers and calendar addresses ([ADR-0037](./0037-calendar-feed-address-in-its-own-table.md)), and last-loop-lepin's includes runners' display names and the admin credential tables. Before, reading it took the operator's own SSO profile.
+- `-` `SELECT` on every table includes tables that hold secrets, so a read can become a write through the application's own API. last-loop-lepin's `admin_sessions.id` is the raw value of the `lastloop_admin` cookie, so reading a live row lets the reader act as the admin until it expires, and `admin_credentials` holds the scrypt hash of a short PIN. Pragma's `vapid_key_pair.private_key` lets the reader sign push messages as pragma. banana-rush stores only `player.token_hash`. The database role still refuses every write; the application does not.
 - `-` Query results enter the session transcript, which lives outside this account and outside AWS. Nothing redacts a column. The guard cannot tell which columns are personal.
 - `-` The IAM half is a manual change to a user that no session can read (`iam:*` is denied), so whether it was applied, and whether the deny was narrowed correctly, is unverifiable from a session. The test is to run the script and read the error.
 - `-` The keyword guard is a deny list, as ADR-0039's is. Here it is a convenience that gives a clear refusal, not a barrier.
@@ -51,7 +54,7 @@ ADR-0039 rejected a second, read-only role for talos's SQL route. Its reason was
   - The IAM grant cannot reach `admin`, so the read path cannot be widened from the session.
   - It is provisioned by the same runner and tests as the stage roles of ADR-0036.
 - **Costs:**
-  - A change to `infra/cdk` under its 100 % coverage gate, a production deploy of pragma, and a manual IAM edit.
+  - A change to `infra/cdk` under its 100 % coverage gate, a production deploy of each application, and a manual IAM edit.
 - **Rationale:** It is the only option where the boundary does not depend on code the caller controls.
 
 ### Option B — An allow rule in server-managed auto-mode settings (rejected)
@@ -110,5 +113,11 @@ ADR-0039 rejected a second, read-only role for talos's SQL route. Its reason was
 
 - Spec: none. The design was ratified in chat on 2026-10-25.
 - Commit: stamped by `/after-task-kaizen` on merge
-- Files: `infra/cdk/src/internal/migration-runner/database-role.utils.ts`, `infra/cdk/src/internal/migration-runner/index.ts`, `infra/cdk/src/constructs/dsql-schema.ts`, `infra/cdk/src/constructs/previewable-app.ts`, `apps/pragma/cdk/lib/stack.ts`, `scripts/database/read-only-query.utils.ts`, `scripts/database/db-read.ts`, `scripts/db-read.sh`, `.claude/settings.json`, `docs/aws-setup.md` §12.7
-- Related ADRs: ADR-0036 (builds on its per-stage roles), ADR-0039 (the case its rejected Option B anticipated), ADR-0009, ADR-0037
+- Files: `infra/cdk/src/internal/migration-runner/database-role.utils.ts`, `infra/cdk/src/internal/migration-runner/index.ts`, `infra/cdk/src/constructs/dsql-schema.ts`, `infra/cdk/src/constructs/previewable-app.ts`, `infra/cdk/src/internal/agent-reader.ts`, `apps/pragma/cdk/lib/stack.ts`, `apps/last-loop-lepin/cdk/lib/stack.ts`, `apps/banana-rush/cdk/lib/stack.ts`, `scripts/database/read-only-query.utils.ts`, `scripts/database/db-read.ts`, `scripts/db-read.sh`, `.claude/settings.json`, `docs/aws-setup.md` §12.7
+- Related ADRs: ADR-0036 (builds on its per-stage roles), ADR-0039 (the case its rejected Option B anticipated, and talos's own agent path), ADR-0027 (why talos stays out), ADR-0009, ADR-0037
+
+### Revision 2026-10-25 — scope widened to last-loop-lepin and banana-rush
+
+What changed: the first draft of this ADR mapped the reader on pragma `prod` only, and left last-loop-lepin, banana-rush and talos out until one of them needed it. The operator widened the scope the same day, before merge, to pragma, last-loop-lepin and banana-rush. Each of their production stacks now lists `AI-Dev-ReadOnly` as its schema reader, the helper that builds that ARN moved to `@borso/infra` so no application imports another, the script accepts the three applications, and the IAM allow is one inline policy, `Prod-db-read`, on the three cluster ARNs.
+Why: operator decision of 2026-10-25. Once `DsqlSchema` takes a reader, each further application costs one property on its production stack and one ARN in the IAM policy, against the same three-level boundary. talos stays out, for the reasons in *Decision*.
+Implication for the original decision: still valid. The mechanism is unchanged; only the list of clusters grew.

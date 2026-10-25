@@ -413,30 +413,58 @@ most often because the deny still lists `s3:Put*` in the blanket statement, wher
 Until this is applied, `/visual-validation` finds the upload denied and commits every
 screenshot, which is the behaviour from before ADR-0023 rather than a failure.
 
-### 12.7 Let a session read pragma production
+### 12.7 Let a session read production
 
 [ADR-0044](./adr/0044-read-only-production-database-access-for-agents.md) gives a hosted
-session one read path into pragma's `prod` schema: `scripts/db-read.sh "<sql>"`, signed in as
-the database role `ai_reader_prod`, which holds `SELECT` only. The migration runner creates that
-role and maps it to this user on pragma's production deploy. The IAM half is manual, because
-the user is not managed by any stack.
+session one read path into the `prod` schema of pragma, last-loop-lepin and banana-rush:
+`APP=<app> scripts/db-read.sh "<sql>"`, signed in as the database role `ai_reader_prod`, which
+holds `SELECT` only. The migration runner creates that role on each application's cluster and
+maps it to this user on that application's production deploy. The IAM half is manual, because
+the user is not managed by any stack. talos is not part of it: its data is private, and agents
+read it through its own API ([ADR-0039](./adr/0039-talos-memory-in-the-database.md)).
 
-**The grant is one verb on one cluster.** `dsql:DbConnect` on pragma's cluster, and never
-`dsql:DbConnectAdmin`, so the only database identity the user can sign in as is the one its
-mapping names. Read the cluster ARN rather than copying it, since a rebuilt cluster gets a
-new one:
+**The grant is one verb on three clusters.** `dsql:DbConnect` on the three cluster ARNs, and
+never `dsql:DbConnectAdmin`, so the only database identity the user can sign in as is the one
+its mapping names. Read the cluster ARNs rather than copying them, since a rebuilt cluster gets
+a new one:
 
 ```bash
-aws ssm get-parameter --name /borso/pragma/dsql-cluster-arn --query Parameter.Value --output text
+for app in pragma last-loop-lepin banana-rush; do
+  aws ssm get-parameter --name "/borso/$app/dsql-cluster-arn" --query Parameter.Value --output text
+done
 ```
 
-On 2026-10-25 that returned
-`arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi`, which the JSON
-below uses.
+On 2026-10-25 that returned these three ARNs, which the JSON below uses:
+
+| Application | Cluster ARN |
+| --- | --- |
+| pragma | `arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi` |
+| last-loop-lepin | `arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4` |
+| banana-rush | `arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba` |
+
+**The allow is one inline policy, `Prod-db-read`**, saved as `prod-db-read.json`:
+
+```json
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Sid": "ConnectAsTheProductionReader",
+      "Effect": "Allow",
+      "Action": "dsql:DbConnect",
+      "Resource": [
+        "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi",
+        "arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4",
+        "arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba"
+      ]
+    }
+  ]
+}
+```
 
 **An explicit `Deny` beats any `Allow`**, and §12.6's deny lists `dsql:*` on `Resource: "*"`.
 That line has to leave the blanket statement and come back as two statements that cover
-everything except `DbConnect` on this one cluster. The deployed deny is unreadable from a
+everything except `DbConnect` on these three clusters. The deployed deny is unreadable from a
 session (`iam:GetUserPolicy` is inside it), so its content is unverified from here. Read it
 first, and change only the `dsql:*` entry:
 
@@ -451,55 +479,52 @@ two statements to the `Statement` array, writing the result to `deny-narrowed.js
 
 ```json
 {
-  "Sid": "DenyDsqlOutsideThePragmaCluster",
+  "Sid": "DenyDsqlOutsideTheReadableClusters",
   "Effect": "Deny",
   "Action": "dsql:*",
-  "NotResource": "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi"
+  "NotResource": [
+    "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi",
+    "arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4",
+    "arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba"
+  ]
 },
 {
-  "Sid": "DenyEveryDsqlActionOnThePragmaClusterButDbConnect",
+  "Sid": "DenyEveryDsqlActionOnTheReadableClustersButDbConnect",
   "Effect": "Deny",
   "NotAction": "dsql:DbConnect",
-  "Resource": "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi"
-}
-```
-
-`jq` makes both edits, and running it twice leaves the same policy:
-
-```bash
-jq --arg arn arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi '
-  .Statement |= (
-    map(select(.Sid != "DenyDsqlOutsideThePragmaCluster" and .Sid != "DenyEveryDsqlActionOnThePragmaClusterButDbConnect"))
-    | map(if .Resource == "*" and (.Action | type) == "array" then .Action -= ["dsql:*"] else . end)
-    | map(select(.Action != [] and ((.Action == "dsql:*" and .Resource == "*") | not)))
-    + [
-      {Sid: "DenyDsqlOutsideThePragmaCluster", Effect: "Deny", Action: "dsql:*", NotResource: $arn},
-      {Sid: "DenyEveryDsqlActionOnThePragmaClusterButDbConnect", Effect: "Deny", NotAction: "dsql:DbConnect", Resource: $arn}
-    ])' deny.json > deny-narrowed.json
-```
-
-The first keeps every other cluster, and every call whose resource is not a cluster, denied
-exactly as before. The second keeps `DbConnectAdmin`, `GetCluster`, `UpdateCluster`,
-`DeleteCluster` and the rest denied on pragma's cluster. Only `DbConnect` on that one ARN is
-left undenied. If `dsql:*` appears in any other statement with `Resource: "*"`, the hole stays
-shut, and the probe below says so.
-
-Denying less grants nothing, so the allow is a third inline policy, `Pragma-prod-read`, saved
-as `pragma-prod-read.json`:
-
-```json
-{
-  "Version": "2012-10-17",
-  "Statement": [
-    {
-      "Sid": "ConnectAsThePragmaProductionReader",
-      "Effect": "Allow",
-      "Action": "dsql:DbConnect",
-      "Resource": "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi"
-    }
+  "Resource": [
+    "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi",
+    "arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4",
+    "arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba"
   ]
 }
 ```
+
+`jq` makes both edits, and running it twice leaves the same policy. It also removes the two
+pragma-only statements an earlier draft of this section added, if they are there:
+
+```bash
+jq --argjson arns '["arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi","arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4","arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba"]' '
+  .Statement |= (
+    map(select(.Sid as $sid | [
+      "DenyDsqlOutsideTheReadableClusters",
+      "DenyEveryDsqlActionOnTheReadableClustersButDbConnect",
+      "DenyDsqlOutsideThePragmaCluster",
+      "DenyEveryDsqlActionOnThePragmaClusterButDbConnect"
+    ] | index($sid) | not))
+    | map(if .Resource == "*" and (.Action | type) == "array" then .Action -= ["dsql:*"] else . end)
+    | map(select(.Action != [] and ((.Action == "dsql:*" and .Resource == "*") | not)))
+    + [
+      {Sid: "DenyDsqlOutsideTheReadableClusters", Effect: "Deny", Action: "dsql:*", NotResource: $arns},
+      {Sid: "DenyEveryDsqlActionOnTheReadableClustersButDbConnect", Effect: "Deny", NotAction: "dsql:DbConnect", Resource: $arns}
+    ])' deny.json > deny-narrowed.json
+```
+
+The first keeps every other cluster, talos's among them, and every call whose resource is not a
+cluster, denied exactly as before. The second keeps `DbConnectAdmin`, `GetCluster`,
+`UpdateCluster`, `DeleteCluster` and the rest denied on the three clusters. Only `DbConnect` on
+those three ARNs is left undenied. If `dsql:*` appears in any other statement with
+`Resource: "*"`, the hole stays shut, and the probe below says so.
 
 Apply both:
 
@@ -511,29 +536,42 @@ aws --profile borso-admin iam put-user-policy \
 
 aws --profile borso-admin iam put-user-policy \
   --user-name AI-Dev-ReadOnly \
-  --policy-name Pragma-prod-read \
-  --policy-document file://pragma-prod-read.json
+  --policy-name Prod-db-read \
+  --policy-document file://prod-db-read.json
 ```
 
-In the console the same two edits are: **IAM → Users → `AI-Dev-ReadOnly` → Permissions**. Open
-the inline policy `Explicit-write-deny`, choose **Edit**, switch to **JSON**, make the change
-above and save. Then choose **Add permissions → Create inline policy**, switch to **JSON**,
-paste the allow, choose **Next**, name it `Pragma-prod-read` and create it.
+If an earlier draft of this section was applied, the user also holds an inline policy named
+`Pragma-prod-read`, which `Prod-db-read` replaces. List the inline policies, and delete that one
+only if it is there:
+
+```bash
+aws --profile borso-admin iam list-user-policies --user-name AI-Dev-ReadOnly
+aws --profile borso-admin iam delete-user-policy \
+  --user-name AI-Dev-ReadOnly --policy-name Pragma-prod-read
+```
+
+In the console the same edits are: **IAM → Users → `AI-Dev-ReadOnly` → Permissions**. Open the
+inline policy `Explicit-write-deny`, choose **Edit**, switch to the **JSON** tab, make the change
+above and save. Then choose **Add permissions → Create inline policy**, switch to the **JSON**
+tab, paste the allow, choose **Next**, name it `Prod-db-read` and create it.
 
 Do not copy either change to the `ClaudeDev` permission set. The database role is mapped to
 this user's ARN only, so the permission set's role would get a connect right with nothing to
 sign in as.
 
-Verify from a hosted session, after pragma's production deploy has created the role:
+Verify from a hosted session, after each application's production deploy has created the role:
 
 ```bash
-scripts/db-read.sh "SELECT count(*) FROM member"      # must print one number
-scripts/db-read.sh "SELECT 1 FROM member FOR UPDATE"  # must be refused by the script
+APP=pragma scripts/db-read.sh "SELECT count(*) FROM member"             # one number
+APP=last-loop-lepin scripts/db-read.sh "SELECT count(*) FROM runners"   # one number
+APP=banana-rush scripts/db-read.sh "SELECT count(*) FROM game"          # one number
+APP=talos scripts/db-read.sh "SELECT 1"                                 # refused by the script
+scripts/db-read.sh "SELECT 1 FROM member FOR UPDATE"                    # refused by the script
 ```
 
-If the first command fails with `AccessDeniedException` naming an explicit deny, the `dsql:*`
-entry is still in a statement with `Resource: "*"`. If it fails with an authentication error
-from Postgres, the deploy has not run yet, or the role mapping did not land.
+If a command fails with `AccessDeniedException` naming an explicit deny, the `dsql:*` entry is
+still in a statement with `Resource: "*"`. If it fails with an authentication error from
+Postgres, that application's deploy has not run yet, or the role mapping did not land.
 
 ## Reference: SSM parameters
 
