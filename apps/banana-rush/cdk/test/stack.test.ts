@@ -94,6 +94,35 @@ function readSchemaCloneConfig(template: Template): unknown {
   return undefined;
 }
 
+function readSchemaReader(template: Template): unknown {
+  for (const resource of Object.values(
+    template.findResources('AWS::CloudFormation::CustomResource'),
+  )) {
+    const properties: unknown = resource.Properties;
+    if (typeof properties !== 'object' || properties === null) continue;
+    if (!('readerPrincipalArns' in properties)) continue;
+    return properties.readerPrincipalArns;
+  }
+  return undefined;
+}
+
+describe('banana-rush read-only agent access (ADR-0044)', () => {
+  beforeAll(() => {
+    synthAppStack('prod');
+    synthAppStack('preview');
+  }, SYNTH_WARMUP_TIMEOUT_MILLISECONDS);
+
+  it('maps the AI-Dev-ReadOnly user to a SELECT-only role on prod', () => {
+    expect(JSON.stringify(readSchemaReader(synthAppStack('prod')))).toContain(
+      ':iam::123456789012:user/AI-Dev-ReadOnly',
+    );
+  });
+
+  it('maps no reader on a preview, which holds a copy of prod and nothing more', () => {
+    expect(readSchemaReader(synthAppStack('preview'))).toBeUndefined();
+  });
+});
+
 describe('banana-rush app stack', () => {
   beforeAll(() => {
     synthAppStack('prod');

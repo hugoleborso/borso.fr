@@ -1,4 +1,11 @@
-import { type IDsqlCluster, PreviewableApp, type Stage, WebSocketChannel } from '@borso/infra';
+import {
+  agentReaderPrincipalArn,
+  type IDsqlCluster,
+  isProductionStage,
+  PreviewableApp,
+  type Stage,
+  WebSocketChannel,
+} from '@borso/infra';
 import type { Construct } from 'constructs';
 
 const APP_SLUG = 'banana-rush';
@@ -24,6 +31,7 @@ export interface BuildBananaRushAppStackProps {
 
 // @FollowsBlueprint app-cdk-stack
 export function buildBananaRushAppStack(props: BuildBananaRushAppStackProps): void {
+  const isProduction = isProductionStage(props.stage);
   const previewableApp = new PreviewableApp(props.scope, APP_CONSTRUCT_ID, {
     app: APP_SLUG,
     stage: props.stage,
@@ -34,6 +42,7 @@ export function buildBananaRushAppStack(props: BuildBananaRushAppStackProps): vo
     database: {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
+      ...(isProduction ? { readerPrincipalArns: [agentReaderPrincipalArn(props.scope)] } : {}),
     },
   });
 
