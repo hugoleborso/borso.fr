@@ -64,6 +64,18 @@ function readEnvVars(resource: { readonly Properties?: unknown }): Record<string
   return typeof variables === 'object' && variables !== null ? { ...variables } : {};
 }
 
+function readSchemaReaderBlocklist(template: Template): unknown {
+  for (const resource of Object.values(
+    template.findResources('AWS::CloudFormation::CustomResource'),
+  )) {
+    const properties: unknown = resource.Properties;
+    if (typeof properties !== 'object' || properties === null) continue;
+    if (!('readerTableBlocklist' in properties)) continue;
+    return properties.readerTableBlocklist;
+  }
+  return undefined;
+}
+
 function readSchemaReader(template: Template): unknown {
   for (const resource of Object.values(
     template.findResources('AWS::CloudFormation::CustomResource'),
@@ -86,6 +98,14 @@ describe('last-loop-lepin read-only agent access (ADR-0044)', () => {
     expect(JSON.stringify(readSchemaReader(synthAppStack('prod')))).toContain(
       ':iam::123456789012:user/AI-Dev-ReadOnly',
     );
+  });
+
+  it('keeps the reader off the admin credential, the admin sessions and the login attempts', () => {
+    expect(readSchemaReaderBlocklist(synthAppStack('prod'))).toStrictEqual([
+      'admin_credentials',
+      'admin_sessions',
+      'auth_attempts',
+    ]);
   });
 
   it('maps no reader on a preview, which holds a copy of prod and nothing more', () => {

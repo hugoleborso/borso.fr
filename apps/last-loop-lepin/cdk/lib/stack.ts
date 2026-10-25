@@ -20,6 +20,8 @@ import type { Construct } from 'constructs';
 const APP_SLUG = 'last-loop-lepin';
 const PHOTOS_CDN_PROD_HOSTNAME = 'photos-cdn.borso.fr';
 
+const SECRET_TABLES = ['admin_credentials', 'admin_sessions', 'auth_attempts'];
+
 const PHOTO_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
 
@@ -96,11 +98,14 @@ export function buildLastLoopLepinAppStack(props: BuildLastLoopLepinAppStackProp
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
       ...(isProduction
-        ? { readerPrincipalArns: [agentReaderPrincipalArn(props.scope)] }
+        ? {
+            readerPrincipalArns: [agentReaderPrincipalArn(props.scope)],
+            readerTableBlocklist: SECRET_TABLES,
+          }
         : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
-              tableBlocklist: ['admin_credentials', 'admin_sessions', 'auth_attempts'],
+              tableBlocklist: SECRET_TABLES,
               columnsToNullify: { runners: ['photo_key'] },
             },
           }),
