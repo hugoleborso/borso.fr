@@ -325,11 +325,63 @@ describe('migration-runner handler', () => {
         (error: unknown) => error,
       );
       await vi.runAllTimersAsync();
-      expect(String(await failure)).toMatch(/had not finished after 240 s/);
+      expect(String(await failure)).toMatch(
+        /last status "processing"\) had not finished within the 240 s/,
+      );
     } finally {
       vi.useRealTimers();
     }
     expect(state.appliedMigrations.has('0005_unique_track.sql')).toBe(false);
+    expect(state.ended).toBe(1);
+  });
+
+  async function failAfterAllTimers(props: typeof baseProps): Promise<{
+    readonly failure: unknown;
+    readonly waitedMilliseconds: number;
+  }> {
+    vi.useFakeTimers();
+    try {
+      const startedAt = Date.now();
+      const outcome = handler({ RequestType: 'Create', ResourceProperties: props }).then(
+        () => ({ failure: null, waitedMilliseconds: Date.now() - startedAt }),
+        (error: unknown) => ({ failure: error, waitedMilliseconds: Date.now() - startedAt }),
+      );
+      await vi.runAllTimersAsync();
+      return await outcome;
+    } finally {
+      vi.useRealTimers();
+    }
+  }
+
+  it('Create: waits for all index builds against one deadline, not one each', async () => {
+    const twoSlowBuilds = {
+      ...baseProps,
+      migrations: [
+        { name: '0005_first.sql', sql: 'CREATE INDEX "first_idx" ON "song" ("a");' },
+        { name: '0006_second.sql', sql: 'CREATE INDEX "second_idx" ON "song" ("b");' },
+      ],
+    };
+    const firstBuildPolls = 100;
+    state.indexBuildStatuses.set('job-first_idx', [
+      ...Array.from({ length: firstBuildPolls }, () => ({ status: 'processing', details: null })),
+      { status: 'completed', details: null },
+    ]);
+    state.indexBuildStatuses.set('job-second_idx', [{ status: 'processing', details: null }]);
+    const { failure, waitedMilliseconds } = await failAfterAllTimers(twoSlowBuilds);
+    expect(String(failure)).toMatch(/"second_idx".*had not finished within the 240 s/);
+    expect(waitedMilliseconds).toBeLessThanOrEqual(240_000);
+    expect(state.appliedMigrations.has('0005_first.sql')).toBe(true);
+    expect(state.appliedMigrations.has('0006_second.sql')).toBe(false);
+    expect(state.ended).toBe(1);
+  });
+
+  it('Create: keeps waiting on a sys.jobs status it does not recognise, and names it at the limit', async () => {
+    state.indexBuildStatuses.set('job-song_deezer_track_id_idx', [
+      { status: 'cancelling', details: null },
+    ]);
+    const { failure } = await failAfterAllTimers(uniqueIndexMigration);
+    expect(String(failure)).toMatch(/last status "cancelling"\) had not finished/);
+    expect(state.unsafeCalls.some((call) => call.query.includes('FROM pg_index'))).toBe(false);
   });
 
   it('Create: reads the index itself when sys.jobs no longer holds the job', async () => {

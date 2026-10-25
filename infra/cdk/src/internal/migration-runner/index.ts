@@ -20,6 +20,7 @@ import {
   type RoleMappingRow,
   selectMappedArns,
 } from './database-role.utils.js';
+import { computeIndexBuildDeadline } from './index-build-jobs.utils.js';
 import { settleIndexBuild } from './index-build-wait.js';
 import { selectPendingMigrations } from './pending-migrations.utils.js';
 import { splitStatements } from './statement-rewrites.utils.js';
@@ -194,6 +195,7 @@ async function applyMigrations(
   sql: postgres.Sql,
   schemaName: string,
   migrations: readonly Migration[],
+  indexBuildDeadline: number,
 ): Promise<void> {
   const applied = await sql.unsafe<{ name: string }[]>(
     `SELECT name FROM "${schemaName}"._migrations`,
@@ -203,7 +205,7 @@ async function applyMigrations(
     await sql.unsafe(`SET search_path TO "${schemaName}"`);
     for (const statement of splitStatements(migration.sql)) {
       const statementRows = await sql.unsafe(statement);
-      await settleIndexBuild(sql, schemaName, statement, statementRows);
+      await settleIndexBuild(sql, schemaName, statement, statementRows, indexBuildDeadline);
     }
     await sql.unsafe(
       `INSERT INTO "${schemaName}"._migrations(name) VALUES ($1) ON CONFLICT (name) DO NOTHING`,
@@ -254,12 +256,16 @@ async function removeApiRole(sql: postgres.Sql, roleName: string | undefined): P
   await runEach(sql, buildRoleRemovalStatements({ roleName, ...roleState }));
 }
 
-async function provisionSchema(sql: postgres.Sql, props: ResourceProps): Promise<void> {
+async function provisionSchema(
+  sql: postgres.Sql,
+  props: ResourceProps,
+  indexBuildDeadline: number,
+): Promise<void> {
   await ensureSchema(sql, props.schemaName);
   if (props.cloneFromSchema !== undefined) {
     await cloneFromSchema(sql, props.schemaName, props.cloneFromSchema);
   }
-  await applyMigrations(sql, props.schemaName, props.migrations);
+  await applyMigrations(sql, props.schemaName, props.migrations, indexBuildDeadline);
   await provisionApiRole(sql, props);
 }
 
@@ -277,10 +283,11 @@ async function deprovisionSchema(sql: postgres.Sql, props: ResourceProps): Promi
 export async function handler(event: CfnEvent): Promise<CfnResponse> {
   const props = event.ResourceProperties;
   const physicalId = event.PhysicalResourceId ?? `dsql-schema:${props.schemaName}`;
+  const indexBuildDeadline = computeIndexBuildDeadline(Date.now());
 
   const applyByRequestType = {
-    Create: async (sql: postgres.Sql) => provisionSchema(sql, props),
-    Update: async (sql: postgres.Sql) => provisionSchema(sql, props),
+    Create: async (sql: postgres.Sql) => provisionSchema(sql, props, indexBuildDeadline),
+    Update: async (sql: postgres.Sql) => provisionSchema(sql, props, indexBuildDeadline),
     Delete: async (sql: postgres.Sql) => deprovisionSchema(sql, props),
   } as const;
 

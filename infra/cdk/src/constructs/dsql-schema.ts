@@ -10,6 +10,7 @@ import { Provider } from 'aws-cdk-lib/custom-resources';
 import { Construct } from 'constructs';
 import { listUndecidedCredentialTables } from '../internal/migration-runner/clone-from-schema.utils.js';
 import { apiRoleName } from '../internal/migration-runner/database-role.utils.js';
+import { MIGRATION_RUNNER_TIMEOUT_SECONDS } from '../internal/migration-runner/index-build-jobs.utils.js';
 import {
   assertDeployStage,
   dsqlSchemaName,
@@ -61,7 +62,6 @@ interface MigrationFile {
 const DSQL_ADMIN_CONNECT_ACTION = 'dsql:DbConnectAdmin';
 const DSQL_CONNECT_ACTION = 'dsql:DbConnect';
 const MIGRATION_FILE_PATTERN = /^(\d+)_[A-Za-z0-9_-]+\.sql$/;
-const MIGRATION_RUNNER_TIMEOUT_MINUTES = 5;
 const MIGRATION_RUNNER_MEMORY_MIB = 512;
 const HEXADECIMAL_RADIX = 16;
 const NODE_BUILTIN_REQUIRE_SHIM_BANNER =
@@ -138,7 +138,7 @@ export class DsqlSchema extends Construct {
       entry: resolveRunnerEntry(),
       runtime: Runtime.NODEJS_22_X,
       architecture: Architecture.ARM_64,
-      timeout: Duration.minutes(MIGRATION_RUNNER_TIMEOUT_MINUTES),
+      timeout: Duration.seconds(MIGRATION_RUNNER_TIMEOUT_SECONDS),
       memorySize: MIGRATION_RUNNER_MEMORY_MIB,
       logGroup: runnerLogGroup,
       bundling: {

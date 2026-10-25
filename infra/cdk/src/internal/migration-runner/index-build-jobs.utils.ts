@@ -8,10 +8,16 @@ export interface IndexValidityRow {
 }
 
 export type IndexBuildProgress =
-  | { readonly kind: 'running' }
+  | { readonly kind: 'running'; readonly status: string }
   | { readonly kind: 'completed' }
   | { readonly kind: 'failed'; readonly details: string }
   | { readonly kind: 'untracked' };
+
+export const MIGRATION_RUNNER_TIMEOUT_SECONDS = 300;
+const SHUTDOWN_MARGIN_SECONDS = 60;
+export const INDEX_BUILD_WAIT_LIMIT_SECONDS =
+  MIGRATION_RUNNER_TIMEOUT_SECONDS - SHUTDOWN_MARGIN_SECONDS;
+const MILLISECONDS_PER_SECOND = 1000;
 
 export const INDEX_BUILD_JOB_QUERY = 'SELECT status, details FROM sys.jobs WHERE job_id = $1';
 
@@ -21,7 +27,6 @@ export const INDEX_VALIDITY_QUERY =
   'JOIN pg_namespace AS index_schema ON index_schema.oid = index_relation.relnamespace ' +
   'WHERE index_schema.nspname = $1 AND index_relation.relname = $2';
 
-const RUNNING_STATUSES = new Set(['submitted', 'processing']);
 const COMPLETED_STATUS = 'completed';
 const FAILED_STATUS = 'failed';
 const JOB_ID_COLUMN = 'job_id';
@@ -57,12 +62,15 @@ export function readCreatedIndexName(statement: string): string | null {
 export function classifyIndexBuildJob(rows: readonly IndexBuildJobRow[]): IndexBuildProgress {
   const [job] = rows;
   if (job === undefined) return { kind: 'untracked' };
-  if (RUNNING_STATUSES.has(job.status)) return { kind: 'running' };
   if (job.status === COMPLETED_STATUS) return { kind: 'completed' };
   if (job.status === FAILED_STATUS) {
     return { kind: 'failed', details: job.details ?? NO_FAILURE_DETAILS };
   }
-  return { kind: 'untracked' };
+  return { kind: 'running', status: job.status };
+}
+
+export function computeIndexBuildDeadline(startedAtMilliseconds: number): number {
+  return startedAtMilliseconds + INDEX_BUILD_WAIT_LIMIT_SECONDS * MILLISECONDS_PER_SECOND;
 }
 
 export function hasWaitLimitPassed(nowMilliseconds: number, deadlineMilliseconds: number): boolean {
@@ -74,28 +82,28 @@ export interface IndexBuildStepInput {
   readonly isPastWaitLimit: boolean;
   readonly indexName: string;
   readonly jobId: string;
-  readonly waitLimitSeconds: number;
 }
 
-export interface IndexBuildStep {
-  readonly failure: string | null;
-  readonly isSettled: boolean;
-  readonly needsIndexCheck: boolean;
-}
-
-const POLL_AGAIN: IndexBuildStep = { failure: null, isSettled: false, needsIndexCheck: false };
+export type IndexBuildStep =
+  | { readonly kind: 'poll-again' }
+  | { readonly kind: 'settled' }
+  | { readonly kind: 'check-index' }
+  | { readonly kind: 'failed'; readonly message: string };
 
 export function planIndexBuildStep(input: IndexBuildStepInput): IndexBuildStep {
   const { progress, indexName, jobId } = input;
-  if (progress.kind === 'completed') return { ...POLL_AGAIN, isSettled: true };
-  if (progress.kind === 'untracked') return { ...POLL_AGAIN, needsIndexCheck: true };
+  if (progress.kind === 'completed') return { kind: 'settled' };
+  if (progress.kind === 'untracked') return { kind: 'check-index' };
   if (progress.kind === 'failed') {
-    return { ...POLL_AGAIN, failure: describeFailedIndexBuild(indexName, jobId, progress.details) };
+    return {
+      kind: 'failed',
+      message: describeFailedIndexBuild(indexName, jobId, progress.details),
+    };
   }
-  if (!input.isPastWaitLimit) return POLL_AGAIN;
+  if (!input.isPastWaitLimit) return { kind: 'poll-again' };
   return {
-    ...POLL_AGAIN,
-    failure: describeUnfinishedIndexBuild(indexName, jobId, input.waitLimitSeconds),
+    kind: 'failed',
+    message: describeUnfinishedIndexBuild(indexName, jobId, progress.status),
   };
 }
 
@@ -114,11 +122,12 @@ export function describeFailedIndexBuild(
 export function describeUnfinishedIndexBuild(
   indexName: string,
   jobId: string,
-  waitedSeconds: number,
+  lastStatus: string,
 ): string {
   return (
-    `The build of index "${indexName}" (sys.jobs ${jobId}) had not finished after ` +
-    `${String(waitedSeconds)} s, so the migration is not recorded as applied. ` +
+    `The build of index "${indexName}" (sys.jobs ${jobId}, last status "${lastStatus}") ` +
+    `had not finished within the ${String(INDEX_BUILD_WAIT_LIMIT_SECONDS)} s a deploy waits ` +
+    `for all of its index builds, so the migration is not recorded as applied. ` +
     `Deploy again once sys.jobs shows it completed or failed.`
   );
 }

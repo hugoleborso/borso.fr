@@ -1,11 +1,14 @@
 import { describe, expect, it } from 'vitest';
 import {
   classifyIndexBuildJob,
+  computeIndexBuildDeadline,
   describeFailedIndexBuild,
   describeInvalidIndex,
   describeMissingIndex,
   describeUnfinishedIndexBuild,
   hasWaitLimitPassed,
+  INDEX_BUILD_WAIT_LIMIT_SECONDS,
+  MIGRATION_RUNNER_TIMEOUT_SECONDS,
   planIndexBuildStep,
   readCreatedIndexName,
   selectSubmittedJobIds,
@@ -61,7 +64,10 @@ describe('readCreatedIndexName', () => {
 
 describe('classifyIndexBuildJob', () => {
   it.each([['submitted'], ['processing']])('reads %s as still running', (status) => {
-    expect(classifyIndexBuildJob([{ status, details: null }])).toStrictEqual({ kind: 'running' });
+    expect(classifyIndexBuildJob([{ status, details: null }])).toStrictEqual({
+      kind: 'running',
+      status,
+    });
   });
 
   it('reads completed as completed', () => {
@@ -92,10 +98,22 @@ describe('classifyIndexBuildJob', () => {
     expect(classifyIndexBuildJob([])).toStrictEqual({ kind: 'untracked' });
   });
 
-  it('reads a status the documentation does not list as untracked', () => {
+  it('reads a status the documentation does not list as still running, and keeps it', () => {
     expect(classifyIndexBuildJob([{ status: 'cancelled', details: null }])).toStrictEqual({
-      kind: 'untracked',
+      kind: 'running',
+      status: 'cancelled',
     });
+  });
+});
+
+describe('the index build wait limit', () => {
+  it('ends before the migration runner Lambda times out, leaving time to close the connection', () => {
+    expect(INDEX_BUILD_WAIT_LIMIT_SECONDS).toBe(240);
+    expect(MIGRATION_RUNNER_TIMEOUT_SECONDS).toBe(300);
+  });
+
+  it('puts the deadline the wait limit after the invocation started', () => {
+    expect(computeIndexBuildDeadline(1_000)).toBe(241_000);
   });
 });
 
@@ -114,22 +132,17 @@ describe('planIndexBuildStep', () => {
     isPastWaitLimit: false,
     indexName: 'song_idx',
     jobId: 'job-1',
-    waitLimitSeconds: 240,
   };
 
   it('settles on a completed build', () => {
     expect(planIndexBuildStep({ ...within, progress: { kind: 'completed' } })).toStrictEqual({
-      failure: null,
-      isSettled: true,
-      needsIndexCheck: false,
+      kind: 'settled',
     });
   });
 
   it('asks for the index itself when sys.jobs no longer holds the job', () => {
     expect(planIndexBuildStep({ ...within, progress: { kind: 'untracked' } })).toStrictEqual({
-      failure: null,
-      isSettled: false,
-      needsIndexCheck: true,
+      kind: 'check-index',
     });
   });
 
@@ -141,27 +154,27 @@ describe('planIndexBuildStep', () => {
         progress: { kind: 'failed', details: 'duplicate key' },
       }),
     ).toStrictEqual({
-      failure: describeFailedIndexBuild('song_idx', 'job-1', 'duplicate key'),
-      isSettled: false,
-      needsIndexCheck: false,
+      kind: 'failed',
+      message: describeFailedIndexBuild('song_idx', 'job-1', 'duplicate key'),
     });
   });
 
   it('polls again while a build runs within the limit', () => {
-    expect(planIndexBuildStep({ ...within, progress: { kind: 'running' } })).toStrictEqual({
-      failure: null,
-      isSettled: false,
-      needsIndexCheck: false,
-    });
+    expect(
+      planIndexBuildStep({ ...within, progress: { kind: 'running', status: 'processing' } }),
+    ).toStrictEqual({ kind: 'poll-again' });
   });
 
-  it('fails a build still running at the limit', () => {
+  it('fails a build still running at the limit, naming its last status', () => {
     expect(
-      planIndexBuildStep({ ...within, isPastWaitLimit: true, progress: { kind: 'running' } }),
+      planIndexBuildStep({
+        ...within,
+        isPastWaitLimit: true,
+        progress: { kind: 'running', status: 'cancelled' },
+      }),
     ).toStrictEqual({
-      failure: describeUnfinishedIndexBuild('song_idx', 'job-1', 240),
-      isSettled: false,
-      needsIndexCheck: false,
+      kind: 'failed',
+      message: describeUnfinishedIndexBuild('song_idx', 'job-1', 'cancelled'),
     });
   });
 });
@@ -175,9 +188,10 @@ describe('the failure messages', () => {
     );
   });
 
-  it('names how long it waited for an unfinished build', () => {
-    expect(describeUnfinishedIndexBuild('song_idx', 'job-1', 240)).toBe(
-      'The build of index "song_idx" (sys.jobs job-1) had not finished after 240 s, ' +
+  it('names the last status and how long a deploy waits for an unfinished build', () => {
+    expect(describeUnfinishedIndexBuild('song_idx', 'job-1', 'processing')).toBe(
+      'The build of index "song_idx" (sys.jobs job-1, last status "processing") ' +
+        'had not finished within the 240 s a deploy waits for all of its index builds, ' +
         'so the migration is not recorded as applied. ' +
         'Deploy again once sys.jobs shows it completed or failed.',
     );
