@@ -1,6 +1,6 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireMemberSession } from '../auth/member-session.middleware';
+import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
 import {
   externalSearchQuerySchema,
   songCreateInputSchema,
@@ -9,7 +9,7 @@ import {
 } from './songs.schema';
 import {
   createSong,
-  getSongById,
+  findSongById,
   getSongs,
   patchSong,
   removeSong,
@@ -39,14 +39,20 @@ export function buildSongsRouter() {
     })
     .get('/:id', zValidator('param', songIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const song = await getSongById(id);
+      const song = await findSongById(id);
       if (song === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ song });
     })
     .post('/', zValidator('json', songCreateInputSchema), async (context) => {
       const input = context.req.valid('json');
-      const song = await createSong(input);
-      return context.json({ song }, 201);
+      const outcome = await createSong(input);
+      if (outcome.kind === 'deezer-track-taken') {
+        return context.json(
+          { error: outcome.kind, songId: outcome.holder.id, songTitle: outcome.holder.title },
+          409,
+        );
+      }
+      return context.json({ song: outcome.song }, 201);
     })
     .put(
       '/:id',
@@ -55,9 +61,22 @@ export function buildSongsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const updatedSong = await patchSong(id, input);
+        const updatedSong = await patchSong(id, input, {
+          memberId: readMemberId(context),
+          now: new Date(),
+        });
         if (updatedSong.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
         if (updatedSong.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        if (updatedSong.kind === 'deezer-track-taken') {
+          return context.json(
+            {
+              error: updatedSong.kind,
+              songId: updatedSong.holder.id,
+              songTitle: updatedSong.holder.title,
+            },
+            409,
+          );
+        }
         return context.json({ song: updatedSong.song });
       },
     )

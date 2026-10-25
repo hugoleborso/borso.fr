@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  reportTaggedFailure,
   reportUnhandledError,
   startErrorReporting,
   traceIncomingRequest,
@@ -12,6 +13,7 @@ const sentry = vi.hoisted(() => ({
   init: vi.fn(),
   isInitialized: vi.fn(() => false),
   captureException: vi.fn(),
+  captureMessage: vi.fn(),
   flush: vi.fn(() => Promise.resolve(true)),
   withIsolationScope: vi.fn((callback: () => unknown) => callback()),
   continueTrace: vi.fn((_trace: unknown, callback: () => unknown) => callback()),
@@ -78,6 +80,20 @@ describe('reportUnhandledError', () => {
     reportUnhandledError(failure);
 
     expect(sentry.captureException).toHaveBeenCalledWith(failure);
+  });
+});
+
+describe('reportTaggedFailure', () => {
+  it('hands a named failure to the SDK as an error carrying its tags', () => {
+    reportTaggedFailure({
+      name: 'PushSendFailed',
+      tags: { 'push.host': 'web.push.apple.com', 'push.status': '500' },
+    });
+
+    expect(sentry.captureMessage).toHaveBeenCalledWith('PushSendFailed', {
+      level: 'error',
+      tags: { 'push.host': 'web.push.apple.com', 'push.status': '500' },
+    });
   });
 });
 

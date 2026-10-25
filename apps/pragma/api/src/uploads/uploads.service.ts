@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { buildChartObjectKey } from './uploads.core';
-import { presignGetObject, presignPutObject } from './uploads.adapter';
+import { deleteObjects, presignGetObject, presignPutObject } from './uploads.adapter';
 import type { AllowedUploadContentType } from '@domain/chart-upload.core';
 import type { PresignedGetUrl, PresignedPutUrl } from './uploads.types';
 import { UPLOAD_URL_EXPIRES_SECONDS } from './uploads.types';
@@ -26,18 +26,49 @@ export async function mintChartUpload(params: MintChartUploadParams): Promise<Pr
     songId,
     randomId: randomUUID(),
   });
+  return await mintObjectUpload({ objectKey, contentType: params.contentType, now: params.now });
+}
+
+export interface MintObjectUploadParams {
+  readonly objectKey: string;
+  readonly contentType: string;
+  readonly contentLength?: number;
+  readonly now: Date;
+}
+
+export async function mintObjectUpload(params: MintObjectUploadParams): Promise<PresignedPutUrl> {
   const uploadUrl = await presignPutObject({
-    objectKey,
+    objectKey: params.objectKey,
     contentType: params.contentType,
     expiresInSeconds: UPLOAD_URL_EXPIRES_SECONDS,
+    ...(params.contentLength === undefined ? {} : { contentLength: params.contentLength }),
   });
   return {
     uploadUrl,
-    objectKey,
+    objectKey: params.objectKey,
     expiresAt: new Date(
       params.now.getTime() + UPLOAD_URL_EXPIRES_SECONDS * MILLISECONDS_PER_SECOND,
     ).toISOString(),
   };
+}
+
+export interface StoredObjectDeletion {
+  readonly failedObjectKeys: readonly string[];
+  readonly failureName: string | null;
+}
+
+function readFailureName(error: unknown): string {
+  return error instanceof Error ? error.name : typeof error;
+}
+
+export async function deleteStoredObjects(
+  objectKeys: readonly string[],
+): Promise<StoredObjectDeletion> {
+  try {
+    return { failedObjectKeys: await deleteObjects(objectKeys), failureName: null };
+  } catch (error) {
+    return { failedObjectKeys: objectKeys, failureName: readFailureName(error) };
+  }
 }
 
 export interface MintChartGetUrlParams {

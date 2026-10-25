@@ -5,7 +5,6 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
-import { ApiError } from '../../lib/api.client';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import {
   useCreateSong,
@@ -14,6 +13,11 @@ import {
   useUpdateSong,
 } from '../../lib/queries/songs.queries';
 import { selectMissingSongMessageKey } from './missing-song.core';
+import {
+  NO_SAVE_REFUSAL,
+  type SongSaveRefusal,
+  selectSongSaveRefusal,
+} from '../../lib/queries/song-save-refusal.core';
 import { SongEditForm } from '../../components/organisms/SongEditForm';
 import {
   BLANK_SONG_DRAFT,
@@ -35,7 +39,7 @@ export function SongEditPage(): JSX.Element {
   const createSong = useCreateSong();
   const updateSong = useUpdateSong();
   const deleteSong = useDeleteSong();
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [saveRefusal, setSaveRefusal] = useState<SongSaveRefusal>(NO_SAVE_REFUSAL);
   const [newLinkUrl, setNewLinkUrl] = useState('');
 
   const defaultValues = useMemo<SongDraftState>(() => {
@@ -64,7 +68,7 @@ export function SongEditPage(): JSX.Element {
         navigateTo(`/catalog/${songId}`);
       }
     } catch (error) {
-      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
+      setSaveRefusal(selectSongSaveRefusal(error));
     }
   };
 
@@ -99,7 +103,7 @@ export function SongEditPage(): JSX.Element {
       onDelete={removeSong}
       newLinkUrl={newLinkUrl}
       setNewLinkUrl={setNewLinkUrl}
-      error={localError}
+      refusal={saveRefusal}
     />
   );
 }

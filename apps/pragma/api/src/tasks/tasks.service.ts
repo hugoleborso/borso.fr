@@ -1,30 +1,30 @@
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
-import { getMemberById } from '../members/members.service';
-import { getSongById } from '../songs/songs.service';
+import { didClaimMemberWithin } from '../members/members.service';
+import { didClaimSongWithin } from '../songs/songs.service';
 import type { DatabaseExecutor } from '../database/client';
 import { sortTasksByUrgency } from './tasks.core';
 import {
   deleteTask,
   detachDeletedSongFromTasks,
   unassignTasksOfDeletedMember,
-  insertTask,
+  insertTaskWithin,
   listTasks,
+  runInOneTaskTransaction,
   type TaskPersistedShape,
   type TaskRow,
-  updateTask,
+  updateTaskWithin,
 } from './tasks.repository';
 import type { taskCreateSchema, taskUpdateSchema } from './tasks.schema';
 
 type TaskCreateInput = z.infer<typeof taskCreateSchema>;
 type TaskUpdateInput = z.infer<typeof taskUpdateSchema>;
 
-export type TaskWriteOutcome =
-  | { kind: 'ok'; task: TaskRow }
-  | { kind: 'empty' }
-  | { kind: 'not-found' }
-  | { kind: 'assignee-not-found' }
-  | { kind: 'song-not-found' };
+type TaskLinkRefusal = { kind: 'assignee-not-found' } | { kind: 'song-not-found' };
+
+export type TaskCreateOutcome = { kind: 'ok'; task: TaskRow } | TaskLinkRefusal;
+
+export type TaskWriteOutcome = TaskCreateOutcome | { kind: 'empty' } | { kind: 'not-found' };
 
 function valuesFromCreate(input: TaskCreateInput): TaskPersistedShape {
   return {
@@ -49,35 +49,46 @@ function valuesFromUpdate(input: TaskUpdateInput): TaskPersistedShape {
   return out;
 }
 
-async function isAssigneeKnown(assigneeId: string | null | undefined): Promise<boolean> {
-  if (assigneeId === null || assigneeId === undefined) return true;
-  return (await getMemberById(assigneeId)) !== null;
-}
-
-async function isLinkedSongKnown(songId: string | null | undefined): Promise<boolean> {
-  if (songId === null || songId === undefined) return true;
-  return (await getSongById(songId)) !== null;
+async function findLinkRefusalWithin(
+  executor: DatabaseExecutor,
+  links: Pick<TaskPersistedShape, 'assigneeId' | 'songId'>,
+): Promise<TaskLinkRefusal | null> {
+  const { assigneeId, songId } = links;
+  const isAssigneeMissing =
+    assigneeId !== null &&
+    assigneeId !== undefined &&
+    !(await didClaimMemberWithin(executor, assigneeId));
+  if (isAssigneeMissing) return { kind: 'assignee-not-found' };
+  const isSongMissing =
+    songId !== null && songId !== undefined && !(await didClaimSongWithin(executor, songId));
+  if (isSongMissing) return { kind: 'song-not-found' };
+  return null;
 }
 
 export async function getTasksSortedByUrgency(): Promise<readonly TaskRow[]> {
   return sortTasksByUrgency(await listTasks());
 }
 
-export async function createTask(input: TaskCreateInput): Promise<TaskWriteOutcome> {
-  if (!(await isAssigneeKnown(input.assigneeId))) return { kind: 'assignee-not-found' };
-  if (!(await isLinkedSongKnown(input.songId))) return { kind: 'song-not-found' };
-  return { kind: 'ok', task: await insertTask(valuesFromCreate(input)) };
+export async function createTask(input: TaskCreateInput): Promise<TaskCreateOutcome> {
+  const values = valuesFromCreate(input);
+  return await runInOneTaskTransaction(async (executor): Promise<TaskCreateOutcome> => {
+    const refusal = await findLinkRefusalWithin(executor, values);
+    if (refusal !== null) return refusal;
+    return { kind: 'ok', task: await insertTaskWithin(executor, values) };
+  });
 }
 
 // @FollowsBlueprint service-crud-update
 export async function patchTask(id: string, input: TaskUpdateInput): Promise<TaskWriteOutcome> {
   const updates = valuesFromUpdate(input);
   if (Object.keys(updates).length === 0) return { kind: 'empty' };
-  if (!(await isAssigneeKnown(updates.assigneeId))) return { kind: 'assignee-not-found' };
-  if (!(await isLinkedSongKnown(updates.songId))) return { kind: 'song-not-found' };
-  const task = await updateTask(id, updates);
-  if (task === null) return { kind: 'not-found' };
-  return { kind: 'ok', task };
+  return await runInOneTaskTransaction(async (executor): Promise<TaskWriteOutcome> => {
+    const refusal = await findLinkRefusalWithin(executor, updates);
+    if (refusal !== null) return refusal;
+    const task = await updateTaskWithin(executor, id, updates);
+    if (task === null) return { kind: 'not-found' };
+    return { kind: 'ok', task };
+  });
 }
 
 export async function removeTask(id: string): Promise<DeletionOutcome> {

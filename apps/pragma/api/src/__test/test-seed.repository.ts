@@ -5,6 +5,11 @@ import {
 } from '../auth/credentials.schema';
 import { barTable } from '../bars/bars.schema';
 import { memberCalendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
+import {
+  notificationDispatchTable,
+  notificationPreferenceTable,
+  pushSubscriptionTable,
+} from '../notifications/notifications.schema';
 import { sql } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
 import { PRODUCTION_SCHEMA, readErrorCode } from './schema-boundary.core';
@@ -24,6 +29,7 @@ import {
 } from '../setlists/setlists.schema';
 import { songTable } from '../songs/songs.schema';
 import { studyTable } from '../studies/studies.schema';
+import { takeCommentTable, takeTable } from '../takes/takes.schema';
 import { taskTable } from '../tasks/tasks.schema';
 import { transitionCommentTable } from '../transitions/transitions.schema';
 
@@ -31,6 +37,8 @@ import { transitionCommentTable } from '../transitions/transitions.schema';
 export async function deleteAllDomainRows(): Promise<void> {
   const database = getDatabase();
   await database.delete(taskTable);
+  await database.delete(takeCommentTable);
+  await database.delete(takeTable);
   await database.delete(setlistVoteTable);
   await database.delete(setlistEntryTable);
   await database.delete(sessionSetlistTable);
@@ -48,6 +56,9 @@ export async function deleteAllDomainRows(): Promise<void> {
   await database.delete(webauthnChallengeTable);
   await database.delete(memberCredentialTable);
   await database.delete(memberCalendarFeedTable);
+  await database.delete(pushSubscriptionTable);
+  await database.delete(notificationPreferenceTable);
+  await database.delete(notificationDispatchTable);
   await database.delete(memberTable);
   await database.delete(instrumentTable);
 }

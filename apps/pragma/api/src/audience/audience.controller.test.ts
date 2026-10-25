@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { AUDIENCE_SEARCH_BUDGET, AUDIENCE_WRITE_BUDGET } from './audience-rate-limit.middleware';
+import { votingRoundTable } from './audience.schema';
 
 const UNKNOWN_ID = '00000000-0000-0000-0000-000000000000';
 const A_BALLOT = 'a'.repeat(48);
@@ -11,6 +12,7 @@ const ANOTHER_BALLOT = 'b'.repeat(48);
 const UNAUTHORISED = 401;
 const ROUND_DURATION_MS = 30_000;
 const SETTLEMENT_TEST_TIMEOUT_MS = 90_000;
+const SIMULTANEOUS_SUGGESTION_COUNT = 2;
 
 const roundSchema = z.object({
   id: z.string().uuid(),
@@ -221,6 +223,22 @@ function stubProviders(...tracks: readonly ProviderTrack[]): void {
   );
 }
 
+function stubProvidersReleasingTrackReadsTogether(
+  heldReadCount: number,
+  ...tracks: readonly ProviderTrack[]
+): void {
+  const heldReads: (() => void)[] = [];
+  vi.stubGlobal('fetch', async (url: string) => {
+    if (url.includes('/track/')) {
+      await new Promise<void>((release) => {
+        heldReads.push(release);
+        if (heldReads.length === heldReadCount) for (const held of heldReads) held();
+      });
+    }
+    return providerResponse(selectProviderPayload(url, tracks));
+  });
+}
+
 // @FollowsBlueprint test-back-e2e
 describe('audience controller (back-e2e)', () => {
   beforeEach(async () => {
@@ -399,6 +417,27 @@ describe('audience controller (back-e2e)', () => {
     expect(second.status).toBe(409);
   });
 
+  it('opens one round when two are asked for on the same concert at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+
+    const answers = await Promise.all([
+      jsonRequest(app, `/api/audience/concerts/${sessionId}/rounds`, {
+        method: 'POST',
+        cookieHeader,
+      }),
+      jsonRequest(app, `/api/audience/concerts/${sessionId}/rounds`, {
+        method: 'POST',
+        cookieHeader,
+      }),
+    ]);
+
+    expect(
+      answers.map((answer) => answer.status).toSorted((first, second) => first - second),
+    ).toEqual([201, 409]);
+    expect(await testDatabase().select().from(votingRoundTable)).toHaveLength(1);
+  });
+
   it('creates the audience-choice setlist at the first round and refuses to rename it', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const sessionId = await createConcert(app, cookieHeader);
@@ -424,6 +463,22 @@ describe('audience controller (back-e2e)', () => {
       body: { name: 'Encore' },
     });
     expect(rename.status).toBe(409);
+  });
+
+  it('creates one audience-choice setlist when two first rounds are opened at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+
+    await Promise.all([
+      openRoundOn(app, cookieHeader, sessionId),
+      openRoundOn(app, cookieHeader, sessionId),
+    ]);
+
+    const after = await readJson(
+      await jsonRequest(app, `/api/setlists/by-session/${sessionId}`, { cookieHeader }),
+      setlistsEnvelope,
+    );
+    expect(after.setlists.map((setlist) => setlist.kind)).toEqual(['audience_choice']);
   });
 
   it('answers the public search without a session cookie and bars an address that hammers it', async () => {
@@ -627,6 +682,28 @@ describe('audience controller (back-e2e)', () => {
     );
     expect(state.state.pool.map((entry) => entry.songId)).toEqual([body.song.id]);
     expect(state.state.pool.map((entry) => entry.isSuggestion)).toEqual([true]);
+  });
+
+  it('imports one song when two audience members suggest the same unknown track at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createConcert(app, cookieHeader);
+    const before = await countCatalogSongs(app, cookieHeader);
+    await openRoundOn(app, cookieHeader, sessionId);
+    stubProvidersReleasingTrackReadsTogether(SIMULTANEOUS_SUGGESTION_COUNT, UNKNOWN_SONG_TRACK);
+
+    const suggest = (ballotToken: string) =>
+      jsonRequest(app, `/api/audience/concerts/${sessionId}/suggestions`, {
+        method: 'POST',
+        extraHeaders: ballotHeaders(ballotToken),
+        body: { trackId: UNKNOWN_SONG_TRACK.trackId },
+      });
+    const [first, second] = await Promise.all([suggest(A_BALLOT), suggest(ANOTHER_BALLOT)]);
+
+    expect([first.status, second.status]).toEqual([201, 201]);
+    const firstSong = (await readJson(first, suggestedSongEnvelope)).song;
+    const secondSong = (await readJson(second, suggestedSongEnvelope)).song;
+    expect(secondSong.id).toBe(firstSong.id);
+    expect(await countCatalogSongs(app, cookieHeader)).toBe(before + 1);
   });
 
   it(

@@ -1,8 +1,16 @@
+import { eq } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { INSTRUMENT_ICONS } from '@domain/instrument.core';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  abortCommitsWritingTable,
+  type LockHold,
+  runSecondWhileFirstWaitsOnHold,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
+import { instrumentTable } from './instruments.schema';
 
 const instrumentSchema = z.object({
   id: z.string().uuid(),
@@ -27,6 +35,22 @@ async function createInstrument(
   });
   const created = await readJson(response, singleInstrumentEnvelope);
   return created.instrument.id;
+}
+
+function holdInstrumentRow(instrumentId: string): LockHold {
+  return async (transaction) =>
+    await transaction
+      .select({ id: instrumentTable.id })
+      .from(instrumentTable)
+      .where(eq(instrumentTable.id, instrumentId))
+      .for('update');
+}
+
+async function readPositionsByName(): Promise<Map<string, number | null>> {
+  const rows = await testDatabase()
+    .select({ name: instrumentTable.name, position: instrumentTable.position })
+    .from(instrumentTable);
+  return new Map(rows.map((row) => [row.name, row.position]));
 }
 
 /**
@@ -211,6 +235,60 @@ describe('instruments controller (back-e2e)', () => {
     });
     expect(partial.status).toBe(409);
     expect(unknown.status).toBe(409);
+  });
+
+  it('refuses a reorder naming an instrument deleted while it was being written, and moves nothing', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const voiceId = await createInstrument(app, cookieHeader, { name: 'Voice', family: 'vocal' });
+    const drumsId = await createInstrument(app, cookieHeader, {
+      name: 'Drums',
+      family: 'percussive',
+    });
+    const guitarId = await createInstrument(app, cookieHeader, {
+      name: 'Guitar',
+      family: 'harmonic',
+    });
+    const positionsBefore = await readPositionsByName();
+
+    const [deletion, reorder] = await runSecondWhileFirstWaitsOnHold(
+      holdInstrumentRow(guitarId),
+      async () =>
+        await jsonRequest(app, `/api/instruments/${guitarId}`, { method: 'DELETE', cookieHeader }),
+      async () =>
+        await jsonRequest(app, '/api/instruments/order', {
+          method: 'PUT',
+          body: { instrumentIds: [drumsId, voiceId, guitarId] },
+          cookieHeader,
+        }),
+    );
+
+    expect(deletion.status).toBe(200);
+    expect(reorder.status).toBe(409);
+    const positionsAfter = await readPositionsByName();
+    expect(positionsAfter.get('Voice')).toBe(positionsBefore.get('Voice'));
+    expect(positionsAfter.get('Drums')).toBe(positionsBefore.get('Drums'));
+  });
+
+  it('reorders once when the first commit loses a conflict on the claimed instruments', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const voiceId = await createInstrument(app, cookieHeader, { name: 'Voice', family: 'vocal' });
+    const drumsId = await createInstrument(app, cookieHeader, {
+      name: 'Drums',
+      family: 'percussive',
+    });
+    const removeSimulatedConflict = await abortCommitsWritingTable('instrument', 1);
+    try {
+      const reorder = await jsonRequest(app, '/api/instruments/order', {
+        method: 'PUT',
+        body: { instrumentIds: [drumsId, voiceId] },
+        cookieHeader,
+      });
+      expect(reorder.status).toBe(200);
+    } finally {
+      await removeSimulatedConflict();
+    }
+    const positions = await readPositionsByName();
+    expect([positions.get('Drums'), positions.get('Voice')]).toEqual([0, 1]);
   });
 
   it('rejects an update with an empty body with 400', async () => {

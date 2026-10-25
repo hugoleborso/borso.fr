@@ -5,9 +5,15 @@ import { readDeezerTrack, searchExternal, type SearchExternalOptions } from './d
 import { findCatalogueMatch } from './song-identity.core';
 import { resolveSpotifyTrackId, type ResolveSpotifyOptions } from './spotify.adapter';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
+import { isLostInsertRace, isUniqueViolation } from '../helpers/persistence/conflict-abort.core';
+import { notifyBand, type WriteActor } from '../notifications/notifications.service';
+import { deleteAudioOfDeletedSong } from '../takes/takes.service';
+import { hasLineupChanged } from './song-lineup.core';
 export type { SongRow } from './songs.repository';
+export { didClaimSongWithin, findSongById, findSongByIdWithin } from './songs.repository';
 import {
   deleteSongWithCascade,
+  findSongByDeezerTrackId,
   findSongById,
   insertSong,
   listSongsNewestFirst,
@@ -54,10 +60,6 @@ export async function getSongs(): Promise<SongRow[]> {
   return await listSongsNewestFirst();
 }
 
-export async function getSongById(id: string): Promise<SongRow | null> {
-  return await findSongById(id);
-}
-
 async function withResolvedSpotifyTrack<Input extends SpotifyResolvable>(
   input: Input,
   options: ResolveSpotifyOptions,
@@ -69,27 +71,79 @@ async function withResolvedSpotifyTrack<Input extends SpotifyResolvable>(
   return { ...input, spotifyTrackId };
 }
 
+export interface DeezerTrackTaken {
+  readonly kind: 'deezer-track-taken';
+  readonly holder: SongRow;
+}
+
+export type SongCreateOutcome = { kind: 'ok'; song: SongRow } | DeezerTrackTaken;
+
+async function refuseTakenDeezerTrack(
+  error: unknown,
+  deezerTrackId: string | null | undefined,
+  writtenSongId: string | null,
+): Promise<DeezerTrackTaken> {
+  if (!isUniqueViolation(error) || deezerTrackId == null) throw error;
+  const holder = await findSongByDeezerTrackId(deezerTrackId);
+  if (holder === null || holder.id === writtenSongId) throw error;
+  return { kind: 'deezer-track-taken', holder };
+}
+
 export async function createSong(
   input: SongCreateInput,
   options: ResolveSpotifyOptions = {},
-): Promise<SongRow> {
-  return await insertSong(valuesFromCreate(await withResolvedSpotifyTrack(input, options)));
+): Promise<SongCreateOutcome> {
+  const values = valuesFromCreate(await withResolvedSpotifyTrack(input, options));
+  try {
+    return { kind: 'ok', song: await insertSong(values) };
+  } catch (error) {
+    return await refuseTakenDeezerTrack(error, values.deezerTrackId, null);
+  }
+}
+
+async function notifyIfLineupChanged(
+  previous: SongRow | null,
+  song: SongRow,
+  actor: WriteActor,
+): Promise<void> {
+  if (previous === null || !hasLineupChanged(previous.defaultLineup, song.defaultLineup)) return;
+  await notifyBand(
+    {
+      kind: 'song-lineup-changed',
+      actorMemberId: actor.memberId,
+      songId: song.id,
+      songTitle: song.title,
+    },
+    actor.now,
+  );
 }
 
 // @FollowsBlueprint service-crud-update
 export async function patchSong(
   id: string,
   input: SongUpdateInput,
+  actor: WriteActor,
   options: ResolveSpotifyOptions = {},
-): Promise<{ kind: 'ok'; song: SongRow } | { kind: 'empty' } | { kind: 'not-found' }> {
+): Promise<
+  { kind: 'ok'; song: SongRow } | { kind: 'empty' } | { kind: 'not-found' } | DeezerTrackTaken
+> {
   if (Object.keys(input).length === 0) return { kind: 'empty' };
-  const song = await updateSong(id, await withResolvedSpotifyTrack(input, options));
+  const previous = input.defaultLineup === undefined ? null : await findSongById(id);
+  let song: SongRow | null;
+  try {
+    song = await updateSong(id, await withResolvedSpotifyTrack(input, options));
+  } catch (error) {
+    return await refuseTakenDeezerTrack(error, input.deezerTrackId, id);
+  }
   if (song === null) return { kind: 'not-found' };
+  await notifyIfLineupChanged(previous, song, actor);
   return { kind: 'ok', song };
 }
 
 export async function removeSong(id: string): Promise<DeletionOutcome> {
-  return await deleteSongWithCascade(id);
+  const deletion = await deleteSongWithCascade(id);
+  await deleteAudioOfDeletedSong(deletion.takeObjectKeys);
+  return deletion.outcome;
 }
 
 export type SongSearchOutcome = { kind: 'ok'; hits: ExternalSongHit[] } | { kind: 'unavailable' };
@@ -116,7 +170,7 @@ export async function searchAudienceSongs(
 
 const SUGGESTED_SONG_STATUS = 'idea';
 
-async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
+async function insertSuggestedSong(track: ExternalSongHit): Promise<SongCreateOutcome> {
   return await createSong({
     title: track.title,
     artist: track.artist,
@@ -139,6 +193,18 @@ async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
     gimmickNotes: '',
     notes: '',
   });
+}
+
+async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
+  try {
+    const outcome = await insertSuggestedSong(track);
+    return outcome.kind === 'ok' ? outcome.song : outcome.holder;
+  } catch (error) {
+    if (!isLostInsertRace(error)) throw error;
+    const winner = await findSongByDeezerTrackId(track.deezerTrackId);
+    if (winner === null) throw error;
+    return winner;
+  }
 }
 
 export type TrackResolution =

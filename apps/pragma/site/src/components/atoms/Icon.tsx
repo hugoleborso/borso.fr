@@ -119,12 +119,38 @@ const ICONS = {
       <rect x="14" y="4" width="4" height="16" />
     </>
   ),
+  mic: (
+    <>
+      <rect x="9" y="3" width="6" height="11" rx="3" />
+      <path d="M5 11a7 7 0 0 0 14 0M12 18v3" />
+    </>
+  ),
+  stop: <rect x="6" y="6" width="12" height="12" rx="1.5" />,
   filter: <path d="M4 5h16l-6 8v6l-4-2v-4L4 5z" />,
   more: (
     <>
       <circle cx="6" cy="12" r="1.3" fill="currentColor" />
       <circle cx="12" cy="12" r="1.3" fill="currentColor" />
       <circle cx="18" cy="12" r="1.3" fill="currentColor" />
+    </>
+  ),
+  moreVertical: (
+    <>
+      <circle cx="12" cy="6" r="1.3" fill="currentColor" />
+      <circle cx="12" cy="12" r="1.3" fill="currentColor" />
+      <circle cx="12" cy="18" r="1.3" fill="currentColor" />
+    </>
+  ),
+  share: (
+    <>
+      <path d="M12 3v12M8 7l4-4 4 4" />
+      <path d="M8 10H6v11h12V10h-2" />
+    </>
+  ),
+  addSquare: (
+    <>
+      <rect x="4" y="4" width="16" height="16" rx="3" />
+      <path d="M12 8v8M8 12h8" />
     </>
   ),
   link: (

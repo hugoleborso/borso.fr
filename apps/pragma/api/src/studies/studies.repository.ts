@@ -1,5 +1,6 @@
 import { and, eq, gte } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import type { CalendarDay } from './paris-day.core';
 import { studyTable } from './studies.schema';
 import type { StudyRow } from './studies.types';
@@ -12,9 +13,20 @@ const STUDY_PROJECTION = {
   studiedOn: studyTable.studiedOn,
 } as const;
 
+// @FollowsBlueprint repository-owned-transaction
+export async function runInOneStudyTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
+
 // @FollowsBlueprint repository-idempotent-upsert
-export async function insertStudyIfAbsent(study: StudyRow, createdAt: Date): Promise<void> {
-  await getDatabase()
+export async function insertStudyIfAbsentWithin(
+  executor: DatabaseExecutor,
+  study: StudyRow,
+  createdAt: Date,
+): Promise<void> {
+  await executor
     .insert(studyTable)
     .values({ ...study, createdAt })
     .onConflictDoNothing();

@@ -4,6 +4,7 @@ import { createCredentialForMember } from '../auth/credentials.service';
 import { saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
+import type { WriteActor } from '../notifications/notifications.service';
 import { createSession } from '../sessions/sessions.service';
 import { appendEntry, createSetlist } from '../setlists/setlists.service';
 import { createSong } from '../songs/songs.service';
@@ -135,8 +136,9 @@ async function seedSongs(
   const songIds: string[] = [];
   for (const seed of SEED_SONGS) {
     const lineup = buildSeedLineup(seed.lineup, memberIdByName, instrumentIdByName);
-    const song = await createSong(buildSongInput(seed, lineup));
-    songIds.push(song.id);
+    const created = await createSong(buildSongInput(seed, lineup));
+    if (created.kind !== 'ok') throw new Error(`seed song ${seed.title} names a taken track`);
+    songIds.push(created.song.id);
   }
   return songIds;
 }
@@ -164,36 +166,50 @@ async function seedTasks(
   }
 }
 
-async function seedConcertSetlist(songIds: readonly string[], now: Date): Promise<void> {
+function selectSeedActor(memberIdByName: ReadonlyMap<string, string>, now: Date): WriteActor {
+  const [memberId] = memberIdByName.values();
+  if (memberId === undefined) throw new Error('the seed wrote no member to act as');
+  return { memberId, now };
+}
+
+async function seedConcertSetlist(songIds: readonly string[], actor: WriteActor): Promise<void> {
+  const now = actor.now;
   const concertDate = new Date(now.getTime() + CONCERT_DAYS_FROM_NOW * MILLISECONDS_PER_DAY);
-  const concert = await createSession({
-    kind: 'concert',
-    date: concertDate.toISOString(),
-    venue: CONCERT_VENUE,
-    capacity: CONCERT_CAPACITY,
-    gear: CONCERT_GEAR,
-    friendsCountPerMember: {},
-  });
-  const created = await createSetlist({ name: SEED_SETLIST_NAME, sessionId: concert.id });
+  const concert = await createSession(
+    {
+      kind: 'concert',
+      date: concertDate.toISOString(),
+      venue: CONCERT_VENUE,
+      capacity: CONCERT_CAPACITY,
+      gear: CONCERT_GEAR,
+      friendsCountPerMember: {},
+    },
+    actor,
+  );
+  const created = await createSetlist({ name: SEED_SETLIST_NAME, sessionId: concert.id }, actor);
   if (created.kind === 'session-not-found')
     throw new Error('seeded concert vanished before its setlist was written');
   for (const [index, songId] of songIds.entries()) {
     const detail = SEED_SONGS[index]?.entry ?? BLANK_ENTRY_DETAIL;
-    await appendEntry(created.setlist.id, {
-      songId,
-      energy: null,
-      lineupOverride: null,
-      keyOverride: detail.keyOverride,
-      capo: detail.capo,
-      notes: detail.notes,
-    });
+    await appendEntry(
+      created.setlist.id,
+      {
+        songId,
+        energy: null,
+        lineupOverride: null,
+        keyOverride: detail.keyOverride,
+        capo: detail.capo,
+        notes: detail.notes,
+      },
+      actor,
+    );
   }
 }
 
-async function seedTransitionComment(songIds: readonly string[], now: Date): Promise<void> {
+async function seedTransitionComment(songIds: readonly string[], actor: WriteActor): Promise<void> {
   const [, songB, songC] = songIds;
   if (songB === undefined || songC === undefined) return;
-  await saveTransitionComment(songB, songC, SEED_TRANSITION_COMMENT, now);
+  await saveTransitionComment(songB, songC, SEED_TRANSITION_COMMENT, actor);
 }
 
 export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise<SeedSummary> {
@@ -207,8 +223,9 @@ export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise
     SEED_SONGS.map((seed, index) => [seed.title, songIds[index] ?? '']),
   );
   await seedTasks(memberIdByName, songIdByTitle, now);
-  await seedConcertSetlist(songIds, now);
-  await seedTransitionComment(songIds, now);
+  const seedActor = selectSeedActor(memberIdByName, now);
+  await seedConcertSetlist(songIds, seedActor);
+  await seedTransitionComment(songIds, seedActor);
   const calendarFeeds = await seedCalendarFeeds(memberIdByName, feedOrigin, now);
 
   return {

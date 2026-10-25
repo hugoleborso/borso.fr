@@ -1,9 +1,11 @@
-import { and, asc, eq, isNull, max, ne, or } from 'drizzle-orm';
+import { and, asc, eq, isNull, max, ne, or, sql } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { selectNextLinkPosition } from './setlists.core';
+import { selectAudienceChoiceSetlistId, selectNextLinkPosition } from './setlists.core';
 import {
   AUDIENCE_CHOICE_SETLIST_KIND,
+  AUDIENCE_CHOICE_SETLIST_NAME,
   sessionSetlistTable,
   setlistEntryTable,
   type SetlistKind,
@@ -20,6 +22,13 @@ const SETLIST_PROJECTION = {
   status: setlistTable.status,
   targetSongCount: setlistTable.targetSongCount,
 } as const;
+
+// @FollowsBlueprint repository-owned-transaction
+export async function runInOneSetlistTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
 
 export async function listSetlists(): Promise<SetlistRow[]> {
   const database = getDatabase();
@@ -87,31 +96,20 @@ export async function listManualSetlistSongIdsOfSession(sessionId: string): Prom
   return rows.map((row) => row.songId);
 }
 
-export async function insertSetlist(
+export async function insertSetlistWithin(
+  executor: DatabaseExecutor,
   name: string,
-  sessionId: string | null,
   kind: SetlistKind,
 ): Promise<SetlistRow> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
-    const [row] = await transaction
-      .insert(setlistTable)
-      .values({ name, kind })
-      .returning(SETLIST_PROJECTION);
-    if (row === undefined) throw new Error('insert returned no row');
-    if (sessionId !== null) await attachAtEnd(transaction, sessionId, row.id);
-    return row;
-  });
+  const [row] = await executor
+    .insert(setlistTable)
+    .values({ name, kind })
+    .returning(SETLIST_PROJECTION);
+  if (row === undefined) throw new Error('insert returned no row');
+  return row;
 }
 
-export async function insertSessionLink(sessionId: string, setlistId: string): Promise<void> {
-  const database = getDatabase();
-  await database.transaction(async (transaction) => {
-    await attachAtEnd(transaction, sessionId, setlistId);
-  });
-}
-
-async function attachAtEnd(
+export async function insertSessionLinkAtEndWithin(
   executor: DatabaseExecutor,
   sessionId: string,
   setlistId: string,
@@ -144,24 +142,23 @@ export async function updateSetlistName(
 }
 
 export async function deleteSetlistWithEntries(setlistId: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
-    await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
-    await transaction
-      .delete(sessionSetlistTable)
-      .where(eq(sessionSetlistTable.setlistId, setlistId));
+  return await runInOneSetlistTransaction(async (transaction) => {
     const deleted = await transaction
       .delete(setlistTable)
       .where(eq(setlistTable.id, setlistId))
       .returning({ id: setlistTable.id });
+    await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
+    await transaction
+      .delete(sessionSetlistTable)
+      .where(eq(sessionSetlistTable.setlistId, setlistId));
     return selectDeletionOutcome(deleted.length);
   });
 }
 
-export interface SetlistSessionLink {
-  setlistId: string;
-  sessionId: string;
-}
+export type SetlistSessionLink = Pick<
+  typeof sessionSetlistTable.$inferSelect,
+  'setlistId' | 'sessionId'
+>;
 
 export async function listAllSessionLinks(): Promise<SetlistSessionLink[]> {
   const database = getDatabase();
@@ -190,9 +187,36 @@ export async function deleteSessionLink(
   return selectDeletionOutcome(deleted.length);
 }
 
-// @FollowsBlueprint repository-owned-transaction
-export async function runInOneSetlistTransaction<Result>(
-  work: (executor: DatabaseExecutor) => Promise<Result>,
-): Promise<Result> {
-  return await getDatabase().transaction(work);
+export async function didClaimSetlistWithin(
+  executor: DatabaseExecutor,
+  setlistId: string,
+): Promise<boolean> {
+  const claimed = await executor
+    .update(setlistTable)
+    .set({ name: sql`${setlistTable.name}` })
+    .where(eq(setlistTable.id, setlistId))
+    .returning({ id: setlistTable.id });
+  return claimed.length > 0;
+}
+
+export async function insertAudienceChoiceSetlistWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+): Promise<SetlistRow> {
+  const setlistId = selectAudienceChoiceSetlistId(sessionId);
+  await executor
+    .insert(setlistTable)
+    .values({
+      id: setlistId,
+      name: AUDIENCE_CHOICE_SETLIST_NAME,
+      kind: AUDIENCE_CHOICE_SETLIST_KIND,
+    })
+    .onConflictDoNothing();
+  const [row] = await executor
+    .select(SETLIST_PROJECTION)
+    .from(setlistTable)
+    .where(eq(setlistTable.id, setlistId))
+    .limit(1);
+  if (row === undefined) throw new Error('audience-choice setlist missing after its insert');
+  return row;
 }

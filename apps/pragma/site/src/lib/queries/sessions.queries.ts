@@ -8,6 +8,14 @@ import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
 type SessionByIdShape = InferResponseType<(typeof api.api.sessions)[':id']['$get']>;
+export type SessionRecord = InferResponseType<
+  (typeof api.api.sessions)[':id']['$get'],
+  200
+>['session'];
+export type ListedSession = InferResponseType<
+  typeof api.api.sessions.$get,
+  200
+>['sessions'][number];
 
 export const sessionKeys = {
   all: ['sessions'] as const,

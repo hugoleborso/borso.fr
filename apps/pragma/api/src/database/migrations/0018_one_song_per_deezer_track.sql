@@ -1,0 +1,14 @@
+-- One catalogue song per Deezer track (ADR-0043). Two audience members
+-- suggesting the same unknown track at the same moment both read it absent,
+-- so the read cannot hold the rule and the table does. The import catches
+-- the violation and answers with the song that was written first.
+--
+-- A song typed in by hand names no track, and Postgres never treats two
+-- NULLs as equal, so any number of songs may still carry none.
+--
+-- Emitted plain: the migration runner rewrites it to CREATE UNIQUE INDEX
+-- ASYNC, which DSQL builds in the background and does not enforce until the
+-- job in sys.jobs completes. Rows that already share a track fail that
+-- build, so the operator merges them before deploying and checks the job
+-- after.
+CREATE UNIQUE INDEX IF NOT EXISTS "song_deezer_track_id_unique" ON "song" ("deezer_track_id");

@@ -116,6 +116,7 @@
     "crumb": "Repertoire",
     "deezerTrackId": "Deezer track ID",
     "deezerTrackIdPlaceholder": "e.g. 67238735",
+    "deezerTrackTaken": "This Deezer track already belongs to another song in the catalog:",
     "defaultLineup": "Default lineup",
     "deleteConfirm": "Delete this song? Its chart, notes and links go with it.",
     "duration": "Duration",
@@ -611,5 +612,109 @@
     "thisWeek_one": "{{count}} study this week",
     "thisWeek_other": "{{count}} studies this week",
     "progressTitle": "Progress"
+  },
+  "takes": {
+    "title": "Takes",
+    "recordAria": "Record a take of {{title}}",
+    "upload": "Upload",
+    "download": "Download",
+    "empty": "No take of this song yet.",
+    "noSession": "no session",
+    "practice": "Practice",
+    "practiceList": {
+      "title": "Record takes",
+      "empty": "Attach a setlist to record its songs."
+    },
+    "concert": "Concert",
+    "unknownSession": "session removed",
+    "formerMember": "former member",
+    "commentCount_one": "{{count}} comment",
+    "commentCount_other": "{{count}} comments",
+    "pending": "pending upload",
+    "failed": "upload failed",
+    "retry": "Retry",
+    "recording": {
+      "title": "Recording {{title}}",
+      "stop": "Stop",
+      "screenAwake": "screen kept awake",
+      "starting": "Starting the microphone…",
+      "saving": "Saving the take…",
+      "denied": "The microphone is not allowed. Allow it in the browser settings, or upload a file instead.",
+      "unsupported": "This browser cannot record here. Upload a file instead.",
+      "interrupted": "The recording was cut when the phone locked. What was recorded until then is saved as the take.",
+      "quotaExceeded": "The device storage is full, so the take could not be kept. Download it so it is not lost.",
+      "queueFailed": "The take could not be stored on this device. Download it so it is not lost.",
+      "unplayable": "This browser recorded a format the band cannot play back. Download it instead.",
+      "empty": "Nothing was recorded, so no take was saved."
+    },
+    "uploadForm": {
+      "title": "Upload a take of {{title}}",
+      "file": "Audio file",
+      "recordedAt": "Recorded at",
+      "session": "Session",
+      "noSession": "No session"
+    },
+    "fileErrors": {
+      "tooLarge": "This file is over {{maxMebibytes}} MiB.",
+      "notAudio": "This file is not an audio file.",
+      "empty": "This file is empty."
+    },
+    "player": {
+      "title": "Take",
+      "delete": "Delete take",
+      "deleteConfirm": "Delete this take and its comments for everyone?",
+      "loadFailed": "The recording could not be loaded.",
+      "marks": "Comments on the timeline",
+      "markAria": "Go to {{moment}}",
+      "noComments": "No comment yet.",
+      "commentPlaceholder": "Write a comment",
+      "momentToggle": "At {{moment}}",
+      "send": "Send",
+      "deleteComment": "Delete comment",
+      "commentFailed": "The comment could not be sent."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "enabled": "Notifications are on for this device.",
+    "denied": "This browser blocks notifications for pragma. Allow them in the browser's site settings, then come back here.",
+    "unsupported": "This browser cannot receive notifications.",
+    "installHint": "On an iPhone, notifications only reach pragma once it is installed on the home screen. In Safari, tap Share, then Add to Home Screen, and open pragma from there.",
+    "enable": "Enable on this device",
+    "enableFailed": "Notifications could not be enabled. Try again.",
+    "saveFailed": "That change could not be saved.",
+    "categoriesTitle": "Notify me about",
+    "categories": {
+      "takes": "New takes",
+      "takeComments": "Comments on takes",
+      "sessions": "Sessions",
+      "setlists": "Setlists, lineups and transitions"
+    }
+  },
+  "install": {
+    "banner": "Install pragma as an app, for notifications and full screen",
+    "showMe": "Show me",
+    "dismiss": "Hide this suggestion",
+    "title": "Install pragma",
+    "installNow": "Install",
+    "walkthrough": "How to install pragma",
+    "steps": {
+      "openInSafari": "Copy this page's address and open it in Safari. Only Safari can add pragma to the home screen.",
+      "tapShare": "In Safari, tap Share.",
+      "scrollShareSheet": "Scroll down the list of actions.",
+      "tapAddToHomeScreen": "Tap “Add to Home Screen”.",
+      "confirmAdd": "Tap Add. pragma is now on your home screen.",
+      "tapBrowserMenu": "In Chrome, tap ⋮ at the top right.",
+      "tapInstallApp": "Tap “Install app” (or “Add to Home screen”).",
+      "confirmInstall": "Tap Install. pragma is now on your home screen."
+    },
+    "screen": {
+      "addToHomeScreen": "Add to Home Screen",
+      "add": "Add",
+      "cancel": "Cancel",
+      "installApp": "Install app",
+      "installQuestion": "Install app?",
+      "install": "Install"
+    }
   }
 }

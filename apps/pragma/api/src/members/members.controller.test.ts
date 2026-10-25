@@ -1,8 +1,17 @@
+import { eq, sql } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { INSTRUMENT_ICONS } from '@domain/instrument.core';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  abortCommitsWritingTable,
+  type LockHold,
+  runSecondWhileFirstWaitsOnHold,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
+import { instrumentTable } from '../instruments/instruments.schema';
+import { memberInstrumentTable, memberTable } from './members.schema';
 
 const memberSchema = z.object({
   id: z.string().uuid(),
@@ -29,6 +38,18 @@ const assignmentResponseSchema = z.object({
   id: z.string().uuid(),
   instrumentIds: z.array(z.string().uuid()),
 });
+
+const holdEveryReadOfInstruments: LockHold = async (transaction) =>
+  await transaction.execute(sql`LOCK TABLE ${instrumentTable} IN ACCESS EXCLUSIVE MODE`);
+
+function holdMemberRow(memberId: string): LockHold {
+  return async (transaction) =>
+    await transaction
+      .select({ id: memberTable.id })
+      .from(memberTable)
+      .where(eq(memberTable.id, memberId))
+      .for('update');
+}
 
 async function createInstrument(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
@@ -247,6 +268,31 @@ describe('members controller (back-e2e)', () => {
     expect(response.status).toBe(404);
   });
 
+  it('writes no instrument rows for a member deleted while the assignment was being checked', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const memberCreate = await jsonRequest(app, '/api/members', {
+      method: 'POST',
+      body: { firstName: 'Gui', color: '#7b5786' },
+      cookieHeader,
+    });
+    const memberId = (await readJson(memberCreate, singleMemberEnvelope)).member.id;
+    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
+
+    const [, removal] = await runSecondWhileFirstWaitsOnHold(
+      holdEveryReadOfInstruments,
+      async () =>
+        await jsonRequest(app, `/api/members/${memberId}/instruments`, {
+          method: 'PUT',
+          body: { instrumentIds: [guitarId] },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/members/${memberId}`, { method: 'DELETE', cookieHeader }),
+    );
+    expect(removal.status).toBe(200);
+    expect(await testDatabase().select().from(memberInstrumentTable)).toEqual([]);
+  });
+
   it('scrubs the member from every song default lineup and setlist entry override on delete', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
 
@@ -347,5 +393,80 @@ describe('members controller (back-e2e)', () => {
     );
     const updatedEntry = entriesAfter.entries.find((row) => row.id === entryId);
     expect(updatedEntry?.lineupOverride).toEqual({ [keepMemberId]: [bassId] });
+  });
+
+  it('leaves no link to an instrument deleted while it was being assigned', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const memberCreate = await jsonRequest(app, '/api/members', {
+      method: 'POST',
+      body: { firstName: 'Gui', color: '#7b5786' },
+      cookieHeader,
+    });
+    const memberId = (await readJson(memberCreate, singleMemberEnvelope)).member.id;
+    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
+
+    const [, removal] = await runSecondWhileFirstWaitsOnHold(
+      holdMemberRow(memberId),
+      async () =>
+        await jsonRequest(app, `/api/members/${memberId}/instruments`, {
+          method: 'PUT',
+          body: { instrumentIds: [guitarId] },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/instruments/${guitarId}`, { method: 'DELETE', cookieHeader }),
+    );
+    expect(removal.status).toBe(200);
+    expect(await testDatabase().select().from(memberInstrumentTable)).toEqual([]);
+  });
+
+  it('removes the links of a deleted instrument from every member who played it', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const memberCreate = await jsonRequest(app, '/api/members', {
+      method: 'POST',
+      body: { firstName: 'Gui', color: '#7b5786' },
+      cookieHeader,
+    });
+    const memberId = (await readJson(memberCreate, singleMemberEnvelope)).member.id;
+    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
+    const voiceId = await createInstrument(app, cookieHeader, 'Voice', 'vocal');
+    await jsonRequest(app, `/api/members/${memberId}/instruments`, {
+      method: 'PUT',
+      body: { instrumentIds: [guitarId, voiceId] },
+      cookieHeader,
+    });
+
+    await jsonRequest(app, `/api/instruments/${guitarId}`, { method: 'DELETE', cookieHeader });
+
+    const links = await testDatabase()
+      .select({ instrumentId: memberInstrumentTable.instrumentId })
+      .from(memberInstrumentTable);
+    expect(links).toEqual([{ instrumentId: voiceId }]);
+  });
+
+  it('assigns the instruments once when the first commit loses a conflict on the claimed member', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const memberCreate = await jsonRequest(app, '/api/members', {
+      method: 'POST',
+      body: { firstName: 'Gui', color: '#7b5786' },
+      cookieHeader,
+    });
+    const memberId = (await readJson(memberCreate, singleMemberEnvelope)).member.id;
+    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
+    const removeSimulatedConflict = await abortCommitsWritingTable('member', 1);
+    try {
+      const assignment = await jsonRequest(app, `/api/members/${memberId}/instruments`, {
+        method: 'PUT',
+        body: { instrumentIds: [guitarId] },
+        cookieHeader,
+      });
+      expect(assignment.status).toBe(200);
+    } finally {
+      await removeSimulatedConflict();
+    }
+    const links = await testDatabase()
+      .select({ instrumentId: memberInstrumentTable.instrumentId })
+      .from(memberInstrumentTable);
+    expect(links).toEqual([{ instrumentId: guitarId }]);
   });
 });

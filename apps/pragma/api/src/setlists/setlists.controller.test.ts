@@ -1,7 +1,17 @@
+import { eq, getTableName } from 'drizzle-orm';
 import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  holdWritesToTable,
+  type LockHold,
+  runSecondWhileFirstWaitsOnHold,
+  runWithWritesToTableHeld,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
+import { sessionTable } from '../sessions/sessions.schema';
+import { sessionSetlistTable, setlistEntryTable, setlistTable } from './setlists.schema';
 
 const entrySchema = z.object({
   id: z.string().uuid(),
@@ -31,6 +41,26 @@ const singleEntryEnvelope = z.object({ entry: entrySchema });
 const entryListEnvelope = z.object({ entries: z.array(entrySchema) });
 const sessionEnvelope = z.object({ session: z.object({ id: z.string().uuid() }) });
 const songEnvelope = z.object({ song: z.object({ id: z.string().uuid() }) });
+
+const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
+
+function holdSetlistRow(setlistId: string): LockHold {
+  return async (transaction) =>
+    await transaction
+      .select({ id: setlistTable.id })
+      .from(setlistTable)
+      .where(eq(setlistTable.id, setlistId))
+      .for('update');
+}
+
+function holdSessionRow(sessionId: string): LockHold {
+  return async (transaction) =>
+    await transaction
+      .select({ id: sessionTable.id })
+      .from(sessionTable)
+      .where(eq(sessionTable.id, sessionId))
+      .for('update');
+}
 
 async function createPractice(
   app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
@@ -155,6 +185,92 @@ describe('setlists controller (back-e2e)', () => {
     expect(after.entries.map((row) => row.position)).toEqual([0, 1]);
   });
 
+  it('gives each of two entries appended at the same moment a position of its own', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const appended = await Promise.all(
+      songIds.map(
+        async (songId) =>
+          await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+            method: 'POST',
+            body: { songId },
+            cookieHeader,
+          }),
+      ),
+    );
+    expect(appended.map((response) => response.status)).toEqual([201, 201, 201]);
+    const after = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+      entryListEnvelope,
+    );
+    expect(after.entries.map((row) => row.position)).toEqual([0, 1, 2]);
+  });
+
+  it('applies one of two reorders sent at the same moment whole, never a mix of both', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const entryIds: string[] = [];
+    for (const songId of songIds) {
+      const response = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId },
+        cookieHeader,
+      });
+      entryIds.push((await readJson(response, singleEntryEnvelope)).entry.id);
+    }
+    const reversed = [...entryIds].reverse();
+    const rotated = [...entryIds.slice(1), ...entryIds.slice(0, 1)];
+    const reorders = await Promise.all(
+      [reversed, rotated].map(
+        async (order) =>
+          await jsonRequest(app, `/api/setlists/${setlistId}/reorder`, {
+            method: 'PUT',
+            body: { entryIds: order },
+            cookieHeader,
+          }),
+      ),
+    );
+    expect(reorders.map((response) => response.status)).toEqual([200, 200]);
+    const after = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+      entryListEnvelope,
+    );
+    expect(after.entries.map((row) => row.position)).toEqual([0, 1, 2]);
+    expect([reversed, rotated]).toContainEqual(after.entries.map((row) => row.id));
+  });
+
+  it('keeps positions distinct when an append and a reorder land at the same moment', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const [firstSongId, secondSongId, thirdSongId] = songIds;
+    const entryIds: string[] = [];
+    for (const songId of [firstSongId, secondSongId]) {
+      const response = await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId },
+        cookieHeader,
+      });
+      entryIds.push((await readJson(response, singleEntryEnvelope)).entry.id);
+    }
+    await Promise.all([
+      jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId: thirdSongId },
+        cookieHeader,
+      }),
+      jsonRequest(app, `/api/setlists/${setlistId}/reorder`, {
+        method: 'PUT',
+        body: { entryIds: [...entryIds].reverse() },
+        cookieHeader,
+      }),
+    ]);
+    const after = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+      entryListEnvelope,
+    );
+    expect(after.entries.map((row) => row.position)).toEqual([0, 1, 2]);
+  });
+
   it('updates an entry partially', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const { setlistId, songIds } = await seed(app, cookieHeader);
@@ -269,6 +385,59 @@ describe('setlists controller (back-e2e)', () => {
     }
   });
 
+  it('gives two setlists joining one session at the same moment a position each', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPractice(app, cookieHeader);
+    const loose = await readJson(
+      await jsonRequest(app, '/api/setlists', {
+        method: 'POST',
+        body: { name: 'Rappel', sessionId: null },
+        cookieHeader,
+      }),
+      setlistEnvelope,
+    );
+    const answers = await runWithWritesToTableHeld(
+      'session_setlist',
+      2,
+      async () =>
+        await Promise.all([
+          jsonRequest(app, '/api/setlists', {
+            method: 'POST',
+            body: { name: 'Filage', sessionId },
+            cookieHeader,
+          }),
+          jsonRequest(app, `/api/setlists/${loose.setlist.id}/sessions`, {
+            method: 'POST',
+            body: { sessionId },
+            cookieHeader,
+          }),
+        ]),
+    );
+    expect(answers.map((answer) => answer.status)).toEqual([201, 201]);
+    const links = await testDatabase().select().from(sessionSetlistTable);
+    expect(links.map((link) => link.position).toSorted((first, second) => first - second)).toEqual([
+      0, 1,
+    ]);
+  });
+
+  it('leaves no link behind when the session is deleted while a setlist joins it', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPractice(app, cookieHeader);
+    const [, deletion] = await runSecondWhileFirstWaitsOnHold(
+      holdWritesToTable(getTableName(setlistTable)),
+      async () =>
+        await jsonRequest(app, '/api/setlists', {
+          method: 'POST',
+          body: { name: 'Filage', sessionId },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/sessions/${sessionId}`, { method: 'DELETE', cookieHeader }),
+    );
+    expect(deletion.status).toBe(200);
+    expect(await testDatabase().select().from(sessionSetlistTable)).toEqual([]);
+  });
+
   it('detaches a setlist from one session and leaves it in the other', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const { setlistId } = await seed(app, cookieHeader);
@@ -359,5 +528,74 @@ describe('setlists controller (back-e2e)', () => {
     expect(listed.setlists).toEqual([]);
     const gone = await jsonRequest(app, `/api/setlists/${setlistId}`, { cookieHeader });
     expect(gone.status).toBe(404);
+  });
+
+  it('answers 404 when writing the entries of a setlist that does not exist', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { songIds } = await seed(app, cookieHeader);
+    const append = await jsonRequest(app, `/api/setlists/${UNKNOWN_ID}/entries`, {
+      method: 'POST',
+      body: { songId: songIds[0] },
+      cookieHeader,
+    });
+    const reorder = await jsonRequest(app, `/api/setlists/${UNKNOWN_ID}/reorder`, {
+      method: 'PUT',
+      body: { entryIds: [UNKNOWN_ID] },
+      cookieHeader,
+    });
+    const removal = await jsonRequest(app, `/api/setlists/${UNKNOWN_ID}/entries/${UNKNOWN_ID}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+    expect([append.status, reorder.status, removal.status]).toEqual([404, 404, 404]);
+    expect(await testDatabase().select().from(setlistEntryTable)).toEqual([]);
+  });
+
+  it('refuses an entry for a setlist deleted while the entry was being written', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seed(app, cookieHeader);
+    const [deletion, append] = await runSecondWhileFirstWaitsOnHold(
+      holdSetlistRow(setlistId),
+      async () =>
+        await jsonRequest(app, `/api/setlists/${setlistId}`, { method: 'DELETE', cookieHeader }),
+      async () =>
+        await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+          method: 'POST',
+          body: { songId: songIds[0] },
+          cookieHeader,
+        }),
+    );
+    expect(deletion.status).toBe(200);
+    expect(append.status).toBe(404);
+    expect(await testDatabase().select().from(setlistEntryTable)).toEqual([]);
+  });
+
+  it('leaves no link to a setlist deleted while it was joining a session', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPractice(app, cookieHeader);
+    const loose = await readJson(
+      await jsonRequest(app, '/api/setlists', {
+        method: 'POST',
+        body: { name: 'Rappel', sessionId: null },
+        cookieHeader,
+      }),
+      setlistEnvelope,
+    );
+    const [, deletion] = await runSecondWhileFirstWaitsOnHold(
+      holdSessionRow(sessionId),
+      async () =>
+        await jsonRequest(app, `/api/setlists/${loose.setlist.id}/sessions`, {
+          method: 'POST',
+          body: { sessionId },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/setlists/${loose.setlist.id}`, {
+          method: 'DELETE',
+          cookieHeader,
+        }),
+    );
+    expect(deletion.status).toBe(200);
+    expect(await testDatabase().select().from(sessionSetlistTable)).toEqual([]);
   });
 });

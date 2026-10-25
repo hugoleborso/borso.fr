@@ -11,6 +11,7 @@ import {
   useLocation,
   useNavigationType,
 } from 'react-router-dom';
+import type { TakeStepFailure } from '../lib/take-queue.core';
 import type { ErrorReportingSettings } from './error-reporting.core';
 
 type ReportingOptions = NonNullable<Parameters<typeof Sentry.init>[0]>;
@@ -49,6 +50,31 @@ export function reportRenderFailure(
   componentStack: string | null | undefined,
 ): void {
   Sentry.captureReactException(error, { componentStack });
+}
+
+const TAKE_UPLOAD_FAILED = 'TakeUploadFailed';
+const TAKE_QUEUE_WRITE_FAILED = 'TakeQueueWriteFailed';
+const TAKES_BREADCRUMB_CATEGORY = 'takes';
+const NO_STATUS = 'none';
+
+export function reportTakeUploadFailed(failure: TakeStepFailure): void {
+  Sentry.captureMessage(TAKE_UPLOAD_FAILED, {
+    level: 'error',
+    tags: { 'take.stage': failure.stage, 'take.status': String(failure.status ?? NO_STATUS) },
+  });
+}
+
+export function reportTakeQueueWriteFailed(error: unknown): void {
+  Sentry.captureException(error, {
+    tags: { 'take.stage': 'queue' },
+    extra: { name: TAKE_QUEUE_WRITE_FAILED },
+  });
+}
+
+export type TakeBreadcrumb = 'RecordingInterrupted' | 'take_upload_retried';
+
+export function recordTakeBreadcrumb(message: TakeBreadcrumb): void {
+  Sentry.addBreadcrumb({ category: TAKES_BREADCRUMB_CATEGORY, message, level: 'info' });
 }
 
 export const TracedRoutes = Sentry.wrapReactRouterRouting(Routes);

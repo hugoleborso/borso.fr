@@ -1,22 +1,17 @@
-import { desc, eq } from 'drizzle-orm';
-import { getDatabase } from '../database/client';
+import { desc, eq, sql } from 'drizzle-orm';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
+import { detachTakesOfDeletedSession } from '../takes/takes.service';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
 
-export interface SessionRow {
-  id: string;
-  kind: string;
-  date: Date;
-  preparedConcertId: string | null;
-  venue: string | null;
-  capacity: number | null;
-  gear: string | null;
-  friendsCountPerMember: unknown;
-}
-
 type SessionRawRow = Omit<typeof sessionTable.$inferSelect, 'origin'>;
+
+export type SessionRow = Omit<SessionRawRow, 'friendsCountPerMember'> & {
+  friendsCountPerMember: unknown;
+};
 
 // @FollowsBlueprint repository-projection
 const PROJECTION = {
@@ -55,6 +50,12 @@ function encodeUpdate(updates: SessionPersistedUpdate): SessionUpdateEncoded {
   const { friendsCountPerMember, ...columns } = updates;
   if (friendsCountPerMember === undefined) return columns;
   return { ...columns, friendsCountPerMember: JSON.stringify(friendsCountPerMember) };
+}
+
+async function runInOneSessionTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
 }
 
 export async function listSessions(): Promise<SessionRow[]> {
@@ -100,14 +101,26 @@ export async function updateSession(
   return row === undefined ? null : rowToSession(row);
 }
 
+export async function didClaimSessionWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+): Promise<boolean> {
+  const claimed = await executor
+    .update(sessionTable)
+    .set({ kind: sql`${sessionTable.kind}` })
+    .where(eq(sessionTable.id, sessionId))
+    .returning({ id: sessionTable.id });
+  return claimed.length > 0;
+}
+
 export async function deleteSessionWithCascade(id: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
-    await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
+  return await runInOneSessionTransaction(async (transaction) => {
     const deleted = await transaction
       .delete(sessionTable)
       .where(eq(sessionTable.id, id))
       .returning({ id: sessionTable.id });
+    await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
+    await detachTakesOfDeletedSession(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });
 }

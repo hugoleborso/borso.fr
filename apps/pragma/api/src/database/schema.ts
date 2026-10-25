@@ -20,6 +20,12 @@ export {
   masteryScoreChangeTable,
 } from '../mastery/mastery.schema';
 export { memberInstrumentTable, memberTable } from '../members/members.schema';
+export {
+  notificationDispatchTable,
+  notificationPreferenceTable,
+  pushSubscriptionTable,
+  vapidKeyPairTable,
+} from '../notifications/notifications.schema';
 export { outreachTemplateTable } from '../outreach/outreach.schema';
 export { sessionTable } from '../sessions/sessions.schema';
 export {
@@ -30,5 +36,6 @@ export {
 } from '../setlists/setlists.schema';
 export { songTable } from '../songs/songs.schema';
 export { studyTable } from '../studies/studies.schema';
+export { takeCommentTable, takeTable } from '../takes/takes.schema';
 export { taskTable } from '../tasks/tasks.schema';
 export { transitionCommentTable } from '../transitions/transitions.schema';

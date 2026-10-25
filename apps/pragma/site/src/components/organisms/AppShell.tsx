@@ -19,6 +19,7 @@ import {
 } from '../molecules/media-query-matching.hook';
 import { useIsOnline } from '../molecules/online-status.hook';
 import { BottomTabBar } from './BottomTabBar';
+import { InstallOffer } from './InstallOffer';
 import { isNavigationDestinationActive } from './navigation-active.core';
 import { useNavigationBadges } from './navigation-badges.hook';
 import { useSignedInMember } from '../../lib/queries/me.queries';
@@ -184,6 +185,7 @@ export function AppShell(): JSX.Element {
 
       <main className="flex-1 min-w-0 relative pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
         <OfflineBanner isVisible={!isOnline} />
+        <InstallOffer />
         <Outlet />
       </main>
 

@@ -1,13 +1,16 @@
-import { eq, inArray, isNotNull } from 'drizzle-orm';
+import { eq, isNotNull, sql } from 'drizzle-orm';
 import { deleteCredentialsOfMember } from '../auth/credentials.service';
 import { deleteCalendarFeedOfMember } from '../calendar-feeds/calendar-feeds.service';
 import { deleteVotesOfDeletedMember } from '../setlists/voting.service';
 import { deleteScoreHistoryOfDeletedMember } from '../mastery/mastery.service';
 import { deleteStudiesOfDeletedMember } from '../studies/studies.service';
+import { deletePushStateOfDeletedMember } from '../notifications/notifications.service';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { barTable } from '../bars/bars.schema';
 import { instrumentTable } from '../instruments/instruments.schema';
+import { didClaimInstrumentsWithin } from '../instruments/instruments.service';
 import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
 import { defaultLineupSchema, songTable } from '../songs/songs.schema';
 import { unassignTasksOfMemberBeingDeleted } from '../tasks/tasks.service';
@@ -22,23 +25,22 @@ import {
 } from '@domain/instrument.core';
 import { memberInstrumentTable, memberTable } from './members.schema';
 
-export interface MemberRow {
-  id: string;
-  firstName: string;
-  color: string;
-  avatarS3Key: string | null;
-  phone: string | null;
-  email: string | null;
-}
+export type MemberRow = typeof memberTable.$inferSelect;
 
-export interface MemberInstrumentRow {
-  id: string;
-  name: string;
+type InstrumentTableRow = typeof instrumentTable.$inferSelect;
+
+export type MemberInstrumentRow = Pick<InstrumentTableRow, 'id' | 'name'> & {
   family: InstrumentFamily;
   icon: InstrumentIcon;
   position: number;
   isPrimary: boolean;
-}
+};
+
+type MemberInstrumentJoinedRow = Pick<
+  InstrumentTableRow,
+  'id' | 'name' | 'isHarmonic' | 'family' | 'icon' | 'position'
+> &
+  Pick<typeof memberInstrumentTable.$inferSelect, 'isPrimary'>;
 
 // @FollowsBlueprint repository-projection
 const MEMBER_PROJECTION = {
@@ -60,15 +62,7 @@ const INSTRUMENT_PROJECTION = {
   isPrimary: memberInstrumentTable.isPrimary,
 } as const;
 
-function rowToMemberInstrument(row: {
-  id: string;
-  name: string;
-  isHarmonic: boolean;
-  family: string | null;
-  icon: string | null;
-  position: number | null;
-  isPrimary: boolean | null;
-}): MemberInstrumentRow {
+function rowToMemberInstrument(row: MemberInstrumentJoinedRow): MemberInstrumentRow {
   return {
     id: row.id,
     name: row.name,
@@ -79,28 +73,18 @@ function rowToMemberInstrument(row: {
   };
 }
 
+async function runInOneMemberTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
+
 export async function listMembers(): Promise<MemberRow[]> {
   const database = getDatabase();
   return await database.select(MEMBER_PROJECTION).from(memberTable);
 }
 
-export async function findMemberById(id: string): Promise<MemberRow | null> {
-  const database = getDatabase();
-  const rows = await database
-    .select(MEMBER_PROJECTION)
-    .from(memberTable)
-    .where(eq(memberTable.id, id))
-    .limit(1);
-  return rows[0] ?? null;
-}
-
-export interface MemberPersistedShape {
-  firstName: string;
-  color: string;
-  avatarS3Key: string | null;
-  phone: string | null;
-  email: string | null;
-}
+export type MemberPersistedShape = Omit<MemberRow, 'id'>;
 
 export async function insertMember(values: MemberPersistedShape): Promise<MemberRow> {
   const database = getDatabase();
@@ -122,9 +106,24 @@ export async function updateMember(
   return row ?? null;
 }
 
+export async function didClaimMemberWithin(
+  executor: DatabaseExecutor,
+  memberId: string,
+): Promise<boolean> {
+  const claimed = await executor
+    .update(memberTable)
+    .set({ firstName: sql`${memberTable.firstName}` })
+    .where(eq(memberTable.id, memberId))
+    .returning({ id: memberTable.id });
+  return claimed.length > 0;
+}
+
 export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
+  return await runInOneMemberTransaction(async (transaction) => {
+    const deleted = await transaction
+      .delete(memberTable)
+      .where(eq(memberTable.id, id))
+      .returning({ id: memberTable.id });
     await unassignBarsOwnedByMember(transaction, id);
     await scrubMemberFromSongDefaults(transaction, id);
     await scrubMemberFromSetlistOverrides(transaction, id);
@@ -135,10 +134,7 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await unassignTasksOfMemberBeingDeleted(transaction, id);
     await deleteScoreHistoryOfDeletedMember(transaction, id);
     await deleteStudiesOfDeletedMember(transaction, id);
-    const deleted = await transaction
-      .delete(memberTable)
-      .where(eq(memberTable.id, id))
-      .returning({ id: memberTable.id });
+    await deletePushStateOfDeletedMember(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });
 }
@@ -203,23 +199,18 @@ export async function listInstrumentsForMember(memberId: string): Promise<Member
   return rows.map((row) => rowToMemberInstrument(row));
 }
 
-export async function areInstrumentsKnown(instrumentIds: readonly string[]): Promise<boolean> {
-  const database = getDatabase();
-  if (instrumentIds.length === 0) return true;
-  const rows = await database
-    .select({ id: instrumentTable.id })
-    .from(instrumentTable)
-    .where(inArray(instrumentTable.id, [...instrumentIds]));
-  return rows.length === instrumentIds.length;
-}
+export type MemberInstrumentsReplacement = 'replaced' | 'member-not-found' | 'instrument-not-found';
 
 export async function replaceMemberInstruments(
   memberId: string,
   instrumentIds: readonly string[],
   requestedPrimaryInstrumentIds?: readonly string[],
-): Promise<void> {
-  const database = getDatabase();
-  await database.transaction(async (transaction) => {
+): Promise<MemberInstrumentsReplacement> {
+  return await runInOneMemberTransaction(async (transaction) => {
+    const areInstrumentsClaimed = await didClaimInstrumentsWithin(transaction, instrumentIds);
+    if (!areInstrumentsClaimed) return 'instrument-not-found';
+    const isMemberClaimed = await didClaimMemberWithin(transaction, memberId);
+    if (!isMemberClaimed) return 'member-not-found';
     const existing = await transaction
       .select({
         instrumentId: memberInstrumentTable.instrumentId,
@@ -249,5 +240,6 @@ export async function replaceMemberInstruments(
         })),
       );
     }
+    return 'replaced';
   });
 }
