@@ -443,11 +443,11 @@ first, and change only the `dsql:*` entry:
 ```bash
 aws --profile borso-admin iam get-user-policy \
   --user-name AI-Dev-ReadOnly --policy-name Explicit-write-deny \
-  --query PolicyDocument > deny.json
+  --query PolicyDocument --output json > deny.json
 ```
 
 In `deny.json`, remove `"dsql:*"` from the statement whose `Resource` is `"*"`, and add these
-two statements to the `Statement` array:
+two statements to the `Statement` array, writing the result to `deny-narrowed.json`:
 
 ```json
 {
@@ -464,13 +464,28 @@ two statements to the `Statement` array:
 }
 ```
 
+`jq` makes both edits, and running it twice leaves the same policy:
+
+```bash
+jq --arg arn arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi '
+  .Statement |= (
+    map(select(.Sid != "DenyDsqlOutsideThePragmaCluster" and .Sid != "DenyEveryDsqlActionOnThePragmaClusterButDbConnect"))
+    | map(if .Resource == "*" and (.Action | type) == "array" then .Action -= ["dsql:*"] else . end)
+    | map(select(.Action != [] and ((.Action == "dsql:*" and .Resource == "*") | not)))
+    + [
+      {Sid: "DenyDsqlOutsideThePragmaCluster", Effect: "Deny", Action: "dsql:*", NotResource: $arn},
+      {Sid: "DenyEveryDsqlActionOnThePragmaClusterButDbConnect", Effect: "Deny", NotAction: "dsql:DbConnect", Resource: $arn}
+    ])' deny.json > deny-narrowed.json
+```
+
 The first keeps every other cluster, and every call whose resource is not a cluster, denied
 exactly as before. The second keeps `DbConnectAdmin`, `GetCluster`, `UpdateCluster`,
 `DeleteCluster` and the rest denied on pragma's cluster. Only `DbConnect` on that one ARN is
 left undenied. If `dsql:*` appears in any other statement with `Resource: "*"`, the hole stays
 shut, and the probe below says so.
 
-Denying less grants nothing, so the allow is a third inline policy, `Pragma-prod-read`:
+Denying less grants nothing, so the allow is a third inline policy, `Pragma-prod-read`, saved
+as `pragma-prod-read.json`:
 
 ```json
 {
@@ -492,7 +507,7 @@ Apply both:
 aws --profile borso-admin iam put-user-policy \
   --user-name AI-Dev-ReadOnly \
   --policy-name Explicit-write-deny \
-  --policy-document file://deny.json
+  --policy-document file://deny-narrowed.json
 
 aws --profile borso-admin iam put-user-policy \
   --user-name AI-Dev-ReadOnly \
