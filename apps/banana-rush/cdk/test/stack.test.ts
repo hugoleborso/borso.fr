@@ -94,6 +94,18 @@ function readSchemaCloneConfig(template: Template): unknown {
   return undefined;
 }
 
+function readSchemaReaderBlocklist(template: Template): unknown {
+  for (const resource of Object.values(
+    template.findResources('AWS::CloudFormation::CustomResource'),
+  )) {
+    const properties: unknown = resource.Properties;
+    if (typeof properties !== 'object' || properties === null) continue;
+    if (!('readerTableBlocklist' in properties)) continue;
+    return properties.readerTableBlocklist;
+  }
+  return undefined;
+}
+
 function readSchemaReader(template: Template): unknown {
   for (const resource of Object.values(
     template.findResources('AWS::CloudFormation::CustomResource'),
@@ -116,6 +128,10 @@ describe('banana-rush read-only agent access (ADR-0044)', () => {
     expect(JSON.stringify(readSchemaReader(synthAppStack('prod')))).toContain(
       ':iam::123456789012:user/AI-Dev-ReadOnly',
     );
+  });
+
+  it('blocks no table from the reader, since players are known only by a token hash', () => {
+    expect(readSchemaReaderBlocklist(synthAppStack('prod'))).toBeUndefined();
   });
 
   it('maps no reader on a preview, which holds a copy of prod and nothing more', () => {
