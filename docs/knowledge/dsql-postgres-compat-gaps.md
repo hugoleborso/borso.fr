@@ -3,6 +3,7 @@ summary: 'Aurora DSQL is not Postgres: no jsonb, no foreign keys, one DDL per tr
 triggers:
   paths:
     - 'apps/*/api/src/database/migrations/*.sql'
+    - 'infra/cdk/src/internal/migration-runner/*.ts'
   output:
     - 'datatype \w+ not supported'
     - 'unsupported ALTER TABLE'
@@ -10,6 +11,8 @@ triggers:
     - '(USING|WHERE) not supported for CREATE INDEX'
     - 'function pg_\w+ not supported'
     - 'unsupported mode\. please use CREATE INDEX ASYNC'
+    - 'Found duplicate key while validating index'
+    - 'exists but is INVALID'
 ---
 
 # Aurora DSQL is not a drop-in for Postgres
@@ -244,6 +247,20 @@ on the preview deploy of PR #26 (`pragma-pr-26`) on 2026-05-21: the
 `setlist_entry_setlist_id_position_idx` and
 `transition_comment_ordered_pair` indexes in pragma's `0000_initial.sql`
 migration triggered the CFN rollback.
+
+**A build can fail after the statement succeeds.** `CREATE UNIQUE INDEX ASYNC`
+over rows that already break it returns a `job_id`, and the job then ends
+`failed` with `Found duplicate key while validating index for UCVs`. DSQL
+leaves the index `INVALID` and, for a unique one, still enforces it on new
+writes. Since the PR #193 kaizen the migration runner (`index-build-wait.ts`)
+polls `SELECT status, details FROM sys.jobs WHERE job_id = $1` until the job
+is `completed` or `failed`, fails the deploy on `failed` or after 240 s, and
+checks `pg_index.indisvalid` when `IF NOT EXISTS` returns no job. The fix for a
+failed build is the one AWS gives: remove the duplicate rows, `DROP INDEX`,
+deploy again. `sys.jobs` drops finished jobs after 30 minutes, so read it
+promptly. AWS documents a `sys.wait_for_job(job_id)` procedure as well; the
+runner polls `sys.jobs` instead because the pages describe the procedure
+without an example of how it is called.
 
 ## Symptoms quick-table
 

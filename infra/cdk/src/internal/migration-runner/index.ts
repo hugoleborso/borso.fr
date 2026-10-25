@@ -20,6 +20,7 @@ import {
   type RoleMappingRow,
   selectMappedArns,
 } from './database-role.utils.js';
+import { settleIndexBuild } from './index-build-wait.js';
 import { selectPendingMigrations } from './pending-migrations.utils.js';
 import { splitStatements } from './statement-rewrites.utils.js';
 
@@ -201,7 +202,8 @@ async function applyMigrations(
   for (const migration of selectPendingMigrations(migrations, appliedNames)) {
     await sql.unsafe(`SET search_path TO "${schemaName}"`);
     for (const statement of splitStatements(migration.sql)) {
-      await sql.unsafe(statement);
+      const statementRows = await sql.unsafe(statement);
+      await settleIndexBuild(sql, schemaName, statement, statementRows);
     }
     await sql.unsafe(
       `INSERT INTO "${schemaName}"._migrations(name) VALUES ($1) ON CONFLICT (name) DO NOTHING`,

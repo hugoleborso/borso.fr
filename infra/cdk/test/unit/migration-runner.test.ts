@@ -257,6 +257,114 @@ describe('migration-runner handler', () => {
     expect(queries).toMatch(/CREATE UNIQUE INDEX ASYNC IF NOT EXISTS bar_idx ON bar \(col\)/);
   });
 
+  const uniqueIndexMigration = {
+    ...baseProps,
+    migrations: [
+      {
+        name: '0005_unique_track.sql',
+        sql: 'CREATE UNIQUE INDEX "song_deezer_track_id_idx" ON "song" ("deezer_track_id");',
+      },
+    ],
+  };
+
+  it('Create: waits on the DSQL job an index build returns before recording the migration', async () => {
+    state.indexBuildStatuses.set('job-song_deezer_track_id_idx', [
+      { status: 'submitted', details: null },
+      { status: 'processing', details: null },
+      { status: 'completed', details: null },
+    ]);
+    vi.useFakeTimers();
+    try {
+      const provisioning = handler({
+        RequestType: 'Create',
+        ResourceProperties: uniqueIndexMigration,
+      });
+      await vi.runAllTimersAsync();
+      await provisioning;
+    } finally {
+      vi.useRealTimers();
+    }
+    const jobPolls = state.unsafeCalls.filter((call) => call.query.includes('FROM sys.jobs'));
+    expect(jobPolls).toHaveLength(3);
+    expect(jobPolls[0]?.params).toStrictEqual(['job-song_deezer_track_id_idx']);
+    expect(state.appliedMigrations.has('0005_unique_track.sql')).toBe(true);
+  });
+
+  it('Create: fails the deploy and leaves the migration unrecorded when the index build fails', async () => {
+    state.indexBuildStatuses.set('job-song_deezer_track_id_idx', [
+      { status: 'failed', details: 'Found duplicate key while validating index for UCVs' },
+    ]);
+    await expect(
+      handler({ RequestType: 'Create', ResourceProperties: uniqueIndexMigration }),
+    ).rejects.toThrow(/song_deezer_track_id_idx.*Found duplicate key/);
+    expect(state.appliedMigrations.has('0005_unique_track.sql')).toBe(false);
+    expect(state.ended).toBe(1);
+  });
+
+  it('Create: names the job when a build fails without details', async () => {
+    state.indexBuildStatuses.set('job-song_deezer_track_id_idx', [
+      { status: 'failed', details: null },
+    ]);
+    await expect(
+      handler({ RequestType: 'Create', ResourceProperties: uniqueIndexMigration }),
+    ).rejects.toThrow(/job-song_deezer_track_id_idx\): sys\.jobs gave no details/);
+  });
+
+  it('Create: fails the deploy when the build is still running at the wait limit', async () => {
+    state.indexBuildStatuses.set('job-song_deezer_track_id_idx', [
+      { status: 'processing', details: null },
+    ]);
+    vi.useFakeTimers();
+    try {
+      const provisioning = handler({
+        RequestType: 'Create',
+        ResourceProperties: uniqueIndexMigration,
+      });
+      const failure = provisioning.then(
+        () => null,
+        (error: unknown) => error,
+      );
+      await vi.runAllTimersAsync();
+      expect(String(await failure)).toMatch(/had not finished after 240 s/);
+    } finally {
+      vi.useRealTimers();
+    }
+    expect(state.appliedMigrations.has('0005_unique_track.sql')).toBe(false);
+  });
+
+  it('Create: reads the index itself when sys.jobs no longer holds the job', async () => {
+    state.indexBuildStatuses.set('job-song_deezer_track_id_idx', []);
+    state.indexValidity.set('song_deezer_track_id_idx', true);
+    await handler({ RequestType: 'Create', ResourceProperties: uniqueIndexMigration });
+    const validityRead = state.unsafeCalls.find((call) => call.query.includes('FROM pg_index'));
+    expect(validityRead?.params).toStrictEqual(['test_app', 'song_deezer_track_id_idx']);
+    expect(state.appliedMigrations.has('0005_unique_track.sql')).toBe(true);
+  });
+
+  it('Create: refuses an index left INVALID by an earlier failed build that IF NOT EXISTS skips', async () => {
+    state.indexBuildJobIds.set('song_deezer_track_id_idx', null);
+    state.indexValidity.set('song_deezer_track_id_idx', false);
+    await expect(
+      handler({ RequestType: 'Create', ResourceProperties: uniqueIndexMigration }),
+    ).rejects.toThrow(/"song_deezer_track_id_idx" exists but is INVALID/);
+    expect(state.appliedMigrations.has('0005_unique_track.sql')).toBe(false);
+  });
+
+  it('Create: accepts a valid index that IF NOT EXISTS skips without a job', async () => {
+    state.indexBuildJobIds.set('song_deezer_track_id_idx', null);
+    state.indexValidity.set('song_deezer_track_id_idx', true);
+    await handler({ RequestType: 'Create', ResourceProperties: uniqueIndexMigration });
+    expect(state.unsafeCalls.some((call) => call.query.includes('FROM sys.jobs'))).toBe(false);
+    expect(state.appliedMigrations.has('0005_unique_track.sql')).toBe(true);
+  });
+
+  it('Create: refuses an index statement that returned no job and left no index', async () => {
+    state.indexBuildJobIds.set('song_deezer_track_id_idx', null);
+    await expect(
+      handler({ RequestType: 'Create', ResourceProperties: uniqueIndexMigration }),
+    ).rejects.toThrow(/returned no build job for it, and no index of that name exists/);
+  });
+
   it('releases the advisory lock even on inner failure', async () => {
     state.rejectNextUnsafe = new Error('boom');
 

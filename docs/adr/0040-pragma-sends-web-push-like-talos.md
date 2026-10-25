@@ -79,7 +79,7 @@ pragma previews clone the production schema ([ADR-0009](./0009-pragma-previews-c
 
 - Spec: [`docs/features/pragma/song-takes-and-push/spec/spec.md`](../features/pragma/song-takes-and-push/spec/spec.md), *Architectural choices*
 - Plan: to be written by `/technical-conception`
-- Commit: stamped by `/after-task-kaizen` on merge
+- Commit: [`d117a320`](https://github.com/hugoleborso/borso.fr/commit/d117a320bc674195391e50c3e739654441d5f177) (PR #193, squashed)
 - Files: `apps/talos/api/src/push/web-push.adapter.ts`, `apps/talos/api/src/push/push.service.ts` (precedent); `apps/pragma/cdk/lib/stack.ts` (parameters, blocklist); `pnpm-workspace.yaml` (catalog)
 - Related ADRs: builds on ADR-0009, ADR-0017 (a credential in SSM)
 
