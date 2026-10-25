@@ -1,7 +1,54 @@
-export interface RecordedInputEvent {
-  readonly type: string;
-  readonly pointerType: string;
-  readonly isOnTarget: boolean;
+import { z } from 'zod';
+
+const recordedInputEventSchema = z
+  .object({ type: z.string(), pointerType: z.string(), isOnTarget: z.boolean() })
+  .readonly();
+
+export type RecordedInputEvent = z.infer<typeof recordedInputEventSchema>;
+
+const recordedLogSchema = z.object({ events: z.array(recordedInputEventSchema) });
+
+export function parseRecordedEvents(value: unknown): readonly RecordedInputEvent[] {
+  return recordedLogSchema.parse(value).events;
+}
+
+const tapPointSchema = z.object({ x: z.number(), y: z.number() }).readonly();
+
+export type TapPoint = z.infer<typeof tapPointSchema>;
+
+export function parseTapPoint(value: unknown): TapPoint | null {
+  return tapPointSchema.nullable().parse(value);
+}
+
+const pageTargetSchema = z
+  .object({ type: z.literal('page'), url: z.string(), webSocketDebuggerUrl: z.string() })
+  .readonly();
+
+export type PageTarget = z.infer<typeof pageTargetSchema>;
+
+const targetListingSchema = z.array(z.unknown());
+
+export function findPageTarget(listing: unknown, pageUrlPart: string): PageTarget | null {
+  const pages = targetListingSchema
+    .parse(listing)
+    .map((entry) => pageTargetSchema.safeParse(entry))
+    .flatMap((outcome) => (outcome.success ? [outcome.data] : []));
+  return pages.find((page) => page.url.includes(pageUrlPart)) ?? null;
+}
+
+const cdpReplySchema = z
+  .object({
+    id: z.number().optional(),
+    result: z.object({ result: z.object({ value: z.unknown() }).optional() }).optional(),
+    error: z.object({ message: z.string() }).optional(),
+  })
+  .readonly();
+
+export type CdpReply = z.infer<typeof cdpReplySchema>;
+
+export function parseCdpReply(message: string): CdpReply {
+  const parsed: unknown = JSON.parse(message);
+  return cdpReplySchema.parse(parsed);
 }
 
 export interface TouchTapVerdict {

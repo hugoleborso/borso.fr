@@ -1,7 +1,12 @@
 import {
+  type CdpReply,
+  findPageTarget,
   judgeTouchTap,
+  type PageTarget,
+  parseCdpReply,
+  parseRecordedEvents,
+  parseTapPoint,
   parseTouchTapArguments,
-  type RecordedInputEvent,
   type TouchTapOptions,
 } from './touch-tap.core';
 
@@ -22,39 +27,15 @@ const TOUCH_RADIUS = 12;
 const PHONE_SCALE_FACTOR = 3;
 const PHONE_TOUCH_POINTS = 5;
 
-interface PageTarget {
-  readonly type: string;
-  readonly url: string;
-  readonly webSocketDebuggerUrl: string;
-}
-
-interface CdpReply {
-  readonly id?: number;
-  readonly result?: { readonly result?: { readonly value?: unknown } };
-  readonly error?: { readonly message: string };
-}
-
 function pause(milliseconds: number): Promise<void> {
   return new Promise((resolve) => setTimeout(resolve, milliseconds));
-}
-
-function readPageTargets(listing: unknown): readonly PageTarget[] {
-  if (!Array.isArray(listing)) return [];
-  return listing.filter(
-    (entry: unknown): entry is PageTarget =>
-      typeof entry === 'object' &&
-      entry !== null &&
-      'type' in entry &&
-      entry.type === 'page' &&
-      'webSocketDebuggerUrl' in entry,
-  );
 }
 
 async function getPage(options: TouchTapOptions): Promise<PageTarget> {
   const response = await fetch(`http://127.0.0.1:${String(options.port)}/json/list`);
   const listing: unknown = await response.json();
-  const page = readPageTargets(listing).find((target) => target.url.includes(options.pageUrlPart));
-  if (page === undefined) {
+  const page = findPageTarget(listing, options.pageUrlPart);
+  if (page === null) {
     throw new Error(`no page on CDP ${String(options.port)} matches "${options.pageUrlPart}"`);
   }
   return page;
@@ -76,7 +57,7 @@ function createSender(socket: WebSocket) {
   let nextId = 0;
   const waiting = new Map<number, (reply: CdpReply) => void>();
   socket.addEventListener('message', (message) => {
-    const reply: CdpReply = JSON.parse(String(message.data));
+    const reply = parseCdpReply(String(message.data));
     if (reply.id !== undefined) waiting.get(reply.id)?.(reply);
   });
   return async function send(method: string, params: object = {}): Promise<unknown> {
@@ -118,24 +99,6 @@ const READ_LOG_SCRIPT = `({
   isCoarsePointer: matchMedia('(pointer: coarse)').matches,
 })`;
 
-function readPoint(value: unknown): { readonly x: number; readonly y: number } | null {
-  if (typeof value !== 'object' || value === null) return null;
-  if (!('x' in value) || !('y' in value)) return null;
-  const { x, y } = value;
-  return typeof x === 'number' && typeof y === 'number' ? { x, y } : null;
-}
-
-function readEvents(value: unknown): readonly RecordedInputEvent[] {
-  if (typeof value !== 'object' || value === null || !('events' in value)) return [];
-  const { events } = value;
-  return Array.isArray(events)
-    ? events.filter(
-        (event: unknown): event is RecordedInputEvent =>
-          typeof event === 'object' && event !== null && 'type' in event,
-      )
-    : [];
-}
-
 async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
   const socket = await openSession(await getPage(options));
   const send = createSender(socket);
@@ -150,7 +113,7 @@ async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
       enabled: true,
       maxTouchPoints: PHONE_TOUCH_POINTS,
     });
-    const point = readPoint(
+    const point = parseTapPoint(
       await send('Runtime.evaluate', {
         expression: buildPreparationScript(options.selector),
         returnByValue: true,
@@ -166,7 +129,7 @@ async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
       expression: READ_LOG_SCRIPT,
       returnByValue: true,
     });
-    const verdict = judgeTouchTap(readEvents(observed));
+    const verdict = judgeTouchTap(parseRecordedEvents(observed));
     process.stdout.write(
       `${JSON.stringify({ selector: options.selector, point, observed, verdict }, null, 2)}\n`,
     );
