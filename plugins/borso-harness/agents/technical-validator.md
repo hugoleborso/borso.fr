@@ -55,6 +55,7 @@ For every Q.O.D. with a user-facing or behavioural decision **and** every entry 
 - Verify the diff actually contains the implied code change.
 - Verify the change matches the decision (palette options, default mode, URL behaviour, error handling, etc.).
 - For URL/state contracts named in the spec, locate the code that implements them and quote 2–4 lines as evidence.
+- A spec section with no *Files to change* entry and no plan section is an amendment the plan never absorbed. The install-banner amendment on PR #193 added a result, edge cases and a test strategy and nothing else, so this category had no file list to walk. Do not skip it: build its rows from the amendment's own claims, find the files from the diff, and add one row naming the gap (`spec amended after the plan; files taken from the diff`) so the operator sees that nobody planned that part.
 
 ### B. Code cleanliness (repo rules)
 
