@@ -21,37 +21,54 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-failed=0
-checked=0
+# With paths as arguments, the manifests among them; pre-commit passes the
+# staged files. With none, every tracked manifest. One node process reads all of
+# them, because one per manifest was half a second on its own.
+list_manifests() {
+  if [ "$#" -eq 0 ]; then
+    git ls-files '*package.json' ':!:**/node_modules/**'
+    return
+  fi
+  for candidate in "$@"; do
+    case "$candidate" in
+      package.json | */package.json) [ -f "$candidate" ] && printf '%s\n' "$candidate" ;;
+    esac
+  done
+  return 0
+}
 
-while IFS= read -r manifest; do
-  checked=$((checked + 1))
-  offenders=$(
-    node -e '
-      const fs = require("node:fs");
-      const BARE_SEMVER = /^[~^]?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
-      const manifest = process.argv[1];
+manifests=$(list_manifests "$@")
+checked=$(printf '%s' "$manifests" | grep -c . || true)
+
+offenders=$(
+  printf '%s\n' "$manifests" | node -e '
+    const fs = require("node:fs");
+    const BARE_SEMVER = /^[~^]?\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/;
+    const manifests = fs.readFileSync(0, "utf8").split("\n").filter(Boolean);
+    for (const manifest of manifests) {
       let parsed;
       try {
         parsed = JSON.parse(fs.readFileSync(manifest, "utf8"));
       } catch {
-        process.exit(0);
+        continue;
       }
       const scripts = parsed.scripts ?? {};
       for (const [name, value] of Object.entries(scripts)) {
         if (typeof value === "string" && BARE_SEMVER.test(value.trim())) {
-          console.log(`${name} -> ${value}`);
+          console.log(`${manifest}: script "${name} -> ${value}"`);
         }
       }
-    ' "$manifest"
-  )
-  if [ -n "$offenders" ]; then
-    failed=1
-    while IFS= read -r offender; do
-      echo "[check-package-scripts] $manifest: script \"${offender}\" is a version, not a command" >&2
-    done <<<"$offenders"
-  fi
-done < <(git ls-files '*package.json' ':!:**/node_modules/**')
+    }
+  '
+)
+
+failed=0
+if [ -n "$offenders" ]; then
+  failed=1
+  while IFS= read -r offender; do
+    echo "[check-package-scripts] ${offender} is a version, not a command" >&2
+  done <<<"$offenders"
+fi
 
 if [ "$failed" -ne 0 ]; then
   cat >&2 <<'NOTE'

@@ -217,7 +217,7 @@ e.g., a change that cannot alter behaviour, and say why on the line.
   invents a split, and a rule both of them judge the other's is validated by
   neither while both reports read as complete. Three specs predate the rule and
   are listed in the script rather than back-filled.
-- `eslint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
+- `oxlint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
   `.utils.ts` file has no sibling test file.
 - `script:scripts/check-every-test-is-collected.sh` fails when a tracked
   `*.test.ts` or `*.test.tsx` file is not collected by any project in its

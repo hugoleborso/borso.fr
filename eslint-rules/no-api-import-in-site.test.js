@@ -63,16 +63,6 @@ createRuleTester('apps/banana-rush/api/src/games/games.service.ts', { jsx: false
   },
 );
 
-createRuleTester(siteFile, { jsx: false }).run('no-api-import-in-site', rule, {
-  valid: [
-    [
-      '// eslint-disable-next-line rule-to-test/no-api-import-in-site -- a reason a reviewer can check',
-      "import { normalizeJoinCode } from '@api/games/join-code.utils';",
-    ].join('\n'),
-  ],
-  invalid: [],
-});
-
 describe('readApiTarget', () => {
   it('ignores a relative path that stays inside the site', () => {
     expect(readApiTarget(siteFile, '../api-failure.core')).toBeNull();

@@ -26,7 +26,10 @@ export function MiniBoard({ fen, boardStyleId }: MiniBoardProps) {
             borderRadius: MINI_BOARD_BORDER_RADIUS,
             boxShadow: MINI_BOARD_SHADOW,
           },
-          arrowOptions: { ...defaultArrowOptions, color: theme.arrow },
+          arrowOptions: {
+            ...defaultArrowOptions,
+            colors: { ...defaultArrowOptions.colors, default: theme.arrow },
+          },
           allowDragging: false,
           allowDrawingArrows: false,
           showAnimations: false,

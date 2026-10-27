@@ -53,7 +53,8 @@ export interface SearchExternalOptions {
 }
 
 export type ExternalSearchOutcome =
-  { readonly kind: 'ok'; readonly hits: ExternalSongHit[] } | { readonly kind: 'unavailable' };
+  | { readonly kind: 'ok'; readonly hits: ExternalSongHit[] }
+  | { readonly kind: 'unavailable' };
 
 export type TrackReadOutcome =
   | { readonly kind: 'ok'; readonly track: ExternalSongHit }

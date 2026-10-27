@@ -31,7 +31,9 @@ export async function createInstrument(
 }
 
 export type PatchInstrumentResult =
-  { kind: 'ok'; instrument: InstrumentWithPlayersRow } | { kind: 'empty' } | { kind: 'not-found' };
+  | { kind: 'ok'; instrument: InstrumentWithPlayersRow }
+  | { kind: 'empty' }
+  | { kind: 'not-found' };
 
 // @FollowsBlueprint service-crud-update
 export async function patchInstrument(
@@ -50,7 +52,8 @@ export async function patchInstrument(
 }
 
 export type ReorderInstrumentsResult =
-  { kind: 'ok'; instruments: InstrumentWithPlayersRow[] } | { kind: 'stale' };
+  | { kind: 'ok'; instruments: InstrumentWithPlayersRow[] }
+  | { kind: 'stale' };
 
 type InstrumentReorder = { kind: 'ok' } | { kind: 'stale' };
 

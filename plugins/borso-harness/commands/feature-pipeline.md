@@ -53,9 +53,9 @@ invoke them, not to reimplement them.
 - **Standard:** [`${CLAUDE_PLUGIN_ROOT}/skills/implementation/standard.md`](../skills/implementation/standard.md).
 - **Hygiene (non-skippable per [`orchestrator-dispatch-hygiene.md`](../../../docs/knowledge/orchestrator-dispatch-hygiene.md)):**
   every spawn passes `model: 'opus'` explicitly + `isolation: 'worktree'`.
-  The dispatch brief names both halves of the gate — ESLint with
-  `--no-warn-ignored --max-warnings 0`, and `prettier --check` — because a
-  brief naming one half lets the other drift a round at a time.
+  The dispatch brief names both halves of the gate — oxlint with
+  `--type-aware`, and `oxfmt --check` — because a brief naming one half lets
+  the other drift a round at a time.
 - **Loop:** round 1 starts from the plan. Subsequent rounds start from the
   previous validation verdict (`fail-local` rows become the fix list).
 - **Integrate before validating.** `isolation: 'worktree'` leaves a round's

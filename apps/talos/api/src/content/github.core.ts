@@ -20,7 +20,8 @@ export interface CachedResponse {
 }
 
 export type ReadAnswer =
-  { readonly kind: 'failed' } | { readonly kind: 'readable'; readonly body: unknown };
+  | { readonly kind: 'failed' }
+  | { readonly kind: 'readable'; readonly body: unknown };
 export type WriteKind = 'written' | 'conflict' | 'failed';
 
 const API_VERSION = '2022-11-28';

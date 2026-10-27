@@ -18,6 +18,7 @@ const SITE_LIBRARY = 'site/src/lib';
 const DOCUMENTS = 'docs';
 const CANARY_SITE_FILE = 'apps/pragma/site/src/lib/gate-canary-planted.ts';
 const CANARY_SITE_COMPONENT = 'apps/pragma/site/src/components/atoms/GateCanary.tsx';
+const CANARY_API_SERVICE = 'apps/pragma/api/src/gate-canary/gate-canary.service.ts';
 
 const SCRIPT = (name: string): readonly string[] => [`scripts/${name}`];
 const TSX = (path: string, ...flags: readonly string[]): readonly string[] => [
@@ -407,33 +408,63 @@ const BACK_END_SUITE_CANARIES: readonly CommandCanary[] = FULL_STACK_APPLICATION
 
 const LINT_GATE_CANARIES: readonly CommandCanary[] = [
   {
-    mechanism: 'eslint',
-    label: 'ESLint on staged files, as pre-commit runs it',
-    defect: 'a warning-severity violation, which only --max-warnings 0 turns into a failure',
+    mechanism: 'oxlint',
+    label: 'oxlint on staged files, as pre-commit runs it',
+    defect: 'a warning-severity violation, which only denyWarnings turns into a failure',
     plant: {
-      [CANARY_SITE_COMPONENT]: `import { useMemo } from 'react';
+      [CANARY_SITE_COMPONENT]: `export const gateCanaryLimits = { maximum: 1 };
 
-export function GateCanary({ price, count }: { readonly price: number; readonly count: number }) {
-  const total = useMemo(() => price * count, [price]);
-  return <span>{total}</span>;
+export function GateCanary() {
+  return <span>{gateCanaryLimits.maximum}</span>;
 }
 `,
     },
-    command: [
-      'pnpm',
-      'exec',
-      'eslint',
-      '--no-warn-ignored',
-      '--max-warnings',
-      '0',
-      CANARY_SITE_COMPONENT,
-    ],
-    refusal: /react-hooks\/exhaustive-deps/,
+    command: [...SCRIPT('lint-staged-files.sh'), CANARY_SITE_COMPONENT],
+    refusal: /only-export-components/,
+    tier: 'fast',
+  },
+  {
+    mechanism: 'oxlint',
+    label: 'oxlint type-aware rules on a staged file, as pre-commit runs them',
+    defect: 'a floating promise, which only the type-aware rules see',
+    plant: {
+      [CANARY_API_SERVICE]: `async function loadGateCanary(): Promise<number> {
+  return Promise.resolve(1);
+}
+
+export function startGateCanary(): void {
+  loadGateCanary();
+}
+`,
+    },
+    command: [...SCRIPT('lint-staged-files.sh'), CANARY_API_SERVICE],
+    refusal: /gate-canary\.service\.ts:6:\d+: .*no-floating-promises/,
+    tier: 'fast',
+  },
+  {
+    mechanism: 'oxlint',
+    label: 'oxlint unused-directive report on a staged file, as pre-commit runs it',
+    defect: 'a disable directive that silences nothing, beside a type-aware one that does',
+    plant: {
+      [CANARY_API_SERVICE]: `async function loadGateCanary(): Promise<number> {
+  return Promise.resolve(1);
+}
+
+export function startGateCanary(): number {
+  // eslint-disable-next-line typescript/no-floating-promises -- the canary needs a directive that is used
+  loadGateCanary();
+  // eslint-disable-next-line no-console -- the canary needs a directive that is not
+  return 1;
+}
+`,
+    },
+    command: [...SCRIPT('lint-staged-files.sh'), CANARY_API_SERVICE],
+    refusal: /gate-canary\.service\.ts:8:\d+: Unused eslint-disable directive/,
     tier: 'fast',
   },
   {
     mechanism: 'scripts/lint-repository.sh',
-    label: 'ESLint over the repository, as CI runs it',
+    label: 'oxlint over the repository, type-aware, as CI runs it',
     defect: 'an explicit any in the tooling outside every workspace',
     plant: {
       'scripts/gate-canary/gate-canary-lint.ts':
@@ -459,8 +490,8 @@ export function GateCanary({ price, count }: { readonly price: number; readonly 
     tier: 'fast',
   },
   {
-    mechanism: 'prettier',
-    label: 'Prettier over the repository, as CI runs it',
+    mechanism: 'oxfmt',
+    label: 'oxfmt over the repository, as CI runs it',
     defect: 'a misformatted source file',
     plant: {
       'scripts/gate-canary/gate-canary-format.ts': 'export const gateCanary   =   [1,2,3]\n',
@@ -506,7 +537,7 @@ export function GateCanary({ price, count }: { readonly price: number; readonly 
 const STANDARD_WITH_A_FICTIONAL_RULE = {
   path: 'docs/standards/00-principles.md',
   find: '## Enforced by\n\n',
-  replace: '## Enforced by\n\n- `eslint:borso/gate-canary-rule` is a rule nobody wrote.\n',
+  replace: '## Enforced by\n\n- `oxlint:borso/gate-canary-rule` is a rule nobody wrote.\n',
 };
 
 const GENERATOR_CANARIES: readonly CommandCanary[] = [
@@ -881,6 +912,36 @@ const SCRIPT_CANARIES: readonly CommandCanary[] = [
     tier: 'fast',
   },
   {
+    mechanism: 'scripts/check-ci-job-timeouts.sh',
+    label: 'CI jobs stop within the budget',
+    defect: 'a CI job allowed ninety minutes',
+    edits: [
+      {
+        path: '.github/workflows/ci.yml',
+        find: '    timeout-minutes: 10\n',
+        replace: '    timeout-minutes: 90\n',
+      },
+    ],
+    command: SCRIPT('check-ci-job-timeouts.sh'),
+    refusal: /may run 90 minutes/,
+    tier: 'fast',
+  },
+  {
+    mechanism: 'scripts/check-pre-commit-budget.sh',
+    label: 'pre-commit runtime budget',
+    defect: 'a commit check that spends a second of CPU',
+    edits: [
+      {
+        path: '.husky/pre-commit',
+        find: 'launch harness-active "$CHECK_BUDGET_MS" scripts/check-claude-harness-active.sh',
+        replace: `launch harness-active "$CHECK_BUDGET_MS" sh -c 'i=0; while [ "$i" -lt 2000000 ]; do i=$((i + 1)); done'`,
+      },
+    ],
+    command: SCRIPT('check-pre-commit-budget.sh'),
+    refusal: /harness-active used \d+ ms of CPU/,
+    tier: 'fast',
+  },
+  {
     mechanism: 'scripts/check-pwa-assets.sh',
     label: 'PWA icons ship',
     defect: 'a manifest naming an icon that is not there',
@@ -1019,19 +1080,19 @@ export const LINT_CANARIES: readonly LintCanary[] = [
     code: '// eslint-disable-next-line no-magic-numbers\nexport const gateCanaryPlanted = 37;\n',
   },
   {
-    mechanism: '@typescript-eslint/no-explicit-any',
+    mechanism: 'typescript/no-explicit-any',
     label: 'an explicit any',
     path: CANARY_SITE_FILE,
     code: 'export function readGateCanary(input: any): string {\n  return String(input);\n}\n',
   },
   {
-    mechanism: '@typescript-eslint/no-unsafe-argument',
+    mechanism: 'typescript/no-unsafe-argument',
     label: 'an any passed as an argument',
     path: CANARY_SITE_FILE,
     code: 'export function readGateCanary(raw: string): number {\n  return Math.abs(JSON.parse(raw));\n}\n',
   },
   {
-    mechanism: '@typescript-eslint/no-unsafe-assignment',
+    mechanism: 'typescript/no-unsafe-assignment',
     label: 'an any assigned to a variable',
     path: CANARY_SITE_FILE,
     code: 'export function readGateCanary(raw: string): unknown {\n  const parsed = JSON.parse(raw);\n  return parsed;\n}\n',
@@ -1049,13 +1110,13 @@ export const LINT_CANARIES: readonly LintCanary[] = [
     code: "import { sql } from 'drizzle-orm/sql';\n\nexport const gateCanaryPlanted = sql;\n",
   },
   {
-    mechanism: 'react-hooks/exhaustive-deps',
+    mechanism: 'react/exhaustive-deps',
     label: 'a memo missing a dependency',
     path: CANARY_SITE_COMPONENT,
     code: "import { useMemo } from 'react';\n\nexport function GateCanary({ price, count }: { readonly price: number; readonly count: number }) {\n  const total = useMemo(() => price * count, [price]);\n  return <span>{total}</span>;\n}\n",
   },
   {
-    mechanism: 'react-hooks/rules-of-hooks',
+    mechanism: 'react/rules-of-hooks',
     label: 'a hook called under a condition',
     path: CANARY_SITE_COMPONENT,
     code: "import { useState } from 'react';\n\nexport function GateCanary({ isOpen }: { readonly isOpen: boolean }) {\n  if (isOpen) {\n    useState(0);\n  }\n  return null;\n}\n",
@@ -1067,13 +1128,13 @@ export const LINT_CANARIES: readonly LintCanary[] = [
     code: 'export function readGateCanary(raw: string): unknown {\n  try {\n    return JSON.parse(raw);\n  } catch (exception) {\n    return exception;\n  }\n}\n',
   },
   {
-    mechanism: 'unicorn/consistent-boolean-name',
+    mechanism: 'unicorn-js/consistent-boolean-name',
     label: 'a boolean named like a noun',
     path: CANARY_SITE_FILE,
     code: 'export const gateCanaryVisibility = true;\n',
   },
   {
-    mechanism: 'unicorn/consistent-function-scoping',
+    mechanism: 'unicorn-js/consistent-function-scoping',
     label: 'a helper that closes over nothing, declared inside a function',
     path: CANARY_SITE_FILE,
     code: 'export function readGateCanary(values: readonly number[]): readonly number[] {\n  function doubleValue(value: number): number {\n    return value + value;\n  }\n  return values.map(doubleValue);\n}\n',

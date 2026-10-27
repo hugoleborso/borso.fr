@@ -44,4 +44,5 @@ export type StudyWriteOutcome =
   | { readonly kind: 'study-not-in-lineup' };
 
 export type StudyUndoOutcome =
-  { readonly kind: 'ok'; readonly myLine: MemberStreak } | { readonly kind: 'study-not-found' };
+  | { readonly kind: 'ok'; readonly myLine: MemberStreak }
+  | { readonly kind: 'study-not-found' };

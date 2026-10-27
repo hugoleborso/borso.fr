@@ -102,13 +102,13 @@ and `lg:` for wider screens. See
 
 ## Enforced by
 
-- `eslint:borso/no-component-css-imports` rejects an import of a `.css` file
+- `oxlint:borso/no-component-css-imports` rejects an import of a `.css` file
   from anywhere other than the application entry point.
-- `eslint:borso/no-string-concatenated-class-names` rejects a template literal
+- `oxlint:borso/no-string-concatenated-class-names` rejects a template literal
   in a `className` attribute and points at `clsx`.
-- `eslint:borso/no-circle-in-non-uniform-svg` rejects a `<circle>` inside an SVG
+- `oxlint:borso/no-circle-in-non-uniform-svg` rejects a `<circle>` inside an SVG
   that scales unevenly, where it renders as an ellipse.
-- `eslint:borso/no-flex-one-in-auto-height-dialog` rejects `flex-1` on a child of
+- `oxlint:borso/no-flex-one-in-auto-height-dialog` rejects `flex-1` on a child of
   a column inside a `dialog` that declares no height of its own. `flex-1` is
   `flex: 1 1 0%`, and a percentage basis in a container whose height comes from
   its content resolves to zero on an engine that follows the specification —
@@ -116,7 +116,7 @@ and `lg:` for wider screens. See
   bare title bar. `flex-auto` starts from the content instead. The rule stays
   quiet on a dialog carrying `h-dvh` or `h-[85vh]`, and on a `flex-1` inside a
   row, where the main axis is the width the dialog already has.
-- `eslint:borso/no-scroll-container-on-main` rejects an `overflow-auto` or
+- `oxlint:borso/no-scroll-container-on-main` rejects an `overflow-auto` or
   `overflow-scroll` class on a `<main>` element. The document is the one thing
   that scrolls: a shell that is exactly one screen tall and scrolls inside
   `<main>` still has a window iOS can scroll to show a focused field, and on an

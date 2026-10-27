@@ -7,7 +7,9 @@ import { MonoNote } from '../atoms/MonoNote';
 import { Show } from '../atoms/Show';
 
 export type GpxErrorKey =
-  'admin.setup.gpx-missing' | 'admin.setup.gpx-empty' | 'admin.setup.gpx-unreadable';
+  | 'admin.setup.gpx-missing'
+  | 'admin.setup.gpx-empty'
+  | 'admin.setup.gpx-unreadable';
 
 interface GpxFileFieldProps {
   readonly id: string;

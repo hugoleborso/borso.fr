@@ -7,7 +7,9 @@ const MILLISECONDS_PER_MINUTE = 60_000;
 export type PunchTimingRejectReason = 'race-not-started' | 'race-finished';
 
 export type PunchRejectReason =
-  PunchTimingRejectReason | 'already-punched-this-loop' | 'runner-not-in-race';
+  | PunchTimingRejectReason
+  | 'already-punched-this-loop'
+  | 'runner-not-in-race';
 
 export type PunchValidation =
   | { readonly ok: true; readonly loopIndex: number }

@@ -22,7 +22,7 @@ holds:
   cache error. A knowledge hook prints the knowledge entry whose `triggers:`
   match the file being written, the command about to run, or what a call
   printed; `scripts/knowledge-triggers.py check` is its gate. A formatting hook
-  runs Prettier on each edited file when the repository has Prettier installed.
+  runs oxfmt, or Prettier, on each edited file when the repository installs one.
   A session hook creates the friction log.
 
 Each skill and agent opens with a short note on paths. The paths these files
@@ -212,7 +212,7 @@ each repository:
 
 - The standards documents themselves, under `docs/standards/` in borso.fr. A
   consumer points `standards` at them.
-- The ESLint rules in `eslint-rules/`, `eslint.config.js`, the Husky hooks and
+- The lint rules in `eslint-rules/`, `.oxlintrc.json`, the Husky hooks and
   the `scripts/check-*.sh` gates. These enforce the standards at commit time
   and in CI, and a consumer wires its own.
 - The blueprint generators in `.claude/skills/blueprint/`, which index
@@ -225,7 +225,7 @@ each repository:
 
 `check-hook-decisions.sh`, in the plugin's `scripts/` folder, feeds every
 refusing hook a command it must refuse and a mention of that command it must
-let through. borso.fr runs it in pre-commit. A repository that changes a hook can run it the same way:
+let through. borso.fr runs it in pre-push when a hook changes, and in CI. A repository that changes a hook can run it the same way:
 
 ```sh
 vendor/borso.fr/plugins/borso-harness/scripts/check-hook-decisions.sh
