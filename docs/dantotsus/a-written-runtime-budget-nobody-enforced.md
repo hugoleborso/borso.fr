@@ -101,7 +101,7 @@ measures each check against it and refuses the one that exceeds it.
   oxfmt and TypeScript 7 replaced ESLint, Prettier and TypeScript 5.9 for the
   checks
   ([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md),
-  [ADR-0046](../adr/0046-typescript-7-type-checks-beside-typescript-5-9.md)),
+  [ADR-0046](../adr/0046-typescript-7-replaces-typescript-5-9.md)),
   the generators run under plain node, and all of them are back on the commit
   except the type-aware lint rules.
 

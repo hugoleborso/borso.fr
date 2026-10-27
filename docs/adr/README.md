@@ -87,7 +87,7 @@ No:
 | [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | proposed | 2026-10-24 |
 | [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | proposed | 2026-10-25 |
 | [0045](./0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md) | oxlint and oxfmt replace ESLint and Prettier | proposed | 2026-10-27 |
-| [0046](./0046-typescript-7-type-checks-beside-typescript-5-9.md) | TypeScript 7 runs the type checks, TypeScript 5.9 stays for the JavaScript API | proposed | 2026-10-27 |
+| [0046](./0046-typescript-7-replaces-typescript-5-9.md) | TypeScript 7 replaces TypeScript 5.9 | proposed | 2026-10-27 |
 
 ### Data layer
 
@@ -136,7 +136,7 @@ No:
 - 0005 — Dynamic Workflows as the orchestration substrate (supersedes 0001's runtime, not its intent).
 - 0007 — ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name. Superseded by 0045.
 - 0045 — oxlint replaces ESLint and oxfmt replaces Prettier; every rule keeps running, natively, through tsgolint, or as the upstream ESLint rule loaded as a JavaScript plugin, and the lint and format checks return to the commit, except the type-aware rules, which run on push and in CI.
-- 0046 — TypeScript 7, installed as `typescript-native`, runs every type check but `infra/cdk`'s; TypeScript 5.9 stays for the tools that import its JavaScript API and for the `infra/cdk` build.
+- 0046 — TypeScript 7.0.2 is the only TypeScript: every type check and the `infra/cdk` build run it; the architecture model parses with `oxc-parser` and the rule suites run on oxlint's `RuleTester`.
 - 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
 - 0011 — ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
 - 0014 — generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.

@@ -15,7 +15,7 @@
     "build": "vite build",
     "preview": "vite preview",
     "lint": "../../scripts/lint-workspace.sh",
-    "typecheck": "../../scripts/ensure-infra-built.sh && node node_modules/typescript-native/bin/tsc -p tsconfig.cdk.json --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/tsconfig.cdk.tsbuildinfo && node node_modules/typescript-native/bin/tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/tsconfig.tsbuildinfo",
+    "typecheck": "../../scripts/ensure-infra-built.sh && tsc -p tsconfig.cdk.json --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/tsconfig.cdk.tsbuildinfo && tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/tsconfig.tsbuildinfo",
     "test:core": "pnpm --filter @borso/infra run build && vitest run --project core --coverage",
     "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) vitest run --project back-e2e",
     "test:coverage": "pnpm run test:core && pnpm run test",
@@ -87,7 +87,6 @@
     "playwright": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "typescript-native": "catalog:",
     "vite": "catalog:",
     "vitest": "catalog:"
   }

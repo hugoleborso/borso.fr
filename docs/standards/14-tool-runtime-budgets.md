@@ -75,7 +75,7 @@ one staged file, 21 s for one changed file in pragma. oxlint replaced it and
 oxfmt replaced Prettier
 ([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)), and
 TypeScript 7 runs the type checks
-([ADR-0046](../adr/0046-typescript-7-type-checks-beside-typescript-5-9.md)), so
+([ADR-0046](../adr/0046-typescript-7-replaces-typescript-5-9.md)), so
 the checks that had left the commit came back.
 
 Three tools have a named budget rather than the 300 ms of a check, each set
@@ -84,8 +84,9 @@ from a measurement on 2026-10-27, and each still held by the hook:
 - **oxlint** loads its JavaScript plugins on every run, 0.9 s of CPU for one
   script, and `eslint-plugin-react-hooks` runs the React Compiler on each
   component, 2.3 s for one and about 0.1 s for each further one.
-- **The tooling type check** is a whole program: 1.5 to 2.1 s of CPU, 1 s of
-  wall time.
+- **The tooling type check** is a whole program. On four threads it took
+  2.1 to 2.8 s of CPU and 0.9 s of wall time; with `--singleThreaded` it takes
+  1.3 s of CPU and 1.1 s of wall time, so the hook runs it on one thread.
 - **The node checks**, the whole-tree generators and the checks written in
   TypeScript (doc links, the dependency catalog, the PR template), run in one
   node process, `scripts/standards/run-node-checks.ts`, which imports each

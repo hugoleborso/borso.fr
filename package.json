@@ -17,7 +17,7 @@
     "test:coverage": "vitest run --coverage",
     "test:eslint-rules": "vitest run",
     "test:mutation": "stryker run",
-    "typecheck": "node node_modules/typescript-native/bin/tsc -p tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit"
   },
   "devDependencies": {
     "@commitlint/cli": "^19.6.0",
@@ -37,13 +37,12 @@
     "eslint-plugin-unicorn": "73.0.0",
     "husky": "^9.1.0",
     "knip": "6.33.0",
+    "oxc-parser": "0.152.0",
     "oxfmt": "0.74.0",
     "oxlint": "1.89.0",
     "oxlint-tsgolint": "7.0.2005",
     "tsx": "catalog:",
     "typescript": "catalog:",
-    "typescript-eslint": "8.70.1",
-    "typescript-native": "catalog:",
     "vitest": "catalog:",
     "zod": "catalog:zod4"
   },

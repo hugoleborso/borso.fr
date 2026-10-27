@@ -268,12 +268,14 @@ run_with_files oxlint '\.(js|jsx|ts|tsx|mjs|cjs)$' \
 # The repository's own tooling, type-checked with TypeScript 7: `scripts/`,
 # `.claude/skills/` and `eslint-rules/` belong to no workspace, so
 # `pnpm -r typecheck` never reaches them and `tsx` strips types without reading
-# them. 1.2 s of wall time and about 2 s of CPU, measured on 2026-10-27, where
-# TypeScript 5.9 took 6.6 s. See
+# them. TypeScript 5.9 took 6.6 s. With TypeScript 7 on four threads it took
+# 0.9 s of wall time and 2.1 to 2.8 s of CPU, measured on 2026-10-27, which is
+# at the budget; `--singleThreaded` takes 1.1 s of wall time and 1.3 s of CPU,
+# and leaves the other cores to the checks running beside it. See
 # docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
 if is_in_scope '^. ((scripts|\.claude/skills)/.*\.(ts|mts|js|mjs)|eslint-rules/.*\.js|tsconfig\.json)$'; then
   launch typecheck-tooling "$TYPECHECK_BUDGET_MS" \
-    node node_modules/typescript-native/bin/tsc -p tsconfig.json --noEmit
+    node_modules/.bin/tsc -p tsconfig.json --noEmit --singleThreaded
 else
   checks_skipped=$((checks_skipped + 1))
 fi

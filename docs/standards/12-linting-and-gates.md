@@ -46,9 +46,13 @@ in the root file — e.g. the one that lets `borsouvertures` say `piece`. One
 file is the point: a rule cannot be quietly relaxed in a corner.
 
 Every custom rule ships with a `RuleTester` suite, because a lint rule that
-misfires costs more than the rule saves. The suites run on ESLint's
-`RuleTester`, which, with the `eslint-js` alias below, is what ESLint is still
-installed for.
+misfires costs more than the rule saves. The suites run on oxlint's
+`RuleTester`, from `oxlint/plugins-dev`, which parses with the same parser the
+rules meet in the linter. It does not apply disable comments, so the cases
+that check a disable comment silences a rule live in
+`eslint-rules/disable-directives.test.js`, which runs the real oxlint over
+planted files. ESLint is still installed for the `eslint-js` alias below and
+as the peer of the upstream plugins.
 
 ## What the shared configuration turns on
 

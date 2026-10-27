@@ -4,13 +4,7 @@
   "workspaces": {
     ".": {
       "ignoreBinaries": ["build", "psql"],
-      "ignoreDependencies": [
-        "@swmansion/argent",
-        "agent-browser",
-        "esbuild",
-        "oxlint-tsgolint",
-        "oxlint"
-      ],
+      "ignoreDependencies": ["@swmansion/argent", "agent-browser", "esbuild"],
       "entry": [
         ".claude/skills/blueprint/blueprint-*.ts",
         "scripts/architecture/*.ts",

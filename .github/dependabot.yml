@@ -59,7 +59,7 @@ updates:
           - 'eslint'
           - 'eslint-*'
           - '@eslint-community/*'
-          - 'typescript-eslint'
+          - 'oxc-parser'
       tanstack:
         patterns:
           - '@tanstack/*'
