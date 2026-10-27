@@ -57,59 +57,13 @@ fi
 # costs one round-trip and buys back the scoping this file exists for.
 git fetch --quiet origin main 2>/dev/null || true
 
-# A remote sha that HEAD does not descend from means the push rewrites the
-# branch: a force push after `git checkout -B <branch> origin/main`, which is
-# how a branch whose pull request was squash-merged starts its next piece of
-# work. Diffing against that sha gates everything main changed between the two
-# bases. Measured on PR #174: a one-commit branch gated 774 files, four
-# applications of tests and six mutation suites over 79 files, and the push
-# outlived its ten-minute command timeout. Such a branch is new work on main, so its base is main.
-# See docs/dantotsus/a-force-push-re-gated-everything-main-had-merged.md.
-if [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null &&
-  git merge-base --is-ancestor "$push_base" HEAD 2>/dev/null; then
-  range_label="this push"
-elif [ -n "$push_base" ] && git cat-file -e "$push_base" 2>/dev/null; then
-  push_base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
-  range_label="the whole branch since main (the push rewrites the branch)"
-else
-  push_base=$(git merge-base HEAD origin/main 2>/dev/null || echo HEAD)
-  range_label="the whole branch since main (no remote ref for this branch yet)"
-fi
-
-# One push legitimately adds work nobody here has to gate: the one that merges
-# origin/main in. Its range carries every commit main made since the branch
-# last pushed, and those were gated when they landed — unscoped, by
-# .github/workflows/full-suite.yml. Keying on <remote sha> alone re-gates all
-# of them: measured on this repository, merging main into a two-day branch
-# turned 46 commits into 491 changed files, four applications of tests and 78
-# mutated files, and the push timed out twice before anyone understood it was
-# working as designed.
-#
-# The newest main commit this branch has merged is `git merge-base HEAD
-# origin/main`, and diffing against it rather than the remote sha leaves exactly
-# the branch's own work: the same push drops from 491 files to 23. It cannot
-# under-gate. A file main changed and this branch took verbatim is identical to
-# that commit, so it falls out of the range, which is right, main gated it. A
-# file both sides touched, or the branch alone touched, still differs and is
-# still gated.
-#
-# It is the merge base and not main's tip because the fetch above moves the
-# tip. This used to diff against origin/main itself, after checking that the
-# tip was an ancestor of HEAD; whenever main moved between the merge and the
-# push, which in a session merging nine pull requests was every push, the
-# check failed, the narrowing never happened, and one push mutated 81 talos
-# files that main had brought in. See
-# docs/dantotsus/the-fetch-that-undid-the-narrowing.md.
-#
-# The ancestry test is what keeps this off an ordinary push: on a branch that
-# has not merged main since its last push, the merge base is already an
-# ancestor of the remote sha, and the remote sha is the tighter base.
-main_merged=$(git merge-base HEAD origin/main 2>/dev/null || true)
-if [ -n "$main_merged" ] &&
-  ! git merge-base --is-ancestor "$main_merged" "$push_base" 2>/dev/null; then
-  push_base="$main_merged"
-  range_label="this push, minus the commits it merged from origin/main"
-fi
+# The base this push is gated against: the remote sha on an ordinary push, main
+# for a new or rewritten branch, and the automatic merge of the two gated
+# states on the push that merges main in. scripts/pre-push-range.sh holds the
+# reasons and scripts/pre-push-range.test.ts the cases.
+range=$(scripts/pre-push-range.sh "$push_base")
+push_base=$(printf '%s\n' "$range" | sed -n 1p)
+range_label=$(printf '%s\n' "$range" | sed -n 2p)
 
 changed=$(git diff --name-only "$push_base" HEAD)
 echo "[pre-push] gating $(echo "$changed" | grep -c . ) changed file(s) — range: $range_label"
@@ -447,7 +401,15 @@ case "$current_branch" in
     printf '\n⚠️  [pre-push] pushing on %s.\n' "$current_branch" >&2
     printf '   If this branch has an open PR, fetch and address any\n' >&2
     printf '   unresolved review threads BEFORE relying on this push.\n' >&2
-    printf '   Use: mcp__github__pull_request_read method:get_review_comments\n\n' >&2
+    printf '   Use: mcp__github__pull_request_read method:get_review_comments\n' >&2
+    # Every local gate passing is not the branch passing. On PR #197 a
+    # subagent pushed, listed every gate it had run, wrote "Nothing is
+    # failing", and CI's pre-commit-budget job, which times the commit hook on
+    # GitHub's runner and has no local equivalent, was red on that very push.
+    # See docs/dantotsus/one-sample-could-not-tell-the-hook-from-the-runner.md.
+    printf '   CI has not run on %s yet, and some of its jobs measure what no\n' "$(git rev-parse --short HEAD)" >&2
+    printf '   local gate can, such as the commit hook timed on its runner. Call\n' >&2
+    printf '   the branch passing only once get_check_runs for this sha is green.\n\n' >&2
 
     # A pull request that conflicts with its base creates NO workflow run at
     # all — GitHub cannot build refs/pull/<n>/merge, so it dispatches nothing.
