@@ -22,3 +22,5 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [02:09] `rework-197` oxlint turns ESLint's column -1 force-location into an offset on the previous line, so @eslint-community/eslint-comments reports one line early and crashes on line 1
 - [02:09] `rework-197` under oxlint a blanket /* eslint-disable */ silences @eslint-community/eslint-comments/no-unlimited-disable's own report, so the rule passes the exact defect it exists for
 - [02:09] `rework-197` oxlint reports React hooks rules as react-hooks(rule) while the configuration names them react/rule, so a tool mapping diagnostics to configured rules needs a translation
+- [08:11] `rework-197` pnpm why typescript -r did not show @stryker-mutator/core, which imports typescript dynamically without declaring it, so dropping TypeScript 5.9 broke every mutation run and only the slow gate canaries showed it
+- [08:46] `rework-197` the pre-commit-budget fixture on CI's runner read 2732 ms, then 2274 and 2427 ms on reruns of the same commit, with every check's CPU, including untouched shell checks, up by the same factor, so one runner sample cannot tell a regression from a slower machine
