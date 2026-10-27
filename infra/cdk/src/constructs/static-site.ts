@@ -45,7 +45,7 @@ const BUCKET_DEPLOYMENT_MEMORY_MIB = 512;
 const FINGERPRINTED_ASSET_GLOB = 'assets/*';
 const FINGERPRINTED_ASSET_MAX_AGE_DAYS = 365;
 const FULLY_QUALIFIED_DOMAIN_SUFFIX = '.';
-const DEFAULT_API_PATH_PATTERN = '/api/*';
+export const DEFAULT_API_PATH_PATTERNS: readonly string[] = ['/api/*'];
 
 export interface StaticSiteProps {
   readonly app: string;
@@ -56,7 +56,7 @@ export interface StaticSiteProps {
   readonly api?: {
     readonly domainName: string;
     readonly originVerifyValue: string;
-    readonly pathPattern?: string;
+    readonly pathPatterns?: readonly string[];
   };
   readonly spaFallback?: boolean;
   readonly bucketNameSuffix?: BucketNameSuffix;
@@ -148,12 +148,11 @@ export class StaticSite extends Construct {
         code: FunctionCode.fromInline(API_VIEWER_ADDRESS_FUNCTION_CODE),
         comment: 'Overwrite the viewer address header the API keys its rate limits on',
       });
-      distribution.addBehavior(
-        props.api.pathPattern ?? DEFAULT_API_PATH_PATTERN,
-        new HttpOrigin(props.api.domainName, {
-          customHeaders: { [ORIGIN_VERIFY_HEADER]: props.api.originVerifyValue },
-        }),
-        {
+      const apiOrigin = new HttpOrigin(props.api.domainName, {
+        customHeaders: { [ORIGIN_VERIFY_HEADER]: props.api.originVerifyValue },
+      });
+      for (const pathPattern of props.api.pathPatterns ?? DEFAULT_API_PATH_PATTERNS) {
+        distribution.addBehavior(pathPattern, apiOrigin, {
           allowedMethods: AllowedMethods.ALLOW_ALL,
           viewerProtocolPolicy: ViewerProtocolPolicy.REDIRECT_TO_HTTPS,
           cachePolicy: CachePolicy.CACHING_DISABLED,
@@ -161,8 +160,8 @@ export class StaticSite extends Construct {
           functionAssociations: [
             { function: viewerAddressFunction, eventType: FunctionEventType.VIEWER_REQUEST },
           ],
-        },
-      );
+        });
+      }
     }
 
     bucket.addToResourcePolicy(

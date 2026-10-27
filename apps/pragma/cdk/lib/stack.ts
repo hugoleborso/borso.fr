@@ -1,5 +1,6 @@
 import {
   agentReaderPrincipalArn,
+  apiPublicOrigin,
   frontendOrigin,
   type IDsqlCluster,
   isProductionStage,
@@ -36,6 +37,15 @@ const READER_TABLE_BLOCKLIST = [
   ...SECRET_TABLES_REPLACED_ON_PREVIEW,
   ...SECRET_TABLES_BLOCKED_ON_PREVIEW,
   ...BALLOT_TOKEN_TABLES,
+];
+
+const ASSISTANT_PATH_PATTERNS = [
+  '/mcp',
+  '/oauth/authorize',
+  '/oauth/token',
+  '/oauth/register',
+  '/oauth/revoke',
+  '/.well-known/oauth-*',
 ];
 
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
@@ -76,15 +86,20 @@ function buildErrorReportingEnvironment(
   };
 }
 
+function readNameContext(props: BuildPragmaAppStackProps): {
+  readonly app: string;
+  readonly stage: Stage;
+  readonly prNumber?: number;
+} {
+  return {
+    app: APP_SLUG,
+    stage: props.stage,
+    ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
+  };
+}
+
 function readSiteOrigin(props: BuildPragmaAppStackProps): SiteOrigin {
-  const origin = frontendOrigin(
-    {
-      app: APP_SLUG,
-      stage: props.stage,
-      ...(props.prNumber === undefined ? {} : { prNumber: props.prNumber }),
-    },
-    props.domainName,
-  );
+  const origin = frontendOrigin(readNameContext(props), props.domainName);
   return { origin, hostname: new URL(origin).hostname };
 }
 
@@ -127,10 +142,13 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     api: {
       entry: props.apiEntry,
       timeoutSeconds: API_TIMEOUT_SECONDS,
+      extraPathPatterns: ASSISTANT_PATH_PATTERNS,
       environment: {
         UPLOADS_BUCKET: uploadsBucket.bucketName,
         WEBAUTHN_RELYING_PARTY_ID: siteOrigin.hostname,
         WEBAUTHN_ORIGIN: siteOrigin.origin,
+        OAUTH_ISSUER: apiPublicOrigin(readNameContext(props), props.domainName),
+        OAUTH_CONSENT_ORIGIN: siteOrigin.origin,
         SPOTIFY_CREDENTIALS_PARAMETER,
         ...buildErrorReportingEnvironment(props.errorReporting),
       },

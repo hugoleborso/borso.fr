@@ -22,7 +22,7 @@ import { applyStandardTags } from '../internal/tags.js';
 import type { IDsqlCluster } from './dsql-cluster.js';
 import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
-import { StaticSite } from './static-site.js';
+import { DEFAULT_API_PATH_PATTERNS, StaticSite } from './static-site.js';
 
 export interface PreviewableAppProps {
   readonly app: string;
@@ -39,6 +39,7 @@ export interface PreviewableAppProps {
     readonly memoryMb?: number;
     readonly timeoutSeconds?: number;
     readonly environment?: Readonly<Record<string, string>>;
+    readonly extraPathPatterns?: readonly string[];
   };
   readonly database?: {
     readonly migrationsPath: string;
@@ -127,6 +128,8 @@ export class PreviewableApp extends Construct {
         ? undefined
         : selectSameOriginApiDomainName(props.stage, apiHttpHostname(this.api));
 
+    const apiPathPatterns = [...DEFAULT_API_PATH_PATTERNS, ...(props.api?.extraPathPatterns ?? [])];
+
     this.site = new StaticSite(this, 'Site', {
       app: props.app,
       stage: props.stage,
@@ -139,7 +142,13 @@ export class PreviewableApp extends Construct {
         : { bucketNameSuffix: props.frontend.bucketNameSuffix }),
       ...(sameOriginApiDomainName === undefined || originVerifyValue === undefined
         ? {}
-        : { api: { domainName: sameOriginApiDomainName, originVerifyValue } }),
+        : {
+            api: {
+              domainName: sameOriginApiDomainName,
+              originVerifyValue,
+              pathPatterns: apiPathPatterns,
+            },
+          }),
     });
 
     new CfnOutput(this, 'FrontendUrl', { value: this.site.url });
