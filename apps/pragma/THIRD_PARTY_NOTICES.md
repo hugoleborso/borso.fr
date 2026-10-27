@@ -2,7 +2,7 @@
 
 ## Lucide
 
-The path data of these glyphs in `site/src/components/atoms/Icon.tsx` is copied from Lucide (https://lucide.dev), version 1.52: `arrowR` (arrow-right), `key` (key-round), `unlink`, `expand`, `bulb` (lightbulb), `reorder` (arrow-down-up), `swap` (arrow-left-right), `clipboard`, `camera`, `refresh` (refresh-cw) and `minus`. Lucide is distributed under the ISC licence:
+The path data of these glyphs in `site/src/components/atoms/Icon.tsx` is copied from Lucide (https://lucide.dev), version 1.52: `arrowR` (arrow-right), `fingerprint` (fingerprint-pattern), `unlink`, `expand`, `bulb` (lightbulb), `reorder` (arrow-down-up), `swap` (arrow-left-right), `clipboard`, `camera`, `refresh` (refresh-cw) and `minus`. Lucide is distributed under the ISC licence:
 
 ```
 ISC License

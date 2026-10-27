@@ -47,7 +47,7 @@ export function LoginPage(): JSX.Element {
         />
         {hasPasskeySupport ? (
           <Button
-            icon="key"
+            icon="fingerprint"
             type="button"
             variant="quiet"
             className="mt-3 w-full"
