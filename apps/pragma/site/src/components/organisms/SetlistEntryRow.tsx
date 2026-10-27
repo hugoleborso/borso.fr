@@ -24,6 +24,7 @@ import {
   type SetlistEntryFormValues,
   useSetlistEntryForm,
 } from '../molecules/setlist-entry-form.hook';
+import { useLatestTextSave } from '../molecules/latest-text-save.hook';
 import { SetlistEntrySheet } from './SetlistEntrySheet';
 import { selectMasteryColor } from './mastery-color.core';
 import {
@@ -77,6 +78,7 @@ export interface SetlistEntryRowProps {
   readonly isMemberView: boolean;
   readonly transitionBefore: ReactNode;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
+  readonly onSave: (entryId: string, patch: SetlistEntryPatch) => Promise<unknown>;
   readonly onUpdateSongDefaults: (patch: SongDefaultsPatch) => void;
   readonly onRemove: (entryId: string) => void;
 }
@@ -102,6 +104,24 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     notes: props.notes,
   };
   const form = useSetlistEntryForm(defaultValues);
+  const notesSave = useLatestTextSave({
+    savedText: defaultValues.notes,
+    save: (text) => props.onSave(props.entryId, { notes: text }),
+  });
+  const keySave = useLatestTextSave({
+    savedText: defaultValues.keyOverride,
+    save: (text) => props.onSave(props.entryId, { keyOverride: text.length === 0 ? null : text }),
+  });
+  const capoSave = useLatestTextSave({
+    savedText: defaultValues.capo,
+    save: (text) => props.onSave(props.entryId, { capo: text === '' ? null : Number(text) }),
+  });
+  const closeSheet = (): void => {
+    notesSave.flush();
+    keySave.flush();
+    capoSave.flush();
+    setIsSheetOpen(false);
+  };
   const saveLineupAsSongDefault = (lineup: LineupRecord | null): void => {
     props.onUpdateSongDefaults({ defaultLineup: toLineupPayload(lineup) });
     if (props.lineupOverride !== null) props.onUpdate(props.entryId, { lineupOverride: null });
@@ -116,7 +136,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     saveTo[selectLineupSaveTarget(props.songDefaultLineup, lineup, wasReset)]();
   };
   const openFromSheet = (open: (isOpen: boolean) => void): void => {
-    setIsSheetOpen(false);
+    closeSheet();
     open(true);
   };
   const publishEnergy = (next: number): void => {
@@ -223,11 +243,13 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
           baseEnergy={props.baseEnergy}
           form={form}
           onPublishEnergy={publishEnergy}
-          onPatch={(patch) => props.onUpdate(props.entryId, patch)}
+          onNotesType={notesSave.type}
+          onKeyType={keySave.type}
+          onCapoType={capoSave.type}
           onEditLineupOverride={() => openFromSheet(setLineupEditorOpen)}
           onEditSongDefaults={() => openFromSheet(setSongDefaultsOpen)}
           onRemove={() => openFromSheet(setIsRemovalPending)}
-          onClose={() => setIsSheetOpen(false)}
+          onClose={closeSheet}
         />
       ) : null}
       <LineupEditor

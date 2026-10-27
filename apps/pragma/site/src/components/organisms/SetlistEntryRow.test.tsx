@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
@@ -68,6 +68,7 @@ function buildProps(memberPart: readonly MemberPartGlyph[]): SetlistEntryRowProp
     isMemberView: memberPart.length > 0,
     transitionBefore: null,
     onUpdate: () => undefined,
+    onSave: async () => ({}),
     onUpdateSongDefaults: () => undefined,
     onRemove: () => undefined,
   };
@@ -144,5 +145,36 @@ describe('a setlist row tapped open', () => {
     fireEvent.click(screen.getByRole('button', { name: /Superstition/ }));
     fireEvent.click(screen.getByRole('button', { name: 'Close' }));
     expect(screen.queryByRole('dialog')).toBeNull();
+  });
+
+  it('saves the full note when the sheet is closed before the pause ends', () => {
+    const onSave = vi.fn(async () => ({}));
+    render(<SetlistEntryRow {...buildProps([])} onSave={onSave} />);
+    fireEvent.click(screen.getByRole('button', { name: /Superstition/ }));
+    const notes = screen.getByRole('textbox', { name: 'Notes' });
+    fireEvent.change(notes, { target: { value: 'F' } });
+    fireEvent.change(notes, { target: { value: 'Finir sur le refrain' } });
+    expect(onSave).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onSave).toHaveBeenCalledExactlyOnceWith('entry-1', { notes: 'Finir sur le refrain' });
+  });
+
+  it('saves the key and an empty capo as cleared values', async () => {
+    const onSave = vi.fn(async () => ({}));
+    render(<SetlistEntryRow {...buildProps([])} onSave={onSave} />);
+    fireEvent.click(screen.getByRole('button', { name: /Superstition/ }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Key' }), { target: { value: 'Am' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Capo' }), { target: { value: '2' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    expect(onSave).toHaveBeenCalledWith('entry-1', { keyOverride: 'Am' });
+    expect(onSave).toHaveBeenCalledWith('entry-1', { capo: 2 });
+    fireEvent.click(screen.getByRole('button', { name: /Superstition/ }));
+    fireEvent.change(screen.getByRole('textbox', { name: 'Key' }), { target: { value: '' } });
+    fireEvent.change(screen.getByRole('spinbutton', { name: 'Capo' }), { target: { value: '' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Close' }));
+    await waitFor(() => {
+      expect(onSave).toHaveBeenCalledWith('entry-1', { keyOverride: null });
+    });
+    expect(onSave).toHaveBeenCalledWith('entry-1', { capo: null });
   });
 });

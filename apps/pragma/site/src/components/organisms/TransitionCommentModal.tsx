@@ -9,6 +9,7 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { inputVariants } from '../atoms/input.variants';
 import { ApiError } from '../../lib/api.client';
 import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
+import { useTransitionDraft } from '../../lib/transition-draft.store';
 import {
   useSaveTransitionComment,
   useTransitionComment,
@@ -33,16 +34,19 @@ export function TransitionCommentModal({
   const { t } = useTranslation();
   const existing = useTransitionComment(songAId, songBId);
   const save = useSaveTransitionComment();
-  const [editedDraft, setEditedDraft] = useState<string | null>(null);
+  const kept = useTransitionDraft(songAId, songBId);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const draft = editedDraft ?? existing.data?.comment.comment ?? '';
+  const draft = kept.text ?? existing.data?.comment.comment ?? '';
 
   const saveComment = (): void => {
     save.mutate(
       { a: songAId, b: songBId, comment: draft },
       {
-        onSuccess: onClose,
+        onSuccess: () => {
+          kept.discard();
+          onClose();
+        },
         onError: (error) =>
           setLocalError(error instanceof ApiError ? error.message : 'unknown-error'),
       },
@@ -75,7 +79,7 @@ export function TransitionCommentModal({
         ) : (
           <textarea
             value={draft}
-            onChange={(event) => setEditedDraft(event.target.value)}
+            onChange={(event) => kept.keep(event.target.value)}
             rows={6}
             maxLength={TRANSITION_COMMENT_MAX_LENGTH}
             className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}

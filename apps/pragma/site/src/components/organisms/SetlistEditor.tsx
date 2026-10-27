@@ -194,6 +194,12 @@ export function SetlistEditor({
     );
   };
 
+  const saveSetlistEntry = async (entryId: string, patch: SetlistEntryPatch): Promise<unknown> =>
+    updateEntry.mutateAsync({ setlistId, entryId, ...patch }).catch((error: unknown) => {
+      setFailureKey('setlist.failure.update');
+      throw error;
+    });
+
   const updateSongDefaults = (songId: string, patch: SongDefaultsPatch): void => {
     updateSong.mutate(
       { id: songId, ...patch },
@@ -249,6 +255,7 @@ export function SetlistEditor({
           knownMemberIds={knownMemberIds}
           onReorder={reorderSetlistEntries}
           onUpdate={updateSetlistEntry}
+          onSave={saveSetlistEntry}
           onUpdateSongDefaults={updateSongDefaults}
           onRemove={removeSetlistEntry}
           onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}

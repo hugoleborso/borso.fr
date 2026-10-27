@@ -70,6 +70,7 @@ export interface SetlistEntriesListProps {
   readonly knownMemberIds: ReadonlySet<string>;
   readonly onReorder: (orderedEntryIds: readonly string[]) => void;
   readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
+  readonly onSave: (entryId: string, patch: SetlistEntryPatch) => Promise<unknown>;
   readonly onUpdateSongDefaults: (songId: string, patch: SongDefaultsPatch) => void;
   readonly onRemove: (entryId: string) => void;
   readonly onOpenTransition: (leftSongId: string, rightSongId: string) => void;
@@ -180,6 +181,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 instruments={props.instruments}
                 transitionBefore={renderTransitionBefore(fullIndex)}
                 onUpdate={props.onUpdate}
+                onSave={props.onSave}
                 onUpdateSongDefaults={(patch) => props.onUpdateSongDefaults(entry.songId, patch)}
                 onRemove={props.onRemove}
               />

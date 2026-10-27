@@ -15,7 +15,6 @@ import { SetlistEntryKeyCapoFields } from '../molecules/SetlistEntryKeyCapoField
 import { SetlistEntryNotesField } from '../molecules/SetlistEntryNotesField';
 import { SetlistEntryEnergyField } from '../molecules/SetlistEntryEnergyField';
 import type { SetlistEntryForm } from '../molecules/setlist-entry-form.hook';
-import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 
 const LISTEN_LINK_CLASS =
@@ -34,7 +33,9 @@ export interface SetlistEntrySheetProps {
   readonly baseEnergy: number | null;
   readonly form: SetlistEntryForm;
   readonly onPublishEnergy: (level: number) => void;
-  readonly onPatch: (patch: SetlistEntryPatch) => void;
+  readonly onNotesType: (text: string) => void;
+  readonly onKeyType: (text: string) => void;
+  readonly onCapoType: (text: string) => void;
   readonly onEditLineupOverride: () => void;
   readonly onEditSongDefaults: () => void;
   readonly onRemove: () => void;
@@ -89,7 +90,11 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
             {props.memberPart.length === 0 ? null : (
               <MemberPartGlyphs parts={props.memberPart} size={18} />
             )}
-            <SetlistEntryKeyCapoFields form={props.form} onPatch={props.onPatch} />
+            <SetlistEntryKeyCapoFields
+              form={props.form}
+              onKeyType={props.onKeyType}
+              onCapoType={props.onCapoType}
+            />
           </div>
         </div>
         <button
@@ -108,7 +113,7 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
             onPublish={props.onPublishEnergy}
           />
         </div>
-        <SetlistEntryNotesField form={props.form} onPatch={props.onPatch} />
+        <SetlistEntryNotesField form={props.form} onType={props.onNotesType} />
         <SetlistEntryActions
           onEditSongDefaults={props.onEditSongDefaults}
           onRemove={props.onRemove}
