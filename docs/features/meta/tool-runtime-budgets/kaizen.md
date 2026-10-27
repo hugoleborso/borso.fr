@@ -14,3 +14,11 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 
 - [14:31] `runtime-budgets` check-claude-harness-active refused a session whose .claude hooks visibly run, because the main checkout's SessionStart predates the --record line and the worktree shares its git dir
 - [15:28] `runtime-budgets` pre-push timings swung from 55 s to 323 s on the same fixture because other sessions drove the shared machine to load 11, and the pragma tests timed out under it
+- [01:34] `rework-197` an npm alias of typescript@7 next to typescript@5 shadows the tsc bin of every workspace that declares both, silently, because pnpm links the higher version
+- [01:34] `rework-197` oxlint reports an eslint-disable directive for a type-aware rule as unused whenever it runs without --type-aware, so a fast non-type-aware pass cannot also report unused directives
+- [01:34] `rework-197` oxlint's native react/purity, unicorn/consistent-function-scoping, jsx-a11y/autocomplete-valid and jsx-a11y/no-autofocus disagree with the ESLint plugins they port on this tree, and @oxlint/migrate maps them as equivalent
+- [01:34] `rework-197` oxlint places a JS plugin's report on a comment one line above the comment, so @eslint-community/eslint-comments/require-description points at the wrong line
+- [01:34] `rework-197` jsPlugins load eagerly even when declared inside an override, so eslint-plugin-react-hooks adds about 0.3 s to every oxlint run including ones that lint no React file
+- [02:09] `rework-197` oxlint turns ESLint's column -1 force-location into an offset on the previous line, so @eslint-community/eslint-comments reports one line early and crashes on line 1
+- [02:09] `rework-197` under oxlint a blanket /* eslint-disable */ silences @eslint-community/eslint-comments/no-unlimited-disable's own report, so the rule passes the exact defect it exists for
+- [02:09] `rework-197` oxlint reports React hooks rules as react-hooks(rule) while the configuration names them react/rule, so a tool mapping diagnostics to configured rules needs a translation

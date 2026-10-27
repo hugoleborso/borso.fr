@@ -72,6 +72,11 @@ plugin on this repository's code:
 | `react-hooks-js` | `purity`, `config`, `gating` | oxlint's `purity` reported 9 `new Date()` calls ESLint's did not; the other two do not exist |
 | `eslint-js` | `no-octal`, `no-dupe-args` | oxlint relies on strict mode, and a CloudFront Function file is not in strict mode |
 
+`@eslint-community/eslint-comments` keeps its name and runs through
+`eslint-rules/js-plugins/eslint-comments.js`, which moves a report placed at
+column -1, ESLint's convention for a whole line, to column 0: oxlint reads -1
+as the end of the previous line.
+
 `unicorn/no-array-push-push` was dropped rather than moved: unicorn 73
 deprecated it, and a deprecated unicorn rule reports nothing.
 
