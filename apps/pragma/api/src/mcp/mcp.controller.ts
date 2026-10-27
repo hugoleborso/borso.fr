@@ -1,6 +1,8 @@
 import { Hono } from 'hono';
 import { readMemberId } from '../auth/member-session.middleware';
 import { requireBearerSession } from '../oauth/bearer-session.middleware';
+import { SESSION_TOOLS } from '../sessions/sessions-tools.controller';
+import { SETLIST_TOOLS } from '../setlists/setlists-tools.controller';
 import { SONG_TOOLS } from '../songs/songs-tools.controller';
 import { TRANSITION_TOOLS } from '../transitions/transitions-tools.controller';
 import {
@@ -13,7 +15,12 @@ const METHOD_NOT_ALLOWED_STATUS = 405;
 const STATELESS_METHODS_REFUSED = ['GET', 'DELETE'];
 const ALLOWED_METHODS_HEADER = { Allow: 'POST' };
 
-export const ASSISTANT_TOOLS: readonly ToolDefinition[] = [...SONG_TOOLS, ...TRANSITION_TOOLS];
+export const ASSISTANT_TOOLS: readonly ToolDefinition[] = [
+  ...SONG_TOOLS,
+  ...TRANSITION_TOOLS,
+  ...SESSION_TOOLS,
+  ...SETLIST_TOOLS,
+];
 
 export interface BuildMcpRouterOptions {
   readonly clock?: () => Date;

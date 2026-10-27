@@ -167,6 +167,7 @@ export async function findOrCreateAudienceChoiceSetlist(
 
 // @FollowsBlueprint service-facade-reexport
 export { didClaimSetlistWithin, runInOneSetlistTransaction } from './setlists.repository';
+export { defineTool, type ToolActor, type ToolAnswer } from '../mcp/mcp.service';
 
 export async function appendSongToClaimedSetlistWithin(
   executor: DatabaseExecutor,

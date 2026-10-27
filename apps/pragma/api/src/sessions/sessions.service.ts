@@ -15,6 +15,7 @@ import {
   updateSession,
 } from './sessions.repository';
 export { didClaimSessionWithin, findSessionById } from './sessions.repository';
+export { defineTool } from '../mcp/mcp.service';
 import {
   type SessionPersistedUpdate,
   type sessionCreateSchema,

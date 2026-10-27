@@ -5,7 +5,15 @@ import { afterAll, beforeAll, vi } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../api/src/app';
 import type { TaggedFailure } from '../api/src/helpers/observability/error-reporting.adapter';
-import { type AuthenticatedApp, jsonRequest, readJson, TEST_HOST } from './auth-utils';
+import { NOTIFICATION_GROUP_WINDOW_MINUTES } from '../api/src/notifications/notifications.core';
+import {
+  type AuthenticatedApp,
+  buildAuthenticatedApp,
+  jsonRequest,
+  readJson,
+  TEST_HOST,
+} from './auth-utils';
+import { stubPushService, subscribeDevice } from './push-utils';
 
 export const MCP_TEST_ISSUER = 'https://pragma.test';
 const MCP_TEST_CONSENT_ORIGIN = 'https://site.pragma.test';
@@ -21,11 +29,13 @@ const OAUTH_VARIABLES = {
 const registeredClientSchema = z.object({ client_id: z.string() });
 const redirectToSchema = z.object({ redirectTo: z.string().url() });
 const tokenSchema = z.object({ access_token: z.string(), refresh_token: z.string() });
+const MILLISECONDS_PER_MINUTE = 60_000;
 const textContentSchema = z.array(z.object({ type: z.literal('text'), text: z.string() }));
 
 export interface AssistantHarness {
   readonly app: Hono;
   readonly clock: { now: Date };
+  readonly advanceClock: (milliseconds: number) => void;
   readonly reportFailure: ReturnType<typeof vi.fn<(failure: TaggedFailure) => void>>;
 }
 
@@ -38,6 +48,14 @@ export interface AssistantTokens {
 export interface ToolReply {
   readonly isError: boolean;
   readonly body: unknown;
+}
+
+export interface AssistantBand {
+  readonly harness: AssistantHarness;
+  readonly hugo: AuthenticatedApp;
+  readonly lea: AuthenticatedApp;
+  readonly send: ReturnType<typeof stubPushService>;
+  readonly assistant: Client;
 }
 
 export function useOAuthOrigins(): void {
@@ -64,7 +82,10 @@ export function buildAssistantHarness(): AssistantHarness {
     oauth: { clock: readClock, reportFailure },
     mcp: { clock: readClock, reportFailure },
   });
-  return { app, clock, reportFailure };
+  const advanceClock = (milliseconds: number) => {
+    clock.now = new Date(clock.now.getTime() + milliseconds);
+  };
+  return { app, clock, advanceClock, reportFailure };
 }
 
 export async function connectAssistant(
@@ -156,4 +177,21 @@ export async function postToMcp(
   };
   if (authorization !== undefined) headers.authorization = authorization;
   return await app.request(MCP_URL, { method: 'POST', headers, body: JSON.stringify(body) });
+}
+
+export async function prepareAssistantBand(): Promise<AssistantBand> {
+  const send = stubPushService();
+  const harness = buildAssistantHarness();
+  const hugo = await buildAuthenticatedApp('Hugo');
+  const lea = await buildAuthenticatedApp('Léa');
+  await subscribeDevice(hugo, 'hugo-phone');
+  await subscribeDevice(lea, 'lea-phone');
+  const tokens = await connectAssistant(harness.app, hugo);
+  const assistant = await openMcpClient(harness.app, tokens.accessToken);
+  return { harness, hugo, lea, send, assistant };
+}
+
+export function passNotificationGroupWindow(harness: AssistantHarness): void {
+  const windowMilliseconds = (NOTIFICATION_GROUP_WINDOW_MINUTES + 1) * MILLISECONDS_PER_MINUTE;
+  harness.advanceClock(windowMilliseconds);
 }

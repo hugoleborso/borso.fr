@@ -74,3 +74,8 @@ export const sessionPersistedUpdateSchema = z
 export type SessionPersistedUpdate = z.infer<typeof sessionPersistedUpdateSchema>;
 
 export const sessionIdParamSchema = z.object({ id: z.string().uuid() });
+
+export const sessionCreateToolInputSchema = z.object({ session: sessionCreateSchema });
+export const sessionUpdateToolInputSchema = sessionIdParamSchema.extend({
+  changes: sessionUpdateSchema,
+});

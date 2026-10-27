@@ -134,3 +134,17 @@ export const setlistSessionParamSchema = z.object({
   sessionId: z.string().uuid(),
 });
 export const setlistBySessionParamSchema = z.object({ sessionId: z.string().uuid() });
+
+export const setlistRenameToolInputSchema = setlistIdParamSchema.merge(setlistRenameSchema);
+export const setlistLinkToolInputSchema = setlistIdParamSchema.merge(setlistLinkSchema);
+export const setlistEntryCreateToolInputSchema =
+  setlistIdParamSchema.merge(setlistEntryCreateSchema);
+export const setlistEntryUpdateToolInputSchema =
+  setlistEntryIdParamSchema.merge(setlistEntryUpdateSchema);
+export const setlistEntryLineupToolInputSchema = setlistEntryIdParamSchema.extend({
+  lineupOverride: lineupOverrideSchema.nullable(),
+});
+export const setlistReorderToolInputSchema = setlistIdParamSchema.merge(setlistReorderSchema);
+export const setlistVoteStatusToolInputSchema = setlistIdParamSchema.merge(setlistVoteStatusSchema);
+export const setlistVoteScoreToolInputSchema = setlistSongParamSchema.merge(setlistVoteScoreSchema);
+export const setlistCloseToolInputSchema = setlistIdParamSchema.merge(setlistCloseSchema);

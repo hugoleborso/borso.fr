@@ -1253,14 +1253,19 @@ its own slice as `<domain>-tools.controller.ts`
   `requireBearerSession`; the member it resolves is the actor of every
   write, so push skips that member exactly as for a change made in the app.
 - Takes the route's own Zod schemas, path parameters and body merged into
-  one object, and answers the body the route would answer. A refusal is a
+  one object, and answers the body the route would answer. A body that is
+  a union, such as a session's concert-or-practice body, cannot be merged,
+  so it sits whole under one field (`session`, `changes`). A refusal is a
   tool error carrying the route's `{ error }` body; an unexpected throw is
   reported as `McpToolFailed` and answers `internal-error`.
 
 Held by: `api/src/mcp/mcp.controller.test.ts` › answers 401 with the protected resource metadata address to a call without a valid token
-Held by: `api/src/mcp/mcp.controller.test.ts` › lists the catalogue tools, advertises tools only, and serves two clients at once with no session
+Held by: `api/src/mcp/mcp.controller.test.ts` › lists every served tool, advertises tools only, and serves two clients at once with no session
 Held by: `api/src/songs/songs-tools.controller.test.ts` › answers the refusal codes the routes answer
 Held by: `api/src/transitions/transitions-tools.controller.test.ts` › writes, reads, lists and deletes a transition comment, pushing the change to the other members only
+Held by: `api/src/sessions/sessions-tools.controller.test.ts` › creates a concert with the fields the route requires
+Held by: `api/src/setlists/setlists-tools.controller.test.ts` › runs an audience vote as the member, from opening to closing
+Held by: `api/src/setlists/setlists-tools.controller.test.ts` › pushes each setlist change to the other members only
 
 Not to be confused with: a route, which a browser calls with a cookie; a
 tool calls the same service with a bearer token.

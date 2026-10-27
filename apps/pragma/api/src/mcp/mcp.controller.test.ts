@@ -31,7 +31,7 @@ const ONE_HOUR_MS = 3_600_000;
 const FOUR_MINUTES_MS = 240_000;
 const FIVE_MINUTES_MS = 300_000;
 const EXPECTED_CHALLENGE = `Bearer resource_metadata="${MCP_TEST_ISSUER}/.well-known/oauth-protected-resource/mcp"`;
-const CATALOGUE_TOOLS = [
+const SERVED_TOOLS = [
   'search_songs',
   'search_deezer',
   'get_song',
@@ -43,6 +43,30 @@ const CATALOGUE_TOOLS = [
   'get_transition_comment',
   'set_transition_comment',
   'delete_transition_comment',
+  'list_sessions',
+  'get_session',
+  'create_session',
+  'update_session',
+  'delete_session',
+  'list_setlists',
+  'list_session_setlists',
+  'get_setlist',
+  'create_setlist',
+  'update_setlist',
+  'delete_setlist',
+  'link_setlist_to_session',
+  'unlink_setlist_from_session',
+  'list_setlist_entries',
+  'add_setlist_entry',
+  'update_setlist_entry',
+  'set_entry_lineup',
+  'remove_setlist_entry',
+  'move_setlist_entry',
+  'get_vote_board',
+  'set_vote_status',
+  'cast_vote',
+  'get_closing_proposal',
+  'close_vote',
 ];
 const INITIALIZE_MESSAGE = {
   jsonrpc: '2.0',
@@ -116,7 +140,7 @@ describe('mcp controller (back-e2e)', () => {
     expect(opened.headers.get('allow')).toBe('POST');
   });
 
-  it('lists the catalogue tools, advertises tools only, and serves two clients at once with no session', async () => {
+  it('lists every served tool, advertises tools only, and serves two clients at once with no session', async () => {
     const harness = buildAssistantHarness();
     const owner = await signInOwner(harness);
     const tokens = await connectAssistant(harness.app, owner);
@@ -135,7 +159,7 @@ describe('mcp controller (back-e2e)', () => {
       callTool(second, 'search_songs'),
     ]);
 
-    expect(tools.map((tool) => tool.name)).toEqual(CATALOGUE_TOOLS);
+    expect(tools.map((tool) => tool.name)).toEqual(SERVED_TOOLS);
     expect(Object.keys(first.getServerCapabilities() ?? {})).toEqual(['tools']);
     expect(created.isError).toBe(false);
     expect(listed.isError).toBe(false);
