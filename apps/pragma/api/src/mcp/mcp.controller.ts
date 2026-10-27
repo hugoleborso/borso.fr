@@ -4,6 +4,7 @@ import { requireBearerSession } from '../oauth/bearer-session.middleware';
 import { SESSION_TOOLS } from '../sessions/sessions-tools.controller';
 import { SETLIST_TOOLS } from '../setlists/setlists-tools.controller';
 import { SONG_TOOLS } from '../songs/songs-tools.controller';
+import { TAKE_TOOLS } from '../takes/takes-tools.controller';
 import { TRANSITION_TOOLS } from '../transitions/transitions-tools.controller';
 import {
   answerToolRequest,
@@ -20,6 +21,7 @@ export const ASSISTANT_TOOLS: readonly ToolDefinition[] = [
   ...TRANSITION_TOOLS,
   ...SESSION_TOOLS,
   ...SETLIST_TOOLS,
+  ...TAKE_TOOLS,
 ];
 
 export interface BuildMcpRouterOptions {

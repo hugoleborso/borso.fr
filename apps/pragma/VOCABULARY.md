@@ -1255,7 +1255,10 @@ its own slice as `<domain>-tools.controller.ts`
 - Takes the route's own Zod schemas, path parameters and body merged into
   one object, and answers the body the route would answer. A body that is
   a union, such as a session's concert-or-practice body, cannot be merged,
-  so it sits whole under one field (`session`, `changes`). A refusal is a
+  so it sits whole under one field (`session`, `changes`). A body schema
+  with a refinement cannot be merged either: the tool takes its fields and
+  answers `empty-update` itself where the route's refinement would refuse
+  the request, as `update_take_comment` does. A refusal is a
   tool error carrying the route's `{ error }` body; an unexpected throw is
   reported as `McpToolFailed` and answers `internal-error`.
 
@@ -1266,6 +1269,8 @@ Held by: `api/src/transitions/transitions-tools.controller.test.ts` › writes, 
 Held by: `api/src/sessions/sessions-tools.controller.test.ts` › creates a concert with the fields the route requires
 Held by: `api/src/setlists/setlists-tools.controller.test.ts` › runs an audience vote as the member, from opening to closing
 Held by: `api/src/setlists/setlists-tools.controller.test.ts` › pushes each setlist change to the other members only
+Held by: `api/src/takes/takes-tools.controller.test.ts` › signs an upload, then records the take as the granting member
+Held by: `api/src/takes/takes-tools.controller.test.ts` › comments on a take as the granting member, edits the comment, then deletes it
 
 Not to be confused with: a route, which a browser calls with a cookie; a
 tool calls the same service with a bearer token.

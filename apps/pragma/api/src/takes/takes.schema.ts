@@ -81,12 +81,20 @@ export const takeCommentCreateSchema = z
   .object({ body: commentBodySchema, atSeconds: momentSchema.default(null) })
   .strict();
 
-export const takeCommentUpdateSchema = z
+const takeCommentChangesSchema = z
   .object({ body: commentBodySchema.optional(), atSeconds: momentSchema.optional() })
-  .strict()
-  .refine((update) => update.body !== undefined || update.atSeconds !== undefined, {
+  .strict();
+
+export const takeCommentUpdateSchema = takeCommentChangesSchema.refine(
+  (update) => update.body !== undefined || update.atSeconds !== undefined,
+  {
     message: 'nothing to update',
-  });
+  },
+);
+
+export const takeCommentCreateToolInputSchema = takePathSchema.merge(takeCommentCreateSchema);
+export const takeCommentUpdateToolInputSchema =
+  takeCommentPathSchema.merge(takeCommentChangesSchema);
 
 export type TakeSignInput = z.infer<typeof takeSignSchema>;
 export type TakeCreateInput = z.infer<typeof takeCreateSchema>;

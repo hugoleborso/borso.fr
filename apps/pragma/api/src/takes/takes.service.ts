@@ -37,6 +37,8 @@ import type {
   TakeView,
 } from './takes.types';
 
+export { defineTool } from '../mcp/mcp.service';
+
 const TAKE_OBJECT_DELETE_FAILED = 'TakeObjectDeleteFailed';
 
 interface ActorCommand {

@@ -67,6 +67,14 @@ const SERVED_TOOLS = [
   'cast_vote',
   'get_closing_proposal',
   'close_vote',
+  'list_takes',
+  'list_take_comments',
+  'request_take_upload',
+  'create_take',
+  'delete_take',
+  'comment_on_take',
+  'update_take_comment',
+  'delete_take_comment',
 ];
 const INITIALIZE_MESSAGE = {
   jsonrpc: '2.0',
