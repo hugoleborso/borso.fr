@@ -319,6 +319,35 @@ const PARITY_CANARIES: readonly CommandCanary[] = APPLICATIONS_WITH_PARITY_TESTS
   }),
 );
 
+const PRAGMA_DESIGN_SYSTEM_CANARIES: readonly CommandCanary[] = [
+  {
+    mechanism: 'Button.tsx',
+    label: 'a pragma button drawn without its icon',
+    defect: 'a Button with a label and no icon',
+    plant: {
+      'apps/pragma/site/src/components/atoms/GateCanaryButton.tsx':
+        "import { Button } from './Button';\n\nexport const gateCanaryButton = <Button>Save</Button>;\n",
+    },
+    command: ['pnpm', '--filter', workspaceFilter('pragma'), 'run', 'typecheck'],
+    refusal: /GateCanaryButton\.tsx[^\n]*TS2741/,
+    tier: 'slow',
+  },
+  {
+    mechanism: 'design-tokens.utils.test.ts',
+    label: 'a pragma class naming a colour token the stylesheet does not define',
+    defect: 'a bg-surface class, the token that shipped undefined',
+    plant: {
+      'apps/pragma/site/src/components/atoms/GateCanaryToken.tsx':
+        "export const gateCanaryTokenClass = 'bg-surface';\n",
+    },
+    command: IN_SHELL(
+      'cd apps/pragma && pnpm exec vitest run --project core site/src/lib/design-tokens.utils.test.ts',
+    ),
+    refusal: /GateCanaryToken\.tsx: bg-surface/,
+    tier: 'fast',
+  },
+];
+
 const AUDIT_CANARIES: readonly CommandCanary[] = APPLICATIONS_WITH_AUDITED_MIGRATIONS.map(
   (application) => ({
     mechanism: 'migrations.audit.test.ts',
@@ -1087,6 +1116,7 @@ export const COMMAND_CANARIES: readonly CommandCanary[] = [
   ...TYPECHECK_CANARIES,
   ...TRANSLATION_KEY_CANARIES,
   ...PARITY_CANARIES,
+  ...PRAGMA_DESIGN_SYSTEM_CANARIES,
   ...COVERAGE_PLACEMENTS.map(coverageCanary),
   SHARED_INFRA_COVERAGE_CANARY,
   ...MUTATION_CANARIES,
