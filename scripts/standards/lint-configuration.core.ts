@@ -20,6 +20,9 @@ export interface LintConfiguration {
 
 export type GlobMatcher = (path: string, pattern: string) => boolean;
 
+const GLOB_METACHARACTERS = /[*?[\]{}()!+@\\]/;
+const WILDCARD = '*';
+
 const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 'allow', 0]);
 const CORE_RULE_PREFIX = 'eslint';
 const OPENING_PARENTHESIS = '(';
@@ -67,4 +70,13 @@ export function readConfiguredRuleName(diagnosticCode: string): string | null {
   if (reportedPlugin === CORE_RULE_PREFIX) return rule;
   const plugin = CONFIGURED_PLUGIN_BY_REPORTED_PLUGIN.get(reportedPlugin) ?? reportedPlugin;
   return `${plugin}/${rule}`;
+}
+
+export function readLiteralSuffix(pattern: string): string {
+  const tail = pattern.slice(pattern.lastIndexOf(WILDCARD) + 1);
+  return GLOB_METACHARACTERS.test(tail) ? '' : tail;
+}
+
+export function skipImpossibleMatches(isMatch: GlobMatcher): GlobMatcher {
+  return (path, pattern) => path.endsWith(readLiteralSuffix(pattern)) && isMatch(path, pattern);
 }

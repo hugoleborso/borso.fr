@@ -3,8 +3,10 @@
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, matchesGlob } from 'node:path';
 import { readLintConfiguration } from './ledger-input';
-import { listActiveRules } from './lint-configuration.core';
+import { listActiveRules, skipImpossibleMatches } from './lint-configuration.core';
 import { readEradicationSection, renderProvenanceReport, type RuleRecord } from './provenance.core';
+
+const MATCHES_GLOB = skipImpossibleMatches(matchesGlob);
 
 const REPOSITORY_ROOT = process.cwd();
 const DANTOTSUS_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'dantotsus');
@@ -41,7 +43,7 @@ function readRegisteredRules(): readonly string[] {
 
 function readEnabledRules(): ReadonlySet<string> {
   const configuration = readLintConfiguration();
-  return new Set(PROBE_PATHS.flatMap((path) => listActiveRules(configuration, path, matchesGlob)));
+  return new Set(PROBE_PATHS.flatMap((path) => listActiveRules(configuration, path, MATCHES_GLOB)));
 }
 
 interface Corpus {

@@ -357,8 +357,17 @@ run_check app-registration \
 
 # Each term in an application's vocabulary names the folder that owns it and
 # the test that holds it, and those get renamed or removed by changes with no
-# reason to open the vocabulary.
-run_check vocabulary-paths '^. apps/[^/]+/VOCABULARY\.md$|^D apps/|^M apps/.*\.test\.tsx?$' \
+# reason to open the vocabulary. An edited test matters only when a `Held by`
+# line names it, since the check reads its titles; any other test edit left
+# the check reading files it could not have changed.
+held_tests=$(
+  awk 'FNR == 1 { folder = FILENAME; sub(/VOCABULARY\.md$/, "", folder) }
+    /^Held by: `/ { cited = $0; sub(/^Held by: `/, "", cited); sub(/`.*/, "", cited)
+      gsub(/\./, "\\.", cited); print folder cited }' apps/*/VOCABULARY.md 2>/dev/null |
+    sort -u | paste -sd '|' -
+)
+run_check vocabulary-paths \
+  "^. apps/[^/]+/VOCABULARY\\.md\$|^D apps/${held_tests:+|^M (${held_tests})\$}" \
   scripts/check-vocabulary-paths.sh
 
 # A dated record of a past review is not editable: it is true as of the day in
@@ -411,7 +420,7 @@ run_check harness-links '^. (plugins/borso-harness/|\.claude/)' scripts/check-ha
 # Two lists that have to say the same thing. Rung-2 eradication of
 # docs/dantotsus/two-copies-that-had-to-agree-and-nothing-made-them.md.
 run_check coupled-lists \
-  '^. (docs/knowledge/|eslint-rules/impurity\.js$|apps/[^/]+/vitest\.config\.ts$|apps/[^/]+/api/src/database/migrations/|apps/[^/]+/test/(setup-postgres|database-utils)\.ts$|apps/pragma/cdk/lib/stack\.ts$|docs/adr/0009-|\.husky/|\.github/|scripts/)' \
+  '^. (docs/knowledge/|eslint-rules/impurity\.js$|apps/[^/]+/vitest\.config\.ts$|apps/[^/]+/api/src/database/migrations/|apps/[^/]+/test/(setup-postgres|database-utils)\.ts$|apps/pragma/cdk/lib/stack\.ts$|docs/adr/0009-|scripts/check-coupled-lists\.sh$)' \
   scripts/check-coupled-lists.sh
 
 # Each number in a sequence is claimed once, no two gates name one subject, and

@@ -4,7 +4,11 @@ import { join, matchesGlob } from 'node:path';
 import { z } from 'zod';
 import { readStandardCitations, type Citation } from './citations.core';
 import { findGate, GATE_DEFINITIONS } from './gates.core';
-import { listActiveRules, type LintConfiguration } from './lint-configuration.core';
+import {
+  listActiveRules,
+  skipImpossibleMatches,
+  type LintConfiguration,
+} from './lint-configuration.core';
 import {
   resolveCitation,
   type LedgerInput,
@@ -12,6 +16,8 @@ import {
   type OrphanMechanism,
   type ResolvedCitation,
 } from './ledger.core';
+
+const MATCHES_GLOB = skipImpossibleMatches(matchesGlob);
 
 const REPOSITORY_ROOT = process.cwd();
 const STANDARDS_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'standards');
@@ -46,7 +52,7 @@ interface Probe {
   readonly path: string;
 }
 
-function listProbes(): readonly Probe[] {
+function collectProbes(): readonly Probe[] {
   const probes: Probe[] = [];
   for (const app of readdirSync(APPS_DIRECTORY).sort()) {
     const siteRoot = resolveSiteRoot(app);
@@ -83,6 +89,13 @@ function listProbes(): readonly Probe[] {
   return probes;
 }
 
+const collected: { probes?: readonly Probe[]; scopes?: readonly string[] } = {};
+
+function listProbes(): readonly Probe[] {
+  collected.probes ??= collectProbes();
+  return collected.probes;
+}
+
 const RULE_SETTINGS = z.record(z.string(), z.unknown());
 
 const LINT_CONFIGURATION = z.object({
@@ -109,7 +122,7 @@ function mapRulesToActiveScopes(): ReadonlyMap<string, readonly string[]> {
   const configuration = readLintConfiguration();
   const scopesByRule = new Map<string, string[]>();
   for (const probe of listProbes()) {
-    for (const ruleName of listActiveRules(configuration, probe.path, matchesGlob)) {
+    for (const ruleName of listActiveRules(configuration, probe.path, MATCHES_GLOB)) {
       const scopes = scopesByRule.get(ruleName) ?? [];
       if (!scopes.includes(probe.scope)) scopes.push(probe.scope);
       scopesByRule.set(ruleName, scopes);
@@ -118,10 +131,15 @@ function mapRulesToActiveScopes(): ReadonlyMap<string, readonly string[]> {
   return scopesByRule;
 }
 
-function listAllScopes(): readonly string[] {
+function collectScopes(): readonly string[] {
   const scopes: string[] = [];
   for (const probe of listProbes()) if (!scopes.includes(probe.scope)) scopes.push(probe.scope);
   return scopes;
+}
+
+function listAllScopes(): readonly string[] {
+  collected.scopes ??= collectScopes();
+  return collected.scopes;
 }
 
 function selectCandidateScopes(activeScopes: readonly string[]): readonly string[] {
@@ -143,9 +161,15 @@ function readRegisteredCustomRules(): ReadonlySet<string> {
   return registered;
 }
 
+const siteTexts = new Map<string, string>();
+
 function readSiteText(site: string): string {
+  const cached = siteTexts.get(site);
+  if (cached !== undefined) return cached;
   const path = join(REPOSITORY_ROOT, site);
-  return existsSync(path) ? readFileSync(path, 'utf8') : '';
+  const text = existsSync(path) ? readFileSync(path, 'utf8') : '';
+  siteTexts.set(site, text);
+  return text;
 }
 
 export function listInvocationSites(): readonly string[] {

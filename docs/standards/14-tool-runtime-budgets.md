@@ -137,6 +137,18 @@ run for any path under `scripts/`, so a shell script cost a second of CPU for a
 compiler that never reads it; on CI's runner that pushed the fixture commit to
 3.8 s.
 
+The same rule, applied once the type-aware rules came back, measured on the
+fixture commit on two cores, three runs each. The vocabulary check ran for any
+edited test, though it reads only the tests a `Held by` line names; it now runs
+for those. The coupled-lists check still ran for `scripts/`, `.husky/` and
+`.github/`, which it stopped reading when its first section was removed. The
+app-registration check started a node process per application to read one
+manifest line, 200 ms of CPU, where one grep takes 50. The ledger compiled each
+override's globs once per probe, 1,800 compilations, where a path that cannot
+end the way a pattern does now skips it, and the blueprint index read every
+source file twice. The checks beside oxlint went from 2.6 to 2.8 s of CPU to
+2.0 to 2.3 s.
+
 What a person waits for is the wall-clock total, and that is only meaningful
 where nothing else runs. `scripts/check-pre-commit-budget.sh` copies the tree,
 makes a commit touching one file of each common kind (a component, an API
@@ -160,13 +172,14 @@ fits in 300 ms.
 | Blueprint index and context, convention drift | when source changes | `ci.yml` |
 | Blueprint defects | when source or a dantotsu changes | `ci.yml` |
 | Dantotsu front matter, weak points, working conditions | when the record changes or a path is removed; the front matter of the staged entries only | `ci.yml` |
-| Enforcement ledger | when a standard or a mechanism changes | `ci.yml` |
+| Enforcement ledger | when a standard or a mechanism changes, a workflow included, since it reads which mechanisms each one runs | `ci.yml` |
 | Architecture maps | not run | `ci.yml` and `architecture.yml` only: 196 s is past the push budget too |
 | Every test is collected | not run | pre-push for the workspaces whose tests or config change; `ci.yml` |
 | Hook decisions | not run | pre-push when a hook changes; `ci.yml` |
 | Doc links | staged documents, and every document naming a removed path | `ci.yml`, after the generators run |
 | Named paths exist | staged files, and every file naming a removed path | `ci.yml` |
 | NUL bytes, package scripts, negative claims, racy pipelines, migration SQL, manifests, instruction tools | staged files only | `ci.yml` |
+| Vocabulary paths | when a vocabulary changes, a path under `apps/` is removed, or a test a `Held by` line names is edited | `ci.yml` |
 | Every other check in the hook | whole tree, when the commit touches its scope | `ci.yml` |
 
 A link the commit makes to a generated, gitignored report is judged in CI and

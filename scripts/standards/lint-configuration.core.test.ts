@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   listActiveRules,
   readConfiguredRuleName,
+  readLiteralSuffix,
   readRulePlugin,
+  skipImpossibleMatches,
   type LintConfiguration,
 } from './lint-configuration.core';
 
@@ -142,5 +144,39 @@ describe('readConfiguredRuleName', () => {
 
   it('reads no rule from a code whose parenthesis never closes', () => {
     expect(readConfiguredRuleName('typescript(no-explicit-any')).toBeNull();
+  });
+});
+
+describe('readLiteralSuffix', () => {
+  it('reads the literal text after the last wildcard', () => {
+    expect(readLiteralSuffix('apps/*/site/**/*.store.ts')).toBe('.store.ts');
+  });
+
+  it('reads a pattern with no wildcard as a whole literal', () => {
+    expect(readLiteralSuffix('vitest.config.ts')).toBe('vitest.config.ts');
+  });
+
+  it.each(['?', '[', ']', '{', '}', '(', ')', '!', '+', '@', '\\'])(
+    'reads no literal suffix when the tail holds %s',
+    (metacharacter) => {
+      expect(readLiteralSuffix(`**/*.t${metacharacter}s`)).toBe('');
+    },
+  );
+});
+
+describe('skipImpossibleMatches', () => {
+  it('refuses a path that cannot end the way the pattern does, without matching', () => {
+    const calls: string[] = [];
+    const isMatch = skipImpossibleMatches((path) => {
+      calls.push(path);
+      return true;
+    });
+    expect(isMatch('scripts/probe.tsx', '**/*.ts')).toBe(false);
+    expect(calls).toEqual([]);
+  });
+
+  it('defers to the matcher when the suffix fits', () => {
+    expect(skipImpossibleMatches(matchesGlob)('scripts/probe.ts', 'scripts/**/*.ts')).toBe(true);
+    expect(skipImpossibleMatches(matchesGlob)('apps/probe.ts', 'scripts/**/*.ts')).toBe(false);
   });
 });
