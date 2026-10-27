@@ -130,49 +130,64 @@ fi
 # BORSO_PRE_PUSH_JOBS overrides the limit. See
 # docs/dantotsus/the-gates-that-timed-each-other-out.md.
 gate_log_dir=$(mktemp -d)
-running_pids=''
-running_names=''
+running_gates=''
 failed=''
 cores=$(nproc 2>/dev/null || echo 2)
 gate_limit=${BORSO_PRE_PUSH_JOBS:-$((cores / 2))}
 [ "$gate_limit" -ge 1 ] 2>/dev/null || gate_limit=1
 
+# Each running gate is one `<pid>:<name>:<started at>` word, and writes its exit
+# status beside its log when it ends. A gate is reaped when it finishes,
+# whichever one that is: reaping the oldest first held every
+# free slot behind the slowest gate, and the type checker, the slowest, is
+# started first on purpose.
 running_count() {
-  set -- $running_pids
+  set -- $running_gates
   echo $#
 }
 
-reap_oldest_gate() {
-  set -- $running_pids
-  pid=$1
-  shift
-  running_pids="$*"
-  set -- $running_names
-  name=$1
-  shift
-  running_names="$*"
-  if wait "$pid"; then
-    echo "[pre-push] pass: $name"
-  else
-    failed="$failed $name"
-  fi
+reap_finished_gates() {
+  still_running=''
+  reaped=0
+  for entry in $running_gates; do
+    pid=${entry%%:*}
+    rest=${entry#*:}
+    name=${rest%%:*}
+    started=${rest#*:}
+    if [ ! -f "$gate_log_dir/$name.status" ]; then
+      still_running="$still_running $entry"
+      continue
+    fi
+    reaped=1
+    wait "$pid" || true
+    if [ "$(cat "$gate_log_dir/$name.status")" -eq 0 ]; then
+      echo "[pre-push] pass: $name ($(($(date +%s) - started)) s)"
+    else
+      echo "[pre-push] fail: $name ($(($(date +%s) - started)) s)"
+      failed="$failed $name"
+    fi
+  done
+  running_gates="$still_running"
+  [ "$reaped" -eq 1 ] || sleep 0.2
 }
 
 start_gate() {
   gate_name="$1"
   shift
   while [ "$(running_count)" -ge "$gate_limit" ]; do
-    reap_oldest_gate
+    reap_finished_gates
   done
   echo "[pre-push] start: $gate_name"
-  ( "$@" ) 8>&- >"$gate_log_dir/$gate_name.log" 2>&1 &
-  running_pids="$running_pids $!"
-  running_names="$running_names $gate_name"
+  {
+    if ( "$@" ) 8>&- >"$gate_log_dir/$gate_name.log" 2>&1; then gate_status=0; else gate_status=$?; fi
+    echo "$gate_status" >"$gate_log_dir/$gate_name.status"
+  } &
+  running_gates="$running_gates $!:$gate_name:$(date +%s)"
 }
 
 wait_for_gates() {
   while [ "$(running_count)" -gt 0 ]; do
-    reap_oldest_gate
+    reap_finished_gates
   done
   for name in $failed; do
     echo "" >&2
@@ -217,6 +232,17 @@ fi
 # Built once here, before the typecheck gates below all reach for it.
 scripts/ensure-infra-built.sh
 
+# The type checker, per changed app, started before anything else because it is
+# the slowest gate: pragma's measured 47 s on 2026-10-24, and the push budget in
+# docs/standards/14-tool-runtime-budgets.md is 60 s for a change confined to one
+# application. Vitest strips types without checking them, so a test passing a
+# value its props do not accept ran green here and failed CI's typecheck. See
+# docs/dantotsus/the-test-only-ci-typechecked.md.
+changed_app_slugs=$(echo "$changed" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u)
+for app in $changed_app_slugs; do
+  start_gate "typecheck-$app" pnpm --filter "@borso-app/$app" run typecheck
+done
+
 start_gate knip pnpm exec knip
 
 if echo "$changed" | grep -q '^infra/cdk/'; then
@@ -233,7 +259,42 @@ fi
 # and was never mutated. The suite is 13 s whole, so it needs no `--changed`.
 if echo "$changed" | grep -qE '^(scripts|eslint-rules)/'; then
   start_gate tooling pnpm run test:coverage
-  start_gate typecheck-tooling pnpm run typecheck
+fi
+
+# oxlint with every rule, the type-aware ones included, over the files this
+# push changes. The commit runs the same rules in a program of the staged files
+# only; here each file gets its workspace's whole program, so a finding that
+# depends on a file the commit did not import shows up before CI. Unused
+# disable directives are reported in one run with every rule. Warnings fail it through
+# `denyWarnings` in .oxlintrc.json. Rung-1 eradication, with the commit and CI
+# runs, of docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+lint_changed_files() {
+  echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs)$' |
+    while IFS= read -r candidate; do [ -f "$candidate" ] && printf '%s\0' "$candidate"; done |
+    xargs -0 --no-run-if-empty pnpm exec oxlint --type-aware
+}
+if echo "$changed" | grep -qE '\.(js|jsx|ts|tsx|mjs|cjs)$'; then
+  start_gate oxlint lint_changed_files
+fi
+
+# A test file no project collects never runs. Asks vitest which files it would
+# collect, one to three seconds per workspace, for the workspaces where a test
+# file was added, renamed or removed, or a vitest config changed. Rung-2
+# eradication of docs/dantotsus/the-test-that-no-project-collected.md.
+collected_subjects=$(
+  git diff --name-only --diff-filter=ADR "$push_base" HEAD | grep -E '\.test\.tsx?$' || true
+  echo "$changed" | grep -E 'vitest[^/]*\.config\.ts$' || true
+)
+if [ -n "$collected_subjects" ]; then
+  # shellcheck disable=SC2086
+  start_gate tests-collected scripts/check-every-test-is-collected.sh $collected_subjects
+fi
+
+# The PreToolUse hooks decide what their table says they decide. Every case
+# starts a hook, about five seconds for the table. Rung-2 eradication of
+# docs/dantotsus/the-hook-that-refused-the-page-explaining-it.md.
+if echo "$changed" | grep -qE '^(plugins/borso-harness/hooks/|plugins/borso-harness/scripts/check-hook-decisions\.sh$|scripts/check-hook-decisions\.sh$)'; then
+  start_gate hook-decisions scripts/check-hook-decisions.sh
 fi
 
 # Only the tests this push affects. `--changed <base>` walks Vitest's module
@@ -252,14 +313,6 @@ fi
 # suite that covers those files, so running it over a changed-only selection
 # would report every untouched pure file at 0 %. It runs in CI on each changed
 # app, and unscoped on main in full-suite.yml.
-changed_app_slugs=$(echo "$changed" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u)
-# The type checker, per changed app. Vitest strips types without checking them,
-# so a test passing a value its props do not accept ran green here and failed
-# CI's typecheck. pragma's takes about 28 s and runs beside the other gates.
-# See docs/dantotsus/the-test-only-ci-typechecked.md.
-for app in $changed_app_slugs; do
-  start_gate "typecheck-$app" pnpm --filter "@borso-app/$app" run typecheck
-done
 for app in $changed_app_slugs; do
   if grep -q '"test:core"' "apps/$app/package.json"; then
     start_gate "tests-$app" \

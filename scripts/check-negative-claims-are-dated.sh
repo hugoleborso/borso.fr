@@ -45,7 +45,25 @@ unquoted() {
   sed -E 's/`[^`]*`//g; s/"[^"]*"//g; s/“[^”]*”//g' "$1"
 }
 
-for doc in docs/knowledge/*.md; do
+# With paths as arguments, the knowledge entries among them; pre-commit passes
+# the staged files. With none, every entry. One grep picks the candidates first,
+# because a sed and a grep per entry was most of a second over two hundred.
+list_candidates() {
+  local entries=()
+  if [ "$#" -eq 0 ]; then
+    entries=(docs/knowledge/*.md)
+  else
+    for candidate in "$@"; do
+      case "$candidate" in
+        docs/knowledge/*.md) [ -f "$candidate" ] && entries+=("$candidate") ;;
+      esac
+    done
+  fi
+  [ "${#entries[@]}" -gt 0 ] || return 0
+  grep -liE "$NEGATIVE_CLAIM_PATTERN" -- "${entries[@]}" || true
+}
+
+while IFS= read -r doc; do
   [ -f "$doc" ] || continue
   unquoted "$doc" | grep -qiE "$NEGATIVE_CLAIM_PATTERN" || continue
 
@@ -64,7 +82,7 @@ for doc in docs/knowledge/*.md; do
     printf '\033[33m[negative-claims] stale\033[0m %s last verified %s (%s days ago) — re-test before believing it\n' \
       "$doc" "$claimed_on" "$age_days"
   fi
-done
+done < <(list_candidates "$@")
 
 if [ "$failed" -ne 0 ]; then
   printf '\nAdd a line saying when the claim was last checked, and how:\n'

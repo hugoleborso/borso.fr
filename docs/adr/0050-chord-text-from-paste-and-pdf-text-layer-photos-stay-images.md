@@ -1,4 +1,4 @@
-# ADR-0048: Chord text comes from pasted text and from a PDF's text layer read in the browser; a photo stays an image
+# ADR-0050: Chord text comes from pasted text and from a PDF's text layer read in the browser; a photo stays an image
 
 - **Status:** accepted
 - **Date:** 2026-10-27
@@ -118,4 +118,4 @@ What makes the question hard is not reading characters but keeping columns. A ch
 - Plan: `docs/features/pragma/ux-redesign/plan/plan.md` (to be written by `/technical-conception`)
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/pragma/domain/chords-above-lyrics.core.ts` (new, shared by paste and PDF), a new `pdf-text.adapter.ts` beside the chord editor in `apps/pragma/site/src/routes/catalog/` holding the only import of `pdfjs-dist`, `apps/pragma/package.json`, `apps/pragma/api/src/songs/songs.schema.ts` (chart kinds unchanged)
-- Related ADRs: [ADR-0012](./0012-outbound-calls-live-in-adapter-files.md) (where an outbound call or third-party reader lives), [ADR-0045](./0045-pragma-design-system-is-notebook-with-grafts.md)
+- Related ADRs: [ADR-0012](./0012-outbound-calls-live-in-adapter-files.md) (where an outbound call or third-party reader lives), [ADR-0047](./0047-pragma-design-system-is-notebook-with-grafts.md)

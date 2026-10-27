@@ -102,14 +102,14 @@ export function rankRunners(runners: readonly Runner[], now: Date): Ranking {
 
 ## Enforced by
 
-- `eslint:@typescript-eslint/no-explicit-any` rejects `any` outright.
-- `eslint:borso/no-type-assertion-except-unknown` allows `as const` and a single
+- `oxlint:typescript/no-explicit-any` rejects `any` outright.
+- `oxlint:borso/no-type-assertion-except-unknown` allows `as const` and a single
   `as unknown` and rejects everything else.
-- `eslint:@typescript-eslint/no-unsafe-argument`,
-  `eslint:@typescript-eslint/no-unsafe-assignment`,
-  `eslint:@typescript-eslint/no-unsafe-call`,
-  `eslint:@typescript-eslint/no-unsafe-member-access` and
-  `eslint:@typescript-eslint/no-unsafe-return` fail on a value that has lost its
+- `oxlint:typescript/no-unsafe-argument`,
+  `oxlint:typescript/no-unsafe-assignment`,
+  `oxlint:typescript/no-unsafe-call`,
+  `oxlint:typescript/no-unsafe-member-access` and
+  `oxlint:typescript/no-unsafe-return` fail on a value that has lost its
   type. They are off inside test files, where a fixture is allowed to be a
   literal.
 - `types:Button.tsx` makes `icon` a required prop of pragma's `Button` and

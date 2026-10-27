@@ -3,7 +3,6 @@
  */
 
 import * as Sentry from '@sentry/react';
-import { useEffect } from 'react';
 import {
   createRoutesFromChildren,
   matchRoutes,
@@ -35,7 +34,6 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     tracePropagationTargets: [...settings.tracePropagationTargets],
     integrations: [
       Sentry.reactRouterBrowserTracingIntegration({
-        useEffect,
         useLocation,
         useNavigationType,
         createRoutesFromChildren,

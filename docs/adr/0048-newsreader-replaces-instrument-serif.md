@@ -1,4 +1,4 @@
-# ADR-0046: Newsreader replaces Instrument Serif, self-hosted with its weight and optical size axes
+# ADR-0048: Newsreader replaces Instrument Serif, self-hosted with its weight and optical size axes
 
 - **Status:** accepted
 - **Date:** 2026-10-27
@@ -8,7 +8,7 @@
 
 ## Context
 
-[ADR-0045](./0045-pragma-design-system-is-notebook-with-grafts.md) makes the Notebook direction pragma's design system. Notebook sets the band's own words (song, setlist and session names, at 19 to 30 px) in a serif, and anything a member wrote (entry notes, transition comments, at 14 to 16 px) in that serif's italic (`spec/design/notebook/direction.md`). Today pragma loads `@fontsource/instrument-serif` 5.3.0 in one weight, 400 upright and italic (`apps/pragma/site/src/main.tsx`, read this session), and 47 files under `apps/pragma/site/src/` name the `font-display` class: `tokens.css`, which defines it, and 46 components that use it. Instrument Serif is drawn for large display sizes, and Notebook needs the same family to stay readable in a 14 px note and to carry two weights (500 and 520) in titles.
+[ADR-0047](./0047-pragma-design-system-is-notebook-with-grafts.md) makes the Notebook direction pragma's design system. Notebook sets the band's own words (song, setlist and session names, at 19 to 30 px) in a serif, and anything a member wrote (entry notes, transition comments, at 14 to 16 px) in that serif's italic (`spec/design/notebook/direction.md`). Today pragma loads `@fontsource/instrument-serif` 5.3.0 in one weight, 400 upright and italic (`apps/pragma/site/src/main.tsx`, read this session), and 47 files under `apps/pragma/site/src/` name the `font-display` class: `tokens.css`, which defines it, and 46 components that use it. Instrument Serif is drawn for large display sizes, and Notebook needs the same family to stay readable in a 14 px note and to carry two weights (500 and 520) in titles.
 
 Adding a font package is a new dependency, which is an ADR trigger here. Fonts are self-hosted through Fontsource, as pragma's three current fonts are, because a third-party font host would see every member's address on every page load. Each `@font-face` in a Fontsource stylesheet carries a `unicode-range`, so a browser downloads only the subsets a page uses; for pragma's English and French text that is the `latin` file. The installed PWA's service worker (`apps/pragma/site/public/sw.js`) caches files under `/assets/` when they are first fetched, so a font costs its bytes once per phone and per release.
 
@@ -109,4 +109,4 @@ The direction's figure of 302 KB included Geist Mono. Spec question Q4 keeps Jet
 - Plan: `docs/features/pragma/ux-redesign/plan/plan.md` (to be written by `/technical-conception`)
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/pragma/package.json` (add `@fontsource-variable/newsreader` 5.3.0, remove `@fontsource/instrument-serif`), `apps/pragma/site/src/main.tsx` (the two imports), `apps/pragma/site/src/styles/tokens.css` (the `font-display` family), the 46 components using `font-display`
-- Related ADRs: [ADR-0045](./0045-pragma-design-system-is-notebook-with-grafts.md)
+- Related ADRs: [ADR-0047](./0047-pragma-design-system-is-notebook-with-grafts.md)

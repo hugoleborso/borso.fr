@@ -17,7 +17,8 @@ export function slugifyDisplayName(displayName: string): string {
 export type RunnerValidationFailure = 'slug-edge-dash' | 'bib-already-taken';
 
 export type RunnerValidation =
-  { readonly ok: true } | { readonly ok: false; readonly reason: RunnerValidationFailure };
+  | { readonly ok: true }
+  | { readonly ok: false; readonly reason: RunnerValidationFailure };
 
 // @FollowsBlueprint core-decision
 export function validateRunnerDraft(

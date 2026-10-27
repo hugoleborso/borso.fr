@@ -1,4 +1,4 @@
-# ADR-0045: pragma's design system is the Notebook direction, with Backstage's buttons and six other grafts
+# ADR-0047: pragma's design system is the Notebook direction, with Backstage's buttons and six other grafts
 
 - **Status:** accepted
 - **Date:** 2026-10-27
@@ -34,7 +34,7 @@ The constraints that close doors before the trade-off: one developer pays for th
 - `-` A member's stored colour is the one dynamic value the "no value outside the tokens" rule lets through, so it must stay confined to the member colour atoms and the Lineup grid, or the rule's lint gate loses its meaning.
 - `+` No member's look changes, the band keeps the colours it already associates with each member, and no colour mapping or migration of `member.color` is needed.
 - `-` Serif titles in lists are wider than today's sans: Newsreader at 19 px truncates long titles sooner, which is why the lineup grid takes Studio's title-on-its-own-line layout.
-- `~` A new font replaces Instrument Serif; that is its own record, [ADR-0046](./0046-newsreader-replaces-instrument-serif.md).
+- `~` A new font replaces Instrument Serif; that is its own record, [ADR-0048](./0048-newsreader-replaces-instrument-serif.md).
 - `~` Tokens move to `light-dark()` values in one `@theme static` block. `light-dark()` needs Safari 17.5 or later on iPhone (MDN browser compatibility data 8.1.7, read this session: Chrome 123, Firefox 120, Safari 17.5).
 
 ## Alternatives considered
@@ -124,4 +124,4 @@ Scores are the critic's (`spec/design/comparison.md`), 1 to 5, with its evidence
 - Plan: `docs/features/pragma/ux-redesign/plan/plan.md` (to be written by `/technical-conception`)
 - Commit: stamped by `/after-task-kaizen` on merge
 - Files: `apps/pragma/site/src/styles/tokens.css`, `apps/pragma/site/src/components/atoms/button.variants.ts`, `apps/pragma/site/src/components/atoms/Icon.tsx`, `apps/pragma/site/src/components/molecules/Sheet.tsx` (new), `apps/pragma/site/src/components/molecules/BottomActions.tsx` (new), `eslint-rules/` (new rules for arbitrary values and raw `<button>` and `<dialog>`), `apps/pragma/site/src/components/atoms/Avatar.tsx`, `apps/pragma/site/src/components/atoms/MemberMark.tsx` (new) and `apps/pragma/site/src/lib/member-color.utils.ts` (the ink on a member colour chosen by contrast ratio)
-- Related ADRs: [ADR-0046](./0046-newsreader-replaces-instrument-serif.md) (the font), [ADR-0028](./0028-tailwind-merge-resolves-class-conflicts.md) (`composeClassName`, which the new button variants go through)
+- Related ADRs: [ADR-0048](./0048-newsreader-replaces-instrument-serif.md) (the font), [ADR-0028](./0028-tailwind-merge-resolves-class-conflicts.md) (`composeClassName`, which the new button variants go through)

@@ -50,7 +50,7 @@ catalog:
   tailwind-merge: '3.6.0'
   tailwindcss: '^4'
   tsx: '^4.23.13'
-  typescript: '^5.7.2'
+  typescript: '7.0.2'
   vite: '^6.0.7'
   vitest: '^4.1.11'
   web-push: '3.6.7'

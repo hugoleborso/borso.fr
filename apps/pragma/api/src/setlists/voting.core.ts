@@ -22,7 +22,8 @@ export interface SongTally {
 }
 
 export type ScoreVerdict =
-  { kind: 'accepted'; budget: VoteBudget } | { kind: 'budget-exhausted'; budget: VoteBudget };
+  | { kind: 'accepted'; budget: VoteBudget }
+  | { kind: 'budget-exhausted'; budget: VoteBudget };
 
 export function resolveTargetSongCount(stored: number | null): number {
   return stored ?? DEFAULT_TARGET_SONG_COUNT;

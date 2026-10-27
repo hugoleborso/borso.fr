@@ -187,15 +187,20 @@ def read_entries(directory, root):
 
 def jq_problems(entries):
     patterns = sorted({pattern for entry in entries for kind in TRIGGER_KINDS for pattern in entry[kind]})
+    if not patterns:
+        return []
+    program = '$ARGS.positional[] | . as $pattern | try ("" | test($pattern) | empty) catch {pattern: $pattern, error: .}'
+    completed = subprocess.run(
+        ["jq", "-nc", program, "--args", *patterns],
+        capture_output=True,
+        text=True,
+    )
+    if completed.returncode != 0:
+        return [f"jq could not test the patterns at all: {completed.stderr.strip()}"]
     problems = []
-    for pattern in patterns:
-        completed = subprocess.run(
-            ["jq", "-n", "--arg", "pattern", pattern, '"" | test($pattern)'],
-            capture_output=True,
-            text=True,
-        )
-        if completed.returncode != 0:
-            problems.append(f"pattern {pattern!r} compiles in Python and not in jq: {completed.stderr.strip()}")
+    for line in completed.stdout.splitlines():
+        failure = json.loads(line)
+        problems.append(f"pattern {failure['pattern']!r} compiles in Python and not in jq: {failure['error']}")
     return problems
 
 

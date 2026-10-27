@@ -57,7 +57,7 @@ A standard states the rule and a blueprint is the working instance of it, so the
 
 When the layer has no blueprint, say so and write the file against the standard, then propose the blueprint in the same change rather than leaving the next author with the same gap. [`blueprint-coverage.html`](../../../../.claude/skills/blueprint/blueprint-coverage.html) is where to check before assuming one exists.
 
-The pre-commit hook and CI both run the generators in `--check` mode, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a stale generated file fails the gate.
+The pre-push hook and CI both run the generators in `--check` mode, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a stale generated file fails the gate.
 
 ### Compose with technical sub-skills
 

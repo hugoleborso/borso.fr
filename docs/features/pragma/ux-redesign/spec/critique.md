@@ -1,6 +1,6 @@
 # Spec review: pragma UX redesign
 
-Reviewer: `spec-critic`, on 2026-10-27. Inputs: [`spec.md`](./spec.md), ADR-0045 to ADR-0048, the 37 confirmed findings in [`baseline/verified-findings.md`](./baseline/verified-findings.md), the measured baseline in [`baseline/baseline.md`](./baseline/baseline.md), the critic's [`design/comparison.md`](./design/comparison.md), the solution designer's proposals and answers to the operator's comments under `../audit/solution-designer-2/`, and `apps/pragma/VOCABULARY.md`.
+Reviewer: `spec-critic`, on 2026-10-27. Inputs: [`spec.md`](./spec.md), ADR-0047 to ADR-0050, the 37 confirmed findings in [`baseline/verified-findings.md`](./baseline/verified-findings.md), the measured baseline in [`baseline/baseline.md`](./baseline/baseline.md), the critic's [`design/comparison.md`](./design/comparison.md), the solution designer's proposals and answers to the operator's comments under `../audit/solution-designer-2/`, and `apps/pragma/VOCABULARY.md`.
 
 ## Verdict
 
@@ -50,24 +50,24 @@ Ranks 9, 10 and 11 (offline and stale order) stay out of scope, as the spec alre
 
 ### Decisions I took (implementation, not product)
 
-- Q4: keep JetBrains Mono. There is no new dependency, and ADR-0046 already assumed it.
+- Q4: keep JetBrains Mono. There is no new dependency, and ADR-0048 already assumed it.
 - Q5: one batch route that adds a list in one transaction.
 - Q2, first half: replace `member-6`, which equals `accent`. The operator asked for the critic's contrast defects to be fixed. Remapping the members' stored colours is a separate question (Q2b).
 - Q10, new: "stage mode" is a screen word. Identifiers keep `scene`, the vocabulary's **scene view**.
 
 ### Vocabulary
 
-- `chord-sheet-to-chordpro.core.ts` became `chords-above-lyrics.core.ts`, in the spec and in ADR-0048. The vocabulary refuses **chord sheet**; the noun is **chord chart**. Six "chord sheet" phrases in ADR-0048 now say "chord chart".
-- "Rehearsal" became "practice" in the spec (task names, the output metric) and in ADR-0046. Task numbers still match `baseline.json`.
+- `chord-sheet-to-chordpro.core.ts` became `chords-above-lyrics.core.ts`, in the spec and in ADR-0050. The vocabulary refuses **chord sheet**; the noun is **chord chart**. Six "chord sheet" phrases in ADR-0050 now say "chord chart".
+- "Rehearsal" became "practice" in the spec (task names, the output metric) and in ADR-0048. Task numbers still match `baseline.json`.
 - "Every member's part" became "every member's instruments". The screen labels "My part" and "Your part" stay, as Q8 already allowed.
 - The spec now notes that `VOCABULARY.md` › Session ("listed newest first") changes with rank 22.
 
 ### Consistency and format
 
-- The chords section said a PDF is stored as a file, while ADR-0048 proposes reading its text layer. The section now follows Q6 either way.
-- ADR-0046 counted 47 files and the spec 46. Both are correct: 47 files name `font-display`, one of them `tokens.css`, which defines it. Both documents now say 46 components plus `tokens.css`.
-- The migration in the spec now matches ADR-0047 and the existing migrations: quoted names and `IF NOT EXISTS`.
-- ADR-0047 had two list items run together on one line ("session page.- **Rejection rationale:**"). They are now on separate lines.
+- The chords section said a PDF is stored as a file, while ADR-0050 proposes reading its text layer. The section now follows Q6 either way.
+- ADR-0048 counted 47 files and the spec 46. Both are correct: 47 files name `font-display`, one of them `tokens.css`, which defines it. Both documents now say 46 components plus `tokens.css`.
+- The migration in the spec now matches ADR-0049 and the existing migrations: quoted names and `IF NOT EXISTS`.
+- ADR-0049 had two list items run together on one line ("session page.- **Rejection rationale:**"). They are now on separate lines.
 - Every markdown link in the spec and the four ADRs resolves. The repository's link checker skips untracked files, so I checked these files with a separate script. That gap is logged in the kaizen file.
 - No time estimates are present. The windows "30 days", "1 hour" and "a day" are alert and success thresholds, not estimates of work.
 
@@ -75,10 +75,10 @@ Ranks 9, 10 and 11 (offline and stale order) stay out of scope, as the spec alre
 
 Answered by the operator in chat on 2026-10-27, and folded into the spec and the ADRs the same day.
 
-1. **Accept ADR-0046, Newsreader with optical sizes?** It adds 235,712 bytes to a phone's first load after the release. Recommendation was: accept. **Answered: accepted**, with no objection.
-2. **Q6 and ADR-0048: read a PDF's text layer with `pdfjs-dist` (a new dependency, about 506 KB compressed, chord editor only)?** Recommendation was: accept. **Answered: accepted**, with no objection. Q6 is decided as option (b).
-3. **Q2b: map each member's stored colour onto the six member tokens?** Recommendation was: yes. **Answered: no.** Members keep their own stored colours, and the colour must stay clearly visible, above all in the Lineup view, so the band learns to recognise each member at a glance. The spec now draws each member's colour as a filled lane in the Lineup grid and as filled lineup avatars, chooses the ink on a member colour by contrast ratio in `member-color.utils.ts`, keeps names in a text token, and drops the six `member-*` tokens. ADR-0045 records the change.
+1. **Accept ADR-0048, Newsreader with optical sizes?** It adds 235,712 bytes to a phone's first load after the release. Recommendation was: accept. **Answered: accepted**, with no objection.
+2. **Q6 and ADR-0050: read a PDF's text layer with `pdfjs-dist` (a new dependency, about 506 KB compressed, chord editor only)?** Recommendation was: accept. **Answered: accepted**, with no objection. Q6 is decided as option (b).
+3. **Q2b: map each member's stored colour onto the six member tokens?** Recommendation was: yes. **Answered: no.** Members keep their own stored colours, and the colour must stay clearly visible, above all in the Lineup view, so the band learns to recognise each member at a glance. The spec now draws each member's colour as a filled lane in the Lineup grid and as filled lineup avatars, chooses the ink on a member colour by contrast ratio in `member-color.utils.ts`, keeps names in a text token, and drops the six `member-*` tokens. ADR-0047 records the change.
 4. **Q3: seven or more members in the Lineup grid.** Recommendation was: show only the members who play in that setlist, and scroll sideways past six. **Answered:** the band has five members. The grid is designed for up to six with no sideways scroll, and more than six is a known limit, not handled.
 5. **Q1: the session's primary action.** Recommendation was: **Open the setlist** before the date and **Listen back** after it. **Answered:** a "practice in progress" mode is important, because the band records songs during practice. The spec now specifies *Practice mode* for slice 5, built on the takes feature, with three new open questions (Q11 where its state lives, Q12 where its quick note goes, Q13 when it is offered), each with a recommendation; none of them blocks slice 1.
 
-The operator also ratified ADR-0045 (with the member colour change), ADR-0046, ADR-0047 and ADR-0048, which are now marked accepted.
+The operator also ratified ADR-0047 (with the member colour change), ADR-0048, ADR-0049 and ADR-0050, which are now marked accepted.

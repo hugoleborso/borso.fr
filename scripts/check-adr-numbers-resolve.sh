@@ -33,11 +33,16 @@ failed=0
 for record in docs/adr/[0-9]*.md; do
   [ -f "$record" ] || continue
 
-  filename_number="$(basename "$record" | sed -n 's/^\([0-9][0-9]*\)-.*/\1/p')"
-  [ -n "$filename_number" ] || continue
+  filename="${record##*/}"
+  [[ "$filename" =~ ^([0-9]+)- ]] || continue
+  filename_number="${BASH_REMATCH[1]}"
 
-  heading="$(head -n 1 "$record")"
-  heading_number="$(echo "$heading" | sed -n 's/^#[[:space:]]*ADR[ -]\{0,1\}\([0-9][0-9]*\).*/\1/p')"
+  heading=''
+  IFS= read -r heading <"$record" || true
+  heading_number=''
+  if [[ "$heading" =~ ^#[[:space:]]*ADR[\ -]?([0-9]+) ]]; then
+    heading_number="${BASH_REMATCH[1]}"
+  fi
 
   if [ -z "$heading_number" ]; then
     failed=1
@@ -54,11 +59,12 @@ for record in docs/adr/[0-9]*.md; do
 done
 
 INDEX="docs/adr/README.md"
+index_text="$(cat "$INDEX")"
 
 for record in docs/adr/[0-9]*.md; do
   [ -f "$record" ] || continue
-  filename="$(basename "$record")"
-  if ! grep -q "](\./${filename})" "$INDEX"; then
+  filename="${record##*/}"
+  if [[ "$index_text" != *"](./${filename})"* ]]; then
     failed=1
     echo "[check-adr-numbers-resolve] $record is in no row of the index" >&2
   fi

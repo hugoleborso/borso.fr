@@ -1,6 +1,5 @@
 import { appendFileSync } from 'node:fs';
-import { RuleTester } from 'eslint';
-import tseslint from 'typescript-eslint';
+import { RuleTester } from 'oxlint/plugins-dev';
 import { afterAll, describe, it } from 'vitest';
 
 const GATE_CANARY_CASES_VARIABLE = 'GATE_CANARY_CASES';
@@ -16,10 +15,8 @@ export function createRuleTester(
 ) {
   const tester = new RuleTester({
     languageOptions: {
-      parser: tseslint.parser,
-      ecmaVersion: 2023,
       sourceType: 'module',
-      parserOptions: { ecmaFeatures: { jsx } },
+      parserOptions: { lang: jsx ? 'tsx' : 'ts' },
     },
   });
 

@@ -167,9 +167,9 @@ The background is in
 
 ## Enforced by
 
-- `eslint:borso/no-database-client-outside-repository` fails when any file
+- `oxlint:borso/no-database-client-outside-repository` fails when any file
   other than a `*.repository.ts` imports the database client.
-- `eslint:borso/no-raw-sql-outside-migrations` rejects Drizzle's `sql` template
+- `oxlint:borso/no-raw-sql-outside-migrations` rejects Drizzle's `sql` template
   tag outside a migration or a repository.
 - `test:migrations.audit.test.ts`, one per full-stack application, rejects a
   `DEFAULT now()` on any column outside that application's allow list.

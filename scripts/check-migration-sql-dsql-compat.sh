@@ -32,6 +32,21 @@ set -euo pipefail
 violations=()
 glob_pattern='apps/*/api/src/database/migrations/*.sql'
 
+# With paths as arguments, the migrations among them; pre-commit passes the
+# staged files. With none, every migration, which is how CI calls it. Each file
+# costs about forty milliseconds of greps, so the whole tree is about a second.
+list_migrations() {
+  if [ "$#" -eq 0 ]; then
+    find apps -maxdepth 6 -path "$glob_pattern" -print0 2>/dev/null
+    return
+  fi
+  for candidate in "$@"; do
+    # shellcheck disable=SC2053
+    [[ "$candidate" == $glob_pattern ]] && [ -f "$candidate" ] && printf '%s\0' "$candidate"
+  done
+  return 0
+}
+
 while IFS= read -r -d '' file; do
   # Strip SQL comments BEFORE scanning so a comment that mentions
   # `NOT NULL DEFAULT 'x'` (documenting the trap, like in
@@ -86,7 +101,7 @@ while IFS= read -r -d '' file; do
   if echo "$stripped" | grep -qE -i 'DROP[[:space:]]+COLUMN'; then
     violations+=("$file: DROP COLUMN is rejected by DSQL — leave the column in place and stop reading it from the app")
   fi
-done < <(find apps -maxdepth 6 -path "$glob_pattern" -print0 2>/dev/null)
+done < <(list_migrations "$@")
 
 if (( ${#violations[@]} > 0 )); then
   echo "DSQL-incompatible migration patterns detected:" >&2

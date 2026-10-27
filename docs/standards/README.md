@@ -5,7 +5,7 @@ repository follows.
 
 Each document states the rule, gives the reason, shows an example, and names
 what enforces it. A rule with no enforcement is a preference, so each document
-names an ESLint rule, a test gate, or a git hook. When a rule cannot be checked
+names a lint rule, a test gate, or a git hook. When a rule cannot be checked
 mechanically, the document says so and describes what a reviewer looks for
 instead.
 
@@ -22,7 +22,7 @@ this checkout:
 
 | Marker | Means | Checked by |
 | --- | --- | --- |
-| `` `eslint:<rule>` `` | an ESLint rule | asking ESLint which rules are on, per layer, per application |
+| `` `oxlint:<rule>` `` | a lint rule, by its name in `.oxlintrc.json` | resolving `.oxlintrc.json` per layer, per application |
 | `` `script:<path>` `` | a shell check | the file exists and a hook or workflow runs it |
 | `` `generator:<path>` `` | a generated artefact with a `--check` | the same |
 | `` `gate:<name>` `` | a named gate | its command appears in every site it claims |
@@ -33,7 +33,7 @@ this checkout:
 The ledger fails when a cited mechanism does not exist, exists and runs
 nowhere, reaches some applications and not others, or when a mechanism runs and
 no standard says why. A rule meant for one application declares that reach
-after its target, as `` `eslint:<rule> (pragma/site)` ``; the ledger then holds
+after its target, as `` `oxlint:<rule> (pragma/site)` ``; the ledger then holds
 it to the scopes it names
 ([12. Linting and gates](./12-linting-and-gates.md#a-rule-meant-for-one-application)). A standard can no longer claim enforcement it does not
 have.
@@ -85,8 +85,9 @@ read the rest.
 | 09     | [Internationalisation](./09-i18n.md)                    | i18next, key naming, and catalogue parity              |
 | 10     | [Testing](./10-testing.md)                              | Vitest, coverage, and mutation testing                 |
 | 11     | [Database](./11-database.md)                            | Drizzle, migrations, and transactions                  |
-| 12     | [Lint and gates](./12-linting-and-gates.md)             | ESLint, hooks, and CI                                  |
+| 12     | [Lint and gates](./12-linting-and-gates.md)             | oxlint, oxfmt, hooks, and CI                           |
 | 13     | [Dependencies](./13-dependencies.md)                    | One version per dependency, in the pnpm catalog        |
+| 14     | [Tool runtime budgets](./14-tool-runtime-budgets.md)    | How long each hook, check and CI job may run           |
 
 ## How a standard differs from a blueprint
 
@@ -120,7 +121,7 @@ before adding a blueprint: a layer sitting at nought per cent is either a
 pattern nobody has written down yet or a layer whose files are genuinely all
 one-offs, and those two need different responses.
 
-Both files are generated, and the pre-commit hook and CI both run the generator
+Both files are generated, and the pre-push hook and CI both run the generator
 in `--check` mode. That fails a blueprint missing one of its four tags, a
 duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not
 exist, and either generated file left stale.

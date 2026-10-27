@@ -56,7 +56,7 @@ No:
 | [0004](./0004-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | proposed | 2026-05-19 |
 | [0005](./0005-dynamic-workflows-for-orchestration.md) | Dynamic Workflows for the tech-lead orchestration pipeline | accepted | 2026-06-05 |
 | [0006](./0006-cascade-on-delete-via-json-blob-scrub.md) | Cascade-on-delete via JSON-blob scrub (DSQL no-FK substitute) | accepted | 2026-06-06 |
-| [0007](./0007-eslint-with-type-aware-rules-replaces-biome.md) | ESLint with type-aware rules replaces Biome | accepted | 2026-08-08 |
+| [0007](./0007-eslint-with-type-aware-rules-replaces-biome.md) | ESLint with type-aware rules replaces Biome | superseded by 0045 | 2026-08-08 |
 | [0008](./0008-purity-enforced-structurally.md) | Purity is enforced by file location, not by review | accepted | 2026-08-08 |
 | [0009](./0009-pragma-previews-clone-production.md) | pragma previews clone production, credentials included | accepted | 2026-08-09 |
 | [0010](./0010-pragma-domain-folder-for-cross-boundary-rules.md) | A `domain/` folder for the rules pragma's two sides share | proposed | 2026-08-13 |
@@ -86,10 +86,12 @@ No:
 | [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | proposed | 2026-10-23 |
 | [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | proposed | 2026-10-24 |
 | [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | proposed | 2026-10-25 |
-| [0045](./0045-pragma-design-system-is-notebook-with-grafts.md) | pragma's design system is the Notebook direction, with Backstage's buttons and six other grafts | accepted | 2026-10-27 |
-| [0046](./0046-newsreader-replaces-instrument-serif.md) | Newsreader replaces Instrument Serif, self-hosted with its weight and optical size axes | accepted | 2026-10-27 |
-| [0047](./0047-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | accepted | 2026-10-27 |
-| [0048](./0048-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
+| [0045](./0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md) | oxlint and oxfmt replace ESLint and Prettier | proposed | 2026-10-27 |
+| [0046](./0046-typescript-7-replaces-typescript-5-9.md) | TypeScript 7 replaces TypeScript 5.9 | proposed | 2026-10-27 |
+| [0047](./0047-pragma-design-system-is-notebook-with-grafts.md) | pragma's design system is the Notebook direction, with Backstage's buttons and six other grafts | accepted | 2026-10-27 |
+| [0048](./0048-newsreader-replaces-instrument-serif.md) | Newsreader replaces Instrument Serif, self-hosted with its weight and optical size axes | accepted | 2026-10-27 |
+| [0049](./0049-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | accepted | 2026-10-27 |
+| [0050](./0050-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
 
 ### Data layer
 
@@ -100,7 +102,7 @@ No:
 - 0039 — the talos memory moves from a private git repository to `memory_*` tables, reached by agents through `/api/agent/*` with one token per environment; the read-only SQL route relies on a keyword guard and a `READ ONLY` transaction rather than a second database role.
 - 0043 — one catalogue song per Deezer track is held by a unique index on `song.deezer_track_id`; DSQL builds it asynchronously, and since the PR #193 kaizen the migration runner waits on the build job and fails the deploy when it fails, so the operator still counts prod duplicates before merging but no longer checks `sys.jobs` by hand.
 - 0044 — a hosted session reads the `prod` schema of pragma, last-loop-lepin and banana-rush (never talos) through `scripts/db-read.sh`, signed in as `ai_reader_prod`, a role that holds `SELECT` only and is mapped to `AI-Dev-ReadOnly`, which gets `dsql:DbConnect` and never `DbConnectAdmin`; the script's keyword guard and `READ ONLY` transaction are conveniences, because the session controls the script.
-- 0047 — a task names at most one session through a nullable `task.session_id`, claimed in the task's transaction like its song and nulled when the session is deleted; DSQL refuses `DROP COLUMN`, so the column stays for good.
+- 0049 — a task names at most one session through a nullable `task.session_id`, claimed in the task's transaction like its song and nulled when the session is deleted; DSQL refuses `DROP COLUMN`, so the column stays for good.
 
 ### App architecture
 
@@ -117,9 +119,9 @@ No:
 - 0038 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
 - 0028 — `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
 - 0040 — pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage, generated on first use and kept in the database since its 2026-10-24 revision, and push subscriptions kept out of preview clones.
-- 0045 — pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
-- 0046 — Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
-- 0048 — chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
+- 0047 — pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
+- 0048 — Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
+- 0050 — chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
 
 ### CDK / infra
 
@@ -140,7 +142,9 @@ No:
 
 - 0001 — `/tech-lead-orchestrator` replaces the linear skill auto-chain.
 - 0005 — Dynamic Workflows as the orchestration substrate (supersedes 0001's runtime, not its intent).
-- 0007 — ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name.
+- 0007 — ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name. Superseded by 0045.
+- 0045 — oxlint replaces ESLint and oxfmt replaces Prettier; every rule keeps running, natively, through tsgolint, or as the upstream ESLint rule loaded as a JavaScript plugin, and the lint and format checks return to the commit, except the type-aware rules, which run on push and in CI.
+- 0046 — TypeScript 7.0.2 is the only TypeScript: every type check and the `infra/cdk` build run it; the architecture model parses with `oxc-parser` and the rule suites run on oxlint's `RuleTester`.
 - 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
 - 0011 — ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
 - 0014 — generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.

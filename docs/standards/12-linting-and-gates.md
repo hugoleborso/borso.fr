@@ -2,7 +2,7 @@
 
 ## Rule
 
-ESLint is the only linter in this repository, Prettier is the only formatter,
+oxlint is the only linter in this repository, oxfmt is the only formatter,
 and every rule in the standards has an enforcement here or an explicit note
 saying a reviewer checks it instead.
 
@@ -19,43 +19,74 @@ like "this function is pure" cannot be written as one. ESLint rules are
 JavaScript with access to the scope manager and, through
 `@typescript-eslint`, to the type checker.
 
+oxlint then replaced ESLint, and oxfmt replaced Prettier, because ESLint could
+not meet the [runtime budgets](./14-tool-runtime-budgets.md): one changed pragma
+file took 21 s on the commit. oxlint runs the same custom rules unchanged, as a
+JavaScript plugin, and the type-aware rules through tsgolint
+([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)).
+
 ## Layout
 
-The configuration is a flat config at the repository root, and each workspace
-extends it.
+The configuration is one file at the repository root.
 
 ```
-eslint.config.js              the shared configuration
+.oxlintrc.json                the shared configuration
+.oxfmtrc.json                 the formatter's settings and ignore list
 eslint-rules/                 the custom rules, one file each
   index.js                    the plugin object
   <rule-name>.js
   <rule-name>.test.js         a RuleTester suite per rule
+  js-plugins/                 upstream ESLint rules oxlint runs as plugins
 ```
 
-There is no per-application ESLint configuration. The flat config at the root
-reaches every workspace, each application's `lint` script runs `eslint` from
-the root against its own folder, and an application-specific exception is a
-`files:` block in the root file — e.g. the one that lets `borsouvertures` say
-`piece`. One file is the point: a rule cannot be quietly relaxed in a corner.
+There is no per-application lint configuration. The root file reaches every
+workspace, each application's `lint` script runs oxlint from the root against
+its own folder, and an application-specific exception is an `overrides` entry
+in the root file — e.g. the one that lets `borsouvertures` say `piece`. One
+file is the point: a rule cannot be quietly relaxed in a corner.
 
 Every custom rule ships with a `RuleTester` suite, because a lint rule that
-misfires costs more than the rule saves.
+misfires costs more than the rule saves. The suites run on oxlint's
+`RuleTester`, from `oxlint/plugins-dev`, which parses with the same parser the
+rules meet in the linter. It does not apply disable comments, so the cases
+that check a disable comment silences a rule live in
+`eslint-rules/disable-directives.test.js`, which runs the real oxlint over
+planted files. ESLint is still installed for the `eslint-js` alias below and
+as the peer of the upstream plugins.
 
 ## What the shared configuration turns on
 
-The configuration starts from `@eslint/js` recommended,
-`typescript-eslint` strict and stylistic with type checking, the React hooks
-plugin, the React refresh plugin, `eslint-plugin-import-x` for resolution and
-cycle detection, `eslint-plugin-unicorn` for the naming and correctness rules,
-`eslint-plugin-vitest` on test files, and `eslint-plugin-jsx-a11y` on the front
-ends.
+The configuration lists, one by one, the rules ESLint's configuration turned
+on: `@eslint/js` recommended, `typescript-eslint` strict and stylistic with
+type checking, the React hooks rules, the React refresh rule, cycle and
+duplicate-import detection, the unicorn rules named below, the Vitest rules on
+test files, and the jsx-a11y rules on the front ends. oxlint runs most of them
+natively, under its own plugin names: `typescript/` for `@typescript-eslint/`,
+`react/` for `react-hooks/`, `import/` for `import-x/`.
 
 It then adds the `borso` plugin, which holds every custom rule the standards
-name.
+name, and four aliases for upstream ESLint rules that run as JavaScript plugins
+because oxlint has no rule of its own or has one that disagreed with the ESLint
+plugin on this repository's code:
 
-Type-aware rules need a `project` setting, which makes them slower than the
-syntactic rules, so `eslint --cache` is on and the cache file is ignored by
-git.
+| Alias | Rules | Why not native |
+|-------|-------|----------------|
+| `unicorn-js` | `consistent-boolean-name`, `prefer-early-return`, `no-top-level-assignment-in-function`, `consistent-function-scoping` | the first three do not exist in oxlint; its `consistent-function-scoping` reported 14 functions ESLint's did not |
+| `jsx-a11y-js` | `autocomplete-valid`, `no-autofocus` | oxlint's refused `autoComplete="nickname"`, a valid token, and did not report an `autoFocus` inside a dialog |
+| `react-hooks-js` | `purity`, `config`, `gating` | oxlint's `purity` reported 9 `new Date()` calls ESLint's did not; the other two do not exist |
+| `eslint-js` | `no-octal`, `no-dupe-args` | oxlint relies on strict mode, and a CloudFront Function file is not in strict mode |
+
+`@eslint-community/eslint-comments` keeps its name and runs through
+`eslint-rules/js-plugins/eslint-comments.js`, which moves a report placed at
+column -1, ESLint's convention for a whole line, to column 0: oxlint reads -1
+as the end of the previous line.
+
+`unicorn/no-array-push-push` was dropped rather than moved: unicorn 73
+deprecated it, and a deprecated unicorn rule reports nothing.
+
+The type-aware rules run when oxlint is given `--type-aware`, which hands them
+to tsgolint. It builds each tsconfig's program with the TypeScript 7 compiler.
+There is no cache: the whole repository takes under a minute.
 
 ## The custom rules
 
@@ -112,7 +143,7 @@ misfire less.
 
 ## Why the configuration is shaped the way it is
 
-The shape of `eslint.config.js` is the result of measurements, not taste. The
+The shape of the configuration is the result of measurements, not taste. The
 numbers below are why a block is scoped, off, or written as an explicit list,
 and each is the kind of thing a reader would otherwise re-derive by turning a
 rule on and drowning.
@@ -156,21 +187,28 @@ So the enabled rules are listed one by one. Each either enforces a rule from
   nothing in this repository calls it. The CloudFront Functions runtime does, by
   that exact name, and there is no import to make the reference visible. The
   same files stay on **ES5 syntax on purpose**, for the same runtime.
-- **CDK entry points under `bin/`** are compiled by `tsconfig.cdk.json`, and the
-  type-aware project service only ever looks for the nearest `tsconfig.json`, so
-  it cannot see them. They are linted without type information rather than not
-  at all.
+- **CDK entry points under `bin/`** are compiled by `tsconfig.cdk.json`, which
+  the type-aware rules do not find, since they only ever look for the nearest
+  `tsconfig.json`. They are linted without type information rather than not at
+  all. banana-rush's service worker is the opposite case: its tsconfig.json
+  excludes it, so it names its library itself with
+  `/// <reference lib="webworker" />`.
+- **Fifteen files in import cycles.** `import/no-cycle` resolves `.ts`
+  imports, which ESLint's `import-x/no-cycle` never did, and it found 26 cycles
+  through 15 files that had never been reported. Those files are listed in the
+  last override with the rule off, so a new cycle anywhere else fails. The list
+  only shrinks.
 
 ### A rule meant for one application
 
 Some rules belong to one application's own decisions, not to the repository.
-Pragma's design system ([ADR-0045](../adr/0045-pragma-design-system-is-notebook-with-grafts.md))
+Pragma's design system ([ADR-0047](../adr/0047-pragma-design-system-is-notebook-with-grafts.md))
 forbids arbitrary Tailwind values and raw `<button>` and `<dialog>` elements;
 the other applications made no such decision and hold dozens of each. Those
 rules are enabled for `apps/pragma/site` only.
 
 A citation of such a rule names its reach in brackets after the target:
-`` `eslint:borso/no-raw-interactive-element (pragma/site)` ``. The ledger then
+`` `oxlint:borso/no-raw-interactive-element (pragma/site)` ``. The ledger then
 checks the rule against the scopes it declares instead of every site, and a
 declared scope the configuration does not reach is `broken`, not `partly`. Several
 scopes are separated by commas. Without the bracket the ledger reads the rule
@@ -212,17 +250,29 @@ line, in a comment, with the reason:
 useEffect(() => { … });
 ```
 
-Three settings make the shape hold, and all three are in `eslint.config.js`:
+oxlint reads `eslint-disable` comments as its own. Three settings make the
+shape hold, and all three are in `.oxlintrc.json`:
 
 | Setting | What it rejects |
 |---------|-----------------|
-| `eslint-comments/require-description` | a disable with no `-- <reason>` |
-| `linterOptions.reportUnusedDisableDirectives` | a disable that no longer suppresses anything |
-| `eslint-comments/no-unlimited-disable` | a blanket `/* eslint-disable */` for a file |
+| `@eslint-community/eslint-comments/require-description` | a disable with no `-- <reason>` |
+| `options.reportUnusedDisableDirectives` | a disable that no longer suppresses anything |
+| `unicorn/no-abusive-eslint-disable` | a blanket `/* eslint-disable */` for a file, or a disable naming no rule |
 
 The second one is the important one. When the underlying violation is fixed, the
 comment becomes an error, so the excuse cannot outlive the problem. Nothing has
-to be swept.
+to be swept. The third is oxlint's own rule: `no-unlimited-disable`, run as a
+JavaScript plugin, is silenced by the very blanket disable it reports, because
+oxlint applies the directive to the plugin's report too. The second runs
+wherever every rule runs: on the commit, on push and in CI. The commit splits
+its rules into two halves run side by side, and each half reads a directive
+for the other half's rules as unused, so `scripts/lint-staged-files.sh`
+reports a directive as unused only when both halves do.
+
+A directive names the rule the way oxlint reports it. The ESLint names of rules
+oxlint implements, such as `@typescript-eslint/no-floating-promises`, still
+work, but a rule run through an alias needs the alias:
+`jsx-a11y-js/no-autofocus`.
 
 ### What a reason has to be
 
@@ -231,7 +281,7 @@ code.
 
 ```ts
 // Good.
-// eslint-disable-next-line @typescript-eslint/no-deprecated -- drizzle's callback form of pgTable cannot express a composite primary key, which DSQL requires here
+// eslint-disable-next-line typescript/no-deprecated -- drizzle's callback form of pgTable cannot express a composite primary key, which DSQL requires here
 
 // Bad. None of these is checkable.
 // eslint-disable-next-line some/rule -- pre-existing
@@ -246,7 +296,7 @@ which is a separate change`.
 ### Reach for a disable third, not first
 
 1. **Fix the code.** This is the outcome for most findings.
-2. **Scope the rule in `eslint.config.js`** if its stated reason does not hold
+2. **Scope the rule in `.oxlintrc.json`** if its stated reason does not hold
    for a whole class of file, with a comment saying why. `no-dynamic-delete`
    fires only on `delete process.env[NAME]` in tests, and `process.env` is not
    ours to redesign, so it is off for test files rather than disabled at
@@ -274,18 +324,32 @@ The blueprint for the replacement shape is annotated at
 
 ## The gates, in the order they run
 
-The pre-commit hook runs `eslint --cache` and `prettier --check` on the staged
-files. It is the cheap hook: nothing in it reads the whole repository's tests.
+The pre-commit hook runs oxfmt and oxlint on the staged files, type-checks the
+tooling with TypeScript 7, runs the blueprint, dantotsu and ledger generators,
+and each of the checks below, each when the commit touches something it reads.
+Each check is held to a CPU budget and the commit to 4 seconds, and
+the hook times every check and refuses a commit that went over;
+[14. Tool runtime budgets](./14-tool-runtime-budgets.md) gives the budgets, the
+scope each check declares, and where each check's whole-tree run lives.
 
-Both eslint invocations, here and in CI, pass `--max-warnings 0`. Several rules
-the standards lean on ship at `warn` from their plugin's recommended preset,
-`react-hooks/exhaustive-deps` and `react-hooks/incompatible-library` among
-them, and eslint exits 0 on a warning. Without the flag those rules print into
-a log nobody reads and stop nothing, which makes them advice again.
+The commit's oxlint pass runs every rule, the type-aware ones included, over
+a TypeScript program of the staged files only. tsgolint builds the program of
+the `tsconfig.json` nearest each file, so `scripts/lint-staged-files.sh` lints
+from a temporary tree in which each touched workspace's `tsconfig.json` extends
+the real one and lists only the staged files it includes: about 2 s for one
+pragma file, against 5.2 s with the whole workspace's program. A staged file
+the real `tsconfig.json` does not include, such as a CDK stack, is not listed,
+and tsgolint lints it in an inferred program, as the whole-tree run does. The
+pre-push hook runs the same rules over the files the push changes, and CI over
+the repository, where a finding that depends on a file the commit did not
+import shows up.
 
-It also runs the cheap whole-repository checks, each a git-index read plus a
-grep, and each guarding a class no linter sees because the evidence lives in
-two files at once:
+`.oxlintrc.json` sets `denyWarnings`. `react/only-export-components` ships at
+`warn`, and a linter exits 0 on a warning, so without it that rule would print
+into a log nobody reads and stop nothing, which makes it advice again.
+
+The pre-commit hook also runs these checks, each guarding a class no linter sees
+because the evidence lives in two files at once:
 
 | Script | Fails when |
 |--------|------------|
@@ -314,8 +378,9 @@ should have been `pnpm --filter <pkg> run deploy`, because seven script names
 are pnpm built-ins and pnpm silently prefers its own.
 
 The pre-push hook runs `knip` for dead code, `actionlint` for the workflows,
-`tsc --noEmit` for each application the pushed commits change, the tests those
-commits affect, and the mutation tests for the pure files they changed. The
+`tsc --noEmit` for each application the pushed commits change, oxlint with the
+type-aware rules over the files they change, the tests those commits affect,
+and the mutation tests for the pure files they changed. The
 type check is there because Vitest strips types without checking them: a test
 handing a component a prop it does not accept passes every test run and fails
 only the type checker.
@@ -350,9 +415,9 @@ mechanism the enforcement ledger resolves, every `scripts/**/check-*` file and
 every generator a hook or workflow runs with `--check`, and fails on any of
 them without a canary. A gate that gates nothing is named in
 `MECHANISMS_THAT_GATE_NOTHING` in `scripts/standards/canary-registry.ts`, with
-the reason. Each custom ESLint rule's canary is the first invalid case of its
-own RuleTester suite, linted through the real configuration at the path the
-case names, so a rule that is correct in its suite and switched off where it
+the reason. Each custom rule's canary is the first invalid case of its
+own RuleTester suite, linted by oxlint through the real configuration at the
+path the case names, so a rule that is correct in its suite and switched off where it
 matters fails here. The other canaries live in the same registry.
 
 It runs in the `gate-canaries` job of `ci.yml`, once per tier: `fast` holds
@@ -372,6 +437,7 @@ does with the answer.
 
 Write `// eslint-disable-next-line <rule> -- <reason>` with a reason after the
 two dashes, and the configuration rejects a disable comment that has no reason.
+oxlint honours the `eslint-disable` spelling, so it stays.
 
 Never pass `--no-verify` to git. When a hook fails, fix what it found, because
 in a repository where an agent writes most of the code, the gates are the
@@ -379,17 +445,15 @@ review.
 
 ## Enforced by
 
-- `gate:eslint` runs over the staged files on commit and over the repository in
-  CI, both with `--max-warnings 0`.
+- `gate:oxlint` runs every rule over the staged files on commit, through
+  `scripts/lint-staged-files.sh`, over the files a push changes, and over the
+  repository in CI, all with `denyWarnings`.
 - `script:scripts/lint-repository.sh` is how CI and `pnpm run lint` reach the
-  whole repository: one ESLint process per workspace, then one for every file
-  outside them. Type-aware linting builds a TypeScript program per tsconfig,
-  and one `eslint .` holding five applications' programs passed Node's 4 GB
-  heap on the runner, so main's build was red from PR #110 on
-  ([dantotsu](../dantotsus/five-apps-did-not-fit-in-one-lint-heap.md)). The
-  peak is now the largest workspace rather than their sum, and a new
-  application is picked up without an edit.
-- `gate:prettier` runs over the staged files on commit and over the repository
+  whole repository: one oxlint process with the type-aware rules. ESLint needed
+  one process per workspace, because one `eslint .` holding five applications'
+  programs passed Node's 4 GB heap on the runner
+  ([dantotsu](../dantotsus/five-apps-did-not-fit-in-one-lint-heap.md)).
+- `gate:oxfmt` runs over the staged files on commit and over the repository
   in CI.
 - `gate:typecheck` runs `tsc --noEmit` in every workspace, and again over the
   tooling that belongs to none. `scripts/`, `.claude/skills/` and
@@ -414,7 +478,7 @@ review.
   `paths-filter` base misuse and a shell quoting bug both hid.
 - `gate:commitlint` fails a message that is not a conventional commit or names
   a scope outside the enumeration.
-- `eslint:@eslint-community/eslint-comments/require-description` rejects a
+- `oxlint:@eslint-community/eslint-comments/require-description` rejects a
   disable comment with no reason after the two dashes. The short spelling
   `eslint-comments/require-description` is not the rule's identifier, and this
   document cited it for months.
@@ -534,8 +598,8 @@ review.
   the install SessionStart would have run and records the session.
 - `script:scripts/check-no-null-bytes.sh` fails a tracked text file carrying a
   NUL byte. A NUL is legal inside a string, renders as nothing in an editor,
-  shows as unchanged whitespace in a diff, and passes ESLint, Prettier and
-  `tsc`; it surfaces much later as an `execFileSync` refusing an argument or a
+  shows as unchanged whitespace in a diff, and passes the linter, the formatter
+  and `tsc`; it surfaces much later as an `execFileSync` refusing an argument or a
   separator that silently stopped matching.
 - `generator:scripts/standards/rule-provenance.ts` records which rules were
   written because a defect actually happened, by reading the eradication section

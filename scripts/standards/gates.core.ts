@@ -13,21 +13,22 @@ export const FULL_SUITE = '.github/workflows/full-suite.yml';
 
 export const GATE_DEFINITIONS: readonly GateDefinition[] = [
   {
-    name: 'eslint',
-    siteMustContain: 'eslint',
-    sites: [COMMIT_HOOK, CONTINUOUS_INTEGRATION],
-    summary: 'ESLint over the staged files on commit, and over the repository in CI',
+    name: 'oxlint',
+    siteMustContain: 'oxlint',
+    sites: [COMMIT_HOOK, PUSH_HOOK, CONTINUOUS_INTEGRATION],
+    summary:
+      'oxlint over the staged files, then with the type-aware rules over the files a push changes and over the repository in CI',
   },
   {
-    name: 'prettier',
-    siteMustContain: 'prettier',
+    name: 'oxfmt',
+    siteMustContain: 'oxfmt',
     sites: [COMMIT_HOOK, CONTINUOUS_INTEGRATION],
-    summary: 'Prettier formatting, on the staged files and again in CI',
+    summary: 'oxfmt formatting, on the staged files and again in CI',
   },
   {
     name: 'typecheck',
     siteMustContain: 'typecheck',
-    sites: [COMMIT_HOOK, CONTINUOUS_INTEGRATION],
+    sites: [PUSH_HOOK, CONTINUOUS_INTEGRATION],
     summary: '`tsc --noEmit` in every workspace, and over the tooling that belongs to none',
   },
   {

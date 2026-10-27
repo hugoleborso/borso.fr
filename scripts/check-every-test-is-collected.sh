@@ -27,9 +27,25 @@ TEST_FILE_PATTERN='\.test\.tsx?$'
 
 failed=0
 
+# With paths as arguments, only the workspaces holding one of them; pre-push
+# passes the files the push changes. With none, every workspace, which is how CI
+# calls it. `vitest list` is one to three seconds per workspace, past the commit
+# budget in docs/standards/14-tool-runtime-budgets.md, so this never runs on the
+# commit.
+is_selected() {
+  [ "$#" -gt 1 ] || return 0
+  local workspace="$1"
+  shift
+  for candidate in "$@"; do
+    case "$candidate" in "$workspace"/*) return 0 ;; esac
+  done
+  return 1
+}
+
 for config in apps/*/vitest.config.ts infra/*/vitest.config.ts; do
   [ -f "$config" ] || continue
   workspace="$(dirname "$config")"
+  is_selected "$workspace" "$@" || continue
 
   tracked="$(git ls-files -- "$workspace" | grep -E "$TEST_FILE_PATTERN" | sed "s|^${workspace}/||" | sort)"
   [ -n "$tracked" ] || continue

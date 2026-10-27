@@ -7,10 +7,10 @@ related-pr: '#55'
 fix-pr: '#73'
 fix-commits: [8c08c5d872]
 eradication-level: 2
-eradication-paths: [eslint.config.js]
+eradication-paths: [.oxlintrc.json]
 time-to-detect: days
 tags: [eslint, naming, standards, meta]
-zone: eslint.config.js
+zone: .oxlintrc.json
 ---
 
 # The naming standard's own example failed the rule the naming standard cites

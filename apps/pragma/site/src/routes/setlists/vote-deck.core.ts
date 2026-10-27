@@ -108,7 +108,9 @@ export function selectZoneStrength(
 }
 
 export type ReleaseIntent =
-  { kind: 'score'; points: number } | { kind: 'refused' } | { kind: 'return' };
+  | { kind: 'score'; points: number }
+  | { kind: 'refused' }
+  | { kind: 'return' };
 
 export function judgeRelease(zone: DeckZone, remainingPoints: number): ReleaseIntent {
   if (zone === 'none') return { kind: 'return' };

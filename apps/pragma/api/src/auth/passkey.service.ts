@@ -50,7 +50,8 @@ async function rememberChallenge(
 }
 
 export type RegistrationOptionsOutcome =
-  { kind: 'ok'; options: Record<string, unknown> } | { kind: 'unknown-member' };
+  | { kind: 'ok'; options: Record<string, unknown> }
+  | { kind: 'unknown-member' };
 
 // @FollowsBlueprint service-orchestration
 export async function startPasskeyRegistration(
@@ -112,7 +113,8 @@ export async function startPasskeyAuthentication(
 }
 
 export type PasskeyLoginOutcome =
-  { kind: 'ok'; session: IssuedSession; memberId: string } | { kind: 'verification-failed' };
+  | { kind: 'ok'; session: IssuedSession; memberId: string }
+  | { kind: 'verification-failed' };
 
 export async function finishPasskeyAuthentication(params: {
   readonly response: unknown;

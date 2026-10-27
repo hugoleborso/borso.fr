@@ -33,13 +33,24 @@ STEM_LENGTH=5
 collisions="$(
   ls scripts/check-*.sh |
     sed 's|scripts/check-||; s|\.sh$||' |
-    while read -r name; do
-      key="$(echo "$name" | tr '-' '\n' | cut -c"1-${STEM_LENGTH}" | sort -u | tr '\n' ' ')"
-      echo "${key}|${name}"
-    done |
-    sort |
-    awk -F'|' '
-      { claimants[$1] = claimants[$1] " check-" $2 ".sh" }
+    awk -v stem_length="$STEM_LENGTH" '
+      {
+        count = split($0, words, "-")
+        delete stems
+        unique = 0
+        for (index_ = 1; index_ <= count; index_++) {
+          stem = substr(words[index_], 1, stem_length)
+          if (!(stem in stems)) { stems[stem] = 1; sorted[++unique] = stem }
+        }
+        for (outer = 2; outer <= unique; outer++) {
+          for (inner = outer; inner > 1 && sorted[inner - 1] > sorted[inner]; inner--) {
+            swap = sorted[inner]; sorted[inner] = sorted[inner - 1]; sorted[inner - 1] = swap
+          }
+        }
+        key = ""
+        for (index_ = 1; index_ <= unique; index_++) key = key sorted[index_] " "
+        claimants[key] = claimants[key] " check-" $0 ".sh"
+      }
       END {
         for (key in claimants) {
           if (split(claimants[key], parts, " ") > 1) print key "|" claimants[key]

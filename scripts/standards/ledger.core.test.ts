@@ -11,9 +11,9 @@ import {
 
 function buildCitation(overrides: Partial<Citation> = {}): Citation {
   return {
-    kind: 'eslint',
+    kind: 'oxlint',
     target: 'borso/no-use-effect',
-    bullet: '`eslint:borso/no-use-effect` rejects effects.',
+    bullet: '`oxlint:borso/no-use-effect` rejects effects.',
     ...overrides,
   };
 }
@@ -199,7 +199,7 @@ describe('selectLedgerProblems', () => {
 
   it('reports a mechanism that runs and that no standard claims', () => {
     const problems = selectLedgerProblems(
-      buildInput({ orphans: [{ kind: 'eslint', target: 'borso/no-orphan' }] }),
+      buildInput({ orphans: [{ kind: 'oxlint', target: 'borso/no-orphan' }] }),
     );
     expect(problems).toEqual([
       { standard: '(none)', message: '`borso/no-orphan` runs and no standard says why' },
@@ -232,7 +232,7 @@ describe('renderLedger', () => {
       '',
       '| Mechanism | Kind | Enforced | Where |',
       '| --- | --- | --- | --- |',
-      '| `borso/no-use-effect` | ESLint rule | yes | pragma/site |',
+      '| `borso/no-use-effect` | oxlint rule | yes | pragma/site |',
       '',
       '## What only a reviewer can check',
       '',
@@ -275,7 +275,7 @@ describe('renderLedger', () => {
       resolutionsByStandard: new Map([
         [standard.standard, [resolveCitation(buildCitation(), buildFacts()), reviewerResolution]],
       ]),
-      orphans: [{ kind: 'eslint', target: 'borso/no-orphan' }],
+      orphans: [{ kind: 'oxlint', target: 'borso/no-orphan' }],
     });
 
     expect(rendered.split('\n')).toEqual([
@@ -301,7 +301,7 @@ describe('renderLedger', () => {
       '',
       '| Mechanism | Kind | Enforced | Where |',
       '| --- | --- | --- | --- |',
-      '| `borso/no-use-effect` | ESLint rule | yes | pragma/site |',
+      '| `borso/no-use-effect` | oxlint rule | yes | pragma/site |',
       '| (a reviewer) | reviewer judgement | reviewer | checked by a reviewer, not by a tool |',
       '',
       '## 00. Principles',
@@ -339,7 +339,7 @@ describe('renderLedger', () => {
     );
     const lines = rendered.split('\n');
     expect(lines).toContain(
-      '| `borso/no-use-effect` | ESLint rule | partly | runs on pragma/site; not on borso-fr/site |',
+      '| `borso/no-use-effect` | oxlint rule | partly | runs on pragma/site; not on borso-fr/site |',
     );
     expect(lines).toContain('- 0 claim(s) enforced by a tool');
     expect(lines).toContain('- 0 claim(s) left to a reviewer');
@@ -356,7 +356,7 @@ describe('renderLedger', () => {
       buildInput({ resolutionsByStandard: new Map([['07-state-and-effects.md', [resolved]]]) }),
     );
     expect(rendered.split('\n')).toContain(
-      '| `borso/no-use-effect` | ESLint rule | yes | a \\| b c |',
+      '| `borso/no-use-effect` | oxlint rule | yes | a \\| b c |',
     );
   });
 });

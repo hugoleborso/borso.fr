@@ -24,6 +24,8 @@ const ZERO_SURVIVING_MUTANTS = { high: 100, low: 100, break: 100 };
 
 const SANDBOX_EXCLUSIONS = ['.claude/**', 'docs/**'];
 
+const TSCONFIG_THE_SANDBOX_NEVER_REWRITES = 'no-tsconfig-for-stryker-to-rewrite.json';
+
 function sandboxOutsideTheWorkspace() {
   const slug = process
     .cwd()
@@ -45,6 +47,7 @@ export function defineStrykerConfig({ mutate, vitest }) {
     tempDirName: sandboxOutsideTheWorkspace(),
     cleanTempDir: true,
     ignorePatterns: SANDBOX_EXCLUSIONS,
+    tsconfigFile: TSCONFIG_THE_SANDBOX_NEVER_REWRITES,
     disableTypeChecks: '{src,site,api,test}/**/*.{js,ts,jsx,tsx}',
     ignoreStatic: true,
     mutate,

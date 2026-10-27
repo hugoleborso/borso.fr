@@ -59,7 +59,6 @@ describe('startErrorReporting', () => {
     });
     expect(sentry.reactRouterBrowserTracingIntegration).toHaveBeenCalledWith(
       expect.objectContaining({
-        useEffect: expect.any(Function),
         useLocation: expect.any(Function),
         useNavigationType: expect.any(Function),
         createRoutesFromChildren: expect.any(Function),

@@ -29,6 +29,18 @@ set -euo pipefail
 
 failed=0
 found_any=0
+HELD_BY_LINE='^Held by: `([^`]+)` › (.+)$'
+declare -A test_sources=()
+
+# Each test file is read once, however many terms it holds: pragma's
+# vocabulary has close to two hundred Held by lines, and one grep per line
+# cost 1.8 s of CPU on the commit.
+test_source_names_title() {
+  if [ -z "${test_sources[$1]+read}" ]; then
+    test_sources[$1]=$(<"$1")
+  fi
+  [[ ${test_sources[$1]} == *"'$2'"* ]]
+}
 
 for vocabulary in apps/*/VOCABULARY.md; do
   [ -f "$vocabulary" ] || continue
@@ -44,15 +56,20 @@ for vocabulary in apps/*/VOCABULARY.md; do
 
   while IFS= read -r held_by; do
     [ -n "$held_by" ] || continue
-    test_file=$(printf '%s' "$held_by" | sed -E 's/^Held by: `([^`]+)` › .*$/\1/')
-    test_title=$(printf '%s' "$held_by" | sed -E 's/^Held by: `[^`]+` › (.*)$/\1/')
-    if [ "$test_file" = "$held_by" ] || [ -z "$test_title" ]; then
+    if [[ $held_by =~ $HELD_BY_LINE ]]; then
+      test_file=${BASH_REMATCH[1]}
+      test_title=${BASH_REMATCH[2]}
+    else
+      test_file=''
+      test_title=''
+    fi
+    if [ -z "$test_file" ] || [ -z "$test_title" ]; then
       echo "  $vocabulary has a Held by line that is not \`<test file>\` › <test title>: $held_by" >&2
       failed=1
     elif [ ! -f "$app_directory/$test_file" ]; then
       echo "  $vocabulary holds an invariant with $test_file, which is not in $app_directory" >&2
       failed=1
-    elif ! grep -qF -- "'$test_title'" "$app_directory/$test_file"; then
+    elif ! test_source_names_title "$app_directory/$test_file" "$test_title"; then
       echo "  $vocabulary holds an invariant with a test $test_file does not have: $test_title" >&2
       failed=1
     fi

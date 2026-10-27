@@ -1,55 +1,24 @@
 #!/usr/bin/env bash
-# Lint the whole repository, one ESLint process per workspace.
+# Lint the whole repository with every rule, the type-aware ones included.
 #
-# ESLint here is type-aware: before it runs a rule it builds a TypeScript
-# program for every tsconfig it meets. One `eslint .` holds every
-# workspace's program in one heap at once, and once banana-rush became the
-# fifth application that heap passed Node's 4 GB default on the CI runner:
-# `FATAL ERROR: Reached heap limit`, and main's `build` job was red on every
-# push from PR #110 on. Reproduced locally with --max-old-space-size=4096.
+# oxlint reads .oxlintrc.json, runs its native rules in Rust, the custom rules
+# under eslint-rules/ and the few upstream ESLint rules it has no faithful port
+# of as JavaScript plugins, and hands the type-aware rules to tsgolint, which
+# builds each tsconfig's program with the TypeScript 7 compiler. One process
+# covers every workspace, where ESLint needed one process per workspace to stay
+# under the heap limit. See
+# docs/adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md.
 #
-# Raising the heap would only move the ceiling, and by how much depends on
-# the runner's memory, which nothing in this repository can see. One process
-# per workspace frees each program when its process exits, so the peak is
-# the largest single workspace rather than the sum of all of them.
-#
-# Coverage is complete by construction: every directory under apps/ and
-# infra/ gets its own run, and a last run lints everything else with those
-# two folders ignored — scripts/, eslint-rules/, .claude/ and the root
-# configs. Adding an application needs no edit here.
-#
-# Each run keeps its own cache file, `.eslintcache-<name>`, because runs
-# sharing one file would each overwrite the others' entries.
-#
-# See docs/dantotsus/five-apps-did-not-fit-in-one-lint-heap.md.
+# Warnings fail the run: `denyWarnings` is set in .oxlintrc.json, because a
+# warning nobody has to clear is a rule that is off.
 
 set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-ESLINT_FLAGS=(--max-warnings 0 --cache --cache-strategy content "$@")
-failed=0
+# The type-aware rules resolve @borso/infra through its dist/, which a fresh
+# worktree does not have; without it every cdk file reports unresolved types
+# and nothing names the missing build.
+scripts/ensure-infra-built.sh
 
-lint() {
-  local name="$1"
-  shift
-  echo "[lint-repository] ${name}"
-  if ! pnpm exec eslint "$@" "${ESLINT_FLAGS[@]}" --cache-location ".eslintcache-${name}"; then
-    failed=1
-  fi
-}
-
-for workspace in apps/*/ infra/*/; do
-  [ -f "${workspace}package.json" ] || continue
-  name="$(basename "$(dirname "$workspace")")-$(basename "$workspace")"
-  lint "$name" "$workspace"
-done
-
-lint rest . --ignore-pattern 'apps/**' --ignore-pattern 'infra/**'
-
-if [ "$failed" -ne 0 ]; then
-  echo "[lint-repository] at least one workspace has lint errors; they are printed above." >&2
-  exit 1
-fi
-
-echo "[lint-repository] every workspace and the files outside them lint clean"
+exec node_modules/.bin/oxlint --type-aware "$@" .

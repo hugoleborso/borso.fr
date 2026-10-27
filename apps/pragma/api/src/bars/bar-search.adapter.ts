@@ -25,7 +25,8 @@ export interface BarSearchState {
 const barSearchState: BarSearchState = { cache: new Map(), lastCallAt: 0 };
 
 export type BarSearchOutcome =
-  { readonly kind: 'ok'; readonly hits: BarSearchHit[] } | { readonly kind: 'unavailable' };
+  | { readonly kind: 'ok'; readonly hits: BarSearchHit[] }
+  | { readonly kind: 'unavailable' };
 
 export interface SearchPlacesOptions {
   readonly fetcher?: PlacesFetcher;

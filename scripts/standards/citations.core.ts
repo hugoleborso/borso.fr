@@ -7,7 +7,7 @@ const DECLARED_REACH = /^(\S+)\s+\(([^)]+)\)$/;
 const REACH_SEPARATOR = ',';
 
 export const CITATION_KINDS = [
-  'eslint',
+  'oxlint',
   'script',
   'generator',
   'gate',

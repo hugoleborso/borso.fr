@@ -159,9 +159,12 @@ async function measureRouteLook(
   );
   const light = await measureSchemeColours(driver, memberColours);
   await emulateColourScheme(driver, 'dark');
-  const dark = await measureSchemeColours(driver, memberColours).finally(() =>
-    emulateColourScheme(driver, 'light'),
-  );
+  let dark: Awaited<ReturnType<typeof measureSchemeColours>>;
+  try {
+    dark = await measureSchemeColours(driver, memberColours);
+  } finally {
+    await emulateColourScheme(driver, 'light');
+  }
   return {
     route: target.route,
     fontSizes,

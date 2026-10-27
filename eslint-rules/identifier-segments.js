@@ -14,12 +14,6 @@ export function readIdentifierSegments(name) {
     .filter((segment) => segment.length > 0);
 }
 
-const FUNCTION_NODE_TYPES = new Set([
-  'FunctionDeclaration',
-  'FunctionExpression',
-  'ArrowFunctionExpression',
-]);
-
 export function readParameterIdentifiers(node) {
   return node.params
     .map((parameter) => {
@@ -32,8 +26,4 @@ export function readParameterIdentifiers(node) {
       return parameter;
     })
     .filter((parameter) => parameter.type === 'Identifier');
-}
-
-export function isFunctionNodeType(type) {
-  return FUNCTION_NODE_TYPES.has(type);
 }

@@ -102,13 +102,13 @@ and `lg:` for wider screens. See
 
 ## Enforced by
 
-- `eslint:borso/no-component-css-imports` rejects an import of a `.css` file
+- `oxlint:borso/no-component-css-imports` rejects an import of a `.css` file
   from anywhere other than the application entry point.
-- `eslint:borso/no-string-concatenated-class-names` rejects a template literal
+- `oxlint:borso/no-string-concatenated-class-names` rejects a template literal
   in a `className` attribute and points at `clsx`.
-- `eslint:borso/no-circle-in-non-uniform-svg` rejects a `<circle>` inside an SVG
+- `oxlint:borso/no-circle-in-non-uniform-svg` rejects a `<circle>` inside an SVG
   that scales unevenly, where it renders as an ellipse.
-- `eslint:borso/no-flex-one-in-auto-height-dialog` rejects `flex-1` on a child of
+- `oxlint:borso/no-flex-one-in-auto-height-dialog` rejects `flex-1` on a child of
   a column inside a `dialog` that declares no height of its own. `flex-1` is
   `flex: 1 1 0%`, and a percentage basis in a container whose height comes from
   its content resolves to zero on an engine that follows the specification —
@@ -116,21 +116,21 @@ and `lg:` for wider screens. See
   bare title bar. `flex-auto` starts from the content instead. The rule stays
   quiet on a dialog carrying `h-dvh` or `h-[85vh]`, and on a `flex-1` inside a
   row, where the main axis is the width the dialog already has.
-- `eslint:borso/no-scroll-container-on-main` rejects an `overflow-auto` or
+- `oxlint:borso/no-scroll-container-on-main` rejects an `overflow-auto` or
   `overflow-scroll` class on a `<main>` element. The document is the one thing
   that scrolls: a shell that is exactly one screen tall and scrolls inside
   `<main>` still has a window iOS can scroll to show a focused field, and on an
   installed app that offset can stay after the keyboard closes, lifting the
   shell over an empty band. Scroll areas inside dialogs and scenes are `div`s
   and are not affected.
-- `eslint:borso/no-arbitrary-tailwind-value (pragma/site)` rejects a
+- `oxlint:borso/no-arbitrary-tailwind-value (pragma/site)` rejects a
   `text-[`, `bg-[`, `rounded-[` or `shadow-[` class and a raw hex, `rgb(`,
   `rgba(` or `hsl(` colour in a class string, a `*_CLASS` constant or a
   `.variants.ts` table, and a colour set through `style` anywhere but `Avatar`
   and `MemberMark`, the two places a member's stored colour reaches the screen.
   Every value the design uses has a name in `tokens.css`
-  ([ADR-0045](../adr/0045-pragma-design-system-is-notebook-with-grafts.md)).
-- `eslint:borso/no-vertical-scroll-container (pragma/site)` rejects
+  ([ADR-0047](../adr/0047-pragma-design-system-is-notebook-with-grafts.md)).
+- `oxlint:borso/no-vertical-scroll-container (pragma/site)` rejects
   `overflow-auto`, `overflow-y-auto`, `overflow-scroll` and `overflow-y-scroll`
   outside `Sheet` and the two scene views. The document scrolls; a list that
   scrolls inside it traps a thumb that meant to scroll the page.

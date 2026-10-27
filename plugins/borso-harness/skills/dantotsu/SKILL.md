@@ -201,7 +201,7 @@ shape pre-filled.
 
 The frontmatter is read by tools, and
 `scripts/quality/check-dantotsu-front-matter.ts` refuses an entry that
-gets it wrong, in pre-commit and in CI. Fill it this way:
+gets it wrong, in pre-push and in CI. Fill it this way:
 
 - **Fixed lists.** `introduced-at`, `detected-at`, `severity` and
   `eradication-level` take only the values the template lists.
