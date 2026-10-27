@@ -179,7 +179,7 @@ moved to pre-push.
 | Run | ESLint, Prettier, TypeScript 5.9 | oxlint, oxfmt, TypeScript 7 |
 | --- | --- | --- |
 | `.husky/pre-commit`, nothing staged | 0.14 s | 0.12 s |
-| `.husky/pre-commit`, one file of each of eight kinds, every moved check back | 1.6 s without ESLint, the tooling type check and the generators | 1.7 to 1.8 s on four cores, 2.4 to 2.6 s on two |
+| `.husky/pre-commit`, one file of each of eight kinds, every moved check back | 1.6 s without ESLint, the tooling type check and the generators | 1.7 to 1.8 s on four cores, 2.3 to 2.6 s on two, 1.96 s on CI's runner (babc5443) |
 | Lint over the repository, type-aware | 256 to 454 s cold, one process per workspace | 28 to 38 s, one process |
 | Format check over the repository | 43.7 s without a cache | 1.5 s |
 | pragma type check | 32 s, 12 to 23 s incremental | 9.7 s cold, 4 s incremental |
