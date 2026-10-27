@@ -192,7 +192,7 @@ export function BarsPage(): JSX.Element {
 
   const panelByView: Readonly<Record<BarsView, JSX.Element>> = {
     list: (
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
+      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
         <BarsList
           bars={listRows}
           statusLabel={(status) => t(BAR_STATUS_KEY[status])}

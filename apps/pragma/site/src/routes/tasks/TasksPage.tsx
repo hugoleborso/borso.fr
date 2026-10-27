@@ -124,24 +124,26 @@ export function TasksPage(): JSX.Element {
         </p>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
-        <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 min-w-0">
-          {tasksQuery.isLoading ? (
-            <p className="text-ink-soft italic text-meta m-0">{t('common.loading')}</p>
-          ) : null}
-          {groups.map((group) => (
-            <MemberTaskColumn
-              key={group.memberId ?? 'unassigned'}
-              group={group}
-              dueLabelOf={(task) => formatDueDate(task.dueDate, i18n.language)}
-              isOverdue={(task) => isDueDatePast(task.dueDate, nowEpochMs)}
-              songTitleOf={(task) => findSongTitle(compositions, task.songId)}
-              onToggleDone={(task) =>
-                updateTask.mutate({ id: task.id, status: nextStatusAfterToggle(task.status) })
-              }
-              onOpen={openTask}
-              onDelete={(task) => setPendingDeletionId(task.id)}
-            />
-          ))}
+        <div className="@container min-w-0">
+          <div className="grid grid-cols-1 @xl:grid-cols-2 @4xl:grid-cols-3 gap-3">
+            {tasksQuery.isLoading ? (
+              <p className="text-ink-soft italic text-meta m-0">{t('common.loading')}</p>
+            ) : null}
+            {groups.map((group) => (
+              <MemberTaskColumn
+                key={group.memberId ?? 'unassigned'}
+                group={group}
+                dueLabelOf={(task) => formatDueDate(task.dueDate, i18n.language)}
+                isOverdue={(task) => isDueDatePast(task.dueDate, nowEpochMs)}
+                songTitleOf={(task) => findSongTitle(compositions, task.songId)}
+                onToggleDone={(task) =>
+                  updateTask.mutate({ id: task.id, status: nextStatusAfterToggle(task.status) })
+                }
+                onOpen={openTask}
+                onDelete={(task) => setPendingDeletionId(task.id)}
+              />
+            ))}
+          </div>
         </div>
 
         <TaskForm

@@ -21,6 +21,8 @@ import { resolveSetlistStatus, SETLIST_VOTING } from '@domain/setlist-vote.core'
 
 const NO_ROWS: readonly never[] = [];
 const ICON_ACTION_CLASS = iconButtonVariants({ variant: 'secondary' });
+const STRIP_FRAME_CLASS =
+  'mb-3 sm:mb-4 rounded-lg border border-rule bg-leaf p-2 pl-3 flex flex-wrap items-center gap-2';
 
 // @FollowsBlueprint organism-query-owning
 export function NextConcertStrip(): JSX.Element | null {
@@ -42,6 +44,17 @@ export function NextConcertStrip(): JSX.Element | null {
   const setlistId = nextConcert?.setlistId ?? null;
   const setlistQuery = useSetlist(setlistId ?? '', setlistId !== null);
 
+  const isWaitingForConcert =
+    sessionsQuery.isLoading ||
+    setlistsQuery.isLoading ||
+    (setlistId !== null && setlistQuery.isLoading);
+  if (isWaitingForConcert) {
+    return (
+      <section aria-label={t('nextConcert.label')} aria-busy="true" className={STRIP_FRAME_CLASS}>
+        <div className="min-h-11" />
+      </section>
+    );
+  }
   if (nextConcert === null) return null;
 
   const { session } = nextConcert;
@@ -52,10 +65,7 @@ export function NextConcertStrip(): JSX.Element | null {
   );
 
   return (
-    <section
-      aria-label={t('nextConcert.label')}
-      className="mb-3 sm:mb-4 rounded-lg border border-rule bg-leaf p-2 pl-3 flex flex-wrap items-center gap-2"
-    >
+    <section aria-label={t('nextConcert.label')} className={STRIP_FRAME_CLASS}>
       <Link
         to={`/sessions/${session.id}`}
         className="flex-1 min-w-[8rem] min-h-11 flex flex-col justify-center no-underline text-ink"

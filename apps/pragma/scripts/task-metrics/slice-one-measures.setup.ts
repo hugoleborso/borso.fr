@@ -20,6 +20,7 @@ import {
   READ_OPEN_TEXTAREA_VALUE,
   READ_PRIMARY_STRIP_POSITION,
   READ_SETLIST_FIRST_SCREEN,
+  READ_COVERED_TEXT,
   SCROLL_TO_PAGE_END,
 } from './page-probes.setup';
 import { buildSignedInRoutePlan, type RouteTarget } from './route-measures.setup';
@@ -28,14 +29,21 @@ import {
   countFullTextRuns,
   listDistinctFontSizes,
   sumCounts,
+  sumSchemeCounts,
   type RouteFontSizes,
 } from './task-metrics.core';
-import { TaskWalk, waitMilliseconds } from './walk-recorder.setup';
+import { PHONE, readScrollAreas, TaskWalk, waitMilliseconds } from './walk-recorder.setup';
 
 const MINIMUM_TAP_TARGET_PX = 44;
 const MINIMUM_TEXT_CONTRAST = 4.5;
 const ROUTE_SETTLE_MS = 600;
 const SHEET_SETTLE_MS = 700;
+const SCHEME_SETTLE_MS = 300;
+const LAYOUT_WIDTHS = [
+  { width: 375, height: 812, mobile: true },
+  { width: 1280, height: 900, mobile: false },
+] as const;
+const LAYOUT_DEVICE_SCALE_FACTOR = 1;
 const NOTE_RACE_RUNS = 8;
 const NOTE_RACE_TEXT = 'Finir sur le refrain ok';
 const NOTE_RACE_MAXIMUM_DELAY_MS = 700;
@@ -108,10 +116,34 @@ async function readMemberColours(driver: BandSessionDriver): Promise<string[]> {
   return parsed.success ? parsed.data.members.map((member) => member.color) : [];
 }
 
+type CountWithSamples = z.infer<typeof countWithSamplesSchema>;
+type PerScheme<Measure> = Readonly<Record<ColourScheme, Measure>>;
+
 interface RouteLook extends RouteFontSizes {
-  readonly memberColouredText: z.infer<typeof countWithSamplesSchema>;
-  readonly lowContrastText: z.infer<typeof countWithSamplesSchema>;
-  readonly smallTapTargets: z.infer<typeof countWithSamplesSchema>;
+  readonly memberColouredText: PerScheme<CountWithSamples>;
+  readonly lowContrastText: PerScheme<CountWithSamples>;
+  readonly smallTapTargets: CountWithSamples;
+}
+
+async function emulateColourScheme(driver: BandSessionDriver, scheme: ColourScheme): Promise<void> {
+  await driver.session.send('Emulation.setEmulatedMedia', {
+    features: [{ name: 'prefers-color-scheme', value: scheme }],
+  });
+  await waitMilliseconds(SCHEME_SETTLE_MS);
+}
+
+async function measureSchemeColours(
+  driver: BandSessionDriver,
+  memberColours: readonly string[],
+): Promise<{ memberColouredText: CountWithSamples; lowContrastText: CountWithSamples }> {
+  return {
+    memberColouredText: countWithSamplesSchema.parse(
+      await driver.session.evaluate(READ_MEMBER_COLOURED_TEXT, memberColours),
+    ),
+    lowContrastText: countWithSamplesSchema.parse(
+      await driver.session.evaluate(READ_LOW_CONTRAST_TEXT, MINIMUM_TEXT_CONTRAST),
+    ),
+  };
 }
 
 async function measureRouteLook(
@@ -121,18 +153,21 @@ async function measureRouteLook(
 ): Promise<RouteLook> {
   await driver.open(target.url);
   await waitMilliseconds(ROUTE_SETTLE_MS);
+  const fontSizes = z.array(z.string()).parse(await driver.session.evaluate(READ_FONT_SIZES));
+  const smallTapTargets = countWithSamplesSchema.parse(
+    await driver.session.evaluate(COUNT_SMALL_TAP_TARGETS, MINIMUM_TAP_TARGET_PX),
+  );
+  const light = await measureSchemeColours(driver, memberColours);
+  await emulateColourScheme(driver, 'dark');
+  const dark = await measureSchemeColours(driver, memberColours).finally(() =>
+    emulateColourScheme(driver, 'light'),
+  );
   return {
     route: target.route,
-    fontSizes: z.array(z.string()).parse(await driver.session.evaluate(READ_FONT_SIZES)),
-    memberColouredText: countWithSamplesSchema.parse(
-      await driver.session.evaluate(READ_MEMBER_COLOURED_TEXT, memberColours),
-    ),
-    lowContrastText: countWithSamplesSchema.parse(
-      await driver.session.evaluate(READ_LOW_CONTRAST_TEXT, MINIMUM_TEXT_CONTRAST),
-    ),
-    smallTapTargets: countWithSamplesSchema.parse(
-      await driver.session.evaluate(COUNT_SMALL_TAP_TARGETS, MINIMUM_TAP_TARGET_PX),
-    ),
+    fontSizes,
+    memberColouredText: { light: light.memberColouredText, dark: dark.memberColouredText },
+    lowContrastText: { light: light.lowContrastText, dark: dark.lowContrastText },
+    smallTapTargets,
   };
 }
 
@@ -268,6 +303,62 @@ async function measureSetlistScreen(driver: BandSessionDriver): Promise<Record<s
   return { firstScreen, addSongAtStart: atStart, addSongAtPageEnd: atEnd };
 }
 
+async function emulateLayoutWidth(
+  driver: BandSessionDriver,
+  layout: {
+    readonly width: number;
+    readonly height: number;
+    readonly mobile: boolean;
+    readonly deviceScaleFactor?: number;
+  },
+): Promise<void> {
+  await driver.session.send('Emulation.setDeviceMetricsOverride', {
+    width: layout.width,
+    height: layout.height,
+    deviceScaleFactor: layout.deviceScaleFactor ?? LAYOUT_DEVICE_SCALE_FACTOR,
+    mobile: layout.mobile,
+  });
+}
+
+async function measureLayoutAtWidths(
+  driver: BandSessionDriver,
+  routes: readonly RouteTarget[],
+): Promise<Record<string, unknown>> {
+  const widths: Record<string, unknown> = {};
+  let coveredText = 0;
+  let routesScrollingSideways = 0;
+  try {
+    for (const layout of LAYOUT_WIDTHS) {
+      await emulateLayoutWidth(driver, layout);
+      const measured: Record<string, unknown>[] = [];
+      for (const target of routes) {
+        await driver.open(target.url);
+        await waitMilliseconds(ROUTE_SETTLE_MS);
+        const covered = countWithSamplesSchema.parse(
+          await driver.session.evaluate(READ_COVERED_TEXT),
+        );
+        const isScrollingSideways = (await readScrollAreas(driver.session)).documentScrollsX;
+        coveredText += covered.count;
+        if (isScrollingSideways) routesScrollingSideways += 1;
+        measured.push({
+          route: target.route,
+          coveredText: covered,
+          isScrollingSideways,
+        });
+      }
+      widths[String(layout.width)] = measured;
+    }
+  } finally {
+    await emulateLayoutWidth(driver, {
+      width: PHONE.width,
+      height: PHONE.height,
+      mobile: true,
+      deviceScaleFactor: PHONE.deviceScaleFactor,
+    });
+  }
+  return { coveredText, routesScrollingSideways, widths };
+}
+
 export async function measureSliceOne(driver: BandSessionDriver): Promise<Record<string, unknown>> {
   driver.reseed();
   await driver.signOut();
@@ -280,13 +371,14 @@ export async function measureSliceOne(driver: BandSessionDriver): Promise<Record
   return {
     totals: {
       distinctFontSizesOutsideSceneViews: distinctFontSizes.length,
-      textSetInMemberColour: sumCounts(looks.map((look) => look.memberColouredText.count)),
-      textPairsUnderMinimumContrast: sumCounts(looks.map((look) => look.lowContrastText.count)),
+      textSetInMemberColour: sumSchemeCounts(looks.map((look) => look.memberColouredText)),
+      textPairsUnderMinimumContrast: sumSchemeCounts(looks.map((look) => look.lowContrastText)),
       tapTargetsUnder44: sumCounts(looks.map((look) => look.smallTapTargets.count)),
     },
     distinctFontSizes,
     secondaryPill: measureSecondaryPill(),
     routes: looks,
+    layoutAtWidths: await measureLayoutAtWidths(driver, routes),
     sheets: await measureSheets(driver),
     transitionDraft: await measureTransitionDraft(driver),
     noteRace: await measureNoteRace(driver),

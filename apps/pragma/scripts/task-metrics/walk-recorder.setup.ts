@@ -20,6 +20,7 @@ import {
 } from './page-probes.setup';
 import {
   isInBottomThird,
+  isSameBox,
   planScrollGesture,
   projectScreenFraction,
   projectTapPoint,
@@ -43,6 +44,8 @@ const FIND_POLL_MS = 250;
 const SCROLL_SETTLE_MS = 450;
 const MAXIMUM_SCROLLS_PER_TARGET = 25;
 const FOCUS_SETTLE_MS = 250;
+const STABLE_BOX_POLL_MS = 150;
+const STABLE_BOX_ATTEMPTS = 20;
 const TYPE_SETTLE_MS = 300;
 const PICK_SETTLE_MS = 400;
 const DRAG_SETTLE_MS = 900;
@@ -218,7 +221,7 @@ export class TaskWalk {
   async bringIntoView(
     spec: TargetSpec,
   ): Promise<{ first: FoundTargetReport; now: FoundTargetReport; scrollsUsed: number }> {
-    let found = await this.waitFor(spec);
+    let found = await this.waitForStableBox(spec, await this.waitFor(spec));
     const first = found;
     let scrollsUsed = 0;
     while (!found.inView && scrollsUsed < MAXIMUM_SCROLLS_PER_TARGET) {
@@ -233,9 +236,23 @@ export class TaskWalk {
     return { first, now: found, scrollsUsed };
   }
 
+  async waitForStableBox(spec: TargetSpec, found: FoundTargetReport): Promise<FoundTargetReport> {
+    let previous = found;
+    for (let attempt = 0; attempt < STABLE_BOX_ATTEMPTS; attempt += 1) {
+      await waitMilliseconds(STABLE_BOX_POLL_MS);
+      const current = await this.waitFor(spec);
+      if (isSameBox(previous.rect, current.rect)) return current;
+      previous = current;
+    }
+    throw new Error(
+      `[${this.task}] layout never settled around ${JSON.stringify(spec)} (last box [${previous.rect.join(',')}])`,
+    );
+  }
+
   async tap(label: string, spec: TargetSpec, options: TapOptions = {}): Promise<void> {
     await this.markScreen();
-    const { first, now, scrollsUsed } = await this.bringIntoView(spec);
+    const { first, now: arrived, scrollsUsed } = await this.bringIntoView(spec);
+    const now = scrollsUsed === 0 ? arrived : await this.waitForStableBox(spec, arrived);
     if (!now.inView) {
       throw new Error(
         `[${this.task}] could not bring into view: ${label} (box [${now.rect.join(',')}], visible ${String(now.visibleTop)} to ${String(now.visibleBottom)}, hittable ${String(now.hittable)}, viewport ${String(now.viewportWidth)}x${String(now.viewportHeight)}, screen ${String(now.screenLeft)},${String(now.screenTop)} ${String(now.screenWidth)}x${String(now.screenHeight)})`,

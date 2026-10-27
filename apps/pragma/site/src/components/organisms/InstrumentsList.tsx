@@ -35,7 +35,7 @@ const DRAG_MODIFIERS = [restrictToVerticalAxis];
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
 const DRAG_TOUCH_DELAY_MS = 200;
 const DRAG_TOUCH_TOLERANCE_PX = 8;
-const ROW_OPENING_BUTTON_CLASS = 'flex-1 text-meta after:absolute after:inset-0';
+const ROW_OPENING_BUTTON_CLASS = 'text-meta after:absolute after:inset-0';
 
 export interface InstrumentListRow {
   readonly id: string;
@@ -83,15 +83,19 @@ function InstrumentRow(
         {...listeners}
       />
       <Icon name={INSTRUMENT_ICON_GLYPH[props.row.icon]} size="md" />
-      <ListRow className={ROW_OPENING_BUTTON_CLASS} onClick={() => props.onSelect(props.row.id)}>
-        {props.row.name}
-      </ListRow>
-      <InstrumentPlayerChips
-        players={props.row.players}
-        toggleLabel={props.primaryToggleLabel}
-        onTogglePrimary={(memberId) => props.onTogglePrimary(props.row.id, memberId)}
-      />
-      <Badge tone="mono">{props.row.familyLabel}</Badge>
+      <div className="flex min-w-0 flex-1 flex-col">
+        <ListRow className={ROW_OPENING_BUTTON_CLASS} onClick={() => props.onSelect(props.row.id)}>
+          {props.row.name}
+        </ListRow>
+        <div className="-ml-2.5 flex flex-wrap items-center gap-x-2">
+          <InstrumentPlayerChips
+            players={props.row.players}
+            toggleLabel={props.primaryToggleLabel}
+            onTogglePrimary={(memberId) => props.onTogglePrimary(props.row.id, memberId)}
+          />
+          <Badge tone="mono">{props.row.familyLabel}</Badge>
+        </div>
+      </div>
       <IconButton
         icon="trash"
         variant="danger"

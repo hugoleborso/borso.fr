@@ -39,8 +39,13 @@ export function TaskRow(props: TaskRowProps): JSX.Element {
         />
       </label>
       <div className="flex-1 min-w-0 flex flex-col gap-1">
-        <ListRow className={OPENING_BUTTON_CLASS} onClick={props.onOpen}>
-          <span className={composeClassName(isOpen ? 'text-ink' : 'text-ink-soft line-through')}>
+        <ListRow className={OPENING_BUTTON_CLASS} isChevronShown={false} onClick={props.onOpen}>
+          <span
+            className={composeClassName(
+              'min-w-0 wrap-anywhere',
+              isOpen ? 'text-ink' : 'text-ink-soft line-through',
+            )}
+          >
             {props.title}
           </span>
         </ListRow>

@@ -10,7 +10,7 @@ export const buttonVariants = cva(
   'relative inline-flex items-center justify-center gap-2 rounded-pill border-0 font-medium ' +
     'whitespace-nowrap no-underline cursor-pointer transition-[background-color,transform] duration-150 ' +
     'active:scale-[0.97] disabled:cursor-not-allowed disabled:active:scale-100 ' +
-    'disabled:bg-glass disabled:text-ink-faint focus-visible:outline-3 focus-visible:outline-focus',
+    'disabled:bg-glass disabled:text-ink-soft focus-visible:outline-3 focus-visible:outline-focus',
   {
     variants: {
       variant: {

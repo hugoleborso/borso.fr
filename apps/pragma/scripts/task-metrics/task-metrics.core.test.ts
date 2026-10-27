@@ -7,6 +7,7 @@ import {
   describeTaskCounts,
   type FoundTarget,
   isInBottomThird,
+  isSameBox,
   isSceneRoute,
   listDistinctFontSizes,
   listBaselineDifferences,
@@ -18,6 +19,7 @@ import {
   replaceIdentifierInPath,
   replaceIdentifiers,
   sumCounts,
+  sumSchemeCounts,
   summariseRouteButtons,
 } from './task-metrics.core';
 
@@ -293,5 +295,30 @@ describe('summariseRouteButtons', () => {
       textOnlyButtons: 0,
       iconOnlyButtonsWithoutName: 0,
     });
+  });
+});
+
+describe('isSameBox', () => {
+  it('holds for two boxes with the same edges', () => {
+    expect(isSameBox([123, 90, 251, 44], [123, 90, 251, 44])).toBe(true);
+  });
+
+  it('fails when the box moved', () => {
+    expect(isSameBox([123, 16, 251, 44], [123, 90, 251, 44])).toBe(false);
+  });
+
+  it('fails when one box has fewer edges', () => {
+    expect(isSameBox([123, 16, 251], [123, 16, 251, 44])).toBe(false);
+  });
+});
+
+describe('sumSchemeCounts', () => {
+  it('sums each scheme apart and both together', () => {
+    expect(
+      sumSchemeCounts([
+        { light: { count: 0 }, dark: { count: 1 } },
+        { light: { count: 2 }, dark: { count: 3 } },
+      ]),
+    ).toEqual({ light: 2, dark: 4, total: 6 });
   });
 });

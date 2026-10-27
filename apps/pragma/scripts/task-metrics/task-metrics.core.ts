@@ -239,3 +239,22 @@ export function summariseRouteButtons(routes: unknown): Record<string, number> {
   }
   return totals;
 }
+
+export function isSameBox(first: readonly number[], second: readonly number[]): boolean {
+  return first.length === second.length && first.every((value, index) => value === second[index]);
+}
+
+export interface SchemeCounts {
+  readonly light: { readonly count: number };
+  readonly dark: { readonly count: number };
+}
+
+export function sumSchemeCounts(measures: readonly SchemeCounts[]): {
+  light: number;
+  dark: number;
+  total: number;
+} {
+  const light = sumCounts(measures.map((measure) => measure.light.count));
+  const dark = sumCounts(measures.map((measure) => measure.dark.count));
+  return { light, dark, total: light + dark };
+}

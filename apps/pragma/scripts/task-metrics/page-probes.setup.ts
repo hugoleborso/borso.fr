@@ -162,7 +162,7 @@ const READ_CSS_COLOUR = `(cssColour) => {
 }`;
 
 const LIST_TEXT_ELEMENTS = `() => [...document.querySelectorAll('body *')].filter((element) => {
-  if (element.closest('dialog:not([open])')) return false;
+  if (element.closest('dialog:not([open]), details:not([open]) > :not(summary)')) return false;
   const hasOwnText = [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
   if (!hasOwnText) return false;
   const box = element.getBoundingClientRect();
@@ -229,7 +229,7 @@ export const COUNT_SMALL_TAP_TARGETS = `(minimum) => {
   };
   const small = [];
   for (const element of document.querySelectorAll('button, [role=button], a[href], input:not([type=hidden]), select, textarea, summary')) {
-    if (!isShown(element) || element.closest('p, li > span')) continue;
+    if (!isShown(element) || element.closest('p')) continue;
     const box = hitBox(element);
     if (box.width < minimum || box.height < minimum) small.push((element.getAttribute('aria-label') || element.innerText || element.tagName).trim().slice(0, 30) + ' ' + Math.round(box.width) + 'x' + Math.round(box.height));
   }
@@ -294,3 +294,44 @@ export const READ_PRIMARY_STRIP_POSITION = `(names) => {
 }`;
 
 export const SCROLL_TO_PAGE_END = `() => { window.scrollTo(0, document.scrollingElement.scrollHeight); return Math.round(scrollY); }`;
+
+export const READ_COVERED_TEXT = `() => {
+  const listTextElements = ${LIST_TEXT_ELEMENTS};
+  const controlSelector = 'button, [role=button], a[href], input, select, textarea, summary';
+  const isInFixedLayer = (element) => { for (let current = element; current; current = current.parentElement) { const position = getComputedStyle(current).position; if (position === 'fixed' || position === 'sticky') return true; } return false; };
+  const clipOf = (element) => {
+    let clip = { left: 0, top: 0, right: innerWidth, bottom: innerHeight };
+    for (let current = element; current; current = current.parentElement) {
+      const style = getComputedStyle(current);
+      if (style.overflowX === 'visible' && style.overflowY === 'visible') continue;
+      const box = current.getBoundingClientRect();
+      clip = { left: Math.max(clip.left, box.left), top: Math.max(clip.top, box.top), right: Math.min(clip.right, box.right), bottom: Math.min(clip.bottom, box.bottom) };
+    }
+    return clip;
+  };
+  const inset = 2;
+  const found = [];
+  for (const element of listTextElements()) {
+    if (isInFixedLayer(element)) continue;
+    const clip = clipOf(element);
+    const lines = [...element.childNodes].filter((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim()).flatMap((node) => { const range = document.createRange(); range.selectNodeContents(node); return [...range.getClientRects()]; });
+    const covering = new Set();
+    for (const line of lines) {
+      const left = Math.max(line.left, clip.left) + inset, right = Math.min(line.right, clip.right) - inset;
+      const top = Math.max(line.top, clip.top), bottom = Math.min(line.bottom, clip.bottom);
+      const middle = (top + bottom) / 2;
+      if (right <= left || bottom <= top) continue;
+      for (const x of [left, (left + right) / 2, right]) {
+        const hit = document.elementFromPoint(x, middle);
+        if (!hit || hit === element || hit.contains(element) || element.contains(hit) || isInFixedLayer(hit)) continue;
+        const cover = hit.closest(controlSelector) ?? hit;
+        if (cover.contains(element)) continue;
+        const box = hit.getBoundingClientRect();
+        const isInsideOwnBox = x >= box.left && x <= box.right && middle >= box.top && middle <= box.bottom;
+        if (isInsideOwnBox) covering.add(cover);
+      }
+    }
+    for (const control of covering) found.push(element.textContent.trim().slice(0, 30) + ' under ' + (control.getAttribute('aria-label') || control.innerText || control.tagName).trim().replace(/\\s+/g, ' ').slice(0, 30));
+  }
+  return { count: found.length, samples: found.slice(0, 8) };
+}`;

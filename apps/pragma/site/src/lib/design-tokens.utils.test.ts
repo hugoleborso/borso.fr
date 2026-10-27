@@ -37,19 +37,18 @@ const TEXT_PAIRS: readonly (readonly [string, string])[] = [
       (text) => [text, background] as const,
     ),
   ),
-  ['ink', 'hover'],
-  ['ink-soft', 'hover'],
+  ...['hover', 'warn-soft', 'danger-soft', 'good-soft', 'accent-soft'].flatMap((background) =>
+    ['ink', 'ink-soft', 'ink-faint'].map((text) => [text, background] as const),
+  ),
   ['on-accent', 'accent'],
   ['on-accent', 'accent-pressed'],
   ['on-danger', 'danger'],
   ['danger', 'danger-soft'],
   ['good', 'good-soft'],
   ['warn', 'warn-soft'],
-  ['ink', 'warn-soft'],
   ['on-highlight', 'highlight'],
   ['paper', 'ink'],
   ['accent-strong', 'accent-soft'],
-  ['ink', 'accent-soft'],
   ['stage-ink', 'stage-bg'],
   ['stage-ink-dim', 'stage-bg'],
   ['stage-chord', 'stage-bg'],
@@ -62,6 +61,9 @@ const PILL_LABELS: readonly (readonly [string, string])[] = [
   ['accent', 'paper'],
   ['accent', 'leaf'],
   ['accent', 'raised'],
+  ['ink-soft', 'paper'],
+  ['ink-soft', 'leaf'],
+  ['ink-soft', 'raised'],
 ];
 
 function listSourceFiles(directory: string): string[] {
@@ -192,7 +194,7 @@ describe('the stylesheet', () => {
   });
 
   it.each(SCHEMES)(
-    'keeps the secondary pill label at 4.5:1 or more on its translucent fill in the %s scheme',
+    'keeps the secondary and the disabled pill labels at 4.5:1 or more on their translucent fill in the %s scheme',
     (scheme) => {
       const failing = PILL_LABELS.filter(([text, under]) => {
         const ratio = measureContrastOnFill(TOKENS, text, 'glass', under, scheme);

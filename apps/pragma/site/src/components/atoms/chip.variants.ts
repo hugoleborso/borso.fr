@@ -14,7 +14,7 @@ export const chipVariants = cva(
         concert_ready: 'bg-ink text-paper',
         choice:
           'border-0 bg-glass text-ink cursor-pointer hover:bg-hover aria-pressed:bg-ink aria-pressed:text-paper ' +
-          'disabled:cursor-not-allowed disabled:text-ink-faint focus-visible:outline-3 focus-visible:outline-focus',
+          'disabled:cursor-not-allowed disabled:text-ink-soft focus-visible:outline-3 focus-visible:outline-focus',
       },
       size: {
         sm: 'px-2 py-1 text-label',
