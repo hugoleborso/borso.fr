@@ -28,6 +28,37 @@ function buildFacts(overrides: Partial<MechanismFacts> = {}): MechanismFacts {
 }
 
 describe('resolveCitation', () => {
+  it('passes a declared reach the configuration covers, ignoring the other sites', () => {
+    const resolved = resolveCitation(
+      buildCitation({ reach: ['pragma/site'] }),
+      buildFacts({
+        activeScopes: ['pragma/site'],
+        candidateScopes: ['pragma/site', 'talos/site', 'borso-fr/site'],
+      }),
+    );
+    expect(resolved.verdict).toBe('enforced');
+    expect(resolved.detail).toBe('pragma/site');
+  });
+
+  it('breaks a declared reach the configuration does not cover', () => {
+    const resolved = resolveCitation(
+      buildCitation({ reach: ['pragma/site', 'talos/site'] }),
+      buildFacts({ activeScopes: ['pragma/site'] }),
+    );
+    expect(resolved.verdict).toBe('broken');
+    expect(resolved.detail).toBe(
+      '`borso/no-use-effect` declares pragma/site, talos/site and does not run on talos/site',
+    );
+  });
+
+  it('keeps reading the candidate scopes when no reach is declared', () => {
+    const resolved = resolveCitation(
+      buildCitation(),
+      buildFacts({ candidateScopes: ['pragma/site', 'talos/site'] }),
+    );
+    expect(resolved.verdict).toBe('unscoped');
+  });
+
   it('passes a rule that exists and reaches every candidate scope', () => {
     const resolved = resolveCitation(buildCitation(), buildFacts());
     expect(resolved.verdict).toBe('enforced');

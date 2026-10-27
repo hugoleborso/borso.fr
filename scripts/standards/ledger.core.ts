@@ -42,6 +42,17 @@ export function resolveCitation(citation: Citation, facts: MechanismFacts): Reso
       detail: `\`${citation.target}\` exists but runs nowhere`,
     };
   }
+  if (citation.reach !== undefined) {
+    const unreached = citation.reach.filter((scope) => !facts.activeScopes.includes(scope));
+    if (unreached.length > 0) {
+      return {
+        citation,
+        verdict: 'broken',
+        detail: `\`${citation.target}\` declares ${citation.reach.join(', ')} and does not run on ${unreached.join(', ')}`,
+      };
+    }
+    return { citation, verdict: 'enforced', detail: citation.reach.join(', ') };
+  }
   const missingScopes = facts.candidateScopes.filter(
     (scope) => !facts.activeScopes.includes(scope),
   );

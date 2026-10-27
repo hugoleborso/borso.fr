@@ -76,6 +76,22 @@ describe('readCitationFromBullet', () => {
     expect(citation).toMatchObject({ kind, target });
   });
 
+  it('reads a declared reach after the target, one scope or several', () => {
+    expect(
+      readCitationFromBullet('`eslint:borso/no-raw-interactive-element (pragma/site)` rejects.'),
+    ).toMatchObject({ target: 'borso/no-raw-interactive-element', reach: ['pragma/site'] });
+    expect(readCitationFromBullet('`eslint:borso/x (pragma/site, , talos/site)` x.')).toMatchObject(
+      {
+        target: 'borso/x',
+        reach: ['pragma/site', 'talos/site'],
+      },
+    );
+  });
+
+  it('declares no reach when the target carries none', () => {
+    expect(readCitationFromBullet('`eslint:borso/x` x.')).not.toHaveProperty('reach');
+  });
+
   it('reads a reviewer citation, which names no target', () => {
     expect(readCitationFromBullet('`reviewer` checks the name.')).toEqual({
       kind: 'reviewer',

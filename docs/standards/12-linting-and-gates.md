@@ -161,6 +161,22 @@ So the enabled rules are listed one by one. Each either enforces a rule from
   it cannot see them. They are linted without type information rather than not
   at all.
 
+### A rule meant for one application
+
+Some rules belong to one application's own decisions, not to the repository.
+Pragma's design system ([ADR-0045](../adr/0045-pragma-design-system-is-notebook-with-grafts.md))
+forbids arbitrary Tailwind values and raw `<button>` and `<dialog>` elements;
+the other applications made no such decision and hold dozens of each. Those
+rules are enabled for `apps/pragma/site` only.
+
+A citation of such a rule names its reach in brackets after the target:
+`` `eslint:borso/no-raw-interactive-element (pragma/site)` ``. The ledger then
+checks the rule against the scopes it declares instead of every site, and a
+declared scope the configuration does not reach is `broken`, not `partly`. Several
+scopes are separated by commas. Without the bracket the ledger reads the rule
+as meant for every application of its layer, and a rule enabled for one of six
+sites reads as `partly`.
+
 ### What the custom rules learned by being wrong first
 
 Three rules report far less than their first version did, and the gap is the

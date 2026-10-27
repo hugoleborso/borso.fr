@@ -32,7 +32,10 @@ this checkout:
 
 The ledger fails when a cited mechanism does not exist, exists and runs
 nowhere, reaches some applications and not others, or when a mechanism runs and
-no standard says why. A standard can no longer claim enforcement it does not
+no standard says why. A rule meant for one application declares that reach
+after its target, as `` `eslint:<rule> (pragma/site)` ``; the ledger then holds
+it to the scopes it names
+([12. Linting and gates](./12-linting-and-gates.md#a-rule-meant-for-one-application)). A standard can no longer claim enforcement it does not
 have.
 
 ## What a reviewer is for
