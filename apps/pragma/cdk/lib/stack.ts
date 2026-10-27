@@ -24,6 +24,9 @@ const SPOTIFY_CREDENTIALS_PARAMETER = `/${APP_SLUG}/spotify-credentials`;
 
 const SECRET_TABLES_REPLACED_ON_PREVIEW = ['app_config', 'member_credential'];
 const SECRET_TABLES_BLOCKED_ON_PREVIEW = [
+  'assistant_authorization_code',
+  'assistant_client',
+  'assistant_grant',
   'auth_attempt',
   'member_calendar_feed',
   'member_passkey',

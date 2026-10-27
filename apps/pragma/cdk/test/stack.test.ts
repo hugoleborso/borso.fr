@@ -146,6 +146,9 @@ describe('pragma read-only agent access (ADR-0044)', () => {
     expect(readSchemaReaderBlocklist(synthAppStack('prod'))).toStrictEqual([
       'app_config',
       'member_credential',
+      'assistant_authorization_code',
+      'assistant_client',
+      'assistant_grant',
       'auth_attempt',
       'member_calendar_feed',
       'member_passkey',
@@ -176,6 +179,9 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
       tableBlocklist: [
+        'assistant_authorization_code',
+        'assistant_client',
+        'assistant_grant',
         'auth_attempt',
         'member_calendar_feed',
         'member_passkey',

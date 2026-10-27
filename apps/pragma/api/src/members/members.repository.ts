@@ -5,6 +5,7 @@ import { deleteVotesOfDeletedMember } from '../setlists/voting.service';
 import { deleteScoreHistoryOfDeletedMember } from '../mastery/mastery.service';
 import { deleteStudiesOfDeletedMember } from '../studies/studies.service';
 import { deletePushStateOfDeletedMember } from '../notifications/notifications.service';
+import { deleteAssistantStateOfDeletedMember } from '../oauth/oauth.service';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
@@ -135,6 +136,7 @@ export async function deleteMemberWithLinks(id: string): Promise<DeletionOutcome
     await deleteScoreHistoryOfDeletedMember(transaction, id);
     await deleteStudiesOfDeletedMember(transaction, id);
     await deletePushStateOfDeletedMember(transaction, id);
+    await deleteAssistantStateOfDeletedMember(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });
 }

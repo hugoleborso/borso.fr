@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "pnpm dev:db && concurrently -k -n api,site -c magenta,green 'pnpm dev:api' 'pnpm dev:site'",
     "dev:db": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma dev) tsx test/dev-database.setup.ts",
-    "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma dev) STAGE=dev ALLOW_TEST_SEED=1 tsx watch api/src/main.dev.ts",
+    "dev:api": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma dev) STAGE=dev ALLOW_TEST_SEED=1 OAUTH_ISSUER=http://localhost:5174 OAUTH_CONSENT_ORIGIN=http://localhost:5174 tsx watch api/src/main.dev.ts",
     "dev:site": "vite",
     "db:local:start": "../../scripts/local-postgres.sh start pragma",
     "db:local:stop": "../../scripts/local-postgres.sh stop pragma",

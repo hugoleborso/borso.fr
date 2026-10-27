@@ -10,6 +10,60 @@ This file names the things the application talks about. Use these words in
 identifiers, file names, commit messages and specs. Every claim below is
 taken from the schema, core rule or repository named beside it.
 
+## Assistant client
+
+An AI assistant that registered itself with pragma's authorization server:
+Claude Code, Mistral Vibe, claude.ai or Le Chat.
+
+Lives in: `api/src/oauth/` (`assistant_client`)
+
+- Registers itself through `POST /oauth/register` (RFC 7591) and is always
+  a public client: it holds no secret and proves itself with PKCE `S256`.
+- Its redirect addresses are `https://`, or a loopback `http://` address
+  (`localhost`, `127.0.0.1`, `[::1]`) that matches on any port, because
+  each terminal client picks its own callback port (RFC 8252).
+- One address may register ten clients an hour; the eleventh is refused.
+- A client older than 30 days that holds no **assistant grant** is deleted
+  the next time any client registers, so the open endpoint cannot fill the
+  table and nothing runs on a schedule.
+- Kept out of every preview's copy of production and out of the read-only
+  reader's reach, like the two tables below.
+
+Held by: `api/src/oauth/oauth.controller.test.ts` › registers the clients Claude Code and Vibe describe, and refuses any other redirect address
+Held by: `api/src/oauth/oauth.controller.test.ts` › refuses the eleventh registration in an hour from one address and reports it
+Held by: `api/src/oauth/oauth.controller.test.ts` › sweeps clients older than 30 days that hold no grant when another registers
+
+Not to be confused with: an **assistant grant**, which is one member
+allowing one client; a client with no grant can do nothing.
+
+## Assistant grant
+
+One member's permission for one **assistant client** to act on pragma as
+that member.
+
+Lives in: `api/src/oauth/` (`assistant_grant`, `assistant_authorization_code`)
+
+- Created when the member allows the client on the consent page and the
+  client exchanges the one-use authorization code, which lives 60 seconds
+  and is bound to the client, its redirect address and its PKCE challenge.
+- Holds an access token (one hour) and a refresh token (90 days), stored as
+  SHA-256 hashes only. Every refresh rotates both; the refresh token rotated
+  away last is kept, and presenting it again revokes the whole grant.
+- Carries the member's session epoch from when it was issued, the same
+  number a **sign-in session** carries, so a password change ends every
+  grant the way it ends every cookie.
+- Revoked from the Account page, by the client through `POST /oauth/revoke`,
+  or by deleting the member, which deletes the member's grants and pending
+  codes in the same transaction.
+
+Held by: `api/src/oauth/oauth.controller.test.ts` › runs the whole flow: consent, code, tokens, and the code cannot be spent twice
+Held by: `api/src/oauth/oauth.controller.test.ts` › rotates the refresh token, and a replay of the old one revokes the grant and is reported
+Held by: `api/src/oauth/oauth.controller.test.ts` › ends every grant of a member who changes password
+Held by: `api/src/oauth/oauth.controller.test.ts` › deletes the grants and pending codes of a deleted member
+
+Not to be confused with: a **sign-in session**, which is a browser's
+cookie; a grant is what a terminal or a chat assistant holds instead.
+
 ## Audience suggestion
 
 The record that a song entered a concert's pool because someone in the
@@ -903,7 +957,9 @@ Lives in: `api/src/auth/`
   bootstrap and the passkey challenge (`auth.controller.ts`), the
   audience's public routes, which a ballot reaches
   (`audience.controller.ts`, which gates its two band routes one by one),
-  and the test-seed route.
+  the OAuth discovery, registration, authorization, token and revocation
+  routes an **assistant client** calls (`oauth.controller.ts`), and the
+  test-seed route.
 
 Held by: `api/src/auth/auth.controller.test.ts` › gates a protected route on the member session cookie
 Held by: `api/src/auth/auth.controller.test.ts` › refuses rotate-password without a session and rotates it with one
@@ -1282,6 +1338,12 @@ to.
 
 ## Words we do not use
 
+- **app**, **integration**, **connector** for an assistant: the registered
+  program is an **assistant client** and the permission a member gives it
+  is an **assistant grant**. *connector* is only what claude.ai and Le Chat
+  call the setting a member fills in.
+- **token** for the permission itself: a grant holds tokens, and revoking
+  ends the grant, not one token.
 - **musician**, **bandmate**: the person is a **member**. **player**
   names a member only in relation to one instrument (an instrument's
   `players`, `InstrumentPlayerLink`), and `TakePlayer` is the audio
