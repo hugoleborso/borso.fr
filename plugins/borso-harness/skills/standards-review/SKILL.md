@@ -41,6 +41,14 @@ The seal is an attestation, not a signature. Nothing in a checkout can sign anyt
 
    When it reports nothing to seal, there is no review to run. Say so and stop.
 
+3. Decide whether this is the branch's first review. It is when no earlier `standards-review-*.md` report sits in the feature's `validation/` folder. The first review covers every file the branch **will** touch, not only the ones it has touched so far: pass the plan, and the agent reviews `seal.ts scope --plan <plan_path>`, which adds every reviewable file the plan names to the files the branch already changed.
+
+   ```bash
+   pnpm exec tsx scripts/standards/seal.ts scope --base origin/main --plan docs/features/<app>/<slug>/plan/plan.md
+   ```
+
+   The takes branch (PR #193) needed nine rounds because the first one read only what had changed: every fix round edited a file nobody had reviewed yet, the next round read that file whole for the first time, and four of the nine rounds were spent on findings that predated the branch. Reading the planned files up front moves all of those into round one, where a single fix round can take them.
+
 ## Dispatching
 
 Send the `standards-reviewer` agent with a brief carrying exactly these fields:
@@ -48,10 +56,13 @@ Send the `standards-reviewer` agent with a brief carrying exactly these fields:
 - `base_ref` — usually `origin/main`.
 - `report_path` — `docs/standards/reviews/<branch>-<timestamp>.md`.
 - `reviewer_name` — `standards-reviewer`.
+- `plan_path` — on the branch's first review, the feature's `plan/plan.md`; omit it on later rounds.
+
+A workflow subagent has no Agent tool, so it cannot dispatch this agent; four agents on the takes branch hit that and reviewed their own work inline. A workflow spawns the reviewer itself, with `agentType: 'standards-reviewer'`, as [`/feature-pipeline`](../../commands/feature-pipeline.md) says. When you genuinely cannot dispatch it, say so in the report's first line (`Dispatch: inline, by <name>`) and seal under your own name, never the agent's.
 
 The agent runs standalone. Do not pass it your conversation, your intent, or your opinion of the code: it exists to read the diff without knowing what the implementer had convinced themselves of.
 
-**Exactly those three fields, and no file list.** The temptation, having just run `seal.ts verify` to find out whether there is a review to run, is to paste its output into the brief. Do not: the brief is written once and the tree keeps moving, so by the time the agent reads it a commit has landed and the list is short by a file. That happened twice on one branch, and both times the agent followed the brief over the gate and silently skipped a file — a file that then went to `main` unsealed while the gate said it was reviewed. The agent runs `seal.ts verify` itself; naming files can only make its answer worse. Say what changed if it helps the agent aim, and let the gate say which files that means.
+**Exactly those fields, and no file list.** The temptation, having just run `seal.ts verify` to find out whether there is a review to run, is to paste its output into the brief. Do not: the brief is written once and the tree keeps moving, so by the time the agent reads it a commit has landed and the list is short by a file. That happened twice on one branch, and both times the agent followed the brief over the gate and silently skipped a file — a file that then went to `main` unsealed while the gate said it was reviewed. The agent runs `seal.ts verify` itself; naming files can only make its answer worse. Say what changed if it helps the agent aim, and let the gate say which files that means.
 
 ## After it returns
 
@@ -67,7 +78,10 @@ Touching one line of a file puts the whole file in front of a reviewer for the f
 
 A one-line fix on a pre-existing finding is cheaper to ship here than to schedule. A refactor is not, and shipping it here buries the change the branch was actually for. Say which you are doing, in the commit message, and take the rest in its own branch — the seal on the untouched half stays valid either way, because a seal is on content and not on a path.
 
-The cost of getting this wrong compounds: each round's fix touches new files, which the next round reviews for the first time. One branch reached ten rounds this way, and the last five were on code its subject never went near.
+The cost of getting this wrong compounds: each round's fix touches new files, which the next round reviews for the first time. One branch reached ten rounds this way, and the last five were on code its subject never went near. Two things stop it, and both are required:
+
+- **The first review reads every file the branch will touch** (step 3 above), and every file a finding's fix will reach, so a pre-existing finding surfaces in round one rather than in round four.
+- **The fix agent reads each file it edits in full against the same checklist and fixes what it finds**, not only the quoted line. [`/implementation`](../implementation/SKILL.md) § *Fix rounds* is that rule. A fix that edits a file and leaves a second finding in it hands the next round a file it has to read whole again.
 
 ## Where the checklist comes from
 

@@ -13,6 +13,7 @@
         "scripts/standards/*.ts",
         "scripts/pr/*.ts",
         "scripts/quality/*.ts",
+        "scripts/browser/*.ts",
         "scripts/**/*.test.ts"
       ],
       "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts"]

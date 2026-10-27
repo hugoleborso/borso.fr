@@ -38,7 +38,7 @@ if [ -n "$staged_lintable" ]; then
   # and nothing names the missing build.
   scripts/ensure-infra-built.sh
   echo "[pre-commit] running eslint on staged files"
-  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
+  echo "$staged_lintable" | scripts/lint-changed-files.sh --no-warn-ignored --max-warnings 0
 fi
 
 staged_formattable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' || true)

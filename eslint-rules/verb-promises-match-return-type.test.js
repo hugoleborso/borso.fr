@@ -27,6 +27,22 @@ createRuleTester('apps/pragma/api/src/songs/songs.core.ts', { jsx: false }).run(
       { code: 'function buildTitle(): string[] { return []; }' },
       { code: 'function selectVisibleSongs(): Song[] { return []; }' },
       { code: 'const listProblems = (): Problem[] => [];' },
+      {
+        code: 'function getWrittenTake(id: string): Take { const take = lookup(id); if (take === null) throw new Error("absent"); return take; }',
+      },
+      {
+        code: 'function findTake(id: string): Take | null { try { return parse(id); } catch { return null; } }',
+      },
+      {
+        code: 'function findTake(id: string): Take | null { try { if (id === "") throw new Error("empty"); return parse(id); } catch { return null; } }',
+      },
+      {
+        code: 'function findTake(ids: string[]): Take | null { ids.forEach((id) => { if (id === "") throw new Error("empty"); }); return null; }',
+      },
+      {
+        code: 'function findTake(id: string): Take | null { function getOrThrow(): Take { throw new Error("absent"); } return id === "" ? null : getOrThrow(); }',
+      },
+      { code: 'function finder(): Take { throw new Error("absent"); }' },
     ],
     invalid: [
       {
@@ -80,6 +96,26 @@ createRuleTester('apps/pragma/api/src/songs/songs.core.ts', { jsx: false }).run(
       {
         code: 'async function listProblems(): Promise { return []; }',
         errors: [{ messageId: 'brokenPromise' }],
+      },
+      {
+        code: 'async function findWrittenTakeWithin(executor: Executor, id: string): Promise<Take> { const take = await findTakeOn(executor, id); if (take === null) throw new Error("not visible"); return take; }',
+        errors: [{ messageId: 'throwingFind' }],
+      },
+      {
+        code: 'const findTake = (id: string) => { if (id === "") throw new Error("empty"); return lookup(id); };',
+        errors: [{ messageId: 'throwingFind' }],
+      },
+      {
+        code: 'function findTake(id: string): Take | null { try { return parse(id); } finally { if (id === "") throw new Error("empty"); } }',
+        errors: [{ messageId: 'throwingFind' }],
+      },
+      {
+        code: 'function findTake(id: string): Take | null { try { return parse(id); } catch { throw new Error("unreadable"); } }',
+        errors: [{ messageId: 'throwingFind' }],
+      },
+      {
+        code: 'const store = { findTake(id: string): Take { throw new Error(id); } };',
+        errors: [{ messageId: 'throwingFind' }],
       },
     ],
   },
