@@ -39,8 +39,6 @@ function readPropertyName(property) {
   return property.key.type === 'Literal' ? String(property.key.value) : null;
 }
 
-// @FollowsBlueprint lint-rule
-/** @type {import('eslint').Rule.RuleModule} */
 function reportStyleColours(context, candidate) {
   if (candidate.type !== 'ObjectExpression') return;
   for (const property of candidate.properties) {
@@ -50,6 +48,8 @@ function reportStyleColours(context, candidate) {
   }
 }
 
+// @FollowsBlueprint lint-rule
+/** @type {import('eslint').Rule.RuleModule} */
 export default {
   meta: {
     type: 'problem',
