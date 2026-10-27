@@ -33,7 +33,7 @@ async function readSavedTodo(id: string): Promise<Todo> {
   return projectStoredTodo(stored);
 }
 
-function findVisibleTodo(visible: readonly StoredTodo[], id: string): StoredTodo {
+function getVisibleTodo(visible: readonly StoredTodo[], id: string): StoredTodo {
   const stored = visible.find((candidate) => candidate.id === id);
   if (stored === undefined) throw new TalosError('todo-not-found');
   return stored;
@@ -72,7 +72,7 @@ export async function changeStoredTodo(
   now: Date,
 ): Promise<Todo> {
   const visible = await listVisibleTodos(list);
-  const stored = findVisibleTodo(visible, id);
+  const stored = getVisibleTodo(visible, id);
   const text = changes.text ?? stored.text;
   if (isTaskTaken(visible, text, stored.addedOn ?? undefined, id)) {
     throw new TalosError('todo-duplicate');
@@ -99,7 +99,7 @@ export async function deleteStoredTodo(
   now: Date,
 ): Promise<RemovedTodo> {
   const visible = await listVisibleTodos(list);
-  const stored = findVisibleTodo(visible, id);
+  const stored = getVisibleTodo(visible, id);
   await recordPwaChanges(describeTodoRemoval(list, stored.text), [{ op: 'todo.remove', id }], now);
   return {
     todo: projectStoredTodo(stored),

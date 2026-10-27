@@ -1,5 +1,5 @@
 ---
-summary: 'A 375 px Chromium resize is not a phone test; `scripts/argent.sh` drives real touch here, and the sandbox has no `/dev/kvm` and no Xcode for simulators.'
+summary: 'A 375 px Chromium resize is not a phone test; on Chromium argent''s taps are mouse presses, so a real tap here is `scripts/argent.sh touch <selector>`, and the sandbox has no `/dev/kvm` and no Xcode for simulators.'
 triggers:
   commands:
     - '\bargent\b'

@@ -1,10 +1,15 @@
 #!/usr/bin/env bash
 # Drive a phone-shaped Chromium with argent, in one command.
 #
-# argent (`@swmansion/argent`) is the tool that sends real touch input — taps,
-# swipes, pinches, keystrokes — over the Chrome DevTools Protocol. A synthetic
-# click through `agent-browser` is not a tap, so any question about touch
-# behaviour, thumb reach or gesture handling is answered here rather than there.
+# argent (`@swmansion/argent`) drives a browser over the Chrome DevTools
+# Protocol with normalised coordinates, which is what makes `describe` and a
+# reach check cheap. On Chromium it does NOT send touch: measured on argent
+# 0.22.1, `gesture-tap` arrives as pointerdown and click with pointerType
+# "mouse" and no touchstart, and 0.30.1's own source sends the same
+# Input.dispatchMouseEvent pair. Headless Chromium also keeps the window at
+# least 500 px wide whatever --window-size says, so argent's page is 500 x 669,
+# not a phone. `touch <css selector>` below is the real tap: it sets a 375 x 812
+# mobile viewport with touch emulation and sends Input.dispatchTouchEvent.
 #
 # Every non-obvious part of the setup is encoded below, because each one has
 # already cost this repository a debugging session:
@@ -29,7 +34,9 @@
 #   scripts/argent.sh start [url]     boot the browser + server, open url
 #   scripts/argent.sh run <args...>   argent run <args>, with udid and proxy set
 #   scripts/argent.sh describe        the screen as normalised frames
-#   scripts/argent.sh tap <x> <y>     tap at normalised [0,1] coordinates
+#   scripts/argent.sh tap <x> <y>     argent's tap at normalised [0,1] coordinates
+#                                     (a mouse press on Chromium, not a touch)
+#   scripts/argent.sh touch <selector> a real touch tap, at a 375 x 812 phone viewport
 #   scripts/argent.sh status          what is running
 #   scripts/argent.sh stop            kill both
 #
@@ -53,6 +60,7 @@ PROFILE_DIR="/tmp/argent-chromium-${CDP_PORT}"
 SERVER_LOG="/tmp/argent-server-${TOOL_SERVER_PORT}.log"
 BROWSER_LOG="/tmp/argent-chromium-${CDP_PORT}.log"
 READY_TIMEOUT_SECONDS=30
+EXTRA_CHROMIUM_FLAGS="${ARGENT_CHROMIUM_FLAGS:-}"
 
 export NO_PROXY=localhost,127.0.0.1
 export no_proxy=localhost,127.0.0.1
@@ -106,6 +114,26 @@ has_rendered() {
     | grep -q 'clickable'
 }
 
+# A pattern kill also matches any shell whose own command line names the
+# pattern, and the shell that called this script often does: `pkill -f
+# remote-debugging-port=9333` ended the caller with exit 144 on 2026-10-25. So
+# the callers of this script, up to init, are left alone.
+list_caller_pids() {
+  local pid="$$"
+  while [ -n "$pid" ] && [ "$pid" -gt 1 ]; do
+    printf '%s\n' "$pid"
+    pid="$(awk '{print $4}' "/proc/${pid}/stat" 2>/dev/null || true)"
+  done
+}
+
+kill_matching_except_callers() {
+  local callers matched
+  callers="$(list_caller_pids)"
+  for matched in $(pgrep -f -- "$1" 2>/dev/null || true); do
+    grep -qx -- "$matched" <<<"$callers" || kill "$matched" 2>/dev/null || true
+  done
+}
+
 wait_for() {
   local check="$1" what="$2" waited=0
   until "$check"; do
@@ -144,6 +172,7 @@ start_browser() {
       --ssl-version-max=tls1.2 \
       --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader \
       --window-size="${PHONE_WIDTH},${PHONE_HEIGHT}" \
+      ${EXTRA_CHROMIUM_FLAGS} \
       --user-data-dir="$PROFILE_DIR" about:blank \
       > "$BROWSER_LOG" 2>&1 &
   else
@@ -153,6 +182,7 @@ start_browser() {
       --headless=new --no-sandbox --disable-dev-shm-usage --no-proxy-server \
       --enable-unsafe-swiftshader --use-gl=angle --use-angle=swiftshader \
       --window-size="${PHONE_WIDTH},${PHONE_HEIGHT}" \
+      ${EXTRA_CHROMIUM_FLAGS} \
       --user-data-dir="$PROFILE_DIR" about:blank \
       > "$BROWSER_LOG" 2>&1 &
   fi
@@ -211,7 +241,15 @@ Ready. The device is ${UDID}.
 
 A tap goes to a frame's centre: x + width / 2, y + height / 2.
 
-gesture-tap is a real touch event. gesture-swipe is NOT supported on Chromium —
+gesture-tap and 'scripts/argent.sh tap' are a MOUSE press on Chromium
+(pointerType mouse, no touchstart), and this window is 500 px wide, not
+${PHONE_WIDTH}. For a real touch at phone width, by CSS selector:
+
+  scripts/argent.sh touch '[aria-label="Stop"]'
+
+It exits 1 unless touchstart and a touch click reached the element.
+Extra Chromium flags (a fake microphone, say) go in ARGENT_CHROMIUM_FLAGS
+before 'start'. gesture-swipe is NOT supported on Chromium —
 it returns an issues list and changes nothing, which reads as the page ignoring
 the gesture. Scroll with gesture-scroll (wheel) and drag with gesture-drag
 (mouse); deltas there are fractions of the window, not pixels.
@@ -237,13 +275,19 @@ EOF
     is_server_up || fail "nothing running — scripts/argent.sh start"
     pnpm exec argent run gesture-tap --udid "$UDID" --x "$2" --y "$3" --json
     ;;
+  touch)
+    [ $# -eq 2 ] || fail "usage: scripts/argent.sh touch '<css selector>'"
+    is_cdp_up || fail "no Chromium on CDP ${CDP_PORT} — scripts/argent.sh start"
+    pnpm exec tsx scripts/browser/touch-tap.ts --selector "$2" --port "$CDP_PORT" \
+      --width "$PHONE_WIDTH" --height "$PHONE_HEIGHT"
+    ;;
   status)
     is_cdp_up && note "Chromium: up on ${CDP_PORT}" || note "Chromium: down"
     is_server_up && note "tool-server: up on ${TOOL_SERVER_PORT}" || note "tool-server: down"
     ;;
   stop)
-    pkill -f "server start --port ${TOOL_SERVER_PORT}" 2>/dev/null || true
-    pkill -f "remote-debugging-port=${CDP_PORT}" 2>/dev/null || true
+    kill_matching_except_callers "server start --port ${TOOL_SERVER_PORT}"
+    kill_matching_except_callers "remote-debugging-port=${CDP_PORT}"
     # Chromium keeps writing its profile for a moment after SIGTERM, so a delete
     # issued straight away fails with "Directory not empty".
     sleep 2
@@ -251,6 +295,6 @@ EOF
     note "stopped"
     ;;
   *)
-    fail "unknown command '$1' — start | run | describe | tap | status | stop"
+    fail "unknown command '$1' — start | run | describe | tap | touch | status | stop"
     ;;
 esac

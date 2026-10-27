@@ -1,5 +1,5 @@
 ---
-summary: '`agent-browser set device` does not make `(pointer: coarse)` match; touch assertions need `scripts/argent.sh`, which sends real touch.'
+summary: '`agent-browser set device` does not make `(pointer: coarse)` match; touch assertions need `scripts/argent.sh touch <selector>`, which emulates touch and sends `Input.dispatchTouchEvent` (argent''s own tap is a mouse press).'
 triggers:
   commands:
     - '(agent-browser|scripts/browser\.sh)\s+(\S+\s+)*set\s+device\b'

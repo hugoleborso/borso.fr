@@ -106,7 +106,7 @@ while IFS= read -r invocation; do
   location="${invocation% *}"
   location="${location%:}"
   case "$filter" in *'<'* | *'$'* | *'*'* | *'...'* | ./*) continue ;; esac
-  if ! printf '%s\n' "$workspace_names" | grep -qxF -e "$filter" -e "@borso-app/$filter" -e "@borso/$filter"; then
+  if ! grep -qxF -e "$filter" -e "@borso-app/$filter" -e "@borso/$filter" <<<"$workspace_names"; then
     failed=1
     echo "[check-instructions-name-installed-tools] ${location}: filters on \`${filter}\`, which names no workspace" >&2
   fi
