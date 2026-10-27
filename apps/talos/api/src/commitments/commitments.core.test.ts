@@ -94,8 +94,10 @@ describe('parseOpenCommitment', () => {
   });
 });
 
+const TODAY = '2026-10-27';
+
 describe('selectOpenCommitments', () => {
-  it('keeps the open commitments, the soonest due first and the undated last by path', () => {
+  it('puts the week ahead first, then the overdue, then the distant, then the undated', () => {
     const open = (dueDay?: string) =>
       commitmentFile([
         'type: engagement',
@@ -104,18 +106,24 @@ describe('selectOpenCommitments', () => {
       ]);
     const files = new Map([
       ['engagements/z.md', open()],
-      ['engagements/late.md', open('2026-10-20')],
+      ['engagements/distant.md', open('2026-11-04')],
       ['engagements/y.md', open()],
       ['engagements/done.md', commitmentFile(['type: engagement', 'statut: fait'])],
-      ['engagements/soon.md', open('2026-10-06')],
-      ['engagements/same.md', open('2026-10-06')],
-      ['engagements/early.md', open('2026-10-02')],
+      ['engagements/last-day.md', open('2026-11-03')],
+      ['engagements/yesterday.md', open('2026-10-26')],
+      ['engagements/same.md', open('2026-10-28')],
+      ['engagements/soon.md', open('2026-10-28')],
+      ['engagements/long-overdue.md', open('2026-10-02')],
+      ['engagements/today.md', open(TODAY)],
     ]);
-    expect(selectOpenCommitments(files).map((commitment) => commitment.path)).toEqual([
-      'engagements/early',
+    expect(selectOpenCommitments(files, TODAY).map((commitment) => commitment.path)).toEqual([
+      'engagements/today',
       'engagements/same',
       'engagements/soon',
-      'engagements/late',
+      'engagements/last-day',
+      'engagements/long-overdue',
+      'engagements/yesterday',
+      'engagements/distant',
       'engagements/y',
       'engagements/z',
     ]);
@@ -131,7 +139,7 @@ describe('selectOpenCommitments between two dated commitments', () => {
     const later = ['engagements/a-later.md', dated('2026-10-20')] as const;
     const sooner = ['engagements/b-sooner.md', dated('2026-10-06')] as const;
     for (const files of [new Map([later, sooner]), new Map([sooner, later])]) {
-      expect(selectOpenCommitments(files).map((commitment) => commitment.path)).toEqual([
+      expect(selectOpenCommitments(files, TODAY).map((commitment) => commitment.path)).toEqual([
         'engagements/b-sooner',
         'engagements/a-later',
       ]);
