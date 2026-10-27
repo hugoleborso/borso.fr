@@ -3,7 +3,7 @@ const HEADING_PREFIX = '## ';
 const BULLET_PREFIX = '- ';
 
 const CITATION_MARKER = /^`(?<kind>[a-z]+)(?::(?<target>[^`]+))?`/;
-const DECLARED_REACH = /^(?<name>\S+)\s+\((?<reach>[^)]+)\)$/;
+const DECLARED_REACH = /^(\S+)\s+\(([^)]+)\)$/;
 const REACH_SEPARATOR = ',';
 
 export const CITATION_KINDS = [
@@ -61,15 +61,13 @@ export function readCitationFromBullet(bullet: string): Citation | null {
   if (kind === 'reviewer') return { kind, target: '', bullet };
   const target = marker.target?.trim();
   if (target === undefined || target.length === 0) return null;
-  const declared = DECLARED_REACH.exec(target)?.groups;
-  if (declared?.name === undefined || declared.reach === undefined) {
-    return { kind, target, bullet };
-  }
-  const reach = declared.reach
+  const declared = DECLARED_REACH.exec(target);
+  if (declared === null) return { kind, target, bullet };
+  const reach = String(declared[2])
     .split(REACH_SEPARATOR)
     .map((scope) => scope.trim())
     .filter((scope) => scope.length > 0);
-  return { kind, target: declared.name, bullet, reach };
+  return { kind, target: String(declared[1]), bullet, reach };
 }
 
 export function readStandardTitle(markdown: string, fallback: string): string {
