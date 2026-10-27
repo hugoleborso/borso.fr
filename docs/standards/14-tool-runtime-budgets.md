@@ -208,7 +208,7 @@ moved to pre-push.
 | --- | --- | --- |
 | `.husky/pre-commit`, nothing staged | 0.14 s | 0.12 s |
 | `.husky/pre-commit`, one file of each of eight kinds, every moved check back | 1.6 s without ESLint, the tooling type check and the generators | 1.7 to 1.8 s on four cores, 2.3 to 2.6 s on two, 1.96 s on CI's runner (babc5443) |
-| The same, with the type-aware rules on the commit | not run on the commit | 1.9 to 2.4 s on CI's runner, three runs of 25799631 |
+| The same, with the type-aware rules on the commit | not run on the commit | 1.9 to 3.6 s on CI's runner over four runs of 25799631 and 53d00219; 1.9 to 3.4 s over six runs of 68cc7783, after the cuts below, three of them in a row at or under 3.0 s |
 | Lint over the repository, type-aware | 256 to 454 s cold, one process per workspace | 28 to 38 s, one process |
 | Format check over the repository | 43.7 s without a cache | 1.5 s |
 | pragma type check | 32 s, 12 to 23 s incremental | 9.7 s cold, 4 s incremental |
