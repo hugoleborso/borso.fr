@@ -55,23 +55,23 @@ describe('selectMemberFormMode', () => {
 
 describe('selectFreePaletteColor', () => {
   it('takes the first palette colour for an empty band', () => {
-    expect(selectFreePaletteColor([])).toBe('#c4583a');
+    expect(selectFreePaletteColor([])).toBe('#e87b62');
   });
 
   it('skips the colours the band already uses, whatever their case', () => {
-    expect(selectFreePaletteColor(['#C4583A', '#3d8a8a'])).toBe('#c4912b');
+    expect(selectFreePaletteColor(['#E87B62', '#3a9b9b'])).toBe('#d6a93c');
   });
 
   it('falls back to the first colour once all five are taken', () => {
-    expect(selectFreePaletteColor(listMemberPaletteHexes())).toBe('#c4583a');
+    expect(selectFreePaletteColor(listMemberPaletteHexes())).toBe('#e87b62');
   });
 });
 
 describe('buildMemberFormValues', () => {
   it('starts blank with the first palette colour no member uses', () => {
-    expect(buildMemberFormValues(null, ['#c4583a'])).toEqual({
+    expect(buildMemberFormValues(null, ['#e87b62'])).toEqual({
       firstName: '',
-      color: '#3d8a8a',
+      color: '#3a9b9b',
     });
   });
 

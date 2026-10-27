@@ -15,11 +15,11 @@ describe('MEMBER_PALETTE', () => {
 
   it('lists the five hex values in the same order', () => {
     expect(listMemberPaletteHexes()).toEqual([
-      '#c4583a',
-      '#3d8a8a',
-      '#c4912b',
-      '#8a4870',
-      '#6e8a48',
+      '#e87b62',
+      '#3a9b9b',
+      '#d6a93c',
+      '#8a4f7a',
+      '#7a9b6f',
     ]);
   });
 });

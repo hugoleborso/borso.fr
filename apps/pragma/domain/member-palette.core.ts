@@ -1,9 +1,9 @@
 export const MEMBER_PALETTE = [
-  { name: 'coral', hex: '#c4583a' },
-  { name: 'teal', hex: '#3d8a8a' },
-  { name: 'mustard', hex: '#c4912b' },
-  { name: 'plum', hex: '#8a4870' },
-  { name: 'sage', hex: '#6e8a48' },
+  { name: 'coral', hex: '#e87b62' },
+  { name: 'teal', hex: '#3a9b9b' },
+  { name: 'mustard', hex: '#d6a93c' },
+  { name: 'plum', hex: '#8a4f7a' },
+  { name: 'sage', hex: '#7a9b6f' },
 ] as const;
 
 // @FollowsBlueprint core-decision

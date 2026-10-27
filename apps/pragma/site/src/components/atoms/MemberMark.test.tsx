@@ -8,8 +8,8 @@ declare global {
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-const CORAL = '#c4583a';
-const PLUM = '#8a4870';
+const CORAL = '#e87b62';
+const PLUM = '#8a4f7a';
 
 // @FollowsBlueprint test-component-render
 describe('MemberMark', () => {
@@ -34,7 +34,7 @@ describe('MemberMark', () => {
 
   it('fills a cell with the stored member colour and inks it with the readable ink', () => {
     const coral = renderMark(<MemberMark color={CORAL} shape="cell" />);
-    expect(coral?.style.backgroundColor).toBe('rgb(196, 88, 58)');
+    expect(coral?.style.backgroundColor).toBe('rgb(232, 123, 98)');
     expect(coral?.className).toContain('text-on-color-dark');
     const plum = renderMark(<MemberMark color={PLUM} shape="cell" />);
     expect(plum?.className).toContain('text-on-color-light');
@@ -42,7 +42,7 @@ describe('MemberMark', () => {
 
   it('draws a ring with the colour as its border and a lane with the colour tinted into the paper', () => {
     expect(renderMark(<MemberMark color={CORAL} shape="ring" />)?.style.borderColor).toBe(
-      'rgb(196, 88, 58)',
+      'rgb(232, 123, 98)',
     );
     expect(renderMark(<MemberMark color={CORAL} shape="lane" />)?.getAttribute('style')).toContain(
       `color-mix(in srgb, ${CORAL} 18%, var(--color-paper))`,
@@ -51,7 +51,7 @@ describe('MemberMark', () => {
 
   it('fills a dot with the colour', () => {
     expect(renderMark(<MemberMark color={PLUM} shape="dot" />)?.style.backgroundColor).toBe(
-      'rgb(138, 72, 112)',
+      'rgb(138, 79, 122)',
     );
   });
 });

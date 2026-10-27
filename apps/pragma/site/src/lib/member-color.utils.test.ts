@@ -97,11 +97,11 @@ describe('member-color.utils', () => {
     });
 
     it.each([
-      ['coral', '#c4583a', 'on-color-dark', 4.55],
-      ['teal', '#3d8a8a', 'on-color-dark', 4.93],
-      ['mustard', '#c4912b', 'on-color-dark', 7.04],
-      ['plum', '#8a4870', 'on-color-light', 6.37],
-      ['sage', '#6e8a48', 'on-color-dark', 5.11],
+      ['coral', '#e87b62', 'on-color-dark', 7.05],
+      ['teal', '#3a9b9b', 'on-color-dark', 6.01],
+      ['mustard', '#d6a93c', 'on-color-dark', 9.1],
+      ['plum', '#8a4f7a', 'on-color-light', 5.94],
+      ['sage', '#7a9b6f', 'on-color-dark', 6.39],
     ] as const)('draws on %s (%s) with %s at 4.5:1 or more', (_name, hex, expected, ratio) => {
       expect(selectInkOnMemberColor(hex)).toBe(expected);
       const color = parseHex(hex);
