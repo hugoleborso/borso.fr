@@ -1,0 +1,189 @@
+import { describe, expect, it } from 'vitest';
+import {
+  ALL_TASK_IDS,
+  BOTTOM_THIRD_FROM,
+  describeTaskCounts,
+  type FoundTarget,
+  isInBottomThird,
+  listBaselineDifferences,
+  listRequestedTaskIds,
+  parseTaskMetricsArguments,
+  planScrollGesture,
+  projectScreenFraction,
+  projectTapPoint,
+  replaceIdentifierInPath,
+  replaceIdentifiers,
+} from './task-metrics.core';
+
+const SAMPLE_IDENTIFIER = '0f8fad5b-d9cb-469f-a165-70867728950e';
+
+function buildTarget(overrides: Partial<FoundTarget> = {}): FoundTarget {
+  return {
+    centreX: 195,
+    centreY: 422,
+    viewportWidth: 390,
+    viewportHeight: 844,
+    screenTop: 0,
+    screenLeft: 0,
+    screenWidth: 390,
+    screenHeight: 844,
+    visibleTop: 0,
+    visibleBottom: 844,
+    hittable: true,
+    inView: true,
+    container: null,
+    ...overrides,
+  };
+}
+
+describe('listRequestedTaskIds', () => {
+  it('answers every task, 8b included, for all and for no value', () => {
+    expect(listRequestedTaskIds('all')).toEqual(ALL_TASK_IDS);
+    expect(listRequestedTaskIds(null)).toEqual(ALL_TASK_IDS);
+    expect(ALL_TASK_IDS).toContain('8b');
+  });
+
+  it('answers nothing for none and splits a list on commas', () => {
+    expect(listRequestedTaskIds('none')).toEqual([]);
+    expect(listRequestedTaskIds('5,6,,8b')).toEqual(['5', '6', '8b']);
+  });
+});
+
+describe('parseTaskMetricsArguments', () => {
+  it('reads every option', () => {
+    expect(
+      parseTaskMetricsArguments([
+        '--tasks',
+        '5',
+        '--routes',
+        '--slice-1',
+        '--out',
+        'after.json',
+        '--compare',
+        'baseline.json',
+      ]),
+    ).toEqual({
+      taskIds: ['5'],
+      measureRoutes: true,
+      measureSliceOne: true,
+      outputPath: 'after.json',
+      baselinePath: 'baseline.json',
+    });
+  });
+
+  it('defaults to every task, no routes and no files', () => {
+    expect(parseTaskMetricsArguments(['--out'])).toEqual({
+      taskIds: ALL_TASK_IDS,
+      measureRoutes: false,
+      measureSliceOne: false,
+      outputPath: null,
+      baselinePath: null,
+    });
+  });
+});
+
+describe('projectTapPoint', () => {
+  it('maps the centre to fractions of the layout viewport, from the visual viewport origin', () => {
+    expect(
+      projectTapPoint(buildTarget({ centreX: 100, centreY: 300, screenLeft: 10, screenTop: 20 })),
+    ).toEqual({ x: 90 / 390, y: 280 / 844 });
+  });
+});
+
+describe('projectScreenFraction and isInBottomThird', () => {
+  it('rounds the fraction to three decimals', () => {
+    expect(projectScreenFraction(buildTarget({ centreY: 100 }))).toBe(0.118);
+  });
+
+  it('places a control at two thirds or lower in the bottom third', () => {
+    expect(isInBottomThird(buildTarget({ centreY: 844 * BOTTOM_THIRD_FROM }))).toBe(true);
+    expect(isInBottomThird(buildTarget({ centreY: 844 * BOTTOM_THIRD_FROM - 1 }))).toBe(false);
+  });
+
+  it('never counts a control that is not in view', () => {
+    expect(isInBottomThird(buildTarget({ centreY: 800, inView: false }))).toBe(false);
+  });
+});
+
+describe('planScrollGesture', () => {
+  it('scrolls the page from its middle by the distance to the visible middle', () => {
+    const plan = planScrollGesture(buildTarget({ centreY: 844 * 0.9, inView: false }));
+    expect(plan.point).toEqual({ x: 0.5, y: 0.45 });
+    expect(plan.deltaY).toBeCloseTo(0.4);
+  });
+
+  it('caps one gesture at seventy percent of the screen in both directions', () => {
+    expect(planScrollGesture(buildTarget({ centreY: 5000 })).deltaY).toBe(0.7);
+    expect(planScrollGesture(buildTarget({ centreY: -5000 })).deltaY).toBe(-0.7);
+  });
+
+  it('nudges a covered control that already sits at the visible middle', () => {
+    expect(planScrollGesture(buildTarget({ hittable: false })).deltaY).toBe(0.15);
+    expect(planScrollGesture(buildTarget({ hittable: true })).deltaY).toBe(0);
+  });
+
+  it('scrolls a container from its own centre line', () => {
+    const plan = planScrollGesture(
+      buildTarget({
+        container: { rect: [10, 100, 200, 400] },
+        visibleTop: 100,
+        visibleBottom: 500,
+      }),
+    );
+    expect(plan.point).toEqual({ x: 110 / 390, y: 300 / 844 });
+  });
+
+  it('reads a short container box as zero', () => {
+    expect(planScrollGesture(buildTarget({ container: { rect: [] } })).point.x).toBe(0);
+  });
+});
+
+describe('replaceIdentifiers', () => {
+  it('replaces every identifier in a nested value and in a path', () => {
+    expect(replaceIdentifiers({ path: `/setlists/${SAMPLE_IDENTIFIER}` })).toEqual({
+      path: '/setlists/:id',
+    });
+    expect(replaceIdentifierInPath(`/a/${SAMPLE_IDENTIFIER}/b/${SAMPLE_IDENTIFIER}`)).toBe(
+      '/a/:id/b/:id',
+    );
+  });
+});
+
+describe('listBaselineDifferences', () => {
+  const baseline = {
+    tasks: { '5': { taps: 3, textEntries: 1, scrollGestures: 0, screensVisited: 2 } },
+  };
+
+  it('answers nothing when every compared field matches', () => {
+    expect(listBaselineDifferences(baseline, baseline, ['5'])).toEqual([]);
+  });
+
+  it('names each differing field with both values', () => {
+    const current = {
+      tasks: { '5': { taps: 4, textEntries: 1, scrollGestures: 1, screensVisited: 2 } },
+    };
+    expect(listBaselineDifferences(current, baseline, ['5'])).toEqual([
+      'task 5: taps 4 (baseline 3)',
+      'task 5: scrollGestures 1 (baseline 0)',
+    ]);
+  });
+
+  it('reports a failed, a missing and an unknown task', () => {
+    expect(
+      listBaselineDifferences({ tasks: { '5': { failed: 'not found: Save' } } }, baseline, ['5']),
+    ).toEqual(['task 5: failed (not found: Save)']);
+    expect(listBaselineDifferences({ tasks: [] }, baseline, ['5'])).toEqual([
+      'task 5: failed (not measured)',
+    ]);
+    expect(listBaselineDifferences(null, baseline, ['9'])).toEqual(['task 9: not in the baseline']);
+  });
+});
+
+describe('describeTaskCounts', () => {
+  it('lists the compared fields of a summary', () => {
+    expect(
+      describeTaskCounts({ taps: 3, textEntries: 1, scrollGestures: 0, screensVisited: 2 }),
+    ).toBe('taps=3 textEntries=1 scrollGestures=0 screensVisited=2');
+    expect(describeTaskCounts('nothing')).toBe('no summary');
+  });
+});

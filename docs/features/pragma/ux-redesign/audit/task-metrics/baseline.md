@@ -1,6 +1,6 @@
 # Pragma task metrics: measured baseline
 
-This is the baseline the build will be judged against. Every number below was measured on the current app on 2026-10-26, on site port 5182 with the audit seed, at 390x844 in emulated standalone display mode (top inset 47 px, bottom inset 34 px). Every tap, scroll and drag went through argent. The data is in [baseline.json](./baseline.json) and the build can rerun the whole thing with [run-baseline.sh](./run-baseline.sh).
+This is the baseline the build will be judged against. Every number below was measured on the current app on 2026-10-26, on site port 5182 with the audit seed, at 390x844 in emulated standalone display mode (top inset 47 px, bottom inset 34 px). Every tap, scroll and drag went through argent. The data is in [baseline.json](./baseline.json) and the build reruns the whole thing with the task-metrics harness in [`apps/pragma/scripts/task-metrics/`](../../../../../../apps/pragma/scripts/task-metrics/README.md).
 
 ## How it was measured
 
@@ -37,10 +37,11 @@ Every task starts from a fresh seed and a fresh sign-in, on the start screen the
 ## How to rerun
 
 ```bash
-docs/features/pragma/ux-redesign/audit/task-metrics/run-baseline.sh 5182 /path/to/after.json
+cd apps/pragma
+pnpm run task-metrics -- --tasks all --routes --out /path/to/after.json --compare ../../docs/features/pragma/ux-redesign/spec/baseline/baseline.json
 ```
 
-It starts a pragma instance with the audit seed on that port, boots argent at 390x844 on the matching CDP and tool-server ports (9282 and 4382 for 5182), walks the 13 task paths, measures the 26 routes, and stops the instance and argent. The walk lives in `run-baseline.mjs` and the argent and CDP plumbing in `driver.mjs`. The selectors find controls by their accessible name or by a form field id, so a rebuilt screen with new labels needs the matching line in `run-baseline.mjs` changed; the counts it reports are the comparison.
+It starts a pragma instance with the audit seed on that port, boots argent at 390x844 on the matching CDP and tool-server ports (9282 and 4382 for 5182), walks the 13 task paths, measures the 26 routes, and stops the instance and argent. The walks live in `task-walks.setup.ts`, the argent and CDP plumbing in `argent-input.adapter.ts`, `cdp-session.adapter.ts` and `walk-recorder.setup.ts`. The selectors find controls by their accessible name or by a form field id, so a rebuilt screen with new labels needs the matching line in `task-walks.setup.ts` changed; the counts it reports are the comparison.
 
 ## Top tasks
 

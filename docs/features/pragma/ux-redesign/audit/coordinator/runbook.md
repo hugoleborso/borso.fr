@@ -2,19 +2,19 @@
 
 Every command below was run end to end on 2026-10-25 in this sandbox. One instance went from nothing to a signed-in, populated setlist in about 12 seconds. Two instances (5181 and 5182) ran side by side without clashing. Everything was stopped afterwards.
 
-All helper files live in the coordinator folder. Do not copy them; call them from there:
+The instance helpers moved into the application in slice 1 of the redesign, beside the task-metrics harness that uses them ([`apps/pragma/scripts/task-metrics/`](../../../../../../apps/pragma/scripts/task-metrics/README.md)). Call them from there:
 
 ```bash
-C=docs/features/pragma/ux-redesign/audit/coordinator
+C=apps/pragma/scripts/task-metrics
 ```
 
 | File | What it does |
 | --- | --- |
 | `pragma-instance.sh` | Starts, stops, reseeds and checks one private instance: its own database, API and site |
-| `seed-audit.mts` | Adds the realistic audit data on top of the app's own dev fixture |
-| `vite-site.mjs` | Runs the pragma site on any port with its `/api` proxy pointing at any API port. Needed because `apps/pragma/vite.config.ts` fixes the ports at 5174 and 3001 |
-| `measure.mjs` | Opens every screen as an installed phone app at 375x667 and 390x844, counts scroll areas, saves screenshots |
-| `count-scroll.js` | The same scroll count, for whatever is on screen right now, to run through `scripts/browser.sh eval` |
+| `audit-seed.setup.ts` | Adds the realistic audit data on top of the app's own dev fixture (was `seed-audit.mts`) |
+| `vite-site.setup.ts` | Runs the pragma site on any port with its `/api` proxy pointing at any API port. Needed because `apps/pragma/vite.config.ts` fixes the ports at 5174 and 3001 (was `vite-site.mjs`) |
+
+`measure.mjs` and `count-scroll.js`, which this runbook used during the audit, were never committed; the harness's route measures replace them.
 
 ## 1. Pick your ports
 
@@ -36,27 +36,27 @@ $C/pragma-instance.sh start 5181
 
 What it does, in order:
 
-1. `scripts/local-postgres.sh start pragma audit5181` starts the shared cluster if needed and creates your database.
+1. `scripts/local-postgres.sh start pragma metrics5181` starts the shared cluster if needed and creates your database.
 2. `apps/pragma/test/dev-database.setup.ts` applies the migrations and seeds the app's own fixture (it wipes the domain tables first, so a restart gives you fresh data).
-3. `seed-audit.mts` adds the audit data on top.
-4. The API starts in the background (`api/src/main.dev.ts`, `STAGE=dev`, `PORT=3181`), then the site (`vite-site.mjs 5181 3181`). The script waits until `/api/health` and the site both answer.
+3. `audit-seed.setup.ts` adds the audit data on top.
+4. The API starts in the background (`api/src/main.dev.ts`, `STAGE=dev`, `PORT=3181`), then the site (`vite-site.setup.ts 5181 3181`). The script waits until `/api/health` and the site both answer.
 
 Expected last lines:
 
 ```
-[seed-audit] songs=44 members=5 instruments=6 sessions=3
-[seed-audit] setlists -> Set principal: 20 | Répétition du jeudi — on cale les enchaînements: 17 | Festival de la Butte — brouillon long: 22
+[audit-seed] songs=44 members=5 instruments=6 sessions=3
+[audit-seed] setlists -> Set principal: 20 | Répétition du jeudi — on cale les enchaînements: 17 | Festival de la Butte — brouillon long: 22
 pragma up: site http://localhost:5181  api http://localhost:3181  (sign in as hugo / pragma-preview)
 ```
 
-Logs and process ids go to `$C/state-5181/` (`api.log`, `site.log`). Other commands:
+Logs and process ids go to `${TMPDIR:-/tmp}/pragma-task-metrics-5181/` (`api.log`, `site.log`); set `STATE_DIR` to put them elsewhere. Other commands:
 
 ```bash
 $C/pragma-instance.sh status 5181   # is the site and the API answering
 $C/pragma-instance.sh reseed 5181   # wipe and reseed the data while the servers keep running; reload the page afterwards
 ```
 
-Run `pragma-instance.sh` from your own folder if you like; it writes only to `$C/state-<port>/`, and each port gets its own.
+Run `pragma-instance.sh` from any folder; it writes only to its state folder, and each port gets its own.
 
 ## 3. The seed data
 
@@ -160,7 +160,7 @@ scripts/local-postgres.sh stop pragma
 Check that nothing is left:
 
 ```bash
-pgrep -af "vite-site|main.dev|argent server" ; lsof -iTCP:5181 -iTCP:3181 -sTCP:LISTEN
+pgrep -af "vite-site.setup|main.dev|argent server" ; lsof -iTCP:5181 -iTCP:3181 -sTCP:LISTEN
 ```
 
 ## Traps met while writing this

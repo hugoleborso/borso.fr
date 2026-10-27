@@ -11,7 +11,7 @@ The first pass proposed three moves: shape the app around the band's two jobs, g
 3. **The session page drops keys** and renames "Talk" to "Messages about this practice".
 4. **Every button carries an icon**, everywhere, as `design-system/DESIGN.md` now requires. All mockups were redrawn with the DESIGN.md tokens.
 
-Each proposal now has a target, written as "before -> target" against `task-metrics/baseline.md`. Before numbers are measured; targets are design goals to be measured again on the built screens with `task-metrics/run-baseline.sh`.
+Each proposal now has a target, written as "before -> target" against `task-metrics/baseline.md`. Before numbers are measured; targets are design goals to be measured again on the built screens with the task-metrics harness (`pnpm --filter @borso-app/pragma run task-metrics`).
 
 ## Inputs
 
@@ -95,7 +95,7 @@ I did not start a pragma instance. Every "before" comes from the baseline or the
   - With 5 members the grid fits 390 px with no sideways scroll. With 6 or more, the title column stays pinned and the member columns scroll sideways, which DESIGN.md allows for horizontal strips.
   - Members who play on no song of this setlist get no column.
 - **Cost:** new organism `SetlistLineupGrid.tsx`; new pure `lineup-grid.core.ts` that builds the cells and the change flags from `resolveLineup` and `INSTRUMENT_ICON_GLYPH` (100% coverage gate, with its test); `SetlistEditor.tsx` switches on the segment; i18n. No API or schema change: the default lineup and the override are already loaded by the editor.
-- **Target metric:** the baseline has no lineup task, so these are new measures to add to `run-baseline.mjs`.
+- **Target metric:** the baseline has no lineup task, so these are new measures to add to the task-metrics harness (`apps/pragma/scripts/task-metrics/task-walks.setup.ts`).
   - Songs whose full lineup is readable on the first screen at 390x844: about 5 today (rows with glyph strips, from the baseline screenshot) -> 8 (mockup).
   - Lineup changes between consecutive songs marked on screen: 0 -> all of them.
   - Taps to see one member's part for the whole set: 1 (member pill, which scrolls sideways at 390 px) -> 1 (column header), with every member visible at once.
@@ -343,7 +343,7 @@ Album covers in the mockups are drawn gradients standing in for real artwork. Th
 
 ## What this pass could not prove
 
-- **The mockups are pictures.** Every target above has to be measured on the built screens with `task-metrics/run-baseline.sh`. A11 and A12 need new steps in `run-baseline.mjs`, since the baseline has no lineup or ordering task.
+- **The mockups are pictures.** Every target above has to be measured on the built screens with the task-metrics harness (`pnpm --filter @borso-app/pragma run task-metrics`). A11 and A12 need new steps in `task-walks.setup.ts`, since the baseline has no lineup or ordering task.
 - **Dragging with a finger.** argent's tap is a mouse click on Chromium, so the touch sensor's long press on the Order screen, and whether the curve redraws smoothly during a real drag, need a real phone.
 - **A grid of 40 px cells.** Each cell is 40x36 px visible. A tap target of 44 px needs the hit area to extend into the row's padding; check it with argent's `describe` once built.
 - **Six or more members.** The mockup has five. The sideways scroll of the member columns is a design claim, not a tested one.

@@ -1,0 +1,621 @@
+import { z } from 'zod';
+import type { BandSessionDriver } from './band-session.setup';
+import {
+  COUNT_ENTRY_BUTTONS,
+  LIST_VISIBLE_BUTTON_NAMES,
+  LISTS_A_DURATION,
+  MAIN_TEXT_INCLUDES,
+  READ_SCROLL_Y,
+  READ_SESSION_HEADER_LINK,
+  STUDY_ROW_LINK_PROBE,
+} from './page-probes.setup';
+import { projectScreenFraction, replaceIdentifierInPath } from './task-metrics.core';
+import { navigateTo, PHONE, TaskWalk, waitMilliseconds } from './walk-recorder.setup';
+
+const CREATE_SETTLE_MS = 1200;
+const SAVE_SETTLE_MS = 1500;
+const PICK_SETTLE_MS = 500;
+const CLOSE_SETTLE_MS = 800;
+const ENTRY_NUMBER_WIDTH = 2;
+const SHOWN_TITLE_COUNT = 8;
+const LISTED_BUTTON_COUNT = 12;
+const TAB_BAR_ALLOWANCE = 90;
+const SECOND_ENTRY = 1;
+const SECOND_ENTRY_NUMBER = 2;
+
+const anyRecord = z.record(z.unknown());
+
+export type TaskWalkRunner = (driver: BandSessionDriver) => Promise<unknown>;
+
+function buildEntryPattern(position: number): string {
+  return `^\\S+ ${String(position).padStart(ENTRY_NUMBER_WIDTH, '0')} `;
+}
+
+function escapeForPattern(text: string): string {
+  return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+}
+
+async function isTextInMain(driver: BandSessionDriver, needle: string): Promise<boolean> {
+  return (await driver.session.evaluate(MAIN_TEXT_INCLUDES, needle)) === true;
+}
+
+const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
+  await driver.startFresh('/catalog');
+  const walk = new TaskWalk(driver.session, '1 Prepare the next rehearsal');
+  await walk.tap('Sessions tab', { text: '^Sessions', css: 'nav a' });
+  await walk.tap('New practice', { exact: 'Practice', css: 'button' }, { primary: true });
+  await walk.tap('Create session', { exact: 'Create', css: 'button' }, { wait: CREATE_SETTLE_MS });
+  await walk.tap('New setlist', { exact: 'New setlist', css: 'button' }, { primary: true });
+  walk.note('The name field comes filled with "Set 1", so the shortest path keeps it.');
+  await walk.tap('Create setlist', { exact: 'Create', css: 'button' }, { wait: CREATE_SETTLE_MS });
+  walk.note(
+    `After creating the setlist the screen stays on ${replaceIdentifierInPath((await walk.readLocation()).path)}.`,
+  );
+  await walk.tap(
+    'Open the new setlist',
+    { text: '^Set 1', css: 'main a' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'Add song',
+    { exact: 'Add song', css: 'button', scope: 'page' },
+    { primary: true },
+  );
+  const picks = [
+    'Afterglow',
+    'Billie Jean',
+    'Come Together',
+    'Dreams',
+    'Get Lucky',
+    'Hey Ya!',
+    'Jolene',
+    'Last Call',
+    'Lightning',
+    'Midnight Drive',
+  ];
+  for (const title of picks) {
+    await walk.tap(
+      `Pick ${title}`,
+      { text: `^${title.replace(/[!?.]/g, '\\$&')} `, css: 'button', scope: 'dialog' },
+      { wait: PICK_SETTLE_MS },
+    );
+  }
+  await walk.tap('Done', { text: '^Done', css: 'button', scope: 'dialog' }, { primary: true });
+  const known = await driver.readKnownRecords();
+  const made = known.setlists.find((setlist) => setlist.name === 'Set 1');
+  const list = made === undefined ? [] : await driver.listEntries(made.id);
+  return walk.summarise({
+    success: {
+      practices: known.sessions.filter((session) => session.kind === 'practice').length,
+      newSetlistAttachedTo: made?.sessionIds?.length ?? 0,
+      newSetlistSongs: list.map((entry) => entry.title),
+    },
+  });
+};
+
+const buildConcertSetlist: TaskWalkRunner = async (driver) => {
+  const known = await driver.startFresh('/catalog');
+  const before = await driver.listEntries(known.main.id);
+  const walk = new TaskWalk(driver.session, '2 Build the concert setlist');
+  await walk.tap('Setlists tab', { text: '^Setlists', css: 'nav a' });
+  await walk.tap(
+    'Open Set principal',
+    { text: '^Set principal', css: 'main a' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'Add song',
+    { exact: 'Add song', css: 'button', scope: 'page' },
+    { primary: true },
+  );
+  await walk.tap('Pick Dreams', { text: '^Dreams ', css: 'button', scope: 'dialog' });
+  await walk.tap('Pick Psycho Killer', { text: '^Psycho Killer ', css: 'button', scope: 'dialog' });
+  await walk.tap('Done', { text: '^Done', css: 'button', scope: 'dialog' }, { primary: true });
+  await walk.drag(
+    'Drag entry 05 to position 02',
+    { exact: 'Drag to reorder', css: 'button', index: 4, scope: 'page' },
+    { exact: 'Drag to reorder', css: 'button', index: 1, scope: 'page' },
+  );
+  await walk.tap('Open entry 03 (to remove)', {
+    text: '^\\S+ 03 ',
+    css: 'main button',
+    scope: 'page',
+  });
+  await walk.tap('Remove', { exact: 'Remove', css: 'button', scope: 'dialog' }, { primary: true });
+  const confirm = await walk.find({
+    text: '^Remove$',
+    css: 'dialog[open] button',
+    scope: 'dialog',
+  });
+  if (confirm === null) walk.note('No confirmation step after Remove.');
+  else await walk.tap('Confirm remove', { text: '^Remove$', css: 'button', scope: 'dialog' });
+  await driver.open(`/setlists/${known.main.id}`);
+  const after = await driver.listEntries(known.main.id);
+  return walk.summarise({
+    success: {
+      before: before.map((entry) => entry.title),
+      afterReload: after.map((entry) => entry.title),
+    },
+  });
+};
+
+const agreeWhoDoesWhat: TaskWalkRunner = async (driver) => {
+  await driver.startFresh('/catalog');
+  const walk = new TaskWalk(driver.session, '3 Agree who does what');
+  await walk.tap('More', { exact: 'More', css: 'nav button' });
+  await walk.tap(
+    'Tasks',
+    { exact: 'Tasks', css: 'a', scope: 'dialog' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'Task title field (full form)',
+    { css: '#task-title', scope: 'page' },
+    { primary: true },
+  );
+  await walk.type('Task title', 'Imprimer les setlists');
+  await walk.tap('Assignee Léa', { exact: 'Léa', css: 'form button', scope: 'page' });
+  await walk.choose('Linked song', '#task-song', '~Nuit blanche');
+  walk.note(
+    'The song list of a task offers only the 6 compositions (originals), not the 44 catalogue songs.',
+  );
+  await walk.choose('Due date', '#task-due', '2026-11-01');
+  await walk.tap(
+    'Save task',
+    { exact: 'Save', css: 'form button[type=submit]', scope: 'page' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  const tasks = await driver.listFrom('/api/tasks', 'tasks', anyRecord);
+  const made = tasks.find((task) => task.title === 'Imprimer les setlists');
+  await navigateTo(driver.session, `${driver.baseUrl}/catalog`);
+  const partB = new TaskWalk(driver.session, '3b See my own tasks');
+  partB.note(
+    'Tried the "My part" link in the header first: it opens the concert setlist filtered on the member, and shows no task.',
+  );
+  await partB.tap('More', { exact: 'More', css: 'nav button' });
+  await partB.tap(
+    'Tasks',
+    { exact: 'Tasks', css: 'a', scope: 'dialog' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  const ownSpec = { css: 'ul[aria-label^="Hugo"] li button', index: 0, scope: 'page' };
+  const firstOwnTask = await partB.find(ownSpec);
+  const reach = firstOwnTask === null ? null : await partB.bringIntoView(ownSpec);
+  const summary = anyRecord.parse(
+    walk.summarise({
+      success: {
+        taskCreated: made !== undefined,
+        assignee: made?.assigneeId ?? null,
+        songId: made?.songId ?? null,
+        dueDate: made?.dueDate ?? null,
+      },
+    }),
+  );
+  return {
+    ...summary,
+    partB: {
+      ...anyRecord.parse(partB.summarise()),
+      firstOwnTaskVisibleOnArrival: reach?.first.inView ?? false,
+      firstOwnTaskYFraction: firstOwnTask === null ? null : projectScreenFraction(firstOwnTask),
+      firstOwnTask: firstOwnTask?.name ?? null,
+      scrollsToReachIt: reach?.scrollsUsed ?? null,
+    },
+  };
+};
+
+const setLineupForOneSong: TaskWalkRunner = async (driver) => {
+  const known = await driver.startFresh((records) => `/setlists/${records.main.id}`);
+  const before = (await driver.listEntries(known.main.id))[SECOND_ENTRY];
+  const walk = new TaskWalk(driver.session, '4 Set the lineup for one song in a setlist');
+  await walk.tap('Open entry 02', {
+    text: buildEntryPattern(SECOND_ENTRY_NUMBER),
+    css: 'main button',
+  });
+  await walk.tap(
+    'Lineup (this set)',
+    { text: '^Lineup', css: 'button', scope: 'dialog' },
+    { primary: true },
+  );
+  await walk.tap('Tom plays Guitare', {
+    within: { css: 'li', text: '\\bTom\\b' },
+    exact: 'Guitare',
+    css: 'button',
+    scope: 'dialog',
+  });
+  await walk.tap(
+    'Save lineup',
+    { exact: 'Save', css: 'button', scope: 'dialog' },
+    { primary: true },
+  );
+  const after = await walk.readLocation();
+  walk.note(
+    `After Save the screen is ${replaceIdentifierInPath(after.path)}${after.overlay === null ? ' (the entry sheet is closed)' : ` with ${after.overlay}`}.`,
+  );
+  const second = (await driver.listEntries(known.main.id))[SECOND_ENTRY];
+  return walk.summarise({
+    success: {
+      entry: second?.title,
+      overrideSaved:
+        second?.lineupOverride !== null &&
+        JSON.stringify(second?.lineupOverride) !== JSON.stringify(before?.lineupOverride),
+      songDefaultUnchanged:
+        JSON.stringify(second?.songDefaultLineup) === JSON.stringify(before?.songDefaultLineup),
+    },
+  });
+};
+
+const noteTransition: TaskWalkRunner = async (driver) => {
+  await driver.startFresh((records) => `/setlists/${records.main.id}`);
+  const walk = new TaskWalk(driver.session, '5 Note a transition');
+  await walk.tap(
+    'Transition band between 04 and 05',
+    { exact: 'View / comment the transition', css: 'button', index: 3 },
+    { primary: true },
+  );
+  await walk.tap('Note field', { css: 'textarea', scope: 'dialog' });
+  await walk.type('Transition note', 'Enchainer sans pause, Marc lance la basse');
+  await walk.tap('Save', { exact: 'Save', css: 'button', scope: 'dialog' }, { primary: true });
+  const isShown = await isTextInMain(driver, 'Enchainer sans pause');
+  walk.note(
+    isShown
+      ? 'The note text is shown on the setlist.'
+      : 'The note text is not shown on the setlist after saving (only an icon or nothing).',
+  );
+  const isSaved = JSON.stringify(await driver.fetchJson('/api/transition-comments')).includes(
+    'Enchainer sans pause',
+  );
+  return walk.summarise({ success: { saved: isSaved, noteTextVisibleOnList: isShown } });
+};
+
+const noteSongForTonight: TaskWalkRunner = async (driver) => {
+  await driver.startFresh((records) => `/setlists/${records.main.id}`);
+  const walk = new TaskWalk(driver.session, '6 Take a note on a song for tonight');
+  await walk.tap(
+    'Open entry 02',
+    { text: buildEntryPattern(SECOND_ENTRY_NUMBER), css: 'main button' },
+    { primary: true },
+  );
+  await walk.tap('Notes field', { css: 'textarea', scope: 'dialog' }, { primary: true });
+  await walk.type('Entry note', 'Finir sur le refrain');
+  await walk.tap('Key field', { css: 'input', index: 0, scope: 'dialog' });
+  await walk.type('Key', 'Am');
+  await walk.tap('Close the sheet', { exact: 'Close', css: 'button', scope: 'dialog' });
+  await waitMilliseconds(CLOSE_SETTLE_MS);
+  const isShown = await isTextInMain(driver, 'Finir sur le refrain');
+  walk.note(
+    isShown
+      ? 'The note is shown on the entry row.'
+      : 'The note is not shown on the entry row; it is only visible by opening the sheet again.',
+  );
+  const second = (await driver.listEntries((await driver.readKnownRecords()).main.id))[
+    SECOND_ENTRY
+  ];
+  return walk.summarise({
+    success: {
+      noteVisibleOnRow: isShown,
+      saved: { notes: second?.notes, keyOverride: second?.keyOverride },
+    },
+  });
+};
+
+const recordTakeAndTalk: TaskWalkRunner = async (driver) => {
+  await driver.startFresh('/catalog');
+  const walk = new TaskWalk(driver.session, '7 Record a take and talk about it');
+  await walk.tap('Search field', { css: 'main input', scope: 'page' });
+  await walk.type('Search', 'Superstition');
+  await walk.tap(
+    'Open Superstition',
+    { text: 'Superstition', css: 'main a' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'Record a take',
+    { text: '^Record a take', css: 'button', scope: 'page' },
+    { primary: true },
+  );
+  walk.note(
+    'The recording sheet shows only Upload and Close here: Chromium has no microphone, so the record and stop buttons cannot be reached or counted. A real phone adds at least 2 taps (record, stop).',
+  );
+  await walk.tap('Close the recording sheet', { exact: 'Close', css: 'button', scope: 'dialog' });
+  await walk.tap('Open the first take', { text: 'Practice · ', css: 'main button', scope: 'page' });
+  await walk.tap('Comment field', { css: 'textarea', scope: 'page' });
+  await walk.type('Comment', 'Le pont est trop lent');
+  const moment = await walk.find({ css: 'input[type=checkbox]', scope: 'page' });
+  walk.note(
+    `The "At <time>" checkbox that pins the comment to a moment is ${moment === null ? 'absent' : 'present but disabled until the audio plays'}; the seeded audio does not exist, so pinning cannot be done here.`,
+  );
+  await walk.tap(
+    'Send',
+    { exact: 'Send', css: 'button', scope: 'page' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  const isCommentShown = await isTextInMain(driver, 'Le pont est trop lent');
+  const known = await driver.readKnownRecords();
+  const pastPractice = known.sessions
+    .filter((session) => session.kind === 'practice')
+    .sort((first, second) =>
+      String(first.startsAt ?? first.date).localeCompare(String(second.startsAt ?? second.date)),
+    )[0];
+  let sessionListsTakes: boolean | null = null;
+  if (pastPractice !== undefined) {
+    await driver.open(`/sessions/${pastPractice.id}`);
+    sessionListsTakes = (await driver.session.evaluate(LISTS_A_DURATION)) === true;
+  }
+  walk.note(
+    `The past practice page ${sessionListsTakes === true ? 'lists its takes' : 'lists none of the takes recorded during it'}.`,
+  );
+  return walk.summarise({
+    success: { commentShownUnderTake: isCommentShown, pastSessionListsTakes: sessionListsTakes },
+  });
+};
+
+const addSongToCatalogue: TaskWalkRunner = async (driver) => {
+  await driver.startFresh('/catalog');
+  const walk = new TaskWalk(driver.session, '8 Add a new song to the catalogue');
+  await walk.tap(
+    'New song',
+    { exact: 'New song', css: 'a, button', scope: 'page' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap('Title field', { css: '#song-title', scope: 'page' });
+  await walk.type('Title', 'Psycho Chicken');
+  await walk.tap('Artist field', { css: '#song-artist', scope: 'page' });
+  await walk.type('Artist', 'The Fools');
+  await walk.choose('Status', '#song-status', '~In progress');
+  await walk.tap(
+    'Save',
+    { exact: 'Save', css: 'button', scope: 'page' },
+    { primary: true, wait: SAVE_SETTLE_MS },
+  );
+  walk.note(
+    `After Save: ${(await walk.readLocation()).path}. The song page has no "add to setlist" action, so the flow leaves to the Setlists tab.`,
+  );
+  await walk.tap('Setlists tab', { text: '^Setlists', css: 'nav a' });
+  await walk.tap(
+    'Open the rehearsal setlist',
+    { text: '^Répétition du jeudi', css: 'main a' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'Add song',
+    { exact: 'Add song', css: 'button', scope: 'page' },
+    { primary: true },
+  );
+  await walk.tap('Picker search', { css: 'input', scope: 'dialog' });
+  await walk.type('Search', 'Psycho Ch');
+  await walk.tap('Pick Psycho Chicken', {
+    text: '^Psycho Chicken',
+    css: 'button',
+    scope: 'dialog',
+  });
+  await walk.tap('Done', { text: '^Done', css: 'button', scope: 'dialog' }, { primary: true });
+  const known = await driver.readKnownRecords();
+  const isInSetlist = (await driver.listEntries(known.rehearsal.id)).some(
+    (entry) => entry.title === 'Psycho Chicken',
+  );
+  return walk.summarise({
+    success: {
+      inCatalogue: known.songs.some((song) => song.title === 'Psycho Chicken'),
+      inRehearsalSetlist: isInSetlist,
+    },
+  });
+};
+
+const addSongFromPicker: TaskWalkRunner = async (driver) => {
+  await driver.startFresh('/catalog');
+  const walk = new TaskWalk(driver.session, '8b Add a song from the setlist picker (title only)');
+  await walk.tap('Setlists tab', { text: '^Setlists', css: 'nav a' });
+  await walk.tap(
+    'Open the rehearsal setlist',
+    { text: '^Répétition du jeudi', css: 'main a' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'Add song',
+    { exact: 'Add song', css: 'button', scope: 'page' },
+    { primary: true },
+  );
+  await walk.tap('Picker search', { css: 'input', scope: 'dialog' });
+  await walk.type('Title', 'Psycho Chicken');
+  await walk.tap(
+    'Create from the picker',
+    { text: '^Create', css: 'button', scope: 'dialog' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  const done = await walk.find({ text: '^Done', css: 'button', scope: 'dialog' });
+  if (done !== null) await walk.tap('Done', { text: '^Done', css: 'button', scope: 'dialog' });
+  walk.note(
+    'This path sets only the title. Artist and status need the song edit page afterwards (Catalog, search, song, Edit, two fields, Save).',
+  );
+  const known = await driver.readKnownRecords();
+  return walk.summarise({
+    success: {
+      inRehearsalSetlist: (await driver.listEntries(known.rehearsal.id)).some(
+        (entry) => entry.title === 'Psycho Chicken',
+      ),
+    },
+  });
+};
+
+const CHORDPRO_CHART =
+  "{title: Ain't No Sunshine}\n[Am]Ain't no sunshine when she's [Em]gone [G]\n[Am]It's not warm when she's a[Em]way [G]";
+
+const addChords: TaskWalkRunner = async (driver) => {
+  await driver.startFresh('/catalog');
+  const walk = new TaskWalk(driver.session, '9 Add chords to a song');
+  await walk.tap('Search field', { css: 'main input', scope: 'page' });
+  await walk.type('Search', "Ain't No");
+  await walk.tap(
+    "Open Ain't No Sunshine",
+    { text: "Ain't No Sunshine", css: 'main a' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'Edit',
+    { exact: 'Edit', css: 'a, button', scope: 'page' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'ChordPro text',
+    { exact: 'ChordPro text', css: 'label', scope: 'page' },
+    { primary: true },
+  );
+  await walk.tap('Chart text box', { css: 'textarea', index: 0, scope: 'page' });
+  await walk.type('Paste chart', CHORDPRO_CHART);
+  await walk.tap(
+    'Save',
+    { exact: 'Save', css: 'button', scope: 'page' },
+    { primary: true, wait: SAVE_SETTLE_MS },
+  );
+  const location = await walk.readLocation();
+  const isShown = await isTextInMain(driver, 'sunshine');
+  return walk.summarise({ success: { landedOn: location.path, chartShownOnSongPage: isShown } });
+};
+
+const studiesOverviewSchema = z
+  .object({
+    queue: z
+      .array(z.object({ title: z.string(), isStudiedToday: z.boolean().optional() }))
+      .optional(),
+    myStreak: z.object({ isTodayCounted: z.boolean().optional() }).nullable().optional(),
+  })
+  .passthrough();
+
+const learnNewSong: TaskWalkRunner = async (driver) => {
+  await driver.startFresh('/catalog');
+  const walk = new TaskWalk(driver.session, '10 Learn a new song');
+  await walk.tap('Studies tab', { text: '^Studies', css: 'nav a' });
+  const firstTitle =
+    studiesOverviewSchema.parse(await driver.fetchJson('/api/studies/overview')).queue?.[0]
+      ?.title ?? '';
+  const isRowLink = (await driver.session.evaluate(STUDY_ROW_LINK_PROBE)) === true;
+  walk.note(
+    `First song to study: ${firstTitle}. The study row ${isRowLink ? 'links' : 'does not link'} to the song, so the person goes to the Catalog tab.`,
+  );
+  await walk.tap('Catalog tab', { text: '^Catalog', css: 'nav a' });
+  await walk.tap(
+    `Open ${firstTitle}`,
+    { text: `^\\S+ ${escapeForPattern(firstTitle)} `, css: 'main a' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  const scrollsBefore = walk.scrolls;
+  await walk.bringIntoView({ text: '^Takes$', css: 'h2', scope: 'page' });
+  walk.note(
+    `Reading the whole chart down to the Takes heading took ${String(walk.scrolls - scrollsBefore)} scroll gestures.`,
+  );
+  const listen = await walk.find({ text: 'Listen on', css: 'a', scope: 'page' });
+  walk.note(
+    listen === null
+      ? 'No listen link on the song page (it only shows in the setlist entry sheet).'
+      : 'A listen link is on the song page.',
+  );
+  await walk.tap('Studies tab', { text: '^Studies', css: 'nav a' });
+  const keptScroll = Number(await driver.session.evaluate(READ_SCROLL_Y));
+  if (keptScroll > 0) {
+    walk.note(
+      `Coming back to the Studies tab, the page opened scrolled ${String(keptScroll)} px down (the scroll of the song page is kept), so the first Studied button was above the screen.`,
+    );
+  }
+  await walk.tap('Studied', { exact: 'Studied', css: 'main button' }, { primary: true });
+  const overview = studiesOverviewSchema.parse(await driver.fetchJson('/api/studies/overview'));
+  return walk.summarise({
+    success: {
+      todayCounted: overview.myStreak?.isTodayCounted ?? null,
+      studiedToday: (overview.queue ?? [])
+        .filter((item) => item.isStudiedToday === true)
+        .map((item) => item.title),
+    },
+  });
+};
+
+const discussWhichSongs: TaskWalkRunner = async (driver) => {
+  const known = await driver.startFresh((records) => `/setlists/${records.rehearsal.id}`);
+  const walk = new TaskWalk(driver.session, '11 Discuss which songs to play');
+  await walk.tap(
+    'Open a vote (header icon)',
+    { exact: 'Open a vote', css: 'button' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap(
+    'Open a vote (vote page)',
+    { exact: 'Open a vote', css: 'main button' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  for (const title of ['Kiss', 'Billie Jean', 'Respect', 'Valerie', 'Superstition']) {
+    await walk.tap(
+      `Score ${title}`,
+      { exact: `Score ${title}`, css: 'button' },
+      { wait: PICK_SETTLE_MS },
+    );
+  }
+  await walk.tap(
+    'Close the vote',
+    { exact: 'Close the vote', css: 'button' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  const after = await walk.readLocation();
+  const panel = z
+    .array(z.string())
+    .parse(await driver.session.evaluate(LIST_VISIBLE_BUTTON_NAMES, LISTED_BUTTON_COUNT));
+  walk.note(
+    `After "Close the vote": ${after.path}${after.overlay === null ? '' : ` + ${after.overlay}`}; buttons: ${panel.join(' | ')}`,
+  );
+  await walk.tap(
+    'Make this the setlist',
+    { exact: 'Make this the setlist', css: 'button' },
+    { primary: true, wait: SAVE_SETTLE_MS },
+  );
+  const list = await driver.listEntries(known.rehearsal.id);
+  const setlist = (await driver.readKnownRecords()).setlists.find(
+    (candidate) => candidate.id === known.rehearsal.id,
+  );
+  return walk.summarise({
+    success: {
+      finalScreen: await walk.readLocation(),
+      setlistStatus: setlist?.status ?? null,
+      firstTitles: list.slice(0, SHOWN_TITLE_COUNT).map((entry) => entry.title),
+      songCount: list.length,
+    },
+  });
+};
+
+const checkWhatIsNext: TaskWalkRunner = async (driver) => {
+  await driver.startFresh('/catalog');
+  const walk = new TaskWalk(driver.session, '12 Check what is next');
+  const header: unknown = await driver.session.evaluate(READ_SESSION_HEADER_LINK, PHONE.insets.top);
+  walk.note(
+    `Header on arrival: ${JSON.stringify(header)}. Date and place of the concert are readable without a tap; the next practice is not shown.`,
+  );
+  await walk.tap(
+    'My part',
+    { exact: 'My part', css: 'a' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  const landing = await walk.readLocation();
+  const songsShown = Number(await driver.session.evaluate(COUNT_ENTRY_BUTTONS, null));
+  const firstScreenSongs = Number(
+    await driver.session.evaluate(COUNT_ENTRY_BUTTONS, TAB_BAR_ALLOWANCE),
+  );
+  walk.note(
+    `"My part" opens ${landing.path}: ${String(songsShown)} entries listed, ${String(firstScreenSongs)} fully on the first screen.`,
+  );
+  return walk.summarise({
+    success: { header, landing: landing.path, songsShown, firstScreenSongs },
+  });
+};
+
+export const TASK_WALKS: Readonly<Record<string, TaskWalkRunner>> = {
+  '1': prepareNextRehearsal,
+  '2': buildConcertSetlist,
+  '3': agreeWhoDoesWhat,
+  '4': setLineupForOneSong,
+  '5': noteTransition,
+  '6': noteSongForTonight,
+  '7': recordTakeAndTalk,
+  '8': addSongToCatalogue,
+  '8b': addSongFromPicker,
+  '9': addChords,
+  '10': learnNewSong,
+  '11': discussWhichSongs,
+  '12': checkWhatIsNext,
+};

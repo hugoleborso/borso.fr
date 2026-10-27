@@ -1,41 +1,44 @@
 import { randomUUID } from 'node:crypto';
-import { getDatabase } from '../../../../../../apps/pragma/api/src/database/client';
-import { createImprovement } from '../../../../../../apps/pragma/api/src/improvements/improvements.service';
+import { getDatabase } from '../../api/src/database/client';
+import { createImprovement } from '../../api/src/improvements/improvements.service';
 import {
   createInstrument,
   getInstrumentsSorted,
-} from '../../../../../../apps/pragma/api/src/instruments/instruments.service';
-import {
-  saveMasteryDefault,
-  saveMasteryOverride,
-} from '../../../../../../apps/pragma/api/src/mastery/mastery.service';
+} from '../../api/src/instruments/instruments.service';
+import { saveMasteryDefault, saveMasteryOverride } from '../../api/src/mastery/mastery.service';
 import {
   assignInstrumentsToMember,
   createMember,
   getMembersSortedByFirstName,
-} from '../../../../../../apps/pragma/api/src/members/members.service';
-import { createCredentialForMember } from '../../../../../../apps/pragma/api/src/auth/credentials.service';
-import {
-  createSession,
-  getSessions,
-} from '../../../../../../apps/pragma/api/src/sessions/sessions.service';
+} from '../../api/src/members/members.service';
+import { createCredentialForMember } from '../../api/src/auth/credentials.service';
+import { createSession, getSessions } from '../../api/src/sessions/sessions.service';
 import {
   appendEntry,
   createSetlist,
   getAllSetlists,
   getEntries,
-} from '../../../../../../apps/pragma/api/src/setlists/setlists.service';
-import { createSong, getSongs } from '../../../../../../apps/pragma/api/src/songs/songs.service';
-import { logStudy } from '../../../../../../apps/pragma/api/src/studies/studies.service';
-import {
-  createTake,
-  createTakeComment,
-} from '../../../../../../apps/pragma/api/src/takes/takes.service';
-import { buildTakeObjectKey } from '../../../../../../apps/pragma/api/src/takes/takes.core';
-import { createTask } from '../../../../../../apps/pragma/api/src/tasks/tasks.service';
-import { saveTransitionComment } from '../../../../../../apps/pragma/api/src/transitions/transitions.service';
+} from '../../api/src/setlists/setlists.service';
+import { createSong, getSongs } from '../../api/src/songs/songs.service';
+import { logStudy } from '../../api/src/studies/studies.service';
+import { createTake, createTakeComment } from '../../api/src/takes/takes.service';
+import { buildTakeObjectKey } from '../../api/src/takes/takes.core';
+import { createTask } from '../../api/src/tasks/tasks.service';
+import { saveTransitionComment } from '../../api/src/transitions/transitions.service';
 
 const DAY = 24 * 60 * 60 * 1000;
+const HIGH_ENERGY_EVERY = 4;
+const HIGH_ENERGY = 9;
+const WONDERWALL_CAPO = 2;
+const CONCERT_NOTE_EVERY = 5;
+const PRACTICE_IN_DAYS = 3;
+const PAST_PRACTICE_DAYS_AGO = 4;
+const REHEARSAL_NOTE_EVERY = 3;
+const FESTIVAL_SONG_COUNT = 22;
+const FIRST_SONG_TAKE_COUNT = 3;
+const TAKE_SPACING_MS = 600_000;
+const TAKE_BASE_DURATION_SECONDS = 180;
+const TAKE_DURATION_STEP_SECONDS = 20;
 const PASSWORD = 'pragma-preview';
 const now = new Date();
 
@@ -461,6 +464,11 @@ const EXTRA_SONGS: ExtraSong[] = [
 
 const actorOf = (memberId: string) => ({ memberId, now });
 
+function requireValue<Value>(value: Value | undefined, what: string): Value {
+  if (value === undefined) throw new Error(`audit seed: no ${what}`);
+  return value;
+}
+
 async function main(): Promise<void> {
   const saxophone = await createInstrument({
     name: 'Saxophone',
@@ -475,16 +483,18 @@ async function main(): Promise<void> {
   await assignInstrumentsToMember(tom.id, [saxophone.id], [saxophone.id]);
   const members = await getMembersSortedByFirstName();
   const memberId = new Map(members.map((row) => [row.firstName, row.id]));
-  const hugo = memberId.get('Hugo')!;
-  const lea = memberId.get('Léa')!;
-  const marc = memberId.get('Marc')!;
-  const sarah = memberId.get('Sarah')!;
+  const hugo = requireValue(memberId.get('Hugo'), 'member Hugo');
+  const lea = requireValue(memberId.get('Léa'), 'member Léa');
+  const marc = requireValue(memberId.get('Marc'), 'member Marc');
+  const sarah = requireValue(memberId.get('Sarah'), 'member Sarah');
 
   const toLineup = (byName: Lineup): Record<string, string[]> =>
     Object.fromEntries(
       Object.entries(byName).map(([name, list]) => [
-        memberId.get(name)!,
-        list.map((instrument) => instrumentId.get(instrument)!),
+        requireValue(memberId.get(name), `member ${name}`),
+        list.map((instrument) =>
+          requireValue(instrumentId.get(instrument), `instrument ${instrument}`),
+        ),
       ]),
     );
 
@@ -521,7 +531,10 @@ async function main(): Promise<void> {
     return found;
   };
 
-  const concertSetlist = (await getAllSetlists()).find((row) => row.name === 'Set principal')!;
+  const concertSetlist = requireValue(
+    (await getAllSetlists()).find((row) => row.name === 'Set principal'),
+    'setlist Set principal',
+  );
   const concertAdditions = [
     'Superstition',
     'Valerie',
@@ -543,15 +556,15 @@ async function main(): Promise<void> {
       concertSetlist.id,
       {
         songId: id(title),
-        energy: index % 4 === 0 ? 9 : null,
+        energy: index % HIGH_ENERGY_EVERY === 0 ? HIGH_ENERGY : null,
         lineupOverride:
           title === 'Valerie' ? toLineup({ ...SARAH_SINGS, Tom: ['Saxophone'] }) : null,
         keyOverride: title === 'Wonderwall' ? 'Em' : null,
-        capo: title === 'Wonderwall' ? 2 : null,
+        capo: title === 'Wonderwall' ? WONDERWALL_CAPO : null,
         notes:
           title === 'Uptown Funk'
             ? 'Rappel : on finit le concert dessus si la salle est chaude.'
-            : index % 5 === 0
+            : index % CONCERT_NOTE_EVERY === 0
               ? 'Enchaîner sans pause.'
               : '',
       },
@@ -562,7 +575,7 @@ async function main(): Promise<void> {
   const practice = await createSession(
     {
       kind: 'practice',
-      date: new Date(now.getTime() + 3 * DAY).toISOString(),
+      date: new Date(now.getTime() + PRACTICE_IN_DAYS * DAY).toISOString(),
       preparedConcertId: null,
       origin: null,
     },
@@ -571,7 +584,7 @@ async function main(): Promise<void> {
   const pastPractice = await createSession(
     {
       kind: 'practice',
-      date: new Date(now.getTime() - 4 * DAY).toISOString(),
+      date: new Date(now.getTime() - PAST_PRACTICE_DAYS_AGO * DAY).toISOString(),
       preparedConcertId: null,
       origin: null,
     },
@@ -610,7 +623,10 @@ async function main(): Promise<void> {
         lineupOverride: null,
         keyOverride: title === 'Take On Me' ? 'F#' : null,
         capo: null,
-        notes: index % 3 === 0 ? 'Travailler la fin, on ne sait jamais qui arrête.' : '',
+        notes:
+          index % REHEARSAL_NOTE_EVERY === 0
+            ? 'Travailler la fin, on ne sait jamais qui arrête.'
+            : '',
       },
       actorOf(lea),
     );
@@ -621,7 +637,7 @@ async function main(): Promise<void> {
     actorOf(sarah),
   );
   if (festival.kind !== 'ok') throw new Error('festival setlist refused');
-  for (const song of songs.filter((row) => row.status !== 'idea').slice(0, 22)) {
+  for (const song of songs.filter((row) => row.status !== 'idea').slice(0, FESTIVAL_SONG_COUNT)) {
     await appendEntry(
       festival.setlist.id,
       {
@@ -636,7 +652,7 @@ async function main(): Promise<void> {
     );
   }
 
-  const transitions: Array<[string, string, string]> = [
+  const transitions: [string, string, string][] = [
     ['Superstition', 'Valerie', "Sarah garde l'accord de Ebm, Hugo enchaîne au charleston."],
     ['Get Lucky', 'Respect', "Coupure nette, Léa annonce pendant que Marc s'accorde."],
     ['Uptown Funk', 'Wonderwall', 'Pause de 20 secondes, changement de guitare.'],
@@ -655,7 +671,7 @@ async function main(): Promise<void> {
     'Valerie',
   ];
   for (const [index, title] of takeSongs.entries()) {
-    for (let attempt = 0; attempt < (index === 0 ? 3 : 1); attempt += 1) {
+    for (let attempt = 0; attempt < (index === 0 ? FIRST_SONG_TAKE_COUNT : 1); attempt += 1) {
       const takeId = randomUUID();
       const contentType = 'audio/mp4';
       const created = await createTake(
@@ -665,8 +681,10 @@ async function main(): Promise<void> {
           sessionId: pastPractice.id,
           contentType,
           objectKey: buildTakeObjectKey({ songId: id(title), takeId, contentType }),
-          recordedAt: new Date(now.getTime() - 4 * DAY + attempt * 600_000).toISOString(),
-          durationSeconds: 180 + index * 20,
+          recordedAt: new Date(
+            now.getTime() - PAST_PRACTICE_DAYS_AGO * DAY + attempt * TAKE_SPACING_MS,
+          ).toISOString(),
+          durationSeconds: TAKE_BASE_DURATION_SECONDS + index * TAKE_DURATION_STEP_SECONDS,
           source: 'live',
           queued: false,
         },
@@ -757,12 +775,17 @@ async function main(): Promise<void> {
   }
   for (const title of ['Superstition', 'Zombie', 'Valerie', 'Get Lucky']) {
     await saveMasteryOverride(
-      { memberId: sarah, instrumentId: instrumentId.get('Clavier')!, songId: id(title), score: 4 },
+      {
+        memberId: sarah,
+        instrumentId: requireValue(instrumentId.get('Clavier'), 'instrument Clavier'),
+        songId: id(title),
+        score: 4,
+      },
       now,
     );
     await logStudy({
       songId: id(title),
-      instrumentId: instrumentId.get('Clavier')!,
+      instrumentId: requireValue(instrumentId.get('Clavier'), 'instrument Clavier'),
       memberId: sarah,
       now,
     });
@@ -773,9 +796,9 @@ async function main(): Promise<void> {
     setlists.map(async (row) => `${row.name}: ${(await getEntries(row.id)).length}`),
   );
   process.stdout.write(
-    `[seed-audit] songs=${songs.length} members=${members.length} instruments=${instruments.length} sessions=${(await getSessions()).length}\n`,
+    `[audit-seed] songs=${songs.length} members=${members.length} instruments=${instruments.length} sessions=${(await getSessions()).length}\n`,
   );
-  process.stdout.write(`[seed-audit] setlists -> ${counts.join(' | ')}\n`);
+  process.stdout.write(`[audit-seed] setlists -> ${counts.join(' | ')}\n`);
   await getDatabase().$client.end();
 }
 
