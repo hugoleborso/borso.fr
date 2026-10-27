@@ -56,7 +56,7 @@
 
 set -euo pipefail
 
-HARNESS_PATH="$(dirname "${BASH_SOURCE[0]}")/harness-path.sh"
+HARNESS_PATH="$(dirname "$(realpath "${BASH_SOURCE[0]}")")/harness-path.sh"
 REPO_ROOT="$("$HARNESS_PATH" --root)"
 KAIZEN_FILE="$REPO_ROOT/$("$HARNESS_PATH" kaizenFile)"
 FEATURES_DIRECTORY="$("$HARNESS_PATH" features)"
