@@ -26,6 +26,7 @@ export default defineConfig({
             'site/src/**/*.utils.test.ts',
             'site/src/**/*.adapter.test.ts',
             'scripts/**/*.core.test.ts',
+            'scripts/**/*.adapter.test.ts',
           ],
         },
       },

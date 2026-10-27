@@ -1,31 +1,46 @@
-import { execFileSync } from 'node:child_process';
-import { beforeEach, describe, expect, it, vi } from 'vitest';
-import {
-  dragBetween,
-  pressKey,
-  refreshArgentViewport,
-  scrollAt,
-  tapAt,
-  typeText,
-} from './argent-input.adapter';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-vi.mock('node:child_process', () => {
-  const execFileSync = vi.fn(() => '{}');
-  return { execFileSync, default: { execFileSync } };
-});
+const { runCommand } = vi.hoisted(() => ({ runCommand: vi.fn(() => '{}') }));
 
-function readLastArguments(): readonly string[] {
-  const calls = vi.mocked(execFileSync).mock.calls;
-  return calls[calls.length - 1]?.[1] ?? [];
+vi.mock('node:child_process', () => ({
+  execFileSync: runCommand,
+  default: { execFileSync: runCommand },
+}));
+
+const REPOSITORY_ROOT = resolve(dirname(fileURLToPath(import.meta.url)), '../../../..');
+const PROXY_VARIABLES = ['HTTP_PROXY', 'HTTPS_PROXY', 'http_proxy', 'https_proxy'];
+
+async function loadAdapterAfresh(): Promise<typeof import('./argent-input.adapter')> {
+  vi.resetModules();
+  return import('./argent-input.adapter');
+}
+
+function readLastCall(): readonly unknown[] {
+  const calls: readonly (readonly unknown[])[] = runCommand.mock.calls;
+  return calls[calls.length - 1] ?? [];
+}
+
+function readLastArguments(): readonly unknown[] {
+  const commandArguments: unknown = readLastCall()[1];
+  return Array.isArray(commandArguments) ? commandArguments : [];
 }
 
 describe('argent input', () => {
   beforeEach(() => {
-    vi.mocked(execFileSync).mockClear();
+    runCommand.mockClear();
+    vi.stubEnv('ARGENT_CDP_PORT', undefined);
   });
 
-  it('runs each gesture on the one device, as json, with the proxy removed', () => {
-    tapAt({ x: 0.5, y: 0.25 });
+  afterEach(() => {
+    vi.unstubAllEnvs();
+  });
+
+  it('runs each gesture on the one device, as json, from the repository binary', async () => {
+    const adapter = await loadAdapterAfresh();
+    adapter.tapAt({ x: 0.5, y: 0.25 });
+    expect(readLastCall()[0]).toBe(`${REPOSITORY_ROOT}/node_modules/.bin/argent`);
     expect(readLastArguments()).toEqual([
       'run',
       'gesture-tap',
@@ -37,12 +52,29 @@ describe('argent input', () => {
       'chromium-cdp-9282',
       '--json',
     ]);
-    const options = vi.mocked(execFileSync).mock.calls[0]?.[2];
-    expect(options).toMatchObject({ encoding: 'utf8', env: { NO_PROXY: 'localhost,127.0.0.1' } });
+    expect(readLastCall()[2]).toMatchObject({
+      cwd: REPOSITORY_ROOT,
+      encoding: 'utf8',
+      env: { NO_PROXY: 'localhost,127.0.0.1', no_proxy: 'localhost,127.0.0.1' },
+    });
   });
 
-  it('passes scroll, drag, typing and key presses through', () => {
-    scrollAt({ x: 0.5, y: 0.45 }, 0.7);
+  it('removes every proxy variable from the environment argent runs in', async () => {
+    for (const name of PROXY_VARIABLES) vi.stubEnv(name, 'http://proxy.invalid');
+    const adapter = await loadAdapterAfresh();
+    adapter.pressKey('Enter');
+    const options: unknown = readLastCall()[2];
+    const environment: unknown =
+      typeof options === 'object' && options !== null ? Reflect.get(options, 'env') : undefined;
+    expect(environment).toBeTypeOf('object');
+    for (const name of PROXY_VARIABLES) {
+      expect(Object.keys(Object(environment))).not.toContain(name);
+    }
+  });
+
+  it('passes scroll, drag, typing and key presses through', async () => {
+    const adapter = await loadAdapterAfresh();
+    adapter.scrollAt({ x: 0.5, y: 0.45 }, 0.7);
     expect(readLastArguments().slice(1, 8)).toEqual([
       'gesture-scroll',
       '--x',
@@ -52,7 +84,7 @@ describe('argent input', () => {
       '--deltaY',
       '0.700',
     ]);
-    dragBetween({ x: 0.1, y: 0.2 }, { x: 0.3, y: 0.4 });
+    adapter.dragBetween({ x: 0.1, y: 0.2 }, { x: 0.3, y: 0.4 });
     expect(readLastArguments().slice(1, 10)).toEqual([
       'gesture-drag',
       '--fromX',
@@ -64,19 +96,19 @@ describe('argent input', () => {
       '--toY',
       '0.4000',
     ]);
-    typeText('Am');
+    adapter.typeText('Am');
     expect(readLastArguments().slice(1, 4)).toEqual(['keyboard', '--text', 'Am']);
-    pressKey('Escape');
+    adapter.pressKey('Escape');
     expect(readLastArguments().slice(1, 4)).toEqual(['keyboard', '--key', 'Escape']);
-    refreshArgentViewport();
+    adapter.refreshArgentViewport();
     expect(readLastArguments()[1]).toBe('describe');
   });
 
   it('reads the DevTools port from the environment when it is set', async () => {
     vi.stubEnv('ARGENT_CDP_PORT', '9333');
-    vi.resetModules();
-    const reloaded = await import('./argent-input.adapter');
-    expect(reloaded.CDP_PORT).toBe(9333);
-    vi.unstubAllEnvs();
+    const adapter = await loadAdapterAfresh();
+    expect(adapter.CDP_PORT).toBe(9333);
+    adapter.typeText('x');
+    expect(readLastArguments()).toContain('chromium-cdp-9333');
   });
 });

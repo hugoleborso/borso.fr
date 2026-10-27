@@ -57,6 +57,7 @@ describe('connectCdpSession', () => {
     const session = await connectCdpSession(9282);
     const socket = FakeSocket.latest;
     expect(socket?.url).toBe('ws://page');
+    expect(fetch).toHaveBeenCalledWith('http://127.0.0.1:9282/json/list');
     const answer = session.send('Page.enable');
     socket?.reply({ method: 'Page.loadEventFired' });
     socket?.reply({ id: 99, result: {} });
@@ -85,6 +86,16 @@ describe('connectCdpSession', () => {
     expect(received).toEqual([{ requestId: 'a' }]);
   });
 
+  it('hands an event that names no method to the handlers of the empty method only', async () => {
+    const session = await connectCdpSession(9282);
+    const received: unknown[] = [];
+    session.listen('', (parameters) => {
+      received.push(parameters);
+    });
+    FakeSocket.latest?.reply({ params: { anonymous: true } });
+    expect(received).toEqual([{ anonymous: true }]);
+  });
+
   it('rejects a call the browser refused', async () => {
     const session = await connectCdpSession(9282);
     const answer = session.send('Page.navigate', { url: 'x' });
@@ -98,7 +109,11 @@ describe('connectCdpSession', () => {
     FakeSocket.latest?.reply({ id: 1, result: { result: { value: 'Léa' } } });
     await expect(value).resolves.toBe('Léa');
     const sent: unknown = JSON.parse(FakeSocket.latest?.sent[0] ?? '{}');
-    expect(sent).toMatchObject({ params: { expression: '((name) => name)("Léa")' } });
+    expect(sent).toEqual({
+      id: 1,
+      method: 'Runtime.evaluate',
+      params: { expression: '((name) => name)("Léa")', returnByValue: true, awaitPromise: true },
+    });
     const empty = session.evaluate('() => 1');
     FakeSocket.latest?.reply({ id: 2, result: {} });
     await expect(empty).resolves.toBeUndefined();
@@ -121,6 +136,8 @@ describe('connectCdpSession', () => {
   });
 
   it('fails without a page target and when the socket cannot open', async () => {
+    answerTargets([{ type: 'service_worker', webSocketDebuggerUrl: 'ws://worker' }]);
+    await expect(connectCdpSession(9282)).rejects.toThrow('no page target on DevTools port 9282');
     answerTargets([{ type: 'page' }]);
     await expect(connectCdpSession(9282)).rejects.toThrow('no page target on DevTools port 9282');
     answerTargets([{ type: 'page', webSocketDebuggerUrl: 'ws://broken' }]);
