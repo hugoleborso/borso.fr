@@ -108,3 +108,5 @@ export async function detachTasksOfSongBeingDeleted(
 ): Promise<void> {
   await detachDeletedSongFromTasks(transaction, songId);
 }
+
+export { defineTool } from '../mcp/mcp.service';

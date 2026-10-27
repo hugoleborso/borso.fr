@@ -41,3 +41,5 @@ export const instrumentOrderSchema = z.object({
 });
 
 export const instrumentIdParamSchema = z.object({ id: z.string().uuid() });
+export const instrumentUpdateToolInputSchema =
+  instrumentIdParamSchema.merge(updateInstrumentSchema);

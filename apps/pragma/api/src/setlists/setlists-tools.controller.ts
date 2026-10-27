@@ -179,7 +179,7 @@ export const SETLIST_TOOLS = [
   defineTool({
     name: 'set_entry_lineup',
     description:
-      "Override the song's default lineup for one entry: a map from instrument id to the member id, or member ids, who play it; null goes back to the default lineup.",
+      "Override the song's default lineup for one entry: a map from member id to the instrument id, or instrument ids, that member plays; null goes back to the default lineup.",
     route: 'PUT /api/setlists/:id/entries/:entryId',
     inputSchema: setlistEntryLineupToolInputSchema,
     run: async ({ id, entryId, lineupOverride }, actor) =>

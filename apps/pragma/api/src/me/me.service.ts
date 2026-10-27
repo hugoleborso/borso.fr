@@ -47,8 +47,12 @@ export async function readSignedInMember(memberId: string): Promise<SignedInMemb
 export async function saveOwnContactDetails(
   memberId: string,
   contact: { phone?: string | null; email?: string | null },
-): Promise<{ kind: 'ok' } | { kind: 'empty' } | { kind: 'not-found' }> {
+): Promise<{ kind: 'ok'; member: SignedInMember } | { kind: 'empty' } | { kind: 'not-found' }> {
   const outcome = await patchMember(memberId, contact);
-  if (outcome.kind === 'ok') return { kind: 'ok' };
-  return outcome;
+  if (outcome.kind !== 'ok') return outcome;
+  const member = await readSignedInMember(memberId);
+  if (member === null) return { kind: 'not-found' };
+  return { kind: 'ok', member };
 }
+
+export { defineTool } from '../mcp/mcp.service';

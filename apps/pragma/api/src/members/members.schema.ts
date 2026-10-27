@@ -65,3 +65,7 @@ export const memberInstrumentAssignmentSchema = z.object({
 });
 
 export const memberIdParamSchema = z.object({ id: z.string().uuid() });
+export const memberUpdateToolInputSchema = memberIdParamSchema.merge(updateMemberSchema);
+export const memberInstrumentAssignmentToolInputSchema = memberIdParamSchema.merge(
+  memberInstrumentAssignmentSchema,
+);

@@ -56,3 +56,4 @@ export const barSearchQuerySchema = z.object({
 });
 
 export const barIdParamSchema = z.object({ id: z.string().uuid() });
+export const barUpdateToolInputSchema = barIdParamSchema.merge(barUpdateSchema);

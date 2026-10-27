@@ -89,3 +89,5 @@ export async function patchBar(
 export async function removeBar(id: string): Promise<DeletionOutcome> {
   return await deleteBar(id);
 }
+
+export { defineTool } from '../mcp/mcp.service';

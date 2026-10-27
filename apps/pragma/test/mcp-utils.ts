@@ -1,10 +1,11 @@
 import { Client } from '@modelcontextprotocol/sdk/client/index.js';
 import { StreamableHTTPClientTransport } from '@modelcontextprotocol/sdk/client/streamableHttp.js';
 import type { Hono } from 'hono';
-import { afterAll, beforeAll, vi } from 'vitest';
+import { afterAll, afterEach, beforeAll, beforeEach, vi } from 'vitest';
 import { z } from 'zod';
 import { createApp } from '../api/src/app';
 import type { TaggedFailure } from '../api/src/helpers/observability/error-reporting.adapter';
+import { testDatabase, truncateAllTables } from './database-utils';
 import { NOTIFICATION_GROUP_WINDOW_MINUTES } from '../api/src/notifications/notifications.core';
 import {
   type AuthenticatedApp,
@@ -194,4 +195,20 @@ export async function prepareAssistantBand(): Promise<AssistantBand> {
 export function passNotificationGroupWindow(harness: AssistantHarness): void {
   const windowMilliseconds = (NOTIFICATION_GROUP_WINDOW_MINUTES + 1) * MILLISECONDS_PER_MINUTE;
   harness.advanceClock(windowMilliseconds);
+}
+
+export function useAssistantToolSuite(): void {
+  useOAuthOrigins();
+  beforeEach(async () => {
+    await truncateAllTables(testDatabase());
+    vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+  });
+  afterEach(() => {
+    vi.restoreAllMocks();
+  });
+}
+
+export function refusal(error: string): ToolReply {
+  return { isError: true, body: { error } };
 }

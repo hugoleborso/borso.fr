@@ -78,3 +78,5 @@ export async function assignInstrumentsToMember(
   if (replacement === 'replaced') return { kind: 'ok' };
   return { kind: replacement };
 }
+
+export { defineTool } from '../mcp/mcp.service';

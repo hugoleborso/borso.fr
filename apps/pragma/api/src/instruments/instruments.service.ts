@@ -77,3 +77,5 @@ export async function reorderInstruments(
 export async function removeInstrument(id: string): Promise<DeletionOutcome> {
   return await deleteInstrumentWithLinks(id);
 }
+
+export { defineTool } from '../mcp/mcp.service';

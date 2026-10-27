@@ -1261,6 +1261,14 @@ its own slice as `<domain>-tools.controller.ts`
   the request, as `update_take_comment` does. A refusal is a
   tool error carrying the route's `{ error }` body; an unexpected throw is
   reported as `McpToolFailed` and answers `internal-error`.
+- Every mounted route has a tool, unless `TOOL_EXCLUSIONS` in
+  `mcp/tool-coverage.core.ts` names it with a reason: credentials,
+  state bound to one browser, the audience ballot, the test seed, and the
+  OAuth and MCP endpoints themselves. A route with neither, a tool whose
+  route is gone, and an exclusion matching no route each fail
+  `mcp/tool-coverage.test.ts`. A route may have two tools when the spec
+  names two operations on it, as `update_song` and `set_default_lineup`
+  share `PUT /api/songs/:id`.
 
 Held by: `api/src/mcp/mcp.controller.test.ts` › answers 401 with the protected resource metadata address to a call without a valid token
 Held by: `api/src/mcp/mcp.controller.test.ts` › lists every served tool, advertises tools only, and serves two clients at once with no session
@@ -1271,6 +1279,14 @@ Held by: `api/src/setlists/setlists-tools.controller.test.ts` › runs an audien
 Held by: `api/src/setlists/setlists-tools.controller.test.ts` › pushes each setlist change to the other members only
 Held by: `api/src/takes/takes-tools.controller.test.ts` › signs an upload, then records the take as the granting member
 Held by: `api/src/takes/takes-tools.controller.test.ts` › comments on a take as the granting member, edits the comment, then deletes it
+Held by: `api/src/mcp/tool-coverage.test.ts` › serves a tool for every mounted route that is not excluded with a reason
+Held by: `api/src/mcp/tool-coverage.test.ts` › maps every tool to a route that is mounted
+Held by: `api/src/mcp/tool-coverage.test.ts` › keeps no exclusion for a route that is no longer mounted
+Held by: `api/src/mcp/tool-coverage.core.test.ts` › reports an exclusion that matches no mounted endpoint as stale
+Held by: `api/src/improvements/improvements-tools.controller.test.ts` › proposes an improvement and votes for it as the granting member, which the other member sees as not theirs
+Held by: `api/src/studies/studies-tools.controller.test.ts` › logs a study of today as the granting member, shows it in the overview, then undoes it
+Held by: `api/src/me/me-tools.controller.test.ts` › reads the granting member, and changes only their own contact details
+Held by: `api/src/notifications/notifications-tools.controller.test.ts` › turns a category off for the granting member only
 
 Not to be confused with: a route, which a browser calls with a cookie; a
 tool calls the same service with a bearer token.

@@ -92,7 +92,7 @@ export const SONG_TOOLS = [
   defineTool({
     name: 'set_default_lineup',
     description:
-      "Set a song's default lineup: a map from instrument id to the member id, or member ids, who play it.",
+      "Set a song's default lineup: a map from member id to the instrument id, or instrument ids, that member plays on the song.",
     route: 'PUT /api/songs/:id',
     inputSchema: songLineupToolInputSchema,
     run: async ({ id, defaultLineup }, actor) => await runSongUpdate(id, { defaultLineup }, actor),

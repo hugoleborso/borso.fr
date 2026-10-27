@@ -98,3 +98,5 @@ export async function withdrawVote(
   await deleteVote(improvementId, memberId);
   return await withTally(row, memberId);
 }
+
+export { defineTool } from '../mcp/mcp.service';

@@ -7,3 +7,5 @@ export async function getOutreachTemplate(): Promise<{ body: string | null }> {
 export async function saveOutreachTemplate(body: string): Promise<{ body: string }> {
   return { body: await upsertOutreachTemplateBody(body) };
 }
+
+export { defineTool } from '../mcp/mcp.service';

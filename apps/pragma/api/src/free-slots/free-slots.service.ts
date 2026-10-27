@@ -37,3 +37,5 @@ export async function computeFreeSlots(now: Date): Promise<FreeSlotsResult> {
   );
   return { slots, excludedMembers };
 }
+
+export { defineTool } from '../mcp/mcp.service';

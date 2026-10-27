@@ -1,4 +1,15 @@
 import { Hono } from 'hono';
+import { BAR_TOOLS } from '../bars/bars-tools.controller';
+import { FREE_SLOT_TOOLS } from '../free-slots/free-slots-tools.controller';
+import { IMPROVEMENT_TOOLS } from '../improvements/improvements-tools.controller';
+import { INSTRUMENT_TOOLS } from '../instruments/instruments-tools.controller';
+import { MASTERY_TOOLS } from '../mastery/mastery-tools.controller';
+import { ME_TOOLS } from '../me/me-tools.controller';
+import { MEMBER_TOOLS } from '../members/members-tools.controller';
+import { NOTIFICATION_TOOLS } from '../notifications/notifications-tools.controller';
+import { OUTREACH_TOOLS } from '../outreach/outreach-tools.controller';
+import { STUDY_TOOLS } from '../studies/studies-tools.controller';
+import { TASK_TOOLS } from '../tasks/tasks-tools.controller';
 import { readMemberId } from '../auth/member-session.middleware';
 import { requireBearerSession } from '../oauth/bearer-session.middleware';
 import { SESSION_TOOLS } from '../sessions/sessions-tools.controller';
@@ -22,6 +33,17 @@ export const ASSISTANT_TOOLS: readonly ToolDefinition[] = [
   ...SESSION_TOOLS,
   ...SETLIST_TOOLS,
   ...TAKE_TOOLS,
+  ...TASK_TOOLS,
+  ...IMPROVEMENT_TOOLS,
+  ...BAR_TOOLS,
+  ...OUTREACH_TOOLS,
+  ...FREE_SLOT_TOOLS,
+  ...STUDY_TOOLS,
+  ...MASTERY_TOOLS,
+  ...MEMBER_TOOLS,
+  ...INSTRUMENT_TOOLS,
+  ...ME_TOOLS,
+  ...NOTIFICATION_TOOLS,
 ];
 
 export interface BuildMcpRouterOptions {

@@ -73,3 +73,5 @@ export async function deleteScoreHistoryOfDeletedSong(
 ): Promise<void> {
   await deleteScoreHistoryOfSong(executor, songId);
 }
+
+export { defineTool } from '../mcp/mcp.service';

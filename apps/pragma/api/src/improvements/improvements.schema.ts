@@ -34,3 +34,5 @@ export const improvementCreateSchema = z.object({
 
 export const improvementUpdateSchema = improvementCreateSchema.partial();
 export const improvementIdParamSchema = z.object({ id: z.string().uuid() });
+export const improvementUpdateToolInputSchema =
+  improvementIdParamSchema.merge(improvementUpdateSchema);

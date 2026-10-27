@@ -233,3 +233,5 @@ export async function deleteStudiesOfDeletedSong(
 ): Promise<void> {
   await deleteStudiesOfSong(executor, songId);
 }
+
+export { defineTool } from '../mcp/mcp.service';
