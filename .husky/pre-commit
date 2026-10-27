@@ -5,7 +5,9 @@ set -e
 # budgets, the reason for each, and where every check's whole-tree run lives are
 # in docs/standards/14-tool-runtime-budgets.md. In short:
 #
-#   pre-commit  300 ms of CPU per check, about 3 s for a typical commit
+#   pre-commit  300 ms of CPU per check, a named budget for each of the three
+#               tools (linter, type checker, whole-tree generators), about 3 s
+#               for a typical commit
 #   pre-push    60 s for a change confined to one application
 #   CI          10 min per pull request
 #
@@ -24,9 +26,11 @@ set -e
 # commit, where nothing else runs: scripts/check-pre-commit-budget.sh.
 
 CHECK_BUDGET_MS=300
-PRETTIER_BUDGET_MS=600
-PRETTIER_BUDGET_PER_EXTRA_FILE_MS=100
 FILE_BUDGET_PER_EXTRA_FILE_MS=20
+LINT_BUDGET_MS=3000
+LINT_BUDGET_PER_EXTRA_FILE_MS=100
+TYPECHECK_BUDGET_MS=2500
+GENERATOR_BUDGET_MS=1000
 
 # Every path the commit adds, changes or removes, one per line as
 # `<status> <path>`, with a rename split into the removal of its old path and
@@ -164,15 +168,41 @@ run_on_subjects() {
   printf '%s\n' "$subjects" | tr '\n' '\0' | xargs -0 "$@"
 }
 
-# Prettier gets a budget of its own, measured on 2026-10-24: one changed .tsx
-# costs 230 to 330 ms of CPU, most of it loading the TypeScript parser, so the
-# shared 300 ms would fail about every other commit on noise. Each further
-# language loads its own parser, and five files across four languages cost
-# 840 ms; forty .tsx files cost about two seconds. Hence the allowance per file.
-run_prettier() {
+# The staged files that still exist, NUL-separated, for the tools that take
+# paths: a staged deletion is a path no formatter or linter can open.
+list_existing_subjects() {
   printf '%s\n' "$subjects" | while IFS= read -r candidate; do
     [ -f "$candidate" ] && printf '%s\0' "$candidate"
-  done | xargs -0 --no-run-if-empty node_modules/.bin/prettier --check --cache --ignore-unknown
+  done
+}
+
+run_oxfmt() {
+  list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxfmt --check
+}
+
+# Unused disable directives are reported on push and in CI, where the
+# type-aware rules run: without them, every directive naming a type-aware rule
+# would read as unused here.
+run_oxlint() {
+  list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxlint \
+    --report-unused-disable-directives-severity=off
+}
+
+run_generator() {
+  node --import ./scripts/typescript-resolve.mjs "$@"
+}
+
+# run_generator_check <name> <scope> <script…>: a whole-tree generator in check
+# mode, run under plain node when the commit touches its scope.
+run_generator_check() {
+  name="$1"
+  scope="$2"
+  shift 2
+  if ! is_in_scope "$scope" "$1"; then
+    checks_skipped=$((checks_skipped + 1))
+    return 0
+  fi
+  launch "$name" "$GENERATOR_BUDGET_MS" run_generator "$@"
 }
 
 # The two lines `times` writes, the subshell's own and its children's, as one
@@ -187,14 +217,68 @@ read_cpu_ms() {
 
 launch harness-active "$CHECK_BUDGET_MS" scripts/check-claude-harness-active.sh
 
-# Prettier over the staged files only. ESLint is not here: type-aware, it
-# builds a TypeScript program per workspace before it runs a rule, which
-# measured 2.8 s on a cache hit and 21 s for one changed file in pragma. It runs
-# in .husky/pre-push over the files the push changes, and in ci.yml over the
-# repository. Rung-1 eradication, together with those two, of
-# docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
-run_with_files prettier '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' \
-  "$PRETTIER_BUDGET_MS" "$PRETTIER_BUDGET_PER_EXTRA_FILE_MS" run_prettier
+# oxfmt over the staged files. 0.1 s of CPU for one file, measured on
+# 2026-10-27, against 0.3 s for Prettier, so it needs no budget of its own.
+run_with_files oxfmt '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' \
+  "$CHECK_BUDGET_MS" "$FILE_BUDGET_PER_EXTRA_FILE_MS" run_oxfmt
+
+# oxlint over the staged files, with every rule but the type-aware ones, which
+# need a TypeScript program for the whole workspace (2.9 s of wall time and 8 s
+# of CPU for one pragma file) and run in .husky/pre-push and ci.yml. Its own
+# budget, measured on 2026-10-27: 0.9 s of CPU for a script, 2.3 s for one
+# React component, because eslint-plugin-react-hooks runs the React Compiler
+# on it, and about 0.1 s more for each further component. Warnings fail it:
+# `denyWarnings` is set in .oxlintrc.json. Rung-1 eradication, together with
+# the push and CI runs, of docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+run_with_files oxlint '\.(js|jsx|ts|tsx|mjs|cjs)$' \
+  "$LINT_BUDGET_MS" "$LINT_BUDGET_PER_EXTRA_FILE_MS" run_oxlint
+
+# The repository's own tooling, type-checked with TypeScript 7: `scripts/`,
+# `.claude/skills/` and `eslint-rules/` belong to no workspace, so
+# `pnpm -r typecheck` never reaches them and `tsx` strips types without reading
+# them. 1.2 s of wall time and about 2 s of CPU, measured on 2026-10-27, where
+# TypeScript 5.9 took 6.6 s. See
+# docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
+if is_in_scope '^. (scripts/|\.claude/skills/|eslint-rules/|tsconfig\.json$)'; then
+  launch typecheck-tooling "$TYPECHECK_BUDGET_MS" \
+    node node_modules/typescript-native/bin/tsc -p tsconfig.json --noEmit
+else
+  checks_skipped=$((checks_skipped + 1))
+fi
+
+# Blueprint annotations and the convention baseline, whenever source changed.
+# Each refuses something a person did: an annotation naming no blueprint, a
+# question the tree had already answered being answered a second way. The
+# context lookup is not a gate; it is regenerated so a blueprint added this
+# session seeds the next write. Under plain node, 0.2 to 0.4 s of CPU each.
+blueprint_scope='^. ([^ ]*\.(js|jsx|ts|tsx|mjs|cjs)|\.claude/skills/blueprint/.*)$'
+run_generator_check blueprint-index "$blueprint_scope" \
+  .claude/skills/blueprint/blueprint-indexing.ts --check
+run_generator_check blueprint-context "$blueprint_scope" \
+  .claude/skills/blueprint/blueprint-context.ts
+run_generator_check convention-drift "$blueprint_scope" \
+  scripts/standards/convention-drift.ts --check
+
+# The defect page reads the dantotsu corpus as well as the source tree.
+run_generator_check blueprint-defects '^. (apps/|infra/|docs/dantotsus/)' \
+  scripts/blueprints/blueprint-defects.ts --check
+
+# The dantotsu record and the two weak-point pages read from it. A rename or a
+# deletion anywhere can orphan a zone or an eradication path, so those trigger
+# the run too. See docs/adr/0029-weak-point-management-from-the-dantotsu-record.md.
+dantotsu_scope='^. (docs/dantotsus/|docs/quality/|docs/features/|scripts/quality/)|^D '
+run_generator_check dantotsu-front-matter "$dantotsu_scope" \
+  scripts/quality/check-dantotsu-front-matter.ts --staged
+run_generator_check weak-points "$dantotsu_scope" scripts/quality/weak-points.ts --check
+run_generator_check working-conditions "$dantotsu_scope" \
+  scripts/quality/working-conditions.ts --check
+
+# The enforcement ledger, whenever a standard or a mechanism it can cite
+# changed. It reads .oxlintrc.json directly: 0.5 s of CPU, where building an
+# ESLint instance to ask for each probe's configuration took 6.4 s.
+run_generator_check enforcement-ledger \
+  '^. (docs/standards/|eslint-rules/|\.oxlintrc\.json$|\.husky/|\.github/workflows/|scripts/(.*/)?check-)' \
+  scripts/standards/enforcement-ledger.ts --check
 
 # DSQL compatibility of staged migration SQL. Rung-2 eradication of
 # docs/dantotsus/dsql-alter-table-only-add-column.md.
@@ -203,7 +287,7 @@ run_check_on_files migration-sql 'api/src/database/migrations/.*\.sql$' \
 
 # One stylesheet per application, holding tokens only, with no comment in it or
 # in a page. A second CSS file is how an application drifts back to global class
-# names; `borso/no-comments` is an ESLint rule and ESLint lints no `.css` and no
+# names; `borso/no-comments` is a lint rule and oxlint lints no `.css` and no
 # `.html` here.
 run_check single-stylesheet '\.css$' scripts/check-single-stylesheet.sh
 run_check stylesheet-contents '\.css$' scripts/check-stylesheet-contents.sh

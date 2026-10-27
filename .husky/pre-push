@@ -261,75 +261,21 @@ if echo "$changed" | grep -qE '^(scripts|eslint-rules)/'; then
   start_gate tooling pnpm run test:coverage
 fi
 
-# What follows ran on every commit until 2026-10-24 and moved here because each
-# one, once triggered, costs more than the 300 ms a commit check may spend; see
-# docs/standards/14-tool-runtime-budgets.md. Each still runs only when the
-# pushed range touches what it reads, and each also runs unscoped in ci.yml.
-tsx=node_modules/.bin/tsx
-removed_in_range=$(git diff --name-only --diff-filter=DR "$push_base" HEAD)
-
-# ESLint over the files this push changes. Type-aware, so it builds a TypeScript
-# program per workspace first: 2.8 s on a cache hit, 21 s for one changed file
-# in pragma, against the 300 ms a commit check may spend. --max-warnings 0 is
-# what makes the warning-severity rules a gate: react-hooks/exhaustive-deps and
-# react-hooks/incompatible-library ship at `warn`, and eslint exits 0 on a
-# warning. Rung-1 eradication, with the ci.yml run, of
-# docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+# oxlint with every rule, the type-aware ones included, over the files this
+# push changes. The commit runs the rest on the staged files; the type-aware
+# rules need a TypeScript program for the whole workspace, 2.9 s of wall time
+# for one pragma file on 2026-10-27, so they run here and in ci.yml. Unused
+# disable directives are reported here too, since only a run with every rule can
+# tell an unused one from one whose rule did not run. Warnings fail it through
+# `denyWarnings` in .oxlintrc.json. Rung-1 eradication, with the commit and CI
+# runs, of docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
 lint_changed_files() {
   echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs)$' |
     while IFS= read -r candidate; do [ -f "$candidate" ] && printf '%s\0' "$candidate"; done |
-    xargs -0 --no-run-if-empty node_modules/.bin/eslint --no-warn-ignored --max-warnings 0 \
-      --cache --cache-strategy content --cache-location .eslintcache
+    xargs -0 --no-run-if-empty pnpm exec oxlint --type-aware
 }
 if echo "$changed" | grep -qE '\.(js|jsx|ts|tsx|mjs|cjs)$'; then
-  start_gate eslint lint_changed_files
-fi
-
-# The repository's own tooling, type-checked: `scripts/`, `.claude/skills/` and
-# `eslint-rules/` belong to no workspace, so `pnpm -r typecheck` never reaches
-# them and `tsx` strips types without reading them. 6.6 s, so not on the commit.
-# See docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
-if echo "$changed" | grep -qE '^(scripts/|\.claude/skills/|eslint-rules/|tsconfig\.json$)'; then
-  start_gate typecheck-tooling pnpm run typecheck
-fi
-
-# Blueprint annotations and the convention baseline, whenever source changed.
-# Each refuses something a person did: an annotation naming no blueprint, a
-# question the tree had already answered being answered a second way. Half a
-# second to a second each over the whole tree.
-check_blueprints() {
-  "$tsx" .claude/skills/blueprint/blueprint-indexing.ts --check &&
-    "$tsx" .claude/skills/blueprint/blueprint-context.ts &&
-    "$tsx" scripts/standards/convention-drift.ts --check
-}
-if echo "$changed" | grep -qE '(\.(js|jsx|ts|tsx|mjs|cjs)$|^\.claude/skills/blueprint/)'; then
-  start_gate blueprints check_blueprints
-fi
-
-# The defect page reads the dantotsu corpus as well as the source tree.
-if echo "$changed" | grep -qE '^(apps/|infra/|docs/dantotsus/)'; then
-  start_gate blueprint-defects "$tsx" scripts/blueprints/blueprint-defects.ts --check
-fi
-
-# The dantotsu record and the two weak-point pages read from it. A rename or a
-# deletion anywhere can orphan a zone or an eradication path, so those trigger
-# the run too. See docs/adr/0029-weak-point-management-from-the-dantotsu-record.md.
-check_dantotsu_record() {
-  "$tsx" scripts/quality/check-dantotsu-front-matter.ts &&
-    "$tsx" scripts/quality/weak-points.ts --check &&
-    "$tsx" scripts/quality/working-conditions.ts --check
-}
-if echo "$changed" | grep -qE '^(docs/dantotsus/|docs/quality/|docs/features/|scripts/quality/)' ||
-  [ -n "$removed_in_range" ]; then
-  start_gate dantotsu-record check_dantotsu_record
-fi
-
-# The enforcement ledger, whenever a standard or a mechanism it can cite
-# changed. It builds an ESLint instance and resolves a configuration per probe
-# path: 6.4 s.
-if echo "$changed" |
-  grep -qE '^(docs/standards/|eslint-rules/|eslint\.config\.js|\.husky/|\.github/workflows/|scripts/(.*/)?check-)'; then
-  start_gate enforcement-ledger "$tsx" scripts/standards/enforcement-ledger.ts --check
+  start_gate oxlint lint_changed_files
 fi
 
 # A test file no project collects never runs. Asks vitest which files it would
