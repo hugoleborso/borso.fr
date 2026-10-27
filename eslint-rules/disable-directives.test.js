@@ -1,11 +1,24 @@
 import { execFileSync } from 'node:child_process';
-import { rmSync, writeFileSync } from 'node:fs';
+import {
+  copyFileSync,
+  lstatSync,
+  mkdirSync,
+  mkdtempSync,
+  readdirSync,
+  rmSync,
+  symlinkSync,
+  unlinkSync,
+  writeFileSync,
+} from 'node:fs';
+import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 
 const REPOSITORY_ROOT = join(import.meta.dirname, '..');
 const OXLINT = join(REPOSITORY_ROOT, 'node_modules', '.bin', 'oxlint');
 const PLANTED_PREFIX = 'zz-disable-directive';
+const CONFIGURATION = '.oxlintrc.json';
+const UNLINKED_ENTRIES = new Set(['.git', CONFIGURATION]);
 
 const CASES = [
   {
@@ -67,12 +80,40 @@ const planted = CASES.flatMap((entry) => [
 ]);
 
 const codesByPath = new Map();
+const overlayRoot = mkdtempSync(join(tmpdir(), 'disable-directives-'));
+
+function linkEntries(sourceDirectory, targetDirectory, skipped) {
+  for (const entry of readdirSync(sourceDirectory)) {
+    if (!skipped.has(entry))
+      symlinkSync(join(sourceDirectory, entry), join(targetDirectory, entry));
+  }
+}
+
+function openDirectory(relativeDirectory) {
+  const segments = relativeDirectory.split('/');
+  for (let depth = 1; depth <= segments.length; depth += 1) {
+    const partial = segments.slice(0, depth).join('/');
+    const overlayPath = join(overlayRoot, partial);
+    if (!lstatSync(overlayPath).isSymbolicLink()) continue;
+    unlinkSync(overlayPath);
+    mkdirSync(overlayPath);
+    linkEntries(join(REPOSITORY_ROOT, partial), overlayPath, new Set());
+  }
+}
+
+function buildOverlay() {
+  linkEntries(REPOSITORY_ROOT, overlayRoot, UNLINKED_ENTRIES);
+  copyFileSync(join(REPOSITORY_ROOT, CONFIGURATION), join(overlayRoot, CONFIGURATION));
+  for (const directory of new Set(planted.map((file) => file.entry.directory))) {
+    openDirectory(directory);
+  }
+}
 
 function lintPlantedFiles() {
   let output;
   try {
     output = execFileSync(OXLINT, ['--format', 'json', ...planted.map((file) => file.path)], {
-      cwd: REPOSITORY_ROOT,
+      cwd: overlayRoot,
       encoding: 'utf8',
     });
   } catch (error) {
@@ -82,8 +123,9 @@ function lintPlantedFiles() {
 }
 
 beforeAll(() => {
+  buildOverlay();
   for (const file of planted) {
-    writeFileSync(join(REPOSITORY_ROOT, file.path), `${file.lines.join('\n')}\n`);
+    writeFileSync(join(overlayRoot, file.path), `${file.lines.join('\n')}\n`);
   }
   for (const diagnostic of lintPlantedFiles()) {
     codesByPath.set(diagnostic.filename, [
@@ -94,7 +136,7 @@ beforeAll(() => {
 }, 60_000);
 
 afterAll(() => {
-  for (const file of planted) rmSync(join(REPOSITORY_ROOT, file.path), { force: true });
+  rmSync(overlayRoot, { recursive: true, force: true });
 });
 
 const bare = planted
