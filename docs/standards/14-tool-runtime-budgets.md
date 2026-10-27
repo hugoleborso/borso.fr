@@ -102,8 +102,14 @@ there would refuse commits for what the neighbours are doing.
 
 So the hook reads each check's CPU with `times`, inside the subshell that ran
 it, which counts that check and everything it started and nothing else. The
-checks run side by side, at most one per core, and their output is printed in
-order once they have all finished.
+checks run side by side, two per core, and their output is printed in order
+once they have all finished. oxlint and the tooling type check are the longest,
+so every other check runs at a lower priority and yields the CPU to them.
+
+A check triggers only on the files it reads. The tooling type check used to
+run for any path under `scripts/`, so a shell script cost a second of CPU for a
+compiler that never reads it; on CI's runner that pushed the fixture commit to
+3.8 s.
 
 What a person waits for is the wall-clock total, and that is only meaningful
 where nothing else runs. `scripts/check-pre-commit-budget.sh` copies the tree,

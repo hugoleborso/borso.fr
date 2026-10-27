@@ -51,11 +51,17 @@ else
   wall_clock_ms() { perl -MTime::HiRes=time -e 'printf "%d", time * 1000'; }
 fi
 
-# The checks run side by side, at most one per core, because none of them
-# writes anything another reads. Each one's output is held back and printed in
-# the order below once all have finished, so a failure reads the same as it did
-# when they ran one after another.
-max_parallel=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+# The checks run side by side, two per core, because none of them writes
+# anything another reads and most of them wait on the disk as much as on the
+# CPU. The longest ones set the commit's wall time, so every other check runs
+# at a lower priority and yields the CPU to them. On a 2-core machine that took
+# a fixture commit from 3.7 s to 2.8 s, measured on 2026-10-27. Each check's
+# output is held back and printed in the order below once all have finished,
+# so a failure reads the same as it did when they ran one after another.
+cores=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+max_parallel=$((cores * 2))
+LONGEST_CHECKS='oxlint typecheck-tooling'
+SHORT_CHECK_NICENESS=10
 running=''
 launched=0
 checks_skipped=0
@@ -99,6 +105,10 @@ launch() {
   done
   started_ms=$(wall_clock_ms)
   (
+    case " $LONGEST_CHECKS " in
+      *" $name "*) ;;
+      *) renice -n "$SHORT_CHECK_NICENESS" -p "$(sh -c 'echo $PPID')" >/dev/null 2>&1 || true ;;
+    esac
     if "$@" >"$slot.out" 2>&1; then status=0; else status=$?; fi
     times >"$slot.times"
     echo "$status $(($(wall_clock_ms) - started_ms))" >"$slot.result"
@@ -239,7 +249,7 @@ run_with_files oxlint '\.(js|jsx|ts|tsx|mjs|cjs)$' \
 # them. 1.2 s of wall time and about 2 s of CPU, measured on 2026-10-27, where
 # TypeScript 5.9 took 6.6 s. See
 # docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
-if is_in_scope '^. (scripts/|\.claude/skills/|eslint-rules/|tsconfig\.json$)'; then
+if is_in_scope '^. ((scripts|\.claude/skills)/.*\.(ts|mts|js|mjs)|eslint-rules/.*\.js|tsconfig\.json)$'; then
   launch typecheck-tooling "$TYPECHECK_BUDGET_MS" \
     node node_modules/typescript-native/bin/tsc -p tsconfig.json --noEmit
 else
