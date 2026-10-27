@@ -245,6 +245,7 @@ async function seedAssistantGrant(
       id: randomUUID(),
       clientId,
       memberId,
+      refreshFamilyHash: mintSeedTokenHash(),
       refreshTokenHash: mintSeedTokenHash(),
       accessTokenHash: mintSeedTokenHash(),
       sessionEpoch: SEED_GRANT_SESSION_EPOCH,

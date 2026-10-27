@@ -4,6 +4,7 @@ import {
   ACCESS_TOKEN_LIFETIME_MS,
   buildBearerChallenge,
   buildTokenResponse,
+  composeRefreshToken,
   hashToken,
   isCodeExchangeAccepted,
   isCodeUsable,
@@ -13,6 +14,7 @@ import {
   judgeGrant,
   LAST_USE_WRITE_INTERVAL_MS,
   readBearerToken,
+  readRefreshTokenFamily,
   judgeRefresh,
   readTokenGrant,
   REFRESH_TOKEN_LIFETIME_MS,
@@ -43,7 +45,6 @@ const GRANT: StoredAssistantGrant = {
   clientId: 'client-1',
   memberId: '00000000-0000-4000-8000-000000000001',
   refreshTokenHash: 'current-hash',
-  previousRefreshTokenHash: 'previous-hash',
   refreshExpiresAt: new Date(NOW.getTime() + ONE_MILLISECOND),
   sessionEpoch: 2,
 };
@@ -181,11 +182,22 @@ describe('judgeRefresh', () => {
     expect(judgeRefresh(GRANT, presentCurrent, CURRENT_CREDENTIAL, NOW)).toBe('rotate');
   });
 
-  it('flags the token rotated away last as a replay', () => {
+  it('flags any other token of the family as a replay, however many rotations old', () => {
     expect(
       judgeRefresh(
         GRANT,
-        { refreshTokenHash: 'previous-hash', clientId: 'client-1' },
+        { refreshTokenHash: 'two-rotations-old-hash', clientId: 'client-1' },
+        CURRENT_CREDENTIAL,
+        NOW,
+      ),
+    ).toBe('replayed');
+  });
+
+  it('flags a replay before judging expiry, so an old token still revokes', () => {
+    expect(
+      judgeRefresh(
+        { ...GRANT, refreshExpiresAt: NOW },
+        { refreshTokenHash: 'old-hash', clientId: 'client-1' },
         CURRENT_CREDENTIAL,
         NOW,
       ),
@@ -209,6 +221,24 @@ describe('judgeRefresh', () => {
     ).toBe('revoke');
     expect(judgeRefresh(GRANT, presentCurrent, { sessionEpoch: 3 }, NOW)).toBe('revoke');
     expect(judgeRefresh(GRANT, presentCurrent, null, NOW)).toBe('revoke');
+  });
+});
+
+describe('refresh token family', () => {
+  it('composes a token whose family reads back', () => {
+    const token = composeRefreshToken('family-secret', 'rotating-secret');
+    expect(token).toBe('family-secret.rotating-secret');
+    expect(readRefreshTokenFamily(token)).toBe('family-secret');
+  });
+
+  it.each([
+    ['no-separator'],
+    ['.rotating-secret'],
+    ['family-secret.'],
+    ['family.rotating.extra'],
+    [''],
+  ])('reads no family from %j', (token) => {
+    expect(readRefreshTokenFamily(token)).toBeNull();
   });
 });
 

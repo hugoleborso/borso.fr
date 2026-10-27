@@ -25,15 +25,16 @@ CREATE TABLE IF NOT EXISTS "assistant_authorization_code" (
 );
 --> statement-breakpoint
 -- A grant carries the member's session epoch when it was issued, so a
--- password change ends it the way it ends a cookie. The refresh token it
--- rotated away last is kept as previous_refresh_token_hash, which is how a
--- replayed token is recognised and the grant revoked.
+-- password change ends it the way it ends a cookie. Every refresh token of a
+-- grant starts with the same family secret, hashed as refresh_family_hash: a
+-- token of the family that is not the current one is a replay, however many
+-- rotations old, and revokes the grant.
 CREATE TABLE IF NOT EXISTS "assistant_grant" (
 	"id" uuid PRIMARY KEY NOT NULL,
 	"client_id" text NOT NULL,
 	"member_id" uuid NOT NULL,
 	"refresh_token_hash" text NOT NULL,
-	"previous_refresh_token_hash" text,
+	"refresh_family_hash" text NOT NULL,
 	"refresh_expires_at" timestamp with time zone NOT NULL,
 	"access_token_hash" text NOT NULL,
 	"access_expires_at" timestamp with time zone NOT NULL,
@@ -47,7 +48,7 @@ CREATE TABLE IF NOT EXISTS "assistant_grant" (
 -- case the application handles; the indexes make the lookups by hash cheap.
 CREATE UNIQUE INDEX IF NOT EXISTS "assistant_grant_refresh_token_hash_unique" ON "assistant_grant" ("refresh_token_hash");
 --> statement-breakpoint
-CREATE UNIQUE INDEX IF NOT EXISTS "assistant_grant_previous_refresh_token_hash_unique" ON "assistant_grant" ("previous_refresh_token_hash");
+CREATE UNIQUE INDEX IF NOT EXISTS "assistant_grant_refresh_family_hash_unique" ON "assistant_grant" ("refresh_family_hash");
 --> statement-breakpoint
 CREATE UNIQUE INDEX IF NOT EXISTS "assistant_grant_access_token_hash_unique" ON "assistant_grant" ("access_token_hash");
 --> statement-breakpoint

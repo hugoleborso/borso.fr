@@ -22,6 +22,8 @@ const ACCESS_TOKEN_LIFETIME_SECONDS = MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
 const REFRESH_TOKEN_LIFETIME_DAYS = 90;
 const LAST_USE_WRITE_INTERVAL_MINUTES = 5;
 const BEARER_PREFIX = 'bearer ';
+const REFRESH_TOKEN_SEPARATOR = '.';
+const REFRESH_TOKEN_PATTERN = /^([^.]+)\.[^.]+$/;
 
 export const ACCESS_TOKEN_LIFETIME_MS = ACCESS_TOKEN_LIFETIME_SECONDS * MILLISECONDS_PER_SECOND;
 export const REFRESH_TOKEN_LIFETIME_MS = REFRESH_TOKEN_LIFETIME_DAYS * MILLISECONDS_PER_DAY;
@@ -132,10 +134,18 @@ export function judgeRefresh(
   now: Date,
 ): RefreshVerdict {
   if (grant.clientId !== presented.clientId) return 'unknown';
-  if (grant.previousRefreshTokenHash === presented.refreshTokenHash) return 'replayed';
+  if (grant.refreshTokenHash !== presented.refreshTokenHash) return 'replayed';
   if (now.getTime() >= grant.refreshExpiresAt.getTime()) return 'revoke';
   if (judgeGrant(grant, credential) !== 'valid') return 'revoke';
   return 'rotate';
+}
+
+export function composeRefreshToken(family: string, secret: string): string {
+  return `${family}${REFRESH_TOKEN_SEPARATOR}${secret}`;
+}
+
+export function readRefreshTokenFamily(refreshToken: string): string | null {
+  return REFRESH_TOKEN_PATTERN.exec(refreshToken)?.[1] ?? null;
 }
 
 export interface TokenExpiries {

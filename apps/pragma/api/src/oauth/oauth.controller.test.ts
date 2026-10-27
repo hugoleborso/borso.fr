@@ -15,7 +15,11 @@ import {
   TEST_HOST,
   TEST_PASSWORD,
 } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  abortCommitsWritingTable,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { createApp } from '../app';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { deleteMemberWithLinks } from '../members/members.repository';
@@ -222,6 +226,10 @@ async function countGrants(): Promise<number> {
     .select({ id: assistantGrantTable.id })
     .from(assistantGrantTable);
   return rows.length;
+}
+
+function byAscendingNumber(left: number, right: number): number {
+  return left - right;
 }
 
 function recordedProductEvents(stdoutWrite: { mock: { calls: unknown[][] } }): string[] {
@@ -519,6 +527,92 @@ describe('oauth controller (back-e2e)', () => {
       name: 'OAuthTokenReplay',
       tags: { 'oauth.client': clientId },
     });
+  });
+
+  it('revokes the grant when a token two rotations old is replayed after a thief refreshed twice', async () => {
+    const { app, reportFailure } = buildHarness();
+    const member = await signInMember(app, 'Hugo');
+    const clientId = await registerClient(app);
+    const stolen = await issueTokens(app, clientId, member);
+
+    const second = await readJson(await refresh(app, clientId, stolen.refresh_token), tokenSchema);
+    const third = await readJson(await refresh(app, clientId, second.refresh_token), tokenSchema);
+    const replayed = await refresh(app, clientId, stolen.refresh_token);
+    const thiefRefresh = await refresh(app, clientId, third.refresh_token);
+
+    expect(await readJson(replayed, errorSchema)).toEqual({ error: 'invalid_grant' });
+    expect(await readJson(thiefRefresh, errorSchema)).toEqual({ error: 'invalid_grant' });
+    expect(await countGrants()).toBe(0);
+    expect(reportFailure).toHaveBeenCalledWith({
+      name: 'OAuthTokenReplay',
+      tags: { 'oauth.client': clientId },
+    });
+  });
+
+  it('spends a code once when two exchanges race, with no server error', async () => {
+    const { app } = buildHarness();
+    const member = await signInMember(app, 'Hugo');
+    const clientId = await registerClient(app);
+    const code = await obtainCode(app, clientId, member);
+
+    const answers = await Promise.all([
+      exchangeCode(app, clientId, code),
+      exchangeCode(app, clientId, code),
+    ]);
+
+    expect(answers.map((answer) => answer.status).toSorted(byAscendingNumber)).toEqual([200, 400]);
+    expect(await countGrants()).toBe(1);
+  });
+
+  it('answers invalid_grant, never a 500, when the code claim loses a commit conflict', async () => {
+    const { app } = buildHarness();
+    const member = await signInMember(app, 'Hugo');
+    const clientId = await registerClient(app);
+    const code = await obtainCode(app, clientId, member);
+    const removeSimulatedConflict = await abortCommitsWritingTable(
+      'assistant_authorization_code',
+      1,
+    );
+    try {
+      const response = await exchangeCode(app, clientId, code);
+
+      expect(response.status).toBe(400);
+      expect(await readJson(response, errorSchema)).toEqual({ error: 'invalid_grant' });
+      expect(await countGrants()).toBe(0);
+    } finally {
+      await removeSimulatedConflict();
+    }
+  });
+
+  it('rotates a refresh token once when two refreshes race, with no server error', async () => {
+    const { app } = buildHarness();
+    const member = await signInMember(app, 'Hugo');
+    const clientId = await registerClient(app);
+    const tokens = await issueTokens(app, clientId, member);
+
+    const answers = await Promise.all([
+      refresh(app, clientId, tokens.refresh_token),
+      refresh(app, clientId, tokens.refresh_token),
+    ]);
+
+    expect(answers.map((answer) => answer.status).toSorted(byAscendingNumber)).toEqual([200, 400]);
+  });
+
+  it('answers invalid_grant, never a 500, when the rotation loses a commit conflict', async () => {
+    const { app } = buildHarness();
+    const member = await signInMember(app, 'Hugo');
+    const clientId = await registerClient(app);
+    const tokens = await issueTokens(app, clientId, member);
+    const removeSimulatedConflict = await abortCommitsWritingTable('assistant_grant', 1);
+    try {
+      const response = await refresh(app, clientId, tokens.refresh_token);
+
+      expect(response.status).toBe(400);
+      expect(await readJson(response, errorSchema)).toEqual({ error: 'invalid_grant' });
+      expect(await countGrants()).toBe(1);
+    } finally {
+      await removeSimulatedConflict();
+    }
   });
 
   it('refuses a refresh presented by another client without revoking the grant', async () => {

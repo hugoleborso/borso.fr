@@ -104,6 +104,7 @@ export interface NewAssistantGrant {
   readonly id: string;
   readonly clientId: string;
   readonly memberId: string;
+  readonly refreshFamilyHash: string;
   readonly refreshTokenHash: string;
   readonly refreshExpiresAt: Date;
   readonly accessTokenHash: string;
@@ -121,23 +122,17 @@ const STORED_GRANT_PROJECTION = {
   clientId: assistantGrantTable.clientId,
   memberId: assistantGrantTable.memberId,
   refreshTokenHash: assistantGrantTable.refreshTokenHash,
-  previousRefreshTokenHash: assistantGrantTable.previousRefreshTokenHash,
   refreshExpiresAt: assistantGrantTable.refreshExpiresAt,
   sessionEpoch: assistantGrantTable.sessionEpoch,
 };
 
-export async function findGrantByRefreshTokenHash(
-  refreshTokenHash: string,
+export async function findGrantByRefreshFamilyHash(
+  refreshFamilyHash: string,
 ): Promise<StoredAssistantGrant | null> {
   const rows = await getDatabase()
     .select(STORED_GRANT_PROJECTION)
     .from(assistantGrantTable)
-    .where(
-      or(
-        eq(assistantGrantTable.refreshTokenHash, refreshTokenHash),
-        eq(assistantGrantTable.previousRefreshTokenHash, refreshTokenHash),
-      ),
-    )
+    .where(eq(assistantGrantTable.refreshFamilyHash, refreshFamilyHash))
     .limit(1);
   return rows[0] ?? null;
 }
@@ -188,7 +183,6 @@ export async function hasRotatedGrant(rotation: GrantRotation): Promise<boolean>
     .update(assistantGrantTable)
     .set({
       refreshTokenHash: rotation.refreshTokenHash,
-      previousRefreshTokenHash: rotation.presentedRefreshTokenHash,
       refreshExpiresAt: rotation.refreshExpiresAt,
       accessTokenHash: rotation.accessTokenHash,
       accessExpiresAt: rotation.accessExpiresAt,

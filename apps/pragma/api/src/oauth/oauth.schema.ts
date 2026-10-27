@@ -39,7 +39,7 @@ export const assistantGrantTable = pgTable(
     clientId: text('client_id').notNull(),
     memberId: uuid('member_id').notNull(),
     refreshTokenHash: text('refresh_token_hash').notNull(),
-    previousRefreshTokenHash: text('previous_refresh_token_hash'),
+    refreshFamilyHash: text('refresh_family_hash').notNull(),
     refreshExpiresAt: timestamp('refresh_expires_at', {
       withTimezone: true,
       mode: 'date',
@@ -52,9 +52,7 @@ export const assistantGrantTable = pgTable(
   },
   (table) => [
     uniqueIndex('assistant_grant_refresh_token_hash_unique').on(table.refreshTokenHash),
-    uniqueIndex('assistant_grant_previous_refresh_token_hash_unique').on(
-      table.previousRefreshTokenHash,
-    ),
+    uniqueIndex('assistant_grant_refresh_family_hash_unique').on(table.refreshFamilyHash),
     uniqueIndex('assistant_grant_access_token_hash_unique').on(table.accessTokenHash),
     index('assistant_grant_member_idx').on(table.memberId),
   ],

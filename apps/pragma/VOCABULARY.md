@@ -47,8 +47,10 @@ Lives in: `api/src/oauth/` (`assistant_grant`, `assistant_authorization_code`)
   client exchanges the one-use authorization code, which lives 60 seconds
   and is bound to the client, its redirect address and its PKCE challenge.
 - Holds an access token (one hour) and a refresh token (90 days), stored as
-  SHA-256 hashes only. Every refresh rotates both; the refresh token rotated
-  away last is kept, and presenting it again revokes the whole grant.
+  SHA-256 hashes only. Every refresh rotates both. Every refresh token of a
+  grant starts with the same family secret, and presenting any token of the
+  family other than the current one, however many rotations old, revokes the
+  whole grant.
 - Carries the member's session epoch from when it was issued, the same
   number a **sign-in session** carries, so a password change ends every
   grant the way it ends every cookie.
@@ -58,6 +60,7 @@ Lives in: `api/src/oauth/` (`assistant_grant`, `assistant_authorization_code`)
 
 Held by: `api/src/oauth/oauth.controller.test.ts` › runs the whole flow: consent, code, tokens, and the code cannot be spent twice
 Held by: `api/src/oauth/oauth.controller.test.ts` › rotates the refresh token, and a replay of the old one revokes the grant and is reported
+Held by: `api/src/oauth/oauth.controller.test.ts` › revokes the grant when a token two rotations old is replayed after a thief refreshed twice
 Held by: `api/src/oauth/oauth.controller.test.ts` › ends every grant of a member who changes password
 Held by: `api/src/oauth/oauth.controller.test.ts` › deletes the grants and pending codes of a deleted member
 

@@ -2,14 +2,17 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { readCredentialOfMember } from '../auth/credentials.service';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
-import { isConflictAbort } from '../helpers/persistence/conflict-abort.core';
+import {
+  isConflictAbort,
+  retryingConflictAborts,
+} from '../helpers/persistence/conflict-abort.core';
 import { readOAuthOrigins } from './oauth.environment';
 import {
   claimAuthorizationCode,
   deleteGrant,
   deleteGrantHoldingToken,
   findGrantByAccessTokenHash,
-  findGrantByRefreshTokenHash,
+  findGrantByRefreshFamilyHash,
   hasRotatedGrant,
   insertAssistantGrant,
   type AccessGrant,
@@ -20,12 +23,14 @@ import type { OAuthErrorCode, TokenResponse } from './oauth.types';
 import {
   buildBearerChallenge,
   buildTokenResponse,
+  composeRefreshToken,
   hashToken,
   isCodeExchangeAccepted,
   isLastUseStale,
   judgeAccessGrant,
   judgeRefresh,
   readBearerToken,
+  readRefreshTokenFamily,
   readTokenGrant,
   selectTokenExpiries,
 } from './token.core';
@@ -50,14 +55,26 @@ interface MintedTokens {
   readonly refreshTokenHash: string;
 }
 
-function mintTokens(): MintedTokens {
+function mintTokens(refreshFamily: string): MintedTokens {
   const accessToken = mintOpaqueToken();
-  const refreshToken = mintOpaqueToken();
+  const refreshToken = composeRefreshToken(refreshFamily, mintOpaqueToken());
   return {
     response: buildTokenResponse(accessToken, refreshToken),
     accessTokenHash: hashToken(accessToken),
     refreshTokenHash: hashToken(refreshToken),
   };
+}
+
+async function claimingOrLosing<Claimed>(
+  claim: () => Promise<Claimed>,
+  lost: Claimed,
+): Promise<Claimed> {
+  try {
+    return await claim();
+  } catch (error) {
+    if (!isConflictAbort(error)) throw error;
+    return lost;
+  }
 }
 
 interface CodeExchange {
@@ -68,15 +85,18 @@ interface CodeExchange {
 }
 
 async function exchangeAuthorizationCode(exchange: CodeExchange, now: Date): Promise<TokenOutcome> {
-  const stored = await claimAuthorizationCode(hashToken(exchange.code));
+  const codeHash = hashToken(exchange.code);
+  const stored = await claimingOrLosing(async () => await claimAuthorizationCode(codeHash), null);
   if (stored === null || !isCodeExchangeAccepted(stored, exchange, now)) return INVALID_GRANT;
   const credential = await readCredentialOfMember(stored.memberId);
   if (credential === null) return INVALID_GRANT;
-  const minted = mintTokens();
+  const refreshFamily = mintOpaqueToken();
+  const minted = mintTokens(refreshFamily);
   await insertAssistantGrant({
     id: randomUUID(),
     clientId: stored.clientId,
     memberId: stored.memberId,
+    refreshFamilyHash: hashToken(refreshFamily),
     refreshTokenHash: minted.refreshTokenHash,
     accessTokenHash: minted.accessTokenHash,
     sessionEpoch: credential.sessionEpoch,
@@ -95,9 +115,11 @@ interface RefreshExchange {
 }
 
 async function exchangeRefreshToken(exchange: RefreshExchange): Promise<TokenOutcome> {
-  const presentedHash = hashToken(exchange.refreshToken);
-  const grant = await findGrantByRefreshTokenHash(presentedHash);
+  const refreshFamily = readRefreshTokenFamily(exchange.refreshToken);
+  if (refreshFamily === null) return INVALID_GRANT;
+  const grant = await findGrantByRefreshFamilyHash(hashToken(refreshFamily));
   if (grant === null) return INVALID_GRANT;
+  const presentedHash = hashToken(exchange.refreshToken);
   const credential = await readCredentialOfMember(grant.memberId);
   const verdict = judgeRefresh(
     grant,
@@ -108,7 +130,9 @@ async function exchangeRefreshToken(exchange: RefreshExchange): Promise<TokenOut
   if (verdict === 'unknown') return INVALID_GRANT;
   const isReplayed = verdict === 'replayed';
   if (isReplayed) {
-    await deleteGrant(grant.id);
+    await retryingConflictAborts(async () => {
+      await deleteGrant(grant.id);
+    });
     exchange.reportFailure({
       name: TOKEN_REPLAY_FAILURE,
       tags: { 'oauth.client': grant.clientId },
@@ -118,17 +142,20 @@ async function exchangeRefreshToken(exchange: RefreshExchange): Promise<TokenOut
   }
   const isRevoked = verdict === 'revoke';
   if (isRevoked) {
-    await deleteGrant(grant.id);
+    await retryingConflictAborts(async () => {
+      await deleteGrant(grant.id);
+    });
     return INVALID_GRANT;
   }
-  const minted = mintTokens();
-  const hasRotated = await hasRotatedGrant({
+  const minted = mintTokens(refreshFamily);
+  const rotation = {
     grantId: grant.id,
     presentedRefreshTokenHash: presentedHash,
     refreshTokenHash: minted.refreshTokenHash,
     accessTokenHash: minted.accessTokenHash,
     ...selectTokenExpiries(exchange.now),
-  });
+  };
+  const hasRotated = await claimingOrLosing(async () => await hasRotatedGrant(rotation), false);
   if (!hasRotated) return INVALID_GRANT;
   return { kind: 'issued', tokens: minted.response };
 }

@@ -93,7 +93,7 @@ describe('assistantGrantTable', () => {
 
     expect(indexes).toEqual([
       { name: 'assistant_grant_refresh_token_hash_unique', isUnique: true },
-      { name: 'assistant_grant_previous_refresh_token_hash_unique', isUnique: true },
+      { name: 'assistant_grant_refresh_family_hash_unique', isUnique: true },
       { name: 'assistant_grant_access_token_hash_unique', isUnique: true },
       { name: 'assistant_grant_member_idx', isUnique: false },
     ]);

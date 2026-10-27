@@ -75,7 +75,6 @@ export interface StoredAssistantGrant {
   readonly clientId: string;
   readonly memberId: string;
   readonly refreshTokenHash: string;
-  readonly previousRefreshTokenHash: string | null;
   readonly refreshExpiresAt: Date;
   readonly sessionEpoch: number;
 }
