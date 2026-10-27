@@ -1,0 +1,137 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/archivo-latin-standard-normal.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Archivo';
+  src: url('/fonts/archivo-latin-standard-italic.woff2') format('woff2-variations');
+  font-weight: 100 900;
+  font-stretch: 62% 125%;
+  font-style: italic;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'JetBrains Mono';
+  src: url('/fonts/jetbrains-mono-latin-wght-normal.woff2') format('woff2-variations');
+  font-weight: 100 800;
+  font-style: normal;
+  font-display: swap;
+}
+
+:root {
+  color-scheme: dark light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+@theme static {
+  --color-*: initial;
+  --font-*: initial;
+  --text-*: initial;
+  --radius-*: initial;
+  --shadow-*: initial;
+
+  --color-bg: light-dark(#f5f5f2, #0a0a0b);
+  --color-surface: light-dark(#ffffff, #141416);
+  --color-raised: light-dark(#ffffff, #1c1c1f);
+  --color-fill: light-dark(#0c0c0d0d, #ffffff12);
+  --color-fill-strong: light-dark(#0c0c0d1a, #ffffff21);
+  --color-line: light-dark(#0c0c0d14, #ffffff14);
+  --color-line-strong: light-dark(#0c0c0d2e, #ffffff2e);
+  --color-ink: light-dark(#0c0c0d, #f4f4f1);
+  --color-ink-soft: light-dark(#55555b, #a6a6ab);
+  --color-ink-faint: light-dark(#6b6b71, #8a8a90);
+  --color-scrim: light-dark(#0c0c0d73, #000000b3);
+
+  --color-accent: light-dark(#c6f03c, #d4f84a);
+  --color-accent-pressed: light-dark(#b2dc22, #c1e82e);
+  --color-on-accent: #0a0a0b;
+  --color-accent-ink: light-dark(#4b6600, #d4f84a);
+  --color-accent-fill: light-dark(#c6f03c33, #d4f84a1f);
+
+  --color-danger: light-dark(#b62c24, #ff6a5c);
+  --color-danger-fill: light-dark(#b62c2414, #ff6a5c1f);
+  --color-warn: light-dark(#965800, #ffb547);
+  --color-warn-fill: light-dark(#ffb5472e, #ffb5471f);
+  --color-good: light-dark(#136a41, #52d48e);
+  --color-good-fill: light-dark(#136a4117, #52d48e1f);
+  --color-focus: light-dark(#0c0c0d, #d4f84a);
+
+  --color-member-coral: light-dark(#bd3e1e, #ff7a59);
+  --color-member-teal: light-dark(#0a7a70, #3ccfc1);
+  --color-member-amber: light-dark(#8c5f00, #f2b43c);
+  --color-member-violet: light-dark(#6a4be0, #ab8dff);
+  --color-member-pink: light-dark(#c9306f, #ff70ae);
+  --color-member-sky: light-dark(#1768b2, #52b4ff);
+  --color-member-mint: light-dark(#1c7942, #6fdc8c);
+  --color-member-sand: light-dark(#86663a, #d8bb8c);
+  --color-on-member: light-dark(#ffffff, #0a0a0b);
+
+  --color-stage-bg: #000000;
+  --color-stage-ink: #f4f4f1;
+  --color-stage-ink-dim: #a6a6ab;
+  --color-stage-chord: #d4f84a;
+
+  --font-display: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Archivo', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, monospace;
+
+  --text-hero: 2.5rem;
+  --text-hero--line-height: 2.5rem;
+  --text-hero--letter-spacing: -0.025em;
+  --text-hero--font-weight: 800;
+  --text-display: 1.75rem;
+  --text-display--line-height: 2rem;
+  --text-display--letter-spacing: -0.02em;
+  --text-display--font-weight: 800;
+  --text-title: 1.25rem;
+  --text-title--line-height: 1.5rem;
+  --text-title--letter-spacing: -0.01em;
+  --text-title--font-weight: 700;
+  --text-body: 1rem;
+  --text-body--line-height: 1.375rem;
+  --text-meta: 0.875rem;
+  --text-meta--line-height: 1.125rem;
+  --text-label: 0.75rem;
+  --text-label--line-height: 1rem;
+  --text-label--letter-spacing: 0.04em;
+  --text-label--font-weight: 600;
+
+  --font-stretch-display: 125%;
+  --font-stretch-title: 112%;
+  --font-stretch-body: 100%;
+
+  --spacing: 0.25rem;
+
+  --radius-cover: 0.375rem;
+  --radius-sm: 0.5rem;
+  --radius-md: 0.75rem;
+  --radius-lg: 1.25rem;
+  --radius-full: 9999px;
+
+  --shadow-raised: 0 1px 2px light-dark(#0c0c0d1f, #00000080), 0 0 0 1px var(--color-line);
+  --shadow-float:
+    0 8px 24px -4px light-dark(#0c0c0d38, #000000cc), 0 2px 6px light-dark(#0c0c0d1f, #00000099);
+  --shadow-overlay: 0 -12px 40px -8px light-dark(#0c0c0d40, #000000e6);
+  --shadow-cover: 0 6px 16px -6px light-dark(#0c0c0d59, #000000cc);
+
+  --duration-instant: 90ms;
+  --duration-quick: 160ms;
+  --duration-sheet: 280ms;
+  --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+}

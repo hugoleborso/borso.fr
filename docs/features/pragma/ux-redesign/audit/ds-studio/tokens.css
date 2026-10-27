@@ -1,0 +1,140 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Inter Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/inter-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@theme static {
+  --color-*: initial;
+
+  --color-bg: light-dark(#f2f2f7, #000000);
+  --color-surface: light-dark(#ffffff, #1c1c1e);
+  --color-raised: light-dark(#ffffff, #2c2c2e);
+  --color-fill: light-dark(#7676801f, #7676803d);
+  --color-fill-strong: light-dark(#76768033, #7676805c);
+  --color-material: light-dark(#f9f9fbe0, #161618e0);
+  --color-line: light-dark(#c6c6c8, #38383a);
+
+  --color-ink: light-dark(#0b0b0f, #ffffff);
+  --color-ink-soft: light-dark(#6c6c72, #98989f);
+  --color-ink-faint: light-dark(#aeaeb2, #636366);
+
+  --color-accent: light-dark(#5856d6, #7d7aff);
+  --color-accent-fill: light-dark(#5856d6, #5e5ce6);
+  --color-accent-pressed: light-dark(#4644b8, #4e4cc9);
+  --color-accent-soft: light-dark(#ececfb, #26254a);
+  --color-on-accent: #ffffff;
+
+  --color-danger: light-dark(#d70015, #ff6961);
+  --color-danger-fill: light-dark(#d70015, #e5383b);
+  --color-danger-soft: light-dark(#fdecec, #3a1c1c);
+  --color-good: light-dark(#1e7a35, #30d158);
+  --color-good-soft: light-dark(#e8f5ec, #12301b);
+  --color-warn: light-dark(#a05a00, #ffb340);
+  --color-warn-soft: light-dark(#fff3e0, #3a2a10);
+
+  --color-member-1: light-dark(#c2410c, #fb923c);
+  --color-member-2: light-dark(#0f766e, #2dd4bf);
+  --color-member-3: light-dark(#a16207, #facc15);
+  --color-member-4: light-dark(#7e22ce, #c084fc);
+  --color-member-5: light-dark(#be185d, #f472b6);
+  --color-member-6: light-dark(#1d4ed8, #60a5fa);
+  --color-on-member: light-dark(#ffffff, #0b0b0f);
+
+  --color-scrim: light-dark(#0000004d, #00000099);
+  --color-focus: light-dark(#5856d680, #7d7aff99);
+
+  --font-sans: 'Inter Variable', -apple-system, BlinkMacSystemFont, system-ui, sans-serif;
+  --font-sans--font-feature-settings: 'cv05', 'cv08', 'ss03';
+
+  --text-title: 30px;
+  --text-title--line-height: 36px;
+  --text-title--font-weight: 700;
+  --text-title--letter-spacing: -0.022em;
+  --text-headline: 20px;
+  --text-headline--line-height: 25px;
+  --text-headline--font-weight: 650;
+  --text-headline--letter-spacing: -0.016em;
+  --text-body: 17px;
+  --text-body--line-height: 22px;
+  --text-body--letter-spacing: -0.011em;
+  --text-callout: 15px;
+  --text-callout--line-height: 20px;
+  --text-callout--letter-spacing: -0.006em;
+  --text-footnote: 13px;
+  --text-footnote--line-height: 18px;
+  --text-caption: 11px;
+  --text-caption--line-height: 13px;
+  --text-caption--font-weight: 560;
+  --text-caption--letter-spacing: 0.006em;
+
+  --spacing: 4px;
+  --spacing-gutter: 16px;
+  --spacing-row: 60px;
+  --spacing-control: 44px;
+  --spacing-control-lg: 50px;
+  --spacing-tabbar: 83px;
+
+  --radius-xs: 6px;
+  --radius-sm: 10px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-sheet: 24px;
+  --radius-full: 9999px;
+
+  --shadow-hairline: 0 0 0 0.5px light-dark(#0000001f, #ffffff1f);
+  --shadow-raised:
+    0 1px 2px light-dark(#0000000f, #00000066), 0 2px 8px light-dark(#0000000f, #00000066);
+  --shadow-float:
+    0 2px 6px light-dark(#0000001a, #00000080), 0 10px 28px -6px light-dark(#5856d659, #00000099);
+  --shadow-sheet: 0 -6px 30px light-dark(#0000001f, #00000099);
+
+  --duration-instant: 100ms;
+  --duration-quick: 200ms;
+  --duration-sheet: 380ms;
+  --ease-standard: cubic-bezier(0.2, 0.8, 0.2, 1);
+  --ease-sheet: cubic-bezier(0.32, 0.72, 0, 1);
+}
+
+:root {
+  color-scheme: light dark;
+}
+
+:root[data-theme='light'] {
+  color-scheme: light;
+}
+
+:root[data-theme='dark'] {
+  color-scheme: dark;
+}
+
+body {
+  background: var(--color-bg);
+  color: var(--color-ink);
+  font-family: var(--font-sans);
+  font-feature-settings: var(--font-sans--font-feature-settings);
+  font-size: var(--text-body);
+  line-height: var(--text-body--line-height);
+  -webkit-font-smoothing: antialiased;
+}
+
+::selection {
+  background: var(--color-accent-soft);
+  color: var(--color-ink);
+}
+
+:focus-visible {
+  outline: 3px solid var(--color-focus);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * {
+    transition-duration: 0ms !important;
+    animation-duration: 0ms !important;
+  }
+}
