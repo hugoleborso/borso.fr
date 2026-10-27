@@ -9,6 +9,7 @@ import {
   judgeClientRegistration,
   selectCodeExpiry,
   selectProtectedResource,
+  selectProtectedResourceMetadataUrl,
   selectSweepFloor,
   UNUSED_CLIENT_LIFETIME_MS,
 } from './oauth.core';
@@ -52,6 +53,9 @@ describe('discovery metadata', () => {
 
   it('describes /mcp as the protected resource this issuer serves', () => {
     expect(selectProtectedResource(ISSUER)).toBe('https://pragma.borso.fr/mcp');
+    expect(selectProtectedResourceMetadataUrl(ISSUER)).toBe(
+      'https://pragma.borso.fr/.well-known/oauth-protected-resource/mcp',
+    );
     expect(describeProtectedResource(ISSUER)).toEqual({
       resource: 'https://pragma.borso.fr/mcp',
       resource_name: 'pragma',

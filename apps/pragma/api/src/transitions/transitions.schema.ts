@@ -23,3 +23,7 @@ export const transitionPairParamSchema = z.object({
 export const transitionCommentBodySchema = z.object({
   comment: z.string().trim().min(1).max(TRANSITION_COMMENT_MAX_LENGTH),
 });
+
+export const transitionCommentToolInputSchema = transitionPairParamSchema.merge(
+  transitionCommentBodySchema,
+);

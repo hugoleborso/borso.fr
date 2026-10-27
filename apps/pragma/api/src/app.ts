@@ -11,6 +11,7 @@ import { answerUnhandledError } from './helpers/observability/unhandled-error.mi
 import { buildImprovementsRouter } from './improvements/improvements.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
+import { type BuildMcpRouterOptions, buildMcpRouter } from './mcp/mcp.controller';
 import { buildMeRouter } from './me/me.controller';
 import { buildMembersRouter } from './members/members.controller';
 import { type BuildOAuthRoutersOptions, buildOAuthRouters } from './oauth/oauth.controller';
@@ -28,6 +29,7 @@ import { buildUploadsRouter } from './uploads/uploads.controller';
 export interface CreateAppOptions {
   readonly auth?: BuildAuthRouterOptions;
   readonly oauth?: BuildOAuthRoutersOptions;
+  readonly mcp?: BuildMcpRouterOptions;
 }
 
 /**
@@ -71,6 +73,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/audience', audience.gatedRouter)
     .route('/api/oauth', oauth.consentRouter)
     .route('/api/assistant-grants', oauth.grantsRouter)
+    .route('/mcp', buildMcpRouter(options.mcp ?? {}))
     .route('/oauth', oauth.authorizationRouter)
     .route('/.well-known', oauth.discoveryRouter);
 }

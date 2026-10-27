@@ -2,12 +2,17 @@ import { describe, expect, it } from 'vitest';
 import type { StoredAssistantGrant, StoredAuthorizationCode } from './oauth.types';
 import {
   ACCESS_TOKEN_LIFETIME_MS,
+  buildBearerChallenge,
   buildTokenResponse,
   hashToken,
   isCodeExchangeAccepted,
   isCodeUsable,
+  isLastUseStale,
   isVerifierMatchingChallenge,
+  judgeAccessGrant,
   judgeGrant,
+  LAST_USE_WRITE_INTERVAL_MS,
+  readBearerToken,
   judgeRefresh,
   readTokenGrant,
   REFRESH_TOKEN_LIFETIME_MS,
@@ -225,5 +230,75 @@ describe('token lifetimes and response', () => {
       refresh_token: 'refresh',
       scope: 'pragma',
     });
+  });
+});
+
+describe('readBearerToken', () => {
+  it.each([
+    ['Bearer abc', 'abc'],
+    ['bearer abc', 'abc'],
+    ['BEARER  abc ', 'abc'],
+  ])('reads the token out of %j', (header, token) => {
+    expect(readBearerToken(header)).toBe(token);
+  });
+
+  it.each([[undefined], [''], ['Basic abc'], ['Bearer '], ['Bearerabc']])(
+    'answers null for %j',
+    (header) => {
+      expect(readBearerToken(header)).toBeNull();
+    },
+  );
+});
+
+describe('buildBearerChallenge', () => {
+  it('points the client at the protected resource metadata of /mcp', () => {
+    expect(buildBearerChallenge(ISSUER)).toBe(
+      'Bearer resource_metadata="https://pragma.borso.fr/.well-known/oauth-protected-resource/mcp"',
+    );
+  });
+});
+
+describe('judgeAccessGrant', () => {
+  const liveGrant = {
+    accessExpiresAt: new Date(NOW.getTime() + ONE_MILLISECOND),
+    sessionEpoch: 2,
+  };
+
+  it('accepts a live access token whose epoch matches the credential', () => {
+    expect(judgeAccessGrant(liveGrant, CURRENT_CREDENTIAL, NOW)).toBe('valid');
+  });
+
+  it('refuses the token at the instant it expires', () => {
+    expect(judgeAccessGrant({ ...liveGrant, accessExpiresAt: NOW }, CURRENT_CREDENTIAL, NOW)).toBe(
+      'expired',
+    );
+  });
+
+  it('refuses a token issued before a password change', () => {
+    expect(judgeAccessGrant(liveGrant, { sessionEpoch: 3 }, NOW)).toBe('stale-epoch');
+  });
+
+  it('refuses a token whose member has no credential any more', () => {
+    expect(judgeAccessGrant(liveGrant, null, NOW)).toBe('unknown-member');
+  });
+});
+
+describe('isLastUseStale', () => {
+  it('writes the first use of a grant', () => {
+    expect(isLastUseStale(null, NOW)).toBe(true);
+  });
+
+  it('skips a write within the interval', () => {
+    const recent = new Date(NOW.getTime() - LAST_USE_WRITE_INTERVAL_MS + ONE_MILLISECOND);
+    expect(isLastUseStale(recent, NOW)).toBe(false);
+  });
+
+  it('writes again once the interval has passed', () => {
+    const old = new Date(NOW.getTime() - LAST_USE_WRITE_INTERVAL_MS);
+    expect(isLastUseStale(old, NOW)).toBe(true);
+  });
+
+  it('waits five minutes between writes', () => {
+    expect(LAST_USE_WRITE_INTERVAL_MS).toBe(300_000);
   });
 });

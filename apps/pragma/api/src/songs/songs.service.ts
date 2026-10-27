@@ -11,6 +11,7 @@ import { deleteAudioOfDeletedSong } from '../takes/takes.service';
 import { hasLineupChanged } from './song-lineup.core';
 export type { SongRow } from './songs.repository';
 export { didClaimSongWithin, findSongById, findSongByIdWithin } from './songs.repository';
+export { defineTool, type ToolActor, type ToolAnswer } from '../mcp/mcp.service';
 import {
   deleteSongWithCascade,
   findSongByDeezerTrackId,

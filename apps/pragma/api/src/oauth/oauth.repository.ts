@@ -142,6 +142,38 @@ export async function findGrantByRefreshTokenHash(
   return rows[0] ?? null;
 }
 
+export interface AccessGrant {
+  readonly id: string;
+  readonly memberId: string;
+  readonly accessExpiresAt: Date;
+  readonly sessionEpoch: number;
+  readonly lastUsedAt: Date | null;
+}
+
+export async function findGrantByAccessTokenHash(
+  accessTokenHash: string,
+): Promise<AccessGrant | null> {
+  const rows = await getDatabase()
+    .select({
+      id: assistantGrantTable.id,
+      memberId: assistantGrantTable.memberId,
+      accessExpiresAt: assistantGrantTable.accessExpiresAt,
+      sessionEpoch: assistantGrantTable.sessionEpoch,
+      lastUsedAt: assistantGrantTable.lastUsedAt,
+    })
+    .from(assistantGrantTable)
+    .where(eq(assistantGrantTable.accessTokenHash, accessTokenHash))
+    .limit(1);
+  return rows[0] ?? null;
+}
+
+export async function updateGrantLastUse(grantId: string, usedAt: Date): Promise<void> {
+  await getDatabase()
+    .update(assistantGrantTable)
+    .set({ lastUsedAt: usedAt })
+    .where(eq(assistantGrantTable.id, grantId));
+}
+
 export interface GrantRotation {
   readonly grantId: string;
   readonly presentedRefreshTokenHash: string;

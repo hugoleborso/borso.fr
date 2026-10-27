@@ -41,7 +41,12 @@ const REGISTRATION_RATE_LIMITED_FAILURE = 'OAuthRegistrationRateLimited';
 
 // @FollowsBlueprint service-facade-reexport
 export { readClientAddress } from '../helpers/client-address/client-address.environment';
-export { exchangeToken, type ReportFailure, revokeToken } from './token.service';
+export {
+  authenticateAccessToken,
+  exchangeToken,
+  type ReportFailure,
+  revokeToken,
+} from './token.service';
 
 export const reportFailureToErrorTracking: ReportFailure = reportTaggedFailure;
 

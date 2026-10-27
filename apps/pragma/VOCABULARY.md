@@ -950,6 +950,10 @@ Lives in: `api/src/auth/`
   issue and expiry times. It lasts 30 days.
 - The gate reads the cookie and the credential behind it: only the second
   read can see a password change.
+- `requireBearerSession` is the second door: it resolves the member from an
+  **assistant grant**'s access token, applies the same session epoch rule,
+  and writes the same member id, so a service never knows which door was
+  used.
 - Rotating the shared password mints a fresh HMAC key, so every member's
   cookie stops verifying.
 - Login attempts are counted per hashed client IP and rate limited.
@@ -1233,6 +1237,33 @@ Lives in: `api/src/setlists/voting.core.ts`
 Held by: `api/src/setlists/voting.core.test.ts` › gives three points per targeted song
 Held by: `api/src/setlists/voting.core.test.ts` › frees the points a song already held when it is rescored
 Held by: `api/src/setlists/voting.controller.test.ts` › refuses a score beyond the budget and says what is left
+
+## Tool
+
+One operation an **assistant client** can call on pragma through MCP,
+mapped to exactly one HTTP route and the service function that route calls.
+
+Lives in: `api/src/mcp/` (the transport and the registry); each tool sits in
+its own slice as `<domain>-tools.controller.ts`
+
+- Served at `POST /mcp`, stateless: every request builds a fresh server,
+  answers one JSON body and keeps no session, so `GET` and `DELETE` answer
+  405.
+- Reached only with an **assistant grant**'s access token, through
+  `requireBearerSession`; the member it resolves is the actor of every
+  write, so push skips that member exactly as for a change made in the app.
+- Takes the route's own Zod schemas, path parameters and body merged into
+  one object, and answers the body the route would answer. A refusal is a
+  tool error carrying the route's `{ error }` body; an unexpected throw is
+  reported as `McpToolFailed` and answers `internal-error`.
+
+Held by: `api/src/mcp/mcp.controller.test.ts` › answers 401 with the protected resource metadata address to a call without a valid token
+Held by: `api/src/mcp/mcp.controller.test.ts` › lists the catalogue tools, advertises tools only, and serves two clients at once with no session
+Held by: `api/src/songs/songs-tools.controller.test.ts` › answers the refusal codes the routes answer
+Held by: `api/src/transitions/transitions-tools.controller.test.ts` › writes, reads, lists and deletes a transition comment, pushing the change to the other members only
+
+Not to be confused with: a route, which a browser calls with a cookie; a
+tool calls the same service with a bearer token.
 
 ## Transition
 

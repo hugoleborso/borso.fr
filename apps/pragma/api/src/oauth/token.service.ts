@@ -2,22 +2,30 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import { readCredentialOfMember } from '../auth/credentials.service';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
+import { isConflictAbort } from '../helpers/persistence/conflict-abort.core';
 import { readOAuthOrigins } from './oauth.environment';
 import {
   claimAuthorizationCode,
   deleteGrant,
   deleteGrantHoldingToken,
+  findGrantByAccessTokenHash,
   findGrantByRefreshTokenHash,
   hasRotatedGrant,
   insertAssistantGrant,
+  type AccessGrant,
+  updateGrantLastUse,
 } from './oauth.repository';
 import type { TokenRequest } from './oauth.schema';
 import type { OAuthErrorCode, TokenResponse } from './oauth.types';
 import {
+  buildBearerChallenge,
   buildTokenResponse,
   hashToken,
   isCodeExchangeAccepted,
+  isLastUseStale,
+  judgeAccessGrant,
   judgeRefresh,
+  readBearerToken,
   readTokenGrant,
   selectTokenExpiries,
 } from './token.core';
@@ -149,4 +157,36 @@ export async function revokeToken(token: string): Promise<void> {
   const deletedCount = await deleteGrantHoldingToken(hashToken(token));
   if (deletedCount === 0) return;
   recordProductEvent({ event: 'assistant_grant_revoked', via: 'client' });
+}
+
+export type BearerVerdict =
+  { kind: 'authenticated'; memberId: string } | { kind: 'refused'; challenge: string };
+
+async function recordGrantUse(grant: AccessGrant, now: Date): Promise<void> {
+  if (!isLastUseStale(grant.lastUsedAt, now)) return;
+  try {
+    await updateGrantLastUse(grant.id, now);
+  } catch (error) {
+    if (!isConflictAbort(error)) throw error;
+    console.warn('assistant grant last use lost a write conflict', grant.id);
+  }
+}
+
+// @FollowsBlueprint service-clock-injected
+export async function authenticateAccessToken(
+  authorization: string | undefined,
+  now: Date,
+): Promise<BearerVerdict> {
+  const refused: BearerVerdict = {
+    kind: 'refused',
+    challenge: buildBearerChallenge(readOAuthOrigins().issuer),
+  };
+  const token = readBearerToken(authorization);
+  if (token === null) return refused;
+  const grant = await findGrantByAccessTokenHash(hashToken(token));
+  if (grant === null) return refused;
+  const credential = await readCredentialOfMember(grant.memberId);
+  if (judgeAccessGrant(grant, credential, now) !== 'valid') return refused;
+  await recordGrantUse(grant, now);
+  return { kind: 'authenticated', memberId: grant.memberId };
 }

@@ -101,6 +101,10 @@ const songBaseSchema = z.object({
 export const songCreateInputSchema = songBaseSchema;
 export const songUpdateInputSchema = songBaseSchema.partial();
 export const songIdParamSchema = z.object({ id: z.string().uuid() });
+export const songUpdateToolInputSchema = songIdParamSchema.merge(songUpdateInputSchema);
+export const songLineupToolInputSchema = songIdParamSchema.extend({
+  defaultLineup: defaultLineupSchema,
+});
 export const externalSearchQuerySchema = z.object({
   q: z.string().min(1).max(SONG_TEXT_FIELD_MAX_LENGTH),
 });

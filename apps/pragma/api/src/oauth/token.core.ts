@@ -8,6 +8,7 @@ import {
   PRAGMA_SCOPE,
   REFRESH_TOKEN_GRANT,
   SECONDS_PER_MINUTE,
+  selectProtectedResourceMetadataUrl,
 } from './oauth.core';
 import type { TokenRequest } from './oauth.schema';
 import type {
@@ -19,9 +20,13 @@ import type {
 
 const ACCESS_TOKEN_LIFETIME_SECONDS = MINUTES_PER_HOUR * SECONDS_PER_MINUTE;
 const REFRESH_TOKEN_LIFETIME_DAYS = 90;
+const LAST_USE_WRITE_INTERVAL_MINUTES = 5;
+const BEARER_PREFIX = 'bearer ';
 
 export const ACCESS_TOKEN_LIFETIME_MS = ACCESS_TOKEN_LIFETIME_SECONDS * MILLISECONDS_PER_SECOND;
 export const REFRESH_TOKEN_LIFETIME_MS = REFRESH_TOKEN_LIFETIME_DAYS * MILLISECONDS_PER_DAY;
+export const LAST_USE_WRITE_INTERVAL_MS =
+  LAST_USE_WRITE_INTERVAL_MINUTES * SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
 
 // @FollowsBlueprint core-decision
 export function hashToken(token: string): string {
@@ -153,4 +158,36 @@ export function buildTokenResponse(accessToken: string, refreshToken: string): T
     refresh_token: refreshToken,
     scope: PRAGMA_SCOPE,
   };
+}
+
+export function readBearerToken(authorization: string | undefined): string | null {
+  if (authorization === undefined) return null;
+  if (!authorization.toLowerCase().startsWith(BEARER_PREFIX)) return null;
+  const token = authorization.slice(BEARER_PREFIX.length).trim();
+  return token.length === 0 ? null : token;
+}
+
+export function buildBearerChallenge(issuer: string): string {
+  return `Bearer resource_metadata="${selectProtectedResourceMetadataUrl(issuer)}"`;
+}
+
+export interface PresentedAccessGrant {
+  readonly accessExpiresAt: Date;
+  readonly sessionEpoch: number;
+}
+
+export type AccessVerdict = GrantVerdict | 'expired';
+
+export function judgeAccessGrant(
+  grant: PresentedAccessGrant,
+  credential: CredentialEpoch | null,
+  now: Date,
+): AccessVerdict {
+  if (now.getTime() >= grant.accessExpiresAt.getTime()) return 'expired';
+  return judgeGrant(grant, credential);
+}
+
+export function isLastUseStale(lastUsedAt: Date | null, now: Date): boolean {
+  if (lastUsedAt === null) return true;
+  return now.getTime() - lastUsedAt.getTime() >= LAST_USE_WRITE_INTERVAL_MS;
 }

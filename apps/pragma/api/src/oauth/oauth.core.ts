@@ -31,6 +31,7 @@ export const AUTHORIZATION_CODE_GRANT = 'authorization_code';
 export const REFRESH_TOKEN_GRANT = 'refresh_token';
 const RESOURCE_NAME = 'pragma';
 const MCP_PATH = '/mcp';
+const PROTECTED_RESOURCE_METADATA_PATH = '/.well-known/oauth-protected-resource';
 const CONSENT_PATH = '/oauth/consent';
 const AUTHORIZATION_CODE_RESPONSE_TYPE = 'code';
 const PKCE_METHOD = 'S256';
@@ -42,6 +43,10 @@ const S256_CHALLENGE_PATTERN = /^[A-Za-z0-9_-]{43}$/;
 // @FollowsBlueprint core-decision
 export function selectProtectedResource(issuer: string): string {
   return `${issuer}${MCP_PATH}`;
+}
+
+export function selectProtectedResourceMetadataUrl(issuer: string): string {
+  return `${issuer}${PROTECTED_RESOURCE_METADATA_PATH}${MCP_PATH}`;
 }
 
 export function describeAuthorizationServer(issuer: string): AuthorizationServerMetadata {

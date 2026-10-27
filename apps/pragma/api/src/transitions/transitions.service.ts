@@ -8,6 +8,7 @@ import {
   upsertTransitionComment,
 } from './transitions.repository';
 export { findTransitionComment } from './transitions.repository';
+export { defineTool } from '../mcp/mcp.service';
 
 // @FollowsBlueprint service-passthrough
 export async function getTransitionComments(): Promise<TransitionCommentRow[]> {
