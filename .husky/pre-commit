@@ -31,6 +31,7 @@ LINT_BUDGET_MS=3000
 LINT_BUDGET_PER_EXTRA_FILE_MS=100
 TYPECHECK_BUDGET_MS=2500
 GENERATOR_BUDGET_MS=1000
+GENERATOR_BUDGET_PER_EXTRA_MS=250
 
 # Every path the commit adds, changes or removes, one per line as
 # `<status> <path>`, with a rename split into the removal of its old path and
@@ -60,7 +61,7 @@ fi
 # so a failure reads the same as it did when they ran one after another.
 cores=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
 max_parallel=$((cores * 2))
-LONGEST_CHECKS='oxlint typecheck-tooling'
+LONGEST_CHECKS='oxlint typecheck-tooling generators'
 SHORT_CHECK_NICENESS=10
 running=''
 launched=0
@@ -198,12 +199,15 @@ run_oxlint() {
     --report-unused-disable-directives-severity=off
 }
 
-run_generator() {
-  node --import ./scripts/typescript-resolve.mjs "$@"
-}
-
 # run_generator_check <name> <scope> <script…>: a whole-tree generator in check
-# mode, run under plain node when the commit touches its scope.
+# mode, queued when the commit touches its scope. The queued generators then
+# run in one node process, scripts/standards/run-generator-checks.ts, which
+# imports each in turn with its own arguments and prints each one's verdict and
+# CPU on its own line. One process loads node, the TypeScript resolver and the
+# modules the generators share once: eight generators measured 1.4 s of CPU
+# together on 2026-10-27, against 2.2 s as eight processes.
+generator_jobs=''
+generator_count=0
 run_generator_check() {
   name="$1"
   scope="$2"
@@ -212,7 +216,24 @@ run_generator_check() {
     checks_skipped=$((checks_skipped + 1))
     return 0
   fi
-  launch "$name" "$GENERATOR_BUDGET_MS" run_generator "$@"
+  generator_jobs="${generator_jobs}${name}=$*
+"
+  generator_count=$((generator_count + 1))
+}
+
+run_generator_batch() {
+  IFS='
+'
+  set -f
+  # shellcheck disable=SC2086
+  node --import ./scripts/typescript-resolve.mjs scripts/standards/run-generator-checks.ts $generator_jobs
+}
+
+launch_generators() {
+  [ "$generator_count" -gt 0 ] || return 0
+  launch generators \
+    $((GENERATOR_BUDGET_MS + (generator_count - 1) * GENERATOR_BUDGET_PER_EXTRA_MS)) \
+    run_generator_batch
 }
 
 # The two lines `times` writes, the subshell's own and its children's, as one
@@ -260,7 +281,7 @@ fi
 # Each refuses something a person did: an annotation naming no blueprint, a
 # question the tree had already answered being answered a second way. The
 # context lookup is not a gate; it is regenerated so a blueprint added this
-# session seeds the next write. Under plain node, 0.2 to 0.4 s of CPU each.
+# session seeds the next write.
 blueprint_scope='^. ([^ ]*\.(js|jsx|ts|tsx|mjs|cjs)|\.claude/skills/blueprint/.*)$'
 run_generator_check blueprint-index "$blueprint_scope" \
   .claude/skills/blueprint/blueprint-indexing.ts --check
@@ -289,6 +310,8 @@ run_generator_check working-conditions "$dantotsu_scope" \
 run_generator_check enforcement-ledger \
   '^. (docs/standards/|eslint-rules/|\.oxlintrc\.json$|\.husky/|\.github/workflows/|scripts/(.*/)?check-)' \
   scripts/standards/enforcement-ledger.ts --check
+
+launch_generators
 
 # DSQL compatibility of staged migration SQL. Rung-2 eradication of
 # docs/dantotsus/dsql-alter-table-only-add-column.md.

@@ -12,7 +12,7 @@ or, as a last resort, runs later. It is never exempted.
 | A per-file check on the commit, oxfmt included | 300 ms, plus 20 ms per staged file past the first | the same | the hook itself |
 | oxlint on the commit | 3 s, plus 100 ms per staged file past the first | the same | the hook itself |
 | The tooling type check on the commit | 2.5 s | the same | the hook itself |
-| A whole-tree generator on the commit | 1 s | the same | the hook itself |
+| The whole-tree generators on the commit, one process | 1 s, plus 250 ms per generator past the first | the same | the hook itself |
 | The whole pre-commit hook | 3 s on a typical commit | wall clock, on a machine nothing else uses | CI's `pre-commit-budget` job, on a fixture commit |
 | The pre-push hook | 60 s for a change confined to one application | wall clock | not gated yet; see the last section |
 | CI on a pull request | 10 min | wall clock of the slowest job | `timeout-minutes: 10` on every job of `ci.yml` |
@@ -86,8 +86,13 @@ from a measurement on 2026-10-27, and each still held by the hook:
   component, 2.3 s for one and about 0.1 s for each further one.
 - **The tooling type check** is a whole program: 1.5 to 2.1 s of CPU, 1 s of
   wall time.
-- **A whole-tree generator** reads the source tree under plain node: 0.2 to
-  0.7 s of CPU each, the enforcement ledger the heaviest.
+- **The whole-tree generators** run in one node process,
+  `scripts/standards/run-generator-checks.ts`, which imports each queued
+  generator in turn with its own arguments, keeps its own exit status, and
+  prints its own verdict and CPU on a line of its own. Eight of them took
+  1.4 s of CPU together, against 2.2 s as eight processes, because node, the
+  TypeScript resolver and the modules they share load once. The budget is the
+  process's; each line says which generator spent it.
 
 The type-aware lint rules are the one check that stays off the commit: one
 pragma file needs 2.9 s of wall time and 8 s of CPU for its program, past the
@@ -103,8 +108,10 @@ there would refuse commits for what the neighbours are doing.
 So the hook reads each check's CPU with `times`, inside the subshell that ran
 it, which counts that check and everything it started and nothing else. The
 checks run side by side, two per core, and their output is printed in order
-once they have all finished. oxlint and the tooling type check are the longest,
-so every other check runs at a lower priority and yields the CPU to them.
+once they have all finished. oxlint, the tooling type check and the generator
+process are the longest, so every other check runs at a lower priority and
+yields the CPU to them. On two cores, the closest this machine gets to CI's
+runner, the fixture commit takes 2.4 to 2.6 s.
 
 A check triggers only on the files it reads. The tooling type check used to
 run for any path under `scripts/`, so a shell script cost a second of CPU for a
@@ -169,7 +176,7 @@ moved to pre-push.
 | Run | ESLint, Prettier, TypeScript 5.9 | oxlint, oxfmt, TypeScript 7 |
 | --- | --- | --- |
 | `.husky/pre-commit`, nothing staged | 0.14 s | 0.12 s |
-| `.husky/pre-commit`, one file of each of eight kinds, every moved check back | 1.6 s without ESLint, the tooling type check and the generators | 2.1 to 2.3 s with all of them |
+| `.husky/pre-commit`, one file of each of eight kinds, every moved check back | 1.6 s without ESLint, the tooling type check and the generators | 1.7 to 1.8 s on four cores, 2.4 to 2.6 s on two |
 | Lint over the repository, type-aware | 256 to 454 s cold, one process per workspace | 28 to 38 s, one process |
 | Format check over the repository | 43.7 s without a cache | 1.5 s |
 | pragma type check | 32 s, 12 to 23 s incremental | 9.7 s cold, 4 s incremental |
