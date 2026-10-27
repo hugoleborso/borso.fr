@@ -1,0 +1,9 @@
+{
+  "runId": "2026-10-27-assistants-act-on-pragma",
+  "spec": "docs/features/pragma/assistants-act-on-pragma/spec/spec.md",
+  "plan": "docs/features/pragma/assistants-act-on-pragma/plan/plan.md",
+  "ratifiedAdrs": ["ADR-0041", "ADR-0042"],
+  "stage": "implement",
+  "retries": {},
+  "pendingAdr": null
+}
