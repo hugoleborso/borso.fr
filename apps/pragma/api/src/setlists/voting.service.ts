@@ -161,7 +161,10 @@ export async function readClosingProposal(setlistId: string): Promise<ProposalOu
 }
 
 export type CloseOutcome =
-  { kind: 'ok' } | { kind: 'setlist-not-found' } | { kind: 'not-voting' } | { kind: 'no-votes' };
+  | { kind: 'ok' }
+  | { kind: 'setlist-not-found' }
+  | { kind: 'not-voting' }
+  | { kind: 'no-votes' };
 
 export async function closeVote(params: {
   readonly setlistId: string;

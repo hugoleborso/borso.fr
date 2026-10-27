@@ -3,7 +3,13 @@ import { buildExcerpt, hasFoldedMatch, readSlugTail } from './memory-text.core';
 
 export type MatchedIn = 'title' | 'alias' | 'summary' | 'fact' | 'body' | 'content';
 export type MemoryObjectType =
-  'entity' | 'commitment' | 'proposal' | 'draft' | 'source' | 'journal' | 'document';
+  | 'entity'
+  | 'commitment'
+  | 'proposal'
+  | 'draft'
+  | 'source'
+  | 'journal'
+  | 'document';
 
 export interface SearchHit {
   readonly slug: string;
