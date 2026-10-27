@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#95'
-fix-pr: '#200'
+fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh, scripts/pr/deploy-fanout.core.ts, plugins/borso-harness/scripts/check-hook-decisions.sh]
@@ -79,7 +79,7 @@ to the shape that was not used.
 
 **Type:** DevX check (level 2 — a gate that fails on the planted defect)
 
-**Reference:** PR #200 · commit `self`
+**Reference:** PR #202 · commit `self`
 
 **The actual fix:** three changes that each close one step of the chain.
 

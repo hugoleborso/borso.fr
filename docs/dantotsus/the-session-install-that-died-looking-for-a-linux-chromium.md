@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: none (the agent-browser block predates the gate that exposed it)
-fix-pr: '#200'
+fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/install-repo-deps.sh]
@@ -87,7 +87,7 @@ do everything else.
 **Type:** code diff (level 1 — the status that killed the script no longer
 exists)
 
-**Reference:** PR #200 · commit `self`
+**Reference:** PR #202 · commit `self`
 
 **The actual fix:**
 

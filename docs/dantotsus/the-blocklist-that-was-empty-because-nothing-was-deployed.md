@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: local
 severity: high
 related-pr: '#199'
-fix-pr: '#200'
+fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 1
 eradication-paths: [scripts/database/read-only-query.utils.ts, scripts/database/db-read.ts]
@@ -81,7 +81,7 @@ everything" from "I do not know" has already failed open.
 
 **Type:** code diff (level 1 — structural impossibility)
 
-**Reference:** PR #200 · commit `self`
+**Reference:** PR #202 · commit `self`
 
 **The actual fix:** the ambiguous value stops existing.
 

@@ -4,7 +4,7 @@ introduced-at: conception
 detected-at: review
 severity: medium
 related-pr: '#199'
-fix-pr: '#200'
+fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [plugins/borso-harness/hooks/pretool-gh-pr-create.sh, .gitignore]
@@ -70,7 +70,7 @@ log and the branch are provably in the same place is the pull request.
 
 **Type:** DevX check (level 2 — the hook that already guards `gh pr create`)
 
-**Reference:** PR #200 · commit `self`
+**Reference:** PR #202 · commit `self`
 
 **The actual fix:** the pull request is the event CLAUDE.md's paragraph did not
 have.
