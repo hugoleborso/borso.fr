@@ -86,10 +86,10 @@ No:
 | [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | proposed | 2026-10-23 |
 | [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | proposed | 2026-10-24 |
 | [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | proposed | 2026-10-25 |
-| [0045](./0045-pragma-design-system-is-notebook-with-grafts.md) | pragma's design system is the Notebook direction, with Backstage's buttons and six other grafts | proposed | 2026-10-27 |
-| [0046](./0046-newsreader-replaces-instrument-serif.md) | Newsreader replaces Instrument Serif, self-hosted with its weight and optical size axes | proposed | 2026-10-27 |
-| [0047](./0047-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | proposed | 2026-10-27 |
-| [0048](./0048-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | proposed | 2026-10-27 |
+| [0045](./0045-pragma-design-system-is-notebook-with-grafts.md) | pragma's design system is the Notebook direction, with Backstage's buttons and six other grafts | accepted | 2026-10-27 |
+| [0046](./0046-newsreader-replaces-instrument-serif.md) | Newsreader replaces Instrument Serif, self-hosted with its weight and optical size axes | accepted | 2026-10-27 |
+| [0047](./0047-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | accepted | 2026-10-27 |
+| [0048](./0048-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
 
 ### Data layer
 
@@ -117,7 +117,7 @@ No:
 - 0038 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
 - 0028 — `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
 - 0040 — pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage in SSM and push subscriptions kept out of preview clones.
-- 0045 — pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes.
+- 0045 — pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
 - 0046 — Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
 - 0048 — chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
 

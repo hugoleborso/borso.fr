@@ -1,7 +1,8 @@
 # ADR-0047: A task names an optional session through a nullable `task.session_id`, claimed like its song and nulled when the session is deleted
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-27
+- **Ratified:** by the operator in chat on 2026-10-27, as decision D3
 - **Deciders:** Hugo Borsoni
 - **Tags:** pragma, ux-redesign, data, schema
 

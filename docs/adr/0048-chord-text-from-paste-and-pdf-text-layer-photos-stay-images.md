@@ -1,7 +1,8 @@
 # ADR-0048: Chord text comes from pasted text and from a PDF's text layer read in the browser; a photo stays an image
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-27
+- **Ratified:** by the operator in chat on 2026-10-27, with no objection; this answers the spec's Q6 with option (b)
 - **Deciders:** Hugo Borsoni
 - **Tags:** pragma, ux-redesign, chords, dependency, front-end
 

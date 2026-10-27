@@ -1,7 +1,8 @@
 # ADR-0046: Newsreader replaces Instrument Serif, self-hosted with its weight and optical size axes
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-27
+- **Ratified:** by the operator in chat on 2026-10-27, with no objection
 - **Deciders:** Hugo Borsoni
 - **Tags:** pragma, ux-redesign, design-system, dependency, fonts
 
