@@ -12,6 +12,7 @@ import {
   COUNT_SCROLL_AREAS,
   DESCRIBE_FOCUS,
   FIND_TARGET,
+  MAIN_PRESENT,
   PAGE_SETTLED_PROBE,
   READ_LOCATION,
   READ_VIEWPORT_SIZE,
@@ -129,6 +130,14 @@ export async function waitForSettledPage(
 export async function navigateTo(session: CdpSession, url: string): Promise<void> {
   await session.send('Page.navigate', { url });
   await waitForSettledPage(session, NAVIGATION_SETTLE_MS);
+}
+
+export async function waitForMain(session: CdpSession): Promise<void> {
+  for (let waited = 0; waited < FIND_TIMEOUT_MS; waited += FIND_POLL_MS) {
+    if ((await session.evaluate(MAIN_PRESENT)) === true) return;
+    await waitMilliseconds(FIND_POLL_MS);
+  }
+  throw new Error(`no <main> on the page after ${String(FIND_TIMEOUT_MS)} ms`);
 }
 
 export async function emulatePhone(session: CdpSession): Promise<void> {

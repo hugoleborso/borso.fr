@@ -137,6 +137,8 @@ export const READ_PATHNAME = `() => location.pathname`;
 
 export const READ_SCROLL_Y = `() => Math.round(scrollY)`;
 
+export const MAIN_PRESENT = `() => document.querySelector('main') !== null`;
+
 export const MAIN_TEXT_INCLUDES = `(needle) => document.querySelector('main').innerText.includes(needle)`;
 
 export const LISTS_A_DURATION = `() => /\\d:\\d\\d/.test(document.querySelector('main').innerText)`;
@@ -215,23 +217,71 @@ export const READ_LOW_CONTRAST_TEXT = `(threshold) => {
 }`;
 
 export const COUNT_SMALL_TAP_TARGETS = `(minimum) => {
-  const isShown = (element) => { const box = element.getBoundingClientRect(); const style = getComputedStyle(element); return box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && !element.closest('dialog:not([open])'); };
-  const ownHitBox = (element) => {
+  const isShown = (element) => { const box = element.getBoundingClientRect(); const style = getComputedStyle(element); return box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && element.checkVisibility() && !element.closest('dialog:not([open])'); };
+  const clipExtension = (element, box, rect) => {
+    let { top, right, bottom, left } = rect;
+    for (let node = element.parentElement; node; node = node.parentElement) {
+      const style = getComputedStyle(node);
+      const frame = node.getBoundingClientRect();
+      const scrolls = (overflow) => overflow === 'auto' || overflow === 'scroll';
+      if (style.overflowX !== 'visible') {
+        const start = frame.left + node.clientLeft - (scrolls(style.overflowX) ? node.scrollLeft : 0);
+        const end = start + (scrolls(style.overflowX) ? node.scrollWidth : node.clientWidth);
+        if (box.left >= start) left = Math.max(left, start);
+        if (box.right <= end) right = Math.min(right, end);
+      }
+      if (style.overflowY !== 'visible') {
+        const start = frame.top + node.clientTop - (scrolls(style.overflowY) ? node.scrollTop : 0);
+        const end = start + (scrolls(style.overflowY) ? node.scrollHeight : node.clientHeight);
+        if (box.top >= start) top = Math.max(top, start);
+        if (box.bottom <= end) bottom = Math.min(bottom, end);
+      }
+    }
+    return { top, right, bottom, left };
+  };
+  const ownHitRect = (element) => {
     const box = element.getBoundingClientRect();
     const after = getComputedStyle(element, '::after');
-    if (after.content === 'none' || after.position !== 'absolute') return { width: box.width, height: box.height };
+    if (after.content === 'none' || after.position !== 'absolute') return { top: box.top, right: box.right, bottom: box.bottom, left: box.left };
     const inset = (value) => { const parsed = parseFloat(value); return Number.isNaN(parsed) ? 0 : Math.min(0, parsed); };
-    return { width: box.width - inset(after.left) - inset(after.right), height: box.height - inset(after.top) - inset(after.bottom) };
+    return clipExtension(element, box, { top: box.top + inset(after.top), right: box.right - inset(after.right), bottom: box.bottom - inset(after.bottom), left: box.left + inset(after.left) });
+  };
+  const controls = [...document.querySelectorAll('button, [role=button], a[href], input:not([type=hidden]), select, textarea, summary')].filter((element) => isShown(element) && !element.closest('p'));
+  const rects = new Map(controls.map((element) => [element, ownHitRect(element)]));
+  const isRelated = (first, second) => first.contains(second) || second.contains(first);
+  const pinnedLayerOf = (element) => { for (let node = element; node; node = node.parentElement) { const position = getComputedStyle(node).position; if (position === 'fixed' || position === 'sticky') return node; } return null; };
+  const isPositioned = (element) => getComputedStyle(element).position !== 'static' || getComputedStyle(element, '::after').position === 'absolute';
+  const followsInDocument = (candidate, element) => (element.compareDocumentPosition(candidate) & Node.DOCUMENT_POSITION_FOLLOWING) !== 0;
+  const winsOver = (candidate, element) => pinnedLayerOf(candidate) === pinnedLayerOf(element) && (isPositioned(candidate) === isPositioned(element) ? followsInDocument(candidate, element) : isPositioned(candidate));
+  const reachableHitBox = (element) => {
+    const rect = rects.get(element);
+    const centreX = (rect.left + rect.right) / 2;
+    const centreY = (rect.top + rect.bottom) / 2;
+    let { top, right, bottom, left } = rect;
+    for (const other of controls) {
+      if (other === element || isRelated(other, element) || !winsOver(other, element)) continue;
+      const blocking = rects.get(other);
+      const overlapsVertically = blocking.top < rect.bottom && blocking.bottom > rect.top;
+      const overlapsHorizontally = blocking.left < rect.right && blocking.right > rect.left;
+      if (blocking.left <= centreX && blocking.right >= centreX && overlapsVertically) {
+        if (blocking.top > centreY) bottom = Math.min(bottom, blocking.top);
+        if (blocking.bottom < centreY) top = Math.max(top, blocking.bottom);
+      }
+      if (blocking.top <= centreY && blocking.bottom >= centreY && overlapsHorizontally) {
+        if (blocking.left > centreX) right = Math.min(right, blocking.left);
+        if (blocking.right < centreX) left = Math.max(left, blocking.right);
+      }
+    }
+    return { width: right - left, height: bottom - top };
   };
   const hitBox = (element) => {
     const labelBoxes = [...(element.labels ?? [])].filter(isShown).map((label) => label.getBoundingClientRect());
-    return [ownHitBox(element), ...labelBoxes].reduce((best, box) => (Math.min(box.width, box.height) > Math.min(best.width, best.height) ? { width: box.width, height: box.height } : best));
+    return [reachableHitBox(element), ...labelBoxes].reduce((best, box) => (Math.min(box.width, box.height) > Math.min(best.width, best.height) ? { width: box.width, height: box.height } : best));
   };
   const small = [];
-  for (const element of document.querySelectorAll('button, [role=button], a[href], input:not([type=hidden]), select, textarea, summary')) {
-    if (!isShown(element) || element.closest('p')) continue;
+  for (const element of controls) {
     const box = hitBox(element);
-    if (box.width < minimum || box.height < minimum) small.push((element.getAttribute('aria-label') || element.innerText || element.tagName).trim().slice(0, 30) + ' ' + Math.round(box.width) + 'x' + Math.round(box.height));
+    if (Math.round(box.width) < minimum || Math.round(box.height) < minimum) small.push((element.getAttribute('aria-label') || element.innerText || element.tagName).trim().slice(0, 30) + ' ' + Math.round(box.width) + 'x' + Math.round(box.height));
   }
   return { count: small.length, samples: small.slice(0, 8) };
 }`;

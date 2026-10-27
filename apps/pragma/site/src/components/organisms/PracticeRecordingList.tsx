@@ -38,7 +38,7 @@ function PracticeSetlistSongs({
           {setlistEntries.map((entry) => {
             const title = songTitles.get(entry.songId) ?? '';
             return (
-              <li key={entry.id} className="flex items-center gap-2 py-0.5">
+              <li key={entry.id} className="flex min-h-11 items-center gap-2">
                 <span className="flex-1 min-w-0 truncate text-meta text-ink">{title}</span>
                 <RecordingSheet
                   songId={entry.songId}

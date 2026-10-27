@@ -10,7 +10,7 @@ import {
   STUDY_ROW_LINK_PROBE,
 } from './page-probes.setup';
 import { projectScreenFraction, replaceIdentifierInPath } from './task-metrics.core';
-import { navigateTo, PHONE, TaskWalk, waitMilliseconds } from './walk-recorder.setup';
+import { navigateTo, PHONE, TaskWalk, waitForMain, waitMilliseconds } from './walk-recorder.setup';
 
 const CREATE_SETTLE_MS = 1200;
 const SAVE_SETTLE_MS = 1500;
@@ -36,6 +36,7 @@ function escapeForPattern(text: string): string {
 }
 
 async function isTextInMain(driver: BandSessionDriver, needle: string): Promise<boolean> {
+  await waitForMain(driver.session);
   return (await driver.session.evaluate(MAIN_TEXT_INCLUDES, needle)) === true;
 }
 
@@ -339,6 +340,7 @@ const recordTakeAndTalk: TaskWalkRunner = async (driver) => {
   let sessionListsTakes: boolean | null = null;
   if (pastPractice !== undefined) {
     await driver.open(`/sessions/${pastPractice.id}`);
+    await waitForMain(driver.session);
     sessionListsTakes = (await driver.session.evaluate(LISTS_A_DURATION)) === true;
   }
   walk.note(

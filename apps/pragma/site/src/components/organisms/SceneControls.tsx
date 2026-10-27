@@ -27,7 +27,7 @@ interface SceneControlsProps {
   readonly onToggleAutoScroll: () => void;
 }
 
-const GROUP_CLASS = 'flex items-center gap-1.5 shrink-0';
+const GROUP_CLASS = 'flex items-center gap-2 shrink-0';
 const READOUT_CLASS = 'font-mono text-meta text-stage-ink-dim px-1 tabular-nums';
 
 // @FollowsBlueprint organism-presentational
@@ -43,7 +43,7 @@ export function SceneControls({
 }: SceneControlsProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-x-3 overflow-x-auto lg:overflow-visible lg:flex-wrap gap-y-2 py-1 [scrollbar-width:none]">
+    <div className="flex items-center gap-x-3 overflow-x-auto lg:overflow-visible lg:flex-wrap gap-y-2 p-1 [scrollbar-width:none]">
       <div className={GROUP_CLASS}>
         <IconButton
           variant="stage"

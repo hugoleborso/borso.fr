@@ -37,6 +37,7 @@ The site port is `TASK_METRICS_PORT`, 5182 by default. The API runs on the site 
 - **Screens** count every distinct page and every open `<dialog>` a walk reached, including the start screen.
 - **Bottom third** means the control's centre sat at or below two thirds of the screen height when the person reached it, before any scroll made for it.
 - **Scroll areas** count elements whose `overflow` is auto or scroll and whose content is larger than their box, plus the page itself when it scrolls.
+- **Tap targets under 44 px** measure the area a tap actually reaches, not each control alone. A control's `::after` extension is cut where a scroll or clipping container ends, and where another control's hit area overlaps it the one painted on top keeps the overlap: a positioned control beats a static one, and between two alike the later one in the document wins. Controls inside a fixed or sticky bar are not compared with the content scrolling under them, and content hidden in a closed `<details>` is skipped. Two 36 px buttons with a 4 px extension stacked 41 px apart therefore count as 41 px tall, which is what a thumb gets.
 - **Icon-only** and **text-only** buttons are read from what is drawn: an `svg`, an image or a one-character glyph counts as an icon, visible text counts as text.
 
 The pure parts of this, from the scroll gesture plan to the comparison with a baseline, are in `task-metrics.core.ts` and tested at full coverage.
