@@ -58,6 +58,14 @@ invoke them, not to reimplement them.
   brief naming one half lets the other drift a round at a time.
 - **Loop:** round 1 starts from the plan. Subsequent rounds start from the
   previous validation verdict (`fail-local` rows become the fix list).
+- **Integrate before validating.** `isolation: 'worktree'` leaves a round's
+  commits on that worktree's branch, not on the run branch. After every
+  implement round, and before any validator starts, one subagent
+  fast-forwards the run branch onto each round's branch (cherry-picking when
+  two rounds diverged) and returns the resulting SHA; every validator brief
+  names that SHA. On PR #193 three validation rounds opened a checkout that
+  held only the plan, because the four implementation rounds and two fix
+  rounds had each landed on their own worktree branch.
 - **Workflow guard — ADR trigger:** if any sub-agent emits a verdict
   flagging an ADR trigger (new third-party dep, new secret, attribution-in-prod-UI,
   schema column driven by an external service, feature scope beyond the
@@ -69,9 +77,21 @@ invoke them, not to reimplement them.
   the script reads `state.json`, sees the ADR is ratified, and continues
   from where it stopped.
 
+### Validators are spawned as their own agent type
+
+A workflow subagent has no Agent tool, so a subagent told to run
+`/technical-validation`, `/visual-validation` or `/standards-review` cannot
+dispatch the isolated validator those skills describe, and ends up validating
+work in the context that is supposed to be blind to it. Four agents on PR #193
+hit this. The script spawns the validator directly instead:
+`agent(brief, { agentType: 'technical-validator' })`, likewise
+`'visual-validator'` and `'standards-reviewer'`, with the brief the skill would
+have sent.
+
 ### Stage 3 — `validate (technical)` after every `implement` round
 
-- **Skill invoked:** `/technical-validation`.
+- **Skill invoked:** `/technical-validation`, whose validator the script spawns
+  with `agentType: 'technical-validator'`.
 - **Standard:** [`${CLAUDE_PLUGIN_ROOT}/skills/technical-validation/standard.md`](../skills/technical-validation/standard.md).
 - **Non-skippable** per `tech-lead-orchestrator/standard.md` and the
   dantotsu `orchestrator-skipped-validation-between-rounds.md`. The validator

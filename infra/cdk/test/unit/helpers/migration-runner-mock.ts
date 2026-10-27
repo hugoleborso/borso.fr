@@ -14,6 +14,9 @@ export const state: {
   columnsPerTable: Map<string, readonly string[]>;
   existingRoles: Set<string>;
   roleMappings: { readonly arn: string; readonly pg_role_name: string }[];
+  indexBuildJobIds: Map<string, string | null>;
+  indexBuildStatuses: Map<string, { readonly status: string; readonly details: string | null }[]>;
+  indexValidity: Map<string, boolean>;
 } = {
   unsafeCalls: [],
   taggedCalls: [],
@@ -25,6 +28,9 @@ export const state: {
   columnsPerTable: new Map(),
   existingRoles: new Set(),
   roleMappings: [],
+  indexBuildJobIds: new Map(),
+  indexBuildStatuses: new Map(),
+  indexValidity: new Map(),
 };
 
 export function resetMigrationRunnerMockState(): void {
@@ -38,6 +44,36 @@ export function resetMigrationRunnerMockState(): void {
   state.columnsPerTable = new Map();
   state.existingRoles = new Set();
   state.roleMappings = [];
+  state.indexBuildJobIds = new Map();
+  state.indexBuildStatuses = new Map();
+  state.indexValidity = new Map();
+}
+
+const CREATED_INDEX =
+  /CREATE\s+(?:UNIQUE\s+)?INDEX\s+ASYNC\s+(?:IF\s+NOT\s+EXISTS\s+)?"?([A-Za-z0-9_]+)"?/i;
+
+function answerIndexBuild(query: string, params?: readonly unknown[]): unknown[] | null {
+  const created = CREATED_INDEX.exec(query);
+  if (created !== null) {
+    const indexName = created[1] ?? '';
+    const jobId = state.indexBuildJobIds.has(indexName)
+      ? state.indexBuildJobIds.get(indexName)
+      : `job-${indexName}`;
+    return jobId === null || jobId === undefined ? [] : [{ job_id: jobId }];
+  }
+  if (/FROM sys\.jobs WHERE job_id/i.test(query)) {
+    const jobId = String(params?.[0]);
+    const statuses = state.indexBuildStatuses.get(jobId);
+    if (statuses === undefined) return [{ status: 'completed', details: null }];
+    const next = statuses.length > 1 ? statuses.shift() : statuses[0];
+    return next === undefined ? [] : [next];
+  }
+  if (/FROM pg_index/i.test(query)) {
+    const indexName = String(params?.[1]);
+    const isValid = state.indexValidity.get(indexName);
+    return isValid === undefined ? [] : [{ is_valid: isValid }];
+  }
+  return null;
 }
 
 export type SqlMock = ((
@@ -62,6 +98,8 @@ export function makeSql(): SqlMock {
         return Promise.reject(error);
       }
       state.unsafeCalls.push({ query, ...(params === undefined ? {} : { params }) });
+      const indexBuildAnswer = answerIndexBuild(query, params);
+      if (indexBuildAnswer !== null) return Promise.resolve(indexBuildAnswer);
       const schemaExistsMatch = /information_schema\.schemata WHERE schema_name = '([^']+)'/i.exec(
         query,
       );

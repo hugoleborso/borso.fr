@@ -245,10 +245,16 @@ meanings each. None of that is visible from any one file.
 - `eslint:borso/verb-promises-match-return-type` reads the declared return type
   and holds three of the verbs above to it: a `list…` returns an array, a
   `find…` does not, and an `is…`, `has…` or `can…` returns a boolean or a type
-  predicate. It reads the annotation only, so it needs no type information and
-  reaches `scripts/`, the skills and `eslint-rules/` as well as `apps/` and
-  `infra/`. A function with no annotation is out of scope, and so are the five
-  verbs promising a shape no annotation can tell apart.
+  predicate. It also reads the body of every `find…` and reports a `throw` that
+  leaves the function, because a `find…` answers `null` when the thing is
+  absent and a `get…` is the verb that throws: an annotation of `Promise<Take>`
+  says nothing about absence, and `findWrittenTakeWithin` threw behind one
+  through two fix rounds ([the dantotsu](../dantotsus/the-find-that-threw-behind-a-clean-annotation.md)).
+  A `throw` caught by its own `try` is not reported. It needs no type
+  information and reaches `scripts/`, the skills and `eslint-rules/` as well as
+  `apps/` and `infra/`. A function with no annotation is out of the return-type
+  half, and so are the five verbs promising a shape no annotation can tell
+  apart.
 - `eslint:borso/no-french-identifiers` flags a dictionary of French terms that
   have appeared in this repository before.
 - `eslint:borso/no-step-named-value` rejects a `const` or `let` named `parsed`,
@@ -288,7 +294,7 @@ meanings each. None of that is visible from any one file.
 - `reviewer` checks that an invariant promising behaviour carries a `Held by:`
   line, because telling a promise from a definition is reading prose.
 - `reviewer` checks the half of the verb table the rule above cannot reach: that
-  a `find…` actually returns `null` rather than throwing, that a `get…` throws,
+  a `find…` returns `null` rather than a sentinel, that a `get…` throws,
   and that a `build…`, `project…` or `select…` returns what its verb says. Those
   are claims about behaviour, not about the shape of the annotation.
 - `reviewer` checks that a boolean name is not negated, because `isNotReady`

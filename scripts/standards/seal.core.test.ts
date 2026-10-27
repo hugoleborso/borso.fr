@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest';
 import {
   isReviewablePath,
+  mergeReviewScope,
+  selectPlannedPaths,
   parseSealLine,
   readSealLedger,
   serialiseSealEntry,
@@ -187,5 +189,48 @@ describe('isReviewablePath', () => {
     ['apps/pragma/site/public/manifest.json', 'not a TypeScript file'],
   ])('asks for no seal on %s, because %s', (path) => {
     expect(isReviewablePath(path)).toBe(false);
+  });
+});
+
+describe('selectPlannedPaths', () => {
+  it('reads the reviewable files a plan names in backticks, once each, in order', () => {
+    const plan = [
+      '- `apps/pragma/api/src/takes/takes.service.ts` — create, list.',
+      '- `apps/pragma/api/src/takes/takes.core.ts` + `.test.ts` — rules.',
+      '- `apps/pragma/api/src/takes/takes.service.ts` again.',
+      '- `apps/pragma/VOCABULARY.md` — Take.',
+    ].join('\n');
+    expect(selectPlannedPaths(plan)).toStrictEqual([
+      'apps/pragma/api/src/takes/takes.core.ts',
+      'apps/pragma/api/src/takes/takes.service.ts',
+      'apps/pragma/VOCABULARY.md',
+    ]);
+  });
+
+  it('drops tests, migrations, relative names and paths outside apps and infra', () => {
+    const plan = [
+      '`apps/pragma/api/src/takes/takes.controller.test.ts`',
+      '`apps/pragma/api/src/database/migrations/0017_takes_and_push.sql`',
+      '`songs.service.ts`',
+      '`scripts/standards/seal.ts`',
+    ].join(' ');
+    expect(selectPlannedPaths(plan)).toStrictEqual([]);
+  });
+});
+
+describe('mergeReviewScope', () => {
+  it('joins what the branch changed with what the plan will change, reviewable only', () => {
+    expect(
+      mergeReviewScope(
+        ['docs/adr/README.md', 'apps/pragma/api/src/takes/takes.service.ts'],
+        [
+          'apps/pragma/api/src/takes/takes.service.ts',
+          'apps/pragma/api/src/songs/songs.service.ts',
+        ],
+      ),
+    ).toStrictEqual([
+      'apps/pragma/api/src/songs/songs.service.ts',
+      'apps/pragma/api/src/takes/takes.service.ts',
+    ]);
   });
 });

@@ -136,6 +136,17 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 
 > **The skill ends here.** Once the PR is open, the implementation skill is done. Preview deploys run automatically on PR push; prod app deploys run automatically in CI on merge to `main` — no approval, since only Hugo can merge (see CLAUDE.md "Deployments"). Claude never runs `pnpm ... run deploy` locally — the workflow does. After the PR merges, the agent asks Hugo to dispatch `shared-deploy` when the merge moved the committed `borso-shared` template snapshot, because that workflow is `workflow_dispatch` only and nothing queues it.
 
+## Fix rounds
+
+When the work is fixing findings from `/standards-review` or `/technical-validation`, the finding names a line, but the round is judged on the file:
+
+1. Run `scripts/reports.sh standards` and open `docs/standards/enforcement-ledger.md`, section **"What only a reviewer can check"**. That list is the reviewer's whole checklist.
+2. **Read every file you are about to edit in full, against that list**, before editing it. Fix every finding you can quote in it, whoever wrote the line, as long as the fix stays inside that file or its sibling test. Name the extra fixes in the commit message.
+3. A finding whose fix would reach a file the reviewer did not read: read that file in full against the same list too, and fix it in the same round.
+4. In the verdict, list each file you read whole, so the next review knows which files a fix round already swept.
+
+The reason is arithmetic. A review seals a file by its content, so every edit reopens the whole file for the next round. If the fix touches one line and leaves a second finding three lines below, the next round finds it, and the round after that finds the one its own fix reopened. PR #193 ran nine standards rounds that way; five of them reported findings older than the branch.
+
 ## Failure modes to avoid
 
 - **Skipping `/technical-conception`** — implementing straight from the spec misses the plan's risk register and self-checks; the implementer ends up rediscovering the same questions.

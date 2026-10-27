@@ -1,17 +1,22 @@
 ---
-summary: 'On Chromium argent''s swipe moves nothing and its scroll and drag send mouse events; drive `Input.dispatchTouchEvent` over CDP for anything that depends on `touch-action`.'
+summary: 'On Chromium every argent pointer verb is a mouse, `gesture-tap` included, and its swipe moves nothing; a real tap is `scripts/argent.sh touch <selector>`, and a real swipe is `Input.dispatchTouchEvent` over CDP.'
 triggers:
   commands:
-    - 'gesture-(swipe|custom|scroll|drag)'
+    - 'gesture-(swipe|custom|scroll|drag|tap)'
+    - 'Input\.dispatchTouchEvent'
+    - 'Browser\.grantPermissions'
+    - 'setTouchEmulationEnabled'
   output:
     - 'Not supported on Chromium'
 ---
 
 # Driving a real touch gesture when argent declines it
 
-`scripts/argent.sh` is the repository's answer for touch, and it is right for
-taps. It is not enough for the gesture a phone audit most often needs — a swipe
-or a drag — because on Chromium argent refuses both of its gesture verbs:
+`scripts/argent.sh` is the repository's answer for touch, through its `touch`
+command, which sends a real tap at a phone viewport. argent's own verbs are not
+touch on Chromium: `gesture-tap` is a mouse press (see *What survives* below),
+and for the gesture a phone audit most often needs — a swipe or a drag — argent
+refuses both of its gesture verbs:
 
 ```
 $ scripts/argent.sh run gesture-swipe --udid chromium-cdp-9222 …
@@ -78,7 +83,8 @@ wrong reason.
 | Question | Tool |
 | --- | --- |
 | Layout, sizes, overflow, screenshots | `scripts/browser.sh` / `agent-browser` |
-| Is this reachable with a thumb, does the tap land | `scripts/argent.sh tap` |
+| Is this reachable by a press at its centre | `scripts/argent.sh tap` (a mouse press) |
+| Does a real tap land, as touch, at phone width | `scripts/argent.sh touch '<css selector>'` |
 | Does a swipe or a drag do the right thing on touch | CDP `Input.dispatchTouchEvent`, as above |
 | Mouse-only behaviour (text selection, hover) | CDP `Input.dispatchMouseEvent` |
 
@@ -116,7 +122,7 @@ rejects the drop", neither of which is true.
 
 | Intent | Chromium verb | Units |
 | --- | --- | --- |
-| Tap something | `gesture-tap` | normalised `[0,1]`, real touch event |
+| Tap something | `gesture-tap` | normalised `[0,1]`, a **mouse** press and release |
 | Scroll a page or a list | `gesture-scroll` | `--deltaY 0.9` is nine tenths of a **window**, not pixels |
 | Drag an element, drop it | `gesture-drag` | `--fromX/--fromY/--toX/--toY`, a mouse drag |
 
@@ -125,14 +131,26 @@ deltaY"*), which is the one place in this area that fails loudly.
 
 ### What survives
 
-`gesture-tap` **is** a real touch event on Chromium and is the reason to reach
-for argent at all — a synthetic click through `agent-browser` is not a tap.
-That half of the tool works, and
-[`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md)
-is right about it.
+Not `gesture-tap`. This section said it was a real touch event, and it is not:
+on argent 0.22.1 a single-point tap goes through `sendTouch`, which sends
+`Input.dispatchTouchEvent` only when a second point is given and
+`Input.dispatchMouseEvent` `mousePressed`/`mouseReleased` otherwise. Capture
+listeners on the page log `pointerdown` and `click` with `pointerType: "mouse"`
+and no `touchstart`, measured on the takes branch (PR #193) and again on
+2026-10-25. argent 0.30.1's `tapChromium` sends the same mouse pair, and its
+tool description says so, so the upgrade the CLI offers does not change it.
 
-The consequence for a phone pass: taps are testable with real touch input,
-scrolling and dragging are testable only through wheel and mouse events. A
+What does work is the method this entry already recommended for swipes.
+[`scripts/browser/touch-tap.ts`](../../scripts/browser/touch-tap.ts), run as
+`scripts/argent.sh touch '<css selector>'`, sets
+`Emulation.setDeviceMetricsOverride` to a 375 × 812 mobile viewport and
+`Emulation.setTouchEmulationEnabled`, scrolls the element into view, sends
+`touchStart` then `touchEnd`, and fails unless `touchstart` and a touch `click`
+reached the element.
+
+The consequence for a phone pass: taps are testable with real touch input
+through `scripts/argent.sh touch`, and scrolling and dragging through argent
+only as wheel and mouse events. A
 finding that depends on the difference between a touch-drag and a mouse-drag —
 a `dnd-kit` `PointerSensor` losing the gesture to page scroll, for instance —
 cannot be reproduced with these tools. Drive that on a real device, or reason
@@ -156,6 +174,19 @@ scripts/argent.sh run gesture-drag --from 180,320 --to 180,320 --durationMs 900
 Measured 2026-09-15 on a `pragma` catalog card: 900 ms opened the listen dialog,
 and a short tap afterwards still navigated, which is what proves the
 capture-phase handler swallows only the press. A synthetic click proves neither.
+
+### Overrides end with the CDP session that set them
+
+A one-shot CDP script is the natural way to drive these methods, and some of
+what it sets does not outlive it. Measured on the sandbox Chromium on
+2026-10-25: after the client disconnected, `navigator.maxTouchPoints` was back to
+0 and `(pointer: coarse)` false, while the 375 px viewport from
+`Emulation.setDeviceMetricsOverride` stayed. The takes branch's validators found
+the same for `Browser.grantPermissions`: a notification grant reported success
+and `Notification.permission` stayed `default`, because the grant was revoked
+when the granting client closed. So set, act and read back in one session, as
+`touch-tap.ts` does, and hold a client open for the whole run when a grant has
+to persist.
 
 ### See also
 

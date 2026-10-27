@@ -62,7 +62,7 @@ for vocabulary in apps/*/VOCABULARY.md; do
     [ -n "$citation" ] || continue
     echo "  $vocabulary sources a claim from a comment: $citation" >&2
     failed=1
-  done < <(grep -nEi '(file )?header (names|says|records|states)|the comment (above|beside|on)' "$vocabulary" || true)
+  done < <(grep -nEi '(file )?header (names|says|records|states)|the comment (above|beside|on)\b' "$vocabulary" || true)
 done
 
 if [ "$found_any" -eq 0 ]; then

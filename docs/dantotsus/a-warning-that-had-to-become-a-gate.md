@@ -118,6 +118,18 @@ strippers as the sibling hook: heredoc bodies first, quoted arguments second.
 index and `git fsck --lost-found` finds it — so blocking on it would refuse a
 safe command for a loss that can be undone.
 
+**Two later defects, found on PR #193 and its kaizen branch.** The hook read its
+own directory, so it refused `git restore --staged` aimed at another worktree by
+naming the main checkout's unrelated work. Teaching it to follow `git -C` and
+`cd` introduced the second: when the named checkout could not be read (a
+variable, a quoted path, a directory that does not exist), `git -C` failed under
+`set -e` and the hook exited 128, which the harness treats as "let it run". It
+also judged only the first `git restore` in a chain, so
+`git restore --staged g && git restore f` passed. The hook now judges every
+command in the chain against the directory it would run in, and refuses with
+exit 2 when it cannot read that directory. Every one of these commands is a row
+in `plugins/borso-harness/scripts/check-hook-decisions.sh`.
+
 ## See also
 
 - [`destructive-git-with-uncommitted-verification-work`](../knowledge/destructive-git-with-uncommitted-verification-work.md) — the knowledge entry this is the eradication of, kept because its examples are the evidence.

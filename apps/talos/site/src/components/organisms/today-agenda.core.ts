@@ -23,10 +23,10 @@ const UNDATED_KEY = 'undated';
 const LAST_DAY = '9999-12-31';
 const OVERDUE_KEY = 'overdue';
 const BUCKET_ORDER: Readonly<Record<AgendaBucket, number>> = {
-  overdue: 0,
-  today: 1,
-  tomorrow: 2,
-  later: 3,
+  today: 0,
+  tomorrow: 1,
+  later: 2,
+  overdue: 3,
   undated: 4,
 };
 
@@ -46,6 +46,7 @@ function compareDays(
   right: AgendaDay<unknown, unknown>,
 ): number {
   const byBucket = BUCKET_ORDER[left.bucket] - BUCKET_ORDER[right.bucket];
+  // Stryker disable next-line ConditionalExpression: equivalent mutant, every dated key sorts before the 'overdue' key and that one before 'undated', so ordering by key alone gives the bucket order too.
   return byBucket === 0 ? left.key.localeCompare(right.key) : byBucket;
 }
 

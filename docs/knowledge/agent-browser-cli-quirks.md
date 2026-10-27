@@ -1,9 +1,12 @@
 ---
-summary: 'agent-browser traps: `--executable-path` ignored once the daemon runs, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, and a click below a nested scroller that reports success and does nothing, a label fill that reports `Done` and fills nothing, and a session that stops fetching after a long idle.'
+summary: 'agent-browser traps: `--executable-path` and `--user-agent` ignored, a silent relaunch when the user agent or flags change, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, a click below a nested scroller that does nothing, a fill that fills nothing (labels, `datetime-local`), and no `display-mode` emulation.'
 triggers:
   commands:
     - '\bagent-browser\b'
     - 'scripts/browser\.sh'
+    - 'AGENT_BROWSER_(USER_AGENT|ARGS)'
+    - '\baddinitscript\b'
+    - 'datetime-local'
   output:
     - 'daemon already running'
     - 'Identifier ''\w+'' has already been declared'
@@ -230,6 +233,34 @@ multi-step flow has to be split across rounds. Budget for it when writing a
 validation brief rather than discovering it halfway through a flow.
 
 Measured 2026-09-16.
+
+## 0.35.2: settings that do nothing, and settings that restart the browser
+
+_Measured on PR #193 (2026-10-24) and re-checked on 2026-10-25._
+
+- **`--user-agent` is ignored.** `agent-browser --session x --user-agent Foo open …`
+  leaves `navigator.userAgent` at `HeadlessChrome/…`; the environment variable
+  `AGENT_BROWSER_USER_AGENT` works. `scripts/browser.sh` now takes
+  `--user-agent <ua>` itself and exports the variable.
+- **A changed user agent or flag list relaunches the browser, silently.** The
+  daemon compares `AGENT_BROWSER_USER_AGENT` and `AGENT_BROWSER_ARGS` on every
+  call, so a later call that omits the user agent, or one that carries the
+  wrapper's default flags after a launch with a fake microphone, restarts
+  Chromium on `about:blank`: the page, the session cookie and the CDP port are
+  gone, and the next step fails as if the application had logged you out.
+  `scripts/browser.sh` now remembers `--user-agent` and `--args` per `--session`
+  and sends them on every call until `--restart`, and says so when a call
+  changes them.
+- **`addinitscript` is listed in `--help` and refused** as `Unknown command`.
+  Inject an init script over CDP (`Page.addScriptToEvaluateOnNewDocument`) or
+  with `eval` after load.
+- **`fill` on an `input[type=datetime-local]` leaves it empty**, with no error.
+  Click each spin-button segment and type its digits, or set the value through
+  `eval` and dispatch `input` and `change`.
+- **`display-mode` cannot be emulated.** Chromium ignores it in
+  `Emulation.setEmulatedMedia`, and agent-browser has no setting for it, so a
+  `display-mode: standalone` assertion needs a `matchMedia` shim and says so in
+  the report.
 
 ## Related
 
