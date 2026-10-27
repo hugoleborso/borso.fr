@@ -116,6 +116,8 @@ The SessionStart hook installs AWS CLI v2 when the key id looks real, and prints
 
 Reads work; writes are denied. **`iam:*` is denied too, so no session can read the policy that binds it** — never trust a written list of its verbs, here or anywhere, and probe the one call you need instead. For trust policies specifically, `aws cloudformation get-template --stack-name borso-shared` returns every role's `AssumeRolePolicyDocument` and reflects the *deployed* account rather than the checked-out branch — see [`docs/knowledge/github-oidc-sub-claim-per-trigger.md`](./docs/knowledge/github-oidc-sub-claim-per-trigger.md).
 
+**Production data has one read path: `APP=<app> scripts/db-read.sh "<one SELECT>"`, for the `prod` schema of `pragma` (the default), `last-loop-lepin` and `banana-rush`.** It signs in as `ai_reader_prod`, a role that holds `SELECT` and nothing else, and the project's allow rule lets it past the auto-mode classifier, which still refuses a DSQL admin token. Results land in the transcript, so select the columns you need. `talos` is refused, because its data is private: agents read it through its own `POST /api/agent/sql` ([ADR-0039](./docs/adr/0039-talos-memory-in-the-database.md)). A preview or a write goes to a local session with `borso-admin` ([ADR-0044](./docs/adr/0044-read-only-production-database-access-for-agents.md), [knowledge entry](./docs/knowledge/the-production-database-is-out-of-reach-of-a-hosted-session.md)).
+
 Full setup including key rotation: [`docs/aws-setup.md#12`](./docs/aws-setup.md#12-optional-grant-claude-code-on-the-web-read-access-to-aws).
 
 ## Architecture map

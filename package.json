@@ -7,6 +7,7 @@
     "node": ">=22"
   },
   "scripts": {
+    "db:read": "scripts/db-read.sh",
     "format": "prettier --write . --cache",
     "format:check": "prettier --check . --cache",
     "knip": "knip",

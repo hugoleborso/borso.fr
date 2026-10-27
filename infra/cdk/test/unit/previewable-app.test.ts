@@ -169,6 +169,22 @@ new PreviewableApp(cloneStacks.stageStack, 'App', {
 });
 const cloneTemplate = Template.fromStack(cloneStacks.stageStack);
 
+const READER_USER_ARN = 'arn:aws:iam::123456789012:user/AI-Dev-ReadOnly';
+const readerStacks = bootstrap('R');
+new PreviewableApp(readerStacks.stageStack, 'App', {
+  app: 'test-app',
+  stage: 'preview',
+  prNumber: 7,
+  frontend: { distPath: '.' },
+  database: {
+    migrationsPath: MIGRATIONS,
+    cluster: readerStacks.clusterStack.cluster,
+    readerPrincipalArns: [READER_USER_ARN],
+    readerTableBlocklist: ['hello'],
+  },
+});
+const readerTemplate = Template.fromStack(readerStacks.stageStack);
+
 describe('PreviewableApp (preview with db)', () => {
   it('shares the cluster across stages via cross-stack reference, no SSM ceremony in stage stack', () => {
     sharedClusterTemplate.resourceCountIs('AWS::CloudFormation::CustomResource', 1);
@@ -185,6 +201,24 @@ describe('PreviewableApp (preview with db)', () => {
       tableBlocklist: ['admin_sessions'],
       columnsToNullify: { runners: ['photo_key'] },
     });
+  });
+});
+
+describe('PreviewableApp (database reader)', () => {
+  it('forwards database.readerPrincipalArns to the schema custom resource', () => {
+    const [schemaCustomResource] = Object.values(
+      readerTemplate.findResources('AWS::CloudFormation::CustomResource'),
+    );
+    expect(getProperties(schemaCustomResource)?.readerRoleName).toBe('ai_reader_pr_7');
+    expect(getProperties(schemaCustomResource)?.readerPrincipalArns).toEqual([READER_USER_ARN]);
+    expect(getProperties(schemaCustomResource)?.readerTableBlocklist).toEqual(['hello']);
+  });
+
+  it('sends no reader when the application lists none', () => {
+    const [schemaCustomResource] = Object.values(
+      sharedClusterTemplate.findResources('AWS::CloudFormation::CustomResource'),
+    );
+    expect(getProperties(schemaCustomResource)).not.toHaveProperty('readerRoleName');
   });
 });
 

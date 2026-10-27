@@ -44,6 +44,8 @@ export interface PreviewableAppProps {
     readonly migrationsPath: string;
     readonly cluster: IDsqlCluster;
     readonly cloneFromSchema?: DsqlSchemaCloneFromConfig;
+    readonly readerPrincipalArns?: readonly string[];
+    readonly readerTableBlocklist?: readonly string[];
   };
 }
 
@@ -71,6 +73,12 @@ export class PreviewableApp extends Construct {
         ...(props.database.cloneFromSchema === undefined
           ? {}
           : { cloneFromSchema: props.database.cloneFromSchema }),
+        ...(props.database.readerPrincipalArns === undefined
+          ? {}
+          : { readerPrincipalArns: props.database.readerPrincipalArns }),
+        ...(props.database.readerTableBlocklist === undefined
+          ? {}
+          : { readerTableBlocklist: props.database.readerTableBlocklist }),
       });
     }
 
