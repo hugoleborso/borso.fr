@@ -4,7 +4,7 @@
 
 No front end in this repository contains a `useEffect`. The four replacements
 below cover every case we have met, and a genuinely new case needs an
-explanation in the pull request and an ESLint disable comment that names it.
+explanation in the pull request and an `eslint-disable` comment that names it.
 
 ## Reason
 
@@ -121,17 +121,17 @@ are synchronising with.
 
 ## Enforced by
 
-- `eslint:borso/no-use-effect` rejects every effect across `apps/*/site/`, and
+- `oxlint:borso/no-use-effect` rejects every effect across `apps/*/site/`, and
   the disable comment that excuses one has to carry a reason.
-- `eslint:react-hooks/rules-of-hooks` rejects a hook called conditionally or
+- `oxlint:react/rules-of-hooks` rejects a hook called conditionally or
   outside a component.
-- `eslint:react-hooks/exhaustive-deps` rejects a dependency array that does not
+- `oxlint:react/exhaustive-deps` rejects a dependency array that does not
   list everything the effect reads. It ships at `warn` from the plugin's
   recommended preset, so both the pre-commit hook and `ci.yml` pass
   `--max-warnings 0` and a warning fails the run exactly as an error does.
   Without that flag eslint exits 0 on a warning, which is how a rule stays on
   and gates nothing.
-- `eslint:borso/no-inline-subscribe-in-use-sync-external-store` rejects an
+- `oxlint:borso/no-inline-subscribe-in-use-sync-external-store` rejects an
   inline `subscribe` or `getSnapshot` argument, which resubscribes on every
   render.
 - `reviewer` checks that the reason on a surviving effect names the external

@@ -92,10 +92,18 @@ measures each check against it and refuses the one that exceeds it.
   file naming a path the commit removes. The three twelve-second checks are a
   single pass (`check-pure-modules-have-callers.sh`, 0.1 s on the whole tree),
   a staged-files read (`check-no-null-bytes.sh`), and a move to pre-push
-  (`check-every-test-is-collected.sh`). ESLint, the generators, the tooling
-  type check, the enforcement ledger and the hook-decision table moved to
+  (`check-every-test-is-collected.sh`). The hook-decision table moved to
   pre-push; the architecture generator runs in CI only. Every check that left
   the commit or narrowed on it has a whole-tree run in `ci.yml`.
+- **Tools:** ESLint, the generators, the tooling type check and the enforcement
+  ledger first moved to pre-push too. The operator refused that: a check stays
+  where it is or moves earlier, and the tool gets faster instead. oxlint,
+  oxfmt and TypeScript 7 replaced ESLint, Prettier and TypeScript 5.9 for the
+  checks
+  ([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md),
+  [ADR-0046](../adr/0046-typescript-7-type-checks-beside-typescript-5-9.md)),
+  the generators run under plain node, and all of them are back on the commit
+  except the type-aware lint rules.
 
 ## Eradication (mandatory — code-level)
 

@@ -182,26 +182,26 @@ predates the suffix and has not been renamed.
 
 ## Enforced by
 
-- `eslint:borso/no-vendor-sdk-outside-adapter` rejects an import of a reporting
+- `oxlint:borso/no-vendor-sdk-outside-adapter` rejects an import of a reporting
   SDK from anywhere under `site/` other than `observability/`.
-- `eslint:borso/no-direct-api-fetch-in-site` rejects a `fetch` call whose URL
+- `oxlint:borso/no-direct-api-fetch-in-site` rejects a `fetch` call whose URL
   literal starts with `/api/`.
-- `eslint:borso/no-api-anchor-in-site` rejects a JSX attribute whose literal
+- `oxlint:borso/no-api-anchor-in-site` rejects a JSX attribute whose literal
   value starts with `/api/`.
-- `eslint:borso/no-server-state-in-use-state` rejects a `useEffect` that calls
+- `oxlint:borso/no-server-state-in-use-state` rejects a `useEffect` that calls
   `fetch` or an API client method and then sets state.
-- `eslint:borso/no-discarded-await-before-navigation` rejects a write whose
+- `oxlint:borso/no-discarded-await-before-navigation` rejects a write whose
   promise is dropped on the way to a route change, where the failure would land
   on a screen nobody is looking at.
-- `eslint:borso/no-refetch-of-optimistically-written-query` rejects an
+- `oxlint:borso/no-refetch-of-optimistically-written-query` rejects an
   `invalidateQueries` or `refetchQueries` call whose key covers one the same
   mutation wrote in `onMutate`, including one reached through a helper declared
   in the same file. It expands each key through its factory, so a sibling key
   passes and a prefix of a written key does not; a key it cannot expand, such as
   one from a factory declared in another file, counts as covering.
-- `eslint:@typescript-eslint/no-unsafe-assignment` fails on a response value that
+- `oxlint:typescript/no-unsafe-assignment` fails on a response value that
   has lost its type.
-- `eslint:no-restricted-imports` rejects a database package imported from a
+- `oxlint:no-restricted-imports` rejects a database package imported from a
   site. The typed client is the only way across, and a bundler pulling `pg` into
   a browser build fails at run time rather than at build time.
 - `reviewer` checks that a mutation whose full result the client already holds

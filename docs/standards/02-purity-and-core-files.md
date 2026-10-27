@@ -110,7 +110,7 @@ inside a `.core.ts` or `.utils.ts` file is exempt, because a condition inside
 one of those files is exactly where the rule wants it. React's own `Suspense`
 and error boundary fallbacks are exempt.
 
-The ESLint rule encodes the same list.
+The lint rule encodes the same list.
 
 ## Choosing between core and utils
 
@@ -257,28 +257,28 @@ at zero over a changed-only selection. See [10. Testing](./10-testing.md).
 
 ## Enforced by
 
-- `eslint:borso/pure-functions-live-in-core-files` fails when a function with a
+- `oxlint:borso/pure-functions-live-in-core-files` fails when a function with a
   branch and no impure call is declared outside a `.core.ts` or `.utils.ts`
   file.
-- `eslint:borso/conditions-live-in-pure-functions` fails on a condition outside
+- `oxlint:borso/conditions-live-in-pure-functions` fails on a condition outside
   a `.core.ts` or `.utils.ts` file that does not match the exemption list above.
-- `eslint:borso/no-adapter-import-in-pure-module` rejects an `.adapter.ts`
+- `oxlint:borso/no-adapter-import-in-pure-module` rejects an `.adapter.ts`
   import from a `.core.ts` or `.utils.ts`, which is the one way a pure file
   reaches the network while both pure gates still score full marks.
-- `eslint:borso/no-api-import-in-site` rejects any import from a site into its
+- `oxlint:borso/no-api-import-in-site` rejects any import from a site into its
   API, through `@api/*` or a relative path, except a type-only import from
   `@api/app`.
-- `eslint:borso/no-api-declaration-repeated-in-site` rejects a module level
+- `oxlint:borso/no-api-declaration-repeated-in-site` rejects a module level
   constant or function in a site whose name the same application's API or
   `domain/` already declares: an exported constant, any constant in a
   `.schema.ts`, or an exported function in a `.core.ts` or `.utils.ts`. A
   unit conversion such as `SECONDS_PER_MINUTE` is exempt. It compares names,
   so a copy under a new name passes it, and the reviewer bullet below is what
   catches that.
-- `eslint:borso/no-impure-calls-in-core-files` rejects `Date.now`, a zero
+- `oxlint:borso/no-impure-calls-in-core-files` rejects `Date.now`, a zero
   argument `new Date()`, `Math.random`, `fetch`, `process.env`, `localStorage`,
   and the console methods inside a `.core.ts` or `.utils.ts` file.
-- `eslint:unicorn/consistent-function-scoping` moves a function that closes over
+- `oxlint:unicorn-js/consistent-function-scoping` moves a function that closes over
   nothing out to module scope.
 - `gate:vitest-coverage` holds every pure file at full statement, branch,
   function and line coverage.

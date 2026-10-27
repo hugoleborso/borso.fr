@@ -3,13 +3,16 @@
 ## Rule
 
 Every tool this repository runs on itself has a runtime budget, and a tool over
-its budget reads less or runs later. It is never exempted.
+its budget reads less, is replaced by a faster tool that checks the same thing,
+or, as a last resort, runs later. It is never exempted.
 
 | Stage | Budget | Measured as | Enforced by |
 | --- | --- | --- | --- |
 | One pre-commit check | 300 ms | CPU time of the check and everything it starts | the hook itself, on every commit |
-| Prettier on the commit | 600 ms, plus 100 ms per staged file past the first | the same | the hook itself |
-| A per-file check on the commit | 300 ms, plus 20 ms per staged file past the first | the same | the hook itself |
+| A per-file check on the commit, oxfmt included | 300 ms, plus 20 ms per staged file past the first | the same | the hook itself |
+| oxlint on the commit | 3 s, plus 100 ms per staged file past the first | the same | the hook itself |
+| The tooling type check on the commit | 2.5 s | the same | the hook itself |
+| A whole-tree generator on the commit | 1 s | the same | the hook itself |
 | The whole pre-commit hook | 3 s on a typical commit | wall clock, on a machine nothing else uses | CI's `pre-commit-budget` job, on a fixture commit |
 | The pre-push hook | 60 s for a change confined to one application | wall clock | not gated yet; see the last section |
 | CI on a pull request | 10 min | wall clock of the slowest job | `timeout-minutes: 10` on every job of `ci.yml` |
@@ -65,11 +68,30 @@ The scope is matched against one `<status> <path>` line per staged path, with a
 rename split into a removal and an addition. A change to the check's own script
 runs it too, without the scope saying so.
 
-A check that cannot meet its budget even on one file moves. ESLint is the
-largest case: it is type-aware, so it builds a TypeScript program for the whole
-workspace before it reads the one staged file, and that took 2.8 s on a cache
-hit and 21 s for one changed file in pragma. No narrowing reaches 300 ms from
-there, so it runs on push.
+A check that cannot meet its budget even on one file moves, or its tool is
+replaced by a faster one that checks the same thing. ESLint was the largest
+case: it built a TypeScript program for the whole workspace before it read the
+one staged file, 21 s for one changed file in pragma. oxlint replaced it and
+oxfmt replaced Prettier
+([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)), and
+TypeScript 7 runs the type checks
+([ADR-0046](../adr/0046-typescript-7-type-checks-beside-typescript-5-9.md)), so
+the checks that had left the commit came back.
+
+Three tools have a named budget rather than the 300 ms of a check, each set
+from a measurement on 2026-10-27, and each still held by the hook:
+
+- **oxlint** loads its JavaScript plugins on every run, 0.9 s of CPU for one
+  script, and `eslint-plugin-react-hooks` runs the React Compiler on each
+  component, 2.3 s for one and about 0.1 s for each further one.
+- **The tooling type check** is a whole program: 1.5 to 2.1 s of CPU, 1 s of
+  wall time.
+- **A whole-tree generator** reads the source tree under plain node: 0.2 to
+  0.7 s of CPU each, the enforcement ledger the heaviest.
+
+The type-aware lint rules are the one check that stays off the commit: one
+pragma file needs 2.9 s of wall time and 8 s of CPU for its program, past the
+3 s a commit may take. They run on push and in CI.
 
 ## Why CPU time on the commit, and wall time in CI
 
@@ -100,13 +122,14 @@ fits in 300 ms.
 
 | Check | On the commit | Whole tree |
 | --- | --- | --- |
-| Prettier | staged files | `ci.yml`, `pnpm run format:check` |
-| ESLint | not run | pre-push over the changed files; `ci.yml` |
-| Tooling type check | not run | pre-push when `scripts/`, `.claude/skills/`, `eslint-rules/` or `tsconfig.json` change; `ci.yml` |
-| Blueprint index and context, convention drift | not run | pre-push when source changes; `ci.yml` |
-| Blueprint defects | not run | pre-push; `ci.yml` |
-| Dantotsu front matter, weak points, working conditions | not run | pre-push when the record changes or a path is removed; `ci.yml` |
-| Enforcement ledger | not run | pre-push when a standard or a mechanism changes; `ci.yml` |
+| oxfmt | staged files | `ci.yml`, `pnpm run format:check` |
+| oxlint, every rule but the type-aware ones | staged files | `ci.yml` |
+| oxlint, type-aware rules and unused directives | not run | pre-push over the changed files; `ci.yml` |
+| Tooling type check | when `scripts/`, `.claude/skills/`, `eslint-rules/` or `tsconfig.json` change | `ci.yml` |
+| Blueprint index and context, convention drift | when source changes | `ci.yml` |
+| Blueprint defects | when source or a dantotsu changes | `ci.yml` |
+| Dantotsu front matter, weak points, working conditions | when the record changes or a path is removed; the front matter of the staged entries only | `ci.yml` |
+| Enforcement ledger | when a standard or a mechanism changes | `ci.yml` |
 | Architecture maps | not run | `ci.yml` and `architecture.yml` only: 196 s is past the push budget too |
 | Every test is collected | not run | pre-push for the workspaces whose tests or config change; `ci.yml` |
 | Hook decisions | not run | pre-push when a hook changes; `ci.yml` |
@@ -135,14 +158,26 @@ slowest checks were `check-every-test-is-collected.sh` at 13.1 s,
 0.1 s on the whole tree; the third reads only the staged files; the first
 moved to pre-push.
 
+## Measured on 2026-10-27, after the tool switch
+
+| Run | ESLint, Prettier, TypeScript 5.9 | oxlint, oxfmt, TypeScript 7 |
+| --- | --- | --- |
+| `.husky/pre-commit`, nothing staged | 0.14 s | 0.12 s |
+| `.husky/pre-commit`, one file of each of eight kinds, every moved check back | 1.6 s without ESLint, the tooling type check and the generators | 2.1 to 2.3 s with all of them |
+| Lint over the repository, type-aware | 256 to 454 s cold, one process per workspace | 28 to 38 s, one process |
+| Format check over the repository | 43.7 s without a cache | 1.5 s |
+| pragma type check | 32 s, 12 to 23 s incremental | 9.7 s cold, 4 s incremental |
+| Tooling type check | 6.6 s | 1.2 s |
+| Enforcement ledger | 6.4 s | 0.5 s |
+
 ## What is not gated yet
 
 - **The pre-push budget.** It is measured by hand on a fixture, a one-line
-  change to a pragma component. The type check of pragma alone is 38 to 47 s
-  on a quiet machine, so the hook starts it first, and the app type checks are
-  incremental, which brings a repeat run of pragma's down to 12 to 23 s. A
+  change to a pragma component. With TypeScript 7 the type check of pragma is
+  9.7 s cold and 4 s incremental, and the type-aware lint of the changed file
+  5.6 s. A
   gate would need a CI job that installs, builds the infrastructure package and
-  runs knip, the type checker, ESLint and the affected tests, which is a few
+  runs knip, the type checker, oxlint and the affected tests, which is a few
   minutes of CI per pull request to measure one minute.
 - **The unit suite budget.** No application meets it. Measured on 2026-10-24
   on the shared machine, at a load average between 10 and 18 on four cores,
