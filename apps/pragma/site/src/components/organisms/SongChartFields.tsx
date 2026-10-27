@@ -27,9 +27,9 @@ interface SongChartFieldsProps {
   readonly onBaseEnergyChange: (value: string) => void;
 }
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const RADIO_LABEL_CLASS =
-  'inline-flex items-center gap-2 min-h-11 px-2 rounded-md text-sm text-ink-700 cursor-pointer';
+  'inline-flex items-center gap-2 min-h-11 px-2 rounded-md text-meta text-ink cursor-pointer';
 const RADIO_INPUT_CLASS = 'w-5 h-5 accent-accent';
 
 // @FollowsBlueprint organism-presentational
@@ -71,7 +71,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
         onChange={(event) => props.onBaseEnergyChange(event.target.value)}
       />
 
-      <fieldset className="border border-line rounded-md p-3 mt-2">
+      <fieldset className="border border-rule rounded-md p-3 mt-2">
         <legend className={composeClassName(LABEL_CLASS, 'px-2')}>{t('catalog.chordChart')}</legend>
         <div className="flex flex-wrap gap-3">
           <label className={RADIO_LABEL_CLASS}>

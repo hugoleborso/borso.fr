@@ -16,14 +16,16 @@ import { Badge } from '../atoms/Badge';
 import { Chip } from '../atoms/Chip';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
+import { ListRow } from '../molecules/ListRow';
 
 const MOBILE_HIDDEN_COLUMN_IDS = new Set(['city', 'capacity', 'owner', 'mood']);
 
 const ROW_OPENING_BUTTON_CLASS =
-  'flex flex-col items-start justify-center w-full min-h-11 text-left text-[13.5px] text-ink-900 ' +
-  'cursor-pointer bg-transparent border-0 p-0 after:absolute after:inset-0';
+  'flex-col items-start justify-center gap-0 text-meta after:absolute after:inset-0';
 
 const ROW_OVERLAY_ESCAPING_CLASS = 'relative z-10';
+const UNSORTED_ICON_CLASS = 'ml-1 inline-block text-ink-faint';
 
 const SORT_ARROW_ROTATION_BY_DIRECTION = {
   asc: '-rotate-90',
@@ -63,20 +65,20 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         accessorKey: 'name',
         header: () => t('bars.name'),
         cell: ({ row }) => (
-          <button
-            type="button"
+          <ListRow
+            isChevronShown={false}
             className={ROW_OPENING_BUTTON_CLASS}
             onClick={() => onSelect(row.original.id)}
           >
             {row.original.name}
-            <span className="md:hidden text-xs font-mono text-ink-400">
+            <span className="md:hidden text-meta font-mono text-ink-soft">
               {row.original.city ?? ''} · {formatCapacity(row.original.capacity)}
             </span>
-            <span className="md:hidden text-xs text-ink-500">
+            <span className="md:hidden text-meta text-ink-soft">
               {row.original.ownerName ?? t('bars.ownerNone')}
               {row.original.moodLabel === null ? '' : ` · ${row.original.moodLabel}`}
             </span>
-          </button>
+          </ListRow>
         ),
         enableSorting: true,
       },
@@ -100,7 +102,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         accessorFn: (row) => row.ownerName ?? '',
         header: () => t('bars.owner'),
         cell: ({ row }) => (
-          <span className="text-xs text-ink-500">
+          <span className="text-meta text-ink-soft">
             {row.original.ownerName ?? t('bars.ownerNone')}
           </span>
         ),
@@ -120,7 +122,9 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         id: 'city',
         accessorKey: 'city',
         header: () => t('bars.city'),
-        cell: ({ row }) => <span className="text-xs text-ink-500">{row.original.city ?? ''}</span>,
+        cell: ({ row }) => (
+          <span className="text-meta text-ink-soft">{row.original.city ?? ''}</span>
+        ),
         enableSorting: true,
       },
       {
@@ -128,7 +132,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         accessorKey: 'capacity',
         header: () => t('bars.capacity'),
         cell: ({ row }) => (
-          <span className="text-xs font-mono text-ink-400">
+          <span className="text-meta font-mono text-ink-soft">
             {formatCapacity(row.original.capacity)}
           </span>
         ),
@@ -139,17 +143,13 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         id: 'actions',
         header: () => '',
         cell: ({ row }) => (
-          <button
-            type="button"
-            className={composeClassName(
-              'inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1',
-              ROW_OVERLAY_ESCAPING_CLASS,
-            )}
+          <IconButton
+            icon="trash"
+            variant="danger"
+            label={t('common.delete')}
+            className={ROW_OVERLAY_ESCAPING_CLASS}
             onClick={() => onRemove(row.original.id)}
-            aria-label={t('common.delete')}
-          >
-            ×
-          </button>
+          />
         ),
         enableSorting: false,
       },
@@ -169,7 +169,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
 
   return (
     <ul className="flex flex-col gap-1.5" aria-label={t('bars.title')}>
-      <li className="flex items-center gap-3 px-3 text-xs tracking-wider uppercase text-ink-500 font-medium">
+      <li className="flex items-center gap-3 px-3 text-label tracking-wider uppercase text-ink-soft font-medium">
         {table.getHeaderGroups()[0]?.headers.map((header, index) => {
           const sortDirection = header.column.getIsSorted();
           const canSort = header.column.getCanSort();
@@ -191,13 +191,15 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
               {sortDirection ? (
                 <Icon
                   name="chevR"
-                  size={10}
+                  size="sm"
                   className={composeClassName(
                     'inline-block ml-1',
                     SORT_ARROW_ROTATION_BY_DIRECTION[sortDirection],
                   )}
                 />
-              ) : null}
+              ) : (
+                <Icon name="reorder" size="sm" className={UNSORTED_ICON_CLASS} />
+              )}
             </SortableHeader>
           );
         })}
@@ -207,7 +209,7 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
           key={row.id}
           aria-current={row.original.isBeingEdited}
           className={composeClassName(
-            'relative flex items-center gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors',
+            'relative flex items-center gap-3 bg-leaf border border-rule rounded-md px-3 py-2 hover:border-rule-strong transition-colors',
             row.original.isStale && 'border-warn/40',
             row.original.isBeingEdited && 'ring-2 ring-accent',
           )}
@@ -241,7 +243,7 @@ interface SortableHeaderProps {
 }
 
 const HEADER_CELL_CLASS =
-  'items-center min-h-11 bg-transparent border-0 text-xs tracking-wider uppercase text-ink-500 font-medium p-0 text-left';
+  'items-center min-h-11 bg-transparent border-0 text-label tracking-wider uppercase text-ink-soft font-medium p-0 text-left';
 
 function SortableHeader({
   canSort,
@@ -253,6 +255,7 @@ function SortableHeader({
     return <span className={composeClassName(className, HEADER_CELL_CLASS)}>{children}</span>;
   }
   return (
+    // eslint-disable-next-line borso/no-raw-interactive-element -- a sortable column heading is the table's own control, named by its header text; it is not an action a Button with an icon describes
     <button
       type="button"
       onClick={onToggleSorting}

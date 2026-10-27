@@ -9,7 +9,7 @@ import { Input } from '../atoms/Input';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { type CalendarFeedFormMode, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
 
-const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const ADDRESS_MAX_LENGTH = 2_048;
 
 export interface CalendarFeedFormProps {
@@ -67,8 +67,9 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
             <Button
+              icon="check"
               type="submit"
-              variant="accent"
+              variant="primary"
               disabled={isSubmitDisabled(canSubmit, isSubmitting)}
             >
               {t('common.save')}
@@ -76,7 +77,7 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
           )}
         </form.Subscribe>
         {onCancel === null ? null : (
-          <Button type="button" variant="ghost" onClick={onCancel}>
+          <Button icon="close" type="button" variant="quiet" onClick={onCancel}>
             {t('common.cancel')}
           </Button>
         )}
@@ -100,13 +101,19 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
     replacing: <AddressField onSave={saveAndClose} onCancel={() => setIsReplacing(false)} />,
     connected: (
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm text-ink-900">{t('account.calendarFeedConnected')}</span>
-        <Button type="button" variant="default" onClick={() => setIsReplacing(true)}>
+        <span className="text-meta text-ink">{t('account.calendarFeedConnected')}</span>
+        <Button
+          icon="refresh"
+          type="button"
+          variant="secondary"
+          onClick={() => setIsReplacing(true)}
+        >
           {t('account.calendarFeedReplace')}
         </Button>
         <Button
+          icon="trash"
           type="button"
-          variant="ghost"
+          variant="quiet"
           onClick={() => setIsConfirmingRemoval(true)}
           disabled={props.isRemoving}
         >
@@ -131,12 +138,12 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
         />
       ) : null}
       {props.error === null ? null : (
-        <p className="text-danger text-sm m-0" role="alert">
+        <p className="text-danger text-meta m-0" role="alert">
           {props.error}
         </p>
       )}
       {props.message === null ? null : (
-        <p className="text-sm text-ink-500 m-0" role="status">
+        <p className="text-meta text-ink-soft m-0" role="status">
           {props.message}
         </p>
       )}

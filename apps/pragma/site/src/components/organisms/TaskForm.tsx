@@ -5,11 +5,15 @@ import { TASK_STATUSES, type TaskStatus } from '@domain/task-status.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
-import { StickyFormActions } from '../atoms/StickyFormActions';
+import { Chip } from '../atoms/Chip';
+import { Icon, type IconName } from '../atoms/Icon';
+import { BottomActions } from '../atoms/BottomActions';
 import { Card } from '../atoms/Card';
-import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
+import { MemberChip } from '../molecules/MemberChip';
+import { inputVariants } from '../atoms/input.variants';
 import { TASK_STATUS_LABEL_KEY } from '../../routes/tasks/tasks-page.core';
 
 export interface TaskFormValues {
@@ -24,27 +28,25 @@ export interface TaskFormValues {
 export interface TaskFormProps {
   readonly values: TaskFormValues;
   readonly isEditing: boolean;
-  readonly members: readonly { readonly id: string; readonly firstName: string }[];
+  readonly members: readonly {
+    readonly id: string;
+    readonly firstName: string;
+    readonly color: string;
+  }[];
   readonly compositions: readonly { readonly id: string; readonly title: string }[];
   readonly onSubmit: (values: TaskFormValues) => Promise<void>;
   readonly onCancel: () => void;
 }
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
-const PILL_CLASS =
-  'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors';
-const PILL_CLASS_BY_STATE = {
-  selected: 'bg-accent-soft border-accent text-accent font-medium',
-  unselected: 'bg-bg border-line text-ink-500 hover:border-line-strong',
-} as const;
-const SELECT_CLASS =
-  'min-h-11 px-2.5 rounded-md border border-line bg-bg text-[13.5px] text-ink-900';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
+const SELECT_CLASS = inputVariants({ size: 'md' });
 const NO_COMPOSITION_VALUE = '';
+const TASK_STATUS_ICON = {
+  todo: 'tasks',
+  doing: 'play',
+  done: 'check',
+} as const satisfies Readonly<Record<TaskStatus, IconName>>;
 const NOTES_ROWS = 3;
-
-function pillClass(isSelected: boolean): string {
-  return composeClassName(PILL_CLASS, PILL_CLASS_BY_STATE[isSelected ? 'selected' : 'unselected']);
-}
 
 function compositionIdFromValue(value: string): string | null {
   return value === NO_COMPOSITION_VALUE ? null : value;
@@ -62,7 +64,7 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
 
   return (
     <Card className="flex flex-col gap-3">
-      <h3 className="font-display italic text-2xl text-ink-900 m-0">
+      <h3 className="font-display text-title text-ink m-0">
         {t(props.isEditing ? 'tasks.editTitle' : 'tasks.newTitle')}
       </h3>
       <form
@@ -94,24 +96,19 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
         <form.Field name="assigneeId">
           {(field) => (
             <div className="flex flex-wrap gap-1.5" role="group">
-              <button
-                type="button"
-                aria-pressed={field.state.value === null}
-                onClick={() => field.handleChange(null)}
-                className={pillClass(field.state.value === null)}
-              >
+              <Chip pressed={field.state.value === null} onPress={() => field.handleChange(null)}>
+                <Icon name="members" />
                 {t('tasks.unassigned')}
-              </button>
+              </Chip>
               {props.members.map((member) => (
-                <button
+                <Chip
                   key={member.id}
-                  type="button"
-                  aria-pressed={field.state.value === member.id}
-                  onClick={() => field.handleChange(member.id)}
-                  className={pillClass(field.state.value === member.id)}
+                  pressed={field.state.value === member.id}
+                  onPress={() => field.handleChange(member.id)}
                 >
+                  <MemberChip memberName={member.firstName} memberColor={member.color} />
                   {member.firstName}
-                </button>
+                </Chip>
               ))}
             </div>
           )}
@@ -122,15 +119,14 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
           {(field) => (
             <div className="flex flex-wrap gap-1.5" role="group">
               {TASK_STATUSES.map((status) => (
-                <button
+                <Chip
                   key={status}
-                  type="button"
-                  aria-pressed={field.state.value === status}
-                  onClick={() => field.handleChange(status)}
-                  className={pillClass(field.state.value === status)}
+                  pressed={field.state.value === status}
+                  onPress={() => field.handleChange(status)}
                 >
+                  <Icon name={TASK_STATUS_ICON[status]} />
                   {t(TASK_STATUS_LABEL_KEY[status])}
-                </button>
+                </Chip>
               ))}
             </div>
           )}
@@ -176,31 +172,36 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
         </label>
         <form.Field name="notes">
           {(field) => (
-            <textarea
+            <AutoGrowTextarea
               id="task-notes"
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               maxLength={TASK_NOTES_MAX_LENGTH}
               rows={NOTES_ROWS}
-              className="px-2.5 py-2 rounded-md border border-line bg-bg text-[13.5px] text-ink-900 resize-y"
+              className="font-display italic"
             />
           )}
         </form.Field>
 
-        <StickyFormActions>
+        <BottomActions>
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
-              <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+              <Button
+                icon="check"
+                type="submit"
+                variant="primary"
+                disabled={!canSubmit || isSubmitting}
+              >
                 {t('common.save')}
               </Button>
             )}
           </form.Subscribe>
           {props.isEditing ? (
-            <Button type="button" variant="ghost" onClick={props.onCancel}>
+            <Button icon="close" type="button" variant="quiet" onClick={props.onCancel}>
               {t('common.cancel')}
             </Button>
           ) : null}
-        </StickyFormActions>
+        </BottomActions>
       </form>
     </Card>
   );

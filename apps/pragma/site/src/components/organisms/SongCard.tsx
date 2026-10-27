@@ -57,24 +57,24 @@ export function SongCard({
     <Link
       to={`/catalog/${id}`}
       {...longPress}
-      className="block bg-bg-elev border border-line rounded-lg p-3 sm:p-4 transition-all duration-100 hover:-translate-y-px hover:border-line-strong select-none"
+      className="block bg-leaf border border-rule rounded-lg p-3 sm:p-4 transition-all duration-100 hover:-translate-y-px hover:border-rule-strong select-none"
     >
       <div className="flex items-start gap-3">
         <AlbumCover title={title} deezerAlbumId={deezerAlbumId} size="md" />
         <div className="min-w-0 flex-1 flex flex-col gap-1.5">
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display italic text-[22px] leading-tight tracking-[-0.01em] text-ink-900 m-0 min-w-0">
+            <h3 className="font-display text-title leading-tight tracking-[-0.01em] text-ink m-0 min-w-0">
               {title}
             </h3>
             <ChartKindIcon kind={chartKind} />
           </div>
           <div className="flex items-center justify-between gap-2 min-w-0">
-            <div className="flex items-center gap-2 text-xs text-ink-500 min-w-0">
+            <div className="flex items-center gap-2 text-meta text-ink-soft min-w-0">
               <span className="truncate">{artist}</span>
               {tonalityLabel !== null && (
                 <>
-                  <span className="text-ink-300">·</span>
-                  <span className="font-mono text-xs">{tonalityLabel}</span>
+                  <span className="text-ink-faint">·</span>
+                  <span className="font-mono text-meta">{tonalityLabel}</span>
                 </>
               )}
             </div>

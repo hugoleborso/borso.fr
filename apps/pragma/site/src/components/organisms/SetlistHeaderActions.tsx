@@ -6,17 +6,12 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { useDeleteSetlist, useRenameSetlist } from '../../lib/queries/setlists.queries';
 import { Button } from '../atoms/Button';
-import { buttonVariants } from '../atoms/button.variants';
-import { composeClassName } from '../atoms/class-name.utils';
+import { iconButtonVariants } from '../atoms/button.variants';
 import { Icon } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
 import { Input } from '../atoms/Input';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
-import { OverflowMenu } from '../molecules/OverflowMenu';
-
-const ICON_ACTION_CLASS = composeClassName(
-  buttonVariants({ variant: 'ghost', size: 'md' }),
-  'no-underline w-11 px-0',
-);
+import { Menu } from '../molecules/Menu';
 
 interface SetlistHeaderActionsProps {
   readonly setlistId: string;
@@ -58,12 +53,12 @@ export function SetlistHeaderActions({
             to={`/setlists/${setlistId}/scene`}
             aria-label={t('scene.title')}
             title={t('scene.title')}
-            className={ICON_ACTION_CLASS}
+            className={iconButtonVariants({ variant: 'quiet' })}
           >
-            <Icon name="play" size={18} />
+            <Icon name="play" size="md" />
           </Link>
           {trailing}
-          <OverflowMenu
+          <Menu
             label={t('setlist.moreActions')}
             items={[
               {
@@ -90,28 +85,25 @@ export function SetlistHeaderActions({
             aria-label={t('setlist.rename.label')}
             className="flex-1 min-w-0"
           />
-          <Button variant="accent" onClick={saveName} disabled={renameSetlist.isPending}>
+          <Button
+            icon="check"
+            variant="primary"
+            onClick={saveName}
+            disabled={renameSetlist.isPending}
+          >
             {t('setlist.rename.save')}
           </Button>
-          <Button
-            variant="ghost"
-            aria-label={t('common.cancel')}
-            title={t('common.cancel')}
-            className="w-11 px-0"
-            onClick={() => setDraftName(null)}
-          >
-            <Icon name="close" size={18} />
-          </Button>
+          <IconButton icon="close" label={t('common.cancel')} onClick={() => setDraftName(null)} />
         </div>
       )}
 
       {renameSetlist.isError ? (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {t('setlist.failure.rename')}
         </p>
       ) : null}
       {deleteSetlist.isError ? (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {t('setlist.failure.delete')}
         </p>
       ) : null}

@@ -1,5 +1,7 @@
 /** @Feature members */
 
+import { listMemberPaletteHexes, MEMBER_PALETTE } from '@domain/member-palette.core';
+
 export interface MemberRow {
   readonly id: string;
   readonly firstName: string;
@@ -24,7 +26,12 @@ export interface MemberFormValues {
 
 export type MemberFormMode = 'create' | 'edit';
 
-export const DEFAULT_MEMBER_COLOR = '#2d5fa0';
+const FIRST_PALETTE_COLOR = MEMBER_PALETTE[0].hex;
+
+export function selectFreePaletteColor(usedColors: readonly string[]): string {
+  const taken = new Set(usedColors.map((color) => color.toLowerCase()));
+  return listMemberPaletteHexes().find((color) => !taken.has(color)) ?? FIRST_PALETTE_COLOR;
+}
 
 export function sortMembersByFirstName(members: readonly MemberRow[]): MemberRow[] {
   return members.toSorted((left, right) => left.firstName.localeCompare(right.firstName));
@@ -38,10 +45,13 @@ export function selectMemberFormMode(selection: MemberSelection | null): MemberF
   return selection === null ? 'create' : 'edit';
 }
 
-export function buildMemberFormValues(selection: MemberSelection | null): MemberFormValues {
+export function buildMemberFormValues(
+  selection: MemberSelection | null,
+  usedColors: readonly string[],
+): MemberFormValues {
   return {
     firstName: selection?.firstName ?? '',
-    color: selection?.color ?? DEFAULT_MEMBER_COLOR,
+    color: selection?.color ?? selectFreePaletteColor(usedColors),
   };
 }
 

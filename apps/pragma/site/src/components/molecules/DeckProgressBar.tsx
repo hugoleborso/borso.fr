@@ -3,7 +3,7 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { selectSeenShare, selectSongsLeft } from '../../routes/setlists/vote-deck.core';
-import { Crumb } from '../atoms/Crumb';
+import { Overline } from '../atoms/Overline';
 
 export interface DeckProgressBarProps {
   readonly deckLength: number;
@@ -17,14 +17,14 @@ export function DeckProgressBar({ deckLength, cardIndex }: DeckProgressBarProps)
   return (
     <div className="px-4">
       <div className="flex items-baseline justify-between gap-3">
-        <Crumb>{t('voting.songsLeftLabel')}</Crumb>
-        <span className="font-sans font-semibold tabular-nums text-ink-900">
+        <Overline>{t('voting.songsLeftLabel')}</Overline>
+        <span className="font-sans font-semibold tabular-nums text-ink">
           {selectSongsLeft(deckLength, cardIndex)} / {deckLength}
         </span>
       </div>
-      <div className="mt-2 h-1.5 w-full rounded-full bg-line overflow-hidden">
+      <div className="mt-2 h-1.5 w-full rounded-full bg-rule overflow-hidden">
         <div
-          className="h-full bg-ink-400"
+          className="h-full bg-ink-soft"
           style={{ width: `${String(selectSeenShare(deckLength, cardIndex))}%` }}
         />
       </div>

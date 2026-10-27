@@ -4,7 +4,6 @@ import { useForm } from '@tanstack/react-form';
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatSessionDate } from '../../lib/formatters.utils';
-import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
 import {
   readAudioDurationMilliseconds,
@@ -15,6 +14,7 @@ import { queueTake } from '../../lib/take-queue.setup';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
+import { Sheet } from '../molecules/Sheet';
 import { TAKE_NOT_SAVED_MESSAGE_KEY } from './recording-sheet.core';
 import {
   parseDateTimeLocalValue,
@@ -35,7 +35,7 @@ export interface TakeUploadFormProps {
   readonly onClose: () => void;
 }
 
-const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const SELECT_CLASS = inputVariants({ size: 'md' });
 const AUDIO_ACCEPT = 'audio/*';
 const NO_SESSIONS: readonly never[] = [];
@@ -95,23 +95,36 @@ export function TakeUploadForm({
   };
 
   return (
-    <dialog
-      ref={openDialogOnAttach}
+    <Sheet
+      title={t('takes.uploadForm.title', { title: songTitle })}
+      label={t('takes.uploadForm.title', { title: songTitle })}
+      isDismissible={false}
       onClose={onClose}
-      aria-label={t('takes.uploadForm.title', { title: songTitle })}
-      className="m-auto w-[calc(100vw-2rem)] sm:w-[28rem] max-w-[28rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      footer={
+        <form.Subscribe
+          selector={(state) =>
+            [state.canSubmit, state.isSubmitting, state.values.file !== null] as const
+          }
+        >
+          {([canSubmit, isSubmitting, hasFile]) => (
+            <Button
+              type="submit"
+              variant="primary"
+              icon="upload"
+              disabled={!canSubmit || isSubmitting || !hasFile}
+            >
+              {t('common.save')}
+            </Button>
+          )}
+        </form.Subscribe>
+      }
     >
-      <form
-        className="p-4 flex flex-col gap-2.5"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-      >
-        <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-1">
-          {t('takes.uploadForm.title', { title: songTitle })}
-        </h3>
+      <div className="flex flex-col gap-2.5">
         <label className={FIELD_LABEL_CLASS} htmlFor="take-upload-file">
           {t('takes.uploadForm.file')}
         </label>
@@ -124,14 +137,14 @@ export function TakeUploadForm({
                   id="take-upload-file"
                   type="file"
                   accept={AUDIO_ACCEPT}
-                  className="text-sm text-ink-700 min-h-11"
+                  className="text-meta text-ink min-h-11"
                   onChange={(event) => {
                     const picked = event.target.files?.[0];
                     if (picked !== undefined) chooseFile(picked);
                   }}
                 />
                 {message === null ? null : (
-                  <p className="text-sm text-danger m-0" role="alert">
+                  <p className="text-meta text-danger m-0" role="alert">
                     {t(message.key, message)}
                   </p>
                 )}
@@ -175,31 +188,11 @@ export function TakeUploadForm({
           )}
         </form.Field>
         {queueFailure === null ? null : (
-          <p className="text-sm text-danger m-0" role="alert">
+          <p className="text-meta text-danger m-0" role="alert">
             {t(TAKE_NOT_SAVED_MESSAGE_KEY[queueFailure])}
           </p>
         )}
-        <div className="flex flex-wrap justify-end gap-2 mt-2">
-          <Button variant="ghost" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <form.Subscribe
-            selector={(state) =>
-              [state.canSubmit, state.isSubmitting, state.values.file !== null] as const
-            }
-          >
-            {([canSubmit, isSubmitting, hasFile]) => (
-              <Button
-                type="submit"
-                variant="accent"
-                disabled={!canSubmit || isSubmitting || !hasFile}
-              >
-                {t('common.save')}
-              </Button>
-            )}
-          </form.Subscribe>
-        </div>
-      </form>
-    </dialog>
+      </div>
+    </Sheet>
   );
 }

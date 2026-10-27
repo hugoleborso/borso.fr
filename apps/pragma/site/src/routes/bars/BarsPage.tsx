@@ -4,10 +4,10 @@ import { BAR_STATUSES, type BarStatus, type ConcertMood } from '@domain/bar-prof
 import type { JSX } from 'react';
 import { useCallback, useMemo, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { composeClassName } from '../../components/atoms/class-name.utils';
 import { Icon } from '../../components/atoms/Icon';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SectionTabs } from '../../components/molecules/SectionTabs';
 import {
   BREAKPOINT_BELOW_LG,
   useIsMediaQueryMatching,
@@ -54,18 +54,12 @@ import {
   selectFormForBar,
   addMoodLabelToCards,
   selectOwnerName,
-  selectToggleState,
   selectVisibleBarsView,
   sortBarsByName,
 } from './bars-page.core';
 
 const NO_BARS: readonly BarRow[] = [];
 const NO_OWNERS: readonly BarOwnerOption[] = [];
-
-const VIEW_TOGGLE_CLASS = {
-  active: 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]',
-  inactive: 'bg-transparent text-ink-500 hover:text-ink-700',
-} as const;
 
 // @FollowsBlueprint route-list-page
 export function BarsPage(): JSX.Element {
@@ -234,45 +228,33 @@ export function BarsPage(): JSX.Element {
       <PageHeader
         title={t('bars.title')}
         actions={
-          <div className="hidden lg:inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg">
-            <button
-              type="button"
-              onClick={() => setView('list')}
-              className={composeClassName(
-                'inline-flex items-center min-h-11 px-3 rounded-md text-xs font-medium cursor-pointer transition-colors',
-                VIEW_TOGGLE_CLASS[selectToggleState(view, 'list')],
-              )}
-            >
-              {t('bars.viewList')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('kanban')}
-              className={composeClassName(
-                'inline-flex items-center min-h-11 px-3 rounded-md text-xs font-medium cursor-pointer transition-colors',
-                VIEW_TOGGLE_CLASS[selectToggleState(view, 'kanban')],
-              )}
-            >
-              {t('bars.viewKanban')}
-            </button>
-          </div>
+          <SectionTabs
+            label={t('bars.title')}
+            tabs={[
+              { value: 'list', label: t('bars.viewList'), icon: 'catalog' },
+              { value: 'kanban', label: t('bars.viewKanban'), icon: 'bars' },
+            ]}
+            value={view}
+            onChange={setView}
+            className="hidden lg:flex"
+          />
         }
       />
 
       {displayError === null ? null : (
-        <p className="text-danger text-sm mb-3" role="alert">
+        <p className="text-danger text-meta mb-3" role="alert">
           {displayError}
         </p>
       )}
       {barsQuery.isLoading ? (
-        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
+        <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>
       ) : null}
       {hasStaleBars ? (
         <div
-          className="flex items-center gap-2 bg-warn-soft text-warn px-4 py-2.5 rounded-md text-sm mb-4"
+          className="flex items-center gap-2 bg-warn-soft text-warn px-4 py-2.5 rounded-md text-meta mb-4"
           role="alert"
         >
-          <Icon name="warn" size={16} />
+          <Icon name="warn" size="sm" />
           {t('bars.staleBanner', { count: staleCount })}
         </div>
       ) : null}
@@ -299,7 +281,7 @@ export function BarsPage(): JSX.Element {
           )
         }
       />
-      {copyMessage === null ? null : <p className="text-sm text-ink-500 mb-3">{copyMessage}</p>}
+      {copyMessage === null ? null : <p className="text-meta text-ink-soft mb-3">{copyMessage}</p>}
       {panelByView[selectVisibleBarsView(view, isNarrow)]}
       {pendingDeletionId === null ? null : (
         <ConfirmDialog

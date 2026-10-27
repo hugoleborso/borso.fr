@@ -19,12 +19,12 @@ export function RecoverPage(): JSX.Element {
   const [serverError, setServerError] = useState<string | null>(null);
 
   return (
-    <main className="min-h-dvh flex items-center justify-center bg-bg px-4 py-8">
+    <main className="min-h-dvh flex items-center justify-center bg-paper px-4 py-8">
       <Card className="w-full max-w-[420px] p-6 sm:p-8">
-        <h1 className="font-display italic text-[32px] sm:text-[40px] leading-none text-ink-900 m-0 mb-2">
+        <h1 className="font-display text-display sm:text-display leading-none text-ink m-0 mb-2">
           {t('auth.recoverTitle')}
         </h1>
-        <p className="text-sm text-ink-500 mb-6">{t('auth.recoverIntro')}</p>
+        <p className="text-meta text-ink-soft mb-6">{t('auth.recoverIntro')}</p>
         <RecoverPasswordForm
           serverError={serverError}
           onSubmit={async (values) => {
@@ -38,7 +38,7 @@ export function RecoverPage(): JSX.Element {
             }
           }}
         />
-        <p className="mt-4 text-sm text-ink-500">
+        <p className="mt-4 text-meta text-ink-soft">
           <Link to="/login" className="underline">
             {t('auth.backToLogin')}
           </Link>

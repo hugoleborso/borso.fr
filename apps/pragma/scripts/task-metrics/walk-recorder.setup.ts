@@ -236,7 +236,11 @@ export class TaskWalk {
   async tap(label: string, spec: TargetSpec, options: TapOptions = {}): Promise<void> {
     await this.markScreen();
     const { first, now, scrollsUsed } = await this.bringIntoView(spec);
-    if (!now.inView) throw new Error(`[${this.task}] could not bring into view: ${label}`);
+    if (!now.inView) {
+      throw new Error(
+        `[${this.task}] could not bring into view: ${label} (box [${now.rect.join(',')}], visible ${String(now.visibleTop)} to ${String(now.visibleBottom)}, hittable ${String(now.hittable)}, viewport ${String(now.viewportWidth)}x${String(now.viewportHeight)}, screen ${String(now.screenLeft)},${String(now.screenTop)} ${String(now.screenWidth)}x${String(now.screenHeight)})`,
+      );
+    }
     await synchroniseArgentViewport(this.session);
     tapAt(projectTapPoint(now));
     this.taps += 1;

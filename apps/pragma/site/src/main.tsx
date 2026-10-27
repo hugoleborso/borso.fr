@@ -1,6 +1,6 @@
 import './observability/error-reporting.setup';
-import '@fontsource/instrument-serif/400.css';
-import '@fontsource/instrument-serif/400-italic.css';
+import '@fontsource-variable/newsreader/opsz.css';
+import '@fontsource-variable/newsreader/opsz-italic.css';
 import '@fontsource-variable/geist/index.css';
 import '@fontsource-variable/jetbrains-mono/index.css';
 import { QueryClientProvider } from '@tanstack/react-query';

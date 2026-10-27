@@ -22,7 +22,7 @@ export interface MemberLineupProps {
 }
 
 const MAXIMUM_VISIBLE_MEMBERS = 4;
-const OVERLAP_CLASS = '-ml-1.5 first:ml-0 rounded-full ring-2 ring-bg-elev';
+const OVERLAP_CLASS = '-ml-1.5 first:ml-0 rounded-full ring-2 ring-leaf';
 
 // @FollowsBlueprint molecule-presentational
 export function MemberLineup({ lineup, members, instruments }: MemberLineupProps): JSX.Element {
@@ -47,7 +47,7 @@ export function MemberLineup({ lineup, members, instruments }: MemberLineupProps
         <span
           className={composeClassName(
             OVERLAP_CLASS,
-            'inline-flex h-[22px] min-w-[22px] items-center justify-center bg-bg-sunk px-1 font-mono text-[10px] text-ink-500',
+            'inline-flex h-[22px] min-w-[22px] items-center justify-center bg-sunk px-1 font-mono text-label text-ink-soft',
           )}
         >
           +{hiddenCount}

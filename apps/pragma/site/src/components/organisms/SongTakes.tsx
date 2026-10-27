@@ -5,9 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
 import { useTakesOfSong } from '../../lib/queries/takes.queries';
 import { takeQueue } from '../../lib/take-queue.setup';
-import { Button } from '../atoms/Button';
+import { IconButton } from '../atoms/IconButton';
 import { Card } from '../atoms/Card';
-import { Icon } from '../atoms/Icon';
 import { mergePendingTakes } from './take-list.core';
 import { RecordingSheet } from './RecordingSheet';
 import { TakeList } from './TakeList';
@@ -52,27 +51,24 @@ export function SongTakes({
   return (
     <Card>
       <div className="flex items-center gap-2 flex-wrap mb-2.5">
-        <h2 className="text-xs tracking-wider uppercase text-ink-400 font-medium flex-1 m-0">
+        <h2 className="text-label tracking-wider uppercase text-ink-soft font-medium flex-1 m-0">
           {t('takes.title')}
         </h2>
         <RecordingSheet songId={songId} songTitle={songTitle} sessionId={null} />
-        <Button
-          variant="default"
-          size="icon"
-          aria-label={t('takes.upload')}
-          title={t('takes.upload')}
+        <IconButton
+          variant="secondary"
+          icon="upload"
+          label={t('takes.upload')}
           onClick={() => setIsUploadOpen(true)}
-        >
-          <Icon name="upload" size={22} />
-        </Button>
+        />
       </div>
       {takesQuery.isError ? (
-        <p className="text-danger text-sm m-0 mb-2" role="alert">
+        <p className="text-danger text-meta m-0 mb-2" role="alert">
           {t('common.loadFailed')}
         </p>
       ) : null}
       {takesQuery.isLoading ? (
-        <p className="text-ink-400 italic text-sm m-0">{t('common.loading')}</p>
+        <p className="text-ink-soft italic text-meta m-0">{t('common.loading')}</p>
       ) : (
         <TakeList
           rows={rows}

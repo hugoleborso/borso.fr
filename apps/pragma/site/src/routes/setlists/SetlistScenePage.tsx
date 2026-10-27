@@ -42,7 +42,7 @@ import {
 } from './setlist-scene.core';
 
 const NO_ROWS: readonly never[] = [];
-const CAPTION_CLASS = 'font-mono text-[11px] tracking-[0.18em] uppercase text-stage-ink-dim m-0';
+const CAPTION_CLASS = 'text-label tracking-[0.18em] uppercase text-stage-ink-dim m-0';
 
 export function SetlistScenePage(): JSX.Element {
   const { setlistId } = useParams<{ setlistId: string }>();
@@ -118,7 +118,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   };
 
   if (entriesQuery.isLoading || setlistQuery.isLoading) {
-    return <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
+    return <p className="px-9 py-7 text-ink-soft italic text-meta">{t('common.loading')}</p>;
   }
 
   if (setlist === null) {
@@ -138,6 +138,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
   const setlistName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
 
   return (
+    // eslint-disable-next-line borso/no-raw-interactive-element -- the scene view is a full-screen stage, not a sheet: no grabber, no title bar, its own dark tokens and its own transport, opened through openSceneOnAttach
     <dialog
       ref={openSceneOnAttach}
       onClose={leaveScene}
@@ -145,10 +146,15 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
       aria-label={t('scene.title')}
       className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-stage-bg text-stage-ink overflow-hidden p-0 flex flex-col"
     >
-      <header className="shrink-0 flex flex-col gap-3 px-4 sm:px-8 pt-4 pb-3 border-b border-[rgba(255,255,255,0.08)] lg:flex-row lg:items-center lg:gap-6">
+      <header className="shrink-0 flex flex-col gap-3 px-4 sm:px-8 pt-4 pb-3 border-b border-stage-line lg:flex-row lg:items-center lg:gap-6">
         <div className="flex items-start gap-3 min-w-0 flex-1">
-          <Button variant="stage" size="sm" onClick={leaveScene} className="shrink-0 mt-0.5">
-            <Icon name="chevL" size={14} />
+          <Button
+            variant="stage"
+            size="sm"
+            onClick={leaveScene}
+            className="shrink-0 mt-0.5"
+            icon="chevL"
+          >
             {t('scene.leave')}
           </Button>
           <div className="min-w-0">
@@ -157,10 +163,10 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
               {' · '}
               {setlistName}
             </p>
-            <h2 className="font-display italic text-2xl sm:text-4xl text-stage-ink m-0 mt-1 truncate">
+            <h2 className="font-display text-stage-title sm:text-stage-hero text-stage-ink m-0 mt-1 truncate">
               {headline.title ?? t('scene.unknownSong')}
             </h2>
-            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-xs text-stage-ink-dim m-0 mt-1">
+            <p className="flex flex-wrap items-center gap-x-2 gap-y-1 text-meta text-stage-ink-dim m-0 mt-1">
               {headline.artist === '' ? null : <span>{headline.artist}</span>}
               {headline.tonalityLabel === null ? null : (
                 <span className="font-mono text-stage-ink">{headline.tonalityLabel}</span>
@@ -170,7 +176,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
               )}
               {headline.energy === null ? null : (
                 <span className="inline-flex items-center gap-1">
-                  <Icon name="bolt" size={12} />
+                  <Icon name="bolt" size="sm" />
                   {headline.energy}
                 </span>
               )}
@@ -189,7 +195,7 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
         />
       </header>
 
-      <div className="shrink-0 h-0.5 bg-[rgba(255,255,255,0.08)]">
+      <div className="shrink-0 h-0.5 bg-stage-line">
         <div
           className="h-full bg-accent transition-[width] duration-300 ease-out"
           style={{ width: `${computeSceneProgressPercent(currentIndex, setlistEntries.length)}%` }}
@@ -202,19 +208,19 @@ function SetlistScene({ setlistId }: { readonly setlistId: string }): JSX.Elemen
         style={{ fontSize: `${fontSizePx}px` }}
       >
         {setlistEntries.length === 0 ? (
-          <p className="text-center font-display italic text-2xl text-stage-ink-dim py-20">
+          <p className="text-center font-display text-title text-stage-ink-dim py-20">
             {t('setlist.emptyList')}
           </p>
         ) : (
           <>
             {entry === undefined || entry.notes === '' ? null : (
-              <p className="text-sm text-stage-ink-dim italic whitespace-pre-wrap mb-4">
+              <p className="text-meta text-stage-ink-dim italic whitespace-pre-wrap mb-4">
                 {entry.notes}
               </p>
             )}
             {song === undefined ? null : <SongNotes song={song} tone="dark" className="mb-5" />}
             {chordproText === null ? (
-              <p className="text-center font-display italic text-2xl text-stage-ink-dim py-20">
+              <p className="text-center font-display text-title text-stage-ink-dim py-20">
                 {t('scene.noChordpro')}
               </p>
             ) : (

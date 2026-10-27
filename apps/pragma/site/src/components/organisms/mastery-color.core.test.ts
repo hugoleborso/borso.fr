@@ -1,24 +1,24 @@
 import { describe, expect, it } from 'vitest';
-import { selectMasteryColor } from './mastery-color.core';
+import { selectMasteryTextClass } from './mastery-color.core';
 
 // @FollowsBlueprint test-pure-unit
-describe('selectMasteryColor', () => {
+describe('selectMasteryTextClass', () => {
   it('is neutral for an unscored member', () => {
-    expect(selectMasteryColor(null)).toBe('var(--color-ink-400)');
+    expect(selectMasteryTextClass(null)).toBe('text-ink-faint');
   });
 
   it('is good from seven upwards', () => {
-    expect(selectMasteryColor(7)).toBe('var(--color-good)');
-    expect(selectMasteryColor(10)).toBe('var(--color-good)');
+    expect(selectMasteryTextClass(7)).toBe('text-good');
+    expect(selectMasteryTextClass(10)).toBe('text-good');
   });
 
   it('warns between five and six', () => {
-    expect(selectMasteryColor(5)).toBe('var(--color-warn)');
-    expect(selectMasteryColor(6)).toBe('var(--color-warn)');
+    expect(selectMasteryTextClass(5)).toBe('text-warn');
+    expect(selectMasteryTextClass(6)).toBe('text-warn');
   });
 
   it('is a danger below five', () => {
-    expect(selectMasteryColor(4)).toBe('var(--color-danger)');
-    expect(selectMasteryColor(0)).toBe('var(--color-danger)');
+    expect(selectMasteryTextClass(4)).toBe('text-danger');
+    expect(selectMasteryTextClass(0)).toBe('text-danger');
   });
 });

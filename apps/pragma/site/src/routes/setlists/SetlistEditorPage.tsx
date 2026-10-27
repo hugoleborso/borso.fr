@@ -4,8 +4,7 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
-import { Button } from '../../components/atoms/Button';
-import { Icon } from '../../components/atoms/Icon';
+import { IconButton } from '../../components/atoms/IconButton';
 import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -53,7 +52,9 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
 
   if (setlistQuery.isLoading) {
     return (
-      <p className="px-4 sm:px-9 py-4 sm:py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>
+      <p className="px-4 sm:px-9 py-4 sm:py-7 italic text-ink-soft text-meta">
+        {t('common.loading')}
+      </p>
     );
   }
 
@@ -80,16 +81,12 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
           onDeleted={() => navigateTo('/setlists')}
           trailing={
             <>
-              <Button
-                variant={isEnergyShown ? 'default' : 'ghost'}
-                aria-label={t('setlist.energy')}
+              <IconButton
+                icon="chart"
+                label={t('setlist.energy')}
                 aria-pressed={isEnergyShown}
-                title={t('setlist.energy')}
-                className="w-11 px-0"
                 onClick={toggleEnergyCurve}
-              >
-                <Icon name="chart" size={18} />
-              </Button>
+              />
               {selectConcertSessionId(sessions) === null ? null : (
                 <AudienceVoteLink setlistId={setlist.id} />
               )}

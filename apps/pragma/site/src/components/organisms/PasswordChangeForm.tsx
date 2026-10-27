@@ -38,7 +38,7 @@ export function PasswordChangeForm(props: PasswordChangeFormProps): JSX.Element 
       }}
       className="flex flex-col gap-3"
     >
-      <label htmlFor="account-current" className="text-xs uppercase text-ink-400">
+      <label htmlFor="account-current" className="text-label uppercase text-ink-soft">
         {t('account.currentPassword')}
       </label>
       <form.Field name="currentPassword">
@@ -53,7 +53,7 @@ export function PasswordChangeForm(props: PasswordChangeFormProps): JSX.Element 
           />
         )}
       </form.Field>
-      <label htmlFor="account-new" className="text-xs uppercase text-ink-400">
+      <label htmlFor="account-new" className="text-label uppercase text-ink-soft">
         {t('account.newPassword')}
       </label>
       <form.Field name="newPassword">
@@ -70,18 +70,23 @@ export function PasswordChangeForm(props: PasswordChangeFormProps): JSX.Element 
       </form.Field>
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
-          <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+          <Button
+            icon="check"
+            type="submit"
+            variant="primary"
+            disabled={!canSubmit || isSubmitting}
+          >
             {t('account.changePassword')}
           </Button>
         )}
       </form.Subscribe>
       {props.message === null ? null : (
-        <p className="text-sm text-ink-700" role="status">
+        <p className="text-meta text-ink" role="status">
           {props.message}
         </p>
       )}
       {props.serverError === null ? null : (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {props.serverError}
         </p>
       )}

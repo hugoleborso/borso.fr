@@ -19,7 +19,6 @@ import {
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { HintText } from '../atoms/HintText';
-import { Icon } from '../atoms/Icon';
 import {
   type EnableFailure,
   isEnableOffered,
@@ -60,12 +59,12 @@ function EnableOnThisDevice(): JSX.Element {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <Button
-        variant="accent"
+        variant="primary"
         disabled={enablePush.isPending}
         onClick={() => enablePush.mutate()}
         className="w-full sm:w-auto"
+        icon="bolt"
       >
-        <Icon name="bolt" size={16} />
         {t('notifications.enable')}
       </Button>
       {enablePush.error === null ? null : (
@@ -83,13 +82,13 @@ function CategoryToggles(): JSX.Element {
   const updatePreference = useUpdateNotificationPreference();
   return (
     <fieldset className="m-0 mt-4 p-0 border-0 flex flex-col gap-1">
-      <legend className="text-xs tracking-wider uppercase text-ink-400 mb-2">
+      <legend className="text-label tracking-wider uppercase text-ink-soft mb-2">
         {t('notifications.categoriesTitle')}
       </legend>
       {(preferences.data?.preferences ?? []).map((toggle) => (
         <label
           key={toggle.category}
-          className="flex items-center justify-between gap-3 min-h-11 text-sm text-ink-900"
+          className="flex items-center justify-between gap-3 min-h-11 text-meta text-ink"
         >
           {t(CATEGORY_LABEL_KEY[toggle.category])}
           <input
@@ -128,9 +127,9 @@ export function NotificationSettings(): JSX.Element {
   const offerMessageKey = OFFER_MESSAGE_KEY[offer];
   return (
     <Card className="p-4 sm:p-6">
-      <h2 className="text-base text-ink-900 m-0 mb-3">{t('notifications.title')}</h2>
+      <h2 className="text-body text-ink m-0 mb-3">{t('notifications.title')}</h2>
       {offerMessageKey === null ? null : (
-        <p className="text-sm text-ink-500 mt-0 mb-3">{t(offerMessageKey)}</p>
+        <p className="text-meta text-ink-soft mt-0 mb-3">{t(offerMessageKey)}</p>
       )}
       {isEnableShown ? <EnableOnThisDevice /> : null}
       <CategoryToggles />

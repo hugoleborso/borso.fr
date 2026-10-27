@@ -29,38 +29,38 @@ export function SongExternalMetadataPanel({
     tags.length > 0 ||
     isrcs.length > 0;
   if (!hasContent) return null;
-  const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+  const labelClass = 'text-label tracking-wider uppercase text-ink-soft font-medium';
   return (
-    <section className="border border-line rounded-md p-3 bg-bg-sunk flex flex-col gap-2">
+    <section className="border border-rule rounded-md p-3 bg-sunk flex flex-col gap-2">
       <h3 className={labelClass}>{t('catalog.externalMetadata')}</h3>
-      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-xs">
+      <dl className="grid grid-cols-1 sm:grid-cols-2 gap-x-4 gap-y-1.5 text-meta">
         {album.length > 0 ? (
           <div>
-            <dt className="text-ink-500">{t('catalog.album')}</dt>
-            <dd className="text-ink-900">{album}</dd>
+            <dt className="text-ink-soft">{t('catalog.album')}</dt>
+            <dd className="text-ink">{album}</dd>
           </div>
         ) : null}
         {durationSeconds === null ? null : (
           <div>
-            <dt className="text-ink-500">{t('catalog.duration')}</dt>
-            <dd className="text-ink-900 font-mono">{formatDuration(durationSeconds)}</dd>
+            <dt className="text-ink-soft">{t('catalog.duration')}</dt>
+            <dd className="text-ink font-mono">{formatDuration(durationSeconds)}</dd>
           </div>
         )}
         {deezerTrackId === null ? null : (
           <div className="sm:col-span-2">
-            <dt className="text-ink-500">{t('catalog.deezerTrackId')}</dt>
-            <dd className="text-ink-700 font-mono break-all">{deezerTrackId}</dd>
+            <dt className="text-ink-soft">{t('catalog.deezerTrackId')}</dt>
+            <dd className="text-ink font-mono break-all">{deezerTrackId}</dd>
           </div>
         )}
         {isrcs.length > 0 ? (
           <div className="sm:col-span-2">
-            <dt className="text-ink-500">{t('catalog.isrcs')}</dt>
-            <dd className="text-ink-700 font-mono">{isrcs.join(', ')}</dd>
+            <dt className="text-ink-soft">{t('catalog.isrcs')}</dt>
+            <dd className="text-ink font-mono">{isrcs.join(', ')}</dd>
           </div>
         ) : null}
         {tags.length > 0 ? (
           <div className="sm:col-span-2">
-            <dt className="text-ink-500">{t('catalog.tags')}</dt>
+            <dt className="text-ink-soft">{t('catalog.tags')}</dt>
             <dd className="flex flex-wrap gap-1 mt-0.5">
               {tags.map((tag) => (
                 <Chip key={tag} className="uppercase tracking-wider">

@@ -20,10 +20,11 @@ export function SongChordPreview({
   if (chartKind !== 'chordpro' || chordproText.length === 0) return null;
   return (
     <Card variant="bare">
-      <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
-        <Icon name="text" size={14} className="text-ink-500" />
-        <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
+      <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-rule bg-sunk">
+        <Icon name="text" size="sm" className="text-ink-soft" />
+        <span className="text-meta font-medium">{t('catalog.previewTitle')}</span>
       </div>
+      {/* eslint-disable-next-line borso/no-vertical-scroll-container -- the ChordPro preview sits beside the text it renders and keeps a bounded height until slice 6 replaces the editor with chords above lyrics */}
       <div className="p-4 max-h-[55vh] overflow-y-auto">
         <ChordChartViewer source={chordproText} compact />
       </div>

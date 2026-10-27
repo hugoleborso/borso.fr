@@ -5,7 +5,6 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
-import { Icon } from '../../components/atoms/Icon';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongNotes } from '../../components/molecules/SongNotes';
 import { ChordChartViewer } from '../../components/organisms/ChordChartViewer';
@@ -42,7 +41,7 @@ export function SongScenePage(): JSX.Element {
   const song = songQuery.data?.song ?? null;
 
   if (songQuery.isLoading) {
-    return <p className="px-9 py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>;
+    return <p className="px-9 py-7 text-ink-soft italic text-meta">{t('common.loading')}</p>;
   }
   if (song === null) {
     return (
@@ -77,14 +76,15 @@ export function SongScenePage(): JSX.Element {
   };
 
   return (
+    // eslint-disable-next-line borso/no-raw-interactive-element -- the scene view is a full-screen stage, not a sheet: no grabber, no title bar, its own dark tokens and its own transport, opened through openSceneOnAttach
     <dialog
       ref={openSceneOnAttach}
       onClose={leaveScene}
       aria-label={song.title}
       className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-stage-bg text-stage-ink overflow-hidden p-0 flex flex-col"
     >
-      <header className="shrink-0 px-4 sm:px-10 pt-4 pb-3 border-b border-[rgba(255,255,255,0.08)]">
-        <h2 className="font-display italic text-2xl sm:text-4xl text-stage-ink m-0 truncate">
+      <header className="shrink-0 px-4 sm:px-10 pt-4 pb-3 border-b border-stage-line">
+        <h2 className="font-display text-stage-title sm:text-stage-hero text-stage-ink m-0 truncate">
           {song.title}
         </h2>
       </header>
@@ -95,16 +95,15 @@ export function SongScenePage(): JSX.Element {
       >
         <SongNotes song={song} tone="dark" className="mb-5" />
         {chordproText === null ? (
-          <p className="text-center font-display italic text-2xl text-stage-ink-dim py-20">
+          <p className="text-center font-display text-title text-stage-ink-dim py-20">
             {t('scene.noChordpro')}
           </p>
         ) : (
           <ChordChartViewer source={chordproText} semitones={semitones} tone="dark" />
         )}
       </div>
-      <div className="shrink-0 flex flex-wrap items-center gap-2 px-4 sm:px-10 py-3 border-t border-[rgba(255,255,255,0.08)] bg-stage-bg pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
-        <Button variant="stage" size="sm" onClick={leaveScene}>
-          <Icon name="chevL" size={14} />
+      <div className="shrink-0 flex flex-wrap items-center gap-2 px-4 sm:px-10 py-3 border-t border-stage-line bg-stage-bg pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+        <Button variant="stage" size="sm" onClick={leaveScene} icon="chevL">
           {t('common.back')}
         </Button>
         {chordproText === null ? null : (

@@ -3,25 +3,11 @@ import { act, type JSX } from 'react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { ListenLinksProvider } from './ListenLinksProvider';
+import { stubSheetDialog } from '../molecules/sheet.test-utils';
 
 const LONG_PRESS_MS = 500;
 
-function stubShowModal(this: HTMLDialogElement): void {
-  this.setAttribute('open', '');
-}
-
-function stubClose(this: HTMLDialogElement): void {
-  this.removeAttribute('open');
-}
-
-Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
-  configurable: true,
-  value: stubShowModal,
-});
-Object.defineProperty(HTMLDialogElement.prototype, 'close', {
-  configurable: true,
-  value: stubClose,
-});
+stubSheetDialog();
 
 function SongRow(): JSX.Element {
   const handlers = useSongLongPress({

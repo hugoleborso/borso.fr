@@ -107,6 +107,6 @@ describe('selectSetlistEntryToneAppearance', () => {
       surfaceClassName: 'bg-warn-soft',
       borderClassName: 'border-warn',
     });
-    expect(selectSetlistEntryToneAppearance('unstaffed').surfaceClassName).toBe('bg-bg-sunk');
+    expect(selectSetlistEntryToneAppearance('unstaffed').surfaceClassName).toBe('bg-sunk');
   });
 });

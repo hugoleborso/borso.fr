@@ -8,10 +8,13 @@ import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../../components/atoms/AutoGrowTextarea';
 import { Badge } from '../../components/atoms/Badge';
 import { Button } from '../../components/atoms/Button';
+import { Chip } from '../../components/atoms/Chip';
+import { Icon, type IconName } from '../../components/atoms/Icon';
 import { Input } from '../../components/atoms/Input';
-import { composeClassName } from '../../components/atoms/class-name.utils';
+import { inputVariants } from '../../components/atoms/input.variants';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { FilterPillGroup } from '../../components/molecules/FilterPillGroup';
+import { ListRow } from '../../components/molecules/ListRow';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { ApiError } from '../../lib/api.client';
 import {
@@ -44,9 +47,13 @@ interface SelectedImprovement {
 
 const DEFAULT_STATUS: ImprovementStatus = 'idea';
 const ALL_STATUSES: StatusFilter = 'all';
-
-const VOTE_BUTTON_CLASS =
-  'flex flex-col items-center justify-center min-w-12 rounded-md border px-2 py-1 leading-tight';
+const IMPROVEMENT_STATUS_ICON = {
+  idea: 'bulb',
+  planned: 'calendar',
+  building: 'edit',
+  shipped: 'check',
+  declined: 'close',
+} as const satisfies Readonly<Record<ImprovementStatus, IconName>>;
 
 export function ImprovementsPage(): JSX.Element {
   const { t } = useTranslation();
@@ -113,10 +120,16 @@ export function ImprovementsPage(): JSX.Element {
   const failureStatus: WriteFailureStatus = lastError instanceof ApiError ? lastError.status : null;
 
   const filterOptions = [
-    { value: ALL_STATUSES, label: t('common.all'), count: improvements.length },
+    {
+      value: ALL_STATUSES,
+      label: t('common.all'),
+      icon: 'catalog' as const,
+      count: improvements.length,
+    },
     ...IMPROVEMENT_STATUSES.map((status) => ({
       value: status,
       label: t(selectStatusLabelKey(status)),
+      icon: IMPROVEMENT_STATUS_ICON[status],
       count: filterByStatus(improvements, status).length,
     })),
   ];
@@ -125,7 +138,7 @@ export function ImprovementsPage(): JSX.Element {
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
       <PageHeader title={t('improvements.title')} />
       {lastError === null ? null : (
-        <p className="text-danger text-sm mb-3" role="alert">
+        <p className="text-danger text-meta mb-3" role="alert">
           {t(selectErrorMessageKey(failureStatus))}
         </p>
       )}
@@ -141,56 +154,45 @@ export function ImprovementsPage(): JSX.Element {
           aria-label={t('improvements.title')}
         >
           {list.isLoading ? (
-            <li className="text-ink-400 italic text-sm">{t('common.loading')}</li>
+            <li className="text-ink-soft italic text-meta">{t('common.loading')}</li>
           ) : null}
           {visibleImprovements.length === 0 && !list.isLoading ? (
-            <li className="text-ink-400 italic text-sm">{t('improvements.empty')}</li>
+            <li className="text-ink-soft italic text-meta">{t('improvements.empty')}</li>
           ) : null}
           {visibleImprovements.map((row) => (
             <li
               key={row.id}
-              className="flex items-start gap-3 bg-bg-elev border border-line rounded-md px-3 py-2 hover:border-line-strong transition-colors"
+              className="flex items-start gap-3 bg-leaf border border-rule rounded-md px-3 py-2 hover:border-rule-strong transition-colors"
             >
-              <button
-                type="button"
-                aria-pressed={row.votedByViewer}
+              <Chip
+                pressed={row.votedByViewer}
                 aria-label={t('improvements.voteFor', { title: row.title })}
-                onClick={() =>
+                onPress={() =>
                   vote.mutate({ id: row.id, intent: selectVoteIntent(row.votedByViewer) })
                 }
-                className={composeClassName(
-                  VOTE_BUTTON_CLASS,
-                  row.votedByViewer
-                    ? 'border-accent text-accent bg-accent/10'
-                    : 'border-line text-ink-500 bg-transparent hover:border-line-strong',
-                )}
+                className="shrink-0 gap-1"
               >
-                <span aria-hidden="true" className="text-xs">
-                  ▲
-                </span>
-                <span className="text-sm font-medium">{row.voteCount}</span>
-              </button>
+                <Icon name="chevD" className="rotate-180" />
+                <span className="font-medium">{row.voteCount}</span>
+              </Chip>
               <div className="flex-1 min-w-0">
                 <div className="flex items-center gap-2 flex-wrap">
-                  <button
-                    type="button"
-                    onClick={() => selectImprovement(row)}
-                    className="text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0 p-0"
-                  >
+                  <ListRow onClick={() => selectImprovement(row)} className="w-auto text-meta">
                     {row.title}
-                  </button>
+                  </ListRow>
                   <Badge tone={row.status === 'shipped' ? 'accent' : 'default'}>
                     {t(selectStatusLabelKey(readStatus(row.status)))}
                   </Badge>
                 </div>
                 {row.details === '' ? null : (
-                  <p className="text-xs text-ink-500 mt-1 mb-0 whitespace-pre-wrap">
+                  <p className="text-meta text-ink-soft mt-1 mb-0 whitespace-pre-wrap">
                     {row.details}
                   </p>
                 )}
               </div>
               <Button
-                variant="ghost"
+                icon="trash"
+                variant="quiet"
                 size="sm"
                 onClick={() => setPendingDeletionId(row.id)}
                 aria-label={t('improvements.deleteFor', { title: row.title })}
@@ -201,19 +203,19 @@ export function ImprovementsPage(): JSX.Element {
           ))}
         </ul>
         <form
-          className="flex flex-col gap-3 bg-bg-elev border border-line rounded-md p-4"
+          className="flex flex-col gap-3 bg-leaf border border-rule rounded-md p-4"
           onSubmit={(event) => {
             event.preventDefault();
             event.stopPropagation();
             void form.handleSubmit();
           }}
         >
-          <h2 className="text-sm font-medium m-0">
+          <h2 className="text-meta font-medium m-0">
             {selected === null ? t('improvements.newTitle') : t('improvements.editTitle')}
           </h2>
           <form.Field name="title">
             {(field) => (
-              <label className="flex flex-col gap-1 text-xs text-ink-500">
+              <label className="flex flex-col gap-1 text-meta text-ink-soft">
                 {t('improvements.titleField')}
                 <Input
                   value={field.state.value}
@@ -225,7 +227,7 @@ export function ImprovementsPage(): JSX.Element {
           </form.Field>
           <form.Field name="details">
             {(field) => (
-              <label className="flex flex-col gap-1 text-xs text-ink-500">
+              <label className="flex flex-col gap-1 text-meta text-ink-soft">
                 {t('improvements.detailsField')}
                 <AutoGrowTextarea
                   value={field.state.value}
@@ -236,12 +238,12 @@ export function ImprovementsPage(): JSX.Element {
           </form.Field>
           <form.Field name="status">
             {(field) => (
-              <label className="flex flex-col gap-1 text-xs text-ink-500">
+              <label className="flex flex-col gap-1 text-meta text-ink-soft">
                 {t('improvements.statusField')}
                 <select
                   value={field.state.value}
                   onChange={(event) => field.handleChange(readStatus(event.target.value))}
-                  className="min-h-11 rounded-md border border-line-strong bg-bg-elev px-2 text-[13px] text-ink-900"
+                  className={inputVariants({ size: 'md' })}
                 >
                   {IMPROVEMENT_STATUSES.map((status) => (
                     <option key={status} value={status}>
@@ -253,11 +255,11 @@ export function ImprovementsPage(): JSX.Element {
             )}
           </form.Field>
           <div className="flex gap-2">
-            <Button type="submit" variant="primary">
+            <Button icon="check" type="submit" variant="primary">
               {selected === null ? t('common.add') : t('common.save')}
             </Button>
             {selected === null ? null : (
-              <Button variant="ghost" onClick={clearSelection}>
+              <Button icon="close" variant="quiet" onClick={clearSelection}>
                 {t('common.cancel')}
               </Button>
             )}

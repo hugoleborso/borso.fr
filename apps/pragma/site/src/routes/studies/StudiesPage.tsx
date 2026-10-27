@@ -14,7 +14,7 @@ import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useStudiesOverview } from '../../lib/queries/studies.queries';
 import { indexInstrumentNames } from './studies-page.core';
 
-const SECTION_TITLE_CLASS = 'text-[11px] uppercase tracking-[0.08em] text-ink-500 mb-2';
+const SECTION_TITLE_CLASS = 'text-label uppercase tracking-[0.08em] text-ink-soft mb-2';
 
 // @FollowsBlueprint route-list-page
 export function StudiesPage(): JSX.Element {
@@ -38,9 +38,9 @@ export function StudiesPage(): JSX.Element {
   return (
     <div className="px-4 py-4 sm:px-8 sm:py-6 max-w-3xl">
       <PageHeader title={t('studies.title')} subtitle={t('studies.subtitle')} />
-      {errorMessage === null ? null : <p className="text-sm text-danger">{errorMessage}</p>}
+      {errorMessage === null ? null : <p className="text-meta text-danger">{errorMessage}</p>}
       {isLoading || overview === undefined || memberId === null ? (
-        <p className="text-sm text-ink-400">…</p>
+        <p className="text-meta text-ink-soft">…</p>
       ) : (
         <div className="flex flex-col gap-6">
           <StreakBadge {...overview.myStreak} size="large" />
@@ -63,7 +63,7 @@ export function StudiesPage(): JSX.Element {
           <section>
             <h2 className={SECTION_TITLE_CLASS}>{t('studies.readinessTitle')}</h2>
             {overview.readiness === null ? (
-              <p className="text-sm text-ink-500 italic">{t('studies.noConcert')}</p>
+              <p className="text-meta text-ink-soft italic">{t('studies.noConcert')}</p>
             ) : (
               <ConcertReadinessBar
                 date={overview.readiness.date}

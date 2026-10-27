@@ -6,13 +6,11 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import { OUTREACH_PLACEHOLDERS } from '../../routes/bars/outreach-message.core';
+import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
-import { composeClassName } from '../atoms/class-name.utils';
-import { inputVariants } from '../atoms/input.variants';
 
-const TEXTAREA_CLASS = composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y');
 const TEMPLATE_ROWS = 8;
 
 export interface OutreachTemplateCardProps {
@@ -35,12 +33,10 @@ export function OutreachTemplateCard(props: OutreachTemplateCardProps): JSX.Elem
     <Card className="mb-5">
       <details className="group">
         <summary className="flex items-center justify-between gap-2 min-h-11 cursor-pointer list-none">
-          <h3 className="font-display italic text-2xl text-ink-900 m-0">
-            {t('bars.outreachTemplate')}
-          </h3>
-          <Icon name="chevD" size={16} className="transition-transform group-open:rotate-180" />
+          <h3 className="font-display text-title text-ink m-0">{t('bars.outreachTemplate')}</h3>
+          <Icon name="chevD" size="sm" className="transition-transform group-open:rotate-180" />
         </summary>
-        <p className="text-xs text-ink-500 mt-0 mb-3">
+        <p className="text-meta text-ink-soft mt-0 mb-3">
           {t('bars.outreachPlaceholdersHint', {
             bar: OUTREACH_PLACEHOLDERS.bar,
             phone: OUTREACH_PLACEHOLDERS.phone,
@@ -57,14 +53,13 @@ export function OutreachTemplateCard(props: OutreachTemplateCardProps): JSX.Elem
         >
           <form.Field name="body">
             {(field) => (
-              <textarea
+              <AutoGrowTextarea
                 aria-label={t('bars.outreachTemplate')}
                 value={field.state.value}
                 onChange={(event) => field.handleChange(event.target.value)}
                 onBlur={field.handleBlur}
                 rows={TEMPLATE_ROWS}
                 maxLength={OUTREACH_TEMPLATE_MAX_LENGTH}
-                className={TEXTAREA_CLASS}
               />
             )}
           </form.Field>
@@ -72,8 +67,9 @@ export function OutreachTemplateCard(props: OutreachTemplateCardProps): JSX.Elem
             <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
               {([canSubmit, isSubmitting]) => (
                 <Button
+                  icon="check"
                   type="submit"
-                  variant="accent"
+                  variant="primary"
                   disabled={isSubmitDisabled(canSubmit, isSubmitting)}
                 >
                   {t('bars.outreachTemplateSave')}
@@ -81,7 +77,7 @@ export function OutreachTemplateCard(props: OutreachTemplateCardProps): JSX.Elem
               )}
             </form.Subscribe>
             {props.message === null ? null : (
-              <span className="text-sm text-ink-500">{props.message}</span>
+              <span className="text-meta text-ink-soft">{props.message}</span>
             )}
           </div>
         </form>

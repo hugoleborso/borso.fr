@@ -16,10 +16,10 @@ import {
 } from '../../routes/bars/bar-form.core';
 import { inputVariants } from '../atoms/input.variants';
 
-const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const SELECT_CLASS = inputVariants({ size: 'md' });
 const CHECKBOX_LABEL_CLASS =
-  'inline-flex items-center gap-2 min-h-11 text-sm text-ink-700 cursor-pointer';
+  'inline-flex items-center gap-2 min-h-11 text-meta text-ink cursor-pointer';
 
 export interface ConcertMoodFieldProps {
   readonly value: ConcertMood | '';

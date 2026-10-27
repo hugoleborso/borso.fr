@@ -6,6 +6,7 @@ import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { Badge } from '../atoms/Badge';
 import { PointsBadge } from '../atoms/PointsBadge';
+import { ListRow } from './ListRow';
 
 export interface VoteCatalogRowProps {
   readonly title: string;
@@ -34,23 +35,23 @@ export function VoteCatalogRow({
 
   return (
     <li>
-      <button
-        type="button"
+      <ListRow
         onClick={onTap}
         {...longPress}
         aria-label={t('voting.tapToScore', { title })}
-        className="w-full min-h-14 flex items-center gap-3 rounded-xl border border-line bg-surface px-3 py-2 text-left cursor-pointer select-none"
+        isChevronShown={false}
+        leading={<AlbumCover title={title} deezerAlbumId={deezerAlbumId} size="sm" />}
+        className="min-h-14 rounded-md bg-leaf px-3 py-2 shadow-leaf select-none"
       >
-        <AlbumCover title={title} deezerAlbumId={deezerAlbumId} size="sm" />
-        <span className="flex-1 min-w-0">
-          <span className="block truncate text-ink-900">{title}</span>
-          <span className="block truncate text-xs uppercase tracking-wider text-ink-400">
+        <span className="min-w-0 flex-1">
+          <span className="block truncate text-ink">{title}</span>
+          <span className="block truncate text-label uppercase tracking-wider text-ink-soft">
             {artist}
           </span>
         </span>
         {isNew ? <Badge tone="accent">{t('voting.newSong')}</Badge> : null}
         <PointsBadge points={points} />
-      </button>
+      </ListRow>
     </li>
   );
 }

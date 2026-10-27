@@ -60,7 +60,7 @@ export function AudienceVoteList({
           closesAtEpochMs={new Date(round.closesAt).getTime()}
         />
       </Card>
-      <p className="text-[13px] text-ink-500 m-0">{t('audience.tapToVote')}</p>
+      <p className="text-meta text-ink-soft m-0">{t('audience.tapToVote')}</p>
       <ul className="list-none p-0 m-0 flex flex-col gap-2">
         {pool.map((entry) => {
           const isChosen = ownVotes.includes(entry.songId);

@@ -154,7 +154,7 @@ const agreeWhoDoesWhat: TaskWalkRunner = async (driver) => {
     { primary: true },
   );
   await walk.type('Task title', 'Imprimer les setlists');
-  await walk.tap('Assignee Léa', { exact: 'Léa', css: 'form button', scope: 'page' });
+  await walk.tap('Assignee Léa', { text: 'Léa$', css: 'form button', scope: 'page' });
   await walk.choose('Linked song', '#task-song', '~Nuit blanche');
   walk.note(
     'The song list of a task offers only the 6 compositions (originals), not the 44 catalogue songs.',

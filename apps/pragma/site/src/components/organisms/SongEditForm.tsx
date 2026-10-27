@@ -6,9 +6,8 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
-import { StickyFormActions } from '../atoms/StickyFormActions';
+import { BottomActions } from '../atoms/BottomActions';
 import { Card } from '../atoms/Card';
-import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { BackLink } from '../molecules/BackLink';
 import { PageHeader } from '../molecules/PageHeader';
@@ -94,7 +93,7 @@ export function SongEditForm({
     );
   };
 
-  const labelClass = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+  const labelClass = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
@@ -107,8 +106,7 @@ export function SongEditForm({
             actions={
               !isNew && songId !== undefined ? (
                 <Link to={`/catalog/${songId}/scene`}>
-                  <Button variant="accent" type="button">
-                    <Icon name="play" size={14} />
+                  <Button variant="primary" type="button" icon="play">
                     {t('catalog.openScene')}
                   </Button>
                 </Link>
@@ -286,10 +284,10 @@ export function SongEditForm({
             </form.Field>
           </SongLinkAdder>
 
-          <StickyFormActions>
+          <BottomActions>
             <div className="flex flex-col items-start gap-2 w-full">
               {refusal.failureMessage === null ? null : (
-                <p className="text-danger text-sm" role="alert">
+                <p className="text-danger text-meta" role="alert">
                   {refusal.failureMessage}
                 </p>
               )}
@@ -298,13 +296,18 @@ export function SongEditForm({
               )}
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (
-                  <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+                  <Button
+                    icon="check"
+                    type="submit"
+                    variant="primary"
+                    disabled={!canSubmit || isSubmitting}
+                  >
                     {t('common.save')}
                   </Button>
                 )}
               </form.Subscribe>
             </div>
-          </StickyFormActions>
+          </BottomActions>
           {isNew ? null : <SongDeleteAction onDelete={onDelete} />}
         </form>
       </Card>

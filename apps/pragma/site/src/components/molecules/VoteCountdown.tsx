@@ -34,16 +34,16 @@ export function VoteCountdown({
   return (
     <div className="flex flex-col gap-2" role="timer" aria-live="off">
       <div className="flex items-baseline justify-between gap-3">
-        <span className="text-xs font-medium uppercase tracking-[0.16em] text-ink-400">
+        <span className="text-label font-medium uppercase tracking-[0.16em] text-ink-soft">
           {t('audience.timeLeft')}
         </span>
-        <span className="font-mono tabular-nums text-3xl sm:text-4xl leading-none text-ink-900">
+        <span className="font-mono tabular-nums text-display sm:text-display leading-none text-ink">
           {t('audience.secondsLeft', { count: secondsLeft })}
         </span>
       </div>
-      <div className="h-1.5 w-full rounded-sm bg-bg-sunk overflow-hidden">
+      <div className="h-1.5 w-full rounded-sm bg-sunk overflow-hidden">
         <div
-          className="h-full rounded-sm bg-ink-900 transition-[width] duration-1000 ease-linear"
+          className="h-full rounded-sm bg-ink transition-[width] duration-1000 ease-linear"
           style={{ width: `${fillPercent}%` }}
         />
       </div>

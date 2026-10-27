@@ -1,8 +1,11 @@
+import { Chip } from '../atoms/Chip';
 import { composeClassName } from '../atoms/class-name.utils';
+import { Icon, type IconName } from '../atoms/Icon';
 
 export interface FilterPillOption<TValue extends string> {
   value: TValue;
   label: string;
+  icon: IconName;
   count: number;
 }
 
@@ -23,32 +26,23 @@ export function FilterPillGroup<TValue extends string>({
   return (
     <div
       className={composeClassName(
-        'flex flex-nowrap sm:flex-wrap w-full sm:w-auto max-w-full overflow-x-auto sm:overflow-visible [scrollbar-width:none] gap-1 p-[3px] bg-bg-sunk rounded-lg',
+        'flex flex-nowrap sm:flex-wrap w-full sm:w-auto max-w-full overflow-x-auto sm:overflow-visible [scrollbar-width:none] gap-2',
         className,
       )}
-      role="tablist"
+      role="group"
     >
-      {options.map((option) => {
-        const isActive = option.value === value;
-        return (
-          <button
-            key={option.value}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onChange(option.value)}
-            className={composeClassName(
-              'inline-flex shrink-0 items-center gap-1.5 min-h-11 px-3 rounded-md text-xs font-medium whitespace-nowrap transition-colors cursor-pointer',
-              isActive
-                ? 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]'
-                : 'bg-transparent text-ink-500 hover:text-ink-700',
-            )}
-          >
-            <span>{option.label}</span>
-            <span className="font-mono text-ink-400 text-xs">{option.count}</span>
-          </button>
-        );
-      })}
+      {options.map((option) => (
+        <Chip
+          key={option.value}
+          pressed={option.value === value}
+          onPress={() => onChange(option.value)}
+          className="shrink-0"
+        >
+          <Icon name={option.icon} />
+          <span>{option.label}</span>
+          <span className="tabular-nums">{option.count}</span>
+        </Chip>
+      ))}
     </div>
   );
 }

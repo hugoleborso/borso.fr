@@ -31,7 +31,7 @@ export function MemberTaskColumn(props: MemberTaskColumnProps): JSX.Element {
         </Badge>
       </div>
       {group.tasks.length === 0 ? (
-        <p className="text-ink-400 italic text-[13px] m-0">{t('tasks.emptyColumn')}</p>
+        <p className="text-ink-soft italic text-meta m-0">{t('tasks.emptyColumn')}</p>
       ) : (
         <ul className="flex flex-col gap-1.5 list-none p-0 m-0" aria-label={group.memberName}>
           {group.tasks.map((task) => (

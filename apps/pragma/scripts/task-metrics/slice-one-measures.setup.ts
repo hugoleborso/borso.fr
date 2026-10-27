@@ -1,4 +1,13 @@
+import { readFileSync } from 'node:fs';
+import { dirname, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
+import {
+  type ColourScheme,
+  measureContrastOnFill,
+  measureFillContrast,
+  readThemeTokens,
+} from '../../site/src/lib/design-tokens.utils';
 import { pressKey, tapAt } from './argent-input.adapter';
 import type { BandSessionDriver } from './band-session.setup';
 import {
@@ -38,6 +47,43 @@ const ENTRY_SAVE_URL_PATTERN = '*/api/setlists/*/entries/*';
 const ADD_SONG_NAMES = ['Add song', 'Add songs'];
 const PAGE_END_SETTLE_MS = 800;
 const FIRST_SEED = 1;
+const TOKENS_STYLESHEET = resolve(
+  dirname(fileURLToPath(import.meta.url)),
+  '../../site/src/styles/tokens.css',
+);
+const COLOUR_SCHEMES: readonly ColourScheme[] = ['light', 'dark'];
+const PILL_BACKGROUNDS = ['paper', 'leaf', 'raised'];
+const SECONDARY_PILL_FILL = 'glass';
+const RATIO_DECIMALS = 2;
+
+function roundRatio(ratio: number | null): number | null {
+  return ratio === null ? null : Number(ratio.toFixed(RATIO_DECIMALS));
+}
+
+function measureSecondaryPill(): Record<string, unknown> {
+  const tokens = readThemeTokens(readFileSync(TOKENS_STYLESHEET, 'utf8'));
+  return Object.fromEntries(
+    COLOUR_SCHEMES.map((scheme) => [
+      scheme,
+      Object.fromEntries(
+        PILL_BACKGROUNDS.map((background) => [
+          background,
+          {
+            fillAgainstBackground: roundRatio(
+              measureFillContrast(tokens, SECONDARY_PILL_FILL, background, scheme),
+            ),
+            inkLabelOnFill: roundRatio(
+              measureContrastOnFill(tokens, 'ink', SECONDARY_PILL_FILL, background, scheme),
+            ),
+            accentIconOnFill: roundRatio(
+              measureContrastOnFill(tokens, 'accent', SECONDARY_PILL_FILL, background, scheme),
+            ),
+          },
+        ]),
+      ),
+    ]),
+  );
+}
 
 const memberListSchema = z.object({ members: z.array(z.object({ color: z.string() })) });
 const countWithSamplesSchema = z.object({ count: z.number(), samples: z.array(z.unknown()) });
@@ -239,6 +285,7 @@ export async function measureSliceOne(driver: BandSessionDriver): Promise<Record
       tapTargetsUnder44: sumCounts(looks.map((look) => look.smallTapTargets.count)),
     },
     distinctFontSizes,
+    secondaryPill: measureSecondaryPill(),
     routes: looks,
     sheets: await measureSheets(driver),
     transitionDraft: await measureTransitionDraft(driver),

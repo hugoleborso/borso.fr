@@ -11,7 +11,7 @@ export interface SongDeezerTrackIdFieldProps {
 }
 
 const FIELD_ID = 'song-deezer-track-id';
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
 // @FollowsBlueprint molecule-presentational
 export function SongDeezerTrackIdField({

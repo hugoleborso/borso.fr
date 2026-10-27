@@ -9,7 +9,6 @@ import {
 } from '../../lib/queries/audience.queries';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
-import { Icon } from '../atoms/Icon';
 import { StandingSongRow } from '../molecules/StandingSongRow';
 import { VoteCountdown } from '../molecules/VoteCountdown';
 import {
@@ -59,22 +58,22 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
               closesAtEpochMs={new Date(round.closesAt).getTime()}
             />
           ) : (
-            <p className="text-[13px] text-ink-500 m-0">{t('audience.panelIdle')}</p>
+            <p className="text-meta text-ink-soft m-0">{t('audience.panelIdle')}</p>
           )}
           <Button
             variant="primary"
             onClick={() => openRound.mutate({ sessionId })}
             disabled={isRoundOpen || openRound.isPending}
+            icon="play"
           >
-            <Icon name="play" size={14} />
             {t('audience.openRound')}
           </Button>
           {openRound.error === null ? null : (
-            <p className="text-xs text-danger m-0" role="alert">
+            <p className="text-meta text-danger m-0" role="alert">
               {t('audience.openRoundFailed')}
             </p>
           )}
-          <p className="text-[13px] text-ink-500 m-0">
+          <p className="text-meta text-ink-soft m-0">
             {participation.sharePercent === null
               ? t('audience.ballotsCast', { ballots: participation.ballotCount })
               : t('audience.ballotsAgainstCapacity', {
@@ -83,19 +82,17 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
                   share: participation.sharePercent,
                 })}
           </p>
-          <p className="text-[13px] text-ink-500 m-0">
+          <p className="text-meta text-ink-soft m-0">
             {t('audience.sayThisAddress')}{' '}
-            <span className="font-mono text-ink-900">{shortVoteAddress}</span>
+            <span className="font-mono text-ink">{shortVoteAddress}</span>
           </p>
-          <p className="font-mono text-xs text-ink-400 m-0 break-all">{voteAddress}</p>
+          <p className="font-mono text-meta text-ink-soft m-0 break-all">{voteAddress}</p>
         </Card>
       </div>
       <div className="flex flex-col gap-2">
-        <h4 className="font-display italic text-lg text-ink-900 m-0">
-          {t('audience.standingTitle')}
-        </h4>
+        <h4 className="font-display text-title text-ink m-0">{t('audience.standingTitle')}</h4>
         {standing.length === 0 ? (
-          <p className="text-[13px] text-ink-500 m-0">{t('audience.standingEmpty')}</p>
+          <p className="text-meta text-ink-soft m-0">{t('audience.standingEmpty')}</p>
         ) : (
           <ul className="list-none p-0 m-0 flex flex-col gap-1.5">
             {standing.map((entry) => (
@@ -115,10 +112,10 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
         {historyLines.map((line) => (
           <li
             key={line.roundId}
-            className="flex items-baseline justify-between gap-3 border-b border-line pb-1.5"
+            className="flex items-baseline justify-between gap-3 border-b border-rule pb-1.5"
           >
-            <span className="font-mono text-xs text-ink-400">{line.openedAtLabel}</span>
-            <span className="text-[13px] text-ink-900 text-right">
+            <span className="font-mono text-meta text-ink-soft">{line.openedAtLabel}</span>
+            <span className="text-meta text-ink text-right">
               {OUTCOME_LABEL[line.outcome.kind](line.outcome)}
             </span>
           </li>

@@ -15,7 +15,7 @@ export function PasskeysCard(): JSX.Element {
   const removePasskey = useRemovePasskey();
   return (
     <Card className="p-4 sm:p-6">
-      <h2 className="text-base text-ink-900 m-0 mb-3">{t('account.passkeys')}</h2>
+      <h2 className="text-body text-ink m-0 mb-3">{t('account.passkeys')}</h2>
       <PasskeyList
         passkeys={passkeys.data ?? []}
         canAdd={isPasskeySupported()}

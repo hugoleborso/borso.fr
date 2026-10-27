@@ -119,14 +119,14 @@ export function TasksPage(): JSX.Element {
         onAdd={addTaskByTitle}
       />
       {errorMessage === null ? null : (
-        <p className="text-danger text-sm mb-3" role="alert">
+        <p className="text-danger text-meta mb-3" role="alert">
           {errorMessage}
         </p>
       )}
       <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
         <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3 min-w-0">
           {tasksQuery.isLoading ? (
-            <p className="text-ink-400 italic text-sm m-0">{t('common.loading')}</p>
+            <p className="text-ink-soft italic text-meta m-0">{t('common.loading')}</p>
           ) : null}
           {groups.map((group) => (
             <MemberTaskColumn

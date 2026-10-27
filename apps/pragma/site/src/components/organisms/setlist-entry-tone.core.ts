@@ -13,8 +13,8 @@ export interface SetlistEntryToneAppearance {
 }
 
 const TONE_APPEARANCE: Readonly<Record<SetlistEntryTone, SetlistEntryToneAppearance>> = {
-  plain: { surfaceClassName: 'bg-bg-elev', borderClassName: 'border-line' },
-  unstaffed: { surfaceClassName: 'bg-bg-sunk', borderClassName: 'border-line' },
+  plain: { surfaceClassName: 'bg-leaf', borderClassName: 'border-rule' },
+  unstaffed: { surfaceClassName: 'bg-sunk', borderClassName: 'border-rule' },
   overridden: { surfaceClassName: 'bg-warn-soft', borderClassName: 'border-warn' },
 };
 

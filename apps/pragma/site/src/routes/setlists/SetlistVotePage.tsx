@@ -6,10 +6,11 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
+import { IconButton } from '../../components/atoms/IconButton';
 import { TargetSongCountField } from '../../components/molecules/TargetSongCountField';
 import { DeckProgressBar } from '../../components/molecules/DeckProgressBar';
 import { VoteBudgetBar } from '../../components/molecules/VoteBudgetBar';
-import { VoteModeToggle } from '../../components/molecules/VoteModeToggle';
+import { SectionTabs } from '../../components/molecules/SectionTabs';
 import { VoteCatalog } from '../../components/organisms/VoteCatalog';
 import { VoteClosePanel } from '../../components/organisms/VoteClosePanel';
 import { VoteDeck } from '../../components/organisms/VoteDeck';
@@ -44,7 +45,6 @@ import {
 } from './vote-deck.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
-import { Icon } from '../../components/atoms/Icon';
 
 // @FollowsBlueprint organism-query-owning
 export function SetlistVotePage(): JSX.Element {
@@ -103,21 +103,17 @@ export function SetlistVotePage(): JSX.Element {
 
   const headerActionByKind = {
     'back-to-vote': (
-      <Button
-        type="button"
-        variant="ghost"
-        aria-label={t('voting.backToVote')}
-        title={t('voting.backToVote')}
-        className="w-11 px-0"
+      <IconButton
+        icon="close"
+        label={t('voting.backToVote')}
         onClick={() => setIsClosingOpen(false)}
-      >
-        <Icon name="close" size={18} />
-      </Button>
+      />
     ),
     'close-vote': (
       <Button
+        icon="stop"
         type="button"
-        variant="ghost"
+        variant="quiet"
         disabled={setVoteStatus.isPending}
         onClick={() => closeOrReview[selectCloseIntent(board.data?.tallies.length ?? 0)]()}
       >
@@ -126,8 +122,9 @@ export function SetlistVotePage(): JSX.Element {
     ),
     'open-vote': (
       <Button
+        icon="vote"
         type="button"
-        variant="ghost"
+        variant="quiet"
         disabled={setVoteStatus.isPending}
         onClick={() => setVoteStatus.mutate({ status: 'voting', targetSongCount })}
       >
@@ -139,7 +136,7 @@ export function SetlistVotePage(): JSX.Element {
   return (
     <section className="flex flex-col gap-4 pb-8">
       <header className="px-4 pt-4 flex items-baseline justify-between gap-3">
-        <h1 className="font-display italic text-[28px] leading-none text-ink-900 m-0">
+        <h1 className="font-display text-display leading-none text-ink m-0">
           {selectSetlistDisplayName(setlist.data?.setlist.name ?? '', t('voting.untitled'))}
         </h1>
         {headerActionByKind[selectVoteHeaderAction(pageState)]}
@@ -182,7 +179,16 @@ export function SetlistVotePage(): JSX.Element {
             remaining={board.data?.budget.remaining ?? 0}
             isExhausted={wasRefused}
           />
-          <VoteModeToggle mode={voteMode} onChange={setVoteMode} />
+          <SectionTabs
+            label={t('voting.modeLabel')}
+            tabs={[
+              { value: 'list', label: t('voting.modeList'), icon: 'catalog' },
+              { value: 'deck', label: t('voting.modeDeck'), icon: 'vote' },
+            ]}
+            value={voteMode}
+            onChange={setVoteMode}
+            className="mx-4"
+          />
           {isDeck ? (
             <>
               <DeckProgressBar deckLength={deckSongs.length} cardIndex={cardIndex} />

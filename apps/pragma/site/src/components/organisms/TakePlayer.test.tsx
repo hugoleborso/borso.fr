@@ -57,6 +57,14 @@ function readReach(markButton: HTMLElement): { left: string; width: string } {
 }
 
 const TOUCH_TARGET_CLASSES = ['min-h-11', 'min-w-11'];
+const SQUARE_TOUCH_TARGET_CLASS = 'size-11';
+
+function hasTouchTargetClasses(control: HTMLElement): boolean {
+  return (
+    control.classList.contains(SQUARE_TOUCH_TARGET_CLASS) ||
+    TOUCH_TARGET_CLASSES.every((targetClass) => control.classList.contains(targetClass))
+  );
+}
 
 // @FollowsBlueprint test-component-render
 describe('TakePlayer', () => {
@@ -108,9 +116,7 @@ describe('TakePlayer', () => {
       screen.getByRole('button', { name: '0:12' }),
     ];
     for (const control of controls) {
-      for (const targetClass of TOUCH_TARGET_CLASSES) {
-        expect(control.classList.contains(targetClass)).toBe(true);
-      }
+      expect(hasTouchTargetClasses(control)).toBe(true);
     }
     expect(screen.getByRole('button', { name: /Delete take/ }).classList.contains('min-h-11')).toBe(
       true,

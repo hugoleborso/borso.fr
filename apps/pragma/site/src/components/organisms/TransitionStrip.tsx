@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
+import { ListRow } from '../molecules/ListRow';
 import { MemberChip } from '../molecules/MemberChip';
 import type { TransitionView } from './transition-view.core';
 
@@ -13,7 +14,7 @@ export interface TransitionStripProps {
   readonly onOpenNote: () => void;
 }
 
-const CARRIER_CHIP_OVERLAP_CLASS = '-ml-1 first:ml-0 rounded-full ring-2 ring-bg';
+const CARRIER_CHIP_OVERLAP_CLASS = '-ml-1 first:ml-0 rounded-full ring-2 ring-paper';
 
 function CarrierStack({ view }: { view: TransitionView }): JSX.Element | null {
   if (view.carriers.length === 0) return null;
@@ -39,44 +40,41 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
 
   if (view.kind !== 'risky') {
     return (
-      <button
-        type="button"
+      <ListRow
         onClick={onOpenNote}
         aria-label={t('setlist.openTransitionComment')}
         title={hasNote ? note : t('setlist.transitionCovered')}
-        className="flex h-6 w-full cursor-pointer items-center justify-center gap-2 border-0 bg-transparent px-2"
+        isChevronShown={false}
+        className="h-6 min-h-6 justify-center gap-2 px-2"
       >
-        <span className="h-px flex-1 bg-line" />
+        <span className="h-px flex-1 bg-rule" />
         <CarrierStack view={view} />
-        {hasNote ? <Icon name="text" size={10} className="shrink-0 text-ink-400" /> : null}
-        <span className="h-px flex-1 bg-line" />
-      </button>
+        <Icon name={hasNote ? 'text' : 'edit'} size="sm" className="shrink-0 text-ink-faint" />
+        <span className="h-px flex-1 bg-rule" />
+      </ListRow>
     );
   }
 
   return (
-    <button
-      type="button"
+    <ListRow
       onClick={onOpenNote}
       aria-label={t('setlist.openTransitionComment')}
-      className={composeClassName(
-        'flex min-h-9 w-full cursor-pointer items-center gap-2 rounded-sm border-0',
-        'bg-warn-soft px-2 py-1 text-left',
-      )}
+      isChevronShown={false}
+      className="min-h-9 gap-2 rounded-sm bg-warn-soft px-2 py-1"
     >
-      <Icon name="warn" size={12} className="shrink-0 text-warn" />
-      <span className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wider text-warn">
+      <Icon name="warn" size="sm" className="shrink-0 text-warn" />
+      <span className="shrink-0 text-label font-semibold uppercase tracking-wider text-warn">
         {t('setlist.transitionRisky')}
       </span>
       <CarrierStack view={view} />
       <span
         className={composeClassName(
-          'min-w-0 flex-1 truncate text-xs',
-          hasNote ? 'text-ink-700' : 'italic text-ink-400',
+          'min-w-0 flex-1 truncate text-meta',
+          hasNote ? 'font-display italic text-ink' : 'text-ink-soft',
         )}
       >
         {hasNote ? note : t('setlist.transitionAddNote')}
       </span>
-    </button>
+    </ListRow>
   );
 }

@@ -19,8 +19,8 @@ import {
 import { useSongsList, useUpdateSong } from '../../lib/queries/songs.queries';
 import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
-import { BottomActionBar } from '../molecules/BottomActionBar';
+import { BottomActions } from '../atoms/BottomActions';
+import { EmptyState } from '../molecules/EmptyState';
 import {
   BREAKPOINT_BELOW_LG,
   useIsMediaQueryMatching,
@@ -218,7 +218,7 @@ export function SetlistEditor({
   };
 
   if (entriesQuery.isLoading) {
-    return <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>;
+    return <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>;
   }
 
   const displayFailureKey =
@@ -238,7 +238,9 @@ export function SetlistEditor({
         onSelectMember={setSelectedMemberId}
       />
       {isInFilteredMode && visibleEntries.length === 0 ? (
-        <p className="text-ink-500 italic text-sm py-6 text-center">{t('lineup.emptyForMember')}</p>
+        <p className="text-ink-soft italic text-meta py-6 text-center">
+          {t('lineup.emptyForMember')}
+        </p>
       ) : (
         <SetlistEntriesList
           entries={setlistEntries}
@@ -262,29 +264,21 @@ export function SetlistEditor({
         />
       )}
       {setlistEntries.length === 0 ? (
-        <p className="text-ink-500 italic text-sm py-6 text-center">{t('setlist.emptyList')}</p>
+        <EmptyState icon="setlist">{t('setlist.emptyList')}</EmptyState>
       ) : null}
-      <BottomActionBar>
+      <BottomActions>
         <Button
-          variant="default"
-          size="icon"
-          aria-label={orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
-          title={t('setlist.copyOrder')}
+          variant="secondary"
+          icon={orderCopied ? 'check' : 'copy'}
           onClick={() => void copyOrderToClipboard()}
           disabled={setlistEntries.length === 0}
         >
-          <Icon name={orderCopied ? 'check' : 'copy'} size={20} />
+          {orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
         </Button>
-        <Button
-          variant="accent"
-          size="icon"
-          aria-label={t('setlist.addSong')}
-          title={t('setlist.addSong')}
-          onClick={() => setPickerOpen(true)}
-        >
-          <Icon name="plus" size={22} />
+        <Button variant="primary" icon="plus" onClick={() => setPickerOpen(true)}>
+          {t('setlist.addSong')}
         </Button>
-      </BottomActionBar>
+      </BottomActions>
       <SetlistSongPicker
         open={pickerOpen}
         songs={songs}

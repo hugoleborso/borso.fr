@@ -9,19 +9,10 @@ import {
   type FetchStub,
 } from '../../lib/queries/queries.test-utils';
 import { TransitionCommentModal } from './TransitionCommentModal';
+import { stubSheetDialog } from '../molecules/sheet.test-utils';
 
 const SONG_A = 'superstition';
 const DRAFT = 'Enchainer sans pause';
-
-function stubDialogs(): void {
-  HTMLDialogElement.prototype.showModal = vi.fn(function showModal(this: HTMLDialogElement) {
-    this.setAttribute('open', '');
-  });
-  HTMLDialogElement.prototype.close = vi.fn(function close(this: HTMLDialogElement) {
-    this.removeAttribute('open');
-    this.dispatchEvent(new Event('close'));
-  });
-}
 
 function renderModal(songBId: string, queryClient = createIsolatedQueryClient()) {
   const onClose = vi.fn();
@@ -45,7 +36,7 @@ describe('a transition comment draft', () => {
   const savedComments: string[] = [];
 
   beforeEach(() => {
-    stubDialogs();
+    stubSheetDialog();
     savedComments.length = 0;
     stub = stubFetch(async (request) => {
       if (request.method === 'PUT') {

@@ -11,8 +11,8 @@ export function SignedInMemberCard(): JSX.Element {
   const member = useSignedInMember();
   return (
     <Card className="p-4 sm:p-6">
-      <p className="text-xs tracking-wider uppercase text-ink-400">{t('account.signedInAs')}</p>
-      <p className="text-lg text-ink-900 m-0">
+      <p className="text-label tracking-wider uppercase text-ink-soft">{t('account.signedInAs')}</p>
+      <p className="text-title text-ink m-0">
         {member.data?.firstName ?? '—'} ({member.data?.username ?? '—'})
       </p>
     </Card>

@@ -19,7 +19,6 @@ import {
   rowAverage,
   selectScoreEditIntent,
 } from '../../lib/mastery-matrix.utils';
-import { readableForeground } from '../../lib/member-color.utils';
 import {
   useDeleteMasteryDefault,
   useMasteryDefaults,
@@ -52,18 +51,18 @@ interface MatrixRow {
   readonly member: MasteryMatrixMember;
 }
 
-const STICKY_ROW_HEADER_CLASS = 'sticky left-0 z-10 bg-bg-elev';
+const STICKY_ROW_HEADER_CLASS = 'sticky left-0 z-10 bg-leaf';
 
 const STICKY_ROW_HEADER_BUDGET_CLASS = 'flex items-center max-w-[7rem] sm:max-w-[12rem]';
 
-const STICKY_AVERAGE_CLASS = 'sticky right-0 z-10 bg-bg-elev border-l border-line';
+const STICKY_AVERAGE_CLASS = 'sticky right-0 z-10 bg-leaf border-l border-rule';
 
 const MATRIX_SCROLLER_CLASS =
-  'overflow-x-scroll [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-bg-sunk ' +
-  '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-line-strong';
+  'overflow-x-scroll [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-sunk ' +
+  '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-rule-strong';
 
 const MATRIX_SCROLL_HINT_CLASS =
-  'sm:hidden text-xs text-ink-400 m-0 mb-2 flex items-center gap-1.5';
+  'sm:hidden text-meta text-ink-soft m-0 mb-2 flex items-center gap-1.5';
 
 const DECIMALS = 1;
 const RIGHT_MOUSE_BUTTON = 2;
@@ -135,9 +134,8 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
             className="mr-2 shrink-0"
             initials={memberInitial(row.original.member.firstName)}
             color={row.original.member.color}
-            style={{ color: readableForeground(row.original.member.color) }}
           />
-          <span className="truncate text-ink-900" title={row.original.member.firstName}>
+          <span className="truncate text-ink" title={row.original.member.firstName}>
             {row.original.member.firstName}
           </span>
         </span>
@@ -195,25 +193,25 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
 
   return (
     <section
-      className="bg-bg-elev border border-line rounded-lg p-4"
+      className="bg-leaf border border-rule rounded-lg p-4"
       memberRows-testid="mastery-matrix"
     >
-      <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-1">
+      <h3 className="font-display text-title text-ink m-0 mb-1">
         {t('members.masteryMatrixTitle')}
       </h3>
-      <p className="text-xs text-ink-500 m-0 mb-4 leading-relaxed">
+      <p className="text-meta text-ink-soft m-0 mb-4 leading-relaxed">
         {t('members.masteryMatrixSubtitle')}
       </p>
       {members.length === 0 || instruments.length === 0 ? (
-        <p className="text-sm text-ink-400 italic">{t('mastery.noData')}</p>
+        <p className="text-meta text-ink-soft italic">{t('mastery.noData')}</p>
       ) : (
         <>
           <p className={MATRIX_SCROLL_HINT_CLASS}>
-            <Icon name="drag" size={12} />
+            <Icon name="drag" size="sm" />
             {t('members.masteryMatrixScrollHint')}
           </p>
           <div className={MATRIX_SCROLLER_CLASS}>
-            <table className="w-full border-collapse text-[12.5px]">
+            <table className="w-full border-collapse text-meta">
               <thead>
                 {table.getHeaderGroups().map((headerGroup) => (
                   <tr key={headerGroup.id}>
@@ -224,10 +222,10 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                         ? STICKY_ROW_HEADER_CLASS
                         : isLast
                           ? composeClassName(
-                              'text-right font-medium text-xs tracking-wider uppercase text-ink-500 px-3 py-3 border-b border-line',
+                              'text-right font-medium text-label tracking-wider uppercase text-ink-soft px-3 py-3 border-b border-rule',
                               STICKY_AVERAGE_CLASS,
                             )
-                          : 'text-center font-medium text-xs tracking-wider uppercase text-ink-500 px-2 py-3 border-b border-line align-bottom';
+                          : 'text-center font-medium text-label tracking-wider uppercase text-ink-soft px-2 py-3 border-b border-rule align-bottom';
                       return (
                         <th key={header.id} className={className}>
                           {header.isPlaceholder
@@ -241,7 +239,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
               </thead>
               <tbody>
                 {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-[rgba(26,22,18,0.02)]">
+                  <tr key={row.id} className="hover:bg-hover">
                     {row.getVisibleCells().map((cell, cellIndex) => {
                       const isFirst = cellIndex === 0;
                       const isLast = cellIndex === row.getVisibleCells().length - 1;
@@ -251,7 +249,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                             key={cell.id}
                             scope="row"
                             className={composeClassName(
-                              'text-left px-3 py-2 border-b border-line',
+                              'text-left px-3 py-2 border-b border-rule',
                               STICKY_ROW_HEADER_CLASS,
                             )}
                           >
@@ -264,7 +262,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                           <td
                             key={cell.id}
                             className={composeClassName(
-                              'text-right px-3 py-1 border-b border-line font-mono text-ink-500',
+                              'text-right px-3 py-1 border-b border-rule font-mono text-ink-soft',
                               STICKY_AVERAGE_CLASS,
                             )}
                           >
@@ -276,7 +274,7 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                       return (
                         <td
                           key={cell.id}
-                          className="px-1 py-1 border-b border-line"
+                          className="px-1 py-1 border-b border-rule"
                           onAuxClick={(event) => {
                             if (event.button !== RIGHT_MOUSE_BUTTON) return;
                             event.preventDefault();
@@ -289,13 +287,13 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                     })}
                   </tr>
                 ))}
-                <tr className="bg-bg-sunk">
+                <tr className="bg-sunk">
                   <th
                     scope="row"
                     className={composeClassName(
-                      'text-left px-3 py-3 font-medium text-ink-500 text-xs tracking-wider uppercase',
+                      'text-left px-3 py-3 font-medium text-ink-soft text-label tracking-wider uppercase',
                       STICKY_ROW_HEADER_CLASS,
-                      'bg-bg-sunk',
+                      'bg-sunk',
                     )}
                   >
                     {t('members.columnAverage')}
@@ -305,15 +303,13 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
                     return (
                       <td
                         key={instrument.id}
-                        className="text-center px-1 py-3 font-mono text-ink-500"
+                        className="text-center px-1 py-3 font-mono text-ink-soft"
                       >
                         {average === null ? '—' : average.toFixed(DECIMALS)}
                       </td>
                     );
                   })}
-                  <td
-                    className={composeClassName('px-3 py-3', STICKY_AVERAGE_CLASS, 'bg-bg-sunk')}
-                  />
+                  <td className={composeClassName('px-3 py-3', STICKY_AVERAGE_CLASS, 'bg-sunk')} />
                 </tr>
               </tbody>
             </table>

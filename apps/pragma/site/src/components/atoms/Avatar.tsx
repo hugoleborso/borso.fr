@@ -1,20 +1,28 @@
 import { type CSSProperties, forwardRef, type HTMLAttributes } from 'react';
+import { selectInkOnMemberColor } from '../../lib/member-color.utils';
 import { type AvatarVariantProps, avatarVariants } from './avatar.variants';
 import { composeClassName } from './class-name.utils';
 
-export interface AvatarProps extends HTMLAttributes<HTMLSpanElement>, AvatarVariantProps {
-  initials: string;
-  color: string;
+export interface AvatarProps
+  extends HTMLAttributes<HTMLSpanElement>, Omit<AvatarVariantProps, 'ink'> {
+  readonly initials: string;
+  readonly color: string;
 }
 
+// @FollowsBlueprint atom-variant
 export const Avatar = forwardRef<HTMLSpanElement, AvatarProps>(
   ({ initials, color, className, size, style, ...rest }, ref) => {
-    const composed: CSSProperties = { backgroundColor: color, ...style };
+    const filled: CSSProperties = { backgroundColor: color, ...style };
     return (
       <span
         ref={ref}
-        className={composeClassName(avatarVariants({ size }), className)}
-        style={composed}
+        role="img"
+        aria-label={initials}
+        className={composeClassName(
+          avatarVariants({ size, ink: selectInkOnMemberColor(color) }),
+          className,
+        )}
+        style={filled}
         {...rest}
       >
         {initials}

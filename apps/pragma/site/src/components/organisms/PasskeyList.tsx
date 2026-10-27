@@ -28,20 +28,25 @@ export function PasskeyList(props: PasskeyListProps): JSX.Element {
         <ul className="list-none p-0 m-0 flex flex-col gap-2">
           {props.passkeys.map((passkey) => (
             <li key={passkey.id} className="flex items-center justify-between gap-3">
-              <span className="text-ink-900">{passkey.label}</span>
-              <Button type="button" variant="ghost" onClick={() => props.onRemove(passkey.id)}>
+              <span className="text-ink">{passkey.label}</span>
+              <Button
+                icon="trash"
+                type="button"
+                variant="quiet"
+                onClick={() => props.onRemove(passkey.id)}
+              >
                 {t('account.removePasskey')}
               </Button>
             </li>
           ))}
         </ul>
       ) : (
-        <p className="text-sm text-ink-500">{t('account.passkeysEmpty')}</p>
+        <p className="text-meta text-ink-soft">{t('account.passkeysEmpty')}</p>
       )}
       {props.canAdd ? (
         <div className="mt-4 flex flex-col gap-2 sm:flex-row sm:items-end">
           <div className="flex-1">
-            <label htmlFor="passkey-label" className="text-xs uppercase text-ink-400">
+            <label htmlFor="passkey-label" className="text-label uppercase text-ink-soft">
               {t('account.passkeyLabel')}
             </label>
             <Input
@@ -53,8 +58,9 @@ export function PasskeyList(props: PasskeyListProps): JSX.Element {
             />
           </div>
           <Button
+            icon="key"
             type="button"
-            variant="accent"
+            variant="primary"
             disabled={deviceLabel.trim().length === 0 || props.isAdding}
             onClick={() => {
               props.onAdd(deviceLabel.trim());
@@ -65,7 +71,7 @@ export function PasskeyList(props: PasskeyListProps): JSX.Element {
           </Button>
         </div>
       ) : (
-        <p className="mt-4 text-sm text-ink-500">{t('account.passkeyUnsupported')}</p>
+        <p className="mt-4 text-meta text-ink-soft">{t('account.passkeyUnsupported')}</p>
       )}
     </>
   );

@@ -2,7 +2,6 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { z } from 'zod';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 
 const TEXT_MAX = 200;
@@ -60,8 +59,7 @@ export function QuickAddForm({
       </form.Field>
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
         {([canSubmit, isSubmitting]) => (
-          <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
-            <Icon name="plus" size={14} />
+          <Button type="submit" variant="primary" disabled={!canSubmit || isSubmitting} icon="plus">
             {submitLabel}
           </Button>
         )}

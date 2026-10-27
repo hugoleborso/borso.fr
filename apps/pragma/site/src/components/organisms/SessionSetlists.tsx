@@ -8,7 +8,6 @@ import {
   useUnlinkSetlistFromSession,
 } from '../../lib/queries/setlists.queries';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
 import { SetlistSummaryRow } from '../molecules/SetlistSummaryRow';
 import { AttachSetlistDialog } from './AttachSetlistDialog';
 import { CreateSetlistDialog } from './CreateSetlistDialog';
@@ -30,13 +29,13 @@ export function SessionSetlists({
   const [isAttaching, setIsAttaching] = useState(false);
 
   if (isLoading) {
-    return <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>;
+    return <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>;
   }
 
   return (
     <>
       {setlists.length === 0 ? (
-        <p className="text-ink-400 italic text-sm">{t('sessions.noSetlists')}</p>
+        <p className="text-ink-soft italic text-meta">{t('sessions.noSetlists')}</p>
       ) : (
         <ul className="flex flex-col gap-2">
           {setlists.map((setlist) => (
@@ -49,7 +48,8 @@ export function SessionSetlists({
                 sessionsLabel={null}
                 action={
                   <Button
-                    variant="ghost"
+                    icon="unlink"
+                    variant="quiet"
                     size="sm"
                     aria-label={t('setlist.detach.aria')}
                     disabled={unlinkSetlist.isPending}
@@ -65,18 +65,16 @@ export function SessionSetlists({
       )}
 
       <div className="flex flex-wrap gap-2 items-start">
-        <Button variant="accent" onClick={() => setIsCreating(true)}>
-          <Icon name="plus" size={14} />
+        <Button variant="primary" onClick={() => setIsCreating(true)} icon="plus">
           {t('setlist.new')}
         </Button>
-        <Button variant="default" onClick={() => setIsAttaching(true)}>
-          <Icon name="setlist" size={14} />
+        <Button variant="secondary" onClick={() => setIsAttaching(true)} icon="setlist">
           {t('setlist.attach.button')}
         </Button>
       </div>
 
       {unlinkSetlist.isError ? (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {t('setlist.failure.detach')}
         </p>
       ) : null}

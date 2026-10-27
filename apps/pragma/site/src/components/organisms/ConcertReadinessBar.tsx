@@ -21,14 +21,14 @@ export function ConcertReadinessBar({ date, venue, songs }: ConcertReadinessBarP
   return (
     <section className="flex flex-col gap-2" data-testid="concert-readiness">
       <div className="flex items-baseline justify-between gap-2">
-        <span className="text-sm text-ink-900">{t('studies.readyCount', { ready, total })}</span>
-        <span className="text-xs text-ink-500 truncate">
+        <span className="text-meta text-ink">{t('studies.readyCount', { ready, total })}</span>
+        <span className="text-meta text-ink-soft truncate">
           {formatSessionDate(date, i18n.language)}
           {venue === null ? '' : ` · ${venue}`}
         </span>
       </div>
       <div
-        className="h-2 w-full rounded-full bg-line overflow-hidden"
+        className="h-2 w-full rounded-full bg-rule overflow-hidden"
         role="progressbar"
         aria-valuemin={0}
         aria-valuemax={total}
@@ -40,8 +40,10 @@ export function ConcertReadinessBar({ date, venue, songs }: ConcertReadinessBarP
       {notReady.length > 0 ? (
         <ul className="m-0 p-0 list-none flex flex-wrap gap-1.5">
           {notReady.map((song) => (
-            <li key={song.songId}>
-              <Chip>{song.title}</Chip>
+            <li key={song.songId} className="min-w-0 max-w-full">
+              <Chip className="max-w-full">
+                <span className="truncate">{song.title}</span>
+              </Chip>
             </li>
           ))}
         </ul>

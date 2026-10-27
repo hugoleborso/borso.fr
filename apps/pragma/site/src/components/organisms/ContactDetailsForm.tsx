@@ -8,7 +8,7 @@ import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 
-const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
 export interface ContactDetailsValues {
   readonly phone: string;
@@ -76,8 +76,9 @@ export function ContactDetailsForm(props: ContactDetailsFormProps): JSX.Element 
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
             <Button
+              icon="check"
               type="submit"
-              variant="accent"
+              variant="primary"
               disabled={isSubmitDisabled(canSubmit, isSubmitting)}
             >
               {t('common.save')}
@@ -85,7 +86,7 @@ export function ContactDetailsForm(props: ContactDetailsFormProps): JSX.Element 
           )}
         </form.Subscribe>
         {props.message === null ? null : (
-          <span className="text-sm text-ink-500">{props.message}</span>
+          <span className="text-meta text-ink-soft">{props.message}</span>
         )}
       </div>
     </form>

@@ -22,7 +22,7 @@ export interface PracticeReadViewProps {
   readonly language: string;
 }
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
 // @FollowsBlueprint organism-presentational
 export function PracticeReadView({
@@ -53,7 +53,7 @@ export function PracticeReadView({
         ))}
       </select>
       {preparedConcert === null ? null : (
-        <p className="text-sm text-ink-500 mt-2">
+        <p className="text-meta text-ink-soft mt-2">
           {t('sessions.preparesConcert')}{' '}
           <Link to={`/sessions/${preparedConcert.id}`} className="text-accent hover:underline">
             {formatSessionDate(preparedConcert.date, language)}

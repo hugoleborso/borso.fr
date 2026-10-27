@@ -18,7 +18,7 @@ export function SearchBar({
 }: SearchBarProps): JSX.Element {
   return (
     <div className={composeClassName('relative w-full min-w-0', className)}>
-      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none">
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none">
         <Icon name="search" />
       </span>
       <Input

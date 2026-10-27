@@ -2,13 +2,13 @@
 
 import { type JSX, useState } from 'react';
 import { Icon } from '../atoms/Icon';
+import { MemberMark } from '../atoms/MemberMark';
 import { useElementWidth } from './element-width.hook';
 import { type LineupColumnView, sliceColumnToWidth } from './lineup-slots.core';
 
-const LINEUP_SLOT_ICON_SIZE_PX = 17;
 const OVERFLOW_NAME_SEPARATOR = ', ';
-const SLOT_CLASS = 'inline-flex h-5 w-[19px] shrink-0 items-center justify-center';
-const COLUMN_CLASS = 'inline-flex h-5 min-w-0 flex-1 items-center overflow-hidden';
+const SLOT_CLASS = 'size-5.5 min-h-0 min-w-0 px-0';
+const COLUMN_CLASS = 'inline-flex h-6 min-w-0 flex-1 items-center gap-0.5 overflow-hidden';
 
 export interface LineupSlotsProps {
   readonly column: LineupColumnView;
@@ -21,18 +21,19 @@ export function LineupSlots({ column }: LineupSlotsProps): JSX.Element {
   return (
     <span ref={setMeasuredColumn} className={COLUMN_CLASS}>
       {view.slots.map((slot) => (
-        <span
+        <MemberMark
           key={slot.slotKey}
+          shape="cell"
+          color={slot.holderColor}
           className={SLOT_CLASS}
-          style={{ color: slot.holderColor }}
           title={slot.instrumentName}
         >
-          <Icon name={slot.glyph} size={LINEUP_SLOT_ICON_SIZE_PX} />
-        </span>
+          <Icon name={slot.glyph} />
+        </MemberMark>
       ))}
       {view.hasOverflow ? (
         <span
-          className="inline-flex h-5 shrink-0 items-center px-0.5 font-mono text-[10px] text-ink-400"
+          className="inline-flex h-6 shrink-0 items-center px-0.5 text-label text-ink-soft tabular-nums"
           title={view.overflowInstrumentNames.join(OVERFLOW_NAME_SEPARATOR)}
         >
           +{view.overflowCount}

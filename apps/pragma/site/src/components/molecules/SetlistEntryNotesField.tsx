@@ -6,7 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { type SetlistEntryForm } from './setlist-entry-form.hook';
 
-const LABEL_CLASS = 'flex flex-col gap-1 text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS =
+  'flex flex-col gap-1 text-label tracking-wider uppercase text-ink-soft font-medium';
 const NOTES_ROWS = 2;
 
 interface SetlistEntryNotesFieldProps {
@@ -33,7 +34,7 @@ export function SetlistEntryNotesField({ form, onType }: SetlistEntryNotesFieldP
             }}
             onBlur={field.handleBlur}
             maxLength={SETLIST_ENTRY_NOTES_MAX_LENGTH}
-            className="font-mono"
+            className="font-display italic"
           />
         </label>
       )}

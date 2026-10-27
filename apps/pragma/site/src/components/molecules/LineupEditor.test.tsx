@@ -8,6 +8,7 @@ import {
   type LineupEditorMember,
   type LineupRecord,
 } from './LineupEditor';
+import { stubSheetDialog } from './sheet.test-utils';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -22,26 +23,7 @@ const DRUMS: LineupEditorInstrument = { id: 'drums-id', name: 'Drums' };
 
 const RESET_BUTTON_TEXT_EN = 'Reset to song default';
 const OVERRIDE_BADGE_TEXT_EN = 'Override';
-const CANCEL_BUTTON_TEXT_EN = 'Cancel';
 const SAVE_AS_DEFAULT_BUTTON_TEXT_EN = 'Save as song default';
-
-// @FollowsBlueprint test-jsdom-gap-stub
-function stubDialogModalMissingFromJsdom(): void {
-  function stubShowModal(this: HTMLDialogElement): void {
-    this.setAttribute('open', '');
-  }
-  function stubClose(this: HTMLDialogElement): void {
-    this.removeAttribute('open');
-  }
-  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
-    configurable: true,
-    value: stubShowModal,
-  });
-  Object.defineProperty(HTMLDialogElement.prototype, 'close', {
-    configurable: true,
-    value: stubClose,
-  });
-}
 
 function renderEditor(root: Root, node: ReactNode): void {
   act(() => {
@@ -93,7 +75,7 @@ describe('LineupEditor', () => {
   let root: Root;
 
   beforeEach(() => {
-    stubDialogModalMissingFromJsdom();
+    stubSheetDialog();
     container = document.createElement('div');
     document.body.append(container);
     root = createRoot(container);
@@ -352,7 +334,7 @@ describe('LineupEditor', () => {
     );
     const badge = findOverrideBadge(container);
     expect(badge).not.toBeNull();
-    expect(badge?.className).toContain('text-warn');
+    expect(badge?.className).toContain('bg-highlight');
   });
 
   it('carries no override marker when the entry plays the song default', () => {
@@ -373,7 +355,7 @@ describe('LineupEditor', () => {
     expect(findOverrideBadge(container)).toBeNull();
   });
 
-  it('closes without saving when Cancel is clicked', () => {
+  it('closes without saving when the sheet is closed', () => {
     const onSave = vi.fn();
     const onClose = vi.fn();
     renderEditor(
@@ -388,8 +370,8 @@ describe('LineupEditor', () => {
         onClose={onClose}
       />,
     );
-    const cancelButton = findButtonByText(container, CANCEL_BUTTON_TEXT_EN);
-    act(() => cancelButton?.click());
+    const closeButton = container.querySelector<HTMLButtonElement>('[data-sheet-close]');
+    act(() => closeButton?.click());
     expect(onSave).not.toHaveBeenCalled();
     expect(onClose).toHaveBeenCalledTimes(1);
   });

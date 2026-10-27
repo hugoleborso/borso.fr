@@ -15,7 +15,7 @@ import {
 } from '../../lib/queries/takes.queries';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { formatDuration } from '../molecules/song-duration.utils';
 import { placeMomentMarks, isMomentToggleOn, selectCommentMoment } from './take-player.core';
@@ -42,13 +42,14 @@ interface MomentButtonProps {
 
 function MomentButton({ atSeconds, onSeek }: MomentButtonProps): JSX.Element {
   return (
-    <button
-      type="button"
-      className="min-h-11 min-w-11 px-1 font-mono text-xs text-accent bg-transparent border-0 cursor-pointer"
+    <Button
+      icon="play"
+      variant="quiet"
+      className="min-w-11 font-mono"
       onClick={() => onSeek(atSeconds)}
     >
       {formatDuration(atSeconds)}
-    </button>
+    </Button>
   );
 }
 
@@ -105,30 +106,21 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
   return (
     <section
       aria-label={t('takes.player.title')}
-      className="flex flex-col gap-3 rounded-md border border-line bg-bg p-3"
+      className="flex flex-col gap-3 rounded-md border border-rule bg-paper p-3"
     >
       <div className="flex items-center gap-2">
-        <span className="text-xs tracking-wider uppercase text-ink-400 font-medium flex-1">
+        <span className="text-label tracking-wider uppercase text-ink-soft font-medium flex-1">
           {t('takes.player.title')}
         </span>
-        <Button variant="ghost" size="sm" onClick={() => setIsConfirmingDelete(true)}>
-          <Icon name="trash" size={12} />
+        <Button variant="quiet" icon="trash" onClick={() => setIsConfirmingDelete(true)}>
           {t('takes.player.delete')}
         </Button>
-        <Button
-          variant="ghost"
-          size="sm"
-          className="min-w-11"
-          aria-label={t('common.close')}
-          onClick={onClose}
-        >
-          <Icon name="close" size={12} />
-        </Button>
+        <IconButton icon="close" label={t('common.close')} onClick={onClose} />
       </div>
 
       {playbackQuery.data === undefined ? (
         <p
-          className="text-sm text-ink-400 italic m-0"
+          className="text-meta text-ink-soft italic m-0"
           role={playbackQuery.isError ? 'alert' : 'status'}
         >
           {t(playbackQuery.isError ? 'takes.player.loadFailed' : 'common.loading')}
@@ -148,7 +140,7 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
       )}
 
       <div className="relative h-11" role="group" aria-label={t('takes.player.marks')}>
-        <div aria-hidden="true" className="absolute inset-x-0 top-2.5 h-6 rounded bg-bg-sunk">
+        <div aria-hidden="true" className="absolute inset-x-0 top-2.5 h-6 rounded-sm bg-sunk">
           {marks.map((mark) => (
             <span
               key={mark.id}
@@ -168,6 +160,7 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
                   width: `${mark.reachEndPercent - mark.reachStartPercent}%`,
                 }}
               >
+                {/* eslint-disable-next-line borso/no-raw-interactive-element -- an invisible tap area laid over the waveform at the comment's moment; the waveform draws the mark, and a Button's icon and fill would hide it */}
                 <button
                   type="button"
                   className="absolute top-0 h-11 w-11 -ml-5.5 p-0 bg-transparent border-0 cursor-pointer pointer-events-auto"
@@ -184,28 +177,25 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
       </div>
 
       {comments.length === 0 ? (
-        <p className="text-sm text-ink-400 italic m-0">{t('takes.player.noComments')}</p>
+        <p className="text-meta text-ink-soft italic m-0">{t('takes.player.noComments')}</p>
       ) : (
         <ul className="flex flex-col gap-2 m-0 p-0 list-none">
           {comments.map((comment) => {
             return (
-              <li key={comment.id} className="flex items-start gap-2 text-sm">
+              <li key={comment.id} className="flex items-start gap-2 text-meta">
                 {comment.atSeconds === null ? null : (
                   <MomentButton atSeconds={comment.atSeconds} onSeek={seek} />
                 )}
                 <div className="flex-1 min-w-0">
-                  <span className="text-xs text-ink-500 mr-2">
+                  <span className="text-meta text-ink-soft mr-2">
                     {comment.authorName ?? t('takes.formerMember')}
                   </span>
-                  <span className="text-ink-900 whitespace-pre-wrap break-words">
-                    {comment.body}
-                  </span>
+                  <span className="text-ink whitespace-pre-wrap break-words">{comment.body}</span>
                 </div>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="min-w-11"
-                  aria-label={t('takes.player.deleteComment')}
+                <IconButton
+                  icon="trash"
+                  variant="danger"
+                  label={t('takes.player.deleteComment')}
                   onClick={() =>
                     deleteComment.mutate({
                       takeId: take.id,
@@ -213,9 +203,7 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
                       commentId: comment.id,
                     })
                   }
-                >
-                  <Icon name="trash" size={12} />
-                </Button>
+                />
               </li>
             );
           })}
@@ -243,7 +231,7 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
           )}
         </form.Field>
         <div className="flex flex-wrap items-center justify-between gap-2">
-          <label className="inline-flex items-center gap-2 text-sm text-ink-700 min-h-11">
+          <label className="inline-flex items-center gap-2 text-meta text-ink min-h-11">
             <input
               type="checkbox"
               checked={isMomentOn}
@@ -256,14 +244,19 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
           </label>
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
             {([canSubmit, isSubmitting]) => (
-              <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+              <Button
+                icon="check"
+                type="submit"
+                variant="primary"
+                disabled={!canSubmit || isSubmitting}
+              >
                 {t('takes.player.send')}
               </Button>
             )}
           </form.Subscribe>
         </div>
         {createComment.isError ? (
-          <p className="text-sm text-danger m-0" role="alert">
+          <p className="text-meta text-danger m-0" role="alert">
             {t('takes.player.commentFailed')}
           </p>
         ) : null}

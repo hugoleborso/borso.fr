@@ -21,22 +21,21 @@ import type { InstrumentIcon } from '@domain/instrument.core';
 import type { JSX } from 'react';
 import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
+import { IconButton } from '../atoms/IconButton';
 import { Icon } from '../atoms/Icon';
 import {
   InstrumentPlayerChips,
   type InstrumentPlayerChip,
 } from '../molecules/InstrumentPlayerChips';
 import { INSTRUMENT_ICON_GLYPH } from '../molecules/lineup-slots.core';
+import { ListRow } from '../molecules/ListRow';
 import { restrictToVerticalAxis } from './setlist-editor.utils';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
 const DRAG_TOUCH_DELAY_MS = 200;
 const DRAG_TOUCH_TOLERANCE_PX = 8;
-const ROW_ICON_SIZE_PX = 18;
-const ROW_OPENING_BUTTON_CLASS =
-  'flex-1 min-h-11 text-left text-[13.5px] text-ink-900 cursor-pointer bg-transparent border-0 ' +
-  'after:absolute after:inset-0';
+const ROW_OPENING_BUTTON_CLASS = 'flex-1 text-meta after:absolute after:inset-0';
 
 export interface InstrumentListRow {
   readonly id: string;
@@ -71,41 +70,35 @@ function InstrumentRow(
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={composeClassName(
-        'relative flex items-center gap-2 rounded-md border border-line bg-bg-elev px-2 py-2 transition-colors hover:border-line-strong sm:gap-3 sm:px-3',
+        'relative flex items-center gap-2 rounded-md border border-rule bg-leaf px-2 py-2 transition-colors hover:border-rule-strong sm:gap-3 sm:px-3',
         isDragging && 'opacity-40',
       )}
     >
-      <button
-        type="button"
-        className="relative z-10 inline-flex h-11 w-5 shrink-0 cursor-grab touch-none items-center justify-center border-0 bg-transparent text-ink-300 hover:text-ink-500 active:cursor-grabbing"
-        aria-label={props.dragHandleLabel}
+      <IconButton
+        icon="drag"
+        label={props.dragHandleLabel}
+        size="sm"
+        className="relative z-10 shrink-0 cursor-grab touch-none text-ink-faint active:cursor-grabbing"
         {...attributes}
         {...listeners}
-      >
-        <Icon name="drag" size={14} />
-      </button>
-      <Icon name={INSTRUMENT_ICON_GLYPH[props.row.icon]} size={ROW_ICON_SIZE_PX} />
-      <button
-        type="button"
-        className={ROW_OPENING_BUTTON_CLASS}
-        onClick={() => props.onSelect(props.row.id)}
-      >
+      />
+      <Icon name={INSTRUMENT_ICON_GLYPH[props.row.icon]} size="md" />
+      <ListRow className={ROW_OPENING_BUTTON_CLASS} onClick={() => props.onSelect(props.row.id)}>
         {props.row.name}
-      </button>
+      </ListRow>
       <InstrumentPlayerChips
         players={props.row.players}
         toggleLabel={props.primaryToggleLabel}
         onTogglePrimary={(memberId) => props.onTogglePrimary(props.row.id, memberId)}
       />
       <Badge tone="mono">{props.row.familyLabel}</Badge>
-      <button
-        type="button"
-        className="relative z-10 inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center border-0 bg-transparent px-1 text-lg leading-none text-ink-400 hover:text-danger"
+      <IconButton
+        icon="trash"
+        variant="danger"
+        label={props.deleteLabel}
+        className="relative z-10"
         onClick={() => props.onDelete(props.row.id)}
-        aria-label={props.deleteLabel}
-      >
-        ×
-      </button>
+      />
     </li>
   );
 }

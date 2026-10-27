@@ -63,7 +63,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
       <SongDetailHeader song={song} />
 
       {props.hasSideLoadFailed ? (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {t('common.loadFailed')}
         </p>
       ) : null}
@@ -74,10 +74,10 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
 
       {lastWriteFailure.isGenericFailureShown ? (
         <p
-          className="text-danger text-sm border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
+          className="text-danger text-meta border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
           role="alert"
         >
-          <Icon name="warn" size={14} />
+          <Icon name="warn" size="sm" />
           {t('catalog.lastSaveFailed')}
         </p>
       ) : null}

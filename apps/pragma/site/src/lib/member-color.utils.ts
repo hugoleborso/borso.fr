@@ -17,10 +17,6 @@ const SRGB_GAMMA = 2.4;
 const LUMINANCE_RED_WEIGHT = 0.2126;
 const LUMINANCE_GREEN_WEIGHT = 0.7152;
 const LUMINANCE_BLUE_WEIGHT = 0.0722;
-export const READABLE_THRESHOLD = 0.5;
-
-const FOREGROUND_ON_LIGHT = '#1a1814';
-const FOREGROUND_ON_DARK = '#fffefa';
 
 export interface Rgb {
   readonly r: number;
@@ -28,11 +24,20 @@ export interface Rgb {
   readonly b: number;
 }
 
+const CONTRAST_OFFSET = 0.05;
+
+export const ON_COLOR_DARK = '#0a0907';
+export const ON_COLOR_LIGHT = '#fffdf8';
+export const ON_COLOR_DARK_RGB: Rgb = { r: 0x0a, g: 0x09, b: 0x07 };
+export const ON_COLOR_LIGHT_RGB: Rgb = { r: 0xff, g: 0xfd, b: 0xf8 };
+
+export type MemberColorInk = 'on-color-dark' | 'on-color-light';
+
 /**
  * @Blueprint utils-pure-module
  * @BlueprintName Pure Utility Module
  * @BlueprintUsage Use for deterministic helpers with no side effect, which the coverage gate holds at one hundred percent per file.
- * @BlueprintDescription Splits one question into layered steps that are each exported and each assertable on their own: parse the hex string into channels or return null, turn channels into a relative luminance, then choose a foreground from that number. Every constant of the formula carries a name, and malformed input returns null rather than throwing, so the caller decides the fallback.
+ * @BlueprintDescription Splits one question into layered steps that are each exported and each assertable on their own: parse the hex string into channels or return null, turn channels into a relative luminance, compare two luminances as a contrast ratio, then choose the ink with the higher ratio. Every constant of the formula carries a name, and malformed input returns null rather than throwing, so the caller decides the fallback.
  */
 export function parseHex(hex: string): Rgb | null {
   const trimmed = hex.trim();
@@ -74,12 +79,19 @@ export function relativeLuminance(rgb: Rgb): number {
   );
 }
 
-export function foregroundForLuminance(luminance: number): string {
-  return luminance > READABLE_THRESHOLD ? FOREGROUND_ON_LIGHT : FOREGROUND_ON_DARK;
+export function contrastRatio(first: Rgb, second: Rgb): number {
+  const firstLuminance = relativeLuminance(first);
+  const secondLuminance = relativeLuminance(second);
+  const lighter = Math.max(firstLuminance, secondLuminance);
+  const darker = Math.min(firstLuminance, secondLuminance);
+  return (lighter + CONTRAST_OFFSET) / (darker + CONTRAST_OFFSET);
 }
 
-export function readableForeground(hex: string): string {
-  const rgb = parseHex(hex);
-  if (rgb === null) return FOREGROUND_ON_LIGHT;
-  return foregroundForLuminance(relativeLuminance(rgb));
+export function selectInkOnMemberColor(hex: string): MemberColorInk {
+  const color = parseHex(hex);
+  if (color === null) return 'on-color-dark';
+  // Stryker disable next-line EqualityOperator: equivalent mutant, no 8-bit colour sits at exactly the same contrast with both inks
+  return contrastRatio(color, ON_COLOR_LIGHT_RGB) > contrastRatio(color, ON_COLOR_DARK_RGB)
+    ? 'on-color-light'
+    : 'on-color-dark';
 }

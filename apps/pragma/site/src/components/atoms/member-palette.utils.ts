@@ -1,10 +1,4 @@
-export const MEMBER_COLOR_TOKENS = {
-  coral: 'var(--color-member-coral)',
-  teal: 'var(--color-member-teal)',
-  mustard: 'var(--color-member-mustard)',
-  plum: 'var(--color-member-plum)',
-  sage: 'var(--color-member-sage)',
-} as const;
+export const MEMBER_LOADING_COLOR = 'var(--color-sunk)';
 
 const SINGLE_CHARACTER = 1;
 

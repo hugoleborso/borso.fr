@@ -91,8 +91,7 @@
         "api/src/**/*.ts",
         "test/**/*.ts",
         "api/scripts/**/*.ts"
-      ],
-      "ignoreDependencies": ["tailwindcss"]
+      ]
     },
     "apps/talos": {
       "entry": [

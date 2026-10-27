@@ -45,7 +45,7 @@ export function VoteCatalog({
   };
 
   if (songs.length === 0) {
-    return <p className="px-4 text-ink-500">{t('voting.deckDone')}</p>;
+    return <p className="px-4 text-ink-soft">{t('voting.deckDone')}</p>;
   }
 
   return (

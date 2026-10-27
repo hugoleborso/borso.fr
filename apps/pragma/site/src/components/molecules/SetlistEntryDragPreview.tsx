@@ -14,18 +14,16 @@ export interface SetlistEntryDragPreviewProps {
 // @FollowsBlueprint molecule-presentational
 export function SetlistEntryDragPreview(props: SetlistEntryDragPreviewProps): JSX.Element {
   return (
-    <div className="grid grid-cols-[32px_auto_1fr] items-center gap-3 bg-bg-elev border border-line-strong rounded-md px-3 py-3 shadow-[0_12px_32px_rgba(0,0,0,0.28)] cursor-grabbing">
-      <span className="font-mono text-xs text-ink-400 text-right">
+    <div className="grid grid-cols-[32px_auto_1fr] items-center gap-3 bg-leaf border border-rule-strong rounded-md px-3 py-3 shadow-raised cursor-grabbing">
+      <span className="text-meta text-ink-soft text-right tabular-nums">
         {String(props.position).padStart(POSITION_DIGITS, '0')}
       </span>
-      <span className="flex items-center justify-center w-6 h-6 text-ink-500">
-        <Icon name="drag" size={16} />
+      <span className="flex items-center justify-center w-6 h-6 text-ink-soft">
+        <Icon name="drag" size="sm" />
       </span>
       <div className="min-w-0">
-        <div className="font-display italic text-[20px] leading-tight text-ink-900 truncate">
-          {props.title}
-        </div>
-        <div className="text-xs text-ink-500 mt-0.5 truncate">{props.artist}</div>
+        <div className="font-display text-title text-ink truncate">{props.title}</div>
+        <div className="text-meta text-ink-soft mt-0.5 truncate">{props.artist}</div>
       </div>
     </div>
   );

@@ -26,7 +26,7 @@ export interface BottomTabBarProps {
 }
 
 const TAB_CLASS =
-  'relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-xs no-underline';
+  'relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-meta no-underline';
 
 // @FollowsBlueprint organism-presentational
 export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
@@ -34,7 +34,7 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
   const isMoreActive = isMoreTabActive(props.activePath, props.moreDestinations, props.isMoreOpen);
   return (
     <nav
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-bg-elev border-t border-line pb-[env(safe-area-inset-bottom)]"
+      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-leaf border-t border-rule pb-[env(safe-area-inset-bottom)]"
       aria-label={t('nav.bottomBar')}
     >
       {props.tabs.map((tab) => {
@@ -45,9 +45,9 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
           <NavLink
             key={tab.to}
             to={tab.to}
-            className={composeClassName(TAB_CLASS, isActive ? 'text-accent' : 'text-ink-500')}
+            className={composeClassName(TAB_CLASS, isActive ? 'text-accent' : 'text-ink-soft')}
           >
-            <Icon name={tab.icon} size={19} />
+            <Icon name={tab.icon} size="md" />
             <span>{t(tab.labelKey)}</span>
             {isBadgeShown ? (
               <span className="absolute top-1.5 right-1/2 translate-x-4">
@@ -59,6 +59,7 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
           </NavLink>
         );
       })}
+      {/* eslint-disable-next-line borso/no-raw-interactive-element -- the More tab is navigation drawn as a tab with its word under the icon, not an action; the four-tab bar of the next slice removes it */}
       <button
         type="button"
         onClick={props.onToggleMore}
@@ -67,10 +68,10 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
         className={composeClassName(
           TAB_CLASS,
           'bg-transparent border-0 cursor-pointer',
-          isMoreActive ? 'text-accent' : 'text-ink-500',
+          isMoreActive ? 'text-accent' : 'text-ink-soft',
         )}
       >
-        <Icon name={props.isMoreOpen ? 'close' : 'menu'} size={19} />
+        <Icon name={props.isMoreOpen ? 'close' : 'menu'} size="md" />
         <span>{t('nav.more')}</span>
       </button>
     </nav>

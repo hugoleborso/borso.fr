@@ -16,7 +16,6 @@ import type { SetlistSummary } from '../../lib/queries/setlists.queries';
 import { parseFriendsCounts } from '../../routes/sessions/friends-count.core';
 import { selectSessionFacts } from '../../routes/sessions/session-facts.core';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
 import { BackLink } from '../molecules/BackLink';
 import { PageHeader } from '../molecules/PageHeader';
 import { PracticeReadView } from '../molecules/PracticeReadView';
@@ -113,8 +112,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         subtitle={[formattedDate, ...sessionFacts].join(' · ')}
         actions={
           isConcert && !editingConcert ? (
-            <Button variant="default" onClick={() => setEditingConcert(true)}>
-              <Icon name="edit" size={14} />
+            <Button variant="secondary" onClick={() => setEditingConcert(true)} icon="edit">
               {t('common.edit')}
             </Button>
           ) : null
@@ -122,12 +120,12 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
       />
 
       {localError === null ? null : (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {localError}
         </p>
       )}
 
-      <h3 className="font-display italic text-2xl text-ink-900 m-0">{t('sessions.setlists')}</h3>
+      <h3 className="font-display text-title text-ink m-0">{t('sessions.setlists')}</h3>
       <SessionSetlists
         sessionId={session.id}
         setlists={setlists}

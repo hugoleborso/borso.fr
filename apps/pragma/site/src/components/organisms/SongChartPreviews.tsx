@@ -29,15 +29,15 @@ export function SongChartPreviews({ songId, chart }: SongChartPreviewsProps): JS
     <>
       {chordProText === null ? null : (
         <Card variant="bare">
-          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
-            <Icon name="text" size={14} className="text-ink-500" />
-            <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-rule bg-sunk">
+            <Icon name="text" size="sm" className="text-ink-soft" />
+            <span className="text-meta font-medium">{t('catalog.previewTitle')}</span>
             <span className="flex-1" />
             <Link
               to={`/catalog/${songId}/scene`}
-              className="inline-flex items-center gap-1 min-h-11 px-2 -mr-1 rounded-md text-xs text-ink-500 hover:text-ink-900 no-underline"
+              className="inline-flex items-center gap-1 min-h-11 px-2 -mr-1 rounded-md text-meta text-ink-soft hover:text-ink no-underline"
             >
-              <Icon name="play" size={12} />
+              <Icon name="play" size="sm" />
               {t('catalog.openScene')}
             </Link>
           </div>
@@ -49,13 +49,13 @@ export function SongChartPreviews({ songId, chart }: SongChartPreviewsProps): JS
 
       {uploadedChart === null ? null : (
         <Card variant="bare">
-          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-line bg-bg-sunk">
+          <div className="flex items-center gap-2 px-3.5 py-2.5 border-b border-rule bg-sunk">
             <Icon
               name={uploadedChart.kind === 'pdf' ? 'pdf' : 'image'}
-              size={14}
-              className="text-ink-500"
+              size="sm"
+              className="text-ink-soft"
             />
-            <span className="text-xs font-medium">{t('catalog.previewTitle')}</span>
+            <span className="text-meta font-medium">{t('catalog.previewTitle')}</span>
           </div>
           <div className="p-4">
             <UploadedChartPreview

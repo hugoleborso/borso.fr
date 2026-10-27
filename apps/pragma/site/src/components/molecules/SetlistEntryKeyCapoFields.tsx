@@ -11,7 +11,7 @@ const FIELD_CLASS = composeClassName(
   inputVariants({ size: 'sm' }),
   'w-12 px-1 text-center font-mono',
 );
-const LABEL_CLASS = 'flex items-center gap-1.5 text-[11px] tracking-wider uppercase text-ink-400';
+const LABEL_CLASS = 'flex items-center gap-1.5 text-label tracking-wider uppercase text-ink-soft';
 
 interface SetlistEntryKeyCapoFieldsProps {
   readonly form: SetlistEntryForm;

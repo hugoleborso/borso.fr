@@ -449,8 +449,10 @@ Held by: `api/src/members/members.controller.test.ts` › keeps a primacy the me
 
 ## Lineup slot
 
-One icon in the lineup a setlist card draws: one instrument held by one
-member on that song, tinted with that member's colour.
+One mark in the lineup a setlist card draws: one instrument held by one
+member on that song, its glyph drawn on a cell filled with that member's
+stored colour, in whichever of the two inks reads better on it
+(`selectInkOnMemberColor`).
 
 Lives in: `site/src/components/molecules/`
 
@@ -527,7 +529,10 @@ Lives in: `api/src/members/`
   filled in on the account page and used to sign the outreach message.
 - A member created without a colour is given palette slot N of five
   (coral, teal, mustard, plum, sage), wrapping round
-  (`pickNextPaletteHex`).
+  (`pickNextPaletteHex`). The five values live in
+  `domain/member-palette.core.ts`, which the API and the member form both
+  read. A stored colour is never rewritten: it is the member's identity on
+  every lineup.
 - `member_instrument` links a member to the instruments they can play. Its
   primary key is `(memberId, instrumentId)`, so the pair cannot repeat.
 - Assigning instruments replaces the whole set, and is refused when any of

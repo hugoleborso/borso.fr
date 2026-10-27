@@ -27,3 +27,20 @@ describe('composeClassName', () => {
     expect(composeClassName('w-full px-3', 'w-12')).toBe('px-3 w-12');
   });
 });
+
+describe('composeClassName with the design tokens', () => {
+  it('keeps a text role beside a text colour', () => {
+    expect(composeClassName('text-meta', 'text-ink')).toBe('text-meta text-ink');
+    expect(composeClassName('text-ink-soft', 'text-label')).toBe('text-ink-soft text-label');
+  });
+
+  it('keeps the last of two text roles', () => {
+    expect(composeClassName('text-meta', 'text-body')).toBe('text-body');
+    expect(composeClassName('text-stage-title', 'text-stage-hero')).toBe('text-stage-hero');
+  });
+
+  it('keeps the last of two radii and of two shadows', () => {
+    expect(composeClassName('rounded-pill', 'rounded-sheet')).toBe('rounded-sheet');
+    expect(composeClassName('shadow-raised', 'shadow-overlay')).toBe('shadow-overlay');
+  });
+});

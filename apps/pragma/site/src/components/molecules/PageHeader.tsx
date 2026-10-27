@@ -1,6 +1,6 @@
 import type { ReactNode } from 'react';
-import { Crumb } from '../atoms/Crumb';
 import { composeClassName } from '../atoms/class-name.utils';
+import { Overline } from '../atoms/Overline';
 
 export interface PageHeaderProps {
   crumb?: ReactNode;
@@ -23,7 +23,7 @@ export function PageHeader({
   return (
     <header className={composeClassName('mb-3 sm:mb-5', className)}>
       {crumb !== undefined && crumb !== null && (
-        <Crumb className="hidden sm:block mb-2">{crumb}</Crumb>
+        <Overline className="mb-2 hidden sm:block">{crumb}</Overline>
       )}
       <div className="flex items-end justify-between gap-x-4 gap-y-2 flex-wrap">
         <div
@@ -33,15 +33,13 @@ export function PageHeader({
           )}
         >
           <div className="min-w-0 shrink-0">
-            <h1 className="font-display italic text-[26px] sm:text-[44px] lg:text-[56px] leading-[0.98] sm:leading-[0.95] tracking-[-0.015em] text-ink-900 m-0 sm:mb-1">
-              {title}
-            </h1>
+            <h1 className="m-0 font-display text-display text-ink sm:mb-1">{title}</h1>
             {subtitle !== undefined && subtitle !== null && (
-              <div className="text-xs sm:text-[13px] text-ink-500">{subtitle}</div>
+              <div className="text-meta text-ink-soft">{subtitle}</div>
             )}
           </div>
           {inline === undefined ? null : (
-            <div className="flex-1 min-w-0 sm:max-w-[380px]">{inline}</div>
+            <div className="min-w-0 flex-1 sm:max-w-[380px]">{inline}</div>
           )}
         </div>
         {actions !== undefined && actions !== null && (

@@ -4,8 +4,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import type { SetlistStatus } from '@domain/setlist-vote.core';
-import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
 
 export interface VoteEntryLinkProps {
   readonly setlistId: string;
@@ -18,9 +17,9 @@ const LABEL_BY_STATUS = {
 } as const satisfies Readonly<Record<SetlistStatus, string>>;
 
 const VARIANT_BY_STATUS = {
-  voting: 'accent',
-  locked: 'ghost',
-} as const satisfies Readonly<Record<SetlistStatus, 'accent' | 'ghost'>>;
+  voting: 'secondary',
+  locked: 'quiet',
+} as const satisfies Readonly<Record<SetlistStatus, 'secondary' | 'quiet'>>;
 
 // @FollowsBlueprint molecule-presentational
 export function VoteEntryLink({ setlistId, status }: VoteEntryLinkProps): JSX.Element {
@@ -28,15 +27,11 @@ export function VoteEntryLink({ setlistId, status }: VoteEntryLinkProps): JSX.El
   const navigateTo = useNavigateTo();
 
   return (
-    <Button
-      type="button"
+    <IconButton
       variant={VARIANT_BY_STATUS[status]}
-      aria-label={t(LABEL_BY_STATUS[status])}
-      title={t(LABEL_BY_STATUS[status])}
-      className="w-11 px-0"
+      icon="vote"
+      label={t(LABEL_BY_STATUS[status])}
       onClick={() => navigateTo(`/setlists/${setlistId}/vote`)}
-    >
-      <Icon name="vote" size={18} />
-    </Button>
+    />
   );
 }

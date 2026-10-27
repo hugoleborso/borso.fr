@@ -2,17 +2,15 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
-import { Icon } from '../atoms/Icon';
 
 export interface SetlistEntryActionsProps {
   readonly onEditSongDefaults: () => void;
   readonly onRemove: () => void;
 }
 
-const ACTION_CLASS =
-  'min-h-11 flex-1 basis-[9rem] inline-flex items-center justify-center gap-2 rounded-md border ' +
-  'border-line bg-bg-elev px-3 text-sm text-ink-700 cursor-pointer hover:border-line-strong';
+const ACTION_CLASS = 'flex-1 basis-[9rem]';
 
 // @FollowsBlueprint molecule-presentational
 export function SetlistEntryActions({
@@ -22,18 +20,17 @@ export function SetlistEntryActions({
   const { t } = useTranslation();
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <button type="button" onClick={onEditSongDefaults} className={ACTION_CLASS}>
-        <Icon name="edit" size={14} />
+      <Button variant="secondary" icon="edit" onClick={onEditSongDefaults} className={ACTION_CLASS}>
         {t('songDefaults.open')}
-      </button>
-      <button
-        type="button"
+      </Button>
+      <Button
+        variant="secondary"
+        icon="trash"
         onClick={onRemove}
-        className={composeClassName(ACTION_CLASS, 'text-danger hover:border-danger')}
+        className={composeClassName(ACTION_CLASS, 'text-danger [&_svg]:text-danger')}
       >
-        <Icon name="trash" size={14} />
         {t('setlist.removeEntry')}
-      </button>
+      </Button>
     </div>
   );
 }

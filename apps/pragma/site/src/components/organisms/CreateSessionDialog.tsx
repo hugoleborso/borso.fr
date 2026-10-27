@@ -10,12 +10,12 @@ import { type JSX, useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { ApiError } from '../../lib/api.client';
-import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { useCreateSession } from '../../lib/queries/sessions.queries';
 import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
+import { Sheet } from '../molecules/Sheet';
 import {
   dateTimeLocalToIso,
   type ExistingConcert,
@@ -23,7 +23,7 @@ import {
   selectInitialDateTimeLocal,
 } from './create-session-dialog.utils';
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft';
 
 interface CreateSessionDialogProps {
   readonly kind: 'concert' | 'practice';
@@ -33,6 +33,11 @@ interface CreateSessionDialogProps {
   readonly initialDate?: Date;
   readonly origin?: 'free_slot' | null;
 }
+
+const TITLE_KEY_BY_KIND = {
+  concert: 'sessions.create.concertTitle',
+  practice: 'sessions.create.practiceTitle',
+} as const;
 
 const concertFormSchema = z.object({
   dateLocal: z.string().min(1),
@@ -113,7 +118,7 @@ export function CreateSessionDialog({
   const formByKind: Readonly<Record<CreateSessionDialogProps['kind'], JSX.Element>> = {
     concert: (
       <form
-        className="flex flex-col gap-2.5 p-4"
+        className="flex flex-col gap-2.5"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -177,28 +182,26 @@ export function CreateSessionDialog({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
+              className={composeClassName(inputVariants({ size: 'md' }), 'resize-y')}
               rows={3}
               maxLength={CONCERT_GEAR_MAX_LENGTH}
             />
           )}
         </concertForm.Field>
         {submitError === null ? null : (
-          <p className="text-danger text-sm" role="alert">
+          <p className="text-meta text-danger" role="alert">
             {submitError}
           </p>
         )}
         <div className="flex gap-2 mt-2 justify-end">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
           <concertForm.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting] as const}
           >
             {([canSubmit, isSubmitting]) => (
               <Button
                 type="submit"
-                variant="accent"
+                variant="primary"
+                icon="plus"
                 disabled={!canSubmit || isSubmitting || createSession.isPending}
               >
                 {createSession.isPending || isSubmitting
@@ -212,7 +215,7 @@ export function CreateSessionDialog({
     ),
     practice: (
       <form
-        className="flex flex-col gap-2.5 p-4"
+        className="flex flex-col gap-2.5"
         onSubmit={(event) => {
           event.preventDefault();
           event.stopPropagation();
@@ -258,21 +261,19 @@ export function CreateSessionDialog({
           )}
         </practiceForm.Field>
         {submitError === null ? null : (
-          <p className="text-danger text-sm" role="alert">
+          <p className="text-meta text-danger" role="alert">
             {submitError}
           </p>
         )}
         <div className="flex gap-2 mt-2 justify-end">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
           <practiceForm.Subscribe
             selector={(state) => [state.canSubmit, state.isSubmitting] as const}
           >
             {([canSubmit, isSubmitting]) => (
               <Button
                 type="submit"
-                variant="accent"
+                variant="primary"
+                icon="plus"
                 disabled={!canSubmit || isSubmitting || createSession.isPending}
               >
                 {createSession.isPending || isSubmitting
@@ -287,27 +288,13 @@ export function CreateSessionDialog({
   };
 
   return (
-    <dialog
-      ref={openDialogOnAttach}
+    <Sheet
+      title={t(TITLE_KEY_BY_KIND[kind])}
+      label={t(TITLE_KEY_BY_KIND[kind])}
+      isDismissible={false}
       onClose={onClose}
-      className="m-auto w-[calc(100vw-2rem)] sm:w-[28rem] max-w-[28rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-        <h2 className="font-display italic text-xl text-ink-900 m-0">
-          {t(kind === 'concert' ? 'sessions.create.concertTitle' : 'sessions.create.practiceTitle')}
-        </h2>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          aria-label={t('common.cancel')}
-          className="min-w-11"
-        >
-          ×
-        </Button>
-      </div>
       {formByKind[kind]}
-    </dialog>
+    </Sheet>
   );
 }

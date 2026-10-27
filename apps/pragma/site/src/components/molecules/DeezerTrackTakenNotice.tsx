@@ -14,10 +14,10 @@ export function DeezerTrackTakenNotice({ takenTrack }: DeezerTrackTakenNoticePro
   const { t } = useTranslation();
   return (
     <p
-      className="text-danger text-sm border border-danger/40 rounded-md px-3 py-2 flex flex-wrap items-center gap-2"
+      className="text-danger text-meta border border-danger/40 rounded-md px-3 py-2 flex flex-wrap items-center gap-2"
       role="alert"
     >
-      <Icon name="warn" size={14} />
+      <Icon name="warn" size="sm" />
       {t('catalog.deezerTrackTaken')}
       <Link to={`/catalog/${takenTrack.songId}`} className="underline font-medium">
         {takenTrack.songTitle}

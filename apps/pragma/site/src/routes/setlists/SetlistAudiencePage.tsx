@@ -29,7 +29,7 @@ export function SetlistAudiencePage(): JSX.Element {
       </div>
       <PageHeader crumb={setlistName} title={t('audience.panelTitle')} />
       {concertSessionId === null ? (
-        <p className="text-ink-500 italic text-sm">{t('setlist.noSession')}</p>
+        <p className="text-ink-soft italic text-meta">{t('setlist.noSession')}</p>
       ) : (
         <VotingRoundPanel sessionId={concertSessionId} />
       )}

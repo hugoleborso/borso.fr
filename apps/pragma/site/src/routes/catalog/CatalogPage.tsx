@@ -5,9 +5,9 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
-import { buttonVariants } from '../../components/atoms/button.variants';
 import { Icon } from '../../components/atoms/Icon';
-import { BottomActionBar } from '../../components/molecules/BottomActionBar';
+import { BottomActions } from '../../components/atoms/BottomActions';
+import { ButtonLink } from '../../components/atoms/ButtonLink';
 import { FilterPillGroup } from '../../components/molecules/FilterPillGroup';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SearchBar } from '../../components/molecules/SearchBar';
@@ -79,26 +79,31 @@ export function CatalogPage(): JSX.Element {
       {
         value: 'all' as const,
         label: t('catalog.filterAll'),
+        icon: 'catalog' as const,
         count: countSongsWithStatus(songs, 'all'),
       },
       {
         value: 'concert_ready' as const,
         label: t('catalog.filterConcertReady'),
+        icon: 'star' as const,
         count: countSongsWithStatus(songs, 'concert_ready'),
       },
       {
         value: 'rehearsed' as const,
         label: t('catalog.filterRehearsed'),
+        icon: 'check' as const,
         count: countSongsWithStatus(songs, 'rehearsed'),
       },
       {
         value: 'wip' as const,
         label: t('catalog.filterWip'),
+        icon: 'edit' as const,
         count: countSongsWithStatus(songs, 'wip'),
       },
       {
         value: 'idea' as const,
         label: t('catalog.filterIdea'),
+        icon: 'bulb' as const,
         count: countSongsWithStatus(songs, 'idea'),
       },
     ],
@@ -138,16 +143,11 @@ export function CatalogPage(): JSX.Element {
   );
 
   const newSongControl = (
-    <BottomActionBar>
-      <Link
-        to={buildNewSongPath(search)}
-        aria-label={t('catalog.newSong')}
-        title={t('catalog.newSong')}
-        className={buttonVariants({ variant: 'accent', size: 'icon' })}
-      >
-        <Icon name="plus" size={22} />
-      </Link>
-    </BottomActionBar>
+    <BottomActions>
+      <ButtonLink to={buildNewSongPath(search)} variant="primary" icon="plus">
+        {t('catalog.newSong')}
+      </ButtonLink>
+    </BottomActions>
   );
 
   return (
@@ -164,35 +164,33 @@ export function CatalogPage(): JSX.Element {
           />
         }
       />
-      {newSongControl}
 
       <div className="flex gap-2 sm:gap-3.5 items-center mb-3 sm:mb-5 flex-wrap">
         <FilterPillGroup options={filterOptions} value={statusFilter} onChange={setStatusFilter} />
       </div>
 
       {errorMessage !== null && (
-        <p className="text-danger text-sm mb-4" role="alert">
+        <p className="text-danger text-meta mb-4" role="alert">
           {errorMessage}
         </p>
       )}
       {titleOfSongThatLostItsWrite !== null && (
         <p
-          className="text-danger text-sm mb-4 border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
+          className="text-danger text-meta mb-4 border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
           role="alert"
         >
-          <Icon name="warn" size={14} />
+          <Icon name="warn" size="sm" />
           {t('catalog.lastWriteFailed', { title: titleOfSongThatLostItsWrite })}
         </p>
       )}
-      {isLoading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}
+      {isLoading && <p className="text-ink-soft text-meta italic">{t('common.loading')}</p>}
       {!isLoading && cards.length === 0 && (
         <div className="flex flex-col items-start gap-3 py-8">
-          <p className="text-ink-400 text-sm italic m-0">
+          <p className="text-ink-soft text-meta italic m-0">
             {t(selectCatalogEmptyMessageKey(search))}
           </p>
           <Link to={buildNewSongPath(search)}>
-            <Button variant="accent" type="button">
-              <Icon name="plus" size={14} />
+            <Button variant="primary" type="button" icon="plus">
               {search.trim().length === 0
                 ? t('catalog.newSong')
                 : t('catalog.createSearched', { title: search.trim() })}
@@ -201,6 +199,7 @@ export function CatalogPage(): JSX.Element {
         </div>
       )}
       {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} />}
+      {newSongControl}
     </div>
   );
 }

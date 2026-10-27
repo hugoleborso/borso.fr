@@ -7,7 +7,7 @@ import { memberInitial } from '../atoms/member-palette.utils';
 export interface MemberChipProps {
   memberName: string;
   memberColor: string;
-  size?: 'sm' | 'md' | 'lg';
+  size?: 'xs' | 'md' | 'lg';
   withName?: boolean;
   title?: string;
   className?: string;
@@ -17,7 +17,7 @@ export interface MemberChipProps {
 export function MemberChip({
   memberName,
   memberColor,
-  size = 'sm',
+  size = 'xs',
   withName = false,
   title,
   className,
@@ -28,7 +28,7 @@ export function MemberChip({
       title={title ?? memberName}
     >
       <Avatar initials={memberInitial(memberName)} color={memberColor} size={size} />
-      {withName && <span className="text-xs font-medium text-ink-700">{memberName}</span>}
+      {withName && <span className="text-meta font-medium text-ink">{memberName}</span>}
     </span>
   );
 }

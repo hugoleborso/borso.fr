@@ -2,6 +2,7 @@
 
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
+import { IconButton } from '../atoms/IconButton';
 import { SongEmbed } from '../molecules/SongEmbed';
 import { resolveEmbed } from '../../lib/embed.utils';
 
@@ -29,19 +30,17 @@ export function SongExternalLinks({ links, onRemove }: SongExternalLinksProps): 
       {embeds.map(({ link, embed }, index) => (
         <li
           key={link.url}
-          className="relative bg-bg border border-line rounded-md p-2 flex items-start gap-2"
+          className="relative bg-paper border border-rule rounded-md p-2 flex items-start gap-2"
         >
           <div className="flex-1 min-w-0">
             <SongEmbed embed={embed} title={`${link.provider}-${link.url}`} />
           </div>
-          <button
-            type="button"
-            className="inline-flex items-center justify-center min-w-11 min-h-11 text-ink-400 hover:text-danger text-lg leading-none cursor-pointer bg-transparent border-0 px-1"
+          <IconButton
+            icon="trash"
+            variant="danger"
+            label={t('common.delete')}
             onClick={() => onRemove(index)}
-            aria-label={t('common.delete')}
-          >
-            ×
-          </button>
+          />
         </li>
       ))}
     </ul>

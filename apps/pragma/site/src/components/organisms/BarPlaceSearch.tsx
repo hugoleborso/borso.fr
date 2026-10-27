@@ -5,9 +5,9 @@ import { useTranslation } from 'react-i18next';
 import { debounce } from '../../lib/debounce.utils';
 import { useBarPlaceSearch } from '../../lib/queries/bars.queries';
 import { Card } from '../atoms/Card';
-import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
+import { ListRow } from '../molecules/ListRow';
 
 const DEBOUNCE_MS = 600;
 const OPENSTREETMAP_COPYRIGHT_URL = 'https://www.openstreetmap.org/copyright';
@@ -45,11 +45,9 @@ export function BarPlaceSearch({ onPick }: BarPlaceSearchProps): JSX.Element {
 
   return (
     <Card className="mb-5">
-      <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-3">
-        {t('bars.searchTitle')}
-      </h3>
+      <h3 className="font-display text-title text-ink m-0 mb-3">{t('bars.searchTitle')}</h3>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none">
           <Icon name="search" />
         </span>
         <Input
@@ -62,34 +60,32 @@ export function BarPlaceSearch({ onPick }: BarPlaceSearchProps): JSX.Element {
         />
       </div>
       {search.error === null ? null : (
-        <p className="text-sm text-danger mt-3 mb-0" role="alert">
+        <p className="text-meta text-danger mt-3 mb-0" role="alert">
           {t('bars.searchFailed')}
         </p>
       )}
       {search.isFetching ? (
-        <p className="text-sm text-ink-400 italic mt-3 mb-0">{t('common.loading')}</p>
+        <p className="text-meta text-ink-soft italic mt-3 mb-0">{t('common.loading')}</p>
       ) : null}
       {hasSearched && hits.length === 0 ? (
-        <p className="text-sm text-ink-500 mt-3 mb-0">{t('bars.searchNoResult')}</p>
+        <p className="text-meta text-ink-soft mt-3 mb-0">{t('bars.searchNoResult')}</p>
       ) : null}
       <ul className="flex flex-col gap-1.5 mt-3 mb-0 p-0 list-none">
         {hits.map((hit) => (
           <li key={hit.placeId}>
-            <button
-              type="button"
+            <ListRow
               onClick={() => onPick(hit)}
-              className={composeClassName(
-                'flex flex-col items-start w-full text-left min-h-11 bg-bg-elev border border-line',
-                'rounded-md px-3 py-2 cursor-pointer hover:border-line-strong transition-colors',
-              )}
+              className="rounded-md border border-rule bg-leaf px-3 py-2 transition-colors hover:border-rule-strong"
             >
-              <span className="text-[13.5px] font-medium text-ink-900">{hit.name}</span>
-              <span className="text-xs text-ink-500">{hit.address ?? ''}</span>
-            </button>
+              <span className="flex min-w-0 flex-col items-start">
+                <span className="text-meta font-medium text-ink">{hit.name}</span>
+                <span className="text-meta text-ink-soft">{hit.address ?? ''}</span>
+              </span>
+            </ListRow>
           </li>
         ))}
       </ul>
-      <p className="text-xs text-ink-400 mt-3 mb-0">
+      <p className="text-meta text-ink-soft mt-3 mb-0">
         <a
           href={OPENSTREETMAP_COPYRIGHT_URL}
           target="_blank"

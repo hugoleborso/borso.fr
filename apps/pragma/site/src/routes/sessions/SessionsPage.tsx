@@ -4,9 +4,9 @@ import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
-import { Icon } from '../../components/atoms/Icon';
+import { IconButton } from '../../components/atoms/IconButton';
 import { composeClassName } from '../../components/atoms/class-name.utils';
-import { BottomActionBar } from '../../components/molecules/BottomActionBar';
+import { BottomActions } from '../../components/atoms/BottomActions';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
 import { FreeSlotsPanel } from '../../components/organisms/FreeSlotsPanel';
@@ -50,24 +50,13 @@ export function SessionsPage(): JSX.Element {
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
       <PageHeader title={t('sessions.title')} />
 
-      <BottomActionBar>
-        <Button variant="default" onClick={() => setCreating({ kind: 'practice' })}>
-          <Icon name="plus" size={14} />
-          {t('sessions.kindPractice')}
-        </Button>
-        <Button variant="accent" onClick={() => setCreating({ kind: 'concert' })}>
-          <Icon name="plus" size={14} />
-          {t('sessions.kindConcert')}
-        </Button>
-      </BottomActionBar>
-
       {error === null ? null : (
-        <p className="text-danger text-sm mb-3" role="alert">
+        <p className="text-danger text-meta mb-3" role="alert">
           {error}
         </p>
       )}
       {sessionsQuery.isLoading ? (
-        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
+        <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>
       ) : null}
 
       <FreeSlotsPanel
@@ -78,7 +67,7 @@ export function SessionsPage(): JSX.Element {
 
       <ul className="relative pl-8 flex flex-col gap-1">
         <span
-          className="absolute top-1 bottom-1 left-2 w-px bg-line-strong pointer-events-none"
+          className="absolute top-1 bottom-1 left-2 w-px bg-rule-strong pointer-events-none"
           aria-hidden="true"
         />
         {sessions.map((session) => {
@@ -88,38 +77,37 @@ export function SessionsPage(): JSX.Element {
               <span
                 className={composeClassName(
                   'absolute -left-7 top-3.5 w-2.5 h-2.5 rounded-full',
-                  isConcert ? 'bg-accent border-2 border-accent' : 'bg-bg border-2 border-ink-700',
+                  isConcert ? 'bg-accent border-2 border-accent' : 'bg-paper border-2 border-ink',
                 )}
                 aria-hidden="true"
               />
               <div className="relative">
                 <Link
                   to={`/sessions/${session.id}`}
-                  className="block bg-bg-elev border border-line rounded-md px-4 py-3 pr-12 hover:border-line-strong transition-colors"
+                  className="block bg-leaf border border-rule rounded-md px-4 py-3 pr-12 hover:border-rule-strong transition-colors"
                 >
-                  <div className="text-xs font-mono uppercase tracking-wider text-ink-400 mb-1">
+                  <div className="text-label uppercase tracking-wider text-ink-soft mb-1">
                     {isConcert ? '♪' : '⟳'}{' '}
                     {t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
                   </div>
-                  <div className="font-display italic text-2xl text-ink-900 leading-tight">
+                  <div className="font-display text-title text-ink leading-tight">
                     {formatSessionDate(session.date, i18n.language)}
                   </div>
                   {session.venue === null ? null : (
-                    <div className="text-[12.5px] text-ink-500 mt-0.5">{session.venue}</div>
+                    <div className="text-meta text-ink-soft mt-0.5">{session.venue}</div>
                   )}
                 </Link>
-                <button
-                  type="button"
+                <IconButton
+                  icon="trash"
+                  variant="danger"
+                  label={t('sessions.delete.aria')}
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
                     setPendingDeletion(session.id);
                   }}
-                  aria-label={t('sessions.delete.aria')}
-                  className="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center justify-center w-11 h-11 rounded-md text-ink-400 hover:text-danger hover:bg-bg transition-colors cursor-pointer"
-                >
-                  <Icon name="trash" size={16} />
-                </button>
+                  className="absolute top-1/2 right-3 -translate-y-1/2"
+                />
               </div>
             </li>
           );
@@ -149,6 +137,14 @@ export function SessionsPage(): JSX.Element {
           onCancel={() => setPendingDeletion(null)}
         />
       )}
+      <BottomActions>
+        <Button variant="secondary" onClick={() => setCreating({ kind: 'practice' })} icon="plus">
+          {t('sessions.kindPractice')}
+        </Button>
+        <Button variant="primary" onClick={() => setCreating({ kind: 'concert' })} icon="plus">
+          {t('sessions.kindConcert')}
+        </Button>
+      </BottomActions>
     </section>
   );
 }

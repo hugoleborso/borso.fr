@@ -3,7 +3,6 @@
 import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 
 interface SongLinkAdderProps {
@@ -22,8 +21,8 @@ export function SongLinkAdder({
 }: SongLinkAdderProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <fieldset className="border border-line rounded-md p-3 mt-2">
-      <legend className="text-xs tracking-wider uppercase text-ink-400 font-medium px-2">
+    <fieldset className="border border-rule rounded-md p-3 mt-2">
+      <legend className="text-label tracking-wider uppercase text-ink-soft font-medium px-2">
         {t('catalog.linksTitle')}
       </legend>
       <div className="flex gap-2">
@@ -33,8 +32,7 @@ export function SongLinkAdder({
           value={newLinkUrl}
           onChange={(event) => setNewLinkUrl(event.target.value)}
         />
-        <Button type="button" variant="default" onClick={onAdd}>
-          <Icon name="plus" size={14} />
+        <Button variant="secondary" icon="plus" onClick={onAdd}>
           {t('common.add')}
         </Button>
       </div>

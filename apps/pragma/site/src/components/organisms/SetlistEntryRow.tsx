@@ -7,6 +7,7 @@ import type { JSX, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
+import { IconButton } from '../atoms/IconButton';
 import { Icon } from '../atoms/Icon';
 import {
   LineupEditor,
@@ -26,7 +27,7 @@ import {
 } from '../molecules/setlist-entry-form.hook';
 import { useLatestTextSave } from '../molecules/latest-text-save.hook';
 import { SetlistEntrySheet } from './SetlistEntrySheet';
-import { selectMasteryColor } from './mastery-color.core';
+import { selectMasteryTextClass } from './mastery-color.core';
 import {
   isOverridingSongLineup,
   selectSetlistEntryTone,
@@ -34,6 +35,7 @@ import {
 } from './setlist-entry-tone.core';
 import type { LineupMember } from '../molecules/MemberLineup';
 import { LineupSlots } from '../molecules/LineupSlots';
+import { ListRow } from '../molecules/ListRow';
 import {
   type LineupColumnView,
   naturalColumnWidth,
@@ -43,12 +45,12 @@ import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.querie
 import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 
 const POSITION_DIGITS = 2;
-const OPEN_SHEET_BUTTON_CLASS =
-  'flex min-w-0 flex-1 items-center gap-1.5 border-0 bg-transparent p-0 pr-1 text-left cursor-pointer';
+const OPEN_SHEET_BUTTON_CLASS = 'min-w-0 flex-1 gap-1.5 pr-1';
+const DRAG_HANDLE_CLASS = 'shrink-0 cursor-grab touch-none text-ink-faint active:cursor-grabbing';
 const WIDE_LINEUP_CLASS =
   'hidden sm:inline-flex h-11 sm:h-10 grow-0 shrink-[999] items-center overflow-hidden';
 const TITLE_COLUMN_CLASS = 'block min-h-11 sm:min-h-10 min-w-0 flex-auto overflow-hidden';
-const TITLE_CLASS = 'block truncate font-display text-[17px] italic leading-[22px] text-ink-900';
+const TITLE_CLASS = 'block truncate font-display text-title leading-[22px] text-ink';
 const NARROW_LINEUP_CLASS =
   'flex w-full min-w-0 sm:hidden items-center -ml-0.5 px-0.5 overflow-hidden';
 
@@ -155,37 +157,36 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
       <div
         data-tone={tone}
         className={composeClassName(
-          'flex flex-col rounded-md border py-1 pl-0.5 pr-0 transition-colors hover:border-line-strong',
+          'flex flex-col rounded-md border py-1 pl-0.5 pr-0 transition-colors hover:border-rule-strong',
           toneAppearance.surfaceClassName,
           toneAppearance.borderClassName,
         )}
       >
         <div className="flex items-center gap-1.5">
-          <button
-            type="button"
-            className="flex h-11 w-5 shrink-0 cursor-grab touch-none items-center justify-center border-0 bg-transparent text-ink-300 hover:text-ink-500 active:cursor-grabbing sm:h-10"
-            aria-label={t('setlist.dragHandle')}
+          <IconButton
+            icon="drag"
+            label={t('setlist.dragHandle')}
+            size="sm"
+            className={DRAG_HANDLE_CLASS}
             {...attributes}
             {...listeners}
-          >
-            <Icon name="drag" size={14} />
-          </button>
-          <button
-            type="button"
+          />
+          <ListRow
             onClick={() => setIsSheetOpen(true)}
+            isChevronShown={false}
             className={OPEN_SHEET_BUTTON_CLASS}
           >
             <AlbumCover title={props.title} deezerAlbumId={props.deezerAlbumId} size="sm" />
-            <span className="w-4 shrink-0 text-right font-mono text-[10px] text-ink-300">
+            <span className="w-4 shrink-0 text-right font-mono text-label text-ink-faint">
               {String(props.position).padStart(POSITION_DIGITS, '0')}
             </span>
             <span className={TITLE_COLUMN_CLASS}>
               <span className={TITLE_CLASS}>{props.title}</span>
-              <span className="hidden min-w-0 items-center gap-1.5 text-[11px] text-ink-500 sm:flex">
+              <span className="hidden min-w-0 items-center gap-1.5 text-label text-ink-soft sm:flex">
                 <span className="truncate">{props.artist}</span>
                 {props.tonalityLabel === null ? null : (
                   <>
-                    <span className="shrink-0 text-ink-300">·</span>
+                    <span className="shrink-0 text-ink-faint">·</span>
                     <span className="shrink-0 font-mono uppercase tracking-wider">
                       {props.tonalityLabel}
                     </span>
@@ -193,12 +194,14 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 )}
                 {props.meanMastery === null ? null : (
                   <>
-                    <span className="shrink-0 text-ink-300">·</span>
+                    <span className="shrink-0 text-ink-faint">·</span>
                     <span
-                      className="inline-flex shrink-0 items-center gap-0.5 font-mono"
-                      style={{ color: selectMasteryColor(props.meanMastery) }}
+                      className={composeClassName(
+                        'inline-flex shrink-0 items-center gap-0.5 font-mono',
+                        selectMasteryTextClass(props.meanMastery),
+                      )}
                     >
-                      <Icon name="star" size={10} />
+                      <Icon name="star" size="sm" />
                       {props.meanMastery.toFixed(1)}
                     </span>
                   </>
@@ -212,7 +215,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             </span>
             {props.isMemberView ? (
               <span className="flex shrink-0 items-center pr-2">
-                <MemberPartGlyphs parts={props.memberPart} size={18} />
+                <MemberPartGlyphs parts={props.memberPart} size="md" />
               </span>
             ) : (
               <span
@@ -225,7 +228,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
                 <LineupSlots column={props.lineupColumn} />
               </span>
             )}
-          </button>
+          </ListRow>
         </div>
       </div>
       {isSheetOpen ? (

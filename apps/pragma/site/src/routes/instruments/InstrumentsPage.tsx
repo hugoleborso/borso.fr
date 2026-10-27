@@ -12,8 +12,9 @@ import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/atoms/Button';
+import { Chip } from '../../components/atoms/Chip';
 import { Card } from '../../components/atoms/Card';
-import { composeClassName } from '../../components/atoms/class-name.utils';
+import { Icon, type IconName } from '../../components/atoms/Icon';
 import { Input } from '../../components/atoms/Input';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { InstrumentIconPicker } from '../../components/molecules/InstrumentIconPicker';
@@ -44,6 +45,12 @@ interface SelectedInstrument {
 }
 
 const DEFAULT_NEW_INSTRUMENT_FAMILY: InstrumentFamily = 'harmonic';
+const INSTRUMENT_FAMILY_ICON = {
+  harmonic: 'instr',
+  percussive: 'bolt',
+  vocal: 'mic',
+  other: 'more',
+} as const satisfies Readonly<Record<InstrumentFamily, IconName>>;
 const INSTRUMENT_NAME_MIN_LENGTH = 1;
 const NO_ROWS: readonly never[] = [];
 
@@ -157,14 +164,14 @@ export function InstrumentsPage(): JSX.Element {
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
       <PageHeader title={t('instruments.title')} />
       {errorMessage === null ? null : (
-        <p className="text-danger text-sm mb-3" role="alert">
+        <p className="text-danger text-meta mb-3" role="alert">
           {errorMessage}
         </p>
       )}
       <div className="grid grid-cols-1 md:grid-cols-[1fr_360px] gap-5 items-start">
         <div className="flex flex-col gap-2">
           {list.isLoading ? (
-            <p className="text-ink-400 italic text-sm m-0">{t('common.loading')}</p>
+            <p className="text-ink-soft italic text-meta m-0">{t('common.loading')}</p>
           ) : null}
           <InstrumentsList
             rows={rows}
@@ -181,7 +188,7 @@ export function InstrumentsPage(): JSX.Element {
           />
         </div>
         <Card className="flex flex-col gap-3">
-          <h3 className="font-display italic text-2xl text-ink-900 m-0">
+          <h3 className="font-display text-title text-ink m-0">
             {selected === null ? t('instruments.newTitle') : t('instruments.editTitle')}
           </h3>
           <form
@@ -193,7 +200,7 @@ export function InstrumentsPage(): JSX.Element {
             className="flex flex-col gap-2.5"
           >
             <label
-              className="text-xs tracking-wider uppercase text-ink-400 font-medium"
+              className="text-label tracking-wider uppercase text-ink-soft font-medium"
               htmlFor="instrument-name"
             >
               {t('instruments.name')}
@@ -212,7 +219,7 @@ export function InstrumentsPage(): JSX.Element {
                 />
               )}
             </form.Field>
-            <span className="text-xs tracking-wider uppercase text-ink-400 font-medium">
+            <span className="text-label tracking-wider uppercase text-ink-soft font-medium">
               {t('instruments.icon')}
             </span>
             <form.Field name="icon">
@@ -224,27 +231,21 @@ export function InstrumentsPage(): JSX.Element {
                 />
               )}
             </form.Field>
-            <span className="text-xs tracking-wider uppercase text-ink-400 font-medium">
+            <span className="text-label tracking-wider uppercase text-ink-soft font-medium">
               {t('instruments.family')}
             </span>
             <form.Field name="family">
               {(field) => (
                 <div className="flex flex-wrap gap-1.5" role="group">
                   {INSTRUMENT_FAMILIES.map((family) => (
-                    <button
+                    <Chip
                       key={family}
-                      type="button"
-                      aria-pressed={field.state.value === family}
-                      onClick={() => field.handleChange(family)}
-                      className={composeClassName(
-                        'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors',
-                        field.state.value === family
-                          ? 'bg-accent-soft border-accent text-accent font-medium'
-                          : 'bg-bg border-line text-ink-500 hover:border-line-strong',
-                      )}
+                      pressed={field.state.value === family}
+                      onPress={() => field.handleChange(family)}
                     >
+                      <Icon name={INSTRUMENT_FAMILY_ICON[family]} />
                       {t(INSTRUMENT_FAMILY_LABEL_KEY[family])}
-                    </button>
+                    </Chip>
                   ))}
                 </div>
               )}
@@ -252,13 +253,18 @@ export function InstrumentsPage(): JSX.Element {
             <div className="flex gap-2 mt-2">
               <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
                 {([canSubmit, isSubmitting]) => (
-                  <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+                  <Button
+                    icon="check"
+                    type="submit"
+                    variant="primary"
+                    disabled={!canSubmit || isSubmitting}
+                  >
                     {t('common.save')}
                   </Button>
                 )}
               </form.Subscribe>
               {selected === null ? null : (
-                <Button type="button" variant="ghost" onClick={clearSelection}>
+                <Button icon="close" type="button" variant="quiet" onClick={clearSelection}>
                   {t('common.cancel')}
                 </Button>
               )}

@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours
 tags: [react, pragma, ux, harness]
-zone: apps/pragma/site/src/components/atoms/EnergyBar.tsx
+zone: apps/pragma/site/src/components/atoms/energy-bar.utils.ts
 ---
 
 # Scrolling past a song re-scored it

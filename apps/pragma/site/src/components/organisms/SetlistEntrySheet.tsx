@@ -2,13 +2,11 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { type ListenSubject, selectListenTargets } from '../../lib/listen-links.utils';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { BrandLogo } from '../atoms/BrandLogo';
-import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
 import { LineupSlots } from '../molecules/LineupSlots';
+import { ListRow } from '../molecules/ListRow';
 import type { LineupColumnView } from '../molecules/lineup-slots.core';
 import { SetlistEntryActions } from '../molecules/SetlistEntryActions';
 import { SetlistEntryKeyCapoFields } from '../molecules/SetlistEntryKeyCapoFields';
@@ -16,9 +14,10 @@ import { SetlistEntryNotesField } from '../molecules/SetlistEntryNotesField';
 import { SetlistEntryEnergyField } from '../molecules/SetlistEntryEnergyField';
 import type { SetlistEntryForm } from '../molecules/setlist-entry-form.hook';
 import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
+import { Sheet } from '../molecules/Sheet';
 
 const LISTEN_LINK_CLASS =
-  'inline-flex size-11 shrink-0 items-center justify-center rounded-full hover:bg-bg-sunk';
+  'inline-flex size-11 shrink-0 items-center justify-center rounded-pill hover:bg-hover';
 const PROVIDER_LABEL_KEYS = {
   deezer: 'catalog.listenOnDeezer',
   spotify: 'catalog.listenOnSpotify',
@@ -46,33 +45,20 @@ export interface SetlistEntrySheetProps {
 export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <dialog
-      ref={openDismissibleDialogOnAttach}
+    <Sheet
+      title={props.subject.title}
+      label={props.subject.title}
+      isTitleARecordName
       onClose={props.onClose}
-      aria-label={props.subject.title}
-      className="m-auto w-[calc(100vw-2rem)] sm:w-[28rem] max-w-[28rem] max-h-[calc(100dvh-2rem)] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
     >
-      <div className="relative p-4 flex flex-col gap-4">
-        <Button
-          type="button"
-          variant="ghost"
-          aria-label={t('common.close')}
-          title={t('common.close')}
-          className="absolute right-2 top-2 w-11 px-0"
-          onClick={props.onClose}
-        >
-          <Icon name="close" size={18} />
-        </Button>
+      <div className="flex flex-col gap-4">
         <div className="flex items-start gap-3">
           <div className="w-28 sm:w-36 shrink-0">
             <AlbumCover title={props.subject.title} deezerAlbumId={props.deezerAlbumId} size="xl" />
           </div>
           <div className="flex min-w-0 flex-1 flex-col gap-1">
-            <h2 className="m-0 pr-9 font-display text-2xl italic leading-tight text-ink-900">
-              {props.subject.title}
-            </h2>
             <div className="flex items-center gap-2">
-              <p className="m-0 min-w-0 truncate text-sm text-ink-500">{props.subject.artist}</p>
+              <p className="m-0 min-w-0 truncate text-meta text-ink-soft">{props.subject.artist}</p>
               {selectListenTargets(props.subject).map((target) => (
                 <a
                   key={target.provider}
@@ -88,7 +74,7 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
               ))}
             </div>
             {props.memberPart.length === 0 ? null : (
-              <MemberPartGlyphs parts={props.memberPart} size={18} />
+              <MemberPartGlyphs parts={props.memberPart} size="md" />
             )}
             <SetlistEntryKeyCapoFields
               form={props.form}
@@ -97,16 +83,15 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
             />
           </div>
         </div>
-        <button
-          type="button"
+        <ListRow
           onClick={props.onEditLineupOverride}
           aria-label={t('lineup.editOverride')}
-          className="flex min-h-11 w-full items-center overflow-hidden rounded-md border border-line bg-transparent px-2 cursor-pointer hover:border-line-strong"
+          className="overflow-hidden rounded-md border border-rule px-2 hover:border-rule-strong"
         >
           <LineupSlots column={props.lineupColumn} />
-        </button>
+        </ListRow>
         <div className="flex min-h-11 items-center gap-3">
-          <span className="text-sm text-ink-500">{t('setlist.energy')}</span>
+          <span className="text-meta text-ink-soft">{t('setlist.energy')}</span>
           <SetlistEntryEnergyField
             entryEnergy={props.energy}
             songEnergy={props.baseEnergy}
@@ -119,6 +104,6 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
           onRemove={props.onRemove}
         />
       </div>
-    </dialog>
+    </Sheet>
   );
 }

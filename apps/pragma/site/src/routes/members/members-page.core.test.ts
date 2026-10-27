@@ -3,7 +3,7 @@ import {
   applyMemberWriteIntent,
   buildMemberFormKey,
   buildMemberFormValues,
-  DEFAULT_MEMBER_COLOR,
+  selectFreePaletteColor,
   type MemberSelection,
   selectInstrumentListState,
   selectMemberFormMode,
@@ -13,6 +13,7 @@ import {
   sortMembersByFirstName,
   toggleInstrumentAssignment,
 } from './members-page.core';
+import { listMemberPaletteHexes } from '@domain/member-palette.core';
 
 const ADA: MemberSelection = { id: 'ada-id', firstName: 'Ada', color: '#112233' };
 
@@ -52,16 +53,30 @@ describe('selectMemberFormMode', () => {
   });
 });
 
+describe('selectFreePaletteColor', () => {
+  it('takes the first palette colour for an empty band', () => {
+    expect(selectFreePaletteColor([])).toBe('#c4583a');
+  });
+
+  it('skips the colours the band already uses, whatever their case', () => {
+    expect(selectFreePaletteColor(['#C4583A', '#3d8a8a'])).toBe('#c4912b');
+  });
+
+  it('falls back to the first colour once all five are taken', () => {
+    expect(selectFreePaletteColor(listMemberPaletteHexes())).toBe('#c4583a');
+  });
+});
+
 describe('buildMemberFormValues', () => {
-  it('starts blank with the default colour', () => {
-    expect(buildMemberFormValues(null)).toEqual({
+  it('starts blank with the first palette colour no member uses', () => {
+    expect(buildMemberFormValues(null, ['#c4583a'])).toEqual({
       firstName: '',
-      color: DEFAULT_MEMBER_COLOR,
+      color: '#3d8a8a',
     });
   });
 
-  it('starts from the selected member', () => {
-    expect(buildMemberFormValues(ADA)).toEqual({ firstName: 'Ada', color: '#112233' });
+  it('starts from the selected member and keeps their stored colour', () => {
+    expect(buildMemberFormValues(ADA, [])).toEqual({ firstName: 'Ada', color: '#112233' });
   });
 });
 

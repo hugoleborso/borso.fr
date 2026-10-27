@@ -17,9 +17,9 @@ import {
   toggleInstrumentAssignment,
 } from '../../routes/members/members-page.core';
 
-const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const CHECKBOX_ROW_CLASS =
-  'flex items-center gap-2.5 min-h-11 text-sm text-ink-700 cursor-pointer select-none';
+  'flex items-center gap-2.5 min-h-11 text-meta text-ink cursor-pointer select-none';
 const CHECKBOX_CLASS = 'w-5 h-5 accent-accent';
 const FIRST_NAME_MIN_LENGTH = 1;
 
@@ -49,7 +49,7 @@ function NoInstrumentsNotice(): null {
 
 function EmptyInstrumentsNotice(): JSX.Element {
   const { t } = useTranslation();
-  return <p className="text-xs italic text-ink-400">{t('members.noInstrumentsYet')}</p>;
+  return <p className="text-meta italic text-ink-soft">{t('members.noInstrumentsYet')}</p>;
 }
 
 const EMPTY_NOTICE_BY_LIST_STATE: Record<InstrumentListState, () => JSX.Element | null> = {
@@ -65,8 +65,8 @@ function InstrumentPanel({
   const { t } = useTranslation();
   const EmptyNotice = EMPTY_NOTICE_BY_LIST_STATE[selectInstrumentListState(instruments)];
   return (
-    <fieldset className="border border-line rounded-md p-3 mt-2">
-      <legend className="text-xs tracking-wider uppercase text-ink-400 px-2">
+    <fieldset className="border border-rule rounded-md p-3 mt-2">
+      <legend className="text-label tracking-wider uppercase text-ink-soft px-2">
         {t('members.instrumentsAssigned')}
       </legend>
       <EmptyNotice />
@@ -102,7 +102,7 @@ function NoCancelButton(): null {
 
 function CancelEditButton({ label, onCancel }: CancelProps): JSX.Element {
   return (
-    <Button type="button" variant="ghost" onClick={onCancel}>
+    <Button icon="close" type="button" variant="quiet" onClick={onCancel}>
       {label}
     </Button>
   );
@@ -146,9 +146,7 @@ export function MemberEditForm({
 
   return (
     <Card>
-      <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-3">
-        {t(TITLE_KEY_BY_MODE[mode])}
-      </h3>
+      <h3 className="font-display text-title text-ink m-0 mb-3">{t(TITLE_KEY_BY_MODE[mode])}</h3>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -185,7 +183,7 @@ export function MemberEditForm({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              className="w-full min-h-11 rounded-md bg-bg-elev border border-line cursor-pointer"
+              className="w-full min-h-11 rounded-md bg-leaf border border-rule cursor-pointer"
             />
           )}
         </form.Field>
@@ -198,8 +196,9 @@ export function MemberEditForm({
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
               <Button
+                icon="check"
                 type="submit"
-                variant="accent"
+                variant="primary"
                 disabled={isSubmitDisabled(canSubmit, isSubmitting)}
               >
                 {t('common.save')}

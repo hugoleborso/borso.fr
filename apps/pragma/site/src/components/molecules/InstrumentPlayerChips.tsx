@@ -1,10 +1,11 @@
 /** @Feature instruments */
 
 import type { JSX } from 'react';
-import { composeClassName } from '../atoms/class-name.utils';
+import { Chip } from '../atoms/Chip';
 import { MemberChip } from './MemberChip';
 
-const PRIMARY_CLASS = 'ring-2 ring-accent rounded-full';
+const MEMBER_CHOICE_CLASS =
+  'relative z-10 bg-transparent px-0.5 aria-pressed:bg-transparent aria-pressed:text-ink aria-pressed:ring-2 aria-pressed:ring-ink';
 
 export interface InstrumentPlayerChip {
   readonly memberId: string;
@@ -28,20 +29,16 @@ export function InstrumentPlayerChips({
   return (
     <span className="inline-flex items-center gap-1">
       {players.map((player) => (
-        <button
+        <Chip
           key={player.memberId}
-          type="button"
-          aria-pressed={player.isPrimary}
+          pressed={player.isPrimary}
           aria-label={`${toggleLabel} — ${player.memberName}`}
           title={`${toggleLabel} — ${player.memberName}`}
-          onClick={() => onTogglePrimary(player.memberId)}
-          className={composeClassName(
-            'relative z-10 inline-flex cursor-pointer items-center border-0 bg-transparent p-0.5',
-            player.isPrimary && PRIMARY_CLASS,
-          )}
+          onPress={() => onTogglePrimary(player.memberId)}
+          className={MEMBER_CHOICE_CLASS}
         >
-          <MemberChip memberName={player.memberName} memberColor={player.memberColor} size="sm" />
-        </button>
+          <MemberChip memberName={player.memberName} memberColor={player.memberColor} size="xs" />
+        </Chip>
       ))}
     </span>
   );

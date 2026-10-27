@@ -31,7 +31,7 @@ export interface CompositionDetailProps {
   readonly onDeleteTask: (task: TaskShape) => void;
 }
 
-const SECTION_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const SECTION_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
 // @FollowsBlueprint organism-presentational
 export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
@@ -43,11 +43,11 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
   return (
     <div className="flex flex-col gap-4 min-w-0">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-display italic text-3xl text-ink-900 m-0">{composition.title}</h2>
+        <h2 className="font-display text-display text-ink m-0">{composition.title}</h2>
         <StatusChip status={composition.status} />
         <Link
           to={`/catalog/${composition.id}`}
-          className="ml-auto text-[13px] text-accent no-underline"
+          className="ml-auto text-meta text-accent no-underline"
         >
           {t('compos.openInCatalog')}
         </Link>
@@ -60,7 +60,7 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
           members={props.members}
           instruments={props.instruments}
         />
-        <Link to={`/catalog/${composition.id}`} className="text-[13px] text-accent no-underline">
+        <Link to={`/catalog/${composition.id}`} className="text-meta text-accent no-underline">
           {t('compos.editLineup')}
         </Link>
       </Card>
@@ -108,7 +108,7 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
             ))}
           </ul>
         )}
-        <Link to="/tasks" className="self-start text-[13px] text-accent no-underline">
+        <Link to="/tasks" className="self-start text-meta text-accent no-underline">
           {t('compos.addTaskLink')}
         </Link>
       </Card>

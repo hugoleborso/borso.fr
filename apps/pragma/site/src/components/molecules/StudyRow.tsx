@@ -2,7 +2,7 @@
 
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
 import { composeClassName } from '../atoms/class-name.utils';
 import { selectReadinessLabelKey } from '../../routes/studies/studies-page.core';
 
@@ -34,16 +34,16 @@ export function StudyRow({
     <li
       className={composeClassName(
         'flex flex-col sm:flex-row sm:items-center gap-1 sm:gap-4 px-3 py-2 rounded-md border',
-        isStudiedToday ? 'border-accent bg-bg-elev' : 'border-line bg-bg',
+        isStudiedToday ? 'border-accent bg-leaf' : 'border-rule bg-paper',
       )}
       data-testid="study-row"
     >
       <div className="min-w-0 flex-1">
-        <div className="text-sm text-ink-900 truncate">{title}</div>
-        <div className="text-xs text-ink-500 flex items-center gap-1.5">
+        <div className="text-meta text-ink truncate">{title}</div>
+        <div className="text-meta text-ink-soft flex items-center gap-1.5">
           <span>{instrumentName}</span>
           {readinessLabelKey === null ? null : (
-            <span className={isReady === true ? 'text-ink-400' : 'text-danger'}>
+            <span className={isReady === true ? 'text-ink-soft' : 'text-danger'}>
               · {t(readinessLabelKey)}
             </span>
           )}
@@ -52,41 +52,28 @@ export function StudyRow({
       <div className="flex items-center justify-between gap-2">
         <div className="flex items-center gap-1" aria-label={t('studies.scoreLabel')}>
           {isStudiedToday ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-11"
-              aria-label={t('studies.scoreDown')}
+            <IconButton
+              icon="minus"
+              label={t('studies.scoreDown')}
               onClick={() => onScoreStep(-1)}
-            >
-              −
-            </Button>
+            />
           ) : null}
           <span
-            className="w-8 text-center font-mono text-sm text-ink-900"
+            className="w-8 text-center text-meta text-ink tabular-nums"
             data-testid="study-score"
           >
             {score ?? '—'}
           </span>
           {isStudiedToday ? (
-            <Button
-              size="sm"
-              variant="ghost"
-              className="w-11"
-              aria-label={t('studies.scoreUp')}
-              onClick={() => onScoreStep(1)}
-            >
-              +
-            </Button>
+            <IconButton icon="plus" label={t('studies.scoreUp')} onClick={() => onScoreStep(1)} />
           ) : null}
         </div>
         {isStudiedToday ? (
-          <Button size="md" variant="default" onClick={onUndo}>
-            <Icon name="check" size={14} />
+          <Button variant="secondary" icon="refresh" onClick={onUndo}>
             {t('studies.undo')}
           </Button>
         ) : (
-          <Button size="md" variant="accent" onClick={onStudied}>
+          <Button variant="primary" icon="check" onClick={onStudied}>
             {t('studies.studied')}
           </Button>
         )}

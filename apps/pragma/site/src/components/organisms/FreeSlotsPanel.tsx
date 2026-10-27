@@ -39,7 +39,7 @@ const EXCLUSION_MESSAGE_KEY = {
 } as const;
 
 const CONNECT_ACTION_CLASS = composeClassName(
-  buttonVariants({ variant: 'default', size: 'md' }),
+  buttonVariants({ variant: 'secondary', size: 'md' }),
   'no-underline self-start',
 );
 
@@ -49,7 +49,7 @@ const NO_SLOTS: readonly FreeSlot[] = [];
 function ExclusionList({ exclusions }: Pick<ViewProps, 'exclusions'>): JSX.Element {
   const { t } = useTranslation();
   return (
-    <ul className="flex flex-col gap-0.5 p-0 m-0 list-none text-xs text-ink-500">
+    <ul className="flex flex-col gap-0.5 p-0 m-0 list-none text-meta text-ink-soft">
       {exclusions.map((exclusion) => (
         <li key={`${exclusion.firstName}-${exclusion.reason}`}>
           {t(EXCLUSION_MESSAGE_KEY[exclusion.reason], { name: exclusion.firstName })}
@@ -61,14 +61,14 @@ function ExclusionList({ exclusions }: Pick<ViewProps, 'exclusions'>): JSX.Eleme
 
 function LoadingView(): JSX.Element {
   const { t } = useTranslation();
-  return <p className="text-ink-400 italic text-sm">{t('freeSlots.loading')}</p>;
+  return <p className="text-ink-soft italic text-meta">{t('freeSlots.loading')}</p>;
 }
 
 function NoCalendarAtAllView(): JSX.Element {
   const { t } = useTranslation();
   return (
     <>
-      <p className="text-sm text-ink-500 m-0">{t('freeSlots.noCalendarAtAll')}</p>
+      <p className="text-meta text-ink-soft m-0">{t('freeSlots.noCalendarAtAll')}</p>
       <Link to={CALENDAR_SECTION_PATH} className={CONNECT_ACTION_CLASS}>
         {t('freeSlots.connectYours')}
       </Link>
@@ -80,7 +80,7 @@ function NoSlotView({ exclusions }: ViewProps): JSX.Element {
   const { t } = useTranslation();
   return (
     <>
-      <p className="text-sm text-ink-500">{t('freeSlots.none')}</p>
+      <p className="text-meta text-ink-soft">{t('freeSlots.none')}</p>
       <ExclusionList exclusions={exclusions} />
     </>
   );
@@ -136,13 +136,13 @@ export function FreeSlotsPanel({ onBook }: FreeSlotsPanelProps): JSX.Element {
   return (
     <section aria-labelledby="free-slots-title" className="flex flex-col gap-2 mb-6">
       <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
-        <h2 id="free-slots-title" className="text-base text-ink-900 m-0">
+        <h2 id="free-slots-title" className="text-body text-ink m-0">
           {t('freeSlots.title')}
         </h2>
-        <p className="text-xs text-ink-400 m-0">{t('freeSlots.subtitle')}</p>
+        <p className="text-meta text-ink-soft m-0">{t('freeSlots.subtitle')}</p>
       </div>
       {freeSlotsQuery.isError ? (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {t('freeSlots.error')}
         </p>
       ) : (

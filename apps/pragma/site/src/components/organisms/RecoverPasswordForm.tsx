@@ -43,7 +43,7 @@ export function RecoverPasswordForm({
     >
       <label
         htmlFor="recover-username"
-        className="text-xs tracking-wider uppercase text-ink-400 font-medium"
+        className="text-label tracking-wider uppercase text-ink-soft font-medium"
       >
         {t('auth.usernameLabel')}
       </label>
@@ -62,7 +62,7 @@ export function RecoverPasswordForm({
       </form.Field>
       <label
         htmlFor="recover-shared-password"
-        className="text-xs tracking-wider uppercase text-ink-400 font-medium"
+        className="text-label tracking-wider uppercase text-ink-soft font-medium"
       >
         {t('auth.sharedPasswordLabel')}
       </label>
@@ -81,7 +81,7 @@ export function RecoverPasswordForm({
       </form.Field>
       <label
         htmlFor="recover-new-password"
-        className="text-xs tracking-wider uppercase text-ink-400 font-medium"
+        className="text-label tracking-wider uppercase text-ink-soft font-medium"
       >
         {t('auth.newPasswordLabel')}
       </label>
@@ -101,8 +101,9 @@ export function RecoverPasswordForm({
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
         {([canSubmit, isSubmitting]) => (
           <Button
+            icon="arrowR"
             type="submit"
-            variant="accent"
+            variant="primary"
             disabled={!canSubmit || isSubmitting}
             className="mt-2"
           >
@@ -111,7 +112,7 @@ export function RecoverPasswordForm({
         )}
       </form.Subscribe>
       {serverError === null ? null : (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {serverError}
         </p>
       )}

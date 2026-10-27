@@ -41,15 +41,15 @@ describe('resolveEnergyLevel', () => {
 describe('selectEnergyAppearance', () => {
   it('draws a stored energy in the accent palette', () => {
     expect(selectEnergyAppearance(true)).toEqual({
-      filledClassName: 'bg-accent border-accent text-bg-elev',
-      emptyClassName: 'bg-bg-sunk border-line-strong text-ink-500',
+      filledClassName: 'bg-accent border-accent text-on-accent',
+      emptyClassName: 'bg-sunk border-rule-strong text-ink-soft',
     });
   });
 
   it('mutes the filled segments while nothing is stored', () => {
     expect(selectEnergyAppearance(false)).toEqual({
-      filledClassName: 'bg-ink-500 border-ink-500 text-bg-elev',
-      emptyClassName: 'bg-bg-sunk border-line-strong text-ink-500',
+      filledClassName: 'bg-ink-soft border-ink-soft text-leaf',
+      emptyClassName: 'bg-sunk border-rule-strong text-ink-soft',
     });
   });
 });
@@ -58,14 +58,14 @@ describe('selectEnergyMeterAppearance', () => {
   it('draws a stored energy in the accent palette, with no border or text class', () => {
     expect(selectEnergyMeterAppearance(true)).toEqual({
       filledClassName: 'bg-accent',
-      emptyClassName: 'bg-line-strong',
+      emptyClassName: 'bg-rule-strong',
     });
   });
 
   it('mutes the bars while nothing is stored', () => {
     expect(selectEnergyMeterAppearance(false)).toEqual({
-      filledClassName: 'bg-ink-400',
-      emptyClassName: 'bg-line',
+      filledClassName: 'bg-ink-soft',
+      emptyClassName: 'bg-rule',
     });
   });
 });

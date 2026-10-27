@@ -5,9 +5,9 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
-import { StickyFormActions } from '../atoms/StickyFormActions';
+import { BottomActions } from '../atoms/BottomActions';
+import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Card } from '../atoms/Card';
-import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
 import { AvailableSupportField, ConcertMoodField } from '../molecules/BarQualificationFields';
@@ -37,8 +37,7 @@ interface BarFormProps {
   readonly onCancel: () => void;
 }
 
-const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
-const TEXTAREA_CLASS = composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y');
+const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const SELECT_CLASS = inputVariants({ size: 'md' });
 const NOTES_ROWS = 4;
 
@@ -53,7 +52,7 @@ function NoCancelButton(): null {
 
 function CancelBarFormButton({ label, onCancel }: CancelButtonProps): JSX.Element {
   return (
-    <Button type="button" variant="ghost" onClick={onCancel}>
+    <Button icon="close" type="button" variant="quiet" onClick={onCancel}>
       {label}
     </Button>
   );
@@ -108,7 +107,7 @@ export function BarForm({
 
   return (
     <Card>
-      <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-3">{title}</h3>
+      <h3 className="font-display text-title text-ink m-0 mb-3">{title}</h3>
       <form
         onSubmit={(event) => {
           event.preventDefault();
@@ -272,30 +271,40 @@ export function BarForm({
         </label>
         <form.Field name="notes">
           {(field) => (
-            <textarea
+            <AutoGrowTextarea
               id="bar-notes"
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
               rows={NOTES_ROWS}
               maxLength={BAR_NOTES_MAX_LENGTH}
-              className={TEXTAREA_CLASS}
+              className="font-display italic"
             />
           )}
         </form.Field>
-        <StickyFormActions>
+        <BottomActions>
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
-              <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+              <Button
+                icon="check"
+                type="submit"
+                variant="primary"
+                disabled={!canSubmit || isSubmitting}
+              >
                 {t('common.save')}
               </Button>
             )}
           </form.Subscribe>
           <CancelButton label={t('common.cancel')} onCancel={onCancel} />
-        </StickyFormActions>
+        </BottomActions>
         <form.Subscribe selector={(state) => state.values.name}>
           {(barName) => (
-            <Button type="button" variant="ghost" onClick={() => onCopyMessage(barName)}>
+            <Button
+              icon="copy"
+              type="button"
+              variant="quiet"
+              onClick={() => onCopyMessage(barName)}
+            >
               {copyMessageLabel}
             </Button>
           )}

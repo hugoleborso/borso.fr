@@ -13,7 +13,6 @@ import {
   selectFormAfterDeletion,
   selectFormForBar,
   selectOwnerName,
-  selectToggleState,
   selectVisibleBarsView,
   sortBarsByName,
 } from './bars-page.core';
@@ -50,16 +49,6 @@ const PAYLOAD: BarFormSubmitPayload = {
 };
 
 // @FollowsBlueprint test-pure-unit
-describe('selectToggleState', () => {
-  it('is active for the current view', () => {
-    expect(selectToggleState('list', 'list')).toBe('active');
-  });
-
-  it('is inactive for the other view', () => {
-    expect(selectToggleState('list', 'kanban')).toBe('inactive');
-  });
-});
-
 describe('groupBarsByStatus', () => {
   it('puts every bar in its own column and leaves the others empty', () => {
     const grouped = groupBarsByStatus([

@@ -17,8 +17,8 @@ export function MasteryBadge({ value, className }: MasteryBadgeProps): JSX.Eleme
   const display = value === null || value === undefined ? '—' : value.toFixed(DECIMAL_PLACES);
   return (
     <Badge tone="mono" className={composeClassName('px-1.5', className)}>
-      <span className="text-ink-700">{t('catalog.masteryBadge')}</span>
-      <span className="text-ink-900">{display}</span>
+      <span className="text-ink">{t('catalog.masteryBadge')}</span>
+      <span className="text-ink">{display}</span>
     </Badge>
   );
 }

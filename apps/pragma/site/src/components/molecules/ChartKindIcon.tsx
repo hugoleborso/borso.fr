@@ -1,7 +1,7 @@
 /** @Feature songs */
 
 import { useTranslation } from 'react-i18next';
-import { Icon } from '../atoms/Icon';
+import { Icon, type IconSize } from '../atoms/Icon';
 
 export type ChartKind = 'chordpro' | 'pdf' | 'image' | null | undefined;
 
@@ -13,14 +13,14 @@ const KIND_ICON = {
 
 export interface ChartKindIconProps {
   kind: ChartKind;
-  size?: number;
+  size?: IconSize;
 }
 
 // @FollowsBlueprint molecule-presentational
-export function ChartKindIcon({ kind, size = 14 }: ChartKindIconProps): JSX.Element {
+export function ChartKindIcon({ kind, size = 'sm' }: ChartKindIconProps): JSX.Element {
   const { t } = useTranslation();
   if (kind === null || kind === undefined) {
-    return <span className="text-xs text-ink-300 italic">{t('catalog.noChartHint')}</span>;
+    return <span className="text-meta text-ink-faint">{t('catalog.noChartHint')}</span>;
   }
-  return <Icon name={KIND_ICON[kind]} size={size} className="text-ink-400" />;
+  return <Icon name={KIND_ICON[kind]} size={size} className="text-ink-soft" />;
 }

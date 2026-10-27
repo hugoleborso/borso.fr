@@ -66,9 +66,9 @@ describe('MemberFilterPills', () => {
       <MemberFilterPills members={[HUGO_MEMBER]} selectedMemberId={null} onChange={vi.fn()} />,
     );
     const allPill = findPillByText(container, ALL_MEMBERS_LABEL_EN);
-    expect(allPill?.getAttribute('aria-selected')).toBe('true');
+    expect(allPill?.getAttribute('aria-pressed')).toBe('true');
     const hugoPill = findPillByText(container, 'Hugo');
-    expect(hugoPill?.getAttribute('aria-selected')).toBe('false');
+    expect(hugoPill?.getAttribute('aria-pressed')).toBe('false');
   });
 
   it('marks the member pill as selected when its id is supplied', () => {
@@ -80,9 +80,9 @@ describe('MemberFilterPills', () => {
         onChange={vi.fn()}
       />,
     );
-    expect(findPillByText(container, 'Pauline')?.getAttribute('aria-selected')).toBe('true');
-    expect(findPillByText(container, 'Hugo')?.getAttribute('aria-selected')).toBe('false');
-    expect(findPillByText(container, ALL_MEMBERS_LABEL_EN)?.getAttribute('aria-selected')).toBe(
+    expect(findPillByText(container, 'Pauline')?.getAttribute('aria-pressed')).toBe('true');
+    expect(findPillByText(container, 'Hugo')?.getAttribute('aria-pressed')).toBe('false');
+    expect(findPillByText(container, ALL_MEMBERS_LABEL_EN)?.getAttribute('aria-pressed')).toBe(
       'false',
     );
   });

@@ -8,11 +8,12 @@ import { Avatar } from '../atoms/Avatar';
 import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon, type IconName } from '../atoms/Icon';
+import { Overline } from '../atoms/Overline';
 import { isPositiveCount } from '../../lib/counts.utils';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
-import { MEMBER_COLOR_TOKENS, memberInitial } from '../atoms/member-palette.utils';
+import { MEMBER_LOADING_COLOR, memberInitial } from '../atoms/member-palette.utils';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { OfflineBanner } from '../molecules/OfflineBanner';
+import { Sheet } from '../molecules/Sheet';
 import {
   BREAKPOINT_BELOW_LG,
   useIsMediaQueryMatching,
@@ -34,7 +35,7 @@ const PRIMARY_NAV: readonly NavItem[] = [
   { to: '/catalog', labelKey: 'nav.catalog', icon: 'catalog' },
   { to: '/sessions', labelKey: 'nav.sessions', icon: 'sessions' },
   { to: '/setlists', labelKey: 'nav.setlists', icon: 'setlist' },
-  { to: '/bars', labelKey: 'nav.bars', icon: 'bars' },
+  { to: '/bars', labelKey: 'nav.bars', icon: 'beer' },
   { to: '/studies', labelKey: 'nav.studies', icon: 'bolt' },
 ];
 
@@ -44,7 +45,7 @@ const WORKSHOP_NAV: readonly NavItem[] = [
 ];
 
 const ADMIN_NAV: readonly NavItem[] = [
-  { to: '/improvements', labelKey: 'nav.improvements', icon: 'bolt' },
+  { to: '/improvements', labelKey: 'nav.improvements', icon: 'bulb' },
   { to: '/members', labelKey: 'nav.members', icon: 'members' },
   { to: '/instruments', labelKey: 'nav.instruments', icon: 'instr' },
 ];
@@ -68,119 +69,88 @@ export function AppShell(): JSX.Element {
   const badges = useNavigationBadges();
   const signedInMember = useSignedInMember();
   const signedInName = signedInMember.data?.firstName ?? '';
-  const signedInColor = signedInMember.data?.color ?? MEMBER_COLOR_TOKENS.teal;
+  const signedInColor = signedInMember.data?.color ?? MEMBER_LOADING_COLOR;
 
   const closeMobileNav = (): void => setIsMobileNavOpen(false);
 
-  const renderSidebar = (variant: 'desktop' | 'mobile'): JSX.Element => {
-    const isSlideOver = variant === 'mobile';
-    return (
-      <nav
-        className={composeClassName(
-          'px-3.5 py-4 flex flex-col gap-3.5 bg-bg-sunk',
-          variant === 'desktop'
-            ? 'w-[232px] min-w-[232px] border-r border-line h-full'
-            : 'w-72 max-w-[80vw] h-full border-r border-line-strong shadow-2xl',
-        )}
-      >
-        <div className="flex items-start justify-between gap-2 px-2 pt-1.5 pb-1">
-          <div className="font-display italic text-[30px] leading-none tracking-[-0.01em] text-ink-900">
-            {t('appName')}
-            <div className="font-sans not-italic text-xs tracking-[0.18em] uppercase text-ink-500 mt-0.5">
-              {t('appWordmark')}
-            </div>
+  const renderNavigationSections = (): JSX.Element => (
+    <>
+      <div className="flex flex-col gap-px">
+        {PRIMARY_NAV.map((item) => (
+          <SidebarLink
+            key={item.to}
+            item={item}
+            label={t(item.labelKey)}
+            badge={badges[item.to]}
+            isActive={isNavigationDestinationActive(location.pathname, item.to)}
+            onClick={closeMobileNav}
+          />
+        ))}
+      </div>
+
+      <Overline className="px-2.5 pt-1.5 pb-0.5">{t('nav.workshopSection')}</Overline>
+      <div className="flex flex-col gap-px">
+        {WORKSHOP_NAV.map((item) => (
+          <SidebarLink
+            key={item.to}
+            item={item}
+            label={t(item.labelKey)}
+            badge={badges[item.to]}
+            isActive={isNavigationDestinationActive(location.pathname, item.to)}
+            onClick={closeMobileNav}
+          />
+        ))}
+      </div>
+
+      <Overline className="px-2.5 pt-1.5 pb-0.5">{t('nav.administrationSection')}</Overline>
+      <div className="flex flex-col gap-px">
+        {ADMIN_NAV.map((item) => (
+          <SidebarLink
+            key={item.to}
+            item={item}
+            label={t(item.labelKey)}
+            badge={badges[item.to]}
+            isActive={isNavigationDestinationActive(location.pathname, item.to)}
+            onClick={closeMobileNav}
+          />
+        ))}
+      </div>
+
+      <div className="mt-auto flex flex-col gap-2">
+        <div className="border-t border-rule pt-2">
+          <LanguageSwitcher />
+        </div>
+        <Link
+          to="/account"
+          onClick={closeMobileNav}
+          className="flex items-center gap-2.5 rounded-md bg-leaf p-2 text-ink no-underline shadow-leaf"
+        >
+          <Avatar initials={memberInitial(signedInName)} color={signedInColor} size="md" />
+          <div className="min-w-0">
+            <div className="truncate text-meta font-medium">{signedInName}</div>
+            <div className="truncate text-meta text-ink-soft">{t('shell.meVersion')}</div>
           </div>
-          {isSlideOver ? (
-            <button
-              type="button"
-              onClick={closeMobileNav}
-              aria-label={t('nav.closeMenu')}
-              className="inline-flex items-center justify-center w-11 h-11 -mr-2 -mt-1 rounded-md text-ink-500 hover:text-ink-900 bg-transparent border-0 cursor-pointer"
-            >
-              <Icon name="close" size={18} />
-            </button>
-          ) : null}
-        </div>
-
-        <div className="flex flex-col gap-px">
-          {PRIMARY_NAV.map((item) => (
-            <SidebarLink
-              key={item.to}
-              item={item}
-              label={t(item.labelKey)}
-              badge={badges[item.to]}
-              isActive={isNavigationDestinationActive(location.pathname, item.to)}
-              onClick={closeMobileNav}
-            />
-          ))}
-        </div>
-
-        <div className="font-sans text-xs tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
-          {t('nav.workshopSection')}
-        </div>
-        <div className="flex flex-col gap-px">
-          {WORKSHOP_NAV.map((item) => (
-            <SidebarLink
-              key={item.to}
-              item={item}
-              label={t(item.labelKey)}
-              badge={badges[item.to]}
-              isActive={isNavigationDestinationActive(location.pathname, item.to)}
-              onClick={closeMobileNav}
-            />
-          ))}
-        </div>
-
-        <div className="font-sans text-xs tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
-          {t('nav.administrationSection')}
-        </div>
-        <div className="flex flex-col gap-px">
-          {ADMIN_NAV.map((item) => (
-            <SidebarLink
-              key={item.to}
-              item={item}
-              label={t(item.labelKey)}
-              badge={badges[item.to]}
-              isActive={isNavigationDestinationActive(location.pathname, item.to)}
-              onClick={closeMobileNav}
-            />
-          ))}
-        </div>
-
-        <div className="mt-auto flex flex-col gap-2">
-          <div className="border-t border-line pt-2">
-            <LanguageSwitcher />
-          </div>
-          <Link
-            to="/account"
-            className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev no-underline text-ink-900"
-          >
-            <Avatar initials={memberInitial(signedInName)} color={signedInColor} size="md" />
-            <div className="min-w-0">
-              <div className="text-[13px] font-medium truncate">{signedInName}</div>
-              <div className="text-xs text-ink-500 truncate">{t('shell.meVersion')}</div>
-            </div>
-          </Link>
-        </div>
-      </nav>
-    );
-  };
+        </Link>
+      </div>
+    </>
+  );
 
   return (
-    <div className="min-h-dvh flex bg-bg text-ink-900">
-      <div className="hidden lg:block sticky top-0 h-dvh self-start">
-        {renderSidebar('desktop')}
+    <div className="min-h-dvh flex bg-paper text-ink">
+      <div className="sticky top-0 hidden h-dvh self-start lg:block">
+        <nav className="flex h-full w-[232px] min-w-[232px] flex-col gap-3.5 border-r border-rule bg-sunk px-3.5 py-4">
+          <div className="px-2 pt-1.5 pb-1">
+            <div className="font-display text-display text-ink">{t('appName')}</div>
+            <Overline className="mt-0.5">{t('appWordmark')}</Overline>
+          </div>
+          {renderNavigationSections()}
+        </nav>
       </div>
 
       {isNarrow && isMobileNavOpen ? (
-        <dialog
-          ref={openDismissibleDialogOnAttach}
-          onClose={closeMobileNav}
-          aria-label={t('nav.more')}
-          className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-transparent p-0 backdrop:bg-[rgba(20,16,12,0.5)]"
-        >
-          <div className="w-fit h-full">{renderSidebar('mobile')}</div>
-        </dialog>
+        <Sheet title={t('nav.more')} label={t('nav.more')} onClose={closeMobileNav}>
+          <nav className="flex flex-col gap-3.5">{renderNavigationSections()}</nav>
+        </Sheet>
       ) : null}
 
       <main className="flex-1 min-w-0 relative pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
@@ -218,12 +188,12 @@ function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps
       to={item.to}
       onClick={onClick}
       className={composeClassName(
-        'flex items-center gap-2.5 min-h-11 px-2.5 py-2 rounded-md text-[13.5px] border border-transparent',
-        'hover:bg-[rgba(26,22,18,0.04)] transition-colors',
-        isActive ? 'bg-bg-elev text-ink-900 border-line' : 'text-ink-700',
+        'flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-2 text-body text-ink no-underline transition-colors',
+        'hover:bg-hover',
+        isActive ? 'bg-leaf font-medium shadow-leaf' : null,
       )}
     >
-      <Icon name={item.icon} size={16} className="opacity-85" />
+      <Icon name={item.icon} size="md" className="text-ink-soft" />
       <span className="flex-1">{label}</span>
       {isBadgeShown ? (
         <Badge tone="default" size="sm">

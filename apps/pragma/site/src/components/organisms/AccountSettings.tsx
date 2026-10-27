@@ -14,9 +14,7 @@ export function AccountSettings(): JSX.Element {
   const { t } = useTranslation();
   return (
     <section className="flex flex-col gap-4 p-4 sm:p-6 max-w-[640px]">
-      <h1 className="font-display italic text-[32px] leading-none text-ink-900 m-0">
-        {t('account.title')}
-      </h1>
+      <h1 className="font-display text-display leading-none text-ink m-0">{t('account.title')}</h1>
       <SignedInMemberCard />
       <ContactDetailsCard />
       <CalendarFeedCard />

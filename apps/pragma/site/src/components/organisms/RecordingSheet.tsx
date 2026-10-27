@@ -3,7 +3,6 @@
 import { type JSX, type SyntheticEvent, useRef, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { recordTakeBreadcrumb } from '../../observability/error-reporting.adapter';
-import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { readBrowserRecorderEnvironment, startRecording } from '../../lib/recorder.adapter';
 import type { ActiveRecording, RecordingOutcome } from '../../lib/recorder.core';
 import { holdScreenAwakeWhileAttached } from '../../lib/scene-wake-lock.adapter';
@@ -16,6 +15,7 @@ import { roundDurationSeconds } from '../../lib/take-queue.core';
 import { queueTake } from '../../lib/take-queue.setup';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
 import { PulsingDot } from '../atoms/PulsingDot';
 import {
   decidePhaseAfterQueueing,
@@ -25,6 +25,7 @@ import {
   selectPhaseAfterStart,
   selectRecordingSheetView,
 } from './recording-sheet.core';
+import { Sheet } from '../molecules/Sheet';
 import { TakeUploadForm } from './TakeUploadForm';
 
 export interface RecordingSheetProps {
@@ -37,11 +38,8 @@ export interface RecordingSheetProps {
 const CLOSED: RecordingSheetPhase = { kind: 'closed' };
 const SAVING: RecordingSheetPhase = { kind: 'saving' };
 const STARTING: RecordingSheetPhase = { kind: 'starting' };
-const RECORDING_DOT_COLOR = 'var(--color-danger)';
-const ALERT_CLASS = 'text-sm text-danger m-0';
-const STATUS_CLASS = 'text-sm text-ink-500 m-0';
-const COMPACT_ICON_SIZE = 14;
-const ICON_BUTTON_ICON_SIZE = 22;
+const ALERT_CLASS = 'text-meta text-danger m-0';
+const STATUS_CLASS = 'text-meta text-ink-soft m-0';
 
 interface ElapsedClockProps {
   readonly startedAtEpochMilliseconds: number;
@@ -50,7 +48,7 @@ interface ElapsedClockProps {
 function ElapsedClock({ startedAtEpochMilliseconds }: ElapsedClockProps): JSX.Element {
   const now = useSyncExternalStore(subscribeSecondClock, readSecondClock, readServerSecondClock);
   return (
-    <span className="font-mono text-3xl tabular-nums text-ink-900">
+    <span className="font-mono text-display tabular-nums text-ink">
       {formatElapsedClock(now - startedAtEpochMilliseconds)}
     </span>
   );
@@ -131,37 +129,58 @@ export function RecordingSheet({
 
   return (
     <>
-      <Button
-        variant={isCompact ? 'ghost' : 'default'}
-        size={isCompact ? 'sm' : 'icon'}
-        aria-label={t('takes.recordAria', { title: songTitle })}
-        title={t('takes.recordAria', { title: songTitle })}
+      <IconButton
+        variant={isCompact ? 'quiet' : 'secondary'}
+        size={isCompact ? 'sm' : 'md'}
+        icon="mic"
+        label={t('takes.recordAria', { title: songTitle })}
         disabled={view.isOpen}
         onClick={() => void start()}
-      >
-        <Icon name="mic" size={isCompact ? COMPACT_ICON_SIZE : ICON_BUTTON_ICON_SIZE} />
-      </Button>
+      />
       {view.isOpen ? (
-        <dialog
-          ref={openDialogOnAttach}
+        <Sheet
+          title={
+            <span className="flex min-w-0 items-center gap-2">
+              {view.isRecording ? <PulsingDot tone="danger" /> : <Icon name="mic" />}
+              <span className="truncate">{songTitle}</span>
+            </span>
+          }
+          label={t('takes.recording.title', { title: songTitle })}
+          isDismissible={false}
+          isTitleARecordName
+          isCloseDisabled={view.isBusy}
           onCancel={refuseCancelWhileBusy}
           onClose={close}
-          aria-label={t('takes.recording.title', { title: songTitle })}
-          className="m-auto w-[calc(100vw-2rem)] sm:w-[26rem] max-w-[26rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
-        >
-          <div className="p-4 flex flex-col gap-3">
-            <div className="flex items-center gap-2 min-w-0">
-              {view.isRecording ? (
-                <PulsingDot color={RECORDING_DOT_COLOR} />
-              ) : (
-                <Icon name="mic" size={14} />
+          footer={
+            <>
+              {view.offersUpload ? (
+                <Button variant="secondary" icon="upload" onClick={uploadInstead}>
+                  {t('takes.upload')}
+                </Button>
+              ) : null}
+              {view.download === null ? null : (
+                <a
+                  href={view.download.url}
+                  download={view.download.name}
+                  className="inline-flex min-h-11 items-center gap-2 rounded-pill bg-glass px-4 text-body font-medium text-ink no-underline"
+                >
+                  <Icon name="download" size="md" className="text-accent" />
+                  {t('takes.download')}
+                </a>
               )}
-              <span className="text-sm font-medium text-ink-900 truncate">{songTitle}</span>
-            </div>
+              {view.showsStop ? (
+                <Button variant="primary" size="lg" icon="stop" onClick={() => void stop()}>
+                  {t('takes.recording.stop')}
+                </Button>
+              ) : null}
+            </>
+          }
+        >
+          <div className="flex flex-col gap-3">
             {view.elapsedSince === null ? null : (
               <div className="flex items-center justify-between gap-3 flex-wrap">
                 <ElapsedClock startedAtEpochMilliseconds={view.elapsedSince} />
-                <span ref={holdScreenAwakeWhileAttached} className="text-xs text-ink-400">
+                <span ref={holdScreenAwakeWhileAttached} className="text-meta text-ink-soft">
                   {t('takes.recording.screenAwake')}
                 </span>
               </div>
@@ -174,36 +193,8 @@ export function RecordingSheet({
                 {t(view.messageKey)}
               </p>
             )}
-            <div className="flex flex-wrap justify-end gap-2">
-              {view.offersUpload ? (
-                <Button variant="default" onClick={uploadInstead}>
-                  <Icon name="upload" size={14} />
-                  {t('takes.upload')}
-                </Button>
-              ) : null}
-              {view.download === null ? null : (
-                <a
-                  href={view.download.url}
-                  download={view.download.name}
-                  className="inline-flex items-center gap-1.5 min-h-11 px-3 rounded-md border border-line-strong text-[13px] font-medium text-ink-900 no-underline"
-                >
-                  <Icon name="download" size={14} />
-                  {t('takes.download')}
-                </a>
-              )}
-              {view.showsStop ? (
-                <Button variant="accent" size="lg" onClick={() => void stop()}>
-                  <Icon name="stop" size={14} />
-                  {t('takes.recording.stop')}
-                </Button>
-              ) : (
-                <Button variant="ghost" disabled={view.isBusy} onClick={close}>
-                  {t('common.close')}
-                </Button>
-              )}
-            </div>
           </div>
-        </dialog>
+        </Sheet>
       ) : null}
       {isUploadOpen ? (
         <TakeUploadForm

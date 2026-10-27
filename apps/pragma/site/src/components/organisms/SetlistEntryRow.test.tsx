@@ -3,6 +3,7 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 import { SetlistEntryRow, type SetlistEntryRowProps } from './SetlistEntryRow';
+import { stubSheetDialog } from '../molecules/sheet.test-utils';
 
 const NO_LINEUP = {};
 
@@ -10,15 +11,6 @@ class StillResizeObserver implements ResizeObserver {
   readonly observe = vi.fn();
   readonly unobserve = vi.fn();
   readonly disconnect = vi.fn();
-}
-
-function stubDialogs(): void {
-  HTMLDialogElement.prototype.showModal = vi.fn(function showModal(this: HTMLDialogElement) {
-    this.setAttribute('open', '');
-  });
-  HTMLDialogElement.prototype.close = vi.fn(function close(this: HTMLDialogElement) {
-    this.removeAttribute('open');
-  });
 }
 
 const BASS_PART: MemberPartGlyph = {
@@ -78,7 +70,7 @@ function buildProps(memberPart: readonly MemberPartGlyph[]): SetlistEntryRowProp
 describe('a setlist row filtered to one member', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', StillResizeObserver);
-    stubDialogs();
+    stubSheetDialog();
   });
 
   afterEach(() => {
@@ -118,7 +110,7 @@ describe('a setlist row filtered to one member', () => {
 describe('a setlist row tapped open', () => {
   beforeEach(() => {
     vi.stubGlobal('ResizeObserver', StillResizeObserver);
-    stubDialogs();
+    stubSheetDialog();
   });
 
   afterEach(() => {

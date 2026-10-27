@@ -14,8 +14,8 @@ export function EnergyBadge({ value, className }: EnergyBadgeProps): JSX.Element
   const { t } = useTranslation();
   return (
     <Badge tone="mono" className={composeClassName('px-1.5', className)}>
-      <span className="text-ink-700">{t('catalog.energyBadge')}</span>
-      <span className="text-ink-900">{value ?? '—'}</span>
+      <span className="text-ink">{t('catalog.energyBadge')}</span>
+      <span className="text-ink">{value ?? '—'}</span>
     </Badge>
   );
 }

@@ -25,12 +25,6 @@ export interface BarRow {
 
 export type BarsView = 'list' | 'kanban';
 
-export type ToggleState = 'active' | 'inactive';
-
-export function selectToggleState(current: BarsView, candidate: BarsView): ToggleState {
-  return current === candidate ? 'active' : 'inactive';
-}
-
 export function groupBarsByStatus(bars: readonly BarRow[]): Record<BarStatus, BarRow[]> {
   const grouped: Record<BarStatus, BarRow[]> = {
     lead: [],

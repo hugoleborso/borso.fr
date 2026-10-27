@@ -27,7 +27,7 @@ export function StudyQueue({ memberId, rows, instrumentNames }: StudyQueueProps)
   const [pinnedKeys] = useState(() => rows.map((row) => targetKey(row)));
   const orderedRows = keepPinnedOrder(rows, pinnedKeys);
   if (rows.length === 0) {
-    return <p className="text-sm text-ink-500 italic">{t('studies.queueEmpty')}</p>;
+    return <p className="text-meta text-ink-soft italic">{t('studies.queueEmpty')}</p>;
   }
   return (
     <ul className="flex flex-col gap-2 m-0 p-0 list-none">

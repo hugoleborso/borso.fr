@@ -7,10 +7,9 @@ import {
   type InstallWalkthrough,
   installStepsOf,
 } from '../../lib/install-offer.utils';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
 import { InstallPhoneScreen } from '../molecules/InstallPhoneScreen';
+import { Sheet } from '../molecules/Sheet';
 
 export interface InstallWalkthroughSheetProps {
   readonly walkthrough: InstallWalkthrough;
@@ -48,24 +47,19 @@ export function InstallWalkthroughSheet({
   const { t } = useTranslation();
   const steps = installStepsOf(walkthrough);
   return (
-    <dialog
-      ref={openDismissibleDialogOnAttach}
+    <Sheet
+      title={t('install.title')}
+      label={t('install.title')}
       onClose={onClose}
-      aria-label={t('install.title')}
-      className="m-auto w-[calc(100vw-2rem)] sm:w-[26rem] max-w-[26rem] max-h-[90dvh] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
+      footer={
+        onInstall === null ? undefined : (
+          <Button variant="primary" size="lg" icon="install" onClick={onInstall} className="w-full">
+            {t('install.installNow')}
+          </Button>
+        )
+      }
     >
-      <div className="flex items-center justify-between pl-4 pr-1 py-1 border-b border-line">
-        <h2 className="m-0 font-display italic text-xl text-ink-900">{t('install.title')}</h2>
-        <button
-          type="button"
-          onClick={onClose}
-          aria-label={t('common.close')}
-          className="inline-flex items-center justify-center w-11 h-11 rounded-md text-ink-500 hover:text-ink-900 bg-transparent border-0 cursor-pointer"
-        >
-          <Icon name="close" size={18} />
-        </button>
-      </div>
-      <div className="p-4 flex flex-col gap-4">
+      <div className="flex flex-col gap-4">
         <section
           aria-label={t('install.walkthrough')}
           className="motion-reduce:hidden overflow-hidden"
@@ -74,8 +68,8 @@ export function InstallWalkthroughSheet({
             {steps.map((step, index) => (
               <div key={step} className="flex-1 flex flex-col items-center gap-3">
                 <InstallPhoneScreen step={step} />
-                <p className="m-0 px-2 text-center text-sm text-ink-900">
-                  <span className="font-mono text-ink-500 mr-1.5">{index + 1}.</span>
+                <p className="m-0 px-2 text-center text-meta text-ink">
+                  <span className="mr-1.5 text-ink-soft tabular-nums">{index + 1}.</span>
                   {t(STEP_CAPTION_KEY[step])}
                 </p>
               </div>
@@ -90,21 +84,14 @@ export function InstallWalkthroughSheet({
           {steps.map((step, index) => (
             <li key={step} className="flex items-center gap-3">
               <InstallPhoneScreen step={step} />
-              <p className="m-0 text-sm text-ink-900">
-                <span className="font-mono text-ink-500 mr-1.5">{index + 1}.</span>
+              <p className="m-0 text-meta text-ink">
+                <span className="mr-1.5 text-ink-soft tabular-nums">{index + 1}.</span>
                 {t(STEP_CAPTION_KEY[step])}
               </p>
             </li>
           ))}
         </ol>
-
-        {onInstall === null ? null : (
-          <Button variant="primary" size="lg" onClick={onInstall} className="w-full">
-            <Icon name="install" size={16} />
-            {t('install.installNow')}
-          </Button>
-        )}
       </div>
-    </dialog>
+    </Sheet>
   );
 }

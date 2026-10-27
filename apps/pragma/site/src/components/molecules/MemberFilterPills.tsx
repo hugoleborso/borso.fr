@@ -2,6 +2,8 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Chip } from '../atoms/Chip';
+import { Icon } from '../atoms/Icon';
 import { composeClassName } from '../atoms/class-name.utils';
 import { MemberChip } from './MemberChip';
 
@@ -18,11 +20,6 @@ export interface MemberFilterPillsProps {
   readonly className?: string;
 }
 
-const PILL_BASE_CLASS =
-  'inline-flex shrink-0 items-center gap-1.5 min-h-11 px-3 rounded-full text-xs font-medium border border-line transition-colors cursor-pointer whitespace-nowrap';
-const PILL_INACTIVE_CLASS = 'bg-bg-elev text-ink-500 hover:text-ink-900 hover:border-line-strong';
-const PILL_ACTIVE_CLASS = 'bg-ink-900 text-bg-elev border-ink-900';
-
 // @FollowsBlueprint molecule-presentational
 export function MemberFilterPills({
   members,
@@ -31,47 +28,30 @@ export function MemberFilterPills({
   className,
 }: MemberFilterPillsProps): JSX.Element {
   const { t } = useTranslation();
-  const isAllActive = selectedMemberId === null;
   return (
     <div
       className={composeClassName(
         '-mx-4 px-4 sm:mx-0 sm:px-0 flex flex-nowrap sm:flex-wrap gap-2 overflow-x-auto sm:overflow-visible [scrollbar-width:none]',
         className,
       )}
-      role="tablist"
+      role="group"
       aria-label={t('lineup.filterByMember')}
     >
-      <button
-        type="button"
-        role="tab"
-        aria-selected={isAllActive}
-        onClick={() => onChange(null)}
-        className={composeClassName(
-          PILL_BASE_CLASS,
-          isAllActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS,
-        )}
-      >
+      <Chip pressed={selectedMemberId === null} onPress={() => onChange(null)} className="shrink-0">
+        <Icon name="members" />
         {t('lineup.allMembers')}
-      </button>
-      {members.map((member) => {
-        const isActive = selectedMemberId === member.id;
-        return (
-          <button
-            key={member.id}
-            type="button"
-            role="tab"
-            aria-selected={isActive}
-            onClick={() => onChange(member.id)}
-            className={composeClassName(
-              PILL_BASE_CLASS,
-              isActive ? PILL_ACTIVE_CLASS : PILL_INACTIVE_CLASS,
-            )}
-          >
-            <MemberChip memberName={member.name} memberColor={member.color} size="sm" />
-            <span>{member.name}</span>
-          </button>
-        );
-      })}
+      </Chip>
+      {members.map((member) => (
+        <Chip
+          key={member.id}
+          pressed={selectedMemberId === member.id}
+          onPress={() => onChange(member.id)}
+          className="shrink-0 pl-1.5"
+        >
+          <MemberChip memberName={member.name} memberColor={member.color} size="xs" />
+          <span>{member.name}</span>
+        </Chip>
+      ))}
     </div>
   );
 }
