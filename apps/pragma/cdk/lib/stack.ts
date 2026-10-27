@@ -1,4 +1,5 @@
 import {
+  agentReaderPrincipalArn,
   frontendOrigin,
   type IDsqlCluster,
   isProductionStage,
@@ -19,6 +20,23 @@ import type { Construct } from 'constructs';
 const API_TIMEOUT_SECONDS = 20;
 const APP_SLUG = 'pragma';
 const SPOTIFY_CREDENTIALS_PARAMETER = `/${APP_SLUG}/spotify-credentials`;
+
+const SECRET_TABLES_REPLACED_ON_PREVIEW = ['app_config', 'member_credential'];
+const SECRET_TABLES_BLOCKED_ON_PREVIEW = [
+  'auth_attempt',
+  'member_calendar_feed',
+  'member_passkey',
+  'push_subscription',
+  'vapid_key_pair',
+  'webauthn_challenge',
+];
+const RECORDING_TABLES = ['take', 'take_comment'];
+const BALLOT_TOKEN_TABLES = ['audience_suggestion', 'audience_vote'];
+const READER_TABLE_BLOCKLIST = [
+  ...SECRET_TABLES_REPLACED_ON_PREVIEW,
+  ...SECRET_TABLES_BLOCKED_ON_PREVIEW,
+  ...BALLOT_TOKEN_TABLES,
+];
 
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
@@ -121,21 +139,15 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
       migrationsPath: props.migrationsPath,
       cluster: props.cluster,
       ...(isProduction
-        ? {}
+        ? {
+            readerPrincipalArns: [agentReaderPrincipalArn(props.scope)],
+            readerTableBlocklist: READER_TABLE_BLOCKLIST,
+          }
         : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
-              tableBlocklist: [
-                'auth_attempt',
-                'member_calendar_feed',
-                'member_passkey',
-                'push_subscription',
-                'take',
-                'take_comment',
-                'vapid_key_pair',
-                'webauthn_challenge',
-              ],
-              tablesToReplace: ['app_config', 'member_credential'],
+              tableBlocklist: [...SECRET_TABLES_BLOCKED_ON_PREVIEW, ...RECORDING_TABLES],
+              tablesToReplace: [...SECRET_TABLES_REPLACED_ON_PREVIEW],
               columnsToNullify: { member: ['avatar_s3_key'] },
             },
           }),

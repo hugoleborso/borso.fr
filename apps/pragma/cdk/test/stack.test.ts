@@ -106,6 +106,62 @@ function readSchemaCloneConfig(template: Template): unknown {
   return undefined;
 }
 
+function readSchemaReaderBlocklist(template: Template): unknown {
+  for (const resource of Object.values(
+    template.findResources('AWS::CloudFormation::CustomResource'),
+  )) {
+    const properties: unknown = resource.Properties;
+    if (typeof properties !== 'object' || properties === null) continue;
+    if (!('readerTableBlocklist' in properties)) continue;
+    return properties.readerTableBlocklist;
+  }
+  return undefined;
+}
+
+function readSchemaReader(template: Template): unknown {
+  for (const resource of Object.values(
+    template.findResources('AWS::CloudFormation::CustomResource'),
+  )) {
+    const properties: unknown = resource.Properties;
+    if (typeof properties !== 'object' || properties === null) continue;
+    if (!('readerPrincipalArns' in properties)) continue;
+    return properties.readerPrincipalArns;
+  }
+  return undefined;
+}
+
+describe('pragma read-only agent access (ADR-0044)', () => {
+  beforeAll(() => {
+    synthAppStack('prod');
+    synthAppStack('preview');
+  }, SYNTH_WARMUP_TIMEOUT_MILLISECONDS);
+
+  it('maps the AI-Dev-ReadOnly user to a SELECT-only role on prod', () => {
+    expect(JSON.stringify(readSchemaReader(synthAppStack('prod')))).toContain(
+      ':iam::123456789012:user/AI-Dev-ReadOnly',
+    );
+  });
+
+  it('keeps the reader off every table holding a credential, a key, a secret address or a ballot token', () => {
+    expect(readSchemaReaderBlocklist(synthAppStack('prod'))).toStrictEqual([
+      'app_config',
+      'member_credential',
+      'auth_attempt',
+      'member_calendar_feed',
+      'member_passkey',
+      'push_subscription',
+      'vapid_key_pair',
+      'webauthn_challenge',
+      'audience_suggestion',
+      'audience_vote',
+    ]);
+  });
+
+  it('maps no reader on a preview, which holds a copy of prod and nothing more', () => {
+    expect(readSchemaReader(synthAppStack('preview'))).toBeUndefined();
+  });
+});
+
 describe('pragma preview schema cloning', () => {
   beforeAll(() => {
     synthAppStack('prod');
@@ -124,10 +180,10 @@ describe('pragma preview schema cloning', () => {
         'member_calendar_feed',
         'member_passkey',
         'push_subscription',
-        'take',
-        'take_comment',
         'vapid_key_pair',
         'webauthn_challenge',
+        'take',
+        'take_comment',
       ],
       tablesToReplace: ['app_config', 'member_credential'],
       columnsToNullify: { member: ['avatar_s3_key'] },
