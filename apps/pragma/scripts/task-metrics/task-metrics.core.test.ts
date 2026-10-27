@@ -21,6 +21,7 @@ import {
   summariseRouteButtons,
 } from './task-metrics.core';
 
+const EXPECTED_FIRST_DELAYS = [627, 3, 527, 981];
 const SAMPLE_IDENTIFIER = '0f8fad5b-d9cb-469f-a165-70867728950e';
 
 function buildTarget(overrides: Partial<FoundTarget> = {}): FoundTarget {
@@ -106,6 +107,12 @@ describe('projectScreenFraction and isInBottomThird', () => {
     expect(isInBottomThird(buildTarget({ centreY: 844 * BOTTOM_THIRD_FROM - 1 }))).toBe(false);
   });
 
+  it('measures from the top of the visual viewport', () => {
+    const target = buildTarget({ centreY: 600, screenTop: 100 });
+    expect(projectScreenFraction(target)).toBe(0.592);
+    expect(isInBottomThird(target)).toBe(false);
+  });
+
   it('never counts a control that is not in view', () => {
     expect(isInBottomThird(buildTarget({ centreY: 800, inView: false }))).toBe(false);
   });
@@ -137,6 +144,26 @@ describe('planScrollGesture', () => {
       }),
     );
     expect(plan.point).toEqual({ x: 110 / 390, y: 300 / 844 });
+  });
+
+  it('places the container point from the visual viewport origin', () => {
+    const plan = planScrollGesture(
+      buildTarget({
+        container: { rect: [10, 100, 200, 400] },
+        visibleTop: 100,
+        visibleBottom: 500,
+        screenLeft: 5,
+        screenTop: 20,
+      }),
+    );
+    expect(plan.point).toEqual({ x: 105 / 390, y: 280 / 844 });
+  });
+
+  it('nudges only a covered control closer than five percent of the screen', () => {
+    const tall = { screenHeight: 1000, visibleTop: 0, visibleBottom: 1000, hittable: false };
+    expect(planScrollGesture(buildTarget({ ...tall, centreY: 800 })).deltaY).toBeCloseTo(0.3);
+    expect(planScrollGesture(buildTarget({ ...tall, centreY: 550 })).deltaY).toBe(0.05);
+    expect(planScrollGesture(buildTarget({ ...tall, centreY: 549 })).deltaY).toBe(0.15);
   });
 
   it('reads a short container box as zero', () => {
@@ -202,6 +229,7 @@ describe('buildDelaySequence', () => {
     expect(first.every((delay) => delay >= 0 && delay <= 700)).toBe(true);
     expect(new Set(first).size).toBeGreaterThan(10);
     expect(buildDelaySequence(8, 23, 700)).not.toEqual(first);
+    expect(buildDelaySequence(1, 4, 1000)).toEqual(EXPECTED_FIRST_DELAYS);
   });
 });
 
@@ -227,10 +255,12 @@ describe('countFullTextRuns', () => {
     expect(
       countFullTextRuns([
         { stored: 'Finir', shown: 'Finir' },
+        { stored: 'Refrain', shown: 'Refrain' },
         { stored: 'Fin', shown: 'Finir' },
         { stored: null, shown: 'Finir' },
+        { stored: null, shown: null },
       ]),
-    ).toBe(1);
+    ).toBe(2);
   });
 });
 

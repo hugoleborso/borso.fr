@@ -228,9 +228,9 @@ export function sumCounts(counts: readonly number[]): number {
 }
 
 export function summariseRouteButtons(routes: unknown): Record<string, number> {
-  const list = isRecord(routes) && Array.isArray(routes.routes) ? routes.routes : [];
   const totals = { routes: 0, buttons: 0, textOnlyButtons: 0, iconOnlyButtonsWithoutName: 0 };
-  for (const route of list) {
+  if (!isRecord(routes) || !Array.isArray(routes.routes)) return totals;
+  for (const route of routes.routes) {
     if (!isRecord(route) || !isRecord(route.buttons)) continue;
     totals.routes += 1;
     totals.buttons += Number(route.buttons.total ?? 0);
