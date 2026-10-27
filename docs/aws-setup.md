@@ -564,7 +564,7 @@ Verify from a hosted session, after each application's production deploy has cre
 
 ```bash
 APP=pragma scripts/db-read.sh "SELECT count(*) FROM member"             # one number
-APP=last-loop-lepin scripts/db-read.sh "SELECT count(*) FROM runners"   # one number
+APP=last-loop-lepin scripts/db-read.sh "SELECT count(*) FROM editions"  # one number
 APP=banana-rush scripts/db-read.sh "SELECT count(*) FROM game"          # one number
 APP=talos scripts/db-read.sh "SELECT 1"                                 # refused by the script
 APP=last-loop-lepin scripts/db-read.sh "SELECT 1 FROM admin_sessions"   # refused by the script
