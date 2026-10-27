@@ -36,7 +36,7 @@ export interface CdpSession {
   readonly close: () => void;
 }
 
-async function findPageSocketUrl(port: number): Promise<string> {
+async function getPageSocketUrl(port: number): Promise<string> {
   const response = await fetch(`http://127.0.0.1:${String(port)}/json/list`);
   const parsed: unknown = await response.json();
   const page = pageTargetListSchema.parse(parsed).find((target) => target.type === 'page');
@@ -79,7 +79,7 @@ function settleReply(
 
 // @FollowsBlueprint adapter-external-service
 export async function connectCdpSession(port: number): Promise<CdpSession> {
-  const socket = await openSocket(await findPageSocketUrl(port));
+  const socket = await openSocket(await getPageSocketUrl(port));
   const pending = new Map<number, PendingCall>();
   const handlers = new Map<string, Set<EventHandler>>();
   let lastCallId = 0;

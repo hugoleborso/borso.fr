@@ -119,7 +119,7 @@ export class BandSessionDriver {
     const setlists = await this.listFrom('/api/setlists', 'setlists', setlistSchema);
     const songs = await this.listFrom('/api/songs', 'songs', songSchema);
     const sessions = await this.listFrom('/api/sessions', 'sessions', sessionSchema);
-    const findSetlist = (pattern: RegExp): BandSetlist => {
+    const getSetlist = (pattern: RegExp): BandSetlist => {
       const found = setlists.find((setlist) => pattern.test(setlist.name));
       if (found === undefined) throw new Error(`no setlist matching ${String(pattern)}`);
       return found;
@@ -130,8 +130,8 @@ export class BandSessionDriver {
       setlists,
       songs,
       sessions,
-      main: findSetlist(/^Set principal/),
-      rehearsal: findSetlist(/^Répétition du jeudi/),
+      main: getSetlist(/^Set principal/),
+      rehearsal: getSetlist(/^Répétition du jeudi/),
       concert,
     };
   }
