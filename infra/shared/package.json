@@ -8,7 +8,7 @@
     "diff": "pnpm --filter @borso/infra run build && cdk diff --all",
     "deploy": "pnpm --filter @borso/infra run build && cdk deploy --all --require-approval never",
     "destroy": "cdk destroy --all --force",
-    "typecheck": "../../scripts/ensure-infra-built.sh && tsc --noEmit",
+    "typecheck": "../../scripts/ensure-infra-built.sh && node node_modules/typescript-native/bin/tsc --noEmit",
     "lint": "../../scripts/lint-workspace.sh",
     "test": "pnpm --filter @borso/infra run build && vitest run",
     "test:coverage": "pnpm --filter @borso/infra run build && vitest run --coverage"
@@ -24,6 +24,7 @@
     "constructs": "catalog:",
     "tsx": "catalog:",
     "typescript": "catalog:",
+    "typescript-native": "catalog:",
     "vitest": "catalog:"
   }
 }

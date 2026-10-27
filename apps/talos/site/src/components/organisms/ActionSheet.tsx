@@ -79,7 +79,7 @@ export function ActionSheet(): JSX.Element | null {
               target={selectClaudeCodeLinkTarget(opener)}
               rel="noopener"
               aria-disabled={target.data === undefined}
-              // eslint-disable-next-line jsx-a11y/no-autofocus -- the sheet opens on a long press, and the first action is where a keyboard or a screen reader has to land.
+              // eslint-disable-next-line jsx-a11y-js/no-autofocus -- the sheet opens on a long press, and the first action is where a keyboard or a screen reader has to land.
               autoFocus
               onClick={() => {
                 copyPrompt(prompt);

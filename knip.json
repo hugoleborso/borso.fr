@@ -4,7 +4,13 @@
   "workspaces": {
     ".": {
       "ignoreBinaries": ["build", "psql"],
-      "ignoreDependencies": ["@swmansion/argent", "agent-browser", "esbuild"],
+      "ignoreDependencies": [
+        "@swmansion/argent",
+        "agent-browser",
+        "esbuild",
+        "oxlint-tsgolint",
+        "oxlint"
+      ],
       "entry": [
         ".claude/skills/blueprint/blueprint-*.ts",
         "scripts/architecture/*.ts",
@@ -13,9 +19,11 @@
         "scripts/standards/*.ts",
         "scripts/pr/*.ts",
         "scripts/quality/*.ts",
-        "scripts/**/*.test.ts"
+        "scripts/**/*.test.ts",
+        "eslint-rules/js-plugins/*.js",
+        "eslint-rules/**/*.test.js"
       ],
-      "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts"]
+      "project": [".claude/skills/blueprint/**/*.ts", "scripts/**/*.ts", "eslint-rules/**/*.js"]
     },
     "apps/banana-rush": {
       "entry": [
@@ -136,5 +144,6 @@
       "project": ["bin/**/*.ts", "lib/**/*.ts", "test/**/*.ts"],
       "ignoreDependencies": ["tsx"]
     }
-  }
+  },
+  "ignoreUnresolved": ["./scripts/typescript-resolve.mjs"]
 }

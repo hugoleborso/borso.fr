@@ -5,7 +5,7 @@ const BULLET_PREFIX = '- ';
 const CITATION_MARKER = /^`(?<kind>[a-z]+)(?::(?<target>[^`]+))?`/;
 
 export const CITATION_KINDS = [
-  'eslint',
+  'oxlint',
   'script',
   'generator',
   'gate',

@@ -407,33 +407,24 @@ const BACK_END_SUITE_CANARIES: readonly CommandCanary[] = FULL_STACK_APPLICATION
 
 const LINT_GATE_CANARIES: readonly CommandCanary[] = [
   {
-    mechanism: 'eslint',
-    label: 'ESLint on staged files, as pre-commit runs it',
-    defect: 'a warning-severity violation, which only --max-warnings 0 turns into a failure',
+    mechanism: 'oxlint',
+    label: 'oxlint on staged files, as pre-commit runs it',
+    defect: 'a warning-severity violation, which only denyWarnings turns into a failure',
     plant: {
-      [CANARY_SITE_COMPONENT]: `import { useMemo } from 'react';
+      [CANARY_SITE_COMPONENT]: `export const gateCanaryLimits = { maximum: 1 };
 
-export function GateCanary({ price, count }: { readonly price: number; readonly count: number }) {
-  const total = useMemo(() => price * count, [price]);
-  return <span>{total}</span>;
+export function GateCanary() {
+  return <span>{gateCanaryLimits.maximum}</span>;
 }
 `,
     },
-    command: [
-      'pnpm',
-      'exec',
-      'eslint',
-      '--no-warn-ignored',
-      '--max-warnings',
-      '0',
-      CANARY_SITE_COMPONENT,
-    ],
-    refusal: /react-hooks\/exhaustive-deps/,
+    command: ['node_modules/.bin/oxlint', CANARY_SITE_COMPONENT],
+    refusal: /only-export-components/,
     tier: 'fast',
   },
   {
     mechanism: 'scripts/lint-repository.sh',
-    label: 'ESLint over the repository, as CI runs it',
+    label: 'oxlint over the repository, type-aware, as CI runs it',
     defect: 'an explicit any in the tooling outside every workspace',
     plant: {
       'scripts/gate-canary/gate-canary-lint.ts':
@@ -459,8 +450,8 @@ export function GateCanary({ price, count }: { readonly price: number; readonly 
     tier: 'fast',
   },
   {
-    mechanism: 'prettier',
-    label: 'Prettier over the repository, as CI runs it',
+    mechanism: 'oxfmt',
+    label: 'oxfmt over the repository, as CI runs it',
     defect: 'a misformatted source file',
     plant: {
       'scripts/gate-canary/gate-canary-format.ts': 'export const gateCanary   =   [1,2,3]\n',
@@ -506,7 +497,7 @@ export function GateCanary({ price, count }: { readonly price: number; readonly 
 const STANDARD_WITH_A_FICTIONAL_RULE = {
   path: 'docs/standards/00-principles.md',
   find: '## Enforced by\n\n',
-  replace: '## Enforced by\n\n- `eslint:borso/gate-canary-rule` is a rule nobody wrote.\n',
+  replace: '## Enforced by\n\n- `oxlint:borso/gate-canary-rule` is a rule nobody wrote.\n',
 };
 
 const GENERATOR_CANARIES: readonly CommandCanary[] = [
@@ -1049,19 +1040,19 @@ export const LINT_CANARIES: readonly LintCanary[] = [
     code: '// eslint-disable-next-line no-magic-numbers\nexport const gateCanaryPlanted = 37;\n',
   },
   {
-    mechanism: '@typescript-eslint/no-explicit-any',
+    mechanism: 'typescript/no-explicit-any',
     label: 'an explicit any',
     path: CANARY_SITE_FILE,
     code: 'export function readGateCanary(input: any): string {\n  return String(input);\n}\n',
   },
   {
-    mechanism: '@typescript-eslint/no-unsafe-argument',
+    mechanism: 'typescript/no-unsafe-argument',
     label: 'an any passed as an argument',
     path: CANARY_SITE_FILE,
     code: 'export function readGateCanary(raw: string): number {\n  return Math.abs(JSON.parse(raw));\n}\n',
   },
   {
-    mechanism: '@typescript-eslint/no-unsafe-assignment',
+    mechanism: 'typescript/no-unsafe-assignment',
     label: 'an any assigned to a variable',
     path: CANARY_SITE_FILE,
     code: 'export function readGateCanary(raw: string): unknown {\n  const parsed = JSON.parse(raw);\n  return parsed;\n}\n',
@@ -1079,13 +1070,13 @@ export const LINT_CANARIES: readonly LintCanary[] = [
     code: "import { sql } from 'drizzle-orm/sql';\n\nexport const gateCanaryPlanted = sql;\n",
   },
   {
-    mechanism: 'react-hooks/exhaustive-deps',
+    mechanism: 'react/exhaustive-deps',
     label: 'a memo missing a dependency',
     path: CANARY_SITE_COMPONENT,
     code: "import { useMemo } from 'react';\n\nexport function GateCanary({ price, count }: { readonly price: number; readonly count: number }) {\n  const total = useMemo(() => price * count, [price]);\n  return <span>{total}</span>;\n}\n",
   },
   {
-    mechanism: 'react-hooks/rules-of-hooks',
+    mechanism: 'react/rules-of-hooks',
     label: 'a hook called under a condition',
     path: CANARY_SITE_COMPONENT,
     code: "import { useState } from 'react';\n\nexport function GateCanary({ isOpen }: { readonly isOpen: boolean }) {\n  if (isOpen) {\n    useState(0);\n  }\n  return null;\n}\n",
@@ -1097,13 +1088,13 @@ export const LINT_CANARIES: readonly LintCanary[] = [
     code: 'export function readGateCanary(raw: string): unknown {\n  try {\n    return JSON.parse(raw);\n  } catch (exception) {\n    return exception;\n  }\n}\n',
   },
   {
-    mechanism: 'unicorn/consistent-boolean-name',
+    mechanism: 'unicorn-js/consistent-boolean-name',
     label: 'a boolean named like a noun',
     path: CANARY_SITE_FILE,
     code: 'export const gateCanaryVisibility = true;\n',
   },
   {
-    mechanism: 'unicorn/consistent-function-scoping',
+    mechanism: 'unicorn-js/consistent-function-scoping',
     label: 'a helper that closes over nothing, declared inside a function',
     path: CANARY_SITE_FILE,
     code: 'export function readGateCanary(values: readonly number[]): readonly number[] {\n  function doubleValue(value: number): number {\n    return value + value;\n  }\n  return values.map(doubleValue);\n}\n',

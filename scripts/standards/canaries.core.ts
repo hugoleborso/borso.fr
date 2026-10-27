@@ -1,4 +1,4 @@
-export type MechanismKind = 'eslint' | 'script' | 'generator' | 'gate' | 'test' | 'types';
+export type MechanismKind = 'oxlint' | 'script' | 'generator' | 'gate' | 'test' | 'types';
 
 export interface Mechanism {
   readonly kind: MechanismKind;
@@ -51,7 +51,7 @@ const GENERATOR_CHECK_PATTERN = /(?<=tsx\s+"?)[\w./-]+\.ts(?="?\s+--check\b)/g;
 const EVIDENCE_LINES = 12;
 
 function isMechanismKind(kind: string): kind is MechanismKind {
-  return ['eslint', 'script', 'generator', 'gate', 'test', 'types'].includes(kind);
+  return ['oxlint', 'script', 'generator', 'gate', 'test', 'types'].includes(kind);
 }
 
 export function collectMechanisms(

@@ -12,7 +12,7 @@ describe('readEnforcedByBullets', () => {
   });
 
   it('returns nothing from a standard that has bullets and no enforcement section', () => {
-    expect(readEnforcedByBullets('# 01. Naming\n\n- `eslint:borso/x` a rule.\n')).toEqual([]);
+    expect(readEnforcedByBullets('# 01. Naming\n\n- `oxlint:borso/x` a rule.\n')).toEqual([]);
   });
 
   it('reads the bullets when the heading opens the second line of the file', () => {
@@ -22,9 +22,9 @@ describe('readEnforcedByBullets', () => {
   });
 
   it('reads the bullets that follow the heading', () => {
-    const markdown = '## Enforced by\n\n- `eslint:borso/a` first.\n- `reviewer` second.\n';
+    const markdown = '## Enforced by\n\n- `oxlint:borso/a` first.\n- `reviewer` second.\n';
     expect(readEnforcedByBullets(markdown)).toEqual([
-      '`eslint:borso/a` first.',
+      '`oxlint:borso/a` first.',
       '`reviewer` second.',
     ]);
   });
@@ -46,8 +46,8 @@ describe('readEnforcedByBullets', () => {
   });
 
   it('folds a bullet that wraps across lines into one claim', () => {
-    const markdown = '## Enforced by\n\n- `eslint:borso/a` rejects\n  a wrapped thing.\n';
-    expect(readEnforcedByBullets(markdown)).toEqual(['`eslint:borso/a` rejects a wrapped thing.']);
+    const markdown = '## Enforced by\n\n- `oxlint:borso/a` rejects\n  a wrapped thing.\n';
+    expect(readEnforcedByBullets(markdown)).toEqual(['`oxlint:borso/a` rejects a wrapped thing.']);
   });
 
   it('ignores a continuation line that precedes any bullet', () => {
@@ -58,10 +58,10 @@ describe('readEnforcedByBullets', () => {
 
 describe('readCitationFromBullet', () => {
   it('reads a rule citation', () => {
-    expect(readCitationFromBullet('`eslint:borso/no-use-effect` rejects effects.')).toEqual({
-      kind: 'eslint',
+    expect(readCitationFromBullet('`oxlint:borso/no-use-effect` rejects effects.')).toEqual({
+      kind: 'oxlint',
       target: 'borso/no-use-effect',
-      bullet: '`eslint:borso/no-use-effect` rejects effects.',
+      bullet: '`oxlint:borso/no-use-effect` rejects effects.',
     });
   });
 
@@ -85,7 +85,7 @@ describe('readCitationFromBullet', () => {
   });
 
   it('returns null for a bullet that opens with prose', () => {
-    expect(readCitationFromBullet('The pre-commit hook, which runs `eslint`.')).toBeNull();
+    expect(readCitationFromBullet('The pre-commit hook, which runs `oxlint`.')).toBeNull();
   });
 
   it('returns null for a marker whose kind is not in the vocabulary', () => {
@@ -93,7 +93,7 @@ describe('readCitationFromBullet', () => {
   });
 
   it('reads only the marker the bullet opens with', () => {
-    const citation = readCitationFromBullet('`eslint:borso/a` and also `eslint:borso/b`.');
+    const citation = readCitationFromBullet('`oxlint:borso/a` and also `oxlint:borso/b`.');
     expect(citation?.target).toBe('borso/a');
   });
 
@@ -102,11 +102,11 @@ describe('readCitationFromBullet', () => {
   });
 
   it('returns null for a kind that names no target', () => {
-    expect(readCitationFromBullet('`eslint` on its own.')).toBeNull();
+    expect(readCitationFromBullet('`oxlint` on its own.')).toBeNull();
   });
 
   it('returns null for a target that is only whitespace', () => {
-    expect(readCitationFromBullet('`eslint: ` on its own.')).toBeNull();
+    expect(readCitationFromBullet('`oxlint: ` on its own.')).toBeNull();
   });
 
   it('ignores a target written after a reviewer marker, which names nobody', () => {
@@ -138,7 +138,7 @@ describe('readStandardCitations', () => {
       '',
       '## Enforced by',
       '',
-      '- `eslint:borso/no-use-effect` rejects effects.',
+      '- `oxlint:borso/no-use-effect` rejects effects.',
       '- `reviewer` checks the layout at 375 pixels.',
       '- The agentic browser check, which nothing invokes.',
       '',
@@ -147,7 +147,7 @@ describe('readStandardCitations', () => {
     const read = readStandardCitations('05-frontend-architecture.md', markdown);
 
     expect(read.title).toBe('05. Front end');
-    expect(read.citations.map((citation) => citation.kind)).toEqual(['eslint', 'reviewer']);
+    expect(read.citations.map((citation) => citation.kind)).toEqual(['oxlint', 'reviewer']);
     expect(read.unmarkedBullets).toEqual(['The agentic browser check, which nothing invokes.']);
   });
 

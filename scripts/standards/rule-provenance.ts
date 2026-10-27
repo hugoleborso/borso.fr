@@ -1,8 +1,9 @@
 #!/usr/bin/env tsx
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { ESLint } from 'eslint';
+import { join, matchesGlob } from 'node:path';
+import { readLintConfiguration } from './ledger-input';
+import { listActiveRules } from './lint-configuration.core';
 import { readEradicationSection, renderProvenanceReport, type RuleRecord } from './provenance.core';
 
 const REPOSITORY_ROOT = process.cwd();
@@ -11,7 +12,6 @@ const STANDARDS_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'standards');
 const REPORT_PATH = join(STANDARDS_DIRECTORY, 'rule-provenance.md');
 const NON_DANTOTSU_FILES = new Set(['README.md', '_template.md']);
 const STANDARD_FILE_PATTERN = /^\d\d-[a-z0-9-]+\.md$/;
-const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 0]);
 
 const PROBE_PATHS: readonly string[] = [
   'apps/pragma/api/src/probe/probe.controller.ts',
@@ -39,17 +39,9 @@ function readRegisteredRules(): readonly string[] {
   return registered.sort();
 }
 
-async function readEnabledRules(): Promise<ReadonlySet<string>> {
-  const eslint = new ESLint({ cwd: REPOSITORY_ROOT });
-  const enabled = new Set<string>();
-  for (const path of PROBE_PATHS) {
-    const configuration = await eslint.calculateConfigForFile(path);
-    for (const [ruleName, severity] of Object.entries(configuration.rules ?? {})) {
-      const level = Array.isArray(severity) ? severity[0] : severity;
-      if (!OFF_SEVERITIES.has(level)) enabled.add(ruleName);
-    }
-  }
-  return enabled;
+function readEnabledRules(): ReadonlySet<string> {
+  const configuration = readLintConfiguration();
+  return new Set(PROBE_PATHS.flatMap((path) => listActiveRules(configuration, path, matchesGlob)));
 }
 
 interface Corpus {
@@ -83,9 +75,9 @@ function listMentions(corpus: ReadonlyMap<string, string>, rule: string): readon
   return found;
 }
 
-async function buildRecords(): Promise<readonly RuleRecord[]> {
+function buildRecords(): readonly RuleRecord[] {
   const corpus = readCorpus();
-  const enabled = await readEnabledRules();
+  const enabled = readEnabledRules();
   return readRegisteredRules().map((rule) => ({
     rule,
     dantotsuSlugs: listMentions(corpus.dantotsus, rule),
@@ -94,8 +86,8 @@ async function buildRecords(): Promise<readonly RuleRecord[]> {
   }));
 }
 
-async function main(): Promise<void> {
-  const records = await buildRecords();
+function main(): void {
+  const records = buildRecords();
   const dantotsuCount = readCorpus().dantotsus.size;
   const rendered = renderProvenanceReport(records, dantotsuCount);
 
@@ -106,4 +98,4 @@ async function main(): Promise<void> {
   );
 }
 
-await main();
+main();

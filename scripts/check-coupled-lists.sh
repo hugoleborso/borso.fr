@@ -76,22 +76,10 @@ while IFS= read -r name; do
   fail "docs/knowledge/$name is not linked from docs/knowledge/README.md, so nobody who does not already know it exists will find it."
 done <<<"$unindexed"
 
-# 4. The formatter the repository tells you to run.
-#
-# The agent harness rewrites a literal `pnpm exec prettier` and substitutes its
-# own build — 3.8.1 against the 3.9.6 this repository pins, measured 2026-08-17.
-# The substitute formats at prettier's default 80 columns instead of the 100 in
-# `.prettierrc.json`, so a `--write` reformats every file it is handed and every
-# file it is not. Eight unrelated files were rewritten that way, one of them
-# losing an escaped character inside a package.json.
-#
-# The repository cannot change the harness. It can stop publishing the shape
-# that breaks: `pnpm run format` and `node_modules/.bin/prettier` are both
-# unambiguous, and neither is rewritten.
-# `--exclude` on this file: it necessarily contains the string it forbids.
-if grep -rn --exclude="$(basename "$0")" 'pnpm exec prettier' .husky .github scripts 2>/dev/null; then
-  fail "the lines above invoke prettier through a command shape the agent harness rewrites to a different version. Use 'pnpm run format:check' or 'node_modules/.bin/prettier'."
-fi
+# The formatter the repository tells you to run used to be checked here: the
+# agent harness rewrote `pnpm exec prettier` into a build of its own. Prettier
+# is gone and oxfmt replaced it, so there is no such command left to guard. See
+# docs/adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md.
 
 # 4. The tables a migration creates, and the two lists the back-e2e harness
 #    keeps of them.
