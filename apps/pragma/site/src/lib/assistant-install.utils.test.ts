@@ -9,13 +9,27 @@ import {
 const PRODUCTION_ORIGIN = 'https://pragma.borso.fr';
 const PRODUCTION_SERVER_URL = 'https://pragma.borso.fr/mcp';
 const PREVIEW_ORIGIN = 'https://pragma-pr-212.preview.borso.fr';
+const PREVIEW_API_BASE = 'https://pragma-pr-212-api.preview.borso.fr';
+const SAME_ORIGIN_API_BASE = '';
 
 // @FollowsBlueprint test-pure-unit
 describe('assistant-install.utils', () => {
-  it('serves the assistants from the page origin, so a preview shows its own address', () => {
-    expect(buildAssistantServerUrl(PRODUCTION_ORIGIN)).toBe(PRODUCTION_SERVER_URL);
-    expect(buildAssistantServerUrl(`${PRODUCTION_ORIGIN}/`)).toBe(PRODUCTION_SERVER_URL);
-    expect(buildAssistantServerUrl(PREVIEW_ORIGIN)).toBe(`${PREVIEW_ORIGIN}/mcp`);
+  it('serves the assistants from the page origin when the API shares it, as in production', () => {
+    expect(
+      buildAssistantServerUrl({ apiBase: SAME_ORIGIN_API_BASE, pageOrigin: PRODUCTION_ORIGIN }),
+    ).toBe(PRODUCTION_SERVER_URL);
+    expect(
+      buildAssistantServerUrl({
+        apiBase: SAME_ORIGIN_API_BASE,
+        pageOrigin: `${PRODUCTION_ORIGIN}/`,
+      }),
+    ).toBe(PRODUCTION_SERVER_URL);
+  });
+
+  it('serves the assistants from the API host on a preview, where the page host only serves the site', () => {
+    expect(buildAssistantServerUrl({ apiBase: PREVIEW_API_BASE, pageOrigin: PREVIEW_ORIGIN })).toBe(
+      `${PREVIEW_API_BASE}/mcp`,
+    );
   });
 
   it('writes the Claude Code command the spec names', () => {
@@ -39,7 +53,9 @@ describe('assistant-install.utils', () => {
   });
 
   it('lists Claude Code, Vibe and the connector address, in that order', () => {
-    expect(listAssistantInstallations(PRODUCTION_ORIGIN)).toEqual([
+    expect(
+      listAssistantInstallations({ apiBase: SAME_ORIGIN_API_BASE, pageOrigin: PRODUCTION_ORIGIN }),
+    ).toEqual([
       { id: 'claude-code', snippet: buildClaudeCodeCommand(PRODUCTION_SERVER_URL) },
       { id: 'vibe', snippet: buildVibeConfiguration(PRODUCTION_SERVER_URL) },
       { id: 'connector', snippet: PRODUCTION_SERVER_URL },

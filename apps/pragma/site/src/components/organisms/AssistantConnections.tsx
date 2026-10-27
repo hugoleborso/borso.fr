@@ -8,6 +8,7 @@ import {
   type AssistantInstallationId,
   listAssistantInstallations,
 } from '../../lib/assistant-install.utils';
+import { API_BASE } from '../../lib/api.client';
 import { formatDueDate, formatTimeAgo } from '../../lib/formatters.utils';
 import { readPageOrigin } from '../../lib/page-location.adapter';
 import {
@@ -41,7 +42,10 @@ export function AssistantConnections(): JSX.Element {
   const grants = useAssistantGrants();
   const revokeGrant = useRevokeAssistantGrant();
   const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
-  const installations = listAssistantInstallations(readPageOrigin());
+  const installations = listAssistantInstallations({
+    apiBase: API_BASE,
+    pageOrigin: readPageOrigin(),
+  });
   const connectedGrants = grants.data ?? [];
 
   return (
