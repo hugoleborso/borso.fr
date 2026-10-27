@@ -40,6 +40,11 @@ const WORKSPACE_TOOLING_FILES = [
 ];
 
 const SITE_FILES = ['apps/*/site/**/*.{ts,tsx}'];
+const PRAGMA_SITE_FILES = ['apps/pragma/site/src/**/*.{ts,tsx}'];
+const PRAGMA_SCENE_VIEW_FILES = [
+  'apps/pragma/site/src/routes/catalog/SongScenePage.tsx',
+  'apps/pragma/site/src/routes/setlists/SetlistScenePage.tsx',
+];
 const API_FILES = ['apps/*/api/src/**/*.ts'];
 const CROSS_BOUNDARY_DOMAIN_FILES = ['apps/*/domain/**/*.ts'];
 const APPLICATION_AND_INFRASTRUCTURE_FILES = ['apps/**/*.{ts,tsx}', 'infra/**/*.ts'];
@@ -297,6 +302,25 @@ export default tseslint.config(
     files: SITE_FILES,
     plugins: { borso: borsoPlugin },
     rules: { 'borso/no-string-concatenated-class-names': 'error' },
+  },
+
+  {
+    files: PRAGMA_SITE_FILES,
+    ignores: TEST_FILES,
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-arbitrary-tailwind-value': 'error',
+      'borso/no-raw-interactive-element': 'error',
+      'borso/no-vertical-scroll-container': 'error',
+    },
+  },
+
+  {
+    files: PRAGMA_SCENE_VIEW_FILES,
+    plugins: { borso: borsoPlugin },
+    rules: {
+      'borso/no-vertical-scroll-container': 'off',
+    },
   },
 
   {

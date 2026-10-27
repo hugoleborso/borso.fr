@@ -167,14 +167,19 @@ with no visible affordance, a licence attribution, an error.
   all of them, and that is where components accumulate.
 - `eslint:borso/no-query-hooks-outside-organisms` rejects `useQuery` and
   `useMutation` in `atoms/` and `molecules/`.
+- `eslint:borso/no-raw-interactive-element (pragma/site)` rejects a `<button>`
+  outside `Button`, `IconButton`, `Chip`, `ListRow`, `SectionTabs` and `Menu`,
+  and a `<dialog>` outside `Sheet`. A raw element draws a control the design
+  system does not know: no icon, no tap target, no variant, and a dialog with
+  its own close button, scroll area and focus.
 - `script:scripts/check-pwa-assets.sh` fails a manifest naming an icon that does
   not ship, which otherwise installs a grey square while every other gate passes.
 - `reviewer` checks that a route composes organisms and owns no layout
   primitive, because the atomic rules read the bucket out of the path and a
   route is in no bucket.
 - `reviewer` checks that no new page subtitle, field hint or button label
-  explains the interface: a create action is an icon button with an
-  `aria-label`, and a sentence survives only for what the screen cannot show.
+  explains the interface: a create action is a short label beside its icon,
+  and a sentence survives only for what the screen cannot show.
 - `reviewer` checks that every screen holds together at 375 pixels, using
   `agent-browser` for anything measurable and `scripts/argent.sh` for anything
   touched, because a synthetic click is not a tap.

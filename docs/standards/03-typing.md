@@ -112,6 +112,10 @@ export function rankRunners(runners: readonly Runner[], now: Date): Ranking {
   `eslint:@typescript-eslint/no-unsafe-return` fail on a value that has lost its
   type. They are off inside test files, where a fixture is allowed to be a
   literal.
+- `types:Button.tsx` makes `icon` a required prop of pragma's `Button` and
+  `ButtonLink`, and `label` a required prop of `IconButton`, so a button with no
+  icon or an icon with no name does not compile; `button.types.test.ts` pins
+  both with `@ts-expect-error`.
 - `gate:typecheck` runs `tsc --noEmit` in every workspace, and again over the
   tooling that belongs to none. `scripts/`, `.claude/skills/` and
   `eslint-rules/` are not workspaces, so `pnpm -r typecheck` never reached them
