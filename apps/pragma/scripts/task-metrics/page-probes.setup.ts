@@ -148,3 +148,145 @@ export const LIST_VISIBLE_BUTTON_NAMES = `(limit) => [...document.querySelectorA
 export const READ_SESSION_HEADER_LINK = `(topInset) => { const link = [...document.querySelectorAll('a')].find((element) => /\\/sessions\\//.test(element.getAttribute('href') || '')); const box = link?.getBoundingClientRect(); return link ? { text: link.innerText.replace(/\\s+/g, ' '), y: Math.round(box.y), aboveSafeArea: box.y < topInset } : null; }`;
 
 export const COUNT_ENTRY_BUTTONS = `(bottomAllowance) => [...document.querySelectorAll('main button')].filter((button) => /^\\S+ \\d\\d /.test(button.innerText.replace(/\\s+/g, ' ')) && (bottomAllowance === null || button.getBoundingClientRect().bottom < innerHeight - bottomAllowance)).length`;
+
+const READ_CSS_COLOUR = `(cssColour) => {
+  const canvas = window.__taskMetricsCanvas || (window.__taskMetricsCanvas = document.createElement('canvas'));
+  canvas.width = 1; canvas.height = 1;
+  const context = canvas.getContext('2d', { willReadFrequently: true });
+  context.clearRect(0, 0, 1, 1);
+  context.fillStyle = '#000000';
+  context.fillStyle = cssColour;
+  context.fillRect(0, 0, 1, 1);
+  const [red, green, blue, alpha] = context.getImageData(0, 0, 1, 1).data;
+  return { red, green, blue, alpha: alpha / 255 };
+}`;
+
+const LIST_TEXT_ELEMENTS = `() => [...document.querySelectorAll('body *')].filter((element) => {
+  if (element.closest('dialog:not([open])')) return false;
+  const hasOwnText = [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim().length > 0);
+  if (!hasOwnText) return false;
+  const box = element.getBoundingClientRect();
+  const style = getComputedStyle(element);
+  return box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none';
+})`;
+
+export const READ_FONT_SIZES = `() => {
+  const listTextElements = ${LIST_TEXT_ELEMENTS};
+  return [...new Set(listTextElements().map((element) => getComputedStyle(element).fontSize))];
+}`;
+
+export const READ_MEMBER_COLOURED_TEXT = `(memberColours) => {
+  const readColour = ${READ_CSS_COLOUR};
+  const listTextElements = ${LIST_TEXT_ELEMENTS};
+  const key = (colour) => colour.red + ',' + colour.green + ',' + colour.blue;
+  const members = new Set(memberColours.map((hex) => key(readColour(hex))));
+  const found = listTextElements().filter((element) => members.has(key(readColour(getComputedStyle(element).color))));
+  return { count: found.length, samples: found.slice(0, 5).map((element) => element.textContent.trim().slice(0, 40)) };
+}`;
+
+export const READ_LOW_CONTRAST_TEXT = `(threshold) => {
+  const readColour = ${READ_CSS_COLOUR};
+  const listTextElements = ${LIST_TEXT_ELEMENTS};
+  const channel = (value) => { const normalised = value / 255; return normalised <= 0.03928 ? normalised / 12.92 : ((normalised + 0.055) / 1.055) ** 2.4; };
+  const luminance = (colour) => 0.2126 * channel(colour.red) + 0.7152 * channel(colour.green) + 0.0722 * channel(colour.blue);
+  const over = (top, bottom) => ({ red: top.red * top.alpha + bottom.red * (1 - top.alpha), green: top.green * top.alpha + bottom.green * (1 - top.alpha), blue: top.blue * top.alpha + bottom.blue * (1 - top.alpha), alpha: 1 });
+  const backgroundOf = (element) => {
+    const layers = [];
+    for (let current = element; current; current = current.parentElement) {
+      const layer = readColour(getComputedStyle(current).backgroundColor);
+      if (layer.alpha > 0) layers.push(layer);
+      if (layer.alpha >= 1) break;
+    }
+    let colour = readColour(getComputedStyle(document.documentElement).backgroundColor);
+    if (colour.alpha < 1) colour = { red: 255, green: 255, blue: 255, alpha: 1 };
+    for (const layer of layers.reverse()) colour = over(layer, colour);
+    return colour;
+  };
+  const failing = [];
+  for (const element of listTextElements()) {
+    const background = backgroundOf(element);
+    const text = over(readColour(getComputedStyle(element).color), background);
+    const lighter = Math.max(luminance(text), luminance(background));
+    const darker = Math.min(luminance(text), luminance(background));
+    const ratio = (lighter + 0.05) / (darker + 0.05);
+    if (ratio < threshold) failing.push({ text: element.textContent.trim().slice(0, 40), ratio: Number(ratio.toFixed(2)) });
+  }
+  return { count: failing.length, samples: failing.slice(0, 8) };
+}`;
+
+export const COUNT_SMALL_TAP_TARGETS = `(minimum) => {
+  const isShown = (element) => { const box = element.getBoundingClientRect(); const style = getComputedStyle(element); return box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && !element.closest('dialog:not([open])'); };
+  const hitBox = (element) => {
+    const box = element.getBoundingClientRect();
+    const after = getComputedStyle(element, '::after');
+    if (after.content === 'none' || after.position !== 'absolute') return { width: box.width, height: box.height };
+    const inset = (value) => { const parsed = parseFloat(value); return Number.isNaN(parsed) ? 0 : Math.min(0, parsed); };
+    return { width: box.width - inset(after.left) - inset(after.right), height: box.height - inset(after.top) - inset(after.bottom) };
+  };
+  const small = [];
+  for (const element of document.querySelectorAll('button, [role=button], a[href], input:not([type=hidden]), select, textarea, summary')) {
+    if (!isShown(element) || element.closest('p, li > span')) continue;
+    const box = hitBox(element);
+    if (box.width < minimum || box.height < minimum) small.push((element.getAttribute('aria-label') || element.innerText || element.tagName).trim().slice(0, 30) + ' ' + Math.round(box.width) + 'x' + Math.round(box.height));
+  }
+  return { count: small.length, samples: small.slice(0, 8) };
+}`;
+
+export const READ_SETLIST_FIRST_SCREEN = `() => {
+  const entryPattern = /^\\S+ \\d\\d /;
+  const rows = [...document.querySelectorAll('main li')].filter((row) => [...row.querySelectorAll('button')].some((button) => entryPattern.test(button.innerText.replace(/\\s+/g, ' '))) && !row.querySelector('li'));
+  const tabBar = [...document.querySelectorAll('nav')].find((navigation) => { const style = getComputedStyle(navigation); const box = navigation.getBoundingClientRect(); return style.position === 'fixed' && box.bottom >= innerHeight - 2 && box.height < innerHeight / 3; });
+  const visibleBottom = tabBar ? tabBar.getBoundingClientRect().top : innerHeight;
+  const chart = [...document.querySelectorAll('main *')].find((element) => getComputedStyle(element).position === 'sticky' && element.querySelector('svg'));
+  const chartBottom = chart ? chart.getBoundingClientRect().bottom : null;
+  const boxes = rows.map((row) => row.getBoundingClientRect());
+  return {
+    rowCount: rows.length,
+    firstRowTop: boxes[0] ? Math.round(boxes[0].top) : null,
+    rowsFullyVisible: boxes.filter((box) => box.top >= 0 && box.bottom <= visibleBottom).length,
+    chartBottom: chartBottom === null ? null : Math.round(chartBottom),
+    rowsBelowChart: chartBottom === null ? null : boxes.filter((box) => box.top >= chartBottom && box.bottom <= visibleBottom).length,
+  };
+}`;
+
+export const READ_OPEN_SHEET = `() => {
+  const dialog = [...document.querySelectorAll('dialog[open]')].pop();
+  if (!dialog) return null;
+  const fields = dialog.querySelectorAll('input:not([type=hidden]):not([type=checkbox]):not([type=radio]), textarea, select');
+  const active = document.activeElement;
+  const activeName = active ? (active.getAttribute('aria-label') || active.innerText || active.value || '').replace(/\\s+/g, ' ').trim() : '';
+  const isOnCancelOrClose = !!active && dialog.contains(active) && active.tagName === 'BUTTON' && /^(cancel|close|annuler|fermer)$/i.test(activeName);
+  const innerScrolls = [...dialog.querySelectorAll('*')].filter((element) => !element.hasAttribute('data-sheet-body') && /(auto|scroll)/.test(getComputedStyle(element).overflowY) && element.scrollHeight > element.clientHeight + 1).length;
+  const box = dialog.getBoundingClientRect();
+  return {
+    title: (dialog.getAttribute('aria-label') || (dialog.querySelector('h1,h2,h3') || {}).textContent || 'dialog').replace(/\\s+/g, ' ').trim().slice(0, 60),
+    holdsField: fields.length > 0,
+    focusedTag: active ? active.tagName.toLowerCase() : null,
+    focusedName: activeName.slice(0, 40),
+    isFocusOnCancelOrClose: isOnCancelOrClose,
+    innerVerticalScrollAreas: innerScrolls,
+    box: [box.left, box.top, box.width, box.height].map(Math.round),
+  };
+}`;
+
+export const FIND_BACKDROP_POINT = `() => {
+  const dialog = [...document.querySelectorAll('dialog[open]')].pop();
+  if (!dialog) return null;
+  const box = dialog.getBoundingClientRect();
+  if (box.top > 24) return { x: 0.5, y: box.top / 2 / innerHeight };
+  if (innerHeight - box.bottom > 24) return { x: 0.5, y: (box.bottom + (innerHeight - box.bottom) / 2) / innerHeight };
+  if (box.left > 8) return { x: box.left / 2 / innerWidth, y: 0.5 };
+  return null;
+}`;
+
+export const READ_OPEN_TEXTAREA_VALUE = `() => { const dialog = [...document.querySelectorAll('dialog[open]')].pop(); const field = dialog && dialog.querySelector('textarea'); return field ? field.value : null; }`;
+
+export const READ_PRIMARY_STRIP_POSITION = `(names) => {
+  const isShown = (element) => { const box = element.getBoundingClientRect(); const style = getComputedStyle(element); return box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && Number(style.opacity) > 0; };
+  const target = [...document.querySelectorAll('button, a[href]')].find((element) => names.includes((element.getAttribute('aria-label') || element.innerText).replace(/\\s+/g, ' ').trim()));
+  if (!target) return null;
+  const box = target.getBoundingClientRect();
+  return { top: Math.round(box.top), isOnScreen: isShown(target) && box.top >= 0 && box.bottom <= innerHeight };
+}`;
+
+export const SCROLL_TO_PAGE_END = `() => { window.scrollTo(0, document.scrollingElement.scrollHeight); return Math.round(scrollY); }`;

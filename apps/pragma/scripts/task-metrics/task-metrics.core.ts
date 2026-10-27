@@ -176,3 +176,66 @@ export function describeTaskCounts(summary: unknown): string {
   if (!isRecord(summary)) return 'no summary';
   return COMPARED_FIELDS.map((field) => `${field}=${String(summary[field])}`).join(' ');
 }
+
+const MULBERRY_INCREMENT = 0x6d2b79f5;
+const MULBERRY_FIRST_SHIFT = 15;
+const MULBERRY_SECOND_SHIFT = 7;
+const MULBERRY_THIRD_SHIFT = 14;
+const MULBERRY_MULTIPLIER = 61;
+const UNSIGNED_RANGE = 4_294_967_296;
+const SCENE_ROUTE_SUFFIX = '/scene';
+
+export function buildDelaySequence(seed: number, count: number, maximumMs: number): number[] {
+  let state = seed >>> 0;
+  const delays: number[] = [];
+  for (let index = 0; index < count; index += 1) {
+    state = (state + MULBERRY_INCREMENT) >>> 0;
+    let mixed = Math.imul(state ^ (state >>> MULBERRY_FIRST_SHIFT), state | 1);
+    mixed ^=
+      mixed + Math.imul(mixed ^ (mixed >>> MULBERRY_SECOND_SHIFT), mixed | MULBERRY_MULTIPLIER);
+    const fraction = ((mixed ^ (mixed >>> MULBERRY_THIRD_SHIFT)) >>> 0) / UNSIGNED_RANGE;
+    delays.push(Math.round(fraction * maximumMs));
+  }
+  return delays;
+}
+
+export function isSceneRoute(route: string): boolean {
+  return route.endsWith(SCENE_ROUTE_SUFFIX);
+}
+
+export interface RouteFontSizes {
+  readonly route: string;
+  readonly fontSizes: readonly string[];
+}
+
+export function listDistinctFontSizes(routes: readonly RouteFontSizes[]): string[] {
+  const sizes = new Set<string>();
+  for (const route of routes) {
+    if (isSceneRoute(route.route)) continue;
+    for (const size of route.fontSizes) sizes.add(size);
+  }
+  return [...sizes].sort((first, second) => Number.parseFloat(first) - Number.parseFloat(second));
+}
+
+export function countFullTextRuns(
+  runs: readonly { readonly stored: string | null; readonly shown: string | null }[],
+): number {
+  return runs.filter((run) => run.stored !== null && run.stored === run.shown).length;
+}
+
+export function sumCounts(counts: readonly number[]): number {
+  return counts.reduce((total, count) => total + count, 0);
+}
+
+export function summariseRouteButtons(routes: unknown): Record<string, number> {
+  const list = isRecord(routes) && Array.isArray(routes.routes) ? routes.routes : [];
+  const totals = { routes: 0, buttons: 0, textOnlyButtons: 0, iconOnlyButtonsWithoutName: 0 };
+  for (const route of list) {
+    if (!isRecord(route) || !isRecord(route.buttons)) continue;
+    totals.routes += 1;
+    totals.buttons += Number(route.buttons.total ?? 0);
+    totals.textOnlyButtons += Number(route.buttons.textNoIcon ?? 0);
+    totals.iconOnlyButtonsWithoutName += Number(route.iconOnlyButtonsWithoutName ?? 0);
+  }
+  return totals;
+}

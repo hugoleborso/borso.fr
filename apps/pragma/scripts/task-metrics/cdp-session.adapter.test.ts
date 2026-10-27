@@ -71,6 +71,20 @@ describe('connectCdpSession', () => {
     expect(socket?.isClosed).toBe(true);
   });
 
+  it('hands each event to the handlers listening for its method until they stop', async () => {
+    const session = await connectCdpSession(9282);
+    const received: unknown[] = [];
+    const stop = session.listen('Fetch.requestPaused', (parameters) => {
+      received.push(parameters);
+    });
+    FakeSocket.latest?.reply({ method: 'Fetch.requestPaused', params: { requestId: 'a' } });
+    FakeSocket.latest?.reply({ method: 'Page.loadEventFired', params: {} });
+    FakeSocket.latest?.reply({ params: {} });
+    stop();
+    FakeSocket.latest?.reply({ method: 'Fetch.requestPaused', params: { requestId: 'b' } });
+    expect(received).toEqual([{ requestId: 'a' }]);
+  });
+
   it('rejects a call the browser refused', async () => {
     const session = await connectCdpSession(9282);
     const answer = session.send('Page.navigate', { url: 'x' });

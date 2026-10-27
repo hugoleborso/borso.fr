@@ -8,7 +8,9 @@ import {
   describeTaskCounts,
   listBaselineDifferences,
   parseTaskMetricsArguments,
+  summariseRouteButtons,
 } from './task-metrics.core';
+import { measureSliceOne } from './slice-one-measures.setup';
 import { TASK_WALKS } from './task-walks.setup';
 import { emulatePhone, PHONE } from './walk-recorder.setup';
 
@@ -70,6 +72,11 @@ async function main(): Promise<void> {
   }
   if (options.measureRoutes) {
     result.routes = await measureRoutes(driver);
+    result.routeTotals = summariseRouteButtons(result.routes);
+    writeResult(options.outputPath, result);
+  }
+  if (options.measureSliceOne) {
+    result.sliceOne = await measureSliceOne(driver);
     writeResult(options.outputPath, result);
   }
   session.close();

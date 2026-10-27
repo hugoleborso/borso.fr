@@ -6,6 +6,8 @@ const pageTargetListSchema = z.array(
 
 const protocolReplySchema = z.object({
   id: z.number().optional(),
+  method: z.string().optional(),
+  params: z.unknown().optional(),
   result: z.unknown().optional(),
   error: z.unknown().optional(),
 });
@@ -25,8 +27,11 @@ interface PendingCall {
   readonly reject: (error: Error) => void;
 }
 
+export type EventHandler = (parameters: unknown) => void;
+
 export interface CdpSession {
   readonly send: (method: string, parameters?: Record<string, unknown>) => Promise<unknown>;
+  readonly listen: (method: string, handler: EventHandler) => () => void;
   readonly evaluate: (functionSource: string, argument?: unknown) => Promise<unknown>;
   readonly close: () => void;
 }
@@ -54,10 +59,17 @@ async function openSocket(url: string): Promise<WebSocket> {
   return socket;
 }
 
-function settleReply(pending: Map<number, PendingCall>, raw: unknown): void {
+function settleReply(
+  pending: Map<number, PendingCall>,
+  handlers: Map<string, Set<EventHandler>>,
+  raw: unknown,
+): void {
   const parsedJson: unknown = JSON.parse(String(raw));
   const reply = protocolReplySchema.parse(parsedJson);
-  if (reply.id === undefined) return;
+  if (reply.id === undefined) {
+    for (const handler of handlers.get(reply.method ?? '') ?? []) handler(reply.params);
+    return;
+  }
   const call = pending.get(reply.id);
   if (call === undefined) return;
   pending.delete(reply.id);
@@ -69,10 +81,19 @@ function settleReply(pending: Map<number, PendingCall>, raw: unknown): void {
 export async function connectCdpSession(port: number): Promise<CdpSession> {
   const socket = await openSocket(await findPageSocketUrl(port));
   const pending = new Map<number, PendingCall>();
+  const handlers = new Map<string, Set<EventHandler>>();
   let lastCallId = 0;
   socket.addEventListener('message', (message) => {
-    settleReply(pending, message.data);
+    settleReply(pending, handlers, message.data);
   });
+  const listen = (method: string, handler: EventHandler): (() => void) => {
+    const forMethod = handlers.get(method) ?? new Set<EventHandler>();
+    forMethod.add(handler);
+    handlers.set(method, forMethod);
+    return () => {
+      forMethod.delete(handler);
+    };
+  };
   const send = (method: string, parameters: Record<string, unknown> = {}): Promise<unknown> => {
     lastCallId += 1;
     const id = lastCallId;
@@ -97,6 +118,7 @@ export async function connectCdpSession(port: number): Promise<CdpSession> {
   };
   return {
     send,
+    listen,
     evaluate,
     close: () => {
       socket.close();

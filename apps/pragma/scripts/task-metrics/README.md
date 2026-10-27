@@ -16,7 +16,7 @@ pnpm run task-metrics -- --tasks all --routes --slice-1 --out /tmp/after.json
 | --- | --- |
 | `--tasks all`, `--tasks 5,6`, `--tasks none` | which walks to run; `all` is tasks 1 to 12 and 8b, and is the default |
 | `--routes` | measure the 26 routes on first load |
-| `--slice-1` | add the measures slice 1 of the redesign is judged on |
+| `--slice-1` | add the measures slice 1 of the redesign is judged on: distinct font sizes outside the scene views, text set in a member colour, text under 4.5:1, tap targets under 44 px, where focus lands in four sheets and whether they scroll inside, a transition draft after a tap on the backdrop, the note race (8 runs with each save delayed 0 to 700 ms, seeded), and the first screen of the concert setlist |
 | `--out <file>` | write the result as JSON; an existing file is kept and updated |
 | `--compare <file>` | compare taps, text entries, scroll gestures and screens of every walked task with that file, print each difference and exit 1 when there is one |
 

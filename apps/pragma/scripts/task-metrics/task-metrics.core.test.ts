@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest';
 import {
   ALL_TASK_IDS,
   BOTTOM_THIRD_FROM,
+  buildDelaySequence,
+  countFullTextRuns,
   describeTaskCounts,
   type FoundTarget,
   isInBottomThird,
+  isSceneRoute,
+  listDistinctFontSizes,
   listBaselineDifferences,
   listRequestedTaskIds,
   parseTaskMetricsArguments,
@@ -13,6 +17,8 @@ import {
   projectTapPoint,
   replaceIdentifierInPath,
   replaceIdentifiers,
+  sumCounts,
+  summariseRouteButtons,
 } from './task-metrics.core';
 
 const SAMPLE_IDENTIFIER = '0f8fad5b-d9cb-469f-a165-70867728950e';
@@ -185,5 +191,77 @@ describe('describeTaskCounts', () => {
       describeTaskCounts({ taps: 3, textEntries: 1, scrollGestures: 0, screensVisited: 2 }),
     ).toBe('taps=3 textEntries=1 scrollGestures=0 screensVisited=2');
     expect(describeTaskCounts('nothing')).toBe('no summary');
+  });
+});
+
+describe('buildDelaySequence', () => {
+  it('answers the same delays for the same seed, each within the maximum', () => {
+    const first = buildDelaySequence(7, 23, 700);
+    expect(first).toEqual(buildDelaySequence(7, 23, 700));
+    expect(first).toHaveLength(23);
+    expect(first.every((delay) => delay >= 0 && delay <= 700)).toBe(true);
+    expect(new Set(first).size).toBeGreaterThan(10);
+    expect(buildDelaySequence(8, 23, 700)).not.toEqual(first);
+  });
+});
+
+describe('listDistinctFontSizes', () => {
+  it('collects the sizes of every route but the scene views, smallest first', () => {
+    expect(
+      listDistinctFontSizes([
+        { route: '/catalog', fontSizes: ['16px', '12px'] },
+        { route: '/setlists/:setlistId', fontSizes: ['12px', '22px'] },
+        { route: '/catalog/:songId/scene', fontSizes: ['48px'] },
+      ]),
+    ).toEqual(['12px', '16px', '22px']);
+  });
+
+  it('recognises a scene route by its last segment', () => {
+    expect(isSceneRoute('/setlists/:setlistId/scene')).toBe(true);
+    expect(isSceneRoute('/setlists/:setlistId')).toBe(false);
+  });
+});
+
+describe('countFullTextRuns', () => {
+  it('counts the runs where the server holds what the field shows', () => {
+    expect(
+      countFullTextRuns([
+        { stored: 'Finir', shown: 'Finir' },
+        { stored: 'Fin', shown: 'Finir' },
+        { stored: null, shown: 'Finir' },
+      ]),
+    ).toBe(1);
+  });
+});
+
+describe('sumCounts', () => {
+  it('adds the counts', () => {
+    expect(sumCounts([1, 2, 3])).toBe(6);
+    expect(sumCounts([])).toBe(0);
+  });
+});
+
+describe('summariseRouteButtons', () => {
+  it('adds the button counts of every measured route', () => {
+    expect(
+      summariseRouteButtons({
+        routes: [
+          { buttons: { total: 10, textNoIcon: 4 }, iconOnlyButtonsWithoutName: 1 },
+          { buttons: { total: 2, textNoIcon: 0 } },
+          { buttons: {} },
+          { route: '/broken' },
+          'not a route',
+        ],
+      }),
+    ).toEqual({ routes: 3, buttons: 12, textOnlyButtons: 4, iconOnlyButtonsWithoutName: 1 });
+  });
+
+  it('answers zero for anything that is not a route measure', () => {
+    expect(summariseRouteButtons(null)).toEqual({
+      routes: 0,
+      buttons: 0,
+      textOnlyButtons: 0,
+      iconOnlyButtonsWithoutName: 0,
+    });
   });
 });
