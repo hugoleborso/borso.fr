@@ -2,7 +2,12 @@
  * @DependsOnExternal aws-s3
  */
 
-import { GetObjectCommand, PutObjectCommand, S3Client } from '@aws-sdk/client-s3';
+import {
+  DeleteObjectsCommand,
+  GetObjectCommand,
+  PutObjectCommand,
+  S3Client,
+} from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
 
 let cachedClient: S3Client | null = null;
@@ -28,6 +33,7 @@ export interface PresignPutParams {
   readonly objectKey: string;
   readonly contentType: string;
   readonly expiresInSeconds: number;
+  readonly contentLength?: number;
 }
 
 /**
@@ -43,6 +49,7 @@ export async function presignPutObject(params: PresignPutParams): Promise<string
     Bucket: bucket,
     Key: params.objectKey,
     ContentType: params.contentType,
+    ContentLength: params.contentLength,
   });
   return await getSignedUrl(getClient(), command, { expiresIn: params.expiresInSeconds });
 }
@@ -57,4 +64,36 @@ export async function presignGetObject(params: PresignGetParams): Promise<string
   if (bucket === undefined) throw new UploadsConfigError('UPLOADS_BUCKET not set');
   const command = new GetObjectCommand({ Bucket: bucket, Key: params.objectKey });
   return await getSignedUrl(getClient(), command, { expiresIn: params.expiresInSeconds });
+}
+
+const DELETE_OBJECTS_BATCH_SIZE = 1_000;
+
+function splitIntoBatches(objectKeys: readonly string[]): string[][] {
+  const batches: string[][] = [];
+  for (let start = 0; start < objectKeys.length; start += DELETE_OBJECTS_BATCH_SIZE) {
+    batches.push(objectKeys.slice(start, start + DELETE_OBJECTS_BATCH_SIZE));
+  }
+  return batches;
+}
+
+async function deleteOneBatch(bucket: string, objectKeys: readonly string[]): Promise<string[]> {
+  const answer = await getClient().send(
+    new DeleteObjectsCommand({
+      Bucket: bucket,
+      Delete: { Objects: objectKeys.map((objectKey) => ({ Key: objectKey })), Quiet: true },
+    }),
+  );
+  return (
+    answer.Errors?.flatMap((failure) => (failure.Key === undefined ? [] : [failure.Key])) ?? []
+  );
+}
+
+export async function deleteObjects(objectKeys: readonly string[]): Promise<string[]> {
+  const bucket = readEnv('UPLOADS_BUCKET');
+  if (bucket === undefined) throw new UploadsConfigError('UPLOADS_BUCKET not set');
+  const failedKeys: string[] = [];
+  for (const batch of splitIntoBatches(objectKeys)) {
+    failedKeys.push(...(await deleteOneBatch(bucket, batch)));
+  }
+  return failedKeys;
 }

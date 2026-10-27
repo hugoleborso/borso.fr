@@ -140,6 +140,13 @@ export function listUndecidedCredentialTables(
   );
 }
 
+export function listTablesNoMigrationCreates(
+  tables: readonly string[],
+  migrationSql: readonly string[],
+): string[] {
+  return tables.filter((table) => !migrationSql.some((sql) => hasCreateTableStatement(sql, table)));
+}
+
 export function isCloneableDataTable(table: string, blocklist: readonly string[]): boolean {
   if (table === APPLIED_MIGRATIONS_TABLE) return false;
   return !blocklist.includes(table);

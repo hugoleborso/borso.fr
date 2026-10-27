@@ -1,7 +1,8 @@
 import { randomBytes } from 'node:crypto';
-import { getSessionById } from '../sessions/sessions.service';
+import { findSessionById } from '../sessions/sessions.service';
 import {
-  appendSongWithin,
+  appendSongToClaimedSetlistWithin,
+  didClaimSetlistWithin,
   findOrCreateAudienceChoiceSetlist,
   getManualSetlistSongIdsOfSession,
   runInOneSetlistTransaction,
@@ -19,8 +20,9 @@ import {
   findConcertWithOpenRound,
   findLatestRoundOfConcert,
   findOpenRoundOfConcert,
+  findOpenRoundOfConcertWithin,
   findRoundById,
-  insertRound,
+  insertRoundWithin,
   insertSuggestion,
   recordVote,
   listRoundsOfConcert,
@@ -90,18 +92,25 @@ export type OpenRoundOutcome = { kind: 'ok'; round: RoundView } | Refused;
 
 // @FollowsBlueprint service-orchestration
 export async function openRound(params: OpenRoundParams): Promise<OpenRoundOutcome> {
-  const session = await getSessionById(params.sessionId);
+  const session = await findSessionById(params.sessionId);
   if (session === null) return refuse('not-a-concert');
   if (session.kind !== CONCERT_SESSION_KIND) return refuse('not-a-concert');
   const running = await findOpenRoundOfConcert(params.sessionId, params.now);
   if (running !== null) return refuse('round-already-open');
-  await findOrCreateAudienceChoiceSetlist(params.sessionId);
-  const round = await insertRound({
-    sessionId: params.sessionId,
-    openedAt: params.now,
-    closesAt: selectRoundClosesAt(params.now),
+  const setlist = await findOrCreateAudienceChoiceSetlist(params.sessionId);
+  if (setlist === null) return refuse('not-a-concert');
+  return await runInOneSetlistTransaction(async (executor): Promise<OpenRoundOutcome> => {
+    const isSetlistClaimed = await didClaimSetlistWithin(executor, setlist.id);
+    if (!isSetlistClaimed) return refuse('not-a-concert');
+    const runningNow = await findOpenRoundOfConcertWithin(executor, params.sessionId, params.now);
+    if (runningNow !== null) return refuse('round-already-open');
+    const round = await insertRoundWithin(executor, {
+      sessionId: params.sessionId,
+      openedAt: params.now,
+      closesAt: selectRoundClosesAt(params.now),
+    });
+    return { kind: 'ok', round: projectRound(round, params.now) };
   });
-  return { kind: 'ok', round: projectRound(round, params.now) };
 }
 
 export interface RoundHistoryParams {
@@ -128,7 +137,10 @@ async function settleIfDue(round: VotingRoundRow, now: Date): Promise<void> {
   if (!write.shouldClaimTheRound) return;
   const winningSongId = write.winningSongId;
   const setlist = await findOrCreateAudienceChoiceSetlist(round.sessionId);
+  if (setlist === null) return;
   await runInOneSetlistTransaction(async (executor) => {
+    const isSetlistClaimed = await didClaimSetlistWithin(executor, setlist.id);
+    if (!isSetlistClaimed) return;
     const hasClaimedTheRound = await hasClaimedRoundForSettlement(
       executor,
       round.id,
@@ -137,7 +149,7 @@ async function settleIfDue(round: VotingRoundRow, now: Date): Promise<void> {
     );
     if (!hasClaimedTheRound) return;
     if (winningSongId === null) return;
-    await appendSongWithin(executor, setlist.id, winningSongId);
+    await appendSongToClaimedSetlistWithin(executor, setlist.id, winningSongId);
   });
 }
 
@@ -163,7 +175,7 @@ export interface ReadConcertStateParams {
 export async function readConcertState(
   params: ReadConcertStateParams,
 ): Promise<ConcertVoteState | null> {
-  const session = await getSessionById(params.sessionId);
+  const session = await findSessionById(params.sessionId);
   if (session === null) return null;
   if (session.kind !== CONCERT_SESSION_KIND) return null;
   const lastKnownRound = await findLatestRoundOfConcert(params.sessionId);
@@ -205,7 +217,7 @@ async function readOpenRound(roundId: string, now: Date): Promise<OpenRoundRead>
 }
 
 async function readConcertRunningARound(sessionId: string, now: Date): Promise<OpenRoundRead> {
-  const session = await getSessionById(sessionId);
+  const session = await findSessionById(sessionId);
   if (session === null) return refuse('not-a-concert');
   if (session.kind !== CONCERT_SESSION_KIND) return refuse('not-a-concert');
   const running = await findOpenRoundOfConcert(sessionId, now);

@@ -1,19 +1,33 @@
 const IDENTIFIER_PATTERN = /^[A-Za-z_][A-Za-z0-9_]*$/;
-const IAM_ROLE_ARN_PATTERN = /^arn:aws:iam::\d{12}:role\/[\w+=,.@/-]+$/;
+const IAM_PRINCIPAL_ARN_PATTERN = /^arn:aws:iam::\d{12}:(?:role|user)\/[\w+=,.@/-]+$/;
 const API_ROLE_PREFIX = 'api_';
-const TABLE_PRIVILEGES = 'SELECT, INSERT, UPDATE, DELETE';
+const READER_ROLE_PREFIX = 'ai_reader_';
+
+export type TableAccess = 'read-write' | 'read-only';
+
+const TABLE_PRIVILEGES_BY_ACCESS: Readonly<Record<TableAccess, string>> = {
+  'read-write': 'SELECT, INSERT, UPDATE, DELETE',
+  'read-only': 'SELECT',
+};
 
 export interface RoleMappingRow {
   readonly arn: string;
   readonly pg_role_name: string;
 }
 
+export interface TableScope {
+  readonly tableNames: readonly string[];
+  readonly tableBlocklist: readonly string[];
+}
+
 export interface RoleProvisioningInput {
   readonly schemaName: string;
   readonly roleName: string;
+  readonly tableAccess: TableAccess;
   readonly principalArns: readonly string[];
   readonly roleExists: boolean;
   readonly mappedArns: readonly string[];
+  readonly tableScope?: TableScope;
 }
 
 export interface RoleRemovalInput {
@@ -28,9 +42,9 @@ function assertIdentifier(name: string, kind: string): void {
   }
 }
 
-function assertIamRoleArn(arn: string): void {
-  if (!IAM_ROLE_ARN_PATTERN.test(arn)) {
-    throw new Error(`Invalid IAM role ARN: "${arn}".`);
+function assertIamPrincipalArn(arn: string): void {
+  if (!IAM_PRINCIPAL_ARN_PATTERN.test(arn)) {
+    throw new Error(`Invalid IAM principal ARN: "${arn}". Expected an IAM role or user.`);
   }
 }
 
@@ -46,10 +60,34 @@ function buildUnmapStatement(roleName: string, arn: string): string {
   return `AWS IAM REVOKE ${quote(roleName)} FROM '${arn}'`;
 }
 
+function buildTableGrantStatements(input: RoleProvisioningInput): string[] {
+  const privileges = TABLE_PRIVILEGES_BY_ACCESS[input.tableAccess];
+  const schema = quote(input.schemaName);
+  const role = quote(input.roleName);
+  const scope = input.tableScope;
+  if (scope === undefined)
+    return [`GRANT ${privileges} ON ALL TABLES IN SCHEMA ${schema} TO ${role}`];
+  for (const table of [...scope.tableNames, ...scope.tableBlocklist])
+    assertIdentifier(table, 'table');
+  const blocked = new Set(scope.tableBlocklist);
+  const revocations = scope.tableNames
+    .filter((table) => blocked.has(table))
+    .map((table) => `REVOKE ALL ON ${schema}.${quote(table)} FROM ${role}`);
+  const grants = scope.tableNames
+    .filter((table) => !blocked.has(table))
+    .map((table) => `GRANT ${privileges} ON ${schema}.${quote(table)} TO ${role}`);
+  return [...revocations, ...grants];
+}
+
 // @FollowsBlueprint utils-pure-module
 export function apiRoleName(schemaName: string): string {
   assertIdentifier(schemaName, 'schema');
   return `${API_ROLE_PREFIX}${schemaName}`;
+}
+
+export function readerRoleName(schemaName: string): string {
+  assertIdentifier(schemaName, 'schema');
+  return `${READER_ROLE_PREFIX}${schemaName}`;
 }
 
 export function buildRoleExistsQuery(roleName: string): string {
@@ -69,7 +107,7 @@ export function selectMappedArns(rows: readonly RoleMappingRow[], roleName: stri
 export function buildRoleProvisioningStatements(input: RoleProvisioningInput): string[] {
   assertIdentifier(input.schemaName, 'schema');
   assertIdentifier(input.roleName, 'role');
-  for (const arn of input.principalArns) assertIamRoleArn(arn);
+  for (const arn of input.principalArns) assertIamPrincipalArn(arn);
   const wanted = new Set(input.principalArns);
   const alreadyMapped = new Set(input.mappedArns);
   const creation = input.roleExists ? [] : [`CREATE ROLE ${quote(input.roleName)} WITH LOGIN`];
@@ -84,7 +122,7 @@ export function buildRoleProvisioningStatements(input: RoleProvisioningInput): s
     ...staleMappings,
     ...newMappings,
     `GRANT USAGE ON SCHEMA ${quote(input.schemaName)} TO ${quote(input.roleName)}`,
-    `GRANT ${TABLE_PRIVILEGES} ON ALL TABLES IN SCHEMA ${quote(input.schemaName)} TO ${quote(input.roleName)}`,
+    ...buildTableGrantStatements(input),
   ];
 }
 
@@ -95,4 +133,9 @@ export function buildRoleRemovalStatements(input: RoleRemovalInput): string[] {
     ...input.mappedArns.map((arn) => buildUnmapStatement(input.roleName, arn)),
     `DROP ROLE IF EXISTS ${quote(input.roleName)}`,
   ];
+}
+
+export function buildMappingRetirementStatements(input: RoleRemovalInput): string[] {
+  assertIdentifier(input.roleName, 'role');
+  return input.mappedArns.map((arn) => buildUnmapStatement(input.roleName, arn));
 }

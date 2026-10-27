@@ -23,12 +23,14 @@ import { SongLinkAdder } from '../molecules/SongLinkAdder';
 import { SongDeezerTrackIdField } from '../molecules/SongDeezerTrackIdField';
 import { SongExternalMetadataPanel } from '../molecules/SongExternalMetadataPanel';
 import { SongNotesFields } from '../molecules/SongNotesFields';
+import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
 import {
   applyExternalIdentityToDraft,
   applyExternalPickToDraft,
   detectProvider,
   type SongDraftState,
 } from '../../routes/catalog/song-draft.core';
+import type { SongSaveRefusal } from '../../lib/queries/song-save-refusal.core';
 
 interface SongEditFormProps {
   readonly isNew: boolean;
@@ -38,7 +40,7 @@ interface SongEditFormProps {
   readonly onDelete: () => void;
   readonly newLinkUrl: string;
   readonly setNewLinkUrl: (value: string) => void;
-  readonly error: string | null;
+  readonly refusal: SongSaveRefusal;
 }
 
 // @FollowsBlueprint route-form
@@ -50,7 +52,7 @@ export function SongEditForm({
   onDelete,
   newLinkUrl,
   setNewLinkUrl,
-  error,
+  refusal,
 }: SongEditFormProps): JSX.Element {
   const { t } = useTranslation();
   const form = useForm({
@@ -115,12 +117,6 @@ export function SongEditForm({
           />
         )}
       </form.Subscribe>
-
-      {error === null ? null : (
-        <p className="text-danger text-sm" role="alert">
-          {error}
-        </p>
-      )}
 
       <form.Subscribe
         selector={(state) => [state.values.chartKind, state.values.chordproText] as const}
@@ -291,13 +287,23 @@ export function SongEditForm({
           </SongLinkAdder>
 
           <StickyFormActions>
-            <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-              {([canSubmit, isSubmitting]) => (
-                <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
-                  {t('common.save')}
-                </Button>
+            <div className="flex flex-col items-start gap-2 w-full">
+              {refusal.failureMessage === null ? null : (
+                <p className="text-danger text-sm" role="alert">
+                  {refusal.failureMessage}
+                </p>
               )}
-            </form.Subscribe>
+              {refusal.takenTrack === null ? null : (
+                <DeezerTrackTakenNotice takenTrack={refusal.takenTrack} />
+              )}
+              <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+                {([canSubmit, isSubmitting]) => (
+                  <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+                    {t('common.save')}
+                  </Button>
+                )}
+              </form.Subscribe>
+            </div>
           </StickyFormActions>
           {isNew ? null : <SongDeleteAction onDelete={onDelete} />}
         </form>

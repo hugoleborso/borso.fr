@@ -1,10 +1,9 @@
+import type { z } from 'zod';
 import { pickNextPaletteHex } from './member-palette.utils';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteMemberWithLinks,
-  findMemberById,
   insertMember,
-  areInstrumentsKnown,
   listInstrumentsForMember,
   listMembers,
   type MemberInstrumentRow,
@@ -14,27 +13,19 @@ import {
   updateMember,
 } from './members.repository';
 
-export async function getMemberById(id: string): Promise<MemberRow | null> {
-  return await findMemberById(id);
-}
+import type { createMemberSchema, updateMemberSchema } from './members.schema';
+
+export { didClaimMemberWithin } from './members.repository';
+
+type MemberCreateInput = z.infer<typeof createMemberSchema>;
+type MemberUpdateInput = z.infer<typeof updateMemberSchema>;
 
 export async function getMembersSortedByFirstName(): Promise<MemberRow[]> {
   const rows = await listMembers();
   return rows.toSorted((left, right) => left.firstName.localeCompare(right.firstName));
 }
 
-export interface MemberContactInput {
-  phone?: string | null;
-  email?: string | null;
-}
-
-export async function createMember(
-  input: {
-    firstName: string;
-    color?: string;
-    avatarS3Key?: string | null;
-  } & MemberContactInput,
-): Promise<MemberRow> {
+export async function createMember(input: MemberCreateInput): Promise<MemberRow> {
   let color = input.color;
   if (color === undefined) {
     const existing = await listMembers();
@@ -52,7 +43,7 @@ export async function createMember(
 // @FollowsBlueprint service-crud-update
 export async function patchMember(
   id: string,
-  input: { firstName?: string; color?: string; avatarS3Key?: string | null } & MemberContactInput,
+  input: MemberUpdateInput,
 ): Promise<{ kind: 'ok'; member: MemberRow } | { kind: 'empty' } | { kind: 'not-found' }> {
   const updates: Partial<MemberPersistedShape> = {};
   if (input.firstName !== undefined) updates.firstName = input.firstName;
@@ -83,10 +74,7 @@ export async function assignInstrumentsToMember(
   instrumentIds: readonly string[],
   primaryInstrumentIds?: readonly string[],
 ): Promise<AssignInstrumentsResult> {
-  const member = await findMemberById(memberId);
-  if (member === null) return { kind: 'member-not-found' };
-  const isKnown = await areInstrumentsKnown(instrumentIds);
-  if (!isKnown) return { kind: 'instrument-not-found' };
-  await replaceMemberInstruments(memberId, instrumentIds, primaryInstrumentIds);
-  return { kind: 'ok' };
+  const replacement = await replaceMemberInstruments(memberId, instrumentIds, primaryInstrumentIds);
+  if (replacement === 'replaced') return { kind: 'ok' };
+  return { kind: replacement };
 }

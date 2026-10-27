@@ -3,7 +3,8 @@ import { z } from 'zod';
 import { lambdaEnvironmentFrom } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
-import { listInstruments, listInstrumentsWithPlayers } from '../instruments/instruments.repository';
+import { listInstruments } from '../instruments/instruments.repository';
+import { getInstrumentsSorted } from '../instruments/instruments.service';
 import { listMembers } from '../members/members.repository';
 import { listSessions } from '../sessions/sessions.repository';
 import { listEntries } from '../setlists/setlist-entry.repository';
@@ -111,7 +112,7 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     await postSeed();
     const members = await listMembers();
     const memberIdByName = new Map(members.map((member) => [member.firstName, member.id]));
-    const instruments = await listInstrumentsWithPlayers();
+    const instruments = await getInstrumentsSorted();
     const primaryMemberIdsByInstrumentName = new Map(
       instruments.map((instrument) => [
         instrument.name,

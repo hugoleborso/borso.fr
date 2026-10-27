@@ -62,6 +62,7 @@
     "react-router-dom": "catalog:",
     "tailwind-merge": "catalog:",
     "tailwindcss": "catalog:",
+    "web-push": "catalog:",
     "zod": "catalog:zod3"
   },
   "devDependencies": {
@@ -73,6 +74,7 @@
     "@types/node": "catalog:",
     "@types/react": "catalog:",
     "@types/react-dom": "catalog:",
+    "@types/web-push": "catalog:",
     "@sentry/vite-plugin": "catalog:",
     "@vitejs/plugin-react": "catalog:",
     "@vitest/coverage-v8": "catalog:",

@@ -5,6 +5,7 @@ import {
   formatColumnType,
   buildCreateTableLikeSql,
   buildReplaceBeforeCloneSql,
+  listTablesNoMigrationCreates,
   listUndecidedCredentialTables,
   isCloneableDataTable,
   isReplacedBeforeClone,
@@ -13,6 +14,21 @@ import {
 } from './clone-from-schema.utils.js';
 
 // @FollowsBlueprint test-pure-unit
+describe('listTablesNoMigrationCreates', () => {
+  it('names each table no migration creates, quoted or not', () => {
+    expect(
+      listTablesNoMigrationCreates(
+        ['admin_sessions', 'runners', 'misspelt'],
+        [
+          'CREATE TABLE IF NOT EXISTS "admin_sessions" (id text);',
+          'CREATE TABLE runners (slug text);',
+        ],
+      ),
+    ).toStrictEqual(['misspelt']);
+    expect(listTablesNoMigrationCreates([], [])).toStrictEqual([]);
+  });
+});
+
 describe('listUndecidedCredentialTables', () => {
   const PRAGMA_MIGRATIONS = [
     'CREATE TABLE "app_config" (id integer PRIMARY KEY, password_hash text NOT NULL);',

@@ -10,30 +10,13 @@ import {
 
 export type LineupOverride = z.infer<typeof lineupOverrideSchema>;
 
-export interface SetlistEntryRow {
-  id: string;
-  setlistId: string;
-  songId: string;
-  position: number;
-  lineupOverride: LineupOverride | null;
-  energy: number | null;
-  keyOverride: string | null;
-  capo: number | null;
-  notes: string;
-}
-
-export interface EntryInsertShape {
-  setlistId: string;
-  songId: string;
-  position: number;
-  energy: number | null;
-  lineupOverride: LineupOverride | null;
-  keyOverride: string | null;
-  capo: number | null;
-  notes: string;
-}
-
 type SetlistEntryRawRow = typeof setlistEntryTable.$inferSelect;
+
+export type SetlistEntryRow = Omit<SetlistEntryRawRow, 'lineupOverride'> & {
+  lineupOverride: LineupOverride | null;
+};
+
+export type EntryInsertShape = Omit<SetlistEntryRow, 'id'>;
 
 // @FollowsBlueprint repository-projection
 const ENTRY_PROJECTION = {
@@ -93,9 +76,9 @@ function encodeEntryUpdate(updates: SetlistEntryPersistedUpdate): EntryUpdateEnc
   };
 }
 
-export async function listEntryOwners(
-  setlistIds: readonly string[],
-): Promise<{ setlistId: string }[]> {
+type SetlistEntryOwner = Pick<SetlistEntryRawRow, 'setlistId'>;
+
+export async function listEntryOwners(setlistIds: readonly string[]): Promise<SetlistEntryOwner[]> {
   if (setlistIds.length === 0) return [];
   const database = getDatabase();
   return await database
@@ -114,8 +97,11 @@ export async function listEntries(setlistId: string): Promise<SetlistEntryRow[]>
   return rows.map((row) => rowToEntry(row));
 }
 
-export async function listEntriesOfSong(songId: string): Promise<SetlistEntryRow[]> {
-  const rows = await getDatabase()
+export async function listEntriesOfSongWithin(
+  executor: DatabaseExecutor,
+  songId: string,
+): Promise<SetlistEntryRow[]> {
+  const rows = await executor
     .select(ENTRY_PROJECTION)
     .from(setlistEntryTable)
     .where(eq(setlistEntryTable.songId, songId));
@@ -134,16 +120,6 @@ export async function listEntriesOfSetlists(
   return rows.map((row) => rowToEntry(row));
 }
 
-export async function insertEntry(values: EntryInsertShape): Promise<SetlistEntryRow> {
-  const database = getDatabase();
-  const [row] = await database
-    .insert(setlistEntryTable)
-    .values(encodeEntryInsert(values))
-    .returning(ENTRY_PROJECTION);
-  if (row === undefined) throw new Error('insert returned no row');
-  return rowToEntry(row);
-}
-
 export async function updateEntry(
   setlistId: string,
   entryId: string,
@@ -158,36 +134,51 @@ export async function updateEntry(
   return row === undefined ? null : rowToEntry(row);
 }
 
-export async function deleteEntry(setlistId: string, entryId: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  const deleted = await database
+export async function deleteEntryWithin(
+  executor: DatabaseExecutor,
+  setlistId: string,
+  entryId: string,
+): Promise<DeletionOutcome> {
+  const deleted = await executor
     .delete(setlistEntryTable)
     .where(and(eq(setlistEntryTable.id, entryId), eq(setlistEntryTable.setlistId, setlistId)))
     .returning({ id: setlistEntryTable.id });
   return selectDeletionOutcome(deleted.length);
 }
 
-export async function setEntryPosition(entryId: string, position: number): Promise<void> {
-  const database = getDatabase();
-  await database
+export async function setEntryPositionWithin(
+  executor: DatabaseExecutor,
+  entryId: string,
+  position: number,
+): Promise<void> {
+  await executor
     .update(setlistEntryTable)
     .set({ position })
     .where(eq(setlistEntryTable.id, entryId));
 }
 
-export async function listEntryIds(setlistId: string): Promise<{ id: string }[]> {
-  const database = getDatabase();
-  return await database
+export async function listEntryIdsInOrderWithin(
+  executor: DatabaseExecutor,
+  setlistId: string,
+): Promise<string[]> {
+  const rows = await executor
     .select({ id: setlistEntryTable.id })
     .from(setlistEntryTable)
-    .where(eq(setlistEntryTable.setlistId, setlistId));
+    .where(eq(setlistEntryTable.setlistId, setlistId))
+    .orderBy(asc(setlistEntryTable.position));
+  return rows.map((row) => row.id);
 }
 
 export async function insertEntryWithin(
   executor: DatabaseExecutor,
   values: EntryInsertShape,
-): Promise<void> {
-  await executor.insert(setlistEntryTable).values(encodeEntryInsert(values));
+): Promise<SetlistEntryRow> {
+  const [row] = await executor
+    .insert(setlistEntryTable)
+    .values(encodeEntryInsert(values))
+    .returning(ENTRY_PROJECTION);
+  if (row === undefined) throw new Error('insert returned no row');
+  return rowToEntry(row);
 }
 
 export async function countEntriesWithin(

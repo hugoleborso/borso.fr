@@ -28,9 +28,13 @@ export function onSessionEnded(listener: SessionEndListener): () => void {
   return () => sessionEndListeners.delete(listener);
 }
 
-async function readJsonOrNull(response: Response): Promise<unknown> {
+async function readJsonOrNull(response: { json: () => Promise<unknown> }): Promise<unknown> {
   const body: unknown = await response.json().catch(() => null);
   return body;
+}
+
+export async function readErrorBody(response: { json: () => Promise<unknown> }): Promise<unknown> {
+  return await readJsonOrNull(response);
 }
 
 export async function fetchWatchingSessionEnd(

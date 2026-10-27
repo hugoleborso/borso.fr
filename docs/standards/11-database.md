@@ -90,11 +90,23 @@ client and a transaction handle, so one query function runs inside or outside a
 transaction without a cast.
 
 When the cascade crosses a **slice boundary** rather than reaching another
-table, the owning repository exports the transaction instead, because
-`borso/no-cross-slice-repository-imports` stops the service calling the other
-slice's repository directly. No application has that case today, so the shape
-below is the one a standards review arrived at on an application that did, and
-it is written here rather than shown from the tree:
+table, `borso/no-cross-slice-repository-imports` stops one slice calling the
+other slice's repository directly, so the other slice is reached through its
+service, with the transaction handle passed in.
+
+`pragma` has this case in three places. `deleteSongWithCascade` in
+`songs.repository.ts`, `deleteSessionWithCascade` in `sessions.repository.ts`
+and `deleteMemberWithLinks` in `members.repository.ts` each open the
+transaction themselves and call other slices' services inside it, for example
+`deleteTakesOfDeletedSong`, `detachTakesOfDeletedSession`,
+`deleteStudiesOfDeletedSong` and `deletePushStateOfDeletedMember`. The rule
+lets them through because each import names a service, not a repository. The
+cost is that a repository then depends on another slice's service.
+
+The shape below keeps that call in the service instead: the owning repository
+exports the transaction, and the service runs both halves inside it. It is the
+one a standards review arrived at on another application, and it is written
+here rather than shown from the tree:
 
 ```ts
 // shelves.repository.ts

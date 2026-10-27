@@ -116,6 +116,7 @@
     "crumb": "Répertoire",
     "deezerTrackId": "Identifiant Deezer",
     "deezerTrackIdPlaceholder": "ex. 67238735",
+    "deezerTrackTaken": "Ce titre Deezer appartient déjà à un autre morceau du catalogue :",
     "defaultLineup": "Lineup par défaut",
     "deleteConfirm": "Supprimer ce morceau ? Sa grille, ses notes et ses liens partent avec.",
     "duration": "Durée",
@@ -611,5 +612,109 @@
     "thisWeek_one": "{{count}} révision cette semaine",
     "thisWeek_other": "{{count}} révisions cette semaine",
     "progressTitle": "Progression"
+  },
+  "takes": {
+    "title": "Prises",
+    "recordAria": "Enregistrer une prise de {{title}}",
+    "upload": "Importer",
+    "download": "Télécharger",
+    "empty": "Aucune prise de ce morceau pour l’instant.",
+    "noSession": "sans séance",
+    "practice": "Répétition",
+    "practiceList": {
+      "title": "Enregistrer des prises",
+      "empty": "Rattachez une setlist pour enregistrer ses morceaux."
+    },
+    "concert": "Concert",
+    "unknownSession": "séance supprimée",
+    "formerMember": "ancien membre",
+    "commentCount_one": "{{count}} commentaire",
+    "commentCount_other": "{{count}} commentaires",
+    "pending": "envoi en attente",
+    "failed": "envoi échoué",
+    "retry": "Réessayer",
+    "recording": {
+      "title": "Enregistrement de {{title}}",
+      "stop": "Arrêter",
+      "screenAwake": "écran maintenu allumé",
+      "starting": "Démarrage du micro…",
+      "saving": "Enregistrement de la prise…",
+      "denied": "Le micro n’est pas autorisé. Autorisez-le dans les réglages du navigateur, ou importez un fichier.",
+      "unsupported": "Ce navigateur ne peut pas enregistrer ici. Importez un fichier.",
+      "interrupted": "L’enregistrement a été coupé au verrouillage du téléphone. Ce qui a été enregistré jusque-là est gardé comme prise.",
+      "quotaExceeded": "Le stockage de l’appareil est plein, la prise n’a pas pu être gardée. Téléchargez-la pour ne pas la perdre.",
+      "queueFailed": "La prise n’a pas pu être stockée sur cet appareil. Téléchargez-la pour ne pas la perdre.",
+      "unplayable": "Ce navigateur a enregistré un format que le groupe ne peut pas relire. Téléchargez-la plutôt.",
+      "empty": "Rien n’a été enregistré, aucune prise n’a donc été gardée."
+    },
+    "uploadForm": {
+      "title": "Importer une prise de {{title}}",
+      "file": "Fichier audio",
+      "recordedAt": "Enregistrée le",
+      "session": "Séance",
+      "noSession": "Sans séance"
+    },
+    "fileErrors": {
+      "tooLarge": "Ce fichier dépasse {{maxMebibytes}} Mio.",
+      "notAudio": "Ce fichier n’est pas un fichier audio.",
+      "empty": "Ce fichier est vide."
+    },
+    "player": {
+      "title": "Prise",
+      "delete": "Supprimer la prise",
+      "deleteConfirm": "Supprimer cette prise et ses commentaires pour tout le monde ?",
+      "loadFailed": "L’enregistrement n’a pas pu être chargé.",
+      "marks": "Commentaires sur la frise",
+      "markAria": "Aller à {{moment}}",
+      "noComments": "Aucun commentaire pour l’instant.",
+      "commentPlaceholder": "Écrire un commentaire",
+      "momentToggle": "À {{moment}}",
+      "send": "Envoyer",
+      "deleteComment": "Supprimer le commentaire",
+      "commentFailed": "Le commentaire n’a pas pu être envoyé."
+    }
+  },
+  "notifications": {
+    "title": "Notifications",
+    "enabled": "Les notifications sont activées sur cet appareil.",
+    "denied": "Ce navigateur bloque les notifications de pragma. Autorisez-les dans les réglages du site du navigateur, puis revenez ici.",
+    "unsupported": "Ce navigateur ne peut pas recevoir de notifications.",
+    "installHint": "Sur iPhone, les notifications n’arrivent que si pragma est installé sur l’écran d’accueil. Dans Safari, touchez Partager, puis Sur l’écran d’accueil, et ouvrez pragma depuis là.",
+    "enable": "Activer sur cet appareil",
+    "enableFailed": "Les notifications n’ont pas pu être activées. Réessayez.",
+    "saveFailed": "Ce changement n’a pas pu être enregistré.",
+    "categoriesTitle": "Me notifier pour",
+    "categories": {
+      "takes": "Les nouvelles prises",
+      "takeComments": "Les commentaires sur les prises",
+      "sessions": "Les sessions",
+      "setlists": "Les setlists, compositions et transitions"
+    }
+  },
+  "install": {
+    "banner": "Installez pragma comme une appli, pour les notifications et le plein écran",
+    "showMe": "Me montrer",
+    "dismiss": "Masquer cette suggestion",
+    "title": "Installer pragma",
+    "installNow": "Installer",
+    "walkthrough": "Comment installer pragma",
+    "steps": {
+      "openInSafari": "Copiez l’adresse de cette page et ouvrez-la dans Safari. Seul Safari peut ajouter pragma à l’écran d’accueil.",
+      "tapShare": "Dans Safari, touchez Partager.",
+      "scrollShareSheet": "Faites défiler la liste des actions.",
+      "tapAddToHomeScreen": "Touchez « Sur l’écran d’accueil ».",
+      "confirmAdd": "Touchez Ajouter. pragma est sur votre écran d’accueil.",
+      "tapBrowserMenu": "Dans Chrome, touchez ⋮ en haut à droite.",
+      "tapInstallApp": "Touchez « Installer l’application » (ou « Ajouter à l’écran d’accueil »).",
+      "confirmInstall": "Touchez Installer. pragma est sur votre écran d’accueil."
+    },
+    "screen": {
+      "addToHomeScreen": "Sur l’écran d’accueil",
+      "add": "Ajouter",
+      "cancel": "Annuler",
+      "installApp": "Installer l’application",
+      "installQuestion": "Installer l’application ?",
+      "install": "Installer"
+    }
   }
 }

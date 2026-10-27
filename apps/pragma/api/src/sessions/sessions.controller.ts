@@ -1,11 +1,11 @@
 import { zValidator } from '@hono/zod-validator';
 import { Hono } from 'hono';
-import { requireMemberSession } from '../auth/member-session.middleware';
+import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
 import { sessionCreateSchema, sessionIdParamSchema, sessionUpdateSchema } from './sessions.schema';
 import {
   createSession,
   getNextSessionOfflineManifest,
-  getSessionById,
+  findSessionById,
   getSessions,
   patchSession,
   removeSession,
@@ -28,13 +28,16 @@ export function buildSessionsRouter() {
     })
     .get('/:id', zValidator('param', sessionIdParamSchema), async (context) => {
       const { id } = context.req.valid('param');
-      const session = await getSessionById(id);
+      const session = await findSessionById(id);
       if (session === null) return context.json({ error: 'not-found' }, 404);
       return context.json({ session });
     })
     .post('/', zValidator('json', sessionCreateSchema), async (context) => {
       const input = context.req.valid('json');
-      const session = await createSession(input);
+      const session = await createSession(input, {
+        memberId: readMemberId(context),
+        now: new Date(),
+      });
       return context.json({ session }, 201);
     })
     .put(
@@ -44,7 +47,10 @@ export function buildSessionsRouter() {
       async (context) => {
         const { id } = context.req.valid('param');
         const input = context.req.valid('json');
-        const updatedSession = await patchSession(id, input);
+        const updatedSession = await patchSession(id, input, {
+          memberId: readMemberId(context),
+          now: new Date(),
+        });
         if (updatedSession.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
         if (updatedSession.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
         return context.json({ session: updatedSession.session });

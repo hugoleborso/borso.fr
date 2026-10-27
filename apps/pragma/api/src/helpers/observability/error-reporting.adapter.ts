@@ -54,6 +54,15 @@ export function reportUnhandledError(error: unknown): void {
   Sentry.captureException(error);
 }
 
+export interface TaggedFailure {
+  readonly name: string;
+  readonly tags: Readonly<Record<string, string>>;
+}
+
+export function reportTaggedFailure(failure: TaggedFailure): void {
+  Sentry.captureMessage(failure.name, { level: 'error', tags: { ...failure.tags } });
+}
+
 async function answerInRequestSpan(
   request: IncomingRequest,
   answer: () => Promise<AnsweredRequest>,

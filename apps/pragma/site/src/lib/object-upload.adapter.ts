@@ -17,3 +17,25 @@ export async function hasSentFileToPresignedUrl(uploadUrl: string, file: File): 
   });
   return response.ok;
 }
+
+export type PresignedPutOutcome =
+  | { readonly kind: 'sent' }
+  | { readonly kind: 'refused'; readonly status: number }
+  | { readonly kind: 'unreachable' };
+
+// @FollowsBlueprint adapter-direct-upload
+export async function sendFileToPresignedUrl(
+  uploadUrl: string,
+  file: File,
+): Promise<PresignedPutOutcome> {
+  try {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      body: file,
+      headers: { 'Content-Type': file.type },
+    });
+    return response.ok ? { kind: 'sent' } : { kind: 'refused', status: response.status };
+  } catch {
+    return { kind: 'unreachable' };
+  }
+}

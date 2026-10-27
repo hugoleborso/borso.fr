@@ -4,23 +4,28 @@ import {
   buildAddColumnSql,
   buildCloneInsertSql,
   buildReplaceBeforeCloneSql,
-  type ColumnDefinition,
   isReplacedBeforeClone,
   buildCreateTableLikeSql,
-  type CatalogueColumnRow,
-  formatColumnType,
   selectCloneableDataTables,
   selectMissingColumns,
 } from './clone-from-schema.utils.js';
 import {
+  buildMappingRetirementStatements,
   buildRoleExistsQuery,
   buildRoleMappingsQuery,
   buildRoleProvisioningStatements,
   buildRoleRemovalStatements,
   type RoleMappingRow,
   selectMappedArns,
+  type TableAccess,
 } from './database-role.utils.js';
 import { selectPendingMigrations } from './pending-migrations.utils.js';
+import {
+  hasSchema,
+  listColumnDefinitions,
+  listColumns,
+  listTablesInSchema,
+} from './schema-catalogue.js';
 import { splitStatements } from './statement-rewrites.utils.js';
 
 interface Migration {
@@ -43,6 +48,9 @@ interface ResourceProps {
   readonly cloneFromSchema?: CloneFromSchemaProps;
   readonly apiRoleName?: string;
   readonly apiPrincipalArns?: readonly string[];
+  readonly readerRoleName?: string;
+  readonly readerPrincipalArns?: readonly string[];
+  readonly readerTableBlocklist?: readonly string[];
 }
 
 interface CfnEvent {
@@ -89,45 +97,6 @@ async function ensureSchema(sql: postgres.Sql, schemaName: string): Promise<void
       applied_at TIMESTAMPTZ NOT NULL DEFAULT now()
     )
   `);
-}
-
-async function hasSchema(sql: postgres.Sql, schemaName: string): Promise<boolean> {
-  const rows = await sql.unsafe<{ count: number }[]>(
-    `SELECT 1 AS count FROM information_schema.schemata WHERE schema_name = '${schemaName.replace(/'/g, "''")}'`,
-  );
-  return rows.length > 0;
-}
-
-async function listTablesInSchema(
-  sql: postgres.Sql,
-  schemaName: string,
-): Promise<readonly string[]> {
-  const rows = await sql.unsafe<{ table_name: string }[]>(
-    `SELECT table_name FROM information_schema.tables WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_type = 'BASE TABLE' ORDER BY table_name`,
-  );
-  return rows.map((row) => row.table_name);
-}
-
-async function listColumns(
-  sql: postgres.Sql,
-  schemaName: string,
-  tableName: string,
-): Promise<readonly string[]> {
-  const rows = await sql.unsafe<{ column_name: string }[]>(
-    `SELECT column_name FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
-  );
-  return rows.map((row) => row.column_name);
-}
-
-async function listColumnDefinitions(
-  sql: postgres.Sql,
-  schemaName: string,
-  tableName: string,
-): Promise<readonly ColumnDefinition[]> {
-  const rows = await sql.unsafe<CatalogueColumnRow[]>(
-    `SELECT column_name, data_type, character_maximum_length, numeric_precision, numeric_scale FROM information_schema.columns WHERE table_schema = '${schemaName.replace(/'/g, "''")}' AND table_name = '${tableName.replace(/'/g, "''")}' ORDER BY ordinal_position`,
-  );
-  return rows.map(formatColumnType);
 }
 
 async function cloneFromSchema(
@@ -214,12 +183,19 @@ async function dropSchema(sql: postgres.Sql, schemaName: string): Promise<void> 
   await sql.unsafe(`DROP SCHEMA IF EXISTS "${schemaName}" CASCADE`);
 }
 
-interface ApiRoleState {
+interface RoleState {
   readonly roleExists: boolean;
   readonly mappedArns: readonly string[];
 }
 
-async function readApiRoleState(sql: postgres.Sql, roleName: string): Promise<ApiRoleState> {
+interface RoleGrant {
+  readonly roleName: string | undefined;
+  readonly principalArns: readonly string[] | undefined;
+  readonly tableAccess: TableAccess;
+  readonly tableBlocklist?: readonly string[];
+}
+
+async function readRoleState(sql: postgres.Sql, roleName: string): Promise<RoleState> {
   const present = await sql.unsafe<{ present: number }[]>(buildRoleExistsQuery(roleName));
   if (present.length === 0) return { roleExists: false, mappedArns: [] };
   const mappings = await sql.unsafe<RoleMappingRow[]>(buildRoleMappingsQuery(roleName));
@@ -232,38 +208,80 @@ async function runEach(sql: postgres.Sql, statements: readonly string[]): Promis
   }
 }
 
-async function provisionApiRole(sql: postgres.Sql, props: ResourceProps): Promise<void> {
-  if (props.apiRoleName === undefined) return;
-  const roleState = await readApiRoleState(sql, props.apiRoleName);
+async function provisionRole(
+  sql: postgres.Sql,
+  schemaName: string,
+  grant: RoleGrant,
+): Promise<void> {
+  if (grant.roleName === undefined) return;
+  const roleState = await readRoleState(sql, grant.roleName);
+  const tableScope =
+    grant.tableBlocklist === undefined
+      ? undefined
+      : {
+          tableNames: await listTablesInSchema(sql, schemaName),
+          tableBlocklist: grant.tableBlocklist,
+        };
   await runEach(
     sql,
     buildRoleProvisioningStatements({
-      schemaName: props.schemaName,
-      roleName: props.apiRoleName,
-      principalArns: props.apiPrincipalArns ?? [],
+      schemaName,
+      roleName: grant.roleName,
+      tableAccess: grant.tableAccess,
+      principalArns: grant.principalArns ?? [],
       ...roleState,
+      ...(tableScope === undefined ? {} : { tableScope }),
     }),
   );
 }
 
-async function removeApiRole(sql: postgres.Sql, roleName: string | undefined): Promise<void> {
+async function removeRole(sql: postgres.Sql, roleName: string | undefined): Promise<void> {
   if (roleName === undefined) return;
-  const roleState = await readApiRoleState(sql, roleName);
+  const roleState = await readRoleState(sql, roleName);
   await runEach(sql, buildRoleRemovalStatements({ roleName, ...roleState }));
 }
 
-async function provisionSchema(sql: postgres.Sql, props: ResourceProps): Promise<void> {
+async function retireDroppedReader(
+  sql: postgres.Sql,
+  props: ResourceProps,
+  oldProps: ResourceProps | undefined,
+): Promise<void> {
+  const droppedRoleName = oldProps?.readerRoleName;
+  if (droppedRoleName === undefined || props.readerRoleName !== undefined) return;
+  const roleState = await readRoleState(sql, droppedRoleName);
+  await runEach(sql, buildMappingRetirementStatements({ roleName: droppedRoleName, ...roleState }));
+}
+
+async function provisionSchema(
+  sql: postgres.Sql,
+  props: ResourceProps,
+  oldProps: ResourceProps | undefined,
+): Promise<void> {
   await ensureSchema(sql, props.schemaName);
   if (props.cloneFromSchema !== undefined) {
     await cloneFromSchema(sql, props.schemaName, props.cloneFromSchema);
   }
   await applyMigrations(sql, props.schemaName, props.migrations);
-  await provisionApiRole(sql, props);
+  await provisionRole(sql, props.schemaName, {
+    roleName: props.apiRoleName,
+    principalArns: props.apiPrincipalArns,
+    tableAccess: 'read-write',
+  });
+  await provisionRole(sql, props.schemaName, {
+    roleName: props.readerRoleName,
+    principalArns: props.readerPrincipalArns,
+    tableAccess: 'read-only',
+    ...(props.readerTableBlocklist === undefined
+      ? {}
+      : { tableBlocklist: props.readerTableBlocklist }),
+  });
+  await retireDroppedReader(sql, props, oldProps);
 }
 
 async function deprovisionSchema(sql: postgres.Sql, props: ResourceProps): Promise<void> {
   await dropSchema(sql, props.schemaName);
-  await removeApiRole(sql, props.apiRoleName);
+  await removeRole(sql, props.apiRoleName);
+  await removeRole(sql, props.readerRoleName);
 }
 
 /**
@@ -277,8 +295,8 @@ export async function handler(event: CfnEvent): Promise<CfnResponse> {
   const physicalId = event.PhysicalResourceId ?? `dsql-schema:${props.schemaName}`;
 
   const applyByRequestType = {
-    Create: async (sql: postgres.Sql) => provisionSchema(sql, props),
-    Update: async (sql: postgres.Sql) => provisionSchema(sql, props),
+    Create: async (sql: postgres.Sql) => provisionSchema(sql, props, undefined),
+    Update: async (sql: postgres.Sql) => provisionSchema(sql, props, event.OldResourceProperties),
     Delete: async (sql: postgres.Sql) => deprovisionSchema(sql, props),
   } as const;
 

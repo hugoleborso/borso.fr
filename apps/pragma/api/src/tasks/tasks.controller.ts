@@ -17,7 +17,6 @@ export function buildTasksRouter() {
       if (outcome.kind === 'assignee-not-found')
         return context.json({ error: 'assignee-not-found' }, 400);
       if (outcome.kind === 'song-not-found') return context.json({ error: 'song-not-found' }, 400);
-      if (outcome.kind !== 'ok') return context.json({ error: 'empty-update' }, 400);
       return context.json({ task: outcome.task }, 201);
     })
     .put(

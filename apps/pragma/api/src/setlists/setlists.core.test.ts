@@ -3,9 +3,17 @@ import {
   buildSetlistSummaries,
   isSetlistRenamable,
   resolveSetlistKind,
+  selectAudienceChoiceSetlistId,
   selectNextLinkPosition,
   tallySongsPerSetlist,
 } from './setlists.core';
+
+describe('selectAudienceChoiceSetlistId', () => {
+  it('names the audience-choice setlist after its concert, so the key allows one per concert', () => {
+    const concertId = '33333333-3333-4333-8333-333333333333';
+    expect(selectAudienceChoiceSetlistId(concertId)).toBe(concertId);
+  });
+});
 
 describe('selectNextLinkPosition', () => {
   it('puts the first setlist of a session at zero', () => {

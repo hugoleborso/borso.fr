@@ -7,40 +7,15 @@ import {
 } from '../helpers/persistence/insertion.core';
 import { audienceSuggestionTable, audienceVoteTable, votingRoundTable } from './audience.schema';
 
-export interface VotingRoundRow {
-  id: string;
-  sessionId: string;
-  openedAt: Date;
-  closesAt: Date;
-  settledAt: Date | null;
-  winningSongId: string | null;
-}
+export type VotingRoundRow = typeof votingRoundTable.$inferSelect;
 
-export interface AudienceVoteRow {
-  ballotToken: string;
-  songId: string;
-  castAt: Date;
-}
+export type AudienceVoteRow = Omit<typeof audienceVoteTable.$inferSelect, 'roundId'>;
 
-export interface RoundInsertShape {
-  sessionId: string;
-  openedAt: Date;
-  closesAt: Date;
-}
+export type RoundInsertShape = Pick<VotingRoundRow, 'sessionId' | 'openedAt' | 'closesAt'>;
 
-export interface VoteInsertShape {
-  roundId: string;
-  ballotToken: string;
-  songId: string;
-  castAt: Date;
-}
+export type VoteInsertShape = typeof audienceVoteTable.$inferInsert;
 
-export interface SuggestionInsertShape {
-  sessionId: string;
-  songId: string;
-  ballotToken: string;
-  suggestedAt: Date;
-}
+export type SuggestionInsertShape = Omit<typeof audienceSuggestionTable.$inferInsert, 'id'>;
 
 // @FollowsBlueprint repository-projection
 const ROUND_PROJECTION = {
@@ -60,11 +35,11 @@ const VOTE_PROJECTION = {
 } as const;
 
 // @FollowsBlueprint repository-query
-export async function insertRound(values: RoundInsertShape): Promise<VotingRoundRow> {
-  const [row] = await getDatabase()
-    .insert(votingRoundTable)
-    .values(values)
-    .returning(ROUND_PROJECTION);
+export async function insertRoundWithin(
+  executor: DatabaseExecutor,
+  values: RoundInsertShape,
+): Promise<VotingRoundRow> {
+  const [row] = await executor.insert(votingRoundTable).values(values).returning(ROUND_PROJECTION);
   if (row === undefined) throw new Error('insert returned no row');
   return row;
 }
@@ -74,7 +49,15 @@ export async function findOpenRoundOfConcert(
   sessionId: string,
   now: Date,
 ): Promise<VotingRoundRow | null> {
-  const rows = await getDatabase()
+  return await findOpenRoundOfConcertWithin(getDatabase(), sessionId, now);
+}
+
+export async function findOpenRoundOfConcertWithin(
+  executor: DatabaseExecutor,
+  sessionId: string,
+  now: Date,
+): Promise<VotingRoundRow | null> {
+  const rows = await executor
     .select(ROUND_PROJECTION)
     .from(votingRoundTable)
     .where(

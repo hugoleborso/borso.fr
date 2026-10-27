@@ -13,6 +13,11 @@ export interface SetlistSongCount {
 const FIRST_POSITION = 0;
 
 // @FollowsBlueprint core-decision
+export function selectAudienceChoiceSetlistId(concertId: string): string {
+  return concertId;
+}
+
+// @FollowsBlueprint core-decision
 export function selectNextLinkPosition(highestTakenPosition: number | null): number {
   if (highestTakenPosition === null) return FIRST_POSITION;
   return highestTakenPosition + 1;

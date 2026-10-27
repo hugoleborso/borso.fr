@@ -8,6 +8,7 @@ import { DsqlClusterStack } from '@borso/infra';
 import { App, Stack } from 'aws-cdk-lib';
 import { Match, Template } from 'aws-cdk-lib/assertions';
 import { beforeAll, describe, expect, it } from 'vitest';
+import { z } from 'zod';
 import { buildPragmaAppStack } from '../lib/stack.js';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -24,6 +25,14 @@ const PROD_ERROR_REPORTING = {
 const SYNTH_WARMUP_TIMEOUT_MILLISECONDS = 300_000;
 
 const templateByStage = new Map<string, Template>();
+
+const policyStatementSchema = z.object({
+  Properties: z.object({
+    PolicyDocument: z.object({
+      Statement: z.array(z.object({ Action: z.unknown(), Resource: z.unknown() })),
+    }),
+  }),
+});
 
 // @FollowsBlueprint test-cdk-synth
 function synthAppStack(stage: 'prod' | 'preview'): Template {
@@ -67,6 +76,16 @@ function readEnvVars(resource: { readonly Properties?: unknown }): Record<string
   return typeof variables === 'object' && variables !== null ? { ...variables } : {};
 }
 
+function readParameterReadGrant(stage: 'prod' | 'preview'): string {
+  const policies = synthAppStack(stage).findResources('AWS::IAM::Policy');
+  const statements = Object.values(policies).flatMap(
+    (policy) => policyStatementSchema.parse(policy).Properties.PolicyDocument.Statement,
+  );
+  const grants = statements.filter((statement) => statement.Action === 'ssm:GetParameter');
+  expect(grants).toHaveLength(1);
+  return JSON.stringify(grants[0]?.Resource);
+}
+
 function readApiVariables(stage: 'prod' | 'preview'): Record<string, unknown> {
   const functions = synthAppStack(stage).findResources('AWS::Lambda::Function');
   const apiFunction = Object.entries(functions).find(([logicalId]) =>
@@ -87,6 +106,62 @@ function readSchemaCloneConfig(template: Template): unknown {
   return undefined;
 }
 
+function readSchemaReaderBlocklist(template: Template): unknown {
+  for (const resource of Object.values(
+    template.findResources('AWS::CloudFormation::CustomResource'),
+  )) {
+    const properties: unknown = resource.Properties;
+    if (typeof properties !== 'object' || properties === null) continue;
+    if (!('readerTableBlocklist' in properties)) continue;
+    return properties.readerTableBlocklist;
+  }
+  return undefined;
+}
+
+function readSchemaReader(template: Template): unknown {
+  for (const resource of Object.values(
+    template.findResources('AWS::CloudFormation::CustomResource'),
+  )) {
+    const properties: unknown = resource.Properties;
+    if (typeof properties !== 'object' || properties === null) continue;
+    if (!('readerPrincipalArns' in properties)) continue;
+    return properties.readerPrincipalArns;
+  }
+  return undefined;
+}
+
+describe('pragma read-only agent access (ADR-0044)', () => {
+  beforeAll(() => {
+    synthAppStack('prod');
+    synthAppStack('preview');
+  }, SYNTH_WARMUP_TIMEOUT_MILLISECONDS);
+
+  it('maps the AI-Dev-ReadOnly user to a SELECT-only role on prod', () => {
+    expect(JSON.stringify(readSchemaReader(synthAppStack('prod')))).toContain(
+      ':iam::123456789012:user/AI-Dev-ReadOnly',
+    );
+  });
+
+  it('keeps the reader off every table holding a credential, a key, a secret address or a ballot token', () => {
+    expect(readSchemaReaderBlocklist(synthAppStack('prod'))).toStrictEqual([
+      'app_config',
+      'member_credential',
+      'auth_attempt',
+      'member_calendar_feed',
+      'member_passkey',
+      'push_subscription',
+      'vapid_key_pair',
+      'webauthn_challenge',
+      'audience_suggestion',
+      'audience_vote',
+    ]);
+  });
+
+  it('maps no reader on a preview, which holds a copy of prod and nothing more', () => {
+    expect(readSchemaReader(synthAppStack('preview'))).toBeUndefined();
+  });
+});
+
 describe('pragma preview schema cloning', () => {
   beforeAll(() => {
     synthAppStack('prod');
@@ -97,14 +172,18 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
 
-  it('clones prod into a preview with its passwords, but no passkey and no avatar key', () => {
+  it('clones prod into a preview with its passwords, but no passkey, no avatar key, no push subscription or key pair, and no take', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
       tableBlocklist: [
         'auth_attempt',
         'member_calendar_feed',
         'member_passkey',
+        'push_subscription',
+        'vapid_key_pair',
         'webauthn_challenge',
+        'take',
+        'take_comment',
       ],
       tablesToReplace: ['app_config', 'member_credential'],
       columnsToNullify: { member: ['avatar_s3_key'] },
@@ -219,28 +298,31 @@ describe('pragma app stack', () => {
   });
 
   it('names the Spotify parameter and grants the API permission to read it', () => {
-    const template = synthAppStack('prod');
-    const functions = template.findResources('AWS::Lambda::Function');
-    const apiFunction = Object.entries(functions).find(([logicalId]) =>
-      logicalId.includes('AppApiFn'),
-    )?.[1];
-    const variables = apiFunction === undefined ? {} : readEnvVars(apiFunction);
-    expect(variables.SPOTIFY_CREDENTIALS_PARAMETER).toBe('/pragma/spotify-credentials');
-    template.hasResourceProperties(
+    expect(readApiVariables('prod').SPOTIFY_CREDENTIALS_PARAMETER).toBe(
+      '/pragma/spotify-credentials',
+    );
+    expect(readParameterReadGrant('prod')).toContain(':parameter/pragma/spotify-credentials');
+  });
+
+  it('grants reading exactly the Spotify parameter, and names no VAPID parameter', () => {
+    for (const stage of ['prod', 'preview'] as const) {
+      const grant = readParameterReadGrant(stage);
+      expect(grant.match(/:parameter\//g)).toHaveLength(1);
+      expect(grant).not.toContain('vapid');
+      expect(Object.keys(readApiVariables(stage)).join()).not.toContain('VAPID');
+    }
+    expect(synthAppStack('prod').findResources('AWS::SSM::Parameter')).toEqual({});
+  });
+
+  it('lets the API delete objects from the uploads bucket, so a deleted song takes its audio with it', () => {
+    synthAppStack('prod').hasResourceProperties(
       'AWS::IAM::Policy',
       Match.objectLike({
         PolicyDocument: Match.objectLike({
           Statement: Match.arrayWith([
             Match.objectLike({
-              Action: 'ssm:GetParameter',
+              Action: Match.arrayWith(['s3:DeleteObject*']),
               Effect: 'Allow',
-              Resource: Match.objectLike({
-                'Fn::Join': Match.arrayWith([
-                  Match.arrayWith([
-                    Match.stringLikeRegexp(':parameter/pragma/spotify-credentials'),
-                  ]),
-                ]),
-              }),
             }),
           ]),
         }),

@@ -229,6 +229,63 @@ describe('DsqlSchema', () => {
   });
 });
 
+const AGENT_USER_ARN = 'arn:aws:iam::123456789012:user/AI-Dev-ReadOnly';
+
+function synthSchemaResource(
+  readerPrincipalArns?: readonly string[],
+  readerTableBlocklist?: readonly string[],
+) {
+  const app = new App();
+  const stack = new Stack(app, 'S', { env: TEST_ENV });
+  const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
+  const schema = new DsqlSchema(stack, 'Db', {
+    app: 'test-app',
+    stage: 'prod',
+    migrationsPath: MIGRATIONS,
+    cluster,
+    ...(readerPrincipalArns === undefined ? {} : { readerPrincipalArns }),
+    ...(readerTableBlocklist === undefined ? {} : { readerTableBlocklist }),
+  });
+  const [customResource] = resourcesOfType(
+    Template.fromStack(stack),
+    'AWS::CloudFormation::CustomResource',
+  );
+  return { schema, properties: customResource?.Properties };
+}
+
+describe('DsqlSchema reader role', () => {
+  it('passes the reader role and its principals to the schema resource', () => {
+    const { schema, properties } = synthSchemaResource([AGENT_USER_ARN]);
+    expect(schema.readerRoleName).toBe('ai_reader_prod');
+    expect(properties?.readerRoleName).toBe('ai_reader_prod');
+    expect(properties?.readerPrincipalArns).toStrictEqual([AGENT_USER_ARN]);
+  });
+
+  it('passes the reader table blocklist when one is given', () => {
+    expect(
+      synthSchemaResource([AGENT_USER_ARN], ['hello']).properties?.readerTableBlocklist,
+    ).toStrictEqual(['hello']);
+    expect(synthSchemaResource([AGENT_USER_ARN]).properties).not.toHaveProperty(
+      'readerTableBlocklist',
+    );
+  });
+
+  it('refuses a reader table blocklist naming a table no migration creates', () => {
+    expect(() => synthSchemaResource([AGENT_USER_ARN], ['hello', 'helo'])).toThrow(
+      'DsqlSchema: readerTableBlocklist names helo, which no migration creates.',
+    );
+  });
+
+  it('sends no reader when no principal is listed', () => {
+    for (const readerPrincipalArns of [undefined, []]) {
+      const { schema, properties } = synthSchemaResource(readerPrincipalArns);
+      expect(schema.readerRoleName).toBeUndefined();
+      expect(properties).not.toHaveProperty('readerRoleName');
+      expect(properties).not.toHaveProperty('readerPrincipalArns');
+    }
+  });
+});
+
 function synthWithGrantedFunction(): { template: Template } {
   const app = new App();
   const stack = new Stack(app, 'S', { env: TEST_ENV });

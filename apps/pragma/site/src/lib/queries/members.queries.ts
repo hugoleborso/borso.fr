@@ -9,12 +9,6 @@ import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 
-export interface MemberInstrumentAssignment {
-  readonly memberId: string;
-  readonly instrumentIds: string[];
-  readonly primaryInstrumentIds?: string[];
-}
-
 export const memberKeys = {
   all: ['members'] as const,
   list: () => [...memberKeys.all, 'list'] as const,
@@ -22,7 +16,17 @@ export const memberKeys = {
 };
 
 type MembersListResponse = InferResponseType<typeof api.api.members.$get>;
-type MemberRow = MembersListResponse['members'][number];
+export type ListedMember = MembersListResponse['members'][number];
+type MemberRow = ListedMember;
+type MemberCreateVariables = Parameters<typeof api.api.members.$post>[0]['json'] & {
+  color: string;
+};
+type MemberUpdateVariables = { id: string } & Parameters<
+  (typeof api.api.members)[':id']['$put']
+>[0]['json'];
+type MemberInstrumentAssignment = { memberId: string } & Parameters<
+  (typeof api.api.members)[':id']['instruments']['$put']
+>[0]['json'];
 type MemberInstrumentsResponse = InferResponseType<
   (typeof api.api.members)[':id']['instruments']['$get'],
   200
@@ -61,11 +65,7 @@ export function useCreateMember() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: memberKeys.all,
-    mutationFn: async (variables: {
-      firstName: string;
-      color: string;
-      avatarS3Key?: string | null;
-    }) => {
+    mutationFn: async (variables: MemberCreateVariables) => {
       const response = await api.api.members.$post({ json: variables });
       if (!isResponseSuccessful(response))
         throw new ApiError(response.status, `create ${response.status}`, null);
@@ -81,8 +81,8 @@ export function useCreateMember() {
         firstName: variables.firstName,
         color: variables.color,
         avatarS3Key: variables.avatarS3Key ?? null,
-        phone: null,
-        email: null,
+        phone: variables.phone ?? null,
+        email: variables.email ?? null,
       };
       queryClient.setQueryData<MembersListResponse>(listKey, (old) => {
         if (old === undefined) return old;
@@ -109,12 +109,7 @@ export function useUpdateMember() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: memberKeys.all,
-    mutationFn: async (variables: {
-      id: string;
-      firstName?: string;
-      color?: string;
-      avatarS3Key?: string | null;
-    }) => {
+    mutationFn: async (variables: MemberUpdateVariables) => {
       const { id, ...rest } = variables;
       const response = await api.api.members[':id'].$put({
         param: { id },
@@ -180,14 +175,10 @@ export function useAssignMemberInstruments() {
   return useMutation({
     mutationKey: memberKeys.all,
     mutationFn: async (variables: MemberInstrumentAssignment) => {
+      const { memberId, ...assignment } = variables;
       const response = await api.api.members[':id'].instruments.$put({
-        param: { id: variables.memberId },
-        json: {
-          instrumentIds: variables.instrumentIds,
-          ...(variables.primaryInstrumentIds === undefined
-            ? {}
-            : { primaryInstrumentIds: variables.primaryInstrumentIds }),
-        },
+        param: { id: memberId },
+        json: assignment,
       });
       if (!response.ok) throw new ApiError(response.status, `assign ${response.status}`, null);
       return response.json();

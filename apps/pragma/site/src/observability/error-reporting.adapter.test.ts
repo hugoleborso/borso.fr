@@ -1,11 +1,20 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { reportRenderFailure, startErrorReporting } from './error-reporting.adapter';
+import {
+  recordTakeBreadcrumb,
+  reportRenderFailure,
+  reportTakeQueueWriteFailed,
+  reportTakeUploadFailed,
+  startErrorReporting,
+} from './error-reporting.adapter';
 
 const ROUTER_TRACING = { name: 'reactRouterBrowserTracing' };
 
 const sentry = vi.hoisted(() => ({
   init: vi.fn(),
   captureReactException: vi.fn(),
+  captureMessage: vi.fn(),
+  captureException: vi.fn(),
+  addBreadcrumb: vi.fn(),
   reactRouterBrowserTracingIntegration: vi.fn(() => ROUTER_TRACING),
   wrapReactRouterRouting: vi.fn((routes: unknown) => routes),
 }));
@@ -68,6 +77,46 @@ describe('reportRenderFailure', () => {
 
     expect(sentry.captureReactException).toHaveBeenCalledWith(failure, {
       componentStack: '\n    at SongPage',
+    });
+  });
+});
+
+describe('take failures', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('reports an exhausted upload tagged with the stage and the status', () => {
+    reportTakeUploadFailed({ stage: 'put', status: 500 });
+    expect(sentry.captureMessage).toHaveBeenCalledWith('TakeUploadFailed', {
+      level: 'error',
+      tags: { 'take.stage': 'put', 'take.status': '500' },
+    });
+  });
+
+  it('names a network failure as having no status', () => {
+    reportTakeUploadFailed({ stage: 'sign', status: null });
+    expect(sentry.captureMessage).toHaveBeenCalledWith('TakeUploadFailed', {
+      level: 'error',
+      tags: { 'take.stage': 'sign', 'take.status': 'none' },
+    });
+  });
+
+  it('reports a refused queue write', () => {
+    const refusal = new Error('blocked');
+    reportTakeQueueWriteFailed(refusal);
+    expect(sentry.captureException).toHaveBeenCalledWith(refusal, {
+      tags: { 'take.stage': 'queue' },
+      extra: { name: 'TakeQueueWriteFailed' },
+    });
+  });
+
+  it('leaves a breadcrumb rather than an error for an interrupted recording', () => {
+    recordTakeBreadcrumb('RecordingInterrupted');
+    expect(sentry.addBreadcrumb).toHaveBeenCalledWith({
+      category: 'takes',
+      message: 'RecordingInterrupted',
+      level: 'info',
     });
   });
 });

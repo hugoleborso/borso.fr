@@ -1,6 +1,7 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
   buildResponse,
+  buildWindowClient,
   loadServiceWorker,
   type FakeRequest,
   type FakeResponse,
@@ -17,9 +18,15 @@ function serveAlways(
 }
 
 describe('sw.js, the worker that ships', () => {
-  it('registers the three listeners a worker needs', () => {
+  it('registers the listeners for caching and for push', () => {
     const worker = loadServiceWorker(serveAlways(buildResponse('', 'text/plain')));
-    expect([...worker.listeners.keys()].toSorted()).toEqual(['activate', 'fetch', 'install']);
+    expect([...worker.listeners.keys()].toSorted()).toEqual([
+      'activate',
+      'fetch',
+      'install',
+      'notificationclick',
+      'push',
+    ]);
   });
 
   it('deletes a cache from an earlier version on activate, which is what unbricks a poisoned client', async () => {
@@ -115,5 +122,188 @@ describe('sw.js, the worker that ships', () => {
     const served = await worker.respondTo({ url: 'https://pragma.borso.fr/api/auth/login' });
 
     expect(served).toBeUndefined();
+  });
+});
+
+function pushData(payload: unknown) {
+  return { json: () => payload };
+}
+
+function failAlways(): Promise<FakeResponse> {
+  return Promise.reject(new Error('offline'));
+}
+
+const TAKE_PUSH = {
+  messageKey: 'take-created',
+  parameters: { actorName: 'Hugo', songTitle: 'Seven Nation Army' },
+  url: '/catalog/song-1?take=take-1',
+  tag: 'take:take-1',
+};
+
+describe('sw.js, push notifications', () => {
+  it('renders a take notification in English with its link and its group tag', async () => {
+    const worker = loadServiceWorker(failAlways, { language: 'en-GB' });
+    await worker.dispatch('push', { data: pushData(TAKE_PUSH) });
+    expect(worker.notifications).toEqual([
+      {
+        title: 'Pragma',
+        options: {
+          body: 'Hugo posted a take of Seven Nation Army',
+          icon: '/icons/icon-192.png',
+          badge: '/icons/icon-192.png',
+          tag: 'take:take-1',
+          renotify: true,
+          data: { url: '/catalog/song-1?take=take-1' },
+        },
+      },
+    ]);
+  });
+
+  it('renders the same push in French on a French device', async () => {
+    const worker = loadServiceWorker(failAlways, { language: 'FR-fr' });
+    await worker.dispatch('push', { data: pushData(TAKE_PUSH) });
+    expect(worker.notifications[0]?.options.body).toBe(
+      'Hugo a publié une prise de Seven Nation Army',
+    );
+  });
+
+  it('renders every message key the API sends, in both languages', async () => {
+    const pushes = [
+      ['take-comment-created', { songTitle: 'Song' }],
+      ['session-created', { sessionDate: 'not a date' }],
+      ['session-changed', { sessionDate: 'not a date' }],
+      ['setlist-changed', { setlistName: 'Summer' }],
+      ['song-lineup-changed', { songTitle: 'Song' }],
+      ['transition-changed', { songATitle: 'One', songBTitle: 'Two' }],
+    ] as const;
+    const english = loadServiceWorker(failAlways, { language: 'en' });
+    const french = loadServiceWorker(failAlways, { language: 'fr' });
+    for (const [messageKey, parameters] of pushes) {
+      const pushMessage = { messageKey, parameters: { actorName: 'Ana', ...parameters } };
+      await english.dispatch('push', { data: pushData(pushMessage) });
+      await french.dispatch('push', { data: pushData(pushMessage) });
+    }
+    expect(english.notifications.map((shown) => shown.options.body)).toEqual([
+      'Ana commented on a take of Song',
+      'Ana planned a session on not a date',
+      'Ana changed the session on not a date',
+      'Ana changed the setlist Summer',
+      'Ana changed the lineup of Song',
+      'Ana changed the transition One → Two',
+    ]);
+    expect(french.notifications.map((shown) => shown.options.body)).toEqual([
+      'Ana a commenté une prise de Song',
+      'Ana a prévu une session le not a date',
+      'Ana a modifié la session du not a date',
+      'Ana a modifié la setlist Summer',
+      'Ana a modifié la composition de Song',
+      'Ana a modifié la transition One → Two',
+    ]);
+  });
+
+  it('writes a session date in the band time zone and the device language', async () => {
+    const worker = loadServiceWorker(failAlways, { language: 'en-GB' });
+    const sessionDate = '2026-10-24T18:30:00.000Z';
+    await worker.dispatch('push', {
+      data: pushData({
+        messageKey: 'session-created',
+        parameters: { actorName: 'Ana', sessionDate },
+      }),
+    });
+    const expectedDate = new Date(sessionDate).toLocaleString('en-GB', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short',
+      hour: '2-digit',
+      minute: '2-digit',
+      timeZone: 'Europe/Paris',
+    });
+    expect(worker.notifications[0]?.options.body).toBe(`Ana planned a session on ${expectedDate}`);
+    expect(expectedDate).toContain('20:30');
+  });
+
+  it('names a former member as someone and keeps a placeholder it has no value for', async () => {
+    const worker = loadServiceWorker(failAlways, { language: 'en' });
+    await worker.dispatch('push', {
+      data: pushData({ messageKey: 'take-created', parameters: { actorName: '', songTitle: 7 } }),
+    });
+    await worker.dispatch('push', {
+      data: pushData({ messageKey: 'take-created', parameters: null }),
+    });
+    expect(worker.notifications.map((shown) => shown.options.body)).toEqual([
+      'Someone posted a take of {songTitle}',
+      'Someone posted a take of {songTitle}',
+    ]);
+  });
+
+  it('falls back to a generic line, in English, for a push it cannot read', async () => {
+    const worker = loadServiceWorker(failAlways);
+    await worker.dispatch('push', { data: null });
+    await worker.dispatch('push', { data: pushData(null) });
+    await worker.dispatch('push', { data: pushData({ messageKey: 'templates' }) });
+    await worker.dispatch('push', { data: pushData({ messageKey: 'toString' }) });
+    await worker.dispatch('push', {
+      data: {
+        json: () => {
+          throw new Error('not json');
+        },
+      },
+    });
+    expect(worker.notifications.map((shown) => shown.options.body)).toEqual([
+      'Something changed in the band.',
+      'Something changed in the band.',
+      'Something changed in the band.',
+      'Something changed in the band.',
+      'Something changed in the band.',
+    ]);
+    expect(worker.notifications[0]?.options).toEqual({
+      body: 'Something changed in the band.',
+      icon: '/icons/icon-192.png',
+      badge: '/icons/icon-192.png',
+      data: { url: '/' },
+    });
+  });
+
+  it('focuses an open window and sends it to the notification URL', async () => {
+    const client = buildWindowClient();
+    const worker = loadServiceWorker(failAlways, { windowClients: [client] });
+    const close = vi.fn();
+    await worker.dispatch('notificationclick', {
+      notification: { close, data: { url: '/sessions/session-1' } },
+    });
+    expect(close).toHaveBeenCalledOnce();
+    expect(client.focusCount).toBe(1);
+    expect(client.visited).toEqual(['/sessions/session-1']);
+    expect(worker.openedWindows).toEqual([]);
+  });
+
+  it('survives a window that refuses to navigate', async () => {
+    const refusing = {
+      focus: () => Promise.resolve(refusing),
+      navigate: () => Promise.reject(new Error('uncontrolled')),
+    };
+    const worker = loadServiceWorker(failAlways, { windowClients: [refusing] });
+    await expect(
+      worker.dispatch('notificationclick', {
+        notification: { close: vi.fn(), data: { url: '/setlists/setlist-1' } },
+      }),
+    ).resolves.toBe(refusing);
+  });
+
+  it('keeps a focused window that cannot navigate', async () => {
+    const bare = { focus: () => Promise.resolve(bare) };
+    const worker = loadServiceWorker(failAlways, { windowClients: [bare] });
+    await expect(
+      worker.dispatch('notificationclick', { notification: { close: vi.fn(), data: {} } }),
+    ).resolves.toBe(bare);
+  });
+
+  it('opens a new window when none is open, at home when the URL is missing', async () => {
+    const worker = loadServiceWorker(failAlways, { windowClients: [{}] });
+    await worker.dispatch('notificationclick', { notification: { close: vi.fn() } });
+    await worker.dispatch('notificationclick', {
+      notification: { close: vi.fn(), data: { url: '/catalog/song-1' } },
+    });
+    expect(worker.openedWindows).toEqual(['/', '/catalog/song-1']);
   });
 });

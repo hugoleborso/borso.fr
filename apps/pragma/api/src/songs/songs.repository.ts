@@ -1,6 +1,7 @@
-import { desc, eq } from 'drizzle-orm';
+import { desc, eq, sql } from 'drizzle-orm';
 import { z } from 'zod';
-import { getDatabase } from '../database/client';
+import { type DatabaseExecutor, getDatabase } from '../database/client';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { resolveSongOrigin, type SongOrigin } from '@domain/song-origin.core';
 import { masteryOverrideTable } from '../mastery/mastery.schema';
@@ -8,6 +9,7 @@ import { deleteScoreHistoryOfDeletedSong } from '../mastery/mastery.service';
 import { setlistEntryTable } from '../setlists/setlists.schema';
 import { deleteVotesOfDeletedSong } from '../setlists/voting.service';
 import { deleteStudiesOfDeletedSong } from '../studies/studies.service';
+import { deleteTakesOfDeletedSong } from '../takes/takes.service';
 import { detachTasksOfSongBeingDeleted } from '../tasks/tasks.service';
 import {
   chordChartSchema,
@@ -26,80 +28,26 @@ export type SongLink = z.infer<typeof songExternalLinkSchema>;
 export type SongChart = z.infer<typeof chordChartSchema>;
 export type SongDefaultLineup = z.infer<typeof defaultLineupSchema>;
 
-export interface SongRow {
-  id: string;
-  title: string;
-  artist: string;
+type SongTableRow = typeof songTable.$inferSelect;
+
+interface SongDecodedColumns {
   status: SongStatus;
   origin: SongOrigin;
   links: SongLink[];
   chart: SongChart | null;
-  tonalityStart: string | null;
-  tonalityEnd: string | null;
   defaultLineup: SongDefaultLineup;
-  baseEnergy: number | null;
-  deezerTrackId: string | null;
-  deezerAlbumId: string | null;
-  spotifyTrackId: string | null;
-  album: string | null;
-  durationSeconds: number | null;
   isrcs: string[];
   tags: string[];
   structureNotes: string;
   gimmickNotes: string;
   notes: string;
-  createdAt: Date;
 }
 
-export interface SongInsertShape {
-  title: string;
-  artist: string;
-  status: SongStatus;
-  origin: SongOrigin;
-  links: SongLink[];
-  chart: SongChart | null;
-  tonalityStart: string | null;
-  tonalityEnd: string | null;
-  defaultLineup: SongDefaultLineup;
-  baseEnergy: number | null;
-  deezerTrackId: string | null;
-  deezerAlbumId: string | null;
-  spotifyTrackId: string | null;
-  album: string | null;
-  durationSeconds: number | null;
-  isrcs: string[];
-  tags: string[];
-  structureNotes: string;
-  gimmickNotes: string;
-  notes: string;
-}
+export type SongRow = Omit<SongTableRow, keyof SongDecodedColumns> & SongDecodedColumns;
+
+export type SongInsertShape = Omit<SongRow, 'id' | 'createdAt'>;
 
 export type SongPersistedShape = Partial<SongInsertShape>;
-
-interface SongRawRow {
-  id: string;
-  title: string;
-  artist: string;
-  status: string;
-  origin: string | null;
-  links: string;
-  chart: string | null;
-  tonalityStart: string | null;
-  tonalityEnd: string | null;
-  defaultLineup: string;
-  baseEnergy: number | null;
-  deezerTrackId: string | null;
-  deezerAlbumId: string | null;
-  spotifyTrackId: string | null;
-  album: string | null;
-  durationSeconds: number | null;
-  isrcs: string | null;
-  tags: string | null;
-  structureNotes: string | null;
-  gimmickNotes: string | null;
-  notes: string | null;
-  createdAt: Date;
-}
 
 // @FollowsBlueprint repository-projection
 const PROJECTION = {
@@ -139,7 +87,7 @@ function parseJsonArrayColumn<T>(raw: string | null, schema: z.ZodSchema<T[]>): 
  * @BlueprintUsage Use for a column holding json as text, which is what Aurora DSQL forces because it has no jsonb type.
  * @BlueprintDescription Decodes every text-encoded column in one place: `JSON.parse` into a value annotated `unknown`, then a Zod schema that narrows it, which is why no type assertion is needed. `encodeInsert` and `encodeUpdate` are the matching write side, so the encoded string never leaves this file.
  */
-function rowToSong(row: SongRawRow): SongRow {
+function rowToSong(row: SongTableRow): SongRow {
   const linksRaw: unknown = JSON.parse(row.links);
   const chartRaw: unknown = row.chart === null ? null : JSON.parse(row.chart);
   const defaultLineupRaw: unknown = JSON.parse(row.defaultLineup);
@@ -226,6 +174,12 @@ function encodeUpdate(updates: SongPersistedShape): SongUpdateEncoded {
   return encoded;
 }
 
+async function runInOneSongTransaction<Result>(
+  work: (executor: DatabaseExecutor) => Promise<Result>,
+): Promise<Result> {
+  return await retryingConflictAborts(async () => await getDatabase().transaction(work));
+}
+
 export async function listSongsNewestFirst(): Promise<SongRow[]> {
   const database = getDatabase();
   const rows = await database.select(PROJECTION).from(songTable).orderBy(desc(songTable.createdAt));
@@ -233,8 +187,14 @@ export async function listSongsNewestFirst(): Promise<SongRow[]> {
 }
 
 export async function findSongById(id: string): Promise<SongRow | null> {
-  const database = getDatabase();
-  const rows = await database
+  return await findSongByIdWithin(getDatabase(), id);
+}
+
+export async function findSongByIdWithin(
+  executor: DatabaseExecutor,
+  id: string,
+): Promise<SongRow | null> {
+  const rows = await executor
     .select(PROJECTION)
     .from(songTable)
     .where(eq(songTable.id, id))
@@ -243,36 +203,68 @@ export async function findSongById(id: string): Promise<SongRow | null> {
   return row === undefined ? null : rowToSong(row);
 }
 
-export async function insertSong(values: SongInsertShape): Promise<SongRow> {
+export async function findSongByDeezerTrackId(deezerTrackId: string): Promise<SongRow | null> {
   const database = getDatabase();
-  const [row] = await database.insert(songTable).values(encodeInsert(values)).returning(PROJECTION);
+  const rows = await database
+    .select(PROJECTION)
+    .from(songTable)
+    .where(eq(songTable.deezerTrackId, deezerTrackId))
+    .limit(1);
+  const row = rows[0];
+  return row === undefined ? null : rowToSong(row);
+}
+
+export async function insertSong(values: SongInsertShape): Promise<SongRow> {
+  const [row] = await retryingConflictAborts(
+    async () =>
+      await getDatabase().insert(songTable).values(encodeInsert(values)).returning(PROJECTION),
+  );
   if (row === undefined) throw new Error('insert returned no row');
   return rowToSong(row);
 }
 
 export async function updateSong(id: string, updates: SongPersistedShape): Promise<SongRow | null> {
-  const database = getDatabase();
-  const [row] = await database
-    .update(songTable)
-    .set(encodeUpdate(updates))
-    .where(eq(songTable.id, id))
-    .returning(PROJECTION);
+  const [row] = await retryingConflictAborts(
+    async () =>
+      await getDatabase()
+        .update(songTable)
+        .set(encodeUpdate(updates))
+        .where(eq(songTable.id, id))
+        .returning(PROJECTION),
+  );
   return row === undefined ? null : rowToSong(row);
 }
 
-export async function deleteSongWithCascade(id: string): Promise<DeletionOutcome> {
-  const database = getDatabase();
-  return await database.transaction(async (transaction) => {
+export async function didClaimSongWithin(
+  executor: DatabaseExecutor,
+  songId: string,
+): Promise<boolean> {
+  const claimed = await executor
+    .update(songTable)
+    .set({ title: sql`${songTable.title}` })
+    .where(eq(songTable.id, songId))
+    .returning({ id: songTable.id });
+  return claimed.length > 0;
+}
+
+export interface SongDeletion {
+  readonly outcome: DeletionOutcome;
+  readonly takeObjectKeys: readonly string[];
+}
+
+export async function deleteSongWithCascade(id: string): Promise<SongDeletion> {
+  return await runInOneSongTransaction(async (transaction) => {
+    const deleted = await transaction
+      .delete(songTable)
+      .where(eq(songTable.id, id))
+      .returning({ id: songTable.id });
     await transaction.delete(masteryOverrideTable).where(eq(masteryOverrideTable.songId, id));
     await deleteScoreHistoryOfDeletedSong(transaction, id);
     await deleteStudiesOfDeletedSong(transaction, id);
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.songId, id));
     await deleteVotesOfDeletedSong(transaction, id);
     await detachTasksOfSongBeingDeleted(transaction, id);
-    const deleted = await transaction
-      .delete(songTable)
-      .where(eq(songTable.id, id))
-      .returning({ id: songTable.id });
-    return selectDeletionOutcome(deleted.length);
+    const takeObjectKeys = await deleteTakesOfDeletedSong(transaction, id);
+    return { outcome: selectDeletionOutcome(deleted.length), takeObjectKeys };
   });
 }
