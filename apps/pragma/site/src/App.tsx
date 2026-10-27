@@ -15,6 +15,7 @@ import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
 import { RecoverPage } from './routes/RecoverPage';
 import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
+import { ConsentPage } from './routes/oauth/ConsentPage';
 import { TasksPage } from './routes/tasks/TasksPage';
 import { StudiesPage } from './routes/studies/StudiesPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
@@ -37,6 +38,7 @@ export function App(): JSX.Element {
           <Route path="/vote" element={<VotePage />} />
           <Route path="/vote/:sessionId" element={<VotePage />} />
           <Route element={<RequireSession />}>
+            <Route path="/oauth/consent" element={<ConsentPage />} />
             <Route path="/catalog/:songId/scene" element={<SongScenePage />} />
             <Route path="/setlists/:setlistId/scene" element={<SetlistScenePage />} />
             <Route element={<AppShell />}>

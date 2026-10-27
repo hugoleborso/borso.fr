@@ -13,6 +13,11 @@ describe('selectPostLoginPath', () => {
     expect(selectPostLoginPath({ from: '/bars' })).toBe('/bars');
   });
 
+  it('keeps the query string of the page the guard bounced the visitor from', () => {
+    const consentAddress = '/oauth/consent?client_id=abc&state=xyz';
+    expect(selectPostLoginPath({ from: consentAddress })).toBe(consentAddress);
+  });
+
   it('falls back to the catalog when the state carries no origin', () => {
     expect(selectPostLoginPath({})).toBe(DEFAULT_POST_LOGIN_PATH);
   });

@@ -2,6 +2,7 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AssistantConnections } from './AssistantConnections';
 import { CalendarFeedCard } from './CalendarFeedCard';
 import { ContactDetailsCard } from './ContactDetailsCard';
 import { NotificationSettings } from './NotificationSettings';
@@ -21,6 +22,7 @@ export function AccountSettings(): JSX.Element {
       <ContactDetailsCard />
       <CalendarFeedCard />
       <NotificationSettings />
+      <AssistantConnections />
       <PasswordChangeCard />
       <PasskeysCard />
     </section>

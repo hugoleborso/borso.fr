@@ -1,3 +1,4 @@
+import { randomBytes, randomUUID } from 'node:crypto';
 import type { Lineup } from '@domain/lineup.core';
 import { bootstrapAuth, resetAllRateLimits, rotatePassword } from '../auth/auth.service';
 import { createCredentialForMember } from '../auth/credentials.service';
@@ -8,6 +9,7 @@ import type { WriteActor } from '../notifications/notifications.service';
 import { createSession } from '../sessions/sessions.service';
 import { appendEntry, createSetlist } from '../setlists/setlists.service';
 import { createSong } from '../songs/songs.service';
+import { hashToken, selectTokenExpiries } from '../oauth/token.core';
 import { createTask } from '../tasks/tasks.service';
 import { saveTransitionComment } from '../transitions/transitions.service';
 import {
@@ -22,6 +24,7 @@ import { countSavedFeeds, listFixtureFeedAttachments } from './calendar-feed-fix
 
 export { answerFixtureFeedRequest } from './calendar-feed-fixtures.core';
 import { SEED_TASKS } from './test-seed-task-board.core';
+import { SEED_ASSISTANT_GRANT } from './test-seed-assistant-grant.core';
 import {
   buildSeedLineup,
   selectAdminCredentialsState,
@@ -29,7 +32,11 @@ import {
   selectPrimaryInstrumentIds,
 } from './test-seed.core';
 import { classifySchemaBoundary, type SchemaBoundary } from './schema-boundary.core';
-import { deleteAllDomainRows, tryReadingProductionMembers } from './test-seed.repository';
+import {
+  deleteAllDomainRows,
+  insertSeedAssistantGrant,
+  tryReadingProductionMembers,
+} from './test-seed.repository';
 
 const CONCERT_DAYS_FROM_NOW = 7;
 const HOURS_PER_DAY = 24;
@@ -43,6 +50,9 @@ const CONCERT_VENUE = 'Le Petit Bain';
 const CONCERT_GEAR = 'Backline fournie, deux retours';
 const SEED_ADMIN_PASSWORD = 'pragma-preview';
 const SEED_SETLIST_NAME = 'Set principal';
+const SEED_TOKEN_BYTES = 32;
+const MILLISECONDS_PER_MINUTE = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
+const SEED_GRANT_SESSION_EPOCH = 0;
 
 type SongCreateInput = Parameters<typeof createSong>[0];
 
@@ -80,6 +90,7 @@ export interface SeedSummary {
   readonly adminPassword: string;
   readonly adminCredentials: 'created' | 'already-set';
   readonly calendarFeeds: number;
+  readonly assistantClientId: string;
 }
 
 async function seedCalendarFeeds(
@@ -212,6 +223,41 @@ async function seedTransitionComment(songIds: readonly string[], actor: WriteAct
   await saveTransitionComment(songB, songC, SEED_TRANSITION_COMMENT, actor);
 }
 
+function mintSeedTokenHash(): string {
+  return hashToken(randomBytes(SEED_TOKEN_BYTES).toString('base64url'));
+}
+
+async function seedAssistantGrant(
+  memberIdByName: ReadonlyMap<string, string>,
+  now: Date,
+): Promise<string> {
+  const memberId = memberIdByName.get(SEED_ASSISTANT_GRANT.memberFirstName);
+  if (memberId === undefined) throw new Error('the seeded assistant grant names no seeded member');
+  const clientId = randomUUID();
+  await insertSeedAssistantGrant({
+    client: {
+      id: clientId,
+      name: SEED_ASSISTANT_GRANT.clientName,
+      redirectUris: JSON.stringify([SEED_ASSISTANT_GRANT.redirectUri]),
+      createdAt: now,
+    },
+    grant: {
+      id: randomUUID(),
+      clientId,
+      memberId,
+      refreshTokenHash: mintSeedTokenHash(),
+      accessTokenHash: mintSeedTokenHash(),
+      sessionEpoch: SEED_GRANT_SESSION_EPOCH,
+      createdAt: now,
+      lastUsedAt: new Date(
+        now.getTime() - SEED_ASSISTANT_GRANT.lastUsedMinutesAgo * MILLISECONDS_PER_MINUTE,
+      ),
+      ...selectTokenExpiries(now),
+    },
+  });
+  return clientId;
+}
+
 export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise<SeedSummary> {
   await deleteAllDomainRows();
   const bootstrap = await bootstrapAuth(SEED_ADMIN_PASSWORD, now);
@@ -227,6 +273,7 @@ export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise
   await seedConcertSetlist(songIds, seedActor);
   await seedTransitionComment(songIds, seedActor);
   const calendarFeeds = await seedCalendarFeeds(memberIdByName, feedOrigin, now);
+  const assistantClientId = await seedAssistantGrant(memberIdByName, now);
 
   return {
     instruments: SEED_INSTRUMENTS.length,
@@ -237,6 +284,7 @@ export async function seedPreviewFixture(now: Date, feedOrigin: string): Promise
     adminPassword: SEED_ADMIN_PASSWORD,
     adminCredentials: selectAdminCredentialsState(bootstrap.kind),
     calendarFeeds,
+    assistantClientId,
   };
 }
 
