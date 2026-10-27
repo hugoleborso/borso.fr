@@ -12,7 +12,7 @@ or, as a last resort, runs later. It is never exempted.
 | A per-file check on the commit, oxfmt included | 300 ms, plus 20 ms per staged file past the first | the same | the hook itself |
 | oxlint on the commit | 3 s, plus 100 ms per staged file past the first | the same | the hook itself |
 | The tooling type check on the commit | 2.5 s | the same | the hook itself |
-| The whole-tree generators on the commit, one process | 1 s, plus 250 ms per generator past the first | the same | the hook itself |
+| The node checks on the commit, in one process | 1 s, plus 250 ms per check past the first | the same | the hook itself |
 | The whole pre-commit hook | 3 s on a typical commit | wall clock, on a machine nothing else uses | CI's `pre-commit-budget` job, on a fixture commit |
 | The pre-push hook | 60 s for a change confined to one application | wall clock | not gated yet; see the last section |
 | CI on a pull request | 10 min | wall clock of the slowest job | `timeout-minutes: 10` on every job of `ci.yml` |
@@ -86,9 +86,10 @@ from a measurement on 2026-10-27, and each still held by the hook:
   component, 2.3 s for one and about 0.1 s for each further one.
 - **The tooling type check** is a whole program: 1.5 to 2.1 s of CPU, 1 s of
   wall time.
-- **The whole-tree generators** run in one node process,
-  `scripts/standards/run-generator-checks.ts`, which imports each queued
-  generator in turn with its own arguments, keeps its own exit status, and
+- **The node checks**, the whole-tree generators and the checks written in
+  TypeScript (doc links, the dependency catalog, the PR template), run in one
+  node process, `scripts/standards/run-node-checks.ts`, which imports each
+  queued check in turn with its own arguments, keeps its own exit status, and
   prints its own verdict and CPU on a line of its own. Eight of them took
   1.4 s of CPU together, against 2.2 s as eight processes, because node, the
   TypeScript resolver and the modules they share load once. The budget is the
@@ -108,9 +109,9 @@ there would refuse commits for what the neighbours are doing.
 So the hook reads each check's CPU with `times`, inside the subshell that ran
 it, which counts that check and everything it started and nothing else. The
 checks run side by side, two per core, and their output is printed in order
-once they have all finished. oxlint, the tooling type check and the generator
-process are the longest, so every other check runs at a lower priority and
-yields the CPU to them. On two cores, the closest this machine gets to CI's
+once they have all finished. oxlint, the tooling type check and the node-check
+process are the longest, so every other check runs at the lowest priority,
+`nice` 19, and yields the CPU to them. On two cores, the closest this machine gets to CI's
 runner, the fixture commit takes 2.4 to 2.6 s.
 
 A check triggers only on the files it reads. The tooling type check used to

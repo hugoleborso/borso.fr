@@ -30,8 +30,8 @@ FILE_BUDGET_PER_EXTRA_FILE_MS=20
 LINT_BUDGET_MS=3000
 LINT_BUDGET_PER_EXTRA_FILE_MS=100
 TYPECHECK_BUDGET_MS=2500
-GENERATOR_BUDGET_MS=1000
-GENERATOR_BUDGET_PER_EXTRA_MS=250
+NODE_CHECK_BUDGET_MS=1000
+NODE_CHECK_BUDGET_PER_EXTRA_MS=250
 
 # Every path the commit adds, changes or removes, one per line as
 # `<status> <path>`, with a rename split into the removal of its old path and
@@ -61,8 +61,8 @@ fi
 # so a failure reads the same as it did when they ran one after another.
 cores=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
 max_parallel=$((cores * 2))
-LONGEST_CHECKS='oxlint typecheck-tooling generators'
-SHORT_CHECK_NICENESS=10
+LONGEST_CHECKS='oxlint typecheck-tooling node-checks'
+SHORT_CHECK_NICENESS=19
 running=''
 launched=0
 checks_skipped=0
@@ -199,16 +199,17 @@ run_oxlint() {
     --report-unused-disable-directives-severity=off
 }
 
-# run_generator_check <name> <scope> <script…>: a whole-tree generator in check
-# mode, queued when the commit touches its scope. The queued generators then
-# run in one node process, scripts/standards/run-generator-checks.ts, which
-# imports each in turn with its own arguments and prints each one's verdict and
-# CPU on its own line. One process loads node, the TypeScript resolver and the
-# modules the generators share once: eight generators measured 1.4 s of CPU
-# together on 2026-10-27, against 2.2 s as eight processes.
-generator_jobs=''
-generator_count=0
-run_generator_check() {
+# queue_node_check <name> <scope> <script…>: a check written in TypeScript, a
+# whole-tree generator in check mode or a node script, queued when the commit
+# touches its scope. The queued checks then run in one node process,
+# scripts/standards/run-node-checks.ts, which imports each in turn with its own
+# arguments and prints each one's verdict and CPU on its own line. One process
+# loads node, the TypeScript resolver and the modules the checks share once:
+# eight generators measured 1.4 s of CPU together on 2026-10-27, against 2.2 s
+# as eight processes.
+node_check_jobs=''
+node_check_count=0
+queue_node_check() {
   name="$1"
   scope="$2"
   shift 2
@@ -216,24 +217,24 @@ run_generator_check() {
     checks_skipped=$((checks_skipped + 1))
     return 0
   fi
-  generator_jobs="${generator_jobs}${name}=$*
+  node_check_jobs="${node_check_jobs}${name}=$*
 "
-  generator_count=$((generator_count + 1))
+  node_check_count=$((node_check_count + 1))
 }
 
-run_generator_batch() {
+run_node_checks() {
   IFS='
 '
   set -f
   # shellcheck disable=SC2086
-  node --import ./scripts/typescript-resolve.mjs scripts/standards/run-generator-checks.ts $generator_jobs
+  node --import ./scripts/typescript-resolve.mjs scripts/standards/run-node-checks.ts $node_check_jobs
 }
 
-launch_generators() {
-  [ "$generator_count" -gt 0 ] || return 0
-  launch generators \
-    $((GENERATOR_BUDGET_MS + (generator_count - 1) * GENERATOR_BUDGET_PER_EXTRA_MS)) \
-    run_generator_batch
+launch_node_checks() {
+  [ "$node_check_count" -gt 0 ] || return 0
+  launch node-checks \
+    $((NODE_CHECK_BUDGET_MS + (node_check_count - 1) * NODE_CHECK_BUDGET_PER_EXTRA_MS)) \
+    run_node_checks
 }
 
 # The two lines `times` writes, the subshell's own and its children's, as one
@@ -283,35 +284,51 @@ fi
 # context lookup is not a gate; it is regenerated so a blueprint added this
 # session seeds the next write.
 blueprint_scope='^. ([^ ]*\.(js|jsx|ts|tsx|mjs|cjs)|\.claude/skills/blueprint/.*)$'
-run_generator_check blueprint-index "$blueprint_scope" \
+queue_node_check blueprint-index "$blueprint_scope" \
   .claude/skills/blueprint/blueprint-indexing.ts --check
-run_generator_check blueprint-context "$blueprint_scope" \
+queue_node_check blueprint-context "$blueprint_scope" \
   .claude/skills/blueprint/blueprint-context.ts
-run_generator_check convention-drift "$blueprint_scope" \
+queue_node_check convention-drift "$blueprint_scope" \
   scripts/standards/convention-drift.ts --check
 
 # The defect page reads the dantotsu corpus as well as the source tree.
-run_generator_check blueprint-defects '^. (apps/|infra/|docs/dantotsus/)' \
+queue_node_check blueprint-defects '^. (apps/|infra/|docs/dantotsus/)' \
   scripts/blueprints/blueprint-defects.ts --check
 
 # The dantotsu record and the two weak-point pages read from it. A rename or a
 # deletion anywhere can orphan a zone or an eradication path, so those trigger
 # the run too. See docs/adr/0029-weak-point-management-from-the-dantotsu-record.md.
 dantotsu_scope='^. (docs/dantotsus/|docs/quality/|docs/features/|scripts/quality/)|^D '
-run_generator_check dantotsu-front-matter "$dantotsu_scope" \
+queue_node_check dantotsu-front-matter "$dantotsu_scope" \
   scripts/quality/check-dantotsu-front-matter.ts --staged
-run_generator_check weak-points "$dantotsu_scope" scripts/quality/weak-points.ts --check
-run_generator_check working-conditions "$dantotsu_scope" \
+queue_node_check weak-points "$dantotsu_scope" scripts/quality/weak-points.ts --check
+queue_node_check working-conditions "$dantotsu_scope" \
   scripts/quality/working-conditions.ts --check
 
 # The enforcement ledger, whenever a standard or a mechanism it can cite
 # changed. It reads .oxlintrc.json directly: 0.5 s of CPU, where building an
 # ESLint instance to ask for each probe's configuration took 6.4 s.
-run_generator_check enforcement-ledger \
+queue_node_check enforcement-ledger \
   '^. (docs/standards/|eslint-rules/|\.oxlintrc\.json$|\.husky/|\.github/workflows/|scripts/(.*/)?check-)' \
   scripts/standards/enforcement-ledger.ts --check
 
-launch_generators
+# One version per dependency lives in pnpm-workspace.yaml.
+queue_node_check dependency-catalog '^. ((.*/)?package\.json|pnpm-workspace\.yaml)$' \
+  scripts/dependencies/check-dependency-catalog.ts
+
+# The template a PR body is drafted from fits the budget the same script
+# enforces on the body.
+queue_node_check pr-body-template '^. (plugins/borso-harness/skills/open-pr/template\.md|scripts/pr/)' \
+  scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
+
+# A document that links a file which is not there. `--staged` reads the staged
+# documents and every document naming a path the commit removes; a link to a
+# generated, gitignored report is judged in ci.yml, after the generators run,
+# because a checkout that never ran them has nothing to judge it against. See
+# docs/dantotsus/the-hook-checked-links-to-files-it-declined-to-build.md.
+queue_node_check doc-links '\.md$|^D ' scripts/docs/check-doc-links.ts --staged
+
+launch_node_checks
 
 # DSQL compatibility of staged migration SQL. Rung-2 eradication of
 # docs/dantotsus/dsql-alter-table-only-add-column.md.
@@ -353,12 +370,10 @@ run_check dated-records '^. docs/' scripts/check-dated-records-are-append-only.s
 # Every staged file, and nothing else; ci.yml reads the whole tree.
 run_check_on_files no-null-bytes '.' scripts/check-no-null-bytes.sh
 
-# A dependency bump can rewrite a script into a version, and one version per
-# dependency lives in pnpm-workspace.yaml.
+# A dependency bump can rewrite a script into a version. The one version per
+# dependency in pnpm-workspace.yaml is checked with the node checks above.
 run_check_on_files package-scripts-are-commands 'package\.json$' \
   scripts/check-package-scripts-are-commands.sh
-run_check dependency-catalog '^. ((.*/)?package\.json|pnpm-workspace\.yaml)$' \
-  node --import ./scripts/typescript-resolve.mjs scripts/dependencies/check-dependency-catalog.ts
 
 # A `VITE_*` variable a site reads and no workflow sets is a feature that never
 # runs. Rung-2 eradication of
@@ -370,26 +385,12 @@ run_check frontend-env-vars '^. (apps/[^/]+/site/|\.github/workflows/)' \
 # applications whose site the commit touches.
 run_check_on_files pwa-assets '^apps/[^/]+/site/' scripts/check-pwa-assets.sh
 
-# The template a PR body is drafted from fits the budget the same script
-# enforces on the body.
-run_check pr-body-template '^. (plugins/borso-harness/skills/open-pr/template\.md|scripts/pr/)' \
-  node --import ./scripts/typescript-resolve.mjs scripts/pr/check-pr-body.ts \
-  plugins/borso-harness/skills/open-pr/template.md
-
 # A knowledge entry saying a tool is broken carries a date, and every entry
 # declares the moment a hook delivers it. See
 # docs/adr/0030-knowledge-is-delivered-by-trigger.md.
 run_check_on_files negative-claims-are-dated '^docs/knowledge/.*\.md$' \
   scripts/check-negative-claims-are-dated.sh
 run_check knowledge-triggers '^. docs/knowledge/' scripts/check-knowledge-triggers.sh
-
-# A document that links a file which is not there. `--staged` reads the staged
-# documents and every document naming a path the commit removes; a link to a
-# generated, gitignored report is judged in ci.yml, after the generators run,
-# because a checkout that never ran them has nothing to judge it against. See
-# docs/dantotsus/the-hook-checked-links-to-files-it-declined-to-build.md.
-run_check doc-links '\.md$|^D ' \
-  node --import ./scripts/typescript-resolve.mjs scripts/docs/check-doc-links.ts --staged
 
 # A pure module whose only consumer is its own test scores 100% on coverage and
 # mutation while running nowhere. Rung-2 eradication of
