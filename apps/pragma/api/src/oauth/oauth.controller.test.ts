@@ -646,6 +646,30 @@ describe('oauth controller (back-e2e)', () => {
     expect(await countGrants()).toBe(0);
   });
 
+  it('stops listing the grants of a member who changes password before any assistant calls again', async () => {
+    const { app } = buildHarness();
+    const member = await signInMember(app, 'Hugo');
+    const clientId = await registerClient(app);
+    await issueTokens(app, clientId, member);
+
+    const changed = await jsonRequest(app, '/api/me/password', {
+      method: 'PUT',
+      body: { currentPassword: TEST_PASSWORD, newPassword: 'another-horse-battery' },
+      cookieHeader: member.cookieHeader,
+    });
+    const renewedCookie = extractSessionCookie(changed);
+    const listed = await readJson(
+      await jsonRequest(app, '/api/assistant-grants', {
+        cookieHeader: `${SESSION_COOKIE_NAME}=${renewedCookie ?? ''}`,
+      }),
+      grantsSchema,
+    );
+
+    expect(changed.status).toBe(200);
+    expect(renewedCookie).not.toBeNull();
+    expect(listed.grants).toEqual([]);
+  });
+
   it('revokes a grant for a client that presents its token, and answers 200 for an unknown one', async () => {
     const { app } = buildHarness();
     const member = await signInMember(app, 'Hugo');

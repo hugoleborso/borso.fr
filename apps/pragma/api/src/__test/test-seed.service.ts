@@ -1,7 +1,7 @@
 import { randomBytes, randomUUID } from 'node:crypto';
 import type { Lineup } from '@domain/lineup.core';
 import { bootstrapAuth, resetAllRateLimits, rotatePassword } from '../auth/auth.service';
-import { createCredentialForMember } from '../auth/credentials.service';
+import { createCredentialForMember, readCredentialOfMember } from '../auth/credentials.service';
 import { saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
 import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
@@ -52,7 +52,6 @@ const SEED_ADMIN_PASSWORD = 'pragma-preview';
 const SEED_SETLIST_NAME = 'Set principal';
 const SEED_TOKEN_BYTES = 32;
 const MILLISECONDS_PER_MINUTE = SECONDS_PER_MINUTE * MILLISECONDS_PER_SECOND;
-const SEED_GRANT_SESSION_EPOCH = 0;
 
 type SongCreateInput = Parameters<typeof createSong>[0];
 
@@ -233,6 +232,9 @@ async function seedAssistantGrant(
 ): Promise<string> {
   const memberId = memberIdByName.get(SEED_ASSISTANT_GRANT.memberFirstName);
   if (memberId === undefined) throw new Error('the seeded assistant grant names no seeded member');
+  const credential = await readCredentialOfMember(memberId);
+  if (credential === null)
+    throw new Error('the seeded assistant grant names a member with no credential');
   const clientId = randomUUID();
   await insertSeedAssistantGrant({
     client: {
@@ -248,7 +250,7 @@ async function seedAssistantGrant(
       refreshFamilyHash: mintSeedTokenHash(),
       refreshTokenHash: mintSeedTokenHash(),
       accessTokenHash: mintSeedTokenHash(),
-      sessionEpoch: SEED_GRANT_SESSION_EPOCH,
+      sessionEpoch: credential.sessionEpoch,
       createdAt: now,
       lastUsedAt: new Date(
         now.getTime() - SEED_ASSISTANT_GRANT.lastUsedMinutesAgo * MILLISECONDS_PER_MINUTE,

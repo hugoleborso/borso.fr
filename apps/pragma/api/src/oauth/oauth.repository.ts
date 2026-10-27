@@ -1,5 +1,6 @@
 import { and, desc, eq, lt, notExists, or } from 'drizzle-orm';
 import { z } from 'zod';
+import { memberCredentialTable } from '../auth/credentials.schema';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { memberTable } from '../members/members.schema';
 import {
@@ -232,6 +233,13 @@ export async function listGrantsOfMember(memberId: string): Promise<AssistantGra
     })
     .from(assistantGrantTable)
     .innerJoin(assistantClientTable, eq(assistantClientTable.id, assistantGrantTable.clientId))
+    .innerJoin(
+      memberCredentialTable,
+      and(
+        eq(memberCredentialTable.memberId, assistantGrantTable.memberId),
+        eq(memberCredentialTable.sessionEpoch, assistantGrantTable.sessionEpoch),
+      ),
+    )
     .where(eq(assistantGrantTable.memberId, memberId))
     .orderBy(desc(assistantGrantTable.createdAt));
 }
