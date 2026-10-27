@@ -229,6 +229,10 @@ decision.
 
 - [`race-end-signal-duality.md`](./race-end-signal-duality.md) — two end-of-race signals (`edition.status === 'finished'` admin intent, `standings.raceEnded` engine truth) and which call sites should consume which.
 
+### talos
+
+- [`talos-has-two-contracts.md`](./talos-has-two-contracts.md) — `apps/talos/CONTRAT.md` is the PWA API and file formats; `apps/talos/MEMORY-CONTRACT.md` is the frozen memory API behind `talos.py contexte`, and the one « contrat API mémoire » names. Neither is under `docs/`.
+
 ### borsouvertures / chess libraries
 
 - [`lichess-openings-dataset-identity-and-matching.md`](./lichess-openings-dataset-identity-and-matching.md) — the source reuses one name across several lines, so identity needs the move sequence; and a `FAMILIES` entry that matches nothing shrinks the dataset silently (prefix shadowing, typographic apostrophe).
