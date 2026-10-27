@@ -7,6 +7,13 @@ import {
   type LintConfiguration,
 } from './lint-configuration.core';
 
+const EMPTY_CONFIGURATION: LintConfiguration = {
+  plugins: [],
+  jsPlugins: [],
+  rules: {},
+  overrides: [],
+};
+
 const CONFIGURATION: LintConfiguration = {
   plugins: ['unicorn'],
   jsPlugins: [{ name: 'borso', specifier: './eslint-rules/index.js' }],
@@ -19,14 +26,17 @@ const CONFIGURATION: LintConfiguration = {
   },
   overrides: [
     {
-      files: ['**/*.ts'],
+      files: ['**/*.ts', '**/*.mts'],
       plugins: ['typescript'],
       rules: { 'typescript/no-unsafe-call': 'error' },
     },
-    { files: ['**/*.test.ts'], rules: { 'no-magic-numbers': 'off' } },
-    { files: ['apps/*/site/**/*.tsx'], plugins: ['react'], rules: { 'react/exhaustive-deps': 1 } },
-    { files: ['scripts/**/*.ts'], rules: { 'typescript/no-unsafe-call': ['allow'] } },
-    { files: ['**/*.js'], plugins: ['import'] },
+    { files: ['**/*.test.ts'], plugins: [], rules: { 'no-magic-numbers': 'off' } },
+    {
+      files: ['apps/*/site/**/*.tsx'],
+      plugins: ['react'],
+      rules: { 'react/exhaustive-deps': 1 },
+    },
+    { files: ['scripts/**/*.ts'], plugins: [], rules: { 'typescript/no-unsafe-call': ['allow'] } },
   ],
 };
 
@@ -49,6 +59,12 @@ describe('listActiveRules', () => {
     ]);
   });
 
+  it('applies an override when any one of its patterns matches', () => {
+    expect(listActiveRules(CONFIGURATION, 'apps/pragma/api/src/probe.mts', matchesGlob)).toContain(
+      'typescript/no-unsafe-call',
+    );
+  });
+
   it('lets a later override turn a rule off, by word or by number in an array', () => {
     expect(listActiveRules(CONFIGURATION, 'scripts/probe.test.ts', matchesGlob)).toEqual([
       'borso/no-comments',
@@ -64,20 +80,18 @@ describe('listActiveRules', () => {
   });
 
   it('enables a plugin from an override that sets no rule, for the base rules it carries', () => {
-    expect(
-      listActiveRules(
-        {
-          rules: { 'import/no-cycle': 'error' },
-          overrides: [{ files: ['**/*.js'], plugins: ['import'] }],
-        },
-        'eslint-rules/probe.js',
-        matchesGlob,
-      ),
-    ).toEqual(['import/no-cycle']);
+    const configuration: LintConfiguration = {
+      ...EMPTY_CONFIGURATION,
+      rules: { 'import/no-cycle': 'error' },
+      overrides: [{ files: ['**/*.js'], plugins: ['import'], rules: {} }],
+    };
+    expect(listActiveRules(configuration, 'eslint-rules/probe.js', matchesGlob)).toEqual([
+      'import/no-cycle',
+    ]);
   });
 
   it('reads a configuration with nothing in it as no rule at all', () => {
-    expect(listActiveRules({}, 'scripts/probe.ts', matchesGlob)).toEqual([]);
+    expect(listActiveRules(EMPTY_CONFIGURATION, 'scripts/probe.ts', matchesGlob)).toEqual([]);
   });
 });
 
@@ -114,11 +128,19 @@ describe('readConfiguredRuleName', () => {
     expect(readConfiguredRuleName('eslint(no-magic-numbers)')).toBe('no-magic-numbers');
   });
 
-  it('reads no rule from a diagnostic that has no code, such as an unused directive', () => {
-    expect(readConfiguredRuleName(undefined)).toBeNull();
+  it('reads a plugin whose name is a single letter', () => {
+    expect(readConfiguredRuleName('x(rule)')).toBe('x/rule');
   });
 
   it('reads no rule from a code that is not in the plugin(rule) shape', () => {
     expect(readConfiguredRuleName('parse error')).toBeNull();
+  });
+
+  it('reads no rule from a code with no plugin before the parenthesis', () => {
+    expect(readConfiguredRuleName('(no-magic-numbers)')).toBeNull();
+  });
+
+  it('reads no rule from a code whose parenthesis never closes', () => {
+    expect(readConfiguredRuleName('typescript(no-explicit-any')).toBeNull();
   });
 });

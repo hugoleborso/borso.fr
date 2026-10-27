@@ -2,8 +2,8 @@ export type RuleSetting = unknown;
 
 export interface LintOverride {
   readonly files: readonly string[];
-  readonly plugins?: readonly string[];
-  readonly rules?: Readonly<Record<string, RuleSetting>>;
+  readonly plugins: readonly string[];
+  readonly rules: Readonly<Record<string, RuleSetting>>;
 }
 
 export interface JavaScriptPluginEntry {
@@ -12,17 +12,18 @@ export interface JavaScriptPluginEntry {
 }
 
 export interface LintConfiguration {
-  readonly plugins?: readonly string[];
-  readonly jsPlugins?: readonly JavaScriptPluginEntry[];
-  readonly rules?: Readonly<Record<string, RuleSetting>>;
-  readonly overrides?: readonly LintOverride[];
+  readonly plugins: readonly string[];
+  readonly jsPlugins: readonly JavaScriptPluginEntry[];
+  readonly rules: Readonly<Record<string, RuleSetting>>;
+  readonly overrides: readonly LintOverride[];
 }
 
 export type GlobMatcher = (path: string, pattern: string) => boolean;
 
 const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 'allow', 0]);
 const CORE_RULE_PREFIX = 'eslint';
-const DIAGNOSTIC_CODE = /^(?<plugin>.+)\((?<rule>[^()]+)\)$/;
+const OPENING_PARENTHESIS = '(';
+const CLOSING_PARENTHESIS = ')';
 const CONFIGURED_PLUGIN_BY_REPORTED_PLUGIN: ReadonlyMap<string, string> = new Map([
   ['react-hooks', 'react'],
 ]);
@@ -42,13 +43,13 @@ export function listActiveRules(
   path: string,
   isMatch: GlobMatcher,
 ): readonly string[] {
-  const settings = new Map<string, RuleSetting>(Object.entries(configuration.rules ?? {}));
-  const plugins = new Set<string>([CORE_RULE_PREFIX, ...(configuration.plugins ?? [])]);
-  for (const entry of configuration.jsPlugins ?? []) plugins.add(entry.name);
-  for (const override of configuration.overrides ?? []) {
+  const settings = new Map<string, RuleSetting>(Object.entries(configuration.rules));
+  const plugins = new Set<string>([CORE_RULE_PREFIX, ...configuration.plugins]);
+  for (const entry of configuration.jsPlugins) plugins.add(entry.name);
+  for (const override of configuration.overrides) {
     if (!override.files.some((pattern) => isMatch(path, pattern))) continue;
-    for (const plugin of override.plugins ?? []) plugins.add(plugin);
-    for (const [ruleName, setting] of Object.entries(override.rules ?? {})) {
+    for (const plugin of override.plugins) plugins.add(plugin);
+    for (const [ruleName, setting] of Object.entries(override.rules)) {
       settings.set(ruleName, setting);
     }
   }
@@ -58,11 +59,12 @@ export function listActiveRules(
     .sort();
 }
 
-export function readConfiguredRuleName(diagnosticCode: string | undefined): string | null {
-  if (diagnosticCode === undefined) return null;
-  const groups = DIAGNOSTIC_CODE.exec(diagnosticCode)?.groups;
-  if (groups?.plugin === undefined || groups.rule === undefined) return null;
-  if (groups.plugin === CORE_RULE_PREFIX) return groups.rule;
-  const plugin = CONFIGURED_PLUGIN_BY_REPORTED_PLUGIN.get(groups.plugin) ?? groups.plugin;
-  return `${plugin}/${groups.rule}`;
+export function readConfiguredRuleName(diagnosticCode: string): string | null {
+  const opening = diagnosticCode.indexOf(OPENING_PARENTHESIS);
+  if (opening < 1 || !diagnosticCode.endsWith(CLOSING_PARENTHESIS)) return null;
+  const reportedPlugin = diagnosticCode.slice(0, opening);
+  const rule = diagnosticCode.slice(opening + 1, -1);
+  if (reportedPlugin === CORE_RULE_PREFIX) return rule;
+  const plugin = CONFIGURED_PLUGIN_BY_REPORTED_PLUGIN.get(reportedPlugin) ?? reportedPlugin;
+  return `${plugin}/${rule}`;
 }

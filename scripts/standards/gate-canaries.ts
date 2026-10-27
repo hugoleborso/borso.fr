@@ -111,7 +111,9 @@ function runLintCanaries(
     const typeAwareFlag = typeAwareRules.has(canary.mechanism) ? ['--type-aware'] : [];
     const run = workspace.run([OXLINT, '--format', 'json', ...typeAwareFlag, canary.path]);
     const diagnostics = readLintReport(run.output).diagnostics;
-    const reported = diagnostics.map((diagnostic) => readConfiguredRuleName(diagnostic.code));
+    const reported = diagnostics.map((diagnostic) =>
+      diagnostic.code === undefined ? null : readConfiguredRuleName(diagnostic.code),
+    );
     const fatal = diagnostics
       .filter((diagnostic) => diagnostic.code === undefined)
       .map((diagnostic) => diagnostic.message);

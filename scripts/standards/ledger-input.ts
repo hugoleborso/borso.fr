@@ -86,18 +86,18 @@ function listProbes(): readonly Probe[] {
 const RULE_SETTINGS = z.record(z.string(), z.unknown());
 
 const LINT_CONFIGURATION = z.object({
-  plugins: z.array(z.string()).optional(),
-  jsPlugins: z.array(z.object({ name: z.string(), specifier: z.string() })).optional(),
-  rules: RULE_SETTINGS.optional(),
+  plugins: z.array(z.string()).default([]),
+  jsPlugins: z.array(z.object({ name: z.string(), specifier: z.string() })).default([]),
+  rules: RULE_SETTINGS.default({}),
   overrides: z
     .array(
       z.object({
         files: z.array(z.string()),
-        plugins: z.array(z.string()).optional(),
-        rules: RULE_SETTINGS.optional(),
+        plugins: z.array(z.string()).default([]),
+        rules: RULE_SETTINGS.default({}),
       }),
     )
-    .optional(),
+    .default([]),
 });
 
 export function readLintConfiguration(): LintConfiguration {
