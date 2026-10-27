@@ -10,10 +10,10 @@ or, as a last resort, runs later. It is never exempted.
 | --- | --- | --- | --- |
 | One pre-commit check | 300 ms | CPU time of the check and everything it starts | the hook itself, on every commit |
 | A per-file check on the commit, oxfmt included | 300 ms, plus 20 ms per staged file past the first | the same | the hook itself |
-| oxlint on the commit | 3 s, plus 100 ms per staged file past the first | the same | the hook itself |
+| oxlint on the commit, type-aware | 5 s, plus 1.5 s per staged file past the first | the same | the hook itself |
 | The tooling type check on the commit | 2.5 s | the same | the hook itself |
 | The node checks on the commit, in one process | 1 s, plus 250 ms per check past the first | the same | the hook itself |
-| The whole pre-commit hook | 3 s on a typical commit | wall clock, on a machine nothing else uses | CI's `pre-commit-budget` job, on a fixture commit |
+| The whole pre-commit hook | 3.5 s on a typical commit | wall clock, on a machine nothing else uses | CI's `pre-commit-budget` job, on a fixture commit |
 | The pre-push hook | 60 s for a change confined to one application | wall clock | not gated yet; see the last section |
 | CI on a pull request | 10 min | wall clock of the slowest job | `timeout-minutes: 10` on every job of `ci.yml` |
 | One application's unit suite | 30 s | wall clock | not gated yet; see the last section |
@@ -81,9 +81,12 @@ the checks that had left the commit came back.
 Three tools have a named budget rather than the 300 ms of a check, each set
 from a measurement on 2026-10-27, and each still held by the hook:
 
-- **oxlint** loads its JavaScript plugins on every run, 0.9 s of CPU for one
-  script, and `eslint-plugin-react-hooks` runs the React Compiler on each
-  component, 2.3 s for one and about 0.1 s for each further one.
+- **oxlint** loads its JavaScript plugins on every run and builds a
+  TypeScript program of the staged files for the type-aware rules: 1.8 s of
+  CPU for one script, 3.9 to 4.8 s for one pragma component or service, and
+  1.1 to 1.5 s more for each further file, most of it the React Compiler that
+  `eslint-plugin-react-hooks` runs on each component. Measured on a four-core
+  machine other agents were also using.
 - **The tooling type check** is a whole program. On four threads it took
   2.1 to 2.8 s of CPU and 0.9 s of wall time; with `--singleThreaded` it takes
   1.3 s of CPU and 1.1 s of wall time, so the hook runs it on one thread.
@@ -96,9 +99,20 @@ from a measurement on 2026-10-27, and each still held by the hook:
   TypeScript resolver and the modules they share load once. The budget is the
   process's; each line says which generator spent it.
 
-The type-aware lint rules are the one check that stays off the commit: one
-pragma file needs 2.9 s of wall time and 8 s of CPU for its program, past the
-3 s a commit may take. They run on push and in CI.
+The type-aware lint rules run on the commit too, over a TypeScript program of
+the staged files only. With the program of the whole workspace, one pragma
+component took 5.2 s of wall time and 12.5 s of CPU;
+`scripts/lint-staged-files.sh` lints from a temporary tree in which each
+touched workspace's `tsconfig.json` lists only the staged files it includes,
+and runs the JavaScript plugins and tsgolint side by side, so the same file
+takes about 2 s. The commit budget went from 3 s to 3.5 s to make room for
+them, the operator's decision of 2026-10-27, recorded in
+[ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md).
+
+A commit touching several components or several workspaces still takes longer
+than 3.5 s: five pragma components took 4.2 to 4.6 s of wall time, one file in
+each of four workspaces 4.6 s. The budget is for a typical commit, and the
+fixture below is one.
 
 ## Why CPU time on the commit, and wall time in CI
 
@@ -115,7 +129,8 @@ process are the longest, so every other check runs at `nice` 10 and yields
 most of the CPU to them. At `nice` 19 the short checks starved and finished
 last, and capping the checks at one per core left the cores idle while they
 waited on the disk; both measured slower. On two cores, the closest this machine gets to CI's
-runner, the fixture commit takes 2.4 to 2.6 s.
+runner, the fixture commit took 2.4 to 2.6 s before the type-aware rules came
+back to the commit.
 
 A check triggers only on the files it reads. The tooling type check used to
 run for any path under `scripts/`, so a shell script cost a second of CPU for a
@@ -127,7 +142,7 @@ where nothing else runs. `scripts/check-pre-commit-budget.sh` copies the tree,
 makes a commit touching one file of each common kind (a component, an API
 source, a test, a manifest, a knowledge entry, a skill, a shell script and a
 workflow), runs the hook on it, and fails when the hook refuses the commit or
-takes longer than three seconds.
+takes longer than 3.5 seconds.
 
 TypeScript checks on the commit run under plain `node` with
 `scripts/typescript-resolve.mjs`, which resolves `./x` and `./x.js` to the
@@ -140,8 +155,7 @@ fits in 300 ms.
 | Check | On the commit | Whole tree |
 | --- | --- | --- |
 | oxfmt | staged files | `ci.yml`, `pnpm run format:check` |
-| oxlint, every rule but the type-aware ones | staged files | `ci.yml` |
-| oxlint, type-aware rules and unused directives | not run | pre-push over the changed files; `ci.yml` |
+| oxlint, every rule, type-aware ones and unused directives included | staged files, in a program of the staged files | pre-push over the changed files; `ci.yml` |
 | Tooling type check | when `scripts/`, `.claude/skills/`, `eslint-rules/` or `tsconfig.json` change | `ci.yml` |
 | Blueprint index and context, convention drift | when source changes | `ci.yml` |
 | Blueprint defects | when source or a dantotsu changes | `ci.yml` |
@@ -214,7 +228,7 @@ moved to pre-push.
 - `script:scripts/check-pre-commit-budget.sh` runs the pre-commit hook on a
   fixture commit touching one file of every common kind, and fails when the
   hook refuses it, which includes any check over its CPU budget, or when the
-  hook takes longer than three seconds. It runs in the `pre-commit-budget` job
+  hook takes longer than 3.5 seconds. It runs in the `pre-commit-budget` job
   of `ci.yml`.
 - `script:scripts/check-ci-job-timeouts.sh` fails a job in `ci.yml` that
   declares no `timeout-minutes`, which GitHub reads as six hours, or one over

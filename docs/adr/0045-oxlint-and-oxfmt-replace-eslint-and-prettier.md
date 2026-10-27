@@ -40,25 +40,39 @@ plugin unchanged. Where oxlint has no rule, or has one that disagrees with the
 ESLint plugin on this repository's code, the upstream ESLint rule itself runs as
 a JavaScript plugin under an alias (`unicorn-js`, `jsx-a11y-js`,
 `react-hooks-js`, `eslint-js`). oxfmt replaces Prettier with the same settings
-and the same ignore list, markdown still excluded. ESLint stays installed only
-as the runtime of the RuleTester suites.
+and the same ignore list, markdown still excluded. ESLint stays installed for
+the two core rule files `eslint-js` loads and as the upstream plugins' peer;
+the RuleTester suites run on oxlint's own tester
+([ADR-0046](./0046-typescript-7-replaces-typescript-5-9.md)).
+
+On the commit, `scripts/lint-staged-files.sh` runs every rule, the type-aware
+ones included, over the staged files. tsgolint builds the program of the
+`tsconfig.json` nearest each file, so it lints from a temporary tree in which
+each touched workspace's `tsconfig.json` extends the real one and lists only
+the staged files. The configuration is split in two halves run side by side,
+the JavaScript plugins' rules and everything else, and a directive is reported
+as unused only when both halves report it. The commit budget is 3.5 s rather
+than 3 s to make room for the type-aware rules: the operator's decision of
+2026-10-27.
 
 ## Consequences
 
-- `+` The lint and format checks are back on the commit. The commit runs every
-  rule but the type-aware ones on the staged files in about 2 s of CPU; the
-  type-aware rules run on push over the changed files and in CI over the
-  repository.
+- `+` The lint and format checks are back on the commit, every rule and the
+  unused-directive report included, where ESLint ran them on main. A one-file
+  pragma commit lints in about 2 s of wall time and 4 to 5 s of CPU, against
+  5.2 s and 12.5 s with the program of the whole workspace.
 - `+` The whole repository lints in one process in 28 to 38 s with the
   type-aware rules, against 454 s cold for ESLint, so there is no lint cache
   left to replay a stale error. oxfmt checks the repository in 1.5 s.
 - `+` The enforcement ledger reads `.oxlintrc.json` directly, 0.5 s, where it
   built an ESLint instance per probe for 6.4 s, so it runs on the commit again.
-- `-` The type-aware rules no longer run on the commit, where ESLint ran them
-  on main. One pragma file needs 2.9 s of wall time and 8 s of CPU for its
-  program, past the 3 s commit budget. Unused disable directives are reported
-  only where every rule runs, on push and in CI, because a pass without the
-  type-aware rules sees a directive for one of them as unused.
+- `-` The commit budget grows from 3 s to 3.5 s, and a commit touching several
+  components or workspaces still goes past it: five pragma components took
+  4.2 to 4.6 s.
+- `-` The commit's program holds the staged files and what they import, not
+  the whole workspace. A type-aware finding that depends on a file the commit
+  does not import is found on push and in CI instead. A directive naming one
+  rule from each half, one of them unused, is reported only in CI.
 - `-` Rule names change where oxlint has its own: `@typescript-eslint/` becomes
   `typescript/`, `react-hooks/` becomes `react/`, `import-x/` becomes
   `import/`. Directives keep working under the old names, but a new directive
@@ -84,7 +98,8 @@ as the runtime of the RuleTester suites.
   - Every rule keeps running, measured: on the whole tree both linters report
     nothing, and on a set of planted violations they report the same 55
     findings on the same lines, with the three differences listed in the PR.
-  - Fits the commit budget for everything but the type-aware rules.
+  - Fits the 3.5 s commit budget with every rule, through a program of the
+    staged files.
 - **Costs:**
   - Two dependencies for linting, one for formatting, and alias names for the
     rules oxlint runs from upstream ESLint plugins.
@@ -123,14 +138,15 @@ as the runtime of the RuleTester suites.
 |  | Option A | Option B | Option C |
 |---|---|---|---|
 | No rule lost | ✓ native, tsgolint or upstream plugin | ✓ | ✓ |
-| Fits the commit budget | ✓ except type-aware rules | ✗ ESLint start-up on every commit | ✗ checks leave the commit |
-| Disable convention | ✓ on push and in CI | ✗ one linter must stop reporting | ✓ |
+| Fits the commit budget | ✓ at 3.5 s, the operator's 2026-10-27 decision | ✗ ESLint start-up on every commit | ✗ checks leave the commit |
+| Disable convention | ✓ on the commit, on push and in CI | ✗ one linter must stop reporting | ✓ |
 | Dependencies added | ✗ three | ✗ three | ✓ none |
 
 ## Implementation pointers
 
 - Files: `.oxlintrc.json`, `.oxfmtrc.json`, `eslint-rules/js-plugins/`,
-  `scripts/lint-repository.sh`, `.husky/pre-commit`, `.husky/pre-push`,
+  `scripts/lint-repository.sh`, `scripts/lint-staged-files.sh`,
+  `.husky/pre-commit`, `.husky/pre-push`,
   `scripts/standards/lint-configuration.core.ts`
 - Standards: [12. Linting and gates](../standards/12-linting-and-gates.md),
   [14. Tool runtime budgets](../standards/14-tool-runtime-budgets.md)

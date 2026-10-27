@@ -262,11 +262,10 @@ if echo "$changed" | grep -qE '^(scripts|eslint-rules)/'; then
 fi
 
 # oxlint with every rule, the type-aware ones included, over the files this
-# push changes. The commit runs the rest on the staged files; the type-aware
-# rules need a TypeScript program for the whole workspace, 2.9 s of wall time
-# for one pragma file on 2026-10-27, so they run here and in ci.yml. Unused
-# disable directives are reported here too, since only a run with every rule can
-# tell an unused one from one whose rule did not run. Warnings fail it through
+# push changes. The commit runs the same rules in a program of the staged files
+# only; here each file gets its workspace's whole program, so a finding that
+# depends on a file the commit did not import shows up before CI. Unused
+# disable directives are reported in one run with every rule. Warnings fail it through
 # `denyWarnings` in .oxlintrc.json. Rung-1 eradication, with the commit and CI
 # runs, of docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
 lint_changed_files() {

@@ -6,7 +6,7 @@ set -e
 # in docs/standards/14-tool-runtime-budgets.md. In short:
 #
 #   pre-commit  300 ms of CPU per check, a named budget for each of the three
-#               tools (linter, type checker, whole-tree generators), about 3 s
+#               tools (linter, type checker, whole-tree generators), 3.5 s
 #               for a typical commit
 #   pre-push    60 s for a change confined to one application
 #   CI          10 min per pull request
@@ -27,8 +27,8 @@ set -e
 
 CHECK_BUDGET_MS=300
 FILE_BUDGET_PER_EXTRA_FILE_MS=20
-LINT_BUDGET_MS=3000
-LINT_BUDGET_PER_EXTRA_FILE_MS=100
+LINT_BUDGET_MS=5000
+LINT_BUDGET_PER_EXTRA_FILE_MS=1500
 TYPECHECK_BUDGET_MS=2500
 NODE_CHECK_BUDGET_MS=1000
 NODE_CHECK_BUDGET_PER_EXTRA_MS=250
@@ -191,12 +191,8 @@ run_oxfmt() {
   list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxfmt --check
 }
 
-# Unused disable directives are reported on push and in CI, where the
-# type-aware rules run: without them, every directive naming a type-aware rule
-# would read as unused here.
 run_oxlint() {
-  list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxlint \
-    --report-unused-disable-directives-severity=off
+  list_existing_subjects | xargs -0 --no-run-if-empty scripts/lint-staged-files.sh
 }
 
 # queue_node_check <name> <scope> <script…>: a check written in TypeScript, a
@@ -254,12 +250,13 @@ launch harness-active "$CHECK_BUDGET_MS" scripts/check-claude-harness-active.sh
 run_with_files oxfmt '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' \
   "$CHECK_BUDGET_MS" "$FILE_BUDGET_PER_EXTRA_FILE_MS" run_oxfmt
 
-# oxlint over the staged files, with every rule but the type-aware ones, which
-# need a TypeScript program for the whole workspace (2.9 s of wall time and 8 s
-# of CPU for one pragma file) and run in .husky/pre-push and ci.yml. Its own
-# budget, measured on 2026-10-27: 0.9 s of CPU for a script, 2.3 s for one
-# React component, because eslint-plugin-react-hooks runs the React Compiler
-# on it, and about 0.1 s more for each further component. Warnings fail it:
+# oxlint over the staged files with every rule, the type-aware ones and the
+# unused-directive report included, through scripts/lint-staged-files.sh,
+# which builds a TypeScript program of the staged files only. Its own budget,
+# measured on 2026-10-27 on a four-core machine other agents were also using:
+# 1.8 s of CPU for a script, 3.9 to 4.8 s for one pragma component or service,
+# and 1.1 to 1.5 s more for each further file, most of it the React Compiler
+# that eslint-plugin-react-hooks runs on each component. Warnings fail it:
 # `denyWarnings` is set in .oxlintrc.json. Rung-1 eradication, together with
 # the push and CI runs, of docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
 run_with_files oxlint '\.(js|jsx|ts|tsx|mjs|cjs)$' \

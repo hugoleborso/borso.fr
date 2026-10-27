@@ -18,6 +18,7 @@ const SITE_LIBRARY = 'site/src/lib';
 const DOCUMENTS = 'docs';
 const CANARY_SITE_FILE = 'apps/pragma/site/src/lib/gate-canary-planted.ts';
 const CANARY_SITE_COMPONENT = 'apps/pragma/site/src/components/atoms/GateCanary.tsx';
+const CANARY_API_SERVICE = 'apps/pragma/api/src/gate-canary/gate-canary.service.ts';
 
 const SCRIPT = (name: string): readonly string[] => [`scripts/${name}`];
 const TSX = (path: string, ...flags: readonly string[]): readonly string[] => [
@@ -418,8 +419,47 @@ export function GateCanary() {
 }
 `,
     },
-    command: ['node_modules/.bin/oxlint', CANARY_SITE_COMPONENT],
+    command: [...SCRIPT('lint-staged-files.sh'), CANARY_SITE_COMPONENT],
     refusal: /only-export-components/,
+    tier: 'fast',
+  },
+  {
+    mechanism: 'oxlint',
+    label: 'oxlint type-aware rules on a staged file, as pre-commit runs them',
+    defect: 'a floating promise, which only the type-aware rules see',
+    plant: {
+      [CANARY_API_SERVICE]: `async function loadGateCanary(): Promise<number> {
+  return Promise.resolve(1);
+}
+
+export function startGateCanary(): void {
+  loadGateCanary();
+}
+`,
+    },
+    command: [...SCRIPT('lint-staged-files.sh'), CANARY_API_SERVICE],
+    refusal: /gate-canary\.service\.ts:6:\d+: .*no-floating-promises/,
+    tier: 'fast',
+  },
+  {
+    mechanism: 'oxlint',
+    label: 'oxlint unused-directive report on a staged file, as pre-commit runs it',
+    defect: 'a disable directive that silences nothing, beside a type-aware one that does',
+    plant: {
+      [CANARY_API_SERVICE]: `async function loadGateCanary(): Promise<number> {
+  return Promise.resolve(1);
+}
+
+export function startGateCanary(): number {
+  // eslint-disable-next-line typescript/no-floating-promises -- the canary needs a directive that is used
+  loadGateCanary();
+  // eslint-disable-next-line no-console -- the canary needs a directive that is not
+  return 1;
+}
+`,
+    },
+    command: [...SCRIPT('lint-staged-files.sh'), CANARY_API_SERVICE],
+    refusal: /gate-canary\.service\.ts:8:\d+: Unused eslint-disable directive/,
     tier: 'fast',
   },
   {

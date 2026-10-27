@@ -247,10 +247,11 @@ The second one is the important one. When the underlying violation is fixed, the
 comment becomes an error, so the excuse cannot outlive the problem. Nothing has
 to be swept. The third is oxlint's own rule: `no-unlimited-disable`, run as a
 JavaScript plugin, is silenced by the very blanket disable it reports, because
-oxlint applies the directive to the plugin's report too. The second runs where
-every rule runs, on push and in CI: the commit's
-pass leaves out the type-aware rules, and would see a directive for one of
-them as unused.
+oxlint applies the directive to the plugin's report too. The second runs
+wherever every rule runs: on the commit, on push and in CI. The commit splits
+its rules into two halves run side by side, and each half reads a directive
+for the other half's rules as unused, so `scripts/lint-staged-files.sh`
+reports a directive as unused only when both halves do.
 
 A directive names the rule the way oxlint reports it. The ESLint names of rules
 oxlint implements, such as `@typescript-eslint/no-floating-promises`, still
@@ -310,15 +311,22 @@ The blueprint for the replacement shape is annotated at
 The pre-commit hook runs oxfmt and oxlint on the staged files, type-checks the
 tooling with TypeScript 7, runs the blueprint, dantotsu and ledger generators,
 and each of the checks below, each when the commit touches something it reads.
-Each check is held to a CPU budget and the commit to about three seconds, and
+Each check is held to a CPU budget and the commit to 3.5 seconds, and
 the hook times every check and refuses a commit that went over;
 [14. Tool runtime budgets](./14-tool-runtime-budgets.md) gives the budgets, the
 scope each check declares, and where each check's whole-tree run lives.
 
-The commit's oxlint pass leaves out the type-aware rules. They need a
-TypeScript program for the whole workspace, 2.9 s of wall time for one pragma
-file, so they run in the pre-push hook over the files the push changes, and in
-CI over the repository.
+The commit's oxlint pass runs every rule, the type-aware ones included, over
+a TypeScript program of the staged files only. tsgolint builds the program of
+the `tsconfig.json` nearest each file, so `scripts/lint-staged-files.sh` lints
+from a temporary tree in which each touched workspace's `tsconfig.json` extends
+the real one and lists only the staged files it includes: about 2 s for one
+pragma file, against 5.2 s with the whole workspace's program. A staged file
+the real `tsconfig.json` does not include, such as a CDK stack, is not listed,
+and tsgolint lints it in an inferred program, as the whole-tree run does. The
+pre-push hook runs the same rules over the files the push changes, and CI over
+the repository, where a finding that depends on a file the commit did not
+import shows up.
 
 `.oxlintrc.json` sets `denyWarnings`. `react/only-export-components` ships at
 `warn`, and a linter exits 0 on a warning, so without it that rule would print
@@ -421,9 +429,9 @@ review.
 
 ## Enforced by
 
-- `gate:oxlint` runs over the staged files on commit without the type-aware
-  rules, and with them over the files a push changes and over the repository in
-  CI, all with `denyWarnings`.
+- `gate:oxlint` runs every rule over the staged files on commit, through
+  `scripts/lint-staged-files.sh`, over the files a push changes, and over the
+  repository in CI, all with `denyWarnings`.
 - `script:scripts/lint-repository.sh` is how CI and `pnpm run lint` reach the
   whole repository: one oxlint process with the type-aware rules. ESLint needed
   one process per workspace, because one `eslint .` holding five applications'
