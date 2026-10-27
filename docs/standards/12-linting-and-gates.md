@@ -311,7 +311,7 @@ The blueprint for the replacement shape is annotated at
 The pre-commit hook runs oxfmt and oxlint on the staged files, type-checks the
 tooling with TypeScript 7, runs the blueprint, dantotsu and ledger generators,
 and each of the checks below, each when the commit touches something it reads.
-Each check is held to a CPU budget and the commit to 3.5 seconds, and
+Each check is held to a CPU budget and the commit to 4 seconds, and
 the hook times every check and refuses a commit that went over;
 [14. Tool runtime budgets](./14-tool-runtime-budgets.md) gives the budgets, the
 scope each check declares, and where each check's whole-tree run lives.

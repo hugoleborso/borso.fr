@@ -51,9 +51,11 @@ ones included, over the staged files. tsgolint builds the program of the
 each touched workspace's `tsconfig.json` extends the real one and lists only
 the staged files. The configuration is split in two halves run side by side,
 the JavaScript plugins' rules and everything else, and a directive is reported
-as unused only when both halves report it. The commit budget is 3.5 s rather
+as unused only when both halves report it. The commit budget is 4 s rather
 than 3 s to make room for the type-aware rules: the operator's decision of
-2026-10-27.
+2026-10-27. A 3.5 s budget came first, and the same fixture commit on CI's
+runner took 1.8 to 3.4 s over seven runs, so the runner's spread alone could
+fail it.
 
 ## Consequences
 
@@ -66,9 +68,9 @@ than 3 s to make room for the type-aware rules: the operator's decision of
   left to replay a stale error. oxfmt checks the repository in 1.5 s.
 - `+` The enforcement ledger reads `.oxlintrc.json` directly, 0.5 s, where it
   built an ESLint instance per probe for 6.4 s, so it runs on the commit again.
-- `-` The commit budget grows from 3 s to 3.5 s, and a commit touching several
-  components or workspaces still goes past it: five pragma components took
-  4.2 to 4.6 s.
+- `-` The commit budget grows from 3 s to 4 s, and a commit touching several
+  components or workspaces can still go past it: five pragma components took
+  4.2 to 4.6 s on a shared machine.
 - `-` The commit's program holds the staged files and what they import, not
   the whole workspace. A type-aware finding that depends on a file the commit
   does not import is found on push and in CI instead. A directive naming one
@@ -98,7 +100,7 @@ than 3 s to make room for the type-aware rules: the operator's decision of
   - Every rule keeps running, measured: on the whole tree both linters report
     nothing, and on a set of planted violations they report the same 55
     findings on the same lines, with the three differences listed in the PR.
-  - Fits the 3.5 s commit budget with every rule, through a program of the
+  - Fits the 4 s commit budget with every rule, through a program of the
     staged files.
 - **Costs:**
   - Two dependencies for linting, one for formatting, and alias names for the
@@ -138,7 +140,7 @@ than 3 s to make room for the type-aware rules: the operator's decision of
 |  | Option A | Option B | Option C |
 |---|---|---|---|
 | No rule lost | ✓ native, tsgolint or upstream plugin | ✓ | ✓ |
-| Fits the commit budget | ✓ at 3.5 s, the operator's 2026-10-27 decision | ✗ ESLint start-up on every commit | ✗ checks leave the commit |
+| Fits the commit budget | ✓ at 4 s, the operator's 2026-10-27 decision | ✗ ESLint start-up on every commit | ✗ checks leave the commit |
 | Disable convention | ✓ on the commit, on push and in CI | ✗ one linter must stop reporting | ✓ |
 | Dependencies added | ✗ three | ✗ three | ✓ none |
 

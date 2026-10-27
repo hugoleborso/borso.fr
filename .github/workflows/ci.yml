@@ -267,7 +267,7 @@ jobs:
       - run: pnpm exec knip
 
   # The commit hook on a fixture commit that touches one file of every common
-  # kind, inside the 3.5 seconds docs/standards/14-tool-runtime-budgets.md
+  # kind, inside the 4 seconds docs/standards/14-tool-runtime-budgets.md
   # gives a commit. The hook holds each check to its CPU budget itself; the
   # wall-clock total is only measurable on a machine nothing else is using.
   pre-commit-budget:

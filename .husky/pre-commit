@@ -6,7 +6,7 @@ set -e
 # in docs/standards/14-tool-runtime-budgets.md. In short:
 #
 #   pre-commit  300 ms of CPU per check, a named budget for each of the three
-#               tools (linter, type checker, whole-tree generators), 3.5 s
+#               tools (linter, type checker, whole-tree generators), 4 s
 #               for a typical commit
 #   pre-push    60 s for a change confined to one application
 #   CI          10 min per pull request

@@ -1,7 +1,7 @@
 #!/usr/bin/env bash
 # The pre-commit hook, run on a fixture commit, inside its wall-clock budget.
 #
-# docs/standards/14-tool-runtime-budgets.md gives a commit 3.5 seconds. The
+# docs/standards/14-tool-runtime-budgets.md gives a commit 4 seconds. The
 # hook enforces its per-check budget itself, on CPU time, because the machines
 # it runs on are shared; what a person waits for is the wall-clock total, and
 # that is only measurable where nothing else is running. So CI copies the tree,
@@ -20,7 +20,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-TOTAL_BUDGET_MS=3500
+TOTAL_BUDGET_MS=4000
 FIXTURE_TEXT='A line the pre-commit runtime budget fixture adds.'
 GIT_IDENTITY=(-c user.name=pre-commit-budget -c user.email=pre-commit-budget@localhost)
 
