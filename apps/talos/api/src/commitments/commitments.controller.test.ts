@@ -1,4 +1,4 @@
-import { beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestContext, requestJson, signIn } from '../../../test/app-utils';
 import { CONTENT_FIXTURE } from '../../../test/content-fixture';
 import { truncateAllTables } from '../../../test/database-utils';
@@ -6,6 +6,14 @@ import { seedMemoryInDatabase } from '../../../test/memory-fixture';
 
 beforeEach(async () => {
   await truncateAllTables();
+});
+
+function openDueOn(dueDay: string): string {
+  return ['---', 'type: engagement', 'statut: ouvert', `echeance: ${dueDay}`, '---', ''].join('\n');
+}
+
+afterEach(() => {
+  vi.useRealTimers();
 });
 
 // @FollowsBlueprint test-back-e2e
@@ -30,6 +38,20 @@ describe('GET /api/commitments', () => {
           action: 'Bruno renvoie le contrat',
         },
       ],
+    });
+  });
+
+  it('lists the week ahead before the overdue, today read in Paris', async () => {
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2026-10-26T23:30:00Z'));
+    const { app } = buildTestContext({
+      'engagements/a-yesterday.md': openDueOn('2026-10-26'),
+      'engagements/b-today.md': openDueOn('2026-10-27'),
+    });
+    const response = await requestJson(app, '/api/commitments', { cookie: await signIn() });
+    const body: unknown = await response.json();
+    expect(body).toMatchObject({
+      items: [{ path: 'engagements/b-today' }, { path: 'engagements/a-yesterday' }],
     });
   });
 

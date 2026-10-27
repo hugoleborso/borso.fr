@@ -67,7 +67,7 @@ export async function readToday(now: Date): Promise<Today> {
     readFocus(),
     listTodos(TODO_LISTS.main),
     listProposals(undefined),
-    listOpenCommitments(),
+    listOpenCommitments(now),
     readContentFile(buildJournalPath(date)),
     readContentFile(buildJournalPath(yesterday)),
     readContentFile(LAST_RUNS_PATH),
