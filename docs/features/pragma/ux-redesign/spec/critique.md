@@ -4,7 +4,7 @@ Reviewer: `spec-critic`, on 2026-10-27. Inputs: [`spec.md`](./spec.md), ADR-0045
 
 ## Verdict
 
-Every ratified decision (D1, D2, D3, D6, D7 revised, D8, D9, D10, D11) and every operator comment was already in the spec. D4 and D5 are out of scope, as ratified. The gaps were in coverage of a few confirmed findings, in acceptance criteria that no slice owned, in a slice gate that would have failed on its own first commit, and in vocabulary. All of those are fixed in place. Five questions remain for the operator.
+Every ratified decision (D1, D2, D3, D6, D7 revised, D8, D9, D10, D11) and every operator comment was already in the spec. D4 and D5 are out of scope, as ratified. The gaps were in coverage of a few confirmed findings, in acceptance criteria that no slice owned, in a slice gate that would have failed on its own first commit, and in vocabulary. All of those are fixed in place. Five questions remained for the operator; the operator answered them on 2026-10-27 (see the last section).
 
 ## What I changed
 
@@ -73,10 +73,12 @@ Ranks 9, 10 and 11 (offline and stale order) stay out of scope, as the spec alre
 
 ## What remains for the operator
 
-1. **Accept ADR-0046, Newsreader with optical sizes?** It adds 235,712 bytes to a phone's first load after the release. Recommendation: accept. The ratified screens were drawn with it, and the lighter `wght` files are a one-import fallback if a member's phone shows the cost.
-2. **Q6 and ADR-0048: read a PDF's text layer with `pdfjs-dist` (a new dependency, about 506 KB compressed, chord editor only)?** Recommendation: accept. On the one measured sample it recovered 27 of 27 chords in their columns. Photos stay images either way.
-3. **Q2b: map each member's stored colour onto the six member tokens?** This changes how some members appear. Recommendation: yes. A free hex colour cannot be held to the 4.5:1 gate in dark mode.
-4. **Q3: seven or more members in the Lineup grid.** Recommendation: show only the members who play in that setlist, and scroll the member columns sideways only past six.
-5. **Q1: the session's primary action.** Recommendation: **Open the setlist** before the date and **Listen back** after it. A "practice in progress" mode has no behaviour defined anywhere.
+Answered by the operator in chat on 2026-10-27, and folded into the spec and the ADRs the same day.
 
-ADR-0045 and ADR-0047 restate D11 and D3, which the operator ratified in chat. I left both at `proposed` because changing an ADR's status is the operator's step. The same go that answers questions 1 and 2 can mark all four accepted.
+1. **Accept ADR-0046, Newsreader with optical sizes?** It adds 235,712 bytes to a phone's first load after the release. Recommendation was: accept. **Answered: accepted**, with no objection.
+2. **Q6 and ADR-0048: read a PDF's text layer with `pdfjs-dist` (a new dependency, about 506 KB compressed, chord editor only)?** Recommendation was: accept. **Answered: accepted**, with no objection. Q6 is decided as option (b).
+3. **Q2b: map each member's stored colour onto the six member tokens?** Recommendation was: yes. **Answered: no.** Members keep their own stored colours, and the colour must stay clearly visible, above all in the Lineup view, so the band learns to recognise each member at a glance. The spec now draws each member's colour as a filled lane in the Lineup grid and as filled lineup avatars, chooses the ink on a member colour by contrast ratio in `member-color.utils.ts`, keeps names in a text token, and drops the six `member-*` tokens. ADR-0045 records the change.
+4. **Q3: seven or more members in the Lineup grid.** Recommendation was: show only the members who play in that setlist, and scroll sideways past six. **Answered:** the band has five members. The grid is designed for up to six with no sideways scroll, and more than six is a known limit, not handled.
+5. **Q1: the session's primary action.** Recommendation was: **Open the setlist** before the date and **Listen back** after it. **Answered:** a "practice in progress" mode is important, because the band records songs during practice. The spec now specifies *Practice mode* for slice 5, built on the takes feature, with three new open questions (Q11 where its state lives, Q12 where its quick note goes, Q13 when it is offered), each with a recommendation; none of them blocks slice 1.
+
+The operator also ratified ADR-0045 (with the member colour change), ADR-0046, ADR-0047 and ADR-0048, which are now marked accepted.
