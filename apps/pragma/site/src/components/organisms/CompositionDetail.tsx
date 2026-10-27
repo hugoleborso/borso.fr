@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card } from '../atoms/Card';
+import { composeClassName } from '../atoms/class-name.utils';
 import { HintText } from '../atoms/HintText';
 import { MemberLineup, type LineupInstrument, type LineupMember } from '../molecules/MemberLineup';
 import { SongNotes } from '../molecules/SongNotes';
@@ -32,6 +33,7 @@ export interface CompositionDetailProps {
 }
 
 const SECTION_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
+const LINK_CLASS = 'inline-flex min-h-11 items-center text-meta text-accent no-underline';
 
 // @FollowsBlueprint organism-presentational
 export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
@@ -45,10 +47,7 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
       <div className="flex flex-wrap items-center gap-2">
         <h2 className="font-display text-display text-ink m-0">{composition.title}</h2>
         <StatusChip status={composition.status} />
-        <Link
-          to={`/catalog/${composition.id}`}
-          className="ml-auto text-meta text-accent no-underline"
-        >
+        <Link to={`/catalog/${composition.id}`} className={composeClassName('ml-auto', LINK_CLASS)}>
           {t('compos.openInCatalog')}
         </Link>
       </div>
@@ -60,7 +59,10 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
           members={props.members}
           instruments={props.instruments}
         />
-        <Link to={`/catalog/${composition.id}`} className="text-meta text-accent no-underline">
+        <Link
+          to={`/catalog/${composition.id}`}
+          className={composeClassName('self-start', LINK_CLASS)}
+        >
           {t('compos.editLineup')}
         </Link>
       </Card>
@@ -108,7 +110,7 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
             ))}
           </ul>
         )}
-        <Link to="/tasks" className="self-start text-meta text-accent no-underline">
+        <Link to="/tasks" className={composeClassName('self-start', LINK_CLASS)}>
           {t('compos.addTaskLink')}
         </Link>
       </Card>

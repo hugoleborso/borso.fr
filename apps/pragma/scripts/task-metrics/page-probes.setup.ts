@@ -216,12 +216,16 @@ export const READ_LOW_CONTRAST_TEXT = `(threshold) => {
 
 export const COUNT_SMALL_TAP_TARGETS = `(minimum) => {
   const isShown = (element) => { const box = element.getBoundingClientRect(); const style = getComputedStyle(element); return box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none' && !element.closest('dialog:not([open])'); };
-  const hitBox = (element) => {
+  const ownHitBox = (element) => {
     const box = element.getBoundingClientRect();
     const after = getComputedStyle(element, '::after');
     if (after.content === 'none' || after.position !== 'absolute') return { width: box.width, height: box.height };
     const inset = (value) => { const parsed = parseFloat(value); return Number.isNaN(parsed) ? 0 : Math.min(0, parsed); };
     return { width: box.width - inset(after.left) - inset(after.right), height: box.height - inset(after.top) - inset(after.bottom) };
+  };
+  const hitBox = (element) => {
+    const labelBoxes = [...(element.labels ?? [])].filter(isShown).map((label) => label.getBoundingClientRect());
+    return [ownHitBox(element), ...labelBoxes].reduce((best, box) => (Math.min(box.width, box.height) > Math.min(best.width, best.height) ? { width: box.width, height: box.height } : best));
   };
   const small = [];
   for (const element of document.querySelectorAll('button, [role=button], a[href], input:not([type=hidden]), select, textarea, summary')) {

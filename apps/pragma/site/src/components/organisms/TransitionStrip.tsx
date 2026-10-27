@@ -14,6 +14,9 @@ export interface TransitionStripProps {
   readonly onOpenNote: () => void;
 }
 
+const COVERED_STRIP_HIT_AREA_CLASS =
+  'relative after:absolute after:inset-x-0 after:-top-3 after:-bottom-2';
+const RISKY_STRIP_HIT_AREA_CLASS = 'relative after:absolute after:inset-x-0 after:-inset-y-1';
 const CARRIER_CHIP_OVERLAP_CLASS = '-ml-1 first:ml-0 rounded-full ring-2 ring-paper';
 
 function CarrierStack({ view }: { view: TransitionView }): JSX.Element | null {
@@ -45,7 +48,10 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
         aria-label={t('setlist.openTransitionComment')}
         title={hasNote ? note : t('setlist.transitionCovered')}
         isChevronShown={false}
-        className="h-6 min-h-6 justify-center gap-2 px-2"
+        className={composeClassName(
+          'h-6 min-h-6 justify-center gap-2 px-2',
+          COVERED_STRIP_HIT_AREA_CLASS,
+        )}
       >
         <span className="h-px flex-1 bg-rule" />
         <CarrierStack view={view} />
@@ -60,7 +66,10 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
       onClick={onOpenNote}
       aria-label={t('setlist.openTransitionComment')}
       isChevronShown={false}
-      className="min-h-9 gap-2 rounded-sm bg-warn-soft px-2 py-1"
+      className={composeClassName(
+        'min-h-9 gap-2 rounded-sm bg-warn-soft px-2 py-1',
+        RISKY_STRIP_HIT_AREA_CLASS,
+      )}
     >
       <Icon name="warn" size="sm" className="shrink-0 text-warn" />
       <span className="shrink-0 text-label font-semibold uppercase tracking-wider text-warn">
