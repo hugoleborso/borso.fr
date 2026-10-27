@@ -232,11 +232,14 @@ shape hold, and all three are in `.oxlintrc.json`:
 |---------|-----------------|
 | `@eslint-community/eslint-comments/require-description` | a disable with no `-- <reason>` |
 | `options.reportUnusedDisableDirectives` | a disable that no longer suppresses anything |
-| `@eslint-community/eslint-comments/no-unlimited-disable` | a blanket `/* eslint-disable */` for a file |
+| `unicorn/no-abusive-eslint-disable` | a blanket `/* eslint-disable */` for a file, or a disable naming no rule |
 
 The second one is the important one. When the underlying violation is fixed, the
 comment becomes an error, so the excuse cannot outlive the problem. Nothing has
-to be swept. It runs where every rule runs, on push and in CI: the commit's
+to be swept. The third is oxlint's own rule: `no-unlimited-disable`, run as a
+JavaScript plugin, is silenced by the very blanket disable it reports, because
+oxlint applies the directive to the plugin's report too. The second runs where
+every rule runs, on push and in CI: the commit's
 pass leaves out the type-aware rules, and would see a directive for one of
 them as unused.
 

@@ -4,7 +4,7 @@
   "jsPlugins": [
     {
       "name": "@eslint-community/eslint-comments",
-      "specifier": "@eslint-community/eslint-plugin-eslint-comments"
+      "specifier": "./eslint-rules/js-plugins/eslint-comments.js"
     },
     {
       "name": "borso",
@@ -186,7 +186,8 @@
     "eslint-js/no-octal": "error",
     "unicorn-js/consistent-boolean-name": "error",
     "unicorn-js/prefer-early-return": "error",
-    "unicorn-js/no-top-level-assignment-in-function": "error"
+    "unicorn-js/no-top-level-assignment-in-function": "error",
+    "unicorn/no-abusive-eslint-disable": "error"
   },
   "overrides": [
     {

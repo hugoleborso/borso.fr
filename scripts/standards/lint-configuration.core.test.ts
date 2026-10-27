@@ -106,6 +106,10 @@ describe('readConfiguredRuleName', () => {
     );
   });
 
+  it('reads a React hooks rule under the plugin name the configuration uses', () => {
+    expect(readConfiguredRuleName('react-hooks(exhaustive-deps)')).toBe('react/exhaustive-deps');
+  });
+
   it('reads a core rule without its prefix', () => {
     expect(readConfiguredRuleName('eslint(no-magic-numbers)')).toBe('no-magic-numbers');
   });

@@ -23,6 +23,9 @@ export type GlobMatcher = (path: string, pattern: string) => boolean;
 const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 'allow', 0]);
 const CORE_RULE_PREFIX = 'eslint';
 const DIAGNOSTIC_CODE = /^(?<plugin>.+)\((?<rule>[^()]+)\)$/;
+const CONFIGURED_PLUGIN_BY_REPORTED_PLUGIN: ReadonlyMap<string, string> = new Map([
+  ['react-hooks', 'react'],
+]);
 
 function isRuleOn(setting: RuleSetting): boolean {
   const severity: unknown = Array.isArray(setting) ? setting[0] : setting;
@@ -59,5 +62,7 @@ export function readConfiguredRuleName(diagnosticCode: string | undefined): stri
   if (diagnosticCode === undefined) return null;
   const groups = DIAGNOSTIC_CODE.exec(diagnosticCode)?.groups;
   if (groups?.plugin === undefined || groups.rule === undefined) return null;
-  return groups.plugin === CORE_RULE_PREFIX ? groups.rule : `${groups.plugin}/${groups.rule}`;
+  if (groups.plugin === CORE_RULE_PREFIX) return groups.rule;
+  const plugin = CONFIGURED_PLUGIN_BY_REPORTED_PLUGIN.get(groups.plugin) ?? groups.plugin;
+  return `${plugin}/${groups.rule}`;
 }
