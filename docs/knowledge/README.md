@@ -233,6 +233,7 @@ decision.
 - [`chessjs-v1-throws-on-illegal-move.md`](./chessjs-v1-throws-on-illegal-move.md) — `chess.js` v1 throws on illegal moves; v0 returned `null`. Wrap every `chess.move` in `try`/`catch`.
 - [`react-chessboard-l-arrows-v5.md`](./react-chessboard-l-arrows-v5.md) — v5 detects knight moves and draws native L-shaped arrows; consolidated `options` prop; React-19 peer requirement.
 - [`pwa-third-party-cdn-breaks-offline.md`](./pwa-third-party-cdn-breaks-offline.md) — third-party image CDNs break PWAs offline (and often online via hotlink-blocking 403s); bundle assets or use library-bundled SVGs.
+- [`the-auto-mode-classifier-refuses-guard-probes.md`](./the-auto-mode-classifier-refuses-guard-probes.md) — auto mode reads the whole Bash command as text, so a probe proving a guard refuses a dangerous query is refused as that query; split the probe, prove it from the deployed template, or ask the operator for a permission rule.
 
 ## Adding a new entry
 
