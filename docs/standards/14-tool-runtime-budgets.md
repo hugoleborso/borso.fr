@@ -110,8 +110,10 @@ So the hook reads each check's CPU with `times`, inside the subshell that ran
 it, which counts that check and everything it started and nothing else. The
 checks run side by side, two per core, and their output is printed in order
 once they have all finished. oxlint, the tooling type check and the node-check
-process are the longest, so every other check runs at the lowest priority,
-`nice` 19, and yields the CPU to them. On two cores, the closest this machine gets to CI's
+process are the longest, so every other check runs at `nice` 10 and yields
+most of the CPU to them. At `nice` 19 the short checks starved and finished
+last, and capping the checks at one per core left the cores idle while they
+waited on the disk; both measured slower. On two cores, the closest this machine gets to CI's
 runner, the fixture commit takes 2.4 to 2.6 s.
 
 A check triggers only on the files it reads. The tooling type check used to

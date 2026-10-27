@@ -62,7 +62,7 @@ fi
 cores=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
 max_parallel=$((cores * 2))
 LONGEST_CHECKS='oxlint typecheck-tooling node-checks'
-SHORT_CHECK_NICENESS=19
+SHORT_CHECK_NICENESS=10
 running=''
 launched=0
 checks_skipped=0
