@@ -9,7 +9,7 @@ import {
   listBlocklistedTables,
   maskLiteralsAndComments,
   readQueryArguments,
-  readReaderTableBlocklist,
+  readReaderProvisioning,
   ROW_CAP,
 } from './read-only-query.utils';
 
@@ -382,38 +382,80 @@ describe('decideTableAccess', () => {
   });
 });
 
-describe('readReaderTableBlocklist', () => {
+describe('readReaderProvisioning', () => {
   const schemaResource = {
     Type: 'AWS::CloudFormation::CustomResource',
-    Properties: { readerTableBlocklist: ['admin_sessions'] },
+    Properties: {
+      readerRoleName: 'ai_reader_prod',
+      readerPrincipalArns: [
+        { 'Fn::Join': ['', ['arn:', { Ref: 'AWS::Partition' }, ':iam::1:user/AI-Dev-ReadOnly']] },
+      ],
+      readerTableBlocklist: ['admin_sessions'],
+    },
   };
 
   it('reads the blocklist from the schema resource of a deployed template', () => {
     expect(
-      readReaderTableBlocklist({
+      readReaderProvisioning({
         Resources: {
           Other: 'not a resource',
-          Bucket: { Type: 'AWS::S3::Bucket', Properties: { readerTableBlocklist: ['x'] } },
+          Bucket: {
+            Type: 'AWS::S3::Bucket',
+            Properties: {
+              readerRoleName: 'ai_reader_prod',
+              readerTableBlocklist: ['never-reached'],
+            },
+          },
           Bare: { Type: 'AWS::CloudFormation::CustomResource' },
-          Malformed: {
+          Unmapped: {
             Type: 'AWS::CloudFormation::CustomResource',
-            Properties: { readerTableBlocklist: ['ok', 1] },
+            Properties: { readerTableBlocklist: ['never-reached'] },
+          },
+          EmptyRoleName: {
+            Type: 'AWS::CloudFormation::CustomResource',
+            Properties: { readerRoleName: '', readerTableBlocklist: ['never-reached'] },
           },
           Unlisted: { Type: 'AWS::CloudFormation::CustomResource', Properties: {} },
           Schema: schemaResource,
         },
       }),
-    ).toStrictEqual(['admin_sessions']);
+    ).toStrictEqual({ provisioned: true, blocklist: ['admin_sessions'] });
   });
 
-  it('reads nothing from a template without one', () => {
-    expect(readReaderTableBlocklist(null)).toStrictEqual([]);
-    expect(readReaderTableBlocklist('{}')).toStrictEqual([]);
-    expect(readReaderTableBlocklist({})).toStrictEqual([]);
-    expect(readReaderTableBlocklist({ Resources: null })).toStrictEqual([]);
-    expect(readReaderTableBlocklist({ Resources: { Bare: schemaResource.Type } })).toStrictEqual(
-      [],
-    );
+  it('reports an empty blocklist as provisioned, because an application may block no table', () => {
+    expect(
+      readReaderProvisioning({
+        Resources: {
+          Schema: {
+            Type: 'AWS::CloudFormation::CustomResource',
+            Properties: { readerRoleName: 'ai_reader_prod' },
+          },
+        },
+      }),
+    ).toStrictEqual({ provisioned: true, blocklist: [] });
+  });
+
+  it('treats a malformed blocklist on a mapped reader as no blocklist', () => {
+    expect(
+      readReaderProvisioning({
+        Resources: {
+          Schema: {
+            Type: 'AWS::CloudFormation::CustomResource',
+            Properties: { readerRoleName: 'ai_reader_prod', readerTableBlocklist: ['ok', 1] },
+          },
+        },
+      }),
+    ).toStrictEqual({ provisioned: true, blocklist: [] });
+  });
+
+  it('reports no reader when the deployed stack has none', () => {
+    expect(readReaderProvisioning(null)).toStrictEqual({ provisioned: false });
+    expect(readReaderProvisioning('{}')).toStrictEqual({ provisioned: false });
+    expect(readReaderProvisioning({})).toStrictEqual({ provisioned: false });
+    expect(readReaderProvisioning({ Resources: null })).toStrictEqual({ provisioned: false });
+    expect(readReaderProvisioning({ Resources: { Bare: schemaResource.Type } })).toStrictEqual({
+      provisioned: false,
+    });
   });
 });
 

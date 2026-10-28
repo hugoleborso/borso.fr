@@ -2,12 +2,17 @@
 summary: '`--cache-strategy content` keys on the linted file, so a type-aware error you already fixed is replayed; remove the ESLint caches and lint again.'
 triggers:
   output:
-    - '@typescript-eslint/no-unsafe-(argument|assignment|call|member-access|return)'
+    - '(^|\n)[ \t]*\d+:\d+[ \t]+error[ \t].*@typescript-eslint/no-unsafe-(argument|assignment|call|member-access|return)[ \t]*(\n|$)'
 ---
 
 # The ESLint content cache replays a type-aware error after you fixed it
 
-`.husky/pre-commit` runs
+This repository stopped running ESLint on 2026-10-27, when oxlint replaced it
+([ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)), and
+oxlint keeps no cache. The entry stays for the repositories that use the
+harness and still lint with ESLint, and its trigger matches only a line of
+ESLint's own report, because a grep of the standards printing a rule name is
+not an error. Until then `.husky/pre-commit` ran
 
 ```bash
 eslint --cache --cache-strategy content --cache-location .eslintcache

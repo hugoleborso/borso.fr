@@ -11,7 +11,7 @@
 
 set -euo pipefail
 
-root="$(git -C "$(dirname "$0")" rev-parse --show-toplevel)"
+root="$(cd "$(dirname "$0")/.." && pwd)"
 workspace="$(realpath --relative-to="$root" "$PWD")"
 
 "$root/scripts/ensure-infra-built.sh"

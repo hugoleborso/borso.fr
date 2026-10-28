@@ -1,4 +1,4 @@
-# ADR-0049: A task names an optional session through a nullable `task.session_id`, claimed like its song and nulled when the session is deleted
+# ADR-0050: A task names an optional session through a nullable `task.session_id`, claimed like its song and nulled when the session is deleted
 
 - **Status:** accepted
 - **Date:** 2026-10-27

@@ -4,7 +4,7 @@
 
 This plan covers **slice 2 only**, on branch `claude/pragma-ux-redesign-slice-2`, stacked on slice 1 (PR #207). It delivers what the spec's *Slices* section assigns to slice 2: four tabs with no counts, the top safe area, Home with the next session, Your part and Your tasks, the Band hub holding tasks with the account link last, Sessions with a Setlists section, sessions listed next first, the manifest shortcut to Home, the theme colour per scheme in `index.html`, the language switch on the account page, task chips that wrap, and Studies reached through Band until slice 6. It also carries two fixes from the operator's review of slice 1 on `/tasks`: one primary action per screen, and drafts that survive a closed sheet.
 
-Nothing in this slice touches the database or adds a dependency. No ADR is triggered: [ADR-0049](../../../../adr/0049-a-task-names-an-optional-session.md) (task session link) is slice 5 and [ADR-0050](../../../../adr/0050-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) is slice 6.
+Nothing in this slice touches the database or adds a dependency. No ADR is triggered: [ADR-0050](../../../../adr/0050-a-task-names-an-optional-session.md) (task session link) is slice 5 and [ADR-0051](../../../../adr/0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) is slice 6.
 
 Every file path below was read on this branch while planning. Paths under `site/`, `api/`, `domain/` and `scripts/` are relative to `apps/pragma/`.
 
@@ -66,7 +66,7 @@ Each step is one or more commits on `claude/pragma-ux-redesign-slice-2`.
 | VOCABULARY, *Changes* › Types | New nouns **Home** and **Band tab** | `apps/pragma/VOCABULARY.md`: `## Home` (lives in `site/src/routes/home/`; the start screen showing the next session; not the catalogue, which was the start screen before) and `## Band tab` (lives in `site/src/routes/band/`; not the band as the set of members, which is **Member**) | `scripts/check-vocabulary-paths.sh` passes |
 | i18n | Every new label in both languages | `site/src/i18n/en.json`, `fr.json`: `nav.home`, `nav.songs`, `nav.band`, `home.*`, `band.*`, `sessions.section.*`, `account.language`; `nav.more`, `nav.workshopSection`, `nav.administrationSection`, `nav.setlists`, `nav.catalog`, `nav.tasks` deleted when nothing reads them | `i18n-parity.core.test.ts`; `borso/no-literal-jsx-text` clean |
 | *Home* `NextConcertStrip` on `/catalog` | Not changed in this slice | (out of scope: slice 6 rebuilds the Songs tab and removes it; until then it keeps the vote and stage shortcuts it carries today) | |
-| D3, ADR-0049, tasks grouped by session, task sheet's session and all songs, **Start the practice** | | (out of scope: slice 5) | |
+| D3, ADR-0050, tasks grouped by session, task sheet's session and all songs, **Start the practice** | | (out of scope: slice 5) | |
 | Setlist views, entry sheet, vote page | | (out of scope: slice 3) | |
 | Add songs, Order | | (out of scope: slice 4) | |
 | To learn filter replacing Studies, song page, chords | | (out of scope: slice 6) | |

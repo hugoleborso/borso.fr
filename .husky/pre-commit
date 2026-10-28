@@ -137,7 +137,8 @@ $word
 }
 
 # run_check <name> <scope> <command…>: a whole-tree check, run when the commit
-# touches its scope.
+# touches its scope. Its budget grows by the per-file amount for each touched
+# path in scope past the first: these checks narrow to the staged paths.
 run_check() {
   name="$1"
   scope="$2"
@@ -146,7 +147,9 @@ run_check() {
     checks_skipped=$((checks_skipped + 1))
     return 0
   fi
-  launch "$name" "$CHECK_BUDGET_MS" "$@"
+  in_scope=$(printf '%s\n' "$touched" | grep -cE "$scope" || true)
+  [ "$in_scope" -ge 1 ] || in_scope=1
+  launch "$name" $((CHECK_BUDGET_MS + (in_scope - 1) * FILE_BUDGET_PER_EXTRA_FILE_MS)) "$@"
 }
 
 # run_check_on_files <name> <path pattern> <command…>: a per-file check, handed
@@ -439,8 +442,12 @@ run_check adr-numbers-resolve '^. docs/adr/' scripts/check-adr-numbers-resolve.s
 run_check_on_files instructions-name-installed-tools \
   '^(\.claude/|plugins/|docs/standards/|docs/features/[^/]+/[^/]+/(plan|spec)/).*\.(md|sh)$' \
   scripts/check-instructions-name-installed-tools.sh
-run_check named-paths-exist '^. (scripts/|\.husky/|\.github/|plugins/|\.claude/|CLAUDE\.md$)|^D ' \
-  scripts/check-named-paths-exist.sh --staged
+if is_in_scope '^. (scripts/|\.husky/|\.github/|plugins/|\.claude/|CLAUDE\.md$)|^D '; then
+  run_with_files named-paths-exist '.' "$CHECK_BUDGET_MS" "$FILE_BUDGET_PER_EXTRA_FILE_MS" \
+    scripts/check-named-paths-exist.sh --staged
+else
+  checks_skipped=$((checks_skipped + 1))
+fi
 
 # A spec with no Test strategy leaves the split between the two validators to
 # whichever reads it first. Rung-2 eradication of

@@ -2,9 +2,9 @@
 
 > Pair with [`../spec/spec.md`](../spec/spec.md) and the earlier plans in this folder. Short on purpose: the spec carries the decisions, and this file says where each one lands.
 
-Branch `claude/pragma-ux-redesign-slice-6`, stacked on slice 5. It delivers what the spec's *Slices* section gives slice 6: the compact catalogue with the **To learn** filter that replaces Studies, the **Add a song** sheet, the song page for learning (listen row with official marks, setlists line, labelled round actions, Your part, transpose, takes, **Full screen**), and chord entry by paste and by a PDF's text layer ([ADR-0050](../../../../adr/0050-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md)), a photo staying an `image` chart.
+Branch `claude/pragma-ux-redesign-slice-6`, stacked on slice 5. It delivers what the spec's *Slices* section gives slice 6: the compact catalogue with the **To learn** filter that replaces Studies, the **Add a song** sheet, the song page for learning (listen row with official marks, setlists line, labelled round actions, Your part, transpose, takes, **Full screen**), and chord entry by paste and by a PDF's text layer ([ADR-0051](../../../../adr/0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md)), a photo staying an `image` chart.
 
-One new dependency, `pdfjs-dist` 6.4.299, which ADR-0050 accepted; it is loaded with a dynamic `import()` from the chord editor only. No schema change. One additive API change: each setlist summary of `GET /api/setlists` carries its `songIds`, so the song page can name the setlists a song is in without a new route. Paths are relative to `apps/pragma/site/src/` unless they start with `apps/` or `api/`.
+One new dependency, `pdfjs-dist` 6.4.299, which ADR-0051 accepted; it is loaded with a dynamic `import()` from the chord editor only. No schema change. One additive API change: each setlist summary of `GET /api/setlists` carries its `songIds`, so the song page can name the setlists a song is in without a new route. Paths are relative to `apps/pragma/site/src/` unless they start with `apps/` or `api/`.
 
 ## How each spec decision becomes code
 

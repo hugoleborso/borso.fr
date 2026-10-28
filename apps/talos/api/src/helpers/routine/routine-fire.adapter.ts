@@ -11,7 +11,7 @@ import {
   type RoutineTrigger,
 } from './routine-fire.core';
 
-export type ExternalFetcher = (url: string, init: RequestInit) => Promise<Response>;
+type ExternalFetcher = (url: string, init: RequestInit) => Promise<Response>;
 
 export interface FireRoutineOptions {
   readonly fetcher?: ExternalFetcher;

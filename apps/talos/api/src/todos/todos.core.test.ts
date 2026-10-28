@@ -1,8 +1,6 @@
 import { TODO_LISTS } from '@domain/todo-list.core';
 import { describe, expect, it } from 'vitest';
 import {
-  buildTodoFileEdit,
-  buildTodoRemovalFileEdit,
   describeTodoAddition,
   describeTodoChange,
   describeTodoRemoval,
@@ -47,58 +45,10 @@ describe('describeTodoAddition', () => {
   });
 });
 
-describe('buildTodoFileEdit', () => {
-  it('writes a saved edit with its commit message', () => {
-    const saved = {
-      kind: 'saved',
-      markdown: '- [ ] Payer\n',
-      todo: { id: 'a', text: 'Payer', done: false },
-    } as const;
-    expect(buildTodoFileEdit(saved, (text) => describeTodoAddition(MAIN, text))).toEqual({
-      content: '- [ ] Payer\n',
-      commitMessage: 'pwa : todo ajoutée « Payer »',
-      outcome: saved,
-    });
-  });
-
-  it('writes nothing for a refused edit', () => {
-    expect(
-      buildTodoFileEdit({ kind: 'not-found' }, (text) => describeTodoAddition(MAIN, text)),
-    ).toEqual({
-      content: null,
-      outcome: { kind: 'not-found' },
-    });
-  });
-});
-
 describe('describeTodoRemoval and describeTodoRestoration', () => {
   it('name the removed and the restored task', () => {
     expect(describeTodoRemoval(MAIN, 'Payer')).toBe('pwa : todo supprimée « Payer »');
     expect(describeTodoRestoration(MAIN, 'Payer')).toBe('pwa : todo restaurée « Payer »');
-  });
-});
-
-describe('buildTodoRemovalFileEdit', () => {
-  it('writes a removal with its commit message', () => {
-    const removed = {
-      kind: 'removed',
-      markdown: '# Todo\n',
-      todo: { id: 'a', text: 'Payer', done: false },
-      line: '- [ ] Payer',
-      position: 0,
-    } as const;
-    expect(buildTodoRemovalFileEdit(MAIN, removed)).toEqual({
-      content: '# Todo\n',
-      commitMessage: 'pwa : todo supprimée « Payer »',
-      outcome: removed,
-    });
-  });
-
-  it('writes nothing for an unknown task', () => {
-    expect(buildTodoRemovalFileEdit(MAIN, { kind: 'not-found' })).toEqual({
-      content: null,
-      outcome: { kind: 'not-found' },
-    });
   });
 });
 

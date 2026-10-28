@@ -1,0 +1,104 @@
+# Validation screenshots, shown inline on the pull request they belong to.
+#
+# `/open-pr` uploads a passing run's PNGs to the previews bucket under
+# `screenshots/pr-<n>/<folder>/` (ADR-0023). The pull request body can only
+# link that folder: the GitHub MCP server rewrites an image in a body or in a
+# comment it posts, so an agent cannot put a picture in front of the reviewer
+# itself. A comment written here, with GITHUB_TOKEN, never passes through that
+# server, so its images render. See docs/knowledge/github-mcp-pr-body-sanitizer.md.
+#
+# Two triggers. `workflow_dispatch` is how `/open-pr` asks for the comment right
+# after uploading, with `ref: main`; `pull_request` refreshes it on every push
+# and is a no-op, without even a checkout, while the prefix holds no PNG.
+
+name: screenshots
+
+on:
+  pull_request:
+    types: [opened, synchronize, reopened]
+  workflow_dispatch:
+    inputs:
+      pr:
+        description: Pull request number whose screenshots/pr-N/ prefix to show
+        required: true
+        type: number
+
+concurrency:
+  group: screenshots-${{ inputs.pr || github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+  pull-requests: write
+  # PreviewDeployRole, the same role architecture.yml and preview.yml assume.
+  # Its trust policy names `pull_request` and `ref:refs/heads/main`, so a
+  # dispatch only authenticates when it runs from main; from any other branch
+  # the assume-role is refused. See docs/knowledge/github-oidc-sub-claim-per-trigger.md.
+  id-token: write
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  gallery:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    env:
+      PR_NUMBER: ${{ inputs.pr || github.event.pull_request.number }}
+    steps:
+      - name: Check the pull request number
+        run: |
+          set -euo pipefail
+          case "${PR_NUMBER:?the pull request number is required}" in
+            '' | *[!0-9]*) echo "::error::refusing PR_NUMBER='$PR_NUMBER'"; exit 1 ;;
+          esac
+
+      - name: Authenticate to AWS
+        uses: aws-actions/configure-aws-credentials@v6
+        with:
+          role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
+          aws-region: ${{ vars.AWS_REGION }}
+
+      - name: List the published screenshots
+        id: listing
+        run: |
+          set -euo pipefail
+          bucket="$(aws ssm get-parameter --name /borso/shared/previews-bucket-name \
+            --query Parameter.Value --output text)"
+          aws s3api list-objects-v2 --bucket "$bucket" \
+            --prefix "screenshots/pr-$PR_NUMBER/" --output json > "$RUNNER_TEMP/listing.json"
+          count="$(jq '[.Contents[]? | select(.Key | endswith(".png"))] | length' \
+            "$RUNNER_TEMP/listing.json")"
+          echo "Found $count PNG files under screenshots/pr-$PR_NUMBER/"
+          echo "count=$count" >> "$GITHUB_OUTPUT"
+
+      - if: steps.listing.outputs.count != '0'
+        uses: actions/checkout@v7
+      - if: steps.listing.outputs.count != '0'
+        uses: pnpm/action-setup@v6
+      - if: steps.listing.outputs.count != '0'
+        uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - if: steps.listing.outputs.count != '0'
+        run: pnpm install --frozen-lockfile
+
+      - name: Render the comment
+        if: steps.listing.outputs.count != '0'
+        run: |
+          pnpm exec tsx scripts/pr/screenshot-gallery.ts \
+            "$RUNNER_TEMP/listing.json" "$PR_NUMBER" "$RUNNER_TEMP/screenshots.md"
+          cat "$RUNNER_TEMP/screenshots.md" >> "$GITHUB_STEP_SUMMARY"
+
+      # One comment per pull request, rewritten in place, and only when the
+      # body moved: an identical rewrite still notifies every watcher and wakes
+      # any agent session subscribed to the pull request.
+      - name: Post or update the Screenshots comment
+        if: steps.listing.outputs.count != '0'
+        uses: marocchino/sticky-pull-request-comment@v3
+        with:
+          header: screenshots
+          number_force: ${{ env.PR_NUMBER }}
+          path: ${{ runner.temp }}/screenshots.md
+          skip_unchanged: true

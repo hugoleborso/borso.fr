@@ -44,7 +44,7 @@ Talos is not a todo app. It is the face of an agent that works overnight: it wri
 
 ## Evidence on Hand
 
-- Fictional content examples in `CONTRAT.md` and `test/content-fixture.ts`.
+- Fictional content examples in `CONTRAT.md` and `test/memory-seed.json`.
 - No logo beyond the current favicon in `site/public/icons/`.
 
 ## Product Principles

@@ -2,7 +2,7 @@
 
 > Early quality check. Pair with [`../spec/spec.md`](../spec/spec.md) and its review [`../spec/critique.md`](../spec/critique.md). When a defect lands and a Dantotsu traces back here, the chain is visible: the plan either named the risk and we missed mitigating it, didn't name the risk at all (planning gap), or named it correctly and the defect comes from elsewhere.
 
-This plan covers **slice 1 only**: the measuring harness moved into the repository, the Notebook tokens with their grafts, Newsreader, the atoms and molecules, every button with an icon, the 14 dialogs on one `Sheet`, the member colour atoms, the two note-loss fixes and the slice 1 gates. Slices 2 to 6 get their own plan when they start. The decisions it applies are [ADR-0047](../../../../adr/0047-pragma-design-system-is-notebook-with-grafts.md) (Notebook with grafts, members keep their stored colours) and [ADR-0048](../../../../adr/0048-newsreader-replaces-instrument-serif.md) (Newsreader). [ADR-0049](../../../../adr/0049-a-task-names-an-optional-session.md) (a task names a session) lands in slice 5 and [ADR-0050](../../../../adr/0050-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) (chord text from paste and PDF) in slice 6; nothing in this slice touches either.
+This plan covers **slice 1 only**: the measuring harness moved into the repository, the Notebook tokens with their grafts, Newsreader, the atoms and molecules, every button with an icon, the 14 dialogs on one `Sheet`, the member colour atoms, the two note-loss fixes and the slice 1 gates. Slices 2 to 6 get their own plan when they start. The decisions it applies are [ADR-0047](../../../../adr/0047-pragma-design-system-is-notebook-with-grafts.md) (Notebook with grafts, members keep their stored colours) and [ADR-0048](../../../../adr/0048-newsreader-replaces-instrument-serif.md) (Newsreader). [ADR-0050](../../../../adr/0050-a-task-names-an-optional-session.md) (a task names a session) lands in slice 5 and [ADR-0051](../../../../adr/0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) (chord text from paste and PDF) in slice 6; nothing in this slice touches either.
 
 Every count below was taken on this branch while planning, with `grep` over `apps/pragma/site/src` (tests left out), unless it names the harness.
 
@@ -70,8 +70,8 @@ Each step is one or more commits on `claude/pragma-ux-redesign`. The order is th
 | D1, D2, Home, Band, safe area top, theme colour per scheme | Navigation and shell | (out of scope: slice 2) | |
 | Setlist views, entry sheet, vote page, "a sheet never opens another" gate | | (out of scope: slice 3) | |
 | Add songs, Order, batch route (Q5) | | (out of scope: slice 4) | |
-| D3 / ADR-0049, practice mode, Q11 to Q13 | | (out of scope: slice 5) | |
-| D9 / ADR-0050, Q6, Q7 YouTube mark, buttons inside a link, `/catalog/:songId/edit` one scroll | | (out of scope: slice 6) | |
+| D3 / ADR-0050, practice mode, Q11 to Q13 | | (out of scope: slice 5) | |
+| D9 / ADR-0051, Q6, Q7 YouTube mark, buttons inside a link, `/catalog/:songId/edit` one scroll | | (out of scope: slice 6) | |
 | Production strategy › `EntryNoteSaveError` | Alert on any failed note save | (out of scope: slice 3, with the "Saved" and "Not saved" line of the entry sheet); `latest-text-save.utils.ts` already exposes the failed state that slice 3 renders and reports | |
 
 ## Token renames

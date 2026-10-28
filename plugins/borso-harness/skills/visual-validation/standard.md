@@ -120,7 +120,9 @@ relative path.
 That per-file URL belongs in the report and **never in the pull request body**.
 `pretool-github-pr-body.sh` blocks a markdown image and a link whose extension is an image,
 so the body links the folder instead and `/open-pr` publishes an `index.html` gallery there.
-The report is read on a checkout or on github.com, where neither rule applies.
+The images themselves reach the pull request through the *Screenshots* comment that
+`.github/workflows/screenshots.yml` writes with its own token, which the MCP server never
+touches. The report is read on a checkout or on github.com, where neither rule applies.
 
 **The upload runs in `/open-pr`, because the destination carries the pull request number.**
 Between the validation and the pull request, a publishable screenshot waits in

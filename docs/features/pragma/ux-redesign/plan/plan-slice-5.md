@@ -2,17 +2,17 @@
 
 > Pair with [`../spec/spec.md`](../spec/spec.md) and the earlier plans in this folder. Short on purpose: the spec carries the decisions, and this file says where each one lands.
 
-Branch `claude/pragma-ux-redesign-slice-5`, stacked on slice 4. It delivers what the spec's *Slices* section gives slice 5: the task's session link ([ADR-0049](../../../../adr/0049-a-task-names-an-optional-session.md)), the task sheet on Band and on the session with every song offered, the session page (setlist preview without key, **Who does what**, takes grouped by song, **Add songs** creating the session's setlist), Home's tasks with the next session's first, and practice mode with **Start the practice** on the session page and on Home.
+Branch `claude/pragma-ux-redesign-slice-5`, stacked on slice 4. It delivers what the spec's *Slices* section gives slice 5: the task's session link ([ADR-0050](../../../../adr/0050-a-task-names-an-optional-session.md)), the task sheet on Band and on the session with every song offered, the session page (setlist preview without key, **Who does what**, takes grouped by song, **Add songs** creating the session's setlist), Home's tasks with the next session's first, and practice mode with **Start the practice** on the session page and on Home.
 
 The operator answered Q11 to Q13 on 2026-10-28: practice mode's position lives on each device (local storage, no schema change), the quick note goes into the current setlist entry's note, and practice mode is offered on the session's own day only. The spec rows now carry those answers.
 
-One schema change, ADR-0049's `task.session_id`, already accepted. No new dependency. The takes list route gains a `sessionId` filter beside `songId`: a query parameter on an existing route, not a new route. Paths are relative to `apps/pragma/site/src/` unless they start with `apps/` or `api/`.
+One schema change, ADR-0050's `task.session_id`, already accepted. No new dependency. The takes list route gains a `sessionId` filter beside `songId`: a query parameter on an existing route, not a new route. Paths are relative to `apps/pragma/site/src/` unless they start with `apps/` or `api/`.
 
 ## How each spec decision becomes code
 
 | Spec decision | File | Change | Blueprint |
 | --- | --- | --- | --- |
-| ADR-0049: nullable `task.session_id`, no foreign key | new `api/src/database/migrations/0020_task_session.sql`, `api/src/tasks/tasks.schema.ts` | `ALTER TABLE "task" ADD COLUMN IF NOT EXISTS "session_id" uuid;`; `sessionId` on the table and on the create and update inputs, default `null` | `schema-table-and-input` |
+| ADR-0050: nullable `task.session_id`, no foreign key | new `api/src/database/migrations/0020_task_session.sql`, `api/src/tasks/tasks.schema.ts` | `ALTER TABLE "task" ADD COLUMN IF NOT EXISTS "session_id" uuid;`; `sessionId` on the table and on the create and update inputs, default `null` | `schema-table-and-input` |
 | The task write claims its session, refused with `session-not-found` | `api/src/tasks/tasks.service.ts`, `tasks.repository.ts`, `tasks.controller.ts` | `findLinkRefusalWithin` claims the session with `didClaimSessionWithin` after the assignee and the song; the projection and the insert carry `sessionId`; the controller answers 400 `session-not-found`; `task_created` product event with `hasSession` | `service-crud-update`, `repository-projection`, `controller-dispatch` |
 | Deleting a session nulls its tasks' session | `api/src/tasks/tasks.repository.ts`, `tasks.service.ts`, `api/src/sessions/sessions.repository.ts` | `detachDeletedSessionFromTasks` beside `detachDeletedSongFromTasks`, called by `deleteSessionWithCascade` after the session row is removed, as takes are | `repository-owned-transaction` |
 | The session page lists the takes recorded at it | `api/src/takes/takes.schema.ts`, `takes.service.ts`, `takes.repository.ts`, `takes.controller.ts` | `GET /api/takes` takes exactly one of `songId` or `sessionId`; `listTakesOfSessionNewestFirst` | `schema-refine-pure-helper`, `controller-dispatch` |

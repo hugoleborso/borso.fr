@@ -1,6 +1,5 @@
 import { sql } from 'drizzle-orm';
 import { getDatabase } from '../api/src/database/client';
-import { forgetStorageMode } from '../api/src/memory/memory-cutover.service';
 
 const ALL_TABLES = [
   'auth_attempt',
@@ -32,5 +31,4 @@ export async function truncateAllTables(): Promise<void> {
   await getDatabase().execute(
     sql.raw(`TRUNCATE ${ALL_TABLES.map((name) => `"${name}"`).join(', ')} CASCADE`),
   );
-  forgetStorageMode();
 }

@@ -1,4 +1,4 @@
-# ADR-0050: Chord text comes from pasted text and from a PDF's text layer read in the browser; a photo stays an image
+# ADR-0051: Chord text comes from pasted text and from a PDF's text layer read in the browser; a photo stays an image
 
 - **Status:** accepted
 - **Date:** 2026-10-27

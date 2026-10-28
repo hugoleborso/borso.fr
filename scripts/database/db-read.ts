@@ -7,7 +7,8 @@ import {
   decideReadTarget,
   decideTableAccess,
   readQueryArguments,
-  readReaderTableBlocklist,
+  READER_NOT_PROVISIONED_REFUSAL,
+  readReaderProvisioning,
   ROW_CAP,
 } from './read-only-query.utils';
 
@@ -53,10 +54,11 @@ const deployedTemplate: unknown = JSON.parse(
     'json',
   ),
 );
-const tableAccess = decideTableAccess(
-  queryDecision.statement,
-  readReaderTableBlocklist(deployedTemplate),
-);
+const provisioning = readReaderProvisioning(deployedTemplate);
+if (!provisioning.provisioned)
+  fail(`refused: ${READER_NOT_PROVISIONED_REFUSAL}`, REFUSAL_EXIT_CODE);
+
+const tableAccess = decideTableAccess(queryDecision.statement, provisioning.blocklist);
 if (!tableAccess.accepted) fail(`refused: ${tableAccess.reason}`, REFUSAL_EXIT_CODE);
 
 const endpoint = runAws([
