@@ -110,11 +110,13 @@ export const COUNT_BUTTONS = `() => {
   const readVisibleText = (element) => { let text = ''; const walker = document.createTreeWalker(element, NodeFilter.SHOW_TEXT); let node; while ((node = walker.nextNode())) { const trimmed = node.textContent.trim(); if (!trimmed) continue; const range = document.createRange(); range.selectNodeContents(node); const box = range.getBoundingClientRect(); const parentStyle = getComputedStyle(node.parentElement); if (box.width > 1 && box.height > 1 && parentStyle.visibility !== 'hidden' && parentStyle.opacity !== '0') text += ' ' + trimmed; } return text.trim(); };
   const hasVisibleIcon = (element) => [...element.querySelectorAll('svg, img, [role=img]')].some((icon) => { const box = icon.getBoundingClientRect(); return box.width > 0 && box.height > 0; });
   const isGlyph = (text) => text.length > 0 && text.length <= 2 && !/[\\p{L}\\p{N}]/u.test(text);
-  const rows = { button: { iconOnly: [], textOnly: [], iconAndText: [], neither: [], total: 0 }, link: { iconOnly: [], textOnly: [], iconAndText: [], neither: [], total: 0 } };
+  const emptyGroup = () => ({ iconOnly: [], textOnly: [], iconAndText: [], neither: [], total: 0 });
+  const rows = { button: emptyGroup(), link: emptyGroup(), choice: emptyGroup() };
+  const isChoice = (element) => element.matches('[aria-pressed], [role=tab], [role=radio], [role=option], [role=switch], [role=checkbox]');
   for (const element of document.querySelectorAll('button, [role=button], summary, input[type=button], input[type=submit], a[href]')) {
     if (!isShown(element)) continue;
     if (element.matches('a[href]') && !element.matches('[role=button]') && element.closest('button')) continue;
-    const kind = element.matches('a[href]') && !element.matches('[role=button]') ? 'link' : 'button';
+    const kind = element.matches('a[href]') && !element.matches('[role=button]') ? 'link' : isChoice(element) ? 'choice' : 'button';
     const text = element.tagName === 'INPUT' ? element.value : readVisibleText(element);
     const hasIcon = hasVisibleIcon(element) || isGlyph(text);
     const realText = isGlyph(text) ? '' : text;

@@ -8,8 +8,10 @@ import {
   READ_OPEN_FIELD_VALUE,
   READ_PATHNAME,
   READ_PRIMARY_ACTIONS,
+  READ_SCROLL_Y,
   READ_SHELL_TABS,
   READ_THEME_COLOUR,
+  SCROLL_TO_PAGE_END,
   SEND_JSON,
 } from './page-probes.setup';
 import { BOTTOM_THIRD_FROM, countTextsWithDigits, selectLongestTitle } from './task-metrics.core';
@@ -20,7 +22,7 @@ const SHEET_SETTLE_MS = 700;
 const SCHEME_SETTLE_MS = 300;
 const SHELL_LABEL = 'Main sections';
 const SHELL_ROUTES = ['/', '/sessions', '/setlists', '/catalog', '/band', '/studies', '/account'];
-const PRIMARY_ROUTES = ['/', '/band', '/tasks', '/sessions', '/setlists'];
+const PRIMARY_ROUTES = ['/', '/band', '/tasks', '/sessions', '/setlists', '/account'];
 const FIRST_CONTENT_ROUTES = ['/', '/band', '/sessions', '/catalog'];
 const TASKS_ROUTE = '/tasks';
 const TASK_TITLE_FIELD = '#task-title';
@@ -30,6 +32,8 @@ const SMALL_PHONE = { width: 375, height: 667 } as const;
 const SIGNED_IN_FIRST_NAME = 'Hugo';
 const COLOUR_SCHEMES = ['light', 'dark'] as const;
 const MANIFEST_PATH = '/manifest.webmanifest';
+const TAB_LINK = `nav[aria-label="${SHELL_LABEL}"] a`;
+const TABS_REACHED_FROM_SCROLLED_HOME = ['Sessions', 'Songs', 'Band'] as const;
 
 const shellTabsSchema = z
   .object({ labels: z.array(z.string()), active: z.array(z.string()) })
@@ -143,6 +147,25 @@ async function measureLanguageSwitch(driver: BandSessionDriver): Promise<Record<
   return { chipsInShell: onHome.outsideMain, chipsShownOnAccount: onAccount.inMainShown };
 }
 
+async function measureTabArrivalScroll(
+  driver: BandSessionDriver,
+): Promise<Record<string, unknown>> {
+  const tabs: Record<string, unknown> = {};
+  for (const tabLabel of TABS_REACHED_FROM_SCROLLED_HOME) {
+    await openAndSettle(driver, '/');
+    const homeScrollY = z.number().parse(await driver.session.evaluate(SCROLL_TO_PAGE_END));
+    const walk = new TaskWalk(driver.session, `tab arrival (${tabLabel})`);
+    await walk.tap(`${tabLabel} tab`, { text: `^${tabLabel}`, css: TAB_LINK });
+    await waitMilliseconds(ROUTE_SETTLE_MS);
+    tabs[tabLabel] = {
+      homeScrollY,
+      landedOn: String(await driver.session.evaluate(READ_PATHNAME)),
+      scrollYOnArrival: z.number().parse(await driver.session.evaluate(READ_SCROLL_Y)),
+    };
+  }
+  return tabs;
+}
+
 type DraftClose = 'backdrop' | 'escape';
 
 async function hasClosedOpenSheet(driver: BandSessionDriver, how: DraftClose): Promise<boolean> {
@@ -236,6 +259,7 @@ export async function measureSliceTwo(driver: BandSessionDriver): Promise<Record
     themeColour: await measureThemeColour(driver),
     manifestShortcutUrls: await measureManifestShortcuts(driver),
     languageSwitch: await measureLanguageSwitch(driver),
+    tabArrivalScroll: await measureTabArrivalScroll(driver),
     tasksLayoutWidth: await measureTasksLayoutWidth(driver),
     taskDraftAfterBackdrop: await measureTaskDraftAfter(driver, 'backdrop'),
     taskDraftAfterEscape: await measureTaskDraftAfter(driver, 'escape'),

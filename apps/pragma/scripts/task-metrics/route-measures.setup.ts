@@ -20,7 +20,11 @@ const buttonGroupSchema = z.object({
   neither: z.array(buttonEntrySchema),
   total: z.number(),
 });
-const buttonCountSchema = z.object({ button: buttonGroupSchema, link: buttonGroupSchema });
+const buttonCountSchema = z.object({
+  button: buttonGroupSchema,
+  link: buttonGroupSchema,
+  choice: buttonGroupSchema,
+});
 
 export type ButtonCount = z.infer<typeof buttonCountSchema>;
 
@@ -70,6 +74,8 @@ async function measureRoute(
     ),
     buttons: summariseGroup(buttons.button),
     links: summariseGroup(buttons.link),
+    choices: summariseGroup(buttons.choice),
+    textOnlyChoiceNames: buttons.choice.textOnly.map((entry) => entry.name),
     noTextNoIconButtons: buttons.button.neither.map(
       (entry) => entry.name || '(no accessible name)',
     ),
