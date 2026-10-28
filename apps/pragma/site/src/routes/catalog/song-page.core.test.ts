@@ -56,6 +56,22 @@ describe('selectPractisedState', () => {
     });
   });
 
+  it('offers nothing to practise to an account with no member row', () => {
+    const queue = [{ songId: 'song-1', instrumentId: 'bass', isStudiedToday: true }];
+    expect(selectPractisedState(lineup, queue, 'song-1', null)).toEqual({
+      instrumentIds: [],
+      isPractisedToday: false,
+    });
+  });
+
+  it('reads the song as not practised today while one of its queue rows waits', () => {
+    const queue = [
+      { songId: 'song-1', instrumentId: 'bass', isStudiedToday: true },
+      { songId: 'song-1', instrumentId: 'voice', isStudiedToday: false },
+    ];
+    expect(selectPractisedState(lineup, queue, 'song-1', 'member-1').isPractisedToday).toBe(false);
+  });
+
   it('reads the song as practised today once every one of its queue rows was studied', () => {
     const queue = [{ songId: 'song-1', instrumentId: 'bass', isStudiedToday: true }];
     expect(selectPractisedState(lineup, queue, 'song-1', 'member-1').isPractisedToday).toBe(true);

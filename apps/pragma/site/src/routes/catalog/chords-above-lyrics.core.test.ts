@@ -62,6 +62,34 @@ describe('convertChordsAboveLyrics', () => {
     });
   });
 
+  it('reads a tab in a chord line as reaching the next column of eight', () => {
+    expect(convertChordsAboveLyrics('Am\tG\nHello there world').chordPro).toBe(
+      '[Am]Hello th[G]ere world',
+    );
+  });
+
+  it('keeps the indent of a lyric line', () => {
+    expect(convertChordsAboveLyrics('  Am\n  Hello').chordPro).toBe('  [Am]Hello');
+  });
+
+  it('brackets a chord line with no lyric under it, without its outer spaces', () => {
+    expect(convertChordsAboveLyrics('   Am   G   ').chordPro).toBe('[Am]   [G]');
+  });
+
+  it('places no bar separator in the lyric, only the chords', () => {
+    expect(convertChordsAboveLyrics('Am | G\nHello there').chordPro).toBe('[Am]Hello[G] there');
+  });
+
+  it('keeps a line of spaces between a chord line and the lyric below as it is', () => {
+    expect(convertChordsAboveLyrics('Am  G\n   \nHello').chordPro).toBe('[Am]  [G]\n   \nHello');
+  });
+
+  it('writes a section label without the spaces inside its brackets', () => {
+    expect(convertChordsAboveLyrics('[ Chorus ]\nAm\nHello').chordPro).toBe(
+      '{comment: Chorus}\n[Am]Hello',
+    );
+  });
+
   it('appends a chord that stands past the end of its lyric', () => {
     expect(convertChordsAboveLyrics('C        G\nHello').chordPro).toBe('[C]Hello    [G]');
   });

@@ -61,19 +61,15 @@ interface SpacedLine {
 }
 
 function measureGapsAbove(lines: readonly PdfLine[]): SpacedLine[] {
-  let previousY: number | null = null;
-  const spaced: SpacedLine[] = [];
-  for (const line of lines) {
-    spaced.push({ line, gapAbove: previousY === null ? 0 : previousY - line.y });
-    previousY = line.y;
-  }
-  return spaced;
+  return lines.map((line, index) => ({
+    line,
+    gapAbove: (lines[index - 1]?.y ?? line.y) - line.y,
+  }));
 }
 
 // @FollowsBlueprint core-projection
 export function layOutPdfPage(pageItems: readonly PdfTextItem[]): string {
   const printedItems = pageItems.filter((item) => item.text.trim().length > 0);
-  if (printedItems.length === 0) return '';
   const characterWidth = readCharacterWidth(printedItems);
   const leftMargin = Math.min(...printedItems.map((item) => item.x));
   const spacedLines = measureGapsAbove(groupIntoLines(printedItems));
@@ -84,7 +80,7 @@ export function layOutPdfPage(pageItems: readonly PdfTextItem[]): string {
   return spacedLines
     .map(({ line, gapAbove }) => {
       const text = renderLine(line, leftMargin, characterWidth);
-      const isAfterBlank = usualGap > 0 && gapAbove > usualGap * BLANK_LINE_GAP_FACTOR;
+      const isAfterBlank = gapAbove > usualGap * BLANK_LINE_GAP_FACTOR;
       return isAfterBlank ? `\n${text}` : text;
     })
     .join('\n');

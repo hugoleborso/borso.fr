@@ -114,8 +114,7 @@ export function convertChordsAboveLyrics(pastedText: string): ChordConversion {
   }
   if (pendingChordLine !== null) converted.push(bracketChordLine(pendingChordLine));
   if (!hasChords) return { chordPro: text, hasChords: false, isChanged: false };
-  const chordPro = converted.join('\n');
-  return { chordPro, hasChords: true, isChanged: chordPro !== text };
+  return { chordPro: converted.join('\n'), hasChords: true, isChanged: true };
 }
 
 export type ChordChartSource = 'paste' | 'photo' | 'pdf';

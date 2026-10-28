@@ -50,6 +50,7 @@ describe('canAddSong', () => {
 describe('shouldSearchMusicServiceFor', () => {
   it('searches once two letters are typed and no track is picked', () => {
     expect(shouldSearchMusicServiceFor('G', null)).toBe(false);
+    expect(shouldSearchMusicServiceFor('  G  ', null)).toBe(false);
     expect(shouldSearchMusicServiceFor('Ge', null)).toBe(true);
     expect(shouldSearchMusicServiceFor('Get Lucky', TRACK)).toBe(false);
   });

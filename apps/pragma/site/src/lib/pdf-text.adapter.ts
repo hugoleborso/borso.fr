@@ -5,18 +5,20 @@ import type { PdfTextItem } from '../routes/catalog/pdf-text-layout.core';
 
 const TRANSFORM_X_INDEX = 4;
 const TRANSFORM_Y_INDEX = 5;
-const transformSchema = z.array(z.number());
+const textItemSchema = z.object({
+  str: z.string(),
+  transform: z.array(z.number()),
+  width: z.number(),
+});
 
-function readTextItem(item: object): PdfTextItem | null {
-  if (!('str' in item) || typeof item.str !== 'string') return null;
-  if (!('transform' in item) || !('width' in item) || typeof item.width !== 'number') return null;
-  const transform = transformSchema.safeParse(item.transform);
-  if (!transform.success) return null;
+function readTextItem(item: unknown): PdfTextItem | null {
+  const printedItem = textItemSchema.safeParse(item);
+  if (!printedItem.success) return null;
   return {
-    text: item.str,
-    x: transform.data[TRANSFORM_X_INDEX] ?? 0,
-    y: transform.data[TRANSFORM_Y_INDEX] ?? 0,
-    width: item.width,
+    text: printedItem.data.str,
+    x: printedItem.data.transform[TRANSFORM_X_INDEX] ?? 0,
+    y: printedItem.data.transform[TRANSFORM_Y_INDEX] ?? 0,
+    width: printedItem.data.width,
   };
 }
 

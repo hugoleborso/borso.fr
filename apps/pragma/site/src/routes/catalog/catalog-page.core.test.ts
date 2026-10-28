@@ -108,8 +108,9 @@ describe('selectCatalogEmptyMessageKey', () => {
     expect(selectCatalogEmptyMessageKey(' slow ', 'learning')).toBe('catalog.emptySearch');
   });
 
-  it('says the catalogue is empty with no search', () => {
+  it('says the catalogue is empty with no search, spaces included', () => {
     expect(selectCatalogEmptyMessageKey('', 'all')).toBe('catalog.emptyList');
+    expect(selectCatalogEmptyMessageKey('   ', 'all')).toBe('catalog.emptyList');
   });
 
   it('says there is nothing to learn under To learn', () => {
@@ -148,6 +149,14 @@ describe('selectSongsToLearn', () => {
     expect(selectSongsToLearn(songs, queue, 'volt').map((entry) => entry.song.id)).toEqual([
       'song-2',
     ]);
+  });
+
+  it('leaves out a song every study of which is ready, with no search typed', () => {
+    const queue = [
+      { songId: 'song-1', instrumentId: 'bass', score: 9, isReady: true },
+      { songId: 'song-2', instrumentId: 'bass', score: 4, isReady: false },
+    ];
+    expect(selectSongsToLearn(songs, queue, '').map((entry) => entry.song.id)).toEqual(['song-2']);
   });
 });
 
