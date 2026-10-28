@@ -101,17 +101,12 @@ describe('a setlist row', () => {
     expect(onOpen).toHaveBeenCalledOnce();
   });
 
-  it('removes the entry from its more menu once confirmed', () => {
+  it('removes the entry from its more menu with no confirmation sheet', () => {
     const onRemove = vi.fn();
     renderRow(buildProps({ onRemove }));
     fireEvent.click(screen.getByRole('button', { name: 'Remove from the setlist' }));
-    const confirm = screen.getByRole('dialog');
-    fireEvent.click(
-      Array.from(confirm.querySelectorAll('button')).find(
-        (button) => button.textContent === 'Remove from the setlist',
-      ) ?? confirm,
-    );
     expect(onRemove).toHaveBeenCalledExactlyOnceWith('entry-1');
+    expect(screen.queryByRole('dialog')).toBe(null);
   });
 
   it('shows the instruments of the chosen member in place of the band lineup', () => {
