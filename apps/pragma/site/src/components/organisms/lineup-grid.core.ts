@@ -101,14 +101,18 @@ function orderGlyphs(
 
 // @FollowsBlueprint core-projection
 export function buildLineupGrid(input: LineupGridInput): LineupGrid {
-  const lineups = input.entries.map((entry) => resolveEntryLineup(entry, input.songsById));
+  const resolved = input.entries.map((entry) => ({
+    entry,
+    lineup: resolveEntryLineup(entry, input.songsById),
+  }));
   const columns = input.members
-    .filter((member) => lineups.some((lineup) => instrumentsHeldBy(lineup, member.id).length > 0))
+    .filter((member) =>
+      resolved.some(({ lineup }) => instrumentsHeldBy(lineup, member.id).length > 0),
+    )
     .map((member) => ({ memberId: member.id, firstName: member.firstName, color: member.color }));
   const orderedInstruments = input.instruments.toSorted(byPositionThenName);
-  const rows = input.entries.map((entry, index): LineupGridRow => {
-    const lineup = lineups[index] ?? {};
-    const previousLineup = lineups[index - 1] ?? lineup;
+  const rows = resolved.map(({ entry, lineup }, index): LineupGridRow => {
+    const previousLineup = resolved[index - 1]?.lineup ?? lineup;
     return {
       entryId: entry.id,
       position: index + 1,

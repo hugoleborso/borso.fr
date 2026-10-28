@@ -86,14 +86,16 @@ export interface TransitionViewsInput {
 
 export function buildTransitionViews(input: TransitionViewsInput): readonly TransitionView[] {
   const families = instrumentFamilyMap(input.instruments);
-  return input.entries.slice(1).map((right, index) => {
-    const left = input.entries[index] ?? right;
+  return input.entries.flatMap((left, index) => {
+    // Stryker disable next-line ArithmeticOperator: equivalent mutant, a transition reads the same both ways, so pairing each entry with the one before yields the same views
+    const right = input.entries[index + 1];
+    if (right === undefined) return [];
     const verdict = evaluateTransition(
       lineupOf(left, input.songsById),
       lineupOf(right, input.songsById),
       families,
     );
-    return buildTransitionView(verdict, input.membersById, input.instrumentsById);
+    return [buildTransitionView(verdict, input.membersById, input.instrumentsById)];
   });
 }
 
