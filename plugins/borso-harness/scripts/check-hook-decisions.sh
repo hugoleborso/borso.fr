@@ -302,14 +302,26 @@ run_context_case() {
   needle="$3"
   payload="$4"
 
+  # A case may name a hook the consumer keeps outside the plugin, as
+  # borso.fr does for the merge notice, which reads that repository's deploy
+  # workflow and shared-stack snapshot and belongs to it rather than to the
+  # harness. Such a case names the path from the repository root.
+  script="$HOOK_PATH/$hook"
+  [ -x "$script" ] || script="$CLAUDE_PROJECT_DIR/$hook"
+
   set +e
-  output="$(cd "${CASE_DIRECTORY:-.}" && printf '%s' "$payload" | "$HOOK_PATH/$hook" 2>/dev/null)"
+  output="$(cd "${CASE_DIRECTORY:-.}" && printf '%s' "$payload" | "$script" 2>/dev/null)"
   status=$?
   set -e
 
+  # An informing hook speaks either through the additionalContext field or on
+  # plain stdout, which Claude Code shows the same way. The needle is looked
+  # for in both, so the table does not have to know which shape a hook picked.
   context="$(jq -r '.hookSpecificOutput.additionalContext // empty' <<<"$output" 2>/dev/null || true)"
+  spoken="$context
+$output"
   case "$expected" in
-    inform) [ "$status" -eq 0 ] && grep -qF -- "$needle" <<<"$context" && verdict=ok || verdict=wrong ;;
+    inform) [ "$status" -eq 0 ] && grep -qF -- "$needle" <<<"$spoken" && verdict=ok || verdict=wrong ;;
     silent) [ "$status" -eq 0 ] && [ -z "$output" ] && verdict=ok || verdict=wrong ;;
     *)
       echo "[check-hook-decisions] unknown expectation '$expected'" >&2
@@ -407,9 +419,13 @@ done
 
 # And every hook that informs has both halves too: a context hook with no
 # silent row is a hook nobody has checked for noise.
-for hook_path in "$HOOK_DIR"/*.sh; do
-  hook_name="$(basename "$hook_path")"
-  grep -q 'additionalContext' "$hook_path" || continue
+for hook_path in "$HOOK_DIR"/*.sh "$CLAUDE_PROJECT_DIR"/.claude/hooks/*.sh; do
+  [ -f "$hook_path" ] || continue
+  case "$hook_path" in
+    "$HOOK_DIR"/*) hook_name="$(basename "$hook_path")" ;;
+    *) hook_name=".claude/hooks/$(basename "$hook_path")" ;;
+  esac
+  grep -qE 'additionalContext|^cat <<NOTE' "$hook_path" || continue
   for half in inform silent; do
     if ! grep -q "^run_context_case $hook_name $half " "$SELF"; then
       echo "[check-hook-decisions] $hook_name adds context but has no $half row here." >&2
@@ -417,6 +433,27 @@ for hook_path in "$HOOK_DIR"/*.sh; do
     fi
   done
 done
+
+# --- the consumer's own context hooks ---------------------------------------
+#
+# A repository keeps hooks of its own beside the harness's, and they answer the
+# same invocation-or-mention question. borso.fr's merge notice answered it for
+# one tool shape only: registered on the GitHub MCP merge call alone, it stayed
+# silent through a `gh pr merge` in a Bash call and six applications deployed to
+# production with nothing printed. See
+# docs/dantotsus/the-merge-whose-blast-radius-nobody-printed.md.
+
+run_context_case .claude/hooks/pretool-merge-deploys-prod.sh inform 'Applications this merge deploys' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"gh pr merge 199 --squash --delete-branch"}}'
+run_context_case .claude/hooks/pretool-merge-deploys-prod.sh inform 'Applications this merge deploys' \
+  '{"hook_event_name":"PreToolUse","tool_name":"mcp__github__merge_pull_request","tool_input":{"pullNumber":199}}'
+run_context_case .claude/hooks/pretool-merge-deploys-prod.sh silent '' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Bash","tool_input":{"command":"grep -n \"gh pr merge\" docs/dantotsus/the-merge-whose-blast-radius-nobody-printed.md"}}'
+
+run_context_case .claude/hooks/pretool-blueprint-context.sh inform 'Blueprint' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"apps/pragma/api/src/song/song.repository.ts"}}'
+run_context_case .claude/hooks/pretool-blueprint-context.sh silent '' \
+  '{"hook_event_name":"PreToolUse","tool_name":"Write","tool_input":{"file_path":"docs/dantotsus/README.md"}}'
 
 if [ "$failed" -ne 0 ]; then
   echo "[check-hook-decisions] a hook decided against its own contract, or has none. A hook that refuses a mention is a hook the next agent works around." >&2

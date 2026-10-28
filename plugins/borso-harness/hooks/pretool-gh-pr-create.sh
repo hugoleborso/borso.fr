@@ -83,6 +83,31 @@ else
   block "no --body / --body-file flag — PRs without a body are rejected."
 fi
 
+# The friction log is gitignored scratch, so it lives on the machine that wrote
+# it and nowhere else. A hosted session's container is reclaimed when the
+# session ends and `/after-task-kaizen` then runs in a fresh one, which is why
+# `scripts/kaizen.sh archive` exists — and why PR #199's sweep had to rebuild
+# its inventory from commits, because nobody ran it. A pull request is the last
+# moment the log and the branch are in the same place.
+# See docs/dantotsus/the-friction-log-that-never-left-the-container.md.
+KAIZEN_FILE="$REPO_ROOT/$("$PLUGIN_ROOT/scripts/harness-path.sh" kaizenFile)"
+FEATURES_DIRECTORY="$("$PLUGIN_ROOT/scripts/harness-path.sh" features)"
+if [[ -f "$KAIZEN_FILE" ]]; then
+  LOGGED="$(grep -c '^- \[' "$KAIZEN_FILE" || true)"
+  # The archive has to be on THIS branch. The tree holds every past feature's
+  # log, so asking whether one exists anywhere answers yes for a branch that
+  # archived nothing.
+  ARCHIVED_HERE="$(git -C "$REPO_ROOT" diff --name-only origin/main...HEAD 2>/dev/null \
+    | grep -c "^$FEATURES_DIRECTORY/.*/kaizen\.md$" || true)"
+  if [[ "$LOGGED" -gt 0 && "$ARCHIVED_HERE" -eq 0 ]]; then
+    echo "[open-pr] the friction log holds $LOGGED entr(y/ies) and this branch commits no archive of it." >&2
+    echo "[open-pr] A gitignored file does not reach the sweep, which may run on another machine." >&2
+    echo "[open-pr]   scripts/kaizen.sh archive <docs-slug>/<feature>   then commit it" >&2
+    "$(dirname "$0")/kaizen-refusal.sh" open-pr "opened a pull request leaving the friction log where the sweep cannot read it"
+    exit 2
+  fi
+fi
+
 BODY_FILE="$(mktemp)"
 trap 'rm -f "$BODY_FILE"' EXIT
 {

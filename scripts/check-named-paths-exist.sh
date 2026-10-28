@@ -56,9 +56,15 @@ if [ "${1:-}" = '--staged' ]; then
     done
   done < <(git diff --cached --name-only --no-renames --diff-filter=D)
   if [ "${#removed_names[@]}" -gt 0 ]; then
+    # Only the surfaces this gate reads below can produce a finding, and
+    # `list_subject_files` discards everything else a moment later. Searching
+    # the whole tree therefore buys candidates that are thrown away: on a merge
+    # removing a toolchain it cost 837 ms of CPU against a 300 ms budget, with
+    # the same verdict either way.
     while IFS= read -r naming; do
       [ -n "$naming" ] && SUBJECTS+=("$naming")
-    done < <(git grep --threads=1 -l -F "${removed_names[@]}" || true)
+    done < <(git grep --threads=1 -l -F "${removed_names[@]}" -- \
+      'scripts/*' '.husky/*' '.github/*' 'plugins/*' '.claude/*' 'CLAUDE.md' || true)
   fi
   if [ "${#SUBJECTS[@]}" -eq 0 ]; then
     echo "[check-named-paths-exist] nothing staged names a path"

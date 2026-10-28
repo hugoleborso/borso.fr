@@ -231,6 +231,10 @@ export function listBlocklistedTables(source: string, blocklist: readonly string
   return blocklist.filter((table) => words.has(table));
 }
 
+export const READER_NOT_PROVISIONED_REFUSAL =
+  'the deployed stack carries no read-only reader, so no table blocklist can be read from it and every table would look readable. ' +
+  'The production deploy that provisions the reader has not run for this application yet (ADR-0044).';
+
 export function decideTableAccess(source: string, blocklist: readonly string[]): QueryDecision {
   const named = listBlocklistedTables(source, blocklist);
   if (named.length > 0) {
@@ -249,15 +253,24 @@ function isStringList(value: unknown): value is string[] {
   return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
 }
 
-export function readReaderTableBlocklist(template: unknown): string[] {
-  if (!isRecord(template) || !isRecord(template.Resources)) return [];
+function isAReaderRoleName(value: unknown): value is string {
+  return typeof value === 'string' && value !== '';
+}
+
+export type ReaderProvisioning =
+  | { readonly provisioned: true; readonly blocklist: string[] }
+  | { readonly provisioned: false };
+
+export function readReaderProvisioning(template: unknown): ReaderProvisioning {
+  if (!isRecord(template) || !isRecord(template.Resources)) return { provisioned: false };
   for (const resource of Object.values(template.Resources)) {
     if (!isRecord(resource) || resource.Type !== SCHEMA_RESOURCE_TYPE) continue;
     if (!isRecord(resource.Properties)) continue;
+    if (!isAReaderRoleName(resource.Properties.readerRoleName)) continue;
     const blocklist = resource.Properties.readerTableBlocklist;
-    if (isStringList(blocklist)) return blocklist;
+    return { provisioned: true, blocklist: isStringList(blocklist) ? blocklist : [] };
   }
-  return [];
+  return { provisioned: false };
 }
 
 export function decideReadTarget(app: string, stage: string): TargetDecision {

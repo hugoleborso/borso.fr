@@ -14,6 +14,16 @@
 # until the session runs this script with --acknowledge, which does what
 # SessionStart would have done and records the id. Commits made outside Claude
 # Code are never concerned.
+#
+# The record is a list, not a single id, because one session can carry several.
+# Resuming a session runs SessionStart again under a new CLAUDE_CODE_SESSION_ID
+# while the tool calls that follow keep reporting the original one, so a marker
+# holding only the last id written never matches the committer again. That is
+# not a hypothetical: on 2026-10-28 the marker held 652f5f5b while every Bash
+# call in the same session reported a062e93b, and this gate refused four
+# commits in a row claiming the hooks had never run while they were running —
+# with an --acknowledge that fixed it only until the next resume. A session
+# that saw SessionStart stays known, whichever of its ids asks.
 set -euo pipefail
 
 MARKER_NAME=claude-harness-session
@@ -23,8 +33,18 @@ repo_root=$(git rev-parse --show-toplevel)
 marker="$(git rev-parse --path-format=absolute --git-common-dir)/$MARKER_NAME"
 session="${CLAUDE_CODE_SESSION_ID:-}"
 
+# A clone outlives many sessions, so the list is capped rather than appended to
+# forever; the oldest ids are the ones nothing will ask about again.
+RECORDED_SESSIONS_KEPT=40
+
 record_session() {
-  [ -n "$session" ] && printf '%s\n' "$session" >"$marker"
+  [ -n "$session" ] || return 0
+  if [ -f "$marker" ] && grep -Fxq "$session" "$marker"; then
+    return 0
+  fi
+  printf '%s\n' "$session" >>"$marker"
+  kept=$(tail -n "$RECORDED_SESSIONS_KEPT" "$marker")
+  printf '%s\n' "$kept" >"$marker"
   return 0
 }
 
@@ -45,7 +65,7 @@ if [ -z "${CLAUDECODE:-}" ] || [ -z "$session" ]; then
   exit 0
 fi
 
-if [ -f "$marker" ] && [ "$(cat "$marker")" = "$session" ]; then
+if [ -f "$marker" ] && grep -Fxq "$session" "$marker"; then
   echo "[check-claude-harness-active] this session runs the repository's hooks"
   exit 0
 fi
