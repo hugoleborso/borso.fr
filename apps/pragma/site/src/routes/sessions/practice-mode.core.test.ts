@@ -3,10 +3,13 @@ import {
   buildPracticeScreen,
   buildPracticeSongs,
   describePracticePosition,
+  describeStoredPosition,
+  formatPracticeNextLine,
   isPracticeModeOffered,
   type PracticeSong,
   parseStoredPracticePosition,
   resolvePracticeIndex,
+  selectPracticeAnchor,
   serializePracticePosition,
 } from './practice-mode.core';
 
@@ -91,6 +94,43 @@ describe('serializePracticePosition', () => {
   });
 });
 
+describe('describeStoredPosition', () => {
+  it('describes the song at an index on the band day', () => {
+    expect(describeStoredPosition(SONGS, 2, SAME_DAY_MORNING)).toEqual({
+      day: TODAY,
+      entryId: 'entry-c',
+      index: 2,
+    });
+    expect(describeStoredPosition(SONGS, 3, SAME_DAY_MORNING)).toBeNull();
+  });
+});
+
+describe('selectPracticeAnchor', () => {
+  const arrival = { day: TODAY, entryId: 'entry-a', index: 0 };
+
+  it('follows the stored position of the same day', () => {
+    const stored = { day: TODAY, entryId: 'entry-b', index: 1 };
+    expect(selectPracticeAnchor(stored, arrival, SAME_DAY_MORNING)).toBe(stored);
+  });
+
+  it('keeps the song shown on arrival when nothing is stored for today', () => {
+    expect(selectPracticeAnchor(null, arrival, SAME_DAY_MORNING)).toBe(arrival);
+    expect(
+      selectPracticeAnchor({ day: '2026-10-27', entryId: 'entry-c', index: 2 }, arrival, NEXT_DAY),
+    ).toBe(arrival);
+  });
+
+  it('keeps the current song current when the setlist is reordered before any move', () => {
+    const reordered = [SONGS[1], SONGS[0], SONGS[2]].filter((song) => song !== undefined);
+    const anchor = selectPracticeAnchor(
+      null,
+      describeStoredPosition(SONGS, 0, SAME_DAY_MORNING),
+      SAME_DAY_MORNING,
+    );
+    expect(resolvePracticeIndex(reordered, anchor, SAME_DAY_MORNING)).toBe(1);
+  });
+});
+
 describe('resolvePracticeIndex', () => {
   it('starts on the first song with nothing stored, or with no song', () => {
     expect(resolvePracticeIndex(SONGS, null, SAME_DAY_MORNING)).toBe(0);
@@ -140,7 +180,14 @@ describe('describePracticePosition', () => {
       count: 3,
       isLast: false,
       isNextInAnotherSetlist: false,
+      currentSetlistName: 'First half',
     });
+  });
+
+  it('names the current song setlist only when the practice plays several setlists', () => {
+    expect(describePracticePosition(SONGS, 2).currentSetlistName).toBe('Encore');
+    expect(describePracticePosition(SONGS.slice(0, 2), 1).currentSetlistName).toBeNull();
+    expect(describePracticePosition(SONGS, 3).currentSetlistName).toBeNull();
   });
 
   it('says when the next song opens another setlist', () => {
@@ -231,5 +278,17 @@ describe('buildPracticeScreen', () => {
       current: null,
       next: null,
     });
+  });
+});
+
+describe('formatPracticeNextLine', () => {
+  it('joins the next song title, artist and new setlist, skipping what is empty', () => {
+    expect(formatPracticeNextLine(null)).toBeNull();
+    expect(formatPracticeNextLine({ title: 'Valerie', artist: '', setlistName: null })).toBe(
+      'Valerie',
+    );
+    expect(
+      formatPracticeNextLine({ title: 'Valerie', artist: 'Amy Winehouse', setlistName: 'Encore' }),
+    ).toBe('Valerie · Amy Winehouse · Encore');
   });
 });

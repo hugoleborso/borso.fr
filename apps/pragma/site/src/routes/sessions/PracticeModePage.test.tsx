@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
@@ -53,6 +53,17 @@ function entry(id: string, songId: string, position: number) {
   };
 }
 const ENTRIES = [entry('entry-a', 'song-a', 0), entry('entry-b', 'song-b', 1)];
+const REORDERED_ENTRIES = [entry('entry-b', 'song-b', 0), entry('entry-a', 'song-a', 1)];
+const FIRST_HALF = { ...SETLIST, id: 'setlist-first', name: 'First half', songCount: 1 };
+const ENCORE = { ...SETLIST, id: 'setlist-encore', name: 'Encore', songCount: 1 };
+const ENTRIES_BY_SETLIST: Readonly<Record<string, unknown[]>> = {
+  [FIRST_HALF.id]: [entry('entry-a', 'song-a', 0)],
+  [ENCORE.id]: [entry('entry-b', 'song-b', 0)],
+};
+const answered: { setlists: readonly unknown[]; entries: readonly unknown[] } = {
+  setlists: [SETLIST],
+  entries: ENTRIES,
+};
 const PRACTICE_STORAGE_KEY = `pragma.practice.${SESSION.id}`;
 
 function answerPracticeApi(request: Request): Response {
@@ -60,9 +71,15 @@ function answerPracticeApi(request: Request): Response {
   if (pathname === `/api/sessions/${SESSION.id}`) return jsonResponse({ session: SESSION });
   if (pathname === '/api/sessions') return jsonResponse({ sessions: [SESSION] });
   if (pathname === `/api/setlists/by-session/${SESSION.id}`) {
-    return jsonResponse({ setlists: [SETLIST] });
+    return jsonResponse({ setlists: answered.setlists });
   }
-  if (pathname === `/api/setlists/${SETLIST.id}/entries`) return jsonResponse({ entries: ENTRIES });
+  if (pathname === `/api/setlists/${SETLIST.id}/entries`) {
+    return jsonResponse({ entries: answered.entries });
+  }
+  const setlistEntries = /^\/api\/setlists\/([^/]+)\/entries$/.exec(pathname);
+  if (setlistEntries !== null) {
+    return jsonResponse({ entries: ENTRIES_BY_SETLIST[setlistEntries[1] ?? ''] ?? [] });
+  }
   if (pathname === '/api/songs') return jsonResponse({ songs: SONGS });
   if (pathname === '/api/members') return jsonResponse({ members: [] });
   if (pathname === '/api/instruments') return jsonResponse({ instruments: [] });
@@ -71,9 +88,9 @@ function answerPracticeApi(request: Request): Response {
   return new Response(null, { status: 404 });
 }
 
-function renderPracticeMode(): void {
+function renderPracticeMode(queryClient = createIsolatedQueryClient()): void {
   render(
-    <QueryClientProvider client={createIsolatedQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <MemoryRouter initialEntries={[`/sessions/${SESSION.id}/practice`]}>
         <Routes>
           <Route path="/sessions/:sessionId/practice" element={<PracticeModePage />} />
@@ -92,6 +109,8 @@ describe('practice mode', () => {
     vi.stubGlobal('ResizeObserver', StillResizeObserver);
     stubSheetDialog();
     localStorage.clear();
+    answered.setlists = [SETLIST];
+    answered.entries = ENTRIES;
     stub = stubFetch((request) => Promise.resolve(answerPracticeApi(request)));
   });
 
@@ -136,5 +155,25 @@ describe('practice mode', () => {
     if (stripPill !== undefined) fireEvent.click(stripPill);
     expect(await screen.findByText('Session page')).toBeTruthy();
     expect(localStorage.getItem(PRACTICE_STORAGE_KEY)).toBeNull();
+  });
+
+  it('keeps the song shown on arrival current when the setlist is reordered elsewhere', async () => {
+    const queryClient = createIsolatedQueryClient();
+    renderPracticeMode(queryClient);
+    expect(await screen.findByRole('heading', { name: 'Superstition' })).toBeTruthy();
+    answered.entries = REORDERED_ENTRIES;
+    await act(async () => {
+      await queryClient.refetchQueries();
+    });
+    expect(await screen.findByRole('button', { name: 'Song 2 of 2' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Superstition' })).toBeTruthy();
+  });
+
+  it('names the setlist of the current song when the practice plays several', async () => {
+    answered.setlists = [FIRST_HALF, ENCORE];
+    renderPracticeMode();
+    expect(await screen.findByRole('button', { name: 'Song 1 of 2 · First half' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Next song' }));
+    expect(await screen.findByRole('button', { name: 'Song 2 of 2 · Encore' })).toBeTruthy();
   });
 });

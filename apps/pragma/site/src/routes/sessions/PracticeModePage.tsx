@@ -9,9 +9,9 @@ import { Button } from '../../components/atoms/Button';
 import { BackLink } from '../../components/molecules/BackLink';
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { buildLineupColumn } from '../../components/molecules/lineup-slots.core';
-import { Menu } from '../../components/molecules/Menu';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PracticeCurrentSong } from '../../components/organisms/PracticeCurrentSong';
+import { PracticeHeader } from '../../components/organisms/PracticeHeader';
 import { PracticeNoteSheet } from '../../components/organisms/PracticeNoteSheet';
 import { PracticeSongListSheet } from '../../components/organisms/PracticeSongListSheet';
 import { RecordingSheetDialogs } from '../../components/organisms/RecordingSheet';
@@ -40,15 +40,18 @@ import { buildSceneAddressFromPractice } from '../catalog/scene-view.core';
 import {
   buildPracticeScreen,
   buildPracticeSongs,
+  describeStoredPosition,
+  formatPracticeNextLine,
   isPracticeModeOffered,
   parseStoredPracticePosition,
   resolvePracticeIndex,
+  selectPracticeAnchor,
   serializePracticePosition,
+  type StoredPracticePosition,
 } from './practice-mode.core';
 import { buildPracticePath } from './session-page.core';
 
 const NO_ROWS: readonly never[] = [];
-const LINE_SEPARATOR = ' · ';
 
 // @FollowsBlueprint route-detail-page
 export function PracticeModePage(): JSX.Element {
@@ -88,6 +91,7 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
   const [isSongListOpen, setIsSongListOpen] = useState(false);
   const [isNoteOpen, setIsNoteOpen] = useState(false);
   const [selectedTakeId, setSelectedTakeId] = useState<string | null>(null);
+  const [arrival, setArrival] = useState<StoredPracticePosition | null>(null);
 
   const now = new Date(nowEpochMs);
   const songs = useMemo(
@@ -103,7 +107,14 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
     () => indexTransitionComments(commentsQuery.data?.comments ?? NO_ROWS),
     [commentsQuery.data],
   );
-  const index = resolvePracticeIndex(songs, parseStoredPracticePosition(position.storedText), now);
+  const anchor = selectPracticeAnchor(
+    parseStoredPracticePosition(position.storedText),
+    arrival,
+    now,
+  );
+  const index = resolvePracticeIndex(songs, anchor, now);
+  const shownOnArrival = arrival === null ? describeStoredPosition(songs, index, now) : null;
+  if (shownOnArrival !== null) setArrival(shownOnArrival);
   const screen = buildPracticeScreen({
     songs,
     index,
@@ -170,42 +181,20 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
     current.entry.songId,
   );
   const selectedTake = serverTakes.find((take) => take.id === selectedTakeId) ?? null;
-  const nextLine =
-    screen.next === null
-      ? null
-      : [screen.next.title, screen.next.artist, screen.next.setlistName]
-          .filter((part) => part !== null && part.length > 0)
-          .join(LINE_SEPARATOR);
+  const nextLine = formatPracticeNextLine(screen.next);
 
   return (
     <section className="flex max-w-[720px] flex-col gap-4 px-4 pt-1 pb-4 sm:px-9 sm:py-7">
-      <div className="flex items-center justify-between gap-2">
-        <BackLink to={sessionPath} label={sessionLabel} />
-        <Menu
-          label={t('practice.actions')}
-          items={[
-            { label: t('practice.end'), icon: 'check', tone: 'default', onSelect: endPractice },
-            {
-              label: t('home.openSetlist'),
-              icon: 'setlist',
-              tone: 'default',
-              onSelect: () => navigateTo(`/setlists/${current.setlistId}`),
-            },
-          ]}
-        />
-      </div>
-      <Button
-        variant="quiet"
-        size="sm"
-        icon="setlist"
-        className="self-start"
-        onClick={() => setIsSongListOpen(true)}
-      >
-        {t('practice.position', {
-          number: screen.position.number,
-          count: screen.position.count,
-        })}
-      </Button>
+      <PracticeHeader
+        sessionPath={sessionPath}
+        sessionLabel={sessionLabel}
+        number={screen.position.number}
+        count={screen.position.count}
+        setlistName={screen.position.currentSetlistName}
+        onEnd={endPractice}
+        onOpenSetlist={() => navigateTo(`/setlists/${current.setlistId}`)}
+        onOpenSongList={() => setIsSongListOpen(true)}
+      />
 
       <PracticeCurrentSong
         title={current.title}
