@@ -37,11 +37,13 @@ and the only dangerous thing in it is a description of danger.
   them an `UPDATE`. Split, the three harmless ones run. A refusal on a batch
   tells you nothing about which element caused it.
 - **Prove the guard without the payload, where the guard allows it.** The
-  blocklist refusal is decided from the deployed CloudFormation template, so
-  naming a blocklisted table is enough; nothing has to connect.
-- **Unit tests instead of a live probe.** `read-only-query.utils.test.ts`
-  covers every refusal branch, runs with no credentials, and nothing reads it
-  as a production action.
+  blocklist refusal is decided inside the reader Lambda from the list its
+  construct set at synth time, so naming a blocklisted table is enough; the
+  function never opens a database connection for a query it refuses.
+- **Unit tests instead of a live probe.**
+  `infra/cdk/src/internal/agent-reader/read-only-query.utils.test.ts` covers
+  every refusal branch, runs with no credentials, and nothing reads it as a
+  production action.
 - **The Write tool for documents.** A markdown file quoting commands is written
   without a shell, which is how this entry was written after the heredoc was
   refused.

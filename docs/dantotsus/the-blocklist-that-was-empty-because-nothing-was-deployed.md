@@ -7,7 +7,7 @@ related-pr: '#199'
 fix-pr: '#202'
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [scripts/database/read-only-query.utils.ts, scripts/database/db-read.ts]
+eradication-paths: [infra/cdk/src/internal/agent-reader/index.ts, scripts/database/read-target.utils.ts, scripts/database/db-read.ts]
 time-to-detect: 2 days
 tags: [dsql, gates, meta, cdk, agents]
 zone: scripts/database
@@ -121,6 +121,18 @@ the tests now.
 Verified against the live stacks after PR #199's deploy: pragma refuses
 `member_credential` by name, banana-rush passes the guard with its empty
 blocklist, and a stack with no reader is refused outright.
+
+### Where this guard lives now
+
+ADR-0049 moved the assessment out of the calling script and into each
+application's reader Lambda, so the reading above no longer exists in that
+shape. The property it defended survives in a stronger form: the blocklist is
+an environment variable the construct sets at synth time from the same list the
+schema enforces, so there is no template to parse and no empty answer to
+mistake for an empty blocklist. A stack whose reader was never deployed
+publishes no `AgentReaderFunctionName` output, and `db-read.ts` refuses on that
+absence before it invokes anything — the same refusal, keyed on a fact that
+cannot be ambiguous.
 
 ## See also
 
