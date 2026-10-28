@@ -43,8 +43,6 @@ export function useSetlistEntries(setlistId: string, isEnabled = true) {
   });
 }
 
-export type ListedSetlistEntry = Awaited<ReturnType<typeof fetchSetlistEntries>>['entries'][number];
-
 export function useEntriesOfSetlists(setlistIds: readonly string[]) {
   return useQueries({
     queries: setlistIds.map((setlistId) => ({

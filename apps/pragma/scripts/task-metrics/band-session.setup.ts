@@ -2,7 +2,7 @@ import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import type { CdpSession } from './cdp-session.adapter';
-import { CLEAR_STORAGE, FETCH_JSON } from './page-probes.setup';
+import { CLEAR_STORAGE, FETCH_JSON, PUT_JSON } from './page-probes.setup';
 import { navigateTo, TaskWalk } from './walk-recorder.setup';
 
 const INSTANCE_SCRIPT = fileURLToPath(new URL('./pragma-instance.sh', import.meta.url));
@@ -77,6 +77,10 @@ export class BandSessionDriver {
 
   async fetchJson(path: string): Promise<unknown> {
     return this.session.evaluate(FETCH_JSON, path);
+  }
+
+  async putJson(path: string, body: unknown): Promise<unknown> {
+    return this.session.evaluate(PUT_JSON, { path, body });
   }
 
   async listFrom<Output>(

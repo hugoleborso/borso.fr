@@ -3,6 +3,7 @@ import { selectNextSession } from '../../domain/session-schedule.core';
 import { formatSessionDate } from '../../site/src/lib/formatters.utils';
 import type { BandSessionDriver } from './band-session.setup';
 import {
+  READ_PAGE_HEADING,
   LIST_VISIBLE_BUTTON_NAMES,
   LISTS_A_DURATION,
   MAIN_TEXT_INCLUDES,
@@ -95,21 +96,13 @@ async function isTextInMain(driver: BandSessionDriver, needle: string): Promise<
 }
 
 const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
-  await driver.startFresh(HOME);
+  const before = await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '1 Prepare the next rehearsal');
   await walk.tap('Sessions tab', { text: '^Sessions', css: TAB_LINK });
   await walk.tap('New practice', { exact: 'Practice', css: 'button' }, { primary: true });
   await walk.tap('Create session', { exact: 'Create', css: 'button' }, { wait: CREATE_SETTLE_MS });
-  await walk.tap('New setlist', { exact: 'New setlist', css: 'button' }, { primary: true });
-  walk.note('The name field comes filled with "Set 1", so the shortest path keeps it.');
-  await walk.tap('Create setlist', { exact: 'Create', css: 'button' }, { wait: CREATE_SETTLE_MS });
   walk.note(
-    `After creating the setlist the screen stays on ${replaceIdentifierInPath((await walk.readLocation()).path)}.`,
-  );
-  await walk.tap(
-    'Open the new setlist',
-    { text: '^Set 1', css: 'main a' },
-    { wait: CREATE_SETTLE_MS },
+    'The new session has no setlist, so its bottom strip offers Add songs, which creates a setlist named after the session and opens the Add songs sheet.',
   );
   await openAddSongs(walk);
   const picks = [
@@ -126,12 +119,17 @@ const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
   ];
   await pickSongs(walk, picks);
   await confirmAddSongs(walk, picks.length);
+  walk.note(
+    `After Add 10 songs the screen is ${replaceIdentifierInPath((await walk.readLocation()).path)}.`,
+  );
   const known = await driver.readKnownRecords();
-  const made = known.setlists.find((setlist) => setlist.name === 'Set 1');
+  const knownIds = new Set(before.setlists.map((setlist) => setlist.id));
+  const made = known.setlists.find((setlist) => !knownIds.has(setlist.id));
   const list = made === undefined ? [] : await driver.listEntries(made.id);
   return walk.summarise({
     success: {
       practices: known.sessions.filter((session) => session.kind === 'practice').length,
+      newSetlistName: made?.name ?? null,
       newSetlistAttachedTo: made?.sessionIds?.length ?? 0,
       newSetlistSongs: list.map((entry) => entry.title),
     },
@@ -190,15 +188,19 @@ const buildConcertSetlist: TaskWalkRunner = async (driver) => {
 const agreeWhoDoesWhat: TaskWalkRunner = async (driver) => {
   await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '3 Agree who does what');
-  await walk.tap('Band tab', { text: '^Band', css: TAB_LINK }, { wait: CREATE_SETTLE_MS });
-  await walk.tap('New task', { exact: 'New task', css: 'button' }, { primary: true });
-  walk.note('The New task sheet opens with its title field focused, so typing needs no tap.');
+  await walk.tap(
+    'Next session',
+    { css: 'section[aria-label="Next session"] a', scope: 'page' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.tap('Add a task', { exact: 'Add a task', css: 'button', scope: 'page' });
+  walk.note(
+    'The task sheet opens with its title field focused and already linked to the session, so typing needs no tap.',
+  );
   await walk.type('Task title', 'Imprimer les setlists');
   await walk.tap('Assignee Léa', { text: 'Léa$', css: 'form button', scope: 'dialog' });
   await walk.choose('Linked song', '#task-song', '~Nuit blanche');
-  walk.note(
-    'The song list of a task offers only the 6 compositions (originals), not the 44 catalogue songs.',
-  );
+  walk.note('The song list of a task offers every catalogue song, not only the compositions.');
   await walk.choose('Due date', '#task-due', '2026-11-01');
   await walk.tap(
     'Save task',
@@ -219,6 +221,7 @@ const agreeWhoDoesWhat: TaskWalkRunner = async (driver) => {
         taskCreated: made !== undefined,
         assignee: made?.assigneeId ?? null,
         songId: made?.songId ?? null,
+        sessionId: made?.sessionId ?? null,
         dueDate: made?.dueDate ?? null,
       },
     }),
@@ -611,6 +614,91 @@ const checkWhatIsNext: TaskWalkRunner = async (driver) => {
   });
 };
 
+const PRACTICE_KIND = 'practice';
+
+async function movePracticeToToday(driver: BandSessionDriver): Promise<string | null> {
+  const known = await driver.readKnownRecords();
+  const nowMs = Date.now();
+  const coming = known.sessions.find(
+    (session) =>
+      session.kind === PRACTICE_KIND && Date.parse(session.date ?? session.startsAt ?? '') > nowMs,
+  );
+  if (coming === undefined) return null;
+  await driver.putJson(`/api/sessions/${coming.id}`, {
+    kind: PRACTICE_KIND,
+    date: new Date(nowMs).toISOString(),
+  });
+  return coming.id;
+}
+
+async function readPageHeading(driver: BandSessionDriver): Promise<string | null> {
+  await waitForMain(driver.session);
+  const heading = await driver.session.evaluate(READ_PAGE_HEADING);
+  return typeof heading === 'string' ? heading : null;
+}
+
+const recordDuringPractice: TaskWalkRunner = async (driver) => {
+  await driver.startFresh(HOME);
+  const practiceId = await movePracticeToToday(driver);
+  await driver.open(HOME);
+  const walk = new TaskWalk(
+    driver.session,
+    '13 Record a take of the current song during a practice',
+  );
+  await walk.tap(
+    'Start the practice',
+    { exact: 'Start the practice', css: 'a, button', scope: 'page' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+  const firstSong = await readPageHeading(driver);
+  await walk.tap(
+    'Record a take',
+    { exact: 'Record a take', css: 'button', scope: 'page' },
+    { primary: true },
+  );
+  walk.note(
+    'Chromium here has no microphone, so the recording sheet says so and offers the upload form; on a phone this tap starts recording and Stop is one more tap.',
+  );
+  const recordingLocation = await walk.readLocation();
+  const setup = new TaskWalk(driver.session, 'close the recording sheet');
+  await setup.tap('Close', { exact: 'Close', css: 'button', scope: 'dialog' });
+  await waitMilliseconds(CLOSE_SETTLE_MS);
+  const partB = new TaskWalk(driver.session, '13b Move to the next song and record it');
+  await partB.tap(
+    'Next song',
+    { exact: 'Next song', css: 'button', scope: 'page' },
+    { wait: PICK_SETTLE_MS },
+  );
+  const secondSong = await readPageHeading(driver);
+  await partB.tap(
+    'Record a take',
+    { exact: 'Record a take', css: 'button', scope: 'page' },
+    { primary: true },
+  );
+  const summary = anyRecord.parse(
+    walk.summarise({
+      success: {
+        practiceMovedToToday: practiceId !== null,
+        practicePath:
+          practiceId === null ? null : replaceIdentifierInPath(`/sessions/${practiceId}/practice`),
+        firstSong,
+        recordingSheetOpen: recordingLocation.overlay !== null,
+      },
+    }),
+  );
+  return {
+    ...summary,
+    partB: anyRecord.parse(
+      partB.summarise({
+        success: {
+          secondSong,
+          currentSongChanged: secondSong !== null && secondSong !== firstSong,
+        },
+      }),
+    ),
+  };
+};
+
 export const TASK_WALKS: Readonly<Record<string, TaskWalkRunner>> = {
   '1': prepareNextRehearsal,
   '2': buildConcertSetlist,
@@ -625,4 +713,5 @@ export const TASK_WALKS: Readonly<Record<string, TaskWalkRunner>> = {
   '10': learnNewSong,
   '11': discussWhichSongs,
   '12': checkWhatIsNext,
+  '13': recordDuringPractice,
 };
