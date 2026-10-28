@@ -27,7 +27,8 @@
     "phone": "Phone",
     "removePasskey": "Remove",
     "signedInAs": "Signed in as",
-    "title": "Account"
+    "title": "Account",
+    "language": "Language"
   },
   "appName": "Pragma",
   "appWordmark": "Band ERP",
@@ -314,11 +315,8 @@
     "title": "Members"
   },
   "nav": {
-    "administrationSection": "Administration",
     "bars": "Bars",
     "bottomBar": "Main sections",
-    "catalog": "Catalog",
-    "closeMenu": "Close menu",
     "compos": "Compositions",
     "improvements": "Improvements",
     "instruments": "Instruments",
@@ -328,12 +326,11 @@
     },
     "mastery": "Mastery",
     "members": "Members",
-    "more": "More",
     "sessions": "Sessions",
-    "setlists": "Setlists",
     "studies": "Studies",
-    "tasks": "Tasks",
-    "workshopSection": "Workshop"
+    "home": "Home",
+    "songs": "Songs",
+    "band": "Band"
   },
   "nextConcert": {
     "label": "Next concert",
@@ -416,7 +413,12 @@
     "setlist": "Setlist",
     "setlists": "Setlists",
     "title": "Sessions",
-    "venue": "Venue"
+    "venue": "Venue",
+    "section": {
+      "label": "Sessions or setlists",
+      "sessions": "Sessions",
+      "setlists": "Setlists"
+    }
   },
   "setlist": {
     "addSong": "Add song",
@@ -517,12 +519,9 @@
     "statusDoing": "in progress",
     "statusDone": "done",
     "statusTodo": "to do",
-    "title": "Tasks",
     "titleField": "Title",
     "toggleDone": "Mark as done",
-    "unassigned": "Unclaimed",
-    "quickAddLabel": "New task",
-    "quickAddSubmit": "Add"
+    "unassigned": "Unclaimed"
   },
   "voting": {
     "addToProposal": "Add a song",
@@ -718,5 +717,27 @@
       "installQuestion": "Install app?",
       "install": "Install"
     }
+  },
+  "home": {
+    "greeting": "Hi {{name}}",
+    "title": "Next up",
+    "nextSession": "Next session",
+    "noSetlist": "No setlist on this session yet.",
+    "noSessionAhead": "No session ahead. Plan the next practice.",
+    "openSetlist": "Open the setlist",
+    "openSession": "Open the session",
+    "yourPart": "Your part",
+    "yourTasks": "Your tasks",
+    "noOpenTask": "No open task. Nice.",
+    "totalHoursMinutes": "{{hours}} h {{minutes}}",
+    "totalMinutes": "{{minutes}} min"
+  },
+  "band": {
+    "title": "Band",
+    "viewsLabel": "Whose tasks",
+    "myTasks": "My tasks",
+    "everyone": "Everyone",
+    "noTaskOfMine": "Nothing on your list.",
+    "linksLabel": "The band"
   }
 }

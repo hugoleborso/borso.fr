@@ -27,7 +27,8 @@
     "phone": "Téléphone",
     "removePasskey": "Retirer",
     "signedInAs": "Connecté en tant que",
-    "title": "Compte"
+    "title": "Compte",
+    "language": "Langue"
   },
   "appName": "Pragma",
   "appWordmark": "ERP du groupe",
@@ -314,11 +315,8 @@
     "title": "Membres"
   },
   "nav": {
-    "administrationSection": "Administration",
     "bars": "Bars",
     "bottomBar": "Sections principales",
-    "catalog": "Catalogue",
-    "closeMenu": "Fermer le menu",
     "compos": "Compos",
     "improvements": "Améliorations",
     "instruments": "Instruments",
@@ -328,12 +326,11 @@
     },
     "mastery": "Maîtrise",
     "members": "Membres",
-    "more": "Plus",
     "sessions": "Sessions",
-    "setlists": "Setlists",
     "studies": "Révisions",
-    "tasks": "Tâches",
-    "workshopSection": "Atelier"
+    "home": "Accueil",
+    "songs": "Morceaux",
+    "band": "Groupe"
   },
   "nextConcert": {
     "label": "Prochain concert",
@@ -416,7 +413,12 @@
     "setlist": "Setlist",
     "setlists": "Setlists",
     "title": "Sessions",
-    "venue": "Lieu"
+    "venue": "Lieu",
+    "section": {
+      "label": "Sessions ou setlists",
+      "sessions": "Sessions",
+      "setlists": "Setlists"
+    }
   },
   "setlist": {
     "addSong": "Ajouter un morceau",
@@ -517,12 +519,9 @@
     "statusDoing": "en cours",
     "statusDone": "faite",
     "statusTodo": "à faire",
-    "title": "Tâches",
     "titleField": "Intitulé",
     "toggleDone": "Marquer comme faite",
-    "unassigned": "Non assignées",
-    "quickAddLabel": "Nouvelle tâche",
-    "quickAddSubmit": "Ajouter"
+    "unassigned": "Non assignées"
   },
   "voting": {
     "addToProposal": "Ajouter une chanson",
@@ -718,5 +717,27 @@
       "installQuestion": "Installer l’application ?",
       "install": "Installer"
     }
+  },
+  "home": {
+    "greeting": "Salut {{name}}",
+    "title": "À venir",
+    "nextSession": "Prochaine session",
+    "noSetlist": "Pas encore de setlist sur cette session.",
+    "noSessionAhead": "Aucune session à venir. Planifie la prochaine répét.",
+    "openSetlist": "Ouvrir la setlist",
+    "openSession": "Ouvrir la session",
+    "yourPart": "Ta partie",
+    "yourTasks": "Tes tâches",
+    "noOpenTask": "Aucune tâche en cours.",
+    "totalHoursMinutes": "{{hours}} h {{minutes}}",
+    "totalMinutes": "{{minutes}} min"
+  },
+  "band": {
+    "title": "Groupe",
+    "viewsLabel": "Tâches de qui",
+    "myTasks": "Mes tâches",
+    "everyone": "Tout le monde",
+    "noTaskOfMine": "Rien sur ta liste.",
+    "linksLabel": "Le groupe"
   }
 }

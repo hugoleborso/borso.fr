@@ -13,7 +13,7 @@ import { Input } from '../atoms/Input';
 import { MemberChip } from '../molecules/MemberChip';
 import { Sheet } from '../molecules/Sheet';
 import { inputVariants } from '../atoms/input.variants';
-import { TASK_STATUS_LABEL_KEY } from '../../routes/tasks/tasks-page.core';
+import { TASK_STATUS_LABEL_KEY } from '../../routes/band/band-tasks.core';
 import { createSheetDraftStore } from '../../lib/sheet-draft.store';
 
 export interface TaskFormValues {

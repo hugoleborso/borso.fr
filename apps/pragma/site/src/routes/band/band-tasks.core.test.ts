@@ -12,7 +12,11 @@ import {
   selectTasksOfSong,
   type TaskShape,
   UNASSIGNED_COLUMN_COLOR,
-} from './tasks-page.core';
+  isOwnTasksView,
+  isTaskListEmpty,
+  readBandView,
+  selectTasksOfMember,
+} from './band-tasks.core';
 
 const MEMBERS: readonly MemberShape[] = [
   { id: 'member-1', firstName: 'Alma', color: '#e07a5f' },
@@ -141,5 +145,44 @@ describe('payloadFromFormValues', () => {
     });
     expect(payloadFromFormValues(BLANK_TASK_FORM)).toBeNull();
     expect(payloadFromFormValues({ ...BLANK_TASK_FORM, title: '   ' })).toBeNull();
+  });
+});
+
+describe('readBandView', () => {
+  it('reads the two views and falls back to My tasks', () => {
+    expect(readBandView('everyone')).toBe('everyone');
+    expect(readBandView('my')).toBe('my');
+    expect(readBandView(null)).toBe('my');
+    expect(readBandView('kanban')).toBe('my');
+  });
+});
+
+describe('selectTasksOfMember', () => {
+  it('keeps the member tasks in the order given, done ones included', () => {
+    const tasks = [
+      task({ id: 'a', assigneeId: 'member-1', status: 'doing' }),
+      task({ id: 'b', assigneeId: 'member-2' }),
+      task({ id: 'c', assigneeId: 'member-1', status: 'done' }),
+    ];
+    expect(selectTasksOfMember(tasks, 'member-1').map((row) => row.id)).toEqual(['a', 'c']);
+  });
+
+  it('lists nothing for an account with no member row', () => {
+    expect(selectTasksOfMember([task({ assigneeId: null })], null)).toEqual([]);
+  });
+});
+
+describe('isTaskListEmpty', () => {
+  it('calls a loaded list with no task empty, and nothing else', () => {
+    expect(isTaskListEmpty(0, false)).toBe(true);
+    expect(isTaskListEmpty(0, true)).toBe(false);
+    expect(isTaskListEmpty(2, false)).toBe(false);
+  });
+});
+
+describe('isOwnTasksView', () => {
+  it('knows My tasks from Everyone', () => {
+    expect(isOwnTasksView('my')).toBe(true);
+    expect(isOwnTasksView('everyone')).toBe(false);
   });
 });

@@ -21,7 +21,7 @@ export function LanguageSwitcher(): JSX.Element {
   };
 
   return (
-    <div className="flex items-center gap-1.5 px-2 py-1.5">
+    <div className="flex items-center gap-1.5">
       {SUPPORTED_LOCALES.map((locale) => (
         <Chip
           key={locale}

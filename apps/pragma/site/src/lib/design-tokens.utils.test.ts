@@ -30,6 +30,9 @@ const TEST_FILE = /\.test\.tsx?$/u;
 const TOKEN_READER_FILE = 'design-tokens.utils.ts';
 const COLOUR_VARIABLE = /var\(--color-([a-z0-9-]+)\)/gu;
 const DECIMAL_PLACES = 2;
+const INDEX_PAGE = readFileSync(join(SITE_SOURCE_ROOT, '..', 'index.html'), 'utf8');
+const THEME_COLOUR_META =
+  /<meta name="theme-color" media="\(prefers-color-scheme: (light|dark)\)" content="([^"]+)"/gu;
 
 const TEXT_PAIRS: readonly (readonly [string, string])[] = [
   ...['paper', 'leaf', 'raised', 'sunk'].flatMap((background) =>
@@ -203,6 +206,13 @@ describe('the stylesheet', () => {
       expect(failing).toEqual([]);
     },
   );
+
+  it('gives the status bar the paper colour of each scheme in index.html', () => {
+    const themeColours = Object.fromEntries(
+      [...INDEX_PAGE.matchAll(THEME_COLOUR_META)].map((match) => [match[1], match[2]]),
+    );
+    expect(themeColours).toEqual(readSchemeColour(TOKENS.colours.get('paper') ?? ''));
+  });
 
   it('reports the secondary pill fill against paper and raised, which has no threshold', () => {
     const report = SCHEMES.flatMap((scheme) =>

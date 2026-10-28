@@ -7,7 +7,7 @@ import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { IconButton } from '../atoms/IconButton';
 import { ListRow } from './ListRow';
-import { TASK_STATUS_LABEL_KEY } from '../../routes/tasks/tasks-page.core';
+import { TASK_STATUS_LABEL_KEY } from '../../routes/band/band-tasks.core';
 
 export interface TaskRowProps {
   readonly title: string;

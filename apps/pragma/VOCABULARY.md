@@ -37,6 +37,22 @@ Held by: `api/src/audience/audience.controller.test.ts` › refuses a suggestion
 Not to be confused with: a vote, which is a ballot's tap on a song already
 in the pool.
 
+## Band tab
+
+The screen that opens on the member's tasks and then links to every page about the band itself: members, instruments, bars, compositions, improvements, studies until the Songs tab carries them, and the account page last.
+
+Lives in: `site/src/routes/band/`
+
+- It opens on **My tasks**, the signed-in member's tasks in the order the
+  API gives them; **Everyone** shows one column per member. The choice is
+  the `view` search parameter, so a reload keeps it.
+- **New task** is its one primary action, in the bottom strip.
+- Not to be confused with the band as the set of people, which is
+  **member**.
+
+Held by: `site/src/routes/band/band-destinations.core.test.ts` › lists the account page last
+Held by: `site/src/routes/band/BandPage.test.tsx` › opens on the signed-in member tasks only
+
 ## Bar
 
 A venue the band wants to play in, and the record of where the
@@ -314,6 +330,24 @@ Held by: `api/src/sessions/sessions.core.test.ts` › keeps only the prepared co
 
 Not to be confused with: a **practice**, which only exists once someone
 books the slot.
+
+## Home
+
+The start screen, at `/`: the next session, the signed-in member's part in its setlist, and their open tasks.
+
+Lives in: `site/src/routes/home/`
+
+- The next session is the earliest one whose calendar day in Paris is
+  today or later (`selectNextSession` in `domain/session-schedule.core.ts`),
+  practice or concert alike.
+- Its one primary action opens that session's first setlist, or the
+  session when it has none; with no session ahead it offers **New
+  session**.
+- Not to be confused with the **catalogue**, which was the start screen
+  before.
+
+Held by: `site/src/routes/home/home.core.test.ts` › lists the songs where the member plays, an override included, with the instruments
+Held by: `site/src/routes/home/HomePage.test.tsx` › shows an empty state with New session when no session is ahead
 
 ## Improvement
 
@@ -1128,7 +1162,7 @@ Lives in: `api/src/tasks/`
   unassigned.
 
 Held by: `api/src/tasks/tasks.controller.test.ts` › orders the list by what is most urgent
-Held by: `site/src/routes/tasks/tasks-page.core.test.ts` › adds the unassigned column only when something is unassigned
+Held by: `site/src/routes/band/band-tasks.core.test.ts` › adds the unassigned column only when something is unassigned
 Held by: `api/src/tasks/tasks.controller.test.ts` › keeps a task when the member it was assigned to is deleted
 Held by: `api/src/tasks/tasks.controller.test.ts` › never leaves a task assigned to a member deleted while the assignment was written
 Held by: `api/src/tasks/tasks.controller.test.ts` › writes the task once when its first two commits lose a conflict on the claimed member

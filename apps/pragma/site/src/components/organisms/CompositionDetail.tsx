@@ -15,7 +15,7 @@ import { UploadedChartPreview } from '../molecules/UploadedChartPreview';
 import { ChordChartViewer } from './ChordChartViewer';
 import type { CompositionShape, UploadedChart } from '../../routes/compos/compos-page.core';
 import { selectChordProSource } from '../../routes/compos/compos-page.core';
-import type { TaskShape } from '../../routes/tasks/tasks-page.core';
+import type { TaskShape } from '../../routes/band/band-tasks.core';
 
 export interface CompositionDetailProps {
   readonly composition: CompositionShape;

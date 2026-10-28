@@ -20,7 +20,7 @@ import { useMembersList } from '../../lib/queries/members.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { useSignedChartUrl } from '../../lib/queries/uploads.queries';
 import { useDeleteTask, useTasksList, useUpdateTask } from '../../lib/queries/tasks.queries';
-import { selectTasksOfSong, type TaskShape } from '../tasks/tasks-page.core';
+import { selectTasksOfSong, type TaskShape } from '../band/band-tasks.core';
 import { countLineupMembers, selectComposition, selectUploadedChart } from './compos-page.core';
 
 const NO_ROWS: readonly never[] = [];

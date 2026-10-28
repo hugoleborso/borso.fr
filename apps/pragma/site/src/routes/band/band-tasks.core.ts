@@ -154,3 +154,29 @@ export function payloadFromFormValues(values: TaskFormShape): TaskWritePayload |
     dueDate: toIsoDueDate(values.dueDate),
   };
 }
+
+export const BAND_VIEW_PARAM = 'view';
+export const BAND_VIEWS = ['my', 'everyone'] as const;
+export type BandView = (typeof BAND_VIEWS)[number];
+const DEFAULT_BAND_VIEW: BandView = 'my';
+
+// @FollowsBlueprint core-view-intent
+export function readBandView(value: string | null): BandView {
+  return BAND_VIEWS.find((view) => view === value) ?? DEFAULT_BAND_VIEW;
+}
+
+export function isOwnTasksView(view: BandView): boolean {
+  return view === DEFAULT_BAND_VIEW;
+}
+
+export function selectTasksOfMember(
+  tasks: readonly TaskShape[],
+  memberId: string | null,
+): readonly TaskShape[] {
+  if (memberId === null) return [];
+  return tasksOf(tasks, memberId);
+}
+
+export function isTaskListEmpty(taskCount: number, isLoading: boolean): boolean {
+  return taskCount === 0 && !isLoading;
+}

@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../../components/atoms/Button';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SessionsSectionTabs } from '../../components/molecules/SessionsSectionTabs';
 import { CreateSetlistDialog } from '../../components/organisms/CreateSetlistDialog';
 import { SetlistCatalogList } from '../../components/organisms/SetlistCatalogList';
 import { ApiError } from '../../lib/api.client';
@@ -43,7 +44,8 @@ export function SetlistsPage(): JSX.Element {
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
-      <PageHeader crumb={t('nav.setlists')} title={t('setlist.title')} />
+      <PageHeader title={t('sessions.title')} />
+      <SessionsSectionTabs value="setlists" />
 
       {error === null ? null : (
         <p className="text-danger text-meta mb-3" role="alert">

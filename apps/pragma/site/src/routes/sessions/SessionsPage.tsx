@@ -1,6 +1,7 @@
 /** @Feature sessions */
 
-import { type JSX, useState } from 'react';
+import { orderSessionsForListing } from '@domain/session-schedule.core';
+import { type JSX, useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
@@ -11,10 +12,14 @@ import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
 import { FreeSlotsPanel } from '../../components/organisms/FreeSlotsPanel';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SessionsSectionTabs } from '../../components/molecules/SessionsSectionTabs';
+import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions.queries';
+
+const NO_ROWS: readonly never[] = [];
 
 interface SessionDraft {
   readonly kind: 'concert' | 'practice';
@@ -32,7 +37,11 @@ export function SessionsPage(): JSX.Element {
   const [creating, setCreating] = useState<SessionDraft | null>(null);
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
 
-  const sessions = sessionsQuery.data?.sessions ?? [];
+  const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
+  const sessions = useMemo(
+    () => orderSessionsForListing(sessionsQuery.data?.sessions ?? NO_ROWS, new Date(nowEpochMs)),
+    [sessionsQuery.data, nowEpochMs],
+  );
   const concerts = sessions.filter((session) => session.kind === 'concert');
   const error =
     sessionsQuery.error instanceof ApiError
@@ -49,6 +58,7 @@ export function SessionsPage(): JSX.Element {
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
       <PageHeader title={t('sessions.title')} />
+      <SessionsSectionTabs value="sessions" />
 
       {error === null ? null : (
         <p className="text-danger text-meta mb-3" role="alert">
