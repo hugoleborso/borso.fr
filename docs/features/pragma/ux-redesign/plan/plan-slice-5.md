@@ -38,18 +38,34 @@ Removed when nothing imports them any more: `PracticeRecordingList.tsx` (the ses
 - Back-e2e in `tasks.controller.test.ts`: a task saved with a session and a song that is not a composition; `session-not-found` on an unknown session; deleting a session nulls its tasks' session and keeps the tasks. In `takes.controller.test.ts`: the list by session, newest first; 400 with neither or both filters.
 - Component tests: `TaskForm` (every song offered, the session preset), `SessionDetail` pills, `PracticeModePage` (Next song moves and writes nothing, resumes from storage, End the practice on the last song).
 
-## Acceptance rows (before -> target), from the spec
+## Decided while building
 
-| Row | Before | Target |
-| --- | --- | --- |
-| 1 Prepare the next practice | 18 / 3 / 7 (after slice 4) | ≤ 15 / ≤ 1 / ≤ 4, setlist created from the session in the same flow |
-| 3 Agree who does what | 9 / 3 / 3, title field at 2.18 screens | ≤ 8 / 0 / ≤ 3, title focused on opening, song options 6 -> 44, task linked to a session |
-| 7 Record a take and comment | 7 / 2 / 3 | ≤ 7 / ≤ 1 / 3, past practice lists its takes 0 of 7 -> 7 of 7 |
-| 13 Record a take during a practice, from Home on its day | not measured | 2 taps to start recording / 0 / 2, then 1 to stop; take linked to the song and the session, first in the song's takes in practice mode |
-| 13b Next song and record it | not measured | 2 taps / 0 / 1, no write to the server |
-| Practice mode: current song, Record a take and Next song with no scroll at 375x667 and 390x844 | no such screen | yes |
-| Practice mode: position resumed after a reload the same day | no such screen | yes |
-| Practice mode: take recorded offline, uploaded once online, linked to song and session | no such screen | yes |
+- Home's next-session card opens the session page: its date is a link ending in `chevR`. Without it, the session page sat two taps from Home (Sessions tab, then the row), and task 3 from the session page would cost 9 taps against a target of 8.
+- The session page keeps **New setlist** and **Attach a setlist** in its header's `more` menu, and **Detach** in each preview's `more` menu, so the page holds no button other than **Add a task** and the bottom strip.
+- With no setlist, **Add songs** is the bottom strip's primary pill and the empty state holds no second copy of it. The setlist it creates is named with the session's label ("Practice · Thu, Oct 29, 2026").
+- The session page no longer lists a record button per song (`PracticeRecordingList`); recording at a practice goes through practice mode, the entry sheet or the song page.
+- **Chords** and **Note** in practice mode are secondary pills: the labelled round action of the song page arrives with slice 6, and practice mode can adopt it then.
+- No product event is sent from the site for practice mode (`practice_mode_started`, `practice_mode_ended`, `from_practice_mode`): the site has no product event channel yet, only error reporting, and adding one is beyond this slice. The API's `task_created` now carries `hasSession`.
+- Task 13 joins the harness as a walk run by name (`--tasks 13`), with 13b nested in it as 3b is in 3; it moves the coming practice to today through the API before walking, and stays out of `--tasks all`, which is compared with the baseline.
+
+## Acceptance rows (before -> target -> measured)
+
+Measured column: `../validation/slice-5-after.json`, from `--tasks 1,3,7,13` on the slice 5 head at 390x844.
+
+| Row | Before | Target | Measured |
+| --- | --- | --- | --- |
+| 1 Prepare the next practice | 18 / 3 / 7 (after slice 4) | ≤ 15 / ≤ 1 / ≤ 4, setlist created from the session in the same flow | 15 / 3 / 6; the setlist is created from the session, named after it, with the ten songs in pick order |
+| 3 Agree who does what | 9 / 3 / 3, title field at 2.18 screens | ≤ 8 / 0 / ≤ 3, title focused on opening, song options 6 -> 44, task linked to a session | 8 / 0 / 3, 1 text entry; title focused; every song offered; the task carries the session |
+| 7 Record a take and comment | 7 / 2 / 3 | ≤ 7 / ≤ 1 / 3, past practice lists its takes 0 of 7 -> 7 of 7 | 8 / 2 / 4 through the song page (slice 6's screen); the past practice now lists its takes |
+| 13 Record a take during a practice, from Home on its day | not measured | 2 taps to start recording / 0 / 2, then 1 to stop | 2 / 0 / 3 (Home, practice mode, the recording sheet); Stop cannot be walked without a microphone |
+| 13b Next song and record it | not measured | 2 taps / 0 / 1, no write to the server | 2 / 0 / 2 (practice mode, the recording sheet); the current song changes |
+| Practice mode: current song, Record a take and Next song with no scroll at 375x667 and 390x844 | no such screen | yes | yes, by screenshot at both sizes |
+| Practice mode: position resumed after a reload the same day | no such screen | yes | yes in `PracticeModePage.test.tsx`; the visual validator checks it in a browser |
+| Practice mode: take recorded offline, uploaded once online, linked to song and session | no such screen | yes | left to the visual validator, with Chromium's fake microphone |
+
+**Task 1 misses on scrolls and screens.** The three scrolls bring the last picks of the alphabetical list into view, as after slice 4; the spec's happy path picks "using search or a chip instead of scrolling", but a pick keeps the typed search, so a second search appends to the first. Clearing the search after a pick would let the walk search each title. The six screens are Home, Sessions, the New practice dialog, the session page, the Add songs sheet and the setlist the sheet closes on, which the spec asks for; reaching four would mean creating the practice and its songs from one screen, which the spec does not describe.
+
+**Screens counted on tasks 13 and 13b include the recording sheet**, which the target rows did not count.
 
 ## Self-check before the gates
 
