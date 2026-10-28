@@ -144,7 +144,7 @@ describe('selectSessionPills', () => {
       setlistPath: null,
       setlistVariant: 'primary',
       setlistLabelKey: 'home.openSetlist',
-      isAddSongsShown: false,
+      isAddSetlistShown: false,
     });
   });
 
@@ -161,7 +161,7 @@ describe('selectSessionPills', () => {
       setlistPath: null,
       setlistVariant: 'primary',
       setlistLabelKey: 'home.openSetlist',
-      isAddSongsShown: true,
+      isAddSetlistShown: true,
     });
   });
 
@@ -178,7 +178,7 @@ describe('selectSessionPills', () => {
       setlistPath: '/setlists/set-1',
       setlistVariant: 'primary',
       setlistLabelKey: 'home.openSetlist',
-      isAddSongsShown: false,
+      isAddSetlistShown: false,
     });
   });
 
@@ -195,7 +195,7 @@ describe('selectSessionPills', () => {
       setlistPath: '/setlists/set-1',
       setlistVariant: 'secondary',
       setlistLabelKey: 'sessions.setlist',
-      isAddSongsShown: false,
+      isAddSetlistShown: false,
     });
   });
 });

@@ -17,9 +17,14 @@ import { Sheet } from '../molecules/Sheet';
 interface AttachSetlistDialogProps {
   readonly sessionId: string;
   readonly onClose: () => void;
+  readonly onCreateNew: (() => void) | null;
 }
 
-export function AttachSetlistDialog({ sessionId, onClose }: AttachSetlistDialogProps): JSX.Element {
+export function AttachSetlistDialog({
+  sessionId,
+  onClose,
+  onCreateNew,
+}: AttachSetlistDialogProps): JSX.Element {
   const { t } = useTranslation();
   const setlistsQuery = useSetlistsList();
   const linkSetlist = useLinkSetlistToSession();
@@ -38,14 +43,22 @@ export function AttachSetlistDialog({ sessionId, onClose }: AttachSetlistDialogP
     );
   };
 
+  const titleKey = onCreateNew === null ? 'setlist.attach.title' : 'setlist.attach.chooseTitle';
+
   return (
-    <Sheet
-      title={t('setlist.attach.title')}
-      label={t('setlist.attach.title')}
-      isDismissible={false}
-      onClose={onClose}
-    >
+    <Sheet title={t(titleKey)} label={t(titleKey)} isDismissible={false} onClose={onClose}>
       <div className="flex flex-col gap-2">
+        {onCreateNew === null ? null : (
+          <ListRow
+            onClick={onCreateNew}
+            leading={<Icon name="plus" className="text-accent" />}
+            className="rounded-md px-3 py-2.5 hover:bg-hover"
+          >
+            <span className="min-w-0 flex-1 truncate font-medium text-ink">
+              {t('setlist.attach.newForSession')}
+            </span>
+          </ListRow>
+        )}
         {setlistsQuery.isLoading ? (
           <p className="text-meta text-ink-soft">{t('common.loading')}</p>
         ) : null}

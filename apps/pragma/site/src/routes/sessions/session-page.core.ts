@@ -117,7 +117,7 @@ export interface SessionPills {
   readonly setlistPath: string | null;
   readonly setlistVariant: 'primary' | 'secondary';
   readonly setlistLabelKey: 'home.openSetlist' | 'sessions.setlist';
-  readonly isAddSongsShown: boolean;
+  readonly isAddSetlistShown: boolean;
 }
 
 const NO_PILLS: SessionPills = {
@@ -125,7 +125,7 @@ const NO_PILLS: SessionPills = {
   setlistPath: null,
   setlistVariant: 'primary',
   setlistLabelKey: 'home.openSetlist',
-  isAddSongsShown: false,
+  isAddSetlistShown: false,
 };
 
 export interface SessionPrimaryActionsInput {
@@ -142,7 +142,7 @@ export function buildPracticePath(sessionId: string): string {
 // @FollowsBlueprint core-view-intent
 export function selectSessionPills(input: SessionPrimaryActionsInput): SessionPills {
   if (input.isLoading) return NO_PILLS;
-  if (input.firstSetlistId === null) return { ...NO_PILLS, isAddSongsShown: true };
+  if (input.firstSetlistId === null) return { ...NO_PILLS, isAddSetlistShown: true };
   const setlistPath = `/setlists/${input.firstSetlistId}`;
   if (!input.isPracticeModeOffered) return { ...NO_PILLS, setlistPath };
   return {

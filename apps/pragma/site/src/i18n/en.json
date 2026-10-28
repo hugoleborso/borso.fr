@@ -456,7 +456,7 @@
     "newSession": "New session",
     "noLineup": "No lineup yet",
     "noPreparedConcert": "—",
-    "noSetlists": "No setlist on this session.",
+    "noSetlists": "No setlist on this session yet. Add a setlist to start picking songs, or attach one you already have.",
     "noTakeYet": "No take recorded at this session yet.",
     "noTaskYet": "No task for this session yet.",
     "preparedConcert": "Prepared concert",
@@ -468,7 +468,6 @@
       "setlists": "Setlists"
     },
     "selectMember": "Member",
-    "sessionActions": "Session actions",
     "sessionNotFound": "This session is no longer in the schedule.",
     "setlist": "Setlist",
     "setlistActions": "Actions for {{name}}",
@@ -476,14 +475,17 @@
     "takesTitle": "Takes recorded at this session",
     "title": "Sessions",
     "venue": "Venue",
-    "whoDoesWhat": "Who does what"
+    "whoDoesWhat": "Who does what",
+    "addSetlist": "Add a setlist"
   },
   "setlist": {
     "addSongNoMatch": "No song matches.",
     "attach": {
       "button": "Attach an existing setlist",
       "title": "Attach a setlist",
-      "empty": "Every setlist is already attached to this session."
+      "empty": "Every setlist is already attached to this session.",
+      "newForSession": "New setlist for this session",
+      "chooseTitle": "Add a setlist"
     },
     "capo": "Capo",
     "copyOrder": "Copy order",

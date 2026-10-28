@@ -27,13 +27,11 @@ import { BottomActions } from '../atoms/BottomActions';
 import { Button } from '../atoms/Button';
 import { ButtonLink } from '../atoms/ButtonLink';
 import { BackLink } from '../molecules/BackLink';
-import { Menu } from '../molecules/Menu';
 import { PageHeader } from '../molecules/PageHeader';
 import { PracticeReadView } from '../molecules/PracticeReadView';
 import { AttachSetlistDialog } from './AttachSetlistDialog';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
-import { CreateSetlistDialog } from './CreateSetlistDialog';
 import { SessionSetlistPreviews } from './SessionSetlistPreviews';
 import { SessionTakes } from './SessionTakes';
 import { SessionTasks } from './SessionTasks';
@@ -53,6 +51,19 @@ interface CreatedSetlist {
   readonly name: string;
 }
 
+type SetlistChooser = 'closed' | 'attach' | 'add';
+
+const CHOOSER_OPENNESS: Readonly<Record<SetlistChooser, boolean>> = {
+  closed: false,
+  attach: true,
+  add: true,
+};
+const DOES_CHOOSER_OFFER_NEW: Readonly<Record<SetlistChooser, boolean>> = {
+  closed: false,
+  attach: false,
+  add: true,
+};
+
 const NO_ROWS: readonly never[] = [];
 const NO_SONG_IDS: readonly string[] = [];
 
@@ -68,8 +79,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
   const [editingConcert, setEditingConcert] = useState(false);
   const [localError, setLocalError] = useState<string | null>(null);
-  const [isCreatingSetlist, setIsCreatingSetlist] = useState(false);
-  const [isAttachingSetlist, setIsAttachingSetlist] = useState(false);
+  const [setlistChooser, setSetlistChooser] = useState<SetlistChooser>('closed');
   const [pickingInto, setPickingInto] = useState<CreatedSetlist | null>(null);
 
   const friendsCounts = useMemo(() => parseFriendsCounts(session.friendsCountPerMember), [session]);
@@ -151,6 +161,13 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     );
   };
 
+  const isSetlistChooserOpen = CHOOSER_OPENNESS[setlistChooser];
+  const offersNewSetlist = DOES_CHOOSER_OFFER_NEW[setlistChooser];
+  const createSetlistFromChooser = (): void => {
+    setSetlistChooser('closed');
+    addSongsToNewSetlist();
+  };
+
   const isConcert = session.kind === 'concert';
   const formattedDate = formatSessionDate(session.date, i18n.language);
   const sessionFacts = selectSessionFacts({
@@ -164,26 +181,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
 
   return (
     <section className="flex max-w-[1280px] flex-col gap-5 px-4 py-4 sm:px-9 sm:py-7">
-      <div className="flex items-center justify-between gap-2">
-        <BackLink to="/sessions" label={t('sessions.title')} />
-        <Menu
-          label={t('sessions.sessionActions')}
-          items={[
-            {
-              label: t('setlist.new'),
-              icon: 'plus',
-              tone: 'default',
-              onSelect: () => setIsCreatingSetlist(true),
-            },
-            {
-              label: t('setlist.attach.button'),
-              icon: 'setlist',
-              tone: 'default',
-              onSelect: () => setIsAttachingSetlist(true),
-            },
-          ]}
-        />
-      </div>
+      <BackLink to="/sessions" label={t('sessions.title')} />
 
       <PageHeader
         crumb={t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
@@ -217,7 +215,9 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         sessionId={session.id}
         setlists={setlists}
         isLoading={props.isSetlistsLoading}
-        isEmpty={pills.isAddSongsShown}
+        isEmpty={pills.isAddSetlistShown}
+        onAddSetlist={() => setSetlistChooser('add')}
+        onAttachSetlist={() => setSetlistChooser('attach')}
       />
 
       <SessionTasks sessionId={session.id} />
@@ -253,16 +253,12 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         />
       ) : null}
 
-      {isCreatingSetlist ? (
-        <CreateSetlistDialog
+      {isSetlistChooserOpen ? (
+        <AttachSetlistDialog
           sessionId={session.id}
-          suggestedName={sessionLabel}
-          onClose={() => setIsCreatingSetlist(false)}
-          onCreated={() => setIsCreatingSetlist(false)}
+          onClose={() => setSetlistChooser('closed')}
+          onCreateNew={offersNewSetlist ? createSetlistFromChooser : null}
         />
-      ) : null}
-      {isAttachingSetlist ? (
-        <AttachSetlistDialog sessionId={session.id} onClose={() => setIsAttachingSetlist(false)} />
       ) : null}
       <SetlistSongPicker
         open={pickingInto !== null}
@@ -290,14 +286,14 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
             {t('practice.start')}
           </ButtonLink>
         )}
-        {pills.isAddSongsShown ? (
+        {pills.isAddSetlistShown ? (
           <Button
             icon="plus"
             variant="primary"
             disabled={createSetlist.isPending}
             onClick={addSongsToNewSetlist}
           >
-            {t('setlist.addSongs')}
+            {t('sessions.addSetlist')}
           </Button>
         ) : null}
       </BottomActions>

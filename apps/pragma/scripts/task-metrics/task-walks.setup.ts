@@ -106,9 +106,13 @@ const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
   await walk.tap('New practice', { exact: 'Practice', css: 'button' }, { primary: true });
   await walk.tap('Create session', { exact: 'Create', css: 'button' }, { wait: CREATE_SETTLE_MS });
   walk.note(
-    'The new session has no setlist, so its bottom strip offers Add songs, which creates a setlist named after the session and opens the Add songs sheet.',
+    'The new session has no setlist, so its bottom strip offers Add a setlist, which creates a setlist named after the session and opens the Add songs sheet.',
   );
-  await openAddSongs(walk);
+  await walk.tap(
+    'Add a setlist',
+    { exact: 'Add a setlist', css: 'button', scope: 'page' },
+    { primary: true, wait: PICK_SETTLE_MS },
+  );
   const picks = [
     'Afterglow',
     'Billie Jean',
