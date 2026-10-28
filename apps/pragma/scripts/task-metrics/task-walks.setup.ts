@@ -29,6 +29,7 @@ const SECTION_TAB = '[role=tab]';
 const HOME = '/';
 
 const anyRecord = z.record(z.unknown());
+const songArtistSchema = z.object({ artist: z.string().optional() });
 
 export type TaskWalkRunner = (driver: BandSessionDriver) => Promise<unknown>;
 
@@ -43,6 +44,44 @@ function escapeForPattern(text: string): string {
 async function openSetlistLibrary(walk: TaskWalk): Promise<void> {
   await walk.tap('Sessions tab', { text: '^Sessions', css: TAB_LINK });
   await walk.tap('Setlists section', { exact: 'Setlists', css: SECTION_TAB });
+}
+
+function buildPickPattern(title: string): string {
+  return `(^| )${escapeForPattern(title)} `;
+}
+
+async function pickSongs(walk: TaskWalk, titles: readonly string[]): Promise<void> {
+  for (const title of titles) {
+    await walk.tap(
+      `Pick ${title}`,
+      { text: buildPickPattern(title), css: '[role=checkbox]', scope: 'dialog' },
+      { wait: PICK_SETTLE_MS },
+    );
+  }
+}
+
+async function confirmAddSongs(walk: TaskWalk, count: number): Promise<void> {
+  await walk.tap(
+    `Add ${String(count)} songs`,
+    { text: `^Add ${String(count)} song`, css: 'button', scope: 'dialog' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
+}
+
+async function openAddSongs(walk: TaskWalk): Promise<void> {
+  await walk.tap(
+    'Add songs',
+    { exact: 'Add songs', css: 'button', scope: 'page' },
+    { primary: true, wait: PICK_SETTLE_MS },
+  );
+}
+
+async function openNextSetlistFromHome(walk: TaskWalk): Promise<void> {
+  await walk.tap(
+    'Open the setlist',
+    { exact: 'Open the setlist', css: 'a, button', scope: 'page' },
+    { primary: true, wait: CREATE_SETTLE_MS },
+  );
 }
 
 async function openStudies(walk: TaskWalk): Promise<void> {
@@ -72,11 +111,7 @@ const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
     { text: '^Set 1', css: 'main a' },
     { wait: CREATE_SETTLE_MS },
   );
-  await walk.tap(
-    'Add song',
-    { exact: 'Add song', css: 'button', scope: 'page' },
-    { primary: true },
-  );
+  await openAddSongs(walk);
   const picks = [
     'Afterglow',
     'Billie Jean',
@@ -89,14 +124,8 @@ const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
     'Lightning',
     'Midnight Drive',
   ];
-  for (const title of picks) {
-    await walk.tap(
-      `Pick ${title}`,
-      { text: `^${title.replace(/[!?.]/g, '\\$&')} `, css: 'button', scope: 'dialog' },
-      { wait: PICK_SETTLE_MS },
-    );
-  }
-  await walk.tap('Done', { text: '^Done', css: 'button', scope: 'dialog' }, { primary: true });
+  await pickSongs(walk, picks);
+  await confirmAddSongs(walk, picks.length);
   const known = await driver.readKnownRecords();
   const made = known.setlists.find((setlist) => setlist.name === 'Set 1');
   const list = made === undefined ? [] : await driver.listEntries(made.id);
@@ -119,19 +148,12 @@ const buildConcertSetlist: TaskWalkRunner = async (driver) => {
     { text: '^Set principal', css: 'main a' },
     { wait: CREATE_SETTLE_MS },
   );
-  await walk.tap(
-    'Add song',
-    { exact: 'Add song', css: 'button', scope: 'page' },
-    { primary: true },
-  );
-  await walk.tap('Pick Dreams', { text: '^Dreams ', css: 'button', scope: 'dialog' });
-  await walk.tap('Pick Psycho Killer', { text: '^Psycho Killer ', css: 'button', scope: 'dialog' });
-  await walk.tap('Done', { text: '^Done', css: 'button', scope: 'dialog' }, { primary: true });
-  await walk.drag(
-    'Drag entry 05 to position 02',
-    { exact: 'Drag to reorder', css: 'button', index: 4, scope: 'page' },
-    { exact: 'Drag to reorder', css: 'button', index: 1, scope: 'page' },
-  );
+  await openAddSongs(walk);
+  await pickSongs(walk, ['Dreams']);
+  walk.note('A pick keeps the focus in the search, so the next title is typed with no tap.');
+  await walk.type('Search', 'Psycho');
+  await pickSongs(walk, ['Psycho Killer']);
+  await confirmAddSongs(walk, CONCERT_PICK_COUNT);
   await walk.tap('More for entry 03', { css: 'main li summary', index: 2, scope: 'page' });
   await walk.tap(
     'Remove from the setlist',
@@ -143,6 +165,18 @@ const buildConcertSetlist: TaskWalkRunner = async (driver) => {
     css: 'button',
     scope: 'dialog',
   });
+  await walk.tap(
+    'Order',
+    { exact: 'Order', css: 'a, button', scope: 'page' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  await walk.drag(
+    'Drag entry 05 to position 02',
+    { exact: 'Drag to reorder', css: 'button', index: 4, scope: 'page' },
+    { exact: 'Drag to reorder', css: 'button', index: 1, scope: 'page' },
+  );
+  walk.note('The order saves on the drop, so the walk ends on the Order screen without Done.');
+  await waitMilliseconds(SAVE_SETTLE_MS);
   await driver.open(`/setlists/${known.main.id}`);
   const after = await driver.listEntries(known.main.id);
   return walk.summarise({
@@ -343,93 +377,68 @@ const recordTakeAndTalk: TaskWalkRunner = async (driver) => {
   });
 };
 
+const NEW_SONG_TITLE = 'Psycho Chicken';
+const MUSIC_SERVICE_SETTLE_MS = 2500;
+const NEW_IDEA_ROW = 'New song as an idea';
+const SINGLE_SONG = 1;
+const CONCERT_PICK_COUNT = 2;
+
+async function typeNewTitle(walk: TaskWalk): Promise<void> {
+  walk.note('The search field has the focus when the sheet opens, so typing needs no tap.');
+  await walk.type('Title', NEW_SONG_TITLE);
+  await waitMilliseconds(MUSIC_SERVICE_SETTLE_MS);
+}
+
+async function readRehearsalOutcome(
+  driver: BandSessionDriver,
+): Promise<{ inRehearsalSetlist: boolean; artist: string | null }> {
+  const known = await driver.readKnownRecords();
+  const song = known.songs.find((candidate) => candidate.title === NEW_SONG_TITLE);
+  return {
+    inRehearsalSetlist: (await driver.listEntries(known.rehearsal.id)).some(
+      (entry) => entry.title === NEW_SONG_TITLE,
+    ),
+    artist: song === undefined ? null : (songArtistSchema.parse(song).artist ?? null),
+  };
+}
+
 const addSongToCatalogue: TaskWalkRunner = async (driver) => {
   await driver.startFresh(HOME);
-  const walk = new TaskWalk(driver.session, '8 Add a new song to the catalogue');
-  await walk.tap('Songs tab', { text: '^Songs', css: TAB_LINK });
-  await walk.tap(
-    'New song',
-    { exact: 'New song', css: 'a, button', scope: 'page' },
-    { primary: true, wait: CREATE_SETTLE_MS },
-  );
-  await walk.tap('Title field', { css: '#song-title', scope: 'page' });
-  await walk.type('Title', 'Psycho Chicken');
-  await walk.tap('Artist field', { css: '#song-artist', scope: 'page' });
-  await walk.type('Artist', 'The Fools');
-  await walk.choose('Status', '#song-status', '~In progress');
-  await walk.tap(
-    'Save',
-    { exact: 'Save', css: 'button', scope: 'page' },
-    { primary: true, wait: SAVE_SETTLE_MS },
-  );
-  walk.note(
-    `After Save: ${(await walk.readLocation()).path}. The song page has no "add to setlist" action, so the flow leaves to the Setlists tab.`,
-  );
-  await openSetlistLibrary(walk);
-  await walk.tap(
-    'Open the rehearsal setlist',
-    { text: '^Répétition du jeudi', css: 'main a' },
-    { wait: CREATE_SETTLE_MS },
-  );
-  await walk.tap(
-    'Add song',
-    { exact: 'Add song', css: 'button', scope: 'page' },
-    { primary: true },
-  );
-  await walk.tap('Picker search', { css: 'input', scope: 'dialog' });
-  await walk.type('Search', 'Psycho Ch');
-  await walk.tap('Pick Psycho Chicken', {
-    text: '^Psycho Chicken',
-    css: 'button',
-    scope: 'dialog',
-  });
-  await walk.tap('Done', { text: '^Done', css: 'button', scope: 'dialog' }, { primary: true });
-  const known = await driver.readKnownRecords();
-  const isInSetlist = (await driver.listEntries(known.rehearsal.id)).some(
-    (entry) => entry.title === 'Psycho Chicken',
-  );
+  const walk = new TaskWalk(driver.session, '8 Add a new song and put it on the next practice');
+  await openNextSetlistFromHome(walk);
+  await openAddSongs(walk);
+  await typeNewTitle(walk);
+  const serviceResult = { text: `^${NEW_SONG_TITLE} `, css: 'dialog section li button' };
+  const isServiceAnswering = (await walk.find(serviceResult)) !== null;
+  if (isServiceAnswering) {
+    await walk.tap("Pick the music service's result", serviceResult, { wait: CREATE_SETTLE_MS });
+  } else {
+    walk.note('The music service did not answer, so the title goes in as an idea.');
+    await walk.tap(
+      NEW_IDEA_ROW,
+      { text: `^${NEW_IDEA_ROW}`, css: 'button', scope: 'dialog' },
+      { wait: CREATE_SETTLE_MS },
+    );
+  }
+  await confirmAddSongs(walk, SINGLE_SONG);
   return walk.summarise({
-    success: {
-      inCatalogue: known.songs.some((song) => song.title === 'Psycho Chicken'),
-      inRehearsalSetlist: isInSetlist,
-    },
+    success: { ...(await readRehearsalOutcome(driver)), fromMusicService: isServiceAnswering },
   });
 };
 
 const addSongFromPicker: TaskWalkRunner = async (driver) => {
   await driver.startFresh(HOME);
-  const walk = new TaskWalk(driver.session, '8b Add a song from the setlist picker (title only)');
-  await openSetlistLibrary(walk);
+  const walk = new TaskWalk(driver.session, '8b New song from the setlist (title only)');
+  await openNextSetlistFromHome(walk);
+  await openAddSongs(walk);
+  await typeNewTitle(walk);
   await walk.tap(
-    'Open the rehearsal setlist',
-    { text: '^Répétition du jeudi', css: 'main a' },
-    { wait: CREATE_SETTLE_MS },
-  );
-  await walk.tap(
-    'Add song',
-    { exact: 'Add song', css: 'button', scope: 'page' },
-    { primary: true },
-  );
-  await walk.tap('Picker search', { css: 'input', scope: 'dialog' });
-  await walk.type('Title', 'Psycho Chicken');
-  await walk.tap(
-    'Create from the picker',
-    { text: '^Create', css: 'button', scope: 'dialog' },
+    NEW_IDEA_ROW,
+    { text: `^${NEW_IDEA_ROW}`, css: 'button', scope: 'dialog' },
     { primary: true, wait: CREATE_SETTLE_MS },
   );
-  const done = await walk.find({ text: '^Done', css: 'button', scope: 'dialog' });
-  if (done !== null) await walk.tap('Done', { text: '^Done', css: 'button', scope: 'dialog' });
-  walk.note(
-    'This path sets only the title. Artist and status need the song edit page afterwards (Catalog, search, song, Edit, two fields, Save).',
-  );
-  const known = await driver.readKnownRecords();
-  return walk.summarise({
-    success: {
-      inRehearsalSetlist: (await driver.listEntries(known.rehearsal.id)).some(
-        (entry) => entry.title === 'Psycho Chicken',
-      ),
-    },
-  });
+  await confirmAddSongs(walk, SINGLE_SONG);
+  return walk.summarise({ success: await readRehearsalOutcome(driver) });
 };
 
 const CHORDPRO_CHART =

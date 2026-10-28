@@ -458,3 +458,35 @@ export const READ_LINEUP_GRID = `() => {
 export const READ_OPEN_DIALOG_LABELS = `() => [...document.querySelectorAll('dialog[open]')].map((dialog) => (dialog.getAttribute('aria-label') || '').slice(0, 60))`;
 
 export const READ_BACK_LINK = `() => { const link = document.querySelector('main a[href]'); return link ? { name: link.innerText.replace(/\\s+/g, ' ').trim(), href: link.getAttribute('href') } : null; }`;
+
+export const READ_ORDER_SCREEN = `() => {
+  const strip = [...document.querySelectorAll('button, a[href]')].find((element) => element.innerText.replace(/\\s+/g, ' ').trim() === 'Done');
+  const stripTop = strip ? strip.getBoundingClientRect().top : innerHeight;
+  const rows = [...document.querySelectorAll('[data-order-row]')];
+  const handle = rows[0] ? rows[0].querySelector('button') : null;
+  const handleBox = handle ? handle.getBoundingClientRect() : null;
+  const curve = document.querySelector('[data-energy-curve]');
+  return {
+    rowCount: rows.length,
+    rowsVisibleWithCurve: rows.filter((row) => { const box = row.getBoundingClientRect(); return box.top >= 0 && box.bottom <= stripTop; }).length,
+    isCurveShown: curve !== null,
+    curveBars: curve ? curve.children.length : 0,
+    handle: handleBox ? { width: Math.round(handleBox.width), height: Math.round(handleBox.height) } : null,
+  };
+}`;
+
+export const READ_ADD_SONGS_SHEET = `(setlistTitles) => {
+  const dialog = document.querySelector('dialog[open]');
+  if (!dialog) return null;
+  const confirm = [...dialog.querySelectorAll('footer button')].find((element) => /^Add /.test(element.innerText.trim()));
+  const box = confirm ? confirm.getBoundingClientRect() : null;
+  const rows = [...dialog.querySelectorAll('[role=checkbox]')];
+  const titleOf = (row) => { const line = row.querySelector('.font-display'); return line ? line.innerText.trim() : ''; };
+  const isInSetlist = (row) => setlistTitles.includes(titleOf(row));
+  return {
+    confirmCentreFraction: box ? Math.round(((box.top + box.height / 2) / innerHeight) * 1000) / 1000 : null,
+    rows: rows.length,
+    rowsInSetlist: rows.filter(isInSetlist).length,
+    rowsInSetlistPickable: rows.filter((row) => isInSetlist(row) && !row.disabled).length,
+  };
+}`;

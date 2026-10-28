@@ -11,6 +11,7 @@ import {
   summariseRouteButtons,
 } from './task-metrics.core';
 import { measureSliceOne } from './slice-one-measures.setup';
+import { measureSliceFour } from './slice-four-measures.setup';
 import { measureSliceThree } from './slice-three-measures.setup';
 import { measureSliceTwo } from './slice-two-measures.setup';
 import { TASK_WALKS } from './task-walks.setup';
@@ -89,6 +90,10 @@ async function main(): Promise<void> {
   }
   if (options.measureSliceThree) {
     result.sliceThree = await measureSliceThree(driver);
+    writeResult(options.outputPath, result);
+  }
+  if (options.measureSliceFour) {
+    result.sliceFour = await measureSliceFour(driver);
     writeResult(options.outputPath, result);
   }
   session.close();
