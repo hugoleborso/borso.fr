@@ -5,6 +5,7 @@ import { selectCompositions } from '@domain/song-origin.core';
 import type { JSX } from 'react';
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Button } from '../../components/atoms/Button';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { QuickAddForm } from '../../components/organisms/QuickAddForm';
@@ -44,6 +45,7 @@ export function TasksPage(): JSX.Element {
   const createTask = useCreateTask();
   const updateTask = useUpdateTask();
   const deleteTask = useDeleteTask();
+  const [isSheetOpen, setIsSheetOpen] = useState<boolean>(false);
   const [editedTaskId, setEditedTaskId] = useState<string | null>(null);
   const [formValues, setFormValues] = useState<TaskFormShape>(BLANK_TASK_FORM);
   const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
@@ -67,13 +69,21 @@ export function TasksPage(): JSX.Element {
   );
 
   const closeForm = (): void => {
+    setIsSheetOpen(false);
     setEditedTaskId(null);
     setFormValues(BLANK_TASK_FORM);
+  };
+
+  const openNewTask = (): void => {
+    setEditedTaskId(null);
+    setFormValues(BLANK_TASK_FORM);
+    setIsSheetOpen(true);
   };
 
   const openTask = (task: TaskShape): void => {
     setEditedTaskId(task.id);
     setFormValues(formValuesFromTask(task));
+    setIsSheetOpen(true);
   };
 
   const saveTask = async (values: TaskFormValues): Promise<void> => {
@@ -111,7 +121,14 @@ export function TasksPage(): JSX.Element {
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
-      <PageHeader title={t('tasks.title')} />
+      <PageHeader
+        title={t('tasks.title')}
+        actions={
+          <Button icon="plus" variant="primary" onClick={openNewTask}>
+            {t('tasks.newTitle')}
+          </Button>
+        }
+      />
       <QuickAddForm
         inputId="task-quick-add"
         label={t('tasks.quickAddLabel')}
@@ -123,29 +140,28 @@ export function TasksPage(): JSX.Element {
           {errorMessage}
         </p>
       )}
-      <div className="grid grid-cols-1 lg:grid-cols-[1fr_340px] gap-5 items-start">
-        <div className="@container min-w-0">
-          <div className="grid grid-cols-1 @xl:grid-cols-2 @4xl:grid-cols-3 gap-3">
-            {tasksQuery.isLoading ? (
-              <p className="text-ink-soft italic text-meta m-0">{t('common.loading')}</p>
-            ) : null}
-            {groups.map((group) => (
-              <MemberTaskColumn
-                key={group.memberId ?? 'unassigned'}
-                group={group}
-                dueLabelOf={(task) => formatDueDate(task.dueDate, i18n.language)}
-                isOverdue={(task) => isDueDatePast(task.dueDate, nowEpochMs)}
-                songTitleOf={(task) => findSongTitle(compositions, task.songId)}
-                onToggleDone={(task) =>
-                  updateTask.mutate({ id: task.id, status: nextStatusAfterToggle(task.status) })
-                }
-                onOpen={openTask}
-                onDelete={(task) => setPendingDeletionId(task.id)}
-              />
-            ))}
-          </div>
+      <div className="@container min-w-0">
+        <div className="grid grid-cols-1 @xl:grid-cols-2 @4xl:grid-cols-3 gap-3">
+          {tasksQuery.isLoading ? (
+            <p className="text-ink-soft italic text-meta m-0">{t('common.loading')}</p>
+          ) : null}
+          {groups.map((group) => (
+            <MemberTaskColumn
+              key={group.memberId ?? 'unassigned'}
+              group={group}
+              dueLabelOf={(task) => formatDueDate(task.dueDate, i18n.language)}
+              isOverdue={(task) => isDueDatePast(task.dueDate, nowEpochMs)}
+              songTitleOf={(task) => findSongTitle(compositions, task.songId)}
+              onToggleDone={(task) =>
+                updateTask.mutate({ id: task.id, status: nextStatusAfterToggle(task.status) })
+              }
+              onOpen={openTask}
+              onDelete={(task) => setPendingDeletionId(task.id)}
+            />
+          ))}
         </div>
-
+      </div>
+      {isSheetOpen ? (
         <TaskForm
           key={editedTaskId ?? 'new'}
           values={formValues}
@@ -153,9 +169,9 @@ export function TasksPage(): JSX.Element {
           members={members}
           compositions={compositions}
           onSubmit={saveTask}
-          onCancel={closeForm}
+          onClose={closeForm}
         />
-      </div>
+      ) : null}
       {pendingDeletionId === null ? null : (
         <ConfirmDialog
           question={t('tasks.deleteConfirm')}

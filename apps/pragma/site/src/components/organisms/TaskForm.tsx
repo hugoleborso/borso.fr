@@ -9,10 +9,9 @@ import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
 import { Chip } from '../atoms/Chip';
 import { Icon, type IconName } from '../atoms/Icon';
-import { BottomActions } from '../atoms/BottomActions';
-import { Card } from '../atoms/Card';
 import { Input } from '../atoms/Input';
 import { MemberChip } from '../molecules/MemberChip';
+import { Sheet } from '../molecules/Sheet';
 import { inputVariants } from '../atoms/input.variants';
 import { TASK_STATUS_LABEL_KEY } from '../../routes/tasks/tasks-page.core';
 
@@ -35,7 +34,7 @@ export interface TaskFormProps {
   }[];
   readonly compositions: readonly { readonly id: string; readonly title: string }[];
   readonly onSubmit: (values: TaskFormValues) => Promise<void>;
-  readonly onCancel: () => void;
+  readonly onClose: () => void;
 }
 
 const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
@@ -62,19 +61,34 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
     },
   });
 
+  const sheetTitle = t(props.isEditing ? 'tasks.editTitle' : 'tasks.newTitle');
+
   return (
-    <Card className="flex flex-col gap-3">
-      <h3 className="font-display text-title text-ink m-0">
-        {t(props.isEditing ? 'tasks.editTitle' : 'tasks.newTitle')}
-      </h3>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        className="flex flex-col gap-2.5"
-      >
+    <Sheet
+      title={sheetTitle}
+      label={sheetTitle}
+      onClose={props.onClose}
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      footer={
+        <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              icon="check"
+              type="submit"
+              variant="primary"
+              disabled={!canSubmit || isSubmitting}
+            >
+              {t('common.save')}
+            </Button>
+          )}
+        </form.Subscribe>
+      }
+    >
+      <div className="flex flex-col gap-2.5">
         <label className={LABEL_CLASS} htmlFor="task-title">
           {t('tasks.titleField')}
         </label>
@@ -182,27 +196,7 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
             />
           )}
         </form.Field>
-
-        <BottomActions>
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <Button
-                icon="check"
-                type="submit"
-                variant="primary"
-                disabled={!canSubmit || isSubmitting}
-              >
-                {t('common.save')}
-              </Button>
-            )}
-          </form.Subscribe>
-          {props.isEditing ? (
-            <Button icon="close" type="button" variant="quiet" onClick={props.onCancel}>
-              {t('common.cancel')}
-            </Button>
-          ) : null}
-        </BottomActions>
-      </form>
-    </Card>
+      </div>
+    </Sheet>
   );
 }
