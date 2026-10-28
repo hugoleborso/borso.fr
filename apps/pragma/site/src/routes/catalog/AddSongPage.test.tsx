@@ -1,7 +1,7 @@
 import { QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { MemoryRouter, Route, Routes } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it } from 'vitest';
 import '../../i18n/i18n.setup';
 import {
   createIsolatedQueryClient,
@@ -9,8 +9,7 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
-import { stubSheetDialog } from '../molecules/sheet.test-utils';
-import { AddSongSheet } from './AddSongSheet';
+import { AddSongPage } from './AddSongPage';
 
 const HIT = {
   deezerTrackId: '67238735',
@@ -36,15 +35,12 @@ function answerSongsApi(request: Request): Response {
   return new Response(null, { status: 404 });
 }
 
-function renderSheet(): void {
+function renderPage(): void {
   render(
     <QueryClientProvider client={createIsolatedQueryClient()}>
-      <MemoryRouter initialEntries={['/catalog']}>
+      <MemoryRouter initialEntries={['/catalog/add?title=get+luck']}>
         <Routes>
-          <Route
-            path="/catalog"
-            element={<AddSongSheet initialTitle="get luck" onClose={vi.fn()} />}
-          />
+          <Route path="/catalog/add" element={<AddSongPage />} />
           <Route path="/catalog/:songId" element={<p>Song page</p>} />
         </Routes>
       </MemoryRouter>
@@ -53,11 +49,10 @@ function renderSheet(): void {
 }
 
 // @FollowsBlueprint test-component-render
-describe('AddSongSheet', () => {
+describe('the Add a song page', () => {
   let stub: FetchStub | null = null;
 
   beforeEach(() => {
-    stubSheetDialog();
     stub = stubFetch((request) => Promise.resolve(answerSongsApi(request)));
   });
 
@@ -66,15 +61,35 @@ describe('AddSongSheet', () => {
     stub?.restore();
   });
 
+  it('is a page of its own, titled Add a song, leading back to the songs', () => {
+    renderPage();
+    expect(screen.getByRole('heading', { level: 1, name: 'Add a song' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Songs' }).getAttribute('href')).toBe('/catalog');
+    expect(document.querySelector('dialog')).toBeNull();
+  });
+
+  it('lists the music service results right under the title, before the artist', async () => {
+    renderPage();
+    const serviceTrackRow = await screen.findByRole('button', { name: /Get Lucky/ });
+    const artist = screen.getByLabelText('Artist');
+    const title = screen.getByLabelText('Title');
+    expect(
+      title.compareDocumentPosition(serviceTrackRow) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+    expect(
+      serviceTrackRow.compareDocumentPosition(artist) & Node.DOCUMENT_POSITION_FOLLOWING,
+    ).toBeTruthy();
+  });
+
   it('starts on the title, focused, carrying what was searched', () => {
-    renderSheet();
+    renderPage();
     const title = screen.getByLabelText('Title');
     expect(title).toHaveProperty('value', 'get luck');
     expect(document.activeElement).toBe(title);
   });
 
   it("fills title and artist from the music service's result and creates the song with its cover", async () => {
-    renderSheet();
+    renderPage();
     fireEvent.click(await screen.findByRole('button', { name: /Get Lucky/ }));
 
     expect(screen.getByLabelText('Title')).toHaveProperty('value', 'Get Lucky');

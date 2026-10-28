@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   applyPickedTrack,
+  buildAddSongPath,
   buildNewSongPayload,
   canAddSong,
   shouldSearchMusicServiceFor,
@@ -76,5 +77,15 @@ describe('buildNewSongPayload', () => {
       durationSeconds: 369,
       isrcs: ['USQX91300108'],
     });
+  });
+});
+
+describe('buildAddSongPath', () => {
+  it('opens the empty page when nothing was searched', () => {
+    expect(buildAddSongPath('   ')).toBe('/catalog/add');
+  });
+
+  it('carries the searched title, trimmed and encoded', () => {
+    expect(buildAddSongPath(' get lucky & co ')).toBe('/catalog/add?title=get+lucky+%26+co');
   });
 });

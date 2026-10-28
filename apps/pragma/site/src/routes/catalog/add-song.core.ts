@@ -68,3 +68,13 @@ export function buildNewSongPayload(draft: AddSongDraft): NewSongPayload {
     isrcs: [...track.isrcs],
   };
 }
+
+export const ADD_SONG_PATH = '/catalog/add';
+export const ADD_SONG_TITLE_PARAMETER = 'title';
+
+// @FollowsBlueprint core-decision
+export function buildAddSongPath(searchedTitle: string): string {
+  const title = searchedTitle.trim();
+  if (title.length === 0) return ADD_SONG_PATH;
+  return `${ADD_SONG_PATH}?${new URLSearchParams({ [ADD_SONG_TITLE_PARAMETER]: title }).toString()}`;
+}

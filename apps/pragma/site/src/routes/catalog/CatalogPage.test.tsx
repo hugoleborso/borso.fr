@@ -49,4 +49,11 @@ describe('the songs page', () => {
     expect(pinned?.contains(screen.getByRole('group', { name: 'Show' }))).toBe(true);
     expect(pinned?.querySelector('[class*="overflow-y"]')).toBeNull();
   });
+
+  it('opens the Add a song page, carrying no title when nothing was searched', () => {
+    renderCatalogPage();
+    const addSong = screen.getByRole('link', { name: 'Add a song' });
+    expect(addSong.getAttribute('href')).toBe('/catalog/add');
+    expect(addSong.dataset.variant).toBe('primary');
+  });
 });

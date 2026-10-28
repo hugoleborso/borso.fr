@@ -5,13 +5,12 @@ import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSearchParams } from 'react-router-dom';
 import { BottomActions } from '../../components/atoms/BottomActions';
-import { Button } from '../../components/atoms/Button';
+import { ButtonLink } from '../../components/atoms/ButtonLink';
 import { Chip } from '../../components/atoms/Chip';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SearchBar } from '../../components/molecules/SearchBar';
 import { StreakBadge } from '../../components/molecules/StreakBadge';
-import { AddSongSheet } from '../../components/organisms/AddSongSheet';
 import { CatalogList } from '../../components/organisms/CatalogList';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError } from '../../lib/api.client';
@@ -31,6 +30,7 @@ import {
   sortSongsByTitle,
   TO_LEARN_FILTER,
 } from './catalog-page.core';
+import { buildAddSongPath } from './add-song.core';
 import { extractChartKind } from './chart-kind.utils';
 
 const NO_ROWS: readonly never[] = [];
@@ -87,7 +87,6 @@ export function CatalogPage(): JSX.Element {
   const overviewQuery = useStudiesOverview();
   const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
-  const [isAddSongOpen, setIsAddSongOpen] = useState(false);
   const filter = parseCatalogFilter(searchParams.get(CATALOG_FILTER_PARAMETER));
   const isToLearn = filter === TO_LEARN_FILTER;
 
@@ -187,13 +186,10 @@ export function CatalogPage(): JSX.Element {
         </p>
       )}
       {!isLoading && cards.length > 0 && <CatalogList songs={cards} />}
-      {isAddSongOpen ? (
-        <AddSongSheet initialTitle={search.trim()} onClose={() => setIsAddSongOpen(false)} />
-      ) : null}
       <BottomActions>
-        <Button variant="primary" size="lg" icon="plus" onClick={() => setIsAddSongOpen(true)}>
+        <ButtonLink variant="primary" size="lg" icon="plus" to={buildAddSongPath(search)}>
           {t('catalog.addSong')}
-        </Button>
+        </ButtonLink>
       </BottomActions>
     </div>
   );

@@ -303,7 +303,7 @@ export const pragmaManifest: ArchitectureManifest = {
       name: 'Element scrolling',
       technology: 'Browser scroll API',
       description:
-        'Drives the scene chart down the screen while a song is played, and brings the current setlist pill into view. Held by a ref callback, so the timer stops when the scene unmounts. The shell scroll region is also read through its scroll event, which is what tells the bottom action bar to tuck away and come back.',
+        'Drives the scene chart down the screen while a song is played, and brings the current setlist pill into view. Held by a ref callback, so the timer stops when the scene unmounts. The shell scroll region is also read through its scroll event, which is what tells the bottom action bar to tuck away and come back. On the Add a song page, a resize of the visual viewport lifts the focused title field to the top, so the results of the music service under it stay above the keyboard.',
       boundary: 'browser-platform',
       access: 'open',
     },
