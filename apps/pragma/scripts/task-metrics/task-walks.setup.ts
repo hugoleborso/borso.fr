@@ -1,4 +1,6 @@
+import { randomUUID } from 'node:crypto';
 import { z } from 'zod';
+import { buildTakeObjectKey } from '../../api/src/takes/takes.core';
 import { selectNextSession } from '../../domain/session-schedule.core';
 import { formatSessionDate } from '../../site/src/lib/formatters.utils';
 import type { BandSessionDriver } from './band-session.setup';
@@ -334,32 +336,80 @@ const noteSongForTonight: TaskWalkRunner = async (driver) => {
   });
 };
 
+const STAND_IN_TAKE_SECONDS = 30;
+const STAND_IN_CONTENT_TYPE = 'audio/webm';
+const practiceSetlistsSchema = z.object({ setlists: z.array(z.object({ id: z.string() })) });
+const practiceEntriesSchema = z.object({
+  entries: z.array(z.object({ songId: z.string(), position: z.number() })),
+});
+
+async function readFirstPracticeSongId(
+  driver: BandSessionDriver,
+  practiceId: string,
+): Promise<string> {
+  const { setlists } = practiceSetlistsSchema.parse(
+    await driver.fetchJson(`/api/setlists/by-session/${practiceId}`),
+  );
+  const firstSetlist = setlists[0];
+  if (firstSetlist === undefined) throw new Error('[7] the coming practice has no setlist');
+  const { entries } = practiceEntriesSchema.parse(
+    await driver.fetchJson(`/api/setlists/${firstSetlist.id}/entries`),
+  );
+  const first = entries.toSorted((left, right) => left.position - right.position)[0];
+  if (first === undefined) throw new Error('[7] the practice setlist is empty');
+  return first.songId;
+}
+
+async function createStandInTake(
+  driver: BandSessionDriver,
+  songId: string,
+  practiceId: string,
+): Promise<void> {
+  const takeId = randomUUID();
+  await driver.postJson('/api/takes', {
+    id: takeId,
+    objectKey: buildTakeObjectKey({ songId, takeId, contentType: STAND_IN_CONTENT_TYPE }),
+    songId,
+    sessionId: practiceId,
+    recordedAt: new Date().toISOString(),
+    durationSeconds: STAND_IN_TAKE_SECONDS,
+    contentType: STAND_IN_CONTENT_TYPE,
+    source: 'live',
+    queued: false,
+    fromPracticeMode: true,
+  });
+}
+
 const recordTakeAndTalk: TaskWalkRunner = async (driver) => {
   await driver.startFresh(HOME);
+  const practiceId = await movePracticeToToday(driver);
+  if (practiceId === null) throw new Error('[7] no coming practice in the seed');
+  await createStandInTake(driver, await readFirstPracticeSongId(driver, practiceId), practiceId);
+  await driver.open(HOME);
   const walk = new TaskWalk(driver.session, '7 Record a take and talk about it');
-  await walk.tap('Songs tab', { text: '^Songs', css: TAB_LINK });
-  await walk.tap('Search field', { css: 'main input', scope: 'page' });
-  await walk.type('Search', 'Superstition');
+  walk.note(
+    'Recorded the way slice 5 offers it, from practice mode on the practice day. Chromium here has no microphone, so Close stands for Stop, and a take of the current song, created through the API before the walk, stands for the one Stop leaves in the list.',
+  );
   await walk.tap(
-    'Open Superstition',
-    { text: 'Superstition', css: 'main a' },
-    { wait: CREATE_SETTLE_MS },
+    'Start the practice',
+    { exact: 'Start the practice', css: 'a, button', scope: 'page' },
+    { primary: true, wait: CREATE_SETTLE_MS },
   );
   await walk.tap(
     'Record a take',
-    { text: '^Record a take', css: 'button', scope: 'page' },
+    { exact: 'Record a take', css: 'button', scope: 'page' },
     { primary: true },
   );
-  walk.note(
-    'The recording sheet shows only Upload and Close here: Chromium has no microphone, so the record and stop buttons cannot be reached or counted. A real phone adds at least 2 taps (record, stop).',
-  );
   await walk.tap('Close the recording sheet', { exact: 'Close', css: 'button', scope: 'dialog' });
-  await walk.tap('Open the first take', { text: 'Practice · ', css: 'main button', scope: 'page' });
+  await walk.tap('Open the take', {
+    css: 'main section[aria-labelledby=practice-takes-title] button',
+    scope: 'page',
+  });
   await walk.tap('Comment field', { css: 'textarea', scope: 'page' });
   await walk.type('Comment', 'Le pont est trop lent');
   const moment = await walk.find({ css: 'input[type=checkbox]', scope: 'page' });
   walk.note(
-    `The "At <time>" checkbox that pins the comment to a moment is ${moment === null ? 'absent' : 'present but disabled until the audio plays'}; the seeded audio does not exist, so pinning cannot be done here.`,
+    `The "At <time>" checkbox that pins the comment to a moment is ${moment === null ? 'absent' : 'present but disabled until the audio plays'}; the stand-in take has no audio, so pinning cannot be done here.`,
   );
   await walk.tap(
     'Send',

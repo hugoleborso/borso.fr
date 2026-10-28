@@ -133,6 +133,8 @@ export const FETCH_JSON = `async (path) => { const response = await fetch(path, 
 
 export const PUT_JSON = `async ({ path, body }) => { const response = await fetch(path, { method: 'PUT', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }); return response.status; }`;
 
+export const POST_JSON = `async ({ path, body }) => { const response = await fetch(path, { method: 'POST', credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }); return response.status; }`;
+
 export const CLEAR_STORAGE = `() => { try { localStorage.clear(); sessionStorage.clear(); } catch {} }`;
 
 export const STANDALONE_PROBE = `() => matchMedia('(display-mode: standalone)').matches`;
