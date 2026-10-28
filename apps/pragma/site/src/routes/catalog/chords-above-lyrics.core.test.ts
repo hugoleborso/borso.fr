@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  describeChordChartAdded,
   convertChordsAboveLyrics,
   isChordLine,
   isChordPro,
@@ -110,5 +111,22 @@ describe('convertChordsAboveLyrics', () => {
       hasChords: false,
       isChanged: false,
     });
+  });
+});
+
+describe('describeChordChartAdded', () => {
+  it('says whether the converter changed the text the chart came from', () => {
+    expect(describeChordChartAdded('paste', 'G       C\nHello there')).toEqual({
+      source: 'paste',
+      converted: true,
+    });
+    expect(describeChordChartAdded('pdf', '[G]Hello there')).toEqual({
+      source: 'pdf',
+      converted: false,
+    });
+  });
+
+  it('counts a chart kept as a file as not converted', () => {
+    expect(describeChordChartAdded('photo', null)).toEqual({ source: 'photo', converted: false });
   });
 });

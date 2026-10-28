@@ -15,6 +15,8 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { useChartUpload } from './chart-upload.hook';
 import { FileDrop } from './FileDrop';
 import { SongChordPreview } from './SongChordPreview';
+import { recordProductEvent } from '../../observability/product-event.adapter';
+import { describeChordChartAdded } from '../../routes/catalog/chords-above-lyrics.core';
 
 export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
 
@@ -63,12 +65,18 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
 
   const pasteText = async (): Promise<void> => {
     const clipboardText = await readTextFromClipboard();
+    if (clipboardText !== null) {
+      recordProductEvent('chord_chart_added', {
+        ...describeChordChartAdded('paste', clipboardText),
+      });
+    }
     showText(clipboardText ?? props.chordproText);
   };
 
   const storePhoto = async (file: File): Promise<void> => {
     const uploaded = await chartUpload.upload(file);
     if (uploaded === null) return;
+    recordProductEvent('chord_chart_added', { ...describeChordChartAdded('photo', null) });
     props.onImageKeyChange(uploaded.objectKey);
     props.onChartKindChange('image');
   };
@@ -80,11 +88,13 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
       .catch(() => '');
     setIsReadingPdf(false);
     if (text.length > 0) {
+      recordProductEvent('chord_chart_added', { ...describeChordChartAdded('pdf', text) });
       showText(text);
       return;
     }
     const uploaded = await chartUpload.upload(file);
     if (uploaded === null) return;
+    recordProductEvent('chord_chart_added', { ...describeChordChartAdded('pdf', null) });
     props.onPdfKeyChange(uploaded.objectKey);
     props.onChartKindChange('pdf');
   };

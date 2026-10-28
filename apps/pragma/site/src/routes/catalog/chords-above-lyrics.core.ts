@@ -117,3 +117,17 @@ export function convertChordsAboveLyrics(pastedText: string): ChordConversion {
   const chordPro = converted.join('\n');
   return { chordPro, hasChords: true, isChanged: chordPro !== text };
 }
+
+export type ChordChartSource = 'paste' | 'photo' | 'pdf';
+
+export interface ChordChartAdded {
+  readonly source: ChordChartSource;
+  readonly converted: boolean;
+}
+
+export function describeChordChartAdded(
+  source: ChordChartSource,
+  text: string | null,
+): ChordChartAdded {
+  return { source, converted: text !== null && convertChordsAboveLyrics(text).isChanged };
+}

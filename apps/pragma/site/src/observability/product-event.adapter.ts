@@ -12,7 +12,8 @@ export type ProductEventName =
   | 'setlist_songs_added'
   | 'setlist_order_opened'
   | 'practice_mode_started'
-  | 'practice_mode_ended';
+  | 'practice_mode_ended'
+  | 'chord_chart_added';
 
 export type ProductEventAttributes = Readonly<Record<string, string | number | boolean>>;
 

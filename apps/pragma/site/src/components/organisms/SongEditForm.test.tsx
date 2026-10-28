@@ -7,7 +7,12 @@ import '../../i18n/i18n.setup';
 import { createIsolatedQueryClient } from '../../lib/queries/queries.test-utils';
 import { BLANK_SONG_DRAFT } from '../../routes/catalog/song-draft.core';
 import { NO_SAVE_REFUSAL, type SongSaveRefusal } from '../../lib/queries/song-save-refusal.core';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { SongEditForm } from './SongEditForm';
+
+vi.mock('../../observability/product-event.adapter', () => ({
+  recordProductEvent: vi.fn(),
+}));
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -81,6 +86,10 @@ describe('SongEditForm', () => {
       'Chords above the lyrics, as chord sites show them',
     );
     expect(textBox).toHaveProperty('value', 'Am     G\nHello there');
+    expect(recordProductEvent).toHaveBeenCalledExactlyOnceWith('chord_chart_added', {
+      source: 'paste',
+      converted: true,
+    });
     const preview = await waitFor(() => screen.getByText('Chord chart', { selector: 'span' }));
     expect(
       textBox.compareDocumentPosition(preview) & Node.DOCUMENT_POSITION_FOLLOWING,
