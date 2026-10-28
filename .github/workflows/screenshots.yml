@@ -44,7 +44,7 @@ jobs:
     runs-on: ubuntu-latest
     timeout-minutes: 10
     env:
-      PR_NUMBER: ${{ inputs.pr || github.event.pull_request.number }}
+      PR_NUMBER: '207'
     steps:
       - name: Check the pull request number
         run: |
