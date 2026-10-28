@@ -8,8 +8,9 @@ or, as a last resort, runs later. It is never exempted.
 
 | Stage | Budget | Measured as | Enforced by |
 | --- | --- | --- | --- |
-| One pre-commit check | 300 ms | CPU time of the check and everything it starts | the hook itself, on every commit |
+| One pre-commit check | 300 ms, plus 20 ms per touched path in its scope past the first | CPU time of the check and everything it starts | the hook itself, on every commit |
 | A per-file check on the commit, oxfmt included | 300 ms, plus 20 ms per staged file past the first | the same | the hook itself |
+| `named-paths-exist`, which reads every staged file and every file naming a deleted one | 300 ms, plus 20 ms per staged file past the first | the same | the hook itself |
 | oxlint on the commit, type-aware | 5 s, plus 1.5 s per staged file past the first | the same | the hook itself |
 | The tooling type check on the commit | 2.5 s | the same | the hook itself |
 | The node checks on the commit, in one process | 1 s, plus 250 ms per check past the first | the same | the hook itself |

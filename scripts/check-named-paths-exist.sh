@@ -58,7 +58,7 @@ if [ "${1:-}" = '--staged' ]; then
   if [ "${#removed_names[@]}" -gt 0 ]; then
     while IFS= read -r naming; do
       [ -n "$naming" ] && SUBJECTS+=("$naming")
-    done < <(git grep -l -F "${removed_names[@]}" || true)
+    done < <(git grep --threads=1 -l -F "${removed_names[@]}" || true)
   fi
   if [ "${#SUBJECTS[@]}" -eq 0 ]; then
     echo "[check-named-paths-exist] nothing staged names a path"

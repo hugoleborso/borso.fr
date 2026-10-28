@@ -12,11 +12,7 @@ import {
 import { selectSubjectReference } from '../../lib/discussion-subject.core';
 import { useCopyPromptOnLaunch } from '../../lib/prompt-copy.hook';
 import { useClaudeCodeTarget } from '../../lib/queries/messages.queries';
-import {
-  composeDiscussionText,
-  selectDiscussionPreambleKey,
-  selectSubjectPhraseKey,
-} from './action-sheet.core';
+import { composeDiscussionText, selectSubjectPhraseKey } from './action-sheet.core';
 
 const SHEET_ROW_CLASS_NAME = 'w-full justify-start min-h-13 px-4 text-body';
 
@@ -28,10 +24,9 @@ export function ActionSheet(): JSX.Element | null {
   const copyPrompt = useCopyPromptOnLaunch();
   const opener = detectClaudeCodeOpener();
   if (sheet === null) return null;
-  const storage = target.data?.storage;
-  const file = selectSubjectReference(sheet.subject, storage);
+  const file = selectSubjectReference(sheet.subject);
   const prompt = composeTalosPrompt(
-    t(selectDiscussionPreambleKey(storage)),
+    t('discuss.preamble'),
     composeDiscussionText(
       t('discuss.context', {
         subject: t(selectSubjectPhraseKey(sheet.subject.kind)),

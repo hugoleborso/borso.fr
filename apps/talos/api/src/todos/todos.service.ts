@@ -1,66 +1,70 @@
-import {
-  appendTodo,
-  type NewTodo,
-  parseTodos,
-  removeTodo,
-  restoreTodo,
-  type Todo,
-  type TodoChanges,
-  type TodoEdit,
-  type TodoRemoval,
-  updateTodo,
-} from '@domain/todo.core';
 import type { TodoList } from '@domain/todo-list.core';
-import { editContentFile, readContentFile } from '../content/content.service';
+import { type NewTodo, parseTodos, type Todo, type TodoChanges } from '@domain/todo.core';
 import { formatParisDate } from '../helpers/calendar/paris-clock.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
-import { isMemoryInDatabase } from '../memory/memory-cutover.service';
 import {
-  addStoredTodo,
-  changeStoredTodo,
-  deleteStoredTodo,
-  listStoredTodos,
-  reinstateStoredTodo,
-} from './todos-memory.service';
+  findMemoryTodo,
+  listMemoryTodos,
+  readCreatedId,
+  recordPwaChanges,
+} from '../memory/memory-pwa.service';
 import {
-  buildTodoFileEdit,
-  buildTodoRemovalFileEdit,
   describeTodoAddition,
   describeTodoChange,
+  describeTodoRemoval,
   describeTodoRestoration,
+  formatStoredTodoLine,
+  isTaskTaken,
+  matchRestoredTodo,
+  projectStoredTodo,
+  readStoredExtra,
   type RemovedTodo,
+  type StoredTodo,
   type TodoRestoration,
 } from './todos.core';
 
 export type { TodoList } from '@domain/todo-list.core';
-export type { RemovedTodo, TodoRestoration } from './todos.core';
 
-function readSavedTodo(edit: TodoEdit): Todo {
-  if (edit.kind === 'not-found') throw new TalosError('todo-not-found');
-  if (edit.kind === 'duplicate') throw new TalosError('todo-duplicate');
-  return edit.todo;
+async function listVisibleTodos(list: TodoList): Promise<StoredTodo[]> {
+  return (await listMemoryTodos(list.memoryList)).filter((stored) => !stored.removed);
 }
 
-function readRemovedTodo(removal: TodoRemoval): RemovedTodo {
-  if (removal.kind === 'not-found') throw new TalosError('todo-not-found');
-  return { todo: removal.todo, line: removal.line, position: removal.position };
+async function readSavedTodo(id: string): Promise<Todo> {
+  const stored = await findMemoryTodo(id);
+  if (stored === null) throw new TalosError('todo-not-found');
+  return projectStoredTodo(stored);
+}
+
+function getVisibleTodo(visible: readonly StoredTodo[], id: string): StoredTodo {
+  const stored = visible.find((candidate) => candidate.id === id);
+  if (stored === undefined) throw new TalosError('todo-not-found');
+  return stored;
 }
 
 // @FollowsBlueprint service-orchestration
 export async function listTodos(list: TodoList): Promise<Todo[]> {
-  if (await isMemoryInDatabase()) return await listStoredTodos(list);
-  return parseTodos((await readContentFile(list.path)) ?? '');
+  return (await listVisibleTodos(list)).map(projectStoredTodo);
 }
 
 export async function addTodo(list: TodoList, newTodo: NewTodo, now: Date): Promise<Todo> {
-  if (await isMemoryInDatabase()) return await addStoredTodo(list, newTodo, now);
   const today = formatParisDate(now);
-  const edit = await editContentFile(list.path, (current) =>
-    buildTodoFileEdit(appendTodo(current ?? '', newTodo, today, list.heading), (text) =>
-      describeTodoAddition(list, text),
-    ),
+  if (isTaskTaken(await listVisibleTodos(list), newTodo.text, today)) {
+    throw new TalosError('todo-duplicate');
+  }
+  const response = await recordPwaChanges(
+    describeTodoAddition(list, newTodo.text),
+    [
+      {
+        op: 'todo.add',
+        list: list.memoryList,
+        text: newTodo.text,
+        addedOn: today,
+        ...(newTodo.dueDate === undefined ? {} : { dueDate: newTodo.dueDate }),
+      },
+    ],
+    now,
   );
-  return readSavedTodo(edit);
+  return await readSavedTodo(readCreatedId(response));
 }
 
 export async function changeTodo(
@@ -69,22 +73,67 @@ export async function changeTodo(
   changes: TodoChanges,
   now: Date,
 ): Promise<Todo> {
-  if (await isMemoryInDatabase()) return await changeStoredTodo(list, id, changes, now);
-  const today = formatParisDate(now);
-  const edit = await editContentFile(list.path, (current) =>
-    buildTodoFileEdit(updateTodo(current ?? '', id, changes, today), (text) =>
-      describeTodoChange(list, changes, text),
-    ),
+  const visible = await listVisibleTodos(list);
+  const stored = getVisibleTodo(visible, id);
+  const text = changes.text ?? stored.text;
+  if (isTaskTaken(visible, text, stored.addedOn ?? undefined, id)) {
+    throw new TalosError('todo-duplicate');
+  }
+  await recordPwaChanges(
+    describeTodoChange(list, changes, text),
+    [
+      {
+        op: 'todo.update',
+        id,
+        ...(changes.text === undefined ? {} : { text: changes.text }),
+        ...(changes.done === undefined ? {} : { done: changes.done }),
+        ...(changes.dueDate === undefined ? {} : { dueDate: changes.dueDate }),
+      },
+    ],
+    now,
   );
-  return readSavedTodo(edit);
+  return await readSavedTodo(id);
 }
 
 export async function deleteTodo(list: TodoList, id: string, now: Date): Promise<RemovedTodo> {
-  if (await isMemoryInDatabase()) return await deleteStoredTodo(list, id, now);
-  const removal = await editContentFile(list.path, (current) =>
-    buildTodoRemovalFileEdit(list, removeTodo(current ?? '', id)),
-  );
-  return readRemovedTodo(removal);
+  const visible = await listVisibleTodos(list);
+  const stored = getVisibleTodo(visible, id);
+  await recordPwaChanges(describeTodoRemoval(list, stored.text), [{ op: 'todo.remove', id }], now);
+  return {
+    todo: projectStoredTodo(stored),
+    line: formatStoredTodoLine(stored),
+    position: visible.indexOf(stored),
+  };
+}
+
+function planRestoredTodo(list: TodoList, restored: Todo, stored: StoredTodo | null) {
+  if (stored === null) {
+    return {
+      op: 'todo.add' as const,
+      list: list.memoryList,
+      text: restored.text,
+      done: restored.done,
+      ...(restored.dueDate === undefined ? {} : { dueDate: restored.dueDate }),
+      ...(restored.commitment === undefined ? {} : { commitmentSlug: restored.commitment }),
+      ...(restored.source === undefined ? {} : { sourceRef: restored.source }),
+      ...(restored.addedOn === undefined ? {} : { addedOn: restored.addedOn }),
+      ...(restored.doneOn === undefined ? {} : { doneOn: restored.doneOn }),
+    };
+  }
+  return {
+    op: 'todo.add' as const,
+    id: stored.id,
+    list: list.memoryList,
+    position: stored.position,
+    text: stored.text,
+    done: stored.done,
+    extra: readStoredExtra(stored.extra),
+    ...(stored.dueDate === null ? {} : { dueDate: stored.dueDate }),
+    ...(stored.commitmentSlug === null ? {} : { commitmentSlug: stored.commitmentSlug }),
+    ...(stored.sourceRef === null ? {} : { sourceRef: stored.sourceRef }),
+    ...(stored.addedOn === null ? {} : { addedOn: stored.addedOn }),
+    ...(stored.doneOn === null ? {} : { doneOn: stored.doneOn }),
+  };
 }
 
 export async function reinstateTodo(
@@ -92,12 +141,14 @@ export async function reinstateTodo(
   restoration: TodoRestoration,
   now: Date,
 ): Promise<Todo> {
-  if (await isMemoryInDatabase()) return await reinstateStoredTodo(list, restoration, now);
-  const edit = await editContentFile(list.path, (current) =>
-    buildTodoFileEdit(
-      restoreTodo(current ?? '', restoration.line, restoration.position, list.heading),
-      (text) => describeTodoRestoration(list, text),
-    ),
+  const [restored] = parseTodos(restoration.line);
+  if (restored === undefined) throw new TalosError('invalid-input');
+  const match = matchRestoredTodo(await listMemoryTodos(list.memoryList), restored);
+  if (match.kind === 'duplicate') throw new TalosError('todo-duplicate');
+  const response = await recordPwaChanges(
+    describeTodoRestoration(list, restored.text),
+    [planRestoredTodo(list, restored, match.kind === 'removed' ? match.todo : null)],
+    now,
   );
-  return readSavedTodo(edit);
+  return await readSavedTodo(readCreatedId(response));
 }
