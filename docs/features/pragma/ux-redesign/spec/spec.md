@@ -62,7 +62,7 @@ Opened by tapping a setlist row. Header: the album cover at 72 px, title, artist
 
 ### Session page (`/sessions/:id`, mockup `after-session.png`)
 
-In order: the setlist preview (count, total time, the first three songs with cover, title and lineup avatars, a `warn` badge on a song with no lineup, **no key**), then **Who does what** (the tasks linked to this session, and **Add a task** with `plus`), then the takes recorded at this session grouped by song. With no setlist yet, the preview holds **Add songs**, which creates a setlist named after the session and opens the Add songs sheet. A past practice does not show the empty "Prepared concert" picker. Primary action (Q1): on a practice's own day, **Start the practice** (`play`), with **Open the setlist** beside it as the second pill; on any other day, and for a concert, **Open the setlist** (`arrowR`). Attendance (D4) and the message thread (D5) are not on this page in this iteration.
+In order: the setlist preview (count, total time, the first three songs with cover, title and lineup avatars, a `warn` badge on a song with no lineup, **no key**), then **Who does what** (the tasks linked to this session, and **Add a task** with `plus`), then the takes recorded at this session grouped by song. With no setlist yet, the preview is an empty state that says so and offers **Attach an existing setlist**, and the bottom strip's primary pill is **Add a setlist**, which creates a setlist named after the session and opens the Add songs sheet; with setlists, a secondary **Add a setlist** under them offers a new setlist or an existing one (operator review 1, R6). A concert reaches its audience vote through one secondary action, **Audience vote**, beside Edit; the vote block is not on the session page (R4). A past practice does not show the empty "Prepared concert" picker. Primary action (Q1): on a practice's own day, **Start the practice** (`play`), with **Open the setlist** beside it as the second pill; on any other day, and for a concert, **Open the setlist** (`arrowR`). Attendance (D4) and the message thread (D5) are not on this page in this iteration.
 
 ### Practice mode (`/sessions/:id/practice`, slice 5, Q1)
 
@@ -93,7 +93,7 @@ On the song's edit page, the chord chart section offers three buttons: **Paste t
 
 ### Songs tab (`/catalog`)
 
-Compact rows (cover, title, artist, status badge; chord icon only when a chart exists), search, filter chips including **To learn**, and **Add a song** (`plus`) in the bottom strip. Add a song opens a sheet with the title field focused, an artist field and status chips; when the music service answers, its results fill title, artist and cover. The raw "Deezer track ID" field leaves the form.
+Compact rows (cover, title, artist, status badge; chord icon only when a chart exists), search, filter chips including **To learn**, and **Add a song** (`plus`) in the bottom strip. The title, the search and the filter chips stay pinned at the top while the list scrolls (operator review 1, R2). Add a song opens the **Add a song** page (`/catalog/add`, R5) with the title field focused, the music service's results directly under it, then an artist field and status chips; picking a result fills title, artist and cover. The raw "Deezer track ID" field leaves the form.
 
 ### Band tab (`/band`, mockup `after-band.png`)
 
@@ -109,7 +109,7 @@ Reached from the setlist's `more` menu. A back link names the setlist. Two lines
 flowchart LR
   Home -->|Open the setlist| Setlist
   Sessions --> Session -->|Open the setlist| Setlist
-  Session -->|Add songs, no setlist yet| AddSongs[Add songs sheet]
+  Session -->|Add a setlist, no setlist yet| AddSongs[Add songs sheet]
   Setlist -->|Add songs| AddSongs
   Setlist -->|Order| Order[Order screen]
   Setlist -->|tap row or lineup cell| Entry[Entry sheet]
@@ -126,7 +126,7 @@ flowchart LR
 
 **Happy path, prepare the next practice (task 1):**
 1. Home, Sessions tab, **New session**, choose practice, create.
-2. On the new session, **Add songs**: a setlist named after the session is created and the sheet opens.
+2. On the new session, **Add a setlist**: a setlist named after the session is created and the Add songs sheet opens.
 3. Check ten songs, using search or a chip instead of scrolling, then **Add 10 songs**.
 4. The sheet closes on the setlist, with the ten songs in the order picked.
 
@@ -312,6 +312,14 @@ Measured with the task-metrics harness at 390x844 in emulated standalone mode, o
 | Songs already in the setlist offered again (slice 4) | yes | no |
 | Band tasks layout width at 390 (slice 2) | 493 px | 390 px |
 | `/catalog` page height (slice 6) | 6.88 screens | ≤ 4.2 screens |
+| `/catalog` title, search and filters on screen after scrolling to the end (operator review 1) | scrolled away | pinned at the top |
+| Undo offered after Remove from the setlist (operator review 1) | no | yes, six seconds, restoring note, lineup and position |
+| Vote results shown on a concert with no round ever opened (operator review 1) | yes, on the session page | no; the session page has no vote block |
+| Add a song: music service results visible above the keyboard, 390x844 (operator review 1) | hidden behind the keyboard, in a sheet | at least three results between the title field and the keyboard |
+| Sheets that close on a swipe down from the grabber (operator review 1) | 0 | every dismissible sheet |
+| Session with no setlist: Add a setlist visible on arrival (operator review 1) | in the `more` menu | primary pill, and Attach in the empty state |
+| Mastery matrix at 375 px: sideways scroll (operator review 1) | yes, headers cut | none, five members |
+| `/instruments`: the action to add an instrument on screen on arrival, 375x812 (operator review 1) | below the fold | the primary pill in the bottom strip |
 | Ways into stage mode from the song page (slice 6) | 3 | 1 |
 | Buttons inside a link (slice 6) | 5 places | 0 |
 | Listen links visible on the song page (slice 6) | 0 | one per link the song has |
@@ -339,6 +347,23 @@ Each slice is one pull request, in dependency order. Every slice keeps the app w
 6. **Songs, song page and chords.** Compact catalogue, To learn filter replacing Studies, study rows opening their song, Add a song sheet, song page for learning (listen row with official marks, setlists line, round actions, Your part, transpose, takes, Full screen), chord input by paste with the converter, photo and PDF (Q6). Screens: Songs, song page, song edit, Studies removed. Acceptance: the rows marked slice 6, and the two rows measured after slice 6.
 
 Slice 6 depends on slices 1 and 2 only and may run beside 3 to 5. Slice 5 needs slice 4, because the session's Add songs opens the Add songs sheet.
+
+## Operator review 1
+
+The operator reviewed the whole redesign on the #216 preview on 2026-10-28. Each item below is a ratified change to this spec, delivered on the same branch.
+
+| # | Change | Where it lands |
+| --- | --- | --- |
+| R1 | Remove from the setlist keeps no confirmation; a snackbar offers **Undo** (`undo`) for six seconds and puts the song back with its note, key, capo, energy, lineup and position. Removal is rare. | Setlist, `UndoSnackbar`, `useRestoreSetlistEntry` |
+| R2 | On Songs, the title, the search and the filter chips stay pinned at the top while the list scrolls. The document stays the one scroll container. | `/catalog` |
+| R3 | The calendar card guides the connection step by step for the device in hand (iPhone with iCloud's share link, Android with Google Calendar's web settings linked, a computer with Google or Outlook), with chips to read another platform's steps, and **Paste and connect** (`clipboard`) saves the copied address in one tap. The app has no feed a phone can subscribe to: the card connects the member's own calendar, which the free slots read. | `/account` |
+| R4 | No vote result shows before a round was ever opened. The concert page carries no vote block; one secondary **Audience vote** (`audience`) opens `/sessions/:sessionId/audience`, with the address to share and the results. | Concert page, vote page |
+| R5 | Add a song is a page, `/catalog/add`, so the keyboard does not hide the music service's results: they sit directly under the title field, which rises to the top of what the keyboard leaves visible. Every sheet closes on a swipe down from its grabber or header past 96 px, through the same path as a backdrop tap, so drafts survive; the spring back animates only when motion is allowed, and a sheet that cannot be dismissed shows no grabber. | `/catalog/add`, `Sheet` |
+| R6 | A session with no setlist says so in an empty state with **Attach an existing setlist**, and its primary pill is **Add a setlist**; a session with setlists shows a secondary **Add a setlist**, offering a new setlist or an existing one. Attaching uses the existing `POST /api/setlists/:id/sessions`. The header's `more` menu with New setlist and Attach a setlist goes. | Session page |
+| R7 | The mastery matrix has one row per instrument, with its average, and one column per member, headed by the member's avatar in their stored colour, with the member averages in a footer row; five members fit at 375 px with no sideways scroll, through `@tanstack/react-table`. | `/members` |
+| R8 | Instrument rows are one aligned 56 px line (handle, glyph, name over family, players, Delete). The New instrument form leaves the page: **Add an instrument** (`plus`) is the primary pill in the bottom strip, as Add a song is, and opens a sheet with the fields; tapping an instrument opens the same sheet filled in. | `/instruments` |
+
+Not taken from the review: a calendar feed of the band's sessions that a phone subscribes to (a `webcal://` link on iOS, Google Calendar's `?cid=` link on Android, a copy button). It needs a new public route serving the sessions as iCal behind a per-member secret, which is an architecture decision for an ADR before any code.
 
 ## Changes
 
