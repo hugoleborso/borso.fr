@@ -5,8 +5,10 @@ import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
+import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
 import { IconButton } from '../../components/atoms/IconButton';
+import { BackLink } from '../../components/molecules/BackLink';
 import { TargetSongCountField } from '../../components/molecules/TargetSongCountField';
 import { DeckProgressBar } from '../../components/molecules/DeckProgressBar';
 import { VoteBudgetBar } from '../../components/molecules/VoteBudgetBar';
@@ -101,7 +103,34 @@ export function SetlistVotePage(): JSX.Element {
       ),
   } as const;
 
-  const headerActionByKind = {
+  const closeVoteButton = (
+    <Button
+      icon="check"
+      type="button"
+      variant="primary"
+      disabled={setVoteStatus.isPending}
+      onClick={() => closeOrReview[selectCloseIntent(board.data?.tallies.length ?? 0)]()}
+    >
+      {t('voting.openClosing')}
+    </Button>
+  );
+  const openVoteButton = (
+    <Button
+      icon="vote"
+      type="button"
+      variant="primary"
+      disabled={setVoteStatus.isPending}
+      onClick={() => setVoteStatus.mutate({ status: 'voting', targetSongCount })}
+    >
+      {t('voting.openVote')}
+    </Button>
+  );
+  const stripActionByKind = {
+    'back-to-vote': null,
+    'close-vote': closeVoteButton,
+    'open-vote': openVoteButton,
+  } as const;
+  const headerExtraByKind = {
     'back-to-vote': (
       <IconButton
         icon="close"
@@ -109,37 +138,28 @@ export function SetlistVotePage(): JSX.Element {
         onClick={() => setIsClosingOpen(false)}
       />
     ),
-    'close-vote': (
-      <Button
-        icon="stop"
-        type="button"
-        variant="quiet"
-        disabled={setVoteStatus.isPending}
-        onClick={() => closeOrReview[selectCloseIntent(board.data?.tallies.length ?? 0)]()}
-      >
-        {t('voting.openClosing')}
-      </Button>
-    ),
-    'open-vote': (
-      <Button
-        icon="vote"
-        type="button"
-        variant="quiet"
-        disabled={setVoteStatus.isPending}
-        onClick={() => setVoteStatus.mutate({ status: 'voting', targetSongCount })}
-      >
-        {t('voting.openVote')}
-      </Button>
-    ),
+    'close-vote': null,
+    'open-vote': null,
   } as const;
+  const headerAction = selectVoteHeaderAction(pageState);
+  const stripAction = stripActionByKind[headerAction];
+  const displayedName = selectSetlistDisplayName(
+    setlist.data?.setlist.name ?? '',
+    t('voting.untitled'),
+  );
 
   return (
     <section className="flex flex-col gap-4 pb-8">
-      <header className="px-4 pt-4 flex items-baseline justify-between gap-3">
-        <h1 className="font-display text-display leading-none text-ink m-0">
-          {selectSetlistDisplayName(setlist.data?.setlist.name ?? '', t('voting.untitled'))}
-        </h1>
-        {headerActionByKind[selectVoteHeaderAction(pageState)]}
+      <header className="flex flex-col gap-1 px-4 pt-1">
+        <BackLink to={`/setlists/${setlistId}`} label={displayedName} />
+        <div className="flex items-baseline justify-between gap-3">
+          <h1 className="m-0 font-display text-display leading-none text-ink">
+            {t('voting.pageTitle')}
+          </h1>
+          {headerExtraByKind[headerAction]}
+        </div>
+        <p className="m-0 text-meta text-ink-soft">{t('voting.howItRunsScore')}</p>
+        <p className="m-0 text-meta text-ink-soft">{t('voting.howItRunsClose')}</p>
       </header>
 
       <TargetSongCountField
@@ -240,6 +260,7 @@ export function SetlistVotePage(): JSX.Element {
         songsById={songsById}
         membersById={membersById}
       />
+      {stripAction === null ? null : <BottomActions>{stripAction}</BottomActions>}
     </section>
   );
 }
