@@ -6,6 +6,7 @@ type Listener = () => void;
 export interface SheetDraft<TDraft> {
   readonly draft: TDraft | null;
   readonly keep: (draft: TDraft) => void;
+  readonly revise: (change: (kept: TDraft | null) => TDraft) => void;
   readonly discard: () => void;
 }
 
@@ -34,6 +35,9 @@ export function createSheetDraftStore<TDraft>(): SheetDraftHook<TDraft> {
       draft: takeDraft(drafts, key),
       keep: (draft) => {
         publish(putDraft(store.drafts, key, draft));
+      },
+      revise: (change) => {
+        publish(putDraft(store.drafts, key, change(takeDraft(store.drafts, key))));
       },
       discard: () => {
         publish(clearDraft(store.drafts, key));

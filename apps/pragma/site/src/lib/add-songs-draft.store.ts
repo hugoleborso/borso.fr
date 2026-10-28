@@ -8,12 +8,16 @@ const NO_PICK: readonly string[] = [];
 
 export interface AddSongsDraft {
   readonly pickedSongIds: readonly string[];
-  readonly keep: (pickedSongIds: readonly string[]) => void;
+  readonly revise: (change: (pickedSongIds: readonly string[]) => readonly string[]) => void;
   readonly discard: () => void;
 }
 
 // @FollowsBlueprint hook-external-store
 export function useAddSongsDraft(setlistId: string): AddSongsDraft {
   const kept = usePickedSongsDraft(setlistId);
-  return { pickedSongIds: kept.draft ?? NO_PICK, keep: kept.keep, discard: kept.discard };
+  return {
+    pickedSongIds: kept.draft ?? NO_PICK,
+    revise: (change) => kept.revise((picked) => change(picked ?? NO_PICK)),
+    discard: kept.discard,
+  };
 }

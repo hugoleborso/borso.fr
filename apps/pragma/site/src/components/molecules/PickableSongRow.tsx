@@ -1,12 +1,16 @@
 /** @Feature setlists */
 
-import type { JSX, ReactNode } from 'react';
+import type { JSX, MouseEvent, ReactNode } from 'react';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { ListRow } from './ListRow';
 
 const ROW_CLASS = 'min-h-14 border-b border-rule py-2';
+
+function keepFocusInSearch(event: MouseEvent<HTMLButtonElement>): void {
+  event.preventDefault();
+}
 
 interface SongLinesProps {
   readonly title: string;
@@ -39,6 +43,7 @@ export function PickableSongRow(props: PickableSongRowProps): JSX.Element {
     <ListRow
       role="checkbox"
       aria-checked={isPicked}
+      onMouseDown={keepFocusInSearch}
       onClick={props.onToggle}
       disabled={props.isDisabled || props.isAlreadyIn}
       isChevronShown={false}

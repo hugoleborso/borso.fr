@@ -130,14 +130,15 @@ function SetlistSongPickerContent({
     setFailureKey(null);
     try {
       const created = await createSong.mutateAsync(input);
-      draft.keep(addPick(draft.pickedSongIds, created.song.id));
+      draft.revise((picked) => addPick(picked, created.song.id));
     } catch (error) {
       const refusal = selectSongSaveRefusal(error);
       if (refusal.takenTrack === null) {
         setFailureKey('setlist.addSongsCreateFailed');
         return;
       }
-      draft.keep(addPick(draft.pickedSongIds, refusal.takenTrack.songId));
+      const takenSongId = refusal.takenTrack.songId;
+      draft.revise((picked) => addPick(picked, takenSongId));
     }
   };
 
@@ -250,7 +251,7 @@ function SetlistSongPickerContent({
               pickNumber={row.pickNumber}
               isAlreadyIn={row.positionInSetlist !== null}
               isDisabled={isBusy}
-              onToggle={() => draft.keep(togglePick(draft.pickedSongIds, row.song.id))}
+              onToggle={() => draft.revise((picked) => togglePick(picked, row.song.id))}
             />
           </li>
         ))}
@@ -260,6 +261,23 @@ function SetlistSongPickerContent({
       </ul>
       {isSearchingService ? (
         <section className="flex flex-col gap-1 pt-2">
+          <ul className="m-0 flex list-none flex-col p-0">
+            <li>
+              <SongActionRow
+                title={t('setlist.addSongsNewIdea')}
+                detail={query.trim()}
+                leading={
+                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-cover bg-accent-soft text-accent">
+                    <Icon name="bulb" />
+                  </span>
+                }
+                isDisabled={isBusy}
+                onSelect={() =>
+                  void checkCreatedSong({ title: query.trim(), status: NEW_SONG_STATUS })
+                }
+              />
+            </li>
+          </ul>
           {hits.length === 0 ? null : (
             <h3 className="m-0 px-1 text-label font-semibold text-ink-soft uppercase">
               {t('setlist.addSongsFromService')}
@@ -277,21 +295,6 @@ function SetlistSongPickerContent({
                 />
               </li>
             ))}
-            <li>
-              <SongActionRow
-                title={t('setlist.addSongsNewIdea')}
-                detail={query.trim()}
-                leading={
-                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-cover bg-accent-soft text-accent">
-                    <Icon name="bulb" />
-                  </span>
-                }
-                isDisabled={isBusy}
-                onSelect={() =>
-                  void checkCreatedSong({ title: query.trim(), status: NEW_SONG_STATUS })
-                }
-              />
-            </li>
           </ul>
         </section>
       ) : null}
