@@ -16,6 +16,7 @@ import { useIsOnline } from '../molecules/online-status.hook';
 import { BottomTabBar } from './BottomTabBar';
 import { InstallOffer } from './InstallOffer';
 import { selectActiveTab, SHELL_TABS, type ShellTab } from './navigation-active.core';
+import { scrollPageToTop } from '../../lib/page-scroll.adapter';
 import { useSignedInMember } from '../../lib/queries/me.queries';
 
 /**
@@ -54,6 +55,7 @@ export function AppShell(): JSX.Element {
           </div>
           <Link
             to="/account"
+            onClick={scrollPageToTop}
             className="mt-auto flex items-center gap-2.5 rounded-md bg-leaf p-2 text-ink no-underline shadow-leaf"
           >
             <Avatar initials={memberInitial(signedInName)} color={signedInColor} size="md" />
@@ -87,6 +89,7 @@ function SidebarLink({ tab, label, isActive }: SidebarLinkProps): JSX.Element {
     <Link
       to={tab.to}
       aria-current={isActive ? 'page' : undefined}
+      onClick={scrollPageToTop}
       className={composeClassName(
         'flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-2 text-body text-ink no-underline transition-colors',
         'hover:bg-hover',

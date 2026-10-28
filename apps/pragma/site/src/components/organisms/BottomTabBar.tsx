@@ -5,6 +5,7 @@ import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
+import { scrollPageToTop } from '../../lib/page-scroll.adapter';
 import type { ShellTab, ShellTabId } from './navigation-active.core';
 
 export interface BottomTabBarProps {
@@ -30,6 +31,7 @@ export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
             key={tab.id}
             to={tab.to}
             aria-current={isActive ? 'page' : undefined}
+            onClick={scrollPageToTop}
             className={composeClassName(TAB_CLASS, isActive ? 'text-accent' : 'text-ink-soft')}
           >
             <Icon name={tab.icon} size="md" />
