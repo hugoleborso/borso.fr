@@ -107,6 +107,16 @@ describe('the Add songs sheet', () => {
     );
   });
 
+  it('empties the search after a pick, so the next title is typed straight away', () => {
+    render(<SetlistSongPicker {...buildProps()} />);
+    const search = screen.getByRole('searchbox');
+    fireEvent.change(search, { target: { value: 'jol' } });
+    fireEvent.click(checkbox('Jolene'));
+    expect(screen.getByRole<HTMLInputElement>('searchbox').value).toBe('');
+    expect(checkbox('Jolene').getAttribute('aria-checked')).toBe('true');
+    expect(checkbox('Dreams')).toBeTruthy();
+  });
+
   it('dims a song already in the setlist under another chip, and it cannot be picked', () => {
     render(<SetlistSongPicker {...buildProps()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Rehearsed' }));

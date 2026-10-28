@@ -256,7 +256,10 @@ function SetlistSongPickerContent({
               pickNumber={row.pickNumber}
               isAlreadyIn={row.positionInSetlist !== null}
               isDisabled={isBusy}
-              onToggle={() => draft.revise((picked) => togglePick(picked, row.song.id))}
+              onToggle={() => {
+                draft.revise((picked) => togglePick(picked, row.song.id));
+                changeQuery('');
+              }}
             />
           </li>
         ))}
