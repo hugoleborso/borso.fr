@@ -8,7 +8,6 @@ const FORMER_DRAWER_DESTINATIONS = [
   '/bars',
   '/compos',
   '/improvements',
-  '/studies',
 ];
 
 // @FollowsBlueprint test-pure-unit

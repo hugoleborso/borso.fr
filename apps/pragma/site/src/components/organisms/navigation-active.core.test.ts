@@ -22,7 +22,6 @@ describe('selectActiveTab', () => {
     ['/bars', 'band'],
     ['/compos', 'band'],
     ['/improvements', 'band'],
-    ['/studies', 'band'],
     ['/account', 'band'],
   ] as const)('lights the tab holding %s up', (pathname, tabId) => {
     expect(selectActiveTab(pathname)).toBe(tabId);

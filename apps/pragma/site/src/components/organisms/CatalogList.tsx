@@ -2,17 +2,19 @@
 
 import { SongCard, type SongCardProps } from './SongCard';
 
-export interface CatalogGridProps {
-  songs: readonly SongCardProps[];
+export interface CatalogListProps {
+  readonly songs: readonly SongCardProps[];
 }
 
 // @FollowsBlueprint organism-presentational
-export function CatalogGrid({ songs }: CatalogGridProps): JSX.Element {
+export function CatalogList({ songs }: CatalogListProps): JSX.Element {
   return (
-    <div className="grid gap-2.5 sm:gap-3.5 [grid-template-columns:repeat(auto-fill,minmax(260px,1fr))]">
+    <ul className="m-0 flex list-none flex-col p-0">
       {songs.map((song) => (
-        <SongCard key={song.id} {...song} />
+        <li key={song.id}>
+          <SongCard {...song} />
+        </li>
       ))}
-    </div>
+    </ul>
   );
 }

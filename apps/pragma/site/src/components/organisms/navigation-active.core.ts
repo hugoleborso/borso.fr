@@ -35,7 +35,6 @@ const DESTINATIONS_BY_TAB: readonly (readonly [ShellTabId, readonly string[]])[]
       '/bars',
       '/compos',
       '/improvements',
-      '/studies',
       '/account',
     ],
   ],

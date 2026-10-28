@@ -17,7 +17,6 @@ import { InstrumentsPage } from './routes/instruments/InstrumentsPage';
 import { RecoverPage } from './routes/RecoverPage';
 import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
-import { StudiesPage } from './routes/studies/StudiesPage';
 import { PracticeModePage } from './routes/sessions/PracticeModePage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
@@ -59,7 +58,7 @@ export function App(): JSX.Element {
               <Route path="/setlists/:setlistId/audience" element={<SetlistAudiencePage />} />
               <Route path="/bars" element={<BarsPage />} />
               <Route path="/improvements" element={<ImprovementsPage />} />
-              <Route path="/studies" element={<StudiesPage />} />
+              <Route path="/studies" element={<Navigate to="/catalog?filter=learning" replace />} />
               <Route path="/band" element={<BandPage />} />
               <Route path="/tasks" element={<Navigate to="/band" replace />} />
               <Route path="/compos" element={<ComposPage />} />
