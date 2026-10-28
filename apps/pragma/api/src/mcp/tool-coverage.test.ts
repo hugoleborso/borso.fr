@@ -8,7 +8,7 @@ const TEST_SEED_FLAG_ON = '1';
 const TOOL_NAME_PATTERN = /^[a-z]+(?:_[a-z]+)+$/;
 
 function readCoverage() {
-  const toolRoutes = ASSISTANT_TOOLS.map((tool) => tool.route);
+  const toolRoutes = ASSISTANT_TOOLS.flatMap((tool) => tool.routes);
   return compareRoutesWithTools(createApp().routes, toolRoutes, TOOL_EXCLUSIONS);
 }
 

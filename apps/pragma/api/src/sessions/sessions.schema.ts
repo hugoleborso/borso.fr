@@ -6,6 +6,8 @@ import {
 } from '@domain/input-limits.core';
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { pageInputShape, referenceSchema } from '../mcp/tool-input.schema';
+import { SESSION_WINDOWS } from './session-tool.core';
 
 // @FollowsBlueprint schema-table-and-input
 export const sessionTable = pgTable('session', {
@@ -76,6 +78,12 @@ export type SessionPersistedUpdate = z.infer<typeof sessionPersistedUpdateSchema
 export const sessionIdParamSchema = z.object({ id: z.string().uuid() });
 
 export const sessionCreateToolInputSchema = z.object({ session: sessionCreateSchema });
-export const sessionUpdateToolInputSchema = sessionIdParamSchema.extend({
+export const sessionReferenceToolInputSchema = z.object({ session: referenceSchema });
+export const sessionUpdateToolInputSchema = sessionReferenceToolInputSchema.extend({
   changes: sessionUpdateSchema,
+});
+export const sessionFindToolInputSchema = z.object({
+  when: z.enum(SESSION_WINDOWS).default('upcoming'),
+  kind: z.enum(['concert', 'practice']).optional(),
+  ...pageInputShape,
 });

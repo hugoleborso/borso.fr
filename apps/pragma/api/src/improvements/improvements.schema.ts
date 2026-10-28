@@ -1,6 +1,7 @@
 import { IMPROVEMENT_TITLE_MAX_LENGTH } from '@domain/input-limits.core';
 import { pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { referenceSchema } from '../mcp/tool-input.schema';
 
 export const IMPROVEMENT_STATUSES = ['idea', 'planned', 'building', 'shipped', 'declined'] as const;
 
@@ -34,5 +35,9 @@ export const improvementCreateSchema = z.object({
 
 export const improvementUpdateSchema = improvementCreateSchema.partial();
 export const improvementIdParamSchema = z.object({ id: z.string().uuid() });
+export const improvementReferenceToolInputSchema = z.object({ improvement: referenceSchema });
 export const improvementUpdateToolInputSchema =
-  improvementIdParamSchema.merge(improvementUpdateSchema);
+  improvementReferenceToolInputSchema.merge(improvementUpdateSchema);
+export const improvementVoteToolInputSchema = improvementReferenceToolInputSchema.extend({
+  vote: z.boolean(),
+});

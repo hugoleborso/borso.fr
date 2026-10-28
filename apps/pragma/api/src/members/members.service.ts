@@ -14,6 +14,8 @@ import {
 } from './members.repository';
 
 import type { createMemberSchema, updateMemberSchema } from './members.schema';
+import { getInstrumentsSorted } from '../instruments/instruments.service';
+import { type MemberToolView, projectMemberForTool } from './member-tool.core';
 
 export { didClaimMemberWithin } from './members.repository';
 
@@ -81,4 +83,17 @@ export async function assignInstrumentsToMember(
   return { kind: replacement };
 }
 
-export { defineTool } from '../mcp/mcp.service';
+export async function getMembersForTool(): Promise<MemberToolView[]> {
+  const [members, instruments] = await Promise.all([
+    getMembersSortedByFirstName(),
+    getInstrumentsSorted(),
+  ]);
+  return members.map((member) => projectMemberForTool(member, instruments));
+}
+
+export {
+  resolveInstrumentIds,
+  resolveMemberId,
+  resolveOptionalInstrumentIds,
+} from '../instruments/instruments.service';
+export { confirmUpdate, defineTool } from '../mcp/mcp.service';

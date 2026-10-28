@@ -68,7 +68,10 @@ async function notifySetlistChanged(
   );
 }
 
-async function notifySetlistChangedById(setlistId: string, actor: WriteActor): Promise<void> {
+export async function notifySetlistChangedById(
+  setlistId: string,
+  actor: WriteActor,
+): Promise<void> {
   const setlist = await findSetlistById(setlistId);
   if (setlist === null) return;
   await notifySetlistChanged(setlist, actor);
@@ -169,7 +172,7 @@ export async function findOrCreateAudienceChoiceSetlist(
 
 // @FollowsBlueprint service-facade-reexport
 export { didClaimSetlistWithin, runInOneSetlistTransaction } from './setlists.repository';
-export { defineTool, type ToolActor, type ToolAnswer } from '../mcp/mcp.service';
+export { confirmUpdate, defineTool, type ToolAnswer } from '../mcp/mcp.service';
 
 export async function appendSongToClaimedSetlistWithin(
   executor: DatabaseExecutor,
@@ -279,7 +282,7 @@ export async function patchEntry(
   return { kind: 'ok', entry };
 }
 
-async function writeEntryPositionsWithin(
+export async function writeEntryPositionsWithin(
   executor: DatabaseExecutor,
   entryIds: readonly string[],
 ): Promise<void> {

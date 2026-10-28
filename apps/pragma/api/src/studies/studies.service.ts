@@ -1,8 +1,13 @@
 import type { Lineup } from '@domain/lineup.core';
 import type { DatabaseExecutor } from '../database/client';
+import { projectOverviewForTool } from './study-tool.core';
 import { indexDefaultScores, indexOverrideScores } from '../mastery/mastery.core';
 import { getAllMasteryOverrides, getMasteryDefaults } from '../mastery/mastery.service';
-import { didClaimInstrumentsWithin } from '../instruments/instruments.service';
+import {
+  didClaimInstrumentsWithin,
+  readLineupNames,
+  resolveInstrumentId,
+} from '../instruments/instruments.service';
 import { getMembersSortedByFirstName } from '../members/members.service';
 import { getSessions } from '../sessions/sessions.service';
 import {
@@ -14,6 +19,7 @@ import {
   didClaimSongWithin,
   findSongByIdWithin,
   getSongs,
+  resolveSongId,
   type SongRow,
 } from '../songs/songs.service';
 import { buildMemberStreaks, type MemberStreak } from './band-streaks.core';
@@ -234,4 +240,33 @@ export async function deleteStudiesOfDeletedSong(
   await deleteStudiesOfSong(executor, songId);
 }
 
+export async function readStudiesOverviewForTool(memberId: string, now: Date) {
+  const [overview, names] = await Promise.all([
+    readStudiesOverview(memberId, now),
+    readLineupNames(),
+  ]);
+  return projectOverviewForTool(overview, names.instruments);
+}
+
+export interface StudyToolCommand {
+  readonly songReference: string;
+  readonly instrumentReference: string;
+  readonly isUndoing: boolean;
+  readonly memberId: string;
+  readonly now: Date;
+}
+
+export async function writeStudyForTool(
+  command: StudyToolCommand,
+): Promise<StudyWriteOutcome | StudyUndoOutcome> {
+  const [songId, instrumentId] = await Promise.all([
+    resolveSongId(command.songReference),
+    resolveInstrumentId(command.instrumentReference),
+  ]);
+  const study = { songId, instrumentId, memberId: command.memberId, now: command.now };
+  if (command.isUndoing) return await undoStudy(study);
+  return await logStudy(study);
+}
+
+export { describeOwnLine } from './study-tool.core';
 export { defineTool } from '../mcp/mcp.service';

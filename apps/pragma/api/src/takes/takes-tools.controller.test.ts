@@ -28,32 +28,21 @@ const LATER_MOMENT_SECONDS = 90;
 const PAST_END_SECONDS = DURATION_SECONDS + 1;
 const RECORDED_AT = '2026-10-18T20:00:00.000Z';
 
-const songBodySchema = z.object({ song: z.object({ id: z.string().uuid() }) });
+const idBodySchema = z.object({ id: z.string().uuid() });
 const uploadBodySchema = z.object({
   uploadUrl: z.string().url(),
   objectKey: z.string(),
   expiresAt: z.string(),
 });
-const takeSchema = z.object({
-  id: z.string().uuid(),
-  memberId: z.string().uuid(),
-  objectKey: z.string(),
-  commentCount: z.number(),
+const takesBodySchema = z.object({
+  takes: z.array(z.object({ id: z.string().uuid(), by: z.string(), comments: z.number() })),
+  total: z.number(),
 });
-const takeBodySchema = z.object({ take: takeSchema });
-const takesBodySchema = z.object({ takes: z.array(takeSchema) });
-const commentSchema = z.object({
-  id: z.string().uuid(),
-  memberId: z.string().uuid(),
-  body: z.string(),
-  atSeconds: z.number().nullable(),
-});
-const commentBodySchema = z.object({ comment: commentSchema });
-const commentsBodySchema = z.object({ comments: z.array(commentSchema) });
+const commentBodySchema = z.object({ id: z.string().uuid(), takeId: z.string().uuid() });
 
 async function createSong(band: AssistantBand): Promise<string> {
   const reply = await callTool(band.assistant, 'create_song', { title: 'Creep', status: 'idea' });
-  return songBodySchema.parse(reply.body).song.id;
+  return idBodySchema.parse(reply.body).id;
 }
 
 function buildTakeArguments(takeId: string, songId: string, objectKey: string) {
@@ -73,7 +62,7 @@ async function uploadTake(band: AssistantBand, songId: string): Promise<string> 
   const takeId = randomUUID();
   const upload = await callTool(band.assistant, 'request_take_upload', {
     takeId,
-    songId,
+    song: songId,
     contentType: 'audio/mpeg',
     contentLength: FILE_BYTES,
   });
@@ -83,16 +72,16 @@ async function uploadTake(band: AssistantBand, songId: string): Promise<string> 
     'create_take',
     buildTakeArguments(takeId, songId, objectKey),
   );
-  return takeBodySchema.parse(created.body).take.id;
+  return idBodySchema.parse(created.body).id;
 }
 
 async function commentOnTake(band: AssistantBand, takeId: string): Promise<string> {
   const reply = await callTool(band.assistant, 'comment_on_take', {
-    id: takeId,
+    take: takeId,
     body: 'The bridge drags',
     atSeconds: MOMENT_SECONDS,
   });
-  return commentBodySchema.parse(reply.body).comment.id;
+  return commentBodySchema.parse(reply.body).id;
 }
 
 function refused(error: string) {
@@ -146,7 +135,7 @@ describe('takes tools (back-e2e)', () => {
 
     const upload = await callTool(band.assistant, 'request_take_upload', {
       takeId,
-      songId,
+      song: 'Creep',
       contentType: 'audio/mpeg',
       contentLength: FILE_BYTES,
     });
@@ -157,7 +146,7 @@ describe('takes tools (back-e2e)', () => {
       buildTakeArguments(takeId, songId, signed.objectKey),
     );
     const listed = takesBodySchema.parse(
-      (await callTool(band.assistant, 'list_takes', { songId })).body,
+      (await callTool(band.assistant, 'list_takes', { song: 'creep' })).body,
     );
     const { takes } = await readTakeRows(takeId);
 
@@ -166,9 +155,12 @@ describe('takes tools (back-e2e)', () => {
     expect(new URL(signed.uploadUrl).searchParams.get('X-Amz-SignedHeaders')).toContain(
       'content-length',
     );
-    expect(created.isError).toBe(false);
-    expect(takeBodySchema.parse(created.body).take.memberId).toBe(band.hugo.memberId);
-    expect(listed.takes.map((take) => take.id)).toEqual([takeId]);
+    expect(upload.body).toMatchObject({ songId });
+    expect(created).toEqual({ isError: false, body: { id: takeId } });
+    expect(listed).toEqual({
+      takes: [expect.objectContaining({ id: takeId, by: 'Hugo', comments: 0 })],
+      total: 1,
+    });
     expect(takes.map((take) => [take.memberId, take.objectKey])).toEqual([
       [band.hugo.memberId, signed.objectKey],
     ]);
@@ -178,32 +170,46 @@ describe('takes tools (back-e2e)', () => {
     const band = await prepareAssistantBand();
     const takeId = await uploadTake(band, await createSong(band));
 
-    const commentId = await commentOnTake(band, takeId);
+    const commented = commentBodySchema.parse(
+      (
+        await callTool(band.assistant, 'comment_on_take', {
+          song: 'Creep',
+          body: 'The bridge drags',
+          atSeconds: MOMENT_SECONDS,
+        })
+      ).body,
+    );
+    const commentId = commented.id;
     const updated = await callTool(band.assistant, 'update_take_comment', {
-      id: takeId,
-      commentId,
+      take: takeId,
+      comment: commentId,
       body: 'The bridge drags, slow the fill',
       atSeconds: LATER_MOMENT_SECONDS,
     });
-    const listed = commentsBodySchema.parse(
-      (await callTool(band.assistant, 'list_take_comments', { id: takeId })).body,
-    );
+    const read = await callTool(band.assistant, 'get_take', { song: 'creep' });
     const { comments } = await readTakeRows(takeId);
 
-    expect(updated.isError).toBe(false);
-    expect(listed.comments).toEqual([
-      expect.objectContaining({
-        id: commentId,
-        memberId: band.hugo.memberId,
-        body: 'The bridge drags, slow the fill',
-        atSeconds: LATER_MOMENT_SECONDS,
-      }),
-    ]);
+    expect(commented.takeId).toBe(takeId);
+    expect(updated).toEqual({
+      isError: false,
+      body: { id: commentId, updated: ['body', 'atSeconds'] },
+    });
+    expect(read.body).toEqual({
+      take: expect.objectContaining({ id: takeId, by: 'Hugo', comments: 1 }),
+      comments: [
+        {
+          id: commentId,
+          by: 'Hugo',
+          body: 'The bridge drags, slow the fill',
+          atSeconds: LATER_MOMENT_SECONDS,
+        },
+      ],
+    });
     expect(comments.map((comment) => comment.memberId)).toEqual([band.hugo.memberId]);
 
     const deleted = await callTool(band.assistant, 'delete_take_comment', {
-      id: takeId,
-      commentId,
+      take: takeId,
+      comment: commentId,
     });
 
     expect(deleted).toEqual({ isError: false, body: { id: commentId, deleted: true } });
@@ -216,7 +222,7 @@ describe('takes tools (back-e2e)', () => {
     await commentOnTake(band, takeId);
     const send = stubObjectDeletion();
 
-    const deleted = await callTool(band.assistant, 'delete_take', { id: takeId });
+    const deleted = await callTool(band.assistant, 'delete_take', { take: takeId });
 
     expect(deleted).toEqual({ isError: false, body: { id: takeId, deleted: true } });
     expect(await readTakeRows(takeId)).toEqual({ takes: [], comments: [] });
@@ -234,7 +240,7 @@ describe('takes tools (back-e2e)', () => {
     const replies = {
       unknownSongUpload: await callTool(band.assistant, 'request_take_upload', {
         takeId: unknownId,
-        songId: unknownId,
+        song: unknownId,
         contentType: 'audio/mpeg',
         contentLength: FILE_BYTES,
       }),
@@ -252,41 +258,44 @@ describe('takes tools (back-e2e)', () => {
         ...buildTakeArguments(unknownId, songId, `take/${songId}/${unknownId}.mp3`),
         sessionId: unknownId,
       }),
-      missingComments: await callTool(band.assistant, 'list_take_comments', { id: unknownId }),
+      missingComments: await callTool(band.assistant, 'get_take', { take: unknownId }),
+      noChoice: await callTool(band.assistant, 'get_take', {}),
       missingTakeComment: await callTool(band.assistant, 'comment_on_take', {
-        id: unknownId,
+        take: unknownId,
         body: 'Nice',
       }),
       pastEndComment: await callTool(band.assistant, 'comment_on_take', {
-        id: takeId,
+        take: takeId,
         body: 'Nice',
         atSeconds: PAST_END_SECONDS,
       }),
       emptyUpdate: await callTool(band.assistant, 'update_take_comment', {
-        id: takeId,
-        commentId,
+        take: takeId,
+        comment: commentId,
       }),
       pastEndUpdate: await callTool(band.assistant, 'update_take_comment', {
-        id: takeId,
-        commentId,
+        take: takeId,
+        comment: commentId,
         atSeconds: PAST_END_SECONDS,
       }),
       missingTakeUpdate: await callTool(band.assistant, 'update_take_comment', {
-        id: unknownId,
-        commentId,
+        take: unknownId,
+        comment: commentId,
         body: 'Nice',
       }),
       missingCommentUpdate: await callTool(band.assistant, 'update_take_comment', {
-        id: takeId,
-        commentId: unknownId,
+        take: takeId,
+        comment: unknownId,
         body: 'Nice',
       }),
       missingCommentDelete: await callTool(band.assistant, 'delete_take_comment', {
-        id: takeId,
-        commentId: unknownId,
+        take: takeId,
+        comment: unknownId,
       }),
-      missingTakeDelete: await callTool(band.assistant, 'delete_take', { id: unknownId }),
+      missingTakeDelete: await callTool(band.assistant, 'delete_take', { take: unknownId }),
     };
+    await callTool(band.assistant, 'create_song', { title: 'Karma Police', status: 'idea' });
+    const songWithoutTake = await callTool(band.assistant, 'get_take', { song: 'Karma Police' });
 
     expect(replies).toEqual({
       unknownSongUpload: refused('song-not-found'),
@@ -294,6 +303,7 @@ describe('takes tools (back-e2e)', () => {
       unknownSongTake: refused('song-not-found'),
       unknownSessionTake: refused('session-not-found'),
       missingComments: refused('take-not-found'),
+      noChoice: refused('take-or-song-required'),
       missingTakeComment: refused('take-not-found'),
       pastEndComment: refused('moment-past-end'),
       emptyUpdate: refused('empty-update'),
@@ -302,6 +312,10 @@ describe('takes tools (back-e2e)', () => {
       missingCommentUpdate: refused('comment-not-found'),
       missingCommentDelete: refused('not-found'),
       missingTakeDelete: refused('not-found'),
+    });
+    expect(songWithoutTake).toEqual({
+      isError: true,
+      body: { error: 'take-not-found', song: 'Karma Police' },
     });
   });
 

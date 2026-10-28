@@ -1,62 +1,74 @@
 import {
   takeCommentCreateToolInputSchema,
-  takeCommentPathSchema,
+  takeCommentPathToolInputSchema,
   takeCommentUpdateToolInputSchema,
   takeCreateSchema,
-  takeListQuerySchema,
-  takePathSchema,
-  takeSignSchema,
+  takeListToolInputSchema,
+  takeReadToolInputSchema,
+  takeReferenceToolInputSchema,
+  takeSignToolInputSchema,
 } from './takes.schema';
 import {
+  confirmUpdate,
   createTake,
   createTakeComment,
   defineTool,
-  getCommentsOfTake,
-  getTakesOfSong,
+  listTakesForTool,
   mintTakeUpload,
+  pageItems,
   patchTakeComment,
+  readTakeForTool,
   removeTake,
   removeTakeComment,
+  resolveSongId,
+  resolveTakeId,
 } from './takes.service';
+
+const TAKE_PAGE_SIZE = 10;
 
 // @FollowsBlueprint controller-dispatch
 export const TAKE_TOOLS = [
   defineTool({
     name: 'list_takes',
-    description:
-      'List the recorded takes of the song `songId`, newest first, each with its comment count.',
-    route: 'GET /api/takes',
-    inputSchema: takeListQuerySchema,
-    run: async ({ songId }) => ({
-      kind: 'answered',
-      body: { takes: await getTakesOfSong(songId) },
-    }),
+    description: 'List the takes of a song (title or id), newest first, with comment counts.',
+    routes: ['GET /api/takes'],
+    inputSchema: takeListToolInputSchema,
+    run: async ({ song, limit, cursor }) => {
+      const page = pageItems(await listTakesForTool(song), { limit, cursor }, TAKE_PAGE_SIZE);
+      return {
+        kind: 'answered',
+        body: { takes: page.items, total: page.total, nextCursor: page.nextCursor },
+      };
+    },
   }),
   defineTool({
-    name: 'list_take_comments',
-    description: 'Read the comments on the take `id`, ordered by their moment in the recording.',
-    route: 'GET /api/takes/:id/comments',
-    inputSchema: takePathSchema,
-    run: async ({ id }) => {
-      const outcome = await getCommentsOfTake(id);
-      if (outcome.kind === 'take-not-found')
-        return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { comments: outcome.comments } };
+    name: 'get_take',
+    description:
+      'Read a take with its comments in recording order: `take` by id, or `song` for its latest take.',
+    routes: ['GET /api/takes/:id/comments'],
+    inputSchema: takeReadToolInputSchema,
+    run: async ({ take, song }) => {
+      const view = await readTakeForTool(await resolveTakeId(take, song));
+      if (view === null) return { kind: 'refused', body: { error: 'take-not-found' } };
+      return { kind: 'answered', body: view };
     },
   }),
   defineTool({
     name: 'request_take_upload',
     description:
-      'First step of adding a take from a local audio file. Choose a new UUID as `takeId`, give the song, the content type and the file size in bytes. Answers a presigned `uploadUrl`: send the file to it with an HTTP PUT carrying the same Content-Type and Content-Length, before `expiresAt`, then call `create_take` with the same id and the returned `objectKey`.',
-    route: 'POST /api/takes/sign',
-    inputSchema: takeSignSchema,
-    run: async (input, actor) => {
-      const outcome = await mintTakeUpload(input, actor.now);
-      if (outcome.kind === 'song-not-found')
+      'Step 1 of adding a take from an audio file: pick a new UUID `takeId`; answers a presigned `uploadUrl`. PUT the file there with the same Content-Type and Content-Length before `expiresAt`, then call `create_take` with that id, `songId` and `objectKey`.',
+    routes: ['POST /api/takes/sign'],
+    inputSchema: takeSignToolInputSchema,
+    run: async ({ song, ...input }, actor) => {
+      const songId = await resolveSongId(song);
+      const outcome = await mintTakeUpload({ ...input, songId }, actor.now);
+      if (outcome.kind === 'song-not-found') {
         return { kind: 'refused', body: { error: outcome.kind } };
+      }
       return {
         kind: 'answered',
         body: {
+          songId,
           uploadUrl: outcome.uploadUrl,
           objectKey: outcome.objectKey,
           expiresAt: outcome.expiresAt,
@@ -67,62 +79,62 @@ export const TAKE_TOOLS = [
   defineTool({
     name: 'create_take',
     description:
-      'Second step of adding a take, once the file is uploaded: record it on the song, and on the session `sessionId` if given. `id` and `objectKey` are the ones `request_take_upload` used; `source` is `upload` for a file and `queued` is false. The take is attributed to you and the band is notified.',
-    route: 'POST /api/takes',
+      'Step 2, once uploaded: record the take on the song, and on `sessionId` if given; `source` is `upload` and `queued` false. The band is notified.',
+    routes: ['POST /api/takes'],
     inputSchema: takeCreateSchema,
     run: async (input, actor) => {
       const outcome = await createTake(input, actor);
       if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { take: outcome.take } };
+      return { kind: 'answered', body: { id: outcome.take.id } };
     },
   }),
   defineTool({
     name: 'delete_take',
-    description: 'Delete the take `id`, its comments and its audio file.',
-    route: 'DELETE /api/takes/:id',
-    inputSchema: takePathSchema,
-    run: async ({ id }) => {
-      const outcome = await removeTake(id);
+    description: 'Delete a take, its comments and its audio file.',
+    routes: ['DELETE /api/takes/:id'],
+    inputSchema: takeReferenceToolInputSchema,
+    run: async ({ take }) => {
+      const outcome = await removeTake(take);
       if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
-      return { kind: 'answered', body: { id, deleted: true } };
+      return { kind: 'answered', body: { id: take, deleted: true } };
     },
   }),
   defineTool({
     name: 'comment_on_take',
     description:
-      'Comment on the take `id`, as you. `atSeconds` pins the comment to a moment of the recording; leave it out for a comment on the whole take.',
-    route: 'POST /api/takes/:id/comments',
+      'Comment, as you, on `take` (id) or on the latest take of `song`. `atSeconds` pins it to a moment.',
+    routes: ['POST /api/takes/:id/comments'],
     inputSchema: takeCommentCreateToolInputSchema,
-    run: async ({ id, ...comment }, actor) => {
-      const outcome = await createTakeComment(id, comment, actor);
+    run: async ({ take, song, ...comment }, actor) => {
+      const takeId = await resolveTakeId(take, song);
+      const outcome = await createTakeComment(takeId, comment, actor);
       if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { comment: outcome.comment } };
+      return { kind: 'answered', body: { id: outcome.comment.id, takeId } };
     },
   }),
   defineTool({
     name: 'update_take_comment',
-    description:
-      'Change the text or the moment of the comment `commentId` on the take `id`; give at least one of `body` and `atSeconds`.',
-    route: 'PATCH /api/takes/:id/comments/:commentId',
+    description: 'Change the text or the moment of a comment on a take; give at least one.',
+    routes: ['PATCH /api/takes/:id/comments/:commentId'],
     inputSchema: takeCommentUpdateToolInputSchema,
-    run: async ({ id, commentId, ...changes }) => {
+    run: async ({ take, comment, ...changes }) => {
       if (changes.body === undefined && changes.atSeconds === undefined) {
         return { kind: 'refused', body: { error: 'empty-update' } };
       }
-      const outcome = await patchTakeComment(id, commentId, changes);
+      const outcome = await patchTakeComment(take, comment, changes);
       if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { comment: outcome.comment } };
+      return { kind: 'answered', body: confirmUpdate(comment, changes) };
     },
   }),
   defineTool({
     name: 'delete_take_comment',
-    description: 'Delete the comment `commentId` on the take `id`.',
-    route: 'DELETE /api/takes/:id/comments/:commentId',
-    inputSchema: takeCommentPathSchema,
-    run: async ({ id, commentId }) => {
-      const outcome = await removeTakeComment(id, commentId);
+    description: 'Delete a comment on a take.',
+    routes: ['DELETE /api/takes/:id/comments/:commentId'],
+    inputSchema: takeCommentPathToolInputSchema,
+    run: async ({ take, comment }) => {
+      const outcome = await removeTakeComment(take, comment);
       if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
-      return { kind: 'answered', body: { id: commentId, deleted: true } };
+      return { kind: 'answered', body: { id: comment, deleted: true } };
     },
   }),
 ];

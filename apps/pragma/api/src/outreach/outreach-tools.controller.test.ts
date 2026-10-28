@@ -24,8 +24,8 @@ describe('outreach tools (back-e2e)', () => {
       templateBodySchema,
     );
 
-    expect(before).toEqual({ isError: false, body: { body: null } });
-    expect(saved).toEqual({ isError: false, body: { body: TEMPLATE } });
+    expect(before).toEqual({ isError: false, body: {} });
+    expect(saved).toEqual({ isError: false, body: { saved: true } });
     expect(seenByLea.body).toBe(TEMPLATE);
   });
 });

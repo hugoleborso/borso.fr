@@ -1244,7 +1244,8 @@ Held by: `api/src/setlists/voting.controller.test.ts` › refuses a score beyond
 ## Tool
 
 One operation an **assistant client** can call on pragma through MCP,
-mapped to exactly one HTTP route and the service function that route calls.
+covering one or more HTTP routes and the service functions those routes
+call.
 
 Lives in: `api/src/mcp/` (the transport and the registry); each tool sits in
 its own slice as `<domain>-tools.controller.ts`
@@ -1255,23 +1256,27 @@ its own slice as `<domain>-tools.controller.ts`
 - Reached only with an **assistant grant**'s access token, through
   `requireBearerSession`; the member it resolves is the actor of every
   write, so push skips that member exactly as for a change made in the app.
-- Takes the route's own Zod schemas, path parameters and body merged into
-  one object, and answers the body the route would answer. A body that is
-  a union, such as a session's concert-or-practice body, cannot be merged,
-  so it sits whole under one field (`session`, `changes`). A body schema
-  with a refinement cannot be merged either: the tool takes its fields and
-  answers `empty-update` itself where the route's refinement would refuse
-  the request, as `update_take_comment` does. A refusal is a
-  tool error carrying the route's `{ error }` body; an unexpected throw is
+- Takes the route's own Zod limits, but names things the way a person
+  does: a song, member, instrument, setlist, bar, task or improvement is a
+  *reference*, its id or its name in any case and with or without accents,
+  and a session is its id, `next`, `next-concert`, `next-practice`, `last`
+  or a day. A reference that matches several answers `<noun>-ambiguous`
+  with the candidates; one that matches nothing answers `<noun>-not-found`.
+- Answers a compact projection rather than the route's body: ids plus what
+  the next step needs, names where a person would say a name, no field that
+  is null or empty, and a short confirmation for a write. A refusal is a
+  tool error carrying the route's `{ error }` code; an unexpected throw is
   reported as `McpToolFailed` and answers `internal-error`.
 - Every mounted route has a tool, unless `TOOL_EXCLUSIONS` in
   `mcp/tool-coverage.core.ts` names it with a reason: credentials,
   state bound to one browser, the audience ballot, the test seed, and the
-  OAuth and MCP endpoints themselves. A route with neither, a tool whose
-  route is gone, and an exclusion matching no route each fail
-  `mcp/tool-coverage.test.ts`. A route may have two tools when the spec
-  names two operations on it, as `update_song` and `set_default_lineup`
-  share `PUT /api/songs/:id`.
+  OAuth and MCP endpoints themselves. A route with neither, a tool naming a
+  route that is gone, and an exclusion matching no route each fail
+  `mcp/tool-coverage.test.ts`. One tool may cover several routes, as
+  `get_setlist` reads a setlist and its entries and `set_mastery_default`
+  both writes and removes a score.
+- The size of the tool list and of the answers to ten typical band tasks
+  are budgets held by `mcp/tool-budget.test.ts`.
 
 Held by: `api/src/mcp/mcp.controller.test.ts` › answers 401 with the protected resource metadata address to a call without a valid token
 Held by: `api/src/mcp/mcp.controller.test.ts` › lists every served tool, advertises tools only, and serves two clients at once with no session
@@ -1286,6 +1291,7 @@ Held by: `api/src/mcp/tool-coverage.test.ts` › serves a tool for every mounted
 Held by: `api/src/mcp/tool-coverage.test.ts` › maps every tool to a route that is mounted
 Held by: `api/src/mcp/tool-coverage.test.ts` › keeps no exclusion for a route that is no longer mounted
 Held by: `api/src/mcp/tool-coverage.core.test.ts` › reports an exclusion that matches no mounted endpoint as stale
+Held by: `api/src/mcp/tool-budget.test.ts` › answers each typical band task within its budget of calls and characters
 Held by: `api/src/improvements/improvements-tools.controller.test.ts` › proposes an improvement and votes for it as the granting member, which the other member sees as not theirs
 Held by: `api/src/studies/studies-tools.controller.test.ts` › logs a study of today as the granting member, shows it in the overview, then undoes it
 Held by: `api/src/me/me-tools.controller.test.ts` › reads the granting member, and changes only their own contact details

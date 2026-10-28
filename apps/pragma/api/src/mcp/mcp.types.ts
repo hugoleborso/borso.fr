@@ -19,7 +19,7 @@ export type ToolOutcome = 'ok' | 'refused' | 'failed';
 export interface ToolDefinition<Schema extends AnyZodObject = AnyZodObject> {
   readonly name: string;
   readonly description: string;
-  readonly route: string;
+  readonly routes: readonly [string, ...string[]];
   readonly inputSchema: Schema;
   run(input: z.output<Schema>, actor: ToolActor): Promise<ToolAnswer>;
 }

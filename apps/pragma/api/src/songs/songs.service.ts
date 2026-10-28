@@ -11,7 +11,27 @@ import { deleteAudioOfDeletedSong } from '../takes/takes.service';
 import { hasLineupChanged } from './song-lineup.core';
 export type { SongRow } from './songs.repository';
 export { didClaimSongWithin, findSongById, findSongByIdWithin } from './songs.repository';
-export { defineTool, type ToolActor, type ToolAnswer } from '../mcp/mcp.service';
+export { readSongMasteryForTool, writeMasteryOverride } from '../mastery/mastery.service';
+export {
+  confirmUpdate,
+  defineTool,
+  pageItems,
+  type ToolActor,
+  type ToolAnswer,
+} from '../mcp/mcp.service';
+import { pickReference, resolveReference } from '../mcp/mcp.service';
+import {
+  type NamedLineupInput,
+  readLineupNames,
+  resolveNamedLineupOrRefuse,
+} from '../instruments/instruments.service';
+import {
+  listSongCandidates,
+  projectSongForTool,
+  type SongFilter,
+  type SongSummary,
+  summarizeSongs,
+} from './song-tool.core';
 import {
   deleteSongWithCascade,
   findSongByDeezerTrackId,
@@ -23,6 +43,8 @@ import {
   updateSong,
 } from './songs.repository';
 import type { songCreateInputSchema, songUpdateInputSchema } from './songs.schema';
+
+export type SongToolView = ReturnType<typeof projectSongForTool>;
 
 type SongCreateInput = z.infer<typeof songCreateInputSchema>;
 type SongUpdateInput = z.infer<typeof songUpdateInputSchema>;
@@ -139,6 +161,46 @@ export async function patchSong(
   if (song === null) return { kind: 'not-found' };
   await notifyIfLineupChanged(previous, song, actor);
   return { kind: 'ok', song };
+}
+
+export async function resolveSongId(reference: string): Promise<string> {
+  return await resolveReference('song', reference, async () =>
+    listSongCandidates(await getSongs()),
+  );
+}
+
+export async function resolveSongIds(references: readonly string[]): Promise<string[]> {
+  const candidates = listSongCandidates(await getSongs());
+  return references.map((reference) => pickReference('song', candidates, reference));
+}
+
+export async function listSongsForTool(filter: SongFilter): Promise<SongSummary[]> {
+  return summarizeSongs(await getSongs(), filter);
+}
+
+export async function readSongForTool(
+  reference: string,
+  isDetailed: boolean,
+): Promise<SongToolView | null> {
+  const song = await findSongById(await resolveSongId(reference));
+  if (song === null) return null;
+  return projectSongForTool(song, await readLineupNames(), isDetailed);
+}
+
+export async function buildSongUpdate(
+  changes: Omit<SongUpdateInput, 'defaultLineup'>,
+  lineup: NamedLineupInput | undefined,
+): Promise<SongUpdateInput> {
+  if (lineup === undefined) return changes;
+  return { ...changes, defaultLineup: await resolveNamedLineupOrRefuse(lineup) };
+}
+
+export async function buildSongCreate(
+  input: Omit<SongCreateInput, 'defaultLineup'>,
+  lineup: NamedLineupInput | undefined,
+): Promise<SongCreateInput> {
+  if (lineup === undefined) return { ...input, defaultLineup: {} };
+  return { ...input, defaultLineup: await resolveNamedLineupOrRefuse(lineup) };
 }
 
 export async function removeSong(id: string): Promise<DeletionOutcome> {

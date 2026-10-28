@@ -12,14 +12,7 @@ import {
 import { readSentNotifications } from '../../../test/push-utils';
 import { taskTable } from './tasks.schema';
 
-const taskSchema = z.object({
-  id: z.string().uuid(),
-  title: z.string(),
-  status: z.string(),
-  assigneeId: z.string().nullable(),
-});
-const taskBodySchema = z.object({ task: taskSchema });
-const tasksBodySchema = z.object({ tasks: z.array(taskSchema) });
+const createdSchema = z.object({ id: z.string().uuid() });
 
 /**
  * @FollowsBlueprint test-back-e2e
@@ -27,22 +20,41 @@ const tasksBodySchema = z.object({ tasks: z.array(taskSchema) });
 describe('tasks tools (back-e2e)', () => {
   useAssistantToolSuite();
 
-  it('creates, lists, updates and deletes a task, as the route does', async () => {
+  it('creates, lists, updates and deletes a task by name, as the route does', async () => {
     const band = await prepareAssistantBand();
+    await callTool(band.assistant, 'create_song', { title: 'Creep', status: 'idea' });
 
     const created = await callTool(band.assistant, 'create_task', {
       title: 'Book the van',
-      assigneeId: band.lea.memberId,
+      assignee: 'lea',
     });
-    const { task } = taskBodySchema.parse(created.body);
-    const updated = await callTool(band.assistant, 'update_task', { id: task.id, status: 'done' });
-    const listed = tasksBodySchema.parse((await callTool(band.assistant, 'list_tasks')).body);
-    const deleted = await callTool(band.assistant, 'delete_task', { id: task.id });
+    const task = createdSchema.parse(created.body);
+    await callTool(band.assistant, 'create_task', {
+      title: 'Learn the solo',
+      assignee: 'me',
+      song: 'Creep',
+    });
+    const updated = await callTool(band.assistant, 'update_task', {
+      task: 'book the van',
+      status: 'done',
+      song: 'creep',
+    });
+    const listed = await callTool(band.assistant, 'list_tasks', { assignee: 'Léa' });
+    const mine = await callTool(band.assistant, 'list_tasks', { assignee: 'me' });
+    const deleted = await callTool(band.assistant, 'delete_task', { task: task.id });
     const rows = await testDatabase().select().from(taskTable).where(eq(taskTable.id, task.id));
 
-    expect(task).toMatchObject({ title: 'Book the van', assigneeId: band.lea.memberId });
-    expect(taskBodySchema.parse(updated.body).task.status).toBe('done');
-    expect(listed.tasks.map((listedTask) => listedTask.id)).toEqual([task.id]);
+    expect(updated).toEqual({
+      isError: false,
+      body: { id: task.id, updated: ['status', 'songId'] },
+    });
+    expect(listed.body).toEqual({
+      tasks: [
+        { id: task.id, title: 'Book the van', status: 'done', assignee: 'Léa', song: 'Creep' },
+      ],
+      total: 1,
+    });
+    expect(mine.body).toMatchObject({ tasks: [{ title: 'Learn the solo', assignee: 'Hugo' }] });
     expect(deleted).toEqual({ isError: false, body: { id: task.id, deleted: true } });
     expect(rows).toEqual([]);
     expect(readSentNotifications(band.send)).toEqual([]);
@@ -52,21 +64,24 @@ describe('tasks tools (back-e2e)', () => {
     const band = await prepareAssistantBand();
     const unknownId = randomUUID();
     const created = await callTool(band.assistant, 'create_task', { title: 'Tune the snare' });
-    const { task } = taskBodySchema.parse(created.body);
+    const task = createdSchema.parse(created.body);
 
     expect(
-      await callTool(band.assistant, 'create_task', { title: 'Call', assigneeId: unknownId }),
+      await callTool(band.assistant, 'create_task', { title: 'Call', assignee: unknownId }),
     ).toEqual(refusal('assignee-not-found'));
     expect(
-      await callTool(band.assistant, 'create_task', { title: 'Call', songId: unknownId }),
+      await callTool(band.assistant, 'create_task', { title: 'Call', song: unknownId }),
     ).toEqual(refusal('song-not-found'));
-    expect(await callTool(band.assistant, 'update_task', { id: task.id })).toEqual(
+    expect(
+      await callTool(band.assistant, 'create_task', { title: 'Call', assignee: 'Marc' }),
+    ).toEqual({ isError: true, body: { error: 'member-not-found', reference: 'Marc' } });
+    expect(await callTool(band.assistant, 'update_task', { task: task.id })).toEqual(
       refusal('empty-update'),
     );
-    expect(await callTool(band.assistant, 'update_task', { id: unknownId, title: 'x' })).toEqual(
+    expect(await callTool(band.assistant, 'update_task', { task: unknownId, title: 'x' })).toEqual(
       refusal('not-found'),
     );
-    expect(await callTool(band.assistant, 'delete_task', { id: unknownId })).toEqual(
+    expect(await callTool(band.assistant, 'delete_task', { task: unknownId })).toEqual(
       refusal('not-found'),
     );
   });

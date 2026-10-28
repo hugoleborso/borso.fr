@@ -55,4 +55,4 @@ export async function saveOwnContactDetails(
   return { kind: 'ok', member };
 }
 
-export { defineTool } from '../mcp/mcp.service';
+export { confirmUpdate, defineTool } from '../mcp/mcp.service';

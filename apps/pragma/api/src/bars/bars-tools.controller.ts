@@ -1,17 +1,19 @@
-import { z } from 'zod';
 import {
   barCreateSchema,
-  barIdParamSchema,
+  barListToolInputSchema,
+  barReferenceToolInputSchema,
   barSearchQuerySchema,
   barUpdateToolInputSchema,
 } from './bars.schema';
 import {
+  confirmUpdate,
   createBar,
   defineTool,
+  listBarsForTool,
   getBarById,
-  getBarsSortedByName,
   patchBar,
   removeBar,
+  resolveBarId,
   searchBarsInPlaces,
 } from './bars.service';
 
@@ -19,16 +21,17 @@ import {
 export const BAR_TOOLS = [
   defineTool({
     name: 'list_bars',
-    description: 'List the bars the band prospects for concerts, by name.',
-    route: 'GET /api/bars',
-    inputSchema: z.object({}),
-    run: async () => ({ kind: 'answered', body: { bars: await getBarsSortedByName() } }),
+    description:
+      'List the bars the band prospects, by name; `query` matches name or city. `get_bar` reads contacts and notes.',
+    routes: ['GET /api/bars'],
+    inputSchema: barListToolInputSchema,
+    run: async (filter) => ({ kind: 'answered', body: { bars: await listBarsForTool(filter) } }),
   }),
   defineTool({
     name: 'search_bar_places',
     description:
-      'Search OpenStreetMap for venues matching `query`, to find the details of a bar before adding it.',
-    route: 'GET /api/bars/search',
+      'Search OpenStreetMap for venues matching `query`, to fill in a bar before adding it.',
+    routes: ['GET /api/bars/search'],
     inputSchema: barSearchQuerySchema,
     run: async ({ query }) => {
       const outcome = await searchBarsInPlaces(query);
@@ -40,40 +43,45 @@ export const BAR_TOOLS = [
   }),
   defineTool({
     name: 'get_bar',
-    description: 'Read one bar by its id.',
-    route: 'GET /api/bars/:id',
-    inputSchema: barIdParamSchema,
-    run: async ({ id }) => {
-      const bar = await getBarById(id);
-      if (bar === null) return { kind: 'refused', body: { error: 'not-found' } };
-      return { kind: 'answered', body: { bar } };
+    description: 'Read one bar, by name or id, with its contacts and notes.',
+    routes: ['GET /api/bars/:id'],
+    inputSchema: barReferenceToolInputSchema,
+    run: async ({ bar }) => {
+      const found = await getBarById(await resolveBarId(bar));
+      if (found === null) return { kind: 'refused', body: { error: 'not-found' } };
+      return { kind: 'answered', body: { bar: found } };
     },
   }),
   defineTool({
     name: 'create_bar',
     description: 'Add a bar to prospect.',
-    route: 'POST /api/bars',
+    routes: ['POST /api/bars'],
     inputSchema: barCreateSchema,
-    run: async (input) => ({ kind: 'answered', body: { bar: await createBar(input) } }),
+    run: async (input) => {
+      const created = await createBar(input);
+      return { kind: 'answered', body: { id: created.id, name: created.name } };
+    },
   }),
   defineTool({
     name: 'update_bar',
-    description: 'Change the fields given of the bar `id`; give at least one.',
-    route: 'PUT /api/bars/:id',
+    description: 'Change the fields given of a bar, named by name or id.',
+    routes: ['PUT /api/bars/:id'],
     inputSchema: barUpdateToolInputSchema,
-    run: async ({ id, ...changes }) => {
+    run: async ({ bar, ...changes }) => {
+      const id = await resolveBarId(bar);
       const outcome = await patchBar(id, changes);
       if (outcome.kind === 'empty') return { kind: 'refused', body: { error: 'empty-update' } };
       if (outcome.kind === 'not-found') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { bar: outcome.bar } };
+      return { kind: 'answered', body: confirmUpdate(id, changes) };
     },
   }),
   defineTool({
     name: 'delete_bar',
-    description: 'Delete the bar `id`.',
-    route: 'DELETE /api/bars/:id',
-    inputSchema: barIdParamSchema,
-    run: async ({ id }) => {
+    description: 'Delete a bar.',
+    routes: ['DELETE /api/bars/:id'],
+    inputSchema: barReferenceToolInputSchema,
+    run: async ({ bar }) => {
+      const id = await resolveBarId(bar);
       const outcome = await removeBar(id);
       if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
       return { kind: 'answered', body: { id, deleted: true } };

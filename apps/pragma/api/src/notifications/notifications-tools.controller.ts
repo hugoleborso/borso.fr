@@ -7,7 +7,7 @@ export const NOTIFICATION_TOOLS = [
   defineTool({
     name: 'get_notification_preferences',
     description: 'Read which categories of push notification you receive.',
-    route: 'GET /api/notifications/preferences',
+    routes: ['GET /api/notifications/preferences'],
     inputSchema: z.object({}),
     run: async (_input, actor) => ({
       kind: 'answered',
@@ -17,7 +17,7 @@ export const NOTIFICATION_TOOLS = [
   defineTool({
     name: 'set_notification_preference',
     description: 'Turn one category of push notification on or off for you.',
-    route: 'PUT /api/notifications/preferences',
+    routes: ['PUT /api/notifications/preferences'],
     inputSchema: preferencesUpdateSchema,
     run: async (input, actor) => ({
       kind: 'answered',

@@ -11,7 +11,8 @@ import {
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { memberInstrumentTable } from '../members/members.schema';
+import { memberInstrumentTable, memberTable } from '../members/members.schema';
+import type { NamedEntity } from './lineup-names.core';
 import type { InstrumentPlayer, InstrumentPlayerLink } from './instrument-players.core';
 import {
   type createInstrumentSchema,
@@ -86,6 +87,12 @@ export async function listInstrumentPlayerLinks(): Promise<InstrumentPlayerLink[
       isPrimary: memberInstrumentTable.isPrimary,
     })
     .from(memberInstrumentTable);
+}
+
+export async function listMemberNames(): Promise<NamedEntity[]> {
+  return await getDatabase()
+    .select({ id: memberTable.id, name: memberTable.firstName })
+    .from(memberTable);
 }
 
 export async function listInstrumentIdsWithin(executor: DatabaseExecutor): Promise<string[]> {

@@ -12,31 +12,22 @@ import {
 } from '../../../test/mcp-utils';
 import { studyTable } from './studies.schema';
 
-const idOf = (key: string, body: unknown) =>
-  z.object({ [key]: z.object({ id: z.string().uuid() }) }).parse(body)[key]?.id ?? '';
-const overviewBodySchema = z.object({
-  queue: z.array(
-    z.object({ songId: z.string(), instrumentId: z.string(), isStudiedToday: z.boolean() }),
-  ),
-});
+const idOf = (body: unknown) => z.object({ id: z.string().uuid() }).parse(body).id;
 
 async function seedSongPlayedByHugo(band: AssistantBand) {
   const instrumentId = idOf(
-    'instrument',
     (await callTool(band.assistant, 'create_instrument', { name: 'Guitar', family: 'harmonic' }))
       .body,
   );
   const otherInstrumentId = idOf(
-    'instrument',
     (await callTool(band.assistant, 'create_instrument', { name: 'Voice', family: 'vocal' })).body,
   );
   const songId = idOf(
-    'song',
     (
       await callTool(band.assistant, 'create_song', {
         title: 'Creep',
         status: 'idea',
-        defaultLineup: { [band.hugo.memberId]: [instrumentId] },
+        defaultLineup: { Hugo: 'Guitar' },
       })
     ).body,
   );
@@ -53,20 +44,27 @@ describe('studies tools (back-e2e)', () => {
     const band = await prepareAssistantBand();
     const { songId, instrumentId } = await seedSongPlayedByHugo(band);
 
-    const logged = await callTool(band.assistant, 'log_study', { songId, instrumentId });
+    const logged = await callTool(band.assistant, 'log_study', {
+      song: 'creep',
+      instrument: 'guitar',
+    });
     const rows = await testDatabase()
       .select()
       .from(studyTable)
       .where(eq(studyTable.memberId, band.hugo.memberId));
-    const overview = overviewBodySchema.parse(
-      (await callTool(band.assistant, 'get_studies_overview')).body,
-    );
-    const undone = await callTool(band.assistant, 'undo_study', { songId, instrumentId });
+    const overview = await callTool(band.assistant, 'get_studies_overview');
+    const undone = await callTool(band.assistant, 'log_study', {
+      song: songId,
+      instrument: instrumentId,
+      undo: true,
+    });
 
-    expect(logged.isError).toBe(false);
+    expect(logged).toEqual({ isError: false, body: { streak: 1, thisWeek: 1 } });
     expect(rows).toHaveLength(1);
-    expect(overview.queue).toEqual([{ songId, instrumentId, isStudiedToday: true }]);
-    expect(undone.isError).toBe(false);
+    expect(overview.body).toMatchObject({
+      queue: [{ song: 'Creep', songId, instrument: 'Guitar', isStudiedToday: true }],
+    });
+    expect(undone).toEqual({ isError: false, body: { streak: 0, thisWeek: 0 } });
     expect(await testDatabase().select().from(studyTable)).toEqual([]);
   });
 
@@ -76,16 +74,26 @@ describe('studies tools (back-e2e)', () => {
     const unknownId = randomUUID();
 
     expect(
-      await callTool(band.assistant, 'log_study', { songId: unknownId, instrumentId }),
+      await callTool(band.assistant, 'log_study', { song: unknownId, instrument: instrumentId }),
     ).toEqual(refusal('song-not-found'));
     expect(
-      await callTool(band.assistant, 'log_study', { songId, instrumentId: unknownId }),
+      await callTool(band.assistant, 'log_study', { song: songId, instrument: unknownId }),
     ).toEqual(refusal('instrument-not-found'));
     expect(
-      await callTool(band.assistant, 'log_study', { songId, instrumentId: otherInstrumentId }),
+      await callTool(band.assistant, 'log_study', { song: songId, instrument: otherInstrumentId }),
     ).toEqual(refusal('study-not-in-lineup'));
-    expect(await callTool(band.assistant, 'undo_study', { songId, instrumentId })).toEqual(
-      refusal('study-not-found'),
-    );
+    expect(
+      await callTool(band.assistant, 'log_study', {
+        song: songId,
+        instrument: instrumentId,
+        undo: true,
+      }),
+    ).toEqual(refusal('study-not-found'));
+    expect(
+      await callTool(band.assistant, 'log_study', { song: 'Creep', instrument: 'Kazoo' }),
+    ).toEqual({
+      isError: true,
+      body: { error: 'instrument-not-found', reference: 'Kazoo' },
+    });
   });
 });

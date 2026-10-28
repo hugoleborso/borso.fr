@@ -1,6 +1,7 @@
 import { TASK_NOTES_MAX_LENGTH, TASK_TITLE_MAX_LENGTH } from '@domain/input-limits.core';
 import { pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { pageInputShape, referenceSchema } from '../mcp/tool-input.schema';
 import { DEFAULT_TASK_STATUS, TASK_STATUSES } from '@domain/task-status.core';
 
 // @FollowsBlueprint schema-table-and-input
@@ -25,4 +26,21 @@ export const taskCreateSchema = z.object({
 
 export const taskUpdateSchema = taskCreateSchema.partial();
 export const taskIdParamSchema = z.object({ id: z.string().uuid() });
-export const taskUpdateToolInputSchema = taskIdParamSchema.merge(taskUpdateSchema);
+const taskLinkShape = {
+  assignee: referenceSchema.nullable().optional(),
+  song: referenceSchema.nullable().optional(),
+};
+
+export const taskReferenceToolInputSchema = z.object({ task: referenceSchema });
+export const taskListToolInputSchema = z.object({
+  assignee: referenceSchema.optional(),
+  song: referenceSchema.optional(),
+  status: z.enum(TASK_STATUSES).optional(),
+  ...pageInputShape,
+});
+export const taskCreateToolInputSchema = taskCreateSchema
+  .omit({ assigneeId: true, songId: true })
+  .extend(taskLinkShape);
+export const taskUpdateToolInputSchema = taskReferenceToolInputSchema
+  .merge(taskUpdateSchema.omit({ assigneeId: true, songId: true }))
+  .extend(taskLinkShape);

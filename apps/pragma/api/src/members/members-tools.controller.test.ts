@@ -8,12 +8,16 @@ import {
   useAssistantToolSuite,
 } from '../../../test/mcp-utils';
 
-const memberSchema = z.object({ id: z.string().uuid(), firstName: z.string() });
-const memberBodySchema = z.object({ member: memberSchema });
-const membersBodySchema = z.object({ members: z.array(memberSchema) });
-const instrumentBodySchema = z.object({ instrument: z.object({ id: z.string().uuid() }) });
-const memberInstrumentsBodySchema = z.object({
-  instruments: z.array(z.object({ id: z.string(), isPrimary: z.boolean() })),
+const createdSchema = z.object({ id: z.string().uuid(), firstName: z.string() });
+const membersBodySchema = z.object({
+  members: z.array(
+    z.object({
+      id: z.string().uuid(),
+      firstName: z.string(),
+      instruments: z.array(z.string()),
+      main: z.array(z.string()).optional(),
+    }),
+  ),
 });
 
 /**
@@ -22,39 +26,33 @@ const memberInstrumentsBodySchema = z.object({
 describe('members tools (back-e2e)', () => {
   useAssistantToolSuite();
 
-  it('adds a member, renames them, gives them an instrument, then removes them', async () => {
+  it('adds a member, renames them, gives them an instrument by name, then removes them', async () => {
     const band = await prepareAssistantBand();
-    const instrumentId = instrumentBodySchema.parse(
-      (await callTool(band.assistant, 'create_instrument', { name: 'Keys', family: 'harmonic' }))
-        .body,
-    ).instrument.id;
+    await callTool(band.assistant, 'create_instrument', { name: 'Keys', family: 'harmonic' });
 
-    const created = await callTool(band.assistant, 'create_member', { firstName: 'Tom' });
-    const { member } = memberBodySchema.parse(created.body);
+    const member = createdSchema.parse(
+      (await callTool(band.assistant, 'create_member', { firstName: 'Tom' })).body,
+    );
     const renamed = await callTool(band.assistant, 'update_member', {
-      id: member.id,
+      member: 'tom',
       firstName: 'Thomas',
     });
     const assigned = await callTool(band.assistant, 'set_member_instruments', {
-      id: member.id,
-      instrumentIds: [instrumentId],
-      primaryInstrumentIds: [instrumentId],
+      member: 'Thomas',
+      instruments: ['keys'],
+      main: ['Keys'],
     });
-    const instruments = memberInstrumentsBodySchema.parse(
-      (await callTool(band.assistant, 'list_member_instruments', { id: member.id })).body,
-    );
     const listed = membersBodySchema.parse((await callTool(band.assistant, 'list_members')).body);
-    const removed = await callTool(band.assistant, 'delete_member', { id: member.id });
+    const removed = await callTool(band.assistant, 'delete_member', { member: member.id });
     const remaining = membersBodySchema.parse(
       (await callTool(band.assistant, 'list_members')).body,
     );
 
-    expect(memberBodySchema.parse(renamed.body).member.firstName).toBe('Thomas');
-    expect(assigned).toEqual({
-      isError: false,
-      body: { id: member.id, instrumentIds: [instrumentId] },
-    });
-    expect(instruments.instruments).toEqual([{ id: instrumentId, isPrimary: true }]);
+    expect(renamed).toEqual({ isError: false, body: { id: member.id, updated: ['firstName'] } });
+    expect(assigned).toEqual({ isError: false, body: { id: member.id, instruments: ['keys'] } });
+    expect(listed.members).toContainEqual(
+      expect.objectContaining({ firstName: 'Thomas', instruments: ['Keys'], main: ['Keys'] }),
+    );
     expect(listed.members.map((listedMember) => listedMember.firstName)).toEqual([
       'Hugo',
       'Léa',
@@ -64,30 +62,34 @@ describe('members tools (back-e2e)', () => {
     expect(remaining.members.map((listedMember) => listedMember.id)).not.toContain(member.id);
   });
 
-  it('answers the refusal codes the routes answer', async () => {
+  it('answers the refusal codes the routes answer, and names a reference nothing matches', async () => {
     const band = await prepareAssistantBand();
     const unknownId = randomUUID();
 
-    expect(await callTool(band.assistant, 'update_member', { id: band.lea.memberId })).toEqual(
+    expect(await callTool(band.assistant, 'update_member', { member: 'Léa' })).toEqual(
       refusal('empty-update'),
     );
     expect(
-      await callTool(band.assistant, 'update_member', { id: unknownId, firstName: 'Ghost' }),
+      await callTool(band.assistant, 'update_member', { member: unknownId, firstName: 'Ghost' }),
     ).toEqual(refusal('not-found'));
-    expect(await callTool(band.assistant, 'delete_member', { id: unknownId })).toEqual(
+    expect(await callTool(band.assistant, 'delete_member', { member: unknownId })).toEqual(
       refusal('not-found'),
     );
     expect(
       await callTool(band.assistant, 'set_member_instruments', {
-        id: unknownId,
-        instrumentIds: [],
+        member: unknownId,
+        instruments: [],
       }),
     ).toEqual(refusal('not-found'));
     expect(
       await callTool(band.assistant, 'set_member_instruments', {
-        id: band.lea.memberId,
-        instrumentIds: [unknownId],
+        member: 'Léa',
+        instruments: ['Theremin'],
       }),
-    ).toEqual(refusal('instrument-not-found'));
+    ).toEqual({ isError: true, body: { error: 'instrument-not-found', reference: 'Theremin' } });
+    expect(await callTool(band.assistant, 'delete_member', { member: 'Ghost' })).toEqual({
+      isError: true,
+      body: { error: 'member-not-found', reference: 'Ghost' },
+    });
   });
 });

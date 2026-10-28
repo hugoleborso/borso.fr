@@ -7,6 +7,7 @@ import {
 } from '@domain/take-upload.core';
 import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { pageInputShape, referenceSchema } from '../mcp/tool-input.schema';
 
 const OBJECT_KEY_MAX_LENGTH = 512;
 
@@ -92,9 +93,30 @@ export const takeCommentUpdateSchema = takeCommentChangesSchema.refine(
   },
 );
 
-export const takeCommentCreateToolInputSchema = takePathSchema.merge(takeCommentCreateSchema);
-export const takeCommentUpdateToolInputSchema =
-  takeCommentPathSchema.merge(takeCommentChangesSchema);
+const takeChoiceShape = {
+  take: z.string().uuid().optional(),
+  song: referenceSchema.optional(),
+};
+
+export const takeListToolInputSchema = z.object({ song: referenceSchema, ...pageInputShape });
+export const takeReadToolInputSchema = z.object(takeChoiceShape);
+export const takeReferenceToolInputSchema = z.object({ take: z.string().uuid() });
+export const takeSignToolInputSchema = z.object({
+  takeId: z.string().uuid(),
+  song: referenceSchema,
+  contentType: takeContentTypeSchema,
+  contentLength: z.number().int().positive().max(TAKE_MAX_BYTES),
+});
+export const takeCommentCreateToolInputSchema = z
+  .object(takeChoiceShape)
+  .merge(takeCommentCreateSchema.strip());
+export const takeCommentPathToolInputSchema = z.object({
+  take: z.string().uuid(),
+  comment: z.string().uuid(),
+});
+export const takeCommentUpdateToolInputSchema = takeCommentPathToolInputSchema.merge(
+  takeCommentChangesSchema.strip(),
+);
 
 export type TakeSignInput = z.infer<typeof takeSignSchema>;
 export type TakeCreateInput = z.infer<typeof takeCreateSchema>;

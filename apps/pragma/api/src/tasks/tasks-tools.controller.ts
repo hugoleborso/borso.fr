@@ -1,52 +1,76 @@
-import { z } from 'zod';
-import { taskCreateSchema, taskIdParamSchema, taskUpdateToolInputSchema } from './tasks.schema';
 import {
+  taskCreateToolInputSchema,
+  taskListToolInputSchema,
+  taskReferenceToolInputSchema,
+  taskUpdateToolInputSchema,
+} from './tasks.schema';
+import {
+  confirmUpdate,
   createTask,
   defineTool,
-  getTasksSortedByUrgency,
+  listTasksForTool,
+  pageItems,
   patchTask,
   removeTask,
+  resolveTaskId,
+  resolveTaskLinks,
 } from './tasks.service';
+
+const TASK_PAGE_SIZE = 30;
 
 // @FollowsBlueprint controller-dispatch
 export const TASK_TOOLS = [
   defineTool({
     name: 'list_tasks',
-    description: "List the band's tasks, most urgent first.",
-    route: 'GET /api/tasks',
-    inputSchema: z.object({}),
-    run: async () => ({ kind: 'answered', body: { tasks: await getTasksSortedByUrgency() } }),
+    description:
+      "List the band's tasks, most urgent first, optionally of one `assignee` (name, or `me`), `song` or `status`.",
+    routes: ['GET /api/tasks'],
+    inputSchema: taskListToolInputSchema,
+    run: async ({ assignee, song, status, limit, cursor }, actor) => {
+      const tasks = await listTasksForTool({ assignee, song }, status, actor.memberId);
+      const page = pageItems(tasks, { limit, cursor }, TASK_PAGE_SIZE);
+      return {
+        kind: 'answered',
+        body: { tasks: page.items, total: page.total, nextCursor: page.nextCursor },
+      };
+    },
   }),
   defineTool({
     name: 'create_task',
-    description:
-      'Add a task to the band, optionally assigned to the member `assigneeId` and linked to the song `songId`.',
-    route: 'POST /api/tasks',
-    inputSchema: taskCreateSchema,
-    run: async (input) => {
-      const outcome = await createTask(input);
+    description: 'Add a task, optionally assigned (name, or `me`) and linked to a song.',
+    routes: ['POST /api/tasks'],
+    inputSchema: taskCreateToolInputSchema,
+    run: async ({ assignee, song, ...input }, actor) => {
+      const links = await resolveTaskLinks({ assignee, song }, actor.memberId);
+      const outcome = await createTask({ assigneeId: null, songId: null, ...input, ...links });
       if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { task: outcome.task } };
+      return { kind: 'answered', body: { id: outcome.task.id } };
     },
   }),
   defineTool({
     name: 'update_task',
-    description: 'Change the fields given of the task `id`; give at least one.',
-    route: 'PUT /api/tasks/:id',
+    description: 'Change the fields given of a task, named by title or id.',
+    routes: ['PUT /api/tasks/:id'],
     inputSchema: taskUpdateToolInputSchema,
-    run: async ({ id, ...changes }) => {
-      const outcome = await patchTask(id, changes);
+    run: async ({ task, assignee, song, ...changes }, actor) => {
+      const id = await resolveTaskId(task);
+      const update = {
+        ...changes,
+        ...(await resolveTaskLinks({ assignee, song }, actor.memberId)),
+      };
+      const outcome = await patchTask(id, update);
       if (outcome.kind === 'empty') return { kind: 'refused', body: { error: 'empty-update' } };
       if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { task: outcome.task } };
+      return { kind: 'answered', body: confirmUpdate(id, update) };
     },
   }),
   defineTool({
     name: 'delete_task',
-    description: 'Delete the task `id`.',
-    route: 'DELETE /api/tasks/:id',
-    inputSchema: taskIdParamSchema,
-    run: async ({ id }) => {
+    description: 'Delete a task, named by title or id.',
+    routes: ['DELETE /api/tasks/:id'],
+    inputSchema: taskReferenceToolInputSchema,
+    run: async ({ task }) => {
+      const id = await resolveTaskId(task);
       const outcome = await removeTask(id);
       if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
       return { kind: 'answered', body: { id, deleted: true } };

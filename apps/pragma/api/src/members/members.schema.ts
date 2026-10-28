@@ -5,6 +5,7 @@ import {
 } from '@domain/input-limits.core';
 import { boolean, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { referenceSchema } from '../mcp/tool-input.schema';
 
 const HEX_COLOR_PATTERN = /^#[0-9a-fA-F]{3,8}$/;
 
@@ -65,7 +66,9 @@ export const memberInstrumentAssignmentSchema = z.object({
 });
 
 export const memberIdParamSchema = z.object({ id: z.string().uuid() });
-export const memberUpdateToolInputSchema = memberIdParamSchema.merge(updateMemberSchema);
-export const memberInstrumentAssignmentToolInputSchema = memberIdParamSchema.merge(
-  memberInstrumentAssignmentSchema,
-);
+export const memberReferenceToolInputSchema = z.object({ member: referenceSchema });
+export const memberUpdateToolInputSchema = memberReferenceToolInputSchema.merge(updateMemberSchema);
+export const memberInstrumentAssignmentToolInputSchema = memberReferenceToolInputSchema.extend({
+  instruments: z.array(referenceSchema),
+  main: z.array(referenceSchema).optional(),
+});

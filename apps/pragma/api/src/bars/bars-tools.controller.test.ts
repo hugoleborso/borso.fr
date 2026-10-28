@@ -17,7 +17,7 @@ const barSchema = z.object({
   city: z.string().nullable(),
 });
 const barBodySchema = z.object({ bar: barSchema });
-const barsBodySchema = z.object({ bars: z.array(barSchema) });
+const createdSchema = z.object({ id: z.string().uuid(), name: z.string() });
 
 /**
  * @FollowsBlueprint test-back-e2e
@@ -33,21 +33,25 @@ describe('bars tools (back-e2e)', () => {
       status: 'lead',
       city: 'Lyon',
     });
-    const { bar } = barBodySchema.parse(created.body);
-    const read = await callTool(band.assistant, 'get_bar', { id: bar.id });
+    const bar = createdSchema.parse(created.body);
+    const read = await callTool(band.assistant, 'get_bar', { bar: 'le zinc' });
     const updated = await callTool(band.assistant, 'update_bar', {
-      id: bar.id,
+      bar: 'Zinc',
       status: 'contacted',
     });
-    const listed = barsBodySchema.parse((await callTool(band.assistant, 'list_bars')).body);
-    const deleted = await callTool(band.assistant, 'delete_bar', { id: bar.id });
+    const listed = await callTool(band.assistant, 'list_bars', { query: 'lyon' });
+    const deleted = await callTool(band.assistant, 'delete_bar', { bar: bar.id });
 
-    expect(bar).toMatchObject({ name: 'Le Zinc', status: 'lead', city: 'Lyon' });
-    expect(barBodySchema.parse(read.body).bar.id).toBe(bar.id);
-    expect(barBodySchema.parse(updated.body).bar.status).toBe('contacted');
-    expect(listed.bars.map((listedBar) => listedBar.id)).toEqual([bar.id]);
+    expect(bar).toEqual({ id: bar.id, name: 'Le Zinc' });
+    expect(barBodySchema.parse(read.body).bar).toMatchObject({ id: bar.id, city: 'Lyon' });
+    expect(updated).toEqual({ isError: false, body: { id: bar.id, updated: ['status'] } });
+    expect(listed.body).toEqual({
+      bars: [{ id: bar.id, name: 'Le Zinc', status: 'contacted', city: 'Lyon' }],
+    });
     expect(deleted).toEqual({ isError: false, body: { id: bar.id, deleted: true } });
-    expect(await callTool(band.assistant, 'get_bar', { id: bar.id })).toEqual(refusal('not-found'));
+    expect(await callTool(band.assistant, 'get_bar', { bar: bar.id })).toEqual(
+      refusal('not-found'),
+    );
   });
 
   it('answers the refusal codes the routes answer', async () => {
@@ -57,17 +61,21 @@ describe('bars tools (back-e2e)', () => {
       name: 'Chez Max',
       status: 'cold',
     });
-    const { bar } = barBodySchema.parse(created.body);
+    const bar = createdSchema.parse(created.body);
 
-    expect(await callTool(band.assistant, 'update_bar', { id: bar.id })).toEqual(
+    expect(await callTool(band.assistant, 'update_bar', { bar: bar.id })).toEqual(
       refusal('empty-update'),
     );
-    expect(await callTool(band.assistant, 'update_bar', { id: unknownId, name: 'x' })).toEqual(
+    expect(await callTool(band.assistant, 'update_bar', { bar: unknownId, name: 'x' })).toEqual(
       refusal('not-found'),
     );
-    expect(await callTool(band.assistant, 'delete_bar', { id: unknownId })).toEqual(
+    expect(await callTool(band.assistant, 'delete_bar', { bar: unknownId })).toEqual(
       refusal('not-found'),
     );
+    expect(await callTool(band.assistant, 'delete_bar', { bar: 'Le Zinc' })).toEqual({
+      isError: true,
+      body: { error: 'bar-not-found', reference: 'Le Zinc' },
+    });
   });
 
   it('searches OpenStreetMap, and answers search-unavailable when it fails', async () => {

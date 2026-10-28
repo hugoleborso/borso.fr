@@ -19,58 +19,50 @@ import {
 } from './setlists.schema';
 
 const PRACTICE_DATE = '2026-11-03T19:00:00.000Z';
+const PRACTICE_DAY = '2026-11-03';
 const SINGLE_SONG_TARGET = 1;
 const FULL_SINGLE_SONG_BUDGET = 3;
 
 const idBodySchema = z.object({ id: z.string().uuid() });
-const songBodySchema = z.object({ song: idBodySchema });
-const sessionBodySchema = z.object({ session: idBodySchema });
-const setlistBodySchema = z.object({
-  setlist: z.object({ id: z.string().uuid(), name: z.string() }),
-});
 const setlistsBodySchema = z.object({
   setlists: z.array(z.object({ id: z.string().uuid(), sessionIds: z.array(z.string()) })),
 });
-const entrySchema = z.object({
-  id: z.string().uuid(),
-  songId: z.string().uuid(),
+const entryViewSchema = z.object({
+  entryId: z.string().uuid(),
   position: z.number().int(),
-  notes: z.string(),
-  lineupOverride: z.record(z.string(), z.array(z.string())).nullable(),
+  songId: z.string().uuid(),
+  title: z.string(),
+  notes: z.string().optional(),
+  lineup: z.record(z.string(), z.string()),
 });
-const entryBodySchema = z.object({ entry: entrySchema });
-const entriesBodySchema = z.object({ entries: z.array(entrySchema) });
-const voteBoardSchema = z.object({
-  status: z.string(),
-  budget: z.object({ remaining: z.number() }),
-  tallies: z.array(z.object({ songId: z.string(), points: z.number() })),
+const setlistViewSchema = z.object({
+  setlist: z.object({ id: z.string().uuid(), name: z.string(), status: z.string() }),
+  entries: z.array(entryViewSchema),
 });
 
 async function createSong(band: AssistantBand, title: string): Promise<string> {
   const reply = await callTool(band.assistant, 'create_song', { title, status: 'idea' });
-  return songBodySchema.parse(reply.body).song.id;
+  return idBodySchema.parse(reply.body).id;
 }
 
 async function createPractice(band: AssistantBand): Promise<string> {
   const reply = await callTool(band.assistant, 'create_session', {
     session: { kind: 'practice', date: PRACTICE_DATE },
   });
-  return sessionBodySchema.parse(reply.body).session.id;
+  return idBodySchema.parse(reply.body).id;
 }
 
-async function createSetlist(band: AssistantBand, sessionId: string | null): Promise<string> {
-  const reply = await callTool(band.assistant, 'create_setlist', { name: 'Saturday', sessionId });
-  return setlistBodySchema.parse(reply.body).setlist.id;
+async function createSetlist(
+  band: AssistantBand,
+  options: { session?: string; songs?: string[] } = {},
+): Promise<string> {
+  const reply = await callTool(band.assistant, 'create_setlist', { name: 'Saturday', ...options });
+  return idBodySchema.parse(reply.body).id;
 }
 
-async function addEntry(band: AssistantBand, setlistId: string, songId: string): Promise<string> {
-  const reply = await callTool(band.assistant, 'add_setlist_entry', { id: setlistId, songId });
-  return entryBodySchema.parse(reply.body).entry.id;
-}
-
-async function readEntries(band: AssistantBand, setlistId: string) {
-  const reply = await callTool(band.assistant, 'list_setlist_entries', { id: setlistId });
-  return entriesBodySchema.parse(reply.body).entries;
+async function readSetlist(band: AssistantBand, setlist: string) {
+  const reply = await callTool(band.assistant, 'get_setlist', { setlist });
+  return setlistViewSchema.parse(reply.body);
 }
 
 async function readSetlistRows(setlistId: string) {
@@ -99,69 +91,98 @@ describe('setlists tools (back-e2e)', () => {
     vi.restoreAllMocks();
   });
 
-  it('builds a setlist for a session, edits and reorders its entries, then deletes it', async () => {
+  it('builds a setlist for a session by name in one call, edits and reorders it, then deletes it', async () => {
     const band = await prepareAssistantBand();
     const sessionId = await createPractice(band);
     const creepId = await createSong(band, 'Creep');
     const armyId = await createSong(band, 'Seven Nation Army');
-    const setlistId = await createSetlist(band, sessionId);
-    const instrumentId = randomUUID();
+    const karmaId = await createSong(band, 'Karma Police');
+    await callTool(band.assistant, 'create_instrument', { name: 'Guitare', family: 'harmonic' });
 
-    const creepEntryId = await addEntry(band, setlistId, creepId);
-    const armyEntryId = await addEntry(band, setlistId, armyId);
+    const created = await callTool(band.assistant, 'create_setlist', {
+      name: 'Saturday',
+      session: PRACTICE_DAY,
+      songs: ['creep', armyId],
+    });
+    const setlistId = idBodySchema.parse(created.body).id;
+    const added = await callTool(band.assistant, 'add_setlist_entries', {
+      setlist: 'saturday',
+      songs: ['Karma Police'],
+    });
     const renamed = await callTool(band.assistant, 'update_setlist', {
-      id: setlistId,
+      setlist: setlistId,
       name: 'Saturday night',
     });
     const noted = await callTool(band.assistant, 'update_setlist_entry', {
-      id: setlistId,
-      entryId: creepEntryId,
+      setlist: 'Saturday night',
+      entry: 'Creep',
       notes: 'Start soft',
     });
-    const lineup = await callTool(band.assistant, 'set_entry_lineup', {
-      id: setlistId,
-      entryId: armyEntryId,
-      lineupOverride: { [instrumentId]: band.lea.memberId },
+    const lineup = await callTool(band.assistant, 'update_setlist_entry', {
+      setlist: setlistId,
+      entry: armyId,
+      lineupOverride: { Léa: 'Guitare' },
     });
-    const moved = await callTool(band.assistant, 'move_setlist_entry', {
-      id: setlistId,
-      entryIds: [armyEntryId, creepEntryId],
+    const swapped = await callTool(band.assistant, 'reorder_setlist', {
+      setlist: setlistId,
+      swap: ['Creep', 'Seven Nation Army'],
+    });
+    const moved = await callTool(band.assistant, 'reorder_setlist', {
+      setlist: setlistId,
+      move: { entry: 'karma', position: 1 },
     });
     const ofSession = setlistsBodySchema.parse(
-      (await callTool(band.assistant, 'list_session_setlists', { sessionId })).body,
+      (await callTool(band.assistant, 'list_setlists', { session: sessionId })).body,
     );
-    const read = setlistBodySchema.parse(
-      (await callTool(band.assistant, 'get_setlist', { id: setlistId })).body,
-    );
-    const orderedEntries = await readEntries(band, setlistId);
+    const read = await readSetlist(band, setlistId);
+    const plan = await callTool(band.assistant, 'get_session', { session: PRACTICE_DAY });
 
-    expect(renamed.isError).toBe(false);
-    expect(noted.isError).toBe(false);
-    expect(lineup.isError).toBe(false);
-    expect(moved).toEqual({
-      isError: false,
-      body: { id: setlistId, entryIds: [armyEntryId, creepEntryId] },
-    });
+    expect(created.body).toEqual({ id: setlistId, songs: 2 });
+    expect(added.body).toEqual({ setlistId, entryIds: [expect.any(String)] });
+    expect(renamed.body).toEqual({ id: setlistId, name: 'Saturday night' });
+    expect(noted.body).toEqual({ id: expect.any(String), updated: ['notes'] });
+    expect(lineup.body).toEqual({ id: expect.any(String), updated: ['lineupOverride'] });
+    expect(swapped.body).toEqual({ order: ['Seven Nation Army', 'Creep', 'Karma Police'] });
+    expect(moved.body).toEqual({ order: ['Karma Police', 'Seven Nation Army', 'Creep'] });
     expect(ofSession.setlists.map((setlist) => setlist.id)).toEqual([setlistId]);
     expect(read.setlist.name).toBe('Saturday night');
-    expect(orderedEntries.map((entry) => entry.songId)).toEqual([armyId, creepId]);
-    expect(orderedEntries[0]?.lineupOverride).toEqual({ [instrumentId]: [band.lea.memberId] });
-    expect(orderedEntries[1]?.notes).toBe('Start soft');
+    expect(read.entries.map((entry) => [entry.position, entry.songId])).toEqual([
+      [1, karmaId],
+      [2, armyId],
+      [3, creepId],
+    ]);
+    expect(read.entries[1]?.lineup).toEqual({ Léa: 'Guitare' });
+    expect(read.entries[2]?.notes).toBe('Start soft');
+    expect(plan.body).toMatchObject({
+      session: { id: sessionId, kind: 'practice', date: PRACTICE_DATE },
+      setlists: [{ id: setlistId, name: 'Saturday night', entries: read.entries }],
+    });
 
-    const removed = await callTool(band.assistant, 'remove_setlist_entry', {
-      id: setlistId,
-      entryId: armyEntryId,
+    const resetLineup = await callTool(band.assistant, 'update_setlist_entry', {
+      setlist: setlistId,
+      entry: 'Seven Nation Army',
+      lineupOverride: null,
+    });
+    const removed = await callTool(band.assistant, 'remove_setlist_entries', {
+      setlist: setlistId,
+      entries: ['Seven Nation Army', 'Karma Police'],
     });
     const afterRemoval = await readSetlistRows(setlistId);
 
-    expect(removed).toEqual({ isError: false, body: { id: armyEntryId, deleted: true } });
+    expect(resetLineup.isError).toBe(false);
+    expect(removed).toEqual({ isError: false, body: { setlistId, removed: 2 } });
     expect(afterRemoval.entries.map((entry) => [entry.songId, entry.position])).toEqual([
       [creepId, 0],
     ]);
 
-    const deleted = await callTool(band.assistant, 'delete_setlist', { id: setlistId });
+    const reordered = await callTool(band.assistant, 'reorder_setlist', {
+      setlist: setlistId,
+      order: [creepId],
+    });
+    const deleted = await callTool(band.assistant, 'delete_setlist', { setlist: setlistId });
     const afterDeletion = await readSetlistRows(setlistId);
 
+    expect(reordered.body).toEqual({ order: ['Creep'] });
     expect(deleted).toEqual({ isError: false, body: { id: setlistId, deleted: true } });
     expect(afterDeletion).toEqual({ setlists: [], entries: [], links: [] });
   });
@@ -169,208 +190,207 @@ describe('setlists tools (back-e2e)', () => {
   it('links a setlist to a session and unlinks it', async () => {
     const band = await prepareAssistantBand();
     const sessionId = await createPractice(band);
-    const setlistId = await createSetlist(band, null);
+    const setlistId = await createSetlist(band);
 
-    const linked = await callTool(band.assistant, 'link_setlist_to_session', {
-      id: setlistId,
-      sessionId,
+    const linked = await callTool(band.assistant, 'link_setlist', {
+      setlist: 'Saturday',
+      session: PRACTICE_DAY,
     });
     const listed = setlistsBodySchema.parse((await callTool(band.assistant, 'list_setlists')).body);
-    const unlinked = await callTool(band.assistant, 'unlink_setlist_from_session', {
-      id: setlistId,
-      sessionId,
+    const unlinked = await callTool(band.assistant, 'link_setlist', {
+      setlist: setlistId,
+      session: sessionId,
+      unlink: true,
     });
     const rows = await readSetlistRows(setlistId);
 
-    expect(linked).toEqual({ isError: false, body: { setlistId, sessionId } });
+    expect(linked).toEqual({ isError: false, body: { setlistId, sessionId, linked: true } });
     expect(listed.setlists).toEqual([
       expect.objectContaining({ id: setlistId, sessionIds: [sessionId] }),
     ]);
-    expect(unlinked).toEqual({ isError: false, body: { setlistId, sessionId, unlinked: true } });
+    expect(unlinked).toEqual({ isError: false, body: { setlistId, sessionId, linked: false } });
     expect(rows.links).toEqual([]);
   });
 
   it('runs an audience vote as the member, from opening to closing', async () => {
     const band = await prepareAssistantBand();
     const creepId = await createSong(band, 'Creep');
-    const armyId = await createSong(band, 'Seven Nation Army');
-    const setlistId = await createSetlist(band, null);
+    await createSong(band, 'Seven Nation Army');
+    const setlistId = await createSetlist(band);
 
     const opened = await callTool(band.assistant, 'set_vote_status', {
-      id: setlistId,
+      setlist: setlistId,
       status: 'voting',
       targetSongCount: SINGLE_SONG_TARGET,
     });
     const cast = await callTool(band.assistant, 'cast_vote', {
-      id: setlistId,
-      songId: creepId,
+      setlist: setlistId,
+      song: 'Creep',
       points: FULL_SINGLE_SONG_BUDGET,
     });
     const overBudget = await callTool(band.assistant, 'cast_vote', {
-      id: setlistId,
-      songId: armyId,
+      setlist: setlistId,
+      song: 'army',
       points: 1,
     });
-    const board = voteBoardSchema.parse(
-      (await callTool(band.assistant, 'get_vote_board', { id: setlistId })).body,
-    );
-    const proposal = await callTool(band.assistant, 'get_closing_proposal', { id: setlistId });
+    const board = await callTool(band.assistant, 'get_vote_board', { setlist: setlistId });
     const votes = await testDatabase()
       .select()
       .from(setlistVoteTable)
       .where(eq(setlistVoteTable.setlistId, setlistId));
     const closed = await callTool(band.assistant, 'close_vote', {
-      id: setlistId,
-      songIds: [creepId],
+      setlist: setlistId,
+      songs: ['Creep'],
     });
-    const lockedEntries = await readEntries(band, setlistId);
+    const lockedEntries = (await readSetlist(band, setlistId)).entries;
     const lateVote = await callTool(band.assistant, 'cast_vote', {
-      id: setlistId,
-      songId: creepId,
+      setlist: setlistId,
+      song: creepId,
       points: 1,
     });
 
-    expect(opened).toEqual({ isError: false, body: { ok: true } });
+    expect(opened).toEqual({ isError: false, body: { setlistId, status: 'voting' } });
     expect(cast).toEqual({
       isError: false,
-      body: {
-        budget: { total: 3, spent: 3, remaining: 0 },
-        songId: creepId,
-        points: FULL_SINGLE_SONG_BUDGET,
-      },
+      body: { points: FULL_SINGLE_SONG_BUDGET, remaining: 0 },
     });
     expect(overBudget).toEqual({
       isError: true,
       body: { error: 'budget-exhausted', budget: { total: 3, spent: 3, remaining: 0 } },
     });
-    expect(board.status).toBe('voting');
-    expect(board.tallies.map((tally) => [tally.songId, tally.points])).toEqual([[creepId, 3]]);
-    expect(proposal.isError).toBe(false);
+    expect(board.body).toMatchObject({
+      status: 'voting',
+      tallies: [{ song: 'Creep', songId: creepId, points: 3, voters: 1 }],
+      proposal: ['Creep'],
+    });
     expect(votes.map((vote) => vote.memberId)).toEqual([band.hugo.memberId]);
-    expect(closed).toEqual({ isError: false, body: { ok: true } });
+    expect(closed).toEqual({ isError: false, body: { setlistId, closed: true } });
     expect(lockedEntries.map((entry) => entry.songId)).toEqual([creepId]);
     expect(lateVote).toEqual({ isError: true, body: { error: 'not-voting' } });
   });
 
-  it('answers the refusal codes the routes answer', async () => {
+  it('answers the refusal codes the routes answer, and names a reference nothing matches', async () => {
     const band = await prepareAssistantBand();
     const unknownId = randomUUID();
     const songId = await createSong(band, 'Creep');
-    const setlistId = await createSetlist(band, null);
-    const entryId = await addEntry(band, setlistId, songId);
+    const setlistId = await createSetlist(band, { songs: [songId] });
 
     const replies = {
-      missing: await callTool(band.assistant, 'get_setlist', { id: unknownId }),
-      unknownSession: await callTool(band.assistant, 'create_setlist', { sessionId: unknownId }),
+      missing: await callTool(band.assistant, 'get_setlist', { setlist: unknownId }),
+      missingName: await callTool(band.assistant, 'get_setlist', { setlist: 'Sunday' }),
+      missingSession: await callTool(band.assistant, 'get_session', { session: unknownId }),
+      unknownSession: await callTool(band.assistant, 'create_setlist', {
+        name: 'x',
+        session: unknownId,
+      }),
       missingRename: await callTool(band.assistant, 'update_setlist', {
-        id: unknownId,
+        setlist: unknownId,
         name: 'x',
       }),
-      missingDelete: await callTool(band.assistant, 'delete_setlist', { id: unknownId }),
-      missingLink: await callTool(band.assistant, 'link_setlist_to_session', {
-        id: setlistId,
-        sessionId: unknownId,
+      missingDelete: await callTool(band.assistant, 'delete_setlist', { setlist: unknownId }),
+      missingLink: await callTool(band.assistant, 'link_setlist', {
+        setlist: setlistId,
+        session: unknownId,
       }),
-      missingUnlink: await callTool(band.assistant, 'unlink_setlist_from_session', {
-        id: setlistId,
-        sessionId: unknownId,
+      missingUnlink: await callTool(band.assistant, 'link_setlist', {
+        setlist: setlistId,
+        session: unknownId,
+        unlink: true,
       }),
-      missingAppend: await callTool(band.assistant, 'add_setlist_entry', {
-        id: unknownId,
-        songId,
+      missingAppend: await callTool(band.assistant, 'add_setlist_entries', {
+        setlist: unknownId,
+        songs: [songId],
+      }),
+      missingSong: await callTool(band.assistant, 'add_setlist_entries', {
+        setlist: setlistId,
+        songs: ['Karma Police'],
       }),
       emptyEntryUpdate: await callTool(band.assistant, 'update_setlist_entry', {
-        id: setlistId,
-        entryId,
+        setlist: setlistId,
+        entry: 'Creep',
       }),
-      missingEntryUpdate: await callTool(band.assistant, 'set_entry_lineup', {
-        id: setlistId,
-        entryId: unknownId,
-        lineupOverride: null,
+      missingEntry: await callTool(band.assistant, 'update_setlist_entry', {
+        setlist: setlistId,
+        entry: unknownId,
+        notes: 'x',
       }),
-      missingRemoval: await callTool(band.assistant, 'remove_setlist_entry', {
-        id: setlistId,
-        entryId: unknownId,
+      emptyReorder: await callTool(band.assistant, 'reorder_setlist', { setlist: setlistId }),
+      missingReorder: await callTool(band.assistant, 'reorder_setlist', {
+        setlist: unknownId,
+        order: [unknownId],
       }),
-      staleReorder: await callTool(band.assistant, 'move_setlist_entry', {
-        id: setlistId,
-        entryIds: [unknownId],
-      }),
-      missingReorder: await callTool(band.assistant, 'move_setlist_entry', {
-        id: unknownId,
-        entryIds: [entryId],
-      }),
-      missingBoard: await callTool(band.assistant, 'get_vote_board', { id: unknownId }),
+      missingBoard: await callTool(band.assistant, 'get_vote_board', { setlist: unknownId }),
       missingStatus: await callTool(band.assistant, 'set_vote_status', {
-        id: unknownId,
+        setlist: unknownId,
         status: 'voting',
       }),
       missingVote: await callTool(band.assistant, 'cast_vote', {
-        id: unknownId,
-        songId,
+        setlist: unknownId,
+        song: songId,
         points: 1,
       }),
-      closedVote: await callTool(band.assistant, 'cast_vote', { id: setlistId, songId, points: 1 }),
-      missingProposal: await callTool(band.assistant, 'get_closing_proposal', { id: unknownId }),
-      closedProposal: await callTool(band.assistant, 'get_closing_proposal', { id: setlistId }),
+      closedVote: await callTool(band.assistant, 'cast_vote', {
+        setlist: setlistId,
+        song: songId,
+        points: 1,
+      }),
       missingClose: await callTool(band.assistant, 'close_vote', {
-        id: unknownId,
-        songIds: [songId],
+        setlist: unknownId,
+        songs: [songId],
       }),
       closedClose: await callTool(band.assistant, 'close_vote', {
-        id: setlistId,
-        songIds: [songId],
+        setlist: setlistId,
+        songs: [songId],
       }),
     };
-    await callTool(band.assistant, 'set_vote_status', { id: setlistId, status: 'voting' });
-    const emptyProposal = await callTool(band.assistant, 'get_closing_proposal', {
-      id: setlistId,
-    });
+    await callTool(band.assistant, 'set_vote_status', { setlist: setlistId, status: 'voting' });
+    const emptyBoard = await callTool(band.assistant, 'get_vote_board', { setlist: setlistId });
     const emptyClose = await callTool(band.assistant, 'close_vote', {
-      id: setlistId,
-      songIds: [songId],
+      setlist: setlistId,
+      songs: [songId],
     });
 
     const notFound = { isError: true, body: { error: 'not-found' } };
     const notVoting = { isError: true, body: { error: 'not-voting' } };
     expect(replies).toEqual({
       missing: notFound,
+      missingName: { isError: true, body: { error: 'setlist-not-found', reference: 'Sunday' } },
+      missingSession: notFound,
       unknownSession: { isError: true, body: { error: 'session-not-found' } },
       missingRename: notFound,
       missingDelete: notFound,
       missingLink: notFound,
       missingUnlink: notFound,
       missingAppend: notFound,
+      missingSong: { isError: true, body: { error: 'song-not-found', reference: 'Karma Police' } },
       emptyEntryUpdate: { isError: true, body: { error: 'empty-update' } },
-      missingEntryUpdate: notFound,
-      missingRemoval: notFound,
-      staleReorder: { isError: true, body: { error: 'reorder-stale' } },
-      missingReorder: notFound,
+      missingEntry: { isError: true, body: { error: 'entry-not-found', reference: unknownId } },
+      emptyReorder: { isError: true, body: { error: 'empty-update' } },
+      missingReorder: { isError: true, body: { error: 'entry-not-found', reference: unknownId } },
       missingBoard: notFound,
       missingStatus: notFound,
       missingVote: notFound,
       closedVote: notVoting,
-      missingProposal: notFound,
-      closedProposal: notVoting,
       missingClose: notFound,
       closedClose: notVoting,
     });
-    expect(emptyProposal).toEqual({ isError: true, body: { error: 'no-votes' } });
+    expect(emptyBoard.body).not.toHaveProperty('proposal');
     expect(emptyClose).toEqual({ isError: true, body: { error: 'no-votes' } });
   });
 
   it('pushes each setlist change to the other members only', async () => {
     const band = await prepareAssistantBand();
     const songId = await createSong(band, 'Creep');
+    await callTool(band.assistant, 'create_instrument', { name: 'Guitare', family: 'harmonic' });
     band.send.mockClear();
-    const setlistId = await createSetlist(band, null);
+    const setlistId = await createSetlist(band);
     passNotificationGroupWindow(band.harness);
-    const entryId = await addEntry(band, setlistId, songId);
+    await callTool(band.assistant, 'add_setlist_entries', { setlist: setlistId, songs: [songId] });
     passNotificationGroupWindow(band.harness);
-    await callTool(band.assistant, 'set_entry_lineup', {
-      id: setlistId,
-      entryId,
-      lineupOverride: { [randomUUID()]: band.lea.memberId },
+    await callTool(band.assistant, 'update_setlist_entry', {
+      setlist: setlistId,
+      entry: songId,
+      lineupOverride: { Léa: 'Guitare' },
     });
     const sent = readSentNotifications(band.send);
 

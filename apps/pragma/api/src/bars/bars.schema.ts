@@ -9,6 +9,7 @@ import {
 } from '@domain/bar-profile.core';
 import { integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { referenceSchema } from '../mcp/tool-input.schema';
 import { availableSupportSchema, concertMoodSchema } from './bar-support.core';
 
 /**
@@ -56,4 +57,9 @@ export const barSearchQuerySchema = z.object({
 });
 
 export const barIdParamSchema = z.object({ id: z.string().uuid() });
-export const barUpdateToolInputSchema = barIdParamSchema.merge(barUpdateSchema);
+export const barReferenceToolInputSchema = z.object({ bar: referenceSchema });
+export const barListToolInputSchema = z.object({
+  query: z.string().max(SEARCH_QUERY_MAX).optional(),
+  status: z.enum(BAR_STATUSES).optional(),
+});
+export const barUpdateToolInputSchema = barReferenceToolInputSchema.merge(barUpdateSchema);

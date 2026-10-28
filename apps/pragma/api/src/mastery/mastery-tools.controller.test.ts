@@ -12,29 +12,14 @@ import {
 const DEFAULT_SCORE = 6;
 const OVERRIDE_SCORE = 9;
 
-const idOf = (key: string, body: unknown) =>
-  z.object({ [key]: z.object({ id: z.string().uuid() }) }).parse(body)[key]?.id ?? '';
-const scoreRowSchema = z.object({
-  memberId: z.string(),
-  instrumentId: z.string(),
-  score: z.number(),
-});
-const defaultsBodySchema = z.object({ defaults: z.array(scoreRowSchema) });
-const overridesBodySchema = z.object({
-  overrides: z.array(scoreRowSchema.extend({ songId: z.string() })),
-});
-const historyBodySchema = z.object({
-  changes: z.array(scoreRowSchema.extend({ songId: z.string() })),
-});
+const idOf = (body: unknown) => z.object({ id: z.string().uuid() }).parse(body).id;
 
 async function seedInstrumentAndSong(band: AssistantBand) {
   const instrumentId = idOf(
-    'instrument',
     (await callTool(band.assistant, 'create_instrument', { name: 'Bass', family: 'harmonic' }))
       .body,
   );
   const songId = idOf(
-    'song',
     (await callTool(band.assistant, 'create_song', { title: 'Creep', status: 'idea' })).body,
   );
   return { instrumentId, songId };
@@ -46,60 +31,86 @@ async function seedInstrumentAndSong(band: AssistantBand) {
 describe('mastery tools (back-e2e)', () => {
   useAssistantToolSuite();
 
-  it('sets, lists and removes a default score of another member', async () => {
+  it('sets, lists and removes a default score of another member, by name', async () => {
     const band = await prepareAssistantBand();
     const { instrumentId } = await seedInstrumentAndSong(band);
-    const row = { memberId: band.lea.memberId, instrumentId, score: DEFAULT_SCORE };
 
-    const saved = await callTool(band.assistant, 'set_mastery_default', row);
-    const listed = defaultsBodySchema.parse(
-      (await callTool(band.assistant, 'list_mastery_defaults')).body,
-    );
-    const removed = await callTool(band.assistant, 'delete_mastery_default', {
-      memberId: band.lea.memberId,
-      instrumentId,
+    const saved = await callTool(band.assistant, 'set_mastery_default', {
+      member: 'Léa',
+      instrument: 'bass',
+      score: DEFAULT_SCORE,
+    });
+    const listed = await callTool(band.assistant, 'list_mastery_defaults', { member: 'lea' });
+    const others = await callTool(band.assistant, 'list_mastery_defaults', { member: 'Hugo' });
+    const removed = await callTool(band.assistant, 'set_mastery_default', {
+      member: band.lea.memberId,
+      instrument: instrumentId,
+      score: null,
     });
 
-    expect(saved).toEqual({ isError: false, body: row });
-    expect(listed.defaults).toEqual([row]);
+    expect(saved).toEqual({
+      isError: false,
+      body: { member: 'Léa', instrument: 'bass', score: DEFAULT_SCORE },
+    });
+    expect(listed.body).toEqual({
+      defaults: [{ member: 'Léa', instrument: 'Bass', score: DEFAULT_SCORE }],
+    });
+    expect(others.body).toEqual({ defaults: [] });
     expect(removed).toEqual({
       isError: false,
-      body: { memberId: band.lea.memberId, instrumentId, deleted: true },
+      body: { member: band.lea.memberId, instrument: instrumentId },
     });
   });
 
   it('sets a score for one song, records it in the history, then removes it', async () => {
     const band = await prepareAssistantBand();
-    const { instrumentId, songId } = await seedInstrumentAndSong(band);
-    const key = { memberId: band.lea.memberId, instrumentId, songId };
+    const { songId } = await seedInstrumentAndSong(band);
+    const key = { song: 'Creep', member: 'Léa', instrument: 'Bass' };
 
-    const saved = await callTool(band.assistant, 'set_mastery_override', {
+    const saved = await callTool(band.assistant, 'set_song_mastery', {
       ...key,
       score: OVERRIDE_SCORE,
     });
-    const overrides = overridesBodySchema.parse(
-      (await callTool(band.assistant, 'list_mastery_overrides', { songId })).body,
-    );
-    const history = historyBodySchema.parse(
-      (await callTool(band.assistant, 'get_mastery_history', { songId })).body,
-    );
-    const removed = await callTool(band.assistant, 'delete_mastery_override', key);
+    const read = await callTool(band.assistant, 'get_song_mastery', { song: 'creep' });
+    const withHistory = await callTool(band.assistant, 'get_song_mastery', {
+      song: songId,
+      history: true,
+    });
+    const removed = await callTool(band.assistant, 'set_song_mastery', { ...key, score: null });
 
-    expect(saved).toEqual({ isError: false, body: { ...key, score: OVERRIDE_SCORE } });
-    expect(overrides.overrides).toEqual([{ ...key, score: OVERRIDE_SCORE }]);
-    expect(history.changes.map((change) => change.score)).toEqual([OVERRIDE_SCORE]);
-    expect(removed).toEqual({ isError: false, body: { ...key, deleted: true } });
+    expect(saved).toEqual({
+      isError: false,
+      body: { songId, member: 'Léa', instrument: 'Bass', score: OVERRIDE_SCORE },
+    });
+    expect(read.body).toEqual({
+      overrides: [{ member: 'Léa', instrument: 'Bass', score: OVERRIDE_SCORE }],
+    });
+    expect(withHistory.body).toMatchObject({
+      history: [{ member: 'Léa', instrument: 'Bass', score: OVERRIDE_SCORE }],
+    });
+    expect(removed).toEqual({
+      isError: false,
+      body: { songId, member: 'Léa', instrument: 'Bass' },
+    });
   });
 
   it('answers not-found when the score to remove does not exist, as the routes do', async () => {
     const band = await prepareAssistantBand();
-    const key = { memberId: band.lea.memberId, instrumentId: randomUUID() };
+    await seedInstrumentAndSong(band);
+    const key = { member: band.lea.memberId, instrument: randomUUID() };
 
-    expect(await callTool(band.assistant, 'delete_mastery_default', key)).toEqual(
+    expect(await callTool(band.assistant, 'set_mastery_default', { ...key, score: null })).toEqual(
       refusal('not-found'),
     );
     expect(
-      await callTool(band.assistant, 'delete_mastery_override', { ...key, songId: randomUUID() }),
+      await callTool(band.assistant, 'set_song_mastery', { ...key, song: 'Creep', score: null }),
     ).toEqual(refusal('not-found'));
+    expect(
+      await callTool(band.assistant, 'set_mastery_default', {
+        member: 'Marc',
+        instrument: 'Bass',
+        score: 3,
+      }),
+    ).toEqual({ isError: true, body: { error: 'member-not-found', reference: 'Marc' } });
   });
 });

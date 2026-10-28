@@ -13,8 +13,8 @@ const PHONE = '+33 6 12 34 56 78';
 const signedInMemberSchema = z.object({
   memberId: z.string(),
   firstName: z.string(),
-  phone: z.string().nullable(),
-  email: z.string().nullable(),
+  phone: z.string().nullable().optional(),
+  email: z.string().nullable().optional(),
 });
 
 /**
@@ -34,9 +34,9 @@ describe('me tools (back-e2e)', () => {
     );
 
     expect(signedIn).toMatchObject({ memberId: band.hugo.memberId, firstName: 'Hugo' });
-    expect(signedInMemberSchema.parse(updated.body)).toMatchObject({
-      memberId: band.hugo.memberId,
-      phone: PHONE,
+    expect(updated).toEqual({
+      isError: false,
+      body: { id: band.hugo.memberId, updated: ['phone'] },
     });
     expect(lea.phone).toBeNull();
   });

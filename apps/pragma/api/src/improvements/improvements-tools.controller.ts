@@ -1,85 +1,78 @@
 import { z } from 'zod';
 import {
   improvementCreateSchema,
-  improvementIdParamSchema,
+  improvementReferenceToolInputSchema,
   improvementUpdateToolInputSchema,
+  improvementVoteToolInputSchema,
 } from './improvements.schema';
 import {
-  castVote,
+  confirmUpdate,
   createImprovement,
   defineTool,
-  getImprovementsRanked,
+  getImprovementsForTool,
   patchImprovement,
   removeImprovement,
-  withdrawVote,
+  resolveImprovementId,
+  setImprovementVote,
 } from './improvements.service';
 
 // @FollowsBlueprint controller-dispatch
 export const IMPROVEMENT_TOOLS = [
   defineTool({
     name: 'list_improvements',
-    description:
-      "List the band's improvement ideas, ranked by votes, each saying whether you voted for it.",
-    route: 'GET /api/improvements',
+    description: "List the band's improvement ideas, ranked by votes, with whether you voted.",
+    routes: ['GET /api/improvements'],
     inputSchema: z.object({}),
     run: async (_input, actor) => ({
       kind: 'answered',
-      body: { improvements: await getImprovementsRanked(actor.memberId) },
+      body: { improvements: await getImprovementsForTool(actor.memberId) },
     }),
   }),
   defineTool({
     name: 'create_improvement',
-    description: 'Propose an improvement for the band, as you.',
-    route: 'POST /api/improvements',
+    description: 'Propose an improvement, as you.',
+    routes: ['POST /api/improvements'],
     inputSchema: improvementCreateSchema,
-    run: async (input, actor) => ({
-      kind: 'answered',
-      body: { improvement: await createImprovement(input, actor.memberId, actor.now) },
-    }),
+    run: async (input, actor) => {
+      const improvement = await createImprovement(input, actor.memberId, actor.now);
+      return { kind: 'answered', body: { id: improvement.id } };
+    },
   }),
   defineTool({
     name: 'update_improvement',
-    description: 'Change the fields given of the improvement `id`; give at least one.',
-    route: 'PUT /api/improvements/:id',
+    description: 'Change the fields given of an improvement, named by title or id.',
+    routes: ['PUT /api/improvements/:id'],
     inputSchema: improvementUpdateToolInputSchema,
-    run: async ({ id, ...changes }, actor) => {
+    run: async ({ improvement, ...changes }, actor) => {
+      const id = await resolveImprovementId(improvement);
       const outcome = await patchImprovement(id, changes, actor.memberId);
       if (outcome.kind === 'empty') return { kind: 'refused', body: { error: 'empty-update' } };
       if (outcome.kind === 'not-found') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { improvement: outcome.improvement } };
+      return { kind: 'answered', body: confirmUpdate(id, changes) };
     },
   }),
   defineTool({
     name: 'delete_improvement',
-    description: 'Delete the improvement `id` and its votes.',
-    route: 'DELETE /api/improvements/:id',
-    inputSchema: improvementIdParamSchema,
-    run: async ({ id }) => {
+    description: 'Delete an improvement and its votes.',
+    routes: ['DELETE /api/improvements/:id'],
+    inputSchema: improvementReferenceToolInputSchema,
+    run: async ({ improvement }) => {
+      const id = await resolveImprovementId(improvement);
       const outcome = await removeImprovement(id);
       if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
       return { kind: 'answered', body: { id, deleted: true } };
     },
   }),
   defineTool({
-    name: 'vote_for_improvement',
-    description: 'Vote, as you, for the improvement `id`. Voting twice keeps one vote.',
-    route: 'PUT /api/improvements/:id/vote',
-    inputSchema: improvementIdParamSchema,
-    run: async ({ id }, actor) => {
-      const improvement = await castVote(id, actor.memberId, actor.now);
-      if (improvement === null) return { kind: 'refused', body: { error: 'not-found' } };
-      return { kind: 'answered', body: { improvement } };
-    },
-  }),
-  defineTool({
-    name: 'withdraw_improvement_vote',
-    description: 'Withdraw your vote for the improvement `id`.',
-    route: 'DELETE /api/improvements/:id/vote',
-    inputSchema: improvementIdParamSchema,
-    run: async ({ id }, actor) => {
-      const improvement = await withdrawVote(id, actor.memberId);
-      if (improvement === null) return { kind: 'refused', body: { error: 'not-found' } };
-      return { kind: 'answered', body: { improvement } };
+    name: 'vote_on_improvement',
+    description: 'Vote for an improvement as you (`vote: true`), or withdraw your vote.',
+    routes: ['PUT /api/improvements/:id/vote', 'DELETE /api/improvements/:id/vote'],
+    inputSchema: improvementVoteToolInputSchema,
+    run: async ({ improvement, vote }, actor) => {
+      const id = await resolveImprovementId(improvement);
+      const view = await setImprovementVote(id, vote, actor.memberId, actor.now);
+      if (view === null) return { kind: 'refused', body: { error: 'not-found' } };
+      return { kind: 'answered', body: { id, votes: view.votes, mine: view.mine } };
     },
   }),
 ];

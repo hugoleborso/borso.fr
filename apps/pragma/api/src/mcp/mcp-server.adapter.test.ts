@@ -12,6 +12,7 @@ import { z } from 'zod';
 import type { TaggedFailure } from '../helpers/observability/error-reporting.adapter';
 import { answerMcpRequest } from './mcp-server.adapter';
 import type { ToolActor, ToolDefinition } from './mcp.types';
+import { ToolRefusedError } from './tool-refusal.core';
 
 const SERVER_URL = 'http://localhost/mcp';
 const ACTOR: ToolActor = {
@@ -23,7 +24,7 @@ const echoInputSchema = z.object({ title: z.string().min(1) });
 const ECHO_TOOL: ToolDefinition<typeof echoInputSchema> = {
   name: 'echo_title',
   description: 'Answers the title it was given.',
-  route: 'POST /api/echo',
+  routes: ['POST /api/echo'],
   inputSchema: echoInputSchema,
   run: async ({ title }, actor) =>
     await Promise.resolve({ kind: 'answered', body: { title, memberId: actor.memberId } }),
@@ -31,14 +32,22 @@ const ECHO_TOOL: ToolDefinition<typeof echoInputSchema> = {
 const REFUSING_TOOL: ToolDefinition = {
   name: 'refuse',
   description: 'Always refuses.',
-  route: 'GET /api/refuse',
+  routes: ['GET /api/refuse'],
   inputSchema: z.object({}),
   run: async () => await Promise.resolve({ kind: 'refused', body: { error: 'not-found' } }),
+};
+const THROWN_REFUSAL_TOOL: ToolDefinition = {
+  name: 'resolve',
+  description: 'Always refuses by throwing, as a reference that resolves to nothing does.',
+  routes: ['GET /api/resolve'],
+  inputSchema: z.object({}),
+  run: async () =>
+    await Promise.reject(new ToolRefusedError({ error: 'song-not-found', reference: 'Creep' })),
 };
 const THROWING_TOOL: ToolDefinition = {
   name: 'explode',
   description: 'Always throws.',
-  route: 'GET /api/explode',
+  routes: ['GET /api/explode'],
   inputSchema: z.object({}),
   run: async () => await Promise.reject(new RangeError('database went away')),
 };
@@ -48,7 +57,7 @@ const toolEventSchema = z.object({ event: z.literal('mcp_tool_called'), tool: z.
 function buildServerApp(reportFailure: (failure: TaggedFailure) => void): Hono {
   return new Hono().post('/mcp', async (context) =>
     answerMcpRequest(context, {
-      tools: [ECHO_TOOL, REFUSING_TOOL, THROWING_TOOL],
+      tools: [ECHO_TOOL, REFUSING_TOOL, THROWN_REFUSAL_TOOL, THROWING_TOOL],
       actor: ACTOR,
       reportFailure,
     }),
@@ -96,7 +105,7 @@ describe('answerMcpRequest', () => {
 
     const { tools } = await client.listTools();
 
-    expect(tools.map((tool) => tool.name)).toEqual(['echo_title', 'refuse', 'explode']);
+    expect(tools.map((tool) => tool.name)).toEqual(['echo_title', 'refuse', 'resolve', 'explode']);
     expect(tools[0]?.inputSchema).toMatchObject({
       type: 'object',
       properties: { title: { type: 'string', minLength: 1 } },
@@ -131,6 +140,23 @@ describe('answerMcpRequest', () => {
     });
     expect(readToolEvents(write)).toEqual([
       { event: 'mcp_tool_called', tool: 'refuse', outcome: 'refused' },
+    ]);
+  });
+
+  it('answers a thrown refusal as a tool error, never reported as a failure', async () => {
+    const write = vi.spyOn(process.stdout, 'write').mockImplementation(() => true);
+    const reportFailure = vi.fn<(failure: TaggedFailure) => void>();
+    const client = await connectClient(buildServerApp(reportFailure));
+
+    const refusal = await client.callTool({ name: 'resolve', arguments: {} });
+
+    expect(refusal).toEqual({
+      isError: true,
+      content: [{ type: 'text', text: '{"error":"song-not-found","reference":"Creep"}' }],
+    });
+    expect(reportFailure).not.toHaveBeenCalled();
+    expect(readToolEvents(write)).toEqual([
+      { event: 'mcp_tool_called', tool: 'resolve', outcome: 'refused' },
     ]);
   });
 

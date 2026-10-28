@@ -1,42 +1,41 @@
 import { z } from 'zod';
-import { studyLogSchema, studyPathSchema } from './studies.schema';
-import { defineTool, logStudy, readStudiesOverview, undoStudy } from './studies.service';
+import { studyToolInputSchema } from './studies.schema';
+import {
+  defineTool,
+  describeOwnLine,
+  readStudiesOverviewForTool,
+  writeStudyForTool,
+} from './studies.service';
 
 // @FollowsBlueprint controller-dispatch
 export const STUDY_TOOLS = [
   defineTool({
     name: 'get_studies_overview',
     description:
-      "Read your study queue, your streak and the band's streaks, and the readiness of the next concert.",
-    route: 'GET /api/studies/overview',
+      "Read your study queue, your streak and the band's, and which songs of the next concert are ready.",
+    routes: ['GET /api/studies/overview'],
     inputSchema: z.object({}),
     run: async (_input, actor) => ({
       kind: 'answered',
-      body: await readStudiesOverview(actor.memberId, actor.now),
+      body: await readStudiesOverviewForTool(actor.memberId, actor.now),
     }),
   }),
   defineTool({
     name: 'log_study',
     description:
-      'Record that you worked the song `songId` on the instrument `instrumentId` today. The instrument must be yours in a lineup of the song; a second call on the same day changes nothing.',
-    route: 'POST /api/studies',
-    inputSchema: studyLogSchema,
-    run: async (input, actor) => {
-      const outcome = await logStudy({ ...input, memberId: actor.memberId, now: actor.now });
+      'Record that you worked a song on one of your instruments in its lineup today (titles, names or ids); `undo` removes today’s record.',
+    routes: ['POST /api/studies', 'DELETE /api/studies/:songId/:instrumentId'],
+    inputSchema: studyToolInputSchema,
+    run: async ({ song, instrument, undo }, actor) => {
+      const outcome = await writeStudyForTool({
+        songReference: song,
+        instrumentReference: instrument,
+        isUndoing: undo === true,
+        memberId: actor.memberId,
+        now: actor.now,
+      });
       if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { study: outcome.study, myLine: outcome.myLine } };
-    },
-  }),
-  defineTool({
-    name: 'undo_study',
-    description:
-      'Remove the study you recorded today for the song `songId` on the instrument `instrumentId`.',
-    route: 'DELETE /api/studies/:songId/:instrumentId',
-    inputSchema: studyPathSchema,
-    run: async (input, actor) => {
-      const outcome = await undoStudy({ ...input, memberId: actor.memberId, now: actor.now });
-      if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { myLine: outcome.myLine } };
+      return { kind: 'answered', body: describeOwnLine(outcome.myLine) };
     },
   }),
 ];

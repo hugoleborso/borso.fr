@@ -1,3 +1,5 @@
+import { resolveReference } from '../mcp/mcp.service';
+import { type BarFilter, type BarSummary, summarizeBars } from './bar-tool.core';
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
@@ -90,4 +92,14 @@ export async function removeBar(id: string): Promise<DeletionOutcome> {
   return await deleteBar(id);
 }
 
-export { defineTool } from '../mcp/mcp.service';
+export async function listBarsForTool(filter: BarFilter): Promise<BarSummary[]> {
+  return summarizeBars(await getBarsSortedByName(), filter);
+}
+
+export async function resolveBarId(reference: string): Promise<string> {
+  return await resolveReference('bar', reference, async () =>
+    (await getBarsSortedByName()).map((bar) => ({ id: bar.id, label: bar.name })),
+  );
+}
+
+export { confirmUpdate, defineTool } from '../mcp/mcp.service';

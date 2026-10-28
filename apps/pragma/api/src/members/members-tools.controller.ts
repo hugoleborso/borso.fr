@@ -1,84 +1,85 @@
 import { z } from 'zod';
 import {
   createMemberSchema,
-  memberIdParamSchema,
   memberInstrumentAssignmentToolInputSchema,
+  memberReferenceToolInputSchema,
   memberUpdateToolInputSchema,
 } from './members.schema';
 import {
   assignInstrumentsToMember,
+  confirmUpdate,
   createMember,
   defineTool,
-  getMemberInstruments,
-  getMembersSortedByFirstName,
+  getMembersForTool,
   patchMember,
   removeMember,
+  resolveInstrumentIds,
+  resolveMemberId,
+  resolveOptionalInstrumentIds,
 } from './members.service';
 
 // @FollowsBlueprint controller-dispatch
 export const MEMBER_TOOLS = [
   defineTool({
     name: 'list_members',
-    description: 'List the members of the band, by first name.',
-    route: 'GET /api/members',
+    description: 'List the members by first name, with the instruments each plays.',
+    routes: ['GET /api/members', 'GET /api/members/:id/instruments'],
     inputSchema: z.object({}),
-    run: async () => ({ kind: 'answered', body: { members: await getMembersSortedByFirstName() } }),
+    run: async () => ({ kind: 'answered', body: { members: await getMembersForTool() } }),
   }),
   defineTool({
     name: 'create_member',
     description: 'Add a member to the band.',
-    route: 'POST /api/members',
+    routes: ['POST /api/members'],
     inputSchema: createMemberSchema,
-    run: async (input) => ({ kind: 'answered', body: { member: await createMember(input) } }),
+    run: async (input) => {
+      const member = await createMember(input);
+      return { kind: 'answered', body: { id: member.id, firstName: member.firstName } };
+    },
   }),
   defineTool({
     name: 'update_member',
-    description: 'Change the fields given of the member `id`; give at least one.',
-    route: 'PUT /api/members/:id',
+    description: 'Change the fields given of a member.',
+    routes: ['PUT /api/members/:id'],
     inputSchema: memberUpdateToolInputSchema,
-    run: async ({ id, ...changes }) => {
+    run: async ({ member, ...changes }) => {
+      const id = await resolveMemberId(member);
       const outcome = await patchMember(id, changes);
       if (outcome.kind === 'empty') return { kind: 'refused', body: { error: 'empty-update' } };
       if (outcome.kind === 'not-found') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { member: outcome.member } };
+      return { kind: 'answered', body: confirmUpdate(id, changes) };
     },
   }),
   defineTool({
     name: 'delete_member',
-    description: 'Remove the member `id` from the band.',
-    route: 'DELETE /api/members/:id',
-    inputSchema: memberIdParamSchema,
-    run: async ({ id }) => {
+    description: 'Remove a member from the band.',
+    routes: ['DELETE /api/members/:id'],
+    inputSchema: memberReferenceToolInputSchema,
+    run: async ({ member }) => {
+      const id = await resolveMemberId(member);
       const outcome = await removeMember(id);
       if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
       return { kind: 'answered', body: { id, deleted: true } };
     },
   }),
   defineTool({
-    name: 'list_member_instruments',
-    description: 'List the instruments the member `id` plays, and which are their main ones.',
-    route: 'GET /api/members/:id/instruments',
-    inputSchema: memberIdParamSchema,
-    run: async ({ id }) => ({
-      kind: 'answered',
-      body: { instruments: await getMemberInstruments(id) },
-    }),
-  }),
-  defineTool({
     name: 'set_member_instruments',
     description:
-      'Replace the instruments the member `id` plays with `instrumentIds`; `primaryInstrumentIds` names their main ones among them.',
-    route: 'PUT /api/members/:id/instruments',
+      'Replace the instruments a member plays with `instruments`; `main` names their main ones.',
+    routes: ['PUT /api/members/:id/instruments'],
     inputSchema: memberInstrumentAssignmentToolInputSchema,
-    run: async ({ id, instrumentIds, primaryInstrumentIds }) => {
-      const outcome = await assignInstrumentsToMember(id, instrumentIds, primaryInstrumentIds);
+    run: async ({ member, instruments, main }) => {
+      const id = await resolveMemberId(member);
+      const instrumentIds = await resolveInstrumentIds(instruments);
+      const mainIds = await resolveOptionalInstrumentIds(main);
+      const outcome = await assignInstrumentsToMember(id, instrumentIds, mainIds);
       if (outcome.kind === 'member-not-found') {
         return { kind: 'refused', body: { error: 'not-found' } };
       }
       if (outcome.kind === 'instrument-not-found') {
         return { kind: 'refused', body: { error: outcome.kind } };
       }
-      return { kind: 'answered', body: { id, instrumentIds } };
+      return { kind: 'answered', body: { id, instruments } };
     },
   }),
 ];

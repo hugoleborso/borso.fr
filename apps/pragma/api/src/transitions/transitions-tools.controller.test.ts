@@ -17,10 +17,7 @@ import {
   subscribeDevice,
 } from '../../../test/push-utils';
 
-const songBodySchema = z.object({ song: z.object({ id: z.string().uuid() }) });
-const commentsBodySchema = z.object({
-  comments: z.array(z.object({ songAId: z.string(), songBId: z.string(), comment: z.string() })),
-});
+const songBodySchema = z.object({ id: z.string().uuid() });
 
 /**
  * @FollowsBlueprint test-back-e2e
@@ -49,40 +46,47 @@ describe('transitions tools (back-e2e)', () => {
     const assistant = await openMcpClient(harness.app, tokens.accessToken);
     const songAId = songBodySchema.parse(
       (await callTool(assistant, 'create_song', { title: 'Creep', status: 'idea' })).body,
-    ).song.id;
+    ).id;
     const songBId = songBodySchema.parse(
       (await callTool(assistant, 'create_song', { title: 'Karma Police', status: 'idea' })).body,
-    ).song.id;
+    ).id;
 
     const written = await callTool(assistant, 'set_transition_comment', {
-      a: songAId,
-      b: songBId,
+      from: 'creep',
+      to: 'Karma Police',
       comment: 'drop the last chorus',
     });
     const sent = readSentNotifications(send);
-    const read = await callTool(assistant, 'get_transition_comment', { a: songAId, b: songBId });
-    const listed = commentsBodySchema.parse(
-      (await callTool(assistant, 'list_transition_comments')).body,
-    );
-    const deleted = await callTool(assistant, 'delete_transition_comment', {
-      a: songAId,
-      b: songBId,
+    const read = await callTool(assistant, 'list_transition_comments', {
+      from: 'Creep',
+      to: songBId,
     });
-    const gone = await callTool(assistant, 'get_transition_comment', { a: songAId, b: songBId });
+    const listed = await callTool(assistant, 'list_transition_comments');
+    const deleted = await callTool(assistant, 'set_transition_comment', {
+      from: songAId,
+      to: songBId,
+      comment: null,
+    });
+    const gone = await callTool(assistant, 'list_transition_comments', { from: 'Creep' });
 
     expect(written).toEqual({
       isError: false,
-      body: { songAId, songBId, comment: 'drop the last chorus' },
+      body: { fromId: songAId, toId: songBId, comment: 'drop the last chorus' },
     });
     expect(sent.map((notification) => notification.endpoint)).toEqual([
       deviceEndpoint('lea-phone'),
     ]);
-    expect(read.isError).toBe(false);
-    expect(listed.comments).toEqual([
-      expect.objectContaining({ songAId, songBId, comment: 'drop the last chorus' }),
-    ]);
-    expect(deleted).toEqual({ isError: false, body: { songAId, songBId, deleted: true } });
-    expect(gone).toEqual({ isError: true, body: { error: 'not-found' } });
+    const comment = {
+      from: 'Creep',
+      to: 'Karma Police',
+      fromId: songAId,
+      toId: songBId,
+      comment: 'drop the last chorus',
+    };
+    expect(read.body).toEqual({ comments: [comment] });
+    expect(listed.body).toEqual({ comments: [comment] });
+    expect(deleted).toEqual({ isError: false, body: { fromId: songAId, toId: songBId } });
+    expect(gone.body).toEqual({ comments: [] });
   });
 
   it('answers not-found when deleting a comment that does not exist', async () => {
@@ -91,9 +95,10 @@ describe('transitions tools (back-e2e)', () => {
     const tokens = await connectAssistant(harness.app, hugo);
     const assistant = await openMcpClient(harness.app, tokens.accessToken);
 
-    const deleted = await callTool(assistant, 'delete_transition_comment', {
-      a: randomUUID(),
-      b: randomUUID(),
+    const deleted = await callTool(assistant, 'set_transition_comment', {
+      from: randomUUID(),
+      to: randomUUID(),
+      comment: null,
     });
 
     expect(deleted).toEqual({ isError: true, body: { error: 'not-found' } });

@@ -1,6 +1,7 @@
 import { TRANSITION_COMMENT_MAX_LENGTH } from '@domain/input-limits.core';
 import { pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { referenceSchema } from '../mcp/tool-input.schema';
 
 // @FollowsBlueprint schema-table-and-input
 export const transitionCommentTable = pgTable(
@@ -24,6 +25,12 @@ export const transitionCommentBodySchema = z.object({
   comment: z.string().trim().min(1).max(TRANSITION_COMMENT_MAX_LENGTH),
 });
 
-export const transitionCommentToolInputSchema = transitionPairParamSchema.merge(
-  transitionCommentBodySchema,
-);
+export const transitionListToolInputSchema = z.object({
+  from: referenceSchema.optional(),
+  to: referenceSchema.optional(),
+});
+export const transitionCommentToolInputSchema = z.object({
+  from: referenceSchema,
+  to: referenceSchema,
+  comment: transitionCommentBodySchema.shape.comment.nullable(),
+});
