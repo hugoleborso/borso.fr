@@ -204,3 +204,42 @@ export function settleAppendedEntries<TEntry extends MinimalSetlistEntry>(
     return settleAppendedEntry(current, temporaryId, settled);
   }, cache);
 }
+
+// @FollowsBlueprint utils-pure-module
+export function insertEntryAt<TEntry extends MinimalSetlistEntry>(
+  cache: EntriesCache<TEntry>,
+  entry: TEntry,
+  index: number,
+): EntriesCache<TEntry> {
+  const others = cache.entries.filter((existing) => existing.id !== entry.id);
+  const placed = [...others.slice(0, index), entry, ...others.slice(index)];
+  return { entries: placed.map((current, position) => ({ ...current, position })) };
+}
+
+// @FollowsBlueprint utils-pure-module
+export function placeEntryIdAt(
+  entryIds: readonly string[],
+  placedId: string,
+  index: number,
+): string[] {
+  const others = entryIds.filter((entryId) => entryId !== placedId);
+  return [...others.slice(0, index), placedId, ...others.slice(index)];
+}
+
+// @FollowsBlueprint utils-pure-module
+export function settleRestoredEntry<TEntry extends MinimalSetlistEntry>(
+  cache: EntriesCache<TEntry>,
+  placeholderId: string,
+  restored: TEntry,
+  index: number,
+): EntriesCache<TEntry> {
+  return insertEntryAt(removeEntryById(cache, placeholderId), restored, index);
+}
+
+// @FollowsBlueprint utils-pure-module
+export function toWritableLineup(lineup: Lineup | null): Record<string, string[]> | null {
+  if (lineup === null) return null;
+  return Object.fromEntries(
+    Object.entries(lineup).map(([memberId, instrumentIds]) => [memberId, [...instrumentIds]]),
+  );
+}

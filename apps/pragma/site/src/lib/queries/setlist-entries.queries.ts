@@ -7,11 +7,16 @@ import {
   appendOptimisticSongs,
   applyEntryPatch,
   type EntriesCache,
+  insertEntryAt,
+  type MinimalSetlistEntry,
   type OptimisticSongAppend,
+  placeEntryIdAt,
   removeEntryById,
   reorderEntriesByIds,
   settleAppendedEntries,
+  settleRestoredEntry,
   toEntryPatch,
+  toWritableLineup,
 } from './setlists.utils';
 
 interface OptimisticContext {
@@ -26,6 +31,7 @@ function snapshotEntries(
 }
 
 const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
+const ENTRY_REMOVAL_SCOPE = { id: 'setlist-entry-removal' } as const;
 
 async function fetchSetlistEntries(setlistId: string) {
   const response = await api.api.setlists[':id'].entries.$get({
@@ -158,6 +164,7 @@ export function useDeleteSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ENTRY_MUTATION_KEY,
+    scope: ENTRY_REMOVAL_SCOPE,
     mutationFn: async (variables: { setlistId: string; entryId: string }) => {
       const response = await api.api.setlists[':id'].entries[':entryId'].$delete({
         param: { id: variables.setlistId, entryId: variables.entryId },
@@ -181,6 +188,90 @@ export function useDeleteSetlistEntry() {
           context.previous,
         );
       }
+    },
+  });
+}
+
+export interface RestoreSetlistEntryVariables {
+  readonly setlistId: string;
+  readonly entry: MinimalSetlistEntry;
+  readonly index: number;
+}
+
+async function placeRestoredEntry(
+  setlistId: string,
+  entryIds: readonly string[],
+  restoredId: string,
+  index: number,
+): Promise<number> {
+  const placedIds = placeEntryIdAt(entryIds, restoredId, index);
+  if (placedIds.at(-1) === restoredId) return placedIds.length - 1;
+  const response = await api.api.setlists[':id'].reorder.$put({
+    param: { id: setlistId },
+    json: { entryIds: placedIds },
+  });
+  return response.ok ? placedIds.indexOf(restoredId) : placedIds.length - 1;
+}
+
+// @FollowsBlueprint query-optimistic-insert
+export function useRestoreSetlistEntry() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationKey: ENTRY_MUTATION_KEY,
+    scope: ENTRY_REMOVAL_SCOPE,
+    mutationFn: async (variables: RestoreSetlistEntryVariables) => {
+      const { entry } = variables;
+      const response = await api.api.setlists[':id'].entries.$post({
+        param: { id: variables.setlistId },
+        json: {
+          songId: entry.songId,
+          energy: entry.energy,
+          keyOverride: entry.keyOverride,
+          capo: entry.capo,
+          notes: entry.notes,
+          lineupOverride: toWritableLineup(entry.lineupOverride),
+        },
+      });
+      if (!isResponseSuccessful(response))
+        throw new ApiError(response.status, `restore ${response.status}`, null);
+      const { entry: restored } = await response.json();
+      const otherIds = (snapshotEntries(queryClient, variables.setlistId)?.entries ?? [])
+        .map((cached) => cached.id)
+        .filter((cachedId) => cachedId !== entry.id);
+      const index = await placeRestoredEntry(
+        variables.setlistId,
+        otherIds,
+        restored.id,
+        variables.index,
+      );
+      return { restored, index };
+    },
+    onMutate: async (variables): Promise<OptimisticContext> => {
+      const key = setlistKeys.entriesOf(variables.setlistId);
+      await queryClient.cancelQueries({ queryKey: key });
+      const previous = snapshotEntries(queryClient, variables.setlistId);
+      if (previous !== undefined) {
+        queryClient.setQueryData<EntriesCache>(
+          key,
+          insertEntryAt(previous, variables.entry, variables.index),
+        );
+      }
+      return { previous };
+    },
+    onError: (_error, variables, context) => {
+      if (context?.previous !== undefined) {
+        queryClient.setQueryData<EntriesCache>(
+          setlistKeys.entriesOf(variables.setlistId),
+          context.previous,
+        );
+      }
+    },
+    onSuccess: (data, variables) => {
+      queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(variables.setlistId), (cache) =>
+        cache === undefined
+          ? cache
+          : settleRestoredEntry(cache, variables.entry.id, data.restored, data.index),
+      );
     },
   });
 }

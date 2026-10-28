@@ -8,15 +8,19 @@ import { useMembersList } from '../../lib/queries/members.queries';
 import {
   type SetlistEntryPatch,
   useDeleteSetlistEntry,
+  useRestoreSetlistEntry,
   useSetlistEntries,
   useUpdateSetlistEntry,
 } from '../../lib/queries/setlist-entries.queries';
+import type { MinimalSetlistEntry } from '../../lib/queries/setlists.utils';
 import { useSongsList, useUpdateSong } from '../../lib/queries/songs.queries';
 import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
 import { BottomActions } from '../atoms/BottomActions';
 import { Button } from '../atoms/Button';
 import { ButtonLink } from '../atoms/ButtonLink';
 import { SectionTabs } from '../molecules/SectionTabs';
+import { useTimedOffer } from '../molecules/timed-offer.hook';
+import { UndoSnackbar } from '../molecules/UndoSnackbar';
 import { indexLineupChangesTonight } from './entry-lineup-change.core';
 import { buildLineupGrid } from './lineup-grid.core';
 import { RecordingSheetDialogs } from './RecordingSheet';
@@ -52,11 +56,19 @@ interface OpenEntry {
   readonly focus: EntrySheetFocus;
 }
 
+interface RemovedEntry {
+  readonly entry: MinimalSetlistEntry;
+  readonly index: number;
+  readonly title: string;
+}
+
 const NO_ROWS: readonly never[] = [];
+const UNDO_WINDOW_MS = 6_000;
 
 type SetlistFailureKey =
   | 'setlist.failure.load'
   | 'setlist.failure.remove'
+  | 'setlist.failure.restore'
   | 'setlist.failure.update'
   | 'setlist.failure.songDefaults';
 
@@ -77,6 +89,8 @@ export function SetlistEditor({
   const commentsQuery = useTransitionCommentsList();
   const updateEntry = useUpdateSetlistEntry();
   const removeEntry = useDeleteSetlistEntry();
+  const restoreEntry = useRestoreSetlistEntry();
+  const removal = useTimedOffer<RemovedEntry>(UNDO_WINDOW_MS);
   const updateSong = useUpdateSong();
   const recording = useRecordingSheet();
 
@@ -144,6 +158,22 @@ export function SetlistEditor({
     );
   };
 
+  const removeSetlistEntry = (entryId: string): void => {
+    const index = setlistEntries.findIndex((entry) => entry.id === entryId);
+    const entry = setlistEntries[index];
+    if (entry === undefined) return;
+    removeEntry.mutate({ setlistId, entryId }, { onError: failWith('setlist.failure.remove') });
+    removal.present({ entry, index, title: songsById[entry.songId]?.title ?? '' });
+  };
+
+  const undoRemoval = (removed: RemovedEntry): void => {
+    removal.withdraw();
+    restoreEntry.mutate(
+      { setlistId, entry: removed.entry, index: removed.index },
+      { onError: failWith('setlist.failure.restore') },
+    );
+  };
+
   const saveSetlistEntry = async (entryId: string, patch: SetlistEntryPatch): Promise<unknown> =>
     updateEntry.mutateAsync({ setlistId, entryId, ...patch });
 
@@ -153,6 +183,7 @@ export function SetlistEditor({
 
   const displayFailureKey =
     failureKey ?? (entriesQuery.error === null ? null : 'setlist.failure.load');
+  const offeredRemoval = removal.offered;
   const openedIndex =
     openEntry === null ? -1 : setlistEntries.findIndex((entry) => entry.id === openEntry.entryId);
   const openedEntry = setlistEntries[openedIndex];
@@ -173,9 +204,7 @@ export function SetlistEditor({
       lineupChangesByEntryId={lineupChangesByEntryId}
       onAddSongs={() => setPickerOpen(true)}
       onOpen={(entryId) => setOpenEntry({ entryId, focus: 'note' })}
-      onRemove={(entryId) =>
-        removeEntry.mutate({ setlistId, entryId }, { onError: failWith('setlist.failure.remove') })
-      }
+      onRemove={removeSetlistEntry}
       onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
     />
   );
@@ -275,6 +304,13 @@ export function SetlistEditor({
         />
       )}
       <RecordingSheetDialogs controller={recording} />
+      {offeredRemoval === null ? null : (
+        <UndoSnackbar
+          message={t('setlist.removed', { title: offeredRemoval.title })}
+          undoLabel={t('setlist.undoRemove')}
+          onUndo={() => undoRemoval(offeredRemoval)}
+        />
+      )}
     </div>
   );
 }

@@ -500,7 +500,8 @@
       "attach": "La setlist n’a pas été liée à cette session. Vérifie la connexion et réessaie.",
       "detach": "La setlist n’a pas été détachée. Vérifie la connexion et réessaie.",
       "openVote": "Le vote n’a pas été ouvert. Vérifiez la connexion et réessayez.",
-      "addSongs": "Les morceaux n’ont pas été ajoutés. Vérifie la connexion et réessaie."
+      "addSongs": "Les morceaux n’ont pas été ajoutés. Vérifie la connexion et réessaie.",
+      "restore": "Le morceau n’a pas été remis. Vérifiez la connexion et ajoutez-le à nouveau."
     },
     "indexEmpty": "Aucune setlist pour l’instant — crée la première.",
     "key": "Ton",
@@ -577,7 +578,9 @@
     "energyCurve": "Courbe d’énergie",
     "averageEnergy": "Énergie moyenne {{value}}",
     "energyStep": "Énergie {{step}} sur 5",
-    "orderEmpty": "Aucun morceau à ordonner pour l’instant."
+    "orderEmpty": "Aucun morceau à ordonner pour l’instant.",
+    "removed": "« {{title}} » retiré de la setlist",
+    "undoRemove": "Annuler"
   },
   "shell": {
     "meVersion": "Pragma · v0.1"

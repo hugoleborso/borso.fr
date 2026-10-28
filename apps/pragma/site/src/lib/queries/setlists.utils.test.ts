@@ -6,10 +6,14 @@ import {
   applyEntryPatch,
   applySessionLinkInCache,
   type EntriesCache,
+  insertEntryAt,
   type MinimalSetlistEntry,
   type MinimalSetlistSummary,
+  placeEntryIdAt,
   removeEntryById,
   removeSetlistFromCache,
+  settleRestoredEntry,
+  toWritableLineup,
   renameSetlistInCache,
   reorderEntriesByIds,
   selectSetlistsNotOnSession,
@@ -350,5 +354,69 @@ describe('settleAppendedEntries', () => {
       [{ id: 'entry-a', position: 0 }],
     );
     expect(settled.entries.map((entry) => entry.id)).toEqual(['entry-a', 'temporary-b']);
+  });
+});
+
+describe('insertEntryAt', () => {
+  it('puts the entry back at its index and renumbers every position', () => {
+    const cache: EntriesCache = {
+      entries: [makeEntry({ id: 'a', position: 0 }), makeEntry({ id: 'c', position: 1 })],
+    };
+    const restored = makeEntry({ id: 'b', position: 7, notes: 'slow down' });
+    const restoredCache = insertEntryAt(cache, restored, 1);
+    expect(restoredCache.entries.map((entry) => [entry.id, entry.position])).toEqual([
+      ['a', 0],
+      ['b', 1],
+      ['c', 2],
+    ]);
+    expect(restoredCache.entries[1]?.notes).toBe('slow down');
+  });
+
+  it('does not duplicate an entry the cache already holds', () => {
+    const cache: EntriesCache = { entries: [makeEntry({ id: 'a' }), makeEntry({ id: 'b' })] };
+    const restoredCache = insertEntryAt(cache, makeEntry({ id: 'b' }), 0);
+    expect(restoredCache.entries.map((entry) => entry.id)).toEqual(['b', 'a']);
+  });
+});
+
+describe('placeEntryIdAt', () => {
+  it('places the id at the index among the others', () => {
+    expect(placeEntryIdAt(['a', 'c', 'n'], 'n', 1)).toEqual(['a', 'n', 'c']);
+  });
+
+  it('appends when the index is past the end', () => {
+    expect(placeEntryIdAt(['a'], 'n', 5)).toEqual(['a', 'n']);
+  });
+});
+
+describe('settleRestoredEntry', () => {
+  it('swaps the placeholder for the stored entry at its index', () => {
+    const cache: EntriesCache = {
+      entries: [makeEntry({ id: 'a' }), makeEntry({ id: 'old' }), makeEntry({ id: 'c' })],
+    };
+    const settledCache = settleRestoredEntry(
+      cache,
+      'old',
+      makeEntry({ id: 'new', notes: 'kept' }),
+      1,
+    );
+    expect(settledCache.entries.map((entry) => [entry.id, entry.position])).toEqual([
+      ['a', 0],
+      ['new', 1],
+      ['c', 2],
+    ]);
+    expect(settledCache.entries[1]?.notes).toBe('kept');
+  });
+});
+
+describe('toWritableLineup', () => {
+  it('copies each member instruments into a writable list', () => {
+    expect(toWritableLineup({ member: ['guitar', 'voice'] })).toEqual({
+      member: ['guitar', 'voice'],
+    });
+  });
+
+  it('keeps an absent lineup absent', () => {
+    expect(toWritableLineup(null)).toBeNull();
   });
 });

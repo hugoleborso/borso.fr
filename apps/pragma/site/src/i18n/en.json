@@ -500,7 +500,8 @@
       "attach": "The setlist was not attached to this session. Check the connection and try again.",
       "detach": "The setlist was not detached. Check the connection and try again.",
       "openVote": "The vote was not opened. Check the connection and try again.",
-      "addSongs": "The songs were not added. Check the connection and try again."
+      "addSongs": "The songs were not added. Check the connection and try again.",
+      "restore": "The song was not put back. Check the connection and add it again."
     },
     "indexEmpty": "No setlist yet — write the first one.",
     "key": "Key",
@@ -577,7 +578,9 @@
     "energyCurve": "Energy curve",
     "averageEnergy": "Average energy {{value}}",
     "energyStep": "Energy {{step}} of 5",
-    "orderEmpty": "No song to order yet."
+    "orderEmpty": "No song to order yet.",
+    "removed": "“{{title}}” removed from the setlist",
+    "undoRemove": "Undo"
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
