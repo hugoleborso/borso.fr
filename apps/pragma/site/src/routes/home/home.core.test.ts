@@ -75,7 +75,7 @@ describe('buildHomeView', () => {
   });
 
   it('knows no total without a setlist', () => {
-    expect(buildHomeView({ ...INPUT, setlist: null, entries: [] }).totalSeconds).toBeNull();
+    expect(buildHomeView({ ...INPUT, setlist: null }).totalSeconds).toBeNull();
   });
 
   it('keeps the open tasks of the member in the order given', () => {
@@ -92,7 +92,11 @@ describe('buildHomeView', () => {
   });
 
   it('shows no part and no task to an account with no member row', () => {
-    const view = buildHomeView({ ...INPUT, tasks: [task({})], memberId: null });
+    const view = buildHomeView({
+      ...INPUT,
+      tasks: [task({}), task({ id: 'unclaimed', assigneeId: null })],
+      memberId: null,
+    });
     expect(view.memberPart).toEqual([]);
     expect(view.memberTasks).toEqual([]);
   });

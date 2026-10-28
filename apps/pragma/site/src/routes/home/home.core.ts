@@ -51,7 +51,6 @@ function selectMemberPart(
   input: HomeViewInput,
   songsById: Readonly<Record<string, HomeSong>>,
 ): readonly MemberPartRow[] {
-  if (input.memberId === null) return [];
   const filtered = filterEntriesForMember(input.entries, songsById, input.memberId);
   const partsByEntryId = describeMemberPartsByEntryId(
     filtered.instrumentIdsByEntryId,
@@ -60,6 +59,7 @@ function selectMemberPart(
   return input.entries.flatMap((entry) => {
     const parts = partsByEntryId[entry.id];
     const song = songsById[entry.songId];
+    // Stryker disable next-line ConditionalExpression: equivalent mutant, an entry has parts only when filterEntriesForMember found its song, so the song is always there once the parts are.
     if (parts === undefined || song === undefined) return [];
     return [{ entryId: entry.id, songTitle: song.title, parts }];
   });
@@ -105,7 +105,7 @@ export interface HomePrimaryActionInput {
 
 // @FollowsBlueprint core-view-intent
 export function selectHomePrimaryAction(input: HomePrimaryActionInput): HomePrimaryAction {
-  if (input.nextSessionId !== null && input.setlistId !== null) {
+  if (input.setlistId !== null) {
     return {
       link: { to: `/setlists/${input.setlistId}`, labelKey: 'home.openSetlist' },
       isNewSessionOffered: false,
