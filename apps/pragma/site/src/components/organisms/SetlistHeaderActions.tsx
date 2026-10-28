@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useDeleteSetlist, useRenameSetlist } from '../../lib/queries/setlists.queries';
+import { useSetVoteStatus } from '../../lib/queries/voting.queries';
 import { Button } from '../atoms/Button';
 import { IconButton } from '../atoms/IconButton';
 import { Input } from '../atoms/Input';
@@ -40,6 +41,13 @@ export function SetlistHeaderActions({
   const navigateTo = useNavigateTo();
   const renameSetlist = useRenameSetlist();
   const deleteSetlist = useDeleteSetlist();
+  const setVoteStatus = useSetVoteStatus(setlistId);
+  const goToVote = (): void => navigateTo(`/setlists/${setlistId}/vote`);
+  const voteActionByStatus = {
+    voting: goToVote,
+    locked: () =>
+      setVoteStatus.mutate({ status: 'voting', targetSongCount: null }, { onSuccess: goToVote }),
+  } as const satisfies Readonly<Record<SetlistStatus, () => void>>;
   const [draftName, setDraftName] = useState<string | null>(null);
   const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
 
@@ -70,7 +78,7 @@ export function SetlistHeaderActions({
               label: t(VOTE_LABEL_BY_STATUS[status]),
               icon: 'vote',
               tone: 'default',
-              onSelect: () => navigateTo(`/setlists/${setlistId}/vote`),
+              onSelect: voteActionByStatus[status],
             },
             ...(isConcert
               ? [
@@ -126,6 +134,11 @@ export function SetlistHeaderActions({
       {renameSetlist.isError ? (
         <p className="text-danger text-meta" role="alert">
           {t('setlist.failure.rename')}
+        </p>
+      ) : null}
+      {setVoteStatus.isError ? (
+        <p className="text-danger text-meta" role="alert">
+          {t('setlist.failure.openVote')}
         </p>
       ) : null}
       {deleteSetlist.isError ? (

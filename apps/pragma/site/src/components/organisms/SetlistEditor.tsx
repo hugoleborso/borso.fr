@@ -200,7 +200,7 @@ export function SetlistEditor({
   );
 
   return (
-    <div className="flex flex-col gap-3">
+    <div className="flex flex-col gap-2">
       <SectionTabs
         label={t('setlist.viewLabel')}
         tabs={[

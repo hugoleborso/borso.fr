@@ -25,6 +25,7 @@ export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps
       onClick={onOpenNote}
       aria-label={hasNote ? t('setlist.editTransitionNote') : t('setlist.noteTransition')}
       isChevronShown={false}
+      data-transition-line
       data-transition-risky={isRisky ? true : undefined}
       className={LINE_CLASS}
     >

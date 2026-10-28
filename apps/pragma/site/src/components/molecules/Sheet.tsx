@@ -11,6 +11,7 @@ export interface SheetProps extends SheetVariantProps {
   readonly onClose: () => void;
   readonly children: ReactNode;
   readonly headerExtra?: ReactNode;
+  readonly subheader?: ReactNode;
   readonly footer?: ReactNode;
   readonly isDismissible?: boolean;
   readonly isTitleARecordName?: boolean;
@@ -34,6 +35,7 @@ export function Sheet({
   onClose,
   children,
   headerExtra,
+  subheader,
   footer,
   size,
   isDismissible = true,
@@ -81,6 +83,7 @@ export function Sheet({
           onClick={onClose}
         />
       </header>
+      {subheader === undefined ? null : <div className="shrink-0 px-4 pb-2">{subheader}</div>}
       {onSubmit === undefined ? (
         content
       ) : (

@@ -65,6 +65,20 @@ describe('Sheet', () => {
     expect(container.querySelector('footer')?.textContent).toBe('Save');
   });
 
+  it('keeps a subheader outside the scroll body, so it stays in view', () => {
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={vi.fn()} subheader={<p>Key and capo</p>}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    const subheader = Array.from(container.querySelectorAll('p')).find(
+      (paragraph) => paragraph.textContent === 'Key and capo',
+    );
+    expect(subheader?.closest('[data-sheet-body]')).toBeNull();
+    expect(subheader?.closest('dialog')).not.toBeNull();
+  });
+
   it('puts the focus in the first field rather than on Close', () => {
     renderSheet(
       root,

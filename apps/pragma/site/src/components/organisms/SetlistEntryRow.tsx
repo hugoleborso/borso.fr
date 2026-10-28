@@ -11,7 +11,7 @@ import { IconButton } from '../atoms/IconButton';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { LineupSlots } from '../molecules/LineupSlots';
 import { ListRow } from '../molecules/ListRow';
-import type { LineupColumnView } from '../molecules/lineup-slots.core';
+import { type LineupColumnView, naturalColumnWidth } from '../molecules/lineup-slots.core';
 import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 import { Menu } from '../molecules/Menu';
 
@@ -92,29 +92,32 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
             <span className="block min-w-0 flex-auto">
               <span className={TITLE_CLASS}>{props.title}</span>
               <span className="flex min-w-0 items-center gap-1.5 text-label text-ink-soft">
-                <span className="truncate">{props.artist}</span>
-                {keyParts.length === 0 ? null : (
-                  <span className="shrink-0 font-mono">{keyParts.join(' · ')}</span>
+                {props.isMemberView ? null : (
+                  <span
+                    className="inline-flex min-w-6 shrink"
+                    style={{ flexBasis: naturalColumnWidth(props.lineupColumn) }}
+                  >
+                    <LineupSlots column={props.lineupColumn} />
+                  </span>
                 )}
+                <span className="min-w-0 flex-1 truncate">
+                  {props.artist}
+                  {keyParts.length === 0 ? null : (
+                    <span className="font-mono">{` · ${keyParts.join(' · ')}`}</span>
+                  )}
+                </span>
               </span>
             </span>
             {props.isMemberView ? (
               <span className="flex shrink-0 items-center pr-1">
                 <MemberPartGlyphs parts={props.memberPart} size="md" />
               </span>
-            ) : (
-              <span className="hidden min-w-0 shrink sm:inline-flex">
-                <LineupSlots column={props.lineupColumn} />
-              </span>
-            )}
+            ) : null}
           </span>
-          {props.isMemberView ? null : (
-            <span className="flex min-w-0 pl-7 sm:hidden">
-              <LineupSlots column={props.lineupColumn} />
-            </span>
-          )}
           {props.notes.length === 0 ? null : (
-            <span className="pl-7 font-display text-body text-ink italic">{props.notes}</span>
+            <span className="pl-7 font-display text-body leading-snug text-ink italic">
+              {props.notes}
+            </span>
           )}
           {changeLabel.length === 0 ? null : (
             <span className="flex pl-7">

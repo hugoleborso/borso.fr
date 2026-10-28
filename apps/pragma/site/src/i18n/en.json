@@ -469,7 +469,8 @@
       "rename": "The new name was not saved. Check the connection and try again.",
       "delete": "The setlist was not deleted. Check the connection and try again.",
       "attach": "The setlist was not attached to this session. Check the connection and try again.",
-      "detach": "The setlist was not detached. Check the connection and try again."
+      "detach": "The setlist was not detached. Check the connection and try again.",
+      "openVote": "The vote was not opened. Check the connection and try again."
     },
     "indexEmpty": "No setlist yet — write the first one.",
     "key": "Key",
@@ -581,8 +582,8 @@
     "untitled": "Unnamed setlist",
     "backToVote": "Back to the vote",
     "pageTitle": "Vote on the songs",
-    "howItRunsScore": "Each member spends a budget of points on the songs they want to play.",
-    "howItRunsClose": "Closing the vote turns the best scored songs into this setlist."
+    "howItRunsScore": "Each member spends points on the songs they want.",
+    "howItRunsClose": "Closing the vote keeps the top songs as this setlist."
   },
   "audience": {
     "pageCrumb": "Tonight",

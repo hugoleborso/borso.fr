@@ -41,7 +41,7 @@ export function VoteCatalogRow({
         aria-label={t('voting.tapToScore', { title })}
         isChevronShown={false}
         leading={<AlbumCover title={title} deezerAlbumId={deezerAlbumId} size="sm" />}
-        className="min-h-14 rounded-md bg-leaf px-3 py-2 shadow-leaf select-none"
+        className="min-h-12 border-b border-rule px-1 py-1 select-none"
       >
         <span className="min-w-0 flex-1">
           <span className="block truncate text-ink">{title}</span>

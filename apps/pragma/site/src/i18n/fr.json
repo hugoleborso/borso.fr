@@ -469,7 +469,8 @@
       "rename": "Le nouveau nom n’a pas été enregistré. Vérifie la connexion et réessaie.",
       "delete": "La setlist n’a pas été supprimée. Vérifie la connexion et réessaie.",
       "attach": "La setlist n’a pas été liée à cette session. Vérifie la connexion et réessaie.",
-      "detach": "La setlist n’a pas été détachée. Vérifie la connexion et réessaie."
+      "detach": "La setlist n’a pas été détachée. Vérifie la connexion et réessaie.",
+      "openVote": "Le vote n’a pas été ouvert. Vérifiez la connexion et réessayez."
     },
     "indexEmpty": "Aucune setlist pour l’instant — crée la première.",
     "key": "Ton",
@@ -581,8 +582,8 @@
     "untitled": "Setlist sans nom",
     "backToVote": "Revenir au vote",
     "pageTitle": "Voter pour les morceaux",
-    "howItRunsScore": "Chaque membre répartit un budget de points sur les morceaux qu’il veut jouer.",
-    "howItRunsClose": "Clore le vote fait des morceaux les mieux notés cette setlist."
+    "howItRunsScore": "Chacun répartit ses points sur les morceaux voulus.",
+    "howItRunsClose": "Clore le vote garde les meilleurs dans cette setlist."
   },
   "audience": {
     "pageCrumb": "Ce soir",

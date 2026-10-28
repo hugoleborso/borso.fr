@@ -49,7 +49,7 @@ export function VoteCatalog({
   }
 
   return (
-    <ul className="flex flex-col gap-2 px-4 m-0 p-0 list-none">
+    <ul className="m-0 flex list-none flex-col px-4 py-0">
       {songs.map((song) => {
         const points = readGivenPoints(pointsBySongId, song.id);
         return (

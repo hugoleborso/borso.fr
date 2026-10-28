@@ -146,6 +146,13 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
       }
       label={song.title}
       isTitleARecordName
+      subheader={
+        <SetlistEntryKeyCapoFields
+          form={form}
+          onKeyType={keySave.type}
+          onCapoType={capoSave.type}
+        />
+      }
       onClose={close}
       footer={
         <>
@@ -159,11 +166,6 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
       }
     >
       <div className="flex flex-col gap-4">
-        <SetlistEntryKeyCapoFields
-          form={form}
-          onKeyType={keySave.type}
-          onCapoType={capoSave.type}
-        />
         <InlineLineupEditor
           rows={lineupRows}
           instruments={props.instruments}

@@ -76,7 +76,7 @@ describe('a setlist row', () => {
   it('shows its position, its song, the key and capo, and the band lineup', () => {
     renderRow(buildProps({ keyLabel: 'Am', capo: 2 }));
     expect(screen.getByText('02')).toBeTruthy();
-    expect(screen.getByText('Am · capo 2')).toBeTruthy();
+    expect(screen.getByText('· Am · capo 2')).toBeTruthy();
     expect(screen.queryAllByTitle('Drums').length).toBeGreaterThan(0);
   });
 
