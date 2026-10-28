@@ -4,7 +4,7 @@ introduced-at: implementation
 detected-at: operator-deploy
 severity: medium
 related-pr: '#202'
-fix-pr: '#206'
+fix-pr: '#217'
 fix-commits: [self]
 eradication-level: 2
 eradication-paths: [.claude/hooks/pretool-merge-deploys-prod.sh, plugins/borso-harness/scripts/check-hook-decisions.sh]
@@ -79,7 +79,7 @@ being about the knowledge-trigger hook, which is where it was learned.
 **Type:** DevX check (level 2 — the table that proved the first half now asks
 the second)
 
-**Reference:** PR #206 · commit `self`
+**Reference:** PR #217 · commit `self`
 
 **The actual fix:** the hook answers on the channel the model reads.
 
