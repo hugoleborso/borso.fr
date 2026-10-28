@@ -9,8 +9,10 @@ import { Button } from '../atoms/Button';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
+import { createSheetDraftStore } from '../../lib/sheet-draft.store';
 import {
   type SongDefaults,
+  type SongDefaultsFormValues,
   type SongDefaultsPatch,
   songDefaultsFormSchema,
   songDefaultsFromFormValues,
@@ -22,6 +24,7 @@ export type { SongDefaults, SongDefaultsPatch };
 
 export interface SongDefaultsDialogProps {
   readonly open: boolean;
+  readonly songId: string;
   readonly songTitle: string;
   readonly defaults: SongDefaults;
   readonly onSave: (defaults: SongDefaults) => void;
@@ -31,6 +34,8 @@ export interface SongDefaultsDialogProps {
 const LABEL_CLASS = 'flex flex-col gap-1 text-label tracking-wider uppercase text-ink-soft';
 const FIELD_CLASS = composeClassName(inputVariants({ size: 'sm' }), 'font-mono');
 
+const useSongDefaultsDraft = createSheetDraftStore<SongDefaultsFormValues>();
+
 // @FollowsBlueprint molecule-dialog-form
 export function SongDefaultsDialog(props: SongDefaultsDialogProps): JSX.Element | null {
   if (!props.open) return null;
@@ -38,26 +43,34 @@ export function SongDefaultsDialog(props: SongDefaultsDialogProps): JSX.Element 
 }
 
 function SongDefaultsDialogContent({
+  songId,
   songTitle,
   defaults,
   onSave,
   onClose,
 }: SongDefaultsDialogProps): JSX.Element {
   const { t } = useTranslation();
+  const kept = useSongDefaultsDraft(songId);
   const form = useForm({
-    defaultValues: songDefaultsToFormValues(defaults),
+    defaultValues: kept.draft ?? songDefaultsToFormValues(defaults),
     validators: { onChange: songDefaultsFormSchema },
     onSubmit: ({ value }) => {
+      kept.discard();
       onSave(songDefaultsFromFormValues(value));
       onClose();
     },
   });
 
+  const closeKeepingDraft = (): void => {
+    if (form.state.isDirty && !form.state.isSubmitSuccessful) kept.keep(form.state.values);
+    onClose();
+  };
+
   return (
     <Sheet
       title={t('songDefaults.title', { title: songTitle })}
       label={t('songDefaults.title', { title: songTitle })}
-      onClose={onClose}
+      onClose={closeKeepingDraft}
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();

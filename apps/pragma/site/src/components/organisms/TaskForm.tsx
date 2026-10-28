@@ -14,6 +14,7 @@ import { MemberChip } from '../molecules/MemberChip';
 import { Sheet } from '../molecules/Sheet';
 import { inputVariants } from '../atoms/input.variants';
 import { TASK_STATUS_LABEL_KEY } from '../../routes/tasks/tasks-page.core';
+import { createSheetDraftStore } from '../../lib/sheet-draft.store';
 
 export interface TaskFormValues {
   readonly title: string;
@@ -25,6 +26,7 @@ export interface TaskFormValues {
 }
 
 export interface TaskFormProps {
+  readonly draftKey: string;
   readonly values: TaskFormValues;
   readonly isEditing: boolean;
   readonly members: readonly {
@@ -47,6 +49,8 @@ const TASK_STATUS_ICON = {
 } as const satisfies Readonly<Record<TaskStatus, IconName>>;
 const NOTES_ROWS = 3;
 
+const useTaskDraft = createSheetDraftStore<TaskFormValues>();
+
 function compositionIdFromValue(value: string): string | null {
   return value === NO_COMPOSITION_VALUE ? null : value;
 }
@@ -54,12 +58,19 @@ function compositionIdFromValue(value: string): string | null {
 // @FollowsBlueprint organism-form
 export function TaskForm(props: TaskFormProps): JSX.Element {
   const { t } = useTranslation();
+  const kept = useTaskDraft(props.draftKey);
   const form = useForm({
-    defaultValues: props.values,
+    defaultValues: kept.draft ?? props.values,
     onSubmit: async ({ value }) => {
       await props.onSubmit(value);
+      kept.discard();
     },
   });
+
+  const closeKeepingDraft = (): void => {
+    if (form.state.isDirty && !form.state.isSubmitSuccessful) kept.keep(form.state.values);
+    props.onClose();
+  };
 
   const sheetTitle = t(props.isEditing ? 'tasks.editTitle' : 'tasks.newTitle');
 
@@ -67,7 +78,7 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
     <Sheet
       title={sheetTitle}
       label={sheetTitle}
-      onClose={props.onClose}
+      onClose={closeKeepingDraft}
       onSubmit={(event) => {
         event.preventDefault();
         event.stopPropagation();

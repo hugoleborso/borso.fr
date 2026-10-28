@@ -30,6 +30,7 @@ function buildProps(memberPart: readonly MemberPartGlyph[]): SetlistEntryRowProp
   return {
     position: 1,
     entryId: 'entry-1',
+    songId: 'song-1',
     title: 'Superstition',
     deezerAlbumId: null,
     deezerTrackId: '3135556',

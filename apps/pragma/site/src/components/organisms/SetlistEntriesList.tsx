@@ -160,6 +160,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 memberPart={props.memberPartByEntryId[entry.id] ?? NO_MEMBER_PART}
                 isMemberView={props.inFilteredMode}
                 entryId={entry.id}
+                songId={entry.songId}
                 title={song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}
                 deezerAlbumId={song?.deezerAlbumId ?? null}
                 deezerTrackId={song?.deezerTrackId ?? null}

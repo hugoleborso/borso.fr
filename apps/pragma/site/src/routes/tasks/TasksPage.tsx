@@ -35,6 +35,7 @@ import {
 } from './tasks-page.core';
 
 const NO_ROWS: readonly never[] = [];
+const NEW_TASK_DRAFT_KEY = 'new';
 
 // @FollowsBlueprint route-list-page
 export function TasksPage(): JSX.Element {
@@ -163,7 +164,8 @@ export function TasksPage(): JSX.Element {
       </div>
       {isSheetOpen ? (
         <TaskForm
-          key={editedTaskId ?? 'new'}
+          key={editedTaskId ?? NEW_TASK_DRAFT_KEY}
+          draftKey={editedTaskId ?? NEW_TASK_DRAFT_KEY}
           values={formValues}
           isEditing={editedTaskId !== null}
           members={members}

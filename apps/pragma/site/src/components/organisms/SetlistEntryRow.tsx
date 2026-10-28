@@ -57,6 +57,7 @@ const NARROW_LINEUP_CLASS =
 export interface SetlistEntryRowProps {
   readonly position: number;
   readonly entryId: string;
+  readonly songId: string;
   readonly title: string;
   readonly deezerAlbumId: string | null;
   readonly deezerTrackId: string | null;
@@ -269,6 +270,7 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
       />
       <SongDefaultsDialog
         open={songDefaultsOpen}
+        songId={props.songId}
         songTitle={props.title}
         defaults={props.songDefaults}
         onSave={(defaults) => props.onUpdateSongDefaults(defaults)}
