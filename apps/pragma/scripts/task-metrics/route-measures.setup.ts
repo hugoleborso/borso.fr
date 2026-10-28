@@ -86,14 +86,23 @@ async function measureRoute(
   };
 }
 
+const LONG_CHART_SONG_TITLE = 'Afterglow';
+
+export function findLongChartSong<
+  Song extends { readonly title: string; readonly chart?: unknown },
+>(songs: readonly Song[]): Song | undefined {
+  return (
+    songs.find((song) => song.title === LONG_CHART_SONG_TITLE && Boolean(song.chart)) ??
+    songs.find((song) => Boolean(song.chart))
+  );
+}
+
 export async function buildSignedInRoutePlan(driver: BandSessionDriver): Promise<{
   readonly songUsed: string;
   readonly routes: readonly RouteTarget[];
 }> {
   const known = await driver.readKnownRecords();
-  const chartSong =
-    known.songs.find((song) => song.title === 'Afterglow' && Boolean(song.chart)) ??
-    known.songs.find((song) => Boolean(song.chart));
+  const chartSong = findLongChartSong(known.songs);
   if (chartSong === undefined) throw new Error('no song with a chart in the seed');
   const pastPractice = known.sessions.find((session) => session.kind === 'practice');
   const concertId = known.concert.id;

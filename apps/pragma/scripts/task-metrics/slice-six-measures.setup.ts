@@ -5,7 +5,7 @@ import {
   COUNT_LISTEN_LINKS,
   COUNT_STAGE_MODE_WAYS,
 } from './page-probes.setup';
-import { buildSignedInRoutePlan } from './route-measures.setup';
+import { buildSignedInRoutePlan, findLongChartSong } from './route-measures.setup';
 import { readScrollAreas, waitMilliseconds } from './walk-recorder.setup';
 
 const ROUTE_SETTLE_MS = 900;
@@ -62,7 +62,7 @@ export async function measureSliceSix(driver: BandSessionDriver): Promise<Record
   const known = await driver.startFresh('/catalog');
   await waitMilliseconds(ROUTE_SETTLE_MS);
   const catalogue = await readScrollAreas(driver.session);
-  const chartSong = known.songs.find((song) => Boolean(song.chart)) ?? known.songs[0];
+  const chartSong = findLongChartSong(known.songs) ?? known.songs[0];
   if (chartSong === undefined) throw new Error('no song in the seed');
   await measureOpenedRoute(driver, `/catalog/${chartSong.id}`);
   const stageModeWays = z.number().parse(await driver.session.evaluate(COUNT_STAGE_MODE_WAYS));
