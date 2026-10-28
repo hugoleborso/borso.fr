@@ -202,6 +202,10 @@ describe('describePracticePosition', () => {
     });
   });
 
+  it('never throws on an index before the first song', () => {
+    expect(() => describePracticePosition(SONGS, -1)).not.toThrow();
+  });
+
   it('holds no current song when the practice has none', () => {
     expect(describePracticePosition([], 0)).toMatchObject({ current: null, count: 0 });
   });

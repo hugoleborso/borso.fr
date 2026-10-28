@@ -82,6 +82,7 @@ const storedPracticePositionSchema = z.object({
 
 // @FollowsBlueprint core-persisted-slice-parsed-not-trusted
 export function parseStoredPracticePosition(text: string | null): StoredPracticePosition | null {
+  // Stryker disable next-line ConditionalExpression: equivalent mutant. JSON.parse reads null as the JSON value null, which the schema refuses, so the function answers null either way.
   if (text === null) return null;
   try {
     const storedValue: unknown = JSON.parse(text);
@@ -238,8 +239,9 @@ export function formatPracticeNextLine(next: PracticeNextView | null): string | 
 export function buildPracticeScreen(input: PracticeScreenInput): PracticeScreen {
   const position = describePracticePosition(input.songs, input.index);
   const next = describeNext(position, input.songsById);
-  const entry = position.current === null ? undefined : input.entriesById[position.current.entryId];
-  if (position.current === null || entry === undefined) return { position, current: null, next };
+  if (position.current === null) return { position, current: null, next };
+  const entry = input.entriesById[position.current.entryId];
+  if (entry === undefined) return { position, current: null, next };
   const song = input.songsById[entry.songId];
   const transitionNote =
     position.next === null

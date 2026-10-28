@@ -109,6 +109,13 @@ describe('buildHomeView', () => {
     ).toEqual(['urgent', 'for-next', 'for-later']);
   });
 
+  it('keeps the given order with no next session, even for a task linked to no session', () => {
+    const tasks = [task({ id: 'for-later', sessionId: 'later-session' }), task({ id: 'urgent' })];
+    expect(
+      buildHomeView({ ...INPUT, tasks, nextSessionId: null }).memberTasks.map((row) => row.id),
+    ).toEqual(['for-later', 'urgent']);
+  });
+
   it('shows no part and no task to an account with no member row', () => {
     const view = buildHomeView({
       ...INPUT,
@@ -173,6 +180,17 @@ describe('selectHomePrimaryAction', () => {
         isLoading: false,
         nextSessionId: null,
         setlistId: null,
+      }),
+    ).toEqual({ link: null, isNewSessionOffered: true });
+  });
+
+  it('starts no practice when no session is ahead, whatever the offer says', () => {
+    expect(
+      selectHomePrimaryAction({
+        isLoading: false,
+        nextSessionId: null,
+        setlistId: null,
+        isPracticeModeOffered: true,
       }),
     ).toEqual({ link: null, isNewSessionOffered: true });
   });

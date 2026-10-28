@@ -1,17 +1,18 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
-type SceneScrollModule = typeof import('./scene-scroll.adapter');
+import {
+  attachSceneScrollBody,
+  scrollCurrentPillIntoView,
+  scrollSceneBodyToTop,
+  startSceneAutoScroll,
+  stopSceneAutoScroll,
+} from './scene-scroll.adapter';
 
 const ONE_SECOND_MS = 1000;
 const SLOW_SPEED_PX_PER_SECOND = 10;
 const READABLE_SPEED_PX_PER_SECOND = 60;
 const HALF_TICK_MS = 25;
 const ONE_TICK_MS = 50;
-
-async function freshModule(): Promise<SceneScrollModule> {
-  vi.resetModules();
-  return await import('./scene-scroll.adapter');
-}
 
 function scrollableElement(): HTMLElement {
   const element = document.createElement('div');
@@ -25,12 +26,12 @@ describe('scene auto-scroll', () => {
   });
 
   afterEach(() => {
+    attachSceneScrollBody(null);
     vi.useRealTimers();
     document.body.replaceChildren();
   });
 
-  it('advances the attached body by the requested speed over a second', async () => {
-    const { attachSceneScrollBody, startSceneAutoScroll } = await freshModule();
+  it('advances the attached body by the requested speed over a second', () => {
     const body = scrollableElement();
     attachSceneScrollBody(body);
     startSceneAutoScroll(READABLE_SPEED_PX_PER_SECOND);
@@ -38,8 +39,7 @@ describe('scene auto-scroll', () => {
     expect(body.scrollTop).toBe(READABLE_SPEED_PX_PER_SECOND);
   });
 
-  it('carries the fraction of a pixel a slow tick does not fill', async () => {
-    const { attachSceneScrollBody, startSceneAutoScroll } = await freshModule();
+  it('carries the fraction of a pixel a slow tick does not fill', () => {
     const body = scrollableElement();
     attachSceneScrollBody(body);
     startSceneAutoScroll(SLOW_SPEED_PX_PER_SECOND);
@@ -49,8 +49,7 @@ describe('scene auto-scroll', () => {
     expect(body.scrollTop).toBe(1);
   });
 
-  it('stops when the body detaches, which is what unmounting the scene does', async () => {
-    const { attachSceneScrollBody, startSceneAutoScroll } = await freshModule();
+  it('stops when the body detaches, which is what unmounting the scene does', () => {
     const body = scrollableElement();
     attachSceneScrollBody(body);
     startSceneAutoScroll(READABLE_SPEED_PX_PER_SECOND);
@@ -61,8 +60,7 @@ describe('scene auto-scroll', () => {
     expect(body.scrollTop).toBe(READABLE_SPEED_PX_PER_SECOND);
   });
 
-  it('keeps scrolling when a second body attaches, which a re-render can do', async () => {
-    const { attachSceneScrollBody, startSceneAutoScroll } = await freshModule();
+  it('keeps scrolling when a second body attaches, which a re-render can do', () => {
     const first = scrollableElement();
     const second = scrollableElement();
     attachSceneScrollBody(first);
@@ -73,8 +71,7 @@ describe('scene auto-scroll', () => {
     expect(first.scrollTop).toBe(0);
   });
 
-  it('replaces the running timer rather than adding a second one', async () => {
-    const { attachSceneScrollBody, startSceneAutoScroll } = await freshModule();
+  it('replaces the running timer rather than adding a second one', () => {
     const body = scrollableElement();
     attachSceneScrollBody(body);
     startSceneAutoScroll(SLOW_SPEED_PX_PER_SECOND);
@@ -84,15 +81,12 @@ describe('scene auto-scroll', () => {
     expect(body.scrollTop).toBe(READABLE_SPEED_PX_PER_SECOND);
   });
 
-  it('ticks harmlessly while no body is attached', async () => {
-    const { startSceneAutoScroll } = await freshModule();
+  it('ticks harmlessly while no body is attached', () => {
     startSceneAutoScroll(READABLE_SPEED_PX_PER_SECOND);
     expect(() => vi.advanceTimersByTime(ONE_SECOND_MS)).not.toThrow();
   });
 
-  it('stops on request', async () => {
-    const { attachSceneScrollBody, startSceneAutoScroll, stopSceneAutoScroll } =
-      await freshModule();
+  it('stops on request', () => {
     const body = scrollableElement();
     attachSceneScrollBody(body);
     startSceneAutoScroll(READABLE_SPEED_PX_PER_SECOND);
@@ -102,9 +96,7 @@ describe('scene auto-scroll', () => {
     expect(body.scrollTop).toBe(0);
   });
 
-  it('forgets the carried fraction when it stops', async () => {
-    const { attachSceneScrollBody, startSceneAutoScroll, stopSceneAutoScroll } =
-      await freshModule();
+  it('forgets the carried fraction when it stops', () => {
     const body = scrollableElement();
     attachSceneScrollBody(body);
     startSceneAutoScroll(SLOW_SPEED_PX_PER_SECOND);
@@ -117,8 +109,7 @@ describe('scene auto-scroll', () => {
 });
 
 describe('scrollSceneBodyToTop', () => {
-  it('sends the attached body back to the first line', async () => {
-    const { attachSceneScrollBody, scrollSceneBodyToTop } = await freshModule();
+  it('sends the attached body back to the first line', () => {
     const body = scrollableElement();
     body.scrollTop = 240;
     attachSceneScrollBody(body);
@@ -126,16 +117,14 @@ describe('scrollSceneBodyToTop', () => {
     expect(body.scrollTop).toBe(0);
   });
 
-  it('does nothing with no body attached', async () => {
-    const { attachSceneScrollBody, scrollSceneBodyToTop } = await freshModule();
+  it('does nothing with no body attached', () => {
     attachSceneScrollBody(null);
     expect(() => scrollSceneBodyToTop()).not.toThrow();
   });
 });
 
 describe('scrollCurrentPillIntoView', () => {
-  it('centres the pill React just attached', async () => {
-    const { scrollCurrentPillIntoView } = await freshModule();
+  it('centres the pill React just attached', () => {
     const pill = scrollableElement();
     const scrollIntoView = vi.fn();
     pill.scrollIntoView = scrollIntoView;
@@ -147,8 +136,7 @@ describe('scrollCurrentPillIntoView', () => {
     });
   });
 
-  it('does nothing on the detach call React makes with null', async () => {
-    const { scrollCurrentPillIntoView } = await freshModule();
+  it('does nothing on the detach call React makes with null', () => {
     expect(() => scrollCurrentPillIntoView(null)).not.toThrow();
   });
 });

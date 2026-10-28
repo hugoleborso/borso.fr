@@ -61,10 +61,9 @@ export function buildSetlistPreview(
   });
   return {
     songCount: ordered.length,
-    totalSeconds:
-      ordered.length === 0
-        ? null
-        : sumKnownDurations(ordered.map((entry) => songsById[entry.songId]?.durationSeconds)),
+    totalSeconds: sumKnownDurations(
+      ordered.map((entry) => songsById[entry.songId]?.durationSeconds),
+    ),
     rows,
   };
 }
