@@ -54,8 +54,8 @@ export function projectOrder(
   targetId: string | null,
 ): string[] {
   const fromIndex = orderedIds.indexOf(liftedId);
-  const toIndex = targetId === null ? -1 : orderedIds.indexOf(targetId);
-  if (fromIndex === -1 || toIndex === -1 || fromIndex === toIndex) return [...orderedIds];
+  const toIndex = orderedIds.indexOf(targetId ?? liftedId);
+  if (fromIndex === -1 || toIndex === -1) return [...orderedIds];
   const projected = orderedIds.filter((id) => id !== liftedId);
   projected.splice(toIndex, 0, liftedId);
   return projected;

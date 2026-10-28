@@ -88,6 +88,10 @@ describe('shouldSearchMusicService', () => {
     expect(shouldSearchMusicService(SONGS, 'volt')).toBe(false);
     expect(shouldSearchMusicService(SONGS, '   ')).toBe(false);
   });
+
+  it('does not ask the music service before anything is typed, even with an empty catalogue', () => {
+    expect(shouldSearchMusicService([], '')).toBe(false);
+  });
 });
 
 describe('togglePick', () => {
