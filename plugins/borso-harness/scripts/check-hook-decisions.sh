@@ -314,14 +314,13 @@ run_context_case() {
   status=$?
   set -e
 
-  # An informing hook speaks either through the additionalContext field or on
-  # plain stdout, which Claude Code shows the same way. The needle is looked
-  # for in both, so the table does not have to know which shape a hook picked.
+  # Only additionalContext counts. A hook's plain stdout reaches the debug log
+  # and not the model, so a notice printed there is a notice nobody reads —
+  # this table accepted stdout for one release, and the hook it accepted went
+  # unheard through the merge of PR #202 while every case here passed.
   context="$(jq -r '.hookSpecificOutput.additionalContext // empty' <<<"$output" 2>/dev/null || true)"
-  spoken="$context
-$output"
   case "$expected" in
-    inform) [ "$status" -eq 0 ] && grep -qF -- "$needle" <<<"$spoken" && verdict=ok || verdict=wrong ;;
+    inform) [ "$status" -eq 0 ] && grep -qF -- "$needle" <<<"$context" && verdict=ok || verdict=wrong ;;
     silent) [ "$status" -eq 0 ] && [ -z "$output" ] && verdict=ok || verdict=wrong ;;
     *)
       echo "[check-hook-decisions] unknown expectation '$expected'" >&2
@@ -425,7 +424,7 @@ for hook_path in "$HOOK_DIR"/*.sh "$CLAUDE_PROJECT_DIR"/.claude/hooks/*.sh; do
     "$HOOK_DIR"/*) hook_name="$(basename "$hook_path")" ;;
     *) hook_name=".claude/hooks/$(basename "$hook_path")" ;;
   esac
-  grep -qE 'additionalContext|^cat <<NOTE' "$hook_path" || continue
+  grep -q 'additionalContext' "$hook_path" || continue
   for half in inform silent; do
     if ! grep -q "^run_context_case $hook_name $half " "$SELF"; then
       echo "[check-hook-decisions] $hook_name adds context but has no $half row here." >&2

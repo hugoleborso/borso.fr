@@ -26,6 +26,12 @@
 # the rule, mirrors deploy.yml's own fan-out, and is covered per file, so the
 # hook and a pull-request body cannot answer the question differently.
 #
+# The notice goes back as `additionalContext`, not on stdout. A PreToolUse
+# hook's plain stdout reaches the debug log and not the model, which is how the
+# first fix to this hook half-missed: it started firing on `gh pr merge`, printed
+# the blast radius, and the session merged PR #202 without ever seeing it. A
+# hook that runs and is inaudible is the same defect as a hook that never runs.
+#
 # Best-effort by contract: it ALWAYS exits 0. It never blocks a merge — the
 # operator's instruction is the gate, and a gate that guesses would be the
 # confirmation step CLAUDE.md says not to add.
@@ -78,8 +84,7 @@ else
   SHARED="no — the committed borso-shared template is unchanged in this diff"
 fi
 
-cat <<NOTE
-[merge-deploys-prod] merging pull request $PR into $BASE_BRANCH deploys to production.
+NOTICE="[merge-deploys-prod] merging pull request $PR into $BASE_BRANCH deploys to production.
 
 There is no approval step after this call. Pushing to $BASE_BRANCH runs
 .github/workflows/deploy.yml, which deploys each affected application to prod
@@ -90,7 +95,9 @@ automatically. The merge is the gate, and this call is the merge.
 
 Merge only on an explicit instruction from the operator for THIS pull request.
 After it lands, surface both post-merge follow-ups CLAUDE.md requires: the
-shared-deploy dispatch when the snapshot moved, and /after-task-kaizen.
-NOTE
+shared-deploy dispatch when the snapshot moved, and /after-task-kaizen."
+
+jq -n --arg context "$NOTICE" \
+  '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'
 
 exit 0
