@@ -26,7 +26,6 @@ import {
 } from '../../lib/queries/mastery.queries';
 import { Avatar } from '../atoms/Avatar';
 import { composeClassName } from '../atoms/class-name.utils';
-import { Icon } from '../atoms/Icon';
 import { memberInitial } from '../atoms/member-palette.utils';
 import { ScoreInput } from '../atoms/ScoreInput';
 
@@ -48,24 +47,21 @@ interface MasteryMatrixProps {
 }
 
 interface MatrixRow {
-  readonly member: MasteryMatrixMember;
+  readonly instrument: MasteryMatrixInstrument;
 }
 
-const STICKY_ROW_HEADER_CLASS = 'sticky left-0 z-10 bg-leaf';
-
-const STICKY_ROW_HEADER_BUDGET_CLASS = 'flex items-center max-w-[7rem] sm:max-w-[12rem]';
-
-const STICKY_AVERAGE_CLASS = 'sticky right-0 z-10 bg-leaf border-l border-rule';
-
-const MATRIX_SCROLLER_CLASS =
-  'overflow-x-scroll [&::-webkit-scrollbar]:h-1.5 [&::-webkit-scrollbar-track]:bg-sunk ' +
-  '[&::-webkit-scrollbar-thumb]:rounded-full [&::-webkit-scrollbar-thumb]:bg-rule-strong';
-
-const MATRIX_SCROLL_HINT_CLASS =
-  'sm:hidden text-meta text-ink-soft m-0 mb-2 flex items-center gap-1.5';
+const INSTRUMENT_COLUMN_CLASS = 'w-20 sm:w-44';
+const HEADER_CELL_CLASS = 'px-0.5 pt-1 pb-2 align-bottom border-b border-rule font-normal';
+const SCORE_CELL_CLASS = 'px-0.5 py-1 border-b border-rule text-center align-middle';
+const AVERAGE_CELL_CLASS = 'px-0.5 py-2 text-center font-mono text-meta text-ink-soft';
 
 const DECIMALS = 1;
 const RIGHT_MOUSE_BUTTON = 2;
+const NO_AVERAGE = '—';
+
+function formatAverage(average: number | null): string {
+  return average === null ? NO_AVERAGE : average.toFixed(DECIMALS);
+}
 
 /**
  * @Blueprint organism-table
@@ -121,80 +117,80 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
     [remove, onError],
   );
 
-  const memberRows = useMemo<MatrixRow[]>(() => members.map((member) => ({ member })), [members]);
+  const instrumentRows = useMemo<MatrixRow[]>(
+    () => instruments.map((instrument) => ({ instrument })),
+    [instruments],
+  );
 
   const columns = useMemo<ColumnDef<MatrixRow>[]>(() => {
-    const memberColumn: ColumnDef<MatrixRow> = {
-      id: 'member',
+    const instrumentColumn: ColumnDef<MatrixRow> = {
+      id: 'instrument',
       header: () => null,
       cell: ({ row }) => (
-        <span className={STICKY_ROW_HEADER_BUDGET_CLASS}>
-          <Avatar
-            size="xs"
-            className="mr-2 shrink-0"
-            initials={memberInitial(row.original.member.firstName)}
-            color={row.original.member.color}
-          />
-          <span className="truncate text-ink" title={row.original.member.firstName}>
-            {row.original.member.firstName}
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate text-meta text-ink" title={row.original.instrument.name}>
+            {row.original.instrument.name}
+          </span>
+          <span className="font-mono text-label text-ink-soft">
+            {t('members.columnAverage')}{' '}
+            {formatAverage(columnAverage(row.original.instrument.id, memberIds, scores))}
           </span>
         </span>
       ),
     };
-    const instrumentColumns: ColumnDef<MatrixRow>[] = instruments.map((instrument) => ({
-      id: `inst:${instrument.id}`,
-      header: () => instrument.name,
+    const memberColumns: ColumnDef<MatrixRow>[] = members.map((member) => ({
+      id: `member:${member.id}`,
+      header: () => (
+        <span className="flex min-w-0 flex-col items-center gap-1">
+          <Avatar size="md" initials={memberInitial(member.firstName)} color={member.color} />
+          <span className="w-full truncate text-label text-ink" title={member.firstName}>
+            {member.firstName}
+          </span>
+        </span>
+      ),
       cell: ({ row }: { row: Row<MatrixRow> }) => {
-        const memberId = row.original.member.id;
-        const value = scores[cellKey(memberId, instrument.id)] ?? null;
+        const instrumentId = row.original.instrument.id;
+        const value = scores[cellKey(member.id, instrumentId)] ?? null;
         return (
           <ScoreInput
             value={value}
             minimum={MASTERY_SCORE_MIN}
             maximum={MASTERY_SCORE_MAX}
-            label={`${row.original.member.firstName} ${instrument.name}`}
+            label={`${member.firstName} ${row.original.instrument.name}`}
             onStep={(step) => {
               const next = clampScore((value ?? MASTERY_SCORE_MIN) + step);
               if (next === value) return;
-              writeScore(memberId, instrument.id, next);
+              writeScore(member.id, instrumentId, next);
             }}
             onEdit={(rawValue) => {
               const applyByIntent = {
-                clear: (): void => clearScore(memberId, instrument.id),
+                clear: (): void => clearScore(member.id, instrumentId),
                 write: (): void =>
-                  writeScore(memberId, instrument.id, clampScore(Number(rawValue))),
+                  writeScore(member.id, instrumentId, clampScore(Number(rawValue))),
               } as const;
               applyByIntent[selectScoreEditIntent(rawValue)]();
             }}
             onClear={() => {
-              clearScore(memberId, instrument.id);
+              clearScore(member.id, instrumentId);
             }}
           />
         );
       },
     }));
-    const averageColumn: ColumnDef<MatrixRow> = {
-      id: 'row-average',
-      header: () => t('members.rowAverage'),
-      cell: ({ row }) => {
-        const average = rowAverage(row.original.member.id, instrumentIds, scores);
-        return average === null ? '—' : average.toFixed(DECIMALS);
-      },
-    };
-    return [memberColumn, ...instrumentColumns, averageColumn];
-  }, [instruments, instrumentIds, scores, writeScore, clearScore, t]);
+    return [instrumentColumn, ...memberColumns];
+  }, [members, memberIds, scores, writeScore, clearScore, t]);
 
   // eslint-disable-next-line react-hooks/incompatible-library -- @tanstack/react-table's useReactTable returns functions the React Compiler cannot memoize, so it skips compiling this component; the table object is read only by this component's own JSX below and never handed to a memoized child, so the skip changes nothing observable
   const table = useReactTable({
-    data: memberRows,
+    data: instrumentRows,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
   return (
     <section
-      className="bg-leaf border border-rule rounded-lg p-4"
-      memberRows-testid="mastery-matrix"
+      className="rounded-lg border border-rule bg-leaf p-3 sm:p-4"
+      data-testid="mastery-matrix"
     >
       <h3 className="font-display text-title text-ink m-0 mb-1">
         {t('members.masteryMatrixTitle')}
@@ -205,116 +201,78 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       {members.length === 0 || instruments.length === 0 ? (
         <p className="text-meta text-ink-soft italic">{t('mastery.noData')}</p>
       ) : (
-        <>
-          <p className={MATRIX_SCROLL_HINT_CLASS}>
-            <Icon name="drag" size="sm" />
-            {t('members.masteryMatrixScrollHint')}
-          </p>
-          <div className={MATRIX_SCROLLER_CLASS}>
-            <table className="w-full border-collapse text-meta">
-              <thead>
-                {table.getHeaderGroups().map((headerGroup) => (
-                  <tr key={headerGroup.id}>
-                    {headerGroup.headers.map((header, headerIndex) => {
-                      const isLast = headerIndex === headerGroup.headers.length - 1;
-                      const isFirst = headerIndex === 0;
-                      const className = isFirst
-                        ? STICKY_ROW_HEADER_CLASS
-                        : isLast
-                          ? composeClassName(
-                              'text-right font-medium text-label tracking-wider uppercase text-ink-soft px-3 py-3 border-b border-rule',
-                              STICKY_AVERAGE_CLASS,
-                            )
-                          : 'text-center font-medium text-label tracking-wider uppercase text-ink-soft px-2 py-3 border-b border-rule align-bottom';
+        <div className="overflow-x-auto">
+          <table className="w-full table-fixed border-collapse text-meta">
+            <thead>
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header, headerIndex) => (
+                    <th
+                      key={header.id}
+                      scope="col"
+                      className={composeClassName(
+                        HEADER_CELL_CLASS,
+                        headerIndex === 0 && INSTRUMENT_COLUMN_CLASS,
+                      )}
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(header.column.columnDef.header, header.getContext())}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody>
+              {table.getRowModel().rows.map((row) => (
+                <tr key={row.id} className="hover:bg-hover">
+                  {row.getVisibleCells().map((cell, cellIndex) => {
+                    if (cellIndex === 0) {
                       return (
-                        <th key={header.id} className={className}>
-                          {header.isPlaceholder
-                            ? null
-                            : flexRender(header.column.columnDef.header, header.getContext())}
-                        </th>
-                      );
-                    })}
-                  </tr>
-                ))}
-              </thead>
-              <tbody>
-                {table.getRowModel().rows.map((row) => (
-                  <tr key={row.id} className="hover:bg-hover">
-                    {row.getVisibleCells().map((cell, cellIndex) => {
-                      const isFirst = cellIndex === 0;
-                      const isLast = cellIndex === row.getVisibleCells().length - 1;
-                      if (isFirst) {
-                        return (
-                          <th
-                            key={cell.id}
-                            scope="row"
-                            className={composeClassName(
-                              'text-left px-3 py-2 border-b border-rule',
-                              STICKY_ROW_HEADER_CLASS,
-                            )}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </th>
-                        );
-                      }
-                      if (isLast) {
-                        return (
-                          <td
-                            key={cell.id}
-                            className={composeClassName(
-                              'text-right px-3 py-1 border-b border-rule font-mono text-ink-soft',
-                              STICKY_AVERAGE_CLASS,
-                            )}
-                          >
-                            {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                          </td>
-                        );
-                      }
-                      const instrumentId = cell.column.id.replace('inst:', '');
-                      return (
-                        <td
+                        <th
                           key={cell.id}
-                          className="px-1 py-1 border-b border-rule"
-                          onAuxClick={(event) => {
-                            if (event.button !== RIGHT_MOUSE_BUTTON) return;
-                            event.preventDefault();
-                            clearScore(row.original.member.id, instrumentId);
-                          }}
+                          scope="row"
+                          className="border-b border-rule py-1 pr-2 text-left font-normal"
                         >
                           {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                        </td>
+                        </th>
                       );
-                    })}
-                  </tr>
-                ))}
-                <tr className="bg-sunk">
-                  <th
-                    scope="row"
-                    className={composeClassName(
-                      'text-left px-3 py-3 font-medium text-ink-soft text-label tracking-wider uppercase',
-                      STICKY_ROW_HEADER_CLASS,
-                      'bg-sunk',
-                    )}
-                  >
-                    {t('members.columnAverage')}
-                  </th>
-                  {instruments.map((instrument) => {
-                    const average = columnAverage(instrument.id, memberIds, scores);
+                    }
+                    const memberId = cell.column.id.replace('member:', '');
                     return (
                       <td
-                        key={instrument.id}
-                        className="text-center px-1 py-3 font-mono text-ink-soft"
+                        key={cell.id}
+                        className={SCORE_CELL_CLASS}
+                        onAuxClick={(event) => {
+                          if (event.button !== RIGHT_MOUSE_BUTTON) return;
+                          event.preventDefault();
+                          clearScore(memberId, row.original.instrument.id);
+                        }}
                       >
-                        {average === null ? '—' : average.toFixed(DECIMALS)}
+                        {flexRender(cell.column.columnDef.cell, cell.getContext())}
                       </td>
                     );
                   })}
-                  <td className={composeClassName('px-3 py-3', STICKY_AVERAGE_CLASS, 'bg-sunk')} />
                 </tr>
-              </tbody>
-            </table>
-          </div>
-        </>
+              ))}
+            </tbody>
+            <tfoot>
+              <tr className="bg-sunk">
+                <th
+                  scope="row"
+                  className="py-2 pr-2 pl-1 text-left text-label font-medium tracking-wider text-ink-soft uppercase"
+                >
+                  {t('members.rowAverage')}
+                </th>
+                {members.map((member) => (
+                  <td key={member.id} className={AVERAGE_CELL_CLASS}>
+                    {formatAverage(rowAverage(member.id, instrumentIds, scores))}
+                  </td>
+                ))}
+              </tr>
+            </tfoot>
+          </table>
+        </div>
       )}
     </section>
   );
