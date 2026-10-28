@@ -13,11 +13,11 @@ describe('selectPostLoginPath', () => {
     expect(selectPostLoginPath({ from: '/bars' })).toBe('/bars');
   });
 
-  it('falls back to the catalog when the state carries no origin', () => {
-    expect(selectPostLoginPath({})).toBe(DEFAULT_POST_LOGIN_PATH);
+  it('opens Home when the state carries no origin', () => {
+    expect(selectPostLoginPath({})).toBe('/');
   });
 
-  it('falls back to the catalog for an unusable state', () => {
+  it('opens Home for an unusable state', () => {
     expect(selectPostLoginPath(null)).toBe(DEFAULT_POST_LOGIN_PATH);
     expect(selectPostLoginPath({ from: 42 })).toBe(DEFAULT_POST_LOGIN_PATH);
   });
