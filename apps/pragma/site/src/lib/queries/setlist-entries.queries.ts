@@ -1,6 +1,6 @@
 /** @Feature setlists */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { setlistKeys } from './setlists.queries';
 import {
@@ -27,17 +27,36 @@ function snapshotEntries(
 
 const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
 
+async function fetchSetlistEntries(setlistId: string) {
+  const response = await api.api.setlists[':id'].entries.$get({
+    param: { id: setlistId },
+  });
+  if (!response.ok) throw new ApiError(response.status, `entries ${response.status}`, null);
+  return response.json();
+}
+
 export function useSetlistEntries(setlistId: string, isEnabled = true) {
   return useQuery({
     queryKey: setlistKeys.entriesOf(setlistId),
-    queryFn: async () => {
-      const response = await api.api.setlists[':id'].entries.$get({
-        param: { id: setlistId },
-      });
-      if (!response.ok) throw new ApiError(response.status, `entries ${response.status}`, null);
-      return response.json();
-    },
+    queryFn: () => fetchSetlistEntries(setlistId),
     enabled: isEnabled,
+  });
+}
+
+export type ListedSetlistEntry = Awaited<ReturnType<typeof fetchSetlistEntries>>['entries'][number];
+
+export function useEntriesOfSetlists(setlistIds: readonly string[]) {
+  return useQueries({
+    queries: setlistIds.map((setlistId) => ({
+      queryKey: setlistKeys.entriesOf(setlistId),
+      queryFn: () => fetchSetlistEntries(setlistId),
+    })),
+    combine: (results) => ({
+      entriesBySetlistId: Object.fromEntries(
+        setlistIds.map((setlistId, index) => [setlistId, results[index]?.data?.entries ?? []]),
+      ),
+      isLoading: results.some((result) => result.isLoading),
+    }),
   });
 }
 

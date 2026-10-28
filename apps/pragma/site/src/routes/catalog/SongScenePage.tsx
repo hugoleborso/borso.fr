@@ -3,7 +3,7 @@
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useParams } from 'react-router-dom';
+import { useParams, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { SongNotes } from '../../components/molecules/SongNotes';
@@ -24,7 +24,9 @@ import {
   clampSceneScrollSpeed,
   clampSemitoneOffset,
   SCENE_FONT_SIZE_DEFAULT_PX,
+  SCENE_BACK_PARAM,
   SCENE_SCROLL_SPEED_DEFAULT_PX_PER_SECOND,
+  selectSceneExitPath,
 } from './scene-view.core';
 
 // @FollowsBlueprint route-detail-page
@@ -32,6 +34,7 @@ export function SongScenePage(): JSX.Element {
   const { t } = useTranslation();
   const navigateTo = useNavigateTo();
   const { songId } = useParams<{ songId: string }>();
+  const [searchParams] = useSearchParams();
   const songQuery = useSong(songId ?? '', songId !== undefined);
   const [semitones, setSemitones] = useState(0);
   const [fontSizePx, setFontSizePx] = useState(SCENE_FONT_SIZE_DEFAULT_PX);
@@ -56,7 +59,7 @@ export function SongScenePage(): JSX.Element {
   const chordproText = selectChordProText(song.chart);
   const leaveScene = (): void => {
     stopSceneAutoScroll();
-    navigateTo(`/catalog/${song.id}`);
+    navigateTo(selectSceneExitPath(song.id, searchParams.get(SCENE_BACK_PARAM)));
   };
 
   const toggleAutoScroll = (): void => {

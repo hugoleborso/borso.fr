@@ -340,9 +340,11 @@ Lives in: `site/src/routes/home/`
 - The next session is the earliest one whose calendar day in Paris is
   today or later (`selectNextSession` in `domain/session-schedule.core.ts`),
   practice or concert alike.
-- Its one primary action opens that session's first setlist, or the
-  session when it has none; with no session ahead it offers **New
-  session**.
+- Its one primary action is **Start the practice** on a practice's own
+  day when practice mode is offered; otherwise it opens that session's
+  first setlist, or the session when it has none; with no session ahead
+  it offers **New session**.
+- The member's open tasks list the ones naming the next session first.
 - Not to be confused with the **catalogue**, which was the start screen
   before.
 
@@ -813,6 +815,35 @@ Lives in: `api/src/sessions/`
 Held by: `api/src/sessions/sessions.schema.test.ts` › refuses a venue, which belongs to the other kind
 Held by: `api/src/sessions/sessions.controller.test.ts` › moves a practice onto another concert it prepares
 
+## Practice mode
+
+The screen that follows a practice's setlists song by song while the band
+plays, at `/sessions/:id/practice`, so recording a take of the song being
+played is one tap.
+
+Lives in: `site/src/routes/sessions/`
+
+- Offered only for a practice, on its own calendar day in Paris, once its
+  setlists hold a song (`isPracticeModeOffered`). A session has a date and
+  no end time, so a practice running past midnight loses the mode the
+  next day.
+- The songs follow the session's setlists in their order, then each
+  entry's position (`buildPracticeSongs`).
+- The current song is held on each device, in local storage under the
+  session, never on the server: two phones in the same practice move
+  independently. A position stored on another day is ignored, and when
+  the stored song has left the setlist the following one becomes current
+  (`resolvePracticeIndex`).
+- Moving between songs writes nothing to the server. A take recorded here
+  carries the current song and the practice, as any take does; the quick
+  note writes the current setlist entry's note.
+
+Held by: `site/src/routes/sessions/practice-mode.core.test.ts` › makes the following song current when the stored one was removed
+Held by: `site/src/routes/sessions/PracticeModePage.test.tsx` › starts on the first song, and Next song moves on without writing to the server
+
+Not to be confused with: the **scene view**, which reads one song's chart
+on stage and records nothing.
+
 ## Scene view
 
 The full-screen reading of a song's chart, for use on stage.
@@ -845,7 +876,12 @@ Lives in: `api/src/sessions/`
 - Deleting a session detaches the setlists it carried and keeps them
   (`deleteSessionWithCascade`). Another session may be playing the same
   one, and the setlists index holds it either way. It also keeps the takes
-  recorded in it and clears their `session_id`.
+  recorded in it and clears their `session_id`, and keeps the tasks
+  naming it and clears theirs.
+- The session page shows, in order, a preview of each setlist (count,
+  total time, the first three songs with their lineup, never their key),
+  **Who does what** (the tasks naming the session), and the takes recorded
+  at it grouped by song.
 
 Held by: `api/src/sessions/sessions.controller.test.ts` › lists coming sessions first, nearest at the top, then past ones
 Held by: `domain/session-schedule.core.test.ts` › keeps a session from earlier today as the next one until midnight

@@ -1,5 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildSceneAddressFromPractice,
+  selectSceneExitPath,
   canScrollFaster,
   canScrollSlower,
   canTransposeDown,
@@ -148,5 +150,27 @@ describe('computeScrollStepPx', () => {
 
   it('covers the full speed over a full second', () => {
     expect(computeScrollStepPx(48, 1000)).toBe(48);
+  });
+});
+
+describe('selectSceneExitPath', () => {
+  it('returns to practice mode when the scene was opened from it', () => {
+    expect(selectSceneExitPath('song-1', '/sessions/abc-1/practice')).toBe(
+      '/sessions/abc-1/practice',
+    );
+  });
+
+  it('returns to the song for anything else, so the address cannot send a reader elsewhere', () => {
+    expect(selectSceneExitPath('song-1', null)).toBe('/catalog/song-1');
+    expect(selectSceneExitPath('song-1', 'https://example.com')).toBe('/catalog/song-1');
+    expect(selectSceneExitPath('song-1', '//evil/sessions/a/practice')).toBe('/catalog/song-1');
+  });
+});
+
+describe('buildSceneAddressFromPractice', () => {
+  it('carries the practice path in the back parameter', () => {
+    expect(buildSceneAddressFromPractice('song-1', '/sessions/abc/practice')).toBe(
+      '/catalog/song-1/scene?back=%2Fsessions%2Fabc%2Fpractice',
+    );
   });
 });

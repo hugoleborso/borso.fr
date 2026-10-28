@@ -64,3 +64,16 @@ export function canScrollSlower(pixelsPerSecond: number): boolean {
 export function computeScrollStepPx(pixelsPerSecond: number, tickMs: number): number {
   return (pixelsPerSecond * tickMs) / MILLISECONDS_IN_SECOND;
 }
+
+export const SCENE_BACK_PARAM = 'back';
+const SESSION_PATH_PATTERN = /^\/sessions\/[\w-]+\/practice$/;
+
+// @FollowsBlueprint core-decision
+export function selectSceneExitPath(songId: string, requestedBack: string | null): string {
+  if (requestedBack !== null && SESSION_PATH_PATTERN.test(requestedBack)) return requestedBack;
+  return `/catalog/${songId}`;
+}
+
+export function buildSceneAddressFromPractice(songId: string, practicePath: string): string {
+  return `/catalog/${songId}/scene?${new URLSearchParams({ [SCENE_BACK_PARAM]: practicePath }).toString()}`;
+}
