@@ -34,3 +34,13 @@ export function orderCommentsByTime<Comment extends TimedComment>(
     return first.id.localeCompare(second.id);
   });
 }
+
+export interface TakeListFilter {
+  readonly songId?: string | undefined;
+  readonly sessionId?: string | undefined;
+}
+
+// @FollowsBlueprint schema-refine-pure-helper
+export function isExactlyOneTakeFilterNamed(filter: TakeListFilter): boolean {
+  return (filter.songId === undefined) !== (filter.sessionId === undefined);
+}

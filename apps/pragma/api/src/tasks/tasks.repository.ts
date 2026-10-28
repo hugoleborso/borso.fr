@@ -22,6 +22,7 @@ const PROJECTION = {
   status: taskTable.status,
   assigneeId: taskTable.assigneeId,
   songId: taskTable.songId,
+  sessionId: taskTable.sessionId,
   dueDate: taskTable.dueDate,
 } as const;
 
@@ -54,6 +55,7 @@ export async function insertTaskWithin(
       status: values.status ?? DEFAULT_TASK_STATUS,
       assigneeId: values.assigneeId ?? null,
       songId: values.songId ?? null,
+      sessionId: values.sessionId ?? null,
       dueDate: values.dueDate ?? null,
     })
     .returning(PROJECTION);
@@ -88,6 +90,16 @@ export async function detachDeletedSongFromTasks(
   songId: string,
 ): Promise<void> {
   await transaction.update(taskTable).set({ songId: null }).where(eq(taskTable.songId, songId));
+}
+
+export async function detachDeletedSessionFromTasks(
+  transaction: DatabaseExecutor,
+  sessionId: string,
+): Promise<void> {
+  await transaction
+    .update(taskTable)
+    .set({ sessionId: null })
+    .where(eq(taskTable.sessionId, sessionId));
 }
 
 export async function unassignTasksOfDeletedMember(

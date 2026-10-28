@@ -18,12 +18,39 @@ const taskSchema = z.object({
   status: z.enum(['todo', 'doing', 'done']),
   assigneeId: z.string().uuid().nullable(),
   songId: z.string().uuid().nullable(),
+  sessionId: z.string().uuid().nullable(),
   dueDate: z.string().nullable(),
 });
 const singleTaskEnvelope = z.object({ task: taskSchema });
 const taskListEnvelope = z.object({ tasks: z.array(taskSchema) });
 
 const UNKNOWN_ID = '00000000-0000-4000-8000-000000000000';
+
+async function createPracticeSession(
+  app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
+  cookieHeader: string,
+): Promise<string> {
+  const response = await jsonRequest(app, '/api/sessions', {
+    method: 'POST',
+    body: { kind: 'practice', date: '2099-03-01T19:00:00Z' },
+    cookieHeader,
+  });
+  const body: unknown = await response.json();
+  return z.object({ session: z.object({ id: z.string().uuid() }) }).parse(body).session.id;
+}
+
+async function createCoverSong(
+  app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
+  cookieHeader: string,
+): Promise<string> {
+  const response = await jsonRequest(app, '/api/songs', {
+    method: 'POST',
+    body: { title: 'Psycho Killer', artist: 'Talking Heads', status: 'idea', origin: 'cover' },
+    cookieHeader,
+  });
+  const body: unknown = await response.json();
+  return z.object({ song: z.object({ id: z.string().uuid() }) }).parse(body).song.id;
+}
 
 function holdTaskRow(taskId: string): LockHold {
   return async (transaction) =>
@@ -73,6 +100,7 @@ describe('tasks controller (back-e2e)', () => {
       status: 'todo',
       assigneeId: memberId,
       songId: null,
+      sessionId: null,
       dueDate: null,
     });
 
@@ -138,6 +166,65 @@ describe('tasks controller (back-e2e)', () => {
       cookieHeader,
     });
     expect(unknownSong.status).toBe(400);
+  });
+
+  it('links a task to a session and to a cover song, and refuses a session that does not exist', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPracticeSession(app, cookieHeader);
+    const songId = await createCoverSong(app, cookieHeader);
+
+    const create = await jsonRequest(app, '/api/tasks', {
+      method: 'POST',
+      body: { title: 'Learn the bridge', sessionId, songId },
+      cookieHeader,
+    });
+    expect(create.status).toBe(201);
+    const created = await readJson(create, singleTaskEnvelope);
+    expect(created.task).toMatchObject({ sessionId, songId });
+
+    const detach = await jsonRequest(app, `/api/tasks/${created.task.id}`, {
+      method: 'PUT',
+      body: { sessionId: null },
+      cookieHeader,
+    });
+    expect((await readJson(detach, singleTaskEnvelope)).task.sessionId).toBeNull();
+
+    const unknownSession = await jsonRequest(app, '/api/tasks', {
+      method: 'POST',
+      body: { title: 'Book the room', sessionId: UNKNOWN_ID },
+      cookieHeader,
+    });
+    expect(unknownSession.status).toBe(400);
+    expect(await unknownSession.json()).toEqual({ error: 'session-not-found' });
+
+    const unknownSessionUpdate = await jsonRequest(app, `/api/tasks/${created.task.id}`, {
+      method: 'PUT',
+      body: { sessionId: UNKNOWN_ID },
+      cookieHeader,
+    });
+    expect(unknownSessionUpdate.status).toBe(400);
+  });
+
+  it('keeps a task and drops its session when the session is deleted', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPracticeSession(app, cookieHeader);
+    const create = await jsonRequest(app, '/api/tasks', {
+      method: 'POST',
+      body: { title: 'Bring the PA', sessionId },
+      cookieHeader,
+    });
+    const created = await readJson(create, singleTaskEnvelope);
+
+    const removeSession = await jsonRequest(app, `/api/sessions/${sessionId}`, {
+      method: 'DELETE',
+      cookieHeader,
+    });
+    expect(removeSession.status).toBe(200);
+
+    const list = await jsonRequest(app, '/api/tasks', { cookieHeader });
+    const tasks = (await readJson(list, taskListEnvelope)).tasks;
+    expect(tasks).toHaveLength(1);
+    expect(tasks[0]).toMatchObject({ id: created.task.id, sessionId: null });
   });
 
   it('answers not-found on a task that is gone, and refuses an empty patch', async () => {

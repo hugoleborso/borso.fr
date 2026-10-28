@@ -17,11 +17,15 @@ type TaskUpdateVariables = { id: string } & Parameters<
   (typeof api.api.tasks)[':id']['$put']
 >[0]['json'];
 
-const NEW_TASK_DEFAULTS: Pick<TaskRow, 'notes' | 'status' | 'assigneeId' | 'songId' | 'dueDate'> = {
+const NEW_TASK_DEFAULTS: Pick<
+  TaskRow,
+  'notes' | 'status' | 'assigneeId' | 'songId' | 'sessionId' | 'dueDate'
+> = {
   notes: '',
   status: 'todo',
   assigneeId: null,
   songId: null,
+  sessionId: null,
   dueDate: null,
 };
 

@@ -4,6 +4,7 @@ import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.co
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
 import { sessionSetlistTable } from '../setlists/setlists.schema';
 import { detachTakesOfDeletedSession } from '../takes/takes.service';
+import { detachTasksOfSessionBeingDeleted } from '../tasks/tasks.service';
 import { encodeSessionInsert, type SessionInsertShape } from './sessions.core';
 import { friendsCountSchema, type SessionPersistedUpdate, sessionTable } from './sessions.schema';
 
@@ -121,6 +122,7 @@ export async function deleteSessionWithCascade(id: string): Promise<DeletionOutc
       .returning({ id: sessionTable.id });
     await transaction.delete(sessionSetlistTable).where(eq(sessionSetlistTable.sessionId, id));
     await detachTakesOfDeletedSession(transaction, id);
+    await detachTasksOfSessionBeingDeleted(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });
 }

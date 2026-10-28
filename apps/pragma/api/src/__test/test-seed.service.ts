@@ -159,6 +159,7 @@ async function seedTasks(
           ? null
           : (memberIdByName.get(seed.assigneeFirstName) ?? null),
       songId: seed.songTitle === null ? null : (songIdByTitle.get(seed.songTitle) ?? null),
+      sessionId: null,
       dueDate:
         seed.dueInDays === null
           ? null

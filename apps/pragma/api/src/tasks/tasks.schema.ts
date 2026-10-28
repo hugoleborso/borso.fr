@@ -11,6 +11,7 @@ export const taskTable = pgTable('task', {
   status: text('status').notNull(),
   assigneeId: uuid('assignee_id'),
   songId: uuid('song_id'),
+  sessionId: uuid('session_id'),
   dueDate: timestamp('due_date', { withTimezone: true, mode: 'date' }),
 });
 
@@ -20,6 +21,7 @@ export const taskCreateSchema = z.object({
   status: z.enum(TASK_STATUSES).default(DEFAULT_TASK_STATUS),
   assigneeId: z.string().uuid().nullable().default(null),
   songId: z.string().uuid().nullable().default(null),
+  sessionId: z.string().uuid().nullable().default(null),
   dueDate: z.string().datetime().nullable().default(null),
 });
 

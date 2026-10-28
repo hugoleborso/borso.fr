@@ -142,6 +142,14 @@ export async function listTakesOfSongNewestFirst(songId: string): Promise<TakeVi
   return rows.map(rowToTake);
 }
 
+export async function listTakesOfSessionNewestFirst(sessionId: string): Promise<TakeView[]> {
+  const rows = await selectTakesWithCommentCounts(
+    getDatabase(),
+    eq(takeTable.sessionId, sessionId),
+  ).orderBy(desc(takeTable.recordedAt), desc(takeTable.id));
+  return rows.map(rowToTake);
+}
+
 export async function deleteTakeWithComments(id: string): Promise<string | null> {
   return await runInOneTakeTransaction(async (transaction) => {
     const [deleted] = await transaction

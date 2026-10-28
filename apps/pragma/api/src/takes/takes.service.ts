@@ -5,7 +5,12 @@ import { notifyBand } from '../notifications/notifications.service';
 import { didClaimSessionWithin } from '../sessions/sessions.service';
 import { didClaimSongWithin, findSongById } from '../songs/songs.service';
 import { deleteStoredObjects, mintObjectUpload } from '../uploads/uploads.service';
-import { buildTakeObjectKey, isMomentWithinTake, orderCommentsByTime } from './takes.core';
+import {
+  buildTakeObjectKey,
+  isMomentWithinTake,
+  orderCommentsByTime,
+  type TakeListFilter,
+} from './takes.core';
 import {
   type ClaimedTake,
   deleteComment,
@@ -18,6 +23,7 @@ import {
   hasInsertedTakeWithin,
   insertCommentWithin,
   listCommentsOfTake,
+  listTakesOfSessionNewestFirst,
   listTakesOfSongNewestFirst,
   runInOneTakeTransaction,
   updateComment,
@@ -132,8 +138,9 @@ export async function createTake(
   return { kind: 'ok', take };
 }
 
-export async function getTakesOfSong(songId: string): Promise<TakeView[]> {
-  return await listTakesOfSongNewestFirst(songId);
+export async function getTakesMatching(filter: TakeListFilter): Promise<TakeView[]> {
+  if (filter.sessionId !== undefined) return await listTakesOfSessionNewestFirst(filter.sessionId);
+  return await listTakesOfSongNewestFirst(filter.songId ?? '');
 }
 
 async function deleteAudioOfDeletedTakes(objectKeys: readonly string[]): Promise<void> {

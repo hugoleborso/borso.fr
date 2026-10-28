@@ -762,6 +762,7 @@ async function main(): Promise<void> {
       status: task.status,
       assigneeId: task.assignee,
       songId: task.song === null ? null : id(task.song),
+      sessionId: null,
       dueDate: new Date(now.getTime() + task.due * DAY).toISOString(),
     });
     if (outcome.kind !== 'ok') throw new Error(`task refused: ${outcome.kind}`);

@@ -36,3 +36,17 @@ export function sortTasksByUrgency<Task extends TaskOrderingShape>(
 ): readonly Task[] {
   return tasks.toSorted(compareTasksByUrgency);
 }
+
+export interface TaskCreatedEvent {
+  readonly event: 'task_created';
+  readonly hasSession: boolean;
+}
+
+// @FollowsBlueprint core-decision
+export function describeTaskCreatedEvent(outcome: {
+  readonly kind: string;
+  readonly task?: { readonly sessionId: string | null };
+}): TaskCreatedEvent | null {
+  if (outcome.task === undefined) return null;
+  return { event: 'task_created', hasSession: outcome.task.sessionId !== null };
+}

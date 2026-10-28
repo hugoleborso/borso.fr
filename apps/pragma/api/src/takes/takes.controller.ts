@@ -14,7 +14,7 @@ import {
   createTake,
   createTakeComment,
   getCommentsOfTake,
-  getTakesOfSong,
+  getTakesMatching,
   mintTakeUpload,
   patchTakeComment,
   removeTake,
@@ -57,7 +57,7 @@ export function buildTakesRouter() {
       return context.json({ take: outcome.take }, 201);
     })
     .get('/', zValidator('query', takeListQuerySchema), async (context) => {
-      const takes = await getTakesOfSong(context.req.valid('query').songId);
+      const takes = await getTakesMatching(context.req.valid('query'));
       return context.json({ takes });
     })
     .delete('/:id', zValidator('param', takePathSchema), async (context) => {

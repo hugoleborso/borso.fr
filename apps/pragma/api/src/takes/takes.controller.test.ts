@@ -307,6 +307,48 @@ describe('takes controller (back-e2e)', () => {
       expect(takes.map((take) => take.id)).toEqual([recentTake, lateUploadOfAnOlderTake]);
     });
 
+    it('lists the takes recorded at one session, every song, newest first', async () => {
+      const band = await buildAuthenticatedApp();
+      const firstSongId = await createSong(band);
+      const secondSongId = await createSong(band);
+      const sessionId = await createPractice(band);
+      const olderTake = await createTake(band, {
+        id: randomUUID(),
+        songId: firstSongId,
+        sessionId,
+        recordedAt: '2026-10-18T19:10:00.000Z',
+      });
+      const newerTake = await createTake(band, {
+        id: randomUUID(),
+        songId: secondSongId,
+        sessionId,
+        recordedAt: '2026-10-18T19:40:00.000Z',
+      });
+      await createTake(band, { id: randomUUID(), songId: firstSongId });
+
+      const response = await jsonRequest(band.app, `/api/takes?sessionId=${sessionId}`, {
+        cookieHeader: band.cookieHeader,
+      });
+      const takes = (await readJson(response, takeListEnvelope)).takes;
+
+      expect(takes.map((take) => take.id)).toEqual([newerTake, olderTake]);
+    });
+
+    it('refuses a list that names neither a song nor a session, or both', async () => {
+      const band = await buildAuthenticatedApp();
+      const neither = await jsonRequest(band.app, '/api/takes', {
+        cookieHeader: band.cookieHeader,
+      });
+      const both = await jsonRequest(
+        band.app,
+        `/api/takes?songId=${randomUUID()}&sessionId=${randomUUID()}`,
+        { cookieHeader: band.cookieHeader },
+      );
+
+      expect(neither.status).toBe(400);
+      expect(both.status).toBe(400);
+    });
+
     it('answers the same take when a create is retried with the same id', async () => {
       const band = await buildAuthenticatedApp();
       const songId = await createSong(band);

@@ -7,6 +7,7 @@ import {
 } from '@domain/take-upload.core';
 import { index, integer, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { isExactlyOneTakeFilterNamed } from './takes.core';
 
 const OBJECT_KEY_MAX_LENGTH = 512;
 
@@ -65,7 +66,9 @@ export const takeCreateSchema = z
   })
   .strict();
 
-export const takeListQuerySchema = z.object({ songId: z.string().uuid() });
+export const takeListQuerySchema = z
+  .object({ songId: z.string().uuid().optional(), sessionId: z.string().uuid().optional() })
+  .refine(isExactlyOneTakeFilterNamed, { message: 'one-of-song-or-session' });
 
 export const takePathSchema = z.object({ id: z.string().uuid() });
 

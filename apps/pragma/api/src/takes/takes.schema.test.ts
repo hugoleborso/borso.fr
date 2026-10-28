@@ -116,6 +116,11 @@ describe('take path and query schemas', () => {
   it('want uuids', () => {
     expect(takeListQuerySchema.safeParse({ songId: SONG_ID }).success).toBe(true);
     expect(takeListQuerySchema.safeParse({ songId: 'song' }).success).toBe(false);
+    expect(takeListQuerySchema.safeParse({ sessionId: SESSION_ID }).success).toBe(true);
+    expect(takeListQuerySchema.safeParse({}).success).toBe(false);
+    expect(takeListQuerySchema.safeParse({ songId: SONG_ID, sessionId: SESSION_ID }).success).toBe(
+      false,
+    );
     expect(takePathSchema.safeParse({ id: 'take' }).success).toBe(false);
     expect(takeCommentPathSchema.safeParse({ id: TAKE_ID, commentId: SONG_ID }).success).toBe(true);
     expect(takeCommentPathSchema.safeParse({ id: TAKE_ID, commentId: 'comment' }).success).toBe(
