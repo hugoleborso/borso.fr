@@ -39,6 +39,7 @@ import { SessionTakes } from './SessionTakes';
 import { SessionTasks } from './SessionTasks';
 import { SetlistSongPicker } from './SetlistSongPicker';
 import { VotingRoundPanel } from './VotingRoundPanel';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 
 export interface SessionDetailProps {
   readonly session: SessionRecord;
@@ -274,7 +275,12 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
           </ButtonLink>
         )}
         {pills.practicePath === null ? null : (
-          <ButtonLink icon="play" variant="primary" to={pills.practicePath}>
+          <ButtonLink
+            icon="play"
+            variant="primary"
+            to={pills.practicePath}
+            onClick={() => recordProductEvent('practice_mode_started')}
+          >
             {t('practice.start')}
           </ButtonLink>
         )}

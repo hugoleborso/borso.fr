@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import type { QueuedTake } from '../../lib/take-queue.core';
-import { describeTakeRow, describeTakeSession, mergePendingTakes } from './take-list.core';
+import {
+  describeTakeRow,
+  describeTakeSession,
+  mergePendingTakes,
+  selectPracticeTakes,
+} from './take-list.core';
 
 const LISTED_OCTOBER_18 = {
   id: 'b',
@@ -32,6 +37,7 @@ const QUEUED: QueuedTake = {
   isUploaded: false,
   wasDeferred: true,
   hasFailed: false,
+  isFromPracticeMode: false,
 };
 
 const SESSIONS = [
@@ -141,5 +147,36 @@ describe('describeTakeRow', () => {
     const [row] = mergePendingTakes([{ ...LISTED_OCTOBER_18, durationSeconds: 0 }], [], 'song-1');
     if (row === undefined) throw new Error('expected one row');
     expect(describeTakeRow(row, SESSIONS).durationSeconds).toBeNull();
+  });
+});
+
+describe('selectPracticeTakes', () => {
+  const ON_SONG = { ...LISTED_OCTOBER_18, songId: 'song-1' };
+  const ON_OTHER_SONG = { ...LISTED_OCTOBER_2, id: 'e', songId: 'song-2' };
+
+  it('lists the current song takes of the session with the ones queued at it, and finds the selected one', () => {
+    const takes = selectPracticeTakes({
+      sessionTakes: [ON_SONG, ON_OTHER_SONG],
+      queuedTakes: [
+        { ...QUEUED, id: 'queued-here', sessionId: 'practice-1' },
+        { ...QUEUED, id: 'queued-elsewhere', sessionId: 'practice-2' },
+      ],
+      sessionId: 'practice-1',
+      songId: 'song-1',
+      selectedTakeId: 'b',
+    });
+    expect(takes.rows.map((row) => row.id)).toEqual(['b', 'queued-here']);
+    expect(takes.selectedTake).toBe(ON_SONG);
+  });
+
+  it('selects nothing when the selected take belongs to another song', () => {
+    const takes = selectPracticeTakes({
+      sessionTakes: [ON_SONG, ON_OTHER_SONG],
+      queuedTakes: [],
+      sessionId: 'practice-1',
+      songId: 'song-1',
+      selectedTakeId: 'e',
+    });
+    expect(takes.selectedTake).toBeNull();
   });
 });

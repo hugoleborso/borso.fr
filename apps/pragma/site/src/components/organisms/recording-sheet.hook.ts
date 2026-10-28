@@ -19,6 +19,7 @@ export interface RecordingSubject {
   readonly songId: string;
   readonly songTitle: string;
   readonly sessionId: string | null;
+  readonly isFromPracticeMode?: boolean;
 }
 
 export interface RecordingSheetController {
@@ -58,6 +59,7 @@ export function useRecordingSheet(): RecordingSheetController {
         durationSeconds: roundDurationSeconds(outcome.durationMilliseconds),
         rawContentType: outcome.contentType,
         source: 'live',
+        isFromPracticeMode: recorded.isFromPracticeMode === true,
       },
       outcome.audio,
     );

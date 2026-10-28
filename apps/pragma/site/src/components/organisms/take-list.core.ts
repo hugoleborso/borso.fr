@@ -108,3 +108,30 @@ export function describeTakeRow<TTake extends ListedTakeSummary>(
     commentCount: row.take.commentCount,
   };
 }
+
+export interface PracticeTakesInput<TTake extends ListedTakeSummary & { readonly songId: string }> {
+  readonly sessionTakes: readonly TTake[];
+  readonly queuedTakes: readonly QueuedTake[];
+  readonly sessionId: string;
+  readonly songId: string;
+  readonly selectedTakeId: string | null;
+}
+
+export interface PracticeTakes<TTake extends ListedTakeSummary> {
+  readonly rows: TakeListRow<TTake>[];
+  readonly selectedTake: TTake | null;
+}
+
+export function selectPracticeTakes<TTake extends ListedTakeSummary & { readonly songId: string }>(
+  input: PracticeTakesInput<TTake>,
+): PracticeTakes<TTake> {
+  const songTakes = input.sessionTakes.filter((take) => take.songId === input.songId);
+  return {
+    rows: mergePendingTakes(
+      songTakes,
+      input.queuedTakes.filter((take) => take.sessionId === input.sessionId),
+      input.songId,
+    ),
+    selectedTake: songTakes.find((take) => take.id === input.selectedTakeId) ?? null,
+  };
+}

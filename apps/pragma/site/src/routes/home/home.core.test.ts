@@ -140,7 +140,12 @@ describe('selectHomePrimaryAction', () => {
         isPracticeModeOffered: true,
       }),
     ).toEqual({
-      link: { to: '/sessions/s1/practice', labelKey: 'home.startPractice', icon: 'play' },
+      link: {
+        to: '/sessions/s1/practice',
+        labelKey: 'home.startPractice',
+        icon: 'play',
+        startsPracticeMode: true,
+      },
       isNewSessionOffered: false,
     });
   });
@@ -154,7 +159,12 @@ describe('selectHomePrimaryAction', () => {
         setlistId: 'l1',
       }),
     ).toEqual({
-      link: { to: '/setlists/l1', labelKey: 'home.openSetlist', icon: 'arrowR' },
+      link: {
+        to: '/setlists/l1',
+        labelKey: 'home.openSetlist',
+        icon: 'arrowR',
+        startsPracticeMode: false,
+      },
       isNewSessionOffered: false,
     });
   });
@@ -168,7 +178,12 @@ describe('selectHomePrimaryAction', () => {
         setlistId: null,
       }),
     ).toEqual({
-      link: { to: '/sessions/s1', labelKey: 'home.openSession', icon: 'arrowR' },
+      link: {
+        to: '/sessions/s1',
+        labelKey: 'home.openSession',
+        icon: 'arrowR',
+        startsPracticeMode: false,
+      },
       isNewSessionOffered: false,
     });
   });

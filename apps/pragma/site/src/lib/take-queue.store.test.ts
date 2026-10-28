@@ -28,6 +28,7 @@ const TAKE: QueuedTake = {
   isUploaded: false,
   wasDeferred: false,
   hasFailed: false,
+  isFromPracticeMode: false,
 };
 
 function entryOf(take: QueuedTake): QueuedTakeEntry {
@@ -113,6 +114,7 @@ describe('createTakeQueue', () => {
         contentType: 'audio/webm',
         source: 'live',
         queued: false,
+        fromPracticeMode: false,
       },
     ]);
     expect(settings.onCreated).toHaveBeenCalledWith({ id: 'take-1' });

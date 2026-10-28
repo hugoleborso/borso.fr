@@ -75,6 +75,7 @@ describe('RecordingSheet', () => {
         durationSeconds: 137,
         rawContentType: 'audio/webm;codecs=opus',
         source: 'live',
+        isFromPracticeMode: false,
       },
       RECORDED.audio,
     );

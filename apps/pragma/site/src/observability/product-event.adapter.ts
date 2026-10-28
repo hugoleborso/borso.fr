@@ -10,7 +10,9 @@ export type ProductEventName =
   | 'entry_note_save_superseded'
   | 'transition_comment_saved'
   | 'setlist_songs_added'
-  | 'setlist_order_opened';
+  | 'setlist_order_opened'
+  | 'practice_mode_started'
+  | 'practice_mode_ended';
 
 export type ProductEventAttributes = Readonly<Record<string, string | number | boolean>>;
 

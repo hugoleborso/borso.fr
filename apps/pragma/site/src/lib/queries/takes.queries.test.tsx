@@ -55,6 +55,7 @@ const QUEUED: QueuedTake = {
   isUploaded: false,
   wasDeferred: false,
   hasFailed: false,
+  isFromPracticeMode: false,
 };
 
 type DeleteTake = ReturnType<typeof useDeleteTake>['mutateAsync'];

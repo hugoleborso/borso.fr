@@ -43,6 +43,7 @@ const QUEUED: QueuedTake = {
   isUploaded: false,
   wasDeferred: false,
   hasFailed: false,
+  isFromPracticeMode: false,
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -162,7 +163,14 @@ describe('buildTakeCreateBody', () => {
       contentType: 'audio/webm',
       source: 'live',
       queued: true,
+      fromPracticeMode: false,
     });
+  });
+
+  it('says when the take was recorded in practice mode', () => {
+    expect(
+      buildTakeCreateBody({ ...QUEUED, isFromPracticeMode: true }, UPLOAD.objectKey),
+    ).toMatchObject({ fromPracticeMode: true });
   });
 });
 
@@ -192,6 +200,7 @@ describe('buildQueuedTake', () => {
     byteLength: 512,
     source: 'upload',
     isOnline: true,
+    isFromPracticeMode: false,
   };
 
   it('stores the normalized content type and starts with nothing sent', () => {
@@ -208,6 +217,13 @@ describe('buildQueuedTake', () => {
       isUploaded: false,
       wasDeferred: false,
       hasFailed: false,
+      isFromPracticeMode: false,
+    });
+  });
+
+  it('keeps whether the take was recorded in practice mode', () => {
+    expect(buildQueuedTake({ ...DRAFT, isFromPracticeMode: true })).toMatchObject({
+      isFromPracticeMode: true,
     });
   });
 

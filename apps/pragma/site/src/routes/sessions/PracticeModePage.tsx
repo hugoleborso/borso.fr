@@ -17,7 +17,7 @@ import { PracticeSongListSheet } from '../../components/organisms/PracticeSongLi
 import { RecordingSheetDialogs } from '../../components/organisms/RecordingSheet';
 import { useRecordingSheet } from '../../components/organisms/recording-sheet.hook';
 import { indexById } from '../../components/organisms/setlist-editor.utils';
-import { mergePendingTakes } from '../../components/organisms/take-list.core';
+import { selectPracticeTakes } from '../../components/organisms/take-list.core';
 import { TakeList } from '../../components/organisms/TakeList';
 import { TakePlayer } from '../../components/organisms/TakePlayer';
 import { indexTransitionComments } from '../../components/organisms/transition-view.core';
@@ -50,6 +50,7 @@ import {
   type StoredPracticePosition,
 } from './practice-mode.core';
 import { buildPracticePath } from './session-page.core';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 
 const NO_ROWS: readonly never[] = [];
 
@@ -165,22 +166,22 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
     setSelectedTakeId(null);
   };
   const endPractice = (): void => {
+    recordProductEvent('practice_mode_ended', { songs_moved_through: screen.position.number });
     position.forget();
     navigateTo(sessionPath);
   };
   const recordTake = (): void => {
-    void recording.start({ songId: current.entry.songId, songTitle: current.title, sessionId });
+    const subject = { songId: current.entry.songId, songTitle: current.title, sessionId };
+    void recording.start({ ...subject, isFromPracticeMode: true });
   };
 
-  const serverTakes = (takesQuery.data?.takes ?? NO_ROWS).filter(
-    (take) => take.songId === current.entry.songId,
-  );
-  const takeRows = mergePendingTakes(
-    serverTakes,
-    queued.map((entry) => entry.take).filter((take) => take.sessionId === sessionId),
-    current.entry.songId,
-  );
-  const selectedTake = serverTakes.find((take) => take.id === selectedTakeId) ?? null;
+  const { rows: takeRows, selectedTake } = selectPracticeTakes({
+    sessionTakes: takesQuery.data?.takes ?? NO_ROWS,
+    queuedTakes: queued.map((entry) => entry.take),
+    sessionId,
+    songId: current.entry.songId,
+    selectedTakeId,
+  });
   const nextLine = formatPracticeNextLine(screen.next);
 
   return (

@@ -10,7 +10,12 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { PracticeModePage } from './PracticeModePage';
+
+vi.mock('../../observability/product-event.adapter', () => ({
+  recordProductEvent: vi.fn(),
+}));
 import { serializePracticePosition } from './practice-mode.core';
 
 class StillResizeObserver implements ResizeObserver {
@@ -118,6 +123,7 @@ describe('practice mode', () => {
     cleanup();
     stub?.restore();
     vi.unstubAllGlobals();
+    vi.clearAllMocks();
   });
 
   it('starts on the first song, and Next song moves on without writing to the server', async () => {
@@ -155,6 +161,9 @@ describe('practice mode', () => {
     if (stripPill !== undefined) fireEvent.click(stripPill);
     expect(await screen.findByText('Session page')).toBeTruthy();
     expect(localStorage.getItem(PRACTICE_STORAGE_KEY)).toBeNull();
+    expect(recordProductEvent).toHaveBeenCalledExactlyOnceWith('practice_mode_ended', {
+      songs_moved_through: 2,
+    });
   });
 
   it('keeps the song shown on arrival current when the setlist is reordered elsewhere', async () => {
