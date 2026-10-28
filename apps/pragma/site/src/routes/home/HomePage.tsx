@@ -128,6 +128,7 @@ export function HomePage(): JSX.Element {
         <NextSessionCard
           isConcert={nextSession.kind === 'concert'}
           dateLabel={formatSessionDate(nextSession.date, i18n.language)}
+          sessionPath={`/sessions/${nextSession.id}`}
           venue={nextSession.venue}
           setlistName={setlist?.name ?? null}
           songCount={setlist?.songCount ?? null}

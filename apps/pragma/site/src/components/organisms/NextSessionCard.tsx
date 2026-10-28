@@ -2,6 +2,7 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { Link } from 'react-router-dom';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { Overline } from '../atoms/Overline';
@@ -9,6 +10,7 @@ import { Overline } from '../atoms/Overline';
 export interface NextSessionCardProps {
   readonly isConcert: boolean;
   readonly dateLabel: string;
+  readonly sessionPath: string;
   readonly venue: string | null;
   readonly setlistName: string | null;
   readonly songCount: number | null;
@@ -30,7 +32,13 @@ export function NextSessionCard(props: NextSessionCardProps): JSX.Element {
           <Icon name={props.isConcert ? 'audience' : 'sessions'} />
           {t(props.isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
         </div>
-        <div className="font-display text-title leading-tight text-ink">{props.dateLabel}</div>
+        <Link
+          to={props.sessionPath}
+          className="-my-2 flex min-h-11 items-center justify-between gap-2 font-display text-title leading-tight text-ink no-underline"
+        >
+          {props.dateLabel}
+          <Icon name="chevR" className="shrink-0 text-ink-faint" />
+        </Link>
         {props.venue === null ? null : <div className="text-meta text-ink-soft">{props.venue}</div>}
         {props.setlistName === null ? (
           <p className="m-0 text-meta text-ink-soft">{t('home.noSetlist')}</p>
