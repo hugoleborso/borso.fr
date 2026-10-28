@@ -53,12 +53,12 @@ describe('readInvocationOutcome', () => {
 
   it('names the error type and message when the function threw', () => {
     const outcome = readInvocationOutcome(
-      JSON.stringify({ errorType: 'Error', errorMessage: 'DSQL_SCHEMA is not set' }),
+      JSON.stringify({ errorType: 'TypeError', errorMessage: 'DSQL_SCHEMA is not set' }),
       'Unhandled',
     );
     expect(outcome).toStrictEqual({
       kind: 'failed',
-      reason: 'the reader function failed with Error: DSQL_SCHEMA is not set',
+      reason: 'the reader function failed with TypeError: DSQL_SCHEMA is not set',
     });
   });
 
@@ -82,6 +82,45 @@ describe('readInvocationOutcome', () => {
       '',
     );
     expect(outcome).toMatchObject({ kind: 'rows' });
+  });
+
+  it('falls back when the failure payload names a non-string error type', () => {
+    expect(readInvocationOutcome(JSON.stringify({ errorType: 7 }), 'Unhandled')).toStrictEqual({
+      kind: 'failed',
+      reason: 'the reader function failed with Error: no message given',
+    });
+  });
+
+  it('treats a null payload as no result, rather than reading fields off it', () => {
+    expect(readInvocationOutcome('null', NO_FUNCTION_ERROR)).toStrictEqual({
+      kind: 'failed',
+      reason: 'the reader function returned null, not a result.',
+    });
+  });
+
+  it('treats a null failure payload as naming no error', () => {
+    expect(readInvocationOutcome('null', 'Unhandled')).toStrictEqual({
+      kind: 'failed',
+      reason: 'the reader function failed and returned no error payload.',
+    });
+  });
+
+  it('fails when rows is present but is not an array', () => {
+    expect(
+      readInvocationOutcome(
+        JSON.stringify({ rows: 'one row', schema: 'prod', role: 'ai_reader_prod' }),
+        NO_FUNCTION_ERROR,
+      ),
+    ).toMatchObject({ kind: 'failed' });
+  });
+
+  it('fails when the schema is missing from an otherwise shaped answer', () => {
+    expect(
+      readInvocationOutcome(
+        JSON.stringify({ rows: [], role: 'ai_reader_prod' }),
+        NO_FUNCTION_ERROR,
+      ),
+    ).toMatchObject({ kind: 'failed' });
   });
 
   it('fails when the payload is not JSON', () => {
