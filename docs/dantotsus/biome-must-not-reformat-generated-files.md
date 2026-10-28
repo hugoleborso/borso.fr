@@ -7,7 +7,7 @@ related-pr: '#27'
 fix-pr: '#27'
 fix-commits: [e138811ba9]
 eradication-level: 1
-eradication-paths: [.prettierignore]
+eradication-paths: [.oxfmtrc.json]
 time-to-detect: 30m
 tags: [biome, formatter, drizzle, dsql, knip, deps, last-loop-lepin]
 zone: apps/last-loop-lepin/api/src/database/migrations

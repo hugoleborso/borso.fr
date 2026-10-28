@@ -7,7 +7,8 @@ const IPV6_LITERAL_PATTERN = /^\[.*\]$/;
 const HOSTNAME_LABEL_SEPARATOR = '.';
 
 export type FeedAddressVerdict =
-  { readonly kind: 'accepted'; readonly address: string } | { readonly kind: 'rejected' };
+  | { readonly kind: 'accepted'; readonly address: string }
+  | { readonly kind: 'rejected' };
 
 function parseAddress(raw: string): URL | null {
   try {

@@ -104,7 +104,8 @@ async function judgeQuery(
 }
 
 export type AuthorizationStart =
-  { kind: 'redirect'; location: string } | { kind: 'refused'; error: OAuthErrorCode };
+  | { kind: 'redirect'; location: string }
+  | { kind: 'refused'; error: OAuthErrorCode };
 
 export async function beginAuthorization(query: AuthorizationQuery): Promise<AuthorizationStart> {
   const origins = readOAuthOrigins();
@@ -141,7 +142,8 @@ export async function describeConsent(
 }
 
 export type ConsentOutcome =
-  { kind: 'decided'; redirectTo: string } | { kind: 'invalid-authorization-request' };
+  | { kind: 'decided'; redirectTo: string }
+  | { kind: 'invalid-authorization-request' };
 
 export interface DecideConsentParams {
   readonly query: AuthorizationQuery;

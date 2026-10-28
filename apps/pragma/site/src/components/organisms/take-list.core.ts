@@ -55,7 +55,10 @@ export interface SessionSummary {
 }
 
 export type TakeSessionKey =
-  'takes.noSession' | 'takes.practice' | 'takes.concert' | 'takes.unknownSession';
+  | 'takes.noSession'
+  | 'takes.practice'
+  | 'takes.concert'
+  | 'takes.unknownSession';
 
 export interface TakeSessionLabel {
   readonly key: TakeSessionKey;

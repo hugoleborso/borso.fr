@@ -202,31 +202,31 @@ two concurrent requests cannot both read the old count. See the
 
 ## Enforced by
 
-- `eslint:borso/no-controller-imports-outside-service` keeps a controller to its
+- `oxlint:borso/no-controller-imports-outside-service` keeps a controller to its
   own service, its own schema, and the framework.
-- `eslint:borso/no-cross-slice-repository-imports` stops a service reaching into
+- `oxlint:borso/no-cross-slice-repository-imports` stops a service reaching into
   another slice's repository.
-- `eslint:borso/no-database-client-outside-repository` allows the client import
+- `oxlint:borso/no-database-client-outside-repository` allows the client import
   only in `*.repository.ts` and `database/client.ts`.
-- `eslint:borso/no-array-methods-in-controllers` rejects `map`, `filter`,
+- `oxlint:borso/no-array-methods-in-controllers` rejects `map`, `filter`,
   `reduce`, `find`, `some`, and `every` in a `*.controller.ts` file.
-- `eslint:borso/no-outbound-call-outside-adapter` keeps a call that leaves the
+- `oxlint:borso/no-outbound-call-outside-adapter` keeps a call that leaves the
   process inside an `*.adapter.ts` file.
-- `eslint:borso/no-horizontal-folders-in-api` rejects `domain/`, `controllers/`,
+- `oxlint:borso/no-horizontal-folders-in-api` rejects `domain/`, `controllers/`,
   `services/`, `repositories/` and `routes/` inside `api/src/`, where every rule
   has an owning bounded context. It does not touch `apps/<app>/domain/`, which
   sits beside `api/` rather than inside it and holds only what both sides read.
   See [ADR-0010](../adr/0010-pragma-domain-folder-for-cross-boundary-rules.md).
-- `eslint:borso/no-client-supplied-address-header` rejects `X-Forwarded-For`,
+- `oxlint:borso/no-client-supplied-address-header` rejects `X-Forwarded-For`,
   `X-Real-IP`, `Forwarded` and the other client-written address headers as
   string literals in API source, and the trusted viewer address header outside
   the one file that checks it against the origin secret.
 - `reviewer` checks that a rate-limit bucket meant to hold across instances is
   bumped in one statement rather than read and then written.
-- `eslint:borso/conditions-live-in-pure-functions` covers business branches
+- `oxlint:borso/conditions-live-in-pure-functions` covers business branches
   everywhere else. See
   [02. Purity and core files](./02-purity-and-core-files.md).
-- `eslint:no-restricted-imports` keeps `apps/<app>/domain/` free of React, Hono,
+- `oxlint:no-restricted-imports` keeps `apps/<app>/domain/` free of React, Hono,
   Drizzle, the AWS SDKs and either side's own modules. ADR-0010 justifies that
   folder entirely on both sides reading it, and one framework import ends that.
 - `reviewer` checks that a repository returns rows, arrays and counts rather

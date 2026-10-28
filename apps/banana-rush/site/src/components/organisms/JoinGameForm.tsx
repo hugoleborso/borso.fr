@@ -1,7 +1,11 @@
-import { MONKEY_AVATARS, type MonkeyAvatar, NICKNAME_MAX_LENGTH } from '@domain/monkey.core';
+import {
+  MONKEY_AVATARS,
+  type MonkeyAvatar,
+  NICKNAME_MAX_LENGTH,
+  selectFreeAvatars,
+} from '@domain/monkey.core';
 import { useForm } from '@tanstack/react-form';
 import { useTranslation } from 'react-i18next';
-import { selectFreeAvatars } from '@domain/monkey.core';
 import { ChunkyButton } from '../atoms/ChunkyButton';
 import { FieldLabel } from '../atoms/FieldLabel';
 import { MonkeyPicker } from '../molecules/MonkeyPicker';

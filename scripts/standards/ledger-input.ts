@@ -1,9 +1,14 @@
 import { execFileSync } from 'node:child_process';
 import { existsSync, readdirSync, readFileSync } from 'node:fs';
-import { join } from 'node:path';
-import { ESLint } from 'eslint';
+import { join, matchesGlob } from 'node:path';
+import { z } from 'zod';
 import { readStandardCitations, type Citation } from './citations.core';
 import { findGate, GATE_DEFINITIONS } from './gates.core';
+import {
+  listActiveRules,
+  skipImpossibleMatches,
+  type LintConfiguration,
+} from './lint-configuration.core';
 import {
   resolveCitation,
   type LedgerInput,
@@ -12,6 +17,8 @@ import {
   type ResolvedCitation,
 } from './ledger.core';
 
+const MATCHES_GLOB = skipImpossibleMatches(matchesGlob);
+
 const REPOSITORY_ROOT = process.cwd();
 const STANDARDS_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'standards');
 const HOOKS_DIRECTORY = join(REPOSITORY_ROOT, '.husky');
@@ -19,7 +26,7 @@ const WORKFLOWS_DIRECTORY = join(REPOSITORY_ROOT, '.github', 'workflows');
 const AGENT_HOOKS_DIRECTORY = join(REPOSITORY_ROOT, '.claude', 'hooks');
 const PLUGIN_HOOKS_DIRECTORY = join(REPOSITORY_ROOT, 'plugins', 'borso-harness', 'hooks');
 const APPS_DIRECTORY = join(REPOSITORY_ROOT, 'apps');
-const OFF_SEVERITIES: ReadonlySet<unknown> = new Set(['off', 0]);
+const LINT_CONFIGURATION_FILE = join(REPOSITORY_ROOT, '.oxlintrc.json');
 const STANDARD_FILE_PATTERN = /^\d\d-[a-z0-9-]+\.md$/;
 export const CHECK_SCRIPT_PATTERN = /^scripts\/(?:[a-z0-9-]+\/)*check-[a-z0-9-]+\.(?:sh|ts)$/;
 
@@ -45,7 +52,7 @@ interface Probe {
   readonly path: string;
 }
 
-function listProbes(): readonly Probe[] {
+function collectProbes(): readonly Probe[] {
   const probes: Probe[] = [];
   for (const app of readdirSync(APPS_DIRECTORY).sort()) {
     const siteRoot = resolveSiteRoot(app);
@@ -82,14 +89,40 @@ function listProbes(): readonly Probe[] {
   return probes;
 }
 
-async function mapRulesToActiveScopes(): Promise<ReadonlyMap<string, readonly string[]>> {
-  const eslint = new ESLint({ cwd: REPOSITORY_ROOT });
+const collected: { probes?: readonly Probe[]; scopes?: readonly string[] } = {};
+
+function listProbes(): readonly Probe[] {
+  collected.probes ??= collectProbes();
+  return collected.probes;
+}
+
+const RULE_SETTINGS = z.record(z.string(), z.unknown());
+
+const LINT_CONFIGURATION = z.object({
+  plugins: z.array(z.string()).default([]),
+  jsPlugins: z.array(z.object({ name: z.string(), specifier: z.string() })).default([]),
+  rules: RULE_SETTINGS.default({}),
+  overrides: z
+    .array(
+      z.object({
+        files: z.array(z.string()),
+        plugins: z.array(z.string()).default([]),
+        rules: RULE_SETTINGS.default({}),
+      }),
+    )
+    .default([]),
+});
+
+export function readLintConfiguration(): LintConfiguration {
+  const parsed: unknown = JSON.parse(readFileSync(LINT_CONFIGURATION_FILE, 'utf8'));
+  return LINT_CONFIGURATION.parse(parsed);
+}
+
+function mapRulesToActiveScopes(): ReadonlyMap<string, readonly string[]> {
+  const configuration = readLintConfiguration();
   const scopesByRule = new Map<string, string[]>();
   for (const probe of listProbes()) {
-    const configuration = await eslint.calculateConfigForFile(probe.path);
-    for (const [ruleName, severity] of Object.entries(configuration.rules ?? {})) {
-      const level = Array.isArray(severity) ? severity[0] : severity;
-      if (OFF_SEVERITIES.has(level)) continue;
+    for (const ruleName of listActiveRules(configuration, probe.path, MATCHES_GLOB)) {
       const scopes = scopesByRule.get(ruleName) ?? [];
       if (!scopes.includes(probe.scope)) scopes.push(probe.scope);
       scopesByRule.set(ruleName, scopes);
@@ -98,10 +131,15 @@ async function mapRulesToActiveScopes(): Promise<ReadonlyMap<string, readonly st
   return scopesByRule;
 }
 
-function listAllScopes(): readonly string[] {
+function collectScopes(): readonly string[] {
   const scopes: string[] = [];
   for (const probe of listProbes()) if (!scopes.includes(probe.scope)) scopes.push(probe.scope);
   return scopes;
+}
+
+function listAllScopes(): readonly string[] {
+  collected.scopes ??= collectScopes();
+  return collected.scopes;
 }
 
 function selectCandidateScopes(activeScopes: readonly string[]): readonly string[] {
@@ -123,9 +161,15 @@ function readRegisteredCustomRules(): ReadonlySet<string> {
   return registered;
 }
 
+const siteTexts = new Map<string, string>();
+
 function readSiteText(site: string): string {
+  const cached = siteTexts.get(site);
+  if (cached !== undefined) return cached;
   const path = join(REPOSITORY_ROOT, site);
-  return existsSync(path) ? readFileSync(path, 'utf8') : '';
+  const text = existsSync(path) ? readFileSync(path, 'utf8') : '';
+  siteTexts.set(site, text);
+  return text;
 }
 
 export function listInvocationSites(): readonly string[] {
@@ -164,7 +208,7 @@ function selectInvokingSites(repository: Repository, target: string): readonly s
 function readMechanismFacts(citation: Citation, repository: Repository): MechanismFacts {
   const everywhere = listAllScopes();
   switch (citation.kind) {
-    case 'eslint': {
+    case 'oxlint': {
       const activeScopes = repository.scopesByRule.get(citation.target) ?? [];
       const isCustom = citation.target.startsWith('borso/');
       return {
@@ -213,7 +257,7 @@ function listOrphanMechanisms(
 ): readonly OrphanMechanism[] {
   const orphans: OrphanMechanism[] = [];
   for (const ruleName of [...repository.registeredCustomRules].sort()) {
-    if (!citedTargets.has(ruleName)) orphans.push({ kind: 'eslint', target: ruleName });
+    if (!citedTargets.has(ruleName)) orphans.push({ kind: 'oxlint', target: ruleName });
   }
   for (const file of repository.trackedFiles) {
     if (!CHECK_SCRIPT_PATTERN.test(file)) continue;
@@ -226,9 +270,9 @@ function listOrphanMechanisms(
   return orphans;
 }
 
-export async function buildLedgerInput(): Promise<LedgerInput> {
+export function buildLedgerInput(): LedgerInput {
   const repository: Repository = {
-    scopesByRule: await mapRulesToActiveScopes(),
+    scopesByRule: mapRulesToActiveScopes(),
     registeredCustomRules: readRegisteredCustomRules(),
     invocationSites: listInvocationSites(),
     trackedFiles: listTrackedFiles(),

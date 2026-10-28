@@ -45,7 +45,8 @@ export function mintOpaqueToken(): string {
 }
 
 export type TokenOutcome =
-  { kind: 'issued'; tokens: TokenResponse } | { kind: 'refused'; error: OAuthErrorCode };
+  | { kind: 'issued'; tokens: TokenResponse }
+  | { kind: 'refused'; error: OAuthErrorCode };
 
 const INVALID_GRANT: TokenOutcome = { kind: 'refused', error: 'invalid_grant' };
 
@@ -187,7 +188,8 @@ export async function revokeToken(token: string): Promise<void> {
 }
 
 export type BearerVerdict =
-  { kind: 'authenticated'; memberId: string } | { kind: 'refused'; challenge: string };
+  | { kind: 'authenticated'; memberId: string }
+  | { kind: 'refused'; challenge: string };
 
 async function recordGrantUse(grant: AccessGrant, now: Date): Promise<void> {
   if (!isLastUseStale(grant.lastUsedAt, now)) return;

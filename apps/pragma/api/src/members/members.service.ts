@@ -67,7 +67,9 @@ export async function getMemberInstruments(memberId: string): Promise<MemberInst
 }
 
 export type AssignInstrumentsResult =
-  { kind: 'ok' } | { kind: 'member-not-found' } | { kind: 'instrument-not-found' };
+  | { kind: 'ok' }
+  | { kind: 'member-not-found' }
+  | { kind: 'instrument-not-found' };
 
 export async function assignInstrumentsToMember(
   memberId: string,

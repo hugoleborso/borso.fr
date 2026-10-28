@@ -5,9 +5,9 @@ import { renderLedger, selectLedgerProblems } from './ledger.core';
 
 const LEDGER_PATH = join(process.cwd(), 'docs', 'standards', 'enforcement-ledger.md');
 
-async function main(): Promise<void> {
+function main(): void {
   const isCheck = process.argv.includes('--check');
-  const input = await buildLedgerInput();
+  const input = buildLedgerInput();
   const rendered = renderLedger(input);
   const problems = selectLedgerProblems(input);
 
@@ -31,4 +31,4 @@ async function main(): Promise<void> {
   if (problems.length > 0) process.exitCode = 1;
 }
 
-await main();
+main();

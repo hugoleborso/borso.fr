@@ -63,15 +63,15 @@ each passed individually, while the formatter drift the composite
 threshold together and a catch-up validation found 125 diagnostics.
 
 [ADR-0007](../adr/0007-eslint-with-type-aware-rules-replaces-biome.md)
-replaced Biome with ESLint, and the two halves are now two commands:
-`pnpm exec eslint --no-warn-ignored --max-warnings 0` and
-`node_modules/.bin/prettier --check`. That makes the trap easier to fall
-into, not harder — a brief naming only ESLint reads complete. **Briefs and
-pre-flight gate lists name both.**
+replaced Biome with ESLint, and
+[ADR-0045](../adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md)
+replaced ESLint and Prettier with oxlint and oxfmt. The two halves are two
+commands: `pnpm exec oxlint --type-aware` and `node_modules/.bin/oxfmt --check`.
+That makes the trap easier to fall into, not harder — a brief naming only the
+linter reads complete. **Briefs and pre-flight gate lists name both.**
 
-`--no-warn-ignored --max-warnings 0` is not decoration: ESLint exits 0 on
-a warning, so a brief that drops the flags is the same failure in a third
-disguise.
+`--type-aware` is not decoration: without it the type-aware rules do not run,
+so a brief that drops the flag is the same failure in a third disguise.
 
 ## Verdict claims about routing/auth must name the stage
 

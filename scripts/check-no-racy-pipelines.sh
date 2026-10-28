@@ -33,6 +33,21 @@ cd "$(dirname "$0")/.."
 # both stop before the producer is done.
 RACY_PIPELINE='(find|git ls-files)[^|]*\|[[:space:]]*(head|grep -q)'
 
+# With paths as arguments, the shell scripts among them; pre-commit passes the
+# staged files. With none, every tracked script and hook.
+list_scripts() {
+  if [ "$#" -eq 0 ]; then
+    git ls-files -- '*.sh' '.husky/*'
+    return
+  fi
+  for candidate in "$@"; do
+    case "$candidate" in
+      *.sh | .husky/*) [ -f "$candidate" ] && printf '%s\n' "$candidate" ;;
+    esac
+  done
+  return 0
+}
+
 failed=0
 
 while read -r script; do
@@ -58,7 +73,7 @@ while read -r script; do
   echo "[check-no-racy-pipelines] $script pipes a directory walk into a consumer that stops early:" >&2
   printf '%s\n' "$matches" | sed 's/^/    /' >&2
   failed=1
-done < <(git ls-files -- '*.sh' '.husky/*')
+done < <(list_scripts "$@")
 
 if [ "$failed" -ne 0 ]; then
   echo "[check-no-racy-pipelines] under \`set -o pipefail\` the producer's write error fails the script, and whether it happens is timing. Use \`find … -print -quit\`." >&2

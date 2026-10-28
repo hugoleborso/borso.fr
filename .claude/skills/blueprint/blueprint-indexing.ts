@@ -47,6 +47,7 @@ const SKIPPED_DIRECTORY_NAMES = new Set([
 const SOURCE_EXTENSIONS = ['.ts', '.tsx', '.js'];
 
 const BLUEPRINT_ID_PATTERN = /@Blueprint\s+(\S+)/;
+const BLUEPRINT_MARKER = 'Blueprint';
 const BLUEPRINT_NAME_PATTERN = /@BlueprintName\s+(.+)/;
 const BLUEPRINT_USAGE_PATTERN = /@BlueprintUsage\s+(.+)/;
 const BLUEPRINT_DESCRIPTION_PATTERN = /@BlueprintDescription\s+(.+)/;
@@ -108,8 +109,18 @@ function readTagWithinBlock(
   return found;
 }
 
-function extractBlueprints(absolutePath: string): Blueprint[] {
-  const lines = fs.readFileSync(absolutePath, 'utf8').split('\n');
+interface SourceFile {
+  readonly absolutePath: string;
+  readonly content: string;
+}
+
+function readSourceFile(absolutePath: string): SourceFile {
+  return { absolutePath, content: fs.readFileSync(absolutePath, 'utf8') };
+}
+
+function extractBlueprints({ absolutePath, content }: SourceFile): Blueprint[] {
+  if (!content.includes(BLUEPRINT_MARKER)) return [];
+  const lines = content.split('\n');
   const relativePath = path.relative(REPOSITORY_ROOT, absolutePath);
   const blueprints: Blueprint[] = [];
 
@@ -137,8 +148,8 @@ function extractBlueprints(absolutePath: string): Blueprint[] {
   return blueprints;
 }
 
-function extractFollowers(absolutePath: string): FollowerReference[] {
-  const content = fs.readFileSync(absolutePath, 'utf8');
+function extractFollowers({ absolutePath, content }: SourceFile): FollowerReference[] {
+  if (!content.includes(BLUEPRINT_MARKER)) return [];
   const relativePath = path.relative(REPOSITORY_ROOT, absolutePath);
   return extractFollowsBlueprint(content).map((entry) => ({
     blueprintId: entry.blueprintId,
@@ -310,7 +321,7 @@ function main(): void {
   const isAccepting = process.argv.includes('--accept');
   const sourceFiles = SCAN_DIRECTORIES.flatMap((directory) =>
     fs.existsSync(directory) ? listSourceFiles(directory) : [],
-  );
+  ).map(readSourceFile);
 
   const blueprints = sourceFiles.flatMap((file) => extractBlueprints(file));
   const followers = sourceFiles.flatMap((file) => extractFollowers(file));

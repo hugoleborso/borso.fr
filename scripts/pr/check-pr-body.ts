@@ -4,9 +4,13 @@ import { LIMITS, renderBody, validateBody } from './pr-body.core';
 const args = process.argv.slice(2);
 const RENDER_FLAG = '--render';
 const shouldRender = args.includes(RENDER_FLAG);
-const path = args.find((argument) => argument !== RENDER_FLAG);
+const FLAG_PREFIX = '--';
+const path = args.find((argument) => !argument.startsWith(FLAG_PREFIX));
+const unknownFlag = args.find(
+  (argument) => argument.startsWith(FLAG_PREFIX) && argument !== RENDER_FLAG,
+);
 
-if (path === undefined) {
+if (path === undefined || unknownFlag !== undefined) {
   process.stderr.write(
     [
       'usage: pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md> [--render]',

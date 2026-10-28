@@ -129,7 +129,9 @@ export async function createSetlist(
 }
 
 export type RenameOutcome =
-  { kind: 'ok'; setlist: SetlistRow } | { kind: 'not-found' } | { kind: 'not-renamable' };
+  | { kind: 'ok'; setlist: SetlistRow }
+  | { kind: 'not-found' }
+  | { kind: 'not-renamable' };
 
 // @FollowsBlueprint service-crud-update
 export async function renameSetlist(

@@ -153,19 +153,19 @@ with no visible affordance, a licence attribution, an error.
 
 ## Enforced by
 
-- `eslint:borso/atomic-design-import-direction` fails when an atom imports from
+- `oxlint:borso/atomic-design-import-direction` fails when an atom imports from
   `molecules/` or `organisms/`, or a molecule imports from `organisms/`.
-- `eslint:borso/atomic-design-composition` fails when a file in `molecules/` or
+- `oxlint:borso/atomic-design-composition` fails when a file in `molecules/` or
   `organisms/` renders markup and imports no component at all. The direction
   rule keeps the dependency arrow pointing one way, and this one asks that the
   arrow exist.
-- `eslint:borso/no-flat-components-folder` fails on a component placed directly
+- `oxlint:borso/no-flat-components-folder` fails on a component placed directly
   under `components/`.
-- `eslint:borso/no-components-outside-buckets` fails on a component under
+- `oxlint:borso/no-components-outside-buckets` fails on a component under
   `routes/` that is not the route's own page. Every atomic design rule reads the
   bucket out of the path, so a component living in `routes/` was invisible to
   all of them, and that is where components accumulate.
-- `eslint:borso/no-query-hooks-outside-organisms` rejects `useQuery` and
+- `oxlint:borso/no-query-hooks-outside-organisms` rejects `useQuery` and
   `useMutation` in `atoms/` and `molecules/`.
 - `script:scripts/check-pwa-assets.sh` fails a manifest naming an icon that does
   not ship, which otherwise installs a grey square while every other gate passes.

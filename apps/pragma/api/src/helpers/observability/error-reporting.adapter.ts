@@ -71,6 +71,7 @@ async function answerInRequestSpan(
     {
       name: request.method,
       op: REQUEST_SPAN_OPERATION,
+      // eslint-disable-next-line typescript/no-deprecated -- the request span is a root span under continueTrace and error-reporting.adapter.test.ts asserts this option; replacing it with the root-span pattern Sentry's deprecation notice points to is a tracing change, to be reviewed as one.
       forceTransaction: true,
       attributes: { 'http.request.method': request.method },
     },

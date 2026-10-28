@@ -64,7 +64,10 @@ export function BoardView({
           darkSquareStyle: { backgroundColor: theme.dark },
           lightSquareStyle: { backgroundColor: theme.light },
           boardStyle: { borderRadius: BOARD_BORDER_RADIUS, boxShadow: BOARD_SHADOW },
-          arrowOptions: { ...defaultArrowOptions, color: theme.arrow },
+          arrowOptions: {
+            ...defaultArrowOptions,
+            colors: { ...defaultArrowOptions.colors, default: theme.arrow },
+          },
           arrows,
           squareStyles: highlightSquares,
           animationDurationInMs: MOVE_ANIMATION_MS,

@@ -63,7 +63,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/posttool-format-write.sh",
-            "statusMessage": "Formatting with Prettier"
+            "statusMessage": "Formatting the edited file"
           }
         ]
       },

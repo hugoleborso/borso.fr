@@ -1,5 +1,7 @@
 export type SeedFixtureName =
-  'race-down-to-one-survivor' | 'race-finished' | 'top-with-dnf-candidates';
+  | 'race-down-to-one-survivor'
+  | 'race-finished'
+  | 'top-with-dnf-candidates';
 
 export type EditionStatusName = 'setup' | 'live' | 'finished';
 

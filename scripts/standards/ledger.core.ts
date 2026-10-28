@@ -15,7 +15,7 @@ export interface ResolvedCitation {
 }
 
 const KIND_LABELS: Readonly<Record<CitationKind, string>> = {
-  eslint: 'ESLint rule',
+  oxlint: 'oxlint rule',
   script: 'script',
   generator: 'generator',
   gate: 'gate',

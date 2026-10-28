@@ -66,16 +66,6 @@ createRuleTester('apps/banana-rush/api/src/games/games.schema.ts', { jsx: false 
   { valid: ['export const JOIN_CODE_LENGTH = 4;'], invalid: [] },
 );
 
-createRuleTester(siteFile).run('no-api-declaration-repeated-in-site', ruleOverFixedDeclarations, {
-  valid: [
-    [
-      '// eslint-disable-next-line rule-to-test/no-api-declaration-repeated-in-site -- a reason a reviewer can check',
-      'const JOIN_CODE_LENGTH = 4;',
-    ].join('\n'),
-  ],
-  invalid: [],
-});
-
 describe('listContractDeclarations', () => {
   it('reads an exported constant from any back end file', () => {
     expect(

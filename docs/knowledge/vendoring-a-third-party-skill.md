@@ -14,8 +14,8 @@ Upstream files do not follow this repository's rules, and four gates read every 
 
 | Gate | What it refused | Where the exclusion lives |
 | --- | --- | --- |
-| ESLint | comments and style rules in the skill's browser scripts | `VENDORED_THIRD_PARTY_FILES` in `eslint.config.js` |
-| Prettier | formatting of the same scripts | `.prettierignore` |
+| oxlint | comments and style rules in the skill's browser scripts | `ignorePatterns` in `.oxlintrc.json` |
+| oxfmt | formatting of the same scripts | `ignorePatterns` in `.oxfmtrc.json` |
 | `scripts/check-instructions-name-installed-tools.sh` | `npx impeccable`, which here is the skill's own launcher | the `INSTRUCTION_SURFACES` pathspec |
 | `scripts/check-named-paths-exist.sh` | paths of a project that installs the skill's hook | the `git ls-files` pathspec |
 

@@ -47,36 +47,57 @@ declare -A ALLOWED_TEST_ONLY=(
 
 failed=0
 
-while read -r module; do
-  [ -z "$module" ] && continue
-  # Import specifiers end with the module's basename whatever prefix the caller
-  # uses, so matching the basename is alias-agnostic: `../songs/tonality.core`,
-  # `@domain/tonality.core` and `./tonality.core` all end the same way. The
-  # optional `.js` is not optional in `infra/`, whose ESM imports carry the
-  # emitted extension — leaving it out reported every construct helper as dead.
-  basename_without_extension=$(basename "$module" .ts)
-  callers=$(
-    git ls-files -- ':(glob)apps/**/*.ts' ':(glob)apps/**/*.tsx' ':(glob)infra/**/*.ts' |
-      { grep -v -E '\.test\.tsx?$' || true; } |
-      { grep -v -F "$module" || true; } |
-      tr '\n' '\0' |
-      xargs -0 --no-run-if-empty grep -l -E "/${basename_without_extension//./\\.}(\\.js)?'" 2>/dev/null || true
-  )
-  if [ -z "$callers" ]; then
-    if [ -n "${ALLOWED_TEST_ONLY[$module]+set}" ]; then
-      continue
-    fi
-    if grep -qE "$ALLOWED_TEST_ONLY_PATTERN" <<<"$module"; then
-      continue
-    fi
-    echo "  $module has no caller outside its own test." >&2
-    echo "    A pure module reached only from its test scores 100% on coverage and mutation while running nowhere. Delete it, or call it." >&2
-    failed=1
-  fi
-done < <(
+# Every import specifier that ends in a pure module's basename, read in one pass
+# over the source as `<importing file>:<specifier tail>`. It used to run one
+# `xargs grep` over the whole tree per module, about four hundred of them, and
+# took thirteen seconds; one pass is the same question asked once. Import
+# specifiers end with the module's basename whatever prefix the caller uses, so
+# matching the basename is alias-agnostic: `../songs/tonality.core`,
+# `@domain/tonality.core` and `./tonality.core` all end the same way. The
+# optional `.js` is not optional in `infra/`, whose ESM imports carry the
+# emitted extension.
+references=$(
+  git ls-files -z -- ':(glob)apps/**/*.ts' ':(glob)apps/**/*.tsx' ':(glob)infra/**/*.ts' |
+    xargs -0 --no-run-if-empty grep -oHE "/[A-Za-z0-9_.-]+\.(core|utils)(\.js)?'" 2>/dev/null |
+    { grep -v -E '\.test\.tsx?:' || true; } |
+    sed -E "s|:/(.*)(\.js)?'\$|\t\1|; s|\.js\$||" |
+    sort -u || true
+)
+
+modules=$(
   git ls-files -- ':(glob)apps/**/*.core.ts' ':(glob)apps/**/*.utils.ts' ':(glob)infra/**/*.utils.ts' |
     { grep -v -E '\.test\.ts$' || true; }
 )
+
+uncalled=$(
+  awk -F '\t' '
+    NR == FNR { if ($0 != "") callers[$2] = callers[$2] SUBSEP $1; next }
+    {
+      name = $0
+      sub(/^.*\//, "", name)
+      sub(/\.ts$/, "", name)
+      count = split(callers[name], files, SUBSEP)
+      called = 0
+      for (index_ = 1; index_ <= count; index_++) {
+        if (files[index_] != "" && files[index_] != $0) called = 1
+      }
+      if (!called) print $0
+    }
+  ' <(printf '%s\n' "$references") <(printf '%s\n' "$modules")
+)
+
+while read -r module; do
+  [ -z "$module" ] && continue
+  if [ -n "${ALLOWED_TEST_ONLY[$module]+set}" ]; then
+    continue
+  fi
+  if grep -qE "$ALLOWED_TEST_ONLY_PATTERN" <<<"$module"; then
+    continue
+  fi
+  echo "  $module has no caller outside its own test." >&2
+  echo "    A pure module reached only from its test scores 100% on coverage and mutation while running nowhere. Delete it, or call it." >&2
+  failed=1
+done <<<"$uncalled"
 
 if [ "$failed" -ne 0 ]; then
   exit 1

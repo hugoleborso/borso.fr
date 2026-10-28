@@ -68,7 +68,9 @@ export interface ReviewableFile {
 }
 
 export type SealFailureReason =
-  'never-reviewed' | 'edited-since-it-was-reviewed' | 'sealed-against-an-older-ledger';
+  | 'never-reviewed'
+  | 'edited-since-it-was-reviewed'
+  | 'sealed-against-an-older-ledger';
 
 export interface SealFailure {
   readonly path: string;

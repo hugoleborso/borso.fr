@@ -18,7 +18,10 @@ interface LearnTreeSnapshot {
 }
 
 type PlayMoveResult =
-  'accepted' | 'rejected-out-of-book' | 'rejected-no-variation' | 'rejected-opponents-turn';
+  | 'accepted'
+  | 'rejected-out-of-book'
+  | 'rejected-no-variation'
+  | 'rejected-opponents-turn';
 
 export interface LearnTreeMachine {
   subscribe: (listener: () => void) => () => void;

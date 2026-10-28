@@ -25,7 +25,25 @@ REQUIRED_ICON_SIZES=("192x192" "512x512")
 
 failed=0
 
-for manifest in apps/*/site/public/manifest.webmanifest; do
+# With paths as arguments, only the applications whose site holds one of them;
+# pre-commit passes the staged files. With none, every application, which is
+# how CI calls it. Each application costs two node starts.
+list_manifests() {
+  if [ "$#" -eq 0 ]; then
+    printf '%s\n' apps/*/site/public/manifest.webmanifest
+    return
+  fi
+  for candidate in "$@"; do
+    case "$candidate" in
+      apps/*/site/*)
+        application="${candidate#apps/}"
+        printf 'apps/%s/site/public/manifest.webmanifest\n' "${application%%/*}"
+        ;;
+    esac
+  done | sort -u
+}
+
+while IFS= read -r manifest; do
   [ -f "$manifest" ] || continue
   public_dir="$(dirname "$manifest")"
   site_dir="$(dirname "$public_dir")"
@@ -102,7 +120,7 @@ for manifest in apps/*/site/public/manifest.webmanifest; do
       "$app" "$apple_icon" "$public_dir"
     failed=1
   fi
-done
+done < <(list_manifests "$@")
 
 if [ "$failed" -ne 0 ]; then
   printf '\nA manifest that names a file which is not there installs a grey square,\n'
