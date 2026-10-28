@@ -54,13 +54,25 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
      --recursive --only-show-errors
    ```
 
-   Upload an `index.html` beside them that shows every PNG in the folder, because **the body gets the folder's URL and never a file's**. `pretool-github-pr-body.sh` blocks a markdown image *and* a link whose extension is an image, since the GitHub MCP server wraps either URL in backticks and it renders as code. A directory URL carries no extension, so it survives both the hook and the sanitizer, and one link costs a reviewer one click to see every shot at once:
+   Then ask GitHub Actions to show them on the pull request. One call:
+
+   ```text
+   mcp__github__actions_run_trigger
+     method: run_workflow, owner and repo: this repository
+     workflow_id: screenshots.yml, ref: main, inputs: { pr: "<pr_number>" }
+   ```
+
+   [`screenshots.yml`](../../../../.github/workflows/screenshots.yml) lists `screenshots/pr-<pr_number>/` and posts or updates one comment headed *Screenshots*, with every folder newest first, two images per row, and `before-*.png` beside `after-*.png` when a folder holds both. It shows the first 30 images and links each folder it cut short. The workflow writes that comment with its own token, so the images render. Do not post the images yourself: `add_issue_comment` turns `![alt](url)` into a plain link, and the body hook refuses them. Keep `ref: main`, because the AWS role the workflow assumes trusts `main` and `pull_request` only, and a dispatch from another branch fails at sign-in. Every later push to the pull request refreshes the comment on its own.
+
+   Also upload an `index.html` beside the PNGs that shows every PNG in the folder, because **the body gets the folder's URL and never a file's**. `pretool-github-pr-body.sh` blocks a markdown image *and* a link whose extension is an image, since the GitHub MCP server wraps either URL in backticks and it renders as code. A directory URL carries no extension, so it survives both the hook and the sanitizer. The body points at the comment and keeps the folder as the fallback for when the workflow did not run:
 
    ```markdown
    ### What was checked
 
-   Nine assertions at 375 px and 1280 px, all PASS. [Screenshots](https://screenshots-pr-<pr_number>.preview.borso.fr/<timestamp>/).
+   Nine assertions at 375 px and 1280 px, all PASS. Shown in the Screenshots comment; [folder](https://screenshots-pr-<pr_number>.preview.borso.fr/<timestamp>/).
    ```
+
+   If the dispatch is refused or the run fails, say so in one line and leave the folder link as the only way in.
 
    The previews CloudFront function routes any `<name>-pr-<n>` host, so this needed no bucket, distribution, certificate or DNS record. The bucket's `expire-previews` rule deletes everything after 60 days, so there is nothing to tear down. Delete `.pending-upload/` once the body reads back correctly.
 
