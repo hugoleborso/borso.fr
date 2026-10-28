@@ -3,9 +3,13 @@
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import type { CalendarPlatform } from '../../lib/calendar-guide.utils';
+import { readTextFromClipboard } from '../../lib/clipboard.adapter';
+import { readCalendarPlatform } from '../../lib/display-mode.adapter';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
+import { CalendarFeedGuide } from '../molecules/CalendarFeedGuide';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { type CalendarFeedFormMode, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
 
@@ -14,6 +18,7 @@ const ADDRESS_MAX_LENGTH = 2_048;
 
 export interface CalendarFeedFormProps {
   readonly state: 'connected' | 'absent';
+  readonly initialPlatform?: CalendarPlatform;
   readonly message: string | null;
   readonly error: string | null;
   readonly isRemoving: boolean;
@@ -22,18 +27,28 @@ export interface CalendarFeedFormProps {
 }
 
 interface AddressFieldProps {
+  readonly initialPlatform: CalendarPlatform;
   readonly onSave: (address: string) => Promise<void>;
   readonly onCancel: (() => void) | null;
 }
 
-function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
+function AddressField({ initialPlatform, onSave, onCancel }: AddressFieldProps): JSX.Element {
   const { t } = useTranslation();
+  const [platform, setPlatform] = useState(initialPlatform);
+  const [hasPasteFailed, setHasPasteFailed] = useState(false);
   const form = useForm({
     defaultValues: { address: '' },
     onSubmit: async ({ value }) => {
       await onSave(value.address.trim());
     },
   });
+  const pasteAndConnect = async (): Promise<void> => {
+    const pasted = (await readTextFromClipboard())?.trim() ?? '';
+    setHasPasteFailed(pasted.length === 0);
+    if (pasted.length === 0) return;
+    form.setFieldValue('address', pasted);
+    await form.handleSubmit();
+  };
   return (
     <form
       onSubmit={(event) => {
@@ -43,6 +58,22 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
       }}
       className="flex flex-col gap-2.5"
     >
+      <CalendarFeedGuide platform={platform} onSelectPlatform={setPlatform} />
+      <div>
+        <Button
+          icon="clipboard"
+          type="button"
+          variant="secondary"
+          onClick={() => void pasteAndConnect()}
+        >
+          {t('account.calendarGuide.pasteAndConnect')}
+        </Button>
+      </div>
+      {hasPasteFailed ? (
+        <p className="m-0 text-meta text-ink-soft" role="status">
+          {t('account.calendarGuide.pasteFailed')}
+        </p>
+      ) : null}
       <label className={FIELD_LABEL_CLASS} htmlFor="account-calendar-feed">
         {t('account.calendarFeedAddress')}
       </label>
@@ -95,10 +126,19 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
     await props.onSave(address);
     setIsReplacing(false);
   };
+  const [initialPlatform] = useState(() => props.initialPlatform ?? readCalendarPlatform());
   const mode = selectCalendarFeedFormMode(props.state, isReplacing);
   const viewByMode: Readonly<Record<CalendarFeedFormMode, JSX.Element>> = {
-    entering: <AddressField onSave={saveAndClose} onCancel={null} />,
-    replacing: <AddressField onSave={saveAndClose} onCancel={() => setIsReplacing(false)} />,
+    entering: (
+      <AddressField initialPlatform={initialPlatform} onSave={saveAndClose} onCancel={null} />
+    ),
+    replacing: (
+      <AddressField
+        initialPlatform={initialPlatform}
+        onSave={saveAndClose}
+        onCancel={() => setIsReplacing(false)}
+      />
+    ),
     connected: (
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-meta text-ink">{t('account.calendarFeedConnected')}</span>

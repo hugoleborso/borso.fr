@@ -1,5 +1,9 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { type DisplayEnvironment, readInstallContext } from './display-mode.adapter';
+import {
+  type DisplayEnvironment,
+  readCalendarPlatform,
+  readInstallContext,
+} from './display-mode.adapter';
 
 const IPHONE = 'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X)';
 const LINUX = 'Mozilla/5.0 (X11; Linux x86_64)';
@@ -18,6 +22,11 @@ function stubMatchMedia(isMatching: boolean): void {
 describe('display-mode.adapter', () => {
   afterEach(() => {
     vi.unstubAllGlobals();
+  });
+
+  it('names the calendar platform of the device it reads', () => {
+    expect(readCalendarPlatform({ ...BROWSER_TAB_ON_LINUX, userAgent: IPHONE })).toBe('iphone');
+    expect(readCalendarPlatform(BROWSER_TAB_ON_LINUX)).toBe('computer');
   });
 
   it('reads an iPhone browser tab as iOS and not installed', () => {

@@ -1,5 +1,6 @@
 /** @DependsOnExternal browser-media-query */
 
+import { type CalendarPlatform, selectCalendarPlatform } from './calendar-guide.utils';
 import { isIosDevice } from './device.utils';
 
 export interface DisplayEnvironment {
@@ -33,4 +34,10 @@ export function readInstallContext(
     isIos: isIosDevice(environment.userAgent, environment.maxTouchPoints),
     isStandalone: environment.isHomeScreenApp || environment.matchesStandaloneDisplay,
   };
+}
+
+export function readCalendarPlatform(
+  environment: DisplayEnvironment = readBrowserDisplayEnvironment(),
+): CalendarPlatform {
+  return selectCalendarPlatform(environment.userAgent, environment.maxTouchPoints);
 }
