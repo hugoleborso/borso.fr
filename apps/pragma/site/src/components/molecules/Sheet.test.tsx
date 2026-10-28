@@ -1,9 +1,11 @@
+import { fireEvent } from '@testing-library/react';
 import { act, type ReactNode } from 'react';
 import { createRoot, type Root } from 'react-dom/client';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { Button } from '../atoms/Button';
 import { Sheet } from './Sheet';
+import { SWIPE_CLOSE_DISTANCE_PX } from './sheet-swipe.utils';
 import { stubSheetDialog } from './sheet.test-utils';
 
 declare global {
@@ -141,5 +143,54 @@ describe('Sheet', () => {
       </Sheet>,
     );
     expect(container.querySelector('h2')?.className).toContain('font-sans');
+  });
+
+  function swipeGrabber(fromY: number, toY: number): void {
+    const grabber = container.querySelector<HTMLElement>('[data-sheet-grab]');
+    if (grabber === null) throw new Error('no grabber');
+    act(() => {
+      fireEvent.touchStart(grabber, { touches: [{ clientY: fromY }] });
+      fireEvent.touchMove(grabber, { touches: [{ clientY: toY }] });
+      fireEvent.touchEnd(grabber, { touches: [] });
+    });
+  }
+
+  it('closes when the grabber is swiped down past the threshold', () => {
+    const onClose = vi.fn();
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={onClose}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    swipeGrabber(100, 100 + SWIPE_CLOSE_DISTANCE_PX);
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(container.querySelector('dialog')?.hasAttribute('open')).toBe(false);
+  });
+
+  it('springs back to its place on a short swipe', () => {
+    const onClose = vi.fn();
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={onClose}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    swipeGrabber(100, 100 + SWIPE_CLOSE_DISTANCE_PX - 1);
+    expect(onClose).not.toHaveBeenCalled();
+    expect(container.querySelector('dialog')?.style.transform).toBe('');
+  });
+
+  it('shows no grabber and ignores a swipe on a sheet that cannot be dismissed', () => {
+    const onClose = vi.fn();
+    renderSheet(
+      root,
+      <Sheet title={TITLE} label={TITLE} onClose={onClose} isDismissible={false}>
+        <p>Body</p>
+      </Sheet>,
+    );
+    expect(container.querySelector('[data-sheet-grabber]')).toBeNull();
+    swipeGrabber(100, 400);
+    expect(onClose).not.toHaveBeenCalled();
   });
 });

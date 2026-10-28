@@ -3,7 +3,8 @@ import { cva, type VariantProps } from 'class-variance-authority';
 // @FollowsBlueprint atom-variant
 export const sheetVariants = cva(
   'm-0 mt-auto mx-auto w-full max-w-full sm:max-w-[34rem] flex-col overflow-hidden border-0 p-0 ' +
-    'rounded-t-sheet bg-raised text-ink shadow-overlay open:flex backdrop:bg-scrim',
+    'rounded-t-sheet bg-raised text-ink shadow-overlay open:flex backdrop:bg-scrim ' +
+    'motion-safe:transition-transform motion-safe:duration-200',
   {
     variants: {
       size: {

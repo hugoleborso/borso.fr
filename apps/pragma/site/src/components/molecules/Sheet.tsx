@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next';
 import { openDialogOnAttach, openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { composeClassName } from '../atoms/class-name.utils';
 import { IconButton } from '../atoms/IconButton';
+import { useSheetSwipe } from './sheet-swipe.hook';
 import { SHEET_BODY_CLASS, type SheetVariantProps, sheetVariants } from './sheet.variants';
 
 export interface SheetProps extends SheetVariantProps {
@@ -45,6 +46,8 @@ export function Sheet({
   isCloseDisabled = false,
 }: SheetProps): JSX.Element {
   const { t } = useTranslation();
+  const isSwipeClosable = isDismissible && !isCloseDisabled;
+  const swipe = useSheetSwipe(isSwipeClosable);
   const content = (
     <>
       <div data-sheet-body className={SHEET_BODY_CLASS}>
@@ -61,28 +64,33 @@ export function Sheet({
       aria-label={label}
       className={sheetVariants({ size })}
     >
-      <div
-        aria-hidden="true"
-        className="mx-auto mt-2 h-1 w-9 shrink-0 rounded-pill bg-rule-strong"
-      />
-      <header className="flex shrink-0 items-center gap-2 py-1 pr-2 pl-4">
-        <h2
-          className={composeClassName(
-            'm-0 min-w-0 flex-auto',
-            TITLE_CLASS_BY_KIND[isTitleARecordName ? 'record' : 'tool'],
-          )}
-        >
-          {title}
-        </h2>
-        {headerExtra}
-        <IconButton
-          data-sheet-close
-          icon="close"
-          label={t('common.close')}
-          disabled={isCloseDisabled}
-          onClick={onClose}
-        />
-      </header>
+      <div data-sheet-grab className="shrink-0 touch-none" {...swipe}>
+        {isSwipeClosable ? (
+          <div
+            data-sheet-grabber
+            aria-hidden="true"
+            className="mx-auto mt-2 h-1 w-9 rounded-pill bg-rule-strong"
+          />
+        ) : null}
+        <header className="flex items-center gap-2 py-1 pr-2 pl-4">
+          <h2
+            className={composeClassName(
+              'm-0 min-w-0 flex-auto',
+              TITLE_CLASS_BY_KIND[isTitleARecordName ? 'record' : 'tool'],
+            )}
+          >
+            {title}
+          </h2>
+          {headerExtra}
+          <IconButton
+            data-sheet-close
+            icon="close"
+            label={t('common.close')}
+            disabled={isCloseDisabled}
+            onClick={onClose}
+          />
+        </header>
+      </div>
       {subheader === undefined ? null : <div className="shrink-0 px-4 pb-2">{subheader}</div>}
       {onSubmit === undefined ? (
         content
