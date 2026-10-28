@@ -100,7 +100,9 @@ describe('parseTaskMetricsArguments', () => {
   });
 
   it('refuses a seed it does not know', () => {
-    expect(() => parseTaskMetricsArguments(['--seed', 'empty'])).toThrow('unknown seed empty');
+    expect(() => parseTaskMetricsArguments(['--seed', 'empty'])).toThrow(
+      new Error('unknown seed empty; expected one of audit, no-upcoming-session'),
+    );
   });
 });
 
