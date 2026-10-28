@@ -5,6 +5,7 @@ import {
   buildSpotifyTarget,
   type ListenSubject,
   selectListenTargets,
+  selectSongListenLinks,
 } from './listen-links.utils';
 
 function subject(overrides: Partial<ListenSubject> = {}): ListenSubject {
@@ -93,5 +94,29 @@ describe('selectListenTargets', () => {
       'deezer',
       'spotify',
     ]);
+  });
+});
+
+describe('selectSongListenLinks', () => {
+  const song = {
+    title: 'Get Lucky',
+    artist: 'Daft Punk',
+    deezerTrackId: '67238735',
+    spotifyTrackId: null,
+    links: [
+      { url: 'https://www.youtube.com/watch?v=5NV6Rdv1a3I', provider: 'youtube' as const },
+      { url: 'https://www.deezer.com/track/67238735', provider: 'deezer' as const },
+    ],
+  };
+
+  it('gives one link per track id and per stored link, without repeating an address', () => {
+    expect(selectSongListenLinks(song)).toEqual([
+      { provider: 'deezer', address: 'https://www.deezer.com/track/67238735' },
+      { provider: 'youtube', address: 'https://www.youtube.com/watch?v=5NV6Rdv1a3I' },
+    ]);
+  });
+
+  it('gives nothing for a song with no track id and no link', () => {
+    expect(selectSongListenLinks({ ...song, deezerTrackId: null, links: [] })).toEqual([]);
   });
 });

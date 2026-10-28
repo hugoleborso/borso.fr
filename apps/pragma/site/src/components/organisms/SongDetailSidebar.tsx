@@ -8,7 +8,6 @@ import {
   MASTERY_BAR_COUNT,
   type SongLineupRow,
 } from '../../routes/catalog/song-lineup.core';
-import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
 import { MemberMark } from '../atoms/MemberMark';
@@ -21,7 +20,6 @@ const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medi
 interface SongDetailSidebarProps {
   readonly lineupRows: readonly SongLineupRow[];
   readonly baseEnergy: number | null;
-  readonly onEditDefaultLineup: () => void;
 }
 
 const MASTERY_BAR_INDEXES = Array.from({ length: MASTERY_BAR_COUNT }, (_unused, index) => index);
@@ -34,23 +32,7 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
   return (
     <aside className="flex flex-col gap-4">
       <Card>
-        <div
-          className={composeClassName(
-            LABEL_CLASS,
-            'mb-2.5 flex items-center justify-between gap-2',
-          )}
-        >
-          <span>{t('catalog.defaultLineup')}</span>
-          <Button
-            type="button"
-            variant="quiet"
-            size="sm"
-            onClick={props.onEditDefaultLineup}
-            icon="edit"
-          >
-            {t('common.edit')}
-          </Button>
-        </div>
+        <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('catalog.defaultLineup')}</div>
         <div className="flex flex-col gap-1.5">
           {hasLineup ? null : <span className="text-meta text-ink-soft italic">—</span>}
           {props.lineupRows.map((row) => (

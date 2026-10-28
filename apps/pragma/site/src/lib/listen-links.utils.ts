@@ -1,6 +1,7 @@
 /**
  * @DependsOnExternal deezer
  * @DependsOnExternal spotify
+ * @DependsOnExternal youtube
  * @Feature songs
  */
 
@@ -69,4 +70,31 @@ export function buildSpotifyTarget(subject: ListenSubject): ListenTarget {
 
 export function selectListenTargets(subject: ListenSubject): readonly ListenTarget[] {
   return [buildDeezerTarget(subject), buildSpotifyTarget(subject)];
+}
+
+export type SongListenProvider = 'deezer' | 'spotify' | 'youtube' | 'other';
+
+export interface SongListenLink {
+  readonly provider: SongListenProvider;
+  readonly address: string;
+}
+
+export interface SongListenSource extends ListenSubject {
+  readonly links: readonly { readonly url: string; readonly provider: SongListenProvider }[];
+}
+
+function collectDistinctLinks(candidates: readonly SongListenLink[]): SongListenLink[] {
+  const distinct: SongListenLink[] = [];
+  for (const candidate of candidates) {
+    if (!distinct.some((known) => known.address === candidate.address)) distinct.push(candidate);
+  }
+  return distinct;
+}
+
+export function selectSongListenLinks(song: SongListenSource): readonly SongListenLink[] {
+  const trackLinks = [buildDeezerTarget(song), buildSpotifyTarget(song)]
+    .filter((target) => target.isExact)
+    .map((target) => ({ provider: target.provider, address: target.address }));
+  const storedLinks = song.links.map((link) => ({ provider: link.provider, address: link.url }));
+  return collectDistinctLinks([...trackLinks, ...storedLinks]);
 }

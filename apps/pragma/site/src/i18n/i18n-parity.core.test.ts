@@ -18,15 +18,16 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'catalog.album', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.chartImage', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.chartPdf', readsTheSameBecause: 'the PDF format name' },
+  { key: 'catalog.chordsPdf', readsTheSameBecause: 'the PDF format name' },
+  { key: 'catalog.chordsPhoto', readsTheSameBecause: 'same word, same spelling' },
   {
-    key: 'catalog.energyBadge',
-    readsTheSameBecause: '"E" — the initial of Energy and of Énergie alike',
+    key: 'catalog.chordsTextPlaceholder',
+    readsTheSameBecause: 'a sample chord chart, lyrics in the language of the song',
   },
   { key: 'catalog.linkPlaceholder', readsTheSameBecause: 'a URL placeholder, not prose' },
-  {
-    key: 'catalog.masteryBadge',
-    readsTheSameBecause: '"M" — the initial of Mastery and of Maîtrise alike',
-  },
+  { key: 'catalog.listenDeezer', readsTheSameBecause: 'Deezer, a proper noun' },
+  { key: 'catalog.listenSpotify', readsTheSameBecause: 'Spotify, a proper noun' },
+  { key: 'catalog.listenYoutube', readsTheSameBecause: 'YouTube, a proper noun' },
   { key: 'catalog.noMastery', readsTheSameBecause: 'an em dash, not a word' },
   {
     key: 'catalog.notesGimmicks',

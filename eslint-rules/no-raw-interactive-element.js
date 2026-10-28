@@ -2,7 +2,7 @@ import { readFileBaseName } from './class-strings.js';
 
 const BUTTON_MESSAGE =
   'A raw <button> draws a button the design system does not know: no icon, no tap target, ' +
-  'no variant. Use Button, IconButton, Chip, ListRow, SectionTabs or Menu. ' +
+  'no variant. Use Button, IconButton, RoundAction, Chip, ListRow, SectionTabs or Menu. ' +
   'See docs/standards/05-frontend-architecture.md.';
 
 const DIALOG_MESSAGE =
@@ -13,6 +13,7 @@ const DIALOG_MESSAGE =
 const DEFAULT_BUTTON_FILES = [
   'Button.tsx',
   'IconButton.tsx',
+  'RoundAction.tsx',
   'Chip.tsx',
   'ListRow.tsx',
   'SectionTabs.tsx',

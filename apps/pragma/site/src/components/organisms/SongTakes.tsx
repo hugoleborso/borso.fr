@@ -8,7 +8,6 @@ import { takeQueue } from '../../lib/take-queue.setup';
 import { IconButton } from '../atoms/IconButton';
 import { Card } from '../atoms/Card';
 import { mergePendingTakes } from './take-list.core';
-import { RecordingSheet } from './RecordingSheet';
 import { TakeList } from './TakeList';
 import { TakePlayer } from './TakePlayer';
 import { TakeUploadForm } from './TakeUploadForm';
@@ -54,7 +53,6 @@ export function SongTakes({
         <h2 className="text-label tracking-wider uppercase text-ink-soft font-medium flex-1 m-0">
           {t('takes.title')}
         </h2>
-        <RecordingSheet songId={songId} songTitle={songTitle} sessionId={null} />
         <IconButton
           variant="secondary"
           icon="upload"

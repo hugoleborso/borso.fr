@@ -51,3 +51,7 @@ SOFTWARE.
 ## Newsreader
 
 The display face is Newsreader, by Production Type, under the SIL Open Font License 1.1, self-hosted from `@fontsource-variable/newsreader` ([ADR-0048](../../docs/adr/0048-newsreader-replaces-instrument-serif.md)).
+
+## YouTube mark
+
+The YouTube path in `site/src/components/atoms/BrandLogo.tsx` is copied from Simple Icons 16.36.0 (https://simpleicons.org), whose entry names YouTube's brand resources (https://www.youtube.com/howyoutubeworks/resources/brand-resources/#logos-icons-and-colors) as its source, with the colour `#FF0000`. Simple Icons is distributed under CC0 1.0 Universal; the mark itself remains YouTube's trademark and is shown only to link to the video it names.
