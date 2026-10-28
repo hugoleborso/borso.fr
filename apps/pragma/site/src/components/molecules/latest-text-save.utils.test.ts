@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  isInFlightSaveSuperseded,
   buildLatestTextSaveState,
   type LatestTextSaveEvent,
   type LatestTextSaveState,
@@ -117,5 +118,28 @@ describe('selectTextSaveDisplay', () => {
 
   it('says nothing while the pause before a save runs', () => {
     expect(selectTextSaveDisplay('unsaved', true)).toBe('none');
+  });
+});
+
+describe('isInFlightSaveSuperseded', () => {
+  it('is false with nothing in flight', () => {
+    expect(isInFlightSaveSuperseded(buildLatestTextSaveState('Intro'))).toBe(false);
+  });
+
+  it('is false while the text in flight is still the latest', () => {
+    const state = reduceLatestTextSave(
+      reduceLatestTextSave(buildLatestTextSaveState(''), { kind: 'typed', text: 'Intro' }),
+      { kind: 'saveStarted', text: 'Intro' },
+    );
+    expect(isInFlightSaveSuperseded(state)).toBe(false);
+  });
+
+  it('is true once newer text was typed behind the save in flight', () => {
+    const inFlight = reduceLatestTextSave(buildLatestTextSaveState(''), {
+      kind: 'saveStarted',
+      text: 'Intro',
+    });
+    const state = reduceLatestTextSave(inFlight, { kind: 'typed', text: 'Intro long' });
+    expect(isInFlightSaveSuperseded(state)).toBe(true);
   });
 });

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildSetlistViewParams, selectSetlistView } from './setlist-view.core';
+import {
+  buildSetlistViewParams,
+  describeSetlistViewForEvent,
+  selectSetlistView,
+} from './setlist-view.core';
 
 describe('selectSetlistView', () => {
   it('opens on Songs when the address names nothing', () => {
@@ -60,5 +64,13 @@ describe('buildSetlistViewParams', () => {
 
   it('writes the view alone for My part with no member yet', () => {
     expect(buildSetlistViewParams('my-part', null)).toEqual({ view: 'my-part' });
+  });
+});
+
+describe('describeSetlistViewForEvent', () => {
+  it('names each view the way the analytics events spell it', () => {
+    expect(describeSetlistViewForEvent('songs')).toBe('songs');
+    expect(describeSetlistViewForEvent('lineup')).toBe('lineup');
+    expect(describeSetlistViewForEvent('my-part')).toBe('my_part');
   });
 });

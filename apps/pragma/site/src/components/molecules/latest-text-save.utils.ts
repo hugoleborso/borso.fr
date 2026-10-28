@@ -39,6 +39,10 @@ export function planNextSave(state: LatestTextSaveState): string | null {
   return state.latestText === state.savedText ? null : state.latestText;
 }
 
+export function isInFlightSaveSuperseded(state: LatestTextSaveState): boolean {
+  return state.inFlightText !== null && state.inFlightText !== state.latestText;
+}
+
 export function selectLatestTextSaveStatus(state: LatestTextSaveState): LatestTextSaveStatus {
   if (state.inFlightText !== null) return 'saving';
   if (state.hasFailed) return 'failed';

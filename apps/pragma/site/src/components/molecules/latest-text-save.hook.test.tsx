@@ -40,6 +40,26 @@ describe('useLatestTextSave', () => {
     vi.useRealTimers();
   });
 
+  it('reports each save that settles, and whether newer text was already waiting', async () => {
+    const save = vi.fn(
+      async () =>
+        new Promise((resolve) => {
+          setTimeout(resolve, TEXT_SAVE_PAUSE_MS);
+        }),
+    );
+    const onSaved = vi.fn();
+    const { result } = renderHook(() => useLatestTextSave({ savedText: '', save, onSaved }));
+    act(() => {
+      result.current.type('Intro');
+      result.current.flush();
+      result.current.type('Intro long');
+    });
+    await act(async () => {
+      await vi.runAllTimersAsync();
+    });
+    expect(onSaved.mock.calls).toEqual([[{ isSuperseded: true }], [{ isSuperseded: false }]]);
+  });
+
   it('sends one save after the pause, with the text typed so far', async () => {
     const save = vi.fn(async () => ({}));
     const { result } = renderHook(() => useLatestTextSave({ savedText: '', save }));

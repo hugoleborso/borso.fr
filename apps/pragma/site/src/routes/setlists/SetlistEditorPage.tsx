@@ -23,7 +23,9 @@ import { useSongsList } from '../../lib/queries/songs.queries';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useSetlistSessions } from '../../lib/setlist-sessions.hook';
 import { buildSetlistHeader } from './setlist-header.core';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import {
+  describeSetlistViewForEvent,
   buildSetlistViewParams,
   SETLIST_VIEW_PARAM,
   selectSetlistView,
@@ -159,7 +161,10 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
         setlistId={setlist.id}
         view={viewChoice.view}
         memberId={viewChoice.memberId}
-        onSelectView={(view) => showView(view, viewChoice.memberId)}
+        onSelectView={(view) => {
+          recordProductEvent('setlist_view_changed', { view: describeSetlistViewForEvent(view) });
+          showView(view, viewChoice.memberId);
+        }}
         onSelectMember={(memberId) => showView('my-part', memberId)}
       />
     </section>
