@@ -137,6 +137,12 @@ describe('chartFromDraft', () => {
     ).toEqual({ kind: 'chordpro', text: '[C]' });
   });
 
+  it('saves pasted chords above lyrics as ChordPro', () => {
+    expect(
+      chartFromDraft({ ...BLANK_SONG_DRAFT, chartKind: 'chordpro', chordproText: 'C\nHello' }),
+    ).toEqual({ kind: 'chordpro', text: '[C]Hello' });
+  });
+
   it('builds a pdf chart', () => {
     expect(chartFromDraft({ ...BLANK_SONG_DRAFT, chartKind: 'pdf', pdfS3Key: 'a.pdf' })).toEqual({
       kind: 'pdf',

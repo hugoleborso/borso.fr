@@ -13,3 +13,12 @@ export async function didCopyTextToClipboard(text: string): Promise<boolean> {
     return false;
   }
 }
+
+// @FollowsBlueprint browser-clipboard-write
+export async function readTextFromClipboard(): Promise<string | null> {
+  try {
+    return await navigator.clipboard.readText();
+  } catch {
+    return null;
+  }
+}

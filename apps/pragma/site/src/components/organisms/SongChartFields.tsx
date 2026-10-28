@@ -1,11 +1,20 @@
 /** @Feature songs */
 
+import { CHART_IMAGE_CONTENT_TYPES, CHART_PDF_CONTENT_TYPE } from '@domain/chart-upload.core';
 import { CHORDPRO_TEXT_MAX_LENGTH } from '@domain/input-limits.core';
+import { type ChangeEvent, type JSX, useRef, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { readTextFromClipboard } from '../../lib/clipboard.adapter';
+import { readPdfTextItems } from '../../lib/pdf-text.adapter';
+import { hasChosenChart } from '../../routes/catalog/chart-kind.utils';
+import { layOutPdfText } from '../../routes/catalog/pdf-text-layout.core';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
+import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
 import { composeClassName } from '../atoms/class-name.utils';
+import { useChartUpload } from './chart-upload.hook';
 import { FileDrop } from './FileDrop';
+import { SongChordPreview } from './SongChordPreview';
 
 export type SongChartKind = 'none' | 'chordpro' | 'pdf' | 'image';
 
@@ -28,15 +37,135 @@ interface SongChartFieldsProps {
 }
 
 const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
-const RADIO_LABEL_CLASS =
-  'inline-flex items-center gap-2 min-h-11 px-2 rounded-md text-meta text-ink cursor-pointer';
-const RADIO_INPUT_CLASS = 'w-5 h-5 accent-accent';
+const CHORD_TEXT_ID = 'song-chord-text';
+const CHORD_TEXT_ROWS = 6;
+const IMAGE_ACCEPT = CHART_IMAGE_CONTENT_TYPES.join(',');
 
-// @FollowsBlueprint organism-presentational
+function readChosenFile(event: ChangeEvent<HTMLInputElement>): File | null {
+  return event.target.files?.[0] ?? null;
+}
+
+// @FollowsBlueprint organism-query-owning
 export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
   const { t } = useTranslation();
+  const chartUpload = useChartUpload(props.songId);
+  const photoInput = useRef<HTMLInputElement>(null);
+  const pdfInput = useRef<HTMLInputElement>(null);
+  const [isReadingPdf, setIsReadingPdf] = useState(false);
+  const isBusy = isReadingPdf || chartUpload.isBusy;
+  const isChartChosen = hasChosenChart(props.chartKind);
+
+  const showText = (text: string): void => {
+    chartUpload.clearError();
+    props.onChartKindChange('chordpro');
+    props.onChordproChange(text);
+  };
+
+  const pasteText = async (): Promise<void> => {
+    const clipboardText = await readTextFromClipboard();
+    showText(clipboardText ?? props.chordproText);
+  };
+
+  const storePhoto = async (file: File): Promise<void> => {
+    const uploaded = await chartUpload.upload(file);
+    if (uploaded === null) return;
+    props.onImageKeyChange(uploaded.objectKey);
+    props.onChartKindChange('image');
+  };
+
+  const storePdf = async (file: File): Promise<void> => {
+    setIsReadingPdf(true);
+    const text = await readPdfTextItems(file)
+      .then(layOutPdfText)
+      .catch(() => '');
+    setIsReadingPdf(false);
+    if (text.length > 0) {
+      showText(text);
+      return;
+    }
+    const uploaded = await chartUpload.upload(file);
+    if (uploaded === null) return;
+    props.onPdfKeyChange(uploaded.objectKey);
+    props.onChartKindChange('pdf');
+  };
+
   return (
     <>
+      <fieldset className="mt-2 flex flex-col gap-3 rounded-md border border-rule p-3">
+        <legend className={composeClassName(LABEL_CLASS, 'px-2')}>{t('catalog.chordChart')}</legend>
+        <div className="flex flex-wrap gap-2">
+          <Button
+            variant="secondary"
+            icon="clipboard"
+            disabled={isBusy}
+            onClick={() => void pasteText()}
+          >
+            {t('catalog.chordsPaste')}
+          </Button>
+          <Button
+            variant="secondary"
+            icon="camera"
+            disabled={isBusy}
+            onClick={() => photoInput.current?.click()}
+          >
+            {t('catalog.chordsPhoto')}
+          </Button>
+          <Button
+            variant="secondary"
+            icon="upload"
+            disabled={isBusy}
+            onClick={() => pdfInput.current?.click()}
+          >
+            {t('catalog.chordsPdf')}
+          </Button>
+          <input
+            ref={photoInput}
+            type="file"
+            accept={IMAGE_ACCEPT}
+            className="hidden"
+            aria-label={t('catalog.chordsPhoto')}
+            onChange={(event) => {
+              const chosen = readChosenFile(event);
+              if (chosen !== null) void storePhoto(chosen);
+            }}
+          />
+          <input
+            ref={pdfInput}
+            type="file"
+            accept={CHART_PDF_CONTENT_TYPE}
+            className="hidden"
+            aria-label={t('catalog.chordsPdf')}
+            onChange={(event) => {
+              const chosen = readChosenFile(event);
+              if (chosen !== null) void storePdf(chosen);
+            }}
+          />
+        </div>
+        {isReadingPdf ? (
+          <p className="m-0 text-meta text-ink-soft">{t('catalog.chordsReadingPdf')}</p>
+        ) : null}
+        {chartUpload.isBusy ? (
+          <p className="m-0 text-meta text-ink-soft">{t('catalog.uploadInProgress')}</p>
+        ) : null}
+        {chartUpload.error === null ? null : (
+          <p className="m-0 text-meta text-danger" role="alert">
+            {chartUpload.error}
+          </p>
+        )}
+        <SongChartEditor {...props} />
+        {isChartChosen ? (
+          <Button
+            variant="quiet"
+            size="sm"
+            icon="trash"
+            className="self-start"
+            onClick={() => props.onChartKindChange('none')}
+          >
+            {t('catalog.chordsRemove')}
+          </Button>
+        ) : null}
+      </fieldset>
+
       <label className={LABEL_CLASS} htmlFor="song-tonality-start">
         {t('catalog.tonalityStart')}
       </label>
@@ -70,83 +199,37 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
         value={props.baseEnergy}
         onChange={(event) => props.onBaseEnergyChange(event.target.value)}
       />
-
-      <fieldset className="border border-rule rounded-md p-3 mt-2">
-        <legend className={composeClassName(LABEL_CLASS, 'px-2')}>{t('catalog.chordChart')}</legend>
-        <div className="flex flex-wrap gap-3">
-          <label className={RADIO_LABEL_CLASS}>
-            <input
-              type="radio"
-              name="chart-kind"
-              className={RADIO_INPUT_CLASS}
-              checked={props.chartKind === 'none'}
-              onChange={() => props.onChartKindChange('none')}
-            />
-            —
-          </label>
-          <label className={RADIO_LABEL_CLASS}>
-            <input
-              type="radio"
-              name="chart-kind"
-              className={RADIO_INPUT_CLASS}
-              checked={props.chartKind === 'chordpro'}
-              onChange={() => props.onChartKindChange('chordpro')}
-            />
-            {t('catalog.chartChordpro')}
-          </label>
-          <label className={RADIO_LABEL_CLASS}>
-            <input
-              type="radio"
-              name="chart-kind"
-              className={RADIO_INPUT_CLASS}
-              checked={props.chartKind === 'pdf'}
-              onChange={() => props.onChartKindChange('pdf')}
-            />
-            {t('catalog.chartPdf')}
-          </label>
-          <label className={RADIO_LABEL_CLASS}>
-            <input
-              type="radio"
-              name="chart-kind"
-              className={RADIO_INPUT_CLASS}
-              checked={props.chartKind === 'image'}
-              onChange={() => props.onChartKindChange('image')}
-            />
-            {t('catalog.chartImage')}
-          </label>
-        </div>
-        <SongChartEditor {...props} />
-      </fieldset>
     </>
   );
 }
 
-const CHORDPRO_ROWS = 10;
-
 function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
-  const keySetterByUploadKind = {
-    pdf: props.onPdfKeyChange,
-    image: props.onImageKeyChange,
-  } as const;
-
+  const { t } = useTranslation();
   if (props.chartKind === 'chordpro') {
     return (
-      <AutoGrowTextarea
-        value={props.chordproText}
-        onChange={(event) => props.onChordproChange(event.target.value)}
-        className="mt-3 font-mono"
-        rows={CHORDPRO_ROWS}
-        maxLength={CHORDPRO_TEXT_MAX_LENGTH}
-      />
+      <div className="flex flex-col gap-2">
+        <label className={LABEL_CLASS} htmlFor={CHORD_TEXT_ID}>
+          {t('catalog.chordsTextLabel')}
+        </label>
+        <AutoGrowTextarea
+          id={CHORD_TEXT_ID}
+          value={props.chordproText}
+          onChange={(event) => props.onChordproChange(event.target.value)}
+          placeholder={t('catalog.chordsTextPlaceholder')}
+          className="font-mono"
+          rows={CHORD_TEXT_ROWS}
+          maxLength={CHORDPRO_TEXT_MAX_LENGTH}
+        />
+        <SongChordPreview chordText={props.chordproText} />
+      </div>
     );
   }
   if (props.chartKind === 'pdf') {
     return (
       <FileDrop
-        className="mt-3"
         songId={props.songId}
         currentObjectKey={props.pdfS3Key}
-        onUploaded={(result) => keySetterByUploadKind[result.kind](result.objectKey)}
+        onUploaded={(result) => props.onPdfKeyChange(result.objectKey)}
         onRemoved={() => props.onPdfKeyChange('')}
       />
     );
@@ -154,10 +237,9 @@ function SongChartEditor(props: SongChartFieldsProps): JSX.Element | null {
   if (props.chartKind === 'image') {
     return (
       <FileDrop
-        className="mt-3"
         songId={props.songId}
         currentObjectKey={props.imageS3Key}
-        onUploaded={(result) => keySetterByUploadKind[result.kind](result.objectKey)}
+        onUploaded={(result) => props.onImageKeyChange(result.objectKey)}
         onRemoved={() => props.onImageKeyChange('')}
       />
     );

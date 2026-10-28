@@ -32,3 +32,9 @@ export function extractChartKind(chart: ChartLike | null | undefined): ChartKind
   }
   return null;
 }
+
+const NO_CHART = 'none';
+
+export function hasChosenChart(chartKind: string): boolean {
+  return chartKind !== NO_CHART;
+}

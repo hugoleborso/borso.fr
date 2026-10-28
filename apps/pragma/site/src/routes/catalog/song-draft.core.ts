@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS, type SongOrigin } from '@domain/song-origin.core';
 import type { SongChartKind } from '../../components/organisms/SongChartFields';
 import type { SongExternalLinkValue } from '../../components/organisms/SongExternalLinks';
+import { convertChordsAboveLyrics } from './chords-above-lyrics.core';
 
 export const songStatuses = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const linkProviders = ['spotify', 'deezer', 'youtube', 'other'] as const;
@@ -138,7 +139,9 @@ export function songFromApi(song: Song): SongDraftState {
 
 export function chartFromDraft(draft: SongDraftState): Song['chart'] {
   if (draft.chartKind === 'none') return null;
-  if (draft.chartKind === 'chordpro') return { kind: 'chordpro', text: draft.chordproText };
+  if (draft.chartKind === 'chordpro') {
+    return { kind: 'chordpro', text: convertChordsAboveLyrics(draft.chordproText).chordPro };
+  }
   if (draft.chartKind === 'pdf') return { kind: 'pdf', s3Key: draft.pdfS3Key };
   return { kind: 'image', s3Key: draft.imageS3Key };
 }

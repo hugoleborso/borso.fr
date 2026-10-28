@@ -118,7 +118,6 @@
     "createSearched": "Create “{{title}}”",
     "crumb": "Repertoire",
     "deezerTrackId": "Deezer track ID",
-    "deezerTrackIdPlaceholder": "e.g. 67238735",
     "deezerTrackTaken": "This Deezer track already belongs to another song in the catalog:",
     "defaultLineup": "Default lineup",
     "deleteConfirm": "Delete this song? Its chart, notes and links go with it.",
@@ -180,7 +179,15 @@
     "uploadInProgress": "Uploading…",
     "uploadPrompt": "Drop a file or click to pick",
     "uploadTooLarge": "File too large (max {{maxMb}} MB).",
-    "uploadUnsupported": "Unsupported file type."
+    "uploadUnsupported": "Unsupported file type.",
+    "chordsPaste": "Paste text",
+    "chordsPhoto": "Photo",
+    "chordsPdf": "PDF",
+    "chordsTextLabel": "Chords above the lyrics, as chord sites show them",
+    "chordsTextPlaceholder": "Am               Em\nAin't no sunshine when she's gone",
+    "chordsReadingPdf": "Reading the PDF…",
+    "chordsRemove": "Remove the chart",
+    "chordsNoChords": "No chord found: the text is kept as written."
   },
   "common": {
     "actions": "Actions",

@@ -56,6 +56,7 @@
     "hono": "catalog:",
     "i18next": "catalog:",
     "ical.js": "2.2.1",
+    "pdfjs-dist": "6.4.299",
     "postgres": "catalog:",
     "react": "catalog:",
     "react-dom": "catalog:",

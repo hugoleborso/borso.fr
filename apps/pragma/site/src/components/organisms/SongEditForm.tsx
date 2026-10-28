@@ -4,7 +4,6 @@ import { SONG_TEXT_FIELD_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import { Button } from '../atoms/Button';
 import { BottomActions } from '../atoms/BottomActions';
 import { Card } from '../atoms/Card';
@@ -13,13 +12,12 @@ import { BackLink } from '../molecules/BackLink';
 import { PageHeader } from '../molecules/PageHeader';
 import { SongSearch } from './SongSearch';
 import { deriveTonality } from '@domain/tonality.core';
+import { convertChordsAboveLyrics } from '../../routes/catalog/chords-above-lyrics.core';
 import { SongChartFields } from './SongChartFields';
-import { SongChordPreview } from './SongChordPreview';
 import { SongDeleteAction } from './SongDeleteAction';
 import { SongExternalLinks } from './SongExternalLinks';
 import { SongClassificationFields } from '../molecules/SongClassificationFields';
 import { SongLinkAdder } from '../molecules/SongLinkAdder';
-import { SongDeezerTrackIdField } from '../molecules/SongDeezerTrackIdField';
 import { SongExternalMetadataPanel } from '../molecules/SongExternalMetadataPanel';
 import { SongNotesFields } from '../molecules/SongNotesFields';
 import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
@@ -63,7 +61,7 @@ export function SongEditForm({
 
   const applyChordproText = (text: string): void => {
     form.setFieldValue('chordproText', text);
-    const derived = deriveTonality(text);
+    const derived = deriveTonality(convertChordsAboveLyrics(text).chordPro);
     const currentStart = form.getFieldValue('tonalityStart');
     const currentEnd = form.getFieldValue('tonalityEnd');
     if (currentStart.length === 0 && derived.start !== null) {
@@ -97,30 +95,19 @@ export function SongEditForm({
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
-      <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
+      {isNew || songId === undefined ? (
+        <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
+      ) : (
+        <form.Subscribe selector={(state) => state.values.title}>
+          {(titleValue) => <BackLink to={`/catalog/${songId}`} label={titleValue} />}
+        </form.Subscribe>
+      )}
       <form.Subscribe selector={(state) => [state.values.artist, state.values.title] as const}>
         {([artistValue, titleValue]) => (
           <PageHeader
             crumb={artistValue.length > 0 ? artistValue : t('catalog.crumb')}
             title={isNew ? t('catalog.newSong') : titleValue}
-            actions={
-              !isNew && songId !== undefined ? (
-                <Link to={`/catalog/${songId}/scene`}>
-                  <Button variant="primary" type="button" icon="play">
-                    {t('catalog.openScene')}
-                  </Button>
-                </Link>
-              ) : null
-            }
           />
-        )}
-      </form.Subscribe>
-
-      <form.Subscribe
-        selector={(state) => [state.values.chartKind, state.values.chordproText] as const}
-      >
-        {([chartKindValue, chordproValue]) => (
-          <SongChordPreview chartKind={chartKindValue} chordproText={chordproValue} />
         )}
       </form.Subscribe>
 
@@ -165,16 +152,6 @@ export function SongEditForm({
               />
             )}
           </form.Subscribe>
-
-          <form.Field name="deezerTrackId">
-            {(field) => (
-              <SongDeezerTrackIdField
-                value={field.state.value}
-                onChange={field.handleChange}
-                onBlur={field.handleBlur}
-              />
-            )}
-          </form.Field>
 
           <label className={labelClass} htmlFor="song-title">
             {t('catalog.songTitle')}

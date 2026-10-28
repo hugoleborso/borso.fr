@@ -118,7 +118,6 @@
     "createSearched": "Créer « {{title}} »",
     "crumb": "Répertoire",
     "deezerTrackId": "Identifiant Deezer",
-    "deezerTrackIdPlaceholder": "ex. 67238735",
     "deezerTrackTaken": "Ce titre Deezer appartient déjà à un autre morceau du catalogue :",
     "defaultLineup": "Lineup par défaut",
     "deleteConfirm": "Supprimer ce morceau ? Sa grille, ses notes et ses liens partent avec.",
@@ -180,7 +179,15 @@
     "uploadInProgress": "Envoi en cours…",
     "uploadPrompt": "Dépose un fichier ou clique pour choisir",
     "uploadTooLarge": "Fichier trop lourd (max {{maxMb}} Mo).",
-    "uploadUnsupported": "Type de fichier non supporté."
+    "uploadUnsupported": "Type de fichier non supporté.",
+    "chordsPaste": "Coller du texte",
+    "chordsPhoto": "Photo",
+    "chordsPdf": "PDF",
+    "chordsTextLabel": "Les accords au-dessus des paroles, comme sur les sites d'accords",
+    "chordsTextPlaceholder": "Am               Em\nAin't no sunshine when she's gone",
+    "chordsReadingPdf": "Lecture du PDF…",
+    "chordsRemove": "Retirer la grille",
+    "chordsNoChords": "Aucun accord trouvé : le texte est gardé tel quel."
   },
   "common": {
     "actions": "Actions",
