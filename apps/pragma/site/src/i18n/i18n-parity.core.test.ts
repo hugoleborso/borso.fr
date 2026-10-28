@@ -9,6 +9,14 @@ interface IdenticalByDesign {
 }
 
 const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
+  {
+    key: 'account.calendarGuide.platform.android',
+    readsTheSameBecause: 'Android and Google, proper nouns',
+  },
+  {
+    key: 'account.calendarGuide.platform.iphone',
+    readsTheSameBecause: 'iPhone and iCloud, proper nouns',
+  },
   { key: 'appName', readsTheSameBecause: 'the Pragma brand' },
   { key: 'bars.contactEmail', readsTheSameBecause: '"Email" is the label French users read too' },
   { key: 'bars.contactName', readsTheSameBecause: 'same word, same spelling' },
