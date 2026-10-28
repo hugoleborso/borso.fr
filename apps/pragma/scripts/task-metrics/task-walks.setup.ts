@@ -509,16 +509,16 @@ async function didPutOnClipboard(driver: BandSessionDriver, text: string): Promi
   return (await driver.session.evaluate(WRITE_CLIPBOARD, text)) === true;
 }
 
+const CHORDS_SONG_TITLE = "Ain't No Sunshine";
+
 const addChords: TaskWalkRunner = async (driver) => {
-  await driver.startFresh(HOME);
+  const known = await driver.startFresh(HOME);
+  const song = known.songs.find((candidate) => candidate.title === CHORDS_SONG_TITLE);
+  if (song === undefined) throw new Error(`[9] no song titled ${CHORDS_SONG_TITLE} in the seed`);
+  await driver.open(`/catalog/${song.id}`);
   const walk = new TaskWalk(driver.session, '9 Add chords to a song');
-  await walk.tap('Songs tab', { text: '^Songs', css: TAB_LINK });
-  await walk.tap('Search field', { css: 'main input', scope: 'page' });
-  await walk.type('Search', "Ain't No");
-  await walk.tap(
-    "Open Ain't No Sunshine",
-    { text: "Ain't No Sunshine", css: 'main a' },
-    { wait: CREATE_SETTLE_MS },
+  walk.note(
+    'Starts on the song page, where the spec happy path for task 9 starts (Song, Edit, Paste text, paste, check the preview, save) and which its target of 3 taps plus the paste counts from. Reaching a song from Home is measured by task 10.',
   );
   const tapsBeforeSongPage = walk.taps;
   await walk.tap(
