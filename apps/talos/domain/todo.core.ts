@@ -1,6 +1,5 @@
 import { z } from 'zod';
 import {
-  formatLineAttribute,
   type LineAttribute,
   normalizeAttributeKey,
   readLineAttribute,
@@ -12,9 +11,7 @@ const MAXIMUM_TODO_TEXT_LENGTH = 500;
 const TODO_LINE_PATTERN = /^- \[(?<checkbox>[ xX])\] (?<rest>.*)$/;
 const ISO_DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
 const SINGLE_LINE_WITHOUT_SEPARATOR = /^[^|\n\r]*$/;
-const ATTRIBUTE_SEPARATOR = ' | ';
 const LINE_BREAK = '\n';
-const TRAILING_BREAKS_PATTERN = /\n*$/;
 const DUE_DATE_KEY = normalizeAttributeKey('échéance');
 const COMMITMENT_KEY = normalizeAttributeKey('engagement');
 const ADDED_ON_KEY = normalizeAttributeKey('ajouté');
@@ -60,21 +57,6 @@ export interface NewTodo {
   readonly text: string;
   readonly dueDate?: string | undefined;
 }
-
-export type TodoEdit =
-  | { readonly kind: 'saved'; readonly markdown: string; readonly todo: Todo }
-  | { readonly kind: 'not-found' }
-  | { readonly kind: 'duplicate' };
-
-export type TodoRemoval =
-  | {
-      readonly kind: 'removed';
-      readonly markdown: string;
-      readonly todo: Todo;
-      readonly line: string;
-      readonly position: number;
-    }
-  | { readonly kind: 'not-found' };
 
 interface TodoLine {
   readonly lineIndex: number;
@@ -138,171 +120,4 @@ function projectTodo(line: TodoLine): Todo {
 // @FollowsBlueprint core-parse-untrusted
 export function parseTodos(markdown: string): Todo[] {
   return readTodoLines(markdown).map(projectTodo);
-}
-
-function setAttribute(
-  attributes: readonly LineAttribute[],
-  key: string,
-  value: string,
-): LineAttribute[] {
-  const replacement = { key, value, raw: formatLineAttribute(key, value) };
-  const hasKey = attributes.some((attribute) => attribute.key === key);
-  return hasKey
-    ? attributes.map((attribute) => (attribute.key === key ? replacement : attribute))
-    : [...attributes, replacement];
-}
-
-function removeAttribute(attributes: readonly LineAttribute[], key: string): LineAttribute[] {
-  return attributes.filter((attribute) => attribute.key !== key);
-}
-
-function applyDone(line: TodoLine, done: boolean | undefined, today: string): TodoLine {
-  if (done === undefined || done === line.isDone) return line;
-  const attributes = done
-    ? setAttribute(line.attributes, DONE_ON_KEY, today)
-    : removeAttribute(line.attributes, DONE_ON_KEY);
-  return { ...line, isDone: done, attributes };
-}
-
-function applyDueDate(line: TodoLine, dueDate: string | null | undefined): TodoLine {
-  if (dueDate === undefined) return line;
-  const attributes =
-    dueDate === null
-      ? removeAttribute(line.attributes, DUE_DATE_KEY)
-      : setAttribute(line.attributes, DUE_DATE_KEY, dueDate);
-  return { ...line, attributes };
-}
-
-function formatTodoLine(line: TodoLine): string {
-  const checkbox = line.isDone ? 'x' : ' ';
-  const attributes = line.attributes.map((attribute) => `${ATTRIBUTE_SEPARATOR}${attribute.raw}`);
-  return `- [${checkbox}] ${line.text}${attributes.join('')}`;
-}
-
-function replaceLine(markdown: string, lineIndex: number, replacement: string): string {
-  return markdown
-    .split(LINE_BREAK)
-    .map((line, index) => (index === lineIndex ? replacement : line))
-    .join(LINE_BREAK);
-}
-
-function isIdTaken(lines: readonly TodoLine[], id: string): boolean {
-  return lines.some((line) => projectTodo(line).id === id);
-}
-
-function isIdTakenByAnotherLine(
-  lines: readonly TodoLine[],
-  id: string,
-  ownLineIndex: number,
-): boolean {
-  return lines.some((line) => line.lineIndex !== ownLineIndex && projectTodo(line).id === id);
-}
-
-// @FollowsBlueprint core-decision
-export function updateTodo(
-  markdown: string,
-  id: string,
-  changes: TodoChanges,
-  today: string,
-): TodoEdit {
-  const lines = readTodoLines(markdown);
-  const target = lines.find((line) => projectTodo(line).id === id);
-  if (target === undefined) return { kind: 'not-found' };
-  const renamed = { ...target, text: changes.text ?? target.text };
-  const updated = applyDueDate(applyDone(renamed, changes.done, today), changes.dueDate);
-  const todo = projectTodo(updated);
-  if (isIdTakenByAnotherLine(lines, todo.id, target.lineIndex)) return { kind: 'duplicate' };
-  return {
-    kind: 'saved',
-    markdown: replaceLine(markdown, target.lineIndex, formatTodoLine(updated)),
-    todo,
-  };
-}
-
-function insertLineAfter(
-  markdown: string,
-  lineIndex: number | undefined,
-  line: string,
-  heading: string,
-): string {
-  if (lineIndex === undefined) {
-    const base = markdown.trim() === '' ? heading : markdown;
-    return `${base.replace(TRAILING_BREAKS_PATTERN, '')}${LINE_BREAK}${LINE_BREAK}${line}${LINE_BREAK}`;
-  }
-  const lines = markdown.split(LINE_BREAK);
-  return [...lines.slice(0, lineIndex + 1), line, ...lines.slice(lineIndex + 1)].join(LINE_BREAK);
-}
-
-export function appendTodo(
-  markdown: string,
-  newTodo: NewTodo,
-  today: string,
-  heading: string,
-): TodoEdit {
-  const lines = readTodoLines(markdown);
-  const dueDateAttributes =
-    newTodo.dueDate === undefined ? [] : setAttribute([], DUE_DATE_KEY, newTodo.dueDate);
-  const line: TodoLine = {
-    lineIndex: lines.length,
-    isDone: false,
-    text: newTodo.text,
-    attributes: setAttribute(dueDateAttributes, ADDED_ON_KEY, today),
-  };
-  const todo = projectTodo(line);
-  if (isIdTaken(lines, todo.id)) return { kind: 'duplicate' };
-  return {
-    kind: 'saved',
-    markdown: insertLineAfter(markdown, lines.at(-1)?.lineIndex, formatTodoLine(line), heading),
-    todo,
-  };
-}
-
-function removeLine(markdown: string, lineIndex: number): string {
-  return markdown
-    .split(LINE_BREAK)
-    .filter((_line, index) => index !== lineIndex)
-    .join(LINE_BREAK);
-}
-
-// @FollowsBlueprint core-decision
-export function removeTodo(markdown: string, id: string): TodoRemoval {
-  const lines = readTodoLines(markdown);
-  const position = lines.findIndex((line) => projectTodo(line).id === id);
-  const target = lines[position];
-  if (target === undefined) return { kind: 'not-found' };
-  return {
-    kind: 'removed',
-    markdown: removeLine(markdown, target.lineIndex),
-    todo: projectTodo(target),
-    line: formatTodoLine(target),
-    position,
-  };
-}
-
-function insertLineBefore(markdown: string, lineIndex: number, line: string): string {
-  const lines = markdown.split(LINE_BREAK);
-  return [...lines.slice(0, lineIndex), line, ...lines.slice(lineIndex)].join(LINE_BREAK);
-}
-
-export function restoreTodo(
-  markdown: string,
-  line: string,
-  position: number,
-  heading: string,
-): TodoEdit {
-  const restored = readTodoLine(line, position);
-  if (restored === null) return { kind: 'not-found' };
-  const lines = readTodoLines(markdown);
-  const todo = projectTodo(restored);
-  if (isIdTaken(lines, todo.id)) return { kind: 'duplicate' };
-  const formatted = formatTodoLine(restored);
-  const successor = lines[position];
-  return {
-    kind: 'saved',
-    markdown:
-      successor === undefined
-        ? insertLineAfter(markdown, lines.at(-1)?.lineIndex, formatted, heading)
-        : insertLineBefore(markdown, successor.lineIndex, formatted),
-    todo,
-  };
 }

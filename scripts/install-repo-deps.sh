@@ -213,7 +213,7 @@ if command -v agent-browser >/dev/null 2>&1 && [ ! -f "$agent_browser_config" ];
   if [ -x "$browsers_root/chromium" ]; then
     chromium_binary="$browsers_root/chromium"
   else
-    chromium_binary=$(find "$browsers_root" -maxdepth 3 -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort | tail -n1)
+    chromium_binary=$(find "$browsers_root" -maxdepth 3 -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort | tail -n1 || true)
   fi
   if [ -n "$chromium_binary" ]; then
     mkdir -p "$(dirname "$agent_browser_config")"

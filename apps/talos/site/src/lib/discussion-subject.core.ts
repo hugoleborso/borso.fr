@@ -1,4 +1,3 @@
-import { isDatabaseStorage, type StorageMode } from '@domain/storage-mode.core';
 import { TODO_LISTS, type TodoListName } from '@domain/todo-list.core';
 
 export type DiscussionSubjectReference =
@@ -14,42 +13,10 @@ export type DiscussionSubjectReference =
 
 export type DiscussionSubjectKind = DiscussionSubjectReference['kind'];
 
-const MARKDOWN_EXTENSION = '.md';
-const FIXED_FILES = {
-  focus: 'focus.md',
-  scan: 'etat/dernier-scan.json',
-  relations: 'etat/relations.json',
-} as const;
-
-// @FollowsBlueprint core-view-intent
-export function selectSubjectFile(subject: DiscussionSubjectReference): string {
-  switch (subject.kind) {
-    case 'todo':
-    case 'todos':
-      return TODO_LISTS[subject.list].path;
-    case 'focus':
-    case 'scan':
-    case 'relations':
-      return FIXED_FILES[subject.kind];
-    case 'proposal':
-      return `etat/propositions/${subject.slug}${MARKDOWN_EXTENSION}`;
-    case 'draft':
-      return `etat/brouillons/${subject.slug}${MARKDOWN_EXTENSION}`;
-    case 'review':
-      return `journal/${subject.week}-hebdo${MARKDOWN_EXTENSION}`;
-    case 'journal':
-      return `journal/${subject.date}${MARKDOWN_EXTENSION}`;
-    case 'folder':
-      return `${subject.path}/`;
-    case 'commitment':
-    case 'page':
-      return `${subject.path}${MARKDOWN_EXTENSION}`;
-  }
-}
-
 const STATE_KEYS = { scan: 'last_scan', relations: 'relations' } as const;
 
-function selectSubjectSlug(subject: DiscussionSubjectReference): string {
+// @FollowsBlueprint core-view-intent
+export function selectSubjectReference(subject: DiscussionSubjectReference): string {
   switch (subject.kind) {
     case 'todo':
     case 'todos':
@@ -74,11 +41,4 @@ function selectSubjectSlug(subject: DiscussionSubjectReference): string {
     case 'page':
       return `page: ${subject.path}`;
   }
-}
-
-export function selectSubjectReference(
-  subject: DiscussionSubjectReference,
-  storage: StorageMode | undefined,
-): string {
-  return isDatabaseStorage(storage) ? selectSubjectSlug(subject) : selectSubjectFile(subject);
 }

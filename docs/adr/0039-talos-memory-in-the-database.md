@@ -13,12 +13,16 @@ The talos app already owns an Aurora DSQL cluster and a `prod` stage schema for 
 
 ## Decision
 
-**The memory moves from the private git repository to `memory_*` tables in the talos `prod` schema, migrated by drizzle like the authentication tables, and the agents reach it through `/api/agent/*` with one bearer token per environment.** Git stays the truth until the `cutover` key of `memory_state` reads `"database"`; the importer fills the tables before that, and the PWA switches on the flag.
+**The memory moves from the private git repository to `memory_*` tables in the talos `prod` schema, migrated by drizzle like the authentication tables, and the agents reach it through `/api/agent/*` with one bearer token per environment.** Git stayed the truth until the `cutover` key of `memory_state` read `"database"`; the importer filled the tables before that, and the PWA switched on the flag (see the amendment below).
 
 - **Tables.** Seventeen tables, one per noun of the contract, prefixed `memory_`. Every column the contract types `jsonb` is `text` holding JSON, because DSQL refuses `jsonb` as a column type ([`dsql-postgres-compat-gaps.md`](../knowledge/dsql-postgres-compat-gaps.md) §1). The HTTP shape is unchanged: the API decodes the text before answering.
 - **Tokens.** Three new SecureStrings, `/talos/agent-token-lecture`, `/talos/agent-token-build` and `/talos/agent-token-mac`, compared in constant time; the matching name is recorded on every event. The Lambda already reads `/talos/*`, so no infrastructure change is needed. The parameter cache of the Lambda now expires after five minutes, for every talos secret, so a rotated token takes effect without a deploy.
 - **Read-only SQL.** `POST /api/agent/sql` accepts one `SELECT` or `WITH` statement, refuses the write and session keywords outside literals and comments, wraps the statement in `SELECT * FROM (…) LIMIT 501`, and runs it in a transaction opened with `BEGIN READ ONLY`. A separate read-only DSQL role was rejected (see below).
 - **Writes.** Every write goes through `POST /api/agent/changes`: Zod validation of every operation before any write, a secret guard, idempotency by key, chunks of at most 2,500 estimated rows and 8 MiB, three attempts on SQLSTATE `40001`, and one `memory_event` row per operation in the same transaction. No memory repository issues a `DELETE`.
+
+## Amendment, 2026-10-28: the git storage mode is removed
+
+The cutover happened on 2026-10-16 (`memory_state.cutover = "database"`). The private repository has held no data since, and its GitHub token was revoked and `/talos/github-token` deleted. The PWA's git path (the GitHub content store, the per-slice git branches and the per-request `cutover` read) is therefore removed: every content route reads and writes the memory tables, and setting `cutover` back to `git` is no longer a rollback. `/api/agent/status` still reports the `cutover` state for information.
 
 ## DSQL facts this relies on
 

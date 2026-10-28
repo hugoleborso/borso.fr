@@ -1,10 +1,10 @@
-import { readContentRepository } from '../content/content-store.setup';
 import { readTalosSecret } from '../helpers/secrets/secrets.setup';
-import { readStorageMode, type StorageMode } from '../memory/memory-cutover.service';
+
+const REPOSITORY_VARIABLE = 'GITHUB_REPO';
+const DEFAULT_REPOSITORY = 'hugoleborso/talos';
 
 export interface ClaudeCodeTarget {
   readonly repository: string;
-  readonly storage: StorageMode;
   readonly environments: {
     readonly talos: string | null;
     readonly build: string | null;
@@ -13,14 +13,12 @@ export interface ClaudeCodeTarget {
 
 // @FollowsBlueprint service-read-model
 export async function readClaudeCodeTarget(): Promise<ClaudeCodeTarget> {
-  const [talos, build, storage] = await Promise.all([
+  const [talos, build] = await Promise.all([
     readTalosSecret('claude-environment-talos'),
     readTalosSecret('claude-environment-build'),
-    readStorageMode(),
   ]);
   return {
-    repository: readContentRepository(),
-    storage,
+    repository: process.env[REPOSITORY_VARIABLE] ?? DEFAULT_REPOSITORY,
     environments: { talos: talos ?? null, build: build ?? null },
   };
 }

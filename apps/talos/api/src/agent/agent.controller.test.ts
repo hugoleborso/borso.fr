@@ -8,7 +8,7 @@ const ACME = 'second-brain/organisations/acme';
 const COMMITMENT = 'engagements/2026-10-05-devis-acme';
 
 async function postChanges(operations: unknown[], idempotencyKey = `cle-${String(Math.random())}`) {
-  const { app } = buildTestContext({});
+  const { app } = buildTestContext();
   return await requestJson(app, '/api/agent/changes', {
     method: 'POST',
     headers: MAC,
@@ -23,7 +23,7 @@ async function postChanges(operations: unknown[], idempotencyKey = `cle-${String
 }
 
 async function getJson(path: string): Promise<unknown> {
-  const { app } = buildTestContext({});
+  const { app } = buildTestContext();
   const response = await requestJson(app, path, { headers: MAC });
   return await response.json();
 }
@@ -87,7 +87,7 @@ describe('/api/agent', () => {
   });
 
   it('refuses a caller without a known token', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     const response = await requestJson(app, '/api/agent/status', {
       headers: { authorization: 'Bearer faux' },
     });
@@ -160,7 +160,7 @@ describe('/api/agent', () => {
       type: 'commitment',
       outgoing: [],
     });
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     expect(
       (await requestJson(app, '/api/agent/page?slug=second-brain/nulle-part', { headers: MAC }))
         .status,
@@ -219,7 +219,7 @@ describe('/api/agent', () => {
 
   it('answers a read-only select and refuses anything else', async () => {
     await postChanges(SEED);
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     const select = await requestJson(app, '/api/agent/sql', {
       method: 'POST',
       headers: MAC,
@@ -263,7 +263,7 @@ describe('/api/agent', () => {
     expect(exported).toMatchObject({
       tables: { memory_state: [{ key: 'cursors', value: { gmail: '2026-10-15' } }] },
     });
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     const compressed = await app.request('/api/agent/export', {
       headers: { ...MAC, 'Accept-Encoding': 'gzip' },
     });

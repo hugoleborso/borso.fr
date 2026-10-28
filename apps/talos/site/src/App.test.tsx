@@ -179,7 +179,7 @@ describe('the application shell', () => {
     expect(address.searchParams.get('repo')).toBe('proprietaire/notes');
     expect(address.searchParams.get('environment')).toBe('env_lecture');
     expect(address.searchParams.get('q')).toContain(
-      'Tu vas discuter de la tâche « Appeler Bruno » (todo.md).',
+      'Tu vas discuter de la tâche « Appeler Bruno » (todo: personal).',
     );
     const writeText = vi.fn(() => Promise.resolve());
     Object.defineProperty(navigator, 'clipboard', { value: { writeText }, configurable: true });

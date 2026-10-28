@@ -1,13 +1,6 @@
 import type { TodoList } from '@domain/todo-list.core';
-import {
-  isoDateSchema,
-  type Todo,
-  type TodoChanges,
-  type TodoEdit,
-  type TodoRemoval,
-} from '@domain/todo.core';
+import { isoDateSchema, type Todo, type TodoChanges } from '@domain/todo.core';
 import { z } from 'zod';
-import type { FileEdit } from '../content/content.service';
 
 // @FollowsBlueprint core-decision
 export function describeTodoChange(list: TodoList, changes: TodoChanges, text: string): string {
@@ -26,26 +19,6 @@ export function describeTodoRemoval(list: TodoList, text: string): string {
 
 export function describeTodoRestoration(list: TodoList, text: string): string {
   return `pwa : ${list.commitNoun} restaurée « ${text} »`;
-}
-
-export function buildTodoRemovalFileEdit(
-  list: TodoList,
-  removal: TodoRemoval,
-): FileEdit<TodoRemoval> {
-  if (removal.kind !== 'removed') return { content: null, outcome: removal };
-  return {
-    content: removal.markdown,
-    commitMessage: describeTodoRemoval(list, removal.todo.text),
-    outcome: removal,
-  };
-}
-
-export function buildTodoFileEdit(
-  edit: TodoEdit,
-  describe: (text: string) => string,
-): FileEdit<TodoEdit> {
-  if (edit.kind !== 'saved') return { content: null, outcome: edit };
-  return { content: edit.markdown, commitMessage: describe(edit.todo.text), outcome: edit };
 }
 
 export interface RemovedTodo {

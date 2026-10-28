@@ -1,8 +1,7 @@
 ---
-summary: 'talos opens nothing without a passkey: drive pnpm dev with a CDP virtual authenticator, fictional content in TALOS_DEV_CONTENT_ROOT, and wipe the local database before each new browser context.'
+summary: 'talos opens nothing without a passkey: drive pnpm dev with a CDP virtual authenticator, the fictional memory `dev:db` seeds, and wipe the local database before each new browser context.'
 triggers:
   commands:
-    - 'TALOS_DEV_CONTENT_ROOT'
     - 'talos.*db:local:wipe'
     - 'WebAuthn\.addVirtualAuthenticator'
 ---
@@ -13,7 +12,7 @@ talos has no preview stage ([ADR-0027](../adr/0027-talos-deploys-to-prod-only.md
 
 ## The recipe that worked on PR #171
 
-1. Write fictional content into a folder outside the repository, in the formats of `apps/talos/CONTRAT.md`, and start the app on it: `TALOS_DEV_CONTENT_ROOT=<folder> pnpm dev` from `apps/talos/`. Writes stay in memory.
+1. Start the app with `pnpm dev` from `apps/talos/`: `dev:db` seeds the local database with the fictional memory of `apps/talos/test/memory-seed.json`. Edit that file, or post more operations to `/api/agent/changes`, for other content.
 2. In Playwright, open a CDP session on the page and add a virtual authenticator before the first navigation: `WebAuthn.enable`, then `WebAuthn.addVirtualAuthenticator` with `protocol: 'ctap2'`, `transport: 'internal'`, `hasResidentKey`, `hasUserVerification`, `isUserVerified` and `automaticPresenceSimulation` all true.
 3. On `/login`, the first run shows the bootstrap step: fill `#bootstrap-code` with `talos-dev` and press « Créer la passkey ».
 4. Switch light and dark with `page.emulateMedia({ colorScheme })` on the same page. A new browser context means a new authenticator with no credential.

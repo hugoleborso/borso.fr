@@ -1,5 +1,3 @@
-import { z } from 'zod';
-
 export interface GraphRelation {
   readonly source: string;
   readonly relation: string;
@@ -37,55 +35,6 @@ const MONTH_LENGTH = 7;
 const UNKNOWN_NODE_TYPE = 'inconnu';
 const PATH_SEPARATOR = '/';
 
-const TARGET_FIELD = 'cible';
-const SINCE_FIELD = 'depuis';
-const UNTIL_FIELD = 'jusqua';
-const SEEN_FIELD = 'vu';
-const PROXIMITY_FIELD = 'proximite';
-const HIGHEST_PROXIMITY = 5;
-const PROXIMITY_BY_DECLARATION: ReadonlyMap<string | undefined, number> = new Map(
-  Array.from({ length: HIGHEST_PROXIMITY }, (_unused, index) => [String(index + 1), index + 1]),
-);
-
-const relationLineSchema = z.object({
-  source: z.string().min(1),
-  relation: z.string().min(1),
-  [TARGET_FIELD]: z.string().min(1),
-  [SINCE_FIELD]: z.string().default(''),
-  [UNTIL_FIELD]: z.string().default(''),
-  [SEEN_FIELD]: z.string().default(''),
-});
-
-function readJsonLine(line: string): unknown {
-  try {
-    return JSON.parse(line);
-  } catch {
-    return null;
-  }
-}
-
-function readRelation(line: string): GraphRelation | null {
-  const relationLine = relationLineSchema.safeParse(readJsonLine(line));
-  if (!relationLine.success) return null;
-  return {
-    source: relationLine.data.source,
-    relation: relationLine.data.relation,
-    target: relationLine.data[TARGET_FIELD],
-    since: relationLine.data[SINCE_FIELD],
-    until: relationLine.data[UNTIL_FIELD],
-    seen: relationLine.data[SEEN_FIELD],
-  };
-}
-
-// @FollowsBlueprint core-parse-untrusted
-export function parseGraphRelations(jsonLines: string): GraphRelation[] {
-  return jsonLines
-    .split('\n')
-    .filter((line) => line.trim() !== '')
-    .map(readRelation)
-    .filter((relation) => relation !== null);
-}
-
 export function computeLowerBound(date: string): string {
   const bare = date.replace(APPROXIMATION_MARK_PATTERN, '');
   if (bare.length === YEAR_LENGTH) return `${bare}-01-01`;
@@ -112,27 +61,6 @@ export function hasRelationStartedBy(relation: GraphRelation, date: string): boo
 export function isRelationClosedOn(relation: GraphRelation, date: string | null): boolean {
   if (relation.until === '') return false;
   return date === null || computeUpperBound(relation.until) < date;
-}
-
-export function readProximity(frontMatter: Readonly<Record<string, string>>): number | null {
-  return PROXIMITY_BY_DECLARATION.get(frontMatter[PROXIMITY_FIELD]) ?? null;
-}
-
-export interface GraphPageSummary {
-  readonly path: string;
-  readonly title: string;
-  readonly type: string;
-  readonly frontMatter: Readonly<Record<string, string>>;
-}
-
-export function projectPageNode(page: GraphPageSummary): GraphNode {
-  const proximity = readProximity(page.frontMatter);
-  return {
-    id: page.path,
-    title: page.title,
-    type: page.type,
-    ...(proximity === null ? {} : { proximity }),
-  };
 }
 
 function projectEdge(relation: GraphRelation, date: string | null): GraphEdge {
