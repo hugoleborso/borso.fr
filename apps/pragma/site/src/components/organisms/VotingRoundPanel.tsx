@@ -21,10 +21,14 @@ import {
 
 export interface VotingRoundPanelProps {
   readonly sessionId: string;
+  readonly openRoundVariant?: 'primary' | 'secondary';
 }
 
 // @FollowsBlueprint organism-query-owning
-export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Element {
+export function VotingRoundPanel({
+  sessionId,
+  openRoundVariant = 'primary',
+}: VotingRoundPanelProps): JSX.Element {
   const { t, i18n } = useTranslation();
   const voteState = useConcertVoteState(sessionId, null);
   const history = useRoundHistory(sessionId);
@@ -61,7 +65,7 @@ export function VotingRoundPanel({ sessionId }: VotingRoundPanelProps): JSX.Elem
             <p className="text-meta text-ink-soft m-0">{t('audience.panelIdle')}</p>
           )}
           <Button
-            variant="primary"
+            variant={openRoundVariant}
             onClick={() => openRound.mutate({ sessionId })}
             disabled={isRoundOpen || openRound.isPending}
             icon="play"

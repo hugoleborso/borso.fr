@@ -244,7 +244,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         />
       ) : null}
 
-      {isConcert ? <VotingRoundPanel sessionId={session.id} /> : null}
+      {isConcert ? <VotingRoundPanel sessionId={session.id} openRoundVariant="secondary" /> : null}
 
       {isCreatingSetlist ? (
         <CreateSetlistDialog
@@ -270,7 +270,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
       <BottomActions>
         {pills.setlistPath === null ? null : (
           <ButtonLink icon="arrowR" variant={pills.setlistVariant} to={pills.setlistPath}>
-            {t('home.openSetlist')}
+            {t(pills.setlistLabelKey)}
           </ButtonLink>
         )}
         {pills.practicePath === null ? null : (

@@ -41,14 +41,17 @@ function stateWith(pool: readonly Record<string, unknown>[]) {
 describe('the panel the band watches from the stage', () => {
   let fetchStub: ReturnType<typeof stubFetch> | null = null;
 
-  function renderPanel(pool: readonly Record<string, unknown>[]): void {
+  function renderPanel(
+    pool: readonly Record<string, unknown>[],
+    openRoundVariant?: 'primary' | 'secondary',
+  ): void {
     fetchStub = stubFetch((request) => {
       if (request.url.includes('/rounds')) return Promise.resolve(jsonResponse({ rounds: [] }));
       return Promise.resolve(jsonResponse(stateWith(pool)));
     });
     render(
       <QueryClientProvider client={createIsolatedQueryClient()}>
-        <VotingRoundPanel sessionId={A_CONCERT} />
+        <VotingRoundPanel sessionId={A_CONCERT} openRoundVariant={openRoundVariant} />
       </QueryClientProvider>,
     );
   }
@@ -107,5 +110,11 @@ describe('the panel the band watches from the stage', () => {
     await waitFor(() => {
       expect(screen.getByText(/Nothing to vote for yet/)).toBeTruthy();
     });
+  });
+
+  it('draws the open round button as a secondary pill where the page already has a primary', async () => {
+    renderPanel([], 'secondary');
+    const openRoundButton = await screen.findByRole('button', { name: /thirty-second round/ });
+    expect(openRoundButton.dataset.variant).toBe('secondary');
   });
 });

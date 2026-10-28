@@ -143,6 +143,7 @@ describe('selectSessionPills', () => {
       practicePath: null,
       setlistPath: null,
       setlistVariant: 'primary',
+      setlistLabelKey: 'home.openSetlist',
       isAddSongsShown: false,
     });
   });
@@ -159,6 +160,7 @@ describe('selectSessionPills', () => {
       practicePath: null,
       setlistPath: null,
       setlistVariant: 'primary',
+      setlistLabelKey: 'home.openSetlist',
       isAddSongsShown: true,
     });
   });
@@ -175,11 +177,12 @@ describe('selectSessionPills', () => {
       practicePath: null,
       setlistPath: '/setlists/set-1',
       setlistVariant: 'primary',
+      setlistLabelKey: 'home.openSetlist',
       isAddSongsShown: false,
     });
   });
 
-  it('starts the practice on its day, with the setlist beside it', () => {
+  it('starts the practice on its day, with the setlist beside it under a short label', () => {
     expect(
       selectSessionPills({
         isLoading: false,
@@ -191,6 +194,7 @@ describe('selectSessionPills', () => {
       practicePath: '/sessions/s/practice',
       setlistPath: '/setlists/set-1',
       setlistVariant: 'secondary',
+      setlistLabelKey: 'sessions.setlistShort',
       isAddSongsShown: false,
     });
   });
