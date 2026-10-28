@@ -1,0 +1,341 @@
+{
+  "meta": {
+    "measuredAt": "2026-10-28T14:58:14.528Z",
+    "viewport": "390x844",
+    "insets": {
+      "top": 47,
+      "bottom": 34,
+      "left": 0,
+      "right": 0
+    },
+    "standalone": false,
+    "base": "http://localhost:5194",
+    "seed": "audit",
+    "input": "argent gesture-tap / gesture-scroll / gesture-drag / keyboard. On Chromium argent sends a one-finger tap as CDP mouse press and release (pointerType mouse), not as a touch event.",
+    "bottomThird": "centre of the control at or below 2/3 of the screen height on arrival, before any scroll"
+  },
+  "tasks": {},
+  "sliceTwo": {
+    "shell": {
+      "tabCount": 4,
+      "tabNumbers": 0,
+      "tabLabels": ["Home", "Sessions", "Songs", "Band"],
+      "activeTabByRoute": {
+        "/": {
+          "landedOn": "/",
+          "active": ["Home"]
+        },
+        "/sessions": {
+          "landedOn": "/sessions",
+          "active": ["Sessions"]
+        },
+        "/setlists": {
+          "landedOn": "/setlists",
+          "active": ["Sessions"]
+        },
+        "/catalog": {
+          "landedOn": "/catalog",
+          "active": ["Songs"]
+        },
+        "/band": {
+          "landedOn": "/band",
+          "active": ["Band"]
+        },
+        "/studies": {
+          "landedOn": "/catalog",
+          "active": ["Songs"]
+        },
+        "/account": {
+          "landedOn": "/account",
+          "active": ["Band"]
+        }
+      }
+    },
+    "primaryActions": {
+      "/": {
+        "landedOn": "/",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "Open the setlist",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/band": {
+        "landedOn": "/band",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "New task",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/tasks": {
+        "landedOn": "/band",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "New task",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/sessions": {
+        "landedOn": "/sessions",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "Concert",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/setlists": {
+        "landedOn": "/setlists",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "New setlist",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/account": {
+        "landedOn": "/account",
+        "primaryCount": 0,
+        "primaries": []
+      }
+    },
+    "firstContentTop": {
+      "topInset": 47,
+      "routes": {
+        "/": {
+          "landedOn": "/",
+          "firstContentTop": 63
+        },
+        "/band": {
+          "landedOn": "/band",
+          "firstContentTop": 63
+        },
+        "/sessions": {
+          "landedOn": "/sessions",
+          "firstContentTop": 63
+        },
+        "/catalog": {
+          "landedOn": "/catalog",
+          "firstContentTop": 68
+        }
+      }
+    },
+    "themeColour": {
+      "light": {
+        "values": [
+          {
+            "media": "(prefers-color-scheme: light)",
+            "content": "#f5f1e8"
+          },
+          {
+            "media": "(prefers-color-scheme: dark)",
+            "content": "#16130f"
+          }
+        ],
+        "shown": "#f5f1e8"
+      },
+      "dark": {
+        "values": [
+          {
+            "media": "(prefers-color-scheme: light)",
+            "content": "#f5f1e8"
+          },
+          {
+            "media": "(prefers-color-scheme: dark)",
+            "content": "#16130f"
+          }
+        ],
+        "shown": "#16130f"
+      }
+    },
+    "manifestShortcutUrls": ["/", "/setlists"],
+    "languageSwitch": {
+      "chipsInShell": 0,
+      "chipsShownOnAccount": 2
+    },
+    "tabArrivalScroll": {
+      "Sessions": {
+        "homeScrollY": 690,
+        "landedOn": "/sessions",
+        "scrollYOnArrival": 0
+      },
+      "Songs": {
+        "homeScrollY": 690,
+        "landedOn": "/catalog",
+        "scrollYOnArrival": 0
+      },
+      "Band": {
+        "homeScrollY": 690,
+        "landedOn": "/band",
+        "scrollYOnArrival": 0
+      }
+    },
+    "tasksLayoutWidth": {
+      "linkedTitle": "Sweet Dreams (Are Made of This) — Extended Version With the Long Synth Intro",
+      "landedOn": "/band",
+      "390x844": 390,
+      "375x667": 375
+    },
+    "taskDraftAfterBackdrop": {
+      "isClosed": true,
+      "valueOnReopening": "Imprimer les setlists",
+      "isDraftKept": true
+    },
+    "taskDraftAfterEscape": {
+      "isClosed": true,
+      "valueOnReopening": "Imprimer les setlists",
+      "isDraftKept": true
+    }
+  },
+  "sliceThree": {
+    "setlistFirstScreen": {
+      "390x844": {
+        "firstRowTop": 210,
+        "stickyElements": 0,
+        "rowCount": 21,
+        "rowsFullyVisible": 4,
+        "chartBottom": null,
+        "rowsBelowChart": null
+      },
+      "375x667": {
+        "firstRowTop": 183,
+        "stickyElements": 0,
+        "rowCount": 21,
+        "rowsFullyVisible": 3,
+        "chartBottom": null,
+        "rowsBelowChart": null
+      }
+    },
+    "lineupGrid": {
+      "rowCount": 20,
+      "rowsWithFullLineupOnFirstScreen": 8,
+      "sidewaysScroll": false,
+      "smallestCellHeight": 36,
+      "changesExpected": 30,
+      "changesMarked": 30,
+      "marksWithoutChange": 0,
+      "colours": {
+        "light": {
+          "playedCells": 82,
+          "playedCellsInMemberColour": 82,
+          "columns": 5,
+          "columnsTintedWithMemberColour": 5
+        },
+        "dark": {
+          "playedCells": 82,
+          "playedCellsInMemberColour": 82,
+          "columns": 5,
+          "columnsTintedWithMemberColour": 5
+        }
+      }
+    },
+    "entrySheet": {
+      "sheet": {
+        "title": "Midnight Drive",
+        "holdsField": true,
+        "focusedTag": "textarea",
+        "focusedName": "",
+        "isFocusOnCancelOrClose": false,
+        "innerVerticalScrollAreas": 0,
+        "box": [0, 68, 390, 776]
+      },
+      "dialogsAfterRecord": ["Recording Midnight Drive"],
+      "mostSheetsOpenAtOnce": 1
+    },
+    "votePage": {
+      "backLink": {
+        "name": "Répétition du jeudi — on cale les enchaînements",
+        "href": "/setlists/77928ab7-cacf-463e-b3d2-ca67d22a5d9d"
+      },
+      "beforeOpening": [
+        {
+          "name": "Open a vote",
+          "centreFraction": 0.858
+        }
+      ],
+      "onArrival": [
+        {
+          "name": "Close the vote",
+          "centreFraction": 0.858
+        }
+      ],
+      "closeTheVoteAtPageEnd": {
+        "top": 702,
+        "isOnScreen": true
+      }
+    }
+  },
+  "sliceFour": {
+    "orderScreen": {
+      "rowCount": 20,
+      "rowsVisibleWithCurve": 10,
+      "isCurveShown": true,
+      "curveBars": 20,
+      "handle": {
+        "width": 44,
+        "height": 44
+      }
+    },
+    "addSongsSheet": {
+      "byChip": {
+        "Not in this setlist": {
+          "confirmCentreFraction": 0.929,
+          "rows": 24,
+          "rowsInSetlist": 0,
+          "rowsInSetlistPickable": 0
+        },
+        "Concert ready": {
+          "confirmCentreFraction": 0.929,
+          "rows": 16,
+          "rowsInSetlist": 16,
+          "rowsInSetlistPickable": 0
+        },
+        "Rehearsed": {
+          "confirmCentreFraction": 0.929,
+          "rows": 16,
+          "rowsInSetlist": 3,
+          "rowsInSetlistPickable": 0
+        },
+        "To learn": {
+          "confirmCentreFraction": 0.929,
+          "rows": 8,
+          "rowsInSetlist": 1,
+          "rowsInSetlistPickable": 0
+        },
+        "Ideas": {
+          "confirmCentreFraction": 0.929,
+          "rows": 4,
+          "rowsInSetlist": 0,
+          "rowsInSetlistPickable": 0
+        }
+      },
+      "confirmCentreFraction": 0.929,
+      "songsAlreadyInOfferedAgain": 0
+    }
+  },
+  "sliceSix": {
+    "catalogPageHeightInScreens": 3.4,
+    "songUsed": "Wonderwall",
+    "stageModeWaysFromSongPage": 1,
+    "editRouteVerticalScrollAreas": 1,
+    "buttonsInsideLinksByRoute": {},
+    "listenLinks": {
+      "songsWithLinks": 0,
+      "songs": []
+    }
+  }
+}
