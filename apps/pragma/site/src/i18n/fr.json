@@ -424,11 +424,7 @@
     }
   },
   "setlist": {
-    "addSong": "Ajouter un morceau",
-    "addSongCreate": "Créer « {{title}} » et l’ajouter",
-    "addSongDone": "Terminé ({{count}})",
     "addSongNoMatch": "Aucun morceau ne correspond.",
-    "addSongSearchPlaceholder": "Chercher un morceau, ou taper un nouveau titre",
     "attach": {
       "button": "Lier une setlist existante",
       "title": "Lier une setlist",
@@ -459,7 +455,6 @@
     "energyUnset": "Non définie, {{value}} affichée",
     "failure": {
       "load": "Impossible de charger ce set. Vérifie la connexion et réessaie.",
-      "add": "Le morceau n’a pas été ajouté. Vérifie la connexion et réessaie.",
       "remove": "Le morceau n’a pas été retiré. Vérifie la connexion et réessaie.",
       "reorder": "Le nouvel ordre n’a pas été enregistré. Vérifie la connexion et réessaie.",
       "update": "La modification n’a pas été enregistrée. Vérifie la connexion et réessaie.",
@@ -470,7 +465,8 @@
       "delete": "La setlist n’a pas été supprimée. Vérifie la connexion et réessaie.",
       "attach": "La setlist n’a pas été liée à cette session. Vérifie la connexion et réessaie.",
       "detach": "La setlist n’a pas été détachée. Vérifie la connexion et réessaie.",
-      "openVote": "Le vote n’a pas été ouvert. Vérifiez la connexion et réessayez."
+      "openVote": "Le vote n’a pas été ouvert. Vérifiez la connexion et réessayez.",
+      "addSongs": "Les morceaux n’ont pas été ajoutés. Vérifie la connexion et réessaie."
     },
     "indexEmpty": "Aucune setlist pour l’instant — crée la première.",
     "key": "Ton",
@@ -523,7 +519,32 @@
     "viewLabel": "Vue de la setlist",
     "viewSongs": "Morceaux",
     "viewLineup": "Line-up",
-    "viewMyPart": "Ma partie"
+    "viewMyPart": "Ma partie",
+    "addSongs": "Ajouter des morceaux",
+    "addSongsTitle": "Ajouter des morceaux à {{name}}",
+    "addSongsSearch": "Chercher un morceau, ou taper un nouveau titre",
+    "addSongsFilterLabel": "Afficher",
+    "addSongsFilterNotInSetlist": "Pas dans cette setlist",
+    "addSongsFilterConcertReady": "Prêts pour la scène",
+    "addSongsFilterRehearsed": "Répétés",
+    "addSongsFilterToLearn": "À apprendre",
+    "addSongsFilterIdeas": "Idées",
+    "addSongsAlreadyIn": "Déjà dans cette setlist · {{position}}",
+    "addSongsEveryoneIn": "Tous les morceaux sont déjà dans cette setlist.",
+    "addSongsFromService": "Sur Deezer",
+    "addSongsServiceUnavailable": "Deezer ne répond pas. Le titre peut quand même être ajouté comme idée.",
+    "addSongsNewIdea": "Nouveau morceau, en idée",
+    "addSongsFooterHint": "Ajoutés à la fin, dans l’ordre choisi",
+    "addSongsConfirm_one": "Ajouter {{count}} morceau",
+    "addSongsConfirm_other": "Ajouter {{count}} morceaux",
+    "addSongsCreateFailed": "Le morceau n’a pas pu être créé. Vérifie la connexion et réessaie.",
+    "order": "Ordre",
+    "orderTitle": "Ordre",
+    "orderDone": "Terminé",
+    "energyCurve": "Courbe d’énergie",
+    "averageEnergy": "Énergie moyenne {{value}}",
+    "energyStep": "Énergie {{step}} sur 5",
+    "orderEmpty": "Aucun morceau à ordonner pour l’instant."
   },
   "shell": {
     "meVersion": "Pragma · v0.1"

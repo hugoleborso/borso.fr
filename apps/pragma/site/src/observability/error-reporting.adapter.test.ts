@@ -3,6 +3,7 @@ import {
   recordTakeBreadcrumb,
   reportRenderFailure,
   reportEntryNoteSaveFailed,
+  reportSetlistBatchAddFailed,
   reportTakeQueueWriteFailed,
   reportTakeUploadFailed,
   startErrorReporting,
@@ -131,6 +132,14 @@ describe('entry note failures', () => {
     expect(sentry.captureMessage).toHaveBeenCalledWith('EntryNoteSaveError', {
       level: 'error',
       tags: { 'setlist.id': 'setlist-1' },
+    });
+  });
+
+  it('reports a batch add that failed, tagged with its setlist', () => {
+    reportSetlistBatchAddFailed('setlist-2');
+    expect(sentry.captureMessage).toHaveBeenCalledWith('SetlistBatchAddError', {
+      level: 'error',
+      tags: { 'setlist.id': 'setlist-2' },
     });
   });
 });

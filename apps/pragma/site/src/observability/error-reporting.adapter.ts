@@ -78,6 +78,15 @@ export function reportEntryNoteSaveFailed(setlistId: string): void {
   });
 }
 
+const SETLIST_BATCH_ADD_ERROR = 'SetlistBatchAddError';
+
+export function reportSetlistBatchAddFailed(setlistId: string): void {
+  Sentry.captureMessage(SETLIST_BATCH_ADD_ERROR, {
+    level: 'error',
+    tags: { 'setlist.id': setlistId },
+  });
+}
+
 export type TakeBreadcrumb = 'RecordingInterrupted' | 'take_upload_retried';
 
 export function recordTakeBreadcrumb(message: TakeBreadcrumb): void {

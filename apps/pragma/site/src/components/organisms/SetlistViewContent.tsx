@@ -17,7 +17,6 @@ export interface SetlistViewMember {
 export interface SetlistViewContentProps {
   readonly view: SetlistViewName;
   readonly entriesList: ReactNode;
-  readonly entryIds: readonly string[];
   readonly memberEntryIds: readonly string[];
   readonly shownMember: SetlistViewMember | undefined;
   readonly lineupGrid: LineupGrid;
@@ -29,12 +28,7 @@ export interface SetlistViewContentProps {
 export function SetlistViewContent(props: SetlistViewContentProps): JSX.Element {
   const { t } = useTranslation();
   const contentByView = {
-    songs:
-      props.entryIds.length === 0 ? (
-        <EmptyState icon="setlist">{t('setlist.emptyList')}</EmptyState>
-      ) : (
-        props.entriesList
-      ),
+    songs: props.entriesList,
     lineup:
       props.lineupGrid.columns.length === 0 ? (
         <EmptyState icon="members">{t('setlist.lineupEmpty')}</EmptyState>

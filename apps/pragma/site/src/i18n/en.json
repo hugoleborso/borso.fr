@@ -424,11 +424,7 @@
     }
   },
   "setlist": {
-    "addSong": "Add song",
-    "addSongCreate": "Create “{{title}}” and add it",
-    "addSongDone": "Done ({{count}})",
     "addSongNoMatch": "No song matches.",
-    "addSongSearchPlaceholder": "Search a song, or type a new title",
     "attach": {
       "button": "Attach an existing setlist",
       "title": "Attach a setlist",
@@ -459,7 +455,6 @@
     "energyUnset": "Not set, showing {{value}}",
     "failure": {
       "load": "Could not load this set. Check the connection and try again.",
-      "add": "The song was not added. Check the connection and try again.",
       "remove": "The song was not removed. Check the connection and try again.",
       "reorder": "The new order was not saved. Check the connection and try again.",
       "update": "The change was not saved. Check the connection and try again.",
@@ -470,7 +465,8 @@
       "delete": "The setlist was not deleted. Check the connection and try again.",
       "attach": "The setlist was not attached to this session. Check the connection and try again.",
       "detach": "The setlist was not detached. Check the connection and try again.",
-      "openVote": "The vote was not opened. Check the connection and try again."
+      "openVote": "The vote was not opened. Check the connection and try again.",
+      "addSongs": "The songs were not added. Check the connection and try again."
     },
     "indexEmpty": "No setlist yet — write the first one.",
     "key": "Key",
@@ -523,7 +519,32 @@
     "viewLabel": "Setlist view",
     "viewSongs": "Songs",
     "viewLineup": "Lineup",
-    "viewMyPart": "My part"
+    "viewMyPart": "My part",
+    "addSongs": "Add songs",
+    "addSongsTitle": "Add songs to {{name}}",
+    "addSongsSearch": "Search a song, or type a new title",
+    "addSongsFilterLabel": "Show",
+    "addSongsFilterNotInSetlist": "Not in this setlist",
+    "addSongsFilterConcertReady": "Concert ready",
+    "addSongsFilterRehearsed": "Rehearsed",
+    "addSongsFilterToLearn": "To learn",
+    "addSongsFilterIdeas": "Ideas",
+    "addSongsAlreadyIn": "Already in this setlist · {{position}}",
+    "addSongsEveryoneIn": "Every song is already in this setlist.",
+    "addSongsFromService": "From Deezer",
+    "addSongsServiceUnavailable": "Deezer does not answer. You can still add the title as an idea.",
+    "addSongsNewIdea": "New song as an idea",
+    "addSongsFooterHint": "Added at the end, in the order picked",
+    "addSongsConfirm_one": "Add {{count}} song",
+    "addSongsConfirm_other": "Add {{count}} songs",
+    "addSongsCreateFailed": "The song could not be created. Check the connection and try again.",
+    "order": "Order",
+    "orderTitle": "Order",
+    "orderDone": "Done",
+    "energyCurve": "Energy curve",
+    "averageEnergy": "Average energy {{value}}",
+    "energyStep": "Energy {{step}} of 5",
+    "orderEmpty": "No song to order yet."
   },
   "shell": {
     "meVersion": "Pragma · v0.1"

@@ -4,12 +4,13 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { setlistKeys } from './setlists.queries';
 import {
-  appendOptimisticEntry,
+  appendOptimisticSongs,
   applyEntryPatch,
   type EntriesCache,
+  type OptimisticSongAppend,
   removeEntryById,
   reorderEntriesByIds,
-  settleAppendedEntry,
+  settleAppendedEntries,
   toEntryPatch,
 } from './setlists.utils';
 
@@ -40,23 +41,23 @@ export function useSetlistEntries(setlistId: string, isEnabled = true) {
   });
 }
 
+export interface AddSetlistEntriesVariables {
+  readonly setlistId: string;
+  readonly appends: readonly OptimisticSongAppend[];
+}
+
 // @FollowsBlueprint query-optimistic-insert
-export function useAppendSetlistEntry() {
+export function useAddSetlistEntries() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ENTRY_MUTATION_KEY,
-    mutationFn: async (
-      variables: { setlistId: string; optimisticId: string } & Parameters<
-        (typeof api.api.setlists)[':id']['entries']['$post']
-      >[0]['json'],
-    ) => {
-      const { setlistId, optimisticId: _optimisticId, ...rest } = variables;
-      const response = await api.api.setlists[':id'].entries.$post({
-        param: { id: setlistId },
-        json: rest,
+    mutationFn: async (variables: AddSetlistEntriesVariables) => {
+      const response = await api.api.setlists[':id'].entries.batch.$post({
+        param: { id: variables.setlistId },
+        json: { songIds: variables.appends.map((append) => append.songId) },
       });
       if (!isResponseSuccessful(response))
-        throw new ApiError(response.status, `append ${response.status}`, null);
+        throw new ApiError(response.status, `add ${response.status}`, null);
       return response.json();
     },
     onMutate: async (variables): Promise<OptimisticContext> => {
@@ -66,15 +67,7 @@ export function useAppendSetlistEntry() {
       if (previous !== undefined) {
         queryClient.setQueryData<EntriesCache>(
           key,
-          appendOptimisticEntry(previous, {
-            id: variables.optimisticId,
-            songId: variables.songId,
-            energy: variables.energy,
-            keyOverride: variables.keyOverride,
-            capo: variables.capo,
-            notes: variables.notes,
-            lineupOverride: variables.lineupOverride,
-          }),
+          appendOptimisticSongs(previous, variables.appends),
         );
       }
       return { previous };
@@ -91,7 +84,11 @@ export function useAppendSetlistEntry() {
       queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(variables.setlistId), (cache) =>
         cache === undefined
           ? cache
-          : settleAppendedEntry(cache, variables.optimisticId, data.entry),
+          : settleAppendedEntries(
+              cache,
+              variables.appends.map((append) => append.temporaryId),
+              data.entries,
+            ),
       );
     },
   });

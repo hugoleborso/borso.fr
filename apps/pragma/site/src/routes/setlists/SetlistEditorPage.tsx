@@ -2,7 +2,7 @@
 
 import { resolveSetlistStatus } from '@domain/setlist-vote.core';
 import type { JSX } from 'react';
-import { useMemo, useState, useSyncExternalStore } from 'react';
+import { useMemo, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
@@ -11,8 +11,6 @@ import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
 import { SetlistHeaderActions } from '../../components/organisms/SetlistHeaderActions';
-import { formatSetlistOrder } from '../../components/organisms/setlist-editor.utils';
-import { didCopyTextToClipboard } from '../../lib/clipboard.adapter';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { MEMBER_FILTER_PARAM } from '../../lib/next-concert.core';
@@ -22,6 +20,7 @@ import { useSetlist } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useSetlistSessions } from '../../lib/setlist-sessions.hook';
+import { useCopySetlistOrder } from './copy-setlist-order.hook';
 import { buildSetlistHeader } from './setlist-header.core';
 import {
   buildSetlistViewParams,
@@ -31,7 +30,6 @@ import {
 } from './setlist-view.core';
 
 const NO_ROWS: readonly never[] = [];
-const COPY_FEEDBACK_MS = 2000;
 const LINE_SEPARATOR = ' · ';
 const TOTAL_DURATION_KEY = {
   minutes: 'home.totalMinutes',
@@ -41,8 +39,6 @@ const SESSION_KIND_KEY = {
   concert: 'sessions.kindConcert',
   practice: 'sessions.kindPractice',
 } as const;
-
-type CopyFeedback = 'copied' | 'failed' | null;
 
 // @FollowsBlueprint route-detail-page
 export function SetlistEditorPage(): JSX.Element {
@@ -64,7 +60,6 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
   const signedInMember = useSignedInMember();
   const sessions = useSetlistSessions(setlistId);
   const [searchParams, setSearchParams] = useSearchParams();
-  const [copyFeedback, setCopyFeedback] = useState<CopyFeedback>(null);
   const setlist = setlistQuery.data?.setlist ?? null;
   const setlistEntries = entriesQuery.data?.entries ?? NO_ROWS;
 
@@ -86,11 +81,8 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
     setSearchParams(buildSetlistViewParams(view, memberId), { replace: true });
   };
 
-  const copyOrder = async (): Promise<void> => {
-    const isCopied = await didCopyTextToClipboard(formatSetlistOrder(setlistEntries, songsById));
-    setCopyFeedback(isCopied ? 'copied' : 'failed');
-    window.setTimeout(() => setCopyFeedback(null), COPY_FEEDBACK_MS);
-  };
+  const copyOrder = useCopySetlistOrder(setlistEntries, songsById);
+  const copyFeedback = copyOrder.feedback;
 
   if (setlistQuery.isLoading) {
     return (
@@ -142,7 +134,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
           displayedName={displayedName}
           status={resolveSetlistStatus(setlist.status)}
           isConcert={sessions.some((session) => session.kind === 'concert')}
-          onCopyOrder={() => void copyOrder()}
+          onCopyOrder={copyOrder.copy}
           onDeleted={() => navigateTo('/setlists')}
         />
       </div>
@@ -157,6 +149,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
       )}
       <SetlistEditor
         setlistId={setlist.id}
+        setlistName={displayedName}
         view={viewChoice.view}
         memberId={viewChoice.memberId}
         onSelectView={(view) => showView(view, viewChoice.memberId)}

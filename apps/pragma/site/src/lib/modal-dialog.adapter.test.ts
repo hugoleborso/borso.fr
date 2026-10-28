@@ -91,6 +91,14 @@ describe('focusFirstField', () => {
     dialog.remove();
   });
 
+  it('puts the focus on a marked field held above the body, such as a search in the subheader', () => {
+    const dialog = sheetWith('<input id="first" />');
+    dialog.insertAdjacentHTML('afterbegin', '<input id="search" data-sheet-focus />');
+    focusFirstField(dialog);
+    expect(document.activeElement?.id).toBe('search');
+    dialog.remove();
+  });
+
   it('reaches a textarea or a select when the body holds no input', () => {
     const dialog = sheetWith('<select id="status"><option>a</option></select>');
     focusFirstField(dialog);

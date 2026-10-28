@@ -1,13 +1,9 @@
 /** @Feature setlists */
 
-import { useSortable } from '@dnd-kit/sortable';
-import { CSS } from '@dnd-kit/utilities';
 import type { JSX, ReactNode } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlbumCover } from '../atoms/AlbumCover';
-import { composeClassName } from '../atoms/class-name.utils';
-import { IconButton } from '../atoms/IconButton';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { LineupSlots } from '../molecules/LineupSlots';
 import { ListRow } from '../molecules/ListRow';
@@ -16,7 +12,6 @@ import { MemberPartGlyphs, type MemberPartGlyph } from '../molecules/MemberPartG
 import { Menu } from '../molecules/Menu';
 
 const POSITION_DIGITS = 2;
-const DRAG_HANDLE_CLASS = 'shrink-0 cursor-grab touch-none text-ink-faint active:cursor-grabbing';
 const TITLE_CLASS = 'block truncate font-display text-title text-ink';
 const CHANGE_CLASS = 'self-start rounded-sm bg-highlight px-1.5 py-0.5 text-meta text-on-highlight';
 const CHANGE_SEPARATOR = ' · ';
@@ -49,9 +44,6 @@ export interface SetlistEntryRowProps {
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
   const [isRemovalPending, setIsRemovalPending] = useState<boolean>(false);
-  const { attributes, listeners, setNodeRef, transform, transition, isDragging } = useSortable({
-    id: props.entryId,
-  });
   const keyParts = [
     props.keyLabel,
     props.capo === null ? null : t('setlist.capoValue', { capo: props.capo }),
@@ -64,21 +56,9 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
     )
     .join(CHANGE_SEPARATOR);
   return (
-    <li
-      ref={setNodeRef}
-      style={{ transform: CSS.Transform.toString(transform), transition }}
-      className={composeClassName('flex flex-col', isDragging && 'opacity-40')}
-    >
+    <li className="flex flex-col">
       {props.transitionBefore}
       <div className="flex items-start gap-1 border-b border-rule py-1.5">
-        <IconButton
-          icon="drag"
-          label={t('setlist.dragHandle')}
-          size="sm"
-          className={DRAG_HANDLE_CLASS}
-          {...attributes}
-          {...listeners}
-        />
         <ListRow
           onClick={props.onOpen}
           isChevronShown={false}

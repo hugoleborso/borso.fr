@@ -7,9 +7,7 @@ import { useInstrumentsList } from '../../lib/queries/instruments.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
 import {
   type SetlistEntryPatch,
-  useAppendSetlistEntry,
   useDeleteSetlistEntry,
-  useReorderSetlist,
   useSetlistEntries,
   useUpdateSetlistEntry,
 } from '../../lib/queries/setlist-entries.queries';
@@ -17,6 +15,7 @@ import { useSongsList, useUpdateSong } from '../../lib/queries/songs.queries';
 import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
 import { BottomActions } from '../atoms/BottomActions';
 import { Button } from '../atoms/Button';
+import { ButtonLink } from '../atoms/ButtonLink';
 import { SectionTabs } from '../molecules/SectionTabs';
 import { indexLineupChangesTonight } from './entry-lineup-change.core';
 import { buildLineupGrid } from './lineup-grid.core';
@@ -35,6 +34,7 @@ export type SetlistEditorView = SetlistViewName;
 
 interface SetlistEditorProps {
   readonly setlistId: string;
+  readonly setlistName: string;
   readonly view: SetlistEditorView;
   readonly memberId: string | null;
   readonly onSelectView: (view: SetlistEditorView) => void;
@@ -55,15 +55,14 @@ const NO_ROWS: readonly never[] = [];
 
 type SetlistFailureKey =
   | 'setlist.failure.load'
-  | 'setlist.failure.add'
   | 'setlist.failure.remove'
-  | 'setlist.failure.reorder'
   | 'setlist.failure.update'
   | 'setlist.failure.songDefaults';
 
 // @FollowsBlueprint organism-query-owning
 export function SetlistEditor({
   setlistId,
+  setlistName,
   view,
   memberId,
   onSelectView,
@@ -75,10 +74,8 @@ export function SetlistEditor({
   const instrumentsQuery = useInstrumentsList();
   const membersQuery = useMembersList();
   const commentsQuery = useTransitionCommentsList();
-  const append = useAppendSetlistEntry();
   const updateEntry = useUpdateSetlistEntry();
   const removeEntry = useDeleteSetlistEntry();
-  const reorder = useReorderSetlist();
   const updateSong = useUpdateSong();
   const recording = useRecordingSheet();
 
@@ -139,18 +136,6 @@ export function SetlistEditor({
 
   const failWith = (key: SetlistFailureKey) => (): void => setFailureKey(key);
 
-  const addEntry = (songId: string): void => {
-    append.mutate(
-      {
-        setlistId,
-        songId,
-        energy: songsById[songId]?.baseEnergy ?? null,
-        optimisticId: crypto.randomUUID(),
-      },
-      { onError: failWith('setlist.failure.add') },
-    );
-  };
-
   const updateSetlistEntry = (entryId: string, patch: SetlistEntryPatch): void => {
     updateEntry.mutate(
       { setlistId, entryId, ...patch },
@@ -185,12 +170,7 @@ export function SetlistEditor({
       slotInstruments={instruments}
       knownMemberIds={knownMemberIds}
       lineupChangesByEntryId={lineupChangesByEntryId}
-      onReorder={(orderedEntryIds) =>
-        reorder.mutate(
-          { setlistId, entryIds: [...orderedEntryIds] },
-          { onError: failWith('setlist.failure.reorder') },
-        )
-      }
+      onAddSongs={() => setPickerOpen(true)}
       onOpen={(entryId) => setOpenEntry({ entryId, focus: 'note' })}
       onRemove={(entryId) =>
         removeEntry.mutate({ setlistId, entryId }, { onError: failWith('setlist.failure.remove') })
@@ -219,7 +199,6 @@ export function SetlistEditor({
       <SetlistViewContent
         view={view}
         entriesList={entriesList}
-        entryIds={setlistEntries.map((entry) => entry.id)}
         memberEntryIds={filtered.visibleEntries.map((entry) => entry.id)}
         shownMember={shownMemberId === null ? undefined : membersById[shownMemberId]}
         lineupGrid={lineupGrid}
@@ -227,14 +206,24 @@ export function SetlistEditor({
         onOpenMember={onSelectMember}
       />
       <BottomActions>
-        <Button variant="primary" icon="plus" onClick={() => setPickerOpen(true)}>
-          {t('setlist.addSong')}
+        <ButtonLink
+          to={`/setlists/${setlistId}/order`}
+          variant="secondary"
+          icon="reorder"
+          size="lg"
+        >
+          {t('setlist.order')}
+        </ButtonLink>
+        <Button variant="primary" icon="plus" size="lg" onClick={() => setPickerOpen(true)}>
+          {t('setlist.addSongs')}
         </Button>
       </BottomActions>
       <SetlistSongPicker
         open={pickerOpen}
+        setlistId={setlistId}
+        setlistName={setlistName}
         songs={songs}
-        onPick={addEntry}
+        setlistSongIds={setlistEntries.map((entry) => entry.songId)}
         onClose={() => setPickerOpen(false)}
       />
       {transitionEditing === null ? null : (

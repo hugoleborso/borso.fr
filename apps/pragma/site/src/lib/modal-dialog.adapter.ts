@@ -9,7 +9,7 @@
 const FIRST_FIELD_SELECTOR =
   '[data-sheet-body] input:not([type=hidden]):not([type=checkbox]):not([type=radio]), [data-sheet-body] textarea, [data-sheet-body] select';
 const CLOSE_BUTTON_SELECTOR = '[data-sheet-close]';
-const CHOSEN_FOCUS_SELECTOR = '[data-sheet-body] [data-sheet-focus]';
+const CHOSEN_FOCUS_SELECTOR = '[data-sheet-focus]';
 
 export function focusFirstField(dialog: HTMLDialogElement): void {
   const target =

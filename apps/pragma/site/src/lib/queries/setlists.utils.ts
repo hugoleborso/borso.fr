@@ -173,3 +173,33 @@ export function settleAppendedEntry<TEntry extends MinimalSetlistEntry>(
     ),
   };
 }
+
+export interface OptimisticSongAppend {
+  readonly temporaryId: string;
+  readonly songId: string;
+}
+
+// @FollowsBlueprint utils-pure-module
+export function appendOptimisticSongs(
+  cache: EntriesCache,
+  appends: readonly OptimisticSongAppend[],
+): EntriesCache {
+  return appends.reduce(
+    (current, append) =>
+      appendOptimisticEntry(current, { id: append.temporaryId, songId: append.songId }),
+    cache,
+  );
+}
+
+// @FollowsBlueprint utils-settle-temporary-entity
+export function settleAppendedEntries<TEntry extends MinimalSetlistEntry>(
+  cache: EntriesCache<TEntry>,
+  temporaryIds: readonly string[],
+  settledEntries: readonly { readonly id: string; readonly position: number }[],
+): EntriesCache<TEntry> {
+  return temporaryIds.reduce((current, temporaryId, index) => {
+    const settled = settledEntries[index];
+    if (settled === undefined) return current;
+    return settleAppendedEntry(current, temporaryId, settled);
+  }, cache);
+}

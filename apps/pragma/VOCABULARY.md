@@ -682,6 +682,28 @@ Lives in: `api/src/sessions/`
 Held by: `api/src/sessions/offline-manifest.core.test.ts` › treats a session starting exactly now as past, not upcoming
 Held by: `api/src/sessions/offline-manifest.core.test.ts` › breaks a date tie on the identifier so the choice is stable
 
+## Order screen
+
+The setlist's screen for putting its entries in order with the energy curve
+in view, reached from **Order** on the setlist. It is a screen of the
+setlist, not a second noun for it: the setlist is never called a running
+order.
+
+Lives in: `site/src/routes/setlists/`
+
+- One bar per entry, its height the entry's energy, read from the entry,
+  then from its song, then the default level drawn muted
+  (`buildEnergyBars`).
+- While a row is lifted, its bar is drawn in the action blue and the curve
+  follows the order the drop would give (`projectOrder`).
+- The order is written on each drop, through the setlist's reorder route.
+
+Held by: `site/src/components/molecules/energy-curve.utils.test.ts` › reads the entry energy first, then the song energy, then the default level unstored
+Held by: `site/src/components/molecules/energy-curve.utils.test.ts` › moves the lifted row to the place of the row it is over, downwards and upwards
+
+Not to be confused with: **Energy**, the level each entry or song holds,
+which the Order screen only draws.
+
 ## Passkey
 
 A credential held by a member's own device, which signs them in without

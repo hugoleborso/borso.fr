@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   appendOptimisticEntry,
+  appendOptimisticSongs,
   appendSetlistToCache,
   applyEntryPatch,
   applySessionLinkInCache,
@@ -12,6 +13,7 @@ import {
   renameSetlistInCache,
   reorderEntriesByIds,
   selectSetlistsNotOnSession,
+  settleAppendedEntries,
   settleAppendedEntry,
   type SetlistsCache,
   toEntryPatch,
@@ -276,5 +278,73 @@ describe('settleAppendedEntry', () => {
     });
 
     expect(settled.entries).toStrictEqual([persisted]);
+  });
+});
+
+describe('appendOptimisticSongs', () => {
+  it('appends one placeholder per song, in the order given, after the existing entries', () => {
+    const cache = {
+      entries: [
+        {
+          id: 'entry-1',
+          songId: 'song-1',
+          position: 0,
+          energy: 4,
+          keyOverride: null,
+          capo: null,
+          notes: '',
+          lineupOverride: null,
+        },
+      ],
+    };
+    const next = appendOptimisticSongs(cache, [
+      { temporaryId: 'temporary-a', songId: 'song-3' },
+      { temporaryId: 'temporary-b', songId: 'song-2' },
+    ]);
+    expect(next.entries.map((entry) => [entry.id, entry.songId, entry.position])).toEqual([
+      ['entry-1', 'song-1', 0],
+      ['temporary-a', 'song-3', 1],
+      ['temporary-b', 'song-2', 2],
+    ]);
+    expect(next.entries[1]?.energy).toBeNull();
+  });
+});
+
+function placeholder(id: string, position: number): MinimalSetlistEntry {
+  return {
+    id,
+    songId: `song-of-${id}`,
+    position,
+    energy: null,
+    keyOverride: null,
+    capo: null,
+    notes: '',
+    lineupOverride: null,
+  };
+}
+
+describe('settleAppendedEntries', () => {
+  it('swaps each temporary id for the id and position the server gave, by pick order', () => {
+    const settled = settleAppendedEntries(
+      { entries: [placeholder('temporary-a', 0), placeholder('temporary-b', 1)] },
+      ['temporary-a', 'temporary-b'],
+      [
+        { id: 'entry-a', position: 4 },
+        { id: 'entry-b', position: 5 },
+      ],
+    );
+    expect(settled.entries.map((entry) => [entry.id, entry.position])).toEqual([
+      ['entry-a', 4],
+      ['entry-b', 5],
+    ]);
+  });
+
+  it('leaves a temporary row alone when the response carries fewer rows than were sent', () => {
+    const settled = settleAppendedEntries(
+      { entries: [placeholder('temporary-a', 0), placeholder('temporary-b', 1)] },
+      ['temporary-a', 'temporary-b'],
+      [{ id: 'entry-a', position: 0 }],
+    );
+    expect(settled.entries.map((entry) => entry.id)).toEqual(['entry-a', 'temporary-b']);
   });
 });

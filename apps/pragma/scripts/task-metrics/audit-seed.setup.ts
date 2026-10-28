@@ -13,12 +13,8 @@ import {
 } from '../../api/src/members/members.service';
 import { createCredentialForMember } from '../../api/src/auth/credentials.service';
 import { createSession, getSessions, patchSession } from '../../api/src/sessions/sessions.service';
-import {
-  appendEntry,
-  createSetlist,
-  getAllSetlists,
-  getEntries,
-} from '../../api/src/setlists/setlists.service';
+import { appendEntry } from '../../api/src/setlists/setlist-entry.service';
+import { createSetlist, getAllSetlists, getEntries } from '../../api/src/setlists/setlists.service';
 import { createSong, getSongs } from '../../api/src/songs/songs.service';
 import { logStudy } from '../../api/src/studies/studies.service';
 import { createTake, createTakeComment } from '../../api/src/takes/takes.service';
