@@ -26,6 +26,10 @@ Removed when nothing imports them any more: `song-picker.core.ts` and its test, 
 
 - **To learn** filters on the status `wip` ("In progress"), the one status that says the band is learning a song; slice 6's To learn filter on Songs can read the same rule.
 - The Order row's meter is five steps over the ten energy levels (two levels per step) and is read-only; energy is still set in the entry sheet, so no level becomes unreachable.
+- **New song as an idea** sits above the music service's results, so it is reached with no scroll whatever the service answers.
+- A pick keeps the focus in the search field, so the next title is typed with no tap on the field. Task 2 types "Psycho" for its second song instead of scrolling to it.
+- The picks are a sheet draft per setlist (`lib/add-songs-draft.store.ts`, on the generic sheet draft store), so they survive a close by the backdrop or Escape, as the spec's sheet rule asks.
+- A field marked `data-sheet-focus` now takes the focus wherever it sits in the sheet, so the search can live in the sheet's fixed subheader above the one scroll body.
 
 ## Tests
 
@@ -36,15 +40,21 @@ Removed when nothing imports them any more: `song-picker.core.ts` and its test, 
 
 ## Acceptance rows (before -> target), from the spec
 
-| Row | Before | Target |
-| --- | --- | --- |
-| 2 Build the concert setlist | 10 / 2 / 6 (11 / 3 / 6 after slice 3) | ≤ 11 / 0 / ≤ 6, order kept after reload |
-| 8 Add a new song and put it on the next practice | 12 / 0 / 6, 3 text entries | ≤ 5 / 0 / ≤ 3, 1 text entry, never leaves the setlist, artist and cover from the music service when it answers |
-| 8b New song from the setlist | 6 / 0 / 4 | 4 / 0 / ≤ 3 |
-| Order screen: rows visible with the curve, 390x844 | about 5 | ≥ 8 |
-| Drag handle | 20x44 | 44x44 |
-| Add songs confirm button position | 0.12 of the screen | ≥ 0.85 |
-| Songs already in the setlist offered again | yes | no |
+Measured column: `../validation/slice-4-after.json`, from `--tasks 1,2,8,8b --slice-4` on the slice 4 head (task 2 and `--slice-4` rerun after the last fix).
+
+| Row | Before | Target | Measured |
+| --- | --- | --- | --- |
+| 2 Build the concert setlist | 10 / 2 / 6 (11 / 3 / 6 after slice 3) | ≤ 11 / 0 / ≤ 6, order kept after reload | 12 / 0 / 7, 1 text entry, order kept after reload |
+| 8 Add a new song and put it on the next practice | 12 / 0 / 6, 3 text entries | ≤ 5 / 0 / ≤ 3, 1 text entry, never leaves the setlist, artist and cover from the music service when it answers | 4 / 0 / 3, 1 text entry, from Deezer with its artist |
+| 8b New song from the setlist | 6 / 0 / 4 | 4 / 0 / ≤ 3 | 4 / 0 / 3 |
+| Order screen: rows visible with the curve, 390x844 | about 5 | ≥ 8 | 10 |
+| Drag handle | 20x44 | 44x44 | 44x44 |
+| Add songs confirm button position | 0.12 of the screen | ≥ 0.85 | 0.929 |
+| Songs already in the setlist offered again | yes | no | 0 under every chip |
+
+**Task 2 misses by one tap and one screen**, both from the confirmation before removing an entry (`more`, Remove, Confirm). The library route costs the tap D1 accepted, and the Order pill is a tap the old drag in the list did not need, so the walk reaches 11 only if removing an entry takes two taps. Dropping the confirmation, or replacing it with an undo line, is a product decision this slice does not take.
+
+Task 1 is slice 5's row; its walk now runs through the sheet and measures 18 / 3 / 7, the scrolls bringing the last picks of the alphabetical list into view.
 
 ## Self-check before the gates
 
