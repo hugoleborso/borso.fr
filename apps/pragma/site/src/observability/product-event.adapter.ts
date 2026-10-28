@@ -8,7 +8,9 @@ export type ProductEventName =
   | 'setlist_view_changed'
   | 'entry_note_saved'
   | 'entry_note_save_superseded'
-  | 'transition_comment_saved';
+  | 'transition_comment_saved'
+  | 'setlist_songs_added'
+  | 'setlist_order_opened';
 
 export type ProductEventAttributes = Readonly<Record<string, string | number | boolean>>;
 
