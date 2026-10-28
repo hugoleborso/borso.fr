@@ -321,7 +321,8 @@
     "name": "Name",
     "newTitle": "New instrument",
     "title": "Instruments",
-    "togglePrimary": "Main instrument"
+    "togglePrimary": "Main instrument",
+    "add": "Add an instrument"
   },
   "lineup": {
     "allMembers": "All",

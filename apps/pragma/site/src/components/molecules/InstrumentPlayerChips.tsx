@@ -5,7 +5,8 @@ import { Chip } from '../atoms/Chip';
 import { MemberChip } from './MemberChip';
 
 const MEMBER_CHOICE_CLASS =
-  'relative z-10 min-w-11 justify-center bg-transparent px-0 aria-pressed:bg-transparent aria-pressed:text-ink';
+  'relative z-10 size-9 justify-center bg-transparent p-0 aria-pressed:bg-transparent aria-pressed:text-ink ' +
+  'after:absolute after:-inset-1 after:content-[""]';
 const PRIMARY_MEMBER_RING_CLASS = 'rounded-pill ring-2 ring-ink ring-offset-2 ring-offset-leaf';
 
 export interface InstrumentPlayerChip {
@@ -28,7 +29,7 @@ export function InstrumentPlayerChips({
   onTogglePrimary,
 }: InstrumentPlayerChipsProps): JSX.Element {
   return (
-    <span className="inline-flex flex-wrap items-center">
+    <span className="flex max-w-28 shrink-0 flex-wrap items-center justify-end">
       {players.map((player) => (
         <Chip
           key={player.memberId}

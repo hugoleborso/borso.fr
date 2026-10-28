@@ -19,7 +19,6 @@ import {
 import { CSS } from '@dnd-kit/utilities';
 import type { InstrumentIcon } from '@domain/instrument.core';
 import type { JSX } from 'react';
-import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { IconButton } from '../atoms/IconButton';
 import { Icon } from '../atoms/Icon';
@@ -35,7 +34,7 @@ const DRAG_MODIFIERS = [restrictToVerticalAxis];
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
 const DRAG_TOUCH_DELAY_MS = 200;
 const DRAG_TOUCH_TOLERANCE_PX = 8;
-const ROW_OPENING_BUTTON_CLASS = 'text-meta after:absolute after:inset-0';
+const ROW_OPENING_BUTTON_CLASS = 'min-w-0 flex-1 gap-2.5 after:absolute after:inset-0';
 
 export interface InstrumentListRow {
   readonly id: string;
@@ -70,7 +69,7 @@ function InstrumentRow(
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={composeClassName(
-        'relative flex items-center gap-2 rounded-md border border-rule bg-leaf px-2 py-2 transition-colors hover:border-rule-strong sm:gap-3 sm:px-3',
+        'relative flex min-h-14 items-center gap-2 rounded-md border border-rule bg-leaf px-2 py-1.5 transition-colors hover:border-rule-strong sm:gap-3 sm:px-3',
         isDragging && 'opacity-40',
       )}
     >
@@ -82,25 +81,29 @@ function InstrumentRow(
         {...attributes}
         {...listeners}
       />
-      <Icon name={INSTRUMENT_ICON_GLYPH[props.row.icon]} size="md" />
-      <div className="flex min-w-0 flex-1 flex-col">
-        <ListRow className={ROW_OPENING_BUTTON_CLASS} onClick={() => props.onSelect(props.row.id)}>
-          {props.row.name}
-        </ListRow>
-        <div className="-ml-2.5 flex flex-wrap items-center gap-x-2">
-          <InstrumentPlayerChips
-            players={props.row.players}
-            toggleLabel={props.primaryToggleLabel}
-            onTogglePrimary={(memberId) => props.onTogglePrimary(props.row.id, memberId)}
-          />
-          <Badge tone="mono">{props.row.familyLabel}</Badge>
-        </div>
-      </div>
+      <ListRow
+        className={ROW_OPENING_BUTTON_CLASS}
+        isChevronShown={false}
+        leading={
+          <Icon name={INSTRUMENT_ICON_GLYPH[props.row.icon]} size="md" className="shrink-0" />
+        }
+        onClick={() => props.onSelect(props.row.id)}
+      >
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate text-body leading-tight text-ink">{props.row.name}</span>
+          <span className="truncate text-label text-ink-soft">{props.row.familyLabel}</span>
+        </span>
+      </ListRow>
+      <InstrumentPlayerChips
+        players={props.row.players}
+        toggleLabel={props.primaryToggleLabel}
+        onTogglePrimary={(memberId) => props.onTogglePrimary(props.row.id, memberId)}
+      />
       <IconButton
         icon="trash"
         variant="danger"
         label={props.deleteLabel}
-        className="relative z-10"
+        className="relative z-10 shrink-0"
         onClick={() => props.onDelete(props.row.id)}
       />
     </li>
