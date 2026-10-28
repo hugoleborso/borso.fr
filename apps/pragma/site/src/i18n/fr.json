@@ -385,7 +385,6 @@
     }
   },
   "sessions": {
-    "setlistShort": "Setlist",
     "addTask": "Ajouter une tâche",
     "capacity": "Jauge",
     "create": {

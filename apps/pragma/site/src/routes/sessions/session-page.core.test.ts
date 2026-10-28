@@ -194,7 +194,7 @@ describe('selectSessionPills', () => {
       practicePath: '/sessions/s/practice',
       setlistPath: '/setlists/set-1',
       setlistVariant: 'secondary',
-      setlistLabelKey: 'sessions.setlistShort',
+      setlistLabelKey: 'sessions.setlist',
       isAddSongsShown: false,
     });
   });

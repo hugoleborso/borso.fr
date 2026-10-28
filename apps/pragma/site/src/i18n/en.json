@@ -385,7 +385,6 @@
     }
   },
   "sessions": {
-    "setlistShort": "Setlist",
     "addTask": "Add a task",
     "capacity": "Capacity",
     "create": {

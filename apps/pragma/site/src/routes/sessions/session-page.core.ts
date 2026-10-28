@@ -116,7 +116,7 @@ export interface SessionPills {
   readonly practicePath: string | null;
   readonly setlistPath: string | null;
   readonly setlistVariant: 'primary' | 'secondary';
-  readonly setlistLabelKey: 'home.openSetlist' | 'sessions.setlistShort';
+  readonly setlistLabelKey: 'home.openSetlist' | 'sessions.setlist';
   readonly isAddSongsShown: boolean;
 }
 
@@ -150,6 +150,6 @@ export function selectSessionPills(input: SessionPrimaryActionsInput): SessionPi
     practicePath: buildPracticePath(input.sessionId),
     setlistPath,
     setlistVariant: 'secondary',
-    setlistLabelKey: 'sessions.setlistShort',
+    setlistLabelKey: 'sessions.setlist',
   };
 }
