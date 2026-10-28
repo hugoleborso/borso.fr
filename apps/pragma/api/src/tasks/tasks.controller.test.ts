@@ -315,6 +315,37 @@ describe('tasks controller (back-e2e)', () => {
     expect(stored).toEqual([{ assigneeId: null }]);
   });
 
+  it('never leaves a task linked to a session deleted while the link was written', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const sessionId = await createPracticeSession(app, cookieHeader);
+    const create = await jsonRequest(app, '/api/tasks', {
+      method: 'POST',
+      body: { title: 'Bring the PA' },
+      cookieHeader,
+    });
+    const created = await readJson(create, singleTaskEnvelope);
+
+    const [link, removal] = await runSecondWhileFirstWaitsOnHold(
+      holdTaskRow(created.task.id),
+      async () =>
+        await jsonRequest(app, `/api/tasks/${created.task.id}`, {
+          method: 'PUT',
+          body: { sessionId },
+          cookieHeader,
+        }),
+      async () =>
+        await jsonRequest(app, `/api/sessions/${sessionId}`, {
+          method: 'DELETE',
+          cookieHeader,
+        }),
+    );
+    expect(removal.status).toBe(200);
+    expect([200, 404]).toContain(link.status);
+
+    const stored = await testDatabase().select({ sessionId: taskTable.sessionId }).from(taskTable);
+    expect(stored).toEqual([{ sessionId: null }]);
+  });
+
   it('writes the task once when its first two commits lose a conflict on the claimed member', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
     const removeSimulatedConflict = await abortCommitsWritingTable('member', 2);
