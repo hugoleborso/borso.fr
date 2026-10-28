@@ -41,18 +41,29 @@ Removed when nothing imports them any more: `SetlistToolbar.tsx`, `MemberFilterP
 
 ## Acceptance rows (before -> target), from the spec
 
-| Row | Before | Target |
-| --- | --- | --- |
-| 4 Lineup for one song tonight | 4 / 0 / 3, lineup sheet inner scroll 1 | 3 / 0 / 2, inner scroll 0 |
-| 5 Note a transition | 3 / 0 / 2, note not shown | ≤ 3 / 0 / 2, comment shown on the list, draft kept after a backdrop close |
-| 6 Note on a song for tonight | 4 / 0 / 2, note not shown | 3 / 0 / 2, note shown on the row, 8 of 8 note race runs |
-| 11 Close a vote | 9 / 8 / 2 | ≤ 9 / ≤ 4 / 2, "Close the vote" visible on arrival at the bottom, back link on the vote page |
-| `/setlists/:id` first song row top, 375x667 / 390x844 | 269 px / about 265 px | ≤ 190 px / ≤ 215 px |
-| `/setlists/:id` sticky elements other than the bottom strip | 1 (71 px chart) | 0 |
-| Lineup grid: songs with the full lineup on the first screen, 390x844 | about 5 | ≥ 8 |
-| Lineup grid: changes from the previous song marked | 0 | all |
-| Lineup grid: columns tinted and played cells filled in the member's stored colour, both schemes | glyphs tinted | every column and every played cell |
-| A sheet never opens another (gated from slice 3) | lineup dialog from the entry sheet | no second open `<dialog>` from the entry sheet |
+Measured column: `../validation/slice-3-after.json`, one run of `--tasks all --routes --slice-1 --slice-2 --slice-3` on the slice 3 head.
+
+| Row | Before | Target | Measured |
+| --- | --- | --- | --- |
+| 4 Lineup for one song tonight | 4 / 0 / 3, lineup sheet inner scroll 1 | 3 / 0 / 2, inner scroll 0 | 3 / 0 / 2, inner scroll 0 |
+| 5 Note a transition | 3 / 0 / 2, note not shown | ≤ 3 / 0 / 2, comment shown on the list, draft kept after a backdrop close | 3 / 0 / 2, shown, draft kept |
+| 6 Note on a song for tonight | 4 / 0 / 2, note not shown | 3 / 0 / 2, note shown on the row, 8 of 8 note race runs | 3 / 0 / 2, shown, 8 of 8 |
+| 11 Close a vote | 9 / 8 / 2 | ≤ 9 / ≤ 4 / 2, "Close the vote" visible on arrival at the bottom, back link on the vote page | 9 / 3 / 2, at 0.858 of the screen on arrival and at the page end, back link names the setlist |
+| `/setlists/:id` first song row top, 375x667 / 390x844 | 269 px / about 265 px | ≤ 190 px / ≤ 215 px | 183 px (20 px top inset) / 210 px |
+| `/setlists/:id` sticky elements other than the bottom strip | 1 (71 px chart) | 0 | 0 |
+| Lineup grid: songs with the full lineup on the first screen, 390x844 | about 5 | ≥ 8 | 8 |
+| Lineup grid: changes from the previous song marked | 0 | all | 30 of 30, no mark without a change |
+| Lineup grid: columns tinted and played cells filled in the member's stored colour, both schemes | glyphs tinted | every column and every played cell | 5 of 5 columns, 82 of 82 cells, in both schemes |
+| A sheet never opens another (gated from slice 3) | lineup dialog from the entry sheet | no second open `<dialog>` from the entry sheet | 1 open after Record a take |
+
+Not a slice 3 row, recorded so the next slice sees it: task 2 (slice 4) costs 11 / 3 / 6 against 11 / 2 / 7 after slice 2, because rows now show their note and lineup change and the drag reaches one row further down; the Order screen of slice 4 takes that drag over.
+
+## Decided while building
+
+- Key and capo sit in a fixed band under the entry sheet's header (`Sheet` gains a `subheader`), so they stay in view when the focus brings the note into view at the bottom of the body; task 6 needed a scroll otherwise.
+- Open a vote in the setlist's more menu opens the vote, then lands on the vote page, so closing a vote stays at 9 taps.
+- The vote list draws its songs as ruled 48 px rows instead of cards, which takes task 11 from 5 scrolls to 3.
+- The 375x667 measure uses the 20 px top inset and no bottom inset of a phone that size without a notch; the 390x844 measure keeps the 47 px and 34 px insets.
 
 ## Self-check before the gates
 
