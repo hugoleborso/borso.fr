@@ -373,6 +373,8 @@ run_context_case posttool-eslint-cache-replays-a-fixed-error.sh inform 'rm -rf .
   '{"hook_event_name":"PostToolUseFailure","tool_name":"Bash","tool_input":{"command":"pnpm run lint"},"error":"Exit code 1\n  3:1  error  Unsafe call  @typescript-eslint/no-unsafe-call"}'
 run_context_case posttool-eslint-cache-replays-a-fixed-error.sh silent '' \
   '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"grep -rn no-unsafe-call docs/"},"tool_response":{"stdout":"@typescript-eslint/no-unsafe-call","stderr":""}}'
+run_context_case posttool-eslint-cache-replays-a-fixed-error.sh silent '' \
+  '{"hook_event_name":"PostToolUse","tool_name":"Bash","tool_input":{"command":"grep -rn typescript-eslint docs/standards"},"tool_response":{"stdout":"docs/standards/03-typing.md:12:- eslint: `@typescript-eslint/no-floating-promises`","stderr":""}}'
 rm -rf "$CASE_DIRECTORY"
 CASE_DIRECTORY=''
 

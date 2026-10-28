@@ -66,7 +66,13 @@ RESPONSE=$(jq -r '
 # cannot invalidate correctly.
 TYPE_AWARE='no-unsafe-argument|no-unsafe-assignment|no-unsafe-call|no-unsafe-member-access|no-unsafe-return|no-deprecated|no-floating-promises|no-misused-promises|restrict-template-expressions|no-unnecessary-condition'
 
-COUNT=$(printf '%s' "$RESPONSE" | grep -cE "@typescript-eslint/($TYPE_AWARE)" || true)
+# Only a line of ESLint's own report counts: `<line>:<column>  error  <message>
+# <rule>`. A rule name anywhere else is a mention, not an error: on PR #197 a
+# grep of the standards printed one, from a command that merely named ESLint,
+# and the hook told the agent to delete a cache in a repository that no longer
+# runs ESLint at all.
+REPORT_LINE='^[[:space:]]*[0-9]+:[0-9]+[[:space:]]+error[[:space:]].*@typescript-eslint/'
+COUNT=$(printf '%s\n' "$RESPONSE" | grep -cE "${REPORT_LINE}($TYPE_AWARE)[[:space:]]*$" || true)
 [ "${COUNT:-0}" -gt 0 ] || exit 0
 
 NOTE=$(

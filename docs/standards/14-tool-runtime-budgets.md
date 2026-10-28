@@ -157,8 +157,10 @@ What a person waits for is the wall-clock total, and that is only meaningful
 where nothing else runs. `scripts/check-pre-commit-budget.sh` copies the tree,
 makes a commit touching one file of each common kind (a component, an API
 source, a test, a manifest, a knowledge entry, a skill, a shell script and a
-workflow), runs the hook on it, and fails when the hook refuses the commit or
-takes longer than 4 seconds.
+workflow), runs the hook on it three times, and fails when the hook refuses the
+commit or the median run takes longer than 4 seconds. One run could not tell a
+slower hook from a slower runner: the same commit measured 1.8 to 3.6 s on CI's
+runner, and every check's CPU moved by the same factor, the untouched ones too.
 
 TypeScript checks on the commit run under plain `node` with
 `scripts/typescript-resolve.mjs`, which resolves `./x` and `./x.js` to the
@@ -246,7 +248,7 @@ moved to pre-push.
 - `script:scripts/check-pre-commit-budget.sh` runs the pre-commit hook on a
   fixture commit touching one file of every common kind, and fails when the
   hook refuses it, which includes any check over its CPU budget, or when the
-  hook takes longer than 4 seconds. It runs in the `pre-commit-budget` job
+  median of three runs takes longer than 4 seconds. It runs in the `pre-commit-budget` job
   of `ci.yml`.
 - `script:scripts/check-ci-job-timeouts.sh` fails a job in `ci.yml` that
   declares no `timeout-minutes`, which GitHub reads as six hours, or one over
