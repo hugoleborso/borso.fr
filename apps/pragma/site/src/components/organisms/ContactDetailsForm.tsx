@@ -78,7 +78,7 @@ export function ContactDetailsForm(props: ContactDetailsFormProps): JSX.Element 
             <Button
               icon="check"
               type="submit"
-              variant="primary"
+              variant="secondary"
               disabled={isSubmitDisabled(canSubmit, isSubmitting)}
             >
               {t('common.save')}

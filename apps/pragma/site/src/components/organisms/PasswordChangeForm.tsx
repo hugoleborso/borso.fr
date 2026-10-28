@@ -73,7 +73,7 @@ export function PasswordChangeForm(props: PasswordChangeFormProps): JSX.Element 
           <Button
             icon="check"
             type="submit"
-            variant="primary"
+            variant="secondary"
             disabled={!canSubmit || isSubmitting}
           >
             {t('account.changePassword')}

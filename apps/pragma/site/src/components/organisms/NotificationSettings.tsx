@@ -59,7 +59,7 @@ function EnableOnThisDevice(): JSX.Element {
   return (
     <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
       <Button
-        variant="primary"
+        variant="secondary"
         disabled={enablePush.isPending}
         onClick={() => enablePush.mutate()}
         className="w-full sm:w-auto"

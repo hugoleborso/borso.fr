@@ -64,7 +64,7 @@ export function PasskeyList(props: PasskeyListProps): JSX.Element {
             <Button
               icon="fingerprint"
               type="button"
-              variant="primary"
+              variant="secondary"
               disabled={deviceLabel.trim().length === 0 || props.isAdding}
               onClick={() => {
                 props.onAdd(deviceLabel.trim());

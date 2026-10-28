@@ -69,7 +69,7 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
             <Button
               icon="check"
               type="submit"
-              variant="primary"
+              variant="secondary"
               disabled={isSubmitDisabled(canSubmit, isSubmitting)}
             >
               {t('common.save')}
