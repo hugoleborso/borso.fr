@@ -642,6 +642,43 @@
       }
     },
     {
+      "files": ["apps/pragma/site/src/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["pg", "postgres", "drizzle-orm/*", "@aws-sdk/client-dsql"],
+                "message": "The site reaches the database through the typed Hono client, never directly. See docs/standards/06-data-fetching.md."
+              },
+              {
+                "group": ["**/button.variants"],
+                "importNames": ["buttonVariants"],
+                "message": "Draw a pill through Button, ButtonLink or IconButton, whose icon is a required prop. Composing buttonVariants by hand draws a pill the type check cannot ask for an icon. See docs/standards/03-typing.md."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "files": ["apps/pragma/site/src/components/atoms/**/*.{ts,tsx}"],
+      "rules": {
+        "no-restricted-imports": [
+          "error",
+          {
+            "patterns": [
+              {
+                "group": ["pg", "postgres", "drizzle-orm/*", "@aws-sdk/client-dsql"],
+                "message": "The site reaches the database through the typed Hono client, never directly. See docs/standards/06-data-fetching.md."
+              }
+            ]
+          }
+        ]
+      }
+    },
+    {
       "files": ["apps/**/*.{ts,tsx}", "infra/**/*.ts"],
       "rules": {
         "borso/no-abbreviated-identifier": "error",

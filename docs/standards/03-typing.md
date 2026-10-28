@@ -116,6 +116,10 @@ export function rankRunners(runners: readonly Runner[], now: Date): Ranking {
   `ButtonLink`, and `label` a required prop of `IconButton`, so a button with no
   icon or an icon with no name does not compile; `button.types.test.ts` pins
   both with `@ts-expect-error`.
+- `oxlint:no-restricted-imports` refuses `buttonVariants` imported anywhere in
+  pragma's site outside `components/atoms/`, because a link given that class
+  by hand is drawn as a pill the type check above never sees, which is how
+  **Connect yours** on `/sessions` shipped with no icon.
 - `gate:typecheck` runs `tsc --noEmit` in every workspace, and again over the
   tooling that belongs to none. `scripts/`, `.claude/skills/` and
   `eslint-rules/` are not workspaces, so `pnpm -r typecheck` never reached them

@@ -2,7 +2,6 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import {
   type FreeSlotsView,
   formatFreeSlot,
@@ -12,8 +11,7 @@ import {
 } from '../../lib/free-slots.utils';
 import { useFreeSlots } from '../../lib/queries/free-slots.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
-import { buttonVariants } from '../atoms/button.variants';
-import { composeClassName } from '../atoms/class-name.utils';
+import { ButtonLink } from '../atoms/ButtonLink';
 import { FreeSlotRow } from '../molecules/FreeSlotRow';
 import { CALENDAR_SECTION_PATH } from './calendar-feed-form.utils';
 
@@ -37,11 +35,6 @@ const EXCLUSION_MESSAGE_KEY = {
   'needs-reconnecting': 'freeSlots.excluded.needsReconnecting',
   unavailable: 'freeSlots.excluded.unavailable',
 } as const;
-
-const CONNECT_ACTION_CLASS = composeClassName(
-  buttonVariants({ variant: 'secondary', size: 'md' }),
-  'no-underline self-start',
-);
 
 const NO_MEMBERS: readonly { id: string; firstName: string }[] = [];
 const NO_SLOTS: readonly FreeSlot[] = [];
@@ -69,9 +62,14 @@ function NoCalendarAtAllView(): JSX.Element {
   return (
     <>
       <p className="text-meta text-ink-soft m-0">{t('freeSlots.noCalendarAtAll')}</p>
-      <Link to={CALENDAR_SECTION_PATH} className={CONNECT_ACTION_CLASS}>
+      <ButtonLink
+        to={CALENDAR_SECTION_PATH}
+        variant="secondary"
+        icon="calendar"
+        className="self-start"
+      >
         {t('freeSlots.connectYours')}
-      </Link>
+      </ButtonLink>
     </>
   );
 }

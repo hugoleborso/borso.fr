@@ -129,9 +129,10 @@ use it, and a button whose label repeats what its icon already says are all
 text a member reads once and then scrolls past every day. When a control needs
 a sentence to be understood, change the control.
 
-- A create action is a round `+` button (`size="icon"` on `Button`, or
-  `buttonVariants({ size: 'icon' })` on a link), named through `aria-label`
-  and `title`, so it costs no width and still reads to a screen reader.
+- A create action is a round `+` button (an icon-only button, or the icon
+  button variant on a link: `iconButtonVariants` in pragma), named through
+  `aria-label` and `title`, so it costs no width and still reads to a screen
+  reader.
 - A page header is the title, plus a subtitle only when it carries data: a
   date, a venue, a count no other control on the screen already shows.
 - A placeholder names the thing (`New task`), not the procedure (`New task,
