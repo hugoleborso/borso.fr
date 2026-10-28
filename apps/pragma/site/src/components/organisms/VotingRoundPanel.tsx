@@ -7,6 +7,7 @@ import {
   useOpenRound,
   useRoundHistory,
 } from '../../lib/queries/audience.queries';
+import type { PoolEntryView } from '../../lib/queries/audience.utils';
 import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { StandingSongRow } from '../molecules/StandingSongRow';
@@ -14,6 +15,8 @@ import { VoteCountdown } from '../molecules/VoteCountdown';
 import {
   buildShortVoteAddress,
   buildVoteAddress,
+  hasAnyRoundOpened,
+  type RoundHistoryLine,
   type RoundOutcome,
   selectParticipation,
   selectRoundHistoryLines,
@@ -44,6 +47,7 @@ export function VotingRoundPanel({
   );
   const historyLines = selectRoundHistoryLines(history.data?.rounds ?? [], i18n.language);
   const standing = voteState.data?.state.pool ?? [];
+  const isResultShown = hasAnyRoundOpened(round, history.data?.rounds.length ?? 0);
 
   const OUTCOME_LABEL: Record<RoundOutcome['kind'], (outcome: RoundOutcome) => string> = {
     running: () => t('audience.roundRunning'),
@@ -77,15 +81,17 @@ export function VotingRoundPanel({
               {t('audience.openRoundFailed')}
             </p>
           )}
-          <p className="text-meta text-ink-soft m-0">
-            {participation.sharePercent === null
-              ? t('audience.ballotsCast', { ballots: participation.ballotCount })
-              : t('audience.ballotsAgainstCapacity', {
-                  ballots: participation.ballotCount,
-                  capacity: participation.capacity,
-                  share: participation.sharePercent,
-                })}
-          </p>
+          {isResultShown ? (
+            <p className="text-meta text-ink-soft m-0">
+              {participation.sharePercent === null
+                ? t('audience.ballotsCast', { ballots: participation.ballotCount })
+                : t('audience.ballotsAgainstCapacity', {
+                    ballots: participation.ballotCount,
+                    capacity: participation.capacity,
+                    share: participation.sharePercent,
+                  })}
+            </p>
+          ) : null}
           <p className="text-meta text-ink-soft m-0">
             {t('audience.sayThisAddress')}{' '}
             <span className="font-mono text-ink">{shortVoteAddress}</span>
@@ -93,6 +99,23 @@ export function VotingRoundPanel({
           <p className="font-mono text-meta text-ink-soft m-0 break-all">{voteAddress}</p>
         </Card>
       </div>
+      {isResultShown ? (
+        <VoteResults standing={standing} historyLines={historyLines} outcomeLabel={OUTCOME_LABEL} />
+      ) : null}
+    </section>
+  );
+}
+
+interface VoteResultsProps {
+  readonly standing: readonly PoolEntryView[];
+  readonly historyLines: readonly RoundHistoryLine[];
+  readonly outcomeLabel: Readonly<Record<RoundOutcome['kind'], (outcome: RoundOutcome) => string>>;
+}
+
+function VoteResults({ standing, historyLines, outcomeLabel }: VoteResultsProps): JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <>
       <div className="flex flex-col gap-2">
         <h4 className="font-display text-title text-ink m-0">{t('audience.standingTitle')}</h4>
         {standing.length === 0 ? (
@@ -120,11 +143,11 @@ export function VotingRoundPanel({
           >
             <span className="font-mono text-meta text-ink-soft">{line.openedAtLabel}</span>
             <span className="text-meta text-ink text-right">
-              {OUTCOME_LABEL[line.outcome.kind](line.outcome)}
+              {outcomeLabel[line.outcome.kind](line.outcome)}
             </span>
           </li>
         ))}
       </ul>
-    </section>
+    </>
   );
 }

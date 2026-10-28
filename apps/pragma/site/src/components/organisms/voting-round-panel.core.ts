@@ -74,3 +74,8 @@ export function selectParticipation(
     sharePercent: Math.round((ballotCount / roomSize) * PERCENT_SCALE),
   };
 }
+
+// @FollowsBlueprint core-decision
+export function hasAnyRoundOpened(currentRound: object | null, pastRoundCount: number): boolean {
+  return currentRound !== null || pastRoundCount > 0;
+}

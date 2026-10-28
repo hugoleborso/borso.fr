@@ -38,7 +38,6 @@ import { SessionSetlistPreviews } from './SessionSetlistPreviews';
 import { SessionTakes } from './SessionTakes';
 import { SessionTasks } from './SessionTasks';
 import { SetlistSongPicker } from './SetlistSongPicker';
-import { VotingRoundPanel } from './VotingRoundPanel';
 import { recordProductEvent } from '../../observability/product-event.adapter';
 
 export interface SessionDetailProps {
@@ -193,9 +192,18 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         className="mb-0 sm:mb-0"
         actions={
           isConcert && !editingConcert ? (
-            <Button variant="secondary" onClick={() => setEditingConcert(true)} icon="edit">
-              {t('common.edit')}
-            </Button>
+            <>
+              <ButtonLink
+                variant="secondary"
+                icon="audience"
+                to={`/sessions/${session.id}/audience`}
+              >
+                {t('audience.panelTitle')}
+              </ButtonLink>
+              <Button variant="secondary" onClick={() => setEditingConcert(true)} icon="edit">
+                {t('common.edit')}
+              </Button>
+            </>
           ) : null
         }
       />
@@ -244,8 +252,6 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
           language={i18n.language}
         />
       ) : null}
-
-      {isConcert ? <VotingRoundPanel sessionId={session.id} openRoundVariant="secondary" /> : null}
 
       {isCreatingSetlist ? (
         <CreateSetlistDialog
