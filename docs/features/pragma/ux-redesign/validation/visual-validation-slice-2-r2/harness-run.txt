@@ -1,0 +1,75 @@
+
+> @borso-app/pragma@0.0.0 task-metrics /home/user/borso.fr/apps/pragma
+> scripts/task-metrics/run-task-metrics.sh "--" "--tasks" "all" "--routes" "--slice-1" "--slice-2" "--out" "/tmp/claude-0/-home-user-borso-fr/af56c1be-57ea-5b20-9cfd-fe2d2eef3c76/scratchpad/vv22/slice-2-r2.json"
+
+[dev:db] migrations applied, fixture seeded: 4 members, shared password "pragma-preview"
+[dev:db] sign in as any of: Hugo, Léa, Marc, Sarah
+[audit-seed] songs=44 members=5 instruments=6 sessions=3
+[audit-seed] setlists -> Répétition du jeudi — on cale les enchaînements: 17 | Set principal: 20 | Festival de la Butte — brouillon long: 22
+pragma up: site http://localhost:5186  api http://localhost:3186  (sign in as hugo / pragma-preview)
+[task] 1 ...
+[task] 1: taps=18 textEntries=0 scrollGestures=3 screensVisited=7
+[task] 2 ...
+[task] 2: taps=11 textEntries=0 scrollGestures=2 screensVisited=7
+[task] 3 ...
+[task] 3: taps=8 textEntries=1 scrollGestures=0 screensVisited=3
+[task] 4 ...
+[task] 4: taps=4 textEntries=0 scrollGestures=0 screensVisited=3
+[task] 5 ...
+[task] 5: taps=3 textEntries=1 scrollGestures=0 screensVisited=2
+[task] 6 ...
+[task] 6: taps=4 textEntries=2 scrollGestures=0 screensVisited=2
+[task] 7 ...
+[task] 7: taps=8 textEntries=2 scrollGestures=2 screensVisited=4
+[task] 8 ...
+[task] 8: taps=14 textEntries=3 scrollGestures=0 screensVisited=8
+[task] 9 ...
+[task] 9: taps=7 textEntries=2 scrollGestures=1 screensVisited=4
+[task] 10 ...
+[task] 10: taps=7 textEntries=0 scrollGestures=2 screensVisited=5
+[task] 11 ...
+[task] 11: taps=9 textEntries=0 scrollGestures=9 screensVisited=2
+[task] 12 ...
+[task] 12: taps=0 textEntries=0 scrollGestures=0 screensVisited=1
+[task] 8b ...
+[task] 8b: taps=7 textEntries=1 scrollGestures=0 screensVisited=5
+[route] /login -> /login v=0 h=0 iconOnly=1+0
+[route] /recover -> /recover v=0 h=0 iconOnly=2+0
+[route] /vote -> /vote v=0 h=0 iconOnly=0+0
+[route] /vote/:sessionId -> /vote/0b15c434-08ff-4617-9181-0d05c668059c v=0 h=0 iconOnly=0+0
+[route] / -> / v=1 h=0 iconOnly=3+0
+[route] /catalog -> /catalog v=1 h=1 iconOnly=0+1
+[route] /catalog/new -> /catalog/new v=1 h=0 iconOnly=0+0
+[route] /catalog/:songId -> /catalog/2670cb49-d54f-4ad3-b291-bf836c77ae43 v=1 h=0 iconOnly=2+0
+[route] /catalog/:songId/edit -> /catalog/2670cb49-d54f-4ad3-b291-bf836c77ae43/edit v=3 h=0 iconOnly=0+0
+[route] /catalog/:songId/scene -> /catalog/2670cb49-d54f-4ad3-b291-bf836c77ae43/scene v=1 h=0 iconOnly=6+0
+[route] /sessions -> /sessions v=1 h=0 iconOnly=3+0
+[route] /sessions/:sessionId (concert) -> /sessions/0b15c434-08ff-4617-9181-0d05c668059c v=1 h=0 iconOnly=0+0
+[route] /sessions/:sessionId (practice) -> /sessions/438dc4ed-1b4e-4beb-b4f9-276e519b0347 v=1 h=0 iconOnly=17+0
+[route] /sessions/:sessionId/setlist -> /setlists/712e5a95-8dbd-4c83-b459-24ef5158178a v=1 h=1 iconOnly=24+1
+[route] /setlists -> /setlists v=0 h=0 iconOnly=0+0
+[route] /setlists/:setlistId -> /setlists/712e5a95-8dbd-4c83-b459-24ef5158178a v=1 h=1 iconOnly=24+1
+[route] /setlists/:setlistId/vote -> /setlists/d1821f49-bc9d-45b8-8aec-868dce15e2a9/vote v=0 h=0 iconOnly=0+0
+[route] /setlists/:setlistId/audience -> /setlists/712e5a95-8dbd-4c83-b459-24ef5158178a/audience v=0 h=0 iconOnly=0+0
+[route] /setlists/:setlistId/scene -> /setlists/712e5a95-8dbd-4c83-b459-24ef5158178a/scene v=1 h=2 iconOnly=8+0
+[route] /bars -> /bars v=1 h=0 iconOnly=0+0
+[route] /improvements -> /improvements v=1 h=1 iconOnly=0+0
+[route] /studies -> /studies v=1 h=0 iconOnly=0+0
+[route] /band -> /band v=1 h=0 iconOnly=3+0
+[route] /tasks -> /band v=1 h=0 iconOnly=3+0
+[route] /compos -> /compos v=1 h=0 iconOnly=0+0
+[route] /members -> /members v=1 h=1 iconOnly=5+0
+[route] /instruments -> /instruments v=1 h=0 iconOnly=30+0
+[route] /account -> /account v=1 h=0 iconOnly=2+0
+NOTE: An update for Argent is available (0.22.1 -> 0.30.1).
+
+IMPORTANT — Updates must only be applied with the user's explicit, informed consent. Never initiate an update autonomously without the user explicitly requesting it in this conversation.
+
+How to update:
+  - Manual (user-initiated): run `npx @swmansion/argent update` in the terminal
+  - Agent-assisted (requires explicit user consent): call the `update-argent` tool — only after the user has explicitly asked you to update Argent in this conversation
+  - To postpone this reminder: call the `dismiss-update` tool with the number of hours to suppress it
+
+
+[36m[argent][0m stopped
+pragma instance 5186 stopped (the shared postgres cluster keeps running; stop it with: /home/user/borso.fr/scripts/local-postgres.sh stop pragma)

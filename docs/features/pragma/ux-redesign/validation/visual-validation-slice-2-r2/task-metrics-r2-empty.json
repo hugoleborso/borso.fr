@@ -1,0 +1,182 @@
+{
+  "meta": {
+    "measuredAt": "2026-10-28T10:08:52.138Z",
+    "viewport": "390x844",
+    "insets": {
+      "top": 47,
+      "bottom": 34,
+      "left": 0,
+      "right": 0
+    },
+    "standalone": false,
+    "base": "http://localhost:5186",
+    "seed": "no-upcoming-session",
+    "input": "argent gesture-tap / gesture-scroll / gesture-drag / keyboard. On Chromium argent sends a one-finger tap as CDP mouse press and release (pointerType mouse), not as a touch event.",
+    "bottomThird": "centre of the control at or below 2/3 of the screen height on arrival, before any scroll"
+  },
+  "tasks": {},
+  "sliceTwo": {
+    "shell": {
+      "tabCount": 4,
+      "tabNumbers": 0,
+      "tabLabels": ["Home", "Sessions", "Songs", "Band"],
+      "activeTabByRoute": {
+        "/": {
+          "landedOn": "/",
+          "active": ["Home"]
+        },
+        "/sessions": {
+          "landedOn": "/sessions",
+          "active": ["Sessions"]
+        },
+        "/setlists": {
+          "landedOn": "/setlists",
+          "active": ["Sessions"]
+        },
+        "/catalog": {
+          "landedOn": "/catalog",
+          "active": ["Songs"]
+        },
+        "/band": {
+          "landedOn": "/band",
+          "active": ["Band"]
+        },
+        "/studies": {
+          "landedOn": "/studies",
+          "active": ["Band"]
+        },
+        "/account": {
+          "landedOn": "/account",
+          "active": ["Band"]
+        }
+      }
+    },
+    "primaryActions": {
+      "/": {
+        "landedOn": "/",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "New session",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/band": {
+        "landedOn": "/band",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "New task",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/tasks": {
+        "landedOn": "/band",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "New task",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/sessions": {
+        "landedOn": "/sessions",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "Concert",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      },
+      "/setlists": {
+        "landedOn": "/setlists",
+        "primaryCount": 1,
+        "primaries": [
+          {
+            "name": "New setlist",
+            "centreFraction": 0.858,
+            "isInBottomThird": true
+          }
+        ]
+      }
+    },
+    "firstContentTop": {
+      "topInset": 47,
+      "routes": {
+        "/": {
+          "landedOn": "/",
+          "firstContentTop": 63
+        },
+        "/band": {
+          "landedOn": "/band",
+          "firstContentTop": 63
+        },
+        "/sessions": {
+          "landedOn": "/sessions",
+          "firstContentTop": 63
+        },
+        "/catalog": {
+          "landedOn": "/catalog",
+          "firstContentTop": 68
+        }
+      }
+    },
+    "themeColour": {
+      "light": {
+        "values": [
+          {
+            "media": "(prefers-color-scheme: light)",
+            "content": "#f5f1e8"
+          },
+          {
+            "media": "(prefers-color-scheme: dark)",
+            "content": "#16130f"
+          }
+        ],
+        "shown": "#f5f1e8"
+      },
+      "dark": {
+        "values": [
+          {
+            "media": "(prefers-color-scheme: light)",
+            "content": "#f5f1e8"
+          },
+          {
+            "media": "(prefers-color-scheme: dark)",
+            "content": "#16130f"
+          }
+        ],
+        "shown": "#16130f"
+      }
+    },
+    "manifestShortcutUrls": ["/", "/setlists"],
+    "languageSwitch": {
+      "chipsInShell": 0,
+      "chipsShownOnAccount": 2
+    },
+    "tasksLayoutWidth": {
+      "linkedTitle": "Sweet Dreams (Are Made of This) — Extended Version With the Long Synth Intro",
+      "landedOn": "/band",
+      "390x844": 390,
+      "375x667": 375
+    },
+    "taskDraftAfterBackdrop": {
+      "isClosed": true,
+      "valueOnReopening": "Imprimer les setlists",
+      "isDraftKept": true
+    },
+    "taskDraftAfterEscape": {
+      "isClosed": true,
+      "valueOnReopening": "Imprimer les setlists",
+      "isDraftKept": true
+    }
+  }
+}
