@@ -39,3 +39,13 @@ export function buildSetlistViewParams(
   if (view === 'lineup' || memberId === null) return { [SETLIST_VIEW_PARAM]: view };
   return { [SETLIST_VIEW_PARAM]: view, [MEMBER_FILTER_PARAM]: memberId };
 }
+
+const VIEW_EVENT_VALUE: Readonly<Record<SetlistView, string>> = {
+  songs: 'songs',
+  lineup: 'lineup',
+  'my-part': 'my_part',
+};
+
+export function describeSetlistViewForEvent(view: SetlistView): string {
+  return VIEW_EVENT_VALUE[view];
+}

@@ -8,7 +8,12 @@ import {
   stubFetch,
   type FetchStub,
 } from '../../lib/queries/queries.test-utils';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { TransitionCommentModal } from './TransitionCommentModal';
+
+vi.mock('../../observability/product-event.adapter', () => ({
+  recordProductEvent: vi.fn(),
+}));
 import { stubSheetDialog } from '../molecules/sheet.test-utils';
 
 const SONG_A = 'superstition';
@@ -56,6 +61,7 @@ describe('a transition comment draft', () => {
 
   afterEach(() => {
     cleanup();
+    vi.clearAllMocks();
     stub?.restore();
   });
 
@@ -77,6 +83,7 @@ describe('a transition comment draft', () => {
       expect(first.onClose).toHaveBeenCalled();
     });
     expect(savedComments).toEqual([DRAFT]);
+    expect(recordProductEvent).toHaveBeenCalledExactlyOnceWith('transition_comment_saved');
     first.unmount();
     const second = renderModal('respect', first.queryClient);
     expect(await screen.findByDisplayValue(DRAFT)).toBeTruthy();
