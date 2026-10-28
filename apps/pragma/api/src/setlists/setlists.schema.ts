@@ -83,6 +83,16 @@ export const setlistEntryCreateSchema = z.object({
 
 export const setlistEntryUpdateSchema = setlistEntryCreateSchema.partial();
 
+export const SETLIST_BATCH_ADD_MAX = 200;
+
+function hasNoDuplicate(songIds: readonly string[]): boolean {
+  return new Set(songIds).size === songIds.length;
+}
+
+export const setlistEntryBatchCreateSchema = z.object({
+  songIds: z.array(z.string().uuid()).min(1).max(SETLIST_BATCH_ADD_MAX).refine(hasNoDuplicate),
+});
+
 export type SetlistEntryPersistedUpdate = z.infer<typeof setlistEntryUpdateSchema>;
 
 export const setlistReorderSchema = z.object({
