@@ -33,7 +33,7 @@ const anyRecord = z.record(z.unknown());
 export type TaskWalkRunner = (driver: BandSessionDriver) => Promise<unknown>;
 
 function buildEntryPattern(position: number): string {
-  return `^\\S+ ${String(position).padStart(ENTRY_NUMBER_WIDTH, '0')} `;
+  return `^${String(position).padStart(ENTRY_NUMBER_WIDTH, '0')} `;
 }
 
 function escapeForPattern(text: string): string {
@@ -132,19 +132,17 @@ const buildConcertSetlist: TaskWalkRunner = async (driver) => {
     { exact: 'Drag to reorder', css: 'button', index: 4, scope: 'page' },
     { exact: 'Drag to reorder', css: 'button', index: 1, scope: 'page' },
   );
-  await walk.tap('Open entry 03 (to remove)', {
-    text: '^\\S+ 03 ',
-    css: 'main button',
-    scope: 'page',
-  });
-  await walk.tap('Remove', { exact: 'Remove', css: 'button', scope: 'dialog' }, { primary: true });
-  const confirm = await walk.find({
-    text: '^Remove$',
-    css: 'dialog[open] button',
+  await walk.tap('More for entry 03', { css: 'main li summary', index: 2, scope: 'page' });
+  await walk.tap(
+    'Remove from the setlist',
+    { exact: 'Remove from the setlist', css: 'main li details[open] button', scope: 'page' },
+    { primary: true },
+  );
+  await walk.tap('Confirm remove', {
+    exact: 'Remove from the setlist',
+    css: 'button',
     scope: 'dialog',
   });
-  if (confirm === null) walk.note('No confirmation step after Remove.');
-  else await walk.tap('Confirm remove', { text: '^Remove$', css: 'button', scope: 'dialog' });
   await driver.open(`/setlists/${known.main.id}`);
   const after = await driver.listEntries(known.main.id);
   return walk.summarise({
@@ -207,29 +205,21 @@ const setLineupForOneSong: TaskWalkRunner = async (driver) => {
   const known = await driver.startFresh((records) => `/setlists/${records.main.id}`);
   const before = (await driver.listEntries(known.main.id))[SECOND_ENTRY];
   const walk = new TaskWalk(driver.session, '4 Set the lineup for one song in a setlist');
-  await walk.tap('Open entry 02', {
-    text: buildEntryPattern(SECOND_ENTRY_NUMBER),
-    css: 'main button',
-  });
   await walk.tap(
-    'Lineup (this set)',
-    { text: '^Lineup', css: 'button', scope: 'dialog' },
+    'Open entry 02',
+    { text: buildEntryPattern(SECOND_ENTRY_NUMBER), css: 'main button' },
     { primary: true },
   );
   await walk.tap('Tom plays Guitare', {
-    within: { css: 'li', text: '\\bTom\\b' },
     exact: 'Guitare',
-    css: 'button',
+    css: '[aria-label="Tom — Instruments"] button',
     scope: 'dialog',
   });
-  await walk.tap(
-    'Save lineup',
-    { exact: 'Save', css: 'button', scope: 'dialog' },
-    { primary: true },
-  );
+  await walk.tap('Close the sheet', { exact: 'Close', css: 'button', scope: 'dialog' });
+  await waitMilliseconds(CLOSE_SETTLE_MS);
   const after = await walk.readLocation();
   walk.note(
-    `After Save the screen is ${replaceIdentifierInPath(after.path)}${after.overlay === null ? ' (the entry sheet is closed)' : ` with ${after.overlay}`}.`,
+    `After Close the screen is ${replaceIdentifierInPath(after.path)}${after.overlay === null ? ' (the entry sheet is closed)' : ` with ${after.overlay}`}.`,
   );
   const second = (await driver.listEntries(known.main.id))[SECOND_ENTRY];
   return walk.summarise({
@@ -248,8 +238,8 @@ const noteTransition: TaskWalkRunner = async (driver) => {
   await driver.startFresh((records) => `/setlists/${records.main.id}`);
   const walk = new TaskWalk(driver.session, '5 Note a transition');
   await walk.tap(
-    'Transition band between 04 and 05',
-    { exact: 'View / comment the transition', css: 'button', index: 3 },
+    'Transition line between 04 and 05',
+    { css: 'main [data-transition-line]', index: 3 },
     { primary: true },
   );
   await walk.tap('Note field', { css: 'textarea', scope: 'dialog' });
@@ -275,7 +265,9 @@ const noteSongForTonight: TaskWalkRunner = async (driver) => {
     { text: buildEntryPattern(SECOND_ENTRY_NUMBER), css: 'main button' },
     { primary: true },
   );
-  await walk.tap('Notes field', { css: 'textarea', scope: 'dialog' }, { primary: true });
+  walk.note(
+    'The entry sheet opens with the focus in the note field, so the note is typed with no tap.',
+  );
   await walk.type('Entry note', 'Finir sur le refrain');
   await walk.tap('Key field', { css: 'input', index: 0, scope: 'dialog' });
   await walk.type('Key', 'Am');
@@ -535,14 +527,10 @@ const learnNewSong: TaskWalkRunner = async (driver) => {
 const discussWhichSongs: TaskWalkRunner = async (driver) => {
   const known = await driver.startFresh((records) => `/setlists/${records.rehearsal.id}`);
   const walk = new TaskWalk(driver.session, '11 Discuss which songs to play');
+  await walk.tap('More actions', { exact: 'More actions', css: 'summary' });
   await walk.tap(
-    'Open a vote (header icon)',
+    'Open a vote (setlist menu)',
     { exact: 'Open a vote', css: 'button' },
-    { primary: true, wait: CREATE_SETTLE_MS },
-  );
-  await walk.tap(
-    'Open a vote (vote page)',
-    { exact: 'Open a vote', css: 'main button' },
     { primary: true, wait: CREATE_SETTLE_MS },
   );
   for (const title of ['Kiss', 'Billie Jean', 'Respect', 'Valerie', 'Superstition']) {

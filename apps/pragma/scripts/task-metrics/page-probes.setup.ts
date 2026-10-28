@@ -287,18 +287,20 @@ export const COUNT_SMALL_TAP_TARGETS = `(minimum) => {
 }`;
 
 export const READ_SETLIST_FIRST_SCREEN = `() => {
-  const entryPattern = /^\\S+ \\d\\d /;
-  const rows = [...document.querySelectorAll('main li')].filter((row) => [...row.querySelectorAll('button')].some((button) => entryPattern.test(button.innerText.replace(/\\s+/g, ' '))) && !row.querySelector('li'));
+  const entryPattern = /^(?:\\S+ )?\\d\\d /;
+  const rows = [...document.querySelectorAll('main li')].filter((row) => [...row.querySelectorAll('button')].some((button) => button.closest('li') === row && entryPattern.test(button.innerText.replace(/\\s+/g, ' '))));
   const tabBar = [...document.querySelectorAll('nav')].find((navigation) => { const style = getComputedStyle(navigation); const box = navigation.getBoundingClientRect(); return style.position === 'fixed' && box.bottom >= innerHeight - 2 && box.height < innerHeight / 3; });
   const visibleBottom = tabBar ? tabBar.getBoundingClientRect().top : innerHeight;
   const chart = [...document.querySelectorAll('main *')].find((element) => getComputedStyle(element).position === 'sticky' && element.querySelector('svg'));
   const chartBottom = chart ? chart.getBoundingClientRect().bottom : null;
+  const stickyElements = [...document.querySelectorAll('main *')].filter((element) => getComputedStyle(element).position === 'sticky').length;
   const boxes = rows.map((row) => row.getBoundingClientRect());
   return {
     rowCount: rows.length,
     firstRowTop: boxes[0] ? Math.round(boxes[0].top) : null,
     rowsFullyVisible: boxes.filter((box) => box.top >= 0 && box.bottom <= visibleBottom).length,
     chartBottom: chartBottom === null ? null : Math.round(chartBottom),
+    stickyElements,
     rowsBelowChart: chartBottom === null ? null : boxes.filter((box) => box.top >= chartBottom && box.bottom <= visibleBottom).length,
   };
 }`;
@@ -429,3 +431,30 @@ export const READ_LANGUAGE_CHIPS = `() => {
 export const READ_OPEN_FIELD_VALUE = `(selector) => { const dialog = [...document.querySelectorAll('dialog[open]')].pop(); const field = dialog && dialog.querySelector(selector); return field ? field.value : null; }`;
 
 export const SEND_JSON = `async ({ method, path, body }) => { const response = await fetch(path, { method, credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }); return response.status; }`;
+
+export const READ_LINEUP_GRID = `() => {
+  const tabBar = [...document.querySelectorAll('nav')].find((navigation) => { const style = getComputedStyle(navigation); const box = navigation.getBoundingClientRect(); return style.position === 'fixed' && box.bottom >= innerHeight - 2 && box.height < innerHeight / 3; });
+  const visibleBottom = tabBar ? tabBar.getBoundingClientRect().top : innerHeight;
+  const rows = [...document.querySelectorAll('[data-lineup-row]')];
+  const cells = [...document.querySelectorAll('[data-lineup-cell]')].map((cell) => ({
+    entryId: cell.closest('[data-lineup-row]')?.getAttribute('data-lineup-row') ?? '',
+    memberId: cell.getAttribute('data-lineup-cell') ?? '',
+    isPlaying: cell.getAttribute('data-lineup-playing') === 'true',
+    isChanged: cell.getAttribute('data-lineup-changed') === 'true',
+    fill: cell.firstElementChild ? getComputedStyle(cell.firstElementChild).backgroundColor : '',
+    height: Math.round(cell.getBoundingClientRect().height),
+  }));
+  const lanes = [...document.querySelectorAll('[data-lineup-lane]')].map((lane) => ({ memberId: lane.getAttribute('data-lineup-lane') ?? '', style: (lane.getAttribute('style') ?? '').toLowerCase() }));
+  return {
+    rowCount: rows.length,
+    rowsFullyVisible: rows.filter((row) => { const box = row.getBoundingClientRect(); return box.top >= 0 && box.bottom <= visibleBottom; }).length,
+    cells,
+    lanes,
+    pageWidth: document.documentElement.scrollWidth,
+    viewportWidth: innerWidth,
+  };
+}`;
+
+export const READ_OPEN_DIALOG_LABELS = `() => [...document.querySelectorAll('dialog[open]')].map((dialog) => (dialog.getAttribute('aria-label') || '').slice(0, 60))`;
+
+export const READ_BACK_LINK = `() => { const link = document.querySelector('main a[href]'); return link ? { name: link.innerText.replace(/\\s+/g, ' ').trim(), href: link.getAttribute('href') } : null; }`;

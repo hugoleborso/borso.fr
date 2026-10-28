@@ -50,7 +50,8 @@ const NOTE_RACE_MAXIMUM_DELAY_MS = 700;
 const NOTE_RACE_SETTLE_MS = 6000;
 const TRANSITION_DRAFT_TEXT = 'Brouillon de transition';
 const TRANSITION_INDEX = 3;
-const SECOND_ENTRY_PATTERN = '^\\S+ 02 ';
+const SECOND_ENTRY_PATTERN = '^02 ';
+const TRANSITION_LINE = 'main [data-transition-line]';
 const ENTRY_SAVE_URL_PATTERN = '*/api/setlists/*/entries/*';
 const ADD_SONG_NAMES = ['Add song', 'Add songs'];
 const PAGE_END_SETTLE_MS = 800;
@@ -185,17 +186,24 @@ async function measureSheets(driver: BandSessionDriver): Promise<Record<string, 
   const walk = new TaskWalk(driver.session, 'sheets');
   await walk.tap('Open entry 02', { text: SECOND_ENTRY_PATTERN, css: 'main button' });
   sheets.entry = await readOpenSheet(driver);
-  await walk.tap('Lineup (this set)', { text: '^Lineup', css: 'button', scope: 'dialog' });
+  pressKey('Escape');
+  await waitMilliseconds(SHEET_SETTLE_MS);
+  await walk.tap('Lineup view', { exact: 'Lineup', css: '[role=tab]', scope: 'page' });
+  await walk.tap('Lineup cell of entry 02', {
+    within: { css: '[data-lineup-row]', text: SECOND_ENTRY_PATTERN },
+    css: '[data-lineup-cell]',
+    scope: 'page',
+  });
   sheets.lineup = await readOpenSheet(driver);
   pressKey('Escape');
   await waitMilliseconds(SHEET_SETTLE_MS);
+  await walk.tap('Songs view', { exact: 'Songs', css: '[role=tab]', scope: 'page' });
   await walk.tap('Add song', { exact: 'Add song', css: 'button', scope: 'page' });
   sheets.songPicker = await readOpenSheet(driver);
   pressKey('Escape');
   await waitMilliseconds(SHEET_SETTLE_MS);
   await walk.tap('Transition between 04 and 05', {
-    exact: 'View / comment the transition',
-    css: 'button',
+    css: TRANSITION_LINE,
     index: TRANSITION_INDEX,
     scope: 'page',
   });
@@ -265,8 +273,7 @@ async function measureTransitionDraft(driver: BandSessionDriver): Promise<Record
   await driver.startFresh((records) => `/setlists/${records.main.id}`);
   const walk = new TaskWalk(driver.session, 'transition draft');
   const transitionSpec = {
-    exact: 'View / comment the transition',
-    css: 'button',
+    css: TRANSITION_LINE,
     index: TRANSITION_INDEX,
     scope: 'page',
   };
