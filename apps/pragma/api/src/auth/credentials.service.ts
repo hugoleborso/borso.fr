@@ -174,7 +174,9 @@ export async function recoverPassword(
 }
 
 export type CreateCredentialOutcome =
-  { kind: 'ok' } | { kind: 'already-enrolled' } | { kind: 'username-taken' };
+  | { kind: 'ok' }
+  | { kind: 'already-enrolled' }
+  | { kind: 'username-taken' };
 
 export async function createCredentialForMember(params: {
   readonly memberId: string;

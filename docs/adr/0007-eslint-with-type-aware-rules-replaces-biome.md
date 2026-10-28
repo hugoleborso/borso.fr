@@ -1,6 +1,6 @@
 # ADR-0007: ESLint with type-aware rules replaces Biome
 
-- **Status:** Accepted
+- **Status:** superseded by ADR-0045
 - **Date:** 2026-08-08
 - **Deciders:** Hugo Le Borso
 - **Tags:** meta, tooling, linting, ci, gates

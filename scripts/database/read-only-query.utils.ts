@@ -258,7 +258,8 @@ function isAReaderRoleName(value: unknown): value is string {
 }
 
 export type ReaderProvisioning =
-  { readonly provisioned: true; readonly blocklist: string[] } | { readonly provisioned: false };
+  | { readonly provisioned: true; readonly blocklist: string[] }
+  | { readonly provisioned: false };
 
 export function readReaderProvisioning(template: unknown): ReaderProvisioning {
   if (!isRecord(template) || !isRecord(template.Resources)) return { provisioned: false };

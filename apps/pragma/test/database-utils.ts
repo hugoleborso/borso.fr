@@ -64,10 +64,20 @@ async function countLockWaiters(database: Database): Promise<number> {
   return lockWaiterCountSchema.parse(rows)[0]?.waiting ?? 0;
 }
 
-async function waitForLockWaiters(database: Database, expected: number): Promise<void> {
+const UNNAMED_HOLD = 'the held lock';
+
+async function waitForLockWaiters(
+  database: Database,
+  expected: number,
+  heldOn: string = UNNAMED_HOLD,
+): Promise<void> {
   const deadline = Date.now() + LOCK_WAITER_DEADLINE_MILLISECONDS;
   while ((await countLockWaiters(database)) < expected) {
-    if (Date.now() > deadline) throw new Error(`fewer than ${expected} writers ever waited`);
+    if (Date.now() > deadline) {
+      throw new Error(
+        `fewer than ${expected} writers ever waited on ${heldOn}: check that the write under test touches it`,
+      );
+    }
     await new Promise((resolve) => setTimeout(resolve, LOCK_WAITER_POLL_MILLISECONDS));
   }
 }
@@ -105,7 +115,7 @@ export async function runWithWritesToTableHeld<Result>(
   const started = await database.transaction(async (transaction) => {
     await holdWritesToTable(tableName)(transaction);
     const pending = start();
-    await waitForLockWaiters(database, writers);
+    await waitForLockWaiters(database, writers, `table "${tableName}"`);
     return { pending };
   });
   return await started.pending;

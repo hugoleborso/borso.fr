@@ -1,7 +1,15 @@
 import { createHash } from 'node:crypto';
 import { readFileSync } from 'node:fs';
 import { dirname, join, relative, resolve } from 'node:path';
-import ts from 'typescript';
+import { parseSync } from 'oxc-parser';
+import {
+  forEachChild,
+  parseSource,
+  readLineNumber,
+  readNodeText,
+  type ParsedSource,
+  type SyntaxNode,
+} from './syntax-tree';
 import {
   inferApplication,
   inferLayer,
@@ -118,44 +126,74 @@ export function aggregateMetrics(files: readonly ArchitectureFile[]): NodeMetric
   };
 }
 
+type NodeOf<Kind extends SyntaxNode['type']> = SyntaxNode extends infer Candidate
+  ? Candidate extends { readonly type: infer CandidateKind }
+    ? Kind extends CandidateKind
+      ? Candidate
+      : never
+    : never
+  : never;
+
+function isKind<Kind extends SyntaxNode['type']>(
+  node: SyntaxNode | null | undefined,
+  kind: Kind,
+): node is NodeOf<Kind> {
+  return node?.type === kind;
+}
+
+function readIdentifierName(node: SyntaxNode | null | undefined): string | null {
+  return isKind(node, 'Identifier') ? node.name : null;
+}
+
+function readStringLiteral(node: SyntaxNode | null | undefined): string | null {
+  return isKind(node, 'Literal') && typeof node.value === 'string' ? node.value : null;
+}
+
+function readBoundNames(pattern: SyntaxNode): string[] {
+  const own = readIdentifierName(pattern);
+  if (own !== null) return [own];
+  if (!isKind(pattern, 'ObjectPattern')) return [];
+  return pattern.properties.flatMap((property) => {
+    const target = property.type === 'RestElement' ? property.argument : property.value;
+    const bound = isKind(target, 'AssignmentPattern') ? target.left : target;
+    const name = readIdentifierName(bound);
+    return name === null ? [] : [name];
+  });
+}
+
 function buildLocalAliases(
-  sourceFile: ts.SourceFile,
+  source: ParsedSource,
   importLookup: ReadonlyMap<string, CallSymbol>,
 ): Map<string, CallSymbol> {
   const aliases = new Map<string, CallSymbol>();
-  const visit = (node: ts.Node): void => {
-    if (ts.isVariableDeclaration(node) && node.initializer !== undefined) {
+  const visit = (node: SyntaxNode): void => {
+    if (isKind(node, 'VariableDeclarator') && node.init !== null) {
       let source: CallSymbol | undefined;
-      for (const identifier of collectReferencedIdentifiers(node.initializer)) {
+      for (const identifier of collectReferencedIdentifiers(node.init)) {
         source = importLookup.get(identifier);
         if (source !== undefined) break;
       }
       if (source !== undefined) {
-        if (ts.isIdentifier(node.name)) {
-          aliases.set(node.name.text, source);
-        } else if (ts.isObjectBindingPattern(node.name)) {
-          for (const element of node.name.elements) {
-            if (ts.isIdentifier(element.name)) aliases.set(element.name.text, source);
-          }
-        }
+        for (const name of readBoundNames(node.id)) aliases.set(name, source);
       }
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   };
-  visit(sourceFile);
+  visit(source.program);
   return aliases;
 }
 
-function findRouterVariable(node: ts.Node): string {
-  let current: ts.Node | undefined = node;
+function findRouterVariable(source: ParsedSource, node: SyntaxNode): string {
+  let current: SyntaxNode | undefined = node;
   while (current !== undefined) {
-    if (ts.isVariableDeclaration(current) && ts.isIdentifier(current.name)) {
-      return current.name.text;
+    if (isKind(current, 'VariableDeclarator')) {
+      const name = readIdentifierName(current.id);
+      if (name !== null) return name;
     }
-    if (ts.isFunctionDeclaration(current) && current.name !== undefined) {
-      return current.name.text;
+    if (isKind(current, 'FunctionDeclaration') && current.id !== null) {
+      return current.id.name;
     }
-    current = current.parent;
+    current = source.parentOf.get(current);
   }
   return '';
 }
@@ -190,21 +228,50 @@ function matchAll(pattern: RegExp, text: string): string[] {
   return found;
 }
 
+function readProperty(value: unknown, key: string): unknown {
+  return typeof value === 'object' && value !== null ? Reflect.get(value, key) : undefined;
+}
+
+function readLiteralValue(node: SyntaxNode): unknown {
+  if (isKind(node, 'Literal')) return node.value;
+  if (isKind(node, 'ArrayExpression')) {
+    return node.elements.map((element) => (element === null ? null : readLiteralValue(element)));
+  }
+  if (!isKind(node, 'ObjectExpression')) return undefined;
+  const entries: [string, unknown][] = [];
+  for (const property of node.properties) {
+    if (property.type !== 'Property') continue;
+    const key = readIdentifierName(property.key) ?? readStringLiteral(property.key);
+    if (key !== null) entries.push([key, readLiteralValue(property.value)]);
+  }
+  return Object.fromEntries(entries);
+}
+
+function readConfigurationFile(configPath: string): unknown {
+  let text: string;
+  try {
+    text = readFileSync(configPath, 'utf8');
+  } catch {
+    return undefined;
+  }
+  const { program, errors } = parseSync(`${configPath}.ts`, `(${text})`);
+  const [statement] = program.body;
+  if (errors.length > 0 || !isKind(statement, 'ExpressionStatement')) return undefined;
+  const expression = isKind(statement.expression, 'ParenthesizedExpression')
+    ? statement.expression.expression
+    : statement.expression;
+  return readLiteralValue(expression);
+}
+
 const aliasesByApplicationRoot = new Map<string, readonly (readonly [string, string])[]>();
 
 function readAliasPrefixes(applicationRoot: string): readonly (readonly [string, string])[] {
   const cached = aliasesByApplicationRoot.get(applicationRoot);
   if (cached !== undefined) return cached;
   const configPath = join(applicationRoot, 'tsconfig.json');
-  const parsed = ts.readConfigFile(configPath, (path) => {
-    try {
-      return readFileSync(path, 'utf8');
-    } catch {
-      return undefined;
-    }
-  });
+  const configuration = readConfigurationFile(configPath);
   const prefixes: [string, string][] = [];
-  const paths: unknown = parsed.config?.compilerOptions?.paths;
+  const paths: unknown = readProperty(readProperty(configuration, 'compilerOptions'), 'paths');
   if (typeof paths === 'object' && paths !== null) {
     for (const [pattern, targets] of Object.entries(paths)) {
       const first = Array.isArray(targets) ? targets[0] : undefined;
@@ -265,13 +332,13 @@ function resolveSpecifier(
   return { targetFile: null, packageName: null };
 }
 
-function collectReferencedIdentifiers(node: ts.Node): Set<string> {
+function collectReferencedIdentifiers(node: SyntaxNode): Set<string> {
   const referenced = new Set<string>();
-  const visit = (current: ts.Node): void => {
-    if (ts.isIdentifier(current)) {
-      referenced.add(current.text);
+  const visit = (current: SyntaxNode): void => {
+    if (isKind(current, 'Identifier') || isKind(current, 'JSXIdentifier')) {
+      referenced.add(current.name);
     }
-    ts.forEachChild(current, visit);
+    forEachChild(current, visit);
   };
   visit(node);
   return referenced;
@@ -293,39 +360,29 @@ function buildImportLookup(imports: readonly ImportEdge[]): Map<string, CallSymb
 }
 
 function readImports(
-  sourceFile: ts.SourceFile,
+  source: ParsedSource,
   containingFile: string,
   repositoryRoot: string,
   applicationRoot: string,
 ): ImportEdge[] {
   const edges: ImportEdge[] = [];
-  for (const statement of sourceFile.statements) {
-    if (!ts.isImportDeclaration(statement)) continue;
-    if (!ts.isStringLiteral(statement.moduleSpecifier)) continue;
+  for (const statement of source.program.body) {
+    if (!isKind(statement, 'ImportDeclaration')) continue;
     const resolved = resolveSpecifier(
-      statement.moduleSpecifier.text,
+      statement.source.value,
       containingFile,
       repositoryRoot,
       applicationRoot,
     );
-    const clause = statement.importClause;
     const namedBindings: string[] = [];
-    let isTypeOnly = clause?.isTypeOnly ?? false;
-    if (clause?.name !== undefined) {
-      namedBindings.push(clause.name.text);
+    let isTypeOnly = statement.importKind === 'type';
+    const named = statement.specifiers.filter((specifier) => specifier.type === 'ImportSpecifier');
+    for (const specifier of statement.specifiers) {
+      if (specifier.type === 'ImportSpecifier' && specifier.importKind === 'type') continue;
+      namedBindings.push(specifier.local.name);
     }
-    const bindings = clause?.namedBindings;
-    if (bindings !== undefined && ts.isNamedImports(bindings)) {
-      for (const element of bindings.elements) {
-        if (element.isTypeOnly) continue;
-        namedBindings.push(element.name.text);
-      }
-      if (bindings.elements.length > 0 && bindings.elements.every((each) => each.isTypeOnly)) {
-        isTypeOnly = true;
-      }
-    }
-    if (bindings !== undefined && ts.isNamespaceImport(bindings)) {
-      namedBindings.push(bindings.name.text);
+    if (named.length > 0 && named.every((specifier) => specifier.importKind === 'type')) {
+      isTypeOnly = true;
     }
     edges.push({
       targetFile: resolved.targetFile,
@@ -341,63 +398,78 @@ const TABLE_IDENTIFIER_PATTERN = /^[a-z][A-Za-z]*Table$/;
 
 const MAXIMUM_SOURCE_LINES = 80;
 
-function cognitiveComplexity(root: ts.Node): number {
+const NESTING_KINDS: ReadonlySet<string> = new Set([
+  'IfStatement',
+  'ForStatement',
+  'ForInStatement',
+  'ForOfStatement',
+  'WhileStatement',
+  'DoWhileStatement',
+  'CatchClause',
+  'SwitchStatement',
+  'ConditionalExpression',
+]);
+
+const LOGICAL_OPERATORS: ReadonlySet<string> = new Set(['&&', '||', '??']);
+
+function isMethod(source: ParsedSource, node: SyntaxNode): boolean {
+  if (isKind(node, 'MethodDefinition')) return node.kind === 'method';
+  return (
+    isKind(node, 'Property') &&
+    node.method &&
+    source.parentOf.get(node)?.type === 'ObjectExpression'
+  );
+}
+
+function isMethodBody(source: ParsedSource, node: SyntaxNode): boolean {
+  const parent = source.parentOf.get(node);
+  if (!isKind(node, 'FunctionExpression') || parent === undefined) return false;
+  return (
+    isKind(parent, 'MethodDefinition') ||
+    isKind(parent, 'TSAbstractMethodDefinition') ||
+    (isKind(parent, 'Property') && (parent.method || parent.kind !== 'init'))
+  );
+}
+
+function cognitiveComplexity(source: ParsedSource, root: SyntaxNode): number {
   let total = 0;
 
-  const isNesting = (node: ts.Node): boolean =>
-    ts.isIfStatement(node) ||
-    ts.isForStatement(node) ||
-    ts.isForInStatement(node) ||
-    ts.isForOfStatement(node) ||
-    ts.isWhileStatement(node) ||
-    ts.isDoStatement(node) ||
-    ts.isCatchClause(node) ||
-    ts.isSwitchStatement(node) ||
-    ts.isConditionalExpression(node);
+  const isNesting = (node: SyntaxNode): boolean => NESTING_KINDS.has(node.type);
 
-  const isNestingOrFunction = (node: ts.Node): boolean =>
+  const isNestingOrFunction = (node: SyntaxNode): boolean =>
     isNesting(node) ||
-    ts.isFunctionDeclaration(node) ||
-    ts.isFunctionExpression(node) ||
-    ts.isArrowFunction(node) ||
-    ts.isMethodDeclaration(node);
+    isKind(node, 'FunctionDeclaration') ||
+    (isKind(node, 'FunctionExpression') && !isMethodBody(source, node)) ||
+    isKind(node, 'ArrowFunctionExpression') ||
+    isMethod(source, node);
 
-  const visit = (node: ts.Node, nesting: number): void => {
+  const visit = (node: SyntaxNode, nesting: number): void => {
     let hasScored = false;
+    const parent = source.parentOf.get(node);
 
-    if (ts.isIfStatement(node)) {
-      const isElseIf =
-        node.parent !== undefined &&
-        ts.isIfStatement(node.parent) &&
-        node.parent.elseStatement === node;
+    if (isKind(node, 'IfStatement')) {
+      const isElseIf = isKind(parent, 'IfStatement') && parent.alternate === node;
       total += isElseIf ? 1 : 1 + nesting;
       hasScored = true;
-      if (node.elseStatement !== undefined && !ts.isIfStatement(node.elseStatement)) {
+      if (node.alternate !== null && !isKind(node.alternate, 'IfStatement')) {
         total += 1;
       }
     } else if (isNesting(node)) {
       total += 1 + nesting;
       hasScored = true;
-    } else if (ts.isBinaryExpression(node)) {
-      const operator = node.operatorToken.kind;
-      const isLogical =
-        operator === ts.SyntaxKind.AmpersandAmpersandToken ||
-        operator === ts.SyntaxKind.BarBarToken ||
-        operator === ts.SyntaxKind.QuestionQuestionToken;
-      const parentIsSameOperator =
-        node.parent !== undefined &&
-        ts.isBinaryExpression(node.parent) &&
-        node.parent.operatorToken.kind === operator;
-      if (isLogical && !parentIsSameOperator) total += 1;
+    } else if (isKind(node, 'LogicalExpression') && LOGICAL_OPERATORS.has(node.operator)) {
+      const isParentSameOperator =
+        isKind(parent, 'LogicalExpression') && parent.operator === node.operator;
+      if (!isParentSameOperator) total += 1;
     }
 
     const nextNesting = isNestingOrFunction(node) ? nesting + 1 : nesting;
-    ts.forEachChild(node, (child) => {
+    forEachChild(node, (child) => {
       visit(child, hasScored || isNestingOrFunction(node) ? nextNesting : nesting);
     });
   };
 
-  ts.forEachChild(root, (child) => {
+  forEachChild(root, (child) => {
     visit(child, 0);
   });
   return total;
@@ -405,10 +477,14 @@ function cognitiveComplexity(root: ts.Node): number {
 
 const LINT_DISABLE_PATTERN = /eslint-disable(-next-line|-line)?/g;
 
-function captureSource(node: ts.Node, sourceFile: ts.SourceFile): string {
-  const full = node.getFullText(sourceFile).replace(/^\n+/, '');
-  const lines = full.split('\n');
-  if (lines.length <= MAXIMUM_SOURCE_LINES) return full.trimEnd();
+function readFullText(source: ParsedSource, node: SyntaxNode, fullStart: number): string {
+  return source.text.slice(fullStart, node.end);
+}
+
+function captureSource(full: string): string {
+  const trimmed = full.replace(/^\n+/, '');
+  const lines = trimmed.split('\n');
+  if (lines.length <= MAXIMUM_SOURCE_LINES) return trimmed.trimEnd();
   return [
     ...lines.slice(0, MAXIMUM_SOURCE_LINES),
     `// … ${lines.length - MAXIMUM_SOURCE_LINES} more lines`,
@@ -419,26 +495,36 @@ function dedupeApiCalls(calls: readonly ApiCall[]): ApiCall[] {
   return [...new Map(calls.map((call) => [`${call.method} ${call.path}`, call])).values()];
 }
 
+function unwrapExport(statement: SyntaxNode): SyntaxNode {
+  if (isKind(statement, 'ExportNamedDeclaration') && statement.declaration !== null) {
+    return statement.declaration;
+  }
+  if (isKind(statement, 'ExportDefaultDeclaration')) return statement.declaration;
+  return statement;
+}
+
 function readLocalApiCalls(
-  sourceFile: ts.SourceFile,
+  source: ParsedSource,
   clientIdentifier: string | null,
 ): Map<string, ApiCall[]> {
   if (clientIdentifier === null) return new Map();
   const own = new Map<string, ApiCall[]>();
   const references = new Map<string, Set<string>>();
-  for (const statement of sourceFile.statements) {
-    const named =
-      ts.isFunctionDeclaration(statement) && statement.name !== undefined
-        ? [[statement.name.text, statement] as const]
-        : ts.isVariableStatement(statement)
-          ? statement.declarationList.declarations.flatMap((declaration) =>
-              ts.isIdentifier(declaration.name) && declaration.initializer !== undefined
-                ? [[declaration.name.text, declaration.initializer] as const]
-                : [],
-            )
+  for (const statement of source.program.body) {
+    const declaration = unwrapExport(statement);
+    const named: (readonly [string, SyntaxNode])[] =
+      isKind(declaration, 'FunctionDeclaration') && declaration.id !== null
+        ? [[declaration.id.name, declaration]]
+        : isKind(declaration, 'VariableDeclaration')
+          ? declaration.declarations.flatMap((declarator) => {
+              const name = readIdentifierName(declarator.id);
+              return name !== null && declarator.init !== null
+                ? [[name, declarator.init] as const]
+                : [];
+            })
           : [];
     for (const [name, node] of named) {
-      own.set(name, readApiCallsIn(node, sourceFile, clientIdentifier));
+      own.set(name, readApiCallsIn(source, node, clientIdentifier));
       references.set(name, collectReferencedIdentifiers(node));
     }
   }
@@ -461,16 +547,22 @@ function readLocalApiCalls(
 }
 
 function readExportedSymbols(
-  sourceFile: ts.SourceFile,
+  source: ParsedSource,
   importLookup: Map<string, CallSymbol>,
   fileExternals: readonly string[],
   clientIdentifier: string | null,
 ): ExportedSymbol[] {
   const symbols: ExportedSymbol[] = [];
-  const localCalls = readLocalApiCalls(sourceFile, clientIdentifier);
+  const localCalls = readLocalApiCalls(source, clientIdentifier);
 
-  const record = (name: string, node: ts.Node, isFunction: boolean): void => {
-    const referenced = collectReferencedIdentifiers(node);
+  const record = (
+    name: string,
+    statement: SyntaxNode,
+    fullStart: number,
+    body: SyntaxNode,
+    isFunction: boolean,
+  ): void => {
+    const referenced = collectReferencedIdentifiers(statement);
     const callSymbols: CallSymbol[] = [];
     const calledFiles = new Set<string>();
     const tables = new Set<string>();
@@ -484,70 +576,80 @@ function readExportedSymbols(
         (resolved.file.endsWith('.schema.ts') || resolved.file.endsWith('/schema.ts'));
       if (isSchemaModule && TABLE_IDENTIFIER_PATTERN.test(identifier)) tables.add(identifier);
     }
-    const leadingText = node.getFullText(sourceFile).slice(0, node.getStart(sourceFile) - node.pos);
+    const fullText = readFullText(source, statement, fullStart);
+    const leadingText = source.text.slice(fullStart, statement.start);
     const ownExternals = matchAll(DEPENDS_ON_EXTERNAL_TAG, leadingText);
     symbols.push({
       name,
-      line: sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1,
+      line: readLineNumber(source, statement.start),
       isFunction,
       calls: [...calledFiles],
       callSymbols,
       dependsOnExternal: ownExternals.length > 0 ? ownExternals : [...fileExternals],
       tables: [...tables],
       apiCalls: dedupeApiCalls([
-        ...readApiCallsIn(node, sourceFile, clientIdentifier),
+        ...readApiCallsIn(source, statement, clientIdentifier),
         ...[...referenced].flatMap((identifier) => localCalls.get(identifier) ?? []),
       ]),
       blueprints: matchAll(BLUEPRINT_TAG, leadingText),
       followsBlueprints: matchAll(FOLLOWS_BLUEPRINT_TAG, leadingText),
-      source: captureSource(node, sourceFile),
-      lineCount: node.getFullText(sourceFile).replace(/^\n+/, '').split('\n').length,
-      complexity: cognitiveComplexity(node),
-      lintExceptions: (node.getFullText(sourceFile).match(LINT_DISABLE_PATTERN) ?? []).length,
+      source: captureSource(fullText),
+      lineCount: fullText.replace(/^\n+/, '').split('\n').length,
+      complexity: cognitiveComplexity(source, body),
+      lintExceptions: (fullText.match(LINT_DISABLE_PATTERN) ?? []).length,
     });
   };
 
-  const hasExportModifier = (node: ts.Node): boolean =>
-    ts.canHaveModifiers(node) &&
-    (ts.getModifiers(node) ?? []).some((each) => each.kind === ts.SyntaxKind.ExportKeyword);
-
-  for (const statement of sourceFile.statements) {
-    if (!hasExportModifier(statement)) continue;
-    if (ts.isFunctionDeclaration(statement) && statement.name !== undefined) {
-      record(statement.name.text, statement, true);
-      continue;
+  source.program.body.forEach((statement, index) => {
+    if (
+      !isKind(statement, 'ExportNamedDeclaration') &&
+      !isKind(statement, 'ExportDefaultDeclaration')
+    ) {
+      return;
     }
-    if (ts.isClassDeclaration(statement) && statement.name !== undefined) {
-      record(statement.name.text, statement, false);
-      continue;
+    const fullStart = index === 0 ? 0 : (source.program.body[index - 1]?.end ?? 0);
+    const declaration = unwrapExport(statement);
+    if (isKind(declaration, 'FunctionDeclaration') && declaration.id !== null) {
+      record(declaration.id.name, statement, fullStart, declaration, true);
+      return;
     }
-    if (ts.isVariableStatement(statement)) {
-      for (const declaration of statement.declarationList.declarations) {
-        if (!ts.isIdentifier(declaration.name)) continue;
-        const initializer = declaration.initializer;
+    if (isKind(declaration, 'ClassDeclaration') && declaration.id !== null) {
+      record(declaration.id.name, statement, fullStart, declaration, false);
+      return;
+    }
+    if (isKind(declaration, 'VariableDeclaration')) {
+      for (const declarator of declaration.declarations) {
+        const name = readIdentifierName(declarator.id);
+        if (name === null) continue;
         const isFunction =
-          initializer !== undefined &&
-          (ts.isArrowFunction(initializer) || ts.isFunctionExpression(initializer));
-        record(declaration.name.text, statement, isFunction);
+          isKind(declarator.init, 'ArrowFunctionExpression') ||
+          isKind(declarator.init, 'FunctionExpression');
+        record(name, statement, fullStart, declaration, isFunction);
       }
     }
-  }
+  });
   return symbols;
 }
 
 function readRoutesAndMounts(
-  sourceFile: ts.SourceFile,
+  source: ParsedSource,
   importLookup: Map<string, CallSymbol>,
   localAliases: ReadonlyMap<string, CallSymbol>,
 ): { routes: RouteEntry[]; mounts: RouteMount[] } {
   const routes: RouteEntry[] = [];
   const mounts: RouteMount[] = [];
 
-  const visit = (node: ts.Node): void => {
-    if (ts.isCallExpression(node) && ts.isPropertyAccessExpression(node.expression)) {
-      const methodName = node.expression.name.text;
+  const visit = (node: SyntaxNode): void => {
+    if (
+      isKind(node, 'CallExpression') &&
+      isKind(node.callee, 'MemberExpression') &&
+      !node.callee.computed &&
+      isKind(node.callee.property, 'Identifier')
+    ) {
+      const methodName = node.callee.property.name;
       const firstArgument = node.arguments[0];
-      if (firstArgument !== undefined && ts.isStringLiteral(firstArgument)) {
+      const firstPath = readStringLiteral(firstArgument);
+      if (firstPath !== null) {
         if (HONO_ROUTE_METHODS.has(methodName)) {
           const calls: CallSymbol[] = [];
           const seen = new Set<string>();
@@ -561,10 +663,10 @@ function readRoutesAndMounts(
           }
           routes.push({
             method: methodName.toUpperCase(),
-            path: firstArgument.text,
-            line: sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1,
+            path: firstPath,
+            line: readLineNumber(source, node.start),
             calls,
-            routerVariable: findRouterVariable(node),
+            routerVariable: findRouterVariable(source, node),
           });
         }
         if (methodName === HONO_MOUNT_METHOD) {
@@ -576,69 +678,74 @@ function readRoutesAndMounts(
           }
           const resolved = importLookup.get(routerFactory) ?? localAliases.get(routerFactory);
           mounts.push({
-            basePath: firstArgument.text,
+            basePath: firstPath,
             routerFactory,
             targetFile: resolved?.file ?? null,
           });
         }
       }
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   };
-  visit(sourceFile);
+  visit(source.program);
   return { routes, mounts };
 }
 
 function readApiCallsIn(
-  root: ts.Node,
-  sourceFile: ts.SourceFile,
+  source: ParsedSource,
+  root: SyntaxNode,
   clientIdentifier: string | null,
 ): ApiCall[] {
   if (clientIdentifier === null) return [];
   const calls: ApiCall[] = [];
 
-  const readChain = (node: ts.Expression): string[] | null => {
+  const readChain = (node: SyntaxNode): string[] | null => {
     const segments: string[] = [];
-    let current: ts.Expression = node;
+    let current: SyntaxNode = node;
     for (;;) {
-      if (ts.isIdentifier(current)) {
-        return current.text === clientIdentifier ? segments.reverse() : null;
+      if (isKind(current, 'Identifier')) {
+        return current.name === clientIdentifier ? segments.reverse() : null;
       }
-      if (ts.isPropertyAccessExpression(current)) {
-        segments.push(current.name.text);
-        current = current.expression;
+      if (isKind(current, 'MemberExpression') && !current.computed) {
+        const name = readIdentifierName(current.property);
+        if (name === null) return null;
+        segments.push(name);
+        current = current.object;
         continue;
       }
-      if (ts.isElementAccessExpression(current)) {
-        const argument = current.argumentExpression;
-        if (!ts.isStringLiteral(argument)) return null;
-        segments.push(argument.text);
-        current = current.expression;
+      if (isKind(current, 'MemberExpression')) {
+        const key = readStringLiteral(current.property);
+        if (key === null) return null;
+        segments.push(key);
+        current = current.object;
         continue;
       }
       return null;
     }
   };
 
-  const visit = (node: ts.Node): void => {
-    if (ts.isPropertyAccessExpression(node) && node.name.text.startsWith('$')) {
-      const segments = readChain(node.expression);
-      if (segments !== null) {
-        calls.push({
-          method: node.name.text.slice(1).toUpperCase(),
-          path: `/${segments.join('/')}`,
-          line: sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1,
-        });
+  const visit = (node: SyntaxNode): void => {
+    if (isKind(node, 'MemberExpression') && !node.computed) {
+      const name = readIdentifierName(node.property);
+      if (name?.startsWith('$') === true) {
+        const segments = readChain(node.object);
+        if (segments !== null) {
+          calls.push({
+            method: name.slice(1).toUpperCase(),
+            path: `/${segments.join('/')}`,
+            line: readLineNumber(source, node.start),
+          });
+        }
       }
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   };
   visit(root);
   return calls;
 }
 
-function readApiCalls(sourceFile: ts.SourceFile, clientIdentifier: string | null): ApiCall[] {
-  return readApiCallsIn(sourceFile, sourceFile, clientIdentifier);
+function readApiCalls(source: ParsedSource, clientIdentifier: string | null): ApiCall[] {
+  return readApiCallsIn(source, source.program, clientIdentifier);
 }
 
 const API_PATH_STRING = /['"`](\/api\/[A-Za-z0-9\-_/:]*)['"`]/g;
@@ -708,13 +815,7 @@ export function buildArchitectureFileFromText(
   applicationRoot: string,
 ): ArchitectureFile {
   const relativePath = relative(repositoryRoot, absolutePath);
-  const sourceFile = ts.createSourceFile(
-    absolutePath,
-    text,
-    ts.ScriptTarget.ES2022,
-    true,
-    absolutePath.endsWith('.tsx') ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
-  );
+  const sourceFile = parseSource(absolutePath, text);
 
   const headerExternals = matchAll(DEPENDS_ON_EXTERNAL_TAG, readModuleHeaderText(text));
 
@@ -738,7 +839,7 @@ export function buildArchitectureFileFromText(
     context: inferContext(relativePath, container),
     feature: featureMatch?.[1] ?? null,
     lineCount: text.split('\n').length,
-    complexity: cognitiveComplexity(sourceFile),
+    complexity: cognitiveComplexity(sourceFile, sourceFile.program),
     lintExceptions: (text.match(LINT_DISABLE_PATTERN) ?? []).length,
     blueprints: matchAll(BLUEPRINT_TAG, text),
     followsBlueprints: matchAll(FOLLOWS_BLUEPRINT_TAG, text),
@@ -755,27 +856,36 @@ export function buildArchitectureFileFromText(
   };
 }
 
+function readJsxName(source: ParsedSource, node: SyntaxNode): string {
+  return readNodeText(source, node);
+}
+
+function readSelfClosingName(source: ParsedSource, node: SyntaxNode): string | null {
+  if (!isKind(node, 'JSXElement') || !node.openingElement.selfClosing) return null;
+  return readJsxName(source, node.openingElement.name);
+}
+
 export function readScreenRoutes(
-  sourceFile: ts.SourceFile,
+  source: ParsedSource,
   importLookup: ReadonlyMap<string, CallSymbol>,
 ): ScreenRoute[] {
   const found: ScreenRoute[] = [];
-  const visit = (node: ts.Node): void => {
-    if (ts.isJsxSelfClosingElement(node) && node.tagName.getText(sourceFile) === 'Route') {
+  const visit = (node: SyntaxNode): void => {
+    if (isKind(node, 'JSXElement') && readSelfClosingName(source, node) === 'Route') {
       let path: string | null = null;
       let component: string | null = null;
-      for (const attribute of node.attributes.properties) {
-        if (!ts.isJsxAttribute(attribute)) continue;
-        const name = attribute.name.getText(sourceFile);
-        const value = attribute.initializer;
-        if (name === 'path' && value !== undefined && ts.isStringLiteral(value)) {
-          path = value.text;
+      for (const attribute of node.openingElement.attributes) {
+        if (!isKind(attribute, 'JSXAttribute')) continue;
+        const name = readJsxName(source, attribute.name);
+        const value = attribute.value;
+        const literal = readStringLiteral(value);
+        if (name === 'path' && literal !== null) {
+          path = literal;
         }
-        if (name === 'element' && value !== undefined && ts.isJsxExpression(value)) {
+        if (name === 'element' && isKind(value, 'JSXExpressionContainer')) {
           const expression = value.expression;
-          if (expression !== undefined && ts.isJsxSelfClosingElement(expression)) {
-            component = expression.tagName.getText(sourceFile);
-          }
+          const tag = readSelfClosingName(source, expression);
+          if (tag !== null) component = tag;
         }
       }
       if (path !== null && component !== null) {
@@ -786,34 +896,34 @@ export function readScreenRoutes(
         });
       }
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   };
-  visit(sourceFile);
+  visit(source.program);
   return found;
 }
 
 export function readGestures(
-  sourceFile: ts.SourceFile,
+  source: ParsedSource,
   identifiers: ReadonlySet<string>,
 ): GestureBinding[] {
   const found = new Map<string, GestureBinding>();
-  const visit = (node: ts.Node): void => {
-    if (ts.isJsxAttribute(node)) {
-      const name = node.name.getText(sourceFile);
-      const value = node.initializer;
-      if (/^on[A-Z]/.test(name) && value !== undefined && ts.isJsxExpression(value)) {
+  const visit = (node: SyntaxNode): void => {
+    if (isKind(node, 'JSXAttribute')) {
+      const name = readJsxName(source, node.name);
+      const value = node.value;
+      if (/^on[A-Z]/.test(name) && isKind(value, 'JSXExpressionContainer')) {
         const referenced = collectReferencedIdentifiers(value);
         if ([...identifiers].some((each) => referenced.has(each)) && !found.has(name)) {
           found.set(name, {
             event: name,
-            line: sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile)).line + 1,
+            line: readLineNumber(source, node.start),
           });
         }
       }
     }
-    ts.forEachChild(node, visit);
+    forEachChild(node, visit);
   };
-  visit(sourceFile);
+  visit(source.program);
   return [...found.values()].sort((left, right) => left.event.localeCompare(right.event));
 }
 
@@ -838,7 +948,7 @@ function addLocalsDerivedFrom(names: Set<string>, declarations: readonly LocalDe
 }
 
 export function readHookGestures(
-  sourceFile: ts.SourceFile,
+  sourceFile: ParsedSource,
   imports: readonly ImportEdge[],
 ): HookGesture[] {
   const hookNames = new Set(
@@ -853,25 +963,19 @@ export function readHookGestures(
     [...hookNames].map((hook) => [hook, new Set([hook])]),
   );
   const declarations: LocalDeclaration[] = [];
-  const collectDeclarations = (node: ts.Node): void => {
-    if (ts.isVariableDeclaration(node) && node.initializer !== undefined) {
-      const bound: string[] = [];
-      if (ts.isIdentifier(node.name)) bound.push(node.name.text);
-      else if (ts.isObjectBindingPattern(node.name)) {
-        for (const element of node.name.elements) {
-          if (ts.isIdentifier(element.name)) bound.push(element.name.text);
-        }
-      }
+  const collectDeclarations = (node: SyntaxNode): void => {
+    if (isKind(node, 'VariableDeclarator') && node.init !== null) {
+      const bound = readBoundNames(node.id);
       if (bound.length > 0) {
         declarations.push({
           names: bound,
-          referenced: collectReferencedIdentifiers(node.initializer),
+          referenced: collectReferencedIdentifiers(node.init),
         });
       }
     }
-    ts.forEachChild(node, collectDeclarations);
+    forEachChild(node, collectDeclarations);
   };
-  collectDeclarations(sourceFile);
+  collectDeclarations(sourceFile.program);
 
   for (const names of localsByHook.values()) addLocalsDerivedFrom(names, declarations);
 

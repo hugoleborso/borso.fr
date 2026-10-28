@@ -109,7 +109,7 @@
           {
             "type": "command",
             "command": "\"$CLAUDE_PROJECT_DIR\"/plugins/borso-harness/hooks/posttool-format-write.sh",
-            "statusMessage": "Formatting with Prettier"
+            "statusMessage": "Formatting the edited file"
           }
         ]
       },

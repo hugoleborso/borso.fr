@@ -156,7 +156,8 @@ export async function searchExternalSongs(
 }
 
 export type AudienceSearchOutcome =
-  { kind: 'ok'; hits: ExternalSongHit[] } | { kind: 'unavailable' };
+  | { kind: 'ok'; hits: ExternalSongHit[] }
+  | { kind: 'unavailable' };
 
 // @FollowsBlueprint service-orchestration
 export async function searchAudienceSongs(
@@ -208,7 +209,9 @@ async function importSuggestedSong(track: ExternalSongHit): Promise<SongRow> {
 }
 
 export type TrackResolution =
-  { kind: 'ok'; song: SongRow } | { kind: 'unknown' } | { kind: 'unavailable' };
+  | { kind: 'ok'; song: SongRow }
+  | { kind: 'unknown' }
+  | { kind: 'unavailable' };
 
 // @FollowsBlueprint service-orchestration
 export async function resolveCatalogueSongForTrack(trackId: string): Promise<TrackResolution> {

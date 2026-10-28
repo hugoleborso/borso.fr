@@ -1,5 +1,6 @@
 import { splitFrontMatter } from '@domain/front-matter.core';
 import { listWikilinkTargets, readPageTitle } from '@domain/markdown-page.core';
+import { addDaysToDate } from '../helpers/calendar/paris-clock.utils';
 
 export type CommitmentDirection = 'owed' | 'awaited';
 
@@ -22,6 +23,8 @@ const MARKDOWN_EXTENSION = '.md';
 const COMMITMENT_TYPE = 'engagement';
 const OPEN_STATUS = 'ouvert';
 const LAST_DAY = '9999-12-31';
+const UPCOMING_HORIZON_DAYS = 7;
+const DUE_GROUP_RANK = { upcoming: 0, overdue: 1, later: 2 } as const;
 const ISO_DAY_PATTERN = /^\d{4}-\d{2}-\d{2}/;
 const DIRECTION_BY_ARROW: Readonly<Record<string, CommitmentDirection>> = {
   'moi->eux': 'owed',
@@ -64,17 +67,33 @@ export function parseOpenCommitment(file: string, markdown: string): Commitment 
   };
 }
 
-function compareByDueDate(left: Commitment, right: Commitment): number {
-  const byDueDate = (left.dueDate ?? LAST_DAY).localeCompare(right.dueDate ?? LAST_DAY);
-  return byDueDate === 0 ? left.path.localeCompare(right.path) : byDueDate;
+function rankByDueDate(dueDate: string, today: string, horizon: string): number {
+  if (dueDate < today) return DUE_GROUP_RANK.overdue;
+  return dueDate <= horizon ? DUE_GROUP_RANK.upcoming : DUE_GROUP_RANK.later;
+}
+
+function compareByUrgency(today: string): (left: Commitment, right: Commitment) => number {
+  const horizon = addDaysToDate(today, UPCOMING_HORIZON_DAYS);
+  return (left, right) => {
+    const leftDueDate = left.dueDate ?? LAST_DAY;
+    const rightDueDate = right.dueDate ?? LAST_DAY;
+    const byGroup =
+      rankByDueDate(leftDueDate, today, horizon) - rankByDueDate(rightDueDate, today, horizon);
+    return (
+      byGroup || leftDueDate.localeCompare(rightDueDate) || left.path.localeCompare(right.path)
+    );
+  };
 }
 
 // @FollowsBlueprint core-projection
-export function selectOpenCommitments(files: ReadonlyMap<string, string>): Commitment[] {
+export function selectOpenCommitments(
+  files: ReadonlyMap<string, string>,
+  today: string,
+): Commitment[] {
   return [...files]
     .map(([file, markdown]) => parseOpenCommitment(file, markdown))
     .filter((commitment) => commitment !== null)
-    .toSorted(compareByDueDate);
+    .toSorted(compareByUrgency(today));
 }
 
 export function selectCommitmentsDueBy(

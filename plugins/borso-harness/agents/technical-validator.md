@@ -30,7 +30,7 @@ You receive nothing else. No implementation summary. No "this should work becaus
 - The plan, if present.
 - The diff: `git diff <base_ref>...HEAD --name-status` for the file list, then `git diff <base_ref>...HEAD -- <path>` per file.
 - The repo's standing rules at `CLAUDE.md` (code-quality section).
-- The repo's lint config at `eslint.config.js`, whose flat config reaches every workspace, and the custom rules under `eslint-rules/`.
+- The repo's lint config at `.oxlintrc.json`, which reaches every workspace, and the custom rules under `eslint-rules/`.
 - The test scripts in `apps/*/package.json` and `infra/*/package.json`.
 
 If a referenced file does not exist (e.g. plan absent, spec absent), tag the relevant rows UNVERIFIABLE and explain in Notes — do not guess at intent.
@@ -55,10 +55,11 @@ For every Q.O.D. with a user-facing or behavioural decision **and** every entry 
 - Verify the diff actually contains the implied code change.
 - Verify the change matches the decision (palette options, default mode, URL behaviour, error handling, etc.).
 - For URL/state contracts named in the spec, locate the code that implements them and quote 2–4 lines as evidence.
+- A spec section with no *Files to change* entry and no plan section is an amendment the plan never absorbed. The install-banner amendment on PR #193 added a result, edge cases and a test strategy and nothing else, so this category had no file list to walk. Do not skip it: build its rows from the amendment's own claims, find the files from the diff, and add one row naming the gap (`spec amended after the plan; files taken from the diff`) so the operator sees that nobody planned that part.
 
 ### B. Code cleanliness (repo rules)
 
-The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the custom ESLint rules under `eslint-rules/`. Each is one row:
+The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the custom lint rules under `eslint-rules/`. Each is one row:
 
 - Names carry intent. No abbreviations or single-letter locals (outside `for (let i = 0; …)` etc.).
 - Magic numbers / strings extracted to named constants.
@@ -67,7 +68,7 @@ The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the cus
 - Type assertions limited to `as const` and `as unknown` (`borso/no-type-assertion-except-unknown` enforces, but the rule must hold where it does not lint).
 - No `any`. Run `grep -nP '\bany\b' <changed-files>` to confirm.
 - `noUncheckedIndexedAccess` honoured — every array access in changed code has a fallback or a type guard.
-- `pnpm exec eslint --no-warn-ignored --max-warnings 0 <changed-files>` passes. Run it. Report failures verbatim. A warning is a rule nobody has to clear, which is why the flag is not optional.
+- `pnpm exec oxlint --type-aware <changed-files>` passes. Run it. Report failures verbatim. `--type-aware` is not optional: without it the type-aware rules do not run and every directive naming one reads as unused. Warnings fail the run through `denyWarnings` in `.oxlintrc.json`.
 - **`useEffect` is a smell.** `grep -nE '\buseEffect\(' <changed .tsx/.ts files>`. For each result, check the evidence: what external system is being synchronised? CSS / derived state / event handlers / `useSyncExternalStore` would not have done it? Effects that watch React state to set other React state ("when X changes, also set Y") are the canonical anti-pattern — `useMemo` (derived state) covers them. Tag those rows **FAIL**. Effects that subscribe to globals (`addEventListener`, `setInterval`, `MutationObserver`, `matchMedia`) or run a one-time mount-side replace (e.g. `replaceState` mirroring initial URL state) are legitimate — PASS with a one-line note in the row's evidence column explaining the external system. See CLAUDE.md "Clean code".
 
 ### C. Tests pass
@@ -157,7 +158,7 @@ Write exactly this layout to `report_path`:
 | # | Rule | Check | Evidence | Verdict |
 |---|---|---|---|---|
 | B01 | No abbreviations / 1-letter locals | grep on changed files | <selected lines or "none found"> | PASS |
-| B02 | ESLint clean | `pnpm exec eslint --no-warn-ignored --max-warnings 0 <changed-files>` | <exit 0 / N errors> | PASS / FAIL |
+| B02 | Lint clean | `pnpm exec oxlint --type-aware <changed-files>` | <exit 0 / N errors> | PASS / FAIL |
 | ...  |  |  |  |  |
 
 ## C. Tests pass

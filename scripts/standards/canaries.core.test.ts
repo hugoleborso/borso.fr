@@ -16,7 +16,7 @@ describe('collectMechanisms', () => {
     expect(
       collectMechanisms([
         { kind: 'script', target: 'scripts/check-b.sh' },
-        { kind: 'eslint', target: 'borso/no-comments' },
+        { kind: 'oxlint', target: 'borso/no-comments' },
         { kind: 'reviewer', target: 'naming is clear' },
         { kind: 'script', target: 'scripts/check-b.sh' },
         { kind: 'unheard-of', target: 'something' },
@@ -26,7 +26,7 @@ describe('collectMechanisms', () => {
         { kind: 'types', target: 'react-i18next.d.ts' },
       ]),
     ).toEqual([
-      { kind: 'eslint', target: 'borso/no-comments' },
+      { kind: 'oxlint', target: 'borso/no-comments' },
       { kind: 'gate', target: 'knip' },
       { kind: 'test', target: 'parity.test.ts' },
       { kind: 'types', target: 'react-i18next.d.ts' },

@@ -35,6 +35,53 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
+# `--staged` narrows both reads to what a commit can break: the staged files
+# themselves, and every file naming a path the commit removes — a deletion, or
+# the old side of a rename — or a directory that removal leaves empty. Without
+# it, every file is read, which is how CI calls it; that is about two seconds.
+SUBJECTS=()
+if [ "${1:-}" = '--staged' ]; then
+  STAGED=1
+  while IFS= read -r staged; do
+    [ -n "$staged" ] && SUBJECTS+=("$staged")
+  done < <(git diff --cached --name-only --diff-filter=ACMR)
+  removed_names=()
+  while IFS= read -r removed; do
+    [ -n "$removed" ] || continue
+    removed_names+=(-e "${removed##*/}")
+    directory=$(dirname "$removed")
+    while [ "$directory" != '.' ] && [ -z "$(git ls-files -- "$directory")" ]; do
+      removed_names+=(-e "${directory##*/}")
+      directory=$(dirname "$directory")
+    done
+  done < <(git diff --cached --name-only --no-renames --diff-filter=D)
+  if [ "${#removed_names[@]}" -gt 0 ]; then
+    # Only the surfaces this gate reads below can produce a finding, and
+    # `list_subject_files` discards everything else a moment later. Searching
+    # the whole tree therefore buys candidates that are thrown away: on a merge
+    # removing a toolchain it cost 837 ms of CPU against a 300 ms budget, with
+    # the same verdict either way.
+    while IFS= read -r naming; do
+      [ -n "$naming" ] && SUBJECTS+=("$naming")
+    done < <(git grep -l -F "${removed_names[@]}" -- \
+      'scripts/*' '.husky/*' '.github/*' 'plugins/*' '.claude/*' 'CLAUDE.md' || true)
+  fi
+  if [ "${#SUBJECTS[@]}" -eq 0 ]; then
+    echo "[check-named-paths-exist] nothing staged names a path"
+    exit 0
+  fi
+else
+  STAGED=0
+fi
+
+list_subject_files() {
+  if [ "$STAGED" -eq 0 ]; then
+    git ls-files "$@"
+    return
+  fi
+  git ls-files "$@" | { grep -Fx -f <(printf '%s\n' "${SUBJECTS[@]}") || true; }
+}
+
 failed=0
 
 report() {
@@ -44,9 +91,9 @@ report() {
 
 # 1. `docs/….md` written anywhere in a script, hook or workflow.
 documents="$(
-  git ls-files 'scripts/*' '.husky/*' '.github/*' 'plugins/*.sh' 'plugins/*.py' |
-    grep -vE '\.test\.(ts|tsx|js)$' |
-    xargs grep -onE 'docs/[A-Za-z0-9/._-]+\.md' 2>/dev/null |
+  list_subject_files 'scripts/*' '.husky/*' '.github/*' 'plugins/*.sh' 'plugins/*.py' |
+    { grep -vE '\.test\.(ts|tsx|js)$' || true; } |
+    { xargs --no-run-if-empty grep -HonE 'docs/[A-Za-z0-9/._-]+\.md' 2>/dev/null || true; } |
     sort -u
 )"
 
@@ -66,16 +113,17 @@ PLUGIN_DIRECTORY=plugins/borso-harness
 # The vendored impeccable references and agents are upstream's text, kept
 # verbatim (ADR-0032); they name paths of a project that installs its hook.
 paths="$(
-  git ls-files 'CLAUDE.md' '.claude/*' 'plugins/*' ':!.claude/skills/impeccable/reference/*' ':!.claude/agents/impeccable-*' |
-    grep -E '\.md$' |
-    xargs grep -onE '`(\.claude|scripts|apps|infra|docs|eslint-rules|\$\{CLAUDE_PLUGIN_ROOT\})/[A-Za-z0-9/._*<>-]+`' 2>/dev/null |
+  list_subject_files 'CLAUDE.md' '.claude/*' 'plugins/*' ':!.claude/skills/impeccable/reference/*' ':!.claude/agents/impeccable-*' |
+    { grep -E '\.md$' || true; } |
+    { xargs --no-run-if-empty grep -HonE '`(\.claude|scripts|apps|infra|docs|eslint-rules|\$\{CLAUDE_PLUGIN_ROOT\})/[A-Za-z0-9/._*<>-]+`' 2>/dev/null || true; } |
     sed -E "s|\\$\\{CLAUDE_PLUGIN_ROOT\\}/|${PLUGIN_DIRECTORY}/|" |
     sort -u
 )"
 
 while IFS= read -r mention; do
   [ -n "$mention" ] || continue
-  named="$(printf '%s' "${mention##*:\`}" | tr -d '`')"
+  named="${mention##*:\`}"
+  named="${named%\`}"
   location="${mention%:\`*}"
   case "$named" in
     *'*'* | *'<'* | *'>'*) continue ;;

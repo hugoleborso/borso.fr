@@ -1,24 +1,37 @@
 ---
-summary: 'Which of agent-browser and argent answers which question, and the traps in each; a synthetic click is not a tap.'
+summary: 'Which of agent-browser and argent answers which question, and the traps in each; neither sends a touch on Chromium, so a real tap is `scripts/argent.sh touch <selector>`.'
 triggers:
   commands:
     - '\.preview\.borso\.fr'
     - 'argent run screenshot'
+    - 'argent\.sh (tap|start)'
+    - 'gesture-tap'
 ---
 
 # Driving the previews with agent-browser and argent
 
-Both tools are installed and both work in this sandbox, argent's touch gestures
-included. Neither works with its default invocation, and they cannot share a
-browser. This is the recipe that does work, verified end to end against the PR
-40 previews, and re-verified against a local `pragma` when the claim that
-`gesture-tap` was broken turned out to be wrong.
+Both tools are installed and both work in this sandbox. Neither works with its
+default invocation, and they cannot share a browser. This is the recipe that
+does work, verified end to end against the PR 40 previews.
 
-**If the task says to check touch behaviour, drive it with argent.** Synthetic
-clicks through `agent-browser` are not taps: they will not tell you whether a
-target is reachable with a thumb, whether a gesture is swallowed by an overlay,
-or what the on-screen keyboard covers. Two phone audits skipped argent on the
-strength of a stale note in this file and reported no touch findings at all.
+**Neither tool sends a touch on Chromium.** A synthetic click through
+`agent-browser` is not a tap, and neither is argent's `gesture-tap`: measured
+on argent 0.22.1 on 2026-10-24 (PR #193) and again on 2026-10-25, it arrives as
+`pointerdown` and `click` with `pointerType: "mouse"` and no `touchstart`,
+because its Chromium backend sends `Input.dispatchMouseEvent`
+`mousePressed`/`mouseReleased` for a single point. argent 0.30.1's source does
+the same, and its own `gesture-tap` description says *"For Chromium, this
+dispatches a CDP mouse-press/release"*, so upgrading does not fix it. argent's
+browser is also 500 × 669 CSS pixels with `maxTouchPoints` 0, because headless
+Chromium keeps a window at least 500 px wide whatever `--window-size` asks.
+
+**If the task says to check touch behaviour, tap with
+`scripts/argent.sh touch '<css selector>'`.** It sets a 375 × 812 mobile
+viewport with touch emulation, sends `Input.dispatchTouchEvent`, and exits 1
+unless `touchstart` and a `click` with `pointerType: "touch"` reached the
+element. This file used to say `gesture-tap` was a real touch event, and the
+takes branch's phone pass recorded argent taps as touch evidence until a
+validator put capture listeners on the page.
 
 ## What each tool is for
 
@@ -28,9 +41,11 @@ daemon, keeps sessions alive between calls, and has the higher-level verbs:
 Reach for it for functional walkthroughs.
 
 `@swmansion/argent` drives an already-running Chromium over the Chrome DevTools
-Protocol. It thinks in devices and normalised coordinates, and its verbs are the
-ones a phone has: `gesture-tap`, `keyboard`, `rotate`, `await-screen-idle`.
-Reach for it for touch behaviour and phone-shaped interaction.
+Protocol. It thinks in devices and normalised coordinates, and its verbs are
+named after a phone's: `gesture-tap`, `keyboard`, `rotate`,
+`await-screen-idle`. On Chromium every one of its pointer verbs is a mouse.
+Reach for it for `describe` and reach checks; reach for `scripts/argent.sh
+touch` for anything that depends on the input being a finger.
 
 **`gesture-swipe` is not among them on Chromium.** It is listed, it returns a
 success object, and it moves nothing — scroll with `gesture-scroll` and drag
@@ -132,7 +147,8 @@ dev server and a preview — the script says so rather than reusing it silently.
 scripts/argent.sh start https://borsouvertures-pr-95.preview.borso.fr/
 scripts/argent.sh start http://localhost:5174/   # browser + server + open, ~5s
 scripts/argent.sh describe                       # frames as normalised [0,1] boxes
-scripts/argent.sh tap 0.5 0.95                   # a real tap at a frame's centre
+scripts/argent.sh tap 0.5 0.95                   # argent's tap: a MOUSE press at a frame's centre
+scripts/argent.sh touch '[aria-label="Stop"]'    # a real touch, at 375 x 812
 scripts/argent.sh run keyboard --text "hello"    # --udid is filled in for you
 scripts/argent.sh stop
 ```
@@ -215,26 +231,24 @@ its tabs. It then fails in a way that wastes time — `Page.navigate`,
 
 Give each tool its own browser.
 
-## `gesture-tap` works — the note that said otherwise cost two audits
+## `gesture-tap` works, as a mouse press
 
 This section used to read *"`gesture-tap` does not work on this Chromium"*, on
 the strength of two runs that both saw `CDP request Input.dispatchMouseEvent
-timed out`. Two later phone audits read that line, drove everything through
-`agent-browser` clicks instead, and reported no touch findings at all, because
-no touch event was ever sent. The claim is wrong, or was fixed under us.
+timed out`. The fix that followed showed `gesture-tap` working once argent had
+its own browser, and the section then said it was a real touch event. It never
+was: the method in that very timeout, `Input.dispatchMouseEvent`, is what argent
+sends for one finger on Chromium. A tap through argent proves that a control is
+reachable by a press at its centre; it says nothing about `touch-action`,
+`pointerType` or a tap-versus-scroll decision.
 
-Re-tested end to end against `pragma` on a fresh browser started as below:
-`gesture-tap` answered `{"tapped": true}`, and tap → `keyboard` → tap logged in,
-opened the More drawer, closed it again, switched tab, and left scene mode. Not
-one timeout.
+The likely cause of the original timeouts is the hazard above: both
+reproductions ran while `agent-browser` held its own session, and Playwright
+owning the target wedges input dispatch the same way it wedges `Page.navigate`.
 
-The likely cause of the original failures is the hazard above: both reproductions
-ran while `agent-browser` held its own session, and Playwright owning the target
-wedges input dispatch the same way it wedges `Page.navigate`. Give argent its
-own browser and its input works.
-
-`Input.dispatchTouchEvent` over raw CDP also works, and is still the fallback if
-`gesture-tap` ever wedges again:
+A real touch is `Input.dispatchTouchEvent`, which
+[`scripts/browser/touch-tap.ts`](../../scripts/browser/touch-tap.ts) sends behind
+`scripts/argent.sh touch`:
 
 ```js
 await send('Input.dispatchTouchEvent', {

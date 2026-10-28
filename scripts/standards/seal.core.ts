@@ -68,7 +68,9 @@ export interface ReviewableFile {
 }
 
 export type SealFailureReason =
-  'never-reviewed' | 'edited-since-it-was-reviewed' | 'sealed-against-an-older-ledger';
+  | 'never-reviewed'
+  | 'edited-since-it-was-reviewed'
+  | 'sealed-against-an-older-ledger';
 
 export interface SealFailure {
   readonly path: string;
@@ -119,4 +121,22 @@ export function isReviewablePath(path: string): boolean {
   if (!REVIEWABLE_EXTENSIONS.some((extension) => path.endsWith(extension))) return false;
   if (path.includes(EXCLUDED_DIRECTORY_SEGMENT)) return false;
   return !EXCLUDED_SUFFIXES.some((suffix) => path.endsWith(suffix));
+}
+
+const BACKTICKED_PATH = /`(?:apps|infra)\/[^`\s]+`/g;
+
+export function selectPlannedPaths(planText: string): readonly string[] {
+  const named = Array.from(planText.matchAll(BACKTICKED_PATH), (match) => match[0].slice(1, -1));
+  return [...new Set(named.filter(isReviewablePath))].sort((left, right) =>
+    left.localeCompare(right),
+  );
+}
+
+export function mergeReviewScope(
+  changedPaths: readonly string[],
+  plannedPaths: readonly string[],
+): readonly string[] {
+  const scope = new Set(changedPaths.filter(isReviewablePath));
+  for (const path of plannedPaths) scope.add(path);
+  return [...scope].sort((left, right) => left.localeCompare(right));
 }

@@ -51,14 +51,15 @@ updates:
       stryker:
         patterns:
           - '@stryker-mutator/*'
-      eslint:
+      lint:
         patterns:
+          - 'oxlint'
+          - 'oxlint-tsgolint'
+          - 'oxfmt'
           - 'eslint'
           - 'eslint-*'
-          - '@eslint/*'
           - '@eslint-community/*'
-          - 'typescript-eslint'
-          - 'prettier'
+          - 'oxc-parser'
       tanstack:
         patterns:
           - '@tanstack/*'

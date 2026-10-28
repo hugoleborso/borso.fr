@@ -88,3 +88,4 @@ export const borsoPlugin = {
     'verb-promises-match-return-type': verbPromisesMatchReturnType,
   },
 };
+export default borsoPlugin;

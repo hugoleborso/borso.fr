@@ -49,7 +49,7 @@ in the matching rows before writing code.
 | A visible string, or a component that renders one | [09. Internationalisation](../../../../docs/standards/09-i18n.md)                                                                                                                     |
 | A class name or a style                           | [08. Styling](../../../../docs/standards/08-styling.md)                                                                                                                               |
 | A test, or a pure function                        | [10. Testing](../../../../docs/standards/10-testing.md)                                                                                                                               |
-| A lint rule, a hook, or a workflow                | [12. Lint and gates](../../../../docs/standards/12-linting-and-gates.md)                                                                                                              |
+| A lint rule, a hook, or a workflow                | [12. Lint and gates](../../../../docs/standards/12-linting-and-gates.md), [14. Tool runtime budgets](../../../../docs/standards/14-tool-runtime-budgets.md)                            |
 
 ## Order of work when writing code
 

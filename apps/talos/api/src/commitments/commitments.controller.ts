@@ -6,5 +6,5 @@ import { listOpenCommitments } from './commitments.service';
 export function buildCommitmentsRouter() {
   return new Hono()
     .use('*', requireSession)
-    .get('/', async (context) => context.json({ items: await listOpenCommitments() }));
+    .get('/', async (context) => context.json({ items: await listOpenCommitments(new Date()) }));
 }

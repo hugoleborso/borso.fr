@@ -13,7 +13,7 @@ name a cost, the rule is a preference and does not belong in this folder.
 Examples come third, taken from code that is actually in this repository rather
 than invented for the document.
 
-The enforcement comes last, and it names the ESLint rule, the test gate, or the
+The enforcement comes last, and it names the lint rule, the test gate, or the
 git hook that fails when someone breaks the rule. When nothing can enforce a
 rule mechanically, the entry says "enforced by reviewer judgement" and
 describes what a reviewer looks for.
@@ -145,13 +145,13 @@ generated artefact is therefore named in prose and never linked.
 
 ## Enforced by
 
-- `eslint:borso/no-comments` rejects every comment that is not entirely
+- `oxlint:borso/no-comments` rejects every comment that is not entirely
   machine-read. It asks one question of the comment body alone: does every
   non-empty line match a known annotation or directive. That is why a
   `@Blueprint` block passes whole, a `/** @type {…} */` on a JavaScript module
   passes, and a block pairing a tag with a sentence does not.
 - `script:scripts/check-no-comments-in-styles-and-markup.sh` asks the same
-  question of the two file kinds ESLint does not lint here, `.css` and
+  question of the two file kinds oxlint does not lint here, `.css` and
   `.html`. It keeps the `@third-party-dom` markers
   `scripts/check-stylesheet-contents.sh` parses, and a conditional comment,
   which is markup rather than prose.

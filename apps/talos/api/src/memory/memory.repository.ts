@@ -24,7 +24,8 @@ import {
 
 export type MemoryDatabase = ReturnType<typeof getDatabase>;
 export type MemoryExecutor =
-  MemoryDatabase | Parameters<Parameters<MemoryDatabase['transaction']>[0]>[0];
+  | MemoryDatabase
+  | Parameters<Parameters<MemoryDatabase['transaction']>[0]>[0];
 
 export const MEMORY_TABLES = {
   memory_entity: memoryEntityTable,

@@ -1,5 +1,6 @@
 #!/usr/bin/env bash
-# PreToolUse hook for a git push or commit whose exit status is thrown away.
+# PreToolUse hook for a git push or commit whose exit status is thrown away,
+# and for a mutation run cut short by `head`.
 #
 # `pipefail` is off in this shell, so a pipeline reports the last stage's
 # status. `git push | tail -5` therefore exits 0 whether the push succeeded or
@@ -40,6 +41,25 @@ COMMAND_TO_RUN="$(printf '%s' "$COMMAND" \
   | python3 "$(dirname "$0")/strip-heredocs.py" \
   | python3 "$(dirname "$0")/strip-quoted-strings.py")"
 
+# One pipeline per line before matching. A `;` or `&&` ends the pipeline the
+# git command belongs to, so a pipe in the next command has nothing to do with
+# its status; without the split, `git commit -F msg > log 2>&1; grep x log | head`
+# was refused three times in one session for a pipe the commit was never in.
+PIPELINES="$(sed -E 's/&&|;/\n/g' <<<"$COMMAND_TO_RUN")"
+
+# A mutation run piped into `head` is not shortened, it is killed: `head` exits
+# after its lines and the next write ends Stryker on a broken pipe, before the
+# score, with nothing printed about it. `pipefail` keeps the status of a killed
+# run, not the run, so this is refused with or without it.
+if grep -qE '(stryker[[:space:]]+run|test:mutation)([[:space:]][^|]*)?\|[[:space:]]*head([[:space:]]|$)' <<<"$PIPELINES"; then
+  echo "[no-swallowed-push] a mutation run piped into head is killed once head has its lines," >&2
+  echo "[no-swallowed-push] with no error and no score, so it reads as a run that finished." >&2
+  echo "[no-swallowed-push] Write the log to a file and read its end instead:" >&2
+  echo "[no-swallowed-push]   pnpm exec stryker run --mutate <files> > stryker.log 2>&1; tail -40 stryker.log" >&2
+  "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "piped a mutation run into head, which kills it before the score"
+  exit 2
+fi
+
 # A pipeline already made safe by an explicit `pipefail` keeps the real status.
 if grep -qE 'set -[a-zA-Z]*o[[:space:]]+pipefail|set -o pipefail' <<<"$COMMAND_TO_RUN"; then
   exit 0
@@ -58,12 +78,6 @@ block() {
   "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "piped git push or git commit into another command, throwing away its exit status"
   exit 2
 }
-
-# One pipeline per line before matching. A `;` or `&&` ends the pipeline the
-# git command belongs to, so a pipe in the next command has nothing to do with
-# its status; without the split, `git commit -F msg > log 2>&1; grep x log | head`
-# was refused three times in one session for a pipe the commit was never in.
-PIPELINES="$(sed -E 's/&&|;/\n/g' <<<"$COMMAND_TO_RUN")"
 
 if grep -qE '(^|[|[:space:]])git[[:space:]]+push([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
   block "git push piped into another command throws away the push's exit status." \

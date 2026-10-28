@@ -62,6 +62,28 @@ DSQL builds every non-primary index asynchronously (`CREATE UNIQUE INDEX ASYNC`,
 
 - Spec: [`docs/features/pragma/song-takes-and-push/spec/spec.md`](../features/pragma/song-takes-and-push/spec/spec.md)
 - Review: [`standards-review-2026-10-24.md`](../features/pragma/song-takes-and-push/validation/standards-review-2026-10-24.md), finding #16
-- Commit: stamped by `/after-task-kaizen` on merge
+- Commit: [`d117a320`](https://github.com/hugoleborso/borso.fr/commit/d117a320bc674195391e50c3e739654441d5f177) (PR #193, squashed)
 - Files: `apps/pragma/api/src/songs/songs.schema.ts`, `apps/pragma/api/src/songs/songs.service.ts`, `apps/pragma/api/src/database/migrations/`
 - Related ADRs: ADR-0006 (no foreign keys on DSQL)
+
+## Revisions
+
+### Revision 2026-10-25 — the migration runner waits for the build
+
+What changed: the second consequence no longer holds. The migration runner in
+`infra/cdk/src/internal/migration-runner/` now reads the `job_id` that
+`CREATE INDEX ASYNC` returns, polls `sys.jobs` until the job is `completed` or
+`failed`, and fails the deploy, leaving the migration unrecorded, when the build
+fails or is still running after 240 s. When `IF NOT EXISTS` skips the statement
+and returns no job, it reads `pg_index.indisvalid` for the index and fails on an
+`INVALID` one, which is what DSQL leaves after a failed build. Both mechanisms are
+the ones AWS documents in *Asynchronous indexes in Aurora DSQL* and *System
+tables and commands in Aurora DSQL*.
+
+Why: a failed unique build was silent, so the guarantee was only as good as an
+operator remembering to read `sys.jobs`. See
+[the dantotsu](../dantotsus/an-index-build-nobody-waited-for.md).
+
+The operator still counts duplicate track ids before a deploy that adds a unique
+index, because the build fails on them; the deploy now says so instead of
+succeeding.

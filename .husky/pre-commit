@@ -1,430 +1,512 @@
 set -e
 
-# Pre-commit holds only checks that are cheap and that should be true of every
-# single commit, so committing stays fast enough that nobody reaches for
-# --no-verify. Anything that needs the whole branch in view, or that takes more
-# than a second or two, lives in .husky/pre-push instead.
+# Pre-commit holds the checks a single commit can break, each run only when the
+# commit touches something it reads, and each held to a measured budget. The
+# budgets, the reason for each, and where every check's whole-tree run lives are
+# in docs/standards/14-tool-runtime-budgets.md. In short:
 #
-# The split, so the next person editing these files keeps it:
+#   pre-commit  300 ms of CPU per check, a named budget for each of the three
+#               tools (linter, type checker, whole-tree generators), 4 s
+#               for a typical commit
+#   pre-push    60 s for a change confined to one application
+#   CI          10 min per pull request
 #
-#   pre-commit  a per-file invariant, cheap, and true of every commit
-#   pre-push    needs the branch in view, or costs real time
-
-changed=$(git diff --cached --name-only --diff-filter=ACMR)
-
-scripts/check-claude-harness-active.sh
-
-# ESLint and Prettier over the STAGED files only. Linting the whole repository
-# here would not be a small check: the type-aware rules build a TypeScript
-# program per workspace, so a cold full run is about 80 s, and a branch that
-# touches many files thrashes the cache and pays most of that on every commit.
+# A check over its budget narrows what it reads — the staged files, or the
+# files a staged removal can break — or moves to .husky/pre-push or ci.yml. It
+# is never exempted. This hook used to state the rule in a comment ("anything
+# over a second or two lives in pre-push") and enforce nothing, and a commit
+# with nothing staged took 61 s: three whole-tree checks at twelve seconds each,
+# and the architecture generator at over three minutes whenever apps/ moved.
+# See docs/dantotsus/a-written-runtime-budget-nobody-enforced.md.
 #
-# Whole-repository linting still happens, in ci.yml, where it also catches the
-# cross-file rules that a staged-file run cannot see, e.g. import-x/no-cycle.
-# So the commit gate is fast and local, and the branch gate is exhaustive.
-#
-# Rung-1 eradication, together with the ci.yml backup, of
-# docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
-#
-# --max-warnings 0 is what makes the warning-severity rules a gate. Several
-# rules the standards rely on ship at `warn` from their plugin's recommended
-# preset — react-hooks/exhaustive-deps, react-hooks/incompatible-library — and
-# eslint exits 0 on a warning, so without this flag those rules printed and
-# nothing stopped. A warning nobody has to clear is a rule that is off.
-staged_lintable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs)$' || true)
-if [ -n "$staged_lintable" ]; then
-  # The type-aware rules resolve @borso/infra through its dist/, which a fresh
-  # worktree does not have; without it every cdk file reports unresolved types
-  # and nothing names the missing build.
-  scripts/ensure-infra-built.sh
-  echo "[pre-commit] running eslint on staged files"
-  echo "$staged_lintable" | xargs pnpm exec eslint --no-warn-ignored --max-warnings 0 --cache --cache-strategy content --cache-location .eslintcache
-fi
+# Every check below is timed. One that uses more CPU than its budget fails the
+# commit, naming itself and its measurement. CPU and not wall time, because
+# this machine is shared with other agents' gates, and a wall-clock budget
+# would measure the neighbours. CI asserts the wall-clock total on a fixture
+# commit, where nothing else runs: scripts/check-pre-commit-budget.sh.
 
-staged_formattable=$(echo "$changed" | grep -E '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' || true)
-if [ -n "$staged_formattable" ]; then
-  echo "[pre-commit] running prettier on staged files"
-  echo "$staged_formattable" | xargs node_modules/.bin/prettier --check --cache --ignore-unknown
-fi
+CHECK_BUDGET_MS=300
+FILE_BUDGET_PER_EXTRA_FILE_MS=20
+LINT_BUDGET_MS=5000
+LINT_BUDGET_PER_EXTRA_FILE_MS=1500
+TYPECHECK_BUDGET_MS=2500
+NODE_CHECK_BUDGET_MS=1000
+NODE_CHECK_BUDGET_PER_EXTRA_MS=250
 
-# DSQL compatibility of staged migration SQL. The find inside is a no-op when
-# no migration is staged, so unrelated work is not slowed down. Rung-2
-# eradication of docs/dantotsus/dsql-alter-table-only-add-column.md.
-if echo "$changed" | grep -q 'api/src/database/migrations/.*\.sql$'; then
-  echo "[pre-commit] migration SQL changed — running DSQL-compat check"
-  ./scripts/check-migration-sql-dsql-compat.sh
-fi
-
-# Blueprint annotations, whenever source changed. A `@Blueprint` missing a tag
-# still lands in the index with an empty cell, and a `// @FollowsBlueprint` that
-# names nothing still reads as adoption, so neither fails anything on its own.
-# A passing check rewrites the index rather than comparing it: the index is a
-# gitignored output, so a stale copy is never something the commit got wrong,
-# and refusing it only made the author run the generator by hand and commit
-# again (docs/dantotsus/the-gate-that-refused-its-own-output.md). One pass over
-# the tree, well under a second, so it belongs on the commit.
-#
-# The three generated artefacts are checked together, and every stale one is
-# named in a single rejection. Run under `set -e` as three consecutive
-# commands, the first failure ended the hook, so a commit that moved all three
-# was rejected three times and the operator learned about one generator per
-# attempt. The cost of continuing is one more pass over a tree that is already
-# in the file cache.
-generator_failures=""
-run_generator_check() {
-  if ! pnpm exec tsx "$1" --check; then
-    generator_failures="${generator_failures}  pnpm exec tsx $1
+# Every path the commit adds, changes or removes, one per line as
+# `<status> <path>`, with a rename split into the removal of its old path and
+# the addition of its new one. A rename or a deletion breaks what names the old
+# path, so checks that resolve names scope on `^D `.
+touched=$(git diff --cached --name-status --no-renames | sed -E 's/^([A-Z])[0-9]*\t/\1 /')
+touched_paths=$(printf '%s\n' "$touched" | sed -E 's/^[A-Z] //')
+path_lines="
+$touched_paths
 "
-  fi
+
+results=$(mktemp -d)
+trap 'rm -rf "$results"' EXIT
+
+if [ "$(date +%s%3N 2>/dev/null)" -gt 0 ] 2>/dev/null; then
+  wall_clock_ms() { date +%s%3N; }
+else
+  wall_clock_ms() { perl -MTime::HiRes=time -e 'printf "%d", time * 1000'; }
+fi
+
+# The checks run side by side, two per core, because none of them writes
+# anything another reads and most of them wait on the disk as much as on the
+# CPU. The longest ones set the commit's wall time, so every other check runs
+# at a lower priority and yields the CPU to them. On a 2-core machine that took
+# a fixture commit from 3.7 s to 2.8 s, measured on 2026-10-27. Each check's
+# output is held back and printed in the order below once all have finished,
+# so a failure reads the same as it did when they ran one after another.
+cores=$(nproc 2>/dev/null || sysctl -n hw.ncpu 2>/dev/null || echo 2)
+max_parallel=$((cores * 2))
+LONGEST_CHECKS='oxlint typecheck-tooling node-checks'
+SHORT_CHECK_NICENESS=10
+running=''
+launched=0
+checks_skipped=0
+hook_started_ms=$(wall_clock_ms)
+
+count_running() {
+  set -- $running
+  running_count=$#
 }
 
-run_generator() {
-  if ! pnpm exec tsx "$1"; then
-    generator_failures="${generator_failures}  pnpm exec tsx $1
-"
-  fi
+# Reaps every check that has finished, whichever they are, so a slow check
+# started early does not hold a free core behind it. Each running check is one
+# `<pid>:<slot>` word, and a check has finished once its slot has a result.
+reap_finished() {
+  still_running=''
+  for entry in $running; do
+    if [ -f "${entry#*:}.result" ]; then
+      wait "${entry%%:*}" || true
+    else
+      still_running="$still_running $entry"
+    fi
+  done
+  running="$still_running"
 }
 
-# The repository's own tooling, when a commit touches it. `scripts/`,
+# launch <name> <budget ms> <command…>: starts one check in the background. Its
+# CPU is read with `times` inside the subshell that ran it, which counts that
+# subshell and everything it started, and nothing else this machine is running.
+launch() {
+  name="$1"
+  budget="$2"
+  shift 2
+  launched=$((launched + 1))
+  slot="$results/$(printf '%03d' "$launched")"
+  printf '%s\n%s\n' "$name" "$budget" >"$slot.check"
+  count_running
+  while [ "$running_count" -ge "$max_parallel" ]; do
+    reap_finished
+    count_running
+    [ "$running_count" -ge "$max_parallel" ] && sleep 0.05
+  done
+  started_ms=$(wall_clock_ms)
+  (
+    case " $LONGEST_CHECKS " in
+      *" $name "*) ;;
+      *) renice -n "$SHORT_CHECK_NICENESS" -p "$(sh -c 'echo $PPID')" >/dev/null 2>&1 || true ;;
+    esac
+    if "$@" >"$slot.out" 2>&1; then status=0; else status=$?; fi
+    times >"$slot.times"
+    echo "$status $(($(wall_clock_ms) - started_ms))" >"$slot.result"
+  ) &
+  running="$running $!:$slot"
+}
+
+# Whether the commit touches what a check reads: its scope, matched against the
+# `<status> <path>` lines, or a file its own command line names, so that editing
+# a check runs it.
+is_in_scope() {
+  scope="$1"
+  shift
+  if printf '%s\n' "$touched" | grep -qE "$scope"; then
+    return 0
+  fi
+  for word in "$@"; do
+    case "$path_lines" in
+      *"
+$word
+"*) return 0 ;;
+    esac
+  done
+  return 1
+}
+
+# run_check <name> <scope> <command…>: a whole-tree check, run when the commit
+# touches its scope.
+run_check() {
+  name="$1"
+  scope="$2"
+  shift 2
+  if ! is_in_scope "$scope" "$@"; then
+    checks_skipped=$((checks_skipped + 1))
+    return 0
+  fi
+  launch "$name" "$CHECK_BUDGET_MS" "$@"
+}
+
+# run_check_on_files <name> <path pattern> <command…>: a per-file check, handed
+# the touched paths that match as arguments. Its budget grows by a fixed amount
+# per path past the first, because reading forty files is not reading one.
+run_check_on_files() {
+  name="$1"
+  pattern="$2"
+  shift 2
+  run_with_files "$name" "$pattern" "$CHECK_BUDGET_MS" "$FILE_BUDGET_PER_EXTRA_FILE_MS" \
+    run_on_subjects "$@"
+}
+
+run_with_files() {
+  name="$1"
+  pattern="$2"
+  base_budget="$3"
+  per_file_budget="$4"
+  shift 4
+  subjects=$(printf '%s\n' "$touched_paths" | grep -E "$pattern" || true)
+  if [ -z "$subjects" ]; then
+    checks_skipped=$((checks_skipped + 1))
+    return 0
+  fi
+  count=$(printf '%s\n' "$subjects" | grep -c .)
+  launch "$name" $((base_budget + (count - 1) * per_file_budget)) "$@"
+}
+
+run_on_subjects() {
+  printf '%s\n' "$subjects" | tr '\n' '\0' | xargs -0 "$@"
+}
+
+# The staged files that still exist, NUL-separated, for the tools that take
+# paths: a staged deletion is a path no formatter or linter can open.
+list_existing_subjects() {
+  printf '%s\n' "$subjects" | while IFS= read -r candidate; do
+    [ -f "$candidate" ] && printf '%s\0' "$candidate"
+  done
+}
+
+run_oxfmt() {
+  list_existing_subjects | xargs -0 --no-run-if-empty node_modules/.bin/oxfmt --check
+}
+
+run_oxlint() {
+  list_existing_subjects | xargs -0 --no-run-if-empty scripts/lint-staged-files.sh
+}
+
+# queue_node_check <name> <scope> <script…>: a check written in TypeScript, a
+# whole-tree generator in check mode or a node script, queued when the commit
+# touches its scope. The queued checks then run in one node process,
+# scripts/standards/run-node-checks.ts, which imports each in turn with its own
+# arguments and prints each one's verdict and CPU on its own line. One process
+# loads node, the TypeScript resolver and the modules the checks share once:
+# eight generators measured 1.4 s of CPU together on 2026-10-27, against 2.2 s
+# as eight processes.
+node_check_jobs=''
+node_check_count=0
+queue_node_check() {
+  name="$1"
+  scope="$2"
+  shift 2
+  if ! is_in_scope "$scope" "$1"; then
+    checks_skipped=$((checks_skipped + 1))
+    return 0
+  fi
+  node_check_jobs="${node_check_jobs}${name}=$*
+"
+  node_check_count=$((node_check_count + 1))
+}
+
+run_node_checks() {
+  IFS='
+'
+  set -f
+  # shellcheck disable=SC2086
+  node --import ./scripts/typescript-resolve.mjs scripts/standards/run-node-checks.ts $node_check_jobs
+}
+
+launch_node_checks() {
+  [ "$node_check_count" -gt 0 ] || return 0
+  launch node-checks \
+    $((NODE_CHECK_BUDGET_MS + (node_check_count - 1) * NODE_CHECK_BUDGET_PER_EXTRA_MS)) \
+    run_node_checks
+}
+
+# The two lines `times` writes, the subshell's own and its children's, as one
+# number of milliseconds.
+read_cpu_ms() {
+  awk '{
+    split($1, user, "m"); split($2, kernel, "m")
+    sub("s", "", user[2]); sub("s", "", kernel[2])
+    total += user[1] * 60 + user[2] + kernel[1] * 60 + kernel[2]
+  } END { printf "%d", total * 1000 }' "$1"
+}
+
+launch harness-active "$CHECK_BUDGET_MS" scripts/check-claude-harness-active.sh
+
+# oxfmt over the staged files. 0.1 s of CPU for one file, measured on
+# 2026-10-27, against 0.3 s for Prettier, so it needs no budget of its own.
+run_with_files oxfmt '\.(js|jsx|ts|tsx|mjs|cjs|json|jsonc|css|ya?ml|html)$' \
+  "$CHECK_BUDGET_MS" "$FILE_BUDGET_PER_EXTRA_FILE_MS" run_oxfmt
+
+# oxlint over the staged files with every rule, the type-aware ones and the
+# unused-directive report included, through scripts/lint-staged-files.sh,
+# which builds a TypeScript program of the staged files only. Its own budget,
+# measured on 2026-10-27 on a four-core machine other agents were also using:
+# 1.8 s of CPU for a script, 3.9 to 4.8 s for one pragma component or service,
+# and 1.1 to 1.5 s more for each further file, most of it the React Compiler
+# that eslint-plugin-react-hooks runs on each component. Warnings fail it:
+# `denyWarnings` is set in .oxlintrc.json. Rung-1 eradication, together with
+# the push and CI runs, of docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
+run_with_files oxlint '\.(js|jsx|ts|tsx|mjs|cjs)$' \
+  "$LINT_BUDGET_MS" "$LINT_BUDGET_PER_EXTRA_FILE_MS" run_oxlint
+
+# The repository's own tooling, type-checked with TypeScript 7: `scripts/`,
 # `.claude/skills/` and `eslint-rules/` belong to no workspace, so
-# `pnpm -r typecheck` never reached them and `tsx` strips types without reading
-# them: a name that no longer exists runs fine until the branch that reaches it,
-# and a return-type annotation naming a type nobody imported is invisible.
-# Scoped to the paths so an application-only commit pays nothing.
-# See docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
-if git diff --cached --name-only |
-  grep -qE '^(scripts/|\.claude/skills/|eslint-rules/|tsconfig\.json$)'; then
-  echo "[pre-commit] type-checking the repository's own tooling"
-  pnpm run typecheck
+# `pnpm -r typecheck` never reaches them and `tsx` strips types without reading
+# them. TypeScript 5.9 took 6.6 s. With TypeScript 7 on four threads it took
+# 0.9 s of wall time and 2.1 to 2.8 s of CPU, measured on 2026-10-27, which is
+# at the budget; `--singleThreaded` takes 1.1 s of wall time and 1.3 s of CPU,
+# and leaves the other cores to the checks running beside it. See
+# docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
+if is_in_scope '^. ((scripts|\.claude/skills)/.*\.(ts|mts|js|mjs)|eslint-rules/.*\.js|tsconfig\.json)$'; then
+  launch typecheck-tooling "$TYPECHECK_BUDGET_MS" \
+    node_modules/.bin/tsc -p tsconfig.json --noEmit --singleThreaded
+else
+  checks_skipped=$((checks_skipped + 1))
 fi
 
-# What runs below is what a commit can be WRONG about, not what a commit makes
-# stale. None of these generated files is committed any more, so no run can
-# find one out of date; each check left refuses something a person did: an
-# annotation that names no blueprint, a dantotsu that names none, a question
-# the tree had already answered being answered a second way.
-#
-# `blueprint-heatmap.ts` and `rule-provenance.ts` used to run here and no
-# longer do. Neither ever refused anything but its own staleness, and the
-# heatmap reads every source file in the repository to do it. They are
-# regenerated at SessionStart and published by `pages.yml`.
-if [ -n "$staged_lintable" ]; then
-  echo "[pre-commit] checking blueprint annotations"
-  set +e
-  run_generator_check .claude/skills/blueprint/blueprint-indexing.ts
-  # The lookup the pre-write hook reads. Not a gate — it is regenerated so a
-  # blueprint added this session seeds the next write in it.
-  run_generator .claude/skills/blueprint/blueprint-context.ts
-  # Two spellings for one idea. Gated on a baseline that only goes down, so the
-  # existing backlog never blocks a commit and the next divergence does. A git
-  # index read plus one pass over the tree, so it belongs on the commit.
-  run_generator_check scripts/standards/convention-drift.ts
-  set -e
-fi
+# Blueprint annotations and the convention baseline, whenever source changed.
+# Each refuses something a person did: an annotation naming no blueprint, a
+# question the tree had already answered being answered a second way. The
+# context lookup is not a gate; it is regenerated so a blueprint added this
+# session seeds the next write.
+blueprint_scope='^. ([^ ]*\.(js|jsx|ts|tsx|mjs|cjs)|\.claude/skills/blueprint/.*)$'
+queue_node_check blueprint-index "$blueprint_scope" \
+  .claude/skills/blueprint/blueprint-indexing.ts --check
+queue_node_check blueprint-context "$blueprint_scope" \
+  .claude/skills/blueprint/blueprint-context.ts
+queue_node_check convention-drift "$blueprint_scope" \
+  scripts/standards/convention-drift.ts --check
 
-# The defect page reads the dantotsu corpus as well as the source tree, and the
-# source-file condition above cannot see a commit that adds only a dantotsu, so
-# it could not run the check its own content invalidates. CI caught it, one per
-# push. The condition is the union of that generator's real inputs, which is
-# the only thing that keeps a trigger honest: the blueprint annotations under
-# apps/ and infra/, plus every dantotsu's front matter.
-#
-# `rule-provenance.ts` had the same trigger bug and is no longer here at all —
-# its check only ever refused its own staleness, and the page it writes is not
-# committed.
-if git diff --cached --name-only | grep -qE '^(apps/|infra/|docs/dantotsus/)'; then
-  echo "[pre-commit] checking the blueprint defect page"
-  set +e
-  run_generator_check scripts/blueprints/blueprint-defects.ts
-  set -e
-fi
+# The defect page reads the dantotsu corpus as well as the source tree.
+queue_node_check blueprint-defects '^. (apps/|infra/|docs/dantotsus/)' \
+  scripts/blueprints/blueprint-defects.ts --check
 
-# The dantotsu record and the two weak-point pages read from it. The schema
-# check refuses a field outside its fixed list, a placeholder, a level the
-# eradication paths do not support and a recurrence left unlinked; on a commit
-# it resolves the fix commits of the staged entries only, so a clone whose
-# origin/main is old pays nothing for entries it did not touch. The two
-# generators refuse a zone, a weak point or a wall that names nothing. A rename
-# or a deletion anywhere can orphan a zone or an eradication path, so those
-# trigger the run too. See docs/adr/0029-weak-point-management-from-the-dantotsu-record.md.
-if git diff --cached --name-only | grep -qE '^(docs/dantotsus/|docs/quality/|docs/features/|scripts/quality/)' ||
-  [ -n "$(git diff --cached --name-only --diff-filter=DR)" ]; then
-  echo "[pre-commit] checking the dantotsu record and the weak-point pages"
-  set +e
-  if ! pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts --staged; then
-    generator_failures="${generator_failures}  pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts
-"
-  fi
-  run_generator_check scripts/quality/weak-points.ts
-  run_generator_check scripts/quality/working-conditions.ts
-  set -e
-fi
+# The dantotsu record and the two weak-point pages read from it. A rename or a
+# deletion anywhere can orphan a zone or an eradication path, so those trigger
+# the run too. See docs/adr/0029-weak-point-management-from-the-dantotsu-record.md.
+dantotsu_scope='^. (docs/dantotsus/|docs/quality/|docs/features/|scripts/quality/)|^D '
+queue_node_check dantotsu-front-matter "$dantotsu_scope" \
+  scripts/quality/check-dantotsu-front-matter.ts --staged
+queue_node_check weak-points "$dantotsu_scope" scripts/quality/weak-points.ts --check
+queue_node_check working-conditions "$dantotsu_scope" \
+  scripts/quality/working-conditions.ts --check
 
-# The architecture pages, whenever any application changed. The generator
-# derives each graph from paths, imports and the Hono call chain, so a rename or
-# a new route moves the page without anyone editing it, and a stale page is a
-# diagram that lies. It also refuses a `@DependsOnExternal` naming an external
-# system the manifest does not declare, and a declared external no file reaches,
-# because either half alone is how a context diagram drifts from the code.
-# The three paths are the ones .github/workflows/architecture.yml watches, and
-# the two lists have to stay the same: a commit that changed only
-# blueprint-utils.ts, whose layer table the generator reads, used to reach CI
-# with a page nothing had regenerated.
-if git diff --cached --name-only |
-  grep -qE '^(apps/|scripts/architecture/|\.claude/skills/blueprint/blueprint-utils\.ts$)'; then
-  echo "[pre-commit] checking the architecture pages"
-  set +e
-  run_generator_check scripts/architecture/architecture-graph.ts
-  set -e
-fi
+# The enforcement ledger, whenever a standard or a mechanism it can cite
+# changed. It reads .oxlintrc.json directly: 0.5 s of CPU, where building an
+# ESLint instance to ask for each probe's configuration took 6.4 s.
+queue_node_check enforcement-ledger \
+  '^. (docs/standards/|eslint-rules/|\.oxlintrc\.json$|\.husky/|\.github/workflows/|scripts/(.*/)?check-)' \
+  scripts/standards/enforcement-ledger.ts --check
 
-if [ -n "$generator_failures" ]; then
-  echo "[pre-commit] ERROR: these checks refused the commit; each printed its reason above. Fix that, then rerun with --check to confirm:" >&2
-  printf '%s' "$generator_failures" >&2
-  exit 1
-fi
+# One version per dependency lives in pnpm-workspace.yaml.
+queue_node_check dependency-catalog '^. ((.*/)?package\.json|pnpm-workspace\.yaml)$' \
+  scripts/dependencies/check-dependency-catalog.ts
 
-# One stylesheet per application. A second CSS file is how an application
-# drifts back to global class names, because the first rule that does not fit a
-# utility goes there and the rest follow. A git-index read of four directories,
-# so it costs nothing and belongs on the commit.
-echo "[pre-commit] checking each app ships one stylesheet"
-scripts/check-single-stylesheet.sh
+# The template a PR body is drafted from fits the budget the same script
+# enforces on the body.
+queue_node_check pr-body-template '^. (plugins/borso-harness/skills/open-pr/template\.md|scripts/pr/)' \
+  scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
 
-# And that the one stylesheet holds tokens only. Counting the files never opens
-# one, so a global `.classname { … }` rule inside it — the cascade coming back,
-# invisible in the JSX it styles — had no gate at all.
-echo "[pre-commit] checking each stylesheet holds tokens only"
-scripts/check-stylesheet-contents.sh
+# A document that links a file which is not there. `--staged` reads the staged
+# documents and every document naming a path the commit removes; a link to a
+# generated, gitignored report is judged in ci.yml, after the generators run,
+# because a checkout that never ran them has nothing to judge it against. See
+# docs/dantotsus/the-hook-checked-links-to-files-it-declined-to-build.md.
+queue_node_check doc-links '\.md$|^D ' scripts/docs/check-doc-links.ts --staged
 
-# `borso/no-comments` is an ESLint rule and ESLint lints no `.css` and no
-# `.html` here, so the no-comment standard reached every source file except
-# those two kinds. This closes the gap, keeping the `@third-party-dom` markers
-# the check above parses.
-echo "[pre-commit] checking no stylesheet or page carries a comment"
-scripts/check-no-comments-in-styles-and-markup.sh
+launch_node_checks
 
-# And that no Tailwind arbitrary variant opens on a bare word, which Tailwind
-# reads as an attribute selector and compiles to nothing at all — no rule, no
-# error, no warning, and a class in the markup that looks right. A grep over
-# four site directories, so it costs nothing and belongs on the commit.
-echo "[pre-commit] checking Tailwind arbitrary variants compile to a rule"
-scripts/check-tailwind-arbitrary-variants.sh
+# DSQL compatibility of staged migration SQL. Rung-2 eradication of
+# docs/dantotsus/dsql-alter-table-only-add-column.md.
+run_check_on_files migration-sql 'api/src/database/migrations/.*\.sql$' \
+  scripts/check-migration-sql-dsql-compat.sh
+
+# One stylesheet per application, holding tokens only, with no comment in it or
+# in a page. A second CSS file is how an application drifts back to global class
+# names; `borso/no-comments` is a lint rule and oxlint lints no `.css` and no
+# `.html` here.
+run_check single-stylesheet '\.css$' scripts/check-single-stylesheet.sh
+run_check stylesheet-contents '\.css$' scripts/check-stylesheet-contents.sh
+run_check no-comments-in-styles-and-markup '\.(css|html)$' \
+  scripts/check-no-comments-in-styles-and-markup.sh
+
+# No Tailwind arbitrary variant opens on a bare word, which Tailwind reads as an
+# attribute selector and compiles to nothing at all.
+run_check tailwind-arbitrary-variants '^. apps/[^/]+/site/' \
+  scripts/check-tailwind-arbitrary-variants.sh
 
 # Every directory under apps/ has a path-filters key and a commitlint scope.
-# Both failures are silent in the way that matters: no filter means the app
-# never gets a preview deploy and no workflow says so, and no scope means the
-# first commit naming the app is rejected by a hook talking about an enum.
-echo "[pre-commit] checking each app is registered"
-scripts/check-app-registration.sh
+# No filter means the app never gets a preview deploy; no scope means the first
+# commit naming the app is rejected by a hook talking about an enum.
+run_check app-registration \
+  '^. (apps/[^/]+/(package\.json|bin/|cdk/|api/src/database/migrations/)|\.github/path-filters\.yml$|commitlint\.config\.js$)' \
+  scripts/check-app-registration.sh
 
-# Each term in an application's vocabulary names the folder that owns it, and
-# that folder gets renamed by changes with no reason to open the vocabulary.
-echo "[pre-commit] checking each vocabulary term names a folder that exists"
-scripts/check-vocabulary-paths.sh
+# Each term in an application's vocabulary names the folder that owns it and
+# the test that holds it, and those get renamed or removed by changes with no
+# reason to open the vocabulary. An edited test matters only when a `Held by`
+# line names it, since the check reads its titles; any other test edit left
+# the check reading files it could not have changed.
+held_tests=$(
+  awk 'FNR == 1 { folder = FILENAME; sub(/VOCABULARY\.md$/, "", folder) }
+    /^Held by: `/ { cited = $0; sub(/^Held by: `/, "", cited); sub(/`.*/, "", cited)
+      gsub(/\./, "\\.", cited); print folder cited }' apps/*/VOCABULARY.md 2>/dev/null |
+    sort -u | paste -sd '|' -
+)
+run_check vocabulary-paths \
+  "^. apps/[^/]+/VOCABULARY\\.md\$|^D apps/${held_tests:+|^M (${held_tests})\$}" \
+  scripts/check-vocabulary-paths.sh
 
-# A NUL byte turns a source file into a binary as far as git is concerned, so
-# it stops merging textually and every diff over it reads `Binary files differ`.
-# A dated record of a past review is not editable. `docs/**/validation/` and
-# `docs/standards/reviews/` are true as of the day in their own file name, so a
-# repository-wide rename reaching into one destroys the record rather than
-# correcting it, and the reader cannot tell.
-echo "[pre-commit] checking no dated record was edited"
-scripts/check-dated-records-are-append-only.sh
+# A dated record of a past review is not editable: it is true as of the day in
+# its own file name. Reads the staged edits only.
+run_check dated-records '^. docs/' scripts/check-dated-records-are-append-only.sh
 
-echo "[pre-commit] checking no file carries a NUL byte"
-scripts/check-no-null-bytes.sh
+# A NUL byte turns a source file into a binary as far as git is concerned.
+# Every staged file, and nothing else; ci.yml reads the whole tree.
+run_check_on_files no-null-bytes '.' scripts/check-no-null-bytes.sh
 
-# A dependency bump rewrites version strings in package.json, and a regex keyed
-# on the package name cannot tell a dependency entry from a script of the same
-# name — both are `"<name>": "<string>"`. A script rewritten into a version runs
-# nothing and no other gate reads it.
-echo "[pre-commit] checking every package script is a command"
-scripts/check-package-scripts-are-commands.sh
-
-# One version per dependency, written in pnpm-workspace.yaml. Nothing else here
-# reads a version field, so two workspaces drifting onto different majors of the
-# same library passes every other gate and surfaces later as a type error in
-# whichever file sits across the seam.
-echo "[pre-commit] checking every shared dependency reads the catalog"
-pnpm exec tsx scripts/dependencies/check-dependency-catalog.ts
-
-# The enforcement ledger, whenever a standard or one of the mechanisms it can
-# cite changed. It resolves every `## Enforced by` bullet against the live
-# ESLint configuration and the checked-in hooks, so it fails on a rule cited
-# and enabled nowhere, a script no hook invokes, a gate whose command is absent
-# from a site it claims, and a mechanism that runs while no standard says why.
-#
-# This is the one check here that is not instant: it builds an ESLint instance
-# and resolves a configuration per probe path, measured at 6.9 s. It stays on
-# the commit because the trigger is narrow — the standards, the rules, the
-# config and the two gate sites — and a commit touching those is rare, while a
-# standard claiming an enforcement nobody runs is exactly what this branch
-# found four of.
-if git diff --cached --name-only |
-  grep -qE '^(docs/standards/|eslint-rules/|eslint\.config\.js|\.husky/|\.github/workflows/)'; then
-  echo "[pre-commit] checking the enforcement ledger"
-  pnpm exec tsx scripts/standards/enforcement-ledger.ts --check
-fi
+# A dependency bump can rewrite a script into a version. The one version per
+# dependency in pnpm-workspace.yaml is checked with the node checks above.
+run_check_on_files package-scripts-are-commands 'package\.json$' \
+  scripts/check-package-scripts-are-commands.sh
 
 # A `VITE_*` variable a site reads and no workflow sets is a feature that never
-# runs, in every stage, silently: Vite substitutes `undefined` at build time and
-# nothing fails. A git-index read plus a grep over the workflows, so it costs
-# nothing and belongs on the commit. Rung-2 eradication of
+# runs. Rung-2 eradication of
 # docs/dantotsus/a-feature-that-was-never-switched-on-in-any-stage.md.
-echo "[pre-commit] checking each VITE_ variable a site reads is wired"
-scripts/check-frontend-env-vars.sh
+run_check frontend-env-vars '^. (apps/[^/]+/site/|\.github/workflows/)' \
+  scripts/check-frontend-env-vars.sh
 
-# A manifest naming an icon that is not there installs a grey square, and the
-# build, the tests, the linter and the page all keep passing. A JSON parse plus
-# a handful of stat calls, so it costs nothing and belongs on the commit.
-echo "[pre-commit] checking each manifest names icons that ship"
-scripts/check-pwa-assets.sh
+# A manifest naming an icon that is not there installs a grey square. Only the
+# applications whose site the commit touches.
+run_check_on_files pwa-assets '^apps/[^/]+/site/' scripts/check-pwa-assets.sh
 
-# The template a PR body is drafted from has to satisfy the budget the same
-# script enforces on the body. A template that drifts out of it teaches every
-# future body to be refused, and the drift is invisible until someone drafts.
-echo "[pre-commit] checking the pull-request template fits its own budget"
-pnpm exec tsx scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
-
-# A knowledge entry saying a tool is broken steers every future agent away from
-# it and never expires on its own — two phone audits obeyed one that was wrong.
-# A grep over one directory, so it costs nothing and belongs on the commit.
-echo "[pre-commit] checking every \"does not work\" carries a date"
-scripts/check-negative-claims-are-dated.sh
-
-# A knowledge entry is read when a hook prints it at the moment it applies, and
-# almost never otherwise, so every entry declares that moment as triggers. One
-# pass over one directory, so it costs nothing and belongs on the commit. See
+# A knowledge entry saying a tool is broken carries a date, and every entry
+# declares the moment a hook delivers it. See
 # docs/adr/0030-knowledge-is-delivered-by-trigger.md.
-echo "[pre-commit] checking every knowledge entry has a trigger a hook can match"
-scripts/check-knowledge-triggers.sh
+run_check_on_files negative-claims-are-dated '^docs/knowledge/.*\.md$' \
+  scripts/check-negative-claims-are-dated.sh
+run_check knowledge-triggers '^. docs/knowledge/' scripts/check-knowledge-triggers.sh
 
-# A document that links a file which is not there sends the reader looking for a
-# stale document rather than a stale link. The routing table in
-# `/code-standards` carried thirteen of them, one `../` short of the repository
-# root, which a rendered preview cannot show.
-#
-# The check treats an ignored path that is absent as a dead link, which is what
-# catches a generator that stopped producing one — so it can only run over a
-# tree where the generators have run. `ci.yml` regenerates them first and this
-# hook did not, so a checkout missing one output refused a commit that had
-# nothing to do with it, naming five links nobody had touched. `--missing-only`
-# is 15 ms when they are all there, which is every commit but the first after a
-# clone, a worktree, or a merge that deleted the last committed copies.
-# See docs/dantotsus/the-hook-checked-links-to-files-it-declined-to-build.md.
-echo "[pre-commit] regenerating any report the link check would read and not find"
-scripts/reports.sh all --missing-only
-
-echo "[pre-commit] checking every document link names a file that exists"
-pnpm exec tsx scripts/docs/check-doc-links.ts
-
-# A pure module whose only consumer is its own test scores 100% on the coverage
-# and mutation gates while running nowhere, and knip cannot see it because every
-# test file is a knip entry point. A git-index read plus a grep, so it costs
-# nothing and belongs on the commit. Rung-2 eradication of
+# A pure module whose only consumer is its own test scores 100% on coverage and
+# mutation while running nowhere. Rung-2 eradication of
 # docs/dantotsus/three-green-gates-on-code-that-ran-nowhere.md.
-echo "[pre-commit] checking each pure module has a caller"
-scripts/check-pure-modules-have-callers.sh
+run_check pure-modules-have-callers '^. (apps|infra)/.*\.tsx?$' \
+  scripts/check-pure-modules-have-callers.sh
 
-# A test file no project collects never runs, and a suite one file lighter looks
-# exactly like a suite that passed. Asks vitest itself, per workspace, which
-# files it would collect. About six seconds over six workspaces and no
-# globalSetup, so no database starts. Rung-2 eradication of
-# docs/dantotsus/the-test-that-no-project-collected.md.
-echo "[pre-commit] checking every test file is collected by a project"
-scripts/check-every-test-is-collected.sh
-
-# A non-module <script src> tag ships un-bundled and 404s in preview and
-# production. A grep over the app HTML, so it costs nothing and belongs on the
-# commit rather than the push. Rung-2 eradication of
+# A non-module <script src> tag ships un-bundled and 404s. Rung-2 eradication of
 # docs/dantotsus/vite-non-module-script-tags-arent-bundled.md.
-echo "[pre-commit] checking app HTML for non-module <script src> tags"
-scripts/check-non-module-scripts.sh
+run_check non-module-scripts '^. apps/[^/]+/site/.*\.html$' scripts/check-non-module-scripts.sh
 
-# A directory walk piped into `head` or `grep -q` is a race, and `pipefail`
-# turns the losing side into a failing script. It passed five local runs of the
-# tree it walks and failed on the first CI run of the same commit.
-echo "[pre-commit] checking no script races a walk against an early-stopping pipe"
-scripts/check-no-racy-pipelines.sh
-
-# Every PreToolUse hook answers the same question — invocation or mention? —
-# and three have answered it wrongly, each after the last was fixed, because
-# nothing carried the lesson across files and nothing ran them. Rung-2
-# eradication of docs/dantotsus/the-hook-that-refused-the-page-explaining-it.md.
-echo "[pre-commit] checking the hooks decide what they promise"
-scripts/check-hook-decisions.sh
+# A directory walk piped into `head` or `grep -q` is a race under pipefail.
+run_check_on_files no-racy-pipelines '(\.sh$|^\.husky/)' scripts/check-no-racy-pipelines.sh
 
 # The harness lives once, in plugins/borso-harness/, and reaches a session only
 # through the links in .claude/ and the hook entries in .claude/settings.json.
-echo "[pre-commit] checking the harness is linked into .claude/"
-scripts/check-harness-links.sh
+run_check harness-links '^. (plugins/borso-harness/|\.claude/)' scripts/check-harness-links.sh
 
-# Two lists that have to say the same thing. Both halves read correctly alone
-# and only the pair is wrong, which is why review never caught either of the two
-# that shipped in PR #49. Rung-2 eradication of
+# Two lists that have to say the same thing. Rung-2 eradication of
 # docs/dantotsus/two-copies-that-had-to-agree-and-nothing-made-them.md.
-echo "[pre-commit] checking the lists that have to agree"
-scripts/check-coupled-lists.sh
+run_check coupled-lists \
+  '^. (docs/knowledge/|eslint-rules/impurity\.js$|apps/[^/]+/vitest\.config\.ts$|apps/[^/]+/api/src/database/migrations/|apps/[^/]+/test/(setup-postgres|database-utils)\.ts$|apps/pragma/cdk/lib/stack\.ts$|docs/adr/0009-|scripts/check-coupled-lists\.sh$)' \
+  scripts/check-coupled-lists.sh
 
-# In a numbered sequence the number is the order, and two branches open at once
-# each take the next free one without conflicting. Migrations hit this twice and
-# ADR numbers once; one script covers every such folder so the next sequence does
-# not need a third. See docs/dantotsus/the-loop-shipped-the-same-gate-twice.md.
-echo "[pre-commit] checking each number in a sequence is claimed once"
-scripts/check-numbered-sequences.sh
-
-# And that no two gates name the same subject. The enforcement ledger asks
-# whether each mechanism exists and runs; it cannot ask whether two of them are
-# the same one, which is how this repository ran the migration-number check
-# twice for a day. Rung-2 eradication of
-# docs/dantotsus/the-loop-shipped-the-same-gate-twice.md.
-echo "[pre-commit] checking no two gates name the same subject"
-scripts/check-gate-names-are-distinct.sh
-
-# And that an ADR's heading states the number its filename does. A renumber
-# moves the file and forgets the heading, which then sends a reader to a record
-# about something else. Rung-2 eradication of
+# Each number in a sequence is claimed once, no two gates name one subject, and
+# an ADR's heading, filename and index row agree. See
+# docs/dantotsus/the-loop-shipped-the-same-gate-twice.md and
 # docs/dantotsus/an-adr-number-goes-to-whoever-writes-it-first.md.
-echo "[pre-commit] checking each ADR number resolves the same way everywhere"
-scripts/check-adr-numbers-resolve.sh
+run_check numbered-sequences '^. (apps/[^/]+/api/src/database/migrations/|docs/adr/)' \
+  scripts/check-numbered-sequences.sh
+run_check gate-names-are-distinct '^. scripts/(.*/)?check-' scripts/check-gate-names-are-distinct.sh
+run_check adr-numbers-resolve '^. docs/adr/' scripts/check-adr-numbers-resolve.sh
 
-# And that no instruction surface tells an agent to run a command this
-# repository does not have. Prose has no build step, and a skill is read by a
-# model that will try what it is told. Rung-2 eradication of
-# docs/dantotsus/the-skill-that-named-the-linter-the-repository-deleted.md.
-echo "[pre-commit] checking every tool an instruction names is installed"
-scripts/check-instructions-name-installed-tools.sh
-
-# And that a document a script cites is there. check-doc-links.ts reads
-# markdown, and a shell script is not markdown, so the line at the top of a
-# gate naming its dantotsu — the only thread back to the reasoning — was the
-# one nothing checked. Rung-2 eradication of
+# No instruction surface tells an agent to run a command this repository does
+# not have, and no path one names is missing. Rung-2 eradications of
+# docs/dantotsus/the-skill-that-named-the-linter-the-repository-deleted.md and
 # docs/dantotsus/the-link-checker-skipped-the-folder-it-was-trusted-for.md.
-echo "[pre-commit] checking every document a script cites and every path an instruction names"
-scripts/check-named-paths-exist.sh
+run_check_on_files instructions-name-installed-tools \
+  '^(\.claude/|plugins/|docs/standards/|docs/features/[^/]+/[^/]+/(plan|spec)/).*\.(md|sh)$' \
+  scripts/check-instructions-name-installed-tools.sh
+run_check named-paths-exist '^. (scripts/|\.husky/|\.github/|plugins/|\.claude/|CLAUDE\.md$)|^D ' \
+  scripts/check-named-paths-exist.sh --staged
 
 # A spec with no Test strategy leaves the split between the two validators to
-# whichever one reads it first, and three of them guessed differently in one
-# task. Rung-2 eradication of
+# whichever reads it first. Rung-2 eradication of
 # docs/dantotsus/a-spec-that-never-said-who-checks-what.md.
-echo "[pre-commit] checking each feature spec names who checks what"
-scripts/check-spec-test-strategy.sh
+run_check spec-test-strategy '^. docs/features/[^/]+/[^/]+/spec/spec\.md$' \
+  scripts/check-spec-test-strategy.sh
 
-# A workspace with gated files and no mutation config reports nothing, not zero,
-# and a coverage number then reads as reassurance it has not earned. Rung-2
-# eradication of docs/dantotsus/the-gate-that-was-never-pointed-at-the-code.md.
-echo "[pre-commit] checking every gated workspace is mutated"
-scripts/check-mutation-covers-gated-files.sh
+# A workspace with gated files and no mutation config reports nothing, not
+# zero. Rung-2 eradication of
+# docs/dantotsus/the-gate-that-was-never-pointed-at-the-code.md.
+run_check mutation-covers-gated-files \
+  '^. (apps|infra)/.*(\.(core|utils|adapter)\.tsx?|stryker\.config\.js)$' \
+  scripts/check-mutation-covers-gated-files.sh
+
+# Every CI job stops within the ten minutes a pull request's CI may take, so the
+# runner enforces the budget rather than a sentence.
+run_check ci-job-timeouts '^. \.github/workflows/ci\.yml$' scripts/check-ci-job-timeouts.sh
 
 # `deploy`, `destroy`, `install`, `update`, `sync`, `fetch` and `publish` are
-# pnpm built-ins. Without `run`, pnpm shadows the package's scripts entry and
-# silently does the wrong thing. Another instant grep of a standing invariant.
-# Rung-2 eradication of docs/dantotsus/pnpm-reserved-script-names.md.
-echo "[pre-commit] checking workflows for pnpm reserved-name shadowing"
-PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
-if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
-  echo "[pre-commit] ERROR: above lines invoke a pnpm built-in instead of a package script." >&2
-  echo "[pre-commit] Use 'pnpm --filter <pkg> run <name>' to force script lookup." >&2
+# pnpm built-ins; without `run`, pnpm shadows the package's script. Rung-2
+# eradication of docs/dantotsus/pnpm-reserved-script-names.md.
+check_pnpm_reserved_names() {
+  PNPM_RESERVED_REGEX='pnpm[[:space:]]+--filter[[:space:]]+("[^"]+"|[^[:space:]]+)[[:space:]]+(deploy|destroy|install|update|sync|fetch|publish)([[:space:]]|$)'
+  if grep -nrE "$PNPM_RESERVED_REGEX" .github/workflows/ >&2; then
+    echo "[pre-commit] ERROR: above lines invoke a pnpm built-in instead of a package script." >&2
+    echo "[pre-commit] Use 'pnpm --filter <pkg> run <name>' to force script lookup." >&2
+    return 1
+  fi
+}
+run_check pnpm-reserved-names '^. \.github/workflows/' check_pnpm_reserved_names
+
+for entry in $running; do
+  wait "${entry%%:*}" || true
+done
+
+failed=''
+over_budget=''
+for check in "$results"/*.check; do
+  [ -f "$check" ] || continue
+  slot="${check%.check}"
+  name=$(sed -n 1p "$check")
+  budget=$(sed -n 2p "$check")
+  cat "$slot.out"
+  read -r status wall_ms <"$slot.result"
+  cpu_ms=$(read_cpu_ms "$slot.times")
+  echo "[pre-commit] $name: ${cpu_ms} ms CPU, ${wall_ms} ms wall"
+  if [ "$status" -ne 0 ]; then
+    failed="${failed} $name"
+  fi
+  if [ "$cpu_ms" -gt "$budget" ]; then
+    over_budget="${over_budget}  $name used ${cpu_ms} ms of CPU (${wall_ms} ms wall) against a budget of ${budget} ms
+"
+  fi
+done
+
+total_ms=$(($(wall_clock_ms) - hook_started_ms))
+echo "[pre-commit] ${launched} check(s) in ${total_ms} ms; ${checks_skipped} skipped because the commit touches nothing they read"
+
+if [ -n "$failed" ]; then
+  echo "[pre-commit] ERROR: these checks refused the commit; each printed its reason above:${failed}" >&2
+fi
+if [ -n "$over_budget" ]; then
+  echo "[pre-commit] ERROR: over the runtime budget in docs/standards/14-tool-runtime-budgets.md:" >&2
+  printf '%s' "$over_budget" >&2
+  echo "[pre-commit] Narrow what the check reads to the staged files, or move it to .husky/pre-push or ci.yml. Never exempt it." >&2
+fi
+if [ -n "$failed" ] || [ -n "$over_budget" ]; then
   exit 1
 fi

@@ -28,7 +28,7 @@ function todo(id: string, dueDate?: string, isDone = false) {
 }
 
 describe('buildAgenda', () => {
-  it('groups the open todos and the dated commitments by day, overdue first and undated last', () => {
+  it('groups the open todos and the dated commitments by day, the days ahead first, then the overdue, undated last', () => {
     const agenda = buildAgenda(
       [
         todo('sans-date'),
@@ -42,6 +42,7 @@ describe('buildAgenda', () => {
         { path: 'engagements/demain', dueDate: TOMORROW },
         { path: 'engagements/sans-date' },
         { path: 'engagements/lundi', dueDate: '2026-10-12' },
+        { path: 'engagements/retard', dueDate: '2026-10-07' },
       ],
       TODAY,
       TOMORROW,
@@ -54,12 +55,6 @@ describe('buildAgenda', () => {
         entries: day.entries.map((entry) => entry.key),
       })),
     ).toEqual([
-      {
-        key: 'overdue',
-        bucket: 'overdue',
-        date: undefined,
-        entries: ['todo:retard-ancien', 'todo:retard'],
-      },
       { key: TODAY, bucket: 'today', date: undefined, entries: ['todo:aujourd-hui'] },
       {
         key: TOMORROW,
@@ -72,6 +67,12 @@ describe('buildAgenda', () => {
         bucket: 'later',
         date: '2026-10-12',
         entries: ['todo:lundi', 'commitment:engagements/lundi'],
+      },
+      {
+        key: 'overdue',
+        bucket: 'overdue',
+        date: undefined,
+        entries: ['todo:retard-ancien', 'todo:retard', 'commitment:engagements/retard'],
       },
       { key: 'undated', bucket: 'undated', date: undefined, entries: ['todo:sans-date'] },
     ]);

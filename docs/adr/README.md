@@ -56,7 +56,7 @@ No:
 | [0004](./0004-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | proposed | 2026-05-19 |
 | [0005](./0005-dynamic-workflows-for-orchestration.md) | Dynamic Workflows for the tech-lead orchestration pipeline | accepted | 2026-06-05 |
 | [0006](./0006-cascade-on-delete-via-json-blob-scrub.md) | Cascade-on-delete via JSON-blob scrub (DSQL no-FK substitute) | accepted | 2026-06-06 |
-| [0007](./0007-eslint-with-type-aware-rules-replaces-biome.md) | ESLint with type-aware rules replaces Biome | accepted | 2026-08-08 |
+| [0007](./0007-eslint-with-type-aware-rules-replaces-biome.md) | ESLint with type-aware rules replaces Biome | superseded by 0045 | 2026-08-08 |
 | [0008](./0008-purity-enforced-structurally.md) | Purity is enforced by file location, not by review | accepted | 2026-08-08 |
 | [0009](./0009-pragma-previews-clone-production.md) | pragma previews clone production, credentials included | accepted | 2026-08-09 |
 | [0010](./0010-pragma-domain-folder-for-cross-boundary-rules.md) | A `domain/` folder for the rules pragma's two sides share | proposed | 2026-08-13 |
@@ -86,6 +86,8 @@ No:
 | [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | proposed | 2026-10-23 |
 | [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | proposed | 2026-10-24 |
 | [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | proposed | 2026-10-25 |
+| [0045](./0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md) | oxlint and oxfmt replace ESLint and Prettier | proposed | 2026-10-27 |
+| [0046](./0046-typescript-7-replaces-typescript-5-9.md) | TypeScript 7 replaces TypeScript 5.9 | proposed | 2026-10-27 |
 | [0049](./0049-agents-read-production-through-an-invoked-reader-lambda.md) | Agents read production through a reader Lambda invoked by the AWS API, not port 5432 | proposed | 2026-10-28 |
 
 ### Data layer
@@ -95,7 +97,7 @@ No:
 - 0036 — every stage schema gets its own login role, mapped to that stage's API Lambda; API Lambdas connect with `dsql:DbConnect` and `admin` is left to the migration runner, so a preview can no longer reach production.
 - 0037 — a member's secret calendar address is plain text in a table of its own, never returned by the API and blocklisted from preview clones.
 - 0039 — the talos memory moves from a private git repository to `memory_*` tables, reached by agents through `/api/agent/*` with one token per environment; the read-only SQL route relies on a keyword guard and a `READ ONLY` transaction rather than a second database role.
-- 0043 — one catalogue song per Deezer track is held by a unique index on `song.deezer_track_id`; DSQL builds it asynchronously and the migration runner does not wait, so the operator counts prod duplicates before merging and checks the build after deploying.
+- 0043 — one catalogue song per Deezer track is held by a unique index on `song.deezer_track_id`; DSQL builds it asynchronously, and since the PR #193 kaizen the migration runner waits on the build job and fails the deploy when it fails, so the operator still counts prod duplicates before merging but no longer checks `sys.jobs` by hand.
 - 0044 — a hosted session reads the `prod` schema of pragma, last-loop-lepin and banana-rush (never talos) through `scripts/db-read.sh`, signed in as `ai_reader_prod`, a role that holds `SELECT` only and is mapped to `AI-Dev-ReadOnly`, which gets `dsql:DbConnect` and never `DbConnectAdmin`; the script's keyword guard and `READ ONLY` transaction are conveniences, because the session controls the script.
 - 0049 — the sandbox blocks 5432 and Aurora DSQL has no data API, so `db-read.sh` stops being a Postgres client and calls `aws lambda invoke` on a reader function per app; SigV4 replaces the shared secret the HTTPS shapes would have needed, nothing is published on Internet, and the blocklist moves inside the function where a caller cannot skip it. Supersedes 0044.
 
@@ -113,7 +115,7 @@ No:
 - 0022 — the instrument table gained `icon` and `position`, and the member-instrument link gained `is_primary`, so the setlist's lineup column reads its slots and their order from the band's own data rather than from a name-matching table that a typo would break.
 - 0038 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
 - 0028 — `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
-- 0040 — pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage in SSM and push subscriptions kept out of preview clones.
+- 0040 — pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage, generated on first use and kept in the database since its 2026-10-24 revision, and push subscriptions kept out of preview clones.
 
 ### CDK / infra
 
@@ -134,7 +136,9 @@ No:
 
 - 0001 — `/tech-lead-orchestrator` replaces the linear skill auto-chain.
 - 0005 — Dynamic Workflows as the orchestration substrate (supersedes 0001's runtime, not its intent).
-- 0007 — ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name.
+- 0007 — ESLint with type-aware rules replaces Biome; the cost is a 23× slower cold lint, the benefit is every rule the standards name. Superseded by 0045.
+- 0045 — oxlint replaces ESLint and oxfmt replaces Prettier; every rule keeps running, natively, through tsgolint, or as the upstream ESLint rule loaded as a JavaScript plugin, and the lint and format checks return to the commit, except the type-aware rules, which run on push and in CI.
+- 0046 — TypeScript 7.0.2 is the only TypeScript: every type check and the `infra/cdk` build run it; the architecture model parses with `oxc-parser` and the rule suites run on oxlint's `RuleTester`.
 - 0008 — purity enforced by file location through three custom rules, with "condition" narrowed to mean a decision.
 - 0011 — ELK lays out the architecture graph at generation time; edges through unrelated nodes go from 72/125 to 0/125 and the page still ships no layout engine.
 - 0014 — generated files are not committed; `--check` validates rather than compares, and `pages.yml` publishes each output so it keeps an address.

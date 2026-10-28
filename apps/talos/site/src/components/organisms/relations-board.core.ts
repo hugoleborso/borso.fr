@@ -2,7 +2,9 @@ import type { ChipTone } from '../atoms/chip.variants';
 import { CLOSENESS_LEVELS, type ClosenessLevel } from '../atoms/closeness-dot.variants';
 
 export type BirthdayDayKey =
-  'relations.birthday.today' | 'relations.birthday.tomorrow' | 'relations.birthday.in-days';
+  | 'relations.birthday.today'
+  | 'relations.birthday.tomorrow'
+  | 'relations.birthday.in-days';
 
 export interface Closeness {
   readonly level: ClosenessLevel;

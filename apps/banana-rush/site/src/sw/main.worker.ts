@@ -1,3 +1,4 @@
+/// <reference lib="webworker" />
 /** @DependsOnExternal browser-service-worker */
 
 import {

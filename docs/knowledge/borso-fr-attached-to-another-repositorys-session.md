@@ -12,7 +12,7 @@ A Claude Code session started on another repository can add this one with `add_r
 
 ## What still runs
 
-The husky hooks live in the clone itself: pre-commit (ESLint, Prettier, blueprints, architecture, vocabulary, doc links…), commit-msg (commitlint) and pre-push (knip, the changed apps' tests, Stryker) all ran on PR #149's commits. CI runs as on any branch.
+The husky hooks live in the clone itself: pre-commit (the linter, the formatter, blueprints, vocabulary, doc links…), commit-msg (commitlint) and pre-push (knip, the changed apps' tests, Stryker) all ran on PR #149's commits. CI runs as on any branch.
 
 ## What does not run
 

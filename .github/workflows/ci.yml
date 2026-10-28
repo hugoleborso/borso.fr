@@ -31,6 +31,7 @@ env:
 jobs:
   build:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       # Whole history: the dantotsu check resolves every fix commit an entry
       # names against origin/main, and a shallow clone holds one commit.
@@ -52,46 +53,17 @@ jobs:
       # reaches it. Rung-1 eradication of
       # docs/dantotsus/the-tooling-that-gates-everything-was-checked-by-nothing.md.
       - run: pnpm run typecheck
-      # Repo-wide ESLint at root scope. The flat config in eslint.config.js
-      # covers every workspace plus the files that belong to none, e.g.
-      # scripts/ and eslint-rules/, so one run replaces the per-workspace
-      # pass the biome setup needed. Defence in depth on top of the
-      # .husky/pre-commit gate, catching commits that bypassed the local
-      # hook. Rung-1 eradication, paired with the pre-commit hook, of
-      # docs/dantotsus/biome-lint-was-not-gated-anywhere.md.
-      # ESLint here is type-aware, which means it builds a TypeScript program
-      # for every workspace before it can run a single rule. A cold run takes
-      # about 80 s on this repository against about 3 s for the biome run it
-      # replaced, so the cache is what keeps the job affordable.
-      # --cache-strategy content is not optional on a CI runner. ESLint's
-      # default strategy is metadata, meaning mtime and size, and a fresh
-      # checkout gives every file a new mtime, so a restored cache matches
-      # nothing. Measured on this repository: the metadata strategy left the
-      # lint step at 68 s on a restored cache.
-      - uses: actions/cache@v6
-        with:
-          path: |
-            .eslintcache-*
-            node_modules/.cache/prettier
-          key: lint-cache-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.js', '.prettierrc.json') }}-${{ github.sha }}
-          restore-keys: |
-            lint-cache-${{ hashFiles('pnpm-lock.yaml', 'eslint.config.js', '.prettierrc.json') }}-
-            lint-cache-
-      # --max-warnings 0 is what makes the warning-severity rules a gate.
-      # react-hooks/exhaustive-deps, react-hooks/incompatible-library and
-      # react-refresh/only-export-components all ship at `warn`, and eslint
-      # exits 0 on a warning, so before this flag they printed into the log and
-      # stopped nothing. Mirrors the .husky/pre-commit invocation.
-      # One process per workspace, because one `eslint .` holding five
-      # applications' TypeScript programs passed Node's 4 GB heap and main's
-      # build was red from PR #110 on; see scripts/lint-repository.sh.
+      # oxlint over the repository with every rule, the type-aware ones
+      # included: one process for every workspace and the files that belong to
+      # none, e.g. scripts/ and eslint-rules/. Defence in depth on top of the
+      # commit and push hooks, catching commits that bypassed them. Warnings
+      # fail it through `denyWarnings` in .oxlintrc.json. Rung-1 eradication,
+      # paired with the hooks, of
+      # docs/dantotsus/biome-lint-was-not-gated-anywhere.md. No cache: the run
+      # measured 28 s over the repository on 2026-10-25.
       - run: scripts/lint-repository.sh
       # Formatter drift is part of the gate. A commit made with hooks
-      # skipped, or from an editor that is not on prettier, fails here.
-      # `pnpm run` rather than `pnpm exec`: the agent harness's command rewriter
-      # substitutes its own build of the formatter when a command names it
-      # through `pnpm exec`, so that shape must not exist here for anyone to
-      # copy. Guarded by scripts/check-coupled-lists.sh.
+      # skipped, or from an editor that is not on oxfmt, fails here.
       # The generated files, first, because a dozen checks below read them and a
       # fresh checkout has none: `check-doc-links.ts` walks every markdown file
       # in the tree and opens each link's target, and both halves of that break
@@ -118,7 +90,7 @@ jobs:
           python3 plugins/borso-harness/scripts/knowledge-triggers.py compile
 
       - run: pnpm run format:check
-      # The custom ESLint rules under eslint-rules/ each ship a RuleTester
+      # The custom lint rules under eslint-rules/ each ship a RuleTester
       # suite, and the generators under scripts/ carry the same 100% per-file
       # coverage threshold an application's pure modules do. `test:eslint-rules`
       # ran the suite without `--coverage`, so the threshold in
@@ -208,6 +180,18 @@ jobs:
       # turns the losing side into a failing script — which is how this one was
       # found, green locally and red here on the same commit.
       - run: ./scripts/check-no-racy-pipelines.sh
+      # The whole-tree runs of the checks the commit hook reads only a slice of,
+      # or no longer runs at all, so that no check lost coverage when the hook
+      # was held to its budget. See docs/standards/14-tool-runtime-budgets.md,
+      # which says where each check's whole-tree run lives.
+      - run: ./scripts/check-hook-decisions.sh
+      - run: ./scripts/check-ci-job-timeouts.sh
+      - run: ./scripts/check-every-test-is-collected.sh
+      - run: ./scripts/check-spec-test-strategy.sh
+      - run: ./scripts/check-no-comments-in-styles-and-markup.sh
+      - run: ./scripts/check-tailwind-arbitrary-variants.sh
+      - run: ./scripts/check-package-scripts-are-commands.sh
+      - run: pnpm exec tsx scripts/pr/check-pr-body.ts plugins/borso-harness/skills/open-pr/template.md
       # `deploy`, `destroy`, `install`, `update`, `sync`, `fetch` and `publish`
       # are pnpm built-ins: without `run`, pnpm shadows the package's scripts
       # entry and silently does the wrong thing. Mirrors the pre-commit hook,
@@ -282,12 +266,30 @@ jobs:
           CDK_DEFAULT_ACCOUNT: '000000000000'
       - run: pnpm exec knip
 
+  # The commit hook on a fixture commit that touches one file of every common
+  # kind, inside the 4 seconds docs/standards/14-tool-runtime-budgets.md
+  # gives a commit. The hook holds each check to its CPU budget itself; the
+  # wall-clock total is only measurable on a machine nothing else is using.
+  pre-commit-budget:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: ./scripts/check-pre-commit-budget.sh
+
   # Which apps this change actually touches. An `infra/cdk` change means all of
   # them, because the constructs are the contract. No `base:` on paths-filter —
   # it defaults to github.event.before on push, and naming HEAD~1 fails with
   # git exit 128. See docs/dantotsus/paths-filter-base-head1-on-push.md.
   detect:
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     outputs:
       apps: ${{ steps.compute.outputs.apps }}
     steps:
@@ -326,6 +328,7 @@ jobs:
     needs: detect
     if: needs.detect.outputs.apps != '[]'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     strategy:
       matrix:
         app: ${{ fromJson(needs.detect.outputs.apps) }}
@@ -389,7 +392,7 @@ jobs:
   # seconds, `slow` the coverage, mutation, type-check and database suites.
   gate-canaries:
     runs-on: ubuntu-latest
-    timeout-minutes: 90
+    timeout-minutes: 10
     strategy:
       matrix:
         tier: [fast, slow]
@@ -437,6 +440,7 @@ jobs:
   commitlint:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v7
         with:

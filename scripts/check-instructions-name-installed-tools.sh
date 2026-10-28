@@ -42,10 +42,24 @@ fi
 # here means its own launcher; PROVENANCE.md beside it says so.
 INSTRUCTION_SURFACES=('.claude/*' 'plugins/*' 'docs/standards/*' ':!.claude/skills/impeccable/*')
 
+# With paths as arguments, only the surface files among them are read;
+# pre-commit passes the staged files. With none, every surface file. A renamed
+# workspace or an uninstalled binary breaks instructions nobody staged, so the
+# whole-tree run in CI is what catches those two.
+SUBJECTS=("$@")
+
+list_surface_files() {
+  if [ "${#SUBJECTS[@]}" -eq 0 ]; then
+    git ls-files "$@"
+    return
+  fi
+  git ls-files "$@" | { grep -Fx -f <(printf '%s\n' "${SUBJECTS[@]}") || true; }
+}
+
 invocations="$(
-  git ls-files "${INSTRUCTION_SURFACES[@]}" |
-    grep -E '\.(md|sh)$' |
-    xargs grep -onE '(pnpm exec|npx|node_modules/\.bin/) +[a-z@][a-zA-Z0-9@/._-]*' 2>/dev/null |
+  list_surface_files "${INSTRUCTION_SURFACES[@]}" |
+    { grep -E '\.(md|sh)$' || true; } |
+    { xargs --no-run-if-empty grep -HonE '(pnpm exec|npx|node_modules/\.bin/) +[a-z@][a-zA-Z0-9@/._-]*' 2>/dev/null || true; } |
     sed -E 's|(pnpm exec\|npx\|node_modules/\.bin/) *| |' |
     sort -u
 )"
@@ -75,13 +89,13 @@ FILTER_SURFACES=('.claude/*' 'plugins/*' 'docs/standards/*' 'docs/features/*/*/p
 
 workspace_names="$(
   git ls-files 'apps/*/package.json' 'infra/*/package.json' |
-    xargs -I{} node -e "process.stdout.write(require('./{}').name + '\n')"
+    node -e "for (const manifest of require('node:fs').readFileSync(0, 'utf8').split('\n').filter(Boolean)) process.stdout.write(require('./' + manifest).name + '\n')"
 )"
 
 filters="$(
-  git ls-files "${FILTER_SURFACES[@]}" |
-    grep -E '\.(md|sh)$' |
-    xargs grep -onE 'pnpm --filter +"?[^ "`]+' 2>/dev/null |
+  list_surface_files "${FILTER_SURFACES[@]}" |
+    { grep -E '\.(md|sh)$' || true; } |
+    { xargs --no-run-if-empty grep -HonE 'pnpm --filter +"?[^ "`]+' 2>/dev/null || true; } |
     sed -E 's/pnpm --filter +"?/ /' |
     sort -u
 )"
@@ -92,7 +106,7 @@ while IFS= read -r invocation; do
   location="${invocation% *}"
   location="${location%:}"
   case "$filter" in *'<'* | *'$'* | *'*'* | *'...'* | ./*) continue ;; esac
-  if ! printf '%s\n' "$workspace_names" | grep -qxF -e "$filter" -e "@borso-app/$filter" -e "@borso/$filter"; then
+  if ! grep -qxF -e "$filter" -e "@borso-app/$filter" -e "@borso/$filter" <<<"$workspace_names"; then
     failed=1
     echo "[check-instructions-name-installed-tools] ${location}: filters on \`${filter}\`, which names no workspace" >&2
   fi

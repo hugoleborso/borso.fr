@@ -238,28 +238,34 @@ meanings each. None of that is visible from any one file.
 
 ## Enforced by
 
-- `eslint:borso/no-abbreviated-identifier` rejects a dictionary of known
+- `oxlint:borso/no-abbreviated-identifier` rejects a dictionary of known
   abbreviations and any identifier under three characters outside a loop header.
-- `eslint:borso/function-names-are-verb-phrases` rejects the `handle`,
+- `oxlint:borso/function-names-are-verb-phrases` rejects the `handle`,
   `process`, `manage`, and `do` prefixes.
-- `eslint:borso/verb-promises-match-return-type` reads the declared return type
+- `oxlint:borso/verb-promises-match-return-type` reads the declared return type
   and holds three of the verbs above to it: a `list…` returns an array, a
   `find…` does not, and an `is…`, `has…` or `can…` returns a boolean or a type
-  predicate. It reads the annotation only, so it needs no type information and
-  reaches `scripts/`, the skills and `eslint-rules/` as well as `apps/` and
-  `infra/`. A function with no annotation is out of scope, and so are the five
-  verbs promising a shape no annotation can tell apart.
-- `eslint:borso/no-french-identifiers` flags a dictionary of French terms that
+  predicate. It also reads the body of every `find…` and reports a `throw` that
+  leaves the function, because a `find…` answers `null` when the thing is
+  absent and a `get…` is the verb that throws: an annotation of `Promise<Take>`
+  says nothing about absence, and `findWrittenTakeWithin` threw behind one
+  through two fix rounds ([the dantotsu](../dantotsus/the-find-that-threw-behind-a-clean-annotation.md)).
+  A `throw` caught by its own `try` is not reported. It needs no type
+  information and reaches `scripts/`, the skills and `eslint-rules/` as well as
+  `apps/` and `infra/`. A function with no annotation is out of the return-type
+  half, and so are the five verbs promising a shape no annotation can tell
+  apart.
+- `oxlint:borso/no-french-identifiers` flags a dictionary of French terms that
   have appeared in this repository before.
-- `eslint:borso/no-step-named-value` rejects a `const` or `let` named `parsed`,
+- `oxlint:borso/no-step-named-value` rejects a `const` or `let` named `parsed`,
   `result`, `results`, `res`, `data`, `entries`, `payload`, `output`, `obj`,
   `arr`, `val`, `tmp`, `temp`, `item` or `items`. A `for (const entry of …)`
   head and a destructuring pattern are out of scope, matching the two
   exceptions above.
-- `eslint:unicorn/consistent-boolean-name` requires a boolean to read as a
+- `oxlint:unicorn-js/consistent-boolean-name` requires a boolean to read as a
   claim.
-- `eslint:unicorn/catch-error-name` requires `catch (error)`.
-- `eslint:no-magic-numbers` requires a literal to be named, across `apps/` and
+- `oxlint:unicorn/catch-error-name` requires `catch (error)`.
+- `oxlint:no-magic-numbers` requires a literal to be named, across `apps/` and
   `infra/`, with `enforceConst` so the name is a `const`. Exempt: `0`, `1` and
   `-1` as identity values; the HTTP status codes `200`, `201`, `204`, `301`,
   `302`, `400`, `401`, `403`, `404`, `409`, `422`, `429`, `500`, `502` and
@@ -288,7 +294,7 @@ meanings each. None of that is visible from any one file.
 - `reviewer` checks that an invariant promising behaviour carries a `Held by:`
   line, because telling a promise from a definition is reading prose.
 - `reviewer` checks the half of the verb table the rule above cannot reach: that
-  a `find…` actually returns `null` rather than throwing, that a `get…` throws,
+  a `find…` returns `null` rather than a sentinel, that a `get…` throws,
   and that a `build…`, `project…` or `select…` returns what its verb says. Those
   are claims about behaviour, not about the shape of the annotation.
 - `reviewer` checks that a boolean name is not negated, because `isNotReady`

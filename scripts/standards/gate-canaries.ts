@@ -1,9 +1,9 @@
 import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-import { ESLint } from 'eslint';
+import { z } from 'zod';
 import { COMMAND_CANARIES, LINT_CANARIES, MECHANISMS_THAT_GATE_NOTHING } from './canary-registry';
 import { recordRuleTesterCanaries } from './canary-rule-cases';
-import { CanaryWorkspace } from './canary-workspace';
+import { CanaryWorkspace, runCommand } from './canary-workspace';
 import {
   collectMechanisms,
   judgeCommandRun,
@@ -25,9 +25,19 @@ import {
   listInvocationSites,
   listTrackedFiles,
 } from './ledger-input';
+import { readConfiguredRuleName } from './lint-configuration.core';
 
 const REPOSITORY_ROOT = process.cwd();
-const FATAL_SEVERITY = 2;
+const OXLINT = 'node_modules/.bin/oxlint';
+const JSON_REPORT_START = '{';
+
+const LINT_REPORT = z.object({
+  diagnostics: z.array(z.object({ code: z.string().optional(), message: z.string() })),
+});
+
+const RULE_LIST = z.array(
+  z.object({ scope: z.string(), value: z.string(), type_aware: z.boolean() }),
+);
 
 interface Options {
   readonly inventoryOnly: boolean;
@@ -48,8 +58,8 @@ function readOptions(argv: readonly string[]): Options {
   };
 }
 
-async function listMechanisms(): Promise<readonly Mechanism[]> {
-  const input = await buildLedgerInput();
+function listMechanisms(): readonly Mechanism[] {
+  const input = buildLedgerInput();
   const citations = input.standards.flatMap((standard) => standard.citations);
   const trackedFiles = listTrackedFiles();
   const checkScripts = trackedFiles
@@ -75,22 +85,38 @@ function isSelected(
   return canary.mechanism.includes(options.only) || canary.label.includes(options.only);
 }
 
-async function runLintCanaries(
+function readTypeAwareRules(): ReadonlySet<string> {
+  const listed = runCommand(REPOSITORY_ROOT, [OXLINT, '--rules', '--format', 'json']);
+  const parsed: unknown = JSON.parse(listed.output);
+  return new Set(
+    RULE_LIST.parse(parsed)
+      .filter((rule) => rule.type_aware)
+      .map((rule) => `${rule.scope}/${rule.value}`),
+  );
+}
+
+function readLintReport(output: string): z.infer<typeof LINT_REPORT> {
+  const parsed: unknown = JSON.parse(output.slice(output.indexOf(JSON_REPORT_START)));
+  return LINT_REPORT.parse(parsed);
+}
+
+function runLintCanaries(
   workspace: CanaryWorkspace,
   canaries: readonly LintCanary[],
-): Promise<readonly CanaryOutcome[]> {
-  const eslint = new ESLint({ cwd: workspace.root });
+): readonly CanaryOutcome[] {
+  const typeAwareRules = readTypeAwareRules();
   const outcomes: CanaryOutcome[] = [];
   for (const canary of canaries) {
     workspace.plant({ [canary.path]: canary.code });
-    const [result] = await eslint.lintText(canary.code, {
-      filePath: join(workspace.root, canary.path),
-    });
-    const messages = result?.messages ?? [];
-    const fatal = messages
-      .filter((message) => message.fatal === true && message.severity === FATAL_SEVERITY)
-      .map((message) => message.message);
-    const reported = messages.map((message) => message.ruleId);
+    const typeAwareFlag = typeAwareRules.has(canary.mechanism) ? ['--type-aware'] : [];
+    const run = workspace.run([OXLINT, '--format', 'json', ...typeAwareFlag, canary.path]);
+    const diagnostics = readLintReport(run.output).diagnostics;
+    const reported = diagnostics.map((diagnostic) =>
+      diagnostic.code === undefined ? null : readConfiguredRuleName(diagnostic.code),
+    );
+    const fatal = diagnostics
+      .filter((diagnostic) => diagnostic.code === undefined)
+      .map((diagnostic) => diagnostic.message);
     outcomes.push({
       mechanism: canary.mechanism,
       label: `${canary.label} at ${canary.path}`,
@@ -162,10 +188,7 @@ function readLintCanaries(): readonly LintCanary[] | null {
   return [...recorded.canaries, ...LINT_CANARIES];
 }
 
-async function didEveryCanaryGetRefused(
-  lintCanaries: readonly LintCanary[],
-  options: Options,
-): Promise<boolean> {
+function didEveryCanaryGetRefused(lintCanaries: readonly LintCanary[], options: Options): boolean {
   const selectedLint =
     options.tier === 'slow' ? [] : lintCanaries.filter((canary) => isSelected(options, canary));
   const selectedCommands = COMMAND_CANARIES.filter(
@@ -176,7 +199,7 @@ async function didEveryCanaryGetRefused(
   console.log(`Planting canaries in ${workspace.root}`);
   const outcomes: CanaryOutcome[] = [];
   try {
-    outcomes.push(...(await runLintCanaries(workspace, selectedLint)));
+    outcomes.push(...runLintCanaries(workspace, selectedLint));
     for (const canary of selectedCommands) outcomes.push(runCommandCanary(workspace, canary));
   } finally {
     if (!options.keepWorkspace) workspace.dispose();
@@ -194,20 +217,20 @@ async function didEveryCanaryGetRefused(
   return failures.length === 0;
 }
 
-async function main(): Promise<void> {
+function main(): void {
   const options = readOptions(process.argv.slice(2));
   const lintCanaries = readLintCanaries();
   if (lintCanaries === null) {
     process.exitCode = 1;
     return;
   }
-  const isInventoryComplete = isEveryGateGuarded(await listMechanisms(), [
+  const isInventoryComplete = isEveryGateGuarded(listMechanisms(), [
     ...lintCanaries,
     ...COMMAND_CANARIES,
   ]);
   if (!isInventoryComplete) process.exitCode = 1;
   if (options.inventoryOnly) return;
-  if (!(await didEveryCanaryGetRefused(lintCanaries, options))) process.exitCode = 1;
+  if (!didEveryCanaryGetRefused(lintCanaries, options)) process.exitCode = 1;
 }
 
-await main();
+main();

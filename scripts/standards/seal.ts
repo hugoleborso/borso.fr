@@ -4,6 +4,8 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import {
   isReviewablePath,
+  mergeReviewScope,
+  selectPlannedPaths,
   readSealLedger,
   serialiseSealEntry,
   verifySeals,
@@ -141,11 +143,26 @@ function verify(): void {
   process.exitCode = 1;
 }
 
+function printReviewScope(): void {
+  const base = readOption('base', 'origin/main');
+  const planPath = readOption('plan', '');
+  const plannedPaths =
+    planPath.length > 0 && existsSync(planPath)
+      ? selectPlannedPaths(readFileSync(planPath, 'utf8')).filter((path) => existsSync(path))
+      : [];
+  const scope = mergeReviewScope(listChangedFiles(base), plannedPaths).filter((path) =>
+    existsSync(path),
+  );
+  for (const path of scope) console.log(path);
+}
+
 const command = process.argv[2];
 if (command === 'record') recordSeal();
 else if (command === 'verify') verify();
+else if (command === 'scope') printReviewScope();
 else {
   console.error('Usage: seal.ts record <path…> [--reviewer <name>] [--note <text>]');
   console.error('       seal.ts verify [--base <ref>]');
+  console.error('       seal.ts scope [--base <ref>] [--plan <plan.md>]');
   process.exitCode = 1;
 }
