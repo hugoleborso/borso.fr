@@ -62,12 +62,15 @@ over doing nothing because it moves the guard to a place the caller cannot skip.
   run since this decision landed. It needs the `AgentReaderFunctionName` output
   to exist, and refuses on its absence rather than falling back — which is
   deliberate, because the fallback would be the unguarded path.
-- `~` The `dsql:DbConnect` allow stays on `AI-Dev-ReadOnly`, so a laptop holding
-  that access key can still reach the cluster as `ai_reader_prod` with `psql` by
-  hand. Nothing in this repository drives that path any more: the assessment
-  moved into the function, so the break-glass connection carries the database's
-  own `SELECT` grant and nothing else. That grant, not a script, is what bounds
-  it.
+- `+` `AI-Dev-ReadOnly` ends up with **no DSQL right at all**, which was not the
+  plan. The intent was to keep `dsql:DbConnect` as break-glass for a laptop
+  holding the access key; IAM's 2048-character cap on a user's inline policies
+  — an aggregate cap, not a per-policy one — left no room for both. Dropping the
+  break-glass was the better half to cut: it was the one path to production that
+  carried no blocklist, and a laptop that needs the database has `borso-admin`.
+  `dsql:*` went back into the blanket deny and the two narrowing statements
+  ADR-0044 added are retired. The constraint is recorded in
+  [`docs/knowledge/iam-inline-user-policies-share-one-2048-character-budget.md`](../knowledge/iam-inline-user-policies-share-one-2048-character-budget.md).
 
 ## Alternatives considered
 
