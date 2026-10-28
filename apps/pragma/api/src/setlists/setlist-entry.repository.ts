@@ -76,15 +76,16 @@ function encodeEntryUpdate(updates: SetlistEntryPersistedUpdate): EntryUpdateEnc
   };
 }
 
-type SetlistEntryOwner = Pick<SetlistEntryRawRow, 'setlistId'>;
+type SetlistEntryOwner = Pick<SetlistEntryRawRow, 'setlistId' | 'songId'>;
 
 export async function listEntryOwners(setlistIds: readonly string[]): Promise<SetlistEntryOwner[]> {
   if (setlistIds.length === 0) return [];
   const database = getDatabase();
   return await database
-    .select({ setlistId: setlistEntryTable.setlistId })
+    .select({ setlistId: setlistEntryTable.setlistId, songId: setlistEntryTable.songId })
     .from(setlistEntryTable)
-    .where(inArray(setlistEntryTable.setlistId, [...setlistIds]));
+    .where(inArray(setlistEntryTable.setlistId, [...setlistIds]))
+    .orderBy(asc(setlistEntryTable.setlistId), asc(setlistEntryTable.position));
 }
 
 export async function listEntries(setlistId: string): Promise<SetlistEntryRow[]> {

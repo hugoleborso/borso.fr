@@ -174,6 +174,7 @@ describe('setlist list cache transforms', () => {
     name: 'Set 1',
     status: 'locked',
     songCount: 2,
+    songIds: ['song-1', 'song-2'],
     sessionIds: ['concert-1'],
   };
   const second: MinimalSetlistSummary = {
@@ -181,6 +182,7 @@ describe('setlist list cache transforms', () => {
     name: 'Set 2',
     status: 'locked',
     songCount: 0,
+    songIds: [],
     sessionIds: [],
   };
   const cache: SetlistsCache = { setlists: [first] };
@@ -234,6 +236,7 @@ describe('selectSetlistsNotOnSession', () => {
     name: '',
     status: 'locked',
     songCount: 0,
+    songIds: [],
     sessionIds: ['concert-1'],
   };
   const loose: MinimalSetlistSummary = {
@@ -241,6 +244,7 @@ describe('selectSetlistsNotOnSession', () => {
     name: '',
     status: 'locked',
     songCount: 0,
+    songIds: [],
     sessionIds: [],
   };
 

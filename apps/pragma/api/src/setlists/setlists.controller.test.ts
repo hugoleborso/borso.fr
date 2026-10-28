@@ -33,6 +33,7 @@ const setlistSummaryListEnvelope = z.object({
       id: z.string().uuid(),
       name: z.string(),
       songCount: z.number().int(),
+      songIds: z.array(z.string().uuid()),
       sessionIds: z.array(z.string().uuid()),
     }),
   ),
@@ -477,7 +478,7 @@ describe('setlists controller (back-e2e)', () => {
     expect(response.status).toBe(404);
   });
 
-  it('lists every setlist with its song count and the sessions playing it', async () => {
+  it('lists every setlist with its song count, its songs and the sessions playing it', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const { setlistId, songIds } = await seed(app, cookieHeader);
     await jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
@@ -491,6 +492,7 @@ describe('setlists controller (back-e2e)', () => {
     );
     expect(listed.setlists).toHaveLength(1);
     expect(listed.setlists[0]?.songCount).toBe(1);
+    expect(listed.setlists[0]?.songIds).toEqual([songIds[0]]);
     expect(listed.setlists[0]?.sessionIds).toHaveLength(1);
   });
 

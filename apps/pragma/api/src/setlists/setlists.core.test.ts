@@ -26,25 +26,31 @@ describe('selectNextLinkPosition', () => {
 });
 
 describe('tallySongsPerSetlist', () => {
-  it('counts the rows of each setlist', () => {
+  it('counts the rows of each setlist and keeps their songs in row order', () => {
     expect(
       tallySongsPerSetlist(
         ['a', 'b'],
-        [{ setlistId: 'a' }, { setlistId: 'b' }, { setlistId: 'a' }],
+        [
+          { setlistId: 'a', songId: 'song-1' },
+          { setlistId: 'b', songId: 'song-2' },
+          { setlistId: 'a', songId: 'song-3' },
+        ],
       ),
     ).toEqual([
-      { setlistId: 'a', songCount: 2 },
-      { setlistId: 'b', songCount: 1 },
+      { setlistId: 'a', songCount: 2, songIds: ['song-1', 'song-3'] },
+      { setlistId: 'b', songCount: 1, songIds: ['song-2'] },
     ]);
   });
 
   it('answers zero for a setlist holding no song', () => {
-    expect(tallySongsPerSetlist(['empty'], [])).toEqual([{ setlistId: 'empty', songCount: 0 }]);
+    expect(tallySongsPerSetlist(['empty'], [])).toEqual([
+      { setlistId: 'empty', songCount: 0, songIds: [] },
+    ]);
   });
 
   it('ignores a row belonging to a setlist not asked for', () => {
-    expect(tallySongsPerSetlist(['a'], [{ setlistId: 'other' }])).toEqual([
-      { setlistId: 'a', songCount: 0 },
+    expect(tallySongsPerSetlist(['a'], [{ setlistId: 'other', songId: 'song-1' }])).toEqual([
+      { setlistId: 'a', songCount: 0, songIds: [] },
     ]);
   });
 
@@ -65,8 +71,8 @@ describe('buildSetlistSummaries', () => {
           { id: 'b', name: 'Set 2', kind: 'audience_choice' as const, status: 'locked' },
         ],
         [
-          { setlistId: 'a', songCount: 3 },
-          { setlistId: 'b', songCount: 0 },
+          { setlistId: 'a', songCount: 3, songIds: ['s1', 's2', 's1'] },
+          { setlistId: 'b', songCount: 0, songIds: [] },
         ],
         [
           { setlistId: 'a', sessionId: 'concert-1' },
@@ -80,6 +86,7 @@ describe('buildSetlistSummaries', () => {
         kind: 'manual',
         status: 'voting',
         songCount: 3,
+        songIds: ['s1', 's2', 's1'],
         sessionIds: ['concert-1', 'practice-1'],
       },
       {
@@ -88,6 +95,7 @@ describe('buildSetlistSummaries', () => {
         kind: 'audience_choice',
         status: 'locked',
         songCount: 0,
+        songIds: [],
         sessionIds: [],
       },
     ]);
@@ -97,7 +105,15 @@ describe('buildSetlistSummaries', () => {
     expect(
       buildSetlistSummaries([{ id: 'a', name: '', kind: 'manual', status: null }], [], []),
     ).toEqual([
-      { id: 'a', name: '', kind: 'manual', status: 'locked', songCount: 0, sessionIds: [] },
+      {
+        id: 'a',
+        name: '',
+        kind: 'manual',
+        status: 'locked',
+        songCount: 0,
+        songIds: [],
+        sessionIds: [],
+      },
     ]);
   });
 
@@ -109,7 +125,15 @@ describe('buildSetlistSummaries', () => {
         [{ setlistId: 'z', sessionId: 's' }],
       ),
     ).toEqual([
-      { id: 'a', name: '', kind: 'manual', status: 'locked', songCount: 0, sessionIds: [] },
+      {
+        id: 'a',
+        name: '',
+        kind: 'manual',
+        status: 'locked',
+        songCount: 0,
+        songIds: [],
+        sessionIds: [],
+      },
     ]);
   });
 });

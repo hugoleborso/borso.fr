@@ -102,6 +102,7 @@ export interface MinimalSetlistSummary {
   readonly name: string;
   readonly status: 'voting' | 'locked';
   readonly songCount: number;
+  readonly songIds: readonly string[];
   readonly sessionIds: readonly string[];
 }
 
