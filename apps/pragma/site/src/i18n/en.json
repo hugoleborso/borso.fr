@@ -385,6 +385,7 @@
     }
   },
   "sessions": {
+    "addTask": "Add a task",
     "capacity": "Capacity",
     "create": {
       "concertTitle": "New concert",
@@ -406,22 +407,29 @@
     "kindPractice": "Practice",
     "myFriendsCount": "My friends count",
     "newSession": "New session",
+    "noLineup": "No lineup yet",
     "noPreparedConcert": "—",
     "noSetlists": "No setlist on this session.",
+    "noTakeYet": "No take recorded at this session yet.",
+    "noTaskYet": "No task for this session yet.",
     "preparedConcert": "Prepared concert",
     "preparesConcert": "Preparing the concert of",
     "saveConcertDetails": "Save",
-    "selectMember": "Member",
-    "sessionNotFound": "This session is no longer in the schedule.",
-    "setlist": "Setlist",
-    "setlists": "Setlists",
-    "title": "Sessions",
-    "venue": "Venue",
     "section": {
       "label": "Sessions or setlists",
       "sessions": "Sessions",
       "setlists": "Setlists"
-    }
+    },
+    "selectMember": "Member",
+    "sessionActions": "Session actions",
+    "sessionNotFound": "This session is no longer in the schedule.",
+    "setlist": "Setlist",
+    "setlistActions": "Actions for {{name}}",
+    "setlists": "Setlists",
+    "takesTitle": "Takes recorded at this session",
+    "title": "Sessions",
+    "venue": "Venue",
+    "whoDoesWhat": "Who does what"
   },
   "setlist": {
     "addSongNoMatch": "No song matches.",
@@ -559,9 +567,11 @@
     "dueDate": "Due date",
     "editTitle": "Edit task",
     "emptyColumn": "Nothing on this list.",
-    "linkedComposition": "Composition",
+    "linkedSong": "Song",
+    "linkedSession": "Session",
     "newTitle": "New task",
-    "noComposition": "No composition",
+    "noSong": "No song",
+    "noSession": "No session",
     "notes": "Notes",
     "status": "Status",
     "statusDoing": "in progress",
@@ -673,10 +683,6 @@
     "empty": "No take of this song yet.",
     "noSession": "no session",
     "practice": "Practice",
-    "practiceList": {
-      "title": "Record takes",
-      "empty": "Attach a setlist to record its songs."
-    },
     "concert": "Concert",
     "unknownSession": "session removed",
     "formerMember": "former member",
@@ -771,17 +777,18 @@
   },
   "home": {
     "greeting": "Hi {{name}}",
-    "title": "Next up",
     "nextSession": "Next session",
-    "noSetlist": "No setlist on this session yet.",
-    "noSessionAhead": "No session ahead. Plan the next practice.",
-    "openSetlist": "Open the setlist",
-    "openSession": "Open the session",
-    "yourPart": "Your part",
-    "yourTasks": "Your tasks",
     "noOpenTask": "No open task. Nice.",
+    "noSessionAhead": "No session ahead. Plan the next practice.",
+    "noSetlist": "No setlist on this session yet.",
+    "openSession": "Open the session",
+    "openSetlist": "Open the setlist",
+    "startPractice": "Start the practice",
+    "title": "Next up",
     "totalHoursMinutes": "{{hours}} h {{minutes}}",
-    "totalMinutes": "{{minutes}} min"
+    "totalMinutes": "{{minutes}} min",
+    "yourPart": "Your part",
+    "yourTasks": "Your tasks"
   },
   "band": {
     "title": "Band",
@@ -790,5 +797,22 @@
     "everyone": "Everyone",
     "noTaskOfMine": "Nothing on your list.",
     "linksLabel": "The band"
+  },
+  "practice": {
+    "actions": "Practice actions",
+    "chords": "Chords",
+    "end": "End the practice",
+    "next": "Next: {{song}}",
+    "nextSong": "Next song",
+    "notOffered": "Practice mode opens on the practice’s own day, once its setlist holds a song.",
+    "note": "Note",
+    "noteTitle": "Note · {{title}}",
+    "nowPlaying": "Now",
+    "position": "Song {{number}} of {{count}}",
+    "recordTake": "Record a take",
+    "songListTitle": "Songs of this practice",
+    "start": "Start the practice",
+    "takesTitle": "Takes of this song at this practice",
+    "towardsNext": "Into the next song: {{note}}"
   }
 }

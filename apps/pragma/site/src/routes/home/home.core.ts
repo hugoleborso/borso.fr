@@ -11,6 +11,7 @@ import {
 } from '../../components/organisms/setlist-filter.core';
 import { sumKnownDurations } from '../../components/molecules/song-duration.utils';
 import type { TaskShape } from '../band/band-tasks.core';
+import { buildPracticePath } from '../sessions/session-page.core';
 
 export interface HomeSong extends SetlistEditorSong {
   readonly durationSeconds?: number | null;
@@ -29,6 +30,7 @@ export interface HomeViewInput {
   readonly instruments: readonly PartInstrument[];
   readonly tasks: readonly TaskShape[];
   readonly memberId: string | null;
+  readonly nextSessionId: string | null;
 }
 
 export interface MemberPartRow {
@@ -68,9 +70,13 @@ function selectMemberPart(
 function selectOpenTasksOf(
   tasks: readonly TaskShape[],
   memberId: string | null,
+  nextSessionId: string | null,
 ): readonly TaskShape[] {
   if (memberId === null) return [];
-  return tasks.filter((task) => task.assigneeId === memberId && isTaskOpen(task));
+  const open = tasks.filter((task) => task.assigneeId === memberId && isTaskOpen(task));
+  const isForNextSession = (task: TaskShape): boolean =>
+    nextSessionId !== null && task.sessionId === nextSessionId;
+  return [...open.filter(isForNextSession), ...open.filter((task) => !isForNextSession(task))];
 }
 
 // @FollowsBlueprint core-view-projection-joining-two-lists
@@ -83,13 +89,14 @@ export function buildHomeView(input: HomeViewInput): HomeView {
   return {
     totalSeconds,
     memberPart: selectMemberPart(input, songsById),
-    memberTasks: selectOpenTasksOf(input.tasks, input.memberId),
+    memberTasks: selectOpenTasksOf(input.tasks, input.memberId, input.nextSessionId),
   };
 }
 
 export interface HomePrimaryLink {
   readonly to: string;
-  readonly labelKey: 'home.openSetlist' | 'home.openSession';
+  readonly labelKey: 'home.openSetlist' | 'home.openSession' | 'home.startPractice';
+  readonly icon: 'arrowR' | 'play';
 }
 
 export interface HomePrimaryAction {
@@ -101,19 +108,34 @@ export interface HomePrimaryActionInput {
   readonly isLoading: boolean;
   readonly nextSessionId: string | null;
   readonly setlistId: string | null;
+  readonly isPracticeModeOffered: boolean;
 }
 
 // @FollowsBlueprint core-view-intent
 export function selectHomePrimaryAction(input: HomePrimaryActionInput): HomePrimaryAction {
+  if (input.nextSessionId !== null && input.isPracticeModeOffered) {
+    return {
+      link: {
+        to: buildPracticePath(input.nextSessionId),
+        labelKey: 'home.startPractice',
+        icon: 'play',
+      },
+      isNewSessionOffered: false,
+    };
+  }
   if (input.setlistId !== null) {
     return {
-      link: { to: `/setlists/${input.setlistId}`, labelKey: 'home.openSetlist' },
+      link: { to: `/setlists/${input.setlistId}`, labelKey: 'home.openSetlist', icon: 'arrowR' },
       isNewSessionOffered: false,
     };
   }
   if (input.nextSessionId !== null) {
     return {
-      link: { to: `/sessions/${input.nextSessionId}`, labelKey: 'home.openSession' },
+      link: {
+        to: `/sessions/${input.nextSessionId}`,
+        labelKey: 'home.openSession',
+        icon: 'arrowR',
+      },
       isNewSessionOffered: false,
     };
   }

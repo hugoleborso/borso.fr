@@ -385,6 +385,7 @@
     }
   },
   "sessions": {
+    "addTask": "Ajouter une tâche",
     "capacity": "Jauge",
     "create": {
       "concertTitle": "Nouveau concert",
@@ -406,22 +407,29 @@
     "kindPractice": "Répétition",
     "myFriendsCount": "Mes amis",
     "newSession": "Nouvelle session",
+    "noLineup": "Pas encore de lineup",
     "noPreparedConcert": "—",
     "noSetlists": "Aucune setlist sur cette session.",
+    "noTakeYet": "Aucune prise enregistrée à cette session.",
+    "noTaskYet": "Aucune tâche pour cette session.",
     "preparedConcert": "Concert préparé",
     "preparesConcert": "Prépare le concert du",
     "saveConcertDetails": "Enregistrer",
-    "selectMember": "Membre",
-    "sessionNotFound": "Cette session n'est plus au planning.",
-    "setlist": "Setlist",
-    "setlists": "Setlists",
-    "title": "Sessions",
-    "venue": "Lieu",
     "section": {
       "label": "Sessions ou setlists",
       "sessions": "Sessions",
       "setlists": "Setlists"
-    }
+    },
+    "selectMember": "Membre",
+    "sessionActions": "Actions de la session",
+    "sessionNotFound": "Cette session n'est plus au planning.",
+    "setlist": "Setlist",
+    "setlistActions": "Actions pour {{name}}",
+    "setlists": "Setlists",
+    "takesTitle": "Prises enregistrées à cette session",
+    "title": "Sessions",
+    "venue": "Lieu",
+    "whoDoesWhat": "Qui fait quoi"
   },
   "setlist": {
     "addSongNoMatch": "Aucun morceau ne correspond.",
@@ -559,9 +567,11 @@
     "dueDate": "Échéance",
     "editTitle": "Modifier la tâche",
     "emptyColumn": "Rien dans cette liste.",
-    "linkedComposition": "Compo",
+    "linkedSong": "Morceau",
+    "linkedSession": "Session",
     "newTitle": "Nouvelle tâche",
-    "noComposition": "Aucune compo",
+    "noSong": "Aucun morceau",
+    "noSession": "Aucune session",
     "notes": "Notes",
     "status": "Statut",
     "statusDoing": "en cours",
@@ -673,10 +683,6 @@
     "empty": "Aucune prise de ce morceau pour l’instant.",
     "noSession": "sans séance",
     "practice": "Répétition",
-    "practiceList": {
-      "title": "Enregistrer des prises",
-      "empty": "Rattachez une setlist pour enregistrer ses morceaux."
-    },
     "concert": "Concert",
     "unknownSession": "séance supprimée",
     "formerMember": "ancien membre",
@@ -771,17 +777,18 @@
   },
   "home": {
     "greeting": "Salut {{name}}",
-    "title": "À venir",
     "nextSession": "Prochaine session",
-    "noSetlist": "Pas encore de setlist sur cette session.",
-    "noSessionAhead": "Aucune session à venir. Planifie la prochaine répét.",
-    "openSetlist": "Ouvrir la setlist",
-    "openSession": "Ouvrir la session",
-    "yourPart": "Ta partie",
-    "yourTasks": "Tes tâches",
     "noOpenTask": "Aucune tâche en cours.",
+    "noSessionAhead": "Aucune session à venir. Planifie la prochaine répét.",
+    "noSetlist": "Pas encore de setlist sur cette session.",
+    "openSession": "Ouvrir la session",
+    "openSetlist": "Ouvrir la setlist",
+    "startPractice": "Lancer la répétition",
+    "title": "À venir",
     "totalHoursMinutes": "{{hours}} h {{minutes}}",
-    "totalMinutes": "{{minutes}} min"
+    "totalMinutes": "{{minutes}} min",
+    "yourPart": "Ta partie",
+    "yourTasks": "Tes tâches"
   },
   "band": {
     "title": "Groupe",
@@ -790,5 +797,22 @@
     "everyone": "Tout le monde",
     "noTaskOfMine": "Rien sur ta liste.",
     "linksLabel": "Le groupe"
+  },
+  "practice": {
+    "actions": "Actions de la répétition",
+    "chords": "Accords",
+    "end": "Terminer la répétition",
+    "next": "Ensuite : {{song}}",
+    "nextSong": "Morceau suivant",
+    "notOffered": "Le mode répétition s’ouvre le jour de la répétition, quand sa setlist contient un morceau.",
+    "note": "Note",
+    "noteTitle": "Note · {{title}}",
+    "nowPlaying": "En cours",
+    "position": "Morceau {{number}} sur {{count}}",
+    "recordTake": "Enregistrer une prise",
+    "songListTitle": "Morceaux de la répétition",
+    "start": "Lancer la répétition",
+    "takesTitle": "Prises de ce morceau à cette répétition",
+    "towardsNext": "Vers le morceau suivant : {{note}}"
   }
 }

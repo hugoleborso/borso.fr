@@ -7,8 +7,11 @@ import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.stor
 import { ApiError } from '../../lib/api.client';
 import { formatDueDate, isDueDatePast } from '../../lib/formatters.utils';
 import { useCreateTask, useDeleteTask, useUpdateTask } from '../../lib/queries/tasks.queries';
+import { useSessionsList } from '../../lib/queries/sessions.queries';
+import { useSessionLabel } from '../../lib/session-label.hook';
 import {
-  BLANK_TASK_FORM,
+  blankTaskFormFor,
+  newTaskDraftKey,
   findSongTitle,
   formValuesFromTask,
   payloadFromFormValues,
@@ -16,8 +19,6 @@ import {
   type TaskFormShape,
   type TaskShape,
 } from '../../routes/band/band-tasks.core';
-
-export const NEW_TASK_DRAFT_KEY = 'new';
 
 export interface OpenTaskSheet {
   readonly draftKey: string;
@@ -29,7 +30,7 @@ export interface TaskSheetController {
   readonly openSheet: OpenTaskSheet | null;
   readonly pendingDeletionId: string | null;
   readonly errorMessage: string | null;
-  readonly openNewTask: () => void;
+  readonly openNewTask: (sessionId?: string | null) => void;
   readonly openTask: (task: TaskShape) => void;
   readonly toggleDone: (task: TaskShape) => void;
   readonly requestDeletion: (task: TaskShape) => void;
@@ -83,8 +84,12 @@ export function useTaskSheet(): TaskSheetController {
         : lastError === null
           ? null
           : 'unknown-error',
-    openNewTask: () => {
-      setOpenSheet({ draftKey: NEW_TASK_DRAFT_KEY, values: BLANK_TASK_FORM, isEditing: false });
+    openNewTask: (sessionId = null) => {
+      setOpenSheet({
+        draftKey: newTaskDraftKey(sessionId),
+        values: blankTaskFormFor(sessionId),
+        isEditing: false,
+      });
     },
     openTask: (task) => {
       setOpenSheet({ draftKey: task.id, values: formValuesFromTask(task), isEditing: true });
@@ -120,4 +125,20 @@ export function useTaskRowLabels(
     isOverdue: (task) => isDueDatePast(task.dueDate, nowEpochMs),
     songTitleOf: (task) => findSongTitle(songs, task.songId),
   };
+}
+
+export interface TaskSessionOption {
+  readonly id: string;
+  readonly label: string;
+}
+
+const NO_SESSIONS: readonly never[] = [];
+
+export function useTaskSessionOptions(): readonly TaskSessionOption[] {
+  const sessionsQuery = useSessionsList();
+  const labelOf = useSessionLabel();
+  return (sessionsQuery.data?.sessions ?? NO_SESSIONS).map((session) => ({
+    id: session.id,
+    label: labelOf(session),
+  }));
 }

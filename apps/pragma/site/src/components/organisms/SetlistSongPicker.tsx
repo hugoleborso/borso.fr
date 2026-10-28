@@ -47,6 +47,7 @@ export interface SetlistSongPickerProps {
   readonly songs: readonly PickerSong[];
   readonly setlistSongIds: readonly string[];
   readonly onClose: () => void;
+  readonly onAdded?: () => void;
 }
 
 const NEW_SONG_STATUS: SongStatus = 'idea';
@@ -78,6 +79,7 @@ function SetlistSongPickerContent({
   songs,
   setlistSongIds,
   onClose,
+  onAdded = onClose,
 }: SetlistSongPickerProps): JSX.Element {
   const { t } = useTranslation();
   const draft = useAddSongsDraft(setlistId);
@@ -168,7 +170,7 @@ function SetlistSongPickerContent({
       {
         onSuccess: () => {
           draft.discard();
-          onClose();
+          onAdded();
         },
         onError: () => {
           reportSetlistBatchAddFailed(setlistId);

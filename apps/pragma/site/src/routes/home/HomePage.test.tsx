@@ -21,6 +21,12 @@ const NEXT_PRACTICE = {
   date: new Date(Date.now() + 3 * DAY_MS).toISOString(),
   venue: 'Studio Bleu',
 };
+const PRACTICE_TODAY = {
+  id: 'session-next',
+  kind: 'practice',
+  date: new Date().toISOString(),
+  venue: null,
+};
 const LATER_CONCERT = {
   id: 'session-later',
   kind: 'concert',
@@ -131,6 +137,15 @@ describe('the home page', () => {
     renderHomePage();
     const link = await screen.findByRole('link', { name: 'Open the setlist' });
     expect(link.getAttribute('href')).toBe(`/setlists/${SETLIST.id}`);
+    expect(document.querySelectorAll('[data-variant="primary"]')).toHaveLength(1);
+  });
+
+  it('offers Start the practice on the practice day, as its one primary action', async () => {
+    const answer = answerHomeApi([PRACTICE_TODAY]);
+    stub = stubFetch((request) => Promise.resolve(answer(request)));
+    renderHomePage();
+    const link = await screen.findByRole('link', { name: 'Start the practice' });
+    expect(link.getAttribute('href')).toBe(`/sessions/${PRACTICE_TODAY.id}/practice`);
     expect(document.querySelectorAll('[data-variant="primary"]')).toHaveLength(1);
   });
 

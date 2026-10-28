@@ -22,6 +22,7 @@ export interface TaskFormValues {
   readonly status: TaskStatus;
   readonly assigneeId: string | null;
   readonly songId: string | null;
+  readonly sessionId: string | null;
   readonly dueDate: string;
 }
 
@@ -34,14 +35,15 @@ export interface TaskFormProps {
     readonly firstName: string;
     readonly color: string;
   }[];
-  readonly compositions: readonly { readonly id: string; readonly title: string }[];
+  readonly songs: readonly { readonly id: string; readonly title: string }[];
+  readonly sessions: readonly { readonly id: string; readonly label: string }[];
   readonly onSubmit: (values: TaskFormValues) => Promise<void>;
   readonly onClose: () => void;
 }
 
 const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const SELECT_CLASS = inputVariants({ size: 'md' });
-const NO_COMPOSITION_VALUE = '';
+const NO_LINK_VALUE = '';
 const TASK_STATUS_ICON = {
   todo: 'tasks',
   doing: 'play',
@@ -51,8 +53,8 @@ const NOTES_ROWS = 3;
 
 const useTaskDraft = createSheetDraftStore<TaskFormValues>();
 
-function compositionIdFromValue(value: string): string | null {
-  return value === NO_COMPOSITION_VALUE ? null : value;
+function linkedIdFromValue(value: string): string | null {
+  return value === NO_LINK_VALUE ? null : value;
 }
 
 // @FollowsBlueprint organism-form
@@ -158,20 +160,41 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
         </form.Field>
 
         <label className={LABEL_CLASS} htmlFor="task-song">
-          {t('tasks.linkedComposition')}
+          {t('tasks.linkedSong')}
         </label>
         <form.Field name="songId">
           {(field) => (
             <select
               id="task-song"
-              value={field.state.value ?? NO_COMPOSITION_VALUE}
-              onChange={(event) => field.handleChange(compositionIdFromValue(event.target.value))}
+              value={field.state.value ?? NO_LINK_VALUE}
+              onChange={(event) => field.handleChange(linkedIdFromValue(event.target.value))}
               className={SELECT_CLASS}
             >
-              <option value={NO_COMPOSITION_VALUE}>{t('tasks.noComposition')}</option>
-              {props.compositions.map((composition) => (
-                <option key={composition.id} value={composition.id}>
-                  {composition.title}
+              <option value={NO_LINK_VALUE}>{t('tasks.noSong')}</option>
+              {props.songs.map((song) => (
+                <option key={song.id} value={song.id}>
+                  {song.title}
+                </option>
+              ))}
+            </select>
+          )}
+        </form.Field>
+
+        <label className={LABEL_CLASS} htmlFor="task-session">
+          {t('tasks.linkedSession')}
+        </label>
+        <form.Field name="sessionId">
+          {(field) => (
+            <select
+              id="task-session"
+              value={field.state.value ?? NO_LINK_VALUE}
+              onChange={(event) => field.handleChange(linkedIdFromValue(event.target.value))}
+              className={SELECT_CLASS}
+            >
+              <option value={NO_LINK_VALUE}>{t('tasks.noSession')}</option>
+              {props.sessions.map((session) => (
+                <option key={session.id} value={session.id}>
+                  {session.label}
                 </option>
               ))}
             </select>

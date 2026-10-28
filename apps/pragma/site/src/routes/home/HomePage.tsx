@@ -1,7 +1,6 @@
 /** @Feature home */
 
 import { selectNextSession } from '@domain/session-schedule.core';
-import { selectCompositions } from '@domain/song-origin.core';
 import type { JSX } from 'react';
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -33,6 +32,7 @@ import { useSetlistEntries } from '../../lib/queries/setlist-entries.queries';
 import { useSetlistsBySession } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { useTasksList } from '../../lib/queries/tasks.queries';
+import { isPracticeModeOffered } from '../sessions/practice-mode.core';
 import { buildHomeView, selectHomePrimaryAction } from './home.core';
 
 const NO_ROWS: readonly never[] = [];
@@ -64,8 +64,11 @@ export function HomePage(): JSX.Element {
   const entriesQuery = useSetlistEntries(setlist?.id ?? '', setlist !== null);
   const memberId = signedInMember.data?.memberId ?? null;
   const songs = useMemo(() => songsQuery.data?.songs ?? NO_ROWS, [songsQuery.data]);
-  const compositions = useMemo(() => selectCompositions(songs), [songs]);
-  const rowLabels = useTaskRowLabels(compositions);
+  const rowLabels = useTaskRowLabels(songs);
+  const sessionSongCount = (setlistsQuery.data?.setlists ?? NO_ROWS).reduce(
+    (total, summary) => total + summary.songCount,
+    0,
+  );
 
   const view = useMemo(
     () =>
@@ -76,8 +79,17 @@ export function HomePage(): JSX.Element {
         instruments: instrumentsQuery.data?.instruments ?? NO_ROWS,
         tasks: tasksQuery.data?.tasks ?? NO_ROWS,
         memberId,
+        nextSessionId: nextSession?.id ?? null,
       }),
-    [setlist, entriesQuery.data, songs, instrumentsQuery.data, tasksQuery.data, memberId],
+    [
+      setlist,
+      entriesQuery.data,
+      songs,
+      instrumentsQuery.data,
+      tasksQuery.data,
+      memberId,
+      nextSession,
+    ],
   );
 
   const totalLabel = (label: TotalDurationLabel): string =>
@@ -87,6 +99,14 @@ export function HomePage(): JSX.Element {
     isLoading: sessionsQuery.isLoading,
     nextSessionId: nextSession?.id ?? null,
     setlistId: setlist?.id ?? null,
+    isPracticeModeOffered:
+      nextSession !== null &&
+      isPracticeModeOffered({
+        kind: nextSession.kind,
+        date: nextSession.date,
+        songCount: sessionSongCount,
+        now: new Date(nowEpochMs),
+      }),
   });
   const greetingName = signedInMember.data?.firstName ?? '';
 
@@ -149,7 +169,7 @@ export function HomePage(): JSX.Element {
       <TaskSheetHost
         controller={taskSheet}
         members={membersQuery.data?.members ?? NO_ROWS}
-        compositions={compositions}
+        songs={songs}
       />
       {isCreatingSession ? (
         <CreateSessionDialog
@@ -165,7 +185,7 @@ export function HomePage(): JSX.Element {
           </Button>
         ) : null}
         {primaryAction.link === null ? null : (
-          <ButtonLink icon="arrowR" variant="primary" to={primaryAction.link.to}>
+          <ButtonLink icon={primaryAction.link.icon} variant="primary" to={primaryAction.link.to}>
             {t(primaryAction.link.labelKey)}
           </ButtonLink>
         )}

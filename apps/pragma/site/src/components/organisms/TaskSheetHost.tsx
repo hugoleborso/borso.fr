@@ -4,21 +4,18 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { TaskForm, type TaskFormProps } from './TaskForm';
-import type { TaskSheetController } from './task-sheet.hook';
+import { type TaskSheetController, useTaskSessionOptions } from './task-sheet.hook';
 
 export interface TaskSheetHostProps {
   readonly controller: TaskSheetController;
   readonly members: TaskFormProps['members'];
-  readonly compositions: TaskFormProps['compositions'];
+  readonly songs: TaskFormProps['songs'];
 }
 
-// @FollowsBlueprint organism-presentational
-export function TaskSheetHost({
-  controller,
-  members,
-  compositions,
-}: TaskSheetHostProps): JSX.Element {
+// @FollowsBlueprint organism-query-owning
+export function TaskSheetHost({ controller, members, songs }: TaskSheetHostProps): JSX.Element {
   const { t } = useTranslation();
+  const sessions = useTaskSessionOptions();
   const { openSheet, pendingDeletionId } = controller;
   return (
     <>
@@ -29,7 +26,8 @@ export function TaskSheetHost({
           values={openSheet.values}
           isEditing={openSheet.isEditing}
           members={members}
-          compositions={compositions}
+          songs={songs}
+          sessions={sessions}
           onSubmit={controller.save}
           onClose={controller.close}
         />

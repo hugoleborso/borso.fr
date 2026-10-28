@@ -1,6 +1,5 @@
 /** @Feature band */
 
-import { selectCompositions } from '@domain/song-origin.core';
 import type { JSX } from 'react';
 import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -55,10 +54,7 @@ export function BandPage(): JSX.Element {
     () => membersQuery.data?.members ?? NO_ROWS,
     [membersQuery.data],
   );
-  const compositions = useMemo(
-    () => selectCompositions(songsQuery.data?.songs ?? NO_ROWS),
-    [songsQuery.data],
-  );
+  const songs = useMemo(() => songsQuery.data?.songs ?? NO_ROWS, [songsQuery.data]);
   const memberTasks = useMemo(
     () => selectTasksOfMember(tasks, signedInMember.data?.memberId ?? null),
     [tasks, signedInMember.data],
@@ -67,7 +63,7 @@ export function BandPage(): JSX.Element {
     () => groupTasksByMember(tasks, members, t('tasks.unassigned')),
     [tasks, members, t],
   );
-  const rowLabels = useTaskRowLabels(compositions);
+  const rowLabels = useTaskRowLabels(songs);
   const isOwnTasksShown = isOwnTasksView(view);
   const isMyListEmpty = isTaskListEmpty(memberTasks.length, tasksQuery.isLoading);
 
@@ -147,9 +143,9 @@ export function BandPage(): JSX.Element {
         </ul>
       </nav>
 
-      <TaskSheetHost controller={taskSheet} members={members} compositions={compositions} />
+      <TaskSheetHost controller={taskSheet} members={members} songs={songs} />
       <BottomActions>
-        <Button icon="plus" variant="primary" onClick={taskSheet.openNewTask}>
+        <Button icon="plus" variant="primary" onClick={() => taskSheet.openNewTask()}>
           {t('tasks.newTitle')}
         </Button>
       </BottomActions>

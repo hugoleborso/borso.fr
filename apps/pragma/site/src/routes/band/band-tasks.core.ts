@@ -9,6 +9,7 @@ export interface TaskShape {
   readonly status: TaskStatus;
   readonly assigneeId: string | null;
   readonly songId: string | null;
+  readonly sessionId: string | null;
   readonly dueDate: string | null;
 }
 
@@ -75,6 +76,21 @@ export function selectTasksOfSong(
   return tasks.filter((task) => task.songId === songId);
 }
 
+export function selectTasksOfSession(
+  tasks: readonly TaskShape[],
+  sessionId: string,
+): readonly TaskShape[] {
+  return tasks.filter((task) => task.sessionId === sessionId);
+}
+
+export function findAssignee(
+  members: readonly MemberShape[],
+  assigneeId: string | null,
+): { readonly name: string; readonly color: string } | null {
+  const member = members.find((candidate) => candidate.id === assigneeId);
+  return member === undefined ? null : { name: member.firstName, color: member.color };
+}
+
 export function findSongTitle(
   songs: readonly { readonly id: string; readonly title: string }[],
   songId: string | null,
@@ -98,6 +114,7 @@ export interface TaskFormShape {
   readonly status: TaskStatus;
   readonly assigneeId: string | null;
   readonly songId: string | null;
+  readonly sessionId: string | null;
   readonly dueDate: string;
 }
 
@@ -107,8 +124,19 @@ export const BLANK_TASK_FORM: TaskFormShape = {
   status: DEFAULT_TASK_STATUS,
   assigneeId: null,
   songId: null,
+  sessionId: null,
   dueDate: '',
 };
+
+const NEW_TASK_DRAFT_KEY = 'new';
+
+export function newTaskDraftKey(sessionId: string | null): string {
+  return sessionId === null ? NEW_TASK_DRAFT_KEY : `${NEW_TASK_DRAFT_KEY}:${sessionId}`;
+}
+
+export function blankTaskFormFor(sessionId: string | null): TaskFormShape {
+  return { ...BLANK_TASK_FORM, sessionId };
+}
 
 const NOON_UTC = 'T12:00:00.000Z';
 const DATE_ONLY_LENGTH = 'YYYY-MM-DD'.length;
@@ -128,6 +156,7 @@ export function formValuesFromTask(task: TaskShape): TaskFormShape {
     status: task.status,
     assigneeId: task.assigneeId,
     songId: task.songId,
+    sessionId: task.sessionId,
     dueDate: toDateInputValue(task.dueDate),
   };
 }
@@ -138,6 +167,7 @@ export interface TaskWritePayload {
   readonly status: TaskStatus;
   readonly assigneeId: string | null;
   readonly songId: string | null;
+  readonly sessionId: string | null;
   readonly dueDate: string | null;
 }
 
@@ -151,6 +181,7 @@ export function payloadFromFormValues(values: TaskFormShape): TaskWritePayload |
     status: values.status,
     assigneeId: values.assigneeId,
     songId: values.songId,
+    sessionId: values.sessionId,
     dueDate: toIsoDueDate(values.dueDate),
   };
 }

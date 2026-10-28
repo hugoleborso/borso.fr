@@ -28,6 +28,7 @@ function task(overrides: Partial<TaskShape>): TaskShape {
     status: 'todo',
     assigneeId: MEMBER,
     songId: null,
+    sessionId: null,
     dueDate: null,
     ...overrides,
   };
@@ -58,6 +59,7 @@ const INPUT: HomeViewInput = {
   ],
   tasks: [],
   memberId: MEMBER,
+  nextSessionId: 'next-session',
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -91,6 +93,22 @@ describe('buildHomeView', () => {
     ]);
   });
 
+  it('puts the tasks linked to the next session first, the rest in the order given', () => {
+    const tasks = [
+      task({ id: 'urgent' }),
+      task({ id: 'for-next', sessionId: 'next-session' }),
+      task({ id: 'for-later', sessionId: 'later-session' }),
+    ];
+    expect(buildHomeView({ ...INPUT, tasks }).memberTasks.map((row) => row.id)).toEqual([
+      'for-next',
+      'urgent',
+      'for-later',
+    ]);
+    expect(
+      buildHomeView({ ...INPUT, tasks, nextSessionId: null }).memberTasks.map((row) => row.id),
+    ).toEqual(['urgent', 'for-next', 'for-later']);
+  });
+
   it('shows no part and no task to an account with no member row', () => {
     const view = buildHomeView({
       ...INPUT,
@@ -102,35 +120,71 @@ describe('buildHomeView', () => {
   });
 });
 
+const NO_PRACTICE = { isPracticeModeOffered: false } as const;
+
 // @FollowsBlueprint test-pure-unit
 describe('selectHomePrimaryAction', () => {
+  it('starts the practice on its day', () => {
+    expect(
+      selectHomePrimaryAction({
+        isLoading: false,
+        nextSessionId: 's1',
+        setlistId: 'l1',
+        isPracticeModeOffered: true,
+      }),
+    ).toEqual({
+      link: { to: '/sessions/s1/practice', labelKey: 'home.startPractice', icon: 'play' },
+      isNewSessionOffered: false,
+    });
+  });
+
   it('opens the setlist of the next session', () => {
     expect(
-      selectHomePrimaryAction({ isLoading: false, nextSessionId: 's1', setlistId: 'l1' }),
+      selectHomePrimaryAction({
+        ...NO_PRACTICE,
+        isLoading: false,
+        nextSessionId: 's1',
+        setlistId: 'l1',
+      }),
     ).toEqual({
-      link: { to: '/setlists/l1', labelKey: 'home.openSetlist' },
+      link: { to: '/setlists/l1', labelKey: 'home.openSetlist', icon: 'arrowR' },
       isNewSessionOffered: false,
     });
   });
 
   it('opens the session when it has no setlist yet', () => {
     expect(
-      selectHomePrimaryAction({ isLoading: false, nextSessionId: 's1', setlistId: null }),
+      selectHomePrimaryAction({
+        ...NO_PRACTICE,
+        isLoading: false,
+        nextSessionId: 's1',
+        setlistId: null,
+      }),
     ).toEqual({
-      link: { to: '/sessions/s1', labelKey: 'home.openSession' },
+      link: { to: '/sessions/s1', labelKey: 'home.openSession', icon: 'arrowR' },
       isNewSessionOffered: false,
     });
   });
 
   it('offers a new session when none is ahead', () => {
     expect(
-      selectHomePrimaryAction({ isLoading: false, nextSessionId: null, setlistId: null }),
+      selectHomePrimaryAction({
+        ...NO_PRACTICE,
+        isLoading: false,
+        nextSessionId: null,
+        setlistId: null,
+      }),
     ).toEqual({ link: null, isNewSessionOffered: true });
   });
 
   it('offers nothing while the sessions load', () => {
     expect(
-      selectHomePrimaryAction({ isLoading: true, nextSessionId: null, setlistId: null }),
+      selectHomePrimaryAction({
+        ...NO_PRACTICE,
+        isLoading: true,
+        nextSessionId: null,
+        setlistId: null,
+      }),
     ).toEqual({ link: null, isNewSessionOffered: false });
   });
 });

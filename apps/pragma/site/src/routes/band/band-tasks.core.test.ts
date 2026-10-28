@@ -1,6 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
   BLANK_TASK_FORM,
+  blankTaskFormFor,
+  newTaskDraftKey,
+  findAssignee,
   findSongTitle,
   formValuesFromTask,
   payloadFromFormValues,
@@ -9,6 +12,7 @@ import {
   toIsoDueDate,
   groupTasksByMember,
   type MemberShape,
+  selectTasksOfSession,
   selectTasksOfSong,
   type TaskShape,
   UNASSIGNED_COLUMN_COLOR,
@@ -31,6 +35,7 @@ function task(overrides: Partial<TaskShape> = {}): TaskShape {
     status: 'todo',
     assigneeId: null,
     songId: null,
+    sessionId: null,
     dueDate: null,
     ...overrides,
   };
@@ -93,6 +98,36 @@ describe('selectTasksOfSong', () => {
   });
 });
 
+describe('selectTasksOfSession', () => {
+  it('keeps the tasks linked to that session', () => {
+    const tasks = [task({ id: 'a', sessionId: 'session-1' }), task({ id: 'b' })];
+    expect(selectTasksOfSession(tasks, 'session-1').map((entry) => entry.id)).toEqual(['a']);
+    expect(selectTasksOfSession(tasks, 'session-2')).toEqual([]);
+  });
+});
+
+describe('blankTaskFormFor', () => {
+  it('opens a blank form already linked to the session it was opened from', () => {
+    expect(blankTaskFormFor('session-1')).toEqual({ ...BLANK_TASK_FORM, sessionId: 'session-1' });
+    expect(blankTaskFormFor(null)).toEqual(BLANK_TASK_FORM);
+  });
+});
+
+describe('newTaskDraftKey', () => {
+  it('keeps one new-task draft per session it was opened from', () => {
+    expect(newTaskDraftKey(null)).toBe('new');
+    expect(newTaskDraftKey('session-1')).toBe('new:session-1');
+  });
+});
+
+describe('findAssignee', () => {
+  it('names the member a task is assigned to, with their colour', () => {
+    expect(findAssignee(MEMBERS, 'member-2')).toEqual({ name: 'Bo', color: '#81b29a' });
+    expect(findAssignee(MEMBERS, null)).toBeNull();
+    expect(findAssignee(MEMBERS, 'member-9')).toBeNull();
+  });
+});
+
 describe('findSongTitle', () => {
   const songs = [{ id: 'song-1', title: 'Runaway Sun' }];
 
@@ -132,6 +167,7 @@ describe('formValuesFromTask', () => {
       status: 'doing',
       assigneeId: 'member-1',
       songId: null,
+      sessionId: null,
       dueDate: '2026-05-01',
     });
   });
@@ -139,8 +175,15 @@ describe('formValuesFromTask', () => {
 
 describe('payloadFromFormValues', () => {
   it('trims the title and refuses a form that carries none', () => {
-    expect(payloadFromFormValues({ ...BLANK_TASK_FORM, title: '  Buy strings ' })).toMatchObject({
+    expect(
+      payloadFromFormValues({
+        ...BLANK_TASK_FORM,
+        title: '  Buy strings ',
+        sessionId: 'session-1',
+      }),
+    ).toMatchObject({
       title: 'Buy strings',
+      sessionId: 'session-1',
       dueDate: null,
     });
     expect(payloadFromFormValues(BLANK_TASK_FORM)).toBeNull();

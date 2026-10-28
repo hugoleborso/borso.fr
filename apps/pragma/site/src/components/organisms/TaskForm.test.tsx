@@ -10,8 +10,14 @@ const BLANK: TaskFormValues = {
   status: 'todo',
   assigneeId: null,
   songId: null,
+  sessionId: null,
   dueDate: '',
 };
+const SONGS = [
+  { id: 'song-cover', title: 'Psycho Killer' },
+  { id: 'song-original', title: 'Runaway Sun' },
+];
+const SESSIONS = [{ id: 'session-1', label: 'Practice · Wed 28 Oct 2026' }];
 const TYPED_TITLE = 'Imprimer les setlists';
 
 function renderTaskForm(draftKey: string, values: TaskFormValues = BLANK) {
@@ -23,7 +29,8 @@ function renderTaskForm(draftKey: string, values: TaskFormValues = BLANK) {
       values={values}
       isEditing={draftKey !== 'new'}
       members={[]}
-      compositions={[]}
+      songs={SONGS}
+      sessions={SESSIONS}
       onSubmit={onSubmit}
       onClose={onClose}
     />,
@@ -48,6 +55,30 @@ function closeByEscape(): void {
 }
 
 // @FollowsBlueprint test-component-render
+describe('the task sheet links', () => {
+  beforeEach(() => {
+    stubSheetDialog();
+  });
+
+  afterEach(() => {
+    cleanup();
+  });
+
+  it('offers every song, not only the compositions', () => {
+    renderTaskForm('task-songs');
+    const options = Array.from(screen.getByLabelText('Song').querySelectorAll('option')).map(
+      (option) => option.textContent,
+    );
+    expect(options).toEqual(['No song', 'Psycho Killer', 'Runaway Sun']);
+  });
+
+  it('opens already linked to the session it was opened from', () => {
+    renderTaskForm('new:session-1', { ...BLANK, sessionId: 'session-1' });
+    const field = screen.getByLabelText('Session');
+    expect(field instanceof HTMLSelectElement ? field.value : null).toBe('session-1');
+  });
+});
+
 describe('a task sheet draft', () => {
   beforeEach(() => {
     stubSheetDialog();

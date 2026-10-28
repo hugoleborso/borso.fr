@@ -6,8 +6,14 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
 import { IconButton } from '../atoms/IconButton';
+import { MemberMark } from '../atoms/MemberMark';
 import { ListRow } from './ListRow';
 import { TASK_STATUS_LABEL_KEY } from '../../routes/band/band-tasks.core';
+
+export interface TaskAssignee {
+  readonly name: string;
+  readonly color: string;
+}
 
 export interface TaskRowProps {
   readonly title: string;
@@ -15,6 +21,7 @@ export interface TaskRowProps {
   readonly dueLabel: string | null;
   readonly songTitle: string | null;
   readonly isOverdue: boolean;
+  readonly assignee?: TaskAssignee | null;
   readonly onToggleDone: () => void;
   readonly onOpen: () => void;
   readonly onDelete: () => void;
@@ -50,6 +57,12 @@ export function TaskRow(props: TaskRowProps): JSX.Element {
           </span>
         </ListRow>
         <div className="flex flex-wrap items-center gap-1.5">
+          {props.assignee === undefined || props.assignee === null ? null : (
+            <span className="inline-flex items-center gap-1 text-meta text-ink-soft">
+              <MemberMark shape="dot" color={props.assignee.color} />
+              {props.assignee.name}
+            </span>
+          )}
           <Badge tone="mono" size="sm">
             {t(TASK_STATUS_LABEL_KEY[props.status])}
           </Badge>

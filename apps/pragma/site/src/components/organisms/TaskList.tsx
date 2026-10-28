@@ -1,7 +1,7 @@
 /** @Feature tasks */
 
 import type { JSX } from 'react';
-import { TaskRow } from '../molecules/TaskRow';
+import { type TaskAssignee, TaskRow } from '../molecules/TaskRow';
 import type { TaskShape } from '../../routes/band/band-tasks.core';
 
 export interface TaskListProps {
@@ -10,6 +10,7 @@ export interface TaskListProps {
   readonly dueLabelOf: (task: TaskShape) => string | null;
   readonly isOverdue: (task: TaskShape) => boolean;
   readonly songTitleOf: (task: TaskShape) => string | null;
+  readonly assigneeOf?: (task: TaskShape) => TaskAssignee | null;
   readonly onToggleDone: (task: TaskShape) => void;
   readonly onOpen: (task: TaskShape) => void;
   readonly onDelete: (task: TaskShape) => void;
@@ -27,6 +28,7 @@ export function TaskList(props: TaskListProps): JSX.Element {
           dueLabel={props.dueLabelOf(task)}
           isOverdue={props.isOverdue(task)}
           songTitle={props.songTitleOf(task)}
+          assignee={props.assigneeOf?.(task) ?? null}
           onToggleDone={() => props.onToggleDone(task)}
           onOpen={() => props.onOpen(task)}
           onDelete={() => props.onDelete(task)}

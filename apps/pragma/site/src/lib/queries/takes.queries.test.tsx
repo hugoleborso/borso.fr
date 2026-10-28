@@ -20,6 +20,7 @@ import {
 } from './takes.queries';
 
 const SONG_ID = '11111111-1111-4111-8111-111111111111';
+const SESSION_ID = '33333333-3333-4333-8333-333333333333';
 const TAKE_ID = '22222222-2222-4222-8222-222222222222';
 
 function listedTake(id: string, recordedAt: string, commentCount = 0): ListedTake {
@@ -106,6 +107,8 @@ describe('useDeleteTake', () => {
   it('keeps the take gone once the server confirms, without reading the list again', async () => {
     const queryClient = createIsolatedQueryClient();
     queryClient.setQueryData(takeKeys.ofSong(SONG_ID), { takes: [NEWER, OLDER] });
+    queryClient.setQueryData(takeKeys.ofSession(SESSION_ID), { takes: [NEWER, OLDER] });
+    queryClient.setQueryData(takeKeys.ofSession(TAKE_ID), undefined);
     const stub = stubTransport(() => Promise.resolve(jsonResponse({ id: 'b', deleted: true })));
     const slot = createMutateSlot<DeleteTake>();
     const tree = mountWithClient(queryClient, <ProbeDelete sink={slot.sink} />);
@@ -114,6 +117,7 @@ describe('useDeleteTake', () => {
     await flushMicrotasks();
 
     expect(queryClient.getQueryData(takeKeys.ofSong(SONG_ID))).toEqual({ takes: [OLDER] });
+    expect(queryClient.getQueryData(takeKeys.ofSession(SESSION_ID))).toEqual({ takes: [OLDER] });
     expect(stub.calls.map((request) => request.method)).toEqual(['DELETE']);
     tree.unmount();
   });
@@ -160,6 +164,24 @@ describe('writeCreatedTake', () => {
     expect(queryClient.getQueryData(takeKeys.ofSong(SONG_ID))).toEqual({
       takes: [NEWER, middle, OLDER],
     });
+  });
+
+  it('also places a take recorded at a session in that session list', () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData(takeKeys.ofSession(SESSION_ID), { takes: [OLDER] });
+    const atThePractice = { ...listedTake('c', '2026-10-14T18:00:00.000Z'), sessionId: SESSION_ID };
+
+    writeCreatedTake(queryClient, atThePractice);
+
+    expect(queryClient.getQueryData(takeKeys.ofSession(SESSION_ID))).toEqual({
+      takes: [atThePractice, OLDER],
+    });
+  });
+
+  it('leaves a session list nobody has read yet unread', () => {
+    const queryClient = createIsolatedQueryClient();
+    writeCreatedTake(queryClient, { ...NEWER, sessionId: SESSION_ID });
+    expect(queryClient.getQueryData(takeKeys.ofSession(SESSION_ID))).toBeUndefined();
   });
 
   it('leaves a song list nobody has read yet unread', () => {
