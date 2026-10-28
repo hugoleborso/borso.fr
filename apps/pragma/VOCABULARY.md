@@ -234,8 +234,15 @@ uploaded through `api/src/uploads/`
   characters, `pdf` with an S3 object key, or `image` with an S3 object
   key (`chordChartSchema`).
 - The column is nullable, and stored as JSON in a TEXT column.
+- Its text comes from what a member pastes or from a PDF's text layer, read
+  in the browser, in the "chords above lyrics" layout chord sites give; it
+  is saved as ChordPro (`convertChordsAboveLyrics` in
+  `site/src/routes/catalog/chords-above-lyrics.core.ts`), and text already
+  in ChordPro is kept as is. A photo and a PDF with no text layer stay
+  `image` and `pdf` files, which cannot be transposed.
 
 Held by: `api/src/songs/songs.controller.test.ts` › persists each of the three chord-chart variants
+Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › places each chord on the syllable it stood above
 
 ## Composition
 
@@ -1086,6 +1093,10 @@ Lives in: `api/src/studies/`
 - Accepted only for an instrument the member holds in the song's default
   lineup or in a lineup override of one of its setlist entries.
 - A study never changes a score; the two are separate writes.
+- Logged from the song page's **Practised**, once per instrument the member
+  holds on the song. The songs a member has to learn are the **To learn**
+  filter of the Songs tab: their study queue, one row per song, ready songs
+  left out (`selectSongsToLearn`). The Studies page this replaced is gone.
 - A study names only a song and an instrument that still exist: the write
   claims both rows, reads the lineups and inserts in one retried
   transaction, and is refused with `song-not-found` or
