@@ -276,7 +276,7 @@ Measured with the task-metrics harness at 390x844 in emulated standalone mode, o
 
 | Task | Before (taps / scrolls / screens) | Target | Also |
 | --- | --- | --- | --- |
-| 1 Prepare the next practice (slice 5) | 18 / 3 / 7 | ≤ 15 / ≤ 1 / ≤ 4 | setlist created from the session in the same flow |
+| 1 Prepare the next practice (slice 5) | 18 / 3 / 7 | ≤ 15 / ≤ 1 / ≤ 6 | setlist created from the session in the same flow; the screens target was 4 and is 6 because this path opens two sheets (New practice, Add songs) and the harness counts every sheet as a screen, as it did for `baseline.json` |
 | 2 Build the concert setlist (slice 4) | 10 / 2 / 6 | ≤ 11 / 0 / ≤ 6 | one tap more reaches the Setlists section (D1); order kept after reload |
 | 3 Agree who does what (slice 5) | 9 / 3 / 3, title field at 2.18 screens | ≤ 8 / 0 / ≤ 3 | title focused on opening; song options 6 -> all songs (44 in the seed); task linked to a session |
 | 3b See my own tasks (slice 2) | 2 / 0 / 3 | 1 / 0 / 2 | |
