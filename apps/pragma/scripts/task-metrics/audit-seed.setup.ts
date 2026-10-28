@@ -472,7 +472,7 @@ function requireValue<Value>(value: Value | undefined, what: string): Value {
 }
 
 async function movePastEverySession(memberId: string): Promise<void> {
-  const sessions = await getSessions();
+  const sessions = await getSessions(now);
   for (const [index, session] of sessions.entries()) {
     if (session.date.getTime() <= now.getTime()) continue;
     const pastDate = new Date(now.getTime() - (PAST_SESSION_DAYS_AGO + index) * DAY);
@@ -811,7 +811,7 @@ async function main(): Promise<void> {
     setlists.map(async (row) => `${row.name}: ${(await getEntries(row.id)).length}`),
   );
   process.stdout.write(
-    `[audit-seed] songs=${songs.length} members=${members.length} instruments=${instruments.length} sessions=${(await getSessions()).length}\n`,
+    `[audit-seed] songs=${songs.length} members=${members.length} instruments=${instruments.length} sessions=${(await getSessions(now)).length}\n`,
   );
   process.stdout.write(`[audit-seed] setlists -> ${counts.join(' | ')}\n`);
   await getDatabase().$client.end();

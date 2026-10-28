@@ -144,7 +144,7 @@ async function readConcertScope(
   now: Date,
   isReady: (song: SongLineups) => boolean,
 ): Promise<ConcertScope> {
-  const nextConcert = selectEarliestUpcomingConcert(await getSessions(), now);
+  const nextConcert = selectEarliestUpcomingConcert(await getSessions(now), now);
   if (nextConcert === null) return buildCatalogueScope(songs);
   const setlistIds = (await getAllSetlists())
     .filter((setlist) => setlist.sessionIds.includes(nextConcert.id))
