@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  composeDiscussionText,
-  selectDiscussionPreambleKey,
-  selectSubjectPhraseKey,
-} from './action-sheet.core';
+import { composeDiscussionText, selectSubjectPhraseKey } from './action-sheet.core';
 
 describe('selectSubjectPhraseKey', () => {
   it('names each kind of subject with its own phrase', () => {
@@ -24,12 +20,5 @@ describe('composeDiscussionText', () => {
 
   it('keeps the subject alone when nothing more is asked', () => {
     expect(composeDiscussionText('Page « Alice »', undefined)).toBe('Page « Alice »');
-  });
-});
-
-describe('selectDiscussionPreambleKey', () => {
-  it('asks to read the memory once it is in the database, the repository before', () => {
-    expect(selectDiscussionPreambleKey('database')).toBe('discuss.memoryPreamble');
-    expect(selectDiscussionPreambleKey('git')).toBe('discuss.preamble');
   });
 });

@@ -63,7 +63,7 @@ if [ "${1:-}" = '--staged' ]; then
     # the same verdict either way.
     while IFS= read -r naming; do
       [ -n "$naming" ] && SUBJECTS+=("$naming")
-    done < <(git grep -l -F "${removed_names[@]}" -- \
+    done < <(git grep --threads=1 -l -F "${removed_names[@]}" -- \
       'scripts/*' '.husky/*' '.github/*' 'plugins/*' '.claude/*' 'CLAUDE.md' || true)
   fi
   if [ "${#SUBJECTS[@]}" -eq 0 ]; then

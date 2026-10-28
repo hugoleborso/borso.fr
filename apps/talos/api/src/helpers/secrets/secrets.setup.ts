@@ -1,7 +1,6 @@
 import { readSecureParameter } from './parameter-store.client';
 
 export type SecretName =
-  | 'github-token'
   | 'vapid-public'
   | 'vapid-private'
   | 'session-hmac'

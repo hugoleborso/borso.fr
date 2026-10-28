@@ -8,7 +8,7 @@ export const MEMORY_SEED: unknown = JSON.parse(readFileSync(SEED_PATH, 'utf8'));
 
 // @FollowsBlueprint test-fixtures-object-mother
 export async function writeMemory(operations: unknown, idempotencyKey: string): Promise<void> {
-  const { app } = buildTestContext({});
+  const { app } = buildTestContext();
   const response = await requestJson(app, '/api/agent/changes', {
     method: 'POST',
     headers: AGENT_HEADERS,
@@ -22,7 +22,7 @@ export async function seedMemoryInDatabase(): Promise<void> {
 }
 
 export async function readMemoryEvents(): Promise<{ actor: string; operation: string }[]> {
-  const { app } = buildTestContext({});
+  const { app } = buildTestContext();
   const response = await requestJson(app, '/api/agent/export', { headers: AGENT_HEADERS });
   const exported: { tables: { memory_event: { actor: string; operation: string }[] } } =
     await response.json();

@@ -6,7 +6,7 @@ Language: identifiers, JSON fields, table and column names in English. Values th
 
 ## 1. Principles
 
-- The database is the single source of truth for the owner's memory once the `cutover` state is `database`. Before that, git stays the truth and the database is only filled by the importer.
+- The database is the single source of truth for the owner's memory.
 - All tables live in the app's existing DSQL schema (the stage schema `prod`, created by `DsqlSchema`), prefixed `memory_`, migrated by drizzle like the auth tables. No separate `memoire` schema.
 - Slugs are the repository path without `.md` (`second-brain/personnes/alice-martin`, `engagements/2026-10-05-devis-acme`, `sources/2026/10/04/appel-acme`, `journal/2026-10-08`). Keeping paths as slugs means every `[[…]]` link in every body stays valid without rewriting.
 - No `DELETE` statement anywhere in memory repositories. Removal = a flag (`archived`, `removed`). Sources are insert-only.
@@ -33,7 +33,7 @@ All timestamps `timestamptz`; "date text" columns hold partial dates as written 
 | `memory_draft` | `slug` | `channel`, `recipients` text, `subject` null, `link` null, `status`, `created_on`, `sent_on` null, `source_ref` null, `proposal_slug` null, `attributes` jsonb, `body` text, `updated_at` |
 | `memory_journal_entry` | `slug` (`journal/2026-10-08`, `journal/2026-S41-hebdo`) | `kind` (`daily`, `weekly`, `other`), `content` text (whole file), `updated_at` |
 | `memory_document` | `slug` | `content` text (whole file, any format, e.g. `preferences/redaction`, `etat/questions`, `etat/frictions`, `etat/securite`, `archives/…`, `etat/backfill/…`), `content_type` (`markdown`, `json`, `text`), `updated_at`. Everything that is data and not modelled above lands here, so nothing is lost |
-| `memory_state` | `key` | `value` jsonb, `updated_at`. Keys: `cutover` (`"git"` or `"database"`, absent = git), `cursors` (curseurs.json), `tasks` (taches.json), `alerts` (alertes.json), `last_scan` (dernier-scan.json), `relations` (relations.json), `focus.updated_on` |
+| `memory_state` | `key` | `value` jsonb, `updated_at`. Keys: `cutover` (`"database"` since 2026-10-16; informational only, nothing reads it but `/status`), `cursors` (curseurs.json), `tasks` (taches.json), `alerts` (alertes.json), `last_scan` (dernier-scan.json), `relations` (relations.json), `focus.updated_on` |
 | `memory_event` | `id` uuid | `occurred_at`, `actor` text (`import`, `pwa`, `routine:nuit`, `session:<id>`, `mac`…), `token_name` text null (`lecture`, `build`, `mac`, null for PWA), `run_id` text null, `operation` text, `object_type` text, `object_id` text, `before` jsonb null, `after` jsonb null, `summary` text |
 | `memory_change_batch` | `idempotency_key` | `run_id`, `actor`, `applied_at`, `result` jsonb. A replayed key returns the stored result without applying again |
 
@@ -128,11 +128,10 @@ Operations (`op` field; other fields camelCase):
 
 Every applied operation inserts `memory_event { actor, token_name, run_id, operation: op, object_type, object_id, before, after, summary }` (`summary` = the call's `summary` for the first operation, an automatic one-liner otherwise). `GET /context` reads these events as the new `log.md`.
 
-## 7. Cutover flag and the PWA
+## 7. The PWA
 
-- `memory_state.cutover` absent or `"git"`: the PWA reads and writes git through `ContentStore` exactly as today.
-- `"database"`: every PWA content route reads and writes the memory tables through repositories, and writes `memory_event` rows with `actor: "pwa"`. Same HTTP contract for the site, except: todo ids stay strings (old 10-hex or uuid), `/pages/*` also accepts any slug of §1, prompts « Discuter » and the fire text cite the slug (`<type>: <slug>`) instead of a file path.
-- The flag is set with `state.set { key: "cutover", value: "database" }` through `/changes` (agent token). The PWA reads it per request (cache ≤ 30 s).
+- Every PWA content route reads and writes the memory tables through repositories, and writes `memory_event` rows with `actor: "pwa"`. Todo ids are strings (old 10-hex or uuid), `/pages/*` accepts any slug of §1, prompts « Discuter » and the fire text cite the slug (`<type>: <slug>`).
+- The git storage mode and its per-request `cutover` switch were removed on 2026-10-28, once the private repository held no data and its token was revoked. `/status` still reports the `cutover` state for information.
 
 ## 8. CLI `scripts/talos.py` (talos repository, Python stdlib only)
 

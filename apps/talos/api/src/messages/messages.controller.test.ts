@@ -1,7 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { buildTestContext, requestJson, signIn, useTestSecrets } from '../../../test/app-utils';
 import { truncateAllTables } from '../../../test/database-utils';
-import { seedMemoryInDatabase } from '../../../test/memory-fixture';
 
 beforeEach(async () => {
   await truncateAllTables();
@@ -15,7 +14,7 @@ afterEach(() => {
 describe('GET /api/messages/claude-code', () => {
   it('answers the content repository and both environments from the deployment settings', async () => {
     vi.stubEnv('GITHUB_REPO', 'proprietaire/notes');
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     useTestSecrets({
       'claude-environment-talos': 'env_lecture',
       'claude-environment-build': 'env_construction',
@@ -26,13 +25,12 @@ describe('GET /api/messages/claude-code', () => {
     expect(response.status).toBe(200);
     expect(await response.json()).toEqual({
       repository: 'proprietaire/notes',
-      storage: 'git',
       environments: { talos: 'env_lecture', build: 'env_construction' },
     });
   });
 
   it('answers null environments while the settings are not set', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     const response = await requestJson(app, '/api/messages/claude-code', {
       cookie: await signIn(),
     });
@@ -40,19 +38,8 @@ describe('GET /api/messages/claude-code', () => {
   });
 
   it('refuses a caller without a session', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     const response = await requestJson(app, '/api/messages/claude-code');
     expect(response.status).toBe(401);
-  });
-});
-
-describe('the Claude Code target once the memory is in the database', () => {
-  it('says the memory is in the database', async () => {
-    await seedMemoryInDatabase();
-    const { app } = buildTestContext({});
-    const response = await requestJson(app, '/api/messages/claude-code', {
-      cookie: await signIn(),
-    });
-    expect(await response.json()).toMatchObject({ storage: 'database' });
   });
 });

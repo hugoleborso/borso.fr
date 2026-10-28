@@ -1,12 +1,7 @@
-import { mkdirSync, mkdtempSync, writeFileSync } from 'node:fs';
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
 import type { Hono } from 'hono';
 import { createApp } from '../api/src/app';
 import { insertSession } from '../api/src/auth/auth.repository';
 import { buildSessionCookie, SESSION_COOKIE_NAME } from '../api/src/auth/session-cookie.utils';
-import { useContentStore } from '../api/src/content/content-store.setup';
-import { createLocalContentStore } from '../api/src/content/local-content.adapter';
 import { type SecretName, useSecretReader } from '../api/src/helpers/secrets/secrets.setup';
 
 export const TEST_HOST = 'http://localhost';
@@ -23,8 +18,6 @@ export const TEST_SECRETS: Partial<Record<SecretName, string>> = {
 
 export interface TestContext {
   readonly app: Hono;
-  readonly overlay: Map<string, string>;
-  readonly root: string;
 }
 
 // @FollowsBlueprint test-fixtures-object-mother
@@ -33,16 +26,9 @@ export function useTestSecrets(overrides: Partial<Record<SecretName, string>> = 
   useSecretReader(async (name) => await Promise.resolve(secrets[name]));
 }
 
-export function buildTestContext(files: Readonly<Record<string, string>> = {}): TestContext {
-  const root = mkdtempSync(join(tmpdir(), 'talos-content-'));
-  for (const [path, content] of Object.entries(files)) {
-    mkdirSync(dirname(join(root, path)), { recursive: true });
-    writeFileSync(join(root, path), content);
-  }
-  const overlay = new Map<string, string>();
-  useContentStore(createLocalContentStore({ root, overlay }));
+export function buildTestContext(): TestContext {
   useTestSecrets();
-  return { app: createApp(), overlay, root };
+  return { app: createApp() };
 }
 
 export async function signIn(now = new Date()): Promise<string> {

@@ -33,7 +33,7 @@ afterEach(() => {
 // @FollowsBlueprint test-back-e2e
 describe('POST /api/notify', () => {
   it('pushes to every subscription and removes the ones that expired', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     await subscribe('https://push.example/vivant');
     await subscribe('https://push.example/expire');
     const sendNotification = vi
@@ -59,7 +59,7 @@ describe('POST /api/notify', () => {
   });
 
   it('refuses a caller without the notify secret, before reading the body', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     const response = await requestJson(app, '/api/notify', {
       method: 'POST',
       body: {},
@@ -70,13 +70,13 @@ describe('POST /api/notify', () => {
   });
 
   it('refuses a caller without any authorization header', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     const response = await requestJson(app, '/api/notify', { method: 'POST', body: NOTIFICATION });
     expect(response.status).toBe(401);
   });
 
   it('answers 503 while no notify secret is configured', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     useTestSecrets({ 'notify-secret': undefined });
     const response = await requestJson(app, '/api/notify', {
       method: 'POST',
@@ -87,7 +87,7 @@ describe('POST /api/notify', () => {
   });
 
   it('accepts an agent token, so a run needs no second secret, even with no notify secret configured', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     useTestSecrets({ 'notify-secret': undefined });
     const response = await requestJson(app, '/api/notify', {
       method: 'POST',
@@ -98,7 +98,7 @@ describe('POST /api/notify', () => {
   });
 
   it('refuses an invalid notification', async () => {
-    const { app } = buildTestContext({});
+    const { app } = buildTestContext();
     const response = await requestJson(app, '/api/notify', {
       method: 'POST',
       body: { title: '', message: 'x' },

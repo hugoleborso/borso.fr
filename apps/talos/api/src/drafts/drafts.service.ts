@@ -1,14 +1,12 @@
 import type { DraftStatusChange } from '@domain/draft-status.core';
 import { stripMarkdownExtension } from '@domain/markdown-page.core';
 import {
-  editContentFile,
   type FileEditor,
   listContentDirectory,
   readContentFiles,
 } from '../content/content.service';
 import { formatParisDate } from '../helpers/calendar/paris-clock.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
-import { isMemoryInDatabase } from '../memory/memory-cutover.service';
 import { recordPwaChanges, renderMemoryDraft } from '../memory/memory-pwa.service';
 import {
   buildDraftPath,
@@ -66,6 +64,5 @@ export async function changeDraftStatus(change: DraftChange): Promise<Draft> {
   const today = formatParisDate(change.now);
   const editor: FileEditor<DraftStatusOutcome> = (current) =>
     changeDraftStatusFile(change.slug, current, { target: change.target, today });
-  if (await isMemoryInDatabase()) return readChangedDraft(await editStoredDraft(change, editor));
-  return readChangedDraft(await editContentFile(buildDraftPath(change.slug), editor));
+  return readChangedDraft(await editStoredDraft(change, editor));
 }

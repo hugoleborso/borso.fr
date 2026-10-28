@@ -184,7 +184,7 @@ decision.
 - [`visual-validation-skill-vs-agent-browser-direct.md`](./visual-validation-skill-vs-agent-browser-direct.md) — `/visual-validation` is the feature-gate skill (full spec walk, separate agent, committed evidence); for single-fix iteration use `agent-browser` directly in the main session — minutes vs seconds.
 
 - [`driving-pragma-auth-from-a-validator.md`](./driving-pragma-auth-from-a-validator.md) — the seeded logins, resetting rate-limit buckets with the test-only reset route, why passkey claims belong in back-e2e, and running one named case.
-- [`screenshotting-talos-behind-its-passkey.md`](./screenshotting-talos-behind-its-passkey.md) — every talos screen but sign-in sits behind a passkey: fictional content in `TALOS_DEV_CONTENT_ROOT`, a CDP virtual authenticator, and a wiped local database before each new browser context, or every screenshot is the login screen.
+- [`screenshotting-talos-behind-its-passkey.md`](./screenshotting-talos-behind-its-passkey.md) — every talos screen but sign-in sits behind a passkey: the fictional memory `dev:db` seeds, a CDP virtual authenticator, and a wiped local database before each new browser context, or every screenshot is the login screen.
 
 ### Spec & metrics framing
 
