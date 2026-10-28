@@ -1,16 +1,17 @@
 import { z } from 'zod';
+import { selectNextSession } from '../../domain/session-schedule.core';
+import { formatSessionDate } from '../../site/src/lib/formatters.utils';
 import type { BandSessionDriver } from './band-session.setup';
 import {
-  COUNT_ENTRY_BUTTONS,
   LIST_VISIBLE_BUTTON_NAMES,
   LISTS_A_DURATION,
   MAIN_TEXT_INCLUDES,
   READ_SCROLL_Y,
-  READ_SESSION_HEADER_LINK,
+  READ_NEXT_SESSION_TEXT,
   STUDY_ROW_LINK_PROBE,
 } from './page-probes.setup';
 import { projectScreenFraction, replaceIdentifierInPath } from './task-metrics.core';
-import { navigateTo, PHONE, TaskWalk, waitForMain, waitMilliseconds } from './walk-recorder.setup';
+import { navigateTo, TaskWalk, waitForMain, waitMilliseconds } from './walk-recorder.setup';
 
 const CREATE_SETTLE_MS = 1200;
 const SAVE_SETTLE_MS = 1500;
@@ -19,9 +20,13 @@ const CLOSE_SETTLE_MS = 800;
 const ENTRY_NUMBER_WIDTH = 2;
 const SHOWN_TITLE_COUNT = 8;
 const LISTED_BUTTON_COUNT = 12;
-const TAB_BAR_ALLOWANCE = 90;
+const HOME_LOCALE = 'en';
 const SECOND_ENTRY = 1;
 const SECOND_ENTRY_NUMBER = 2;
+const TAB_LINK = 'nav[aria-label="Main sections"] a';
+const BAND_LINK = 'nav[aria-label="The band"] a';
+const SECTION_TAB = '[role=tab]';
+const HOME = '/';
 
 const anyRecord = z.record(z.unknown());
 
@@ -35,15 +40,25 @@ function escapeForPattern(text: string): string {
   return text.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 }
 
+async function openSetlistLibrary(walk: TaskWalk): Promise<void> {
+  await walk.tap('Sessions tab', { text: '^Sessions', css: TAB_LINK });
+  await walk.tap('Setlists section', { exact: 'Setlists', css: SECTION_TAB });
+}
+
+async function openStudies(walk: TaskWalk): Promise<void> {
+  await walk.tap('Band tab', { text: '^Band', css: TAB_LINK });
+  await walk.tap('Studies link', { exact: 'Studies', css: BAND_LINK });
+}
+
 async function isTextInMain(driver: BandSessionDriver, needle: string): Promise<boolean> {
   await waitForMain(driver.session);
   return (await driver.session.evaluate(MAIN_TEXT_INCLUDES, needle)) === true;
 }
 
 const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
-  await driver.startFresh('/catalog');
+  await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '1 Prepare the next rehearsal');
-  await walk.tap('Sessions tab', { text: '^Sessions', css: 'nav a' });
+  await walk.tap('Sessions tab', { text: '^Sessions', css: TAB_LINK });
   await walk.tap('New practice', { exact: 'Practice', css: 'button' }, { primary: true });
   await walk.tap('Create session', { exact: 'Create', css: 'button' }, { wait: CREATE_SETTLE_MS });
   await walk.tap('New setlist', { exact: 'New setlist', css: 'button' }, { primary: true });
@@ -95,10 +110,10 @@ const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
 };
 
 const buildConcertSetlist: TaskWalkRunner = async (driver) => {
-  const known = await driver.startFresh('/catalog');
+  const known = await driver.startFresh(HOME);
   const before = await driver.listEntries(known.main.id);
   const walk = new TaskWalk(driver.session, '2 Build the concert setlist');
-  await walk.tap('Setlists tab', { text: '^Setlists', css: 'nav a' });
+  await openSetlistLibrary(walk);
   await walk.tap(
     'Open Set principal',
     { text: '^Set principal', css: 'main a' },
@@ -141,21 +156,13 @@ const buildConcertSetlist: TaskWalkRunner = async (driver) => {
 };
 
 const agreeWhoDoesWhat: TaskWalkRunner = async (driver) => {
-  await driver.startFresh('/catalog');
+  await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '3 Agree who does what');
-  await walk.tap('More', { exact: 'More', css: 'nav button' });
-  await walk.tap(
-    'Tasks',
-    { exact: 'Tasks', css: 'a', scope: 'dialog' },
-    { wait: CREATE_SETTLE_MS },
-  );
-  await walk.tap(
-    'Task title field (full form)',
-    { css: '#task-title', scope: 'page' },
-    { primary: true },
-  );
+  await walk.tap('Band tab', { text: '^Band', css: TAB_LINK }, { wait: CREATE_SETTLE_MS });
+  await walk.tap('New task', { exact: 'New task', css: 'button' }, { primary: true });
+  walk.note('The New task sheet opens with its title field focused, so typing needs no tap.');
   await walk.type('Task title', 'Imprimer les setlists');
-  await walk.tap('Assignee Léa', { text: 'Léa$', css: 'form button', scope: 'page' });
+  await walk.tap('Assignee Léa', { text: 'Léa$', css: 'form button', scope: 'dialog' });
   await walk.choose('Linked song', '#task-song', '~Nuit blanche');
   walk.note(
     'The song list of a task offers only the 6 compositions (originals), not the 44 catalogue songs.',
@@ -163,23 +170,15 @@ const agreeWhoDoesWhat: TaskWalkRunner = async (driver) => {
   await walk.choose('Due date', '#task-due', '2026-11-01');
   await walk.tap(
     'Save task',
-    { exact: 'Save', css: 'form button[type=submit]', scope: 'page' },
+    { exact: 'Save', css: 'form button[type=submit]', scope: 'dialog' },
     { primary: true, wait: CREATE_SETTLE_MS },
   );
   const tasks = await driver.listFrom('/api/tasks', 'tasks', anyRecord);
   const made = tasks.find((task) => task.title === 'Imprimer les setlists');
-  await navigateTo(driver.session, `${driver.baseUrl}/catalog`);
+  await navigateTo(driver.session, `${driver.baseUrl}${HOME}`);
   const partB = new TaskWalk(driver.session, '3b See my own tasks');
-  partB.note(
-    'Tried the "My part" link in the header first: it opens the concert setlist filtered on the member, and shows no task.',
-  );
-  await partB.tap('More', { exact: 'More', css: 'nav button' });
-  await partB.tap(
-    'Tasks',
-    { exact: 'Tasks', css: 'a', scope: 'dialog' },
-    { wait: CREATE_SETTLE_MS },
-  );
-  const ownSpec = { css: 'ul[aria-label^="Hugo"] li button', index: 0, scope: 'page' };
+  await partB.tap('Band tab', { text: '^Band', css: TAB_LINK }, { wait: CREATE_SETTLE_MS });
+  const ownSpec = { css: 'ul[aria-label="My tasks"] li button', index: 0, scope: 'page' };
   const firstOwnTask = await partB.find(ownSpec);
   const reach = firstOwnTask === null ? null : await partB.bringIntoView(ownSpec);
   const summary = anyRecord.parse(
@@ -300,8 +299,9 @@ const noteSongForTonight: TaskWalkRunner = async (driver) => {
 };
 
 const recordTakeAndTalk: TaskWalkRunner = async (driver) => {
-  await driver.startFresh('/catalog');
+  await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '7 Record a take and talk about it');
+  await walk.tap('Songs tab', { text: '^Songs', css: TAB_LINK });
   await walk.tap('Search field', { css: 'main input', scope: 'page' });
   await walk.type('Search', 'Superstition');
   await walk.tap(
@@ -352,8 +352,9 @@ const recordTakeAndTalk: TaskWalkRunner = async (driver) => {
 };
 
 const addSongToCatalogue: TaskWalkRunner = async (driver) => {
-  await driver.startFresh('/catalog');
+  await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '8 Add a new song to the catalogue');
+  await walk.tap('Songs tab', { text: '^Songs', css: TAB_LINK });
   await walk.tap(
     'New song',
     { exact: 'New song', css: 'a, button', scope: 'page' },
@@ -372,7 +373,7 @@ const addSongToCatalogue: TaskWalkRunner = async (driver) => {
   walk.note(
     `After Save: ${(await walk.readLocation()).path}. The song page has no "add to setlist" action, so the flow leaves to the Setlists tab.`,
   );
-  await walk.tap('Setlists tab', { text: '^Setlists', css: 'nav a' });
+  await openSetlistLibrary(walk);
   await walk.tap(
     'Open the rehearsal setlist',
     { text: '^Répétition du jeudi', css: 'main a' },
@@ -404,9 +405,9 @@ const addSongToCatalogue: TaskWalkRunner = async (driver) => {
 };
 
 const addSongFromPicker: TaskWalkRunner = async (driver) => {
-  await driver.startFresh('/catalog');
+  await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '8b Add a song from the setlist picker (title only)');
-  await walk.tap('Setlists tab', { text: '^Setlists', css: 'nav a' });
+  await openSetlistLibrary(walk);
   await walk.tap(
     'Open the rehearsal setlist',
     { text: '^Répétition du jeudi', css: 'main a' },
@@ -443,8 +444,9 @@ const CHORDPRO_CHART =
   "{title: Ain't No Sunshine}\n[Am]Ain't no sunshine when she's [Em]gone [G]\n[Am]It's not warm when she's a[Em]way [G]";
 
 const addChords: TaskWalkRunner = async (driver) => {
-  await driver.startFresh('/catalog');
+  await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '9 Add chords to a song');
+  await walk.tap('Songs tab', { text: '^Songs', css: TAB_LINK });
   await walk.tap('Search field', { css: 'main input', scope: 'page' });
   await walk.type('Search', "Ain't No");
   await walk.tap(
@@ -484,17 +486,17 @@ const studiesOverviewSchema = z
   .passthrough();
 
 const learnNewSong: TaskWalkRunner = async (driver) => {
-  await driver.startFresh('/catalog');
+  await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '10 Learn a new song');
-  await walk.tap('Studies tab', { text: '^Studies', css: 'nav a' });
+  await openStudies(walk);
   const firstTitle =
     studiesOverviewSchema.parse(await driver.fetchJson('/api/studies/overview')).queue?.[0]
       ?.title ?? '';
   const isRowLink = (await driver.session.evaluate(STUDY_ROW_LINK_PROBE)) === true;
   walk.note(
-    `First song to study: ${firstTitle}. The study row ${isRowLink ? 'links' : 'does not link'} to the song, so the person goes to the Catalog tab.`,
+    `First song to study: ${firstTitle}. The study row ${isRowLink ? 'links' : 'does not link'} to the song, so the person goes to the Songs tab.`,
   );
-  await walk.tap('Catalog tab', { text: '^Catalog', css: 'nav a' });
+  await walk.tap('Songs tab', { text: '^Songs', css: TAB_LINK });
   await walk.tap(
     `Open ${firstTitle}`,
     { text: `^\\S+ ${escapeForPattern(firstTitle)} `, css: 'main a' },
@@ -511,11 +513,11 @@ const learnNewSong: TaskWalkRunner = async (driver) => {
       ? 'No listen link on the song page (it only shows in the setlist entry sheet).'
       : 'A listen link is on the song page.',
   );
-  await walk.tap('Studies tab', { text: '^Studies', css: 'nav a' });
+  await openStudies(walk);
   const keptScroll = Number(await driver.session.evaluate(READ_SCROLL_Y));
   if (keptScroll > 0) {
     walk.note(
-      `Coming back to the Studies tab, the page opened scrolled ${String(keptScroll)} px down (the scroll of the song page is kept), so the first Studied button was above the screen.`,
+      `Coming back to Studies, the page opened scrolled ${String(keptScroll)} px down (the scroll of the song page is kept), so the first Studied button was above the screen.`,
     );
   }
   await walk.tap('Studied', { exact: 'Studied', css: 'main button' }, { primary: true });
@@ -582,27 +584,33 @@ const discussWhichSongs: TaskWalkRunner = async (driver) => {
 };
 
 const checkWhatIsNext: TaskWalkRunner = async (driver) => {
-  await driver.startFresh('/catalog');
+  const known = await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '12 Check what is next');
-  const header: unknown = await driver.session.evaluate(READ_SESSION_HEADER_LINK, PHONE.insets.top);
-  walk.note(
-    `Header on arrival: ${JSON.stringify(header)}. Date and place of the concert are readable without a tap; the next practice is not shown.`,
+  const next = selectNextSession(
+    known.sessions.map((session) => ({
+      ...session,
+      date: String(session.date ?? session.startsAt),
+    })),
+    new Date(),
   );
-  await walk.tap(
-    'My part',
-    { exact: 'My part', css: 'a' },
-    { primary: true, wait: CREATE_SETTLE_MS },
+  await walk.markScreen();
+  const card = await walk.waitFor({ css: 'section[aria-label="Next session"]', scope: 'page' });
+  await waitMilliseconds(CREATE_SETTLE_MS);
+  const shown = String(await driver.session.evaluate(READ_NEXT_SESSION_TEXT));
+  const setlist = known.setlists.find((candidate) =>
+    (candidate.sessionIds ?? []).includes(next?.id ?? ''),
   );
-  const landing = await walk.readLocation();
-  const songsShown = Number(await driver.session.evaluate(COUNT_ENTRY_BUTTONS, null));
-  const firstScreenSongs = Number(
-    await driver.session.evaluate(COUNT_ENTRY_BUTTONS, TAB_BAR_ALLOWANCE),
-  );
-  walk.note(
-    `"My part" opens ${landing.path}: ${String(songsShown)} entries listed, ${String(firstScreenSongs)} fully on the first screen.`,
-  );
+  const venue = next?.venue ?? null;
+  const facts = {
+    kind: next !== null && shown.toLowerCase().includes(next.kind),
+    date: next !== null && shown.includes(formatSessionDate(next.date, HOME_LOCALE)),
+    venue: venue === null || shown.includes(venue),
+    setlist: setlist !== undefined && shown.includes(setlist.name),
+    songCount: /\d+ songs?/u.test(shown),
+  };
+  walk.note(`Next session card on arrival: ${shown}`);
   return walk.summarise({
-    success: { header, landing: landing.path, songsShown, firstScreenSongs },
+    success: { nextSessionId: next?.id ?? null, facts, onArrival: card.inView },
   });
 };
 

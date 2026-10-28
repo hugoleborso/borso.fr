@@ -29,6 +29,7 @@ const sessionSchema = z
     kind: z.string(),
     date: z.string().optional(),
     startsAt: z.string().optional(),
+    venue: z.string().nullable().optional(),
   })
   .passthrough();
 const entrySchema = z.object({
@@ -159,7 +160,7 @@ export class BandSessionDriver {
   }
 
   async startFresh(
-    path: string | ((known: KnownRecords) => string) = '/catalog',
+    path: string | ((known: KnownRecords) => string) = '/',
     user = 'hugo',
   ): Promise<KnownRecords> {
     this.reseed();

@@ -147,9 +147,7 @@ export const STUDY_ROW_LINK_PROBE = `() => { const studied = [...document.queryS
 
 export const LIST_VISIBLE_BUTTON_NAMES = `(limit) => [...document.querySelectorAll('main button, dialog[open] button')].map((button) => (button.getAttribute('aria-label') || button.innerText).trim()).filter(Boolean).slice(0, limit)`;
 
-export const READ_SESSION_HEADER_LINK = `(topInset) => { const link = [...document.querySelectorAll('a')].find((element) => /\\/sessions\\//.test(element.getAttribute('href') || '')); const box = link?.getBoundingClientRect(); return link ? { text: link.innerText.replace(/\\s+/g, ' '), y: Math.round(box.y), aboveSafeArea: box.y < topInset } : null; }`;
-
-export const COUNT_ENTRY_BUTTONS = `(bottomAllowance) => [...document.querySelectorAll('main button')].filter((button) => /^\\S+ \\d\\d /.test(button.innerText.replace(/\\s+/g, ' ')) && (bottomAllowance === null || button.getBoundingClientRect().bottom < innerHeight - bottomAllowance)).length`;
+export const READ_NEXT_SESSION_TEXT = `() => (document.querySelector('section[aria-label="Next session"]')?.innerText || '').replace(/\\s+/g, ' ')`;
 
 const READ_CSS_COLOUR = `(cssColour) => {
   const canvas = window.__taskMetricsCanvas || (window.__taskMetricsCanvas = document.createElement('canvas'));
