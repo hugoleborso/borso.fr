@@ -1,6 +1,6 @@
 # ADR-0044: Agents read production through a SELECT-only database role
 
-- **Status:** proposed
+- **Status:** superseded by ADR-0049
 - **Date:** 2026-10-25
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, data, security, cdk

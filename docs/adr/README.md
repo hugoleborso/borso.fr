@@ -86,6 +86,7 @@ No:
 | [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | proposed | 2026-10-23 |
 | [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | proposed | 2026-10-24 |
 | [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | proposed | 2026-10-25 |
+| [0049](./0049-agents-read-production-through-an-invoked-reader-lambda.md) | Agents read production through a reader Lambda invoked by the AWS API, not port 5432 | proposed | 2026-10-28 |
 
 ### Data layer
 
@@ -96,6 +97,7 @@ No:
 - 0039 — the talos memory moves from a private git repository to `memory_*` tables, reached by agents through `/api/agent/*` with one token per environment; the read-only SQL route relies on a keyword guard and a `READ ONLY` transaction rather than a second database role.
 - 0043 — one catalogue song per Deezer track is held by a unique index on `song.deezer_track_id`; DSQL builds it asynchronously and the migration runner does not wait, so the operator counts prod duplicates before merging and checks the build after deploying.
 - 0044 — a hosted session reads the `prod` schema of pragma, last-loop-lepin and banana-rush (never talos) through `scripts/db-read.sh`, signed in as `ai_reader_prod`, a role that holds `SELECT` only and is mapped to `AI-Dev-ReadOnly`, which gets `dsql:DbConnect` and never `DbConnectAdmin`; the script's keyword guard and `READ ONLY` transaction are conveniences, because the session controls the script.
+- 0049 — the sandbox blocks 5432 and Aurora DSQL has no data API, so `db-read.sh` stops being a Postgres client and calls `aws lambda invoke` on a reader function per app; SigV4 replaces the shared secret the HTTPS shapes would have needed, nothing is published on Internet, and the blocklist moves inside the function where a caller cannot skip it. Supersedes 0044.
 
 ### App architecture
 
