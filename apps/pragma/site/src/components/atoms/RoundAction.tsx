@@ -55,7 +55,7 @@ export function RoundAction(props: RoundActionProps): JSX.Element {
   return (
     <button
       type="button"
-      aria-pressed={props.isPressed ?? false}
+      aria-pressed={props.isPressed}
       disabled={props.isDisabled ?? false}
       onClick={props.onPress}
       className={ACTION_CLASS}

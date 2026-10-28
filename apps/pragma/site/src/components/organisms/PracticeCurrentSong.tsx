@@ -3,8 +3,7 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlbumCover } from '../atoms/AlbumCover';
-import { Button } from '../atoms/Button';
-import { ButtonLink } from '../atoms/ButtonLink';
+import { RoundAction } from '../atoms/RoundAction';
 import { LineupSlots } from '../molecules/LineupSlots';
 import type { LineupColumnView } from '../molecules/lineup-slots.core';
 
@@ -53,13 +52,14 @@ export function PracticeCurrentSong(props: PracticeCurrentSongProps): JSX.Elemen
           {t('practice.towardsNext', { note: props.transitionNote })}
         </p>
       )}
-      <div className="flex flex-wrap gap-2">
-        <ButtonLink variant="secondary" icon="text" to={props.chordsTo}>
-          {t('practice.chords')}
-        </ButtonLink>
-        <Button variant="secondary" icon="edit" onClick={props.onOpenNote}>
-          {t('practice.note')}
-        </Button>
+      <div className="flex items-start gap-6">
+        <RoundAction kind="link" icon="text" label={t('practice.chords')} to={props.chordsTo} />
+        <RoundAction
+          kind="button"
+          icon="edit"
+          label={t('practice.note')}
+          onPress={props.onOpenNote}
+        />
       </div>
     </section>
   );

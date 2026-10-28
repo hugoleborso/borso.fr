@@ -130,6 +130,8 @@ describe('practice mode', () => {
     renderPracticeMode();
     expect(await screen.findByRole('heading', { name: 'Superstition' })).toBeTruthy();
     expect(screen.getByRole('button', { name: 'Song 1 of 2' })).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Chords' }).getAttribute('href')).toContain('/scene');
+    expect(screen.getByRole('button', { name: 'Note' }).hasAttribute('aria-pressed')).toBe(false);
 
     fireEvent.click(screen.getByRole('button', { name: 'Next song' }));
 
