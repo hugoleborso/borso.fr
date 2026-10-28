@@ -61,6 +61,15 @@ async function pickSongs(walk: TaskWalk, titles: readonly string[]): Promise<voi
   }
 }
 
+async function pickSongsWithoutScrolling(walk: TaskWalk, titles: readonly string[]): Promise<void> {
+  for (const title of titles) {
+    const row = { text: buildPickPattern(title), css: '[role=checkbox]', scope: 'dialog' } as const;
+    const shown = await walk.find(row);
+    if (shown === null || !shown.inView) await walk.type('Search', title);
+    await walk.tap(`Pick ${title}`, row, { wait: PICK_SETTLE_MS });
+  }
+}
+
 async function confirmAddSongs(walk: TaskWalk, count: number): Promise<void> {
   await walk.tap(
     `Add ${String(count)} songs`,
@@ -117,7 +126,10 @@ const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
     'Lightning',
     'Midnight Drive',
   ];
-  await pickSongs(walk, picks);
+  walk.note(
+    'A song already on the screen is tapped; any other is typed into the search, which a pick empties, as the spec happy path says: search or a chip instead of scrolling.',
+  );
+  await pickSongsWithoutScrolling(walk, picks);
   await confirmAddSongs(walk, picks.length);
   walk.note(
     `After Add 10 songs the screen is ${replaceIdentifierInPath((await walk.readLocation()).path)}.`,
