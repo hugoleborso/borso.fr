@@ -69,7 +69,7 @@ export function OutreachTemplateCard(props: OutreachTemplateCardProps): JSX.Elem
                 <Button
                   icon="check"
                   type="submit"
-                  variant="primary"
+                  variant="secondary"
                   disabled={isSubmitDisabled(canSubmit, isSubmitting)}
                 >
                   {t('bars.outreachTemplateSave')}

@@ -59,7 +59,12 @@ export function QuickAddForm({
       </form.Field>
       <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
         {([canSubmit, isSubmitting]) => (
-          <Button type="submit" variant="primary" disabled={!canSubmit || isSubmitting} icon="plus">
+          <Button
+            type="submit"
+            variant="secondary"
+            disabled={!canSubmit || isSubmitting}
+            icon="plus"
+          >
             {submitLabel}
           </Button>
         )}

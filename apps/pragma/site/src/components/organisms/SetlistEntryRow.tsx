@@ -1,10 +1,8 @@
 /** @Feature setlists */
 
 import type { JSX, ReactNode } from 'react';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AlbumCover } from '../atoms/AlbumCover';
-import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { LineupSlots } from '../molecules/LineupSlots';
 import { ListRow } from '../molecules/ListRow';
 import { type LineupColumnView, naturalColumnWidth } from '../molecules/lineup-slots.core';
@@ -43,7 +41,6 @@ export interface SetlistEntryRowProps {
 // @FollowsBlueprint organism-presentational
 export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
   const { t } = useTranslation();
-  const [isRemovalPending, setIsRemovalPending] = useState<boolean>(false);
   const keyParts = [
     props.keyLabel,
     props.capo === null ? null : t('setlist.capoValue', { capo: props.capo }),
@@ -114,22 +111,11 @@ export function SetlistEntryRow(props: SetlistEntryRowProps): JSX.Element {
               label: t('setlist.removeFromSetlist'),
               icon: 'trash',
               tone: 'danger',
-              onSelect: () => setIsRemovalPending(true),
+              onSelect: () => props.onRemove(props.entryId),
             },
           ]}
         />
       </div>
-      {isRemovalPending ? (
-        <ConfirmDialog
-          question={t('setlist.removeConfirm', { title: props.title })}
-          confirmLabel={t('setlist.removeFromSetlist')}
-          onConfirm={() => {
-            setIsRemovalPending(false);
-            props.onRemove(props.entryId);
-          }}
-          onCancel={() => setIsRemovalPending(false)}
-        />
-      ) : null}
     </li>
   );
 }

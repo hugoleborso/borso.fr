@@ -158,11 +158,6 @@ const buildConcertSetlist: TaskWalkRunner = async (driver) => {
     { exact: 'Remove from the setlist', css: 'main li details[open] button', scope: 'page' },
     { primary: true },
   );
-  await walk.tap('Confirm remove', {
-    exact: 'Remove from the setlist',
-    css: 'button',
-    scope: 'dialog',
-  });
   await walk.tap(
     'Order',
     { exact: 'Order', css: 'a, button', scope: 'page' },

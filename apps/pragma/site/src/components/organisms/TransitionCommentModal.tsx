@@ -8,6 +8,7 @@ import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
 import { Sheet } from '../molecules/Sheet';
 import { ApiError } from '../../lib/api.client';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { useTransitionDraft } from '../../lib/transition-draft.store';
 import {
   useSaveTransitionComment,
@@ -45,6 +46,7 @@ export function TransitionCommentModal({
       { a: songAId, b: songBId, comment: draft },
       {
         onSuccess: () => {
+          recordProductEvent('transition_comment_saved');
           kept.discard();
           onClose();
         },

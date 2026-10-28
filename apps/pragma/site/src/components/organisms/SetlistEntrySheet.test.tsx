@@ -3,11 +3,16 @@ import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { reportEntryNoteSaveFailed } from '../../observability/error-reporting.adapter';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { SetlistEntrySheet, type SetlistEntrySheetProps } from './SetlistEntrySheet';
 
 vi.mock('../../observability/error-reporting.adapter', () => ({
   reportEntryNoteSaveFailed: vi.fn(),
+}));
+
+vi.mock('../../observability/product-event.adapter', () => ({
+  recordProductEvent: vi.fn(),
 }));
 
 const SAVE_PAUSE_MS = 600;
@@ -103,6 +108,7 @@ describe('the entry sheet', () => {
     });
     expect(onSave).toHaveBeenCalledExactlyOnceWith('entry-1', { notes: 'Finir sur le refrain' });
     expect(screen.getByText('Saved')).toBeTruthy();
+    expect(recordProductEvent).toHaveBeenCalledExactlyOnceWith('entry_note_saved');
   });
 
   it('keeps the text, says Not saved and retries when a save fails', async () => {
