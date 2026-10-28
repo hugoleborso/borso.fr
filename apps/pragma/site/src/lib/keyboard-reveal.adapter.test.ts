@@ -44,6 +44,24 @@ describe('focusFieldAboveKeyboard', () => {
     expect(scrollIntoView).toHaveBeenCalledTimes(1);
   });
 
+  it('still focuses the field in a browser with no visual viewport', () => {
+    vi.stubGlobal('visualViewport', undefined);
+    const field = document.createElement('input');
+    document.body.append(field);
+    const reportedErrors: unknown[] = [];
+    const recordError = (event: ErrorEvent): void => {
+      reportedErrors.push(event.error);
+      event.preventDefault();
+    };
+    window.addEventListener('error', recordError);
+
+    focusFieldAboveKeyboard(field);
+    window.removeEventListener('error', recordError);
+
+    expect(document.activeElement).toBe(field);
+    expect(reportedErrors).toEqual([]);
+  });
+
   it('does nothing when React detaches the field', () => {
     expect(() => focusFieldAboveKeyboard(null)).not.toThrow();
   });
