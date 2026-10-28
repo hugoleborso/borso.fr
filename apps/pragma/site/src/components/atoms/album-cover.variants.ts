@@ -8,6 +8,7 @@ export const albumCoverVariants = cva(
       size: {
         sm: 'w-10 h-10 text-meta',
         md: 'w-14 h-14 text-meta',
+        sheet: 'size-18 text-title',
         lg: 'w-24 h-24 text-title',
         xl: 'w-full aspect-square h-auto text-title rounded-lg',
       },

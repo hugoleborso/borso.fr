@@ -280,7 +280,7 @@
     "allMembers": "All",
     "cancel": "Cancel",
     "editOverride": "Lineup (this set)",
-    "emptyForMember": "Nothing to play tonight.",
+    "emptyForMember": "Nothing to play in this setlist.",
     "filterByMember": "Filter by member",
     "instruments": "Instruments",
     "modal": {
@@ -293,7 +293,10 @@
     "override": "Override",
     "resetToDefault": "Reset to song default",
     "save": "Save",
-    "saveAsSongDefault": "Save as song default"
+    "saveAsSongDefault": "Save as song default",
+    "tonight": "Lineup tonight",
+    "useSongLineup": "Use the song's lineup",
+    "changedTonight": "Changed tonight"
   },
   "mastery": {
     "noData": "Add members and instruments to populate the matrix.",
@@ -496,7 +499,30 @@
     "transitionRisky": "Risky transition",
     "untitled": "Untitled setlist",
     "moreActions": "More actions",
-    "voting": "Voting in progress"
+    "voting": "Voting in progress",
+    "noteNotSaved": "Not saved",
+    "noteSaving": "Saving…",
+    "noteSaved": "Saved",
+    "noteRetry": "Retry",
+    "entryPosition": "Song {{position}} of {{count}} · tonight only",
+    "openSong": "Open the song",
+    "recordTake": "Record a take",
+    "capoValue": "capo {{capo}}",
+    "sitsOutTonight": "{{name}} sits out",
+    "tonightChange": "Tonight: {{change}}",
+    "entryActions": "More for {{title}}",
+    "removeFromSetlist": "Remove from the setlist",
+    "editTransitionNote": "Edit the transition note",
+    "noteTransition": "Note this transition",
+    "lineupCellPlays": "{{title}}: {{name}} plays {{instrumentNames}}.",
+    "lineupCellSitsOut": "{{title}}: {{name}} sits out.",
+    "lineupCellChanged": "Changed from the song before.",
+    "lineupOpenMemberPart": "Show the part of {{name}}",
+    "lineupEmpty": "Nobody plays in this setlist yet. Open a song to give it a lineup.",
+    "viewLabel": "Setlist view",
+    "viewSongs": "Songs",
+    "viewLineup": "Lineup",
+    "viewMyPart": "My part"
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
@@ -553,7 +579,10 @@
     "tapToScore": "Score {{title}}",
     "targetSongCount": "How many songs?",
     "untitled": "Unnamed setlist",
-    "backToVote": "Back to the vote"
+    "backToVote": "Back to the vote",
+    "pageTitle": "Vote on the songs",
+    "howItRunsScore": "Each member spends a budget of points on the songs they want to play.",
+    "howItRunsClose": "Closing the vote turns the best scored songs into this setlist."
   },
   "audience": {
     "pageCrumb": "Tonight",

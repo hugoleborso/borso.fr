@@ -84,6 +84,13 @@ describe('focusFirstField', () => {
     dialog.remove();
   });
 
+  it('puts the focus on the control the sheet marks, before any earlier field', () => {
+    const dialog = sheetWith('<input id="key" /><textarea id="note" data-sheet-focus></textarea>');
+    focusFirstField(dialog);
+    expect(document.activeElement?.id).toBe('note');
+    dialog.remove();
+  });
+
   it('reaches a textarea or a select when the body holds no input', () => {
     const dialog = sheetWith('<select id="status"><option>a</option></select>');
     focusFirstField(dialog);

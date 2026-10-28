@@ -5,6 +5,7 @@ import {
   type LatestTextSaveState,
   planNextSave,
   reduceLatestTextSave,
+  selectTextSaveDisplay,
   selectLatestTextSaveStatus,
 } from './latest-text-save.utils';
 
@@ -100,5 +101,21 @@ describe('a failed save', () => {
 describe('a success with nothing in flight', () => {
   it('keeps the saved text', () => {
     expect(replay([{ kind: 'saveSucceeded' }], buildLatestTextSaveState('a')).savedText).toBe('a');
+  });
+});
+
+describe('selectTextSaveDisplay', () => {
+  it('shows a failure and a save in flight whatever was typed', () => {
+    expect(selectTextSaveDisplay('failed', false)).toBe('failed');
+    expect(selectTextSaveDisplay('saving', false)).toBe('saving');
+  });
+
+  it('says Saved only once the person typed', () => {
+    expect(selectTextSaveDisplay('saved', true)).toBe('saved');
+    expect(selectTextSaveDisplay('saved', false)).toBe('none');
+  });
+
+  it('says nothing while the pause before a save runs', () => {
+    expect(selectTextSaveDisplay('unsaved', true)).toBe('none');
   });
 });

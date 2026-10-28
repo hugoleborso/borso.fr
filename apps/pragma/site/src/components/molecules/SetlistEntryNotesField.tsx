@@ -13,10 +13,15 @@ const NOTES_ROWS = 2;
 interface SetlistEntryNotesFieldProps {
   readonly form: SetlistEntryForm;
   readonly onType: (text: string) => void;
+  readonly isFocusedOnOpen: boolean;
 }
 
 // @FollowsBlueprint molecule-presentational
-export function SetlistEntryNotesField({ form, onType }: SetlistEntryNotesFieldProps): JSX.Element {
+export function SetlistEntryNotesField({
+  form,
+  onType,
+  isFocusedOnOpen,
+}: SetlistEntryNotesFieldProps): JSX.Element {
   const { t } = useTranslation();
   return (
     <form.Field name="notes">
@@ -34,6 +39,7 @@ export function SetlistEntryNotesField({ form, onType }: SetlistEntryNotesFieldP
             }}
             onBlur={field.handleBlur}
             maxLength={SETLIST_ENTRY_NOTES_MAX_LENGTH}
+            data-sheet-focus={isFocusedOnOpen ? true : undefined}
             className="font-display italic"
           />
         </label>

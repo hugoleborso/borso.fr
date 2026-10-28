@@ -70,6 +70,7 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   },
   { key: 'sessions.title', readsTheSameBecause: 'same word, same spelling' },
   { key: 'setlist.capo', readsTheSameBecause: 'guitar jargon, used as-is in French' },
+  { key: 'setlist.capoValue', readsTheSameBecause: 'guitar jargon, used as-is in French' },
   {
     key: 'setlist.create.defaultName',
     readsTheSameBecause: '"Set 1" is what the band writes on the paper, in both languages',

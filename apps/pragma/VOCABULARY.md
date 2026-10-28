@@ -507,6 +507,31 @@ Held by: `site/src/components/molecules/lineup-slots.core.test.ts` › counts th
 Not to be confused with: **Lineup**, which is the record a slot is drawn
 from.
 
+## Lineup grid
+
+The setlist's **Lineup** view: one column per member who plays in the
+setlist and one row per entry, so a member's instruments read down the
+setlist as one lane in their stored colour.
+
+Lives in: `site/src/components/organisms/`
+
+- A column exists only for a member who holds an instrument in at least
+  one entry; a member who plays nowhere in the setlist has no column.
+- A cell where the member plays is filled with their stored colour and
+  holds their instrument glyphs; a cell where they sit out shows a dot
+  of that colour on the column's tint.
+- A cell is marked as changed when its member plays and holds another set
+  of instruments than on the entry before. The mark is a highlighter bar
+  and an ink corner tick, never another fill: the colour means the member
+  and nothing else (`buildLineupGrid`).
+
+Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › keeps a column only for the members who play in the setlist, in the order given
+Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › marks a played cell whose instruments differ from the entry before, and only that
+Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › marks a cell that changed from the song before, without changing its fill
+
+Not to be confused with: **Lineup slot**, the single mark a Songs row
+draws for one instrument held.
+
 ## Mastery
 
 How well a member plays a given instrument, as a whole number from 0 to 10.

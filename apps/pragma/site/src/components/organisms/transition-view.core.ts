@@ -1,6 +1,17 @@
 /** @Feature transitions */
 
-import type { TransitionCarrier, TransitionVerdict } from '@domain/transition.core';
+import {
+  evaluateTransition,
+  type TransitionCarrier,
+  type TransitionVerdict,
+} from '@domain/transition.core';
+import {
+  instrumentFamilyMap,
+  lineupOf,
+  type SetlistEditorEntry,
+  type SetlistEditorInstrument,
+  type SetlistEditorSong,
+} from './setlist-editor.utils';
 
 export type TransitionCarrierRole = 'harmonic' | 'support';
 
@@ -63,6 +74,27 @@ export function buildTransitionView(
       ...buildRows(verdict.supportCarriers, 'support', membersById, instrumentsById),
     ],
   };
+}
+
+export interface TransitionViewsInput {
+  readonly entries: readonly SetlistEditorEntry[];
+  readonly songsById: Readonly<Record<string, SetlistEditorSong>>;
+  readonly instruments: readonly (SetlistEditorInstrument & NameableInstrument)[];
+  readonly membersById: Readonly<Record<string, NameableMember>>;
+  readonly instrumentsById: Readonly<Record<string, NameableInstrument>>;
+}
+
+export function buildTransitionViews(input: TransitionViewsInput): readonly TransitionView[] {
+  const families = instrumentFamilyMap(input.instruments);
+  return input.entries.slice(1).map((right, index) => {
+    const left = input.entries[index] ?? right;
+    const verdict = evaluateTransition(
+      lineupOf(left, input.songsById),
+      lineupOf(right, input.songsById),
+      families,
+    );
+    return buildTransitionView(verdict, input.membersById, input.instrumentsById);
+  });
 }
 
 export function transitionPairKey(songAId: string, songBId: string): string {

@@ -4,9 +4,8 @@ import { TRANSITION_COMMENT_MAX_LENGTH } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
-import { composeClassName } from '../atoms/class-name.utils';
-import { inputVariants } from '../atoms/input.variants';
 import { Sheet } from '../molecules/Sheet';
 import { ApiError } from '../../lib/api.client';
 import { useTransitionDraft } from '../../lib/transition-draft.store';
@@ -14,6 +13,8 @@ import {
   useSaveTransitionComment,
   useTransitionComment,
 } from '../../lib/queries/transitions.queries';
+
+const TRANSITION_NOTE_ROWS = 3;
 
 export interface TransitionCommentModalProps {
   readonly songAId: string;
@@ -79,17 +80,15 @@ export function TransitionCommentModal({
         {existing.isLoading ? (
           <p className="m-0 mb-2 text-meta text-ink-soft">{t('common.loading')}</p>
         ) : null}
-        <textarea
+        <AutoGrowTextarea
+          size="md"
           value={draft}
           onChange={(event) => kept.keep(event.target.value)}
           readOnly={existing.isLoading}
           aria-label={t('setlist.transitionCommentTitle')}
-          rows={6}
+          rows={TRANSITION_NOTE_ROWS}
           maxLength={TRANSITION_COMMENT_MAX_LENGTH}
-          className={composeClassName(
-            inputVariants({ size: 'md' }),
-            'font-display italic resize-y',
-          )}
+          className="font-display italic"
         />
       </div>
     </Sheet>

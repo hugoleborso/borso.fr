@@ -1,13 +1,12 @@
 /** @Feature setlists */
 
-import type { JSX, ReactNode } from 'react';
+import type { SetlistStatus } from '@domain/setlist-vote.core';
+import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { useNavigateTo } from '../../lib/navigation.hook';
 import { useDeleteSetlist, useRenameSetlist } from '../../lib/queries/setlists.queries';
 import { Button } from '../atoms/Button';
-import { iconButtonVariants } from '../atoms/button.variants';
-import { Icon } from '../atoms/Icon';
 import { IconButton } from '../atoms/IconButton';
 import { Input } from '../atoms/Input';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
@@ -17,18 +16,28 @@ interface SetlistHeaderActionsProps {
   readonly setlistId: string;
   readonly name: string;
   readonly displayedName: string;
+  readonly status: SetlistStatus;
+  readonly isConcert: boolean;
+  readonly onCopyOrder: () => void;
   readonly onDeleted: () => void;
-  readonly trailing: ReactNode;
 }
+
+const VOTE_LABEL_BY_STATUS = {
+  voting: 'voting.enterVote',
+  locked: 'voting.openVote',
+} as const satisfies Readonly<Record<SetlistStatus, string>>;
 
 export function SetlistHeaderActions({
   setlistId,
   name,
   displayedName,
+  status,
+  isConcert,
+  onCopyOrder,
   onDeleted,
-  trailing,
 }: SetlistHeaderActionsProps): JSX.Element {
   const { t } = useTranslation();
+  const navigateTo = useNavigateTo();
   const renameSetlist = useRenameSetlist();
   const deleteSetlist = useDeleteSetlist();
   const [draftName, setDraftName] = useState<string | null>(null);
@@ -48,34 +57,51 @@ export function SetlistHeaderActions({
   return (
     <>
       {draftName === null ? (
-        <div className="flex items-center gap-1">
-          <Link
-            to={`/setlists/${setlistId}/scene`}
-            aria-label={t('scene.title')}
-            title={t('scene.title')}
-            className={iconButtonVariants({ variant: 'quiet' })}
-          >
-            <Icon name="play" size="md" />
-          </Link>
-          {trailing}
-          <Menu
-            label={t('setlist.moreActions')}
-            items={[
-              {
-                label: t('setlist.rename.label'),
-                icon: 'edit',
-                tone: 'default',
-                onSelect: () => setDraftName(name),
-              },
-              {
-                label: t('setlist.delete.button'),
-                icon: 'trash',
-                tone: 'danger',
-                onSelect: () => setIsConfirmingDeletion(true),
-              },
-            ]}
-          />
-        </div>
+        <Menu
+          label={t('setlist.moreActions')}
+          items={[
+            {
+              label: t('scene.title'),
+              icon: 'play',
+              tone: 'default',
+              onSelect: () => navigateTo(`/setlists/${setlistId}/scene`),
+            },
+            {
+              label: t(VOTE_LABEL_BY_STATUS[status]),
+              icon: 'vote',
+              tone: 'default',
+              onSelect: () => navigateTo(`/setlists/${setlistId}/vote`),
+            },
+            ...(isConcert
+              ? [
+                  {
+                    label: t('audience.panelTitle'),
+                    icon: 'audience',
+                    tone: 'default',
+                    onSelect: () => navigateTo(`/setlists/${setlistId}/audience`),
+                  } as const,
+                ]
+              : []),
+            {
+              label: t('setlist.copyOrder'),
+              icon: 'copy',
+              tone: 'default',
+              onSelect: onCopyOrder,
+            },
+            {
+              label: t('setlist.rename.label'),
+              icon: 'edit',
+              tone: 'default',
+              onSelect: () => setDraftName(name),
+            },
+            {
+              label: t('setlist.delete.button'),
+              icon: 'trash',
+              tone: 'danger',
+              onSelect: () => setIsConfirmingDeletion(true),
+            },
+          ]}
+        />
       ) : (
         <div className="flex flex-1 items-center gap-2 min-w-0">
           <Input
@@ -87,7 +113,7 @@ export function SetlistHeaderActions({
           />
           <Button
             icon="check"
-            variant="primary"
+            variant="secondary"
             onClick={saveName}
             disabled={renameSetlist.isPending}
           >

@@ -44,3 +44,13 @@ export function selectLatestTextSaveStatus(state: LatestTextSaveState): LatestTe
   if (state.hasFailed) return 'failed';
   return state.latestText === state.savedText ? 'saved' : 'unsaved';
 }
+
+export type TextSaveDisplay = 'none' | 'saving' | 'saved' | 'failed';
+
+export function selectTextSaveDisplay(
+  status: LatestTextSaveStatus,
+  hasTyped: boolean,
+): TextSaveDisplay {
+  if (status === 'failed' || status === 'saving') return status;
+  return status === 'saved' && hasTyped ? 'saved' : 'none';
+}

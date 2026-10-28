@@ -19,11 +19,10 @@ import {
 } from '@dnd-kit/sortable';
 import type { JSX } from 'react';
 import { useState } from 'react';
-import type { LineupEditorInstrument } from '../molecules/LineupEditor';
 import type { LineupMember } from '../molecules/MemberLineup';
 import { warnIfOrphanMemberIds } from './orphan-member-warn.adapter';
 import { SetlistEntryDragPreview } from '../molecules/SetlistEntryDragPreview';
-import { SetlistEntryRow } from './SetlistEntryRow';
+import { type SetlistEntryLineupChange, SetlistEntryRow } from './SetlistEntryRow';
 import {
   compactLineup,
   lineupOf,
@@ -33,15 +32,13 @@ import {
   tonalityLabelFor,
 } from './setlist-editor.utils';
 import { buildLineupColumn, type SlotInstrument } from '../molecules/lineup-slots.core';
-import type { SongDefaults, SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
-import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];
 const NO_MEMBER_PART: readonly MemberPartGlyph[] = [];
-const STATUS_OF_A_SONG_THE_CATALOG_LOST = 'idea';
+const NO_CHANGE: readonly SetlistEntryLineupChange[] = [];
 const SONG_ID_FALLBACK_LENGTH = 8;
 const DRAG_ACTIVATION_DISTANCE_PX = 6;
 const DRAG_TOUCH_DELAY_MS = 200;
@@ -51,7 +48,6 @@ interface ListEntry extends SetlistEditorEntry {
   readonly id: string;
   readonly keyOverride: string | null;
   readonly capo: number | null;
-  readonly energy: number | null;
   readonly notes: string;
 }
 
@@ -61,28 +57,16 @@ export interface SetlistEntriesListProps {
   readonly songsById: Readonly<Record<string, SetlistEditorSong>>;
   readonly transitionViews: readonly TransitionView[];
   readonly transitionNotesByPair: Readonly<Record<string, string>>;
-  readonly meanMasteryBySongId: Readonly<Record<string, number | null>>;
   readonly inFilteredMode: boolean;
   readonly memberPartByEntryId: Readonly<Record<string, readonly MemberPartGlyph[]>>;
   readonly lineupMembers: readonly LineupMember[];
-  readonly instruments: readonly LineupEditorInstrument[];
   readonly slotInstruments: readonly SlotInstrument[];
   readonly knownMemberIds: ReadonlySet<string>;
+  readonly lineupChangesByEntryId: Readonly<Record<string, readonly SetlistEntryLineupChange[]>>;
   readonly onReorder: (orderedEntryIds: readonly string[]) => void;
-  readonly onUpdate: (entryId: string, patch: SetlistEntryPatch) => void;
-  readonly onSave: (entryId: string, patch: SetlistEntryPatch) => Promise<unknown>;
-  readonly onUpdateSongDefaults: (songId: string, patch: SongDefaultsPatch) => void;
+  readonly onOpen: (entryId: string) => void;
   readonly onRemove: (entryId: string) => void;
   readonly onOpenTransition: (leftSongId: string, rightSongId: string) => void;
-}
-
-function songDefaultsOf(song: SetlistEditorSong | undefined): SongDefaults {
-  return {
-    status: song?.status ?? STATUS_OF_A_SONG_THE_CATALOG_LOST,
-    tonalityStart: song?.tonalityStart ?? null,
-    tonalityEnd: song?.tonalityEnd ?? null,
-    baseEnergy: song?.baseEnergy ?? null,
-  };
 }
 
 export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element {
@@ -142,7 +126,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
         items={props.visibleEntries.map((entry) => entry.id)}
         strategy={verticalListSortingStrategy}
       >
-        <ul className="flex flex-col gap-2">
+        <ul className="m-0 flex list-none flex-col p-0">
           {props.visibleEntries.map((entry, visibleIndex) => {
             const song = props.songsById[entry.songId];
             const lineupRaw = lineupOf(entry, props.songsById);
@@ -160,30 +144,16 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
                 memberPart={props.memberPartByEntryId[entry.id] ?? NO_MEMBER_PART}
                 isMemberView={props.inFilteredMode}
                 entryId={entry.id}
-                songId={entry.songId}
                 title={song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH)}
                 deezerAlbumId={song?.deezerAlbumId ?? null}
-                deezerTrackId={song?.deezerTrackId ?? null}
-                spotifyTrackId={song?.spotifyTrackId ?? null}
                 artist={song?.artist ?? ''}
-                tonalityLabel={tonalityLabelFor(song)}
-                meanMastery={props.meanMasteryBySongId[entry.songId] ?? null}
-                keyOverride={entry.keyOverride}
+                keyLabel={entry.keyOverride ?? tonalityLabelFor(song)}
                 capo={entry.capo}
-                energy={entry.energy}
-                baseEnergy={song?.baseEnergy ?? null}
                 notes={entry.notes}
                 lineupColumn={lineupColumn}
-                resolvedLineupForEdit={lineupRaw}
-                songDefaultLineup={song?.defaultLineup ?? {}}
-                songDefaults={songDefaultsOf(song)}
-                lineupOverride={entry.lineupOverride}
-                members={props.lineupMembers}
-                instruments={props.instruments}
+                lineupChanges={props.lineupChangesByEntryId[entry.id] ?? NO_CHANGE}
                 transitionBefore={renderTransitionBefore(fullIndex)}
-                onUpdate={props.onUpdate}
-                onSave={props.onSave}
-                onUpdateSongDefaults={(patch) => props.onUpdateSongDefaults(entry.songId, patch)}
+                onOpen={() => props.onOpen(entry.id)}
                 onRemove={props.onRemove}
               />
             );

@@ -1,30 +1,19 @@
 /** @Feature takes */
 
-import { type JSX, type SyntheticEvent, useRef, useState, useSyncExternalStore } from 'react';
+import { type JSX, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { recordTakeBreadcrumb } from '../../observability/error-reporting.adapter';
-import { readBrowserRecorderEnvironment, startRecording } from '../../lib/recorder.adapter';
-import type { ActiveRecording, RecordingOutcome } from '../../lib/recorder.core';
 import { holdScreenAwakeWhileAttached } from '../../lib/scene-wake-lock.adapter';
 import {
   readSecondClock,
   readServerSecondClock,
   subscribeSecondClock,
 } from '../../lib/second-clock.store';
-import { roundDurationSeconds } from '../../lib/take-queue.core';
-import { queueTake } from '../../lib/take-queue.setup';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
 import { IconButton } from '../atoms/IconButton';
 import { PulsingDot } from '../atoms/PulsingDot';
-import {
-  decidePhaseAfterQueueing,
-  formatElapsedClock,
-  type RecordingEnd,
-  type RecordingSheetPhase,
-  selectPhaseAfterStart,
-  selectRecordingSheetView,
-} from './recording-sheet.core';
+import { formatElapsedClock } from './recording-sheet.core';
+import { type RecordingSheetController, useRecordingSheet } from './recording-sheet.hook';
 import { Sheet } from '../molecules/Sheet';
 import { TakeUploadForm } from './TakeUploadForm';
 
@@ -35,9 +24,6 @@ export interface RecordingSheetProps {
   readonly isCompact?: boolean;
 }
 
-const CLOSED: RecordingSheetPhase = { kind: 'closed' };
-const SAVING: RecordingSheetPhase = { kind: 'saving' };
-const STARTING: RecordingSheetPhase = { kind: 'starting' };
 const ALERT_CLASS = 'text-meta text-danger m-0';
 const STATUS_CLASS = 'text-meta text-ink-soft m-0';
 
@@ -62,71 +48,7 @@ export function RecordingSheet({
   isCompact = false,
 }: RecordingSheetProps): JSX.Element {
   const { t } = useTranslation();
-  const [phase, setPhase] = useState<RecordingSheetPhase>(CLOSED);
-  const [isUploadOpen, setIsUploadOpen] = useState(false);
-  const recording = useRef<ActiveRecording | null>(null);
-  const view = selectRecordingSheetView(phase);
-
-  const keep = async (end: RecordingEnd, outcome: RecordingOutcome): Promise<void> => {
-    const queueing = await queueTake(
-      {
-        songId,
-        sessionId,
-        recordedAt: new Date(outcome.startedAtEpochMilliseconds),
-        durationSeconds: roundDurationSeconds(outcome.durationMilliseconds),
-        rawContentType: outcome.contentType,
-        source: 'live',
-      },
-      outcome.audio,
-    );
-    setPhase(
-      decidePhaseAfterQueueing({
-        end,
-        result: queueing,
-        songTitle,
-        contentType: outcome.contentType,
-        readDownloadUrl: () => URL.createObjectURL(outcome.audio),
-      }),
-    );
-  };
-
-  const keepInterrupted = (outcome: RecordingOutcome): void => {
-    recording.current = null;
-    recordTakeBreadcrumb('RecordingInterrupted');
-    setPhase(SAVING);
-    void keep('interrupted', outcome);
-  };
-
-  const start = async (): Promise<void> => {
-    setPhase(STARTING);
-    const answer = await startRecording(readBrowserRecorderEnvironment(), keepInterrupted);
-    recording.current = 'recording' in answer ? answer.recording : null;
-    setPhase(selectPhaseAfterStart(answer));
-  };
-
-  const stop = async (): Promise<void> => {
-    const active = recording.current;
-    if (active === null) return;
-    recording.current = null;
-    setPhase(SAVING);
-    await keep('stopped', await active.stop());
-  };
-
-  const close = (): void => {
-    const { download } = view;
-    if (download !== null) URL.revokeObjectURL(download.url);
-    setPhase(CLOSED);
-  };
-
-  const refuseCancelWhileBusy = (event: SyntheticEvent<HTMLDialogElement>): void => {
-    if (view.isBusy) event.preventDefault();
-  };
-
-  const uploadInstead = (): void => {
-    setPhase(CLOSED);
-    setIsUploadOpen(true);
-  };
-
+  const controller = useRecordingSheet();
   return (
     <>
       <IconButton
@@ -134,9 +56,28 @@ export function RecordingSheet({
         size={isCompact ? 'sm' : 'md'}
         icon="mic"
         label={t('takes.recordAria', { title: songTitle })}
-        disabled={view.isOpen}
-        onClick={() => void start()}
+        disabled={controller.view.isOpen}
+        onClick={() => void controller.start({ songId, songTitle, sessionId })}
       />
+      <RecordingSheetDialogs controller={controller} />
+    </>
+  );
+}
+
+export interface RecordingSheetDialogsProps {
+  readonly controller: RecordingSheetController;
+}
+
+// @FollowsBlueprint organism-presentational
+export function RecordingSheetDialogs({
+  controller,
+}: RecordingSheetDialogsProps): JSX.Element | null {
+  const { t } = useTranslation();
+  const { subject, view } = controller;
+  if (subject === null) return null;
+  const songTitle = subject.songTitle;
+  return (
+    <>
       {view.isOpen ? (
         <Sheet
           title={
@@ -149,12 +90,12 @@ export function RecordingSheet({
           isDismissible={false}
           isTitleARecordName
           isCloseDisabled={view.isBusy}
-          onCancel={refuseCancelWhileBusy}
-          onClose={close}
+          onCancel={controller.refuseCancelWhileBusy}
+          onClose={controller.close}
           footer={
             <>
               {view.offersUpload ? (
-                <Button variant="secondary" icon="upload" onClick={uploadInstead}>
+                <Button variant="secondary" icon="upload" onClick={controller.uploadInstead}>
                   {t('takes.upload')}
                 </Button>
               ) : null}
@@ -169,7 +110,12 @@ export function RecordingSheet({
                 </a>
               )}
               {view.showsStop ? (
-                <Button variant="primary" size="lg" icon="stop" onClick={() => void stop()}>
+                <Button
+                  variant="primary"
+                  size="lg"
+                  icon="stop"
+                  onClick={() => void controller.stop()}
+                >
                   {t('takes.recording.stop')}
                 </Button>
               ) : null}
@@ -196,12 +142,12 @@ export function RecordingSheet({
           </div>
         </Sheet>
       ) : null}
-      {isUploadOpen ? (
+      {controller.isUploadOpen ? (
         <TakeUploadForm
-          songId={songId}
+          songId={subject.songId}
           songTitle={songTitle}
-          presetSessionId={sessionId}
-          onClose={() => setIsUploadOpen(false)}
+          presetSessionId={subject.sessionId}
+          onClose={controller.closeUpload}
         />
       ) : null}
     </>

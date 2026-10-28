@@ -1832,7 +1832,7 @@
     "SetlistEditor": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx": {
-    "SetlistEntryRow": "organism-form"
+    "SetlistEntryRow": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/SetlistSongPicker.tsx": {
     "SetlistSongPicker": "organism-query-owning"

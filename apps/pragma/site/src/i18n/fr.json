@@ -280,7 +280,7 @@
     "allMembers": "Tous",
     "cancel": "Annuler",
     "editOverride": "Lineup (ce set)",
-    "emptyForMember": "Rien à jouer ce soir.",
+    "emptyForMember": "Rien à jouer dans cette setlist.",
     "filterByMember": "Filtrer par membre",
     "instruments": "Instruments",
     "modal": {
@@ -293,7 +293,10 @@
     "override": "Exception",
     "resetToDefault": "Revenir au défaut du morceau",
     "save": "Enregistrer",
-    "saveAsSongDefault": "Enregistrer comme défaut du morceau"
+    "saveAsSongDefault": "Enregistrer comme défaut du morceau",
+    "tonight": "Line-up de ce soir",
+    "useSongLineup": "Reprendre le line-up du morceau",
+    "changedTonight": "Changé ce soir"
   },
   "mastery": {
     "noData": "Crée des membres et des instruments pour remplir la matrice.",
@@ -496,7 +499,30 @@
     "transitionRisky": "Transition risquée",
     "untitled": "Setlist sans titre",
     "moreActions": "Plus d’actions",
-    "voting": "En cours de vote"
+    "voting": "En cours de vote",
+    "noteNotSaved": "Non enregistré",
+    "noteSaving": "Enregistrement…",
+    "noteSaved": "Enregistré",
+    "noteRetry": "Réessayer",
+    "entryPosition": "Morceau {{position}} sur {{count}} · ce soir seulement",
+    "openSong": "Ouvrir le morceau",
+    "recordTake": "Enregistrer une prise",
+    "capoValue": "capo {{capo}}",
+    "sitsOutTonight": "{{name}} ne joue pas",
+    "tonightChange": "Ce soir : {{change}}",
+    "entryActions": "Plus pour {{title}}",
+    "removeFromSetlist": "Retirer de la setlist",
+    "editTransitionNote": "Modifier la note de transition",
+    "noteTransition": "Noter cette transition",
+    "lineupCellPlays": "{{title}} : {{name}} joue {{instrumentNames}}.",
+    "lineupCellSitsOut": "{{title}} : {{name}} ne joue pas.",
+    "lineupCellChanged": "Change par rapport au morceau précédent.",
+    "lineupOpenMemberPart": "Voir la partie de {{name}}",
+    "lineupEmpty": "Personne ne joue encore dans cette setlist. Ouvrez un morceau pour lui donner un line-up.",
+    "viewLabel": "Vue de la setlist",
+    "viewSongs": "Morceaux",
+    "viewLineup": "Line-up",
+    "viewMyPart": "Ma partie"
   },
   "shell": {
     "meVersion": "Pragma · v0.1"
@@ -553,7 +579,10 @@
     "tapToScore": "Noter {{title}}",
     "targetSongCount": "Combien de chansons ?",
     "untitled": "Setlist sans nom",
-    "backToVote": "Revenir au vote"
+    "backToVote": "Revenir au vote",
+    "pageTitle": "Voter pour les morceaux",
+    "howItRunsScore": "Chaque membre répartit un budget de points sur les morceaux qu’il veut jouer.",
+    "howItRunsClose": "Clore le vote fait des morceaux les mieux notés cette setlist."
   },
   "audience": {
     "pageCrumb": "Ce soir",
