@@ -40,6 +40,7 @@ export interface TaskMetricsOptions {
   readonly measureSliceTwo: boolean;
   readonly measureSliceThree: boolean;
   readonly measureSliceFour: boolean;
+  readonly measureSliceSix: boolean;
   readonly seedVariant: SeedVariant;
   readonly outputPath: string | null;
   readonly baselinePath: string | null;
@@ -95,6 +96,7 @@ export function parseTaskMetricsArguments(argumentList: readonly string[]): Task
     measureSliceTwo: argumentList.includes('--slice-2'),
     measureSliceThree: argumentList.includes('--slice-3'),
     measureSliceFour: argumentList.includes('--slice-4'),
+    measureSliceSix: argumentList.includes('--slice-6'),
     seedVariant: parseSeedVariant(readOptionValue(argumentList, '--seed')),
     outputPath: readOptionValue(argumentList, '--out'),
     baselinePath: readOptionValue(argumentList, '--compare'),

@@ -3,13 +3,12 @@ import { selectNextSession } from '../../domain/session-schedule.core';
 import { formatSessionDate } from '../../site/src/lib/formatters.utils';
 import type { BandSessionDriver } from './band-session.setup';
 import {
+  COUNT_LISTEN_LINKS,
   READ_PAGE_HEADING,
   LIST_VISIBLE_BUTTON_NAMES,
   LISTS_A_DURATION,
   MAIN_TEXT_INCLUDES,
-  READ_SCROLL_Y,
   READ_NEXT_SESSION_TEXT,
-  STUDY_ROW_LINK_PROBE,
 } from './page-probes.setup';
 import { projectScreenFraction, replaceIdentifierInPath } from './task-metrics.core';
 import { navigateTo, TaskWalk, waitForMain, waitMilliseconds } from './walk-recorder.setup';
@@ -25,7 +24,6 @@ const HOME_LOCALE = 'en';
 const SECOND_ENTRY = 1;
 const SECOND_ENTRY_NUMBER = 2;
 const TAB_LINK = 'nav[aria-label="Main sections"] a';
-const BAND_LINK = 'nav[aria-label="The band"] a';
 const SECTION_TAB = '[role=tab]';
 const HOME = '/';
 
@@ -83,11 +81,6 @@ async function openNextSetlistFromHome(walk: TaskWalk): Promise<void> {
     { exact: 'Open the setlist', css: 'a, button', scope: 'page' },
     { primary: true, wait: CREATE_SETTLE_MS },
   );
-}
-
-async function openStudies(walk: TaskWalk): Promise<void> {
-  await walk.tap('Band tab', { text: '^Band', css: TAB_LINK });
-  await walk.tap('Studies link', { exact: 'Studies', css: BAND_LINK });
 }
 
 async function isTextInMain(driver: BandSessionDriver, needle: string): Promise<boolean> {
@@ -444,8 +437,20 @@ const addSongFromPicker: TaskWalkRunner = async (driver) => {
   return walk.summarise({ success: await readRehearsalOutcome(driver) });
 };
 
-const CHORDPRO_CHART =
-  "{title: Ain't No Sunshine}\n[Am]Ain't no sunshine when she's [Em]gone [G]\n[Am]It's not warm when she's a[Em]way [G]";
+const CHORDS_ABOVE_LYRICS =
+  "Am               Em   G\nAin't no sunshine when she's gone\nAm               Em   G\nIt's not warm when she's away";
+const WRITE_CLIPBOARD = `async (text) => { try { await navigator.clipboard.writeText(text); return true; } catch { return false; } }`;
+const READ_CHORD_TEXT = `() => document.querySelector('#song-chord-text')?.value ?? ''`;
+
+async function didPutOnClipboard(driver: BandSessionDriver, text: string): Promise<boolean> {
+  await driver.session
+    .send('Browser.grantPermissions', {
+      origin: new URL(driver.baseUrl).origin,
+      permissions: ['clipboardReadWrite', 'clipboardSanitizedWrite'],
+    })
+    .catch(() => null);
+  return (await driver.session.evaluate(WRITE_CLIPBOARD, text)) === true;
+}
 
 const addChords: TaskWalkRunner = async (driver) => {
   await driver.startFresh(HOME);
@@ -458,73 +463,64 @@ const addChords: TaskWalkRunner = async (driver) => {
     { text: "Ain't No Sunshine", css: 'main a' },
     { wait: CREATE_SETTLE_MS },
   );
+  const tapsBeforeSongPage = walk.taps;
   await walk.tap(
     'Edit',
-    { exact: 'Edit', css: 'a, button', scope: 'page' },
+    { exact: 'Edit', css: 'a', scope: 'page' },
     { primary: true, wait: CREATE_SETTLE_MS },
   );
+  const isOnClipboard = await didPutOnClipboard(driver, CHORDS_ABOVE_LYRICS);
   await walk.tap(
-    'ChordPro text',
-    { exact: 'ChordPro text', css: 'label', scope: 'page' },
-    { primary: true },
+    'Paste text',
+    { exact: 'Paste text', css: 'button', scope: 'page' },
+    { primary: true, wait: PICK_SETTLE_MS },
   );
-  await walk.tap('Chart text box', { css: 'textarea', index: 0, scope: 'page' });
-  await walk.type('Paste chart', CHORDPRO_CHART);
+  const pasted = String(await driver.session.evaluate(READ_CHORD_TEXT));
+  if (!pasted.includes('sunshine')) {
+    walk.note('The browser refused the clipboard read, so the chords were typed into the box.');
+    await walk.tap('Chord text box', { css: '#song-chord-text', scope: 'page' });
+    await walk.type('Paste chart', CHORDS_ABOVE_LYRICS);
+  }
   await walk.tap(
     'Save',
     { exact: 'Save', css: 'button', scope: 'page' },
     { primary: true, wait: SAVE_SETTLE_MS },
   );
+  walk.note(
+    `From the song page: ${String(walk.taps - tapsBeforeSongPage)} taps (Edit, Paste text, Save), with no ChordPro syntax typed.`,
+  );
   const location = await walk.readLocation();
   const isShown = await isTextInMain(driver, 'sunshine');
-  return walk.summarise({ success: { landedOn: location.path, chartShownOnSongPage: isShown } });
+  const saved = z
+    .object({ song: z.object({ chart: z.object({ text: z.string() }).passthrough().nullable() }) })
+    .passthrough()
+    .safeParse(await driver.fetchJson(`/api/songs/${location.path.split('/').at(-1) ?? ''}`));
+  return walk.summarise({
+    success: {
+      landedOn: location.path,
+      chartShownOnSongPage: isShown,
+      clipboardUsed: isOnClipboard && pasted.includes('sunshine'),
+      savedAsChordPro: saved.success && (saved.data.song.chart?.text.includes('[Am]') ?? false),
+    },
+  });
 };
-
-const studiesOverviewSchema = z
-  .object({
-    queue: z
-      .array(z.object({ title: z.string(), isStudiedToday: z.boolean().optional() }))
-      .optional(),
-    myStreak: z.object({ isTodayCounted: z.boolean().optional() }).nullable().optional(),
-  })
-  .passthrough();
 
 const learnNewSong: TaskWalkRunner = async (driver) => {
   await driver.startFresh(HOME);
   const walk = new TaskWalk(driver.session, '10 Learn a new song');
-  await openStudies(walk);
-  const firstTitle =
-    studiesOverviewSchema.parse(await driver.fetchJson('/api/studies/overview')).queue?.[0]
-      ?.title ?? '';
-  const isRowLink = (await driver.session.evaluate(STUDY_ROW_LINK_PROBE)) === true;
-  walk.note(
-    `First song to study: ${firstTitle}. The study row ${isRowLink ? 'links' : 'does not link'} to the song, so the person goes to the Songs tab.`,
-  );
   await walk.tap('Songs tab', { text: '^Songs', css: TAB_LINK });
+  await walk.tap('To learn', { exact: 'To learn', css: 'main [aria-pressed]', scope: 'page' });
+  const firstRow = await walk.waitFor({ css: 'main li a', index: 0, scope: 'page' });
+  walk.note(`First song to learn: ${firstRow.name}.`);
   await walk.tap(
-    `Open ${firstTitle}`,
-    { text: `^\\S+ ${escapeForPattern(firstTitle)} `, css: 'main a' },
+    'Open the first song to learn',
+    { css: 'main li a', index: 0, scope: 'page' },
     { wait: CREATE_SETTLE_MS },
   );
-  const scrollsBefore = walk.scrolls;
-  await walk.bringIntoView({ text: '^Takes$', css: 'h2', scope: 'page' });
-  walk.note(
-    `Reading the whole chart down to the Takes heading took ${String(walk.scrolls - scrollsBefore)} scroll gestures.`,
-  );
-  const listen = await walk.find({ text: 'Listen on', css: 'a', scope: 'page' });
-  walk.note(
-    listen === null
-      ? 'No listen link on the song page (it only shows in the setlist entry sheet).'
-      : 'A listen link is on the song page.',
-  );
-  await openStudies(walk);
-  const keptScroll = Number(await driver.session.evaluate(READ_SCROLL_Y));
-  if (keptScroll > 0) {
-    walk.note(
-      `Coming back to Studies, the page opened scrolled ${String(keptScroll)} px down (the scroll of the song page is kept), so the first Studied button was above the screen.`,
-    );
-  }
-  await walk.tap('Studied', { exact: 'Studied', css: 'main button' }, { primary: true });
+  const listenLinks = Number(await driver.session.evaluate(COUNT_LISTEN_LINKS));
+  walk.note(`${String(listenLinks)} listen link(s) on the song page.`);
+  await walk.tap('Practised', { exact: 'Practised', css: 'main button' }, { primary: true });
+  await waitMilliseconds(SAVE_SETTLE_MS);
   const overview = studiesOverviewSchema.parse(await driver.fetchJson('/api/studies/overview'));
   return walk.summarise({
     success: {
@@ -535,6 +531,15 @@ const learnNewSong: TaskWalkRunner = async (driver) => {
     },
   });
 };
+
+const studiesOverviewSchema = z
+  .object({
+    queue: z
+      .array(z.object({ title: z.string(), isStudiedToday: z.boolean().optional() }))
+      .optional(),
+    myStreak: z.object({ isTodayCounted: z.boolean().optional() }).nullable().optional(),
+  })
+  .passthrough();
 
 const discussWhichSongs: TaskWalkRunner = async (driver) => {
   const known = await driver.startFresh((records) => `/setlists/${records.rehearsal.id}`);

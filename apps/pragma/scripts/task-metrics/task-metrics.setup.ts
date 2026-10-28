@@ -12,6 +12,7 @@ import {
 } from './task-metrics.core';
 import { measureSliceOne } from './slice-one-measures.setup';
 import { measureSliceFour } from './slice-four-measures.setup';
+import { measureSliceSix } from './slice-six-measures.setup';
 import { measureSliceThree } from './slice-three-measures.setup';
 import { measureSliceTwo } from './slice-two-measures.setup';
 import { TASK_WALKS } from './task-walks.setup';
@@ -94,6 +95,10 @@ async function main(): Promise<void> {
   }
   if (options.measureSliceFour) {
     result.sliceFour = await measureSliceFour(driver);
+    writeResult(options.outputPath, result);
+  }
+  if (options.measureSliceSix) {
+    result.sliceSix = await measureSliceSix(driver);
     writeResult(options.outputPath, result);
   }
   session.close();

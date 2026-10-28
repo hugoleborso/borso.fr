@@ -149,8 +149,6 @@ export const MAIN_TEXT_INCLUDES = `(needle) => document.querySelector('main').in
 
 export const LISTS_A_DURATION = `() => /\\d:\\d\\d/.test(document.querySelector('main').innerText)`;
 
-export const STUDY_ROW_LINK_PROBE = `() => { const studied = [...document.querySelectorAll('main button')].find((element) => element.innerText.trim() === 'Studied'); return !!studied?.closest('li, div')?.querySelector('a[href*="/catalog/"]'); }`;
-
 export const LIST_VISIBLE_BUTTON_NAMES = `(limit) => [...document.querySelectorAll('main button, dialog[open] button')].map((button) => (button.getAttribute('aria-label') || button.innerText).trim()).filter(Boolean).slice(0, limit)`;
 
 export const READ_NEXT_SESSION_TEXT = `() => (document.querySelector('section[aria-label="Next session"]')?.innerText || '').replace(/\\s+/g, ' ')`;
@@ -494,3 +492,9 @@ export const READ_ADD_SONGS_SHEET = `(setlistTitles) => {
     rowsInSetlistPickable: rows.filter((row) => isInSetlist(row) && !row.disabled).length,
   };
 }`;
+
+export const COUNT_BUTTONS_INSIDE_LINKS = `() => document.querySelectorAll('a button, a [role="button"]').length`;
+
+export const COUNT_STAGE_MODE_WAYS = `() => [...document.querySelectorAll('main a[href$="/scene"], main button')].filter((element) => element.tagName === 'A' || /stage|scene|full screen/i.test(element.innerText)).length`;
+
+export const COUNT_LISTEN_LINKS = `() => document.querySelectorAll('main ul[aria-label="Listen"] a').length`;

@@ -1,0 +1,302 @@
+{
+  "meta": {
+    "measuredAt": "2026-10-28T14:19:46.741Z",
+    "viewport": "390x844",
+    "insets": {
+      "top": 47,
+      "bottom": 34,
+      "left": 0,
+      "right": 0
+    },
+    "standalone": false,
+    "base": "http://localhost:5182",
+    "seed": "audit",
+    "input": "argent gesture-tap / gesture-scroll / gesture-drag / keyboard. On Chromium argent sends a one-finger tap as CDP mouse press and release (pointerType mouse), not as a touch event.",
+    "bottomThird": "centre of the control at or below 2/3 of the screen height on arrival, before any scroll"
+  },
+  "tasks": {
+    "9": {
+      "task": "9 Add chords to a song",
+      "taps": 6,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 4,
+      "screens": ["/", "/catalog", "/catalog/:id", "/catalog/:id/edit"],
+      "primaryActions": [
+        {
+          "label": "Edit",
+          "screen": "/catalog/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.177,
+          "inBottomThird": false
+        },
+        {
+          "label": "Paste text",
+          "screen": "/catalog/:id/edit",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.77,
+          "inBottomThird": true
+        },
+        {
+          "label": "Save",
+          "screen": "/catalog/:id/edit",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Songs tab",
+          "target": "Songs",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [195, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Search field",
+          "target": "Search",
+          "tag": "input",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.101,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.101,
+          "box": [102, 63, 272, 44]
+        },
+        {
+          "kind": "type",
+          "label": "Search",
+          "chars": 8
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Open Ain't No Sunshine",
+          "target": "AN Ain't No Sunshine Bill Withers Rehearsed",
+          "tag": "a",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.241,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.241,
+          "box": [16, 175, 358, 57]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Edit",
+          "target": "Edit",
+          "tag": "a",
+          "primary": true,
+          "screen": "/catalog/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.177,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.177,
+          "box": [253, 131, 73, 36]
+        },
+        {
+          "n": 5,
+          "kind": "tap",
+          "label": "Paste text",
+          "target": "Paste text",
+          "tag": "button",
+          "primary": true,
+          "screen": "/catalog/:id/edit",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.77,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.77,
+          "box": [46, 628, 137, 44]
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Save",
+          "target": "Save",
+          "tag": "button",
+          "primary": true,
+          "screen": "/catalog/:id/edit",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [16, 702, 97, 44]
+        }
+      ],
+      "notes": [
+        "From the song page: 3 taps (Edit, Paste text, Save), with no ChordPro syntax typed."
+      ],
+      "success": {
+        "landedOn": "/catalog/:id",
+        "chartShownOnSongPage": true,
+        "clipboardUsed": true,
+        "savedAsChordPro": true
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/catalog": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": true,
+          "containers": ["x div 0,119,390,44 (44/44)"]
+        },
+        "/catalog/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/catalog/:id/edit": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "10": {
+      "task": "10 Learn a new song",
+      "taps": 4,
+      "textEntries": 0,
+      "scrollGestures": 0,
+      "screensVisited": 3,
+      "screens": ["/", "/catalog", "/catalog/:id"],
+      "primaryActions": [
+        {
+          "label": "Practised",
+          "screen": "/catalog/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.408,
+          "inBottomThird": false
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Songs tab",
+          "target": "Songs",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [195, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "To learn",
+          "target": "To learn",
+          "tag": "button",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.167,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.167,
+          "box": [65, 119, 76, 44]
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Open the first song to learn",
+          "target": "A Afterglow Batterie, Chant · 2/10 Concert ready",
+          "tag": "a",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.287,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.287,
+          "box": [16, 214, 358, 57]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Practised",
+          "target": "Practised",
+          "tag": "button",
+          "primary": true,
+          "screen": "/catalog/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.408,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.408,
+          "box": [41, 309, 64, 72]
+        }
+      ],
+      "notes": [
+        "First song to learn: A Afterglow Batterie, Chant · 2/10 Concert ready.",
+        "0 listen link(s) on the song page."
+      ],
+      "success": {
+        "todayCounted": true,
+        "studiedToday": ["Afterglow", "Afterglow"]
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/catalog": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": true,
+          "containers": ["x div 0,119,390,44 (44/44)"]
+        },
+        "/catalog/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    }
+  },
+  "sliceSix": {
+    "catalogPageHeightInScreens": 3.4,
+    "songUsed": "Wonderwall",
+    "stageModeWaysFromSongPage": 1,
+    "editRouteVerticalScrollAreas": 1,
+    "buttonsInsideLinksByRoute": {},
+    "listenLinks": {
+      "songsWithLinks": 0,
+      "songs": []
+    }
+  }
+}
