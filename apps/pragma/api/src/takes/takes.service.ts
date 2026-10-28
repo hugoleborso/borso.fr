@@ -133,7 +133,12 @@ export async function createTake(
   if (recording.kind !== 'recorded') return recording;
   const { take } = recording;
   if (!recording.isNewTake) return { kind: 'ok', take };
-  recordProductEvent({ event: 'take_created', source: input.source, queued: input.queued });
+  recordProductEvent({
+    event: 'take_created',
+    source: input.source,
+    queued: input.queued,
+    from_practice_mode: input.fromPracticeMode,
+  });
   await notifyBandAboutTake('take-created', take, command);
   return { kind: 'ok', take };
 }

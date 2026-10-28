@@ -6,6 +6,7 @@ import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import { reportEntryNoteSaveFailed } from '../../observability/error-reporting.adapter';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { Button } from '../atoms/Button';
 import { ButtonLink } from '../atoms/ButtonLink';
@@ -88,6 +89,10 @@ export function SetlistEntrySheet(props: SetlistEntrySheetProps): JSX.Element {
         reportEntryNoteSaveFailed(props.setlistId);
         throw error;
       }),
+    onSaved: ({ isSuperseded }) => {
+      recordProductEvent('entry_note_saved');
+      if (isSuperseded) recordProductEvent('entry_note_save_superseded');
+    },
   });
   const keySave = useLatestTextSave({
     savedText: entry.keyOverride ?? '',

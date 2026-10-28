@@ -694,6 +694,7 @@ async function main(): Promise<void> {
           durationSeconds: TAKE_BASE_DURATION_SECONDS + index * TAKE_DURATION_STEP_SECONDS,
           source: 'live',
           queued: false,
+          fromPracticeMode: false,
         },
         actorOf(hugo),
       );

@@ -29,6 +29,7 @@ import { indexById } from './setlist-editor.utils';
 import { describeMemberPartsByEntryId, filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
 import { buildTransitionViews, indexTransitionComments } from './transition-view.core';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 
 export type SetlistEditorView = SetlistViewName;
 
@@ -208,6 +209,7 @@ export function SetlistEditor({
       <BottomActions>
         <ButtonLink
           to={`/setlists/${setlistId}/order`}
+          onClick={() => recordProductEvent('setlist_order_opened')}
           variant="secondary"
           icon="reorder"
           size="lg"

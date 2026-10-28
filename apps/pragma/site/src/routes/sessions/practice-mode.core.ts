@@ -82,6 +82,7 @@ const storedPracticePositionSchema = z.object({
 
 // @FollowsBlueprint core-persisted-slice-parsed-not-trusted
 export function parseStoredPracticePosition(text: string | null): StoredPracticePosition | null {
+  // Stryker disable next-line ConditionalExpression: equivalent mutant. JSON.parse reads null as the JSON value null, which the schema refuses, so the function answers null either way.
   if (text === null) return null;
   try {
     const storedValue: unknown = JSON.parse(text);
@@ -92,15 +93,32 @@ export function parseStoredPracticePosition(text: string | null): StoredPractice
   }
 }
 
+export function describeStoredPosition(
+  songs: readonly PracticeSong[],
+  index: number,
+  now: Date,
+): StoredPracticePosition | null {
+  const song = songs[index];
+  if (song === undefined) return null;
+  return { day: bandDayOf(now), entryId: song.entryId, index };
+}
+
 export function serializePracticePosition(
   songs: readonly PracticeSong[],
   index: number,
   now: Date,
 ): string | null {
-  const song = songs[index];
-  if (song === undefined) return null;
-  const position: StoredPracticePosition = { day: bandDayOf(now), entryId: song.entryId, index };
-  return JSON.stringify(position);
+  const position = describeStoredPosition(songs, index, now);
+  return position === null ? null : JSON.stringify(position);
+}
+
+export function selectPracticeAnchor(
+  stored: StoredPracticePosition | null,
+  arrival: StoredPracticePosition | null,
+  now: Date,
+): StoredPracticePosition | null {
+  if (stored !== null && stored.day === bandDayOf(now)) return stored;
+  return arrival;
 }
 
 function clampIndex(index: number, songCount: number): number {
@@ -127,7 +145,14 @@ export interface PracticePosition {
   readonly count: number;
   readonly isLast: boolean;
   readonly isNextInAnotherSetlist: boolean;
+  readonly currentSetlistName: string | null;
 }
+
+function countSetlists(songs: readonly PracticeSong[]): number {
+  return new Set(songs.map((song) => song.setlistId)).size;
+}
+
+const ONE_SETLIST = 1;
 
 // @FollowsBlueprint core-view-projection
 export function describePracticePosition(
@@ -143,6 +168,8 @@ export function describePracticePosition(
     count: songs.length,
     isLast: next === null,
     isNextInAnotherSetlist: next !== null && next.setlistId !== current?.setlistId,
+    currentSetlistName:
+      current === null || countSetlists(songs) === ONE_SETLIST ? null : current.setlistName,
   };
 }
 
@@ -199,12 +226,22 @@ function describeNext(
   };
 }
 
+const LINE_SEPARATOR = ' · ';
+
+export function formatPracticeNextLine(next: PracticeNextView | null): string | null {
+  if (next === null) return null;
+  return [next.title, next.artist, next.setlistName]
+    .filter((part) => part !== null && part.length > 0)
+    .join(LINE_SEPARATOR);
+}
+
 // @FollowsBlueprint core-view-projection-joining-two-lists
 export function buildPracticeScreen(input: PracticeScreenInput): PracticeScreen {
   const position = describePracticePosition(input.songs, input.index);
   const next = describeNext(position, input.songsById);
-  const entry = position.current === null ? undefined : input.entriesById[position.current.entryId];
-  if (position.current === null || entry === undefined) return { position, current: null, next };
+  if (position.current === null) return { position, current: null, next };
+  const entry = input.entriesById[position.current.entryId];
+  if (entry === undefined) return { position, current: null, next };
   const song = input.songsById[entry.songId];
   const transitionNote =
     position.next === null

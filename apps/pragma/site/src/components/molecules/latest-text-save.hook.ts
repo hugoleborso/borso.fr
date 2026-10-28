@@ -1,6 +1,7 @@
 import { useRef, useState } from 'react';
 import {
   buildLatestTextSaveState,
+  isInFlightSaveSuperseded,
   type LatestTextSaveEvent,
   type LatestTextSaveState,
   type LatestTextSaveStatus,
@@ -21,6 +22,11 @@ export interface LatestTextSaveOptions {
   readonly savedText: string;
   readonly save: (text: string) => Promise<unknown>;
   readonly pauseMs?: number;
+  readonly onSaved?: (outcome: LatestTextSaveOutcome) => void;
+}
+
+export interface LatestTextSaveOutcome {
+  readonly isSuperseded: boolean;
 }
 
 // @FollowsBlueprint hook-timer-owned-by-handlers
@@ -46,6 +52,7 @@ export function useLatestTextSave(options: LatestTextSaveOptions): LatestTextSav
     apply({ kind: 'saveStarted', text });
     options.save(text).then(
       () => {
+        options.onSaved?.({ isSuperseded: isInFlightSaveSuperseded(state.current) });
         apply({ kind: 'saveSucceeded' });
         sendLatest();
       },

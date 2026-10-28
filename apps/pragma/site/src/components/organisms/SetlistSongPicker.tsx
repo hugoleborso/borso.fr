@@ -12,6 +12,7 @@ import {
   useSongSearch,
 } from '../../lib/queries/songs.queries';
 import { reportSetlistBatchAddFailed } from '../../observability/error-reporting.adapter';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { Button } from '../atoms/Button';
 import { Chip } from '../atoms/Chip';
@@ -159,6 +160,7 @@ function SetlistSongPickerContent({
 
   const addPickedSongs = (): void => {
     setFailureKey(null);
+    const pickCount = draft.pickedSongIds.length;
     addEntries.mutate(
       {
         setlistId,
@@ -169,6 +171,7 @@ function SetlistSongPickerContent({
       },
       {
         onSuccess: () => {
+          recordProductEvent('setlist_songs_added', { count: pickCount });
           draft.discard();
           onAdded();
         },
@@ -253,7 +256,10 @@ function SetlistSongPickerContent({
               pickNumber={row.pickNumber}
               isAlreadyIn={row.positionInSetlist !== null}
               isDisabled={isBusy}
-              onToggle={() => draft.revise((picked) => togglePick(picked, row.song.id))}
+              onToggle={() => {
+                draft.revise((picked) => togglePick(picked, row.song.id));
+                changeQuery('');
+              }}
             />
           </li>
         ))}

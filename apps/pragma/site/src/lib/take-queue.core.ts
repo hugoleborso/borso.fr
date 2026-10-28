@@ -31,6 +31,7 @@ export interface QueuedTake {
   readonly isUploaded: boolean;
   readonly wasDeferred: boolean;
   readonly hasFailed: boolean;
+  readonly isFromPracticeMode: boolean;
 }
 
 export type TakeStep = 'sign' | 'put' | 'create';
@@ -128,6 +129,7 @@ export function buildTakeCreateBody(take: QueuedTake, objectKey: string): TakeCr
     contentType: take.contentType,
     source: take.source,
     queued: take.wasDeferred,
+    fromPracticeMode: take.isFromPracticeMode,
   };
 }
 
@@ -141,6 +143,7 @@ export interface TakeDraft {
   readonly byteLength: number;
   readonly source: TakeSource;
   readonly isOnline: boolean;
+  readonly isFromPracticeMode: boolean;
 }
 
 const MILLISECONDS_PER_SECOND = 1_000;
@@ -174,6 +177,7 @@ export function buildQueuedTake(draft: TakeDraft): QueuedTake | TakeDraftRefusal
     isUploaded: false,
     wasDeferred: !draft.isOnline,
     hasFailed: false,
+    isFromPracticeMode: draft.isFromPracticeMode,
   };
 }
 

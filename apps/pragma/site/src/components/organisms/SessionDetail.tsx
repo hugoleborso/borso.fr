@@ -39,6 +39,7 @@ import { SessionTakes } from './SessionTakes';
 import { SessionTasks } from './SessionTasks';
 import { SetlistSongPicker } from './SetlistSongPicker';
 import { VotingRoundPanel } from './VotingRoundPanel';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 
 export interface SessionDetailProps {
   readonly session: SessionRecord;
@@ -244,7 +245,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         />
       ) : null}
 
-      {isConcert ? <VotingRoundPanel sessionId={session.id} /> : null}
+      {isConcert ? <VotingRoundPanel sessionId={session.id} openRoundVariant="secondary" /> : null}
 
       {isCreatingSetlist ? (
         <CreateSetlistDialog
@@ -270,11 +271,16 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
       <BottomActions>
         {pills.setlistPath === null ? null : (
           <ButtonLink icon="arrowR" variant={pills.setlistVariant} to={pills.setlistPath}>
-            {t('home.openSetlist')}
+            {t(pills.setlistLabelKey)}
           </ButtonLink>
         )}
         {pills.practicePath === null ? null : (
-          <ButtonLink icon="play" variant="primary" to={pills.practicePath}>
+          <ButtonLink
+            icon="play"
+            variant="primary"
+            to={pills.practicePath}
+            onClick={() => recordProductEvent('practice_mode_started')}
+          >
             {t('practice.start')}
           </ButtonLink>
         )}

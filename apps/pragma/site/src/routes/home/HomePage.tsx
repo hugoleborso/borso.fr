@@ -34,6 +34,7 @@ import { useSongsList } from '../../lib/queries/songs.queries';
 import { useTasksList } from '../../lib/queries/tasks.queries';
 import { isPracticeModeOffered } from '../sessions/practice-mode.core';
 import { buildHomeView, selectHomePrimaryAction } from './home.core';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 
 const NO_ROWS: readonly never[] = [];
 const TOTAL_DURATION_KEY = {
@@ -108,6 +109,7 @@ export function HomePage(): JSX.Element {
         now: new Date(nowEpochMs),
       }),
   });
+  const primaryLink = primaryAction.link;
   const greetingName = signedInMember.data?.firstName ?? '';
 
   return (
@@ -185,9 +187,16 @@ export function HomePage(): JSX.Element {
             {t('sessions.newSession')}
           </Button>
         ) : null}
-        {primaryAction.link === null ? null : (
-          <ButtonLink icon={primaryAction.link.icon} variant="primary" to={primaryAction.link.to}>
-            {t(primaryAction.link.labelKey)}
+        {primaryLink === null ? null : (
+          <ButtonLink
+            icon={primaryLink.icon}
+            variant="primary"
+            to={primaryLink.to}
+            onClick={() => {
+              if (primaryLink.startsPracticeMode) recordProductEvent('practice_mode_started');
+            }}
+          >
+            {t(primaryLink.labelKey)}
           </ButtonLink>
         )}
       </BottomActions>

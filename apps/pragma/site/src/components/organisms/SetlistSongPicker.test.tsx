@@ -2,6 +2,7 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { reportSetlistBatchAddFailed } from '../../observability/error-reporting.adapter';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { SetlistSongPicker, type SetlistSongPickerProps } from './SetlistSongPicker';
 
@@ -25,6 +26,10 @@ vi.mock('../../lib/queries/songs.queries', () => ({
 
 vi.mock('../../observability/error-reporting.adapter', () => ({
   reportSetlistBatchAddFailed: vi.fn(),
+}));
+
+vi.mock('../../observability/product-event.adapter', () => ({
+  recordProductEvent: vi.fn(),
 }));
 
 function buildProps(overrides: Partial<SetlistSongPickerProps> = {}): SetlistSongPickerProps {
@@ -102,6 +107,16 @@ describe('the Add songs sheet', () => {
     );
   });
 
+  it('empties the search after a pick, so the next title is typed straight away', () => {
+    render(<SetlistSongPicker {...buildProps()} />);
+    const search = screen.getByRole('searchbox');
+    fireEvent.change(search, { target: { value: 'jol' } });
+    fireEvent.click(checkbox('Jolene'));
+    expect(screen.getByRole<HTMLInputElement>('searchbox').value).toBe('');
+    expect(checkbox('Jolene').getAttribute('aria-checked')).toBe('true');
+    expect(checkbox('Dreams')).toBeTruthy();
+  });
+
   it('dims a song already in the setlist under another chip, and it cannot be picked', () => {
     render(<SetlistSongPicker {...buildProps()} />);
     fireEvent.click(screen.getByRole('button', { name: 'Rehearsed' }));
@@ -121,6 +136,18 @@ describe('the Add songs sheet', () => {
     expect(reportSetlistBatchAddFailed).toHaveBeenCalledWith(props.setlistId);
     expect(screen.getByRole('alert').textContent).toContain('The songs were not added');
     expect(checkbox('Jolene').getAttribute('aria-checked')).toBe('true');
+  });
+
+  it('closes once the songs are added and counts how many one tap added', () => {
+    const onClose = vi.fn();
+    render(<SetlistSongPicker {...buildProps({ onClose })} />);
+    fireEvent.click(checkbox('Jolene'));
+    fireEvent.click(checkbox('Dreams'));
+    fireEvent.click(screen.getByRole('button', { name: 'Add 2 songs' }));
+    const [, options] = batch.mutate.mock.calls[0] ?? [];
+    act(() => options?.onSuccess?.());
+    expect(onClose).toHaveBeenCalledOnce();
+    expect(recordProductEvent).toHaveBeenCalledExactlyOnceWith('setlist_songs_added', { count: 2 });
   });
 
   it('offers the typed title as a new idea when no song of the catalogue matches it', () => {

@@ -97,6 +97,7 @@ export interface HomePrimaryLink {
   readonly to: string;
   readonly labelKey: 'home.openSetlist' | 'home.openSession' | 'home.startPractice';
   readonly icon: 'arrowR' | 'play';
+  readonly startsPracticeMode: boolean;
 }
 
 export interface HomePrimaryAction {
@@ -119,13 +120,19 @@ export function selectHomePrimaryAction(input: HomePrimaryActionInput): HomePrim
         to: buildPracticePath(input.nextSessionId),
         labelKey: 'home.startPractice',
         icon: 'play',
+        startsPracticeMode: true,
       },
       isNewSessionOffered: false,
     };
   }
   if (input.setlistId !== null) {
     return {
-      link: { to: `/setlists/${input.setlistId}`, labelKey: 'home.openSetlist', icon: 'arrowR' },
+      link: {
+        to: `/setlists/${input.setlistId}`,
+        labelKey: 'home.openSetlist',
+        icon: 'arrowR',
+        startsPracticeMode: false,
+      },
       isNewSessionOffered: false,
     };
   }
@@ -135,6 +142,7 @@ export function selectHomePrimaryAction(input: HomePrimaryActionInput): HomePrim
         to: `/sessions/${input.nextSessionId}`,
         labelKey: 'home.openSession',
         icon: 'arrowR',
+        startsPracticeMode: false,
       },
       isNewSessionOffered: false,
     };

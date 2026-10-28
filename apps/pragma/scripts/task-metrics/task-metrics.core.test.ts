@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  describeScreenKey,
   ALL_TASK_IDS,
   BOTTOM_THIRD_FROM,
   buildDelaySequence,
@@ -362,5 +363,23 @@ describe('sumSchemeCounts', () => {
         { light: { count: 2 }, dark: { count: 3 } },
       ]),
     ).toEqual({ light: 2, dark: 4, total: 6 });
+  });
+});
+
+describe('describeScreenKey', () => {
+  it('names a page by its path and a sheet by the page under it', () => {
+    expect(describeScreenKey('/setlists/:id', null)).toBe('/setlists/:id');
+    expect(describeScreenKey('/setlists/:id', 'Midnight Drive')).toBe(
+      '/setlists/:id + [Midnight Drive]',
+    );
+  });
+
+  it('keeps the recording sheet on the screen it records from, as the spec counts tasks 7, 13 and 13b', () => {
+    expect(describeScreenKey('/sessions/:id/practice', 'Recording Valerie')).toBe(
+      '/sessions/:id/practice',
+    );
+    expect(describeScreenKey('/catalog/:id', 'Re-recording Valerie')).toBe(
+      '/catalog/:id + [Re-recording Valerie]',
+    );
   });
 });

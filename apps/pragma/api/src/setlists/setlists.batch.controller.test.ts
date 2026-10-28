@@ -126,4 +126,56 @@ describe('setlists batch add (back-e2e)', () => {
     expect([empty.status, repeated.status]).toEqual([400, 400]);
     expect(await listEntries(app, cookieHeader, setlistId)).toEqual([]);
   });
+
+  it('keeps two batches sent at the same moment contiguous, each in its own run of positions', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seedSetlistAndSongs(app, cookieHeader);
+    const [first, second, third, fourth] = songIds;
+    const batches = [
+      [first, second],
+      [third, fourth],
+    ];
+    const responses = await Promise.all(
+      batches.map(
+        async (batch) =>
+          await jsonRequest(app, `/api/setlists/${setlistId}/entries/batch`, {
+            method: 'POST',
+            body: { songIds: batch },
+            cookieHeader,
+          }),
+      ),
+    );
+    expect(responses.map((response) => response.status)).toEqual([201, 201]);
+    const listed = await listEntries(app, cookieHeader, setlistId);
+    expect(listed.map((entry) => entry.position)).toEqual([0, 1, 2, 3]);
+    expect([
+      [first, second, third, fourth],
+      [third, fourth, first, second],
+    ]).toContainEqual(listed.map((entry) => entry.songId));
+  });
+
+  it('gives a batch and a single append sent at the same moment distinct positions', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, songIds } = await seedSetlistAndSongs(app, cookieHeader);
+    const [first, second, third] = songIds;
+    const [batch, single] = await Promise.all([
+      jsonRequest(app, `/api/setlists/${setlistId}/entries/batch`, {
+        method: 'POST',
+        body: { songIds: [first, second] },
+        cookieHeader,
+      }),
+      jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId: third },
+        cookieHeader,
+      }),
+    ]);
+    expect([batch.status, single.status]).toEqual([201, 201]);
+    const listed = await listEntries(app, cookieHeader, setlistId);
+    expect(listed.map((entry) => entry.position)).toEqual([0, 1, 2]);
+    expect([
+      [first, second, third],
+      [third, first, second],
+    ]).toContainEqual(listed.map((entry) => entry.songId));
+  });
 });

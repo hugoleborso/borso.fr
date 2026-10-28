@@ -63,6 +63,7 @@ export const takeCreateSchema = z
     contentType: takeContentTypeSchema,
     source: z.enum(TAKE_SOURCES),
     queued: z.boolean(),
+    fromPracticeMode: z.boolean().default(false),
   })
   .strict();
 

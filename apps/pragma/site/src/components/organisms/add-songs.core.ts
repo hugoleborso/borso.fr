@@ -45,6 +45,7 @@ export interface AddSongsRowsInput<Song extends CandidateSong> {
 export type AddSongsEmptyMessageKey = 'setlist.addSongsEveryoneIn' | 'setlist.addSongNoMatch';
 
 function normalize(value: string): string {
+  // Stryker disable next-line MethodExpression: equivalent mutant. The typed text and the song's title and artist go through this same fold, so folding them all to upper case matches the same songs.
   return value.trim().toLowerCase();
 }
 

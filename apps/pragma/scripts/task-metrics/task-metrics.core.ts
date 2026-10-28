@@ -298,3 +298,10 @@ export function selectLongestTitle<Song extends { readonly title: string }>(
     null,
   );
 }
+
+const RECORDING_SHEET_LABEL_START = 'Recording ';
+
+export function describeScreenKey(path: string, overlay: string | null): string {
+  if (overlay === null || overlay.startsWith(RECORDING_SHEET_LABEL_START)) return path;
+  return `${path} + [${overlay}]`;
+}

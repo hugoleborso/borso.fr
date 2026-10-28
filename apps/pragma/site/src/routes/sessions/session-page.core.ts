@@ -61,10 +61,9 @@ export function buildSetlistPreview(
   });
   return {
     songCount: ordered.length,
-    totalSeconds:
-      ordered.length === 0
-        ? null
-        : sumKnownDurations(ordered.map((entry) => songsById[entry.songId]?.durationSeconds)),
+    totalSeconds: sumKnownDurations(
+      ordered.map((entry) => songsById[entry.songId]?.durationSeconds),
+    ),
     rows,
   };
 }
@@ -117,6 +116,7 @@ export interface SessionPills {
   readonly practicePath: string | null;
   readonly setlistPath: string | null;
   readonly setlistVariant: 'primary' | 'secondary';
+  readonly setlistLabelKey: 'home.openSetlist' | 'sessions.setlist';
   readonly isAddSongsShown: boolean;
 }
 
@@ -124,6 +124,7 @@ const NO_PILLS: SessionPills = {
   practicePath: null,
   setlistPath: null,
   setlistVariant: 'primary',
+  setlistLabelKey: 'home.openSetlist',
   isAddSongsShown: false,
 };
 
@@ -149,5 +150,6 @@ export function selectSessionPills(input: SessionPrimaryActionsInput): SessionPi
     practicePath: buildPracticePath(input.sessionId),
     setlistPath,
     setlistVariant: 'secondary',
+    setlistLabelKey: 'sessions.setlist',
   };
 }

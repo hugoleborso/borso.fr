@@ -109,6 +109,13 @@ describe('buildHomeView', () => {
     ).toEqual(['urgent', 'for-next', 'for-later']);
   });
 
+  it('keeps the given order with no next session, even for a task linked to no session', () => {
+    const tasks = [task({ id: 'for-later', sessionId: 'later-session' }), task({ id: 'urgent' })];
+    expect(
+      buildHomeView({ ...INPUT, tasks, nextSessionId: null }).memberTasks.map((row) => row.id),
+    ).toEqual(['for-later', 'urgent']);
+  });
+
   it('shows no part and no task to an account with no member row', () => {
     const view = buildHomeView({
       ...INPUT,
@@ -133,7 +140,12 @@ describe('selectHomePrimaryAction', () => {
         isPracticeModeOffered: true,
       }),
     ).toEqual({
-      link: { to: '/sessions/s1/practice', labelKey: 'home.startPractice', icon: 'play' },
+      link: {
+        to: '/sessions/s1/practice',
+        labelKey: 'home.startPractice',
+        icon: 'play',
+        startsPracticeMode: true,
+      },
       isNewSessionOffered: false,
     });
   });
@@ -147,7 +159,12 @@ describe('selectHomePrimaryAction', () => {
         setlistId: 'l1',
       }),
     ).toEqual({
-      link: { to: '/setlists/l1', labelKey: 'home.openSetlist', icon: 'arrowR' },
+      link: {
+        to: '/setlists/l1',
+        labelKey: 'home.openSetlist',
+        icon: 'arrowR',
+        startsPracticeMode: false,
+      },
       isNewSessionOffered: false,
     });
   });
@@ -161,7 +178,12 @@ describe('selectHomePrimaryAction', () => {
         setlistId: null,
       }),
     ).toEqual({
-      link: { to: '/sessions/s1', labelKey: 'home.openSession', icon: 'arrowR' },
+      link: {
+        to: '/sessions/s1',
+        labelKey: 'home.openSession',
+        icon: 'arrowR',
+        startsPracticeMode: false,
+      },
       isNewSessionOffered: false,
     });
   });
@@ -173,6 +195,17 @@ describe('selectHomePrimaryAction', () => {
         isLoading: false,
         nextSessionId: null,
         setlistId: null,
+      }),
+    ).toEqual({ link: null, isNewSessionOffered: true });
+  });
+
+  it('starts no practice when no session is ahead, whatever the offer says', () => {
+    expect(
+      selectHomePrimaryAction({
+        isLoading: false,
+        nextSessionId: null,
+        setlistId: null,
+        isPracticeModeOffered: true,
       }),
     ).toEqual({ link: null, isNewSessionOffered: true });
   });

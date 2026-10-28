@@ -76,6 +76,7 @@ export function TakeUploadForm({
           durationSeconds: roundDurationSeconds(durationMilliseconds),
           rawContentType: value.file.type,
           source: 'upload',
+          isFromPracticeMode: false,
         },
         value.file,
       );

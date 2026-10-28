@@ -78,6 +78,13 @@ describe('takeCreateSchema', () => {
     );
   });
 
+  it('counts a take as recorded outside practice mode unless the site says otherwise', () => {
+    expect(takeCreateSchema.parse(VALID_CREATE).fromPracticeMode).toBe(false);
+    expect(
+      takeCreateSchema.parse({ ...VALID_CREATE, fromPracticeMode: true }).fromPracticeMode,
+    ).toBe(true);
+  });
+
   it('refuses a take without a song', () => {
     const { songId: _songId, ...withoutSong } = VALID_CREATE;
     expect(takeCreateSchema.safeParse(withoutSong).success).toBe(false);

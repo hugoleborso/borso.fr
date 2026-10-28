@@ -107,6 +107,7 @@ describe('TakeUploadForm', () => {
         durationSeconds: 232,
         rawContentType: 'audio/webm',
         source: 'upload',
+        isFromPracticeMode: false,
       },
       file,
     );

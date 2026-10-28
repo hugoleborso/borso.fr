@@ -18,18 +18,20 @@ export function readStoredPracticePosition(sessionId: string): string | null {
   }
 }
 
-export function writePracticePosition(sessionId: string, position: string): void {
+// Stryker disable BlockStatement: equivalent mutant. An empty catch block swallows the storage refusal exactly as this one does.
+function ignoringStorageRefusal(write: () => void): void {
   try {
-    localStorage.setItem(practiceKeyOfSession(sessionId), position);
+    write();
   } catch {
     return;
   }
 }
+// Stryker restore BlockStatement
+
+export function writePracticePosition(sessionId: string, position: string): void {
+  ignoringStorageRefusal(() => localStorage.setItem(practiceKeyOfSession(sessionId), position));
+}
 
 export function forgetPracticePosition(sessionId: string): void {
-  try {
-    localStorage.removeItem(practiceKeyOfSession(sessionId));
-  } catch {
-    return;
-  }
+  ignoringStorageRefusal(() => localStorage.removeItem(practiceKeyOfSession(sessionId)));
 }

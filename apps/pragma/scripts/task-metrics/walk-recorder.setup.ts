@@ -20,6 +20,7 @@ import {
   TAPPED_FIELD_FOCUS_PROBE,
 } from './page-probes.setup';
 import {
+  describeScreenKey,
   isInBottomThird,
   isSameBox,
   planScrollGesture,
@@ -193,8 +194,7 @@ export class TaskWalk {
 
   async markScreen(): Promise<z.infer<typeof locationSchema>> {
     const location = await this.readLocation();
-    const key =
-      location.overlay === null ? location.path : `${location.path} + [${location.overlay}]`;
+    const key = describeScreenKey(location.path, location.overlay);
     if (this.screens[this.screens.length - 1] !== key) {
       this.screens.push(key);
       const areas = await readScrollAreas(this.session);
