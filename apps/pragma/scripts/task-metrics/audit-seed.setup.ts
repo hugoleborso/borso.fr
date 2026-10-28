@@ -12,7 +12,7 @@ import {
   getMembersSortedByFirstName,
 } from '../../api/src/members/members.service';
 import { createCredentialForMember } from '../../api/src/auth/credentials.service';
-import { createSession, getSessions } from '../../api/src/sessions/sessions.service';
+import { createSession, getSessions, patchSession } from '../../api/src/sessions/sessions.service';
 import {
   appendEntry,
   createSetlist,
@@ -33,6 +33,8 @@ const WONDERWALL_CAPO = 2;
 const CONCERT_NOTE_EVERY = 5;
 const PRACTICE_IN_DAYS = 3;
 const PAST_PRACTICE_DAYS_AGO = 4;
+const NO_UPCOMING_SESSION_VARIANT = 'no-upcoming-session';
+const PAST_SESSION_DAYS_AGO = 10;
 const REHEARSAL_NOTE_EVERY = 3;
 const FESTIVAL_SONG_COUNT = 22;
 const FIRST_SONG_TAKE_COUNT = 3;
@@ -469,6 +471,15 @@ function requireValue<Value>(value: Value | undefined, what: string): Value {
   return value;
 }
 
+async function movePastEverySession(memberId: string): Promise<void> {
+  const sessions = await getSessions();
+  for (const [index, session] of sessions.entries()) {
+    if (session.date.getTime() <= now.getTime()) continue;
+    const pastDate = new Date(now.getTime() - (PAST_SESSION_DAYS_AGO + index) * DAY);
+    await patchSession(session.id, { date: pastDate.toISOString() }, actorOf(memberId));
+  }
+}
+
 async function main(): Promise<void> {
   const saxophone = await createInstrument({
     name: 'Saxophone',
@@ -789,6 +800,10 @@ async function main(): Promise<void> {
       memberId: sarah,
       now,
     });
+  }
+
+  if (process.env.AUDIT_SEED_VARIANT === NO_UPCOMING_SESSION_VARIANT) {
+    await movePastEverySession(hugo);
   }
 
   const setlists = await getAllSetlists();

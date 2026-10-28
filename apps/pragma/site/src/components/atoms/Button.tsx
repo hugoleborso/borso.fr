@@ -1,5 +1,5 @@
 import { type ButtonHTMLAttributes, forwardRef } from 'react';
-import { type ButtonVariantProps, buttonVariants } from './button.variants';
+import { type ButtonVariantProps, buttonVariants, DEFAULT_BUTTON_VARIANT } from './button.variants';
 import { composeClassName } from './class-name.utils';
 import { Icon, type IconName } from './Icon';
 
@@ -20,6 +20,7 @@ export const Button = forwardRef<HTMLButtonElement, ButtonProps>(
       <button
         ref={ref}
         type={type}
+        data-variant={variant ?? DEFAULT_BUTTON_VARIANT}
         className={composeClassName(buttonVariants({ variant, size }), className)}
         {...rest}
       >

@@ -1,5 +1,7 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 
+export const DEFAULT_BUTTON_VARIANT = 'secondary';
+
 /**
  * @Blueprint atom-variant
  * @BlueprintName Atom With Variant Table
@@ -26,7 +28,7 @@ export const buttonVariants = cva(
         lg: 'min-h-13 px-5 text-body font-semibold',
       },
     },
-    defaultVariants: { variant: 'secondary', size: 'md' },
+    defaultVariants: { variant: DEFAULT_BUTTON_VARIANT, size: 'md' },
   },
 );
 

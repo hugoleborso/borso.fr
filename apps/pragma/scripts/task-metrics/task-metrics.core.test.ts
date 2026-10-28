@@ -12,7 +12,9 @@ import {
   listDistinctFontSizes,
   listBaselineDifferences,
   listRequestedTaskIds,
+  countTextsWithDigits,
   parseTaskMetricsArguments,
+  selectLongestTitle,
   planScrollGesture,
   projectScreenFraction,
   projectTapPoint,
@@ -66,6 +68,9 @@ describe('parseTaskMetricsArguments', () => {
         '5',
         '--routes',
         '--slice-1',
+        '--slice-2',
+        '--seed',
+        'no-upcoming-session',
         '--out',
         'after.json',
         '--compare',
@@ -75,6 +80,8 @@ describe('parseTaskMetricsArguments', () => {
       taskIds: ['5'],
       measureRoutes: true,
       measureSliceOne: true,
+      measureSliceTwo: true,
+      seedVariant: 'no-upcoming-session',
       outputPath: 'after.json',
       baselinePath: 'baseline.json',
     });
@@ -85,9 +92,33 @@ describe('parseTaskMetricsArguments', () => {
       taskIds: ALL_TASK_IDS,
       measureRoutes: false,
       measureSliceOne: false,
+      measureSliceTwo: false,
+      seedVariant: 'audit',
       outputPath: null,
       baselinePath: null,
     });
+  });
+
+  it('refuses a seed it does not know', () => {
+    expect(() => parseTaskMetricsArguments(['--seed', 'empty'])).toThrow('unknown seed empty');
+  });
+});
+
+describe('countTextsWithDigits', () => {
+  it('counts the labels that carry a number', () => {
+    expect(countTextsWithDigits(['Home', 'Songs 12', '3', 'Band'])).toBe(2);
+  });
+});
+
+describe('selectLongestTitle', () => {
+  it('picks the song with the longest title, the first one on a tie', () => {
+    const songs = [
+      { id: 'a', title: 'Kiss' },
+      { id: 'b', title: 'Superstition' },
+      { id: 'c', title: 'Seven Nation' },
+    ];
+    expect(selectLongestTitle(songs)?.id).toBe('b');
+    expect(selectLongestTitle([])).toBeNull();
   });
 });
 

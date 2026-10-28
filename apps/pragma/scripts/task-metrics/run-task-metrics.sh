@@ -2,7 +2,7 @@
 # Walk pragma's top tasks with real argent input at 390x844 in emulated standalone mode.
 # Starts a private pragma instance with the audit seed, boots argent on matching ports,
 # runs task-metrics.setup.ts with every argument passed through, then stops what it started.
-# Usage: run-task-metrics.sh [--tasks 1,2,...|all|none] [--routes] [--slice-1] [--out file.json] [--compare baseline.json]
+# Usage: run-task-metrics.sh [--tasks 1,2,...|all|none] [--routes] [--slice-1] [--slice-2] [--seed audit|no-upcoming-session] [--out file.json] [--compare baseline.json]
 # The site port comes from TASK_METRICS_PORT (default 5182).
 set -euo pipefail
 HERE="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -14,8 +14,14 @@ export BASE="http://localhost:$PORT"
 
 absolute_arguments=()
 expects_path=no
+expects_seed=no
 for argument in "$@"; do
   [ "$argument" = "--" ] && continue
+  if [ "$expects_seed" = yes ]; then
+    export AUDIT_SEED_VARIANT="$argument"
+  fi
+  expects_seed=no
+  [ "$argument" = "--seed" ] && expects_seed=yes
   if [ "$expects_path" = yes ] && [ "${argument#/}" = "$argument" ]; then
     argument="$PWD/$argument"
   fi

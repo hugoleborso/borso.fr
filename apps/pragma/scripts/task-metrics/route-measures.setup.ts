@@ -95,6 +95,7 @@ export async function buildSignedInRoutePlan(driver: BandSessionDriver): Promise
     songUsed: chartSong.title,
     routes: [
       { route: '/vote/:sessionId', url: `/vote/${concertId}` },
+      { route: '/', url: '/' },
       { route: '/catalog', url: '/catalog' },
       { route: '/catalog/new', url: '/catalog/new' },
       { route: '/catalog/:songId', url: `/catalog/${chartSong.id}` },
@@ -115,6 +116,7 @@ export async function buildSignedInRoutePlan(driver: BandSessionDriver): Promise
       { route: '/bars', url: '/bars' },
       { route: '/improvements', url: '/improvements' },
       { route: '/studies', url: '/studies' },
+      { route: '/band', url: '/band' },
       { route: '/tasks', url: '/tasks' },
       { route: '/compos', url: '/compos' },
       { route: '/members', url: '/members' },

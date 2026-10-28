@@ -385,3 +385,47 @@ export const READ_COVERED_TEXT = `() => {
   }
   return { count: found.length, samples: found.slice(0, 8) };
 }`;
+
+export const READ_SHELL_TABS = `(label) => {
+  const nav = document.querySelector('nav[aria-label="' + label + '"]');
+  if (!nav) return null;
+  const controls = [...nav.querySelectorAll('a, button')];
+  return {
+    labels: controls.map((control) => (control.innerText || control.getAttribute('aria-label') || '').replace(/\\s+/g, ' ').trim()),
+    active: controls.filter((control) => control.getAttribute('aria-current') === 'page').map((control) => control.innerText.replace(/\\s+/g, ' ').trim()),
+  };
+}`;
+
+export const READ_PRIMARY_ACTIONS = `() => {
+  const isShown = (element) => { const box = element.getBoundingClientRect(); const style = getComputedStyle(element); return box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.display !== 'none'; };
+  return [...document.querySelectorAll('[data-variant="primary"]')]
+    .filter((element) => !element.closest('nav') && !element.closest('dialog:not([open])') && isShown(element))
+    .map((element) => { const box = element.getBoundingClientRect(); return { name: (element.getAttribute('aria-label') || element.innerText).replace(/\\s+/g, ' ').trim().slice(0, 40), centreFraction: Number(((box.top + box.height / 2) / innerHeight).toFixed(3)) }; });
+}`;
+
+export const READ_FIRST_CONTENT_TOP = `() => {
+  const main = document.querySelector('main');
+  if (!main) return null;
+  const tops = [...main.querySelectorAll('*')]
+    .filter((element) => { const box = element.getBoundingClientRect(); const style = getComputedStyle(element); const isLeafContent = element.tagName === 'svg' || [...element.childNodes].some((node) => node.nodeType === Node.TEXT_NODE && node.textContent.trim()); return isLeafContent && box.width > 0 && box.height > 0 && style.visibility !== 'hidden' && style.position !== 'fixed'; })
+    .map((element) => element.getBoundingClientRect().top + scrollY);
+  return tops.length === 0 ? null : Math.round(Math.min(...tops));
+}`;
+
+export const READ_THEME_COLOUR = `() => {
+  const metas = [...document.querySelectorAll('meta[name="theme-color"]')];
+  const matching = metas.find((meta) => !meta.media || matchMedia(meta.media).matches);
+  return { values: metas.map((meta) => ({ media: meta.media || null, content: meta.content })), shown: matching ? matching.content : null };
+}`;
+
+export const READ_LANGUAGE_CHIPS = `() => {
+  const isChip = (element) => /^(FR|EN)$/.test(element.innerText.trim());
+  const isShown = (element) => { const box = element.getBoundingClientRect(); return box.width > 0 && box.height > 0; };
+  const chips = [...document.querySelectorAll('button')].filter(isChip);
+  const inMain = chips.filter((chip) => chip.closest('main'));
+  return { outsideMain: chips.length - inMain.length, inMainShown: inMain.filter(isShown).length };
+}`;
+
+export const READ_OPEN_FIELD_VALUE = `(selector) => { const dialog = [...document.querySelectorAll('dialog[open]')].pop(); const field = dialog && dialog.querySelector(selector); return field ? field.value : null; }`;
+
+export const SEND_JSON = `async ({ method, path, body }) => { const response = await fetch(path, { method, credentials: 'include', headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) }); return response.status; }`;

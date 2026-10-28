@@ -11,6 +11,7 @@ import {
   summariseRouteButtons,
 } from './task-metrics.core';
 import { measureSliceOne } from './slice-one-measures.setup';
+import { measureSliceTwo } from './slice-two-measures.setup';
 import { TASK_WALKS } from './task-walks.setup';
 import { emulatePhone, PHONE } from './walk-recorder.setup';
 
@@ -40,6 +41,7 @@ function readTaskRecord(result: Record<string, unknown>): Record<string, unknown
 
 async function main(): Promise<void> {
   const options = parseTaskMetricsArguments(process.argv.slice(FIRST_PROGRAM_ARGUMENT));
+  process.env.AUDIT_SEED_VARIANT = options.seedVariant;
   const baseUrl = process.env.BASE ?? DEFAULT_BASE_URL;
   const session = await connectCdpSession(CDP_PORT);
   await emulatePhone(session);
@@ -51,6 +53,7 @@ async function main(): Promise<void> {
     insets: PHONE.insets,
     standalone: await session.evaluate(STANDALONE_PROBE),
     base: baseUrl,
+    seed: options.seedVariant,
     input: ARGENT_INPUT_NOTE,
     bottomThird: BOTTOM_THIRD_NOTE,
   };
@@ -77,6 +80,10 @@ async function main(): Promise<void> {
   }
   if (options.measureSliceOne) {
     result.sliceOne = await measureSliceOne(driver);
+    writeResult(options.outputPath, result);
+  }
+  if (options.measureSliceTwo) {
+    result.sliceTwo = await measureSliceTwo(driver);
     writeResult(options.outputPath, result);
   }
   session.close();

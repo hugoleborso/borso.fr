@@ -29,10 +29,16 @@ const IDENTIFIER_PLACEHOLDER = ':id';
 
 export type ComparedField = (typeof COMPARED_FIELDS)[number];
 
+export const SEED_VARIANTS = ['audit', 'no-upcoming-session'] as const;
+
+export type SeedVariant = (typeof SEED_VARIANTS)[number];
+
 export interface TaskMetricsOptions {
   readonly taskIds: readonly string[];
   readonly measureRoutes: boolean;
   readonly measureSliceOne: boolean;
+  readonly measureSliceTwo: boolean;
+  readonly seedVariant: SeedVariant;
   readonly outputPath: string | null;
   readonly baselinePath: string | null;
 }
@@ -69,11 +75,23 @@ export function listRequestedTaskIds(requested: string | null): readonly string[
   return requested.split(',').filter((taskId) => taskId.length > 0);
 }
 
+function isSeedVariant(value: string): value is SeedVariant {
+  return SEED_VARIANTS.some((variant) => variant === value);
+}
+
+export function parseSeedVariant(requested: string | null): SeedVariant {
+  if (requested === null) return 'audit';
+  if (isSeedVariant(requested)) return requested;
+  throw new Error(`unknown seed ${requested}; expected one of ${SEED_VARIANTS.join(', ')}`);
+}
+
 export function parseTaskMetricsArguments(argumentList: readonly string[]): TaskMetricsOptions {
   return {
     taskIds: listRequestedTaskIds(readOptionValue(argumentList, '--tasks')),
     measureRoutes: argumentList.includes('--routes'),
     measureSliceOne: argumentList.includes('--slice-1'),
+    measureSliceTwo: argumentList.includes('--slice-2'),
+    seedVariant: parseSeedVariant(readOptionValue(argumentList, '--seed')),
     outputPath: readOptionValue(argumentList, '--out'),
     baselinePath: readOptionValue(argumentList, '--compare'),
   };
@@ -257,4 +275,20 @@ export function sumSchemeCounts(measures: readonly SchemeCounts[]): {
   const light = sumCounts(measures.map((measure) => measure.light.count));
   const dark = sumCounts(measures.map((measure) => measure.dark.count));
   return { light, dark, total: light + dark };
+}
+
+const DIGIT_PATTERN = /\d/;
+
+export function countTextsWithDigits(texts: readonly string[]): number {
+  return texts.filter((text) => DIGIT_PATTERN.test(text)).length;
+}
+
+export function selectLongestTitle<Song extends { readonly title: string }>(
+  songs: readonly Song[],
+): Song | null {
+  return songs.reduce<Song | null>(
+    (longest, song) =>
+      longest === null || song.title.length > longest.title.length ? song : longest,
+    null,
+  );
 }

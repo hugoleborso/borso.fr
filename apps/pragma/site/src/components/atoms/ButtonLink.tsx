@@ -1,6 +1,6 @@
 import { forwardRef } from 'react';
 import { Link, type LinkProps } from 'react-router-dom';
-import { type ButtonVariantProps, buttonVariants } from './button.variants';
+import { type ButtonVariantProps, buttonVariants, DEFAULT_BUTTON_VARIANT } from './button.variants';
 import { composeClassName } from './class-name.utils';
 import { Icon, type IconName } from './Icon';
 
@@ -18,6 +18,7 @@ export const ButtonLink = forwardRef<HTMLAnchorElement, ButtonLinkProps>(
     return (
       <Link
         ref={ref}
+        data-variant={variant ?? DEFAULT_BUTTON_VARIANT}
         className={composeClassName(buttonVariants({ variant, size }), className)}
         {...rest}
       >
