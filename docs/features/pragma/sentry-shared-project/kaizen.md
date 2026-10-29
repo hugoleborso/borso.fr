@@ -13,3 +13,4 @@ struggling from four agents hitting the same wall.
 This file is gitignored and is deleted once the kaizen pull request is open.
 
 - [2026-10-29 15:16] `blueprint-context-origin` A cloud session's clone is restored from a snapshot taken at an older commit, so untracked outputs of since-deleted generators (blueprint-context.json) survive the checkout and trip the stop hook.
+- [2026-10-29 15:31] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
