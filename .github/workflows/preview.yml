@@ -160,8 +160,8 @@ jobs:
       VITE_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
       PRAGMA_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
       SENTRY_AUTH_TOKEN: ${{ matrix.app == 'pragma' && secrets.SENTRY_AUTH_TOKEN || '' }}
-      SENTRY_ORG: borsofr
-      SENTRY_PROJECT: borsofr
+      SENTRY_ORG: ${{ vars.SENTRY_ORG }}
+      SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
     steps:
       - uses: actions/checkout@v7
       # Digest of everything this app's preview is built from. Tree hashes
