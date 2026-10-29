@@ -16,7 +16,7 @@ separately (rows 15 and 16). Two implementers hit the import graph (row 09).
 | # | When | Friction | Sources / evidence | Decision |
 | --- | --- | --- | --- | --- |
 | 01 | conception | The brief said PR #216 was merged, and the session found it open. | log 11:15 `main`; PR #216 `merged_at` 2026-10-29T11:15:38Z | no-op: #216 merged within the same minute, so the brief was right moments later. |
-| 02 | implementation | `no-swallowed-push` refused a piped `git push` or `git commit` twice. | log 11:15 and 11:40 | no-op: the hook refused as designed, and its message names the fix. |
+| 02 | implementation | `no-swallowed-push` refused a piped `git push` or `git commit` twice. This sweep hit it once too. | log 11:15 and 11:40; this session's first push | no-op: the hook refused before anything ran, and its message gives the bare command. Each hit cost one retry. |
 | 03 | implementation | commitlint's `subject-case` refused a subject that opened with "ADR for". | log 11:40 `main`; commit `41adc8c7` reworded | no-op: config-conventional refuses an upper-case opening word, and the message names the rule. One retry. |
 | 04 | plan | The technical-conception template's self-check named eslint and `pnpm typecheck`, which pragma does not run. | log 11:49 `technical-conception-01`; `template.md:41-42` | fixed: kaizen commit "align the skills with no-comments and oxlint". The lines are gone, because the hooks run lint and typecheck. |
 | 05 | implementation | Four skill files and the validator agent said "comments document the WHY only", while `borso/no-comments` refuses every prose comment. | log 12:05 `implementation-01`; `docs/standards/00-principles.md:148` | fixed: same commit. Each now states the rule the linter holds. |
