@@ -69,6 +69,7 @@ flowchart LR
   - An active day adds 1.
   - A missed day spends one joker from its Monday-to-Sunday week. Each week has 3 jokers. A missed day with no joker left in its week ends the walk.
   - A joker bridges only a gap that has an active day on both sides. Missed days older than the first active day spend nothing.
+  - While today is still open, today stands as the newer side of a gap, so a missed yesterday spends a joker and the flame shows its count (the happy path's "12, Today still open, 1 joker left").
   - The count is active days only. A day bridged by a joker adds nothing.
 - **Band flame**. A day is active for the band when it is active for at least one member. Walk back from today as above, with no joker. The first missed day ends the walk.
 - **Jokers left this week** is 3 minus the jokers the walk spent on days of the current week.
@@ -112,6 +113,7 @@ flowchart LR
 | Pushes | 20:00 job; push on each study; none | 20:00 job, production only (operator). |
 | Placement and tap | Header chips; own row; inside the next-session card. Sheet or nothing | Header chips that open a sheet (operator). |
 | Concerts | Count; do not | Count, as sessions. The operator's "practice" answer named "a practice or concert" in its option. |
+| Today open after a missed yesterday | Lenient: today stands as the gap's newer side; strict: the flame reads 0 until today counts | Lenient, from the happy path the operator ratified. The 20:00 at-risk push stays true for that member. |
 | Base branch | `main`; #216's head | #216 is open. This branch starts from `claude/pragma-ux-redesign-slice-6` and its PR targets that branch until #216 merges. |
 
 **Out of scope**: takes in the streak, an attendance record, a streak on any screen other than Home and its sheet, and push wording per member.
