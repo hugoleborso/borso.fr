@@ -1,6 +1,6 @@
 /** @Feature setlists */
 
-import { type JSX, useMemo, useState } from 'react';
+import { type JSX, useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useAddSongsDraft } from '../../lib/add-songs-draft.store';
 import { debounce } from '../../lib/debounce.utils';
@@ -93,6 +93,10 @@ function SetlistSongPickerContent({
   const publishSearchedTitle = useMemo(
     () => debounce((title: string) => setSearchedTitle(title), SEARCH_DEBOUNCE_MS),
     [],
+  );
+  const cancelSearchOnUnmount = useCallback(
+    () => publishSearchedTitle.cancel,
+    [publishSearchedTitle],
   );
 
   const isSearchingService = shouldSearchMusicService(songs, query);
@@ -196,7 +200,7 @@ function SetlistSongPickerContent({
               <Icon name="search" />
             </span>
             <Input
-              ref={() => publishSearchedTitle.cancel}
+              ref={cancelSearchOnUnmount}
               type="search"
               data-sheet-focus
               value={query}

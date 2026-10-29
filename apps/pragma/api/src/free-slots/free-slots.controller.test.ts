@@ -12,10 +12,13 @@ import {
   listStoredCalendarFeeds,
   upsertCalendarFeed,
 } from '../calendar-feeds/calendar-feeds.repository';
+import { calendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
 
 const SECRET_ADDRESS = 'https://calendar.example.com/private-0123abcd/basic.ics';
 const SECOND_ADDRESS = 'https://calendar.example.com/private-4567efgh/basic.ics';
 const SECRET_FRAGMENT = 'private-0123abcd';
+const LOWER_TWIN_ID = '00000000-0000-4000-8000-000000000001';
+const HIGHER_TWIN_ID = 'ffffffff-ffff-4fff-bfff-ffffffffffff';
 
 const calendarFeedsSchema = z.object({
   calendarFeeds: z.array(z.object({ id: z.string(), name: z.string().nullable() })),
@@ -123,15 +126,29 @@ describe('calendar feeds and free slots (back-e2e)', () => {
   });
 
   it('lists unnamed calendars last, and two calendars of one name by id', async () => {
-    const { app, cookieHeader } = await buildAuthenticatedApp();
-    for (const address of [
-      'https://calendar.example.com/zz-unnamed.ics',
-      'https://calendar.example.com/twin-a.ics',
-      SECOND_ADDRESS,
-      'https://calendar.example.com/twin-b.ics',
-    ]) {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    for (const address of ['https://calendar.example.com/zz-unnamed.ics', SECOND_ADDRESS]) {
       await postFeed(app, cookieHeader, address);
     }
+    const now = new Date();
+    await testDatabase()
+      .insert(calendarFeedTable)
+      .values([
+        {
+          id: HIGHER_TWIN_ID,
+          memberId,
+          address: 'https://a.example/twin-b.ics',
+          name: 'Twin',
+          updatedAt: now,
+        },
+        {
+          id: LOWER_TWIN_ID,
+          memberId,
+          address: 'https://a.example/twin-a.ics',
+          name: 'Twin',
+          updatedAt: now,
+        },
+      ]);
     const signedInMember = await readJson(
       await jsonRequest(app, '/api/me', { cookieHeader }),
       calendarFeedsSchema,
@@ -142,8 +159,10 @@ describe('calendar feeds and free slots (back-e2e)', () => {
       'Twin',
       null,
     ]);
-    const [, firstTwin, secondTwin] = signedInMember.calendarFeeds;
-    expect((firstTwin?.id ?? '') < (secondTwin?.id ?? '')).toBe(true);
+    expect(signedInMember.calendarFeeds.slice(1, 3).map((feed) => feed.id)).toStrictEqual([
+      LOWER_TWIN_ID,
+      HIGHER_TWIN_ID,
+    ]);
   });
 
   it('refreshes the name when the same address is saved again', async () => {
