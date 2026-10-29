@@ -247,7 +247,7 @@ describe('attachTransitionComments', () => {
       attachTransitionComments(creepThenArmy, [
         { songAId: 'song-army', songBId: 'song-creep', comment: 'The other way round.' },
       ]),
-    ).toEqual(creepThenArmy);
+    ).toStrictEqual(creepThenArmy);
   });
 });
 
