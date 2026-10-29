@@ -65,7 +65,9 @@ if [ "$failed" -ne 0 ]; then
   echo "  before running them (makeIdempotent in" >&2
   echo "  infra/cdk/src/internal/migration-runner/statement-rewrites.utils.ts), so the file" >&2
   echo "  runs again as a no-op under its new name, and the SQL needs no edit." >&2
-  echo "  An ADR is safe to renumber until it is merged, after which its number is" >&2
+  echo "  A new ADR is named after the UTC minute it was written (date -u +%Y%m%d%H%M)," >&2
+  echo "  so two of them collide only within one minute: move the second to the next" >&2
+  echo "  minute. An ADR id is safe to change until it is merged, after which it is" >&2
   echo "  cited elsewhere and never recycled." >&2
   exit 1
 fi

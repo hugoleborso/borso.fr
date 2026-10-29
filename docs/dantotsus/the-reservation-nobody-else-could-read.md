@@ -7,7 +7,7 @@ related-pr: '#118, #163, #167'
 fix-pr: '#173'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [plugins/borso-harness/scripts/next-adr-number.sh]
+eradication-paths: [plugins/borso-harness/skills/adr/SKILL.md, scripts/check-numbered-sequences.sh]
 time-to-detect: hours
 tags: [adr, git, agents, orchestrator, meta]
 zone: docs/adr
@@ -55,6 +55,14 @@ take or hand out numbers by message.
 ## Eradication (mandatory — code-level)
 
 **Type:** DevX check (level 2 — devx check)
+
+> **Superseded mechanism.** `next-adr-number.sh` was removed on 2026-10-29.
+> A new ADR is now named after the UTC minute it was written,
+> `YYYYMMDDHHMM-<slug>.md`, so parallel branches take different ids without
+> reading each other and there is nothing left to allocate. The `/adr` skill's
+> id step runs `date -u +%Y%m%d%H%M`, and `check-numbered-sequences.sh` still
+> refuses two records that land in the same minute. Records `0001` to `0049`
+> kept their numbers.
 
 **Reference:** [PR #173](https://github.com/hugoleborso/borso.fr/pull/173) · commit `self` (this entry ships with it)
 
