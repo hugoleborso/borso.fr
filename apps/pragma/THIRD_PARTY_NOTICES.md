@@ -55,3 +55,5 @@ The display face is Newsreader, by Production Type, under the SIL Open Font Lice
 ## YouTube mark
 
 The YouTube path in `site/src/components/atoms/BrandLogo.tsx` is copied from Simple Icons 16.36.0 (https://simpleicons.org), whose entry names YouTube's brand resources (https://www.youtube.com/howyoutubeworks/resources/brand-resources/#logos-icons-and-colors) as its source, with the colour `#FF0000`. Simple Icons is distributed under CC0 1.0 Universal; the mark itself remains YouTube's trademark and is shown only to link to the video it names.
+
+The Claude and Mistral AI paths in `site/src/components/atoms/BrandLogo.tsx` are copied from Simple Icons 16.36.0, whose entries name https://claude.ai and https://chat.mistral.ai as their sources, with the colours `#D97757` and `#FA520F`, under the same CC0 1.0 Universal licence. The marks remain Anthropic's and Mistral AI's trademarks and are shown only beside the command that connects Claude Code or Mistral Vibe to pragma; Mistral Vibe carries Mistral AI's mark, as its README does.

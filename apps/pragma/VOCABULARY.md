@@ -780,7 +780,9 @@ Lives in: `api/src/auth/` (`member_passkey`), verified through
 `passkey.adapter.ts`
 
 - Stores the credential id, the public key as `bytea`, the signature
-  counter and a label the member typed. The credential id is unique.
+  counter and a label: the device kind guessed from the user agent at
+  creation, which the member confirms or changes right after
+  (`PATCH /api/me/passkeys/:passkeyId`). The credential id is unique.
 - It is an alternative to the password, not a second factor: a member
   signs in with either. The password stays as the way back when a device
   is lost.
@@ -790,6 +792,7 @@ Lives in: `api/src/auth/` (`member_passkey`), verified through
   memory.
 
 Held by: `api/src/auth/auth.controller.test.ts` › keeps the member passkeys alive through a recovery
+Held by: `api/src/me/me.controller.test.ts` › answers 404 for a passkey of another member and leaves it as it was
 
 ## Deezer track
 

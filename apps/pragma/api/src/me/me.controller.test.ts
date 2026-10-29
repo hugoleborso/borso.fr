@@ -2,6 +2,24 @@ import { beforeEach, describe, expect, it } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import { insertPasskey } from '../auth/credentials.repository';
+
+const passkeysSchema = z.object({
+  passkeys: z.array(z.object({ id: z.string().uuid(), label: z.string() })),
+});
+
+async function givePasskey(memberId: string): Promise<string> {
+  const passkey = await insertPasskey({
+    memberId,
+    credentialId: `key-of-${memberId}`,
+    publicKey: Buffer.from([1, 2, 3]),
+    signCounter: 0,
+    transports: 'internal',
+    label: 'iPhone',
+    createdAt: new Date(),
+  });
+  return passkey.id;
+}
 
 const signedInMemberSchema = z.object({
   memberId: z.string().uuid(),
@@ -110,6 +128,50 @@ describe('me controller (back-e2e)', () => {
     const response = await jsonRequest(app, '/api/me/contact', {
       method: 'PUT',
       body: { email: 'not-an-email' },
+      cookieHeader,
+    });
+    expect(response.status).toBe(400);
+  });
+
+  it('renames a passkey of the signed-in member', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const passkeyId = await givePasskey(memberId);
+    const response = await jsonRequest(app, `/api/me/passkeys/${passkeyId}`, {
+      method: 'PATCH',
+      body: { label: ' Kitchen iPad ' },
+      cookieHeader,
+    });
+    expect(response.status).toBe(200);
+    const listed = await readJson(
+      await jsonRequest(app, '/api/me/passkeys', { cookieHeader }),
+      passkeysSchema,
+    );
+    expect(listed.passkeys).toEqual([{ id: passkeyId, label: 'Kitchen iPad' }]);
+  });
+
+  it('answers 404 for a passkey of another member and leaves it as it was', async () => {
+    const owner = await buildAuthenticatedApp('Owner');
+    const { app, cookieHeader } = await buildAuthenticatedApp('Intruder');
+    const passkeyId = await givePasskey(owner.memberId);
+    const response = await jsonRequest(app, `/api/me/passkeys/${passkeyId}`, {
+      method: 'PATCH',
+      body: { label: 'Mine now' },
+      cookieHeader,
+    });
+    expect(response.status).toBe(404);
+    const listed = await readJson(
+      await jsonRequest(owner.app, '/api/me/passkeys', { cookieHeader: owner.cookieHeader }),
+      passkeysSchema,
+    );
+    expect(listed.passkeys.map((passkey) => passkey.label)).toEqual(['iPhone']);
+  });
+
+  it('refuses an empty passkey name', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const passkeyId = await givePasskey(memberId);
+    const response = await jsonRequest(app, `/api/me/passkeys/${passkeyId}`, {
+      method: 'PATCH',
+      body: { label: '   ' },
       cookieHeader,
     });
     expect(response.status).toBe(400);

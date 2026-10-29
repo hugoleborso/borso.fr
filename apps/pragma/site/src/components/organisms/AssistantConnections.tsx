@@ -15,25 +15,21 @@ import {
   useAssistantGrants,
   useRevokeAssistantGrant,
 } from '../../lib/queries/assistant-grants.queries';
+import type { BrandName } from '../atoms/BrandLogo';
 import { Card } from '../atoms/Card';
 import { AssistantGrantRow } from '../molecules/AssistantGrantRow';
 import { InstallCommandBlock } from '../molecules/InstallCommandBlock';
 
-interface InstallationTextKeys {
+interface InstallationPresentation {
   readonly label: ParseKeys;
-  readonly hint: ParseKeys;
+  readonly brand: BrandName;
 }
 
-const INSTALLATION_TEXT_KEYS: Readonly<Record<AssistantInstallationId, InstallationTextKeys>> = {
-  'claude-code': {
-    label: 'account.assistants.claudeCodeLabel',
-    hint: 'account.assistants.claudeCodeHint',
-  },
-  vibe: { label: 'account.assistants.vibeLabel', hint: 'account.assistants.vibeHint' },
-  connector: {
-    label: 'account.assistants.connectorLabel',
-    hint: 'account.assistants.connectorHint',
-  },
+const INSTALLATION_PRESENTATION: Readonly<
+  Record<AssistantInstallationId, InstallationPresentation>
+> = {
+  'claude-code': { label: 'account.assistants.claudeCodeLabel', brand: 'claude' },
+  vibe: { label: 'account.assistants.vibeLabel', brand: 'mistral' },
 };
 
 // @FollowsBlueprint organism-query-owning
@@ -51,17 +47,16 @@ export function AssistantConnections(): JSX.Element {
   return (
     <Card className="p-4 sm:p-6">
       <h2 className="text-body text-ink m-0 mb-2">{t('account.assistants.title')}</h2>
-      <p className="text-meta text-ink-soft mt-0 mb-4">{t('account.assistants.hint')}</p>
-      <div className="flex flex-col gap-5">
+      <ul className="list-none p-0 m-0 flex flex-col divide-y divide-rule">
         {installations.map((installation) => (
           <InstallCommandBlock
             key={installation.id}
-            label={t(INSTALLATION_TEXT_KEYS[installation.id].label)}
-            hint={t(INSTALLATION_TEXT_KEYS[installation.id].hint)}
+            brand={INSTALLATION_PRESENTATION[installation.id].brand}
+            label={t(INSTALLATION_PRESENTATION[installation.id].label)}
             snippet={installation.snippet}
           />
         ))}
-      </div>
+      </ul>
       <h3 className="text-meta font-medium text-ink mt-6 mb-1">
         {t('account.assistants.connected')}
       </h3>

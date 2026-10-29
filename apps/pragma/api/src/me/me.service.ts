@@ -16,6 +16,7 @@ export {
   finishPasskeyRegistration,
   listPasskeys,
   removePasskey,
+  renamePasskey,
   startPasskeyRegistration,
 } from '../auth/passkey.service';
 

@@ -3,6 +3,7 @@ import { Hono } from 'hono';
 import { setCookie } from 'hono/cookie';
 import {
   passkeyIdParamSchema,
+  passkeyLabelSchema,
   passkeyRegistrationSchema,
   passwordChangeSchema,
 } from '../auth/credentials.schema';
@@ -16,6 +17,7 @@ import {
   readSignedInMember,
   removeCalendarFeed,
   removePasskey,
+  renamePasskey,
   saveCalendarFeed,
   saveOwnContactDetails,
   SESSION_COOKIE_NAME,
@@ -108,8 +110,20 @@ export function buildMeRouter() {
       if (outcome.kind === 'verification-failed') {
         return context.json({ error: 'passkey-verification-failed' }, 401);
       }
-      return context.json({ ok: true }, 201);
+      return context.json({ passkey: outcome.passkey }, 201);
     })
+    .patch(
+      '/passkeys/:passkeyId',
+      zValidator('param', passkeyIdParamSchema),
+      zValidator('json', passkeyLabelSchema),
+      async (context) => {
+        const { passkeyId } = context.req.valid('param');
+        const { label } = context.req.valid('json');
+        const passkey = await renamePasskey(readMemberId(context), passkeyId, label);
+        if (passkey === null) return context.json({ error: 'not-found' }, 404);
+        return context.json({ passkey });
+      },
+    )
     .delete('/passkeys/:passkeyId', zValidator('param', passkeyIdParamSchema), async (context) => {
       const { passkeyId } = context.req.valid('param');
       const outcome = await removePasskey(readMemberId(context), passkeyId);
