@@ -93,8 +93,34 @@ This file is gitignored. Before the pull request opens, run
 \`$KAIZEN_COMMAND archive <docs-slug>/<feature>\` and commit the copy.
 "
 
+SESSION="${CLAUDE_CODE_SESSION_ID:-}"
+
 ensure_file() {
-  [ -f "$KAIZEN_FILE" ] || printf '%s\n' "$HEADER" > "$KAIZEN_FILE"
+  [ -f "$KAIZEN_FILE" ] && return
+  printf '%s\n' "$HEADER" > "$KAIZEN_FILE"
+  [ -z "$SESSION" ] || printf 'Session: %s\n\n' "$SESSION" >> "$KAIZEN_FILE"
+}
+
+# A local checkout outlives its sessions, so a log a finished session never
+# archived used to greet the next one as "entries logged earlier in this task",
+# and its archive carried them into an unrelated pull request: PR #236's held
+# seven hook refusals from another task. The log now names the session that
+# opened it, and a different session parks the leftovers instead of adopting
+# them. A resumed session keeps its id and its log.
+park_another_sessions_log() {
+  [ -f "$KAIZEN_FILE" ] && [ -n "$SESSION" ] || return 0
+  local owner entries parked
+  owner="$(sed -n 's/^Session: //p' "$KAIZEN_FILE" | head -1)"
+  [ "$owner" != "$SESSION" ] || return 0
+  entries="$(grep -c '^- \[' "$KAIZEN_FILE" || true)"
+  if [ "${entries:-0}" -eq 0 ]; then
+    rm -f "$KAIZEN_FILE"
+    return 0
+  fi
+  parked="${KAIZEN_FILE%.md}.$(date -u '+%Y%m%d%H%M%S').md"
+  mv "$KAIZEN_FILE" "$parked" 2>/dev/null || return 0
+  printf '[kaizen] %s entries from session %s were never archived; moved to %s. Archive them into their own task folder, or delete the file.\n' \
+    "$entries" "${owner:-unknown}" "$(basename "$parked")"
 }
 
 WRITER="${KAIZEN_AGENT:-main}"
@@ -146,6 +172,7 @@ case "${1:-}" in
     printf '%s\n' "$kept" > "$KAIZEN_FILE"
     ;;
   init)
+    park_another_sessions_log
     ensure_file
     ;;
   *)

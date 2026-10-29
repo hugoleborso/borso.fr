@@ -42,6 +42,11 @@ not a policy that cannot change.
 both rejected at the agent proxy, so a non-empty token is not evidence
 of anything. There is no git credential helper to borrow from.
 
+**List or delete environments.** `/repos/{owner}/{repo}/environments` answers
+HTTP 403 through the session proxy (measured by the operator before PR #236).
+Purge environments from a local session; see
+[`github-environments-outlive-their-pull-requests.md`](./github-environments-outlive-their-pull-requests.md).
+
 **`gh auth status` lies about `gh api`.** Measured 2026-10-29: the `gh` CLI
 is installed, `gh auth status` prints `The token in GH_TOKEN is invalid`, and
 `gh api repos/hugoleborso/borso.fr/pulls/224` still answers, because the agent
