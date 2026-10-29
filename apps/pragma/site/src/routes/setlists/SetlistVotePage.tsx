@@ -8,7 +8,7 @@ import { useParams } from 'react-router-dom';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
 import { IconButton } from '../../components/atoms/IconButton';
-import { BackLink } from '../../components/molecules/BackLink';
+import { PageHeader } from '../../components/molecules/PageHeader';
 import { TargetSongCountField } from '../../components/molecules/TargetSongCountField';
 import { DeckProgressBar } from '../../components/molecules/DeckProgressBar';
 import { VoteBudgetBar } from '../../components/molecules/VoteBudgetBar';
@@ -150,17 +150,16 @@ export function SetlistVotePage(): JSX.Element {
 
   return (
     <section className="flex flex-col gap-4 pb-8">
-      <header className="flex flex-col gap-1 px-4 pt-1">
-        <BackLink to={`/setlists/${setlistId}`} label={displayedName} />
-        <div className="flex items-baseline justify-between gap-3">
-          <h1 className="m-0 font-display text-display leading-none text-ink">
-            {t('voting.pageTitle')}
-          </h1>
-          {headerExtraByKind[headerAction]}
-        </div>
+      <PageHeader
+        className="mx-0 mb-0 sm:mx-0 sm:mb-0"
+        back={{ to: `/setlists/${setlistId}`, label: displayedName }}
+        title={t('voting.pageTitle')}
+        actions={headerExtraByKind[headerAction]}
+      />
+      <div className="flex flex-col gap-1 px-4">
         <p className="m-0 text-meta text-ink-soft">{t('voting.howItRunsScore')}</p>
         <p className="m-0 text-meta text-ink-soft">{t('voting.howItRunsClose')}</p>
-      </header>
+      </div>
 
       <TargetSongCountField
         value={targetSongCount}

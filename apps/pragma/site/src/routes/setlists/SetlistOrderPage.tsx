@@ -6,7 +6,6 @@ import { useParams } from 'react-router-dom';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
 import { ButtonLink } from '../../components/atoms/ButtonLink';
-import { BackLink } from '../../components/molecules/BackLink';
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -77,8 +76,11 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
 
   return (
     <section className="flex max-w-[1280px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">
-      <BackLink to={setlistPath} label={displayedName} />
-      <PageHeader title={t('setlist.orderTitle')} className="mb-2 sm:mb-4" />
+      <PageHeader
+        back={{ to: setlistPath, label: displayedName }}
+        title={t('setlist.orderTitle')}
+        className="mb-2 sm:mb-4"
+      />
       {hasReorderFailed ? (
         <p
           className="m-0 mb-2 rounded-md bg-danger-soft px-3 py-2 text-meta text-danger"

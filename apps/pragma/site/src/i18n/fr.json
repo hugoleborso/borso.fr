@@ -11,7 +11,7 @@
     "calendarFeedRemoveQuestion": "Retirer ton agenda ? Les créneaux libres seront alors calculés sans toi, et il faudra de nouveau l’adresse secrète pour le reconnecter.",
     "calendarFeedRemoved": "Agenda retiré.",
     "calendarFeedReplace": "Remplacer",
-    "calendarFeedSaved": "Enregistré. Les créneaux libres de la page Sessions tiennent compte de ton agenda.",
+    "calendarFeedSaved": "Enregistré. Trouver un créneau, sur la page Sessions, compte maintenant votre calendrier.",
     "changePassword": "Changer de mot de passe",
     "contactDetails": "Coordonnées",
     "contactDetailsSaved": "Coordonnées enregistrées.",
@@ -49,6 +49,14 @@
       "openSettings": "Ouvrir les paramètres Google Agenda",
       "pasteAndConnect": "Coller et connecter",
       "pasteFailed": "Le presse-papiers n’a pas pu être lu. Colle l’adresse dans le champ ci-dessous."
+    },
+    "sections": {
+      "label": "Sections du compte",
+      "profile": "Profil",
+      "signIn": "Connexion rapide",
+      "calendar": "Calendrier",
+      "notifications": "Notifications",
+      "language": "Langue"
     }
   },
   "appName": "Pragma",
@@ -123,8 +131,6 @@
     "title": "Bars",
     "viewKanban": "Kanban",
     "viewList": "Liste",
-    "quickAddLabel": "Nouveau bar",
-    "quickAddSubmit": "Ajouter",
     "outreachTemplateSave": "Enregistrer le message"
   },
   "catalog": {
@@ -322,7 +328,11 @@
     "newTitle": "Nouvel instrument",
     "title": "Instruments",
     "togglePrimary": "Instrument principal",
-    "add": "Ajouter un instrument"
+    "add": "Ajouter un instrument",
+    "playersHint": "Chaque instrument liste les membres qui le jouent, d'après leur profil. Touchez un membre pour en faire son instrument principal.",
+    "playedBy": "Joué par",
+    "noPlayer": "Aucun membre ne le joue encore. Ajoutez-le à un membre dans Membres.",
+    "main": "principal"
   },
   "lineup": {
     "allMembers": "Tous",
@@ -362,7 +372,8 @@
     "newTitle": "Nouveau membre",
     "noInstrumentsYet": "Aucun instrument assigné",
     "rowAverage": "Moy.",
-    "title": "Membres"
+    "title": "Membres",
+    "viewsLabel": "Membres ou maîtrise"
   },
   "nav": {
     "bars": "Bars",
@@ -429,7 +440,9 @@
       "noCalendar": "Sans {{name}}, qui n’a pas d’agenda",
       "needsReconnecting": "L’agenda de {{name}} est à reconnecter",
       "unavailable": "L’agenda de {{name}} est indisponible pour l’instant"
-    }
+    },
+    "pageTitle": "Trouver un créneau",
+    "open": "Trouver un créneau"
   },
   "sessions": {
     "addTask": "Ajouter une tâche",
@@ -476,7 +489,14 @@
     "title": "Sessions",
     "venue": "Lieu",
     "whoDoesWhat": "Qui fait quoi",
-    "addSetlist": "Ajouter une setlist"
+    "addSetlist": "Ajouter une setlist",
+    "view": {
+      "label": "Parties de cette session",
+      "setlist": "Setlist",
+      "tasks": "Tâches",
+      "takes": "Prises",
+      "details": "Détails"
+    }
   },
   "setlist": {
     "addSongNoMatch": "Aucun morceau ne correspond.",
@@ -839,7 +859,8 @@
     "totalHoursMinutes": "{{hours}} h {{minutes}}",
     "totalMinutes": "{{minutes}} min",
     "yourPart": "Ta partie",
-    "yourTasks": "Tes tâches"
+    "yourTasks": "Tes tâches",
+    "sectionsLabel": "Votre partie ou vos tâches"
   },
   "band": {
     "title": "Groupe",
@@ -864,6 +885,7 @@
     "songListTitle": "Morceaux de la répétition",
     "start": "Lancer la répétition",
     "takesTitle": "Prises de ce morceau à cette répétition",
-    "towardsNext": "Vers le morceau suivant : {{note}}"
+    "towardsNext": "Vers le morceau suivant : {{note}}",
+    "title": "Mode répétition"
   }
 }

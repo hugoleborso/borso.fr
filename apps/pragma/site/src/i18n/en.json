@@ -11,7 +11,7 @@
     "calendarFeedRemoveQuestion": "Remove your calendar? The free slots will then be computed without you, and reconnecting needs the secret address again.",
     "calendarFeedRemoved": "Calendar removed.",
     "calendarFeedReplace": "Replace",
-    "calendarFeedSaved": "Saved. The free slots on the Sessions page now count your calendar.",
+    "calendarFeedSaved": "Saved. Find a slot, on the Sessions page, now counts your calendar.",
     "changePassword": "Change password",
     "contactDetails": "Contact details",
     "contactDetailsSaved": "Contact details saved.",
@@ -49,6 +49,14 @@
       "openSettings": "Open Google Calendar settings",
       "pasteAndConnect": "Paste and connect",
       "pasteFailed": "The clipboard could not be read. Paste the address in the field below."
+    },
+    "sections": {
+      "label": "Account sections",
+      "profile": "Profile",
+      "signIn": "Quick sign-in",
+      "calendar": "Calendar",
+      "notifications": "Notifications",
+      "language": "Language"
     }
   },
   "appName": "Pragma",
@@ -123,8 +131,6 @@
     "title": "Bars",
     "viewKanban": "Kanban",
     "viewList": "List",
-    "quickAddLabel": "New bar",
-    "quickAddSubmit": "Add",
     "outreachTemplateSave": "Save the message"
   },
   "catalog": {
@@ -322,7 +328,11 @@
     "newTitle": "New instrument",
     "title": "Instruments",
     "togglePrimary": "Main instrument",
-    "add": "Add an instrument"
+    "add": "Add an instrument",
+    "playersHint": "Each instrument lists the members who play it, from their member profile. Tap a member to make it their main instrument.",
+    "playedBy": "Played by",
+    "noPlayer": "No member plays it yet. Add it to a member on Members.",
+    "main": "main"
   },
   "lineup": {
     "allMembers": "All",
@@ -362,7 +372,8 @@
     "newTitle": "New member",
     "noInstrumentsYet": "No instruments assigned",
     "rowAverage": "Avg",
-    "title": "Members"
+    "title": "Members",
+    "viewsLabel": "Members or mastery"
   },
   "nav": {
     "bars": "Bars",
@@ -429,7 +440,9 @@
       "noCalendar": "Without {{name}}, who has no calendar",
       "needsReconnecting": "{{name}}'s calendar needs reconnecting",
       "unavailable": "{{name}}'s calendar is unavailable right now"
-    }
+    },
+    "pageTitle": "Find a slot",
+    "open": "Find a slot"
   },
   "sessions": {
     "addTask": "Add a task",
@@ -476,7 +489,14 @@
     "title": "Sessions",
     "venue": "Venue",
     "whoDoesWhat": "Who does what",
-    "addSetlist": "Add a setlist"
+    "addSetlist": "Add a setlist",
+    "view": {
+      "label": "Parts of this session",
+      "setlist": "Setlist",
+      "tasks": "Tasks",
+      "takes": "Takes",
+      "details": "Details"
+    }
   },
   "setlist": {
     "addSongNoMatch": "No song matches.",
@@ -839,7 +859,8 @@
     "totalHoursMinutes": "{{hours}} h {{minutes}}",
     "totalMinutes": "{{minutes}} min",
     "yourPart": "Your part",
-    "yourTasks": "Your tasks"
+    "yourTasks": "Your tasks",
+    "sectionsLabel": "Your part or your tasks"
   },
   "band": {
     "title": "Band",
@@ -864,6 +885,7 @@
     "songListTitle": "Songs of this practice",
     "start": "Start the practice",
     "takesTitle": "Takes of this song at this practice",
-    "towardsNext": "Into the next song: {{note}}"
+    "towardsNext": "Into the next song: {{note}}",
+    "title": "Practice mode"
   }
 }

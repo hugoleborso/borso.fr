@@ -29,7 +29,6 @@ export function SessionsSectionTabs({ value }: SessionsSectionTabsProps): JSX.El
       ]}
       value={value}
       onChange={(section) => navigateTo(SECTION_PATH[section], { replace: true })}
-      className="mb-4"
     />
   );
 }

@@ -17,6 +17,10 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     key: 'account.calendarGuide.platform.iphone',
     readsTheSameBecause: 'iPhone and iCloud, proper nouns',
   },
+  {
+    key: 'account.sections.notifications',
+    readsTheSameBecause: '"Notifications" is spelled alike in French',
+  },
   { key: 'appName', readsTheSameBecause: 'the Pragma brand' },
   { key: 'bars.contactEmail', readsTheSameBecause: '"Email" is the label French users read too' },
   { key: 'bars.contactName', readsTheSameBecause: 'same word, same spelling' },
@@ -80,6 +84,10 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     readsTheSameBecause: 'same word, and French pluralises it the same way',
   },
   { key: 'sessions.title', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'sessions.view.setlist',
+    readsTheSameBecause: '"setlist" is the word French musicians use',
+  },
   { key: 'setlist.capo', readsTheSameBecause: 'guitar jargon, used as-is in French' },
   { key: 'setlist.capoValue', readsTheSameBecause: 'guitar jargon, used as-is in French' },
   {

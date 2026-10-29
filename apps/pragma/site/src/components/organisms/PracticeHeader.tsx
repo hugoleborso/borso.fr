@@ -5,6 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { BackLink } from '../molecules/BackLink';
 import { Menu } from '../molecules/Menu';
+import { PINNED_HEADER_CLASS } from '../molecules/PageHeader';
+import { composeClassName } from '../atoms/class-name.utils';
 
 const LINE_SEPARATOR = ' · ';
 
@@ -29,7 +31,10 @@ export function PracticeHeader(props: PracticeHeaderProps): JSX.Element {
     .filter((part) => part !== null)
     .join(LINE_SEPARATOR);
   return (
-    <>
+    <header
+      data-page-header
+      className={composeClassName(PINNED_HEADER_CLASS, 'mb-0 flex flex-col')}
+    >
       <div className="flex items-center justify-between gap-2">
         <BackLink to={props.sessionPath} label={props.sessionLabel} />
         <Menu
@@ -54,6 +59,6 @@ export function PracticeHeader(props: PracticeHeaderProps): JSX.Element {
       >
         {positionLine}
       </Button>
-    </>
+    </header>
   );
 }

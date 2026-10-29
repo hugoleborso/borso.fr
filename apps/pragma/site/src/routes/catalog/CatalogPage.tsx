@@ -35,11 +35,6 @@ import { extractChartKind } from './chart-kind.utils';
 
 const NO_ROWS: readonly never[] = [];
 
-const PINNED_TOP_CLASS =
-  'sticky top-0 z-20 -mx-4 -mt-[calc(1rem+env(safe-area-inset-top))] mb-3 border-b border-rule ' +
-  'bg-paper px-4 pt-[calc(1rem+env(safe-area-inset-top))] pb-3 sm:-mx-9 ' +
-  'sm:-mt-[calc(1.75rem+env(safe-area-inset-top))] sm:px-9 sm:pt-[calc(1.75rem+env(safe-area-inset-top))]';
-
 const FILTER_LABEL_KEY = {
   all: 'catalog.filterAll',
   learning: 'catalog.filterToLearn',
@@ -128,19 +123,16 @@ export function CatalogPage(): JSX.Element {
 
   return (
     <div className="max-w-3xl px-4 py-4 sm:px-9 sm:py-7">
-      <div data-pinned-top className={PINNED_TOP_CLASS}>
-        <PageHeader
-          className="mb-2 sm:mb-3"
-          title={t('catalog.title')}
-          inline={
-            <SearchBar
-              value={search}
-              onChange={setSearch}
-              placeholder={t('catalog.searchPlaceholder')}
-            />
-          }
-        />
-
+      <PageHeader
+        title={t('catalog.title')}
+        inline={
+          <SearchBar
+            value={search}
+            onChange={setSearch}
+            placeholder={t('catalog.searchPlaceholder')}
+          />
+        }
+      >
         <div
           role="group"
           aria-label={t('catalog.filterLabel')}
@@ -157,7 +149,7 @@ export function CatalogPage(): JSX.Element {
             </Chip>
           ))}
         </div>
-      </div>
+      </PageHeader>
 
       {isToLearn && overviewQuery.data !== undefined ? (
         <div className="mb-3">

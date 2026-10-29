@@ -14,7 +14,9 @@ export function BottomActions({ children }: BottomActionsProps): JSX.Element {
   return (
     <>
       <div aria-hidden="true" className="h-20 lg:h-16" />
-      <div className={STRIP_CLASS}>{children}</div>
+      <div data-bottom-actions className={STRIP_CLASS}>
+        {children}
+      </div>
     </>
   );
 }

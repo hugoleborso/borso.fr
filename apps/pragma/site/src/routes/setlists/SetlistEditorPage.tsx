@@ -6,7 +6,6 @@ import { useMemo, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
-import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SetlistEditor } from '../../components/organisms/SetlistEditor';
@@ -128,19 +127,23 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
 
   return (
     <section className="flex max-w-[1280px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">
-      <div className="flex items-center justify-between gap-2">
-        <BackLink to={header.backTo} label={parentLabel ?? t('setlist.title')} />
-        <SetlistHeaderActions
-          setlistId={setlistId}
-          name={setlist.name}
-          displayedName={displayedName}
-          status={resolveSetlistStatus(setlist.status)}
-          isConcert={sessions.some((session) => session.kind === 'concert')}
-          onCopyOrder={copyOrder.copy}
-          onDeleted={() => navigateTo('/setlists')}
-        />
-      </div>
-      <PageHeader title={displayedName} subtitle={summaryLine} className="mb-2 sm:mb-4" />
+      <PageHeader
+        back={{ to: header.backTo, label: parentLabel ?? t('setlist.title') }}
+        title={displayedName}
+        subtitle={summaryLine}
+        className="mb-2 sm:mb-4"
+        actions={
+          <SetlistHeaderActions
+            setlistId={setlistId}
+            name={setlist.name}
+            displayedName={displayedName}
+            status={resolveSetlistStatus(setlist.status)}
+            isConcert={sessions.some((session) => session.kind === 'concert')}
+            onCopyOrder={copyOrder.copy}
+            onDeleted={() => navigateTo('/setlists')}
+          />
+        }
+      />
       {copyFeedback === null ? null : (
         <p
           role={copyFeedback === 'copied' ? 'status' : 'alert'}

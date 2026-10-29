@@ -8,7 +8,6 @@ import { Button } from '../atoms/Button';
 import { BottomActions } from '../atoms/BottomActions';
 import { Card } from '../atoms/Card';
 import { Input } from '../atoms/Input';
-import { BackLink } from '../molecules/BackLink';
 import { PageHeader } from '../molecules/PageHeader';
 import { SongSearch } from './SongSearch';
 import { deriveTonality } from '@domain/tonality.core';
@@ -95,18 +94,17 @@ export function SongEditForm({
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-5">
-      {isNew || songId === undefined ? (
-        <BackLink to="/catalog" label={t('catalog.backToCatalog')} />
-      ) : (
-        <form.Subscribe selector={(state) => state.values.title}>
-          {(titleValue) => <BackLink to={`/catalog/${songId}`} label={titleValue} />}
-        </form.Subscribe>
-      )}
       <form.Subscribe selector={(state) => [state.values.artist, state.values.title] as const}>
         {([artistValue, titleValue]) => (
           <PageHeader
+            back={
+              isNew || songId === undefined
+                ? { to: '/catalog', label: t('catalog.backToCatalog') }
+                : { to: `/catalog/${songId}`, label: titleValue }
+            }
             crumb={artistValue.length > 0 ? artistValue : t('catalog.crumb')}
             title={isNew ? t('catalog.newSong') : titleValue}
+            className="mb-0 sm:mb-0"
           />
         )}
       </form.Subscribe>

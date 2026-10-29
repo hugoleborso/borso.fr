@@ -3,7 +3,6 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useParams } from 'react-router-dom';
-import { BackLink } from '../../components/molecules/BackLink';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { VotingRoundPanel } from '../../components/organisms/VotingRoundPanel';
@@ -38,8 +37,11 @@ export function SessionAudiencePage(): JSX.Element {
 
   return (
     <section className="flex max-w-[960px] flex-col gap-3 px-4 py-4 sm:px-9 sm:py-7">
-      <BackLink to={`/sessions/${session.id}`} label={labelOf(session)} />
-      <PageHeader title={t('audience.panelTitle')} className="mb-0 sm:mb-0" />
+      <PageHeader
+        back={{ to: `/sessions/${session.id}`, label: labelOf(session) }}
+        title={t('audience.panelTitle')}
+        className="mb-0 sm:mb-0"
+      />
       <VotingRoundPanel sessionId={session.id} />
     </section>
   );

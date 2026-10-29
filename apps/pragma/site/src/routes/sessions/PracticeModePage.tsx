@@ -6,7 +6,7 @@ import { useParams } from 'react-router-dom';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
-import { BackLink } from '../../components/molecules/BackLink';
+import { PageHeader } from '../../components/molecules/PageHeader';
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { buildLineupColumn } from '../../components/molecules/lineup-slots.core';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
@@ -154,7 +154,11 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
   if (!isOffered || current === null) {
     return (
       <section className="flex flex-col gap-4 px-4 py-4 sm:px-9 sm:py-7">
-        <BackLink to={sessionPath} label={sessionLabel} />
+        <PageHeader
+          back={{ to: sessionPath, label: sessionLabel }}
+          title={t('practice.title')}
+          className="mb-0 sm:mb-0"
+        />
         <EmptyState icon="sessions">{t('practice.notOffered')}</EmptyState>
       </section>
     );

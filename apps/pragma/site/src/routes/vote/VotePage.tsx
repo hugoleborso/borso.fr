@@ -1,10 +1,13 @@
 /** @Feature audience-voting */
 
-import type { JSX } from 'react';
+import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Navigate, useParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { Card } from '../../components/atoms/Card';
+import { composeClassName } from '../../components/atoms/class-name.utils';
+import { PINNED_HEADER_CLASS } from '../../components/molecules/PageHeader';
+import { Sheet } from '../../components/molecules/Sheet';
 import { AudienceVoteList } from '../../components/organisms/AudienceVoteList';
 import { SuggestSongField } from '../../components/organisms/SuggestSongField';
 import { useBallot, useConcertVoteState, useLiveConcert } from '../../lib/queries/audience.queries';
@@ -52,17 +55,26 @@ function ConcertVoteScreen({ sessionId }: { readonly sessionId: string }): JSX.E
   const voteState = useConcertVoteState(sessionId, ballotToken, ballot.isSuccess);
   const round = voteState.data?.state.round ?? null;
   const isRoundOpen = round?.isOpen === true;
+  const [isSuggesting, setIsSuggesting] = useState(false);
 
   return (
     <VoteShell>
       <div className="flex flex-col gap-6">
-        <header className="flex flex-col gap-1">
+        <header
+          data-page-header
+          className={composeClassName(PINNED_HEADER_CLASS, 'mb-0 flex flex-col gap-1 sm:mb-0')}
+        >
           <span className="text-label font-medium uppercase tracking-[0.16em] text-ink-soft">
             {t('audience.pageCrumb')}
           </span>
-          <h1 className="font-display text-display sm:text-display text-ink m-0">
-            {t('audience.pageTitle')}
-          </h1>
+          <div className="flex flex-wrap items-center justify-between gap-2">
+            <h1 className="font-display text-display sm:text-display text-ink m-0">
+              {t('audience.pageTitle')}
+            </h1>
+            <Button icon="plus" variant="secondary" onClick={() => setIsSuggesting(true)}>
+              {t('audience.suggestTitle')}
+            </Button>
+          </div>
         </header>
 
         {isRoundOpen ? (
@@ -82,7 +94,15 @@ function ConcertVoteScreen({ sessionId }: { readonly sessionId: string }): JSX.E
           </Card>
         )}
 
-        <SuggestSongField sessionId={sessionId} ballotToken={ballotToken} />
+        {isSuggesting ? (
+          <Sheet
+            title={t('audience.suggestTitle')}
+            label={t('audience.suggestTitle')}
+            onClose={() => setIsSuggesting(false)}
+          >
+            <SuggestSongField sessionId={sessionId} ballotToken={ballotToken} />
+          </Sheet>
+        ) : null}
       </div>
     </VoteShell>
   );
