@@ -6,10 +6,20 @@ const recordedInputEventSchema = z
 
 export type RecordedInputEvent = z.infer<typeof recordedInputEventSchema>;
 
-const recordedLogSchema = z.object({ events: z.array(recordedInputEventSchema) });
+export const TOUCH_TAP_BINDING = '__touchTapReport';
 
-export function parseRecordedEvents(value: unknown): readonly RecordedInputEvent[] {
-  return recordedLogSchema.parse(value).events;
+const bindingCallSchema = z.object({
+  method: z.literal('Runtime.bindingCalled'),
+  params: z.object({ name: z.string(), payload: z.string() }),
+});
+
+export function readReportedEvent(message: string): RecordedInputEvent | null {
+  const parsedMessage: unknown = JSON.parse(message);
+  const call = bindingCallSchema.safeParse(parsedMessage);
+  if (!call.success || call.data.params.name !== TOUCH_TAP_BINDING) return null;
+  const parsedPayload: unknown = JSON.parse(call.data.params.payload);
+  const event = recordedInputEventSchema.safeParse(parsedPayload);
+  return event.success ? event.data : null;
 }
 
 const tapPointSchema = z.object({ x: z.number(), y: z.number() }).readonly();
