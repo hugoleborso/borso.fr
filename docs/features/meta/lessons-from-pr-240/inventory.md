@@ -27,5 +27,6 @@ logged.
 | 12 | post-merge | This sweep could not `git log` the PR's commits until it fetched them by SHA, because the squash merge left them out of the clone. | this session's log 18:20 | no-op: one fetch by SHA, and git's error names the unknown revision. |
 | 13 | post-merge | This sweep's first fix set a `parserPreset` in the commitlint config, which replaced the extended preset whole and failed `feat!: probe`. | this session's log 18:20; prototype reverted | merge into 01: recorded there as the rejected alternative. |
 | 14 | post-merge | The merged session kept running for PR #242, so its cost covers more than PR #240. | `get_session` `session_01K69KnEN4KZEAddTa4QvvkW`, status idle, watching #242 | no-op: the cost row says so. |
+| 15 | post-merge | `no-swallowed-push` refused this sweep's piped push too. | this session's log 18:20 `hook:no-swallowed-push` | no-op: a filed wall, matched at `docs/quality/working-conditions.md:90`, and the hook refused before anything ran. |
 
-Counts: 1 dantotsu, 0 knowledge, 4 merged, 9 no-op.
+Counts: 1 dantotsu, 0 knowledge, 4 merged, 10 no-op.

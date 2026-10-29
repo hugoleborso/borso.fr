@@ -18,3 +18,4 @@ Session: bd478bd0-c24b-54be-b537-75942e140826
 
 - [2026-10-29 18:20] `main` git log on PR #240's branch commits failed with unknown revision, because the squash merge left them out of the clone until fetched by SHA
 - [2026-10-29 18:20] `main` a commitlint config that sets its own parserPreset replaces the extended preset whole, so a one-option override lost the header pattern
+- [2026-10-29 18:20] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
