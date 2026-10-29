@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/argent.sh]
 time-to-detect: minutes
 tags: [agent-browser, agents, harness, mobile, sandbox, tooling, documentation, validation]
-zone: scripts/phone.sh
+zone: scripts/argent.sh
 recurs: [two-audits-that-sent-no-touch-events]
 ---
 

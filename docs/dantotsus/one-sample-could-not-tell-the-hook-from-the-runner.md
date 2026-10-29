@@ -10,7 +10,7 @@ eradication-level: 2
 eradication-paths: [scripts/check-pre-commit-budget.sh, .husky/pre-push]
 time-to-detect: hours
 tags: [ci, gates, pre-commit, runtime-budget, agents]
-zone: .husky/pre-commit
+zone: scripts/check-pre-commit-budget.sh
 recurs: none (a-written-runtime-budget-nobody-enforced had no measurement at all; this one measured once and read the runner's noise as the hook's cost)
 ---
 

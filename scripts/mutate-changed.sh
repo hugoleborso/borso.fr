@@ -12,6 +12,11 @@
 # `--mutate` takes one comma-separated list of plain paths: the flag does not
 # accumulate, and a brace expression matches nothing.
 #
+# Each run reads and writes Stryker's incremental file, so a mutant whose source
+# and tests did not move keeps its verdict from the previous run. CI keeps that
+# file in the Actions cache per pull request: a later push re-tests only what
+# moved since. Stryker writes the file only when a run completes.
+#
 # Usage: scripts/mutate-changed.sh <base-ref>
 
 set -euo pipefail
@@ -19,6 +24,7 @@ set -euo pipefail
 base="${1:?usage: scripts/mutate-changed.sh <base-ref>}"
 changed=$(git diff --name-only "$(git merge-base "$base" HEAD)" HEAD)
 failed=()
+incremental=(--incremental --incrementalFile reports/mutation/incremental.json)
 
 run_mutation() {
   local label="$1"
@@ -36,7 +42,7 @@ for app in $(echo "$changed" | sed -n 's|^apps/\([^/]*\)/.*|\1|p' | sort -u); do
     sort -u)
   [ -z "$gated_files" ] && continue
   run_mutation "$app: $(echo "$gated_files" | grep -c .) file(s)" \
-    pnpm --filter "@borso-app/$app" exec stryker run --mutate "$(echo "$gated_files" | paste -sd, -)"
+    pnpm --filter "@borso-app/$app" exec stryker run "${incremental[@]}" --mutate "$(echo "$gated_files" | paste -sd, -)"
 done
 
 tooling_files=$(echo "$changed" |
@@ -46,7 +52,7 @@ tooling_files=$(echo "$changed" |
   sort -u)
 if [ -n "$tooling_files" ]; then
   run_mutation "tooling: $(echo "$tooling_files" | grep -c .) file(s)" \
-    pnpm exec stryker run --mutate "$(echo "$tooling_files" | paste -sd, -)"
+    pnpm exec stryker run "${incremental[@]}" --mutate "$(echo "$tooling_files" | paste -sd, -)"
 fi
 
 infra_files=$(echo "$changed" |
@@ -57,7 +63,7 @@ infra_files=$(echo "$changed" |
   sort -u)
 if [ -n "$infra_files" ]; then
   run_mutation "infra-cdk: $(echo "$infra_files" | grep -c .) file(s)" \
-    pnpm --filter @borso/infra exec stryker run --mutate "$(echo "$infra_files" | paste -sd, -)"
+    pnpm --filter @borso/infra exec stryker run "${incremental[@]}" --mutate "$(echo "$infra_files" | paste -sd, -)"
 fi
 
 if [ "${#failed[@]}" -gt 0 ]; then

@@ -85,7 +85,7 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
    **On `AccessDenied`**, the grant in [`docs/aws-setup.md` §12.6](../../../../docs/aws-setup.md) is not applied. Move the staged files back beside the report, commit them, and have *Validation* link the report rather than the images — a raw blob URL ends in `.png` and the hook refuses it for the same reason. Say in one line that the upload was denied, so the next run does not rediscover it.
 6. **Read it back.** `pull_request_read method: get`, then check what GitHub kept with `pnpm exec tsx scripts/pr/check-pr-body.ts --pr <pr_number>`, which reads the posted title and body through `gh api` instead of a file. GitHub deletes an angle-bracket placeholder even inside a code span, which is why the checker refuses one — see [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../../docs/knowledge/github-mcp-pr-body-sanitizer.md) for what else is confirmed to survive the round trip.
 
-7. **Subscribe, then stop.** One call to `subscribe_pr_activity`, and end the turn. See *Watching the pull request afterwards*.
+7. **Subscribe, then stop.** One call to `subscribe_pr_activity`, and end the turn. See *Watching the pull request afterwards*. A subagent skips the call and hands the URL back: its caller is the session that waits, and on PR #231 a subagent told not to subscribe followed this step instead.
 
 ## Watching the pull request afterwards
 

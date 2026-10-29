@@ -394,7 +394,7 @@ jobs:
   mutation:
     if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 60
     steps:
       - uses: actions/checkout@v7
         with:
@@ -406,6 +406,19 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @borso/infra build
+      # Stryker's incremental files, one per pull request, so a push re-tests
+      # only the mutants whose source or tests moved since the last complete
+      # run. The key carries the toolchain, as full-suite.yml's does, so a
+      # Vitest or Stryker bump starts from an empty cache.
+      - uses: actions/cache@v6
+        with:
+          path: |
+            apps/*/reports/mutation/incremental.json
+            reports/mutation/incremental.json
+            infra/cdk/reports/mutation/incremental.json
+          key: stryker-pr-${{ github.event.pull_request.number }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-${{ github.sha }}
+          restore-keys: |
+            stryker-pr-${{ github.event.pull_request.number }}-${{ hashFiles('pnpm-lock.yaml', 'stryker.shared.js', 'stryker-zero-test-guard.js', 'patches/**') }}-
       - run: scripts/mutate-changed.sh "origin/${{ github.base_ref }}"
 
   commitlint:

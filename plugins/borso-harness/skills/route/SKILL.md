@@ -59,6 +59,8 @@ Sizing happens before the work, so it is sometimes wrong. These are the signals,
 - A change that was one application turns out to need the same edit in another → Tier 3.
 - A gate fails for a reason unrelated to your change → that is its own task, at its own tier. CLAUDE.md forbids walking past it, and it does not belong inside the current one.
 
+A feature is one branch and one pull request at every tier. Slices are commits on that branch, never pull requests stacked on each other. The operator reviews a feature on one preview and merges it at once, and PR #216's seven stacked pull requests were rejected for that reason.
+
 De-escalating is equally allowed and rarer. A Tier 2 whose spec resolves to "add the field and render it" is a Tier 1; say so and drop the ceremony.
 
 ## Parallel agents

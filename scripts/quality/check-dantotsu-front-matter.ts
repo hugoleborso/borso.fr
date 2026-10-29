@@ -1,6 +1,6 @@
 #!/usr/bin/env tsx
 
-import { readTrackedPaths, readDantotsuCorpus, runGit } from './dantotsu-corpus';
+import { readDantotsuCorpus, readPathsEverTracked, runGit } from './dantotsu-corpus';
 import { selectSchemaProblems } from './dantotsu-schema.core';
 
 const MAIN_REFERENCE = 'origin/main';
@@ -38,16 +38,6 @@ function readStagedSlugs(): ReadonlySet<string> {
     if (slug !== undefined) slugs.add(slug);
   }
   return slugs;
-}
-
-function readPathsEverTracked(): ReadonlySet<string> {
-  const paths = new Set(readTrackedPaths());
-  for (const path of runGit(['log', '--format=', '--name-only', '--diff-filter=A', 'HEAD']).split(
-    '\n',
-  )) {
-    if (path.length > 0) paths.add(path);
-  }
-  return paths;
 }
 
 function main(): void {

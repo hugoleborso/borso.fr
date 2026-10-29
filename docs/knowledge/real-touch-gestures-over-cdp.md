@@ -1,11 +1,14 @@
 ---
-summary: 'A real tap is `scripts/phone.sh touch <selector>`; a real swipe or drag is `Input.dispatchTouchEvent` sent yourself over CDP, to the port of `agent-browser get cdp-url`. Overrides end with the CDP session that set them.'
+summary: 'A real tap is `scripts/phone.sh touch <selector>`; a real swipe or drag is `Input.dispatchTouchEvent` sent yourself over CDP, to the port of `agent-browser get cdp-url`. Overrides end with the CDP session that set them. Headless Chromium scrolls nothing from a touch-source scroll, ignores DPR in a screencast and draws no keyboard.'
 triggers:
   commands:
     - 'Input\.dispatchTouchEvent'
     - 'Browser\.grantPermissions'
     - 'setTouchEmulationEnabled'
     - 'get cdp-url'
+    - 'synthesizeScrollGesture'
+    - 'startScreencast'
+    - 'setSafeAreaInsetsOverride'
 ---
 
 # Driving a real touch gesture over CDP
@@ -70,6 +73,26 @@ A finding that depends on the difference between a touch drag and a mouse drag,
 such as a `dnd-kit` `PointerSensor` losing the gesture to page scroll, needs
 this recipe or a real device; see
 [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md).
+
+## What the headless Chromium does not do
+
+Four gaps the agents of PR #216 and #231 measured in agent-browser's headless
+Chromium (friction log `docs/features/pragma/ux-redesign/kaizen.md`):
+
+- **A touch-source scroll scrolls nothing.** `Input.synthesizeScrollGesture`
+  with `gestureSourceType: 'touch'` returns success and moves the page 0 px for
+  a 300 px request. The mouse source moved it 299 px. Scroll with the mouse
+  source, and send the touch events of a gesture yourself as above.
+- **A screencast ignores the device scale factor.** `Page.startScreencast`
+  returned 390 px frames under a DPR 3 override. Sharp frames came only from a
+  headful Chromium under Xvfb started with `--force-device-scale-factor`.
+- **No safe-area insets without CDP.** agent-browser has no command for
+  `Emulation.setSafeAreaInsetsOverride`, so checking `env(safe-area-inset-*)`
+  needs a raw client. Clear the override before closing it: one left in place
+  hung the next agent-browser navigation.
+- **No virtual keyboard.** "Stays visible above the keyboard" can only be
+  approximated by shrinking the viewport, which models Android's resize and
+  not the iOS overlay.
 
 ## See also
 
