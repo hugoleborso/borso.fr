@@ -47,6 +47,13 @@ describe('CalendarFeedForm', () => {
     ).toBe(GOOGLE_CALENDAR_SETTINGS_ADDRESS);
   });
 
+  it('puts the address field above the steps, so no list hides it', () => {
+    renderForm();
+    const field = screen.getByLabelText('Secret iCal address');
+    const steps = screen.getByRole('list');
+    expect(field.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+  });
+
   it('pastes the copied address and saves it in one tap', async () => {
     readTextFromClipboard.mockResolvedValue(`  ${SECRET_ADDRESS}\n`);
     const onSave = vi.fn(async () => undefined);

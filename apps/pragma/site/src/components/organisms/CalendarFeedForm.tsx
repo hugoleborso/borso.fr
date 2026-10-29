@@ -58,7 +58,6 @@ function AddressField({ initialPlatform, onSave, onCancel }: AddressFieldProps):
       }}
       className="flex flex-col gap-2.5"
     >
-      <CalendarFeedGuide platform={platform} onSelectPlatform={setPlatform} />
       <div>
         <Button
           icon="clipboard"
@@ -113,6 +112,7 @@ function AddressField({ initialPlatform, onSave, onCancel }: AddressFieldProps):
           </Button>
         )}
       </div>
+      <CalendarFeedGuide platform={platform} onSelectPlatform={setPlatform} />
     </form>
   );
 }
