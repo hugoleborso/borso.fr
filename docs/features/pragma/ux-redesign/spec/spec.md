@@ -88,7 +88,7 @@ The band records songs during practice (operator, 2026-10-27), and today that me
 
 ### Song page (`/catalog/:songId`, mockup `after-song.png`, `design/grafts/backstage-song-page.png`)
 
-In order: cover, title, artist, status; a row of listening links (Deezer, Spotify, YouTube, each with its official mark) built from the song's `links`, `deezerTrackId` and `spotifyTrackId`; one line of text naming the setlists the song is in; labelled round actions (**Practised**, **Notes**, **Full screen**), each an icon with its word under it; **My part** with the member's instrument and mastery in the highlighter; the chord chart with a transpose stepper; the band's takes with play buttons; the default lineup and notes. Header: **Edit** (`edit`) and `more`. Primary action in the bottom strip: **Record a take** (`mic`); the page's bottom padding equals the strip's height, so the last chord line scrolls clear of the pill (the critic found Backstage's pill covering the chords). **Full screen** is the only way into stage mode from the song. (D8) **Edit** and **Full screen** are links drawn as buttons, never a button inside a link (rank 29).
+In order: cover, title, artist, status; a row of listening links (Deezer, Spotify, YouTube, each with its official mark) built from the song's `links`, `deezerTrackId` and `spotifyTrackId`, where Spotify is always present: the stored track, else a stored Spotify link, else a search for the artist and title (operator review 4, U4); one line of text naming the setlists the song is in; labelled round actions (**Practised**, **Notes**, **Full screen**), each an icon with its word under it; **My part** with the member's instrument and mastery in the highlighter; the chord chart with a transpose stepper; the band's takes with play buttons; the default lineup and notes. Header: **Edit** (`edit`) and `more`. Primary action in the bottom strip: **Record a take** (`mic`); the page's bottom padding equals the strip's height, so the last chord line scrolls clear of the pill (the critic found Backstage's pill covering the chords). **Full screen** is the only way into stage mode from the song. (D8) **Edit** and **Full screen** are links drawn as buttons, never a button inside a link (rank 29).
 
 ### Chords by paste, photo or PDF (mockup `after-chords.png`)
 
@@ -415,9 +415,9 @@ The operator reviewed the #216 preview a third time on 2026-10-29. Each item bel
 
 | # | Change | Where it lands |
 | --- | --- | --- |
-| T1 | A practice's Details tab names the prepared concert once, in its select; the sentence under it goes. The select draws its chevron inside the field. | Session page, Details tab |
-| T2 | Sessions stay sorted by date, coming sessions nearest first, then past ones most recent first, and a test pins the order. A concert's card carries the accent border and fill. A **Concerts only** chip in the fixed header keeps the list to concerts, held in the address as `?kind=concert`. When the next session on Home is a practice, its card also names the next concert, as one line linking to it. | `/sessions`, Home |
-| T3 | A practice picks no setlist. Its first tab is **Songs**, and **Choose songs** picks its songs from concerts in two steps: tick concerts, then tick songs pooled from their setlists, and **Save**. No schema change; see *Session page*. | Session page |
+| T1 | A practice picks no setlist. Its first tab is **Songs**, and **Choose songs** picks its songs from concerts in two steps: tick concerts, then tick songs pooled from their setlists, and **Save**. No schema change; see *Session page*. | Session page |
+| T2 | A practice's Details tab names the prepared concert once, in its select; the sentence under it goes. The select draws its chevron inside the field. | Session page, Details tab |
+| T3 | Sessions stay sorted by date, coming sessions nearest first, then past ones most recent first, and a test pins the order. A concert's card carries the accent border and fill. A **Concerts only** chip in the fixed header keeps the list to concerts, held in the address as `?kind=concert`. When the next session on Home is a practice, its card also names the next concert, as one line linking to it. | `/sessions`, Home |
 | T4 | Band is a plain menu of its sections, Tasks first and Account last. The tasks, with the **My tasks / Everyone** tabs and **New task**, move to their own page, `/tasks`, with a back link to Band. | `/band`, `/tasks` |
 | T5 | The paragraph explaining the mastery matrix goes, with no text in its place. | `/members`, Mastery tab |
 | T6 | The Instruments page names no players: the **Played by** line, the avatars, the **main** mark and the header text explaining them go. This reverts operator review 2, Q4. | `/instruments` |
@@ -432,6 +432,23 @@ The operator reviewed the #216 preview a third time on 2026-10-29. Each item bel
 - **The member's own things are named in the first person** in every label.
 
 Properties this review drops: the assistants card no longer offers the server address for a claude.ai or Le Chat custom connector, nor the steps after copying the command; the server still accepts those clients.
+
+## Operator review 4
+
+The operator reviewed the #216 preview a fourth time on 2026-10-29. Each item below is a ratified change to this spec, delivered on the same branch.
+
+| # | Change | Where it lands |
+| --- | --- | --- |
+| U1 | A member has no main instrument. The API, the site, the assistants' member and instrument tools, the domain and the seed neither read nor write `member_instrument.is_primary`; the column stays in the database only because Aurora DSQL refuses `DROP COLUMN`. | API, site, assistants' tools, seed |
+| U2 | The outreach message sheet opens at full height, and its text box fills the height left under the hint and grows with its text; the sheet body is the only scroll container. | `/bars`, outreach message sheet |
+| U3 | A tab row whose tabs fit is unchanged. One that overflows shows a fade with a chevron on each edge that hides tabs, and scrolls the active tab into view. The Account tabs fit at 375 px: icon over a short label (**Profile**, **Sign-in**, **Calendar**, **Alerts**, **Language**; in French "Profil", "Connexion", "Calendrier", "Alertes", "Langue"). The task-metrics screen rule fails a tab row that hides tabs with no cue, on every route at 375 px. | every tab row, `/account` |
+| U4 | No long press opens the listening links anywhere. The song page's listen row always carries a **Spotify** button with the official mark, a secondary action: the song's Spotify track when stored, otherwise `https://open.spotify.com/search/<artist> <title>`. | song page, Songs, vote page |
+
+**Decisions recorded in this review:**
+- **A member has no main instrument** (operator, 2026-10-29). This replaces review 3's decision that kept it in the data for the assistants: nothing reads or writes it any more.
+- **The Account tabs stack the icon over the label.** Shortening the labels alone could not fit five tabs with an icon at 375 px; the measured row needed about 480 px.
+
+Properties this review drops: `PUT /api/members/:id/instruments` no longer accepts `primaryInstrumentIds`; `list_members` and `list_instruments` no longer answer `main` and `mainFor`, and `set_member_instruments` no longer takes `main`; a Deezer search link is no longer reachable for a song with no Deezer track id.
 
 ## Changes
 
