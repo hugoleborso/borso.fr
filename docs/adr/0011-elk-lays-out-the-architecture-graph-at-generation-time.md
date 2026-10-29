@@ -151,7 +151,7 @@ because the layout is computed once and committed.
 | Criterion | Weight | Why it matters |
 |---|---|---|
 | Edges never cross unrelated nodes | high | A diagram that implies a dependency that does not exist is worse than no diagram; this is the defect that opened the ADR |
-| Deterministic output | high | `architecture-graph.ts --check` compares the page byte for byte in pre-commit and CI |
+| Deterministic output | high | `architecture-graph.ts --check` compares the page byte for byte in pre-commit and CI (2026-10-29: it now runs only when the operator dispatches `architecture.yml`) |
 | Page payload | medium | The artifact CSP forces inlining, so a runtime library is paid on every load |
 | Maintenance surface | medium | One developer; code we write is code we debug alone |
 | Layout compactness | low | Affects scrolling, not correctness |

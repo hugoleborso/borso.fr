@@ -116,7 +116,7 @@ decision.
 
 - [`pnpm-dev-serves-a-schema-it-never-migrated.md`](./pnpm-dev-serves-a-schema-it-never-migrated.md) — `pnpm dev` applies no migrations (only the back-e2e setup does), so a new one answers 500 with `errorMissingColumn` until that suite runs; and the dev API shares its Postgres with that suite, so seeding by hand mid-run fails an unrelated test.
 - [`pnpm-peer-warning-is-not-enforcement.md`](./pnpm-peer-warning-is-not-enforcement.md) — pnpm only *warns* on peer-dep mismatch; installs succeed and the bad combination crashes at runtime.
-- [`pnpm-run-test-double-dash-drops-the-filter.md`](./pnpm-run-test-double-dash-drops-the-filter.md) — `pnpm run test -- <path>` hands Vitest a `--` and it runs every file; drop the `--`, or call `vitest run --project <name> <path>`.
+- [`pnpm-run-test-double-dash-drops-the-filter.md`](./pnpm-run-test-double-dash-drops-the-filter.md) — `pnpm run test:e2e -- <path>` hands Vitest a `--` and it runs every file; drop the `--`, or call `vitest run --project <name> <path>`.
 - [`vitest-list-ignores-shard.md`](./vitest-list-ignores-shard.md) — `vitest list --shard=i/n` lists every file, so a shard split cannot be checked by listing it; `--project` is honoured, and a split that must be predictable belongs in a project.
 - [`rtk-pnpm-install-can-skip-lockfile-write.md`](./rtk-pnpm-install-can-skip-lockfile-write.md) — when `pnpm install` is invoked through `rtk`, the lockfile sometimes doesn't write back; mirror from `node_modules/.pnpm/lock.yaml` if `git status` shows nothing changed.
 
@@ -149,7 +149,7 @@ decision.
 
 ### Local dev / Postgres
 
-- [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test` wires `DATABASE_URL` automatically.
+- [`local-postgres-without-docker.md`](./local-postgres-without-docker.md) — `scripts/local-postgres.sh` boots a sandbox-private Postgres for any borso app when Docker is unavailable (claude.ai/code sandbox); per-app stable port, Drizzle-friendly, `pnpm run test:e2e` wires `DATABASE_URL` automatically.
 - [`a-race-test-must-prove-the-race-happened.md`](./a-race-test-must-prove-the-race-happened.md) — `Promise.all` does not overlap a read and a write, local Postgres never aborts a commit, and a lock held on the wrong table locks nothing; use the lock-and-wait and forced-abort helpers in `apps/pragma/test/database-utils.ts`.
 - [`dsql-clone-from-prod.md`](./dsql-clone-from-prod.md) — cloning a production schema into a preview, and what the clone does not carry.
 - [`a-pragma-preview-cannot-be-signed-into.md`](./a-pragma-preview-cannot-be-signed-into.md) — the preview clones production's group password and member accounts (not passkeys), so only someone holding a production account signs in; what can still be validated there, and what has to move local.

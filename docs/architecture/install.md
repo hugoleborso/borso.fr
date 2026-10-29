@@ -9,7 +9,7 @@ Run it with:
 ```bash
 pnpm exec tsx scripts/architecture/architecture-graph.ts            # every app
 pnpm exec tsx scripts/architecture/architecture-graph.ts --app foo  # one app
-pnpm exec tsx scripts/architecture/architecture-graph.ts --check    # gate
+pnpm exec tsx scripts/architecture/architecture-graph.ts --check    # gate, run by architecture.yml when the operator dispatches it
 pnpm exec tsx scripts/architecture/architecture-graph.ts --list     # the slugs
 ```
 
@@ -139,5 +139,5 @@ deliberate: an unknown suffix should be a decision, not a silent new category.
    register.
 4. Tag whatever reaches outside with `@DependsOnExternal`, and declare each one
    in the manifest.
-5. Run `--check` before merging. Nothing runs it for you: the maps are built
-   on demand only, from the `architecture` workflow.
+5. Ask the operator to dispatch the `architecture` workflow before merging.
+   It runs `--check`, and nothing else does. Do not run it by hand.

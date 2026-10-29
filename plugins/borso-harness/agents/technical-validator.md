@@ -95,10 +95,9 @@ The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the cus
 ### C. Tests pass
 
 - Identify which workspaces the diff touches (`apps/borso-fr`, `infra/cdk`, `infra/shared`, …).
-- Run the fast suite, never the whole back-e2e suite, which stays in CI:
-  - a full-stack app (its `package.json` has `test:core`): `pnpm --filter <pkg> run test:core`, then the back-e2e files the branch touches or that import a touched file: `pnpm --filter <pkg> run test --changed <base>` (round 2: `--changed <reviewed-sha>`). The `test` script boots the local Postgres; `--changed` walks Vitest's import graph, and no affected file exits 0.
-  - any other app: `pnpm --filter <pkg> run test:coverage`, or `test` when it has none.
-  - `infra/cdk` and `infra/shared`: `test:coverage`, and confirm 100%.
+- Run only the tests the branch affects. Coverage and mutation are CI's (`app-tests` and the `mutation` job), so never run `test:core`, `test:coverage`, `test:mutation` or a whole suite. Round 2 replaces `<base>` with `<reviewed-sha>`.
+  - a full-stack app (its `package.json` has `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base>`, then `pnpm --filter <pkg> run test:e2e --changed <base>`. The `test:e2e` script boots the local Postgres; `--changed` walks Vitest's import graph, and no affected file exits 0.
+  - a front-end-only app, `infra/cdk` or `infra/shared`: `pnpm --filter <pkg> exec vitest run --changed <base>`.
 - Capture exit code + the last 30 lines on failure.
 - **Enumerate every `*.utils.ts` file in the touched workspaces.** Repo rule (CLAUDE.md "Clean code"): pure utilities ship at 100% coverage. For each `*.utils.ts`, confirm a sibling `*.utils.test.ts` exists and the runner picks it up. A `*.utils.ts` without its matching test file is **FAIL**. A workspace that touched any `*.utils.ts` but has no `test` script at all is **FAIL** — utilities are coverage-gated, so a missing runner is a missing gate.
 - A workspace with no `*.utils.ts` files and no test script is UNVERIFIABLE with a note.
@@ -197,7 +196,7 @@ Write exactly this layout to `report_path`:
 
 | # | Workspace | Command | Exit | Verdict |
 |---|---|---|---|---|
-| C01 | @borso-app/borso-fr | `pnpm --filter @borso-app/borso-fr run test:coverage` | 0 | PASS |
+| C01 | @borso-app/borso-fr | `pnpm --filter @borso-app/borso-fr exec vitest run --changed <base>` | 0 | PASS |
 
 ## D. Test coverage of spec
 

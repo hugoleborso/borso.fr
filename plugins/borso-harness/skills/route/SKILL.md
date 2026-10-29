@@ -34,7 +34,7 @@ No spec, no plan, no task list. Write it, test it, commit it. Reaching for a ski
 Task list:
 1. `/code-standards` for the layers you are touching
 2. implement, marking new files `// @FollowsBlueprint <id>`
-3. the fast suite (`pnpm --filter <app> run test:core`, or `test:coverage` on a front-end-only app) and the affected gates; the whole back-e2e suite runs in CI
+3. the affected tests (`pnpm --filter <app> exec vitest run --project core --changed <base>`, or `exec vitest run --changed <base>` on a front-end-only app); coverage, mutation and the whole suites run in CI
 4. `/technical-validation`, which also checks what lint cannot, two rounds at most
 
 **Tier 2 — specified.** New user-visible behaviour, or a change crossing back end and front end, or any open decision.

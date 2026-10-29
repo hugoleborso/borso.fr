@@ -1,6 +1,8 @@
 import { fileURLToPath } from 'node:url';
 import { defineConfig } from 'vitest/config';
 
+const CONFIG_FILES_THAT_RERUN_EVERY_TEST = ['**/{vitest,vite}.config.*'];
+
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 const PURE_TEST_FILES = [
@@ -41,6 +43,7 @@ const workspaceAliases = {
 export default defineConfig({
   resolve: { alias: workspaceAliases },
   test: {
+    forceRerunTriggers: CONFIG_FILES_THAT_RERUN_EVERY_TEST,
     coverage: {
       provider: 'v8',
       include: [

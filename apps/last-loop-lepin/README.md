@@ -11,9 +11,11 @@ Plan : [`docs/features/last-loop-lepin/race-day-live/plan/plan.md`](../../docs/f
 pnpm install
 pnpm --filter @borso-app/last-loop-lepin run dev          # Vite (site)
 pnpm --filter @borso-app/last-loop-lepin run dev:api      # Hono local server (port 3001)
-pnpm --filter @borso-app/last-loop-lepin run test:core    # gate A (~1 s, no Docker)
-pnpm --filter @borso-app/last-loop-lepin run test         # gate B (testcontainers Postgres)
+pnpm --filter @borso-app/last-loop-lepin exec vitest run --project core --changed <base>
+pnpm --filter @borso-app/last-loop-lepin run test:e2e --changed <base>
 ```
+
+CI runs `test:core` with coverage and the whole `test:e2e` suite. Locally, run only what the change affects.
 
 ## Layers
 

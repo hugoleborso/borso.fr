@@ -51,7 +51,7 @@ Do **not** invoke when:
 
 1. **Parse the argument.** `spec_path = docs/features/<app>/<slug>/spec/spec.md`. Derive `<app>` from the path.
 2. **Locate the plan.** `plan_path = docs/features/<app>/<slug>/plan/plan.md`. If missing, surface that to the user and continue — the validator will tag plan-dependent rows UNVERIFIABLE.
-3. **Resolve the workspace.** `app_pkg = "@borso-app/<app>"` for app workspaces; `@borso/infra` for `<app> = infra`. Check `apps/<app>/package.json` exists and identify the test script (`test`, `test:coverage`, etc.).
+3. **Resolve the workspace.** `app_pkg = "@borso-app/<app>"` for app workspaces; `@borso/infra` for `<app> = infra`. Check `apps/<app>/package.json` exists and whether it has `test:core` (full-stack) or not, which picks the scoped test command.
 4. **Resolve the base ref.** Default to `origin/main`. Surface explicit override via `BASE_REF` env if the user provides one.
 5. **Build the run paths.**
    ```
@@ -111,7 +111,7 @@ Same rule as `/visual-validation`:
 ## Repo-specific notes
 
 - Workspaces: `@borso-app/<app>` for `apps/*`; `@borso/infra` for `infra/cdk`; `@borso/shared-infra` for `infra/shared`.
-- `infra/cdk` and `infra/shared` are 100%-coverage gated. The validator runs `test:coverage` for those, not `test`, and treats <100% as FAIL.
+- `infra/cdk` and `infra/shared` are 100%-coverage gated. The pre-push hook and CI run their `test:coverage`; the validator runs only the changed tests.
 - Default base ref is `origin/main`. Feature branches are typically `claude/<slug>` per CLAUDE.md.
 - Reports go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/`, `plan/`, and any visual-validation reports).
 - Pair with `/visual-validation` (UI work): visual catches "doesn't render right"; technical catches "renders fine but the code is rotten or untested".

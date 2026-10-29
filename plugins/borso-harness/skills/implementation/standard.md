@@ -57,7 +57,7 @@ A standard states the rule and a blueprint is the working instance of it, so the
 
 When the layer has no blueprint, say so and write the file against the standard, then propose the blueprint in the same change rather than leaving the next author with the same gap. [`blueprint-coverage.html`](../../../../.claude/skills/blueprint/blueprint-coverage.html) is where to check before assuming one exists.
 
-The pre-push hook and CI both run the generators in `--check` mode, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a stale generated file fails the gate.
+The pre-commit hook and CI both run the generators in `--check` mode, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a stale generated file fails the gate. Do not run them by hand.
 
 ### Compose with technical sub-skills
 
@@ -79,7 +79,7 @@ Every behavioural assertion the spec makes lives somewhere the autonomous valida
 
 ### Commit small, push only after gates
 
-Conventional-commit, small focused units. Push only after typecheck, `eslint`, `prettier --check`, knip, build, `/visual-validation` (UI work), `/technical-validation` (always) all pass. Hooks must not be bypassed; their failures are the gate.
+Conventional-commit, small focused units. Push only after build, `/visual-validation` (UI work) and `/technical-validation` (always) pass. The commit and push hooks run typecheck, oxlint, oxfmt, knip and the changed tests, so do not run them by hand. Hooks must not be bypassed; their failures are the gate.
 
 When the verdict asserts a **routing or auth property that differs by stage** (e.g. "same-origin `/api`"), name the stage(s) where it holds — *"same-origin in prod, cross-origin via `VITE_API_BASE` in preview by design"* — never a bare yes/no. A stageless claim gets inherited verbatim by the next validator and flagged as a FAIL that is actually by-design. Cf. [`docs/knowledge/preview-api-cross-origin.md`](../../../../docs/knowledge/preview-api-cross-origin.md).
 

@@ -47,7 +47,7 @@ The blueprint and the standard are two halves of the same answer. [`docs/standar
 
 When the layer genuinely has no blueprint, write the file against the standard and propose the blueprint in the same change rather than handing the next author the same gap. Run `/blueprint create` for the annotation and `/blueprint index` afterwards.
 
-Both generators take `--check` and both run in pre-push and in CI, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a generated file left stale fails the gate rather than reaching review.
+Both generators take `--check` and both run in pre-commit and in CI, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a generated file left stale fails the gate rather than reaching review. Do not run them by hand.
 
 ## Load-bearing rules (enforced as you write)
 
@@ -130,7 +130,7 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
    e. Update local commits as you go — do not save the diff for one giant commit.
    f. **Test only what the row touched.** Run `pnpm --filter <app> exec vitest run --project core --changed <base>` and, for an `api/` change, the back-e2e files you touched by path, all without `--coverage`. Never run an app's whole `test`, `test:core` or `test:coverage` script between rows, and never `scripts/lint-staged-files.sh` over the branch: the commit and push hooks already lint and test what changed. On PR #216 one fix round spent 751 s in 18 test runs and 178 s linting the whole branch (measured).
 3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
-4. **Run the plan's pre-flight gates** in order, once, here. This is the one place the full suite with `--coverage` runs locally. Fix issues, do not bypass.
+4. **Run the plan's pre-flight gates** in order, once, here. Pre-flight runs the plan's build and feature checks. The coverage gate and the full suites run in CI (`app-tests`), so do not run `test:core`, `test:coverage` or `test:e2e` unscoped locally. Fix issues, do not bypass.
 5. **Run `/technical-validation`** always. Read the verdict; it must be PASS before push. Fix rounds follow *Fix rounds* below.
 6. **Run `/visual-validation`** for UI work, once, after the last slice and after technical validation passes. Not per slice.
 7. **Push.** The branch's CI is the last gate; the local gates are stricter.

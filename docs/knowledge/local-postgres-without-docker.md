@@ -1,5 +1,5 @@
 ---
-summary: '`scripts/local-postgres.sh` boots a sandbox-private Postgres when Docker is unreachable; `pnpm run test` wires `DATABASE_URL`.'
+summary: '`scripts/local-postgres.sh` boots a sandbox-private Postgres when Docker is unreachable; `pnpm run test:e2e` wires `DATABASE_URL`.'
 triggers:
   commands:
     - 'scripts/local-postgres\.sh'
@@ -70,18 +70,22 @@ Behaviour:
    }
    ```
 
-2. **`pnpm run test`** — boot the cluster + export `DATABASE_URL` in one go:
+2. **`pnpm run test:e2e`** — boot the cluster + export `DATABASE_URL` in one go:
 
    ```jsonc
    // apps/<slug>/package.json
    "scripts": {
-     "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start <slug>) vitest run --project back-e2e",
+     "test:e2e": "DATABASE_URL=$(../../scripts/local-postgres.sh start <slug>) vitest run --project back-e2e",
      "db:local:start": "../../scripts/local-postgres.sh start <slug>",
      "db:local:stop":  "../../scripts/local-postgres.sh stop <slug>",
      "db:local:wipe":  "../../scripts/local-postgres.sh wipe <slug>",
      "db:local:url":   "../../scripts/local-postgres.sh url <slug>"
    }
    ```
+
+   To run one file, call `pnpm --filter <app> exec vitest run --project back-e2e <path>`
+   with `DATABASE_URL` from `scripts/local-postgres.sh start <app>`, or
+   `pnpm --filter <app> run test:e2e <path>`. The whole suite is CI's.
 
 3. **Drizzle migrations** — the same `.sql` files
    (`api/src/database/migrations/`) get applied by `globalSetup`, so

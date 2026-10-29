@@ -210,8 +210,8 @@ see [`docs/dantotsus/orchestrator-agency-overcorrected-on-product-decisions.md`]
 - **Rounds ≥ ~4 commits or ~20 files default to `isolation: "worktree"`**
   (verify with `git worktree list` right after dispatch; if the flag was
   dropped, fall back to one round at a time).
-- **Dispatch briefs name both halves of the gate** — `pnpm exec eslint
-  --no-warn-ignored --max-warnings 0` *and* `prettier --check`. A brief
+- **Dispatch briefs name both halves of the gate** — oxlint with
+  `--type-aware` *and* `oxfmt --check`. A brief
   naming one half lets the other drift a round at a time, because every
   round passes the check its brief named.
 

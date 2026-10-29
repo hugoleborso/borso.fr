@@ -80,7 +80,7 @@ The agent writes this at `docs/features/<app>/<slug>/validation/technical-valida
 
 | # | Workspace | Command | Exit | Verdict |
 |---|---|---|---|---|
-| C01 | @borso-app/<app> | `pnpm --filter @borso-app/<app> run test:core`, then `run test --changed <base>` | 0 / N | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
+| C01 | @borso-app/<app> | `pnpm --filter @borso-app/<app> exec vitest run --project core --changed <base>`, then `run test:e2e --changed <base>` | 0 / N | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
 
 ## D. Test coverage of spec
 

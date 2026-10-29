@@ -61,8 +61,10 @@ Then write the impure code that calls the decision function, which is a
 service on the back end or a component on the front end, and it should contain
 no condition of its own.
 
-Then run the gates, which are `lint`, `typecheck`, `test`, `test:coverage`, and
-`test:mutation` in the workspace you changed.
+Then run the tests your change affects, with
+`pnpm --filter <pkg> exec vitest run --project core --changed <base>` in a
+full-stack app or `pnpm --filter <pkg> exec vitest run --changed <base>`
+otherwise. The hooks run lint and typecheck, and CI runs coverage and mutation.
 
 ## Order of work when reviewing code
 

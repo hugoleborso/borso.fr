@@ -12,7 +12,7 @@ A technical validation **reads the diff on the current branch and asks five ques
 
 1. **Correctness** — does the code do what the spec said it would? Quote the code, cross-reference the Q.O.D. or Changes entry.
 2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, oxlint including `borso/no-type-assertion-except-unknown`) and every `reviewer` bullet of the `## Enforced by` sections in `docs/standards/`? Run lint, search for forbidden patterns, read each changed source file in full against the checklist.
-3. **Tests pass** — the fast suite passes on every touched workspace, with the back-e2e files the branch affects. For coverage-gated workspaces, `test:coverage` succeeds at 100%.
+3. **Tests pass** — the fast suite passes on every touched workspace, scoped with `--changed <base>`, with the back-e2e files the branch affects. Coverage and mutation are CI's.
 4. **Coverage** — every use case the spec lists is exercised by a test that exists.
 5. **Scale** — when the same request arrives twice at once, or the code runs on two processes, does every rule still hold?
 
@@ -71,9 +71,10 @@ Pulled from CLAUDE.md "Clean code", `docs/standards/`, and the repo's `eslint.co
 
 For each touched workspace, run the test script and capture exit code + tail of output.
 
-- Full-stack app workspaces (with `test:core`): `pnpm --filter <pkg> run test:core`, then `pnpm --filter <pkg> run test --changed <base>`, which boots the local Postgres and runs only the back-e2e files that changed or import a changed file. The whole back-e2e suite runs in CI.
-- Other app workspaces: `pnpm --filter <pkg> run test:coverage`, or `test` when there is none. **A workspace that touched any `*.utils.ts` file but has no `test` script is FAIL** — utilities are coverage-gated by repo rule (CLAUDE.md "Clean code"), so a missing runner is a missing gate, not an "ah well".
-- Coverage-gated workspaces (`infra/cdk`, `infra/shared`): `pnpm --filter <pkg> run test:coverage`. <100% is FAIL.
+Every run is scoped to what the branch changed. Coverage and mutation are CI's (`app-tests` and the `mutation` job), and so are the whole suites. Round 2 replaces `<base>` with `<reviewed-sha>`.
+
+- Full-stack app workspaces (with `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base>`, then `pnpm --filter <pkg> run test:e2e --changed <base>`, which boots the local Postgres and runs only the back-e2e files that changed or import a changed file.
+- Front-end-only app workspaces, `infra/cdk` and `infra/shared`: `pnpm --filter <pkg> exec vitest run --changed <base>`. **A workspace that touched any `*.utils.ts` file but has no `test` script is FAIL** — utilities are coverage-gated by repo rule (CLAUDE.md "Clean code"), so a missing runner is a missing gate, not an "ah well".
 - A workspace with no `*.utils.ts` files and no test script is UNVERIFIABLE with a note — not a free PASS.
 
 The validator additionally enumerates every `*.utils.ts` file in the touched workspaces and confirms each one has a sibling test (`*.utils.test.ts`) that the runner picks up. Files matching `*.utils.ts` without a corresponding test file are FAIL.

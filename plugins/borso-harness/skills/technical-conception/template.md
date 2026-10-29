@@ -46,20 +46,18 @@ Delete the block-quoted prompt under each heading once the section is written.
 - [ ] Comments document the WHY only — no what-comments, no JSDoc on internals.
 - [ ] Function names describe the result, not the mechanism.
 - [ ] Conventional-commit scope matches the touched app (`borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`).
-- [ ] `pnpm exec knip` clean — no unused exports / files / deps.
 - [ ] Every pure helper this feature introduces lives in `<name>.utils.ts` with a sibling `<name>.utils.test.ts` covered at 100% (statements / branches / functions / lines). Repo rule, no exemption for frontend-only or "small" workspaces. See CLAUDE.md "Clean code".
 
 ## Pre-flight gates
 
 > *Numbered, reproducible, verifiable. Gates that need human judgement are listed as `human:`.*
 
-1. `pnpm install`.
-2. `pnpm --filter <pkg> typecheck`.
-3. `pnpm exec eslint --no-warn-ignored --max-warnings 0`.
-4. `pnpm --filter <pkg> build`.
-5. (UI work only) `/visual-validation docs/features/<app>/<slug>/spec/spec.md`.
-6. `pnpm exec knip`.
-7. (Test-bearing code only) `/technical-validation docs/features/<app>/<slug>/spec/spec.md`.
+> *Generator `--check` gates (architecture-graph, blueprint, convention-drift, `reports.sh`) are not pre-flight gates, and neither are `pnpm install`, typecheck, lint or knip. Pre-commit, pre-push and CI already run them. A plan copied from an older plan drops them.*
+
+1. `pnpm --filter <pkg> build`.
+2. <feature-specific checks, one per line>.
+3. (UI work only) `/visual-validation docs/features/<app>/<slug>/spec/spec.md`.
+4. (Test-bearing code only) `/technical-validation docs/features/<app>/<slug>/spec/spec.md`.
 
 ## Open questions / unknowns
 

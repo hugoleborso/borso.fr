@@ -83,13 +83,12 @@ Section names match the canonical template at [`template.md`](./template.md).
 ## Pre-flight gates
 
 Run, in order, before push:
-1. `pnpm install`.
-2. `pnpm --filter <pkg> typecheck`.
-3. `pnpm exec eslint --no-warn-ignored --max-warnings 0`.
-4. `pnpm --filter <pkg> build`.
-5. (UI work only) `/visual-validation` against the spec.
-6. `pnpm exec knip` — no unused entries.
-7. (Test-bearing code only) `/technical-validation` for the code-review pass.
+1. `pnpm --filter <pkg> build`.
+2. The checks this feature needs and no hook runs, one per line.
+3. (UI work only) `/visual-validation` against the spec.
+4. (Test-bearing code only) `/technical-validation` for the code-review pass.
+
+Generator `--check` gates (architecture-graph, blueprint, convention-drift, `reports.sh`) are not pre-flight gates, and neither are `pnpm install`, typecheck, lint or knip. Pre-commit, pre-push and CI already run them. A plan copied from an older plan drops them.
 
 ## Open questions / unknowns
 
@@ -100,7 +99,7 @@ Run, in order, before push:
 - Skills that would have helped but don't yet exist under `.claude/skills/`. Seed them next.
 ```
 
-For tone and depth, mirror the worked example at [`../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md`](../../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md).
+For tone and depth, mirror the worked example at [`../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md`](../../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md). Do not copy its pre-flight gates. Older plans list `pnpm install`, eslint, knip, typecheck and generator `--check` runs that the hooks and CI already run.
 
 ## Operating mode
 
