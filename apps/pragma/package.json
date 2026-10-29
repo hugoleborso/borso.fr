@@ -17,7 +17,7 @@
     "lint": "../../scripts/lint-workspace.sh",
     "typecheck": "../../scripts/ensure-infra-built.sh && tsc -p tsconfig.cdk.json --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/tsconfig.cdk.tsbuildinfo && tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/tsconfig.tsbuildinfo",
     "test:core": "pnpm --filter @borso/infra run build && vitest run --project core --coverage",
-    "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) vitest run --project back-e2e",
+    "test": "DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) vitest run --project back-e2e --project back-e2e-assistants",
     "test:coverage": "pnpm run test:core && pnpm run test",
     "db:generate": "drizzle-kit generate",
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",

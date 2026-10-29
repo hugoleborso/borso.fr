@@ -186,6 +186,7 @@ fits in 300 ms.
 | Named paths exist | staged files, and every file naming a removed path | `ci.yml` |
 | NUL bytes, package scripts, negative claims, racy pipelines, migration SQL, manifests, instruction tools | staged files only | `ci.yml` |
 | Vocabulary paths | when a vocabulary changes, a path under `apps/` is removed, or a test a `Held by` line names is edited | `ci.yml` |
+| Application test suites | not run | pre-push runs the tests a push affects; `ci.yml` runs every suite of each changed app in `app-tests (<app>)`, except pragma's OAuth and MCP database suites, which run in `app-tests (pragma-assistants)` with a Postgres of their own; `full-suite.yml` runs them all on `main` |
 | Every other check in the hook | whole tree, when the commit touches its scope | `ci.yml` |
 
 A link the commit makes to a generated, gitignored report is judged in CI and
@@ -236,7 +237,10 @@ moved to pre-push.
   minutes (pragma and talos). Those numbers are inflated by the load, but CI's
   `app-tests` job for pragma, install and coverage included, took 339 to 471 s
   on recent pull requests, and most of each run is spent
-  building the jsdom environment, not in the tests. Pre-push already runs only
+  building the jsdom environment, not in the tests. When the assistant
+  feature's OAuth and MCP suites pushed that job past ten minutes, they moved
+  to a job of their own, `app-tests (pragma-assistants)`, rather than the
+  limit moving. Pre-push already runs only
   the tests a push affects, which is what keeps it inside its own budget.
   Bringing the suites under 30 s is its own change.
 - **The CI budget beyond `ci.yml`.** `full-suite.yml` runs on `main` after the
