@@ -57,6 +57,13 @@ scripts/phone.sh stop
 `pointerType: "touch"` reached the element. Swipes and drags as touch are not
 covered; see [`real-touch-gestures-over-cdp.md`](./real-touch-gestures-over-cdp.md).
 
+The `phone` session is its own browser with its own cookies. Sign in there,
+with `agent-browser --session phone`, because a sign-in on the default session
+does not carry over; PR #234 met that as `no element matches` on a signed-out
+page. `touch` taps the first visible match of the selector, so pragma's hidden
+desktop sidebar no longer catches a tap meant for the tab bar. A selector that
+matches only hidden elements fails with `no visible element matches`.
+
 ## WebGL is slow
 
 SwiftShader renders the `borso-fr` galaxy at 1 to 2 frames per second. When a
