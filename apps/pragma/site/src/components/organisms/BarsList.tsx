@@ -12,7 +12,6 @@ import type { JSX, ReactNode } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatCapacity } from '../../lib/formatters.utils';
-import { Badge } from '../atoms/Badge';
 import { Chip } from '../atoms/Chip';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
@@ -40,7 +39,6 @@ export interface BarsListRow {
   readonly capacity: number | null;
   readonly ownerName: string | null;
   readonly moodLabel: string | null;
-  readonly isStale: boolean;
   readonly isBeingEdited: boolean;
 }
 
@@ -87,14 +85,6 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
         accessorKey: 'status',
         header: () => t('bars.status'),
         cell: ({ row }) => <Chip tone="default">{statusLabel(row.original.status)}</Chip>,
-        enableSorting: true,
-      },
-      {
-        id: 'stale',
-        accessorFn: (row) => (row.isStale ? 1 : 0),
-        header: () => t('bars.staleColumn'),
-        cell: ({ row }) =>
-          row.original.isStale ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null,
         enableSorting: true,
       },
       {
@@ -210,7 +200,6 @@ export function BarsList({ bars, statusLabel, onSelect, onRemove }: BarsListProp
           aria-current={row.original.isBeingEdited}
           className={composeClassName(
             'relative flex items-center gap-3 bg-leaf border border-rule rounded-md px-3 py-2 hover:border-rule-strong transition-colors',
-            row.original.isStale && 'border-warn/40',
             row.original.isBeingEdited && 'ring-2 ring-accent',
           )}
         >

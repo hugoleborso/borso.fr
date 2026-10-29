@@ -6,7 +6,6 @@ import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
-import { Icon } from '../../components/atoms/Icon';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SectionTabs } from '../../components/molecules/SectionTabs';
@@ -17,7 +16,6 @@ import {
 import { BarsKanban } from '../../components/organisms/BarsKanban';
 import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
 import { ApiError } from '../../lib/api.client';
-import { isPositiveCount } from '../../lib/counts.utils';
 import { didCopyTextToClipboard } from '../../lib/clipboard.adapter';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useSignedInMember } from '../../lib/queries/me.queries';
@@ -31,7 +29,6 @@ import {
   useDeleteBar,
   useUpdateBar,
 } from '../../lib/queries/bars.queries';
-import { countStale, isStale } from '@domain/bar-staleness.core';
 import { BarForm, type BarOwnerOption } from '../../components/organisms/BarForm';
 import {
   BAR_STATUS_KEY,
@@ -91,11 +88,6 @@ export function BarsPage(): JSX.Element {
     [owners],
   );
 
-  const now = useMemo(() => new Date(), []);
-  const staleCount = useMemo(() => countStale(bars, now), [bars, now]);
-  const hasStaleBars = isPositiveCount(staleCount);
-  const isBarStale = useCallback((bar: BarRow): boolean => isStale(bar, now), [now]);
-
   const moodLabelOf = useCallback(
     (mood: ConcertMood | null): string | null => (mood === null ? null : t(CONCERT_MOOD_KEY[mood])),
     [t],
@@ -103,8 +95,8 @@ export function BarsPage(): JSX.Element {
 
   const grouped = useMemo(() => groupBarsByStatus(sortedBars), [sortedBars]);
   const kanbanCardsByStatus = useMemo(
-    () => buildKanbanCardsByStatus(grouped, isBarStale, ownerNameOf),
-    [grouped, isBarStale, ownerNameOf],
+    () => buildKanbanCardsByStatus(grouped, ownerNameOf),
+    [grouped, ownerNameOf],
   );
   const kanbanCardsWithMood = useMemo(
     () => addMoodLabelToCards(kanbanCardsByStatus, moodLabelOf),
@@ -124,10 +116,9 @@ export function BarsPage(): JSX.Element {
         capacity: bar.capacity,
         ownerName: ownerNameOf(bar),
         moodLabel: moodLabelOf(bar.concertMood),
-        isStale: isBarStale(bar),
         isBeingEdited: isBarBeingEdited(bar.id, formInitial ?? BLANK_BAR_FORM),
       })),
-    [sortedBars, isBarStale, ownerNameOf, moodLabelOf, formInitial],
+    [sortedBars, ownerNameOf, moodLabelOf, formInitial],
   );
 
   const template = selectOutreachTemplate(
@@ -238,15 +229,6 @@ export function BarsPage(): JSX.Element {
       )}
       {barsQuery.isLoading ? (
         <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>
-      ) : null}
-      {hasStaleBars ? (
-        <div
-          className="flex items-center gap-2 bg-warn-soft text-warn px-4 py-2.5 rounded-md text-meta mb-4"
-          role="alert"
-        >
-          <Icon name="warn" size="sm" />
-          {t('bars.staleBanner', { count: staleCount })}
-        </div>
       ) : null}
 
       {copyMessage === null ? null : <p className="text-meta text-ink-soft mb-3">{copyMessage}</p>}

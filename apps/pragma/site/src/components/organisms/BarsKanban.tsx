@@ -3,14 +3,7 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatCapacity } from '../../lib/formatters.utils';
-import { Badge } from '../atoms/Badge';
-import { composeClassName } from '../atoms/class-name.utils';
 import { ListRow } from '../molecules/ListRow';
-
-const KANBAN_CARD_TONE = {
-  stale: 'border-warn/40',
-  fresh: '',
-} as const;
 
 const DRAGGED_BAR_MIME = 'text/plain';
 
@@ -22,7 +15,6 @@ export interface BarsKanbanCard {
   readonly contactName: string | null;
   readonly ownerName: string | null;
   readonly moodLabel: string | null;
-  readonly isStale: boolean;
 }
 
 interface BarsKanbanProps<TStatus extends string> {
@@ -57,18 +49,12 @@ export function BarsKanban<TStatus extends string>(props: BarsKanbanProps<TStatu
             <ListRow
               key={card.id}
               isChevronShown={false}
-              className={composeClassName(
-                'block rounded-md border border-rule bg-leaf px-3 py-2.5 cursor-grab transition-colors hover:border-rule-strong',
-                KANBAN_CARD_TONE[card.isStale ? 'stale' : 'fresh'],
-              )}
+              className="block rounded-md border border-rule bg-leaf px-3 py-2.5 cursor-grab transition-colors hover:border-rule-strong"
               draggable
               onDragStart={(event) => event.dataTransfer.setData(DRAGGED_BAR_MIME, card.id)}
               onClick={() => props.onSelect(card.id)}
             >
-              <div className="flex items-center gap-2 text-meta font-medium text-ink mb-1">
-                {card.name}
-                {card.isStale ? <Badge tone="warn">{t('bars.staleBadge')}</Badge> : null}
-              </div>
+              <div className="text-meta font-medium text-ink mb-1">{card.name}</div>
               <div className="text-meta font-mono text-ink-soft tracking-wide">
                 {card.city ?? ''} · {formatCapacity(card.capacity)}
               </div>

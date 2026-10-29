@@ -29,7 +29,6 @@ function buildBar(overrides: Partial<BarRow> & { id: string; name: string }): Ba
     ownerMemberId: null,
     concertMood: null,
     availableSupport: [],
-    lastInteractionAt: null,
     ...overrides,
   };
 }
@@ -66,48 +65,28 @@ describe('groupBarsByStatus', () => {
 
 describe('buildKanbanCardsByStatus', () => {
   const grouped = groupBarsByStatus([
-    buildBar({ id: 'fresh-bar', name: 'Le Zinc', city: 'Lyon', capacity: 90 }),
-    buildBar({ id: 'stale-bar', name: 'Le Klub', status: 'booked', contactName: 'Ana' }),
+    buildBar({ id: 'lead-bar', name: 'Le Zinc', city: 'Lyon', capacity: 90 }),
+    buildBar({ id: 'booked-bar', name: 'Le Klub', status: 'booked', contactName: 'Ana' }),
   ]);
 
   it('projects each bar into the fields the board shows', () => {
-    const cards = buildKanbanCardsByStatus(
-      grouped,
-      () => false,
-      () => null,
-    );
+    const cards = buildKanbanCardsByStatus(grouped, () => null);
 
     expect(cards.lead).toStrictEqual([
       {
-        id: 'fresh-bar',
+        id: 'lead-bar',
         name: 'Le Zinc',
         city: 'Lyon',
         capacity: 90,
         contactName: null,
         ownerName: null,
         concertMood: null,
-        isStale: false,
       },
     ]);
   });
 
-  it('derives staleness through the caller, which owns the clock', () => {
-    const cards = buildKanbanCardsByStatus(
-      grouped,
-      (bar) => bar.id === 'stale-bar',
-      () => null,
-    );
-
-    expect(cards.booked[0]?.isStale).toBe(true);
-    expect(cards.lead[0]?.isStale).toBe(false);
-  });
-
   it('gives every status a column, including the empty ones', () => {
-    const cards = buildKanbanCardsByStatus(
-      grouped,
-      () => false,
-      () => null,
-    );
+    const cards = buildKanbanCardsByStatus(grouped, () => null);
 
     expect(Object.keys(cards)).toStrictEqual(['lead', 'contacted', 'booked', 'played', 'cold']);
     expect(cards.cold).toStrictEqual([]);
@@ -117,11 +96,7 @@ describe('buildKanbanCardsByStatus', () => {
 describe('buildKanbanCardsByStatus owner projection', () => {
   it('names the owner the caller resolves', () => {
     const owned = groupBarsByStatus([buildBar({ id: 'bar-1', name: 'Le Zinc' })]);
-    const cards = buildKanbanCardsByStatus(
-      owned,
-      () => false,
-      () => 'Ada',
-    );
+    const cards = buildKanbanCardsByStatus(owned, () => 'Ada');
 
     expect(cards.lead[0]?.ownerName).toBe('Ada');
   });
@@ -151,11 +126,7 @@ describe('addMoodLabelToCards', () => {
     buildBar({ id: 'bar-1', name: 'Le Zinc', concertMood: 'gig' }),
     buildBar({ id: 'bar-2', name: 'Le Klub', status: 'booked' }),
   ]);
-  const cards = buildKanbanCardsByStatus(
-    grouped,
-    () => false,
-    () => null,
-  );
+  const cards = buildKanbanCardsByStatus(grouped, () => null);
 
   it('labels the mood through the caller, which owns the translations', () => {
     const labelled = addMoodLabelToCards(cards, (mood) => (mood === null ? null : `mood:${mood}`));

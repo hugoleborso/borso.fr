@@ -8,7 +8,6 @@ const barSchema = z.object({
   name: z.string(),
   status: z.string(),
   notes: z.string(),
-  lastInteractionAt: z.string().nullable(),
   city: z.string().nullable(),
   capacity: z.number().nullable(),
   contactName: z.string().nullable(),

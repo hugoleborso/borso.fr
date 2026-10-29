@@ -22,7 +22,6 @@ function valuesFromCreate(input: BarCreateInput): BarPersistedShape {
     name: input.name,
     status: input.status,
     notes: input.notes,
-    lastInteractionAt: input.lastInteractionAt === null ? null : new Date(input.lastInteractionAt),
     city: input.city,
     capacity: input.capacity,
     contactName: input.contactName,
@@ -39,10 +38,6 @@ function valuesFromUpdate(input: BarUpdateInput): BarPersistedShape {
   if (input.name !== undefined) out.name = input.name;
   if (input.status !== undefined) out.status = input.status;
   if (input.notes !== undefined) out.notes = input.notes;
-  if (input.lastInteractionAt !== undefined) {
-    out.lastInteractionAt =
-      input.lastInteractionAt === null ? null : new Date(input.lastInteractionAt);
-  }
   if (input.city !== undefined) out.city = input.city;
   if (input.capacity !== undefined) out.capacity = input.capacity;
   if (input.contactName !== undefined) out.contactName = input.contactName;

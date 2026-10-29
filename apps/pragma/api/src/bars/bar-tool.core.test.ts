@@ -7,7 +7,6 @@ const ZINC = {
   status: 'lead',
   city: 'Lyon',
   capacity: 80,
-  lastInteractionAt: new Date('2026-10-01T10:00:00.000Z'),
 };
 const MAX = {
   id: 'bar-max',
@@ -15,7 +14,6 @@ const MAX = {
   status: 'cold',
   city: null,
   capacity: null,
-  lastInteractionAt: null,
 };
 
 function keep(filter: { query?: string; status?: string }): string[] {
@@ -24,7 +22,7 @@ function keep(filter: { query?: string; status?: string }): string[] {
 
 // @FollowsBlueprint test-pure-unit
 describe('summarizeBars', () => {
-  it('keeps what a prospect list needs, the last interaction as an ISO string', () => {
+  it('keeps what a prospect list needs', () => {
     expect(summarizeBars([ZINC, MAX], {})).toEqual([
       {
         id: 'bar-zinc',
@@ -32,7 +30,6 @@ describe('summarizeBars', () => {
         status: 'lead',
         city: 'Lyon',
         capacity: 80,
-        lastInteractionAt: '2026-10-01T10:00:00.000Z',
       },
       {
         id: 'bar-max',
@@ -40,7 +37,6 @@ describe('summarizeBars', () => {
         status: 'cold',
         city: null,
         capacity: null,
-        lastInteractionAt: null,
       },
     ]);
   });

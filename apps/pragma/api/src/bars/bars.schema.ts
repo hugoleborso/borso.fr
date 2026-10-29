@@ -38,7 +38,6 @@ export const barCreateSchema = z.object({
   name: z.string().trim().min(1).max(BAR_NAME_MAX_LENGTH),
   status: z.enum(BAR_STATUSES),
   notes: z.string().max(BAR_NOTES_MAX_LENGTH).default(''),
-  lastInteractionAt: z.string().datetime().nullable().default(null),
   city: z.string().max(BAR_CITY_MAX_LENGTH).nullable().default(null),
   capacity: z.number().int().min(0).max(BAR_CAPACITY_MAX).nullable().default(null),
   contactName: z.string().max(BAR_CONTACT_NAME_MAX_LENGTH).nullable().default(null),

@@ -133,10 +133,9 @@ Lives in: `api/src/bars/`
 - `availableSupport` is what the bar lends the band, any number of
   `pa-system`, `lights` and `sound-engineer`, held as JSON in a TEXT
   column. An empty list and a null column both mean it lends nothing.
-- `lastInteractionAt` may be null. A bar is stale when its last
-  interaction is older than the threshold, and a bar with no recorded
-  interaction is stale too (`isStale` in `domain/bar-staleness.core.ts`).
-  The default threshold is 60 days.
+- The `last_interaction_at` column is no longer read or written: the
+  follow-up reminder it fed was removed, and the column stays only because
+  Aurora DSQL refuses `DROP COLUMN`.
 
 A bar is added either by hand or from a **place**, the OpenStreetMap
 record a member picked in the search (`mapNominatimToBarSearchHits` in
@@ -147,8 +146,6 @@ the phone number of a new bar's form (`buildBarFormFromPlace` in
 Held by: `api/src/bars/bars.controller.test.ts` › persists every spec status value
 Held by: `api/src/bars/bars.controller.test.ts` › carries the owner through create and clears it when that member goes
 Held by: `api/src/bars/bars.controller.test.ts` › defaults a bar nobody qualified to no mood and no support
-Held by: `domain/bar-staleness.core.test.ts` › treats null lastInteractionAt as stale (no interaction ever logged)
-Held by: `domain/bar-staleness.core.test.ts` › returns true past the default threshold (61 days)
 
 Not to be confused with: the `venue` column on a concert, which is free
 text typed for that one date.

@@ -1,4 +1,4 @@
-import { BAR_NAME_MAX_LENGTH, BAR_NOTES_MAX_LENGTH, BAR_STATUSES } from '@domain/bar-profile.core';
+import { BAR_NAME_MAX_LENGTH, BAR_NOTES_MAX_LENGTH } from '@domain/bar-profile.core';
 /** @Feature bars */
 
 import { useForm } from '@tanstack/react-form';
@@ -7,24 +7,24 @@ import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Input } from '../atoms/Input';
-import { inputVariants } from '../atoms/input.variants';
-import { AvailableSupportField, ConcertMoodField } from '../molecules/BarQualificationFields';
+import {
+  AvailableSupportField,
+  type BarOwnerOption,
+  BarOwnerField,
+  BarStatusField,
+  ConcertMoodField,
+} from '../molecules/BarQualificationFields';
 import { Sheet } from '../molecules/Sheet';
 import {
-  BAR_STATUS_KEY,
   type BarFormInitial,
   type BarFormSubmitPayload,
   type BarFormValues,
   barFormValuesSchema,
   buildBarPayloadFromFormValues,
-  parseBarStatus,
   selectBarFormTitleKind,
 } from '../../routes/bars/bar-form.core';
 
-export interface BarOwnerOption {
-  readonly id: string;
-  readonly firstName: string;
-}
+export type { BarOwnerOption } from '../molecules/BarQualificationFields';
 
 interface BarFormProps {
   readonly initial: BarFormInitial;
@@ -37,8 +37,26 @@ interface BarFormProps {
 }
 
 const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
-const SELECT_CLASS = inputVariants({ size: 'md' });
-const NOTES_ROWS = 4;
+const NOTES_ROWS = 3;
+const FIELD_CLASS = 'flex min-w-0 flex-col gap-1.5';
+const PAIR_CLASS = 'grid grid-cols-2 gap-3';
+const QUALIFICATION_CLASS = 'grid grid-cols-1 gap-4 sm:grid-cols-2';
+const GROUP_CLASS = 'flex flex-col gap-4 border-t border-rule pt-4';
+
+function LabelledField(props: {
+  readonly id: string;
+  readonly label: string;
+  readonly children: ReactNode;
+}): JSX.Element {
+  return (
+    <div className={FIELD_CLASS}>
+      <label className={FIELD_LABEL_CLASS} htmlFor={props.id}>
+        {props.label}
+      </label>
+      {props.children}
+    </div>
+  );
+}
 
 /**
  * @Blueprint route-form
@@ -120,175 +138,169 @@ export function BarForm({
         </>
       }
     >
-      <div className="flex flex-col gap-2.5">
+      <div className="flex flex-col gap-4">
         {leading}
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-name">
-          {t('bars.name')}
-        </label>
-        <form.Field name="name">
-          {(field) => (
-            <Input
-              id="bar-name"
-              data-sheet-focus
-              type="text"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-              required
-              maxLength={BAR_NAME_MAX_LENGTH}
-            />
-          )}
-        </form.Field>
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-status">
-          {t('bars.status')}
-        </label>
-        <form.Field name="status">
-          {(field) => (
-            <select
-              id="bar-status"
-              value={field.state.value}
-              onChange={(event) => {
-                const status = parseBarStatus(event.target.value);
-                if (status === null) throw new TypeError('unknown bar status');
-                field.handleChange(status);
-              }}
-              onBlur={field.handleBlur}
-              className={SELECT_CLASS}
-            >
-              {BAR_STATUSES.map((status) => (
-                <option key={status} value={status}>
-                  {t(BAR_STATUS_KEY[status])}
-                </option>
-              ))}
-            </select>
-          )}
-        </form.Field>
-        <form.Field name="concertMood">
-          {(field) => (
-            <ConcertMoodField
-              value={field.state.value}
-              onChange={field.handleChange}
-              onBlur={field.handleBlur}
-            />
-          )}
-        </form.Field>
-        <form.Field name="availableSupport">
-          {(field) => (
-            <AvailableSupportField
-              value={field.state.value}
-              onChange={field.handleChange}
-              onBlur={field.handleBlur}
-            />
-          )}
-        </form.Field>
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-owner">
-          {t('bars.owner')}
-        </label>
-        <form.Field name="ownerMemberId">
-          {(field) => (
-            <select
-              id="bar-owner"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-              className={SELECT_CLASS}
-            >
-              <option value="">{t('bars.ownerNone')}</option>
-              {owners.map((owner) => (
-                <option key={owner.id} value={owner.id}>
-                  {owner.firstName}
-                </option>
-              ))}
-            </select>
-          )}
-        </form.Field>
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-city">
-          {t('bars.city')}
-        </label>
-        <form.Field name="city">
-          {(field) => (
-            <Input
-              id="bar-city"
-              type="text"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-            />
-          )}
-        </form.Field>
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-capacity">
-          {t('bars.capacity')}
-        </label>
-        <form.Field name="capacity">
-          {(field) => (
-            <Input
-              id="bar-capacity"
-              type="number"
-              min={0}
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-            />
-          )}
-        </form.Field>
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-contact">
-          {t('bars.contactName')}
-        </label>
-        <form.Field name="contactName">
-          {(field) => (
-            <Input
-              id="bar-contact"
-              type="text"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-            />
-          )}
-        </form.Field>
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-email">
-          {t('bars.contactEmail')}
-        </label>
-        <form.Field name="contactEmail">
-          {(field) => (
-            <Input
-              id="bar-email"
-              type="email"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-            />
-          )}
-        </form.Field>
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-phone">
-          {t('bars.contactPhone')}
-        </label>
-        <form.Field name="contactPhone">
-          {(field) => (
-            <Input
-              id="bar-phone"
-              type="tel"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-            />
-          )}
-        </form.Field>
-        <label className={FIELD_LABEL_CLASS} htmlFor="bar-notes">
-          {t('bars.notes')}
-        </label>
-        <form.Field name="notes">
-          {(field) => (
-            <AutoGrowTextarea
-              id="bar-notes"
-              value={field.state.value}
-              onChange={(event) => field.handleChange(event.target.value)}
-              onBlur={field.handleBlur}
-              rows={NOTES_ROWS}
-              maxLength={BAR_NOTES_MAX_LENGTH}
-              className="font-display italic"
-            />
-          )}
-        </form.Field>
+        <LabelledField id="bar-name" label={t('bars.name')}>
+          <form.Field name="name">
+            {(field) => (
+              <Input
+                id="bar-name"
+                data-sheet-focus
+                type="text"
+                autoComplete="off"
+                value={field.state.value}
+                onChange={(event) => field.handleChange(event.target.value)}
+                onBlur={field.handleBlur}
+                required
+                maxLength={BAR_NAME_MAX_LENGTH}
+              />
+            )}
+          </form.Field>
+        </LabelledField>
+        <div className={PAIR_CLASS}>
+          <div className={FIELD_CLASS}>
+            <form.Field name="status">
+              {(field) => (
+                <BarStatusField
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  onBlur={field.handleBlur}
+                />
+              )}
+            </form.Field>
+          </div>
+          <div className={FIELD_CLASS}>
+            <form.Field name="ownerMemberId">
+              {(field) => (
+                <BarOwnerField
+                  owners={owners}
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  onBlur={field.handleBlur}
+                />
+              )}
+            </form.Field>
+          </div>
+        </div>
+        <div className={PAIR_CLASS}>
+          <LabelledField id="bar-city" label={t('bars.city')}>
+            <form.Field name="city">
+              {(field) => (
+                <Input
+                  id="bar-city"
+                  type="text"
+                  autoComplete="off"
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  onBlur={field.handleBlur}
+                />
+              )}
+            </form.Field>
+          </LabelledField>
+          <LabelledField id="bar-capacity" label={t('bars.capacity')}>
+            <form.Field name="capacity">
+              {(field) => (
+                <Input
+                  id="bar-capacity"
+                  type="text"
+                  inputMode="numeric"
+                  pattern="[0-9]*"
+                  autoComplete="off"
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  onBlur={field.handleBlur}
+                />
+              )}
+            </form.Field>
+          </LabelledField>
+        </div>
+        <div className={QUALIFICATION_CLASS}>
+          <div className={FIELD_CLASS}>
+            <form.Field name="concertMood">
+              {(field) => (
+                <ConcertMoodField
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  onBlur={field.handleBlur}
+                />
+              )}
+            </form.Field>
+          </div>
+          <div className={FIELD_CLASS}>
+            <form.Field name="availableSupport">
+              {(field) => (
+                <AvailableSupportField
+                  value={field.state.value}
+                  onChange={field.handleChange}
+                  onBlur={field.handleBlur}
+                />
+              )}
+            </form.Field>
+          </div>
+        </div>
+        <div className={GROUP_CLASS}>
+          <LabelledField id="bar-contact" label={t('bars.contactName')}>
+            <form.Field name="contactName">
+              {(field) => (
+                <Input
+                  id="bar-contact"
+                  type="text"
+                  autoComplete="off"
+                  value={field.state.value}
+                  onChange={(event) => field.handleChange(event.target.value)}
+                  onBlur={field.handleBlur}
+                />
+              )}
+            </form.Field>
+          </LabelledField>
+          <div className={PAIR_CLASS}>
+            <LabelledField id="bar-phone" label={t('bars.contactPhone')}>
+              <form.Field name="contactPhone">
+                {(field) => (
+                  <Input
+                    id="bar-phone"
+                    type="tel"
+                    inputMode="tel"
+                    autoComplete="off"
+                    value={field.state.value}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    onBlur={field.handleBlur}
+                  />
+                )}
+              </form.Field>
+            </LabelledField>
+            <LabelledField id="bar-email" label={t('bars.contactEmail')}>
+              <form.Field name="contactEmail">
+                {(field) => (
+                  <Input
+                    id="bar-email"
+                    type="email"
+                    inputMode="email"
+                    autoComplete="off"
+                    value={field.state.value}
+                    onChange={(event) => field.handleChange(event.target.value)}
+                    onBlur={field.handleBlur}
+                  />
+                )}
+              </form.Field>
+            </LabelledField>
+          </div>
+        </div>
+        <LabelledField id="bar-notes" label={t('bars.notes')}>
+          <form.Field name="notes">
+            {(field) => (
+              <AutoGrowTextarea
+                id="bar-notes"
+                value={field.state.value}
+                onChange={(event) => field.handleChange(event.target.value)}
+                onBlur={field.handleBlur}
+                rows={NOTES_ROWS}
+                maxLength={BAR_NOTES_MAX_LENGTH}
+                className="font-display italic"
+              />
+            )}
+          </form.Field>
+        </LabelledField>
       </div>
     </Sheet>
   );
