@@ -22,7 +22,8 @@ export interface PageHeaderProps {
 
 export const PINNED_HEADER_CLASS =
   'sticky top-0 z-20 -mx-4 -mt-[calc(0.5rem+env(safe-area-inset-top))] mb-3 border-b border-rule ' +
-  'bg-paper px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-3 sm:-mx-9 sm:mb-5 sm:px-9';
+  'bg-paper px-4 pt-[calc(0.5rem+env(safe-area-inset-top))] pb-3 sm:-mx-9 sm:mb-5 sm:px-9 ' +
+  'has-[[data-page-header-children]_[role=tablist]]:border-b-0';
 
 const TITLE_CLASS = 'm-0 font-display text-display text-ink wrap-anywhere line-clamp-3 sm:mb-1';
 
@@ -68,7 +69,11 @@ export function PageHeader({
           <div className="flex max-w-full shrink-0 flex-wrap items-center gap-2">{actions}</div>
         )}
       </div>
-      {children === undefined ? null : <div className="mt-2 sm:mt-3">{children}</div>}
+      {children === undefined ? null : (
+        <div data-page-header-children className="mt-2 sm:mt-3">
+          {children}
+        </div>
+      )}
     </header>
   );
 }
