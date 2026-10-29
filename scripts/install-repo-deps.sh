@@ -184,14 +184,27 @@ fi
 # daemon. Skipped on machines without npm (rare in this repo, but the
 # install is non-fatal there — the validator surfaces the missing tool as
 # a FAIL row rather than the session refusing to start).
-if ! command -v agent-browser >/dev/null 2>&1; then
-  if command -v npm >/dev/null 2>&1; then
-    log "agent-browser not found; installing globally via npm"
-    npm install -g agent-browser >/dev/null || true
+#
+# The global binary is held to the version package.json pins. The hosted image
+# ships its own agent-browser, 0.27.0 on 2026-10-29, and every agent ran that
+# one while the knowledge entries were verified on the pin. 0.27.0 let a
+# `network route '**/api/streaks*' --abort` through with a 200 and printed
+# Done; 0.35.2 aborted it. See
+# docs/dantotsus/the-browser-on-path-was-not-the-pinned-one.md.
+pinned_agent_browser=$(node -p "require('./package.json').devDependencies['agent-browser'] ?? ''" 2>/dev/null || true)
+global_agent_browser=$(agent-browser --version 2>/dev/null | sed -n 's/^agent-browser //p' || true)
+if command -v npm >/dev/null 2>&1; then
+  if [ -z "$global_agent_browser" ]; then
+    log "agent-browser not found; installing ${pinned_agent_browser:-latest} globally via npm"
+    npm install -g "agent-browser@${pinned_agent_browser:-latest}" >/dev/null || true
     agent-browser install >/dev/null 2>&1 || log "agent-browser install (Chromium provision) failed; /visual-validation will surface this"
-  else
-    log "npm not available; skipping agent-browser install"
+  elif [ -n "$pinned_agent_browser" ] && [ "$global_agent_browser" != "$pinned_agent_browser" ]; then
+    log "agent-browser $global_agent_browser on PATH, $pinned_agent_browser pinned; installing the pin globally"
+    npm install -g "agent-browser@$pinned_agent_browser" >/dev/null ||
+      note_missing agent-browser "agent-browser $pinned_agent_browser did not install, so $global_agent_browser drives the browser and the knowledge entries may not describe it."
   fi
+elif [ -z "$global_agent_browser" ]; then
+  log "npm not available; skipping agent-browser install"
 fi
 if command -v agent-browser >/dev/null 2>&1; then
   log "agent-browser: $(agent-browser --version 2>/dev/null || echo 'installed')"
