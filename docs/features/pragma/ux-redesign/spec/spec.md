@@ -457,6 +457,7 @@ The operator reviewed the #216 preview a fifth time on 2026-10-29. Each item bel
 
 | # | Change | Where it lands |
 | --- | --- | --- |
+| U6 | The Account Calendar section is buttons and a field: **Open Google Calendar settings** (`external`), **Paste and connect** (`clipboard`), the one-line label **Secret iCal address** with its field, and **Save**. The explanatory paragraph, the device chips and the numbered steps go; a connected calendar shows one line with **Replace** and **Remove**. | `/account?view=calendar` |
 | U8 | Each Account tab opens a section headed with the tab's own words, in English and French (**Profile**, **Sign-in**, **Calendar**, **Alerts**, **Language**; "Profil", "Connexion", "Calendrier", "Alertes", "Langue"). The cards inside a section no longer repeat a heading of their own for Calendar, Alerts and Language. | `/account` |
 
 ## Changes

@@ -14,7 +14,6 @@ function renderForm(onSave: (address: string) => Promise<void> = async () => und
   render(
     <CalendarFeedForm
       state="absent"
-      initialPlatform="iphone"
       message={null}
       error={null}
       isRemoving={false}
@@ -31,27 +30,13 @@ describe('CalendarFeedForm', () => {
     readTextFromClipboard.mockReset();
   });
 
-  it('opens on the steps for the device it was given, and switches on request', () => {
+  it('offers the Google Calendar settings and the address field, with no steps to read', () => {
     renderForm();
-    expect(
-      screen.getByRole('button', { name: 'iPhone (iCloud)' }).getAttribute('aria-pressed'),
-    ).toBe('true');
-    expect(screen.getByText(/Turn on Public Calendar/)).not.toBeNull();
-    expect(screen.queryByRole('link', { name: 'Open Google Calendar settings' })).toBeNull();
-
-    fireEvent.click(screen.getByRole('button', { name: 'Android (Google)' }));
-
-    expect(screen.queryByText(/Turn on Public Calendar/)).toBeNull();
     expect(
       screen.getByRole('link', { name: 'Open Google Calendar settings' }).getAttribute('href'),
     ).toBe(GOOGLE_CALENDAR_SETTINGS_ADDRESS);
-  });
-
-  it('puts the address field above the steps, so no list hides it', () => {
-    renderForm();
-    const field = screen.getByLabelText('Secret iCal address');
-    const steps = screen.getByRole('list');
-    expect(field.compareDocumentPosition(steps) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    expect(screen.getByLabelText('Secret iCal address')).not.toBeNull();
+    expect(screen.queryByRole('list')).toBeNull();
   });
 
   it('pastes the copied address and saves it in one tap', async () => {

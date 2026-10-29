@@ -20,13 +20,12 @@
     },
     "calendarFeedAddress": "Secret iCal address",
     "calendarFeedConnected": "Calendar connected.",
-    "calendarFeedHint": "Connect your own calendar so the free slots count the times you are busy. The app only reads when you are busy, and never shows the address again.",
     "calendarFeedInvalid": "This address cannot be read. Paste the secret address that starts with https:// or webcal://.",
     "calendarFeedRemove": "Remove",
     "calendarFeedRemoveQuestion": "Remove your calendar? The free slots will then be computed without you, and reconnecting needs the secret address again.",
     "calendarFeedRemoved": "Calendar removed.",
     "calendarFeedReplace": "Replace",
-    "calendarFeedSaved": "Saved. Find a slot, on the Sessions page, now counts your calendar.",
+    "calendarFeedSaved": "Saved.",
     "changePassword": "Change password",
     "contactDetails": "Contact details",
     "contactDetailsSaved": "Contact details saved.",
@@ -42,22 +41,6 @@
     "signedInAs": "Signed in as",
     "title": "Account",
     "calendarGuide": {
-      "platformLabel": "My calendar is on",
-      "platform": {
-        "iphone": "iPhone (iCloud)",
-        "android": "Android (Google)",
-        "computer": "Computer"
-      },
-      "steps": {
-        "iphoneOpenCalendars": "Open the Calendar app and tap Calendars at the bottom.",
-        "iphoneTapInfo": "Tap ⓘ next to your iCloud calendar.",
-        "iphoneShareLink": "Turn on Public Calendar, tap Share Link, then Copy.",
-        "googleOpenSettings": "Open Google Calendar's settings with the button below. The address is only on the web, not in the app.",
-        "googleIntegrate": "Under Settings for my calendars, pick your calendar, then Integrate calendar.",
-        "googleCopySecret": "Copy the Secret address in iCal format.",
-        "outlookPublish": "On Outlook instead: Settings, Shared calendars, Publish a calendar, then copy the ICS link.",
-        "pasteHere": "Come back here and tap Paste and connect."
-      },
       "openSettings": "Open Google Calendar settings",
       "pasteAndConnect": "Paste and connect",
       "pasteFailed": "The clipboard could not be read. Paste the address in the field below."

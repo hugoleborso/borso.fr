@@ -3,13 +3,13 @@
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import type { CalendarPlatform } from '../../lib/calendar-guide.utils';
+import { GOOGLE_CALENDAR_SETTINGS_ADDRESS } from '../../lib/calendar-guide.utils';
 import { readTextFromClipboard } from '../../lib/clipboard.adapter';
-import { readCalendarPlatform } from '../../lib/display-mode.adapter';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import { Button } from '../atoms/Button';
+import { ButtonAnchor } from '../atoms/ButtonAnchor';
+import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
-import { CalendarFeedGuide } from '../molecules/CalendarFeedGuide';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { type CalendarFeedFormMode, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
 
@@ -18,7 +18,6 @@ const ADDRESS_MAX_LENGTH = 2_048;
 
 export interface CalendarFeedFormProps {
   readonly state: 'connected' | 'absent';
-  readonly initialPlatform?: CalendarPlatform;
   readonly message: string | null;
   readonly error: string | null;
   readonly isRemoving: boolean;
@@ -27,14 +26,12 @@ export interface CalendarFeedFormProps {
 }
 
 interface AddressFieldProps {
-  readonly initialPlatform: CalendarPlatform;
   readonly onSave: (address: string) => Promise<void>;
   readonly onCancel: (() => void) | null;
 }
 
-function AddressField({ initialPlatform, onSave, onCancel }: AddressFieldProps): JSX.Element {
+function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
   const { t } = useTranslation();
-  const [platform, setPlatform] = useState(initialPlatform);
   const [hasPasteFailed, setHasPasteFailed] = useState(false);
   const form = useForm({
     defaultValues: { address: '' },
@@ -58,7 +55,14 @@ function AddressField({ initialPlatform, onSave, onCancel }: AddressFieldProps):
       }}
       className="flex flex-col gap-2.5"
     >
-      <div>
+      <div className="flex flex-wrap gap-2">
+        <ButtonAnchor
+          href={GOOGLE_CALENDAR_SETTINGS_ADDRESS}
+          variant="secondary"
+          mark={<Icon name="external" size="md" />}
+        >
+          {t('account.calendarGuide.openSettings')}
+        </ButtonAnchor>
         <Button
           icon="clipboard"
           type="button"
@@ -112,7 +116,6 @@ function AddressField({ initialPlatform, onSave, onCancel }: AddressFieldProps):
           </Button>
         )}
       </div>
-      <CalendarFeedGuide platform={platform} onSelectPlatform={setPlatform} />
     </form>
   );
 }
@@ -126,19 +129,10 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
     await props.onSave(address);
     setIsReplacing(false);
   };
-  const [initialPlatform] = useState(() => props.initialPlatform ?? readCalendarPlatform());
   const mode = selectCalendarFeedFormMode(props.state, isReplacing);
   const viewByMode: Readonly<Record<CalendarFeedFormMode, JSX.Element>> = {
-    entering: (
-      <AddressField initialPlatform={initialPlatform} onSave={saveAndClose} onCancel={null} />
-    ),
-    replacing: (
-      <AddressField
-        initialPlatform={initialPlatform}
-        onSave={saveAndClose}
-        onCancel={() => setIsReplacing(false)}
-      />
-    ),
+    entering: <AddressField onSave={saveAndClose} onCancel={null} />,
+    replacing: <AddressField onSave={saveAndClose} onCancel={() => setIsReplacing(false)} />,
     connected: (
       <div className="flex flex-wrap items-center gap-3">
         <span className="text-meta text-ink">{t('account.calendarFeedConnected')}</span>

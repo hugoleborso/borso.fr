@@ -20,13 +20,12 @@
     },
     "calendarFeedAddress": "Adresse iCal secrète",
     "calendarFeedConnected": "Agenda connecté.",
-    "calendarFeedHint": "Connecte ton propre agenda pour que les créneaux libres tiennent compte de tes indisponibilités. L’app lit seulement quand tu es occupé·e, et n’affiche plus jamais l’adresse.",
     "calendarFeedInvalid": "Cette adresse ne peut pas être lue. Colle l’adresse secrète qui commence par https:// ou webcal://.",
     "calendarFeedRemove": "Retirer",
     "calendarFeedRemoveQuestion": "Retirer ton agenda ? Les créneaux libres seront alors calculés sans toi, et il faudra de nouveau l’adresse secrète pour le reconnecter.",
     "calendarFeedRemoved": "Agenda retiré.",
     "calendarFeedReplace": "Remplacer",
-    "calendarFeedSaved": "Enregistré. Trouver un créneau, sur la page Sessions, compte maintenant votre calendrier.",
+    "calendarFeedSaved": "Enregistré.",
     "changePassword": "Changer de mot de passe",
     "contactDetails": "Coordonnées",
     "contactDetailsSaved": "Coordonnées enregistrées.",
@@ -42,22 +41,6 @@
     "signedInAs": "Connecté en tant que",
     "title": "Compte",
     "calendarGuide": {
-      "platformLabel": "Mon agenda est sur",
-      "platform": {
-        "iphone": "iPhone (iCloud)",
-        "android": "Android (Google)",
-        "computer": "Ordinateur"
-      },
-      "steps": {
-        "iphoneOpenCalendars": "Ouvre l’app Calendrier et touche Calendriers en bas.",
-        "iphoneTapInfo": "Touche ⓘ à côté de ton calendrier iCloud.",
-        "iphoneShareLink": "Active Calendrier public, touche Partager le lien, puis Copier.",
-        "googleOpenSettings": "Ouvre les paramètres de Google Agenda avec le bouton ci-dessous. L’adresse n’existe que sur le web, pas dans l’app.",
-        "googleIntegrate": "Sous Paramètres de mes agendas, choisis ton agenda, puis Intégrer l’agenda.",
-        "googleCopySecret": "Copie l’Adresse secrète au format iCal.",
-        "outlookPublish": "Sur Outlook : Paramètres, Calendriers partagés, Publier un calendrier, puis copie le lien ICS.",
-        "pasteHere": "Reviens ici et touche Coller et connecter."
-      },
       "openSettings": "Ouvrir les paramètres Google Agenda",
       "pasteAndConnect": "Coller et connecter",
       "pasteFailed": "Le presse-papiers n’a pas pu être lu. Colle l’adresse dans le champ ci-dessous."
