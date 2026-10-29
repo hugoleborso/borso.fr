@@ -166,10 +166,6 @@ export const setlistEntryChangeToolInputSchema = z
   .object({ ...setlistReferenceShape, entry: referenceSchema })
   .merge(setlistEntryUpdateSchema.omit({ songId: true, lineupOverride: true }))
   .extend({ lineupOverride: namedLineupSchema.nullable().optional() });
-export const setlistVoteCloseToolInputSchema = z.object({
-  ...setlistReferenceShape,
-  songs: z.array(referenceSchema).min(1).optional(),
-});
 export const setlistReorderReferencesToolInputSchema = z.object({
   ...setlistReferenceShape,
   order: z.array(referenceSchema).min(1).optional(),

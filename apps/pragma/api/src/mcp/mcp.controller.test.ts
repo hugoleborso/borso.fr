@@ -43,7 +43,6 @@ const SERVED_TOOLS = [
   'update_setlist_entry',
   'remove_setlist_entries',
   'reorder_setlist',
-  'close_setlist_vote',
   'find_songs',
   'get_song',
   'search_deezer',

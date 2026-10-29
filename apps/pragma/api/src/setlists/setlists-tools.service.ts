@@ -13,7 +13,7 @@ import {
   resolveSessionId,
   type SessionToolView,
 } from '../sessions/sessions.service';
-import { getSongs, resolveSongIds } from '../songs/songs.service';
+import { getSongs } from '../songs/songs.service';
 import {
   countEntriesWithin,
   deleteEntryWithin,
@@ -56,26 +56,10 @@ import {
   writeEntryPositionsWithin,
 } from './setlists.service';
 import type { SetlistEntryPersistedUpdate } from './setlists.schema';
-import {
-  type CloseOutcome,
-  closeVote,
-  lockVoteKeepingEntries,
-  type VoteLockOutcome,
-} from './voting.service';
 
 export { resolveSessionId } from '../sessions/sessions.service';
 export { defineDeletion, type ToolActor } from '../mcp/mcp.service';
 export { resolveSongIds } from '../songs/songs.service';
-
-export type ToolVoteClosing = CloseOutcome | VoteLockOutcome;
-
-export async function closeVoteForTool(
-  setlistId: string,
-  songs: readonly string[] | undefined,
-): Promise<ToolVoteClosing> {
-  if (songs === undefined) return await lockVoteKeepingEntries(setlistId);
-  return await closeVote({ setlistId, songIds: await resolveSongIds(songs) });
-}
 
 export async function resolveSetlistId(reference: string): Promise<string> {
   return await resolveReference('setlist', reference, async () =>

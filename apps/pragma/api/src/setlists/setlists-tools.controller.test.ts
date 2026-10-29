@@ -62,14 +62,6 @@ async function readSetlist(band: AssistantBand, setlist: string) {
   return setlistViewSchema.parse(reply.body);
 }
 
-async function openVote(band: AssistantBand, setlistId: string): Promise<void> {
-  await jsonRequest(band.hugo.app, `/api/setlists/${setlistId}/vote-status`, {
-    method: 'PUT',
-    body: { status: 'voting' },
-    cookieHeader: band.hugo.cookieHeader,
-  });
-}
-
 async function readSetlistRows(setlistId: string) {
   const database = testDatabase();
   const [setlists, entries, links] = await Promise.all([
@@ -323,55 +315,6 @@ describe('setlists tools (back-e2e)', () => {
       emptyReorder: { isError: true, body: { error: 'empty-update' } },
       missingReorder: { isError: true, body: { error: 'entry-not-found', reference: unknownId } },
     });
-  });
-
-  it('closes a vote keeping the songs the setlist has, and refuses to close it twice', async () => {
-    const band = await prepareAssistantBand();
-    await createSong(band, 'Creep');
-    await createSong(band, 'Karma Police');
-    const setlistId = await createSetlist(band, { songs: ['Creep', 'Karma Police'] });
-    await openVote(band, setlistId);
-
-    const closed = await callTool(band.assistant, 'close_setlist_vote', { setlist: 'Saturday' });
-    const closedAgain = await callTool(band.assistant, 'close_setlist_vote', {
-      setlist: setlistId,
-    });
-
-    expect(closed).toEqual({ isError: false, body: { setlistId, status: 'locked' } });
-    expect(closedAgain).toEqual({ isError: true, body: { error: 'not-voting' } });
-    const view = await readSetlist(band, setlistId);
-    expect(view.setlist.status).toBe('locked');
-    expect(view.entries.map((entry) => entry.title)).toEqual(['Creep', 'Karma Police']);
-  });
-
-  it('closes a vote on the songs given, in order, once the band has voted', async () => {
-    const band = await prepareAssistantBand();
-    const creepId = await createSong(band, 'Creep');
-    await createSong(band, 'Karma Police');
-    await createSong(band, 'Seven Nation Army');
-    const setlistId = await createSetlist(band, { songs: ['Creep'] });
-    await openVote(band, setlistId);
-    const songs = ['Seven Nation Army', 'Karma Police'];
-
-    const beforeAnyVote = await callTool(band.assistant, 'close_setlist_vote', {
-      setlist: setlistId,
-      songs,
-    });
-    await jsonRequest(band.hugo.app, `/api/setlists/${setlistId}/votes/${creepId}`, {
-      method: 'PUT',
-      body: { points: 1 },
-      cookieHeader: band.hugo.cookieHeader,
-    });
-    const closed = await callTool(band.assistant, 'close_setlist_vote', {
-      setlist: setlistId,
-      songs,
-    });
-
-    expect(beforeAnyVote).toEqual({ isError: true, body: { error: 'no-votes' } });
-    expect(closed).toEqual({ isError: false, body: { setlistId, status: 'locked' } });
-    const view = await readSetlist(band, setlistId);
-    expect(view.setlist.status).toBe('locked');
-    expect(view.entries.map((entry) => entry.title)).toEqual(songs);
   });
 
   it('pushes each setlist change to the other members only', async () => {

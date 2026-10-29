@@ -88,24 +88,6 @@ export async function setVoteStatus(params: {
   return STATUS_OUTCOME_BY_WRITE[selectWriteOutcome(updated)];
 }
 
-export type VoteLockOutcome =
-  | { kind: 'ok' }
-  | { kind: 'setlist-not-found' }
-  | { kind: 'not-voting' };
-
-export async function lockVoteKeepingEntries(setlistId: string): Promise<VoteLockOutcome> {
-  const setlist = await findSetlistById(setlistId);
-  if (setlist === null) return { kind: 'setlist-not-found' };
-  if (resolveSetlistStatus(setlist.status) !== SETLIST_VOTING) return { kind: 'not-voting' };
-  const updated = await updateVoteStatus(setlistId, SETLIST_LOCKED, setlist.targetSongCount);
-  return LOCK_OUTCOME_BY_WRITE[selectWriteOutcome(updated)];
-}
-
-const LOCK_OUTCOME_BY_WRITE: Readonly<Record<WriteOutcome, VoteLockOutcome>> = {
-  missing: { kind: 'setlist-not-found' },
-  written: { kind: 'ok' },
-};
-
 const STATUS_OUTCOME_BY_WRITE: Readonly<Record<WriteOutcome, VoteStatusOutcome>> = {
   missing: { kind: 'setlist-not-found' },
   written: { kind: 'ok' },
