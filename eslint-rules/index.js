@@ -26,6 +26,7 @@ import noScrollContainerOnMain from './no-scroll-container-on-main.js';
 import noFrenchIdentifiers from './no-french-identifiers.js';
 import noHorizontalFoldersInApi from './no-horizontal-folders-in-api.js';
 import noImpureCallsInCoreFiles from './no-impure-calls-in-core-files.js';
+import noInlineRefCallback from './no-inline-ref-callback.js';
 import noInlineSubscribeInUseSyncExternalStore from './no-inline-subscribe-in-use-sync-external-store.js';
 import noLiteralJsxText from './no-literal-jsx-text.js';
 import noOutboundCallOutsideAdapter from './no-outbound-call-outside-adapter.js';
@@ -75,6 +76,7 @@ export const borsoPlugin = {
     'no-french-identifiers': noFrenchIdentifiers,
     'no-horizontal-folders-in-api': noHorizontalFoldersInApi,
     'no-impure-calls-in-core-files': noImpureCallsInCoreFiles,
+    'no-inline-ref-callback': noInlineRefCallback,
     'no-inline-subscribe-in-use-sync-external-store': noInlineSubscribeInUseSyncExternalStore,
     'no-literal-jsx-text': noLiteralJsxText,
     'no-outbound-call-outside-adapter': noOutboundCallOutsideAdapter,

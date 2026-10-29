@@ -128,6 +128,7 @@
     "borso/no-comments": "error",
     "borso/no-type-assertion-except-unknown": "error",
     "borso/no-inline-subscribe-in-use-sync-external-store": "error",
+    "borso/no-inline-ref-callback": "error",
     "borso/no-controller-imports-outside-service": "error",
     "max-lines": [
       "error",

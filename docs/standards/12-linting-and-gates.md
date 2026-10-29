@@ -121,6 +121,7 @@ There is no cache: the whole repository takes under a minute.
 | `borso/no-string-concatenated-class-names`             | [08](./08-styling.md)                                      |
 | `borso/no-use-effect`                                  | [07](./07-state-and-effects.md)                            |
 | `borso/no-inline-subscribe-in-use-sync-external-store` | [07](./07-state-and-effects.md)                            |
+| `borso/no-inline-ref-callback`                         | a dantotsu, [07](./07-state-and-effects.md)                |
 | `borso/no-component-css-imports`                       | [08](./08-styling.md)                                      |
 | `borso/no-literal-jsx-text`                            | [09](./09-i18n.md)                                         |
 | `borso/no-abbreviated-identifier`                      | [01](./01-naming.md)                                       |

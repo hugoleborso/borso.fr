@@ -223,22 +223,26 @@ fi
 # because that one wants a Postgres this hook has no business booting. The
 # back-e2e suites run in CI, per changed app.
 #
-# The per-file coverage gate is NOT here. A per-file threshold needs the whole
-# suite that covers those files, so running it over a changed-only selection
-# would report every untouched pure file at 0 %. It runs in CI on each changed
-# app, and unscoped on main in full-suite.yml.
+# The same run carries the per-file coverage gate. Vitest's `coverage.changed`
+# follows `--changed`, so it measures only the changed files the coverage
+# include names, and the graph above selected every test that executes them.
+# This comment used to say a changed-only run would report every untouched
+# pure file at 0 %. It does not, and PR #238 met CI's coverage gate on
+# calendar-feeds.schema.ts after this hook had passed; with `--coverage` the
+# hook refuses that tree in 7 s (measured). See
+# docs/dantotsus/the-coverage-gate-a-wrong-comment-kept-in-ci.md.
 for app in $changed_app_slugs; do
   if grep -q '"test:core"' "apps/$app/package.json"; then
     start_gate "tests-$app" \
-      pnpm --filter "@borso-app/$app" exec vitest run --project core --changed "$push_base"
+      pnpm --filter "@borso-app/$app" exec vitest run --project core --changed "$push_base" --coverage
   else
     start_gate "tests-$app" \
-      pnpm --filter "@borso-app/$app" exec vitest run --changed "$push_base"
+      pnpm --filter "@borso-app/$app" exec vitest run --changed "$push_base" --coverage
   fi
 done
 
 # The tests of infra/cdk, infra/shared and the tooling this push affects. Their
-# coverage gate runs in CI, for the reason above.
+# coverage gate runs in CI.
 if echo "$changed" | grep -q '^infra/cdk/'; then
   start_gate infra-cdk pnpm --filter @borso/infra exec vitest run --changed "$push_base"
 fi

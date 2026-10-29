@@ -115,7 +115,11 @@ Leaflet map to a DOM node, writing the initial state into the URL once with
 tree.
 
 Even for the three cases above, prefer a `ref` callback, a library binding, or
-an event handler when one exists. When you do need the effect, disable the
+an event handler when one exists. A `ref` callback is stable, hoisted to module
+scope or wrapped in `useCallback`. React calls a new one on every render, and
+under React 19 it first runs the cleanup the old one returned, so an inline
+`ref={() => debounced.cancel}` cancels on every keystroke rather than on
+unmount. When you do need the effect, disable the
 lint rule on the line and write one sentence saying which external system you
 are synchronising with.
 
@@ -134,6 +138,9 @@ are synchronising with.
 - `oxlint:borso/no-inline-subscribe-in-use-sync-external-store` rejects an
   inline `subscribe` or `getSnapshot` argument, which resubscribes on every
   render.
+- `oxlint:borso/no-inline-ref-callback` rejects an arrow or function
+  expression written directly in a JSX `ref`, which React detaches and
+  reattaches on every render.
 - `reviewer` checks that the reason on a surviving effect names the external
   system it synchronises with, because a rule can see the disable comment and
   not whether the sentence after it is true.
