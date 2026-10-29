@@ -63,7 +63,7 @@ async function connectAsReader(schema: string, role: string): Promise<postgres.S
     ssl: 'require',
     max: 1,
     prepare: false,
-    connection: { search_path: schema, default_transaction_read_only: true },
+    connection: { search_path: schema },
   });
 }
 

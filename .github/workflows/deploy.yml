@@ -135,3 +135,9 @@ jobs:
           role-to-assume: ${{ vars.PROD_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
       - run: pnpm --filter "@borso-app/${{ matrix.app }}" run deploy
+      # The only thing here that talks to a real DSQL cluster. Every suite
+      # mocks the driver, so a connection parameter, a transaction syntax or a
+      # role mapping the cluster refuses reaches the first invocation of a
+      # deployed function and nothing earlier. See
+      # docs/dantotsus/the-connection-parameter-no-mock-could-refuse.md.
+      - run: scripts/smoke-agent-reader.sh "${{ matrix.app }}"

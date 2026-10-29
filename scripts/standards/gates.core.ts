@@ -10,6 +10,7 @@ export const PUSH_HOOK = '.husky/pre-push';
 export const MESSAGE_HOOK = '.husky/commit-msg';
 export const CONTINUOUS_INTEGRATION = '.github/workflows/ci.yml';
 export const FULL_SUITE = '.github/workflows/full-suite.yml';
+export const PRODUCTION_DEPLOY = '.github/workflows/deploy.yml';
 
 export const GATE_DEFINITIONS: readonly GateDefinition[] = [
   {
@@ -66,6 +67,13 @@ export const GATE_DEFINITIONS: readonly GateDefinition[] = [
     siteMustContain: 'commitlint',
     sites: [MESSAGE_HOOK],
     summary: 'conventional commits and the scope enumeration',
+  },
+  {
+    name: 'deploy-smoke-agent-reader',
+    siteMustContain: 'smoke-agent-reader.sh',
+    sites: [PRODUCTION_DEPLOY],
+    summary:
+      'one invocation of each reader Lambda after its production deploy, the only gate here that reaches a real DSQL cluster',
   },
   {
     name: 'eslint-rule-suites',

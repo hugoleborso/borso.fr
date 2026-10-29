@@ -63,7 +63,7 @@ describe('agent-reader handler', () => {
       user: 'ai_reader_prod',
       password: 'TOKEN',
       max: 1,
-      connection: { search_path: 'prod', default_transaction_read_only: true },
+      connection: { search_path: 'prod' },
     });
   });
 
