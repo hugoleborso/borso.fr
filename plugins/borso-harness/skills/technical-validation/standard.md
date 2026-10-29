@@ -11,12 +11,18 @@
 A technical validation **reads the diff on the current branch and asks five questions about it**:
 
 1. **Correctness** — does the code do what the spec said it would? Quote the code, cross-reference the Q.O.D. or Changes entry.
-2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, ESLint including `borso/no-type-assertion-except-unknown`)? Run lint, search for forbidden patterns, sample names.
-3. **Tests pass** — `pnpm test` succeeds on every touched workspace. For coverage-gated workspaces, `test:coverage` succeeds at 100%.
+2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, oxlint including `borso/no-type-assertion-except-unknown`) and every `reviewer` bullet in `docs/standards/enforcement-ledger.md`? Run lint, search for forbidden patterns, read each changed source file in full against the checklist.
+3. **Tests pass** — the fast suite passes on every touched workspace, with the back-e2e files the branch affects. For coverage-gated workspaces, `test:coverage` succeeds at 100%.
 4. **Coverage** — every use case the spec lists is exercised by a test that exists.
 5. **Scale** — when the same request arrives twice at once, or the code runs on two processes, does every rule still hold?
 
 Every finding states a concrete failing case: this input, or this pair of requests, leads to this wrong result. A concern that cannot be put that way is a question in the report's Notes, not a FAIL row.
+
+Every finding is `blocking` (wrong against the spec, security, a race or data-integrity defect, a failing test or gate, a broken standard that is a real defect) or `non-blocking` (style, naming, nits, suggestions). Only blocking findings fail the verdict, and only they start a second round.
+
+## Two rounds at most
+
+Round 1 reviews the whole branch diff against the spec and the plan, and records the commit it reviewed as `Reviewed: <sha>`. Round 2, run only when round 1 had blocking findings, reviews `git diff <reviewed-sha>..HEAD` and re-checks each round-1 blocking finding. Blocking findings left after round 2 go to the operator with the report. There is no round 3: every round rereads code nobody changed, and PR #193 ran nine standards rounds and four technical ones.
 
 A passing technical validation is high confidence the feature ships *clean*. A failing one is grounds to halt push, same as visual-validation.
 
@@ -55,7 +61,8 @@ Pulled from CLAUDE.md "Clean code", `docs/standards/`, and the repo's `eslint.co
 - Type assertions limited to `as const` and `as unknown` (`borso/no-type-assertion-except-unknown` enforces, but the rule must hold even where ESLint does not reach).
 - `noExplicitAny` — no `any`.
 - `noUncheckedIndexedAccess` honoured.
-- `pnpm exec eslint --no-warn-ignored --max-warnings 0` passes on changed files.
+- `pnpm exec oxlint --type-aware` passes on changed files.
+- **The standards checklist.** Every `reviewer` bullet under *What only a reviewer can check* in the generated ledger, applied to each changed source file and `VOCABULARY.md` read in full. Each finding quotes the line, names the bullet, and says whether the branch introduced it and how far its fix reaches.
 - `pnpm exec knip` clean on the workspace.
 - **`useEffect` is a smell.** Every `useEffect` introduced or modified in the diff has to justify itself in the row's evidence — what external system is being synchronised, why CSS / derived state / event handlers / `useSyncExternalStore` couldn't do it. Effects that watch React state to set other React state are the classic anti-pattern (almost always `useMemo` in disguise) and land FAIL. Effects that subscribe to globals (`addEventListener`, `setInterval`, `MutationObserver`, `matchMedia`) or run a one-time mount-side replace (URL replaceState mirroring initial state) are legitimate and PASS with a one-line note. See CLAUDE.md "Clean code" and [*You Might Not Need an Effect*](https://react.dev/learn/you-might-not-need-an-effect).
 - **Per-domain triad on the backend.** Every new or modified folder under `apps/<app>/api/src/` is checked against CLAUDE.md "Clean code" — *Back-end domains are vertical slices*. The validator opens each domain folder and confirms: (a) the folder is a bounded context (named after the domain, not a horizontal aggregator), (b) it contains the layered triad (`<domain>.controller.ts` + `<domain>.service.ts` + `<domain>.repository.ts` + `<domain>.schema.ts`), (c) any pure `.core.ts` file lives INSIDE the bounded context's folder, not in a central `domain/`. Horizontal aggregator folders (`domain/`, `controllers/`, `services/`, `repositories/`, `routes/`) FAIL on sight — they cannot be papered over as "shared". A controller file with DB queries inlined (rather than going through a repository) FAILs the row even if a `<domain>.service.ts` exists. Reference: `apps/last-loop-lepin/api/src/{auth,edition,punch,runner,ranking,media}/` is the canonical shape; new code is compared against it. A workspace's `api/` directory that doesn't have any per-domain folders yet (e.g. a brand-new app shipping only a healthcheck) is UNVERIFIABLE with a note, not a free PASS.
@@ -64,7 +71,8 @@ Pulled from CLAUDE.md "Clean code", `docs/standards/`, and the repo's `eslint.co
 
 For each touched workspace, run the test script and capture exit code + tail of output.
 
-- App workspaces: `pnpm --filter <pkg> run test`. **A workspace that touched any `*.utils.ts` file but has no `test` script is FAIL** — utilities are coverage-gated by repo rule (CLAUDE.md "Clean code"), so a missing runner is a missing gate, not an "ah well".
+- Full-stack app workspaces (with `test:core`): `pnpm --filter <pkg> run test:core`, then `pnpm --filter <pkg> run test --changed <base>`, which boots the local Postgres and runs only the back-e2e files that changed or import a changed file. The whole back-e2e suite runs in CI.
+- Other app workspaces: `pnpm --filter <pkg> run test:coverage`, or `test` when there is none. **A workspace that touched any `*.utils.ts` file but has no `test` script is FAIL** — utilities are coverage-gated by repo rule (CLAUDE.md "Clean code"), so a missing runner is a missing gate, not an "ah well".
 - Coverage-gated workspaces (`infra/cdk`, `infra/shared`): `pnpm --filter <pkg> run test:coverage`. <100% is FAIL.
 - A workspace with no `*.utils.ts` files and no test script is UNVERIFIABLE with a note — not a free PASS.
 
@@ -122,14 +130,14 @@ A FAIL row carries a concrete failing case, or it is not a finding.
 The agent assigns one tag per row:
 
 - **PASS** — the agent observed the assertion to hold; evidence (quoted code with file:line, command output, test description) is in the row.
-- **FAIL** — the agent observed the assertion to *not* hold.
+- **FAIL (blocking)** or **FAIL (non-blocking)** — the agent observed the assertion to *not* hold, and typed the finding.
 - **UNVERIFIABLE** — the agent could not determine pass/fail (missing input, missing test, ambiguous spec).
 
 Final verdict, aggregated across categories A–E:
 
-- All rows PASS → **PASS**.
-- ≥ 1 FAIL row → **FAIL**.
-- 0 FAIL + ≥ 1 UNVERIFIABLE → **PASS_EXCEPT_UNVERIFIABLE**.
+- No blocking FAIL and no UNVERIFIABLE → **PASS**.
+- ≥ 1 blocking FAIL → **FAIL**.
+- 0 blocking FAIL + ≥ 1 UNVERIFIABLE → **PASS_EXCEPT_UNVERIFIABLE**.
 
 PASS_EXCEPT_UNVERIFIABLE is its own verdict — mergeable only if the operator copies the UNVERIFIABLE rows into the PR description per the disclosure rule in `SKILL.md`. **FAIL is never mergeable** — the operator fixes the implementation (or the spec) and re-runs.
 
@@ -147,3 +155,5 @@ PASS_EXCEPT_UNVERIFIABLE is its own verdict — mergeable only if the operator c
 | Validating against the implementation, not the spec | Implementer's bug is laundered through validation. |
 | Missing-plan UNVERIFIABLE noise | When the plan is missing, the report should say so once, not echo it across every row. |
 | Skipping the run on infra workspaces because they're slow | Coverage gate matters most where coverage is mandatory. |
+| Typing a style nit blocking | It starts a round that rereads the branch for nothing. |
+| Running a third round | Blocking findings left after round 2 go to the operator. |

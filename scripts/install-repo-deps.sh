@@ -258,7 +258,7 @@ fi
 
 # 10. The generated files, none of which is committed. Agents read
 # blueprint-index.md before writing a file, the pre-write hook reads
-# blueprint-context.json on every Write, and the standards reviewer reads
+# blueprint-context.json on every Write, and the technical validator reads
 # enforcement-ledger.md; all three read the working tree, so a fresh checkout
 # has to produce them before anything asks.
 #

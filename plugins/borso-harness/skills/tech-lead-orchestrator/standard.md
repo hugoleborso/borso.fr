@@ -45,11 +45,11 @@ constrain it. Transitions:
 | spec | adrs | `spec.md` present (or `/specification` returns `done`). Spec checksum recorded. Spec carries enough tech surface (Q.O.D. + Changes / Types) to surface architectural choices. |
 | adrs | plan | Every ADR-qualifying candidate from the spec has been ratified by the human (tech-lead validation via `AskUserQuestion`) and the confirmed ones have been written via `/adr` (piloted mode). ADR numbers are in `state.adrIndex`. If no candidates, transition immediately. |
 | plan | implement | `/technical-conception` returns `done` with `plan.md` next to spec. The plan references every ADR in `state.adrIndex`. |
-| implement | validate | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. **The validate stage is never skipped.** A runtime smoke-test (`curl`, "the Lambda boots", "routes return non-5xx") is NOT a substitute for `/technical-validation` — booting ≠ correct, and the implementer's own `done` is not independent evidence. Dispatch `/technical-validation` on the current SHA every round, including mid-PR fix rounds. See [`docs/dantotsus/orchestrator-skipped-validation-between-rounds.md`](../../../../docs/dantotsus/orchestrator-skipped-validation-between-rounds.md). |
+| implement | validate | `/implementation` returns `done` with a `next: { kind: 'validate' }` hint. **The validate stage is never skipped.** A runtime smoke-test (`curl`, "the Lambda boots", "routes return non-5xx") is NOT a substitute for `/technical-validation` — booting ≠ correct, and the implementer's own `done` is not independent evidence. Dispatch `/technical-validation` on the integrated SHA once implementation is done, and again after the fix round when round 1 had blocking findings: two rounds at most. See [`docs/dantotsus/orchestrator-skipped-validation-between-rounds.md`](../../../../docs/dantotsus/orchestrator-skipped-validation-between-rounds.md). |
 | validate | arbitrate | At least one validator returned a verdict. |
-| arbitrate | implement | `verdictKind` maps to action `fix`. `retries.implement++`. |
+| arbitrate | implement | `verdictKind` maps to action `fix` and round 2 has not run yet. A fresh implementation agent gets the report path. `retries.implement++`. |
 | arbitrate | plan | `verdictKind` maps to action `replan`. Scope flagged in the replan verdict. |
-| arbitrate | escalated | `verdictKind` maps to action `escalate`. Terminal. |
+| arbitrate | escalated | `verdictKind` maps to action `escalate`, or blocking findings remain after round 2. Terminal. |
 | arbitrate | ship | All verdicts PASS. |
 | ship | (end) | Push successful, deploy reminder issued, **PR description updated to reflect what the run actually shipped** (see *PR description maintenance* below). |
 
@@ -145,23 +145,21 @@ every feature has an ADR-qualifying choice.
 
 ## Retry policy
 
-**Escalate on lack of progress, not on a retry count.** A round that
-closes 6 of 10 blockers is *progress* and chains into the next round;
-a hard "cap of 3" framing causes premature "last retry before
-escalation" surfacing (observed in run `2026-05-19-1937-pragma`). The
-`retries.*` counters are tracked for visibility and never auto-escalate
-at a small integer.
+**Two review rounds at most.** Round 1 reviews the whole branch after the
+last slice. When it has blocking findings, one fresh fix agent triages them
+(fix, dismiss with a reason, or ask the operator for a product call), and
+round 2 reviews only the commits after round 1's `Reviewed:` SHA plus each
+round-1 blocking finding. Blocking findings left after round 2 escalate to
+the operator with the report. Non-blocking findings never start a round.
 
-- Soft budget: `MAX_RETRIES = 10` (override via `TECH_LEAD_MAX_RETRIES`).
-  Hitting it is a signal to step back, not an automatic terminal state.
-- Escalate immediately, regardless of count, only when:
-  - **stuck loop** — a round closes 0 blockers, or
-  - **net-negative regression** — a round introduces strictly more new
-    FAILs than it closes, or
-  - **product ambiguity** — the FAIL needs a human product decision
-    (see *Decision boundary* below), or
-  - `verdictKind` is `fail-spec` / `crash` (unrecoverable by retry).
-- Lookup table from `verdictKind` to next action (progress permitting):
+Visual validation runs once, after technical validation passes. A visual FAIL
+gets one fresh fix agent and one re-run, then escalates.
+
+Escalate immediately, regardless of round, when:
+
+- **product ambiguity** — the FAIL needs a human product decision
+  (see *Decision boundary* below), or
+- `verdictKind` is `fail-spec` / `crash` (unrecoverable by retry).
 
 | `verdictKind` | Action |
 |---|---|
@@ -169,7 +167,7 @@ at a small integer.
 | `fail-spec` | `escalate` immediately |
 | `crash` | `escalate` immediately |
 | `fail-plan` | `replan` |
-| `fail-local` | `fix` (if the round made progress) / `escalate` (stuck loop) |
+| `fail-local` | `fix` after round 1 / `escalate` after round 2 |
 
 ## Decision boundary — what the orchestrator decides vs surfaces
 
@@ -196,6 +194,15 @@ over-eager (deciding product) — both bit run `2026-05-19-1937-pragma`;
 see [`docs/dantotsus/orchestrator-agency-overcorrected-on-product-decisions.md`](../../../../docs/dantotsus/orchestrator-agency-overcorrected-on-product-decisions.md).
 
 ## Sub-agent dispatch hygiene
+
+- **The orchestrator does not read code.** It reads verdict front-matter
+  and dispatches. Each phase, slice and fix round is a fresh agent; never
+  resume an earlier one. Every brief is consolidated: the original goal,
+  the spec and plan paths, every later operator directive, the previous
+  report path, and the branch.
+- **The implementer names its shape before code:** the goal restated, the
+  smallest change that meets it, and the data shape with its organising
+  structure (state machine, table, typed model).
 
 - **Implementation dispatches pass `model: 'opus'` explicitly** — never
   rely on an implicit "inherits from parent" default for the

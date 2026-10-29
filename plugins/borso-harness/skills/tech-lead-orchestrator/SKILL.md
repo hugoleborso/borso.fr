@@ -8,7 +8,7 @@ description: |
   this feature", "ship X end-to-end". Pipelines `/specification`,
   `/technical-conception`, `/adr`, `/implementation`,
   `/technical-validation`, `/visual-validation` in sequence; arbitrates
-  retries (fix → replan → escalate) with a hard cap of 3; emits ADRs
+  failures (fix → replan → escalate) with two review rounds at most; emits ADRs
   when a decision matches one of 4 triggers; never mutates `spec.md`
   without explicit human consent. State is persisted to
   `docs/features/<app>/<slug>/runs/<run-id>/` and committed alongside
@@ -18,7 +18,7 @@ description: |
   before starting.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # tech-lead-orchestrator skill
 
@@ -120,14 +120,16 @@ are computed post-hoc.
    each ADR explicitly and shape its Files / Test strategy / Risk
    register around them. Sub-skill's auto-chain to `/implementation` is
    **suppressed**.
-4. **implement.** Spawn a sub-agent for `/implementation` with the spec +
-   plan paths. The sub-agent writes its verdict YAML to
+4. **implement.** Spawn a fresh sub-agent for `/implementation` per plan
+   slice, with a consolidated brief: the original goal, the spec and plan
+   paths, every later operator directive, the previous report path, the
+   branch. The sub-agent writes its verdict YAML to
    `runs/<run-id>/agents/implementation-<step>.md` per
    [`sub-agent-contract.md`](./sub-agent-contract.md). One implementer at
-   a time — never parallel.
-5. **validate.** Spawn `/technical-validation` and `/visual-validation`
-   **in parallel** via two `Agent` tool calls in the same message. Each
-   writes its verdict YAML next to the implementation's.
+   a time — never parallel, and never a resumed one.
+5. **validate.** After the last slice, spawn `/technical-validation`
+   (round 1, whole branch). After it passes, spawn `/visual-validation`
+   once. Each writes its verdict YAML next to the implementation's.
    - If the feature has no UI surface, **skip silently** (decision
      Q-VIS-VAL): append a `visual_validation_skipped` event and proceed
      with only the technical verdict.
@@ -136,7 +138,9 @@ are computed post-hoc.
    `verdictKind` per the table in
    [`standard.md`](./standard.md#deriving-verdictkind). Take the next
    action per [`standard.md`](./standard.md#retry-policy):
-   - `fix` → re-spawn `/implementation` with the verdict context.
+   - `fix` → spawn a fresh `/implementation` agent with the report path;
+     it fixes, dismisses with a reason, or asks the operator. Then run
+     technical round 2. Blocking findings after round 2 → `escalate`.
      Increment `state.retries.implement`.
    - `replan` → spawn `/technical-conception` scoped to the flagged
      sub-section. Then re-implement.
@@ -166,6 +170,7 @@ disk for post-mortems and Dantotsus.
 The orchestrator's own context is the failure mode of failure modes —
 it sees every artefact, every retry, every escalation. To keep it small:
 
+- Do not read code, diffs or report bodies. Dispatch, then read verdicts.
 - Read verdict files with `limit:` to fetch only the front-matter (≈ 15
   lines covers `status` / `summary` / `artifacts` / `next`).
 - Skim, don't absorb. `Read` a plan in full only when arbitrating a

@@ -56,7 +56,6 @@ const STATION_BY_PATH_PREFIX: readonly (readonly [string, string])[] = [
   ['plugins/borso-harness/skills/implementation', 'implementation'],
   ['plugins/borso-harness/skills/technical-validation', 'validation'],
   ['plugins/borso-harness/skills/visual-validation', 'validation'],
-  ['plugins/borso-harness/skills/standards-review', 'validation'],
   ['plugins/borso-harness/agents', 'validation'],
   ['scripts/browser.sh', 'validation'],
   ['scripts/argent.sh', 'validation'],

@@ -157,7 +157,7 @@ export function renderLedger(input: LedgerInput): string {
     '## What only a reviewer can check',
     '',
     `${String(reviewerCount)} claim(s) below hand the check to a person, because no tool can make it.`,
-    'They are the checklist the standards review agent works from, so the agent',
+    'They are the checklist the technical validator works from, so the agent',
     'reviews what lint cannot rather than repeating what lint already did.',
     '',
   );

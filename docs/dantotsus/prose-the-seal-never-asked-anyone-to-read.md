@@ -6,11 +6,11 @@ severity: low
 related-pr: '#63'
 fix-pr: '#71'
 fix-commits: [957846c4d2]
-eradication-level: 2
-eradication-paths: [scripts/standards/seal.core.ts]
+eradication-level: 5
+eradication-paths: [plugins/borso-harness/skills/technical-validation/SKILL.md, plugins/borso-harness/agents/technical-validator.md]
 time-to-detect: 3 hours
 tags: [standards, documentation, tooling, ci]
-zone: scripts/standards/seal.core.ts
+zone: plugins/borso-harness/skills/technical-validation
 weak-point: prose-stands-in-for-a-check
 recurs: [an-approval-gate-that-only-existed-in-a-comment]
 ---
@@ -151,3 +151,7 @@ read it, and that limit is itself recorded in
   the repository could observe.
 - [`a-generated-file-cannot-contain-its-own-commit.md`](./a-generated-file-cannot-contain-its-own-commit.md)
   — another entry about a gate whose subject was not what it appeared to be.
+
+## Superseded mechanism
+
+The seal and the separate standards review were removed on 2026-10-29. The standards checklist is now part of `/technical-validation`, which records the reviewed commit SHA and reviews at most two rounds, the second on the diff since that SHA.

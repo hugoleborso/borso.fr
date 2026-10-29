@@ -471,9 +471,8 @@ review.
   and in every `vitest.config.ts`. Neither half is wrong on its own, which is
   why a reviewer reads past both.
 - `script:scripts/check-dated-records-are-append-only.sh` fails a change that
-  edits or deletes a file under `docs/**/validation/` or
-  `docs/standards/reviews/`. Those are dated records of what a validator saw and
-  what a reviewer cleared, and the date is in the file name, so a
+  edits or deletes a file under `docs/**/validation/`. Those are dated records
+  of what a validator saw, and the date is in the file name, so a
   repository-wide rename reaching into one destroys the record rather than
   correcting it — which is how a `sed` across the tree silently rewrote a
   finding from months earlier. Adding a report is the point; changing one is

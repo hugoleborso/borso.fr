@@ -3,7 +3,7 @@ name: route
 description: Decide how much machinery a task deserves before starting it, and lay out the task list that follows. Use at the start of any non-trivial request, when the user says "/route", "how should we do this", "is this a big one", or when you are about to reach for /specification or /feature-pipeline and are not sure the task is worth them. Sizes the work on five axes, picks one of four tiers from direct edit to fanned-out workflow, and writes the task list for the tier it picked.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Route
 
@@ -34,16 +34,14 @@ No spec, no plan, no task list. Write it, test it, commit it. Reaching for a ski
 Task list:
 1. `/code-standards` for the layers you are touching
 2. implement, marking new files `// @FollowsBlueprint <id>`
-3. `pnpm --filter <app> run test` and the affected gates
-4. `/standards-review` to clear and seal what lint cannot check
-5. `/technical-validation` if the change carries real logic
+3. the fast suite (`pnpm --filter <app> run test:core`, or `test:coverage` on a front-end-only app) and the affected gates; the whole back-e2e suite runs in CI
+4. `/technical-validation`, which also checks what lint cannot, two rounds at most
 
 **Tier 2 — specified.** New user-visible behaviour, or a change crossing back end and front end, or any open decision.
 Task list:
 1. `/specification` — this is the stage that needs the human, so do not skip to the plan
 2. `/adr` for each decision matching a trigger: a new third-party dependency, a new secret, a schema column driven by an external service, a cross-cutting structural choice
 3. `/feature-pipeline <spec-path>` — plan, implement, validate and open the PR
-4. `/standards-review` before the PR is ready
 
 **Tier 3 — fanned out.** The same change repeated across applications, a migration, an audit, or anything where coverage matters more than depth.
 Use a Workflow, not a chain. The shape that fits this repository:

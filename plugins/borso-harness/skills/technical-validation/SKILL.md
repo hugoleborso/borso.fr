@@ -1,21 +1,21 @@
 ---
 name: technical-validation
-description: Dispatch the dedicated `technical-validator` agent to read the spec, the plan, and the diff on the current branch, and produce a code-review verdict covering correctness-vs-spec, code cleanliness vs repo rules, test pass status, and whether tests cover what the spec asks. Use when the user says "/technical-validation", "review the code", "code review against the spec", or as the gate-7 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the matching plan, the workspace package, and the base ref. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md` and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/technical-validation/standard.md` before dispatching.
+description: Dispatch the dedicated `technical-validator` agent to read the spec, the plan, and the diff on the current branch, and produce the branch's one code-review verdict covering correctness-vs-spec, code cleanliness vs repo rules and the standards reviewer checklist, test pass status, and whether tests cover what the spec asks. Two rounds at most; only blocking findings fail it. Use when the user says "/technical-validation", "review the code", "code review against the spec", "review this against the standards", or as the gate-7 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the matching plan, the workspace package, and the base ref. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md` and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/technical-validation/standard.md` before dispatching.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Technical-validation skill
 
 A spec is a contract. A plan is the engineering projection of the contract onto the codebase. A technical validation **reads the diff and asks five questions**:
 
 1. **Correctness** — does the code do what the spec says?
-2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, ESLint including `borso/no-type-assertion-except-unknown`)?
-3. **Tests pass** — does `pnpm test` succeed on every touched workspace?
+2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, oxlint including `borso/no-type-assertion-except-unknown`), and every `reviewer` bullet of `docs/standards/enforcement-ledger.md`, which no tool can check?
+3. **Tests pass** — does the fast suite pass on every touched workspace, with the back-e2e files the branch affects?
 4. **Coverage** — does each use case in the spec have a test that exercises it?
 5. **Scale** — does every rule still hold when the same request arrives twice at once, or runs on two processes? Required on any diff that writes or keeps state.
 
-Every FAIL row states a concrete failing case: this input leads to this wrong result. A concern without one is a question in the report's Notes, not a finding.
+Every FAIL row states a concrete failing case: this input leads to this wrong result. A concern without one is a question in the report's Notes, not a finding. Every finding is typed `blocking` or `non-blocking`, and only blocking ones fail the verdict.
 
 It is the engineering counterpart of `/visual-validation`. Same standalone-agent posture; same evidence-required discipline; same no-rounding-up verdict semantics — applied to source code rather than rendered pixels.
 
@@ -60,9 +60,22 @@ Do **not** invoke when:
    report_path      = <validation_dir>/technical-validation-<timestamp>.md
    ```
    `mkdir -p` the validation directory.
-6. **Dispatch the `technical-validator` agent** with `spec_path`, `plan_path`, `base_ref`, `app_pkg`, `report_path`. The agent reads the diff, runs lint + tests, walks the five validation categories, writes the report.
-7. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — fix the implementation (or the spec), do not ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule.
-8. **Stage the report for commit.** It lives under `docs/features/<app>/<slug>/validation/` alongside any visual-validation report from the same feature.
+6. **Pick the round.** Round 1 when no earlier `technical-validation-*.md` report of this branch sits in `validation_dir`; round 2 otherwise, with `previous_report` set to it. There is no round 3.
+7. **Dispatch the `technical-validator` agent** with `spec_path`, `plan_path`, `base_ref`, `app_pkg`, `report_path`, `round`, and `previous_report` on round 2. Round 1 reviews the whole branch; round 2 reviews only the commits after round 1's `Reviewed:` SHA, plus each round-1 blocking finding.
+8. **Read the report's verdict and its two finding lists**, not the tables. On **FAIL**, triage the blocking findings below; do not ship. On **PASS_EXCEPT_UNVERIFIABLE**, carry the UNVERIFIABLE rows to the PR description per the disclosure rule.
+9. **Stage the report for commit.** It lives under `docs/features/<app>/<slug>/validation/` alongside any visual-validation report from the same feature.
+
+## Findings and rounds
+
+The implementer takes each finding, blocking or not, and does one of three things:
+
+- **fix** it;
+- **dismiss** it with a concrete reason, written in the commit message or the pull request (`B07 dismissed: the name is the one VOCABULARY.md uses`);
+- **ask the operator**, only when it is a product call.
+
+Be skeptical: a reviewer that read the diff cold is often wrong about intent. Non-blocking findings never start a round; list them in the pull request.
+
+After round 1 with blocking findings, fix them and run round 2. After round 2, any blocking finding still open goes to the operator with the report. Never run a third round: each round rereads code nobody changed. PR #193 ran nine standards rounds and four technical ones, and 12 of its 92 commits did nothing but re-seal.
 
 ## Deliverable
 
@@ -77,7 +90,8 @@ The skill's textual return is one of:
 
 Same rule as `/visual-validation`:
 
-- **FAIL is never accepted.** Code-cleanliness violations, missing `.utils.ts` tests, lint / knip / typecheck regressions, and correctness-vs-spec gaps are real defects — the operator fixes them and re-runs the validator. There is no "disclose-and-merge" path.
+- **FAIL is never accepted.** A blocking finding is a real defect. Fix it and run round 2, or, after round 2, hand it to the operator. There is no "disclose-and-merge" path.
+- **Non-blocking findings** never block. Each is fixed, dismissed with a reason, or listed in the PR description.
 - **PASS_EXCEPT_UNVERIFIABLE is mergeable** when each UNVERIFIABLE row is genuinely outside this validator's reach (e.g. a tooling limit, or a row legitimately deferred to `/visual-validation`). The PR description must surface those rows (row number, assertion text verbatim, one-line reason, report-path link), placed where `/open-pr`'s *Validation* step puts them.
 - **PASS is mergeable** with no further disclosure.
 
@@ -85,7 +99,8 @@ Same rule as `/visual-validation`:
 
 - **Optimism leak.** The skill must not pre-summarise the implementation for the agent. Pass the four paths; nothing else.
 - **Dispatching `general-purpose`.** A generic agent has none of the dedicated agent's structural rules.
-- **Skipping tests because they're slow.** The validator runs them. If a workspace has no test script and the spec implies test coverage, the row is UNVERIFIABLE — not "fine because no tests exist".
+- **Skipping tests because they're slow.** The validator runs the fast suite and the back-e2e files the branch affects. The whole back-e2e suite (367 s on pragma) stays in CI. If a workspace has no test script and the spec implies test coverage, the row is UNVERIFIABLE — not "fine because no tests exist".
+- **A third round.** Two rounds, then the operator.
 - **Quoting evidence without line numbers.** Every code citation in the report needs a `file:line` reference; otherwise reviewers can't audit the verdict.
 - **Skipping the scale pass.** Every test runs one request at a time, so a check-then-write race passes categories A to D. Category E is required, not optional.
 - **A FAIL with no failing case.** A row saying "might race" without the two requests and the wrong result is a question, and belongs in Notes.

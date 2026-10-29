@@ -6,11 +6,11 @@ severity: medium
 related-pr: '#84'
 fix-pr: '#85'
 fix-commits: [77473535c1, 2672da66f9]
-eradication-level: 2
-eradication-paths: [scripts/standards/seal.core.ts]
+eradication-level: 5
+eradication-paths: [plugins/borso-harness/skills/technical-validation/SKILL.md, plugins/borso-harness/agents/technical-validator.md]
 time-to-detect: hours
 tags: [standards, review, seals, meta]
-zone: plugins/borso-harness/skills/standards-review
+zone: plugins/borso-harness/skills/technical-validation
 ---
 
 # Ten review rounds on a two-file bug fix
@@ -131,3 +131,7 @@ round one.
   — one of the findings, and an example of the kind only a reader catches.
 - [`docs/standards/README.md`](../standards/README.md) — why the seal is
   recorded rather than trusted.
+
+## Superseded mechanism
+
+The seal and the separate standards review were removed on 2026-10-29. The standards checklist is now part of `/technical-validation`, which records the reviewed commit SHA and reviews at most two rounds, the second on the diff since that SHA.

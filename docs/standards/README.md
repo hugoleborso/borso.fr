@@ -42,28 +42,16 @@ code cannot, whether a name is the one the domain uses, whether a repository is
 projecting when it should be returning rows. No rule can ask those.
 
 They are collected in the ledger under **What only a reviewer can check**, and
-that generated list is the entire scope of the
-[`/standards-review`](../../plugins/borso-harness/skills/standards-review/SKILL.md) skill.
-The reviewer never repeats what lint already did, and widening what it checks
-means writing a `reviewer` bullet in a standard rather than editing the skill.
+that generated list is what the
+[`technical-validator`](../../plugins/borso-harness/agents/technical-validator.md)
+agent checks besides the spec, during
+[`/technical-validation`](../../plugins/borso-harness/skills/technical-validation/SKILL.md).
+It never repeats what lint already did, and widening what it checks means
+writing a `reviewer` bullet in a standard rather than editing the agent.
 
-Because CI runs no model, the review is recorded rather than repeated: the
-agent hashes the content it cleared into [`seals.jsonl`](./seals.jsonl), and
-`scripts/standards/seal.ts verify` hashes the branch's changed files and fails
-on any hash it cannot find — no model on that side, only sha-256. Editing a
-file after sealing unseals it. Moving one does not. Rewording a standard
-invalidates the seals taken under the old wording. It is an attestation and not
-a signature, and `scripts/standards/seal.core.ts` says so at more length.
-
-`seal.ts verify` is deliberately **not** a CI gate yet, and this is the one
-place in this folder where a mechanism exists and nothing runs it. The pull
-request that introduced it changes more than four hundred files, nearly all of
-them a directory move, and requiring a seal on each would mean clearing four
-hundred files in one sitting. That is rubber-stamping, which is the failure the
-seal exists to prevent, so arming the gate on this change would have taught
-exactly the wrong habit on its first use. Wire it in the first pull request of
-ordinary size. Until then the skill is run by hand and
-`docs/standards/reviews/` holds what it found.
+CI runs no model, so the review is recorded rather than repeated: the report
+names the commit it reviewed on a `Reviewed: <sha>` line, and a later round
+reviews only what changed after that commit.
 
 Read [00. Principles](./00-principles.md) first, because it explains how to
 read the rest.
