@@ -238,11 +238,8 @@ for app in $changed_app_slugs; do
   fi
 done
 
-# The heavy wave: the coverage suites, then the mutation runs, one at a time
-# and only after every light gate has finished. Stryker and the coverage suites
-# each take every core they are given; one CDK synth test measured 5 s alone
-# and 60 s under the shared wave. Run alone, each takes the whole machine and
-# nothing else is waiting on a clock.
+# The coverage suites of infra/cdk, infra/shared and the tooling, in the same
+# parallel wave as the light gates.
 if echo "$changed" | grep -q '^infra/cdk/'; then
   start_gate infra-cdk pnpm --filter @borso/infra test:coverage
 fi
@@ -257,90 +254,8 @@ if echo "$changed" | grep -qE '^(scripts|eslint-rules)/'; then
   start_gate tooling pnpm run test:coverage
 fi
 
-wait_for_gates
-gate_limit=1
-BORSO_MUTATION_RUNS_IN_FLIGHT=1
-export BORSO_MUTATION_RUNS_IN_FLIGHT
+# Mutation testing runs in CI, on the pull request: scripts/mutate-changed.sh.
 
-
-# Mutation testing, scoped to the gated files this push actually touches: the
-# pure ones, plus the adapters, which the coverage and mutation configs cover
-# for the same reason. A gate that is armed everywhere except at the moment a
-# file changes is the shape this repository keeps rediscovering.
-#
-# Coverage says a line ran; a surviving mutant says no assertion noticed a
-# change to it, which is the signal docs/standards/10-testing.md asks for. A
-# full run over one application is fifteen to twenty-five minutes, so an
-# unscoped gate is a gate nobody can afford on every push. Mutating only the
-# changed files takes seconds, and the unscoped run moves to CD.
-#
-# A changed *test* file pulls in its sibling source, because weakening a test
-# is exactly how a mutant comes back to life without the source moving.
-#
-# Two things about `--mutate`, both measured rather than assumed:
-#   - It does NOT accumulate. Passing the flag twice silently keeps the last
-#     value only, so every file goes into one flag.
-#   - The value is split on commas BEFORE globbing, so a brace expression is
-#     wrong: `{a,b}` becomes the two patterns `{a` and `b}`, each matching
-#     nothing, and `{a}` alone matches nothing either because a single-element
-#     brace never expands. Stryker then instruments zero files and exits 1 on
-#     "No tests were executed". Comma-separated plain paths, no braces.
-if [ "${SKIP_MUTATION_GATE:-0}" != "1" ]; then
-  for app in $changed_app_slugs; do
-    # `|| true` because a grep that matches nothing exits 1, and a failing
-    # command substitution inside an assignment aborts the hook under `set -e`.
-    gated_files=$(echo "$changed" |
-      sed -n "s|^apps/$app/||p" |
-      # `-E` and a delimiter that is not `|`: inside `s|…|…|` a `\|` reads as an
-      # escaped delimiter rather than as alternation, so this substitution
-      # matched nothing at all and a changed test never pulled in its sibling
-      # source — the one thing the comment above says it does.
-      sed -E 's/\.(core|utils|adapter)\.test\.tsx?$/.\1.ts/' |
-      grep -E '\.(core|utils|adapter)\.tsx?$' |
-      # A rename shows up here as its old path too, and Stryker exits 1 on
-      # "No tests were executed" when handed a file that is no longer there —
-      # an error naming nothing about the cause, on a push whose only crime was
-      # moving a file. The suffix work ahead is mostly renames.
-      while read -r gated; do [ -n "$gated" ] && [ -f "apps/$app/$gated" ] && echo "$gated"; done |
-      sort -u || true)
-    [ -z "$gated_files" ] && continue
-    mutate_glob=$(echo "$gated_files" | paste -sd, -)
-    echo "[pre-push] $app: mutating $(echo "$gated_files" | grep -c .) changed gated file(s)"
-    start_gate "mutation-$app" \
-      pnpm --filter "@borso-app/$app" exec stryker run --mutate "$mutate_glob"
-  done
-
-  # The same scoping for the root workspace, whose gated files are the pure
-  # modules under scripts/. Same two `--mutate` rules as above.
-  tooling_files=$(echo "$changed" |
-    sed -E 's/\.(core|utils)\.test\.ts$/.\1.ts/' |
-    grep -E '^scripts/.*\.(core|utils)\.ts$' |
-    while read -r gated; do [ -n "$gated" ] && [ -f "$gated" ] && echo "$gated"; done |
-    sort -u || true)
-  if [ -n "$tooling_files" ]; then
-    echo "[pre-push] tooling: mutating $(echo "$tooling_files" | grep -c .) changed gated file(s)"
-    start_gate mutation-tooling \
-      pnpm exec stryker run --mutate "$(echo "$tooling_files" | paste -sd, -)"
-  fi
-
-  # And infra/cdk, whose five pure modules rewrite every migration before it
-  # reaches DSQL. They sat at 100% coverage with no mutation configuration at
-  # all until 2026-08-15, and the first run scored 80.84 with 69 survivors.
-  infra_files=$(echo "$changed" |
-    sed -E 's/\.utils\.test\.ts$/.utils.ts/' |
-    sed -n 's|^infra/cdk/||p' |
-    grep -E '^src/.*\.utils\.ts$' |
-    while read -r gated; do [ -n "$gated" ] && [ -f "infra/cdk/$gated" ] && echo "$gated"; done |
-    sort -u || true)
-  if [ -n "$infra_files" ]; then
-    echo "[pre-push] infra-cdk: mutating $(echo "$infra_files" | grep -c .) changed gated file(s)"
-    start_gate mutation-infra-cdk \
-      pnpm --filter @borso/infra exec stryker run --mutate "$(echo "$infra_files" | paste -sd, -)"
-  fi
-fi
-
-# The wait for the heavy wave. It sits outside the SKIP_MUTATION_GATE branch
-# above so that every gate this hook started is always awaited.
 wait_for_gates
 
 rm -rf "$gate_log_dir"

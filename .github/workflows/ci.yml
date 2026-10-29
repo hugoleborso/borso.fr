@@ -10,7 +10,7 @@
 # back-e2e suite), `app-tests (pragma-e2e)` and `app-tests (pragma-assistants)`
 # (pragma's back-e2e and its OAuth and MCP suites, split out of
 # `app-tests (pragma)` to keep each inside the ten-minute budget), and
-# `commitlint` (PR-only).
+# `mutation` and `commitlint` (PR-only).
 
 name: ci
 
@@ -385,6 +385,25 @@ jobs:
       - run: pnpm --filter @borso/infra build
       - name: Assistant end-to-end suite
         run: pnpm --filter @borso-app/pragma exec vitest run --project back-e2e-assistants
+
+  # Stryker on the gated files the pull request changes. It ran in pre-push
+  # until 2026-10-29, where it took 194 s of one 244 s push.
+  mutation:
+    if: github.event_name == 'pull_request'
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v7
+        with:
+          fetch-depth: 0
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - run: scripts/mutate-changed.sh "origin/${{ github.base_ref }}"
 
   commitlint:
     if: github.event_name == 'pull_request'
