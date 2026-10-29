@@ -166,6 +166,14 @@ Conventions:
 **Hard floor: every row has a decision. No `?` cells. No "we'll
 think about this later".**
 
+### 1b. Measure what the pull request cost
+
+Add one row to `docs/quality/feature-cost.md`, by the sources its *Targets*
+table names: `get_session` on every session in the commits' `Claude-Session`
+trailers, and the feature's validation reports. When the row is the third
+`feature` row, compare the rows with the targets in the kaizen pull request's
+*Patterns* section.
+
 ### 2. Re-read the table top-to-bottom — only now classify
 
 After the table is committed to writing, scan it as a whole.
@@ -282,7 +290,8 @@ For each surviving subject:
    snippet of the eradication.
    **A new check proves it can fail, here, once.** Reintroduce the
    defect on a scratch copy, run the check, paste its refusal into the
-   entry, then revert. The repository keeps no standing canary, so this
+   entry, then revert. Feed a guard hook with `KAIZEN_LOG_REFUSALS=0`, or each
+   proof lands in `KAIZEN.md` as friction. The repository keeps no standing canary, so this
    step is the only proof. Prefer removing a mechanism over adding a
    check, and never add a check that only guards the harness.
 6. Add a one-line entry to `docs/dantotsus/README.md` index.
@@ -379,6 +388,7 @@ not its volume, is what keeps the system improving.
 
 ## Output checklist before declaring done
 
+- [ ] A row for this pull request in `docs/quality/feature-cost.md`.
 - [ ] Inventory built from the archived friction log + commits +
       review comments + CI runs, not just memory.
 - [ ] Each subject classified using the table; no-ops dropped.
