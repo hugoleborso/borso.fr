@@ -136,6 +136,22 @@ describe('song page', () => {
     );
   });
 
+  it('keeps the title and the Edit button apart in a fixed header with a back link', async () => {
+    renderSongPage();
+    const title = await screen.findByRole('heading', { level: 1, name: 'Get Lucky' });
+    const header = title.closest('header');
+    if (header === null) throw new Error('no page header');
+    expect(header.classList.contains('sticky')).toBe(true);
+    expect(within(header).getByRole('link', { name: 'Songs' }).getAttribute('href')).toBe(
+      '/catalog',
+    );
+    const edit = within(header).getByRole('link', { name: 'Edit' });
+    expect(title.contains(edit)).toBe(false);
+    expect(title.classList.contains('wrap-anywhere')).toBe(true);
+    expect(title.classList.contains('line-clamp-3')).toBe(true);
+    expect(edit.parentElement?.classList.contains('shrink-0')).toBe(true);
+  });
+
   it('shows one listen link per link the song has, and names its setlists', async () => {
     renderSongPage();
     const listen = await screen.findByRole('list', { name: 'Listen' });

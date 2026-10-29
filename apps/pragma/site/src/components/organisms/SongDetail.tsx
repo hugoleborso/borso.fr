@@ -19,7 +19,6 @@ import type {
 import { BottomActions } from '../atoms/BottomActions';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
-import { BackLink } from '../molecules/BackLink';
 import { DeezerTrackTakenNotice } from '../molecules/DeezerTrackTakenNotice';
 import { LineupEditor, type LineupRecord } from '../molecules/LineupEditor';
 import { toLineupPayload } from '../molecules/lineup-editor.core';
@@ -78,8 +77,6 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
 
   return (
     <section className="flex max-w-3xl flex-col gap-5 px-4 py-4 sm:px-9 sm:py-7">
-      <BackLink to="/catalog" label={t('catalog.title')} />
-
       <SongDetailHeader
         song={song}
         menuItems={[

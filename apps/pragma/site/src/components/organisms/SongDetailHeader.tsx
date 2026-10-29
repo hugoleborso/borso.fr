@@ -8,6 +8,7 @@ import { buildTonalityLabel } from '../../routes/catalog/tonality-label.utils';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { ButtonLink } from '../atoms/ButtonLink';
 import { Menu, type MenuItem } from '../molecules/Menu';
+import { PageHeader } from '../molecules/PageHeader';
 import { StatusChip } from '../molecules/StatusChip';
 
 export interface SongDetailHeaderProps {
@@ -27,26 +28,34 @@ export function SongDetailHeader({ song, menuItems }: SongDetailHeaderProps): JS
   const tonality = buildTonalityLabel(song.tonalityStart, song.tonalityEnd);
 
   return (
-    <header className="flex items-start gap-4">
-      <div className="flex min-w-0 flex-1 items-start gap-4 select-none" {...longPress}>
-        <AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="lg" />
-        <div className="flex min-w-0 flex-col gap-1">
-          <h1 className="m-0 font-display text-display leading-tight text-ink">{song.title}</h1>
-          {song.artist.length > 0 ? (
-            <p className="m-0 text-body text-ink-soft">{song.artist}</p>
-          ) : null}
-          <div className="flex flex-wrap items-center gap-2 text-meta text-ink-soft">
-            <StatusChip status={song.status} />
-            {tonality === null ? null : <span className="font-mono">{tonality}</span>}
-          </div>
-        </div>
-      </div>
-      <div className="flex shrink-0 items-center gap-1">
-        <ButtonLink to={`/catalog/${song.id}/edit`} variant="secondary" size="sm" icon="edit">
-          {t('common.edit')}
-        </ButtonLink>
-        <Menu label={t('catalog.songActions')} items={menuItems} />
-      </div>
-    </header>
+    <PageHeader
+      className="mb-0 sm:mb-0"
+      back={{ to: '/catalog', label: t('catalog.title') }}
+      leading={
+        <span className="shrink-0 select-none" {...longPress}>
+          <AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="md" />
+        </span>
+      }
+      title={
+        <span className="select-none" {...longPress}>
+          {song.title}
+        </span>
+      }
+      subtitle={
+        <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
+          {song.artist.length > 0 ? <span className="text-body">{song.artist}</span> : null}
+          <StatusChip status={song.status} />
+          {tonality === null ? null : <span className="font-mono">{tonality}</span>}
+        </span>
+      }
+      actions={
+        <>
+          <ButtonLink to={`/catalog/${song.id}/edit`} variant="secondary" size="sm" icon="edit">
+            {t('common.edit')}
+          </ButtonLink>
+          <Menu label={t('catalog.songActions')} items={menuItems} />
+        </>
+      }
+    />
   );
 }
