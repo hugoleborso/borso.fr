@@ -1,15 +1,20 @@
 # Production deploys. Trusts repo:hugoleborso/borso.fr:environment:prod
 # via ProdDeployRole. The `prod` GitHub environment is kept ONLY to scope
 # the OIDC subject the role trusts — it carries no reviewer rule, so the
-# deploy job runs automatically. The gate is the merge to main: only the
-# human can merge (Claude cannot), so an approval click here is redundant.
+# deploy job runs automatically. The gate is the merge to main, which a
+# person or Claude performs when the operator asks for that pull request,
+# so an approval click here would be redundant.
 #
 # Triggers on every push to main. paths-filter detects which apps
 # changed in the latest commit; if infra/cdk changed, every app
 # redeploys (constructs are the contract).
 #
-# max-parallel: 1 — avoid simultaneous CFN updates touching shared
-# zone records.
+# The apps deploy in parallel. Every prod stack shares the one borso.fr
+# hosted zone, but each writes only its own A and AAAA alias records under
+# a hostname no other app uses, and a single stack already sends its A and
+# AAAA changes to that zone at the same time. Nothing else a prod stack
+# writes is shared: DSQL clusters and their SSM parameters are per app, and
+# the certificate and zone ids are only read.
 # fail-fast: false — one app failing must not cancel the others'
 # turn; each app's deploy is independent.
 
@@ -104,7 +109,6 @@ jobs:
       fail-fast: false
       matrix:
         app: ${{ fromJson(needs.detect.outputs.apps) }}
-      max-parallel: 1
     env:
       STAGE: prod
       AWS_REGION: ${{ vars.AWS_REGION }}
