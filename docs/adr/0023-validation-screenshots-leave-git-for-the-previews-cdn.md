@@ -1,6 +1,6 @@
 # ADR-0023: Passing validation screenshots go to the previews CDN, failing ones stay in git
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-09-21
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, validation, cdk, devx

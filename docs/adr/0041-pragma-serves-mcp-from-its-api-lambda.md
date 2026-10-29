@@ -1,6 +1,6 @@
 # ADR-0041: pragma serves MCP from its API Lambda, stateless, with the official SDK behind @hono/mcp
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-23
 - **Deciders:** Hugo Borsoni
 - **Tags:** assistants-act-on-pragma, app-architecture

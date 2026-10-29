@@ -1,6 +1,6 @@
 # ADR-0040: pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-23
 - **Deciders:** Hugo Borsoni
 - **Tags:** song-takes-and-push, app-architecture, security

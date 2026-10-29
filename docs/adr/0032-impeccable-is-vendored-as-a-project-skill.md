@@ -1,6 +1,6 @@
 # ADR-0032: impeccable is vendored as a project skill, without its edit hook
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-12
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, design, skills

@@ -1,6 +1,6 @@
 # ADR-0011: ELK lays out the architecture graph at generation time
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-08-14
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, architecture-map, tooling

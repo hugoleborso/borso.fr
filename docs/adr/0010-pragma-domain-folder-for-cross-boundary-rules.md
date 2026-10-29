@@ -1,6 +1,6 @@
 # ADR-0010 — A `domain/` folder for the rules pragma's two sides share
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-08-13
 - **Decided in:** PR [#46](https://github.com/hugoleborso/borso.fr/pull/46)
 

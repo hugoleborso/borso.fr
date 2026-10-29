@@ -1,6 +1,6 @@
 # ADR-0012: Every outbound call lives in an `.adapter.ts` file
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-08-15
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, architecture-map, backend, frontend

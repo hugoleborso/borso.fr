@@ -1,6 +1,6 @@
 # ADR-0026: The harness ships as a plugin and is linked into .claude/ part by part
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-05
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, harness

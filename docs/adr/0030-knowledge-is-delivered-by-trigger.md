@@ -1,6 +1,6 @@
 # ADR-0030: Knowledge is delivered by trigger, and an entry without one is not written
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-10
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, harness, knowledge

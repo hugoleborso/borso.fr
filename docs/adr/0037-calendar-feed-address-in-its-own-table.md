@@ -1,6 +1,6 @@
 # ADR-0037: A member's calendar feed address is plain text in its own table, write-only through the API
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-02
 - **Deciders:** Hugo Borsoni
 - **Tags:** practice-free-slots, data, security

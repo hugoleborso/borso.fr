@@ -1,6 +1,6 @@
 # ADR-0043: One catalogue song per Deezer track, held by a unique index on song.deezer_track_id
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-24
 - **Deciders:** Hugo Borsoni
 - **Tags:** song-takes-and-push, data

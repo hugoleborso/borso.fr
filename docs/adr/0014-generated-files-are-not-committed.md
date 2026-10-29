@@ -1,6 +1,6 @@
 # ADR-0014 — Generated files are not committed
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-08-20
 - **Decided in:** PR [#70](https://github.com/hugoleborso/borso.fr/pull/70)
 

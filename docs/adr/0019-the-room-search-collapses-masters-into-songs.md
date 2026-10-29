@@ -1,6 +1,6 @@
 # ADR-0019: The room's search collapses masters into songs, and reads a refusal stated inside a 200
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-09-16
 
 ## Context

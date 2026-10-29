@@ -1,6 +1,6 @@
 # ADR-0038: `ical.js` parses the members' calendar feeds
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-02
 - **Deciders:** Hugo Borsoni
 - **Tags:** practice-free-slots, dependency
