@@ -73,7 +73,7 @@
           {
             "type": "command",
             "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/posttool-empty-checks-means-conflict.sh",
-            "statusMessage": "Checking whether an empty checks list means a conflict"
+            "statusMessage": "Checking whether a checks list is empty, unfinished or partial"
           }
         ]
       },

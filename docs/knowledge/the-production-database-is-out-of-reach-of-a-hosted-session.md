@@ -9,6 +9,7 @@ triggers:
     - 'db:read'
   output:
     - 'which the reader cannot read'
+    - 'not authorized to perform: lambda:InvokeFunction'
 ---
 
 # The production database is out of reach of a hosted session, except through one read path
@@ -56,8 +57,11 @@ APP=banana-rush scripts/db-read.sh "SELECT count(*) FROM game"
   the deployed stack's template, and the database refuses it anyway with
   `permission denied for table`. ADR-0044 lists them per application; a
   migration that adds a secret-bearing table should add it to the
-  application's reader blocklist in `cdk/lib/stack.ts`. `AI-Dev-ReadOnly` may connect as that
-  role (`dsql:DbConnect`) and never as `admin`.
+  application's reader blocklist in `cdk/lib/stack.ts`. Since
+  [ADR-0049](../adr/0049-agents-read-production-through-an-invoked-reader-lambda.md)
+  `AI-Dev-ReadOnly` holds no DSQL right at all: the script invokes the
+  application's `<app>-prod-agent-reader` Lambda, and that function's role is
+  what the database maps.
 - It accepts one `SELECT` or `WITH … SELECT` statement, refuses write,
   session and transaction keywords outside literals and comments, runs
   inside `BEGIN READ ONLY … ROLLBACK`, returns at most 200 rows and cancels
@@ -78,6 +82,17 @@ production deploy, which creates its role, and the IAM change in
 An `AccessDeniedException` naming an explicit deny means the IAM change is
 not applied. A Postgres authentication error means the role or its mapping
 is not there yet.
+
+On 2026-10-29, after the read path had worked earlier that day, a hosted
+session's invoke was refused for all three readers with *"not authorized to
+perform: lambda:InvokeFunction on resource:
+…function:pragma-prod-agent-reader:$LATEST with an explicit deny in an
+identity-based policy"*. The resource carries `:$LATEST`, which the
+`NotResource` list of §12.7 does not name. Whether the deny changed or the
+qualified ARN is what IAM compares cannot be told from a session, because
+`iam:*` is denied; run §12.7's *Verify* with the admin profile, and add the
+`:$LATEST` form to that check. `db-read.sh` reports the refusal on one line
+with exit code 4 and names §12.7.
 
 ## talos: its own agent API
 

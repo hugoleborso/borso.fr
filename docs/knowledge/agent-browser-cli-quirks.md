@@ -1,5 +1,5 @@
 ---
-summary: 'agent-browser traps: `--executable-path` and `--user-agent` ignored, a silent relaunch when the user agent or flags change, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, a click below a nested scroller that does nothing, a fill that fills nothing (labels, `datetime-local`), and no `display-mode` emulation.'
+summary: 'agent-browser traps: `--executable-path` and `--user-agent` ignored, a silent relaunch when the user agent or flags change, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, a click below a nested scroller that does nothing, a fill that fills nothing (labels, `datetime-local`), no `display-mode` emulation, and `chrome-error://` on a dead loopback redirect.'
 triggers:
   commands:
     - '\bagent-browser\b'
@@ -8,6 +8,7 @@ triggers:
     - '\baddinitscript\b'
     - 'datetime-local'
   output:
+    - 'chrome-error://chromewebdata'
     - 'daemon already running'
     - 'Identifier ''\w+'' has already been declared'
 ---
@@ -261,6 +262,27 @@ _Measured on PR #193 (2026-10-24) and re-checked on 2026-10-25._
   `Emulation.setEmulatedMedia`, and agent-browser has no setting for it, so a
   `display-mode: standalone` assertion needs a `matchMedia` shim and says so in
   the report.
+
+## A redirect to a closed loopback port lands on `chrome-error://chromewebdata/`
+
+An OAuth consent page ends by redirecting to the client's `redirect_uri`,
+which for a command-line client is `http://127.0.0.1:<port>/callback`. When
+nothing listens on that port, Chromium shows its own error page, and
+`get url` answers `chrome-error://chromewebdata/` instead of the address the
+page redirected to, so the `code` and `state` a validator wants to read are
+gone. PR #206's consent rows hit this (`implementation-07-7` in
+`docs/features/pragma/assistants-act-on-pragma/kaizen.md`).
+
+Start a listener on the port before pressing Allow or Deny, so the redirect
+lands on a real page; its log then holds the request line with `code` and
+`state`. The agent that hit this did not record its exact commands, so this is
+the shape rather than a measured recipe:
+
+```bash
+python3 -m http.server 8976 --bind 127.0.0.1 > callback.log 2>&1 &
+scripts/browser.sh click @e7          # the ref snapshot gave the Allow button
+grep 'GET /callback' callback.log     # GET /callback?code=…&state=… HTTP/1.1
+```
 
 ## Related
 
