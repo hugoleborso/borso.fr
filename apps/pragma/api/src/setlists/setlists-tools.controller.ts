@@ -8,6 +8,7 @@ import {
   setlistReorderReferencesToolInputSchema,
   setlistSaveToolInputSchema,
   setlistSessionToolInputSchema,
+  setlistVoteCloseToolInputSchema,
 } from './setlists.schema';
 import {
   confirmUpdate,
@@ -20,6 +21,7 @@ import {
 } from './setlists.service';
 import {
   appendSongs,
+  closeVoteForTool,
   defineDeletion,
   buildEntryUpdate,
   getSetlistsForTool,
@@ -37,9 +39,16 @@ import {
   resolveSongIds,
   setSessionLink,
   type ToolActor,
+  type ToolVoteClosing,
 } from './setlists-tools.service';
 
 const NOT_FOUND: ToolAnswer = { kind: 'refused', body: { error: 'not-found' } };
+const VOTE_CLOSING_REFUSALS: Readonly<Record<Exclude<ToolVoteClosing['kind'], 'ok'>, ToolAnswer>> =
+  {
+    'setlist-not-found': NOT_FOUND,
+    'not-voting': { kind: 'refused', body: { error: 'not-voting' } },
+    'no-votes': { kind: 'refused', body: { error: 'no-votes' } },
+  };
 
 interface SetlistCreation {
   readonly name: string | undefined;
@@ -189,6 +198,19 @@ export const SETLIST_TOOLS = [
       if (outcome.kind === 'not-found') return NOT_FOUND;
       if (outcome.kind === 'stale') return { kind: 'refused', body: { error: 'reorder-stale' } };
       return { kind: 'answered', body: { order: await readEntryTitlesInOrder(setlistId) } };
+    },
+  }),
+  defineTool({
+    name: 'close_setlist_vote',
+    description:
+      'Close the vote on a setlist and lock it. With `songs` (titles or ids, in order) the setlist becomes those songs; without, it keeps its songs.',
+    routes: ['PUT /api/setlists/:id/vote-status', 'POST /api/setlists/:id/close'],
+    inputSchema: setlistVoteCloseToolInputSchema,
+    run: async ({ setlist, songs }) => {
+      const setlistId = await resolveSetlistId(setlist);
+      const outcome = await closeVoteForTool(setlistId, songs);
+      if (outcome.kind !== 'ok') return VOTE_CLOSING_REFUSALS[outcome.kind];
+      return { kind: 'answered', body: { setlistId, status: 'locked' } };
     },
   }),
 ];

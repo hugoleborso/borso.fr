@@ -5,6 +5,7 @@ import {
   memberInstrumentPairs,
   normalizeLineup,
   resolveLineup,
+  withoutInstrument,
 } from './lineup.core';
 
 // @FollowsBlueprint test-pure-unit
@@ -72,6 +73,14 @@ describe('resolveLineup', () => {
     const resolved = resolveLineup(defaultLineup, null);
     expect(resolved).toEqual(defaultLineup);
     expect(resolved).not.toBe(defaultLineup);
+  });
+});
+
+describe('withoutInstrument', () => {
+  it('removes the instrument from every member and leaves a member who only held it sitting out', () => {
+    expect(
+      withoutInstrument({ hugo: ['bass', 'voice'], lea: ['bass'], tom: ['drums'] }, 'bass'),
+    ).toEqual({ hugo: ['voice'], lea: [], tom: ['drums'] });
   });
 });
 

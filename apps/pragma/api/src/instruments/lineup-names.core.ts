@@ -42,7 +42,10 @@ export function nameEntity(entities: readonly NamedEntity[], id: string): string
 export function nameLineup(lineup: Lineup, names: LineupNames): Record<string, string> {
   const named: Record<string, string> = {};
   for (const [memberId, instrumentIds] of Object.entries(lineup)) {
-    const instrumentNames = instrumentIds.map((id) => nameEntity(names.instruments, id));
+    const instrumentNames = instrumentIds.flatMap((id) => {
+      const instrument = names.instruments.find((candidate) => candidate.id === id);
+      return instrument === undefined ? [] : [instrument.name];
+    });
     if (instrumentNames.length > 0) {
       named[nameEntity(names.members, memberId)] = instrumentNames.join(NAME_SEPARATOR);
     }
