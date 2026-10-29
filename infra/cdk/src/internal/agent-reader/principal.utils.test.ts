@@ -1,6 +1,6 @@
 import { App, Stack } from 'aws-cdk-lib';
 import { describe, expect, it } from 'vitest';
-import { AGENT_READER_IAM_USER, agentReaderPrincipalArn } from '../../src/internal/agent-reader.js';
+import { AGENT_READER_IAM_USER, agentReaderPrincipalArn } from './principal.utils.js';
 
 const ACCOUNT = '123456789012';
 

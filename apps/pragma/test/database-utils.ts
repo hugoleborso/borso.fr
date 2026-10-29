@@ -4,6 +4,9 @@ import { type Database, type DatabaseExecutor, getDatabase } from '../api/src/da
 
 const ALL_TABLES: readonly string[] = [
   'app_config',
+  'assistant_authorization_code',
+  'assistant_client',
+  'assistant_grant',
   'audience_suggestion',
   'audience_vote',
   'voting_round',

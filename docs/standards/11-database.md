@@ -158,6 +158,17 @@ you for free has to be written explicitly in a service, and the decision is
 recorded in
 [`docs/adr/0006-cascade-on-delete-via-json-blob-scrub.md`](../adr/0006-cascade-on-delete-via-json-blob-scrub.md).
 
+A connection parameter, a transaction syntax and a role mapping are part of a
+contract with DSQL rather than part of the code, so only a cluster can refuse
+one. DSQL closes the connection on a startup parameter it does not accept, and
+every driver double in this repository takes any options object, so no test,
+coverage threshold or mutant reaches the question — the failure lands at the
+first query of a deployed function. `search_path` is the one startup parameter
+this repository has proven. Nothing in the suites can tell you about the next
+one; the smoke invocation after each production deploy can, and is where this
+class is caught. See
+[`docs/dantotsus/the-connection-parameter-no-mock-could-refuse.md`](../dantotsus/the-connection-parameter-no-mock-could-refuse.md).
+
 ## Local development
 
 `scripts/local-postgres.sh` starts a private Postgres cluster without Docker,
@@ -187,6 +198,12 @@ The background is in
   survives the reset and collides with its own `CREATE TABLE` on the second run
   of the suite, which is a state CI never reaches because its Postgres is
   always fresh.
+- `gate:deploy-smoke-agent-reader` invokes each reader Lambda once after its
+  production deploy and fails the job unless it answers with a row.
+  `scripts/smoke-agent-reader.sh` is the only thing in this repository that
+  reaches a real DSQL cluster outside a migration, so it is the only gate that
+  can refuse a connection parameter, a transaction syntax or a role mapping the
+  cluster rejects. An application whose stack publishes no reader passes.
 - `gate:vitest-back-e2e` runs every repository method against a real Postgres.
 - `reviewer` checks that a workflow writing more than one table wraps the
   writes in one transaction owned by the service, and that a cascade DSQL will

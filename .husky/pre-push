@@ -370,6 +370,22 @@ wait_for_gates
 rm -rf "$gate_log_dir"
 exec 8>&-
 
+# Every mechanism a standard cites has a canary planting a defect for it. The
+# answer costs ten seconds, because discovering the lint canaries runs the
+# eslint-rules suite, so it is paid only by a push that changes a mechanism —
+# which is the push that can break the answer. CI runs the canaries themselves;
+# this only asks whether one exists, which is the half that failed twice on
+# PR #219 after the enforcement ledger passed clean locally and said nothing
+# about canaries. Rung-2 eradication of
+# docs/dantotsus/the-gate-whose-own-gate-only-ran-in-ci.md.
+if echo "$changed" | grep -qE '^(scripts/standards/(gates\.core|canary-registry)\.ts|docs/standards/[0-9].*\.md|\.husky/pre-commit)$'; then
+  echo "[pre-push] running the canary inventory (a mechanism changed)"
+  if ! pnpm exec tsx scripts/standards/gate-canaries.ts --inventory; then
+    echo "[pre-push] a cited mechanism has no canary. Nothing proves it can fail." >&2
+    exit 1
+  fi
+fi
+
 # Workflow lint. Catches paths-filter base misuses, deprecated action versions,
 # and shell-quoting bugs in `run:` blocks. Stays on push because it needs a
 # binary that is not always installed. Rung-2 eradication of

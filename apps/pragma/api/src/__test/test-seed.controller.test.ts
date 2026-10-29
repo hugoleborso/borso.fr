@@ -6,6 +6,7 @@ import { createApp } from '../app';
 import { listInstruments } from '../instruments/instruments.repository';
 import { getInstrumentsSorted } from '../instruments/instruments.service';
 import { listMembers } from '../members/members.repository';
+import { listGrantsOfMember } from '../oauth/oauth.repository';
 import { listSessions } from '../sessions/sessions.repository';
 import { listEntries } from '../setlists/setlist-entry.repository';
 import { listSetlistsOfSession } from '../setlists/setlists.repository';
@@ -146,6 +147,18 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     await postSeed();
     await postSeed();
     expect((await listSongsNewestFirst()).length).toBe(6);
+  });
+
+  it('connects one assistant to Hugo, used a moment ago, and names its client', async () => {
+    await postSeed();
+    const response = await postSeed();
+    const summary = z.object({ assistantClientId: z.string() }).parse(await response.json());
+    const hugo = (await listMembers()).find((member) => member.firstName === 'Hugo');
+    if (hugo === undefined) throw new Error('the seed wrote no Hugo');
+    const grants = await listGrantsOfMember(hugo.id);
+    expect(grants.map((grant) => grant.clientName)).toEqual(['Claude Code']);
+    expect(grants[0]?.lastUsedAt?.getTime()).toBeLessThan(grants[0]?.createdAt.getTime() ?? 0);
+    expect(summary.assistantClientId.length).toBeGreaterThan(0);
   });
 
   it('serves the fixture calendars the seed attaches, and a reset address as 410', async () => {

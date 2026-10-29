@@ -15,6 +15,7 @@ import {
 } from '@domain/input-limits.core';
 import { integer, pgTable, primaryKey, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { namedLineupSchema, referenceSchema } from '../mcp/tool-input.schema';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 
 export const SETLIST_KINDS = ['manual', 'audience_choice'] as const;
@@ -144,3 +145,41 @@ export const setlistSessionParamSchema = z.object({
   sessionId: z.string().uuid(),
 });
 export const setlistBySessionParamSchema = z.object({ sessionId: z.string().uuid() });
+
+const setlistReferenceShape = { setlist: referenceSchema };
+const POSITION_MAX = 500;
+
+export const setlistReferenceToolInputSchema = z.object(setlistReferenceShape);
+export const setlistListToolInputSchema = z.object({ session: referenceSchema.optional() });
+export const setlistSessionToolInputSchema = z.object({ session: referenceSchema });
+export const setlistSaveToolInputSchema = z.object({
+  setlist: referenceSchema.optional(),
+  name: setlistRenameSchema.shape.name.optional(),
+  session: referenceSchema.optional(),
+  songs: z.array(referenceSchema).optional(),
+});
+export const setlistLinkToolInputSchema = z.object({
+  ...setlistReferenceShape,
+  session: referenceSchema,
+  unlink: z.boolean().optional(),
+});
+export const setlistEntriesAddToolInputSchema = z.object({
+  ...setlistReferenceShape,
+  songs: z.array(referenceSchema).min(1),
+});
+export const setlistEntriesRemoveToolInputSchema = z.object({
+  ...setlistReferenceShape,
+  entries: z.array(referenceSchema).min(1),
+});
+export const setlistEntryChangeToolInputSchema = z
+  .object({ ...setlistReferenceShape, entry: referenceSchema })
+  .merge(setlistEntryUpdateSchema.omit({ songId: true, lineupOverride: true }))
+  .extend({ lineupOverride: namedLineupSchema.nullable().optional() });
+export const setlistReorderReferencesToolInputSchema = z.object({
+  ...setlistReferenceShape,
+  order: z.array(referenceSchema).min(1).optional(),
+  move: z
+    .object({ entry: referenceSchema, position: z.number().int().min(1).max(POSITION_MAX) })
+    .optional(),
+  swap: z.tuple([referenceSchema, referenceSchema]).optional(),
+});

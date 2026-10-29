@@ -14,6 +14,7 @@ import type { IconName } from '../atoms/Icon';
 import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
 import { PageHeader } from '../molecules/PageHeader';
 import { SectionTabs } from '../molecules/SectionTabs';
+import { AssistantConnections } from './AssistantConnections';
 import { CalendarFeedCard } from './CalendarFeedCard';
 import { ContactDetailsCard } from './ContactDetailsCard';
 import { NotificationSettings } from './NotificationSettings';
@@ -56,9 +57,18 @@ function ProfileSection(): JSX.Element {
   );
 }
 
+function SignInSection(): JSX.Element {
+  return (
+    <>
+      <PasskeysCard />
+      <AssistantConnections />
+    </>
+  );
+}
+
 const SECTION_CONTENT: Readonly<Record<AccountSection, () => JSX.Element>> = {
   profile: ProfileSection,
-  'sign-in': PasskeysCard,
+  'sign-in': SignInSection,
   calendar: CalendarFeedCard,
   notifications: NotificationSettings,
   language: LanguageSection,

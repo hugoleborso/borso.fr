@@ -9,6 +9,12 @@ interface IdenticalByDesign {
 }
 
 const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
+  { key: 'account.assistants.claudeCodeLabel', readsTheSameBecause: 'Claude Code, a product name' },
+  {
+    key: 'account.assistants.connectorLabel',
+    readsTheSameBecause: 'claude.ai and Le Chat, product names',
+  },
+  { key: 'account.assistants.vibeLabel', readsTheSameBecause: 'Mistral Vibe, a product name' },
   {
     key: 'account.calendarGuide.platform.android',
     readsTheSameBecause: 'Android and Google, proper nouns',

@@ -67,7 +67,7 @@ describe('PreviewableApp (prod, full)', () => {
     stage: 'prod',
     domainName: 'borsouvertures.borso.fr',
     frontend: { distPath: '.' },
-    api: { entry: ENTRY, environment: { FOO: 'bar' } },
+    api: { entry: ENTRY, environment: { FOO: 'bar' }, extraPathPatterns: ['/mcp'] },
     database: { migrationsPath: MIGRATIONS, cluster: clusterStack.cluster },
   });
   const stageTpl = Template.fromStack(stageStack);
@@ -117,6 +117,17 @@ describe('PreviewableApp (prod, full)', () => {
     expect(ids).toMatch(/FrontendUrl/);
     expect(ids).toMatch(/ApiUrl/);
     expect(ids).toMatch(/DbSchema/);
+  });
+
+  it('routes /api/* and the extra path patterns to the API, in that order', () => {
+    stageTpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        CacheBehaviors: [
+          Match.objectLike({ PathPattern: '/api/*' }),
+          Match.objectLike({ PathPattern: '/mcp' }),
+        ],
+      }),
+    });
   });
 
   it('never sets ALLOW_TEST_SEED on a prod Lambda', () => {
@@ -185,6 +196,20 @@ new PreviewableApp(readerStacks.stageStack, 'App', {
 });
 const readerTemplate = Template.fromStack(readerStacks.stageStack);
 
+const unblockedReaderStacks = bootstrap('U');
+new PreviewableApp(unblockedReaderStacks.stageStack, 'App', {
+  app: 'test-app',
+  stage: 'preview',
+  prNumber: 8,
+  frontend: { distPath: '.' },
+  database: {
+    migrationsPath: MIGRATIONS,
+    cluster: unblockedReaderStacks.clusterStack.cluster,
+    readerPrincipalArns: [READER_USER_ARN],
+  },
+});
+const unblockedReaderTemplate = Template.fromStack(unblockedReaderStacks.stageStack);
+
 describe('PreviewableApp (preview with db)', () => {
   it('shares the cluster across stages via cross-stack reference, no SSM ceremony in stage stack', () => {
     sharedClusterTemplate.resourceCountIs('AWS::CloudFormation::CustomResource', 1);
@@ -210,8 +235,35 @@ describe('PreviewableApp (database reader)', () => {
       readerTemplate.findResources('AWS::CloudFormation::CustomResource'),
     );
     expect(getProperties(schemaCustomResource)?.readerRoleName).toBe('ai_reader_pr_7');
-    expect(getProperties(schemaCustomResource)?.readerPrincipalArns).toEqual([READER_USER_ARN]);
+    expect(getProperties(schemaCustomResource)?.readerPrincipalArns).toContainEqual(
+      READER_USER_ARN,
+    );
     expect(getProperties(schemaCustomResource)?.readerTableBlocklist).toEqual(['hello']);
+  });
+
+  it('maps the reader function it creates into the same role, beside the IAM user', () => {
+    const [schemaCustomResource] = Object.values(
+      readerTemplate.findResources('AWS::CloudFormation::CustomResource'),
+    );
+    expect(getProperties(schemaCustomResource)?.readerPrincipalArns).toHaveLength(2);
+    readerTemplate.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'test-app-pr-7-agent-reader',
+    });
+  });
+
+  it('gives the reader function an empty blocklist when the application names no table', () => {
+    unblockedReaderTemplate.hasResourceProperties('AWS::Lambda::Function', {
+      FunctionName: 'test-app-pr-8-agent-reader',
+      Environment: { Variables: Match.objectLike({ READER_TABLE_BLOCKLIST: '' }) },
+    });
+  });
+
+  it('creates no reader function when the application lists no reader principal', () => {
+    expect(
+      Object.values(sharedClusterTemplate.findResources('AWS::Lambda::Function')).some(
+        (lambdaFunction) => JSON.stringify(lambdaFunction).includes('agent-reader'),
+      ),
+    ).toBe(false);
   });
 
   it('sends no reader when the application lists none', () => {

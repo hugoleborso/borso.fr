@@ -10,6 +10,63 @@ This file names the things the application talks about. Use these words in
 identifiers, file names, commit messages and specs. Every claim below is
 taken from the schema, core rule or repository named beside it.
 
+## Assistant client
+
+An AI assistant that registered itself with pragma's authorization server:
+Claude Code, Mistral Vibe, claude.ai or Le Chat.
+
+Lives in: `api/src/oauth/` (`assistant_client`)
+
+- Registers itself through `POST /oauth/register` (RFC 7591) and is always
+  a public client: it holds no secret and proves itself with PKCE `S256`.
+- Its redirect addresses are `https://`, or a loopback `http://` address
+  (`localhost`, `127.0.0.1`, `[::1]`) that matches on any port, because
+  each terminal client picks its own callback port (RFC 8252).
+- One address may register ten clients an hour; the eleventh is refused.
+- A client older than 30 days that holds no **assistant grant** is deleted
+  the next time any client registers, so the open endpoint cannot fill the
+  table and nothing runs on a schedule.
+- Kept out of every preview's copy of production and out of the read-only
+  reader's reach, like the two tables below.
+
+Held by: `api/src/oauth/oauth.controller.test.ts` › registers the clients Claude Code and Vibe describe, and refuses any other redirect address
+Held by: `api/src/oauth/oauth.controller.test.ts` › refuses the eleventh registration in an hour from one address and reports it
+Held by: `api/src/oauth/oauth.controller.test.ts` › sweeps clients older than 30 days that hold no grant when another registers
+
+Not to be confused with: an **assistant grant**, which is one member
+allowing one client; a client with no grant can do nothing.
+
+## Assistant grant
+
+One member's permission for one **assistant client** to act on pragma as
+that member.
+
+Lives in: `api/src/oauth/` (`assistant_grant`, `assistant_authorization_code`)
+
+- Created when the member allows the client on the consent page and the
+  client exchanges the one-use authorization code, which lives 60 seconds
+  and is bound to the client, its redirect address and its PKCE challenge.
+- Holds an access token (one hour) and a refresh token (90 days), stored as
+  SHA-256 hashes only. Every refresh rotates both. Every refresh token of a
+  grant starts with the same family secret, and presenting any token of the
+  family other than the current one, however many rotations old, revokes the
+  whole grant.
+- Carries the member's session epoch from when it was issued, the same
+  number a **sign-in session** carries, so a password change ends every
+  grant the way it ends every cookie.
+- Revoked from the Account page, by the client through `POST /oauth/revoke`,
+  or by deleting the member, which deletes the member's grants and pending
+  codes in the same transaction.
+
+Held by: `api/src/oauth/oauth.controller.test.ts` › runs the whole flow: consent, code, tokens, and the code cannot be spent twice
+Held by: `api/src/oauth/oauth.controller.test.ts` › rotates the refresh token, and a replay of the old one revokes the grant and is reported
+Held by: `api/src/oauth/oauth.controller.test.ts` › revokes the grant when a token two rotations old is replayed after a thief refreshed twice
+Held by: `api/src/oauth/oauth.controller.test.ts` › ends every grant of a member who changes password
+Held by: `api/src/oauth/oauth.controller.test.ts` › deletes the grants and pending codes of a deleted member
+
+Not to be confused with: a **sign-in session**, which is a browser's
+cookie; a grant is what a terminal or a chat assistant holds instead.
+
 ## Audience suggestion
 
 The record that a song entered a concert's pool because someone in the
@@ -1032,6 +1089,10 @@ Lives in: `api/src/auth/`
   issue and expiry times. It lasts 30 days.
 - The gate reads the cookie and the credential behind it: only the second
   read can see a password change.
+- `requireBearerSession` is the second door: it resolves the member from an
+  **assistant grant**'s access token, applies the same session epoch rule,
+  and writes the same member id, so a service never knows which door was
+  used.
 - Rotating the shared password mints a fresh HMAC key, so every member's
   cookie stops verifying.
 - Login attempts are counted per hashed client IP and rate limited.
@@ -1039,7 +1100,9 @@ Lives in: `api/src/auth/`
   bootstrap and the passkey challenge (`auth.controller.ts`), the
   audience's public routes, which a ballot reaches
   (`audience.controller.ts`, which gates its two band routes one by one),
-  and the test-seed route.
+  the OAuth discovery, registration, authorization, token and revocation
+  routes an **assistant client** calls (`oauth.controller.ts`), and the
+  test-seed route.
 
 Held by: `api/src/auth/auth.controller.test.ts` › gates a protected route on the member session cookie
 Held by: `api/src/auth/auth.controller.test.ts` › refuses rotate-password without a session and rotates it with one
@@ -1318,6 +1381,71 @@ Held by: `api/src/setlists/voting.core.test.ts` › gives three points per targe
 Held by: `api/src/setlists/voting.core.test.ts` › frees the points a song already held when it is rescored
 Held by: `api/src/setlists/voting.controller.test.ts` › refuses a score beyond the budget and says what is left
 
+## Tool
+
+One operation an **assistant client** can call on pragma through MCP,
+covering one or more HTTP routes and the service functions those routes
+call.
+
+Lives in: `api/src/mcp/` (the transport and the registry); each tool sits in
+its own slice as `<domain>-tools.controller.ts`
+
+- Served at `POST /mcp`, stateless: every request builds a fresh server,
+  answers one JSON body and keeps no session, so `GET` and `DELETE` answer
+  405.
+- Reached only with an **assistant grant**'s access token, through
+  `requireBearerSession`; the member it resolves is the actor of every
+  write, so push skips that member exactly as for a change made in the app.
+- Takes the route's own Zod limits, but names things the way a person
+  does: a song, member, instrument, setlist, bar, task or improvement is a
+  *reference*, its id or its name in any case and with or without accents,
+  and a session is its id, `next`, `next-concert`, `next-practice`, `last`
+  or a day. A reference that matches several answers `<noun>-ambiguous`
+  with the candidates; one that matches nothing answers `<noun>-not-found`.
+- Answers a compact projection rather than the route's body: ids plus what
+  the next step needs, names where a person would say a name, no field that
+  is null or empty, and a short confirmation for a write. A refusal is a
+  tool error carrying the route's `{ error }` code; an unexpected throw is
+  reported as `McpToolFailed` and answers `internal-error`.
+- A `save_<noun>` tool both creates and changes: without a reference it
+  creates, and a creation missing a required field answers `invalid-input`
+  with the fields; with a reference it changes only the fields given. One
+  `delete` tool takes `{ kind, id }` for a bar, improvement, session,
+  setlist, song, take or task, and its description tells the assistant to
+  confirm with the user first.
+- Every mounted route has a tool, unless `TOOL_EXCLUSIONS` in
+  `mcp/tool-coverage.core.ts` names it with a reason: credentials,
+  state bound to one browser, the audience ballot, the test seed, the
+  OAuth and MCP endpoints themselves, and what the operator kept away from
+  assistants on 2026-10-29 (every vote, notification preferences, take and
+  transition comments, the instrument list, mastery defaults, the outreach
+  template, and adding, renaming or removing members). A route with neither,
+  a tool naming a route that is gone, and an exclusion matching no route each
+  fail `mcp/tool-coverage.test.ts`. One tool may cover several routes, as
+  `get_setlist` reads a setlist and its entries and `set_song_mastery`
+  both writes and removes a score.
+- The size of the tool list and of the answers to ten typical band tasks
+  are budgets held by `mcp/tool-budget.test.ts`.
+
+Held by: `api/src/mcp/mcp.controller.test.ts` › answers 401 with the protected resource metadata address to a call without a valid token
+Held by: `api/src/mcp/mcp.controller.test.ts` › lists every served tool, advertises tools only, and serves two clients at once with no session
+Held by: `api/src/songs/songs-tools.controller.test.ts` › answers the refusal codes the routes answer
+Held by: `api/src/sessions/sessions-tools.controller.test.ts` › creates a concert with the fields the route requires
+Held by: `api/src/setlists/setlists-tools.controller.test.ts` › pushes each setlist change to the other members only
+Held by: `api/src/setlists/setlists-tools.controller.test.ts` › reads what the band wrote about each transition into the next song, which the tools never write
+Held by: `api/src/takes/takes-tools.controller.test.ts` › signs an upload, then records the take as the granting member
+Held by: `api/src/mcp/tool-coverage.test.ts` › serves a tool for every mounted route that is not excluded with a reason
+Held by: `api/src/mcp/tool-coverage.test.ts` › maps every tool to a route that is mounted
+Held by: `api/src/mcp/tool-coverage.test.ts` › keeps no exclusion for a route that is no longer mounted
+Held by: `api/src/mcp/tool-coverage.core.test.ts` › reports an exclusion that matches no mounted endpoint as stale
+Held by: `api/src/mcp/tool-budget.test.ts` › answers each typical band task within its budget of calls and characters
+Held by: `api/src/improvements/improvements-tools.controller.test.ts` › proposes an improvement as the granting member, and lists whether that member voted for it
+Held by: `api/src/me/me-tools.controller.test.ts` › logs a study of today as the granting member, shows it in get_me, then undoes it
+Held by: `api/src/me/me-tools.controller.test.ts` › reads the granting member, and changes only their own contact details
+
+Not to be confused with: a route, which a browser calls with a cookie; a
+tool calls the same service with a bearer token.
+
 ## Transition
 
 The gap between two consecutive setlist entries, and who can hold the room
@@ -1352,6 +1480,8 @@ Lives in: `api/src/transitions/`
   separate rows.
 - `comment` is `NOT NULL`, trimmed, 1 to 4 096 characters. `updatedAt` is
   `NOT NULL` and defaults to the write time.
+- An assistant reads it, as `transitionComment` on the setlist entry it
+  leaves from in `get_setlist`, and never writes it.
 
 Held by: `api/src/transitions/transitions.controller.test.ts` › treats A→B and B→A as distinct rows
 Held by: `api/src/transitions/transitions.schema.test.ts` › refuses whitespace alone, which would read as a comment and say nothing
@@ -1422,6 +1552,12 @@ to.
 
 ## Words we do not use
 
+- **app**, **integration**, **connector** for an assistant: the registered
+  program is an **assistant client** and the permission a member gives it
+  is an **assistant grant**. *connector* is only what claude.ai and Le Chat
+  call the setting a member fills in.
+- **token** for the permission itself: a grant holds tokens, and revoking
+  ends the grant, not one token.
 - **musician**, **bandmate**: the person is a **member**. **player**
   names a member only in relation to one instrument (an instrument's
   `players`, `InstrumentPlayerLink`), and `TakePlayer` is the audio

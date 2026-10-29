@@ -8,6 +8,13 @@ import {
 } from '@domain/input-limits.core';
 import { integer, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { masteryScoreSchema } from '../mastery/mastery.schema';
+import {
+  detailInputShape,
+  namedLineupSchema,
+  pageInputShape,
+  referenceSchema,
+} from '../mcp/tool-input.schema';
 import { normalizeLineup, type StoredLineupValue } from '@domain/lineup.core';
 import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS } from '@domain/song-origin.core';
 
@@ -101,6 +108,23 @@ const songBaseSchema = z.object({
 export const songCreateInputSchema = songBaseSchema;
 export const songUpdateInputSchema = songBaseSchema.partial();
 export const songIdParamSchema = z.object({ id: z.string().uuid() });
+export const songReferenceToolInputSchema = z.object({ song: referenceSchema });
+export const songReadToolInputSchema = songReferenceToolInputSchema.extend(detailInputShape);
+export const songFindToolInputSchema = z.object({
+  query: z.string().max(SONG_TEXT_FIELD_MAX_LENGTH).optional(),
+  status: z.enum(SONG_STATUSES).optional(),
+  ...pageInputShape,
+});
+export const songCreateFieldsSchema = songCreateInputSchema.omit({ defaultLineup: true });
+export const songMasteryToolInputSchema = songReferenceToolInputSchema.extend({
+  member: referenceSchema,
+  instrument: referenceSchema,
+  score: masteryScoreSchema.nullable(),
+});
+export const songSaveToolInputSchema = z
+  .object({ song: referenceSchema.optional() })
+  .merge(songUpdateInputSchema.omit({ defaultLineup: true }))
+  .extend({ defaultLineup: namedLineupSchema.optional() });
 export const externalSearchQuerySchema = z.object({
   q: z.string().min(1).max(SONG_TEXT_FIELD_MAX_LENGTH),
 });

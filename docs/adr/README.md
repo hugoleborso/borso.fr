@@ -84,6 +84,8 @@ No:
 | [0038](./0038-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | proposed | 2026-10-02 |
 | [0039](./0039-talos-memory-in-the-database.md) | The talos memory moves into the database, behind an agent API | proposed | 2026-10-16 |
 | [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | proposed | 2026-10-23 |
+| [0041](./0041-pragma-serves-mcp-from-its-api-lambda.md) | pragma serves MCP from its API Lambda, stateless, with the official SDK behind @hono/mcp | proposed | 2026-10-23 |
+| [0042](./0042-pragma-is-its-own-oauth-authorization-server.md) | pragma is its own OAuth 2.1 authorization server, and an assistant signs in through the member's existing session | proposed | 2026-10-23 |
 | [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | proposed | 2026-10-24 |
 | [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | proposed | 2026-10-25 |
 | [0045](./0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md) | oxlint and oxfmt replace ESLint and Prettier | proposed | 2026-10-27 |
@@ -121,6 +123,8 @@ No:
 - 0038 — `ical.js` parses the members' calendar feeds: no runtime dependency and no fetch of its own, so the SSRF guard stays the only path to an address a member typed.
 - 0028 — `composeClassName` runs `clsx` through `twMerge`, so a caller's class overrides a variant's base; a lost override had shipped twice in two pull requests.
 - 0040 — pragma sends Web Push with `web-push` inline from the API Lambda, as talos does, with one VAPID pair per stage, generated on first use and kept in the database since its 2026-10-24 revision, and push subscriptions kept out of preview clones.
+- 0041 — pragma serves MCP at `/mcp` on its API Lambda, stateless, with `@modelcontextprotocol/sdk` behind `@hono/mcp`; every tool is a schema plus one service call.
+- 0042 — pragma is its own OAuth 2.1 authorization server for assistants (discovery, dynamic registration, PKCE S256, rotating refresh tokens), signing members in through their existing session rather than a hosted provider.
 - 0047 — pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
 - 0048 — Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
 - 0051 — chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.

@@ -33,19 +33,19 @@ export const masteryScoreChangeTable = pgTable('mastery_score_change', {
   changedAt: timestamp('changed_at', { withTimezone: true, mode: 'date' }).notNull(),
 });
 
-const scoreSchema = z.number().int().min(MASTERY_SCORE_MIN).max(MASTERY_SCORE_MAX);
+export const masteryScoreSchema = z.number().int().min(MASTERY_SCORE_MIN).max(MASTERY_SCORE_MAX);
 
 export const masteryDefaultRowSchema = z.object({
   memberId: z.string().uuid(),
   instrumentId: z.string().uuid(),
-  score: scoreSchema,
+  score: masteryScoreSchema,
 });
 
 export const masteryOverrideRowSchema = z.object({
   memberId: z.string().uuid(),
   instrumentId: z.string().uuid(),
   songId: z.string().uuid(),
-  score: scoreSchema,
+  score: masteryScoreSchema,
 });
 
 export const masteryDefaultPathSchema = z.object({

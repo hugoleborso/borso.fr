@@ -1,5 +1,11 @@
 export type { DsqlClusterProps, IDsqlCluster } from './constructs/dsql-cluster.js';
 export { DsqlCluster, lookupDsqlCluster } from './constructs/dsql-cluster.js';
+export type { DsqlAgentReaderProps } from './constructs/dsql-agent-reader.js';
+export {
+  AGENT_READER_FUNCTION_NAME_OUTPUT,
+  AGENT_READER_HANDLER_SLUG,
+  DsqlAgentReader,
+} from './constructs/dsql-agent-reader.js';
 export type { DsqlClusterBackupProps } from './constructs/dsql-cluster-backup.js';
 export { DsqlClusterBackup } from './constructs/dsql-cluster-backup.js';
 export type { DsqlClusterStackProps } from './constructs/dsql-cluster-stack.js';
@@ -16,7 +22,7 @@ export type { StaticSiteProps } from './constructs/static-site.js';
 export { StaticSite } from './constructs/static-site.js';
 export type { WebSocketChannelProps } from './constructs/web-socket-channel.js';
 export { WebSocketChannel } from './constructs/web-socket-channel.js';
-export { agentReaderPrincipalArn } from './internal/agent-reader.js';
+export { agentReaderPrincipalArn } from './internal/agent-reader/principal.utils.js';
 export { HOST_ROUTING_FUNCTION_CODE } from './internal/cf-host-routing-function.js';
 
 export {
@@ -26,6 +32,7 @@ export {
   requirePrNumber,
 } from './internal/env.js';
 export {
+  apiPublicOrigin,
   type BucketNameSuffix,
   frontendOrigin,
   isProductionStage,

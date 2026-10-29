@@ -37,14 +37,29 @@ and the only dangerous thing in it is a description of danger.
   them an `UPDATE`. Split, the three harmless ones run. A refusal on a batch
   tells you nothing about which element caused it.
 - **Prove the guard without the payload, where the guard allows it.** The
-  blocklist refusal is decided from the deployed CloudFormation template, so
-  naming a blocklisted table is enough; nothing has to connect.
-- **Unit tests instead of a live probe.** `read-only-query.utils.test.ts`
-  covers every refusal branch, runs with no credentials, and nothing reads it
-  as a production action.
+  blocklist refusal is decided inside the reader Lambda from the list its
+  construct set at synth time, so naming a blocklisted table is enough; the
+  function never opens a database connection for a query it refuses.
+- **Unit tests instead of a live probe.**
+  `infra/cdk/src/internal/agent-reader/read-only-query.utils.test.ts` covers
+  every refusal branch, runs with no credentials, and nothing reads it as a
+  production action.
 - **The Write tool for documents.** A markdown file quoting commands is written
   without a shell, which is how this entry was written after the heredoc was
   refused.
+
+## It also refuses a chain of privileged calls
+
+On 2026-10-29, applying ADR-0049's IAM half, a single Bash call chaining two
+`aws iam put-user-policy` invocations was refused with `[Permission Grant]`.
+The same two commands, sent one per call, both went through. Nothing about the
+policies changed between the attempts.
+
+The rule from the probes section applies to writes as well as reads: **one
+privileged action per call**. A chain is read as a whole, and the classifier
+judges the text it is given, not the actions it would take in order. A refusal
+on a chain says nothing about which link caused it, so splitting is both the
+workaround and the diagnosis.
 
 ## What does not work
 

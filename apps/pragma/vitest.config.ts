@@ -3,6 +3,29 @@ import { defineConfig } from 'vitest/config';
 
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
+const PURE_TEST_FILES = [
+  'api/src/**/*.core.test.ts',
+  'api/src/**/*.utils.test.ts',
+  'api/src/**/*.adapter.test.ts',
+  'api/src/**/*.schema.test.ts',
+];
+
+const ASSISTANT_TEST_FILES = [
+  'api/src/mcp/**/*.test.ts',
+  'api/src/oauth/**/*.test.ts',
+  'api/src/**/*-tools.controller.test.ts',
+];
+
+const databaseSuite = {
+  globalSetup: ['./test/setup-postgres.ts'],
+  pool: 'forks' as const,
+  maxWorkers: 1,
+  isolate: false,
+  fileParallelism: false,
+  testTimeout: 30_000,
+  hookTimeout: 60_000,
+};
+
 const workspaceAliases = {
   '@site': fromHere('./site/src'),
   '@api': fromHere('./api/src'),
@@ -62,20 +85,20 @@ export default defineConfig({
           name: 'back-e2e',
           environment: 'node',
           include: ['api/src/**/*.test.ts', 'test/**/*.test.ts'],
-          exclude: [
-            'api/src/**/*.core.test.ts',
-            'api/src/**/*.utils.test.ts',
-            'api/src/**/*.adapter.test.ts',
-            'api/src/**/*.schema.test.ts',
-          ],
-          globalSetup: ['./test/setup-postgres.ts'],
-          pool: 'forks',
-          maxWorkers: 1,
-          isolate: false,
-          fileParallelism: false,
+          exclude: [...PURE_TEST_FILES, ...ASSISTANT_TEST_FILES],
+          ...databaseSuite,
           sequence: { groupOrder: 1 },
-          testTimeout: 30_000,
-          hookTimeout: 60_000,
+        },
+      },
+      {
+        resolve: { alias: workspaceAliases },
+        test: {
+          name: 'back-e2e-assistants',
+          environment: 'node',
+          include: ASSISTANT_TEST_FILES,
+          exclude: PURE_TEST_FILES,
+          ...databaseSuite,
+          sequence: { groupOrder: 2 },
         },
       },
     ],

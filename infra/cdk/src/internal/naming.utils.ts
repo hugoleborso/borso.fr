@@ -166,6 +166,16 @@ export function previewApiHostname(context: NameContext): string {
   return `${integPrefix}${context.app}-${suffix}${API_HOSTNAME_SUFFIX}.${PREVIEW_PARENT_DOMAIN}`;
 }
 
+export function apiPublicOrigin(context: NameContext, domainName: string | undefined): string {
+  if (context.stage === 'prod') {
+    if (domainName === undefined) {
+      throw new Error('apiPublicOrigin() requires domainName for the prod stage.');
+    }
+    return `https://${domainName}`;
+  }
+  return `https://${previewApiHostname(context)}`;
+}
+
 export function previewS3Prefix(context: NameContext): string {
   validateAppSlug(context.app);
   assertDeployStage(context.stage);

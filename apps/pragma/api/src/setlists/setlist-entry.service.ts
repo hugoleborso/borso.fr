@@ -121,7 +121,7 @@ export async function patchEntry(
   return { kind: 'ok', entry };
 }
 
-async function writeEntryPositionsWithin(
+export async function writeEntryPositionsWithin(
   executor: DatabaseExecutor,
   entryIds: readonly string[],
 ): Promise<void> {

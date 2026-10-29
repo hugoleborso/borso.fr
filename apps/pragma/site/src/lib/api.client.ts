@@ -3,7 +3,7 @@ import { hc } from 'hono/client';
 import { isEndedSessionBody, canAnswerEndedSession } from './session-end.core';
 
 const RAW_API_BASE: unknown = import.meta.env.VITE_API_BASE;
-const API_BASE: string =
+export const API_BASE: string =
   typeof RAW_API_BASE === 'string' && RAW_API_BASE.length > 0
     ? RAW_API_BASE.replace(/\/$/, '')
     : '';

@@ -20,9 +20,10 @@ import {
 } from '../internal/stage-wiring.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { IDsqlCluster } from './dsql-cluster.js';
+import { DsqlAgentReader } from './dsql-agent-reader.js';
 import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
-import { StaticSite } from './static-site.js';
+import { DEFAULT_API_PATH_PATTERNS, StaticSite } from './static-site.js';
 
 export interface PreviewableAppProps {
   readonly app: string;
@@ -39,6 +40,7 @@ export interface PreviewableAppProps {
     readonly memoryMb?: number;
     readonly timeoutSeconds?: number;
     readonly environment?: Readonly<Record<string, string>>;
+    readonly extraPathPatterns?: readonly string[];
   };
   readonly database?: {
     readonly migrationsPath: string;
@@ -54,6 +56,7 @@ export class PreviewableApp extends Construct {
   public readonly site: StaticSite;
   public readonly api: LambdaApi | undefined;
   public readonly database: DsqlSchema | undefined;
+  public readonly agentReader: DsqlAgentReader | undefined;
   public readonly cluster: IDsqlCluster | undefined;
 
   constructor(scope: Construct, id: string, props: PreviewableAppProps) {
@@ -80,6 +83,18 @@ export class PreviewableApp extends Construct {
           ? {}
           : { readerTableBlocklist: props.database.readerTableBlocklist }),
       });
+
+      if (this.database.readerRoleName !== undefined) {
+        this.agentReader = new DsqlAgentReader(this, 'AgentReader', {
+          app: props.app,
+          stage: props.stage,
+          prNumber: props.prNumber,
+          schema: this.database,
+          ...(props.database.readerTableBlocklist === undefined
+            ? {}
+            : { tableBlocklist: props.database.readerTableBlocklist }),
+        });
+      }
     }
 
     const isApiBehindCloudFront = isApiServedThroughCloudFront(
@@ -127,6 +142,8 @@ export class PreviewableApp extends Construct {
         ? undefined
         : selectSameOriginApiDomainName(props.stage, apiHttpHostname(this.api));
 
+    const apiPathPatterns = [...DEFAULT_API_PATH_PATTERNS, ...(props.api?.extraPathPatterns ?? [])];
+
     this.site = new StaticSite(this, 'Site', {
       app: props.app,
       stage: props.stage,
@@ -139,7 +156,13 @@ export class PreviewableApp extends Construct {
         : { bucketNameSuffix: props.frontend.bucketNameSuffix }),
       ...(sameOriginApiDomainName === undefined || originVerifyValue === undefined
         ? {}
-        : { api: { domainName: sameOriginApiDomainName, originVerifyValue } }),
+        : {
+            api: {
+              domainName: sameOriginApiDomainName,
+              originVerifyValue,
+              pathPatterns: apiPathPatterns,
+            },
+          }),
     });
 
     new CfnOutput(this, 'FrontendUrl', { value: this.site.url });

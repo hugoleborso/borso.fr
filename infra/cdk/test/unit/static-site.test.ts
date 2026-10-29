@@ -1,5 +1,5 @@
 import { App, Stack } from 'aws-cdk-lib';
-import { Match } from 'aws-cdk-lib/assertions';
+import { Capture, Match } from 'aws-cdk-lib/assertions';
 import { describe, expect, it } from 'vitest';
 import { StaticSite } from '../../src/constructs/static-site.js';
 import { API_VIEWER_ADDRESS_FUNCTION_CODE } from '../../src/internal/cf-api-viewer-address.js';
@@ -165,7 +165,8 @@ describe('StaticSite (prod, with same-origin /api/* routing)', () => {
     });
   });
 
-  it('respects a custom pathPattern', () => {
+  it('routes every listed path pattern to one API origin, each behaviour with caching disabled and the viewer-address function', () => {
+    const listedPatterns = ['/api/*', '/mcp', '/.well-known/oauth-*'];
     const customTpl = synth((stack) => {
       new StaticSite(stack, 'Site', {
         app: 'borso-fr',
@@ -175,15 +176,37 @@ describe('StaticSite (prod, with same-origin /api/* routing)', () => {
         api: {
           domainName: 'x.execute-api.eu-west-3.amazonaws.com',
           originVerifyValue: ORIGIN_VERIFY_VALUE,
-          pathPattern: '/v1/*',
+          pathPatterns: listedPatterns,
         },
       });
     });
+    const targetOriginId = new Capture();
     customTpl.hasResourceProperties('AWS::CloudFront::Distribution', {
       DistributionConfig: Match.objectLike({
-        CacheBehaviors: Match.arrayWith([Match.objectLike({ PathPattern: '/v1/*' })]),
+        CacheBehaviors: listedPatterns.map((pathPattern) =>
+          Match.objectLike({
+            PathPattern: pathPattern,
+            TargetOriginId: targetOriginId,
+            CachePolicyId: CACHING_DISABLED_ID,
+            FunctionAssociations: [Match.objectLike({ EventType: 'viewer-request' })],
+          }),
+        ),
+        Origins: Match.arrayWith([
+          Match.objectLike({
+            DomainName: 'x.execute-api.eu-west-3.amazonaws.com',
+            OriginCustomHeaders: [
+              { HeaderName: ORIGIN_VERIFY_HEADER, HeaderValue: ORIGIN_VERIFY_VALUE },
+            ],
+          }),
+        ]),
       }),
     });
+    const capturedOriginIds = new Set([targetOriginId.asString()]);
+    while (targetOriginId.next()) capturedOriginIds.add(targetOriginId.asString());
+    expect(capturedOriginIds.size).toBe(1);
+    expect(
+      JSON.stringify(customTpl.toJSON()).split('x.execute-api.eu-west-3.amazonaws.com'),
+    ).toHaveLength(2);
   });
 });
 
