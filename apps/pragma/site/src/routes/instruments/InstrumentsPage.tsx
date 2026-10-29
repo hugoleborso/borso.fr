@@ -132,7 +132,11 @@ export function InstrumentsPage(): JSX.Element {
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-3xl">
-      <PageHeader title={t('instruments.title')} />
+      <PageHeader
+        back={{ to: '/band', label: t('band.title') }}
+        title={t('instruments.title')}
+        subtitle={t('instruments.playersHint')}
+      />
       {errorMessage === null ? null : (
         <p className="text-danger text-meta mb-3" role="alert">
           {errorMessage}
@@ -146,6 +150,9 @@ export function InstrumentsPage(): JSX.Element {
         listLabel={t('instruments.title')}
         dragHandleLabel={t('instruments.dragHandle')}
         primaryToggleLabel={t('instruments.togglePrimary')}
+        playedByLabel={t('instruments.playedBy')}
+        noPlayerLabel={t('instruments.noPlayer')}
+        mainLabel={t('instruments.main')}
         deleteLabel={t('common.delete')}
         onSelect={editInstrument}
         onTogglePrimary={toggleMemberPrimacy}
