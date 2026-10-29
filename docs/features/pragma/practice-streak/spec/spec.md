@@ -35,8 +35,10 @@ Home                     [🔥 12] [👥 4]
             ( ▶ Practice mode )
 ```
 
-- Two chips sit right of the `Home` title, on the `PageHeader` line. The first is the signed-in member's flame and its day count. The second is the band's flame, marked with the `members` glyph, and its day count.
-- A new `flame` glyph joins `Icon.tsx`. The flame uses only the accent family from `tokens.css`. It is `accent` when today counts, `accent-soft` filled with an `accent` outline while today is still open, and `ink-faint` at 0.
+- Two chips sit right of the `Home` title, on the `PageHeader` line. The first is the signed-in member's flame and its day count. The second is the band's flame and its day count.
+- The flames are drawn marks, not icons, in pragma blues only (operator, 2026-10-29, choosing from [`mockups/flame-options.png`](mockups/flame-options.png)):
+  - **Personal flame** ("Blaze", option B): one flame in three layers (deep blue, blue, a light core), three sparks and a soft blue glow when today counts. It is `accent-soft` with an `accent` outline and a faint core while today is open, and an `ink-faint` outline with no sparks at 0. It is used in your chip, large in the sheet, and in each member row.
+  - **Band flame** ("Bonfire", option A): three tilted flames, each layered the same way, with the glow. It flickers gently, a slow scale and glow pulse, while today counts for the band, and stays still under `prefers-reduced-motion`. Open and 0 follow the personal flame's tones.
 - Each chip is a button with an accessible name, for example "Your flame, 12 days, today counted". Tapping either one opens the **streak sheet**.
 - The streak sheet:
   - Your flame, large, with "Today counted" or "Today still open", and "2 jokers left this week".
@@ -114,6 +116,7 @@ flowchart LR
 | Placement and tap | Header chips; own row; inside the next-session card. Sheet or nothing | Header chips that open a sheet (operator). |
 | Concerts | Count; do not | Count, as sessions. The operator's "practice" answer named "a practice or concert" in its option. |
 | Today open after a missed yesterday | Lenient: today stands as the gap's newer side; strict: the flame reads 0 until today counts | Lenient, from the happy path the operator ratified. The 20:00 at-risk push stays true for that member. |
+| Flame drawings | Icon glyph; drawn marks | Drawn marks: Blaze for a member, Bonfire with a gentle flicker for the band (operator, 2026-10-29, after PR #234 opened). |
 | Base branch | `main`; #216's head | #216 is open. This branch starts from `claude/pragma-ux-redesign-slice-6` and its PR targets that branch until #216 merges. |
 
 **Out of scope**: takes in the streak, an attendance record, a streak on any screen other than Home and its sheet, and push wording per member.
@@ -160,7 +163,7 @@ apps/pragma/api/src/studies/study-tool.core.ts, me/me-tools.controller.ts UPDATE
 apps/pragma/api/src/notifications/notifications.core.ts   UPDATE: 'streak' category, two messages
 apps/pragma/api/src/streaks/streak-reminder.*             NEW: who gets which push, and the job entry
 apps/pragma/cdk/lib/stack.ts (+ test)                     UPDATE: 20:00 Europe/Paris schedule, production only
-apps/pragma/site/src/components/atoms/Icon.tsx            UPDATE: flame glyph
+apps/pragma/site/src/components/atoms/ (flame marks)      NEW: PersonalFlameMark, BandFlameMark; tokens.css gains the flame blues
 apps/pragma/site/src/components/molecules/FlameChip.tsx   NEW (replaces StreakBadge)
 apps/pragma/site/src/components/organisms/StreakSheet.tsx NEW
 apps/pragma/site/src/lib/queries/streaks.queries.ts       NEW; study mutations invalidate it
