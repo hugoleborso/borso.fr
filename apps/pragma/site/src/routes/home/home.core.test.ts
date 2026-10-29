@@ -6,6 +6,7 @@ import {
   type HomeViewInput,
   selectHomePrimaryAction,
   readHomeSection,
+  selectNextConcertBesideSession,
 } from './home.core';
 
 const MEMBER = 'member-1';
@@ -234,5 +235,33 @@ describe('selectHomePrimaryAction', () => {
         setlistId: null,
       }),
     ).toEqual({ link: null, isNewSessionOffered: false });
+  });
+});
+
+describe('selectNextConcertBesideSession', () => {
+  const now = new Date('2026-10-29T10:00:00Z');
+  const practice = { id: 'practice', kind: 'practice', date: '2026-10-30T18:00:00Z' };
+  const pastConcert = { id: 'past', kind: 'concert', date: '2026-10-01T20:00:00Z' };
+  const nearConcert = { id: 'near', kind: 'concert', date: '2026-11-05T20:00:00Z' };
+  const farConcert = { id: 'far', kind: 'concert', date: '2026-12-05T20:00:00Z' };
+
+  it('returns the nearest coming concert when the next session is something else', () => {
+    expect(
+      selectNextConcertBesideSession(
+        [farConcert, practice, pastConcert, nearConcert],
+        practice.id,
+        now,
+      ),
+    ).toBe(nearConcert);
+  });
+
+  it('returns nothing when the next session is that concert', () => {
+    expect(selectNextConcertBesideSession([nearConcert, farConcert], nearConcert.id, now)).toBe(
+      null,
+    );
+  });
+
+  it('returns nothing when no concert is coming', () => {
+    expect(selectNextConcertBesideSession([practice, pastConcert], practice.id, now)).toBe(null);
   });
 });

@@ -131,6 +131,24 @@ describe('the home page', () => {
     expect(await within(card).findByText('2 songs · 48 min')).toBeTruthy();
   });
 
+  it('names the next concert on the card when the next session is a practice', async () => {
+    const answer = answerHomeApi([LATER_CONCERT, NEXT_PRACTICE]);
+    stub = stubFetch((request) => Promise.resolve(answer(request)));
+    renderHomePage();
+    const card = await screen.findByRole('region', { name: 'Next session' });
+    const concertLink = within(card).getByRole('link', { name: /Next concert/ });
+    expect(concertLink.getAttribute('href')).toBe(`/sessions/${LATER_CONCERT.id}`);
+    expect(within(concertLink).getByText(new RegExp(LATER_CONCERT.venue))).toBeTruthy();
+  });
+
+  it('does not repeat the concert when the next session is that concert', async () => {
+    const answer = answerHomeApi([LATER_CONCERT]);
+    stub = stubFetch((request) => Promise.resolve(answer(request)));
+    renderHomePage();
+    const card = await screen.findByRole('region', { name: 'Next session' });
+    expect(within(card).queryByRole('link', { name: /Next concert/ })).toBe(null);
+  });
+
   it('offers Open the setlist as its one primary action', async () => {
     const answer = answerHomeApi([NEXT_PRACTICE]);
     stub = stubFetch((request) => Promise.resolve(answer(request)));

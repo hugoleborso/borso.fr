@@ -477,6 +477,7 @@
   "sessions": {
     "addTask": "Add a task",
     "capacity": "Capacity",
+    "concertsOnly": "Concerts only",
     "create": {
       "concertTitle": "New concert",
       "practiceTitle": "New practice",

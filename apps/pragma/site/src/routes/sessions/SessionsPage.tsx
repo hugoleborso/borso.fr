@@ -3,9 +3,11 @@
 import { orderSessionsForListing } from '@domain/session-schedule.core';
 import { type JSX, useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
 import { ButtonLink } from '../../components/atoms/ButtonLink';
+import { Chip } from '../../components/atoms/Chip';
+import { Icon } from '../../components/atoms/Icon';
 import { IconButton } from '../../components/atoms/IconButton';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { BottomActions } from '../../components/atoms/BottomActions';
@@ -20,6 +22,8 @@ import { useNavigateTo } from '../../lib/navigation.hook';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions.queries';
 
 const NO_ROWS: readonly never[] = [];
+const KIND_PARAM = 'kind';
+const CONCERT_KIND = 'concert';
 
 interface SessionDraft {
   readonly kind: 'concert' | 'practice';
@@ -34,13 +38,19 @@ export function SessionsPage(): JSX.Element {
 
   const [creating, setCreating] = useState<SessionDraft | null>(null);
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isConcertsOnly = searchParams.get(KIND_PARAM) === CONCERT_KIND;
 
   const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
   const sessions = useMemo(
     () => orderSessionsForListing(sessionsQuery.data?.sessions ?? NO_ROWS, new Date(nowEpochMs)),
     [sessionsQuery.data, nowEpochMs],
   );
-  const concerts = sessions.filter((session) => session.kind === 'concert');
+  const concerts = sessions.filter((session) => session.kind === CONCERT_KIND);
+  const listedSessions = isConcertsOnly ? concerts : sessions;
+  const toggleConcertsOnly = (): void => {
+    setSearchParams(isConcertsOnly ? {} : { [KIND_PARAM]: CONCERT_KIND }, { replace: true });
+  };
   const error =
     sessionsQuery.error instanceof ApiError
       ? sessionsQuery.error.message
@@ -64,6 +74,12 @@ export function SessionsPage(): JSX.Element {
         }
       >
         <SessionsSectionTabs value="sessions" />
+        <div className="mt-3">
+          <Chip pressed={isConcertsOnly} onPress={toggleConcertsOnly}>
+            <Icon name="audience" />
+            <span>{t('sessions.concertsOnly')}</span>
+          </Chip>
+        </div>
       </PageHeader>
 
       {error === null ? null : (
@@ -80,8 +96,8 @@ export function SessionsPage(): JSX.Element {
           className="absolute top-1 bottom-1 left-2 w-px bg-rule-strong pointer-events-none"
           aria-hidden="true"
         />
-        {sessions.map((session) => {
-          const isConcert = session.kind === 'concert';
+        {listedSessions.map((session) => {
+          const isConcert = session.kind === CONCERT_KIND;
           return (
             <li key={session.id} className="relative py-2">
               <span
@@ -94,9 +110,19 @@ export function SessionsPage(): JSX.Element {
               <div className="relative">
                 <Link
                   to={`/sessions/${session.id}`}
-                  className="block bg-leaf border border-rule rounded-md px-4 py-3 pr-12 hover:border-rule-strong transition-colors"
+                  className={composeClassName(
+                    'block rounded-md px-4 py-3 pr-12 transition-colors',
+                    isConcert
+                      ? 'border-2 border-accent bg-accent-soft'
+                      : 'border border-rule bg-leaf hover:border-rule-strong',
+                  )}
                 >
-                  <div className="text-label uppercase tracking-wider text-ink-soft mb-1">
+                  <div
+                    className={composeClassName(
+                      'text-label uppercase tracking-wider mb-1',
+                      isConcert ? 'font-semibold text-accent-strong' : 'text-ink-soft',
+                    )}
+                  >
                     {isConcert ? '♪' : '⟳'}{' '}
                     {t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
                   </div>

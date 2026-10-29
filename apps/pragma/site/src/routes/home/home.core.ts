@@ -1,5 +1,6 @@
 /** @Feature home */
 
+import { type ScheduledSession, selectNextSession } from '@domain/session-schedule.core';
 import { isTaskOpen } from '@domain/task-status.core';
 import type { SetlistEditorSong } from '../../components/organisms/setlist-editor.utils';
 import {
@@ -157,4 +158,22 @@ const TASKS_SECTION: HomeSection = 'tasks';
 // @FollowsBlueprint core-decision
 export function readHomeSection(requested: string | null, hasPart: boolean): HomeSection {
   return hasPart && requested !== TASKS_SECTION ? 'part' : TASKS_SECTION;
+}
+
+export interface KindedSession extends ScheduledSession {
+  readonly kind: string;
+}
+
+const CONCERT_KIND = 'concert';
+
+// @FollowsBlueprint core-decision
+export function selectNextConcertBesideSession<TSession extends KindedSession>(
+  sessions: readonly TSession[],
+  nextSessionId: string | null,
+  now: Date,
+): TSession | null {
+  const concerts = sessions.filter((session) => session.kind === CONCERT_KIND);
+  const nextConcert = selectNextSession(concerts, now);
+  if (nextConcert === null || nextConcert.id === nextSessionId) return null;
+  return nextConcert;
 }

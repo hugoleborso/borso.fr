@@ -477,6 +477,7 @@
   "sessions": {
     "addTask": "Ajouter une tâche",
     "capacity": "Jauge",
+    "concertsOnly": "Concerts uniquement",
     "create": {
       "concertTitle": "Nouveau concert",
       "practiceTitle": "Nouvelle répétition",

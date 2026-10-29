@@ -7,6 +7,12 @@ import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
 import { Overline } from '../atoms/Overline';
 
+export interface NextConcertLine {
+  readonly dateLabel: string;
+  readonly venue: string | null;
+  readonly path: string;
+}
+
 export interface NextSessionCardProps {
   readonly isConcert: boolean;
   readonly dateLabel: string;
@@ -15,6 +21,7 @@ export interface NextSessionCardProps {
   readonly setlistName: string | null;
   readonly songCount: number | null;
   readonly totalLabel: string | null;
+  readonly nextConcert: NextConcertLine | null;
 }
 
 // @FollowsBlueprint organism-presentational
@@ -48,6 +55,21 @@ export function NextSessionCard(props: NextSessionCardProps): JSX.Element {
             <span className="min-w-0 truncate font-medium">{props.setlistName}</span>
             <span className="shrink-0 text-ink-soft">{setlistFacts.join(' · ')}</span>
           </div>
+        )}
+        {props.nextConcert === null ? null : (
+          <Link
+            to={props.nextConcert.path}
+            className="-mb-2 flex min-h-11 min-w-0 items-center gap-2 border-t border-rule pt-2 text-meta text-ink no-underline"
+          >
+            <Icon name="audience" className="shrink-0 text-accent" />
+            <span className="shrink-0 font-medium">{t('nextConcert.label')}</span>
+            <span className="min-w-0 truncate text-ink-soft">
+              {[props.nextConcert.dateLabel, props.nextConcert.venue]
+                .filter((part) => part !== null)
+                .join(' · ')}
+            </span>
+            <Icon name="chevR" className="ml-auto shrink-0 text-ink-faint" />
+          </Link>
         )}
       </Card>
     </section>

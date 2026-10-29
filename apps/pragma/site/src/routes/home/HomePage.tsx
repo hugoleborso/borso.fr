@@ -41,6 +41,7 @@ import {
   type HomeSection,
   readHomeSection,
   selectHomePrimaryAction,
+  selectNextConcertBesideSession,
 } from './home.core';
 import { recordProductEvent } from '../../observability/product-event.adapter';
 
@@ -68,6 +69,15 @@ export function HomePage(): JSX.Element {
   const nextSession = useMemo(
     () => selectNextSession(sessionsQuery.data?.sessions ?? NO_ROWS, new Date(nowEpochMs)),
     [sessionsQuery.data, nowEpochMs],
+  );
+  const nextConcert = useMemo(
+    () =>
+      selectNextConcertBesideSession(
+        sessionsQuery.data?.sessions ?? NO_ROWS,
+        nextSession?.id ?? null,
+        new Date(nowEpochMs),
+      ),
+    [sessionsQuery.data, nextSession, nowEpochMs],
   );
   const setlistsQuery = useSetlistsBySession(nextSession?.id ?? '', nextSession !== null);
   const setlist = setlistsQuery.data?.setlists[0] ?? null;
@@ -182,6 +192,15 @@ export function HomePage(): JSX.Element {
           songCount={setlist?.songCount ?? null}
           totalLabel={
             view.totalSeconds === null ? null : totalLabel(describeTotalDuration(view.totalSeconds))
+          }
+          nextConcert={
+            nextConcert === null
+              ? null
+              : {
+                  dateLabel: formatSessionDate(nextConcert.date, i18n.language),
+                  venue: nextConcert.venue,
+                  path: `/sessions/${nextConcert.id}`,
+                }
           }
         />
       )}
