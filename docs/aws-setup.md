@@ -461,8 +461,11 @@ refused before anything is invoked.
       "Action": "lambda:InvokeFunction",
       "Resource": [
         "arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader",
+        "arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader:*",
         "arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader",
-        "arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader"
+        "arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader:*",
+        "arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader",
+        "arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader:*"
       ]
     }
   ]
@@ -489,7 +492,7 @@ narrowing statements are what ADR-0049 retired — and appends the two Lambda on
 not cosmetic; see *The 2048-character wall* below.
 
 ```bash
-jq -c --argjson fns '["arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader"]' '
+jq -c --argjson fns '["arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader:*","arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader:*","arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader:*"]' '
   .Statement |= (
     map(select(.Sid | test("Dsql|Lambda") | not))
     | map(if .Resource == "*" and (.Action | type) == "array"
@@ -569,6 +572,12 @@ for f in pragma-prod-agent-reader last-loop-lepin-prod-agent-reader \
     --query 'EvaluationResults[0].EvalDecision' --output text)"
 done
 ```
+
+Run it a second time with `function:$f:\$LATEST` as the resource. `aws lambda invoke` is
+evaluated against the qualified ARN `…:function:<name>:$LATEST`, which an unqualified entry in a
+`NotResource` list does not match, so each reader is listed twice above: bare and `:*`. A deny
+holding only the bare ARNs answers `allowed` to the first loop and still refuses every invoke,
+which is what happened on 2026-10-29.
 
 On 2026-10-29 that returned `allowed` for the three readers and `explicitDeny` for
 `pragma-prod-api`, with `lambda:UpdateFunctionCode` and `lambda:GetFunction` on a reader both
