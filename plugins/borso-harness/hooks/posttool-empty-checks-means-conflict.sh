@@ -22,6 +22,13 @@
 # legitimately have no checks before its first workflow starts, and telling the
 # reader to go and look is right in both cases.
 #
+# It also speaks on a list that is not finished, or not whole. On PR #206 the
+# orchestrator told the operator CI was green while a job was still running, and
+# a list read with a page size shows a few runs of a total it names in the same
+# answer. Both read as "every check I can see passed". The hook names the runs
+# still going and the runs the page left out, because "green" is a claim about
+# all of them. See docs/dantotsus/green-said-of-a-run-still-going.md.
+#
 # It answers with `additionalContext`: plain stdout from a PostToolUse hook
 # reaches the debug log and not the model, which is what this hook printed into
 # until 2026-10-10. See docs/adr/0030-knowledge-is-delivered-by-trigger.md.
@@ -41,10 +48,31 @@ esac
 RESPONSE=$(jq -r '.tool_response // empty' <<<"$INPUT")
 [ -z "$RESPONSE" ] && exit 0
 
-TOTAL=$(jq -r 'if type == "string" then (fromjson? // {}) else . end | .total_count // empty' <<<"$RESPONSE" 2>/dev/null)
-[ "$TOTAL" = "0" ] || exit 0
-
+PARSED=$(jq -c 'if type == "string" then (fromjson? // {}) else . end' <<<"$RESPONSE" 2>/dev/null)
+TOTAL=$(jq -r '.total_count // empty' <<<"$PARSED" 2>/dev/null)
 PR=$(jq -r '.tool_input.pullNumber // "the pull request"' <<<"$INPUT")
+
+if [ "$TOTAL" != "0" ]; then
+  [ "$METHOD" = get_check_runs ] || exit 0
+  jq -e '.check_runs | type == "array"' <<<"$PARSED" >/dev/null 2>&1 || exit 0
+  SHOWN=$(jq -r '.check_runs | length' <<<"$PARSED")
+  RUNNING=$(jq -r '[.check_runs[] | select(.status != "completed") | .name] | join(", ")' <<<"$PARSED")
+  [ -z "$RUNNING" ] && [ "$SHOWN" -ge "${TOTAL:-0}" ] && exit 0
+  NOTE="[unfinished-checks] get_check_runs for pull request $PR is not a verdict yet."
+  if [ -n "$RUNNING" ]; then
+    NOTE="$NOTE
+Still running: $RUNNING. CI is not green until every run has completed;
+say which are still going rather than calling the rest green."
+  fi
+  if [ "$SHOWN" -lt "${TOTAL:-0}" ]; then
+    NOTE="$NOTE
+This page shows $SHOWN of $TOTAL runs. Read the rest (perPage up to 100, or the
+next page) before saying anything about all of them."
+  fi
+  jq -n --arg context "$NOTE" \
+    '{hookSpecificOutput: {hookEventName: "PostToolUse", additionalContext: $context}}'
+  exit 0
+fi
 
 NOTE=$(
   cat <<NOTE

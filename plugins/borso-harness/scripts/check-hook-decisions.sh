@@ -395,6 +395,14 @@ run_context_case posttool-empty-checks-means-conflict.sh inform 'mergeable_state
   '{"hook_event_name":"PostToolUse","tool_name":"mcp__github__pull_request_read","tool_input":{"method":"get_check_runs","pullNumber":7},"tool_response":"{\"total_count\": 0}"}'
 run_context_case posttool-empty-checks-means-conflict.sh silent '' \
   '{"hook_event_name":"PostToolUse","tool_name":"mcp__github__pull_request_read","tool_input":{"method":"get_check_runs","pullNumber":7},"tool_response":"{\"total_count\": 3}"}'
+run_context_case posttool-empty-checks-means-conflict.sh inform 'Still running: app-tests (pragma)' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__github__pull_request_read","tool_input":{"method":"get_check_runs","pullNumber":7},"tool_response":"{\"total_count\": 2, \"check_runs\": [{\"name\": \"lint\", \"status\": \"completed\"}, {\"name\": \"app-tests (pragma)\", \"status\": \"in_progress\"}]}"}'
+run_context_case posttool-empty-checks-means-conflict.sh inform 'shows 1 of 29 runs' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__github__pull_request_read","tool_input":{"method":"get_check_runs","pullNumber":7,"perPage":1},"tool_response":"{\"total_count\": 29, \"check_runs\": [{\"name\": \"lint\", \"status\": \"completed\"}]}"}'
+run_context_case posttool-empty-checks-means-conflict.sh silent '' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__github__pull_request_read","tool_input":{"method":"get_check_runs","pullNumber":7},"tool_response":"{\"total_count\": 1, \"check_runs\": [{\"name\": \"lint\", \"status\": \"completed\"}]}"}'
+run_context_case posttool-empty-checks-means-conflict.sh silent '' \
+  '{"hook_event_name":"PostToolUse","tool_name":"mcp__github__pull_request_read","tool_input":{"method":"get_status","pullNumber":7},"tool_response":"{\"total_count\": 2, \"state\": \"pending\"}"}'
 
 # Every hook that can refuse has to appear above, with both halves unless it
 # is declared state-dependent. pretool-no-swallowed-push.sh refused for weeks
