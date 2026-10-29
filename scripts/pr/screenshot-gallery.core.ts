@@ -12,6 +12,7 @@ export interface ScreenshotFolder {
   readonly path: string;
   readonly newest: string;
   readonly screenshots: readonly Screenshot[];
+  readonly recordings: readonly Screenshot[];
 }
 
 export interface BeforeAfterPair {
@@ -35,7 +36,13 @@ export const DEFAULT_IMAGE_LIMIT = 30;
 export const IMAGES_PER_ROW = 2;
 export const GALLERY_HEADING = '### Screenshots';
 
-const SCREENSHOT_EXTENSION = '.png';
+const IMAGE_EXTENSIONS = ['.png', '.gif'];
+const ANIMATION_EXTENSION = '.gif';
+const RECORDING_EXTENSIONS = ['.webm', '.mp4'];
+const EXTENSION_SEPARATOR = '.';
+const ANIMATION_MARKER = ' (animated)';
+const RECORDINGS_INTRODUCTION =
+  'Recordings, which GitHub does not play inline; each link opens the file:';
 const BEFORE_PREFIX = 'before-';
 const AFTER_PREFIX = 'after-';
 const PATH_SEPARATOR = '/';
@@ -75,6 +82,31 @@ function splitKey(relativeKey: string): { readonly folder: string; readonly file
   };
 }
 
+type MediaKind = 'screenshots' | 'recordings';
+
+function mediaKind(key: string): MediaKind | undefined {
+  if (IMAGE_EXTENSIONS.some((extension) => key.endsWith(extension))) return 'screenshots';
+  if (RECORDING_EXTENSIONS.some((extension) => key.endsWith(extension))) return 'recordings';
+  return undefined;
+}
+
+function fileStem(file: string): string {
+  return file.slice(0, file.lastIndexOf(EXTENSION_SEPARATOR));
+}
+
+function byFileName(left: Screenshot, right: Screenshot): number {
+  return left.file.localeCompare(right.file);
+}
+
+function newestOf(files: readonly Screenshot[]): string {
+  return files.reduce(
+    (latest, file) =>
+      // Stryker disable next-line EqualityOperator: equivalent mutant, on equal strings both branches return the same value
+      file.lastModified > latest ? file.lastModified : latest,
+    '',
+  );
+}
+
 function newestFolderFirst(left: ScreenshotFolder, right: ScreenshotFolder): number {
   return right.newest.localeCompare(left.newest) || right.path.localeCompare(left.path);
 }
@@ -83,30 +115,27 @@ export function groupIntoFolders(
   objects: readonly StoredObject[],
   prefix: string,
 ): readonly ScreenshotFolder[] {
-  const byFolder = new Map<string, Screenshot[]>();
+  const byFolder = new Map<string, Record<MediaKind, Screenshot[]>>();
   for (const object of objects) {
-    if (!object.key.startsWith(prefix) || !object.key.endsWith(SCREENSHOT_EXTENSION)) continue;
+    const kind = mediaKind(object.key);
+    if (!object.key.startsWith(prefix) || kind === undefined) continue;
     const { folder, file } = splitKey(object.key.slice(prefix.length));
-    const screenshots = byFolder.get(folder) ?? [];
-    screenshots.push({ file, lastModified: object.lastModified });
-    byFolder.set(folder, screenshots);
+    const media = byFolder.get(folder) ?? { screenshots: [], recordings: [] };
+    media[kind].push({ file, lastModified: object.lastModified });
+    byFolder.set(folder, media);
   }
   return [...byFolder.entries()]
-    .map(([path, screenshots]) => ({
+    .map(([path, media]) => ({
       path,
-      newest: screenshots.reduce(
-        (latest, screenshot) =>
-          // Stryker disable next-line EqualityOperator: equivalent mutant, on equal strings both branches return the same value
-          screenshot.lastModified > latest ? screenshot.lastModified : latest,
-        '',
-      ),
-      screenshots: [...screenshots].sort((left, right) => left.file.localeCompare(right.file)),
+      newest: newestOf([...media.screenshots, ...media.recordings]),
+      screenshots: [...media.screenshots].sort(byFileName),
+      recordings: [...media.recordings].sort(byFileName),
     }))
     .sort(newestFolderFirst);
 }
 
 function subjectAfterPrefix(file: string, prefix: string): string {
-  return file.slice(prefix.length, -SCREENSHOT_EXTENSION.length);
+  return fileStem(file).slice(prefix.length);
 }
 
 export function layOutFolder(screenshots: readonly Screenshot[]): FolderLayout {
@@ -133,9 +162,10 @@ export function layOutFolder(screenshots: readonly Screenshot[]): FolderLayout {
 }
 
 function imageCell(pullRequestNumber: number, folderPath: string, screenshot: Screenshot): string {
-  const label = escapeMarkdown(screenshot.file.slice(0, -SCREENSHOT_EXTENSION.length));
+  const label = escapeMarkdown(fileStem(screenshot.file));
   const url = screenshotUrl(pullRequestNumber, folderPath, screenshot.file);
-  return `![${label}](${url})<br><sub>${label}</sub>`;
+  const marker = screenshot.file.endsWith(ANIMATION_EXTENSION) ? ANIMATION_MARKER : '';
+  return `![${label}](${url})<br><sub>${label}${marker}</sub>`;
 }
 
 function tableRow(cells: readonly string[]): string {
@@ -189,6 +219,29 @@ function renderSingles(
   ];
 }
 
+function renderRecordings(
+  pullRequestNumber: number,
+  folderPath: string,
+  recordings: readonly Screenshot[],
+): readonly string[] {
+  if (recordings.length === 0) return [];
+  return [
+    RECORDINGS_INTRODUCTION,
+    '',
+    ...recordings.map(
+      (recording) =>
+        `- [${escapeMarkdown(recording.file)}](${screenshotUrl(pullRequestNumber, folderPath, recording.file)})`,
+    ),
+    '',
+  ];
+}
+
+function describeMedia(shown: number, images: number, recordings: number): string {
+  const imageCount =
+    shown === images ? plural(images, 'image') : `${String(shown)} of ${plural(images, 'image')}`;
+  return recordings === 0 ? imageCount : `${imageCount} and ${plural(recordings, 'recording')}`;
+}
+
 interface FolderBudget {
   readonly layout: FolderLayout;
   readonly shown: number;
@@ -232,34 +285,34 @@ export function renderGallery(request: GalleryRequest): string {
   let remaining = imageLimit;
   let shownTotal = 0;
   let imageTotal = 0;
+  let recordingTotal = 0;
 
   for (const folder of folders) {
     const fitted = fitFolderToBudget(layOutFolder(folder.screenshots), remaining);
     remaining -= fitted.shown;
     shownTotal += fitted.shown;
     imageTotal += fitted.total;
+    recordingTotal += folder.recordings.length;
     const link = `[${folderLabel(folder.path)}](${folderUrl(pullRequestNumber, folder.path)})`;
     if (fitted.shown < fitted.total) {
       dropped.push(`- ${link}: ${String(fitted.shown)} of ${String(fitted.total)} shown`);
     }
-    if (fitted.shown === 0) continue;
+    if (fitted.shown === 0 && folder.recordings.length === 0) continue;
     sections.push(
       `#### ${link}`,
       '',
       ...renderPairs(pullRequestNumber, folder.path, fitted.layout.pairs),
       ...renderSingles(pullRequestNumber, folder.path, fitted.layout.singles),
+      ...renderRecordings(pullRequestNumber, folder.path, folder.recordings),
     );
   }
 
-  const summary =
-    shownTotal === imageTotal
-      ? `<sub>${plural(imageTotal, 'image')} from ${plural(folders.length, 'folder')}, newest folder first. The previews bucket deletes them 60 days after upload.</sub>`
-      : `<sub>${String(shownTotal)} of ${plural(imageTotal, 'image')} from ${plural(folders.length, 'folder')}, newest folder first. The previews bucket deletes them 60 days after upload.</sub>`;
+  const summary = `<sub>${describeMedia(shownTotal, imageTotal, recordingTotal)} from ${plural(folders.length, 'folder')}, newest folder first. The previews bucket deletes them 60 days after upload.</sub>`;
   const droppedSection =
     dropped.length === 0
       ? []
       : [
-          `**Not shown here**, to keep the comment readable: ${String(imageTotal - shownTotal)} images past the first ${String(imageLimit)}. Each folder link opens the full set.`,
+          `**Not shown here**, to keep the comment readable: ${plural(imageTotal - shownTotal, 'image')} past the first ${String(imageLimit)}. Each folder link opens the full set.`,
           '',
           ...dropped,
         ];
