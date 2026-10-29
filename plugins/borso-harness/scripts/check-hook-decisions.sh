@@ -134,6 +134,34 @@ run_case pretool-no-swallowed-push.sh allow command \
 run_case pretool-no-swallowed-push.sh allow command \
   'scripts/kaizen.sh "piping stryker run into head cut it short"'
 
+# --- pretool-no-sleep-polling.sh ------------------------------------------
+#
+# Refuses a wait spelled as a sleep of thirty seconds or more, and a loop that
+# sleeps between gh, git or curl calls: CI and reviews arrive as webhook events.
+# Must not refuse a short sleep, or a command that only names the long one.
+
+run_case pretool-no-sleep-polling.sh block command \
+  'sleep 90'
+run_case pretool-no-sleep-polling.sh block command \
+  'sleep 2m && gh pr checks 42'
+run_case pretool-no-sleep-polling.sh block command \
+  'until gh run view 123 --json status | grep -q completed; do sleep 10; done'
+run_case pretool-no-sleep-polling.sh block command \
+  'while true; do curl -s https://pragma.borso.fr/api/health && break; sleep 5; done'
+
+run_case pretool-no-sleep-polling.sh allow command \
+  'pnpm dev & sleep 3; curl -s localhost:5173'
+run_case pretool-no-sleep-polling.sh allow command \
+  'sleep 0.5'
+run_case pretool-no-sleep-polling.sh allow command \
+  'scripts/kaizen.sh "wrote a sleep 90 loop around gh pr checks"'
+run_case pretool-no-sleep-polling.sh allow command \
+  'git commit -F - <<MSG
+docs: why sleep 120 is refused
+
+while true; do gh pr checks; sleep 60; done waits on what a webhook delivers.
+MSG'
+
 # --- pretool-github-pr-body.sh --------------------------------------------
 #
 # Refuses body markup the GitHub MCP server strips on the way in. Must not
