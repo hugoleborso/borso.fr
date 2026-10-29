@@ -180,6 +180,18 @@ no layer at all.
 `apps/last-loop-lepin/site/src/observability/sentry.ts` is the one module that
 predates the suffix and has not been renamed.
 
+## Writes that answer one shared value run one at a time
+
+When several mutations each answer the same aggregate and write it into one
+key, the answer that arrives last wins, not the write that ran last. On PR #234
+the study log and undo both answered the member's flames. One tap on a
+two-part song sent two writes whose transactions missed each other, so a stale
+flame could land last. Give such mutations one `scope: { id }`, so TanStack
+Query sends each one only after the previous answer. The study writes in
+`apps/pragma/site/src/lib/queries/studies.queries.ts` and the entry removals in
+`setlist-entries.queries.ts` do this. A mutation that writes only its own
+entity's entry needs no scope.
+
 ## Enforced by
 
 - `oxlint:borso/no-vendor-sdk-outside-adapter` rejects an import of a reporting
@@ -207,5 +219,7 @@ predates the suffix and has not been renamed.
 - `reviewer` checks that a mutation whose full result the client already holds
   reconciles from the response rather than refetching, because an immediate read
   after a write can be served a pre-commit snapshot.
+- `reviewer` checks that mutations which write one shared aggregate from their
+  answers, such as a count or a streak, share a mutation `scope`.
 - `reviewer` checks that a form goes through `useForm` rather than a chain of
   `useState`, and that a grid goes through `useReactTable`.
