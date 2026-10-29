@@ -39,12 +39,12 @@ import {
   formatDuration,
   sumKnownDurations,
 } from '../molecules/song-duration.utils';
+import { joinSummaryItems } from '../molecules/summary-line.utils';
 import { restrictToVerticalAxis } from './setlist-editor.utils';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];
 const DRAG_ACTIVATION_DISTANCE_PX = 4;
 const POSITION_DIGITS = 2;
-const SUMMARY_SEPARATOR = ' · ';
 const TOTAL_DURATION_KEY = {
   minutes: 'home.totalMinutes',
   hoursMinutes: 'home.totalHoursMinutes',
@@ -85,14 +85,12 @@ export function SetlistOrderList({ rows, onReorder }: SetlistOrderListProps): JS
   const average = averageEnergy(bars);
   const totalSeconds = sumKnownDurations(rows.map((row) => row.durationSeconds));
   const total = totalSeconds === null ? null : describeTotalDuration(totalSeconds);
-  const summary = [
+  const summary = joinSummaryItems([
     average === null ? null : t('setlist.averageEnergy', { value: average }),
     total === null
       ? null
       : t(TOTAL_DURATION_KEY[total.kind], { hours: total.hours, minutes: total.minutes }),
-  ]
-    .filter((part) => part !== null)
-    .join(SUMMARY_SEPARATOR);
+  ]);
 
   const dropLiftedRow = (event: DragEndEvent): void => {
     setLift(null);

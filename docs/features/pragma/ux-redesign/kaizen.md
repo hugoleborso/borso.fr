@@ -201,3 +201,11 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [2026-10-29 10:27] `harness-repair` Input.synthesizeScrollGesture with gestureSourceType touch returns success but scrolls nothing in agent-browser's headless Chromium, so the harness scrolls with the mouse source instead (measured 0 px vs 299 px for 300).
 - [2026-10-29 10:41] `hook:no-discarding-reset` ran a discarding git command on a checkout the hook could not read
 - [2026-10-29 10:41] `harness-repair` pretool-no-discarding-reset fails on a plain 'git checkout -- <tracked file>' in the main checkout, even with git -C and a literal path, so restoring one file needs git show HEAD:path redirected.
+- [2026-10-29 10:52] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [2026-10-29 11:40] `demo-video` A local copy of prod data cannot sign in until app_config is seeded, and no script loads db-read.sh rows into a local database, so each demo or repro session rebuilds that loader by hand.
+- [2026-10-29 11:40] `demo-video` CDP screencast in headless Chromium ignores deviceScaleFactor and returns 390 px frames; only headful Chromium under Xvfb with --force-device-scale-factor gives sharp frames.
+- [2026-10-29 11:40] `demo-video` Stage views (/setlists/:id/scene, /catalog/:id/scene) do not pad env(safe-area-inset-top), so their header sits under the status bar and Dynamic Island in standalone mode.
+- [2026-10-29 11:40] `demo-video` On a practice's day the two bottom-strip pills (Lancer la répétition + Choisir les morceaux, and Morceau suivant + Enregistrer une prise in practice mode) overflow the 390 px screen in French.
+- [2026-10-29 11:57] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-10-29 12:31] `redesign-fixes` The design-token scan in design-tokens.utils.test.ts reads any string starting with from-/to-/via- as a gradient utility, so a cva option value like 'from-sm' fails a colour test with no hint that the scan matched a variant name.
+- [2026-10-29 12:31] `redesign-fixes` Measuring a safe-area fix needs a CDP Emulation.setSafeAreaInsetsOverride that agent-browser has no command for, so I wrote a throwaway script on the task-metrics CDP adapter, and its leftover emulation hung the next agent-browser navigation.

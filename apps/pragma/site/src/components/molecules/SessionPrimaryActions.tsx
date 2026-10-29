@@ -41,7 +41,12 @@ export function SessionPrimaryActions({
         </ButtonLink>
       )}
       {pills.chooseSongsVariant === null ? null : (
-        <Button icon="song" variant={pills.chooseSongsVariant} onClick={onChooseSongs}>
+        <Button
+          icon="song"
+          variant={pills.chooseSongsVariant}
+          labelDisplay={pills.chooseSongsVariant === 'secondary' ? 'wide-only' : 'always'}
+          onClick={onChooseSongs}
+        >
           {t('sessions.practiceSongs.choose')}
         </Button>
       )}
