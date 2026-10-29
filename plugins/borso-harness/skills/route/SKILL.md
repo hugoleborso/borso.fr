@@ -19,7 +19,7 @@ Answer all five. Answer them by **looking**, not by guessing: run the greps, ope
 
 | Axis | Question | How to answer it |
 | --- | --- | --- |
-| Blast radius | How many files, layers and applications? | `rg` for the symbol, list the folder, read the map for the application (`pnpm exec tsx scripts/architecture/architecture-graph.ts` writes it; the pages are generated, not committed) |
+| Blast radius | How many files, layers and applications? | `rg` for the symbol, list the folder. The architecture maps run on demand only, through the `architecture` workflow, so do not wait on them |
 | Decisions | Is anything genuinely open about what to build? | If you can name two defensible answers and the user has not picked, it is open |
 | Precedent | Does a blueprint already cover every layer this touches? | `.claude/skills/blueprint/blueprint-index.md`, after `scripts/reports.sh blueprints` |
 | Reversibility | Does it touch a schema, a shared construct, a secret, prod infrastructure? | A migration, `infra/shared/`, or anything in `docs/adr/`'s trigger list |
@@ -68,7 +68,7 @@ De-escalating is equally allowed and rarer. A Tier 2 whose spec resolves to "add
 Tier 3 means several agents in one checkout, and that has two failure modes this repository has already hit:
 
 - **One git index.** Agents share it. An agent that runs `git add` stages another's half-finished work, and the next commit ships it. Tell every agent: do not commit, do not stage. Collect and commit yourself — and while any agent is still running, stage explicit paths rather than `git add -A`, or you will sweep its half-written files into a commit about something else. That is the same failure from the dispatcher's side and it is the easier one to hit, because `git add -A` is the reflex.
-- **Whole-repository generators.** `blueprint-indexing.ts`, `blueprint-heatmap.ts`, `architecture-graph.ts` and `enforcement-ledger.ts` all read the entire tree and all have a `--check` gate. An agent regenerating one of them bakes in every other agent's uncommitted work. Regenerate them once, yourself, after the agents are done.
+- **Whole-repository generators.** `blueprint-indexing.ts`, `blueprint-heatmap.ts` and `enforcement-ledger.ts` all read the entire tree and all have a `--check` gate. An agent regenerating one of them bakes in every other agent's uncommitted work. Regenerate them once, yourself, after the agents are done.
 
 When agents genuinely need to build in parallel without seeing each other, give them `isolation: "worktree"` instead of a shared checkout.
 

@@ -214,7 +214,7 @@ numbered standard or the commit hook. Cost is the product, not either factor.
 | Blueprint defects | when source or a dantotsu changes | `ci.yml` |
 | Dantotsu front matter, weak points, working conditions | when the record changes or a path is removed; the front matter of the staged entries only | `ci.yml` |
 | Enforcement ledger | when a standard or a mechanism changes, a workflow included, since it reads which mechanisms each one runs | `ci.yml` |
-| Architecture maps | not run | `ci.yml` and `architecture.yml` only: 196 s is past the push budget too |
+| Architecture maps | not run | not run: on demand only, by dispatching `architecture.yml` |
 | Every test is collected | not run | pre-push for the workspaces whose tests or config change; `ci.yml` |
 | Hook decisions | not run | pre-push when a hook changes; `ci.yml` |
 | Doc links | staged documents, and every document naming a removed path | `ci.yml`, after the generators run |

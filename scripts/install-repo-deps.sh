@@ -266,8 +266,9 @@ fi
 # hook is best-effort by contract and exits 0 when its lookup is missing, so a
 # race would not break a write — it would silently write a file with no
 # blueprint in front of it, which is worse than a failure because nothing says
-# it happened. Four seconds at session start buys that away; the maps take
-# fourteen and nothing in the first turn reads them.
+# it happened. Four seconds at session start buys that away. The architecture
+# maps are not built here: they run on demand, through `scripts/reports.sh
+# maps` or the `architecture` workflow.
 #
 # A session is not the only reader. A subagent given its own worktree never
 # runs this hook at all, which is why every skill that opens one of these files
@@ -275,10 +276,9 @@ fi
 log 'generating the lookups an agent reads before its first write'
 "$REPO_ROOT/scripts/reports.sh" blueprints >/dev/null 2>&1 || true
 
-log 'generating the reports and the maps in the background'
+log 'generating the reports in the background'
 (
   "$REPO_ROOT/scripts/reports.sh" standards >/dev/null 2>&1 || true
-  "$REPO_ROOT/scripts/reports.sh" maps >/dev/null 2>&1 || true
 ) &
 
 if [ ${#missing_optional[@]} -gt 0 ]; then

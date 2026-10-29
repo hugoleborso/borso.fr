@@ -84,12 +84,18 @@ function readHeadRevision(): string {
 
 const commitWindow = readCommitWindow();
 const commits = readCommits(commitWindow);
-const reachable = buildReachability(readGraphFiles());
+const graphFiles = readGraphFiles();
+const reachable = buildReachability(graphFiles);
 const partitioned = partitionByConnection(rankCoupledPairs(commits, OPTIONS), reachable);
 
 writeFileSync(
   REPORT_PATH,
-  renderCouplingReport({ ...partitioned, commitWindow, headRevision: readHeadRevision() }),
+  renderCouplingReport({
+    ...partitioned,
+    commitWindow,
+    headRevision: readHeadRevision(),
+    isGraphRead: graphFiles.length > 0,
+  }),
 );
 console.log(
   `Wrote docs/standards/temporal-coupling.md: ${String(partitioned.hidden.length)} unconnected, ${String(partitioned.connected.length)} connected and ${String(partitioned.uncovered.length)} unmodelled pair(s) from ${String(commits.length)} commit(s).`,

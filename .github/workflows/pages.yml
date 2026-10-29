@@ -1,5 +1,5 @@
-# Publishes the architecture maps and every generated report to GitHub Pages,
-# so a link opens them instead of a download of a workflow artifact.
+# Publishes every generated report to GitHub Pages, and the architecture maps
+# when asked, so a link opens them instead of a download of a workflow artifact.
 #
 # None of these files is in git, so this is the address they have. A report
 # nobody can reach is a report nobody reads, and the alternative — committing
@@ -9,11 +9,13 @@
 # This needs one repository setting the workflow cannot make or read: Settings →
 # Pages → Build and deployment → Source must be "GitHub Actions". Until that is
 # set, this workflow fails on the deploy step with a 404 and nothing else
-# breaks; the maps still upload as an artifact on every pull request.
+# breaks.
 #
-# The maps are not committed, so this triggers on what they are derived from
-# rather than on the pages themselves. `docs/standards/**` is in the list
-# because the Standards tab carries each document's history.
+# The maps build only with `maps: true`, which the `architecture` workflow
+# passes when dispatched without a pull request. Pages replaces the whole site
+# on each deploy, so a push to main after that publishes the reports without
+# the maps. `docs/standards/**` is in the paths because the Standards tab
+# carries each document's history.
 
 name: pages
 
@@ -22,7 +24,6 @@ on:
     branches: [main]
     paths:
       - 'apps/**'
-      - 'scripts/architecture/**'
       - 'docs/standards/**'
       - 'docs/dantotsus/**'
       - 'docs/quality/**'
@@ -31,6 +32,18 @@ on:
       - '.claude/skills/blueprint/blueprint-utils.ts'
       - '.github/workflows/pages.yml'
   workflow_dispatch:
+    inputs:
+      maps:
+        description: 'Build and publish the architecture maps too.'
+        required: false
+        default: false
+        type: boolean
+  workflow_call:
+    inputs:
+      maps:
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: pages
@@ -64,14 +77,14 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # The only copy there is. Nothing publishes a file from the commit, so a
-      # stale page cannot exist to be published.
+      # Before the reports, because `temporal-coupling.ts` reads the models.
       - name: Build the maps
+        if: inputs.maps
         run: pnpm exec tsx scripts/architecture/architecture-graph.ts
 
-      # The reports land beside the maps, under `reports/`, because the maps
-      # already own `docs/architecture/` and `upload-pages-artifact` takes one
-      # path. The blueprint heatmap is HTML and opens as a page; the rest are
+      # The reports land under `docs/architecture/reports/`, beside the maps
+      # when they are built, because `upload-pages-artifact` takes one path.
+      # The blueprint heatmap is HTML and opens as a page; the rest are
       # markdown, which Pages serves as plain text — enough to read on a phone,
       # which is more than a file that exists nowhere.
       - name: Build the reports

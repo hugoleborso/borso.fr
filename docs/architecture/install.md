@@ -111,12 +111,12 @@ next agent from writing `helpers.ts` is the layer below it.
 
 | Convention | What holds it |
 | ---------- | ------------- |
-| Every file resolves to a layer | `architecture-graph.ts --check` in pre-commit and in CI, which regenerates and fails on any byte of drift |
+| Every file resolves to a layer | The `layer-marker:<app>` budget in `docs/standards/convention-baseline.json`, which `convention-drift.ts --check` holds in pre-commit and in CI |
 | Pure modules are `*.core.ts` / `*.utils.ts` | The 100% coverage gate keyed on those suffixes: naming a file `.utils.ts` opts it into a threshold, so the name is load-bearing rather than decorative |
 | Controllers stay dispatchers | [`docs/standards/`](../standards/README.md), read by the `/code-standards` skill before any change in `apps/` |
 | A pattern is copied rather than reinvented | The blueprint annotations, with `blueprint-indexing.ts --check` and `blueprint-heatmap.ts --check` in pre-commit |
-| The map matches the code | `architecture-graph.ts --check`, plus the pull-request comment saying what moved |
-| Externals are declared once | The two-way manifest cross-check above |
+| The map matches the code | Nothing automatic. The maps are built on demand, by dispatching the `architecture` workflow, and that run posts the comment saying what moved |
+| Externals are declared once | The two-way manifest cross-check above, which runs only when someone builds the maps |
 | An outbound call is where the map can see it | `borso/no-outbound-call-outside-adapter`, which rejects a `fetch` or an AWS SDK client outside a `<domain>.adapter.ts` |
 | No rule is disabled quietly | `eslint-comments/require-description` plus `reportUnusedDisableDirectives`, and the disable count printed on the block itself |
 
@@ -139,4 +139,5 @@ deliberate: an unknown suffix should be a decision, not a silent new category.
    register.
 4. Tag whatever reaches outside with `@DependsOnExternal`, and declare each one
    in the manifest.
-5. Regenerate, commit the page, and let `--check` keep it honest from there.
+5. Run `--check` before merging. Nothing runs it for you: the maps are built
+   on demand only, from the `architecture` workflow.

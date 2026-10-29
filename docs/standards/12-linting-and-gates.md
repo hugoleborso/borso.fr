@@ -467,10 +467,9 @@ review.
   `eslint-comments/require-description` is not the rule's identifier, and this
   document cited it for months.
 - `script:scripts/check-coupled-lists.sh` fails when two copies of one list
-  disagree — the architecture generator's trigger paths in the commit hook and
-  in its workflow, and the gated file suffixes in `eslint-rules/impurity.js` and
-  in every `vitest.config.ts`. Neither half is wrong on its own, which is why a
-  reviewer reads past both.
+  disagree — among them the gated file suffixes in `eslint-rules/impurity.js`
+  and in every `vitest.config.ts`. Neither half is wrong on its own, which is
+  why a reviewer reads past both.
 - `script:scripts/check-dated-records-are-append-only.sh` fails a change that
   edits or deletes a file under `docs/**/validation/` or
   `docs/standards/reviews/`. Those are dated records of what a validator saw and

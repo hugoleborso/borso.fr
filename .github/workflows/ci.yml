@@ -83,8 +83,7 @@ jobs:
             scripts/standards/temporal-coupling.ts \
             scripts/standards/enforcement-ledger.ts \
             scripts/quality/weak-points.ts \
-            scripts/quality/working-conditions.ts \
-            scripts/architecture/architecture-graph.ts; do
+            scripts/quality/working-conditions.ts; do
             pnpm exec tsx "$generator"
           done
           python3 plugins/borso-harness/scripts/knowledge-triggers.py compile
@@ -236,11 +235,6 @@ jobs:
       # runs it only when a standard or one of those mechanisms is staged,
       # because it takes about seven seconds.
       - run: pnpm exec tsx scripts/standards/enforcement-ledger.ts --check
-      # The architecture pages, mirroring the pre-commit hook, which was the
-      # only place they were checked. The generator derives each graph from
-      # paths, imports and the Hono call chain, so a stale page is a diagram
-      # that lies, and a diagram that lies survives a bypassed hook forever.
-      - run: pnpm exec tsx scripts/architecture/architecture-graph.ts --check
       - run: pnpm --filter @borso/infra test:coverage
       - run: pnpm --filter @borso/shared-infra test:coverage
       - run: pnpm -r build

@@ -27,8 +27,8 @@ fail() {
 # 1. The architecture generator's trigger paths used to be checked here, against
 # the list `.husky/pre-commit` matched before running it. The generator no longer
 # runs on the commit: it measured over three minutes, past every local budget in
-# docs/standards/14-tool-runtime-budgets.md, and ci.yml runs it on every pull
-# request whatever the paths. With one list left, there is no pair to compare.
+# docs/standards/14-tool-runtime-budgets.md, and it now runs only on demand,
+# from the `architecture` workflow. There is no pair left to compare.
 
 # 2. The suffixes the coverage gate and the sibling-test rule both name.
 #
