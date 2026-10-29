@@ -3,7 +3,7 @@
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { inferLayer } from '../../.claude/skills/blueprint/blueprint-utils.js';
-import { REPOSITORY_ROOT, readTrackedPaths, readDantotsuCorpus } from './dantotsu-corpus';
+import { REPOSITORY_ROOT, readDantotsuCorpus, readPathsEverTracked } from './dantotsu-corpus';
 import { renderWeakPointPage, type PlacedDot } from './weak-points-page.core';
 import {
   countWeeklyOccurrences,
@@ -49,13 +49,14 @@ function main(): void {
     }),
     'utf8',
   );
-  const problems = selectUnresolvedReferences(dots, readTrackedPaths(), engaged);
+  const problems = selectUnresolvedReferences(dots, readPathsEverTracked(), engaged);
   for (const problem of problems) process.stderr.write(`  ${problem}\n`);
   if (problems.length > 0) {
     process.stderr.write(
       '\nA zone places a defect on the map and a weak point counts it; one that names ' +
         'nothing drops the dot without a word. Point the zone at the path where the ' +
-        'defect lived, or list the weak point in docs/quality/weak-points.md.\n',
+        'defect lived, even one deleted since, or list the weak point in ' +
+        'docs/quality/weak-points.md.\n',
     );
     process.exitCode = 1;
     return;
