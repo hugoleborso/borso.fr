@@ -114,10 +114,11 @@ while IFS= read -r segment; do
 
   # Only tracked modifications are at stake. An untracked file survives all
   # three commands, and a staged-only change is recoverable from the index.
-  set +e
-  git -C "$TARGET_DIRECTORY" diff --quiet 2>/dev/null
-  DIFF_STATUS=$?
-  set -e
+  # `|| DIFF_STATUS=$?` keeps exit 1, the answer "there are changes", away
+  # from the ERR trap. `set +e` did not: the trap fires on any failing simple
+  # command, so every dirty tree read as an unreadable checkout.
+  DIFF_STATUS=0
+  git -C "$TARGET_DIRECTORY" diff --quiet 2>/dev/null || DIFF_STATUS=$?
   if [[ "$DIFF_STATUS" -eq 0 ]]; then
     continue
   fi
@@ -128,7 +129,7 @@ while IFS= read -r segment; do
   echo "[no-discarding-reset] \`$segment\` discards tracked changes that are not committed in $TARGET_DIRECTORY:" >&2
   git -C "$TARGET_DIRECTORY" diff --name-only | sed 's/^/[no-discarding-reset]     /' >&2
   echo "[no-discarding-reset] Commit them first — a commit is cheap and amendable:" >&2
-  echo "[no-discarding-reset]   git add -A && git commit -m 'wip'   …   git reset --soft HEAD~1" >&2
+  echo "[no-discarding-reset]   git add <those paths> && git commit -m 'wip'   …   git reset --soft HEAD~1" >&2
   echo "[no-discarding-reset] Or park them where the command cannot reach:" >&2
   echo "[no-discarding-reset]   git stash push -u -m 'before the probe'" >&2
   "$(dirname "$0")/kaizen-refusal.sh" no-discarding-reset "ran a git command that would discard uncommitted work"

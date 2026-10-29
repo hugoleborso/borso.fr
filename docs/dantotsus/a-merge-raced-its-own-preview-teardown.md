@@ -7,7 +7,7 @@ related-pr: '#231'
 fix-pr: none (opened by the kaizen pull request for #216 and #231)
 fix-commits: [self]
 eradication-level: 1
-eradication-paths: [infra/cdk/src/internal/migration-runner/concurrency-retry.utils.ts, infra/cdk/src/internal/migration-runner/index.ts]
+eradication-paths: [infra/cdk/src/internal/migration-runner/concurrency-retry.utils.ts, infra/cdk/src/internal/migration-runner/concurrency-retry.ts, infra/cdk/src/internal/migration-runner/index.ts]
 time-to-detect: minutes
 tags: [dsql, cdk, preview, deploy, github-actions]
 zone: infra/cdk/src/internal/migration-runner/index.ts
@@ -68,7 +68,7 @@ actually it can lose a race and must be retried.
 **Reference:** the kaizen pull request for #216 and #231 · this commit
 
 **The actual fix:** the handler runs each request through
-`runRetryingConcurrencyConflicts`. `concurrency-retry.utils.ts` reads OC000,
+`runRetryingConcurrencyConflicts` in `concurrency-retry.ts`. `concurrency-retry.utils.ts` reads OC000,
 OC001 and 40001, from the code or from the `(OC00x)` DSQL puts in the message,
 and retries up to five attempts, 2, 4, 8 then 16 s apart, inside the 300 s
 runner timeout. Create, Update and Delete are idempotent, so running one again
