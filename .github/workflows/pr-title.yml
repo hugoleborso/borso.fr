@@ -1,0 +1,45 @@
+# The pull request title is the squash commit's title on main.
+#
+# The repository squashes with COMMIT_OR_PR_TITLE, so a pull request of more
+# than one commit lands on main under its title. `ci.yml`'s commitlint job reads
+# the branch's commits and never the title. PR #224 was titled "Cut the cost of a
+# feature: ..." with no type, and the merge typed "meta:" in front of it, a scope
+# that is not a conventional-commit type. Nothing refused either.
+# See docs/dantotsus/the-title-that-became-a-commit-unlinted.md.
+#
+# `edited` reruns this job alone when someone retitles the pull request, which
+# `ci.yml` does not listen for.
+
+name: pr-title
+
+on:
+  pull_request:
+    types: [opened, edited, reopened, synchronize]
+
+concurrency:
+  group: pr-title-${{ github.event.pull_request.number }}
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+env:
+  FORCE_JAVASCRIPT_ACTIONS_TO_NODE24: 'true'
+
+jobs:
+  commitlint-title:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      # The title goes through env, never into the script text, so a title
+      # cannot inject shell.
+      - env:
+          TITLE: ${{ github.event.pull_request.title }}
+        run: printf '%s\n' "$TITLE" | pnpm exec commitlint --verbose
