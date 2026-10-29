@@ -426,7 +426,9 @@
       "needsReconnecting": "L’agenda de {{name}} est à reconnecter",
       "unavailable": "L’agenda de {{name}} est indisponible pour l’instant",
       "needsReconnectingNamed": "L’agenda {{calendar}} de {{name}} est à reconnecter",
-      "unavailableNamed": "L’agenda {{calendar}} de {{name}} est indisponible pour l’instant"
+      "unavailableNamed": "L’agenda {{calendar}} de {{name}} est indisponible pour l’instant",
+      "needsReconnectingNumbered": "L’agenda {{position}} de {{name}} est à reconnecter",
+      "unavailableNumbered": "L’agenda {{position}} de {{name}} est indisponible pour l’instant"
     },
     "pageTitle": "Trouver un créneau",
     "open": "Trouver un créneau",

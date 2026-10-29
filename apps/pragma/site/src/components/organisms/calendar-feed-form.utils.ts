@@ -25,3 +25,9 @@ export function selectCalendarFeedErrorKey(
 ): 'account.calendarFeedsFull' | 'account.calendarFeedInvalid' {
   return status === CONFLICT_STATUS ? 'account.calendarFeedsFull' : 'account.calendarFeedInvalid';
 }
+
+export type CalendarFeedSaveOutcome = 'saved' | 'refused';
+
+export function isAddressFieldKeptOpen(outcome: CalendarFeedSaveOutcome): boolean {
+  return outcome === 'refused';
+}

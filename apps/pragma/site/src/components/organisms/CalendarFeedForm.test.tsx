@@ -12,7 +12,7 @@ const SECRET_ADDRESS = 'https://calendar.google.com/calendar/ical/ada/private-ab
 
 interface RenderOptions {
   readonly feeds?: readonly { readonly id: string; readonly name: string | null }[];
-  readonly onSave?: (address: string) => Promise<void>;
+  readonly onSave?: (address: string) => Promise<'saved' | 'refused'>;
   readonly onRemove?: (feedId: string) => void;
 }
 
@@ -23,7 +23,7 @@ function renderForm(options: RenderOptions = {}): void {
       message={null}
       error={null}
       isRemoving={false}
-      onSave={options.onSave ?? (async () => undefined)}
+      onSave={options.onSave ?? (async () => await Promise.resolve('saved' as const))}
       onRemove={options.onRemove ?? (() => undefined)}
     />,
   );
@@ -63,7 +63,7 @@ describe('CalendarFeedForm', () => {
 
   it('pastes the copied address and saves it in one tap', async () => {
     readTextFromClipboard.mockResolvedValue(`  ${SECRET_ADDRESS}\n`);
-    const onSave = vi.fn(async () => undefined);
+    const onSave = vi.fn(async () => await Promise.resolve('saved' as const));
     renderForm({ onSave });
 
     fireEvent.click(screen.getByRole('button', { name: 'Paste and connect' }));
@@ -73,7 +73,7 @@ describe('CalendarFeedForm', () => {
 
   it('says to paste by hand when the clipboard cannot be read', async () => {
     readTextFromClipboard.mockResolvedValue(null);
-    const onSave = vi.fn(async () => undefined);
+    const onSave = vi.fn(async () => await Promise.resolve('saved' as const));
     renderForm({ onSave });
 
     fireEvent.click(screen.getByRole('button', { name: 'Paste and connect' }));
@@ -91,7 +91,7 @@ describe('CalendarFeedForm', () => {
   });
 
   it('opens the address field to add one more calendar', async () => {
-    const onSave = vi.fn(async () => undefined);
+    const onSave = vi.fn(async () => await Promise.resolve('saved' as const));
     renderForm({ feeds: TWO_FEEDS, onSave });
 
     fireEvent.click(screen.getByRole('button', { name: 'Add a calendar' }));
@@ -118,5 +118,19 @@ describe('CalendarFeedForm', () => {
     fireEvent.click(confirm);
 
     expect(onRemove).toHaveBeenCalledWith('feed-work');
+  });
+
+  it('keeps the field and what was typed when the address is refused', async () => {
+    const onSave = vi.fn(async () => await Promise.resolve('refused' as const));
+    renderForm({ feeds: TWO_FEEDS, onSave });
+
+    fireEvent.click(screen.getByRole('button', { name: 'Add a calendar' }));
+    fireEvent.change(screen.getByLabelText('Secret iCal address'), {
+      target: { value: 'ftp://nope' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Save' }));
+
+    await waitFor(() => expect(onSave).toHaveBeenCalledWith('ftp://nope'));
+    expect(screen.getByLabelText<HTMLInputElement>('Secret iCal address').value).toBe('ftp://nope');
   });
 });

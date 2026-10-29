@@ -30,14 +30,14 @@ describe('nameExclusions', () => {
     expect(
       nameExclusions(
         [
-          { memberId: 'a', reason: 'no-calendar', calendarName: null },
-          { memberId: 'gone', reason: 'unavailable', calendarName: 'Work' },
+          { memberId: 'a', reason: 'no-calendar', calendarName: null, calendarPosition: null },
+          { memberId: 'gone', reason: 'unavailable', calendarName: 'Work', calendarPosition: 2 },
         ],
         [{ id: 'a', firstName: 'Léa' }],
       ),
     ).toStrictEqual([
-      { firstName: 'Léa', reason: 'no-calendar', calendarName: null },
-      { firstName: '—', reason: 'unavailable', calendarName: 'Work' },
+      { firstName: 'Léa', reason: 'no-calendar', calendarName: null, calendarPosition: null },
+      { firstName: '—', reason: 'unavailable', calendarName: 'Work', calendarPosition: 2 },
     ]);
   });
 });
@@ -45,23 +45,41 @@ describe('nameExclusions', () => {
 describe('selectExclusionMessageKey', () => {
   it('names the calendar that failed when its feed declared a name', () => {
     expect(
-      selectExclusionMessageKey({ firstName: 'Léa', reason: 'unavailable', calendarName: 'Work' }),
+      selectExclusionMessageKey({
+        firstName: 'Léa',
+        reason: 'unavailable',
+        calendarName: 'Work',
+        calendarPosition: 1,
+      }),
     ).toBe('freeSlots.excluded.unavailableNamed');
     expect(
       selectExclusionMessageKey({
         firstName: 'Léa',
         reason: 'needs-reconnecting',
         calendarName: 'Work',
+        calendarPosition: 1,
       }),
     ).toBe('freeSlots.excluded.needsReconnectingNamed');
   });
 
-  it('falls back to the member alone when the calendar has no name', () => {
+  it('numbers a failing calendar with no name the way the Account page does', () => {
+    const unnamed = { firstName: 'Léa', calendarName: null, calendarPosition: 2 };
+    expect(selectExclusionMessageKey({ ...unnamed, reason: 'unavailable' })).toBe(
+      'freeSlots.excluded.unavailableNumbered',
+    );
+    expect(selectExclusionMessageKey({ ...unnamed, reason: 'needs-reconnecting' })).toBe(
+      'freeSlots.excluded.needsReconnectingNumbered',
+    );
+  });
+
+  it('names the member alone when there is no calendar to name', () => {
     expect(
-      selectExclusionMessageKey({ firstName: 'Léa', reason: 'unavailable', calendarName: null }),
-    ).toBe('freeSlots.excluded.unavailable');
-    expect(
-      selectExclusionMessageKey({ firstName: 'Léa', reason: 'no-calendar', calendarName: null }),
+      selectExclusionMessageKey({
+        firstName: 'Léa',
+        reason: 'no-calendar',
+        calendarName: null,
+        calendarPosition: null,
+      }),
     ).toBe('freeSlots.excluded.noCalendar');
   });
 });

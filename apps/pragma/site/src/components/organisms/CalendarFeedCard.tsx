@@ -39,11 +39,13 @@ export function CalendarFeedCard(): JSX.Element {
           try {
             await addCalendarFeed.mutateAsync({ address });
             setCalendarFeedMessage(t('account.calendarFeedSaved'));
+            return 'saved';
           } catch (error) {
             const status = error instanceof ApiError ? error.status : null;
             setCalendarFeedError(
               t(selectCalendarFeedErrorKey(status), { count: CALENDAR_FEEDS_PER_MEMBER_MAX }),
             );
+            return 'refused';
           }
         }}
         onRemove={(feedId) => {

@@ -426,7 +426,9 @@
       "needsReconnecting": "{{name}}'s calendar needs reconnecting",
       "unavailable": "{{name}}'s calendar is unavailable right now",
       "needsReconnectingNamed": "{{name}}'s calendar {{calendar}} needs reconnecting",
-      "unavailableNamed": "{{name}}'s calendar {{calendar}} is unavailable right now"
+      "unavailableNamed": "{{name}}'s calendar {{calendar}} is unavailable right now",
+      "needsReconnectingNumbered": "{{name}}'s calendar {{position}} needs reconnecting",
+      "unavailableNumbered": "{{name}}'s calendar {{position}} is unavailable right now"
     },
     "pageTitle": "Find a slot",
     "open": "Find a slot",

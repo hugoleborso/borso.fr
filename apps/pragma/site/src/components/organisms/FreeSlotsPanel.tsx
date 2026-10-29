@@ -43,6 +43,7 @@ function ExclusionList({ exclusions }: Pick<ViewProps, 'exclusions'>): JSX.Eleme
           {t(selectExclusionMessageKey(exclusion), {
             name: exclusion.firstName,
             calendar: exclusion.calendarName,
+            position: exclusion.calendarPosition,
           })}
         </li>
       ))}

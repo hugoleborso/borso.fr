@@ -7,7 +7,12 @@ type BusyTimeOutcome =
       readonly kind: 'read';
       readonly intervals: readonly BusyInterval[];
     }
-  | { readonly memberId: string; readonly kind: FeedFailure; readonly calendarName: string | null };
+  | {
+      readonly memberId: string;
+      readonly kind: FeedFailure;
+      readonly calendarName: string | null;
+      readonly calendarPosition: number;
+    };
 
 // @FollowsBlueprint core-decision
 export function selectExcludedMembers(
@@ -16,11 +21,20 @@ export function selectExcludedMembers(
 ): ExcludedMember[] {
   return memberIds.flatMap((memberId): ExcludedMember[] => {
     const outcomes = busyTimes.filter((busyTime) => busyTime.memberId === memberId);
-    if (outcomes.length === 0) return [{ memberId, reason: 'no-calendar', calendarName: null }];
+    if (outcomes.length === 0) {
+      return [{ memberId, reason: 'no-calendar', calendarName: null, calendarPosition: null }];
+    }
     return outcomes.flatMap((outcome): ExcludedMember[] =>
       outcome.kind === 'read'
         ? []
-        : [{ memberId, reason: outcome.kind, calendarName: outcome.calendarName }],
+        : [
+            {
+              memberId,
+              reason: outcome.kind,
+              calendarName: outcome.calendarName,
+              calendarPosition: outcome.calendarPosition,
+            },
+          ],
     );
   });
 }

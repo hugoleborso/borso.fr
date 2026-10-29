@@ -7,13 +7,9 @@ import {
   listStoredCalendarFeeds,
   upsertCalendarFeed,
 } from './calendar-feeds.repository';
-import type {
-  BusyInterval,
-  CalendarFeedSummary,
-  FeedFailure,
-  StoredCalendarFeed,
-} from './calendar-feeds.types';
+import type { BusyInterval, CalendarFeedSummary, FeedFailure } from './calendar-feeds.types';
 import { judgeFeedAddress } from './feed-address.core';
+import { numberFeedsOfEachMember, type PositionedCalendarFeed } from './feed-position.core';
 import { readBusyIntervals, readCalendarName } from './ics.core';
 
 export type SaveCalendarFeedOutcome =
@@ -32,6 +28,7 @@ export type FeedBusyTime =
       readonly memberId: string;
       readonly kind: FeedFailure;
       readonly calendarName: string | null;
+      readonly calendarPosition: number;
     };
 
 interface ReadRange {
@@ -80,18 +77,23 @@ const FAILURE_EVENT_BY_KIND: Readonly<Record<FeedFailure, string>> = {
 };
 
 function reportFeedFailure(
-  feed: StoredCalendarFeed,
+  feed: PositionedCalendarFeed,
   kind: FeedFailure,
   status: number | null,
 ): FeedBusyTime {
   console.warn(
     JSON.stringify({ event: FAILURE_EVENT_BY_KIND[kind], memberId: feed.memberId, status }),
   );
-  return { memberId: feed.memberId, kind, calendarName: feed.name };
+  return {
+    memberId: feed.memberId,
+    kind,
+    calendarName: feed.name,
+    calendarPosition: feed.position,
+  };
 }
 
 async function readBusyTimeOfOneFeed(
-  feed: StoredCalendarFeed,
+  feed: PositionedCalendarFeed,
   range: ReadRange,
 ): Promise<FeedBusyTime> {
   const read = await readCalendarFeed(feed.address);
@@ -102,7 +104,7 @@ async function readBusyTimeOfOneFeed(
 }
 
 export async function readBusyTimeOfEveryFeed(range: ReadRange): Promise<FeedBusyTime[]> {
-  const feeds = await listStoredCalendarFeeds();
+  const feeds = numberFeedsOfEachMember(await listStoredCalendarFeeds());
   return await Promise.all(feeds.map((feed) => readBusyTimeOfOneFeed(feed, range)));
 }
 

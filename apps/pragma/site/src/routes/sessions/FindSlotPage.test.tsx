@@ -29,7 +29,14 @@ function answerApi(request: Request): Response {
   if (pathname === '/api/free-slots') {
     return jsonResponse({
       slots: SLOTS,
-      excludedMembers: [{ memberId: 'member-bo', reason: 'no-calendar', calendarName: null }],
+      excludedMembers: [
+        {
+          memberId: 'member-bo',
+          reason: 'no-calendar',
+          calendarName: null,
+          calendarPosition: null,
+        },
+      ],
     });
   }
   if (pathname === '/api/members') return jsonResponse({ members: MEMBERS });

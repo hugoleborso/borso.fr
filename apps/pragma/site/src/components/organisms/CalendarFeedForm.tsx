@@ -13,7 +13,12 @@ import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import type { CalendarFeedSummary } from '../../lib/queries/me.queries';
-import { type CalendarFeedFormMode, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
+import {
+  type CalendarFeedFormMode,
+  type CalendarFeedSaveOutcome,
+  isAddressFieldKeptOpen,
+  selectCalendarFeedFormMode,
+} from './calendar-feed-form.utils';
 
 const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
@@ -22,7 +27,7 @@ export interface CalendarFeedFormProps {
   readonly message: string | null;
   readonly error: string | null;
   readonly isRemoving: boolean;
-  readonly onSave: (address: string) => Promise<void>;
+  readonly onSave: (address: string) => Promise<CalendarFeedSaveOutcome>;
   readonly onRemove: (feedId: string) => void;
 }
 
@@ -46,7 +51,7 @@ function CalendarFeedList({
         <li key={feed.id} className="flex items-center justify-between gap-3">
           <span className="flex min-w-0 items-center gap-2 text-ink">
             <Icon name="calendar" size="md" />
-            <span className="truncate">{labelOf(feed)}</span>
+            <span className="min-w-0 break-words">{labelOf(feed)}</span>
           </span>
           <Button
             icon="trash"
@@ -164,8 +169,8 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
   const [isAdding, setIsAdding] = useState(false);
   const [feedToRemove, setFeedToRemove] = useState<CalendarFeedSummary | null>(null);
   const saveAndClose = async (address: string): Promise<void> => {
-    await props.onSave(address);
-    setIsAdding(false);
+    const outcome = await props.onSave(address);
+    setIsAdding(isAddressFieldKeptOpen(outcome));
   };
   const mode = selectCalendarFeedFormMode(props.feeds.length, isAdding);
   const labelOf = (feed: CalendarFeedSummary): string =>

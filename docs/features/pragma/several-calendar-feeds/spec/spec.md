@@ -49,7 +49,10 @@ instead of one, each named from its feed.
   before. With no calendar, the field shows directly. At 10 calendars the
   button is replaced by a sentence saying the cap is reached.
 - Find a slot names the failing calendar: "Hugo's calendar Work needs
-  reconnecting".
+  reconnecting". A failing calendar with no name is numbered as Account
+  numbers it: "Hugo's calendar 2 needs reconnecting".
+- A refused address keeps the field open with what was typed.
+- A long name wraps at 375 px rather than being cut.
 
 ## Out of scope
 

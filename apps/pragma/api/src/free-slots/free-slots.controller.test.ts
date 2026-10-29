@@ -26,7 +26,12 @@ const calendarFeedsSchema = z.object({
 const freeSlotsSchema = z.object({
   slots: z.array(z.object({ start: z.string(), end: z.string() })),
   excludedMembers: z.array(
-    z.object({ memberId: z.string(), reason: z.string(), calendarName: z.string().nullable() }),
+    z.object({
+      memberId: z.string(),
+      reason: z.string(),
+      calendarName: z.string().nullable(),
+      calendarPosition: z.number().nullable(),
+    }),
   ),
 });
 
@@ -329,7 +334,7 @@ describe('calendar feeds and free slots (back-e2e)', () => {
       freeSlotsSchema,
     );
     expect(freeSlots.excludedMembers).toStrictEqual([
-      { memberId, reason: 'no-calendar', calendarName: null },
+      { memberId, reason: 'no-calendar', calendarName: null, calendarPosition: null },
     ]);
   });
 
@@ -390,9 +395,40 @@ describe('calendar feeds and free slots (back-e2e)', () => {
     );
     expect(freeSlots.excludedMembers).toStrictEqual(
       expect.arrayContaining([
-        { memberId: first.memberId, reason: 'needs-reconnecting', calendarName: 'Work' },
-        { memberId: second.memberId, reason: 'unavailable', calendarName: 'Band' },
+        {
+          memberId: first.memberId,
+          reason: 'needs-reconnecting',
+          calendarName: 'Work',
+          calendarPosition: 1,
+        },
+        {
+          memberId: second.memberId,
+          reason: 'unavailable',
+          calendarName: 'Band',
+          calendarPosition: 1,
+        },
       ]),
     );
+  });
+
+  it('numbers a failing calendar with no name by its place in the member’s list', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    for (const address of [SECRET_ADDRESS, 'https://calendar.example.com/zz-unnamed.ics']) {
+      await postFeed(app, cookieHeader, address);
+    }
+    vi.spyOn(globalThis, 'fetch').mockImplementation((input) =>
+      Promise.resolve(
+        new Response(null, { status: new Request(input).url.includes('unnamed') ? 503 : 404 }),
+      ),
+    );
+    vi.spyOn(console, 'warn').mockImplementation(() => undefined);
+    const freeSlots = await readJson(
+      await jsonRequest(app, '/api/free-slots', { cookieHeader }),
+      freeSlotsSchema,
+    );
+    expect(freeSlots.excludedMembers).toStrictEqual([
+      { memberId, reason: 'needs-reconnecting', calendarName: 'Work', calendarPosition: 1 },
+      { memberId, reason: 'unavailable', calendarName: null, calendarPosition: 2 },
+    ]);
   });
 });

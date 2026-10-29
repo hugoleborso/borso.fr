@@ -77,7 +77,12 @@ export async function listStoredCalendarFeeds(): Promise<StoredCalendarFeed[]> {
       address: calendarFeedTable.address,
       name: calendarFeedTable.name,
     })
-    .from(calendarFeedTable);
+    .from(calendarFeedTable)
+    .orderBy(
+      asc(calendarFeedTable.memberId),
+      asc(calendarFeedTable.name),
+      asc(calendarFeedTable.id),
+    );
 }
 
 export async function deleteCalendarFeed(memberId: string, feedId: string): Promise<void> {

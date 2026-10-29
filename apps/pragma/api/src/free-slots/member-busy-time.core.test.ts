@@ -18,15 +18,20 @@ describe('selectExcludedMembers', () => {
       selectExcludedMembers(
         ['hugo', 'lea', 'marc', 'sarah'],
         [
-          { memberId: 'sarah', kind: 'unavailable', calendarName: null },
+          { memberId: 'sarah', kind: 'unavailable', calendarName: null, calendarPosition: 1 },
           { memberId: 'hugo', kind: 'read', intervals: [] },
-          { memberId: 'marc', kind: 'needs-reconnecting', calendarName: 'Work' },
+          {
+            memberId: 'marc',
+            kind: 'needs-reconnecting',
+            calendarName: 'Work',
+            calendarPosition: 1,
+          },
         ],
       ),
     ).toStrictEqual([
-      { memberId: 'lea', reason: 'no-calendar', calendarName: null },
-      { memberId: 'marc', reason: 'needs-reconnecting', calendarName: 'Work' },
-      { memberId: 'sarah', reason: 'unavailable', calendarName: null },
+      { memberId: 'lea', reason: 'no-calendar', calendarName: null, calendarPosition: null },
+      { memberId: 'marc', reason: 'needs-reconnecting', calendarName: 'Work', calendarPosition: 1 },
+      { memberId: 'sarah', reason: 'unavailable', calendarName: null, calendarPosition: 1 },
     ]);
   });
 
@@ -36,13 +41,18 @@ describe('selectExcludedMembers', () => {
         ['hugo'],
         [
           { memberId: 'hugo', kind: 'read', intervals: [] },
-          { memberId: 'hugo', kind: 'unavailable', calendarName: 'Band' },
-          { memberId: 'hugo', kind: 'needs-reconnecting', calendarName: 'Work' },
+          { memberId: 'hugo', kind: 'unavailable', calendarName: 'Band', calendarPosition: 2 },
+          {
+            memberId: 'hugo',
+            kind: 'needs-reconnecting',
+            calendarName: 'Work',
+            calendarPosition: 3,
+          },
         ],
       ),
     ).toStrictEqual([
-      { memberId: 'hugo', reason: 'unavailable', calendarName: 'Band' },
-      { memberId: 'hugo', reason: 'needs-reconnecting', calendarName: 'Work' },
+      { memberId: 'hugo', reason: 'unavailable', calendarName: 'Band', calendarPosition: 2 },
+      { memberId: 'hugo', reason: 'needs-reconnecting', calendarName: 'Work', calendarPosition: 3 },
     ]);
   });
 
@@ -56,7 +66,7 @@ describe('selectExcludedMembers', () => {
 describe('collectBusyIntervals and countReadFeeds', () => {
   const busyTimes = [
     { memberId: 'hugo', kind: 'read', intervals: [EVENING] },
-    { memberId: 'marc', kind: 'unavailable', calendarName: null },
+    { memberId: 'marc', kind: 'unavailable', calendarName: null, calendarPosition: 1 },
     { memberId: 'sarah', kind: 'read', intervals: [] },
     { memberId: 'sarah', kind: 'read', intervals: [LATE_EVENING] },
   ] as const;

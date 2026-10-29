@@ -1,6 +1,10 @@
 import { describe, expect, it } from 'vitest';
 import { CALENDAR_FEEDS_PER_MEMBER_MAX } from '@domain/input-limits.core';
-import { selectCalendarFeedErrorKey, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
+import {
+  isAddressFieldKeptOpen,
+  selectCalendarFeedErrorKey,
+  selectCalendarFeedFormMode,
+} from './calendar-feed-form.utils';
 
 describe('selectCalendarFeedFormMode', () => {
   it('asks for an address when the member has no calendar, whatever was clicked before', () => {
@@ -26,5 +30,12 @@ describe('selectCalendarFeedErrorKey', () => {
   it('says the address cannot be read for any other failure', () => {
     expect(selectCalendarFeedErrorKey(400)).toBe('account.calendarFeedInvalid');
     expect(selectCalendarFeedErrorKey(null)).toBe('account.calendarFeedInvalid');
+  });
+});
+
+describe('isAddressFieldKeptOpen', () => {
+  it('keeps the field open on a refused address, and closes it once one is saved', () => {
+    expect(isAddressFieldKeptOpen('refused')).toBe(true);
+    expect(isAddressFieldKeptOpen('saved')).toBe(false);
   });
 });
