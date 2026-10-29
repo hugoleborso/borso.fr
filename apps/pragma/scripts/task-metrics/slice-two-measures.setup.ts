@@ -142,7 +142,7 @@ async function measureManifestShortcuts(driver: BandSessionDriver): Promise<stri
 async function measureLanguageSwitch(driver: BandSessionDriver): Promise<Record<string, unknown>> {
   await openAndSettle(driver, '/');
   const onHome = languageChipsSchema.parse(await driver.session.evaluate(READ_LANGUAGE_CHIPS));
-  await openAndSettle(driver, '/account');
+  await openAndSettle(driver, '/account?view=language');
   const onAccount = languageChipsSchema.parse(await driver.session.evaluate(READ_LANGUAGE_CHIPS));
   return { chipsInShell: onHome.outsideMain, chipsShownOnAccount: onAccount.inMainShown };
 }
