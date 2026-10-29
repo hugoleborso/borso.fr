@@ -14,7 +14,6 @@ targets failed and what that decides.
 | --- | --- | --- | --- |
 | Cost per feature | $104 to $2,392 per session | under $150 | `get_session` `external_metadata.usage.cost_usd`, summed over every session in the commits' `Claude-Session` trailers |
 | Main-session context | median 195k to 643k tokens per call | median under 150k | `get_session` `context_usage.used_tokens` at the end, a ceiling of the last call. Under 150k passes. Above it, the median is unknown until a transcript sample is read |
-| Main-session cost share | 100% in 5 of 8 sessions | under 30% | Not measured. `get_session` sums the session and its in-process subagents in one figure. The sweep writes `unknown` |
 | Cache rebuilds after a wait | up to 42% of a session | under $2 per feature | `usage.cache_write_tokens` at $8 per million, the one-hour write price. This is a ceiling, because it counts every cache write and not only the rebuilds |
 | Technical review rounds | 3 or more in 9 of 21 features | 2 at most | The number of `technical-validation-*.md` reports under the feature's `validation/` folder |
 
