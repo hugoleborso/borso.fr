@@ -60,7 +60,7 @@ const TAB_VARIANTS: readonly {
 
 const headerSchema = z.object({
   hasHeader: z.boolean(),
-  headerPosition: z.string().nullable(),
+  headerPosition: z.string(),
   backLinks: z.array(z.string()),
 });
 const headerBoxSchema = z.object({

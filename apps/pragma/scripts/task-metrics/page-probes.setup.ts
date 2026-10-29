@@ -505,7 +505,7 @@ const FIND_PAGE_HEADER = `() => document.querySelector('[data-page-header]') ?? 
 
 export const READ_PAGE_HEADER = `() => {
   const header = (${FIND_PAGE_HEADER})();
-  if (header === null) return { hasHeader: false, headerPosition: null, backLinks: [] };
+  if (header === null) return { hasHeader: false, headerPosition: 'none', backLinks: [] };
   const backLinks = [...header.querySelectorAll('a[href]')].map((link) => new URL(link.getAttribute('href'), location.href).pathname);
   return { hasHeader: true, headerPosition: getComputedStyle(header).position, backLinks };
 }`;

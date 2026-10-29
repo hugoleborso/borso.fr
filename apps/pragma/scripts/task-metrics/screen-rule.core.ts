@@ -14,7 +14,7 @@ export interface ContentBelowList {
 
 export interface ScreenShapeReport {
   readonly hasHeader: boolean;
-  readonly headerPosition: string | null;
+  readonly headerPosition: string;
   readonly backLinks: readonly string[];
   readonly headerTopAfterEnd: number | null;
   readonly headerBottomAfterEnd: number | null;
@@ -49,8 +49,8 @@ export function listScreenRuleViolations(
 ): string[] {
   if (!report.hasHeader) return ['no page header'];
   const violations: string[] = [];
-  if (report.headerPosition === null || !FIXED_POSITIONS.has(report.headerPosition)) {
-    violations.push(`header is not fixed (position ${String(report.headerPosition)})`);
+  if (!FIXED_POSITIONS.has(report.headerPosition)) {
+    violations.push(`header is not fixed (position ${report.headerPosition})`);
   }
   if (!isHeaderOnScreen(report)) violations.push('header scrolled away at the end of the page');
   violations.push(...listBackLinkViolations(target, report));

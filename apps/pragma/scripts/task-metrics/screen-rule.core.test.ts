@@ -52,15 +52,6 @@ describe('listScreenRuleViolations', () => {
     ]);
   });
 
-  it('reports a header whose position could not be read', () => {
-    expect(
-      listScreenRuleViolations(
-        { route: '/x', back: null },
-        { ...WELL_SHAPED, headerPosition: null },
-      ),
-    ).toEqual(['header is not fixed (position null)']);
-  });
-
   it('allows one pixel at either edge and no more', () => {
     const target = { route: '/x', back: null };
     expect(
