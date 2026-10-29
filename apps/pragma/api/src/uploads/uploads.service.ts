@@ -1,8 +1,14 @@
 import { randomUUID } from 'node:crypto';
-import { buildChartObjectKey } from './uploads.core';
-import { deleteObjects, presignGetObject, presignPutObject } from './uploads.adapter';
+import { buildChartObjectKey, canReadFromProductionBucket } from './uploads.core';
+import {
+  deleteObjects,
+  hasProductionUploadsBucket,
+  isStoredInOwnBucket,
+  presignGetObject,
+  presignPutObject,
+} from './uploads.adapter';
 import type { AllowedUploadContentType } from '@domain/chart-upload.core';
-import type { PresignedGetUrl, PresignedPutUrl } from './uploads.types';
+import type { PresignedGetUrl, PresignedPutUrl, UploadsBucketSource } from './uploads.types';
 import { UPLOAD_URL_EXPIRES_SECONDS } from './uploads.types';
 
 const MILLISECONDS_PER_SECOND = 1_000;
@@ -76,10 +82,21 @@ export interface MintChartGetUrlParams {
   readonly now: Date;
 }
 
+async function resolveReadSource(objectKey: string): Promise<UploadsBucketSource> {
+  const canReadFromProduction = canReadFromProductionBucket(
+    objectKey,
+    hasProductionUploadsBucket(),
+  );
+  if (!canReadFromProduction) return 'own';
+  const isInOwnBucket = await isStoredInOwnBucket(objectKey);
+  return isInOwnBucket ? 'own' : 'production';
+}
+
 export async function mintChartGetUrl(params: MintChartGetUrlParams): Promise<PresignedGetUrl> {
   const getUrl = await presignGetObject({
     objectKey: params.objectKey,
     expiresInSeconds: UPLOAD_URL_EXPIRES_SECONDS,
+    source: await resolveReadSource(params.objectKey),
   });
   return {
     getUrl,

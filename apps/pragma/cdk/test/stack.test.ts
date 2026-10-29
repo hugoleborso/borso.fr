@@ -175,7 +175,7 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('prod'))).toBeUndefined();
   });
 
-  it('clones prod into a preview with its passwords, but no passkey, no avatar key, no push subscription or key pair, and no take', () => {
+  it('clones prod into a preview with its passwords and its takes, but no passkey, no avatar key, and no push subscription or key pair', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
       tableBlocklist: [
@@ -188,8 +188,6 @@ describe('pragma preview schema cloning', () => {
         'push_subscription',
         'vapid_key_pair',
         'webauthn_challenge',
-        'take',
-        'take_comment',
       ],
       tablesToReplace: ['app_config', 'member_credential'],
       columnsToNullify: { member: ['avatar_s3_key'] },
@@ -369,6 +367,26 @@ describe('pragma app stack', () => {
         }),
       }),
     );
+  });
+
+  it('lets a preview API read takes, and nothing else, from the production uploads bucket (ADR-0052)', () => {
+    expect(readApiVariables('preview').PRODUCTION_UPLOADS_BUCKET).toBe('pragma-prod-uploads');
+    const policies = synthAppStack('preview').findResources('AWS::IAM::Policy');
+    const statements = Object.values(policies).flatMap(
+      (policy) => policyStatementSchema.parse(policy).Properties.PolicyDocument.Statement,
+    );
+    const productionGrants = statements.filter((statement) =>
+      JSON.stringify(statement.Resource).includes('pragma-prod-uploads'),
+    );
+    expect(productionGrants).toHaveLength(1);
+    expect(productionGrants[0]?.Action).toBe('s3:GetObject');
+    expect(JSON.stringify(productionGrants[0]?.Resource)).toContain(
+      ':::pragma-prod-uploads/take/*',
+    );
+  });
+
+  it('names no production bucket on prod, which reads only its own', () => {
+    expect(readApiVariables('prod')).not.toHaveProperty('PRODUCTION_UPLOADS_BUCKET');
   });
 
   it('keeps the Spotify secret itself out of the synthesized template', () => {

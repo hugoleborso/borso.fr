@@ -95,6 +95,7 @@ No:
 | [0049](./0049-agents-read-production-through-an-invoked-reader-lambda.md) | Agents read production through a reader Lambda invoked by the AWS API, not port 5432 | proposed | 2026-10-28 |
 | [0050](./0050-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | accepted | 2026-10-27 |
 | [0051](./0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
+| [0052](./0052-pragma-previews-clone-takes-and-read-their-audio-from-production.md) | pragma previews clone takes and read their audio from the production uploads bucket | accepted | 2026-10-29 |
 
 ### Data layer
 
@@ -107,6 +108,7 @@ No:
 - 0044 — a hosted session reads the `prod` schema of pragma, last-loop-lepin and banana-rush (never talos) through `scripts/db-read.sh`, signed in as `ai_reader_prod`, a role that holds `SELECT` only and is mapped to `AI-Dev-ReadOnly`, which gets `dsql:DbConnect` and never `DbConnectAdmin`; the script's keyword guard and `READ ONLY` transaction are conveniences, because the session controls the script.
 - 0049 — the sandbox blocks 5432 and Aurora DSQL has no data API, so `db-read.sh` stops being a Postgres client and calls `aws lambda invoke` on a reader function per app; SigV4 replaces the shared secret the HTTPS shapes would have needed, nothing is published on Internet, and the blocklist moves inside the function where a caller cannot skip it. Supersedes 0044.
 - 0050 — a task names at most one session through a nullable `task.session_id`, claimed in the task's transaction like its song and nulled when the session is deleted; DSQL refuses `DROP COLUMN`, so the column stays for good.
+- 0052 — pragma previews clone `take` and `take_comment`; the preview API may `s3:GetObject` on `pragma-prod-uploads/take/*` only, and signs a take's read against production when its own bucket does not hold the key, so a deletion on a preview never reaches production.
 
 ### App architecture
 

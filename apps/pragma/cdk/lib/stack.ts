@@ -34,7 +34,6 @@ const SECRET_TABLES_BLOCKED_ON_PREVIEW = [
   'vapid_key_pair',
   'webauthn_challenge',
 ];
-const RECORDING_TABLES = ['take', 'take_comment'];
 const BALLOT_TOKEN_TABLES = ['audience_suggestion', 'audience_vote'];
 const READER_TABLE_BLOCKLIST = [
   ...SECRET_TABLES_REPLACED_ON_PREVIEW,
@@ -50,6 +49,9 @@ const ASSISTANT_PATH_PATTERNS = [
   '/oauth/revoke',
   '/.well-known/oauth-*',
 ];
+
+const PRODUCTION_STAGE: Stage = 'prod';
+const TAKE_OBJECT_KEYS = 'take/*';
 
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
@@ -101,6 +103,10 @@ function readNameContext(props: BuildPragmaAppStackProps): {
   };
 }
 
+function nameUploadsBucket(stage: Stage, prNumber: number | undefined): string {
+  return `${APP_SLUG}-${stage}-uploads${prNumber === undefined ? '' : `-${prNumber}`}`;
+}
+
 function readSiteOrigin(props: BuildPragmaAppStackProps): SiteOrigin {
   const origin = frontendOrigin(readNameContext(props), props.domainName);
   return { origin, hostname: new URL(origin).hostname };
@@ -115,7 +121,7 @@ function readSiteOrigin(props: BuildPragmaAppStackProps): SiteOrigin {
 export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   const isProduction = isProductionStage(props.stage);
   const uploadsBucket = new Bucket(props.scope, 'UploadsBucket', {
-    bucketName: `${APP_SLUG}-${props.stage}-uploads${props.prNumber === undefined ? '' : `-${props.prNumber}`}`,
+    bucketName: nameUploadsBucket(props.stage, props.prNumber),
     encryption: BucketEncryption.S3_MANAGED,
     blockPublicAccess: BlockPublicAccess.BLOCK_ALL,
     objectOwnership: ObjectOwnership.BUCKET_OWNER_ENFORCED,
@@ -135,6 +141,13 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
   });
 
   const siteOrigin = readSiteOrigin(props);
+  const productionUploadsBucket = isProduction
+    ? undefined
+    : Bucket.fromBucketName(
+        props.scope,
+        'ProductionUploadsBucket',
+        nameUploadsBucket(PRODUCTION_STAGE, undefined),
+      );
 
   const previewableApp = new PreviewableApp(props.scope, 'App', {
     app: APP_SLUG,
@@ -153,6 +166,9 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         OAUTH_ISSUER: apiPublicOrigin(readNameContext(props), props.domainName),
         OAUTH_CONSENT_ORIGIN: siteOrigin.origin,
         SPOTIFY_CREDENTIALS_PARAMETER,
+        ...(productionUploadsBucket === undefined
+          ? {}
+          : { PRODUCTION_UPLOADS_BUCKET: productionUploadsBucket.bucketName }),
         ...buildErrorReportingEnvironment(props.errorReporting),
       },
     },
@@ -167,7 +183,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         : {
             cloneFromSchema: {
               sourceSchemaName: 'prod',
-              tableBlocklist: [...SECRET_TABLES_BLOCKED_ON_PREVIEW, ...RECORDING_TABLES],
+              tableBlocklist: [...SECRET_TABLES_BLOCKED_ON_PREVIEW],
               tablesToReplace: [...SECRET_TABLES_REPLACED_ON_PREVIEW],
               columnsToNullify: { member: ['avatar_s3_key'] },
             },
@@ -179,6 +195,15 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
     uploadsBucket.grantPut(previewableApp.api.handler);
     uploadsBucket.grantRead(previewableApp.api.handler);
     uploadsBucket.grantDelete(previewableApp.api.handler);
+    if (productionUploadsBucket !== undefined) {
+      previewableApp.api.handler.addToRolePolicy(
+        new PolicyStatement({
+          effect: Effect.ALLOW,
+          actions: ['s3:GetObject'],
+          resources: [productionUploadsBucket.arnForObjects(TAKE_OBJECT_KEYS)],
+        }),
+      );
+    }
     previewableApp.api.handler.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,

@@ -1,4 +1,5 @@
 import type { AllowedUploadContentType } from '@domain/chart-upload.core';
+import { TAKE_OBJECT_PREFIX } from '../takes/takes.core';
 import { CHART_OBJECT_PREFIX } from './uploads.types';
 
 const EXTENSION_BY_CONTENT_TYPE: Readonly<Record<AllowedUploadContentType, string>> = {
@@ -23,4 +24,12 @@ export interface BuildChartObjectKeyParams {
 export function buildChartObjectKey(params: BuildChartObjectKeyParams): string {
   const extension = extensionForContentType(params.contentType);
   return `${CHART_OBJECT_PREFIX}/${params.songId}/${params.randomId}.${extension}`;
+}
+
+// @FollowsBlueprint core-decision
+export function canReadFromProductionBucket(
+  objectKey: string,
+  hasProductionBucket: boolean,
+): boolean {
+  return hasProductionBucket && objectKey.startsWith(`${TAKE_OBJECT_PREFIX}/`);
 }
