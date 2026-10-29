@@ -27,12 +27,18 @@ export const buttonVariants = cva(
         md: 'min-h-11 px-4 text-body',
         lg: 'min-h-13 px-5 text-body font-semibold',
       },
+      labelDisplay: {
+        always: '',
+        'wide-only': 'max-sm:w-11 max-sm:px-0',
+      },
     },
-    defaultVariants: { variant: DEFAULT_BUTTON_VARIANT, size: 'md' },
+    defaultVariants: { variant: DEFAULT_BUTTON_VARIANT, size: 'md', labelDisplay: 'always' },
   },
 );
 
 export type ButtonVariantProps = VariantProps<typeof buttonVariants>;
+
+export const PHONE_HIDDEN_LABEL_CLASS = 'max-sm:sr-only';
 
 // @FollowsBlueprint atom-variant
 export const iconButtonVariants = cva(

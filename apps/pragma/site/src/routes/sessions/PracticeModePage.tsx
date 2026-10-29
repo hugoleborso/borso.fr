@@ -280,13 +280,14 @@ function PracticeMode({ sessionId }: { readonly sessionId: string }): JSX.Elemen
 
       <BottomActions>
         {screen.position.isLast ? (
-          <Button icon="check" variant="secondary" onClick={endPractice}>
+          <Button icon="check" variant="secondary" labelDisplay="wide-only" onClick={endPractice}>
             {t('practice.end')}
           </Button>
         ) : (
           <Button
             icon="chevR"
             variant="secondary"
+            labelDisplay="wide-only"
             disabled={recording.view.isOpen}
             onClick={() => moveTo(index + 1)}
           >
