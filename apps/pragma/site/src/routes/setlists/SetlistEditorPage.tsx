@@ -17,6 +17,7 @@ import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useSetlistEntries } from '../../lib/queries/setlist-entries.queries';
 import { useSetlist } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
+import { joinSummaryItems } from '../../components/molecules/summary-line.utils';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useSetlistSessions } from '../../lib/setlist-sessions.hook';
 import { useCopySetlistOrder } from './copy-setlist-order.hook';
@@ -105,15 +106,16 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
 
   const displayedName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
   const parent = header.parentSession;
-  const parentLabel =
+  const parentParts =
     parent === null
-      ? null
+      ? []
       : [
           t(parent.kind === 'concert' ? SESSION_KIND_KEY.concert : SESSION_KIND_KEY.practice),
           formatSessionDate(parent.date, i18n.language),
-        ].join(LINE_SEPARATOR);
-  const summaryLine = [
-    parentLabel,
+        ];
+  const parentLabel = parent === null ? null : parentParts.join(LINE_SEPARATOR);
+  const summaryLine = joinSummaryItems([
+    ...parentParts,
     t('setlist.songCount', { count: header.songCount }),
     header.total === null
       ? null
@@ -121,9 +123,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
           hours: header.total.hours,
           minutes: header.total.minutes,
         }),
-  ]
-    .filter((part) => part !== null)
-    .join(LINE_SEPARATOR);
+  ]);
 
   return (
     <section className="flex max-w-[960px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">

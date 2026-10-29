@@ -14,6 +14,7 @@ import { LineupSlots } from '../molecules/LineupSlots';
 import { buildLineupColumn } from '../molecules/lineup-slots.core';
 import { Menu, type MenuItem } from '../molecules/Menu';
 import { describeTotalDuration } from '../molecules/song-duration.utils';
+import { joinSummaryItems } from '../molecules/summary-line.utils';
 import { indexById } from './setlist-editor.utils';
 
 export interface SessionSetlistPreviewProps {
@@ -23,7 +24,6 @@ export interface SessionSetlistPreviewProps {
 }
 
 const NO_ROWS: readonly never[] = [];
-const LINE_SEPARATOR = ' · ';
 const TOTAL_DURATION_KEY = {
   minutes: 'home.totalMinutes',
   hoursMinutes: 'home.totalHoursMinutes',
@@ -49,14 +49,12 @@ export function SessionSetlistPreview({
   const members = membersQuery.data?.members ?? NO_ROWS;
   const instruments = instrumentsQuery.data?.instruments ?? NO_ROWS;
   const total = preview.totalSeconds === null ? null : describeTotalDuration(preview.totalSeconds);
-  const summary = [
+  const summary = joinSummaryItems([
     t('setlist.songCount', { count: preview.songCount }),
     total === null
       ? null
       : t(TOTAL_DURATION_KEY[total.kind], { hours: total.hours, minutes: total.minutes }),
-  ]
-    .filter((part) => part !== null)
-    .join(LINE_SEPARATOR);
+  ]);
 
   return (
     <section className="flex flex-col rounded-md bg-leaf shadow-leaf" aria-label={setlistName}>
