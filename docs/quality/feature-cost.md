@@ -35,3 +35,4 @@ One row per merged pull request. Only `feature` rows count toward the three.
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | #224 | meta | `session_01K69KnFMwexFAkg7bqDpDTu` | $115.61 | 709,659 | $43.43 (5,428,463 tokens) | none | lessons from PR #224 |
 | #228 | meta | `session_01K69KnC3z5ZgBCLywzoUmpj` | unknown, the session was still running | unknown | unknown | none | lessons from PR #228 |
+| #230 | meta | `session_01K69KnB6rgd7Vc8bpRUzdAe` | $3.44 at the sweep, the session was still running | 173,750 | $0.98 (122,858 tokens) | none | lessons from PR #230 |

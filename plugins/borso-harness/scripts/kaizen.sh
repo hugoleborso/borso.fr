@@ -149,6 +149,12 @@ case "${1:-}" in
     ensure_file
     ;;
   *)
+    # A friction line is a sentence. One word is a mistyped subcommand, and
+    # logging it put `list` in PR #230's archive as if it were friction.
+    if [[ "$*" != *[[:space:]]* ]]; then
+      printf 'scripts/kaizen.sh: "%s" is not a subcommand (show, archive, init), and one word is not a friction sentence. Nothing logged.\n' "$*" >&2
+      exit 1
+    fi
     ensure_file
     # One line, one write. Newlines in the argument would break that guarantee,
     # so they collapse to spaces.
