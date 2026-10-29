@@ -148,3 +148,56 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 - [16:48] `ship-all` pre-push on a new stacked branch gates from the merge-base with main, so each of slices 3 to 6 re-runs mutation over every earlier slice's files although the branch below was just pushed and gated
 - [17:01] `hook:pr-body` wrote a pull-request body carrying markup the server silently strips
 - [17:32] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [22:18] `main` operator rejected stacked per-slice PRs for a redesign they review on one preview and merge at once; the plan split one reviewable change into seven PRs
+- [22:20] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [22:54] `review-build` the R3 calendar commit passed pre-commit while the i18n parity test, which lists every value identical in en and fr, failed only in the full core suite
+- [23:31] `visual-validator-review` scripts/argent.sh touch applies its own device emulation, which fires visualViewport resize events and spends a page's one-shot resize listener, so a keyboard check run after it measures the harness rather than the app
+- [23:31] `visual-validator-review` each raw CDP connection that sets device metrics clears them when it closes, firing resizes, so touch emulation does not persist across separate scripts/argent.sh calls
+- [23:31] `visual-validator-review` scripts/argent.sh touch only taps; there is no touch drag, so verifying swipe-down-to-close on a sheet needed a hand-written Input.dispatchTouchEvent script
+- [23:31] `visual-validator-review` headless Chromium draws no virtual keyboard, so 'results stay visible above the keyboard' can only be emulated by shrinking the viewport, which models Android's resize and not iOS's overlay
+- [23:31] `visual-validator-review` agent-browser find text / find role --name did not locate an icon-plus-label control ('Remove from the setlist', 'Audience vote', a link named 'Add a song'), costing several retries before falling back to snapshot refs
+- [23:31] `visual-validator-review` the operator's R3 (webcal subscription feed) was recorded in the spec as not taken pending an ADR, but the validation brief still listed it as 'all to deliver', so the validator had to decide whether a ratified spec exclusion counts as a failure
+- [23:33] `review-fix` A fix row was handed to an implementer agent for a change the spec itself parks behind an ADR, so the agent could only commit the report and exit.
+- [23:44] `review-ship` pre-push mutation gate refused the push over a survived optional-chain mutant in keyboard-reveal.adapter.ts that the implementing agent's commit never ran Stryker on
+- [00:05] `ci-timeout` pragma back-e2e signed every test in through three real argon2id (64 MiB) operations, about 0.9 s per buildAuthenticatedApp, and nothing flagged the suite growing toward the 10-minute app-tests limit until the job was cancelled
+- [00:36] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [01:29] `review2-build` A git rm left staged across commits made convention-drift fail the next commit with ENOENT on the removed file, naming the file rather than the staged-deletion cause
+- [01:29] `review2-build` The production read path (scripts/db-read.sh) timed out connecting to DSQL from this hosted session, so the operator's instrument data could not be checked
+- [01:42] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [01:42] `visual-validator-review2` agent-browser session wedged on Page.navigate after about 150 drives in one session, so every later route in a probe loop timed out at 300 s before the loop could be noticed
+- [02:17] `visual-validator-review2` the task-metrics audit seed creates no bars, so the screen-rule and icon checks pass /bars vacuously and missed text-only bar rows
+- [02:17] `visual-validator-review2` the screen-rule probe only looks below lists and never checks that a page's tabs are pinned, so Home's Your part/Your tasks tabs scrolling away passed with 0 violations
+- [02:17] `visual-validator-review2` scripts/argent.sh touch takes the first CSS match even when it is a zero-size hidden element, and reports a tap at 0,0 rather than saying the element is not visible
+- [02:17] `visual-validator-review2` agent-browser wedged a second time in the same run after a daemon restart, costing another 10-minute timeout on a screenshot loop
+- [02:29] `main` operator prefers push then review on the preview over a full visual-validation round per review batch; the validation rounds cost hours and hit the usage limit twice
+- [02:37] `band-calendar` check-pr-body.ts rejects any section outside its fixed list, so a requested 'Operator review 2' section had to become two Validation items, which brings Validation to its limit of 10
+- [02:37] `band-calendar` the slice-6 branch conflicts with origin/main in 11 files, so GitHub runs no CI and builds no preview for PR #216 after the push
+- [02:59] `merge-main-2` Merging main renumbered nothing in a dated validation report but the append-only gate still refuses fixing a stale migration path there, so the report keeps citing 0020_task_session.sql after the rename
+- [03:22] `main` an implementing agent answered 'why only one or two member pills' by adding an unrequested 'Played by' feature instead of asking or removing; operator review rounds keep surfacing additions nobody asked for
+- [03:30] `hook:no-discarding-reset` ran a discarding git command on a checkout the hook could not read
+- [03:31] `build-timeout` ci build and architecture.yml each ran architecture-graph.ts twice back to back (generate, then --check) although --check has had nothing to compare against since ADR-0014, so the ELK layout cost was paid twice and build hit its 10-minute timeout once pragma's journey graphs grew
+- [03:31] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [03:35] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [04:03] `review3-sessions` SessionDetail.tsx sits at the 300-line cap, so adding the practice Songs tab forced extracting a hook and slimming sheet props before lint passed.
+- [04:03] `review3-sessions` Task walk 1 hard-coded the Add a setlist flow on a new practice, so a product change to practices silently breaks the walk unless someone greps the harness.
+- [04:06] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [04:07] `review3-band` commitlint subject-case rejects a subject that opens on a capitalised product noun like Band, found only after the whole pre-commit run
+- [04:44] `review3-push` pre-push canary inventory refused the push: removing the architecture-graph --check step from CI made its canary stray, and the CI commit's own hooks never ran the inventory
+- [05:01] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [05:06] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [05:43] `benchmark-sessions` WebFetch gets HTTP 403 on help.meetup.com and bandsintown.com, so two benchmark apps can only be cited from search snippets
+- [05:45] `review4` git commit took deletions staged earlier with git rm into an unrelated one-file commit, because git add of one path does not unstage the rest
+- [05:45] `review4` pre-commit runs only some tests, so the i18n parity test broken by a label change in U3 passed the commit and only failed in the next full core run
+- [07:32] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [08:03] `sessions-takes` pre-commit checks read the working tree, so committing one item of several with a partially staged index needs the deleted file restored on disk or convention-drift fails with ENOENT
+- [08:03] `sessions-takes` check-coupled-lists parses backticked table names out of ADR-0009 prose, so a sentence explaining a removed blocklist entry kept it in the list until the backticks went
+- [08:03] `sessions-takes` stryker reports a survivor for some() vs every() over a one-element constant list, an equivalent mutant only removable by dropping the list
+- [2026-10-29 08:23] `merge-main` scripts/reports.sh all failed on main: c54e32da removed scripts/browser.sh, argent.sh and four gate scripts but left eight dantotsu zones naming them, so weak-points.ts exited 1
+- [2026-10-29 09:32] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-10-29 09:39] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [2026-10-29 09:39] `review6` The pre-commit oxlint rule conditions-live-in-pure-functions flags 'layout === x' inside JSX, which only shows at commit time, not in the editor or a quick tsc run.
+- [2026-10-29 09:54] `review6` The design-token gate's class tokenizer split Tailwind variants at '=', so a valid has-[[role=x]] class failed test:core only, long after the browser showed it working.
+- [2026-10-29 10:07] `review6` The task-metrics harness (run-task-metrics.sh, --screen-rule included) cannot run since #224 removed scripts/argent.sh and the argent binary it calls for sign-in taps.
+- [2026-10-29 10:27] `harness-repair` Input.synthesizeScrollGesture with gestureSourceType touch returns success but scrolls nothing in agent-browser's headless Chromium, so the harness scrolls with the mouse source instead (measured 0 px vs 299 px for 300).
+- [2026-10-29 10:41] `hook:no-discarding-reset` ran a discarding git command on a checkout the hook could not read
+- [2026-10-29 10:41] `harness-repair` pretool-no-discarding-reset fails on a plain 'git checkout -- <tracked file>' in the main checkout, even with git -C and a literal path, so restoring one file needs git show HEAD:path redirected.
