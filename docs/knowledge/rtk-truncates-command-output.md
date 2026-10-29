@@ -10,6 +10,7 @@ triggers:
   output:
     - '\[\d+ more lines\]'
     - '\+\d+ hidden: rtk recall'
+    - '\.\.\. \(\d+ (additions|deletions) truncated\)'
 ---
 
 # rtk truncates command output, and the truncation reads as content

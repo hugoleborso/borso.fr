@@ -64,6 +64,16 @@ case " $CMD " in
     ;;
 esac
 
+# A diff is read to judge every line of it. `rtk git diff` keeps 100 added
+# lines of a hunk and prints `... (255 additions truncated)` for the rest,
+# measured on the 356-line plan of PR #234, so a reviewer passes code it never
+# saw. `git diff` and `git show` therefore go through unrewritten.
+# See docs/dantotsus/the-reviewer-read-a-hundred-lines-of-each-hunk.md.
+GIT_DIFF_COMMAND='(^|[;&|[:space:]])git[[:space:]]+(-C[[:space:]]+[^[:space:]]+[[:space:]]+)?(--no-pager[[:space:]]+)?(diff|show)($|[[:space:]])'
+if [[ "$CMD" =~ $GIT_DIFF_COMMAND ]]; then
+  exit 0
+fi
+
 # A subagent dispatched with worktree isolation runs behind Claude Code's own
 # guard, which lets a command through only when it can see that no git inside
 # it escapes that worktree. `rtk git status` hides git behind a launcher, and

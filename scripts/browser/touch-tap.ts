@@ -77,8 +77,10 @@ function createSender(socket: WebSocket) {
 
 function buildPreparationScript(selector: string): string {
   return `(() => {
-    const target = document.querySelector(${JSON.stringify(selector)});
-    if (target === null) return null;
+    const target = [...document.querySelectorAll(${JSON.stringify(selector)})].find((element) =>
+      element.checkVisibility(),
+    );
+    if (target === undefined) return null;
     target.scrollIntoView({ block: 'center' });
     for (const type of ['pointerdown', 'touchstart', 'touchend', 'click']) {
       document.addEventListener(type, (event) => {
@@ -127,7 +129,7 @@ async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
         returnByValue: true,
       }),
     );
-    if (point === null) throw new Error(`no element matches ${options.selector}`);
+    if (point === null) throw new Error(`no visible element matches ${options.selector}`);
     const touchPoint = { ...point, radiusX: TOUCH_RADIUS, radiusY: TOUCH_RADIUS, force: 1 };
     await send('Input.dispatchTouchEvent', { type: 'touchStart', touchPoints: [touchPoint] });
     await pause(TOUCH_HOLD_MILLISECONDS);

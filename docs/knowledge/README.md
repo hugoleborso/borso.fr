@@ -119,6 +119,8 @@ decision.
 - [`pnpm-peer-warning-is-not-enforcement.md`](./pnpm-peer-warning-is-not-enforcement.md) — pnpm only *warns* on peer-dep mismatch; installs succeed and the bad combination crashes at runtime.
 - [`pnpm-run-test-double-dash-drops-the-filter.md`](./pnpm-run-test-double-dash-drops-the-filter.md) — `pnpm run test:e2e -- <path>` hands Vitest a `--` and it runs every file; drop the `--`, or call `vitest run --project <name> <path>`.
 - [`vitest-list-ignores-shard.md`](./vitest-list-ignores-shard.md) — `vitest list --shard=i/n` lists every file, so a shard split cannot be checked by listing it; `--project` is honoured, and a split that must be predictable belongs in a project.
+- [`vitest-hides-the-console-of-a-passing-test-from-an-agent.md`](./vitest-hides-the-console-of-a-passing-test-from-an-agent.md) — Vitest 4.1.11 run by an agent prints no `console.log` from a passing test, and `--silent=false` does not change that; `--reporter=default` does.
+- [`a-file-of-constant-tables-passes-mutation-with-no-mutant.md`](./a-file-of-constant-tables-passes-mutation-with-no-mutant.md) — under `ignoreStatic` a gated file of module-level tables gets no mutant and passes at NaN; whole-table `toEqual` tests are its only pin.
 - [`rtk-pnpm-install-can-skip-lockfile-write.md`](./rtk-pnpm-install-can-skip-lockfile-write.md) — when `pnpm install` is invoked through `rtk`, the lockfile sometimes doesn't write back; mirror from `node_modules/.pnpm/lock.yaml` if `git status` shows nothing changed.
 
 ### Claude Code tooling
