@@ -44,7 +44,7 @@
     "title": "Account",
     "language": "Language",
     "calendarGuide": {
-      "platformLabel": "Your calendar is on",
+      "platformLabel": "My calendar is on",
       "platform": {
         "iphone": "iPhone (iCloud)",
         "android": "Android (Google)",
@@ -97,7 +97,7 @@
     "submit": "Enter",
     "title": "Pragma — band space",
     "unknownError": "Unexpected error.",
-    "usernameLabel": "Your name"
+    "usernameLabel": "My name"
   },
   "bars": {
     "capacity": "Capacity",
@@ -236,7 +236,7 @@
     "inNoSetlist": "In no setlist yet",
     "practised": "Practised",
     "fullScreen": "Full screen",
-    "yourPart": "Your part",
+    "yourPart": "My part",
     "yourPartNone": "You do not play this song.",
     "yourPartNoScore": "not rated",
     "transpose": "Transpose",
@@ -890,16 +890,16 @@
     "title": "Next up",
     "totalHoursMinutes": "{{hours}} h {{minutes}}",
     "totalMinutes": "{{minutes}} min",
-    "yourPart": "Your part",
-    "yourTasks": "Your tasks",
-    "sectionsLabel": "Your part or your tasks"
+    "yourPart": "My part",
+    "yourTasks": "My tasks",
+    "sectionsLabel": "My part or my tasks"
   },
   "band": {
     "title": "Band",
     "viewsLabel": "Whose tasks",
     "myTasks": "My tasks",
     "everyone": "Everyone",
-    "noTaskOfMine": "Nothing on your list.",
+    "noTaskOfMine": "Nothing on my list.",
     "linksLabel": "The band"
   },
   "practice": {

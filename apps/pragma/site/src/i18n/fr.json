@@ -44,7 +44,7 @@
     "title": "Compte",
     "language": "Langue",
     "calendarGuide": {
-      "platformLabel": "Ton agenda est sur",
+      "platformLabel": "Mon agenda est sur",
       "platform": {
         "iphone": "iPhone (iCloud)",
         "android": "Android (Google)",
@@ -97,7 +97,7 @@
     "submit": "Entrer",
     "title": "Pragma — espace du groupe",
     "unknownError": "Erreur inattendue.",
-    "usernameLabel": "Ton nom"
+    "usernameLabel": "Mon nom"
   },
   "bars": {
     "capacity": "Capacité",
@@ -236,7 +236,7 @@
     "inNoSetlist": "Dans aucune setlist pour l'instant",
     "practised": "Révisé",
     "fullScreen": "Plein écran",
-    "yourPart": "Ta partie",
+    "yourPart": "Ma partie",
     "yourPartNone": "Tu ne joues pas ce morceau.",
     "yourPartNoScore": "pas noté",
     "transpose": "Transposer",
@@ -890,16 +890,16 @@
     "title": "À venir",
     "totalHoursMinutes": "{{hours}} h {{minutes}}",
     "totalMinutes": "{{minutes}} min",
-    "yourPart": "Ta partie",
-    "yourTasks": "Tes tâches",
-    "sectionsLabel": "Votre partie ou vos tâches"
+    "yourPart": "Ma partie",
+    "yourTasks": "Mes tâches",
+    "sectionsLabel": "Ma partie ou mes tâches"
   },
   "band": {
     "title": "Groupe",
     "viewsLabel": "Tâches de qui",
     "myTasks": "Mes tâches",
     "everyone": "Tout le monde",
-    "noTaskOfMine": "Rien sur ta liste.",
+    "noTaskOfMine": "Rien sur ma liste.",
     "linksLabel": "Le groupe"
   },
   "practice": {

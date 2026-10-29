@@ -171,13 +171,13 @@ describe('the home page', () => {
     const answer = answerHomeApi([NEXT_PRACTICE]);
     stub = stubFetch((request) => Promise.resolve(answer(request)));
     renderHomePage();
-    const part = await screen.findByRole('list', { name: 'Your part' });
+    const part = await screen.findByRole('list', { name: 'My part' });
     expect(within(part).getByText('Superstition')).toBeTruthy();
     expect(within(part).queryByText('Valerie')).toBe(null);
-    expect(screen.queryByRole('list', { name: 'Your tasks' })).toBe(null);
-    fireEvent.click(screen.getByRole('tab', { name: 'Your tasks' }));
-    const tasks = await screen.findByRole('list', { name: 'Your tasks' });
-    expect(screen.queryByRole('list', { name: 'Your part' })).toBe(null);
+    expect(screen.queryByRole('list', { name: 'My tasks' })).toBe(null);
+    fireEvent.click(screen.getByRole('tab', { name: 'My tasks' }));
+    const tasks = await screen.findByRole('list', { name: 'My tasks' });
+    expect(screen.queryByRole('list', { name: 'My part' })).toBe(null);
     expect(within(tasks).getByText(MY_TASK.title)).toBeTruthy();
   });
 
@@ -185,7 +185,7 @@ describe('the home page', () => {
     const answer = answerHomeApi([NEXT_PRACTICE]);
     stub = stubFetch((request) => Promise.resolve(answer(request)));
     renderHomePage();
-    fireEvent.click(await screen.findByRole('tab', { name: 'Your tasks' }));
+    fireEvent.click(await screen.findByRole('tab', { name: 'My tasks' }));
     fireEvent.click(await screen.findByRole('button', { name: MY_TASK.title }));
     const sheet = screen.getByRole('dialog', { name: 'Edit task' });
     expect(within(sheet).getByLabelText('Title')).toHaveProperty('value', MY_TASK.title);
