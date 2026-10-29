@@ -34,3 +34,4 @@ One row per merged pull request. Only `feature` rows count toward the three.
 | PR | Kind | Sessions | Cost | Final context | Cache-write ceiling | Review rounds | Swept by |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | #224 | meta | `session_01K69KnFMwexFAkg7bqDpDTu` | $115.61 | 709,659 | $43.43 (5,428,463 tokens) | none | lessons from PR #224 |
+| #228 | meta | `session_01K69KnC3z5ZgBCLywzoUmpj` | unknown, the session was still running | unknown | unknown | none | lessons from PR #228 |
