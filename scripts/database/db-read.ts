@@ -9,6 +9,7 @@ import {
   decideReadTarget,
   isAgentReaderFunctionName,
   READER_NOT_PROVISIONED_REFUSAL,
+  readMisplacedApplication,
   readQueryArguments,
 } from './read-target.utils';
 import { formatRows, readInvocationOutcome } from './reader-invocation.utils';
@@ -25,11 +26,29 @@ function fail(message: string, exitCode: number): never {
   process.exit(exitCode);
 }
 
+const AWS_REFUSAL_HINT =
+  'an AccessDenied on lambda:InvokeFunction is the grant in docs/aws-setup.md section 12.7, not the query';
+
 function runAws(argumentsForAws: readonly string[], output = 'text'): string {
-  return execFileSync('aws', [...argumentsForAws, '--region', REGION, '--output', output], {
-    encoding: 'utf8',
-    stdio: ['ignore', 'pipe', 'inherit'],
-  }).trim();
+  try {
+    return execFileSync('aws', [...argumentsForAws, '--region', REGION, '--output', output], {
+      encoding: 'utf8',
+      stdio: ['ignore', 'pipe', 'inherit'],
+    }).trim();
+  } catch {
+    return fail(
+      `aws ${argumentsForAws.slice(0, 2).join(' ')} failed with the error printed above; ${AWS_REFUSAL_HINT}`,
+      FAILURE_EXIT_CODE,
+    );
+  }
+}
+
+const misplacedApplication = readMisplacedApplication(process.argv.slice(2));
+if (misplacedApplication !== undefined) {
+  fail(
+    `"${misplacedApplication}" is an application, not a statement: choose it with APP=${misplacedApplication} scripts/db-read.sh "<statement>"`,
+    USAGE_EXIT_CODE,
+  );
 }
 
 const query = readQueryArguments(process.argv.slice(2));
