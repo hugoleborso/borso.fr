@@ -10,8 +10,6 @@ import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
 import { Sheet } from '../molecules/Sheet';
 
-const TEMPLATE_ROWS = 8;
-
 export interface OutreachTemplateSheetProps {
   readonly template: string;
   readonly message: string | null;
@@ -35,6 +33,7 @@ export function OutreachTemplateSheet(props: OutreachTemplateSheetProps): JSX.El
     <Sheet
       title={title}
       label={title}
+      size="full"
       onClose={props.onClose}
       onSubmit={(event) => {
         event.preventDefault();
@@ -62,26 +61,28 @@ export function OutreachTemplateSheet(props: OutreachTemplateSheetProps): JSX.El
         </>
       }
     >
-      <p className="text-meta text-ink-soft mt-0 mb-3">
-        {t('bars.outreachPlaceholdersHint', {
-          bar: OUTREACH_PLACEHOLDERS.bar,
-          phone: OUTREACH_PLACEHOLDERS.phone,
-          email: OUTREACH_PLACEHOLDERS.email,
-        })}
-      </p>
-      <form.Field name="body">
-        {(field) => (
-          <AutoGrowTextarea
-            data-sheet-focus
-            aria-label={title}
-            value={field.state.value}
-            onChange={(event) => field.handleChange(event.target.value)}
-            onBlur={field.handleBlur}
-            rows={TEMPLATE_ROWS}
-            maxLength={OUTREACH_TEMPLATE_MAX_LENGTH}
-          />
-        )}
-      </form.Field>
+      <div className="flex min-h-full flex-col">
+        <p className="text-meta text-ink-soft mt-0 mb-3">
+          {t('bars.outreachPlaceholdersHint', {
+            bar: OUTREACH_PLACEHOLDERS.bar,
+            phone: OUTREACH_PLACEHOLDERS.phone,
+            email: OUTREACH_PLACEHOLDERS.email,
+          })}
+        </p>
+        <form.Field name="body">
+          {(field) => (
+            <AutoGrowTextarea
+              data-sheet-focus
+              aria-label={title}
+              value={field.state.value}
+              onChange={(event) => field.handleChange(event.target.value)}
+              onBlur={field.handleBlur}
+              maxLength={OUTREACH_TEMPLATE_MAX_LENGTH}
+              className="shrink-0 grow"
+            />
+          )}
+        </form.Field>
+      </div>
     </Sheet>
   );
 }
