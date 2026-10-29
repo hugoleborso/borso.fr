@@ -37,3 +37,4 @@ One row per merged pull request. Only `feature` rows count toward the three.
 | #228 | meta | `session_01K69KnC3z5ZgBCLywzoUmpj` | unknown, the session was still running | unknown | unknown | none | lessons from PR #228 |
 | #216 and #231 | feature | `session_01Leu3Yhimw9wioFyRfsVdKa` | $778.45, which may cover only the latest resume (worker epoch 23); the session was still running | 363,134 | $328.99 (41,124,023 tokens) | 9 | lessons from PR #216 |
 | #230 | meta | `session_01K69KnB6rgd7Vc8bpRUzdAe` | $3.44 at the sweep, the session was still running | 173,750 | $0.98 (122,858 tokens) | none | lessons from PR #230 |
+| #235 | feature | `session_01K69KnAzzigT63QYQpKfY3q` | $9.89 at the sweep, which includes this sweep; the session was still running | 228,713 | $3.27 (408,174 tokens) | none, no technical validation ran | lessons from PR #235 |
