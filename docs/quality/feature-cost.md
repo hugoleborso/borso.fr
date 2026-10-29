@@ -41,3 +41,4 @@ One row per merged pull request. Only `feature` rows count toward the three.
 | #235 | feature | `session_01K69KnAzzigT63QYQpKfY3q` | $9.89 at the sweep, which includes this sweep; the session was still running | 228,713 | $3.27 (408,174 tokens) | none, no technical validation ran | lessons from PR #235 |
 | #236 | meta | `local_ebb74411-cdc8-4012-a143-d1f5774ba568` | unknown, a local session reports no usage through `get_session` | unknown | unknown | none | lessons from PR #236 |
 | #238 | feature | `session_01K69KnC85eQ9YvXqSyKWSAF` | $25.85 at worker epoch 5, archived; whether it counts earlier epochs is unknown | 455,516 | $5.52 (689,659 tokens) | 2 | lessons from PR #238 |
+| #240 | meta | `session_01K69KnEN4KZEAddTa4QvvkW` | $11.87 at the sweep, which includes PR #242; the session was still running | 336,914 | $2.28 (284,799 tokens) | none | lessons from PR #240 |
