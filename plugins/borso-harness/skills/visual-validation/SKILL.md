@@ -69,7 +69,7 @@ Do **not** invoke when:
 
 1. **Parse the argument.** `spec_path = docs/features/<app>/<slug>/spec/spec.md`. Derive `<app>` from the path itself — it's the segment after `docs/features/`.
 2. **Discover the workspace.** `app_pkg = "@borso-app/<app>"` (the workspace conventions live in CLAUDE.md). Confirm `apps/<app>/package.json` exists.
-3. **Probe the dev server** at `http://localhost:5173/` (or the port from `apps/<app>/vite.config.ts`). If 200, reuse it. If not, spawn `pnpm --filter <app_pkg> dev` in the background and poll until 200.
+3. **Probe the dev server** at `http://localhost:5173/` (or the port from `apps/<app>/vite.config.ts`). If 200, reuse it. If not, spawn `pnpm --filter <app_pkg> dev` in the background with the Bash tool's `timeout: 7200000` and poll until 200. The default background limit is 30 minutes, and on PR #234 it stopped the server in the middle of a validation run.
 4. **Build the run folder paths.**
    ```
    timestamp        = <YYYY-MM-DD-HHmm>

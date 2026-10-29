@@ -184,14 +184,27 @@ fi
 # daemon. Skipped on machines without npm (rare in this repo, but the
 # install is non-fatal there — the validator surfaces the missing tool as
 # a FAIL row rather than the session refusing to start).
-if ! command -v agent-browser >/dev/null 2>&1; then
-  if command -v npm >/dev/null 2>&1; then
-    log "agent-browser not found; installing globally via npm"
-    npm install -g agent-browser >/dev/null || true
+#
+# The global binary is held to the version package.json pins. The hosted image
+# ships its own agent-browser, 0.27.0 on 2026-10-29, and every agent ran that
+# one while the knowledge entries were verified on the pin. 0.27.0 let a
+# `network route '**/api/streaks*' --abort` through with a 200 and printed
+# Done; 0.35.2 aborted it. See
+# docs/dantotsus/the-browser-on-path-was-not-the-pinned-one.md.
+pinned_agent_browser=$(node -p "require('./package.json').devDependencies['agent-browser'] ?? ''" 2>/dev/null || true)
+global_agent_browser=$(agent-browser --version 2>/dev/null | sed -n 's/^agent-browser //p' || true)
+if command -v npm >/dev/null 2>&1; then
+  if [ -z "$global_agent_browser" ]; then
+    log "agent-browser not found; installing ${pinned_agent_browser:-latest} globally via npm"
+    npm install -g "agent-browser@${pinned_agent_browser:-latest}" >/dev/null || true
     agent-browser install >/dev/null 2>&1 || log "agent-browser install (Chromium provision) failed; /visual-validation will surface this"
-  else
-    log "npm not available; skipping agent-browser install"
+  elif [ -n "$pinned_agent_browser" ] && [ "$global_agent_browser" != "$pinned_agent_browser" ]; then
+    log "agent-browser $global_agent_browser on PATH, $pinned_agent_browser pinned; installing the pin globally"
+    npm install -g "agent-browser@$pinned_agent_browser" >/dev/null ||
+      note_missing agent-browser "agent-browser $pinned_agent_browser did not install, so $global_agent_browser drives the browser and the knowledge entries may not describe it."
   fi
+elif [ -z "$global_agent_browser" ]; then
+  log "npm not available; skipping agent-browser install"
 fi
 if command -v agent-browser >/dev/null 2>&1; then
   log "agent-browser: $(agent-browser --version 2>/dev/null || echo 'installed')"
@@ -213,19 +226,13 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 # docs/dantotsus/designated-branch-was-a-merged-pr-head.md.
 "$REPO_ROOT/scripts/check-branch-context.sh" || true
 
-# 9. KAIZEN.md — the friction log `/after-task-kaizen` sweeps at merge.
-# Created empty here rather than on first use, because a file that already
-# exists gets appended to and a file somebody has to remember to create does
-# not: PR 50 maintained none, and its inventory had to be rebuilt from the
-# transcript, the commit history and 22 agent journals. Gitignored, so it never
-# reaches a commit.
-if [ ! -f "$REPO_ROOT/KAIZEN.md" ]; then
-  "$REPO_ROOT/scripts/kaizen.sh" init
-  log 'KAIZEN.md ready — log friction as you hit it: scripts/kaizen.sh "<what went wrong>"'
-else
-  kaizen_entries="$(grep -c '^- \[' "$REPO_ROOT/KAIZEN.md" || true)"
-  log "KAIZEN.md carries ${kaizen_entries:-0} entries logged earlier in this task"
-fi
+# 9. KAIZEN.md — the friction log `/after-task-kaizen` sweeps at merge. It is
+# created at session start rather than on first use, because a file that
+# already exists gets appended to and one somebody has to remember to create
+# does not: PR 50 maintained none. The `kaizen.sh init` SessionStart entry in
+# .claude/settings.json owns it, including parking a log another session left
+# behind; calling init here as well raced that entry over the same rename.
+log 'KAIZEN.md is opened by kaizen.sh init — log friction as you hit it: scripts/kaizen.sh "<what went wrong>"'
 
 # 10. The two generated lookups a session reads, neither of which is
 # committed: the blueprint index agents read before writing a file, and the

@@ -84,7 +84,7 @@ The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the cus
 
 - Names carry intent. No abbreviations or single-letter locals (outside `for (let i = 0; …)` etc.).
 - Magic numbers / strings extracted to named constants.
-- Comments document the WHY only — no what-comments, no JSDoc on internals.
+- No prose comments. `borso/no-comments` refuses every comment a machine does not read, so the why goes in a name or the commit message.
 - Function names describe the result (`buildTitle`, not `processStuff`).
 - Type assertions limited to `as const` and `as unknown` (`borso/no-type-assertion-except-unknown` enforces, but the rule must hold where it does not lint).
 - No `any`. Run `grep -nP '\bany\b' <changed-files>` to confirm.

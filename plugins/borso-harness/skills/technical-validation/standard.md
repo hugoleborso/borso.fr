@@ -52,11 +52,11 @@ Skip rows that are pure deferral ("out of scope"). Skip rows that the spec marks
 
 ### B. Code cleanliness (repo rules)
 
-Pulled from CLAUDE.md "Clean code", `docs/standards/`, and the repo's `eslint.config.js`:
+Pulled from CLAUDE.md "Clean code", `docs/standards/`, and the repo's `.oxlintrc.json`:
 
 - Names carry intent — no `c`, `x`, `r` outside trivial loop indices. No abbreviations.
 - Magic numbers / strings extracted to named constants.
-- Comments document the WHY only — no what-comments, no JSDoc on internals.
+- No prose comments. `borso/no-comments` refuses every comment a machine does not read, so the why goes in a name or the commit message.
 - Function names describe the result, not the mechanism.
 - Type assertions limited to `as const` and `as unknown` (`borso/no-type-assertion-except-unknown` enforces, but the rule must hold even where ESLint does not reach).
 - `noExplicitAny` — no `any`.

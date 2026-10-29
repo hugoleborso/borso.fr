@@ -101,7 +101,7 @@ No:
 | [0050](./0050-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | accepted | 2026-10-27 |
 | [0051](./0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
 | [0052](./0052-pragma-previews-clone-takes-and-read-their-audio-from-production.md) | pragma previews clone takes and read their audio from the production uploads bucket | accepted | 2026-10-29 |
-| [202610291139](./202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda | proposed | 2026-10-29 |
+| [202610291139](./202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda | accepted | 2026-10-29 |
 
 ### Data layer
 

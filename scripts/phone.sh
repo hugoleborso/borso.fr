@@ -10,7 +10,7 @@
 #
 # Usage:
 #   scripts/phone.sh start <url>          open url in the "phone" session at 375 x 812
-#   scripts/phone.sh touch '<selector>'   real touch tap on the first match
+#   scripts/phone.sh touch '<selector>'   real touch tap on the first visible match
 #   scripts/phone.sh stop                 close the session
 
 set -euo pipefail

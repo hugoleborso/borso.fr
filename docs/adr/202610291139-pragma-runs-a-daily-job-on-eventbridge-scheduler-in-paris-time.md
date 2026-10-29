@@ -1,6 +1,6 @@
 # ADR-202610291139: pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-29
 - **Deciders:** Hugo Borsoni
 - **Tags:** practice-streak, cdk

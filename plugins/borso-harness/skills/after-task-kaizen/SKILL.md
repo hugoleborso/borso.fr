@@ -174,6 +174,15 @@ trailers, and the feature's validation reports. When the row is the third
 `feature` row, compare the rows with the targets in the kaizen pull request's
 *Patterns* section.
 
+### 1c. Stamp the ADRs the merge shipped
+
+`git diff --name-only <merge>^ <merge> -- docs/adr/` lists the ADRs the pull
+request added. Set each one still marked `- **Status:** proposed` to
+`accepted`, in the file and in its row of `docs/adr/README.md`, as `/adr`'s
+lifecycle says. No other step does it: twenty-five ADRs
+merged from `0010` to `0046` were still `proposed` when the sweep of PR #234
+looked.
+
 ### 2. Re-read the table top-to-bottom — only now classify
 
 After the table is committed to writing, scan it as a whole.
@@ -388,6 +397,7 @@ not its volume, is what keeps the system improving.
 ## Output checklist before declaring done
 
 - [ ] A row for this pull request in `docs/quality/feature-cost.md`.
+- [ ] Every ADR the merge added reads `accepted`.
 - [ ] Inventory built from the archived friction log + commits +
       review comments + CI runs, not just memory.
 - [ ] Each subject classified using the table; no-ops dropped.

@@ -36,14 +36,13 @@ Delete the block-quoted prompt under each heading once the section is written.
 
 ## Code-quality self-check
 
-> *Pulled from CLAUDE.md, `docs/standards/`, and the repo's eslint / knip / commitlint config. Sub-skills (`/vite`, `/three-js`, …) extend this. An unchecked box blocks push.*
+> *Pulled from CLAUDE.md, `docs/standards/`, and the repo's oxlint / knip / commitlint config. Sub-skills (`/vite`, `/three-js`, …) extend this. An unchecked box blocks push.*
 
-- [ ] `pnpm exec eslint --no-warn-ignored --max-warnings 0` clean (incl. `borso/no-type-assertion-except-unknown`: only `as const`, `as unknown`).
-- [ ] `pnpm typecheck` clean (`tsc --noEmit` in every workspace touched).
+- [ ] Type assertions are only `as const` and `as unknown`.
 - [ ] No `any`.
 - [ ] No abbreviations / one-letter locals outside trivial loop indices.
 - [ ] Magic numbers and strings extracted to named constants.
-- [ ] Comments document the WHY only — no what-comments, no JSDoc on internals.
+- [ ] No prose comments. `borso/no-comments` refuses every comment a machine does not read, so the why goes in a name or the commit message.
 - [ ] Function names describe the result, not the mechanism.
 - [ ] Conventional-commit scope matches the touched app (`borso-fr`, `borsouvertures`, `infra`, `ci`, `docs`, `deps`).
 - [ ] Every pure helper this feature introduces lives in `<name>.utils.ts` with a sibling `<name>.utils.test.ts` covered at 100% (statements / branches / functions / lines). Repo rule, no exemption for frontend-only or "small" workspaces. See CLAUDE.md "Clean code".

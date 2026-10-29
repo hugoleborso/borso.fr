@@ -71,13 +71,11 @@ Section names match the canonical template at [`template.md`](./template.md).
 
 ## Code-quality self-check
 
-- [ ] Repo lint rules pass (`pnpm exec eslint --no-warn-ignored --max-warnings 0`).
 - [ ] Type-assertion plugin satisfied (only `as const`, `as unknown` allowed in this repo).
 - [ ] No `any`.
 - [ ] No abbreviations or single-letter locals outside trivial loop indices.
 - [ ] Magic numbers / strings extracted to named constants.
-- [ ] Comments document the WHY only.
-- [ ] No JSDoc on internals.
+- [ ] No prose comments. `borso/no-comments` refuses every comment a machine does not read, so the why goes in a name or the commit message.
 - [ ] Function names describe the result, not the mechanism.
 
 ## Pre-flight gates
