@@ -25,7 +25,7 @@ A subject logged by three or more writers is marked *systemic* below. That count
 | 04 | implementation | The discarding-reset hook said "cannot read the checkout" for a literal `git checkout -- <file>` on any dirty tree. Systemic: 3 agents plus the 5 hook lines, and this sweep | L147 `fix-all`, L203 `harness-repair`, L145, L146, L177, L202 hook lines; reproduced here | dantotsu: [the-guard-that-blamed-the-checkout-for-its-own-trap](../../../dantotsus/the-guard-that-blamed-the-checkout-for-its-own-trap.md) |
 | 05 | implementation | The design-token test read the strings `'to-learn'` and `'from-sm'` as gradient classes. Systemic: 3 writers across both PRs | L132 `build-4`, L139 `build-6`, L210 `redesign-fixes` | dantotsu: [a-filter-named-to-learn-failed-the-colour-test](../../../dantotsus/a-filter-named-to-learn-failed-the-colour-test.md) |
 | 06 | implementation | The same token scanner split `aria-pressed:*:` and `has-[[role=x]]` wrongly | L85 `fix-1`, L199 `review6` | no-op: both tokenizer bugs were fixed on #216 and pinned by tests in `design-tokens.utils.test.ts` |
-| 07 | validation | The CI `mutation` job was cancelled at its 20-minute timeout on #216's final head `d4ca9ba0`, a docs-only commit, because it mutates the whole PR diff: 101 gated pragma files. #216 merged with no mutation verdict. Pushes after main's #224 had none either, since #224 moved mutation from pre-push to CI | ci: job 123404080056, run 40861015638 (Stryker processes killed at cleanup); `scripts/mutate-changed.sh`; 101 gated files counted from the diff (measured) | question to the operator, below. It is an architecture decision about where mutation runs |
+| 07 | validation | The CI `mutation` job was cancelled at its 20-minute timeout on #216's final head `d4ca9ba0`, a docs-only commit, because it mutates the whole PR diff: 101 gated pragma files. #216 merged with no mutation verdict. Pushes after main's #224 had none either, since #224 moved mutation from pre-push to CI | ci: job 123404080056, run 40861015638 (Stryker processes killed at cleanup); `scripts/mutate-changed.sh`; 101 gated files counted from the diff (measured) | fixed: the operator chose Stryker's incremental mode, cached per pull request, and a 60-minute limit. Measured on this branch: 61 s, then 19 s with 25 of 30 mutant results reused |
 | 08 | implementation | Pre-push mutation over a stacked branch re-ran every earlier slice, and a five-slice range was estimated at about three hours | L141 `tech-validator-all`, L148 `ship-all` | merge into 07 |
 | 09 | implementation | A link to a new, untracked doc read as broken, and an untracked doc's own links were never checked. Systemic: 3 writers | L47 `archivist`, L50 `adr-writer`, L51 `spec-critic` | fixed: `check-doc-links.ts` reads untracked, non-ignored files in full mode |
 | 10 | implementation | `blueprint-indexing --accept` rewrote 2,751 lines to accept one marker. On main the baseline carried 703 lines of drift: 584 unrecorded markers and 119 stale entries | L69 `implement-2`; `--accept` diff on main (measured) | fixed: `--accept <path>` rewrites only that file's entries, the drift message names the path, and the baseline is resynced in this PR. Unrecorded markers will build up again, because nothing records them until someone accepts |
@@ -95,17 +95,17 @@ A subject logged by three or more writers is marked *systemic* below. That count
 | --- | --- |
 | dantotsu | 5 |
 | knowledge | 3 |
-| fixed | 9 |
-| question to the operator | 1 |
+| fixed | 10 |
 | merge into another row | 2 |
 | no-op, already covered or by design | 49 |
 
-## The question for the operator
+## The operator's decision on row 07
 
-Row 07. Where should mutation get a verdict on a large pull request? The CI job mutates every gated file the pull request changes, in one run, under a 20-minute limit. #216 had 101 such files and never got a verdict.
+Where should mutation get a verdict on a large pull request? The CI job mutated every gated file the pull request changes, in one run, under a 20-minute limit. #216 had 101 such files and never got a verdict.
 
-- (a) Shard the gated files over a matrix of CI jobs with a fixed number of files each. Each job stays bounded whatever the pull request's size. It costs runner minutes and a change to `ci.yml` and `mutate-changed.sh`.
-- (b) Turn on Stryker's incremental mode with a cache keyed on the branch. Later runs reuse unchanged results, but the first run of a large pull request is still unbounded.
-- (c) Keep it as it is, and accept that a large pull request merges without mutation.
+The options were a matrix of CI jobs with a fixed number of files each, Stryker's incremental mode, or no change. The matrix needs a script of ours to split the files, because Stryker does not shard. The operator chose the incremental mode, which Stryker provides and `full-suite.yml` already uses on `main`, with the job's limit raised from 20 to 60 minutes.
 
-Recommendation: (a), because it is the only option that bounds every run. Per-shard durations are unknown until measured.
+- `scripts/mutate-changed.sh` passes `--incremental` to every Stryker run, so a mutant whose source and tests did not move keeps its verdict.
+- The `mutation` job in `ci.yml` keeps those files in the Actions cache, one entry per pull request, keyed on the toolchain as `full-suite.yml` keys its own.
+- Stryker writes the file only when a run completes, so a first run that outlives 60 minutes still leaves nothing. Whether 101 files fit in 60 minutes is unknown: the job never completed on #216.
+- Measured on this branch: 61 s for the first run, then 19 s with 25 of 30 mutant results reused.
