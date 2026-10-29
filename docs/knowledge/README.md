@@ -253,6 +253,7 @@ decision.
 - [`an-exit-status-read-through-a-pipe-is-the-pipes.md`](./an-exit-status-read-through-a-pipe-is-the-pipes.md) — `$?` after `cmd | tail` is tail's status, so a guard that refuses at exit 3 reads as 0 and a fail-open looks identical to a pass; redirect instead of piping, or use `pipefail` / `PIPESTATUS`.
 - [`generated-reports-are-rebuilt-not-committed.md`](./generated-reports-are-rebuilt-not-committed.md) — a generated report is gitignored and rebuilt with `scripts/reports.sh` before it is read; only inputs a person accepted are committed (ADR-0014).
 - [`reading-another-sessions-transcript-with-list-events.md`](./reading-another-sessions-transcript-with-list-events.md) — `get_session` answers what a session cost in one call; `list_events` pages land inline and a hook-heavy session is thousands of them.
+- [`the-service-worker-grows-by-importscripts.md`](./the-service-worker-grows-by-importscripts.md) — Pragma's `sw.js` is at the line cap; split it with `importScripts` and register the file in the test harness.
 
 ## Adding a new entry
 
