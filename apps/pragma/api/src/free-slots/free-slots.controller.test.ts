@@ -1,18 +1,23 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { CALENDAR_FEEDS_PER_MEMBER_MAX } from '@domain/input-limits.core';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { deleteMemberWithLinks } from '../members/members.repository';
 import { listStoredCalendarFeeds } from '../calendar-feeds/calendar-feeds.repository';
 
 const SECRET_ADDRESS = 'https://calendar.example.com/private-0123abcd/basic.ics';
+const SECOND_ADDRESS = 'https://calendar.example.com/private-4567efgh/basic.ics';
 const SECRET_FRAGMENT = 'private-0123abcd';
 
-const calendarFeedSchema = z.object({ calendarFeed: z.enum(['connected', 'absent']) });
-const signedInMemberSchema = z.object({ calendarFeed: z.enum(['connected', 'absent']) });
+const calendarFeedsSchema = z.object({
+  calendarFeeds: z.array(z.object({ id: z.string(), name: z.string().nullable() })),
+});
 const freeSlotsSchema = z.object({
   slots: z.array(z.object({ start: z.string(), end: z.string() })),
-  excludedMembers: z.array(z.object({ memberId: z.string(), reason: z.string() })),
+  excludedMembers: z.array(
+    z.object({ memberId: z.string(), reason: z.string(), calendarName: z.string().nullable() }),
+  ),
 });
 
 function icsResponse(lines: readonly string[]): Response {
@@ -21,10 +26,21 @@ function icsResponse(lines: readonly string[]): Response {
   });
 }
 
+function namedCalendarOf(address: string): Response {
+  return icsResponse([`X-WR-CALNAME:${address.includes('4567') ? 'Band' : 'Work'}`]);
+}
+
+function answerEveryFeedWithItsName(): void {
+  vi.spyOn(globalThis, 'fetch').mockImplementation((input) =>
+    Promise.resolve(namedCalendarOf(new Request(input).url)),
+  );
+}
+
 // @FollowsBlueprint test-back-e2e
 describe('calendar feeds and free slots (back-e2e)', () => {
   beforeEach(async () => {
     await truncateAllTables(testDatabase());
+    answerEveryFeedWithItsName();
   });
 
   afterEach(() => {
@@ -33,8 +49,8 @@ describe('calendar feeds and free slots (back-e2e)', () => {
 
   it('rejects every calendar route without a session cookie', async () => {
     const { app } = await buildAuthenticatedApp();
-    const save = await jsonRequest(app, '/api/me/calendar-feed', {
-      method: 'PUT',
+    const save = await jsonRequest(app, '/api/me/calendar-feeds', {
+      method: 'POST',
       body: { address: SECRET_ADDRESS },
     });
     const slots = await jsonRequest(app, '/api/free-slots');
@@ -42,29 +58,80 @@ describe('calendar feeds and free slots (back-e2e)', () => {
     expect(slots.status).toBe(401);
   });
 
-  it('saves an address, answers only "connected", and never sends the address back', async () => {
+  it('saves an address under the name its feed declares, and never sends the address back', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
-    const saved = await jsonRequest(app, '/api/me/calendar-feed', {
-      method: 'PUT',
+    const saved = await jsonRequest(app, '/api/me/calendar-feeds', {
+      method: 'POST',
       body: { address: SECRET_ADDRESS },
       cookieHeader,
     });
     const savedText = await saved.text();
     expect(savedText).not.toContain(SECRET_FRAGMENT);
-    expect(calendarFeedSchema.parse(JSON.parse(savedText))).toStrictEqual({
-      calendarFeed: 'connected',
-    });
+    const { calendarFeeds } = calendarFeedsSchema.parse(JSON.parse(savedText));
+    expect(calendarFeeds.map((feed) => feed.name)).toStrictEqual(['Work']);
 
     const signedInMember = await jsonRequest(app, '/api/me', { cookieHeader });
     const meText = await signedInMember.text();
     expect(meText).not.toContain(SECRET_FRAGMENT);
-    expect(signedInMemberSchema.parse(JSON.parse(meText)).calendarFeed).toBe('connected');
+    expect(calendarFeedsSchema.parse(JSON.parse(meText)).calendarFeeds).toStrictEqual(
+      calendarFeeds,
+    );
+  });
+
+  it('keeps several calendars of one member, and saving one twice keeps one copy', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    for (const address of [SECRET_ADDRESS, SECOND_ADDRESS, SECRET_ADDRESS]) {
+      await jsonRequest(app, '/api/me/calendar-feeds', {
+        method: 'POST',
+        body: { address },
+        cookieHeader,
+      });
+    }
+    const signedInMember = await readJson(
+      await jsonRequest(app, '/api/me', { cookieHeader }),
+      calendarFeedsSchema,
+    );
+    expect(signedInMember.calendarFeeds.map((feed) => feed.name)).toStrictEqual(['Band', 'Work']);
+    expect(await listStoredCalendarFeeds()).toHaveLength(2);
+  });
+
+  it('saves a calendar with no name when its feed cannot be read yet', async () => {
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(new Response(null, { status: 503 }));
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const saved = await readJson(
+      await jsonRequest(app, '/api/me/calendar-feeds', {
+        method: 'POST',
+        body: { address: SECRET_ADDRESS },
+        cookieHeader,
+      }),
+      calendarFeedsSchema,
+    );
+    expect(saved.calendarFeeds.map((feed) => feed.name)).toStrictEqual([null]);
+  });
+
+  it('refuses one calendar more than the cap, and says why', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    for (let index = 0; index < CALENDAR_FEEDS_PER_MEMBER_MAX; index++) {
+      await jsonRequest(app, '/api/me/calendar-feeds', {
+        method: 'POST',
+        body: { address: `https://calendar.example.com/feed-${String(index)}.ics` },
+        cookieHeader,
+      });
+    }
+    const refused = await jsonRequest(app, '/api/me/calendar-feeds', {
+      method: 'POST',
+      body: { address: SECRET_ADDRESS },
+      cookieHeader,
+    });
+    expect(refused.status).toBe(409);
+    expect(await refused.json()).toStrictEqual({ error: 'too-many-calendar-feeds' });
+    expect(await listStoredCalendarFeeds()).toHaveLength(CALENDAR_FEEDS_PER_MEMBER_MAX);
   });
 
   it('turns a webcal address into https before storing it', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
-    await jsonRequest(app, '/api/me/calendar-feed', {
-      method: 'PUT',
+    await jsonRequest(app, '/api/me/calendar-feeds', {
+      method: 'POST',
       body: { address: 'webcal://calendar.example.com/feed.ics' },
       cookieHeader,
     });
@@ -77,8 +144,8 @@ describe('calendar feeds and free slots (back-e2e)', () => {
     ['a malformed body', ''],
   ])('refuses %s with a fixed error that does not echo the input', async (_label, address) => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
-    const response = await jsonRequest(app, '/api/me/calendar-feed', {
-      method: 'PUT',
+    const response = await jsonRequest(app, '/api/me/calendar-feeds', {
+      method: 'POST',
       body: { address },
       cookieHeader,
     });
@@ -87,28 +154,49 @@ describe('calendar feeds and free slots (back-e2e)', () => {
     expect(await listStoredCalendarFeeds()).toStrictEqual([]);
   });
 
-  it('removes the address', async () => {
-    const { app, cookieHeader } = await buildAuthenticatedApp();
-    await jsonRequest(app, '/api/me/calendar-feed', {
-      method: 'PUT',
-      body: { address: SECRET_ADDRESS },
-      cookieHeader,
-    });
-    const removed = await readJson(
-      await jsonRequest(app, '/api/me/calendar-feed', { method: 'DELETE', cookieHeader }),
-      calendarFeedSchema,
+  it('removes the one calendar named, and never one of another member', async () => {
+    const owner = await buildAuthenticatedApp('Owner');
+    const other = await buildAuthenticatedApp('Other');
+    const saved = await readJson(
+      await jsonRequest(owner.app, '/api/me/calendar-feeds', {
+        method: 'POST',
+        body: { address: SECRET_ADDRESS },
+        cookieHeader: owner.cookieHeader,
+      }),
+      calendarFeedsSchema,
     );
-    expect(removed.calendarFeed).toBe('absent');
-    expect(await listStoredCalendarFeeds()).toStrictEqual([]);
+    await jsonRequest(owner.app, '/api/me/calendar-feeds', {
+      method: 'POST',
+      body: { address: SECOND_ADDRESS },
+      cookieHeader: owner.cookieHeader,
+    });
+    const workId = saved.calendarFeeds[0]?.id ?? '';
+
+    await jsonRequest(other.app, `/api/me/calendar-feeds/${workId}`, {
+      method: 'DELETE',
+      cookieHeader: other.cookieHeader,
+    });
+    expect(await listStoredCalendarFeeds()).toHaveLength(2);
+
+    const removed = await readJson(
+      await jsonRequest(owner.app, `/api/me/calendar-feeds/${workId}`, {
+        method: 'DELETE',
+        cookieHeader: owner.cookieHeader,
+      }),
+      calendarFeedsSchema,
+    );
+    expect(removed.calendarFeeds.map((feed) => feed.name)).toStrictEqual(['Band']);
   });
 
-  it('deletes the address with its member', async () => {
+  it('deletes every address with its member', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
-    await jsonRequest(app, '/api/me/calendar-feed', {
-      method: 'PUT',
-      body: { address: SECRET_ADDRESS },
-      cookieHeader,
-    });
+    for (const address of [SECRET_ADDRESS, SECOND_ADDRESS]) {
+      await jsonRequest(app, '/api/me/calendar-feeds', {
+        method: 'POST',
+        body: { address },
+        cookieHeader,
+      });
+    }
     await deleteMemberWithLinks(memberId);
     expect(await listStoredCalendarFeeds()).toStrictEqual([]);
   });
@@ -119,26 +207,32 @@ describe('calendar feeds and free slots (back-e2e)', () => {
       await jsonRequest(app, '/api/free-slots', { cookieHeader }),
       freeSlotsSchema,
     );
-    expect(freeSlots.excludedMembers).toStrictEqual([{ memberId, reason: 'no-calendar' }]);
+    expect(freeSlots.excludedMembers).toStrictEqual([
+      { memberId, reason: 'no-calendar', calendarName: null },
+    ]);
   });
 
-  it('subtracts a read feed, and never puts the address in the slots response', async () => {
+  it('subtracts every calendar of a member, and never puts an address in the slots response', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
-    await jsonRequest(app, '/api/me/calendar-feed', {
-      method: 'PUT',
-      body: { address: SECRET_ADDRESS },
-      cookieHeader,
-    });
+    for (const address of [SECRET_ADDRESS, SECOND_ADDRESS]) {
+      await jsonRequest(app, '/api/me/calendar-feeds', {
+        method: 'POST',
+        body: { address },
+        cookieHeader,
+      });
+    }
     const fetchSpy = vi
       .spyOn(globalThis, 'fetch')
-      .mockResolvedValue(
-        icsResponse([
-          'BEGIN:VEVENT',
-          'UID:x',
-          'DTSTART:20200101T180000Z',
-          'DTEND:20200101T190000Z',
-          'END:VEVENT',
-        ]),
+      .mockImplementation(() =>
+        Promise.resolve(
+          icsResponse([
+            'BEGIN:VEVENT',
+            'UID:x',
+            'DTSTART:20200101T180000Z',
+            'DTEND:20200101T190000Z',
+            'END:VEVENT',
+          ]),
+        ),
       );
     const response = await jsonRequest(app, '/api/free-slots', { cookieHeader });
     const text = await response.text();
@@ -147,19 +241,20 @@ describe('calendar feeds and free slots (back-e2e)', () => {
     expect(freeSlots.excludedMembers).toStrictEqual([]);
     expect(freeSlots.slots.length).toBeGreaterThan(0);
     expect(fetchSpy).toHaveBeenCalledWith(SECRET_ADDRESS, expect.anything());
+    expect(fetchSpy).toHaveBeenCalledWith(SECOND_ADDRESS, expect.anything());
   });
 
-  it('excludes a member whose address is gone, and one whose provider is down', async () => {
+  it('names the calendar whose address is gone, and the one whose provider is down', async () => {
     const first = await buildAuthenticatedApp('First');
     const second = await buildAuthenticatedApp('Second');
-    await jsonRequest(first.app, '/api/me/calendar-feed', {
-      method: 'PUT',
+    await jsonRequest(first.app, '/api/me/calendar-feeds', {
+      method: 'POST',
       body: { address: 'https://gone.example.com/feed.ics' },
       cookieHeader: first.cookieHeader,
     });
-    await jsonRequest(second.app, '/api/me/calendar-feed', {
-      method: 'PUT',
-      body: { address: 'https://down.example.com/feed.ics' },
+    await jsonRequest(second.app, '/api/me/calendar-feeds', {
+      method: 'POST',
+      body: { address: 'https://down.example.com/4567.ics' },
       cookieHeader: second.cookieHeader,
     });
     vi.spyOn(globalThis, 'fetch').mockImplementation((input) =>
@@ -174,8 +269,8 @@ describe('calendar feeds and free slots (back-e2e)', () => {
     );
     expect(freeSlots.excludedMembers).toStrictEqual(
       expect.arrayContaining([
-        { memberId: first.memberId, reason: 'needs-reconnecting' },
-        { memberId: second.memberId, reason: 'unavailable' },
+        { memberId: first.memberId, reason: 'needs-reconnecting', calendarName: 'Work' },
+        { memberId: second.memberId, reason: 'unavailable', calendarName: 'Band' },
       ]),
     );
   });

@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { formatFreeSlot, nameExclusions, selectFreeSlotsView } from './free-slots.utils';
+import {
+  formatFreeSlot,
+  nameExclusions,
+  selectExclusionMessageKey,
+  selectFreeSlotsView,
+} from './free-slots.utils';
 
 describe('formatFreeSlot', () => {
   it('shows the day and the whole span in Paris time, whatever the browser zone', () => {
@@ -25,15 +30,39 @@ describe('nameExclusions', () => {
     expect(
       nameExclusions(
         [
-          { memberId: 'a', reason: 'no-calendar' },
-          { memberId: 'gone', reason: 'unavailable' },
+          { memberId: 'a', reason: 'no-calendar', calendarName: null },
+          { memberId: 'gone', reason: 'unavailable', calendarName: 'Work' },
         ],
         [{ id: 'a', firstName: 'Léa' }],
       ),
     ).toStrictEqual([
-      { firstName: 'Léa', reason: 'no-calendar' },
-      { firstName: '—', reason: 'unavailable' },
+      { firstName: 'Léa', reason: 'no-calendar', calendarName: null },
+      { firstName: '—', reason: 'unavailable', calendarName: 'Work' },
     ]);
+  });
+});
+
+describe('selectExclusionMessageKey', () => {
+  it('names the calendar that failed when its feed declared a name', () => {
+    expect(
+      selectExclusionMessageKey({ firstName: 'Léa', reason: 'unavailable', calendarName: 'Work' }),
+    ).toBe('freeSlots.excluded.unavailableNamed');
+    expect(
+      selectExclusionMessageKey({
+        firstName: 'Léa',
+        reason: 'needs-reconnecting',
+        calendarName: 'Work',
+      }),
+    ).toBe('freeSlots.excluded.needsReconnectingNamed');
+  });
+
+  it('falls back to the member alone when the calendar has no name', () => {
+    expect(
+      selectExclusionMessageKey({ firstName: 'Léa', reason: 'unavailable', calendarName: null }),
+    ).toBe('freeSlots.excluded.unavailable');
+    expect(
+      selectExclusionMessageKey({ firstName: 'Léa', reason: 'no-calendar', calendarName: null }),
+    ).toBe('freeSlots.excluded.noCalendar');
   });
 });
 

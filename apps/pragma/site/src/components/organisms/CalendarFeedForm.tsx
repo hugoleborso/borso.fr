@@ -11,18 +11,56 @@ import { ButtonAnchor } from '../atoms/ButtonAnchor';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
+import type { CalendarFeedSummary } from '../../lib/queries/me.queries';
 import { type CalendarFeedFormMode, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
 
 const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const ADDRESS_MAX_LENGTH = 2_048;
 
 export interface CalendarFeedFormProps {
-  readonly state: 'connected' | 'absent';
+  readonly feeds: readonly CalendarFeedSummary[];
   readonly message: string | null;
   readonly error: string | null;
   readonly isRemoving: boolean;
   readonly onSave: (address: string) => Promise<void>;
-  readonly onRemove: () => void;
+  readonly onRemove: (feedId: string) => void;
+}
+
+interface CalendarFeedListProps {
+  readonly feeds: readonly CalendarFeedSummary[];
+  readonly labelOf: (feed: CalendarFeedSummary) => string;
+  readonly isRemoving: boolean;
+  readonly onRemove: (feed: CalendarFeedSummary) => void;
+}
+
+function CalendarFeedList({
+  feeds,
+  labelOf,
+  isRemoving,
+  onRemove,
+}: CalendarFeedListProps): JSX.Element {
+  const { t } = useTranslation();
+  return (
+    <ul className="list-none p-0 m-0 flex flex-col gap-2" aria-label={t('account.calendarFeeds')}>
+      {feeds.map((feed) => (
+        <li key={feed.id} className="flex items-center justify-between gap-3">
+          <span className="flex min-w-0 items-center gap-2 text-ink">
+            <Icon name="calendar" size="md" />
+            <span className="truncate">{labelOf(feed)}</span>
+          </span>
+          <Button
+            icon="trash"
+            type="button"
+            variant="quiet"
+            onClick={() => onRemove(feed)}
+            disabled={isRemoving}
+          >
+            {t('account.calendarFeedRemove')}
+          </Button>
+        </li>
+      ))}
+    </ul>
+  );
 }
 
 interface AddressFieldProps {
@@ -123,54 +161,53 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
 // @FollowsBlueprint organism-form
 export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
   const { t } = useTranslation();
-  const [isReplacing, setIsReplacing] = useState(false);
-  const [isConfirmingRemoval, setIsConfirmingRemoval] = useState(false);
+  const [isAdding, setIsAdding] = useState(false);
+  const [feedToRemove, setFeedToRemove] = useState<CalendarFeedSummary | null>(null);
   const saveAndClose = async (address: string): Promise<void> => {
     await props.onSave(address);
-    setIsReplacing(false);
+    setIsAdding(false);
   };
-  const mode = selectCalendarFeedFormMode(props.state, isReplacing);
-  const viewByMode: Readonly<Record<CalendarFeedFormMode, JSX.Element>> = {
+  const mode = selectCalendarFeedFormMode(props.feeds.length, isAdding);
+  const labelOf = (feed: CalendarFeedSummary): string =>
+    feed.name ?? t('account.calendarFeedUnnamed', { position: props.feeds.indexOf(feed) + 1 });
+  const addButton = (
+    <Button icon="plus" type="button" variant="secondary" onClick={() => setIsAdding(true)}>
+      {t('account.calendarFeedAdd')}
+    </Button>
+  );
+  const fieldByMode: Readonly<Record<CalendarFeedFormMode, JSX.Element | null>> = {
     entering: <AddressField onSave={saveAndClose} onCancel={null} />,
-    replacing: <AddressField onSave={saveAndClose} onCancel={() => setIsReplacing(false)} />,
-    connected: (
-      <div className="flex flex-wrap items-center gap-3">
-        <span className="text-meta text-ink">{t('account.calendarFeedConnected')}</span>
-        <Button
-          icon="refresh"
-          type="button"
-          variant="secondary"
-          onClick={() => setIsReplacing(true)}
-        >
-          {t('account.calendarFeedReplace')}
-        </Button>
-        <Button
-          icon="trash"
-          type="button"
-          variant="quiet"
-          onClick={() => setIsConfirmingRemoval(true)}
-          disabled={props.isRemoving}
-        >
-          {t('account.calendarFeedRemove')}
-        </Button>
-      </div>
+    adding: <AddressField onSave={saveAndClose} onCancel={() => setIsAdding(false)} />,
+    listing: <div>{addButton}</div>,
+    full: (
+      <p className="m-0 text-meta text-ink-soft">
+        {t('account.calendarFeedsFull', { count: props.feeds.length })}
+      </p>
     ),
   };
 
   return (
     <div className="flex flex-col gap-3">
-      {viewByMode[mode]}
-      {isConfirmingRemoval ? (
+      {props.feeds.length === 0 ? null : (
+        <CalendarFeedList
+          feeds={props.feeds}
+          labelOf={labelOf}
+          isRemoving={props.isRemoving}
+          onRemove={setFeedToRemove}
+        />
+      )}
+      {fieldByMode[mode]}
+      {feedToRemove === null ? null : (
         <ConfirmDialog
-          question={t('account.calendarFeedRemoveQuestion')}
+          question={t('account.calendarFeedRemoveQuestion', { name: labelOf(feedToRemove) })}
           confirmLabel={t('account.calendarFeedRemove')}
           onConfirm={() => {
-            setIsConfirmingRemoval(false);
-            props.onRemove();
+            setFeedToRemove(null);
+            props.onRemove(feedToRemove.id);
           }}
-          onCancel={() => setIsConfirmingRemoval(false)}
+          onCancel={() => setFeedToRemove(null)}
         />
-      ) : null}
+      )}
       {props.error === null ? null : (
         <p className="text-danger text-meta m-0" role="alert">
           {props.error}

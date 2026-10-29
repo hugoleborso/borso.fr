@@ -28,6 +28,7 @@ const SECRET_TABLES_BLOCKED_ON_PREVIEW = [
   'assistant_client',
   'assistant_grant',
   'auth_attempt',
+  'calendar_feed',
   'member_calendar_feed',
   'member_passkey',
   'push_subscription',

@@ -1,6 +1,7 @@
 import ICAL from 'ical.js';
 import { z } from 'zod';
 import { BAND_TIME_ZONE } from '@domain/band-time-zone.core';
+import { CALENDAR_FEED_NAME_MAX_LENGTH } from '@domain/input-limits.core';
 import { isKnownTimeZone, zonedWallTimeToInstant } from '../helpers/paris-time/paris-time.core';
 import type { BusyInterval } from './calendar-feeds.types';
 
@@ -12,6 +13,7 @@ const TZID = 'tzid';
 const DTSTART = 'dtstart';
 const DTEND = 'dtend';
 const UID = 'uid';
+const CALENDAR_NAME = 'x-wr-calname';
 const MILLISECONDS_PER_SECOND = 1_000;
 const MAX_OCCURRENCES_PER_EVENT = 100_000;
 
@@ -132,5 +134,17 @@ export function readBusyIntervals(body: string, range: ReadRange): BusyIntervals
     return { kind: 'ok', intervals };
   } catch {
     return UNAVAILABLE;
+  }
+}
+
+export function readCalendarName(body: string): string | null {
+  try {
+    const root = new ICAL.Component(jcalSchema.parse(ICAL.parse(body)));
+    const name: unknown = root.getFirstPropertyValue(CALENDAR_NAME);
+    if (typeof name !== 'string') return null;
+    const trimmed = name.trim().slice(0, CALENDAR_FEED_NAME_MAX_LENGTH).trim();
+    return trimmed.length === 0 ? null : trimmed;
+  } catch {
+    return null;
   }
 }

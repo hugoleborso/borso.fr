@@ -7,6 +7,7 @@ import {
   formatFreeSlot,
   type NamedExclusion,
   nameExclusions,
+  selectExclusionMessageKey,
   selectFreeSlotsView,
 } from '../../lib/free-slots.utils';
 import { useFreeSlots } from '../../lib/queries/free-slots.queries';
@@ -30,12 +31,6 @@ interface ViewProps {
   readonly onBook: (start: Date) => void;
 }
 
-const EXCLUSION_MESSAGE_KEY = {
-  'no-calendar': 'freeSlots.excluded.noCalendar',
-  'needs-reconnecting': 'freeSlots.excluded.needsReconnecting',
-  unavailable: 'freeSlots.excluded.unavailable',
-} as const;
-
 const NO_MEMBERS: readonly { id: string; firstName: string }[] = [];
 const NO_SLOTS: readonly FreeSlot[] = [];
 
@@ -43,9 +38,12 @@ function ExclusionList({ exclusions }: Pick<ViewProps, 'exclusions'>): JSX.Eleme
   const { t } = useTranslation();
   return (
     <ul className="flex flex-col gap-0.5 p-0 m-0 list-none text-meta text-ink-soft">
-      {exclusions.map((exclusion) => (
-        <li key={`${exclusion.firstName}-${exclusion.reason}`}>
-          {t(EXCLUSION_MESSAGE_KEY[exclusion.reason], { name: exclusion.firstName })}
+      {exclusions.map((exclusion, index) => (
+        <li key={index}>
+          {t(selectExclusionMessageKey(exclusion), {
+            name: exclusion.firstName,
+            calendar: exclusion.calendarName,
+          })}
         </li>
       ))}
     </ul>

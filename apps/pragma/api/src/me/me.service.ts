@@ -1,6 +1,6 @@
 import { readCredentialOfMember } from '../auth/credentials.service';
-import { readCalendarFeedState } from '../calendar-feeds/calendar-feeds.service';
-import type { CalendarFeedState } from '../calendar-feeds/calendar-feeds.types';
+import { listCalendarFeeds } from '../calendar-feeds/calendar-feeds.service';
+import type { CalendarFeedSummary } from '../calendar-feeds/calendar-feeds.types';
 import { getMembersSortedByFirstName, patchMember } from '../members/members.service';
 import { confirmUpdate, type ToolActor } from '../mcp/mcp.service';
 import {
@@ -27,15 +27,15 @@ export interface SignedInMember {
   readonly username: string;
   readonly phone: string | null;
   readonly email: string | null;
-  readonly calendarFeed: CalendarFeedState;
+  readonly calendarFeeds: readonly CalendarFeedSummary[];
 }
 
 // @FollowsBlueprint service-orchestration
 export async function readSignedInMember(memberId: string): Promise<SignedInMember | null> {
-  const [credential, members, calendarFeed] = await Promise.all([
+  const [credential, members, calendarFeeds] = await Promise.all([
     readCredentialOfMember(memberId),
     getMembersSortedByFirstName(),
-    readCalendarFeedState(memberId),
+    listCalendarFeeds(memberId),
   ]);
   if (credential === null) return null;
   const member = members.find((candidate) => candidate.id === memberId);
@@ -47,7 +47,7 @@ export async function readSignedInMember(memberId: string): Promise<SignedInMemb
     username: credential.username,
     phone: member.phone,
     email: member.email,
-    calendarFeed,
+    calendarFeeds,
   };
 }
 

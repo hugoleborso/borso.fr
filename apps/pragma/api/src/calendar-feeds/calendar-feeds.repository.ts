@@ -1,50 +1,92 @@
-import { eq } from 'drizzle-orm';
+import { and, asc, count, eq } from 'drizzle-orm';
+import { CALENDAR_FEEDS_PER_MEMBER_MAX } from '@domain/input-limits.core';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import type { StoredCalendarFeed } from './calendar-feeds.types';
-import { memberCalendarFeedTable } from './calendar-feeds.schema';
+import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
+import { memberTable } from '../members/members.schema';
+import type { CalendarFeedSummary, StoredCalendarFeed } from './calendar-feeds.types';
+import { calendarFeedTable } from './calendar-feeds.schema';
+
+export type AddCalendarFeedOutcome = 'saved' | 'too-many';
+
+interface NewCalendarFeed {
+  readonly memberId: string;
+  readonly address: string;
+  readonly name: string | null;
+  readonly now: Date;
+}
+
+async function claimMemberRow(executor: DatabaseExecutor, memberId: string): Promise<void> {
+  await executor
+    .select({ id: memberTable.id })
+    .from(memberTable)
+    .where(eq(memberTable.id, memberId))
+    .for('update');
+}
 
 // @FollowsBlueprint repository-idempotent-upsert
-export async function upsertCalendarFeed(
-  memberId: string,
-  address: string,
-  now: Date,
-): Promise<void> {
-  const database = getDatabase();
-  await database
-    .insert(memberCalendarFeedTable)
-    .values({ memberId, address, updatedAt: now })
-    .onConflictDoUpdate({
-      target: memberCalendarFeedTable.memberId,
-      set: { address, updatedAt: now },
-    });
+export async function upsertCalendarFeed(feed: NewCalendarFeed): Promise<AddCalendarFeedOutcome> {
+  return await retryingConflictAborts(
+    async () =>
+      await getDatabase().transaction(async (transaction) => {
+        await claimMemberRow(transaction, feed.memberId);
+        const [existing] = await transaction
+          .select({ total: count() })
+          .from(calendarFeedTable)
+          .where(eq(calendarFeedTable.memberId, feed.memberId));
+        const updated = await transaction
+          .update(calendarFeedTable)
+          .set({ name: feed.name, updatedAt: feed.now })
+          .where(
+            and(
+              eq(calendarFeedTable.memberId, feed.memberId),
+              eq(calendarFeedTable.address, feed.address),
+            ),
+          )
+          .returning({ id: calendarFeedTable.id });
+        if (updated.length > 0) return 'saved';
+        if ((existing?.total ?? 0) >= CALENDAR_FEEDS_PER_MEMBER_MAX) return 'too-many';
+        await transaction.insert(calendarFeedTable).values({
+          memberId: feed.memberId,
+          address: feed.address,
+          name: feed.name,
+          updatedAt: feed.now,
+        });
+        return 'saved';
+      }),
+  );
 }
 
 // @FollowsBlueprint repository-query
-export async function hasCalendarFeed(memberId: string): Promise<boolean> {
+export async function listCalendarFeedsOfMember(memberId: string): Promise<CalendarFeedSummary[]> {
   const database = getDatabase();
-  const rows = await database
-    .select({ memberId: memberCalendarFeedTable.memberId })
-    .from(memberCalendarFeedTable)
-    .where(eq(memberCalendarFeedTable.memberId, memberId))
-    .limit(1);
-  return rows.length > 0;
+  return await database
+    .select({ id: calendarFeedTable.id, name: calendarFeedTable.name })
+    .from(calendarFeedTable)
+    .where(eq(calendarFeedTable.memberId, memberId))
+    .orderBy(asc(calendarFeedTable.name), asc(calendarFeedTable.id));
 }
 
 export async function listStoredCalendarFeeds(): Promise<StoredCalendarFeed[]> {
   const database = getDatabase();
   return await database
     .select({
-      memberId: memberCalendarFeedTable.memberId,
-      address: memberCalendarFeedTable.address,
+      memberId: calendarFeedTable.memberId,
+      address: calendarFeedTable.address,
+      name: calendarFeedTable.name,
     })
-    .from(memberCalendarFeedTable);
+    .from(calendarFeedTable);
 }
 
-export async function deleteCalendarFeed(
+export async function deleteCalendarFeed(memberId: string, feedId: string): Promise<void> {
+  const database = getDatabase();
+  await database
+    .delete(calendarFeedTable)
+    .where(and(eq(calendarFeedTable.memberId, memberId), eq(calendarFeedTable.id, feedId)));
+}
+
+export async function deleteCalendarFeedsOfMember(
   memberId: string,
   executor: DatabaseExecutor = getDatabase(),
 ): Promise<void> {
-  await executor
-    .delete(memberCalendarFeedTable)
-    .where(eq(memberCalendarFeedTable.memberId, memberId));
+  await executor.delete(calendarFeedTable).where(eq(calendarFeedTable.memberId, memberId));
 }

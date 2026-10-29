@@ -19,13 +19,15 @@
       "vibeLabel": "Mistral Vibe"
     },
     "calendarFeedAddress": "Secret iCal address",
-    "calendarFeedConnected": "Calendar connected.",
+    "calendarFeedAdd": "Add a calendar",
+    "calendarFeeds": "Connected calendars",
     "calendarFeedInvalid": "This address cannot be read. Paste the secret address that starts with https:// or webcal://.",
     "calendarFeedRemove": "Remove",
-    "calendarFeedRemoveQuestion": "Remove your calendar? The free slots will then be computed without you, and reconnecting needs the secret address again.",
+    "calendarFeedRemoveQuestion": "Remove the calendar {{name}}? The free slots will no longer read it, and reconnecting it needs its secret address again.",
     "calendarFeedRemoved": "Calendar removed.",
-    "calendarFeedReplace": "Replace",
     "calendarFeedSaved": "Saved.",
+    "calendarFeedUnnamed": "Calendar {{position}}",
+    "calendarFeedsFull": "You have connected {{count}} calendars, the most Pragma reads. Remove one to add another.",
     "changePassword": "Change password",
     "contactDetails": "Contact details",
     "contactDetailsSaved": "Contact details saved.",
@@ -422,7 +424,9 @@
     "excluded": {
       "noCalendar": "Without {{name}}, who has no calendar",
       "needsReconnecting": "{{name}}'s calendar needs reconnecting",
-      "unavailable": "{{name}}'s calendar is unavailable right now"
+      "unavailable": "{{name}}'s calendar is unavailable right now",
+      "needsReconnectingNamed": "{{name}}'s calendar {{calendar}} needs reconnecting",
+      "unavailableNamed": "{{name}}'s calendar {{calendar}} is unavailable right now"
     },
     "pageTitle": "Find a slot",
     "open": "Find a slot",

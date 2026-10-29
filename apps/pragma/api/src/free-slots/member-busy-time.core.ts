@@ -7,19 +7,21 @@ type BusyTimeOutcome =
       readonly kind: 'read';
       readonly intervals: readonly BusyInterval[];
     }
-  | { readonly memberId: string; readonly kind: FeedFailure };
+  | { readonly memberId: string; readonly kind: FeedFailure; readonly calendarName: string | null };
 
 // @FollowsBlueprint core-decision
 export function selectExcludedMembers(
   memberIds: readonly string[],
   busyTimes: readonly BusyTimeOutcome[],
 ): ExcludedMember[] {
-  const outcomeByMember = new Map(busyTimes.map((busyTime) => [busyTime.memberId, busyTime.kind]));
   return memberIds.flatMap((memberId): ExcludedMember[] => {
-    const outcome = outcomeByMember.get(memberId);
-    if (outcome === undefined) return [{ memberId, reason: 'no-calendar' }];
-    if (outcome === 'read') return [];
-    return [{ memberId, reason: outcome }];
+    const outcomes = busyTimes.filter((busyTime) => busyTime.memberId === memberId);
+    if (outcomes.length === 0) return [{ memberId, reason: 'no-calendar', calendarName: null }];
+    return outcomes.flatMap((outcome): ExcludedMember[] =>
+      outcome.kind === 'read'
+        ? []
+        : [{ memberId, reason: outcome.kind, calendarName: outcome.calendarName }],
+    );
   });
 }
 

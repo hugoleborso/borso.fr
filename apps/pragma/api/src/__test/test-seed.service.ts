@@ -103,7 +103,14 @@ async function seedCalendarFeeds(
   }));
   const outcomes = [];
   for (const attachment of listFixtureFeedAttachments(seededMembers, feedOrigin)) {
-    outcomes.push(await saveCalendarFeed(attachment.memberId, attachment.address, now));
+    outcomes.push(
+      await saveCalendarFeed(
+        attachment.memberId,
+        attachment.address,
+        now,
+        async () => await Promise.resolve(attachment.name),
+      ),
+    );
   }
   return countSavedFeeds(outcomes);
 }

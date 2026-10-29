@@ -7,6 +7,10 @@ import {
 } from './member-busy-time.core';
 
 const EVENING = { start: new Date('2026-10-13T17:00:00Z'), end: new Date('2026-10-13T18:00:00Z') };
+const LATE_EVENING = {
+  start: new Date('2026-10-13T19:00:00Z'),
+  end: new Date('2026-10-13T20:00:00Z'),
+};
 
 describe('selectExcludedMembers', () => {
   it('names each member left out of the calculation and why, in member order', () => {
@@ -14,15 +18,31 @@ describe('selectExcludedMembers', () => {
       selectExcludedMembers(
         ['hugo', 'lea', 'marc', 'sarah'],
         [
-          { memberId: 'sarah', kind: 'unavailable' },
+          { memberId: 'sarah', kind: 'unavailable', calendarName: null },
           { memberId: 'hugo', kind: 'read', intervals: [] },
-          { memberId: 'marc', kind: 'needs-reconnecting' },
+          { memberId: 'marc', kind: 'needs-reconnecting', calendarName: 'Work' },
         ],
       ),
     ).toStrictEqual([
-      { memberId: 'lea', reason: 'no-calendar' },
-      { memberId: 'marc', reason: 'needs-reconnecting' },
-      { memberId: 'sarah', reason: 'unavailable' },
+      { memberId: 'lea', reason: 'no-calendar', calendarName: null },
+      { memberId: 'marc', reason: 'needs-reconnecting', calendarName: 'Work' },
+      { memberId: 'sarah', reason: 'unavailable', calendarName: null },
+    ]);
+  });
+
+  it('names each calendar of a member that failed, and none that was read', () => {
+    expect(
+      selectExcludedMembers(
+        ['hugo'],
+        [
+          { memberId: 'hugo', kind: 'read', intervals: [] },
+          { memberId: 'hugo', kind: 'unavailable', calendarName: 'Band' },
+          { memberId: 'hugo', kind: 'needs-reconnecting', calendarName: 'Work' },
+        ],
+      ),
+    ).toStrictEqual([
+      { memberId: 'hugo', reason: 'unavailable', calendarName: 'Band' },
+      { memberId: 'hugo', reason: 'needs-reconnecting', calendarName: 'Work' },
     ]);
   });
 
@@ -36,16 +56,17 @@ describe('selectExcludedMembers', () => {
 describe('collectBusyIntervals and countReadFeeds', () => {
   const busyTimes = [
     { memberId: 'hugo', kind: 'read', intervals: [EVENING] },
-    { memberId: 'marc', kind: 'unavailable' },
+    { memberId: 'marc', kind: 'unavailable', calendarName: null },
     { memberId: 'sarah', kind: 'read', intervals: [] },
+    { memberId: 'sarah', kind: 'read', intervals: [LATE_EVENING] },
   ] as const;
 
-  it('pools the intervals of every feed that was read', () => {
-    expect(collectBusyIntervals(busyTimes)).toStrictEqual([EVENING]);
+  it('pools the intervals of every feed that was read, several per member included', () => {
+    expect(collectBusyIntervals(busyTimes)).toStrictEqual([EVENING, LATE_EVENING]);
   });
 
   it('counts the feeds that were read, and the ones that failed', () => {
-    expect(countReadFeeds(busyTimes)).toBe(2);
+    expect(countReadFeeds(busyTimes)).toBe(3);
     expect(countFailedFeeds(busyTimes)).toBe(1);
   });
 });
