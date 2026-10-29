@@ -112,7 +112,6 @@ When the verdict asserts a **routing or auth property that differs by stage** (e
 | Writing a file for a layer without opening that layer's blueprint | The file invents a shape the repository already settled, and the reviewer spends the review re-deriving a decision instead of reading the change. |
 | Leaving a new file without a `// @FollowsBlueprint` marker | The coverage grid reports the layer as unmarked, so the next author reads a real pattern as an absent one. |
 | Skipping an existing sub-skill | The sub-skill's conventions go unenforced; defects predicted by it ship anyway. |
-| Bypassing a hook (`--no-verify`) | Repo rule says never. The gate exists because culture wasn't enough. |
 | Deferring the test-runner setup | The implementation lands without coverage and the next session inherits a broken gate. |
 | One giant commit at the end | Reviewers (and the technical-validator) cannot bisect; risk regression goes up. |
 | Implementing rows out of order to chase the interesting parts first | Plan rows that depend on earlier ones get implemented against an incomplete foundation; refactor cost balloons. |

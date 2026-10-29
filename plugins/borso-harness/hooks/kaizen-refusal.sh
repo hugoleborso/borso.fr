@@ -17,9 +17,9 @@
 #
 # Never fails the hook that calls it: a log that cannot be written is not a
 # reason to let a refused call through, and `exit 2` has to stay the last word.
-# `KAIZEN_LOG_REFUSALS=0` turns it off, which is what the decisions check sets
-# while it feeds every hook the commands they must refuse — those refusals are
-# the check working, not friction anyone hit.
+# `KAIZEN_LOG_REFUSALS=0` turns it off, for a run that feeds a hook the
+# commands it must refuse to prove the refusal: those refusals are the check
+# working, not friction anyone hit.
 set -euo pipefail
 
 [ "${KAIZEN_LOG_REFUSALS:-1}" = "0" ] && exit 0

@@ -204,7 +204,7 @@ The classification is best-effort, captured by the orchestrator itself
 
 If a `pre-commit` or `pre-push` hook fails during `ship`, the orchestrator
 reads stderr and treats the failure as a `fail-local` verdict — back to
-arbitrate, never `--no-verify` (CLAUDE.md *Hooks* rule).
+arbitrate.
 
 ### Spec immutability
 
