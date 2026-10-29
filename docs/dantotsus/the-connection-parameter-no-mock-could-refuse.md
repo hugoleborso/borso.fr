@@ -7,7 +7,7 @@ related-pr: '#218'
 fix-pr: '#219'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [scripts/check-dsql-connection-parameters.sh, .husky/pre-commit]
+eradication-paths: [scripts/smoke-agent-reader.sh, .github/workflows/deploy.yml]
 time-to-detect: same day
 tags: [dsql, cdk, gates, infra, agents]
 zone: infra/cdk/src/internal/agent-reader
@@ -89,7 +89,8 @@ every gate here runs on the side of the boundary that cannot refuse it.
 
 ## Eradication (mandatory — code-level)
 
-**Type:** DevX check (level 2 — the list of proven parameters becomes a gate)
+**Type:** DevX check (level 2 — the deploy proves the function before it is
+anybody's to find)
 
 **Reference:** PR #219 · commit `self`
 
@@ -100,25 +101,45 @@ every gate here runs on the side of the boundary that cannot refuse it.
 +    connection: { search_path: schema },
 ```
 
-**What stops the next one:** `scripts/check-dsql-connection-parameters.sh`
-reads every `connection: { … }` under `apps/` and `infra/` and refuses a key
-that is not in the list this repository has run against a real cluster and seen
-work. It runs in pre-commit on changed `.ts` files.
+**What stops the next one:** `scripts/smoke-agent-reader.sh`, run by
+`deploy.yml` on each application right after its production deploy. It invokes
+that application's reader with `SELECT 1` and fails the job unless one row
+comes back. An application whose stack publishes no `AgentReaderFunctionName`
+exits 0, which is the normal state for the three ADR-0049 does not cover.
+
+This is the **only thing in this repository that reaches a real DSQL cluster
+outside a migration**, which is why it is the eradication and a lint-shaped
+check is not. One `SELECT 1` exercises the startup parameters, the read-only
+transaction, the role mapping and every environment variable the construct set
+— the whole class of *only a cluster can refuse this*, not the one instance
+that happened to bite.
+
+Verified against production while the defect was still deployed, which is
+better evidence than a planted one:
 
 ```
-infra/cdk/src/internal/agent-reader/index.ts:66:
-  "default_transaction_read_only" is not a DSQL startup parameter this repository has proven.
-  DSQL closes the connection on an unsupported one, and a mocked driver accepts it.
-  Prove it against a cluster, then add it to PROVEN_PARAMETERS in
-  scripts/check-dsql-connection-parameters.sh.
+[smoke-agent-reader] pragma: the reader function threw.
+  {"errorType":"PostgresError","errorMessage":"setting configuration parameter
+   \"default_transaction_read_only\" not supported", …}
+exit=1
 ```
 
-Verified both ways on the branch: the check passes on the fixed tree, and
-re-planting the parameter makes it exit 1 naming the file, the line and the key.
+and the no-reader path, on the same run:
 
-The allow-list is the point, not the spelling. A parameter enters it by being
-proven against a cluster, in the same commit — which is the step that was
-skipped here, and the only one that could have caught this.
+```
+[smoke-agent-reader] borso-fr prod publishes no AgentReaderFunctionName; nothing to smoke.
+exit=0
+```
+
+**A first attempt was the wrong shape, and is worth recording.** It was a
+pre-commit script that grepped every `connection: { … }` and refused a key
+outside an allow-list. It worked, and it was the wrong trade: the guarded
+surface is five identical lines whose four application copies changed in 15
+commits ever, while the check would have run on every commit touching a `.ts`
+under `apps/` or `infra/` — 100 of the last 100. A permanent toll on every
+commit, with a hand-rolled parser nobody would maintain, against an accident
+that happens once. It also answered only the connection-parameter instance,
+while the smoke answers the class. Removed before merge.
 
 **Sibling defects swept:** the four application clients send `search_path` and
 nothing else; the migration runner sets its schema with a `SET search_path`
