@@ -86,7 +86,7 @@ export function SongScenePage(): JSX.Element {
       aria-label={song.title}
       className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-stage-bg text-stage-ink overflow-hidden p-0 flex flex-col"
     >
-      <header className="shrink-0 px-4 sm:px-10 pt-4 pb-3 border-b border-stage-line">
+      <header className="shrink-0 px-4 sm:px-10 pt-[calc(1rem+env(safe-area-inset-top))] pb-3 border-b border-stage-line">
         <h2 className="font-display text-stage-title sm:text-stage-hero text-stage-ink m-0 truncate">
           {song.title}
         </h2>

@@ -130,6 +130,12 @@ describe('SetlistScenePage', () => {
     expect(readPosition(container)).toContain('Les Disquaires');
   });
 
+  it('keeps its header below the status bar of a phone with a notch', () => {
+    expect(container.querySelector('dialog header')?.className).toContain(
+      'pt-[calc(1rem+env(safe-area-inset-top))]',
+    );
+  });
+
   it('renders the chart of the song being played', () => {
     expect(container.textContent).toContain('Take five');
   });
