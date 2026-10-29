@@ -120,7 +120,7 @@ flowchart LR
 
 | ADR | Decision | What it constrains downstream |
 | --- | --- | --- |
-| To write with `/adr` before code: pragma runs a daily job at 20:00 Europe/Paris | EventBridge Scheduler with a `Europe/Paris` time zone, against an EventBridge Rule in UTC (which drifts one hour twice a year) and a new Lambda against the API handler routing a scheduled event | pragma's CDK stack, the Lambda entry point, and the 100% coverage of `apps/pragma/cdk` tests |
+| [ADR-202610291139](../../../../adr/202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | EventBridge Scheduler at 20:00 `Europe/Paris`, production only, invoking the API Lambda with `{ "job": "streak-reminder" }` | `apps/pragma/cdk/lib/stack.ts`, the routing guard in `apps/pragma/api/src/main.ts`, and the 100% coverage of `apps/pragma/cdk` tests |
 
 ## Changes
 
