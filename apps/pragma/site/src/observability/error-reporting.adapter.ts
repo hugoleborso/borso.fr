@@ -87,6 +87,12 @@ export function reportSetlistBatchAddFailed(setlistId: string): void {
   });
 }
 
+const STREAKS_READ_FAILED = 'StreaksReadFailed';
+
+export function reportStreaksReadFailed(error: Error): void {
+  Sentry.captureException(error, { extra: { name: STREAKS_READ_FAILED } });
+}
+
 export type TakeBreadcrumb = 'RecordingInterrupted' | 'take_upload_retried';
 
 export function recordTakeBreadcrumb(message: TakeBreadcrumb): void {

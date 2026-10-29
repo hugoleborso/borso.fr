@@ -78,16 +78,17 @@ export function StreakSheet({ view, onClose }: StreakSheetProps): JSX.Element {
         <ul className="m-0 flex list-none flex-col gap-2 p-0">
           {view.members.map((member) => (
             <li key={member.memberId} className="flex items-center gap-3">
-              <MemberMark
-                shape="cell"
-                color={member.color}
-                className="min-h-8 min-w-12 rounded-pill text-meta font-semibold tabular-nums"
-              >
-                <Icon name="flame" size="sm" />
-                {member.flame.days}
-              </MemberMark>
+              <MemberMark shape="dot" color={member.color} />
               <span className="min-w-0 flex-auto truncate text-body text-ink">
                 {member.firstName}
+              </span>
+              <span className="flex shrink-0 items-center gap-1 text-meta font-semibold text-ink tabular-nums">
+                <Icon
+                  name="flame"
+                  size="sm"
+                  className={FLAME_TONE_CLASS.flame[selectFlameTone(member.flame)]}
+                />
+                {member.flame.days}
               </span>
               <span className="shrink-0 text-meta text-ink-soft first-letter:uppercase">
                 {t(selectFlameStatusKey(member.flame))}

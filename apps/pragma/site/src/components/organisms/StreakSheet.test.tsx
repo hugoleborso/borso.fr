@@ -17,6 +17,12 @@ const TOM = {
   color: '#f4d35e',
   flame: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 },
 };
+const MARC = {
+  memberId: 'member-marc',
+  firstName: 'Marc',
+  color: '#e07a5f',
+  flame: { days: 5, isTodayCounted: true, jokersLeftThisWeek: 3 },
+};
 const VIEW = {
   today: '2026-10-29',
   mine: LEA.flame,
@@ -58,17 +64,29 @@ describe('StreakSheet', () => {
     expect(within(sheet).getByText('3 jokers left this week')).toBeTruthy();
   });
 
-  it('lists each member on their stored colour, with ink chosen by contrast', () => {
-    const sheet = renderSheet(VIEW);
+  it('lists each member as a dot in their stored colour, their first name, their flame', () => {
+    const sheet = renderSheet({ ...VIEW, members: [LEA, TOM, MARC] });
     const rows = within(sheet).getAllByRole('listitem');
     expect(rows.map((row) => row.textContent)).toEqual([
-      '12Léatoday still open',
-      '0TomNo flame yet',
+      'Léa12today still open',
+      'Tom0No flame yet',
+      'Marc5today counted',
     ]);
-    const leaMark = rows[0]?.firstElementChild;
-    expect(leaMark instanceof HTMLElement ? leaMark.style.backgroundColor : '').toBe(RENDERED_NAVY);
-    expect(leaMark?.getAttribute('class')).toContain('text-on-color-light');
-    expect(rows[1]?.firstElementChild?.getAttribute('class')).toContain('text-on-color-dark');
+    const leaDot = rows[0]?.firstElementChild;
+    expect(leaDot instanceof HTMLElement ? leaDot.style.backgroundColor : '').toBe(RENDERED_NAVY);
+    expect(leaDot?.textContent).toBe('');
+  });
+
+  it.each([
+    { memberIndex: 0, present: ['text-accent', 'fill-accent-soft'], absent: ['fill-accent'] },
+    { memberIndex: 1, present: ['text-ink-faint'], absent: ['text-accent', 'fill-accent'] },
+    { memberIndex: 2, present: ['text-accent', 'fill-accent'], absent: ['fill-accent-soft'] },
+  ])('tones the flame of row $memberIndex with $present', ({ memberIndex, present, absent }) => {
+    const sheet = renderSheet({ ...VIEW, members: [LEA, TOM, MARC] });
+    const flame = within(sheet).getAllByRole('listitem')[memberIndex]?.querySelector('svg');
+    const classes = (flame?.getAttribute('class') ?? '').split(' ');
+    expect(classes).toEqual(expect.arrayContaining(present));
+    expect(classes.filter((name) => absent.includes(name))).toEqual([]);
   });
 
   it('says No flame yet for a flame of zero days', () => {

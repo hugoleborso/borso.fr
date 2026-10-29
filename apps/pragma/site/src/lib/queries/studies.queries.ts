@@ -15,6 +15,7 @@ export const studyKeys = {
 
 const CREATED_STATUS = 201;
 const OK_STATUS = 200;
+const STUDY_WRITE_SCOPE = { id: 'study-writes' };
 
 export type StudiesOverview = InferResponseType<typeof api.api.studies.overview.$get, 200>;
 
@@ -91,6 +92,7 @@ export function useLogStudy() {
   const toggle = useStudyToggle(true);
   return useMutation({
     mutationKey: studyKeys.all,
+    scope: STUDY_WRITE_SCOPE,
     mutationFn: async (target: StudyTarget) => {
       const response = await api.api.studies.$post({ json: target });
       if (response.status !== CREATED_STATUS)
@@ -108,6 +110,7 @@ export function useUndoStudy() {
   const toggle = useStudyToggle(false);
   return useMutation({
     mutationKey: studyKeys.all,
+    scope: STUDY_WRITE_SCOPE,
     mutationFn: async (target: StudyTarget) => {
       const response = await api.api.studies[':songId'][':instrumentId'].$delete({ param: target });
       if (response.status !== OK_STATUS)
