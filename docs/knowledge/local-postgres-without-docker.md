@@ -2,6 +2,7 @@
 summary: '`scripts/local-postgres.sh` boots a sandbox-private Postgres when Docker is unreachable; `pnpm run test` wires `DATABASE_URL`.'
 triggers:
   commands:
+    - 'scripts/local-postgres\.sh'
     - '\bdocker\b'
     - '\bdockerd\b'
   output:

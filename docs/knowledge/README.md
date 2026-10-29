@@ -245,6 +245,7 @@ decision.
 - [`the-auto-mode-classifier-refuses-guard-probes.md`](./the-auto-mode-classifier-refuses-guard-probes.md) — auto mode reads the whole Bash command as text, so a probe proving a guard refuses a dangerous query is refused as that query; split the probe, prove it from the deployed template, or ask the operator for a permission rule.
 - [`iam-inline-user-policies-share-one-2048-character-budget.md`](./iam-inline-user-policies-share-one-2048-character-budget.md) — the 2048-character cap is an aggregate across a user's inline policies, not per policy, and `LimitExceeded` names only the document just sent; compact with `jq -c`, measure the whole budget, and move to a customer-managed policy rather than golfing Sids.
 - [`an-exit-status-read-through-a-pipe-is-the-pipes.md`](./an-exit-status-read-through-a-pipe-is-the-pipes.md) — `$?` after `cmd | tail` is tail's status, so a guard that refuses at exit 3 reads as 0 and a fail-open looks identical to a pass; redirect instead of piping, or use `pipefail` / `PIPESTATUS`.
+- [`generated-reports-are-rebuilt-not-committed.md`](./generated-reports-are-rebuilt-not-committed.md) — a generated report is gitignored and rebuilt with `scripts/reports.sh` before it is read; only inputs a person accepted are committed (ADR-0014).
 
 ## Adding a new entry
 

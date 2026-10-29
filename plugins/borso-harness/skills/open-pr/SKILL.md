@@ -3,7 +3,7 @@ name: open-pr
 description: Write a pull request title and body that fit a fixed budget — a 72-character title, a 200-character description, one flow diagram, one decisions table carrying its ADR links, one before-merge block, validation evidence and notable facts. Use when the user says "/open-pr", "open a PR", "create a pull request", when a PR body needs rewriting, or after `/technical-validation` and `/visual-validation`. Drafts from `template.md`, checks with `scripts/pr/check-pr-body.ts`, then posts.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Open-PR skill
 
@@ -16,11 +16,13 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
 1. **Draft into a file.** Copy [`template.md`](./template.md) to the scratchpad and fill it. Every section is optional and every decision cell may be empty; an absent section says there was nothing, which is information. The `# ` heading is the PR title and never reaches the body.
 2. **Fill it from the tree, not from memory.** Each source answers one section:
    - **Decisions** — one row per ADR referenced by a commit on the branch, by a comment the diff touches, or by the plan. The ADR cell links it. A decision with no ADR goes in the row with an empty ADR cell and a line in *Notable* saying so.
-   - **Flow** — the path the change added or moved, drawn from the diff. The architecture maps are built on demand only, by dispatching the `architecture` workflow with the pull request number; nothing here runs them.
+   - **Flow** — the path the change added or moved, drawn from the diff.
    - **Validation** — what was run and what came back: suites, a browser pass, a live API call. A validator verdict of `PASS_EXCEPT_UNVERIFIABLE` puts each unverifiable row in its own `### Gap: <what>` block here: the assertion, the one-line reason, and the report path. A published screenshot is shown by the *Screenshots* comment that step 5b asks for, and the body names that comment and links the folder; a committed one is named by its path under `docs/features/<app>/<slug>/validation/`, where the *Files changed* tab renders it. A markdown image does not survive the GitHub MCP server, in the body or in a comment. This section is the only place the body's shape is written down, and `/visual-validation`, `/technical-validation`, `/implementation` and `/tech-lead-orchestrator` point here instead of describing headings of their own.
    - **Before merge** — what the operator does before merging, and what stays broken until they do.
    - **Notable** — what a reviewer would otherwise find only by reading the diff.
 3. **Pick the block shape.** *Before merge* and *Validation* are each written as blocks. A `<details>` toggle is the better read and the GitHub MCP body sanitizer deletes it, keeping the contents and flattening them — measured on PR #60 and visible in that PR's own stored body, which says so in place of the toggles it lost. So a body posted through `mcp__github__*` uses `### ` headings, and only a body posted through an authenticated `gh` uses toggles. The checker accepts either and `pretool-github-pr-body.sh` refuses the toggle on the call that would eat it.
+3b. **Archive the friction log.** `scripts/kaizen.sh archive <docs-slug>/<feature>` and commit the copy on this branch. The container is reclaimed when the session ends, and the kaizen runs later in a new conversation that reads only what the branch carries. `pretool-gh-pr-create.sh` refuses a `gh pr create` whose branch archives nothing while the log holds entries.
+
 4. **Check it.** `pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>` — fix every violation it names rather than arguing with the count.
 5. **Post it.** Title from the `# ` line; body from `--render`, which strips that line and the attribution footer:
 
@@ -86,6 +88,19 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
 **Never schedule a recurring check on a pull request.** No cron, no routine, no `send_later` check-in, no self-re-arming reminder, whatever the harness guidance of the day suggests. The subscription is the mechanism: CI results, reviews, comments and merge-state changes arrive on their own and wake the session. A timer adds nothing on top and costs a wake-up, a round of tool calls and a line in the operator's chat each time it fires; on PR #99 an hourly re-check fired eight times to report the same nine green checks. CLAUDE.md carries the general rule in *Don'ts*.
 
 Once the pull request is open and green: say once that it waits on its reviewers, and end the turn — that is how a session waits. Act when an event arrives, because a red check, a conflict or a review comment is work then. The one thing a subscription misses is an event GitHub never sends, such as a workflow that was never triggered; look for that once, when something else wakes the session.
+
+## After the merge
+
+The session that shipped the feature ends at merge. It does not run the kaizen sweep itself, because the sweep is a fresh look at the work and this session's context is the thing it audits. The merge reply carries two follow-ups, and says so when either is not needed.
+
+1. **`shared-deploy`.** If the merge changed `infra/shared/test/unit/__snapshots__/borso-shared.template.json`, ask the operator to dispatch it.
+2. **The kaizen task.** Call `spawn_task` (`mcp__ccd_session__spawn_task`), which shows the operator a card that starts a new conversation. Its prompt stands alone and names:
+   - the merged pull request, as `owner/repo#N` with its URL;
+   - the archived friction log, `docs/features/<docs-slug>/<feature>/kaizen.md`, which step 3b committed;
+   - the instruction to run `/after-task-kaizen` on that pull request;
+   - any line logged after the archive, pasted verbatim, since the local `KAIZEN.md` dies with this container.
+
+   Title it `Kaizen sweep for PR #N`. When the session has no `spawn_task` tool, give the operator the same prompt to paste into a new session. Then unsubscribe from the pull request and end the turn.
 
 ## What the budget leaves out
 
