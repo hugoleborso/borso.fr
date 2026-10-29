@@ -242,6 +242,7 @@ describe('notifications controller (back-e2e)', () => {
           { category: 'take_comments', enabled: true },
           { category: 'sessions', enabled: true },
           { category: 'setlists', enabled: true },
+          { category: 'streak', enabled: true },
         ],
       });
     });

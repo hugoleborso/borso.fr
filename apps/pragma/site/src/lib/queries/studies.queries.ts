@@ -3,7 +3,8 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
-import { markStudied, settleOwnLine } from './studies.utils';
+import { streakKeys, type StreaksView } from './streaks.queries';
+import { markStudied } from './studies.utils';
 
 export const studyKeys = {
   all: ['studies'] as const,
@@ -14,6 +15,7 @@ export const studyKeys = {
 
 const CREATED_STATUS = 201;
 const OK_STATUS = 200;
+const STUDY_WRITE_SCOPE = { id: 'study-writes' };
 
 export type StudiesOverview = InferResponseType<typeof api.api.studies.overview.$get, 200>;
 
@@ -79,14 +81,18 @@ function useStudyToggle(isStudiedToday: boolean) {
         queryClient.setQueryData(studyKeys.overview(), context.previousOverview);
       }
     },
+    onSuccess: (response: { readonly streaks: StreaksView }) => {
+      queryClient.setQueryData(streakKeys.all, response.streaks);
+    },
   };
 }
 
 // @FollowsBlueprint query-optimistic-mutation
-export function useLogStudy(memberId: string) {
+export function useLogStudy() {
   const toggle = useStudyToggle(true);
   return useMutation({
     mutationKey: studyKeys.all,
+    scope: STUDY_WRITE_SCOPE,
     mutationFn: async (target: StudyTarget) => {
       const response = await api.api.studies.$post({ json: target });
       if (response.status !== CREATED_STATUS)
@@ -95,19 +101,16 @@ export function useLogStudy(memberId: string) {
     },
     onMutate: toggle.onMutate,
     onError: toggle.onError,
-    onSuccess: (data) => {
-      toggle.queryClient.setQueryData<StudiesOverview>(studyKeys.overview(), (old) =>
-        old === undefined ? old : settleOwnLine(old, memberId, data.myLine),
-      );
-    },
+    onSuccess: toggle.onSuccess,
   });
 }
 
 // @FollowsBlueprint query-optimistic-mutation
-export function useUndoStudy(memberId: string) {
+export function useUndoStudy() {
   const toggle = useStudyToggle(false);
   return useMutation({
     mutationKey: studyKeys.all,
+    scope: STUDY_WRITE_SCOPE,
     mutationFn: async (target: StudyTarget) => {
       const response = await api.api.studies[':songId'][':instrumentId'].$delete({ param: target });
       if (response.status !== OK_STATUS)
@@ -116,10 +119,6 @@ export function useUndoStudy(memberId: string) {
     },
     onMutate: toggle.onMutate,
     onError: toggle.onError,
-    onSuccess: (data) => {
-      toggle.queryClient.setQueryData<StudiesOverview>(studyKeys.overview(), (old) =>
-        old === undefined ? old : settleOwnLine(old, memberId, data.myLine),
-      );
-    },
+    onSuccess: toggle.onSuccess,
   });
 }

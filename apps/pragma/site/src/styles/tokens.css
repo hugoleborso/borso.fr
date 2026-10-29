@@ -26,6 +26,10 @@
   --color-accent-soft: light-dark(#e2e9f2, #1f2a3a);
   --color-on-accent: light-dark(#fffdf8, #10161f);
   --color-on-danger: light-dark(#fffdf8, #1a0d0a);
+  --color-flame-deep: light-dark(#1f4680, #4f7fc4);
+  --color-flame-mid: light-dark(#2d5fa0, #8db2e6);
+  --color-flame-core: light-dark(#dbe7f6, #eaf2fd);
+  --color-flame-glow: light-dark(#2d5fa055, #8db2e666);
 
   --color-pencil: light-dark(#8a4a24, #e0a580);
   --color-highlight: light-dark(#f4e6a8, #6e5a12);
@@ -98,6 +102,8 @@
   --shadow-overlay:
     0 -1px 0 light-dark(#e2dacb, #4a4235), 0 -12px 40px light-dark(#3c28101f, #00000080);
   --shadow-cover: 0 1px 2px light-dark(#3c281026, #00000066);
+
+  --animate-flame-flicker: flame-flicker 2.6s ease-in-out infinite;
 }
 
 @layer base {
@@ -168,5 +174,17 @@
 @keyframes install-walkthrough-advance {
   to {
     transform: translateX(-100%);
+  }
+}
+
+@keyframes flame-flicker {
+  0%,
+  100% {
+    transform: scale(1);
+    filter: drop-shadow(0 0 3px var(--color-flame-glow));
+  }
+  50% {
+    transform: scale(1.04, 1.07);
+    filter: drop-shadow(0 0 6px var(--color-flame-glow));
   }
 }

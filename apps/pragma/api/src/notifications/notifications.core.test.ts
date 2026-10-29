@@ -166,8 +166,15 @@ describe('buildCategoryToggles', () => {
       { category: 'take_comments', enabled: true },
       { category: 'sessions', enabled: false },
       { category: 'setlists', enabled: true },
+      { category: 'streak', enabled: true },
     ]);
-    expect(NOTIFICATION_CATEGORIES).toEqual(['takes', 'take_comments', 'sessions', 'setlists']);
+    expect(NOTIFICATION_CATEGORIES).toEqual([
+      'takes',
+      'take_comments',
+      'sessions',
+      'setlists',
+      'streak',
+    ]);
   });
 });
 

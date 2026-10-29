@@ -4,6 +4,7 @@ import {
   reportRenderFailure,
   reportEntryNoteSaveFailed,
   reportSetlistBatchAddFailed,
+  reportStreaksReadFailed,
   reportTakeQueueWriteFailed,
   reportTakeUploadFailed,
   startErrorReporting,
@@ -141,6 +142,20 @@ describe('entry note failures', () => {
     expect(sentry.captureMessage).toHaveBeenCalledWith('SetlistBatchAddError', {
       level: 'error',
       tags: { 'setlist.id': 'setlist-2' },
+    });
+  });
+});
+
+describe('flame read failures', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('reports the failed read with its name', () => {
+    const failure = new Error('streaks 500');
+    reportStreaksReadFailed(failure);
+    expect(sentry.captureException).toHaveBeenCalledWith(failure, {
+      extra: { name: 'StreaksReadFailed' },
     });
   });
 });

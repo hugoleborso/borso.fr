@@ -10,6 +10,8 @@ import {
 } from '../instruments/instruments.service';
 import { getMembersSortedByFirstName } from '../members/members.service';
 import { getSessions } from '../sessions/sessions.service';
+import { buildStreaksView, collectSessionDays, firstLookbackDay } from '../streaks/streaks.core';
+import type { StreaksView } from '../streaks/streaks.types';
 import {
   getAllSetlists,
   getEntriesOfSetlists,
@@ -22,53 +24,40 @@ import {
   resolveSongId,
   type SongRow,
 } from '../songs/songs.service';
-import { buildMemberStreaks, type MemberStreak } from './band-streaks.core';
 import {
   groupLineupsBySong,
   isSongReady,
   selectEarliestUpcomingConcert,
   type SongLineups,
 } from './concert-readiness.core';
-import { type CalendarDay, parisCalendarDay, shiftCalendarDay } from './paris-day.core';
-import { computeStreak } from './streak.core';
+import { parisCalendarDay } from '@domain/paris-day.core';
 import {
   deleteStudiesOfMember,
   deleteStudiesOfSong,
-  deleteStudy,
+  deleteStudyWithin,
   insertStudyIfAbsentWithin,
-  listStudiesSince,
   listStudiesOfMemberSince,
+  listStudiesSince,
+  listStudiesSinceWithin,
   runInOneStudyTransaction,
 } from './studies.repository';
+export { listStudiesOfMemberSince } from './studies.repository';
 import type { StudyLogInput } from './studies.schema';
 import type {
   ConcertReadiness,
   StudyRow,
   StudiesOverview,
   StudyUndoOutcome,
+  StudyUndoWithStreaks,
   StudyWriteOutcome,
+  StudyWriteWithStreaks,
 } from './studies.types';
 import { hasInstrumentInAnyLineup } from './study-eligibility.core';
 import { buildStudyQueue, type StudyCandidateSong, studyKey } from './study-queue.core';
 
-export const STREAK_LOOKBACK_DAYS = 400;
-
 interface StudyCommand extends StudyLogInput {
   readonly memberId: string;
   readonly now: Date;
-}
-
-function firstLookbackDay(today: CalendarDay): CalendarDay {
-  return shiftCalendarDay(today, -STREAK_LOOKBACK_DAYS);
-}
-
-async function readOwnLine(memberId: string, today: CalendarDay): Promise<MemberStreak> {
-  const ownStudies = await listStudiesOfMemberSince(memberId, firstLookbackDay(today));
-  const [ownLine] = buildMemberStreaks([{ memberId }], ownStudies, today);
-  return {
-    streak: ownLine?.streak ?? computeStreak([], today),
-    studiesThisWeek: ownLine?.studiesThisWeek ?? 0,
-  };
 }
 
 async function readLineupsOfSongWithin(
@@ -83,49 +72,110 @@ async function readLineupsOfSongWithin(
   return [song.defaultLineup, ...lineupsWithOverrides.flatMap((grouped) => grouped.lineups)];
 }
 
-type StudyRecording = { readonly kind: 'recorded' } | Exclude<StudyWriteOutcome, { kind: 'ok' }>;
+function studyOfToday(command: StudyCommand): StudyRow {
+  return {
+    memberId: command.memberId,
+    songId: command.songId,
+    instrumentId: command.instrumentId,
+    studiedOn: parisCalendarDay(command.now),
+  };
+}
 
-async function recordStudy(study: StudyRow, createdAt: Date): Promise<StudyRecording> {
-  return await runInOneStudyTransaction(async (executor): Promise<StudyRecording> => {
-    const isSongClaimed = await didClaimSongWithin(executor, study.songId);
-    if (!isSongClaimed) return { kind: 'song-not-found' };
-    const isInstrumentClaimed = await didClaimInstrumentsWithin(executor, [study.instrumentId]);
-    if (!isInstrumentClaimed) return { kind: 'instrument-not-found' };
-    const song = await findSongByIdWithin(executor, study.songId);
-    if (song === null) return { kind: 'song-not-found' };
-    const lineups = await readLineupsOfSongWithin(executor, song);
-    if (!hasInstrumentInAnyLineup(lineups, study.memberId, study.instrumentId)) {
-      return { kind: 'study-not-in-lineup' };
-    }
-    await insertStudyIfAbsentWithin(executor, study, createdAt);
-    return { kind: 'recorded' };
-  });
+type StudiesLister = typeof listStudiesSince;
+
+async function readFlameInputsWith(now: Date, listStudies: StudiesLister) {
+  const today = parisCalendarDay(now);
+  const firstDay = firstLookbackDay(today);
+  const [sessions, members, studies] = await Promise.all([
+    getSessions(now),
+    getMembersSortedByFirstName(),
+    listStudies(firstDay),
+  ]);
+  return {
+    today,
+    members,
+    studies,
+    sessionDays: collectSessionDays(sessions, firstDay, today),
+  };
+}
+
+export async function readFlameInputs(now: Date) {
+  return await readFlameInputsWith(now, listStudiesSince);
+}
+
+async function readStreaksWithin(
+  executor: DatabaseExecutor,
+  memberId: string,
+  now: Date,
+): Promise<StreaksView> {
+  const inputs = await readFlameInputsWith(
+    now,
+    async (firstDay) => await listStudiesSinceWithin(executor, firstDay),
+  );
+  return buildStreaksView({ ...inputs, memberId });
+}
+
+async function logStudyWithin(
+  executor: DatabaseExecutor,
+  command: StudyCommand,
+): Promise<StudyWriteOutcome> {
+  const study = studyOfToday(command);
+  const isSongClaimed = await didClaimSongWithin(executor, study.songId);
+  if (!isSongClaimed) return { kind: 'song-not-found' };
+  const isInstrumentClaimed = await didClaimInstrumentsWithin(executor, [study.instrumentId]);
+  if (!isInstrumentClaimed) return { kind: 'instrument-not-found' };
+  const song = await findSongByIdWithin(executor, study.songId);
+  if (song === null) return { kind: 'song-not-found' };
+  const lineups = await readLineupsOfSongWithin(executor, song);
+  if (!hasInstrumentInAnyLineup(lineups, study.memberId, study.instrumentId)) {
+    return { kind: 'study-not-in-lineup' };
+  }
+  await insertStudyIfAbsentWithin(executor, study, command.now);
+  return { kind: 'ok', study };
 }
 
 // @FollowsBlueprint service-clock-injected
 export async function logStudy(command: StudyCommand): Promise<StudyWriteOutcome> {
-  const today = parisCalendarDay(command.now);
-  const study: StudyRow = {
-    memberId: command.memberId,
-    songId: command.songId,
-    instrumentId: command.instrumentId,
-    studiedOn: today,
-  };
-  const recording = await recordStudy(study, command.now);
-  if (recording.kind !== 'recorded') return recording;
-  return { kind: 'ok', study, myLine: await readOwnLine(command.memberId, today) };
+  return await runInOneStudyTransaction(
+    async (executor) => await logStudyWithin(executor, command),
+  );
+}
+
+async function undoStudyWithin(
+  executor: DatabaseExecutor,
+  command: StudyCommand,
+): Promise<StudyUndoOutcome> {
+  const deletedCount = await deleteStudyWithin(executor, studyOfToday(command));
+  if (deletedCount === 0) return { kind: 'study-not-found' };
+  return { kind: 'ok' };
 }
 
 export async function undoStudy(command: StudyCommand): Promise<StudyUndoOutcome> {
-  const today = parisCalendarDay(command.now);
-  const deletedCount = await deleteStudy({
-    memberId: command.memberId,
-    songId: command.songId,
-    instrumentId: command.instrumentId,
-    studiedOn: today,
+  return await runInOneStudyTransaction(
+    async (executor) => await undoStudyWithin(executor, command),
+  );
+}
+
+export async function logStudyWithStreaks(command: StudyCommand): Promise<StudyWriteWithStreaks> {
+  return await runInOneStudyTransaction(async (executor): Promise<StudyWriteWithStreaks> => {
+    const outcome = await logStudyWithin(executor, command);
+    if (outcome.kind !== 'ok') return outcome;
+    return {
+      ...outcome,
+      streaks: await readStreaksWithin(executor, command.memberId, command.now),
+    };
   });
-  if (deletedCount === 0) return { kind: 'study-not-found' };
-  return { kind: 'ok', myLine: await readOwnLine(command.memberId, today) };
+}
+
+export async function undoStudyWithStreaks(command: StudyCommand): Promise<StudyUndoWithStreaks> {
+  return await runInOneStudyTransaction(async (executor): Promise<StudyUndoWithStreaks> => {
+    const outcome = await undoStudyWithin(executor, command);
+    if (outcome.kind !== 'ok') return outcome;
+    return {
+      kind: 'ok',
+      streaks: await readStreaksWithin(executor, command.memberId, command.now),
+    };
+  });
 }
 
 interface ConcertScope {
@@ -182,12 +232,11 @@ async function readConcertScope(
 
 export async function readStudiesOverview(memberId: string, now: Date): Promise<StudiesOverview> {
   const today = parisCalendarDay(now);
-  const [songs, members, defaultRows, overrideRows, studies] = await Promise.all([
+  const [songs, defaultRows, overrideRows, studiesOfToday] = await Promise.all([
     getSongs(),
-    getMembersSortedByFirstName(),
     getMasteryDefaults(),
     getAllMasteryOverrides(),
-    listStudiesSince(firstLookbackDay(today)),
+    listStudiesOfMemberSince(memberId, today),
   ]);
   const defaults = indexDefaultScores(defaultRows);
   const overrides = indexOverrideScores(overrideRows);
@@ -195,25 +244,10 @@ export async function readStudiesOverview(memberId: string, now: Date): Promise<
     isSongReady(defaults, overrides, song),
   );
   const keysStudiedToday = new Set(
-    studies
-      .filter((study) => study.memberId === memberId && study.studiedOn === today)
-      .map((study) => studyKey(study.songId, study.instrumentId)),
+    studiesOfToday.map((study) => studyKey(study.songId, study.instrumentId)),
   );
-  const band = buildMemberStreaks(
-    members.map((member) => ({
-      memberId: member.id,
-      firstName: member.firstName,
-      color: member.color,
-    })),
-    studies,
-    today,
-  );
-  const ownStudyDays = studies
-    .filter((study) => study.memberId === memberId)
-    .map((study) => study.studiedOn);
   return {
     today,
-    myStreak: computeStreak(ownStudyDays, today),
     queue: buildStudyQueue({
       memberId,
       songs: scope.candidates,
@@ -221,7 +255,6 @@ export async function readStudiesOverview(memberId: string, now: Date): Promise<
       overrides,
       keysStudiedToday,
     }),
-    band,
     readiness: scope.readiness,
   };
 }
@@ -267,5 +300,3 @@ export async function writeStudyForTool(
   if (command.isUndoing) return await undoStudy(study);
   return await logStudy(study);
 }
-
-export { describeOwnLine } from './study-tool.core';

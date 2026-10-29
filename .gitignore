@@ -64,6 +64,7 @@ docs/architecture/*-architecture.json
 # revision they would be true at.
 docs/architecture/*-diff.json
 .claude/skills/blueprint/blueprint-index.md
+.claude/skills/blueprint/blueprint-context.json
 .claude/skills/blueprint/blueprint-coverage.html
 .claude/knowledge-triggers.json
 .claude/.knowledge-triggers.*
