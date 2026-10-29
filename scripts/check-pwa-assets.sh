@@ -75,14 +75,14 @@ while IFS= read -r manifest; do
   done <<< "$icons"
 
   for size in "${REQUIRED_ICON_SIZES[@]}"; do
-    if ! printf '%s\n' "$icons" | grep -q "^${size} "; then
+    if ! grep -q "^${size} " <<<"$icons"; then
       printf '\033[31m[pwa-assets] FAIL\033[0m %s: no %s icon, so the install prompt is refused\n' \
         "$app" "$size"
       failed=1
     fi
   done
 
-  if ! printf '%s\n' "$icons" | grep -q ' maskable '; then
+  if ! grep -q ' maskable ' <<<"$icons"; then
     printf '\033[31m[pwa-assets] FAIL\033[0m %s: no maskable icon, so Android crops the square\n' \
       "$app"
     failed=1

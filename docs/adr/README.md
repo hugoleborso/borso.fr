@@ -90,6 +90,7 @@ No:
 | [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | proposed | 2026-10-25 |
 | [0045](./0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md) | oxlint and oxfmt replace ESLint and Prettier | proposed | 2026-10-27 |
 | [0046](./0046-typescript-7-replaces-typescript-5-9.md) | TypeScript 7 replaces TypeScript 5.9 | proposed | 2026-10-27 |
+| [0049](./0049-agents-read-production-through-an-invoked-reader-lambda.md) | Agents read production through a reader Lambda invoked by the AWS API, not port 5432 | proposed | 2026-10-28 |
 
 ### Data layer
 
@@ -100,6 +101,7 @@ No:
 - 0039 — the talos memory moves from a private git repository to `memory_*` tables, reached by agents through `/api/agent/*` with one token per environment; the read-only SQL route relies on a keyword guard and a `READ ONLY` transaction rather than a second database role.
 - 0043 — one catalogue song per Deezer track is held by a unique index on `song.deezer_track_id`; DSQL builds it asynchronously, and since the PR #193 kaizen the migration runner waits on the build job and fails the deploy when it fails, so the operator still counts prod duplicates before merging but no longer checks `sys.jobs` by hand.
 - 0044 — a hosted session reads the `prod` schema of pragma, last-loop-lepin and banana-rush (never talos) through `scripts/db-read.sh`, signed in as `ai_reader_prod`, a role that holds `SELECT` only and is mapped to `AI-Dev-ReadOnly`, which gets `dsql:DbConnect` and never `DbConnectAdmin`; the script's keyword guard and `READ ONLY` transaction are conveniences, because the session controls the script.
+- 0049 — the sandbox blocks 5432 and Aurora DSQL has no data API, so `db-read.sh` stops being a Postgres client and calls `aws lambda invoke` on a reader function per app; SigV4 replaces the shared secret the HTTPS shapes would have needed, nothing is published on Internet, and the blocklist moves inside the function where a caller cannot skip it. Supersedes 0044.
 
 ### App architecture
 

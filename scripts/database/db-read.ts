@@ -1,23 +1,24 @@
-import { execFileSync, spawn } from 'node:child_process';
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import {
-  buildReadOnlySessionCommands,
+  AGENT_READER_FUNCTION_NAME_OUTPUT,
   DEFAULT_APP,
   DEFAULT_STAGE,
-  decideReadOnlyQuery,
   decideReadTarget,
-  decideTableAccess,
+  isAgentReaderFunctionName,
+  READER_NOT_PROVISIONED_REFUSAL,
   readQueryArguments,
-  readReaderTableBlocklist,
-  ROW_CAP,
-} from './read-only-query.utils';
+} from './read-target.utils';
+import { formatRows, readInvocationOutcome } from './reader-invocation.utils';
 
 const REGION = process.env.AWS_REGION ?? 'eu-west-3';
-const TOKEN_LIFETIME_SECONDS = 900;
-const QUERY_TIMEOUT_MILLISECONDS = 30_000;
-const FORCED_STOP_GRACE_MILLISECONDS = 5_000;
-const CONNECT_TIMEOUT_SECONDS = 10;
 const USAGE_EXIT_CODE = 2;
 const REFUSAL_EXIT_CODE = 3;
+const FAILURE_EXIT_CODE = 4;
+const RESPONSE_FILE_NAME = 'reader-response.json';
+const TEMPORARY_DIRECTORY_PREFIX = 'borso-db-read-';
 
 function fail(message: string, exitCode: number): never {
   process.stderr.write(`[db:read] ${message}\n`);
@@ -34,85 +35,68 @@ function runAws(argumentsForAws: readonly string[], output = 'text'): string {
 const query = readQueryArguments(process.argv.slice(2));
 if (query === '') {
   fail(
-    'usage: pnpm run db:read -- "<one SELECT or WITH … SELECT statement>"\n' +
+    'usage: scripts/db-read.sh "<one SELECT or WITH … SELECT statement>"\n' +
       `  APP (pragma, last-loop-lepin or banana-rush; default ${DEFAULT_APP}) and STAGE (default ${DEFAULT_STAGE}) pick the schema.\n` +
-      `  The statement runs as a SELECT-only role in a READ ONLY transaction, capped at ${String(ROW_CAP)} rows.`,
+      "  The statement is assessed and run inside the application's reader Lambda (ADR-0049), never here.",
     USAGE_EXIT_CODE,
   );
 }
 
-const queryDecision = decideReadOnlyQuery(query);
-if (!queryDecision.accepted) fail(`refused: ${queryDecision.reason}`, REFUSAL_EXIT_CODE);
-
 const target = decideReadTarget(process.env.APP ?? DEFAULT_APP, process.env.STAGE ?? DEFAULT_STAGE);
 if (!target.accepted) fail(`refused: ${target.reason}`, REFUSAL_EXIT_CODE);
 
-const deployedTemplate: unknown = JSON.parse(
-  runAws(
-    ['cloudformation', 'get-template', '--stack-name', target.stackName, '--query', 'TemplateBody'],
-    'json',
-  ),
-);
-const tableAccess = decideTableAccess(
-  queryDecision.statement,
-  readReaderTableBlocklist(deployedTemplate),
-);
-if (!tableAccess.accepted) fail(`refused: ${tableAccess.reason}`, REFUSAL_EXIT_CODE);
-
-const endpoint = runAws([
-  'ssm',
-  'get-parameter',
-  '--name',
-  `/borso/${target.app}/dsql-cluster-endpoint`,
+const functionName = runAws([
+  'cloudformation',
+  'describe-stacks',
+  '--stack-name',
+  target.stackName,
   '--query',
-  'Parameter.Value',
+  `Stacks[0].Outputs[?OutputKey=='${AGENT_READER_FUNCTION_NAME_OUTPUT}'].OutputValue | [0]`,
 ]);
-const token = runAws([
-  'dsql',
-  'generate-db-connect-auth-token',
-  '--hostname',
-  endpoint,
-  '--expires-in',
-  String(TOKEN_LIFETIME_SECONDS),
-]);
-
-const sessionArguments = buildReadOnlySessionCommands(queryDecision.statement, ROW_CAP).flatMap(
-  (command) => ['--command', command],
-);
+if (!isAgentReaderFunctionName(functionName)) {
+  fail(`refused: ${READER_NOT_PROVISIONED_REFUSAL}`, REFUSAL_EXIT_CODE);
+}
 
 process.stderr.write(
-  `[db:read] ${target.app} schema ${target.schemaName} as ${target.roleName}, read only, at most ${String(ROW_CAP)} rows\n`,
+  `[db:read] ${target.app} schema ${target.schemaName} through ${functionName}, read only\n`,
 );
 
-const psql = spawn(
-  'psql',
-  [
-    '--no-psqlrc',
-    '--quiet',
-    '--pset=pager=off',
-    '--set=ON_ERROR_STOP=1',
-    ...sessionArguments,
-    `host=${endpoint} port=5432 dbname=postgres user=${target.roleName} sslmode=require connect_timeout=${String(CONNECT_TIMEOUT_SECONDS)}`,
-  ],
-  {
-    stdio: ['ignore', 'inherit', 'inherit'],
-    env: {
-      ...process.env,
-      PGPASSWORD: token,
-      PGOPTIONS: `--search_path=${target.schemaName}`,
-    },
-  },
-);
-
-const cancelTimer = setTimeout(() => {
-  process.stderr.write(
-    `[db:read] cancelled after ${String(QUERY_TIMEOUT_MILLISECONDS / 1000)} s; narrow the query.\n`,
+const responseDirectory = mkdtempSync(join(tmpdir(), TEMPORARY_DIRECTORY_PREFIX));
+const responsePath = join(responseDirectory, RESPONSE_FILE_NAME);
+try {
+  const invocation = runAws(
+    [
+      'lambda',
+      'invoke',
+      '--function-name',
+      functionName,
+      '--cli-binary-format',
+      'raw-in-base64-out',
+      '--payload',
+      JSON.stringify({ query }),
+      responsePath,
+    ],
+    'json',
   );
-  psql.kill('SIGINT');
-  setTimeout(() => psql.kill('SIGKILL'), FORCED_STOP_GRACE_MILLISECONDS).unref();
-}, QUERY_TIMEOUT_MILLISECONDS);
+  const invocationReport: unknown = JSON.parse(invocation);
+  const functionError =
+    typeof invocationReport === 'object' &&
+    invocationReport !== null &&
+    'FunctionError' in invocationReport &&
+    typeof invocationReport.FunctionError === 'string'
+      ? invocationReport.FunctionError
+      : undefined;
 
-psql.on('exit', (code) => {
-  clearTimeout(cancelTimer);
-  process.exit(code ?? 1);
-});
+  const outcome = readInvocationOutcome(readFileSync(responsePath, 'utf8'), functionError);
+  if (outcome.kind === 'refused') fail(`refused: ${outcome.reason}`, REFUSAL_EXIT_CODE);
+  if (outcome.kind === 'failed') fail(outcome.reason, FAILURE_EXIT_CODE);
+
+  process.stdout.write(formatRows(outcome.rows).join('\n'));
+  process.stdout.write('\n');
+  process.stderr.write(
+    `[db:read] ${String(outcome.rows.length)} row(s) as ${outcome.role}` +
+      `${outcome.capped ? ', capped — narrow the query to see the rest' : ''}\n`,
+  );
+} finally {
+  rmSync(responseDirectory, { recursive: true, force: true });
+}

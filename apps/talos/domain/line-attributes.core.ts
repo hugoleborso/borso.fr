@@ -22,17 +22,3 @@ export function readLineAttribute(segment: string): LineAttribute {
     raw,
   };
 }
-
-export function parseLineAttributes(segments: readonly string[]): ReadonlyMap<string, string> {
-  const attributes = new Map<string, string>();
-  for (const attribute of segments.map(readLineAttribute)) {
-    if (attribute.key !== null && !attributes.has(attribute.key)) {
-      attributes.set(attribute.key, attribute.value);
-    }
-  }
-  return attributes;
-}
-
-export function formatLineAttribute(key: string, value: string): string {
-  return `${key}: ${value}`;
-}

@@ -7,7 +7,6 @@ import {
   type ProposalDecision,
 } from '@domain/proposal.core';
 import {
-  editContentFile,
   type FileEditor,
   listContentDirectory,
   readContentFiles,
@@ -15,7 +14,6 @@ import {
 import { formatParisMinute } from '../helpers/calendar/paris-clock.utils';
 import { TalosError } from '../helpers/errors/talos-error.types';
 import { fireRoutine } from '../helpers/routine/routine-fire.adapter';
-import { isMemoryInDatabase } from '../memory/memory-cutover.service';
 import { recordPwaChanges, renderMemoryProposal } from '../memory/memory-pwa.service';
 import {
   buildProposalPath,
@@ -50,7 +48,7 @@ interface ProposalEdit<Outcome> {
   readonly now: Date;
 }
 
-async function editStoredProposal<Outcome>(edit: ProposalEdit<Outcome>): Promise<Outcome> {
+async function editProposal<Outcome>(edit: ProposalEdit<Outcome>): Promise<Outcome> {
   const memorySlug = stripMarkdownExtension(buildProposalPath(edit.slug));
   const fileEdit = edit.editor(await renderMemoryProposal(memorySlug));
   if (fileEdit.content === null) return fileEdit.outcome;
@@ -67,17 +65,6 @@ async function editStoredProposal<Outcome>(edit: ProposalEdit<Outcome>): Promise
     edit.now,
   );
   return fileEdit.outcome;
-}
-
-async function editProposal<Outcome>(edit: ProposalEdit<Outcome>): Promise<Outcome> {
-  if (await isMemoryInDatabase()) return await editStoredProposal(edit);
-  return await editContentFile(buildProposalPath(edit.slug), edit.editor);
-}
-
-async function selectFiredReference(slug: string): Promise<string> {
-  const path = buildProposalPath(slug);
-  if (await isMemoryInDatabase()) return stripMarkdownExtension(path);
-  return path;
 }
 
 // @FollowsBlueprint service-orchestration
@@ -105,7 +92,7 @@ export async function decideProposal(params: {
     now: params.now,
   });
   const proposal = readDecidedProposal(outcome);
-  await fireRoutine(ROUTINE_TRIGGER, await selectFiredReference(params.slug));
+  await fireRoutine(ROUTINE_TRIGGER, stripMarkdownExtension(buildProposalPath(params.slug)));
   return proposal;
 }
 

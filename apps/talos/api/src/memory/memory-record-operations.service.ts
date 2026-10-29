@@ -2,8 +2,6 @@ import { randomUUID } from 'node:crypto';
 import { TalosError } from '../helpers/errors/talos-error.types';
 import { appendJournalSection, appendLineUnderHeading } from './memory-changes.core';
 import type { ChangeOperation } from './memory-changes.schema';
-import { isCutoverKey } from './memory-cutover.core';
-import { forgetStorageMode } from './memory-cutover.service';
 import type { OperationContext, OperationOutcome } from './memory-entity-operations.service';
 import {
   planDraftStatus,
@@ -288,7 +286,5 @@ export async function setStateOperation(
     updatedAt: context.now,
   };
   await upsertState(context.executor, after);
-  const isCutoverChange = isCutoverKey(operation.key);
-  if (isCutoverChange) forgetStorageMode();
   return { status: before === null ? 'created' : 'updated', before, after };
 }

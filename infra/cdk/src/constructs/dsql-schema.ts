@@ -138,6 +138,7 @@ export class DsqlSchema extends Construct {
   private readonly runnerFn: NodejsFunction;
   private readonly schemaResource: CustomResource;
   private readonly apiPrincipalArns: string[] = [];
+  private readonly readerPrincipalArns: string[] = [];
 
   constructor(scope: Construct, id: string, props: DsqlSchemaProps) {
     super(scope, id);
@@ -153,9 +154,9 @@ export class DsqlSchema extends Construct {
     this.clusterArn = props.cluster.clusterArn;
     this.clusterEndpoint = props.cluster.clusterEndpoint;
     this.apiRoleName = apiRoleName(this.schemaName);
-    const readerPrincipalArns = props.readerPrincipalArns ?? [];
+    this.readerPrincipalArns.push(...(props.readerPrincipalArns ?? []));
     this.readerRoleName =
-      readerPrincipalArns.length === 0 ? undefined : readerRoleName(this.schemaName);
+      this.readerPrincipalArns.length === 0 ? undefined : readerRoleName(this.schemaName);
 
     const runnerLogGroup = new LogGroup(this, 'MigrationRunnerLogs', {
       retention: RetentionDays.ONE_WEEK,
@@ -205,7 +206,7 @@ export class DsqlSchema extends Construct {
           ? {}
           : {
               readerRoleName: this.readerRoleName,
-              readerPrincipalArns,
+              readerPrincipalArns: Lazy.list({ produce: () => this.readerPrincipalArns }),
               ...(props.readerTableBlocklist === undefined
                 ? {}
                 : { readerTableBlocklist: props.readerTableBlocklist }),
@@ -229,6 +230,28 @@ export class DsqlSchema extends Construct {
       }),
     );
     this.apiPrincipalArns.push(role.roleArn);
+    deployAfter(handler, this.schemaResource);
+  }
+
+  public grantReaderConnect(handler: IFunction): void {
+    if (this.readerRoleName === undefined) {
+      throw new Error(
+        'DsqlSchema.grantReaderConnect: this schema provisions no read-only role. ' +
+          'Pass readerPrincipalArns so the role exists before granting a reader.',
+      );
+    }
+    const role = handler.role;
+    if (role === undefined) {
+      throw new Error('DsqlSchema.grantReaderConnect: the function has no execution role to map.');
+    }
+    role.addToPrincipalPolicy(
+      new PolicyStatement({
+        effect: Effect.ALLOW,
+        actions: [DSQL_CONNECT_ACTION],
+        resources: [this.clusterArn],
+      }),
+    );
+    this.readerPrincipalArns.push(role.roleArn);
     deployAfter(handler, this.schemaResource);
   }
 }

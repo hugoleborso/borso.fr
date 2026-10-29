@@ -6,58 +6,41 @@ import {
   hasRelationStartedBy,
   isRelationClosedOn,
   isRelationTrueOn,
-  parseGraphRelations,
-  projectPageNode,
-  readProximity,
+  type GraphRelation,
 } from './graph.core';
 
-const GRAPH_FILE = [
-  '{"source": "second-brain/moi", "relation": "travaille_sur", "cible": "second-brain/projets/audit-initech", "depuis": "2026-01", "jusqua": "2026-05", "vu": "2026-05-30", "src": "x"}',
-  '{"source": "second-brain/moi", "relation": "travaille_sur", "cible": "second-brain/projets/refonte-du-site-globex", "depuis": "2026-09-01", "jusqua": "", "vu": "2026-10-02", "src": "y"}',
-  '',
-  '{"source": "second-brain/projets/refonte-du-site-globex", "relation": "client", "cible": "second-brain/organisations/globex", "depuis": "~2026-07"}',
-  '{ pas du json',
-  '{"source": "second-brain/moi", "relation": "ami_de"}',
-].join('\n');
-
-const RELATIONS = parseGraphRelations(GRAPH_FILE);
+const RELATIONS: GraphRelation[] = [
+  {
+    source: 'second-brain/moi',
+    relation: 'travaille_sur',
+    target: 'second-brain/projets/audit-initech',
+    since: '2026-01',
+    until: '2026-05',
+    seen: '2026-05-30',
+  },
+  {
+    source: 'second-brain/moi',
+    relation: 'travaille_sur',
+    target: 'second-brain/projets/refonte-du-site-globex',
+    since: '2026-09-01',
+    until: '',
+    seen: '2026-10-02',
+  },
+  {
+    source: 'second-brain/projets/refonte-du-site-globex',
+    relation: 'client',
+    target: 'second-brain/organisations/globex',
+    since: '~2026-07',
+    until: '',
+    seen: '',
+  },
+];
 
 function neighboursOfOwner(date: string): string[] {
   return RELATIONS.filter(
     (relation) => relation.source === 'second-brain/moi' && isRelationTrueOn(relation, date),
   ).map((relation) => relation.target);
 }
-
-describe('parseGraphRelations', () => {
-  it('reads every well-formed line and skips blank, broken and incomplete ones', () => {
-    expect(RELATIONS).toEqual([
-      {
-        source: 'second-brain/moi',
-        relation: 'travaille_sur',
-        target: 'second-brain/projets/audit-initech',
-        since: '2026-01',
-        until: '2026-05',
-        seen: '2026-05-30',
-      },
-      {
-        source: 'second-brain/moi',
-        relation: 'travaille_sur',
-        target: 'second-brain/projets/refonte-du-site-globex',
-        since: '2026-09-01',
-        until: '',
-        seen: '2026-10-02',
-      },
-      {
-        source: 'second-brain/projets/refonte-du-site-globex',
-        relation: 'client',
-        target: 'second-brain/organisations/globex',
-        since: '~2026-07',
-        until: '',
-        seen: '',
-      },
-    ]);
-  });
-});
 
 describe('computeLowerBound and computeUpperBound, as scripts/graphe.py computes them', () => {
   it.each([
@@ -204,38 +187,5 @@ describe('isRelationClosedOn', () => {
   it('never closes a relation without an end', () => {
     expect(isRelationClosedOn(ongoing, null)).toBe(false);
     expect(isRelationClosedOn(ongoing, '2030-01-01')).toBe(false);
-  });
-});
-
-describe('readProximity', () => {
-  it.each(['1', '3', '5'])('reads %s as a score', (declared) => {
-    expect(readProximity({ proximite: declared })).toBe(Number(declared));
-  });
-
-  it.each(['0', '6', '4.5', ' 4', 'haute', '', '45'])('ignores %j', (declared) => {
-    expect(readProximity({ proximite: declared })).toBeNull();
-  });
-
-  it('answers null without the key', () => {
-    expect(readProximity({ type: 'personne' })).toBeNull();
-  });
-});
-
-describe('projectPageNode', () => {
-  it('carries the proximity of a page that declares one', () => {
-    expect(
-      projectPageNode({
-        path: 'second-brain/personnes/lea',
-        title: 'Léa',
-        type: 'personne',
-        frontMatter: { type: 'personne', proximite: '5' },
-      }),
-    ).toEqual({ id: 'second-brain/personnes/lea', title: 'Léa', type: 'personne', proximity: 5 });
-  });
-
-  it('leaves the proximity out when the page has none', () => {
-    expect(
-      projectPageNode({ path: 'index', title: 'Index', type: 'page', frontMatter: {} }),
-    ).toEqual({ id: 'index', title: 'Index', type: 'page' });
   });
 });

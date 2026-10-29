@@ -1,17 +1,12 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildReadOnlySessionCommands,
-  DEFAULT_APP,
-  DEFAULT_STAGE,
   decideReadOnlyQuery,
-  decideReadTarget,
   decideTableAccess,
   listBlocklistedTables,
   maskLiteralsAndComments,
-  readQueryArguments,
-  readReaderTableBlocklist,
   ROW_CAP,
-} from './read-only-query.utils';
+} from './read-only-query.utils.js';
 
 function blanks(text: string): string {
   return ' '.repeat(text.length);
@@ -267,48 +262,6 @@ describe('decideReadOnlyQuery', () => {
   });
 });
 
-describe('decideReadTarget', () => {
-  it('defaults to pragma prod', () => {
-    expect(DEFAULT_APP).toBe('pragma');
-    expect(DEFAULT_STAGE).toBe('prod');
-    expect(decideReadTarget(DEFAULT_APP, DEFAULT_STAGE)).toStrictEqual({
-      accepted: true,
-      app: 'pragma',
-      schemaName: 'prod',
-      roleName: 'ai_reader_prod',
-      stackName: 'pragma-prod',
-    });
-  });
-
-  it('reads the prod schema of pragma, last-loop-lepin and banana-rush', () => {
-    for (const app of ['pragma', 'last-loop-lepin', 'banana-rush']) {
-      expect(decideReadTarget(app, 'prod')).toStrictEqual({
-        accepted: true,
-        app,
-        schemaName: 'prod',
-        roleName: 'ai_reader_prod',
-        stackName: `${app}-prod`,
-      });
-    }
-  });
-
-  it('refuses a stage or an application without a reader', () => {
-    const reason =
-      'no read-only role exists for APP=pragma STAGE=preview. Readable: APP=pragma STAGE=prod, APP=last-loop-lepin STAGE=prod, APP=banana-rush STAGE=prod (ADR-0044).';
-    expect(decideReadTarget('pragma', 'preview')).toStrictEqual({ accepted: false, reason });
-    expect(decideReadTarget('borso-fr', 'prod')).toMatchObject({ accepted: false });
-    expect(decideReadTarget('toString', 'prod')).toMatchObject({ accepted: false });
-    expect(decideReadTarget('pragma', 'constructor')).toMatchObject({ accepted: false });
-  });
-
-  it('refuses talos on every stage and points to its agent API', () => {
-    const reason =
-      'talos holds private data and has no read-only role by design (ADR-0044). Query it through its agent API, POST /api/agent/sql with an agent token (ADR-0039).';
-    expect(decideReadTarget('talos', 'prod')).toStrictEqual({ accepted: false, reason });
-    expect(decideReadTarget('talos', 'preview')).toStrictEqual({ accepted: false, reason });
-  });
-});
-
 describe('listBlocklistedTables', () => {
   const blocklist = ['member_passkey', 'app_config'];
 
@@ -382,41 +335,6 @@ describe('decideTableAccess', () => {
   });
 });
 
-describe('readReaderTableBlocklist', () => {
-  const schemaResource = {
-    Type: 'AWS::CloudFormation::CustomResource',
-    Properties: { readerTableBlocklist: ['admin_sessions'] },
-  };
-
-  it('reads the blocklist from the schema resource of a deployed template', () => {
-    expect(
-      readReaderTableBlocklist({
-        Resources: {
-          Other: 'not a resource',
-          Bucket: { Type: 'AWS::S3::Bucket', Properties: { readerTableBlocklist: ['x'] } },
-          Bare: { Type: 'AWS::CloudFormation::CustomResource' },
-          Malformed: {
-            Type: 'AWS::CloudFormation::CustomResource',
-            Properties: { readerTableBlocklist: ['ok', 1] },
-          },
-          Unlisted: { Type: 'AWS::CloudFormation::CustomResource', Properties: {} },
-          Schema: schemaResource,
-        },
-      }),
-    ).toStrictEqual(['admin_sessions']);
-  });
-
-  it('reads nothing from a template without one', () => {
-    expect(readReaderTableBlocklist(null)).toStrictEqual([]);
-    expect(readReaderTableBlocklist('{}')).toStrictEqual([]);
-    expect(readReaderTableBlocklist({})).toStrictEqual([]);
-    expect(readReaderTableBlocklist({ Resources: null })).toStrictEqual([]);
-    expect(readReaderTableBlocklist({ Resources: { Bare: schemaResource.Type } })).toStrictEqual(
-      [],
-    );
-  });
-});
-
 describe('buildReadOnlySessionCommands', () => {
   it('opens a read only transaction, caps the rows and rolls back', () => {
     expect(ROW_CAP).toBe(200);
@@ -425,14 +343,5 @@ describe('buildReadOnlySessionCommands', () => {
       'SELECT * FROM (\nSELECT 1 -- x\n) AS capped_result LIMIT 5',
       'ROLLBACK',
     ]);
-  });
-});
-
-describe('readQueryArguments', () => {
-  it('drops the separator pnpm forwards and joins the rest', () => {
-    expect(readQueryArguments(['--', 'SELECT', '1'])).toBe('SELECT 1');
-    expect(readQueryArguments(['SELECT 1'])).toBe('SELECT 1');
-    expect(readQueryArguments(['SELECT', '--', '1'])).toBe('SELECT -- 1');
-    expect(readQueryArguments([])).toBe('');
   });
 });

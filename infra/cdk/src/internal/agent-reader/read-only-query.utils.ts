@@ -47,6 +47,7 @@ const ESCAPE_STRING_PATTERN = /^'(?:[^'\\]|''|\\.)*'/s;
 const BLOCK_COMMENT_MARKER_PATTERN = /\/\*|\*\//g;
 const ESCAPE_STRING_PREFIX_PATTERN = /e/i;
 const IDENTIFIER_CHARACTER_PATTERN = /[\w$]/;
+const CHARACTER_BEFORE_THE_ESCAPE_PREFIX = 2;
 const NOT_FOUND = -1;
 const BLANK = ' ';
 const SINGLE_QUOTE = "'";
@@ -57,39 +58,10 @@ const LINE_COMMENT_OPENER = '--';
 const BLOCK_COMMENT_OPENER = '/*';
 const BLOCK_COMMENT_CLOSER = '*/';
 const NEWLINE = '\n';
-const ARGUMENT_SEPARATOR = '--';
-
-export const DEFAULT_APP = 'pragma';
-export const DEFAULT_STAGE = 'prod';
 export const ROW_CAP = 200;
-
-const READER_ROLE_PREFIX = 'ai_reader_';
-const SCHEMA_RESOURCE_TYPE = 'AWS::CloudFormation::CustomResource';
-
-const READABLE_SCHEMA_BY_TARGET: ReadonlyMap<string, string> = new Map([
-  ['pragma/prod', 'prod'],
-  ['last-loop-lepin/prod', 'prod'],
-  ['banana-rush/prod', 'prod'],
-]);
-const READABLE_TARGETS_LABEL = [...READABLE_SCHEMA_BY_TARGET.keys()]
-  .map((target) => `APP=${target.replace('/', ' STAGE=')}`)
-  .join(', ');
-const PRIVATE_APP = 'talos';
-const PRIVATE_APP_REFUSAL =
-  'talos holds private data and has no read-only role by design (ADR-0044). Query it through its agent API, POST /api/agent/sql with an agent token (ADR-0039).';
 
 export type QueryDecision =
   | { readonly accepted: true; readonly statement: string }
-  | { readonly accepted: false; readonly reason: string };
-
-export type TargetDecision =
-  | {
-      readonly accepted: true;
-      readonly app: string;
-      readonly schemaName: string;
-      readonly roleName: string;
-      readonly stackName: string;
-    }
   | { readonly accepted: false; readonly reason: string };
 
 interface MaskedSource {
@@ -129,7 +101,9 @@ function endOfDelimited(source: string, start: number, delimiter: string): numbe
 function isEscapeStringPrefix(source: string, quoteIndex: number): boolean {
   return (
     ESCAPE_STRING_PREFIX_PATTERN.test(source.charAt(quoteIndex - 1)) &&
-    !IDENTIFIER_CHARACTER_PATTERN.test(source.charAt(quoteIndex - 2))
+    !IDENTIFIER_CHARACTER_PATTERN.test(
+      source.charAt(quoteIndex - CHARACTER_BEFORE_THE_ESCAPE_PREFIX),
+    )
   );
 }
 
@@ -241,55 +215,19 @@ export function decideTableAccess(source: string, blocklist: readonly string[]):
   return { accepted: true, statement: source };
 }
 
-function isRecord(value: unknown): value is Record<string, unknown> {
-  return typeof value === 'object' && value !== null;
-}
+export type ReadOnlySessionCommands = readonly [
+  begin: string,
+  cappedSelect: string,
+  rollback: string,
+];
 
-function isStringList(value: unknown): value is string[] {
-  return Array.isArray(value) && value.every((entry) => typeof entry === 'string');
-}
-
-export function readReaderTableBlocklist(template: unknown): string[] {
-  if (!isRecord(template) || !isRecord(template.Resources)) return [];
-  for (const resource of Object.values(template.Resources)) {
-    if (!isRecord(resource) || resource.Type !== SCHEMA_RESOURCE_TYPE) continue;
-    if (!isRecord(resource.Properties)) continue;
-    const blocklist = resource.Properties.readerTableBlocklist;
-    if (isStringList(blocklist)) return blocklist;
-  }
-  return [];
-}
-
-export function decideReadTarget(app: string, stage: string): TargetDecision {
-  if (app === PRIVATE_APP) return { accepted: false, reason: PRIVATE_APP_REFUSAL };
-  const schemaName = READABLE_SCHEMA_BY_TARGET.get(`${app}/${stage}`);
-  if (schemaName === undefined) {
-    return {
-      accepted: false,
-      reason: `no read-only role exists for APP=${app} STAGE=${stage}. Readable: ${READABLE_TARGETS_LABEL} (ADR-0044).`,
-    };
-  }
-  return {
-    accepted: true,
-    app,
-    schemaName,
-    roleName: `${READER_ROLE_PREFIX}${schemaName}`,
-    stackName: `${app}-${stage}`,
-  };
-}
-
-export function buildReadOnlySessionCommands(statement: string, rowCap: number): string[] {
+export function buildReadOnlySessionCommands(
+  statement: string,
+  rowCap: number,
+): ReadOnlySessionCommands {
   return [
     'BEGIN READ ONLY',
     `SELECT * FROM (\n${statement}\n) AS capped_result LIMIT ${String(rowCap)}`,
     'ROLLBACK',
   ];
-}
-
-export function readQueryArguments(argumentsAfterScript: readonly string[]): string {
-  const withoutSeparator =
-    argumentsAfterScript[0] === ARGUMENT_SEPARATOR
-      ? argumentsAfterScript.slice(1)
-      : argumentsAfterScript;
-  return withoutSeparator.join(BLANK);
 }

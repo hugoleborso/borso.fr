@@ -5,7 +5,7 @@ export const talosManifest: ArchitectureManifest = {
   name: 'Talos',
   urlOnlyScripts: ['apps/talos/site/public/sw.js'],
   description:
-    "A personal assistant's phone interface: the owner's focus, todos, proposals, daily brief and notes graph, read from and written to a private Git repository that scheduled agent runs keep up to date.",
+    "A personal assistant's phone interface: the owner's focus, todos, proposals, daily brief and notes graph, read from and written to a memory database that scheduled agent runs keep up to date.",
   actors: [
     {
       id: 'owner',
@@ -93,16 +93,6 @@ export const talosManifest: ArchitectureManifest = {
   ],
   externals: [
     {
-      id: 'github',
-      icon: '🐙',
-      name: 'GitHub contents API',
-      technology: 'REST and GraphQL, fine-grained token',
-      description:
-        'The only store of content. Every read is a file or a tree of the private repository, and every write is a commit, so the scheduled runs and the application share one state.',
-      boundary: 'third-party',
-      access: 'credential',
-    },
-    {
       id: 'claude-routine',
       icon: '🤖',
       name: 'Agent routine trigger',
@@ -159,7 +149,7 @@ export const talosManifest: ArchitectureManifest = {
       name: 'SSM Parameter Store',
       technology: 'AWS SDK, GetParameter with decryption',
       description:
-        'Holds every secret under /talos/ as a SecureString (the GitHub token, the VAPID keys, the session key, the bootstrap code and the notify secret), and the two Claude Code environment ids as plain parameters.',
+        'Holds every secret under /talos/ as a SecureString (the VAPID keys, the agent tokens, the session key, the bootstrap code and the notify secret), and the two Claude Code environment ids as plain parameters.',
       boundary: 'aws',
       access: 'credential',
     },

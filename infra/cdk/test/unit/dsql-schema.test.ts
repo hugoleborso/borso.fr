@@ -209,6 +209,43 @@ describe('DsqlSchema', () => {
     expect(() => schema.grantConnect(imported)).toThrow('has no execution role to map');
   });
 
+  it('grantReaderConnect refuses a schema that provisions no read-only role', () => {
+    const app = new App();
+    const stack = new Stack(app, 'S', { env: TEST_ENV });
+    const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
+    const schema = new DsqlSchema(stack, 'Db', {
+      app: 'test-app',
+      stage: 'prod',
+      migrationsPath: MIGRATIONS,
+      cluster,
+    });
+    const handler = new LambdaFunction(stack, 'Reader', {
+      runtime: Runtime.NODEJS_22_X,
+      handler: 'index.handler',
+      code: Code.fromInline('exports.handler = async () => {};'),
+    });
+    expect(() => schema.grantReaderConnect(handler)).toThrow('provisions no read-only role');
+  });
+
+  it('grantReaderConnect refuses a function without an execution role', () => {
+    const app = new App();
+    const stack = new Stack(app, 'S', { env: TEST_ENV });
+    const cluster = new DsqlCluster(stack, 'Cluster', { app: 'test-app', stage: 'prod' });
+    const schema = new DsqlSchema(stack, 'Db', {
+      app: 'test-app',
+      stage: 'prod',
+      migrationsPath: MIGRATIONS,
+      cluster,
+      readerPrincipalArns: ['arn:aws:iam::123456789012:user/AI-Dev-ReadOnly'],
+    });
+    const imported = LambdaFunction.fromFunctionArn(
+      stack,
+      'Imported',
+      'arn:aws:lambda:eu-west-3:123456789012:function:elsewhere',
+    );
+    expect(() => schema.grantReaderConnect(imported)).toThrow('has no execution role to map');
+  });
+
   it('grantConnect refuses a function defined outside this application', () => {
     const app = new App();
     const stack = new Stack(app, 'S', { env: TEST_ENV });

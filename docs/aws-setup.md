@@ -417,57 +417,65 @@ screenshot, which is the behaviour from before ADR-0023 rather than a failure.
 
 [ADR-0044](./adr/0044-read-only-production-database-access-for-agents.md) gives a hosted
 session one read path into the `prod` schema of pragma, last-loop-lepin and banana-rush:
-`APP=<app> scripts/db-read.sh "<sql>"`, signed in as the database role `ai_reader_prod`, which
+`APP=<app> scripts/db-read.sh "<sql>"`, served by the database role `ai_reader_prod`, which
 holds `SELECT` only, and not on the tables that hold credentials, keys or tokens (ADR-0044's
-*Tables the reader never sees*). The migration runner creates that role on each application's cluster and
-maps it to this user on that application's production deploy. The IAM half is manual, because
+*Tables the reader never sees*). The migration runner creates that role on each application's
+cluster and maps it on that application's production deploy. The IAM half is manual, because
 the user is not managed by any stack. talos is not part of it: its data is private, and agents
 read it through its own API ([ADR-0039](./adr/0039-talos-memory-in-the-database.md)).
 
-**The grant is one verb on three clusters.** `dsql:DbConnect` on the three cluster ARNs, and
-never `dsql:DbConnectAdmin`, so the only database identity the user can sign in as is the one
-its mapping names. Read the cluster ARNs rather than copying them, since a rebuilt cluster gets
-a new one:
+**[ADR-0049](./adr/0049-agents-read-production-through-an-invoked-reader-lambda.md) replaced the
+transport.** The sandbox a hosted session runs in refuses outbound 5432 and Aurora DSQL has no
+data API, so the script no longer speaks Postgres. It invokes a reader Lambda per application —
+`<app>-prod-agent-reader`, created by `DsqlAgentReader` beside each production schema — over
+`lambda.eu-west-3.amazonaws.com`, which that sandbox already reaches. The function holds the
+role mapping and runs the assessment that decides what the query may name, so a caller that
+skips the script gains nothing. Nothing is published: there is no Function URL and no route,
+and the caller is authenticated by SigV4 as the IAM user it already is.
 
-```bash
-for app in pragma last-loop-lepin banana-rush; do
-  aws ssm get-parameter --name "/borso/$app/dsql-cluster-arn" --query Parameter.Value --output text
-done
-```
+**`AI-Dev-ReadOnly` therefore holds no DSQL right at all.** The user used to carry
+`dsql:DbConnect` on the three cluster ARNs, kept as break-glass for a laptop holding its access
+key. That is gone: the execution role of each reader function is what the database maps now, and
+the user's only production right is `lambda:InvokeFunction` on those three functions. A laptop
+that needs the database has `borso-admin`, which is a better fallback than a read role with no
+blocklist in front of it. Verified by simulation on 2026-10-29: `dsql:DbConnect` on the pragma
+cluster is `explicitDeny` for this user.
 
-On 2026-10-25 that returned these three ARNs, which the JSON below uses:
+#### The grant is one verb on three functions
 
-| Application | Cluster ARN |
-| --- | --- |
-| pragma | `arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi` |
-| last-loop-lepin | `arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4` |
-| banana-rush | `arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba` |
+The function names are deterministic — `<app>-<stage>-<handler>`, the same rule every Lambda in
+this account is named by — so these ARNs survive a redeploy. They do **not** survive a rename of
+the handler slug, which is why `db-read.sh` reads the name from the stack's
+`AgentReaderFunctionName` output rather than building it, and why a stack with no such output is
+refused before anything is invoked.
 
-**The allow is one inline policy, `Prod-db-read`**, saved as `prod-db-read.json`:
+`Prod-db-read` is the whole allow, saved as `prod-db-read.json`:
 
 ```json
 {
   "Version": "2012-10-17",
   "Statement": [
     {
-      "Sid": "ConnectAsTheProductionReader",
+      "Sid": "InvokeTheProductionReaders",
       "Effect": "Allow",
-      "Action": "dsql:DbConnect",
+      "Action": "lambda:InvokeFunction",
       "Resource": [
-        "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi",
-        "arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4",
-        "arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba"
+        "arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader",
+        "arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader",
+        "arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader"
       ]
     }
   ]
 }
 ```
 
-**An explicit `Deny` beats any `Allow`**, and §12.6's deny lists `dsql:*` on `Resource: "*"`.
-That line has to leave the blanket statement and come back as two statements that cover
-everything except `DbConnect` on these three clusters. The deployed deny is unreadable from a
-session (`iam:GetUserPolicy` is inside it), so its content is unverified from here. Read it
-first, and change only the `dsql:*` entry:
+#### The deny has to stop covering that one verb
+
+**An explicit `Deny` beats any `Allow`**, and §12.6's deny lists `lambda:Invoke*` on
+`Resource: "*"`. That line has to leave the blanket statement and come back as two statements
+that cover everything except `InvokeFunction` on these three functions. The deployed deny is
+unreadable from a session (`iam:GetUserPolicy` is inside it), so its content is unverified from
+there. Read it first with the admin profile:
 
 ```bash
 aws --profile borso-admin iam get-user-policy \
@@ -475,57 +483,29 @@ aws --profile borso-admin iam get-user-policy \
   --query PolicyDocument --output json > deny.json
 ```
 
-In `deny.json`, remove `"dsql:*"` from the statement whose `Resource` is `"*"`, and add these
-two statements to the `Statement` array, writing the result to `deny-narrowed.json`:
-
-```json
-{
-  "Sid": "DenyDsqlOutsideTheReadableClusters",
-  "Effect": "Deny",
-  "Action": "dsql:*",
-  "NotResource": [
-    "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi",
-    "arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4",
-    "arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba"
-  ]
-},
-{
-  "Sid": "DenyEveryDsqlActionOnTheReadableClustersButDbConnect",
-  "Effect": "Deny",
-  "NotAction": "dsql:DbConnect",
-  "Resource": [
-    "arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi",
-    "arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4",
-    "arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba"
-  ]
-}
-```
-
-`jq` makes both edits, and running it twice leaves the same policy. It also removes the two
-pragma-only statements an earlier draft of this section added, if they are there:
+One `jq` makes every edit, and running it twice leaves the same policy. It removes
+`lambda:Invoke*` from the blanket statement, puts `dsql:*` back into it — ADR-0044's two DSQL
+narrowing statements are what ADR-0049 retired — and appends the two Lambda ones. The `-c` is
+not cosmetic; see *The 2048-character wall* below.
 
 ```bash
-jq --argjson arns '["arn:aws:dsql:eu-west-3:756586757578:cluster/r5t2mnkg7tsrgko6jblynaa5zi","arn:aws:dsql:eu-west-3:756586757578:cluster/pftyumunnbsz2q2sjtmjw5lyi4","arn:aws:dsql:eu-west-3:756586757578:cluster/3ruc7tel3vjn7qro34r3lo2yba"]' '
+jq -c --argjson fns '["arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader"]' '
   .Statement |= (
-    map(select(.Sid as $sid | [
-      "DenyDsqlOutsideTheReadableClusters",
-      "DenyEveryDsqlActionOnTheReadableClustersButDbConnect",
-      "DenyDsqlOutsideThePragmaCluster",
-      "DenyEveryDsqlActionOnThePragmaClusterButDbConnect"
-    ] | index($sid) | not))
-    | map(if .Resource == "*" and (.Action | type) == "array" then .Action -= ["dsql:*"] else . end)
-    | map(select(.Action != [] and ((.Action == "dsql:*" and .Resource == "*") | not)))
+    map(select(.Sid | test("Dsql|Lambda") | not))
+    | map(if .Resource == "*" and (.Action | type) == "array"
+          then .Action = ((.Action - ["lambda:Invoke*", "dsql:*"]) + ["dsql:*"] | unique)
+          else . end)
     + [
-      {Sid: "DenyDsqlOutsideTheReadableClusters", Effect: "Deny", Action: "dsql:*", NotResource: $arns},
-      {Sid: "DenyEveryDsqlActionOnTheReadableClustersButDbConnect", Effect: "Deny", NotAction: "dsql:DbConnect", Resource: $arns}
+      {Sid: "DenyLambdaInvokeOutsideTheReaders", Effect: "Deny", Action: "lambda:Invoke*", NotResource: $fns},
+      {Sid: "DenyEveryLambdaActionOnTheReadersButInvoke", Effect: "Deny", NotAction: "lambda:InvokeFunction", Resource: $fns}
     ])' deny.json > deny-narrowed.json
 ```
 
-The first keeps every other cluster, talos's among them, and every call whose resource is not a
-cluster, denied exactly as before. The second keeps `DbConnectAdmin`, `GetCluster`,
-`UpdateCluster`, `DeleteCluster` and the rest denied on the three clusters. Only `DbConnect` on
-those three ARNs is left undenied. If `dsql:*` appears in any other statement with
-`Resource: "*"`, the hole stays shut, and the probe below says so.
+The first added statement keeps every other function denied, the API Lambdas and talos's among
+them. The second keeps `UpdateFunctionCode`, `GetFunction`, `AddPermission` and the rest denied
+on the three readers. Only `InvokeFunction` on those three ARNs is left undenied. If
+`lambda:Invoke*` appears in any other statement with `Resource: "*"`, the hole stays shut, and
+the simulation below says so.
 
 Apply both:
 
@@ -541,42 +521,80 @@ aws --profile borso-admin iam put-user-policy \
   --policy-document file://prod-db-read.json
 ```
 
-If an earlier draft of this section was applied, the user also holds an inline policy named
-`Pragma-prod-read`, which `Prod-db-read` replaces. List the inline policies, and delete that one
-only if it is there:
-
-```bash
-aws --profile borso-admin iam list-user-policies --user-name AI-Dev-ReadOnly
-aws --profile borso-admin iam delete-user-policy \
-  --user-name AI-Dev-ReadOnly --policy-name Pragma-prod-read
-```
-
 In the console the same edits are: **IAM → Users → `AI-Dev-ReadOnly` → Permissions**. Open the
 inline policy `Explicit-write-deny`, choose **Edit**, switch to the **JSON** tab, make the change
-above and save. Then choose **Add permissions → Create inline policy**, switch to the **JSON**
-tab, paste the allow, choose **Next**, name it `Prod-db-read` and create it.
+above and save. Then open `Prod-db-read` and replace its document with the allow.
 
-Do not copy either change to the `ClaudeDev` permission set. The database role is mapped to
-this user's ARN only, so the permission set's role would get a connect right with nothing to
-sign in as.
+Do not copy either change to the `ClaudeDev` permission set. The reader functions are invoked as
+this user, and the database role is mapped to each function's execution role, so the permission
+set's role would get an invoke right it has no reason to hold.
 
-Verify from a hosted session, after each application's production deploy has created the role:
+#### The 2048-character wall
+
+**IAM caps the inline policies of one user at 2048 characters in aggregate, not per policy.**
+Not 2048 each, and the error says only *"Maximum policy size of 2048 bytes exceeded for user
+AI-Dev-ReadOnly"*, which reads as if the document you just sent were too large. It was not: the
+first attempt here sent a 1887-character deny, under the limit on its own, and was refused
+because `Prod-db-read` and `Screenshots-publish` were already spending 525 of the budget.
+
+Two things follow. Compact the JSON — IAM counts whitespace, so `jq -c` buys about a third of
+the document back. And treat the budget as a shared one: as of 2026-10-29 the three policies
+spend 1243 + 375 + 173 = 1791 of 2048, which leaves room for roughly four more ARNs anywhere.
+The next thing that does not fit moves to a customer-managed policy, which is capped at 6144 and
+attaches to the user the same way; do not golf the Sids to buy another hundred characters.
+
+Measure before applying:
+
+```bash
+for p in $(aws --profile borso-admin iam list-user-policies \
+             --user-name AI-Dev-ReadOnly --query 'PolicyNames[]' --output text); do
+  printf '%s: %s\n' "$p" "$(aws --profile borso-admin iam get-user-policy \
+    --user-name AI-Dev-ReadOnly --policy-name "$p" \
+    --query PolicyDocument --output json | jq -c . | tr -d ' \n' | wc -c)"
+done
+```
+
+#### Verify
+
+The simulator answers without invoking anything, and one resource per call — a call naming
+several collapses them into one templated answer that tells you nothing:
+
+```bash
+for f in pragma-prod-agent-reader last-loop-lepin-prod-agent-reader \
+         banana-rush-prod-agent-reader pragma-prod-api; do
+  printf '%s -> %s\n' "$f" "$(aws --profile borso-admin iam simulate-principal-policy \
+    --policy-source-arn arn:aws:iam::756586757578:user/AI-Dev-ReadOnly \
+    --action-names lambda:InvokeFunction \
+    --resource-arns "arn:aws:lambda:eu-west-3:756586757578:function:$f" \
+    --query 'EvaluationResults[0].EvalDecision' --output text)"
+done
+```
+
+On 2026-10-29 that returned `allowed` for the three readers and `explicitDeny` for
+`pragma-prod-api`, with `lambda:UpdateFunctionCode` and `lambda:GetFunction` on a reader both
+`explicitDeny`.
+
+Then, from a hosted session, after each application's production deploy has created the role and
+the reader function:
 
 ```bash
 APP=pragma scripts/db-read.sh "SELECT count(*) FROM member"             # one number
-APP=last-loop-lepin scripts/db-read.sh "SELECT count(*) FROM runners"   # one number
+APP=last-loop-lepin scripts/db-read.sh "SELECT count(*) FROM editions"  # one number
 APP=banana-rush scripts/db-read.sh "SELECT count(*) FROM game"          # one number
 APP=talos scripts/db-read.sh "SELECT 1"                                 # refused by the script
-APP=last-loop-lepin scripts/db-read.sh "SELECT 1 FROM admin_sessions"   # refused by the script
-scripts/db-read.sh "SELECT 1 FROM member FOR UPDATE"                    # refused by the script
+APP=last-loop-lepin scripts/db-read.sh "SELECT 1 FROM admin_sessions"   # refused by the function
+scripts/db-read.sh "SELECT 1 FROM member FOR UPDATE"                    # refused by the function
 ```
 
-A session that skips the script and asks for a blocklisted table directly gets `permission denied
-for table` from Postgres, which is the database half of the same rule.
+Only the talos refusal happens locally; the rest are the function's answer, which is the point of
+ADR-0049. A session that invokes the function directly with a blocklisted table gets the same
+refusal, and one that reached past the function to the database would still get `permission
+denied for table` from Postgres, which is the database half of the same rule.
 
-If a command fails with `AccessDeniedException` naming an explicit deny, the `dsql:*` entry is
-still in a statement with `Resource: "*"`. If it fails with an authentication error from
-Postgres, that application's deploy has not run yet, or the role mapping did not land.
+If a command fails with `AccessDeniedException` naming an explicit deny, the `lambda:Invoke*`
+entry is still in a statement with `Resource: "*"`. If it is refused with *the deployed stack
+carries no `AgentReaderFunctionName` output*, that application's production deploy has not run
+since ADR-0049 landed.
 
 ## Reference: SSM parameters
 

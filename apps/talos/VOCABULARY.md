@@ -1,6 +1,6 @@
 # Vocabulary — talos
 
-`talos` is a progressive web app for one person, its owner, over a private Git repository that scheduled agent runs keep up to date. The repository's files are written in French; the code is in English. This file names the English word to use for each notion, in identifiers, routes, JSON fields and file names. The file formats themselves are in [`CONTRAT.md`](./CONTRAT.md).
+`talos` is a progressive web app for one person, its owner, over a memory database that scheduled agent runs keep up to date. The memory's keys and headings are written in French; the code is in English. This file names the English word to use for each notion, in identifiers, routes, JSON fields and file names. The file formats themselves are in [`CONTRAT.md`](./CONTRAT.md).
 
 ## Focus
 
@@ -142,7 +142,7 @@ A note from the owner to Talos. It is not stored: the Message screen opens a Cla
 Lives in: `api/src/messages/`, `site/src/lib/claude-code-address.core.ts`
 
 - Code: `ClaudeCodeTarget` (`repository`, `environments`), what the API answers so the screen can build the link; `ClaudeCodeEnvironment` (`talos` to read and answer, `build` to code and deploy); `buildClaudeCodeAddress` and `composeTalosPrompt` build the link.
-- The repository is `GITHUB_REPO`; the environment ids are deployment settings under `/talos/`, never written in this repository.
+- The repository Claude Code opens is `GITHUB_REPO`; the environment ids are deployment settings under `/talos/`, never written in this repository.
 
 Not to be confused with: a run, which Talos starts on a schedule or after a proposal decision.
 
@@ -165,9 +165,9 @@ Lives in: `api/src/memory/`
 - A **slug** is the repository path without `.md`, so every `[[…]]` link stays valid.
 - A **memory event** records one applied operation (actor, token, run, before and after); a **change batch** remembers the answer to one idempotency key. Nothing is deleted: an entity is archived, a todo is removed by a flag.
 - `renderEntityPage` (`page-rendering.core.ts`) writes an entity back as the markdown file it came from.
-- The **cutover** is the `memory_state` key that says whether git or the database is the truth.
+- The **cutover** is the `memory_state` key that recorded the move from git to the database; it is only reported by `/status`.
 
-Not to be confused with: a **page** of the git repository, which the PWA reads through `api/src/pages/` until the cutover; a **memory document** is the database row that holds such a file once it is not modelled by a table of its own.
+Not to be confused with: a **page**, which the PWA reads through `api/src/pages/` as a rendered memory slug; a **memory document** is the database row that holds such a file once it is not modelled by a table of its own.
 
 ## Agent
 

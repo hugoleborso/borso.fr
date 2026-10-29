@@ -1,11 +1,6 @@
 export const TODO_LISTS = {
-  main: { path: 'todo.md', heading: '# Todo', commitNoun: 'todo', memoryList: 'personal' },
-  work: {
-    path: 'todo-taff.md',
-    heading: '# Todo taff',
-    commitNoun: 'todo taff',
-    memoryList: 'work',
-  },
+  main: { commitNoun: 'todo', memoryList: 'personal' },
+  work: { commitNoun: 'todo taff', memoryList: 'work' },
 } as const;
 
 export type TodoListName = keyof typeof TODO_LISTS;

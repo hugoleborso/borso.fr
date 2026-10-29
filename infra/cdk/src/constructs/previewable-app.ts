@@ -20,6 +20,7 @@ import {
 } from '../internal/stage-wiring.utils.js';
 import { applyStandardTags } from '../internal/tags.js';
 import type { IDsqlCluster } from './dsql-cluster.js';
+import { DsqlAgentReader } from './dsql-agent-reader.js';
 import { DsqlSchema, type DsqlSchemaCloneFromConfig } from './dsql-schema.js';
 import { LambdaApi } from './lambda-api.js';
 import { DEFAULT_API_PATH_PATTERNS, StaticSite } from './static-site.js';
@@ -55,6 +56,7 @@ export class PreviewableApp extends Construct {
   public readonly site: StaticSite;
   public readonly api: LambdaApi | undefined;
   public readonly database: DsqlSchema | undefined;
+  public readonly agentReader: DsqlAgentReader | undefined;
   public readonly cluster: IDsqlCluster | undefined;
 
   constructor(scope: Construct, id: string, props: PreviewableAppProps) {
@@ -81,6 +83,18 @@ export class PreviewableApp extends Construct {
           ? {}
           : { readerTableBlocklist: props.database.readerTableBlocklist }),
       });
+
+      if (this.database.readerRoleName !== undefined) {
+        this.agentReader = new DsqlAgentReader(this, 'AgentReader', {
+          app: props.app,
+          stage: props.stage,
+          prNumber: props.prNumber,
+          schema: this.database,
+          ...(props.database.readerTableBlocklist === undefined
+            ? {}
+            : { tableBlocklist: props.database.readerTableBlocklist }),
+        });
+      }
     }
 
     const isApiBehindCloudFront = isApiServedThroughCloudFront(

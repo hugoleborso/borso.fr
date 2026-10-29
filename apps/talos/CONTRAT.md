@@ -2,21 +2,18 @@
 
 Talos is a personal assistant for one person, its owner. Scheduled agent runs keep the owner's memory of notes, tasks and proposals up to date; this progressive web app is how the owner reads and edits that memory from a phone. It is served at `https://talos.borso.fr`.
 
-The file formats below belong to the private repository, and the memory tables keep the same keys and headings, so they stay in French: they are data, not identifiers. Every example in this document is fictional.
+The file formats below are those the memory tables render and keep, with the keys and headings of the former private repository, so they stay in French: they are data, not identifiers. Every example in this document is fictional.
 
 ## Principles
 
-- **Two storage modes, one truth at a time, chosen per request.** The state key `cutover` of the memory tables decides, read at most every 30 seconds by each Lambda instance ([`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md) §7):
-  - **`git`, or no key** (the mode until the owner switches): the private repository named by `GITHUB_REPO` is the truth. The API reads and writes its files through the GitHub API, with a fine-grained token limited to "contents" read and write on that one repository. Every write is a commit with a French message, such as `pwa : todo cochée …`.
-  - **`database`**: the memory tables are the truth. Every content route reads them, and every write goes through the same validation as `POST /api/agent/changes` and records one `memory_event` per operation with the actor `pwa` and, as its summary, the message the commit would have had. The repository is neither read nor written: a git write reached in that mode answers 409. The routes keep their contract, with the differences listed under « Database mode » below.
-  - Git mode stays in the code so that setting `cutover` back to `git` is the rollback, until the owner purges the repository's content.
+- **The database is the truth.** Every content route reads the memory tables ([`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md)), and every write goes through the same validation as `POST /api/agent/changes` and records one `memory_event` per operation with the actor `pwa` and a French summary, such as `pwa : todo cochée …`; that summary is what the routes below call the commit message. No git repository is read or written. The git storage mode, with its `cutover` switch, was removed on 2026-10-28 ([ADR-0039](../../docs/adr/0039-talos-memory-in-the-database.md)).
 - **What is not content lives in the database**: passkeys, WebAuthn challenges, push subscriptions, sessions and sign-in attempts. It follows [`docs/standards/11-database.md`](../../docs/standards/11-database.md): an Aurora DSQL cluster of its own, `talos-cluster` (`DsqlClusterStack`), and the `prod` schema (`DsqlSchema` through `PreviewableApp`), as pragma does. Drizzle tables live in each slice's `<slice>.schema.ts`; `pnpm --filter @borso-app/talos run db:generate` writes the migrations into `api/src/database/migrations/`, and the migration runner of `@borso/infra` applies them on deploy. Only `*.repository.ts` files reach the database.
-- **Secrets** are SSM Parameter Store SecureStrings under the `/talos/` prefix (`TALOS_SSM_PREFIX`; the Lambda may read `/talos/*` and nothing wider): `github-token`, `vapid-public`, `vapid-private`, `session-hmac`, `bootstrap-code`, `notify-secret`, the agent tokens `agent-token-lecture`, `agent-token-build` and `agent-token-mac`, and optionally `fire-url`, `fire-token`, `secret-phrase`. Two settings that are not secret live under the same prefix as plain `String` parameters, so that this public repository holds neither: `claude-environment-talos` and `claude-environment-build`, the ids of the two Claude Code environments the Message screen opens.
+- **Secrets** are SSM Parameter Store SecureStrings under the `/talos/` prefix (`TALOS_SSM_PREFIX`; the Lambda may read `/talos/*` and nothing wider): `vapid-public`, `vapid-private`, `session-hmac`, `bootstrap-code`, `notify-secret`, the agent tokens `agent-token-lecture`, `agent-token-build` and `agent-token-mac`, and optionally `fire-url`, `fire-token`, `secret-phrase`. Two settings that are not secret live under the same prefix as plain `String` parameters, so that this public repository holds neither: `claude-environment-talos` and `claude-environment-build`, the ids of the two Claude Code environments the Message screen opens.
 - **One user.** Sign-in is by passkey (WebAuthn, `@simplewebauthn/server` 13, relying party `TALOS_RP_ID` = `talos.borso.fr`). The first registration requires the bootstrap code read from SSM. Once a passkey exists, registration closes; a second passkey is added from a signed-in session.
 - **The interface is in French only**, from one catalogue, `site/src/i18n/fr.json`. Identifiers, routes and API JSON fields are in English, per `borso/no-french-identifiers`. [`VOCABULARY.md`](./VOCABULARY.md) maps each French file key to its English name.
 - **Production only.** There is no preview stage: a preview would serve the private repository's content on a `preview.borso.fr` host. See [ADR-0027](../../docs/adr/0027-talos-deploys-to-prod-only.md).
 
-## File formats in the private repository
+## File formats
 
 ### `focus.md`
 
@@ -191,7 +188,7 @@ Every route is under `/api`, JSON, and needs the `talos_session` cookie (HttpOnl
 | POST | `/auth/login/options` | | WebAuthn authentication options |
 | POST | `/auth/login/verification` | `{ response }` | `{ ok: true }` + cookie |
 | POST | `/auth/logout` | | `{ ok: true }` + cleared cookie |
-| GET | `/health` | | `{ ok: true }` (probe, touches neither the database nor GitHub) |
+| GET | `/health` | | `{ ok: true }` (probe, touches no database) |
 
 The two registration routes also accept a session: that is how a second passkey is added, without a code.
 
@@ -221,14 +218,14 @@ The two registration routes also accept a session: that is how a second passkey 
 | PATCH | `/todos/:id` | `{ done?, text?, dueDate? }` | `Todo` |
 | DELETE | `/todos/:id` | | `{ todo: Todo, line, position }`: the line is removed from `todo.md` (commit `pwa : todo supprimée « … »`); `line` is the removed line and `position` its rank among the task lines, from 0. 404 when unknown |
 | POST | `/todos/restorations` | `{ line, position }` | `Todo`, status 201: the line goes back before the task now at `position`, or after the last task (commit `pwa : todo restaurée « … »`). 409 when the same task is already there, 400 when `line` is not a task line |
-| | `/work-todos`, `/work-todos/:id`, `/work-todos/restorations` | | The five `/todos` routes above, on `todo-taff.md`, with `todo taff` in place of `todo` in the commit messages. A missing file is created under `# Todo taff` |
+| | `/work-todos`, `/work-todos/:id`, `/work-todos/restorations` | | The five `/todos` routes above, on `todo-taff.md`, with `todo taff` in place of `todo` in the commit messages |
 | GET | `/proposals?status=proposee` | | `Proposal[]` (newest first) |
 | POST | `/proposals/:slug/decision` | `{ decision: "acceptee" \| "refusee", comment? }` | `Proposal`; 409 when the proposal is not `proposee` |
 | DELETE | `/proposals/:slug/decision` | | `Proposal` back to `proposee`; 409 when the status is not `acceptee` or `refusee`, 404 when unknown. Fires no run |
 | GET | `/graph?date=AAAA-MM-JJ` | | `{ nodes: { id, title, type, proximity? }[], edges: { source, target, relation, since?, until?, seen?, isClosed }[] }`: `proximity` is the page's valid `proximite`, absent otherwise; with `date`, only the relations begun by that date, and `isClosed` when their `jusqua` ended before it; without `date`, `isClosed` for every relation with a `jusqua` |
 | GET | `/pages/*` (path without `.md`, under `second-brain/`, `engagements/`, `objectifs/`, `journal/` or `sources/`, or `index`) | | `{ path, title, type, frontMatter: Record<string,string>, markdown, outgoingLinks: string[], incomingLinks: string[] }` |
 | GET | `/search?q=` | | `{ path, title, excerpt }[]` (20 at most, title matches before content matches) |
-| GET | `/messages/claude-code` | | `{ repository, storage: "git" \| "database", environments: { talos: string \| null, build: string \| null } }`: `GITHUB_REPO`, the storage mode and the two environment settings, `null` when a setting is missing |
+| GET | `/messages/claude-code` | | `{ repository, environments: { talos: string \| null, build: string \| null } }`: `GITHUB_REPO` (the repository Claude Code opens) and the two environment settings, `null` when a setting is missing |
 | GET | `/push/public-key` | | `{ key }` (public VAPID key) |
 | POST | `/push/subscriptions` | `PushSubscriptionJSON` | `{ ok: true }` |
 | DELETE | `/push/subscriptions` | `{ endpoint }` | `{ ok: true }` |
@@ -258,17 +255,16 @@ type Draft = { slug: string; channel: string; recipients: { name: string; page?:
 
 ### Machine: memory API
 
-The tables, the page rendering, the agent routes under `/api/agent/*`, the `POST /api/agent/changes` write path and the cutover flag are specified in [`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md), which every lot of the migration implements. The agent routes take `Authorization: Bearer <token>`, where the token is one of the SecureStrings `/talos/agent-token-lecture`, `/talos/agent-token-build` and `/talos/agent-token-mac`; a wrong or missing token answers 401 `{ "error": "jeton invalide" }`. A `proposal.status`, `draft.status` or `commitment.status` also writes `statut` (and, for a draft, `envoye`) into the stored front matter, so the rendered page agrees with the columns; a draft that is not `envoye` loses its sending day. Decision record: [ADR-0039](../../docs/adr/0039-talos-memory-in-the-database.md).
+The tables, the page rendering, the agent routes under `/api/agent/*`, the `POST /api/agent/changes` write path are specified in [`MEMORY-CONTRACT.md`](./MEMORY-CONTRACT.md), which every lot of the migration implements. The agent routes take `Authorization: Bearer <token>`, where the token is one of the SecureStrings `/talos/agent-token-lecture`, `/talos/agent-token-build` and `/talos/agent-token-mac`; a wrong or missing token answers 401 `{ "error": "jeton invalide" }`. A `proposal.status`, `draft.status` or `commitment.status` also writes `statut` (and, for a draft, `envoye`) into the stored front matter, so the rendered page agrees with the columns; a draft that is not `envoye` loses its sending day. Decision record: [ADR-0039](../../docs/adr/0039-talos-memory-in-the-database.md).
 
-### Database mode
+### Memory specifics
 
-Once `cutover` is `database`, the routes above answer from the memory tables with the same shapes, except:
+The routes above answer from the memory tables; what the files alone did not say:
 
 - A todo id is the stored id, the old 10-hexadecimal one or a uuid, and every todo route accepts both. A deleted todo is flagged `removed`; its restoration clears the flag and keeps its place, and a line the memory never held is added at the end.
-- `/pages/*` accepts any slug of the memory (entity, commitment, proposal, draft, source, journal entry, document), rendered as in git, with the links the memory computes.
+- `/pages/*` accepts any slug of the memory (entity, commitment, proposal, draft, source, journal entry, document), rendered as markdown, with the links the memory computes.
 - `/search` is the memory search (accent- and case-insensitive, titles and aliases first), 20 hits at most, the path being the slug.
 - `/graph` draws the non-archived entities and the commitments as nodes and the stored relations as edges, with the same date rule.
-- `GET /messages/claude-code` also answers `storage: "git" | "database"`, from which the site picks its prompts.
 
 | Content | Table |
 |---|---|
@@ -283,17 +279,17 @@ Once `cutover` is `database`, the routes above answer from the memory tables wit
 
 ### Firing a run
 
-A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<type>: <path of the file in the repository>" }`; in database mode the path gives way to the slug (`proposition: etat/propositions/<slug>`). Without `fire-url`, the decision is still recorded and the next scheduled run picks it up. Cancelling a decision fires nothing.
+A decision on a proposal calls `POST <fire-url>` with `Authorization: Bearer <fire-token>`, the headers `anthropic-beta: experimental-cc-routine-2026-04-01` and `anthropic-version: 2023-06-01`, and `{ "text": "<secret-phrase>\n<type>: <slug>" }`, such as `proposition: etat/propositions/<slug>`. Without `fire-url`, the decision is still recorded and the next scheduled run picks it up. Cancelling a decision fires nothing.
 
 ## Discussing an item with Talos
 
-A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis le fichier du dépôt cité ci-dessous et discutes-en avec Hugo. » followed by the sentence « Tu vas discuter <phrase of the kind> « <title> » (<file>). », where the phrase names the kind (« de la tâche » for one todo, « de la todo » for the whole list, « de l'engagement », « de la proposition »…) and the file is the item's file in the private repository (`todo.md` for one todo and for the list, `todo-taff.md` for a work todo and its list, `focus.md`, `etat/propositions/<slug>.md`, `etat/brouillons/<slug>.md`, `engagements/<slug>.md`, `journal/<date>.md`, `journal/<week>-hebdo.md`, `<page>.md`, `etat/dernier-scan.json`, `etat/relations.json`). In database mode the preamble is « Tu es Talos. Lis dans la mémoire l'élément cité ci-dessous et discutes-en avec Hugo. » and the file gives way to the type and slug: `todo: personal` or `todo: work`, `focus`, `état: last_scan`, `état: relations`, `proposition: etat/propositions/<slug>`, `brouillon: etat/brouillons/<slug>`, `engagement: <path>`, `journal: journal/<date>`, `journal: journal/<week>-hebdo`, `page: <path>`, `dossier: <path>/`. On a person to reconnect with, the prompt also asks for a message to get back in touch; on a birthday, for a message and a gift idea.
+A long press (450 ms, cancelled by a move) on any item of data opens an action sheet: « Discuter » first, then the quick actions of that item (check, edit, delete, accept, refuse, take back, open). « Discuter » opens the same Claude Code link as the Message screen, on the reading environment, with the prompt « Tu es Talos. Lis dans la mémoire l'élément cité ci-dessous et discutes-en avec Hugo. » followed by the sentence « Tu vas discuter <phrase of the kind> « <title> » (<reference>). », where the phrase names the kind (« de la tâche » for one todo, « de la todo » for the whole list, « de l'engagement », « de la proposition »…) and the reference is the item's type and slug: `todo: personal` or `todo: work`, `focus`, `état: last_scan`, `état: relations`, `proposition: etat/propositions/<slug>`, `brouillon: etat/brouillons/<slug>`, `engagement: <path>`, `journal: journal/<date>`, `journal: journal/<week>-hebdo`, `page: <path>`, `dossier: <path>/`. On a person to reconnect with, the prompt also asks for a message to get back in touch; on a birthday, for a message and a gift idea.
 
 ## Screens
 
 No screen explains its interface: only data, one- or two-word labels and icons. An empty list shows a faint icon.
 
-- **Aujourd'hui**: the day in reading order. Header: the day, the scan age in words (« Scan il y a 3 h », red past 24 hours or when there was none) with the number of failed sources (a tap or a long press lists them, with the age of the last Mac collection), a « Scanner » icon that opens Claude Code with the prompt « Tu es Talos. Lance le skill talos-scan sur toutes les sources depuis le dernier curseur, traite les décisions et messages de la PWA, puis commit et push. » (in database mode « Tu es Talos. Lance le skill talos-scan sur toutes les sources depuis le dernier curseur et traite les décisions et messages de la PWA. »), and the settings. Then the birthdays three days away or closer, today's brief open on its first three lines (« Lire la suite » shows it whole), « À trancher »: the first pending proposal as a card with Accept and Refuse (the next one takes its place), the agenda of `todo.md` limited to today and overdue, in that order, where a commitment carries a handshake tile and the word « Engagement » instead of a check circle, one row of pills for the counters that are not zero (to decide, overdue, owed, awaited, ready drafts, people to reconnect with) plus « Historique », the focus folded to one line (its first title and how many follow; a tap opens it for editing), and Talos's recent activity, without journal sections whose heading is a single word. Everything opens its detail on a tap.
+- **Aujourd'hui**: the day in reading order. Header: the day, the scan age in words (« Scan il y a 3 h », red past 24 hours or when there was none) with the number of failed sources (a tap or a long press lists them, with the age of the last Mac collection), a « Scanner » icon that opens Claude Code with the prompt « Tu es Talos. Lance le skill talos-scan sur toutes les sources depuis le dernier curseur et traite les décisions et messages de la PWA. », and the settings. Then the birthdays three days away or closer, today's brief open on its first three lines (« Lire la suite » shows it whole), « À trancher »: the first pending proposal as a card with Accept and Refuse (the next one takes its place), the agenda of `todo.md` limited to today and overdue, in that order, where a commitment carries a handshake tile and the word « Engagement » instead of a check circle, one row of pills for the counters that are not zero (to decide, overdue, owed, awaited, ready drafts, people to reconnect with) plus « Historique », the focus folded to one line (its first title and how many follow; a tap opens it for editing), and Talos's recent activity, without journal sections whose heading is a single word. Everything opens its detail on a tap.
 - **Todo**: check, swipe right to check or uncheck, swipe left to delete (both toasts offer « Annuler »; undoing a deletion puts the line back where it was), tap the text to open the detail, done or not filter, quick add docked above the tab bar.
 - **Todo taff** (`/work-todos`, a tab of its own): the Todo screen on `todo-taff.md`, with its own detail at `/work-todos/:id`.
 - **Détail d'une todo** (`/todos/:id`): the todo with check, edit and delete, then its `src` (a repository page rendered, a link, or the identifier as written), then its commitment rendered with the commitment's `sources`, each page folded until tapped.
