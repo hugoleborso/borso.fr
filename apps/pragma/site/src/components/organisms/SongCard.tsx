@@ -1,7 +1,6 @@
 /** @Feature songs */
 
 import { Link } from 'react-router-dom';
-import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { Icon } from '../atoms/Icon';
 import type { ChartKindTag } from '../../routes/catalog/chart-kind.utils';
@@ -12,10 +11,7 @@ export interface SongCardProps {
   readonly id: string;
   readonly title: string;
   readonly detail: string;
-  readonly artist: string;
   readonly deezerAlbumId: string | null;
-  readonly deezerTrackId: string | null;
-  readonly spotifyTrackId: string | null;
   readonly status: SongStatus;
   readonly chartKind: ChartKindTag;
 }
@@ -30,19 +26,14 @@ export function SongCard({
   id,
   title,
   detail,
-  artist,
   deezerAlbumId,
-  deezerTrackId,
-  spotifyTrackId,
   status,
   chartKind,
 }: SongCardProps): JSX.Element {
-  const longPress = useSongLongPress({ title, artist, deezerTrackId, spotifyTrackId });
   return (
     <Link
       to={`/catalog/${id}`}
-      {...longPress}
-      className="flex min-h-14 items-center gap-3 border-b border-rule py-1.5 text-ink no-underline select-none hover:bg-hover"
+      className="flex min-h-14 items-center gap-3 border-b border-rule py-1.5 text-ink no-underline hover:bg-hover"
     >
       <AlbumCover title={title} deezerAlbumId={deezerAlbumId} />
       <span className="flex min-w-0 flex-1 flex-col">

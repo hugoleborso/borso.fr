@@ -50,8 +50,6 @@ interface CatalogSongRow {
   readonly artist: string;
   readonly status: SongCardProps['status'];
   readonly deezerAlbumId: string | null;
-  readonly deezerTrackId: string | null;
-  readonly spotifyTrackId: string | null;
   readonly chart: { readonly kind?: unknown } | null;
 }
 
@@ -60,10 +58,7 @@ function toSongCard(song: CatalogSongRow, detail: string): SongCardProps {
     id: song.id,
     title: song.title,
     detail,
-    artist: song.artist,
     deezerAlbumId: song.deezerAlbumId,
-    deezerTrackId: song.deezerTrackId,
-    spotifyTrackId: song.spotifyTrackId,
     status: song.status,
     chartKind: extractChartKind(song.chart),
   };

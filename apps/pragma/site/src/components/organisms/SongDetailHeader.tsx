@@ -3,7 +3,6 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { SongRecord } from '../../lib/queries/songs.queries';
-import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { buildTonalityLabel } from '../../routes/catalog/tonality-label.utils';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { ButtonLink } from '../atoms/ButtonLink';
@@ -19,28 +18,14 @@ export interface SongDetailHeaderProps {
 // @FollowsBlueprint organism-presentational
 export function SongDetailHeader({ song, menuItems }: SongDetailHeaderProps): JSX.Element {
   const { t } = useTranslation();
-  const longPress = useSongLongPress({
-    title: song.title,
-    artist: song.artist,
-    deezerTrackId: song.deezerTrackId,
-    spotifyTrackId: song.spotifyTrackId,
-  });
   const tonality = buildTonalityLabel(song.tonalityStart, song.tonalityEnd);
 
   return (
     <PageHeader
       className="mb-0 sm:mb-0"
       back={{ to: '/catalog', label: t('catalog.title') }}
-      leading={
-        <span className="shrink-0 select-none" {...longPress}>
-          <AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="md" />
-        </span>
-      }
-      title={
-        <span className="select-none" {...longPress}>
-          {song.title}
-        </span>
-      }
+      leading={<AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="md" />}
+      title={song.title}
       subtitle={
         <span className="mt-1 flex flex-wrap items-center gap-x-2 gap-y-1">
           {song.artist.length > 0 ? <span className="text-body">{song.artist}</span> : null}

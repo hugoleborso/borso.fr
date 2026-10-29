@@ -6,7 +6,12 @@ export interface TimedOffer<TValue> {
   readonly withdraw: () => void;
 }
 
-// @FollowsBlueprint hook-timer-owned-by-handlers
+/**
+ * @Blueprint hook-timer-owned-by-handlers
+ * @BlueprintName Hook Whose Timer Is Started And Cleared By Its Own Handlers
+ * @BlueprintUsage Use for a timer that begins on one call and ends on another, where no effect is needed because nothing outside React starts it.
+ * @BlueprintDescription Holds the pending timer in a ref, starts it in the handler that presents the value and clears it in every handler that ends the offer, so the timer has no lifecycle of its own to synchronise and no `useEffect`. Clearing before each start is what keeps a second presentation from being withdrawn by the first one's timer.
+ */
 export function useTimedOffer<TValue>(durationMs: number): TimedOffer<TValue> {
   const [offered, setOffered] = useState<TValue | null>(null);
   const pendingTimer = useRef<ReturnType<typeof setTimeout> | null>(null);

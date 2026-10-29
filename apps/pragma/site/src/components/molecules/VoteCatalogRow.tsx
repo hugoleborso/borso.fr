@@ -2,7 +2,6 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { useSongLongPress } from '../../lib/song-long-press.hook';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { Badge } from '../atoms/Badge';
 import { PointsBadge } from '../atoms/PointsBadge';
@@ -12,8 +11,6 @@ export interface VoteCatalogRowProps {
   readonly title: string;
   readonly artist: string;
   readonly deezerAlbumId: string | null;
-  readonly deezerTrackId: string | null;
-  readonly spotifyTrackId: string | null;
   readonly points: number;
   readonly isNew: boolean;
   readonly onTap: () => void;
@@ -24,24 +21,19 @@ export function VoteCatalogRow({
   title,
   artist,
   deezerAlbumId,
-  deezerTrackId,
-  spotifyTrackId,
   points,
   isNew,
   onTap,
 }: VoteCatalogRowProps): JSX.Element {
   const { t } = useTranslation();
-  const longPress = useSongLongPress({ title, artist, deezerTrackId, spotifyTrackId });
-
   return (
     <li>
       <ListRow
         onClick={onTap}
-        {...longPress}
         aria-label={t('voting.tapToScore', { title })}
         isChevronShown={false}
         leading={<AlbumCover title={title} deezerAlbumId={deezerAlbumId} size="sm" />}
-        className="min-h-12 border-b border-rule px-1 py-1 select-none"
+        className="min-h-12 border-b border-rule px-1 py-1"
       >
         <span className="min-w-0 flex-1">
           <span className="block truncate text-ink">{title}</span>

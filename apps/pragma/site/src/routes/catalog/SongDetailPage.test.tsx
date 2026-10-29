@@ -152,7 +152,7 @@ describe('song page', () => {
     expect(edit.parentElement?.classList.contains('shrink-0')).toBe(true);
   });
 
-  it('shows one listen link per link the song has, and names its setlists', async () => {
+  it('shows one listen link per link the song has, Spotify always among them, and names its setlists', async () => {
     renderSongPage();
     const listen = await screen.findByRole('list', { name: 'Listen' });
 
@@ -160,7 +160,7 @@ describe('song page', () => {
       within(listen)
         .getAllByRole('link')
         .map((link) => link.textContent),
-    ).toEqual(['Deezer', 'YouTube']);
+    ).toEqual(['Deezer', 'Spotify', 'YouTube']);
     expect(await screen.findByText('In Concert')).toBeTruthy();
   });
 
