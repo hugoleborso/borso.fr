@@ -3,7 +3,7 @@ import {
   MEMBER_FIRST_NAME_MAX_LENGTH,
   MEMBER_PHONE_MAX_LENGTH,
 } from '@domain/input-limits.core';
-import { boolean, pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
+import { pgTable, primaryKey, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
 import { referenceSchema } from '../mcp/tool-input.schema';
 
@@ -23,7 +23,6 @@ export const memberInstrumentTable = pgTable(
   {
     memberId: uuid('member_id').notNull(),
     instrumentId: uuid('instrument_id').notNull(),
-    isPrimary: boolean('is_primary'),
   },
   (table) => [primaryKey({ columns: [table.memberId, table.instrumentId] })],
 );
@@ -62,12 +61,10 @@ export const updateMemberSchema = z.object({
 
 export const memberInstrumentAssignmentSchema = z.object({
   instrumentIds: z.array(z.string().uuid()),
-  primaryInstrumentIds: z.array(z.string().uuid()).optional(),
 });
 
 export const memberIdParamSchema = z.object({ id: z.string().uuid() });
 export const memberReferenceToolInputSchema = z.object({ member: referenceSchema });
 export const memberInstrumentAssignmentToolInputSchema = memberReferenceToolInputSchema.extend({
   instruments: z.array(referenceSchema),
-  main: z.array(referenceSchema).optional(),
 });

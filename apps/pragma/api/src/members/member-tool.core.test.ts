@@ -5,29 +5,25 @@ const HUGO = { id: 'member-hugo', firstName: 'Hugo', phone: '0600000000', email:
 const INSTRUMENTS = [
   {
     name: 'Batterie',
-    players: [
-      { memberId: 'member-hugo', isPrimary: true },
-      { memberId: 'member-lea', isPrimary: false },
-    ],
+    players: [{ memberId: 'member-hugo' }, { memberId: 'member-lea' }],
   },
-  { name: 'Chant', players: [{ memberId: 'member-hugo', isPrimary: false }] },
-  { name: 'Guitare', players: [{ memberId: 'member-lea', isPrimary: true }] },
+  { name: 'Chant', players: [{ memberId: 'member-hugo' }] },
+  { name: 'Guitare', players: [{ memberId: 'member-lea' }] },
 ];
 
 // @FollowsBlueprint test-pure-unit
 describe('projectMemberForTool', () => {
-  it('lists the instruments the member plays, and which are their main ones', () => {
+  it('lists the instruments the member plays', () => {
     expect(projectMemberForTool(HUGO, INSTRUMENTS)).toEqual({
       id: 'member-hugo',
       firstName: 'Hugo',
       phone: '0600000000',
       email: null,
       instruments: ['Batterie', 'Chant'],
-      main: ['Batterie'],
     });
   });
 
-  it('leaves out the main instruments of a member who has none', () => {
+  it('lists no instrument for a member who plays none', () => {
     expect(projectMemberForTool({ ...HUGO, id: 'member-marc' }, INSTRUMENTS)).toEqual({
       id: 'member-marc',
       firstName: 'Hugo',

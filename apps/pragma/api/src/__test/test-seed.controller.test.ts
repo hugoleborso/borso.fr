@@ -4,7 +4,6 @@ import { lambdaEnvironmentFrom } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import { createApp } from '../app';
 import { listInstruments } from '../instruments/instruments.repository';
-import { getInstrumentsSorted } from '../instruments/instruments.service';
 import { listMembers } from '../members/members.repository';
 import { listGrantsOfMember } from '../oauth/oauth.repository';
 import { listSessions } from '../sessions/sessions.repository';
@@ -107,23 +106,6 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     const setlistEntries = await listEntries(setlist.id);
     expect(setlistEntries.length).toBe(6);
     expect(setlistEntries.every((entry) => entry.energy === null)).toBe(true);
-  });
-
-  it('makes the first instrument of every member primary, so the lineup column draws slots', async () => {
-    await postSeed();
-    const members = await listMembers();
-    const memberIdByName = new Map(members.map((member) => [member.firstName, member.id]));
-    const instruments = await getInstrumentsSorted();
-    const primaryMemberIdsByInstrumentName = new Map(
-      instruments.map((instrument) => [
-        instrument.name,
-        instrument.players.filter((player) => player.isPrimary).map((player) => player.memberId),
-      ]),
-    );
-    expect(primaryMemberIdsByInstrumentName.get('Batterie')).toEqual([memberIdByName.get('Hugo')]);
-    expect(primaryMemberIdsByInstrumentName.get('Guitare')).toEqual([memberIdByName.get('Léa')]);
-    expect(primaryMemberIdsByInstrumentName.get('Basse')).toEqual([memberIdByName.get('Marc')]);
-    expect(primaryMemberIdsByInstrumentName.get('Clavier')).toEqual([memberIdByName.get('Sarah')]);
   });
 
   it('bootstraps the admin password so the seeded preview is loginable', async () => {

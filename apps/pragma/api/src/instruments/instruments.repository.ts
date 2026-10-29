@@ -84,7 +84,6 @@ export async function listInstrumentPlayerLinks(): Promise<InstrumentPlayerLink[
     .select({
       instrumentId: memberInstrumentTable.instrumentId,
       memberId: memberInstrumentTable.memberId,
-      isPrimary: memberInstrumentTable.isPrimary,
     })
     .from(memberInstrumentTable);
 }
@@ -136,13 +135,10 @@ export async function updateInstrument(
 export async function listPlayersOfInstrument(instrumentId: string): Promise<InstrumentPlayer[]> {
   const database = getDatabase();
   const rows = await database
-    .select({
-      memberId: memberInstrumentTable.memberId,
-      isPrimary: memberInstrumentTable.isPrimary,
-    })
+    .select({ memberId: memberInstrumentTable.memberId })
     .from(memberInstrumentTable)
     .where(eq(memberInstrumentTable.instrumentId, instrumentId));
-  return rows.map((row) => ({ memberId: row.memberId, isPrimary: row.isPrimary === true }));
+  return rows.map((row) => ({ memberId: row.memberId }));
 }
 
 export async function setInstrumentPositionWithin(

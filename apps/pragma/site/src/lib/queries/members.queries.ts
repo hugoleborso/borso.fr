@@ -195,7 +195,6 @@ export function useAssignMemberInstruments() {
             old.instruments,
             catalog?.instruments ?? [],
             variables.instrumentIds,
-            variables.primaryInstrumentIds,
           ),
         };
       });

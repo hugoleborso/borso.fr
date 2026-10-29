@@ -537,16 +537,15 @@ Lives in: `domain/lineup.core.ts`
   default lineup and every entry's override, inside one transaction
   (`deleteMemberWithLinks` with `scrubMemberFromLineup`).
 - A lineup says who holds what on one song. Which instruments a member
-  plays at all is the `member_instrument` link, and that link carries
-  `is_primary`: whether this is one of that member's main instruments.
-  A member form that saves without naming primacy keeps what was there
-  (`decidePrimaryInstrumentIds`).
+  plays at all is the `member_instrument` link. A member has no main
+  instrument: the link's `is_primary` column stays in the database,
+  because Aurora DSQL refuses `DROP COLUMN`, and nothing reads or writes
+  it.
 
 Held by: `domain/lineup.core.test.ts` › lifts a single instrument id written before one member could hold two
 Held by: `domain/lineup.core.test.ts` › keeps default members not mentioned in the override
 Held by: `domain/lineup.core.test.ts` › answers one pair per instrument held
 Held by: `api/src/members/members.controller.test.ts` › scrubs the member from every song default lineup and setlist entry override on delete
-Held by: `api/src/members/members.controller.test.ts` › keeps a primacy the member form never sends, so saving a member does not empty the column
 
 ## Lineup slot
 
@@ -1604,6 +1603,8 @@ to.
   reason as *revision*.
 - **part**, **station**: what a member holds on a song is an
   **instrument**, and the whole map is a **lineup**.
+- **main instrument**, **primary instrument**: a member plays a set of
+  **instruments**, none ranked above the others.
 - **ticket**, **issue**, **feature request**, **bug**: what the band wants
   changed in this application is an **improvement**, and its votes are
   **improvement votes**.

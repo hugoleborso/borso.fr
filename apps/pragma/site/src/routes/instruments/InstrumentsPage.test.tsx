@@ -19,10 +19,10 @@ const BASS = {
   icon: 'bass',
   isHarmonic: true,
   players: [
-    { memberId: 'member-ada', isPrimary: true },
-    { memberId: 'member-bo', isPrimary: false },
-    { memberId: 'member-cy', isPrimary: false },
-    { memberId: 'member-di', isPrimary: false },
+    { memberId: 'member-ada' },
+    { memberId: 'member-bo' },
+    { memberId: 'member-cy' },
+    { memberId: 'member-di' },
   ],
 };
 

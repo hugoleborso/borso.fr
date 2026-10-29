@@ -1,9 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import {
-  type CatalogInstrument,
-  predictMemberRoster,
-  type RosterInstrument,
-} from './member-roster.core';
+import { type CatalogInstrument, predictMemberRoster } from './member-roster.core';
 
 const GUITAR: CatalogInstrument = {
   id: 'guitar',
@@ -20,62 +16,29 @@ const BASS: CatalogInstrument = {
   position: 2,
 };
 
-function held(instrument: CatalogInstrument, isPrimary: boolean): RosterInstrument {
-  return { ...instrument, isPrimary };
-}
-
 // @FollowsBlueprint test-pure-unit
 describe('predictMemberRoster', () => {
   it('reads a new instrument out of the catalog the list already holds', () => {
-    expect(predictMemberRoster([], [GUITAR, BASS], ['bass'], undefined)).toEqual([
-      held(BASS, false),
+    expect(predictMemberRoster([], [GUITAR, BASS], ['bass'])).toEqual([BASS]);
+  });
+
+  it('keeps the requested instruments in the order they were sent', () => {
+    expect(predictMemberRoster([GUITAR], [GUITAR, BASS], ['bass', 'guitar'])).toEqual([
+      BASS,
+      GUITAR,
     ]);
-  });
-
-  it('keeps a primacy the member already had on an instrument they still play', () => {
-    expect(
-      predictMemberRoster(
-        [held(GUITAR, true), held(BASS, false)],
-        [GUITAR, BASS],
-        ['guitar'],
-        undefined,
-      ),
-    ).toEqual([held(GUITAR, true)]);
-  });
-
-  it('carries over only the primacy that was set, not every instrument held', () => {
-    expect(
-      predictMemberRoster(
-        [held(GUITAR, false), held(BASS, true)],
-        [GUITAR, BASS],
-        ['guitar', 'bass'],
-        undefined,
-      ),
-    ).toEqual([held(GUITAR, false), held(BASS, true)]);
-  });
-
-  it('takes the requested primacy over the one that was there', () => {
-    expect(
-      predictMemberRoster([held(GUITAR, true)], [GUITAR, BASS], ['guitar', 'bass'], ['bass']),
-    ).toEqual([held(GUITAR, false), held(BASS, true)]);
   });
 
   it('still predicts a roster when the catalog has not loaded, from what the member holds', () => {
-    expect(
-      predictMemberRoster([held(GUITAR, true), held(BASS, false)], [], ['guitar'], undefined),
-    ).toEqual([held(GUITAR, true)]);
+    expect(predictMemberRoster([GUITAR, BASS], [], ['guitar'])).toEqual([GUITAR]);
   });
 
   it('drops an instrument neither the catalog nor the roster knows', () => {
-    expect(predictMemberRoster([], [GUITAR], ['guitar', 'tuba'], undefined)).toEqual([
-      held(GUITAR, false),
-    ]);
+    expect(predictMemberRoster([], [GUITAR], ['guitar', 'tuba'])).toEqual([GUITAR]);
   });
 
   it('prefers the catalog row over the stale one the roster carries', () => {
     const renamed: CatalogInstrument = { ...GUITAR, name: 'Nylon guitar' };
-    expect(predictMemberRoster([held(GUITAR, true)], [renamed], ['guitar'], undefined)).toEqual([
-      held(renamed, true),
-    ]);
+    expect(predictMemberRoster([GUITAR], [renamed], ['guitar'])).toEqual([renamed]);
   });
 });

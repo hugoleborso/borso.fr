@@ -30,7 +30,6 @@ import {
   buildSeedLineup,
   selectAdminCredentialsState,
   selectInstrumentIds,
-  selectPrimaryInstrumentIds,
 } from './test-seed.core';
 import { classifySchemaBoundary, type SchemaBoundary } from './schema-boundary.core';
 import {
@@ -134,7 +133,6 @@ async function seedMembers(
     await assignInstrumentsToMember(
       member.id,
       selectInstrumentIds(seed.instrumentNames, instrumentIdByName),
-      selectPrimaryInstrumentIds(seed.instrumentNames, instrumentIdByName),
     );
   }
   return memberIdByName;

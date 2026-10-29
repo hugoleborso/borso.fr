@@ -110,7 +110,7 @@ A Band sub-page with a back link to Band. Its header pins the **My tasks / Every
 
 One aligned row per instrument: the drag handle, the glyph, the name over its family, and Delete. The page names no players (operator review 3, T6). **Add an instrument** (`plus`) is the bottom strip's pill and opens a sheet; tapping an instrument opens the same sheet filled in (R8).
 
-A member's **main instrument** (`member_instrument.is_primary`) is not shown and cannot be changed anywhere in the app, on purpose (operator decision, 2026-10-29). The value stays in the data, and only the assistants' member and instrument tools read it.
+A member has no **main instrument** (operator review 4, U1). The API, the site, the assistants' tools and the seed neither read nor write `member_instrument.is_primary`; the column stays in the database only because Aurora DSQL refuses `DROP COLUMN`.
 
 ### Account, Quick sign-in tab (`/account?view=sign-in`)
 

@@ -12,25 +12,21 @@ const VOICE: InstrumentWithPlayersRow = {
   family: 'vocal',
   icon: 'mic-vocal',
   position: 0,
-  players: [
-    { memberId: 'member-hugo', isPrimary: false },
-    { memberId: 'member-lea', isPrimary: true },
-  ],
+  players: [{ memberId: 'member-hugo' }, { memberId: 'member-lea' }],
 };
 
 // @FollowsBlueprint test-pure-unit
 describe('projectInstrumentForTool', () => {
-  it('names the players, and those for whom it is their main instrument', () => {
+  it('names the players', () => {
     expect(projectInstrumentForTool(VOICE, MEMBERS)).toEqual({
       id: 'instrument-voice',
       name: 'Chant',
       family: 'vocal',
       players: ['Hugo', 'Léa'],
-      mainFor: ['Léa'],
     });
   });
 
-  it('leaves out the main players when nobody holds it as main', () => {
+  it('names no player when nobody plays it', () => {
     expect(projectInstrumentForTool({ ...VOICE, players: [] }, MEMBERS)).toEqual({
       id: 'instrument-voice',
       name: 'Chant',

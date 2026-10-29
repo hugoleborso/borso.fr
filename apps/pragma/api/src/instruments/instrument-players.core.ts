@@ -1,12 +1,10 @@
 export interface InstrumentPlayer {
   readonly memberId: string;
-  readonly isPrimary: boolean;
 }
 
 export interface InstrumentPlayerLink {
   readonly instrumentId: string;
   readonly memberId: string;
-  readonly isPrimary: boolean | null;
 }
 
 interface Identifiable {
@@ -26,7 +24,7 @@ export function foldPlayersIntoInstruments<Instrument extends Identifiable>(
   const playersByInstrumentId = new Map<string, InstrumentPlayer[]>();
   for (const link of links) {
     const players = playersByInstrumentId.get(link.instrumentId) ?? [];
-    players.push({ memberId: link.memberId, isPrimary: link.isPrimary === true });
+    players.push({ memberId: link.memberId });
     playersByInstrumentId.set(link.instrumentId, players);
   }
   return instruments.map((instrument) => ({

@@ -487,7 +487,7 @@ async function main(): Promise<void> {
 
   const tom = await createMember({ firstName: 'Tom', color: '#8a4fd1' });
   await createCredentialForMember({ memberId: tom.id, username: 'tom', password: PASSWORD, now });
-  await assignInstrumentsToMember(tom.id, [saxophone.id], [saxophone.id]);
+  await assignInstrumentsToMember(tom.id, [saxophone.id]);
   const members = await getMembersSortedByFirstName();
   const memberId = new Map(members.map((row) => [row.firstName, row.id]));
   const hugo = requireValue(memberId.get('Hugo'), 'member Hugo');

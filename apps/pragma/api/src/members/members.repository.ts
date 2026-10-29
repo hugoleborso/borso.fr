@@ -17,7 +17,6 @@ import { defaultLineupSchema, songTable } from '../songs/songs.schema';
 import { unassignTasksOfMemberBeingDeleted } from '../tasks/tasks.service';
 import { scrubMemberFromLineup } from './lineup-scrub.core';
 import {
-  decidePrimaryInstrumentIds,
   type InstrumentFamily,
   type InstrumentIcon,
   resolveInstrumentFamily,
@@ -34,14 +33,12 @@ export type MemberInstrumentRow = Pick<InstrumentTableRow, 'id' | 'name'> & {
   family: InstrumentFamily;
   icon: InstrumentIcon;
   position: number;
-  isPrimary: boolean;
 };
 
 type MemberInstrumentJoinedRow = Pick<
   InstrumentTableRow,
   'id' | 'name' | 'isHarmonic' | 'family' | 'icon' | 'position'
-> &
-  Pick<typeof memberInstrumentTable.$inferSelect, 'isPrimary'>;
+>;
 
 // @FollowsBlueprint repository-projection
 const MEMBER_PROJECTION = {
@@ -60,7 +57,6 @@ const INSTRUMENT_PROJECTION = {
   family: instrumentTable.family,
   icon: instrumentTable.icon,
   position: instrumentTable.position,
-  isPrimary: memberInstrumentTable.isPrimary,
 } as const;
 
 function rowToMemberInstrument(row: MemberInstrumentJoinedRow): MemberInstrumentRow {
@@ -70,7 +66,6 @@ function rowToMemberInstrument(row: MemberInstrumentJoinedRow): MemberInstrument
     family: resolveInstrumentFamily(row.family, row.isHarmonic),
     icon: resolveInstrumentIcon(row.icon),
     position: resolveInstrumentPosition(row.position),
-    isPrimary: row.isPrimary === true,
   };
 }
 
@@ -206,41 +201,19 @@ export type MemberInstrumentsReplacement = 'replaced' | 'member-not-found' | 'in
 export async function replaceMemberInstruments(
   memberId: string,
   instrumentIds: readonly string[],
-  requestedPrimaryInstrumentIds?: readonly string[],
 ): Promise<MemberInstrumentsReplacement> {
   return await runInOneMemberTransaction(async (transaction) => {
     const areInstrumentsClaimed = await didClaimInstrumentsWithin(transaction, instrumentIds);
     if (!areInstrumentsClaimed) return 'instrument-not-found';
     const isMemberClaimed = await didClaimMemberWithin(transaction, memberId);
     if (!isMemberClaimed) return 'member-not-found';
-    const existing = await transaction
-      .select({
-        instrumentId: memberInstrumentTable.instrumentId,
-        isPrimary: memberInstrumentTable.isPrimary,
-      })
-      .from(memberInstrumentTable)
-      .where(eq(memberInstrumentTable.memberId, memberId));
-    const survivingPrimaryInstrumentIds = existing
-      .filter((link) => link.isPrimary === true)
-      .map((link) => link.instrumentId);
-    const primaryInstrumentIds = new Set(
-      decidePrimaryInstrumentIds(
-        instrumentIds,
-        requestedPrimaryInstrumentIds,
-        survivingPrimaryInstrumentIds,
-      ),
-    );
     await transaction
       .delete(memberInstrumentTable)
       .where(eq(memberInstrumentTable.memberId, memberId));
     if (instrumentIds.length > 0) {
-      await transaction.insert(memberInstrumentTable).values(
-        instrumentIds.map((instrumentId) => ({
-          memberId,
-          instrumentId,
-          isPrimary: primaryInstrumentIds.has(instrumentId),
-        })),
-      );
+      await transaction
+        .insert(memberInstrumentTable)
+        .values(instrumentIds.map((instrumentId) => ({ memberId, instrumentId })));
     }
     return 'replaced';
   });
