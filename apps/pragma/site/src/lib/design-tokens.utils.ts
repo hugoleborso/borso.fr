@@ -101,11 +101,18 @@ export function readUtilityName(token: string): string {
   return token.slice(token.lastIndexOf(':') + 1).replace(IMPORTANT_MARK, '');
 }
 
+const GRADIENT_STOP_ROOT = /^-?(?:from|via|to)-/u;
+const GRADIENT_BACKGROUND = /\bbg-(?:linear|radial|conic|gradient)\b/u;
+
 export function listTokenUtilityCandidates(source: string): string[] {
+  const hasGradient = GRADIENT_BACKGROUND.test(source);
   const candidates = new Set<string>();
   for (const match of source.matchAll(CLASS_TOKEN)) {
     const token = match[0];
-    if (TOKEN_UTILITY_ROOT.test(readUtilityName(token))) candidates.add(token);
+    const utility = readUtilityName(token);
+    if (!TOKEN_UTILITY_ROOT.test(utility)) continue;
+    if (!hasGradient && GRADIENT_STOP_ROOT.test(utility)) continue;
+    candidates.add(token);
   }
   return [...candidates].sort();
 }
