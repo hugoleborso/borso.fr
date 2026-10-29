@@ -524,6 +524,13 @@
       "tasks": "Tasks",
       "takes": "Takes",
       "details": "Details"
+    },
+    "when": {
+      "label": "Sessions to show",
+      "upcoming": "Upcoming",
+      "past": "Past",
+      "noUpcoming": "No upcoming session.",
+      "noPast": "No past session."
     }
   },
   "setlist": {

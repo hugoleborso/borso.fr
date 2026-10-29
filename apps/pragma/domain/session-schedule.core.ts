@@ -44,12 +44,27 @@ export function selectNextSession<TSession extends ScheduledSession>(
 }
 
 // @FollowsBlueprint domain-shared-selection
-export function orderSessionsForListing<TSession extends ScheduledSession>(
+export function selectComingSessions<TSession extends ScheduledSession>(
   sessions: readonly TSession[],
   now: Date,
 ): TSession[] {
   const today = bandDayOf(now);
-  const coming = sessions.filter((session) => isComing(session, today));
-  const past = sessions.filter((session) => !isComing(session, today));
-  return [...coming.toSorted(compareEarliestFirst), ...past.toSorted(compareNewestFirst)];
+  return sessions.filter((session) => isComing(session, today)).toSorted(compareEarliestFirst);
+}
+
+// @FollowsBlueprint domain-shared-selection
+export function selectPastSessions<TSession extends ScheduledSession>(
+  sessions: readonly TSession[],
+  now: Date,
+): TSession[] {
+  const today = bandDayOf(now);
+  return sessions.filter((session) => !isComing(session, today)).toSorted(compareNewestFirst);
+}
+
+// @FollowsBlueprint domain-shared-selection
+export function orderSessionsForListing<TSession extends ScheduledSession>(
+  sessions: readonly TSession[],
+  now: Date,
+): TSession[] {
+  return [...selectComingSessions(sessions, now), ...selectPastSessions(sessions, now)];
 }

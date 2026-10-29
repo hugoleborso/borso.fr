@@ -934,9 +934,11 @@ Lives in: `api/src/sessions/`
   are `NOT NULL`.
 - The API validates the body as a discriminated union on `kind`, so a
   concert and a practice cannot borrow each other's columns.
-- Sessions are listed with the coming ones first, nearest at the top, then
-  the past ones, newest first (`orderSessionsForListing` in
-  `domain/session-schedule.core.ts`). A session is still coming for the
+- The API lists sessions with the coming ones first, nearest at the top,
+  then the past ones, newest first (`orderSessionsForListing` in
+  `domain/session-schedule.core.ts`). The Sessions screen shows one side at
+  a time: the coming ones nearest first (`selectComingSessions`) or the past
+  ones newest first (`selectPastSessions`). A session is still coming for the
   whole of its calendar day in the band's time zone, so a practice that
   started this morning stays the next session until midnight in Paris
   (`selectNextSession`, which Home reads).
@@ -952,6 +954,7 @@ Lives in: `api/src/sessions/`
 
 Held by: `api/src/sessions/sessions.controller.test.ts` › lists coming sessions first, nearest at the top, then past ones
 Held by: `domain/session-schedule.core.test.ts` › keeps a session from earlier today as the next one until midnight
+Held by: `domain/session-schedule.core.test.ts` › keeps the sessions of past days, newest first
 Held by: `api/src/sessions/sessions.controller.test.ts` › rejects a payload that mixes concert-only with practice-only fields
 Held by: `api/src/sessions/sessions.controller.test.ts` › detaches the setlists on session delete, and keeps them
 Held by: `api/src/takes/takes.controller.test.ts` › deleting the session keeps its takes and clears their session

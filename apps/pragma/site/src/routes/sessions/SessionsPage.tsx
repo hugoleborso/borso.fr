@@ -1,6 +1,6 @@
 /** @Feature sessions */
 
-import { orderSessionsForListing } from '@domain/session-schedule.core';
+import { selectComingSessions, selectPastSessions } from '@domain/session-schedule.core';
 import { type JSX, useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link, useSearchParams } from 'react-router-dom';
@@ -13,7 +13,9 @@ import { composeClassName } from '../../components/atoms/class-name.utils';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
+import { EmptyState } from '../../components/molecules/EmptyState';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SegmentedChoice } from '../../components/molecules/SegmentedChoice';
 import { SessionsSectionTabs } from '../../components/molecules/SessionsSectionTabs';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
@@ -24,6 +26,16 @@ import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions.qu
 const NO_ROWS: readonly never[] = [];
 const KIND_PARAM = 'kind';
 const CONCERT_KIND = 'concert';
+const WHEN_PARAM = 'when';
+const PAST_WHEN = 'past';
+const UPCOMING_WHEN = 'upcoming';
+
+type ListingWhen = typeof UPCOMING_WHEN | typeof PAST_WHEN;
+
+const SELECT_SESSIONS_BY_WHEN = {
+  upcoming: selectComingSessions,
+  past: selectPastSessions,
+} as const satisfies Readonly<Record<ListingWhen, unknown>>;
 
 interface SessionDraft {
   readonly kind: 'concert' | 'practice';
@@ -40,16 +52,34 @@ export function SessionsPage(): JSX.Element {
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const isConcertsOnly = searchParams.get(KIND_PARAM) === CONCERT_KIND;
+  const when: ListingWhen = searchParams.get(WHEN_PARAM) === PAST_WHEN ? PAST_WHEN : UPCOMING_WHEN;
 
   const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
+  const allSessions = sessionsQuery.data?.sessions ?? NO_ROWS;
   const sessions = useMemo(
-    () => orderSessionsForListing(sessionsQuery.data?.sessions ?? NO_ROWS, new Date(nowEpochMs)),
-    [sessionsQuery.data, nowEpochMs],
+    () => SELECT_SESSIONS_BY_WHEN[when](allSessions, new Date(nowEpochMs)),
+    [allSessions, when, nowEpochMs],
   );
-  const concerts = sessions.filter((session) => session.kind === CONCERT_KIND);
-  const listedSessions = isConcertsOnly ? concerts : sessions;
+  const concerts = allSessions.filter((session) => session.kind === CONCERT_KIND);
+  const listedSessions = isConcertsOnly
+    ? sessions.filter((session) => session.kind === CONCERT_KIND)
+    : sessions;
+  const writeAddressParam = (name: string, value: string | null): void => {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (value === null) next.delete(name);
+        else next.set(name, value);
+        return next;
+      },
+      { replace: true },
+    );
+  };
   const toggleConcertsOnly = (): void => {
-    setSearchParams(isConcertsOnly ? {} : { [KIND_PARAM]: CONCERT_KIND }, { replace: true });
+    writeAddressParam(KIND_PARAM, isConcertsOnly ? null : CONCERT_KIND);
+  };
+  const chooseWhen = (chosen: ListingWhen): void => {
+    writeAddressParam(WHEN_PARAM, chosen === PAST_WHEN ? PAST_WHEN : null);
   };
   const error =
     sessionsQuery.error instanceof ApiError
@@ -74,7 +104,16 @@ export function SessionsPage(): JSX.Element {
         }
       >
         <SessionsSectionTabs value="sessions" />
-        <div className="mt-3">
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <SegmentedChoice
+            legend={t('sessions.when.label')}
+            options={[
+              { value: UPCOMING_WHEN, label: t('sessions.when.upcoming') },
+              { value: PAST_WHEN, label: t('sessions.when.past') },
+            ]}
+            value={when}
+            onChange={chooseWhen}
+          />
           <Chip pressed={isConcertsOnly} onPress={toggleConcertsOnly}>
             <Icon name="audience" />
             <span>{t('sessions.concertsOnly')}</span>
@@ -89,6 +128,11 @@ export function SessionsPage(): JSX.Element {
       )}
       {sessionsQuery.isLoading ? (
         <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>
+      ) : null}
+      {sessionsQuery.isSuccess && listedSessions.length === 0 ? (
+        <EmptyState icon="calendar">
+          {t(when === PAST_WHEN ? 'sessions.when.noPast' : 'sessions.when.noUpcoming')}
+        </EmptyState>
       ) : null}
 
       <ul className="relative pl-8 flex flex-col gap-1">

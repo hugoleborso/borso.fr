@@ -1,5 +1,11 @@
 import { describe, expect, it } from 'vitest';
-import { bandDayOf, orderSessionsForListing, selectNextSession } from './session-schedule.core';
+import {
+  bandDayOf,
+  orderSessionsForListing,
+  selectComingSessions,
+  selectNextSession,
+  selectPastSessions,
+} from './session-schedule.core';
 
 const NOW = new Date('2026-10-28T15:00:00.000Z');
 const THIS_MORNING = { id: 'morning', date: '2026-10-28T08:00:00.000Z' };
@@ -66,5 +72,22 @@ describe('orderSessionsForListing', () => {
       'a-past',
       'last-week',
     ]);
+  });
+});
+
+describe('selectComingSessions', () => {
+  it('keeps the sessions of today and later, nearest first', () => {
+    const coming = selectComingSessions(
+      [LAST_WEEK, TOMORROW, YESTERDAY, TONIGHT, THIS_MORNING],
+      NOW,
+    );
+    expect(coming.map((session) => session.id)).toEqual(['morning', 'tonight', 'tomorrow']);
+  });
+});
+
+describe('selectPastSessions', () => {
+  it('keeps the sessions of past days, newest first', () => {
+    const past = selectPastSessions([LAST_WEEK, TOMORROW, YESTERDAY, TONIGHT, THIS_MORNING], NOW);
+    expect(past.map((session) => session.id)).toEqual(['yesterday', 'last-week']);
   });
 });

@@ -31,10 +31,10 @@ const NEAR_PRACTICE = sessionAt('near-practice', 'practice', 2, null);
 const RECENT_PRACTICE = sessionAt('recent-practice', 'practice', -2, null);
 const OLD_CONCERT = sessionAt('old-concert', 'concert', -30, 'Le Petit Bain');
 
-function renderSessionsPage(): void {
+function renderSessionsPage(address = '/sessions'): void {
   render(
     <QueryClientProvider client={createIsolatedQueryClient()}>
-      <MemoryRouter>
+      <MemoryRouter initialEntries={[address]}>
         <SessionsPage />
       </MemoryRouter>
     </QueryClientProvider>,
@@ -69,28 +69,53 @@ describe('the sessions list', () => {
     });
   }
 
-  it('lists upcoming sessions nearest first, then past ones most recent first', async () => {
+  it('lists only the upcoming sessions by default, nearest first', async () => {
     answerSessions();
     renderSessionsPage();
     await screen.findByText('La Cigale');
+    expect(screen.getByRole('radio', { name: 'Upcoming' })).toHaveProperty('checked', true);
     expect(listedSessionPaths()).toEqual([
       `/sessions/${NEAR_PRACTICE.id}`,
       `/sessions/${FAR_CONCERT.id}`,
+    ]);
+  });
+
+  it('lists only the past sessions, newest first, once Past is chosen', async () => {
+    answerSessions();
+    renderSessionsPage();
+    await screen.findByText('La Cigale');
+    fireEvent.click(screen.getByRole('radio', { name: 'Past' }));
+    expect(listedSessionPaths()).toEqual([
+      `/sessions/${RECENT_PRACTICE.id}`,
+      `/sessions/${OLD_CONCERT.id}`,
+    ]);
+    fireEvent.click(screen.getByRole('radio', { name: 'Upcoming' }));
+    expect(listedSessionPaths()).toEqual([
+      `/sessions/${NEAR_PRACTICE.id}`,
+      `/sessions/${FAR_CONCERT.id}`,
+    ]);
+  });
+
+  it('keeps the concerts filter on the past sessions read from the address', async () => {
+    answerSessions();
+    renderSessionsPage('/sessions?when=past');
+    await screen.findByText('Le Petit Bain');
+    const filter = screen.getByRole('button', { name: 'Concerts only' });
+    fireEvent.click(filter);
+    expect(filter.getAttribute('aria-pressed')).toBe('true');
+    expect(screen.getByRole('radio', { name: 'Past' })).toHaveProperty('checked', true);
+    expect(listedSessionPaths()).toEqual([`/sessions/${OLD_CONCERT.id}`]);
+    fireEvent.click(filter);
+    expect(listedSessionPaths()).toEqual([
       `/sessions/${RECENT_PRACTICE.id}`,
       `/sessions/${OLD_CONCERT.id}`,
     ]);
   });
 
-  it('shows only the concerts once the concerts filter is pressed', async () => {
-    answerSessions();
-    renderSessionsPage();
-    await screen.findByText('La Cigale');
-    const filter = screen.getByRole('button', { name: 'Concerts only' });
-    fireEvent.click(filter);
-    expect(filter.getAttribute('aria-pressed')).toBe('true');
-    expect(listedSessionPaths()).toEqual([
-      `/sessions/${FAR_CONCERT.id}`,
-      `/sessions/${OLD_CONCERT.id}`,
-    ]);
+  it('says so when the chosen side holds no session', async () => {
+    stub = stubFetch(() => Promise.resolve(jsonResponse({ sessions: [FAR_CONCERT] })));
+    renderSessionsPage('/sessions?when=past');
+    expect(await screen.findByText('No past session.')).toBeTruthy();
+    expect(listedSessionPaths()).toEqual([]);
   });
 });
