@@ -54,7 +54,7 @@ block() {
   echo "[open-pr] $1" >&2
   echo "[open-pr] Draft from $PLUGIN_ROOT/skills/open-pr/template.md and check it with" >&2
   echo "[open-pr]   node_modules/.bin/tsx $CHECKER <draft.md>" >&2
-  "$(dirname "$0")/kaizen-refusal.sh" open-pr "opened a pull request with a body too thin for the template"
+  "$(dirname "$0")/kaizen-refusal.sh" open-pr "refused gh pr create: $1"
   exit 2
 }
 
@@ -67,6 +67,9 @@ BODY=""
 if grep -qE -- '--body-file\b' <<<"$COMMAND_TO_RUN"; then
   BODY_PATH="$(sed -E 's/.*--body-file[ =]([^ ]+).*/\1/' <<<"$COMMAND_TO_RUN")"
   if [[ "$BODY_PATH" == "-" ]]; then exit 0; fi
+  if [[ "$BODY_PATH" == *'$'* ]]; then
+    block "--body-file names a shell variable, $BODY_PATH, which this hook reads before the shell expands it; pass the literal path"
+  fi
   if [[ ! -f "$BODY_PATH" ]]; then
     block "--body-file points at a missing path: $BODY_PATH"
   fi

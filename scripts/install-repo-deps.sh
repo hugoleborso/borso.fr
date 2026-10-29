@@ -213,19 +213,13 @@ find /tmp -maxdepth 1 -name 'cdk.out*' -type d -exec rm -rf {} + 2>/dev/null || 
 # docs/dantotsus/designated-branch-was-a-merged-pr-head.md.
 "$REPO_ROOT/scripts/check-branch-context.sh" || true
 
-# 9. KAIZEN.md — the friction log `/after-task-kaizen` sweeps at merge.
-# Created empty here rather than on first use, because a file that already
-# exists gets appended to and a file somebody has to remember to create does
-# not: PR 50 maintained none, and its inventory had to be rebuilt from the
-# transcript, the commit history and 22 agent journals. Gitignored, so it never
-# reaches a commit.
-if [ ! -f "$REPO_ROOT/KAIZEN.md" ]; then
-  "$REPO_ROOT/scripts/kaizen.sh" init
-  log 'KAIZEN.md ready — log friction as you hit it: scripts/kaizen.sh "<what went wrong>"'
-else
-  kaizen_entries="$(grep -c '^- \[' "$REPO_ROOT/KAIZEN.md" || true)"
-  log "KAIZEN.md carries ${kaizen_entries:-0} entries logged earlier in this task"
-fi
+# 9. KAIZEN.md — the friction log `/after-task-kaizen` sweeps at merge. It is
+# created at session start rather than on first use, because a file that
+# already exists gets appended to and one somebody has to remember to create
+# does not: PR 50 maintained none. The `kaizen.sh init` SessionStart entry in
+# .claude/settings.json owns it, including parking a log another session left
+# behind; calling init here as well raced that entry over the same rename.
+log 'KAIZEN.md is opened by kaizen.sh init — log friction as you hit it: scripts/kaizen.sh "<what went wrong>"'
 
 # 10. The two generated lookups a session reads, neither of which is
 # committed: the blueprint index agents read before writing a file, and the
