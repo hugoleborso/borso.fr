@@ -3,7 +3,7 @@ name: dantotsu
 description: Use when the user asks for a Dantotsu, root-cause analysis (RCA), five-whys, post-mortem of a defect, or "lean quality investigation" — including the explicit `/dantotsu` invocation. Walks the seven Dantotsu steps and produces a Markdown entry under `docs/dantotsus/`. CRITICAL — eradication is non-optional and must land code, not docs alone. The skill has a hard rule: every dantotsu finishes with at least one of (a) a structural change that makes the defect impossible to reintroduce, (b) a DevX check (linter, type guard, pre-commit hook) that catches the misconception, (c) a vendor patch in `patches/` plus a flag for the human to open the upstream PR, OR — only if none of the above is feasible — (d) a triggered knowledge entry under `docs/knowledge/`, whose `triggers:` front matter names the paths, commands or output at which a hook prints it. Each dantotsu links the commit hash, PR, and code diff that fixed it. Agent never opens PRs against repos outside `hugoleborso/*`. Read the standard at `${CLAUDE_PLUGIN_ROOT}/skills/dantotsu/standard.md` before facilitating one.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Dantotsu — radical quality through root-cause analysis
 
@@ -175,6 +175,18 @@ For each item picked, **include the actual diff or commit
 reference** in the entry — not a placeholder. The dantotsu file
 links the commit hash, PR, and a relative-path diff snippet that
 shows what changed.
+
+**Prove a new check can fail, once, when you add it.** For a level 2
+or 4 eradication, reintroduce the defect on a scratch copy, run the
+check, and paste its refusal into the entry's Eradication section,
+then revert. A check that has never refused anything is not an
+eradication. The proof lives in the entry, not in a standing tool:
+the repository keeps no canary per gate.
+
+**Subtract before you add.** Before adding a check, look for the
+mechanism whose removal makes the defect impossible, and prefer it. A
+check that only guards another part of the harness is not an
+eradication of a product or infra defect.
 
 If a Dantotsu's "highest level reached" is (5) alone, it's almost
 always misclassified. Re-read step 3 — the misconception is usually

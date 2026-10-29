@@ -3,7 +3,7 @@ name: route
 description: Decide how much machinery a task deserves before starting it, and lay out the task list that follows. Use at the start of any non-trivial request, when the user says "/route", "how should we do this", "is this a big one", or when you are about to reach for /specification or /feature-pipeline and are not sure the task is worth them. Sizes the work on five axes, picks one of four tiers from direct edit to fanned-out workflow, and writes the task list for the tier it picked.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Route
 
@@ -19,7 +19,7 @@ Answer all five. Answer them by **looking**, not by guessing: run the greps, ope
 
 | Axis | Question | How to answer it |
 | --- | --- | --- |
-| Blast radius | How many files, layers and applications? | `rg` for the symbol, list the folder, read the map for the application (`pnpm exec tsx scripts/architecture/architecture-graph.ts` writes it; the pages are generated, not committed) |
+| Blast radius | How many files, layers and applications? | `rg` for the symbol, list the folder. The architecture maps run on demand only, through the `architecture` workflow, so do not wait on them |
 | Decisions | Is anything genuinely open about what to build? | If you can name two defensible answers and the user has not picked, it is open |
 | Precedent | Does a blueprint already cover every layer this touches? | `.claude/skills/blueprint/blueprint-index.md`, after `scripts/reports.sh blueprints` |
 | Reversibility | Does it touch a schema, a shared construct, a secret, prod infrastructure? | A migration, `infra/shared/`, or anything in `docs/adr/`'s trigger list |
@@ -34,16 +34,14 @@ No spec, no plan, no task list. Write it, test it, commit it. Reaching for a ski
 Task list:
 1. `/code-standards` for the layers you are touching
 2. implement, marking new files `// @FollowsBlueprint <id>`
-3. `pnpm --filter <app> run test` and the affected gates
-4. `/standards-review` to clear and seal what lint cannot check
-5. `/technical-validation` if the change carries real logic
+3. the affected tests (`pnpm --filter <app> exec vitest run --project core --changed <base>`, or `exec vitest run --changed <base>` on a front-end-only app); coverage, mutation and the whole suites run in CI
+4. `/technical-validation`, which also checks what lint cannot, two rounds at most
 
 **Tier 2 — specified.** New user-visible behaviour, or a change crossing back end and front end, or any open decision.
 Task list:
 1. `/specification` — this is the stage that needs the human, so do not skip to the plan
 2. `/adr` for each decision matching a trigger: a new third-party dependency, a new secret, a schema column driven by an external service, a cross-cutting structural choice
 3. `/feature-pipeline <spec-path>` — plan, implement, validate and open the PR
-4. `/standards-review` before the PR is ready
 
 **Tier 3 — fanned out.** The same change repeated across applications, a migration, an audit, or anything where coverage matters more than depth.
 Use a Workflow, not a chain. The shape that fits this repository:
@@ -68,7 +66,7 @@ De-escalating is equally allowed and rarer. A Tier 2 whose spec resolves to "add
 Tier 3 means several agents in one checkout, and that has two failure modes this repository has already hit:
 
 - **One git index.** Agents share it. An agent that runs `git add` stages another's half-finished work, and the next commit ships it. Tell every agent: do not commit, do not stage. Collect and commit yourself — and while any agent is still running, stage explicit paths rather than `git add -A`, or you will sweep its half-written files into a commit about something else. That is the same failure from the dispatcher's side and it is the easier one to hit, because `git add -A` is the reflex.
-- **Whole-repository generators.** `blueprint-indexing.ts`, `blueprint-heatmap.ts`, `architecture-graph.ts` and `enforcement-ledger.ts` all read the entire tree and all have a `--check` gate. An agent regenerating one of them bakes in every other agent's uncommitted work. Regenerate them once, yourself, after the agents are done.
+- **Whole-repository generators.** `blueprint-indexing.ts` and `convention-drift.ts` read the entire tree and have a `--check` gate. An agent regenerating one of them bakes in every other agent's uncommitted work. Regenerate them once, yourself, after the agents are done.
 
 When agents genuinely need to build in parallel without seeing each other, give them `isolation: "worktree"` instead of a shared checkout.
 

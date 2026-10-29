@@ -52,6 +52,8 @@ that was fixed and should be removed.
   match: agent-browser eval | agent-browser batch | agent-browser find | agent-browser silently | agent-browser ref | browser.sh | set viewport | agent-browser has no
 - `no-touch-gestures-on-chromium` · Build · argent cannot send the touch gesture a phone audit needs on Chromium
   match: gesture-swipe | gesture-custom | touch drag | argent cannot
+- `workflow-subagent-cannot-dispatch` · Build · A workflow subagent told to run a validation skill has no Agent tool to dispatch the isolated validator
+  match: no Agent tool
 - `no-image-tooling` · Build · The image has no raster or pixel tooling to judge an icon or a screenshot
   match: no pil | raster tooling | png decoder | pixel zoom | pixelated | true 16px | 17px icon | 16px mark | ffmpeg
 - `generated-files-go-stale` · Build · A move or rename leaves generated indexes and maps stale and the gates name the wrong cause

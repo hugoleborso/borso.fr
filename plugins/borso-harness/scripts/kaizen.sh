@@ -32,8 +32,9 @@
 # sweep designs the eradication, and a solution written in the moment is the
 # one you already thought of, which is usually the smallest one.
 #
-# The file is gitignored, so it never lands in a commit; the sweep removes it
-# once the kaizen pull request is open.
+# The file is gitignored, so it never lands in a commit. `archive` copies it
+# into the branch before the pull request opens, and the sweep reads that copy
+# in a new conversation after the merge.
 #
 # It lives in the repository being worked on, not beside this script: the
 # borso-harness plugin may be installed from a cache or vendored in a
@@ -82,12 +83,14 @@ Append one line per friction event, as it happens, with:
     $KAIZEN_COMMAND \"what went wrong, in one sentence\"
     $KAIZEN_COMMAND --from <your-agent-label> \"...\"   # from a subagent
 
-The problem only, never the fix. \`/after-task-kaizen\` sweeps this file when
-the work merges, classifies each line, and designs the eradication. Subagents
+The problem only, never the fix. \`/after-task-kaizen\` sweeps the archived
+copy in a new conversation after the merge, classifies each line, and designs
+the eradication. Subagents
 should append here too, naming themselves, so the sweep can tell one agent
 struggling from four agents hitting the same wall.
 
-This file is gitignored and is deleted once the kaizen pull request is open.
+This file is gitignored. Before the pull request opens, run
+\`$KAIZEN_COMMAND archive <docs-slug>/<feature>\` and commit the copy.
 "
 
 ensure_file() {
@@ -151,7 +154,10 @@ case "${1:-}" in
     # so they collapse to spaces.
     entry="$(printf '%s' "$*" | tr '\n' ' ')"
     writer="$(printf '%s' "$WRITER" | tr '\n ' '--')"
-    printf -- '- [%s] `%s` %s\n' "$(date -u +%H:%M)" "$writer" "$entry" >> "$KAIZEN_FILE"
+    # The date is part of the stamp because one session's log outlives one task:
+    # the PR #206 sweep had to cut a log holding four pull requests' lines by
+    # clock time alone, across three days.
+    printf -- '- [%s] `%s` %s\n' "$(date -u '+%Y-%m-%d %H:%M')" "$writer" "$entry" >> "$KAIZEN_FILE"
     printf '\033[36m[kaizen]\033[0m logged as %s: %s\n' "$writer" "$entry"
     ;;
 esac

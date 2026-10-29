@@ -16,7 +16,7 @@ $ curl -sI "https://api.deezer.com/album/302127/image?size=big"
 HTTP/2 403
 server: AkamaiGHost
 
-$ scripts/browser.sh open "https://api.deezer.com/album/302127/image?size=big"
+$ agent-browser open "https://api.deezer.com/album/302127/image?size=big"
 ✓ 400x400-000000-80-0-0.jpg (400×400)
   https://cdn-images.dzcdn.net/images/cover/5718f7…/400x400-000000-80-0-0.jpg
 ```
@@ -43,7 +43,7 @@ blames the proxy for a missing image should re-probe before saying so.
 ## What to do when an asset looks broken
 
 Last verified: 2026-09-16 — `curl -sI` on the album-image endpoint answered
-`403 AkamaiGHost`, `scripts/browser.sh open` on the same URL rendered a 400x400
+`403 AkamaiGHost`, `agent-browser open` on the same URL rendered a 400x400
 JPEG, and both tools answered `200` on `api.deezer.com/search`.
 
 - **Probe both ways before concluding.** A `403` or a connection error from
@@ -60,8 +60,7 @@ JPEG, and both tools answered `200` on `api.deezer.com/search`.
 ## See also
 
 - [`driving-previews-with-agent-browser-and-argent`](./driving-previews-with-agent-browser-and-argent.md)
-  — the rest of the traps in this loop, including the TLS flag
-  `scripts/browser.sh` passes so navigation works at all.
+  — the rest of the traps in this loop.
 - [`../dantotsus/described-screenshot-without-checking-pixels.md`](../dantotsus/described-screenshot-without-checking-pixels.md)
   — the neighbouring failure, where the picture was never examined.
 - [`../dantotsus/said-the-file-was-unreachable-without-looking.md`](../dantotsus/said-the-file-was-unreachable-without-looking.md)

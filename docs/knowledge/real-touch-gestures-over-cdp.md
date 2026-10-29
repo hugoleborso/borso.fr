@@ -1,199 +1,78 @@
 ---
-summary: 'On Chromium every argent pointer verb is a mouse, `gesture-tap` included, and its swipe moves nothing; a real tap is `scripts/argent.sh touch <selector>`, and a real swipe is `Input.dispatchTouchEvent` over CDP.'
+summary: 'A real tap is `scripts/phone.sh touch <selector>`; a real swipe or drag is `Input.dispatchTouchEvent` sent yourself over CDP, to the port of `agent-browser get cdp-url`. Overrides end with the CDP session that set them.'
 triggers:
   commands:
-    - 'gesture-(swipe|custom|scroll|drag|tap)'
     - 'Input\.dispatchTouchEvent'
     - 'Browser\.grantPermissions'
     - 'setTouchEmulationEnabled'
-  output:
-    - 'Not supported on Chromium'
+    - 'get cdp-url'
 ---
 
-# Driving a real touch gesture when argent declines it
+# Driving a real touch gesture over CDP
 
-`scripts/argent.sh` is the repository's answer for touch, through its `touch`
-command, which sends a real tap at a phone viewport. argent's own verbs are not
-touch on Chromium: `gesture-tap` is a mouse press (see *What survives* below),
-and for the gesture a phone audit most often needs — a swipe or a drag — argent
-refuses both of its gesture verbs:
-
-```
-$ scripts/argent.sh run gesture-swipe --udid chromium-cdp-9222 …
-Not supported on Chromium — use gesture-scroll there instead.
-
-$ scripts/argent.sh run gesture-custom --udid chromium-cdp-9222 …
-Tool 'gesture-custom' is not supported on chromium app (no chromium support declared).
-```
-
-`gesture-scroll` dispatches **mouse-wheel** events, and `gesture-drag`
-dispatches a **mouse** drag. Neither is a finger. A control whose behaviour
-depends on `touch-action`, on `pointerType`, or on the browser deciding
-mid-gesture whether the page or the element gets it will behave differently
-under all three, and that difference is exactly where the bugs are — see
+`agent-browser click`, `scroll` and `drag` are mouse and wheel events. A control
+whose behaviour depends on `touch-action`, on `pointerType`, or on the browser
+deciding mid-gesture whether the page or the element gets it behaves
+differently under them, and that difference is where the bugs are; see
 [`../dantotsus/a-control-that-wrote-before-the-gesture-was-decided.md`](../dantotsus/a-control-that-wrote-before-the-gesture-was-decided.md).
-
-## The recipe
-
-argent's Chromium already exposes CDP on 9222, so send the touch events
-yourself. `Input.dispatchTouchEvent` is the real thing: it produces
-`touchstart` / `touchmove` / `touchend`, the `pointerdown` / `pointermove` /
-`pointercancel` pairs that go with them, and it makes the browser apply
-`touch-action` for real.
-
-```js
-import WebSocket from '/home/user/borso.fr/node_modules/.pnpm/ws@8.20.0/node_modules/ws/index.js';
-
-const listing = await fetch('http://127.0.0.1:9222/json/list').then((r) => r.json());
-const page = listing.find((t) => t.type === 'page' && t.url.includes('localhost:5174'));
-const socket = new WebSocket(page.webSocketDebuggerUrl, { perMessageDeflate: false });
-// … resolve responses by message id …
-
-async function touch(type, x, y) {
-  const points = type === 'touchEnd' ? [] : [{ x, y, radiusX: 12, radiusY: 12, force: 1 }];
-  await send('Input.dispatchTouchEvent', { type, touchPoints: points });
-  await new Promise((r) => setTimeout(r, 60));
-}
-```
-
-Three details that matter:
-
-- **`touchEnd` takes an empty `touchPoints` array.** Passing the last point is
-  rejected.
-- **Pace the events.** Around 60 ms between them; a burst dispatched in one tick
-  does not give the compositor the chance to decide the gesture, which is the
-  behaviour under test.
-- **`ws` is already in the store** (`node_modules/.pnpm/ws@8.20.0/…`), pulled in
-  by Playwright. Import it by path; there is no need to add a dependency.
-
-Read the result back through `Runtime.evaluate` in the same session, so the
-assertion sees the same page the gesture hit:
-
-```js
-const value = await evaluate(`document.querySelector('[role="slider"]').getAttribute('aria-valuenow')`);
-const scrolled = await evaluate(`document.querySelector('main').scrollTop`);
-```
-
-Asserting *both* is the point for a control inside a scroller: the page must
-scroll **and** the control must not change. Either one alone passes for the
-wrong reason.
 
 ## Which tool for which question
 
 | Question | Tool |
 | --- | --- |
-| Layout, sizes, overflow, screenshots | `scripts/browser.sh` / `agent-browser` |
-| Is this reachable by a press at its centre | `scripts/argent.sh tap` (a mouse press) |
-| Does a real tap land, as touch, at phone width | `scripts/argent.sh touch '<css selector>'` |
-| Does a swipe or a drag do the right thing on touch | CDP `Input.dispatchTouchEvent`, as above |
-| Mouse-only behaviour (text selection, hover) | CDP `Input.dispatchMouseEvent` |
+| Layout, sizes, overflow, screenshots | `agent-browser` |
+| Does a real tap land, as touch, at phone width | `scripts/phone.sh touch '<css selector>'` |
+| Does a swipe or a drag do the right thing on touch | CDP `Input.dispatchTouchEvent`, below |
+| Mouse-only behaviour (text selection, hover) | `agent-browser` |
+
+## The recipe for a swipe or a drag
+
+Every `agent-browser` session exposes CDP. `agent-browser --session phone get
+cdp-url` prints `ws://127.0.0.1:<port>/…`; list the page targets at
+`http://127.0.0.1:<port>/json/list` and open the page's
+`webSocketDebuggerUrl`. Measured 2026-10-29: a raw CDP client and
+`agent-browser` drive the same page in turn without either one timing out.
+[`scripts/browser/touch-tap.ts`](../../scripts/browser/touch-tap.ts) is the
+working client to copy.
+
+```js
+async function touch(type, x, y) {
+  const points = type === 'touchEnd' ? [] : [{ x, y, radiusX: 12, radiusY: 12, force: 1 }];
+  await send('Input.dispatchTouchEvent', { type, touchPoints: points });
+  await new Promise((resolve) => setTimeout(resolve, 60));
+}
+```
+
+- **`touchEnd` takes an empty `touchPoints` array.** Passing the last point is
+  rejected.
+- **Pace the events**, around 60 ms apart. A burst in one tick gives the
+  compositor no chance to decide the gesture, which is the behaviour under test.
+- **Turn on touch emulation first**: `Emulation.setDeviceMetricsOverride` with
+  `mobile: true`, then `Emulation.setTouchEmulationEnabled`. That gives
+  `pointer: coarse`, `hover: none` and `maxTouchPoints: 5`. Do not use
+  `Emulation.setEmitTouchEventsForMouse`, which wedges the input pipeline until
+  the page navigates away and back.
+
+Read the result back through `Runtime.evaluate` in the same session. For a
+control inside a scroller, assert both that the page scrolled and that the
+control did not change; either one alone passes for the wrong reason.
+
+## Overrides end with the CDP session that set them
+
+Measured 2026-10-25: after the client disconnected, `navigator.maxTouchPoints`
+was back to 0 and `(pointer: coarse)` false, while the 375 px viewport stayed.
+On 2026-10-29 `(pointer: coarse)` was again false after `scripts/phone.sh touch`
+returned. `Browser.grantPermissions` behaves the same: the
+grant is revoked when the granting client closes. So set, act and read back in
+one session, as `touch-tap.ts` does.
+
+A finding that depends on the difference between a touch drag and a mouse drag,
+such as a `dnd-kit` `PointerSensor` losing the gesture to page scroll, needs
+this recipe or a real device; see
+[`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md).
 
 ## See also
 
 - [`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md)
-  — the launch flags and the traps for both tools; this entry is the gap it
-  leaves.
 - [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md)
-  — why `set device` is not a coarse pointer.
 - [`agentic-device-testing.md`](./agentic-device-testing.md)
-
-## argent's `gesture-swipe` does nothing on Chromium
-
-_Merged from `real-touch-gestures-over-cdp.md` on 2026-10-10, when every entry gained a trigger._
-
-_Last verified: 2026-09-14 — `argent 0.22.1`, `pnpm exec argent tools describe
-gesture-swipe`, plus four live calls against a Chromium CDP device that
-returned `"issues": []` and moved nothing._
-
-`gesture-swipe` is listed among argent's verbs and reads like the one a phone
-has. On a Chromium target it is not implemented. Its own help says so:
-
-> Execute a smooth swipe / drag touch gesture between two points on the device
-> (iOS simulator or Android emulator). … **Not supported on Chromium — use
-> `gesture-scroll` there instead.**
-
-What makes this expensive is the failure mode. The call does not error. It
-returns a JSON object, exits 0, and the page is unchanged — which is
-indistinguishable from a page that received the gesture and ignored it. Read as
-a finding, that is "the list does not scroll on touch" or "the drag target
-rejects the drop", neither of which is true.
-
-### What to use instead
-
-| Intent | Chromium verb | Units |
-| --- | --- | --- |
-| Tap something | `gesture-tap` | normalised `[0,1]`, a **mouse** press and release |
-| Scroll a page or a list | `gesture-scroll` | `--deltaY 0.9` is nine tenths of a **window**, not pixels |
-| Drag an element, drop it | `gesture-drag` | `--fromX/--fromY/--toX/--toY`, a mouse drag |
-
-`gesture-scroll` rejects a call with no delta (*"Pass a non-zero deltaX and/or
-deltaY"*), which is the one place in this area that fails loudly.
-
-### What survives
-
-Not `gesture-tap`. This section said it was a real touch event, and it is not:
-on argent 0.22.1 a single-point tap goes through `sendTouch`, which sends
-`Input.dispatchTouchEvent` only when a second point is given and
-`Input.dispatchMouseEvent` `mousePressed`/`mouseReleased` otherwise. Capture
-listeners on the page log `pointerdown` and `click` with `pointerType: "mouse"`
-and no `touchstart`, measured on the takes branch (PR #193) and again on
-2026-10-25. argent 0.30.1's `tapChromium` sends the same mouse pair, and its
-tool description says so, so the upgrade the CLI offers does not change it.
-
-What does work is the method this entry already recommended for swipes.
-[`scripts/browser/touch-tap.ts`](../../scripts/browser/touch-tap.ts), run as
-`scripts/argent.sh touch '<css selector>'`, sets
-`Emulation.setDeviceMetricsOverride` to a 375 × 812 mobile viewport and
-`Emulation.setTouchEmulationEnabled`, scrolls the element into view, sends
-`touchStart` then `touchEnd`, and fails unless `touchstart` and a touch `click`
-reached the element.
-
-The consequence for a phone pass: taps are testable with real touch input
-through `scripts/argent.sh touch`, and scrolling and dragging through argent
-only as wheel and mouse events. A
-finding that depends on the difference between a touch-drag and a mouse-drag —
-a `dnd-kit` `PointerSensor` losing the gesture to page scroll, for instance —
-cannot be reproduced with these tools. Drive that on a real device, or reason
-about it from the sensor configuration.
-
-### A long press is `gesture-drag`, not `gesture-custom`
-
-`gesture-custom` is the verb argent's own help documents a long press with. It
-refuses on Chromium:
-
-```
-no chromium support declared
-```
-
-The long press that works is a drag that does not move, with a duration:
-
-```sh
-scripts/argent.sh run gesture-drag --from 180,320 --to 180,320 --durationMs 900
-```
-
-Measured 2026-09-15 on a `pragma` catalog card: 900 ms opened the listen dialog,
-and a short tap afterwards still navigated, which is what proves the
-capture-phase handler swallows only the press. A synthetic click proves neither.
-
-### Overrides end with the CDP session that set them
-
-A one-shot CDP script is the natural way to drive these methods, and some of
-what it sets does not outlive it. Measured on the sandbox Chromium on
-2026-10-25: after the client disconnected, `navigator.maxTouchPoints` was back to
-0 and `(pointer: coarse)` false, while the 375 px viewport from
-`Emulation.setDeviceMetricsOverride` stayed. The takes branch's validators found
-the same for `Browser.grantPermissions`: a notification grant reported success
-and `Notification.permission` stayed `default`, because the grant was revoked
-when the granting client closed. So set, act and read back in one session, as
-`touch-tap.ts` does, and hold a client open for the whole run when a grant has
-to persist.
-
-### See also
-
-- [`dnd-kit-pointersensor-loses-touch-to-page-scroll.md`](./dnd-kit-pointersensor-loses-touch-to-page-scroll.md)
-  — the class of bug this gap cannot reach.
-- [`agent-browser-coarse-pointer-emulation.md`](./agent-browser-coarse-pointer-emulation.md)
-  — the same limitation from the other tool's side.
-- [`../dantotsus/the-wrapper-for-driving-previews-could-not-reach-one.md`](../dantotsus/the-wrapper-for-driving-previews-could-not-reach-one.md)
-  — found in the same session, and why the wrapper's banner stopped advertising
-  this verb.

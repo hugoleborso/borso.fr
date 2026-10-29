@@ -1,10 +1,8 @@
 import { resolve } from 'node:path';
-import { performance } from 'node:perf_hooks';
 import { pathToFileURL } from 'node:url';
 
 const JOB_SEPARATOR = '=';
 const ARGUMENT_SEPARATOR = ' ';
-const MICROSECONDS_PER_MILLISECOND = 1000;
 const FAILURE_EXIT_CODE = 1;
 const HOOK_PREFIX = '[pre-commit]';
 
@@ -17,8 +15,6 @@ interface GeneratorJob {
 interface JobOutcome {
   readonly isPassing: boolean;
   readonly output: string;
-  readonly cpuMilliseconds: number;
-  readonly wallMilliseconds: number;
 }
 
 class ExitRequested extends Error {
@@ -61,8 +57,6 @@ async function runJob(job: GeneratorJob): Promise<JobOutcome> {
   };
   process.argv = [process.argv[0] ?? 'node', job.script, ...job.arguments];
   process.exitCode = undefined;
-  const cpuAtStart = process.cpuUsage();
-  const wallAtStart = performance.now();
   let isPassing: boolean;
   try {
     await import(pathToFileURL(resolve(job.script)).href);
@@ -76,24 +70,14 @@ async function runJob(job: GeneratorJob): Promise<JobOutcome> {
     process.exit = exitProcess;
     process.exitCode = undefined;
   }
-  const cpu = process.cpuUsage(cpuAtStart);
-  return {
-    isPassing,
-    output: chunks.join(''),
-    cpuMilliseconds: Math.round((cpu.user + cpu.system) / MICROSECONDS_PER_MILLISECOND),
-    wallMilliseconds: Math.round(performance.now() - wallAtStart),
-  };
+  return { isPassing, output: chunks.join('') };
 }
 
 async function main(): Promise<void> {
   const failures: string[] = [];
   for (const job of process.argv.slice(2).map(readJob)) {
     const outcome = await runJob(job);
-    const verdict = outcome.isPassing ? 'passed' : 'refused';
     process.stdout.write(outcome.output);
-    process.stdout.write(
-      `${HOOK_PREFIX} ${job.name}: ${verdict}, ${String(outcome.cpuMilliseconds)} ms CPU, ${String(outcome.wallMilliseconds)} ms wall\n`,
-    );
     if (!outcome.isPassing) failures.push(job.name);
   }
   if (failures.length > 0) {

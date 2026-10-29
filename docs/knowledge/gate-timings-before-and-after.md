@@ -108,8 +108,8 @@ a cache written by the previous run:
 | `pnpm exec eslint .` | 68 s |
 | `pnpm exec prettier --check .` | 4 s |
 | `pnpm run test:eslint-rules` | 12 s |
-| `@borso/infra test:coverage` | 21 s |
-| `@borso/shared-infra test:coverage` | 3 s |
+| `@borso/infra exec vitest run --coverage` | 21 s |
+| `@borso/shared-infra exec vitest run --coverage` | 3 s |
 | `pnpm -r build` | 11 s |
 | `pnpm exec knip` | 2 s |
 

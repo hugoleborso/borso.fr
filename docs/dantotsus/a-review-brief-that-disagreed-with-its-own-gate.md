@@ -10,7 +10,7 @@ eradication-level: 5
 eradication-paths: []
 time-to-detect: hours
 tags: [skill, standards, gates, harness, meta]
-zone: plugins/borso-harness/skills/standards-review
+zone: plugins/borso-harness/skills/technical-validation
 weak-point: prose-stands-in-for-a-check
 ---
 
@@ -109,3 +109,7 @@ brief" instinct applies to any agent that reads a moving tree.
   — what a dispatch brief is for, and what it must not carry.
 - [`parallel-agents-share-one-index-and-every-generator.md`](./parallel-agents-share-one-index-and-every-generator.md)
   — the other way a moving tree invalidates what an agent was told.
+
+## Superseded mechanism
+
+The seal and the separate standards review were removed on 2026-10-29. The standards checklist is now part of `/technical-validation`, which records the reviewed commit SHA and reviews at most two rounds, the second on the diff since that SHA.

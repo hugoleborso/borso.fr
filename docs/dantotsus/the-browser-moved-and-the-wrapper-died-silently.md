@@ -10,7 +10,7 @@ eradication-level: 1
 eradication-paths: [scripts/browser.sh, scripts/argent.sh]
 time-to-detect: minutes
 tags: [harness, agent-browser, tooling, visual-validation]
-zone: scripts/browser.sh
+zone: scripts/phone.sh
 recurs: [the-browser-was-on-disk-and-unreachable]
 ---
 

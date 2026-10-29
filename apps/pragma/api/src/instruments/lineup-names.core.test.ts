@@ -49,6 +49,18 @@ describe('nameLineup', () => {
       ),
     ).toEqual({ Hugo: 'Batterie, Chant', 'member-gone': 'Guitare' });
   });
+
+  it('leaves out an instrument that no longer exists rather than answering its id', () => {
+    expect(
+      nameLineup(
+        {
+          'member-hugo': ['instrument-deleted', 'instrument-voice'],
+          'member-lea': ['instrument-deleted'],
+        },
+        NAMES,
+      ),
+    ).toEqual({ Hugo: 'Chant' });
+  });
 });
 
 describe('resolveNamedLineup', () => {

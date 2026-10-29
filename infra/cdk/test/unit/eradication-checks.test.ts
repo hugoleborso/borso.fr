@@ -93,6 +93,10 @@ describe('eradication: cf-host-routing-function uses ES5-only syntax', () => {
   it('does not use template literals', () => {
     expect(stripped).not.toMatch(/`[^`]*\$\{/);
   });
+
+  it('has no import or export statement, because the edge runtime has no module system', () => {
+    expect(stripped).not.toMatch(/^\s*(import|export)\b/m);
+  });
 });
 
 // @FollowsBlueprint test-artifact-audit

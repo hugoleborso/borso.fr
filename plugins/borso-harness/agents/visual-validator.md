@@ -4,7 +4,7 @@ description: Standalone agent that drives the implemented app in a real browser 
 tools: Bash, Read, Write, Glob, Grep
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Visual-validator agent
 
@@ -21,38 +21,28 @@ The skill that dispatches you provides a self-contained brief with these fields:
 
 You receive nothing else. No implementation summary. No "this should work because…".
 
-## Tooling: `scripts/browser.sh`
+## Tooling: `agent-browser`
 
-You drive the browser through `scripts/browser.sh`, run from the repository root. It is `agent-browser` — a Rust daemon controlled by shell commands — with the two settings this sandbox needs already applied, and every argument passed straight through. The CLI is reference-based: take a snapshot, identify elements by their `@eN` refs, then act on them.
-
-**Never call `agent-browser` directly, and never run `agent-browser install`.** The browser it looks for is not where it looks, and without `--ssl-version-max=tls1.2` every https navigation fails with `ERR_CONNECTION_RESET`. Neither is discoverable from the error you would get, and the install command agent-browser itself suggests fetches a second Chromium this image already has.
-
-The commands you will use most:
+You drive the browser with `agent-browser`, a CLI over a browser daemon. It needs no setup here: it finds the image's Chromium and reaches https and localhost on its own. Never run `agent-browser install`. Take a snapshot, identify elements by their `@eN` refs, then act on them.
 
 ```bash
-scripts/browser.sh open <url>                       # Navigate
-scripts/browser.sh --restart open <url>             # Same, from a fresh daemon
-scripts/browser.sh snapshot -i --json               # Accessibility tree + element refs as JSON
-scripts/browser.sh click @eN                        # Click an element by its ref
-scripts/browser.sh fill @eN "text"                  # Type into a field by ref
-scripts/browser.sh press Space                      # Send a key
-scripts/browser.sh screenshot <absolute-path>       # Save a PNG to disk
-scripts/browser.sh screenshot <absolute-path> --full  # Full-page PNG
-scripts/browser.sh set viewport <width> <height>    # Resize
-scripts/browser.sh set device "iPhone 14"           # Viewport + user agent. NOT a coarse pointer, NOT touch.
-scripts/browser.sh set media dark                   # Emulate prefers-color-scheme: dark
-scripts/browser.sh wait --load networkidle          # Wait for network to settle
-scripts/browser.sh wait --text "Untitled"           # Wait for text to appear
-scripts/browser.sh get url                          # Get current URL
-scripts/browser.sh get text "<css-selector>"        # Read text content
-scripts/browser.sh errors                           # Console errors since the last navigation
-scripts/browser.sh back                             # Browser back button
-scripts/browser.sh reload                           # Reload page
+agent-browser open <url>                       # Navigate
+agent-browser snapshot -i --json               # Accessibility tree + element refs as JSON
+agent-browser click @eN                        # Click an element by its ref (a mouse press, not a tap)
+agent-browser fill @eN "text"                  # Type into a field by ref
+agent-browser screenshot <absolute-path>       # Save a PNG; add --full for the whole page
+agent-browser record start <absolute-path>.webm  # Record motion; stop with `record stop`, then convert to GIF (see the /visual-validation skill)
+agent-browser set viewport <width> <height>    # Resize
+agent-browser set media dark                   # Emulate prefers-color-scheme: dark
+agent-browser wait --load networkidle          # Wait for network to settle
+agent-browser get text "<css-selector>"        # Read text content
+agent-browser errors                           # Console errors since the last navigation
+agent-browser close                            # End the session; the next call starts a fresh browser
 ```
 
-If a command you need isn't documented here, run `scripts/browser.sh --help` or `scripts/browser.sh <command> --help` and adapt. The CLI is the source of truth, not this brief.
+`agent-browser --help` is the source of truth for anything else. Its traps are in `docs/knowledge/agent-browser-cli-quirks.md`; the one that produces false FAILs is a session that stops completing fetches after about forty drives, so `close` and reopen before recording a FAIL you cannot explain.
 
-If `scripts/browser.sh` itself fails, surface it as a single FAIL row at the top of the report titled "Tooling unavailable" and stop — do not fall back to a different tool silently, and do not try to install anything.
+If `agent-browser` itself fails, surface it as a single FAIL row at the top of the report titled "Tooling unavailable" and stop. Do not fall back to a different tool silently, and do not try to install anything.
 
 ## Procedure
 
@@ -78,7 +68,7 @@ If `scripts/browser.sh` itself fails, surface it as a single FAIL row at the top
 5. **Walk the edge-case categories the spec likely mentions:**
    - Narrow-viewport thresholds (e.g. ≤ 960 px, ≤ 520 px, ≤ 380 px) — `agent-browser set viewport <w> <h>` and re-check the layout claims.
    - `prefers-color-scheme: dark` — `agent-browser set media dark` and re-check first-visit palette claim.
-   - Touch / coarse-pointer affordances — **not** `agent-browser set device`. That sets the viewport and the user agent; `matchMedia('(pointer: coarse)')` stays false (see `docs/knowledge/agent-browser-coarse-pointer-emulation.md`), and a click is not a tap, so a hover-only affordance still appears to work and a swallowed tap still appears to land. Drive real touch with `scripts/argent.sh` — `start <url>`, `describe`, then `touch '<css selector>'`, which taps at a 375 × 812 mobile viewport with `Input.dispatchTouchEvent` and exits 1 unless a touch reached the element. argent's own `tap <x> <y>` is a mouse press on Chromium (`pointerType: "mouse"`, no `touchstart`) in a 500 px wide window, so it proves reach and nothing about touch. Say in the report which tool produced each row. If the assertion needs touch and you could not run argent, the row is UNVERIFIABLE; do not pass it on a click.
+   - Touch / coarse-pointer affordances: **not** `agent-browser set device` or `click`, which give no touch events and no coarse pointer. Run `scripts/phone.sh start <url>`, then `scripts/phone.sh touch '<css selector>'`: it taps with `Input.dispatchTouchEvent` at a 375 × 812 mobile viewport and exits 1 unless a touch reached the element. The page is the `phone` session of `agent-browser`, so `agent-browser --session phone screenshot …` shows the result. If the assertion needs touch and you could not run it, the row is UNVERIFIABLE; do not pass it on a click.
    - URL state — `agent-browser open <url>?seed=…&palette=…`, screenshot, `agent-browser back`, re-check.
    - `prefers-reduced-motion: reduce` — try `agent-browser set media reduce-motion` first; if unsupported, mark the row UNVERIFIABLE with a note (don't fake it).
 6. **Write the report.** Markdown at `report_path`, format below.

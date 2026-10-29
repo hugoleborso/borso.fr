@@ -15,28 +15,23 @@ neither was configured anywhere, claimed a CDK synth and a mutation run that CI
 did not do, and named `eslint-comments/require-description` under an identifier
 that is not the rule's. Nothing read those names, so nothing noticed.
 
-So the names are now typed. Every bullet under `## Enforced by` opens with a
-marker in a closed vocabulary, and
-[`enforcement-ledger.md`](./enforcement-ledger.md) resolves each one against
-this checkout:
+So the names are typed. Every bullet under `## Enforced by` opens with a
+marker in a closed vocabulary:
 
-| Marker | Means | Checked by |
-| --- | --- | --- |
-| `` `oxlint:<rule>` `` | a lint rule, by its name in `.oxlintrc.json` | resolving `.oxlintrc.json` per layer, per application |
-| `` `script:<path>` `` | a shell check | the file exists and a hook or workflow runs it |
-| `` `generator:<path>` `` | a generated artefact with a `--check` | the same |
-| `` `gate:<name>` `` | a named gate | its command appears in every site it claims |
-| `` `types:<path>` `` | a compile error | the declaration is checked in |
-| `` `test:<name>` `` | a test that is the gate | the test exists |
-| `` `reviewer` `` | nothing can check it | nothing, and that is the point |
+| Marker | Means |
+| --- | --- |
+| `` `oxlint:<rule>` `` | a lint rule, by its name in `.oxlintrc.json` |
+| `` `script:<path>` `` | a shell check a hook or workflow runs |
+| `` `generator:<path>` `` | a generated artefact with a `--check` |
+| `` `gate:<name>` `` | a named gate |
+| `` `types:<path>` `` | a compile error |
+| `` `test:<name>` `` | a test that is the gate |
+| `` `reviewer` `` | nothing can check it |
 
-The ledger fails when a cited mechanism does not exist, exists and runs
-nowhere, reaches some applications and not others, or when a mechanism runs and
-no standard says why. A rule meant for one application declares that reach
-after its target, as `` `oxlint:<rule> (pragma/site)` ``; the ledger then holds
-it to the scopes it names
-([12. Linting and gates](./12-linting-and-gates.md#a-rule-meant-for-one-application)). A standard can no longer claim enforcement it does not
-have.
+Until 2026-10-29 a generated ledger resolved each marker against the checkout
+and failed a claim it could not find. It was removed with the other gates whose
+only subject was another gate, so keeping a bullet true when a mechanism is
+removed is now the author's job and the reviewer's.
 
 ## What a reviewer is for
 
@@ -44,29 +39,16 @@ The `reviewer` bullets are the residue: whether a comment says something the
 code cannot, whether a name is the one the domain uses, whether a repository is
 projecting when it should be returning rows. No rule can ask those.
 
-They are collected in the ledger under **What only a reviewer can check**, and
-that generated list is the entire scope of the
-[`/standards-review`](../../plugins/borso-harness/skills/standards-review/SKILL.md) skill.
-The reviewer never repeats what lint already did, and widening what it checks
-means writing a `reviewer` bullet in a standard rather than editing the skill.
+Every `reviewer` bullet in the numbered standards is what the
+[`technical-validator`](../../plugins/borso-harness/agents/technical-validator.md)
+agent checks besides the spec, during
+[`/technical-validation`](../../plugins/borso-harness/skills/technical-validation/SKILL.md).
+It never repeats what lint already did, and widening what it checks means
+writing a `reviewer` bullet in a standard rather than editing the agent.
 
-Because CI runs no model, the review is recorded rather than repeated: the
-agent hashes the content it cleared into [`seals.jsonl`](./seals.jsonl), and
-`scripts/standards/seal.ts verify` hashes the branch's changed files and fails
-on any hash it cannot find — no model on that side, only sha-256. Editing a
-file after sealing unseals it. Moving one does not. Rewording a standard
-invalidates the seals taken under the old wording. It is an attestation and not
-a signature, and `scripts/standards/seal.core.ts` says so at more length.
-
-`seal.ts verify` is deliberately **not** a CI gate yet, and this is the one
-place in this folder where a mechanism exists and nothing runs it. The pull
-request that introduced it changes more than four hundred files, nearly all of
-them a directory move, and requiring a seal on each would mean clearing four
-hundred files in one sitting. That is rubber-stamping, which is the failure the
-seal exists to prevent, so arming the gate on this change would have taught
-exactly the wrong habit on its first use. Wire it in the first pull request of
-ordinary size. Until then the skill is run by hand and
-`docs/standards/reviews/` holds what it found.
+CI runs no model, so the review is recorded rather than repeated: the report
+names the commit it reviewed on a `Reviewed: <sha>` line, and a later round
+reviews only what changed after that commit.
 
 Read [00. Principles](./00-principles.md) first, because it explains how to
 read the rest.
@@ -108,7 +90,8 @@ ones we intended. The [`/blueprint`](../../plugins/borso-harness/skills/blueprin
 skill creates, indexes, and validates them.
 
 A blueprint's follower count answers how widely a pattern was copied, and read
-alone it reads as success. [`blueprint-defects.md`](./blueprint-defects.md) is
+alone it reads as success. `blueprint-defects.md`, an on-demand report built by
+`scripts/reports.sh blueprints`, is
 the other half: a dantotsu may name the pattern whose shape let its defect
 through, as `blueprints: [some-id]` in its front matter, and the page ranks the
 patterns by exposure, which is followers times defects. A pattern with forty
@@ -121,10 +104,11 @@ before adding a blueprint: a layer sitting at nought per cent is either a
 pattern nobody has written down yet or a layer whose files are genuinely all
 one-offs, and those two need different responses.
 
-Both files are generated, and the pre-push hook and CI both run the generator
-in `--check` mode. That fails a blueprint missing one of its four tags, a
-duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not
-exist, and either generated file left stale.
+Both files are generated and not committed; the coverage page is on demand,
+through `scripts/reports.sh blueprints`. The pre-commit hook and CI run the
+index generator in `--check` mode. That fails a blueprint missing one of its
+four tags, a duplicated identifier, and a `// @FollowsBlueprint` naming a
+blueprint that does not exist.
 
 ## How a standard differs from a dantotsu
 

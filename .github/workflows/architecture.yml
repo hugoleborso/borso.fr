@@ -1,40 +1,36 @@
-# What a pull request does to each application's architecture, in one comment.
+# The architecture maps, on demand only. Nothing runs them automatically: the
+# build measured a median of 3.9 minutes and was the slowest check on about one
+# commit in five, for pages most pull requests never opened.
 #
-# The generator already fails a tree whose sources the manifests do not
-# describe, and the pages are rebuilt from source rather than committed. What
-# that cannot do is say what changed, because a generated HTML file diffs badly and the JSON
-# model diffs as a wall of lines. This workflow answers that: it builds the
-# model for the merge base and for the head, and reports the difference as
-# routes, externals and layers rather than as text.
+# Dispatch with `pr_number` to build that pull request's head, compare it with
+# its merge base, publish it to `architecture-pr-<n>.preview.borso.fr` and post
+# or update the comment. Dispatch without it to build `main` and publish the
+# maps to GitHub Pages through pages.yml. Dispatch from `main`: PreviewDeployRole
+# trusts `main` and pull requests, not other branches.
 #
-# The target branch does not need to carry the generator. The script runs at the
-# head revision against a worktree of the base, through `--app-root`, so a
-# branch opened before this workflow existed still gets a comparison.
+# The generator runs at the head revision against a worktree of the base,
+# through `--app-root`, so a base that predates the generator still compares.
 
 name: architecture
 
 on:
+  workflow_dispatch:
+    inputs:
+      pr_number:
+        description: 'Pull request to map. Empty maps main and publishes it to GitHub Pages.'
+        required: false
+        type: string
+  # Only for the teardown below: a closed pull request's published maps go.
   pull_request:
-    # `closed` is here for the teardown below, and it is the only reason the
-    # default set is spelled out: naming any type at all replaces the default.
-    types: [opened, synchronize, reopened, closed]
-    paths:
-      - 'apps/**'
-      - 'scripts/architecture/**'
-      - '.claude/skills/blueprint/blueprint-utils.ts'
-      - '.github/workflows/architecture.yml'
+    types: [closed]
 
 concurrency:
-  group: architecture-${{ github.ref }}
+  group: architecture-${{ inputs.pr_number || github.event.pull_request.number || 'main' }}
   cancel-in-progress: true
 
 permissions:
   contents: read
   pull-requests: write
-  # Minting an OIDC token is what lets the publish step assume
-  # PreviewDeployRole. That is the same role preview.yml uses, and its trust
-  # policy already names `pull_request`, so no permission had to be granted in
-  # AWS to add this.
   id-token: write
 
 env:
@@ -42,11 +38,24 @@ env:
 
 jobs:
   architecture:
-    if: github.event.action != 'closed'
+    if: github.event_name == 'workflow_dispatch' && inputs.pr_number != ''
     runs-on: ubuntu-latest
+    env:
+      PR_NUMBER: ${{ inputs.pr_number }}
+      GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+      GH_REPO: ${{ github.repository }}
     steps:
+      - name: Resolve the pull request
+        id: target
+        run: |
+          set -euo pipefail
+          case "$PR_NUMBER" in
+            '' | *[!0-9]*) echo "::error::pr_number must be a number, got '$PR_NUMBER'"; exit 1 ;;
+          esac
+          echo "base_ref=$(gh pr view "$PR_NUMBER" --json baseRefName --jq .baseRefName)" >> "$GITHUB_OUTPUT"
       - uses: actions/checkout@v7
         with:
+          ref: refs/pull/${{ inputs.pr_number }}/head
           fetch-depth: 0
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7
@@ -56,7 +65,8 @@ jobs:
       - run: pnpm install --frozen-lockfile
 
       # The pages are not committed, so this produces them for the artifact
-      # below. It also refuses what `--check` would, since every refusal fires
+      # below. It also refuses what `--check` would, an undeclared
+      # `@DependsOnExternal` and the reverse included, since every refusal fires
       # without the flag, so a second `--check` run would only repeat the build.
       - name: Build the head model
         run: pnpm exec tsx scripts/architecture/architecture-graph.ts
@@ -65,10 +75,12 @@ jobs:
       # The merge base rather than the branch tip, so the comparison describes
       # this pull request and not whatever else landed on the target meanwhile.
       - name: Build the target-branch models and diff them
+        env:
+          BASE_REF: ${{ steps.target.outputs.base_ref }}
         run: |
           set -euo pipefail
-          base_sha="$(git merge-base "origin/${{ github.base_ref }}" HEAD)"
-          echo "Comparing against $base_sha on ${{ github.base_ref }}"
+          base_sha="$(git merge-base "origin/$BASE_REF" HEAD)"
+          echo "Comparing against $base_sha on $BASE_REF"
           git worktree add --detach ../architecture-base "$base_sha"
           : > /tmp/architecture-diff.md
           for app in $(pnpm exec tsx scripts/architecture/architecture-graph.ts --list); do
@@ -103,8 +115,8 @@ jobs:
       # `<name>-pr-<n>` host and serves `/<name>/pr-<n>/` from the previews
       # bucket, so `architecture` is just another name to it: no bucket, no
       # distribution, no certificate and no DNS record had to be added. Objects
-      # in that bucket expire after 60 days on their own, which is why nothing
-      # here tears them down.
+      # in that bucket expire after 60 days, and the teardown job below removes
+      # them when the pull request closes.
       #
       # Both steps may fail without failing the report. AWS being unreachable
       # is not a reason to lose the diff comment, and the artifact below still
@@ -127,7 +139,7 @@ jobs:
             --query Parameter.Value --output text)"
           distribution="$(aws ssm get-parameter --name /borso/shared/previews-distribution-id \
             --query Parameter.Value --output text)"
-          prefix="architecture/pr-${{ github.event.pull_request.number }}"
+          prefix="architecture/pr-$PR_NUMBER"
           aws s3 sync docs/architecture "s3://$bucket/$prefix/" --delete --only-show-errors
           # A push writes the same keys, and the edge would go on serving the
           # previous maps for its default TTL without this.
@@ -157,7 +169,8 @@ jobs:
             const fs = require('node:fs');
             const marker = '<!-- architecture-diff -->';
             const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
-            const site = `https://architecture-pr-${context.issue.number}.preview.borso.fr`;
+            const prNumber = Number(process.env.PR_NUMBER);
+            const site = `https://architecture-pr-${prNumber}.preview.borso.fr`;
             const isPublished = '${{ steps.publish.outcome }}' === 'success';
             // The counts only. The full report — routes added, files moved,
             // externals reached — is in the job summary and on the maps
@@ -204,7 +217,7 @@ jobs:
               `<sub>Files added, edited and removed per application. The full report is in the <a href="${runUrl}">job summary</a>.</sub>`,
             ].join('\n');
             const { owner, repo } = context.repo;
-            const issue_number = context.issue.number;
+            const issue_number = prNumber;
             const comments = await github.paginate(github.rest.issues.listComments, {
               owner, repo, issue_number, per_page: 100,
             });
@@ -231,11 +244,21 @@ jobs:
             }
             await github.rest.issues.updateComment({ owner, repo, comment_id: existing.id, body });
 
+  main:
+    if: github.event_name == 'workflow_dispatch' && inputs.pr_number == ''
+    permissions:
+      contents: read
+      pages: write
+      id-token: write
+    uses: ./.github/workflows/pages.yml
+    with:
+      maps: true
+
   # The maps of a pull request that is over are dead weight at a live address.
   # The bucket would expire them after sixty days on its own, which is a long
   # time to serve a merged branch's architecture to anyone who kept the link.
   teardown:
-    if: github.event.action == 'closed'
+    if: github.event_name == 'pull_request'
     runs-on: ubuntu-latest
     steps:
       - name: Authenticate to AWS

@@ -1,8 +1,8 @@
 ---
-summary: '`agent-browser set device` does not make `(pointer: coarse)` match; touch assertions need `scripts/argent.sh touch <selector>`, which emulates touch and sends `Input.dispatchTouchEvent` (argent''s own tap is a mouse press).'
+summary: '`agent-browser set device` does not make `(pointer: coarse)` match; touch assertions need `scripts/phone.sh touch <selector>`, which emulates touch and sends `Input.dispatchTouchEvent`.'
 triggers:
   commands:
-    - '(agent-browser|scripts/browser\.sh)\s+(\S+\s+)*set\s+device\b'
+    - 'agent-browser\s+(\S+\s+)*set\s+device\b'
     - 'pointer:\s*coarse'
 ---
 
@@ -45,7 +45,9 @@ These are exactly the assertions a visual-validation run wants to verify, and ex
 
 ## What to do
 
-The validator should mark the row UNVERIFIABLE with a one-line note and **not** assert from source-code review alone — the standard forbids that. Closing the gap belongs to one of:
+For a tap, run `scripts/phone.sh touch '<css selector>'`: it turns on touch emulation in the same CDP session, so the page sees `pointer: coarse` while the tap lands, and it fails unless a touch reached the element. A coarse-pointer read at mount time is not covered, because the emulation ends with that session; see [`real-touch-gestures-over-cdp.md`](./real-touch-gestures-over-cdp.md).
+
+Otherwise the validator should mark the row UNVERIFIABLE with a one-line note and **not** assert from source-code review alone — the standard forbids that. Closing the gap belongs to one of:
 
 1. **Extract the `matchMedia` lookup into a pure utility** (`device.utils.ts` or similar) that takes a `matchMedia` implementation as a parameter. Test it in Vitest with a stubbed `matchMedia`. The React hook stays a thin wrapper. Lowest blast radius — no new dev deps. Recommended.
 2. **Add `@testing-library/react`** to the workspace devDeps, write a `renderHook` test that calls the hook against a stubbed `matchMedia`. Bigger lift (3 packages, a vitest setup file, a new conceptual surface — React component / hook tests). Worth it only if the workspace already wants RTL for other reasons.

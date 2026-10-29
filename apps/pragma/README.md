@@ -7,8 +7,8 @@ Single-stakeholder app — five band members behind a shared password (ADR-0004)
 ## Scripts
 
 - `pnpm dev` — boots the Docker-less local Postgres + Hono API + Vite site.
-- `pnpm test:core` — runs the pure-helper + CDK construct gate at 100% coverage on every `*.core.ts` / `*.utils.ts`.
-- `pnpm test` — runs the back-e2e suite against the local Postgres.
+- `pnpm test:core` — runs the pure-helper + CDK construct gate at 100% coverage on every `*.core.ts` / `*.utils.ts`. CI runs it; locally run `pnpm exec vitest run --project core --changed <base>`.
+- `pnpm test:e2e` — runs the back-e2e suite against the local Postgres. CI runs the whole suite; locally run `pnpm test:e2e --changed <base>` or `pnpm test:e2e <path>`.
 - `pnpm typecheck` / `pnpm lint` — gates.
 - `pnpm build` / `pnpm synth` — production build + CDK template.
 

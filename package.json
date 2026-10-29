@@ -14,7 +14,7 @@
     "lint": "scripts/lint-repository.sh",
     "lint:fix": "scripts/lint-repository.sh --fix",
     "prepare": "husky",
-    "test:coverage": "vitest run --coverage",
+    "test:full-suite": "vitest run",
     "test:eslint-rules": "vitest run",
     "test:mutation": "stryker run",
     "typecheck": "tsc -p tsconfig.json --noEmit"
@@ -25,7 +25,6 @@
     "@eslint-community/eslint-plugin-eslint-comments": "4.7.2",
     "@stryker-mutator/core": "catalog:",
     "@stryker-mutator/vitest-runner": "catalog:",
-    "@swmansion/argent": "0.22.1",
     "@types/node": "catalog:",
     "@vitest/coverage-v8": "catalog:",
     "agent-browser": "0.35.2",

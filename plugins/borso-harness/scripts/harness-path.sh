@@ -39,10 +39,8 @@ features	docs/features
 kaizenFile	KAIZEN.md
 blueprintIndex	.claude/skills/blueprint/blueprint-index.md
 reports	scripts/reports.sh
-seal	scripts/standards/seal.ts
 prBodyCheck	scripts/pr/check-pr-body.ts
-browser	scripts/browser.sh
-argent	scripts/argent.sh'
+phone	scripts/phone.sh'
 
 resolve() {
   local key="$1" fallback="$2"

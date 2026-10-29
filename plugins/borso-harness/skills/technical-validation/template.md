@@ -23,17 +23,21 @@ INPUTS:
 - base_ref:     {{base_ref}}         # e.g. origin/main
 - app_pkg:      {{app_pkg}}          # e.g. @borso-app/borso-fr
 - report_path:  {{report_path}}      # absolute path you must write to
+- round:        {{round}}            # 1 or 2
+- previous_report: {{previous_report}}  # round 2 only: the round-1 report
 
 Read the spec, read the plan if present, resolve the diff against base_ref, and walk the five validation categories per your standard:
   A. Correctness vs spec
-  B. Code cleanliness (repo rules + eslint + knip)
+  B. Code cleanliness (repo rules, oxlint, knip, and every `reviewer` bullet of the `## Enforced by` sections in docs/standards/)
   C. Tests pass
   D. Test coverage of spec
   E. Scale (required): check-then-write races, per-process state, concurrent tests
 
-Every FAIL row states a concrete failing case: this input leads to this wrong result. A concern without one goes in Notes as a question.
+Every FAIL row states a concrete failing case: this input leads to this wrong result, and is typed blocking or non-blocking. A concern without one goes in Notes as a question.
 
-Run lint and tests; do not assume. Quote code with file:line. Tag every row PASS / FAIL / UNVERIFIABLE. Aggregate to PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL.
+Round 2 reviews only `git diff <Reviewed sha of previous_report>..HEAD` and re-checks each round-1 blocking finding.
+
+Run lint and tests; do not assume. Quote code with file:line. Tag every row PASS / FAIL (blocking) / FAIL (non-blocking) / UNVERIFIABLE. Aggregate to PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL.
 
 Write the report at report_path. Return only the report path.
 
@@ -56,25 +60,27 @@ The agent writes this at `docs/features/<app>/<slug>/validation/technical-valida
 - Branch: <current branch>
 - Base: <base_ref>
 - Run at: <ISO 8601 timestamp>
+- Round: <1 | 2>
+- Reviewed: <full SHA of HEAD when the review started>
 - Touched workspaces: <list>
 
 ## A. Correctness vs spec
 
 | # | Spec ref | Claim | Code (file:line) | Evidence (quoted) | Verdict |
 |---|---|---|---|---|---|
-| A01 | Q5 | <verbatim claim> | apps/.../X.tsx:NN | `…` | PASS / FAIL / UNVERIFIABLE |
+| A01 | Q5 | <verbatim claim> | apps/.../X.tsx:NN | `…` | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
 
 ## B. Code cleanliness
 
 | # | Rule | Check | Evidence | Verdict |
 |---|---|---|---|---|
-| B01 | <rule> | <how checked> | <result> | PASS / FAIL / UNVERIFIABLE |
+| B01 | <rule> | <how checked> | <result> | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
 
 ## C. Tests pass
 
 | # | Workspace | Command | Exit | Verdict |
 |---|---|---|---|---|
-| C01 | @borso-app/<app> | `pnpm --filter @borso-app/<app> run test` | 0 / N | PASS / FAIL / UNVERIFIABLE |
+| C01 | @borso-app/<app> | `pnpm --filter @borso-app/<app> exec vitest run --project core --changed <base>`, then `run test:e2e --changed <base>` | 0 / N | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
 
 ## D. Test coverage of spec
 
@@ -86,11 +92,19 @@ The agent writes this at `docs/features/<app>/<slug>/validation/technical-valida
 
 | # | Write path or state | Question | Failing case, or the key or test that holds it | Verdict |
 |---|---|---|---|---|
-| E01 | <service function → write> | Check-then-write / per-process state / concurrent proof | <two requests → wrong result, or the key and the test> | PASS / FAIL / UNVERIFIABLE |
+| E01 | <service function → write> | Check-then-write / per-process state / concurrent proof | <two requests → wrong result, or the key and the test> | PASS / FAIL (blocking or non-blocking) / UNVERIFIABLE |
+
+## Blocking findings
+
+- <row #> — <one line>
+
+## Non-blocking findings
+
+- <row #> — <one line>
 
 ## Notes
 
-> *One bullet per FAIL or UNVERIFIABLE row, expanding what was observed and what was missing, plus any concern with no failing case yet, phrased as a question. PASS rows do not need a note.*
+> *One bullet per UNVERIFIABLE row, plus any concern with no failing case yet, phrased as a question.*
 
 -
 

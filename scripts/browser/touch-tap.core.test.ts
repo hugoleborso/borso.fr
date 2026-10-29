@@ -3,9 +3,10 @@ import {
   findPageTarget,
   judgeTouchTap,
   parseCdpReply,
-  parseRecordedEvents,
   parseTapPoint,
   parseTouchTapArguments,
+  readReportedEvent,
+  TOUCH_TAP_BINDING,
 } from './touch-tap.core';
 
 const REAL_TAP = [
@@ -154,18 +155,31 @@ describe('parseTapPoint', () => {
   });
 });
 
-describe('parseRecordedEvents', () => {
-  it('reads the events the page recorded', () => {
-    expect(parseRecordedEvents({ events: REAL_TAP, innerWidth: 375 })).toStrictEqual(REAL_TAP);
+function bindingMessage(name: string, payload: string): string {
+  return JSON.stringify({ method: 'Runtime.bindingCalled', params: { name, payload } });
+}
+
+describe('readReportedEvent', () => {
+  it('reads an event the page reported through the binding', () => {
+    const event = { type: 'click', pointerType: 'touch', isOnTarget: true };
+    expect(
+      readReportedEvent(bindingMessage(TOUCH_TAP_BINDING, JSON.stringify(event))),
+    ).toStrictEqual(event);
   });
 
-  it('refuses an event missing a field the verdict reads', () => {
-    expect(() =>
-      parseRecordedEvents({ events: [{ type: 'click', pointerType: 'touch' }] }),
-    ).toThrow();
+  it('ignores a call to another binding', () => {
+    const event = { type: 'click', pointerType: 'touch', isOnTarget: true };
+    expect(readReportedEvent(bindingMessage('somethingElse', JSON.stringify(event)))).toBeNull();
   });
 
-  it('refuses a log with no events', () => {
-    expect(() => parseRecordedEvents({ innerWidth: 375 })).toThrow();
+  it('ignores a reply and any other protocol event', () => {
+    expect(readReportedEvent(JSON.stringify({ id: 3, result: {} }))).toBeNull();
+    expect(
+      readReportedEvent(JSON.stringify({ method: 'Runtime.consoleAPICalled', params: {} })),
+    ).toBeNull();
+  });
+
+  it('ignores a payload that is not an input event', () => {
+    expect(readReportedEvent(bindingMessage(TOUCH_TAP_BINDING, '{"type":"click"}'))).toBeNull();
   });
 });

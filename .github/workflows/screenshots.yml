@@ -1,15 +1,18 @@
 # Validation screenshots, shown inline on the pull request they belong to.
 #
-# `/open-pr` uploads a passing run's PNGs to the previews bucket under
+# `/open-pr` uploads a passing run's PNG and GIF files, and any WebM or MP4
+# recording, to the previews bucket under
 # `screenshots/pr-<n>/<folder>/` (ADR-0023). The pull request body can only
 # link that folder: the GitHub MCP server rewrites an image in a body or in a
 # comment it posts, so an agent cannot put a picture in front of the reviewer
 # itself. A comment written here, with GITHUB_TOKEN, never passes through that
-# server, so its images render. See docs/knowledge/github-mcp-pr-body-sanitizer.md.
+# server, so its images render. GitHub renders an animated GIF from an outside
+# URL inline but never plays a video from one, so a recording is a link line.
+# See docs/knowledge/github-mcp-pr-body-sanitizer.md.
 #
 # Two triggers. `workflow_dispatch` is how `/open-pr` asks for the comment right
 # after uploading, with `ref: main`; `pull_request` refreshes it on every push
-# and is a no-op, without even a checkout, while the prefix holds no PNG.
+# and is a no-op, without even a checkout, while the prefix holds none of those.
 
 name: screenshots
 
@@ -59,7 +62,7 @@ jobs:
           role-to-assume: ${{ vars.PREVIEW_DEPLOY_ROLE_ARN }}
           aws-region: ${{ vars.AWS_REGION }}
 
-      - name: List the published screenshots
+      - name: List the published screenshots and recordings
         id: listing
         run: |
           set -euo pipefail
@@ -67,9 +70,9 @@ jobs:
             --query Parameter.Value --output text)"
           aws s3api list-objects-v2 --bucket "$bucket" \
             --prefix "screenshots/pr-$PR_NUMBER/" --output json > "$RUNNER_TEMP/listing.json"
-          count="$(jq '[.Contents[]? | select(.Key | endswith(".png"))] | length' \
+          count="$(jq '[.Contents[]? | select(.Key | test("\\.(png|gif|webm|mp4)$"))] | length' \
             "$RUNNER_TEMP/listing.json")"
-          echo "Found $count PNG files under screenshots/pr-$PR_NUMBER/"
+          echo "Found $count PNG, GIF, WebM or MP4 files under screenshots/pr-$PR_NUMBER/"
           echo "count=$count" >> "$GITHUB_OUTPUT"
 
       - if: steps.listing.outputs.count != '0'

@@ -178,6 +178,23 @@ const REPORT_LIMIT = 25;
 export interface CouplingReport extends PartitionedPairs {
   readonly commitWindow: number;
   readonly headRevision: string;
+  readonly isGraphRead: boolean;
+}
+
+function describeUncoveredPairs(report: CouplingReport): readonly string[] {
+  const count = String(report.uncovered.length);
+  if (!report.isGraphRead) {
+    return [
+      `${count} pair(s) are left out because no module graph was read. The architecture`,
+      'maps run on demand only; run `scripts/reports.sh maps` before this report to',
+      'see which of them nothing connects.',
+    ];
+  }
+  return [
+    `${count} pair(s) are left out because the module graph does not`,
+    'describe one of the two files: deleted, renamed, or in a workspace the graph',
+    'does not model. Nothing can be said about a connection that never existed.',
+  ];
 }
 
 export function renderCouplingReport(report: CouplingReport): string {
@@ -205,9 +222,7 @@ export function renderCouplingReport(report: CouplingReport): string {
     '',
     `Read at \`${report.headRevision}\`, from the last ${String(report.commitWindow)} commit(s).`,
     '',
-    `${String(report.uncovered.length)} pair(s) are left out because the module graph does not`,
-    'describe one of the two files: deleted, renamed, or in a workspace the graph',
-    'does not model. Nothing can be said about a connection that never existed.',
+    ...describeUncoveredPairs(report),
     '',
   ];
 

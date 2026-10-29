@@ -53,7 +53,7 @@ df -h /tmp
 ```
 
 On this volume the cleanup released ~29 GB and the next
-`pnpm --filter @borso/infra run test:coverage` ran green.
+`pnpm --filter @borso/infra run test:full-suite` ran green.
 
 ## Prevention (now wired)
 

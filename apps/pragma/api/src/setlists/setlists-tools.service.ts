@@ -149,7 +149,7 @@ export async function resolveEntryId(setlistId: string, reference: string): Prom
 export interface ReorderReferences {
   readonly order?: readonly string[] | undefined;
   readonly move?: { readonly entry: string; readonly position: number } | undefined;
-  readonly swap?: readonly [string, string] | undefined;
+  readonly swap?: readonly string[] | undefined;
 }
 
 async function resolveReorderRequest(

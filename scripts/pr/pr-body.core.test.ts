@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   countable,
   readDeletedPlaceholders,
+  readSiteHostApiAddresses,
   isSeparatorRow,
   LIMITS,
   parseBody,
@@ -176,6 +177,42 @@ describe('readDeletedPlaceholders', () => {
 
   it('finds nothing when the body has no code span at all', () => {
     expect(readDeletedPlaceholders('plain prose')).toEqual([]);
+  });
+});
+
+describe('readSiteHostApiAddresses', () => {
+  it('finds the MCP address written on the preview site host', () => {
+    expect(
+      readSiteHostApiAddresses('claude mcp add pragma https://pragma-pr-206.preview.borso.fr/mcp'),
+    ).toEqual(['https://pragma-pr-206.preview.borso.fr/mcp']);
+  });
+
+  it('finds an API, OAuth or well-known path on the site host', () => {
+    expect(
+      readSiteHostApiAddresses(
+        [
+          'https://pragma-pr-7.preview.borso.fr/api/songs',
+          'https://pragma-pr-7.preview.borso.fr/oauth/token',
+          'https://pragma-pr-7.preview.borso.fr/.well-known/oauth-authorization-server',
+        ].join(' '),
+      ),
+    ).toHaveLength(3);
+  });
+
+  it('accepts the same path on the -api host', () => {
+    expect(readSiteHostApiAddresses('https://pragma-pr-206-api.preview.borso.fr/mcp')).toEqual([]);
+  });
+
+  it('accepts a page of the site and the screenshots host', () => {
+    expect(
+      readSiteHostApiAddresses(
+        'https://pragma-pr-206.preview.borso.fr/account https://screenshots-pr-206.preview.borso.fr/2026-10-27-1440/',
+      ),
+    ).toEqual([]);
+  });
+
+  it('accepts a page whose name only starts like an API path', () => {
+    expect(readSiteHostApiAddresses('https://pragma-pr-206.preview.borso.fr/mcpx')).toEqual([]);
   });
 });
 
@@ -528,6 +565,28 @@ describe('the exact words a violation carries', () => {
     expect(validateBody(draft(MINIMAL, '## Validation', ...items))).toEqual([
       { where: 'Validation', problem: '11 items, limit 10' },
     ]);
+  });
+
+  it('tells the author the preview API lives on the -api host', () => {
+    const address = 'https://pragma-pr-206.preview.borso.fr/mcp';
+    expect(
+      validateBody(
+        draft(
+          MINIMAL,
+          '## Before merge',
+          '### Smoke',
+          '',
+          'Run it.',
+          '',
+          '```sh',
+          `claude mcp add ${address}`,
+          '```',
+        ),
+      ),
+    ).toContainEqual({
+      where: 'Body',
+      problem: `${address} names the preview's site host, which answers an API path with the app's index.html; the API is on the -api host`,
+    });
   });
 
   it('tells the author to write a literal value in place of the placeholder', () => {

@@ -125,9 +125,8 @@ orchestrator caught it (the spec checksum changed) and aborted the run.
 ### Symptom: pre-commit / pre-push hook failed at `ship`
 
 The orchestrator treats this as a `fail-local` verdict and re-enters
-the arbitrate stage with `retries.implement++`. If the hook keeps
-failing, the orchestrator will eventually escalate (cap = 3 by
-default, override via `TECH_LEAD_MAX_RETRIES`). **Never** invoke the
+the arbitrate stage with `retries.implement++`. If the hook still
+fails after the second review round, the orchestrator escalates. **Never** invoke the
 orchestrator with `--no-verify` semantics — CLAUDE.md *Hooks* rule.
 
 ## Dogfooding

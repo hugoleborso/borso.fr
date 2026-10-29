@@ -1,7 +1,7 @@
 # ADR template
 
 The skill emits one ADR per `/adr` invocation, written to
-`docs/adr/<NNNN>-<kebab-slug>.md` using the layout below. The standard at
+`docs/adr/<id>-<kebab-slug>.md`, where `<id>` is `date -u +%Y%m%d%H%M`, using the layout below. The standard at
 [`standard.md`](./standard.md) explains *why* each section is mandatory; this
 template gives the *what*.
 
@@ -12,7 +12,7 @@ qualifies).
 ---
 
 ```markdown
-# ADR-{{NNNN}}: {{short title — chosen path, not the question}}
+# ADR-{{id}}: {{short title — chosen path, not the question}}
 
 - **Status:** proposed
 - **Date:** {{YYYY-MM-DD}}
@@ -102,7 +102,7 @@ operational reality, or a prior ADR / Dantotsu}} |
 
 What changed: {{...}}
 Why: {{...}}
-Implication for the original decision: still valid \| re-evaluate \| supersede with ADR-NNNN
+Implication for the original decision: still valid \| re-evaluate \| supersede with ADR-<id>
 -->
 ```
 
@@ -115,7 +115,7 @@ After writing the ADR file, the skill appends one line to
 Observability, Data, …). Mirror the format of `docs/dantotsus/README.md`:
 
 ```markdown
-- [`NNNN-kebab-slug.md`](./NNNN-kebab-slug.md) — one-line summary
+- [`<id>-kebab-slug.md`](./<id>-kebab-slug.md) — one-line summary
   including the chosen path. Example: "Aurora DSQL over RDS Postgres
   for race-day persistence; idle cost dominated."
 ```

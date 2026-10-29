@@ -1,24 +1,18 @@
 ---
-summary: 'A 375 px Chromium resize is not a phone test; on Chromium argent''s taps are mouse presses, so a real tap here is `scripts/argent.sh touch <selector>`, and the sandbox has no `/dev/kvm` and no Xcode for simulators.'
+summary: 'A 375 px Chromium resize is not a phone test; a real tap here is `scripts/phone.sh touch <selector>`, and the sandbox has no `/dev/kvm` and no Xcode for simulators or emulators.'
 triggers:
   commands:
-    - '\bargent\b'
-    - 'scripts/argent\.sh'
+    - 'scripts/phone\.sh'
+    - '\bset viewport 3[0-9][0-9]\b'
+    - '\b(adb|xcrun simctl)\b'
 ---
 
-# Agentic device testing with argent
+# Testing on a phone from an agent session
 
-`@swmansion/argent` is the agentic toolkit this repository uses to drive real
-devices. It gives an agent direct control of iOS Simulators, Android emulators
-and physical devices over adb, TVs, and Electron or Chromium apps over the
-Chrome DevTools Protocol. It is a root devDependency, so `pnpm exec argent` works
-from anywhere in the workspace.
-
-`agent-browser` is also installed and is what
-[`/visual-validation`](../../plugins/borso-harness/skills/visual-validation/SKILL.md) drives.
-The two do different jobs. Use `agent-browser` for a desktop browser check
-against a specification, and use `argent` when the question is about a phone, a
-tablet, or a TV, because a viewport resize is not a device.
+[`/visual-validation`](../../plugins/borso-harness/skills/visual-validation/SKILL.md)
+drives `agent-browser`, a desktop Chromium. Use it for the layout at 375 px, and
+use `scripts/phone.sh touch` when the question is about touch, because a
+viewport resize is not a device.
 
 ## The difference between a viewport and a device
 
@@ -45,27 +39,17 @@ gesture involved, and nothing for a touch pass to find. See
 Real device pixel ratios change how a hairline border and a small font actually
 render.
 
-So a 375 pixel Chromium pass is a cheap first filter, and argent against a
-simulator or an emulator is the real check.
-
-## What argent needs on the host
-
-| Target | Needs |
-|--------|-------|
-| iOS Simulator | macOS with Xcode installed |
-| Android emulator | `adb` and the Android Emulator package on `PATH`, plus `/dev/kvm` |
-| Android physical device | `adb`, and the device in developer mode |
-| Chromium and Electron | Nothing beyond the browser, driven over the DevTools Protocol |
+So a 375 pixel Chromium pass is a cheap first filter, and a simulator, an
+emulator or a real phone is the real check.
 
 ## What does not work in the Claude Code web sandbox
 
 The sandbox this repository's agent sessions run in is Linux x86_64 with no
 `/dev/kvm`, no Android SDK platform tools, and no macOS. So an agent session on
-the web can drive argent's Chromium target and nothing else.
+the web can drive Chromium and nothing else.
 
 Last verified: 2026-08-15 — `uname -sm` answered `Linux x86_64`, `ls /dev/kvm`
-found nothing, and neither `adb` nor `emulator` is on `PATH`. The Chromium
-target itself was driven end to end the same day, gestures included.
+found nothing, and neither `adb` nor `emulator` is on `PATH`.
 
 Checking for the constraint before starting:
 
@@ -82,32 +66,18 @@ four differences above are exactly what the phone pass exists to catch.
 Real device runs therefore happen on the operator's own machine, and CI keeps
 the Chromium viewport pass.
 
-## Running argent
+## A real tap in the sandbox
 
 ```bash
-scripts/argent.sh start http://localhost:5174/
-scripts/argent.sh describe
-scripts/argent.sh tap 0.5 0.95
-scripts/argent.sh stop
+scripts/phone.sh start http://localhost:5174/
+scripts/phone.sh touch '[aria-label="Stop"]'
+scripts/phone.sh stop
 ```
 
-[`scripts/argent.sh`](../../scripts/argent.sh) is the way in. Starting argent by
-hand needs a Chromium of its own, the proxy stripped from that browser, and a
-tool-server on a port that is not 3001; each of those has cost a session, and
-the script does all three. `scripts/argent.sh run <anything>` passes through to
-`argent run` with the device already named, so the full tool surface stays
-reachable — ask it what it can do with `pnpm exec argent --help` rather than
-guessing flags, the same habit
-[`agent-browser-cli-quirks.md`](./agent-browser-cli-quirks.md) records for the
-other tool.
-
-**Touch gestures work on the sandbox's Chromium target.** `gesture-tap`,
-`keyboard` and `describe` were re-verified end to end against a local `pragma`:
-tap, type, tap logged in, opened a drawer, closed it, changed tab and left a
-full-screen view, with no timeout. This repository carried a note saying
-`gesture-tap` was broken here, and two phone audits believed it and sent no
-touch events at all. See
-[`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md).
+`touch` sends `Input.dispatchTouchEvent` at a 375 × 812 mobile viewport with
+touch emulation, so the page sees `pointer: coarse` and a click with
+`pointerType: "touch"`, and it exits 1 unless the touch reached the element.
+See [`driving-previews-with-agent-browser-and-argent.md`](./driving-previews-with-agent-browser-and-argent.md).
 
 ## Device profiles we check
 
@@ -131,9 +101,3 @@ Text or a control is clipped, or two elements overlap. A tap target is smaller
 than about 44 by 44 CSS pixels. Content sits behind a fixed header or a bottom
 bar. Something is reachable only by hovering. The console reports an error, or a
 request fails.
-
-## The name
-
-The npm package `argent` is an unrelated optional-parameter helper last
-published in 2018. The tool is `@swmansion/argent`, from Software Mansion, and
-its home page is https://argent.swmansion.com.

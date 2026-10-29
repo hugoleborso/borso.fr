@@ -65,12 +65,9 @@ the actions in [`plugins/borso-harness/commands/feature-pipeline.md`](../../plug
 - `spec-thin-on-tech-surface` — `/technical-conception` couldn't produce
   a plan because the spec's Q.O.D. is too thin. Run `/specification`
   in chat to deepen, then re-launch.
-- `stuck-loop` — a fix-round closed 0 blockers. Inspect the verdict at
-  `runs/<run-id>/agents/technical-validation-<NN>.md` to see what didn't
-  move; decide whether to re-spec, drop the blocker, or escalate by hand.
-- `regression-net-negative` — a fix-round added strictly more new FAILs
-  than it closed. The latest implementation verdict has the diff against
-  the prior verdict; revert + re-plan.
+- `needs-operator` — blocking findings remain after the second technical
+  round, or after the one visual re-run. The outcome names the report;
+  decide each finding: fix by hand, dismiss with a reason, or re-spec.
 
 ## Save the script after the first successful run
 

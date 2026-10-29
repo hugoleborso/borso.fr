@@ -29,13 +29,13 @@ Same lineage as `specification` and `technical-conception`: catch defects at the
 
 A visible defect that ships erodes trust faster than any other kind. The user sees it. They tell their friends. They don't open a Sentry ticket — they leave. Visual validation is the cheapest gate against that class of damage.
 
-## Tooling: `scripts/browser.sh`
+## Tooling: `agent-browser`
 
-The validator uses [`agent-browser`](https://github.com/vercel-labs/agent-browser) — a Rust CLI that exposes browser control to LLM agents — through the [`scripts/browser.sh`](../../../../scripts/browser.sh) wrapper, which carries the browser path and the TLS flag this sandbox needs and passes everything else through. What the CLI gives an agent:
+The validator calls [`agent-browser`](https://github.com/vercel-labs/agent-browser), a Rust CLI that exposes browser control to LLM agents, directly. What it gives an agent:
 
-- **Reference-based snapshots.** `scripts/browser.sh snapshot -i --json` returns the accessibility tree with `@e1`, `@e2` refs. The agent acts on refs, not CSS selectors. This eliminates a category of selector-fragility that plagues Playwright in agent hands.
+- **Reference-based snapshots.** `agent-browser snapshot -i --json` returns the accessibility tree with `@e1`, `@e2` refs. The agent acts on refs, not CSS selectors. This eliminates a category of selector-fragility that plagues Playwright in agent hands.
 - **Stateful daemon.** A persistent process holds the browser session; commands are individual shell calls. The agent's loop is "snapshot → reason → act → re-snapshot", which matches LLM affordances.
-- **Built-in emulation.** `set viewport`, `set device`, `set media [dark|light]` cover the spec's edge-case checklist without scripting. They do not cover touch: `set device` sets the viewport and the user agent, leaves `matchMedia('(pointer: coarse)')` false, and a click is still a click. An assertion about tap behaviour, thumb reach or a gesture is answered with `scripts/argent.sh touch '<css selector>'`, which sends `Input.dispatchTouchEvent` at a 375 × 812 mobile viewport and fails unless a touch reached the element, or it is UNVERIFIABLE. argent's own `tap` and `gesture-tap` are a mouse press on Chromium and prove reach only.
+- **Built-in emulation.** `set viewport`, `set device`, `set media [dark|light]` cover the spec's edge-case checklist without scripting. They do not cover touch: `set device` leaves `matchMedia('(pointer: coarse)')` false, and a click is still a mouse press. An assertion about tap behaviour is answered with `scripts/phone.sh touch '<css selector>'`, which sends `Input.dispatchTouchEvent` at a 375 × 812 mobile viewport and fails unless a touch reached the element, or it is UNVERIFIABLE.
 
 Playwright would have worked for this skill, but agent-browser is *shaped* for LLMs. The validation reports are richer because the agent isn't fighting an imperative JS API.
 

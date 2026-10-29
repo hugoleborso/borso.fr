@@ -3,7 +3,7 @@ name: technical-conception
 description: Translate a finished feature `spec.md` into a precise, exhaustive `plan.md` that maps every spec decision to where it lands in code, names every risk with detection + mitigation, and lists the pre-flight gates the implementation will pass before push. Use when the user says "write the plan", "technical conception", "/technical-conception", "spec is done, plan it", or otherwise asks for the engineering plan of an already-specified feature. Skip when there is no `spec.md`, when the spec still carries a `> ⚠️ Missing <perspective>` flag, or when the work is small enough to ship without a plan (one-line bug fix, dependency bump). The plan is **not** a hand-off artefact — it is an early quality check that a future Dantotsu can trace defects back to. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/technical-conception/standard.md` before producing one.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Technical-conception skill
 
@@ -83,13 +83,12 @@ Section names match the canonical template at [`template.md`](./template.md).
 ## Pre-flight gates
 
 Run, in order, before push:
-1. `pnpm install`.
-2. `pnpm --filter <pkg> typecheck`.
-3. `pnpm exec eslint --no-warn-ignored --max-warnings 0`.
-4. `pnpm --filter <pkg> build`.
-5. (UI work only) `/visual-validation` against the spec.
-6. `pnpm exec knip` — no unused entries.
-7. (Test-bearing code only) `/technical-validation` for the code-review pass.
+1. `pnpm --filter <pkg> build`.
+2. The checks this feature needs and no hook runs, one per line.
+3. (UI work only) `/visual-validation` against the spec.
+4. (Test-bearing code only) `/technical-validation` for the code-review pass.
+
+Generator `--check` gates (architecture-graph, blueprint, convention-drift, `reports.sh`) are not pre-flight gates, and neither are `pnpm install`, typecheck, lint or knip. Pre-commit, pre-push and CI already run them. A plan copied from an older plan drops them.
 
 ## Open questions / unknowns
 
@@ -100,7 +99,7 @@ Run, in order, before push:
 - Skills that would have helped but don't yet exist under `.claude/skills/`. Seed them next.
 ```
 
-For tone and depth, mirror the worked example at [`../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md`](../../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md).
+For tone and depth, mirror the worked example at [`../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md`](../../../../docs/features/borso-fr/mondrian-atelier/plan/plan.md). Do not copy its pre-flight gates. Older plans list `pnpm install`, eslint, knip, typecheck and generator `--check` runs that the hooks and CI already run.
 
 ## Operating mode
 

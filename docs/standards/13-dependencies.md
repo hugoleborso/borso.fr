@@ -18,7 +18,7 @@ all.
 
 Every other gate here reads source. Nothing reads a version field, so two
 workspaces drifting onto different majors of the same library passes lint, all
-four test suites, mutation, coverage and the architecture map. It surfaces much
+four test suites, mutation and coverage. It surfaces much
 later, as a type error in whichever file happens to sit across the seam, and
 the file it surfaces in is not the file that caused it.
 

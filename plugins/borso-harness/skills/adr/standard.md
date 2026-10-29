@@ -9,10 +9,12 @@ docs/adr/
 ├── README.md                 ← index, grouped by area
 ├── 0001-pnpm-workspaces.md
 ├── 0002-aurora-dsql-over-rds.md
-└── ...
+├── ...
+├── 0049-agents-read-production-through-an-invoked-reader-lambda.md
+└── 202610291405-<kebab-slug>.md
 ```
 
-Numbering is monotonically increasing, zero-padded to 4 digits, never recycled — superseded ADRs keep their number forever.
+A new record's id is the UTC minute it was written, `YYYYMMDDHHMM`, from `date -u +%Y%m%d%H%M`. A sequential number was the highest one in the folder plus one, and parallel branches cannot see each other's folders, so they took the same number again and again; a timestamp needs nobody else's tree. Records `0001` to `0052` predate the change and keep their names, and the timestamps sort after them. Ids are never recycled: superseded ADRs keep theirs forever.
 
 ## Mandatory sections
 
@@ -125,12 +127,12 @@ When the implementation drifts from the ADR or new evidence changes the trade-of
 
 What changed: ...
 Why: ...
-Implication for the original decision: still valid / re-evaluate / supersede with ADR-NNNN
+Implication for the original decision: still valid / re-evaluate / supersede with ADR-<id>
 ```
 
 ## Cross-linking rules
 
-- **From `plan.md`** — every "How each decision becomes code" row whose decision has an ADR points at it: `→ see [ADR-NNNN](../../adr/NNNN-slug.md)`.
+- **From `plan.md`** — every "How each decision becomes code" row whose decision has an ADR points at it: `→ see [ADR-<id>](../../adr/<id>-slug.md)`.
 - **From `spec.md`** — usually not; specs describe *what*, ADRs describe *why we built it this way*. Exception: when the spec calls out a constraint that comes from an ADR (e.g. "see ADR-0007 for the DSQL trade-off").
 - **From `docs/dantotsus/`** — the *Eradication* section links the ADR if the eradication is "we picked structure A over structure B".
 - **From code** — only when the *why* is non-obvious at the call site. ADR references in code are JSDoc-tagged: `@see {@link ../../docs/adr/0042-...}`. Keep these rare — comments rot faster than the ADR they point at.
@@ -142,7 +144,7 @@ A new ADR supersedes an old one when:
 - The system grew a constraint the original ADR didn't model.
 - A different option won, on the same problem, with the same criteria.
 
-The new ADR's header carries `**Supersedes:** ADR-XXXX`. The old ADR's header is updated to `**Status:** superseded by ADR-NNNN`. Both files remain in `docs/adr/`.
+The new ADR's header carries `**Supersedes:** ADR-XXXX`. The old ADR's header is updated to `**Status:** superseded by ADR-<id>`. Both files remain in `docs/adr/`.
 
 ## When not to supersede
 

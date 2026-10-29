@@ -1,11 +1,11 @@
 ---
-summary: '`pnpm run test -- <path>` passes the `--` on to Vitest, which then ignores the path and runs every file; write `pnpm run test <path>` or call `pnpm exec vitest run --project <name> <path>`.'
+summary: '`pnpm run test:e2e -- <path>` passes the `--` on to Vitest, which then ignores the path and runs every file; write `pnpm run test:e2e <path>` or call `pnpm exec vitest run --project <name> <path>`.'
 triggers:
   commands:
     - 'pnpm\b[^|;&]*\brun\s+test(:[a-z-]+)?\s+--\s'
 ---
 
-# `pnpm run test -- <path>` runs everything
+# `pnpm run test:e2e -- <path>` runs everything
 
 pnpm forwards every argument after the script name to the script, the `--`
 included. The script's own command then receives `-- apps/…/x.test.ts`, and
@@ -20,7 +20,7 @@ and then looked like a regression in files nobody had touched.
 What works:
 
 ```bash
-pnpm run test apps/pragma/api/src/takes/takes.controller.test.ts      # no --
+pnpm run test:e2e apps/pragma/api/src/takes/takes.controller.test.ts      # no --
 cd apps/pragma && DATABASE_URL=$(../../scripts/local-postgres.sh start pragma) \
   pnpm exec vitest run --project back-e2e api/src/takes/takes.controller.test.ts
 ```

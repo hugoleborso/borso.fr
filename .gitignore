@@ -47,14 +47,13 @@ reports
 # What stays, because each is an input: `convention-baseline.json`, a count a
 # person accepted with `--accept`; `blueprint-subjects.json`, which symbol each
 # `@FollowsBlueprint` marker was accepted against, since a marker moved to a
-# neighbouring function leaves every count identical; `seals.jsonl`, an
-# attestation nothing can recompute because it records that a review happened;
-# and the CloudFormation template snapshots, whose diff IS the review artefact.
+# neighbouring function leaves every count identical; and the CloudFormation
+# template snapshots, whose diff IS the review artefact.
 #
-# Where the outputs went instead: `pages.yml` regenerates and publishes every
-# one of them on each push to `main`, so each still has an address, and the
-# SessionStart hook regenerates them locally so agents and the blueprint hook
-# read them from the tree. `--check` now means "validate without writing"
+# Where the outputs went instead: `scripts/reports.sh` regenerates them on
+# demand, and `pages.yml` publishes them when someone dispatches it. The
+# SessionStart hook builds only the blueprint index and the knowledge-trigger
+# lookup. `--check` now means "validate without writing"
 # rather than "compare against the committed copy", because there is no
 # committed copy to compare against and a byte gate whose only subject is its
 # own output proves nothing.
@@ -66,11 +65,9 @@ docs/architecture/*-architecture.json
 docs/architecture/*-diff.json
 .claude/skills/blueprint/blueprint-index.md
 .claude/skills/blueprint/blueprint-coverage.html
-.claude/skills/blueprint/blueprint-context.json
 .claude/knowledge-triggers.json
 .claude/.knowledge-triggers.*
 docs/standards/blueprint-defects.md
-docs/standards/enforcement-ledger.md
 docs/standards/convention-drift.md
 docs/standards/rule-provenance.md
 docs/standards/hotspots.md

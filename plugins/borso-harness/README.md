@@ -6,12 +6,11 @@ holds:
 
 - **Skills.** `/route`, `/specification`, `/technical-conception`, `/adr`,
   `/implementation`, `/technical-validation`, `/visual-validation`,
-  `/standards-review`, `/code-standards`, `/blueprint`, `/open-pr`,
+  `/code-standards`, `/blueprint`, `/open-pr`,
   `/dantotsu`, `/after-task-kaizen`, `/tech-lead-orchestrator`,
   `/plain-writing` and `/writing-for-agents`.
-- **Agents.** `technical-validator`, `visual-validator` and
-  `standards-reviewer`, each of which reviews a branch without the main
-  session's context. A session that installs the harness as a plugin lists
+- **Agents.** `technical-validator` and `visual-validator`, each of which
+  reviews a branch without the main session's context. A session that installs the harness as a plugin lists
   them with the `borso-harness:` prefix.
 - **Command.** `/feature-pipeline`, the contract a Dynamic Workflow follows from
   a ratified spec to an opened pull request.
@@ -39,7 +38,7 @@ keeps borso.fr's default, so borso.fr itself has no such file.
 
 | Key | Default | What reads it |
 | --- | --- | --- |
-| `standards` | `docs/standards` | `/code-standards`, `/standards-review`, the validators |
+| `standards` | `docs/standards` | `/code-standards`, the validators |
 | `dantotsus` | `docs/dantotsus` | `/dantotsu`, `/after-task-kaizen` |
 | `knowledge` | `docs/knowledge` | `/dantotsu`, `/after-task-kaizen` |
 | `adr` | `docs/adr` | `/adr`, `/open-pr`, `/tech-lead-orchestrator` |
@@ -47,10 +46,8 @@ keeps borso.fr's default, so borso.fr itself has no such file.
 | `kaizenFile` | `KAIZEN.md` | `kaizen.sh`, the refusal logger in the hooks |
 | `blueprintIndex` | `.claude/skills/blueprint/blueprint-index.md` | `/blueprint`, `/code-standards`, `/route` |
 | `reports` | `scripts/reports.sh` | every skill that reads a generated file |
-| `seal` | `scripts/standards/seal.ts` | `/standards-review` |
 | `prBodyCheck` | `scripts/pr/check-pr-body.ts` | `/open-pr`, the `gh pr create` hook |
-| `browser` | `scripts/browser.sh` | `/visual-validation`, `/implementation` |
-| `argent` | `scripts/argent.sh` | `/visual-validation` for touch checks |
+| `phone` | `scripts/phone.sh` | `/visual-validation` for touch checks |
 
 The file holds one object, `paths`:
 
@@ -139,7 +136,6 @@ borso.fr as a git submodule.
        "knowledge": "docs/knowledge",
        "adr": "docs/adr",
        "features": "docs/features",
-       "browser": "vendor/borso.fr/scripts/browser.sh",
        "prBodyCheck": "vendor/borso.fr/scripts/pr/check-pr-body.ts"
      }
    }
@@ -147,8 +143,8 @@ borso.fr as a git submodule.
 
    The body checker runs with `node_modules/.bin/tsx` from the repository root,
    so Talos needs `tsx` installed for the budget check to run. Without it, the
-   hook only refuses an empty body. The blueprint index, `reports.sh` and
-   `seal.ts` index and seal borso.fr's own layout. Leave those keys unset until
+   hook only refuses an empty body. The blueprint index and `reports.sh`
+   index borso.fr's own layout. Leave those keys unset until
    Talos has its own, and the skills that need them will say so.
 
 4. Add `KAIZEN.md` and `.claude/knowledge-triggers.json` to `.gitignore`. The
@@ -218,15 +214,5 @@ each repository:
 - The blueprint generators in `.claude/skills/blueprint/`, which index
   borso.fr's application layers.
 - borso.fr's own hooks in `.claude/settings.json`: the dependency install at
-  session start, the rtk command rewrite, the blueprint seeding on a new file
-  and the notice that a merge deploys to production.
-
-## Check the hooks
-
-`check-hook-decisions.sh`, in the plugin's `scripts/` folder, feeds every
-refusing hook a command it must refuse and a mention of that command it must
-let through. borso.fr runs it in pre-push when a hook changes, and in CI. A repository that changes a hook can run it the same way:
-
-```sh
-vendor/borso.fr/plugins/borso-harness/scripts/check-hook-decisions.sh
-```
+  session start, the rtk command rewrite and the notice that a merge deploys
+  to production.

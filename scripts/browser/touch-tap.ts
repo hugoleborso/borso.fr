@@ -4,9 +4,11 @@ import {
   judgeTouchTap,
   type PageTarget,
   parseCdpReply,
-  parseRecordedEvents,
   parseTapPoint,
   parseTouchTapArguments,
+  readReportedEvent,
+  type RecordedInputEvent,
+  TOUCH_TAP_BINDING,
   type TouchTapOptions,
 } from './touch-tap.core';
 
@@ -15,12 +17,13 @@ const USAGE = [
   '         [--port 9222] [--width 375] [--height 812]',
   '',
   'Taps the element with a real touch through CDP Input.dispatchTouchEvent, on the',
-  'Chromium listening on --port (the one scripts/argent.sh starts), at a phone',
-  'viewport with touch emulation on, and prints which events reached it.',
+  'Chromium listening on --port (scripts/phone.sh passes its agent-browser session),',
+  'at a phone viewport with touch emulation on, and prints which events reached it.',
   'Exits 1 when the tap did not arrive as touch on the element.',
   '',
 ].join('\n');
 
+const PAGE_LEFT = 'the tap navigated away before the page could be read';
 const TOUCH_HOLD_MILLISECONDS = 60;
 const SETTLE_MILLISECONDS = 300;
 const TOUCH_RADIUS = 12;
@@ -77,14 +80,13 @@ function buildPreparationScript(selector: string): string {
     const target = document.querySelector(${JSON.stringify(selector)});
     if (target === null) return null;
     target.scrollIntoView({ block: 'center' });
-    window.__touchTapLog = [];
     for (const type of ['pointerdown', 'touchstart', 'touchend', 'click']) {
       document.addEventListener(type, (event) => {
-        window.__touchTapLog.push({
+        window.${TOUCH_TAP_BINDING}(JSON.stringify({
           type,
           pointerType: event.pointerType ?? '',
           isOnTarget: event.target instanceof Node && target.contains(event.target),
-        });
+        }));
       }, { capture: true });
     }
     const box = target.getBoundingClientRect();
@@ -92,8 +94,7 @@ function buildPreparationScript(selector: string): string {
   })()`;
 }
 
-const READ_LOG_SCRIPT = `({
-  events: window.__touchTapLog ?? [],
+const READ_PAGE_SCRIPT = `({
   innerWidth: window.innerWidth,
   maxTouchPoints: navigator.maxTouchPoints,
   isCoarsePointer: matchMedia('(pointer: coarse)').matches,
@@ -102,7 +103,14 @@ const READ_LOG_SCRIPT = `({
 async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
   const socket = await openSession(await getPage(options));
   const send = createSender(socket);
+  const reported: RecordedInputEvent[] = [];
+  socket.addEventListener('message', (message) => {
+    const event = readReportedEvent(String(message.data));
+    if (event !== null) reported.push(event);
+  });
   try {
+    await send('Runtime.enable');
+    await send('Runtime.addBinding', { name: TOUCH_TAP_BINDING });
     await send('Emulation.setDeviceMetricsOverride', {
       width: options.width,
       height: options.height,
@@ -125,13 +133,13 @@ async function didTapArriveAsTouch(options: TouchTapOptions): Promise<boolean> {
     await pause(TOUCH_HOLD_MILLISECONDS);
     await send('Input.dispatchTouchEvent', { type: 'touchEnd', touchPoints: [] });
     await pause(SETTLE_MILLISECONDS);
-    const observed = await send('Runtime.evaluate', {
-      expression: READ_LOG_SCRIPT,
+    const page = await send('Runtime.evaluate', {
+      expression: READ_PAGE_SCRIPT,
       returnByValue: true,
-    });
-    const verdict = judgeTouchTap(parseRecordedEvents(observed));
+    }).catch(() => PAGE_LEFT);
+    const verdict = judgeTouchTap(reported);
     process.stdout.write(
-      `${JSON.stringify({ selector: options.selector, point, observed, verdict }, null, 2)}\n`,
+      `${JSON.stringify({ selector: options.selector, point, page, events: reported, verdict }, null, 2)}\n`,
     );
     return verdict.isRealTouch;
   } finally {

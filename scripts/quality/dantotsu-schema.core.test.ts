@@ -179,12 +179,12 @@ describe('selectSchemaProblems', () => {
     ).toHaveLength(1);
   });
 
-  it('refuses an eradication path that is not in the repository', () => {
+  it('refuses an eradication path that was never in the repository', () => {
     expect(
       check([
         buildEntry('missing', { 'eradication-paths': '[scripts/check-a.sh, scripts/gone.sh]' }),
       ]),
-    ).toEqual(['missing: eradication path scripts/gone.sh is not in the repository']);
+    ).toEqual(['missing: eradication path scripts/gone.sh was never in the repository']);
   });
 
   it('refuses a level from 1 to 4 that names only markdown', () => {

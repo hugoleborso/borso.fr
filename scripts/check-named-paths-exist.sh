@@ -100,11 +100,15 @@ documents="$(
     sort -u
 )"
 
+present_or_generated() {
+  [ -e "$1" ] || git check-ignore -q "$1"
+}
+
 while IFS= read -r citation; do
   [ -n "$citation" ] || continue
   document="${citation##*:}"
   location="${citation%:*}"
-  [ -f "$document" ] || report "${location}: cites ${document}, which is not there"
+  present_or_generated "$document" || report "${location}: cites ${document}, which is not there"
 done <<<"$documents"
 
 # 2. A backticked repository path in an instruction surface — CLAUDE.md, a
@@ -131,7 +135,7 @@ while IFS= read -r mention; do
   case "$named" in
     *'*'* | *'<'* | *'>'*) continue ;;
   esac
-  [ -e "$named" ] || report "${location}: names ${named}, which is not there"
+  present_or_generated "$named" || report "${location}: names ${named}, which is not there"
 done <<<"$paths"
 
 if [ "$failed" -ne 0 ]; then

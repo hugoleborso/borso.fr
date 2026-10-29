@@ -1,5 +1,5 @@
 ---
-summary: '`pnpm dev` applies no migrations, so a new column answers 500 `errorMissingColumn` until the back-e2e setup runs.'
+summary: '`pnpm dev` applies no migrations, so a new column answers 500 `errorMissingColumn` until the back-e2e setup runs; a migration edited after it was applied locally is never replayed, so wipe.'
 triggers:
   output:
     - 'errorMissingColumn'
@@ -35,6 +35,15 @@ code you just wrote.
 (`pnpm --filter @borso-app/pragma exec vitest run --project back-e2e`), or wipe
 and let it rebuild (`pnpm --filter @borso-app/pragma run db:local:wipe`). Both
 destroy local rows, which is why neither is wired into `dev`.
+
+**Editing a migration the local database already applied does nothing,** and
+the back-e2e suite does not save you this time. Drizzle's migrator records each
+applied migration in its journal and only runs the ones after the last
+recorded, so an edit to that file is never replayed. On PR #206 a fix round
+changed a column of the not-yet-shipped migration 0020, and back-e2e failed on
+the missing column with nothing pointing at the migration
+(`implementation-fix-technical-01`). Wipe after editing a migration in place:
+`pnpm --filter @borso-app/pragma run db:local:wipe`.
 
 Note this is *not* what happens on a deploy — the Lambda applies migrations at
 boot, and preview schemas are cloned. It is only the local dev path that skips

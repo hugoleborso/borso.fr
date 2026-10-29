@@ -1,9 +1,9 @@
 ---
 name: after-task-kaizen
-description: Use after a PR has merged or closed to sweep what happened during the task and produce one Dantotsu (under `docs/dantotsus/`) per real defect AND one Knowledge entry (under `docs/knowledge/`) per vendor surprise or reusable insight, then open a follow-up PR labelled `kaizen`. Implements CLAUDE.md's Self-improvement loop rule end-to-end. Triggered by the user saying any of "/after-task-kaizen", "post-merge dantotsus", "kaizen pass on PR #N", "let's capture the lessons from that PR", or by a PR-merged webhook event in a session that was watching the PR. Hard rule — every Dantotsu in the output PR ships a code-level eradication (structural impossibility / DevX check / vendor patch / detection); knowledge-only is the last-resort floor and pure-knowledge subjects go to `docs/knowledge/` instead. Hard rule — agent never opens PRs against repos outside `hugoleborso/*`. The follow-up PR is the dev's sole and last goal between the merged PR and starting any new work — give it your all.
+description: Use after a PR has merged or closed to sweep what happened during the task and produce one Dantotsu (under `docs/dantotsus/`) per real defect AND one Knowledge entry (under `docs/knowledge/`) per vendor surprise or reusable insight, then open a follow-up PR labelled `kaizen`. Implements CLAUDE.md's Self-improvement loop rule end-to-end. Triggered by the user saying any of "/after-task-kaizen", "post-merge dantotsus", "kaizen pass on PR #N", "let's capture the lessons from that PR", or by the kaizen task the merged PR's session spawned, which starts this skill in a new conversation. Hard rule — every Dantotsu in the output PR ships a code-level eradication (structural impossibility / DevX check / vendor patch / detection); knowledge-only is the last-resort floor and pure-knowledge subjects go to `docs/knowledge/` instead. Hard rule — agent never opens PRs against repos outside `hugoleborso/*`. The follow-up PR is the dev's sole and last goal between the merged PR and starting any new work — give it your all.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # After-task kaizen sweep → `kaizen` PR
 
@@ -23,12 +23,20 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 
 ## When to invoke
 
-- A PR you've been working on just merged or closed.
+**In a new conversation, never in the session that shipped the PR.**
+That session ends at merge: it archives its friction log and calls
+`spawn_task` with a prompt naming the merged PR, the archived
+`kaizen.md` and this skill (`/open-pr`'s *After the merge*). The
+operator starts the task from its card, and this skill runs there with
+a context that did not do the work it audits.
+
+- A kaizen task started from that card.
 - The user says any of: "/after-task-kaizen", "kaizen pass",
   "post-merge dantotsus", "capture lessons from PR #N", "what
   should we add from that PR".
-- A `<github-webhook-activity>` event reports a merge or close
-  outcome on a PR you've been participating in.
+
+If you are the session that shipped the PR, do not run the sweep.
+Spawn the task instead.
 
 ## When NOT to invoke
 
@@ -56,18 +64,24 @@ reality before any conclusions.
 
 Sources to walk in order, capturing each friction event as one row:
 
-- **`KAIZEN.md` (primary input).** `${CLAUDE_PLUGIN_ROOT}/scripts/kaizen.sh show`. The file is
-  created at SessionStart and appended to by the main session *and by
-  every subagent that was told to*, one line per friction event,
-  problem-only. Map every line to an inventory row. Many will resolve to
+- **The archived friction log (primary input).** Read it from the
+  repository, at the path the task prompt names, normally
+  `docs/features/<docs-slug>/<feature>/kaizen.md` on `main` after
+  `git fetch`. It is the merged session's `KAIZEN.md`, copied by
+  `scripts/kaizen.sh archive` and appended to by the main session *and
+  by every subagent that was told to*, one line per friction event,
+  problem-only. Lines the prompt pasted because they were logged after
+  the archive count the same. The local `KAIZEN.md` of this session is
+  not the input: it was created empty at this session's start. Map
+  every line to an inventory row. Many will resolve to
   `no-op: already eradicated by <existing entry>` once cross-checked
-  against the corpus — that cross-check is the point. **`rm KAIZEN.md`
-  once the kaizen PR is open** (it's local-only scratch, not committed).
+  against the corpus — that cross-check is the point.
 
-  An empty `KAIZEN.md` is a finding, not an absence: it means the task
-  ran without logging, so the inventory has to be rebuilt from the
-  transcript, the commits and any agent journals — expensive, and lossy
-  for whatever the subagents learned. Add an inventory row saying so.
+  A missing or empty archive is a finding, not an absence: it means the
+  task ran without logging or never archived, so the inventory has to be
+  rebuilt from the pull request's commits, review threads and any agent
+  journals — expensive, and lossy for whatever the subagents learned.
+  Add an inventory row saying so.
 
   **Read the writer, not only the line.** Every entry names who logged
   it. One agent hitting a wall is a local problem; four agents hitting
@@ -79,8 +93,10 @@ Sources to walk in order, capturing each friction event as one row:
   entry into a gate. Entries written as `main` from a task that spawned
   agents mean the agents were never told their label; note it, because
   the sweep is then blind to whatever they hit.
-- **Conversation transcript.** Every interrupt-and-redirect from
-  the user (*"wait, you missed X"*, *"NO, do Y"*, *"why did you
+- **The pull request's conversation and review threads.** This
+  session never saw the merged session's chat, so the PR is the record
+  of it. Read the threads with `mcp__github__pull_request_read`. Every
+  interrupt-and-redirect from the user (*"wait, you missed X"*, *"NO, do Y"*, *"why did you
   assume Z"*, *"that doesn't work, try …"*, *"there was a lot more
   friction than what you said"*) is a row. Every silent
   course-correction the user made is a row.
@@ -264,6 +280,11 @@ For each surviving subject:
    knowledge as last resort). The frontmatter records
    `eradication-level`. Each entry links the commit SHA + diff
    snippet of the eradication.
+   **A new check proves it can fail, here, once.** Reintroduce the
+   defect on a scratch copy, run the check, paste its refusal into the
+   entry, then revert. The repository keeps no standing canary, so this
+   step is the only proof. Prefer removing a mechanism over adding a
+   check, and never add a check that only guards the harness.
 6. Add a one-line entry to `docs/dantotsus/README.md` index.
 
 **Vendor surprises / operator confusion / reusable insights →
@@ -358,8 +379,8 @@ not its volume, is what keeps the system improving.
 
 ## Output checklist before declaring done
 
-- [ ] Inventory built from commits + review comments + CI runs +
-      webhooks, not just memory.
+- [ ] Inventory built from the archived friction log + commits +
+      review comments + CI runs, not just memory.
 - [ ] Each subject classified using the table; no-ops dropped.
 - [ ] Each surviving real-defect / design-pivot subject has a file
       under `docs/dantotsus/` matching `_template.md`, with
@@ -398,8 +419,9 @@ not its volume, is what keeps the system improving.
   → If it cost any time during debugging, it's worth a 30-line
   entry. The next session will find it for free.
 - **"I'll capture it later."**
-  → No, you won't. The PR-merge moment is the moment context is
-  freshest. The skill exists because this debt always slips.
+  → No, you won't. Start from the task card as soon as it appears; the
+  archived log is what keeps the context, not your memory of the work.
+  The skill exists because this debt always slips.
 - **"Knowledge is enough for this defect."**
   → Almost always wrong. Re-read the root cause and push for the
   highest level you can reach. Knowledge is the *floor*, not the

@@ -148,6 +148,7 @@ export const setlistBySessionParamSchema = z.object({ sessionId: z.string().uuid
 
 const setlistReferenceShape = { setlist: referenceSchema };
 const POSITION_MAX = 500;
+const SWAPPED_ENTRY_COUNT = 2;
 
 export const setlistReferenceToolInputSchema = z.object(setlistReferenceShape);
 export const setlistListToolInputSchema = z.object({ session: referenceSchema.optional() });
@@ -181,5 +182,5 @@ export const setlistReorderReferencesToolInputSchema = z.object({
   move: z
     .object({ entry: referenceSchema, position: z.number().int().min(1).max(POSITION_MAX) })
     .optional(),
-  swap: z.tuple([referenceSchema, referenceSchema]).optional(),
+  swap: z.array(referenceSchema).length(SWAPPED_ENTRY_COUNT).optional(),
 });

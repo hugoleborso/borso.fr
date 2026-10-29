@@ -1,18 +1,18 @@
 ---
 name: adr
-description: Write an Architecture Decision Record under `docs/adr/NNNN-<slug>.md`. Two entry modes — (a) interactive: walk the operator through a 5-round decision-support trade-off (frame → criteria → options → score → choice + consequences), where the markdown file is the byproduct; (b) piloted: invoked by `/tech-lead-orchestrator` with the slug, decision summary, alternatives, and triggers already mined from the spec, in which case the walk is skipped and the file is written from the inputs. Use when the user says "/adr", "I need to decide between X and Y", "help me pick", "draft an ADR", "record this choice", "write an ADR for X", or when `/tech-lead-orchestrator` calls it after the human ratifies an ADR candidate. Loads its standard and template from `${CLAUDE_PLUGIN_ROOT}/skills/adr/`.
+description: Write an Architecture Decision Record under `docs/adr/<id>-<slug>.md`, where `<id>` is the UTC minute it was written, `YYYYMMDDHHMM`. Two entry modes — (a) interactive: walk the operator through a 5-round decision-support trade-off (frame → criteria → options → score → choice + consequences), where the markdown file is the byproduct; (b) piloted: invoked by `/tech-lead-orchestrator` with the slug, decision summary, alternatives, and triggers already mined from the spec, in which case the walk is skipped and the file is written from the inputs. Use when the user says "/adr", "I need to decide between X and Y", "help me pick", "draft an ADR", "record this choice", "write an ADR for X", or when `/tech-lead-orchestrator` calls it after the human ratifies an ADR candidate. Loads its standard and template from `${CLAUDE_PLUGIN_ROOT}/skills/adr/`.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # ADR skill
 
-One skill, two entry modes — both end with `docs/adr/NNNN-<slug>.md` written, the index updated, and (when piloted) a verdict YAML emitted for the orchestrator.
+One skill, two entry modes — both end with `docs/adr/<id>-<slug>.md` written, the index updated, and (when piloted) a verdict YAML emitted for the orchestrator.
 
 - **Interactive (default).** Human types `/adr` or asks for help on a trade-off. The skill walks the 5 rounds — *frame → criteria → options → score → choose* — and refuses to write the file if any round is shortcut. The 30-minute conversation the operator wishes they'd had before silently picking Option A.
 - **Piloted (called by `/tech-lead-orchestrator`).** The orchestrator has already mined the spec's Q.O.D. + Changes / Types sections, surfaced candidates to Hugo via `AskUserQuestion`, and is invoking `/adr` for each ratified candidate. The walk is **skipped** — the orchestrator hands over `{ slug, decision-summary, triggers, alternatives, supersedes? }` and expects the file written + a verdict YAML emitted per the [sub-agent contract](../tech-lead-orchestrator/sub-agent-contract.md).
 
-Whichever mode runs, the skill calls the same **mechanical procedure** (numbering, conflict check, write, index update, supersedes handling) — described in *Procedure* below.
+Whichever mode runs, the skill calls the same **mechanical procedure** (id, conflict check, write, index update, supersedes handling) — described in *Procedure* below.
 
 The canonical standard lives at [`standard.md`](./standard.md). The markdown template the skill emits is at [`template.md`](./template.md).
 
@@ -103,7 +103,7 @@ The orchestrator invokes this skill via the `Skill` tool with a payload describi
 - `criteria` — list of 3–5 criteria with weights and a one-line "why it matters" anchored to the spec.
 - `score-matrix` — table mapping each (option, criterion) to `✓` / `✗` + justification.
 - `consequences` — at least two `-` (closed doors / costs), one or more `+`, optional `~`.
-- `supersedes?` — list of ADR numbers explicitly replaced (optional).
+- `supersedes?` — list of ADR ids explicitly replaced (optional).
 - `feature-path` — `docs/features/<app>/<slug>/` for the verdict YAML location.
 - `run-id`, `step` — to locate `runs/<run-id>/agents/adr-<step>.md`.
 
@@ -112,29 +112,29 @@ The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alter
 ## Procedure (both modes)
 
 1. **Read** the latest version of [`standard.md`](./standard.md) and [`template.md`](./template.md).
-2. **List existing ADRs:** `ls docs/adr/`. Filter for filenames matching `NNNN-<slug>.md`.
-3. **Pick the number.** Run `${CLAUDE_PLUGIN_ROOT}/scripts/next-adr-number.sh` and take the number it prints. It reads the ADR folder of this checkout and of every branch on origin, so a number another open branch has already pushed is never handed out twice. Do not take a number someone reserved by message, and do not reserve numbers for other agents: a branch that is pushed is the reservation, and a message is one that nobody outside the conversation can read. If two branches still collide before either pushes, `check-numbered-sequences.sh` refuses the second, which renumbers before merging.
+2. **List existing ADRs:** `ls docs/adr/`. Filter for filenames matching `<digits>-<slug>.md`.
+3. **Pick the id.** Run `date -u +%Y%m%d%H%M` and take what it prints, for example `202610291405`. The id is the UTC minute the record is written, so two branches open at the same time take different ids without reading each other, and no number is ever reserved or handed out. It sorts after the four-digit records `0001` to `0052`, which keep their names. If two records still land in the same minute, `check-numbered-sequences.sh` refuses the second, which takes the next minute before merging.
 4. **Check conflicts.** Iterate the existing ADRs. An ADR conflicts when **all** of:
    - its slug equals the new ADR's slug, **and**
    - its status is `accepted`, **and**
-   - its number is **not** declared in the new ADR's `supersedes`.
+   - its id is **not** declared in the new ADR's `supersedes`.
 
    If any conflict exists:
    - **Piloted mode:** emit verdict `status: blocked`, `next: { kind: 'escalate', reason: 'adr-conflict-<slug>' }`, and stop. The orchestrator surfaces the conflict to the human.
-   - **Interactive mode:** ask the operator via `AskUserQuestion` whether the new ADR supersedes the conflicting one(s). If yes, add the numbers to `supersedes` and continue. If no, bail out with a message.
+   - **Interactive mode:** ask the operator via `AskUserQuestion` whether the new ADR supersedes the conflicting one(s). If yes, add the ids to `supersedes` and continue. If no, bail out with a message.
 5. **Fill the template.** Map inputs (interactive: collected across rounds; piloted: from the payload) to the 7 mandatory sections of [`template.md`](./template.md): header block, Context, Decision, Consequences, Alternatives considered (chosen first), Evaluation rubric, Implementation pointers.
-6. **Write the file** at `docs/adr/NNNN-<slug>.md` with the rendered markdown. Header reads `# ADR-NNNN: <title>` with the number zero-padded to 4 digits.
+6. **Write the file** at `docs/adr/<id>-<slug>.md` with the rendered markdown. Header reads `# ADR-<id>: <title>`, with the same id as the filename; `check-adr-numbers-resolve.sh` refuses the two disagreeing.
 7. **Update the index** `docs/adr/README.md`:
    - Append a row to the main `| # | Title | Status | Date |` table.
    - Append a one-line entry under the right area heading (CDK, App architecture, Data, Observability, Tooling / DevX). Create the heading if it doesn't exist. **Never reorder existing entries** — the README is manually curated.
-8. **Mark superseded predecessors.** If `supersedes` is non-empty, edit each predecessor's header: set `**Status:** superseded by ADR-NNNN`, leave the rest of the file untouched.
+8. **Mark superseded predecessors.** If `supersedes` is non-empty, edit each predecessor's header: set `**Status:** superseded by ADR-<id>`, leave the rest of the file untouched.
 9. **Piloted mode only — emit verdict YAML.** Write to `<feature-path>/runs/<run-id>/agents/adr-<step>.md`:
    ```yaml
    ---
    status: done
-   summary: ADR-NNNN written at docs/adr/NNNN-<slug>.md.
+   summary: ADR-<id> written at docs/adr/<id>-<slug>.md.
    artifacts:
-     - docs/adr/NNNN-<slug>.md
+     - docs/adr/<id>-<slug>.md
      - docs/adr/README.md
    ---
    ```
@@ -170,11 +170,11 @@ That's the contract: the walk (or the orchestrator's payload) produces a record 
 ## Auto-chain & maintenance
 
 - On PR merge (`/after-task-kaizen`), every ADR whose status is `proposed` and whose commit SHA matches the merge gets stamped to `accepted`.
-- ADRs are append-only. To replace, the new ADR carries `**Supersedes:** ADR-XXXX` and the old one's status flips to `superseded by ADR-NNNN`. Both files stay.
+- ADRs are append-only. To replace, the new ADR carries `**Supersedes:** ADR-XXXX` and the old one's status flips to `superseded by ADR-<id>`. Both files stay.
 
 ## Repo-specific notes
 
 - ADRs live at `docs/adr/`, next to `docs/dantotsus/` and `docs/knowledge/`.
-- Filename: `NNNN-kebab-slug.md`. NNNN is zero-padded to 4 digits, monotonically increasing.
+- Filename: `<id>-kebab-slug.md`. `<id>` is the UTC minute of writing, `YYYYMMDDHHMM`. Records written before 2026-10-29 keep their four-digit numbers `0001` to `0052`, and are cited by them.
 - The skill always reads [`standard.md`](./standard.md) before walking or rendering — that's where section names, status lifecycle, and the rubric format are pinned. Drift would break `/open-pr`.
 - This skill is markdown-driven. No `package.json`, no test suite. The LLM is the runtime.

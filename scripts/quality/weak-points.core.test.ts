@@ -97,7 +97,7 @@ describe('selectStation', () => {
     ['docs/adr', 'plan'],
     ['plugins/borso-harness/skills/implementation', 'implementation'],
     ['plugins/borso-harness/agents/technical-validator.md', 'validation'],
-    ['scripts/argent.sh', 'validation'],
+    ['scripts/phone.sh', 'validation'],
     ['.github/workflows/deploy.yml', 'deploy'],
     ['scripts/preflight-cloudfront-aliases.sh', 'deploy'],
     ['.github/workflows/ci.yml', 'ci'],
