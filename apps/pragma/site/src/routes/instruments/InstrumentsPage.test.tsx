@@ -25,12 +25,6 @@ const BASS = {
     { memberId: 'member-di', isPrimary: false },
   ],
 };
-const ADA = { id: 'member-ada', firstName: 'Ada', color: '#c0392b' };
-const OTHER_PLAYERS = [
-  { id: 'member-bo', firstName: 'Bo', color: '#2f8f6b' },
-  { id: 'member-cy', firstName: 'Cy', color: '#3a6ee0' },
-  { id: 'member-di', firstName: 'Di', color: '#b8841a' },
-];
 
 function answerInstrumentsApi(request: Request): Response {
   const { pathname } = new URL(request.url);
@@ -38,7 +32,6 @@ function answerInstrumentsApi(request: Request): Response {
     return jsonResponse({ instrument: { ...BASS, id: 'instrument-new', name: 'Cello' } }, 201);
   }
   if (pathname === '/api/instruments') return jsonResponse({ instruments: [BASS] });
-  if (pathname === '/api/members') return jsonResponse({ members: [ADA, ...OTHER_PLAYERS] });
   return new Response(null, { status: 404 });
 }
 
@@ -87,15 +80,15 @@ describe('the instruments page', () => {
     expect(await creation?.clone().json()).toMatchObject({ name: 'Cello', family: 'harmonic' });
   });
 
-  it('names every player of an instrument and marks the main instrument in words', async () => {
+  it('shows each instrument as one row with no player and no explanation', async () => {
     renderInstrumentsPage();
-    expect(await screen.findByText(/Each instrument lists the members who play it/)).toBeTruthy();
     const row = (await screen.findByText('Bass')).closest('li');
     if (row === null) throw new Error('no instrument row');
-    const players = within(row).getAllByRole('button', { name: /^Main instrument — / });
-    expect(players.map((player) => player.textContent)).toEqual(['AAdamain', 'BBo', 'CCy', 'DDi']);
-    expect(players[0]?.getAttribute('aria-pressed')).toBe('true');
-    expect(within(row).getByText('Played by')).toBeTruthy();
+    expect(within(row).getAllByRole('button')).toHaveLength(3);
+    expect(screen.queryByText('Ada')).toBe(null);
+    expect(screen.getByRole('heading', { level: 1 }).closest('header')?.textContent).not.toContain(
+      'member',
+    );
   });
 
   it('links back to Band from its fixed header', async () => {

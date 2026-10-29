@@ -348,12 +348,7 @@
     "name": "Nom",
     "newTitle": "Nouvel instrument",
     "title": "Instruments",
-    "togglePrimary": "Instrument principal",
-    "add": "Ajouter un instrument",
-    "playersHint": "Chaque instrument liste les membres qui le jouent, d'après leur profil. Touchez un membre pour en faire son instrument principal.",
-    "playedBy": "Joué par",
-    "noPlayer": "Aucun membre ne le joue encore. Ajoutez-le à un membre dans Membres.",
-    "main": "principal"
+    "add": "Ajouter un instrument"
   },
   "lineup": {
     "allMembers": "Tous",

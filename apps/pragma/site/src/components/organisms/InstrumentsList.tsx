@@ -22,10 +22,6 @@ import type { JSX } from 'react';
 import { composeClassName } from '../atoms/class-name.utils';
 import { IconButton } from '../atoms/IconButton';
 import { Icon } from '../atoms/Icon';
-import {
-  InstrumentPlayerChips,
-  type InstrumentPlayerChip,
-} from '../molecules/InstrumentPlayerChips';
 import { INSTRUMENT_ICON_GLYPH } from '../molecules/lineup-slots.core';
 import { ListRow } from '../molecules/ListRow';
 import { restrictToVerticalAxis } from './setlist-editor.utils';
@@ -41,20 +37,14 @@ export interface InstrumentListRow {
   readonly name: string;
   readonly icon: InstrumentIcon;
   readonly familyLabel: string;
-  readonly players: readonly InstrumentPlayerChip[];
 }
 
 export interface InstrumentsListProps {
   readonly rows: readonly InstrumentListRow[];
   readonly listLabel: string;
   readonly dragHandleLabel: string;
-  readonly primaryToggleLabel: string;
-  readonly playedByLabel: string;
-  readonly noPlayerLabel: string;
-  readonly mainLabel: string;
   readonly deleteLabel: string;
   readonly onSelect: (instrumentId: string) => void;
-  readonly onTogglePrimary: (instrumentId: string, memberId: string) => void;
   readonly onDelete: (instrumentId: string) => void;
   readonly onReorder: (orderedInstrumentIds: readonly string[]) => void;
 }
@@ -72,50 +62,38 @@ function InstrumentRow(
       ref={setNodeRef}
       style={{ transform: CSS.Transform.toString(transform), transition }}
       className={composeClassName(
-        'relative flex flex-col gap-1 rounded-md border border-rule bg-leaf px-2 py-1.5 transition-colors hover:border-rule-strong sm:px-3',
+        'relative flex min-h-11 items-center gap-2 rounded-md border border-rule bg-leaf px-2 py-1.5 transition-colors hover:border-rule-strong sm:gap-3 sm:px-3',
         isDragging && 'opacity-40',
       )}
     >
-      <div className="flex min-h-11 items-center gap-2 sm:gap-3">
-        <IconButton
-          icon="drag"
-          label={props.dragHandleLabel}
-          size="sm"
-          className="relative z-10 shrink-0 cursor-grab touch-none text-ink-faint active:cursor-grabbing"
-          {...attributes}
-          {...listeners}
-        />
-        <ListRow
-          className={ROW_OPENING_BUTTON_CLASS}
-          isChevronShown={false}
-          leading={
-            <Icon name={INSTRUMENT_ICON_GLYPH[props.row.icon]} size="md" className="shrink-0" />
-          }
-          onClick={() => props.onSelect(props.row.id)}
-        >
-          <span className="flex min-w-0 flex-col">
-            <span className="truncate text-body leading-tight text-ink">{props.row.name}</span>
-            <span className="truncate text-label text-ink-soft">{props.row.familyLabel}</span>
-          </span>
-        </ListRow>
-        <IconButton
-          icon="trash"
-          variant="danger"
-          label={props.deleteLabel}
-          className="relative z-10 shrink-0"
-          onClick={() => props.onDelete(props.row.id)}
-        />
-      </div>
-      <div className="pb-1 pl-11 sm:pl-12">
-        <InstrumentPlayerChips
-          players={props.row.players}
-          playedByLabel={props.playedByLabel}
-          noPlayerLabel={props.noPlayerLabel}
-          mainLabel={props.mainLabel}
-          toggleLabel={props.primaryToggleLabel}
-          onTogglePrimary={(memberId) => props.onTogglePrimary(props.row.id, memberId)}
-        />
-      </div>
+      <IconButton
+        icon="drag"
+        label={props.dragHandleLabel}
+        size="sm"
+        className="relative z-10 shrink-0 cursor-grab touch-none text-ink-faint active:cursor-grabbing"
+        {...attributes}
+        {...listeners}
+      />
+      <ListRow
+        className={ROW_OPENING_BUTTON_CLASS}
+        isChevronShown={false}
+        leading={
+          <Icon name={INSTRUMENT_ICON_GLYPH[props.row.icon]} size="md" className="shrink-0" />
+        }
+        onClick={() => props.onSelect(props.row.id)}
+      >
+        <span className="flex min-w-0 flex-col">
+          <span className="truncate text-body leading-tight text-ink">{props.row.name}</span>
+          <span className="truncate text-label text-ink-soft">{props.row.familyLabel}</span>
+        </span>
+      </ListRow>
+      <IconButton
+        icon="trash"
+        variant="danger"
+        label={props.deleteLabel}
+        className="relative z-10 shrink-0"
+        onClick={() => props.onDelete(props.row.id)}
+      />
     </li>
   );
 }

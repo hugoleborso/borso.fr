@@ -21,12 +21,9 @@ import {
   useReorderInstruments,
   useUpdateInstrument,
 } from '../../lib/queries/instruments.queries';
-import { useAssignMemberInstruments, useMembersList } from '../../lib/queries/members.queries';
 import {
-  claimOfMember,
   INSTRUMENT_FAMILY_LABEL_KEY,
   selectInstrumentDeletionEffect,
-  togglePrimacy,
 } from './instruments-page.core';
 
 interface EditedInstrument {
@@ -45,12 +42,10 @@ const NO_ROWS: readonly never[] = [];
 export function InstrumentsPage(): JSX.Element {
   const { t } = useTranslation();
   const list = useInstrumentsList();
-  const membersQuery = useMembersList();
   const create = useCreateInstrument();
   const update = useUpdateInstrument();
   const remove = useDeleteInstrument();
   const reorder = useReorderInstruments();
-  const assignInstruments = useAssignMemberInstruments();
   const [edited, setEdited] = useState<EditedInstrument | null>(null);
   const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
 
@@ -65,12 +60,6 @@ export function InstrumentsPage(): JSX.Element {
   };
 
   const instruments = useMemo(() => list.data?.instruments ?? NO_ROWS, [list.data]);
-  const members = useMemo(() => membersQuery.data?.members ?? NO_ROWS, [membersQuery.data]);
-  const membersById = useMemo(() => {
-    const out: Record<string, (typeof members)[number]> = {};
-    for (const member of members) out[member.id] = member;
-    return out;
-  }, [members]);
 
   const rows = useMemo(
     () =>
@@ -79,20 +68,8 @@ export function InstrumentsPage(): JSX.Element {
         name: instrument.name,
         icon: instrument.icon,
         familyLabel: t(INSTRUMENT_FAMILY_LABEL_KEY[instrument.family]),
-        players: instrument.players.flatMap((player) => {
-          const member = membersById[player.memberId];
-          if (member === undefined) return [];
-          return [
-            {
-              memberId: player.memberId,
-              memberName: member.firstName,
-              memberColor: member.color,
-              isPrimary: player.isPrimary,
-            },
-          ];
-        }),
       })),
-    [instruments, membersById, t],
+    [instruments, t],
   );
 
   const editInstrument = (instrumentId: string): void => {
@@ -116,15 +93,6 @@ export function InstrumentsPage(): JSX.Element {
     ]();
   };
 
-  const toggleMemberPrimacy = (instrumentId: string, memberId: string): void => {
-    const claim = claimOfMember(instruments, memberId);
-    assignInstruments.mutate({
-      memberId,
-      instrumentIds: claim.instrumentIds,
-      primaryInstrumentIds: togglePrimacy(claim.primaryInstrumentIds, instrumentId),
-    });
-  };
-
   const lastError: unknown =
     list.error ?? create.error ?? update.error ?? remove.error ?? reorder.error ?? null;
   const errorMessage =
@@ -132,11 +100,7 @@ export function InstrumentsPage(): JSX.Element {
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-3xl">
-      <PageHeader
-        back={{ to: '/band', label: t('band.title') }}
-        title={t('instruments.title')}
-        subtitle={t('instruments.playersHint')}
-      />
+      <PageHeader back={{ to: '/band', label: t('band.title') }} title={t('instruments.title')} />
       {errorMessage === null ? null : (
         <p className="text-danger text-meta mb-3" role="alert">
           {errorMessage}
@@ -149,13 +113,8 @@ export function InstrumentsPage(): JSX.Element {
         rows={rows}
         listLabel={t('instruments.title')}
         dragHandleLabel={t('instruments.dragHandle')}
-        primaryToggleLabel={t('instruments.togglePrimary')}
-        playedByLabel={t('instruments.playedBy')}
-        noPlayerLabel={t('instruments.noPlayer')}
-        mainLabel={t('instruments.main')}
         deleteLabel={t('common.delete')}
         onSelect={editInstrument}
-        onTogglePrimary={toggleMemberPrimacy}
         onDelete={setPendingDeletionId}
         onReorder={(orderedInstrumentIds) =>
           reorder.mutate({ instrumentIds: [...orderedInstrumentIds] })

@@ -348,12 +348,7 @@
     "name": "Name",
     "newTitle": "New instrument",
     "title": "Instruments",
-    "togglePrimary": "Main instrument",
-    "add": "Add an instrument",
-    "playersHint": "Each instrument lists the members who play it, from their member profile. Tap a member to make it their main instrument.",
-    "playedBy": "Played by",
-    "noPlayer": "No member plays it yet. Add it to a member on Members.",
-    "main": "main"
+    "add": "Add an instrument"
   },
   "lineup": {
     "allMembers": "All",

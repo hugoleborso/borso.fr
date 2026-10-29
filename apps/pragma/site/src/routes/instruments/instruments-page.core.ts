@@ -30,41 +30,6 @@ export const INSTRUMENT_FAMILY_LABEL_KEY = {
   other: 'instruments.familyOther',
 } as const satisfies Record<InstrumentFamily, string>;
 
-export interface PlayedInstrument {
-  readonly id: string;
-  readonly players: readonly { readonly memberId: string; readonly isPrimary: boolean }[];
-}
-
-export interface MemberInstrumentClaim {
-  readonly instrumentIds: string[];
-  readonly primaryInstrumentIds: string[];
-}
-
-export function claimOfMember(
-  instruments: readonly PlayedInstrument[],
-  memberId: string,
-): MemberInstrumentClaim {
-  const instrumentIds: string[] = [];
-  const primaryInstrumentIds: string[] = [];
-  for (const instrument of instruments) {
-    const link = instrument.players.find((player) => player.memberId === memberId);
-    if (link === undefined) continue;
-    instrumentIds.push(instrument.id);
-    if (link.isPrimary) primaryInstrumentIds.push(instrument.id);
-  }
-  return { instrumentIds, primaryInstrumentIds };
-}
-
-export function togglePrimacy(
-  primaryInstrumentIds: readonly string[],
-  instrumentId: string,
-): string[] {
-  if (primaryInstrumentIds.includes(instrumentId)) {
-    return primaryInstrumentIds.filter((candidate) => candidate !== instrumentId);
-  }
-  return [...primaryInstrumentIds, instrumentId];
-}
-
 export type InstrumentDeletionEffect = 'keep-form' | 'clear-form';
 
 // @FollowsBlueprint core-view-intent
