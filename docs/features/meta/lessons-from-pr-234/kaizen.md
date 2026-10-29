@@ -13,3 +13,4 @@ struggling from four agents hitting the same wall.
 This file is gitignored and is deleted once the kaizen pull request is open.
 
 - [2026-10-29 17:38] `hook:no-broad-kill` reached for pkill or killall on a machine other agents share
+- [2026-10-29 17:51] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
