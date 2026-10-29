@@ -67,7 +67,38 @@ describe('groupIntoFolders', () => {
       ],
       PREFIX,
     );
-    expect(folders).toEqual([{ path: 'run', newest: EARLY, screenshots: [shot('a.png')] }]);
+    expect(folders).toEqual([
+      { path: 'run', newest: EARLY, screenshots: [shot('a.png')], recordings: [] },
+    ]);
+  });
+
+  it('lists GIF files beside the PNG files, and WebM and MP4 files apart as recordings', () => {
+    const [folder] = groupIntoFolders(
+      [
+        stored('run/c.mp4'),
+        stored('run/b.gif'),
+        stored('run/notes.txt'),
+        stored('run/a.webm'),
+        stored('run/a.png'),
+      ],
+      PREFIX,
+    );
+    expect(folder?.screenshots).toEqual([shot('a.png'), shot('b.gif')]);
+    expect(folder?.recordings).toEqual([shot('a.webm'), shot('c.mp4')]);
+  });
+
+  it('dates a folder by its newest recording too', () => {
+    const [folder] = groupIntoFolders(
+      [stored('run/a.png', EARLY), stored('run/a.webm', LATE)],
+      PREFIX,
+    );
+    expect(folder?.newest).toBe(LATE);
+  });
+
+  it('keeps a folder that holds only recordings', () => {
+    expect(groupIntoFolders([stored('run/a.webm')], PREFIX)).toEqual([
+      { path: 'run', newest: EARLY, screenshots: [], recordings: [shot('a.webm')] },
+    ]);
   });
 
   it('puts the folder holding the newest file first', () => {
@@ -141,6 +172,13 @@ describe('layOutFolder, names that only look like a pair', () => {
       'zzzzzzband.png',
       'zzzzzzzband.png',
     ]);
+  });
+});
+
+describe('layOutFolder, animations', () => {
+  it('pairs before and after GIF files the same way, and strips only the last extension', () => {
+    const layout = layOutFolder([shot('after-v1.2-drag.gif'), shot('before-v1.2-drag.gif')]);
+    expect(layout.pairs.map((pair) => pair.subject)).toEqual(['v1.2-drag']);
   });
 });
 
@@ -277,5 +315,86 @@ describe('renderGallery', () => {
         `| ![a](${host}/run/a.png)<br><sub>a</sub> | ![b](${host}/run/b.png)<br><sub>b</sub> |`,
       ),
     ).toBe(true);
+  });
+
+  it('shows a GIF inline like a PNG and marks it as animated', () => {
+    const host = 'https://screenshots-pr-207.preview.borso.fr';
+    const body = renderGallery({
+      pullRequestNumber: PULL_REQUEST,
+      imageLimit: DEFAULT_IMAGE_LIMIT,
+      objects: [stored('run/drag.gif'), stored('run/v1.2.png')],
+    });
+    expect(body).toContain(
+      `| ![drag](${host}/run/drag.gif)<br><sub>drag (animated)</sub> | ![v1.2](${host}/run/v1.2.png)<br><sub>v1.2</sub> |`,
+    );
+  });
+
+  it('links each recording on its own line under the images of its folder', () => {
+    const host = 'https://screenshots-pr-207.preview.borso.fr';
+    const body = renderGallery({
+      pullRequestNumber: PULL_REQUEST,
+      imageLimit: DEFAULT_IMAGE_LIMIT,
+      objects: [stored('run/a.png'), stored('run/drag_1.webm'), stored('run/tap.mp4')],
+    });
+    expect(body).toBe(
+      [
+        GALLERY_HEADING,
+        '',
+        '<sub>1 image and 2 recordings from 1 folder, newest folder first. The previews bucket deletes them 60 days after upload.</sub>',
+        '',
+        `#### [run](${host}/run/)`,
+        '',
+        '|   |   |',
+        '| --- | --- |',
+        `| ![a](${host}/run/a.png)<br><sub>a</sub> |   |`,
+        '',
+        'Recordings, which GitHub does not play inline; each link opens the file:',
+        '',
+        `- [drag\\_1.webm](${host}/run/drag_1.webm)`,
+        `- [tap.mp4](${host}/run/tap.mp4)`,
+      ].join('\n'),
+    );
+  });
+
+  it('keeps the recording links of a folder whose images the cap removed', () => {
+    const host = 'https://screenshots-pr-207.preview.borso.fr';
+    const body = renderGallery({
+      pullRequestNumber: PULL_REQUEST,
+      imageLimit: 1,
+      objects: [stored('new/a.png', LATE), stored('old/b.png'), stored('old/c.webm')],
+    });
+    expect(body).toBe(
+      [
+        GALLERY_HEADING,
+        '',
+        '<sub>1 of 2 images and 1 recording from 2 folders, newest folder first. The previews bucket deletes them 60 days after upload.</sub>',
+        '',
+        `#### [new](${host}/new/)`,
+        '',
+        '|   |   |',
+        '| --- | --- |',
+        `| ![a](${host}/new/a.png)<br><sub>a</sub> |   |`,
+        '',
+        `#### [old](${host}/old/)`,
+        '',
+        'Recordings, which GitHub does not play inline; each link opens the file:',
+        '',
+        `- [c.webm](${host}/old/c.webm)`,
+        '',
+        '**Not shown here**, to keep the comment readable: 1 image past the first 1. Each folder link opens the full set.',
+        '',
+        `- [old](${host}/old/): 0 of 1 shown`,
+      ].join('\n'),
+    );
+  });
+
+  it('renders a folder of recordings alone, with no image table', () => {
+    const body = renderGallery({
+      pullRequestNumber: PULL_REQUEST,
+      imageLimit: DEFAULT_IMAGE_LIMIT,
+      objects: [stored('run/a.webm')],
+    });
+    expect(body).toContain('<sub>0 images and 1 recording from 1 folder,');
+    expect(body).not.toContain('| --- |');
   });
 });

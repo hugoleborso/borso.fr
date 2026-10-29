@@ -31,6 +31,7 @@ agent-browser snapshot -i --json               # Accessibility tree + element re
 agent-browser click @eN                        # Click an element by its ref (a mouse press, not a tap)
 agent-browser fill @eN "text"                  # Type into a field by ref
 agent-browser screenshot <absolute-path>       # Save a PNG; add --full for the whole page
+agent-browser record start <absolute-path>.webm  # Record motion; stop with `record stop`, then convert to GIF (see the /visual-validation skill)
 agent-browser set viewport <width> <height>    # Resize
 agent-browser set media dark                   # Emulate prefers-color-scheme: dark
 agent-browser wait --load networkidle          # Wait for network to settle
