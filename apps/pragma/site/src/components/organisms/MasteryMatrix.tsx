@@ -192,12 +192,9 @@ export function MasteryMatrix({ members, instruments, onError }: MasteryMatrixPr
       className="rounded-lg border border-rule bg-leaf p-3 sm:p-4"
       data-testid="mastery-matrix"
     >
-      <h3 className="font-display text-title text-ink m-0 mb-1">
+      <h3 className="font-display text-title text-ink m-0 mb-4">
         {t('members.masteryMatrixTitle')}
       </h3>
-      <p className="text-meta text-ink-soft m-0 mb-4 leading-relaxed">
-        {t('members.masteryMatrixSubtitle')}
-      </p>
       {members.length === 0 || instruments.length === 0 ? (
         <p className="text-meta text-ink-soft italic">{t('mastery.noData')}</p>
       ) : (

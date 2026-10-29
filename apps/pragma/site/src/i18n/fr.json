@@ -388,7 +388,6 @@
     "editTitle": "Modifier le membre",
     "firstName": "Prénom",
     "instrumentsAssigned": "Instruments joués",
-    "masteryMatrixSubtitle": "Une ligne par instrument, une colonne par membre. Touche une case pour saisir une note, vide-la pour l'effacer. À la souris : molette pour ±1, clic-droit pour vider. La moyenne sous chaque instrument donne l'effectif ; la ligne Moy. donne la musicalité de chaque membre.",
     "masteryMatrixTitle": "Matrice de maîtrise",
     "newTitle": "Nouveau membre",
     "noInstrumentsYet": "Aucun instrument assigné",

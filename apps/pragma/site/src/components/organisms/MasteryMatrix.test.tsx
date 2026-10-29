@@ -76,4 +76,10 @@ describe('MasteryMatrix', () => {
         .map((cell) => cell.textContent),
     ).toEqual(['3.0', '1.0']);
   });
+
+  it('carries its title and the table, with no explanation between them', () => {
+    renderMatrix();
+    const matrix = screen.getByTestId('mastery-matrix');
+    expect(matrix.querySelector('p')).toBe(null);
+  });
 });
