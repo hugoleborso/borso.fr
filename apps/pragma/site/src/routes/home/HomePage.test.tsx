@@ -1,7 +1,7 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
 import { stubSheetDialog } from '../../components/molecules/sheet.test-utils';
 import {
@@ -10,7 +10,13 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
+import { streakKeys } from '../../lib/queries/streaks.queries';
+import { recordProductEvent } from '../../observability/product-event.adapter';
 import { HomePage } from './HomePage';
+
+vi.mock('../../observability/product-event.adapter', () => ({
+  recordProductEvent: vi.fn(),
+}));
 
 const DAY_MS = 86_400_000;
 const MEMBER = { id: 'member-1', firstName: 'Ada', color: '#c0392b' };
@@ -79,9 +85,24 @@ const SIGNED_IN = {
   calendarFeeds: [],
 };
 
-function answerHomeApi(sessions: readonly unknown[]) {
+const STREAKS = {
+  today: '2026-10-29',
+  mine: { days: 12, isTodayCounted: true, jokersLeftThisWeek: 2 },
+  band: { days: 4, isTodayCounted: true },
+  members: [
+    {
+      memberId: MEMBER.id,
+      firstName: MEMBER.firstName,
+      color: MEMBER.color,
+      flame: { days: 12, isTodayCounted: true, jokersLeftThisWeek: 2 },
+    },
+  ],
+};
+
+function answerHomeApi(sessions: readonly unknown[], streaksStatus = 200) {
   return (request: Request): Response => {
     const { pathname } = new URL(request.url);
+    if (pathname === '/api/streaks') return jsonResponse(STREAKS, streaksStatus);
     if (pathname === '/api/sessions') return jsonResponse({ sessions });
     if (pathname.startsWith('/api/setlists/by-session/session-next')) {
       return jsonResponse({ setlists: [SETLIST] });
@@ -97,9 +118,9 @@ function answerHomeApi(sessions: readonly unknown[]) {
   };
 }
 
-function renderHomePage(): void {
+function renderHomePage(queryClient: QueryClient = createIsolatedQueryClient()): void {
   render(
-    <QueryClientProvider client={createIsolatedQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         <HomePage />
       </MemoryRouter>
@@ -198,5 +219,40 @@ describe('the home page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'New session' }));
     expect(screen.getByRole('dialog', { name: 'New practice' })).toBeTruthy();
     expect(screen.queryByRole('region', { name: 'Next session' })).toBe(null);
+  });
+
+  it('puts both flames on the title line, and a tap on either opens the streak sheet', async () => {
+    const answer = answerHomeApi([NEXT_PRACTICE]);
+    stub = stubFetch((request) => Promise.resolve(answer(request)));
+    renderHomePage();
+    const header = screen.getByRole('banner');
+    const mine = await within(header).findByRole('button', {
+      name: 'Your flame, 12 days, today counted',
+    });
+    const band = within(header).getByRole('button', { name: 'Band flame, 4 days' });
+    expect(mine.querySelector('svg')?.getAttribute('data-flame-mark')).toBe('blaze');
+    expect(band.querySelector('svg')?.getAttribute('data-flame-mark')).toBe('bonfire');
+    expect(band.querySelector('svg')?.getAttribute('class')).toContain(
+      'motion-safe:animate-flame-flicker',
+    );
+    fireEvent.click(mine);
+    const sheet = screen.getByRole('dialog', { name: 'Flames' });
+    expect(within(sheet).getByText(MEMBER.firstName)).toBeTruthy();
+    expect(recordProductEvent).toHaveBeenCalledWith('streak_sheet_opened');
+    fireEvent.click(within(sheet).getByRole('button', { name: 'Close' }));
+    expect(screen.queryByRole('dialog', { name: 'Flames' })).toBe(null);
+    fireEvent.click(within(header).getByRole('button', { name: 'Band flame, 4 days' }));
+    expect(screen.getByRole('dialog', { name: 'Flames' })).toBeTruthy();
+  });
+
+  it('shows no flame when the flames cannot be read, and the rest of Home still works', async () => {
+    const answer = answerHomeApi([NEXT_PRACTICE], 500);
+    stub = stubFetch((request) => Promise.resolve(answer(request)));
+    const queryClient = createIsolatedQueryClient();
+    renderHomePage(queryClient);
+    await waitFor(() => expect(queryClient.getQueryState(streakKeys.all)?.status).toBe('error'));
+    expect(await screen.findByRole('region', { name: 'Next session' })).toBeTruthy();
+    await screen.findByRole('link', { name: 'Open the setlist' });
+    expect(screen.queryByRole('button', { name: /flame/ })).toBe(null);
   });
 });

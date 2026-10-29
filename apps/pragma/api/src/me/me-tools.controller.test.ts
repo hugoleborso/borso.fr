@@ -82,7 +82,11 @@ describe('me tools (back-e2e)', () => {
 
     expect(logged).toEqual({
       isError: false,
-      body: { id: band.hugo.memberId, updated: [], study: { streak: 1, thisWeek: 1 } },
+      body: {
+        id: band.hugo.memberId,
+        updated: [],
+        study: { flame: { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 } },
+      },
     });
     expect(rows.map((row) => row.memberId)).toEqual([band.hugo.memberId]);
     expect(profile.body).toMatchObject({
@@ -90,10 +94,19 @@ describe('me tools (back-e2e)', () => {
       studies: {
         queue: [{ song: 'Creep', songId, instrument: 'Guitar', isStudiedToday: true }],
       },
+      flames: {
+        mine: { days: 1, isTodayCounted: true },
+        band: { days: 1, isTodayCounted: true },
+        members: expect.arrayContaining([{ firstName: 'Hugo', days: 1, isTodayCounted: true }]),
+      },
     });
     expect(undone).toEqual({
       isError: false,
-      body: { id: band.hugo.memberId, updated: ['email'], study: { streak: 0, thisWeek: 0 } },
+      body: {
+        id: band.hugo.memberId,
+        updated: ['email'],
+        study: { flame: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 } },
+      },
     });
     expect(await testDatabase().select().from(studyTable)).toEqual([]);
   });

@@ -601,9 +601,10 @@ const learnNewSong: TaskWalkRunner = async (driver) => {
   await walk.tap('Practised', { exact: 'Practised', css: 'main button' }, { primary: true });
   await waitMilliseconds(SAVE_SETTLE_MS);
   const overview = studiesOverviewSchema.parse(await driver.fetchJson('/api/studies/overview'));
+  const streaks = streaksSchema.parse(await driver.fetchJson('/api/streaks'));
   return walk.summarise({
     success: {
-      todayCounted: overview.myStreak?.isTodayCounted ?? null,
+      todayCounted: streaks.mine?.isTodayCounted ?? null,
       studiedToday: (overview.queue ?? [])
         .filter((item) => item.isStudiedToday === true)
         .map((item) => item.title),
@@ -616,7 +617,12 @@ const studiesOverviewSchema = z
     queue: z
       .array(z.object({ title: z.string(), isStudiedToday: z.boolean().optional() }))
       .optional(),
-    myStreak: z.object({ isTodayCounted: z.boolean().optional() }).nullable().optional(),
+  })
+  .passthrough();
+
+const streaksSchema = z
+  .object({
+    mine: z.object({ isTodayCounted: z.boolean().optional() }).nullable().optional(),
   })
   .passthrough();
 

@@ -420,3 +420,73 @@ describe('pragma app stack', () => {
     );
   });
 });
+
+const scheduleSchema = z.object({
+  Properties: z.object({
+    Target: z.object({
+      Arn: z.object({ 'Fn::GetAtt': z.tuple([z.string(), z.literal('Arn')]) }),
+      RoleArn: z.object({ 'Fn::GetAtt': z.tuple([z.string(), z.literal('Arn')]) }),
+    }),
+  }),
+});
+
+const rolePolicySchema = z.object({
+  Properties: z.object({
+    PolicyDocument: z.object({ Statement: z.array(z.unknown()) }),
+    Roles: z.array(z.object({ Ref: z.string() })),
+  }),
+});
+
+function readStreakReminderTarget(): { readonly functionId: string; readonly roleId: string } {
+  const schedules = Object.values(synthAppStack('prod').findResources('AWS::Scheduler::Schedule'));
+  const [schedule] = schedules.map((resource) => scheduleSchema.parse(resource));
+  if (schedule === undefined) throw new Error('no schedule in the prod template');
+  return {
+    functionId: schedule.Properties.Target.Arn['Fn::GetAtt'][0],
+    roleId: schedule.Properties.Target.RoleArn['Fn::GetAtt'][0],
+  };
+}
+
+function readStatementsOfRole(roleId: string): unknown[] {
+  return Object.values(synthAppStack('prod').findResources('AWS::IAM::Policy'))
+    .map((resource) => rolePolicySchema.parse(resource).Properties)
+    .filter((policy) => policy.Roles.some((role) => role.Ref === roleId))
+    .flatMap((policy) => policy.PolicyDocument.Statement);
+}
+
+describe('pragma streak reminder schedule (ADR-202610291139)', () => {
+  beforeAll(() => {
+    synthAppStack('prod');
+    synthAppStack('preview');
+  }, SYNTH_WARMUP_TIMEOUT_MILLISECONDS);
+
+  it('invokes the API at 20:00 Paris time with the streak-reminder job, dropping a retry older than an hour', () => {
+    const template = synthAppStack('prod');
+    template.resourceCountIs('AWS::Scheduler::Schedule', 1);
+    template.hasResourceProperties('AWS::Scheduler::Schedule', {
+      ScheduleExpression: 'cron(0 20 * * ? *)',
+      ScheduleExpressionTimezone: 'Europe/Paris',
+      Target: {
+        Input: JSON.stringify({ job: 'streak-reminder' }),
+        RetryPolicy: { MaximumEventAgeInSeconds: 3600, MaximumRetryAttempts: 2 },
+      },
+    });
+    expect(readStreakReminderTarget().functionId).toMatch(/^AppApiFn/);
+  });
+
+  it('lets the scheduler role invoke the API function and nothing else', () => {
+    const { functionId, roleId } = readStreakReminderTarget();
+    const functionArn = { 'Fn::GetAtt': [functionId, 'Arn'] };
+    expect(readStatementsOfRole(roleId)).toEqual([
+      {
+        Action: 'lambda:InvokeFunction',
+        Effect: 'Allow',
+        Resource: [functionArn, { 'Fn::Join': ['', [functionArn, ':*']] }],
+      },
+    ]);
+  });
+
+  it('schedules nothing on a preview, which holds no push subscription', () => {
+    synthAppStack('preview').resourceCountIs('AWS::Scheduler::Schedule', 0);
+  });
+});

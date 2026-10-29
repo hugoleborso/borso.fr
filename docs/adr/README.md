@@ -101,6 +101,7 @@ No:
 | [0050](./0050-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | accepted | 2026-10-27 |
 | [0051](./0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
 | [0052](./0052-pragma-previews-clone-takes-and-read-their-audio-from-production.md) | pragma previews clone takes and read their audio from the production uploads bucket | accepted | 2026-10-29 |
+| [202610291139](./202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda | proposed | 2026-10-29 |
 
 ### Data layer
 
@@ -140,6 +141,7 @@ No:
 
 - [`0021-api-gateway-websocket-pushes-banana-rush-round-state.md`](./0021-api-gateway-websocket-pushes-banana-rush-round-state.md) — an API Gateway WebSocket API, wrapped in a new `WebSocketChannel` construct, pushes lobby and round state to the phones playing Banana Rush; chosen over polling and over streamed Lambda responses because it delivers a simultaneous reveal and bills per message and per connection minute with no fixed charge.
 - 0027 — talos deploys to prod only; an app opts out of previews with `"borso": { "previews": false }`, because a talos preview would serve private content on a public host.
+- 202610291139 — pragma's 20:00 streak reminder runs on EventBridge Scheduler in `Europe/Paris`, production only, and invokes the API Lambda with a fixed payload, so the time holds across daylight saving and the job reuses the API's DSQL role; the cost is a second event shape on the API entry point.
 
 ### Harness
 

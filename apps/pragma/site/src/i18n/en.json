@@ -740,12 +740,6 @@
   "studies": {
     "title": "Studies",
     "subtitle": "What everyone worked on, and whether we are ready for the next concert.",
-    "streakDays_one": "day streak",
-    "streakDays_other": "day streak",
-    "todayCounted": "today counted",
-    "todayPending": "today not yet",
-    "jokerAvailable": "joker available",
-    "jokerUsed": "joker used",
     "notReady": "not ready",
     "ready": "ready",
     "scoreLabel": "My mastery",
@@ -835,7 +829,8 @@
       "takes": "New takes",
       "takeComments": "Comments on takes",
       "sessions": "Sessions",
-      "setlists": "Setlists, lineups and transitions"
+      "setlists": "Setlists, lineups and transitions",
+      "streak": "Daily flame reminder at 20:00"
     }
   },
   "install": {
@@ -879,6 +874,20 @@
     "yourPart": "My part",
     "yourTasks": "My tasks",
     "sectionsLabel": "My part or my tasks"
+  },
+  "streaks": {
+    "mineChip_one": "Your flame, {{count}} day, {{status}}",
+    "mineChip_other": "Your flame, {{count}} days, {{status}}",
+    "bandChip_one": "Band flame, {{count}} day",
+    "bandChip_other": "Band flame, {{count}} days",
+    "todayCounted": "today counted",
+    "todayOpen": "today still open",
+    "jokersLeft_one": "{{count}} joker left this week",
+    "jokersLeft_other": "{{count}} jokers left this week",
+    "noFlame": "No flame yet",
+    "sheetTitle": "Flames",
+    "bandTitle": "Band",
+    "studyASong": "Study a song"
   },
   "band": {
     "title": "Band",

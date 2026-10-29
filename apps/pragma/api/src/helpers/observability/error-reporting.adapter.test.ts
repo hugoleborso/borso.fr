@@ -1,5 +1,6 @@
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
+  flushErrorReports,
   reportTaggedFailure,
   reportUnhandledError,
   startErrorReporting,
@@ -49,6 +50,7 @@ describe('startErrorReporting', () => {
       dsn: DSN,
       environment: 'prod',
       release: 'abc123',
+      initialScope: { tags: { app: 'pragma' } },
       tracesSampleRate: 1,
       tracePropagationTargets: [],
       dataCollection: {
@@ -80,6 +82,18 @@ describe('reportUnhandledError', () => {
     reportUnhandledError(failure);
 
     expect(sentry.captureException).toHaveBeenCalledWith(failure);
+  });
+});
+
+describe('flushErrorReports', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('waits for the SDK to send what a scheduled job reported before the Lambda freezes', async () => {
+    await flushErrorReports();
+
+    expect(sentry.flush).toHaveBeenCalledWith(2_000);
   });
 });
 

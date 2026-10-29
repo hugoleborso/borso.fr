@@ -6,10 +6,14 @@ import {
   buildCategoryToggles,
   buildGroupKey,
   buildNotificationPayload,
+  type CategoryPreference,
   type CategoryToggle,
   countDelivered,
   isGroupDue,
+  type NotificationCategory,
   type NotificationEvent,
+  type NotificationPayload,
+  type PersonalPushOutcome,
   type PushDeliveryOutcome,
   type PushFailureReport,
   selectCategory,
@@ -25,6 +29,7 @@ import {
   findMemberFirstName,
   findVapidKeyPair,
   hasClaimedDispatch,
+  hasClaimedFirstDispatch,
   insertVapidKeyPairUnlessPresent,
   listPreferencesOfCategory,
   listPreferencesOfMember,
@@ -36,9 +41,22 @@ import {
 import type { PreferencesUpdateInput, PushSubscriptionInput } from './notifications.schema';
 import { deliverWebPush, generateVapidKeyPair, type VapidKeys } from './web-push.adapter';
 
-export type { NotificationEvent, WriteActor } from './notifications.core';
+export type { NotificationEvent, PersonalPushOutcome, WriteActor } from './notifications.core';
 
 export type NotifyOutcome = 'no-recipients' | 'grouped' | 'sent' | 'timed-out' | 'failed';
+
+export interface PushAudience {
+  readonly subscriptions: readonly PushSubscriptionRow[];
+  readonly preferences: readonly CategoryPreference[];
+}
+
+export interface PersonalPush {
+  readonly groupKey: string;
+  readonly recipients: readonly PushSubscriptionRow[];
+  readonly payload: NotificationPayload;
+  readonly now: Date;
+  readonly failureName: string;
+}
 
 const PUSH_SEND_DEADLINE_MILLISECONDS = 5_000;
 const PUSH_SEND_FAILED = 'PushSendFailed';
@@ -109,6 +127,15 @@ async function hasClaimedGroup(groupKey: string, now: Date): Promise<boolean> {
   }
 }
 
+async function hasClaimedOnlyDispatch(groupKey: string, now: Date): Promise<boolean> {
+  try {
+    return await hasClaimedFirstDispatch(groupKey, now);
+  } catch (error) {
+    if (isConflictAbort(error)) return false;
+    throw error;
+  }
+}
+
 async function sendWithinDeadline(
   sends: Promise<PushDeliveryOutcome[]>,
 ): Promise<PushDeliveryOutcome[] | null> {
@@ -125,16 +152,41 @@ async function sendWithinDeadline(
   }
 }
 
-function reportSendFailures(failures: readonly PushFailureReport[]): void {
+function reportSendFailures(failures: readonly PushFailureReport[], failureName: string): void {
   for (const failure of failures) {
     const status = failure.statusCode === null ? UNKNOWN_STATUS : String(failure.statusCode);
-    console.warn(JSON.stringify({ event: PUSH_SEND_FAILED, host: failure.host, status }));
+    console.warn(JSON.stringify({ event: failureName, host: failure.host, status }));
     reportTaggedFailure({
-      name: PUSH_SEND_FAILED,
+      name: failureName,
       tags: { 'push.host': failure.host, 'push.status': status },
     });
     recordProductEvent({ event: 'push_failed', status });
   }
+}
+
+async function deliverPayload(
+  recipients: readonly PushSubscriptionRow[],
+  payload: NotificationPayload,
+  delivery: { readonly vapidKeys: VapidKeys; readonly failureName: string },
+): Promise<Exclude<PersonalPushOutcome, 'already-sent'>> {
+  const encodedNotification = JSON.stringify(payload);
+  const outcomes = await sendWithinDeadline(
+    Promise.all(
+      recipients.map(
+        async (recipient) =>
+          await deliverWebPush(recipient, encodedNotification, { vapidKeys: delivery.vapidKeys }),
+      ),
+    ),
+  );
+  if (outcomes === null) {
+    console.warn(JSON.stringify({ event: PUSH_SEND_TIMED_OUT, recipients: recipients.length }));
+    reportTaggedFailure({ name: PUSH_SEND_TIMED_OUT, tags: { 'push.kind': payload.messageKey } });
+    return 'timed-out';
+  }
+  await deleteSubscriptions(selectExpiredEndpoints(recipients, outcomes));
+  reportSendFailures(selectFailureReports(recipients, outcomes), delivery.failureName);
+  recordProductEvent({ event: 'push_sent', delivered: countDelivered(outcomes) });
+  return 'sent';
 }
 
 async function deliverToRecipients(
@@ -142,33 +194,19 @@ async function deliverToRecipients(
   event: NotificationEvent,
   vapidKeys: VapidKeys,
 ): Promise<NotifyOutcome> {
-  const encodedNotification = JSON.stringify(
-    buildNotificationPayload(event, await findMemberFirstName(event.actorMemberId)),
+  const notification = buildNotificationPayload(
+    event,
+    await findMemberFirstName(event.actorMemberId),
   );
-  const outcomes = await sendWithinDeadline(
-    Promise.all(
-      recipients.map(
-        async (recipient) => await deliverWebPush(recipient, encodedNotification, { vapidKeys }),
-      ),
-    ),
-  );
-  if (outcomes === null) {
-    console.warn(JSON.stringify({ event: PUSH_SEND_TIMED_OUT, recipients: recipients.length }));
-    reportTaggedFailure({ name: PUSH_SEND_TIMED_OUT, tags: { 'push.kind': event.kind } });
-    return 'timed-out';
-  }
-  await deleteSubscriptions(selectExpiredEndpoints(recipients, outcomes));
-  reportSendFailures(selectFailureReports(recipients, outcomes));
-  recordProductEvent({ event: 'push_sent', delivered: countDelivered(outcomes) });
-  return 'sent';
+  return await deliverPayload(recipients, notification, {
+    vapidKeys,
+    failureName: PUSH_SEND_FAILED,
+  });
 }
 
 async function notifyRecipients(event: NotificationEvent, now: Date): Promise<NotifyOutcome> {
   const category = selectCategory(event);
-  const [subscriptions, preferences] = await Promise.all([
-    listSubscriptions(),
-    listPreferencesOfCategory(category),
-  ]);
+  const { subscriptions, preferences } = await readPushAudience(category);
   const recipients = selectRecipients(subscriptions, preferences, {
     actorMemberId: event.actorMemberId,
     category,
@@ -188,4 +226,21 @@ export async function notifyBand(event: NotificationEvent, now: Date): Promise<N
     reportTaggedFailure({ name: NOTIFY_BAND_FAILED, tags: { 'push.kind': event.kind } });
     return 'failed';
   }
+}
+
+export async function readPushAudience(category: NotificationCategory): Promise<PushAudience> {
+  const [subscriptions, preferences] = await Promise.all([
+    listSubscriptions(),
+    listPreferencesOfCategory(category),
+  ]);
+  return { subscriptions, preferences };
+}
+
+export async function sendPersonalPush(push: PersonalPush): Promise<PersonalPushOutcome> {
+  const vapidKeys = await readVapidKeys();
+  if (!(await hasClaimedOnlyDispatch(push.groupKey, push.now))) return 'already-sent';
+  return await deliverPayload(push.recipients, push.payload, {
+    vapidKeys,
+    failureName: push.failureName,
+  });
 }

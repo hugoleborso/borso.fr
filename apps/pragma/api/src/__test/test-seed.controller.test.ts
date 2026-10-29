@@ -12,7 +12,9 @@ import { listSessions } from '../sessions/sessions.repository';
 import { listEntries } from '../setlists/setlist-entry.repository';
 import { listSetlistsOfSession } from '../setlists/setlists.repository';
 import { listSongsNewestFirst } from '../songs/songs.repository';
+import { readPersonalFlame } from '../streaks/streaks.service';
 import { listTasks } from '../tasks/tasks.repository';
+import { seedPreviewFixture } from './test-seed.service';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 const SEED_ADMIN_PASSWORD = 'pragma-preview';
@@ -32,6 +34,8 @@ async function postSeed(): Promise<Response> {
 }
 
 const VALIDATOR_ADDRESS = '198.51.100.90';
+const LATE_EVENING_AFTER_CLOCK_CHANGE = new Date('2026-10-29T22:30:00Z');
+const SEEDED_HUGO_FLAME_DAYS = 4;
 const LOGIN_BUDGET = 5;
 
 async function postLogin(password: string, username = 'hugo'): Promise<Response> {
@@ -108,6 +112,15 @@ describe('__test/test-seed.controller (back-e2e)', () => {
     const setlistEntries = await listEntries(setlist.id);
     expect(setlistEntries.length).toBe(6);
     expect(setlistEntries.every((entry) => entry.energy === null)).toBe(true);
+  });
+
+  it('seeds Hugo his planned flame on a late evening after the 25 October clock change', async () => {
+    await seedPreviewFixture(LATE_EVENING_AFTER_CLOCK_CHANGE, 'http://localhost');
+    const hugo = (await listMembers()).find((member) => member.firstName === 'Hugo');
+    if (hugo === undefined) throw new Error('the seed has no Hugo');
+    const flame = await readPersonalFlame(hugo.id, LATE_EVENING_AFTER_CLOCK_CHANGE);
+    expect(flame.days).toBe(SEEDED_HUGO_FLAME_DAYS);
+    expect(flame.isTodayCounted).toBe(false);
   });
 
   it('bootstraps the admin password so the seeded preview is loginable', async () => {

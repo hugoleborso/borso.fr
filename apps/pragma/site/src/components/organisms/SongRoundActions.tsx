@@ -28,8 +28,8 @@ export function SongRoundActions({
   const memberQuery = useSignedInMember();
   const overviewQuery = useStudiesOverview();
   const memberId = memberQuery.data?.memberId ?? null;
-  const logStudy = useLogStudy(memberId ?? '');
-  const undoStudy = useUndoStudy(memberId ?? '');
+  const logStudy = useLogStudy();
+  const undoStudy = useUndoStudy();
   const [practisedHere, setPractisedHere] = useState<boolean | null>(null);
   const [isNotesOpen, setIsNotesOpen] = useState(false);
   const practised = selectPractisedState(

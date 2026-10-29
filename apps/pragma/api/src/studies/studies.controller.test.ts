@@ -15,15 +15,8 @@ type TestApp = Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'];
 
 const idEnvelope = (key: string) => z.object({ [key]: z.object({ id: z.string().uuid() }) });
 
-const streakSchema = z.object({
-  days: z.number(),
-  isTodayCounted: z.boolean(),
-  isJokerAvailable: z.boolean(),
-});
-
 const overviewSchema = z.object({
   today: z.string(),
-  myStreak: streakSchema,
   queue: z.array(
     z.object({
       songId: z.string(),
@@ -33,15 +26,16 @@ const overviewSchema = z.object({
       isStudiedToday: z.boolean(),
     }),
   ),
-  band: z.array(
-    z.object({ memberId: z.string(), streak: streakSchema, studiesThisWeek: z.number() }),
-  ),
   readiness: z
     .object({
       concertId: z.string(),
       songs: z.array(z.object({ songId: z.string(), isReady: z.boolean() })),
     })
     .nullable(),
+});
+
+const mineSchema = z.object({
+  mine: z.object({ days: z.number(), isTodayCounted: z.boolean() }),
 });
 
 const FUTURE_CONCERT_DATE = '2099-06-21T20:00:00.000Z';
@@ -99,7 +93,7 @@ describe('studies controller (back-e2e)', () => {
     expect((await jsonRequest(app, '/api/studies/overview')).status).toBe(401);
   });
 
-  it('logs a study once per day and counts it in the streak', async () => {
+  it('logs a study once per day', async () => {
     const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
     const { songId, instrumentId } = await seedSongPlayedBy(app, cookieHeader, memberId);
 
@@ -116,9 +110,10 @@ describe('studies controller (back-e2e)', () => {
 
     expect(first.status).toBe(201);
     expect(second.status).toBe(201);
+    const { streaks } = await readJson(first, z.object({ streaks: mineSchema }));
+    expect(streaks.mine).toEqual({ days: 1, isTodayCounted: true });
     expect(await testDatabase().select().from(studyTable)).toHaveLength(1);
     const overview = await readOverview(app, cookieHeader);
-    expect(overview.myStreak).toEqual({ days: 1, isTodayCounted: true, isJokerAvailable: true });
     expect(overview.queue).toEqual([
       { songId, instrumentId, score: null, isReady: null, isStudiedToday: true },
     ]);
@@ -227,16 +222,22 @@ describe('studies controller (back-e2e)', () => {
       cookieHeader,
     });
     expect(undone.status).toBe(200);
-    expect(
-      await readJson(
-        undone,
-        z.object({ myLine: z.object({ streak: streakSchema, studiesThisWeek: z.number() }) }),
-      ),
-    ).toEqual({
-      myLine: {
-        streak: { days: 0, isTodayCounted: false, isJokerAvailable: true },
-        studiesThisWeek: 0,
-      },
+    const undoneBody = await readJson(
+      undone,
+      z
+        .object({
+          songId: z.string(),
+          instrumentId: z.string(),
+          deleted: z.boolean(),
+          streaks: mineSchema,
+        })
+        .strict(),
+    );
+    expect(undoneBody).toEqual({
+      songId,
+      instrumentId,
+      deleted: true,
+      streaks: { mine: { days: 0, isTodayCounted: false } },
     });
     expect(again.status).toBe(404);
   });
@@ -319,10 +320,9 @@ describe('studies controller (back-e2e)', () => {
     );
   });
 
-  it('lists every band member with a streak', async () => {
-    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+  it('answers no readiness when no concert is coming', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
     const overview = await readOverview(app, cookieHeader);
-    expect(overview.band.map((member) => member.memberId)).toEqual([memberId]);
     expect(overview.readiness).toBeNull();
   });
 

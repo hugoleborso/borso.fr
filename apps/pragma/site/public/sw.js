@@ -195,6 +195,9 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': '{actorName} changed the setlist {setlistName}',
       'song-lineup-changed': '{actorName} changed the lineup of {songTitle}',
       'transition-changed': '{actorName} changed the transition {songATitle} → {songBTitle}',
+      'streak-at-risk': 'Keep your {days}-day flame alive. Log a study before midnight.',
+      'streak-band-count': '{count} members already practised today. Your turn?',
+      'streak-band-count-one': '1 member already practised today. Your turn?',
     },
   },
   fr: {
@@ -208,6 +211,9 @@ const NOTIFICATION_TEXT = {
       'setlist-changed': '{actorName} a modifié la setlist {setlistName}',
       'song-lineup-changed': '{actorName} a modifié la composition de {songTitle}',
       'transition-changed': '{actorName} a modifié la transition {songATitle} → {songBTitle}',
+      'streak-at-risk': 'Garde ta flamme de {days} jours. Note une étude avant minuit.',
+      'streak-band-count': '{count} membres ont déjà pratiqué aujourd’hui. À toi ?',
+      'streak-band-count-one': '1 membre a déjà pratiqué aujourd’hui. À toi ?',
     },
   },
 };

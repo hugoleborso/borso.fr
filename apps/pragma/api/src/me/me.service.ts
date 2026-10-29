@@ -3,11 +3,10 @@ import { listCalendarFeeds } from '../calendar-feeds/calendar-feeds.service';
 import type { CalendarFeedSummary } from '../calendar-feeds/calendar-feeds.types';
 import { getMembersSortedByFirstName, patchMember } from '../members/members.service';
 import { confirmUpdate, type ToolActor } from '../mcp/mcp.service';
-import {
-  describeOwnLine,
-  readStudiesOverviewForTool,
-  writeStudyForTool,
-} from '../studies/studies.service';
+import type { PersonalFlame } from '@domain/practice-flame.core';
+import { projectStreaksForTool } from '../streaks/streaks.core';
+import { readPersonalFlame, readStreaks } from '../streaks/streaks.service';
+import { readStudiesOverviewForTool, writeStudyForTool } from '../studies/studies.service';
 
 export { changePassword } from '../auth/credentials.service';
 export { removeCalendarFeed, saveCalendarFeed } from '../calendar-feeds/calendar-feeds.service';
@@ -75,7 +74,9 @@ interface StudyToolEntry {
   readonly undo?: boolean;
 }
 
-export type OwnStudyLine = ReturnType<typeof describeOwnLine>;
+export interface OwnStudyLine {
+  readonly flame: PersonalFlame;
+}
 
 export type MeToolUpdateOutcome =
   | {
@@ -87,12 +88,13 @@ export type MeToolUpdateOutcome =
   | { readonly kind: 'refused'; readonly error: string };
 
 export async function readMeForTool(memberId: string, now: Date) {
-  const [member, studies] = await Promise.all([
+  const [member, studies, streaks] = await Promise.all([
     readSignedInMember(memberId),
     readStudiesOverviewForTool(memberId, now),
+    readStreaks(memberId, now),
   ]);
   if (member === null) return null;
-  return { ...member, studies };
+  return { ...member, studies, flames: projectStreaksForTool(streaks) };
 }
 
 async function logOwnStudy(
@@ -107,7 +109,7 @@ async function logOwnStudy(
     now: actor.now,
   });
   if (outcome.kind !== 'ok') return { error: outcome.kind };
-  return describeOwnLine(outcome.myLine);
+  return { flame: await readPersonalFlame(actor.memberId, actor.now) };
 }
 
 // @FollowsBlueprint service-orchestration

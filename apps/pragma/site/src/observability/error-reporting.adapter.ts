@@ -23,12 +23,15 @@ const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   urlQueryParams: false,
 };
 
+const SHARED_PROJECT_APP_TAGS = { app: 'pragma' } as const;
+
 // @FollowsBlueprint adapter-external-service
 export function startErrorReporting(settings: ErrorReportingSettings | undefined): void {
   if (settings === undefined) return;
   Sentry.init({
     dsn: settings.dsn,
     environment: settings.environment,
+    initialScope: { tags: SHARED_PROJECT_APP_TAGS },
     dataCollection: PRIVATE_DATA_COLLECTION,
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: [...settings.tracePropagationTargets],
@@ -85,6 +88,12 @@ export function reportSetlistBatchAddFailed(setlistId: string): void {
     level: 'error',
     tags: { 'setlist.id': setlistId },
   });
+}
+
+const STREAKS_READ_FAILED = 'StreaksReadFailed';
+
+export function reportStreaksReadFailed(error: Error): void {
+  Sentry.captureException(error, { extra: { name: STREAKS_READ_FAILED } });
 }
 
 export type TakeBreadcrumb = 'RecordingInterrupted' | 'take_upload_retried';

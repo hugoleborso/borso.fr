@@ -740,12 +740,6 @@
   "studies": {
     "title": "Révisions",
     "subtitle": "Ce que chacun a bossé, et si on est prêts pour le prochain concert.",
-    "streakDays_one": "jour de série",
-    "streakDays_other": "jours de série",
-    "todayCounted": "aujourd'hui compté",
-    "todayPending": "aujourd'hui pas encore",
-    "jokerAvailable": "joker dispo",
-    "jokerUsed": "joker utilisé",
     "notReady": "pas prêt",
     "ready": "prêt",
     "scoreLabel": "Ma maîtrise",
@@ -835,7 +829,8 @@
       "takes": "Les nouvelles prises",
       "takeComments": "Les commentaires sur les prises",
       "sessions": "Les sessions",
-      "setlists": "Les setlists, compositions et transitions"
+      "setlists": "Les setlists, compositions et transitions",
+      "streak": "Rappel de flamme chaque jour à 20 h"
     }
   },
   "install": {
@@ -879,6 +874,20 @@
     "yourPart": "Ma partie",
     "yourTasks": "Mes tâches",
     "sectionsLabel": "Ma partie ou mes tâches"
+  },
+  "streaks": {
+    "mineChip_one": "Ta flamme, {{count}} jour, {{status}}",
+    "mineChip_other": "Ta flamme, {{count}} jours, {{status}}",
+    "bandChip_one": "Flamme du groupe, {{count}} jour",
+    "bandChip_other": "Flamme du groupe, {{count}} jours",
+    "todayCounted": "aujourd’hui compté",
+    "todayOpen": "aujourd’hui encore ouvert",
+    "jokersLeft_one": "{{count}} joker restant cette semaine",
+    "jokersLeft_other": "{{count}} jokers restants cette semaine",
+    "noFlame": "Pas encore de flamme",
+    "sheetTitle": "Flammes",
+    "bandTitle": "Groupe",
+    "studyASong": "Étudier un morceau"
   },
   "band": {
     "title": "Groupe",

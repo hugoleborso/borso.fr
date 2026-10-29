@@ -7,7 +7,8 @@
 #            already deployed, otherwise cdk deploy <app>-pr-<n> and
 #            sticky comment the preview URL on the PR
 #   teardown → on PR close, and on every push of a Dependabot PR, iterate
-#              every app and cdk destroy the stacks that exist.
+#              every app, cdk destroy the stacks that exist, mark their
+#              deployments inactive and delete their GitHub environments.
 #
 # `detect` answers "what does this pull request touch", not "what changed
 # since this preview was last built": dorny/paths-filter on a pull_request
@@ -157,11 +158,11 @@ jobs:
       # ingest key, so it is a repository variable; the upload token is a
       # secret and reaches no other application's build. Unset values leave
       # Sentry off: the site and the API both treat an empty DSN as no project.
-      VITE_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.PRAGMA_SENTRY_DSN || '' }}
-      PRAGMA_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.PRAGMA_SENTRY_DSN || '' }}
+      VITE_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
+      PRAGMA_SENTRY_DSN: ${{ matrix.app == 'pragma' && vars.SENTRY_DSN || '' }}
       SENTRY_AUTH_TOKEN: ${{ matrix.app == 'pragma' && secrets.SENTRY_AUTH_TOKEN || '' }}
       SENTRY_ORG: ${{ vars.SENTRY_ORG }}
-      SENTRY_PROJECT: ${{ vars.PRAGMA_SENTRY_PROJECT }}
+      SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
     steps:
       - uses: actions/checkout@v7
       # Digest of everything this app's preview is built from. Tree hashes
@@ -522,5 +523,40 @@ jobs:
                   deployment_id: d.id,
                   state: 'inactive',
                 });
+              }
+            }
+      # Deleting an environment needs Administration: write, which no
+      # `permissions:` key grants GITHUB_TOKEN, so it takes a fine-grained PAT.
+      # Without it the environments pile up (398 were purged by hand on
+      # 2026-10-29). Deleting one leaves its deployments in place, which is
+      # why the inactive step above still runs first.
+      - name: Delete every app's preview environment
+        if: always()
+        uses: actions/github-script@v9
+        env:
+          APPS_JSON: ${{ steps.apps.outputs.list }}
+          PR_NUMBER: ${{ github.event.pull_request.number }}
+          ENVIRONMENTS_ADMIN_TOKEN: ${{ secrets.ENVIRONMENTS_ADMIN_TOKEN }}
+        with:
+          script: |
+            if (!process.env.ENVIRONMENTS_ADMIN_TOKEN) {
+              core.warning('ENVIRONMENTS_ADMIN_TOKEN is not set; preview environments are left in place.');
+              return;
+            }
+            const NOT_FOUND = 404;
+            const admin = getOctokit(process.env.ENVIRONMENTS_ADMIN_TOKEN);
+            const apps = JSON.parse(process.env.APPS_JSON);
+            for (const app of apps) {
+              const environment_name = `preview-${app}-pr-${process.env.PR_NUMBER}`;
+              try {
+                await admin.rest.repos.deleteAnEnvironment({
+                  owner: context.repo.owner,
+                  repo: context.repo.repo,
+                  environment_name,
+                });
+                core.info(`[ok] ${environment_name} deleted`);
+              } catch (error) {
+                if (error.status !== NOT_FOUND) throw error;
+                core.info(`[skip] ${environment_name}: environment does not exist`);
               }
             }

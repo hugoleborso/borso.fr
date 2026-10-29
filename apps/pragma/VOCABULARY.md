@@ -1177,7 +1177,7 @@ Lives in: `api/src/studies/`
   transaction, and is refused with `song-not-found` or
   `instrument-not-found` when a claim finds no row.
 
-Held by: `api/src/studies/studies.controller.test.ts` › logs a study once per day and counts it in the streak
+Held by: `api/src/studies/studies.controller.test.ts` › logs a study once per day
 Held by: `api/src/studies/studies.controller.test.ts` › refuses a body carrying a date, so a study cannot be back-dated
 Held by: `api/src/studies/studies.controller.test.ts` › refuses to undo a study of yesterday
 Held by: `api/src/studies/studies.controller.test.ts` › accepts an instrument held only through a setlist lineup override
@@ -1189,22 +1189,64 @@ Held by: `api/src/studies/studies.controller.test.ts` › logs the study once wh
 Not to be confused with: a **practice**, which is the band playing
 together and is a kind of session.
 
+## Flame
+
+How many days a member, or the band, has kept practising, counted back from
+today.
+
+Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
+
+- A day is the `Europe/Paris` calendar day. It is active for a member when
+  that member logged a **study** that day, or when a **session** of either
+  kind is dated that day. Takes do not count.
+- The personal flame walks back from today. Today never breaks it: while
+  today is not active, the walk starts from yesterday. An active day adds 1.
+- A missed day spends one joker of its Monday-to-Sunday week, and each week
+  has 3. A gap is bridged whole or not at all, so jokers are spent only on a
+  gap with an active day on its older side; while today is open, today
+  stands as the newer side. A day bridged by a joker adds nothing.
+- Jokers left this week is 3 minus the jokers the walk spent since Monday.
+- The band flame counts a day when any current member is active, and has no
+  joker: its first missed day ends it. A deleted member's studies drop out.
+- Not stored: it is computed on every read from the last 400 days of studies
+  and sessions (`STREAK_LOOKBACK_DAYS`).
+- Shown on Home as two chips that open the streak sheet: the member's own
+  flame and the band's. Both are drawn marks, not `Icon` glyphs. The
+  personal flame is the `BlazeMark`, one flame in three layers with sparks.
+  The band flame is the `BonfireMark`, three tilted flames. Each reads a
+  tone. `counted` (today counts) layers `flame-deep`, `flame-mid` and
+  `flame-core` under a `flame-glow` drop shadow, and the bonfire flickers
+  unless motion is reduced. `open` (today not yet) is `accent-soft` with an
+  `accent` outline and a faint core. `out` (0 days) is an `ink-faint`
+  outline with no spark. Logging or undoing a study settles it from the
+  flames the write answers, read in the write's own transaction.
+
+Held by: `site/src/routes/home/HomePage.test.tsx` › puts both flames on the title line, and a tap on either opens the streak sheet
+Held by: `site/src/lib/queries/streaks.queries.test.tsx` › settles the flames from the answer once a study is logged
+Held by: `domain/practice-flame.core.test.ts` › keeps a run ending yesterday alive while today is still open
+Held by: `domain/practice-flame.core.test.ts` › bridges a gap that ends yesterday while today is open (Q-A)
+Held by: `domain/practice-flame.core.test.ts` › bridges a gap that crosses a Monday with each week’s own jokers
+Held by: `domain/practice-flame.core.test.ts` › ends the flame on a fourth missed day in one week
+Held by: `domain/practice-flame.core.test.ts` › spends no joker on a gap it cannot bridge whole
+Held by: `domain/practice-flame.core.test.ts` › counts jokers left this week from the jokers spent since Monday
+Held by: `domain/practice-flame.core.test.ts` › ends the band flame on its first missed day, with no joker
+Held by: `api/src/streaks/streaks.core.test.ts` › ignores the study of a member who was deleted
+Held by: `api/src/streaks/streaks.controller.test.ts` › counts every member’s day when a session is dated today
+
 ## Streak
 
-How many days a member has kept studying, read from their studies.
+The feature that shows **flames**. The word names its surface, never the
+count: `GET /api/streaks`, the `streaks/` slice, the streak sheet, the
+`streak` push category and the `streak-reminder` job.
 
-Lives in: `api/src/studies/` (`computeStreak` in `streak.core.ts`)
+Lives in: `api/src/streaks/`
 
-- A day counts when it holds at least one study. Today never ends a streak
-  before it is over.
-- One missed day in any seven is forgiven, which the screen calls the
-  joker; a second missed day inside that window ends the streak.
-- Not stored: it is computed on every read from the last 400 days of
-  studies (`STREAK_LOOKBACK_DAYS`).
+- The `streak-reminder` job runs at 20:00 `Europe/Paris` in production only.
+  A member whose day has not counted gets at most one push that day, claimed
+  on the group key `streak:<memberId>:<day>`.
 
-Held by: `api/src/studies/streak.core.test.ts` › keeps a run ending yesterday alive while today is still open
-Held by: `api/src/studies/streak.core.test.ts` › bridges one missed day and spends the joker
-Held by: `api/src/studies/streak.core.test.ts` › ends the streak on a second missed day within seven days
+Held by: `api/src/streaks/streaks.controller.test.ts` › counts today after a study and drops it after the undo
+Held by: `api/src/streaks/streak-reminder.service.test.ts` › sends one push per open member and claims each group once when run twice
 
 ## Concert readiness
 
