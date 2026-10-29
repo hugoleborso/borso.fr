@@ -280,6 +280,11 @@ For each surviving subject:
    knowledge as last resort). The frontmatter records
    `eradication-level`. Each entry links the commit SHA + diff
    snippet of the eradication.
+   **A new check proves it can fail, here, once.** Reintroduce the
+   defect on a scratch copy, run the check, paste its refusal into the
+   entry, then revert. The repository keeps no standing canary, so this
+   step is the only proof. Prefer removing a mechanism over adding a
+   check, and never add a check that only guards the harness.
 6. Add a one-line entry to `docs/dantotsus/README.md` index.
 
 **Vendor surprises / operator confusion / reusable insights →
