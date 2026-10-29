@@ -4,7 +4,6 @@ import { useForm } from '@tanstack/react-form';
 import { type JSX, useRef } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
-import { Chip } from '../atoms/Chip';
 import { Icon } from '../atoms/Icon';
 import {
   formValuesToLineup,
@@ -13,15 +12,12 @@ import {
   lineupToFormValues,
   toggleInstrumentHeld,
 } from './lineup-editor.core';
-import { MemberChip } from './MemberChip';
+import { LineupMemberRow, type LineupMemberRowInstrument } from './LineupMemberRow';
 import { Sheet } from './Sheet';
 
 export type { LineupEditorMember, LineupRecord };
 
-export interface LineupEditorInstrument {
-  readonly id: string;
-  readonly name: string;
-}
+export type LineupEditorInstrument = LineupMemberRowInstrument;
 
 export type LineupEditorSurface = 'song' | 'setlist-entry';
 
@@ -117,38 +113,18 @@ function LineupEditorContent({
     >
       <ul className="m-0 flex list-none flex-col gap-3 p-0">
         {members.map((member) => (
-          <li key={member.id} className="flex flex-col gap-1.5">
-            <div className="flex items-center gap-2">
-              <MemberChip memberName={member.name} memberColor={member.color} size="xs" />
-              <span className="text-meta font-medium text-ink">{member.name}</span>
-            </div>
-            <form.Field name={member.id}>
-              {(field) => (
-                <div
-                  className="flex flex-wrap gap-1.5"
-                  role="group"
-                  aria-label={`${member.name} — ${t('lineup.instruments')}`}
-                >
-                  {instruments.map((instrument) => (
-                    <Chip
-                      key={instrument.id}
-                      pressed={field.state.value.includes(instrument.id)}
-                      onPress={() =>
-                        field.handleChange(toggleInstrumentHeld(field.state.value, instrument.id))
-                      }
-                    >
-                      {instrument.name}
-                    </Chip>
-                  ))}
-                  {field.state.value.length === 0 ? (
-                    <span className="self-center pl-1 text-meta text-ink-soft">
-                      {t('lineup.notPlaying')}
-                    </span>
-                  ) : null}
-                </div>
-              )}
-            </form.Field>
-          </li>
+          <form.Field key={member.id} name={member.id}>
+            {(field) => (
+              <LineupMemberRow
+                member={member}
+                instruments={instruments}
+                heldInstrumentIds={field.state.value}
+                onToggle={(instrumentId) =>
+                  field.handleChange(toggleInstrumentHeld(field.state.value, instrumentId))
+                }
+              />
+            )}
+          </form.Field>
         ))}
       </ul>
       <div className="mt-4 flex flex-wrap gap-2">

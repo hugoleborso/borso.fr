@@ -16,13 +16,7 @@ export function SongDeleteAction({ onDelete }: SongDeleteActionProps): JSX.Eleme
   const [isPending, setIsPending] = useState<boolean>(false);
   return (
     <div className="flex mt-6 pt-4 border-t border-rule">
-      <Button
-        type="button"
-        variant="quiet"
-        className="text-danger ml-auto"
-        onClick={() => setIsPending(true)}
-        icon="trash"
-      >
+      <Button type="button" variant="danger" onClick={() => setIsPending(true)} icon="trash">
         {t('common.delete')}
       </Button>
       {isPending ? (

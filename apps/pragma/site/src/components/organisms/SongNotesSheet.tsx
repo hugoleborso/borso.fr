@@ -26,7 +26,12 @@ export function SongNotesSheet({ songId, notes, onClose }: SongNotesSheetProps):
         <EmptyState
           icon="text"
           action={
-            <ButtonLink to={`/catalog/${songId}/edit`} variant="secondary" size="sm" icon="edit">
+            <ButtonLink
+              to={`/catalog/${songId}/edit?section=notes`}
+              variant="secondary"
+              size="sm"
+              icon="edit"
+            >
               {t('common.edit')}
             </ButtonLink>
           }

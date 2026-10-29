@@ -21,7 +21,7 @@ export function SongLinkAdder({
 }: SongLinkAdderProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <fieldset className="border border-rule rounded-md p-3 mt-2">
+    <fieldset className="border border-rule rounded-md p-3">
       <legend className="text-label tracking-wider uppercase text-ink-soft font-medium px-2">
         {t('catalog.linksTitle')}
       </legend>

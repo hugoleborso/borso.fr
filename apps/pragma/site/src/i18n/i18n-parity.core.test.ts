@@ -26,6 +26,11 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     key: 'catalog.chordsTextPlaceholder',
     readsTheSameBecause: 'a sample chord chart, lyrics in the language of the song',
   },
+  {
+    key: 'catalog.editSectionLineup',
+    readsTheSameBecause: '"lineup" is the word French musicians use here',
+  },
+  { key: 'catalog.editSectionNotes', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.linkPlaceholder', readsTheSameBecause: 'a URL placeholder, not prose' },
   { key: 'catalog.listenDeezer', readsTheSameBecause: 'Deezer, a proper noun' },
   { key: 'catalog.listenSpotify', readsTheSameBecause: 'Spotify, a proper noun' },

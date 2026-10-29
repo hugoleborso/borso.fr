@@ -25,7 +25,7 @@ describe('SongNotesSheet', () => {
     );
     expect(screen.getByText('Nothing written down for this song yet.')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Edit' }).getAttribute('href')).toBe(
-      '/catalog/song-1/edit',
+      '/catalog/song-1/edit?section=notes',
     );
   });
 });

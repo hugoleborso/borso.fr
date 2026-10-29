@@ -34,6 +34,7 @@ const API_SONG: Song = {
   structureNotes: 'intro ×4',
   gimmickNotes: 'break avant le dernier refrain',
   notes: '',
+  defaultLineup: { 'member-1': ['bass'] },
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -94,6 +95,7 @@ describe('songFromApi', () => {
       structureNotes: 'intro ×4',
       gimmickNotes: 'break avant le dernier refrain',
       notes: '',
+      defaultLineup: { 'member-1': ['bass'] },
     });
   });
 
@@ -194,6 +196,7 @@ describe('payloadFromDraft', () => {
       gimmickNotes: '',
       notes: '',
       tags: [],
+      defaultLineup: {},
     });
   });
 

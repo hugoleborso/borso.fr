@@ -10,7 +10,6 @@ import { hasChosenChart } from '../../routes/catalog/chart-kind.utils';
 import { layOutPdfText } from '../../routes/catalog/pdf-text-layout.core';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
-import { Input } from '../atoms/Input';
 import { composeClassName } from '../atoms/class-name.utils';
 import { useChartUpload } from './chart-upload.hook';
 import { FileDrop } from './FileDrop';
@@ -25,17 +24,11 @@ interface SongChartFieldsProps {
   readonly chordproText: string;
   readonly pdfS3Key: string;
   readonly imageS3Key: string;
-  readonly tonalityStart: string;
-  readonly tonalityEnd: string;
-  readonly baseEnergy: string;
   readonly songId?: string;
   readonly onChartKindChange: (kind: SongChartKind) => void;
   readonly onChordproChange: (text: string) => void;
   readonly onPdfKeyChange: (key: string) => void;
   readonly onImageKeyChange: (key: string) => void;
-  readonly onTonalityStartChange: (value: string) => void;
-  readonly onTonalityEndChange: (value: string) => void;
-  readonly onBaseEnergyChange: (value: string) => void;
 }
 
 const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
@@ -101,7 +94,7 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
 
   return (
     <>
-      <fieldset className="mt-2 flex flex-col gap-3 rounded-md border border-rule p-3">
+      <fieldset className="flex flex-col gap-3 rounded-md border border-rule p-3">
         <legend className={composeClassName(LABEL_CLASS, 'px-2')}>{t('catalog.chordChart')}</legend>
         <div className="flex flex-wrap gap-2">
           <Button
@@ -175,40 +168,6 @@ export function SongChartFields(props: SongChartFieldsProps): JSX.Element {
           </Button>
         ) : null}
       </fieldset>
-
-      <label className={LABEL_CLASS} htmlFor="song-tonality-start">
-        {t('catalog.tonalityStart')}
-      </label>
-      <Input
-        id="song-tonality-start"
-        type="text"
-        value={props.tonalityStart}
-        onChange={(event) => props.onTonalityStartChange(event.target.value)}
-        maxLength={16}
-      />
-
-      <label className={LABEL_CLASS} htmlFor="song-tonality-end">
-        {t('catalog.tonalityEnd')}
-      </label>
-      <Input
-        id="song-tonality-end"
-        type="text"
-        value={props.tonalityEnd}
-        onChange={(event) => props.onTonalityEndChange(event.target.value)}
-        maxLength={16}
-      />
-
-      <label className={LABEL_CLASS} htmlFor="song-base-energy">
-        {t('catalog.baseEnergy')}
-      </label>
-      <Input
-        id="song-base-energy"
-        type="number"
-        min={1}
-        max={10}
-        value={props.baseEnergy}
-        onChange={(event) => props.onBaseEnergyChange(event.target.value)}
-      />
     </>
   );
 }

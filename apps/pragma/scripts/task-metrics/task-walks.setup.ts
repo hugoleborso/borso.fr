@@ -543,6 +543,11 @@ const addChords: TaskWalkRunner = async (driver) => {
     { exact: 'Edit', css: 'a', scope: 'page' },
     { primary: true, wait: CREATE_SETTLE_MS },
   );
+  await walk.tap(
+    'Music tab',
+    { exact: 'Music', css: SECTION_TAB, scope: 'page' },
+    { primary: true, wait: PICK_SETTLE_MS },
+  );
   const isOnClipboard = await didPutOnClipboard(driver, CHORDS_ABOVE_LYRICS);
   await walk.tap(
     'Paste text',
@@ -561,7 +566,7 @@ const addChords: TaskWalkRunner = async (driver) => {
     { primary: true, wait: SAVE_SETTLE_MS },
   );
   walk.note(
-    `From the song page: ${String(walk.taps - tapsBeforeSongPage)} taps (Edit, Paste text, Save), with no ChordPro syntax typed.`,
+    `From the song page: ${String(walk.taps - tapsBeforeSongPage)} taps (Edit, Music, Paste text, Save), with no ChordPro syntax typed.`,
   );
   const location = await walk.readLocation();
   const isShown = await isTextInMain(driver, 'sunshine');
