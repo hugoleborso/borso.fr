@@ -95,8 +95,9 @@ automatically. The merge is the gate, and this call is the merge.
 
 Merge only on an explicit instruction from the operator for THIS pull request.
 After it lands, surface both post-merge follow-ups CLAUDE.md requires: the
-shared-deploy dispatch when the snapshot moved, and a kaizen task started with
-spawn_task for /after-task-kaizen in a new conversation, never in this one."
+shared-deploy dispatch when the snapshot moved, and a kaizen for
+/after-task-kaizen in a new conversation, never in this one. Propose the
+kaizen; call spawn_task only once the operator approves it."
 
 jq -n --arg context "$NOTICE" \
   '{hookSpecificOutput: {hookEventName: "PreToolUse", additionalContext: $context}}'

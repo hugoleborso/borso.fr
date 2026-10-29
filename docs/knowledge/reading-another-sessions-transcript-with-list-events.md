@@ -19,6 +19,12 @@ These are their observations, not re-measured since.
 `session_01K69KnFMwexFAkg7bqDpDTu`, 2026-10-29. That answers what a session
 cost in one call. Reach for `list_events` only for a per-call question.
 
+Read it once the session is archived. On a running session that was resumed,
+`usage` looked like the latest resume only: on `session_01K69KnC3z5ZgBCLywzoUmpj`
+in worker epoch 4, `cache_write_tokens` and `context_usage.used_tokens` were
+both 281,772, with $8.85 of cost for a session that had already done a full
+sweep (inferred, 2026-10-29).
+
 ## What a page costs
 
 - A page reads at most 100 events, whatever the `kinds` filter. The filter runs

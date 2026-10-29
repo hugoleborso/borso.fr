@@ -24,10 +24,10 @@ a follow-up PR labelled `kaizen`. This skill is the procedure.
 ## When to invoke
 
 **In a new conversation, never in the session that shipped the PR.**
-That session ends at merge: it archives its friction log and calls
-`spawn_task` with a prompt naming the merged PR, the archived
-`kaizen.md` and this skill (`/open-pr`'s *After the merge*). The
-operator starts the task from its card, and this skill runs there with
+That session ends at merge: it archives its friction log, proposes the
+kaizen, and once the operator approves calls `spawn_task` with a prompt
+naming the merged PR, the archived `kaizen.md` and this skill (`/open-pr`'s
+*After the merge*). The operator starts the task from its card, and this skill runs there with
 a context that did not do the work it audits.
 
 - A kaizen task started from that card.
@@ -435,4 +435,7 @@ not its volume, is what keeps the system improving.
 - **"Knowledge is enough for this defect."**
   → Almost always wrong. Re-read the root cause and push for the
   highest level you can reach. Knowledge is the *floor*, not the
-  default.
+  default. The exception runs the other way. A defect that costs no
+  one anything, such as a cosmetic commit header, is a no-op, not a
+  new gate. PR #228 added a workflow for one, and the operator
+  removed it.
