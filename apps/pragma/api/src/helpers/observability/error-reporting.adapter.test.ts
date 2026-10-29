@@ -49,6 +49,7 @@ describe('startErrorReporting', () => {
       dsn: DSN,
       environment: 'prod',
       release: 'abc123',
+      initialScope: { tags: { app: 'pragma' } },
       tracesSampleRate: 1,
       tracePropagationTargets: [],
       dataCollection: {

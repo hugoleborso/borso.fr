@@ -23,12 +23,15 @@ const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   urlQueryParams: false,
 };
 
+const SHARED_PROJECT_APP_TAGS = { app: 'pragma' } as const;
+
 // @FollowsBlueprint adapter-external-service
 export function startErrorReporting(settings: ErrorReportingSettings | undefined): void {
   if (settings === undefined) return;
   Sentry.init({
     dsn: settings.dsn,
     environment: settings.environment,
+    initialScope: { tags: SHARED_PROJECT_APP_TAGS },
     dataCollection: PRIVATE_DATA_COLLECTION,
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: [...settings.tracePropagationTargets],

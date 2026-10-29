@@ -48,6 +48,7 @@ describe('startErrorReporting', () => {
     expect(sentry.init).toHaveBeenCalledWith({
       dsn: DSN,
       environment: 'prod',
+      initialScope: { tags: { app: 'pragma' } },
       dataCollection: {
         userInfo: false,
         cookies: false,

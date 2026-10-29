@@ -1,6 +1,6 @@
 # ADR-0031: pragma sends errors and traces to Sentry's EU region with personal data collection off
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-10
 - **Deciders:** Hugo Borsoni
 - **Tags:** pragma, observability
@@ -29,6 +29,7 @@ Four constraints narrow the choice before any trade-off:
 - **Source maps:** the site's source maps are uploaded at build time when `SENTRY_AUTH_TOKEN` is present, then deleted from `dist/`. The Lambda gets `NODE_OPTIONS=--enable-source-maps` so its stack traces point at the TypeScript sources.
 - **Release:** the commit SHA on both sides.
 - **Off:** replay and profiling stay off.
+- **Project:** one Sentry project, `borsofr` in the `borsofr` organization, serves the whole monorepo. Every pragma event carries the tag `app: pragma`, so a second app can share the project and still be filtered apart.
 
 ## Consequences
 
