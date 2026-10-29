@@ -1,6 +1,6 @@
 # ADR-0036: One database role per stage schema, and API Lambdas lose admin access
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-02
 - **Deciders:** Hugo Borsoni
 - **Tags:** practice-free-slots, cdk, data, security

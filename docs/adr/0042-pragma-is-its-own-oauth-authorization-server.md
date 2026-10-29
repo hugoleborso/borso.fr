@@ -1,6 +1,6 @@
 # ADR-0042: pragma is its own OAuth 2.1 authorization server, and an assistant signs in through the member's existing session
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-23
 - **Deciders:** Hugo Borsoni
 - **Tags:** assistants-act-on-pragma, security, data

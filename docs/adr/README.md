@@ -58,46 +58,46 @@ No:
 | [0001](./0001-tech-lead-orchestrator-replaces-auto-chain.md) | `/tech-lead-orchestrator` replaces the linear skill auto-chain | accepted | 2026-05-13 |
 | [0002](./0002-vendor-react-bits-galaxy-shader.md) | Vendor the react-bits Galaxy WebGL shader instead of installing it | superseded by [0003](./0003-react-bits-galaxy-as-react-component.md) | 2026-05-14 |
 | [0003](./0003-react-bits-galaxy-as-react-component.md) | Mount the react-bits Galaxy as a React component on top of `ogl` | accepted | 2026-05-14 |
-| [0004](./0004-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | proposed | 2026-05-19 |
+| [0004](./0004-pragma-shared-password-auth.md) | Shared-password auth for the pragma band ERP | superseded by 0015 | 2026-05-19 |
 | [0005](./0005-dynamic-workflows-for-orchestration.md) | Dynamic Workflows for the tech-lead orchestration pipeline | accepted | 2026-06-05 |
 | [0006](./0006-cascade-on-delete-via-json-blob-scrub.md) | Cascade-on-delete via JSON-blob scrub (DSQL no-FK substitute) | accepted | 2026-06-06 |
 | [0007](./0007-eslint-with-type-aware-rules-replaces-biome.md) | ESLint with type-aware rules replaces Biome | superseded by 0045 | 2026-08-08 |
 | [0008](./0008-purity-enforced-structurally.md) | Purity is enforced by file location, not by review | accepted | 2026-08-08 |
 | [0009](./0009-pragma-previews-clone-production.md) | pragma previews clone production, credentials included | accepted | 2026-08-09 |
-| [0010](./0010-pragma-domain-folder-for-cross-boundary-rules.md) | A `domain/` folder for the rules pragma's two sides share | proposed | 2026-08-13 |
-| [0011](./0011-elk-lays-out-the-architecture-graph-at-generation-time.md) | ELK lays out the architecture graph at generation time | proposed | 2026-08-14 |
-| [0012](./0012-outbound-calls-live-in-adapter-files.md) | Every outbound call lives in an `.adapter.ts` file | proposed | 2026-08-15 |
+| [0010](./0010-pragma-domain-folder-for-cross-boundary-rules.md) | A `domain/` folder for the rules pragma's two sides share | accepted | 2026-08-13 |
+| [0011](./0011-elk-lays-out-the-architecture-graph-at-generation-time.md) | ELK lays out the architecture graph at generation time | accepted | 2026-08-14 |
+| [0012](./0012-outbound-calls-live-in-adapter-files.md) | Every outbound call lives in an `.adapter.ts` file | accepted | 2026-08-15 |
 | [0013](./0013-input-schemas-carry-the-coverage-gate.md) | `.schema.ts` carries the coverage gate | accepted | 2026-08-15 |
-| [0014](./0014-generated-files-are-not-committed.md) | Generated files are not committed | proposed | 2026-08-20 |
-| [0015](./0015-per-member-credentials-replace-the-shared-password.md) | Per-member credentials replace the shared password, behind a self-closing enrolment window | proposed | 2026-09-14 |
-| [0016](./0016-simplewebauthn-carries-the-passkey-flow.md) | `@simplewebauthn` carries the passkey flow, as an alternative single factor | proposed | 2026-09-14 |
-| [0017](./0017-spotify-track-ids-resolved-by-isrc-at-link-time.md) | Spotify track ids resolved by ISRC at link time, credential in SSM | proposed | 2026-09-15 |
-| [0018](./0018-nominatim-answers-the-bar-search.md) | Nominatim answers the bar search, proxied through the API | proposed | 2026-09-15 |
-| [0019](./0019-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | proposed | 2026-09-16 |
+| [0014](./0014-generated-files-are-not-committed.md) | Generated files are not committed | accepted | 2026-08-20 |
+| [0015](./0015-per-member-credentials-replace-the-shared-password.md) | Per-member credentials replace the shared password, behind a self-closing enrolment window | accepted | 2026-09-14 |
+| [0016](./0016-simplewebauthn-carries-the-passkey-flow.md) | `@simplewebauthn` carries the passkey flow, as an alternative single factor | accepted | 2026-09-14 |
+| [0017](./0017-spotify-track-ids-resolved-by-isrc-at-link-time.md) | Spotify track ids resolved by ISRC at link time, credential in SSM | accepted | 2026-09-15 |
+| [0018](./0018-nominatim-answers-the-bar-search.md) | Nominatim answers the bar search, proxied through the API | accepted | 2026-09-15 |
+| [0019](./0019-the-room-search-collapses-masters-into-songs.md) | The room's search collapses masters into songs, and reads a refusal stated inside a 200 | accepted | 2026-09-16 |
 | [0020](./0020-qrcode-react-for-the-audience-vote-qr-code.md) | `qrcode.react` renders the audience-vote QR code | deprecated | 2026-08-26 |
 | [0022](./0022-instruments-carry-their-own-icon-order-and-primacy.md) | Instruments carry their own icon, order and primacy | accepted | 2026-09-18 |
-| [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | proposed | 2026-09-21 |
-| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | proposed | 2026-10-05 |
-| [0027](./0027-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | proposed | 2026-10-06 |
+| [0023](./0023-validation-screenshots-leave-git-for-the-previews-cdn.md) | A passing validation's screenshots go to the previews CDN; a FAIL row's stay in git | accepted | 2026-09-21 |
+| [0026](./0026-the-harness-ships-as-a-plugin-linked-into-claude.md) | The harness ships as a plugin and is linked into .claude/ part by part | accepted | 2026-10-05 |
+| [0027](./0027-talos-deploys-to-prod-only.md) | talos deploys to prod only, and an app can opt out of previews | accepted | 2026-10-06 |
 | [0028](./0028-tailwind-merge-resolves-class-conflicts.md) | tailwind-merge resolves conflicting classes in composeClassName | accepted | 2026-10-12 |
-| [0029](./0029-weak-point-management-from-the-dantotsu-record.md) | Weak point management reads the dantotsu record, made checkable | proposed | 2026-10-10 |
-| [0030](./0030-knowledge-is-delivered-by-trigger.md) | Knowledge is delivered by trigger, and an entry without one is not written | proposed | 2026-10-10 |
-| [0031](./0031-pragma-reports-errors-and-traces-to-sentry-eu.md) | pragma sends errors and traces to Sentry's EU region with personal data collection off | proposed | 2026-10-10 |
-| [0032](./0032-impeccable-is-vendored-as-a-project-skill.md) | impeccable is vendored as a project skill, without its edit hook | proposed | 2026-10-12 |
-| [0036](./0036-one-database-role-per-stage-schema.md) | One database role per stage schema, and API Lambdas lose admin access | proposed | 2026-10-02 |
-| [0037](./0037-calendar-feed-address-in-its-own-table.md) | A member's calendar feed address is plain text in its own table, write-only through the API | proposed | 2026-10-02 |
-| [0038](./0038-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | proposed | 2026-10-02 |
-| [0039](./0039-talos-memory-in-the-database.md) | The talos memory moves into the database, behind an agent API | proposed | 2026-10-16 |
-| [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | proposed | 2026-10-23 |
-| [0041](./0041-pragma-serves-mcp-from-its-api-lambda.md) | pragma serves MCP from its API Lambda, stateless, with the official SDK behind @hono/mcp | proposed | 2026-10-23 |
-| [0042](./0042-pragma-is-its-own-oauth-authorization-server.md) | pragma is its own OAuth 2.1 authorization server, and an assistant signs in through the member's existing session | proposed | 2026-10-23 |
-| [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | proposed | 2026-10-24 |
-| [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | proposed | 2026-10-25 |
-| [0045](./0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md) | oxlint and oxfmt replace ESLint and Prettier | proposed | 2026-10-27 |
-| [0046](./0046-typescript-7-replaces-typescript-5-9.md) | TypeScript 7 replaces TypeScript 5.9 | proposed | 2026-10-27 |
+| [0029](./0029-weak-point-management-from-the-dantotsu-record.md) | Weak point management reads the dantotsu record, made checkable | accepted | 2026-10-10 |
+| [0030](./0030-knowledge-is-delivered-by-trigger.md) | Knowledge is delivered by trigger, and an entry without one is not written | accepted | 2026-10-10 |
+| [0031](./0031-pragma-reports-errors-and-traces-to-sentry-eu.md) | pragma sends errors and traces to Sentry's EU region with personal data collection off | accepted | 2026-10-10 |
+| [0032](./0032-impeccable-is-vendored-as-a-project-skill.md) | impeccable is vendored as a project skill, without its edit hook | accepted | 2026-10-12 |
+| [0036](./0036-one-database-role-per-stage-schema.md) | One database role per stage schema, and API Lambdas lose admin access | accepted | 2026-10-02 |
+| [0037](./0037-calendar-feed-address-in-its-own-table.md) | A member's calendar feed address is plain text in its own table, write-only through the API | accepted | 2026-10-02 |
+| [0038](./0038-ical-js-parses-calendar-feeds.md) | `ical.js` parses the members' calendar feeds | accepted | 2026-10-02 |
+| [0039](./0039-talos-memory-in-the-database.md) | The talos memory moves into the database, behind an agent API | accepted | 2026-10-16 |
+| [0040](./0040-pragma-sends-web-push-like-talos.md) | pragma sends Web Push the way talos does, inline from the API with one VAPID pair per stage | accepted | 2026-10-23 |
+| [0041](./0041-pragma-serves-mcp-from-its-api-lambda.md) | pragma serves MCP from its API Lambda, stateless, with the official SDK behind @hono/mcp | accepted | 2026-10-23 |
+| [0042](./0042-pragma-is-its-own-oauth-authorization-server.md) | pragma is its own OAuth 2.1 authorization server, and an assistant signs in through the member's existing session | accepted | 2026-10-23 |
+| [0043](./0043-one-catalogue-song-per-deezer-track-by-unique-index.md) | One catalogue song per Deezer track, held by a unique index on song.deezer_track_id | accepted | 2026-10-24 |
+| [0044](./0044-read-only-production-database-access-for-agents.md) | Agents read production through a SELECT-only database role | superseded by 0049 | 2026-10-25 |
+| [0045](./0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md) | oxlint and oxfmt replace ESLint and Prettier | accepted | 2026-10-27 |
+| [0046](./0046-typescript-7-replaces-typescript-5-9.md) | TypeScript 7 replaces TypeScript 5.9 | accepted | 2026-10-27 |
 | [0047](./0047-pragma-design-system-is-notebook-with-grafts.md) | pragma's design system is the Notebook direction, with Backstage's buttons and six other grafts | accepted | 2026-10-27 |
 | [0048](./0048-newsreader-replaces-instrument-serif.md) | Newsreader replaces Instrument Serif, self-hosted with its weight and optical size axes | accepted | 2026-10-27 |
-| [0049](./0049-agents-read-production-through-an-invoked-reader-lambda.md) | Agents read production through a reader Lambda invoked by the AWS API, not port 5432 | proposed | 2026-10-28 |
+| [0049](./0049-agents-read-production-through-an-invoked-reader-lambda.md) | Agents read production through a reader Lambda invoked by the AWS API, not port 5432 | accepted | 2026-10-28 |
 | [0050](./0050-a-task-names-an-optional-session.md) | A task names an optional session through a nullable `task.session_id` | accepted | 2026-10-27 |
 | [0051](./0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
 | [0052](./0052-pragma-previews-clone-takes-and-read-their-audio-from-production.md) | pragma previews clone takes and read their audio from the production uploads bucket | accepted | 2026-10-29 |

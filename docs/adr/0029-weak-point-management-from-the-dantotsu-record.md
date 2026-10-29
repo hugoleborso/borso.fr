@@ -1,6 +1,6 @@
 # ADR-0029: Weak point management reads the dantotsu record, made checkable
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-10
 - **Deciders:** Hugo Borsoni
 - **Tags:** weak-point-management, tooling, dantotsu, quality

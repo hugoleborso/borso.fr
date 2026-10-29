@@ -1,6 +1,6 @@
 # ADR-0017: Spotify track ids resolved by ISRC at link time, with the credential in SSM
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-09-15
 - **Deciders:** Hugo
 - **Tags:** pragma, songs, data, secrets

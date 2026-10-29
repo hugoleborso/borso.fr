@@ -1,6 +1,6 @@
 # ADR-0016: `@simplewebauthn` carries the passkey flow, as an alternative single factor
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-09-14
 - **Deciders:** Hugo Borsoni
 - **Tags:** member-accounts-and-setlist-voting, auth, deps

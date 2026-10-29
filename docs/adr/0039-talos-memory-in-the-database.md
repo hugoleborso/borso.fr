@@ -1,6 +1,6 @@
 # ADR-0039: The talos memory moves into the database, behind an agent API
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-16
 - **Deciders:** Hugo Borsoni
 - **Tags:** talos, data, security, api

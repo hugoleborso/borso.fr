@@ -1,6 +1,6 @@
 # ADR-0027: talos deploys to prod only, and an app can opt out of previews
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-06
 - **Deciders:** Hugo Borsoni
 - **Tags:** talos, cdk, ci

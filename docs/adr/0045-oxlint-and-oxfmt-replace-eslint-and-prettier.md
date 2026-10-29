@@ -1,6 +1,6 @@
 # ADR-0045: oxlint and oxfmt replace ESLint and Prettier
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-27
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, tooling, linting, gates

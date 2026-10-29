@@ -1,6 +1,6 @@
 # ADR-0046: TypeScript 7 replaces TypeScript 5.9
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-27
 - **Deciders:** Hugo Borsoni
 - **Tags:** meta, tooling, gates

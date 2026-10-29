@@ -1,6 +1,6 @@
 # ADR-0018: Nominatim answers the bar search, proxied through the API
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-09-15
 - **Deciders:** Hugo Borsoni
 - **Tags:** bar-owner, bars, backend, deps

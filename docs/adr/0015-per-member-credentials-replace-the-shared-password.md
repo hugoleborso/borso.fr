@@ -1,6 +1,6 @@
 # ADR-0015: Per-member credentials replace the shared password, behind a self-closing enrolment window
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-09-14
 - **Deciders:** Hugo Borsoni
 - **Tags:** member-accounts-and-setlist-voting, auth, data
