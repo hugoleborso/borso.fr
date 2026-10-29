@@ -503,6 +503,19 @@
     "noSetlists": "No setlist on this session yet. Add a setlist to start picking songs, or attach one you already have.",
     "noTakeYet": "No take recorded at this session yet.",
     "noTaskYet": "No task for this session yet.",
+    "practiceSongs": {
+      "back": "Concerts",
+      "choose": "Choose songs",
+      "concertsTitle": "Concerts to prepare",
+      "empty": "No songs chosen for this practice yet.",
+      "failure": "The songs could not be saved. Try again.",
+      "next": "Next",
+      "noConcert": "No concert matches.",
+      "noSong": "No song in these concerts' setlists.",
+      "save": "Save",
+      "search": "Search concerts",
+      "songsTitle": "Songs to work on"
+    },
     "preparedConcert": "Prepared concert",
     "saveConcertDetails": "Save",
     "section": {
@@ -523,6 +536,7 @@
     "view": {
       "label": "Parts of this session",
       "setlist": "Setlist",
+      "songs": "Songs",
       "tasks": "Tasks",
       "takes": "Takes",
       "details": "Details"

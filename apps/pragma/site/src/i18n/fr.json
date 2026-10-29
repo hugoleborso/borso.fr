@@ -503,6 +503,19 @@
     "noSetlists": "Pas encore de setlist sur cette session. Ajoute une setlist pour choisir les morceaux, ou lie une setlist existante.",
     "noTakeYet": "Aucune prise enregistrée à cette session.",
     "noTaskYet": "Aucune tâche pour cette session.",
+    "practiceSongs": {
+      "back": "Concerts",
+      "choose": "Choisir les morceaux",
+      "concertsTitle": "Concerts à préparer",
+      "empty": "Aucun morceau choisi pour cette répétition.",
+      "failure": "Les morceaux n'ont pas pu être enregistrés. Réessaie.",
+      "next": "Suivant",
+      "noConcert": "Aucun concert ne correspond.",
+      "noSong": "Aucun morceau dans les setlists de ces concerts.",
+      "save": "Enregistrer",
+      "search": "Chercher un concert",
+      "songsTitle": "Morceaux à travailler"
+    },
     "preparedConcert": "Concert préparé",
     "saveConcertDetails": "Enregistrer",
     "section": {
@@ -523,6 +536,7 @@
     "view": {
       "label": "Parties de cette session",
       "setlist": "Setlist",
+      "songs": "Morceaux",
       "tasks": "Tâches",
       "takes": "Prises",
       "details": "Détails"

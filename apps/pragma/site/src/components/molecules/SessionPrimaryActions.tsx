@@ -12,6 +12,7 @@ export interface SessionPrimaryActionsProps {
   readonly pills: SessionPills;
   readonly isAddingSetlist: boolean;
   readonly onAddSetlist: () => void;
+  readonly onChooseSongs: () => void;
 }
 
 // @FollowsBlueprint molecule-presentational
@@ -19,6 +20,7 @@ export function SessionPrimaryActions({
   pills,
   isAddingSetlist,
   onAddSetlist,
+  onChooseSongs,
 }: SessionPrimaryActionsProps): JSX.Element {
   const { t } = useTranslation();
   return (
@@ -37,6 +39,11 @@ export function SessionPrimaryActions({
         >
           {t('practice.start')}
         </ButtonLink>
+      )}
+      {pills.chooseSongsVariant === null ? null : (
+        <Button icon="song" variant={pills.chooseSongsVariant} onClick={onChooseSongs}>
+          {t('sessions.practiceSongs.choose')}
+        </Button>
       )}
       {pills.isAddSetlistShown ? (
         <Button icon="plus" variant="primary" disabled={isAddingSetlist} onClick={onAddSetlist}>

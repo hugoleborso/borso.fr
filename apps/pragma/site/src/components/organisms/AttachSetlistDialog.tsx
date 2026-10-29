@@ -9,6 +9,8 @@ import {
   useSetlistsList,
 } from '../../lib/queries/setlists.queries';
 import { selectSetlistsNotOnSession } from '../../lib/queries/setlists.utils';
+import { useSessionsList } from '../../lib/queries/sessions.queries';
+import { isPracticeSetlist } from '../../lib/setlist-index.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { Icon } from '../atoms/Icon';
 import { ListRow } from '../molecules/ListRow';
@@ -30,9 +32,13 @@ export function AttachSetlistDialog({
   const linkSetlist = useLinkSetlistToSession();
   const [hasFailed, setHasFailed] = useState(false);
 
+  const sessionsQuery = useSessionsList();
   const candidates = useMemo(
-    () => selectSetlistsNotOnSession(setlistsQuery.data?.setlists ?? [], sessionId),
-    [setlistsQuery.data, sessionId],
+    () =>
+      selectSetlistsNotOnSession(setlistsQuery.data?.setlists ?? [], sessionId).filter(
+        (setlist) => !isPracticeSetlist(setlist.sessionIds, sessionsQuery.data?.sessions ?? []),
+      ),
+    [setlistsQuery.data, sessionsQuery.data, sessionId],
   );
 
   const attach = (setlist: SetlistSummary): void => {

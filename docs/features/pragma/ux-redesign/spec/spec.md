@@ -31,13 +31,14 @@ Mockups are in `mockups/` (390x844). They were drawn before D11, with the earlie
 - Four tabs: **Home**, **Sessions**, **Songs**, **Band**. No count on any tab. The More drawer goes. (D1)
 - The app opens on Home. (D2) The manifest shortcut points to Home instead of the catalogue.
 - Sessions holds a **Sessions / Setlists** section switch; Setlists is today's setlist library.
+- The Sessions list is ordered by session date: coming sessions nearest first, then past ones most recent first, concerts and practices mixed. A concert's card carries the accent border and fill, and a **Concerts only** chip (`audience`) in the fixed header keeps the list to concerts (operator review 3).
 - Band opens on tasks, with a row of links to members, instruments, bars, compositions, improvements and the account page above them (operator review 2, Q3). The language switch moves from the More drawer to the account page, on its own Language tab (Q8).
 - Songs carries a **To learn** filter that replaces the Studies tab; a study row opens its song.
 - Each destination has its own icon: Studies and Improvements no longer share `bolt` (rank 35).
 
 ### Home (`/`, mockup `after-home.png`)
 
-The next session, practice or concert, whichever comes first: kind, date, place, setlist name, song count and total time, and **Open the setlist**; on the day of a practice, the primary action is **Start the practice** instead (see *Practice mode*, slice 5). Under it: **Your part** (the songs of that setlist where the signed-in member plays, with their instruments) and **Your tasks** (open tasks assigned to the member, the ones linked to that session first once slice 5 adds the link; until then, by urgency as on Band). No session ahead: an empty state with **New session**.
+The next session, practice or concert, whichever comes first: kind, date, place, setlist name, song count and total time, and **Open the setlist**; on the day of a practice, the primary action is **Start the practice** instead (see *Practice mode*, slice 5). Under it: **Your part** (the songs of that setlist where the signed-in member plays, with their instruments) and **Your tasks** (open tasks assigned to the member, the ones linked to that session first once slice 5 adds the link; until then, by urgency as on Band). When that next session is a practice, the card also names the next concert, as one line linking to it (operator review 3). No session ahead: an empty state with **New session**.
 
 ### Setlist (`/setlists/:id`, mockups `after-setlist.png`, `after-lineup.png`)
 
@@ -62,7 +63,9 @@ Opened by tapping a setlist row. Header: the album cover at 72 px, title, artist
 
 ### Session page (`/sessions/:id`, mockup `after-session.png`)
 
-Tabs in the pinned header choose one part at a time (operator review 2, Q3): **Setlist**, **Tasks**, **Takes** and, for a concert or a practice that prepares one, **Details**. In tab order: the setlist preview (count, total time, the first three songs with cover, title and lineup avatars, a `warn` badge on a song with no lineup, **no key**); **Who does what** (the tasks linked to this session, and **Add a task** with `plus`); the takes recorded at this session grouped by song. With no setlist yet, the preview is an empty state that says so and offers **Attach an existing setlist**, and the bottom strip's primary pill is **Add a setlist**, which creates a setlist named after the session and opens the Add songs sheet; with setlists, a secondary **Add a setlist** under them offers a new setlist or an existing one (operator review 1, R6). A concert reaches its audience vote through one secondary action, **Audience vote**, beside **Edit** (Edit opens the Details tab); the vote block is not on the session page (R4). A past practice does not show the empty "Prepared concert" picker. Primary action (Q1): on a practice's own day, **Start the practice** (`play`), with **Open the setlist** beside it as the second pill; on any other day, and for a concert, **Open the setlist** (`arrowR`). Attendance (D4) and the message thread (D5) are not on this page in this iteration.
+Tabs in the pinned header choose one part at a time (operator review 2, Q3): **Setlist**, **Tasks**, **Takes** and, for a concert or a practice that prepares one, **Details**. In tab order: the setlist preview (count, total time, the first three songs with cover, title and lineup avatars, a `warn` badge on a song with no lineup, **no key**); **Who does what** (the tasks linked to this session, and **Add a task** with `plus`); the takes recorded at this session grouped by song. With no setlist yet, the preview is an empty state that says so and offers **Attach an existing setlist**, and the bottom strip's primary pill is **Add a setlist**, which creates a setlist named after the session and opens the Add songs sheet; with setlists, a secondary **Add a setlist** under them offers a new setlist or an existing one (operator review 1, R6). A concert reaches its audience vote through one secondary action, **Audience vote**, beside **Edit** (Edit opens the Details tab); the vote block is not on the session page (R4). A past practice does not show the empty "Prepared concert" picker. Primary action (Q1): on a practice's own day, **Start the practice** (`play`), with **Choose songs** beside it as the second pill; on its other days, **Choose songs**; for a concert, **Open the setlist** (`arrowR`). The setlist preview, **Add a setlist** and **Attach an existing setlist** belong to a concert; a practice shows its songs instead (see below). Attendance (D4) and the message thread (D5) are not on this page in this iteration.
+
+A practice has no setlist to pick (operator review 3). Its first tab is **Songs**, the songs it will work on, in place of the setlist preview, and its primary pill is **Choose songs** (`song`), the second pill beside **Start the practice** on its day; it never offers **Open the setlist**. **Choose songs** opens one sheet in two steps: the concerts, most recent first, with a search field, any number of them ticked (the prepared concert ticked on opening); then **Next** (`chevR`) pools the songs of those concerts' setlists into one list, with the practice's current songs ticked, and **Save** (`check`) keeps the ticked ones. Under the hood the ticked songs are the entries of a setlist linked to the practice alone, created on the first save and named after the session; a setlist the practice shares with another session is unlinked from it rather than edited. The Setlists library and **Attach an existing setlist** list no setlist that only practices use. The Details tab names the prepared concert once, in its select.
 
 ### Practice mode (`/sessions/:id/practice`, slice 5, Q1)
 
@@ -126,9 +129,9 @@ flowchart LR
 
 **Happy path, prepare the next practice (task 1):**
 1. Home, Sessions tab, **New session**, choose practice, create.
-2. On the new session, **Add a setlist**: a setlist named after the session is created and the Add songs sheet opens.
-3. Check ten songs, using search or a chip instead of scrolling, then **Add 10 songs**.
-4. The sheet closes on the setlist, with the ten songs in the order picked.
+2. On the new practice, **Choose songs**: tick the concert it prepares in the concert list, then **Next**.
+3. Tick ten songs of that concert's setlists, then **Save**.
+4. The sheet closes on the practice's **Songs** tab, with the ten songs in the order ticked.
 
 **Happy path, prepare tonight's details (tasks 4, 5, 6):**
 1. On the setlist, tap a row: the entry sheet opens with the focus in the note field.

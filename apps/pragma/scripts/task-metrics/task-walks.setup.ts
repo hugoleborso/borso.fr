@@ -28,6 +28,7 @@ const SECOND_ENTRY_NUMBER = 2;
 const TAB_LINK = 'nav[aria-label="Main sections"] a';
 const SECTION_TAB = '[role=tab]';
 const HOME = '/';
+const SEEDED_CONCERT_VENUE = 'Le Petit Bain';
 
 const anyRecord = z.record(z.unknown());
 const songArtistSchema = z.object({ artist: z.string().optional() });
@@ -58,15 +59,6 @@ async function pickSongs(walk: TaskWalk, titles: readonly string[]): Promise<voi
       { text: buildPickPattern(title), css: '[role=checkbox]', scope: 'dialog' },
       { wait: PICK_SETTLE_MS },
     );
-  }
-}
-
-async function pickSongsWithoutScrolling(walk: TaskWalk, titles: readonly string[]): Promise<void> {
-  for (const title of titles) {
-    const row = { text: buildPickPattern(title), css: '[role=checkbox]', scope: 'dialog' } as const;
-    const shown = await walk.find(row);
-    if (shown === null || !shown.inView) await walk.type('Search', title);
-    await walk.tap(`Pick ${title}`, row, { wait: PICK_SETTLE_MS });
   }
 }
 
@@ -106,32 +98,43 @@ const prepareNextRehearsal: TaskWalkRunner = async (driver) => {
   await walk.tap('New practice', { exact: 'Practice', css: 'button' }, { primary: true });
   await walk.tap('Create session', { exact: 'Create', css: 'button' }, { wait: CREATE_SETTLE_MS });
   walk.note(
-    'The new session has no setlist, so its bottom strip offers Add a setlist, which creates a setlist named after the session and opens the Add songs sheet.',
+    'The new practice has no songs, so its bottom strip offers Choose songs: tick the concerts it prepares, then the songs of their setlists to work on.',
   );
   await walk.tap(
-    'Add a setlist',
-    { exact: 'Add a setlist', css: 'button', scope: 'page' },
+    'Choose songs',
+    { exact: 'Choose songs', css: 'button', scope: 'page' },
+    { primary: true, wait: PICK_SETTLE_MS },
+  );
+  await walk.tap(
+    `Pick ${SEEDED_CONCERT_VENUE}`,
+    { text: `^${SEEDED_CONCERT_VENUE}`, css: '[role=checkbox]', scope: 'dialog' },
+    { wait: PICK_SETTLE_MS },
+  );
+  await walk.tap(
+    'Next',
+    { exact: 'Next', css: 'button', scope: 'dialog' },
     { primary: true, wait: PICK_SETTLE_MS },
   );
   const picks = [
-    'Afterglow',
-    'Billie Jean',
-    'Come Together',
-    'Dreams',
+    'Superstition',
+    'Valerie',
+    'Seven Nation Army',
     'Get Lucky',
-    'Hey Ya!',
-    'Jolene',
-    'Last Call',
-    'Lightning',
-    'Midnight Drive',
+    'Respect',
+    'Hit the Road Jack',
+    'Rolling in the Deep',
+    'Uptown Funk',
+    'Wonderwall',
+    'Mr. Brightside',
   ];
-  walk.note(
-    'A song already on the screen is tapped; any other is typed into the search, which a pick empties, as the spec happy path says: search or a chip instead of scrolling.',
+  await pickSongs(walk, picks);
+  await walk.tap(
+    'Save',
+    { exact: 'Save', css: 'button', scope: 'dialog' },
+    { primary: true, wait: CREATE_SETTLE_MS },
   );
-  await pickSongsWithoutScrolling(walk, picks);
-  await confirmAddSongs(walk, picks.length);
   walk.note(
-    `After Add 10 songs the screen is ${replaceIdentifierInPath((await walk.readLocation()).path)}.`,
+    `After Save the screen is ${replaceIdentifierInPath((await walk.readLocation()).path)}.`,
   );
   const known = await driver.readKnownRecords();
   const knownIds = new Set(before.setlists.map((setlist) => setlist.id));

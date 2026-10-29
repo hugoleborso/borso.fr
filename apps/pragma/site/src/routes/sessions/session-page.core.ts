@@ -118,6 +118,7 @@ export interface SessionPills {
   readonly setlistVariant: 'primary' | 'secondary';
   readonly setlistLabelKey: 'home.openSetlist' | 'sessions.setlist';
   readonly isAddSetlistShown: boolean;
+  readonly chooseSongsVariant: 'primary' | 'secondary' | null;
 }
 
 const NO_PILLS: SessionPills = {
@@ -126,10 +127,12 @@ const NO_PILLS: SessionPills = {
   setlistVariant: 'primary',
   setlistLabelKey: 'home.openSetlist',
   isAddSetlistShown: false,
+  chooseSongsVariant: null,
 };
 
 export interface SessionPrimaryActionsInput {
   readonly isLoading: boolean;
+  readonly isPractice: boolean;
   readonly sessionId: string;
   readonly firstSetlistId: string | null;
   readonly isPracticeModeOffered: boolean;
@@ -139,9 +142,19 @@ export function buildPracticePath(sessionId: string): string {
   return `/sessions/${sessionId}/practice`;
 }
 
+function selectPracticePills(input: SessionPrimaryActionsInput): SessionPills {
+  if (!input.isPracticeModeOffered) return { ...NO_PILLS, chooseSongsVariant: 'primary' };
+  return {
+    ...NO_PILLS,
+    practicePath: buildPracticePath(input.sessionId),
+    chooseSongsVariant: 'secondary',
+  };
+}
+
 // @FollowsBlueprint core-view-intent
 export function selectSessionPills(input: SessionPrimaryActionsInput): SessionPills {
   if (input.isLoading) return NO_PILLS;
+  if (input.isPractice) return selectPracticePills(input);
   if (input.firstSetlistId === null) return { ...NO_PILLS, isAddSetlistShown: true };
   const setlistPath = `/setlists/${input.firstSetlistId}`;
   if (!input.isPracticeModeOffered) return { ...NO_PILLS, setlistPath };
@@ -155,14 +168,20 @@ export function selectSessionPills(input: SessionPrimaryActionsInput): SessionPi
 }
 
 export const SESSION_VIEW_PARAM = 'view';
-export const SESSION_VIEWS = ['setlist', 'tasks', 'takes', 'details'] as const;
+export const SESSION_VIEWS = ['setlist', 'songs', 'tasks', 'takes', 'details'] as const;
 export type SessionView = (typeof SESSION_VIEWS)[number];
 const DEFAULT_SESSION_VIEW: SessionView = 'setlist';
-const DETAILS_VIEW: SessionView = 'details';
+
+export interface SessionViewsInput {
+  readonly hasDetails: boolean;
+  readonly isPractice: boolean;
+}
 
 // @FollowsBlueprint core-decision
-export function listSessionViews(hasDetails: boolean): readonly SessionView[] {
-  return hasDetails ? SESSION_VIEWS : SESSION_VIEWS.filter((view) => view !== DETAILS_VIEW);
+export function listSessionViews(input: SessionViewsInput): readonly SessionView[] {
+  const firstView: SessionView = input.isPractice ? 'songs' : 'setlist';
+  const views: SessionView[] = [firstView, 'tasks', 'takes'];
+  return input.hasDetails ? [...views, 'details'] : views;
 }
 
 // @FollowsBlueprint core-decision
@@ -170,5 +189,5 @@ export function readSessionView(
   requested: string | null,
   views: readonly SessionView[],
 ): SessionView {
-  return views.find((view) => view === requested) ?? DEFAULT_SESSION_VIEW;
+  return views.find((view) => view === requested) ?? views[0] ?? DEFAULT_SESSION_VIEW;
 }

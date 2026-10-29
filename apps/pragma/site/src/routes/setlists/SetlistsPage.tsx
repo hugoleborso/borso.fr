@@ -13,7 +13,11 @@ import { ApiError } from '../../lib/api.client';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useSessionsList } from '../../lib/queries/sessions.queries';
 import { useSetlistsList } from '../../lib/queries/setlists.queries';
-import { buildSetlistIndexRows, type IndexSession } from '../../lib/setlist-index.core';
+import {
+  buildSetlistIndexRows,
+  type IndexSession,
+  isPracticeSetlist,
+} from '../../lib/setlist-index.core';
 
 const NO_ROWS: readonly never[] = [];
 
@@ -28,7 +32,10 @@ export function SetlistsPage(): JSX.Element {
   const rows = useMemo(
     () =>
       buildSetlistIndexRows<IndexSession>(
-        setlistsQuery.data?.setlists ?? NO_ROWS,
+        (setlistsQuery.data?.setlists ?? NO_ROWS).filter(
+          (setlist) =>
+            !isPracticeSetlist(setlist.sessionIds, sessionsQuery.data?.sessions ?? NO_ROWS),
+        ),
         sessionsQuery.data?.sessions ?? NO_ROWS,
       ),
     [setlistsQuery.data, sessionsQuery.data],

@@ -66,3 +66,14 @@ export function selectConcertSessionId(sessions: readonly IndexSession[]): strin
   const latest = concerts.toSorted((left, right) => right.date.localeCompare(left.date))[0];
   return latest?.id ?? null;
 }
+
+// @FollowsBlueprint core-decision
+export function isPracticeSetlist(
+  sessionIds: readonly string[],
+  sessions: readonly IndexSession[],
+): boolean {
+  const linkedKinds = sessions
+    .filter((session) => sessionIds.includes(session.id))
+    .map((session) => session.kind);
+  return linkedKinds.length > 0 && !linkedKinds.includes(CONCERT_SESSION_KIND);
+}

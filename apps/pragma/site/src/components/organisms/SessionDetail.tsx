@@ -35,6 +35,9 @@ import { PracticeReadView } from '../molecules/PracticeReadView';
 import { SessionPrimaryActions } from '../molecules/SessionPrimaryActions';
 import { SessionViewTabs } from '../molecules/SessionViewTabs';
 import { AttachSetlistDialog } from './AttachSetlistDialog';
+import { PracticeSongList } from './PracticeSongList';
+import { PracticeSongsSheet } from './PracticeSongsSheet';
+import { usePracticeSongs } from './practice-songs.hook';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
 import { SessionSetlistPreviews } from './SessionSetlistPreviews';
@@ -85,6 +88,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   const [localError, setLocalError] = useState<string | null>(null);
   const [setlistChooser, setSetlistChooser] = useState<SetlistChooser>('closed');
   const [pickingInto, setPickingInto] = useState<CreatedSetlist | null>(null);
+  const [isChoosingSongs, setIsChoosingSongs] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const friendsCounts = useMemo(() => parseFriendsCounts(session.friendsCountPerMember), [session]);
@@ -105,10 +109,14 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     () => Object.values(friendsCounts).reduce((accumulator, value) => accumulator + value, 0),
     [friendsCounts],
   );
+  const isPractice = session.kind === 'practice';
+  const songs = songsQuery.data?.songs ?? NO_ROWS;
+  const practiceSongs = usePracticeSongs(isPractice, setlists, songs);
   const songCount = setlists.reduce((total, setlist) => total + setlist.songCount, 0);
   const now = new Date(nowEpochMs);
   const pills = selectSessionPills({
-    isLoading: props.isSetlistsLoading,
+    isLoading: props.isSetlistsLoading || practiceSongs.isLoading,
+    isPractice,
     sessionId: session.id,
     firstSetlistId: setlists[0]?.id ?? null,
     isPracticeModeOffered: isPracticeModeOffered({
@@ -125,7 +133,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   });
 
   const isConcert = session.kind === 'concert';
-  const views = listSessionViews(isConcert || isPickerShown);
+  const views = listSessionViews({ hasDetails: isConcert || isPickerShown, isPractice });
   const view = readSessionView(searchParams.get(SESSION_VIEW_PARAM), views);
   const showView = (nextView: SessionView): void => {
     setSearchParams({ [SESSION_VIEW_PARAM]: nextView }, { replace: true });
@@ -227,6 +235,12 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         onAttachSetlist={() => setSetlistChooser('attach')}
       />
     ),
+    songs: (
+      <PracticeSongList
+        songs={practiceSongs.songs}
+        isLoading={props.isSetlistsLoading || practiceSongs.isLoading}
+      />
+    ),
     tasks: <SessionTasks sessionId={session.id} />,
     takes: <SessionTakes sessionId={session.id} />,
     details: detailsPanel,
@@ -278,16 +292,27 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         open={pickingInto !== null}
         setlistId={pickingInto?.id ?? ''}
         setlistName={pickingInto?.name ?? ''}
-        songs={songsQuery.data?.songs ?? NO_ROWS}
+        songs={songs}
         setlistSongIds={NO_SONG_IDS}
         onClose={() => setPickingInto(null)}
         onAdded={() => navigateTo(`/setlists/${pickingInto?.id ?? ''}`)}
       />
 
+      {isChoosingSongs ? (
+        <PracticeSongsSheet
+          practice={session}
+          setlistName={sessionLabel}
+          sessions={sessions}
+          practiceSetlists={setlists}
+          practiceSongs={practiceSongs}
+          onClose={() => setIsChoosingSongs(false)}
+        />
+      ) : null}
       <SessionPrimaryActions
         pills={pills}
         isAddingSetlist={createSetlist.isPending}
         onAddSetlist={addSongsToNewSetlist}
+        onChooseSongs={() => setIsChoosingSongs(true)}
       />
     </section>
   );

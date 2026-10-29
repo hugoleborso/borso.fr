@@ -14,12 +14,14 @@ export interface SessionViewTabsProps {
 
 const SESSION_VIEW_LABEL_KEY = {
   setlist: 'sessions.view.setlist',
+  songs: 'sessions.view.songs',
   tasks: 'sessions.view.tasks',
   takes: 'sessions.view.takes',
   details: 'sessions.view.details',
 } as const satisfies Readonly<Record<SessionView, string>>;
 const SESSION_VIEW_ICON = {
   setlist: 'setlist',
+  songs: 'song',
   tasks: 'tasks',
   takes: 'mic',
   details: 'edit',

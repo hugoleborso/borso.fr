@@ -38,21 +38,56 @@ const SONGS_BY_ID: Readonly<Record<string, PreviewSong>> = {
 // @FollowsBlueprint test-pure-unit
 describe('listSessionViews', () => {
   it('offers the details view only when the session has details to show', () => {
-    expect(listSessionViews(true)).toEqual(['setlist', 'tasks', 'takes', 'details']);
-    expect(listSessionViews(false)).toEqual(['setlist', 'tasks', 'takes']);
+    expect(listSessionViews({ hasDetails: true, isPractice: false })).toEqual([
+      'setlist',
+      'tasks',
+      'takes',
+      'details',
+    ]);
+    expect(listSessionViews({ hasDetails: false, isPractice: false })).toEqual([
+      'setlist',
+      'tasks',
+      'takes',
+    ]);
+  });
+
+  it('opens a practice on its songs instead of a setlist', () => {
+    expect(listSessionViews({ hasDetails: true, isPractice: true })).toEqual([
+      'songs',
+      'tasks',
+      'takes',
+      'details',
+    ]);
   });
 });
 
 describe('readSessionView', () => {
   it('reads an offered view from the address', () => {
-    expect(readSessionView('takes', listSessionViews(false))).toBe('takes');
-    expect(readSessionView('details', listSessionViews(true))).toBe('details');
+    expect(
+      readSessionView('takes', listSessionViews({ hasDetails: false, isPractice: false })),
+    ).toBe('takes');
+    expect(
+      readSessionView('details', listSessionViews({ hasDetails: true, isPractice: false })),
+    ).toBe('details');
   });
 
   it('falls back to the setlist for a view not offered, unknown or absent', () => {
-    expect(readSessionView('details', listSessionViews(false))).toBe('setlist');
-    expect(readSessionView('lineup', listSessionViews(true))).toBe('setlist');
-    expect(readSessionView(null, listSessionViews(true))).toBe('setlist');
+    expect(
+      readSessionView('details', listSessionViews({ hasDetails: false, isPractice: false })),
+    ).toBe('setlist');
+    expect(
+      readSessionView('lineup', listSessionViews({ hasDetails: true, isPractice: false })),
+    ).toBe('setlist');
+    expect(readSessionView(null, listSessionViews({ hasDetails: true, isPractice: false }))).toBe(
+      'setlist',
+    );
+  });
+
+  it('falls back to the first view offered, and to the setlist when none is', () => {
+    expect(readSessionView(null, listSessionViews({ hasDetails: false, isPractice: true }))).toBe(
+      'songs',
+    );
+    expect(readSessionView('setlist', [])).toBe('setlist');
   });
 });
 
@@ -157,6 +192,7 @@ describe('selectSessionPills', () => {
     expect(
       selectSessionPills({
         isLoading: true,
+        isPractice: false,
         sessionId: 's',
         firstSetlistId: null,
         isPracticeModeOffered: false,
@@ -167,6 +203,7 @@ describe('selectSessionPills', () => {
       setlistVariant: 'primary',
       setlistLabelKey: 'home.openSetlist',
       isAddSetlistShown: false,
+      chooseSongsVariant: null,
     });
   });
 
@@ -174,6 +211,7 @@ describe('selectSessionPills', () => {
     expect(
       selectSessionPills({
         isLoading: false,
+        isPractice: false,
         sessionId: 's',
         firstSetlistId: null,
         isPracticeModeOffered: false,
@@ -184,6 +222,7 @@ describe('selectSessionPills', () => {
       setlistVariant: 'primary',
       setlistLabelKey: 'home.openSetlist',
       isAddSetlistShown: true,
+      chooseSongsVariant: null,
     });
   });
 
@@ -191,6 +230,7 @@ describe('selectSessionPills', () => {
     expect(
       selectSessionPills({
         isLoading: false,
+        isPractice: false,
         sessionId: 's',
         firstSetlistId: 'set-1',
         isPracticeModeOffered: false,
@@ -201,6 +241,7 @@ describe('selectSessionPills', () => {
       setlistVariant: 'primary',
       setlistLabelKey: 'home.openSetlist',
       isAddSetlistShown: false,
+      chooseSongsVariant: null,
     });
   });
 
@@ -208,6 +249,7 @@ describe('selectSessionPills', () => {
     expect(
       selectSessionPills({
         isLoading: false,
+        isPractice: false,
         sessionId: 's',
         firstSetlistId: 'set-1',
         isPracticeModeOffered: true,
@@ -218,7 +260,41 @@ describe('selectSessionPills', () => {
       setlistVariant: 'secondary',
       setlistLabelKey: 'sessions.setlist',
       isAddSetlistShown: false,
+      chooseSongsVariant: null,
     });
+  });
+});
+
+describe('selectSessionPills on a practice', () => {
+  const practice = { isLoading: false, isPractice: true, sessionId: 's', firstSetlistId: 'set-1' };
+
+  it('offers Choose songs as the one primary action, and never the setlist', () => {
+    expect(selectSessionPills({ ...practice, isPracticeModeOffered: false })).toEqual({
+      practicePath: null,
+      setlistPath: null,
+      setlistVariant: 'primary',
+      setlistLabelKey: 'home.openSetlist',
+      isAddSetlistShown: false,
+      chooseSongsVariant: 'primary',
+    });
+  });
+
+  it('starts the practice on its day, with Choose songs beside it', () => {
+    expect(selectSessionPills({ ...practice, isPracticeModeOffered: true })).toEqual({
+      practicePath: '/sessions/s/practice',
+      setlistPath: null,
+      setlistVariant: 'primary',
+      setlistLabelKey: 'home.openSetlist',
+      isAddSetlistShown: false,
+      chooseSongsVariant: 'secondary',
+    });
+  });
+
+  it('offers nothing while the songs load', () => {
+    expect(
+      selectSessionPills({ ...practice, isLoading: true, isPracticeModeOffered: true })
+        .chooseSongsVariant,
+    ).toBe(null);
   });
 });
 
