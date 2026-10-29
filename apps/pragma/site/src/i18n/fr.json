@@ -744,7 +744,7 @@
     "failed": "La décision n’a pas pu être envoyée. Réessaie.",
     "invalid": "Cette demande d’autorisation n’est pas valide. Recommence depuis ton assistant.",
     "question": "{{clientName}} veut agir sur pragma en tant que {{memberFirstName}}.",
-    "scope": "Il pourra faire tout ce que tu peux faire dans l’application.",
+    "scope": "Il pourra lire et modifier les morceaux, sessions, setlists, prises, bars et tâches du groupe, en ton nom.",
     "title": "Autoriser un assistant"
   }
 }

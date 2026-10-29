@@ -1,4 +1,4 @@
-# A member connects Claude Code, Mistral Vibe, claude.ai or Le Chat to pragma in one command and a browser login, and the assistant can do anything the member can do in the app
+# A member connects Claude Code, Mistral Vibe, claude.ai or Le Chat to pragma in one command and a browser login, and the assistant can read and change the band's songs, sessions, setlists, takes, bars and tasks as that member
 
 ## Perspectives confronted
 
