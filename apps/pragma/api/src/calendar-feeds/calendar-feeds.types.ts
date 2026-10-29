@@ -5,13 +5,8 @@ export interface BusyInterval {
   readonly end: Date;
 }
 
-export interface CalendarFeedSummary {
-  readonly id: string;
-  readonly name: string | null;
-}
+import type { CalendarFeedRow } from './calendar-feeds.schema';
 
-export interface StoredCalendarFeed {
-  readonly memberId: string;
-  readonly address: string;
-  readonly name: string | null;
-}
+export type CalendarFeedSummary = Readonly<Pick<CalendarFeedRow, 'id' | 'name'>>;
+
+export type StoredCalendarFeed = Readonly<Pick<CalendarFeedRow, 'memberId' | 'address' | 'name'>>;

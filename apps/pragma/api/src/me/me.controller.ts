@@ -67,6 +67,7 @@ export function buildMeRouter() {
         if (outcome.kind === 'too-many') {
           return context.json({ error: 'too-many-calendar-feeds' }, 409);
         }
+        if (outcome.kind === 'member-gone') return context.json({ error: 'unknown-member' }, 404);
         return context.json({ calendarFeeds: outcome.calendarFeeds });
       },
     )

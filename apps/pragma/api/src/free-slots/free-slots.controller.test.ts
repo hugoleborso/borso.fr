@@ -2,9 +2,16 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { CALENDAR_FEEDS_PER_MEMBER_MAX } from '@domain/input-limits.core';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
-import { testDatabase, truncateAllTables } from '../../../test/database-utils';
+import {
+  runWithWritesToTableHeld,
+  testDatabase,
+  truncateAllTables,
+} from '../../../test/database-utils';
 import { deleteMemberWithLinks } from '../members/members.repository';
-import { listStoredCalendarFeeds } from '../calendar-feeds/calendar-feeds.repository';
+import {
+  listStoredCalendarFeeds,
+  upsertCalendarFeed,
+} from '../calendar-feeds/calendar-feeds.repository';
 
 const SECRET_ADDRESS = 'https://calendar.example.com/private-0123abcd/basic.ics';
 const SECOND_ADDRESS = 'https://calendar.example.com/private-4567efgh/basic.ics';
@@ -26,8 +33,28 @@ function icsResponse(lines: readonly string[]): Response {
   });
 }
 
+const NAME_BY_ADDRESS_FRAGMENT: readonly (readonly [string, string | null])[] = [
+  ['4567', 'Band'],
+  ['zz-unnamed', null],
+  ['twin', 'Twin'],
+];
+
 function namedCalendarOf(address: string): Response {
-  return icsResponse([`X-WR-CALNAME:${address.includes('4567') ? 'Band' : 'Work'}`]);
+  const match = NAME_BY_ADDRESS_FRAGMENT.find(([fragment]) => address.includes(fragment));
+  const name = match === undefined ? 'Work' : match[1];
+  return icsResponse(name === null ? [] : [`X-WR-CALNAME:${name}`]);
+}
+
+async function postFeed(
+  app: Awaited<ReturnType<typeof buildAuthenticatedApp>>['app'],
+  cookieHeader: string,
+  address: string,
+): Promise<Response> {
+  return await jsonRequest(app, '/api/me/calendar-feeds', {
+    method: 'POST',
+    body: { address },
+    cookieHeader,
+  });
 }
 
 function answerEveryFeedWithItsName(): void {
@@ -93,6 +120,81 @@ describe('calendar feeds and free slots (back-e2e)', () => {
     );
     expect(signedInMember.calendarFeeds.map((feed) => feed.name)).toStrictEqual(['Band', 'Work']);
     expect(await listStoredCalendarFeeds()).toHaveLength(2);
+  });
+
+  it('lists unnamed calendars last, and two calendars of one name by id', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    for (const address of [
+      'https://calendar.example.com/zz-unnamed.ics',
+      'https://calendar.example.com/twin-a.ics',
+      SECOND_ADDRESS,
+      'https://calendar.example.com/twin-b.ics',
+    ]) {
+      await postFeed(app, cookieHeader, address);
+    }
+    const signedInMember = await readJson(
+      await jsonRequest(app, '/api/me', { cookieHeader }),
+      calendarFeedsSchema,
+    );
+    expect(signedInMember.calendarFeeds.map((feed) => feed.name)).toStrictEqual([
+      'Band',
+      'Twin',
+      'Twin',
+      null,
+    ]);
+    const [, firstTwin, secondTwin] = signedInMember.calendarFeeds;
+    expect((firstTwin?.id ?? '') < (secondTwin?.id ?? '')).toBe(true);
+  });
+
+  it('refreshes the name when the same address is saved again', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    await postFeed(app, cookieHeader, SECRET_ADDRESS);
+    vi.spyOn(globalThis, 'fetch').mockResolvedValue(icsResponse(['X-WR-CALNAME:Renamed']));
+    const saved = await readJson(
+      await postFeed(app, cookieHeader, SECRET_ADDRESS),
+      calendarFeedsSchema,
+    );
+    expect(saved.calendarFeeds.map((feed) => feed.name)).toStrictEqual(['Renamed']);
+  });
+
+  it('holds the cap when two calendars are added at once to a member one short of it', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    for (let index = 0; index < CALENDAR_FEEDS_PER_MEMBER_MAX - 1; index++) {
+      await postFeed(app, cookieHeader, `https://calendar.example.com/feed-${String(index)}.ics`);
+    }
+    const responses = await runWithWritesToTableHeld('calendar_feed', 2, async () =>
+      Promise.all([
+        postFeed(app, cookieHeader, SECRET_ADDRESS),
+        postFeed(app, cookieHeader, SECOND_ADDRESS),
+      ]),
+    );
+    expect(
+      responses.map((response) => response.status).toSorted((left, right) => left - right),
+    ).toStrictEqual([200, 409]);
+    expect(await listStoredCalendarFeeds()).toHaveLength(CALENDAR_FEEDS_PER_MEMBER_MAX);
+  });
+
+  it('keeps one copy when the same address is added twice at once', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const responses = await runWithWritesToTableHeld('calendar_feed', 2, async () =>
+      Promise.all([
+        postFeed(app, cookieHeader, SECRET_ADDRESS),
+        postFeed(app, cookieHeader, SECRET_ADDRESS),
+      ]),
+    );
+    expect(responses.map((response) => response.status)).toStrictEqual([200, 200]);
+    expect(await listStoredCalendarFeeds()).toHaveLength(1);
+  });
+
+  it('writes no calendar for a member deleted before the save', async () => {
+    const outcome = await upsertCalendarFeed({
+      memberId: '00000000-0000-4000-8000-000000000000',
+      address: SECRET_ADDRESS,
+      name: null,
+      now: new Date(),
+    });
+    expect(outcome).toBe('member-gone');
+    expect(await listStoredCalendarFeeds()).toStrictEqual([]);
   });
 
   it('saves a calendar with no name when its feed cannot be read yet', async () => {

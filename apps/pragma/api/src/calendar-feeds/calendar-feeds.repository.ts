@@ -1,12 +1,12 @@
 import { and, asc, count, eq } from 'drizzle-orm';
-import { CALENDAR_FEEDS_PER_MEMBER_MAX } from '@domain/input-limits.core';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { memberTable } from '../members/members.schema';
 import type { CalendarFeedSummary, StoredCalendarFeed } from './calendar-feeds.types';
 import { calendarFeedTable } from './calendar-feeds.schema';
+import { hasRoomForAnotherFeed } from './feed-cap.core';
 
-export type AddCalendarFeedOutcome = 'saved' | 'too-many';
+export type AddCalendarFeedOutcome = 'saved' | 'too-many' | 'member-gone';
 
 interface NewCalendarFeed {
   readonly memberId: string;
@@ -15,20 +15,22 @@ interface NewCalendarFeed {
   readonly now: Date;
 }
 
-async function claimMemberRow(executor: DatabaseExecutor, memberId: string): Promise<void> {
-  await executor
+async function didClaimMemberRow(executor: DatabaseExecutor, memberId: string): Promise<boolean> {
+  const claimed = await executor
     .select({ id: memberTable.id })
     .from(memberTable)
     .where(eq(memberTable.id, memberId))
     .for('update');
+  return claimed.length > 0;
 }
 
-// @FollowsBlueprint repository-idempotent-upsert
+// @FollowsBlueprint repository-query
 export async function upsertCalendarFeed(feed: NewCalendarFeed): Promise<AddCalendarFeedOutcome> {
   return await retryingConflictAborts(
     async () =>
       await getDatabase().transaction(async (transaction) => {
-        await claimMemberRow(transaction, feed.memberId);
+        const isMemberClaimed = await didClaimMemberRow(transaction, feed.memberId);
+        if (!isMemberClaimed) return 'member-gone';
         const [existing] = await transaction
           .select({ total: count() })
           .from(calendarFeedTable)
@@ -44,7 +46,8 @@ export async function upsertCalendarFeed(feed: NewCalendarFeed): Promise<AddCale
           )
           .returning({ id: calendarFeedTable.id });
         if (updated.length > 0) return 'saved';
-        if ((existing?.total ?? 0) >= CALENDAR_FEEDS_PER_MEMBER_MAX) return 'too-many';
+        const hasRoom = hasRoomForAnotherFeed(existing?.total ?? 0);
+        if (!hasRoom) return 'too-many';
         await transaction.insert(calendarFeedTable).values({
           memberId: feed.memberId,
           address: feed.address,

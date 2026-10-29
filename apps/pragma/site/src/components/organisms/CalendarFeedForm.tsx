@@ -1,5 +1,6 @@
 /** @Feature auth */
 
+import { CALENDAR_FEED_ADDRESS_MAX_LENGTH } from '@domain/input-limits.core';
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
@@ -15,7 +16,6 @@ import type { CalendarFeedSummary } from '../../lib/queries/me.queries';
 import { type CalendarFeedFormMode, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
 
 const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
-const ADDRESS_MAX_LENGTH = 2_048;
 
 export interface CalendarFeedFormProps {
   readonly feeds: readonly CalendarFeedSummary[];
@@ -127,7 +127,7 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
             autoComplete="off"
             spellCheck={false}
             placeholder="https://calendar.google.com/calendar/ical/…/basic.ics"
-            maxLength={ADDRESS_MAX_LENGTH}
+            maxLength={CALENDAR_FEED_ADDRESS_MAX_LENGTH}
             value={field.state.value}
             onChange={(event) => field.handleChange(event.target.value)}
             onBlur={field.handleBlur}

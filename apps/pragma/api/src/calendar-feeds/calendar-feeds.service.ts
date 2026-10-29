@@ -19,7 +19,8 @@ import { readBusyIntervals, readCalendarName } from './ics.core';
 export type SaveCalendarFeedOutcome =
   | { readonly kind: 'saved'; readonly calendarFeeds: readonly CalendarFeedSummary[] }
   | { readonly kind: 'invalid-address' }
-  | { readonly kind: 'too-many' };
+  | { readonly kind: 'too-many' }
+  | { readonly kind: 'member-gone' };
 
 export type FeedBusyTime =
   | {
@@ -57,7 +58,7 @@ export async function saveCalendarFeed(
   if (verdict.kind === 'rejected') return { kind: 'invalid-address' };
   const name = await readName(verdict.address);
   const outcome = await upsertCalendarFeed({ memberId, address: verdict.address, name, now });
-  if (outcome === 'too-many') return { kind: 'too-many' };
+  if (outcome !== 'saved') return { kind: outcome };
   return { kind: 'saved', calendarFeeds: await listCalendarFeedsOfMember(memberId) };
 }
 

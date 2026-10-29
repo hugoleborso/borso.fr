@@ -1,7 +1,6 @@
 import { index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
-
-const ADDRESS_MAX = 2_048;
+import { CALENDAR_FEED_ADDRESS_MAX_LENGTH } from '@domain/input-limits.core';
 
 // @FollowsBlueprint schema-table-and-input
 export const calendarFeedTable = pgTable(
@@ -20,7 +19,9 @@ export const calendarFeedTable = pgTable(
 );
 
 export const calendarFeedBodySchema = z
-  .object({ address: z.string().trim().min(1).max(ADDRESS_MAX) })
+  .object({ address: z.string().trim().min(1).max(CALENDAR_FEED_ADDRESS_MAX_LENGTH) })
   .strict();
+
+export type CalendarFeedRow = typeof calendarFeedTable.$inferSelect;
 
 export const calendarFeedIdParamSchema = z.object({ id: z.string().uuid() });

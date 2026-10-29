@@ -196,6 +196,7 @@ function SetlistSongPickerContent({
               <Icon name="search" />
             </span>
             <Input
+              ref={() => publishSearchedTitle.cancel}
               type="search"
               data-sheet-focus
               value={query}
