@@ -118,7 +118,7 @@ Proved by hand with `KAIZEN_LOG_REFUSALS=0` (measured).
 **Sibling defects swept:** `pretool-no-discarding-reset.sh` already reads the
 command's own directory since
 [the-reset-guard-read-the-wrong-checkout](./the-reset-guard-read-the-wrong-checkout.md).
-`rtk-rewrite.sh` reads the hook's `cwd`. No other hook reads
+No other hook reads
 `$CLAUDE_PROJECT_DIR`'s HEAD.
 
 ## See also

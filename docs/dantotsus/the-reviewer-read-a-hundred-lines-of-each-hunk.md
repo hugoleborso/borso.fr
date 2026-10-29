@@ -37,7 +37,7 @@ The second technical validator on PR #234 logged:
    wants. A reviewer reads a diff to judge every line. A truncated hunk lets it
    pass code it never saw, and its report names the file as read.
 3. **Why did the existing knowledge not stop it?**
-   [`rtk-truncates-command-output.md`](../knowledge/rtk-truncates-command-output.md)
+   [`rtk-truncates-command-output.md`](https://github.com/hugoleborso/borso.fr/blob/d1be9c42/docs/knowledge/rtk-truncates-command-output.md)
    fires on `[N more lines]` and `rtk recall` markers. The diff marker reads
    `additions truncated`, so the hook printed nothing, and the validator found
    it on its own.
@@ -89,4 +89,4 @@ same exception.
 
 - [`the-rewrite-that-hid-git-from-the-guard.md`](./the-rewrite-that-hid-git-from-the-guard.md),
   the earlier case of the rewrite changing what a command means to its consumer.
-- [`../knowledge/rtk-truncates-command-output.md`](../knowledge/rtk-truncates-command-output.md).
+- [`../knowledge/rtk-truncates-command-output.md`](https://github.com/hugoleborso/borso.fr/blob/d1be9c42/docs/knowledge/rtk-truncates-command-output.md).

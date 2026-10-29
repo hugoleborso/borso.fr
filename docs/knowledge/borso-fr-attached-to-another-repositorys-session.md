@@ -17,7 +17,7 @@ The husky hooks live in the clone itself: pre-commit (the linter, the formatter,
 ## What does not run
 
 - **SessionStart.** `scripts/install-repo-deps.sh` never ran: no `node_modules`, no generated blueprint index, no `KAIZEN.md`. Run it by hand right after the clone.
-- **`.claude/settings.json` hooks.** The session carries the settings of the repository it started on. So the pre-write blueprint context, the rtk rewrite and this repository's guard hooks are absent, and the other repository's guards apply instead.
+- **`.claude/settings.json` hooks.** The session carries the settings of the repository it started on. So the pre-write blueprint context and this repository's guard hooks are absent, and the other repository's guards apply instead.
 - **This CLAUDE.md.** `register_repo_root` asks for a reload on the next turn; until it arrives, read `CLAUDE.md` yourself before the first edit.
 - **The friction log.** Nothing creates `KAIZEN.md` or reminds the agent to write to it, so the after-task sweep starts from the transcript alone. Run `scripts/kaizen.sh` from the start like in a native session.
 

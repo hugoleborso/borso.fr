@@ -121,12 +121,10 @@ decision.
 - [`vitest-list-ignores-shard.md`](./vitest-list-ignores-shard.md) — `vitest list --shard=i/n` lists every file, so a shard split cannot be checked by listing it; `--project` is honoured, and a split that must be predictable belongs in a project.
 - [`vitest-hides-the-console-of-a-passing-test-from-an-agent.md`](./vitest-hides-the-console-of-a-passing-test-from-an-agent.md) — Vitest 4.1.11 run by an agent prints no `console.log` from a passing test, and `--silent=false` does not change that; `--reporter=default` does.
 - [`a-file-of-constant-tables-passes-mutation-with-no-mutant.md`](./a-file-of-constant-tables-passes-mutation-with-no-mutant.md) — under `ignoreStatic` a gated file of module-level tables gets no mutant and passes at NaN; whole-table `toEqual` tests are its only pin.
-- [`rtk-pnpm-install-can-skip-lockfile-write.md`](./rtk-pnpm-install-can-skip-lockfile-write.md) — when `pnpm install` is invoked through `rtk`, the lockfile sometimes doesn't write back; mirror from `node_modules/.pnpm/lock.yaml` if `git status` shows nothing changed.
 
 ### Claude Code tooling
 
 - [`the-worktree-guard-reads-shell-text.md`](./the-worktree-guard-reads-shell-text.md) — a worktree-isolated agent's guard refuses any loop, heredoc or interpreter whose text mentions git; run git as one plain command and put multi-step work in a script file.
-- [`rtk-truncates-command-output.md`](./rtk-truncates-command-output.md) — a nine-line `cat` printed eight lines plus `[10 more lines]`, and the truncation reads as the file's real content; ask with `grep -c` when completeness is the question.
 - [`parallel-agents-share-one-scratchpad.md`](./parallel-agents-share-one-scratchpad.md) — a fan-out gets one scratchpad, not one each, and agents pick the same obvious filename; three of eight agents on PR #81 lost a file to it, one seeing another agent's traceback from its own tool. Give each agent `<scratchpad>/<label>/`.
 - [`an-agent-added-by-main-is-not-dispatchable-yet.md`](./an-agent-added-by-main-is-not-dispatchable-yet.md) — the agent registry is read once at session start, so a `plugins/borso-harness/agents/*.md` that arrives mid-session (merged from `main`, or written by you) is on disk and still *agent type not found*.
 - [`two-agents-in-one-working-tree.md`](./two-agents-in-one-working-tree.md) — how a concurrent writer shows itself (`git diff` md5 moving over 60 s, findings that no longer reproduce), why staging explicit paths matters, and how to check a background run is really dead before launching a second one.

@@ -6,7 +6,7 @@
 | --- | --- |
 | Node 22 (`.nvmrc`) | Lambda runtime parity. |
 | pnpm 10 (via `packageManager` + corepack) | Workspaces; `npm`/`yarn` will not work. |
-| `jq` | Required by the rtk PreToolUse hook (Claude Code). Almost always already installed. |
+| `jq` | Required by the Claude Code hooks. Almost always already installed. |
 | Docker | Only needed if an app uses local Postgres (none do today). |
 
 ## First clone
@@ -24,10 +24,9 @@ pnpm install
 Whenever a Claude Code session opens this repo, `.claude/hooks/session-start.sh` fires. It runs `scripts/install-repo-deps.sh`, which:
 
 1. Verifies `jq` is on PATH (fails fast if not).
-2. Installs `rtk` (Rust Token Killer, see `.claude/hooks/rtk-rewrite.sh`) to `~/.local/bin` if missing.
-3. Runs `pnpm install --frozen-lockfile`.
+2. Runs `pnpm install --frozen-lockfile`.
 
-The hook also writes `export PATH="$HOME/.local/bin:$PATH"` to `$CLAUDE_ENV_FILE` so subsequent tool calls see `rtk`. Idempotent — typically ~500 ms when everything's cached.
+The hook also writes `export PATH="$HOME/.local/bin:$PATH"` to `$CLAUDE_ENV_FILE` so subsequent tool calls see the tools installed there. Idempotent — typically ~500 ms when everything's cached.
 
 If you're running Claude Code locally and want the same auto-install behavior outside the session hook, just run the script:
 
