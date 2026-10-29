@@ -95,7 +95,7 @@ The repo's rules from CLAUDE.md "Clean code" and `docs/standards/`, plus the cus
 ### C. Tests pass
 
 - Identify which workspaces the diff touches (`apps/borso-fr`, `infra/cdk`, `infra/shared`, …).
-- Run only the tests the branch affects. Coverage and mutation are CI's (`app-tests` and the `mutation` job), so never run `test:core`, `test:coverage`, `test:mutation` or a whole suite. Round 2 replaces `<base>` with `<reviewed-sha>`.
+- Run only the tests the branch affects. Coverage and mutation are CI's (`app-tests` and the `mutation` job), so never run `test:core`, `test:full-suite`, `test:mutation` or a whole suite. Round 2 replaces `<base>` with `<reviewed-sha>`.
   - a full-stack app (its `package.json` has `test:core`): `pnpm --filter <pkg> exec vitest run --project core --changed <base>`, then `pnpm --filter <pkg> run test:e2e --changed <base>`. The `test:e2e` script boots the local Postgres; `--changed` walks Vitest's import graph, and no affected file exits 0.
   - a front-end-only app, `infra/cdk` or `infra/shared`: `pnpm --filter <pkg> exec vitest run --changed <base>`.
 - Capture exit code + the last 30 lines on failure.

@@ -111,7 +111,7 @@ Same rule as `/visual-validation`:
 ## Repo-specific notes
 
 - Workspaces: `@borso-app/<app>` for `apps/*`; `@borso/infra` for `infra/cdk`; `@borso/shared-infra` for `infra/shared`.
-- `infra/cdk` and `infra/shared` are 100%-coverage gated. The pre-push hook and CI run their `test:coverage`; the validator runs only the changed tests.
+- `infra/cdk` and `infra/shared` are 100%-coverage gated. CI collects coverage. Pre-push and the validator run only the changed tests.
 - Default base ref is `origin/main`. Feature branches are typically `claude/<slug>` per CLAUDE.md.
 - Reports go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/`, `plan/`, and any visual-validation reports).
 - Pair with `/visual-validation` (UI work): visual catches "doesn't render right"; technical catches "renders fine but the code is rotten or untested".

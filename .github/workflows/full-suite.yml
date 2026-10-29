@@ -85,9 +85,9 @@ jobs:
       - name: Pure suites and the per-file coverage gate
         run: |
           if grep -q '"test:core"' "apps/$APP/package.json"; then
-            pnpm --filter "@borso-app/$APP" run test:core
+            pnpm --filter "@borso-app/$APP" exec vitest run --project core --coverage
           else
-            pnpm --filter "@borso-app/$APP" run test:coverage
+            pnpm --filter "@borso-app/$APP" exec vitest run --coverage
           fi
 
       # `back-e2e-*` picks up a database suite an app split out of `back-e2e`,
@@ -135,7 +135,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm run test:coverage
+      - run: pnpm exec vitest run --coverage
       - uses: actions/cache@v6
         with:
           path: reports/mutation/incremental.json
@@ -161,7 +161,7 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra run test:coverage
+      - run: pnpm --filter @borso/infra exec vitest run --coverage
       - uses: actions/cache@v6
         with:
           path: infra/cdk/reports/mutation/incremental.json

@@ -70,10 +70,10 @@ jobs:
       - run: pnpm run format:check
       # The custom lint rules under eslint-rules/ each ship a RuleTester
       # suite, and the generators under scripts/ carry the same 100% per-file
-      # coverage threshold an application's pure modules do. `test:eslint-rules`
-      # ran the suite without `--coverage`, so the threshold in
-      # `vitest.config.ts` was declared and never applied to anything.
-      - run: pnpm run test:coverage
+      # coverage threshold an application's pure modules do. Only CI collects
+      # coverage, so this step is where the threshold in `vitest.config.ts`
+      # applies.
+      - run: pnpm exec vitest run --coverage
       # DSQL-compat scan on every migration SQL file. Mirrors the
       # pre-commit hook so a bypass via `git push --no-verify` still
       # gets caught before merge. Rung-2 eradication (paired with the
@@ -186,8 +186,10 @@ jobs:
       # resolves only the staged entries' commits; this resolves all of them.
       - run: pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts
       - run: pnpm exec tsx scripts/standards/convention-drift.ts --check
-      - run: pnpm --filter @borso/infra test:coverage
-      - run: pnpm --filter @borso/shared-infra test:coverage
+      # Coverage is a CI-only flag. `@borso/infra` was built at the top of
+      # this job, which the shared-infra tests import.
+      - run: pnpm --filter @borso/infra exec vitest run --coverage
+      - run: pnpm --filter @borso/shared-infra exec vitest run --coverage
       - run: pnpm -r build
       # The CDK synth the standards claim CI runs, which until now it did not:
       # `pnpm -r build` is `vite build`, and the per-app stack tests call
@@ -294,15 +296,16 @@ jobs:
       # `cdk/test/stack.test.ts` in the full-stack apps imports `@borso/infra`
       # via its package entry — the CDK constructs must be built first.
       - run: pnpm --filter @borso/infra build
-      # `test:core` where it exists — the full-stack apps, whose `test:coverage`
-      # wants a Postgres — and `test:coverage` otherwise. Both carry the 100%
-      # per-file threshold on `*.core.ts` / `*.utils.ts`.
+      # The `core` project where it exists, the full-stack apps whose other
+      # projects want a Postgres, and the whole suite otherwise. Only CI passes
+      # `--coverage`, which applies the 100% per-file threshold on `*.core.ts`
+      # and `*.utils.ts`.
       - name: Pure suites and the per-file coverage gate
         run: |
           if grep -q '"test:core"' "apps/$APP/package.json"; then
-            pnpm --filter "@borso-app/$APP" run test:core
+            pnpm --filter "@borso-app/$APP" exec vitest run --project core --coverage
           else
-            pnpm --filter "@borso-app/$APP" run test:coverage
+            pnpm --filter "@borso-app/$APP" exec vitest run --coverage
           fi
       - name: Back-end end-to-end suite
         if: hashFiles(format('apps/{0}/api/**', matrix.app)) != '' && matrix.app != 'pragma'

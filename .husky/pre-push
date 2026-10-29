@@ -75,12 +75,11 @@ fi
 # Runs a labelled gate in the background, capturing its output so parallel jobs
 # do not interleave. Logs are printed only for the gates that fail.
 #
-# Two waves. The light gates (type checks, knip, oxlint, the changed tests) run
-# side by side, at most `gate_limit` at once. The heavy gates (the coverage
-# suites and Stryker) then run one after another, alone: run together with the
-# light wave, they ran the sandbox out of memory and the tests that lost the
-# race for CPU timed out, each passing alone. BORSO_PRE_PUSH_JOBS overrides the
-# light wave's limit. See docs/dantotsus/the-gates-that-timed-each-other-out.md.
+# The gates (type checks, knip, oxlint, the changed tests) run side by side, at
+# most `gate_limit` at once. Unbounded, they ran the sandbox out of memory and
+# the tests that lost the race for CPU timed out, each passing alone.
+# BORSO_PRE_PUSH_JOBS overrides the limit. See
+# docs/dantotsus/the-gates-that-timed-each-other-out.md.
 gate_log_dir=$(mktemp -d)
 running_gates=''
 failed=''
@@ -238,20 +237,23 @@ for app in $changed_app_slugs; do
   fi
 done
 
-# The coverage suites of infra/cdk, infra/shared and the tooling, in the same
-# parallel wave as the light gates.
+# The tests of infra/cdk, infra/shared and the tooling this push affects. Their
+# coverage gate runs in CI, for the reason above.
 if echo "$changed" | grep -q '^infra/cdk/'; then
-  start_gate infra-cdk pnpm --filter @borso/infra test:coverage
+  start_gate infra-cdk pnpm --filter @borso/infra exec vitest run --changed "$push_base"
 fi
 
+# infra/shared's tests import `@borso/infra` through its built package entry.
+test_infra_shared() {
+  pnpm --filter @borso/infra run build &&
+    pnpm --filter @borso/shared-infra exec vitest run --changed "$push_base"
+}
 if echo "$changed" | grep -q '^infra/shared/'; then
-  start_gate infra-shared pnpm --filter @borso/shared-infra test:coverage
+  start_gate infra-shared test_infra_shared
 fi
 
-# The repository's own tooling, held to the bar it holds the applications to.
-# The suite is small, so it needs no `--changed`.
 if echo "$changed" | grep -qE '^(scripts|eslint-rules)/'; then
-  start_gate tooling pnpm run test:coverage
+  start_gate tooling pnpm exec vitest run --changed "$push_base"
 fi
 
 # Mutation testing runs in CI, on the pull request: scripts/mutate-changed.sh.

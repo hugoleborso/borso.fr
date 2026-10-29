@@ -128,9 +128,9 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
    c. If the change is a pure helper, the file ends in `.utils.ts`; write the matching `.utils.test.ts` alongside it.
    d. Mark the declaration `// @FollowsBlueprint <id>`.
    e. Update local commits as you go — do not save the diff for one giant commit.
-   f. **Test only what the row touched.** Run `pnpm --filter <app> exec vitest run --project core --changed <base>` and, for an `api/` change, the back-e2e files you touched by path, all without `--coverage`. Never run an app's whole `test`, `test:core` or `test:coverage` script between rows, and never `scripts/lint-staged-files.sh` over the branch: the commit and push hooks already lint and test what changed. On PR #216 one fix round spent 751 s in 18 test runs and 178 s linting the whole branch (measured).
+   f. **Test only what the row touched.** Run `pnpm --filter <app> exec vitest run --project core --changed <base>` and, for an `api/` change, the back-e2e files you touched by path. No package script collects coverage. Never run an app's whole `test`, `test:core` or `test:full-suite` script between rows, and never `scripts/lint-staged-files.sh` over the branch: the commit and push hooks already lint and test what changed. On PR #216 one fix round spent 751 s in 18 test runs and 178 s linting the whole branch (measured).
 3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
-4. **Run the plan's pre-flight gates** in order, once, here. Pre-flight runs the plan's build and feature checks. The coverage gate and the full suites run in CI (`app-tests`), so do not run `test:core`, `test:coverage` or `test:e2e` unscoped locally. Fix issues, do not bypass.
+4. **Run the plan's pre-flight gates** in order, once, here. Pre-flight runs the plan's build and feature checks. The coverage gate and the full suites run in CI (`app-tests`), so do not run `test:core`, `test:full-suite` or `test:e2e` unscoped locally. Fix issues, do not bypass.
 5. **Run `/technical-validation`** always. Read the verdict; it must be PASS before push. Fix rounds follow *Fix rounds* below.
 6. **Run `/visual-validation`** for UI work, once, after the last slice and after technical validation passes. Not per slice.
 7. **Push.** The branch's CI is the last gate; the local gates are stricter.
@@ -164,7 +164,7 @@ There are two rounds at most. Blocking findings left after round 2 go to the ope
 
 - pnpm always; no npm/yarn.
 - Conventional-commit scopes: `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `infra`, `ci`, `docs`, `deps`, `meta`. Multi-commit per feature is fine; small, focused commits beat one giant landing.
-- `infra/cdk` and `infra/shared` are 100%-coverage gated by hook; pre-push runs their `test:coverage` when the push changes them.
+- `infra/cdk` and `infra/shared` are 100%-coverage gated in CI. Pre-push runs their changed tests, without coverage, when the push changes them.
 - Reports from validators land at `docs/features/<app>/<slug>/validation/`; commit them alongside the implementation diff in the same PR.
 
 ## Verdict émis (when piloted by `/tech-lead-orchestrator`)

@@ -92,7 +92,8 @@ SDK clients and the network calls to third-party services.
 
 `vitest run --coverage` fails when any file matching `**/*.core.ts`,
 `**/*.utils.ts`, `**/*.adapter.ts` or `**/*.schema.ts` falls below full
-statement, branch, function, and line coverage.
+statement, branch, function, and line coverage. Only CI passes `--coverage`.
+No package script carries it, so local runs never collect coverage.
 
 The first two are pure. The third is not, and it is on the list anyway: an
 adapter is the one file in a bounded context that leaves the process
