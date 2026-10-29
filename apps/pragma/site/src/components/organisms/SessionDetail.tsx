@@ -101,11 +101,6 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     () => selectUpcomingConcerts(sessions, nowEpochMs),
     [sessions, nowEpochMs],
   );
-  const preparedConcert = useMemo(() => {
-    const preparedConcertId = session.preparedConcertId ?? null;
-    if (preparedConcertId === null) return null;
-    return upcomingConcerts.find((entry) => entry.id === preparedConcertId) ?? null;
-  }, [session, upcomingConcerts]);
   const friendsTotal = useMemo(
     () => Object.values(friendsCounts).reduce((accumulator, value) => accumulator + value, 0),
     [friendsCounts],
@@ -216,7 +211,6 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   ) : isPickerShown ? (
     <PracticeReadView
       session={session}
-      preparedConcert={preparedConcert}
       upcomingConcerts={upcomingConcerts}
       onChangePreparedConcert={setPreparedConcert}
       language={i18n.language}
