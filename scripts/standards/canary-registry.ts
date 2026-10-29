@@ -512,6 +512,17 @@ export function startGateCanary(): number {
     tier: 'slow',
   },
   {
+    mechanism: 'deploy-smoke-agent-reader',
+    label: 'the deploy smoke, on a reader that answered nothing',
+    defect: 'a reader Lambda that returns no row',
+    plant: {
+      'gate-canary-reader-response.json': '{"rows":[],"schema":"prod","role":"ai_reader_prod"}\n',
+    },
+    command: ['scripts/smoke-agent-reader.sh', '--payload', 'gate-canary-reader-response.json'],
+    refusal: /expected 1 row/,
+    tier: 'fast',
+  },
+  {
     mechanism: 'actionlint',
     label: 'actionlint over the workflows',
     defect: 'a workflow job with a misspelt key',

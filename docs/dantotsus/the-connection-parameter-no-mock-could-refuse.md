@@ -7,7 +7,7 @@ related-pr: '#218'
 fix-pr: '#219'
 fix-commits: [self]
 eradication-level: 2
-eradication-paths: [scripts/smoke-agent-reader.sh, .github/workflows/deploy.yml]
+eradication-paths: [scripts/database/smoke-agent-reader.ts, scripts/smoke-agent-reader.sh, .github/workflows/deploy.yml]
 time-to-detect: same day
 tags: [dsql, cdk, gates, infra, agents]
 zone: infra/cdk/src/internal/agent-reader
@@ -140,6 +140,21 @@ under `apps/` or `infra/` — 100 of the last 100. A permanent toll on every
 commit, with a hand-rolled parser nobody would maintain, against an accident
 that happens once. It also answered only the connection-parameter instance,
 while the smoke answers the class. Removed before merge.
+
+**The gate has its own gate.** `gate-canaries` refused the first version of this
+eradication, correctly: a mechanism nothing can prove wrong is a mechanism
+nobody should trust. A deploy-time smoke cannot be canaried by planting a
+defect in production, so the judgement moved out of the AWS calls — the script
+takes `--payload <file>` and judges a response captured earlier, which is also
+how a failed invocation is replayed. The canary plants a response with no rows
+and asserts the refusal. Weaker than the others, because it proves the
+judgement rather than the invocation, and that is the strongest thing provable
+without breaking production.
+
+That rewrite removed a duplication the first version introduced: the shell
+script judged the response in `jq`, a second writing of `readInvocationOutcome`
+in `scripts/database/reader-invocation.utils.ts`. ADR-0049's own
+single-implementation criterion, broken within a day of being written.
 
 **Sibling defects swept:** the four application clients send `search_path` and
 nothing else; the migration runner sets its schema with a `SET search_path`
