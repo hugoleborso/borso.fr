@@ -3,6 +3,7 @@ import { SHELL_TABS } from '../../components/organisms/navigation-active.core';
 import { BAND_DESTINATIONS } from './band-destinations.core';
 
 const FORMER_DRAWER_DESTINATIONS = [
+  '/tasks',
   '/members',
   '/instruments',
   '/bars',
@@ -17,7 +18,7 @@ describe('BAND_DESTINATIONS', () => {
     expect(new Set(icons).size).toBe(icons.length);
   });
 
-  it('keeps every destination the More drawer and the old tabs held within reach', () => {
+  it('keeps the tasks and every destination the More drawer held within reach', () => {
     const paths = BAND_DESTINATIONS.map((destination) => destination.to);
     expect(paths).toEqual(expect.arrayContaining(FORMER_DRAWER_DESTINATIONS));
   });

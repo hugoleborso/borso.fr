@@ -28,8 +28,9 @@ const EXEMPT_ROUTES: Readonly<Record<string, string>> = {
   '/setlists/:setlistId/scene': 'a full-screen stage view',
 };
 const TAB_ROOTS = new Set(['/', '/catalog', '/sessions', '/setlists', '/band']);
-const REDIRECTS_TO_TAB_ROOT = new Set(['/studies', '/tasks']);
+const REDIRECTS_TO_TAB_ROOT = new Set(['/studies']);
 const BAND_SUB_PAGES = new Set([
+  '/tasks',
   '/members',
   '/instruments',
   '/bars',
@@ -44,7 +45,7 @@ const TAB_VARIANTS: readonly {
   readonly url: (known: KnownRecords) => string;
 }[] = [
   { route: '/', view: 'tasks', url: () => '/' },
-  { route: '/band', view: 'everyone', url: () => '/band' },
+  { route: '/tasks', view: 'everyone', url: () => '/tasks' },
   { route: '/members', view: 'mastery', url: () => '/members' },
   ...['sign-in', 'calendar', 'notifications', 'language'].map((view) => ({
     route: '/account',

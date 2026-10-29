@@ -5,6 +5,7 @@ import { RequireSession } from './components/organisms/RequireSession';
 import { TracedRoutes } from './observability/error-reporting.adapter';
 import { AccountPage } from './routes/account/AccountPage';
 import { BandPage } from './routes/band/BandPage';
+import { TasksPage } from './routes/band/TasksPage';
 import { HomePage } from './routes/home/HomePage';
 import { BarsPage } from './routes/bars/BarsPage';
 import { AddSongPage } from './routes/catalog/AddSongPage';
@@ -68,7 +69,7 @@ export function App(): JSX.Element {
               <Route path="/improvements" element={<ImprovementsPage />} />
               <Route path="/studies" element={<Navigate to="/catalog?filter=learning" replace />} />
               <Route path="/band" element={<BandPage />} />
-              <Route path="/tasks" element={<Navigate to="/band" replace />} />
+              <Route path="/tasks" element={<TasksPage />} />
               <Route path="/compos" element={<ComposPage />} />
               <Route path="/members" element={<MembersPage />} />
               <Route path="/instruments" element={<InstrumentsPage />} />

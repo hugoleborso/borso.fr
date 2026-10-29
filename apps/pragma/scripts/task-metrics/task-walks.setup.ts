@@ -225,6 +225,12 @@ const agreeWhoDoesWhat: TaskWalkRunner = async (driver) => {
   await navigateTo(driver.session, `${driver.baseUrl}${HOME}`);
   const partB = new TaskWalk(driver.session, '3b See my own tasks');
   await partB.tap('Band tab', { text: '^Band', css: TAB_LINK }, { wait: CREATE_SETTLE_MS });
+  await partB.tap(
+    'Tasks',
+    { exact: 'Tasks', css: 'nav[aria-label="The band"] a', scope: 'page' },
+    { wait: CREATE_SETTLE_MS },
+  );
+  partB.note('Operator review 3 made Band a menu of its sections, so My tasks is one link away.');
   const ownSpec = { css: 'ul[aria-label="My tasks"] li button', index: 0, scope: 'page' };
   const firstOwnTask = await partB.find(ownSpec);
   const reach = firstOwnTask === null ? null : await partB.bringIntoView(ownSpec);

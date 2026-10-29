@@ -11,6 +11,7 @@ export interface BandDestination {
 
 // @FollowsBlueprint core-lookup-table
 export const BAND_DESTINATIONS: readonly BandDestination[] = [
+  { to: '/tasks', labelKey: 'nav.tasks', icon: 'tasks' },
   { to: '/members', labelKey: 'nav.members', icon: 'audience' },
   { to: '/instruments', labelKey: 'nav.instruments', icon: 'instr' },
   { to: '/bars', labelKey: 'nav.bars', icon: 'beer' },

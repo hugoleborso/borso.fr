@@ -1,149 +1,36 @@
 /** @Feature band */
 
 import type { JSX } from 'react';
-import { useMemo } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, useSearchParams } from 'react-router-dom';
-import { BottomActions } from '../../components/atoms/BottomActions';
-import { Button } from '../../components/atoms/Button';
+import { Link } from 'react-router-dom';
 import { Icon } from '../../components/atoms/Icon';
-import { EmptyState } from '../../components/molecules/EmptyState';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { SectionTabs } from '../../components/molecules/SectionTabs';
-import { MemberTaskColumn } from '../../components/organisms/MemberTaskColumn';
-import { TaskList } from '../../components/organisms/TaskList';
-import { TaskSheetHost } from '../../components/organisms/TaskSheetHost';
-import { useTaskRowLabels, useTaskSheet } from '../../components/organisms/task-sheet.hook';
-import { useSignedInMember } from '../../lib/queries/me.queries';
-import { useMembersList } from '../../lib/queries/members.queries';
-import { useSongsList } from '../../lib/queries/songs.queries';
-import { useTasksList } from '../../lib/queries/tasks.queries';
 import { BAND_DESTINATIONS } from './band-destinations.core';
-import {
-  BAND_VIEW_PARAM,
-  type BandView,
-  groupTasksByMember,
-  isOwnTasksView,
-  isTaskListEmpty,
-  type MemberShape,
-  readBandView,
-  selectTasksOfMember,
-  type TaskShape,
-} from './band-tasks.core';
 
-const NO_ROWS: readonly never[] = [];
-const UNASSIGNED_GROUP_KEY = 'unassigned';
+const ROW_CLASS =
+  'flex min-h-11 items-center gap-3 py-3 text-body text-ink no-underline hover:bg-hover ' +
+  'focus-visible:outline-3 focus-visible:outline-focus';
 
 // @FollowsBlueprint route-list-page
 export function BandPage(): JSX.Element {
   const { t } = useTranslation();
-  const [searchParams, setSearchParams] = useSearchParams();
-  const view = readBandView(searchParams.get(BAND_VIEW_PARAM));
-  const tasksQuery = useTasksList();
-  const membersQuery = useMembersList();
-  const songsQuery = useSongsList();
-  const signedInMember = useSignedInMember();
-  const taskSheet = useTaskSheet();
-
-  const tasks = useMemo<readonly TaskShape[]>(
-    () => tasksQuery.data?.tasks ?? NO_ROWS,
-    [tasksQuery.data],
-  );
-  const members = useMemo<readonly MemberShape[]>(
-    () => membersQuery.data?.members ?? NO_ROWS,
-    [membersQuery.data],
-  );
-  const songs = useMemo(() => songsQuery.data?.songs ?? NO_ROWS, [songsQuery.data]);
-  const memberTasks = useMemo(
-    () => selectTasksOfMember(tasks, signedInMember.data?.memberId ?? null),
-    [tasks, signedInMember.data],
-  );
-  const groups = useMemo(
-    () => groupTasksByMember(tasks, members, t('tasks.unassigned')),
-    [tasks, members, t],
-  );
-  const rowLabels = useTaskRowLabels(songs);
-  const isOwnTasksShown = isOwnTasksView(view);
-  const isMyListEmpty = isTaskListEmpty(memberTasks.length, tasksQuery.isLoading);
-
-  const selectView = (nextView: BandView): void => {
-    setSearchParams({ [BAND_VIEW_PARAM]: nextView }, { replace: true });
-  };
-
-  const errorMessage =
-    tasksQuery.error === null ? taskSheet.errorMessage : tasksQuery.error.message;
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[1280px]">
-      <PageHeader title={t('band.title')}>
-        <SectionTabs
-          label={t('band.viewsLabel')}
-          tabs={[
-            { value: 'my', label: t('band.myTasks'), icon: 'tasks' },
-            { value: 'everyone', label: t('band.everyone'), icon: 'members' },
-          ]}
-          value={view}
-          onChange={selectView}
-        />
-      </PageHeader>
-      <nav aria-label={t('band.linksLabel')} className="mb-4">
-        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+      <PageHeader title={t('band.title')} />
+      <nav aria-label={t('band.linksLabel')}>
+        <ul className="m-0 list-none divide-y divide-rule p-0">
           {BAND_DESTINATIONS.map((destination) => (
-            <Link
-              key={destination.to}
-              to={destination.to}
-              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-pill bg-glass px-3 text-meta font-medium text-ink no-underline hover:bg-hover focus-visible:outline-3 focus-visible:outline-focus"
-            >
-              <Icon name={destination.icon} className="text-accent" />
-              {t(destination.labelKey)}
-            </Link>
+            <li key={destination.to}>
+              <Link to={destination.to} className={ROW_CLASS}>
+                <Icon name={destination.icon} className="text-accent" />
+                {t(destination.labelKey)}
+                <Icon name="chevR" className="ml-auto text-ink-faint" />
+              </Link>
+            </li>
           ))}
-        </div>
+        </ul>
       </nav>
-      {errorMessage === null ? null : (
-        <p className="text-danger text-meta mb-3" role="alert">
-          {errorMessage}
-        </p>
-      )}
-      {tasksQuery.isLoading ? (
-        <p className="text-ink-soft italic text-meta m-0">{t('common.loading')}</p>
-      ) : null}
-      {isOwnTasksShown ? (
-        isMyListEmpty ? (
-          <EmptyState icon="tasks">{t('band.noTaskOfMine')}</EmptyState>
-        ) : (
-          <TaskList
-            label={t('band.myTasks')}
-            tasks={memberTasks}
-            {...rowLabels}
-            onToggleDone={taskSheet.toggleDone}
-            onOpen={taskSheet.openTask}
-            onDelete={taskSheet.requestDeletion}
-          />
-        )
-      ) : (
-        <div className="@container min-w-0">
-          <div className="grid grid-cols-1 @xl:grid-cols-2 @4xl:grid-cols-3 gap-3">
-            {groups.map((group) => (
-              <MemberTaskColumn
-                key={group.memberId ?? UNASSIGNED_GROUP_KEY}
-                group={group}
-                {...rowLabels}
-                onToggleDone={taskSheet.toggleDone}
-                onOpen={taskSheet.openTask}
-                onDelete={taskSheet.requestDeletion}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      <TaskSheetHost controller={taskSheet} members={members} songs={songs} />
-      <BottomActions>
-        <Button icon="plus" variant="primary" onClick={() => taskSheet.openNewTask()}>
-          {t('tasks.newTitle')}
-        </Button>
-      </BottomActions>
     </section>
   );
 }

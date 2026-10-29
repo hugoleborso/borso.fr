@@ -96,19 +96,19 @@ in the pool.
 
 ## Band tab
 
-The screen that opens on the member's tasks and then links to every page about the band itself: members, instruments, bars, compositions, improvements, studies until the Songs tab carries them, and the account page last.
+The screen that lists every page about the band itself: tasks first, then members, instruments, bars, compositions, improvements, and the account page last. It holds no list of its own.
 
 Lives in: `site/src/routes/band/`
 
-- It opens on **My tasks**, the signed-in member's tasks in the order the
-  API gives them; **Everyone** shows one column per member. The choice is
-  the `view` search parameter, so a reload keeps it.
-- **New task** is its one primary action, in the bottom strip.
+- **Tasks** (`/tasks`) opens on **My tasks**, the signed-in member's
+  tasks in the order the API gives them; **Everyone** shows one column
+  per member. The choice is the `view` search parameter, so a reload
+  keeps it. **New task** is its one primary action, in the bottom strip.
 - Not to be confused with the band as the set of people, which is
   **member**.
 
 Held by: `site/src/routes/band/band-destinations.core.test.ts` › lists the account page last
-Held by: `site/src/routes/band/BandPage.test.tsx` › opens on the signed-in member tasks only
+Held by: `site/src/routes/band/TasksPage.test.tsx` › opens on the signed-in member tasks only
 
 ## Bar
 
