@@ -168,6 +168,41 @@ TypeScript checks on the commit run under plain `node` with
 second before the script starts, and `tsx` alone about half of one, so neither
 fits in 300 ms.
 
+## Earning the run
+
+A budget prices one run. It cannot see that a check runs on every commit to
+guard something that changes once a year, which is a cost with no matching
+benefit however fast each run is. **A new check on the commit answers two
+questions in writing before it lands**, with the commands that produce the
+numbers rather than an impression:
+
+```sh
+# how many of the last hundred commits it would run on
+git log --oneline -100 --name-only --pretty=format:%h -- '<its scope>' \
+  | grep -c '^[0-9a-f]\{7,\}$'
+
+# how many commits ever touched what it guards
+git log --oneline -- '<the files it guards>' | wc -l
+```
+
+When the first number dwarfs the second by two orders of magnitude, the check
+is in the wrong place. It belongs at pre-push, in CI, or at the moment its
+subject is actually exercised — a deploy, a migration, a release — and the
+budget it was passing was never the constraint that mattered.
+
+The case this rule comes from: a pre-commit check guarding five identical
+lines, which would have run on 100 of the last 100 commits while the four files
+holding those lines changed in 15 commits across the repository's whole
+history. It passed the per-check budget at 39 ms and was still the wrong
+artefact. See
+[`docs/dantotsus/the-check-that-cost-more-than-the-defect.md`](../dantotsus/the-check-that-cost-more-than-the-defect.md).
+
+The rule cuts the other way too, and that is the useful half: a check that is
+far too slow for the commit is fine at pre-push **if its scope is narrow enough
+that it almost never runs there**. The canary inventory costs ten seconds and
+runs only when a push edits the gate definitions, the canary registry, a
+numbered standard or the commit hook. Cost is the product, not either factor.
+
 ## Where each check runs
 
 | Check | On the commit | Whole tree |
@@ -257,3 +292,10 @@ moved to pre-push.
 - `reviewer` checks that a new check in `.husky/pre-commit` declares a scope
   naming everything it reads, including `^D ` when a removal can break what it
   checks, and that a check leaving the commit gets a whole-tree run in `ci.yml`.
+- `reviewer` checks that a new check on the commit answers *Earning the run*
+  above: how many of the last hundred commits it would fire on, against how
+  many ever touched what it guards. There is no mechanical form of this — the
+  numerator is computable and the denominator is a judgement about what a
+  surface is for — so it is residue by construction, and
+  [`docs/dantotsus/the-check-that-cost-more-than-the-defect.md`](../dantotsus/the-check-that-cost-more-than-the-defect.md)
+  is the case it comes from.
