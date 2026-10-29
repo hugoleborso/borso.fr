@@ -15,8 +15,8 @@ const USAGE = [
   '         [--port 9222] [--width 375] [--height 812]',
   '',
   'Taps the element with a real touch through CDP Input.dispatchTouchEvent, on the',
-  'Chromium listening on --port (the one scripts/argent.sh starts), at a phone',
-  'viewport with touch emulation on, and prints which events reached it.',
+  'Chromium listening on --port (scripts/phone.sh passes its agent-browser session),',
+  'at a phone viewport with touch emulation on, and prints which events reached it.',
   'Exits 1 when the tap did not arrive as touch on the element.',
   '',
 ].join('\n');

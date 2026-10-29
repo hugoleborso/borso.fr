@@ -309,10 +309,9 @@ The blueprint for the replacement shape is annotated at
 ## The gates, in the order they run
 
 The pre-commit hook runs oxfmt and oxlint on the staged files, type-checks the
-tooling with TypeScript 7, runs the blueprint, dantotsu and ledger generators,
-and each of the checks below, each when the commit touches something it reads.
-Each check is held to a CPU budget and the commit to 4 seconds, and
-the hook times every check and refuses a commit that went over;
+tooling with TypeScript 7, runs the blueprint index, convention drift and
+dantotsu front-matter checks, and each of the checks below, each when the
+commit touches something it reads.
 [14. Tool runtime budgets](./14-tool-runtime-budgets.md) gives the budgets, the
 scope each check declares, and where each check's whole-tree run lives.
 
@@ -340,7 +339,6 @@ because the evidence lives in two files at once:
 | `check-single-stylesheet.sh` | an application ships a second `.css` file |
 | `check-migration-sql-dsql-compat.sh` | a migration uses SQL Aurora DSQL rejects |
 | `check-numbered-sequences.sh` | two files in a numbered sequence — a migrations folder, the ADRs — claim the same number, so the order the number was there to carry falls to the rest of the filename |
-| `check-gate-names-are-distinct.sh` | two gates' names fold to the same words, which is what one gate written twice looks like from outside |
 | `check-adr-numbers-resolve.sh` | an ADR's heading states a number other than its filename's, or the index is missing a record or links one that is gone |
 | `check-instructions-name-installed-tools.sh` | a skill, agent or standard tells an agent to run a command this repository does not install, or a skill, standard, plan or spec filters on a workspace that does not exist |
 | `check-frontend-env-vars.sh` | a site reads a `VITE_*` variable no workflow sets, so the code behind it never runs |
@@ -363,8 +361,10 @@ are pnpm built-ins and pnpm silently prefers its own.
 
 The pre-push hook runs `knip` for dead code, `actionlint` for the workflows,
 `tsc --noEmit` for each application the pushed commits change, oxlint with the
-type-aware rules over the files they change, the tests those commits affect,
-and the mutation tests for the pure files they changed. The
+type-aware rules over the files they change, and the tests those commits
+affect, side by side. Then, one at a time, the coverage suites of `infra/` and
+the tooling when those changed, and the mutation tests for the pure files they
+changed. The
 type check is there because Vitest strips types without checking them: a test
 handing a component a prop it does not accept passes every test run and fails
 only the type checker.
@@ -377,45 +377,6 @@ every application. The synth is what covers `cdk/bin/*.ts`: the per-app stack
 tests call `build<App>Stack()` directly, so a break in the entry point that
 reads `STAGE` and names the stacks passes every other gate and surfaces in the
 automatic production deploy after the merge.
-
-### Every gate has to fail once, on purpose
-
-A gate that has never failed has not shown that it can. Sixteen dantotsus
-between May and October 2026 found a gate that was green while it measured
-nothing: a coverage threshold in a block Vitest ignores, a mutation run that
-reached no test, a hook that let every command through, a test file no project
-collected. Each was found by accident and fixed alone, and nothing stopped the
-next one ([dantotsu](../dantotsus/sixteen-gates-were-trusted-because-they-had-never-failed.md)).
-
-So each gate carries a canary: a small defect the gate must refuse.
-`scripts/standards/gate-canaries.ts` copies the tree into a temporary
-directory, plants each canary there, runs the gate the way its hook or
-workflow runs it, and fails when the gate exits 0, or exits non-zero without
-naming the planted defect. The second case matters as much as the first: a
-gate that fails for an unrelated reason has not shown that it saw the defect.
-
-Which gates need a canary is not a list someone keeps. The runner takes every
-mechanism the enforcement ledger resolves, every `scripts/**/check-*` file and
-every generator a hook or workflow runs with `--check`, and fails on any of
-them without a canary. A gate that gates nothing is named in
-`MECHANISMS_THAT_GATE_NOTHING` in `scripts/standards/canary-registry.ts`, with
-the reason. Each custom rule's canary is the first invalid case of its
-own RuleTester suite, linted by oxlint through the real configuration at the
-path the case names, so a rule that is correct in its suite and switched off where it
-matters fails here. The other canaries live in the same registry.
-
-It runs in the `gate-canaries` job of `ci.yml`, once per tier: `fast` holds
-the lint-rule canaries and the checks that answer in seconds, `slow` the
-coverage, mutation, type-check and database suites. It does not run in a
-hook. The inventory alone, `--inventory`, runs every rule suite and builds the
-ledger. It measured 32 s on 2026-10-10, and two minutes while other agents
-loaded the same machine; the fast tier measured over five minutes. Neither is
-a commit-time cost.
-
-What it does not prove: it runs each gate's command, not the hook around it,
-so a hook that calls a gate and then discards its exit code still passes. The
-ledger checks that the hook names the gate; nothing yet checks what the hook
-does with the answer.
 
 ## Suppressing a rule
 
@@ -483,20 +444,6 @@ review.
   pipe first and the producer's write error fails the script, and whether that
   happens is timing — the instance it was written for passed five consecutive
   local runs and failed on the first CI run of the same commit.
-- `script:scripts/check-hook-decisions.sh` fails a `PreToolUse` hook that decides
-  against its own contract, feeding each one a command it must refuse and a
-  mention of that command it must let through. Every one of these hooks answers
-  the same question — invocation or mention? — and three have answered it
-  wrongly, each after the last was fixed, because the hooks were part of the
-  untested shell surface described in
-  [`the-shell-gates-are-only-ever-run-where-they-pass`](../knowledge/the-shell-gates-are-only-ever-run-where-they-pass.md).
-  They are the half of that surface a table can reach: a hook reads a command
-  off stdin and answers with an exit code, so its inputs are strings rather
-  than a repository. It also fails a hook that can refuse and has no row:
-  each needs an allow row, and a block row unless it is declared
-  state-dependent with its reason. Three refusing hooks had none, and one of
-  them refused a harmless command three times in a session before anyone
-  looked ([dantotsu](../dantotsus/the-hook-that-was-missing-from-its-own-contract.md)).
 - `script:scripts/check-knowledge-triggers.sh` fails a knowledge entry with no
   `summary:` or no `triggers:` a hook can match, and a trigger pattern that
   compiles in Python and not in jq, which is what the hook matches with.
@@ -504,15 +451,7 @@ review.
   Write or Edit target, a command about to run, or a call's output matches it.
   Of 123 entries only the few a hook or a gate printed ever stopped a repeat,
   and nine dantotsus record an entry that existed and was not read
-  ([ADR-0030](../adr/0030-knowledge-is-delivered-by-trigger.md)). The same
-  table that holds the refusing hooks to their contract holds this one to its
-  two halves: a call it must speak on, and a mention it must stay silent on.
-- `script:scripts/standards/gate-canaries.ts` plants a defect for every gate
-  above, and every other check script or `--check` generator a hook or
-  workflow runs, and fails on a gate that does not refuse its defect or a gate
-  that has no canary. Sixteen gates were found passing while measuring
-  nothing, one at a time, before this existed
-  ([dantotsu](../dantotsus/sixteen-gates-were-trusted-because-they-had-never-failed.md)).
+  ([ADR-0030](../adr/0030-knowledge-is-delivered-by-trigger.md)).
 - `script:scripts/check-harness-links.sh` fails a skill, agent or command of
   the harness plugin that has no link in `.claude/`, a link that points
   somewhere else, and a plugin hook that `.claude/settings.json` does not
@@ -534,14 +473,6 @@ review.
   rename is still free. One script covers every such folder because two
   covering one folder each is what this repository shipped before it, a day
   apart, neither able to see the other.
-- `script:scripts/check-gate-names-are-distinct.sh` fails two gate scripts
-  whose names, stemmed word by word, fold to the same set. Nothing can decide
-  that two shell scripts compute the same answer, so this decides the thing
-  that is decidable: that two authors naming one subject converged on the same
-  words. `check-migration-numbering.sh` and `check-migration-numbers.sh` both
-  fold to `migra numbe`, and both ran in pre-commit for a day. It misses a
-  duplicate whose authors chose unrelated words, which is the case where a name
-  was never going to help.
 - `script:scripts/check-adr-numbers-resolve.sh` fails when an ADR number does
   not resolve the same way in the three places it appears: the filename a
   citation resolves to, the heading a reader sees, and the index row. A
@@ -573,21 +504,11 @@ review.
 - `script:scripts/check-non-module-scripts.sh` fails an application's HTML
   carrying a `<script src>` without `type="module"`, which ships un-bundled and
   404s.
-- `script:scripts/check-claude-harness-active.sh` fails a commit made from a
-  Claude Code session whose SessionStart never ran in this clone, because the
-  session started in a parent folder holding several clones and so loaded none
-  of `.claude/settings.json`. It refuses once per session; `--acknowledge` runs
-  the install SessionStart would have run and records the session.
 - `script:scripts/check-no-null-bytes.sh` fails a tracked text file carrying a
   NUL byte. A NUL is legal inside a string, renders as nothing in an editor,
   shows as unchanged whitespace in a diff, and passes the linter, the formatter
   and `tsc`; it surfaces much later as an `execFileSync` refusing an argument or a
   separator that silently stopped matching.
-- `generator:scripts/standards/rule-provenance.ts` records which rules were
-  written because a defect actually happened, by reading the eradication section
-  of every dantotsu, and which were written from principle. It gates nothing:
-  the ratio is an input to the decision about the next rule, and several of the
-  best rules here were written before anything went wrong.
 - `script:scripts/check-app-registration.sh` fails a directory under `apps/`
   that has no `.github/path-filters.yml` filter or no commitlint scope, and a
   filter naming an application that is not there. Both failures are silent
@@ -614,17 +535,5 @@ review.
   level 5, however it is described. On a commit it resolves only the staged
   entries' commits; CI resolves all of them, from a full clone
   ([ADR-0029](../adr/0029-weak-point-management-from-the-dantotsu-record.md)).
-- `generator:scripts/quality/weak-points.ts` draws every dantotsu as a dot at
-  its `zone:` on two maps, the product by application and layer and the
-  factory by station, with a weekly count for each weak point engaged in
-  `docs/quality/weak-points.md` and the groups joined by `recurs:`. Its
-  `--check` fails a zone that names no path in the repository and a
-  `weak-point:` the file does not list, because either one drops a dot from
-  the count without a word.
-- `generator:scripts/quality/working-conditions.ts` files every archived
-  friction line under the walls declared in
-  `docs/quality/working-conditions.md` and ranks them by how many distinct
-  agents hit each one. Its `--check` fails a wall outside Build, Observe and
-  Ship, a wall with no terms, a duplicated wall and a wall that files nothing.
 - `reviewer` checks that the reason on a disable comment is a claim about that
   line which a reader can check, and not "pre-existing" or "will fix later".

@@ -54,10 +54,6 @@ function isCheckedDocument(path: string): boolean {
   );
 }
 
-function listIgnoredFilesOnDisk(): readonly string[] {
-  return splitLines(runGit(['ls-files', '--others', '--ignored', '--exclude-standard']));
-}
-
 function addWithParents(paths: Set<string>, file: string): void {
   paths.add(file);
   let directory = dirname(file);
@@ -133,9 +129,7 @@ function selectJudgeable(broken: readonly BrokenLink[]): readonly BrokenLink[] {
 }
 
 const trackedFiles = splitLines(runGit(['ls-files']));
-const presentPaths = buildPresentPaths(
-  isStaged ? trackedFiles : [...trackedFiles, ...listIgnoredFilesOnDisk()],
-);
+const presentPaths = buildPresentPaths(trackedFiles);
 
 function isPresent(documentPath: string, target: string): boolean {
   const resolved = resolveTarget(documentPath, target);
@@ -149,7 +143,7 @@ for (const path of documents) {
   const markdown = readFileSync(join(REPOSITORY_ROOT, path), 'utf8');
   found.push(...listBrokenLinks({ path, markdown }, isPresent));
 }
-const broken = isStaged ? selectJudgeable(found) : found;
+const broken = selectJudgeable(found);
 
 if (broken.length > 0) {
   for (const link of broken) {

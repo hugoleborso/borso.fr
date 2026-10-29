@@ -28,7 +28,7 @@ INPUTS:
 
 Read the spec, read the plan if present, resolve the diff against base_ref, and walk the five validation categories per your standard:
   A. Correctness vs spec
-  B. Code cleanliness (repo rules, oxlint, knip, and every `reviewer` bullet of docs/standards/enforcement-ledger.md)
+  B. Code cleanliness (repo rules, oxlint, knip, and every `reviewer` bullet of the `## Enforced by` sections in docs/standards/)
   C. Tests pass
   D. Test coverage of spec
   E. Scale (required): check-then-write races, per-process state, concurrent tests

@@ -47,8 +47,7 @@ keeps borso.fr's default, so borso.fr itself has no such file.
 | `blueprintIndex` | `.claude/skills/blueprint/blueprint-index.md` | `/blueprint`, `/code-standards`, `/route` |
 | `reports` | `scripts/reports.sh` | every skill that reads a generated file |
 | `prBodyCheck` | `scripts/pr/check-pr-body.ts` | `/open-pr`, the `gh pr create` hook |
-| `browser` | `scripts/browser.sh` | `/visual-validation`, `/implementation` |
-| `argent` | `scripts/argent.sh` | `/visual-validation` for touch checks |
+| `phone` | `scripts/phone.sh` | `/visual-validation` for touch checks |
 
 The file holds one object, `paths`:
 
@@ -137,7 +136,6 @@ borso.fr as a git submodule.
        "knowledge": "docs/knowledge",
        "adr": "docs/adr",
        "features": "docs/features",
-       "browser": "vendor/borso.fr/scripts/browser.sh",
        "prBodyCheck": "vendor/borso.fr/scripts/pr/check-pr-body.ts"
      }
    }
@@ -216,15 +214,5 @@ each repository:
 - The blueprint generators in `.claude/skills/blueprint/`, which index
   borso.fr's application layers.
 - borso.fr's own hooks in `.claude/settings.json`: the dependency install at
-  session start, the rtk command rewrite, the blueprint seeding on a new file
-  and the notice that a merge deploys to production.
-
-## Check the hooks
-
-`check-hook-decisions.sh`, in the plugin's `scripts/` folder, feeds every
-refusing hook a command it must refuse and a mention of that command it must
-let through. borso.fr runs it in pre-push when a hook changes, and in CI. A repository that changes a hook can run it the same way:
-
-```sh
-vendor/borso.fr/plugins/borso-harness/scripts/check-hook-decisions.sh
-```
+  session start, the rtk command rewrite and the notice that a merge deploys
+  to production.

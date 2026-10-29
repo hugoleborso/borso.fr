@@ -1,5 +1,7 @@
 # Publishes every generated report to GitHub Pages, and the architecture maps
 # when asked, so a link opens them instead of a download of a workflow artifact.
+# On demand only: someone dispatches it, or the `architecture` workflow calls
+# it. Nothing publishes on a push.
 #
 # None of these files is in git, so this is the address they have. A report
 # nobody can reach is a report nobody reads, and the alternative — committing
@@ -13,24 +15,12 @@
 #
 # The maps build only with `maps: true`, which the `architecture` workflow
 # passes when dispatched without a pull request. Pages replaces the whole site
-# on each deploy, so a push to main after that publishes the reports without
-# the maps. `docs/standards/**` is in the paths because the Standards tab
-# carries each document's history.
+# on each deploy, so a dispatch without `maps` publishes the reports without
+# the maps.
 
 name: pages
 
 on:
-  push:
-    branches: [main]
-    paths:
-      - 'apps/**'
-      - 'docs/standards/**'
-      - 'docs/dantotsus/**'
-      - 'docs/quality/**'
-      - 'docs/features/**'
-      - 'scripts/quality/**'
-      - '.claude/skills/blueprint/blueprint-utils.ts'
-      - '.github/workflows/pages.yml'
   workflow_dispatch:
     inputs:
       maps:
@@ -98,7 +88,6 @@ jobs:
             scripts/standards/rule-provenance.ts \
             scripts/standards/hotspots.ts \
             scripts/standards/temporal-coupling.ts \
-            scripts/standards/enforcement-ledger.ts \
             scripts/quality/weak-points.ts \
             scripts/quality/working-conditions.ts; do
             pnpm exec tsx "$generator"
@@ -111,7 +100,6 @@ jobs:
              docs/standards/rule-provenance.md \
              docs/standards/hotspots.md \
              docs/standards/temporal-coupling.md \
-             docs/standards/enforcement-ledger.md \
              docs/quality/weak-points.html \
              docs/quality/working-conditions.html \
              docs/architecture/reports/

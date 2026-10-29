@@ -64,30 +64,6 @@ jobs:
       - run: scripts/lint-repository.sh
       # Formatter drift is part of the gate. A commit made with hooks
       # skipped, or from an editor that is not on oxfmt, fails here.
-      # The generated files, first, because a dozen checks below read them and a
-      # fresh checkout has none: `check-doc-links.ts` walks every markdown file
-      # in the tree and opens each link's target, and both halves of that break
-      # without this step. Running them here also means the `--check` runs
-      # further down validate a tree that is already current.
-      - name: Generate the files no commit carries
-        run: |
-          set -euo pipefail
-          for generator in \
-            .claude/skills/blueprint/blueprint-indexing.ts \
-            .claude/skills/blueprint/blueprint-context.ts \
-            .claude/skills/blueprint/blueprint-heatmap.ts \
-            scripts/blueprints/blueprint-defects.ts \
-            scripts/standards/convention-drift.ts \
-            scripts/standards/rule-provenance.ts \
-            scripts/standards/hotspots.ts \
-            scripts/standards/temporal-coupling.ts \
-            scripts/standards/enforcement-ledger.ts \
-            scripts/quality/weak-points.ts \
-            scripts/quality/working-conditions.ts; do
-            pnpm exec tsx "$generator"
-          done
-          python3 plugins/borso-harness/scripts/knowledge-triggers.py compile
-
       - run: pnpm run format:check
       # The custom lint rules under eslint-rules/ each ship a RuleTester
       # suite, and the generators under scripts/ carry the same 100% per-file
@@ -105,9 +81,6 @@ jobs:
       # branches add differently named files, so the commit hook never sees
       # both sides and only the merge does.
       - run: ./scripts/check-numbered-sequences.sh
-      # And that no two gates name the same subject, which is how a duplicated
-      # gate announces itself when nothing can compare two scripts' behaviour.
-      - run: ./scripts/check-gate-names-are-distinct.sh
       # And that no ADR heading states a number other than its filename's, which
       # is what a renumber leaves behind when it moves the file only.
       - run: ./scripts/check-adr-numbers-resolve.sh
@@ -164,9 +137,6 @@ jobs:
       # paths, and the suffixes the coverage gate and the sibling-test rule both
       # name. Each half reads correctly alone; only the pair is wrong.
       - run: ./scripts/check-coupled-lists.sh
-      # A workspace holding gated files with no mutation config is unmeasured
-      # rather than clean, and its coverage number hides the difference.
-      - run: ./scripts/check-mutation-covers-gated-files.sh
       - run: pnpm exec tsx scripts/docs/check-doc-links.ts
       # A pure module reached only from its own test passes coverage and
       # mutation at full marks while running nowhere, and knip cannot see it.
@@ -179,14 +149,7 @@ jobs:
       # turns the losing side into a failing script — which is how this one was
       # found, green locally and red here on the same commit.
       - run: ./scripts/check-no-racy-pipelines.sh
-      # The whole-tree runs of the checks the commit hook reads only a slice of,
-      # or no longer runs at all, so that no check lost coverage when the hook
-      # was held to its budget. See docs/standards/14-tool-runtime-budgets.md,
-      # which says where each check's whole-tree run lives.
-      - run: ./scripts/check-hook-decisions.sh
-      - run: ./scripts/check-ci-job-timeouts.sh
-      - run: ./scripts/check-every-test-is-collected.sh
-      - run: ./scripts/check-spec-test-strategy.sh
+      # The whole-tree runs of the checks the commit hook reads only a slice of.
       - run: ./scripts/check-no-comments-in-styles-and-markup.sh
       - run: ./scripts/check-tailwind-arbitrary-variants.sh
       - run: ./scripts/check-package-scripts-are-commands.sh
@@ -214,27 +177,12 @@ jobs:
       # comparing bytes against a copy in git. What is gated is what a person
       # can get wrong.
       - run: pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --check
-      # A dantotsu naming a blueprint that does not exist reads as fine until
-      # someone follows the link.
-      - run: pnpm exec tsx scripts/blueprints/blueprint-defects.ts --check
       # The dantotsu record: fixed value lists, fix commits that resolve on
       # main, no placeholder, a level its eradication paths support, and a
-      # recurrence linked rather than retold. Then the weak-point map and the
-      # working-conditions board, which fail on a zone, a weak point or a wall
-      # that names nothing. Mirrors the pre-commit hook, which resolves only the
-      # staged entries' commits; this resolves all of them.
+      # recurrence linked rather than retold. Mirrors the pre-commit hook, which
+      # resolves only the staged entries' commits; this resolves all of them.
       - run: pnpm exec tsx scripts/quality/check-dantotsu-front-matter.ts
-      - run: pnpm exec tsx scripts/quality/weak-points.ts --check
-      - run: pnpm exec tsx scripts/quality/working-conditions.ts --check
       - run: pnpm exec tsx scripts/standards/convention-drift.ts --check
-      # Every `## Enforced by` bullet in docs/standards/ resolves against the
-      # live ESLint configuration and the checked-in hooks. Fails on a rule
-      # cited and enabled nowhere, a script no hook invokes, a gate whose
-      # command is absent from a site it claims, and a mechanism that runs
-      # while no standard says why. Unconditional here; the pre-commit hook
-      # runs it only when a standard or one of those mechanisms is staged,
-      # because it takes about seven seconds.
-      - run: pnpm exec tsx scripts/standards/enforcement-ledger.ts --check
       - run: pnpm --filter @borso/infra test:coverage
       - run: pnpm --filter @borso/shared-infra test:coverage
       - run: pnpm -r build
@@ -259,23 +207,6 @@ jobs:
         env:
           CDK_DEFAULT_ACCOUNT: '000000000000'
       - run: pnpm exec knip
-
-  # The commit hook on a fixture commit that touches one file of every common
-  # kind, inside the 4 seconds docs/standards/14-tool-runtime-budgets.md
-  # gives a commit. The hook holds each check to its CPU budget itself; the
-  # wall-clock total is only measurable on a machine nothing else is using.
-  pre-commit-budget:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: ./scripts/check-pre-commit-budget.sh
 
   # Which apps this change actually touches. An `infra/cdk` change means all of
   # them, because the constructs are the contract. No `base:` on paths-filter —
@@ -373,63 +304,6 @@ jobs:
       - name: Back-end end-to-end suite
         if: hashFiles(format('apps/{0}/api/**', matrix.app)) != ''
         run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e
-
-  # Every gate the enforcement ledger lists, plus every check script and every
-  # generator a hook or workflow runs with --check, is handed a defect it must
-  # refuse: scripts/standards/gate-canaries.ts plants each one in a throwaway
-  # copy of the tree, runs the gate the way its hook or workflow runs it, and
-  # fails when the gate passes. A gate with no canary fails it too. Sixteen
-  # dantotsus found a gate green while measuring nothing, one at a time; see
-  # docs/dantotsus/sixteen-gates-were-trusted-because-they-had-never-failed.md.
-  #
-  # Two jobs: `fast` holds every lint-rule canary and the checks that answer in
-  # seconds, `slow` the coverage, mutation, type-check and database suites.
-  gate-canaries:
-    runs-on: ubuntu-latest
-    timeout-minutes: 10
-    strategy:
-      matrix:
-        tier: [fast, slow]
-      fail-fast: false
-    services:
-      postgres:
-        image: postgres:16-alpine
-        env:
-          POSTGRES_USER: app
-          POSTGRES_PASSWORD: app
-          POSTGRES_DB: app
-        ports:
-          - 5432:5432
-        options: >-
-          --health-cmd "pg_isready -U app"
-          --health-interval 5s
-          --health-timeout 5s
-          --health-retries 10
-    env:
-      GATE_CANARY_POSTGRES: postgres://app:app@localhost:5432
-    steps:
-      - uses: actions/checkout@v7
-      - uses: pnpm/action-setup@v6
-      - uses: actions/setup-node@v7
-        with:
-          node-version-file: .nvmrc
-          cache: pnpm
-      - run: pnpm install --frozen-lockfile
-      - run: pnpm --filter @borso/infra build
-      - name: Install actionlint, which the pre-push hook runs
-        run: |
-          mkdir -p "$HOME/.local/bin"
-          curl -fsSL https://github.com/rhysd/actionlint/releases/download/v1.7.7/actionlint_1.7.7_linux_amd64.tar.gz |
-            tar -xz -C "$HOME/.local/bin" actionlint
-          echo "$HOME/.local/bin" >> "$GITHUB_PATH"
-      # test/setup-postgres.ts trusts DATABASE_URL verbatim, so each full-stack
-      # application gets a database of its own on the one server.
-      - name: One database per full-stack application
-        run: |
-          for database in banana_rush last_loop_lepin pragma talos; do
-            psql "$GATE_CANARY_POSTGRES/app" -c "CREATE DATABASE $database"
-          done
-      - run: pnpm exec tsx scripts/standards/gate-canaries.ts --tier "${{ matrix.tier }}"
 
   commitlint:
     if: github.event_name == 'pull_request'

@@ -3,7 +3,7 @@ name: implementation
 description: Execute the engineering plan in `plan.md`, enforcing the repo's clean-code rules and test-coverage rules as the code is written rather than discovered after the fact by `/technical-validation`. Use when the user says "/implementation", "implement the plan", "ship the feature", "write the code", or as the natural next step after `/technical-conception`. Loads `spec.md` + `plan.md`, opens the blueprint for every layer the plan touches and marks new code `// @FollowsBlueprint`, walks the plan's table row-by-row, splits pure helpers into `*.utils.ts` with sibling `*.utils.test.ts` at 100% coverage, applies CLAUDE.md "Clean code" rules (named constants, no abbreviations, type-assertion ban, comments document WHY only), composes with technical sub-skills (`/vite`, `/three-js`, `/controller`, `/database`, …) for domain-specific guidance, and runs pre-flight gates before push. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/implementation/standard.md` before starting.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Implementation skill
 
@@ -102,15 +102,15 @@ Manual sweeps are not a valid coverage path — repo rule.
 
 ### 4. Self-screenshot UI work before declaring it green
 
-If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `scripts/browser.sh snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
+If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `agent-browser snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
 
-The cost is two `scripts/browser.sh` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
+The cost is two `agent-browser` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
 
 Pair this with the broken-image scan from `/visual-validation`'s standard if you want a one-shot self-check:
 
 ```bash
-scripts/browser.sh screenshot /tmp/self-check.png
-scripts/browser.sh eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
+agent-browser screenshot /tmp/self-check.png
+agent-browser eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
 ```
 
 A non-empty `eval` result is a stop-the-line — the row is not done, the broken `<img>` has to be diagnosed and fixed *before* you tag the slice complete.
@@ -141,7 +141,7 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 
 The technical validator types each finding `blocking` or `non-blocking`. Take each one skeptically, since it was written by a reader who did not know your intent, and do one of three things: fix it; dismiss it with a concrete reason in the commit message; or ask the operator, only for a product call. Non-blocking findings never start a round.
 
-Before editing a file to fix a finding, read it in full against the *What only a reviewer can check* list of `docs/standards/enforcement-ledger.md` (`scripts/reports.sh standards` first), and fix what else you find in it. Round 2 reviews only the commits after round 1, so a second finding left in the same file is one nobody will review.
+Before editing a file to fix a finding, read it in full against the `reviewer` bullets of the `## Enforced by` sections in `docs/standards/`, and fix what else you find in it. Round 2 reviews only the commits after round 1, so a second finding left in the same file is one nobody will review.
 
 There are two rounds at most. Blocking findings left after round 2 go to the operator with the report.
 

@@ -206,28 +206,8 @@ e.g., a change that cannot alter behaviour, and say why on the line.
   `infra/cdk`. The last two carried the coverage gate and no mutation
   configuration at all, and scored 77.40 and 80.84 the first time one was
   pointed at them.
-- `script:scripts/check-mutation-covers-gated-files.sh` fails a workspace that
-  holds gated files and ships no mutation configuration. A missing gate produces
-  no output to be wrong, so the absence itself is what fails here — `infra/cdk`
-  read as 100% covered for as long as nothing pointed Stryker at it, and the
-  first run reported 90 survivors.
-- `script:scripts/check-spec-test-strategy.sh` fails a feature spec with no
-  Test strategy section. The section is what routes each assertion to
-  `/technical-validation` or to `/visual-validation`; without it each validator
-  invents a split, and a rule both of them judge the other's is validated by
-  neither while both reports read as complete. Three specs predate the rule and
-  are listed in the script rather than back-filled.
 - `oxlint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
   `.utils.ts` file has no sibling test file.
-- `script:scripts/check-every-test-is-collected.sh` fails when a tracked
-  `*.test.ts` or `*.test.tsx` file is not collected by any project in its
-  workspace. `borso/test-file-has-sibling-source` reads source to test and asks
-  whether a gated file has a suite; nothing read test to suite until this,
-  and a test no project loads fails nothing, because a green run with one
-  fewer file looks exactly like a green run. The check asks
-  `vitest list --filesOnly` rather than matching the include globs itself, so
-  it cannot disagree with the runner, and listing starts no `globalSetup`, so
-  the back-e2e Postgres stays down. About a second per workspace.
 - `reviewer` checks that a test name states the behaviour and the condition,
   and that a service test asserts on what the database holds rather than on
   which method was called.

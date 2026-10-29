@@ -7,10 +7,14 @@
 # runs this first.
 #
 #   scripts/reports.sh                # everything, ~20s
-#   scripts/reports.sh blueprints     # the index, the heatmap, the defects page, the two hooks' lookups
-#   scripts/reports.sh standards      # the enforcement ledger, drift, provenance, hotspots, coupling, weak points, working conditions
+#   scripts/reports.sh index          # the blueprint index and the knowledge-trigger lookup; SessionStart runs this
+#   scripts/reports.sh blueprints     # the index, the heatmap, the defects page, the knowledge-trigger lookup
+#   scripts/reports.sh standards      # drift, provenance, hotspots, coupling, weak points, working conditions
 #   scripts/reports.sh maps           # the architecture maps and models
 #   scripts/reports.sh all --missing-only   # only the ones absent from the tree
+#
+# Every report except the index is on demand: no hook and no CI job builds it.
+# The `pages` workflow publishes them when someone dispatches it.
 #
 # `--missing-only` exists for a reader that must not pay for a rebuild it does
 # not need but must not read a file that is not there either. A checkout where
@@ -30,14 +34,12 @@ cd "$(dirname "$0")/.."
 output_of() {
   case "$1" in
     *blueprint-indexing.ts) echo .claude/skills/blueprint/blueprint-index.md ;;
-    *blueprint-context.ts) echo .claude/skills/blueprint/blueprint-context.json ;;
     *blueprint-heatmap.ts) echo .claude/skills/blueprint/blueprint-coverage.html ;;
     *blueprint-defects.ts) echo docs/standards/blueprint-defects.md ;;
     *convention-drift.ts) echo docs/standards/convention-drift.md ;;
     *rule-provenance.ts) echo docs/standards/rule-provenance.md ;;
     *hotspots.ts) echo docs/standards/hotspots.md ;;
     *temporal-coupling.ts) echo docs/standards/temporal-coupling.md ;;
-    *enforcement-ledger.ts) echo docs/standards/enforcement-ledger.md ;;
     *weak-points.ts) echo docs/quality/weak-points.html ;;
     *working-conditions.ts) echo docs/quality/working-conditions.html ;;
     *architecture-graph.ts) echo docs/architecture/pragma-architecture.json ;;
@@ -46,12 +48,15 @@ output_of() {
   esac
 }
 
-BLUEPRINT_GENERATORS=(
+INDEX_GENERATORS=(
   .claude/skills/blueprint/blueprint-indexing.ts
-  .claude/skills/blueprint/blueprint-context.ts
+  plugins/borso-harness/scripts/knowledge-triggers.py
+)
+
+BLUEPRINT_GENERATORS=(
+  "${INDEX_GENERATORS[@]}"
   .claude/skills/blueprint/blueprint-heatmap.ts
   scripts/blueprints/blueprint-defects.ts
-  plugins/borso-harness/scripts/knowledge-triggers.py
 )
 
 STANDARDS_GENERATORS=(
@@ -59,7 +64,6 @@ STANDARDS_GENERATORS=(
   scripts/standards/rule-provenance.ts
   scripts/standards/hotspots.ts
   scripts/standards/temporal-coupling.ts
-  scripts/standards/enforcement-ledger.ts
   scripts/quality/weak-points.ts
   scripts/quality/working-conditions.ts
 )
@@ -74,6 +78,7 @@ for argument in "$@"; do
 done
 
 case "${1:-all}" in
+  index) generators=("${INDEX_GENERATORS[@]}") ;;
   blueprints) generators=("${BLUEPRINT_GENERATORS[@]}") ;;
   standards) generators=("${STANDARDS_GENERATORS[@]}") ;;
   maps) generators=("${MAP_GENERATORS[@]}") ;;
@@ -90,7 +95,7 @@ case "${1:-all}" in
       "${MAP_GENERATORS[@]}"
     ) ;;
   *)
-    echo "usage: scripts/reports.sh [all|blueprints|standards|maps] [--missing-only]" >&2
+    echo "usage: scripts/reports.sh [all|index|blueprints|standards|maps] [--missing-only]" >&2
     exit 2
     ;;
 esac

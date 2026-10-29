@@ -38,16 +38,6 @@
         ]
       },
       {
-        "matcher": "Write",
-        "hooks": [
-          {
-            "type": "command",
-            "command": ".claude/hooks/pretool-blueprint-context.sh",
-            "statusMessage": "Seeding the layer's blueprint"
-          }
-        ]
-      },
-      {
         "matcher": "mcp__github__merge_pull_request",
         "hooks": [
           {

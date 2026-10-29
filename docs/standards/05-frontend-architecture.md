@@ -176,7 +176,7 @@ with no visible affordance, a licence attribution, an error.
   explains the interface: a create action is an icon button with an
   `aria-label`, and a sentence survives only for what the screen cannot show.
 - `reviewer` checks that every screen holds together at 375 pixels, using
-  `agent-browser` for anything measurable and `scripts/argent.sh` for anything
+  `agent-browser` for anything measurable and `scripts/phone.sh` for anything
   touched, because a synthetic click is not a tap.
 - `reviewer` checks that a prop set has not grown a family of booleans where one
   variant string belongs.

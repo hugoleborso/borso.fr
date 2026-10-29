@@ -2,8 +2,12 @@
 
 import { readdirSync, readFileSync, writeFileSync } from 'node:fs';
 import { join, matchesGlob } from 'node:path';
-import { readLintConfiguration } from './ledger-input';
-import { listActiveRules, skipImpossibleMatches } from './lint-configuration.core';
+import { z } from 'zod';
+import {
+  listActiveRules,
+  skipImpossibleMatches,
+  type LintConfiguration,
+} from './lint-configuration.core';
 import { readEradicationSection, renderProvenanceReport, type RuleRecord } from './provenance.core';
 
 const MATCHES_GLOB = skipImpossibleMatches(matchesGlob);
@@ -14,6 +18,29 @@ const STANDARDS_DIRECTORY = join(REPOSITORY_ROOT, 'docs', 'standards');
 const REPORT_PATH = join(STANDARDS_DIRECTORY, 'rule-provenance.md');
 const NON_DANTOTSU_FILES = new Set(['README.md', '_template.md']);
 const STANDARD_FILE_PATTERN = /^\d\d-[a-z0-9-]+\.md$/;
+const LINT_CONFIGURATION_FILE = join(REPOSITORY_ROOT, '.oxlintrc.json');
+
+const RULE_SETTINGS = z.record(z.string(), z.unknown());
+
+const LINT_CONFIGURATION = z.object({
+  plugins: z.array(z.string()).default([]),
+  jsPlugins: z.array(z.object({ name: z.string(), specifier: z.string() })).default([]),
+  rules: RULE_SETTINGS.default({}),
+  overrides: z
+    .array(
+      z.object({
+        files: z.array(z.string()),
+        plugins: z.array(z.string()).default([]),
+        rules: RULE_SETTINGS.default({}),
+      }),
+    )
+    .default([]),
+});
+
+function readLintConfiguration(): LintConfiguration {
+  const parsed: unknown = JSON.parse(readFileSync(LINT_CONFIGURATION_FILE, 'utf8'));
+  return LINT_CONFIGURATION.parse(parsed);
+}
 
 const PROBE_PATHS: readonly string[] = [
   'apps/pragma/api/src/probe/probe.controller.ts',

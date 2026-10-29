@@ -2,7 +2,7 @@
 description: Launch a Dynamic Workflow that drives a ratified feature spec from plan → opened PR, invoking the existing tech-lead skills as workflow subagents (the Skill stays for spec + ADR ratification; this command starts when those are done).
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 ## Pre-conditions (the workflow assumes these are already true)
 
@@ -109,7 +109,7 @@ hit this. The script spawns the validator directly instead:
 
 - **Skill invoked:** `/technical-validation`, whose validator the script spawns
   with `agentType: 'technical-validator'`. It also checks the `reviewer`
-  bullets of `docs/standards/enforcement-ledger.md`; there is no separate
+  bullets of the `## Enforced by` sections in `docs/standards/`; there is no separate
   standards review.
 - **Standard:** [`${CLAUDE_PLUGIN_ROOT}/skills/technical-validation/standard.md`](../skills/technical-validation/standard.md).
 - **Round 1** runs once, after the last slice, on the integrated SHA, over

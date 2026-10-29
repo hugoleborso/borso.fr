@@ -118,7 +118,7 @@ Added to the `## Enforced by` block of
 [`docs/standards/08-styling.md`](../standards/08-styling.md). This is not
 decoration: `scripts/standards/enforcement-ledger.ts` collects every `reviewer`
 bullet into the *What only a reviewer can check* section of
-[`enforcement-ledger.md`](../standards/enforcement-ledger.md), and that section
+`enforcement-ledger.md` (removed on 2026-10-29; the validator now reads the `reviewer` bullets from the standards directly), and that section
 is the entire scope of the [`/technical-validation`](../../plugins/borso-harness/skills/technical-validation/SKILL.md)
 agent. Adding the bullet adds the question to every future review of a
 front-end change, and the seal records the answer.

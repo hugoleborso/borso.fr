@@ -11,7 +11,7 @@
 A technical validation **reads the diff on the current branch and asks five questions about it**:
 
 1. **Correctness** — does the code do what the spec said it would? Quote the code, cross-reference the Q.O.D. or Changes entry.
-2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, oxlint including `borso/no-type-assertion-except-unknown`) and every `reviewer` bullet in `docs/standards/enforcement-ledger.md`? Run lint, search for forbidden patterns, read each changed source file in full against the checklist.
+2. **Cleanliness** — does the code follow the repo's standing rules (CLAUDE.md, `docs/standards/`, oxlint including `borso/no-type-assertion-except-unknown`) and every `reviewer` bullet of the `## Enforced by` sections in `docs/standards/`? Run lint, search for forbidden patterns, read each changed source file in full against the checklist.
 3. **Tests pass** — the fast suite passes on every touched workspace, with the back-e2e files the branch affects. For coverage-gated workspaces, `test:coverage` succeeds at 100%.
 4. **Coverage** — every use case the spec lists is exercised by a test that exists.
 5. **Scale** — when the same request arrives twice at once, or the code runs on two processes, does every rule still hold?

@@ -96,8 +96,8 @@ After a merge, the same reply carries two follow-ups, and says so when either is
 
 ## Checking a screen
 
-- `scripts/browser.sh` checks layout, styles, contrast and content. Never call `agent-browser` directly.
-- `scripts/argent.sh touch '<selector>'` checks touch, keyboard and swipe on a phone. A click is not a tap. Traps are in `docs/knowledge/driving-previews-with-agent-browser-and-argent.md`.
+- `agent-browser` checks layout, styles, contrast and content. Call it directly; it needs no flag here. Never run `agent-browser install`.
+- `scripts/phone.sh touch '<selector>'` checks a tap on a phone. A click is not a tap. Traps are in `docs/knowledge/driving-previews-with-agent-browser-and-argent.md`.
 
 ## AWS and production data
 

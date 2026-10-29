@@ -12,7 +12,7 @@ the change.
 > styles, the contrast ratios and the `elementFromPoint` hit-testing all stand
 > as measured, and nothing here is evidence about swipe, pinch, momentum
 > scrolling or what the software keyboard covers. A later spot-check with real
-> taps through [`scripts/argent.sh`](../../../../scripts/argent.sh) found the
+> taps through `scripts/argent.sh` (since replaced by `scripts/phone.sh`) found the
 > More toggle, tab navigation, the bottom-anchored scene control and the
 > dead-link notice all behaving as claimed — four surfaces, not a sweep.
 

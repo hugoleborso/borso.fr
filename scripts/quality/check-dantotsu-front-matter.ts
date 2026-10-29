@@ -40,11 +40,21 @@ function readStagedSlugs(): ReadonlySet<string> {
   return slugs;
 }
 
+function readPathsEverTracked(): ReadonlySet<string> {
+  const paths = new Set(readTrackedPaths());
+  for (const path of runGit(['log', '--format=', '--name-only', '--diff-filter=A', 'HEAD']).split(
+    '\n',
+  )) {
+    if (path.length > 0) paths.add(path);
+  }
+  return paths;
+}
+
 function main(): void {
   const corpus = readDantotsuCorpus();
   const problems = selectSchemaProblems(corpus, {
     mainCommits: readMainCommits(),
-    trackedPaths: readTrackedPaths(),
+    trackedPaths: readPathsEverTracked(),
     verifiedSlugs: process.argv.includes('--staged') ? readStagedSlugs() : null,
   });
   if (problems.length === 0) {

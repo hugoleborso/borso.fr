@@ -15,8 +15,6 @@ REPO_ROOT="${CLAUDE_PROJECT_DIR:-$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && 
 
 bash "$REPO_ROOT/scripts/install-repo-deps.sh"
 
-(cd "$REPO_ROOT" && scripts/check-claude-harness-active.sh --record)
-
 # Persist user-bin PATH for subsequent tool calls in this session.
 if [ -n "${CLAUDE_ENV_FILE:-}" ]; then
   printf 'export PATH="$HOME/.local/bin:$PATH"\n' >> "$CLAUDE_ENV_FILE"

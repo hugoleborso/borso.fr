@@ -1,9 +1,8 @@
 ---
-summary: 'agent-browser traps: `--executable-path` and `--user-agent` ignored, a silent relaunch when the user agent or flags change, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, a click below a nested scroller that does nothing, a fill that fills nothing (labels, `datetime-local`), and no `display-mode` emulation.'
+summary: 'agent-browser traps: launch flags ignored by a running daemon, `--user-agent` ignored, a silent relaunch when the user agent or flags change, no `resize`, a shared `eval` scope, a session that wedges after about forty drives, a click below a nested scroller that does nothing, a fill that fills nothing (labels, `datetime-local`), and no `display-mode` emulation.'
 triggers:
   commands:
     - '\bagent-browser\b'
-    - 'scripts/browser\.sh'
     - 'AGENT_BROWSER_(USER_AGENT|ARGS)'
     - '\baddinitscript\b'
     - 'datetime-local'
@@ -17,29 +16,17 @@ triggers:
 CLI footguns hit during PR #8 and PR #60 that cost more time than they
 should have.
 
-## 1. `--executable-path` is ignored when the daemon is already running
+## 1. Launch settings are read only when the daemon starts
 
-`agent-browser` runs a background daemon. The `--executable-path` flag
-(and other browser-options flags) are only read on **daemon start**.
-If the daemon is already up — from an earlier `agent-browser open` in
-the same session, or a leftover from a previous Claude Code session —
-`--executable-path` silently no-ops:
+`--executable-path`, `--args`, `--user-agent` and their `AGENT_BROWSER_*`
+variables are read when a session's daemon starts. Against a running daemon
+the flag prints one easy-to-miss line and does nothing:
 
 ```
-$ agent-browser --executable-path /opt/pw-browsers/.../chrome open http://...
 ⚠ --executable-path ignored: daemon already running. Use 'agent-browser close' first to restart with new options.
-✓ <page-title>
-  <url>
 ```
 
-The warning is helpful but easy to miss when piped through `tail`.
-
-Recovery: `agent-browser close` first, **then** re-open with the flag:
-
-```bash
-agent-browser close
-agent-browser --executable-path /opt/pw-browsers/.../chrome open <url>
-```
+Run `agent-browser --session <name> close` first, then open with the setting.
 
 ## 2. `agent-browser screenshot` takes a **positional** output path, not a `--output` flag
 
@@ -60,37 +47,13 @@ PR #8 — recovery commit `a8dadb4`).
 The `--screenshot-dir` flag DOES exist and sets the default output
 directory, but the per-call path is always positional.
 
-## 3. Chromium provision can fail on session start
+## 3. No browser setup is needed, and `agent-browser install` is wrong here
 
-The `agent-browser install` command needs network access to fetch the
-Chromium for-testing binary. Behind some corporate proxies (or when the
-TLS root CA isn't trusted) it fails:
-
-```
-✗ Failed to fetch version info: error sending request for url (...): client error (Connect): invalid peer certificate: UnknownIssuer
-```
-
-This repo's SessionStart hook surfaces this as `agent-browser install
-(Chromium provision) failed; /visual-validation will surface this`.
-
-Workaround when a Playwright-installed Chromium is already on the
-system (e.g. `/opt/pw-browsers/chromium-*/chrome-linux/chrome`),
-pass it through:
-
-```bash
-agent-browser --executable-path /opt/pw-browsers/chromium-1194/chrome-linux/chrome open <url>
-```
-
-(See quirk #1 above — the flag is only read on daemon start.)
-
-Since 2026-08-18 this is handled for you: SessionStart writes
-`~/.agent-browser/config.json` with `executablePath` pointing at the Chromium
-the container already ships, so the first `open` of a session needs no flag and
-never starts a daemon with the wrong browser. The two failure shapes it
-removes, both observed on PR #60: the CLI reporting *"Chrome not found … Run
-`agent-browser install`"* while a Chromium sat at `$PLAYWRIGHT_BROWSERS_PATH`,
-and `--executable-path` then appearing inert because quirk #1 had already
-started a daemon. See
+Last verified: 2026-10-29 — agent-browser 0.35.2 found the image's Chromium
+under `/opt/pw-browsers` with no config file and no flag. `agent-browser
+install` would download a second Chromium, and behind the proxy it can fail
+with `invalid peer certificate: UnknownIssuer`. Before 0.35.2 the CLI reported
+*"Chrome not found"* while a Chromium sat at `$PLAYWRIGHT_BROWSERS_PATH`; see
 [`docs/dantotsus/the-browser-was-on-disk-and-unreachable.md`](../dantotsus/the-browser-was-on-disk-and-unreachable.md).
 
 ## 4. `click` on a ref below the fold of a nested scroller does nothing, and says it did
@@ -164,15 +127,9 @@ validator that records a FAIL here records a false one, and the only evidence
 that tells the two apart — how many times this session has been driven — is
 not visible from inside the session.
 
-So [`scripts/browser.sh`](../../scripts/browser.sh) counts the drives per
-`--session` and prints the count plus this symptom list from drive 30 onward,
-with the restart command spelled out. **Before recording a FAIL on a page that
-looks frozen, restart the daemon and check whether the symptom survives it.**
-
-`--restart` may go anywhere in the argument list on the wrapper (agent-browser
-itself rejects `--restart` after `--session` with `Unknown command: --restart`,
-which is the kind of order-sensitivity its help does not state). A restart also
-resets the count.
+**Before recording a FAIL on a page that looks frozen, run `agent-browser
+--session <name> close`, reopen the page and check whether the symptom survives
+a fresh browser.**
 
 ## `find label … fill` can print `Done` and leave the field empty
 
@@ -226,31 +183,20 @@ of by ref.
 
 Observed 2026-09-16.
 
-## Each wrapper call costs about 2.5 s of `pnpm exec` startup
-
-A thirty-second agent round affords roughly eight browser commands, so a
-multi-step flow has to be split across rounds. Budget for it when writing a
-validation brief rather than discovering it halfway through a flow.
-
-Measured 2026-09-16.
-
 ## 0.35.2: settings that do nothing, and settings that restart the browser
 
 _Measured on PR #193 (2026-10-24) and re-checked on 2026-10-25._
 
 - **`--user-agent` is ignored.** `agent-browser --session x --user-agent Foo open …`
   leaves `navigator.userAgent` at `HeadlessChrome/…`; the environment variable
-  `AGENT_BROWSER_USER_AGENT` works. `scripts/browser.sh` now takes
-  `--user-agent <ua>` itself and exports the variable.
+  `AGENT_BROWSER_USER_AGENT` works.
 - **A changed user agent or flag list relaunches the browser, silently.** The
   daemon compares `AGENT_BROWSER_USER_AGENT` and `AGENT_BROWSER_ARGS` on every
-  call, so a later call that omits the user agent, or one that carries the
-  wrapper's default flags after a launch with a fake microphone, restarts
-  Chromium on `about:blank`: the page, the session cookie and the CDP port are
-  gone, and the next step fails as if the application had logged you out.
-  `scripts/browser.sh` now remembers `--user-agent` and `--args` per `--session`
-  and sends them on every call until `--restart`, and says so when a call
-  changes them.
+  call, so a later call that omits the user agent, or a fake-microphone flag
+  the session was launched with, restarts Chromium on `about:blank`: the page,
+  the session cookie and the CDP port are gone, and the next step fails as if
+  the application had logged you out. Export both variables once in the shell
+  that drives the session, rather than setting them on one call.
 - **`addinitscript` is listed in `--help` and refused** as `Unknown command`.
   Inject an init script over CDP (`Page.addScriptToEvaluateOnNewDocument`) or
   with `eval` after load.
