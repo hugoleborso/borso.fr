@@ -7,8 +7,6 @@ export const STANDALONE_DISPLAY_MODE_SHIM = `(() => {
   };
 })();`;
 
-export const READ_VIEWPORT_SIZE = `() => innerWidth + 'x' + innerHeight`;
-
 export const PAGE_SETTLED_PROBE = `() => document.readyState === 'complete' && !document.querySelector('[aria-busy="true"]')`;
 
 export const READ_LOCATION = `() => {

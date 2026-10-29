@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import { pressKey, tapAt } from './argent-input.adapter';
+import { pressKey, tapAt } from './touch-input.adapter';
 import type { BandSessionDriver } from './band-session.setup';
 import {
   FIND_BACKDROP_POINT,
@@ -170,12 +170,12 @@ type DraftClose = 'backdrop' | 'escape';
 
 async function hasClosedOpenSheet(driver: BandSessionDriver, how: DraftClose): Promise<boolean> {
   if (how === 'escape') {
-    pressKey('Escape');
+    await pressKey(driver.session, 'Escape');
     return true;
   }
   const backdrop = pointSchema.nullable().parse(await driver.session.evaluate(FIND_BACKDROP_POINT));
   if (backdrop === null) return false;
-  tapAt(backdrop);
+  await tapAt(driver.session, backdrop);
   return true;
 }
 

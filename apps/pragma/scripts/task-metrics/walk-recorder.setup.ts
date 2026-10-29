@@ -1,11 +1,5 @@
 import { z } from 'zod';
-import {
-  dragBetween,
-  refreshArgentViewport,
-  scrollAt,
-  tapAt,
-  typeText,
-} from './argent-input.adapter';
+import { dragBetween, scrollAt, tapAt, typeText } from './touch-input.adapter';
 import type { CdpSession } from './cdp-session.adapter';
 import {
   CHOOSE_NATIVE_OPTION,
@@ -15,7 +9,6 @@ import {
   MAIN_PRESENT,
   PAGE_SETTLED_PROBE,
   READ_LOCATION,
-  READ_VIEWPORT_SIZE,
   STANDALONE_DISPLAY_MODE_SHIM,
   TAPPED_FIELD_FOCUS_PROBE,
 } from './page-probes.setup';
@@ -158,20 +151,10 @@ export async function emulatePhone(session: CdpSession): Promise<void> {
   await session.send('Page.addScriptToEvaluateOnNewDocument', {
     source: STANDALONE_DISPLAY_MODE_SHIM,
   });
-  refreshArgentViewport();
 }
 
 export async function readScrollAreas(session: CdpSession): Promise<ScrollAreaReport> {
   return scrollAreaReportSchema.parse(await session.evaluate(COUNT_SCROLL_AREAS));
-}
-
-const argentState = { viewport: '' };
-async function synchroniseArgentViewport(session: CdpSession): Promise<void> {
-  const viewport = String(await session.evaluate(READ_VIEWPORT_SIZE));
-  if (viewport !== argentState.viewport) {
-    refreshArgentViewport();
-    argentState.viewport = viewport;
-  }
 }
 
 export class TaskWalk {
@@ -235,8 +218,7 @@ export class TaskWalk {
     let scrollsUsed = 0;
     while (!found.inView && scrollsUsed < MAXIMUM_SCROLLS_PER_TARGET) {
       const gesture = planScrollGesture(found);
-      await synchroniseArgentViewport(this.session);
-      scrollAt(gesture.point, gesture.deltaY);
+      await scrollAt(this.session, gesture.point, gesture.deltaY);
       scrollsUsed += 1;
       this.scrolls += 1;
       await waitMilliseconds(SCROLL_SETTLE_MS);
@@ -267,8 +249,7 @@ export class TaskWalk {
         `[${this.task}] could not bring into view: ${label} (box [${now.rect.join(',')}], visible ${String(now.visibleTop)} to ${String(now.visibleBottom)}, hittable ${String(now.hittable)}, viewport ${String(now.viewportWidth)}x${String(now.viewportHeight)}, screen ${String(now.screenLeft)},${String(now.screenTop)} ${String(now.screenWidth)}x${String(now.screenHeight)})`,
       );
     }
-    await synchroniseArgentViewport(this.session);
-    tapAt(projectTapPoint(now));
+    await tapAt(this.session, projectTapPoint(now));
     this.taps += 1;
     this.steps.push({
       n: this.taps,
@@ -302,7 +283,7 @@ export class TaskWalk {
   }
 
   async type(label: string, text: string): Promise<void> {
-    typeText(text);
+    await typeText(this.session, text);
     this.texts += 1;
     this.steps.push({ kind: 'type', label, chars: text.length });
     await waitMilliseconds(TYPE_SETTLE_MS);
@@ -325,8 +306,7 @@ export class TaskWalk {
   async drag(label: string, fromSpec: TargetSpec, toSpec: TargetSpec): Promise<void> {
     const { now: origin } = await this.bringIntoView(fromSpec);
     const destination = await this.waitFor(toSpec);
-    await synchroniseArgentViewport(this.session);
-    dragBetween(projectTapPoint(origin), projectTapPoint(destination));
+    await dragBetween(this.session, projectTapPoint(origin), projectTapPoint(destination));
     this.taps += 1;
     this.steps.push({ n: this.taps, kind: 'drag', label, from: origin.name, to: destination.name });
     await waitForSettledPage(this.session, DRAG_SETTLE_MS);

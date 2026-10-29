@@ -26,19 +26,19 @@ pnpm run task-metrics -- --tasks all --routes --slice-1 --out /tmp/after.json
 | `--out <file>`                               | write the result as JSON; an existing file is kept and updated                                                                                                                                                                                                                                                                                                                                              |
 | `--compare <file>`                           | compare taps, text entries, scroll gestures and screens of every walked task with that file, print each difference and exit 1 when there is one                                                                                                                                                                                                                                                             |
 
-The site port is `TASK_METRICS_PORT`, 5182 by default. The API runs on the site port minus 2000, the argent browser on 9280 plus the last digits of the site port, and the argent tool-server on 4380 plus the same, so two runs on two ports do not meet. Every walk starts from a fresh seed and a fresh sign-in.
+The site port is `TASK_METRICS_PORT`, 5182 by default. The API runs on the site port minus 2000, and the browser is the `agent-browser` session `pragma-task-metrics-<site port>`, so two runs on two ports do not meet. Every walk starts from a fresh seed and a fresh sign-in.
 
 ## What one run does
 
 1. `pragma-instance.sh start <port>` creates a database of its own in the shared local Postgres cluster (`scripts/local-postgres.sh`), applies the migrations, seeds the app's dev fixture and then `audit-seed.setup.ts` on top of it (44 songs, five members, three setlists, takes, tasks and transitions), and starts the API and the site (`vite-site.setup.ts`, because `vite.config.ts` fixes its ports).
-2. `scripts/argent.sh start` boots a Chromium and the argent tool-server on the ports above.
+2. `agent-browser --session pragma-task-metrics-<port> open` boots agent-browser's Chromium on the login page, and `get cdp-url` gives its DevTools port to `task-metrics.setup.ts`.
 3. `task-metrics.setup.ts` emulates an installed phone app at 390x844: device metrics, touch, safe-area insets of 47 px at the top and 34 px at the bottom, and `matchMedia('(display-mode: standalone)')` answering true.
-4. Each walk in `task-walks.setup.ts` reseeds, signs in through the form and performs its task through argent: `gesture-tap`, `gesture-scroll`, `gesture-drag` and `keyboard`. The DevTools socket in `cdp-session.adapter.ts` only reads the page and sets the emulation; it never clicks.
+4. Each walk in `task-walks.setup.ts` reseeds, signs in through the form and performs its task through `touch-input.adapter.ts`, on the one DevTools socket of `cdp-session.adapter.ts`. A tap is `Input.dispatchTouchEvent` start and end 60 ms apart, a drag is ten paced touch moves, a scroll is `Input.synthesizeScrollGesture`, typing is `Input.insertText` and a key is `Input.dispatchKeyEvent`. This is the recipe of `scripts/phone.sh touch`, in the harness's own session so the touch emulation stays on.
 5. Everything started is stopped at the end, even after a failure. The shared Postgres cluster keeps running; `scripts/local-postgres.sh stop pragma` stops it.
 
 ## How it counts
 
-- **Taps** count every `gesture-tap`, one per choice in a native picker, and one per drag. Typing is counted apart as **text entries**, one per field filled.
+- **Taps** count every touch tap, one per choice in a native picker, and one per drag. Typing is counted apart as **text entries**, one per field filled.
 - **Scroll gestures** count the wheel gestures needed to bring the next control into view. One gesture moves at most 70% of the screen.
 - **Screens** count every distinct page and every open `<dialog>` a walk reached, including the start screen.
 - **Bottom third** means the control's centre sat at or below two thirds of the screen height when the person reached it, before any scroll made for it.
@@ -51,15 +51,14 @@ The pure parts of this, from the scroll gesture plan to the comparison with a ba
 
 ## What it cannot prove
 
-- argent sends a one-finger tap on Chromium as a mouse press and release, so the page sees `pointerType: mouse` and no `touchstart`. Touch-only behaviour is checked with `scripts/argent.sh` by hand.
+- A scroll is a wheel-style gesture, not a touch swipe. `Input.synthesizeScrollGesture` with the `touch` source answers success and scrolls nothing in agent-browser's headless Chromium (measured 0 px for 300, against 299 px with the `mouse` source). Taps and drags are real touch.
 - There is no microphone, so recording a take cannot be walked; the seeded audio files do not exist, so nothing plays.
 - A native select or date field opens a picker headless Chromium does not draw. The tap that opens it is real; the value is set through the page and counted as one more tap.
-- argent's keyboard cannot type accented characters, so typed text is plain ASCII.
 - `Emulation.setEmulatedMedia` with `display-mode` has no effect on this Chromium, which is why standalone mode is a `matchMedia` shim injected before each page loads.
 
 ## Traps already met
 
-- argent caches the window size when it connects and maps every fraction through it. After any emulation change it has to `describe` again, which `walk-recorder.setup.ts` does before each gesture when the size changed.
+- Touch emulation ends with the DevTools session that set it, so every gesture goes through the session `emulatePhone` set up, never a second client.
 - Signing in through `/api/auth/login` alone is not enough: the site also keeps a marker in `localStorage`, so the walks sign in through the form.
 - A target can move after it is found, when something above it renders late. A walk taps only once two reads of the target's box, 150 ms apart, agree; a box that keeps moving fails the walk with `layout never settled`.
-- A Chromium that inherits the sandbox's proxy variables sends `localhost` through the proxy; `run-task-metrics.sh` and the argent adapter remove them.
+- A Chromium that inherits the sandbox's proxy variables sends `localhost` through the proxy; `run-task-metrics.sh` removes them before it opens the browser.

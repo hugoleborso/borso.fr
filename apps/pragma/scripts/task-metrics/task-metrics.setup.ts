@@ -1,6 +1,5 @@
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { BandSessionDriver } from './band-session.setup';
-import { CDP_PORT } from './argent-input.adapter';
 import { connectCdpSession } from './cdp-session.adapter';
 import { STANDALONE_PROBE } from './page-probes.setup';
 import { measureRoutes } from './route-measures.setup';
@@ -20,11 +19,12 @@ import { TASK_WALKS } from './task-walks.setup';
 import { emulatePhone, PHONE } from './walk-recorder.setup';
 
 const DEFAULT_BASE_URL = 'http://localhost:5182';
+const DEFAULT_CDP_PORT = 9222;
 const JSON_INDENT = 2;
 const FIRST_PROGRAM_ARGUMENT = 2;
 const FAILURE_EXIT_CODE = 1;
-const ARGENT_INPUT_NOTE =
-  'argent gesture-tap / gesture-scroll / gesture-drag / keyboard. On Chromium argent sends a one-finger tap as CDP mouse press and release (pointerType mouse), not as a touch event.';
+const TOUCH_INPUT_NOTE =
+  'CDP Input.dispatchTouchEvent for taps and drags, Input.synthesizeScrollGesture (mouse source, as a touch swipe scrolls nothing in headless Chromium) for scrolls, Input.insertText and Input.dispatchKeyEvent for the keyboard, on the agent-browser Chromium with touch emulation on.';
 const BOTTOM_THIRD_NOTE =
   'centre of the control at or below 2/3 of the screen height on arrival, before any scroll';
 
@@ -47,7 +47,9 @@ async function main(): Promise<void> {
   const options = parseTaskMetricsArguments(process.argv.slice(FIRST_PROGRAM_ARGUMENT));
   process.env.AUDIT_SEED_VARIANT = options.seedVariant;
   const baseUrl = process.env.BASE ?? DEFAULT_BASE_URL;
-  const session = await connectCdpSession(CDP_PORT);
+  const session = await connectCdpSession(
+    Number(process.env.TASK_METRICS_CDP_PORT ?? DEFAULT_CDP_PORT),
+  );
   await emulatePhone(session);
   const driver = new BandSessionDriver(session, baseUrl);
   const result = readExistingResult(options.outputPath);
@@ -58,7 +60,7 @@ async function main(): Promise<void> {
     standalone: await session.evaluate(STANDALONE_PROBE),
     base: baseUrl,
     seed: options.seedVariant,
-    input: ARGENT_INPUT_NOTE,
+    input: TOUCH_INPUT_NOTE,
     bottomThird: BOTTOM_THIRD_NOTE,
   };
   const tasks = readTaskRecord(result);

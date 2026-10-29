@@ -2255,11 +2255,11 @@
   "apps/pragma/domain/upcoming-concerts.core.ts": {
     "selectUpcomingConcerts": "core-view-projection"
   },
-  "apps/pragma/scripts/task-metrics/argent-input.adapter.ts": {
-    "runArgent": "adapter-external-service"
-  },
   "apps/pragma/scripts/task-metrics/cdp-session.adapter.ts": {
     "connectCdpSession": "adapter-external-service"
+  },
+  "apps/pragma/scripts/task-metrics/touch-input.adapter.ts": {
+    "tapAt": "adapter-external-service"
   },
   "apps/pragma/site/src/App.test.tsx": {
     "describe": "test-component-render"

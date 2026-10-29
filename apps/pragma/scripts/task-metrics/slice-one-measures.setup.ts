@@ -8,7 +8,7 @@ import {
   measureFillContrast,
   readThemeTokens,
 } from '../../site/src/lib/design-tokens.utils';
-import { pressKey, tapAt } from './argent-input.adapter';
+import { pressKey, tapAt } from './touch-input.adapter';
 import type { BandSessionDriver } from './band-session.setup';
 import {
   COUNT_SMALL_TAP_TARGETS,
@@ -186,7 +186,7 @@ async function measureSheets(driver: BandSessionDriver): Promise<Record<string, 
   const walk = new TaskWalk(driver.session, 'sheets');
   await walk.tap('Open entry 02', { text: SECOND_ENTRY_PATTERN, css: 'main button' });
   sheets.entry = await readOpenSheet(driver);
-  pressKey('Escape');
+  await pressKey(driver.session, 'Escape');
   await waitMilliseconds(SHEET_SETTLE_MS);
   await walk.tap('Lineup view', { exact: 'Lineup', css: '[role=tab]', scope: 'page' });
   await walk.tap('Lineup cell of entry 02', {
@@ -195,12 +195,12 @@ async function measureSheets(driver: BandSessionDriver): Promise<Record<string, 
     scope: 'page',
   });
   sheets.lineup = await readOpenSheet(driver);
-  pressKey('Escape');
+  await pressKey(driver.session, 'Escape');
   await waitMilliseconds(SHEET_SETTLE_MS);
   await walk.tap('Songs view', { exact: 'Songs', css: '[role=tab]', scope: 'page' });
   await walk.tap('Add song', { exact: 'Add song', css: 'button', scope: 'page' });
   sheets.songPicker = await readOpenSheet(driver);
-  pressKey('Escape');
+  await pressKey(driver.session, 'Escape');
   await waitMilliseconds(SHEET_SETTLE_MS);
   await walk.tap('Transition between 04 and 05', {
     css: TRANSITION_LINE,
@@ -208,7 +208,7 @@ async function measureSheets(driver: BandSessionDriver): Promise<Record<string, 
     scope: 'page',
   });
   sheets.transition = await readOpenSheet(driver);
-  pressKey('Escape');
+  await pressKey(driver.session, 'Escape');
   const measured = Object.values(sheets).map((sheet) => openSheetSchema.parse(sheet));
   return {
     sheets,
@@ -282,7 +282,7 @@ async function measureTransitionDraft(driver: BandSessionDriver): Promise<Record
   await walk.type('Transition draft', TRANSITION_DRAFT_TEXT);
   const backdrop = pointSchema.nullable().parse(await driver.session.evaluate(FIND_BACKDROP_POINT));
   if (backdrop === null) return { isDraftKept: false, note: 'no backdrop area to tap' };
-  tapAt(backdrop);
+  await tapAt(driver.session, backdrop);
   await waitMilliseconds(SHEET_SETTLE_MS);
   const isClosed = (await walk.readLocation()).overlay === null;
   await walk.tap('Transition between 04 and 05 again', transitionSpec);

@@ -3,7 +3,7 @@ import { INSTRUMENT_ICONS } from '../../domain/instrument.core';
 import { normalizeLineup } from '../../domain/lineup.core';
 import { buildLineupGrid } from '../../site/src/components/organisms/lineup-grid.core';
 import { parseHex } from '../../site/src/lib/member-color.utils';
-import { pressKey } from './argent-input.adapter';
+import { pressKey } from './touch-input.adapter';
 import type { BandSessionDriver } from './band-session.setup';
 import {
   READ_BACK_LINK,
@@ -214,7 +214,7 @@ async function measureEntrySheet(driver: BandSessionDriver): Promise<Record<stri
   const dialogsAfterRecord = z
     .array(z.string())
     .parse(await driver.session.evaluate(READ_OPEN_DIALOG_LABELS));
-  pressKey('Escape');
+  await pressKey(driver.session, 'Escape');
   return { sheet, dialogsAfterRecord, mostSheetsOpenAtOnce: dialogsAfterRecord.length };
 }
 
