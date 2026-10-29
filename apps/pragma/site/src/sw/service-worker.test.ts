@@ -175,6 +175,9 @@ describe('sw.js, push notifications', () => {
       ['setlist-changed', { setlistName: 'Summer' }],
       ['song-lineup-changed', { songTitle: 'Song' }],
       ['transition-changed', { songATitle: 'One', songBTitle: 'Two' }],
+      ['streak-at-risk', { days: '12' }],
+      ['streak-band-count', { count: '3' }],
+      ['streak-band-count-one', { count: '1' }],
     ] as const;
     const english = loadServiceWorker(failAlways, { language: 'en' });
     const french = loadServiceWorker(failAlways, { language: 'fr' });
@@ -190,6 +193,9 @@ describe('sw.js, push notifications', () => {
       'Ana changed the setlist Summer',
       'Ana changed the lineup of Song',
       'Ana changed the transition One → Two',
+      'Keep your 12-day flame alive. Log a study before midnight.',
+      '3 members already practised today. Your turn?',
+      '1 member already practised today. Your turn?',
     ]);
     expect(french.notifications.map((shown) => shown.options.body)).toEqual([
       'Ana a commenté une prise de Song',
@@ -198,6 +204,9 @@ describe('sw.js, push notifications', () => {
       'Ana a modifié la setlist Summer',
       'Ana a modifié la composition de Song',
       'Ana a modifié la transition One → Two',
+      'Garde ta flamme de 12 jours. Note une étude avant minuit.',
+      '3 membres ont déjà pratiqué aujourd’hui. À toi ?',
+      '1 membre a déjà pratiqué aujourd’hui. À toi ?',
     ]);
   });
 

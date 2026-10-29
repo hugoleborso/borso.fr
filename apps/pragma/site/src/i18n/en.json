@@ -823,7 +823,8 @@
       "takes": "New takes",
       "takeComments": "Comments on takes",
       "sessions": "Sessions",
-      "setlists": "Setlists, lineups and transitions"
+      "setlists": "Setlists, lineups and transitions",
+      "streak": "Daily flame reminder at 20:00"
     }
   },
   "install": {

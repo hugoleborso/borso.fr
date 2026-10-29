@@ -1215,11 +1215,17 @@ Held by: `api/src/streaks/streaks.controller.test.ts` › counts every member’
 ## Streak
 
 The feature that shows **flames**. The word names its surface, never the
-count: `GET /api/streaks`, the `streaks/` slice and the streak sheet.
+count: `GET /api/streaks`, the `streaks/` slice, the streak sheet, the
+`streak` push category and the `streak-reminder` job.
 
 Lives in: `api/src/streaks/`
 
+- The `streak-reminder` job runs at 20:00 `Europe/Paris` in production only.
+  A member whose day has not counted gets at most one push that day, claimed
+  on the group key `streak:<memberId>:<day>`.
+
 Held by: `api/src/streaks/streaks.controller.test.ts` › counts today after a study and drops it after the undo
+Held by: `api/src/streaks/streak-reminder.service.test.ts` › sends one push per open member and claims each group once when run twice
 
 ## Concert readiness
 

@@ -4,7 +4,7 @@ import {
   computePersonalFlame,
   type PersonalFlame,
 } from '@domain/practice-flame.core';
-import type { StreaksView } from './streaks.types';
+import type { MemberFlame, StreaksView } from './streaks.types';
 
 interface StreaksMember {
   readonly id: string;
@@ -28,8 +28,15 @@ interface OwnFlameInput {
   readonly sessionDays: ReadonlySet<CalendarDay>;
 }
 
-interface StreaksInput extends OwnFlameInput {
+interface MemberFlamesInput {
+  readonly today: CalendarDay;
   readonly members: readonly StreaksMember[];
+  readonly studies: readonly StudyDay[];
+  readonly sessionDays: ReadonlySet<CalendarDay>;
+}
+
+interface StreaksInput extends MemberFlamesInput {
+  readonly memberId: string;
 }
 
 function activeDaysOf(
@@ -59,14 +66,18 @@ export function buildOwnFlame(input: OwnFlameInput): PersonalFlame {
   );
 }
 
-// @FollowsBlueprint core-projection
-export function buildStreaksView(input: StreaksInput): StreaksView {
-  const members = input.members.map((member) => ({
+export function buildMemberFlames(input: MemberFlamesInput): MemberFlame[] {
+  return input.members.map((member) => ({
     memberId: member.id,
     firstName: member.firstName,
     color: member.color,
     flame: buildOwnFlame({ ...input, memberId: member.id }),
   }));
+}
+
+// @FollowsBlueprint core-projection
+export function buildStreaksView(input: StreaksInput): StreaksView {
+  const members = buildMemberFlames(input);
   const currentMemberIds = new Set(input.members.map((member) => member.id));
   const bandStudyDays = input.studies
     .filter((study) => currentMemberIds.has(study.memberId))

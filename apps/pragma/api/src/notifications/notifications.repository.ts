@@ -106,7 +106,7 @@ export async function findDispatchLastSentAt(groupKey: string): Promise<Date | n
   return dispatch?.lastSentAt ?? null;
 }
 
-async function hasClaimedFirstDispatch(groupKey: string, now: Date): Promise<boolean> {
+export async function hasClaimedFirstDispatch(groupKey: string, now: Date): Promise<boolean> {
   const claimed = await getDatabase()
     .insert(notificationDispatchTable)
     .values({ groupKey, lastSentAt: now })

@@ -3,8 +3,13 @@ import type { PersonalFlame } from '@domain/practice-flame.core';
 import { getMembersSortedByFirstName } from '../members/members.service';
 import { getSessions } from '../sessions/sessions.service';
 import { listStudyDaysOfMemberSince, listStudyDaysSince } from '../studies/studies.service';
-import { buildOwnFlame, buildStreaksView, collectSessionDays } from './streaks.core';
-import type { StreaksView } from './streaks.types';
+import {
+  buildMemberFlames,
+  buildOwnFlame,
+  buildStreaksView,
+  collectSessionDays,
+} from './streaks.core';
+import type { MemberFlame, StreaksView } from './streaks.types';
 
 export const STREAK_LOOKBACK_DAYS = 400;
 
@@ -12,8 +17,7 @@ function firstLookbackDay(today: CalendarDay): CalendarDay {
   return shiftCalendarDay(today, -STREAK_LOOKBACK_DAYS);
 }
 
-// @FollowsBlueprint service-clock-injected
-export async function readStreaks(memberId: string, now: Date): Promise<StreaksView> {
+async function readFlameInputs(now: Date) {
   const today = parisCalendarDay(now);
   const firstDay = firstLookbackDay(today);
   const [sessions, members, studies] = await Promise.all([
@@ -21,13 +25,21 @@ export async function readStreaks(memberId: string, now: Date): Promise<StreaksV
     getMembersSortedByFirstName(),
     listStudyDaysSince(firstDay),
   ]);
-  return buildStreaksView({
+  return {
     today,
-    memberId,
     members,
     studies,
     sessionDays: collectSessionDays(sessions, firstDay, today),
-  });
+  };
+}
+
+// @FollowsBlueprint service-clock-injected
+export async function readStreaks(memberId: string, now: Date): Promise<StreaksView> {
+  return buildStreaksView({ ...(await readFlameInputs(now)), memberId });
+}
+
+export async function readMemberFlames(now: Date): Promise<MemberFlame[]> {
+  return buildMemberFlames(await readFlameInputs(now));
 }
 
 export async function readPersonalFlame(memberId: string, now: Date): Promise<PersonalFlame> {

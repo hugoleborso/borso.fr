@@ -54,6 +54,10 @@ export function reportUnhandledError(error: unknown): void {
   Sentry.captureException(error);
 }
 
+export async function flushErrorReports(): Promise<void> {
+  await Sentry.flush(FLUSH_TIMEOUT_MILLISECONDS);
+}
+
 export interface TaggedFailure {
   readonly name: string;
   readonly tags: Readonly<Record<string, string>>;

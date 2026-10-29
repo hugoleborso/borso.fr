@@ -7,7 +7,9 @@ import {
   PreviewableApp,
   type Stage,
 } from '@borso/infra';
-import { Duration, RemovalPolicy, Stack } from 'aws-cdk-lib';
+import { Duration, RemovalPolicy, Stack, TimeZone } from 'aws-cdk-lib';
+import { Schedule, ScheduleExpression, ScheduleTargetInput } from 'aws-cdk-lib/aws-scheduler';
+import { LambdaInvoke } from 'aws-cdk-lib/aws-scheduler-targets';
 import {
   BlockPublicAccess,
   Bucket,
@@ -16,7 +18,9 @@ import {
   ObjectOwnership,
 } from 'aws-cdk-lib/aws-s3';
 import { Effect, PolicyStatement } from 'aws-cdk-lib/aws-iam';
+import type { IFunction } from 'aws-cdk-lib/aws-lambda';
 import type { Construct } from 'constructs';
+import { STREAK_REMINDER_JOB } from '../../domain/scheduled-job.core.js';
 
 const API_TIMEOUT_SECONDS = 20;
 const APP_SLUG = 'pragma';
@@ -52,6 +56,11 @@ const ASSISTANT_PATH_PATTERNS = [
 
 const PRODUCTION_STAGE: Stage = 'prod';
 const TAKE_OBJECT_KEYS = 'take/*';
+
+const STREAK_REMINDER_HOUR = '20';
+const STREAK_REMINDER_MINUTE = '0';
+const STREAK_REMINDER_MAX_EVENT_AGE = Duration.hours(1);
+const STREAK_REMINDER_RETRY_ATTEMPTS = 2;
 
 const CHART_UPLOAD_CORS_MAX_AGE_SECONDS = 300;
 const ABORT_MULTIPART_UPLOAD_DAYS = 1;
@@ -110,6 +119,22 @@ function nameUploadsBucket(stage: Stage, prNumber: number | undefined): string {
 function readSiteOrigin(props: BuildPragmaAppStackProps): SiteOrigin {
   const origin = frontendOrigin(readNameContext(props), props.domainName);
   return { origin, hostname: new URL(origin).hostname };
+}
+
+function scheduleStreakReminder(scope: Construct, apiHandler: IFunction): void {
+  new Schedule(scope, 'StreakReminderSchedule', {
+    description: 'Pushes the 20:00 Europe/Paris streak reminder (ADR-202610291139)',
+    schedule: ScheduleExpression.cron({
+      minute: STREAK_REMINDER_MINUTE,
+      hour: STREAK_REMINDER_HOUR,
+      timeZone: TimeZone.EUROPE_PARIS,
+    }),
+    target: new LambdaInvoke(apiHandler, {
+      input: ScheduleTargetInput.fromObject({ job: STREAK_REMINDER_JOB }),
+      maxEventAge: STREAK_REMINDER_MAX_EVENT_AGE,
+      retryAttempts: STREAK_REMINDER_RETRY_ATTEMPTS,
+    }),
+  });
 }
 
 /**
@@ -204,6 +229,7 @@ export function buildPragmaAppStack(props: BuildPragmaAppStackProps): void {
         }),
       );
     }
+    if (isProduction) scheduleStreakReminder(props.scope, previewableApp.api.handler);
     previewableApp.api.handler.addToRolePolicy(
       new PolicyStatement({
         effect: Effect.ALLOW,

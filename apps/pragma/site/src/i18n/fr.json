@@ -823,7 +823,8 @@
       "takes": "Les nouvelles prises",
       "takeComments": "Les commentaires sur les prises",
       "sessions": "Les sessions",
-      "setlists": "Les setlists, compositions et transitions"
+      "setlists": "Les setlists, compositions et transitions",
+      "streak": "Rappel de flamme chaque jour à 20 h"
     }
   },
   "install": {

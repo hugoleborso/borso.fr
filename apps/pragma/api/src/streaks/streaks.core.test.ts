@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildMemberFlames,
   buildOwnFlame,
   buildStreaksView,
   collectSessionDays,
@@ -11,6 +12,8 @@ const YESTERDAY = '2026-10-28';
 const LEA = { id: 'member-lea', firstName: 'Léa', color: '#e0533a' };
 const TOM = { id: 'member-tom', firstName: 'Tom', color: '#3a7be0' };
 const NO_SESSION = new Set<string>();
+const LEA_ROW = { memberId: LEA.id, firstName: LEA.firstName, color: LEA.color };
+const TOM_ROW = { memberId: TOM.id, firstName: TOM.firstName, color: TOM.color };
 
 // @FollowsBlueprint test-pure-unit
 describe('buildStreaksView', () => {
@@ -79,6 +82,21 @@ describe('buildStreaksView', () => {
       sessionDays: new Set([TODAY]),
     });
     expect(view.mine).toEqual({ days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 });
+  });
+});
+
+describe('buildMemberFlames', () => {
+  it('answers every member’s flame without a signed-in member', () => {
+    const flames = buildMemberFlames({
+      today: TODAY,
+      members: [LEA, TOM],
+      studies: [{ memberId: TOM.id, studiedOn: TODAY }],
+      sessionDays: NO_SESSION,
+    });
+    expect(flames).toEqual([
+      { ...LEA_ROW, flame: { days: 0, isTodayCounted: false, jokersLeftThisWeek: 3 } },
+      { ...TOM_ROW, flame: { days: 1, isTodayCounted: true, jokersLeftThisWeek: 3 } },
+    ]);
   });
 });
 
