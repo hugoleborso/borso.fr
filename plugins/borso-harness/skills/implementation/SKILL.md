@@ -155,7 +155,6 @@ There are two rounds at most. Blocking findings left after round 2 go to the ope
 - **Writing a file for a layer without opening that layer's blueprint** — the file invents a shape the repository already settled, and the review is spent re-deriving a decision instead of reading the change.
 - **Leaving a new file unmarked** — the coverage grid reports the layer as having no adopted pattern, so the next author reads a real pattern as an absent one.
 - **Skipping a sub-skill that exists** — domain knowledge in the sub-skill goes unenforced; defects predicted by it ship anyway.
-- **Bypassing a hook** with `--no-verify` — repo rule says never. Fix the hook failure.
 - **Deferring the test-runner setup** — if the workspace has no Vitest yet, set it up *as part of this implementation*. Otherwise the implementation lands without coverage and the next session inherits a broken gate.
 - **Reinventing what the library already does.** Before writing a "quick custom X" on top of an imported library, read the library's current docs / changelog / `defaultOptions` for the capability you're about to recreate. The first place to look for a feature an imported library plausibly already has is the library itself.
 - **Walking the plan with open questions still in it.** Step 1a of the procedure is non-negotiable. If `plan.md` carries unanswered items, the implementer must surface them to the user *before* writing code. Picking the answer yourself silently bakes the implementer's preference into both the implementation and the validation that follows.

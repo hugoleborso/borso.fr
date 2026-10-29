@@ -226,9 +226,17 @@ the shape rather than a measured recipe:
 
 ```bash
 python3 -m http.server 8976 --bind 127.0.0.1 > callback.log 2>&1 &
-scripts/browser.sh click @e7          # the ref snapshot gave the Allow button
+agent-browser click @e7              # the ref snapshot gave the Allow button
 grep 'GET /callback' callback.log     # GET /callback?code=…&state=… HTTP/1.1
 ```
+
+## `get cdp-url` on a session that was never opened launches a browser
+
+Logged by PR #224's `browser-simplify` agent, not re-measured since. `agent-browser
+--session <name> get cdp-url` on a session with no daemon does not fail. It
+starts a browser on `about:blank` and prints that browser's URL, so a script
+that reads the URL to attach to an existing page attaches to an empty one.
+Open the page in that session first, then ask for the URL.
 
 ## Related
 

@@ -43,7 +43,6 @@ One operator, many agents in parallel, each shipping one feature in its own sand
 
 ## Hard rules
 
-- Never `--no-verify`. Fix what the hook reports.
 - Never merge to `main` unless the operator asked for that pull request. A merge deploys every changed app to prod, in parallel.
 - Never run a deploy locally. Call reserved names through `run` (`pnpm --filter <pkg> run deploy`, same for `destroy`).
 - A full-stack app's `destroy` targets `<app>-pr-<N>` only. `--all` also deletes the shared `<app>-cluster` stack.

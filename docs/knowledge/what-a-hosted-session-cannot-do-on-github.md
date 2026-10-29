@@ -3,6 +3,9 @@ summary: 'Measured: a hosted session can merge and push to any branch, cannot di
 triggers:
   commands:
     - 'workflow_dispatch|actions_run_trigger'
+    - 'gh auth status'
+  output:
+    - 'The token in GH_TOKEN is invalid'
 ---
 
 # What a hosted session cannot do on GitHub
@@ -37,8 +40,13 @@ not a policy that cannot change.
 
 `GH_TOKEN` and `GITHUB_TOKEN` are both *set* in the environment and
 both rejected at the agent proxy, so a non-empty token is not evidence
-of anything. There is no `gh` or `hub` CLI and no git credential
-helper to borrow from.
+of anything. There is no git credential helper to borrow from.
+
+**`gh auth status` lies about `gh api`.** Measured 2026-10-29: the `gh` CLI
+is installed, `gh auth status` prints `The token in GH_TOKEN is invalid`, and
+`gh api repos/hugoleborso/borso.fr/pulls/224` still answers, because the agent
+proxy authenticates the request. Probe the one `gh api` call you need instead
+of reading the status line. PR #224's `ci-metrics` agent lost time to it.
 
 **Queue a merge for when CI goes green.** `mcp__github__enable_pr_auto_merge`
 answers `Auto-merge is not enabled for this repository`, measured on PR #153 on

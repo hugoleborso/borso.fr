@@ -17,6 +17,10 @@
 #
 # See docs/dantotsus/a-push-that-failed-and-reported-success.md.
 #
+# A commit or push that skips its hooks with `--no-verify` or `HUSKY=0` throws
+# the gates' status away before it exists, so it is refused here too. CLAUDE.md
+# carried "Never --no-verify" as prose for months with nothing that refused it.
+#
 # Output contract (Claude Code PreToolUse hook):
 #   - exit 0 + no stderr → command runs as-is.
 #   - exit 2 + stderr message → command is blocked; the message is surfaced to
@@ -57,6 +61,13 @@ if grep -qE '(stryker[[:space:]]+run|test:mutation)([[:space:]][^|]*)?\|[[:space
   echo "[no-swallowed-push] Write the log to a file and read its end instead:" >&2
   echo "[no-swallowed-push]   pnpm exec stryker run --mutate <files> > stryker.log 2>&1; tail -40 stryker.log" >&2
   "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "piped a mutation run into head, which kills it before the score"
+  exit 2
+fi
+
+if grep -qE '(^|[[:space:]])(HUSKY=0[[:space:]]+)?git[[:space:]]+(commit|push)([[:space:]][^|]*)?[[:space:]]--no-verify\b|HUSKY=0[[:space:]]+git[[:space:]]+(commit|push)\b' <<<"$PIPELINES"; then
+  echo "[no-swallowed-push] --no-verify and HUSKY=0 skip the git hooks, so their gates never report." >&2
+  echo "[no-swallowed-push] Run the commit or push bare and fix what the hook reports." >&2
+  "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "skipped the git hooks with --no-verify or HUSKY=0"
   exit 2
 fi
 

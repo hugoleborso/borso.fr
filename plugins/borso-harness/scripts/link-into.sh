@@ -29,13 +29,17 @@
 
 set -euo pipefail
 
+# The flag may come before or after the two arguments: the flag-after form was
+# quoted in CLAUDE.md and only printed the usage line.
 mode=link
-case "${1:-}" in
-  --check | --hooks)
-    mode="${1#--}"
-    shift
-    ;;
-esac
+arguments=()
+for argument in "$@"; do
+  case "$argument" in
+    --check | --hooks) mode="${argument#--}" ;;
+    *) arguments+=("$argument") ;;
+  esac
+done
+set -- "${arguments[@]}"
 
 if [ "$#" -ne 2 ]; then
   echo "usage: link-into.sh [--check|--hooks] <repo-root> <prefix>" >&2
