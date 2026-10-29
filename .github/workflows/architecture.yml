@@ -1,8 +1,8 @@
 # What a pull request does to each application's architecture, in one comment.
 #
-# `architecture-graph.ts --check` already fails a commit whose generated page is
-# stale, so the page in the branch is always current. What that gate cannot do
-# is say what changed, because a generated HTML file diffs badly and the JSON
+# The generator already fails a tree whose sources the manifests do not
+# describe, and the pages are rebuilt from source rather than committed. What
+# that cannot do is say what changed, because a generated HTML file diffs badly and the JSON
 # model diffs as a wall of lines. This workflow answers that: it builds the
 # model for the merge base and for the head, and reports the difference as
 # routes, externals and layers rather than as text.
@@ -55,14 +55,11 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
-      # The pages are not committed, so this both produces them for the artifact
-      # below and, through --check, catches a committed model the code has
-      # moved past on a push that skipped the hook.
+      # The pages are not committed, so this produces them for the artifact
+      # below. It also refuses what `--check` would, since every refusal fires
+      # without the flag, so a second `--check` run would only repeat the build.
       - name: Build the head model
         run: pnpm exec tsx scripts/architecture/architecture-graph.ts
-
-      - name: Fail when the committed model is stale
-        run: pnpm exec tsx scripts/architecture/architecture-graph.ts --check
 
       # A worktree of the merge base, scanned by the head revision's generator.
       # The merge base rather than the branch tip, so the comparison describes
