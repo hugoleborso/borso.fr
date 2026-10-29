@@ -221,6 +221,8 @@ async function dropInstrumentFromEntryLineupsWithin(
 
 export async function deleteInstrumentWithLinks(id: string): Promise<DeletionOutcome> {
   return await runInOneInstrumentTransaction(async (transaction) => {
+    await dropInstrumentFromSongLineupsWithin(transaction, id);
+    await dropInstrumentFromEntryLineupsWithin(transaction, id);
     const deleted = await transaction
       .delete(instrumentTable)
       .where(eq(instrumentTable.id, id))
@@ -228,8 +230,6 @@ export async function deleteInstrumentWithLinks(id: string): Promise<DeletionOut
     await transaction
       .delete(memberInstrumentTable)
       .where(eq(memberInstrumentTable.instrumentId, id));
-    await dropInstrumentFromSongLineupsWithin(transaction, id);
-    await dropInstrumentFromEntryLineupsWithin(transaction, id);
     return selectDeletionOutcome(deleted.length);
   });
 }
