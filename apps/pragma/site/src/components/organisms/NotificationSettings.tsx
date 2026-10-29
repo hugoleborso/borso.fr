@@ -127,7 +127,6 @@ export function NotificationSettings(): JSX.Element {
   const offerMessageKey = OFFER_MESSAGE_KEY[offer];
   return (
     <Card className="p-4 sm:p-6">
-      <h2 className="text-body text-ink m-0 mb-3">{t('notifications.title')}</h2>
       {offerMessageKey === null ? null : (
         <p className="text-meta text-ink-soft mt-0 mb-3">{t(offerMessageKey)}</p>
       )}

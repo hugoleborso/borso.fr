@@ -18,7 +18,6 @@
       "title": "Connecter un assistant",
       "vibeLabel": "Mistral Vibe"
     },
-    "calendarFeed": "Agenda",
     "calendarFeedAddress": "Adresse iCal secrète",
     "calendarFeedConnected": "Agenda connecté.",
     "calendarFeedHint": "Connecte ton propre agenda pour que les créneaux libres tiennent compte de tes indisponibilités. L’app lit seulement quand tu es occupé·e, et n’affiche plus jamais l’adresse.",
@@ -42,7 +41,6 @@
     "removePasskey": "Retirer",
     "signedInAs": "Connecté en tant que",
     "title": "Compte",
-    "language": "Langue",
     "calendarGuide": {
       "platformLabel": "Mon agenda est sur",
       "platform": {
@@ -839,7 +837,6 @@
     }
   },
   "notifications": {
-    "title": "Notifications",
     "enabled": "Les notifications sont activées sur cet appareil.",
     "denied": "Ce navigateur bloque les notifications de pragma. Autorisez-les dans les réglages du site du navigateur, puis revenez ici.",
     "unsupported": "Ce navigateur ne peut pas recevoir de notifications.",

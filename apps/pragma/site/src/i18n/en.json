@@ -18,7 +18,6 @@
       "title": "Connect an assistant",
       "vibeLabel": "Mistral Vibe"
     },
-    "calendarFeed": "Calendar",
     "calendarFeedAddress": "Secret iCal address",
     "calendarFeedConnected": "Calendar connected.",
     "calendarFeedHint": "Connect your own calendar so the free slots count the times you are busy. The app only reads when you are busy, and never shows the address again.",
@@ -42,7 +41,6 @@
     "removePasskey": "Remove",
     "signedInAs": "Signed in as",
     "title": "Account",
-    "language": "Language",
     "calendarGuide": {
       "platformLabel": "My calendar is on",
       "platform": {
@@ -839,7 +837,6 @@
     }
   },
   "notifications": {
-    "title": "Notifications",
     "enabled": "Notifications are on for this device.",
     "denied": "This browser blocks notifications for pragma. Allow them in the browser's site settings, then come back here.",
     "unsupported": "This browser cannot receive notifications.",

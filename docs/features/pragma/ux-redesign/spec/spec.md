@@ -451,6 +451,14 @@ The operator reviewed the #216 preview a fourth time on 2026-10-29. Each item be
 
 Properties this review drops: `PUT /api/members/:id/instruments` no longer accepts `primaryInstrumentIds`; `list_members` and `list_instruments` no longer answer `main` and `mainFor`, and `set_member_instruments` no longer takes `main`; a Deezer search link is no longer reachable for a song with no Deezer track id.
 
+## Operator review 5
+
+The operator reviewed the #216 preview a fifth time on 2026-10-29. Each item below is a ratified change to this spec, delivered on the same branch.
+
+| # | Change | Where it lands |
+| --- | --- | --- |
+| U8 | Each Account tab opens a section headed with the tab's own words, in English and French (**Profile**, **Sign-in**, **Calendar**, **Alerts**, **Language**; "Profil", "Connexion", "Calendrier", "Alertes", "Langue"). The cards inside a section no longer repeat a heading of their own for Calendar, Alerts and Language. | `/account` |
+
 ## Changes
 
 ### Types / domain model

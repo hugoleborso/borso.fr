@@ -63,7 +63,6 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'nav.language.en', readsTheSameBecause: 'the EN language tag' },
   { key: 'nav.language.fr', readsTheSameBecause: 'the FR language tag' },
   { key: 'nav.sessions', readsTheSameBecause: 'same word, same spelling' },
-  { key: 'notifications.title', readsTheSameBecause: '"Notifications" is spelled alike in French' },
   { key: 'practice.note', readsTheSameBecause: 'same word, same spelling' },
   { key: 'practice.noteTitle', readsTheSameBecause: 'same word, then the song title' },
   { key: 'scene.autoScrollStop', readsTheSameBecause: '"Stop" is the word on French pedals too' },

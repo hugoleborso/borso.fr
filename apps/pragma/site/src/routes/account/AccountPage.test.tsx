@@ -56,9 +56,9 @@ describe('the account page', () => {
 
   it('shows the language switch only on its own tab', () => {
     renderAccountPage();
-    expect(screen.queryByRole('heading', { name: 'Language' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'FR' })).toBeNull();
     fireEvent.click(screen.getByRole('tab', { name: 'Language' }));
-    expect(screen.getByRole('heading', { name: 'Language' })).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'FR' })).toBeTruthy();
   });
 
   it('opens the calendar tab from the address free slots link to', () => {
@@ -66,5 +66,13 @@ describe('the account page', () => {
     expect(screen.getByRole('tab', { name: 'Calendar' }).getAttribute('aria-selected')).toBe(
       'true',
     );
+  });
+
+  it('heads each section with the words of its tab', () => {
+    renderAccountPage();
+    for (const label of ['Profile', 'Sign-in', 'Calendar', 'Alerts', 'Language']) {
+      fireEvent.click(screen.getByRole('tab', { name: label }));
+      expect(screen.getByRole('heading', { level: 2, name: label })).toBeTruthy();
+    }
   });
 });

@@ -38,10 +38,8 @@ const SECTION_ICON = {
 } as const satisfies Readonly<Record<AccountSection, IconName>>;
 
 function LanguageSection(): JSX.Element {
-  const { t } = useTranslation();
   return (
     <Card className="p-4 sm:p-6">
-      <h2 className="text-body text-ink m-0 mb-3">{t('account.language')}</h2>
       <LanguageSwitcher />
     </Card>
   );
@@ -99,6 +97,7 @@ export function AccountSettings(): JSX.Element {
           onChange={(next) => setSearchParams({ [ACCOUNT_SECTION_PARAM]: next }, { replace: true })}
         />
       </PageHeader>
+      <h2 className="m-0 font-display text-heading text-ink">{t(SECTION_LABEL_KEY[section])}</h2>
       <Content />
     </section>
   );

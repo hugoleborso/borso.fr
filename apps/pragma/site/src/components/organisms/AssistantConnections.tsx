@@ -46,7 +46,7 @@ export function AssistantConnections(): JSX.Element {
 
   return (
     <Card className="p-4 sm:p-6">
-      <h2 className="text-body text-ink m-0 mb-2">{t('account.assistants.title')}</h2>
+      <h3 className="text-body text-ink m-0 mb-2">{t('account.assistants.title')}</h3>
       <ul className="list-none p-0 m-0 flex flex-col divide-y divide-rule">
         {installations.map((installation) => (
           <InstallCommandBlock
@@ -57,9 +57,9 @@ export function AssistantConnections(): JSX.Element {
           />
         ))}
       </ul>
-      <h3 className="text-meta font-medium text-ink mt-6 mb-1">
+      <h4 className="text-meta font-medium text-ink mt-6 mb-1">
         {t('account.assistants.connected')}
-      </h3>
+      </h4>
       {connectedGrants.length === 0 ? (
         <p className="text-meta text-ink-soft m-0">{t('account.assistants.empty')}</p>
       ) : (
