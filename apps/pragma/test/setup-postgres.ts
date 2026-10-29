@@ -94,7 +94,7 @@ function databaseNamePrefix(baseUrl: URL, projectName: string): string {
   return `${baseName}_${projectSlug}`;
 }
 
-function urlOfDatabase(baseUrl: URL, databaseName: string): string {
+export function urlOfDatabase(baseUrl: URL, databaseName: string): string {
   const url = new URL(baseUrl);
   url.pathname = `/${databaseName}`;
   return url.toString();

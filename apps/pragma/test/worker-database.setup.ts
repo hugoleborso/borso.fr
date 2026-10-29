@@ -1,12 +1,16 @@
 import postgres from 'postgres';
 import { inject } from 'vitest';
+import { urlOfDatabase } from './setup-postgres';
 
-const source = inject('workerDatabaseSource');
-const workerDatabaseName = `${source.workerDatabasePrefix}${String(process.pid)}`;
-const workerDatabaseUrl = new URL(source.administrationUrl);
-workerDatabaseUrl.pathname = `/${workerDatabaseName}`;
+const WORKER_DATABASE_SUFFIX = `_worker_${String(process.pid)}`;
 
-if (process.env.DATABASE_URL !== workerDatabaseUrl.toString()) {
+function hasWorkerDatabase(databaseUrl: string | undefined): boolean {
+  return databaseUrl?.endsWith(WORKER_DATABASE_SUFFIX) === true;
+}
+
+if (!hasWorkerDatabase(process.env.DATABASE_URL)) {
+  const source = inject('workerDatabaseSource');
+  const workerDatabaseName = `${source.workerDatabasePrefix}${String(process.pid)}`;
   const administration = postgres(source.administrationUrl, { max: 1, onnotice: () => undefined });
   try {
     await administration.unsafe(`DROP DATABASE IF EXISTS "${workerDatabaseName}" WITH (FORCE)`);
@@ -16,5 +20,5 @@ if (process.env.DATABASE_URL !== workerDatabaseUrl.toString()) {
   } finally {
     await administration.end({ timeout: 5 });
   }
-  process.env.DATABASE_URL = workerDatabaseUrl.toString();
+  process.env.DATABASE_URL = urlOfDatabase(new URL(source.administrationUrl), workerDatabaseName);
 }
