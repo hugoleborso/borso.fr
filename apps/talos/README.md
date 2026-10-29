@@ -15,7 +15,8 @@ PWA at `talos.borso.fr` for one person: focus, todos, proposals, the daily brief
 
 - `pnpm dev` — local Postgres, Hono API on port 3001, Vite on port 5180 with `/api` proxied. `dev:db` seeds the local database with the fictional memory of `test/memory-seed.json`.
 - `pnpm test:core` — pure suites and the CDK stack test, 100% per-file coverage on `*.core.ts`, `*.utils.ts`, `*.adapter.ts`, `*.schema.ts`.
-- `pnpm test` — back-e2e suite against the local Postgres.
+- `pnpm test:e2e` — back-e2e suite against the local Postgres.
 - `pnpm test:mutation` — Stryker, 100% of mutants killed.
+- CI runs those three in full. Locally, run `pnpm exec vitest run --project core --changed <base>` and `pnpm test:e2e --changed <base>`.
 - `pnpm typecheck` / `pnpm lint` — gates.
 - `pnpm build` / `pnpm run synth` — production build and CDK templates.

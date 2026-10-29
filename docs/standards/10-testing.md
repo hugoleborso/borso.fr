@@ -4,7 +4,7 @@
 
 Vitest runs every test in this repository. Every `.core.ts` and `.utils.ts`
 file reaches full coverage and survives mutation testing with no surviving
-mutants. Mutation runs before a push, scoped to what the push changed;
+mutants. Mutation runs in CI on each pull request, scoped to what it changed;
 coverage runs in CI, because a per-file threshold cannot be read off a
 changed-only selection.
 
@@ -92,7 +92,8 @@ SDK clients and the network calls to third-party services.
 
 `vitest run --coverage` fails when any file matching `**/*.core.ts`,
 `**/*.utils.ts`, `**/*.adapter.ts` or `**/*.schema.ts` falls below full
-statement, branch, function, and line coverage.
+statement, branch, function, and line coverage. Only CI passes `--coverage`.
+No package script carries it, so local runs never collect coverage.
 
 The first two are pure. The third is not, and it is on the list anyway: an
 adapter is the one file in a bounded context that leaves the process
@@ -180,14 +181,16 @@ exactly the kind that is cheap to cover.
 `pnpm run test:mutation` runs Stryker over the same file set, and it fails when
 any mutant survives.
 
-Two places run it, and `ci.yml` is not one of them. The pre-push hook runs it
-on every push, scoped with `--mutate` to the pure files that push changed,
-which is seconds rather than the fifteen to twenty-five minutes an unscoped run
-over one application costs. [`full-suite.yml`](../../.github/workflows/full-suite.yml)
+Two places run it. The `mutation` job of `ci.yml` runs
+[`scripts/mutate-changed.sh`](../../scripts/mutate-changed.sh) on every pull
+request, scoped with `--mutate` to the pure files the branch changed, which is
+seconds to minutes rather than the fifteen to twenty-five minutes an unscoped
+run over one application costs. It ran in the pre-push hook until 2026-10-29,
+where it took 194 s of one 244 s push. [`full-suite.yml`](../../.github/workflows/full-suite.yml)
 then runs it unscoped on `main`, one job per application, with Stryker's
 `--incremental` file restored from the Actions cache.
 
-Scoping the push gate is only honest because the unscoped run exists somewhere,
+Scoping the pull request gate is only honest because the unscoped run exists somewhere,
 and `main` is where it exists.
 
 When a mutant survives, the fix is a new assertion, and it is not an exclusion.
@@ -200,34 +203,14 @@ e.g., a change that cannot alter behaviour, and say why on the line.
   `**/*.utils.ts` falls below the per-file thresholds each `vitest.config.ts`
   declares.
 - `gate:stryker` fails when a mutant survives. It is scoped with `--mutate` to
-  the changed pure files in the pre-push hook, and unscoped in `full-suite.yml`
+  the changed pure files by the `mutation` job of `ci.yml`, and unscoped in `full-suite.yml`
   on `main`. Both cover every workspace that has pure modules, which since
   2026-08-15 means the four applications, the repository's own `scripts/`, and
   `infra/cdk`. The last two carried the coverage gate and no mutation
   configuration at all, and scored 77.40 and 80.84 the first time one was
   pointed at them.
-- `script:scripts/check-mutation-covers-gated-files.sh` fails a workspace that
-  holds gated files and ships no mutation configuration. A missing gate produces
-  no output to be wrong, so the absence itself is what fails here — `infra/cdk`
-  read as 100% covered for as long as nothing pointed Stryker at it, and the
-  first run reported 90 survivors.
-- `script:scripts/check-spec-test-strategy.sh` fails a feature spec with no
-  Test strategy section. The section is what routes each assertion to
-  `/technical-validation` or to `/visual-validation`; without it each validator
-  invents a split, and a rule both of them judge the other's is validated by
-  neither while both reports read as complete. Three specs predate the rule and
-  are listed in the script rather than back-filled.
 - `oxlint:borso/test-file-has-sibling-source` fails when a `.core.ts` or
   `.utils.ts` file has no sibling test file.
-- `script:scripts/check-every-test-is-collected.sh` fails when a tracked
-  `*.test.ts` or `*.test.tsx` file is not collected by any project in its
-  workspace. `borso/test-file-has-sibling-source` reads source to test and asks
-  whether a gated file has a suite; nothing read test to suite until this,
-  and a test no project loads fails nothing, because a green run with one
-  fewer file looks exactly like a green run. The check asks
-  `vitest list --filesOnly` rather than matching the include globs itself, so
-  it cannot disagree with the runner, and listing starts no `globalSetup`, so
-  the back-e2e Postgres stays down. About a second per workspace.
 - `reviewer` checks that a test name states the behaviour and the condition,
   and that a service test asserts on what the database holds rather than on
   which method was called.

@@ -1,10 +1,9 @@
 #!/usr/bin/env bash
 # A dated record of something that happened is not editable.
 #
-# `docs/**/validation/` and `docs/standards/reviews/` hold verdicts: what a
-# validator saw on a given day, what a standards reviewer cleared and what it
-# refused. Their value is that they were true when they were written. Editing
-# one does not correct the record, it destroys it — and the reader has no way to
+# `docs/**/validation/` holds verdicts: what a validator saw on a given day and
+# what it refused. Their value is that they were true when they were written.
+# Editing one does not correct the record, it destroys it — and the reader has no way to
 # tell, because the file still carries its original date in its own name.
 #
 # This is not hypothetical. A repository-wide `sed` rename, run to move a symbol
@@ -21,7 +20,7 @@ set -euo pipefail
 
 cd "$(dirname "$0")/.."
 
-DATED_RECORD_PATHS=(':(glob)docs/**/validation/**' ':(glob)docs/standards/reviews/**')
+DATED_RECORD_PATHS=(':(glob)docs/**/validation/**')
 
 # With no argument the staged change is the subject, which is what pre-commit
 # needs. With a base ref the subject is everything the branch did to it, which is

@@ -141,7 +141,7 @@ function checkEradicationPaths(document: DantotsuDocument, facts: SchemaFacts): 
   if (paths === null) return [];
   const problems = paths
     .filter((path) => !facts.trackedPaths.has(path))
-    .map((path) => `${document.slug}: eradication path ${path} is not in the repository`);
+    .map((path) => `${document.slug}: eradication path ${path} was never in the repository`);
   const level = readField(document, 'eradication-level');
   const namesCode = paths.some((path) => !path.endsWith(MARKDOWN_EXTENSION));
   if (level !== undefined && LEVELS_THAT_NEED_CODE.has(stripQuotes(level)) && !namesCode) {

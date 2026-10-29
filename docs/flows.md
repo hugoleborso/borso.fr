@@ -35,14 +35,14 @@ push to main                                       merge fails / rolled back
 .github/workflows/deploy.yml                                  manual rollback
    │                                                          (revert + push)
    1. paths-filter detects changed apps
-   2. matrix per app, max-parallel: 1
+   2. matrix per app, in parallel
    3. assume ProdDeployRole via OIDC
    4. cdk deploy <app>-prod
 ```
 
-**Trust pattern.** `ProdDeployRole` trusts `repo:hugoleborso/borso.fr:environment:prod`. The GitHub `prod` environment is kept only to scope that OIDC subject — it carries no reviewer rule, so the workflow runs automatically on push to `main`. The gate is the merge: only Hugo can merge to `main` (Claude cannot), which makes an approval click here redundant. (Shared-infra deploys via `prod-shared` still require a reviewer — see below.)
+**Trust pattern.** `ProdDeployRole` trusts `repo:hugoleborso/borso.fr:environment:prod`. The GitHub `prod` environment is kept only to scope that OIDC subject — it carries no reviewer rule, so the workflow runs automatically on push to `main`. The gate is the merge, which Hugo performs or asks Claude to perform for a given pull request, and that makes an approval click here redundant. Shared-infra deploys are a separate `workflow_dispatch` the operator starts by hand.
 
-**Permissions.** PowerUserAccess + IAM scoped to `*-prod-*` and `cdk-*` + DSQL cluster lifecycle (Create/Delete/Update/Tag/DbConnect/DbConnectAdmin on `*`). No AdministratorAccess; the merge gate (only Hugo can merge to `main`) is the security layer for power, not the role.
+**Permissions.** PowerUserAccess + IAM scoped to `*-prod-*` and `cdk-*` + DSQL cluster lifecycle (Create/Delete/Update/Tag/DbConnect/DbConnectAdmin on `*`). No AdministratorAccess; the merge gate (a merge to `main` happens only on Hugo's instruction) is the security layer for power, not the role.
 
 ## Shared-infra deploy flow
 

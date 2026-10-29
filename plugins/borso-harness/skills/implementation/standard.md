@@ -57,7 +57,7 @@ A standard states the rule and a blueprint is the working instance of it, so the
 
 When the layer has no blueprint, say so and write the file against the standard, then propose the blueprint in the same change rather than leaving the next author with the same gap. [`blueprint-coverage.html`](../../../../.claude/skills/blueprint/blueprint-coverage.html) is where to check before assuming one exists.
 
-The pre-push hook and CI both run the generators in `--check` mode, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a stale generated file fails the gate.
+The pre-commit hook and CI both run the generators in `--check` mode, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a stale generated file fails the gate. Do not run them by hand.
 
 ### Compose with technical sub-skills
 
@@ -79,7 +79,7 @@ Every behavioural assertion the spec makes lives somewhere the autonomous valida
 
 ### Commit small, push only after gates
 
-Conventional-commit, small focused units. Push only after typecheck, `eslint`, `prettier --check`, knip, build, `/visual-validation` (UI work), `/technical-validation` (always) all pass. Hooks must not be bypassed; their failures are the gate.
+Conventional-commit, small focused units. Push only after build, `/visual-validation` (UI work) and `/technical-validation` (always) pass. The commit and push hooks run typecheck, oxlint, oxfmt, knip and the changed tests, so do not run them by hand. Hooks must not be bypassed; their failures are the gate.
 
 When the verdict asserts a **routing or auth property that differs by stage** (e.g. "same-origin `/api`"), name the stage(s) where it holds — *"same-origin in prod, cross-origin via `VITE_API_BASE` in preview by design"* — never a bare yes/no. A stageless claim gets inherited verbatim by the next validator and flagged as a FAIL that is actually by-design. Cf. [`docs/knowledge/preview-api-cross-origin.md`](../../../../docs/knowledge/preview-api-cross-origin.md).
 
@@ -95,8 +95,8 @@ When the verdict asserts a **routing or auth property that differs by stage** (e
 | 3b | **When `docs/features/<app>/<slug>/spec/design-bundle/` exists, the bundle IS the visual spec — pixel-perfectly, ported to Tailwind + atomic design.** See CLAUDE.md "Clean code" — *Styling is Tailwind classes inline* and *React components follow atomic design*. Concretely, before writing feature UI: (a) read the bundle README + every chat transcript under `design-bundle/chats/` (the chats reveal what the user iterated toward); (b) port `design-bundle/project/src/styles.css` palette + typography into Tailwind v4 `@theme` declarations in `apps/<app>/site/src/styles/tokens.css` — every named CSS variable from the prototype (`--bg-elev`, `--bg-sunk`, every `--ink-*` tone, every `--m-*` member tone, `--accent-soft`, `--warn`, `--t-display` / `--t-ui` / `--t-mono`) becomes a Tailwind utility (`bg-bg-elev`, `text-ink-700`, `font-display`, etc.); (c) wire fonts via `@fontsource-variable/<name>` or `@fontsource/<name>` npm packages imported once in the entry; (d) **decompose every prototype screen into atoms / molecules / organisms**, then place them under `apps/<app>/site/src/components/{atoms,molecules,organisms}/` — atoms are UI primitives (Button, Chip, Badge, Icon, Input), molecules are small compositions (SearchBar, FilterPill, SongCardHeader, MemberChip), organisms are screen-region compositions (CatalogGrid, SetlistEditor, MasteryMatrix); (e) routes under `apps/<app>/site/src/routes/<screen>/` compose organisms — they own routing + data-fetching, NOT layout primitives; (f) every component uses Tailwind utility classes inline, NO raw `.css` files per component, no CSS modules, no styled-components. The visual-validator's design-bundle fidelity rubric (see `${CLAUDE_PLUGIN_ROOT}/skills/visual-validation/standard.md`) compares each screen's implementation against the prototype side-by-side — typography stack, layout structure, affordances, palette tokens, microcopy must all match. Token-level conformance (accent / bg matches) is NOT design fidelity. | pixel-faithful Tailwind UI on atomic-design hierarchy |
 | 4 | For every pure helper introduced, file ends in `.utils.ts` and a sibling `.utils.test.ts` ships with it | tested utilities |
 | 5 | Run pre-flight gates (typecheck, eslint, knip, build) | green gates |
-| 6 | Run `/visual-validation` for UI work; read the report | UI verdict |
-| 7 | Run `/technical-validation` always; read the report | code verdict |
+| 6 | Run `/technical-validation` always; read the verdict | code verdict |
+| 7 | Run `/visual-validation` for UI work, once, after the last slice | UI verdict |
 | 8 | Push only after both verdicts are PASS | shippable branch |
 
 ## Common mistakes

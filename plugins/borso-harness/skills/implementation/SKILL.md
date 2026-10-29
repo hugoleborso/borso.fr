@@ -3,7 +3,7 @@ name: implementation
 description: Execute the engineering plan in `plan.md`, enforcing the repo's clean-code rules and test-coverage rules as the code is written rather than discovered after the fact by `/technical-validation`. Use when the user says "/implementation", "implement the plan", "ship the feature", "write the code", or as the natural next step after `/technical-conception`. Loads `spec.md` + `plan.md`, opens the blueprint for every layer the plan touches and marks new code `// @FollowsBlueprint`, walks the plan's table row-by-row, splits pure helpers into `*.utils.ts` with sibling `*.utils.test.ts` at 100% coverage, applies CLAUDE.md "Clean code" rules (named constants, no abbreviations, type-assertion ban, comments document WHY only), composes with technical sub-skills (`/vite`, `/three-js`, `/controller`, `/database`, …) for domain-specific guidance, and runs pre-flight gates before push. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/implementation/standard.md` before starting.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Implementation skill
 
@@ -47,7 +47,7 @@ The blueprint and the standard are two halves of the same answer. [`docs/standar
 
 When the layer genuinely has no blueprint, write the file against the standard and propose the blueprint in the same change rather than handing the next author the same gap. Run `/blueprint create` for the annotation and `/blueprint index` afterwards.
 
-Both generators take `--check` and both run in pre-push and in CI, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a generated file left stale fails the gate rather than reaching review.
+Both generators take `--check` and both run in pre-commit and in CI, so a missing tag, a duplicated identifier, a `// @FollowsBlueprint` naming a blueprint that does not exist, or a generated file left stale fails the gate rather than reaching review. Do not run them by hand.
 
 ## Load-bearing rules (enforced as you write)
 
@@ -102,15 +102,15 @@ Manual sweeps are not a valid coverage path — repo rule.
 
 ### 4. Self-screenshot UI work before declaring it green
 
-If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `scripts/browser.sh snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
+If the slice you just shipped touches visible UI, **open it in the running dev server and screenshot it yourself before declaring the row done**. Read the screenshot — not the DOM dump, not the `agent-browser snapshot` JSON, the actual PNG. Visible defects (broken `<img>` fallbacks rendering alt text, missing icons, layout breakage at narrow viewports, overflow, contrast disasters) are invisible to type-checks and unit tests; they are obvious in a screenshot a human looks at for two seconds.
 
-The cost is two `scripts/browser.sh` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
+The cost is two `agent-browser` commands per slice. The cost of *not* doing this is the implementer reporting the slice green, the visual-validator catching it next, and the user catching it after that.
 
 Pair this with the broken-image scan from `/visual-validation`'s standard if you want a one-shot self-check:
 
 ```bash
-scripts/browser.sh screenshot /tmp/self-check.png
-scripts/browser.sh eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
+agent-browser screenshot /tmp/self-check.png
+agent-browser eval "Array.from(document.querySelectorAll('img')).filter((img) => img.complete && img.naturalWidth === 0).map((img) => img.src)"
 ```
 
 A non-empty `eval` result is a stop-the-line — the row is not done, the broken `<img>` has to be diagnosed and fixed *before* you tag the slice complete.
@@ -119,6 +119,7 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 
 1. **Read** `spec.md` and `plan.md` end-to-end. Build a mental model.
 1a. **Verify the plan has no open questions left unanswered.** Grep `plan.md` for "Open question", "TBD", "?", "decide", "still need". Any open item is a **stop-and-ask** — the implementer must surface it to the user and get an explicit answer *before walking the table*. Open questions in the plan are a common source of bias-laundered implementation defects: the implementer picks one of the answers themselves, the validator then validates against that silently-chosen answer, and the spec-vs-implementation gap is invisible.
+1b. **Before any code, write three lines in your notes or the verdict:** the goal restated in one sentence; the smallest change that meets it; and the data shape with the structure that organises it (a state machine, a table, a typed model). If you cannot name the structure, you are not ready to write the code.
 2. **Inventory** technical surfaces. For each, invoke the matching sub-skill via `Skill` if one exists. Note any missing. **When a third-party library appears in the inventory, spend a minute on its current docs/changelog before re-implementing any of its capabilities** — many "I'll just write a quick X" moments dissolve when you discover the library already ships X natively. See [`docs/knowledge/audit-imported-deps-and-patterns-when-planning.md`](../../../../docs/knowledge/audit-imported-deps-and-patterns-when-planning.md).
 2a. **Run `scripts/reports.sh blueprints`, then read `blueprint-index.md`** and open the blueprint for every layer the code map touches. The index is generated and not committed ([ADR-0014](../../../../docs/adr/0014-generated-files-are-not-committed.md)), so it is absent in a fresh clone and in a subagent worktree, and stale the moment anyone adds a blueprint. Four seconds.
 3. **Walk the plan's "How each spec decision becomes code" table top-down.** For each row:
@@ -127,10 +128,11 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
    c. If the change is a pure helper, the file ends in `.utils.ts`; write the matching `.utils.test.ts` alongside it.
    d. Mark the declaration `// @FollowsBlueprint <id>`.
    e. Update local commits as you go — do not save the diff for one giant commit.
+   f. **Test only what the row touched.** Run `pnpm --filter <app> exec vitest run --project core --changed <base>` and, for an `api/` change, the back-e2e files you touched by path. No package script collects coverage. Never run an app's whole `test`, `test:core` or `test:full-suite` script between rows, and never `scripts/lint-staged-files.sh` over the branch: the commit and push hooks already lint and test what changed. On PR #216 one fix round spent 751 s in 18 test runs and 178 s linting the whole branch (measured).
 3a. **Re-walk the plan's §3 Code-quality self-check section bullet by bullet.** Each bullet names a repo-rule risk the plan author flagged for *this* feature ("rename `y` → `candidateYear` in App.tsx's year-switch", "extract `pickDefaultMonth` to `data.utils.ts` so clock-dependent flows are testable", "no `useEffect` to derive `selected`", …). The plan-author wrote them because they predicted this implementation would slip on them. Verify each against the diff. An unchecked bullet is a blocker — fix the diff before running pre-flight gates; `/technical-validation` will FAIL on it otherwise. See [`docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md`](../../../../docs/dantotsus/plan-code-quality-self-check-not-walked-at-write-time.md) for the precedent.
-4. **Run the plan's pre-flight gates** in order. Fix issues, do not bypass.
-5. **Run `/visual-validation`** for UI work. Read the report; the verdict must be PASS before push.
-6. **Run `/technical-validation`** always. Read the report; the verdict must be PASS before push.
+4. **Run the plan's pre-flight gates** in order, once, here. Pre-flight runs the plan's build and feature checks. The coverage gate and the full suites run in CI (`app-tests`), so do not run `test:core`, `test:full-suite` or `test:e2e` unscoped locally. Fix issues, do not bypass.
+5. **Run `/technical-validation`** always. Read the verdict; it must be PASS before push. Fix rounds follow *Fix rounds* below.
+6. **Run `/visual-validation`** for UI work, once, after the last slice and after technical validation passes. Not per slice.
 7. **Push.** The branch's CI is the last gate; the local gates are stricter.
 8. **Open the PR.** A **FAIL** validator verdict is fix-required — do not open a PR while the latest validation report is FAIL. A **PASS_EXCEPT_UNVERIFIABLE** verdict is mergeable once every UNVERIFIABLE row is disclosed in the description, and **PASS** ships without per-row disclosure; either way the screenshots are named. What has to be disclosed is in `/visual-validation`'s *What the pull request has to carry*; where it goes is `/open-pr`'s *Validation* step, which is the only place the body's shape is written down. Reviewers read the PR description, not the validation report; the gap and the visuals have to be up-front.
 
@@ -138,14 +140,11 @@ A non-empty `eval` result is a stop-the-line — the row is not done, the broken
 
 ## Fix rounds
 
-When the work is fixing findings from `/standards-review` or `/technical-validation`, the finding names a line, but the round is judged on the file:
+The technical validator types each finding `blocking` or `non-blocking`. Take each one skeptically, since it was written by a reader who did not know your intent, and do one of three things: fix it; dismiss it with a concrete reason in the commit message; or ask the operator, only for a product call. Non-blocking findings never start a round.
 
-1. Run `scripts/reports.sh standards` and open `docs/standards/enforcement-ledger.md`, section **"What only a reviewer can check"**. That list is the reviewer's whole checklist.
-2. **Read every file you are about to edit in full, against that list**, before editing it. Fix every finding you can quote in it, whoever wrote the line, as long as the fix stays inside that file or its sibling test. Name the extra fixes in the commit message.
-3. A finding whose fix would reach a file the reviewer did not read: read that file in full against the same list too, and fix it in the same round.
-4. In the verdict, list each file you read whole, so the next review knows which files a fix round already swept.
+Before editing a file to fix a finding, read it in full against the `reviewer` bullets of the `## Enforced by` sections in `docs/standards/`, and fix what else you find in it. Round 2 reviews only the commits after round 1, so a second finding left in the same file is one nobody will review.
 
-The reason is arithmetic. A review seals a file by its content, so every edit reopens the whole file for the next round. If the fix touches one line and leaves a second finding three lines below, the next round finds it, and the round after that finds the one its own fix reopened. PR #193 ran nine standards rounds that way; five of them reported findings older than the branch.
+There are two rounds at most. Blocking findings left after round 2 go to the operator with the report.
 
 ## Failure modes to avoid
 
@@ -165,7 +164,7 @@ The reason is arithmetic. A review seals a file by its content, so every edit re
 
 - pnpm always; no npm/yarn.
 - Conventional-commit scopes: `borso-fr`, `borsouvertures`, `last-loop-lepin`, `pragma`, `infra`, `ci`, `docs`, `deps`, `meta`. Multi-commit per feature is fine; small, focused commits beat one giant landing.
-- `infra/cdk` and `infra/shared` are 100%-coverage gated by hook; pre-push runs their `test:coverage` when the push changes them.
+- `infra/cdk` and `infra/shared` are 100%-coverage gated in CI. Pre-push runs their changed tests, without coverage, when the push changes them.
 - Reports from validators land at `docs/features/<app>/<slug>/validation/`; commit them alongside the implementation diff in the same PR.
 
 ## Verdict émis (when piloted by `/tech-lead-orchestrator`)
@@ -182,4 +181,4 @@ The body is free-form (full report, diff summary, debugging notes) — the orche
 
 ## After this skill
 
-Step 8 ends `/implementation`. The chain continues with `/visual-validation` (UI work) and `/technical-validation` (always) — both validators carry the post-merge auto-chain to `/after-task-kaizen`.
+Step 8 ends `/implementation`. Both validators carry the post-merge auto-chain to `/after-task-kaizen`.

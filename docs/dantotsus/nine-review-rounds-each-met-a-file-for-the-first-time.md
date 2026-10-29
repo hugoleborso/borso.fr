@@ -6,11 +6,11 @@ severity: medium
 related-pr: '#193'
 fix-pr: none (opened by the kaizen pull request for #193)
 fix-commits: [self]
-eradication-level: 4
-eradication-paths: [scripts/standards/seal.ts, scripts/standards/seal.core.ts]
+eradication-level: 5
+eradication-paths: [plugins/borso-harness/skills/technical-validation/SKILL.md, plugins/borso-harness/agents/technical-validator.md]
 time-to-detect: hours
 tags: [standards, review, seals, agents, harness, meta]
-zone: plugins/borso-harness/skills/standards-review
+zone: plugins/borso-harness/skills/technical-validation
 weak-point: prose-stands-in-for-a-check
 recurs: [ten-review-rounds-on-a-two-file-bug-fix]
 ---
@@ -112,3 +112,7 @@ author of the code.
 
 - [`ten-review-rounds-on-a-two-file-bug-fix.md`](./ten-review-rounds-on-a-two-file-bug-fix.md) — the earlier entry on the same class, whose labels this one builds on.
 - [`the-validator-opened-a-checkout-holding-only-the-plan.md`](./the-validator-opened-a-checkout-holding-only-the-plan.md) — why the first seals were taken inline.
+
+## Superseded mechanism
+
+The seal and the separate standards review were removed on 2026-10-29. The standards checklist is now part of `/technical-validation`, which records the reviewed commit SHA and reviews at most two rounds, the second on the diff since that SHA.

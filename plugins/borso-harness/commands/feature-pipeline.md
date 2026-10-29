@@ -2,7 +2,7 @@
 description: Launch a Dynamic Workflow that drives a ratified feature spec from plan → opened PR, invoking the existing tech-lead skills as workflow subagents (the Skill stays for spec + ADR ratification; this command starts when those are done).
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 ## Pre-conditions (the workflow assumes these are already true)
 
@@ -30,6 +30,20 @@ ship` end-to-end. Each stage spawns a subagent that invokes the existing
 skill of that name, with the standards files (`${CLAUDE_PLUGIN_ROOT}/skills/<skill>/standard.md`)
 as the durable contract.
 
+### Thin orchestrator, fresh agents
+
+The orchestrator does not read code, diffs or report bodies. It reads verdict
+front-matter and decides the next step. Each phase and each fix round is a
+**fresh** subagent; never resume an earlier agent for a new round, because it
+carries that round's context and its conclusions. Every brief is consolidated
+and stands alone:
+
+- the original goal, in the operator's words;
+- the spec and plan paths;
+- every directive the operator gave since, in order;
+- the path of the previous report, when there is one;
+- the branch and the SHA to work from.
+
 The script orchestrates the following stages, in order. The skills named
 here are **the existing skills in this repo** — the workflow's job is to
 invoke them, not to reimplement them.
@@ -56,8 +70,12 @@ invoke them, not to reimplement them.
   The dispatch brief names both halves of the gate — oxlint with
   `--type-aware`, and `oxfmt --check` — because a brief naming one half lets
   the other drift a round at a time.
-- **Loop:** round 1 starts from the plan. Subsequent rounds start from the
-  previous validation verdict (`fail-local` rows become the fix list).
+- **Slices:** one fresh subagent per plan slice, in order. Before writing
+  code, each names the goal, the smallest change that meets it, and the data
+  shape with its organising structure (state machine, table, typed model).
+- **Fix round:** after a validation FAIL, one fresh subagent gets the report
+  path and triages each finding: fix, dismiss with a concrete reason, or ask
+  the operator for a product call.
 - **Integrate before validating.** `isolation: 'worktree'` leaves a round's
   commits on that worktree's branch, not on the run branch. After every
   implement round, and before any validator starts, one subagent
@@ -80,41 +98,43 @@ invoke them, not to reimplement them.
 ### Validators are spawned as their own agent type
 
 A workflow subagent has no Agent tool, so a subagent told to run
-`/technical-validation`, `/visual-validation` or `/standards-review` cannot
+`/technical-validation` or `/visual-validation` cannot
 dispatch the isolated validator those skills describe, and ends up validating
 work in the context that is supposed to be blind to it. Four agents on PR #193
 hit this. The script spawns the validator directly instead:
 `agent(brief, { agentType: 'technical-validator' })`, likewise
-`'visual-validator'` and `'standards-reviewer'`, with the brief the skill would
-have sent.
+`'visual-validator'`, with the brief the skill would have sent.
 
-### Stage 3 — `validate (technical)` after every `implement` round
+### Stage 3 — `validate (technical)`, two rounds at most
 
 - **Skill invoked:** `/technical-validation`, whose validator the script spawns
-  with `agentType: 'technical-validator'`.
+  with `agentType: 'technical-validator'`. It also checks the `reviewer`
+  bullets of the `## Enforced by` sections in `docs/standards/`; there is no separate
+  standards review.
 - **Standard:** [`${CLAUDE_PLUGIN_ROOT}/skills/technical-validation/standard.md`](../skills/technical-validation/standard.md).
-- **Non-skippable** per `tech-lead-orchestrator/standard.md` and the
-  dantotsu `orchestrator-skipped-validation-between-rounds.md`. The validator
-  runs on the latest SHA after every `/implementation` verdict of `status: done`.
-  A runtime smoke-test is explicitly NOT a substitute.
-- **Output:** verdict at `runs/<run-id>/agents/technical-validation-<NN>.md`,
-  report at `docs/features/<app>/<slug>/validation/technical-validation-<timestamp>.md`.
-- **Workflow guard:** `PASS` → advance to visual (or to ship if UI not in
-  scope). `PASS_EXCEPT_UNVERIFIABLE` → advance with a disclosure carried
-  to the PR body. `FAIL` → loop back to `implement` (consume one fix-round
-  budget). Escalation criteria are *progress-based*, not retry-count based:
-  exit with `outcome: stuck-loop` if a round closes 0 blockers, or
-  `outcome: regression-net-negative` if a round adds strictly more new
-  FAILs than it closes.
+- **Round 1** runs once, after the last slice, on the integrated SHA, over
+  the whole branch. Its report carries `Reviewed: <sha>`. A runtime
+  smoke-test is not a substitute.
+- **Findings are typed.** Only `blocking` findings fail the verdict.
+  `non-blocking` ones go to the PR body and never start a round.
+- **Round 2** runs only when round 1 had blocking findings, after one fix
+  round, and reviews `git diff <reviewed-sha>..HEAD` plus each round-1
+  blocking finding.
+- **Workflow guard:** `PASS` → visual (or ship if UI not in scope).
+  `PASS_EXCEPT_UNVERIFIABLE` → advance with a disclosure carried to the PR
+  body. `FAIL` after round 2 → exit with `outcome: needs-operator` and the
+  report path. There is no round 3.
 
-### Stage 4 — `validate (visual)` once technical is `PASS` (when UI in scope)
+### Stage 4 — `validate (visual)`, once, at the end (when UI in scope)
 
-- **Skill invoked:** `/visual-validation`.
+- **Skill invoked:** `/visual-validation`, once, after technical validation
+  passes. Never per slice.
 - **Standard:** [`${CLAUDE_PLUGIN_ROOT}/skills/visual-validation/standard.md`](../skills/visual-validation/standard.md).
 - **Scope:** if the spec's *What the user sees / does* section is empty
   (back-end-only feature), skip — verdict `not-applicable`, record in
   the journal, advance to ship.
-- **Same workflow guards** as technical: `FAIL` → loop back to implement.
+- **Guard:** `FAIL` → one fresh fix subagent, then one re-run. A FAIL after
+  that exits with `outcome: needs-operator`.
 - **Section 0** of the standard (per-screen design-bundle fidelity) is
   mandatory when a `design-bundle/` directory exists under the spec.
 
@@ -166,17 +186,20 @@ as a subagent, in the order described. The script:
 
   1. Loads runs/<run-id>/state.json (creates one if absent; run-id =
      <ISO-date-slug>).
-  2. Walks plan → implement → validate (tech, then visual when UI in scope)
-     → ship as documented in feature-pipeline.md.
+  2. Walks plan → implement (one fresh agent per slice) → validate (tech,
+     two rounds at most, then visual once when UI in scope) → ship as
+     documented in feature-pipeline.md. Never resumes an agent; every
+     brief is consolidated.
   3. Pins every implementation subagent dispatch to model: 'opus' +
      isolation: 'worktree'.
-  4. Loops fix-rounds with progress-based escalation (not a retry count).
+  4. Runs at most two technical rounds; blocking findings after round 2
+     exit with outcome: needs-operator.
   5. On ADR trigger, exits with outcome: needs-human-adr-ratification +
      the trigger details in state.json::pendingAdr.
   6. Writes journal events on every transition.
   7. Returns a structured outcome the operator can read at the end:
-     pr-opened (url) | needs-human-adr-ratification (trigger) | stuck-loop
-     | regression-net-negative | spec-thin-on-tech-surface.
+     pr-opened (url) | needs-human-adr-ratification (trigger) |
+     needs-operator (report) | spec-thin-on-tech-surface.
 ```
 
 Once the run completes successfully, the generated script *may* be saved

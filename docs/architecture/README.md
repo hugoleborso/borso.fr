@@ -14,20 +14,20 @@ pnpm exec tsx scripts/architecture/architecture-graph.ts            # every app
 pnpm exec tsx scripts/architecture/architecture-graph.ts --app foo  # one app
 ```
 
-The pages themselves are **not committed** — `.gitignore` covers
-`docs/architecture/*.html`. The model beside each one is, and pre-commit runs
-the same script with `--check` whenever a commit touches `apps/`, the generator
-or the blueprint layer table, so no model can fall behind the code. The pages
-are rebuilt from that code wherever they are read: `pages.yml` regenerates
-before publishing to GitHub Pages, and `architecture.yml` regenerates them into
-a workflow artifact on every pull request. Nothing publishes bytes from a
-commit, so a stale page has nowhere to exist.
+Neither the pages nor the models are committed: `.gitignore` covers both.
+**Nothing builds them automatically.** No hook, no CI check and no session
+start runs the generator; it runs on demand only, from the `architecture`
+workflow (`workflow_dispatch`). Dispatched with a `pr_number`, it builds that
+pull request; dispatched without one, it builds `main` and publishes it to
+GitHub Pages through `pages.yml`. Nothing publishes bytes from a commit, so a
+built page is always as current as the run that built it, and no newer.
 
-So there are four places a built copy exists without running anything: the
-[published site](https://hugoleborso.github.io/borso.fr/) for `main`, the
-pull request's own copy at `architecture-pr-<n>.preview.borso.fr`, the
-`architecture-maps` artifact on that pull request's workflow run, and whatever
-the last local run left behind.
+So a built copy exists in these places: the
+[published site](https://hugoleborso.github.io/borso.fr/) for `main`, until
+the next push to `main` republishes the reports without the maps; the pull
+request's own copy at `architecture-pr-<n>.preview.borso.fr`; the
+`architecture-maps` artifact on that dispatched run; and whatever the last
+local run left behind.
 
 **To put a new application on the map, read [`install.md`](./install.md)** —
 what a codebase must provide, what is optional, and what holds each convention
@@ -257,8 +257,8 @@ of its own now that the standards have theirs.
 
 ## On a pull request
 
-[`.github/workflows/architecture.yml`](../../.github/workflows/architecture.yml)
-builds the model twice, for the merge base and for the head, and reports what
+[`.github/workflows/architecture.yml`](../../.github/workflows/architecture.yml),
+dispatched with the pull request's number, builds the model twice, for the merge base and for the head, and reports what
 moved: routes added or removed, routes reaching a table or an external system
 they did not reach before, routes that lost their last caller, files that
 changed layer, and new external systems.
@@ -268,7 +268,7 @@ counts only — one line per application that moved, each linking its map — an
 link to the maps for the branch. It used to carry the whole report, which ran
 to several screens on a phone and ended with the link, so the reader who wanted
 the map had the furthest to scroll. The comment is rewritten in place on each
-push rather than added to, and only when the counts change.
+dispatch rather than added to, and only when the counts change.
 
 Each diff run leaves its counts in `docs/architecture/<app>-diff.json`, which
 is how the index and the comment learn what every application found: the
@@ -320,8 +320,11 @@ diff first and the whole file behind one click, because reading ninety lines of
 final source to find the six that moved is the work the page exists to remove.
 
 [`pages.yml`](../../.github/workflows/pages.yml) publishes the maps to GitHub
-Pages on every push to `main`, so a link opens the map instead of downloading an
-artifact. It needs one repository setting no workflow can make or read: Settings
+Pages when the `architecture` workflow is dispatched without a pull request, or
+when `pages.yml` itself is dispatched with `maps` set, so a link opens the map
+instead of downloading an artifact. A push to `main` publishes the reports only,
+and Pages replaces the whole site on each deploy, so the maps leave the site at
+the next push. It needs one repository setting no workflow can make or read: Settings
 → Pages → Build and deployment → Source set to **GitHub Actions**. Until that is
 set the workflow fails on its deploy step and nothing else changes.
 
@@ -335,12 +338,15 @@ to check one by one. That
 host needed nothing built: the routing function in front of the previews bucket
 reads any `<name>-pr-<n>` host and serves `/<name>/pr-<n>/`, and the certificate
 is the wildcard the previews already use. The workflow assumes
-`PreviewDeployRole`, whose trust policy already names `pull_request`.
+`PreviewDeployRole`, whose trust policy names `pull_request` and the `main`
+branch, so dispatch it from `main`: a run dispatched from another branch cannot
+publish and falls back to the artifact.
 
 Closing the pull request deletes them. The bucket would expire its objects after
 sixty days on its own, which is a long time to go on serving a merged branch's
-architecture to anyone who kept the link, so the `closed` run removes the prefix
-and invalidates it at the edge.
+architecture to anyone who kept the link, so the workflow's one automatic
+trigger, a pull request closing, removes the prefix and invalidates it at the
+edge. It builds nothing.
 
 The same pages still upload as a workflow artifact. That is what a reader who
 wants the whole folder offline downloads, and it is the fallback whenever AWS is

@@ -193,35 +193,6 @@ if ! command -v agent-browser >/dev/null 2>&1; then
     log "npm not available; skipping agent-browser install"
   fi
 fi
-# agent-browser looks for a browser in its own cache, in the system Chrome
-# locations, and in Puppeteer's and Playwright's caches — none of which is
-# where this environment keeps one. The managed container ships a Chromium at
-# $PLAYWRIGHT_BROWSERS_PATH and asks that nothing download a second copy, so
-# the CLI reports "Chrome not found. Run `agent-browser install`" and the
-# obvious next step is the one the environment forbids. Pointing its user-level
-# config at the browser that is already on disk makes the first `agent-browser
-# open` of a session work with no flag at all, which matters because
-# `--executable-path` is ignored once a daemon is running: the flag looks like
-# it does not work, and the fix is `agent-browser close --all` first.
-#
-# Only written when absent, so an operator's own config is never overwritten,
-# and a no-op on a machine that has no Playwright browsers directory.
-browsers_root="${PLAYWRIGHT_BROWSERS_PATH:-/opt/pw-browsers}"
-agent_browser_config="$HOME/.agent-browser/config.json"
-if command -v agent-browser >/dev/null 2>&1 && [ ! -f "$agent_browser_config" ]; then
-  chromium_binary=""
-  if [ -x "$browsers_root/chromium" ]; then
-    chromium_binary="$browsers_root/chromium"
-  else
-    chromium_binary=$(find "$browsers_root" -maxdepth 3 -type f -name chrome -path '*chrome-linux*' 2>/dev/null | sort | tail -n1 || true)
-  fi
-  if [ -n "$chromium_binary" ]; then
-    mkdir -p "$(dirname "$agent_browser_config")"
-    printf '{"executablePath":"%s"}\n' "$chromium_binary" > "$agent_browser_config"
-    log "agent-browser: pointed at $chromium_binary"
-  fi
-fi
-
 if command -v agent-browser >/dev/null 2>&1; then
   log "agent-browser: $(agent-browser --version 2>/dev/null || echo 'installed')"
 else
@@ -256,30 +227,14 @@ else
   log "KAIZEN.md carries ${kaizen_entries:-0} entries logged earlier in this task"
 fi
 
-# 10. The generated files, none of which is committed. Agents read
-# blueprint-index.md before writing a file, the pre-write hook reads
-# blueprint-context.json on every Write, and the standards reviewer reads
-# enforcement-ledger.md; all three read the working tree, so a fresh checkout
-# has to produce them before anything asks.
-#
-# The blueprint group runs here and now, and the rest in the background. That
-# hook is best-effort by contract and exits 0 when its lookup is missing, so a
-# race would not break a write — it would silently write a file with no
-# blueprint in front of it, which is worse than a failure because nothing says
-# it happened. Four seconds at session start buys that away; the maps take
-# fourteen and nothing in the first turn reads them.
-#
-# A session is not the only reader. A subagent given its own worktree never
-# runs this hook at all, which is why every skill that opens one of these files
-# runs `scripts/reports.sh` itself.
-log 'generating the lookups an agent reads before its first write'
-"$REPO_ROOT/scripts/reports.sh" blueprints >/dev/null 2>&1 || true
-
-log 'generating the reports and the maps in the background'
-(
-  "$REPO_ROOT/scripts/reports.sh" standards >/dev/null 2>&1 || true
-  "$REPO_ROOT/scripts/reports.sh" maps >/dev/null 2>&1 || true
-) &
+# 10. The two generated lookups a session reads, neither of which is
+# committed: the blueprint index agents read before writing a file, and the
+# knowledge-trigger lookup the knowledge hook reads on every call. Every other
+# report is on demand, through `scripts/reports.sh <group>`. A subagent given
+# its own worktree never runs this hook at all, which is why every skill that
+# opens one of these files runs `scripts/reports.sh` itself.
+log 'generating the blueprint index and the knowledge-trigger lookup'
+"$REPO_ROOT/scripts/reports.sh" index >/dev/null 2>&1 || true
 
 if [ ${#missing_optional[@]} -gt 0 ]; then
   printf '[install-repo-deps] WARN: optional tools missing: %s\n' "${missing_optional[*]}"

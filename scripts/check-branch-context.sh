@@ -78,7 +78,7 @@ if [[ "$unmerged_count" -eq 0 ]]; then
   printf '   accumulates merge conflicts.\n'
   printf '   If you restart it from main (git checkout -B <branch> origin/main),\n'
   printf '   this session prepared the OLD tree: run `pnpm install` and\n'
-  printf '   `scripts/reports.sh all` afterwards. Without them knip reports\n'
+  printf '   `scripts/reports.sh index` afterwards. Without them knip reports\n'
   printf '   the new apps'"'"' dependencies as unused and pre-commit refuses a\n'
   printf '   stale blueprint index, neither of which names the real cause.\n'
   printf '   See docs/dantotsus/designated-branch-was-a-merged-pr-head.md.\n\n'

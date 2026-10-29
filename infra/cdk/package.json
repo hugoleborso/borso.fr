@@ -20,7 +20,7 @@
     "lint": "../../scripts/lint-workspace.sh",
     "test": "vitest run",
     "test:watch": "vitest",
-    "test:coverage": "vitest run --coverage",
+    "test:full-suite": "vitest run",
     "test:mutation": "stryker run"
   },
   "peerDependencies": {

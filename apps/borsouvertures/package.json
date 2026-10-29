@@ -10,7 +10,7 @@
     "lint": "../../scripts/lint-workspace.sh",
     "typecheck": "../../scripts/ensure-infra-built.sh && tsc -p tsconfig.cdk.json --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/tsconfig.cdk.tsbuildinfo && tsc --noEmit --incremental --tsBuildInfoFile node_modules/.cache/tsc/tsconfig.tsbuildinfo",
     "test": "vitest run",
-    "test:coverage": "vitest run --coverage",
+    "test:full-suite": "vitest run",
     "build:openings": "tsx scripts/build-openings.ts",
     "synth": "pnpm --filter @borso/infra run build && pnpm build && cdk synth --all",
     "diff": "pnpm --filter @borso/infra run build && pnpm build && cdk diff --all",

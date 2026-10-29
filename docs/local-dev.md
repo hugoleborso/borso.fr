@@ -46,7 +46,7 @@ pnpm -r test                 # run vitest in every workspace
 pnpm -r build                # build every workspace that has a build script
 
 # infra/cdk (the CDK constructs library)
-pnpm --filter @borso/infra test:coverage   # tests + 100% coverage thresholds
+pnpm --filter @borso/infra test:full-suite # every test; CI adds --coverage
 pnpm --filter @borso/infra build           # tsc -p tsconfig.build.json + cp .code.js
 
 # infra/shared (the CDK app for account-level singletons)
@@ -61,18 +61,10 @@ pnpm --filter @borso/shared-infra destroy
 | Hook | When | What it does |
 | --- | --- | --- |
 | `commit-msg` | every commit | `commitlint` against the conventional-commit + scope-enum config |
-| `pre-commit` | every commit | If `infra/cdk/**` changed: `@borso/infra test:coverage`. If `infra/shared/**` changed: `@borso/shared-infra test:coverage`. Both gate at 100% statements/branches/functions/lines. |
-| `pre-push` | every push | `pnpm exec knip` repo-wide. |
+| `pre-commit` | every commit | The checks a single commit can break, each scoped to what the commit touches. |
+| `pre-push` | every push | Type checks, knip, oxlint and the tests the push affects, without coverage. CI collects coverage. |
 
-### When `--no-verify` is OK
-
-- The pre-commit coverage check fails because of an environmental issue you've already debugged (rare).
-- You're on an in-progress branch where the half-extracted helper temporarily fails knip (not a problem because pre-push runs knip too, but if you're pushing from elsewhere — uncommon).
-
-### When it isn't
-
-- Tests fail and you want to commit "to keep moving." Fix the test or revert the change.
-- A new conventional-commit scope you haven't added to the enum. Add it (`commitlint.config.js`) instead of bypassing.
+Never bypass a hook with `--no-verify`. Fix what it reports.
 
 ## Granting Claude Code read access to AWS
 

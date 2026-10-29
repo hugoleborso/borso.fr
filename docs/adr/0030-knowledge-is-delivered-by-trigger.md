@@ -81,7 +81,6 @@ Applying the rule to the corpus deleted 8 entries and merged 8 others into relat
 
 - Hook: `plugins/borso-harness/hooks/knowledge-triggers.sh`
 - Compiler and gate: `plugins/borso-harness/scripts/knowledge-triggers.py`, `scripts/check-knowledge-triggers.sh`
-- Contract rows: `plugins/borso-harness/scripts/check-hook-decisions.sh`
 - Front-matter format: `docs/knowledge/README.md`
 - Ladder: `plugins/borso-harness/skills/dantotsu/SKILL.md`, step 6, rung 5
 - Related ADRs: ADR-0014 (generated files are not committed), ADR-0026 (the harness ships as a plugin)

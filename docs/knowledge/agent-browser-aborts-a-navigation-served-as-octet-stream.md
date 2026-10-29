@@ -7,7 +7,7 @@ triggers:
 
 # agent-browser aborts a navigation served as octet-stream
 
-`scripts/browser.sh open http://localhost:8099/` answered:
+`agent-browser open http://localhost:8099/` answered:
 
 ```
 ✗ Navigation failed: net::ERR_ABORTED
@@ -45,4 +45,4 @@ decided the response was not a page; it is not a network error despite the
 
 ## See also
 
-- [Driving previews with agent-browser and argent](./driving-previews-with-agent-browser-and-argent.md) for the TLS trap this one is easily mistaken for.
+- [Driving previews with agent-browser](./driving-previews-with-agent-browser-and-argent.md) for the TLS trap this one is easily mistaken for.

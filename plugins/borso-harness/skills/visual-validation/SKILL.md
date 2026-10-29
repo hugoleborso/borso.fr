@@ -3,7 +3,7 @@ name: visual-validation
 description: Dispatch the dedicated `visual-validator` agent to open the implemented feature in a real browser (via the agent-browser CLI) and check, point by point, that every visible and behavioural assertion in the spec actually holds. Use when the user says "/visual-validation", "validate visually", "check the spec is implemented", or as the gate-5 step in a `/technical-conception` plan. Takes a path to `docs/features/<app>/<slug>/spec/spec.md` as the only required argument; the skill discovers the dev-server command from the workspace's `package.json`. The validator runs in isolation — no chat history, no main-session context — so its verdict is not biased by what the implementer already convinced themselves of. Produces a verdict report at `docs/features/<app>/<slug>/validation/visual-validation-<timestamp>.md` plus screenshot evidence that is published to the previews CDN or, for a FAIL row, committed beside the report, and returns PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL. Reads the standard at `${CLAUDE_PLUGIN_ROOT}/skills/visual-validation/standard.md` before dispatching.
 ---
 
-> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `seal`, `prBodyCheck`, `blueprintIndex`, `browser`, `argent`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
+> **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
 # Visual-validation skill
 
@@ -27,25 +27,23 @@ Agent({
 
 The brief carries the spec path, dev URL, report path, and evidence directory — and *nothing else*. It does not summarise the implementation, list known gotchas, or hint at what to look for.
 
-## Tooling: `scripts/browser.sh`
+## Tooling: `agent-browser`
 
-The validator drives the browser via [`agent-browser`](https://github.com/vercel-labs/agent-browser) — the LLM-oriented CLI that exposes a reference-based snapshot/click/screenshot interface tuned for agents. Not Playwright: agent-browser is the right shape for an LLM-driven validator (text refs over selectors, JSON snapshots over imperative API calls).
-
-**Call it through [`scripts/browser.sh`](../../../../scripts/browser.sh), never directly.** Two settings are not optional in this sandbox and neither is discoverable from a failure message: the browser agent-browser looks for is not there, and without `--ssl-version-max=tls1.2` every https navigation dies with `ERR_CONNECTION_RESET`. The wrapper sets both and passes every argument through, so `scripts/browser.sh snapshot` is `agent-browser snapshot`.
+The validator drives the browser with [`agent-browser`](https://github.com/vercel-labs/agent-browser), the LLM-oriented CLI with reference-based snapshots, clicks and screenshots. It is called directly and needs no setup in this sandbox: it finds the image's Chromium and reaches https and localhost on its own. Real touch goes through `scripts/phone.sh`, which taps an `agent-browser` session with `Input.dispatchTouchEvent`.
 
 ```bash
-scripts/browser.sh --restart open http://localhost:5173/
-scripts/browser.sh snapshot -i --json
-scripts/browser.sh screenshot ./evidence/01-catalog.png
-scripts/browser.sh errors
+agent-browser open http://localhost:5173/
+agent-browser snapshot -i --json
+agent-browser screenshot ./evidence/01-catalog.png
+agent-browser errors
 ```
 
 **A behaviour that only shows in motion is recorded, then converted to GIF.** A drag, an animation or a transition is evidence a still cannot carry. agent-browser records WebM only, and GitHub plays no video from an outside URL, while it does play an animated GIF inline in the pull request's *Screenshots* comment. So record, convert, and keep the GIF as the evidence file:
 
 ```bash
-scripts/browser.sh record start ./evidence/04-drag.webm
+agent-browser record start ./evidence/04-drag.webm
 # drive the interaction
-scripts/browser.sh record stop
+agent-browser record stop
 ffmpeg -loglevel error -y -i ./evidence/04-drag.webm \
   -vf "fps=10,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
   -loop 0 ./evidence/04-drag.gif && rm ./evidence/04-drag.webm
@@ -53,7 +51,7 @@ ffmpeg -loglevel error -y -i ./evidence/04-drag.webm \
 
 Keep a recording to the few seconds the assertion needs; ten frames a second at 800 px wide is enough to read and keeps the file small. `ffmpeg` is in the sandbox image (`command -v ffmpeg`); never install one. If it is missing, keep the WebM: the comment then shows it as a link line instead of inline, and the report says why.
 
-**Never run `agent-browser install`.** The suggestion appears in agent-browser's own "Chrome not found" message and is wrong here: the image already ships Chromium for Playwright, the environment brief says not to fetch a second copy, and the wrapper points at the one that exists. If the wrapper itself fails, that is a genuine "Tooling unavailable" FAIL row, and the validator exits without falling back to Playwright.
+Never run `agent-browser install`; the image already ships Chromium. If `agent-browser` itself fails, that is a "Tooling unavailable" FAIL row, and the validator exits without falling back to another tool.
 
 ## When to invoke
 

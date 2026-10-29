@@ -25,7 +25,12 @@ piloted mode that takes a pre-built payload when
   file stays for audit.
 - **deprecated** — surrounding system is gone; preserved as historical.
 
-ADRs are append-only. Numbers are never recycled, even after supersession.
+ADRs are append-only. Ids are never recycled, even after supersession.
+
+A new record is named after the UTC minute it was written,
+`YYYYMMDDHHMM-<slug>.md`, so branches open at the same time never take
+the same id. Records `0001` to `0049` kept the sequential numbers they
+were written with, and the timestamps sort after them.
 
 ## When to write one
 
