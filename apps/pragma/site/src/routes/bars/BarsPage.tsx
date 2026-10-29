@@ -2,8 +2,10 @@ import { BAR_STATUSES, type BarStatus, type ConcertMood } from '@domain/bar-prof
 /** @Feature bars */
 
 import type { JSX } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { BottomActions } from '../../components/atoms/BottomActions';
+import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
@@ -19,10 +21,9 @@ import { isPositiveCount } from '../../lib/counts.utils';
 import { didCopyTextToClipboard } from '../../lib/clipboard.adapter';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useSignedInMember } from '../../lib/queries/me.queries';
-import { useOutreachTemplate, useSaveOutreachTemplate } from '../../lib/queries/outreach.queries';
+import { useOutreachTemplate } from '../../lib/queries/outreach.queries';
 import { BarPlaceSearch } from '../../components/organisms/BarPlaceSearch';
-import { OutreachTemplateCard } from '../../components/organisms/OutreachTemplateCard';
-import { BarQuickAdd } from '../../components/organisms/BarQuickAdd';
+import { OutreachTemplateAction } from '../../components/organisms/OutreachTemplateAction';
 import { renderOutreachMessage, selectOutreachTemplate } from './outreach-message.core';
 import {
   useBarsList,
@@ -65,18 +66,15 @@ const NO_OWNERS: readonly BarOwnerOption[] = [];
 export function BarsPage(): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<BarsView>('list');
-  const [formInitial, setFormInitial] = useState<BarFormInitial>(BLANK_BAR_FORM);
+  const [formInitial, setFormInitial] = useState<BarFormInitial | null>(null);
   const [writeCount, setWriteCount] = useState<number>(0);
   const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
-  const barFormRef = useRef<HTMLDivElement>(null);
   const barsQuery = useBarsList();
   const membersQuery = useMembersList();
   const signedInMember = useSignedInMember();
   const outreachTemplateQuery = useOutreachTemplate();
-  const saveOutreachTemplate = useSaveOutreachTemplate();
-  const [templateMessage, setTemplateMessage] = useState<string | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const createBar = useCreateBar();
   const updateBar = useUpdateBar();
@@ -127,7 +125,7 @@ export function BarsPage(): JSX.Element {
         ownerName: ownerNameOf(bar),
         moodLabel: moodLabelOf(bar.concertMood),
         isStale: isBarStale(bar),
-        isBeingEdited: isBarBeingEdited(bar.id, formInitial),
+        isBeingEdited: isBarBeingEdited(bar.id, formInitial ?? BLANK_BAR_FORM),
       })),
     [sortedBars, isBarStale, ownerNameOf, moodLabelOf, formInitial],
   );
@@ -154,7 +152,7 @@ export function BarsPage(): JSX.Element {
   const saveBar = (id: string | null, payload: BarFormSubmitPayload): void => {
     const mutationOptions = {
       onSuccess: () => {
-        setFormInitial(BLANK_BAR_FORM);
+        setFormInitial(null);
         setWriteCount((current) => current + 1);
       },
       onError: reportError,
@@ -171,15 +169,16 @@ export function BarsPage(): JSX.Element {
       { id: barId },
       {
         onSuccess: () =>
-          setFormInitial((current) => selectFormAfterDeletion(current, barId, BLANK_BAR_FORM)),
+          setFormInitial((current) =>
+            current === null ? null : selectFormAfterDeletion(current, barId, BLANK_BAR_FORM),
+          ),
         onError: reportError,
       },
     );
   };
 
-  const selectBarAndScrollItsFormIntoView = (barId: string): void => {
-    setFormInitial((current) => selectFormForBar(bars, barId, current));
-    barFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const openBar = (barId: string): void => {
+    setFormInitial((current) => selectFormForBar(bars, barId, current ?? BLANK_BAR_FORM));
   };
 
   const moveBarToStatus = (status: BarStatus, draggedId: string): void => {
@@ -192,52 +191,43 @@ export function BarsPage(): JSX.Element {
 
   const panelByView: Readonly<Record<BarsView, JSX.Element>> = {
     list: (
-      <div className="grid grid-cols-1 xl:grid-cols-[minmax(0,1fr)_340px] gap-5 items-start">
-        <BarsList
-          bars={listRows}
-          statusLabel={(status) => t(BAR_STATUS_KEY[status])}
-          onSelect={selectBarAndScrollItsFormIntoView}
-          onRemove={setPendingDeletionId}
-        />
-        <div ref={barFormRef} className="scroll-mt-4">
-          <BarForm
-            key={buildBarFormKey(formInitial, writeCount)}
-            initial={formInitial}
-            owners={owners}
-            copyMessageLabel={t('bars.outreachCopy')}
-            onCopyMessage={(barName) => void copyMessageForBar(barName)}
-            onSubmit={saveBar}
-            onCancel={() => setFormInitial(BLANK_BAR_FORM)}
-          />
-        </div>
-      </div>
+      <BarsList
+        bars={listRows}
+        statusLabel={(status) => t(BAR_STATUS_KEY[status])}
+        onSelect={openBar}
+        onRemove={setPendingDeletionId}
+      />
     ),
     kanban: (
       <BarsKanban
         statuses={BAR_STATUSES}
         cardsByStatus={kanbanCardsWithMood}
         statusLabel={(status) => t(BAR_STATUS_KEY[status])}
-        onSelect={selectBarAndScrollItsFormIntoView}
+        onSelect={openBar}
         onMoveToStatus={moveBarToStatus}
       />
     ),
   };
 
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[1280px]">
       <PageHeader
+        back={{ to: '/band', label: t('band.title') }}
         title={t('bars.title')}
         actions={
-          <SectionTabs
-            label={t('bars.title')}
-            tabs={[
-              { value: 'list', label: t('bars.viewList'), icon: 'catalog' },
-              { value: 'kanban', label: t('bars.viewKanban'), icon: 'bars' },
-            ]}
-            value={view}
-            onChange={setView}
-            className="hidden lg:flex"
-          />
+          <>
+            <OutreachTemplateAction template={template} onError={reportError} />
+            <SectionTabs
+              label={t('bars.title')}
+              tabs={[
+                { value: 'list', label: t('bars.viewList'), icon: 'catalog' },
+                { value: 'kanban', label: t('bars.viewKanban'), icon: 'bars' },
+              ]}
+              value={view}
+              onChange={setView}
+              className="hidden lg:flex"
+            />
+          </>
         }
       />
 
@@ -259,30 +249,29 @@ export function BarsPage(): JSX.Element {
         </div>
       ) : null}
 
-      <BarQuickAdd onError={reportError} />
-      <BarPlaceSearch
-        onPick={(hit) => {
-          setFormInitial(buildBarFormFromPlace(hit, BLANK_BAR_FORM));
-          setWriteCount((current) => current + 1);
-          barFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }}
-      />
-      <OutreachTemplateCard
-        key={template}
-        template={template}
-        message={templateMessage}
-        onSave={(body) =>
-          saveOutreachTemplate.mutate(
-            { body },
-            {
-              onSuccess: () => setTemplateMessage(t('bars.outreachTemplateSaved')),
-              onError: reportError,
-            },
-          )
-        }
-      />
       {copyMessage === null ? null : <p className="text-meta text-ink-soft mb-3">{copyMessage}</p>}
       {panelByView[selectVisibleBarsView(view, isNarrow)]}
+      {formInitial === null ? null : (
+        <BarForm
+          key={buildBarFormKey(formInitial, writeCount)}
+          initial={formInitial}
+          owners={owners}
+          copyMessageLabel={t('bars.outreachCopy')}
+          onCopyMessage={(barName) => void copyMessageForBar(barName)}
+          onSubmit={saveBar}
+          onCancel={() => setFormInitial(null)}
+          leading={
+            formInitial.id === null ? (
+              <BarPlaceSearch
+                onPick={(hit) => {
+                  setFormInitial(buildBarFormFromPlace(hit, BLANK_BAR_FORM));
+                  setWriteCount((current) => current + 1);
+                }}
+              />
+            ) : null
+          }
+        />
+      )}
       {pendingDeletionId === null ? null : (
         <ConfirmDialog
           question={t('bars.deleteConfirm')}
@@ -294,6 +283,16 @@ export function BarsPage(): JSX.Element {
           onCancel={() => setPendingDeletionId(null)}
         />
       )}
+      <BottomActions>
+        <Button
+          variant="primary"
+          size="lg"
+          icon="plus"
+          onClick={() => setFormInitial(BLANK_BAR_FORM)}
+        >
+          {t('bars.newBar')}
+        </Button>
+      </BottomActions>
     </section>
   );
 }

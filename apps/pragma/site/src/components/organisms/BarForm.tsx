@@ -2,20 +2,18 @@ import { BAR_NAME_MAX_LENGTH, BAR_NOTES_MAX_LENGTH, BAR_STATUSES } from '@domain
 /** @Feature bars */
 
 import { useForm } from '@tanstack/react-form';
-import type { JSX } from 'react';
+import type { JSX, ReactNode } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
-import { BottomActions } from '../atoms/BottomActions';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
-import { Card } from '../atoms/Card';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
 import { AvailableSupportField, ConcertMoodField } from '../molecules/BarQualificationFields';
+import { Sheet } from '../molecules/Sheet';
 import {
   BAR_STATUS_KEY,
   type BarFormInitial,
   type BarFormSubmitPayload,
-  type BarFormTitleKind,
   type BarFormValues,
   barFormValuesSchema,
   buildBarPayloadFromFormValues,
@@ -35,36 +33,12 @@ interface BarFormProps {
   readonly onCopyMessage: (barName: string) => void;
   readonly onSubmit: (id: string | null, payload: BarFormSubmitPayload) => void;
   readonly onCancel: () => void;
+  readonly leading?: ReactNode;
 }
 
 const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const SELECT_CLASS = inputVariants({ size: 'md' });
 const NOTES_ROWS = 4;
-
-interface CancelButtonProps {
-  readonly label: string;
-  readonly onCancel: () => void;
-}
-
-function NoCancelButton(): null {
-  return null;
-}
-
-function CancelBarFormButton({ label, onCancel }: CancelButtonProps): JSX.Element {
-  return (
-    <Button icon="close" type="button" variant="quiet" onClick={onCancel}>
-      {label}
-    </Button>
-  );
-}
-
-const CANCEL_BUTTON_BY_TITLE_KIND: Record<
-  BarFormTitleKind,
-  (props: CancelButtonProps) => JSX.Element | null
-> = {
-  new: NoCancelButton,
-  existing: CancelBarFormButton,
-};
 
 /**
  * @Blueprint route-form
@@ -79,6 +53,7 @@ export function BarForm({
   onCopyMessage,
   onSubmit,
   onCancel,
+  leading,
 }: BarFormProps): JSX.Element {
   const { t } = useTranslation();
   const defaultValues: BarFormValues = {
@@ -103,19 +78,50 @@ export function BarForm({
   });
   const titleKind = selectBarFormTitleKind(initial);
   const title = { new: t('bars.newBar'), existing: initial.name }[titleKind];
-  const CancelButton = CANCEL_BUTTON_BY_TITLE_KIND[titleKind];
 
   return (
-    <Card>
-      <h3 className="font-display text-title text-ink m-0 mb-3">{title}</h3>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        className="flex flex-col gap-2.5"
-      >
+    <Sheet
+      title={title}
+      label={title}
+      isTitleARecordName={titleKind === 'existing'}
+      onClose={onCancel}
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      footer={
+        <>
+          <form.Subscribe selector={(state) => state.values.name}>
+            {(barName) => (
+              <Button
+                icon="copy"
+                type="button"
+                variant="quiet"
+                onClick={() => onCopyMessage(barName)}
+              >
+                {copyMessageLabel}
+              </Button>
+            )}
+          </form.Subscribe>
+          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+            {([canSubmit, isSubmitting]) => (
+              <Button
+                icon="check"
+                type="submit"
+                variant="primary"
+                size="lg"
+                disabled={!canSubmit || isSubmitting}
+              >
+                {t('common.save')}
+              </Button>
+            )}
+          </form.Subscribe>
+        </>
+      }
+    >
+      <div className="flex flex-col gap-2.5">
+        {leading}
         <label className={FIELD_LABEL_CLASS} htmlFor="bar-name">
           {t('bars.name')}
         </label>
@@ -123,6 +129,7 @@ export function BarForm({
           {(field) => (
             <Input
               id="bar-name"
+              data-sheet-focus
               type="text"
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -282,34 +289,7 @@ export function BarForm({
             />
           )}
         </form.Field>
-        <BottomActions>
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <Button
-                icon="check"
-                type="submit"
-                variant="primary"
-                disabled={!canSubmit || isSubmitting}
-              >
-                {t('common.save')}
-              </Button>
-            )}
-          </form.Subscribe>
-          <CancelButton label={t('common.cancel')} onCancel={onCancel} />
-        </BottomActions>
-        <form.Subscribe selector={(state) => state.values.name}>
-          {(barName) => (
-            <Button
-              icon="copy"
-              type="button"
-              variant="quiet"
-              onClick={() => onCopyMessage(barName)}
-            >
-              {copyMessageLabel}
-            </Button>
-          )}
-        </form.Subscribe>
-      </form>
-    </Card>
+      </div>
+    </Sheet>
   );
 }

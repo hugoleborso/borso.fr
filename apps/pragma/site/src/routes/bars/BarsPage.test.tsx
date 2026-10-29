@@ -1,5 +1,5 @@
 import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
@@ -63,11 +63,30 @@ describe('the bars page', () => {
     stub?.restore();
   });
 
-  it('carries the bar form Save as its one primary action', async () => {
+  it('carries New bar as its one primary action, with no form on the page', async () => {
     renderBarsPage();
-    await screen.findByRole('button', { name: 'Save the message' });
+    const newBar = await screen.findByRole('button', { name: 'New bar' });
     const primaries = document.querySelectorAll('[data-variant="primary"]');
     expect(primaries).toHaveLength(ONE_PRIMARY);
-    expect(primaries[0]?.textContent).toBe('Save');
+    expect(primaries[0]).toBe(newBar);
+    expect(screen.queryByLabelText('Name')).toBeNull();
+    expect(screen.queryByRole('searchbox')).toBeNull();
+  });
+
+  it('opens the bar form in a sheet from New bar, with the place search at its top', async () => {
+    renderBarsPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'New bar' }));
+    const sheet = screen.getByRole('dialog', { name: 'New bar' });
+    expect(within(sheet).getByRole('searchbox')).toBeTruthy();
+    expect(within(sheet).getByRole('button', { name: 'Save' }).dataset.variant).toBe('primary');
+  });
+
+  it('opens the outreach message from the header, in a sheet', async () => {
+    renderBarsPage();
+    const header = screen.getByRole('heading', { level: 1, name: 'Bars' }).closest('header');
+    if (header === null) throw new Error('no page header');
+    expect(within(header).getByRole('link', { name: 'Band' }).getAttribute('href')).toBe('/band');
+    fireEvent.click(within(header).getByRole('button', { name: 'Outreach message' }));
+    expect(screen.getByRole('dialog', { name: 'Outreach message' })).toBeTruthy();
   });
 });
