@@ -40,6 +40,19 @@ scripts/browser.sh screenshot ./evidence/01-catalog.png
 scripts/browser.sh errors
 ```
 
+**A behaviour that only shows in motion is recorded, then converted to GIF.** A drag, an animation or a transition is evidence a still cannot carry. agent-browser records WebM only, and GitHub plays no video from an outside URL, while it does play an animated GIF inline in the pull request's *Screenshots* comment. So record, convert, and keep the GIF as the evidence file:
+
+```bash
+scripts/browser.sh record start ./evidence/04-drag.webm
+# drive the interaction
+scripts/browser.sh record stop
+ffmpeg -loglevel error -y -i ./evidence/04-drag.webm \
+  -vf "fps=10,scale=800:-1:flags=lanczos,split[s0][s1];[s0]palettegen[p];[s1][p]paletteuse" \
+  -loop 0 ./evidence/04-drag.gif && rm ./evidence/04-drag.webm
+```
+
+Keep a recording to the few seconds the assertion needs; ten frames a second at 800 px wide is enough to read and keeps the file small. `ffmpeg` is in the sandbox image (`command -v ffmpeg`); never install one. If it is missing, keep the WebM: the comment then shows it as a link line instead of inline, and the report says why.
+
 **Never run `agent-browser install`.** The suggestion appears in agent-browser's own "Chrome not found" message and is wrong here: the image already ships Chromium for Playwright, the environment brief says not to fetch a second copy, and the wrapper points at the one that exists. If the wrapper itself fails, that is a genuine "Tooling unavailable" FAIL row, and the validator exits without falling back to Playwright.
 
 ## When to invoke
@@ -66,7 +79,7 @@ Do **not** invoke when:
    report_path      = <validation_dir>/visual-validation-<timestamp>.md
    evidence_dir     = <validation_dir>/visual-validation-<timestamp>/
    ```
-   `mkdir -p` the evidence directory so the validator can drop PNGs straight in.
+   `mkdir -p` the evidence directory so the validator can drop PNG and GIF files straight in.
 5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path.
 6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
 7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
@@ -75,7 +88,7 @@ Do **not** invoke when:
    ```bash
    pending_dir="$validation_dir/.pending-upload/$timestamp"
    mkdir -p "$pending_dir"
-   mv "$evidence_dir"<each-png-no-FAIL-row-cites> "$pending_dir/"
+   mv "$evidence_dir"<each-png-or-gif-no-FAIL-row-cites> "$pending_dir/"
    rmdir "$evidence_dir" 2>/dev/null
    ```
 

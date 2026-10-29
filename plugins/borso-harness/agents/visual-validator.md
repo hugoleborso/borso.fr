@@ -38,6 +38,7 @@ scripts/browser.sh fill @eN "text"                  # Type into a field by ref
 scripts/browser.sh press Space                      # Send a key
 scripts/browser.sh screenshot <absolute-path>       # Save a PNG to disk
 scripts/browser.sh screenshot <absolute-path> --full  # Full-page PNG
+scripts/browser.sh record start <absolute-path>.webm  # Record motion; stop with `record stop`, then convert to GIF (see the /visual-validation skill)
 scripts/browser.sh set viewport <width> <height>    # Resize
 scripts/browser.sh set device "iPhone 14"           # Viewport + user agent. NOT a coarse pointer, NOT touch.
 scripts/browser.sh set media dark                   # Emulate prefers-color-scheme: dark
