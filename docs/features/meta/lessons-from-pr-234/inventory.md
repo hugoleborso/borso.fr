@@ -51,3 +51,21 @@ separately (rows 15 and 16). Two implementers hit the import graph (row 09).
 
 Counts: 2 dantotsu, 3 knowledge (2 new, 1 extended), 6 fixed, 3 merged, 19
 no-op.
+
+## Cost targets after three feature rows
+
+Rows #216 and #231, #235 and #234 in `docs/quality/feature-cost.md`, measured
+with `get_session`.
+
+| Target | #216 and #231 | #235 | #234 |
+| --- | --- | --- | --- |
+| Cost under $150 | fail, $778.45 | pass, $9.89 | pass, $54.95 |
+| Final context under 150k | unknown, 363,134 | unknown, 228,713 | unknown, 427,521 |
+| Cache writes under $2 | fail, $328.99 | fail, $3.27 | fail, $15.44 |
+| Review rounds 2 at most | fail, 9 | pass, none | pass, 2 |
+
+Cost and review rounds held after #224. The cache-write target failed all
+three, but its source counts every cache write and not only the rebuilds after
+a wait, so it cannot pass a feature session of this size. It decides nothing
+until the measure isolates the rebuilds. Two costs may cover only a session's
+latest resume, as their rows say.
