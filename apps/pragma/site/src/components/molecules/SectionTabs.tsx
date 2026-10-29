@@ -68,7 +68,7 @@ export function SectionTabs<Value extends string>({
         ref={setRow}
         role="tablist"
         aria-label={label}
-        className="relative flex min-w-0 flex-auto gap-1 overflow-x-auto border-b border-rule"
+        className="relative flex min-w-0 flex-auto gap-1 overflow-x-auto border-b border-rule [scrollbar-width:none]"
       >
         {tabs.map((tab) => (
           <button
