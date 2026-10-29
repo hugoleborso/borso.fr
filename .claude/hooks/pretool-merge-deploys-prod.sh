@@ -68,14 +68,32 @@ fi
 
 # Anything that cannot be determined is reported as unknown rather than as
 # absent, because a silent "no" is the failure this hook exists to prevent.
-if [ -x "$TSX" ] && [ -f "$FANOUT" ]; then
-  APPS=$(cd "$REPO_ROOT" && "$TSX" "$FANOUT" "origin/$BASE_BRANCH" HEAD 2>/dev/null) \
+#
+# A numbered pull request is compared at its own head commit, not at the
+# checkout's HEAD. The checkout is shared with other local sessions, and when
+# PR #243 merged it sat on main, so the hook printed "none" for a merge that
+# deployed pragma. See docs/dantotsus/the-pull-request-hooks-read-the-checkout.md.
+COMPARED_HEAD=HEAD
+if [[ "$PR" =~ ^[0-9]+$ ]] && command -v gh >/dev/null 2>&1; then
+  PULL_REQUEST_HEAD=$(cd "$REPO_ROOT" && gh pr view "$PR" --json headRefOid --jq .headRefOid 2>/dev/null || true)
+  if [ -n "$PULL_REQUEST_HEAD" ] && { git -C "$REPO_ROOT" cat-file -e "$PULL_REQUEST_HEAD^{commit}" 2>/dev/null \
+    || git -C "$REPO_ROOT" fetch -q origin "pull/$PR/head" 2>/dev/null; }; then
+    COMPARED_HEAD=$PULL_REQUEST_HEAD
+  else
+    COMPARED_HEAD=
+  fi
+fi
+if [ -z "$COMPARED_HEAD" ]; then
+  APPS="unknown — the head commit of pull request $PR could not be read"
+elif [ -x "$TSX" ] && [ -f "$FANOUT" ]; then
+  APPS=$(cd "$REPO_ROOT" && "$TSX" "$FANOUT" "origin/$BASE_BRANCH" "$COMPARED_HEAD" 2>/dev/null) \
     || APPS="unknown from this checkout — read the pull request's Files changed tab"
 else
   APPS="unknown — scripts/pr/deploy-fanout.ts did not run in this checkout"
 fi
 
-CHANGED=$(cd "$REPO_ROOT" && git diff --name-only "origin/$BASE_BRANCH...HEAD" 2>/dev/null || true)
+CHANGED=
+[ -n "$COMPARED_HEAD" ] && CHANGED=$(cd "$REPO_ROOT" && git diff --name-only "origin/$BASE_BRANCH...$COMPARED_HEAD" 2>/dev/null || true)
 if [ -z "$CHANGED" ]; then
   SHARED="unknown from this checkout"
 elif printf '%s\n' "$CHANGED" | grep -qF "$SHARED_SNAPSHOT"; then

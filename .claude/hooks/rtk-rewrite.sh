@@ -64,6 +64,16 @@ case " $CMD " in
     ;;
 esac
 
+# rtk 0.38.0 rewrites `pnpm run lint` and `pnpm lint` to `rtk lint`, which runs
+# ESLint. This repository lints with oxlint through scripts/lint-workspace.sh,
+# so the rewrite found no ESLint config and failed on PR #243. Any command
+# naming the `lint` script passes through.
+case " $CMD " in
+  *" lint "*)
+    exit 0
+    ;;
+esac
+
 # A diff is read to judge every line of it. `rtk git diff` keeps 100 added
 # lines of a hunk and prints `... (255 additions truncated)` for the rest,
 # measured on the 356-line plan of PR #234, so a reviewer passes code it never

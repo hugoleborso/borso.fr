@@ -71,7 +71,7 @@ if grep -qE -- '--body-file\b' <<<"$COMMAND_TO_RUN"; then
     block "--body-file names a shell variable, $BODY_PATH, which this hook reads before the shell expands it; pass the literal path"
   fi
   if [[ ! -f "$BODY_PATH" ]]; then
-    block "--body-file points at a missing path: $BODY_PATH"
+    block "--body-file points at a missing path: $BODY_PATH. This hook reads it before the command runs, so write it in an earlier call"
   fi
   BODY="$(cat "$BODY_PATH")"
 elif grep -qE -- '--body\b' <<<"$COMMAND_TO_RUN"; then
@@ -100,7 +100,15 @@ if [[ -f "$KAIZEN_FILE" ]]; then
   # The archive has to be on THIS branch. The tree holds every past feature's
   # log, so asking whether one exists anywhere answers yes for a branch that
   # archived nothing.
-  ARCHIVED_HERE="$(git -C "$REPO_ROOT" diff --name-only origin/main...HEAD 2>/dev/null \
+  #
+  # "This branch" is the one `--head` names when there is one. The project
+  # checkout is shared with other local sessions, so its HEAD can be anyone's
+  # branch. PR #243 was opened from a worktree whose branch carried the archive,
+  # and this check refused it for the branch checked out in the main folder.
+  # See docs/dantotsus/the-pull-request-hooks-read-the-checkout.md.
+  PULL_REQUEST_HEAD="$(sed -nE 's/.*--head[ =]([^ ]+).*/\1/p' <<<"$COMMAND_TO_RUN")"
+  COMPARED_HEAD="${PULL_REQUEST_HEAD:+origin/$PULL_REQUEST_HEAD}"
+  ARCHIVED_HERE="$(git -C "$REPO_ROOT" diff --name-only "origin/main...${COMPARED_HEAD:-HEAD}" 2>/dev/null \
     | grep -c "^$FEATURES_DIRECTORY/.*/kaizen\.md$" || true)"
   if [[ "$LOGGED" -gt 0 && "$ARCHIVED_HERE" -eq 0 ]]; then
     echo "[open-pr] the friction log holds $LOGGED entr(y/ies) and this branch commits no archive of it." >&2
