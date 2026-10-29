@@ -1,13 +1,12 @@
-export type FeedFailure = 'needs-reconnecting' | 'unavailable';
+import type { CalendarFeedRow } from './calendar-feeds.schema';
 
-export type CalendarFeedState = 'connected' | 'absent';
+export type FeedFailure = 'needs-reconnecting' | 'unavailable';
 
 export interface BusyInterval {
   readonly start: Date;
   readonly end: Date;
 }
 
-export interface StoredCalendarFeed {
-  readonly memberId: string;
-  readonly address: string;
-}
+export type CalendarFeedSummary = Readonly<Pick<CalendarFeedRow, 'id' | 'name'>>;
+
+export type StoredCalendarFeed = Readonly<Pick<CalendarFeedRow, 'memberId' | 'address' | 'name'>>;

@@ -32,7 +32,7 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   'PUT /api/me/password':
     'A credential; changing it would also end the grant of the assistant itself.',
   '* /api/me/passkeys/*': 'Passkeys are credentials bound to one device.',
-  '* /api/me/calendar-feed':
+  '* /api/me/calendar-feeds/*':
     'The secret address of the calendar of the member is a credential to a third-party service.',
   '* /api/notifications/subscriptions': 'A push subscription belongs to one browser.',
   'GET /api/notifications/vapid-public-key': 'Read by a browser to subscribe to push.',

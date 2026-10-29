@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { readBusyIntervals } from '../calendar-feeds/ics.core';
 import { SEARCH_DAYS, selectFreeSlots } from '../free-slots/free-slots.core';
 import {
+  ATTACHED_FIXTURE_FEEDS,
   answerFixtureFeedRequest,
   buildFixtureFeed,
   countSavedFeeds,
@@ -14,7 +15,7 @@ const MILLISECONDS_PER_DAY = 86_400_000;
 
 function freeSlotsOfTheFixtures(now: Date): string[][] {
   const range = { start: now, end: new Date(now.getTime() + SEARCH_DAYS * MILLISECONDS_PER_DAY) };
-  const busy = FIXTURE_FEED_NAMES.flatMap((name) => {
+  const busy = ATTACHED_FIXTURE_FEEDS.flatMap((name) => {
     const outcome = readBusyIntervals(buildFixtureFeed(name, now), range);
     if (outcome.kind !== 'ok') throw new Error(`fixture ${name} did not parse`);
     return outcome.intervals;
@@ -36,6 +37,18 @@ describe('preview calendar fixtures', () => {
     expect(freeSlotsOfTheFixtures(new Date('2026-12-03T20:00:00Z'))).toStrictEqual([
       ['2026-12-05T18:15:00.000Z', '2026-12-05T22:00:00.000Z'],
     ]);
+  });
+
+  it('spread Hugo over two calendars, the second holding only a past day', () => {
+    expect(ATTACHED_FIXTURE_FEEDS).toStrictEqual(['hugo', 'hugo-band', 'marc', 'sarah']);
+    const now = new Date('2026-10-13T08:00:00Z');
+    const range = { start: now, end: new Date(now.getTime() + MILLISECONDS_PER_DAY) };
+    expect(readBusyIntervals(buildFixtureFeed('hugo-band', now), range)).toStrictEqual({
+      kind: 'ok',
+      intervals: [],
+    });
+    expect(answerFixtureFeedRequest('hugo-band.ics', now).status).toBe(200);
+    expect(buildFixtureFeed('hugo-band', now)).toMatchSnapshot();
   });
 
   it.each(FIXTURE_FEED_NAMES)('write the %s feed exactly as recorded', (name) => {
@@ -147,6 +160,12 @@ describe('listFixtureFeedAttachments', () => {
       {
         memberId: 'id-hugo',
         address: 'https://pragma-pr-118.preview.borso.fr/api/__test/calendar-feeds/hugo.ics',
+        name: 'Personal',
+      },
+      {
+        memberId: 'id-hugo',
+        address: 'https://pragma-pr-118.preview.borso.fr/api/__test/calendar-feeds/hugo-band.ics',
+        name: 'Band',
       },
     ]);
   });

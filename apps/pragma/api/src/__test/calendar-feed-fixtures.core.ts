@@ -6,9 +6,30 @@ import {
 
 export const FIXTURE_FEED_NAMES = ['hugo', 'marc', 'sarah'] as const;
 export type FixtureFeedName = (typeof FIXTURE_FEED_NAMES)[number];
+const SECOND_CALENDAR_FEED_NAMES = ['hugo-band'] as const;
+type SecondCalendarFeedName = (typeof SECOND_CALENDAR_FEED_NAMES)[number];
 const EDGE_CASE_FEED_NAMES = ['declined', 'midnight', 'everything', 'huge'] as const;
 type EdgeCaseFeedName = (typeof EDGE_CASE_FEED_NAMES)[number];
-type ServableFeedName = FixtureFeedName | EdgeCaseFeedName;
+type ServableFeedName = FixtureFeedName | SecondCalendarFeedName | EdgeCaseFeedName;
+type AttachedFeedName = FixtureFeedName | SecondCalendarFeedName;
+
+interface NamedFixtureFeed {
+  readonly feed: AttachedFeedName;
+  readonly name: string;
+}
+
+const FEEDS_BY_USERNAME: Readonly<Record<FixtureFeedName, readonly NamedFixtureFeed[]>> = {
+  hugo: [
+    { feed: 'hugo', name: 'Personal' },
+    { feed: 'hugo-band', name: 'Band' },
+  ],
+  marc: [{ feed: 'marc', name: 'Marc' }],
+  sarah: [{ feed: 'sarah', name: 'Sarah' }],
+};
+
+export const ATTACHED_FIXTURE_FEEDS: readonly AttachedFeedName[] = Object.values(
+  FEEDS_BY_USERNAME,
+).flatMap((feeds) => feeds.map((fixture) => fixture.feed));
 
 export const FREE_DAY_OFFSET = 2;
 const SECOND_GAP_DAY_OFFSET = 5;
@@ -134,6 +155,16 @@ function busyWithADeclinedInvitation(today: CalendarDay): string {
   ]);
 }
 
+function busyYesterdayOnly(today: CalendarDay): string {
+  const yesterday = addCalendarDays(today, -1);
+  return calendar([
+    event('hugo-band-yesterday', [
+      `DTSTART;VALUE=DATE:${dateValue(yesterday)}`,
+      `DTEND;VALUE=DATE:${dateValue(today)}`,
+    ]),
+  ]);
+}
+
 function busyOvernight(today: CalendarDay): string {
   const freeDay = addCalendarDays(today, FREE_DAY_OFFSET);
   return calendar([
@@ -173,6 +204,7 @@ const FIXTURE_BUILDERS: Readonly<Record<ServableFeedName, (today: CalendarDay) =
   midnight: busyOvernight,
   everything: busyEveryDay,
   huge: overTheSizeLimit,
+  'hugo-band': busyYesterdayOnly,
 };
 
 export function isFixtureFeedName(name: string): name is FixtureFeedName {
@@ -180,7 +212,10 @@ export function isFixtureFeedName(name: string): name is FixtureFeedName {
 }
 
 function isServableFeedName(name: string): name is ServableFeedName {
-  return isFixtureFeedName(name) || EDGE_CASE_FEED_NAMES.some((candidate) => candidate === name);
+  return (
+    isFixtureFeedName(name) ||
+    [...SECOND_CALENDAR_FEED_NAMES, ...EDGE_CASE_FEED_NAMES].some((candidate) => candidate === name)
+  );
 }
 
 // @FollowsBlueprint core-decision
@@ -223,18 +258,22 @@ export interface SeededMember {
 export interface FixtureFeedAttachment {
   readonly memberId: string;
   readonly address: string;
+  readonly name: string;
 }
 
 export function listFixtureFeedAttachments(
   members: readonly SeededMember[],
   feedOrigin: string,
 ): FixtureFeedAttachment[] {
-  return members
-    .filter((member) => isFixtureFeedName(member.username))
-    .map((member) => ({
-      memberId: member.memberId,
-      address: `${feedOrigin}/api/__test/calendar-feeds/${member.username}${FEED_EXTENSION}`,
-    }));
+  return members.flatMap((member) =>
+    isFixtureFeedName(member.username)
+      ? FEEDS_BY_USERNAME[member.username].map((fixture) => ({
+          memberId: member.memberId,
+          address: `${feedOrigin}/api/__test/calendar-feeds/${fixture.feed}${FEED_EXTENSION}`,
+          name: fixture.name,
+        }))
+      : [],
+  );
 }
 
 export function countSavedFeeds(outcomes: readonly { readonly kind: string }[]): number {
