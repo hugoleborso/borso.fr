@@ -1,0 +1,2 @@
+# Every kaizen sweep appends one row to this table, so parallel sweeps conflicted on it.
+docs/quality/feature-cost.md merge=union
