@@ -20,10 +20,18 @@ import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { formatDuration } from '../molecules/song-duration.utils';
 import { placeMomentMarks, isMomentToggleOn, selectCommentMoment } from './take-player.core';
 
+export type TakePlayerLayout = 'panel' | 'sheet';
+
 export interface TakePlayerProps {
   readonly take: ListedTake;
+  readonly layout?: TakePlayerLayout;
   readonly onClose: () => void;
 }
+
+const FRAME_CLASS_BY_LAYOUT = {
+  panel: 'flex flex-col gap-3 rounded-md border border-rule bg-paper p-3',
+  sheet: 'flex flex-col gap-3 px-1.5',
+} as const satisfies Readonly<Record<TakePlayerLayout, string>>;
 
 const NO_COMMENTS: readonly never[] = [];
 
@@ -54,7 +62,7 @@ function MomentButton({ atSeconds, onSeek }: MomentButtonProps): JSX.Element {
 }
 
 // @FollowsBlueprint organism-query-owning
-export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
+export function TakePlayer({ take, layout = 'panel', onClose }: TakePlayerProps): JSX.Element {
   const { t } = useTranslation();
   const playbackQuery = useTakePlaybackUrl(take.objectKey);
   const commentsQuery = useTakeComments(take.id);
@@ -103,20 +111,24 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
     onClose();
   };
 
+  const isPanel = layout === 'panel';
+  const deleteButton = (
+    <Button variant="danger" icon="trash" onClick={() => setIsConfirmingDelete(true)}>
+      {t('takes.player.delete')}
+    </Button>
+  );
+
   return (
-    <section
-      aria-label={t('takes.player.title')}
-      className="flex flex-col gap-3 rounded-md border border-rule bg-paper p-3"
-    >
-      <div className="flex items-center gap-2">
-        <span className="text-label tracking-wider uppercase text-ink-soft font-medium flex-1">
-          {t('takes.player.title')}
-        </span>
-        <Button variant="quiet" icon="trash" onClick={() => setIsConfirmingDelete(true)}>
-          {t('takes.player.delete')}
-        </Button>
-        <IconButton icon="close" label={t('common.close')} onClick={onClose} />
-      </div>
+    <section aria-label={t('takes.player.title')} className={FRAME_CLASS_BY_LAYOUT[layout]}>
+      {isPanel ? (
+        <div className="flex items-center gap-2">
+          <span className="text-label tracking-wider uppercase text-ink-soft font-medium flex-1">
+            {t('takes.player.title')}
+          </span>
+          {deleteButton}
+          <IconButton icon="close" label={t('common.close')} onClick={onClose} />
+        </div>
+      ) : null}
 
       {playbackQuery.data === undefined ? (
         <p
@@ -261,6 +273,8 @@ export function TakePlayer({ take, onClose }: TakePlayerProps): JSX.Element {
           </p>
         ) : null}
       </form>
+
+      {isPanel ? null : <div className="self-start">{deleteButton}</div>}
 
       {isConfirmingDelete ? (
         <ConfirmDialog

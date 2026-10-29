@@ -42,13 +42,16 @@ function comment(id: string, atSeconds: number | null, body: string): Record<str
   };
 }
 
-function renderPlayer(comments: readonly Record<string, unknown>[]): void {
+function renderPlayer(
+  comments: readonly Record<string, unknown>[],
+  layout: 'panel' | 'sheet' = 'panel',
+): void {
   takes.useTakePlaybackUrl.mockReturnValue({ data: { getUrl: 'blob:take' }, isError: false });
   takes.useTakeComments.mockReturnValue({ data: { comments } });
   takes.useCreateTakeComment.mockReturnValue(IDLE_MUTATION);
   takes.useDeleteTake.mockReturnValue(IDLE_MUTATION);
   takes.useDeleteTakeComment.mockReturnValue(IDLE_MUTATION);
-  render(<TakePlayer take={TAKE} onClose={vi.fn()} />);
+  render(<TakePlayer take={TAKE} layout={layout} onClose={vi.fn()} />);
 }
 
 function readReach(markButton: HTMLElement): { left: string; width: string } {
@@ -121,5 +124,14 @@ describe('TakePlayer', () => {
     expect(screen.getByRole('button', { name: /Delete take/ }).classList.contains('min-h-11')).toBe(
       true,
     );
+  });
+
+  it('leaves the close to the sheet that frames it and draws Delete take as a destructive button', () => {
+    renderPlayer([], 'sheet');
+
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+    const deleteTake = screen.getByRole('button', { name: /Delete take/ });
+    expect(deleteTake.getAttribute('data-variant')).toBe('danger');
+    expect(deleteTake.querySelector('svg')).not.toBeNull();
   });
 });

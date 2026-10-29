@@ -92,12 +92,19 @@ export function groupTakesBySong<TTake extends SessionTake>(
   }));
 }
 
-export function findSelectedTakeOfSong<TTake extends SessionTake>(
+export function findSelectedTake<TTake extends SessionTake>(
   takes: readonly TTake[],
   selectedTakeId: string | null,
-  songId: string,
 ): TTake | null {
-  return takes.find((take) => take.id === selectedTakeId && take.songId === songId) ?? null;
+  return takes.find((take) => take.id === selectedTakeId) ?? null;
+}
+
+// @FollowsBlueprint core-decision
+export function toggleTakeSelection(
+  selectedTakeId: string | null,
+  tappedTakeId: string,
+): string | null {
+  return selectedTakeId === tappedTakeId ? null : tappedTakeId;
 }
 
 export interface PreparedConcertPickerInput {

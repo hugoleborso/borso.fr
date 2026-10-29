@@ -6,7 +6,14 @@ import { useSessionsList } from '../../lib/queries/sessions.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { useTakesOfSession } from '../../lib/queries/takes.queries';
 import { takeQueue } from '../../lib/take-queue.setup';
-import { findSelectedTakeOfSong, groupTakesBySong } from '../../routes/sessions/session-page.core';
+import { toSongCard } from '../../routes/catalog/catalog-page.core';
+import {
+  findSelectedTake,
+  groupTakesBySong,
+  toggleTakeSelection,
+} from '../../routes/sessions/session-page.core';
+import { Sheet } from '../molecules/Sheet';
+import { SongCard } from './SongCard';
 import { mergePendingTakes } from './take-list.core';
 import { TakeList } from './TakeList';
 import { TakePlayer } from './TakePlayer';
@@ -28,8 +35,8 @@ export function SessionTakes({ sessionId }: SessionTakesProps): JSX.Element {
 
   const serverTakes = takesQuery.data?.takes ?? NO_ROWS;
   const sessions = sessionsQuery.data?.sessions ?? NO_ROWS;
-  const songTitles = useMemo(
-    () => new Map((songsQuery.data?.songs ?? NO_ROWS).map((song) => [song.id, song.title])),
+  const songsById = useMemo(
+    () => new Map((songsQuery.data?.songs ?? NO_ROWS).map((song) => [song.id, song])),
     [songsQuery.data],
   );
   const queuedHere = useMemo(
@@ -38,9 +45,14 @@ export function SessionTakes({ sessionId }: SessionTakesProps): JSX.Element {
   );
   const groups = useMemo(
     () =>
-      groupTakesBySong([...serverTakes, ...queuedHere], (songId) => songTitles.get(songId) ?? ''),
-    [serverTakes, queuedHere, songTitles],
+      groupTakesBySong(
+        [...serverTakes, ...queuedHere],
+        (songId) => songsById.get(songId)?.title ?? '',
+      ),
+    [serverTakes, queuedHere, songsById],
   );
+  const selectedTake = findSelectedTake(serverTakes, selectedTakeId);
+  const closeTake = (): void => setSelectedTakeId(null);
 
   return (
     <section className="flex flex-col gap-3" aria-labelledby="session-takes-title">
@@ -59,10 +71,10 @@ export function SessionTakes({ sessionId }: SessionTakesProps): JSX.Element {
         <p className="m-0 text-meta text-ink-soft">{t('sessions.noTakeYet')}</p>
       ) : null}
       {groups.map((group) => {
-        const selectedTake = findSelectedTakeOfSong(serverTakes, selectedTakeId, group.songId);
+        const song = songsById.get(group.songId);
         return (
           <div key={group.songId} className="flex flex-col gap-1.5">
-            <h3 className="m-0 truncate text-meta font-medium text-ink">{group.songTitle}</h3>
+            {song === undefined ? null : <SongCard {...toSongCard(song, song.artist)} />}
             <TakeList
               rows={mergePendingTakes(
                 serverTakes.filter((take) => take.songId === group.songId),
@@ -71,19 +83,27 @@ export function SessionTakes({ sessionId }: SessionTakesProps): JSX.Element {
               )}
               sessions={sessions}
               selectedTakeId={selectedTakeId}
-              onSelect={setSelectedTakeId}
+              onSelect={(takeId) => setSelectedTakeId(toggleTakeSelection(selectedTakeId, takeId))}
               onRetry={(takeId) => void takeQueue.retry(takeId)}
             />
-            {selectedTake === null ? null : (
-              <TakePlayer
-                key={selectedTake.id}
-                take={selectedTake}
-                onClose={() => setSelectedTakeId(null)}
-              />
-            )}
           </div>
         );
       })}
+      {selectedTake === null ? null : (
+        <Sheet
+          title={songsById.get(selectedTake.songId)?.title ?? t('takes.player.title')}
+          label={t('takes.player.title')}
+          isTitleARecordName
+          onClose={closeTake}
+        >
+          <TakePlayer
+            key={selectedTake.id}
+            take={selectedTake}
+            layout="sheet"
+            onClose={closeTake}
+          />
+        </Sheet>
+      )}
     </section>
   );
 }

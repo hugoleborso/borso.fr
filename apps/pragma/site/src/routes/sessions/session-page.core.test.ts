@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import {
   buildPracticePath,
   buildSetlistPreview,
-  findSelectedTakeOfSong,
+  findSelectedTake,
   groupTakesBySong,
   isPreparedConcertPickerShown,
   listSessionViews,
@@ -10,6 +10,7 @@ import {
   type PreviewSong,
   readSessionView,
   selectSessionPills,
+  toggleTakeSelection,
 } from './session-page.core';
 
 function song(id: string, overrides: Partial<PreviewSong> = {}): PreviewSong {
@@ -154,16 +155,24 @@ describe('groupTakesBySong', () => {
   });
 });
 
-describe('findSelectedTakeOfSong', () => {
+describe('findSelectedTake', () => {
   const takes = [
     { id: 't1', songId: 'song-a' },
     { id: 't2', songId: 'song-b' },
   ];
 
-  it('answers the selected take only under its own song', () => {
-    expect(findSelectedTakeOfSong(takes, 't2', 'song-b')).toBe(takes[1]);
-    expect(findSelectedTakeOfSong(takes, 't2', 'song-a')).toBeNull();
-    expect(findSelectedTakeOfSong(takes, null, 'song-a')).toBeNull();
+  it('answers the selected take, and none when nothing is selected', () => {
+    expect(findSelectedTake(takes, 't2')).toBe(takes[1]);
+    expect(findSelectedTake(takes, 't3')).toBeNull();
+    expect(findSelectedTake(takes, null)).toBeNull();
+  });
+});
+
+describe('toggleTakeSelection', () => {
+  it('opens a tapped take and closes it on a second tap', () => {
+    expect(toggleTakeSelection(null, 't1')).toBe('t1');
+    expect(toggleTakeSelection('t2', 't1')).toBe('t1');
+    expect(toggleTakeSelection('t1', 't1')).toBeNull();
   });
 });
 
