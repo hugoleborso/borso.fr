@@ -7,7 +7,6 @@ import { Button } from '../atoms/Button';
 
 export interface PasskeyListProps {
   readonly passkeys: readonly PasskeySummary[];
-  readonly canAdd: boolean;
   readonly isAdding: boolean;
   readonly onAdd: () => void;
   readonly onRemove: (passkeyId: string) => void;
@@ -40,7 +39,7 @@ export function PasskeyList(props: PasskeyListProps): JSX.Element {
         icon="fingerprint"
         type="button"
         variant="secondary"
-        disabled={!props.canAdd || props.isAdding}
+        disabled={props.isAdding}
         onClick={props.onAdd}
       >
         {t('account.addPasskey')}

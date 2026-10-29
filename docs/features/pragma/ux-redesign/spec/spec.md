@@ -32,13 +32,13 @@ Mockups are in `mockups/` (390x844). They were drawn before D11, with the earlie
 - The app opens on Home. (D2) The manifest shortcut points to Home instead of the catalogue.
 - Sessions holds a **Sessions / Setlists** section switch; Setlists is today's setlist library.
 - The Sessions list is ordered by session date: coming sessions nearest first, then past ones most recent first, concerts and practices mixed. A concert's card carries the accent border and fill, and a **Concerts only** chip (`audience`) in the fixed header keeps the list to concerts (operator review 3).
-- Band opens on tasks, with a row of links to members, instruments, bars, compositions, improvements and the account page above them (operator review 2, Q3). The language switch moves from the More drawer to the account page, on its own Language tab (Q8).
+- Band is a plain menu of its sections, one row each: Tasks, Members, Instruments, Bars, Compositions, Improvements and Account (operator review 3, T4). Tasks is a page of its own, `/tasks`. The language switch moves from the More drawer to the account page, on its own Language tab (Q8).
 - Songs carries a **To learn** filter that replaces the Studies tab; a study row opens its song.
 - Each destination has its own icon: Studies and Improvements no longer share `bolt` (rank 35).
 
 ### Home (`/`, mockup `after-home.png`)
 
-The next session, practice or concert, whichever comes first: kind, date, place, setlist name, song count and total time, and **Open the setlist**; on the day of a practice, the primary action is **Start the practice** instead (see *Practice mode*, slice 5). Under it: **Your part** (the songs of that setlist where the signed-in member plays, with their instruments) and **Your tasks** (open tasks assigned to the member, the ones linked to that session first once slice 5 adds the link; until then, by urgency as on Band). When that next session is a practice, the card also names the next concert, as one line linking to it (operator review 3). No session ahead: an empty state with **New session**.
+The next session, practice or concert, whichever comes first: kind, date, place, setlist name, song count and total time, and **Open the setlist**; on the day of a practice, the primary action is **Start the practice** instead (see *Practice mode*, slice 5). Under it: **My part** (the songs of that setlist where the signed-in member plays, with their instruments) and **My tasks** (open tasks assigned to the member, the ones linked to that session first once slice 5 adds the link; until then, by urgency as on Tasks). When that next session is a practice, the card also names the next concert, as one line linking to it (operator review 3). No session ahead: an empty state with **New session**.
 
 ### Setlist (`/setlists/:id`, mockups `after-setlist.png`, `after-lineup.png`)
 
@@ -88,7 +88,7 @@ The band records songs during practice (operator, 2026-10-27), and today that me
 
 ### Song page (`/catalog/:songId`, mockup `after-song.png`, `design/grafts/backstage-song-page.png`)
 
-In order: cover, title, artist, status; a row of listening links (Deezer, Spotify, YouTube, each with its official mark) built from the song's `links`, `deezerTrackId` and `spotifyTrackId`; one line of text naming the setlists the song is in; labelled round actions (**Practised**, **Notes**, **Full screen**), each an icon with its word under it; **Your part** with the member's instrument and mastery in the highlighter; the chord chart with a transpose stepper; the band's takes with play buttons; the default lineup and notes. Header: **Edit** (`edit`) and `more`. Primary action in the bottom strip: **Record a take** (`mic`); the page's bottom padding equals the strip's height, so the last chord line scrolls clear of the pill (the critic found Backstage's pill covering the chords). **Full screen** is the only way into stage mode from the song. (D8) **Edit** and **Full screen** are links drawn as buttons, never a button inside a link (rank 29).
+In order: cover, title, artist, status; a row of listening links (Deezer, Spotify, YouTube, each with its official mark) built from the song's `links`, `deezerTrackId` and `spotifyTrackId`; one line of text naming the setlists the song is in; labelled round actions (**Practised**, **Notes**, **Full screen**), each an icon with its word under it; **My part** with the member's instrument and mastery in the highlighter; the chord chart with a transpose stepper; the band's takes with play buttons; the default lineup and notes. Header: **Edit** (`edit`) and `more`. Primary action in the bottom strip: **Record a take** (`mic`); the page's bottom padding equals the strip's height, so the last chord line scrolls clear of the pill (the critic found Backstage's pill covering the chords). **Full screen** is the only way into stage mode from the song. (D8) **Edit** and **Full screen** are links drawn as buttons, never a button inside a link (rank 29).
 
 ### Chords by paste, photo or PDF (mockup `after-chords.png`)
 
@@ -100,7 +100,21 @@ Compact rows (cover, title, artist, status badge; chord icon only when a chart e
 
 ### Band tab (`/band`, mockup `after-band.png`)
 
-Opens on **My tasks / Everyone**. **New task** (`plus`) opens a sheet with title (focused), assignee avatars, due date, an optional song chosen among all songs, and an optional session. Tapping a task opens the same sheet filled with its values, in place of today's form 1840 px down the page (rank 2). A long song title in a task wraps or ends in an ellipsis, so the page stays 390 px wide (rank 21). The links to members, instruments, bars, compositions, improvements and the account sit above the tasks, as one row of links that scrolls sideways, so a long task list never hides them (operator review 2); the My tasks / Everyone tabs are pinned in the header.
+Band is a menu: one row per section, each with its icon and a `chevR`, in this order: **Tasks**, **Members**, **Instruments**, **Bars**, **Compositions**, **Improvements**, **Account** (operator review 3, T4). It holds no tasks and no tabs. The mockup still shows the tasks on Band; it predates review 3.
+
+### Tasks (`/tasks`)
+
+A Band sub-page with a back link to Band. Its header pins the **My tasks / Everyone** tabs. **New task** (`plus`) opens a sheet with title (focused), assignee avatars, due date, an optional song chosen among all songs, and an optional session. Tapping a task opens the same sheet filled with its values, in place of the old form 1840 px down the page (rank 2). A long song title in a task wraps or ends in an ellipsis, so the page stays 390 px wide (rank 21).
+
+### Instruments (`/instruments`)
+
+One aligned row per instrument: the drag handle, the glyph, the name over its family, and Delete. The page names no players (operator review 3, T6). **Add an instrument** (`plus`) is the bottom strip's pill and opens a sheet; tapping an instrument opens the same sheet filled in (R8).
+
+A member's **main instrument** (`member_instrument.is_primary`) is not shown and cannot be changed anywhere in the app, on purpose (operator decision, 2026-10-29). The value stays in the data, and only the assistants' member and instrument tools read it.
+
+### Account, Quick sign-in tab (`/account?view=sign-in`)
+
+Two cards. **Quick sign-in** holds one **Turn on quick sign-in** button (`fingerprint`) above the passkeys already made, each with **Remove**, and no explanatory text (operator review 3, T7). The passkey is created under the device kind guessed from the browser (iPhone, iPad, Android, Mac, Windows, Linux, Chromebook, or "This device"), then a small sheet asks for its name with that guess filled in. In a browser without WebAuthn the whole card is hidden, rather than showing a disabled button with no reason. **Assistants** shows Claude Code and Mistral Vibe by their official marks, each with one **Copy the command** button, and nothing else: no command block, no server address and no steps.
 
 ### Vote page (`/setlists/:setlistId/vote`)
 
@@ -119,7 +133,7 @@ flowchart LR
   Entry -->|Open the song| Song[Song page]
   Song -->|Full screen| Scene[Stage mode]
   Song -->|Edit| Chords[Chords: paste, photo, PDF]
-  Band -->|New task| TaskSheet[Task sheet]
+  Band --> Tasks -->|New task| TaskSheet[Task sheet]
   Session -->|Add a task| TaskSheet
   Home -->|Start the practice| Practice[Practice mode]
   Session -->|Start the practice| Practice
@@ -156,7 +170,7 @@ flowchart LR
 
 **Happy path, add chords (task 9):** Song, **Edit**, **Paste text**, paste a chords-above-lyrics sheet, check the preview under it, save.
 
-**Happy path, agree who does what (task 3):** session page, **Add a task**: title, assignee, due date, optional song; the task is linked to the session and shows on the session page, on Band, and on the assignee's Home.
+**Happy path, agree who does what (task 3):** session page, **Add a task**: title, assignee, due date, optional song; the task is linked to the session and shows on the session page, on Tasks, and on the assignee's Home.
 
 **Edge cases:**
 - Entry note typed fast on a slow network: the server keeps the last text typed; a reply to an older save never overwrites a newer one.
@@ -283,7 +297,7 @@ Measured with the task-metrics harness at 390x844 in emulated standalone mode, o
 | 1 Prepare the next practice (slice 5) | 18 / 3 / 7 | ≤ 15 / ≤ 1 / ≤ 6 | setlist created from the session in the same flow; the screens target was 4 and is 6 because this path opens two sheets (New practice, Add songs) and the harness counts every sheet as a screen, as it did for `baseline.json` |
 | 2 Build the concert setlist (slice 4) | 10 / 2 / 6 | ≤ 11 / 0 / ≤ 6 | one tap more reaches the Setlists section (D1); order kept after reload |
 | 3 Agree who does what (slice 5) | 9 / 3 / 3, title field at 2.18 screens | ≤ 9 / 0 / ≤ 3 (was ≤ 8; operator review 2 puts Who does what on the session page's Tasks tab, one tap) | title focused on opening; song options 6 -> all songs (44 in the seed); task linked to a session |
-| 3b See my own tasks (slice 2) | 2 / 0 / 3 | 1 / 0 / 2 | |
+| 3b See my own tasks (slice 2) | 2 / 0 / 3 | 1 / 0 / 2 | operator review 3 (T4) moves the tasks to `/tasks`, reached through Band's Tasks row: one tap more than this target, accepted with the change |
 | 4 Lineup for one song tonight (slice 3) | 4 / 0 / 3 | 3 / 0 / 2 | lineup sheet inner scroll 1 -> 0 |
 | 5 Note a transition (slices 1 and 3) | 3 / 0 / 2, note not shown | ≤ 3 / 0 / 2 | comment shown on the list; draft kept after a backdrop close |
 | 6 Note on a song for tonight (slices 1 and 3) | 4 / 0 / 2, note not shown | 3 / 0 / 2 | note shown on the row; full text stored in 8 of 8 runs of the note race (was 3 of 4) |
@@ -340,9 +354,9 @@ Measured with the task-metrics harness at 390x844 in emulated standalone mode, o
 | Practice mode: take recorded with the network off, then uploaded once back online, linked to the song and the session (slice 5) | no such screen | yes |
 | Screen rule violations, every route and tab at 375x667 (operator review 2, `--screen-rule`) | 76 on 31 routes | 0 (measured: 0 on 38 routes and tabs, `validation/operator-review-2-after.json`) |
 | Page header on screen after scrolling to the end, every route (operator review 2, Q1) | `/catalog` only | every route but the stage views and the two signed-out cards |
-| Band pages with a back link to Band in their header (operator review 2, Q5) | 0 of 6 | 6 of 6 |
+| Band pages with a back link to Band in their header (operator review 2, Q5) | 0 of 6 | 6 of 6; 7 of 7 with Tasks after review 3 |
 | Free slots on the Sessions list (operator review 2, Q2) | above the sessions | none; one Find a slot link opens `/sessions/slots` |
-| Players named on an instrument row (operator review 2, Q4) | avatars only, up to three per line, no legend | every player, avatar in the stored colour and first name, the main instrument marked in words |
+| Players named on an instrument row (operator review 2, Q4; reverted in operator review 3, T6) | avatars only, up to three per line, no legend | none: the row names no player |
 
 ## Slices
 
@@ -370,7 +384,7 @@ The operator reviewed the whole redesign on the #216 preview on 2026-10-28. Each
 | R5 | Add a song is a page, `/catalog/add`, so the keyboard does not hide the music service's results: they sit directly under the title field, which rises to the top of what the keyboard leaves visible. Every sheet closes on a swipe down from its grabber or header past 96 px, through the same path as a backdrop tap, so drafts survive; the spring back animates only when motion is allowed, and a sheet that cannot be dismissed shows no grabber. | `/catalog/add`, `Sheet` |
 | R6 | A session with no setlist says so in an empty state with **Attach an existing setlist**, and its primary pill is **Add a setlist**; a session with setlists shows a secondary **Add a setlist**, offering a new setlist or an existing one. Attaching uses the existing `POST /api/setlists/:id/sessions`. The header's `more` menu with New setlist and Attach a setlist goes. | Session page |
 | R7 | The mastery matrix has one row per instrument, with its average, and one column per member, headed by the member's avatar in their stored colour, with the member averages in a footer row; five members fit at 375 px with no sideways scroll, through `@tanstack/react-table`. | `/members` |
-| R8 | Instrument rows are one aligned 56 px line (handle, glyph, name over family, players, Delete). The New instrument form leaves the page: **Add an instrument** (`plus`) is the primary pill in the bottom strip, as Add a song is, and opens a sheet with the fields; tapping an instrument opens the same sheet filled in. | `/instruments` |
+| R8 | Instrument rows are one aligned 56 px line (handle, glyph, name over family, players, Delete; review 3 removed the players, T6). The New instrument form leaves the page: **Add an instrument** (`plus`) is the primary pill in the bottom strip, as Add a song is, and opens a sheet with the fields; tapping an instrument opens the same sheet filled in. | `/instruments` |
 
 Not taken from the review: a calendar feed of the band's sessions that a phone subscribes to (a `webcal://` link on iOS, Google Calendar's `?cid=` link on Android, a copy button). It needs a new public route serving the sessions as iCal behind a per-member secret, which is an architecture decision for an ADR before any code.
 
@@ -384,9 +398,9 @@ The operator reviewed the #216 preview again on 2026-10-29. Each item below is a
 | --- | --- | --- |
 | Q1 | Every page header is pinned while the content scrolls, not only on Songs: `PageHeader` is the sticky header of every screen, with the back link, the title, the actions and an optional pinned row for tabs, filters or a search. | every route |
 | Q2 | The free slots leave the Sessions list for their own page, **Find a slot** (`/sessions/slots`), reached from one **Find a slot** (`calendar`) link in the Sessions header. The members left out of the count come first, then the free evenings, each booking a practice through the New practice sheet. | `/sessions`, `/sessions/slots` |
-| Q3 | The rule above applies to every screen. Beyond Q7 to Q10, the check found and this review fixed: the session page (Who does what and the takes below the setlist preview, the prepared-concert picker below them), now on the tabs **Setlist**, **Tasks**, **Takes** and **Details**; Home (Your tasks below Your part), now two tabs; Band (its links below the tasks), now a row of links above them; compositions (the detail below the list on a phone), now a sheet; the audience vote page (Ask for something else below the vote list), now a sheet from the header. | session page, Home, Band, `/compos`, `/vote/:sessionId` |
-| Q4 | The avatars on an instrument row are the members whose profile lists that instrument, the ring marking their main instrument; nothing said so, and the fixture gives most instruments one player. Each row now names every player on a second line, **Played by**, with their avatar in their stored colour and their first name, and **main** with a star on the main instrument; the header says where the players come from and that a tap changes the main instrument. | `/instruments` |
-| Q5 | Every Band sub-page (Members, Instruments, Bars, Compositions, Improvements, Account) has a back link to Band in its header. | Band pages |
+| Q3 | The rule above applies to every screen. Beyond Q7 to Q10, the check found and this review fixed: the session page (Who does what and the takes below the setlist preview, the prepared-concert picker below them), now on the tabs **Setlist**, **Tasks**, **Takes** and **Details**; Home (My tasks below My part), now two tabs; Band (its links below the tasks), now a row of links above them, and since review 3 a plain menu with the tasks on their own page (T4); compositions (the detail below the list on a phone), now a sheet; the audience vote page (Ask for something else below the vote list), now a sheet from the header. | session page, Home, Band, `/compos`, `/vote/:sessionId` |
+| Q4 | The avatars on an instrument row are the members whose profile lists that instrument, the ring marking their main instrument; nothing said so, and the fixture gives most instruments one player. Each row now names every player on a second line, **Played by**, with their avatar in their stored colour and their first name, and **main** with a star on the main instrument; the header says where the players come from and that a tap changes the main instrument. **Reverted in operator review 3 (T6)**: the operator never asked for players on this page, and the rows name no player again. | `/instruments` |
+| Q5 | Every Band sub-page (Members, Instruments, Bars, Compositions, Improvements, Account, and Tasks since review 3) has a back link to Band in its header. | Band pages |
 | Q6 | On the song page the title wraps anywhere and stops at three lines, and Edit sits in a column that never shrinks, so they never overlap. | `/catalog/:songId` |
 | Q7 | **New improvement** (`plus`) is the bottom strip's pill and opens a sheet; tapping an improvement opens the same sheet filled in. The status filter is pinned in the header. | `/improvements` |
 | Q8 | The account page is five tabs: **Profile** (member card, contact details, password), **Quick sign-in**, **Calendar**, **Notifications**, **Language**. The tab is in the address, so the free slots' "Connect yours" opens Calendar. | `/account` |
@@ -394,6 +408,30 @@ The operator reviewed the #216 preview again on 2026-10-29. Each item below is a
 | Q10 | **New bar** (`plus`) is the bottom strip's pill and opens the bar form as a sheet, with the place search at its top; tapping a bar opens it filled in. The outreach message template is a sheet opened from the header. The one-field quick add goes: New bar with a name and Save does the same, with the status already "lead". | `/bars` |
 
 Measured after this review with the harness (`validation/operator-review-2-after.json`): every task walk still meets its target, task 3 at 9 taps for its new target of 9, and the screen rule finds nothing; see the acceptance rows marked *operator review 2*.
+
+## Operator review 3
+
+The operator reviewed the #216 preview a third time on 2026-10-29. Each item below is a ratified change to this spec, delivered on the same branch.
+
+| # | Change | Where it lands |
+| --- | --- | --- |
+| T1 | A practice's Details tab names the prepared concert once, in its select; the sentence under it goes. The select draws its chevron inside the field. | Session page, Details tab |
+| T2 | Sessions stay sorted by date, coming sessions nearest first, then past ones most recent first, and a test pins the order. A concert's card carries the accent border and fill. A **Concerts only** chip in the fixed header keeps the list to concerts, held in the address as `?kind=concert`. When the next session on Home is a practice, its card also names the next concert, as one line linking to it. | `/sessions`, Home |
+| T3 | A practice picks no setlist. Its first tab is **Songs**, and **Choose songs** picks its songs from concerts in two steps: tick concerts, then tick songs pooled from their setlists, and **Save**. No schema change; see *Session page*. | Session page |
+| T4 | Band is a plain menu of its sections, Tasks first and Account last. The tasks, with the **My tasks / Everyone** tabs and **New task**, move to their own page, `/tasks`, with a back link to Band. | `/band`, `/tasks` |
+| T5 | The paragraph explaining the mastery matrix goes, with no text in its place. | `/members`, Mastery tab |
+| T6 | The Instruments page names no players: the **Played by** line, the avatars, the **main** mark and the header text explaining them go. This reverts operator review 2, Q4. | `/instruments` |
+| T7 | Quick sign-in has no explanatory text, only **Turn on quick sign-in**. The passkey is made under a guessed device name, then a small sheet asks for its name; `PATCH /api/me/passkeys/:passkeyId` renames it. In a browser without WebAuthn the card is hidden. The assistants card shows Claude Code and Mistral Vibe by their official marks, each with **Copy the command**, and nothing else. | `/account`, Quick sign-in tab |
+| T8 | Every label that names the member's own things is in the first person: **My part**, **My tasks**, **My name**, **My calendar is on**, **Nothing on my list**, and in French "Ma partie", "Mes tâches", "Mon nom". A sentence addressed to the member with a verb keeps the second person. | every screen, `en.json`, `fr.json` |
+
+**Decisions recorded in this review:**
+- **The main instrument is not in the interface, on purpose** (operator, 2026-10-29). Removing the players from Instruments (T6) removed the only place that set a member's main instrument. It stays in the data, and only the assistants' member and instrument tools read it. No screen shows or edits it, and none should be added without a new decision.
+- **A practice's songs come from concerts.** The songs a practice works on are chosen among the songs of the concerts it prepares, never from the setlist library.
+- **Band is navigation only.** It lists its sections and holds no content of its own, so seeing one's own tasks costs one more tap (task 3b).
+- **Quick sign-in and the assistants card carry no explanation.** The card is hidden where it cannot work, rather than explained.
+- **The member's own things are named in the first person** in every label.
+
+Properties this review drops: the assistants card no longer offers the server address for a claude.ai or Le Chat custom connector, nor the steps after copying the command; the server still accepts those clients.
 
 ## Changes
 

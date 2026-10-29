@@ -48,6 +48,7 @@ describe('PasskeysCard', () => {
 
   beforeEach(() => {
     stubSheetDialog();
+    passkeyBrowser.isPasskeySupported.mockReturnValue(true);
     vi.spyOn(navigator, 'userAgent', 'get').mockReturnValue(IPHONE_AGENT);
     stub = stubFetch((request) => Promise.resolve(answerPasskeysApi(request)));
   });
@@ -64,6 +65,17 @@ describe('PasskeysCard', () => {
     const card = button.parentElement;
     expect(card?.textContent).toBe('Turn on quick sign-in');
     expect(screen.queryByRole('textbox')).toBe(null);
+  });
+
+  it('renders nothing in a browser that cannot make a passkey', () => {
+    passkeyBrowser.isPasskeySupported.mockReturnValue(false);
+    const { container } = render(
+      <QueryClientProvider client={createIsolatedQueryClient()}>
+        <PasskeysCard />
+      </QueryClientProvider>,
+    );
+    expect(container.textContent).toBe('');
+    expect(screen.queryByRole('button')).toBe(null);
   });
 
   it('creates the passkey under a guessed name, then asks for the name in a sheet', async () => {

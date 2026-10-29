@@ -16,12 +16,14 @@ import { PasskeyList } from './PasskeyList';
 import { PasskeyNameSheet } from './PasskeyNameSheet';
 
 // @FollowsBlueprint organism-query-owning
-export function PasskeysCard(): JSX.Element {
+export function PasskeysCard(): JSX.Element | null {
   const { t } = useTranslation();
   const passkeys = usePasskeys();
   const registerPasskey = useRegisterPasskey();
   const removePasskey = useRemovePasskey();
   const [createdPasskey, setCreatedPasskey] = useState<PasskeySummary | null>(null);
+
+  if (!isPasskeySupported()) return null;
 
   const turnOnQuickSignIn = (): void => {
     const label =
@@ -34,7 +36,6 @@ export function PasskeysCard(): JSX.Element {
     <Card className="p-4 sm:p-6">
       <PasskeyList
         passkeys={passkeys.data ?? []}
-        canAdd={isPasskeySupported()}
         isAdding={registerPasskey.isPending}
         onAdd={turnOnQuickSignIn}
         onRemove={(passkeyId) => removePasskey.mutate({ passkeyId })}
