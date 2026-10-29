@@ -98,6 +98,28 @@ describe('migration-runner handler', () => {
     expect(state.ended).toBe(1);
   });
 
+  it('Delete: drops the schema again when DSQL aborted the first try on a concurrent catalog change', async () => {
+    vi.useFakeTimers();
+    state.rejectNextUnsafe = Object.assign(
+      new Error('schema has been updated by another transaction'),
+      { code: 'OC001' },
+    );
+    const pending = handler({
+      RequestType: 'Delete',
+      PhysicalResourceId: 'dsql-schema:test_app',
+      ResourceProperties: baseProps,
+    });
+    await vi.runAllTimersAsync();
+    const response = await pending;
+    vi.useRealTimers();
+    expect(response.PhysicalResourceId).toBe('dsql-schema:test_app');
+    const drops = state.unsafeCalls
+      .map((call) => call.query)
+      .filter((query) => query.includes('DROP SCHEMA IF EXISTS "test_app" CASCADE'));
+    expect(drops).toHaveLength(1);
+    expect(state.ended).toBe(1);
+  });
+
   it('Create: creates the API role after the migrations, maps it and grants the schema', async () => {
     await handler({
       RequestType: 'Create',

@@ -19,6 +19,7 @@ import {
   selectMappedArns,
   type TableAccess,
 } from './database-role.utils.js';
+import { runRetryingConcurrencyConflicts } from './concurrency-retry.js';
 import { computeIndexBuildDeadline } from './index-build-jobs.utils.js';
 import { settleIndexBuild } from './index-build-wait.js';
 import { selectPendingMigrations } from './pending-migrations.utils.js';
@@ -309,7 +310,7 @@ export async function handler(event: CfnEvent): Promise<CfnResponse> {
 
   const sql = await connect(props);
   try {
-    await applyByRequestType[event.RequestType](sql);
+    await runRetryingConcurrencyConflicts(async () => applyByRequestType[event.RequestType](sql));
   } finally {
     await sql.end({ timeout: CONNECTION_CLOSE_TIMEOUT_SECONDS });
   }
