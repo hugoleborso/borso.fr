@@ -10,7 +10,7 @@ eradication-level: 1
 eradication-paths: [scripts/check-no-racy-pipelines.sh]
 time-to-detect: hours
 tags: [ci, gates, shell, meta, self-improvement-loop]
-zone: .husky/pre-commit
+zone: scripts/check-mutation-covers-gated-files.sh
 ---
 
 # The gate that failed on a broken pipe

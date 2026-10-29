@@ -37,3 +37,13 @@ export function readTrackedPaths(): ReadonlySet<string> {
   }
   return paths;
 }
+
+export function readPathsEverTracked(): ReadonlySet<string> {
+  const paths = new Set(readTrackedPaths());
+  for (const path of runGit(['log', '--format=', '--name-only', '--diff-filter=A', 'HEAD']).split(
+    '\n',
+  )) {
+    if (path.length > 0) paths.add(path);
+  }
+  return paths;
+}

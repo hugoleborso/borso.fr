@@ -94,6 +94,21 @@ qualified ARN is what IAM compares cannot be told from a session, because
 `:$LATEST` form to that check. `db-read.sh` reports the refusal on one line
 with exit code 4 and names §12.7.
 
+## Copying production rows into a local database
+
+No script does this. PR #216's demo video built one by hand, from `db-read.sh`
+output into a `load.sql`. Two limits shape it:
+
+- **200 rows per query.** The reader wraps every statement in
+  `LIMIT 200` (`ROW_CAP` in `infra/cdk/src/internal/agent-reader/read-only-query.utils.ts`).
+  A larger table needs one query per page, as `setlist_entry` did.
+- **No sign-in from the copy alone.** `app_config` holds the shared password
+  and the reader cannot see it, so the copied rows never include it. Run
+  `pnpm --filter @borso-app/pragma run dev:db` first: it applies the migrations
+  and seeds the fixture, whose password it prints. Then replace the fixture's
+  data rows with the copied ones and keep `app_config` (inferred from the
+  demo agent's log line, not run in this sweep).
+
 ## talos: its own agent API
 
 `APP=talos` is refused by the script, and the IAM grant does not name its

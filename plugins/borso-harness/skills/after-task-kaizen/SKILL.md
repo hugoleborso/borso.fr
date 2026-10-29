@@ -122,7 +122,7 @@ Sources to walk in order, capturing each friction event as one row:
 
 Output: a markdown table with these columns, committed to
 `docs/features/meta/lessons-from-pr-<N>/inventory.md`, which the kaizen
-PR body links from its *Notable* section. The table does not go in the
+PR body links from its *Inventory* section. The table does not go in the
 body: `scripts/pr/check-pr-body.ts` holds a budget an inventory of this
 size cannot fit, and the two requirements contradicted each other from
 the moment the budget landed. A committed file is the better home
@@ -294,7 +294,6 @@ For each surviving subject:
    proof lands in `KAIZEN.md` as friction. The repository keeps no standing canary, so this
    step is the only proof. Prefer removing a mechanism over adding a
    check, and never add a check that only guards the harness.
-6. Add a one-line entry to `docs/dantotsus/README.md` index.
 
 **Vendor surprises / operator confusion / reusable insights →
 `docs/knowledge/<slug>.md`:**
@@ -407,7 +406,7 @@ not its volume, is what keeps the system improving.
       passes once the friction log is archived; three unfiled lines
       about the same wall are a wall to add to
       `docs/quality/working-conditions.md`.
-- [ ] Both READMEs updated.
+- [ ] `docs/knowledge/README.md` lists every new or extended entry.
 - [ ] Cross-links to existing entries added where chains overlap.
 - [ ] All eradication commits exist on the kaizen branch (verify
       `git log --oneline` shows them).
@@ -417,7 +416,7 @@ not its volume, is what keeps the system improving.
       array should include `"kaizen"`).
 - [ ] Inventory committed to
       `docs/features/meta/lessons-from-pr-<N>/inventory.md` and linked
-      from the body's *Notable* section.
+      from the body's *Inventory* section.
 - [ ] Body passes `pnpm exec tsx scripts/pr/check-pr-body.ts <draft.md>`.
 
 ## Reframes

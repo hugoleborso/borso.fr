@@ -157,6 +157,7 @@ There are two rounds at most. Blocking findings left after round 2 go to the ope
 - **Skipping a sub-skill that exists** — domain knowledge in the sub-skill goes unenforced; defects predicted by it ship anyway.
 - **Deferring the test-runner setup** — if the workspace has no Vitest yet, set it up *as part of this implementation*. Otherwise the implementation lands without coverage and the next session inherits a broken gate.
 - **Reinventing what the library already does.** Before writing a "quick custom X" on top of an imported library, read the library's current docs / changelog / `defaultOptions` for the capability you're about to recreate. The first place to look for a feature an imported library plausibly already has is the library itself.
+- **Answering a question with a feature.** When the operator asks why something looks the way it does, answer, or ask what they want. Build only what the spec or the operator's message names. On PR #216 the question "why only one or two member pills" became an unrequested **Played by** feature, which review 3 reverted.
 - **Walking the plan with open questions still in it.** Step 1a of the procedure is non-negotiable. If `plan.md` carries unanswered items, the implementer must surface them to the user *before* writing code. Picking the answer yourself silently bakes the implementer's preference into both the implementation and the validation that follows.
 
 ## Repo-specific notes
@@ -180,4 +181,4 @@ The body is free-form (full report, diff summary, debugging notes) — the orche
 
 ## After this skill
 
-Step 8 ends `/implementation`. Both validators carry the post-merge auto-chain to `/after-task-kaizen`.
+Step 8 ends `/implementation`.

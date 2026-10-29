@@ -16,7 +16,7 @@ import {
   UNRESOLVED_SUBJECT,
 } from './blueprint-utils.js';
 import {
-  buildSubjectBaseline,
+  acceptSubjects,
   describeDetachedClaim,
   listDetachedClaims,
   parseSubjectBaseline,
@@ -294,8 +294,21 @@ function toMarkerClaims(followers: readonly FollowerReference[]): MarkerClaim[] 
     }));
 }
 
+function readAcceptedPaths(): readonly string[] {
+  const acceptIndex = process.argv.indexOf('--accept');
+  return process.argv
+    .slice(acceptIndex + 1)
+    .filter((argument) => !argument.startsWith('--'))
+    .map((argument) => path.relative(REPOSITORY_ROOT, path.resolve(argument)));
+}
+
 function writeSubjectBaseline(followers: readonly FollowerReference[]): void {
-  const baseline = buildSubjectBaseline(toMarkerClaims(followers));
+  const acceptedPaths = readAcceptedPaths();
+  const recorded =
+    acceptedPaths.length > 0 && fs.existsSync(SUBJECT_BASELINE_FILE)
+      ? (parseSubjectBaseline(fs.readFileSync(SUBJECT_BASELINE_FILE, 'utf8')) ?? {})
+      : {};
+  const baseline = acceptSubjects(recorded, toMarkerClaims(followers), acceptedPaths);
   fs.writeFileSync(SUBJECT_BASELINE_FILE, `${JSON.stringify(baseline, null, 2)}\n`, 'utf8');
 }
 

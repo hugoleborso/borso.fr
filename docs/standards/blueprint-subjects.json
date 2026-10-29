@@ -5654,6 +5654,12 @@
   "infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts": {
     "buildCloneInsertSql": "utils-pure-module"
   },
+  "infra/cdk/src/internal/migration-runner/concurrency-retry.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/migration-runner/concurrency-retry.utils.ts": {
+    "isConcurrencyConflict": "utils-pure-module"
+  },
   "infra/cdk/src/internal/migration-runner/database-role.utils.ts": {
     "apiRoleName": "utils-pure-module"
   },
