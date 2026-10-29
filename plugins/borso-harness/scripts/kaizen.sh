@@ -151,7 +151,10 @@ case "${1:-}" in
     # so they collapse to spaces.
     entry="$(printf '%s' "$*" | tr '\n' ' ')"
     writer="$(printf '%s' "$WRITER" | tr '\n ' '--')"
-    printf -- '- [%s] `%s` %s\n' "$(date -u +%H:%M)" "$writer" "$entry" >> "$KAIZEN_FILE"
+    # The date is part of the stamp because one session's log outlives one task:
+    # the PR #206 sweep had to cut a log holding four pull requests' lines by
+    # clock time alone, across three days.
+    printf -- '- [%s] `%s` %s\n' "$(date -u '+%Y-%m-%d %H:%M')" "$writer" "$entry" >> "$KAIZEN_FILE"
     printf '\033[36m[kaizen]\033[0m logged as %s: %s\n' "$writer" "$entry"
     ;;
 esac

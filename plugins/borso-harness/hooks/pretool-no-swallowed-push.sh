@@ -70,7 +70,8 @@ block() {
   echo "[no-swallowed-push] pipefail is off here, so the pipeline reports the last stage's status," >&2
   echo "[no-swallowed-push] and the gate's own message goes to stderr, which is not piped." >&2
   echo "[no-swallowed-push] Nothing in this command ran, including any step before the $2," >&2
-  echo "[no-swallowed-push] so a \`git add\` chained in front of it staged nothing." >&2
+  echo "[no-swallowed-push] so a \`git add\` chained in front of it staged nothing, and a heredoc" >&2
+  echo "[no-swallowed-push] that was to write the message file wrote nothing: write it again first." >&2
   echo "[no-swallowed-push] Run it bare and read the tail afterwards:" >&2
   echo "[no-swallowed-push]   $3" >&2
   echo "[no-swallowed-push] or keep the status if the output is genuinely too long:" >&2
