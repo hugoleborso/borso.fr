@@ -21,7 +21,7 @@ export function TargetSongCountField(props: TargetSongCountFieldProps): JSX.Elem
   return (
     <div className="flex items-end gap-2 px-4">
       <div className="flex-1 max-w-[220px]">
-        <label htmlFor="vote-target" className="text-xs tracking-wider uppercase text-ink-400">
+        <label htmlFor="vote-target" className="text-label tracking-wider uppercase text-ink-soft">
           {t('voting.targetSongCount')}
         </label>
         <Input
@@ -35,7 +35,12 @@ export function TargetSongCountField(props: TargetSongCountFieldProps): JSX.Elem
         />
       </div>
       {props.isVoting ? (
-        <Button type="button" variant="ghost" disabled={props.isPending} onClick={props.onCommit}>
+        <Button
+          variant="secondary"
+          icon="check"
+          disabled={props.isPending}
+          onClick={props.onCommit}
+        >
           {t('voting.applyTarget')}
         </Button>
       ) : null}

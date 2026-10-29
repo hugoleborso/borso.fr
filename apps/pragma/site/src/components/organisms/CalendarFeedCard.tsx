@@ -26,8 +26,6 @@ export function CalendarFeedCard(): JSX.Element {
       ref={scrollIntoViewWhenAddressed}
       className="p-4 sm:p-6 scroll-mt-4"
     >
-      <h2 className="text-base text-ink-900 m-0 mb-3">{t('account.calendarFeed')}</h2>
-      <p className="text-xs text-ink-500 mt-0 mb-3">{t('account.calendarFeedHint')}</p>
       <CalendarFeedForm
         state={member.data?.calendarFeed ?? 'absent'}
         message={calendarFeedMessage}

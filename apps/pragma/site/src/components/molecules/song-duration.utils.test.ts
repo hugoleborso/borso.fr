@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDuration } from './song-duration.utils';
+import { describeTotalDuration, formatDuration, sumKnownDurations } from './song-duration.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('formatDuration', () => {
@@ -25,5 +25,42 @@ describe('formatDuration', () => {
 
   it('carries past an hour into the minutes', () => {
     expect(formatDuration(3_661)).toBe('61:01');
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('sumKnownDurations', () => {
+  it('adds the durations that are known and skips the others', () => {
+    expect(sumKnownDurations([180, null, 240, undefined])).toBe(420);
+  });
+
+  it('knows no total when no song has a duration', () => {
+    expect(sumKnownDurations([null, undefined])).toBeNull();
+    expect(sumKnownDurations([])).toBeNull();
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('describeTotalDuration', () => {
+  it('writes a set under an hour in minutes', () => {
+    expect(describeTotalDuration(48 * 60)).toEqual({ kind: 'minutes', hours: 0, minutes: '48' });
+  });
+
+  it('writes hours and padded minutes past an hour', () => {
+    expect(describeTotalDuration(78 * 60)).toEqual({
+      kind: 'hoursMinutes',
+      hours: 1,
+      minutes: '18',
+    });
+    expect(describeTotalDuration(65 * 60)).toEqual({
+      kind: 'hoursMinutes',
+      hours: 1,
+      minutes: '05',
+    });
+  });
+
+  it('rounds to the nearest minute', () => {
+    expect(describeTotalDuration(29)).toEqual({ kind: 'minutes', hours: 0, minutes: '0' });
+    expect(describeTotalDuration(30)).toEqual({ kind: 'minutes', hours: 0, minutes: '1' });
   });
 });

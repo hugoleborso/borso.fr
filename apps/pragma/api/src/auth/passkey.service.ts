@@ -10,6 +10,8 @@ import {
   listPasskeysForMember,
   takeChallenge,
   updatePasskeyCounter,
+  updatePasskeyLabel,
+  type PasskeyRow,
 } from './credentials.repository';
 import {
   buildAuthenticationOptions,
@@ -27,13 +29,13 @@ export interface PasskeySummary {
   readonly createdAt: string;
 }
 
+function summarisePasskey(passkey: PasskeyRow): PasskeySummary {
+  return { id: passkey.id, label: passkey.label, createdAt: passkey.createdAt.toISOString() };
+}
+
 export async function listPasskeys(memberId: string): Promise<PasskeySummary[]> {
   const passkeys = await listPasskeysForMember(memberId);
-  return passkeys.map((passkey) => ({
-    id: passkey.id,
-    label: passkey.label,
-    createdAt: passkey.createdAt.toISOString(),
-  }));
+  return passkeys.map(summarisePasskey);
 }
 
 async function rememberChallenge(
@@ -72,7 +74,9 @@ export async function startPasskeyRegistration(
   return { kind: 'ok', options };
 }
 
-export type RegistrationOutcome = { kind: 'ok' } | { kind: 'verification-failed' };
+export type RegistrationOutcome =
+  | { kind: 'ok'; passkey: PasskeySummary }
+  | { kind: 'verification-failed' };
 
 export async function finishPasskeyRegistration(params: {
   readonly memberId: string;
@@ -90,7 +94,7 @@ export async function finishPasskeyRegistration(params: {
     challenge: stored.challenge,
   });
   if (verdict === null) return { kind: 'verification-failed' };
-  await insertPasskey({
+  const passkey = await insertPasskey({
     memberId: params.memberId,
     credentialId: verdict.credentialId,
     publicKey: verdict.publicKey,
@@ -99,7 +103,7 @@ export async function finishPasskeyRegistration(params: {
     label: params.label,
     createdAt: params.now,
   });
-  return { kind: 'ok' };
+  return { kind: 'ok', passkey: summarisePasskey(passkey) };
 }
 
 export async function startPasskeyAuthentication(
@@ -143,4 +147,13 @@ export async function finishPasskeyAuthentication(params: {
 
 export async function removePasskey(memberId: string, passkeyId: string) {
   return selectDeletionOutcome(await deletePasskey(memberId, passkeyId));
+}
+
+export async function renamePasskey(
+  memberId: string,
+  passkeyId: string,
+  label: string,
+): Promise<PasskeySummary | null> {
+  const renamed = await updatePasskeyLabel(memberId, passkeyId, label);
+  return renamed === null ? null : summarisePasskey(renamed);
 }

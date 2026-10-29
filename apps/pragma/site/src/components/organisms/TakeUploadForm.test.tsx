@@ -6,6 +6,7 @@ import '../../i18n/i18n.setup';
 import { createIsolatedQueryClient } from '../../lib/queries/queries.test-utils';
 import { toDateTimeLocalValue } from './take-upload-form.core';
 import { TakeUploadForm } from './TakeUploadForm';
+import { stubSheetDialog } from '../molecules/sheet.test-utils';
 
 const NEAR_PRACTICE = { id: 'practice-near', kind: 'practice', date: '2026-10-18T19:00:00.000Z' };
 const FAR_PRACTICE = { id: 'practice-far', kind: 'practice', date: '2026-10-11T19:00:00.000Z' };
@@ -24,14 +25,7 @@ vi.mock('../../lib/queries/sessions.queries', () => sessions);
 vi.mock('../../lib/recorder.adapter', () => recorder);
 vi.mock('../../lib/take-queue.setup', () => queue);
 
-function stubShowModal(this: HTMLDialogElement): void {
-  this.setAttribute('open', '');
-}
-
-Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
-  configurable: true,
-  value: stubShowModal,
-});
+stubSheetDialog();
 
 function buildRecordedFile(): File {
   return new File(['take'], 'practice.webm', {
@@ -113,6 +107,7 @@ describe('TakeUploadForm', () => {
         durationSeconds: 232,
         rawContentType: 'audio/webm',
         source: 'upload',
+        isFromPracticeMode: false,
       },
       file,
     );

@@ -5,24 +5,25 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
 import { inputVariants } from '../atoms/input.variants';
-import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import { type SetlistEntryForm } from './setlist-entry-form.hook';
 
 const FIELD_CLASS = composeClassName(
   inputVariants({ size: 'sm' }),
   'w-12 px-1 text-center font-mono',
 );
-const LABEL_CLASS = 'flex items-center gap-1.5 text-[11px] tracking-wider uppercase text-ink-400';
+const LABEL_CLASS = 'flex items-center gap-1.5 text-label tracking-wider uppercase text-ink-soft';
 
 interface SetlistEntryKeyCapoFieldsProps {
   readonly form: SetlistEntryForm;
-  readonly onPatch: (patch: SetlistEntryPatch) => void;
+  readonly onKeyType: (text: string) => void;
+  readonly onCapoType: (text: string) => void;
 }
 
 // @FollowsBlueprint molecule-presentational
 export function SetlistEntryKeyCapoFields({
   form,
-  onPatch,
+  onKeyType,
+  onCapoType,
 }: SetlistEntryKeyCapoFieldsProps): JSX.Element {
   const { t } = useTranslation();
   return (
@@ -37,7 +38,7 @@ export function SetlistEntryKeyCapoFields({
               onChange={(event) => {
                 const next = event.target.value;
                 field.handleChange(next);
-                onPatch({ keyOverride: next.length === 0 ? null : next });
+                onKeyType(next);
               }}
               onBlur={field.handleBlur}
               maxLength={KEY_OVERRIDE_MAX_LENGTH}
@@ -59,7 +60,7 @@ export function SetlistEntryKeyCapoFields({
               onChange={(event) => {
                 const next = event.target.value;
                 field.handleChange(next);
-                onPatch({ capo: next === '' ? null : Number(next) });
+                onCapoType(next);
               }}
               onBlur={field.handleBlur}
               className={FIELD_CLASS}

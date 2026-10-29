@@ -1,0 +1,11 @@
+
+> @borso-app/pragma@0.0.0 task-metrics /home/user/borso.fr/apps/pragma
+> scripts/task-metrics/run-task-metrics.sh "--" "--tasks" "none" "--slice-2" "--seed" "no-upcoming-session" "--out" "/tmp/claude-0/-home-user-borso-fr/af56c1be-57ea-5b20-9cfd-fe2d2eef3c76/scratchpad/vv22/slice-2-r2-empty.json"
+
+[dev:db] migrations applied, fixture seeded: 4 members, shared password "pragma-preview"
+[dev:db] sign in as any of: Hugo, Léa, Marc, Sarah
+[audit-seed] songs=44 members=5 instruments=6 sessions=3
+[audit-seed] setlists -> Festival de la Butte — brouillon long: 22 | Set principal: 20 | Répétition du jeudi — on cale les enchaînements: 17
+pragma up: site http://localhost:5186  api http://localhost:3186  (sign in as hugo / pragma-preview)
+[36m[argent][0m stopped
+pragma instance 5186 stopped (the shared postgres cluster keeps running; stop it with: /home/user/borso.fr/scripts/local-postgres.sh stop pragma)

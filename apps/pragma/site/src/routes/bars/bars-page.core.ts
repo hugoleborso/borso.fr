@@ -20,16 +20,9 @@ export interface BarRow {
   readonly ownerMemberId: string | null;
   readonly concertMood: ConcertMood | null;
   readonly availableSupport: readonly AvailableSupport[];
-  readonly lastInteractionAt: string | null;
 }
 
 export type BarsView = 'list' | 'kanban';
-
-export type ToggleState = 'active' | 'inactive';
-
-export function selectToggleState(current: BarsView, candidate: BarsView): ToggleState {
-  return current === candidate ? 'active' : 'inactive';
-}
 
 export function groupBarsByStatus(bars: readonly BarRow[]): Record<BarStatus, BarRow[]> {
   const grouped: Record<BarStatus, BarRow[]> = {
@@ -51,12 +44,10 @@ export interface KanbanCard {
   readonly contactName: string | null;
   readonly ownerName: string | null;
   readonly concertMood: ConcertMood | null;
-  readonly isStale: boolean;
 }
 
 export function buildKanbanCardsByStatus(
   barsByStatus: Readonly<Record<BarStatus, readonly BarRow[]>>,
-  isBarStale: (bar: BarRow) => boolean,
   ownerNameOf: (bar: BarRow) => string | null,
 ): Record<BarStatus, KanbanCard[]> {
   const toCards = (bars: readonly BarRow[]): KanbanCard[] =>
@@ -68,7 +59,6 @@ export function buildKanbanCardsByStatus(
       contactName: bar.contactName,
       ownerName: ownerNameOf(bar),
       concertMood: bar.concertMood,
-      isStale: isBarStale(bar),
     }));
   return {
     lead: toCards(barsByStatus.lead),

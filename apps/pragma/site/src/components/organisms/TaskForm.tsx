@@ -5,12 +5,16 @@ import { TASK_STATUSES, type TaskStatus } from '@domain/task-status.core';
 import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
-import { StickyFormActions } from '../atoms/StickyFormActions';
-import { Card } from '../atoms/Card';
-import { composeClassName } from '../atoms/class-name.utils';
+import { Chip } from '../atoms/Chip';
+import { Icon, type IconName } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
-import { TASK_STATUS_LABEL_KEY } from '../../routes/tasks/tasks-page.core';
+import { MemberChip } from '../molecules/MemberChip';
+import { Sheet } from '../molecules/Sheet';
+import { inputVariants } from '../atoms/input.variants';
+import { TASK_STATUS_LABEL_KEY } from '../../routes/band/band-tasks.core';
+import { createSheetDraftStore } from '../../lib/sheet-draft.store';
 
 export interface TaskFormValues {
   readonly title: string;
@@ -18,61 +22,86 @@ export interface TaskFormValues {
   readonly status: TaskStatus;
   readonly assigneeId: string | null;
   readonly songId: string | null;
+  readonly sessionId: string | null;
   readonly dueDate: string;
 }
 
 export interface TaskFormProps {
+  readonly draftKey: string;
   readonly values: TaskFormValues;
   readonly isEditing: boolean;
-  readonly members: readonly { readonly id: string; readonly firstName: string }[];
-  readonly compositions: readonly { readonly id: string; readonly title: string }[];
+  readonly members: readonly {
+    readonly id: string;
+    readonly firstName: string;
+    readonly color: string;
+  }[];
+  readonly songs: readonly { readonly id: string; readonly title: string }[];
+  readonly sessions: readonly { readonly id: string; readonly label: string }[];
   readonly onSubmit: (values: TaskFormValues) => Promise<void>;
-  readonly onCancel: () => void;
+  readonly onClose: () => void;
 }
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
-const PILL_CLASS =
-  'inline-flex items-center min-h-11 px-3 rounded-full border text-[12.5px] cursor-pointer transition-colors';
-const PILL_CLASS_BY_STATE = {
-  selected: 'bg-accent-soft border-accent text-accent font-medium',
-  unselected: 'bg-bg border-line text-ink-500 hover:border-line-strong',
-} as const;
-const SELECT_CLASS =
-  'min-h-11 px-2.5 rounded-md border border-line bg-bg text-[13.5px] text-ink-900';
-const NO_COMPOSITION_VALUE = '';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
+const SELECT_CLASS = inputVariants({ size: 'md' });
+const NO_LINK_VALUE = '';
+const TASK_STATUS_ICON = {
+  todo: 'tasks',
+  doing: 'play',
+  done: 'check',
+} as const satisfies Readonly<Record<TaskStatus, IconName>>;
 const NOTES_ROWS = 3;
 
-function pillClass(isSelected: boolean): string {
-  return composeClassName(PILL_CLASS, PILL_CLASS_BY_STATE[isSelected ? 'selected' : 'unselected']);
-}
+const useTaskDraft = createSheetDraftStore<TaskFormValues>();
 
-function compositionIdFromValue(value: string): string | null {
-  return value === NO_COMPOSITION_VALUE ? null : value;
+function linkedIdFromValue(value: string): string | null {
+  return value === NO_LINK_VALUE ? null : value;
 }
 
 // @FollowsBlueprint organism-form
 export function TaskForm(props: TaskFormProps): JSX.Element {
   const { t } = useTranslation();
+  const kept = useTaskDraft(props.draftKey);
   const form = useForm({
-    defaultValues: props.values,
+    defaultValues: kept.draft ?? props.values,
     onSubmit: async ({ value }) => {
       await props.onSubmit(value);
+      kept.discard();
     },
   });
 
+  const closeKeepingDraft = (): void => {
+    if (form.state.isDirty && !form.state.isSubmitSuccessful) kept.keep(form.state.values);
+    props.onClose();
+  };
+
+  const sheetTitle = t(props.isEditing ? 'tasks.editTitle' : 'tasks.newTitle');
+
   return (
-    <Card className="flex flex-col gap-3">
-      <h3 className="font-display italic text-2xl text-ink-900 m-0">
-        {t(props.isEditing ? 'tasks.editTitle' : 'tasks.newTitle')}
-      </h3>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        className="flex flex-col gap-2.5"
-      >
+    <Sheet
+      title={sheetTitle}
+      label={sheetTitle}
+      onClose={closeKeepingDraft}
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      footer={
+        <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              icon="check"
+              type="submit"
+              variant="primary"
+              disabled={!canSubmit || isSubmitting}
+            >
+              {t('common.save')}
+            </Button>
+          )}
+        </form.Subscribe>
+      }
+    >
+      <div className="flex flex-col gap-2.5">
         <label className={LABEL_CLASS} htmlFor="task-title">
           {t('tasks.titleField')}
         </label>
@@ -94,24 +123,19 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
         <form.Field name="assigneeId">
           {(field) => (
             <div className="flex flex-wrap gap-1.5" role="group">
-              <button
-                type="button"
-                aria-pressed={field.state.value === null}
-                onClick={() => field.handleChange(null)}
-                className={pillClass(field.state.value === null)}
-              >
+              <Chip pressed={field.state.value === null} onPress={() => field.handleChange(null)}>
+                <Icon name="members" />
                 {t('tasks.unassigned')}
-              </button>
+              </Chip>
               {props.members.map((member) => (
-                <button
+                <Chip
                   key={member.id}
-                  type="button"
-                  aria-pressed={field.state.value === member.id}
-                  onClick={() => field.handleChange(member.id)}
-                  className={pillClass(field.state.value === member.id)}
+                  pressed={field.state.value === member.id}
+                  onPress={() => field.handleChange(member.id)}
                 >
+                  <MemberChip memberName={member.firstName} memberColor={member.color} />
                   {member.firstName}
-                </button>
+                </Chip>
               ))}
             </div>
           )}
@@ -122,35 +146,55 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
           {(field) => (
             <div className="flex flex-wrap gap-1.5" role="group">
               {TASK_STATUSES.map((status) => (
-                <button
+                <Chip
                   key={status}
-                  type="button"
-                  aria-pressed={field.state.value === status}
-                  onClick={() => field.handleChange(status)}
-                  className={pillClass(field.state.value === status)}
+                  pressed={field.state.value === status}
+                  onPress={() => field.handleChange(status)}
                 >
+                  <Icon name={TASK_STATUS_ICON[status]} />
                   {t(TASK_STATUS_LABEL_KEY[status])}
-                </button>
+                </Chip>
               ))}
             </div>
           )}
         </form.Field>
 
         <label className={LABEL_CLASS} htmlFor="task-song">
-          {t('tasks.linkedComposition')}
+          {t('tasks.linkedSong')}
         </label>
         <form.Field name="songId">
           {(field) => (
             <select
               id="task-song"
-              value={field.state.value ?? NO_COMPOSITION_VALUE}
-              onChange={(event) => field.handleChange(compositionIdFromValue(event.target.value))}
+              value={field.state.value ?? NO_LINK_VALUE}
+              onChange={(event) => field.handleChange(linkedIdFromValue(event.target.value))}
               className={SELECT_CLASS}
             >
-              <option value={NO_COMPOSITION_VALUE}>{t('tasks.noComposition')}</option>
-              {props.compositions.map((composition) => (
-                <option key={composition.id} value={composition.id}>
-                  {composition.title}
+              <option value={NO_LINK_VALUE}>{t('tasks.noSong')}</option>
+              {props.songs.map((song) => (
+                <option key={song.id} value={song.id}>
+                  {song.title}
+                </option>
+              ))}
+            </select>
+          )}
+        </form.Field>
+
+        <label className={LABEL_CLASS} htmlFor="task-session">
+          {t('tasks.linkedSession')}
+        </label>
+        <form.Field name="sessionId">
+          {(field) => (
+            <select
+              id="task-session"
+              value={field.state.value ?? NO_LINK_VALUE}
+              onChange={(event) => field.handleChange(linkedIdFromValue(event.target.value))}
+              className={SELECT_CLASS}
+            >
+              <option value={NO_LINK_VALUE}>{t('tasks.noSession')}</option>
+              {props.sessions.map((session) => (
+                <option key={session.id} value={session.id}>
+                  {session.label}
                 </option>
               ))}
             </select>
@@ -176,32 +220,17 @@ export function TaskForm(props: TaskFormProps): JSX.Element {
         </label>
         <form.Field name="notes">
           {(field) => (
-            <textarea
+            <AutoGrowTextarea
               id="task-notes"
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               maxLength={TASK_NOTES_MAX_LENGTH}
               rows={NOTES_ROWS}
-              className="px-2.5 py-2 rounded-md border border-line bg-bg text-[13.5px] text-ink-900 resize-y"
+              className="font-display italic"
             />
           )}
         </form.Field>
-
-        <StickyFormActions>
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
-                {t('common.save')}
-              </Button>
-            )}
-          </form.Subscribe>
-          {props.isEditing ? (
-            <Button type="button" variant="ghost" onClick={props.onCancel}>
-              {t('common.cancel')}
-            </Button>
-          ) : null}
-        </StickyFormActions>
-      </form>
-    </Card>
+      </div>
+    </Sheet>
   );
 }

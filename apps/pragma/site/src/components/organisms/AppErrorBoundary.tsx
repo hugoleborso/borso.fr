@@ -26,16 +26,18 @@ function CrashScreen(): JSX.Element {
   return (
     <div
       role="alert"
-      className="h-dvh w-full bg-bg text-ink-900 flex flex-col items-center justify-center gap-4 px-6 text-center"
+      className="h-dvh w-full bg-paper text-ink flex flex-col items-center justify-center gap-4 px-6 text-center"
     >
-      <Icon name="warn" size={24} />
-      <h1 className="font-display italic text-2xl m-0">{t('crash.title')}</h1>
-      <p className="text-ink-500 text-sm max-w-sm m-0">{t('crash.body')}</p>
+      <Icon name="warn" size="lg" />
+      <h1 className="font-display text-title m-0">{t('crash.title')}</h1>
+      <p className="text-ink-soft text-meta max-w-sm m-0">{t('crash.body')}</p>
       <div className="flex flex-wrap gap-2 justify-center">
-        <Button variant="accent" onClick={reload}>
+        <Button icon="refresh" variant="primary" onClick={reload}>
           {t('crash.reload')}
         </Button>
-        <Button onClick={startRecovery}>{t('crash.reset')}</Button>
+        <Button icon="refresh" onClick={startRecovery}>
+          {t('crash.reset')}
+        </Button>
       </div>
     </div>
   );

@@ -3,6 +3,7 @@ import {
   buildSetlistIndexRows,
   type IndexSession,
   type IndexSetlist,
+  isPracticeSetlist,
   selectConcertSessionId,
 } from './setlist-index.core';
 
@@ -154,5 +155,19 @@ describe('selectConcertSessionId', () => {
   it('names the latest concert when the setlist is played at two of them', () => {
     expect(selectConcertSessionId([EARLIER_CONCERT, MIDDLE_CONCERT])).toBe('concert-2');
     expect(selectConcertSessionId([MIDDLE_CONCERT, EARLIER_CONCERT])).toBe('concert-2');
+  });
+});
+
+describe('isPracticeSetlist', () => {
+  const sessions = [EARLIER_CONCERT, LATER_PRACTICE];
+
+  it('calls a setlist linked to practices only a practice setlist', () => {
+    expect(isPracticeSetlist([LATER_PRACTICE.id], sessions)).toBe(true);
+  });
+
+  it('keeps a setlist that a concert uses, or that no known session uses, out of practice', () => {
+    expect(isPracticeSetlist([LATER_PRACTICE.id, EARLIER_CONCERT.id], sessions)).toBe(false);
+    expect(isPracticeSetlist([], sessions)).toBe(false);
+    expect(isPracticeSetlist(['deleted-session'], sessions)).toBe(false);
   });
 });

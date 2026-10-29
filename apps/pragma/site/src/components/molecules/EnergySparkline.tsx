@@ -59,6 +59,7 @@ export function EnergySparkline({
             top: y,
             width: POINT_DIAMETER_PX,
             height: POINT_DIAMETER_PX,
+            // eslint-disable-next-line borso/no-arbitrary-tailwind-value -- the series colour is the accent, or a member's stored colour when the mastery chart draws one member's progress
             backgroundColor: accent,
           }}
         />

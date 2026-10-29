@@ -3,31 +3,42 @@
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import {
   type SetlistSummary,
   useLinkSetlistToSession,
   useSetlistsList,
 } from '../../lib/queries/setlists.queries';
 import { selectSetlistsNotOnSession } from '../../lib/queries/setlists.utils';
+import { useSessionsList } from '../../lib/queries/sessions.queries';
+import { isPracticeSetlist } from '../../lib/setlist-index.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
-import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { ListRow } from '../molecules/ListRow';
+import { Sheet } from '../molecules/Sheet';
 
 interface AttachSetlistDialogProps {
   readonly sessionId: string;
   readonly onClose: () => void;
+  readonly onCreateNew: (() => void) | null;
 }
 
-export function AttachSetlistDialog({ sessionId, onClose }: AttachSetlistDialogProps): JSX.Element {
+export function AttachSetlistDialog({
+  sessionId,
+  onClose,
+  onCreateNew,
+}: AttachSetlistDialogProps): JSX.Element {
   const { t } = useTranslation();
   const setlistsQuery = useSetlistsList();
   const linkSetlist = useLinkSetlistToSession();
   const [hasFailed, setHasFailed] = useState(false);
 
+  const sessionsQuery = useSessionsList();
   const candidates = useMemo(
-    () => selectSetlistsNotOnSession(setlistsQuery.data?.setlists ?? [], sessionId),
-    [setlistsQuery.data, sessionId],
+    () =>
+      selectSetlistsNotOnSession(setlistsQuery.data?.setlists ?? [], sessionId).filter(
+        (setlist) => !isPracticeSetlist(setlist.sessionIds, sessionsQuery.data?.sessions ?? []),
+      ),
+    [setlistsQuery.data, sessionsQuery.data, sessionId],
   );
 
   const attach = (setlist: SetlistSummary): void => {
@@ -38,57 +49,50 @@ export function AttachSetlistDialog({ sessionId, onClose }: AttachSetlistDialogP
     );
   };
 
+  const titleKey = onCreateNew === null ? 'setlist.attach.title' : 'setlist.attach.chooseTitle';
+
   return (
-    <dialog
-      ref={openDialogOnAttach}
-      onClose={onClose}
-      className="m-auto w-[calc(100vw-2rem)] sm:w-[28rem] max-w-[28rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
-    >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-        <h2 className="font-display italic text-xl text-ink-900 m-0">
-          {t('setlist.attach.title')}
-        </h2>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          aria-label={t('common.cancel')}
-          className="min-w-11"
-        >
-          ×
-        </Button>
-      </div>
-      <div className="flex flex-col gap-2 p-4">
+    <Sheet title={t(titleKey)} label={t(titleKey)} isDismissible={false} onClose={onClose}>
+      <div className="flex flex-col gap-2">
+        {onCreateNew === null ? null : (
+          <ListRow
+            onClick={onCreateNew}
+            leading={<Icon name="plus" className="text-accent" />}
+            className="rounded-md px-3 py-2.5 hover:bg-hover"
+          >
+            <span className="min-w-0 flex-1 truncate font-medium text-ink">
+              {t('setlist.attach.newForSession')}
+            </span>
+          </ListRow>
+        )}
         {setlistsQuery.isLoading ? (
-          <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
+          <p className="text-meta text-ink-soft">{t('common.loading')}</p>
         ) : null}
         {!setlistsQuery.isLoading && candidates.length === 0 ? (
-          <p className="text-ink-400 italic text-sm">{t('setlist.attach.empty')}</p>
+          <p className="text-meta text-ink-soft">{t('setlist.attach.empty')}</p>
         ) : null}
         {candidates.map((setlist) => (
-          <button
+          <ListRow
             key={setlist.id}
-            type="button"
             onClick={() => attach(setlist)}
             disabled={linkSetlist.isPending}
-            className="flex items-center gap-3 text-left border border-line rounded-md px-3 py-2.5 min-h-11 hover:border-line-strong transition-colors cursor-pointer disabled:opacity-60"
+            leading={<Icon name="setlist" className="text-ink-soft" />}
+            className="rounded-md px-3 py-2.5 hover:bg-hover disabled:opacity-60"
           >
-            <Icon name="setlist" size={16} className="text-ink-500" />
-            <span className="flex-1 min-w-0 truncate text-ink-900">
+            <span className="min-w-0 flex-1 truncate text-ink">
               {selectSetlistDisplayName(setlist.name, t('setlist.untitled'))}
             </span>
-            <span className="text-[12px] text-ink-500">
+            <span className="text-meta text-ink-soft">
               {t('setlist.songCount', { count: setlist.songCount })}
             </span>
-          </button>
+          </ListRow>
         ))}
         {hasFailed ? (
-          <p className="text-danger text-sm" role="alert">
+          <p className="text-meta text-danger" role="alert">
             {t('setlist.failure.attach')}
           </p>
         ) : null}
       </div>
-    </dialog>
+    </Sheet>
   );
 }

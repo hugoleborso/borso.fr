@@ -11,9 +11,6 @@ export interface StreakBadgeProps {
   size?: 'large' | 'compact';
 }
 
-const LARGE_ICON_SIZE = 28;
-const COMPACT_ICON_SIZE = 14;
-
 // @FollowsBlueprint molecule-presentational
 export function StreakBadge({
   days,
@@ -23,18 +20,18 @@ export function StreakBadge({
 }: StreakBadgeProps): JSX.Element {
   const { t } = useTranslation();
   const isLarge = size === 'large';
-  const tone = isTodayCounted ? 'text-accent' : 'text-ink-500';
+  const tone = isTodayCounted ? 'text-accent' : 'text-ink-soft';
   if (!isLarge) {
     return (
       <span
         className={composeClassName(
-          'inline-flex items-center gap-1 font-display italic text-lg',
+          'inline-flex items-center gap-1 font-display text-title tabular-nums',
           tone,
         )}
         aria-label={t('studies.streakDays', { count: days })}
         data-testid="streak-badge"
       >
-        <Icon name="bolt" size={COMPACT_ICON_SIZE} />
+        <Icon name="bolt" />
         {days}
       </span>
     );
@@ -43,16 +40,16 @@ export function StreakBadge({
     <div className="flex items-center gap-2" data-testid="streak-badge">
       <span
         className={composeClassName(
-          'inline-flex items-center gap-1 font-display italic text-[40px] leading-none',
+          'inline-flex items-center gap-1 font-display text-display tabular-nums',
           tone,
         )}
       >
-        <Icon name="bolt" size={LARGE_ICON_SIZE} />
+        <Icon name="bolt" size="lg" />
         {days}
       </span>
-      <span className="flex flex-col text-[13px]">
-        <span className="text-ink-900">{t('studies.streakDays', { count: days })}</span>
-        <span className="text-ink-500">
+      <span className="flex flex-col text-meta">
+        <span className="text-ink">{t('studies.streakDays', { count: days })}</span>
+        <span className="text-ink-soft">
           {isTodayCounted ? t('studies.todayCounted') : t('studies.todayPending')}
           {' · '}
           {isJokerAvailable ? t('studies.jokerAvailable') : t('studies.jokerUsed')}

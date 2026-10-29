@@ -5,6 +5,7 @@ import functionNamesAreVerbPhrases from './function-names-are-verb-phrases.js';
 import noAbbreviatedIdentifier from './no-abbreviated-identifier.js';
 import noAdapterImportInPureModule from './no-adapter-import-in-pure-module.js';
 import noApiAnchorInSite from './no-api-anchor-in-site.js';
+import noArbitraryTailwindValue from './no-arbitrary-tailwind-value.js';
 import noApiDeclarationRepeatedInSite from './no-api-declaration-repeated-in-site.js';
 import noApiImportInSite from './no-api-import-in-site.js';
 import noArrayMethodsInControllers from './no-array-methods-in-controllers.js';
@@ -29,6 +30,7 @@ import noInlineSubscribeInUseSyncExternalStore from './no-inline-subscribe-in-us
 import noLiteralJsxText from './no-literal-jsx-text.js';
 import noOutboundCallOutsideAdapter from './no-outbound-call-outside-adapter.js';
 import noQueryHooksOutsideOrganisms from './no-query-hooks-outside-organisms.js';
+import noRawInteractiveElement from './no-raw-interactive-element.js';
 import noRawSqlOutsideMigrations from './no-raw-sql-outside-migrations.js';
 import noRefetchOfOptimisticallyWrittenQuery from './no-refetch-of-optimistically-written-query.js';
 import noServerStateInUseState from './no-server-state-in-use-state.js';
@@ -37,6 +39,7 @@ import noStringConcatenatedClassNames from './no-string-concatenated-class-names
 import noTypeAssertionExceptUnknown from './no-type-assertion-except-unknown.js';
 import noUseEffect from './no-use-effect.js';
 import noVendorSdkOutsideAdapter from './no-vendor-sdk-outside-adapter.js';
+import noVerticalScrollContainer from './no-vertical-scroll-container.js';
 import pureFunctionsLiveInCoreFiles from './pure-functions-live-in-core-files.js';
 import testFileHasSiblingSource from './test-file-has-sibling-source.js';
 import verbPromisesMatchReturnType from './verb-promises-match-return-type.js';
@@ -51,6 +54,7 @@ export const borsoPlugin = {
     'no-abbreviated-identifier': noAbbreviatedIdentifier,
     'no-adapter-import-in-pure-module': noAdapterImportInPureModule,
     'no-api-anchor-in-site': noApiAnchorInSite,
+    'no-arbitrary-tailwind-value': noArbitraryTailwindValue,
     'no-api-declaration-repeated-in-site': noApiDeclarationRepeatedInSite,
     'no-api-import-in-site': noApiImportInSite,
     'no-array-methods-in-controllers': noArrayMethodsInControllers,
@@ -75,6 +79,7 @@ export const borsoPlugin = {
     'no-literal-jsx-text': noLiteralJsxText,
     'no-outbound-call-outside-adapter': noOutboundCallOutsideAdapter,
     'no-query-hooks-outside-organisms': noQueryHooksOutsideOrganisms,
+    'no-raw-interactive-element': noRawInteractiveElement,
     'no-raw-sql-outside-migrations': noRawSqlOutsideMigrations,
     'no-refetch-of-optimistically-written-query': noRefetchOfOptimisticallyWrittenQuery,
     'no-server-state-in-use-state': noServerStateInUseState,
@@ -83,6 +88,7 @@ export const borsoPlugin = {
     'no-type-assertion-except-unknown': noTypeAssertionExceptUnknown,
     'no-use-effect': noUseEffect,
     'no-vendor-sdk-outside-adapter': noVendorSdkOutsideAdapter,
+    'no-vertical-scroll-container': noVerticalScrollContainer,
     'pure-functions-live-in-core-files': pureFunctionsLiveInCoreFiles,
     'test-file-has-sibling-source': testFileHasSiblingSource,
     'verb-promises-match-return-type': verbPromisesMatchReturnType,

@@ -7,20 +7,14 @@ import {
   INSTALL_BANNER_DISMISSED_KEY,
 } from '../../lib/install-prompt.adapter';
 import { InstallOffer } from './InstallOffer';
+import { stubSheetDialog } from '../molecules/sheet.test-utils';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
 }
 globalThis.IS_REACT_ACT_ENVIRONMENT = true;
 
-function stubShowModal(this: HTMLDialogElement): void {
-  this.setAttribute('open', '');
-}
-
-Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
-  configurable: true,
-  value: stubShowModal,
-});
+stubSheetDialog();
 
 const IPHONE_SAFARI =
   'Mozilla/5.0 (iPhone; CPU iPhone OS 18_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/18.0 Mobile/15E148 Safari/604.1';

@@ -17,6 +17,8 @@ export function buildTasksRouter() {
       if (outcome.kind === 'assignee-not-found')
         return context.json({ error: 'assignee-not-found' }, 400);
       if (outcome.kind === 'song-not-found') return context.json({ error: 'song-not-found' }, 400);
+      if (outcome.kind === 'session-not-found')
+        return context.json({ error: 'session-not-found' }, 400);
       return context.json({ task: outcome.task }, 201);
     })
     .put(
@@ -31,6 +33,8 @@ export function buildTasksRouter() {
           return context.json({ error: 'assignee-not-found' }, 400);
         if (outcome.kind === 'song-not-found')
           return context.json({ error: 'song-not-found' }, 400);
+        if (outcome.kind === 'session-not-found')
+          return context.json({ error: 'session-not-found' }, 400);
         if (outcome.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
         return context.json({ task: outcome.task });
       },

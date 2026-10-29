@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildTransitionView,
+  buildTransitionViews,
   indexTransitionComments,
   transitionPairKey,
 } from './transition-view.core';
@@ -104,5 +105,40 @@ describe('indexTransitionComments', () => {
 
   it('answers an empty index when nothing is stored', () => {
     expect(indexTransitionComments([])).toEqual({});
+  });
+});
+
+describe('buildTransitionViews', () => {
+  it('judges each pair of neighbouring entries, one view fewer than entries', () => {
+    const songsById = {
+      one: { id: 'one', title: 'One', artist: '', defaultLineup: { anna: ['bass'] } },
+      two: { id: 'two', title: 'Two', artist: '', defaultLineup: { anna: ['bass'] } },
+    };
+    const views = buildTransitionViews({
+      entries: [
+        { songId: 'one', lineupOverride: null },
+        { songId: 'two', lineupOverride: null },
+        { songId: 'lost', lineupOverride: null },
+      ],
+      songsById,
+      instruments: [{ id: 'bass', name: 'Bass', family: 'harmonic' }],
+      membersById: { anna: { firstName: 'Anna', color: '#e07a5f' } },
+      instrumentsById: { bass: { name: 'Bass' } },
+    });
+    expect(views).toHaveLength(2);
+    expect(views[0]?.carriers.map((carrier) => carrier.memberName)).toEqual(['Anna']);
+  });
+
+  it('returns no view for a setlist of one song or none', () => {
+    const input = {
+      songsById: {},
+      instruments: [],
+      membersById: {},
+      instrumentsById: {},
+    };
+    expect(buildTransitionViews({ ...input, entries: [] })).toEqual([]);
+    expect(
+      buildTransitionViews({ ...input, entries: [{ songId: 'one', lineupOverride: null }] }),
+    ).toEqual([]);
   });
 });

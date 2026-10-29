@@ -71,6 +71,12 @@ export function formatSetlistOrder(
     .join('\n');
 }
 
+export function indexById<TRow extends { readonly id: string }>(
+  rows: readonly TRow[],
+): Readonly<Record<string, TRow>> {
+  return Object.fromEntries(rows.map((row) => [row.id, row]));
+}
+
 export function instrumentFamilyMap(
   instruments: readonly SetlistEditorInstrument[],
 ): Record<string, { family: InstrumentFamily }> {

@@ -6,12 +6,12 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { z } from 'zod';
 import { ApiError } from '../../lib/api.client';
-import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
 import { useCreateSetlist } from '../../lib/queries/setlists.queries';
 import { Button } from '../atoms/Button';
 import { Input } from '../atoms/Input';
+import { Sheet } from '../molecules/Sheet';
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft';
 
 interface CreateSetlistDialogProps {
   readonly sessionId: string | null;
@@ -45,34 +45,34 @@ export function CreateSetlistDialog({
   const submitError = createSetlist.error instanceof ApiError ? t('setlist.failure.create') : null;
 
   return (
-    <dialog
-      ref={openDialogOnAttach}
+    <Sheet
+      title={t('setlist.create.title')}
+      label={t('setlist.create.title')}
+      isDismissible={false}
       onClose={onClose}
-      className="m-auto w-[calc(100vw-2rem)] sm:w-[28rem] max-w-[28rem] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40"
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      footer={
+        <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              type="submit"
+              variant="primary"
+              icon="plus"
+              disabled={!canSubmit || isSubmitting || createSetlist.isPending}
+            >
+              {createSetlist.isPending || isSubmitting
+                ? t('common.loading')
+                : t('setlist.create.submit')}
+            </Button>
+          )}
+        </form.Subscribe>
+      }
     >
-      <div className="flex items-center justify-between px-4 py-3 border-b border-line">
-        <h2 className="font-display italic text-xl text-ink-900 m-0">
-          {t('setlist.create.title')}
-        </h2>
-        <Button
-          type="button"
-          variant="ghost"
-          size="sm"
-          onClick={onClose}
-          aria-label={t('common.cancel')}
-          className="min-w-11"
-        >
-          ×
-        </Button>
-      </div>
-      <form
-        className="flex flex-col gap-2.5 p-4"
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-      >
+      <div className="flex flex-col gap-2.5">
         <label className={LABEL_CLASS} htmlFor="create-setlist-name">
           {t('setlist.create.nameLabel')}
         </label>
@@ -90,29 +90,11 @@ export function CreateSetlistDialog({
           )}
         </form.Field>
         {submitError === null ? null : (
-          <p className="text-danger text-sm" role="alert">
+          <p className="text-meta text-danger" role="alert">
             {submitError}
           </p>
         )}
-        <div className="flex gap-2 mt-2 justify-end">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting] as const}>
-            {([canSubmit, isSubmitting]) => (
-              <Button
-                type="submit"
-                variant="accent"
-                disabled={!canSubmit || isSubmitting || createSetlist.isPending}
-              >
-                {createSetlist.isPending || isSubmitting
-                  ? t('common.loading')
-                  : t('setlist.create.submit')}
-              </Button>
-            )}
-          </form.Subscribe>
-        </div>
-      </form>
-    </dialog>
+      </div>
+    </Sheet>
   );
 }

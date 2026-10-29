@@ -1,7 +1,9 @@
 import type { JSX, MouseEvent, WheelEvent } from 'react';
 
 const SCORE_INPUT_CLASS =
-  'w-12 min-h-11 text-center bg-bg-elev border border-line rounded-sm text-base py-1 outline-none focus:border-ink-700 font-mono';
+  'w-11 min-h-11 appearance-none text-center bg-raised border border-rule-strong rounded-sm text-body py-1 ' +
+  'outline-none focus:border-accent font-mono [&::-webkit-inner-spin-button]:appearance-none ' +
+  '[&::-webkit-outer-spin-button]:appearance-none';
 
 // @FollowsBlueprint component-lookup-table
 const STEP_BY_SCROLLED_UP: Readonly<Record<`${boolean}`, number>> = { true: 1, false: -1 };

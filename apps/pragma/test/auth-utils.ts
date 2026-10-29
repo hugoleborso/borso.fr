@@ -1,6 +1,10 @@
+import { randomBytes } from 'node:crypto';
 import type { Hono } from 'hono';
 import type { z } from 'zod';
 import { createApp } from '../api/src/app';
+import { insertInitialAppConfig, loadAppConfig } from '../api/src/auth/auth.repository';
+import { insertCredential } from '../api/src/auth/credentials.repository';
+import { hashPassword, issueSessionForMember } from '../api/src/auth/credentials.service';
 
 export const TEST_HOST = 'http://localhost';
 export const TEST_PASSWORD = 'correct-horse-battery';
@@ -106,17 +110,44 @@ export interface AuthenticatedApp {
 
 let credentialCounter = 0;
 
+const HMAC_KEY_BYTES = 32;
+const FIRST_SESSION_EPOCH = 1;
+
+let sharedPasswordHash: Promise<string> | undefined;
+let memberPasswordHash: Promise<string> | undefined;
+
+async function ensureSharedPasswordConfigured(now: Date): Promise<void> {
+  if ((await loadAppConfig()) !== null) return;
+  sharedPasswordHash ??= hashPassword(TEST_SHARED_PASSWORD);
+  await insertInitialAppConfig(await sharedPasswordHash, randomBytes(HMAC_KEY_BYTES), now);
+}
+
+async function enrolMemberWithTestPassword(
+  memberId: string,
+  username: string,
+  now: Date,
+): Promise<void> {
+  memberPasswordHash ??= hashPassword(TEST_PASSWORD);
+  await insertCredential({
+    memberId,
+    username,
+    passwordHash: await memberPasswordHash,
+    sessionEpoch: FIRST_SESSION_EPOCH,
+    createdAt: now,
+  });
+}
+
 export async function buildAuthenticatedApp(firstName = 'Tester'): Promise<AuthenticatedApp> {
   const app = createApp();
-  await bootstrapSharedPassword(app);
+  const now = new Date();
+  await ensureSharedPasswordConfigured(now);
   const memberId = await createMemberDirectly(app, firstName);
   credentialCounter += 1;
   const username = `${TEST_USERNAME}${String(credentialCounter)}`;
-  await giveMemberCredentials({ memberId, username });
-  const loginResponse = await loginAsMember(app, username);
-  const value = extractSessionCookie(loginResponse);
-  if (value === null) throw new Error('signing in did not return a session cookie');
-  return { app, cookieHeader: `${SESSION_COOKIE_NAME}=${value}`, memberId };
+  await enrolMemberWithTestPassword(memberId, username, now);
+  const session = await issueSessionForMember(memberId, now);
+  if (session === null) throw new Error('issuing a session for the test member failed');
+  return { app, cookieHeader: `${SESSION_COOKIE_NAME}=${session.cookieValue}`, memberId };
 }
 
 export interface JsonRequestOptions {

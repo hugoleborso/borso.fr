@@ -1,0 +1,267 @@
+import { describe, expect, it } from 'vitest';
+import type { TaskShape } from '../band/band-tasks.core';
+import {
+  buildHomeView,
+  type HomeSong,
+  type HomeViewInput,
+  selectHomePrimaryAction,
+  readHomeSection,
+  selectNextConcertBesideSession,
+} from './home.core';
+
+const MEMBER = 'member-1';
+const OTHER_MEMBER = 'member-2';
+const GUITAR = 'guitar-id';
+const BASS = 'bass-id';
+
+function song(
+  id: string,
+  lineup: Record<string, readonly string[]>,
+  durationSeconds: number | null,
+): HomeSong {
+  return { id, title: `Title ${id}`, artist: '', defaultLineup: lineup, durationSeconds };
+}
+
+function task(overrides: Partial<TaskShape>): TaskShape {
+  return {
+    id: 'task',
+    title: 'Task',
+    notes: '',
+    status: 'todo',
+    assigneeId: MEMBER,
+    songId: null,
+    sessionId: null,
+    dueDate: null,
+    ...overrides,
+  };
+}
+
+const SONGS: readonly HomeSong[] = [
+  song('a', { [MEMBER]: [GUITAR] }, 200),
+  song('b', { [OTHER_MEMBER]: [BASS] }, null),
+  song('c', { [MEMBER]: [GUITAR, BASS] }, 100),
+  song('d', { [OTHER_MEMBER]: [GUITAR] }, 60),
+  { id: 'e', title: 'Title e', artist: '', defaultLineup: { [OTHER_MEMBER]: [GUITAR] } },
+];
+
+const INPUT: HomeViewInput = {
+  setlist: { id: 'setlist-1', name: 'Wednesday', songCount: 5 },
+  entries: [
+    { id: 'e1', songId: 'a', lineupOverride: null },
+    { id: 'e2', songId: 'b', lineupOverride: null },
+    { id: 'e3', songId: 'c', lineupOverride: null },
+    { id: 'e4', songId: 'd', lineupOverride: { [MEMBER]: [BASS] } },
+    { id: 'e5', songId: 'e', lineupOverride: null },
+    { id: 'e6', songId: 'missing', lineupOverride: null },
+  ],
+  songs: SONGS,
+  instruments: [
+    { id: GUITAR, name: 'Guitar', icon: 'guitar' },
+    { id: BASS, name: 'Bass', icon: 'bass' },
+  ],
+  tasks: [],
+  memberId: MEMBER,
+  nextSessionId: 'next-session',
+};
+
+// @FollowsBlueprint test-pure-unit
+describe('readHomeSection', () => {
+  it('opens on the member part when there is one, unless the address asks for the tasks', () => {
+    expect(readHomeSection(null, true)).toBe('part');
+    expect(readHomeSection('part', true)).toBe('part');
+    expect(readHomeSection('unknown', true)).toBe('part');
+    expect(readHomeSection('tasks', true)).toBe('tasks');
+  });
+
+  it('shows the tasks when the member has no part', () => {
+    expect(readHomeSection(null, false)).toBe('tasks');
+    expect(readHomeSection('part', false)).toBe('tasks');
+  });
+});
+
+describe('buildHomeView', () => {
+  it('lists the songs where the member plays, an override included, with the instruments', () => {
+    const view = buildHomeView(INPUT);
+    expect(view.memberPart.map((row) => row.entryId)).toEqual(['e1', 'e3', 'e4']);
+    expect(view.memberPart[0]).toMatchObject({ songTitle: 'Title a' });
+    expect(view.memberPart[1]?.parts.map((part) => part.name)).toEqual(['Guitar', 'Bass']);
+    expect(view.memberPart[2]?.parts.map((part) => part.name)).toEqual(['Bass']);
+  });
+
+  it('adds up the known durations of the setlist songs', () => {
+    expect(buildHomeView(INPUT).totalSeconds).toBe(360);
+  });
+
+  it('knows no total without a setlist', () => {
+    expect(buildHomeView({ ...INPUT, setlist: null }).totalSeconds).toBeNull();
+  });
+
+  it('keeps the open tasks of the member in the order given', () => {
+    const tasks = [
+      task({ id: 'doing', status: 'doing' }),
+      task({ id: 'theirs', assigneeId: OTHER_MEMBER }),
+      task({ id: 'done', status: 'done' }),
+      task({ id: 'todo' }),
+    ];
+    expect(buildHomeView({ ...INPUT, tasks }).memberTasks.map((row) => row.id)).toEqual([
+      'doing',
+      'todo',
+    ]);
+  });
+
+  it('puts the tasks linked to the next session first, the rest in the order given', () => {
+    const tasks = [
+      task({ id: 'urgent' }),
+      task({ id: 'for-next', sessionId: 'next-session' }),
+      task({ id: 'for-later', sessionId: 'later-session' }),
+    ];
+    expect(buildHomeView({ ...INPUT, tasks }).memberTasks.map((row) => row.id)).toEqual([
+      'for-next',
+      'urgent',
+      'for-later',
+    ]);
+    expect(
+      buildHomeView({ ...INPUT, tasks, nextSessionId: null }).memberTasks.map((row) => row.id),
+    ).toEqual(['urgent', 'for-next', 'for-later']);
+  });
+
+  it('keeps the given order with no next session, even for a task linked to no session', () => {
+    const tasks = [task({ id: 'for-later', sessionId: 'later-session' }), task({ id: 'urgent' })];
+    expect(
+      buildHomeView({ ...INPUT, tasks, nextSessionId: null }).memberTasks.map((row) => row.id),
+    ).toEqual(['for-later', 'urgent']);
+  });
+
+  it('shows no part and no task to an account with no member row', () => {
+    const view = buildHomeView({
+      ...INPUT,
+      tasks: [task({}), task({ id: 'unclaimed', assigneeId: null })],
+      memberId: null,
+    });
+    expect(view.memberPart).toEqual([]);
+    expect(view.memberTasks).toEqual([]);
+  });
+});
+
+const NO_PRACTICE = { isPracticeModeOffered: false } as const;
+
+// @FollowsBlueprint test-pure-unit
+describe('selectHomePrimaryAction', () => {
+  it('starts the practice on its day', () => {
+    expect(
+      selectHomePrimaryAction({
+        isLoading: false,
+        nextSessionId: 's1',
+        setlistId: 'l1',
+        isPracticeModeOffered: true,
+      }),
+    ).toEqual({
+      link: {
+        to: '/sessions/s1/practice',
+        labelKey: 'home.startPractice',
+        icon: 'play',
+        startsPracticeMode: true,
+      },
+      isNewSessionOffered: false,
+    });
+  });
+
+  it('opens the setlist of the next session', () => {
+    expect(
+      selectHomePrimaryAction({
+        ...NO_PRACTICE,
+        isLoading: false,
+        nextSessionId: 's1',
+        setlistId: 'l1',
+      }),
+    ).toEqual({
+      link: {
+        to: '/setlists/l1',
+        labelKey: 'home.openSetlist',
+        icon: 'arrowR',
+        startsPracticeMode: false,
+      },
+      isNewSessionOffered: false,
+    });
+  });
+
+  it('opens the session when it has no setlist yet', () => {
+    expect(
+      selectHomePrimaryAction({
+        ...NO_PRACTICE,
+        isLoading: false,
+        nextSessionId: 's1',
+        setlistId: null,
+      }),
+    ).toEqual({
+      link: {
+        to: '/sessions/s1',
+        labelKey: 'home.openSession',
+        icon: 'arrowR',
+        startsPracticeMode: false,
+      },
+      isNewSessionOffered: false,
+    });
+  });
+
+  it('offers a new session when none is ahead', () => {
+    expect(
+      selectHomePrimaryAction({
+        ...NO_PRACTICE,
+        isLoading: false,
+        nextSessionId: null,
+        setlistId: null,
+      }),
+    ).toEqual({ link: null, isNewSessionOffered: true });
+  });
+
+  it('starts no practice when no session is ahead, whatever the offer says', () => {
+    expect(
+      selectHomePrimaryAction({
+        isLoading: false,
+        nextSessionId: null,
+        setlistId: null,
+        isPracticeModeOffered: true,
+      }),
+    ).toEqual({ link: null, isNewSessionOffered: true });
+  });
+
+  it('offers nothing while the sessions load', () => {
+    expect(
+      selectHomePrimaryAction({
+        ...NO_PRACTICE,
+        isLoading: true,
+        nextSessionId: null,
+        setlistId: null,
+      }),
+    ).toEqual({ link: null, isNewSessionOffered: false });
+  });
+});
+
+describe('selectNextConcertBesideSession', () => {
+  const now = new Date('2026-10-29T10:00:00Z');
+  const practice = { id: 'practice', kind: 'practice', date: '2026-10-30T18:00:00Z' };
+  const pastConcert = { id: 'past', kind: 'concert', date: '2026-10-01T20:00:00Z' };
+  const nearConcert = { id: 'near', kind: 'concert', date: '2026-11-05T20:00:00Z' };
+  const farConcert = { id: 'far', kind: 'concert', date: '2026-12-05T20:00:00Z' };
+
+  it('returns the nearest coming concert when the next session is something else', () => {
+    expect(
+      selectNextConcertBesideSession(
+        [farConcert, practice, pastConcert, nearConcert],
+        practice.id,
+        now,
+      ),
+    ).toBe(nearConcert);
+  });
+
+  it('returns nothing when the next session is that concert', () => {
+    expect(selectNextConcertBesideSession([nearConcert, farConcert], nearConcert.id, now)).toBe(
+      null,
+    );
+  });
+
+  it('returns nothing when no concert is coming', () => {
+    expect(selectNextConcertBesideSession([practice, pastConcert], practice.id, now)).toBe(null);
+  });
+});

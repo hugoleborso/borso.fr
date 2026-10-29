@@ -5,8 +5,8 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
-import { Card } from '../atoms/Card';
 import { Input } from '../atoms/Input';
+import { Sheet } from '../molecules/Sheet';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import {
   type InstrumentListState,
@@ -17,9 +17,9 @@ import {
   toggleInstrumentAssignment,
 } from '../../routes/members/members-page.core';
 
-const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const CHECKBOX_ROW_CLASS =
-  'flex items-center gap-2.5 min-h-11 text-sm text-ink-700 cursor-pointer select-none';
+  'flex items-center gap-2.5 min-h-11 text-meta text-ink cursor-pointer select-none';
 const CHECKBOX_CLASS = 'w-5 h-5 accent-accent';
 const FIRST_NAME_MIN_LENGTH = 1;
 
@@ -49,7 +49,7 @@ function NoInstrumentsNotice(): null {
 
 function EmptyInstrumentsNotice(): JSX.Element {
   const { t } = useTranslation();
-  return <p className="text-xs italic text-ink-400">{t('members.noInstrumentsYet')}</p>;
+  return <p className="text-meta italic text-ink-soft">{t('members.noInstrumentsYet')}</p>;
 }
 
 const EMPTY_NOTICE_BY_LIST_STATE: Record<InstrumentListState, () => JSX.Element | null> = {
@@ -65,8 +65,8 @@ function InstrumentPanel({
   const { t } = useTranslation();
   const EmptyNotice = EMPTY_NOTICE_BY_LIST_STATE[selectInstrumentListState(instruments)];
   return (
-    <fieldset className="border border-line rounded-md p-3 mt-2">
-      <legend className="text-xs tracking-wider uppercase text-ink-400 px-2">
+    <fieldset className="border border-rule rounded-md p-3 mt-2">
+      <legend className="text-label tracking-wider uppercase text-ink-soft px-2">
         {t('members.instrumentsAssigned')}
       </legend>
       <EmptyNotice />
@@ -91,34 +91,12 @@ function InstrumentPanel({
   );
 }
 
-interface CancelProps {
-  readonly label: string;
-  readonly onCancel: () => void;
-}
-
-function NoCancelButton(): null {
-  return null;
-}
-
-function CancelEditButton({ label, onCancel }: CancelProps): JSX.Element {
-  return (
-    <Button type="button" variant="ghost" onClick={onCancel}>
-      {label}
-    </Button>
-  );
-}
-
 const INSTRUMENT_PANEL_BY_MODE: Record<
   MemberFormMode,
   (props: InstrumentPanelProps) => JSX.Element | null
 > = {
   create: NoInstrumentPanel,
   edit: InstrumentPanel,
-};
-
-const CANCEL_BUTTON_BY_MODE: Record<MemberFormMode, (props: CancelProps) => JSX.Element | null> = {
-  create: NoCancelButton,
-  edit: CancelEditButton,
 };
 
 const TITLE_KEY_BY_MODE = {
@@ -142,21 +120,35 @@ export function MemberEditForm({
     onSubmit: ({ value }) => onSave(value),
   });
   const AssignmentPanel = INSTRUMENT_PANEL_BY_MODE[mode];
-  const CancelButton = CANCEL_BUTTON_BY_MODE[mode];
+  const title = t(TITLE_KEY_BY_MODE[mode]);
 
   return (
-    <Card>
-      <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-3">
-        {t(TITLE_KEY_BY_MODE[mode])}
-      </h3>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        className="flex flex-col gap-2.5"
-      >
+    <Sheet
+      title={title}
+      label={title}
+      onClose={onCancel}
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      footer={
+        <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              icon="check"
+              type="submit"
+              variant="primary"
+              size="lg"
+              disabled={isSubmitDisabled(canSubmit, isSubmitting)}
+            >
+              {t('common.save')}
+            </Button>
+          )}
+        </form.Subscribe>
+      }
+    >
+      <div className="flex flex-col gap-2.5">
         <label className={FIELD_LABEL_CLASS} htmlFor="member-first-name">
           {t('members.firstName')}
         </label>
@@ -164,6 +156,7 @@ export function MemberEditForm({
           {(field) => (
             <Input
               id="member-first-name"
+              data-sheet-focus
               type="text"
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -185,7 +178,7 @@ export function MemberEditForm({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              className="w-full min-h-11 rounded-md bg-bg-elev border border-line cursor-pointer"
+              className="w-full min-h-11 rounded-md bg-leaf border border-rule cursor-pointer"
             />
           )}
         </form.Field>
@@ -194,21 +187,7 @@ export function MemberEditForm({
           assignedInstrumentIds={assignedInstrumentIds}
           onInstrumentsChanged={onInstrumentsChanged}
         />
-        <div className="flex gap-2 mt-2">
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <Button
-                type="submit"
-                variant="accent"
-                disabled={isSubmitDisabled(canSubmit, isSubmitting)}
-              >
-                {t('common.save')}
-              </Button>
-            )}
-          </form.Subscribe>
-          <CancelButton label={t('common.cancel')} onCancel={onCancel} />
-        </div>
-      </form>
-    </Card>
+      </div>
+    </Sheet>
   );
 }

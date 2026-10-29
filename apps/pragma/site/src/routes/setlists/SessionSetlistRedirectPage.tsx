@@ -13,7 +13,9 @@ export function SessionSetlistRedirectPage(): JSX.Element {
   if (sessionId === undefined) return <Navigate to="/setlists" replace />;
   if (setlistsQuery.isLoading) {
     return (
-      <p className="px-4 sm:px-9 py-4 sm:py-7 italic text-ink-400 text-sm">{t('common.loading')}</p>
+      <p className="px-4 sm:px-9 py-4 sm:py-7 italic text-ink-soft text-meta">
+        {t('common.loading')}
+      </p>
     );
   }
 

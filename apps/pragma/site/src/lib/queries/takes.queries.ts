@@ -17,6 +17,8 @@ import { useSignedChartUrl } from './uploads.queries';
 export const takeKeys = {
   all: ['takes'] as const,
   ofSong: (songId: string) => [...takeKeys.all, 'ofSong', songId] as const,
+  ofSessions: () => [...takeKeys.all, 'ofSession'] as const,
+  ofSession: (sessionId: string) => [...takeKeys.ofSessions(), sessionId] as const,
   commentsOf: (takeId: string) => [...takeKeys.all, 'comments', takeId] as const,
 };
 
@@ -36,6 +38,18 @@ export function useTakesOfSong(songId: string, isEnabled = true) {
     queryKey: takeKeys.ofSong(songId),
     queryFn: async () => {
       const response = await api.api.takes.$get({ query: { songId } });
+      if (!response.ok) throw new ApiError(response.status, `takes ${response.status}`, null);
+      return response.json();
+    },
+    enabled: isEnabled,
+  });
+}
+
+export function useTakesOfSession(sessionId: string, isEnabled = true) {
+  return useQuery({
+    queryKey: takeKeys.ofSession(sessionId),
+    queryFn: async () => {
+      const response = await api.api.takes.$get({ query: { sessionId } });
       if (!response.ok) throw new ApiError(response.status, `takes ${response.status}`, null);
       return response.json();
     },
@@ -104,6 +118,18 @@ export function writeCreatedTake(queryClient: QueryClient, take: ListedTake): vo
     if (cache === undefined) return cache;
     return { takes: insertTakeNewestFirst(cache.takes, take) };
   });
+  if (take.sessionId === null) return;
+  queryClient.setQueryData<TakesOfSongResponse>(takeKeys.ofSession(take.sessionId), (cache) => {
+    if (cache === undefined) return cache;
+    return { takes: insertTakeNewestFirst(cache.takes, take) };
+  });
+}
+
+function removeTakeFromSessionLists(queryClient: QueryClient, takeId: string): void {
+  queryClient.setQueriesData<TakesOfSongResponse>({ queryKey: takeKeys.ofSessions() }, (cache) => {
+    if (cache === undefined) return cache;
+    return { takes: removeTakeById(cache.takes, takeId) };
+  });
 }
 
 // @FollowsBlueprint query-optimistic-mutation
@@ -126,6 +152,9 @@ export function useDeleteTake() {
       });
       return { previous };
     },
+    onSuccess: (_data, variables) => {
+      removeTakeFromSessionLists(queryClient, variables.takeId);
+    },
     onError: (_error, variables, context) => {
       if (context?.previous === undefined) return;
       queryClient.setQueryData(takeKeys.ofSong(variables.songId), context.previous);
@@ -140,6 +169,10 @@ function shiftCommentCountInCache(
   delta: number,
 ): void {
   queryClient.setQueryData<TakesOfSongResponse>(takeKeys.ofSong(songId), (cache) => {
+    if (cache === undefined) return cache;
+    return { takes: shiftCommentCount(cache.takes, takeId, delta) };
+  });
+  queryClient.setQueriesData<TakesOfSongResponse>({ queryKey: takeKeys.ofSessions() }, (cache) => {
     if (cache === undefined) return cache;
     return { takes: shiftCommentCount(cache.takes, takeId, delta) };
   });

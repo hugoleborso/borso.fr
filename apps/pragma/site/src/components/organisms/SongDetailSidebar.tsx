@@ -8,21 +8,18 @@ import {
   MASTERY_BAR_COUNT,
   type SongLineupRow,
 } from '../../routes/catalog/song-lineup.core';
-import { Button } from '../atoms/Button';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
-import { Icon } from '../atoms/Icon';
+import { MemberMark } from '../atoms/MemberMark';
+import { MEMBER_LOADING_COLOR } from '../atoms/member-palette.utils';
 import { MemberChip } from '../molecules/MemberChip';
 
-const FILLED_BAR_OPACITY = 0.85;
-const EMPTY_BAR_OPACITY = 1;
-const EMPTY_BAR_COLOR = 'var(--color-bg-sunk)';
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const MASTERY_BAR_CLASS = 'h-3.5 min-h-0 w-1.5 min-w-0 rounded-cover px-0';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
 interface SongDetailSidebarProps {
   readonly lineupRows: readonly SongLineupRow[];
   readonly baseEnergy: number | null;
-  readonly onEditDefaultLineup: () => void;
 }
 
 const MASTERY_BAR_INDEXES = Array.from({ length: MASTERY_BAR_COUNT }, (_unused, index) => index);
@@ -35,28 +32,17 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
   return (
     <aside className="flex flex-col gap-4">
       <Card>
-        <div
-          className={composeClassName(
-            LABEL_CLASS,
-            'mb-2.5 flex items-center justify-between gap-2',
-          )}
-        >
-          <span>{t('catalog.defaultLineup')}</span>
-          <Button type="button" variant="ghost" size="sm" onClick={props.onEditDefaultLineup}>
-            <Icon name="edit" size={12} />
-            {t('common.edit')}
-          </Button>
-        </div>
+        <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('catalog.defaultLineup')}</div>
         <div className="flex flex-col gap-1.5">
-          {hasLineup ? null : <span className="text-xs text-ink-400 italic">—</span>}
+          {hasLineup ? null : <span className="text-meta text-ink-soft italic">—</span>}
           {props.lineupRows.map((row) => (
             <div
               key={row.memberId}
-              className="flex items-center gap-2.5 py-1.5 border-b border-dashed border-line last:border-b-0"
+              className="flex items-center gap-2.5 py-1.5 border-b border-dashed border-rule last:border-b-0"
             >
               <MemberChip memberName={row.memberName} memberColor={row.memberColor} />
-              <span className="text-[12.5px] text-ink-900 flex-1">{row.memberName}</span>
-              <span className="font-mono text-xs uppercase tracking-wider text-ink-500 text-right">
+              <span className="text-meta text-ink flex-1">{row.memberName}</span>
+              <span className="text-label uppercase tracking-wider text-ink-soft text-right">
                 {row.instruments.length === 0
                   ? '—'
                   : row.instruments.map((instrument) => instrument.instrumentName).join(' + ')}
@@ -69,31 +55,31 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
       <Card>
         <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('catalog.mastery')}</div>
         <div className="flex flex-col gap-2">
-          {masteryRows.length === 0 ? <span className="text-xs text-ink-400 italic">—</span> : null}
+          {masteryRows.length === 0 ? (
+            <span className="text-meta text-ink-soft italic">—</span>
+          ) : null}
           {masteryRows.map((row) => (
             <div key={`${row.memberId}-${row.instrumentId}`} className="flex items-center gap-2.5">
               <MemberChip memberName={row.memberName} memberColor={row.memberColor} />
-              <span className="text-[12.5px] flex-1 min-w-0 text-ink-900 truncate">
+              <span className="text-meta flex-1 min-w-0 text-ink truncate">
                 {row.memberName}
-                <span className="text-ink-400"> · {row.instrumentName}</span>
+                <span className="text-ink-soft"> · {row.instrumentName}</span>
               </span>
               <div className="flex gap-px">
                 {MASTERY_BAR_INDEXES.map((barIndex) => (
-                  <span
+                  <MemberMark
                     key={barIndex}
-                    className="w-1.5 h-3.5 rounded-[1px]"
-                    style={{
-                      background: isMasteryBarFilled(row.masteryScore, barIndex)
+                    color={
+                      isMasteryBarFilled(row.masteryScore, barIndex)
                         ? row.memberColor
-                        : EMPTY_BAR_COLOR,
-                      opacity: isMasteryBarFilled(row.masteryScore, barIndex)
-                        ? FILLED_BAR_OPACITY
-                        : EMPTY_BAR_OPACITY,
-                    }}
+                        : MEMBER_LOADING_COLOR
+                    }
+                    shape="cell"
+                    className={MASTERY_BAR_CLASS}
                   />
                 ))}
               </div>
-              <span className="font-mono text-xs text-ink-400 min-w-[24px] text-right">
+              <span className="font-mono text-meta text-ink-soft min-w-[24px] text-right">
                 {row.masteryScore === null ? '—' : `${row.masteryScore}/${MASTERY_BAR_COUNT}`}
               </span>
             </div>
@@ -102,9 +88,9 @@ export function SongDetailSidebar(props: SongDetailSidebarProps): JSX.Element {
       </Card>
 
       {props.baseEnergy === null ? null : (
-        <Card variant="flat" className="bg-bg-sunk border-0">
+        <Card variant="flat" className="bg-sunk border-0">
           <div className={composeClassName(LABEL_CLASS, 'mb-1.5')}>{t('catalog.baseEnergy')}</div>
-          <div className="font-mono text-[14px] text-ink-700">
+          <div className="font-mono text-meta text-ink">
             {props.baseEnergy}/{MASTERY_BAR_COUNT}
           </div>
         </Card>

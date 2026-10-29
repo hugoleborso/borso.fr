@@ -2,13 +2,8 @@
 
 import { INSTRUMENT_ICONS, type InstrumentIcon } from '@domain/instrument.core';
 import type { JSX } from 'react';
-import { composeClassName } from '../atoms/class-name.utils';
-import { Icon } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
 import { INSTRUMENT_ICON_GLYPH } from './lineup-slots.core';
-
-const PICKER_ICON_SIZE_PX = 20;
-const PICKED_CLASS = 'bg-accent-soft border-accent text-accent';
-const UNPICKED_CLASS = 'bg-bg border-line text-ink-500 hover:border-line-strong';
 
 export interface InstrumentIconPickerProps {
   readonly value: InstrumentIcon;
@@ -25,20 +20,14 @@ export function InstrumentIconPicker({
   return (
     <div className="flex flex-wrap gap-1.5" role="group">
       {INSTRUMENT_ICONS.map((icon) => (
-        <button
+        <IconButton
           key={icon}
-          type="button"
+          variant="secondary"
+          icon={INSTRUMENT_ICON_GLYPH[icon]}
+          label={labelOf(icon)}
           aria-pressed={value === icon}
-          aria-label={labelOf(icon)}
-          title={labelOf(icon)}
           onClick={() => onPick(icon)}
-          className={composeClassName(
-            'inline-flex min-h-11 min-w-11 cursor-pointer items-center justify-center rounded-md border transition-colors',
-            value === icon ? PICKED_CLASS : UNPICKED_CLASS,
-          )}
-        >
-          <Icon name={INSTRUMENT_ICON_GLYPH[icon]} size={PICKER_ICON_SIZE_PX} />
-        </button>
+        />
       ))}
     </div>
   );

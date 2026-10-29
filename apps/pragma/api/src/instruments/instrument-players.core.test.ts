@@ -14,28 +14,17 @@ describe('foldPlayersIntoInstruments', () => {
     const folded = foldPlayersIntoInstruments(
       [GUITAR],
       [
-        { instrumentId: 'guitar-id', memberId: 'ana', isPrimary: true },
-        { instrumentId: 'guitar-id', memberId: 'ben', isPrimary: false },
+        { instrumentId: 'guitar-id', memberId: 'ana' },
+        { instrumentId: 'guitar-id', memberId: 'ben' },
       ],
     );
-    expect(folded[0]?.players).toEqual([
-      { memberId: 'ana', isPrimary: true },
-      { memberId: 'ben', isPrimary: false },
-    ]);
-  });
-
-  it('reads a primacy the migration never wrote as not primary', () => {
-    const folded = foldPlayersIntoInstruments(
-      [GUITAR],
-      [{ instrumentId: 'guitar-id', memberId: 'ana', isPrimary: null }],
-    );
-    expect(folded[0]?.players).toEqual([{ memberId: 'ana', isPrimary: false }]);
+    expect(folded[0]?.players).toEqual([{ memberId: 'ana' }, { memberId: 'ben' }]);
   });
 
   it('drops a link pointing at an instrument the list does not carry', () => {
     const folded = foldPlayersIntoInstruments(
       [GUITAR],
-      [{ instrumentId: 'tuba-id', memberId: 'ana', isPrimary: true }],
+      [{ instrumentId: 'tuba-id', memberId: 'ana' }],
     );
     expect(folded).toEqual([{ ...GUITAR, players: [] }]);
   });
@@ -44,8 +33,8 @@ describe('foldPlayersIntoInstruments', () => {
     const folded = foldPlayersIntoInstruments(
       [GUITAR, DRUMS],
       [
-        { instrumentId: 'drums-id', memberId: 'cam', isPrimary: true },
-        { instrumentId: 'guitar-id', memberId: 'ana', isPrimary: true },
+        { instrumentId: 'drums-id', memberId: 'cam' },
+        { instrumentId: 'guitar-id', memberId: 'ana' },
       ],
     );
     expect(folded.map((row) => row.players.map((player) => player.memberId))).toEqual([

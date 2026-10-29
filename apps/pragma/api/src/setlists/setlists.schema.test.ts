@@ -3,7 +3,9 @@ import { describe, expect, it } from 'vitest';
 import {
   lineupOverrideSchema,
   setlistBySessionParamSchema,
+  SETLIST_BATCH_ADD_MAX,
   setlistCreateSchema,
+  setlistEntryBatchCreateSchema,
   setlistEntryCreateSchema,
   setlistEntryIdParamSchema,
   setlistEntryUpdateSchema,
@@ -190,5 +192,28 @@ describe('setlist voting schemas', () => {
     expect(
       setlistCloseSchema.safeParse({ songIds: ['11111111-2222-3333-4444-555555555555'] }).success,
     ).toBe(true);
+  });
+});
+
+describe('setlistEntryBatchCreateSchema', () => {
+  const pickedSongIds = Array.from({ length: SETLIST_BATCH_ADD_MAX + 1 }, () =>
+    crypto.randomUUID(),
+  );
+
+  it('takes between one and the batch limit of distinct songs', () => {
+    expect(setlistEntryBatchCreateSchema.safeParse({ songIds: [songId] }).success).toBe(true);
+    expect(
+      setlistEntryBatchCreateSchema.safeParse({
+        songIds: pickedSongIds.slice(0, SETLIST_BATCH_ADD_MAX),
+      }).success,
+    ).toBe(true);
+    expect(setlistEntryBatchCreateSchema.safeParse({ songIds: [] }).success).toBe(false);
+    expect(setlistEntryBatchCreateSchema.safeParse({ songIds: pickedSongIds }).success).toBe(false);
+  });
+
+  it('refuses a list naming one song twice', () => {
+    expect(setlistEntryBatchCreateSchema.safeParse({ songIds: [songId, songId] }).success).toBe(
+      false,
+    );
   });
 });

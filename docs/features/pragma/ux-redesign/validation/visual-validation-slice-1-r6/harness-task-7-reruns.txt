@@ -1,0 +1,15 @@
+== run 1
+[task] 7 ...
+[task] 7: taps=7 textEntries=2 scrollGestures=2 screensVisited=3
+[compare] no difference with /home/user/borso.fr/apps/pragma/../../docs/features/pragma/ux-redesign/spec/baseline/baseline.json for 7
+exit 0
+== run 2
+[task] 7 ...
+[task] 7: taps=7 textEntries=2 scrollGestures=2 screensVisited=3
+[compare] no difference with /home/user/borso.fr/apps/pragma/../../docs/features/pragma/ux-redesign/spec/baseline/baseline.json for 7
+exit 0
+== run 3
+[task] 7 ...
+[task] 7: taps=7 textEntries=2 scrollGestures=2 screensVisited=3
+[compare] no difference with /home/user/borso.fr/apps/pragma/../../docs/features/pragma/ux-redesign/spec/baseline/baseline.json for 7
+exit 0

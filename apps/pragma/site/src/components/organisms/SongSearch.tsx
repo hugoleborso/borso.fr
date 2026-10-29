@@ -8,6 +8,7 @@ import { type ExternalSongHit, useSongSearch } from '../../lib/queries/songs.que
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
+import { ListRow } from '../molecules/ListRow';
 
 const DEBOUNCE_MS = 1000;
 
@@ -43,7 +44,7 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
   return (
     <div className={composeClassName('flex flex-col gap-2', className)}>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none">
           <Icon name="search" />
         </span>
         <Input
@@ -55,14 +56,14 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
           aria-label={t('catalog.searchSong')}
         />
       </div>
-      {isLoading ? <p className="text-xs text-ink-500 italic">{t('common.loading')}</p> : null}
+      {isLoading ? <p className="text-meta text-ink-soft italic">{t('common.loading')}</p> : null}
       {error === null ? null : (
-        <p className="text-xs text-danger" role="alert">
+        <p className="text-meta text-danger" role="alert">
           {error}
         </p>
       )}
       {hits.length > 0 ? (
-        <ul className="flex flex-col gap-1 border border-line rounded-md p-1 bg-bg-elev max-h-72 overflow-y-auto">
+        <ul className="m-0 flex list-none flex-col gap-1 rounded-md border border-rule bg-leaf p-1">
           {hits.map((hit) => (
             <li key={hit.deezerTrackId}>
               <SongSearchHitRow hit={hit} onPick={onPick} />
@@ -71,7 +72,7 @@ export function SongSearch({ onPick, className }: SongSearchProps): JSX.Element 
         </ul>
       ) : null}
       {hasSearched && hits.length === 0 ? (
-        <p className="text-xs text-ink-500 italic">{t('catalog.searchNoResults')}</p>
+        <p className="text-meta text-ink-soft italic">{t('catalog.searchNoResults')}</p>
       ) : null}
     </div>
   );
@@ -88,22 +89,22 @@ function SongSearchHitRow({ hit, onPick }: SongSearchHitRowProps): JSX.Element {
   if (hit.durationLabel !== null) secondaryParts.push(hit.durationLabel);
   const secondary = secondaryParts.join(' · ');
   return (
-    <button
-      type="button"
+    <ListRow
       onClick={() => onPick(hit)}
-      className="w-full text-left px-2 py-1.5 rounded text-sm text-ink-700 hover:bg-bg cursor-pointer flex flex-col gap-0.5"
+      isChevronShown={false}
+      className="flex-col items-start gap-0.5 rounded-sm px-2 py-1.5 text-meta hover:bg-hover"
     >
       <div className="flex items-baseline justify-between gap-2 flex-wrap">
         <div className="min-w-0 flex-1">
-          <span className="font-medium text-ink-900">{hit.artist}</span>
-          <span className="text-ink-500"> — </span>
+          <span className="font-medium text-ink">{hit.artist}</span>
+          <span className="text-ink-soft"> — </span>
           <span>{hit.title}</span>
-          {secondary.length > 0 ? <span className="text-ink-400"> ({secondary})</span> : null}
+          {secondary.length > 0 ? <span className="text-ink-soft"> ({secondary})</span> : null}
         </div>
       </div>
       {hit.titleVersion === null ? null : (
-        <div className="text-xs text-ink-400 italic">{hit.titleVersion}</div>
+        <div className="text-meta text-ink-soft italic">{hit.titleVersion}</div>
       )}
-    </button>
+    </ListRow>
   );
 }

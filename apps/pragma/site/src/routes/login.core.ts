@@ -3,7 +3,7 @@
 import type { ParseKeys } from 'i18next';
 import { z } from 'zod';
 
-export const DEFAULT_POST_LOGIN_PATH = '/catalog';
+export const DEFAULT_POST_LOGIN_PATH = '/';
 
 const TOO_MANY_ATTEMPTS_STATUS = 429;
 const WRONG_PASSWORD_STATUS = 401;

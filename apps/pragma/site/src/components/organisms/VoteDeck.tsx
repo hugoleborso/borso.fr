@@ -33,8 +33,6 @@ export interface DeckSong {
   readonly title: string;
   readonly artist: string;
   readonly deezerAlbumId: string | null;
-  readonly deezerTrackId: string | null;
-  readonly spotifyTrackId: string | null;
   readonly createdAt: string;
 }
 
@@ -117,7 +115,7 @@ export function VoteDeck({
             key={scoring.zone}
             data-zone={scoring.zone}
             className={clsx(
-              'flex-1 flex items-center justify-end pr-4 rounded-r-2xl bg-accent',
+              'flex-1 flex items-center justify-end pr-4 rounded-r-lg bg-accent',
               tintTransition,
             )}
             style={{ opacity: selectScoringTint(zone, scoring.zone, offset, geometry) }}
@@ -129,7 +127,7 @@ export function VoteDeck({
       <div
         data-zone="discard"
         className={clsx(
-          'absolute inset-y-0 left-0 w-1/2 pointer-events-none rounded-l-2xl bg-ink-400',
+          'absolute inset-y-0 left-0 w-1/2 pointer-events-none rounded-l-lg bg-ink-soft',
           tintTransition,
         )}
         style={{ opacity: selectDiscardTint(zone, offset, geometry) }}
@@ -139,7 +137,7 @@ export function VoteDeck({
           role="group"
           aria-label={t('voting.cardLabel')}
           className={clsx(
-            'absolute inset-0 touch-none rounded-2xl border border-line bg-surface p-4 flex flex-col justify-between shadow-lg cursor-grab',
+            'absolute inset-0 touch-none rounded-lg border border-rule bg-leaf p-4 flex flex-col justify-between shadow-raised cursor-grab',
             cardTransition,
           )}
           style={{
@@ -154,20 +152,18 @@ export function VoteDeck({
             <AlbumCover title={song.title} deezerAlbumId={song.deezerAlbumId} size="lg" />
             <div className="min-w-0">
               {isNewSong ? <Badge tone="accent">{t('voting.newSong')}</Badge> : null}
-              <p className="text-xs tracking-wider uppercase text-ink-400 m-0">{song.artist}</p>
-              <h2 className="font-display italic text-[26px] leading-tight text-ink-900 m-0">
-                {song.title}
-              </h2>
+              <p className="text-label tracking-wider uppercase text-ink-soft m-0">{song.artist}</p>
+              <h2 className="font-display text-title leading-tight text-ink m-0">{song.title}</h2>
             </div>
           </div>
           <div className="flex items-center justify-between">
-            <span className="text-xs text-ink-500">{t('voting.swipeHint')}</span>
+            <span className="text-meta text-ink-soft">{t('voting.swipeHint')}</span>
             <PointsBadge points={givenPoints} />
           </div>
         </div>
       ) : (
-        <div className="absolute inset-0 rounded-2xl border border-dashed border-line flex items-center justify-center">
-          <p className="text-ink-500">{t('voting.deckDone')}</p>
+        <div className="absolute inset-0 rounded-lg border border-dashed border-rule flex items-center justify-center">
+          <p className="text-ink-soft">{t('voting.deckDone')}</p>
         </div>
       )}
     </div>

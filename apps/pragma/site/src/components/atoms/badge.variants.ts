@@ -1,6 +1,6 @@
 import { cva, type VariantProps } from 'class-variance-authority';
 
-const SMALLEST_LEGIBLE_TEXT_SIZE = 'text-xs';
+const SMALLEST_LEGIBLE_TEXT_SIZE = 'text-label';
 
 // @FollowsBlueprint atom-variant
 export const badgeVariants = cva(
@@ -8,10 +8,10 @@ export const badgeVariants = cva(
   {
     variants: {
       tone: {
-        default: 'bg-bg text-ink-500',
-        mono: 'bg-bg-sunk text-ink-500 font-mono rounded-sm',
-        solid: 'bg-ink-900 text-bg',
-        accent: 'bg-accent text-bg-elev',
+        default: 'bg-sunk text-ink-soft',
+        mono: 'bg-sunk text-ink-soft font-mono rounded-sm',
+        solid: 'bg-ink text-paper',
+        accent: 'bg-accent text-on-accent',
         warn: 'bg-warn-soft text-warn',
       },
       size: {

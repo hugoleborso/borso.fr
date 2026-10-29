@@ -18,7 +18,7 @@ const instrumentSchema = z.object({
   family: z.enum(['harmonic', 'percussive', 'vocal', 'other']),
   icon: z.enum(INSTRUMENT_ICONS),
   position: z.number().int(),
-  players: z.array(z.object({ memberId: z.string().uuid(), isPrimary: z.boolean() })),
+  players: z.array(z.object({ memberId: z.string().uuid() })),
 });
 const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
@@ -236,7 +236,7 @@ describe('instruments controller (back-e2e)', () => {
       memberIds.push(member.member.id);
       await jsonRequest(app, `/api/members/${member.member.id}/instruments`, {
         method: 'PUT',
-        body: { instrumentIds: [guitarId], primaryInstrumentIds: [guitarId] },
+        body: { instrumentIds: [guitarId] },
         cookieHeader,
       });
     }
@@ -249,7 +249,6 @@ describe('instruments controller (back-e2e)', () => {
     expect(guitar?.players.map((player) => player.memberId).toSorted()).toEqual(
       memberIds.toSorted(),
     );
-    expect(guitar?.players.every((player) => player.isPrimary)).toBe(true);
   });
 
   it('reorders the whole list and answers with the settled order, not a stale one', async () => {

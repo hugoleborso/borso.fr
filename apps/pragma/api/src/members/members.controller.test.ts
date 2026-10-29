@@ -28,11 +28,8 @@ const instrumentSchema = z.object({
   family: z.enum(['harmonic', 'percussive', 'vocal', 'other']),
   icon: z.enum(INSTRUMENT_ICONS),
   position: z.number().int(),
-  isPrimary: z.boolean(),
 });
-const singleInstrumentEnvelope = z.object({
-  instrument: instrumentSchema.omit({ isPrimary: true }),
-});
+const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
 const assignmentResponseSchema = z.object({
   id: z.string().uuid(),
@@ -184,62 +181,6 @@ describe('members controller (back-e2e)', () => {
     });
     const remaining = await readJson(listAfterReplace, instrumentListEnvelope);
     expect(remaining.instruments.map((row) => row.name)).toEqual(['Bass']);
-  });
-
-  it('keeps a primacy the member form never sends, so saving a member does not empty the column', async () => {
-    const { app, cookieHeader } = await buildAuthenticatedApp();
-    const memberCreate = await jsonRequest(app, '/api/members', {
-      method: 'POST',
-      body: { firstName: 'Gui', color: '#7b5786' },
-      cookieHeader,
-    });
-    const memberId = (await readJson(memberCreate, singleMemberEnvelope)).member.id;
-    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
-    const bassId = await createInstrument(app, cookieHeader, 'Bass', 'harmonic');
-
-    await jsonRequest(app, `/api/members/${memberId}/instruments`, {
-      method: 'PUT',
-      body: { instrumentIds: [guitarId, bassId], primaryInstrumentIds: [bassId] },
-      cookieHeader,
-    });
-    await jsonRequest(app, `/api/members/${memberId}/instruments`, {
-      method: 'PUT',
-      body: { instrumentIds: [guitarId, bassId] },
-      cookieHeader,
-    });
-
-    const list = await jsonRequest(app, `/api/members/${memberId}/instruments`, { cookieHeader });
-    const listed = await readJson(list, instrumentListEnvelope);
-    expect(listed.instruments.filter((row) => row.isPrimary).map((row) => row.name)).toEqual([
-      'Bass',
-    ]);
-  });
-
-  it('drops a primacy on an instrument the member stopped playing', async () => {
-    const { app, cookieHeader } = await buildAuthenticatedApp();
-    const memberCreate = await jsonRequest(app, '/api/members', {
-      method: 'POST',
-      body: { firstName: 'Gui', color: '#7b5786' },
-      cookieHeader,
-    });
-    const memberId = (await readJson(memberCreate, singleMemberEnvelope)).member.id;
-    const guitarId = await createInstrument(app, cookieHeader, 'Guitar', 'harmonic');
-    const bassId = await createInstrument(app, cookieHeader, 'Bass', 'harmonic');
-
-    await jsonRequest(app, `/api/members/${memberId}/instruments`, {
-      method: 'PUT',
-      body: { instrumentIds: [guitarId, bassId], primaryInstrumentIds: [bassId] },
-      cookieHeader,
-    });
-    await jsonRequest(app, `/api/members/${memberId}/instruments`, {
-      method: 'PUT',
-      body: { instrumentIds: [guitarId] },
-      cookieHeader,
-    });
-
-    const list = await jsonRequest(app, `/api/members/${memberId}/instruments`, { cookieHeader });
-    const listed = await readJson(list, instrumentListEnvelope);
-    expect(listed.instruments.map((row) => row.isPrimary)).toEqual([false]);
   });
 
   it('rejects an assignment that references an unknown instrument', async () => {

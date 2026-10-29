@@ -21,7 +21,8 @@ import { useTranslation } from 'react-i18next';
 import type { SongTally } from '../../lib/queries/voting.utils';
 import { moveWithin, reorderByDrop } from '../../routes/setlists/vote-proposal.core';
 import { Button } from '../atoms/Button';
-import { StickyFormActions } from '../atoms/StickyFormActions';
+import { IconButton } from '../atoms/IconButton';
+import { BottomActions } from '../atoms/BottomActions';
 import type { TallySong } from './VoteTally';
 import { VoteProposalRow } from './VoteProposalRow';
 
@@ -67,13 +68,13 @@ export function VoteClosePanel({
   return (
     <section className="flex flex-col gap-3 px-4 py-4">
       <header className="flex items-baseline justify-between">
-        <h2 className="text-base text-ink-900 m-0">{t('voting.closeTitle')}</h2>
-        <span className="text-sm tabular-nums text-ink-500">
+        <h2 className="text-body text-ink m-0">{t('voting.closeTitle')}</h2>
+        <span className="text-meta tabular-nums text-ink-soft">
           {keptSongIds.length} / {targetSongCount}
         </span>
       </header>
       {isOverTarget ? (
-        <p className="text-sm text-ink-500 m-0" role="status">
+        <p className="text-meta text-ink-soft m-0" role="status">
           {t('voting.closeOverTarget')}
         </p>
       ) : null}
@@ -109,43 +110,41 @@ export function VoteClosePanel({
       </DndContext>
       {leftOutSongs.length === 0 ? null : (
         <div className="flex flex-col gap-2">
-          <span className="text-xs tracking-wider uppercase text-ink-400">
+          <span className="text-label tracking-wider uppercase text-ink-soft">
             {t('voting.closeAddLabel')}
           </span>
           <ul className="list-none p-0 m-0 flex flex-col gap-2">
             {leftOutSongs.map((song) => (
               <li
                 key={song.id}
-                className="flex items-center gap-2 rounded-xl border border-dashed border-line px-3 py-2"
+                className="flex items-center gap-2 rounded-lg border border-dashed border-rule px-3 py-2"
               >
-                <span className="flex-1 min-w-0 truncate text-ink-500">{song.title}</span>
-                <Button
-                  type="button"
-                  variant="ghost"
-                  aria-label={t('voting.addToProposal')}
+                <span className="flex-1 min-w-0 truncate text-ink-soft">{song.title}</span>
+                <IconButton
+                  icon="plus"
+                  label={t('voting.addToProposal')}
                   onClick={() => setKeptSongIds([...keptSongIds, song.id])}
-                >
-                  +
-                </Button>
+                />
               </li>
             ))}
           </ul>
         </div>
       )}
-      <StickyFormActions>
-        <Button type="button" variant="ghost" onClick={onCancel}>
+      <BottomActions>
+        <Button icon="close" type="button" variant="quiet" onClick={onCancel}>
           {t('common.cancel')}
         </Button>
         <Button
+          icon="check"
           type="button"
-          variant="accent"
+          variant="primary"
           className="flex-1"
           disabled={keptSongIds.length === 0 || isClosing}
           onClick={() => onClose(keptSongIds)}
         >
           {t('voting.closeSubmit')}
         </Button>
-      </StickyFormActions>
+      </BottomActions>
     </section>
   );
 }

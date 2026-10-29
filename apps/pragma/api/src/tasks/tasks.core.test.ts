@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { compareTasksByUrgency, sortTasksByUrgency, type TaskOrderingShape } from './tasks.core';
+import {
+  compareTasksByUrgency,
+  describeTaskCreatedEvent,
+  sortTasksByUrgency,
+  type TaskOrderingShape,
+} from './tasks.core';
 
 const EARLY = new Date('2026-01-10T00:00:00.000Z');
 const LATE = new Date('2026-02-10T00:00:00.000Z');
@@ -65,5 +70,23 @@ describe('sortTasksByUrgency', () => {
       'Print setlists',
     ]);
     expect(given[0]?.title).toBe('Print setlists');
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('describeTaskCreatedEvent', () => {
+  it('says whether the created task names a session', () => {
+    expect(describeTaskCreatedEvent({ kind: 'ok', task: { sessionId: 'session' } })).toEqual({
+      event: 'task_created',
+      hasSession: true,
+    });
+    expect(describeTaskCreatedEvent({ kind: 'ok', task: { sessionId: null } })).toEqual({
+      event: 'task_created',
+      hasSession: false,
+    });
+  });
+
+  it('records nothing for a refused write', () => {
+    expect(describeTaskCreatedEvent({ kind: 'session-not-found' })).toBeNull();
   });
 });

@@ -1,0 +1,18 @@
+
+> @borso-app/pragma@0.0.0 task-metrics /tmp/claude-0/-home-user-borso-fr/af56c1be-57ea-5b20-9cfd-fe2d2eef3c76/scratchpad/visual-validator-all/wt/apps/pragma
+> scripts/task-metrics/run-task-metrics.sh "--" "--tasks" "none" "--slice-2" "--slice-3" "--slice-4" "--slice-6" "--out" "/tmp/claude-0/-home-user-borso-fr/af56c1be-57ea-5b20-9cfd-fe2d2eef3c76/scratchpad/visual-validator-all/harness-slices.json"
+
+{"event":"task_created","hasSession":false}
+{"event":"task_created","hasSession":false}
+{"event":"task_created","hasSession":false}
+{"event":"task_created","hasSession":false}
+{"event":"task_created","hasSession":false}
+{"event":"task_created","hasSession":false}
+[dev:db] migrations applied, fixture seeded: 4 members, shared password "pragma-preview"
+[dev:db] sign in as any of: Hugo, Léa, Marc, Sarah
+[audit-seed] songs=44 members=5 instruments=6 sessions=3
+[audit-seed] setlists -> Répétition du jeudi — on cale les enchaînements: 17 | Festival de la Butte — brouillon long: 22 | Set principal: 20
+pragma up: site http://localhost:5194  api http://localhost:3194  (sign in as hugo / pragma-preview)
+[36m[argent][0m stopped
+pragma instance 5194 stopped (the shared postgres cluster keeps running; stop it with: /tmp/claude-0/-home-user-borso-fr/af56c1be-57ea-5b20-9cfd-fe2d2eef3c76/scratchpad/visual-validator-all/wt/scripts/local-postgres.sh stop pragma)
+exit 0

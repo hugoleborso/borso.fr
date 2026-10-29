@@ -1,10 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
-  foregroundForLuminance,
+  contrastRatio,
+  ON_COLOR_DARK,
+  ON_COLOR_DARK_RGB,
+  ON_COLOR_LIGHT,
+  ON_COLOR_LIGHT_RGB,
   parseHex,
-  READABLE_THRESHOLD,
-  readableForeground,
   relativeLuminance,
+  selectInkOnMemberColor,
 } from './member-color.utils';
 
 const SRGB_THRESHOLD = 0.03928;
@@ -71,27 +74,50 @@ describe('member-color.utils', () => {
     });
   });
 
-  describe('foregroundForLuminance', () => {
-    it('reads a luminance sitting exactly on the threshold as dark', () => {
-      expect(foregroundForLuminance(READABLE_THRESHOLD)).toBe('#fffefa');
+  describe('contrastRatio', () => {
+    it('is 21 between black and white, in either order', () => {
+      const black = { r: 0, g: 0, b: 0 };
+      const white = { r: 255, g: 255, b: 255 };
+      expect(contrastRatio(black, white)).toBeCloseTo(21);
+      expect(contrastRatio(white, black)).toBeCloseTo(21);
     });
 
-    it('reads a luminance just past the threshold as light', () => {
-      expect(foregroundForLuminance(READABLE_THRESHOLD + 0.001)).toBe('#1a1814');
+    it('is 1 between a colour and itself', () => {
+      expect(contrastRatio({ r: 196, g: 88, b: 58 }, { r: 196, g: 88, b: 58 })).toBe(1);
     });
   });
 
-  describe('readableForeground', () => {
-    it('returns the ink color on a bright background', () => {
-      expect(readableForeground('#ffffff')).toBe('#1a1814');
+  describe('selectInkOnMemberColor', () => {
+    const darkInk = ON_COLOR_DARK_RGB;
+    const lightInk = ON_COLOR_LIGHT_RGB;
+
+    it('holds each ink as a hex value and as its channels', () => {
+      expect(parseHex(ON_COLOR_DARK)).toEqual(ON_COLOR_DARK_RGB);
+      expect(parseHex(ON_COLOR_LIGHT)).toEqual(ON_COLOR_LIGHT_RGB);
     });
 
-    it('returns the surface color on a dark background', () => {
-      expect(readableForeground('#000000')).toBe('#fffefa');
+    it.each([
+      ['coral', '#e87b62', 'on-color-dark', 7.05],
+      ['teal', '#3a9b9b', 'on-color-dark', 6.01],
+      ['mustard', '#d6a93c', 'on-color-dark', 9.1],
+      ['plum', '#8a4f7a', 'on-color-light', 5.94],
+      ['sage', '#7a9b6f', 'on-color-dark', 6.39],
+    ] as const)('draws on %s (%s) with %s at 4.5:1 or more', (_name, hex, expected, ratio) => {
+      expect(selectInkOnMemberColor(hex)).toBe(expected);
+      const color = parseHex(hex);
+      const ink = expected === 'on-color-dark' ? darkInk : lightInk;
+      if (color === null) throw new Error('palette colour does not parse');
+      expect(contrastRatio(color, ink)).toBeCloseTo(ratio, 2);
+      expect(contrastRatio(color, ink)).toBeGreaterThanOrEqual(4.5);
     });
 
-    it('falls back to the ink color on a malformed hex', () => {
-      expect(readableForeground('rebeccapurple')).toBe('#1a1814');
+    it('takes the light ink on a colour as dark as the dark ink', () => {
+      expect(selectInkOnMemberColor('#000000')).toBe('on-color-light');
+      expect(selectInkOnMemberColor('#ffffff')).toBe('on-color-dark');
+    });
+
+    it('falls back to the dark ink on a malformed colour', () => {
+      expect(selectInkOnMemberColor('coral')).toBe('on-color-dark');
     });
   });
 });

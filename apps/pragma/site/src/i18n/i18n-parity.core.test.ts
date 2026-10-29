@@ -10,15 +10,7 @@ interface IdenticalByDesign {
 
 const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'account.assistants.claudeCodeLabel', readsTheSameBecause: 'Claude Code, a product name' },
-  {
-    key: 'account.assistants.connectorLabel',
-    readsTheSameBecause: 'claude.ai and Le Chat, product names',
-  },
   { key: 'account.assistants.vibeLabel', readsTheSameBecause: 'Mistral Vibe, a product name' },
-  {
-    key: 'account.passkeys',
-    readsTheSameBecause: 'the WebAuthn credential is called a passkey in French too',
-  },
   { key: 'appName', readsTheSameBecause: 'the Pragma brand' },
   { key: 'bars.contactEmail', readsTheSameBecause: '"Email" is the label French users read too' },
   { key: 'bars.contactName', readsTheSameBecause: 'same word, same spelling' },
@@ -28,15 +20,21 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'catalog.album', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.chartImage', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.chartPdf', readsTheSameBecause: 'the PDF format name' },
+  { key: 'catalog.chordsPdf', readsTheSameBecause: 'the PDF format name' },
+  { key: 'catalog.chordsPhoto', readsTheSameBecause: 'same word, same spelling' },
   {
-    key: 'catalog.energyBadge',
-    readsTheSameBecause: '"E" — the initial of Energy and of Énergie alike',
+    key: 'catalog.chordsTextPlaceholder',
+    readsTheSameBecause: 'a sample chord chart, lyrics in the language of the song',
   },
+  {
+    key: 'catalog.editSectionLineup',
+    readsTheSameBecause: '"lineup" is the word French musicians use here',
+  },
+  { key: 'catalog.editSectionNotes', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.linkPlaceholder', readsTheSameBecause: 'a URL placeholder, not prose' },
-  {
-    key: 'catalog.masteryBadge',
-    readsTheSameBecause: '"M" — the initial of Mastery and of Maîtrise alike',
-  },
+  { key: 'catalog.listenDeezer', readsTheSameBecause: 'Deezer, a proper noun' },
+  { key: 'catalog.listenSpotify', readsTheSameBecause: 'Spotify, a proper noun' },
+  { key: 'catalog.listenYoutube', readsTheSameBecause: 'YouTube, a proper noun' },
   { key: 'catalog.noMastery', readsTheSameBecause: 'an em dash, not a word' },
   {
     key: 'catalog.notesGimmicks',
@@ -50,28 +48,43 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     key: 'compos.lineup',
     readsTheSameBecause: 'the band says lineup in French too, and the vocabulary keeps that word',
   },
+  {
+    key: 'home.totalHoursMinutes',
+    readsTheSameBecause: 'a duration written with the h unit both languages share',
+  },
+  { key: 'home.totalMinutes', readsTheSameBecause: 'min is the minute abbreviation in both' },
   { key: 'instruments.title', readsTheSameBecause: 'same word, same spelling' },
   { key: 'lineup.instruments', readsTheSameBecause: 'same word, same spelling' },
-  { key: 'nav.administrationSection', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.bars', readsTheSameBecause: '"un bar" is the same word in French' },
   { key: 'nav.instruments', readsTheSameBecause: 'same word, same spelling' },
   { key: 'nav.language.en', readsTheSameBecause: 'the EN language tag' },
   { key: 'nav.language.fr', readsTheSameBecause: 'the FR language tag' },
   { key: 'nav.sessions', readsTheSameBecause: 'same word, same spelling' },
-  { key: 'nav.setlists', readsTheSameBecause: '"setlist" is the word French musicians use' },
-  { key: 'notifications.title', readsTheSameBecause: '"Notifications" is spelled alike in French' },
+  { key: 'practice.note', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'practice.noteTitle', readsTheSameBecause: 'same word, then the song title' },
   { key: 'scene.autoScrollStop', readsTheSameBecause: '"Stop" is the word on French pedals too' },
   { key: 'scene.capo', readsTheSameBecause: 'guitar jargon, used as-is in French' },
   { key: 'sessions.date', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.kindConcert', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.noPreparedConcert', readsTheSameBecause: 'an em dash, not a word' },
+  { key: 'sessions.practiceSongs.back', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'sessions.section.sessions', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'sessions.section.setlists',
+    readsTheSameBecause: 'same word, and French pluralises it the same way',
+  },
   { key: 'sessions.setlist', readsTheSameBecause: '"setlist" is the word French musicians use' },
   {
     key: 'sessions.setlists',
     readsTheSameBecause: 'same word, and French pluralises it the same way',
   },
   { key: 'sessions.title', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'sessions.view.setlist',
+    readsTheSameBecause: '"setlist" is the word French musicians use',
+  },
   { key: 'setlist.capo', readsTheSameBecause: 'guitar jargon, used as-is in French' },
+  { key: 'setlist.capoValue', readsTheSameBecause: 'guitar jargon, used as-is in French' },
   {
     key: 'setlist.create.defaultName',
     readsTheSameBecause: '"Set 1" is what the band writes on the paper, in both languages',
@@ -81,6 +94,7 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'setlist.title', readsTheSameBecause: '"setlist" is the word French musicians use' },
   { key: 'shell.meVersion', readsTheSameBecause: 'the brand and a version number' },
   { key: 'takes.concert', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'tasks.linkedSession', readsTheSameBecause: '"Sessions" is the tab name in French too' },
   { key: 'tasks.notes', readsTheSameBecause: 'same word, same spelling' },
 ];
 

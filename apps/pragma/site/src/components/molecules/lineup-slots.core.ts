@@ -24,8 +24,8 @@ export const INSTRUMENT_ICON_GLYPH = {
   sun: 'sun',
 } satisfies Record<InstrumentIcon, IconName>;
 
-export const LINEUP_SLOT_WIDTH_PX = 19;
-export const OVERFLOW_COUNTER_WIDTH_PX = 22;
+export const LINEUP_SLOT_WIDTH_PX = 24;
+export const OVERFLOW_COUNTER_WIDTH_PX = 24;
 const NO_OVERFLOW = 0;
 
 export interface SlotInstrument {

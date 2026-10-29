@@ -22,7 +22,6 @@ type BarUpdateVariables = { id: string } & Parameters<
 const NEW_BAR_DEFAULTS: Pick<
   BarRow,
   | 'notes'
-  | 'lastInteractionAt'
   | 'city'
   | 'capacity'
   | 'contactName'
@@ -33,7 +32,6 @@ const NEW_BAR_DEFAULTS: Pick<
   | 'availableSupport'
 > = {
   notes: '',
-  lastInteractionAt: null,
   city: null,
   capacity: null,
   contactName: null,

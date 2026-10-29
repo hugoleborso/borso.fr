@@ -3,158 +3,102 @@
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
-import { Button } from '../../components/atoms/Button';
-import { buttonVariants } from '../../components/atoms/button.variants';
+import { useSearchParams } from 'react-router-dom';
+import { BottomActions } from '../../components/atoms/BottomActions';
+import { ButtonLink } from '../../components/atoms/ButtonLink';
+import { Chip } from '../../components/atoms/Chip';
 import { Icon } from '../../components/atoms/Icon';
-import { BottomActionBar } from '../../components/molecules/BottomActionBar';
-import { FilterPillGroup } from '../../components/molecules/FilterPillGroup';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SearchBar } from '../../components/molecules/SearchBar';
-import { CatalogGrid } from '../../components/organisms/CatalogGrid';
-import { NextConcertStrip } from '../../components/organisms/NextConcertStrip';
+import { StreakBadge } from '../../components/molecules/StreakBadge';
+import { CatalogList } from '../../components/organisms/CatalogList';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError } from '../../lib/api.client';
-import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.core';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
-import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
-import { useMembersList } from '../../lib/queries/members.queries';
 import { useSongsList, useSongThatLostItsLastWrite } from '../../lib/queries/songs.queries';
+import { useStudiesOverview } from '../../lib/queries/studies.queries';
 import {
-  buildNewSongPath,
-  type CatalogStatusFilter,
+  buildCatalogFilterSearch,
+  CATALOG_FILTER_PARAMETER,
+  CATALOG_FILTERS,
+  type CatalogFilter,
+  describeSongToLearn,
+  parseCatalogFilter,
   selectCatalogEmptyMessageKey,
-  compactLineup,
-  countSongsWithStatus,
+  selectSongsToLearn,
   selectVisibleSongs,
   sortSongsByTitle,
+  TO_LEARN_FILTER,
+  toSongCard,
 } from './catalog-page.core';
-import { extractChartKind } from './chart-kind.utils';
+import { buildAddSongPath } from './add-song.core';
+
+const NO_ROWS: readonly never[] = [];
+
+const FILTER_LABEL_KEY = {
+  all: 'catalog.filterAll',
+  learning: 'catalog.filterToLearn',
+  concert_ready: 'catalog.filterConcertReady',
+  rehearsed: 'catalog.filterRehearsed',
+  wip: 'catalog.filterWip',
+  idea: 'catalog.filterIdea',
+} as const satisfies Readonly<Record<CatalogFilter, string>>;
 
 /**
  * @Blueprint route-list-page
  * @BlueprintName Route List Page
  * @BlueprintUsage Use for a route that reads a collection and renders it as a list or a grid.
- * @BlueprintDescription Calls one query hook per domain it needs, funnels the four errors into a single message and the four loading flags into a single flag, then hands the derivation to `catalog-page.core.ts` so sorting, filtering and counting stay pure and testable. The route owns only the search text and the status filter, and the markup below is one list organism, so the page holds no layout primitive of its own.
+ * @BlueprintDescription Calls one query hook per domain it needs, funnels their errors into a single message and their loading flags into a single flag, then hands the derivation to `catalog-page.core.ts` so sorting, filtering and the To learn projection stay pure and testable. The route owns only the search text and reads its filter from the address, so coming back from a song keeps it, and the markup below is one list organism, so the page holds no layout primitive of its own.
  */
 export function CatalogPage(): JSX.Element {
   const { t } = useTranslation();
   const songsQuery = useSongsList();
-  const membersQuery = useMembersList();
   const instrumentsQuery = useInstrumentsList();
-  const masteryQuery = useMasteryDefaults();
+  const overviewQuery = useStudiesOverview();
+  const [searchParams, setSearchParams] = useSearchParams();
   const [search, setSearch] = useState('');
-  const [statusFilter, setStatusFilter] = useState<CatalogStatusFilter>('all');
+  const filter = parseCatalogFilter(searchParams.get(CATALOG_FILTER_PARAMETER));
+  const isToLearn = filter === TO_LEARN_FILTER;
 
-  const firstError =
-    songsQuery.error ?? membersQuery.error ?? instrumentsQuery.error ?? masteryQuery.error;
+  const firstError = songsQuery.error ?? instrumentsQuery.error;
   const errorMessage =
     firstError instanceof ApiError ? firstError.message : firstError ? 'unknown-error' : null;
-  const isLoading =
-    songsQuery.isLoading ||
-    membersQuery.isLoading ||
-    instrumentsQuery.isLoading ||
-    masteryQuery.isLoading;
+  const isLoading = songsQuery.isLoading || instrumentsQuery.isLoading;
 
-  const songs = useMemo(() => songsQuery.data?.songs ?? [], [songsQuery.data]);
+  const songs = useMemo(() => songsQuery.data?.songs ?? NO_ROWS, [songsQuery.data]);
   const failedWriteSongId = useSongThatLostItsLastWrite();
   const titleOfSongThatLostItsWrite =
     songs.find((song) => song.id === failedWriteSongId)?.title ?? null;
-  const members = useMemo(() => membersQuery.data?.members ?? [], [membersQuery.data]);
-  const instruments = useMemo(
-    () => instrumentsQuery.data?.instruments ?? [],
+  const instrumentNames = useMemo(
+    () =>
+      new Map(
+        (instrumentsQuery.data?.instruments ?? NO_ROWS).map((instrument) => [
+          instrument.id,
+          instrument.name,
+        ]),
+      ),
     [instrumentsQuery.data],
   );
-  const masteryDefaults = useMemo(() => masteryQuery.data?.defaults ?? [], [masteryQuery.data]);
+  const queue = overviewQuery.data?.queue ?? NO_ROWS;
 
-  const sortedSongs = useMemo(() => sortSongsByTitle(songs), [songs]);
+  const cards = useMemo<SongCardProps[]>(() => {
+    if (isToLearn) {
+      return selectSongsToLearn(songs, queue, search).map((entry) =>
+        toSongCard(entry.song, describeSongToLearn(entry, instrumentNames)),
+      );
+    }
+    return selectVisibleSongs(sortSongsByTitle(songs), filter, search).map((song) =>
+      toSongCard(song, song.artist),
+    );
+  }, [isToLearn, songs, queue, search, instrumentNames, filter]);
 
-  const filteredSongs = useMemo(
-    () => selectVisibleSongs(sortedSongs, statusFilter, search),
-    [sortedSongs, statusFilter, search],
-  );
-
-  const filterOptions = useMemo(
-    () => [
-      {
-        value: 'all' as const,
-        label: t('catalog.filterAll'),
-        count: countSongsWithStatus(songs, 'all'),
-      },
-      {
-        value: 'concert_ready' as const,
-        label: t('catalog.filterConcertReady'),
-        count: countSongsWithStatus(songs, 'concert_ready'),
-      },
-      {
-        value: 'rehearsed' as const,
-        label: t('catalog.filterRehearsed'),
-        count: countSongsWithStatus(songs, 'rehearsed'),
-      },
-      {
-        value: 'wip' as const,
-        label: t('catalog.filterWip'),
-        count: countSongsWithStatus(songs, 'wip'),
-      },
-      {
-        value: 'idea' as const,
-        label: t('catalog.filterIdea'),
-        count: countSongsWithStatus(songs, 'idea'),
-      },
-    ],
-    [songs, t],
-  );
-
-  const lineupMembers = useMemo(
-    () =>
-      members.map((member) => ({
-        id: member.id,
-        name: member.firstName,
-        color: member.color,
-      })),
-    [members],
-  );
-
-  const cards = useMemo<SongCardProps[]>(
-    () =>
-      filteredSongs.map((song) => ({
-        id: song.id,
-        title: song.title,
-        deezerAlbumId: song.deezerAlbumId,
-        deezerTrackId: song.deezerTrackId,
-        spotifyTrackId: song.spotifyTrackId,
-        artist: song.artist,
-        status: song.status,
-        tonalityStart: song.tonalityStart,
-        tonalityEnd: song.tonalityEnd,
-        chartKind: extractChartKind(song.chart ?? null),
-        baseEnergy: song.baseEnergy,
-        meanMastery: meanDefaultMasteryForSong(song.defaultLineup, masteryDefaults),
-        defaultLineup: compactLineup(song.defaultLineup),
-        members: lineupMembers,
-        instruments,
-      })),
-    [filteredSongs, lineupMembers, instruments, masteryDefaults],
-  );
-
-  const newSongControl = (
-    <BottomActionBar>
-      <Link
-        to={buildNewSongPath(search)}
-        aria-label={t('catalog.newSong')}
-        title={t('catalog.newSong')}
-        className={buttonVariants({ variant: 'accent', size: 'icon' })}
-      >
-        <Icon name="plus" size={22} />
-      </Link>
-    </BottomActionBar>
-  );
+  const chooseFilter = (next: CatalogFilter): void => {
+    setSearchParams(buildCatalogFilterSearch(next), { replace: true });
+  };
 
   return (
-    <div className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
-      <NextConcertStrip />
+    <div className="max-w-3xl px-4 py-4 sm:px-9 sm:py-7 lg:max-w-[1280px]">
       <PageHeader
-        crumb={t('catalog.crumb')}
         title={t('catalog.title')}
         inline={
           <SearchBar
@@ -163,44 +107,57 @@ export function CatalogPage(): JSX.Element {
             placeholder={t('catalog.searchPlaceholder')}
           />
         }
-      />
-      {newSongControl}
+      >
+        <div
+          role="group"
+          aria-label={t('catalog.filterLabel')}
+          className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0"
+        >
+          {CATALOG_FILTERS.map((option) => (
+            <Chip
+              key={option}
+              pressed={option === filter}
+              onPress={() => chooseFilter(option)}
+              className="shrink-0"
+            >
+              {t(FILTER_LABEL_KEY[option])}
+            </Chip>
+          ))}
+        </div>
+      </PageHeader>
 
-      <div className="flex gap-2 sm:gap-3.5 items-center mb-3 sm:mb-5 flex-wrap">
-        <FilterPillGroup options={filterOptions} value={statusFilter} onChange={setStatusFilter} />
-      </div>
+      {isToLearn && overviewQuery.data !== undefined ? (
+        <div className="mb-3">
+          <StreakBadge {...overviewQuery.data.myStreak} />
+        </div>
+      ) : null}
 
       {errorMessage !== null && (
-        <p className="text-danger text-sm mb-4" role="alert">
+        <p className="text-danger text-meta mb-4" role="alert">
           {errorMessage}
         </p>
       )}
       {titleOfSongThatLostItsWrite !== null && (
         <p
-          className="text-danger text-sm mb-4 border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
+          className="text-danger text-meta mb-4 border border-danger/40 rounded-md px-3 py-2 flex items-center gap-2"
           role="alert"
         >
-          <Icon name="warn" size={14} />
+          <Icon name="warn" size="sm" />
           {t('catalog.lastWriteFailed', { title: titleOfSongThatLostItsWrite })}
         </p>
       )}
-      {isLoading && <p className="text-ink-400 text-sm italic">{t('common.loading')}</p>}
+      {isLoading && <p className="text-ink-soft text-meta italic">{t('common.loading')}</p>}
       {!isLoading && cards.length === 0 && (
-        <div className="flex flex-col items-start gap-3 py-8">
-          <p className="text-ink-400 text-sm italic m-0">
-            {t(selectCatalogEmptyMessageKey(search))}
-          </p>
-          <Link to={buildNewSongPath(search)}>
-            <Button variant="accent" type="button">
-              <Icon name="plus" size={14} />
-              {search.trim().length === 0
-                ? t('catalog.newSong')
-                : t('catalog.createSearched', { title: search.trim() })}
-            </Button>
-          </Link>
-        </div>
+        <p className="m-0 py-8 text-meta text-ink-soft italic">
+          {t(selectCatalogEmptyMessageKey(search, filter))}
+        </p>
       )}
-      {!isLoading && cards.length > 0 && <CatalogGrid songs={cards} />}
+      {!isLoading && cards.length > 0 && <CatalogList songs={cards} />}
+      <BottomActions>
+        <ButtonLink variant="primary" size="lg" icon="plus" to={buildAddSongPath(search)}>
+          {t('catalog.addSong')}
+        </ButtonLink>
+      </BottomActions>
     </div>
   );
 }

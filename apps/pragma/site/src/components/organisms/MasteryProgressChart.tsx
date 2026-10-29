@@ -30,13 +30,13 @@ export function MasteryProgressChart({
   if (series.length === 0) return null;
   return (
     <Card className="p-4 flex flex-col gap-3" data-testid="mastery-progress">
-      <div className="text-xs tracking-wider uppercase text-ink-400 font-medium">
+      <div className="text-label tracking-wider uppercase text-ink-soft font-medium">
         {t('studies.progressTitle')}
       </div>
       <ul className="m-0 p-0 list-none grid grid-cols-1 sm:grid-cols-2 gap-3">
         {series.map((entry) => (
           <li key={entry.key} className="flex flex-col gap-1">
-            <span className="text-xs text-ink-700">
+            <span className="text-meta text-ink">
               {entry.memberName} · {entry.instrumentName} · {entry.scores.at(-1)}
             </span>
             <EnergySparkline

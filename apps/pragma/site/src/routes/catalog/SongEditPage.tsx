@@ -6,6 +6,8 @@ import { useTranslation } from 'react-i18next';
 import { useParams, useSearchParams } from 'react-router-dom';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { useNavigateTo } from '../../lib/navigation.hook';
+import { useInstrumentsList } from '../../lib/queries/instruments.queries';
+import { useMembersList } from '../../lib/queries/members.queries';
 import {
   useCreateSong,
   useDeleteSong,
@@ -26,13 +28,20 @@ import {
   singleSongSchema,
   songFromApi,
 } from './song-draft.core';
+import {
+  readSongEditSection,
+  SONG_EDIT_SECTION_PARAM,
+  type SongEditSection,
+} from './song-edit-page.core';
+
+const NO_ROWS: readonly never[] = [];
 
 // @FollowsBlueprint route-detail-page
 export function SongEditPage(): JSX.Element {
   const { t } = useTranslation();
   const { songId } = useParams<{ songId: string }>();
   const navigateTo = useNavigateTo();
-  const [searchParams] = useSearchParams();
+  const [searchParams, setSearchParams] = useSearchParams();
   const prefilledTitle = searchParams.get('title') ?? '';
   const isNew = songId === undefined || songId === 'new';
   const songQuery = useSong(songId ?? '', !isNew);
@@ -41,6 +50,32 @@ export function SongEditPage(): JSX.Element {
   const deleteSong = useDeleteSong();
   const [saveRefusal, setSaveRefusal] = useState<SongSaveRefusal>(NO_SAVE_REFUSAL);
   const [newLinkUrl, setNewLinkUrl] = useState('');
+  const membersQuery = useMembersList();
+  const instrumentsQuery = useInstrumentsList();
+  const section = readSongEditSection(searchParams.get(SONG_EDIT_SECTION_PARAM));
+  const lineupMembers = useMemo(
+    () =>
+      (membersQuery.data?.members ?? NO_ROWS).map((member) => ({
+        id: member.id,
+        name: member.firstName,
+        color: member.color,
+      })),
+    [membersQuery.data],
+  );
+  const lineupInstruments = useMemo(
+    () =>
+      (instrumentsQuery.data?.instruments ?? NO_ROWS).map((instrument) => ({
+        id: instrument.id,
+        name: instrument.name,
+      })),
+    [instrumentsQuery.data],
+  );
+
+  const showSection = (next: SongEditSection): void => {
+    const nextParams = new URLSearchParams(searchParams);
+    nextParams.set(SONG_EDIT_SECTION_PARAM, next);
+    setSearchParams(nextParams, { replace: true });
+  };
 
   const defaultValues = useMemo<SongDraftState>(() => {
     if (isNew) return { ...BLANK_SONG_DRAFT, title: prefilledTitle };
@@ -80,7 +115,9 @@ export function SongEditPage(): JSX.Element {
 
   if (isLoading) {
     return (
-      <p className="px-4 sm:px-9 py-4 sm:py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
+      <p className="px-4 sm:px-9 py-4 sm:py-7 text-ink-soft italic text-meta">
+        {t('common.loading')}
+      </p>
     );
   }
   if (isEditingMissingSong) {
@@ -99,6 +136,10 @@ export function SongEditPage(): JSX.Element {
       isNew={isNew}
       songId={songId}
       defaultValues={defaultValues}
+      section={section}
+      members={lineupMembers}
+      instruments={lineupInstruments}
+      onSectionChange={showSection}
       onSubmit={saveSong}
       onDelete={removeSong}
       newLinkUrl={newLinkUrl}

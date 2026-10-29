@@ -30,17 +30,18 @@ function ConsentQuestion(props: ConsentQuestionProps): JSX.Element {
   };
   return (
     <>
-      <p className="text-base text-ink-900 m-0 mb-2">
+      <p className="text-body text-ink m-0 mb-2">
         {t('consent.question', {
           clientName: props.clientName,
           memberFirstName: props.memberFirstName,
         })}
       </p>
-      <p className="text-sm text-ink-500 m-0 mb-6">{t('consent.scope')}</p>
+      <p className="text-meta text-ink-soft m-0 mb-6">{t('consent.scope')}</p>
       <div className="flex flex-col-reverse gap-2 sm:flex-row sm:justify-end">
         <Button
           type="button"
-          variant="ghost"
+          variant="quiet"
+          icon="close"
           disabled={decideConsent.isPending}
           onClick={() => decide('deny')}
         >
@@ -48,7 +49,8 @@ function ConsentQuestion(props: ConsentQuestionProps): JSX.Element {
         </Button>
         <Button
           type="button"
-          variant="accent"
+          variant="primary"
+          icon="check"
           disabled={decideConsent.isPending}
           onClick={() => decide('allow')}
         >
@@ -56,7 +58,7 @@ function ConsentQuestion(props: ConsentQuestionProps): JSX.Element {
         </Button>
       </div>
       {decideConsent.isError ? (
-        <p role="alert" className="mt-3 text-sm text-danger">
+        <p role="alert" className="mt-3 text-meta text-danger">
           {t('consent.failed')}
         </p>
       ) : null}
@@ -73,9 +75,9 @@ export function ConsentPage(): JSX.Element {
   const view = selectConsentView(description);
 
   const VIEW_BY_CONSENT_STATE = {
-    loading: () => <p className="text-sm text-ink-400 m-0">{t('common.loading')}</p>,
+    loading: () => <p className="text-meta text-ink-soft m-0">{t('common.loading')}</p>,
     invalid: () => (
-      <p role="alert" className="text-sm text-danger m-0">
+      <p role="alert" className="text-meta text-danger m-0">
         {t('consent.invalid')}
       </p>
     ),
@@ -90,10 +92,12 @@ export function ConsentPage(): JSX.Element {
   const View = VIEW_BY_CONSENT_STATE[view];
 
   return (
-    <main className="min-h-dvh flex items-center justify-center bg-bg px-4 py-8">
+    <main className="min-h-dvh flex items-center justify-center bg-paper px-4 py-8">
       <Card className="w-full max-w-[480px] p-6 sm:p-8">
-        <p className="text-xs tracking-[0.18em] uppercase text-ink-500 m-0 mb-2">{t('appName')}</p>
-        <h1 className="font-display italic text-[32px] sm:text-[40px] leading-none text-ink-900 m-0 mb-5">
+        <p className="text-label tracking-[0.18em] uppercase text-ink-soft m-0 mb-2">
+          {t('appName')}
+        </p>
+        <h1 className="font-display text-display leading-none tracking-[-0.015em] text-ink m-0 mb-5">
           {t('consent.title')}
         </h1>
         <View />

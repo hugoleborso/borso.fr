@@ -36,10 +36,14 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 
 # `--staged` narrows both reads to what a commit can break: the staged files
-# themselves, and every file naming a path the commit removes — a deletion, or
-# the old side of a rename — or a directory that removal leaves empty. Without
+# themselves, and every file of the surfaces below naming a path the commit
+# removes — a deletion, or the old side of a rename — or a directory that removal
+# leaves empty. Only those surfaces are ever read, so the search for a removed
+# name stays inside them: across the whole tree, a commit deleting seventeen
+# files cost 490 ms of CPU against a 300 ms budget. Without
 # it, every file is read, which is how CI calls it; that is about two seconds.
 SUBJECTS=()
+SURFACES=('scripts/*' '.husky/*' '.github/*' 'plugins/*' 'CLAUDE.md' '.claude/*')
 if [ "${1:-}" = '--staged' ]; then
   STAGED=1
   while IFS= read -r staged; do
@@ -63,8 +67,7 @@ if [ "${1:-}" = '--staged' ]; then
     # the same verdict either way.
     while IFS= read -r naming; do
       [ -n "$naming" ] && SUBJECTS+=("$naming")
-    done < <(git grep --threads=1 -l -F "${removed_names[@]}" -- \
-      'scripts/*' '.husky/*' '.github/*' 'plugins/*' '.claude/*' 'CLAUDE.md' || true)
+    done < <(git grep --threads=1 -l -F "${removed_names[@]}" -- "${SURFACES[@]}" || true)
   fi
   if [ "${#SUBJECTS[@]}" -eq 0 ]; then
     echo "[check-named-paths-exist] nothing staged names a path"

@@ -1,78 +1,44 @@
 /** @Feature shell */
 
-import type { ParseKeys } from 'i18next';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { NavLink } from 'react-router-dom';
-import { Badge } from '../atoms/Badge';
+import { Link } from 'react-router-dom';
 import { composeClassName } from '../atoms/class-name.utils';
-import { Icon, type IconName } from '../atoms/Icon';
-import { isPositiveCount } from '../../lib/counts.utils';
-import { isMoreTabActive, isNavigationDestinationActive } from './navigation-active.core';
-
-export interface BottomTab {
-  readonly to: string;
-  readonly labelKey: ParseKeys;
-  readonly icon: IconName;
-}
+import { Icon } from '../atoms/Icon';
+import { scrollPageToTop } from '../../lib/page-scroll.adapter';
+import type { ShellTab, ShellTabId } from './navigation-active.core';
 
 export interface BottomTabBarProps {
-  readonly tabs: readonly BottomTab[];
-  readonly badges: Readonly<Record<string, number | undefined>>;
-  readonly activePath: string;
-  readonly moreDestinations: readonly string[];
-  readonly isMoreOpen: boolean;
-  readonly onToggleMore: () => void;
+  readonly tabs: readonly ShellTab[];
+  readonly activeTab: ShellTabId | null;
 }
 
 const TAB_CLASS =
-  'relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-xs no-underline';
+  'relative flex-1 flex flex-col items-center justify-center gap-0.5 min-h-14 text-meta no-underline';
 
 // @FollowsBlueprint organism-presentational
 export function BottomTabBar(props: BottomTabBarProps): JSX.Element {
   const { t } = useTranslation();
-  const isMoreActive = isMoreTabActive(props.activePath, props.moreDestinations, props.isMoreOpen);
   return (
     <nav
-      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-bg-elev border-t border-line pb-[env(safe-area-inset-bottom)]"
+      className="lg:hidden fixed bottom-0 inset-x-0 z-40 flex items-stretch bg-leaf border-t border-rule pb-[env(safe-area-inset-bottom)]"
       aria-label={t('nav.bottomBar')}
     >
       {props.tabs.map((tab) => {
-        const isActive = isNavigationDestinationActive(props.activePath, tab.to);
-        const badge = props.badges[tab.to];
-        const isBadgeShown = isPositiveCount(badge);
+        const isActive = tab.id === props.activeTab;
         return (
-          <NavLink
-            key={tab.to}
+          <Link
+            key={tab.id}
             to={tab.to}
-            className={composeClassName(TAB_CLASS, isActive ? 'text-accent' : 'text-ink-500')}
+            aria-current={isActive ? 'page' : undefined}
+            onClick={scrollPageToTop}
+            className={composeClassName(TAB_CLASS, isActive ? 'text-accent' : 'text-ink-soft')}
           >
-            <Icon name={tab.icon} size={19} />
+            <Icon name={tab.icon} size="md" />
             <span>{t(tab.labelKey)}</span>
-            {isBadgeShown ? (
-              <span className="absolute top-1.5 right-1/2 translate-x-4">
-                <Badge tone="default" size="sm">
-                  {badge}
-                </Badge>
-              </span>
-            ) : null}
-          </NavLink>
+          </Link>
         );
       })}
-      <button
-        type="button"
-        onClick={props.onToggleMore}
-        aria-expanded={props.isMoreOpen}
-        aria-current={isMoreActive ? 'page' : undefined}
-        className={composeClassName(
-          TAB_CLASS,
-          'bg-transparent border-0 cursor-pointer',
-          isMoreActive ? 'text-accent' : 'text-ink-500',
-        )}
-      >
-        <Icon name={props.isMoreOpen ? 'close' : 'menu'} size={19} />
-        <span>{t('nav.more')}</span>
-      </button>
     </nav>
   );
 }

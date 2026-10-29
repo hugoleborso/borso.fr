@@ -5,9 +5,11 @@
 // @FollowsBlueprint test-node-adapter
 
 import { afterAll, afterEach, beforeAll, describe, expect, it, vi } from 'vitest';
-import { S3Client } from '@aws-sdk/client-s3';
+import { NotFound, S3Client } from '@aws-sdk/client-s3';
 import {
   deleteObjects,
+  hasProductionUploadsBucket,
+  isStoredInOwnBucket,
   presignGetObject,
   presignPutObject,
   UploadsConfigError,
@@ -15,12 +17,14 @@ import {
 
 const PRESERVED_ENV = {
   UPLOADS_BUCKET: process.env.UPLOADS_BUCKET,
+  PRODUCTION_UPLOADS_BUCKET: process.env.PRODUCTION_UPLOADS_BUCKET,
   AWS_REGION: process.env.AWS_REGION,
   AWS_ACCESS_KEY_ID: process.env.AWS_ACCESS_KEY_ID,
   AWS_SECRET_ACCESS_KEY: process.env.AWS_SECRET_ACCESS_KEY,
 };
 
 const BUCKET = 'pragma-uploads-test';
+const PRODUCTION_BUCKET = 'pragma-prod-uploads';
 const EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT = 300;
 
 beforeAll(() => {
@@ -32,6 +36,7 @@ beforeAll(() => {
 
 afterEach(() => {
   vi.restoreAllMocks();
+  delete process.env.PRODUCTION_UPLOADS_BUCKET;
 });
 
 afterAll(() => {
@@ -153,6 +158,78 @@ describe('presignGetObject', () => {
   });
 });
 
+describe('presignGetObject from the production bucket', () => {
+  it('signs against the production bucket the stage names', async () => {
+    process.env.PRODUCTION_UPLOADS_BUCKET = PRODUCTION_BUCKET;
+    const url = await presignGetObject({
+      objectKey: 'take/song-1/take-1.webm',
+      expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
+      source: 'production',
+    });
+    expect(url).toContain(PRODUCTION_BUCKET);
+    expect(url).not.toContain(BUCKET);
+  });
+
+  it('raises the slice its own error when the stage names no production bucket', async () => {
+    await expect(
+      presignGetObject({
+        objectKey: 'take/song-1/take-1.webm',
+        expiresInSeconds: EXPIRES_IN_SECONDS_UNLIKE_THE_PRESIGNER_DEFAULT,
+        source: 'production',
+      }),
+    ).rejects.toThrow(new UploadsConfigError('PRODUCTION_UPLOADS_BUCKET not set'));
+  });
+});
+
+describe('hasProductionUploadsBucket', () => {
+  it('answers whether the stage names a production bucket, an empty name counting as none', () => {
+    expect(hasProductionUploadsBucket()).toBe(false);
+    process.env.PRODUCTION_UPLOADS_BUCKET = '';
+    expect(hasProductionUploadsBucket()).toBe(false);
+    process.env.PRODUCTION_UPLOADS_BUCKET = PRODUCTION_BUCKET;
+    expect(hasProductionUploadsBucket()).toBe(true);
+  });
+});
+
+function stubHeadAnswer(answer: () => Promise<unknown>) {
+  // eslint-disable-next-line @typescript-eslint/no-misused-promises -- S3Client.send is overloaded and its last signature, the callback form, returns void; the adapter calls the promise form, which is what this stub answers
+  return vi.spyOn(S3Client.prototype, 'send').mockImplementationOnce(answer);
+}
+
+describe('isStoredInOwnBucket', () => {
+  it('asks the own bucket for the key and answers true when it holds it', async () => {
+    const send = stubHeadAnswer(() => Promise.resolve({}));
+    expect(await isStoredInOwnBucket('take/song-1/take-1.webm')).toBe(true);
+    const command: unknown = send.mock.calls[0]?.[0];
+    expect(command).toBeInstanceOf(Object);
+    expect(Reflect.get(Object(command), 'input')).toEqual({
+      Bucket: BUCKET,
+      Key: 'take/song-1/take-1.webm',
+    });
+  });
+
+  it('answers false when S3 says the key is not there', async () => {
+    stubHeadAnswer(() =>
+      Promise.reject(new NotFound({ message: 'Not Found', $metadata: { httpStatusCode: 404 } })),
+    );
+    expect(await isStoredInOwnBucket('take/song-1/take-1.webm')).toBe(false);
+  });
+
+  it('passes any other failure on, so a refused read is not mistaken for a missing object', async () => {
+    const refusal = new Error('Access Denied');
+    stubHeadAnswer(() => Promise.reject(refusal));
+    await expect(isStoredInOwnBucket('take/song-1/take-1.webm')).rejects.toBe(refusal);
+  });
+
+  it('raises the slice its own error when the bucket is not configured', async () => {
+    delete process.env.UPLOADS_BUCKET;
+    await expect(isStoredInOwnBucket('take/song-1/take-1.webm')).rejects.toThrow(
+      new UploadsConfigError('UPLOADS_BUCKET not set'),
+    );
+    process.env.UPLOADS_BUCKET = BUCKET;
+  });
+});
+
 const DELETE_BATCH_SIZE = 1_000;
 
 function stubDeleteAnswers(...answers: readonly unknown[]) {
@@ -183,6 +260,16 @@ describe('deleteObjects', () => {
     expect(readDeletedKeys(send, 0)).toEqual({
       Bucket: BUCKET,
       Delete: { Objects: [{ Key: 'take/a.webm' }, { Key: 'take/b.mp4' }], Quiet: true },
+    });
+  });
+
+  it('deletes from the own bucket only, even on a stage that reads takes from production', async () => {
+    process.env.PRODUCTION_UPLOADS_BUCKET = PRODUCTION_BUCKET;
+    const send = stubDeleteAnswers({});
+    expect(await deleteObjects(['take/a.webm'])).toEqual([]);
+    expect(readDeletedKeys(send, 0)).toEqual({
+      Bucket: BUCKET,
+      Delete: { Objects: [{ Key: 'take/a.webm' }], Quiet: true },
     });
   });
 

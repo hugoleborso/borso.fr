@@ -71,13 +71,3 @@ const INSTRUMENT_FAMILY_RANK = {
 export function defaultPositionForFamily(family: InstrumentFamily): number {
   return INSTRUMENT_FAMILY_RANK[family];
 }
-
-// @FollowsBlueprint core-projection
-export function decidePrimaryInstrumentIds(
-  instrumentIds: readonly string[],
-  requestedPrimaryInstrumentIds: readonly string[] | undefined,
-  survivingPrimaryInstrumentIds: readonly string[],
-): string[] {
-  const claimed = new Set(requestedPrimaryInstrumentIds ?? survivingPrimaryInstrumentIds);
-  return instrumentIds.filter((instrumentId) => claimed.has(instrumentId));
-}

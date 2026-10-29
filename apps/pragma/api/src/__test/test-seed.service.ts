@@ -7,7 +7,8 @@ import { createInstrument } from '../instruments/instruments.service';
 import { assignInstrumentsToMember, createMember } from '../members/members.service';
 import type { WriteActor } from '../notifications/notifications.service';
 import { createSession } from '../sessions/sessions.service';
-import { appendEntry, createSetlist } from '../setlists/setlists.service';
+import { appendEntry } from '../setlists/setlist-entry.service';
+import { createSetlist } from '../setlists/setlists.service';
 import { createSong } from '../songs/songs.service';
 import { hashToken, selectTokenExpiries } from '../oauth/token.core';
 import { createTask } from '../tasks/tasks.service';
@@ -29,7 +30,6 @@ import {
   buildSeedLineup,
   selectAdminCredentialsState,
   selectInstrumentIds,
-  selectPrimaryInstrumentIds,
 } from './test-seed.core';
 import { classifySchemaBoundary, type SchemaBoundary } from './schema-boundary.core';
 import {
@@ -133,7 +133,6 @@ async function seedMembers(
     await assignInstrumentsToMember(
       member.id,
       selectInstrumentIds(seed.instrumentNames, instrumentIdByName),
-      selectPrimaryInstrumentIds(seed.instrumentNames, instrumentIdByName),
     );
   }
   return memberIdByName;
@@ -168,6 +167,7 @@ async function seedTasks(
           ? null
           : (memberIdByName.get(seed.assigneeFirstName) ?? null),
       songId: seed.songTitle === null ? null : (songIdByTitle.get(seed.songTitle) ?? null),
+      sessionId: null,
       dueDate:
         seed.dueInDays === null
           ? null

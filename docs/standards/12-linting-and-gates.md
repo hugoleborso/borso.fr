@@ -199,6 +199,19 @@ So the enabled rules are listed one by one. Each either enforces a rule from
   last override with the rule off, so a new cycle anywhere else fails. The list
   only shrinks.
 
+### A rule meant for one application
+
+Some rules belong to one application's own decisions, not to the repository.
+Pragma's design system ([ADR-0047](../adr/0047-pragma-design-system-is-notebook-with-grafts.md))
+forbids arbitrary Tailwind values and raw `<button>` and `<dialog>` elements;
+the other applications made no such decision and hold dozens of each. Those
+rules are enabled for `apps/pragma/site` only.
+
+A citation of such a rule names its reach in brackets after the target:
+`` `oxlint:borso/no-raw-interactive-element (pragma/site)` ``, several scopes
+separated by commas. A reader then knows the rule is off elsewhere on purpose,
+and that a site the bracket names must keep it on.
+
 ### What the custom rules learned by being wrong first
 
 Three rules report far less than their first version did, and the gap is the

@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildShortVoteAddress,
+  hasAnyRoundOpened,
   buildVoteAddress,
   selectParticipation,
   selectRoundHistoryLines,
@@ -151,5 +152,16 @@ describe('selectParticipation', () => {
 
   it('is zero, not absent, before anyone in the room has voted', () => {
     expect(selectParticipation(0, 120).sharePercent).toBe(0);
+  });
+});
+
+describe('hasAnyRoundOpened', () => {
+  it('is false for a concert where nobody ever opened a round', () => {
+    expect(hasAnyRoundOpened(null, 0)).toBe(false);
+  });
+
+  it('is true while a round is open, and once one has been held', () => {
+    expect(hasAnyRoundOpened({ id: 'round-1' }, 0)).toBe(true);
+    expect(hasAnyRoundOpened(null, 1)).toBe(true);
   });
 });

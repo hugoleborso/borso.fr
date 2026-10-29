@@ -7,26 +7,26 @@ export interface EnergyAppearance {
   readonly emptyClassName: string;
 }
 
-const EMPTY_SEGMENT_CLASS = 'bg-bg-sunk border-line-strong text-ink-500';
+const EMPTY_SEGMENT_CLASS = 'bg-sunk border-rule-strong text-ink-soft';
 
 const STORED_APPEARANCE: EnergyAppearance = {
-  filledClassName: 'bg-accent border-accent text-bg-elev',
+  filledClassName: 'bg-accent border-accent text-on-accent',
   emptyClassName: EMPTY_SEGMENT_CLASS,
 };
 
 const UNSET_APPEARANCE: EnergyAppearance = {
-  filledClassName: 'bg-ink-500 border-ink-500 text-bg-elev',
+  filledClassName: 'bg-ink-soft border-ink-soft text-leaf',
   emptyClassName: EMPTY_SEGMENT_CLASS,
 };
 
 const STORED_METER_APPEARANCE: EnergyAppearance = {
   filledClassName: 'bg-accent',
-  emptyClassName: 'bg-line-strong',
+  emptyClassName: 'bg-rule-strong',
 };
 
 const UNSET_METER_APPEARANCE: EnergyAppearance = {
-  filledClassName: 'bg-ink-400',
-  emptyClassName: 'bg-line',
+  filledClassName: 'bg-ink-soft',
+  emptyClassName: 'bg-rule',
 };
 
 export interface EnergyState {

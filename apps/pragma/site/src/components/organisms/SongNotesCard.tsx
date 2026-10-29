@@ -21,7 +21,7 @@ export function SongNotesCard({ song }: SongNotesCardProps): JSX.Element | null 
   if (sections.length === 0) return null;
   return (
     <Card>
-      <div className="text-xs tracking-wider uppercase text-ink-400 font-medium mb-2.5">
+      <div className="text-label tracking-wider uppercase text-ink-soft font-medium mb-2.5">
         {t('catalog.notesTitle')}
       </div>
       <SongNotes song={song} />

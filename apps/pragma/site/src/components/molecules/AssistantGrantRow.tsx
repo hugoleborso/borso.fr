@@ -18,14 +18,15 @@ export function AssistantGrantRow(props: AssistantGrantRowProps): JSX.Element {
   return (
     <li className="flex items-center justify-between gap-3 py-2">
       <div className="flex flex-col min-w-0 sm:flex-row sm:items-baseline sm:gap-2">
-        <span className="text-ink-900 truncate">{props.clientName}</span>
-        <span className="text-xs text-ink-500">
+        <span className="text-ink truncate">{props.clientName}</span>
+        <span className="text-meta text-ink-soft">
           {props.sinceLabel} · {props.lastUsedLabel}
         </span>
       </div>
       <Button
         type="button"
-        variant="ghost"
+        variant="quiet"
+        icon="unlink"
         aria-label={t('account.assistants.revokeLabel', { clientName: props.clientName })}
         disabled={props.isRevoking}
         onClick={props.onRevoke}

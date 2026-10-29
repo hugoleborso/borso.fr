@@ -10,7 +10,7 @@ eradication-level: 1
 eradication-paths: [scripts/browser.sh]
 time-to-detect: hours
 tags: [harness, agent-browser, tooling, visual-validation]
-zone: scripts/browser.sh
+zone: scripts/phone.sh
 recurs: [the-browser-moved-and-the-wrapper-died-silently]
 ---
 

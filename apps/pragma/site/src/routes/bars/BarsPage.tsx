@@ -2,12 +2,13 @@ import { BAR_STATUSES, type BarStatus, type ConcertMood } from '@domain/bar-prof
 /** @Feature bars */
 
 import type { JSX } from 'react';
-import { useCallback, useMemo, useRef, useState } from 'react';
+import { useCallback, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { composeClassName } from '../../components/atoms/class-name.utils';
-import { Icon } from '../../components/atoms/Icon';
+import { BottomActions } from '../../components/atoms/BottomActions';
+import { Button } from '../../components/atoms/Button';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SectionTabs } from '../../components/molecules/SectionTabs';
 import {
   BREAKPOINT_BELOW_LG,
   useIsMediaQueryMatching,
@@ -15,14 +16,12 @@ import {
 import { BarsKanban } from '../../components/organisms/BarsKanban';
 import { BarsList, type BarsListRow } from '../../components/organisms/BarsList';
 import { ApiError } from '../../lib/api.client';
-import { isPositiveCount } from '../../lib/counts.utils';
 import { didCopyTextToClipboard } from '../../lib/clipboard.adapter';
 import { useMembersList } from '../../lib/queries/members.queries';
 import { useSignedInMember } from '../../lib/queries/me.queries';
-import { useOutreachTemplate, useSaveOutreachTemplate } from '../../lib/queries/outreach.queries';
+import { useOutreachTemplate } from '../../lib/queries/outreach.queries';
 import { BarPlaceSearch } from '../../components/organisms/BarPlaceSearch';
-import { OutreachTemplateCard } from '../../components/organisms/OutreachTemplateCard';
-import { BarQuickAdd } from '../../components/organisms/BarQuickAdd';
+import { OutreachTemplateAction } from '../../components/organisms/OutreachTemplateAction';
 import { renderOutreachMessage, selectOutreachTemplate } from './outreach-message.core';
 import {
   useBarsList,
@@ -30,7 +29,6 @@ import {
   useDeleteBar,
   useUpdateBar,
 } from '../../lib/queries/bars.queries';
-import { countStale, isStale } from '@domain/bar-staleness.core';
 import { BarForm, type BarOwnerOption } from '../../components/organisms/BarForm';
 import {
   BAR_STATUS_KEY,
@@ -54,7 +52,6 @@ import {
   selectFormForBar,
   addMoodLabelToCards,
   selectOwnerName,
-  selectToggleState,
   selectVisibleBarsView,
   sortBarsByName,
 } from './bars-page.core';
@@ -62,27 +59,19 @@ import {
 const NO_BARS: readonly BarRow[] = [];
 const NO_OWNERS: readonly BarOwnerOption[] = [];
 
-const VIEW_TOGGLE_CLASS = {
-  active: 'bg-bg-elev text-ink-900 shadow-[0_1px_2px_rgba(26,22,18,0.06)]',
-  inactive: 'bg-transparent text-ink-500 hover:text-ink-700',
-} as const;
-
 // @FollowsBlueprint route-list-page
 export function BarsPage(): JSX.Element {
   const { t } = useTranslation();
   const [view, setView] = useState<BarsView>('list');
-  const [formInitial, setFormInitial] = useState<BarFormInitial>(BLANK_BAR_FORM);
+  const [formInitial, setFormInitial] = useState<BarFormInitial | null>(null);
   const [writeCount, setWriteCount] = useState<number>(0);
   const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
-  const barFormRef = useRef<HTMLDivElement>(null);
   const barsQuery = useBarsList();
   const membersQuery = useMembersList();
   const signedInMember = useSignedInMember();
   const outreachTemplateQuery = useOutreachTemplate();
-  const saveOutreachTemplate = useSaveOutreachTemplate();
-  const [templateMessage, setTemplateMessage] = useState<string | null>(null);
   const [copyMessage, setCopyMessage] = useState<string | null>(null);
   const createBar = useCreateBar();
   const updateBar = useUpdateBar();
@@ -99,11 +88,6 @@ export function BarsPage(): JSX.Element {
     [owners],
   );
 
-  const now = useMemo(() => new Date(), []);
-  const staleCount = useMemo(() => countStale(bars, now), [bars, now]);
-  const hasStaleBars = isPositiveCount(staleCount);
-  const isBarStale = useCallback((bar: BarRow): boolean => isStale(bar, now), [now]);
-
   const moodLabelOf = useCallback(
     (mood: ConcertMood | null): string | null => (mood === null ? null : t(CONCERT_MOOD_KEY[mood])),
     [t],
@@ -111,8 +95,8 @@ export function BarsPage(): JSX.Element {
 
   const grouped = useMemo(() => groupBarsByStatus(sortedBars), [sortedBars]);
   const kanbanCardsByStatus = useMemo(
-    () => buildKanbanCardsByStatus(grouped, isBarStale, ownerNameOf),
-    [grouped, isBarStale, ownerNameOf],
+    () => buildKanbanCardsByStatus(grouped, ownerNameOf),
+    [grouped, ownerNameOf],
   );
   const kanbanCardsWithMood = useMemo(
     () => addMoodLabelToCards(kanbanCardsByStatus, moodLabelOf),
@@ -132,10 +116,9 @@ export function BarsPage(): JSX.Element {
         capacity: bar.capacity,
         ownerName: ownerNameOf(bar),
         moodLabel: moodLabelOf(bar.concertMood),
-        isStale: isBarStale(bar),
-        isBeingEdited: isBarBeingEdited(bar.id, formInitial),
+        isBeingEdited: isBarBeingEdited(bar.id, formInitial ?? BLANK_BAR_FORM),
       })),
-    [sortedBars, isBarStale, ownerNameOf, moodLabelOf, formInitial],
+    [sortedBars, ownerNameOf, moodLabelOf, formInitial],
   );
 
   const template = selectOutreachTemplate(
@@ -160,7 +143,7 @@ export function BarsPage(): JSX.Element {
   const saveBar = (id: string | null, payload: BarFormSubmitPayload): void => {
     const mutationOptions = {
       onSuccess: () => {
-        setFormInitial(BLANK_BAR_FORM);
+        setFormInitial(null);
         setWriteCount((current) => current + 1);
       },
       onError: reportError,
@@ -177,15 +160,16 @@ export function BarsPage(): JSX.Element {
       { id: barId },
       {
         onSuccess: () =>
-          setFormInitial((current) => selectFormAfterDeletion(current, barId, BLANK_BAR_FORM)),
+          setFormInitial((current) =>
+            current === null ? null : selectFormAfterDeletion(current, barId, BLANK_BAR_FORM),
+          ),
         onError: reportError,
       },
     );
   };
 
-  const selectBarAndScrollItsFormIntoView = (barId: string): void => {
-    setFormInitial((current) => selectFormForBar(bars, barId, current));
-    barFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  const openBar = (barId: string): void => {
+    setFormInitial((current) => selectFormForBar(bars, barId, current ?? BLANK_BAR_FORM));
   };
 
   const moveBarToStatus = (status: BarStatus, draggedId: string): void => {
@@ -198,109 +182,78 @@ export function BarsPage(): JSX.Element {
 
   const panelByView: Readonly<Record<BarsView, JSX.Element>> = {
     list: (
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
-        <BarsList
-          bars={listRows}
-          statusLabel={(status) => t(BAR_STATUS_KEY[status])}
-          onSelect={selectBarAndScrollItsFormIntoView}
-          onRemove={setPendingDeletionId}
-        />
-        <div ref={barFormRef} className="scroll-mt-4">
-          <BarForm
-            key={buildBarFormKey(formInitial, writeCount)}
-            initial={formInitial}
-            owners={owners}
-            copyMessageLabel={t('bars.outreachCopy')}
-            onCopyMessage={(barName) => void copyMessageForBar(barName)}
-            onSubmit={saveBar}
-            onCancel={() => setFormInitial(BLANK_BAR_FORM)}
-          />
-        </div>
-      </div>
+      <BarsList
+        bars={listRows}
+        statusLabel={(status) => t(BAR_STATUS_KEY[status])}
+        onSelect={openBar}
+        onRemove={setPendingDeletionId}
+      />
     ),
     kanban: (
       <BarsKanban
         statuses={BAR_STATUSES}
         cardsByStatus={kanbanCardsWithMood}
         statusLabel={(status) => t(BAR_STATUS_KEY[status])}
-        onSelect={selectBarAndScrollItsFormIntoView}
+        onSelect={openBar}
         onMoveToStatus={moveBarToStatus}
       />
     ),
   };
 
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[1280px]">
       <PageHeader
+        back={{ to: '/band', label: t('band.title') }}
         title={t('bars.title')}
         actions={
-          <div className="hidden lg:inline-flex gap-1 p-[3px] bg-bg-sunk rounded-lg">
-            <button
-              type="button"
-              onClick={() => setView('list')}
-              className={composeClassName(
-                'inline-flex items-center min-h-11 px-3 rounded-md text-xs font-medium cursor-pointer transition-colors',
-                VIEW_TOGGLE_CLASS[selectToggleState(view, 'list')],
-              )}
-            >
-              {t('bars.viewList')}
-            </button>
-            <button
-              type="button"
-              onClick={() => setView('kanban')}
-              className={composeClassName(
-                'inline-flex items-center min-h-11 px-3 rounded-md text-xs font-medium cursor-pointer transition-colors',
-                VIEW_TOGGLE_CLASS[selectToggleState(view, 'kanban')],
-              )}
-            >
-              {t('bars.viewKanban')}
-            </button>
-          </div>
+          <>
+            <OutreachTemplateAction template={template} onError={reportError} />
+            <SectionTabs
+              label={t('bars.title')}
+              tabs={[
+                { value: 'list', label: t('bars.viewList'), icon: 'catalog' },
+                { value: 'kanban', label: t('bars.viewKanban'), icon: 'bars' },
+              ]}
+              value={view}
+              onChange={setView}
+              className="hidden lg:flex"
+            />
+          </>
         }
       />
 
       {displayError === null ? null : (
-        <p className="text-danger text-sm mb-3" role="alert">
+        <p className="text-danger text-meta mb-3" role="alert">
           {displayError}
         </p>
       )}
       {barsQuery.isLoading ? (
-        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
-      ) : null}
-      {hasStaleBars ? (
-        <div
-          className="flex items-center gap-2 bg-warn-soft text-warn px-4 py-2.5 rounded-md text-sm mb-4"
-          role="alert"
-        >
-          <Icon name="warn" size={16} />
-          {t('bars.staleBanner', { count: staleCount })}
-        </div>
+        <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>
       ) : null}
 
-      <BarQuickAdd onError={reportError} />
-      <BarPlaceSearch
-        onPick={(hit) => {
-          setFormInitial(buildBarFormFromPlace(hit, BLANK_BAR_FORM));
-          setWriteCount((current) => current + 1);
-          barFormRef.current?.scrollIntoView({ behavior: 'smooth', block: 'start' });
-        }}
-      />
-      <OutreachTemplateCard
-        key={template}
-        template={template}
-        message={templateMessage}
-        onSave={(body) =>
-          saveOutreachTemplate.mutate(
-            { body },
-            {
-              onSuccess: () => setTemplateMessage(t('bars.outreachTemplateSaved')),
-              onError: reportError,
-            },
-          )
-        }
-      />
-      {copyMessage === null ? null : <p className="text-sm text-ink-500 mb-3">{copyMessage}</p>}
+      {copyMessage === null ? null : <p className="text-meta text-ink-soft mb-3">{copyMessage}</p>}
       {panelByView[selectVisibleBarsView(view, isNarrow)]}
+      {formInitial === null ? null : (
+        <BarForm
+          key={buildBarFormKey(formInitial, writeCount)}
+          initial={formInitial}
+          owners={owners}
+          copyMessageLabel={t('bars.outreachCopy')}
+          onCopyMessage={(barName) => void copyMessageForBar(barName)}
+          onSubmit={saveBar}
+          onCancel={() => setFormInitial(null)}
+          leading={
+            formInitial.id === null ? (
+              <BarPlaceSearch
+                onPick={(hit) => {
+                  setFormInitial(buildBarFormFromPlace(hit, BLANK_BAR_FORM));
+                  setWriteCount((current) => current + 1);
+                }}
+              />
+            ) : null
+          }
+        />
+      )}
       {pendingDeletionId === null ? null : (
         <ConfirmDialog
           question={t('bars.deleteConfirm')}
@@ -312,6 +265,16 @@ export function BarsPage(): JSX.Element {
           onCancel={() => setPendingDeletionId(null)}
         />
       )}
+      <BottomActions>
+        <Button
+          variant="primary"
+          size="lg"
+          icon="plus"
+          onClick={() => setFormInitial(BLANK_BAR_FORM)}
+        >
+          {t('bars.newBar')}
+        </Button>
+      </BottomActions>
     </section>
   );
 }

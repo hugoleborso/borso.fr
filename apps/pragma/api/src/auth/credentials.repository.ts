@@ -107,9 +107,28 @@ export async function insertPasskey(values: {
   transports: string;
   label: string;
   createdAt: Date;
-}): Promise<void> {
+}): Promise<PasskeyRow> {
   const database = getDatabase();
-  await database.insert(memberPasskeyTable).values(values);
+  const [inserted] = await database
+    .insert(memberPasskeyTable)
+    .values(values)
+    .returning(PASSKEY_PROJECTION);
+  if (inserted === undefined) throw new Error('inserting a passkey returned no row');
+  return inserted;
+}
+
+export async function updatePasskeyLabel(
+  memberId: string,
+  passkeyId: string,
+  label: string,
+): Promise<PasskeyRow | null> {
+  const database = getDatabase();
+  const [updated] = await database
+    .update(memberPasskeyTable)
+    .set({ label })
+    .where(and(eq(memberPasskeyTable.memberId, memberId), eq(memberPasskeyTable.id, passkeyId)))
+    .returning(PASSKEY_PROJECTION);
+  return updated ?? null;
 }
 
 export async function updatePasskeyCounter(

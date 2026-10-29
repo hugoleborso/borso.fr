@@ -6,7 +6,6 @@ import {
   getMembersForTool,
   resolveInstrumentIds,
   resolveMemberId,
-  resolveOptionalInstrumentIds,
 } from './members.service';
 
 // @FollowsBlueprint controller-dispatch
@@ -20,15 +19,13 @@ export const MEMBER_TOOLS = [
   }),
   defineTool({
     name: 'set_member_instruments',
-    description:
-      'Replace the instruments a member plays with `instruments`; `main` names their main ones.',
+    description: 'Replace the instruments a member plays with `instruments`.',
     routes: ['PUT /api/members/:id/instruments'],
     inputSchema: memberInstrumentAssignmentToolInputSchema,
-    run: async ({ member, instruments, main }) => {
+    run: async ({ member, instruments }) => {
       const id = await resolveMemberId(member);
       const instrumentIds = await resolveInstrumentIds(instruments);
-      const mainIds = await resolveOptionalInstrumentIds(main);
-      const outcome = await assignInstrumentsToMember(id, instrumentIds, mainIds);
+      const outcome = await assignInstrumentsToMember(id, instrumentIds);
       if (outcome.kind === 'member-not-found') {
         return { kind: 'refused', body: { error: 'not-found' } };
       }

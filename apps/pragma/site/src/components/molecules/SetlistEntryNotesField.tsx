@@ -4,21 +4,23 @@ import { SETLIST_ENTRY_NOTES_MAX_LENGTH } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
-import type { SetlistEntryPatch } from '../../lib/queries/setlist-entries.queries';
 import { type SetlistEntryForm } from './setlist-entry-form.hook';
 
-const LABEL_CLASS = 'flex flex-col gap-1 text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS =
+  'flex flex-col gap-1 text-label tracking-wider uppercase text-ink-soft font-medium';
 const NOTES_ROWS = 2;
 
 interface SetlistEntryNotesFieldProps {
   readonly form: SetlistEntryForm;
-  readonly onPatch: (patch: SetlistEntryPatch) => void;
+  readonly onType: (text: string) => void;
+  readonly isFocusedOnOpen: boolean;
 }
 
 // @FollowsBlueprint molecule-presentational
 export function SetlistEntryNotesField({
   form,
-  onPatch,
+  onType,
+  isFocusedOnOpen,
 }: SetlistEntryNotesFieldProps): JSX.Element {
   const { t } = useTranslation();
   return (
@@ -33,11 +35,12 @@ export function SetlistEntryNotesField({
             onChange={(event) => {
               const next = event.target.value;
               field.handleChange(next);
-              onPatch({ notes: next });
+              onType(next);
             }}
             onBlur={field.handleBlur}
             maxLength={SETLIST_ENTRY_NOTES_MAX_LENGTH}
-            className="font-mono"
+            data-sheet-focus={isFocusedOnOpen ? true : undefined}
+            className="font-display italic"
           />
         </label>
       )}

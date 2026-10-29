@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   DEFAULT_INSTRUMENT_POSITION,
-  decidePrimaryInstrumentIds,
   defaultPositionForFamily,
   FALLBACK_INSTRUMENT_ICON,
   familyFromHarmonicFlag,
@@ -92,32 +91,5 @@ describe('defaultPositionForFamily', () => {
 
   it('puts a new instrument where its family sits rather than at the head', () => {
     expect(defaultPositionForFamily('vocal')).toBeLessThan(defaultPositionForFamily('percussive'));
-  });
-});
-
-describe('decidePrimaryInstrumentIds', () => {
-  it('keeps the primacy the surviving links already carried when the payload says nothing', () => {
-    expect(decidePrimaryInstrumentIds(['guitar', 'bass'], undefined, ['bass'])).toEqual(['bass']);
-  });
-
-  it('takes the requested set when the payload carries one, replacing what was there', () => {
-    expect(decidePrimaryInstrumentIds(['guitar', 'bass'], ['guitar'], ['bass'])).toEqual([
-      'guitar',
-    ]);
-  });
-
-  it('reads an empty requested set as the band clearing every primacy', () => {
-    expect(decidePrimaryInstrumentIds(['guitar', 'bass'], [], ['bass'])).toEqual([]);
-  });
-
-  it('drops a primacy on an instrument the member no longer plays', () => {
-    expect(decidePrimaryInstrumentIds(['guitar'], undefined, ['bass'])).toEqual([]);
-  });
-
-  it('keeps the order of the instrument list, so two primaries settle the same way twice', () => {
-    expect(decidePrimaryInstrumentIds(['guitar', 'bass'], ['bass', 'guitar'], [])).toEqual([
-      'guitar',
-      'bass',
-    ]);
   });
 });

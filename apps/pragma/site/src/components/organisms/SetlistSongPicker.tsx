@@ -1,36 +1,72 @@
 /** @Feature setlists */
 
-import { type JSX, useState } from 'react';
+import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { ApiError } from '../../lib/api.client';
-import { openDialogOnAttach } from '../../lib/modal-dialog.adapter';
-import { useCreateSong } from '../../lib/queries/songs.queries';
+import { useAddSongsDraft } from '../../lib/add-songs-draft.store';
+import { debounce } from '../../lib/debounce.utils';
+import { useAddSetlistEntries } from '../../lib/queries/setlist-entries.queries';
+import { selectSongSaveRefusal } from '../../lib/queries/song-save-refusal.core';
+import {
+  type ExternalSongHit,
+  useCreateSong,
+  useSongSearch,
+} from '../../lib/queries/songs.queries';
+import { reportSetlistBatchAddFailed } from '../../observability/error-reporting.adapter';
+import { recordProductEvent } from '../../observability/product-event.adapter';
+import { AlbumCover } from '../atoms/AlbumCover';
 import { Button } from '../atoms/Button';
-import { composeClassName } from '../atoms/class-name.utils';
+import { Chip } from '../atoms/Chip';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
-import { type SongStatus, StatusChip } from '../molecules/StatusChip';
+import { PickableSongRow, SongActionRow } from '../molecules/PickableSongRow';
+import { Sheet } from '../molecules/Sheet';
+import type { SongStatus } from '../molecules/StatusChip';
 import {
-  filterPickableSongs,
-  selectPickerCloseLabelKey,
-  shouldOfferCreatingSong,
-} from './song-picker.core';
+  ADD_SONGS_FILTERS,
+  type AddSongsFilter,
+  type AddSongsRow,
+  addPick,
+  buildAddSongsRows,
+  DEFAULT_ADD_SONGS_FILTER,
+  selectAddSongsEmptyMessageKey,
+  shouldSearchMusicService,
+  togglePick,
+} from './add-songs.core';
 
 export interface PickerSong {
   readonly id: string;
   readonly title: string;
   readonly artist: string;
   readonly status: SongStatus;
+  readonly deezerAlbumId: string | null;
 }
 
 export interface SetlistSongPickerProps {
   readonly open: boolean;
+  readonly setlistId: string;
+  readonly setlistName: string;
   readonly songs: readonly PickerSong[];
-  readonly onPick: (songId: string) => void;
+  readonly setlistSongIds: readonly string[];
   readonly onClose: () => void;
+  readonly onAdded?: () => void;
 }
 
 const NEW_SONG_STATUS: SongStatus = 'idea';
+const SEARCH_DEBOUNCE_MS = 400;
+const POSITION_DIGITS = 2;
+
+const FILTER_LABEL_KEY = {
+  'not-in-setlist': 'setlist.addSongsFilterNotInSetlist',
+  'concert-ready': 'setlist.addSongsFilterConcertReady',
+  rehearsed: 'setlist.addSongsFilterRehearsed',
+  learning: 'setlist.addSongsFilterToLearn',
+  ideas: 'setlist.addSongsFilterIdeas',
+} as const satisfies Readonly<Record<AddSongsFilter, string>>;
+
+type PickerFailureKey =
+  | 'setlist.failure.addSongs'
+  | 'setlist.addSongsCreateFailed'
+  | 'setlist.addSongsServiceUnavailable';
 
 // @FollowsBlueprint organism-query-owning
 export function SetlistSongPicker(props: SetlistSongPickerProps): JSX.Element | null {
@@ -38,111 +74,238 @@ export function SetlistSongPicker(props: SetlistSongPickerProps): JSX.Element | 
   return <SetlistSongPickerContent {...props} />;
 }
 
-function SetlistSongPickerContent({ songs, onPick, onClose }: SetlistSongPickerProps): JSX.Element {
+function SetlistSongPickerContent({
+  setlistId,
+  setlistName,
+  songs,
+  setlistSongIds,
+  onClose,
+  onAdded = onClose,
+}: SetlistSongPickerProps): JSX.Element {
   const { t } = useTranslation();
+  const draft = useAddSongsDraft(setlistId);
   const [query, setQuery] = useState('');
-  const [addedCount, setAddedCount] = useState(0);
-  const [lastAddedId, setLastAddedId] = useState<string | null>(null);
-  const [localError, setLocalError] = useState<string | null>(null);
+  const [searchedTitle, setSearchedTitle] = useState('');
+  const [filter, setFilter] = useState<AddSongsFilter>(DEFAULT_ADD_SONGS_FILTER);
+  const [failureKey, setFailureKey] = useState<PickerFailureKey | null>(null);
   const createSong = useCreateSong();
+  const addEntries = useAddSetlistEntries();
+  const publishSearchedTitle = useMemo(
+    () => debounce((title: string) => setSearchedTitle(title), SEARCH_DEBOUNCE_MS),
+    [],
+  );
 
-  const visibleSongs = filterPickableSongs(songs, query);
-  const isOfferingCreate = shouldOfferCreatingSong(songs, query);
-  const closeLabelKey = selectPickerCloseLabelKey(addedCount);
+  const isSearchingService = shouldSearchMusicService(songs, query);
+  const search = useSongSearch(isSearchingService ? searchedTitle : '');
+  const hits = isSearchingService ? (search.data?.hits ?? []) : [];
+  const rows = buildAddSongsRows({
+    songs,
+    setlistSongIds,
+    pickedSongIds: draft.pickedSongIds,
+    query,
+    filter,
+  });
+  const pickCount = draft.pickedSongIds.length;
+  const hasPicks = pickCount > 0;
+  const emptyMessageKey = selectAddSongsEmptyMessageKey({
+    filter,
+    query,
+    rowCount: rows.length,
+    isSearchingService,
+  });
+  const describeRow = (row: AddSongsRow<PickerSong>): string =>
+    row.positionInSetlist === null
+      ? row.song.artist
+      : t('setlist.addSongsAlreadyIn', {
+          position: String(row.positionInSetlist).padStart(POSITION_DIGITS, '0'),
+        });
+  const isBusy = createSong.isPending || addEntries.isPending;
+  const shownFailureKey =
+    failureKey ??
+    (isSearchingService && search.error !== null ? 'setlist.addSongsServiceUnavailable' : null);
 
-  const addSong = (songId: string): void => {
-    onPick(songId);
-    setLastAddedId(songId);
-    setAddedCount((count) => count + 1);
+  const changeQuery = (nextQuery: string): void => {
+    setQuery(nextQuery);
+    publishSearchedTitle(nextQuery.trim());
   };
 
-  const createAndAddSong = async (): Promise<void> => {
-    const title = query.trim();
-    if (title.length === 0) return;
+  const checkCreatedSong = async (input: Parameters<typeof createSong.mutateAsync>[0]) => {
+    setFailureKey(null);
     try {
-      const created = await createSong.mutateAsync({ title, status: NEW_SONG_STATUS });
-      addSong(created.song.id);
-      setQuery('');
+      const created = await createSong.mutateAsync(input);
+      draft.revise((picked) => addPick(picked, created.song.id));
     } catch (error) {
-      setLocalError(error instanceof ApiError ? error.message : 'unknown-error');
+      const refusal = selectSongSaveRefusal(error);
+      if (refusal.takenTrack === null) {
+        setFailureKey('setlist.addSongsCreateFailed');
+        return;
+      }
+      const takenSongId = refusal.takenTrack.songId;
+      draft.revise((picked) => addPick(picked, takenSongId));
     }
   };
 
+  const pickHit = (hit: ExternalSongHit): void => {
+    void checkCreatedSong({
+      title: hit.title,
+      artist: hit.artist,
+      status: NEW_SONG_STATUS,
+      album: hit.album,
+      deezerTrackId: hit.deezerTrackId,
+      deezerAlbumId: hit.deezerAlbumId,
+      durationSeconds: hit.durationSeconds,
+      isrcs: [...hit.isrcs],
+    });
+  };
+
+  const addPickedSongs = (): void => {
+    setFailureKey(null);
+    const pickCount = draft.pickedSongIds.length;
+    addEntries.mutate(
+      {
+        setlistId,
+        appends: draft.pickedSongIds.map((songId) => ({
+          songId,
+          temporaryId: crypto.randomUUID(),
+        })),
+      },
+      {
+        onSuccess: () => {
+          recordProductEvent('setlist_songs_added', { count: pickCount });
+          draft.discard();
+          onAdded();
+        },
+        onError: () => {
+          reportSetlistBatchAddFailed(setlistId);
+          setFailureKey('setlist.failure.addSongs');
+        },
+      },
+    );
+  };
+
   return (
-    <dialog
-      ref={openDialogOnAttach}
+    <Sheet
+      size="full"
+      title={t('setlist.addSongsTitle', { name: setlistName })}
+      label={t('setlist.addSongsTitle', { name: setlistName })}
       onClose={onClose}
-      className="m-auto w-[calc(100vw-1rem)] sm:w-[34rem] max-w-[34rem] h-[85vh] sm:h-auto sm:max-h-[80vh] rounded-lg border border-line bg-bg-elev p-0 backdrop:bg-ink-900/40 flex flex-col overflow-hidden"
-    >
-      <div className="flex items-center justify-between gap-2 px-4 py-3 border-b border-line">
-        <h2 className="font-display italic text-xl text-ink-900 m-0">{t('setlist.addSong')}</h2>
-        <Button type="button" variant="ghost" size="sm" onClick={onClose}>
-          {t(closeLabelKey, { count: addedCount })}
-        </Button>
-      </div>
-      <form
-        className="flex flex-col gap-2 px-4 pt-3 pb-2"
-        onSubmit={(event) => {
-          event.preventDefault();
-          if (!isOfferingCreate) return;
-          void createAndAddSong();
-        }}
-      >
-        <div className="relative">
-          <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none">
-            <Icon name="search" />
-          </span>
-          <Input
-            type="search"
-            value={query}
-            onChange={(event) => setQuery(event.target.value)}
-            placeholder={t('setlist.addSongSearchPlaceholder')}
-            aria-label={t('setlist.addSongSearchPlaceholder')}
-            className="pl-9"
-          />
+      subheader={
+        <div className="flex flex-col gap-2">
+          <div className="relative">
+            <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft">
+              <Icon name="search" />
+            </span>
+            <Input
+              type="search"
+              data-sheet-focus
+              value={query}
+              onChange={(event) => changeQuery(event.target.value)}
+              placeholder={t('setlist.addSongsSearch')}
+              aria-label={t('setlist.addSongsSearch')}
+              className="pl-9"
+            />
+          </div>
+          <div
+            role="group"
+            aria-label={t('setlist.addSongsFilterLabel')}
+            className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none]"
+          >
+            {ADD_SONGS_FILTERS.map((option) => (
+              <Chip
+                key={option}
+                pressed={option === filter}
+                onPress={() => setFilter(option)}
+                className="shrink-0"
+              >
+                {t(FILTER_LABEL_KEY[option])}
+              </Chip>
+            ))}
+          </div>
         </div>
-        {isOfferingCreate ? (
-          <Button type="submit" variant="accent" disabled={createSong.isPending}>
-            <Icon name="plus" size={14} />
-            {t('setlist.addSongCreate', { title: query.trim() })}
+      }
+      footer={
+        <div className="flex w-full items-center justify-between gap-3">
+          <span className="text-meta text-ink-soft">{t('setlist.addSongsFooterHint')}</span>
+          <Button
+            variant="primary"
+            icon="plus"
+            size="lg"
+            disabled={!hasPicks || isBusy}
+            onClick={addPickedSongs}
+          >
+            {hasPicks ? t('setlist.addSongsConfirm', { count: pickCount }) : t('setlist.addSongs')}
           </Button>
-        ) : null}
-      </form>
-      {localError === null ? null : (
-        <p className="px-4 text-danger text-sm" role="alert">
-          {localError}
+        </div>
+      }
+    >
+      {shownFailureKey === null ? null : (
+        <p
+          className="m-0 mb-2 rounded-md bg-danger-soft px-3 py-2 text-meta text-danger"
+          role="alert"
+        >
+          {t(shownFailureKey)}
         </p>
       )}
-      <ul className="flex-1 overflow-y-auto px-2 pb-2 m-0 list-none flex flex-col gap-1">
-        {visibleSongs.map((song) => (
-          <li key={song.id}>
-            <button
-              type="button"
-              onClick={() => addSong(song.id)}
-              className={composeClassName(
-                'w-full text-left flex items-center gap-2 min-h-12 px-2.5 py-2 rounded-md border cursor-pointer transition-colors',
-                lastAddedId === song.id
-                  ? 'border-accent bg-accent-soft'
-                  : 'border-transparent hover:bg-bg-sunk',
-              )}
-            >
-              <Icon
-                name={lastAddedId === song.id ? 'check' : 'plus'}
-                size={14}
-                className="text-ink-400 shrink-0"
-              />
-              <span className="min-w-0 flex-1">
-                <span className="block text-[14px] text-ink-900 truncate">{song.title}</span>
-                <span className="block text-xs text-ink-500 truncate">{song.artist}</span>
-              </span>
-              <StatusChip status={song.status} />
-            </button>
+      <ul className="m-0 flex list-none flex-col p-0">
+        {rows.map((row) => (
+          <li key={row.song.id}>
+            <PickableSongRow
+              title={row.song.title}
+              detail={describeRow(row)}
+              deezerAlbumId={row.song.deezerAlbumId}
+              pickNumber={row.pickNumber}
+              isAlreadyIn={row.positionInSetlist !== null}
+              isDisabled={isBusy}
+              onToggle={() => {
+                draft.revise((picked) => togglePick(picked, row.song.id));
+                changeQuery('');
+              }}
+            />
           </li>
         ))}
-        {visibleSongs.length === 0 ? (
-          <li className="px-3 py-4 text-sm italic text-ink-400">{t('setlist.addSongNoMatch')}</li>
-        ) : null}
+        {emptyMessageKey === null ? null : (
+          <li className="px-1 py-4 text-meta text-ink-soft">{t(emptyMessageKey)}</li>
+        )}
       </ul>
-    </dialog>
+      {isSearchingService ? (
+        <section className="flex flex-col gap-1 pt-2">
+          <ul className="m-0 flex list-none flex-col p-0">
+            <li>
+              <SongActionRow
+                title={t('setlist.addSongsNewIdea')}
+                detail={query.trim()}
+                leading={
+                  <span className="inline-flex size-10 shrink-0 items-center justify-center rounded-cover bg-accent-soft text-accent">
+                    <Icon name="bulb" />
+                  </span>
+                }
+                isDisabled={isBusy}
+                onSelect={() =>
+                  void checkCreatedSong({ title: query.trim(), status: NEW_SONG_STATUS })
+                }
+              />
+            </li>
+          </ul>
+          {hits.length === 0 ? null : (
+            <h3 className="m-0 px-1 text-label font-semibold text-ink-soft uppercase">
+              {t('setlist.addSongsFromService')}
+            </h3>
+          )}
+          <ul className="m-0 flex list-none flex-col p-0">
+            {hits.map((hit) => (
+              <li key={hit.deezerTrackId}>
+                <SongActionRow
+                  title={hit.title}
+                  detail={hit.artist}
+                  leading={<AlbumCover title={hit.title} deezerAlbumId={hit.deezerAlbumId} />}
+                  isDisabled={isBusy}
+                  onSelect={() => pickHit(hit)}
+                />
+              </li>
+            ))}
+          </ul>
+        </section>
+      ) : null}
+    </Sheet>
   );
 }

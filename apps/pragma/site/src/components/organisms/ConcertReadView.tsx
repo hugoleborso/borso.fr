@@ -3,6 +3,7 @@
 import { useTranslation } from 'react-i18next';
 import { Card } from '../atoms/Card';
 import { composeClassName } from '../atoms/class-name.utils';
+import { MemberMark } from '../atoms/MemberMark';
 import { MemberChip } from '../molecules/MemberChip';
 import { computeSharePercent, isCapacityKnown } from '../../routes/sessions/friends-count.core';
 
@@ -21,7 +22,7 @@ export interface ConcertReadViewProps {
   readonly friendsTotal: number;
 }
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
 // @FollowsBlueprint organism-presentational
 export function ConcertReadView({
@@ -40,7 +41,7 @@ export function ConcertReadView({
         <Card>
           <div className="flex items-center justify-between mb-3">
             <div className={LABEL_CLASS}>{t('sessions.friendsCountPerMember')}</div>
-            <span className="font-mono text-xs uppercase tracking-wider text-ink-500">
+            <span className="text-label uppercase tracking-wider text-ink-soft">
               Σ {friendsTotal}
             </span>
           </div>
@@ -51,20 +52,16 @@ export function ConcertReadView({
               return (
                 <div key={member.id} className="flex items-center gap-2.5">
                   <MemberChip memberName={member.firstName} memberColor={member.color} />
-                  <span className="text-[12.5px] text-ink-900 w-20 flex-shrink-0">
-                    {member.firstName}
-                  </span>
-                  <div className="flex-1 h-1.5 bg-bg-sunk rounded-sm overflow-hidden">
-                    <div
-                      className="h-full rounded-sm"
-                      style={{
-                        width: `${percent}%`,
-                        background: member.color,
-                        opacity: 0.85,
-                      }}
+                  <span className="text-meta text-ink w-20 flex-shrink-0">{member.firstName}</span>
+                  <div className="flex-1 h-1.5 bg-sunk rounded-sm overflow-hidden">
+                    <MemberMark
+                      color={member.color}
+                      shape="cell"
+                      className="block h-full min-h-0 min-w-0 rounded-sm px-0"
+                      style={{ width: `${percent}%` }}
                     />
                   </div>
-                  <span className="font-mono text-xs text-ink-500 min-w-[28px] text-right">
+                  <span className="font-mono text-meta text-ink-soft min-w-[28px] text-right">
                     {count}
                   </span>
                 </div>
@@ -72,8 +69,8 @@ export function ConcertReadView({
             })}
           </div>
           {isVenueFillShown ? (
-            <div className="mt-3.5 pt-3.5 border-t border-line flex justify-between text-[12.5px]">
-              <span className="text-ink-500">{t('sessions.capacity')}</span>
+            <div className="mt-3.5 pt-3.5 border-t border-rule flex justify-between text-meta">
+              <span className="text-ink-soft">{t('sessions.capacity')}</span>
               <span className="font-mono">
                 {Math.round(computeSharePercent(friendsTotal, capacity))}% · {friendsTotal}/
                 {capacity}
@@ -83,7 +80,7 @@ export function ConcertReadView({
         </Card>
         <Card>
           <div className={composeClassName(LABEL_CLASS, 'mb-2.5')}>{t('sessions.gear')}</div>
-          <div className="text-[13px] text-ink-700 whitespace-pre-line font-mono">
+          <div className="font-display text-meta text-ink whitespace-pre-line italic">
             {gear === null || gear.length === 0 ? '—' : gear}
           </div>
         </Card>
@@ -91,9 +88,7 @@ export function ConcertReadView({
       <aside className="flex flex-col gap-4">
         <Card variant="sunk">
           <div className={composeClassName(LABEL_CLASS, 'mb-1.5')}>{t('sessions.venue')}</div>
-          <div className="font-display italic text-2xl text-ink-900 leading-tight">
-            {venue ?? '—'}
-          </div>
+          <div className="font-display text-title text-ink leading-tight">{venue ?? '—'}</div>
         </Card>
       </aside>
     </div>

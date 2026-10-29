@@ -4,6 +4,7 @@ import { z } from 'zod';
 import { DEFAULT_SONG_ORIGIN, SONG_ORIGINS, type SongOrigin } from '@domain/song-origin.core';
 import type { SongChartKind } from '../../components/organisms/SongChartFields';
 import type { SongExternalLinkValue } from '../../components/organisms/SongExternalLinks';
+import { convertChordsAboveLyrics } from './chords-above-lyrics.core';
 
 export const songStatuses = ['idea', 'wip', 'rehearsed', 'concert_ready'] as const;
 export const linkProviders = ['spotify', 'deezer', 'youtube', 'other'] as const;
@@ -53,6 +54,7 @@ export const songSchema = z.object({
   structureNotes: z.string().default(''),
   gimmickNotes: z.string().default(''),
   notes: z.string().default(''),
+  defaultLineup: z.record(z.string(), z.array(z.string())).default({}),
 });
 export const singleSongSchema = z.object({ song: songSchema });
 
@@ -82,6 +84,7 @@ export interface SongDraftState {
   structureNotes: string;
   gimmickNotes: string;
   notes: string;
+  defaultLineup: Record<string, string[]>;
 }
 
 export const BLANK_SONG_DRAFT: SongDraftState = {
@@ -107,6 +110,7 @@ export const BLANK_SONG_DRAFT: SongDraftState = {
   structureNotes: '',
   gimmickNotes: '',
   notes: '',
+  defaultLineup: {},
 };
 
 export function songFromApi(song: Song): SongDraftState {
@@ -133,12 +137,15 @@ export function songFromApi(song: Song): SongDraftState {
     structureNotes: song.structureNotes,
     gimmickNotes: song.gimmickNotes,
     notes: song.notes,
+    defaultLineup: song.defaultLineup,
   };
 }
 
 export function chartFromDraft(draft: SongDraftState): Song['chart'] {
   if (draft.chartKind === 'none') return null;
-  if (draft.chartKind === 'chordpro') return { kind: 'chordpro', text: draft.chordproText };
+  if (draft.chartKind === 'chordpro') {
+    return { kind: 'chordpro', text: convertChordsAboveLyrics(draft.chordproText).chordPro };
+  }
   if (draft.chartKind === 'pdf') return { kind: 'pdf', s3Key: draft.pdfS3Key };
   return { kind: 'image', s3Key: draft.imageS3Key };
 }
@@ -163,6 +170,7 @@ export interface SongSavePayload {
   readonly structureNotes: string;
   readonly gimmickNotes: string;
   readonly notes: string;
+  readonly defaultLineup: Record<string, string[]>;
 }
 
 // @FollowsBlueprint core-form-schema
@@ -191,6 +199,7 @@ export function payloadFromDraft(draft: SongDraftState): SongSavePayload | null 
     structureNotes: draft.structureNotes,
     gimmickNotes: draft.gimmickNotes,
     notes: draft.notes,
+    defaultLineup: draft.defaultLineup,
   };
 }
 

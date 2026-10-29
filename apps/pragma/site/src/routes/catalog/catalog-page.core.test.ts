@@ -1,14 +1,16 @@
 import { describe, expect, it } from 'vitest';
 import {
+  buildCatalogFilterSearch,
   type CatalogSong,
-  buildNewSongPath,
-  compactLineup,
+  describeSongToLearn,
+  parseCatalogFilter,
   selectCatalogEmptyMessageKey,
-  countSongsWithStatus,
+  selectSongsToLearn,
   isMatchingSearch,
   isMatchingStatusFilter,
   selectVisibleSongs,
   sortSongsByTitle,
+  toSongCard,
 } from './catalog-page.core';
 
 const SONGS: readonly CatalogSong[] = [
@@ -18,14 +20,24 @@ const SONGS: readonly CatalogSong[] = [
 ];
 
 // @FollowsBlueprint test-pure-unit
-describe('countSongsWithStatus', () => {
-  it('counts every song for the all filter', () => {
-    expect(countSongsWithStatus(SONGS, 'all')).toBe(3);
+describe('buildCatalogFilterSearch', () => {
+  it('names a chosen filter in the address', () => {
+    expect(buildCatalogFilterSearch('learning')).toEqual({ filter: 'learning' });
   });
 
-  it('counts only the songs carrying the status', () => {
-    expect(countSongsWithStatus(SONGS, 'concert_ready')).toBe(2);
-    expect(countSongsWithStatus(SONGS, 'idea')).toBe(0);
+  it('leaves the address bare for every song', () => {
+    expect(buildCatalogFilterSearch('all')).toEqual({});
+  });
+});
+
+describe('parseCatalogFilter', () => {
+  it('reads a filter named in the address', () => {
+    expect(parseCatalogFilter('learning')).toBe('learning');
+  });
+
+  it('falls back to every song for a missing or unknown filter', () => {
+    expect(parseCatalogFilter(null)).toBe('all');
+    expect(parseCatalogFilter('studies')).toBe('all');
   });
 });
 
@@ -92,36 +104,105 @@ describe('selectVisibleSongs', () => {
   });
 });
 
-describe('compactLineup', () => {
-  it('drops the members holding nothing', () => {
-    expect(compactLineup({ ada: ['guitar'], bob: [] })).toEqual({ ada: ['guitar'] });
-  });
-
-  it('keeps both instruments of a member holding two', () => {
-    expect(compactLineup({ ada: ['drums', 'vocals'] })).toEqual({ ada: ['drums', 'vocals'] });
-  });
-
-  it('returns an empty record for an empty lineup', () => {
-    expect(compactLineup({})).toEqual({});
-  });
-});
-
-describe('buildNewSongPath', () => {
-  it('goes to the blank form when nothing was searched', () => {
-    expect(buildNewSongPath('   ')).toBe('/catalog/new');
-  });
-
-  it('carries what was typed so the title is not typed twice', () => {
-    expect(buildNewSongPath(' Slow Burn ')).toBe('/catalog/new?title=Slow%20Burn');
-  });
-});
-
 describe('selectCatalogEmptyMessageKey', () => {
-  it('says the catalog is empty when nothing was searched', () => {
-    expect(selectCatalogEmptyMessageKey('  ')).toBe('catalog.emptyList');
+  it('says no song matches when a search is typed', () => {
+    expect(selectCatalogEmptyMessageKey(' slow ', 'learning')).toBe('catalog.emptySearch');
   });
 
-  it('says the search matched nothing when something was', () => {
-    expect(selectCatalogEmptyMessageKey('Bohemian')).toBe('catalog.emptySearch');
+  it('says the catalogue is empty with no search, spaces included', () => {
+    expect(selectCatalogEmptyMessageKey('', 'all')).toBe('catalog.emptyList');
+    expect(selectCatalogEmptyMessageKey('   ', 'all')).toBe('catalog.emptyList');
+  });
+
+  it('says there is nothing to learn under To learn', () => {
+    expect(selectCatalogEmptyMessageKey('', 'learning')).toBe('catalog.emptyToLearn');
+  });
+});
+
+describe('selectSongsToLearn', () => {
+  const songs = [
+    { id: 'song-1', ...SLOW_BURN },
+    { id: 'song-2', ...LIGHTNING },
+    { id: 'song-3', title: 'Afterglow', artist: 'Nova Reef', status: 'wip' },
+  ];
+
+  it('keeps the queue order, one row per song with its instruments and its lowest score', () => {
+    const queue = [
+      { songId: 'song-2', instrumentId: 'bass', score: 6, isReady: false },
+      { songId: 'song-1', instrumentId: 'voice', score: null, isReady: null },
+      { songId: 'song-2', instrumentId: 'voice', score: 3, isReady: false },
+      { songId: 'song-1', instrumentId: 'bass', score: 5, isReady: null },
+      { songId: 'song-2', instrumentId: 'keys', score: null, isReady: false },
+    ];
+    expect(selectSongsToLearn(songs, queue, '')).toEqual([
+      { song: songs[1], instrumentIds: ['bass', 'voice', 'keys'], lowestScore: 3 },
+      { song: songs[0], instrumentIds: ['voice', 'bass'], lowestScore: 5 },
+    ]);
+  });
+
+  it('leaves out a ready song, a song no longer in the catalogue and a song the search misses', () => {
+    const queue = [
+      { songId: 'song-1', instrumentId: 'bass', score: 9, isReady: true },
+      { songId: 'gone', instrumentId: 'bass', score: 1, isReady: false },
+      { songId: 'song-3', instrumentId: 'bass', score: 1, isReady: false },
+      { songId: 'song-2', instrumentId: 'bass', score: 1, isReady: false },
+    ];
+    expect(selectSongsToLearn(songs, queue, 'volt').map((entry) => entry.song.id)).toEqual([
+      'song-2',
+    ]);
+  });
+
+  it('leaves out a song every study of which is ready, with no search typed', () => {
+    const queue = [
+      { songId: 'song-1', instrumentId: 'bass', score: 9, isReady: true },
+      { songId: 'song-2', instrumentId: 'bass', score: 4, isReady: false },
+    ];
+    expect(selectSongsToLearn(songs, queue, '').map((entry) => entry.song.id)).toEqual(['song-2']);
+  });
+});
+
+describe('describeSongToLearn', () => {
+  const names = new Map([
+    ['bass', 'Bass'],
+    ['voice', 'Voice'],
+  ]);
+
+  it('names the instruments and the lowest score', () => {
+    expect(
+      describeSongToLearn(
+        { song: null, instrumentIds: ['bass', 'voice', 'gone'], lowestScore: 4 },
+        names,
+      ),
+    ).toBe('Bass, Voice · 4/10');
+  });
+
+  it('names the instruments alone when no score is set', () => {
+    expect(
+      describeSongToLearn({ song: null, instrumentIds: ['bass'], lowestScore: null }, names),
+    ).toBe('Bass');
+  });
+});
+
+describe('toSongCard', () => {
+  it('draws a song as its card, with the line under the title and the kind of its chart', () => {
+    expect(
+      toSongCard(
+        {
+          id: 'song-1',
+          title: 'Lightning',
+          status: 'rehearsed',
+          deezerAlbumId: 'album-9',
+          chart: { kind: 'pdf' },
+        },
+        'Volt',
+      ),
+    ).toEqual({
+      id: 'song-1',
+      title: 'Lightning',
+      detail: 'Volt',
+      deezerAlbumId: 'album-9',
+      status: 'rehearsed',
+      chartKind: 'pdf',
+    });
   });
 });

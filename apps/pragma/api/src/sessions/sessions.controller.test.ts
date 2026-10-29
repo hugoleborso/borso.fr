@@ -34,13 +34,13 @@ describe('sessions controller (back-e2e)', () => {
     expect((await jsonRequest(app, '/api/sessions')).status).toBe(401);
   });
 
-  it('creates a concert + a practice + lists both newest-first', async () => {
+  it('lists coming sessions first, nearest at the top, then past ones', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     await jsonRequest(app, '/api/sessions', {
       method: 'POST',
       body: {
         kind: 'concert',
-        date: '2025-09-13T18:30:00Z',
+        date: '2099-05-01T18:30:00Z',
         venue: 'Les Disquaires',
         capacity: 80,
         gear: 'Sono maison',
@@ -50,15 +50,23 @@ describe('sessions controller (back-e2e)', () => {
     });
     await jsonRequest(app, '/api/sessions', {
       method: 'POST',
-      body: { kind: 'practice', date: '2025-09-08T19:00:00Z' },
+      body: { kind: 'practice', date: '2020-01-10T19:00:00Z' },
+      cookieHeader,
+    });
+    await jsonRequest(app, '/api/sessions', {
+      method: 'POST',
+      body: { kind: 'practice', date: '2099-03-01T19:00:00Z' },
       cookieHeader,
     });
     const list = await readJson(
       await jsonRequest(app, '/api/sessions', { cookieHeader }),
       listEnvelope,
     );
-    expect(list.sessions).toHaveLength(2);
-    expect(list.sessions[0]?.kind).toBe('concert');
+    expect(list.sessions.map((session) => session.date)).toEqual([
+      '2099-03-01T19:00:00.000Z',
+      '2099-05-01T18:30:00.000Z',
+      '2020-01-10T19:00:00.000Z',
+    ]);
   });
 
   it('rejects a payload that mixes concert-only with practice-only fields', async () => {

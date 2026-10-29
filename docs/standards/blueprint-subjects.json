@@ -1,4 +1,270 @@
 {
+  "apps/banana-rush/api/src/config/config.controller.ts": {
+    "buildConfigRouter": "controller-public-router"
+  },
+  "apps/banana-rush/api/src/database/client.ts": {
+    "getDatabase": "database-client"
+  },
+  "apps/banana-rush/api/src/games/game-view.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/games/game.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/games/games.controller.ts": {
+    "buildGamesRouter": "controller-dispatch"
+  },
+  "apps/banana-rush/api/src/games/games.repository.ts": {
+    "findGameByJoinCode": "repository-query",
+    "findLatestRoundResult": "repository-json-column",
+    "seatPlayer": "repository-owned-transaction-losing-a-race-quietly"
+  },
+  "apps/banana-rush/api/src/games/games.schema.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/games/games.schema.ts": {
+    "bidTable": "schema-identity-free-of-database-constraints"
+  },
+  "apps/banana-rush/api/src/games/games.service.ts": {
+    "createGame": "service-orchestration"
+  },
+  "apps/banana-rush/api/src/games/join-code.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/games/player-token.middleware.ts": {
+    "readPlayerToken": "environment-reader"
+  },
+  "apps/banana-rush/api/src/games/player-token.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/games/player-token.utils.ts": {
+    "hashPlayerToken": "utils-pure-module"
+  },
+  "apps/banana-rush/api/src/games/rematch.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/games/rematch.core.ts": {
+    "refuseRematch": "core-decision-table-for-a-lifecycle"
+  },
+  "apps/banana-rush/api/src/games/rematch.service.ts": {
+    "startRematch": "service-orchestration"
+  },
+  "apps/banana-rush/api/src/games/round.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/helpers/errors/error-response.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/helpers/errors/game-error.types.ts": {
+    "GameError": "named-domain-error"
+  },
+  "apps/banana-rush/api/src/helpers/http/bearer-token.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/main.dev.ts": {
+    "app": "api-dev-entrypoint"
+  },
+  "apps/banana-rush/api/src/main.ts": {
+    "handler": "api-lambda-entrypoint"
+  },
+  "apps/banana-rush/api/src/main.websocket.ts": {
+    "handler": "api-lambda-entrypoint"
+  },
+  "apps/banana-rush/api/src/realtime/broadcast.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/banana-rush/api/src/realtime/local-socket.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/realtime/realtime.schema.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/api/src/realtime/realtime.service.ts": {
+    "broadcastGame": "service-orchestration"
+  },
+  "apps/banana-rush/api/src/realtime/socket-route.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/cdk/bin/cdk.ts": {
+    "account": "cdk-app-entrypoint"
+  },
+  "apps/banana-rush/cdk/lib/stack.ts": {
+    "buildBananaRushAppStack": "app-cdk-stack"
+  },
+  "apps/banana-rush/cdk/test/stack.test.ts": {
+    "synthAppStack": "test-cdk-synth"
+  },
+  "apps/banana-rush/domain/bid.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/domain/bid.core.ts": {
+    "refuseBid": "domain-shared-selection"
+  },
+  "apps/banana-rush/domain/game-error.core.test.ts": {
+    "describe": "test-exhaustive-domain"
+  },
+  "apps/banana-rush/domain/game-lifecycle.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/domain/game-lifecycle.core.ts": {
+    "refuseStart": "domain-shared-selection"
+  },
+  "apps/banana-rush/domain/game-setup.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/domain/game-setup.core.ts": {
+    "refuseGameSetup": "domain-shared-selection"
+  },
+  "apps/banana-rush/domain/join-code.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/domain/join-code.core.ts": {
+    "normalizeJoinCode": "domain-shared-selection"
+  },
+  "apps/banana-rush/domain/monkey.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/domain/monkey.core.ts": {
+    "isMonkeyAvatar": "domain-shared-selection"
+  },
+  "apps/banana-rush/domain/round-clock.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/App.tsx": {
+    "App": "organism-shell"
+  },
+  "apps/banana-rush/site/src/components/atoms/Chip.tsx": {
+    "Chip": "atom-variant"
+  },
+  "apps/banana-rush/site/src/components/atoms/FieldLabel.tsx": {
+    "FieldLabel": "atom-plain"
+  },
+  "apps/banana-rush/site/src/components/atoms/LinkIcon.tsx": {
+    "LinkIcon": "atom-plain"
+  },
+  "apps/banana-rush/site/src/components/atoms/RoundCountdown.tsx": {
+    "RoundCountdown": "atom-null-render"
+  },
+  "apps/banana-rush/site/src/components/atoms/StashCount.tsx": {
+    "StashCount": "atom-plain"
+  },
+  "apps/banana-rush/site/src/components/molecules/JoinCodeBadge.tsx": {
+    "JoinCodeBadge": "molecule-presentational"
+  },
+  "apps/banana-rush/site/src/components/molecules/MonkeyPicker.tsx": {
+    "MonkeyPicker": "molecule-presentational"
+  },
+  "apps/banana-rush/site/src/components/organisms/AppErrorBoundary.tsx": {
+    "AppErrorBoundary": "organism-error-boundary"
+  },
+  "apps/banana-rush/site/src/components/organisms/AppShell.tsx": {
+    "AppShell": "organism-shell"
+  },
+  "apps/banana-rush/site/src/components/organisms/FinalScoreboard.tsx": {
+    "FinalScoreboard": "organism-presentational"
+  },
+  "apps/banana-rush/site/src/components/organisms/JoinGameForm.tsx": {
+    "JoinGameForm": "organism-form"
+  },
+  "apps/banana-rush/site/src/components/organisms/RoundReveal.tsx": {
+    "RoundReveal": "organism-presentational"
+  },
+  "apps/banana-rush/site/src/components/organisms/RulesPanel.tsx": {
+    "RulesPanel": "organism-presentational"
+  },
+  "apps/banana-rush/site/src/i18n/i18n-parity.test.ts": {
+    "describe": "test-i18n-parity"
+  },
+  "apps/banana-rush/site/src/i18n/i18n.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/i18n/i18n.utils.ts": {
+    "isSupportedLocale": "utils-pure-module"
+  },
+  "apps/banana-rush/site/src/i18n/locale-storage.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/i18n/locale-storage.utils.ts": {
+    "readPersistedLocale": "injected-storage-slice"
+  },
+  "apps/banana-rush/site/src/lib/api-failure.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/api.client.ts": {
+    "api": "typed-api-client"
+  },
+  "apps/banana-rush/site/src/lib/banana-rain.utils.ts": {
+    "createSeededDraw": "utils-pure-module"
+  },
+  "apps/banana-rush/site/src/lib/countdown.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/error-codes.core.test.ts": {
+    "describe": "test-exhaustive-domain"
+  },
+  "apps/banana-rush/site/src/lib/game-broadcast.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/game-phase.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/game-phase.core.ts": {
+    "isRoundOver": "core-view-intent"
+  },
+  "apps/banana-rush/site/src/lib/game-recap.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/game-summary.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/invitation.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/player-session.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/player-session.store.ts": {
+    "loadSeat": "persisted-store-module"
+  },
+  "apps/banana-rush/site/src/lib/rejection-code.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/round-spotlight.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/round-spotlight.core.ts": {
+    "selectSpotlightStyling": "core-label-key"
+  },
+  "apps/banana-rush/site/src/lib/speech-transcript.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/spoken-number.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/site/src/lib/translation-keys.core.test.ts": {
+    "describe": "test-exhaustive-domain"
+  },
+  "apps/banana-rush/site/src/lib/translation-keys.core.ts": {
+    "selectErrorKey": "core-label-key"
+  },
+  "apps/banana-rush/site/src/main.tsx": {
+    "rootElement": "site-entrypoint"
+  },
+  "apps/banana-rush/site/src/routes/CreateGamePage.tsx": {
+    "CreateGamePage": "route-form"
+  },
+  "apps/banana-rush/site/src/sw/sw-cache.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/banana-rush/test/database-utils.ts": {
+    "truncateAllTables": "test-database-isolation"
+  },
+  "apps/banana-rush/test/setup-postgres.ts": {
+    "setup": "test-global-setup"
+  },
+  "apps/banana-rush/vitest.config.ts": {
+    "defineConfig": "workspace-test-config"
+  },
   "apps/borso-fr/bin/app.ts": {
     "account": "cdk-app-entrypoint"
   },
@@ -634,7 +900,7 @@
   },
   "apps/last-loop-lepin/api/src/auth/auth.repository.ts": {
     "findValidSession": "repository-query",
-    "upsertBucket": "repository-idempotent-upsert"
+    "incrementBucket": "repository-atomic-counter"
   },
   "apps/last-loop-lepin/api/src/auth/auth.service.test.ts": {
     "describe": "test-repository-integration"
@@ -687,14 +953,23 @@
   "apps/last-loop-lepin/api/src/edition/edition.types.ts": {
     "EditionStatus": "domain-types-module"
   },
+  "apps/last-loop-lepin/api/src/helpers/client-address/client-address.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/helpers/client-address/client-address.core.ts": {
+    "resolveClientAddress": "client-address-resolution"
+  },
+  "apps/last-loop-lepin/api/src/helpers/client-address/client-address.environment.test.ts": {
+    "describe": "test-middleware-integration"
+  },
+  "apps/last-loop-lepin/api/src/helpers/client-address/client-address.environment.ts": {
+    "readClientAddress": "environment-reader"
+  },
   "apps/last-loop-lepin/api/src/helpers/geo/geo.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/last-loop-lepin/api/src/helpers/geo/geo.core.ts": {
     "smoothedElevationGainMeters": "helper-module"
-  },
-  "apps/last-loop-lepin/api/src/helpers/geo/haversine.utils.test.ts": {
-    "describe": "test-pure-unit"
   },
   "apps/last-loop-lepin/api/src/helpers/gpx/gpx.core.test.ts": {
     "describe": "test-pure-unit"
@@ -738,6 +1013,9 @@
   },
   "apps/last-loop-lepin/api/src/punch/punch.core.test.ts": {
     "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/api/src/punch/punch.repository.ts": {
+    "didClaimLoop": "repository-write-refused-by-the-primary-key"
   },
   "apps/last-loop-lepin/api/src/punch/punch.service.test.ts": {
     "describe": "test-repository-integration"
@@ -823,7 +1101,16 @@
   "apps/last-loop-lepin/cdk/test/stack.test.ts": {
     "synthAppStack": "test-cdk-synth"
   },
+  "apps/last-loop-lepin/domain/edition-limits.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
   "apps/last-loop-lepin/domain/edition-selection.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/domain/haversine.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/last-loop-lepin/domain/runner-limits.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/last-loop-lepin/site/src/App.test.tsx": {
@@ -1118,12 +1405,6 @@
   "apps/last-loop-lepin/site/src/lib/formatters.utils.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/last-loop-lepin/site/src/lib/haversine.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/last-loop-lepin/site/src/lib/haversine.utils.ts": {
-    "haversineDistanceMeters": "utils-geometry"
-  },
   "apps/last-loop-lepin/site/src/lib/initials.utils.test.ts": {
     "describe": "test-pure-unit"
   },
@@ -1229,7 +1510,16 @@
   "apps/last-loop-lepin/vitest.config.ts": {
     "defineConfig": "workspace-test-config"
   },
+  "apps/pragma/api/src/__test/calendar-feed-fixtures.core.ts": {
+    "buildFixtureFeed": "core-decision"
+  },
+  "apps/pragma/api/src/__test/schema-boundary.core.ts": {
+    "classifySchemaBoundary": "core-decision"
+  },
   "apps/pragma/api/src/__test/test-seed-fixture.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/__test/test-seed-task-board.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/api/src/__test/test-seed.controller.test.ts": {
@@ -1243,10 +1533,70 @@
   },
   "apps/pragma/api/src/__test/test-seed.core.ts": {
     "buildSeedLineup": "core-projection",
-    "selectInstrumentIds": "core-projection"
+    "selectInstrumentIds": "core-projection",
+    "selectPrimaryInstrumentIds": "core-projection"
   },
   "apps/pragma/api/src/__test/test-seed.repository.ts": {
     "deleteAllDomainRows": "repository-query"
+  },
+  "apps/pragma/api/src/audience/audience.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/audience/audience.repository.ts": {
+    "ROUND_PROJECTION": "repository-projection",
+    "VOTE_PROJECTION": "repository-projection",
+    "deleteVote": "repository-query",
+    "findConcertWithOpenRound": "repository-query",
+    "findLatestRoundOfConcert": "repository-query",
+    "findOpenRoundOfConcert": "repository-query",
+    "findRoundById": "repository-query",
+    "insertRoundWithin": "repository-query",
+    "insertSuggestion": "repository-query",
+    "listRoundsOfConcert": "repository-query",
+    "listSuggestedSongIdsOfConcert": "repository-query",
+    "listVotesOfRound": "repository-query",
+    "listWinningSongIdsOfConcert": "repository-query",
+    "recordVote": "repository-query"
+  },
+  "apps/pragma/api/src/audience/audience.schema.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/audience/audience.schema.ts": {
+    "audienceSuggestionTable": "schema-table-and-input",
+    "audienceVoteTable": "schema-dsql-constraints",
+    "votingRoundTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/audience/audience.service.ts": {
+    "acceptSuggestion": "service-orchestration",
+    "castVote": "service-orchestration",
+    "getRoundHistory": "service-read-model",
+    "openRound": "service-orchestration",
+    "readConcertState": "service-orchestration"
+  },
+  "apps/pragma/api/src/audience/ballot-token.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/audience/ballot-token.utils.ts": {
+    "mintBallotToken": "utils-pure-module"
+  },
+  "apps/pragma/api/src/audience/open-ballot.middleware.ts": {
+    "requireBallot": "middleware-session-gate"
+  },
+  "apps/pragma/api/src/audience/pool.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/audience/pool.core.ts": {
+    "buildPoolEntries": "core-projection",
+    "selectPool": "core-decision"
+  },
+  "apps/pragma/api/src/audience/round.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/audience/round.core.ts": {
+    "projectRound": "core-projection",
+    "projectRoundHistory": "core-projection",
+    "selectSettlementWrite": "core-decision",
+    "settleRound": "core-decision"
   },
   "apps/pragma/api/src/auth/auth.controller.test.ts": {
     "describe": "test-back-e2e"
@@ -1262,7 +1612,7 @@
   },
   "apps/pragma/api/src/auth/credentials.repository.ts": {
     "CREDENTIAL_PROJECTION": "repository-projection",
-    "listCredentials": "repository-query"
+    "findCredentialByUsername": "repository-query"
   },
   "apps/pragma/api/src/auth/credentials.schema.test.ts": {
     "describe": "test-pure-unit"
@@ -1272,19 +1622,9 @@
   },
   "apps/pragma/api/src/auth/credentials.service.ts": {
     "attemptMemberLogin": "service-orchestration",
-    "deleteCredentialsOfMember": "repository-owned-transaction"
-  },
-  "apps/pragma/api/src/auth/enrolment.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/api/src/auth/enrolment.core.ts": {
-    "selectEnrolmentWindow": "core-decision"
-  },
-  "apps/pragma/api/src/auth/ip-hash.utils.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/api/src/auth/ip-hash.utils.ts": {
-    "readClientIp": "utils-pure-module"
+    "deleteCredentialsOfMember": "repository-owned-transaction",
+    "readClientAddress": "service-facade-reexport",
+    "recoverPassword": "service-orchestration"
   },
   "apps/pragma/api/src/auth/member-session.core.test.ts": {
     "describe": "test-pure-unit"
@@ -1316,6 +1656,9 @@
   "apps/pragma/api/src/auth/session-cookie.utils.ts": {
     "verifyCookie": "utils-pure-module"
   },
+  "apps/pragma/api/src/bars/bar-search.adapter.ts": {
+    "searchPlacesForBars": "adapter-rate-limited-fetch"
+  },
   "apps/pragma/api/src/bars/bars.controller.test.ts": {
     "describe": "test-back-e2e"
   },
@@ -1323,16 +1666,96 @@
     "buildBarsRouter": "controller-dispatch"
   },
   "apps/pragma/api/src/bars/bars.repository.ts": {
-    "PROJECTION": "repository-projection"
+    "PROJECTION": "repository-projection",
+    "decodeAvailableSupportColumn": "repository-json-column"
+  },
+  "apps/pragma/api/src/calendar-feeds/calendar-feed.adapter.ts": {
+    "readCalendarFeed": "adapter-external-service"
+  },
+  "apps/pragma/api/src/calendar-feeds/calendar-feeds.repository.ts": {
+    "hasCalendarFeed": "repository-query",
+    "upsertCalendarFeed": "repository-idempotent-upsert"
+  },
+  "apps/pragma/api/src/calendar-feeds/calendar-feeds.schema.ts": {
+    "memberCalendarFeedTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/calendar-feeds/calendar-feeds.service.ts": {
+    "saveCalendarFeed": "service-orchestration"
+  },
+  "apps/pragma/api/src/calendar-feeds/feed-address.core.ts": {
+    "judgeFeedAddress": "core-decision"
+  },
+  "apps/pragma/api/src/calendar-feeds/feed-response.core.ts": {
+    "classifyFeedStatus": "core-decision"
+  },
+  "apps/pragma/api/src/calendar-feeds/ics.core.ts": {
+    "readBusyIntervals": "core-external-payload-mapping"
   },
   "apps/pragma/api/src/database/migrations.audit.test.ts": {
     "describe": "test-artifact-audit"
   },
-  "apps/pragma/api/src/database/schema.ts": {
-    "appConfigTable": "database-schema-barrel"
+  "apps/pragma/api/src/free-slots/free-slots.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/free-slots/free-slots.controller.ts": {
+    "buildFreeSlotsRouter": "controller-guarded-router"
+  },
+  "apps/pragma/api/src/free-slots/free-slots.core.ts": {
+    "buildSearchWindows": "core-decision"
+  },
+  "apps/pragma/api/src/free-slots/free-slots.service.ts": {
+    "computeFreeSlots": "service-orchestration"
+  },
+  "apps/pragma/api/src/free-slots/member-busy-time.core.ts": {
+    "selectExcludedMembers": "core-decision"
+  },
+  "apps/pragma/api/src/helpers/client-address/client-address.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/helpers/client-address/client-address.environment.test.ts": {
+    "describe": "test-middleware-integration"
+  },
+  "apps/pragma/api/src/helpers/client-address/client-address.environment.ts": {
+    "readClientAddress": "environment-reader"
   },
   "apps/pragma/api/src/helpers/json/json.core.test.ts": {
     "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/helpers/observability/error-reporting.adapter.ts": {
+    "startErrorReporting": "adapter-external-service"
+  },
+  "apps/pragma/api/src/helpers/observability/error-reporting.core.ts": {
+    "selectErrorReportingSettings": "core-decision"
+  },
+  "apps/pragma/api/src/helpers/observability/error-reporting.environment.ts": {
+    "readErrorReportingInputs": "environment-reader"
+  },
+  "apps/pragma/api/src/helpers/observability/product-event.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/pragma/api/src/helpers/observability/product-event.adapter.ts": {
+    "recordProductEvent": "adapter-external-service"
+  },
+  "apps/pragma/api/src/helpers/observability/request-tracing.middleware.test.ts": {
+    "describe": "test-middleware-integration"
+  },
+  "apps/pragma/api/src/helpers/observability/unhandled-error.middleware.test.ts": {
+    "describe": "test-middleware-integration"
+  },
+  "apps/pragma/api/src/helpers/ordering/reorder.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/helpers/ordering/reorder.core.ts": {
+    "isReorderOfTheSameIds": "helper-module"
+  },
+  "apps/pragma/api/src/helpers/paris-time/paris-time.core.ts": {
+    "zonedWallTimeOf": "helper-module"
+  },
+  "apps/pragma/api/src/helpers/persistence/conflict-abort.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/helpers/persistence/conflict-abort.core.ts": {
+    "isConflictAbort": "helper-module"
   },
   "apps/pragma/api/src/helpers/persistence/deletion.core.test.ts": {
     "describe": "test-pure-unit"
@@ -1340,8 +1763,41 @@
   "apps/pragma/api/src/helpers/persistence/deletion.core.ts": {
     "selectDeletionOutcome": "helper-module"
   },
+  "apps/pragma/api/src/helpers/persistence/insertion.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/helpers/persistence/insertion.core.ts": {
+    "selectInsertionOutcome": "helper-module"
+  },
+  "apps/pragma/api/src/improvements/improvements.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/improvements/improvements.controller.ts": {
+    "buildImprovementsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/improvements/improvements.core.ts": {
+    "summariseVotes": "core-decision"
+  },
+  "apps/pragma/api/src/improvements/improvements.repository.ts": {
+    "PROJECTION": "repository-projection"
+  },
+  "apps/pragma/api/src/improvements/improvements.schema.ts": {
+    "improvementTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/improvements/improvements.service.ts": {
+    "patchImprovement": "service-crud-update"
+  },
+  "apps/pragma/api/src/instruments/instrument-players.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/instruments/instrument-players.core.ts": {
+    "foldPlayersIntoInstruments": "core-projection"
+  },
   "apps/pragma/api/src/instruments/instruments.controller.ts": {
     "buildInstrumentsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/instruments/instruments.repository.ts": {
+    "runInOneInstrumentTransaction": "repository-owned-transaction"
   },
   "apps/pragma/api/src/instruments/instruments.service.ts": {
     "patchInstrument": "service-crud-update"
@@ -1362,7 +1818,8 @@
     "describe": "test-pure-unit"
   },
   "apps/pragma/api/src/mastery/mastery.core.ts": {
-    "effective": "core-decision"
+    "effective": "core-decision",
+    "indexDefaultScores": "core-projection"
   },
   "apps/pragma/api/src/mastery/mastery.repository.ts": {
     "listMasteryDefaults": "repository-query",
@@ -1370,6 +1827,9 @@
   },
   "apps/pragma/api/src/mastery/mastery.schema.ts": {
     "masteryDefaultTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/me/me.controller.test.ts": {
+    "describe": "test-back-e2e"
   },
   "apps/pragma/api/src/me/me.controller.ts": {
     "buildMeRouter": "controller-guarded-router"
@@ -1401,6 +1861,50 @@
   "apps/pragma/api/src/members/members.service.ts": {
     "patchMember": "service-crud-update"
   },
+  "apps/pragma/api/src/notifications/notifications.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/notifications/notifications.controller.ts": {
+    "buildNotificationsRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/notifications/notifications.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/notifications/notifications.core.ts": {
+    "classifyPushFailure": "core-decision"
+  },
+  "apps/pragma/api/src/notifications/notifications.fan-out.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/notifications/notifications.repository.ts": {
+    "hasClaimedDispatch": "repository-conditional-claim",
+    "saveSubscription": "repository-idempotent-upsert"
+  },
+  "apps/pragma/api/src/notifications/notifications.schema.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/notifications/notifications.schema.ts": {
+    "pushSubscriptionTable": "schema-dsql-constraints"
+  },
+  "apps/pragma/api/src/notifications/notifications.service.ts": {
+    "notifyBand": "service-orchestration",
+    "readVapidPublicKey": "service-orchestration"
+  },
+  "apps/pragma/api/src/notifications/web-push.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/pragma/api/src/notifications/web-push.adapter.ts": {
+    "deliverWebPush": "adapter-outcome-instead-of-a-throw"
+  },
+  "apps/pragma/api/src/outreach/outreach.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/outreach/outreach.controller.ts": {
+    "buildOutreachRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/outreach/outreach.schema.ts": {
+    "outreachTemplateTable": "schema-table-and-input"
+  },
   "apps/pragma/api/src/sessions/offline-manifest.core.test.ts": {
     "describe": "test-pure-unit"
   },
@@ -1425,7 +1929,19 @@
   },
   "apps/pragma/api/src/sessions/sessions.service.ts": {
     "getNextSessionOfflineManifest": "service-read-model",
+    "getSessions": "service-clock-injected",
     "patchSession": "service-crud-update"
+  },
+  "apps/pragma/api/src/setlists/setlist-entry.repository.ts": {
+    "ENTRY_PROJECTION": "repository-projection",
+    "rowToEntry": "repository-json-column"
+  },
+  "apps/pragma/api/src/setlists/setlist-entry.service.ts": {
+    "addEntries": "service-crud-update",
+    "patchEntry": "service-crud-update"
+  },
+  "apps/pragma/api/src/setlists/setlists.batch.controller.test.ts": {
+    "describe": "test-back-e2e"
   },
   "apps/pragma/api/src/setlists/setlists.controller.test.ts": {
     "describe": "test-back-e2e"
@@ -1435,21 +1951,22 @@
   },
   "apps/pragma/api/src/setlists/setlists.core.ts": {
     "buildSetlistSummaries": "core-projection",
-    "resolveSetlistStatus": "core-decision",
+    "resolveSetlistKind": "core-decision",
+    "selectAudienceChoiceSetlistId": "core-decision",
     "selectNextLinkPosition": "core-decision",
     "tallySongsPerSetlist": "core-projection"
   },
   "apps/pragma/api/src/setlists/setlists.repository.ts": {
-    "ENTRY_PROJECTION": "repository-projection",
     "SETLIST_PROJECTION": "repository-projection",
-    "rowToEntry": "repository-json-column"
+    "runInOneSetlistTransaction": "repository-owned-transaction"
   },
   "apps/pragma/api/src/setlists/setlists.schema.ts": {
     "setlistTable": "schema-table-and-input"
   },
   "apps/pragma/api/src/setlists/setlists.service.ts": {
+    "didClaimSetlistWithin": "service-facade-reexport",
     "getAllSetlists": "service-read-model",
-    "patchEntry": "service-crud-update"
+    "renameSetlist": "service-crud-update"
   },
   "apps/pragma/api/src/setlists/voting.controller.test.ts": {
     "describe": "test-back-e2e"
@@ -1467,8 +1984,11 @@
   "apps/pragma/api/src/setlists/voting.service.ts": {
     "readVoteBoard": "service-orchestration"
   },
-  "apps/pragma/api/src/songs/musicbrainz.core.test.ts": {
-    "describe": "test-pure-unit"
+  "apps/pragma/api/src/songs/deezer.adapter.ts": {
+    "readDeezerTrack": "adapter-rate-limited-fetch"
+  },
+  "apps/pragma/api/src/songs/deezer.core.ts": {
+    "mapDeezerTrack": "core-parse-untrusted"
   },
   "apps/pragma/api/src/songs/search-ranking.core.test.ts": {
     "describe": "test-pure-unit"
@@ -1476,10 +1996,19 @@
   "apps/pragma/api/src/songs/search-ranking.core.ts": {
     "scoreExternalHit": "core-decision"
   },
+  "apps/pragma/api/src/songs/song-identity.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/songs/song-lineup.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/songs/song-lineup.core.ts": {
+    "hasLineupChanged": "core-decision"
+  },
   "apps/pragma/api/src/songs/songs.controller.test.ts": {
     "describe": "test-back-e2e"
   },
-  "apps/pragma/api/src/songs/songs.musicbrainz.controller.test.ts": {
+  "apps/pragma/api/src/songs/songs.deezer.controller.test.ts": {
     "describe": "test-back-e2e"
   },
   "apps/pragma/api/src/songs/songs.repository.ts": {
@@ -1489,7 +2018,122 @@
     "songTable": "schema-table-and-input"
   },
   "apps/pragma/api/src/songs/songs.service.ts": {
-    "patchSong": "service-crud-update"
+    "patchSong": "service-crud-update",
+    "resolveCatalogueSongForTrack": "service-orchestration",
+    "searchAudienceSongs": "service-orchestration"
+  },
+  "apps/pragma/api/src/songs/spotify.core.ts": {
+    "readSpotifyToken": "core-parse-untrusted"
+  },
+  "apps/pragma/api/src/studies/band-streaks.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/studies/band-streaks.core.ts": {
+    "buildMemberStreaks": "core-projection"
+  },
+  "apps/pragma/api/src/studies/concert-readiness.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/studies/concert-readiness.core.ts": {
+    "groupLineupsBySong": "core-projection",
+    "isSongReady": "core-decision"
+  },
+  "apps/pragma/api/src/studies/paris-day.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/studies/paris-day.core.ts": {
+    "parisCalendarDay": "core-projection"
+  },
+  "apps/pragma/api/src/studies/streak.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/studies/streak.core.ts": {
+    "computeStreak": "core-decision"
+  },
+  "apps/pragma/api/src/studies/studies.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/studies/studies.controller.ts": {
+    "buildStudiesRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/studies/studies.repository.ts": {
+    "STUDY_PROJECTION": "repository-projection",
+    "insertStudyIfAbsentWithin": "repository-idempotent-upsert",
+    "runInOneStudyTransaction": "repository-owned-transaction"
+  },
+  "apps/pragma/api/src/studies/studies.schema.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/studies/studies.schema.ts": {
+    "studyTable": "schema-dsql-constraints"
+  },
+  "apps/pragma/api/src/studies/studies.service.ts": {
+    "logStudy": "service-clock-injected"
+  },
+  "apps/pragma/api/src/studies/study-eligibility.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/studies/study-eligibility.core.ts": {
+    "hasInstrumentInAnyLineup": "core-decision"
+  },
+  "apps/pragma/api/src/studies/study-queue.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/studies/study-queue.core.ts": {
+    "buildStudyQueue": "core-projection"
+  },
+  "apps/pragma/api/src/takes/takes.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/takes/takes.controller.ts": {
+    "buildTakesRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/takes/takes.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/takes/takes.core.ts": {
+    "isExactlyOneTakeFilterNamed": "schema-refine-pure-helper",
+    "isMomentWithinTake": "core-decision",
+    "orderCommentsByTime": "core-decision"
+  },
+  "apps/pragma/api/src/takes/takes.repository.ts": {
+    "TAKE_PROJECTION": "repository-projection",
+    "hasInsertedTakeWithin": "repository-idempotent-upsert",
+    "rowToTake": "repository-row-mapper",
+    "runInOneTakeTransaction": "repository-owned-transaction"
+  },
+  "apps/pragma/api/src/takes/takes.schema.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/takes/takes.schema.ts": {
+    "takeTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/takes/takes.service.ts": {
+    "createTake": "service-orchestration",
+    "mintTakeUpload": "service-clock-injected"
+  },
+  "apps/pragma/api/src/tasks/tasks.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/pragma/api/src/tasks/tasks.controller.ts": {
+    "buildTasksRouter": "controller-dispatch"
+  },
+  "apps/pragma/api/src/tasks/tasks.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/tasks/tasks.core.ts": {
+    "compareTasksByUrgency": "core-decision",
+    "describeTaskCreatedEvent": "core-decision"
+  },
+  "apps/pragma/api/src/tasks/tasks.repository.ts": {
+    "PROJECTION": "repository-projection",
+    "runInOneTaskTransaction": "repository-owned-transaction"
+  },
+  "apps/pragma/api/src/tasks/tasks.schema.ts": {
+    "taskTable": "schema-table-and-input"
+  },
+  "apps/pragma/api/src/tasks/tasks.service.ts": {
+    "patchTask": "service-crud-update"
   },
   "apps/pragma/api/src/transitions/transitions.controller.test.ts": {
     "describe": "test-back-e2e"
@@ -1505,7 +2149,8 @@
     "transitionCommentTable": "schema-table-and-input"
   },
   "apps/pragma/api/src/transitions/transitions.service.ts": {
-    "getTransitionComments": "service-passthrough"
+    "getTransitionComments": "service-passthrough",
+    "saveTransitionComment": "service-orchestration"
   },
   "apps/pragma/api/src/uploads/uploads.controller.test.ts": {
     "describe": "test-back-e2e"
@@ -1522,16 +2167,35 @@
   "apps/pragma/cdk/test/stack.test.ts": {
     "synthAppStack": "test-cdk-synth"
   },
+  "apps/pragma/domain/ballot-token.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/band-time-zone.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/bar-profile.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
   "apps/pragma/domain/bar-staleness.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/domain/bar-staleness.core.ts": {
     "isStale": "core-decision"
   },
+  "apps/pragma/domain/chart-upload.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/improvement.core.ts": {
+    "STATUS_RANK": "core-lookup-table"
+  },
+  "apps/pragma/domain/input-limits.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
   "apps/pragma/domain/instrument.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/domain/instrument.core.ts": {
+    "decidePrimaryInstrumentIds": "core-projection",
     "familyFromHarmonicFlag": "core-projection"
   },
   "apps/pragma/domain/lineup.core.test.ts": {
@@ -1543,33 +2207,107 @@
     "normalizeLineup": "core-projection",
     "resolveLineup": "core-projection"
   },
+  "apps/pragma/domain/member-palette.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/member-palette.core.ts": {
+    "listMemberPaletteHexes": "core-decision"
+  },
+  "apps/pragma/domain/session-schedule.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/session-schedule.core.ts": {
+    "orderSessionsForListing": "domain-shared-selection",
+    "selectNextSession": "domain-shared-selection"
+  },
+  "apps/pragma/domain/setlist-vote.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/setlist-vote.core.ts": {
+    "resolveSetlistStatus": "domain-shared-selection"
+  },
+  "apps/pragma/domain/song-origin.core.ts": {
+    "resolveSongOrigin": "core-projection"
+  },
+  "apps/pragma/domain/take-upload.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/take-upload.core.ts": {
+    "normalizeTakeContentType": "core-decision",
+    "takeFileExtensionOf": "core-lookup-table",
+    "validateTakeFile": "core-decision"
+  },
+  "apps/pragma/domain/task-status.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/task-status.core.ts": {
+    "nextStatusAfterToggle": "core-decision"
+  },
   "apps/pragma/domain/tonality.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/domain/transition.core.ts": {
     "evaluateTransition": "core-decision"
   },
+  "apps/pragma/domain/upcoming-concerts.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/domain/upcoming-concerts.core.ts": {
+    "selectUpcomingConcerts": "core-view-projection"
+  },
+  "apps/pragma/scripts/task-metrics/cdp-session.adapter.ts": {
+    "connectCdpSession": "adapter-external-service"
+  },
+  "apps/pragma/scripts/task-metrics/touch-input.adapter.ts": {
+    "tapAt": "adapter-external-service"
+  },
+  "apps/pragma/site/src/App.test.tsx": {
+    "describe": "test-component-render"
+  },
   "apps/pragma/site/src/clock.store.ts": {
     "subscribeClock": "external-store-module"
+  },
+  "apps/pragma/site/src/components/atoms/AlbumCover.tsx": {
+    "AlbumCover": "atom-variant"
   },
   "apps/pragma/site/src/components/atoms/AutoGrowTextarea.tsx": {
     "AutoGrowTextarea": "atom-variant"
   },
+  "apps/pragma/site/src/components/atoms/Avatar.tsx": {
+    "Avatar": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/BottomActions.tsx": {
+    "BottomActions": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/BrandLogo.tsx": {
+    "BrandLogo": "atom-plain"
+  },
+  "apps/pragma/site/src/components/atoms/ButtonLink.tsx": {
+    "ButtonLink": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/Chip.tsx": {
+    "Chip": "atom-variant"
+  },
   "apps/pragma/site/src/components/atoms/DocumentFrame.tsx": {
     "DocumentFrame": "atom-plain"
   },
-  "apps/pragma/site/src/components/atoms/EnergyBar.test.tsx": {
-    "beforeAll": "test-jsdom-gap-stub",
-    "describe": "test-component-render"
-  },
-  "apps/pragma/site/src/components/atoms/EnergyBar.tsx": {
-    "EnergyBar": "atom-plain"
+  "apps/pragma/site/src/components/atoms/EnergyMeter.tsx": {
+    "EnergyMeter": "atom-plain"
   },
   "apps/pragma/site/src/components/atoms/ExternalLink.tsx": {
     "ExternalLink": "atom-plain"
   },
   "apps/pragma/site/src/components/atoms/HintText.tsx": {
     "HintText": "atom-lookup-variants"
+  },
+  "apps/pragma/site/src/components/atoms/IconButton.tsx": {
+    "IconButton": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/MemberMark.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/atoms/MemberMark.tsx": {
+    "MemberMark": "atom-variant"
   },
   "apps/pragma/site/src/components/atoms/OembedFrame.tsx": {
     "OembedFrame": "atom-plain"
@@ -1599,6 +2337,9 @@
   "apps/pragma/site/src/components/atoms/badge.variants.ts": {
     "badgeVariants": "atom-variant"
   },
+  "apps/pragma/site/src/components/atoms/button.variants.ts": {
+    "iconButtonVariants": "atom-variant"
+  },
   "apps/pragma/site/src/components/atoms/card.variants.ts": {
     "cardVariants": "atom-variant"
   },
@@ -1620,20 +2361,25 @@
     "levelFromKey": "utils-pure-module",
     "levelFromPointerRatio": "utils-pure-module"
   },
+  "apps/pragma/site/src/components/atoms/energy-meter.utils.ts": {
+    "barHeightRatio": "utils-pure-module",
+    "levelFromTravel": "utils-pure-module"
+  },
   "apps/pragma/site/src/components/atoms/input.variants.ts": {
     "inputVariants": "atom-variant"
+  },
+  "apps/pragma/site/src/components/atoms/member-mark.variants.ts": {
+    "memberMarkVariants": "atom-variant"
   },
   "apps/pragma/site/src/components/atoms/member-palette.utils.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/components/atoms/member-palette.utils.ts": {
-    "parseHexTriplet": "utils-pure-module"
-  },
   "apps/pragma/site/src/components/molecules/BackLink.tsx": {
     "BackLink": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/BottomActionBar.tsx": {
-    "BottomActionBar": "molecule-presentational"
+  "apps/pragma/site/src/components/molecules/BarQualificationFields.tsx": {
+    "AvailableSupportField": "molecule-presentational",
+    "ConcertMoodField": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/ChartKindIcon.tsx": {
     "ChartKindIcon": "molecule-presentational"
@@ -1644,33 +2390,77 @@
   "apps/pragma/site/src/components/molecules/ConfirmDialog.tsx": {
     "ConfirmDialog": "molecule-presentational"
   },
+  "apps/pragma/site/src/components/molecules/DeckProgressBar.tsx": {
+    "DeckProgressBar": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/EmptyState.tsx": {
+    "EmptyState": "molecule-presentational"
+  },
   "apps/pragma/site/src/components/molecules/EnergyBadge.tsx": {
     "EnergyBadge": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/EnergyCurve.tsx": {
+    "EnergyCurve": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/EnergySparkline.tsx": {
     "EnergySparkline": "molecule-presentational"
   },
+  "apps/pragma/site/src/components/molecules/EnumSelectField.tsx": {
+    "EnumSelectField": "molecule-presentational"
+  },
   "apps/pragma/site/src/components/molecules/FilterPillGroup.tsx": {
     "FilterPillGroup": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/FreeSlotRow.tsx": {
+    "FreeSlotRow": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/InlineLineupEditor.tsx": {
+    "InlineLineupEditor": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/InstallBanner.tsx": {
+    "InstallBanner": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/InstallPhoneScreen.tsx": {
+    "InstallPhoneScreen": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/InstrumentIconPicker.tsx": {
+    "InstrumentIconPicker": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/InstrumentPlayerChips.tsx": {
+    "InstrumentPlayerChips": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/LanguageSwitcher.tsx": {
     "LanguageSwitcher": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/LineupEditor.test.tsx": {
-    "describe": "test-component-render",
-    "stubDialogModalMissingFromJsdom": "test-jsdom-gap-stub"
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/molecules/LineupSlots.tsx": {
+    "LineupSlots": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/ListRow.tsx": {
+    "ListRow": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/ListenLinksDialog.tsx": {
+    "ListenLinksDialog": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/MasteryBadge.tsx": {
     "MasteryBadge": "molecule-presentational"
   },
+  "apps/pragma/site/src/components/molecules/MemberChip.test.tsx": {
+    "describe": "test-component-render"
+  },
   "apps/pragma/site/src/components/molecules/MemberChip.tsx": {
     "MemberChip": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/MemberFilterPills.tsx": {
-    "MemberFilterPills": "molecule-presentational"
-  },
   "apps/pragma/site/src/components/molecules/MemberLineup.tsx": {
     "MemberLineup": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/MemberPartGlyphs.tsx": {
+    "MemberPartGlyphs": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/Menu.tsx": {
+    "Menu": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/NotFoundNotice.tsx": {
     "NotFoundNotice": "molecule-presentational"
@@ -1681,6 +2471,15 @@
   "apps/pragma/site/src/components/molecules/PageHeader.tsx": {
     "PageHeader": "molecule-presentational"
   },
+  "apps/pragma/site/src/components/molecules/PasswordField.tsx": {
+    "PasswordField": "molecule-local-state"
+  },
+  "apps/pragma/site/src/components/molecules/PickableSongRow.tsx": {
+    "PickableSongRow": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/PoolSongRow.tsx": {
+    "PoolSongRow": "molecule-presentational"
+  },
   "apps/pragma/site/src/components/molecules/PracticeReadView.tsx": {
     "PracticeReadView": "organism-presentational"
   },
@@ -1690,26 +2489,38 @@
   "apps/pragma/site/src/components/molecules/SearchBar.tsx": {
     "SearchBar": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/SetlistEntryActions.tsx": {
-    "SetlistEntryActions": "molecule-presentational"
+  "apps/pragma/site/src/components/molecules/SectionTabs.tsx": {
+    "SectionTabs": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/SetlistEntryDetailsFields.tsx": {
-    "SetlistEntryDetailsFields": "molecule-presentational"
+  "apps/pragma/site/src/components/molecules/SessionsSectionTabs.tsx": {
+    "SessionsSectionTabs": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/SetlistEntryDragPreview.tsx": {
-    "SetlistEntryDragPreview": "molecule-presentational"
+  "apps/pragma/site/src/components/molecules/SetlistEntryEnergyField.test.tsx": {
+    "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/components/molecules/SongDefaultsDialog.tsx": {
-    "SongDefaultsDialog": "molecule-dialog-form"
+  "apps/pragma/site/src/components/molecules/SetlistEntryEnergyField.tsx": {
+    "SetlistEntryEnergyField": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SetlistEntryKeyCapoFields.tsx": {
+    "SetlistEntryKeyCapoFields": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/SetlistEntryNotesField.tsx": {
+    "SetlistEntryNotesField": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/Sheet.tsx": {
+    "Sheet": "molecule-dialog-form"
+  },
+  "apps/pragma/site/src/components/molecules/SongClassificationFields.tsx": {
+    "SongClassificationFields": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/SongEmbed.tsx": {
     "SongEmbed": "molecule-presentational"
   },
+  "apps/pragma/site/src/components/molecules/SongExternalMetadataPanel.tsx": {
+    "SongExternalMetadataPanel": "molecule-presentational"
+  },
   "apps/pragma/site/src/components/molecules/SongLinkAdder.tsx": {
     "SongLinkAdder": "organism-presentational"
-  },
-  "apps/pragma/site/src/components/molecules/SongMusicBrainzPanel.tsx": {
-    "SongMusicBrainzPanel": "organism-presentational"
   },
   "apps/pragma/site/src/components/molecules/SongNotes.tsx": {
     "SongNotes": "molecule-presentational"
@@ -1717,8 +2528,26 @@
   "apps/pragma/site/src/components/molecules/SongNotesFields.tsx": {
     "SongNotesFields": "molecule-presentational"
   },
+  "apps/pragma/site/src/components/molecules/StandingSongRow.tsx": {
+    "StandingSongRow": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/StreakBadge.tsx": {
+    "StreakBadge": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/StudyRow.tsx": {
+    "StudyRow": "molecule-presentational"
+  },
   "apps/pragma/site/src/components/molecules/TargetSongCountField.tsx": {
     "TargetSongCountField": "molecule-field"
+  },
+  "apps/pragma/site/src/components/molecules/TaskRow.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/molecules/TaskRow.tsx": {
+    "TaskRow": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/TextSaveStatus.tsx": {
+    "TextSaveStatus": "molecule-presentational"
   },
   "apps/pragma/site/src/components/molecules/UploadedChartPreview.tsx": {
     "UploadedChartPreview": "molecule-presentational"
@@ -1726,8 +2555,26 @@
   "apps/pragma/site/src/components/molecules/VoteBudgetBar.tsx": {
     "VoteBudgetBar": "molecule-presentational"
   },
-  "apps/pragma/site/src/components/molecules/VoteEntryLink.tsx": {
-    "VoteEntryLink": "molecule-presentational"
+  "apps/pragma/site/src/components/molecules/VoteCatalogRow.tsx": {
+    "VoteCatalogRow": "molecule-presentational"
+  },
+  "apps/pragma/site/src/components/molecules/VoteCountdown.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/molecules/VoteCountdown.tsx": {
+    "VoteCountdown": "molecule-clock-subscriber"
+  },
+  "apps/pragma/site/src/components/molecules/element-width.hook.test.tsx": {
+    "describe": "test-hook-probe"
+  },
+  "apps/pragma/site/src/components/molecules/element-width.hook.ts": {
+    "useElementWidth": "hook-external-store"
+  },
+  "apps/pragma/site/src/components/molecules/energy-curve.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/energy-curve.utils.ts": {
+    "buildEnergyBars": "utils-pure-module"
   },
   "apps/pragma/site/src/components/molecules/energy-sparkline.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -1741,11 +2588,24 @@
   "apps/pragma/site/src/components/molecules/file-drop.utils.ts": {
     "validateChartFile": "utils-pure-module"
   },
+  "apps/pragma/site/src/components/molecules/latest-text-save.hook.ts": {
+    "useLatestTextSave": "hook-timer-owned-by-handlers"
+  },
+  "apps/pragma/site/src/components/molecules/latest-text-save.utils.ts": {
+    "buildLatestTextSaveState": "utils-pure-module"
+  },
   "apps/pragma/site/src/components/molecules/lineup-editor.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/components/molecules/lineup-editor.core.ts": {
     "lineupToFormValues": "core-form-schema"
+  },
+  "apps/pragma/site/src/components/molecules/lineup-slots.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/lineup-slots.core.ts": {
+    "buildLineupColumn": "core-projection",
+    "sliceColumnToWidth": "core-projection"
   },
   "apps/pragma/site/src/components/molecules/media-query-matching.hook.test.tsx": {
     "describe": "test-hook-probe"
@@ -1762,17 +2622,50 @@
   "apps/pragma/site/src/components/molecules/online-status.hook.test.tsx": {
     "describe": "test-hook-probe"
   },
-  "apps/pragma/site/src/components/molecules/song-defaults.core.test.ts": {
+  "apps/pragma/site/src/components/molecules/pool-song-row.core.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/components/molecules/song-defaults.core.ts": {
-    "songDefaultsToFormValues": "core-form-schema"
+  "apps/pragma/site/src/components/molecules/setlist-entry-energy.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/molecules/setlist-entry-energy.core.ts": {
+    "isEnergyStored": "core-appearance",
+    "resolveEnergyLevel": "core-projection",
+    "selectEnergyAppearance": "core-appearance",
+    "selectEnergyMeterAppearance": "core-appearance"
+  },
+  "apps/pragma/site/src/components/molecules/sheet.test-utils.ts": {
+    "stubSheetDialog": "test-jsdom-gap-stub"
+  },
+  "apps/pragma/site/src/components/molecules/sheet.variants.ts": {
+    "sheetVariants": "atom-variant"
   },
   "apps/pragma/site/src/components/molecules/song-duration.utils.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/components/molecules/song-duration.utils.ts": {
     "formatDuration": "utils-formatter"
+  },
+  "apps/pragma/site/src/components/molecules/vote-countdown.store.ts": {
+    "subscribeVoteCountdown": "external-store-module"
+  },
+  "apps/pragma/site/src/components/molecules/vote-countdown.utils.ts": {
+    "secondsLeftUntil": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/organisms/AccountSettings.tsx": {
+    "AccountSettings": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/AudienceVoteList.tsx": {
+    "AudienceVoteList": "organism-mutation-panel"
+  },
+  "apps/pragma/site/src/components/organisms/BandStreaks.tsx": {
+    "BandStreaks": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/BarPlaceSearch.tsx": {
+    "BarPlaceSearch": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/BarQuickAdd.tsx": {
+    "BarQuickAdd": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/BarsKanban.tsx": {
     "BarsKanban": "organism-presentational"
@@ -1783,11 +2676,20 @@
   "apps/pragma/site/src/components/organisms/BottomTabBar.tsx": {
     "BottomTabBar": "organism-presentational"
   },
+  "apps/pragma/site/src/components/organisms/CalendarFeedCard.tsx": {
+    "CalendarFeedCard": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/CalendarFeedForm.tsx": {
+    "CalendarFeedForm": "organism-form"
+  },
   "apps/pragma/site/src/components/organisms/CatalogGrid.tsx": {
     "CatalogGrid": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/ChordChartViewer.tsx": {
     "ChordChartViewer": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/CompositionDetail.tsx": {
+    "CompositionDetail": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/ConcertEditForm.tsx": {
     "ConcertEditForm": "route-form"
@@ -1795,17 +2697,41 @@
   "apps/pragma/site/src/components/organisms/ConcertReadView.tsx": {
     "ConcertReadView": "organism-presentational"
   },
+  "apps/pragma/site/src/components/organisms/ConcertReadinessBar.tsx": {
+    "ConcertReadinessBar": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/ContactDetailsCard.tsx": {
+    "ContactDetailsCard": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/ContactDetailsForm.tsx": {
+    "ContactDetailsForm": "route-form"
+  },
   "apps/pragma/site/src/components/organisms/CreateSessionDialog.tsx": {
     "CreateSessionDialog": "organism-form"
   },
   "apps/pragma/site/src/components/organisms/CreateSetlistDialog.tsx": {
     "CreateSetlistDialog": "organism-form"
   },
-  "apps/pragma/site/src/components/organisms/EnrolForm.tsx": {
-    "EnrolForm": "route-form"
-  },
   "apps/pragma/site/src/components/organisms/FileDrop.tsx": {
     "FileDrop": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/FreeSlotsPanel.tsx": {
+    "FreeSlotsPanel": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/InstallOffer.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/InstallOffer.tsx": {
+    "InstallOffer": "molecule-local-state"
+  },
+  "apps/pragma/site/src/components/organisms/InstallWalkthroughSheet.tsx": {
+    "InstallWalkthroughSheet": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/InstrumentsList.tsx": {
+    "InstrumentsList": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/MasteryProgressChart.tsx": {
+    "MasteryProgressChart": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/MemberEditForm.test.tsx": {
     "describe": "test-component-render"
@@ -1813,11 +2739,60 @@
   "apps/pragma/site/src/components/organisms/MemberEditForm.tsx": {
     "MemberEditForm": "route-form"
   },
+  "apps/pragma/site/src/components/organisms/MemberPartList.tsx": {
+    "MemberPartList": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/MemberTaskColumn.tsx": {
+    "MemberTaskColumn": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/NextConcertStrip.tsx": {
+    "NextConcertStrip": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/NextSessionCard.tsx": {
+    "NextSessionCard": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/NotificationSettings.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/NotificationSettings.tsx": {
+    "NotificationSettings": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/OutreachTemplateCard.tsx": {
+    "OutreachTemplateCard": "route-form"
+  },
   "apps/pragma/site/src/components/organisms/PasskeyList.tsx": {
     "PasskeyList": "organism-mutation-panel"
   },
+  "apps/pragma/site/src/components/organisms/PasskeysCard.tsx": {
+    "PasskeysCard": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/PasswordChangeCard.tsx": {
+    "PasswordChangeCard": "organism-query-owning"
+  },
   "apps/pragma/site/src/components/organisms/PasswordChangeForm.tsx": {
     "PasswordChangeForm": "route-form"
+  },
+  "apps/pragma/site/src/components/organisms/PracticeCurrentSong.tsx": {
+    "PracticeCurrentSong": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/PracticeNoteSheet.tsx": {
+    "PracticeNoteSheet": "organism-form"
+  },
+  "apps/pragma/site/src/components/organisms/PracticeSongListSheet.tsx": {
+    "PracticeSongListSheet": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/QuickAddForm.tsx": {
+    "QuickAddForm": "organism-form"
+  },
+  "apps/pragma/site/src/components/organisms/RecordingSheet.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/RecordingSheet.tsx": {
+    "RecordingSheet": "organism-query-owning",
+    "RecordingSheetDialogs": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/RecoverPasswordForm.tsx": {
+    "RecoverPasswordForm": "route-form"
   },
   "apps/pragma/site/src/components/organisms/SceneControls.tsx": {
     "SceneControls": "organism-presentational"
@@ -1825,26 +2800,74 @@
   "apps/pragma/site/src/components/organisms/SceneTransport.tsx": {
     "SceneTransport": "organism-presentational"
   },
+  "apps/pragma/site/src/components/organisms/SessionDetail.tsx": {
+    "SessionDetail": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SessionSetlistPreview.tsx": {
+    "SessionSetlistPreview": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SessionSetlistPreviews.tsx": {
+    "SessionSetlistPreviews": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SessionTakes.tsx": {
+    "SessionTakes": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SessionTasks.tsx": {
+    "SessionTasks": "organism-query-owning"
+  },
   "apps/pragma/site/src/components/organisms/SetlistCatalogList.tsx": {
     "SetlistCatalogList": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/SetlistEditor.tsx": {
     "SetlistEditor": "organism-query-owning"
   },
+  "apps/pragma/site/src/components/organisms/SetlistEntriesList.tsx": {
+    "SetlistEntriesList": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistEntryRow.test.tsx": {
+    "describe": "test-component-render"
+  },
   "apps/pragma/site/src/components/organisms/SetlistEntryRow.tsx": {
-    "SetlistEntryRow": "organism-form"
+    "SetlistEntryRow": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistEntrySheet.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistEntrySheet.tsx": {
+    "SetlistEntrySheet": "organism-form"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistLineupGrid.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistLineupGrid.tsx": {
+    "SetlistLineupGrid": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistOrderList.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistOrderList.tsx": {
+    "SetlistOrderList": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SetlistSongPicker.test.tsx": {
+    "describe": "test-component-render"
   },
   "apps/pragma/site/src/components/organisms/SetlistSongPicker.tsx": {
     "SetlistSongPicker": "organism-query-owning"
   },
-  "apps/pragma/site/src/components/organisms/SetlistToolbar.tsx": {
-    "SetlistToolbar": "organism-presentational"
+  "apps/pragma/site/src/components/organisms/SetlistViewContent.tsx": {
+    "SetlistViewContent": "organism-presentational"
   },
   "apps/pragma/site/src/components/organisms/SignInForm.tsx": {
     "SignInForm": "route-form"
   },
+  "apps/pragma/site/src/components/organisms/SignedInMemberCard.tsx": {
+    "SignedInMemberCard": "organism-query-owning"
+  },
   "apps/pragma/site/src/components/organisms/SongChartFields.tsx": {
-    "SongChartFields": "organism-presentational"
+    "SongChartFields": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SongChartPreviews.tsx": {
+    "SongChartPreviews": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/SongChordPreview.tsx": {
     "SongChordPreview": "organism-presentational"
@@ -1852,8 +2875,17 @@
   "apps/pragma/site/src/components/organisms/SongDeleteAction.tsx": {
     "SongDeleteAction": "organism-presentational"
   },
+  "apps/pragma/site/src/components/organisms/SongDetail.tsx": {
+    "SongDetail": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SongDetailHeader.tsx": {
+    "SongDetailHeader": "organism-presentational"
+  },
   "apps/pragma/site/src/components/organisms/SongDetailSidebar.tsx": {
     "SongDetailSidebar": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SongEditForm.test.tsx": {
+    "describe": "test-component-render"
   },
   "apps/pragma/site/src/components/organisms/SongEditForm.tsx": {
     "SongEditForm": "route-form"
@@ -1861,14 +2893,65 @@
   "apps/pragma/site/src/components/organisms/SongExternalLinks.tsx": {
     "SongExternalLinks": "organism-presentational"
   },
+  "apps/pragma/site/src/components/organisms/SongLinksCard.tsx": {
+    "SongLinksCard": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/SongNotesCard.tsx": {
+    "SongNotesCard": "organism-presentational"
+  },
   "apps/pragma/site/src/components/organisms/SongSearch.tsx": {
     "SongSearch": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SongTakes.tsx": {
+    "SongTakes": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/StudyQueue.tsx": {
+    "StudyQueue": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/SuggestSongField.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/SuggestSongField.tsx": {
+    "SuggestSongField": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/TakeList.tsx": {
+    "TakeList": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/TakePlayer.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/TakePlayer.tsx": {
+    "TakePlayer": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/TakeUploadForm.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/TakeUploadForm.tsx": {
+    "TakeUploadForm": "route-form"
+  },
+  "apps/pragma/site/src/components/organisms/TaskForm.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/TaskForm.tsx": {
+    "TaskForm": "organism-form"
+  },
+  "apps/pragma/site/src/components/organisms/TaskList.tsx": {
+    "TaskList": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/TaskSheetHost.tsx": {
+    "TaskSheetHost": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/TransitionCommentModal.test.tsx": {
+    "describe": "test-component-render"
   },
   "apps/pragma/site/src/components/organisms/TransitionCommentModal.tsx": {
     "TransitionCommentModal": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/TransitionStrip.tsx": {
     "TransitionStrip": "organism-presentational"
+  },
+  "apps/pragma/site/src/components/organisms/VoteCatalog.tsx": {
+    "VoteCatalog": "organism-mutation-panel"
   },
   "apps/pragma/site/src/components/organisms/VoteClosePanel.tsx": {
     "VoteClosePanel": "organism-mutation-panel"
@@ -1882,26 +2965,67 @@
   "apps/pragma/site/src/components/organisms/VoteTally.tsx": {
     "VoteTally": "organism-presentational"
   },
+  "apps/pragma/site/src/components/organisms/VotingRoundPanel.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/components/organisms/VotingRoundPanel.tsx": {
+    "VotingRoundPanel": "organism-query-owning"
+  },
+  "apps/pragma/site/src/components/organisms/add-songs.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/add-songs.core.ts": {
+    "buildAddSongsRows": "core-view-projection"
+  },
+  "apps/pragma/site/src/components/organisms/calendar-feed-form.utils.ts": {
+    "selectCalendarFeedFormMode": "utils-pure-module"
+  },
+  "apps/pragma/site/src/components/organisms/chart-upload.hook.ts": {
+    "useChartUpload": "hook-timer-owned-by-handlers"
+  },
   "apps/pragma/site/src/components/organisms/create-session-dialog.utils.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/components/organisms/create-session-dialog.utils.ts": {
     "formatDateTimeLocal": "utils-pure-module"
   },
+  "apps/pragma/site/src/components/organisms/entry-lineup-change.core.ts": {
+    "describeEntryLineup": "core-projection"
+  },
   "apps/pragma/site/src/components/organisms/file-drop.test.tsx": {
     "describe": "test-component-render"
   },
-  "apps/pragma/site/src/components/organisms/mastery-color.core.test.ts": {
+  "apps/pragma/site/src/components/organisms/install-prompt.hook.ts": {
+    "useDeferredInstallPrompt": "hook-external-store"
+  },
+  "apps/pragma/site/src/components/organisms/lineup-grid.core.ts": {
+    "buildLineupGrid": "core-projection"
+  },
+  "apps/pragma/site/src/components/organisms/mastery-progress.core.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/components/organisms/mastery-color.core.ts": {
-    "selectMasteryColor": "core-appearance"
+  "apps/pragma/site/src/components/organisms/mastery-progress.core.ts": {
+    "groupScoreChangesIntoSeries": "core-view-projection"
   },
   "apps/pragma/site/src/components/organisms/navigation-active.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/components/organisms/navigation-active.core.ts": {
-    "isNavigationDestinationActive": "core-decision"
+    "selectActiveTab": "core-decision"
+  },
+  "apps/pragma/site/src/components/organisms/notifications-offer.core.ts": {
+    "selectNotificationOffer": "core-view-intent"
+  },
+  "apps/pragma/site/src/components/organisms/recording-sheet.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/recording-sheet.core.ts": {
+    "decidePhaseAfterQueueing": "core-decision",
+    "selectPhaseAfterStart": "core-decision",
+    "selectRecordingSheetView": "core-message-selection"
+  },
+  "apps/pragma/site/src/components/organisms/recording-sheet.hook.ts": {
+    "useRecordingSheet": "hook-timer-owned-by-handlers"
   },
   "apps/pragma/site/src/components/organisms/session-gate.core.test.ts": {
     "describe": "test-pure-unit"
@@ -1915,13 +3039,6 @@
   "apps/pragma/site/src/components/organisms/setlist-editor.utils.ts": {
     "formatSetlistOrder": "utils-pure-module"
   },
-  "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/components/organisms/setlist-entry-energy.core.ts": {
-    "isEnergyStored": "core-appearance",
-    "selectEnergyAppearance": "core-appearance"
-  },
   "apps/pragma/site/src/components/organisms/setlist-filter.core.test.ts": {
     "describe": "test-pure-unit"
   },
@@ -1934,17 +3051,47 @@
   "apps/pragma/site/src/components/organisms/sign-in-form.core.ts": {
     "credentialsFormSchema": "core-form-schema"
   },
-  "apps/pragma/site/src/components/organisms/song-picker.core.test.ts": {
+  "apps/pragma/site/src/components/organisms/suggest-song.core.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/components/organisms/song-picker.core.ts": {
-    "filterPickableSongs": "core-view-projection"
+  "apps/pragma/site/src/components/organisms/take-list.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/take-list.core.ts": {
+    "describeTakeRow": "core-view-projection",
+    "describeTakeSession": "core-decision",
+    "mergePendingTakes": "core-view-projection"
+  },
+  "apps/pragma/site/src/components/organisms/take-player.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/take-player.core.ts": {
+    "isMomentToggleOnByDefault": "core-decision",
+    "placeMomentMarks": "core-view-projection"
+  },
+  "apps/pragma/site/src/components/organisms/take-upload-form.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/take-upload-form.core.ts": {
+    "selectNearestPractice": "core-decision",
+    "selectTakeFileMessage": "core-message-selection"
+  },
+  "apps/pragma/site/src/components/organisms/task-sheet.hook.ts": {
+    "useTaskSheet": "hook-stateful-helper"
   },
   "apps/pragma/site/src/components/organisms/transition-view.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/components/organisms/transition-view.core.ts": {
     "buildTransitionView": "core-view-projection"
+  },
+  "apps/pragma/site/src/components/organisms/voting-round-panel.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/components/organisms/voting-round-panel.core.ts": {
+    "selectParticipation": "core-projection",
+    "selectRoundHistoryLines": "core-projection",
+    "selectRoundOutcome": "core-decision"
   },
   "apps/pragma/site/src/i18n/i18n-parity.core.test.ts": {
     "describe": "test-i18n-parity"
@@ -1964,11 +3111,20 @@
   "apps/pragma/site/src/i18n/locale-storage.utils.ts": {
     "readPersistedLocale": "injected-storage-slice"
   },
+  "apps/pragma/site/src/lib/add-songs-draft.store.ts": {
+    "useAddSongsDraft": "hook-external-store"
+  },
+  "apps/pragma/site/src/lib/anchor-scroll.adapter.ts": {
+    "scrollIntoViewWhenAddressed": "ref-callback-browser-api"
+  },
   "apps/pragma/site/src/lib/chordpro.utils.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/lib/chordpro.utils.ts": {
     "parseChordProLine": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/clipboard.adapter.ts": {
+    "readTextFromClipboard": "browser-clipboard-write"
   },
   "apps/pragma/site/src/lib/counts.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -1981,6 +3137,21 @@
   },
   "apps/pragma/site/src/lib/debounce.utils.ts": {
     "debounce": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/design-tokens.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/design-tokens.utils.ts": {
+    "readThemeTokens": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/device.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/device.utils.ts": {
+    "isIosDevice": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/display-mode.adapter.ts": {
+    "readBrowserDisplayEnvironment": "injected-browser-api"
   },
   "apps/pragma/site/src/lib/embed.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -2000,6 +3171,15 @@
   "apps/pragma/site/src/lib/formatters.utils.ts": {
     "formatSessionDate": "utils-formatter"
   },
+  "apps/pragma/site/src/lib/free-slots.utils.ts": {
+    "formatFreeSlot": "utils-formatter"
+  },
+  "apps/pragma/site/src/lib/install-offer.utils.ts": {
+    "selectInstallWalkthrough": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/install-prompt.adapter.ts": {
+    "captureInstallPrompt": "injected-browser-api"
+  },
   "apps/pragma/site/src/lib/mastery-aggregate.core.test.ts": {
     "describe": "test-pure-unit"
   },
@@ -2015,22 +3195,66 @@
   "apps/pragma/site/src/lib/member-color.utils.test.ts": {
     "describe": "test-pure-unit"
   },
+  "apps/pragma/site/src/lib/next-concert.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/next-concert.core.ts": {
+    "selectNextConcert": "core-view-projection"
+  },
+  "apps/pragma/site/src/lib/object-upload.adapter.ts": {
+    "sendFileToPresignedUrl": "adapter-direct-upload"
+  },
+  "apps/pragma/site/src/lib/page-scroll.adapter.ts": {
+    "scrollPageToTop": "browser-clipboard-write"
+  },
   "apps/pragma/site/src/lib/passkey.adapter.ts": {
     "startPasskeyEnrolment": "adapter-external-service"
+  },
+  "apps/pragma/site/src/lib/pdf-text.adapter.ts": {
+    "readPdfTextItems": "adapter-direct-upload"
+  },
+  "apps/pragma/site/src/lib/practice-position.adapter.ts": {
+    "readStoredPracticePosition": "adapter-storage-keyed-by-record"
+  },
+  "apps/pragma/site/src/lib/practice-position.store.ts": {
+    "useStoredPracticePosition": "hook-external-store"
+  },
+  "apps/pragma/site/src/lib/push-subscription.adapter.ts": {
+    "isPushSupported": "injected-browser-api"
+  },
+  "apps/pragma/site/src/lib/queries/audience.queries.ts": {
+    "useCastVote": "query-optimistic-mutation",
+    "useLiveConcert": "query-module",
+    "useOpenRound": "query-pessimistic-mutation",
+    "useRetractVote": "query-optimistic-mutation",
+    "useSuggestSong": "query-optimistic-insert"
   },
   "apps/pragma/site/src/lib/queries/auth.queries.test.tsx": {
     "describe": "test-query-hook"
   },
   "apps/pragma/site/src/lib/queries/auth.queries.ts": {
-    "useLogin": "query-pessimistic-mutation"
+    "useLogin": "query-pessimistic-mutation",
+    "useRecoverPassword": "query-pessimistic-mutation"
   },
   "apps/pragma/site/src/lib/queries/bars.queries.test.tsx": {
     "describe": "test-query-hook"
   },
   "apps/pragma/site/src/lib/queries/bars.queries.ts": {
+    "useBarPlaceSearch": "query-module",
     "useCreateBar": "query-optimistic-insert",
     "useDeleteBar": "query-optimistic-mutation",
     "useUpdateBar": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/free-slots.queries.ts": {
+    "useFreeSlots": "query-module"
+  },
+  "apps/pragma/site/src/lib/queries/improvements.queries.ts": {
+    "useDeleteImprovement": "query-optimistic-mutation",
+    "useUpdateImprovement": "query-optimistic-mutation",
+    "useVoteOnImprovement": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/improvements.utils.ts": {
+    "applyVoteIntent": "utils-pure-module"
   },
   "apps/pragma/site/src/lib/queries/instruments.queries.test.tsx": {
     "describe": "test-query-hook"
@@ -2038,6 +3262,7 @@
   "apps/pragma/site/src/lib/queries/instruments.queries.ts": {
     "useCreateInstrument": "query-optimistic-insert",
     "useDeleteInstrument": "query-optimistic-mutation",
+    "useReorderInstruments": "query-optimistic-mutation",
     "useUpdateInstrument": "query-optimistic-mutation"
   },
   "apps/pragma/site/src/lib/queries/mastery.queries.test.tsx": {
@@ -2055,7 +3280,15 @@
   },
   "apps/pragma/site/src/lib/queries/me.queries.ts": {
     "useRegisterPasskey": "query-pessimistic-mutation",
+    "useRemovePasskey": "query-optimistic-mutation",
+    "useSaveCalendarFeed": "query-settled-from-the-write-response",
     "useSignedInMember": "query-module"
+  },
+  "apps/pragma/site/src/lib/queries/member-roster.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/member-roster.core.ts": {
+    "predictMemberRoster": "core-projection"
   },
   "apps/pragma/site/src/lib/queries/members.queries.test.tsx": {
     "describe": "test-query-hook"
@@ -2066,6 +3299,14 @@
     "useDeleteMember": "query-optimistic-mutation",
     "useMembersList": "query-module",
     "useUpdateMember": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/notifications.queries.ts": {
+    "useEnablePush": "query-pessimistic-mutation",
+    "usePushSubscription": "query-module",
+    "useUpdateNotificationPreference": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/notifications.utils.ts": {
+    "setCategoryToggle": "utils-pure-module"
   },
   "apps/pragma/site/src/lib/queries/optimistic-session.core.test.ts": {
     "describe": "test-pure-unit"
@@ -2079,13 +3320,17 @@
   "apps/pragma/site/src/lib/queries/optimistic.utils.ts": {
     "replaceEntityById": "utils-pure-module"
   },
+  "apps/pragma/site/src/lib/queries/outreach.queries.ts": {
+    "useOutreachTemplate": "query-module",
+    "useSaveOutreachTemplate": "query-pessimistic-mutation"
+  },
   "apps/pragma/site/src/lib/queries/sessions.queries.ts": {
     "useCreateSession": "query-optimistic-insert",
     "useDeleteSession": "query-optimistic-mutation",
     "useUpdateSession": "query-optimistic-mutation"
   },
   "apps/pragma/site/src/lib/queries/setlist-entries.queries.ts": {
-    "useAppendSetlistEntry": "query-optimistic-insert",
+    "useAddSetlistEntries": "query-optimistic-insert",
     "useDeleteSetlistEntry": "query-optimistic-mutation",
     "useReorderSetlist": "query-optimistic-mutation",
     "useUpdateSetlistEntry": "query-optimistic-mutation"
@@ -2101,6 +3346,8 @@
   },
   "apps/pragma/site/src/lib/queries/setlists.utils.ts": {
     "appendOptimisticEntry": "utils-pure-module",
+    "appendOptimisticSongs": "utils-pure-module",
+    "settleAppendedEntries": "utils-settle-temporary-entity",
     "settleAppendedEntry": "utils-pure-module"
   },
   "apps/pragma/site/src/lib/queries/song-cache.core.test.ts": {
@@ -2110,15 +3357,56 @@
     "buildOptimisticSong": "core-projection",
     "mergeSongUpdate": "core-projection"
   },
+  "apps/pragma/site/src/lib/queries/song-save-refusal.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/song-save-refusal.core.ts": {
+    "selectSongSaveRefusal": "core-message-selection"
+  },
   "apps/pragma/site/src/lib/queries/song-write-failure.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/lib/queries/song-write-failure.core.ts": {
     "didLastSongWriteFail": "core-view-projection",
+    "selectLastSongWriteError": "core-view-projection",
     "selectSongThatLostItsLastWrite": "core-view-projection"
   },
   "apps/pragma/site/src/lib/queries/songs.queries.ts": {
     "useDeleteSong": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/studies.queries.ts": {
+    "useLogStudy": "query-optimistic-mutation",
+    "useStepSongScore": "query-pessimistic-mutation",
+    "useStudiesOverview": "query-module",
+    "useUndoStudy": "query-optimistic-mutation"
+  },
+  "apps/pragma/site/src/lib/queries/studies.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/studies.utils.ts": {
+    "markStudied": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/queries/takes.queries.test.tsx": {
+    "describe": "test-query-hook"
+  },
+  "apps/pragma/site/src/lib/queries/takes.queries.ts": {
+    "useCreateTakeComment": "query-pessimistic-mutation",
+    "useDeleteTake": "query-optimistic-mutation",
+    "useDeleteTakeComment": "query-optimistic-mutation",
+    "useTakesOfSong": "query-module",
+    "writeCreatedTake": "query-settled-from-the-write-response"
+  },
+  "apps/pragma/site/src/lib/queries/takes.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/queries/takes.utils.ts": {
+    "compareTakesNewestFirst": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/queries/tasks.queries.ts": {
+    "useCreateTask": "query-optimistic-insert",
+    "useDeleteTask": "query-optimistic-mutation",
+    "useTasksList": "query-module",
+    "useUpdateTask": "query-optimistic-mutation"
   },
   "apps/pragma/site/src/lib/queries/transitions.queries.test.tsx": {
     "describe": "test-query-hook"
@@ -2146,6 +3434,23 @@
   "apps/pragma/site/src/lib/queries/voting.utils.ts": {
     "applyScoreToBoard": "utils-pure-module"
   },
+  "apps/pragma/site/src/lib/recorder.adapter.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/recorder.adapter.ts": {
+    "startRecording": "adapter-outcome-instead-of-a-throw"
+  },
+  "apps/pragma/site/src/lib/recorder.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/recorder.core.ts": {
+    "isEndedByTheSystem": "core-decision",
+    "isStoppedOnReturn": "core-decision"
+  },
+  "apps/pragma/site/src/lib/recovery.adapter.ts": {
+    "discardCachesAndReload": "browser-clipboard-write",
+    "reload": "browser-clipboard-write"
+  },
   "apps/pragma/site/src/lib/scene-dialog.adapter.ts": {
     "openSceneOnAttach": "ref-callback-browser-api"
   },
@@ -2155,26 +3460,105 @@
   "apps/pragma/site/src/lib/scene-wake-lock.adapter.ts": {
     "holdScreenAwakeWhileAttached": "ref-callback-browser-api"
   },
+  "apps/pragma/site/src/lib/second-clock.store.ts": {
+    "subscribeSecondClock": "external-store-module"
+  },
+  "apps/pragma/site/src/lib/session-end.core.ts": {
+    "isEndedSessionBody": "core-decision"
+  },
+  "apps/pragma/site/src/lib/session-label.hook.ts": {
+    "useSessionLabel": "hook-stateful-helper"
+  },
+  "apps/pragma/site/src/lib/session-label.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/session-label.utils.ts": {
+    "composeSessionLabel": "utils-formatter"
+  },
   "apps/pragma/site/src/lib/setlist-index.core.ts": {
-    "buildSetlistIndexRows": "utils-pure-module"
+    "buildSetlistIndexRows": "utils-pure-module",
+    "selectConcertSessionId": "core-projection"
   },
   "apps/pragma/site/src/lib/setlist-name.utils.ts": {
     "selectSetlistDisplayName": "utils-pure-module"
   },
-  "apps/pragma/site/src/lib/upcoming-concerts.core.test.ts": {
+  "apps/pragma/site/src/lib/sheet-draft.store.ts": {
+    "createSheetDraftStore": "hook-external-store"
+  },
+  "apps/pragma/site/src/lib/sheet-draft.utils.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/lib/upcoming-concerts.core.ts": {
-    "selectUpcomingConcerts": "core-view-projection"
+  "apps/pragma/site/src/lib/sheet-draft.utils.ts": {
+    "putDraft": "utils-pure-module"
   },
-  "apps/pragma/site/src/routes/EnrolPage.tsx": {
-    "EnrolPage": "route-detail-page"
+  "apps/pragma/site/src/lib/take-queue.adapter.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/take-queue.adapter.ts": {
+    "openTakeQueueStorage": "adapter-outcome-instead-of-a-throw"
+  },
+  "apps/pragma/site/src/lib/take-queue.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/take-queue.core.ts": {
+    "buildQueuedTake": "core-decision",
+    "decideAfterTakeFailure": "core-decision",
+    "decideNextTakeMove": "core-decision",
+    "selectNextTakeStep": "core-decision"
+  },
+  "apps/pragma/site/src/lib/take-queue.store.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/lib/take-queue.store.ts": {
+    "createTakeQueue": "external-store-module"
+  },
+  "apps/pragma/site/src/lib/transition-draft.store.ts": {
+    "useTransitionDraft": "hook-external-store"
+  },
+  "apps/pragma/site/src/lib/transition-draft.utils.ts": {
+    "buildTransitionDraftKey": "utils-pure-module"
+  },
+  "apps/pragma/site/src/lib/vapid-key.utils.ts": {
+    "decodeBase64Url": "utils-pure-module"
+  },
+  "apps/pragma/site/src/observability/error-reporting.adapter.ts": {
+    "startErrorReporting": "adapter-external-service"
+  },
+  "apps/pragma/site/src/observability/error-reporting.core.ts": {
+    "selectBrowserReportingSettings": "core-decision"
+  },
+  "apps/pragma/site/src/observability/error-reporting.environment.ts": {
+    "readErrorReportingInputs": "environment-reader"
   },
   "apps/pragma/site/src/routes/LoginPage.tsx": {
     "LoginPage": "route-detail-page"
   },
+  "apps/pragma/site/src/routes/RecoverPage.tsx": {
+    "RecoverPage": "route-detail-page"
+  },
   "apps/pragma/site/src/routes/account/AccountPage.tsx": {
     "AccountPage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/band/BandPage.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/routes/band/BandPage.tsx": {
+    "BandPage": "route-list-page"
+  },
+  "apps/pragma/site/src/routes/band/band-destinations.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/band/band-destinations.core.ts": {
+    "BAND_DESTINATIONS": "core-lookup-table"
+  },
+  "apps/pragma/site/src/routes/band/band-tasks.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/band/band-tasks.core.ts": {
+    "groupTasksByMember": "core-view-projection",
+    "payloadFromFormValues": "core-form-schema",
+    "readBandView": "core-view-intent",
+    "selectFormAfterDeletion": "core-view-intent"
   },
   "apps/pragma/site/src/routes/bars/BarsPage.tsx": {
     "BarsPage": "route-list-page"
@@ -2186,6 +3570,9 @@
     "buildBarPayloadFromFormValues": "core-form-schema"
   },
   "apps/pragma/site/src/routes/bars/bars-page.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/bars/outreach-message.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/routes/catalog/SongDetailPage.tsx": {
@@ -2209,11 +3596,18 @@
   "apps/pragma/site/src/routes/catalog/chart-kind.utils.ts": {
     "extractChartKind": "core-lookup-table"
   },
+  "apps/pragma/site/src/routes/catalog/chords-above-lyrics.core.ts": {
+    "convertChordsAboveLyrics": "core-projection"
+  },
+  "apps/pragma/site/src/routes/catalog/pdf-text-layout.core.ts": {
+    "layOutPdfPage": "core-projection"
+  },
   "apps/pragma/site/src/routes/catalog/scene-view.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/routes/catalog/scene-view.core.ts": {
-    "clampSceneFontSize": "utils-pure-module"
+    "clampSceneFontSize": "utils-pure-module",
+    "selectSceneExitPath": "core-decision"
   },
   "apps/pragma/site/src/routes/catalog/song-draft.core.test.ts": {
     "describe": "test-pure-unit"
@@ -2239,6 +3633,36 @@
   "apps/pragma/site/src/routes/catalog/tonality-label.utils.ts": {
     "buildTonalityLabel": "utils-formatter"
   },
+  "apps/pragma/site/src/routes/compos/ComposPage.tsx": {
+    "ComposPage": "route-list-page"
+  },
+  "apps/pragma/site/src/routes/compos/compos-page.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/compos/compos-page.core.ts": {
+    "selectComposition": "core-view-intent"
+  },
+  "apps/pragma/site/src/routes/home/HomePage.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/routes/home/HomePage.tsx": {
+    "HomePage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/home/home.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/home/home.core.ts": {
+    "buildHomeView": "core-view-projection-joining-two-lists",
+    "selectHomePrimaryAction": "core-view-intent"
+  },
+  "apps/pragma/site/src/routes/improvements/improvements-page.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/improvements/improvements-page.core.ts": {
+    "STATUS_LABEL_KEY": "core-label-key",
+    "selectErrorMessageKey": "core-label-key",
+    "selectImprovementDeletionEffect": "core-view-intent"
+  },
   "apps/pragma/site/src/routes/instruments/InstrumentsPage.tsx": {
     "InstrumentsPage": "route-list-page"
   },
@@ -2263,6 +3687,12 @@
   "apps/pragma/site/src/routes/members/members-page.core.ts": {
     "selectMemberWriteIntent": "core-view-intent"
   },
+  "apps/pragma/site/src/routes/sessions/PracticeModePage.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/routes/sessions/PracticeModePage.tsx": {
+    "PracticeModePage": "route-detail-page"
+  },
   "apps/pragma/site/src/routes/sessions/SessionsPage.tsx": {
     "SessionsPage": "route-list-page"
   },
@@ -2272,11 +3702,37 @@
   "apps/pragma/site/src/routes/sessions/friends-count.core.ts": {
     "parseFriendsCounts": "core-parse-untrusted"
   },
+  "apps/pragma/site/src/routes/sessions/practice-mode.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/sessions/practice-mode.core.ts": {
+    "buildPracticeScreen": "core-view-projection-joining-two-lists",
+    "buildPracticeSongs": "core-view-projection",
+    "describePracticePosition": "core-view-projection",
+    "isPracticeModeOffered": "core-decision",
+    "parseStoredPracticePosition": "core-persisted-slice-parsed-not-trusted",
+    "resolvePracticeIndex": "core-decision"
+  },
   "apps/pragma/site/src/routes/sessions/session-facts.core.ts": {
     "selectSessionFacts": "core-projection"
   },
+  "apps/pragma/site/src/routes/sessions/session-page.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/site/src/routes/sessions/session-page.core.ts": {
+    "buildSetlistPreview": "core-view-projection",
+    "groupTakesBySong": "core-view-projection",
+    "isPreparedConcertPickerShown": "core-decision",
+    "selectSessionPills": "core-view-intent"
+  },
+  "apps/pragma/site/src/routes/setlists/SetlistAudiencePage.tsx": {
+    "SetlistAudiencePage": "route-detail-page"
+  },
   "apps/pragma/site/src/routes/setlists/SetlistEditorPage.tsx": {
     "SetlistEditorPage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/setlists/SetlistOrderPage.tsx": {
+    "SetlistOrderPage": "route-detail-page"
   },
   "apps/pragma/site/src/routes/setlists/SetlistScenePage.test.tsx": {
     "stubDialogModalMissingFromJsdom": "test-jsdom-gap-stub"
@@ -2290,17 +3746,20 @@
   "apps/pragma/site/src/routes/setlists/SetlistsPage.tsx": {
     "SetlistsPage": "route-list-page"
   },
+  "apps/pragma/site/src/routes/setlists/copy-setlist-order.hook.ts": {
+    "useCopySetlistOrder": "hook-timer-owned-by-handlers"
+  },
+  "apps/pragma/site/src/routes/setlists/setlist-header.core.ts": {
+    "buildSetlistHeader": "core-view-intent"
+  },
   "apps/pragma/site/src/routes/setlists/setlist-scene.core.test.ts": {
     "describe": "test-pure-unit"
   },
   "apps/pragma/site/src/routes/setlists/setlist-scene.core.ts": {
     "selectSceneKeyCommand": "core-lookup-table"
   },
-  "apps/pragma/site/src/routes/setlists/setlist-status.core.test.ts": {
-    "describe": "test-pure-unit"
-  },
-  "apps/pragma/site/src/routes/setlists/setlist-status.core.ts": {
-    "resolveSetlistStatus": "core-decision"
+  "apps/pragma/site/src/routes/setlists/setlist-view.core.ts": {
+    "selectSetlistView": "core-view-intent"
   },
   "apps/pragma/site/src/routes/setlists/setlist-vote.core.test.ts": {
     "describe": "test-pure-unit"
@@ -2314,17 +3773,1105 @@
   "apps/pragma/site/src/routes/setlists/vote-proposal.core.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/sw/manifest.utils.test.ts": {
+  "apps/pragma/site/src/routes/studies/StudiesPage.tsx": {
+    "StudiesPage": "route-list-page"
+  },
+  "apps/pragma/site/src/routes/studies/studies-page.core.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/sw/manifest.utils.ts": {
-    "pickNextSession": "utils-pure-module"
+  "apps/pragma/site/src/routes/studies/studies-page.core.ts": {
+    "countReadySongs": "core-view-projection"
   },
-  "apps/pragma/site/src/sw/sw-cache.utils.test.ts": {
+  "apps/pragma/site/src/routes/vote/VotePage.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/pragma/site/src/routes/vote/VotePage.tsx": {
+    "VotePage": "route-detail-page"
+  },
+  "apps/pragma/site/src/routes/vote/live-concert.core.test.ts": {
     "describe": "test-pure-unit"
   },
-  "apps/pragma/site/src/sw/sw-cache.utils.ts": {
-    "isReadableApiPath": "utils-pure-module"
+  "apps/pragma/site/src/routes/vote/live-concert.core.ts": {
+    "resolveShortAddress": "core-decision"
+  },
+  "apps/talos/api/src/agent/agent-token.core.ts": {
+    "selectAgentTokenName": "core-decision"
+  },
+  "apps/talos/api/src/agent/agent.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/agent/agent.controller.ts": {
+    "buildAgentRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/agent/agent.middleware.ts": {
+    "requireAgentToken": "middleware-session-gate"
+  },
+  "apps/talos/api/src/agent/agent.schema.ts": {
+    "contextQuerySchema": "schema-input-only"
+  },
+  "apps/talos/api/src/agent/agent.service.ts": {
+    "authorizeAgent": "service-orchestration"
+  },
+  "apps/talos/api/src/app.ts": {
+    "buildAppRouter": "api-composition-root-with-one-error-translation"
+  },
+  "apps/talos/api/src/auth/auth.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/auth/auth.controller.ts": {
+    "buildAuthRouter": "controller-split-routers"
+  },
+  "apps/talos/api/src/auth/auth.core.ts": {
+    "decideRegistrationAccess": "core-decision"
+  },
+  "apps/talos/api/src/auth/auth.environment.ts": {
+    "readRelyingParty": "environment-reader"
+  },
+  "apps/talos/api/src/auth/auth.repository.ts": {
+    "incrementAttempt": "repository-atomic-counter",
+    "listPasskeys": "repository-query"
+  },
+  "apps/talos/api/src/auth/auth.schema.ts": {
+    "passkeyTable": "schema-dsql-constraints"
+  },
+  "apps/talos/api/src/auth/auth.service.ts": {
+    "readSessionStatus": "service-orchestration"
+  },
+  "apps/talos/api/src/auth/ip-hash.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/talos/api/src/auth/ip-hash.utils.ts": {
+    "hashIp": "utils-pure-module"
+  },
+  "apps/talos/api/src/auth/passkey.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/talos/api/src/auth/passkey.adapter.ts": {
+    "buildRegistrationOptions": "adapter-external-service"
+  },
+  "apps/talos/api/src/auth/passkey.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/talos/api/src/auth/passkey.core.ts": {
+    "readChallengeFromResponse": "core-parse-untrusted"
+  },
+  "apps/talos/api/src/auth/rate-limit.utils.ts": {
+    "windowFloorFor": "utils-pure-module"
+  },
+  "apps/talos/api/src/auth/session-cookie.utils.ts": {
+    "verifySessionCookie": "utils-pure-module"
+  },
+  "apps/talos/api/src/auth/session.core.ts": {
+    "buildSessionPayload": "core-decision"
+  },
+  "apps/talos/api/src/auth/session.middleware.ts": {
+    "requireSession": "middleware-session-gate"
+  },
+  "apps/talos/api/src/backups/export-archive.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/talos/api/src/backups/export-archive.adapter.ts": {
+    "archiveExport": "adapter-external-service"
+  },
+  "apps/talos/api/src/backups/export-archive.core.ts": {
+    "summariseExport": "core-parse-untrusted"
+  },
+  "apps/talos/api/src/backups/restore-drill.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/talos/api/src/backups/restore-drill.adapter.ts": {
+    "runRestoreDrill": "adapter-external-service"
+  },
+  "apps/talos/api/src/commitments/commitments.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/commitments/commitments.controller.ts": {
+    "buildCommitmentsRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/commitments/commitments.core.ts": {
+    "parseOpenCommitment": "core-parse-untrusted",
+    "selectOpenCommitments": "core-projection"
+  },
+  "apps/talos/api/src/commitments/commitments.service.ts": {
+    "listOpenCommitments": "service-read-model"
+  },
+  "apps/talos/api/src/content/content-store.setup.ts": {
+    "resolveContentStore": "adapter-chosen-by-the-composition-root"
+  },
+  "apps/talos/api/src/content/content.core.ts": {
+    "isCorpusFile": "core-decision"
+  },
+  "apps/talos/api/src/content/content.service.ts": {
+    "readContentFile": "service-passthrough"
+  },
+  "apps/talos/api/src/content/github.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/talos/api/src/content/github.adapter.ts": {
+    "createGithubContentStore": "adapter-credentialed-lookup"
+  },
+  "apps/talos/api/src/content/github.core.ts": {
+    "readGithubFile": "core-external-payload-mapping"
+  },
+  "apps/talos/api/src/content/local-content.adapter.ts": {
+    "createLocalContentStore": "adapter-chosen-by-the-composition-root"
+  },
+  "apps/talos/api/src/database/client.ts": {
+    "getDatabase": "database-client"
+  },
+  "apps/talos/api/src/database/migrations.audit.test.ts": {
+    "describe": "test-artifact-audit"
+  },
+  "apps/talos/api/src/drafts/drafts.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/drafts/drafts.controller.ts": {
+    "buildDraftsRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/drafts/drafts.core.ts": {
+    "applyDraftStatus": "core-serializer",
+    "parseDraft": "core-parse-untrusted",
+    "selectDrafts": "core-projection"
+  },
+  "apps/talos/api/src/drafts/drafts.schema.ts": {
+    "draftSlugSchema": "schema-input-only"
+  },
+  "apps/talos/api/src/drafts/drafts.service.ts": {
+    "listDrafts": "service-orchestration"
+  },
+  "apps/talos/api/src/focus/focus.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/focus/focus.controller.ts": {
+    "buildFocusRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/focus/focus.core.ts": {
+    "projectStoredFocus": "core-projection"
+  },
+  "apps/talos/api/src/focus/focus.schema.ts": {
+    "focusUpdateSchema": "schema-input-only"
+  },
+  "apps/talos/api/src/focus/focus.service.ts": {
+    "readFocus": "service-orchestration"
+  },
+  "apps/talos/api/src/graph/graph.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/graph/graph.controller.ts": {
+    "buildGraphRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/graph/graph.core.ts": {
+    "projectStoredGraph": "core-projection"
+  },
+  "apps/talos/api/src/graph/graph.schema.ts": {
+    "graphQuerySchema": "schema-input-only"
+  },
+  "apps/talos/api/src/graph/graph.service.ts": {
+    "readGraph": "service-read-model"
+  },
+  "apps/talos/api/src/helpers/calendar/paris-clock.utils.ts": {
+    "formatParisDate": "utils-formatter"
+  },
+  "apps/talos/api/src/helpers/client-address/client-address.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/talos/api/src/helpers/client-address/client-address.core.ts": {
+    "resolveClientAddress": "client-address-resolution"
+  },
+  "apps/talos/api/src/helpers/client-address/client-address.environment.test.ts": {
+    "describe": "test-middleware-integration"
+  },
+  "apps/talos/api/src/helpers/client-address/client-address.environment.ts": {
+    "readClientAddress": "environment-reader"
+  },
+  "apps/talos/api/src/helpers/crypto/secret-comparison.utils.ts": {
+    "areSecretsEqual": "utils-pure-module"
+  },
+  "apps/talos/api/src/helpers/errors/error-response.core.ts": {
+    "selectErrorResponse": "core-failure-to-response"
+  },
+  "apps/talos/api/src/helpers/errors/talos-error.types.ts": {
+    "TalosErrorDetail": "named-domain-error"
+  },
+  "apps/talos/api/src/helpers/http/bearer-token.core.ts": {
+    "readBearerToken": "core-reading-a-credential-off-a-standard-header"
+  },
+  "apps/talos/api/src/helpers/json/json.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/talos/api/src/helpers/routine/routine-fire.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/talos/api/src/helpers/routine/routine-fire.adapter.ts": {
+    "fireRoutine": "adapter-outcome-instead-of-a-throw"
+  },
+  "apps/talos/api/src/helpers/routine/routine-fire.core.ts": {
+    "buildFireBody": "core-template-rendering"
+  },
+  "apps/talos/api/src/helpers/secrets/secrets.setup.ts": {
+    "readTalosSecret": "adapter-chosen-by-the-composition-root"
+  },
+  "apps/talos/api/src/history/history.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/history/history.controller.ts": {
+    "buildHistoryRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/history/history.core.ts": {
+    "selectHistoryIndex": "core-projection"
+  },
+  "apps/talos/api/src/history/history.schema.ts": {
+    "briefDateSchema": "schema-input-only"
+  },
+  "apps/talos/api/src/history/history.service.ts": {
+    "readHistoryIndex": "service-read-model"
+  },
+  "apps/talos/api/src/main.dev.ts": {
+    "app": "api-dev-entrypoint"
+  },
+  "apps/talos/api/src/main.export.ts": {
+    "handler": "api-lambda-entrypoint"
+  },
+  "apps/talos/api/src/main.restore-drill.ts": {
+    "handler": "api-lambda-entrypoint"
+  },
+  "apps/talos/api/src/main.ts": {
+    "handler": "api-lambda-entrypoint"
+  },
+  "apps/talos/api/src/memory/memory-changes-response.core.ts": {
+    "composeChangeResponse": "core-projection"
+  },
+  "apps/talos/api/src/memory/memory-changes.service.ts": {
+    "applyChanges": "service-orchestration"
+  },
+  "apps/talos/api/src/memory/memory-context.core.ts": {
+    "composeContext": "core-serializer"
+  },
+  "apps/talos/api/src/memory/memory-cutover.core.ts": {
+    "isStorageModeReadingFresh": "core-decision"
+  },
+  "apps/talos/api/src/memory/memory-cutover.service.ts": {
+    "readStorageMode": "service-read-model"
+  },
+  "apps/talos/api/src/memory/memory-entity-operations.service.ts": {
+    "upsertEntityOperation": "service-orchestration"
+  },
+  "apps/talos/api/src/memory/memory-files.core.ts": {
+    "locateMemoryFile": "core-decision"
+  },
+  "apps/talos/api/src/memory/memory-files.repository.ts": {
+    "listProposals": "repository-query"
+  },
+  "apps/talos/api/src/memory/memory-files.service.ts": {
+    "readMemoryFiles": "service-read-model"
+  },
+  "apps/talos/api/src/memory/memory-graph.core.ts": {
+    "buildNeighbourhood": "core-projection"
+  },
+  "apps/talos/api/src/memory/memory-lint.core.ts": {
+    "listMemoryIssues": "core-projection"
+  },
+  "apps/talos/api/src/memory/memory-page.core.ts": {
+    "composePageView": "core-projection"
+  },
+  "apps/talos/api/src/memory/memory-page.service.ts": {
+    "readMemoryPage": "service-read-model"
+  },
+  "apps/talos/api/src/memory/memory-plans.core.ts": {
+    "planEntityUpsert": "core-decision"
+  },
+  "apps/talos/api/src/memory/memory-positions.repository.ts": {
+    "findLastFactPosition": "repository-query"
+  },
+  "apps/talos/api/src/memory/memory-pwa.service.ts": {
+    "recordPwaChanges": "service-orchestration"
+  },
+  "apps/talos/api/src/memory/memory-read.service.ts": {
+    "readMemoryStatus": "service-read-model"
+  },
+  "apps/talos/api/src/memory/memory-record-operations.service.ts": {
+    "upsertCommitmentOperation": "service-orchestration"
+  },
+  "apps/talos/api/src/memory/memory-records.schema.ts": {
+    "memoryCommitmentTable": "schema-dsql-constraints"
+  },
+  "apps/talos/api/src/memory/memory-search.core.ts": {
+    "rankSearchHits": "core-projection"
+  },
+  "apps/talos/api/src/memory/memory-search.repository.ts": {
+    "foldText": "repository-query"
+  },
+  "apps/talos/api/src/memory/memory-sql.repository.ts": {
+    "runReadOnlyQuery": "repository-query"
+  },
+  "apps/talos/api/src/memory/memory-write.repository.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/talos/api/src/memory/memory-write.repository.ts": {
+    "runInMemoryTransaction": "repository-owned-transaction"
+  },
+  "apps/talos/api/src/memory/memory.repository.test.ts": {
+    "describe": "test-repository-integration"
+  },
+  "apps/talos/api/src/memory/memory.repository.ts": {
+    "findEntity": "repository-query"
+  },
+  "apps/talos/api/src/memory/memory.schema.ts": {
+    "memoryEntityTable": "schema-dsql-constraints"
+  },
+  "apps/talos/api/src/messages/messages.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/messages/messages.controller.ts": {
+    "buildMessagesRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/messages/messages.service.ts": {
+    "readClaudeCodeTarget": "service-read-model"
+  },
+  "apps/talos/api/src/notify/notify.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/notify/notify.controller.ts": {
+    "buildNotifyRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/notify/notify.middleware.ts": {
+    "requireNotifySecret": "middleware-session-gate"
+  },
+  "apps/talos/api/src/notify/notify.schema.ts": {
+    "notifySchema": "schema-input-only"
+  },
+  "apps/talos/api/src/notify/notify.service.ts": {
+    "authorizeNotifier": "service-orchestration"
+  },
+  "apps/talos/api/src/pages/pages.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/pages/pages.controller.ts": {
+    "buildPagesRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/pages/pages.core.ts": {
+    "projectPage": "core-projection"
+  },
+  "apps/talos/api/src/pages/pages.schema.ts": {
+    "pagePathSchema": "schema-input-only"
+  },
+  "apps/talos/api/src/pages/pages.service.ts": {
+    "readPage": "service-read-model"
+  },
+  "apps/talos/api/src/proposals/proposals.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/proposals/proposals.controller.ts": {
+    "buildProposalsRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/proposals/proposals.core.ts": {
+    "selectProposals": "core-projection"
+  },
+  "apps/talos/api/src/proposals/proposals.schema.ts": {
+    "proposalStatusQuerySchema": "schema-input-only"
+  },
+  "apps/talos/api/src/proposals/proposals.service.ts": {
+    "listProposals": "service-orchestration"
+  },
+  "apps/talos/api/src/push/push.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/push/push.controller.ts": {
+    "buildPushRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/push/push.core.ts": {
+    "classifyPushFailure": "core-decision"
+  },
+  "apps/talos/api/src/push/push.repository.ts": {
+    "saveSubscription": "repository-idempotent-upsert"
+  },
+  "apps/talos/api/src/push/push.schema.ts": {
+    "pushSubscriptionTable": "schema-table-and-input"
+  },
+  "apps/talos/api/src/push/push.service.ts": {
+    "readVapidPublicKey": "service-orchestration"
+  },
+  "apps/talos/api/src/push/web-push.adapter.test.ts": {
+    "describe": "test-node-adapter"
+  },
+  "apps/talos/api/src/push/web-push.adapter.ts": {
+    "deliverWebPush": "adapter-outcome-instead-of-a-throw"
+  },
+  "apps/talos/api/src/relations/relations.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/relations/relations.controller.ts": {
+    "buildRelationsRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/relations/relations.core.ts": {
+    "parseRelations": "core-parse-untrusted"
+  },
+  "apps/talos/api/src/relations/relations.service.ts": {
+    "readRelations": "service-read-model"
+  },
+  "apps/talos/api/src/search/search.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/search/search.controller.ts": {
+    "buildSearchRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/search/search.schema.ts": {
+    "searchQuerySchema": "schema-input-only"
+  },
+  "apps/talos/api/src/search/search.service.ts": {
+    "searchPages": "service-read-model"
+  },
+  "apps/talos/api/src/today/last-runs.core.ts": {
+    "parseLastRuns": "core-parse-untrusted"
+  },
+  "apps/talos/api/src/today/today.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/today/today.controller.ts": {
+    "buildTodayRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/today/today.core.ts": {
+    "selectTodayTodos": "core-projection"
+  },
+  "apps/talos/api/src/today/today.service.ts": {
+    "readToday": "service-read-model"
+  },
+  "apps/talos/api/src/todos/todos-memory.service.ts": {
+    "listStoredTodos": "service-orchestration"
+  },
+  "apps/talos/api/src/todos/todos.controller.test.ts": {
+    "describe": "test-back-e2e"
+  },
+  "apps/talos/api/src/todos/todos.controller.ts": {
+    "buildTodosRouter": "controller-guarded-router"
+  },
+  "apps/talos/api/src/todos/todos.core.ts": {
+    "describeTodoChange": "core-decision"
+  },
+  "apps/talos/api/src/todos/todos.schema.ts": {
+    "createTodoSchema": "schema-input-only"
+  },
+  "apps/talos/api/src/todos/todos.service.ts": {
+    "listTodos": "service-orchestration"
+  },
+  "apps/talos/cdk/bin/cdk.ts": {
+    "account": "cdk-app-entrypoint"
+  },
+  "apps/talos/cdk/lib/stack.ts": {
+    "buildTalosAppStack": "app-cdk-stack"
+  },
+  "apps/talos/cdk/test/stack.test.ts": {
+    "synthAppStack": "test-cdk-synth"
+  },
+  "apps/talos/domain/draft-status.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/talos/domain/draft-status.core.ts": {
+    "isDraftReady": "domain-shared-selection"
+  },
+  "apps/talos/domain/focus.core.ts": {
+    "parseFocus": "core-parse-untrusted",
+    "serializeFocus": "core-serializer"
+  },
+  "apps/talos/domain/front-matter.core.ts": {
+    "splitFrontMatter": "core-parse-untrusted"
+  },
+  "apps/talos/domain/graph.core.ts": {
+    "buildGraph": "core-projection",
+    "parseGraphRelations": "core-parse-untrusted"
+  },
+  "apps/talos/domain/markdown-page.core.ts": {
+    "listWikilinkTargets": "core-parse-untrusted",
+    "summarizePage": "core-projection"
+  },
+  "apps/talos/domain/proposal.core.ts": {
+    "applyProposalDecision": "core-serializer",
+    "parseProposal": "core-parse-untrusted"
+  },
+  "apps/talos/domain/search.core.ts": {
+    "rankSearchHits": "core-shared-ranking"
+  },
+  "apps/talos/domain/storage-mode.core.ts": {
+    "isDatabaseStorage": "core-decision"
+  },
+  "apps/talos/domain/todo-id.core.ts": {
+    "buildTodoId": "core-decision"
+  },
+  "apps/talos/domain/todo.core.ts": {
+    "parseTodos": "core-parse-untrusted",
+    "removeTodo": "core-decision",
+    "updateTodo": "core-decision"
+  },
+  "apps/talos/site/src/components/atoms/Button.tsx": {
+    "Button": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/Card.tsx": {
+    "Card": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/Checkbox.tsx": {
+    "Checkbox": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/Chip.tsx": {
+    "Chip": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/ClosenessDot.tsx": {
+    "ClosenessDot": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/CountBadge.tsx": {
+    "CountBadge": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/Icon.tsx": {
+    "Icon": "atom-icon-registry"
+  },
+  "apps/talos/site/src/components/atoms/Input.tsx": {
+    "Input": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/MarkdownContent.tsx": {
+    "MarkdownContent": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/MeanderRail.tsx": {
+    "MeanderRail": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/Notice.tsx": {
+    "Notice": "atom-variant-table"
+  },
+  "apps/talos/site/src/components/atoms/PageTitle.tsx": {
+    "PageTitle": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/SectionTitle.tsx": {
+    "SectionTitle": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/Spinner.tsx": {
+    "Spinner": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/Textarea.tsx": {
+    "Textarea": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/Tondo.tsx": {
+    "Tondo": "atom-plain"
+  },
+  "apps/talos/site/src/components/atoms/button.variants.ts": {
+    "buttonVariants": "atom-variant"
+  },
+  "apps/talos/site/src/components/atoms/card.variants.ts": {
+    "cardVariants": "atom-variant"
+  },
+  "apps/talos/site/src/components/atoms/chip.variants.ts": {
+    "chipVariants": "atom-variant"
+  },
+  "apps/talos/site/src/components/atoms/class-name.utils.ts": {
+    "composeClassName": "utils-pure-module"
+  },
+  "apps/talos/site/src/components/atoms/closeness-dot.variants.ts": {
+    "closenessDotVariants": "atom-variant"
+  },
+  "apps/talos/site/src/components/atoms/field.variants.ts": {
+    "fieldVariants": "atom-variant"
+  },
+  "apps/talos/site/src/components/molecules/ActivityRow.tsx": {
+    "ActivityRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/BackLink.tsx": {
+    "BackLink": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/CommitmentRow.tsx": {
+    "CommitmentRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/CounterPill.tsx": {
+    "CounterPill": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/DateSlider.tsx": {
+    "DateSlider": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/DecidedProposalRow.tsx": {
+    "DecidedProposalRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/DraftRow.tsx": {
+    "DraftRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/EmptyState.tsx": {
+    "EmptyState": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/FocusItemCard.tsx": {
+    "FocusItemCard": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/FoldedSection.tsx": {
+    "FoldedSection": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/FrontMatterChips.tsx": {
+    "FrontMatterChips": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/GraphLegend.tsx": {
+    "GraphLegend": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/HistoryRow.tsx": {
+    "HistoryRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/InstallHint.tsx": {
+    "InstallHint": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/OfflineBanner.tsx": {
+    "OfflineBanner": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/PageLinkList.tsx": {
+    "PageLinkList": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/PasskeyRow.tsx": {
+    "PasskeyRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/PersonRow.tsx": {
+    "PersonRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/ProposalCard.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/talos/site/src/components/molecules/ProposalCard.tsx": {
+    "ProposalCard": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/QueryState.tsx": {
+    "QueryState": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/RevokeDecisionButton.tsx": {
+    "RevokeDecisionButton": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/SearchResultRow.tsx": {
+    "SearchResultRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/SegmentedFilter.tsx": {
+    "SegmentedFilter": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/SourceRow.tsx": {
+    "SourceRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/Toast.tsx": {
+    "Toast": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/TodoRow.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/talos/site/src/components/molecules/TodoRow.tsx": {
+    "TodoRow": "molecule-presentational"
+  },
+  "apps/talos/site/src/components/molecules/online-status.hook.ts": {
+    "useIsOnline": "hook-external-store"
+  },
+  "apps/talos/site/src/components/molecules/toast.variants.ts": {
+    "toastVariants": "atom-variant"
+  },
+  "apps/talos/site/src/components/organisms/ActionSheet.tsx": {
+    "ActionSheet": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/AppShell.tsx": {
+    "AppShell": "organism-shell"
+  },
+  "apps/talos/site/src/components/organisms/AuthPanel.tsx": {
+    "AuthPanel": "organism-form"
+  },
+  "apps/talos/site/src/components/organisms/BirthdayList.tsx": {
+    "BirthdayList": "organism-presentational"
+  },
+  "apps/talos/site/src/components/organisms/BottomTabBar.tsx": {
+    "BottomTabBar": "organism-presentational"
+  },
+  "apps/talos/site/src/components/organisms/BrainPageView.tsx": {
+    "BrainPageView": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/BrainSearch.tsx": {
+    "BrainSearch": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/CommitmentBoard.tsx": {
+    "CommitmentBoard": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/CommitmentDetail.tsx": {
+    "CommitmentDetail": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/CommitmentWithSources.tsx": {
+    "CommitmentWithSources": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/DraftBoard.tsx": {
+    "DraftBoard": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/DraftView.tsx": {
+    "DraftView": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/EmbeddedPage.tsx": {
+    "EmbeddedPage": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/FocusEditor.tsx": {
+    "FocusEditor": "organism-form"
+  },
+  "apps/talos/site/src/components/organisms/HistoryBoard.tsx": {
+    "HistoryBoard": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/HistoryEntry.tsx": {
+    "HistoryEntry": "organism-presentational"
+  },
+  "apps/talos/site/src/components/organisms/KnowledgeGraph.tsx": {
+    "KnowledgeGraph": "organism-imperative-bridge",
+    "useEffect": "lint-exception"
+  },
+  "apps/talos/site/src/components/organisms/MessageComposer.test.tsx": {
+    "describe": "test-component-render"
+  },
+  "apps/talos/site/src/components/organisms/MessageComposer.tsx": {
+    "MessageComposer": "organism-form"
+  },
+  "apps/talos/site/src/components/organisms/NotificationSettings.tsx": {
+    "NotificationSettings": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/NotificationsPrompt.tsx": {
+    "NotificationsPrompt": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/PasskeySettings.tsx": {
+    "PasskeySettings": "organism-mutation-panel"
+  },
+  "apps/talos/site/src/components/organisms/PastBriefView.tsx": {
+    "PastBriefView": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/PendingProposal.tsx": {
+    "PendingProposal": "organism-presentational"
+  },
+  "apps/talos/site/src/components/organisms/ProposalBoard.tsx": {
+    "ProposalBoard": "organism-mutation-panel"
+  },
+  "apps/talos/site/src/components/organisms/ProposalDecisionForm.tsx": {
+    "ProposalDecisionForm": "organism-form"
+  },
+  "apps/talos/site/src/components/organisms/RelationsBoard.tsx": {
+    "RelationsBoard": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/RequireSession.tsx": {
+    "RequireSession": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/ScanStatus.tsx": {
+    "ScanStatus": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/SessionSettings.tsx": {
+    "SessionSettings": "organism-mutation-panel"
+  },
+  "apps/talos/site/src/components/organisms/SettingsOverview.tsx": {
+    "SettingsOverview": "organism-shell"
+  },
+  "apps/talos/site/src/components/organisms/SourceView.tsx": {
+    "SourceView": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/ToastViewport.tsx": {
+    "ToastViewport": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/TodayActivity.tsx": {
+    "TodayActivity": "organism-presentational"
+  },
+  "apps/talos/site/src/components/organisms/TodayAgenda.tsx": {
+    "TodayAgenda": "organism-mutation-panel"
+  },
+  "apps/talos/site/src/components/organisms/TodayBirthdays.tsx": {
+    "TodayBirthdays": "organism-presentational"
+  },
+  "apps/talos/site/src/components/organisms/TodayBrief.tsx": {
+    "TodayBrief": "organism-presentational"
+  },
+  "apps/talos/site/src/components/organisms/TodayCounters.tsx": {
+    "TodayCounters": "organism-presentational"
+  },
+  "apps/talos/site/src/components/organisms/TodayFocus.tsx": {
+    "TodayFocus": "organism-mutation-panel"
+  },
+  "apps/talos/site/src/components/organisms/TodayOverview.tsx": {
+    "TodayOverview": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/TodayProposal.tsx": {
+    "TodayProposal": "organism-mutation-panel"
+  },
+  "apps/talos/site/src/components/organisms/TodoBoard.tsx": {
+    "TodoBoard": "organism-mutation-panel"
+  },
+  "apps/talos/site/src/components/organisms/TodoDetail.tsx": {
+    "TodoDetail": "organism-mutation-panel"
+  },
+  "apps/talos/site/src/components/organisms/TodoEditForm.tsx": {
+    "TodoEditForm": "organism-form"
+  },
+  "apps/talos/site/src/components/organisms/TodoQuickAdd.tsx": {
+    "TodoQuickAdd": "organism-form"
+  },
+  "apps/talos/site/src/components/organisms/WeeklyReviewView.tsx": {
+    "WeeklyReviewView": "organism-query-owning"
+  },
+  "apps/talos/site/src/components/organisms/action-sheet.core.ts": {
+    "selectSubjectPhraseKey": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/auth-panel.core.ts": {
+    "selectAuthStep": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/brain-search.core.ts": {
+    "normaliseSearchQuery": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/commitment-board.core.ts": {
+    "readCommitmentFilter": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/draft-board.core.ts": {
+    "partitionDrafts": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/focus-editor.core.ts": {
+    "toFocusFormValues": "core-form-schema"
+  },
+  "apps/talos/site/src/components/organisms/front-matter-chips.core.ts": {
+    "formatFrontMatterValue": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/graph-layout.core.ts": {
+    "selectRelationTie": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/graph-simulation.core.ts": {
+    "selectSimulationPlan": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/history-board.core.ts": {
+    "readHistoryFilter": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/knowledge-graph.core.ts": {
+    "selectNodeColorToken": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/message-composer.core.ts": {
+    "isMessageTooLong": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/navigation-active.core.ts": {
+    "isNavigationDestinationActive": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/notifications-offer.core.ts": {
+    "selectNotificationOffer": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/passkey-settings.core.ts": {
+    "canRemovePasskey": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/proposal-board.core.ts": {
+    "partitionProposals": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/relations-board.core.ts": {
+    "selectCloseness": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/scan-status.core.ts": {
+    "listFailedSources": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/session-gate.core.ts": {
+    "selectSessionGateState": "core-view-intent"
+  },
+  "apps/talos/site/src/components/organisms/source-reference.core.ts": {
+    "classifySource": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/today-agenda.core.ts": {
+    "buildAgenda": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/today-brief.core.ts": {
+    "selectBriefPreview": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/today-counters.core.ts": {
+    "keepNonZeroCounters": "core-view-projection"
+  },
+  "apps/talos/site/src/components/organisms/todo-form.core.ts": {
+    "canCreateTodo": "core-form-schema"
+  },
+  "apps/talos/site/src/components/organisms/todo-list.core.ts": {
+    "selectVisibleTodos": "core-view-projection"
+  },
+  "apps/talos/site/src/lib/action-sheet.hook.ts": {
+    "useShownActionSheet": "hook-external-store"
+  },
+  "apps/talos/site/src/lib/api.client.ts": {
+    "api": "typed-api-client"
+  },
+  "apps/talos/site/src/lib/app-badge.adapter.ts": {
+    "showAppBadge": "browser-clipboard-write"
+  },
+  "apps/talos/site/src/lib/calendar-day.utils.ts": {
+    "toIsoDay": "utils-formatter"
+  },
+  "apps/talos/site/src/lib/claude-code-address.core.ts": {
+    "composeTalosPrompt": "core-view-intent"
+  },
+  "apps/talos/site/src/lib/claude-code-opener.adapter.ts": {
+    "detectClaudeCodeOpener": "browser-clipboard-write"
+  },
+  "apps/talos/site/src/lib/clipboard.adapter.ts": {
+    "didCopyTextToClipboard": "browser-clipboard-write"
+  },
+  "apps/talos/site/src/lib/debounced-value.hook.ts": {
+    "useDebouncedValue": "hook-timer-owned-by-handlers"
+  },
+  "apps/talos/site/src/lib/discussion-subject.core.ts": {
+    "selectSubjectFile": "core-view-intent"
+  },
+  "apps/talos/site/src/lib/graph-forces.adapter.ts": {
+    "buildRadialForce": "injected-storage-slice"
+  },
+  "apps/talos/site/src/lib/haptic.adapter.ts": {
+    "pulseHaptic": "browser-clipboard-write"
+  },
+  "apps/talos/site/src/lib/markdown.utils.ts": {
+    "renderMarkdownToSafeHtml": "utils-pure-module"
+  },
+  "apps/talos/site/src/lib/offline-cache.adapter.ts": {
+    "clearOfflineData": "injected-browser-api"
+  },
+  "apps/talos/site/src/lib/passkey.adapter.ts": {
+    "startPasskeyRegistration": "adapter-external-service"
+  },
+  "apps/talos/site/src/lib/press-gesture.core.ts": {
+    "hasMovedBeyondTolerance": "core-view-intent"
+  },
+  "apps/talos/site/src/lib/push-subscription.adapter.ts": {
+    "isPushSupported": "injected-browser-api"
+  },
+  "apps/talos/site/src/lib/queries/brain.queries.ts": {
+    "useBrainSearch": "query-module"
+  },
+  "apps/talos/site/src/lib/queries/cache-updates.core.ts": {
+    "applyTodoPatch": "core-optimistic-overlay"
+  },
+  "apps/talos/site/src/lib/queries/commitments.queries.ts": {
+    "useOpenCommitments": "query-module"
+  },
+  "apps/talos/site/src/lib/queries/drafts.queries.ts": {
+    "useChangeDraftStatus": "query-optimistic-mutation",
+    "useDrafts": "query-module"
+  },
+  "apps/talos/site/src/lib/queries/history.queries.ts": {
+    "useHistory": "query-module"
+  },
+  "apps/talos/site/src/lib/queries/messages.queries.ts": {
+    "useClaudeCodeTarget": "query-module"
+  },
+  "apps/talos/site/src/lib/queries/mutation-toasts.core.ts": {
+    "selectDecisionToast": "core-view-intent"
+  },
+  "apps/talos/site/src/lib/queries/passkey.queries.ts": {
+    "useAddPasskey": "query-pessimistic-mutation",
+    "usePasskeySignIn": "query-pessimistic-mutation",
+    "usePasskeys": "query-module",
+    "useRegisterPasskey": "query-pessimistic-mutation",
+    "useRemovePasskey": "query-optimistic-mutation"
+  },
+  "apps/talos/site/src/lib/queries/proposals.queries.ts": {
+    "useCancelProposalDecision": "query-optimistic-mutation",
+    "useDecideProposal": "query-optimistic-mutation",
+    "useProposals": "query-module"
+  },
+  "apps/talos/site/src/lib/queries/push.queries.ts": {
+    "useDisablePush": "query-pessimistic-mutation",
+    "useEnablePush": "query-pessimistic-mutation",
+    "usePushSubscription": "query-module",
+    "useSendTestPush": "query-uncached-mutation"
+  },
+  "apps/talos/site/src/lib/queries/relations.queries.ts": {
+    "useRelations": "query-module"
+  },
+  "apps/talos/site/src/lib/queries/session.queries.ts": {
+    "useSession": "query-module",
+    "useSignOut": "query-uncached-mutation"
+  },
+  "apps/talos/site/src/lib/queries/today.queries.ts": {
+    "useToday": "query-module",
+    "useUpdateFocus": "query-optimistic-mutation"
+  },
+  "apps/talos/site/src/lib/queries/todos.queries.ts": {
+    "useCreateTodo": "query-optimistic-insert",
+    "useDeleteTodo": "query-optimistic-mutation",
+    "useTodos": "query-module",
+    "useUpdateTodo": "query-optimistic-mutation"
+  },
+  "apps/talos/site/src/lib/relative-age.utils.ts": {
+    "measureAge": "utils-formatter"
+  },
+  "apps/talos/site/src/lib/session-end.core.ts": {
+    "isEndedSessionFailure": "core-decision"
+  },
+  "apps/talos/site/src/lib/standalone-display.hook.ts": {
+    "useIsDisplayedStandalone": "hook-external-store"
+  },
+  "apps/talos/site/src/lib/toast.core.ts": {
+    "selectToastDuration": "core-view-intent"
+  },
+  "apps/talos/site/src/lib/toast.hook.ts": {
+    "useShownToast": "hook-external-store"
+  },
+  "apps/talos/site/src/lib/vapid-key.utils.ts": {
+    "decodeBase64Url": "utils-pure-module"
+  },
+  "apps/talos/site/src/lib/wikilinks.core.ts": {
+    "buildPageHref": "core-view-projection"
+  },
+  "apps/talos/site/src/main.tsx": {
+    "rootElement": "site-entrypoint"
+  },
+  "apps/talos/site/src/routes/BrainEntryPage.tsx": {
+    "BrainEntryPage": "route-detail-page"
+  },
+  "apps/talos/site/src/routes/BrainPage.tsx": {
+    "BrainPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/CommitmentDetailPage.tsx": {
+    "CommitmentDetailPage": "route-detail-page"
+  },
+  "apps/talos/site/src/routes/CommitmentsPage.tsx": {
+    "CommitmentsPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/DraftPage.tsx": {
+    "DraftPage": "route-detail-page"
+  },
+  "apps/talos/site/src/routes/DraftsPage.tsx": {
+    "DraftsPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/GraphPage.tsx": {
+    "GraphPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/HistoryPage.tsx": {
+    "HistoryPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/LoginPage.tsx": {
+    "LoginPage": "route-detail-page"
+  },
+  "apps/talos/site/src/routes/MessagePage.tsx": {
+    "MessagePage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/PastBriefPage.tsx": {
+    "PastBriefPage": "route-detail-page"
+  },
+  "apps/talos/site/src/routes/ProposalsPage.tsx": {
+    "ProposalsPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/RelationsPage.tsx": {
+    "RelationsPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/SettingsPage.tsx": {
+    "SettingsPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/TodayPage.tsx": {
+    "TodayPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/TodoDetailPage.tsx": {
+    "TodoDetailPage": "route-detail-page"
+  },
+  "apps/talos/site/src/routes/TodosPage.tsx": {
+    "TodosPage": "route-list-page"
+  },
+  "apps/talos/site/src/routes/WeeklyReviewPage.tsx": {
+    "WeeklyReviewPage": "route-detail-page"
+  },
+  "apps/talos/test/app-utils.ts": {
+    "useTestSecrets": "test-fixtures-object-mother"
+  },
+  "apps/talos/test/database-utils.ts": {
+    "truncateAllTables": "test-database-isolation"
+  },
+  "apps/talos/test/memory-fixture.ts": {
+    "writeMemory": "test-fixtures-object-mother"
+  },
+  "apps/talos/test/setup-postgres.ts": {
+    "setup": "test-global-setup"
+  },
+  "apps/talos/test/software-authenticator.ts": {
+    "createSoftwareAuthenticator": "test-fixtures-object-mother"
+  },
+  "apps/talos/vitest.config.ts": {
+    "defineConfig": "workspace-test-config"
   },
   "eslint-rules/ast-walk.js": {
     "forEachDescendant": "lint-rule-predicate"
@@ -2340,6 +4887,9 @@
   },
   "eslint-rules/atomic-design-import-direction.test.js": {
     "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/class-strings.js": {
+    "isVariantsFile": "lint-rule-predicate"
   },
   "eslint-rules/conditions-live-in-pure-functions.js": {
     "default": "lint-rule"
@@ -2377,6 +4927,24 @@
   "eslint-rules/no-api-anchor-in-site.test.js": {
     "createRuleTester": "test-lint-rule"
   },
+  "eslint-rules/no-api-declaration-repeated-in-site.js": {
+    "createRepeatedDeclarationRule": "lint-rule"
+  },
+  "eslint-rules/no-api-declaration-repeated-in-site.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-api-import-in-site.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-api-import-in-site.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-arbitrary-tailwind-value.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-arbitrary-tailwind-value.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
   "eslint-rules/no-array-methods-in-controllers.js": {
     "default": "lint-rule"
   },
@@ -2387,6 +4955,12 @@
     "default": "lint-rule"
   },
   "eslint-rules/no-circle-in-non-uniform-svg.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-client-supplied-address-header.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-client-supplied-address-header.test.js": {
     "createRuleTester": "test-lint-rule"
   },
   "eslint-rules/no-comments.js": {
@@ -2497,6 +5071,12 @@
   "eslint-rules/no-query-hooks-outside-organisms.test.js": {
     "createRuleTester": "test-lint-rule"
   },
+  "eslint-rules/no-raw-interactive-element.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-raw-interactive-element.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
   "eslint-rules/no-raw-sql-outside-migrations.js": {
     "default": "lint-rule"
   },
@@ -2507,6 +5087,12 @@
     "default": "lint-rule"
   },
   "eslint-rules/no-refetch-of-optimistically-written-query.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
+  "eslint-rules/no-scroll-container-on-main.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-scroll-container-on-main.test.js": {
     "createRuleTester": "test-lint-rule"
   },
   "eslint-rules/no-server-state-in-use-state.js": {
@@ -2539,6 +5125,12 @@
   "eslint-rules/no-vendor-sdk-outside-adapter.test.js": {
     "createRuleTester": "test-lint-rule"
   },
+  "eslint-rules/no-vertical-scroll-container.js": {
+    "default": "lint-rule"
+  },
+  "eslint-rules/no-vertical-scroll-container.test.js": {
+    "createRuleTester": "test-lint-rule"
+  },
   "eslint-rules/pure-functions-live-in-core-files.js": {
     "default": "lint-rule"
   },
@@ -2557,6 +5149,9 @@
   "eslint-rules/verb-promises-match-return-type.test.js": {
     "createRuleTester": "test-lint-rule"
   },
+  "infra/cdk/src/constructs/dsql-cluster-backup.ts": {
+    "DsqlClusterBackup": "reusable-cdk-construct"
+  },
   "infra/cdk/src/constructs/dsql-cluster.ts": {
     "DsqlCluster": "reusable-cdk-construct"
   },
@@ -2572,6 +5167,12 @@
   "infra/cdk/src/constructs/static-site.ts": {
     "StaticSite": "reusable-cdk-construct"
   },
+  "infra/cdk/src/constructs/web-socket-channel.ts": {
+    "WebSocketChannel": "reusable-cdk-construct"
+  },
+  "infra/cdk/src/internal/cf-api-viewer-address.ts": {
+    "API_VIEWER_ADDRESS_FUNCTION_CODE": "cloudfront-function-source"
+  },
   "infra/cdk/src/internal/cf-host-routing-function.ts": {
     "HOST_ROUTING_FUNCTION_CODE": "cloudfront-function-source"
   },
@@ -2583,6 +5184,15 @@
   },
   "infra/cdk/src/internal/migration-runner/clone-from-schema.utils.ts": {
     "buildCloneInsertSql": "utils-pure-module"
+  },
+  "infra/cdk/src/internal/migration-runner/database-role.utils.ts": {
+    "apiRoleName": "utils-pure-module"
+  },
+  "infra/cdk/src/internal/migration-runner/index-build-jobs.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/migration-runner/index-build-jobs.utils.ts": {
+    "selectSubmittedJobIds": "utils-pure-module"
   },
   "infra/cdk/src/internal/migration-runner/pending-migrations.utils.test.ts": {
     "describe": "test-pure-unit"
@@ -2602,6 +5212,21 @@
   "infra/cdk/src/internal/naming.utils.ts": {
     "stackName": "utils-pure-module"
   },
+  "infra/cdk/src/internal/oidc-subject.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/origin-verify-generator/index.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/origin-verify-generator/origin-verify-response.utils.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "infra/cdk/src/internal/origin-verify-generator/origin-verify-response.utils.ts": {
+    "selectResponseData": "utils-pure-module"
+  },
+  "infra/cdk/src/internal/origin-verify.ts": {
+    "createOriginVerifyValue": "cdk-custom-resource"
+  },
   "infra/cdk/src/internal/stage-wiring.utils.test.ts": {
     "describe": "test-pure-unit"
   },
@@ -2611,11 +5236,20 @@
   "infra/cdk/src/internal/tags.ts": {
     "standardTagPairs": "utils-pure-module"
   },
+  "infra/cdk/test/unit/agent-reader.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/cf-api-viewer-address.test.ts": {
+    "describe": "test-pure-unit"
+  },
   "infra/cdk/test/unit/cf-host-routing-function.test.ts": {
     "describe": "test-pure-unit"
   },
   "infra/cdk/test/unit/cf-static-site-index-rewrite.test.ts": {
     "describe": "test-pure-unit"
+  },
+  "infra/cdk/test/unit/dsql-cluster-backup.test.ts": {
+    "describe": "test-cdk-synth"
   },
   "infra/cdk/test/unit/dsql-cluster-stack.test.ts": {
     "describe": "test-cdk-synth"
@@ -2651,6 +5285,9 @@
     "describe": "test-cdk-synth"
   },
   "infra/cdk/test/unit/tags.test.ts": {
+    "describe": "test-cdk-synth"
+  },
+  "infra/cdk/test/unit/web-socket-channel.test.ts": {
     "describe": "test-cdk-synth"
   },
   "infra/cdk/vitest.config.ts": {

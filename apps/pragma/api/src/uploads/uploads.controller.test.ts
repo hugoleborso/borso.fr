@@ -1,4 +1,5 @@
-import { afterEach, beforeEach, describe, expect, it } from 'vitest';
+import { NotFound, S3Client } from '@aws-sdk/client-s3';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { buildAuthenticatedApp, jsonRequest, readJson } from '../../../test/auth-utils';
 
@@ -20,6 +21,17 @@ const getResponseSchema = z.object({
   expiresAt: z.string(),
 });
 
+async function signTakeRead(objectKey: string): Promise<string> {
+  const { app, cookieHeader } = await buildAuthenticatedApp();
+  const response = await jsonRequest(app, '/api/uploads/sign-get', {
+    method: 'POST',
+    body: { objectKey },
+    cookieHeader,
+  });
+  expect(response.status).toBe(200);
+  return new URL((await readJson(response, getResponseSchema)).getUrl).hostname;
+}
+
 // @FollowsBlueprint test-back-e2e
 describe('uploads controller (back-e2e)', () => {
   const previous: Record<string, string | undefined> = {};
@@ -37,6 +49,8 @@ describe('uploads controller (back-e2e)', () => {
       if (saved === undefined) delete process.env[name];
       else process.env[name] = saved;
     }
+    delete process.env.PRODUCTION_UPLOADS_BUCKET;
+    vi.restoreAllMocks();
   });
 
   it('rejects /sign without a session cookie', async () => {
@@ -106,5 +120,27 @@ describe('uploads controller (back-e2e)', () => {
     expect(response.status).toBe(200);
     const body = await readJson(response, getResponseSchema);
     expect(body.getUrl).toMatch(/^https:\/\//);
+  });
+
+  it('signs a take absent from the preview bucket against the production bucket', async () => {
+    process.env.PRODUCTION_UPLOADS_BUCKET = 'pragma-prod-uploads';
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- S3Client.send is overloaded and its last signature, the callback form, returns void; the adapter calls the promise form, which is what this stub answers
+    vi.spyOn(S3Client.prototype, 'send').mockImplementationOnce(() =>
+      Promise.reject(new NotFound({ message: 'Not Found', $metadata: {} })),
+    );
+    expect(await signTakeRead('take/song-1/take-1.webm')).toContain('pragma-prod-uploads');
+  });
+
+  it('signs a take recorded on the preview against the preview bucket', async () => {
+    process.env.PRODUCTION_UPLOADS_BUCKET = 'pragma-prod-uploads';
+    // eslint-disable-next-line @typescript-eslint/no-misused-promises -- S3Client.send is overloaded and its last signature, the callback form, returns void; the adapter calls the promise form, which is what this stub answers
+    vi.spyOn(S3Client.prototype, 'send').mockImplementationOnce(() => Promise.resolve({}));
+    expect(await signTakeRead('take/song-1/take-1.webm')).toContain('pragma-test-uploads');
+  });
+
+  it('never asks S3 on a stage with no production bucket, as on production itself', async () => {
+    const send = vi.spyOn(S3Client.prototype, 'send');
+    expect(await signTakeRead('take/song-1/take-1.webm')).toContain('pragma-test-uploads');
+    expect(send).not.toHaveBeenCalled();
   });
 });

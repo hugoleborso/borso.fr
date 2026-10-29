@@ -25,22 +25,22 @@ export function SetlistSummaryRow({
 }: SetlistSummaryRowProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-3 bg-bg-elev border border-line rounded-md px-4 py-3">
+    <div className="flex items-center gap-3 bg-leaf border border-rule rounded-md px-4 py-3">
       <Link
         to={`/setlists/${id}`}
         className="flex items-center gap-3 flex-1 min-w-0 hover:opacity-80 transition-opacity"
       >
-        <Icon name="setlist" size={18} className="text-ink-500" />
+        <Icon name="setlist" size="md" className="text-ink-soft" />
         <div className="flex-1 min-w-0">
-          <div className="font-display italic text-xl text-ink-900 leading-tight truncate">
+          <div className="font-display text-title text-ink leading-tight truncate">
             {selectSetlistDisplayName(name, t('setlist.untitled'))}
           </div>
-          <div className="text-[12px] text-ink-500 mt-0.5 truncate">
+          <div className="text-meta text-ink-soft mt-0.5 truncate">
             {isVoting ? t('setlist.voting') : t('setlist.songCount', { count: songCount })}
             {sessionsLabel === null ? null : ` · ${sessionsLabel}`}
           </div>
         </div>
-        <Icon name="chevR" size={14} className="text-ink-400" />
+        <Icon name="chevR" size="sm" className="text-ink-soft" />
       </Link>
       {action}
     </div>

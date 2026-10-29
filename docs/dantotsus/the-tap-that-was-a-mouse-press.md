@@ -10,7 +10,7 @@ eradication-level: 4
 eradication-paths: [scripts/browser/touch-tap.ts, scripts/browser/touch-tap.core.ts, scripts/argent.sh]
 time-to-detect: days
 tags: [harness, tooling, validation, visual-validation, claude-md, documentation]
-zone: scripts/argent.sh
+zone: scripts/phone.sh
 weak-point: prose-stands-in-for-a-check
 recurs: [two-audits-that-sent-no-touch-events]
 ---

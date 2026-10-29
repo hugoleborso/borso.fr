@@ -34,6 +34,7 @@ const API_SONG: Song = {
   structureNotes: 'intro ×4',
   gimmickNotes: 'break avant le dernier refrain',
   notes: '',
+  defaultLineup: { 'member-1': ['bass'] },
 };
 
 // @FollowsBlueprint test-pure-unit
@@ -94,6 +95,7 @@ describe('songFromApi', () => {
       structureNotes: 'intro ×4',
       gimmickNotes: 'break avant le dernier refrain',
       notes: '',
+      defaultLineup: { 'member-1': ['bass'] },
     });
   });
 
@@ -135,6 +137,12 @@ describe('chartFromDraft', () => {
     expect(
       chartFromDraft({ ...BLANK_SONG_DRAFT, chartKind: 'chordpro', chordproText: '[C]' }),
     ).toEqual({ kind: 'chordpro', text: '[C]' });
+  });
+
+  it('saves pasted chords above lyrics as ChordPro', () => {
+    expect(
+      chartFromDraft({ ...BLANK_SONG_DRAFT, chartKind: 'chordpro', chordproText: 'C\nHello' }),
+    ).toEqual({ kind: 'chordpro', text: '[C]Hello' });
   });
 
   it('builds a pdf chart', () => {
@@ -188,6 +196,7 @@ describe('payloadFromDraft', () => {
       gimmickNotes: '',
       notes: '',
       tags: [],
+      defaultLineup: {},
     });
   });
 

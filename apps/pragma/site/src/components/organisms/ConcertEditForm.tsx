@@ -16,7 +16,6 @@ import { composeClassName } from '../atoms/class-name.utils';
 import { Input } from '../atoms/Input';
 import { inputVariants } from '../atoms/input.variants';
 import { memberInitial } from '../atoms/member-palette.utils';
-import { readableForeground } from '../../lib/member-color.utils';
 
 export interface ConcertEditFormMember {
   readonly id: string;
@@ -38,7 +37,7 @@ interface ConcertEditFormProps {
   readonly onCancel: () => void;
 }
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
 const concertFormSchema = z.object({
   venue: z.string().max(CONCERT_VENUE_MAX_LENGTH),
@@ -110,13 +109,13 @@ export function ConcertEditForm({
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
               onBlur={field.handleBlur}
-              className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
+              className={composeClassName(inputVariants({ size: 'md' }), 'resize-y')}
               rows={4}
               maxLength={CONCERT_GEAR_MAX_LENGTH}
             />
           )}
         </form.Field>
-        <fieldset className="border border-line rounded-md p-3 mt-2">
+        <fieldset className="border border-rule rounded-md p-3 mt-2">
           <legend className={composeClassName(LABEL_CLASS, 'px-2')}>
             {t('sessions.friendsCountPerMember')}
           </legend>
@@ -130,9 +129,8 @@ export function ConcertEditForm({
                         size="xs"
                         initials={memberInitial(member.firstName)}
                         color={member.color}
-                        style={{ color: readableForeground(member.color) }}
                       />
-                      <span className="flex-1 text-[13px] text-ink-700">{member.firstName}</span>
+                      <span className="flex-1 text-meta text-ink">{member.firstName}</span>
                       <div className="w-20 shrink-0">
                         <Input
                           type="number"
@@ -158,9 +156,9 @@ export function ConcertEditForm({
                     </div>
                   ))}
                 </div>
-                <p className="text-xs text-ink-500 mt-3 text-right font-mono">
+                <p className="text-meta text-ink-soft mt-3 text-right font-mono">
                   {t('sessions.friendsCount')} :{' '}
-                  <span className="text-ink-900">
+                  <span className="text-ink">
                     {Object.values(friendsField.state.value).reduce(
                       (accumulator, current) => accumulator + current,
                       0,
@@ -174,12 +172,17 @@ export function ConcertEditForm({
         <div className="flex gap-2 mt-2">
           <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
             {([canSubmit, isSubmitting]) => (
-              <Button type="submit" variant="accent" disabled={!canSubmit || isSubmitting}>
+              <Button
+                icon="check"
+                type="submit"
+                variant="primary"
+                disabled={!canSubmit || isSubmitting}
+              >
                 {t('sessions.saveConcertDetails')}
               </Button>
             )}
           </form.Subscribe>
-          <Button type="button" variant="ghost" onClick={onCancel}>
+          <Button icon="close" type="button" variant="quiet" onClick={onCancel}>
             {t('common.cancel')}
           </Button>
         </div>

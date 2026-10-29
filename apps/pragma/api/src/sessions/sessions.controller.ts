@@ -23,7 +23,7 @@ export function buildSessionsRouter() {
   return new Hono()
     .use('*', requireMemberSession)
     .get('/', async (context) => {
-      const sessions = await getSessions();
+      const sessions = await getSessions(new Date());
       return context.json({ sessions });
     })
     .get('/:id', zValidator('param', sessionIdParamSchema), async (context) => {

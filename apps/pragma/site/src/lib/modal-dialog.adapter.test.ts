@@ -1,5 +1,9 @@
 import { describe, expect, it, vi } from 'vitest';
-import { openDialogOnAttach, openDismissibleDialogOnAttach } from './modal-dialog.adapter';
+import {
+  focusFirstField,
+  openDialogOnAttach,
+  openDismissibleDialogOnAttach,
+} from './modal-dialog.adapter';
 
 interface StubbedDialog {
   readonly dialog: HTMLDialogElement;
@@ -59,5 +63,60 @@ describe('openDismissibleDialogOnAttach', () => {
     content.dispatchEvent(new MouseEvent('click', { bubbles: true }));
     expect(close).not.toHaveBeenCalled();
     dialog.remove();
+  });
+});
+
+function sheetWith(bodyMarkup: string): HTMLDialogElement {
+  const dialog = document.createElement('dialog');
+  dialog.innerHTML = `<button data-sheet-close>Close</button><div data-sheet-body>${bodyMarkup}</div>`;
+  dialog.setAttribute('open', '');
+  document.body.append(dialog);
+  return dialog;
+}
+
+describe('focusFirstField', () => {
+  it('puts the focus in the first field a person types in, in page order, never on Close', () => {
+    const dialog = sheetWith(
+      '<input type="checkbox" /><button>Cancel</button><textarea id="note"></textarea><input id="key" />',
+    );
+    focusFirstField(dialog);
+    expect(document.activeElement?.id).toBe('note');
+    dialog.remove();
+  });
+
+  it('puts the focus on the control the sheet marks, before any earlier field', () => {
+    const dialog = sheetWith('<input id="key" /><textarea id="note" data-sheet-focus></textarea>');
+    focusFirstField(dialog);
+    expect(document.activeElement?.id).toBe('note');
+    dialog.remove();
+  });
+
+  it('puts the focus on a marked field held above the body, such as a search in the subheader', () => {
+    const dialog = sheetWith('<input id="first" />');
+    dialog.insertAdjacentHTML('afterbegin', '<input id="search" data-sheet-focus />');
+    focusFirstField(dialog);
+    expect(document.activeElement?.id).toBe('search');
+    dialog.remove();
+  });
+
+  it('reaches a textarea or a select when the body holds no input', () => {
+    const dialog = sheetWith('<select id="status"><option>a</option></select>');
+    focusFirstField(dialog);
+    expect(document.activeElement?.id).toBe('status');
+    dialog.remove();
+  });
+
+  it('puts the focus on Close when the sheet holds no field', () => {
+    const dialog = sheetWith('<p>Remove this song?</p><button>Remove</button>');
+    focusFirstField(dialog);
+    expect(document.activeElement?.hasAttribute('data-sheet-close')).toBe(true);
+    dialog.remove();
+  });
+
+  it('does nothing in a dialog with neither', () => {
+    const dialog = document.createElement('dialog');
+    expect(() => {
+      focusFirstField(dialog);
+    }).not.toThrow();
   });
 });

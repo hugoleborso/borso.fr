@@ -10,7 +10,7 @@ eradication-level: 1
 eradication-paths: [scripts/standards/enforcement-ledger.ts]
 time-to-detect: minutes
 tags: [ci, standards, hooks, tooling]
-zone: scripts/standards/enforcement-ledger.ts
+zone: .husky/pre-commit
 ---
 
 # The ledger could not see the hooks it was built for

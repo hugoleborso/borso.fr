@@ -4,7 +4,7 @@ import {
   buildSearchTerms,
   buildSpotifyTarget,
   type ListenSubject,
-  selectListenTargets,
+  selectSongListenLinks,
 } from './listen-links.utils';
 
 function subject(overrides: Partial<ListenSubject> = {}): ListenSubject {
@@ -87,11 +87,45 @@ describe('buildSpotifyTarget', () => {
   });
 });
 
-describe('selectListenTargets', () => {
-  it('offers Deezer first, which is where the identifiers come from', () => {
-    expect(selectListenTargets(subject()).map((target) => target.provider)).toEqual([
-      'deezer',
-      'spotify',
+describe('selectSongListenLinks', () => {
+  const song = {
+    title: 'Get Lucky',
+    artist: 'Daft Punk',
+    deezerTrackId: '67238735',
+    spotifyTrackId: null,
+    links: [
+      { url: 'https://www.youtube.com/watch?v=5NV6Rdv1a3I', provider: 'youtube' as const },
+      { url: 'https://www.deezer.com/track/67238735', provider: 'deezer' as const },
+    ],
+  };
+
+  it('gives the Deezer track, a Spotify search and each stored link, without repeating an address', () => {
+    expect(selectSongListenLinks(song)).toEqual([
+      { provider: 'deezer', address: 'https://www.deezer.com/track/67238735' },
+      { provider: 'spotify', address: 'https://open.spotify.com/search/Daft%20Punk%20Get%20Lucky' },
+      { provider: 'youtube', address: 'https://www.youtube.com/watch?v=5NV6Rdv1a3I' },
+    ]);
+  });
+
+  it('points Spotify at the stored track rather than at a search', () => {
+    expect(
+      selectSongListenLinks({ ...song, spotifyTrackId: '2Foc5Q5nqNiosCNqttzHof', links: [] }),
+    ).toEqual([
+      { provider: 'deezer', address: 'https://www.deezer.com/track/67238735' },
+      { provider: 'spotify', address: 'https://open.spotify.com/track/2Foc5Q5nqNiosCNqttzHof' },
+    ]);
+  });
+
+  it('keeps a stored Spotify link in place of the search', () => {
+    const stored = { url: 'https://open.spotify.com/track/abc', provider: 'spotify' as const };
+    expect(selectSongListenLinks({ ...song, deezerTrackId: null, links: [stored] })).toEqual([
+      { provider: 'spotify', address: 'https://open.spotify.com/track/abc' },
+    ]);
+  });
+
+  it('always offers Spotify, as a search for a song with no track id and no link', () => {
+    expect(selectSongListenLinks({ ...song, deezerTrackId: null, links: [] })).toEqual([
+      { provider: 'spotify', address: 'https://open.spotify.com/search/Daft%20Punk%20Get%20Lucky' },
     ]);
   });
 });

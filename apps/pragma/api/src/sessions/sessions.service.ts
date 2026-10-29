@@ -1,3 +1,4 @@
+import { orderSessionsForListing } from '@domain/session-schedule.core';
 import type { z } from 'zod';
 import { getSongs } from '../songs/songs.service';
 import { buildSessionInsertShape } from './sessions.core';
@@ -58,8 +59,9 @@ function valuesFromUpdate(input: SessionUpdateInput): SessionPersistedUpdate {
   return sessionPersistedUpdateSchema.parse(updates);
 }
 
-export async function getSessions(): Promise<SessionRow[]> {
-  return await listSessions();
+// @FollowsBlueprint service-clock-injected
+export async function getSessions(now: Date): Promise<SessionRow[]> {
+  return orderSessionsForListing(await listSessions(), now);
 }
 
 async function notifySessionWritten(
@@ -106,13 +108,13 @@ export async function listSessionsForTool(
   kind: string | undefined,
   now: Date,
 ): Promise<SessionSummary[]> {
-  return summarizeSessionsInWindow(await getSessions(), window, kind, now);
+  return summarizeSessionsInWindow(await getSessions(now), window, kind, now);
 }
 
 export async function resolveSessionId(reference: string, now: Date): Promise<string> {
   const isIdentifier = isIdentifierReference(reference);
   if (isIdentifier) return reference;
-  const match = matchSessionReference(await getSessions(), reference, now);
+  const match = matchSessionReference(await getSessions(now), reference, now);
   if (match.kind === 'found') return match.id;
   return refuseUnresolvedReference('session', reference, match);
 }
@@ -131,6 +133,6 @@ export async function removeSession(id: string): Promise<DeletionOutcome> {
 
 // @FollowsBlueprint service-read-model
 export async function getNextSessionOfflineManifest(now: Date): Promise<OfflineManifestPayload> {
-  const [sessions, songs] = await Promise.all([getSessions(), getSongs()]);
+  const [sessions, songs] = await Promise.all([getSessions(now), getSongs()]);
   return buildNextSessionOfflineManifest(sessions, songs, now);
 }

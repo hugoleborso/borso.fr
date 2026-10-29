@@ -1,6 +1,11 @@
 import type { TakeContentType } from '@domain/take-upload.core';
 import { describe, expect, it } from 'vitest';
-import { buildTakeObjectKey, isMomentWithinTake, orderCommentsByTime } from './takes.core';
+import {
+  buildTakeObjectKey,
+  isMomentWithinTake,
+  isExactlyOneTakeFilterNamed,
+  orderCommentsByTime,
+} from './takes.core';
 
 const SONG_ID = '11111111-1111-4111-8111-111111111111';
 const TAKE_ID = '22222222-2222-4222-8222-222222222222';
@@ -79,5 +84,18 @@ describe('orderCommentsByTime', () => {
     ];
     orderCommentsByTime(comments);
     expect(comments.map((comment) => comment.id)).toEqual(['b', 'a']);
+  });
+});
+
+// @FollowsBlueprint test-pure-unit
+describe('isExactlyOneTakeFilterNamed', () => {
+  it('accepts a song alone or a session alone', () => {
+    expect(isExactlyOneTakeFilterNamed({ songId: SONG_ID })).toBe(true);
+    expect(isExactlyOneTakeFilterNamed({ sessionId: TAKE_ID })).toBe(true);
+  });
+
+  it('refuses neither and both', () => {
+    expect(isExactlyOneTakeFilterNamed({})).toBe(false);
+    expect(isExactlyOneTakeFilterNamed({ songId: SONG_ID, sessionId: TAKE_ID })).toBe(false);
   });
 });

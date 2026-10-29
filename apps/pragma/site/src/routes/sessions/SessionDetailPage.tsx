@@ -34,7 +34,9 @@ export function SessionDetailPage(): JSX.Element {
 
   if (isLoading) {
     return (
-      <p className="px-4 sm:px-9 py-4 sm:py-7 text-ink-400 italic text-sm">{t('common.loading')}</p>
+      <p className="px-4 sm:px-9 py-4 sm:py-7 text-ink-soft italic text-meta">
+        {t('common.loading')}
+      </p>
     );
   }
   if (session === null) {

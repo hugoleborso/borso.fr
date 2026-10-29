@@ -6,7 +6,6 @@ export interface ListedBar {
   readonly status: string;
   readonly city: string | null;
   readonly capacity: number | null;
-  readonly lastInteractionAt: Date | null;
 }
 
 export interface BarSummary {
@@ -15,7 +14,6 @@ export interface BarSummary {
   readonly status: string;
   readonly city: string | null;
   readonly capacity: number | null;
-  readonly lastInteractionAt: string | null;
 }
 
 export interface BarFilter {
@@ -39,6 +37,5 @@ export function summarizeBars(bars: readonly ListedBar[], filter: BarFilter): Ba
       status: bar.status,
       city: bar.city,
       capacity: bar.capacity,
-      lastInteractionAt: bar.lastInteractionAt?.toISOString() ?? null,
     }));
 }

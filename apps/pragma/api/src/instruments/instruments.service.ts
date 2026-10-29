@@ -116,13 +116,6 @@ export async function resolveInstrumentIds(references: readonly string[]): Promi
   return references.map((reference) => pickReference('instrument', candidates, reference));
 }
 
-export async function resolveOptionalInstrumentIds(
-  references: readonly string[] | undefined,
-): Promise<string[] | undefined> {
-  if (references === undefined) return undefined;
-  return await resolveInstrumentIds(references);
-}
-
 export async function resolveNamedLineupOrRefuse(input: NamedLineupInput): Promise<Lineup> {
   const resolution = resolveNamedLineup(input, await readLineupNames());
   if (resolution.kind === 'unresolved') {

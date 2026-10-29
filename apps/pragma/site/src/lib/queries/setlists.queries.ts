@@ -130,6 +130,7 @@ export function useCreateSetlist() {
         name: data.setlist.name,
         status: 'locked',
         songCount: 0,
+        songIds: [],
         sessionIds: variables.sessionId === null ? [] : [variables.sessionId],
       };
       updateListCache(queryClient, (cache) => appendSetlistToCache(cache, created));

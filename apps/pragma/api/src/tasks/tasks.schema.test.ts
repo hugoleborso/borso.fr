@@ -15,6 +15,7 @@ describe('taskCreateSchema', () => {
       status: 'todo',
       assigneeId: null,
       songId: null,
+      sessionId: null,
       dueDate: null,
     });
   });

@@ -1,0 +1,1028 @@
+{
+  "meta": {
+    "measuredAt": "2026-10-28T12:45:48.677Z",
+    "viewport": "390x844",
+    "insets": {
+      "top": 47,
+      "bottom": 34,
+      "left": 0,
+      "right": 0
+    },
+    "standalone": false,
+    "base": "http://localhost:5196",
+    "seed": "audit",
+    "input": "argent gesture-tap / gesture-scroll / gesture-drag / keyboard. On Chromium argent sends a one-finger tap as CDP mouse press and release (pointerType mouse), not as a touch event.",
+    "bottomThird": "centre of the control at or below 2/3 of the screen height on arrival, before any scroll"
+  },
+  "tasks": {
+    "1": {
+      "task": "1 Prepare the next rehearsal",
+      "taps": 18,
+      "textEntries": 0,
+      "scrollGestures": 3,
+      "screensVisited": 7,
+      "screens": [
+        "/",
+        "/sessions",
+        "/sessions + [New practice]",
+        "/sessions/:id",
+        "/sessions/:id + [New setlist]",
+        "/setlists/:id",
+        "/setlists/:id + [Add songs to Set 1]"
+      ],
+      "primaryActions": [
+        {
+          "label": "New practice",
+          "screen": "/sessions",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "New setlist",
+          "screen": "/sessions/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.378,
+          "inBottomThird": false
+        },
+        {
+          "label": "Add songs",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.853,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add 10 songs",
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.929,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Sessions tab",
+          "target": "Sessions",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [98, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "New practice",
+          "target": "Practice",
+          "tag": "button",
+          "primary": true,
+          "screen": "/sessions",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [124, 702, 122, 44]
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Create session",
+          "target": "Create",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions + [New practice]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.955,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.955,
+          "box": [264, 784, 110, 44]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "New setlist",
+          "target": "New setlist",
+          "tag": "button",
+          "primary": true,
+          "screen": "/sessions/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.378,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.378,
+          "box": [16, 297, 144, 44]
+        },
+        {
+          "n": 5,
+          "kind": "tap",
+          "label": "Create setlist",
+          "target": "Create",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [New setlist]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.934,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.934,
+          "box": [264, 766, 110, 44]
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Open the new setlist",
+          "target": "Set 1 0 songs",
+          "tag": "a",
+          "primary": false,
+          "screen": "/sessions/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.347,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.347,
+          "box": [33, 270, 217, 46]
+        },
+        {
+          "n": 7,
+          "kind": "tap",
+          "label": "Add songs",
+          "target": "Add songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [221, 694, 153, 52]
+        },
+        {
+          "n": 8,
+          "kind": "tap",
+          "label": "Pick Afterglow",
+          "target": "A Afterglow Nova Reef",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.315,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.315,
+          "box": [16, 236, 358, 61]
+        },
+        {
+          "n": 9,
+          "kind": "tap",
+          "label": "Pick Billie Jean",
+          "target": "BJ Billie Jean Michael Jackson",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.532,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.532,
+          "box": [16, 419, 358, 61]
+        },
+        {
+          "n": 10,
+          "kind": "tap",
+          "label": "Pick Come Together",
+          "target": "CT Come Together The Beatles",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.604,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.604,
+          "box": [16, 480, 358, 61]
+        },
+        {
+          "n": 11,
+          "kind": "tap",
+          "label": "Pick Dreams",
+          "target": "D Dreams Fleetwood Mac",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.749,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.749,
+          "box": [16, 602, 358, 61]
+        },
+        {
+          "n": 12,
+          "kind": "tap",
+          "label": "Pick Get Lucky",
+          "target": "GL Get Lucky Daft Punk",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 0.966,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.581,
+          "box": [16, 785, 358, 61]
+        },
+        {
+          "n": 13,
+          "kind": "tap",
+          "label": "Pick Hey Ya!",
+          "target": "HY Hey Ya! OutKast",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.653,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.653,
+          "box": [16, 521, 358, 61]
+        },
+        {
+          "n": 14,
+          "kind": "tap",
+          "label": "Pick Jolene",
+          "target": "J Jolene Dolly Parton",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.87,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.87,
+          "box": [16, 704, 358, 61]
+        },
+        {
+          "n": 15,
+          "kind": "tap",
+          "label": "Pick Last Call",
+          "target": "LC Last Call Volt",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 1.087,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.581,
+          "box": [16, 887, 358, 61]
+        },
+        {
+          "n": 16,
+          "kind": "tap",
+          "label": "Pick Lightning",
+          "target": "L Lightning Volt",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.797,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.797,
+          "box": [16, 643, 358, 61]
+        },
+        {
+          "n": 17,
+          "kind": "tap",
+          "label": "Pick Midnight Drive",
+          "target": "MD Midnight Drive Nova Reef",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 0.942,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.581,
+          "box": [16, 765, 358, 61]
+        },
+        {
+          "n": 18,
+          "kind": "tap",
+          "label": "Add 10 songs",
+          "target": "Add 10 songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Set 1]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.929,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.929,
+          "box": [198, 758, 176, 52]
+        }
+      ],
+      "notes": [
+        "The name field comes filled with \"Set 1\", so the shortest path keeps it.",
+        "After creating the setlist the screen stays on /sessions/:id."
+      ],
+      "success": {
+        "practices": 3,
+        "newSetlistAttachedTo": 1,
+        "newSetlistSongs": [
+          "Afterglow",
+          "Billie Jean",
+          "Come Together",
+          "Dreams",
+          "Get Lucky",
+          "Hey Ya!",
+          "Jolene",
+          "Last Call",
+          "Lightning",
+          "Midnight Drive"
+        ]
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/sessions": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/sessions + [New practice]": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/sessions/:id": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/sessions/:id + [New setlist]": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Add songs to Set 1]": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": false,
+          "containers": ["x div 0,184,390,44 (44/44)", "y div 0,236,390,509 (2700/509)"]
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "2": {
+      "task": "2 Build the concert setlist",
+      "taps": 12,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 7,
+      "screens": [
+        "/",
+        "/sessions",
+        "/setlists",
+        "/setlists/:id",
+        "/setlists/:id + [Add songs to Set principal]",
+        "/setlists/:id + [Remove from the setlist]",
+        "/setlists/:id/order"
+      ],
+      "primaryActions": [
+        {
+          "label": "Add songs",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.853,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add 2 songs",
+          "screen": "/setlists/:id + [Add songs to Set principal]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.929,
+          "inBottomThird": true
+        },
+        {
+          "label": "Remove from the setlist",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.628,
+          "inBottomThird": false
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Sessions tab",
+          "target": "Sessions",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [98, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Setlists section",
+          "target": "Setlists",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.155,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.155,
+          "box": [127, 109, 98, 44]
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Open Set principal",
+          "target": "Set principal 20 songs · Le Petit Bain",
+          "tag": "a",
+          "primary": false,
+          "screen": "/setlists",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.338,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.338,
+          "box": [33, 263, 324, 46]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Add songs",
+          "target": "Add songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [221, 694, 153, 52]
+        },
+        {
+          "n": 5,
+          "kind": "tap",
+          "label": "Pick Dreams",
+          "target": "D Dreams Fleetwood Mac",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set principal]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.604,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.604,
+          "box": [16, 480, 358, 61]
+        },
+        {
+          "kind": "type",
+          "label": "Search",
+          "chars": 6
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Pick Psycho Killer",
+          "target": "PK Psycho Killer Talking Heads",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set principal]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.315,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.315,
+          "box": [16, 236, 358, 61]
+        },
+        {
+          "n": 7,
+          "kind": "tap",
+          "label": "Add 2 songs",
+          "target": "Add 2 songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Set principal]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.929,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.929,
+          "box": [208, 758, 166, 52]
+        },
+        {
+          "n": 8,
+          "kind": "tap",
+          "label": "More for entry 03",
+          "target": "More for Lightning",
+          "tag": "summary",
+          "primary": false,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.566,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.566,
+          "box": [330, 456, 44, 44]
+        },
+        {
+          "n": 9,
+          "kind": "tap",
+          "label": "Remove from the setlist",
+          "target": "Remove from the setlist",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.628,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.628,
+          "box": [202, 508, 168, 44]
+        },
+        {
+          "n": 10,
+          "kind": "tap",
+          "label": "Confirm remove",
+          "target": "Remove from the setlist",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Remove from the setlist]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.934,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.934,
+          "box": [135, 766, 239, 44]
+        },
+        {
+          "n": 11,
+          "kind": "tap",
+          "label": "Order",
+          "target": "Order",
+          "tag": "a",
+          "primary": false,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [98, 694, 116, 52]
+        },
+        {
+          "n": 12,
+          "kind": "drag",
+          "label": "Drag entry 05 to position 02",
+          "from": "Drag to reorder",
+          "to": "Drag to reorder"
+        }
+      ],
+      "notes": [
+        "A pick keeps the focus in the search, so the next title is typed with no tap.",
+        "The order saves on the drop, so the walk ends on the Order screen without Done."
+      ],
+      "success": {
+        "before": [
+          "Slow Burn",
+          "Midnight Drive",
+          "Lightning",
+          "Afterglow",
+          "Runaway Sun",
+          "Last Call",
+          "Superstition",
+          "Valerie",
+          "Seven Nation Army",
+          "Get Lucky",
+          "Respect",
+          "Hit the Road Jack",
+          "Rolling in the Deep",
+          "Uptown Funk",
+          "Wonderwall",
+          "Mr. Brightside",
+          "September",
+          "Billie Jean",
+          "Should I Stay or Should I Go",
+          "Sweet Dreams (Are Made of This) — Extended Version With the Long Synth Intro"
+        ],
+        "afterReload": [
+          "Slow Burn",
+          "Last Call",
+          "Midnight Drive",
+          "Afterglow",
+          "Runaway Sun",
+          "Superstition",
+          "Valerie",
+          "Seven Nation Army",
+          "Get Lucky",
+          "Respect",
+          "Hit the Road Jack",
+          "Rolling in the Deep",
+          "Uptown Funk",
+          "Wonderwall",
+          "Mr. Brightside",
+          "September",
+          "Billie Jean",
+          "Should I Stay or Should I Go",
+          "Sweet Dreams (Are Made of This) — Extended Version With the Long Synth Intro",
+          "Dreams",
+          "Psycho Killer"
+        ]
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/sessions": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Add songs to Set principal]": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": false,
+          "containers": ["x div 0,184,390,44 (44/44)", "y div 0,236,390,509 (1480/509)"]
+        },
+        "/setlists/:id + [Remove from the setlist]": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/setlists/:id/order": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "8": {
+      "task": "8 Add a new song and put it on the next practice",
+      "taps": 4,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 3,
+      "screens": [
+        "/",
+        "/setlists/:id",
+        "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]"
+      ],
+      "primaryActions": [
+        {
+          "label": "Open the setlist",
+          "screen": "/",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add songs",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.853,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add 1 songs",
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.929,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Open the setlist",
+          "target": "Open the setlist",
+          "tag": "a",
+          "primary": true,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [195, 702, 179, 44]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Add songs",
+          "target": "Add songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [221, 694, 153, 52]
+        },
+        {
+          "kind": "type",
+          "label": "Title",
+          "chars": 14
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Pick the music service's result",
+          "target": "Psycho Chicken The Sticks",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.473,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.473,
+          "box": [16, 369, 358, 61]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Add 1 songs",
+          "target": "Add 1 song",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.929,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.929,
+          "box": [216, 758, 158, 52]
+        }
+      ],
+      "notes": ["The search field has the focus when the sheet opens, so typing needs no tap."],
+      "success": {
+        "inRehearsalSetlist": true,
+        "artist": "The Sticks",
+        "fromMusicService": true
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": false,
+          "containers": ["x div 0,224,390,44 (44/44)", "y div 0,276,390,469 (1663/469)"]
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "8b": {
+      "task": "8b New song from the setlist (title only)",
+      "taps": 4,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 3,
+      "screens": [
+        "/",
+        "/setlists/:id",
+        "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]"
+      ],
+      "primaryActions": [
+        {
+          "label": "Open the setlist",
+          "screen": "/",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add songs",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.853,
+          "inBottomThird": true
+        },
+        {
+          "label": "New song as an idea",
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.372,
+          "inBottomThird": false
+        },
+        {
+          "label": "Add 1 songs",
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.929,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Open the setlist",
+          "target": "Open the setlist",
+          "tag": "a",
+          "primary": true,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [195, 702, 179, 44]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Add songs",
+          "target": "Add songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [221, 694, 153, 52]
+        },
+        {
+          "kind": "type",
+          "label": "Title",
+          "chars": 14
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "New song as an idea",
+          "target": "New song as an idea Psycho Chicken",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.372,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.372,
+          "box": [16, 284, 358, 61]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Add 1 songs",
+          "target": "Add 1 song",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.929,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.929,
+          "box": [216, 758, 158, 52]
+        }
+      ],
+      "notes": ["The search field has the focus when the sheet opens, so typing needs no tap."],
+      "success": {
+        "inRehearsalSetlist": true,
+        "artist": ""
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": false,
+          "containers": ["x div 0,224,390,44 (44/44)", "y div 0,276,390,469 (1663/469)"]
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    }
+  },
+  "sliceFour": {
+    "orderScreen": {
+      "rowCount": 20,
+      "rowsVisibleWithCurve": 10,
+      "isCurveShown": true,
+      "curveBars": 20,
+      "handle": {
+        "width": 44,
+        "height": 44
+      }
+    },
+    "addSongsSheet": {
+      "byChip": {
+        "Not in this setlist": {
+          "confirmCentreFraction": 0.929,
+          "rows": 24,
+          "rowsInSetlist": 0,
+          "rowsInSetlistPickable": 0
+        },
+        "Concert ready": {
+          "confirmCentreFraction": 0.929,
+          "rows": 16,
+          "rowsInSetlist": 16,
+          "rowsInSetlistPickable": 0
+        },
+        "Rehearsed": {
+          "confirmCentreFraction": 0.929,
+          "rows": 16,
+          "rowsInSetlist": 3,
+          "rowsInSetlistPickable": 0
+        },
+        "To learn": {
+          "confirmCentreFraction": 0.929,
+          "rows": 8,
+          "rowsInSetlist": 1,
+          "rowsInSetlistPickable": 0
+        },
+        "Ideas": {
+          "confirmCentreFraction": 0.929,
+          "rows": 4,
+          "rowsInSetlist": 0,
+          "rowsInSetlistPickable": 0
+        }
+      },
+      "confirmCentreFraction": 0.929,
+      "songsAlreadyInOfferedAgain": 0
+    }
+  }
+}

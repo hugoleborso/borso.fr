@@ -76,9 +76,8 @@ export type AssignInstrumentsResult =
 export async function assignInstrumentsToMember(
   memberId: string,
   instrumentIds: readonly string[],
-  primaryInstrumentIds?: readonly string[],
 ): Promise<AssignInstrumentsResult> {
-  const replacement = await replaceMemberInstruments(memberId, instrumentIds, primaryInstrumentIds);
+  const replacement = await replaceMemberInstruments(memberId, instrumentIds);
   if (replacement === 'replaced') return { kind: 'ok' };
   return { kind: replacement };
 }
@@ -91,9 +90,5 @@ export async function getMembersForTool(): Promise<MemberToolView[]> {
   return members.map((member) => projectMemberForTool(member, instruments));
 }
 
-export {
-  resolveInstrumentIds,
-  resolveMemberId,
-  resolveOptionalInstrumentIds,
-} from '../instruments/instruments.service';
+export { resolveInstrumentIds, resolveMemberId } from '../instruments/instruments.service';
 export { defineTool } from '../mcp/mcp.service';

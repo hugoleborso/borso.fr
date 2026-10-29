@@ -85,8 +85,8 @@ export function EnergyMeter({
       data-adjusting={isAdjusting}
       className={composeClassName(
         'flex h-11 shrink-0 cursor-ew-resize touch-none select-none items-center justify-center gap-1.5 px-1.5',
-        'outline-hidden focus-visible:outline-solid focus-visible:outline-2',
-        'focus-visible:outline-offset-2 focus-visible:outline-accent',
+        'outline-hidden focus-visible:outline-solid focus-visible:outline-3',
+        'focus-visible:outline-offset-2 focus-visible:outline-focus',
         className,
       )}
       onPointerDown={openGesture}
@@ -101,7 +101,7 @@ export function EnergyMeter({
             key={level}
             className={composeClassName(
               BAR_WIDTH_CLASS,
-              'rounded-[1px] transition-colors',
+              'rounded-cover transition-colors',
               level <= value ? filledClassName : emptyClassName,
             )}
             style={{ height: METER_HEIGHT_PX * barHeightRatio(level, minimum, maximum) }}
@@ -110,8 +110,8 @@ export function EnergyMeter({
       </span>
       <span
         className={composeClassName(
-          'w-3 text-right font-mono text-[13px] tabular-nums',
-          isAdjusting ? 'font-semibold text-accent-ink' : 'text-ink-500',
+          'w-3 text-right font-mono text-meta tabular-nums',
+          isAdjusting ? 'font-semibold text-accent-strong' : 'text-ink-soft',
         )}
       >
         {value}

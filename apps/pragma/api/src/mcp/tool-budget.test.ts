@@ -14,7 +14,8 @@ import { stubPushService } from '../../../test/push-utils';
 import { SEED_MEMBERS, SEED_SONGS } from '../__test/test-seed-fixture.core';
 import { seedPreviewFixture } from '../__test/test-seed.service';
 import { createSession } from '../sessions/sessions.service';
-import { appendEntry, createSetlist } from '../setlists/setlists.service';
+import { appendEntry } from '../setlists/setlist-entry.service';
+import { createSetlist } from '../setlists/setlists.service';
 import { getSongs } from '../songs/songs.service';
 import { createTake, createTakeComment, mintTakeUpload } from '../takes/takes.service';
 
@@ -132,6 +133,7 @@ async function seedTakesOf(songId: string, actor: { memberId: string; now: Date 
         contentType: 'audio/mpeg',
         source: 'upload',
         queued: false,
+        fromPracticeMode: false,
       },
       actor,
     );

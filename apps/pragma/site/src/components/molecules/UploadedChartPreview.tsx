@@ -13,9 +13,9 @@ export interface UploadedChartPreviewProps {
   readonly errorMessage: string | null;
 }
 
-const DOCUMENT_CLASS = 'w-full h-[720px] border border-line rounded-md';
+const DOCUMENT_CLASS = 'w-full h-[720px] border border-rule rounded-md';
 
-const IMAGE_CLASS = 'max-w-full rounded-md border border-line';
+const IMAGE_CLASS = 'max-w-full rounded-md border border-rule';
 
 // @FollowsBlueprint molecule-presentational
 export function UploadedChartPreview({

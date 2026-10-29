@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { MEMBER_PALETTE, pickNextPaletteHex, pickPaletteHex } from './member-palette.utils';
+import { MEMBER_PALETTE } from '@domain/member-palette.core';
+import { pickNextPaletteHex, pickPaletteHex } from './member-palette.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('pickPaletteHex', () => {
@@ -38,23 +39,5 @@ describe('pickNextPaletteHex', () => {
 
   it('wraps once five members are seated', () => {
     expect(pickNextPaletteHex(5)).toBe(MEMBER_PALETTE[0].hex);
-  });
-});
-
-describe('MEMBER_PALETTE', () => {
-  it('has exactly the five design-bundle hues', () => {
-    expect(MEMBER_PALETTE.map((slot) => slot.name)).toEqual([
-      'coral',
-      'teal',
-      'mustard',
-      'plum',
-      'sage',
-    ]);
-  });
-
-  it('each hex matches the #rrggbb pattern', () => {
-    for (const slot of MEMBER_PALETTE) {
-      expect(slot.hex).toMatch(/^#[0-9a-f]{6}$/);
-    }
   });
 });

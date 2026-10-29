@@ -5,7 +5,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 
-const LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 
 interface SongNotesFieldsProps {
   readonly structureNotes: string;
@@ -24,40 +24,43 @@ const NOTES_ROWS = 2;
 export function SongNotesFields(props: SongNotesFieldsProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="flex flex-col gap-2.5">
-      <label className={LABEL_CLASS} htmlFor="song-structure-notes">
-        {t('catalog.notesStructure')}
-      </label>
-      <AutoGrowTextarea
-        id="song-structure-notes"
-        value={props.structureNotes}
-        onChange={(event) => props.onStructureChange(event.target.value)}
-        rows={STRUCTURE_ROWS}
-        maxLength={SONG_NOTE_MAX_LENGTH}
-        placeholder={t('catalog.notesStructurePlaceholder')}
-      />
-      <label className={LABEL_CLASS} htmlFor="song-gimmick-notes">
-        {t('catalog.notesGimmicks')}
-      </label>
-      <AutoGrowTextarea
-        id="song-gimmick-notes"
-        value={props.gimmickNotes}
-        onChange={(event) => props.onGimmickChange(event.target.value)}
-        rows={GIMMICK_ROWS}
-        maxLength={SONG_NOTE_MAX_LENGTH}
-        placeholder={t('catalog.notesGimmicksPlaceholder')}
-      />
-      <label className={LABEL_CLASS} htmlFor="song-free-notes">
-        {t('catalog.notesFree')}
-      </label>
-      <AutoGrowTextarea
-        id="song-free-notes"
-        value={props.notes}
-        onChange={(event) => props.onNotesChange(event.target.value)}
-        rows={NOTES_ROWS}
-        maxLength={SONG_NOTE_MAX_LENGTH}
-        placeholder={t('catalog.notesFreePlaceholder')}
-      />
+    <div className="flex flex-col gap-4">
+      <div className="flex flex-col gap-1.5">
+        <label className={LABEL_CLASS} htmlFor="song-structure-notes">
+          {t('catalog.notesStructure')}
+        </label>
+        <AutoGrowTextarea
+          id="song-structure-notes"
+          value={props.structureNotes}
+          onChange={(event) => props.onStructureChange(event.target.value)}
+          rows={STRUCTURE_ROWS}
+          maxLength={SONG_NOTE_MAX_LENGTH}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className={LABEL_CLASS} htmlFor="song-gimmick-notes">
+          {t('catalog.notesGimmicks')}
+        </label>
+        <AutoGrowTextarea
+          id="song-gimmick-notes"
+          value={props.gimmickNotes}
+          onChange={(event) => props.onGimmickChange(event.target.value)}
+          rows={GIMMICK_ROWS}
+          maxLength={SONG_NOTE_MAX_LENGTH}
+        />
+      </div>
+      <div className="flex flex-col gap-1.5">
+        <label className={LABEL_CLASS} htmlFor="song-free-notes">
+          {t('catalog.notesFree')}
+        </label>
+        <AutoGrowTextarea
+          id="song-free-notes"
+          value={props.notes}
+          onChange={(event) => props.onNotesChange(event.target.value)}
+          rows={NOTES_ROWS}
+          maxLength={SONG_NOTE_MAX_LENGTH}
+        />
+      </div>
     </div>
   );
 }

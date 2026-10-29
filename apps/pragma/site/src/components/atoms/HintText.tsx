@@ -3,10 +3,10 @@ import { composeClassName } from './class-name.utils';
 
 export type HintTextTone = 'muted' | 'danger';
 
-const HINT_TEXT_CLASS = 'text-xs';
+const HINT_TEXT_CLASS = 'text-meta';
 
 const CLASS_BY_TONE: Readonly<Record<HintTextTone, string>> = {
-  muted: 'text-ink-400 italic',
+  muted: 'text-ink-soft italic',
   danger: 'text-danger',
 };
 

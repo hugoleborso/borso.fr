@@ -2,6 +2,8 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import {
   recordTakeBreadcrumb,
   reportRenderFailure,
+  reportEntryNoteSaveFailed,
+  reportSetlistBatchAddFailed,
   reportTakeQueueWriteFailed,
   reportTakeUploadFailed,
   startErrorReporting,
@@ -116,6 +118,28 @@ describe('take failures', () => {
       category: 'takes',
       message: 'RecordingInterrupted',
       level: 'info',
+    });
+  });
+});
+
+describe('entry note failures', () => {
+  afterEach(() => {
+    vi.clearAllMocks();
+  });
+
+  it('reports a note save that failed, tagged with its setlist', () => {
+    reportEntryNoteSaveFailed('setlist-1');
+    expect(sentry.captureMessage).toHaveBeenCalledWith('EntryNoteSaveError', {
+      level: 'error',
+      tags: { 'setlist.id': 'setlist-1' },
+    });
+  });
+
+  it('reports a batch add that failed, tagged with its setlist', () => {
+    reportSetlistBatchAddFailed('setlist-2');
+    expect(sentry.captureMessage).toHaveBeenCalledWith('SetlistBatchAddError', {
+      level: 'error',
+      tags: { 'setlist.id': 'setlist-2' },
     });
   });
 });

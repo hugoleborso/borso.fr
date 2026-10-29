@@ -1,6 +1,6 @@
 export interface PlayedInstrument {
   readonly name: string;
-  readonly players: readonly { readonly memberId: string; readonly isPrimary: boolean }[];
+  readonly players: readonly { readonly memberId: string }[];
 }
 
 export interface MemberContact {
@@ -16,7 +16,6 @@ export interface MemberToolView {
   readonly phone: string | null;
   readonly email: string | null;
   readonly instruments: readonly string[];
-  readonly main?: readonly string[];
 }
 
 // @FollowsBlueprint core-projection
@@ -24,20 +23,13 @@ export function projectMemberForTool(
   member: MemberContact,
   instruments: readonly PlayedInstrument[],
 ): MemberToolView {
-  const held = instruments.flatMap((instrument) =>
-    instrument.players
-      .filter((player) => player.memberId === member.id)
-      .map((player) => ({ name: instrument.name, isPrimary: player.isPrimary })),
-  );
-  const view = {
+  return {
     id: member.id,
     firstName: member.firstName,
     phone: member.phone,
     email: member.email,
-    instruments: held.map((instrument) => instrument.name),
+    instruments: instruments
+      .filter((instrument) => instrument.players.some((player) => player.memberId === member.id))
+      .map((instrument) => instrument.name),
   };
-  const main = held
-    .filter((instrument) => instrument.isPrimary)
-    .map((instrument) => instrument.name);
-  return main.length > 0 ? { ...view, main } : view;
 }

@@ -1,6 +1,7 @@
 /**
  * @DependsOnExternal deezer
  * @DependsOnExternal spotify
+ * @DependsOnExternal youtube
  * @Feature songs
  */
 
@@ -9,9 +10,7 @@ const DEEZER_SEARCH_ORIGIN = 'https://www.deezer.com/search';
 const SPOTIFY_TRACK_ORIGIN = 'https://open.spotify.com/track';
 const SPOTIFY_SEARCH_ORIGIN = 'https://open.spotify.com/search';
 
-export const LISTEN_PROVIDERS = ['deezer', 'spotify'] as const;
-
-export type ListenProvider = (typeof LISTEN_PROVIDERS)[number];
+export type ListenProvider = 'deezer' | 'spotify';
 
 export interface ListenSubject {
   readonly title: string;
@@ -67,6 +66,38 @@ export function buildSpotifyTarget(subject: ListenSubject): ListenTarget {
   };
 }
 
-export function selectListenTargets(subject: ListenSubject): readonly ListenTarget[] {
-  return [buildDeezerTarget(subject), buildSpotifyTarget(subject)];
+export type SongListenProvider = 'deezer' | 'spotify' | 'youtube' | 'other';
+
+export interface SongListenLink {
+  readonly provider: SongListenProvider;
+  readonly address: string;
+}
+
+export interface SongListenSource extends ListenSubject {
+  readonly links: readonly { readonly url: string; readonly provider: SongListenProvider }[];
+}
+
+function collectDistinctLinks(candidates: readonly SongListenLink[]): SongListenLink[] {
+  const distinct: SongListenLink[] = [];
+  for (const candidate of candidates) {
+    if (!distinct.some((known) => known.address === candidate.address)) distinct.push(candidate);
+  }
+  return distinct;
+}
+
+function toListenLink(target: ListenTarget): SongListenLink {
+  return { provider: target.provider, address: target.address };
+}
+
+export function selectSongListenLinks(song: SongListenSource): readonly SongListenLink[] {
+  const deezer = buildDeezerTarget(song);
+  const spotify = buildSpotifyTarget(song);
+  const storedLinks = song.links.map((link) => ({ provider: link.provider, address: link.url }));
+  const hasStoredSpotifyLink = storedLinks.some((link) => link.provider === 'spotify');
+  const isSpotifyLinkShown = spotify.isExact || !hasStoredSpotifyLink;
+  return collectDistinctLinks([
+    ...(deezer.isExact ? [toListenLink(deezer)] : []),
+    ...(isSpotifyLinkShown ? [toListenLink(spotify)] : []),
+    ...storedLinks,
+  ]);
 }

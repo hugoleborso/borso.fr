@@ -69,6 +69,24 @@ export function reportTakeQueueWriteFailed(error: unknown): void {
   });
 }
 
+const ENTRY_NOTE_SAVE_ERROR = 'EntryNoteSaveError';
+
+export function reportEntryNoteSaveFailed(setlistId: string): void {
+  Sentry.captureMessage(ENTRY_NOTE_SAVE_ERROR, {
+    level: 'error',
+    tags: { 'setlist.id': setlistId },
+  });
+}
+
+const SETLIST_BATCH_ADD_ERROR = 'SetlistBatchAddError';
+
+export function reportSetlistBatchAddFailed(setlistId: string): void {
+  Sentry.captureMessage(SETLIST_BATCH_ADD_ERROR, {
+    level: 'error',
+    tags: { 'setlist.id': setlistId },
+  });
+}
+
 export type TakeBreadcrumb = 'RecordingInterrupted' | 'take_upload_retried';
 
 export function recordTakeBreadcrumb(message: TakeBreadcrumb): void {

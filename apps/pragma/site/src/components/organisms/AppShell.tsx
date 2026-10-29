@@ -1,17 +1,12 @@
 /** @Feature shell */
 
-import type { ParseKeys } from 'i18next';
-import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link, NavLink, Outlet, useLocation } from 'react-router-dom';
+import { Link, Outlet, useLocation } from 'react-router-dom';
 import { Avatar } from '../atoms/Avatar';
-import { Badge } from '../atoms/Badge';
 import { composeClassName } from '../atoms/class-name.utils';
-import { Icon, type IconName } from '../atoms/Icon';
-import { isPositiveCount } from '../../lib/counts.utils';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
-import { MEMBER_COLOR_TOKENS, memberInitial } from '../atoms/member-palette.utils';
-import { LanguageSwitcher } from '../molecules/LanguageSwitcher';
+import { Icon } from '../atoms/Icon';
+import { Overline } from '../atoms/Overline';
+import { MEMBER_LOADING_COLOR, memberInitial } from '../atoms/member-palette.utils';
 import { OfflineBanner } from '../molecules/OfflineBanner';
 import {
   BREAKPOINT_BELOW_LG,
@@ -20,168 +15,57 @@ import {
 import { useIsOnline } from '../molecules/online-status.hook';
 import { BottomTabBar } from './BottomTabBar';
 import { InstallOffer } from './InstallOffer';
-import { isNavigationDestinationActive } from './navigation-active.core';
-import { useNavigationBadges } from './navigation-badges.hook';
+import { selectActiveTab, SHELL_TABS, type ShellTab } from './navigation-active.core';
+import { scrollPageToTop } from '../../lib/page-scroll.adapter';
 import { useSignedInMember } from '../../lib/queries/me.queries';
-
-interface NavItem {
-  to: string;
-  labelKey: ParseKeys;
-  icon: IconName;
-}
-
-const PRIMARY_NAV: readonly NavItem[] = [
-  { to: '/catalog', labelKey: 'nav.catalog', icon: 'catalog' },
-  { to: '/sessions', labelKey: 'nav.sessions', icon: 'sessions' },
-  { to: '/setlists', labelKey: 'nav.setlists', icon: 'setlist' },
-  { to: '/bars', labelKey: 'nav.bars', icon: 'bars' },
-  { to: '/studies', labelKey: 'nav.studies', icon: 'bolt' },
-];
-
-const WORKSHOP_NAV: readonly NavItem[] = [
-  { to: '/tasks', labelKey: 'nav.tasks', icon: 'tasks' },
-  { to: '/compos', labelKey: 'nav.compos', icon: 'compos' },
-];
-
-const ADMIN_NAV: readonly NavItem[] = [
-  { to: '/improvements', labelKey: 'nav.improvements', icon: 'bolt' },
-  { to: '/members', labelKey: 'nav.members', icon: 'members' },
-  { to: '/instruments', labelKey: 'nav.instruments', icon: 'instr' },
-];
-
-const MORE_NAV_DESTINATIONS: readonly string[] = [...WORKSHOP_NAV, ...ADMIN_NAV].map(
-  (item) => item.to,
-);
 
 /**
  * @Blueprint organism-shell
  * @BlueprintName Application Shell Organism
  * @BlueprintUsage Use for the frame that wraps every routed page: the navigation, the global banners, and the outlet.
- * @BlueprintDescription Declares the navigation as readonly arrays of items, one per section, and maps them, so adding a destination is a data change rather than new markup. The browser's online status and the viewport width both arrive through `useSyncExternalStore` hooks, so the shell holds no effect, and its only state is the mobile panel flag a button writes.
+ * @BlueprintDescription Maps one readonly array of tabs, declared in a sibling core module, into both the desktop sidebar and the phone's bottom bar, so adding a destination is a data change rather than new markup, and asks a pure function which tab the current path belongs to. The browser's online status and the viewport width both arrive through `useSyncExternalStore` hooks, so the shell holds no state and no effect. Its root pads the top safe area, and the bottom bar the bottom one.
  */
 export function AppShell(): JSX.Element {
   const { t } = useTranslation();
   const location = useLocation();
   const isOnline = useIsOnline();
   const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
-  const [isMobileNavOpen, setIsMobileNavOpen] = useState<boolean>(false);
-  const badges = useNavigationBadges();
   const signedInMember = useSignedInMember();
   const signedInName = signedInMember.data?.firstName ?? '';
-  const signedInColor = signedInMember.data?.color ?? MEMBER_COLOR_TOKENS.teal;
+  const signedInColor = signedInMember.data?.color ?? MEMBER_LOADING_COLOR;
+  const activeTab = selectActiveTab(location.pathname);
 
-  const closeMobileNav = (): void => setIsMobileNavOpen(false);
-
-  const renderSidebar = (variant: 'desktop' | 'mobile'): JSX.Element => {
-    const isSlideOver = variant === 'mobile';
-    return (
-      <nav
-        className={composeClassName(
-          'px-3.5 py-4 flex flex-col gap-3.5 bg-bg-sunk',
-          variant === 'desktop'
-            ? 'w-[232px] min-w-[232px] border-r border-line h-full'
-            : 'w-72 max-w-[80vw] h-full border-r border-line-strong shadow-2xl',
-        )}
-      >
-        <div className="flex items-start justify-between gap-2 px-2 pt-1.5 pb-1">
-          <div className="font-display italic text-[30px] leading-none tracking-[-0.01em] text-ink-900">
-            {t('appName')}
-            <div className="font-sans not-italic text-xs tracking-[0.18em] uppercase text-ink-500 mt-0.5">
-              {t('appWordmark')}
-            </div>
+  return (
+    <div className="min-h-dvh flex bg-paper text-ink pt-[env(safe-area-inset-top)]">
+      <div className="sticky top-0 hidden h-dvh self-start lg:block">
+        <nav className="flex h-full w-[232px] min-w-[232px] flex-col gap-3.5 border-r border-rule bg-sunk px-3.5 py-4">
+          <div className="px-2 pt-1.5 pb-1">
+            <div className="font-display text-display text-ink">{t('appName')}</div>
+            <Overline className="mt-0.5">{t('appWordmark')}</Overline>
           </div>
-          {isSlideOver ? (
-            <button
-              type="button"
-              onClick={closeMobileNav}
-              aria-label={t('nav.closeMenu')}
-              className="inline-flex items-center justify-center w-11 h-11 -mr-2 -mt-1 rounded-md text-ink-500 hover:text-ink-900 bg-transparent border-0 cursor-pointer"
-            >
-              <Icon name="close" size={18} />
-            </button>
-          ) : null}
-        </div>
-
-        <div className="flex flex-col gap-px">
-          {PRIMARY_NAV.map((item) => (
-            <SidebarLink
-              key={item.to}
-              item={item}
-              label={t(item.labelKey)}
-              badge={badges[item.to]}
-              isActive={isNavigationDestinationActive(location.pathname, item.to)}
-              onClick={closeMobileNav}
-            />
-          ))}
-        </div>
-
-        <div className="font-sans text-xs tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
-          {t('nav.workshopSection')}
-        </div>
-        <div className="flex flex-col gap-px">
-          {WORKSHOP_NAV.map((item) => (
-            <SidebarLink
-              key={item.to}
-              item={item}
-              label={t(item.labelKey)}
-              badge={badges[item.to]}
-              isActive={isNavigationDestinationActive(location.pathname, item.to)}
-              onClick={closeMobileNav}
-            />
-          ))}
-        </div>
-
-        <div className="font-sans text-xs tracking-[0.14em] uppercase text-ink-400 px-2.5 pt-1.5 pb-0.5">
-          {t('nav.administrationSection')}
-        </div>
-        <div className="flex flex-col gap-px">
-          {ADMIN_NAV.map((item) => (
-            <SidebarLink
-              key={item.to}
-              item={item}
-              label={t(item.labelKey)}
-              badge={badges[item.to]}
-              isActive={isNavigationDestinationActive(location.pathname, item.to)}
-              onClick={closeMobileNav}
-            />
-          ))}
-        </div>
-
-        <div className="mt-auto flex flex-col gap-2">
-          <div className="border-t border-line pt-2">
-            <LanguageSwitcher />
+          <div className="flex flex-col gap-px">
+            {SHELL_TABS.map((tab) => (
+              <SidebarLink
+                key={tab.id}
+                tab={tab}
+                label={t(tab.labelKey)}
+                isActive={tab.id === activeTab}
+              />
+            ))}
           </div>
           <Link
             to="/account"
-            className="flex items-center gap-2.5 p-2 rounded-md border border-line bg-bg-elev no-underline text-ink-900"
+            onClick={scrollPageToTop}
+            className="mt-auto flex items-center gap-2.5 rounded-md bg-leaf p-2 text-ink no-underline shadow-leaf"
           >
             <Avatar initials={memberInitial(signedInName)} color={signedInColor} size="md" />
             <div className="min-w-0">
-              <div className="text-[13px] font-medium truncate">{signedInName}</div>
-              <div className="text-xs text-ink-500 truncate">{t('shell.meVersion')}</div>
+              <div className="truncate text-meta font-medium">{signedInName}</div>
+              <div className="truncate text-meta text-ink-soft">{t('shell.meVersion')}</div>
             </div>
           </Link>
-        </div>
-      </nav>
-    );
-  };
-
-  return (
-    <div className="min-h-dvh flex bg-bg text-ink-900">
-      <div className="hidden lg:block sticky top-0 h-dvh self-start">
-        {renderSidebar('desktop')}
+        </nav>
       </div>
-
-      {isNarrow && isMobileNavOpen ? (
-        <dialog
-          ref={openDismissibleDialogOnAttach}
-          onClose={closeMobileNav}
-          aria-label={t('nav.more')}
-          className="fixed inset-0 z-50 m-0 w-screen h-dvh max-w-none max-h-none border-0 bg-transparent p-0 backdrop:bg-[rgba(20,16,12,0.5)]"
-        >
-          <div className="w-fit h-full">{renderSidebar('mobile')}</div>
-        </dialog>
-      ) : null}
 
       <main className="flex-1 min-w-0 relative pb-[calc(4rem+env(safe-area-inset-bottom))] lg:pb-0">
         <OfflineBanner isVisible={!isOnline} />
@@ -189,47 +73,31 @@ export function AppShell(): JSX.Element {
         <Outlet />
       </main>
 
-      {isNarrow ? (
-        <BottomTabBar
-          tabs={PRIMARY_NAV}
-          badges={badges}
-          activePath={location.pathname}
-          moreDestinations={MORE_NAV_DESTINATIONS}
-          isMoreOpen={isMobileNavOpen}
-          onToggleMore={() => setIsMobileNavOpen((isOpen) => !isOpen)}
-        />
-      ) : null}
+      {isNarrow ? <BottomTabBar tabs={SHELL_TABS} activeTab={activeTab} /> : null}
     </div>
   );
 }
 
 interface SidebarLinkProps {
-  item: NavItem;
-  label: string;
-  badge: number | undefined;
-  isActive: boolean;
-  onClick: () => void;
+  readonly tab: ShellTab;
+  readonly label: string;
+  readonly isActive: boolean;
 }
 
-function SidebarLink({ item, label, badge, isActive, onClick }: SidebarLinkProps): JSX.Element {
-  const isBadgeShown = isPositiveCount(badge);
+function SidebarLink({ tab, label, isActive }: SidebarLinkProps): JSX.Element {
   return (
-    <NavLink
-      to={item.to}
-      onClick={onClick}
+    <Link
+      to={tab.to}
+      aria-current={isActive ? 'page' : undefined}
+      onClick={scrollPageToTop}
       className={composeClassName(
-        'flex items-center gap-2.5 min-h-11 px-2.5 py-2 rounded-md text-[13.5px] border border-transparent',
-        'hover:bg-[rgba(26,22,18,0.04)] transition-colors',
-        isActive ? 'bg-bg-elev text-ink-900 border-line' : 'text-ink-700',
+        'flex min-h-11 items-center gap-2.5 rounded-md px-2.5 py-2 text-body text-ink no-underline transition-colors',
+        'hover:bg-hover',
+        isActive ? 'bg-leaf font-medium shadow-leaf' : null,
       )}
     >
-      <Icon name={item.icon} size={16} className="opacity-85" />
+      <Icon name={tab.icon} size="md" className="text-ink-soft" />
       <span className="flex-1">{label}</span>
-      {isBadgeShown ? (
-        <Badge tone="default" size="sm">
-          {badge}
-        </Badge>
-      ) : null}
-    </NavLink>
+    </Link>
   );
 }

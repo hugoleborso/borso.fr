@@ -45,11 +45,11 @@ export function VoteCatalog({
   };
 
   if (songs.length === 0) {
-    return <p className="px-4 text-ink-500">{t('voting.deckDone')}</p>;
+    return <p className="px-4 text-ink-soft">{t('voting.deckDone')}</p>;
   }
 
   return (
-    <ul className="flex flex-col gap-2 px-4 m-0 p-0 list-none">
+    <ul className="m-0 flex list-none flex-col px-4 py-0">
       {songs.map((song) => {
         const points = readGivenPoints(pointsBySongId, song.id);
         return (
@@ -58,8 +58,6 @@ export function VoteCatalog({
             title={song.title}
             artist={song.artist}
             deezerAlbumId={song.deezerAlbumId}
-            deezerTrackId={song.deezerTrackId}
-            spotifyTrackId={song.spotifyTrackId}
             points={points}
             isNew={isSongNewSinceLastScore(song, lastScoredAt, points)}
             onTap={() => {

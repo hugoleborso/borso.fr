@@ -1,25 +1,44 @@
 /** @Feature sessions */
 
-import { type JSX, useState } from 'react';
+import { selectComingSessions, selectPastSessions } from '@domain/session-schedule.core';
+import { type JSX, useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { Link, useSearchParams } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
+import { ButtonLink } from '../../components/atoms/ButtonLink';
+import { Chip } from '../../components/atoms/Chip';
 import { Icon } from '../../components/atoms/Icon';
+import { IconButton } from '../../components/atoms/IconButton';
 import { composeClassName } from '../../components/atoms/class-name.utils';
-import { BottomActionBar } from '../../components/molecules/BottomActionBar';
+import { BottomActions } from '../../components/atoms/BottomActions';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
-import { FreeSlotsPanel } from '../../components/organisms/FreeSlotsPanel';
+import { EmptyState } from '../../components/molecules/EmptyState';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SegmentedChoice } from '../../components/molecules/SegmentedChoice';
+import { SessionsSectionTabs } from '../../components/molecules/SessionsSectionTabs';
+import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
 import { formatSessionDate } from '../../lib/formatters.utils';
 import { useNavigateTo } from '../../lib/navigation.hook';
 import { useDeleteSession, useSessionsList } from '../../lib/queries/sessions.queries';
 
+const NO_ROWS: readonly never[] = [];
+const KIND_PARAM = 'kind';
+const CONCERT_KIND = 'concert';
+const WHEN_PARAM = 'when';
+const PAST_WHEN = 'past';
+const UPCOMING_WHEN = 'upcoming';
+
+type ListingWhen = typeof UPCOMING_WHEN | typeof PAST_WHEN;
+
+const SELECT_SESSIONS_BY_WHEN = {
+  upcoming: selectComingSessions,
+  past: selectPastSessions,
+} as const satisfies Readonly<Record<ListingWhen, unknown>>;
+
 interface SessionDraft {
   readonly kind: 'concert' | 'practice';
-  readonly initialDate?: Date;
-  readonly origin?: 'free_slot';
 }
 
 // @FollowsBlueprint route-list-page
@@ -31,9 +50,37 @@ export function SessionsPage(): JSX.Element {
 
   const [creating, setCreating] = useState<SessionDraft | null>(null);
   const [pendingDeletion, setPendingDeletion] = useState<string | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const isConcertsOnly = searchParams.get(KIND_PARAM) === CONCERT_KIND;
+  const when: ListingWhen = searchParams.get(WHEN_PARAM) === PAST_WHEN ? PAST_WHEN : UPCOMING_WHEN;
 
-  const sessions = sessionsQuery.data?.sessions ?? [];
-  const concerts = sessions.filter((session) => session.kind === 'concert');
+  const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
+  const allSessions = sessionsQuery.data?.sessions ?? NO_ROWS;
+  const sessions = useMemo(
+    () => SELECT_SESSIONS_BY_WHEN[when](allSessions, new Date(nowEpochMs)),
+    [allSessions, when, nowEpochMs],
+  );
+  const concerts = allSessions.filter((session) => session.kind === CONCERT_KIND);
+  const listedSessions = isConcertsOnly
+    ? sessions.filter((session) => session.kind === CONCERT_KIND)
+    : sessions;
+  const writeAddressParam = (name: string, value: string | null): void => {
+    setSearchParams(
+      (current) => {
+        const next = new URLSearchParams(current);
+        if (value === null) next.delete(name);
+        else next.set(name, value);
+        return next;
+      },
+      { replace: true },
+    );
+  };
+  const toggleConcertsOnly = (): void => {
+    writeAddressParam(KIND_PARAM, isConcertsOnly ? null : CONCERT_KIND);
+  };
+  const chooseWhen = (chosen: ListingWhen): void => {
+    writeAddressParam(WHEN_PARAM, chosen === PAST_WHEN ? PAST_WHEN : null);
+  };
   const error =
     sessionsQuery.error instanceof ApiError
       ? sessionsQuery.error.message
@@ -47,79 +94,100 @@ export function SessionsPage(): JSX.Element {
   };
 
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
-      <PageHeader title={t('sessions.title')} />
-
-      <BottomActionBar>
-        <Button variant="default" onClick={() => setCreating({ kind: 'practice' })}>
-          <Icon name="plus" size={14} />
-          {t('sessions.kindPractice')}
-        </Button>
-        <Button variant="accent" onClick={() => setCreating({ kind: 'concert' })}>
-          <Icon name="plus" size={14} />
-          {t('sessions.kindConcert')}
-        </Button>
-      </BottomActionBar>
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[960px]">
+      <PageHeader
+        title={t('sessions.title')}
+        actions={
+          <ButtonLink to="/sessions/slots" variant="secondary" size="sm" icon="calendar">
+            {t('freeSlots.open')}
+          </ButtonLink>
+        }
+      >
+        <SessionsSectionTabs value="sessions" />
+        <div className="mt-3 flex flex-wrap items-center gap-2">
+          <SegmentedChoice
+            legend={t('sessions.when.label')}
+            options={[
+              { value: UPCOMING_WHEN, label: t('sessions.when.upcoming') },
+              { value: PAST_WHEN, label: t('sessions.when.past') },
+            ]}
+            value={when}
+            onChange={chooseWhen}
+          />
+          <Chip pressed={isConcertsOnly} onPress={toggleConcertsOnly}>
+            <Icon name="audience" />
+            <span>{t('sessions.concertsOnly')}</span>
+          </Chip>
+        </div>
+      </PageHeader>
 
       {error === null ? null : (
-        <p className="text-danger text-sm mb-3" role="alert">
+        <p className="text-danger text-meta mb-3" role="alert">
           {error}
         </p>
       )}
       {sessionsQuery.isLoading ? (
-        <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
+        <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>
       ) : null}
-
-      <FreeSlotsPanel
-        onBook={(start) =>
-          setCreating({ kind: 'practice', initialDate: start, origin: 'free_slot' })
-        }
-      />
+      {sessionsQuery.isSuccess && listedSessions.length === 0 ? (
+        <EmptyState icon="calendar">
+          {t(when === PAST_WHEN ? 'sessions.when.noPast' : 'sessions.when.noUpcoming')}
+        </EmptyState>
+      ) : null}
 
       <ul className="relative pl-8 flex flex-col gap-1">
         <span
-          className="absolute top-1 bottom-1 left-2 w-px bg-line-strong pointer-events-none"
+          className="absolute top-1 bottom-1 left-2 w-px bg-rule-strong pointer-events-none"
           aria-hidden="true"
         />
-        {sessions.map((session) => {
-          const isConcert = session.kind === 'concert';
+        {listedSessions.map((session) => {
+          const isConcert = session.kind === CONCERT_KIND;
           return (
             <li key={session.id} className="relative py-2">
               <span
                 className={composeClassName(
                   'absolute -left-7 top-3.5 w-2.5 h-2.5 rounded-full',
-                  isConcert ? 'bg-accent border-2 border-accent' : 'bg-bg border-2 border-ink-700',
+                  isConcert ? 'bg-accent border-2 border-accent' : 'bg-paper border-2 border-ink',
                 )}
                 aria-hidden="true"
               />
               <div className="relative">
                 <Link
                   to={`/sessions/${session.id}`}
-                  className="block bg-bg-elev border border-line rounded-md px-4 py-3 pr-12 hover:border-line-strong transition-colors"
+                  className={composeClassName(
+                    'block rounded-md px-4 py-3 pr-12 transition-colors',
+                    isConcert
+                      ? 'border-2 border-accent bg-accent-soft'
+                      : 'border border-rule bg-leaf hover:border-rule-strong',
+                  )}
                 >
-                  <div className="text-xs font-mono uppercase tracking-wider text-ink-400 mb-1">
+                  <div
+                    className={composeClassName(
+                      'text-label uppercase tracking-wider mb-1',
+                      isConcert ? 'font-semibold text-accent-strong' : 'text-ink-soft',
+                    )}
+                  >
                     {isConcert ? '♪' : '⟳'}{' '}
                     {t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
                   </div>
-                  <div className="font-display italic text-2xl text-ink-900 leading-tight">
+                  <div className="font-display text-title text-ink leading-tight">
                     {formatSessionDate(session.date, i18n.language)}
                   </div>
                   {session.venue === null ? null : (
-                    <div className="text-[12.5px] text-ink-500 mt-0.5">{session.venue}</div>
+                    <div className="text-meta text-ink-soft mt-0.5">{session.venue}</div>
                   )}
                 </Link>
-                <button
-                  type="button"
+                <IconButton
+                  icon="trash"
+                  variant="danger"
+                  label={t('sessions.delete.aria')}
                   onClick={(event) => {
                     event.preventDefault();
                     event.stopPropagation();
                     setPendingDeletion(session.id);
                   }}
-                  aria-label={t('sessions.delete.aria')}
-                  className="absolute top-1/2 -translate-y-1/2 right-3 inline-flex items-center justify-center w-11 h-11 rounded-md text-ink-400 hover:text-danger hover:bg-bg transition-colors cursor-pointer"
-                >
-                  <Icon name="trash" size={16} />
-                </button>
+                  className="absolute top-1/2 right-3 -translate-y-1/2"
+                />
               </div>
             </li>
           );
@@ -129,8 +197,6 @@ export function SessionsPage(): JSX.Element {
       {creating === null ? null : (
         <CreateSessionDialog
           kind={creating.kind}
-          {...(creating.initialDate === undefined ? {} : { initialDate: creating.initialDate })}
-          {...(creating.origin === undefined ? {} : { origin: creating.origin })}
           onClose={() => setCreating(null)}
           onCreated={(sessionId) => navigateTo(`/sessions/${sessionId}`)}
           existingConcerts={concerts.map((concert) => ({
@@ -149,6 +215,14 @@ export function SessionsPage(): JSX.Element {
           onCancel={() => setPendingDeletion(null)}
         />
       )}
+      <BottomActions>
+        <Button variant="secondary" onClick={() => setCreating({ kind: 'practice' })} icon="plus">
+          {t('sessions.kindPractice')}
+        </Button>
+        <Button variant="primary" onClick={() => setCreating({ kind: 'concert' })} icon="plus">
+          {t('sessions.kindConcert')}
+        </Button>
+      </BottomActions>
     </section>
   );
 }

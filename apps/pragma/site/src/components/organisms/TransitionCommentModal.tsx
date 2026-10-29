@@ -4,15 +4,18 @@ import { TRANSITION_COMMENT_MAX_LENGTH } from '@domain/input-limits.core';
 import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { AutoGrowTextarea } from '../atoms/AutoGrowTextarea';
 import { Button } from '../atoms/Button';
-import { composeClassName } from '../atoms/class-name.utils';
-import { inputVariants } from '../atoms/input.variants';
+import { Sheet } from '../molecules/Sheet';
 import { ApiError } from '../../lib/api.client';
-import { openDismissibleDialogOnAttach } from '../../lib/modal-dialog.adapter';
+import { recordProductEvent } from '../../observability/product-event.adapter';
+import { useTransitionDraft } from '../../lib/transition-draft.store';
 import {
   useSaveTransitionComment,
   useTransitionComment,
 } from '../../lib/queries/transitions.queries';
+
+const TRANSITION_NOTE_ROWS = 3;
 
 export interface TransitionCommentModalProps {
   readonly songAId: string;
@@ -33,16 +36,20 @@ export function TransitionCommentModal({
   const { t } = useTranslation();
   const existing = useTransitionComment(songAId, songBId);
   const save = useSaveTransitionComment();
-  const [editedDraft, setEditedDraft] = useState<string | null>(null);
+  const kept = useTransitionDraft(songAId, songBId);
   const [localError, setLocalError] = useState<string | null>(null);
 
-  const draft = editedDraft ?? existing.data?.comment.comment ?? '';
+  const draft = kept.text ?? existing.data?.comment.comment ?? '';
 
   const saveComment = (): void => {
     save.mutate(
       { a: songAId, b: songBId, comment: draft },
       {
-        onSuccess: onClose,
+        onSuccess: () => {
+          recordProductEvent('transition_comment_saved');
+          kept.discard();
+          onClose();
+        },
         onError: (error) =>
           setLocalError(error instanceof ApiError ? error.message : 'unknown-error'),
       },
@@ -53,43 +60,39 @@ export function TransitionCommentModal({
   const displayError = localError ?? queryError;
 
   return (
-    <dialog
-      ref={openDismissibleDialogOnAttach}
+    <Sheet
+      title={t('setlist.transitionCommentTitle')}
+      label={t('setlist.transitionCommentTitle')}
       onClose={onClose}
-      className="m-auto w-[calc(100vw-2rem)] sm:w-[30rem] max-w-[30rem] rounded-lg border border-line-strong bg-bg-elev p-0 backdrop:bg-ink-900/40"
+      footer={
+        <Button icon="check" variant="primary" onClick={saveComment} disabled={save.isPending}>
+          {t('common.save')}
+        </Button>
+      }
     >
-      <div className="p-6">
-        <h3 className="font-display italic text-2xl text-ink-900 m-0 mb-1">
-          {t('setlist.transitionCommentTitle')}
-        </h3>
-        <p className="text-xs text-ink-500 m-0 mb-4">
-          {songATitle} <span className="text-ink-300">▸</span> {songBTitle}
+      <div>
+        <p className="m-0 mb-4 text-meta text-ink-soft">
+          {songATitle} <span className="text-ink-faint">▸</span> {songBTitle}
         </p>
         {displayError === null ? null : (
-          <p className="text-danger text-sm mb-3" role="alert">
+          <p className="text-danger text-meta mb-3" role="alert">
             {displayError}
           </p>
         )}
         {existing.isLoading ? (
-          <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>
-        ) : (
-          <textarea
-            value={draft}
-            onChange={(event) => setEditedDraft(event.target.value)}
-            rows={6}
-            maxLength={TRANSITION_COMMENT_MAX_LENGTH}
-            className={composeClassName(inputVariants({ size: 'md' }), 'font-mono resize-y')}
-          />
-        )}
-        <div className="flex gap-2 mt-4 justify-end">
-          <Button type="button" variant="ghost" onClick={onClose}>
-            {t('common.cancel')}
-          </Button>
-          <Button type="button" variant="accent" onClick={saveComment} disabled={save.isPending}>
-            {t('common.save')}
-          </Button>
-        </div>
+          <p className="m-0 mb-2 text-meta text-ink-soft">{t('common.loading')}</p>
+        ) : null}
+        <AutoGrowTextarea
+          size="md"
+          value={draft}
+          onChange={(event) => kept.keep(event.target.value)}
+          readOnly={existing.isLoading}
+          aria-label={t('setlist.transitionCommentTitle')}
+          rows={TRANSITION_NOTE_ROWS}
+          maxLength={TRANSITION_COMMENT_MAX_LENGTH}
+          className="font-display italic"
+        />
       </div>
-    </dialog>
+    </Sheet>
   );
 }

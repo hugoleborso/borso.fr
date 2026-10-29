@@ -50,11 +50,13 @@ import {
   linkSetlistToSession,
   type LinkOutcome,
   notifySetlistChangedById,
+  unlinkSetlistFromSession,
+} from './setlists.service';
+import {
   reorderEntries,
   type ReorderResult,
-  unlinkSetlistFromSession,
   writeEntryPositionsWithin,
-} from './setlists.service';
+} from './setlist-entry.service';
 import type { SetlistEntryPersistedUpdate } from './setlists.schema';
 
 export { resolveSessionId } from '../sessions/sessions.service';

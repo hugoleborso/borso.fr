@@ -21,6 +21,7 @@ const TAKE: QueuedTake = {
   isUploaded: false,
   wasDeferred: false,
   hasFailed: false,
+  isFromPracticeMode: false,
 };
 
 const ENTRY: QueuedTakeEntry = { take: TAKE, audio: new Blob(['abc'], { type: 'audio/webm' }) };
@@ -160,6 +161,17 @@ describe('openTakeQueueStorage', () => {
 
     expect(read?.take).toEqual(TAKE);
     expect(read?.audio).toBeInstanceOf(Blob);
+  });
+
+  it('reads a take queued before practice mode existed as recorded outside it', async () => {
+    const fake = createFakeDatabase();
+    const { isFromPracticeMode: _dropped, ...olderTake } = TAKE;
+    fake.rows.set('take-1', { ...olderTake, audio: new Blob(['audio']) });
+    const storage = openTakeQueueStorage(fake.factory);
+
+    const [read] = await storage.list();
+
+    expect(read?.take).toEqual(TAKE);
   });
 
   it('skips a stored record it cannot read rather than failing the whole queue', async () => {

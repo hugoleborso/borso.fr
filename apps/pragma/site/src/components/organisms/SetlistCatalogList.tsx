@@ -15,7 +15,7 @@ export function SetlistCatalogList({ rows }: SetlistCatalogListProps): JSX.Eleme
   const { t, i18n } = useTranslation();
 
   if (rows.length === 0) {
-    return <p className="text-ink-400 italic text-sm">{t('setlist.indexEmpty')}</p>;
+    return <p className="text-ink-soft italic text-meta">{t('setlist.indexEmpty')}</p>;
   }
 
   return (

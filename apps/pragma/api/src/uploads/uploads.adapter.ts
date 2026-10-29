@@ -5,10 +5,13 @@
 import {
   DeleteObjectsCommand,
   GetObjectCommand,
+  HeadObjectCommand,
+  NotFound,
   PutObjectCommand,
   S3Client,
 } from '@aws-sdk/client-s3';
 import { getSignedUrl } from '@aws-sdk/s3-request-presigner';
+import type { UploadsBucketSource } from './uploads.types';
 
 let cachedClient: S3Client | null = null;
 
@@ -57,13 +60,40 @@ export async function presignPutObject(params: PresignPutParams): Promise<string
 export interface PresignGetParams {
   readonly objectKey: string;
   readonly expiresInSeconds: number;
+  readonly source?: UploadsBucketSource;
+}
+
+const BUCKET_VARIABLE_BY_SOURCE = {
+  own: 'UPLOADS_BUCKET',
+  production: 'PRODUCTION_UPLOADS_BUCKET',
+} as const satisfies Readonly<Record<UploadsBucketSource, string>>;
+
+function readBucketOf(source: UploadsBucketSource): string {
+  const variable = BUCKET_VARIABLE_BY_SOURCE[source];
+  const bucket = readEnv(variable);
+  if (bucket === undefined) throw new UploadsConfigError(`${variable} not set`);
+  return bucket;
 }
 
 export async function presignGetObject(params: PresignGetParams): Promise<string> {
-  const bucket = readEnv('UPLOADS_BUCKET');
-  if (bucket === undefined) throw new UploadsConfigError('UPLOADS_BUCKET not set');
+  const bucket = readBucketOf(params.source ?? 'own');
   const command = new GetObjectCommand({ Bucket: bucket, Key: params.objectKey });
   return await getSignedUrl(getClient(), command, { expiresIn: params.expiresInSeconds });
+}
+
+export function hasProductionUploadsBucket(): boolean {
+  return readEnv(BUCKET_VARIABLE_BY_SOURCE.production) !== undefined;
+}
+
+export async function isStoredInOwnBucket(objectKey: string): Promise<boolean> {
+  const bucket = readBucketOf('own');
+  try {
+    await getClient().send(new HeadObjectCommand({ Bucket: bucket, Key: objectKey }));
+    return true;
+  } catch (error) {
+    if (error instanceof NotFound) return false;
+    throw error;
+  }
 }
 
 const DELETE_OBJECTS_BATCH_SIZE = 1_000;

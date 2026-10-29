@@ -6,6 +6,7 @@ import { debounce } from '../../lib/debounce.utils';
 import { useSuggestionSearch, useSuggestSong } from '../../lib/queries/audience.queries';
 import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
+import { ListRow } from '../molecules/ListRow';
 import { selectSuggestionOutcome } from './suggest-song.core';
 
 const DEBOUNCE_MS = 600;
@@ -49,9 +50,9 @@ export function SuggestSongField({ sessionId, ballotToken }: SuggestSongFieldPro
 
   return (
     <section className="flex flex-col gap-2">
-      <h2 className="font-display italic text-xl text-ink-900 m-0">{t('audience.suggestTitle')}</h2>
+      <h2 className="font-display text-title text-ink m-0">{t('audience.suggestTitle')}</h2>
       <div className="relative">
-        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-400 pointer-events-none">
+        <span className="absolute left-3 top-1/2 -translate-y-1/2 text-ink-soft pointer-events-none">
           <Icon name="search" />
         </span>
         <Input
@@ -65,22 +66,25 @@ export function SuggestSongField({ sessionId, ballotToken }: SuggestSongFieldPro
         />
       </div>
       {outcome.messageKey === null ? null : (
-        <p className="text-xs text-ink-500 italic" role={outcome.isFailure ? 'alert' : undefined}>
+        <p
+          className="text-meta text-ink-soft italic"
+          role={outcome.isFailure ? 'alert' : undefined}
+        >
           {t(outcome.messageKey)}
         </p>
       )}
       {search.data === undefined ? null : (
-        <ul className="list-none p-1 m-0 flex flex-col gap-1 border border-line rounded-md bg-bg-elev max-h-72 overflow-y-auto">
+        <ul className="m-0 flex list-none flex-col gap-1 rounded-md border border-rule bg-leaf p-1">
           {search.data.hits.map((hit) => (
             <li key={hit.deezerTrackId}>
-              <button
-                type="button"
+              <ListRow
                 onClick={() => pickResult(hit.deezerTrackId)}
-                className="w-full text-left px-2 py-2 rounded text-sm text-ink-700 flex flex-col gap-0.5"
+                isChevronShown={false}
+                className="flex-col items-start gap-0.5 rounded-sm px-2 py-2 text-meta hover:bg-hover"
               >
-                <span className="font-medium text-ink-900">{hit.title}</span>
-                <span className="text-xs text-ink-500">{hit.artist}</span>
-              </button>
+                <span className="font-medium text-ink">{hit.title}</span>
+                <span className="text-meta text-ink-soft">{hit.artist}</span>
+              </ListRow>
             </li>
           ))}
         </ul>

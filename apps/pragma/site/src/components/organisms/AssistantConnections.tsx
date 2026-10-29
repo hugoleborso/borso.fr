@@ -15,25 +15,21 @@ import {
   useAssistantGrants,
   useRevokeAssistantGrant,
 } from '../../lib/queries/assistant-grants.queries';
+import type { BrandName } from '../atoms/BrandLogo';
 import { Card } from '../atoms/Card';
 import { AssistantGrantRow } from '../molecules/AssistantGrantRow';
 import { InstallCommandBlock } from '../molecules/InstallCommandBlock';
 
-interface InstallationTextKeys {
+interface InstallationPresentation {
   readonly label: ParseKeys;
-  readonly hint: ParseKeys;
+  readonly brand: BrandName;
 }
 
-const INSTALLATION_TEXT_KEYS: Readonly<Record<AssistantInstallationId, InstallationTextKeys>> = {
-  'claude-code': {
-    label: 'account.assistants.claudeCodeLabel',
-    hint: 'account.assistants.claudeCodeHint',
-  },
-  vibe: { label: 'account.assistants.vibeLabel', hint: 'account.assistants.vibeHint' },
-  connector: {
-    label: 'account.assistants.connectorLabel',
-    hint: 'account.assistants.connectorHint',
-  },
+const INSTALLATION_PRESENTATION: Readonly<
+  Record<AssistantInstallationId, InstallationPresentation>
+> = {
+  'claude-code': { label: 'account.assistants.claudeCodeLabel', brand: 'claude' },
+  vibe: { label: 'account.assistants.vibeLabel', brand: 'mistral' },
 };
 
 // @FollowsBlueprint organism-query-owning
@@ -50,25 +46,24 @@ export function AssistantConnections(): JSX.Element {
 
   return (
     <Card className="p-4 sm:p-6">
-      <h2 className="text-base text-ink-900 m-0 mb-2">{t('account.assistants.title')}</h2>
-      <p className="text-xs text-ink-500 mt-0 mb-4">{t('account.assistants.hint')}</p>
-      <div className="flex flex-col gap-5">
+      <h3 className="text-body text-ink m-0 mb-2">{t('account.assistants.title')}</h3>
+      <ul className="list-none p-0 m-0 flex flex-col divide-y divide-rule">
         {installations.map((installation) => (
           <InstallCommandBlock
             key={installation.id}
-            label={t(INSTALLATION_TEXT_KEYS[installation.id].label)}
-            hint={t(INSTALLATION_TEXT_KEYS[installation.id].hint)}
+            brand={INSTALLATION_PRESENTATION[installation.id].brand}
+            label={t(INSTALLATION_PRESENTATION[installation.id].label)}
             snippet={installation.snippet}
           />
         ))}
-      </div>
-      <h3 className="text-sm font-medium text-ink-900 mt-6 mb-1">
+      </ul>
+      <h4 className="text-meta font-medium text-ink mt-6 mb-1">
         {t('account.assistants.connected')}
-      </h3>
+      </h4>
       {connectedGrants.length === 0 ? (
-        <p className="text-sm text-ink-500 m-0">{t('account.assistants.empty')}</p>
+        <p className="text-meta text-ink-soft m-0">{t('account.assistants.empty')}</p>
       ) : (
-        <ul className="list-none p-0 m-0 flex flex-col divide-y divide-line">
+        <ul className="list-none p-0 m-0 flex flex-col divide-y divide-rule">
           {connectedGrants.map((grant) => (
             <AssistantGrantRow
               key={grant.id}
@@ -90,7 +85,7 @@ export function AssistantConnections(): JSX.Element {
         </ul>
       )}
       {revokeGrant.isError ? (
-        <p role="alert" className="mt-3 text-sm text-danger">
+        <p role="alert" className="mt-3 text-meta text-danger">
           {t('account.assistants.revokeFailed')}
         </p>
       ) : null}

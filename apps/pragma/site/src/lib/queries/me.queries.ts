@@ -2,6 +2,7 @@
 
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
+import { z } from 'zod';
 import { ApiError, api } from '../api.client';
 import { startPasskeyEnrolment } from '../passkey.adapter';
 import { freeSlotsKeys } from './free-slots.queries';
@@ -17,6 +18,16 @@ type PasskeysResponse = InferResponseType<typeof api.api.me.passkeys.$get>;
 
 export type SignedInMember = Extract<MeResponse, { memberId: string }>;
 export type PasskeySummary = Extract<PasskeysResponse, { passkeys: unknown }>['passkeys'][number];
+
+const returnedPasskeySchema = z.object({
+  passkey: z.object({ id: z.string(), label: z.string(), createdAt: z.string() }),
+});
+
+function readReturnedPasskey(body: unknown): PasskeySummary {
+  const returned = returnedPasskeySchema.safeParse(body);
+  if (!returned.success) throw new ApiError(0, 'passkey-response', body);
+  return returned.data.passkey;
+}
 
 function withoutPasskey(passkeys: readonly PasskeySummary[], passkeyId: string): PasskeySummary[] {
   return passkeys.filter((passkey) => passkey.id !== passkeyId);
@@ -134,10 +145,29 @@ export function useRegisterPasskey() {
         json: { label: variables.label, response: attestation },
       });
       await throwOnFailure(response, 'passkey-register');
-      return await response.json();
+      return readReturnedPasskey(await response.json());
     },
     onSuccess: async () => {
       await queryClient.invalidateQueries({ queryKey: meKeys.passkeys() });
+    },
+  });
+}
+
+export function useRenamePasskey() {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (variables: { passkeyId: string; label: string }) => {
+      const response = await api.api.me.passkeys[':passkeyId'].$patch({
+        param: { passkeyId: variables.passkeyId },
+        json: { label: variables.label },
+      });
+      await throwOnFailure(response, 'passkey-rename');
+      return readReturnedPasskey(await response.json());
+    },
+    onSuccess: (renamed) => {
+      queryClient.setQueryData<PasskeySummary[]>(meKeys.passkeys(), (passkeys) =>
+        passkeys?.map((passkey) => (passkey.id === renamed.id ? renamed : passkey)),
+      );
     },
   });
 }

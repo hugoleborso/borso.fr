@@ -94,6 +94,22 @@ Held by: `api/src/audience/audience.controller.test.ts` › refuses a suggestion
 Not to be confused with: a vote, which is a ballot's tap on a song already
 in the pool.
 
+## Band tab
+
+The screen that lists every page about the band itself: tasks first, then members, instruments, bars, compositions, improvements, and the account page last. It holds no list of its own.
+
+Lives in: `site/src/routes/band/`
+
+- **Tasks** (`/tasks`) opens on **My tasks**, the signed-in member's
+  tasks in the order the API gives them; **Everyone** shows one column
+  per member. The choice is the `view` search parameter, so a reload
+  keeps it. **New task** is its one primary action, in the bottom strip.
+- Not to be confused with the band as the set of people, which is
+  **member**.
+
+Held by: `site/src/routes/band/band-destinations.core.test.ts` › lists the account page last
+Held by: `site/src/routes/band/TasksPage.test.tsx` › opens on the signed-in member tasks only
+
 ## Bar
 
 A venue the band wants to play in, and the record of where the
@@ -117,10 +133,9 @@ Lives in: `api/src/bars/`
 - `availableSupport` is what the bar lends the band, any number of
   `pa-system`, `lights` and `sound-engineer`, held as JSON in a TEXT
   column. An empty list and a null column both mean it lends nothing.
-- `lastInteractionAt` may be null. A bar is stale when its last
-  interaction is older than the threshold, and a bar with no recorded
-  interaction is stale too (`isStale` in `domain/bar-staleness.core.ts`).
-  The default threshold is 60 days.
+- The `last_interaction_at` column is no longer read or written: the
+  follow-up reminder it fed was removed, and the column stays only because
+  Aurora DSQL refuses `DROP COLUMN`.
 
 A bar is added either by hand or from a **place**, the OpenStreetMap
 record a member picked in the search (`mapNominatimToBarSearchHits` in
@@ -131,8 +146,6 @@ the phone number of a new bar's form (`buildBarFormFromPlace` in
 Held by: `api/src/bars/bars.controller.test.ts` › persists every spec status value
 Held by: `api/src/bars/bars.controller.test.ts` › carries the owner through create and clears it when that member goes
 Held by: `api/src/bars/bars.controller.test.ts` › defaults a bar nobody qualified to no mood and no support
-Held by: `domain/bar-staleness.core.test.ts` › treats null lastInteractionAt as stale (no interaction ever logged)
-Held by: `domain/bar-staleness.core.test.ts` › returns true past the default threshold (61 days)
 
 Not to be confused with: the `venue` column on a concert, which is free
 text typed for that one date.
@@ -275,8 +288,15 @@ uploaded through `api/src/uploads/`
   characters, `pdf` with an S3 object key, or `image` with an S3 object
   key (`chordChartSchema`).
 - The column is nullable, and stored as JSON in a TEXT column.
+- Its text comes from what a member pastes or from a PDF's text layer, read
+  in the browser, in the "chords above lyrics" layout chord sites give; it
+  is saved as ChordPro (`convertChordsAboveLyrics` in
+  `site/src/routes/catalog/chords-above-lyrics.core.ts`), and text already
+  in ChordPro is kept as is. A photo and a PDF with no text layer stay
+  `image` and `pdf` files, which cannot be transposed.
 
 Held by: `api/src/songs/songs.controller.test.ts` › persists each of the three chord-chart variants
+Held by: `site/src/routes/catalog/chords-above-lyrics.core.test.ts` › places each chord on the syllable it stood above
 
 ## Composition
 
@@ -363,6 +383,7 @@ Lives in: `api/src/free-slots/`
   with a feed that could not be read is left out of the calculation and
   listed with the reason.
 - Booking one creates a practice whose `origin` is `free_slot`.
+- Listed on the **Find a slot** page (`/sessions/slots`, `site/src/routes/sessions/FindSlotPage.tsx`), reached from the Sessions header; the Sessions list itself shows none.
 
 Held by: `api/src/free-slots/free-slots.core.test.ts` › opens at 18:00 on weekdays and 10:00 at weekends, until midnight, Paris time
 Held by: `api/src/free-slots/free-slots.core.test.ts` › keeps free time of at least two hours, starting on a quarter hour
@@ -371,6 +392,26 @@ Held by: `api/src/sessions/sessions.core.test.ts` › keeps only the prepared co
 
 Not to be confused with: a **practice**, which only exists once someone
 books the slot.
+
+## Home
+
+The start screen, at `/`: the next session, then the signed-in member's part in its setlist or their open tasks, one at a time, chosen from two tabs.
+
+Lives in: `site/src/routes/home/`
+
+- The next session is the earliest one whose calendar day in Paris is
+  today or later (`selectNextSession` in `domain/session-schedule.core.ts`),
+  practice or concert alike.
+- Its one primary action is **Start the practice** on a practice's own
+  day when practice mode is offered; otherwise it opens that session's
+  first setlist, or the session when it has none; with no session ahead
+  it offers **New session**.
+- The member's open tasks list the ones naming the next session first.
+- Not to be confused with the **catalogue**, which was the start screen
+  before.
+
+Held by: `site/src/routes/home/home.core.test.ts` › lists the songs where the member plays, an override included, with the instruments
+Held by: `site/src/routes/home/HomePage.test.tsx` › shows an empty state with New session when no session is ahead
 
 ## Improvement
 
@@ -493,21 +534,22 @@ Lives in: `domain/lineup.core.ts`
   default lineup and every entry's override, inside one transaction
   (`deleteMemberWithLinks` with `scrubMemberFromLineup`).
 - A lineup says who holds what on one song. Which instruments a member
-  plays at all is the `member_instrument` link, and that link carries
-  `is_primary`: whether this is one of that member's main instruments.
-  A member form that saves without naming primacy keeps what was there
-  (`decidePrimaryInstrumentIds`).
+  plays at all is the `member_instrument` link. A member has no main
+  instrument: the link's `is_primary` column stays in the database,
+  because Aurora DSQL refuses `DROP COLUMN`, and nothing reads or writes
+  it.
 
 Held by: `domain/lineup.core.test.ts` › lifts a single instrument id written before one member could hold two
 Held by: `domain/lineup.core.test.ts` › keeps default members not mentioned in the override
 Held by: `domain/lineup.core.test.ts` › answers one pair per instrument held
 Held by: `api/src/members/members.controller.test.ts` › scrubs the member from every song default lineup and setlist entry override on delete
-Held by: `api/src/members/members.controller.test.ts` › keeps a primacy the member form never sends, so saving a member does not empty the column
 
 ## Lineup slot
 
-One icon in the lineup a setlist card draws: one instrument held by one
-member on that song, tinted with that member's colour.
+One mark in the lineup a setlist card draws: one instrument held by one
+member on that song, its glyph drawn on a cell filled with that member's
+stored colour, in whichever of the two inks reads better on it
+(`selectInkOnMemberColor`).
 
 Lives in: `site/src/components/molecules/`
 
@@ -527,6 +569,31 @@ Held by: `site/src/components/molecules/lineup-slots.core.test.ts` › counts th
 
 Not to be confused with: **Lineup**, which is the record a slot is drawn
 from.
+
+## Lineup grid
+
+The setlist's **Lineup** view: one column per member who plays in the
+setlist and one row per entry, so a member's instruments read down the
+setlist as one lane in their stored colour.
+
+Lives in: `site/src/components/organisms/`
+
+- A column exists only for a member who holds an instrument in at least
+  one entry; a member who plays nowhere in the setlist has no column.
+- A cell where the member plays is filled with their stored colour and
+  holds their instrument glyphs; a cell where they sit out shows a dot
+  of that colour on the column's tint.
+- A cell is marked as changed when its member plays and holds another set
+  of instruments than on the entry before. The mark is a highlighter bar
+  and an ink corner tick, never another fill: the colour means the member
+  and nothing else (`buildLineupGrid`).
+
+Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › keeps a column only for the members who play in the setlist, in the order given
+Held by: `site/src/components/organisms/lineup-grid.core.test.ts` › marks a played cell whose instruments differ from the entry before, and only that
+Held by: `site/src/components/organisms/SetlistLineupGrid.test.tsx` › marks a cell that changed from the song before, without changing its fill
+
+Not to be confused with: **Lineup slot**, the single mark a Songs row
+draws for one instrument held.
 
 ## Mastery
 
@@ -584,7 +651,10 @@ Lives in: `api/src/members/`
   filled in on the account page and used to sign the outreach message.
 - A member created without a colour is given palette slot N of five
   (coral, teal, mustard, plum, sage), wrapping round
-  (`pickNextPaletteHex`).
+  (`pickNextPaletteHex`). The five values live in
+  `domain/member-palette.core.ts`, which the API and the member form both
+  read. A stored colour is never rewritten: it is the member's identity on
+  every lineup.
 - `member_instrument` links a member to the instruments they can play. Its
   primary key is `(memberId, instrumentId)`, so the pair cannot repeat.
 - Assigning instruments replaces the whole set, and is refused when any of
@@ -675,6 +745,28 @@ Lives in: `api/src/sessions/`
 Held by: `api/src/sessions/offline-manifest.core.test.ts` › treats a session starting exactly now as past, not upcoming
 Held by: `api/src/sessions/offline-manifest.core.test.ts` › breaks a date tie on the identifier so the choice is stable
 
+## Order screen
+
+The setlist's screen for putting its entries in order with the energy curve
+in view, reached from **Order** on the setlist. It is a screen of the
+setlist, not a second noun for it: the setlist is never called a running
+order.
+
+Lives in: `site/src/routes/setlists/`
+
+- One bar per entry, its height the entry's energy, read from the entry,
+  then from its song, then the default level drawn muted
+  (`buildEnergyBars`).
+- While a row is lifted, its bar is drawn in the action blue and the curve
+  follows the order the drop would give (`projectOrder`).
+- The order is written on each drop, through the setlist's reorder route.
+
+Held by: `site/src/components/molecules/energy-curve.utils.test.ts` › reads the entry energy first, then the song energy, then the default level unstored
+Held by: `site/src/components/molecules/energy-curve.utils.test.ts` › moves the lifted row to the place of the row it is over, downwards and upwards
+
+Not to be confused with: **Energy**, the level each entry or song holds,
+which the Order screen only draws.
+
 ## Passkey
 
 A credential held by a member's own device, which signs them in without
@@ -684,7 +776,9 @@ Lives in: `api/src/auth/` (`member_passkey`), verified through
 `passkey.adapter.ts`
 
 - Stores the credential id, the public key as `bytea`, the signature
-  counter and a label the member typed. The credential id is unique.
+  counter and a label: the device kind guessed from the user agent at
+  creation, which the member confirms or changes right after
+  (`PATCH /api/me/passkeys/:passkeyId`). The credential id is unique.
 - It is an alternative to the password, not a second factor: a member
   signs in with either. The password stays as the way back when a device
   is lost.
@@ -694,6 +788,7 @@ Lives in: `api/src/auth/` (`member_passkey`), verified through
   memory.
 
 Held by: `api/src/auth/auth.controller.test.ts` › keeps the member passkeys alive through a recovery
+Held by: `api/src/me/me.controller.test.ts` › answers 404 for a passkey of another member and leaves it as it was
 
 ## Deezer track
 
@@ -784,6 +879,35 @@ Lives in: `api/src/sessions/`
 Held by: `api/src/sessions/sessions.schema.test.ts` › refuses a venue, which belongs to the other kind
 Held by: `api/src/sessions/sessions.controller.test.ts` › moves a practice onto another concert it prepares
 
+## Practice mode
+
+The screen that follows a practice's setlists song by song while the band
+plays, at `/sessions/:id/practice`, so recording a take of the song being
+played is one tap.
+
+Lives in: `site/src/routes/sessions/`
+
+- Offered only for a practice, on its own calendar day in Paris, once its
+  setlists hold a song (`isPracticeModeOffered`). A session has a date and
+  no end time, so a practice running past midnight loses the mode the
+  next day.
+- The songs follow the session's setlists in their order, then each
+  entry's position (`buildPracticeSongs`).
+- The current song is held on each device, in local storage under the
+  session, never on the server: two phones in the same practice move
+  independently. A position stored on another day is ignored, and when
+  the stored song has left the setlist the following one becomes current
+  (`resolvePracticeIndex`).
+- Moving between songs writes nothing to the server. A take recorded here
+  carries the current song and the practice, as any take does; the quick
+  note writes the current setlist entry's note.
+
+Held by: `site/src/routes/sessions/practice-mode.core.test.ts` › makes the following song current when the stored one was removed
+Held by: `site/src/routes/sessions/PracticeModePage.test.tsx` › starts on the first song, and Next song moves on without writing to the server
+
+Not to be confused with: the **scene view**, which reads one song's chart
+on stage and records nothing.
+
 ## Scene view
 
 The full-screen reading of a song's chart, for use on stage.
@@ -807,13 +931,27 @@ Lives in: `api/src/sessions/`
   are `NOT NULL`.
 - The API validates the body as a discriminated union on `kind`, so a
   concert and a practice cannot borrow each other's columns.
-- Sessions are listed newest first by date.
+- The API lists sessions with the coming ones first, nearest at the top,
+  then the past ones, newest first (`orderSessionsForListing` in
+  `domain/session-schedule.core.ts`). The Sessions screen shows one side at
+  a time: the coming ones nearest first (`selectComingSessions`) or the past
+  ones newest first (`selectPastSessions`). A session is still coming for the
+  whole of its calendar day in the band's time zone, so a practice that
+  started this morning stays the next session until midnight in Paris
+  (`selectNextSession`, which Home reads).
 - Deleting a session detaches the setlists it carried and keeps them
   (`deleteSessionWithCascade`). Another session may be playing the same
   one, and the setlists index holds it either way. It also keeps the takes
-  recorded in it and clears their `session_id`.
+  recorded in it and clears their `session_id`, and keeps the tasks
+  naming it and clears theirs.
+- The session page shows, in order, a preview of each setlist (count,
+  total time, the first three songs with their lineup, never their key),
+  **Who does what** (the tasks naming the session), and the takes recorded
+  at it grouped by song.
 
-Held by: `api/src/sessions/sessions.controller.test.ts` › creates a concert + a practice + lists both newest-first
+Held by: `api/src/sessions/sessions.controller.test.ts` › lists coming sessions first, nearest at the top, then past ones
+Held by: `domain/session-schedule.core.test.ts` › keeps a session from earlier today as the next one until midnight
+Held by: `domain/session-schedule.core.test.ts` › keeps the sessions of past days, newest first
 Held by: `api/src/sessions/sessions.controller.test.ts` › rejects a payload that mixes concert-only with practice-only fields
 Held by: `api/src/sessions/sessions.controller.test.ts` › detaches the setlists on session delete, and keeps them
 Held by: `api/src/takes/takes.controller.test.ts` › deleting the session keeps its takes and clears their session
@@ -1021,6 +1159,10 @@ Lives in: `api/src/studies/`
 - Accepted only for an instrument the member holds in the song's default
   lineup or in a lineup override of one of its setlist entries.
 - A study never changes a score; the two are separate writes.
+- Logged from the song page's **Practised**, once per instrument the member
+  holds on the song. The songs a member has to learn are the **To learn**
+  filter of the Songs tab: their study queue, one row per song, ready songs
+  left out (`selectSongsToLearn`). The Studies page this replaced is gone.
 - A study names only a song and an instrument that still exist: the write
   claims both rows, reads the lineups and inserts in one retried
   transaction, and is refused with `song-not-found` or
@@ -1180,7 +1322,7 @@ Lives in: `api/src/tasks/`
   unassigned.
 
 Held by: `api/src/tasks/tasks.controller.test.ts` › orders the list by what is most urgent
-Held by: `site/src/routes/tasks/tasks-page.core.test.ts` › adds the unassigned column only when something is unassigned
+Held by: `site/src/routes/band/band-tasks.core.test.ts` › adds the unassigned column only when something is unassigned
 Held by: `api/src/tasks/tasks.controller.test.ts` › keeps a task when the member it was assigned to is deleted
 Held by: `api/src/tasks/tasks.controller.test.ts` › never leaves a task assigned to a member deleted while the assignment was written
 Held by: `api/src/tasks/tasks.controller.test.ts` › writes the task once when its first two commits lose a conflict on the claimed member
@@ -1461,6 +1603,8 @@ to.
   reason as *revision*.
 - **part**, **station**: what a member holds on a song is an
   **instrument**, and the whole map is a **lineup**.
+- **main instrument**, **primary instrument**: a member plays a set of
+  **instruments**, none ranked above the others.
 - **ticket**, **issue**, **feature request**, **bug**: what the band wants
   changed in this application is an **improvement**, and its votes are
   **improvement votes**.

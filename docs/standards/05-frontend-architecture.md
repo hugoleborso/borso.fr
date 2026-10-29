@@ -129,9 +129,10 @@ use it, and a button whose label repeats what its icon already says are all
 text a member reads once and then scrolls past every day. When a control needs
 a sentence to be understood, change the control.
 
-- A create action is a round `+` button (`size="icon"` on `Button`, or
-  `buttonVariants({ size: 'icon' })` on a link), named through `aria-label`
-  and `title`, so it costs no width and still reads to a screen reader.
+- A create action is a round `+` button (an icon-only button, or the icon
+  button variant on a link: `iconButtonVariants` in pragma), named through
+  `aria-label` and `title`, so it costs no width and still reads to a screen
+  reader.
 - A page header is the title, plus a subtitle only when it carries data: a
   date, a venue, a count no other control on the screen already shows.
 - A placeholder names the thing (`New task`), not the procedure (`New task,
@@ -167,14 +168,19 @@ with no visible affordance, a licence attribution, an error.
   all of them, and that is where components accumulate.
 - `oxlint:borso/no-query-hooks-outside-organisms` rejects `useQuery` and
   `useMutation` in `atoms/` and `molecules/`.
+- `oxlint:borso/no-raw-interactive-element (pragma/site)` rejects a `<button>`
+  outside `Button`, `IconButton`, `Chip`, `ListRow`, `SectionTabs` and `Menu`,
+  and a `<dialog>` outside `Sheet`. A raw element draws a control the design
+  system does not know: no icon, no tap target, no variant, and a dialog with
+  its own close button, scroll area and focus.
 - `script:scripts/check-pwa-assets.sh` fails a manifest naming an icon that does
   not ship, which otherwise installs a grey square while every other gate passes.
 - `reviewer` checks that a route composes organisms and owns no layout
   primitive, because the atomic rules read the bucket out of the path and a
   route is in no bucket.
 - `reviewer` checks that no new page subtitle, field hint or button label
-  explains the interface: a create action is an icon button with an
-  `aria-label`, and a sentence survives only for what the screen cannot show.
+  explains the interface: a create action is a short label beside its icon,
+  and a sentence survives only for what the screen cannot show.
 - `reviewer` checks that every screen holds together at 375 pixels, using
   `agent-browser` for anything measurable and `scripts/phone.sh` for anything
   touched, because a synthetic click is not a tap.

@@ -1,85 +1,103 @@
 /** @Feature setlists */
 
-import { evaluateTransition } from '@domain/transition.core';
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { meanDefaultMasteryForSong } from '../../lib/mastery-aggregate.core';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
-import { useMasteryDefaults } from '../../lib/queries/mastery.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
 import {
   type SetlistEntryPatch,
-  useAppendSetlistEntry,
   useDeleteSetlistEntry,
-  useReorderSetlist,
+  useRestoreSetlistEntry,
   useSetlistEntries,
   useUpdateSetlistEntry,
 } from '../../lib/queries/setlist-entries.queries';
+import type { MinimalSetlistEntry } from '../../lib/queries/setlists.utils';
 import { useSongsList, useUpdateSong } from '../../lib/queries/songs.queries';
 import { useTransitionCommentsList } from '../../lib/queries/transitions.queries';
+import { BottomActions } from '../atoms/BottomActions';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
-import { BottomActionBar } from '../molecules/BottomActionBar';
-import {
-  BREAKPOINT_BELOW_LG,
-  useIsMediaQueryMatching,
-} from '../molecules/media-query-matching.hook';
+import { ButtonLink } from '../atoms/ButtonLink';
+import { SectionTabs } from '../molecules/SectionTabs';
+import { useTimedOffer } from '../molecules/timed-offer.hook';
+import { UndoSnackbar } from '../molecules/UndoSnackbar';
+import { indexLineupChangesTonight } from './entry-lineup-change.core';
+import { buildLineupGrid } from './lineup-grid.core';
+import { RecordingSheetDialogs } from './RecordingSheet';
+import { useRecordingSheet } from './recording-sheet.hook';
 import { SetlistEntriesList } from './SetlistEntriesList';
+import { type EntrySheetFocus, SetlistEntrySheet } from './SetlistEntrySheet';
+import { SetlistViewContent, type SetlistViewName } from './SetlistViewContent';
 import { SetlistSongPicker } from './SetlistSongPicker';
-import { SetlistToolbar } from './SetlistToolbar';
-import { formatSetlistOrder, instrumentFamilyMap, lineupOf } from './setlist-editor.utils';
-import type { SongDefaultsPatch } from '../molecules/SongDefaultsDialog';
+import { indexById } from './setlist-editor.utils';
 import { describeMemberPartsByEntryId, filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
-import { buildTransitionView, indexTransitionComments } from './transition-view.core';
+import { buildTransitionViews, indexTransitionComments } from './transition-view.core';
+import { recordProductEvent } from '../../observability/product-event.adapter';
+
+export type SetlistEditorView = SetlistViewName;
 
 interface SetlistEditorProps {
   readonly setlistId: string;
-  readonly initialMemberId: string | null;
-  readonly isEnergyShown: boolean;
+  readonly setlistName: string;
+  readonly view: SetlistEditorView;
+  readonly memberId: string | null;
+  readonly onSelectView: (view: SetlistEditorView) => void;
+  readonly onSelectMember: (memberId: string) => void;
+}
+
+interface TransitionPair {
+  readonly songAId: string;
+  readonly songBId: string;
+}
+
+interface OpenEntry {
+  readonly entryId: string;
+  readonly focus: EntrySheetFocus;
+}
+
+interface RemovedEntry {
+  readonly entry: MinimalSetlistEntry;
+  readonly index: number;
+  readonly title: string;
 }
 
 const NO_ROWS: readonly never[] = [];
-const COPIED_FEEDBACK_MS = 2000;
+const UNDO_WINDOW_MS = 6_000;
 
 type SetlistFailureKey =
   | 'setlist.failure.load'
-  | 'setlist.failure.add'
   | 'setlist.failure.remove'
-  | 'setlist.failure.reorder'
+  | 'setlist.failure.restore'
   | 'setlist.failure.update'
-  | 'setlist.failure.songDefaults'
-  | 'setlist.failure.copyOrder';
+  | 'setlist.failure.songDefaults';
 
 // @FollowsBlueprint organism-query-owning
 export function SetlistEditor({
   setlistId,
-  initialMemberId,
-  isEnergyShown,
+  setlistName,
+  view,
+  memberId,
+  onSelectView,
+  onSelectMember,
 }: SetlistEditorProps): JSX.Element {
   const { t } = useTranslation();
   const entriesQuery = useSetlistEntries(setlistId);
   const songsQuery = useSongsList();
   const instrumentsQuery = useInstrumentsList();
   const membersQuery = useMembersList();
-  const masteryQuery = useMasteryDefaults();
   const commentsQuery = useTransitionCommentsList();
-  const append = useAppendSetlistEntry();
   const updateEntry = useUpdateSetlistEntry();
   const removeEntry = useDeleteSetlistEntry();
-  const reorder = useReorderSetlist();
+  const restoreEntry = useRestoreSetlistEntry();
+  const removal = useTimedOffer<RemovedEntry>(UNDO_WINDOW_MS);
   const updateSong = useUpdateSong();
-  const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
+  const recording = useRecordingSheet();
 
-  const [transitionEditing, setTransitionEditing] = useState<{
-    songAId: string;
-    songBId: string;
-  } | null>(null);
+  const [transitionEditing, setTransitionEditing] = useState<TransitionPair | null>(null);
   const [failureKey, setFailureKey] = useState<SetlistFailureKey | null>(null);
-  const [selectedMemberId, setSelectedMemberId] = useState<string | null>(initialMemberId);
-  const [orderCopied, setOrderCopied] = useState(false);
   const [pickerOpen, setPickerOpen] = useState(false);
+  const [openEntry, setOpenEntry] = useState<OpenEntry | null>(null);
 
   const setlistEntries = useMemo(() => entriesQuery.data?.entries ?? NO_ROWS, [entriesQuery.data]);
   const songs = useMemo(() => songsQuery.data?.songs ?? NO_ROWS, [songsQuery.data]);
@@ -88,104 +106,50 @@ export function SetlistEditor({
     [instrumentsQuery.data],
   );
   const members = useMemo(() => membersQuery.data?.members ?? NO_ROWS, [membersQuery.data]);
-  const masteryDefaults = useMemo(
-    () => masteryQuery.data?.defaults ?? NO_ROWS,
-    [masteryQuery.data],
-  );
 
-  const songsById = useMemo(() => {
-    const out: Record<string, (typeof songs)[number]> = {};
-    for (const song of songs) out[song.id] = song;
-    return out;
-  }, [songs]);
-
-  const instrumentFamilies = useMemo(() => instrumentFamilyMap(instruments), [instruments]);
-
+  const songsById = useMemo(() => indexById(songs), [songs]);
+  const membersById = useMemo(() => indexById(members), [members]);
   const lineupMembers = useMemo(
     () => members.map((member) => ({ id: member.id, name: member.firstName, color: member.color })),
     [members],
   );
-
-  const energyValues = useMemo(
+  const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
+  const transitionViews = useMemo(
     () =>
-      setlistEntries.map((entry) => entry.energy ?? songsById[entry.songId]?.baseEnergy ?? null),
-    [setlistEntries, songsById],
+      buildTransitionViews({
+        entries: setlistEntries,
+        songsById,
+        instruments,
+        membersById,
+        instrumentsById: indexById(instruments),
+      }),
+    [setlistEntries, songsById, instruments, membersById],
   );
-
-  const meanMasteryBySongId = useMemo(() => {
-    const out: Record<string, number | null> = {};
-    for (const song of songs)
-      out[song.id] = meanDefaultMasteryForSong(song.defaultLineup, masteryDefaults);
-    return out;
-  }, [songs, masteryDefaults]);
-
-  const membersById = useMemo(() => {
-    const out: Record<string, (typeof members)[number]> = {};
-    for (const member of members) out[member.id] = member;
-    return out;
-  }, [members]);
-  const instrumentsById = useMemo(() => {
-    const out: Record<string, (typeof instruments)[number]> = {};
-    for (const instrument of instruments) out[instrument.id] = instrument;
-    return out;
-  }, [instruments]);
-
-  const transitionViews = useMemo(() => {
-    const views = [];
-    for (let index = 0; index < setlistEntries.length - 1; index += 1) {
-      const left = setlistEntries[index];
-      const right = setlistEntries[index + 1];
-      if (left === undefined || right === undefined) continue;
-      const verdict = evaluateTransition(
-        lineupOf(left, songsById),
-        lineupOf(right, songsById),
-        instrumentFamilies,
-      );
-      views.push(buildTransitionView(verdict, membersById, instrumentsById));
-    }
-    return views;
-  }, [setlistEntries, songsById, instrumentFamilies, membersById, instrumentsById]);
 
   const transitionNotesByPair = useMemo(
     () => indexTransitionComments(commentsQuery.data?.comments ?? NO_ROWS),
     [commentsQuery.data],
   );
 
+  const shownMemberId = view === 'my-part' ? memberId : null;
   const filtered = useMemo(
-    () => filterEntriesForMember(setlistEntries, songsById, selectedMemberId),
-    [setlistEntries, songsById, selectedMemberId],
+    () => filterEntriesForMember(setlistEntries, songsById, shownMemberId),
+    [setlistEntries, songsById, shownMemberId],
   );
   const memberPartByEntryId = useMemo(
     () => describeMemberPartsByEntryId(filtered.instrumentIdsByEntryId, instruments),
     [filtered, instruments],
   );
-  const knownMemberIds = useMemo(() => new Set(members.map((member) => member.id)), [members]);
+  const lineupChangesByEntryId = useMemo(
+    () => indexLineupChangesTonight({ entries: setlistEntries, songsById, members, instruments }),
+    [setlistEntries, songsById, members, instruments],
+  );
+  const lineupGrid = useMemo(
+    () => buildLineupGrid({ entries: setlistEntries, songsById, members, instruments }),
+    [setlistEntries, songsById, members, instruments],
+  );
 
   const failWith = (key: SetlistFailureKey) => (): void => setFailureKey(key);
-
-  const addEntry = (songId: string): void => {
-    const song = songsById[songId];
-    append.mutate(
-      {
-        setlistId,
-        songId,
-        energy: song?.baseEnergy ?? null,
-        optimisticId: crypto.randomUUID(),
-      },
-      { onError: failWith('setlist.failure.add') },
-    );
-  };
-
-  const removeSetlistEntry = (entryId: string): void => {
-    removeEntry.mutate({ setlistId, entryId }, { onError: failWith('setlist.failure.remove') });
-  };
-
-  const reorderSetlistEntries = (orderedEntryIds: readonly string[]): void => {
-    reorder.mutate(
-      { setlistId, entryIds: [...orderedEntryIds] },
-      { onError: failWith('setlist.failure.reorder') },
-    );
-  };
 
   const updateSetlistEntry = (entryId: string, patch: SetlistEntryPatch): void => {
     updateEntry.mutate(
@@ -194,94 +158,103 @@ export function SetlistEditor({
     );
   };
 
-  const updateSongDefaults = (songId: string, patch: SongDefaultsPatch): void => {
-    updateSong.mutate(
-      { id: songId, ...patch },
-      { onError: failWith('setlist.failure.songDefaults') },
+  const removeSetlistEntry = (entryId: string): void => {
+    const index = setlistEntries.findIndex((entry) => entry.id === entryId);
+    const entry = setlistEntries[index];
+    if (entry === undefined) return;
+    removeEntry.mutate({ setlistId, entryId }, { onError: failWith('setlist.failure.remove') });
+    removal.present({ entry, index, title: songsById[entry.songId]?.title ?? '' });
+  };
+
+  const undoRemoval = (removed: RemovedEntry): void => {
+    removal.withdraw();
+    restoreEntry.mutate(
+      { setlistId, entry: removed.entry, index: removed.index },
+      { onError: failWith('setlist.failure.restore') },
     );
   };
 
-  const copyOrderToClipboard = async (): Promise<void> => {
-    try {
-      await navigator.clipboard.writeText(formatSetlistOrder(setlistEntries, songsById));
-      setOrderCopied(true);
-      window.setTimeout(() => setOrderCopied(false), COPIED_FEEDBACK_MS);
-    } catch {
-      setFailureKey('setlist.failure.copyOrder');
-    }
-  };
+  const saveSetlistEntry = async (entryId: string, patch: SetlistEntryPatch): Promise<unknown> =>
+    updateEntry.mutateAsync({ setlistId, entryId, ...patch });
 
   if (entriesQuery.isLoading) {
-    return <p className="text-ink-400 italic text-sm">{t('common.loading')}</p>;
+    return <p className="text-meta text-ink-soft italic">{t('common.loading')}</p>;
   }
 
   const displayFailureKey =
     failureKey ?? (entriesQuery.error === null ? null : 'setlist.failure.load');
-  const isInFilteredMode = selectedMemberId !== null;
-  const visibleEntries = filtered.visibleEntries;
+  const offeredRemoval = removal.offered;
+  const openedIndex =
+    openEntry === null ? -1 : setlistEntries.findIndex((entry) => entry.id === openEntry.entryId);
+  const openedEntry = setlistEntries[openedIndex];
+  const openedSong = openedEntry === undefined ? undefined : songsById[openedEntry.songId];
+
+  const entriesList = (
+    <SetlistEntriesList
+      entries={setlistEntries}
+      visibleEntries={filtered.visibleEntries}
+      songsById={songsById}
+      transitionViews={transitionViews}
+      transitionNotesByPair={transitionNotesByPair}
+      inFilteredMode={view === 'my-part'}
+      memberPartByEntryId={memberPartByEntryId}
+      lineupMembers={lineupMembers}
+      slotInstruments={instruments}
+      knownMemberIds={knownMemberIds}
+      lineupChangesByEntryId={lineupChangesByEntryId}
+      onAddSongs={() => setPickerOpen(true)}
+      onOpen={(entryId) => setOpenEntry({ entryId, focus: 'note' })}
+      onRemove={removeSetlistEntry}
+      onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
+    />
+  );
 
   return (
-    <div className="flex flex-col gap-4">
-      <SetlistToolbar
-        energyValues={energyValues}
-        isCompact={isNarrow}
-        isEnergyShown={isEnergyShown}
-        members={lineupMembers}
-        selectedMemberId={selectedMemberId}
-        failureMessage={displayFailureKey === null ? null : t(displayFailureKey)}
-        onSelectMember={setSelectedMemberId}
+    <div className="flex flex-col gap-2">
+      <SectionTabs
+        label={t('setlist.viewLabel')}
+        tabs={[
+          { value: 'songs', label: t('setlist.viewSongs'), icon: 'song' },
+          { value: 'lineup', label: t('setlist.viewLineup'), icon: 'members' },
+          { value: 'my-part', label: t('setlist.viewMyPart'), icon: 'user' },
+        ]}
+        value={view}
+        onChange={onSelectView}
       />
-      {isInFilteredMode && visibleEntries.length === 0 ? (
-        <p className="text-ink-500 italic text-sm py-6 text-center">{t('lineup.emptyForMember')}</p>
-      ) : (
-        <SetlistEntriesList
-          entries={setlistEntries}
-          visibleEntries={visibleEntries}
-          songsById={songsById}
-          transitionViews={transitionViews}
-          transitionNotesByPair={transitionNotesByPair}
-          meanMasteryBySongId={meanMasteryBySongId}
-          inFilteredMode={isInFilteredMode}
-          memberPartByEntryId={memberPartByEntryId}
-          lineupMembers={lineupMembers}
-          instruments={instruments}
-          slotInstruments={instruments}
-          knownMemberIds={knownMemberIds}
-          onReorder={reorderSetlistEntries}
-          onUpdate={updateSetlistEntry}
-          onUpdateSongDefaults={updateSongDefaults}
-          onRemove={removeSetlistEntry}
-          onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
-        />
+      {displayFailureKey === null ? null : (
+        <p className="m-0 rounded-md bg-danger-soft px-3 py-2 text-meta text-danger" role="alert">
+          {t(displayFailureKey)}
+        </p>
       )}
-      {setlistEntries.length === 0 ? (
-        <p className="text-ink-500 italic text-sm py-6 text-center">{t('setlist.emptyList')}</p>
-      ) : null}
-      <BottomActionBar>
-        <Button
-          variant="default"
-          size="icon"
-          aria-label={orderCopied ? t('setlist.orderCopied') : t('setlist.copyOrder')}
-          title={t('setlist.copyOrder')}
-          onClick={() => void copyOrderToClipboard()}
-          disabled={setlistEntries.length === 0}
+      <SetlistViewContent
+        view={view}
+        entriesList={entriesList}
+        memberEntryIds={filtered.visibleEntries.map((entry) => entry.id)}
+        shownMember={shownMemberId === null ? undefined : membersById[shownMemberId]}
+        lineupGrid={lineupGrid}
+        onOpenLineupCell={(entryId) => setOpenEntry({ entryId, focus: 'lineup' })}
+        onOpenMember={onSelectMember}
+      />
+      <BottomActions>
+        <ButtonLink
+          to={`/setlists/${setlistId}/order`}
+          onClick={() => recordProductEvent('setlist_order_opened')}
+          variant="secondary"
+          icon="reorder"
+          size="lg"
         >
-          <Icon name={orderCopied ? 'check' : 'copy'} size={20} />
+          {t('setlist.order')}
+        </ButtonLink>
+        <Button variant="primary" icon="plus" size="lg" onClick={() => setPickerOpen(true)}>
+          {t('setlist.addSongs')}
         </Button>
-        <Button
-          variant="accent"
-          size="icon"
-          aria-label={t('setlist.addSong')}
-          title={t('setlist.addSong')}
-          onClick={() => setPickerOpen(true)}
-        >
-          <Icon name="plus" size={22} />
-        </Button>
-      </BottomActionBar>
+      </BottomActions>
       <SetlistSongPicker
         open={pickerOpen}
+        setlistId={setlistId}
+        setlistName={setlistName}
         songs={songs}
-        onPick={addEntry}
+        setlistSongIds={setlistEntries.map((entry) => entry.songId)}
         onClose={() => setPickerOpen(false)}
       />
       {transitionEditing === null ? null : (
@@ -291,6 +264,51 @@ export function SetlistEditor({
           songATitle={songsById[transitionEditing.songAId]?.title ?? ''}
           songBTitle={songsById[transitionEditing.songBId]?.title ?? ''}
           onClose={() => setTransitionEditing(null)}
+        />
+      )}
+      {openEntry === null || openedEntry === undefined || openedSong === undefined ? null : (
+        <SetlistEntrySheet
+          key={openedEntry.id}
+          setlistId={setlistId}
+          entry={openedEntry}
+          song={{
+            title: openedSong.title,
+            artist: openedSong.artist,
+            deezerAlbumId: openedSong.deezerAlbumId ?? null,
+            durationSeconds: openedSong.durationSeconds ?? null,
+            baseEnergy: openedSong.baseEnergy ?? null,
+            defaultLineup: openedSong.defaultLineup,
+          }}
+          position={openedIndex + 1}
+          songCount={setlistEntries.length}
+          members={members}
+          instruments={instruments}
+          focus={openEntry.focus}
+          onSave={saveSetlistEntry}
+          onUpdate={updateSetlistEntry}
+          onSaveSongLineup={(lineup) =>
+            updateSong.mutate(
+              { id: openedEntry.songId, defaultLineup: lineup },
+              { onError: failWith('setlist.failure.songDefaults') },
+            )
+          }
+          onRecordTake={() => {
+            setOpenEntry(null);
+            void recording.start({
+              songId: openedEntry.songId,
+              songTitle: openedSong.title,
+              sessionId: null,
+            });
+          }}
+          onClose={() => setOpenEntry(null)}
+        />
+      )}
+      <RecordingSheetDialogs controller={recording} />
+      {offeredRemoval === null ? null : (
+        <UndoSnackbar
+          message={t('setlist.removed', { title: offeredRemoval.title })}
+          undoLabel={t('setlist.undoRemove')}
+          onUndo={() => undoRemoval(offeredRemoval)}
         />
       )}
     </div>

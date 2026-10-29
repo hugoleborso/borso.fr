@@ -13,7 +13,12 @@ import {
   type TakeSummary,
 } from './take-tool.core';
 import { deleteStoredObjects, mintObjectUpload } from '../uploads/uploads.service';
-import { buildTakeObjectKey, isMomentWithinTake, orderCommentsByTime } from './takes.core';
+import {
+  buildTakeObjectKey,
+  isMomentWithinTake,
+  orderCommentsByTime,
+  type TakeListFilter,
+} from './takes.core';
 import {
   type ClaimedTake,
   deleteComment,
@@ -26,6 +31,7 @@ import {
   hasInsertedTakeWithin,
   insertCommentWithin,
   listCommentsOfTake,
+  listTakesOfSessionNewestFirst,
   listTakesOfSongNewestFirst,
   runInOneTakeTransaction,
   updateComment,
@@ -138,13 +144,19 @@ export async function createTake(
   if (recording.kind !== 'recorded') return recording;
   const { take } = recording;
   if (!recording.isNewTake) return { kind: 'ok', take };
-  recordProductEvent({ event: 'take_created', source: input.source, queued: input.queued });
+  recordProductEvent({
+    event: 'take_created',
+    source: input.source,
+    queued: input.queued,
+    from_practice_mode: input.fromPracticeMode,
+  });
   await notifyBandAboutTake('take-created', take, command);
   return { kind: 'ok', take };
 }
 
-export async function getTakesOfSong(songId: string): Promise<TakeView[]> {
-  return await listTakesOfSongNewestFirst(songId);
+export async function getTakesMatching(filter: TakeListFilter): Promise<TakeView[]> {
+  if (filter.sessionId !== undefined) return await listTakesOfSessionNewestFirst(filter.sessionId);
+  return await listTakesOfSongNewestFirst(filter.songId ?? '');
 }
 
 async function deleteAudioOfDeletedTakes(objectKeys: readonly string[]): Promise<void> {
@@ -252,7 +264,7 @@ export async function detachTakesOfDeletedSession(
 }
 
 export async function listTakesForTool(songReference: string): Promise<TakeSummary[]> {
-  return (await getTakesOfSong(await resolveSongId(songReference))).map(summarizeTake);
+  return (await listTakesOfSongNewestFirst(await resolveSongId(songReference))).map(summarizeTake);
 }
 
 export async function resolveTakeId(
@@ -261,7 +273,7 @@ export async function resolveTakeId(
 ): Promise<string> {
   if (takeId !== undefined) return takeId;
   if (songReference === undefined) return refuseTool({ error: 'take-or-song-required' });
-  const [latest] = await getTakesOfSong(await resolveSongId(songReference));
+  const [latest] = await listTakesOfSongNewestFirst(await resolveSongId(songReference));
   if (latest === undefined) return refuseTool({ error: 'take-not-found', song: songReference });
   return latest.id;
 }

@@ -3,13 +3,17 @@
 import { useForm } from '@tanstack/react-form';
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { GOOGLE_CALENDAR_SETTINGS_ADDRESS } from '../../lib/calendar-guide.utils';
+import { readTextFromClipboard } from '../../lib/clipboard.adapter';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import { Button } from '../atoms/Button';
+import { ButtonAnchor } from '../atoms/ButtonAnchor';
+import { Icon } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
 import { type CalendarFeedFormMode, selectCalendarFeedFormMode } from './calendar-feed-form.utils';
 
-const FIELD_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const FIELD_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
 const ADDRESS_MAX_LENGTH = 2_048;
 
 export interface CalendarFeedFormProps {
@@ -28,12 +32,20 @@ interface AddressFieldProps {
 
 function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
   const { t } = useTranslation();
+  const [hasPasteFailed, setHasPasteFailed] = useState(false);
   const form = useForm({
     defaultValues: { address: '' },
     onSubmit: async ({ value }) => {
       await onSave(value.address.trim());
     },
   });
+  const pasteAndConnect = async (): Promise<void> => {
+    const pasted = (await readTextFromClipboard())?.trim() ?? '';
+    setHasPasteFailed(pasted.length === 0);
+    if (pasted.length === 0) return;
+    form.setFieldValue('address', pasted);
+    await form.handleSubmit();
+  };
   return (
     <form
       onSubmit={(event) => {
@@ -43,6 +55,28 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
       }}
       className="flex flex-col gap-2.5"
     >
+      <div className="flex flex-wrap gap-2">
+        <ButtonAnchor
+          href={GOOGLE_CALENDAR_SETTINGS_ADDRESS}
+          variant="secondary"
+          mark={<Icon name="external" size="md" />}
+        >
+          {t('account.calendarGuide.openSettings')}
+        </ButtonAnchor>
+        <Button
+          icon="clipboard"
+          type="button"
+          variant="secondary"
+          onClick={() => void pasteAndConnect()}
+        >
+          {t('account.calendarGuide.pasteAndConnect')}
+        </Button>
+      </div>
+      {hasPasteFailed ? (
+        <p className="m-0 text-meta text-ink-soft" role="status">
+          {t('account.calendarGuide.pasteFailed')}
+        </p>
+      ) : null}
       <label className={FIELD_LABEL_CLASS} htmlFor="account-calendar-feed">
         {t('account.calendarFeedAddress')}
       </label>
@@ -67,8 +101,9 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
         <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
           {([canSubmit, isSubmitting]) => (
             <Button
+              icon="check"
               type="submit"
-              variant="accent"
+              variant="secondary"
               disabled={isSubmitDisabled(canSubmit, isSubmitting)}
             >
               {t('common.save')}
@@ -76,7 +111,7 @@ function AddressField({ onSave, onCancel }: AddressFieldProps): JSX.Element {
           )}
         </form.Subscribe>
         {onCancel === null ? null : (
-          <Button type="button" variant="ghost" onClick={onCancel}>
+          <Button icon="close" type="button" variant="quiet" onClick={onCancel}>
             {t('common.cancel')}
           </Button>
         )}
@@ -100,13 +135,19 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
     replacing: <AddressField onSave={saveAndClose} onCancel={() => setIsReplacing(false)} />,
     connected: (
       <div className="flex flex-wrap items-center gap-3">
-        <span className="text-sm text-ink-900">{t('account.calendarFeedConnected')}</span>
-        <Button type="button" variant="default" onClick={() => setIsReplacing(true)}>
+        <span className="text-meta text-ink">{t('account.calendarFeedConnected')}</span>
+        <Button
+          icon="refresh"
+          type="button"
+          variant="secondary"
+          onClick={() => setIsReplacing(true)}
+        >
           {t('account.calendarFeedReplace')}
         </Button>
         <Button
+          icon="trash"
           type="button"
-          variant="ghost"
+          variant="quiet"
           onClick={() => setIsConfirmingRemoval(true)}
           disabled={props.isRemoving}
         >
@@ -131,12 +172,12 @@ export function CalendarFeedForm(props: CalendarFeedFormProps): JSX.Element {
         />
       ) : null}
       {props.error === null ? null : (
-        <p className="text-danger text-sm m-0" role="alert">
+        <p className="text-danger text-meta m-0" role="alert">
           {props.error}
         </p>
       )}
       {props.message === null ? null : (
-        <p className="text-sm text-ink-500 m-0" role="status">
+        <p className="text-meta text-ink-soft m-0" role="status">
           {props.message}
         </p>
       )}

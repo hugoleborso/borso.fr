@@ -45,14 +45,14 @@ export function FileDropZone({ isBusy, onFileChosen }: FileDropZoneProps): JSX.E
         'flex flex-col items-center justify-center gap-2 px-6 py-8 rounded-md border-2 border-dashed cursor-pointer transition-colors',
         dragOver
           ? 'border-accent bg-accent/5'
-          : 'border-line text-ink-500 hover:border-ink-700 hover:text-ink-700',
+          : 'border-rule text-ink-soft hover:border-ink hover:text-ink',
       )}
     >
-      <Icon name="upload" size={20} />
-      <span className="text-sm font-medium">
+      <Icon name="upload" size="md" />
+      <span className="text-meta font-medium">
         {isBusy ? t('catalog.uploadInProgress') : t('catalog.uploadPrompt')}
       </span>
-      <span className="text-xs text-ink-400">
+      <span className="text-meta text-ink-soft">
         {t('catalog.uploadHint', { maxMb: FILE_DROP_MAX_MEBIBYTES })}
       </span>
       <input

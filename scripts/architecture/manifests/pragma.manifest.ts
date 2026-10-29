@@ -193,7 +193,7 @@ export const pragmaManifest: ArchitectureManifest = {
       technology:
         'Error monitoring SaaS, @sentry/react in the browser and @sentry/aws-serverless in the Lambda',
       description:
-        'Receives the failures nobody saw and one trace per page load or navigation: a render that crashed the page, an uncaught error in the browser, any API error that reached the 500 answer, and the browser spans joined to the Lambda request span through the sentry-trace and baggage headers, which the site sends to the pragma API and nowhere else. Both sides start it only on a deployed stage with a project address configured, so a missing project leaves the application unchanged. Every personal data category the SDK collects by default is switched off: no user, cookie, header, body, query string or local variable leaves the process. The site build uploads its source maps with a token and deletes them before the bundle ships.',
+        'Receives the failures nobody saw and one trace per page load or navigation: a render that crashed the page, an uncaught error in the browser, any API error that reached the 500 answer, and the browser spans joined to the Lambda request span through the sentry-trace and baggage headers, which the site sends to the pragma API and nowhere else. The site also counts the product events the analytics read, such as setlist_view_changed or entry_note_saved, as Sentry metrics carrying a few non-personal attributes. Both sides start it only on a deployed stage with a project address configured, so a missing project leaves the application unchanged. Every personal data category the SDK collects by default is switched off: no user, cookie, header, body, query string or local variable leaves the process. The site build uploads its source maps with a token and deletes them before the bundle ships.',
       boundary: 'third-party',
       access: 'account',
     },
@@ -313,7 +313,7 @@ export const pragmaManifest: ArchitectureManifest = {
       name: 'Element scrolling',
       technology: 'Browser scroll API',
       description:
-        'Drives the scene chart down the screen while a song is played, and brings the current setlist pill into view. Held by a ref callback, so the timer stops when the scene unmounts. The shell scroll region is also read through its scroll event, which is what tells the bottom action bar to tuck away and come back.',
+        'Drives the scene chart down the screen while a song is played, and brings the current setlist pill into view. Held by a ref callback, so the timer stops when the scene unmounts. The shell scroll region is also read through its scroll event, which is what tells the bottom action bar to tuck away and come back. On the Add a song page, a resize of the visual viewport lifts the focused title field to the top, so the results of the music service under it stay above the keyboard.',
       boundary: 'browser-platform',
       access: 'open',
     },

@@ -64,12 +64,12 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
 
+      # The pages are not committed, so this produces them for the artifact
+      # below. It also refuses what `--check` would, an undeclared
+      # `@DependsOnExternal` and the reverse included, since every refusal fires
+      # without the flag, so a second `--check` run would only repeat the build.
       - name: Build the head model
         run: pnpm exec tsx scripts/architecture/architecture-graph.ts
-
-      # Fails on a `@DependsOnExternal` no manifest declares, and the reverse.
-      - name: Check the tags the maps read
-        run: pnpm exec tsx scripts/architecture/architecture-graph.ts --check
 
       # A worktree of the merge base, scanned by the head revision's generator.
       # The merge base rather than the branch tip, so the comparison describes

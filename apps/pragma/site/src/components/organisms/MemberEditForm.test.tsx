@@ -1,12 +1,11 @@
 import { cleanup, render, screen } from '@testing-library/react';
 import userEvent from '@testing-library/user-event';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
+import { MEMBER_PALETTE } from '@domain/member-palette.core';
+import { stubSheetDialog } from '../molecules/sheet.test-utils';
 import { MemberEditForm } from './MemberEditForm';
-import {
-  type MemberFormValues,
-  DEFAULT_MEMBER_COLOR,
-} from '../../routes/members/members-page.core';
+import { type MemberFormValues } from '../../routes/members/members-page.core';
 
 declare global {
   var IS_REACT_ACT_ENVIRONMENT: boolean;
@@ -18,7 +17,7 @@ const INSTRUMENTS = [
   { id: 'keys-id', name: 'Keys' },
 ];
 
-const BLANK_VALUES: MemberFormValues = { firstName: '', color: DEFAULT_MEMBER_COLOR };
+const BLANK_VALUES: MemberFormValues = { firstName: '', color: MEMBER_PALETTE[0].hex };
 
 function renderForm(overrides: Partial<Parameters<typeof MemberEditForm>[0]> = {}): {
   onSave: ReturnType<typeof vi.fn>;
@@ -58,6 +57,10 @@ function readFirstNameField(): HTMLInputElement {
 
 // @FollowsBlueprint test-component-render
 describe('MemberEditForm', () => {
+  beforeEach(() => {
+    stubSheetDialog();
+  });
+
   afterEach(() => {
     cleanup();
   });
@@ -83,7 +86,7 @@ describe('MemberEditForm', () => {
     const { onSave } = renderForm();
     await user.type(readFirstNameField(), 'Ada');
     await user.click(screen.getByRole('button', { name: /save/i }));
-    expect(onSave).toHaveBeenCalledWith({ firstName: 'Ada', color: DEFAULT_MEMBER_COLOR });
+    expect(onSave).toHaveBeenCalledWith({ firstName: 'Ada', color: MEMBER_PALETTE[0].hex });
   });
 
   it('reports the toggled instrument set instead of mutating it', async () => {
@@ -95,6 +98,12 @@ describe('MemberEditForm', () => {
     });
     await user.click(screen.getByLabelText('Keys'));
     expect(onInstrumentsChanged).toHaveBeenCalledWith(['bass-id', 'keys-id']);
+  });
+
+  it('opens as a sheet titled for what it does, with the first name focused', () => {
+    renderForm();
+    expect(screen.getByRole('dialog', { name: 'New member' })).toBeTruthy();
+    expect(readFirstNameField().hasAttribute('data-sheet-focus')).toBe(true);
   });
 
   it('shows the new member once the page remounts it under a new key', () => {

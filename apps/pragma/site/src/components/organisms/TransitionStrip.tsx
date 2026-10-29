@@ -4,7 +4,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Icon } from '../atoms/Icon';
-import { MemberChip } from '../molecules/MemberChip';
+import { ListRow } from '../molecules/ListRow';
 import type { TransitionView } from './transition-view.core';
 
 export interface TransitionStripProps {
@@ -13,70 +13,39 @@ export interface TransitionStripProps {
   readonly onOpenNote: () => void;
 }
 
-const CARRIER_CHIP_OVERLAP_CLASS = '-ml-1 first:ml-0 rounded-full ring-2 ring-bg';
-
-function CarrierStack({ view }: { view: TransitionView }): JSX.Element | null {
-  if (view.carriers.length === 0) return null;
-  return (
-    <span className="inline-flex shrink-0 items-center">
-      {view.carriers.map((carrier) => (
-        <MemberChip
-          key={carrier.memberId}
-          memberName={carrier.memberName}
-          memberColor={carrier.memberColor}
-          title={`${carrier.memberName} — ${carrier.instrumentNames.join(' + ')}`}
-          className={CARRIER_CHIP_OVERLAP_CLASS}
-        />
-      ))}
-    </span>
-  );
-}
+const LINE_CLASS = 'min-h-11 gap-2 px-2 py-1 text-meta';
 
 // @FollowsBlueprint organism-presentational
 export function TransitionStrip({ view, note, onOpenNote }: TransitionStripProps): JSX.Element {
   const { t } = useTranslation();
   const hasNote = note.length > 0;
-
-  if (view.kind !== 'risky') {
-    return (
-      <button
-        type="button"
-        onClick={onOpenNote}
-        aria-label={t('setlist.openTransitionComment')}
-        title={hasNote ? note : t('setlist.transitionCovered')}
-        className="flex h-6 w-full cursor-pointer items-center justify-center gap-2 border-0 bg-transparent px-2"
-      >
-        <span className="h-px flex-1 bg-line" />
-        <CarrierStack view={view} />
-        {hasNote ? <Icon name="text" size={10} className="shrink-0 text-ink-400" /> : null}
-        <span className="h-px flex-1 bg-line" />
-      </button>
-    );
-  }
-
+  const isRisky = view.kind === 'risky';
   return (
-    <button
-      type="button"
+    <ListRow
       onClick={onOpenNote}
-      aria-label={t('setlist.openTransitionComment')}
-      className={composeClassName(
-        'flex min-h-9 w-full cursor-pointer items-center gap-2 rounded-sm border-0',
-        'bg-warn-soft px-2 py-1 text-left',
-      )}
+      aria-label={hasNote ? t('setlist.editTransitionNote') : t('setlist.noteTransition')}
+      isChevronShown={false}
+      data-transition-line
+      data-transition-risky={isRisky ? true : undefined}
+      className={LINE_CLASS}
     >
-      <Icon name="warn" size={12} className="shrink-0 text-warn" />
-      <span className="shrink-0 font-mono text-[10px] font-semibold uppercase tracking-wider text-warn">
-        {t('setlist.transitionRisky')}
-      </span>
-      <CarrierStack view={view} />
+      <Icon
+        name={isRisky ? 'warn' : hasNote ? 'edit' : 'plus'}
+        className={composeClassName('shrink-0', isRisky ? 'text-warn' : 'text-ink-faint')}
+      />
+      {isRisky ? (
+        <span className="shrink-0 text-label font-semibold tracking-wider text-warn uppercase">
+          {t('setlist.transitionRisky')}
+        </span>
+      ) : null}
       <span
         className={composeClassName(
-          'min-w-0 flex-1 truncate text-xs',
-          hasNote ? 'text-ink-700' : 'italic text-ink-400',
+          'min-w-0 flex-1 text-left',
+          hasNote ? 'font-display text-pencil italic' : 'text-ink-faint',
         )}
       >
-        {hasNote ? note : t('setlist.transitionAddNote')}
+        {hasNote ? note : t('setlist.noteTransition')}
       </span>
-    </button>
+    </ListRow>
   );
 }

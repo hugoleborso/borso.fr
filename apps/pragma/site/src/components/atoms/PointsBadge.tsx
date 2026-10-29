@@ -11,7 +11,7 @@ export const PointsBadge = forwardRef<HTMLSpanElement, PointsBadgeProps>(
     <span
       ref={ref}
       className={composeClassName(
-        'inline-flex min-w-7 min-h-7 items-center justify-center rounded-full bg-accent text-bg font-sans font-semibold text-sm tabular-nums',
+        'inline-flex min-w-7 min-h-7 items-center justify-center rounded-full bg-accent text-on-accent font-sans font-semibold text-meta tabular-nums',
         className,
       )}
       {...rest}

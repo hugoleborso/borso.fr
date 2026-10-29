@@ -4,6 +4,7 @@ import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Card } from '../atoms/Card';
+import { composeClassName } from '../atoms/class-name.utils';
 import { HintText } from '../atoms/HintText';
 import { MemberLineup, type LineupInstrument, type LineupMember } from '../molecules/MemberLineup';
 import { SongNotes } from '../molecules/SongNotes';
@@ -14,7 +15,7 @@ import { UploadedChartPreview } from '../molecules/UploadedChartPreview';
 import { ChordChartViewer } from './ChordChartViewer';
 import type { CompositionShape, UploadedChart } from '../../routes/compos/compos-page.core';
 import { selectChordProSource } from '../../routes/compos/compos-page.core';
-import type { TaskShape } from '../../routes/tasks/tasks-page.core';
+import type { TaskShape } from '../../routes/band/band-tasks.core';
 
 export interface CompositionDetailProps {
   readonly composition: CompositionShape;
@@ -29,26 +30,28 @@ export interface CompositionDetailProps {
   readonly onToggleTaskDone: (task: TaskShape) => void;
   readonly onOpenTask: (task: TaskShape) => void;
   readonly onDeleteTask: (task: TaskShape) => void;
+  readonly isTitleShown?: boolean;
 }
 
-const SECTION_LABEL_CLASS = 'text-xs tracking-wider uppercase text-ink-400 font-medium';
+const SECTION_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
+const LINK_CLASS = 'inline-flex min-h-11 items-center text-meta text-accent no-underline';
 
 // @FollowsBlueprint organism-presentational
 export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
   const { t } = useTranslation();
   const { composition } = props;
+  const isTitleShown = props.isTitleShown ?? true;
   const chordProSource = selectChordProSource(composition.chart);
   const hasNotes = selectSongNoteSections(composition).length > 0;
 
   return (
     <div className="flex flex-col gap-4 min-w-0">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-display italic text-3xl text-ink-900 m-0">{composition.title}</h2>
+        {isTitleShown ? (
+          <h2 className="font-display text-display text-ink m-0">{composition.title}</h2>
+        ) : null}
         <StatusChip status={composition.status} />
-        <Link
-          to={`/catalog/${composition.id}`}
-          className="ml-auto text-[13px] text-accent no-underline"
-        >
+        <Link to={`/catalog/${composition.id}`} className={composeClassName('ml-auto', LINK_CLASS)}>
           {t('compos.openInCatalog')}
         </Link>
       </div>
@@ -60,7 +63,10 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
           members={props.members}
           instruments={props.instruments}
         />
-        <Link to={`/catalog/${composition.id}`} className="text-[13px] text-accent no-underline">
+        <Link
+          to={`/catalog/${composition.id}`}
+          className={composeClassName('self-start', LINK_CLASS)}
+        >
           {t('compos.editLineup')}
         </Link>
       </Card>
@@ -108,7 +114,7 @@ export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
             ))}
           </ul>
         )}
-        <Link to="/tasks" className="self-start text-[13px] text-accent no-underline">
+        <Link to="/tasks" className={composeClassName('self-start', LINK_CLASS)}>
           {t('compos.addTaskLink')}
         </Link>
       </Card>

@@ -25,10 +25,10 @@ function openRound() {
   };
 }
 
-function stateWith(pool: readonly Record<string, unknown>[]) {
+function stateWith(pool: readonly Record<string, unknown>[], round: object | null = openRound()) {
   return {
     state: {
-      round: openRound(),
+      round,
       pool,
       ownVotes: [],
       ballotCount: 3,
@@ -41,10 +41,25 @@ function stateWith(pool: readonly Record<string, unknown>[]) {
 describe('the panel the band watches from the stage', () => {
   let fetchStub: ReturnType<typeof stubFetch> | null = null;
 
-  function renderPanel(pool: readonly Record<string, unknown>[]): void {
+  function renderPanel(
+    pool: readonly Record<string, unknown>[],
+    openRoundVariant?: 'primary' | 'secondary',
+  ): void {
     fetchStub = stubFetch((request) => {
       if (request.url.includes('/rounds')) return Promise.resolve(jsonResponse({ rounds: [] }));
       return Promise.resolve(jsonResponse(stateWith(pool)));
+    });
+    render(
+      <QueryClientProvider client={createIsolatedQueryClient()}>
+        <VotingRoundPanel sessionId={A_CONCERT} openRoundVariant={openRoundVariant} />
+      </QueryClientProvider>,
+    );
+  }
+
+  function renderPanelWithNoRoundEver(pool: readonly Record<string, unknown>[]): void {
+    fetchStub = stubFetch((request) => {
+      if (request.url.includes('/rounds')) return Promise.resolve(jsonResponse({ rounds: [] }));
+      return Promise.resolve(jsonResponse(stateWith(pool, null)));
     });
     render(
       <QueryClientProvider client={createIsolatedQueryClient()}>
@@ -107,5 +122,29 @@ describe('the panel the band watches from the stage', () => {
     await waitFor(() => {
       expect(screen.getByText(/Nothing to vote for yet/)).toBeTruthy();
     });
+  });
+
+  it('draws the open round button as a secondary pill where the page already has a primary', async () => {
+    renderPanel([], 'secondary');
+    const openRoundButton = await screen.findByRole('button', { name: /thirty-second round/ });
+    expect(openRoundButton.dataset.variant).toBe('secondary');
+  });
+
+  it('shows no result before any round was opened, only how to open one and the address', async () => {
+    renderPanelWithNoRoundEver([
+      {
+        songId: 'song-1',
+        title: 'Slow Burn',
+        artist: 'The Embers',
+        status: 'concert_ready',
+        voteCount: 0,
+        isSuggestion: false,
+      },
+    ]);
+    expect(await screen.findByRole('button', { name: /thirty-second round/ })).toBeTruthy();
+    await waitFor(() => expect(fetchStub?.calls.length).toBeGreaterThanOrEqual(2));
+    expect(screen.queryByText('Slow Burn')).toBeNull();
+    expect(screen.queryByText(/ballot/i)).toBeNull();
+    expect(screen.getByText(/\/vote\//)).toBeTruthy();
   });
 });

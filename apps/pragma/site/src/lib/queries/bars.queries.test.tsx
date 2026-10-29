@@ -38,7 +38,6 @@ const SEED = {
       name: 'Alpha Bar',
       status: 'lead',
       notes: '',
-      lastInteractionAt: null,
       city: null,
       capacity: null,
       contactName: null,

@@ -1,0 +1,3435 @@
+{
+  "meta": {
+    "measuredAt": "2026-10-28T14:41:07.633Z",
+    "viewport": "390x844",
+    "insets": {
+      "top": 47,
+      "bottom": 34,
+      "left": 0,
+      "right": 0
+    },
+    "standalone": false,
+    "base": "http://localhost:5194",
+    "seed": "audit",
+    "input": "argent gesture-tap / gesture-scroll / gesture-drag / keyboard. On Chromium argent sends a one-finger tap as CDP mouse press and release (pointerType mouse), not as a touch event.",
+    "bottomThird": "centre of the control at or below 2/3 of the screen height on arrival, before any scroll"
+  },
+  "tasks": {
+    "1": {
+      "task": "1 Prepare the next rehearsal",
+      "taps": 15,
+      "textEntries": 0,
+      "scrollGestures": 3,
+      "screensVisited": 6,
+      "screens": [
+        "/",
+        "/sessions",
+        "/sessions + [New practice]",
+        "/sessions/:id",
+        "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+        "/setlists/:id"
+      ],
+      "primaryActions": [
+        {
+          "label": "New practice",
+          "screen": "/sessions",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add songs",
+          "screen": "/sessions/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add 10 songs",
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.929,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Sessions tab",
+          "target": "Sessions",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [98, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "New practice",
+          "target": "Practice",
+          "tag": "button",
+          "primary": true,
+          "screen": "/sessions",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [124, 702, 122, 44]
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Create session",
+          "target": "Create",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions + [New practice]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.955,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.955,
+          "box": [264, 784, 110, 44]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Add songs",
+          "target": "Add songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/sessions/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [235, 702, 139, 44]
+        },
+        {
+          "n": 5,
+          "kind": "tap",
+          "label": "Pick Afterglow",
+          "target": "A Afterglow Nova Reef",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.329,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.329,
+          "box": [16, 248, 358, 61]
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Pick Billie Jean",
+          "target": "BJ Billie Jean Michael Jackson",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.546,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.546,
+          "box": [16, 431, 358, 61]
+        },
+        {
+          "n": 7,
+          "kind": "tap",
+          "label": "Pick Come Together",
+          "target": "CT Come Together The Beatles",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.619,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.619,
+          "box": [16, 492, 358, 61]
+        },
+        {
+          "n": 8,
+          "kind": "tap",
+          "label": "Pick Dreams",
+          "target": "D Dreams Fleetwood Mac",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.763,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.763,
+          "box": [16, 614, 358, 61]
+        },
+        {
+          "n": 9,
+          "kind": "tap",
+          "label": "Pick Get Lucky",
+          "target": "GL Get Lucky Daft Punk",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 0.98,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.588,
+          "box": [16, 797, 358, 61]
+        },
+        {
+          "n": 10,
+          "kind": "tap",
+          "label": "Pick Hey Ya!",
+          "target": "HY Hey Ya! OutKast",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.66,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.66,
+          "box": [16, 527, 358, 61]
+        },
+        {
+          "n": 11,
+          "kind": "tap",
+          "label": "Pick Jolene",
+          "target": "J Jolene Dolly Parton",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.877,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.877,
+          "box": [16, 710, 358, 61]
+        },
+        {
+          "n": 12,
+          "kind": "tap",
+          "label": "Pick Last Call",
+          "target": "LC Last Call Volt",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 1.094,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.588,
+          "box": [16, 893, 358, 61]
+        },
+        {
+          "n": 13,
+          "kind": "tap",
+          "label": "Pick Lightning",
+          "target": "L Lightning Volt",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.805,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.805,
+          "box": [16, 649, 358, 61]
+        },
+        {
+          "n": 14,
+          "kind": "tap",
+          "label": "Pick Midnight Drive",
+          "target": "MD Midnight Drive Nova Reef",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 0.949,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.588,
+          "box": [16, 771, 358, 61]
+        },
+        {
+          "n": 15,
+          "kind": "tap",
+          "label": "Add 10 songs",
+          "target": "Add 10 songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.929,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.929,
+          "box": [198, 758, 176, 52]
+        }
+      ],
+      "notes": [
+        "The new session has no setlist, so its bottom strip offers Add songs, which creates a setlist named after the session and opens the Add songs sheet.",
+        "After Add 10 songs the screen is /setlists/:id."
+      ],
+      "success": {
+        "practices": 3,
+        "newSetlistName": "Practice · Thu, Oct 29, 2026",
+        "newSetlistAttachedTo": 1,
+        "newSetlistSongs": [
+          "Afterglow",
+          "Billie Jean",
+          "Come Together",
+          "Dreams",
+          "Get Lucky",
+          "Hey Ya!",
+          "Jolene",
+          "Last Call",
+          "Lightning",
+          "Midnight Drive"
+        ]
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/sessions": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/sessions + [New practice]": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/sessions/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/sessions/:id + [Add songs to Practice · Thu, Oct 29, 2026]": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": false,
+          "containers": ["x div 0,196,390,44 (44/44)", "y div 0,248,390,497 (2700/497)"]
+        },
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "2": {
+      "task": "2 Build the concert setlist",
+      "taps": 12,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 7,
+      "screens": [
+        "/",
+        "/sessions",
+        "/setlists",
+        "/setlists/:id",
+        "/setlists/:id + [Add songs to Set principal]",
+        "/setlists/:id + [Remove from the setlist]",
+        "/setlists/:id/order"
+      ],
+      "primaryActions": [
+        {
+          "label": "Add songs",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.853,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add 2 songs",
+          "screen": "/setlists/:id + [Add songs to Set principal]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.929,
+          "inBottomThird": true
+        },
+        {
+          "label": "Remove from the setlist",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.628,
+          "inBottomThird": false
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Sessions tab",
+          "target": "Sessions",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [98, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Setlists section",
+          "target": "Setlists",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.155,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.155,
+          "box": [127, 109, 98, 44]
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Open Set principal",
+          "target": "Set principal 20 songs · Le Petit Bain",
+          "tag": "a",
+          "primary": false,
+          "screen": "/setlists",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.338,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.338,
+          "box": [33, 263, 324, 46]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Add songs",
+          "target": "Add songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [221, 694, 153, 52]
+        },
+        {
+          "n": 5,
+          "kind": "tap",
+          "label": "Pick Dreams",
+          "target": "D Dreams Fleetwood Mac",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set principal]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.604,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.604,
+          "box": [16, 480, 358, 61]
+        },
+        {
+          "kind": "type",
+          "label": "Search",
+          "chars": 6
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Pick Psycho Killer",
+          "target": "PK Psycho Killer Talking Heads",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Set principal]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.315,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.315,
+          "box": [16, 236, 358, 61]
+        },
+        {
+          "n": 7,
+          "kind": "tap",
+          "label": "Add 2 songs",
+          "target": "Add 2 songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Set principal]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.929,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.929,
+          "box": [208, 758, 166, 52]
+        },
+        {
+          "n": 8,
+          "kind": "tap",
+          "label": "More for entry 03",
+          "target": "More for Lightning",
+          "tag": "summary",
+          "primary": false,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.566,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.566,
+          "box": [330, 456, 44, 44]
+        },
+        {
+          "n": 9,
+          "kind": "tap",
+          "label": "Remove from the setlist",
+          "target": "Remove from the setlist",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.628,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.628,
+          "box": [202, 508, 168, 44]
+        },
+        {
+          "n": 10,
+          "kind": "tap",
+          "label": "Confirm remove",
+          "target": "Remove from the setlist",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Remove from the setlist]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.934,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.934,
+          "box": [135, 766, 239, 44]
+        },
+        {
+          "n": 11,
+          "kind": "tap",
+          "label": "Order",
+          "target": "Order",
+          "tag": "a",
+          "primary": false,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [98, 694, 116, 52]
+        },
+        {
+          "n": 12,
+          "kind": "drag",
+          "label": "Drag entry 05 to position 02",
+          "from": "Drag to reorder",
+          "to": "Drag to reorder"
+        }
+      ],
+      "notes": [
+        "A pick keeps the focus in the search, so the next title is typed with no tap.",
+        "The order saves on the drop, so the walk ends on the Order screen without Done."
+      ],
+      "success": {
+        "before": [
+          "Slow Burn",
+          "Midnight Drive",
+          "Lightning",
+          "Afterglow",
+          "Runaway Sun",
+          "Last Call",
+          "Superstition",
+          "Valerie",
+          "Seven Nation Army",
+          "Get Lucky",
+          "Respect",
+          "Hit the Road Jack",
+          "Rolling in the Deep",
+          "Uptown Funk",
+          "Wonderwall",
+          "Mr. Brightside",
+          "September",
+          "Billie Jean",
+          "Should I Stay or Should I Go",
+          "Sweet Dreams (Are Made of This) — Extended Version With the Long Synth Intro"
+        ],
+        "afterReload": [
+          "Slow Burn",
+          "Last Call",
+          "Midnight Drive",
+          "Afterglow",
+          "Runaway Sun",
+          "Superstition",
+          "Valerie",
+          "Seven Nation Army",
+          "Get Lucky",
+          "Respect",
+          "Hit the Road Jack",
+          "Rolling in the Deep",
+          "Uptown Funk",
+          "Wonderwall",
+          "Mr. Brightside",
+          "September",
+          "Billie Jean",
+          "Should I Stay or Should I Go",
+          "Sweet Dreams (Are Made of This) — Extended Version With the Long Synth Intro",
+          "Dreams",
+          "Psycho Killer"
+        ]
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/sessions": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Add songs to Set principal]": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": false,
+          "containers": ["x div 0,184,390,44 (44/44)", "y div 0,236,390,509 (1480/509)"]
+        },
+        "/setlists/:id + [Remove from the setlist]": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/setlists/:id/order": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "3": {
+      "task": "3 Agree who does what",
+      "taps": 8,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 3,
+      "screens": ["/", "/sessions/:id", "/sessions/:id + [New task]"],
+      "primaryActions": [
+        {
+          "label": "Save task",
+          "screen": "/sessions/:id + [New task]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.934,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Next session",
+          "target": "Sat, Oct 31, 2026",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.232,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.232,
+          "box": [33, 174, 324, 44]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Add a task",
+          "target": "Add a task",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.661,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.661,
+          "box": [16, 536, 140, 44]
+        },
+        {
+          "kind": "type",
+          "label": "Task title",
+          "chars": 21
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Assignee Léa",
+          "target": "L Léa",
+          "tag": "button",
+          "primary": false,
+          "screen": "/sessions/:id + [New task]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.308,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.308,
+          "box": [232, 238, 78, 44]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Linked song (open picker)",
+          "target": "No song Kiss Everybody Wants to Rule the World Should I Stay or Should I Go La J",
+          "tag": "select",
+          "primary": false,
+          "screen": "/sessions/:id + [New task]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.556,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.556,
+          "box": [16, 448, 358, 44]
+        },
+        {
+          "n": 5,
+          "kind": "pick",
+          "label": "Linked song = ~Nuit blanche",
+          "note": "native picker; option set through the DOM, counted as one tap"
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Due date (open picker)",
+          "target": "",
+          "tag": "input",
+          "primary": false,
+          "screen": "/sessions/:id + [New task]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.746,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.746,
+          "box": [16, 608, 358, 44]
+        },
+        {
+          "n": 7,
+          "kind": "pick",
+          "label": "Due date = 2026-11-01",
+          "note": "native picker; option set through the DOM, counted as one tap"
+        },
+        {
+          "n": 8,
+          "kind": "tap",
+          "label": "Save task",
+          "target": "Save",
+          "tag": "button",
+          "primary": true,
+          "screen": "/sessions/:id + [New task]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.934,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.934,
+          "box": [277, 766, 97, 44]
+        }
+      ],
+      "notes": [
+        "The task sheet opens with its title field focused and already linked to the session, so typing needs no tap.",
+        "The song list of a task offers every catalogue song, not only the compositions."
+      ],
+      "success": {
+        "taskCreated": true,
+        "assignee": ":id",
+        "songId": ":id",
+        "sessionId": ":id",
+        "dueDate": "2026-11-01T12:00:00.000Z"
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/sessions/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/sessions/:id + [New task]": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": ["y div 0,132,390,621 (660/621)"]
+        }
+      },
+      "maxVerticalScrollAreas": 1,
+      "partB": {
+        "task": "3b See my own tasks",
+        "taps": 1,
+        "textEntries": 0,
+        "scrollGestures": 0,
+        "screensVisited": 2,
+        "screens": ["/", "/band"],
+        "primaryActions": [],
+        "steps": [
+          {
+            "n": 1,
+            "kind": "tap",
+            "label": "Band tab",
+            "target": "Band",
+            "tag": "a",
+            "primary": false,
+            "screen": "/",
+            "visibleOnArrival": true,
+            "scrollsBefore": 0,
+            "yFractionOnArrival": 0.927,
+            "bottomThirdOnArrival": true,
+            "yFractionWhenTapped": 0.927,
+            "box": [293, 754, 98, 56]
+          }
+        ],
+        "notes": [],
+        "scrollAreasPerScreen": {
+          "/": {
+            "vertical": 0,
+            "horizontal": 0,
+            "documentScrolls": false,
+            "containers": []
+          },
+          "/band": {
+            "vertical": 1,
+            "horizontal": 0,
+            "documentScrolls": true,
+            "containers": []
+          }
+        },
+        "maxVerticalScrollAreas": 1,
+        "firstOwnTaskVisibleOnArrival": true,
+        "firstOwnTaskYFraction": 0.232,
+        "firstOwnTask": "Réécrire le pont",
+        "scrollsToReachIt": 0
+      }
+    },
+    "4": {
+      "task": "4 Set the lineup for one song in a setlist",
+      "taps": 3,
+      "textEntries": 0,
+      "scrollGestures": 0,
+      "screensVisited": 2,
+      "screens": ["/setlists/:id", "/setlists/:id + [Midnight Drive]"],
+      "primaryActions": [
+        {
+          "label": "Open entry 02",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.44,
+          "inBottomThird": false
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Open entry 02",
+          "target": "02 MD Midnight Drive Nova Reef · C",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.44,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.44,
+          "box": [16, 347, 310, 48]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Tom plays Guitare",
+          "target": "Guitare",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Midnight Drive]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.633,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.633,
+          "box": [16, 513, 94, 44]
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Close the sheet",
+          "target": "Close",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Midnight Drive]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.142,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.142,
+          "box": [338, 98, 44, 44]
+        }
+      ],
+      "notes": ["After Close the screen is /setlists/:id (the entry sheet is closed)."],
+      "success": {
+        "entry": "Midnight Drive",
+        "overrideSaved": true,
+        "songDefaultUnchanged": true
+      },
+      "scrollAreasPerScreen": {
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Midnight Drive]": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": ["y div 0,212,390,541 (976/541)"]
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "5": {
+      "task": "5 Note a transition",
+      "taps": 3,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 2,
+      "screens": ["/setlists/:id", "/setlists/:id + [Transition comment]"],
+      "primaryActions": [
+        {
+          "label": "Transition line between 04 and 05",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.813,
+          "inBottomThird": true
+        },
+        {
+          "label": "Save",
+          "screen": "/setlists/:id + [Transition comment]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.934,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Transition line between 04 and 05",
+          "target": "Note this transition",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.813,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.813,
+          "box": [16, 664, 358, 44]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Note field",
+          "target": "Transition comment",
+          "tag": "textarea",
+          "primary": false,
+          "screen": "/setlists/:id + [Transition comment]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.813,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.813,
+          "box": [16, 642, 358, 88]
+        },
+        {
+          "kind": "type",
+          "label": "Transition note",
+          "chars": 41
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Save",
+          "target": "Save",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Transition comment]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.934,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.934,
+          "box": [277, 766, 97, 44]
+        }
+      ],
+      "notes": ["The note text is shown on the setlist."],
+      "success": {
+        "saved": true,
+        "noteTextVisibleOnList": true
+      },
+      "scrollAreasPerScreen": {
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Transition comment]": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "6": {
+      "task": "6 Take a note on a song for tonight",
+      "taps": 3,
+      "textEntries": 2,
+      "scrollGestures": 0,
+      "screensVisited": 2,
+      "screens": ["/setlists/:id", "/setlists/:id + [Midnight Drive]"],
+      "primaryActions": [
+        {
+          "label": "Open entry 02",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.44,
+          "inBottomThird": false
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Open entry 02",
+          "target": "02 MD Midnight Drive Nova Reef · C",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.44,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.44,
+          "box": [16, 347, 310, 48]
+        },
+        {
+          "kind": "type",
+          "label": "Entry note",
+          "chars": 20
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Key field",
+          "target": "",
+          "tag": "input",
+          "primary": false,
+          "screen": "/setlists/:id + [Midnight Drive]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.215,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.215,
+          "box": [46, 160, 48, 44]
+        },
+        {
+          "kind": "type",
+          "label": "Key",
+          "chars": 2
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Close the sheet",
+          "target": "Close",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Midnight Drive]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.142,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.142,
+          "box": [338, 98, 44, 44]
+        }
+      ],
+      "notes": [
+        "The entry sheet opens with the focus in the note field, so the note is typed with no tap.",
+        "The note is shown on the entry row."
+      ],
+      "success": {
+        "noteVisibleOnRow": true,
+        "saved": {
+          "notes": "Finir sur le refrain",
+          "keyOverride": "Am"
+        }
+      },
+      "scrollAreasPerScreen": {
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Midnight Drive]": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": ["y div 0,212,390,541 (976/541)"]
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "7": {
+      "task": "7 Record a take and talk about it",
+      "taps": 8,
+      "textEntries": 2,
+      "scrollGestures": 2,
+      "screensVisited": 4,
+      "screens": ["/", "/catalog", "/catalog/:id", "/catalog/:id + [Recording Superstition]"],
+      "primaryActions": [
+        {
+          "label": "Record a take",
+          "screen": "/catalog/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.853,
+          "inBottomThird": true
+        },
+        {
+          "label": "Send",
+          "screen": "/catalog/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.52,
+          "inBottomThird": false
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Songs tab",
+          "target": "Songs",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [195, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Search field",
+          "target": "Search",
+          "tag": "input",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.101,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.101,
+          "box": [102, 63, 272, 44]
+        },
+        {
+          "kind": "type",
+          "label": "Search",
+          "chars": 12
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Open Superstition",
+          "target": "S Superstition Stevie Wonder Concert ready",
+          "tag": "a",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.241,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.241,
+          "box": [16, 175, 358, 57]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Record a take",
+          "target": "Record a take",
+          "tag": "button",
+          "primary": true,
+          "screen": "/catalog/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [196, 694, 178, 52]
+        },
+        {
+          "n": 5,
+          "kind": "tap",
+          "label": "Close the recording sheet",
+          "target": "Close",
+          "tag": "button",
+          "primary": false,
+          "screen": "/catalog/:id + [Recording Superstition]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.819,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.819,
+          "box": [338, 669, 44, 44]
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Open the first take",
+          "target": "Sat, Oct 24, 2026 · Practice · 3:00 · Hugo",
+          "tag": "button",
+          "primary": false,
+          "screen": "/catalog/:id",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 1.197,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.496,
+          "box": [42, 988, 219, 44]
+        },
+        {
+          "n": 7,
+          "kind": "tap",
+          "label": "Comment field",
+          "target": "Write a comment",
+          "tag": "textarea",
+          "primary": false,
+          "screen": "/catalog/:id",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 1.067,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.447,
+          "box": [46, 869, 298, 64]
+        },
+        {
+          "kind": "type",
+          "label": "Comment",
+          "chars": 21
+        },
+        {
+          "n": 8,
+          "kind": "tap",
+          "label": "Send",
+          "target": "Send",
+          "tag": "button",
+          "primary": true,
+          "screen": "/catalog/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.52,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.52,
+          "box": [245, 417, 99, 44]
+        }
+      ],
+      "notes": [
+        "The recording sheet shows only Upload and Close here: Chromium has no microphone, so the record and stop buttons cannot be reached or counted. A real phone adds at least 2 taps (record, stop).",
+        "The \"At <time>\" checkbox that pins the comment to a moment is present but disabled until the audio plays; the seeded audio does not exist, so pinning cannot be done here.",
+        "The past practice page lists none of the takes recorded during it."
+      ],
+      "success": {
+        "commentShownUnderTake": true,
+        "pastSessionListsTakes": false
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/catalog": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": true,
+          "containers": ["x div 0,119,390,44 (44/44)"]
+        },
+        "/catalog/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/catalog/:id + [Recording Superstition]": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "8": {
+      "task": "8 Add a new song and put it on the next practice",
+      "taps": 4,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 3,
+      "screens": [
+        "/",
+        "/setlists/:id",
+        "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]"
+      ],
+      "primaryActions": [
+        {
+          "label": "Open the setlist",
+          "screen": "/",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add songs",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.853,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add 1 songs",
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.929,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Open the setlist",
+          "target": "Open the setlist",
+          "tag": "a",
+          "primary": true,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [195, 702, 179, 44]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Add songs",
+          "target": "Add songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [221, 694, 153, 52]
+        },
+        {
+          "kind": "type",
+          "label": "Title",
+          "chars": 14
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Pick the music service's result",
+          "target": "Psycho Chicken The Sticks",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.473,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.473,
+          "box": [16, 369, 358, 61]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Add 1 songs",
+          "target": "Add 1 song",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.929,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.929,
+          "box": [216, 758, 158, 52]
+        }
+      ],
+      "notes": ["The search field has the focus when the sheet opens, so typing needs no tap."],
+      "success": {
+        "inRehearsalSetlist": true,
+        "artist": "The Sticks",
+        "fromMusicService": true
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": false,
+          "containers": ["x div 0,224,390,44 (44/44)", "y div 0,276,390,469 (1663/469)"]
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "9": {
+      "task": "9 Add chords to a song",
+      "taps": 6,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 4,
+      "screens": ["/", "/catalog", "/catalog/:id", "/catalog/:id/edit"],
+      "primaryActions": [
+        {
+          "label": "Edit",
+          "screen": "/catalog/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.177,
+          "inBottomThird": false
+        },
+        {
+          "label": "Paste text",
+          "screen": "/catalog/:id/edit",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.77,
+          "inBottomThird": true
+        },
+        {
+          "label": "Save",
+          "screen": "/catalog/:id/edit",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Songs tab",
+          "target": "Songs",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [195, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Search field",
+          "target": "Search",
+          "tag": "input",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.101,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.101,
+          "box": [102, 63, 272, 44]
+        },
+        {
+          "kind": "type",
+          "label": "Search",
+          "chars": 8
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Open Ain't No Sunshine",
+          "target": "AN Ain't No Sunshine Bill Withers Rehearsed",
+          "tag": "a",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.241,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.241,
+          "box": [16, 175, 358, 57]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Edit",
+          "target": "Edit",
+          "tag": "a",
+          "primary": true,
+          "screen": "/catalog/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.177,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.177,
+          "box": [253, 131, 73, 36]
+        },
+        {
+          "n": 5,
+          "kind": "tap",
+          "label": "Paste text",
+          "target": "Paste text",
+          "tag": "button",
+          "primary": true,
+          "screen": "/catalog/:id/edit",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.77,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.77,
+          "box": [46, 628, 137, 44]
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Save",
+          "target": "Save",
+          "tag": "button",
+          "primary": true,
+          "screen": "/catalog/:id/edit",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [16, 702, 97, 44]
+        }
+      ],
+      "notes": [
+        "From the song page: 3 taps (Edit, Paste text, Save), with no ChordPro syntax typed."
+      ],
+      "success": {
+        "landedOn": "/catalog/:id",
+        "chartShownOnSongPage": true,
+        "clipboardUsed": true,
+        "savedAsChordPro": true
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/catalog": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": true,
+          "containers": ["x div 0,119,390,44 (44/44)"]
+        },
+        "/catalog/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/catalog/:id/edit": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "10": {
+      "task": "10 Learn a new song",
+      "taps": 4,
+      "textEntries": 0,
+      "scrollGestures": 0,
+      "screensVisited": 3,
+      "screens": ["/", "/catalog", "/catalog/:id"],
+      "primaryActions": [
+        {
+          "label": "Practised",
+          "screen": "/catalog/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.408,
+          "inBottomThird": false
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Songs tab",
+          "target": "Songs",
+          "tag": "a",
+          "primary": false,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.927,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.927,
+          "box": [195, 754, 98, 56]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "To learn",
+          "target": "To learn",
+          "tag": "button",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.167,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.167,
+          "box": [65, 119, 76, 44]
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Open the first song to learn",
+          "target": "A Afterglow Chant, Batterie · 2/10 Concert ready",
+          "tag": "a",
+          "primary": false,
+          "screen": "/catalog",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.287,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.287,
+          "box": [16, 214, 358, 57]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Practised",
+          "target": "Practised",
+          "tag": "button",
+          "primary": true,
+          "screen": "/catalog/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.408,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.408,
+          "box": [41, 309, 64, 72]
+        }
+      ],
+      "notes": [
+        "First song to learn: A Afterglow Chant, Batterie · 2/10 Concert ready.",
+        "0 listen link(s) on the song page."
+      ],
+      "success": {
+        "todayCounted": true,
+        "studiedToday": ["Afterglow", "Afterglow"]
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/catalog": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": true,
+          "containers": ["x div 0,119,390,44 (44/44)"]
+        },
+        "/catalog/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "11": {
+      "task": "11 Discuss which songs to play",
+      "taps": 9,
+      "textEntries": 0,
+      "scrollGestures": 3,
+      "screensVisited": 2,
+      "screens": ["/setlists/:id", "/setlists/:id/vote"],
+      "primaryActions": [
+        {
+          "label": "Open a vote (setlist menu)",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.2,
+          "inBottomThird": false
+        },
+        {
+          "label": "Close the vote",
+          "screen": "/setlists/:id/vote",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "Make this the setlist",
+          "screen": "/setlists/:id/vote",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "More actions",
+          "target": "More actions",
+          "tag": "summary",
+          "primary": false,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.086,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.086,
+          "box": [330, 51, 44, 44]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Open a vote (setlist menu)",
+          "target": "Open a vote",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.2,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.2,
+          "box": [202, 147, 168, 44]
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "Score Kiss",
+          "target": "Score Kiss",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id/vote",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.523,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.523,
+          "box": [16, 417, 358, 49]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Score Billie Jean",
+          "target": "Score Billie Jean",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id/vote",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.813,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.813,
+          "box": [16, 662, 358, 49]
+        },
+        {
+          "n": 5,
+          "kind": "tap",
+          "label": "Score Respect",
+          "target": "Score Respect",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id/vote",
+          "visibleOnArrival": false,
+          "scrollsBefore": 2,
+          "yFractionOnArrival": 2.265,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.864,
+          "box": [16, 1887, 358, 49]
+        },
+        {
+          "n": 6,
+          "kind": "tap",
+          "label": "Score Valerie",
+          "target": "Score Valerie",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id/vote",
+          "visibleOnArrival": false,
+          "scrollsBefore": 1,
+          "yFractionOnArrival": 1.213,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.514,
+          "box": [16, 999, 358, 49]
+        },
+        {
+          "n": 7,
+          "kind": "tap",
+          "label": "Score Superstition",
+          "target": "Score Superstition",
+          "tag": "button",
+          "primary": false,
+          "screen": "/setlists/:id/vote",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.572,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.572,
+          "box": [16, 458, 358, 49]
+        },
+        {
+          "n": 8,
+          "kind": "tap",
+          "label": "Close the vote",
+          "target": "Close the vote",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id/vote",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [206, 702, 168, 44]
+        },
+        {
+          "n": 9,
+          "kind": "tap",
+          "label": "Make this the setlist",
+          "target": "Make this the setlist",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id/vote",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [136, 702, 238, 44]
+        }
+      ],
+      "notes": [
+        "After \"Close the vote\": /setlists/:id/vote; buttons: Back to the vote | Reorder | Move up | Move down | Remove | Reorder | Move up | Move down | Remove | Reorder | Move up | Move down"
+      ],
+      "success": {
+        "finalScreen": {
+          "path": "/setlists/:id",
+          "overlay": null
+        },
+        "setlistStatus": "locked",
+        "firstTitles": ["Superstition", "Kiss", "Respect", "Valerie", "Billie Jean"],
+        "songCount": 5
+      },
+      "scrollAreasPerScreen": {
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id/vote": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    },
+    "12": {
+      "task": "12 Check what is next",
+      "taps": 0,
+      "textEntries": 0,
+      "scrollGestures": 0,
+      "screensVisited": 1,
+      "screens": ["/"],
+      "primaryActions": [],
+      "steps": [],
+      "notes": [
+        "Next session card on arrival: NEXT SESSION PRACTICE Sat, Oct 31, 2026 Répétition du jeudi — on cale les enchaînements 17 songs"
+      ],
+      "success": {
+        "nextSessionId": ":id",
+        "facts": {
+          "kind": true,
+          "date": true,
+          "venue": true,
+          "setlist": true,
+          "songCount": true
+        },
+        "onArrival": true
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 0
+    },
+    "13": {
+      "task": "13 Record a take of the current song during a practice",
+      "taps": 2,
+      "textEntries": 0,
+      "scrollGestures": 0,
+      "screensVisited": 3,
+      "screens": [
+        "/",
+        "/sessions/:id/practice",
+        "/sessions/:id/practice + [Recording Le Temps de l'amour]"
+      ],
+      "primaryActions": [
+        {
+          "label": "Start the practice",
+          "screen": "/",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "Record a take",
+          "screen": "/sessions/:id/practice",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Start the practice",
+          "target": "Start the practice",
+          "tag": "a",
+          "primary": true,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [183, 702, 191, 44]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Record a take",
+          "target": "Record a take",
+          "tag": "button",
+          "primary": true,
+          "screen": "/sessions/:id/practice",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [211, 702, 163, 44]
+        }
+      ],
+      "notes": [
+        "Chromium here has no microphone, so the recording sheet says so and offers the upload form; on a phone this tap starts recording and Stop is one more tap."
+      ],
+      "success": {
+        "practiceMovedToToday": true,
+        "practicePath": "/sessions/:id/practice",
+        "firstSong": "Le Temps de l'amour",
+        "recordingSheetOpen": true
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/sessions/:id/practice": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/sessions/:id/practice + [Recording Le Temps de l'amour]": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        }
+      },
+      "maxVerticalScrollAreas": 0,
+      "partB": {
+        "task": "13b Move to the next song and record it",
+        "taps": 2,
+        "textEntries": 0,
+        "scrollGestures": 0,
+        "screensVisited": 2,
+        "screens": [
+          "/sessions/:id/practice",
+          "/sessions/:id/practice + [Recording Lose Yourself to Dance]"
+        ],
+        "primaryActions": [
+          {
+            "label": "Record a take",
+            "screen": "/sessions/:id/practice",
+            "visibleWithoutScrolling": true,
+            "yFraction": 0.858,
+            "inBottomThird": true
+          }
+        ],
+        "steps": [
+          {
+            "n": 1,
+            "kind": "tap",
+            "label": "Next song",
+            "target": "Next song",
+            "tag": "button",
+            "primary": false,
+            "screen": "/sessions/:id/practice",
+            "visibleOnArrival": true,
+            "scrollsBefore": 0,
+            "yFractionOnArrival": 0.858,
+            "bottomThirdOnArrival": true,
+            "yFractionWhenTapped": 0.858,
+            "box": [67, 702, 136, 44]
+          },
+          {
+            "n": 2,
+            "kind": "tap",
+            "label": "Record a take",
+            "target": "Record a take",
+            "tag": "button",
+            "primary": true,
+            "screen": "/sessions/:id/practice",
+            "visibleOnArrival": true,
+            "scrollsBefore": 0,
+            "yFractionOnArrival": 0.858,
+            "bottomThirdOnArrival": true,
+            "yFractionWhenTapped": 0.858,
+            "box": [211, 702, 163, 44]
+          }
+        ],
+        "notes": [],
+        "success": {
+          "secondSong": "Lose Yourself to Dance",
+          "currentSongChanged": true
+        },
+        "scrollAreasPerScreen": {
+          "/sessions/:id/practice": {
+            "vertical": 0,
+            "horizontal": 0,
+            "documentScrolls": false,
+            "containers": []
+          },
+          "/sessions/:id/practice + [Recording Lose Yourself to Dance]": {
+            "vertical": 0,
+            "horizontal": 0,
+            "documentScrolls": false,
+            "containers": []
+          }
+        },
+        "maxVerticalScrollAreas": 0
+      }
+    },
+    "8b": {
+      "task": "8b New song from the setlist (title only)",
+      "taps": 4,
+      "textEntries": 1,
+      "scrollGestures": 0,
+      "screensVisited": 3,
+      "screens": [
+        "/",
+        "/setlists/:id",
+        "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]"
+      ],
+      "primaryActions": [
+        {
+          "label": "Open the setlist",
+          "screen": "/",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.858,
+          "inBottomThird": true
+        },
+        {
+          "label": "Add songs",
+          "screen": "/setlists/:id",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.853,
+          "inBottomThird": true
+        },
+        {
+          "label": "New song as an idea",
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.372,
+          "inBottomThird": false
+        },
+        {
+          "label": "Add 1 songs",
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleWithoutScrolling": true,
+          "yFraction": 0.929,
+          "inBottomThird": true
+        }
+      ],
+      "steps": [
+        {
+          "n": 1,
+          "kind": "tap",
+          "label": "Open the setlist",
+          "target": "Open the setlist",
+          "tag": "a",
+          "primary": true,
+          "screen": "/",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.858,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.858,
+          "box": [195, 702, 179, 44]
+        },
+        {
+          "n": 2,
+          "kind": "tap",
+          "label": "Add songs",
+          "target": "Add songs",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.853,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.853,
+          "box": [221, 694, 153, 52]
+        },
+        {
+          "kind": "type",
+          "label": "Title",
+          "chars": 14
+        },
+        {
+          "n": 3,
+          "kind": "tap",
+          "label": "New song as an idea",
+          "target": "New song as an idea Psycho Chicken",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.372,
+          "bottomThirdOnArrival": false,
+          "yFractionWhenTapped": 0.372,
+          "box": [16, 284, 358, 61]
+        },
+        {
+          "n": 4,
+          "kind": "tap",
+          "label": "Add 1 songs",
+          "target": "Add 1 song",
+          "tag": "button",
+          "primary": true,
+          "screen": "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]",
+          "visibleOnArrival": true,
+          "scrollsBefore": 0,
+          "yFractionOnArrival": 0.929,
+          "bottomThirdOnArrival": true,
+          "yFractionWhenTapped": 0.929,
+          "box": [216, 758, 158, 52]
+        }
+      ],
+      "notes": ["The search field has the focus when the sheet opens, so typing needs no tap."],
+      "success": {
+        "inRehearsalSetlist": true,
+        "artist": ""
+      },
+      "scrollAreasPerScreen": {
+        "/": {
+          "vertical": 0,
+          "horizontal": 0,
+          "documentScrolls": false,
+          "containers": []
+        },
+        "/setlists/:id": {
+          "vertical": 1,
+          "horizontal": 0,
+          "documentScrolls": true,
+          "containers": []
+        },
+        "/setlists/:id + [Add songs to Répétition du jeudi — on cale les enchaînements]": {
+          "vertical": 1,
+          "horizontal": 1,
+          "documentScrolls": false,
+          "containers": ["x div 0,224,390,44 (44/44)", "y div 0,276,390,469 (1663/469)"]
+        }
+      },
+      "maxVerticalScrollAreas": 1
+    }
+  },
+  "routes": {
+    "songUsed": "Afterglow",
+    "routes": [
+      {
+        "route": "/login",
+        "url": "/login",
+        "landedOn": "/login",
+        "verticalScrollAreas": 0,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 3,
+          "iconOnly": 1,
+          "textNoIcon": 0,
+          "iconAndText": 2,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 1,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Show password"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/recover",
+        "url": "/recover",
+        "landedOn": "/recover",
+        "verticalScrollAreas": 0,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 3,
+          "iconOnly": 2,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 1,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Show password", "Show password"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/vote",
+        "url": "/vote",
+        "landedOn": "/vote",
+        "verticalScrollAreas": 0,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/vote/:sessionId",
+        "url": "/vote/3ae8c4ad-213e-4960-bb34-e6af54cd6ab5",
+        "landedOn": "/vote/3ae8c4ad-213e-4960-bb34-e6af54cd6ab5",
+        "verticalScrollAreas": 0,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/",
+        "url": "/",
+        "landedOn": "/",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.82,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 6,
+          "iconOnly": 3,
+          "textNoIcon": 0,
+          "iconAndText": 3,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 21,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 21,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Delete", "Delete", "Delete"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/catalog",
+        "url": "/catalog",
+        "landedOn": "/catalog",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 1,
+        "documentScrolls": true,
+        "pageHeightInScreens": 3.4,
+        "layoutWidth": 390,
+        "scrollContainers": ["x div [0,119,390,44] 44/44"],
+        "buttons": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 48,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 48,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 6,
+          "iconOnly": 0,
+          "textNoIcon": 6,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [
+          "All",
+          "To learn",
+          "Concert-ready",
+          "Rehearsed",
+          "In progress",
+          "Ideas"
+        ],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/catalog/new",
+        "url": "/catalog/new",
+        "landedOn": "/catalog/new",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 2,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 5,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 5,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 5,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 5,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/catalog/:songId",
+        "url": "/catalog/2914bf6c-3971-46bc-8c49-4ea7da9c7661",
+        "landedOn": "/catalog/2914bf6c-3971-46bc-8c49-4ea7da9c7661",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 2.81,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 5,
+          "iconOnly": 4,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 8,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 8,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [
+          "More actions on this song",
+          "Transpose down",
+          "Transpose up",
+          "Upload"
+        ],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/catalog/:songId/edit",
+        "url": "/catalog/2914bf6c-3971-46bc-8c49-4ea7da9c7661/edit",
+        "landedOn": "/catalog/2914bf6c-3971-46bc-8c49-4ea7da9c7661/edit",
+        "verticalScrollAreas": 2,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 3.74,
+        "layoutWidth": 390,
+        "scrollContainers": ["y textarea [46,776,298,464] 904/462"],
+        "buttons": {
+          "total": 7,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 7,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 5,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 5,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/catalog/:songId/scene",
+        "url": "/catalog/2914bf6c-3971-46bc-8c49-4ea7da9c7661/scene",
+        "landedOn": "/catalog/2914bf6c-3971-46bc-8c49-4ea7da9c7661/scene",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": ["y div [0,59,390,638] 1399/638"],
+        "buttons": {
+          "total": 7,
+          "iconOnly": 6,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [
+          "Transpose down",
+          "Transpose up",
+          "Zoom out",
+          "Zoom in",
+          "Scroll slower",
+          "Scroll faster"
+        ],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/sessions",
+        "url": "/sessions",
+        "landedOn": "/sessions",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.03,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 5,
+          "iconOnly": 3,
+          "textNoIcon": 0,
+          "iconAndText": 2,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 8,
+          "iconOnly": 0,
+          "textNoIcon": 3,
+          "iconAndText": 5,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 2,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 2,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Delete session", "Delete session", "Delete session"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/sessions/:sessionId (concert)",
+        "url": "/sessions/3ae8c4ad-213e-4960-bb34-e6af54cd6ab5",
+        "landedOn": "/sessions/3ae8c4ad-213e-4960-bb34-e6af54cd6ab5",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 2.05,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 6,
+          "iconOnly": 2,
+          "textNoIcon": 0,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 7,
+          "iconOnly": 0,
+          "textNoIcon": 1,
+          "iconAndText": 6,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Session actions", "Actions for Set principal"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/sessions/:sessionId (practice)",
+        "url": "/sessions/75a0405f-c96f-473b-b73a-243ed38c9f12",
+        "landedOn": "/sessions/75a0405f-c96f-473b-b73a-243ed38c9f12",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.18,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 4,
+          "iconOnly": 2,
+          "textNoIcon": 0,
+          "iconAndText": 2,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 7,
+          "iconOnly": 0,
+          "textNoIcon": 1,
+          "iconAndText": 6,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [
+          "Session actions",
+          "Actions for Répétition du jeudi — on cale les enchaînements"
+        ],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/sessions/:sessionId/setlist",
+        "url": "/sessions/3ae8c4ad-213e-4960-bb34-e6af54cd6ab5/setlist",
+        "landedOn": "/setlists/19824272-9b06-4b52-b882-602204dc4a82",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 3.33,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 67,
+          "iconOnly": 21,
+          "textNoIcon": 0,
+          "iconAndText": 46,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 6,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 6,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 3,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 3,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [
+          "More actions",
+          "More for Slow Burn",
+          "More for Midnight Drive",
+          "More for Lightning",
+          "More for Afterglow",
+          "More for Runaway Sun",
+          "More for Last Call",
+          "More for Superstition",
+          "More for Valerie",
+          "More for Seven Nation Army",
+          "More for Get Lucky",
+          "More for Respect",
+          "More for Hit the Road Jack",
+          "More for Rolling in the Deep",
+          "More for Uptown Funk",
+          "More for Wonderwall",
+          "More for Mr. Brightside",
+          "More for September",
+          "More for Billie Jean",
+          "More for Should I Stay or Should I Go",
+          "More for Sweet Dreams (Are Made of This) — Extended Version "
+        ],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/setlists",
+        "url": "/setlists",
+        "landedOn": "/setlists",
+        "verticalScrollAreas": 0,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 7,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 7,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 2,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 2,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/setlists/:setlistId",
+        "url": "/setlists/19824272-9b06-4b52-b882-602204dc4a82",
+        "landedOn": "/setlists/19824272-9b06-4b52-b882-602204dc4a82",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 3.33,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 67,
+          "iconOnly": 21,
+          "textNoIcon": 0,
+          "iconAndText": 46,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 6,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 6,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 3,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 3,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [
+          "More actions",
+          "More for Slow Burn",
+          "More for Midnight Drive",
+          "More for Lightning",
+          "More for Afterglow",
+          "More for Runaway Sun",
+          "More for Last Call",
+          "More for Superstition",
+          "More for Valerie",
+          "More for Seven Nation Army",
+          "More for Get Lucky",
+          "More for Respect",
+          "More for Hit the Road Jack",
+          "More for Rolling in the Deep",
+          "More for Uptown Funk",
+          "More for Wonderwall",
+          "More for Mr. Brightside",
+          "More for September",
+          "More for Billie Jean",
+          "More for Should I Stay or Should I Go",
+          "More for Sweet Dreams (Are Made of This) — Extended Version "
+        ],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/setlists/:setlistId/vote",
+        "url": "/setlists/9823c623-5ef6-4a66-8147-36c4397de431/vote",
+        "landedOn": "/setlists/9823c623-5ef6-4a66-8147-36c4397de431/vote",
+        "verticalScrollAreas": 0,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 5,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 5,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/setlists/:setlistId/audience",
+        "url": "/setlists/19824272-9b06-4b52-b882-602204dc4a82/audience",
+        "landedOn": "/setlists/19824272-9b06-4b52-b882-602204dc4a82/audience",
+        "verticalScrollAreas": 0,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 5,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 5,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/setlists/:setlistId/scene",
+        "url": "/setlists/19824272-9b06-4b52-b882-602204dc4a82/scene",
+        "landedOn": "/setlists/19824272-9b06-4b52-b882-602204dc4a82/scene",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 2,
+        "documentScrolls": false,
+        "pageHeightInScreens": 1,
+        "layoutWidth": 390,
+        "scrollContainers": [
+          "x div [16,102,358,44] 44/44",
+          "y div [0,161,390,541] 1902/541",
+          "x nav [64,715,262,83] 83/83"
+        ],
+        "buttons": {
+          "total": 29,
+          "iconOnly": 8,
+          "textNoIcon": 0,
+          "iconAndText": 21,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [
+          "Transpose down",
+          "Transpose up",
+          "Zoom out",
+          "Zoom in",
+          "Scroll slower",
+          "Scroll faster",
+          "Previous song",
+          "Next song"
+        ],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/bars",
+        "url": "/bars",
+        "landedOn": "/bars",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 2.3,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 8,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 8,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 5,
+          "iconOnly": 0,
+          "textNoIcon": 1,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/improvements",
+        "url": "/improvements",
+        "landedOn": "/improvements",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 1,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.29,
+        "layoutWidth": 390,
+        "scrollContainers": ["x div [16,109,358,44] 44/44"],
+        "buttons": {
+          "total": 7,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 7,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 4,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 9,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 9,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/studies",
+        "url": "/studies",
+        "landedOn": "/catalog",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 1,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.83,
+        "layoutWidth": 390,
+        "scrollContainers": ["x div [0,119,390,44] 44/44"],
+        "buttons": {
+          "total": 1,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 1,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 24,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 24,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 6,
+          "iconOnly": 0,
+          "textNoIcon": 6,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [
+          "All",
+          "To learn",
+          "Concert-ready",
+          "Rehearsed",
+          "In progress",
+          "Ideas"
+        ],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/band",
+        "url": "/band",
+        "landedOn": "/band",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.18,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 7,
+          "iconOnly": 3,
+          "textNoIcon": 0,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 10,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 10,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 2,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 2,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Delete", "Delete", "Delete"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/tasks",
+        "url": "/tasks",
+        "landedOn": "/band",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.18,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 7,
+          "iconOnly": 3,
+          "textNoIcon": 0,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 10,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 10,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 2,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 2,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Delete", "Delete", "Delete"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/compos",
+        "url": "/compos",
+        "landedOn": "/compos",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.42,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 6,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 6,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 7,
+          "iconOnly": 0,
+          "textNoIcon": 3,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/members",
+        "url": "/members",
+        "landedOn": "/members",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 1,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.82,
+        "layoutWidth": 390,
+        "scrollContainers": ["x div [33,983,324,356] 350/350"],
+        "buttons": {
+          "total": 11,
+          "iconOnly": 5,
+          "textNoIcon": 0,
+          "iconAndText": 6,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 4,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 0,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Delete", "Delete", "Delete", "Delete", "Delete"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/instruments",
+        "url": "/instruments",
+        "landedOn": "/instruments",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 1.76,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 19,
+          "iconOnly": 12,
+          "textNoIcon": 0,
+          "iconAndText": 7,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 4,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 30,
+          "iconOnly": 18,
+          "textNoIcon": 0,
+          "iconAndText": 12,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": [],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": [
+          "Reorder instrument",
+          "Delete",
+          "Reorder instrument",
+          "Delete",
+          "Reorder instrument",
+          "Delete",
+          "Reorder instrument",
+          "Delete",
+          "Reorder instrument",
+          "Delete",
+          "Reorder instrument",
+          "Delete"
+        ],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      },
+      {
+        "route": "/account",
+        "url": "/account",
+        "landedOn": "/account",
+        "verticalScrollAreas": 1,
+        "horizontalScrollAreas": 0,
+        "documentScrolls": true,
+        "pageHeightInScreens": 2.36,
+        "layoutWidth": 390,
+        "scrollContainers": [],
+        "buttons": {
+          "total": 6,
+          "iconOnly": 2,
+          "textNoIcon": 0,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "links": {
+          "total": 4,
+          "iconOnly": 0,
+          "textNoIcon": 0,
+          "iconAndText": 4,
+          "noTextNoIcon": 0
+        },
+        "choices": {
+          "total": 2,
+          "iconOnly": 0,
+          "textNoIcon": 2,
+          "iconAndText": 0,
+          "noTextNoIcon": 0
+        },
+        "textOnlyChoiceNames": ["FR", "EN"],
+        "noTextNoIconButtons": [],
+        "iconOnlyButtons": ["Show password", "Show password"],
+        "iconOnlyLinks": [],
+        "iconOnlyButtonsWithoutName": 0,
+        "textOnlyButtonNames": []
+      }
+    ]
+  },
+  "routeTotals": {
+    "routes": 28,
+    "buttons": 292,
+    "textOnlyButtons": 0,
+    "iconOnlyButtonsWithoutName": 0
+  }
+}

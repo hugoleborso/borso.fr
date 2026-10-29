@@ -6,6 +6,7 @@ import { formatSessionDate } from '../../lib/formatters.utils';
 import { composeClassName } from '../atoms/class-name.utils';
 import { Button } from '../atoms/Button';
 import { Icon } from '../atoms/Icon';
+import { ListRow } from '../molecules/ListRow';
 import { formatDuration } from '../molecules/song-duration.utils';
 import {
   describeTakeRow,
@@ -25,7 +26,7 @@ export interface TakeListProps {
 const NO_BREAK_SPACE = ' ';
 const SEPARATOR = `${NO_BREAK_SPACE}· `;
 const SELECTED_ROW_CLASS = 'border-accent bg-accent-soft';
-const ROW_CLASS = 'border-line bg-bg';
+const ROW_CLASS = 'border-rule bg-paper';
 
 // @FollowsBlueprint organism-presentational
 export function TakeList({
@@ -38,7 +39,7 @@ export function TakeList({
   const { t, i18n } = useTranslation();
 
   if (rows.length === 0) {
-    return <p className="text-ink-400 italic text-sm m-0">{t('takes.empty')}</p>;
+    return <p className="text-ink-soft italic text-meta m-0">{t('takes.empty')}</p>;
   }
 
   return (
@@ -61,33 +62,33 @@ export function TakeList({
             )}
           >
             {view.isListed ? (
-              <button
-                type="button"
-                className="flex flex-1 min-w-0 items-center gap-2 min-h-11 text-left text-sm text-ink-900 bg-transparent border-0 cursor-pointer"
+              <ListRow
+                className="min-w-0 flex-1 gap-2 text-meta"
                 aria-pressed={isSelected}
+                isChevronShown={false}
+                leading={<Icon name="play" className="text-ink-soft" />}
                 onClick={() => onSelect(row.id)}
               >
-                <Icon name="play" size={12} className="text-ink-500" />
                 <span className="min-w-0 break-words">{summary}</span>
-              </button>
+              </ListRow>
             ) : (
-              <span className="flex flex-1 min-w-0 items-center gap-2 min-h-11 text-sm text-ink-500">
-                <Icon name="cloudOff" size={12} />
+              <span className="flex flex-1 min-w-0 items-center gap-2 min-h-11 text-meta text-ink-soft">
+                <Icon name="cloudOff" size="sm" />
                 <span className="min-w-0 break-words">{summary}</span>
               </span>
             )}
             {view.commentCount === null ? null : (
-              <span className="text-xs text-ink-400 shrink-0">
+              <span className="text-meta text-ink-soft shrink-0">
                 {t('takes.commentCount', { count: view.commentCount })}
               </span>
             )}
             {view.isPending ? (
-              <span className="text-xs text-ink-500 italic shrink-0">{t('takes.pending')}</span>
+              <span className="text-meta text-ink-soft italic shrink-0">{t('takes.pending')}</span>
             ) : null}
             {view.hasFailed ? (
               <>
-                <span className="text-xs text-danger shrink-0">{t('takes.failed')}</span>
-                <Button variant="ghost" size="sm" onClick={() => onRetry(row.id)}>
+                <span className="text-meta text-danger shrink-0">{t('takes.failed')}</span>
+                <Button icon="refresh" variant="quiet" size="sm" onClick={() => onRetry(row.id)}>
                   {t('takes.retry')}
                 </Button>
               </>

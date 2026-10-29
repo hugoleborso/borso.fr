@@ -1,7 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
   buildSceneHeadline,
-  composeSceneSubtitle,
   buildScenePills,
   clampSceneIndex,
   computeSceneProgressPercent,
@@ -146,19 +145,9 @@ describe('buildScenePills', () => {
     expect(pills.map((pill) => pill.ordinal)).toEqual(['01', '02', '03', '04']);
   });
 
-  it('prefers the entry key over the song tonality', () => {
-    const pills = buildScenePills(setlistEntries, songsById, 0);
-    expect(pills[2]?.subtitle).toBe('Dave Brubeck · F#m');
-  });
-
-  it('reads a modulation as the walk between the two keys', () => {
-    const pills = buildScenePills(setlistEntries, songsById, 0);
-    expect(pills[1]?.subtitle).toBe('Dave Brubeck · D → E');
-  });
-
   it('leaves the title empty for an entry whose song left the catalogue', () => {
     const pills = buildScenePills(setlistEntries, songsById, 0);
-    expect(pills[3]).toMatchObject({ title: null, subtitle: '' });
+    expect(pills[3]).toMatchObject({ title: null });
   });
 
   it('answers with nothing for an empty set', () => {
@@ -166,21 +155,13 @@ describe('buildScenePills', () => {
   });
 });
 
-describe('composeSceneSubtitle', () => {
-  it('joins the artist and the key', () => {
-    expect(composeSceneSubtitle('Dave Brubeck', 'Ebm')).toBe('Dave Brubeck · Ebm');
-  });
-
-  it('drops the separator when the song carries no key', () => {
-    expect(composeSceneSubtitle('Dave Brubeck', null)).toBe('Dave Brubeck');
-  });
-
-  it('drops the separator when the song carries no artist', () => {
-    expect(composeSceneSubtitle('', 'Ebm')).toBe('Ebm');
-  });
-});
-
 describe('buildSceneHeadline', () => {
+  it('prefers the entry key over the song tonality', () => {
+    const modulating = song({ tonalityStart: 'D', tonalityEnd: 'E' });
+    expect(buildSceneHeadline(entry({ keyOverride: 'F#m' }), modulating).tonalityLabel).toBe('F#m');
+    expect(buildSceneHeadline(entry(), modulating).tonalityLabel).toBe('D → E');
+  });
+
   it('carries what a player reads above the chart', () => {
     expect(buildSceneHeadline(entry({ energy: 8, capo: 2 }), song())).toEqual({
       title: 'Take Five',

@@ -3,6 +3,7 @@ import {
   compactLineup,
   listOrphanMemberIds,
   formatSetlistOrder,
+  indexById,
   instrumentFamilyMap,
   instrumentNamesFor,
   lineupOf,
@@ -251,5 +252,13 @@ describe('restrictToVerticalAxis', () => {
       scaleX: 1,
       scaleY: 1,
     });
+  });
+});
+
+describe('indexById', () => {
+  it('keys each row by its id', () => {
+    const first = { id: 'a', name: 'A' };
+    const second = { id: 'b', name: 'B' };
+    expect(indexById([first, second])).toEqual({ a: first, b: second });
   });
 });

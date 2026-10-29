@@ -1,0 +1,65 @@
+
+> @borso-app/pragma@0.0.0 task-metrics /home/user/borso.fr/apps/pragma
+> scripts/task-metrics/run-task-metrics.sh "--" "--tasks" "all" "--routes" "--slice-1" "--compare" "../../docs/features/pragma/ux-redesign/spec/baseline/baseline.json" "--out" "/home/user/borso.fr/docs/features/pragma/ux-redesign/validation/visual-validation-slice-1-r6/task-metrics-r6.json"
+
+[dev:db] migrations applied, fixture seeded: 4 members, shared password "pragma-preview"
+[dev:db] sign in as any of: Hugo, Léa, Marc, Sarah
+[audit-seed] songs=44 members=5 instruments=6 sessions=3
+[audit-seed] setlists -> Répétition du jeudi — on cale les enchaînements: 17 | Set principal: 20 | Festival de la Butte — brouillon long: 22
+pragma up: site http://localhost:5182  api http://localhost:3182  (sign in as hugo / pragma-preview)
+[task] 1 ...
+[task] 1: taps=18 textEntries=0 scrollGestures=3 screensVisited=7
+[task] 2 ...
+[task] 2: taps=10 textEntries=0 scrollGestures=2 screensVisited=6
+[task] 3 ...
+[task] 3: taps=9 textEntries=1 scrollGestures=3 screensVisited=3
+[task] 4 ...
+[task] 4: taps=4 textEntries=0 scrollGestures=0 screensVisited=3
+[task] 5 ...
+[task] 5: taps=3 textEntries=1 scrollGestures=0 screensVisited=2
+[task] 6 ...
+[task] 6: taps=4 textEntries=2 scrollGestures=0 screensVisited=2
+[task] 7 ...
+[task] 7: taps=7 textEntries=2 scrollGestures=2 screensVisited=3
+[task] 8 ...
+[task] 8: taps=12 textEntries=3 scrollGestures=0 screensVisited=6
+[task] 9 ...
+[task] 9: taps=6 textEntries=2 scrollGestures=1 screensVisited=3
+[task] 10 ...
+[task] 10: taps=5 textEntries=0 scrollGestures=2 screensVisited=3
+[task] 11 ...
+[task] 11: taps=9 textEntries=0 scrollGestures=8 screensVisited=2
+[task] 12 ...
+[task] 12: taps=1 textEntries=0 scrollGestures=0 screensVisited=2
+[task] 8b ...
+[task] 8b: taps=6 textEntries=1 scrollGestures=0 screensVisited=4
+[route] /login -> /login v=0 h=0 iconOnly=1+0
+[route] /recover -> /recover v=0 h=0 iconOnly=2+0
+[route] /vote -> /vote v=0 h=0 iconOnly=0+0
+[route] /vote/:sessionId -> /vote/ff78ca1c-6879-40b4-85cd-a0519f84df4e v=0 h=0 iconOnly=0+0
+[route] /catalog -> /catalog v=1 h=1 iconOnly=0+1
+[route] /catalog/new -> /catalog/new v=1 h=0 iconOnly=0+0
+[route] /catalog/:songId -> /catalog/bd544f94-016f-48aa-9d98-277613d6bb82 v=1 h=0 iconOnly=2+0
+[route] /catalog/:songId/edit -> /catalog/bd544f94-016f-48aa-9d98-277613d6bb82/edit v=3 h=0 iconOnly=0+0
+[route] /catalog/:songId/scene -> /catalog/bd544f94-016f-48aa-9d98-277613d6bb82/scene v=1 h=0 iconOnly=6+0
+[route] /sessions -> /sessions v=0 h=0 iconOnly=3+0
+[route] /sessions/:sessionId (concert) -> /sessions/ff78ca1c-6879-40b4-85cd-a0519f84df4e v=1 h=0 iconOnly=0+0
+[route] /sessions/:sessionId (practice) -> /sessions/75b22cc7-4771-453a-8948-762e3f335151 v=1 h=0 iconOnly=17+0
+[route] /sessions/:sessionId/setlist -> /setlists/dce60e41-4cef-4be7-a979-ad692b638d22 v=1 h=1 iconOnly=24+1
+[route] /setlists -> /setlists v=0 h=0 iconOnly=0+0
+[route] /setlists/:setlistId -> /setlists/dce60e41-4cef-4be7-a979-ad692b638d22 v=1 h=1 iconOnly=24+1
+[route] /setlists/:setlistId/vote -> /setlists/d7894705-a69c-4eef-a58f-cdc8c446935d/vote v=0 h=0 iconOnly=0+0
+[route] /setlists/:setlistId/audience -> /setlists/dce60e41-4cef-4be7-a979-ad692b638d22/audience v=0 h=0 iconOnly=0+0
+[route] /setlists/:setlistId/scene -> /setlists/dce60e41-4cef-4be7-a979-ad692b638d22/scene v=1 h=2 iconOnly=8+0
+[route] /bars -> /bars v=1 h=0 iconOnly=0+0
+[route] /improvements -> /improvements v=1 h=1 iconOnly=0+0
+[route] /studies -> /studies v=1 h=0 iconOnly=0+0
+[route] /tasks -> /tasks v=1 h=0 iconOnly=12+0
+[route] /compos -> /compos v=1 h=0 iconOnly=0+0
+[route] /members -> /members v=1 h=1 iconOnly=5+0
+[route] /instruments -> /instruments v=1 h=0 iconOnly=30+0
+[route] /account -> /account v=1 h=0 iconOnly=2+0
+[compare] no difference with /home/user/borso.fr/apps/pragma/../../docs/features/pragma/ux-redesign/spec/baseline/baseline.json for 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 8b
+[36m[argent][0m stopped
+pragma instance 5182 stopped (the shared postgres cluster keeps running; stop it with: /home/user/borso.fr/scripts/local-postgres.sh stop pragma)
+exit 0

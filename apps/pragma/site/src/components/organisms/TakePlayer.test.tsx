@@ -42,13 +42,16 @@ function comment(id: string, atSeconds: number | null, body: string): Record<str
   };
 }
 
-function renderPlayer(comments: readonly Record<string, unknown>[]): void {
+function renderPlayer(
+  comments: readonly Record<string, unknown>[],
+  layout: 'panel' | 'sheet' = 'panel',
+): void {
   takes.useTakePlaybackUrl.mockReturnValue({ data: { getUrl: 'blob:take' }, isError: false });
   takes.useTakeComments.mockReturnValue({ data: { comments } });
   takes.useCreateTakeComment.mockReturnValue(IDLE_MUTATION);
   takes.useDeleteTake.mockReturnValue(IDLE_MUTATION);
   takes.useDeleteTakeComment.mockReturnValue(IDLE_MUTATION);
-  render(<TakePlayer take={TAKE} onClose={vi.fn()} />);
+  render(<TakePlayer take={TAKE} layout={layout} onClose={vi.fn()} />);
 }
 
 function readReach(markButton: HTMLElement): { left: string; width: string } {
@@ -57,6 +60,14 @@ function readReach(markButton: HTMLElement): { left: string; width: string } {
 }
 
 const TOUCH_TARGET_CLASSES = ['min-h-11', 'min-w-11'];
+const SQUARE_TOUCH_TARGET_CLASS = 'size-11';
+
+function hasTouchTargetClasses(control: HTMLElement): boolean {
+  return (
+    control.classList.contains(SQUARE_TOUCH_TARGET_CLASS) ||
+    TOUCH_TARGET_CLASSES.every((targetClass) => control.classList.contains(targetClass))
+  );
+}
 
 // @FollowsBlueprint test-component-render
 describe('TakePlayer', () => {
@@ -108,12 +119,19 @@ describe('TakePlayer', () => {
       screen.getByRole('button', { name: '0:12' }),
     ];
     for (const control of controls) {
-      for (const targetClass of TOUCH_TARGET_CLASSES) {
-        expect(control.classList.contains(targetClass)).toBe(true);
-      }
+      expect(hasTouchTargetClasses(control)).toBe(true);
     }
     expect(screen.getByRole('button', { name: /Delete take/ }).classList.contains('min-h-11')).toBe(
       true,
     );
+  });
+
+  it('leaves the close to the sheet that frames it and draws Delete take as a destructive button', () => {
+    renderPlayer([], 'sheet');
+
+    expect(screen.queryByRole('button', { name: 'Close' })).toBeNull();
+    const deleteTake = screen.getByRole('button', { name: /Delete take/ });
+    expect(deleteTake.getAttribute('data-variant')).toBe('danger');
+    expect(deleteTake.querySelector('svg')).not.toBeNull();
   });
 });

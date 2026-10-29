@@ -74,6 +74,7 @@ const storedTakeSchema = z.object({
   isUploaded: z.boolean(),
   wasDeferred: z.boolean(),
   hasFailed: z.boolean(),
+  isFromPracticeMode: z.boolean().default(false),
   audio: z.instanceof(Blob),
 });
 

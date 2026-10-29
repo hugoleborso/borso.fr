@@ -3,7 +3,7 @@
 const ASSISTANT_SERVER_PATH = '/mcp';
 const SERVER_NAME = 'pragma';
 
-export type AssistantInstallationId = 'claude-code' | 'vibe' | 'connector';
+export type AssistantInstallationId = 'claude-code' | 'vibe';
 
 export interface AssistantServerLocation {
   readonly apiBase: string;
@@ -44,6 +44,5 @@ export function listAssistantInstallations(
   return [
     { id: 'claude-code', snippet: buildClaudeCodeCommand(serverUrl) },
     { id: 'vibe', snippet: buildVibeConfiguration(serverUrl) },
-    { id: 'connector', snippet: serverUrl },
   ];
 }

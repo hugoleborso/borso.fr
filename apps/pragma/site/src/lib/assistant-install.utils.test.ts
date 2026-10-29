@@ -52,13 +52,12 @@ describe('assistant-install.utils', () => {
     );
   });
 
-  it('lists Claude Code, Vibe and the connector address, in that order', () => {
+  it('lists Claude Code, then Vibe', () => {
     expect(
       listAssistantInstallations({ apiBase: SAME_ORIGIN_API_BASE, pageOrigin: PRODUCTION_ORIGIN }),
     ).toEqual([
       { id: 'claude-code', snippet: buildClaudeCodeCommand(PRODUCTION_SERVER_URL) },
       { id: 'vibe', snippet: buildVibeConfiguration(PRODUCTION_SERVER_URL) },
-      { id: 'connector', snippet: PRODUCTION_SERVER_URL },
     ]);
   });
 });

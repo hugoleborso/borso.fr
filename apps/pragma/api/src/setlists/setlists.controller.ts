@@ -4,6 +4,7 @@ import { readMemberId, requireMemberSession } from '../auth/member-session.middl
 import {
   setlistBySessionParamSchema,
   setlistCreateSchema,
+  setlistEntryBatchCreateSchema,
   setlistEntryCreateSchema,
   setlistEntryIdParamSchema,
   setlistEntryUpdateSchema,
@@ -18,20 +19,23 @@ import {
   setlistSessionParamSchema,
 } from './setlists.schema';
 import {
-  appendEntry,
   createSetlist,
   getAllSetlists,
   getEntries,
   findSetlist,
   getSetlistsOfSession,
   linkSetlistToSession,
-  patchEntry,
-  removeEntryAndCompact,
   removeSetlist,
   renameSetlist,
-  reorderEntries,
   unlinkSetlistFromSession,
 } from './setlists.service';
+import {
+  addEntries,
+  appendEntry,
+  patchEntry,
+  removeEntryAndCompact,
+  reorderEntries,
+} from './setlist-entry.service';
 import {
   closeVote,
   readClosingProposal,
@@ -194,6 +198,19 @@ export function buildSetlistsRouter() {
         const appended = await appendEntry(id, input, readActor(context));
         if (appended.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
         return context.json({ entry: appended.entry }, 201);
+      },
+    )
+    .post(
+      '/:id/entries/batch',
+      zValidator('param', setlistIdParamSchema),
+      zValidator('json', setlistEntryBatchCreateSchema),
+      async (context) => {
+        const { id } = context.req.valid('param');
+        const input = context.req.valid('json');
+        const added = await addEntries(id, input, readActor(context));
+        if (added.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        if (added.kind === 'song-not-found') return context.json({ error: 'song-not-found' }, 404);
+        return context.json({ entries: added.entries }, 201);
       },
     )
     .put(

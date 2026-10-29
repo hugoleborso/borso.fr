@@ -14,7 +14,7 @@ docs/adr/
 └── 202610291405-<kebab-slug>.md
 ```
 
-A new record's id is the UTC minute it was written, `YYYYMMDDHHMM`, from `date -u +%Y%m%d%H%M`. A sequential number was the highest one in the folder plus one, and parallel branches cannot see each other's folders, so they took the same number again and again; a timestamp needs nobody else's tree. Records `0001` to `0049` predate the change and keep their names, and the timestamps sort after them. Ids are never recycled: superseded ADRs keep theirs forever.
+A new record's id is the UTC minute it was written, `YYYYMMDDHHMM`, from `date -u +%Y%m%d%H%M`. A sequential number was the highest one in the folder plus one, and parallel branches cannot see each other's folders, so they took the same number again and again; a timestamp needs nobody else's tree. Records `0001` to `0052` predate the change and keep their names, and the timestamps sort after them. Ids are never recycled: superseded ADRs keep theirs forever.
 
 ## Mandatory sections
 

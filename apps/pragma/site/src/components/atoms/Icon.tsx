@@ -214,14 +214,73 @@ const ICONS = {
       <path d="M9.5 5.2A10.6 10.6 0 0 1 12 5c6.5 0 10 7 10 7a18.4 18.4 0 0 1-3.2 4.1M6.6 6.6A18.2 18.2 0 0 0 2 12s3.5 7 10 7a10.6 10.6 0 0 0 3-.4" />
     </>
   ),
+  arrowR: (
+    <>
+      <path d="M5 12h14" />
+      <path d="m12 5 7 7-7 7" />
+    </>
+  ),
+  user: (
+    <>
+      <path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2" />
+      <circle cx="12" cy="7" r="4" />
+    </>
+  ),
+  fingerprint: (
+    <path d="M12 10a2 2 0 0 0-2 2c0 1.02-.1 2.51-.26 4 M14 13.12c0 2.38 0 6.38-1 8.88 M17.29 21.02c.12-.6.43-2.3.5-3.02 M2 12a10 10 0 0 1 18-6 M2 16h.01 M21.8 16c.2-2 .131-5.354 0-6 M5 19.5C5.5 18 6 15 6 12a6 6 0 0 1 .34-2 M8.65 22c.21-.66.45-1.32.57-2 M9 6.8a6 6 0 0 1 9 5.2v2" />
+  ),
+  unlink: (
+    <>
+      <path d="m18.84 12.25 1.72-1.71h-.02a5.004 5.004 0 0 0-.12-7.07 5.006 5.006 0 0 0-6.95 0l-1.72 1.71" />
+      <path d="m5.17 11.75-1.71 1.71a5.004 5.004 0 0 0 .12 7.07 5.006 5.006 0 0 0 6.95 0l1.71-1.71" />
+      <path d="M8 2v3M2 8h3M16 19v3M19 16h3" />
+    </>
+  ),
+  expand: (
+    <>
+      <path d="m15 15 6 6M15 9l6-6M21 16v5h-5M21 8V3h-5M3 16v5h5M3 21l6-6M3 8V3h5M9 9 3 3" />
+    </>
+  ),
+  bulb: (
+    <>
+      <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.7 1.3 1.5 1.5 2.5" />
+      <path d="M9 18h6M10 22h4" />
+    </>
+  ),
+  minus: <path d="M5 12h14" />,
+  reorder: <path d="m3 16 4 4 4-4M7 20V4m14 4-4-4-4 4m4-4v16" />,
+  swap: <path d="M8 3 4 7l4 4M4 7h16m-4 14 4-4-4-4m4 4H4" />,
+  clipboard: (
+    <>
+      <rect x="8" y="2" width="8" height="4" rx="1" ry="1" />
+      <path d="M16 4h2a2 2 0 0 1 2 2v14a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h2" />
+    </>
+  ),
+  camera: (
+    <>
+      <path d="M13.997 4a2 2 0 0 1 1.76 1.05l.486.9A2 2 0 0 0 18.003 7H20a2 2 0 0 1 2 2v9a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V9a2 2 0 0 1 2-2h1.997a2 2 0 0 0 1.759-1.048l.489-.904A2 2 0 0 1 10.004 4z" />
+      <circle cx="12" cy="13" r="3" />
+    </>
+  ),
+  refresh: (
+    <>
+      <path d="M3 12a9 9 0 0 1 9-9 9.75 9.75 0 0 1 6.74 2.74L21 8M21 3v5h-5" />
+      <path d="M21 12a9 9 0 0 1-9 9 9.75 9.75 0 0 1-6.74-2.74L3 16M8 16H3v5" />
+    </>
+  ),
+  undo: <path d="M9 14 4 9l5-5M4 9h10.5a5.5 5.5 0 0 1 0 11H11" />,
   ...INSTRUMENT_GLYPHS,
 } as const;
 
 export type IconName = keyof typeof ICONS;
 
+export type IconSize = 'sm' | 'md' | 'lg';
+
+const ICON_PIXELS: Readonly<Record<IconSize, number>> = { sm: 16, md: 20, lg: 24 };
+
 export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
   name: IconName;
-  size?: number;
+  size?: IconSize;
 }
 
 /**
@@ -230,11 +289,11 @@ export interface IconProps extends Omit<SVGProps<SVGSVGElement>, 'name'> {
  * @BlueprintUsage Use for the single icon atom of an application, so every glyph the interface draws has one home.
  * @BlueprintDescription Keeps every glyph in one `as const` map of SVG bodies and derives the `IconName` union from `keyof typeof ICONS`, so an unknown name is a type error and adding a glyph is one entry rather than a new component. The atom owns the viewBox, the stroke settings and the size, so a caller passes a name instead of markup.
  */
-export function Icon({ name, size = 16, className, ...rest }: IconProps): JSX.Element {
+export function Icon({ name, size = 'sm', className, ...rest }: IconProps): JSX.Element {
   return (
     <svg
-      width={size}
-      height={size}
+      width={ICON_PIXELS[size]}
+      height={ICON_PIXELS[size]}
       viewBox="0 0 24 24"
       fill="none"
       stroke="currentColor"

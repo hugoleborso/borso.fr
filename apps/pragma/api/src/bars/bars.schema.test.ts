@@ -9,7 +9,6 @@ describe('barCreateSchema', () => {
   it('needs only a name and a status, and fills the rest in', () => {
     expect(barCreateSchema.parse(bar())).toMatchObject({
       notes: '',
-      lastInteractionAt: null,
       city: null,
       capacity: null,
       contactName: null,
@@ -53,13 +52,6 @@ describe('barCreateSchema', () => {
   it('refuses a contact address that is not an address', () => {
     expect(barCreateSchema.safeParse(bar({ contactEmail: 'booking' })).success).toBe(false);
     expect(barCreateSchema.safeParse(bar({ contactEmail: 'booking@venue.fr' })).success).toBe(true);
-  });
-
-  it('refuses a last interaction that is not a timestamp', () => {
-    expect(barCreateSchema.safeParse(bar({ lastInteractionAt: '2026-08-15' })).success).toBe(false);
-    expect(
-      barCreateSchema.safeParse(bar({ lastInteractionAt: '2026-08-15T10:00:00.000Z' })).success,
-    ).toBe(true);
   });
 });
 

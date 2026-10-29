@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 
 import { dirname, join, relative, resolve } from 'node:path';
 import { buildJourneys, type SourceEntry } from './architecture-journeys';
 import { filePathOfLocation, statusOfNode } from './journey-status.core';
-import { type LevelLayout, layoutLevel } from './architecture-layout';
+import { type LevelLayout, layoutLevel, skipLevelLayout } from './architecture-layout';
 import {
   type DiffReport,
   renderArchitectureIndex,
@@ -1022,6 +1022,10 @@ function buildModelJson(
   };
 }
 
+const SKIP_LAYOUT_FLAG = '--skip-layout';
+
+type LevelPlacer = (level: GraphLevel) => Promise<LevelLayout>;
+
 function readFlag(name: string): string | null {
   const index = process.argv.indexOf(name);
   if (index === -1) return null;
@@ -1307,6 +1311,7 @@ interface DiffPageOptions {
   readonly coverage: readonly LevelCoverage[];
   readonly unmarkedCount: number;
   readonly outputDirectory: string;
+  readonly placeLevel: LevelPlacer;
 }
 
 async function writeDiffPage(options: DiffPageOptions): Promise<void> {
@@ -1390,7 +1395,7 @@ async function writeDiffPage(options: DiffPageOptions): Promise<void> {
   const diffLayouts = new Map<string, LevelLayout>();
   for (const level of annotatedLevels) {
     if (level.id === 'code') continue;
-    diffLayouts.set(level.id, await layoutLevel(level));
+    diffLayouts.set(level.id, await options.placeLevel(level));
   }
 
   const report = buildDiffReport({
@@ -1550,6 +1555,7 @@ interface BuildOptions {
   readonly isForeignTree: boolean;
   readonly diffBase: string | null;
   readonly diffRef: string | null;
+  readonly placeLevel: LevelPlacer;
 }
 
 async function buildApplication(options: BuildOptions): Promise<void> {
@@ -1562,6 +1568,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
     isForeignTree,
     diffBase,
     diffRef,
+    placeLevel,
   } = options;
 
   const files = listSourceFiles(applicationRoot)
@@ -1604,7 +1611,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   const layouts = new Map<string, LevelLayout>();
   for (const level of levels) {
     if (level.id === 'code') continue;
-    layouts.set(level.id, await layoutLevel(level));
+    layouts.set(level.id, await placeLevel(level));
   }
 
   const journeys = buildJourneys(files, readHtmlEntries(applicationRoot, scanRoot));
@@ -1612,7 +1619,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
   for (const [id, graph] of journeys.graphs) {
     journeyLayouts.set(
       id,
-      await layoutLevel({
+      await placeLevel({
         id: `journey-${id}`,
         title: id,
         summary: '',
@@ -1719,6 +1726,7 @@ async function buildApplication(options: BuildOptions): Promise<void> {
       coverage,
       unmarkedCount: unmarked.length,
       outputDirectory,
+      placeLevel,
     });
   }
 
@@ -1764,6 +1772,7 @@ async function main(): Promise<void> {
   const requested = readFlag('--app');
   const diffBase = readFlag('--diff-base');
   const diffRef = readFlag('--diff-ref');
+  const placeLevel = process.argv.includes(SKIP_LAYOUT_FLAG) ? skipLevelLayout : layoutLevel;
   if (requested !== null && manifestFor(requested) === undefined) {
     console.error(
       `  --app ${requested} has no manifest. Known: ${ARCHITECTURE_MANIFESTS.map((each) => each.application).join(', ')}.`,
@@ -1790,6 +1799,7 @@ async function main(): Promise<void> {
       isForeignTree: true,
       diffBase: null,
       diffRef: null,
+      placeLevel,
     });
     return;
   }
@@ -1804,6 +1814,7 @@ async function main(): Promise<void> {
       isForeignTree: false,
       diffBase,
       diffRef,
+      placeLevel,
     });
   }
 

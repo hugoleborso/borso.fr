@@ -33,7 +33,6 @@ function toBarRow(row: {
   name: string;
   status: string;
   notes: string;
-  lastInteractionAt: Date | null;
   city: string | null;
   capacity: number | null;
   contactName: string | null;
@@ -56,7 +55,6 @@ export interface BarRow {
   name: string;
   status: BarStatus;
   notes: string;
-  lastInteractionAt: Date | null;
   city: string | null;
   capacity: number | null;
   contactName: string | null;
@@ -73,7 +71,6 @@ const PROJECTION = {
   name: barTable.name,
   status: barTable.status,
   notes: barTable.notes,
-  lastInteractionAt: barTable.lastInteractionAt,
   city: barTable.city,
   capacity: barTable.capacity,
   contactName: barTable.contactName,
@@ -88,7 +85,6 @@ export interface BarPersistedShape {
   name?: string;
   status?: BarStatus;
   notes?: string;
-  lastInteractionAt?: Date | null;
   city?: string | null;
   capacity?: number | null;
   contactName?: string | null;
@@ -119,7 +115,6 @@ export async function insertBar(values: BarPersistedShape): Promise<BarRow> {
       name: values.name ?? '',
       status: values.status ?? 'lead',
       notes: values.notes ?? '',
-      lastInteractionAt: values.lastInteractionAt ?? null,
       city: values.city ?? null,
       capacity: values.capacity ?? null,
       contactName: values.contactName ?? null,

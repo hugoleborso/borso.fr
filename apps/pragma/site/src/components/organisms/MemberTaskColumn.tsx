@@ -5,8 +5,8 @@ import { useTranslation } from 'react-i18next';
 import { Badge } from '../atoms/Badge';
 import { Card } from '../atoms/Card';
 import { MemberChip } from '../molecules/MemberChip';
-import { TaskRow } from '../molecules/TaskRow';
-import type { MemberTaskGroup, TaskShape } from '../../routes/tasks/tasks-page.core';
+import { TaskList } from './TaskList';
+import type { MemberTaskGroup, TaskShape } from '../../routes/band/band-tasks.core';
 
 export interface MemberTaskColumnProps {
   readonly group: MemberTaskGroup;
@@ -31,23 +31,18 @@ export function MemberTaskColumn(props: MemberTaskColumnProps): JSX.Element {
         </Badge>
       </div>
       {group.tasks.length === 0 ? (
-        <p className="text-ink-400 italic text-[13px] m-0">{t('tasks.emptyColumn')}</p>
+        <p className="text-ink-soft italic text-meta m-0">{t('tasks.emptyColumn')}</p>
       ) : (
-        <ul className="flex flex-col gap-1.5 list-none p-0 m-0" aria-label={group.memberName}>
-          {group.tasks.map((task) => (
-            <TaskRow
-              key={task.id}
-              title={task.title}
-              status={task.status}
-              dueLabel={props.dueLabelOf(task)}
-              isOverdue={props.isOverdue(task)}
-              songTitle={props.songTitleOf(task)}
-              onToggleDone={() => props.onToggleDone(task)}
-              onOpen={() => props.onOpen(task)}
-              onDelete={() => props.onDelete(task)}
-            />
-          ))}
-        </ul>
+        <TaskList
+          label={group.memberName}
+          tasks={group.tasks}
+          dueLabelOf={props.dueLabelOf}
+          isOverdue={props.isOverdue}
+          songTitleOf={props.songTitleOf}
+          onToggleDone={props.onToggleDone}
+          onOpen={props.onOpen}
+          onDelete={props.onDelete}
+        />
       )}
     </Card>
   );

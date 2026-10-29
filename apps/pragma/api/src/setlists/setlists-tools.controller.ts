@@ -13,11 +13,11 @@ import {
   confirmUpdate,
   createSetlist,
   defineTool,
-  patchEntry,
   removeSetlist,
   renameSetlist,
   type ToolAnswer,
 } from './setlists.service';
+import { patchEntry } from './setlist-entry.service';
 import {
   appendSongs,
   defineDeletion,
@@ -138,7 +138,7 @@ export const SETLIST_TOOLS = [
   defineTool({
     name: 'add_setlist_entries',
     description: 'Add `songs` (titles or ids) at the end of a setlist, in order.',
-    routes: ['POST /api/setlists/:id/entries'],
+    routes: ['POST /api/setlists/:id/entries', 'POST /api/setlists/:id/entries/batch'],
     inputSchema: setlistEntriesAddToolInputSchema,
     run: async ({ setlist, songs }, actor) => {
       const setlistId = await resolveSetlistId(setlist);

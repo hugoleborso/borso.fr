@@ -2,7 +2,6 @@
 
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
 import {
   type FreeSlotsView,
   formatFreeSlot,
@@ -12,8 +11,7 @@ import {
 } from '../../lib/free-slots.utils';
 import { useFreeSlots } from '../../lib/queries/free-slots.queries';
 import { useMembersList } from '../../lib/queries/members.queries';
-import { buttonVariants } from '../atoms/button.variants';
-import { composeClassName } from '../atoms/class-name.utils';
+import { ButtonLink } from '../atoms/ButtonLink';
 import { FreeSlotRow } from '../molecules/FreeSlotRow';
 import { CALENDAR_SECTION_PATH } from './calendar-feed-form.utils';
 
@@ -38,18 +36,13 @@ const EXCLUSION_MESSAGE_KEY = {
   unavailable: 'freeSlots.excluded.unavailable',
 } as const;
 
-const CONNECT_ACTION_CLASS = composeClassName(
-  buttonVariants({ variant: 'default', size: 'md' }),
-  'no-underline self-start',
-);
-
 const NO_MEMBERS: readonly { id: string; firstName: string }[] = [];
 const NO_SLOTS: readonly FreeSlot[] = [];
 
 function ExclusionList({ exclusions }: Pick<ViewProps, 'exclusions'>): JSX.Element {
   const { t } = useTranslation();
   return (
-    <ul className="flex flex-col gap-0.5 p-0 m-0 list-none text-xs text-ink-500">
+    <ul className="flex flex-col gap-0.5 p-0 m-0 list-none text-meta text-ink-soft">
       {exclusions.map((exclusion) => (
         <li key={`${exclusion.firstName}-${exclusion.reason}`}>
           {t(EXCLUSION_MESSAGE_KEY[exclusion.reason], { name: exclusion.firstName })}
@@ -61,17 +54,22 @@ function ExclusionList({ exclusions }: Pick<ViewProps, 'exclusions'>): JSX.Eleme
 
 function LoadingView(): JSX.Element {
   const { t } = useTranslation();
-  return <p className="text-ink-400 italic text-sm">{t('freeSlots.loading')}</p>;
+  return <p className="text-ink-soft italic text-meta">{t('freeSlots.loading')}</p>;
 }
 
 function NoCalendarAtAllView(): JSX.Element {
   const { t } = useTranslation();
   return (
     <>
-      <p className="text-sm text-ink-500 m-0">{t('freeSlots.noCalendarAtAll')}</p>
-      <Link to={CALENDAR_SECTION_PATH} className={CONNECT_ACTION_CLASS}>
+      <p className="text-meta text-ink-soft m-0">{t('freeSlots.noCalendarAtAll')}</p>
+      <ButtonLink
+        to={CALENDAR_SECTION_PATH}
+        variant="secondary"
+        icon="calendar"
+        className="self-start"
+      >
         {t('freeSlots.connectYours')}
-      </Link>
+      </ButtonLink>
     </>
   );
 }
@@ -80,17 +78,18 @@ function NoSlotView({ exclusions }: ViewProps): JSX.Element {
   const { t } = useTranslation();
   return (
     <>
-      <p className="text-sm text-ink-500">{t('freeSlots.none')}</p>
+      <p className="text-meta text-ink-soft">{t('freeSlots.none')}</p>
       <ExclusionList exclusions={exclusions} />
     </>
   );
 }
 
 function SlotsView({ slots, exclusions, onBook }: ViewProps): JSX.Element {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (
     <>
-      <ul className="flex flex-col gap-1.5 p-0 m-0 list-none">
+      <ExclusionList exclusions={exclusions} />
+      <ul className="flex flex-col gap-1.5 p-0 m-0 list-none" aria-label={t('freeSlots.title')}>
         {slots.map((slot) => {
           const formatted = formatFreeSlot(slot.start, slot.end, i18n.language);
           return (
@@ -103,7 +102,6 @@ function SlotsView({ slots, exclusions, onBook }: ViewProps): JSX.Element {
           );
         })}
       </ul>
-      <ExclusionList exclusions={exclusions} />
     </>
   );
 }
@@ -134,20 +132,14 @@ export function FreeSlotsPanel({ onBook }: FreeSlotsPanelProps): JSX.Element {
     ];
 
   return (
-    <section aria-labelledby="free-slots-title" className="flex flex-col gap-2 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
-        <h2 id="free-slots-title" className="text-base text-ink-900 m-0">
-          {t('freeSlots.title')}
-        </h2>
-        <p className="text-xs text-ink-400 m-0">{t('freeSlots.subtitle')}</p>
-      </div>
+    <div className="flex flex-col gap-2">
       {freeSlotsQuery.isError ? (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {t('freeSlots.error')}
         </p>
       ) : (
         <View slots={slots} exclusions={exclusions} onBook={onBook} />
       )}
-    </section>
+    </div>
   );
 }

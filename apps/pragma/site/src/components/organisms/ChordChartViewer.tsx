@@ -21,17 +21,17 @@ interface ChordChartViewerProps {
 }
 
 const LYRIC_CLASS_BY_TONE = {
-  light: 'text-ink-700',
+  light: 'text-ink',
   dark: 'text-stage-ink',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
 
 const TITLE_CLASS_BY_TONE = {
-  light: 'text-ink-900',
+  light: 'text-ink',
   dark: 'text-stage-ink',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
 
 const DIRECTIVE_CLASS_BY_TONE = {
-  light: 'text-ink-500',
+  light: 'text-ink-soft',
   dark: 'text-stage-ink-dim',
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
 
@@ -41,7 +41,7 @@ const CHORD_CLASS_BY_TONE = {
 } as const satisfies Readonly<Record<ChordChartTone, string>>;
 
 const SIZE_CLASS_BY_DENSITY = {
-  compact: 'text-[13px] leading-[1.7]',
+  compact: 'text-meta leading-[1.7]',
   roomy: 'leading-[1.6]',
 } as const;
 
@@ -54,7 +54,7 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
       <h3
         key={key}
         className={composeClassName(
-          'font-display italic text-2xl m-0 mb-2 not-prose',
+          'font-display text-title m-0 mb-2 not-prose',
           TITLE_CLASS_BY_TONE[tone],
         )}
       >
@@ -66,7 +66,7 @@ function renderLine(line: ChordProLine, key: string, tone: ChordChartTone): JSX.
     return (
       <p
         key={key}
-        className={composeClassName('italic text-xs m-0', DIRECTIVE_CLASS_BY_TONE[tone])}
+        className={composeClassName('italic text-meta m-0', DIRECTIVE_CLASS_BY_TONE[tone])}
       >
         {line.value}
       </p>

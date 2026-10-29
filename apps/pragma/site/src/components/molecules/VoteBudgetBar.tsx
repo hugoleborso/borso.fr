@@ -3,7 +3,7 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { isBudgetExhausted, selectSpentShare } from '../../routes/setlists/vote-deck.core';
-import { Crumb } from '../atoms/Crumb';
+import { Overline } from '../atoms/Overline';
 
 export interface VoteBudgetBarProps {
   readonly total: number;
@@ -18,18 +18,18 @@ export function VoteBudgetBar({ total, remaining, isExhausted }: VoteBudgetBarPr
   const shownRemaining = Math.max(remaining, 0);
   const isSpent = isExhausted || isBudgetExhausted(remaining);
   return (
-    <div className="sticky top-0 z-10 bg-bg/95 backdrop-blur px-4 py-3 border-b border-line">
+    <div className="sticky top-0 z-10 bg-paper/95 backdrop-blur px-4 py-3 border-b border-rule">
       <div className="flex items-baseline justify-between gap-3">
-        <Crumb>{t('voting.budgetLabel')}</Crumb>
-        <span className="font-sans font-semibold tabular-nums text-ink-900">
+        <Overline>{t('voting.budgetLabel')}</Overline>
+        <span className="font-sans font-semibold tabular-nums text-ink">
           {shownRemaining} / {total}
         </span>
       </div>
-      <div className="mt-2 h-1.5 w-full rounded-full bg-line overflow-hidden">
+      <div className="mt-2 h-1.5 w-full rounded-full bg-rule overflow-hidden">
         <div className="h-full bg-accent" style={{ width: `${String(spentShare)}%` }} />
       </div>
       {isSpent ? (
-        <p className="mt-2 text-sm text-danger m-0" role="alert">
+        <p className="mt-2 text-meta text-danger m-0" role="alert">
           {t('voting.budgetExhausted')}
         </p>
       ) : null}

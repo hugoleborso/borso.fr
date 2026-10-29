@@ -1,92 +1,48 @@
 /** @Feature songs */
 
 import { Link } from 'react-router-dom';
-import { useSongLongPress } from '../../lib/song-long-press.hook';
-import { buildTonalityLabel } from '../../routes/catalog/tonality-label.utils';
 import { AlbumCover } from '../atoms/AlbumCover';
-import { type ChartKind, ChartKindIcon } from '../molecules/ChartKindIcon';
-import { EnergyBadge } from '../molecules/EnergyBadge';
-import { MasteryBadge } from '../molecules/MasteryBadge';
-import { type LineupInstrument, type LineupMember, MemberLineup } from '../molecules/MemberLineup';
+import { Icon } from '../atoms/Icon';
+import type { ChartKindTag } from '../../routes/catalog/chart-kind.utils';
+import { ChartKindIcon } from '../molecules/ChartKindIcon';
 import { type SongStatus, StatusChip } from '../molecules/StatusChip';
 
 export interface SongCardProps {
-  id: string;
-  title: string;
-  artist: string;
-  deezerAlbumId: string | null;
-  deezerTrackId: string | null;
-  spotifyTrackId: string | null;
-  status: SongStatus;
-  tonalityStart: string | null;
-  tonalityEnd: string | null;
-  chartKind: ChartKind;
-  baseEnergy: number | null;
-  meanMastery: number | null;
-  defaultLineup: Record<string, readonly string[]>;
-  members: readonly LineupMember[];
-  instruments: readonly LineupInstrument[];
+  readonly id: string;
+  readonly title: string;
+  readonly detail: string;
+  readonly deezerAlbumId: string | null;
+  readonly status: SongStatus;
+  readonly chartKind: ChartKindTag;
 }
 
 /**
  * @Blueprint organism-presentational
  * @BlueprintName Presentational Organism
  * @BlueprintUsage Use for a screen region that composes molecules and atoms but owns no state and fetches nothing.
- * @BlueprintDescription Takes every value it draws as a prop, composes molecules and atoms only, and delegates its one derived string to the covered `buildTonalityLabel` instead of computing it inline. Holding no state and no query is what lets the route above it decide when the card re-renders.
+ * @BlueprintDescription Takes every value it draws as a prop, composes molecules and atoms only, and leaves every derived string, here the line under the title, to the route's covered core instead of computing it inline. Holding no state and no query is what lets the route above it decide when the card re-renders.
  */
 export function SongCard({
   id,
   title,
-  artist,
+  detail,
   deezerAlbumId,
-  deezerTrackId,
-  spotifyTrackId,
   status,
-  tonalityStart,
-  tonalityEnd,
   chartKind,
-  baseEnergy,
-  meanMastery,
-  defaultLineup,
-  members,
-  instruments,
 }: SongCardProps): JSX.Element {
-  const tonalityLabel = buildTonalityLabel(tonalityStart, tonalityEnd);
-  const longPress = useSongLongPress({ title, artist, deezerTrackId, spotifyTrackId });
   return (
     <Link
       to={`/catalog/${id}`}
-      {...longPress}
-      className="block bg-bg-elev border border-line rounded-lg p-3 sm:p-4 transition-all duration-100 hover:-translate-y-px hover:border-line-strong select-none"
+      className="flex h-full min-h-14 items-center gap-3 border-b border-rule py-1.5 text-ink no-underline hover:bg-hover lg:rounded-md lg:border lg:bg-leaf lg:px-3 lg:py-2.5 lg:hover:border-rule-strong"
     >
-      <div className="flex items-start gap-3">
-        <AlbumCover title={title} deezerAlbumId={deezerAlbumId} size="md" />
-        <div className="min-w-0 flex-1 flex flex-col gap-1.5">
-          <div className="flex items-start justify-between gap-2">
-            <h3 className="font-display italic text-[22px] leading-tight tracking-[-0.01em] text-ink-900 m-0 min-w-0">
-              {title}
-            </h3>
-            <ChartKindIcon kind={chartKind} />
-          </div>
-          <div className="flex items-center justify-between gap-2 min-w-0">
-            <div className="flex items-center gap-2 text-xs text-ink-500 min-w-0">
-              <span className="truncate">{artist}</span>
-              {tonalityLabel !== null && (
-                <>
-                  <span className="text-ink-300">·</span>
-                  <span className="font-mono text-xs">{tonalityLabel}</span>
-                </>
-              )}
-            </div>
-            <MemberLineup lineup={defaultLineup} members={members} instruments={instruments} />
-          </div>
-          <div className="flex items-center gap-1.5 flex-wrap">
-            <StatusChip status={status} />
-            <EnergyBadge value={baseEnergy} />
-            <MasteryBadge value={meanMastery} />
-          </div>
-        </div>
-      </div>
+      <AlbumCover title={title} deezerAlbumId={deezerAlbumId} />
+      <span className="flex min-w-0 flex-1 flex-col">
+        <span className="truncate font-display text-title leading-tight">{title}</span>
+        <span className="truncate text-meta text-ink-soft">{detail}</span>
+      </span>
+      {chartKind === null ? null : <ChartKindIcon kind={chartKind} />}
+      <StatusChip status={status} />
+      <Icon name="chevR" size="sm" className="shrink-0 text-ink-faint" />
     </Link>
   );
 }

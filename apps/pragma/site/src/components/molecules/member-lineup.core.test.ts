@@ -2,11 +2,11 @@ import { describe, expect, it } from 'vitest';
 import { buildLineupChips, type LineupChipInstrument } from './member-lineup.core';
 
 const MEMBERS = [
-  { id: 'hugo', name: 'Hugo', color: '#c4583a' },
-  { id: 'lea', name: 'Léa', color: '#3d8a8a' },
-  { id: 'marc', name: 'Marc', color: '#c4912b' },
-  { id: 'sarah', name: 'Sarah', color: '#8a4870' },
-  { id: 'noa', name: 'Noa', color: '#6e8a48' },
+  { id: 'hugo', name: 'Hugo', color: '#e87b62' },
+  { id: 'lea', name: 'Léa', color: '#3a9b9b' },
+  { id: 'marc', name: 'Marc', color: '#d6a93c' },
+  { id: 'sarah', name: 'Sarah', color: '#8a4f7a' },
+  { id: 'noa', name: 'Noa', color: '#7a9b6f' },
   { id: 'ines', name: 'Inès', color: '#4a6ea8' },
 ];
 
@@ -28,7 +28,7 @@ describe('buildLineupChips', () => {
         {
           memberId: 'hugo',
           memberName: 'Hugo',
-          memberColor: '#c4583a',
+          memberColor: '#e87b62',
           title: 'Hugo — Batterie + Chant',
         },
       ],
@@ -39,7 +39,7 @@ describe('buildLineupChips', () => {
 
   it('titles a member holding nothing with their name alone', () => {
     expect(buildLineupChips({ lea: [] }, MEMBERS, INSTRUMENTS, MAXIMUM_VISIBLE).visible).toEqual([
-      { memberId: 'lea', memberName: 'Léa', memberColor: '#3d8a8a', title: 'Léa' },
+      { memberId: 'lea', memberName: 'Léa', memberColor: '#3a9b9b', title: 'Léa' },
     ]);
   });
 

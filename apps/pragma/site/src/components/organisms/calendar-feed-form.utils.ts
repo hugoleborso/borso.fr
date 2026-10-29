@@ -2,7 +2,7 @@
 
 export const CALENDAR_SECTION_ID = 'calendar';
 
-export const CALENDAR_SECTION_PATH = `/account#${CALENDAR_SECTION_ID}`;
+export const CALENDAR_SECTION_PATH = `/account?view=${CALENDAR_SECTION_ID}`;
 
 export type CalendarFeedFormMode = 'entering' | 'replacing' | 'connected';
 

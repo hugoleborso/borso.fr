@@ -2,7 +2,7 @@
 
 import type { JSX } from 'react';
 import type { InstrumentIcon } from '@domain/instrument.core';
-import { Icon } from '../atoms/Icon';
+import { Icon, type IconSize } from '../atoms/Icon';
 import { INSTRUMENT_ICON_GLYPH } from './lineup-slots.core';
 
 export interface MemberPartGlyph {
@@ -14,7 +14,7 @@ export interface MemberPartGlyph {
 
 export interface MemberPartGlyphsProps {
   readonly parts: readonly MemberPartGlyph[];
-  readonly size: number;
+  readonly size: IconSize;
 }
 
 // @FollowsBlueprint molecule-presentational
@@ -31,7 +31,7 @@ export function MemberPartGlyphs({ parts, size }: MemberPartGlyphsProps): JSX.El
         >
           <Icon name={INSTRUMENT_ICON_GLYPH[part.icon]} size={size} />
           {part.isNameNeeded ? (
-            <span aria-hidden="true" className="font-mono text-[11px] uppercase tracking-wider">
+            <span aria-hidden="true" className="text-label tracking-wider uppercase">
               {part.name}
             </span>
           ) : null}

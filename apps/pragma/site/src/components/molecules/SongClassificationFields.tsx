@@ -25,27 +25,31 @@ export interface SongClassificationFieldsProps {
 export function SongClassificationFields(props: SongClassificationFieldsProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <>
-      <EnumSelectField
-        id="song-status"
-        label={t('catalog.status')}
-        labelClassName={props.labelClassName}
-        value={props.status}
-        options={songStatuses}
-        labelOf={(status) => t(SONG_STATUS_LABEL_KEY[status])}
-        onChange={props.onStatusChange}
-        onBlur={props.onStatusBlur}
-      />
-      <EnumSelectField
-        id="song-origin"
-        label={t('catalog.origin')}
-        labelClassName={props.labelClassName}
-        value={props.origin}
-        options={SONG_ORIGINS}
-        labelOf={(origin) => t(SONG_ORIGIN_LABEL_KEY[origin])}
-        onChange={props.onOriginChange}
-        onBlur={props.onOriginBlur}
-      />
-    </>
+    <div className="grid grid-cols-2 gap-3">
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <EnumSelectField
+          id="song-status"
+          label={t('catalog.status')}
+          labelClassName={props.labelClassName}
+          value={props.status}
+          options={songStatuses}
+          labelOf={(status) => t(SONG_STATUS_LABEL_KEY[status])}
+          onChange={props.onStatusChange}
+          onBlur={props.onStatusBlur}
+        />
+      </div>
+      <div className="flex min-w-0 flex-col gap-1.5">
+        <EnumSelectField
+          id="song-origin"
+          label={t('catalog.origin')}
+          labelClassName={props.labelClassName}
+          value={props.origin}
+          options={SONG_ORIGINS}
+          labelOf={(origin) => t(SONG_ORIGIN_LABEL_KEY[origin])}
+          onChange={props.onOriginChange}
+          onBlur={props.onOriginBlur}
+        />
+      </div>
+    </div>
   );
 }

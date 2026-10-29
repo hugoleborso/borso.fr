@@ -1,38 +1,41 @@
 import { describe, expect, it } from 'vitest';
-import { isMoreTabActive, isNavigationDestinationActive } from './navigation-active.core';
-
-const ADMIN_DESTINATIONS = ['/members', '/instruments'];
+import { selectActiveTab, SHELL_TABS } from './navigation-active.core';
 
 // @FollowsBlueprint test-pure-unit
-describe('isNavigationDestinationActive', () => {
-  it('lights the destination up on its own path', () => {
-    expect(isNavigationDestinationActive('/catalog', '/catalog')).toBe(true);
+describe('selectActiveTab', () => {
+  it('lights Home up on the start screen only', () => {
+    expect(selectActiveTab('/')).toBe('home');
+    expect(selectActiveTab('/sessions')).toBe('sessions');
   });
 
-  it('lights it up on a page below it', () => {
-    expect(isNavigationDestinationActive('/catalog/3/edit', '/catalog')).toBe(true);
+  it.each([
+    ['/sessions', 'sessions'],
+    ['/sessions/7', 'sessions'],
+    ['/setlists', 'sessions'],
+    ['/setlists/3/vote', 'sessions'],
+    ['/catalog', 'songs'],
+    ['/catalog/3/edit', 'songs'],
+    ['/band', 'band'],
+    ['/tasks', 'band'],
+    ['/members', 'band'],
+    ['/instruments', 'band'],
+    ['/bars', 'band'],
+    ['/compos', 'band'],
+    ['/improvements', 'band'],
+    ['/account', 'band'],
+  ] as const)('lights the tab holding %s up', (pathname, tabId) => {
+    expect(selectActiveTab(pathname)).toBe(tabId);
   });
 
-  it('leaves another destination dark', () => {
-    expect(isNavigationDestinationActive('/sessions', '/catalog')).toBe(false);
-  });
-});
-
-// @FollowsBlueprint test-pure-unit
-describe('isMoreTabActive', () => {
-  it('lights the tab up while its drawer is open', () => {
-    expect(isMoreTabActive('/catalog', ADMIN_DESTINATIONS, true)).toBe(true);
+  it('matches whole path segments, not a prefix of a word', () => {
+    expect(selectActiveTab('/sessionsarchive')).toBeNull();
   });
 
-  it('lights it up on a destination the drawer owns', () => {
-    expect(isMoreTabActive('/instruments', ADMIN_DESTINATIONS, false)).toBe(true);
+  it('lights no tab up on a path no tab holds', () => {
+    expect(selectActiveTab('/vote')).toBeNull();
   });
 
-  it('lights it up on a page below such a destination', () => {
-    expect(isMoreTabActive('/members/7', ADMIN_DESTINATIONS, false)).toBe(true);
-  });
-
-  it('leaves it dark elsewhere with the drawer closed', () => {
-    expect(isMoreTabActive('/catalog', ADMIN_DESTINATIONS, false)).toBe(false);
+  it('declares the four tabs in order', () => {
+    expect(SHELL_TABS.map((tab) => tab.to)).toEqual(['/', '/sessions', '/catalog', '/band']);
   });
 });

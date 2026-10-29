@@ -1,41 +1,53 @@
 /** @Feature setlists */
 
-import type { JSX, ReactNode } from 'react';
+import type { SetlistStatus } from '@domain/setlist-vote.core';
+import type { JSX } from 'react';
 import { useState } from 'react';
 import { useTranslation } from 'react-i18next';
-import { Link } from 'react-router-dom';
+import { useNavigateTo } from '../../lib/navigation.hook';
 import { useDeleteSetlist, useRenameSetlist } from '../../lib/queries/setlists.queries';
+import { useSetVoteStatus } from '../../lib/queries/voting.queries';
 import { Button } from '../atoms/Button';
-import { buttonVariants } from '../atoms/button.variants';
-import { composeClassName } from '../atoms/class-name.utils';
-import { Icon } from '../atoms/Icon';
+import { IconButton } from '../atoms/IconButton';
 import { Input } from '../atoms/Input';
 import { ConfirmDialog } from '../molecules/ConfirmDialog';
-import { OverflowMenu } from '../molecules/OverflowMenu';
-
-const ICON_ACTION_CLASS = composeClassName(
-  buttonVariants({ variant: 'ghost', size: 'md' }),
-  'no-underline w-11 px-0',
-);
+import { Menu } from '../molecules/Menu';
 
 interface SetlistHeaderActionsProps {
   readonly setlistId: string;
   readonly name: string;
   readonly displayedName: string;
+  readonly status: SetlistStatus;
+  readonly isConcert: boolean;
+  readonly onCopyOrder: () => void;
   readonly onDeleted: () => void;
-  readonly trailing: ReactNode;
 }
+
+const VOTE_LABEL_BY_STATUS = {
+  voting: 'voting.enterVote',
+  locked: 'voting.openVote',
+} as const satisfies Readonly<Record<SetlistStatus, string>>;
 
 export function SetlistHeaderActions({
   setlistId,
   name,
   displayedName,
+  status,
+  isConcert,
+  onCopyOrder,
   onDeleted,
-  trailing,
 }: SetlistHeaderActionsProps): JSX.Element {
   const { t } = useTranslation();
+  const navigateTo = useNavigateTo();
   const renameSetlist = useRenameSetlist();
   const deleteSetlist = useDeleteSetlist();
+  const setVoteStatus = useSetVoteStatus(setlistId);
+  const goToVote = (): void => navigateTo(`/setlists/${setlistId}/vote`);
+  const voteActionByStatus = {
+    voting: goToVote,
+    locked: () =>
+      setVoteStatus.mutate({ status: 'voting', targetSongCount: null }, { onSuccess: goToVote }),
+  } as const satisfies Readonly<Record<SetlistStatus, () => void>>;
   const [draftName, setDraftName] = useState<string | null>(null);
   const [isConfirmingDeletion, setIsConfirmingDeletion] = useState(false);
 
@@ -53,34 +65,51 @@ export function SetlistHeaderActions({
   return (
     <>
       {draftName === null ? (
-        <div className="flex items-center gap-1">
-          <Link
-            to={`/setlists/${setlistId}/scene`}
-            aria-label={t('scene.title')}
-            title={t('scene.title')}
-            className={ICON_ACTION_CLASS}
-          >
-            <Icon name="play" size={18} />
-          </Link>
-          {trailing}
-          <OverflowMenu
-            label={t('setlist.moreActions')}
-            items={[
-              {
-                label: t('setlist.rename.label'),
-                icon: 'edit',
-                tone: 'default',
-                onSelect: () => setDraftName(name),
-              },
-              {
-                label: t('setlist.delete.button'),
-                icon: 'trash',
-                tone: 'danger',
-                onSelect: () => setIsConfirmingDeletion(true),
-              },
-            ]}
-          />
-        </div>
+        <Menu
+          label={t('setlist.moreActions')}
+          items={[
+            {
+              label: t('scene.title'),
+              icon: 'play',
+              tone: 'default',
+              onSelect: () => navigateTo(`/setlists/${setlistId}/scene`),
+            },
+            {
+              label: t(VOTE_LABEL_BY_STATUS[status]),
+              icon: 'vote',
+              tone: 'default',
+              onSelect: voteActionByStatus[status],
+            },
+            ...(isConcert
+              ? [
+                  {
+                    label: t('audience.panelTitle'),
+                    icon: 'audience',
+                    tone: 'default',
+                    onSelect: () => navigateTo(`/setlists/${setlistId}/audience`),
+                  } as const,
+                ]
+              : []),
+            {
+              label: t('setlist.copyOrder'),
+              icon: 'copy',
+              tone: 'default',
+              onSelect: onCopyOrder,
+            },
+            {
+              label: t('setlist.rename.label'),
+              icon: 'edit',
+              tone: 'default',
+              onSelect: () => setDraftName(name),
+            },
+            {
+              label: t('setlist.delete.button'),
+              icon: 'trash',
+              tone: 'danger',
+              onSelect: () => setIsConfirmingDeletion(true),
+            },
+          ]}
+        />
       ) : (
         <div className="flex flex-1 items-center gap-2 min-w-0">
           <Input
@@ -90,28 +119,30 @@ export function SetlistHeaderActions({
             aria-label={t('setlist.rename.label')}
             className="flex-1 min-w-0"
           />
-          <Button variant="accent" onClick={saveName} disabled={renameSetlist.isPending}>
+          <Button
+            icon="check"
+            variant="secondary"
+            onClick={saveName}
+            disabled={renameSetlist.isPending}
+          >
             {t('setlist.rename.save')}
           </Button>
-          <Button
-            variant="ghost"
-            aria-label={t('common.cancel')}
-            title={t('common.cancel')}
-            className="w-11 px-0"
-            onClick={() => setDraftName(null)}
-          >
-            <Icon name="close" size={18} />
-          </Button>
+          <IconButton icon="close" label={t('common.cancel')} onClick={() => setDraftName(null)} />
         </div>
       )}
 
       {renameSetlist.isError ? (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {t('setlist.failure.rename')}
         </p>
       ) : null}
+      {setVoteStatus.isError ? (
+        <p className="text-danger text-meta" role="alert">
+          {t('setlist.failure.openVote')}
+        </p>
+      ) : null}
       {deleteSetlist.isError ? (
-        <p className="text-danger text-sm" role="alert">
+        <p className="text-danger text-meta" role="alert">
           {t('setlist.failure.delete')}
         </p>
       ) : null}

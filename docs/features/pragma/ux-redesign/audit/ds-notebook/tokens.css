@@ -1,0 +1,169 @@
+@import 'tailwindcss';
+
+@font-face {
+  font-family: 'Newsreader Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('./fonts/newsreader-latin-opsz-normal.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Newsreader Variable';
+  font-style: italic;
+  font-display: swap;
+  font-weight: 200 800;
+  src: url('./fonts/newsreader-latin-opsz-italic.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Geist Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/geist-latin-wght-normal.woff2') format('woff2-variations');
+}
+@font-face {
+  font-family: 'Geist Mono Variable';
+  font-style: normal;
+  font-display: swap;
+  font-weight: 100 900;
+  src: url('./fonts/geist-mono-latin-wght-normal.woff2') format('woff2-variations');
+}
+
+@theme static {
+  --color-*: initial;
+
+  --color-paper: light-dark(#f5f1e8, #16130f);
+  --color-leaf: light-dark(#fbf8f1, #1e1a15);
+  --color-raised: light-dark(#fffdf8, #27221b);
+  --color-sunk: light-dark(#ece6d9, #100e0b);
+  --color-hover: light-dark(#ebe4d5, #2d2820);
+  --color-rule: light-dark(#e2dacb, #322c23);
+  --color-rule-strong: light-dark(#cfc5b2, #4a4235);
+  --color-margin: light-dark(#e9c8bc, #4a2e27);
+
+  --color-ink: light-dark(#1d1914, #f1ebdf);
+  --color-ink-soft: light-dark(#5c5348, #b9b0a1);
+  --color-ink-faint: light-dark(#6f665a, #958c7e);
+
+  --color-accent: light-dark(#2d5fa0, #8db2e6);
+  --color-accent-strong: light-dark(#1f4680, #b3cdf0);
+  --color-accent-pressed: light-dark(#244f88, #7aa2da);
+  --color-accent-soft: light-dark(#e2e9f2, #1f2a3a);
+  --color-on-accent: light-dark(#fffdf8, #10161f);
+
+  --color-pencil: light-dark(#8a4a24, #e0a580);
+  --color-highlight: light-dark(#f4e6a8, #4a3f17);
+  --color-on-highlight: light-dark(#3d3208, #f6e7a6);
+
+  --color-danger: light-dark(#a3301d, #f08f7b);
+  --color-danger-soft: light-dark(#f6e1da, #3a1d17);
+  --color-good: light-dark(#3d6b38, #93c58a);
+  --color-good-soft: light-dark(#e1eadb, #1d2b1a);
+  --color-warn: light-dark(#7d5810, #e5bd63);
+  --color-warn-soft: light-dark(#f3e6c6, #33280f);
+
+  --color-member-1: light-dark(#b24a2c, #ee9878);
+  --color-member-2: light-dark(#2e7373, #7fc7c4);
+  --color-member-3: light-dark(#8f6512, #e3bb63);
+  --color-member-4: light-dark(#7d3d66, #d39ac0);
+  --color-member-5: light-dark(#56702f, #b4cf84);
+  --color-member-6: light-dark(#2d5fa0, #8db2e6);
+  --color-on-member: light-dark(#fffdf8, #16130f);
+
+  --color-scrim: light-dark(#1d19144d, #00000099);
+  --color-focus: light-dark(#2d5fa080, #8db2e699);
+
+  --color-stage-bg: #0d0a07;
+  --color-stage-ink: #f1e9d8;
+  --color-stage-chord: #8db2e6;
+
+  --font-serif: 'Newsreader Variable', 'Iowan Old Style', Georgia, serif;
+  --font-sans: 'Geist Variable', system-ui, -apple-system, sans-serif;
+  --font-mono: 'Geist Mono Variable', ui-monospace, Menlo, monospace;
+
+  --text-display: 30px;
+  --text-display--line-height: 34px;
+  --text-display--font-weight: 520;
+  --text-display--letter-spacing: -0.015em;
+  --text-heading: 22px;
+  --text-heading--line-height: 28px;
+  --text-heading--font-weight: 520;
+  --text-heading--letter-spacing: -0.01em;
+  --text-title: 19px;
+  --text-title--line-height: 24px;
+  --text-title--font-weight: 500;
+  --text-body: 16px;
+  --text-body--line-height: 24px;
+  --text-body--font-weight: 400;
+  --text-meta: 14px;
+  --text-meta--line-height: 20px;
+  --text-meta--font-weight: 400;
+  --text-label: 12px;
+  --text-label--line-height: 16px;
+  --text-label--font-weight: 550;
+  --text-label--letter-spacing: 0.01em;
+
+  --spacing: 4px;
+  --spacing-gutter: 16px;
+  --spacing-margin: 44px;
+  --spacing-row: 64px;
+  --spacing-tap: 44px;
+  --spacing-tabbar: 56px;
+
+  --radius-cover: 3px;
+  --radius-sm: 6px;
+  --radius-md: 10px;
+  --radius-lg: 16px;
+  --radius-sheet: 20px;
+  --radius-pill: 999px;
+
+  --shadow-leaf: 0 1px 0 light-dark(#e2dacb, #00000066), 0 1px 3px light-dark(#3c28100d, #00000040);
+  --shadow-raised:
+    0 1px 1px light-dark(#3c28100f, #0000004d), 0 4px 12px light-dark(#3c281014, #00000059);
+  --shadow-overlay:
+    0 -1px 0 light-dark(#e2dacb, #4a4235), 0 -12px 40px light-dark(#3c28101f, #00000080);
+  --shadow-cover: 0 1px 2px light-dark(#3c281026, #00000066);
+
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --duration-fast: 120ms;
+  --duration-base: 200ms;
+  --duration-slow: 320ms;
+}
+
+@layer base {
+  :root {
+    color-scheme: light dark;
+  }
+  :root[data-theme='light'] {
+    color-scheme: light;
+  }
+  :root[data-theme='dark'] {
+    color-scheme: dark;
+  }
+  html {
+    font-family: var(--font-sans);
+    font-size: var(--text-body);
+    line-height: var(--text-body--line-height);
+    background: var(--color-paper);
+    color: var(--color-ink);
+    font-variant-numeric: tabular-nums;
+  }
+  ::selection {
+    background: var(--color-highlight);
+    color: var(--color-on-highlight);
+  }
+  :focus-visible {
+    outline: 3px solid var(--color-focus);
+    outline-offset: 2px;
+  }
+  dialog::backdrop {
+    background: var(--color-scrim);
+  }
+  @media (prefers-reduced-motion: reduce) {
+    * {
+      transition-duration: 0ms !important;
+      animation-duration: 0ms !important;
+    }
+  }
+}

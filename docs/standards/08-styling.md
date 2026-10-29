@@ -123,6 +123,22 @@ and `lg:` for wider screens. See
   installed app that offset can stay after the keyboard closes, lifting the
   shell over an empty band. Scroll areas inside dialogs and scenes are `div`s
   and are not affected.
+- `oxlint:borso/no-arbitrary-tailwind-value (pragma/site)` rejects a
+  `text-[`, `bg-[`, `rounded-[` or `shadow-[` class and a raw hex, `rgb(`,
+  `rgba(` or `hsl(` colour in a class string, a `*_CLASS` constant or a
+  `.variants.ts` table, and a colour set through `style` anywhere but `Avatar`
+  and `MemberMark`, the two places a member's stored colour reaches the screen.
+  Every value the design uses has a name in `tokens.css`
+  ([ADR-0047](../adr/0047-pragma-design-system-is-notebook-with-grafts.md)).
+- `oxlint:borso/no-vertical-scroll-container (pragma/site)` rejects
+  `overflow-auto`, `overflow-y-auto`, `overflow-scroll` and `overflow-y-scroll`
+  outside `Sheet` and the two scene views. The document scrolls; a list that
+  scrolls inside it traps a thumb that meant to scroll the page.
+- `test:design-tokens.utils.test.ts` reads pragma's `tokens.css`, fails on a
+  listed text pair under 4.5:1 in either scheme, and compiles every colour,
+  text, radius and shadow utility found under `site/src` through Tailwind: a
+  class naming a token the stylesheet does not define generates nothing, and the
+  test names the file. That is how `bg-surface` shipped unnoticed.
 - `script:scripts/check-single-stylesheet.sh` fails an application that ships
   more than one `.css` file under its site directory. It reads the git index
   rather than walking the filesystem, because `coverage/` and `.stryker-tmp/`

@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest';
-import { buildChartObjectKey, extensionForContentType } from './uploads.core';
+import {
+  buildChartObjectKey,
+  extensionForContentType,
+  canReadFromProductionBucket,
+} from './uploads.core';
 
 // @FollowsBlueprint test-pure-unit
 describe('extensionForContentType', () => {
@@ -31,5 +35,20 @@ describe('buildChartObjectKey', () => {
         randomId: 'rnd-1',
       }),
     ).toBe('chart/song-1/rnd-1.jpg');
+  });
+});
+
+describe('canReadFromProductionBucket', () => {
+  it('lets a take be read from production when the stage names a production bucket', () => {
+    expect(canReadFromProductionBucket('take/song-1/take-1.webm', true)).toBe(true);
+  });
+
+  it('never reaches production from a stage that names no production bucket', () => {
+    expect(canReadFromProductionBucket('take/song-1/take-1.webm', false)).toBe(false);
+  });
+
+  it('keeps every other object, and a key that only starts like a take, in the own bucket', () => {
+    expect(canReadFromProductionBucket('chart/song-1/rnd-1.pdf', true)).toBe(false);
+    expect(canReadFromProductionBucket('takeover/song-1.webm', true)).toBe(false);
   });
 });

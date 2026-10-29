@@ -8,6 +8,7 @@ import {
 export interface SetlistSongCount {
   readonly setlistId: string;
   readonly songCount: number;
+  readonly songIds: readonly string[];
 }
 
 const FIRST_POSITION = 0;
@@ -26,16 +27,18 @@ export function selectNextLinkPosition(highestTakenPosition: number | null): num
 // @FollowsBlueprint core-projection
 export function tallySongsPerSetlist(
   setlistIds: readonly string[],
-  entryRows: readonly { readonly setlistId: string }[],
+  entryRows: readonly { readonly setlistId: string; readonly songId: string }[],
 ): SetlistSongCount[] {
-  const countBySetlistId = new Map<string, number>();
+  const songIdsBySetlistId = new Map<string, string[]>();
   for (const row of entryRows) {
-    countBySetlistId.set(row.setlistId, (countBySetlistId.get(row.setlistId) ?? 0) + 1);
+    const songIds = songIdsBySetlistId.get(row.setlistId) ?? [];
+    songIds.push(row.songId);
+    songIdsBySetlistId.set(row.setlistId, songIds);
   }
-  return setlistIds.map((setlistId) => ({
-    setlistId,
-    songCount: countBySetlistId.get(setlistId) ?? 0,
-  }));
+  return setlistIds.map((setlistId) => {
+    const songIds = songIdsBySetlistId.get(setlistId) ?? [];
+    return { setlistId, songCount: songIds.length, songIds };
+  });
 }
 
 export interface SetlistSummary {
@@ -44,6 +47,7 @@ export interface SetlistSummary {
   readonly kind: SetlistKind;
   readonly status: SetlistStatus;
   readonly songCount: number;
+  readonly songIds: readonly string[];
   readonly sessionIds: string[];
 }
 
@@ -58,9 +62,7 @@ export function buildSetlistSummaries(
   songCounts: readonly SetlistSongCount[],
   links: readonly { readonly setlistId: string; readonly sessionId: string }[],
 ): SetlistSummary[] {
-  const songCountBySetlistId = new Map(
-    songCounts.map((count) => [count.setlistId, count.songCount]),
-  );
+  const songCountBySetlistId = new Map(songCounts.map((count) => [count.setlistId, count]));
   const sessionIdsBySetlistId = new Map<string, string[]>();
   for (const link of links) {
     const known = sessionIdsBySetlistId.get(link.setlistId);
@@ -75,7 +77,8 @@ export function buildSetlistSummaries(
     name: setlist.name,
     kind: resolveSetlistKind(setlist.kind),
     status: resolveSetlistStatus(setlist.status),
-    songCount: songCountBySetlistId.get(setlist.id) ?? 0,
+    songCount: songCountBySetlistId.get(setlist.id)?.songCount ?? 0,
+    songIds: songCountBySetlistId.get(setlist.id)?.songIds ?? [],
     sessionIds: sessionIdsBySetlistId.get(setlist.id) ?? [],
   }));
 }

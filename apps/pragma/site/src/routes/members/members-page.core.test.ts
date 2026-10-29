@@ -3,7 +3,7 @@ import {
   applyMemberWriteIntent,
   buildMemberFormKey,
   buildMemberFormValues,
-  DEFAULT_MEMBER_COLOR,
+  selectFreePaletteColor,
   type MemberSelection,
   selectInstrumentListState,
   selectMemberFormMode,
@@ -12,7 +12,9 @@ import {
   sortInstrumentsByName,
   sortMembersByFirstName,
   toggleInstrumentAssignment,
+  readMembersView,
 } from './members-page.core';
+import { listMemberPaletteHexes } from '@domain/member-palette.core';
 
 const ADA: MemberSelection = { id: 'ada-id', firstName: 'Ada', color: '#112233' };
 
@@ -52,16 +54,30 @@ describe('selectMemberFormMode', () => {
   });
 });
 
+describe('selectFreePaletteColor', () => {
+  it('takes the first palette colour for an empty band', () => {
+    expect(selectFreePaletteColor([])).toBe('#e87b62');
+  });
+
+  it('skips the colours the band already uses, whatever their case', () => {
+    expect(selectFreePaletteColor(['#E87B62', '#3a9b9b'])).toBe('#d6a93c');
+  });
+
+  it('falls back to the first colour once all five are taken', () => {
+    expect(selectFreePaletteColor(listMemberPaletteHexes())).toBe('#e87b62');
+  });
+});
+
 describe('buildMemberFormValues', () => {
-  it('starts blank with the default colour', () => {
-    expect(buildMemberFormValues(null)).toEqual({
+  it('starts blank with the first palette colour no member uses', () => {
+    expect(buildMemberFormValues(null, ['#e87b62'])).toEqual({
       firstName: '',
-      color: DEFAULT_MEMBER_COLOR,
+      color: '#3a9b9b',
     });
   });
 
-  it('starts from the selected member', () => {
-    expect(buildMemberFormValues(ADA)).toEqual({ firstName: 'Ada', color: '#112233' });
+  it('starts from the selected member and keeps their stored colour', () => {
+    expect(buildMemberFormValues(ADA, [])).toEqual({ firstName: 'Ada', color: '#112233' });
   });
 });
 
@@ -157,5 +173,14 @@ describe('applyMemberWriteIntent', () => {
       firstName: 'Ada',
       color: '#000000',
     });
+  });
+});
+
+describe('readMembersView', () => {
+  it('opens the mastery matrix only when the address asks for it', () => {
+    expect(readMembersView('mastery')).toBe('mastery');
+    expect(readMembersView('members')).toBe('members');
+    expect(readMembersView(null)).toBe('members');
+    expect(readMembersView('other')).toBe('members');
   });
 });

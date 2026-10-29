@@ -16,12 +16,12 @@ export interface SongNotesProps {
 }
 
 const LABEL_CLASS_BY_TONE = {
-  light: 'text-ink-400',
+  light: 'text-ink-soft',
   dark: 'text-stage-ink-dim',
 } as const;
 
 const TEXT_CLASS_BY_TONE = {
-  light: 'text-ink-700',
+  light: 'text-ink',
   dark: 'text-stage-ink',
 } as const;
 
@@ -36,7 +36,7 @@ export function SongNotes({ song, tone = 'light', className }: SongNotesProps): 
         <div key={section.kind} className="flex flex-col gap-1">
           <span
             className={composeClassName(
-              'text-xs tracking-wider uppercase font-medium',
+              'text-label tracking-wider uppercase font-medium',
               LABEL_CLASS_BY_TONE[tone],
             )}
           >
@@ -44,7 +44,7 @@ export function SongNotes({ song, tone = 'light', className }: SongNotesProps): 
           </span>
           <p
             className={composeClassName(
-              'm-0 text-[13px] leading-relaxed whitespace-pre-wrap [overflow-wrap:anywhere]',
+              'm-0 font-display text-body italic whitespace-pre-wrap [overflow-wrap:anywhere]',
               TEXT_CLASS_BY_TONE[tone],
             )}
           >

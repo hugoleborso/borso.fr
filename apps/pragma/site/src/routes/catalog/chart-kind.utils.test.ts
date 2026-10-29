@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { extractChartKind, selectChordProText } from './chart-kind.utils';
+import { extractChartKind, hasChosenChart, selectChordProText } from './chart-kind.utils';
 
 // @FollowsBlueprint test-pure-unit
 describe('extractChartKind', () => {
@@ -48,5 +48,15 @@ describe('selectChordProText', () => {
   it('returns null for a chordpro chart whose text is missing or not a string', () => {
     expect(selectChordProText({ kind: 'chordpro' })).toBeNull();
     expect(selectChordProText({ kind: 'chordpro', text: 42 })).toBeNull();
+  });
+});
+
+describe('hasChosenChart', () => {
+  it('answers no while the draft holds no chart', () => {
+    expect(hasChosenChart('none')).toBe(false);
+  });
+
+  it('answers yes for any chosen kind', () => {
+    expect(hasChosenChart('image')).toBe(true);
   });
 });

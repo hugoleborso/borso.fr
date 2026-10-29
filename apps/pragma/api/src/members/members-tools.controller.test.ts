@@ -15,7 +15,6 @@ const membersBodySchema = z.object({
       id: z.string().uuid(),
       firstName: z.string(),
       instruments: z.array(z.string()),
-      main: z.array(z.string()).optional(),
     }),
   ),
 });
@@ -33,7 +32,6 @@ describe('members tools (back-e2e)', () => {
     const assigned = await callTool(band.assistant, 'set_member_instruments', {
       member: 'lea',
       instruments: ['keys'],
-      main: ['Keys'],
     });
     const listed = membersBodySchema.parse((await callTool(band.assistant, 'list_members')).body);
 
@@ -42,7 +40,7 @@ describe('members tools (back-e2e)', () => {
       body: { id: band.lea.memberId, instruments: ['keys'] },
     });
     expect(listed.members).toContainEqual(
-      expect.objectContaining({ firstName: 'Léa', instruments: ['Keys'], main: ['Keys'] }),
+      expect.objectContaining({ firstName: 'Léa', instruments: ['Keys'] }),
     );
     expect(listed.members.map((listedMember) => listedMember.firstName)).toEqual(['Hugo', 'Léa']);
   });
