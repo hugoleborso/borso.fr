@@ -8,6 +8,8 @@ export default {
   rules: {
     'header-max-length': [2, 'always', 100],
     'body-max-line-length': [0],
+    'footer-leading-blank': [0],
+    'footer-max-line-length': [0],
     'scope-enum': [
       2,
       'always',
