@@ -65,6 +65,7 @@ docs/architecture/*-architecture.json
 docs/architecture/*-diff.json
 .claude/skills/blueprint/blueprint-index.md
 .claude/skills/blueprint/blueprint-coverage.html
+.claude/skills/blueprint/blueprint-context.json
 .claude/knowledge-triggers.json
 .claude/.knowledge-triggers.*
 docs/standards/blueprint-defects.md
