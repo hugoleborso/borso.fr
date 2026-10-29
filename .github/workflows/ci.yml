@@ -85,10 +85,10 @@ jobs:
             scripts/standards/temporal-coupling.ts \
             scripts/standards/enforcement-ledger.ts \
             scripts/quality/weak-points.ts \
-            scripts/quality/working-conditions.ts \
-            scripts/architecture/architecture-graph.ts; do
+            scripts/quality/working-conditions.ts; do
             pnpm exec tsx "$generator"
           done
+          pnpm exec tsx scripts/architecture/architecture-graph.ts --skip-layout
           python3 plugins/borso-harness/scripts/knowledge-triggers.py compile
 
       - run: pnpm run format:check
@@ -244,6 +244,10 @@ jobs:
       # too, since nothing is committed to compare against (ADR-0014). The
       # second run repeated the whole build, ELK layout included, and on
       # 2026-10-29 that alone took 175 s and pushed this job past its timeout.
+      # The generate step passes `--skip-layout`: in this job only
+      # check-doc-links.ts reads the pages, to see that they exist, and the
+      # ELK layout was most of the build (pragma: 171 s with it, 11 s
+      # without, 2026-10-29). architecture.yml and pages.yml lay them out.
       - run: pnpm --filter @borso/infra test:coverage
       - run: pnpm --filter @borso/shared-infra test:coverage
       - run: pnpm -r build

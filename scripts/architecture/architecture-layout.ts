@@ -24,6 +24,12 @@ export interface LevelLayout {
   readonly height: number;
 }
 
+const UNPLACED_LAYOUT: LevelLayout = { nodes: [], edges: [], width: 0, height: 0 };
+
+export function skipLevelLayout(): Promise<LevelLayout> {
+  return Promise.resolve(UNPLACED_LAYOUT);
+}
+
 const NODE_BASE_HEIGHT = 38;
 export const NODE_LINE_HEIGHT = 14;
 const NODE_MIN_WIDTH = 138;
