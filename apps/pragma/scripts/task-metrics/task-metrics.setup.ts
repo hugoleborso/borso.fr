@@ -12,6 +12,7 @@ import {
 } from './task-metrics.core';
 import { measureSliceOne } from './slice-one-measures.setup';
 import { measureSliceFour } from './slice-four-measures.setup';
+import { measureScreenRule } from './screen-rule-measures.setup';
 import { measureSliceSix } from './slice-six-measures.setup';
 import { measureSliceThree } from './slice-three-measures.setup';
 import { measureSliceTwo } from './slice-two-measures.setup';
@@ -100,6 +101,14 @@ async function main(): Promise<void> {
   if (options.measureSliceSix) {
     result.sliceSix = await measureSliceSix(driver);
     writeResult(options.outputPath, result);
+  }
+  if (options.measureScreenRule) {
+    const screenRule = await measureScreenRule(driver);
+    result.screenRule = screenRule;
+    writeResult(options.outputPath, result);
+    const violationCount = Number(screenRule.violations);
+    console.log(`[screen-rule] ${String(violationCount)} violation(s)`);
+    if (violationCount > 0) process.exitCode = FAILURE_EXIT_CODE;
   }
   session.close();
   if (options.baselinePath === null) return;

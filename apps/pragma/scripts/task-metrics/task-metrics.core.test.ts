@@ -88,6 +88,7 @@ describe('parseTaskMetricsArguments', () => {
       measureSliceThree: true,
       measureSliceFour: true,
       measureSliceSix: true,
+      measureScreenRule: true,
       seedVariant: 'no-upcoming-session',
       outputPath: 'after.json',
       baselinePath: 'baseline.json',
@@ -103,10 +104,17 @@ describe('parseTaskMetricsArguments', () => {
       measureSliceThree: false,
       measureSliceFour: false,
       measureSliceSix: false,
+      measureScreenRule: false,
       seedVariant: 'audit',
       outputPath: null,
       baselinePath: null,
     });
+  });
+
+  it('checks the screen rule alone, or with the routes', () => {
+    expect(parseTaskMetricsArguments(['--screen-rule']).measureScreenRule).toBe(true);
+    expect(parseTaskMetricsArguments(['--routes']).measureScreenRule).toBe(true);
+    expect(parseTaskMetricsArguments(['--slice-6']).measureScreenRule).toBe(false);
   });
 
   it('refuses a seed it does not know', () => {

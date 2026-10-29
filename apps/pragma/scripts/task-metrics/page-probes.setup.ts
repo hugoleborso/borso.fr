@@ -500,3 +500,53 @@ export const COUNT_BUTTONS_INSIDE_LINKS = `() => document.querySelectorAll('a bu
 export const COUNT_STAGE_MODE_WAYS = `() => [...document.querySelectorAll('main a[href$="/scene"], main button')].filter((element) => element.tagName === 'A' || /stage|scene|full screen/i.test(element.innerText)).length`;
 
 export const COUNT_LISTEN_LINKS = `() => document.querySelectorAll('main ul[aria-label="Listen"] a').length`;
+
+const FIND_PAGE_HEADER = `() => document.querySelector('[data-page-header]') ?? [...document.querySelectorAll('header')].find((header) => header.closest('dialog') === null) ?? null`;
+
+export const READ_PAGE_HEADER = `() => {
+  const header = (${FIND_PAGE_HEADER})();
+  if (header === null) return { hasHeader: false, headerPosition: null, backLinks: [] };
+  const backLinks = [...header.querySelectorAll('a[href]')].map((link) => new URL(link.getAttribute('href'), location.href).pathname);
+  return { hasHeader: true, headerPosition: getComputedStyle(header).position, backLinks };
+}`;
+
+export const READ_PAGE_HEADER_BOX = `() => {
+  const header = (${FIND_PAGE_HEADER})();
+  const box = header?.getBoundingClientRect();
+  return { headerTopAfterEnd: box === undefined ? null : Math.round(box.top), headerBottomAfterEnd: box === undefined ? null : Math.round(box.bottom), viewportHeight: innerHeight };
+}`;
+
+export const READ_CONTENT_BELOW_LIST = `() => {
+  const scope = document.querySelector('main') ?? document.body;
+  const OUTSIDE_CONTENT = 'dialog, [data-page-header], [data-bottom-actions], [aria-hidden="true"], details:not([open]) > :not(summary)';
+  const LIST_SELECTOR = 'ul, ol, table, [role=list], [role=grid], [role=table]';
+  const ITEM_SELECTOR = ':scope > li, :scope > [role=listitem], :scope > [role=row], :scope > tbody > tr, :scope > tr, :scope > [role=rowgroup] > [role=row]';
+  const MINIMUM_ITEMS = 3;
+  const isShown = (element) => { const box = element.getBoundingClientRect(); const style = getComputedStyle(element); return box.width > 0 && box.height > 0 && style.visibility !== 'hidden'; };
+  const isContent = (element) => element.closest(OUTSIDE_CONTENT) === null && isShown(element);
+  const pageTop = (element) => element.getBoundingClientRect().top + scrollY;
+  const pageBottom = (element) => element.getBoundingClientRect().bottom + scrollY;
+  const nameOf = (element) => (element.getAttribute('aria-label') || element.getAttribute('placeholder') || element.getAttribute('name') || element.innerText || '').replace(/\\s+/g, ' ').trim().slice(0, 40);
+  const describe = (element) => element.tagName.toLowerCase() + (element.getAttribute('role') ? '[role=' + element.getAttribute('role') + ']' : '') + ' "' + nameOf(element) + '"';
+  const kindOf = (list) => { const first = list.querySelector(ITEM_SELECTOR); return [list.tagName, list.getAttribute('role') ?? '', String(list.className), first === null ? '' : first.tagName + '.' + String(first.className)].join('|'); };
+  const lists = [...scope.querySelectorAll(LIST_SELECTOR)].filter(isContent).filter((list) => list.parentElement.closest(LIST_SELECTOR) === null);
+  const runs = new Map();
+  for (const list of lists) {
+    const kind = kindOf(list);
+    const run = runs.get(kind) ?? { kind, lists: [], items: 0, bottom: -Infinity };
+    run.lists.push(list);
+    run.items += list.querySelectorAll(ITEM_SELECTOR).length;
+    run.bottom = Math.max(run.bottom, pageBottom(list));
+    runs.set(kind, run);
+  }
+  const candidates = [...scope.querySelectorAll('form, input, select, textarea, h2, h3, [role=tablist], ' + LIST_SELECTOR)].filter(isContent);
+  const found = [];
+  for (const run of runs.values()) {
+    if (run.items < MINIMUM_ITEMS) continue;
+    const insideRun = (element) => run.lists.some((list) => list.contains(element) || element.contains(list));
+    const offending = candidates.filter((element) => !insideRun(element) && pageTop(element) >= run.bottom - 1 && !(element.matches(LIST_SELECTOR) && kindOf(element) === run.kind));
+    const outermost = offending.filter((element) => !offending.some((other) => other !== element && other.contains(element)));
+    for (const element of outermost) found.push({ list: describe(run.lists[0]), below: describe(element) });
+  }
+  return found;
+}`;

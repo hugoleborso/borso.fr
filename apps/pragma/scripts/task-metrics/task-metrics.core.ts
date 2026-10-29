@@ -41,6 +41,7 @@ export interface TaskMetricsOptions {
   readonly measureSliceThree: boolean;
   readonly measureSliceFour: boolean;
   readonly measureSliceSix: boolean;
+  readonly measureScreenRule: boolean;
   readonly seedVariant: SeedVariant;
   readonly outputPath: string | null;
   readonly baselinePath: string | null;
@@ -97,6 +98,7 @@ export function parseTaskMetricsArguments(argumentList: readonly string[]): Task
     measureSliceThree: argumentList.includes('--slice-3'),
     measureSliceFour: argumentList.includes('--slice-4'),
     measureSliceSix: argumentList.includes('--slice-6'),
+    measureScreenRule: argumentList.includes('--screen-rule') || argumentList.includes('--routes'),
     seedVariant: parseSeedVariant(readOptionValue(argumentList, '--seed')),
     outputPath: readOptionValue(argumentList, '--out'),
     baselinePath: readOptionValue(argumentList, '--compare'),
