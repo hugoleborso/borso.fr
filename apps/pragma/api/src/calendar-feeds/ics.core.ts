@@ -22,6 +22,7 @@ export type BusyIntervalsOutcome =
   | { readonly kind: 'unavailable' };
 
 const jcalSchema = z.array(z.unknown());
+const calendarNameSchema = z.string().catch('');
 
 const UNAVAILABLE: BusyIntervalsOutcome = { kind: 'unavailable' };
 
@@ -140,8 +141,7 @@ export function readBusyIntervals(body: string, range: ReadRange): BusyIntervals
 export function readCalendarName(body: string): string | null {
   try {
     const root = new ICAL.Component(jcalSchema.parse(ICAL.parse(body)));
-    const name: unknown = root.getFirstPropertyValue(CALENDAR_NAME);
-    if (typeof name !== 'string') return null;
+    const name = calendarNameSchema.parse(root.getFirstPropertyValue(CALENDAR_NAME));
     const trimmed = name.trim().slice(0, CALENDAR_FEED_NAME_MAX_LENGTH).trim();
     return trimmed.length === 0 ? null : trimmed;
   } catch {

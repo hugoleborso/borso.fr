@@ -292,6 +292,18 @@ describe('readCalendarName', () => {
     expect(name).toBe('a'.repeat(CALENDAR_FEED_NAME_MAX_LENGTH));
   });
 
+  it('trims before the cap, so leading spaces do not count against it', () => {
+    const name = readCalendarName(calendar(`X-WR-CALNAME:   ${'a'.repeat(500)}`));
+    expect(name).toBe('a'.repeat(CALENDAR_FEED_NAME_MAX_LENGTH));
+  });
+
+  it('trims after the cap, so a cut never ends on a space', () => {
+    const longName = `${'a'.repeat(CALENDAR_FEED_NAME_MAX_LENGTH - 1)} band`;
+    expect(readCalendarName(calendar(`X-WR-CALNAME:${longName}`))).toBe(
+      'a'.repeat(CALENDAR_FEED_NAME_MAX_LENGTH - 1),
+    );
+  });
+
   it('answers no name for a feed that declares none, an empty one, or a body that is not a calendar', () => {
     expect(readCalendarName(calendar())).toBeNull();
     expect(readCalendarName(calendar('X-WR-CALNAME:   '))).toBeNull();

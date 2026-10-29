@@ -48,6 +48,7 @@ describe('preview calendar fixtures', () => {
       intervals: [],
     });
     expect(answerFixtureFeedRequest('hugo-band.ics', now).status).toBe(200);
+    expect(buildFixtureFeed('hugo-band', now)).toMatchSnapshot();
   });
 
   it.each(FIXTURE_FEED_NAMES)('write the %s feed exactly as recorded', (name) => {

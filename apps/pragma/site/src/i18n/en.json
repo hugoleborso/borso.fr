@@ -423,8 +423,6 @@
     "bookAria": "Book a practice on {{day}}, {{hours}}",
     "excluded": {
       "noCalendar": "Without {{name}}, who has no calendar",
-      "needsReconnecting": "{{name}}'s calendar needs reconnecting",
-      "unavailable": "{{name}}'s calendar is unavailable right now",
       "needsReconnectingNamed": "{{name}}'s calendar {{calendar}} needs reconnecting",
       "unavailableNamed": "{{name}}'s calendar {{calendar}} is unavailable right now",
       "needsReconnectingNumbered": "{{name}}'s calendar {{position}} needs reconnecting",

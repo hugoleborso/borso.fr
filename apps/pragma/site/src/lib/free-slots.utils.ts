@@ -18,12 +18,6 @@ export interface NamedExclusion {
   readonly calendarPosition: number | null;
 }
 
-const EXCLUSION_MESSAGE_KEY = {
-  'no-calendar': 'freeSlots.excluded.noCalendar',
-  'needs-reconnecting': 'freeSlots.excluded.needsReconnecting',
-  unavailable: 'freeSlots.excluded.unavailable',
-} as const;
-
 const NAMED_EXCLUSION_MESSAGE_KEY = {
   'no-calendar': 'freeSlots.excluded.noCalendar',
   'needs-reconnecting': 'freeSlots.excluded.needsReconnectingNamed',
@@ -37,14 +31,13 @@ const NUMBERED_EXCLUSION_MESSAGE_KEY = {
 } as const;
 
 export type ExclusionMessageKey =
-  | (typeof EXCLUSION_MESSAGE_KEY)[ExclusionReason]
   | (typeof NAMED_EXCLUSION_MESSAGE_KEY)[ExclusionReason]
   | (typeof NUMBERED_EXCLUSION_MESSAGE_KEY)[ExclusionReason];
 
 export function selectExclusionMessageKey(exclusion: NamedExclusion): ExclusionMessageKey {
-  if (exclusion.calendarName !== null) return NAMED_EXCLUSION_MESSAGE_KEY[exclusion.reason];
-  if (exclusion.calendarPosition !== null) return NUMBERED_EXCLUSION_MESSAGE_KEY[exclusion.reason];
-  return EXCLUSION_MESSAGE_KEY[exclusion.reason];
+  return exclusion.calendarName === null
+    ? NUMBERED_EXCLUSION_MESSAGE_KEY[exclusion.reason]
+    : NAMED_EXCLUSION_MESSAGE_KEY[exclusion.reason];
 }
 
 interface MemberName {

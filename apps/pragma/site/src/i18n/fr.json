@@ -423,8 +423,6 @@
     "bookAria": "Réserver une répétition le {{day}}, {{hours}}",
     "excluded": {
       "noCalendar": "Sans {{name}}, qui n’a pas d’agenda",
-      "needsReconnecting": "L’agenda de {{name}} est à reconnecter",
-      "unavailable": "L’agenda de {{name}} est indisponible pour l’instant",
       "needsReconnectingNamed": "L’agenda {{calendar}} de {{name}} est à reconnecter",
       "unavailableNamed": "L’agenda {{calendar}} de {{name}} est indisponible pour l’instant",
       "needsReconnectingNumbered": "L’agenda {{position}} de {{name}} est à reconnecter",
