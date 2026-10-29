@@ -6,6 +6,14 @@ import {
 import type { ToolRefusal } from './mcp.types';
 
 export const LISTED_CANDIDATES_MAX = 10;
+const INVALID_INPUT_ERROR = 'invalid-input';
+const WHOLE_INPUT_FIELD = 'input';
+const FIELD_PATH_SEPARATOR = '.';
+
+export interface FieldIssue {
+  readonly path: readonly (string | number)[];
+  readonly message: string;
+}
 
 export type UnresolvedReference = Exclude<ReferenceMatch, { kind: 'found' }>;
 
@@ -45,4 +53,14 @@ export function pickReference(
   const match = matchReference(candidates, reference);
   if (match.kind === 'found') return match.id;
   throw new ToolRefusedError(describeUnresolvedReference(noun, reference, match));
+}
+
+// @FollowsBlueprint core-projection
+export function describeInvalidFields(issues: readonly FieldIssue[]): ToolRefusal {
+  const fields: Record<string, string> = {};
+  for (const issue of issues) {
+    const field = issue.path.join(FIELD_PATH_SEPARATOR) || WHOLE_INPUT_FIELD;
+    fields[field] ??= issue.message;
+  }
+  return { error: INVALID_INPUT_ERROR, fields };
 }

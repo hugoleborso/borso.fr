@@ -1,17 +1,13 @@
 import {
-  setlistCreateToolInputSchema,
   setlistEntriesAddToolInputSchema,
   setlistEntriesRemoveToolInputSchema,
   setlistEntryChangeToolInputSchema,
   setlistLinkToolInputSchema,
   setlistListToolInputSchema,
   setlistReferenceToolInputSchema,
-  setlistRenameToolInputSchema,
   setlistReorderReferencesToolInputSchema,
+  setlistSaveToolInputSchema,
   setlistSessionToolInputSchema,
-  setlistVoteCastToolInputSchema,
-  setlistVoteCloseToolInputSchema,
-  setlistVoteStatusReferenceToolInputSchema,
 } from './setlists.schema';
 import {
   confirmUpdate,
@@ -24,12 +20,13 @@ import {
 } from './setlists.service';
 import {
   appendSongs,
+  defineDeletion,
   buildEntryUpdate,
   getSetlistsForTool,
   readEntryTitlesInOrder,
   readSessionPlanForTool,
   readSetlistForTool,
-  readVoteBoardForTool,
+  refuseCreationOnlyFields,
   removeEntriesAndCompact,
   reorderEntriesForTool,
   resolveEntryId,
@@ -37,15 +34,44 @@ import {
   resolveOptionalSessionId,
   resolveSessionId,
   resolveSetlistId,
-  resolveSongId,
   resolveSongIds,
   setSessionLink,
+  type ToolActor,
 } from './setlists-tools.service';
-import { closeVote, scoreSong, setVoteStatus } from './voting.service';
 
 const NOT_FOUND: ToolAnswer = { kind: 'refused', body: { error: 'not-found' } };
-const NOT_VOTING: ToolAnswer = { kind: 'refused', body: { error: 'not-voting' } };
-const NO_VOTES: ToolAnswer = { kind: 'refused', body: { error: 'no-votes' } };
+
+interface SetlistCreation {
+  readonly name: string | undefined;
+  readonly session: string | undefined;
+  readonly songs: readonly string[] | undefined;
+}
+
+async function runSetlistCreate(creation: SetlistCreation, actor: ToolActor): Promise<ToolAnswer> {
+  const sessionId = await resolveOptionalSessionId(creation.session, actor.now);
+  const songIds = await resolveSongIds(creation.songs ?? []);
+  const outcome = await createSetlist({ name: creation.name ?? '', sessionId }, actor);
+  if (outcome.kind === 'session-not-found') {
+    return { kind: 'refused', body: { error: 'session-not-found' } };
+  }
+  await appendSongs(outcome.setlist.id, songIds, actor);
+  return { kind: 'answered', body: { id: outcome.setlist.id, songs: songIds.length } };
+}
+
+async function runSetlistRename(
+  reference: string,
+  name: string | undefined,
+  actor: ToolActor,
+): Promise<ToolAnswer> {
+  if (name === undefined) return { kind: 'refused', body: { error: 'empty-update' } };
+  const id = await resolveSetlistId(reference);
+  const outcome = await renameSetlist(id, name, actor);
+  if (outcome.kind === 'not-found') return NOT_FOUND;
+  if (outcome.kind === 'not-renamable') {
+    return { kind: 'refused', body: { error: 'setlist-not-renamable' } };
+  }
+  return { kind: 'answered', body: confirmUpdate(id, { name }) };
+}
 
 // @FollowsBlueprint controller-dispatch
 export const SETLIST_TOOLS = [
@@ -73,7 +99,8 @@ export const SETLIST_TOOLS = [
   }),
   defineTool({
     name: 'get_setlist',
-    description: 'Read a setlist by name or id with its songs in order and who plays what.',
+    description:
+      'Read a setlist by name or id with its songs in order, who plays what, and the comment on each transition into the next song.',
     routes: ['GET /api/setlists/:id', 'GET /api/setlists/:id/entries'],
     inputSchema: setlistReferenceToolInputSchema,
     run: async ({ setlist }) => {
@@ -83,47 +110,15 @@ export const SETLIST_TOOLS = [
     },
   }),
   defineTool({
-    name: 'create_setlist',
+    name: 'save_setlist',
     description:
-      'Create a setlist, linked to `session` if given and filled with `songs` (titles or ids) in order.',
-    routes: ['POST /api/setlists', 'POST /api/setlists/:id/entries'],
-    inputSchema: setlistCreateToolInputSchema,
-    run: async ({ name, session, songs }, actor) => {
-      const sessionId = await resolveOptionalSessionId(session, actor.now);
-      const songIds = await resolveSongIds(songs ?? []);
-      const outcome = await createSetlist({ name, sessionId }, actor);
-      if (outcome.kind === 'session-not-found') {
-        return { kind: 'refused', body: { error: 'session-not-found' } };
-      }
-      await appendSongs(outcome.setlist.id, songIds, actor);
-      return { kind: 'answered', body: { id: outcome.setlist.id, songs: songIds.length } };
-    },
-  }),
-  defineTool({
-    name: 'update_setlist',
-    description: 'Rename a setlist. An audience choice setlist keeps its name.',
-    routes: ['PUT /api/setlists/:id'],
-    inputSchema: setlistRenameToolInputSchema,
-    run: async ({ setlist, name }, actor) => {
-      const id = await resolveSetlistId(setlist);
-      const outcome = await renameSetlist(id, name, actor);
-      if (outcome.kind === 'not-found') return NOT_FOUND;
-      if (outcome.kind === 'not-renamable') {
-        return { kind: 'refused', body: { error: 'setlist-not-renamable' } };
-      }
-      return { kind: 'answered', body: { id, name: outcome.setlist.name } };
-    },
-  }),
-  defineTool({
-    name: 'delete_setlist',
-    description: 'Delete a setlist with its entries and its links to sessions.',
-    routes: ['DELETE /api/setlists/:id'],
-    inputSchema: setlistReferenceToolInputSchema,
-    run: async ({ setlist }) => {
-      const id = await resolveSetlistId(setlist);
-      const outcome = await removeSetlist(id);
-      if (outcome === 'not-found') return NOT_FOUND;
-      return { kind: 'answered', body: { id, deleted: true } };
+      'Create a setlist, linked to `session` if given and filled with `songs` (titles or ids) in order; or, with `setlist` (name or id), rename it. An audience choice setlist keeps its name.',
+    routes: ['POST /api/setlists', 'POST /api/setlists/:id/entries', 'PUT /api/setlists/:id'],
+    inputSchema: setlistSaveToolInputSchema,
+    run: async ({ setlist, name, session, songs }, actor) => {
+      if (setlist === undefined) return await runSetlistCreate({ name, session, songs }, actor);
+      refuseCreationOnlyFields({ session, songs });
+      return await runSetlistRename(setlist, name, actor);
     },
   }),
   defineTool({
@@ -196,64 +191,14 @@ export const SETLIST_TOOLS = [
       return { kind: 'answered', body: { order: await readEntryTitlesInOrder(setlistId) } };
     },
   }),
-  defineTool({
-    name: 'get_vote_board',
-    description:
-      'Read the vote on a setlist: status, your points left, the tallies, and the songs closing now would keep.',
-    routes: ['GET /api/setlists/:id/votes', 'GET /api/setlists/:id/closing-proposal'],
-    inputSchema: setlistReferenceToolInputSchema,
-    run: async ({ setlist }, actor) => {
-      const outcome = await readVoteBoardForTool(await resolveSetlistId(setlist), actor.memberId);
-      if (outcome.kind === 'setlist-not-found') return NOT_FOUND;
-      return { kind: 'answered', body: outcome.board };
-    },
-  }),
-  defineTool({
-    name: 'set_vote_status',
-    description:
-      'Open (`voting`) or lock (`locked`) the vote on a setlist, with the number of songs to pick.',
-    routes: ['PUT /api/setlists/:id/vote-status'],
-    inputSchema: setlistVoteStatusReferenceToolInputSchema,
-    run: async ({ setlist, status, targetSongCount }) => {
-      const setlistId = await resolveSetlistId(setlist);
-      const outcome = await setVoteStatus({ setlistId, status, targetSongCount });
-      if (outcome.kind === 'setlist-not-found') return NOT_FOUND;
-      return { kind: 'answered', body: { setlistId, status } };
-    },
-  }),
-  defineTool({
-    name: 'cast_vote',
-    description: 'Give `points` to a song in the vote on a setlist, as you; 0 withdraws the vote.',
-    routes: ['PUT /api/setlists/:id/votes/:songId'],
-    inputSchema: setlistVoteCastToolInputSchema,
-    run: async ({ setlist, song, points }, actor) => {
-      const outcome = await scoreSong({
-        setlistId: await resolveSetlistId(setlist),
-        memberId: actor.memberId,
-        songId: await resolveSongId(song),
-        points,
-        now: actor.now,
-      });
-      if (outcome.kind === 'setlist-not-found') return NOT_FOUND;
-      if (outcome.kind === 'not-voting') return NOT_VOTING;
-      if (outcome.kind === 'budget-exhausted') {
-        return { kind: 'refused', body: { error: 'budget-exhausted', budget: outcome.budget } };
-      }
-      return { kind: 'answered', body: { points, remaining: outcome.budget.remaining } };
-    },
-  }),
-  defineTool({
-    name: 'close_vote',
-    description: 'Close the vote on a setlist: its entries become `songs`, in order, and it locks.',
-    routes: ['POST /api/setlists/:id/close'],
-    inputSchema: setlistVoteCloseToolInputSchema,
-    run: async ({ setlist, songs }) => {
-      const setlistId = await resolveSetlistId(setlist);
-      const outcome = await closeVote({ setlistId, songIds: await resolveSongIds(songs) });
-      if (outcome.kind === 'setlist-not-found') return NOT_FOUND;
-      if (outcome.kind === 'not-voting') return NOT_VOTING;
-      if (outcome.kind === 'no-votes') return NO_VOTES;
-      return { kind: 'answered', body: { setlistId, closed: true } };
-    },
-  }),
 ];
+
+export const SETLIST_DELETION = defineDeletion({
+  route: 'DELETE /api/setlists/:id',
+  remove: async (reference) => {
+    const id = await resolveSetlistId(reference);
+    const outcome = await removeSetlist(id);
+    if (outcome === 'not-found') return NOT_FOUND;
+    return { kind: 'answered', body: { id, deleted: true } };
+  },
+});

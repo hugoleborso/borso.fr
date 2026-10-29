@@ -62,4 +62,6 @@ export const barListToolInputSchema = z.object({
   query: z.string().max(SEARCH_QUERY_MAX).optional(),
   status: z.enum(BAR_STATUSES).optional(),
 });
-export const barUpdateToolInputSchema = barReferenceToolInputSchema.merge(barUpdateSchema);
+export const barSaveToolInputSchema = z
+  .object({ bar: referenceSchema.optional() })
+  .merge(barUpdateSchema);

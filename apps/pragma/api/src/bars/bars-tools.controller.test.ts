@@ -28,19 +28,19 @@ describe('bars tools (back-e2e)', () => {
   it('adds, reads, lists, updates and deletes a bar, as the routes do', async () => {
     const band = await prepareAssistantBand();
 
-    const created = await callTool(band.assistant, 'create_bar', {
+    const created = await callTool(band.assistant, 'save_bar', {
       name: 'Le Zinc',
       status: 'lead',
       city: 'Lyon',
     });
     const bar = createdSchema.parse(created.body);
     const read = await callTool(band.assistant, 'get_bar', { bar: 'le zinc' });
-    const updated = await callTool(band.assistant, 'update_bar', {
+    const updated = await callTool(band.assistant, 'save_bar', {
       bar: 'Zinc',
       status: 'contacted',
     });
     const listed = await callTool(band.assistant, 'list_bars', { query: 'lyon' });
-    const deleted = await callTool(band.assistant, 'delete_bar', { bar: bar.id });
+    const deleted = await callTool(band.assistant, 'delete', { kind: 'bar', id: bar.id });
 
     expect(bar).toEqual({ id: bar.id, name: 'Le Zinc' });
     expect(barBodySchema.parse(read.body).bar).toMatchObject({ id: bar.id, city: 'Lyon' });
@@ -57,24 +57,28 @@ describe('bars tools (back-e2e)', () => {
   it('answers the refusal codes the routes answer', async () => {
     const band = await prepareAssistantBand();
     const unknownId = randomUUID();
-    const created = await callTool(band.assistant, 'create_bar', {
+    const created = await callTool(band.assistant, 'save_bar', {
       name: 'Chez Max',
       status: 'cold',
     });
     const bar = createdSchema.parse(created.body);
 
-    expect(await callTool(band.assistant, 'update_bar', { bar: bar.id })).toEqual(
+    expect(await callTool(band.assistant, 'save_bar', { bar: bar.id })).toEqual(
       refusal('empty-update'),
     );
-    expect(await callTool(band.assistant, 'update_bar', { bar: unknownId, name: 'x' })).toEqual(
+    expect(await callTool(band.assistant, 'save_bar', { bar: unknownId, name: 'x' })).toEqual(
       refusal('not-found'),
     );
-    expect(await callTool(band.assistant, 'delete_bar', { bar: unknownId })).toEqual(
+    expect(await callTool(band.assistant, 'delete', { kind: 'bar', id: unknownId })).toEqual(
       refusal('not-found'),
     );
-    expect(await callTool(band.assistant, 'delete_bar', { bar: 'Le Zinc' })).toEqual({
+    expect(await callTool(band.assistant, 'delete', { kind: 'bar', id: 'Le Zinc' })).toEqual({
       isError: true,
       body: { error: 'bar-not-found', reference: 'Le Zinc' },
+    });
+    expect(await callTool(band.assistant, 'save_bar', { name: 'Le Zinc' })).toEqual({
+      isError: true,
+      body: { error: 'invalid-input', fields: { status: 'Required' } },
     });
   });
 

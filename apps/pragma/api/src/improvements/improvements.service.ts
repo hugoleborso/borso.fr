@@ -113,16 +113,4 @@ export async function resolveImprovementId(reference: string): Promise<string> {
   );
 }
 
-export async function setImprovementVote(
-  improvementId: string,
-  isVoting: boolean,
-  memberId: string,
-  now: Date,
-): Promise<ImprovementToolView | null> {
-  const improvement = isVoting
-    ? await castVote(improvementId, memberId, now)
-    : await withdrawVote(improvementId, memberId);
-  return improvement === null ? null : projectImprovementForTool(improvement);
-}
-
-export { confirmUpdate, defineTool } from '../mcp/mcp.service';
+export { confirmUpdate, defineDeletion, defineTool, parseToolFields } from '../mcp/mcp.service';

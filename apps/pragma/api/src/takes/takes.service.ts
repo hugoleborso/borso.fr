@@ -5,6 +5,7 @@ import { notifyBand } from '../notifications/notifications.service';
 import { didClaimSessionWithin } from '../sessions/sessions.service';
 import { didClaimSongWithin, findSongById, resolveSongId } from '../songs/songs.service';
 import { refuseTool } from '../mcp/mcp.service';
+import { isIdentifierReference } from '../helpers/reference/reference.core';
 import {
   type CommentSummary,
   summarizeComment,
@@ -44,7 +45,7 @@ import type {
   TakeView,
 } from './takes.types';
 
-export { confirmUpdate, defineTool, pageItems } from '../mcp/mcp.service';
+export { defineDeletion, defineTool, pageItems } from '../mcp/mcp.service';
 export { resolveSongId } from '../songs/songs.service';
 
 const TAKE_OBJECT_DELETE_FAILED = 'TakeObjectDeleteFailed';
@@ -263,6 +264,11 @@ export async function resolveTakeId(
   const [latest] = await getTakesOfSong(await resolveSongId(songReference));
   if (latest === undefined) return refuseTool({ error: 'take-not-found', song: songReference });
   return latest.id;
+}
+
+export async function removeTakeByReference(reference: string): Promise<DeletionOutcome> {
+  if (!isIdentifierReference(reference)) return refuseTool({ error: 'take-not-found', reference });
+  return await removeTake(reference);
 }
 
 export interface TakeToolView {

@@ -22,26 +22,26 @@ describe('tasks tools (back-e2e)', () => {
 
   it('creates, lists, updates and deletes a task by name, as the route does', async () => {
     const band = await prepareAssistantBand();
-    await callTool(band.assistant, 'create_song', { title: 'Creep', status: 'idea' });
+    await callTool(band.assistant, 'save_song', { title: 'Creep', status: 'idea' });
 
-    const created = await callTool(band.assistant, 'create_task', {
+    const created = await callTool(band.assistant, 'save_task', {
       title: 'Book the van',
       assignee: 'lea',
     });
     const task = createdSchema.parse(created.body);
-    await callTool(band.assistant, 'create_task', {
+    await callTool(band.assistant, 'save_task', {
       title: 'Learn the solo',
       assignee: 'me',
       song: 'Creep',
     });
-    const updated = await callTool(band.assistant, 'update_task', {
+    const updated = await callTool(band.assistant, 'save_task', {
       task: 'book the van',
       status: 'done',
       song: 'creep',
     });
     const listed = await callTool(band.assistant, 'list_tasks', { assignee: 'Léa' });
     const mine = await callTool(band.assistant, 'list_tasks', { assignee: 'me' });
-    const deleted = await callTool(band.assistant, 'delete_task', { task: task.id });
+    const deleted = await callTool(band.assistant, 'delete', { kind: 'task', id: task.id });
     const rows = await testDatabase().select().from(taskTable).where(eq(taskTable.id, task.id));
 
     expect(updated).toEqual({
@@ -63,26 +63,30 @@ describe('tasks tools (back-e2e)', () => {
   it('answers the refusal codes the routes answer', async () => {
     const band = await prepareAssistantBand();
     const unknownId = randomUUID();
-    const created = await callTool(band.assistant, 'create_task', { title: 'Tune the snare' });
+    const created = await callTool(band.assistant, 'save_task', { title: 'Tune the snare' });
     const task = createdSchema.parse(created.body);
 
     expect(
-      await callTool(band.assistant, 'create_task', { title: 'Call', assignee: unknownId }),
+      await callTool(band.assistant, 'save_task', { title: 'Call', assignee: unknownId }),
     ).toEqual(refusal('assignee-not-found'));
+    expect(await callTool(band.assistant, 'save_task', { title: 'Call', song: unknownId })).toEqual(
+      refusal('song-not-found'),
+    );
     expect(
-      await callTool(band.assistant, 'create_task', { title: 'Call', song: unknownId }),
-    ).toEqual(refusal('song-not-found'));
-    expect(
-      await callTool(band.assistant, 'create_task', { title: 'Call', assignee: 'Marc' }),
+      await callTool(band.assistant, 'save_task', { title: 'Call', assignee: 'Marc' }),
     ).toEqual({ isError: true, body: { error: 'member-not-found', reference: 'Marc' } });
-    expect(await callTool(band.assistant, 'update_task', { task: task.id })).toEqual(
+    expect(await callTool(band.assistant, 'save_task', { task: task.id })).toEqual(
       refusal('empty-update'),
     );
-    expect(await callTool(band.assistant, 'update_task', { task: unknownId, title: 'x' })).toEqual(
+    expect(await callTool(band.assistant, 'save_task', { task: unknownId, title: 'x' })).toEqual(
       refusal('not-found'),
     );
-    expect(await callTool(band.assistant, 'delete_task', { task: unknownId })).toEqual(
+    expect(await callTool(band.assistant, 'delete', { kind: 'task', id: unknownId })).toEqual(
       refusal('not-found'),
     );
+    expect(await callTool(band.assistant, 'save_task', { notes: 'x' })).toEqual({
+      isError: true,
+      body: { error: 'invalid-input', fields: { title: 'Required' } },
+    });
   });
 });

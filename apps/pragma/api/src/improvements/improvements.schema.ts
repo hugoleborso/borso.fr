@@ -35,9 +35,6 @@ export const improvementCreateSchema = z.object({
 
 export const improvementUpdateSchema = improvementCreateSchema.partial();
 export const improvementIdParamSchema = z.object({ id: z.string().uuid() });
-export const improvementReferenceToolInputSchema = z.object({ improvement: referenceSchema });
-export const improvementUpdateToolInputSchema =
-  improvementReferenceToolInputSchema.merge(improvementUpdateSchema);
-export const improvementVoteToolInputSchema = improvementReferenceToolInputSchema.extend({
-  vote: z.boolean(),
-});
+export const improvementSaveToolInputSchema = z
+  .object({ improvement: referenceSchema.optional() })
+  .merge(improvementUpdateSchema);

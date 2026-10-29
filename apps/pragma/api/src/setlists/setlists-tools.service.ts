@@ -4,7 +4,9 @@ import {
   readLineupNames,
   resolveNamedLineupOrRefuse,
 } from '../instruments/instruments.service';
-import { refuseUnresolvedReference, resolveReference } from '../mcp/mcp.service';
+import { refuseTool, refuseUnresolvedReference, resolveReference } from '../mcp/mcp.service';
+import { describeInvalidFields } from '../mcp/tool-refusal.core';
+import { getTransitionComments } from '../transitions/transitions.service';
 import type { WriteActor } from '../notifications/notifications.service';
 import {
   readSessionForTool,
@@ -21,15 +23,17 @@ import {
   listEntryIdsInOrderWithin,
 } from './setlist-entry.repository';
 import {
+  attachTransitionComments,
+  type CreationOnlyFields,
   describeSetlist,
-  type EntryToolView,
+  type EntryWithTransitionView,
+  listCreationOnlyIssues,
   listNamedCandidates,
   matchEntryReference,
   nameSongs,
   planEntryOrder,
   projectEntriesForTool,
   projectSetlistsWithEntries,
-  projectVoteBoardForTool,
   type ReorderRequest,
 } from './setlist-tool.core';
 import type { SetlistSummary } from './setlists.core';
@@ -52,10 +56,10 @@ import {
   writeEntryPositionsWithin,
 } from './setlists.service';
 import type { SetlistEntryPersistedUpdate } from './setlists.schema';
-import { readClosingProposal, readVoteBoard } from './voting.service';
 
 export { resolveSessionId } from '../sessions/sessions.service';
-export { resolveSongId, resolveSongIds } from '../songs/songs.service';
+export { defineDeletion, type ToolActor } from '../mcp/mcp.service';
+export { resolveSongIds } from '../songs/songs.service';
 
 export async function resolveSetlistId(reference: string): Promise<string> {
   return await resolveReference('setlist', reference, async () =>
@@ -73,21 +77,30 @@ export async function getSetlistsForTool(
 
 export interface SetlistToolView {
   readonly setlist: ReturnType<typeof describeSetlist>;
-  readonly entries: readonly EntryToolView[];
+  readonly entries: readonly EntryWithTransitionView[];
 }
 
 export async function readSetlistForTool(setlistId: string): Promise<SetlistToolView | null> {
-  const [setlist, entries, songs, names] = await Promise.all([
+  const [setlist, entries, songs, names, transitionComments] = await Promise.all([
     findSetlistById(setlistId),
     listEntries(setlistId),
     getSongs(),
     readLineupNames(),
+    getTransitionComments(),
   ]);
   if (setlist === null) return null;
   return {
     setlist: describeSetlist(setlist),
-    entries: projectEntriesForTool(entries, songs, names),
+    entries: attachTransitionComments(
+      projectEntriesForTool(entries, songs, names),
+      transitionComments,
+    ),
   };
+}
+
+export function refuseCreationOnlyFields(fields: CreationOnlyFields): void {
+  const issues = listCreationOnlyIssues(fields);
+  if (issues.length > 0) refuseTool(describeInvalidFields(issues));
 }
 
 export interface SessionPlanToolView {
@@ -233,18 +246,6 @@ export async function buildEntryUpdate(
   if (lineupOverride === undefined) return changes;
   if (lineupOverride === null) return { ...changes, lineupOverride: null };
   return { ...changes, lineupOverride: await resolveNamedLineupOrRefuse(lineupOverride) };
-}
-
-export type VoteBoardToolView = ReturnType<typeof projectVoteBoardForTool>;
-
-export async function readVoteBoardForTool(
-  setlistId: string,
-  memberId: string,
-): Promise<{ kind: 'ok'; board: VoteBoardToolView } | { kind: 'setlist-not-found' }> {
-  const outcome = await readVoteBoard(setlistId, memberId);
-  if (outcome.kind !== 'ok') return outcome;
-  const [proposal, songs] = await Promise.all([readClosingProposal(setlistId), getSongs()]);
-  return { kind: 'ok', board: projectVoteBoardForTool(outcome.board, proposal, songs) };
 }
 
 export async function resolveOptionalSessionId(

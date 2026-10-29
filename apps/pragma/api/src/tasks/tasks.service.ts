@@ -119,7 +119,13 @@ export async function detachTasksOfSongBeingDeleted(
   await detachDeletedSongFromTasks(transaction, songId);
 }
 
-export { confirmUpdate, defineTool, pageItems } from '../mcp/mcp.service';
+export {
+  confirmUpdate,
+  defineDeletion,
+  defineTool,
+  pageItems,
+  parseToolFields,
+} from '../mcp/mcp.service';
 
 export async function resolveTaskId(reference: string): Promise<string> {
   return await resolveReference('task', reference, async () =>

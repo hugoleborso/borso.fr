@@ -1,15 +1,16 @@
 import {
-  taskCreateToolInputSchema,
+  taskCreateFieldsSchema,
   taskListToolInputSchema,
-  taskReferenceToolInputSchema,
-  taskUpdateToolInputSchema,
+  taskSaveToolInputSchema,
 } from './tasks.schema';
 import {
   confirmUpdate,
   createTask,
+  defineDeletion,
   defineTool,
   listTasksForTool,
   pageItems,
+  parseToolFields,
   patchTask,
   removeTask,
   resolveTaskId,
@@ -36,26 +37,22 @@ export const TASK_TOOLS = [
     },
   }),
   defineTool({
-    name: 'create_task',
-    description: 'Add a task, optionally assigned (name, or `me`) and linked to a song.',
-    routes: ['POST /api/tasks'],
-    inputSchema: taskCreateToolInputSchema,
-    run: async ({ assignee, song, ...input }, actor) => {
-      const links = await resolveTaskLinks({ assignee, song }, actor.memberId);
-      const outcome = await createTask({ assigneeId: null, songId: null, ...input, ...links });
-      if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { id: outcome.task.id } };
-    },
-  }),
-  defineTool({
-    name: 'update_task',
-    description: 'Change the fields given of a task, named by title or id.',
-    routes: ['PUT /api/tasks/:id'],
-    inputSchema: taskUpdateToolInputSchema,
-    run: async ({ task, assignee, song, ...changes }, actor) => {
+    name: 'save_task',
+    description:
+      'Add a task (`title` required), or, with `task` (title or id), change only the fields given. `assignee` is a name or `me`, `song` a title; null clears either.',
+    routes: ['POST /api/tasks', 'PUT /api/tasks/:id'],
+    inputSchema: taskSaveToolInputSchema,
+    run: async ({ task, assignee, song, ...fields }, actor) => {
+      if (task === undefined) {
+        const input = parseToolFields(taskCreateFieldsSchema, fields);
+        const links = await resolveTaskLinks({ assignee, song }, actor.memberId);
+        const outcome = await createTask({ assigneeId: null, songId: null, ...input, ...links });
+        if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
+        return { kind: 'answered', body: { id: outcome.task.id } };
+      }
       const id = await resolveTaskId(task);
       const update = {
-        ...changes,
+        ...fields,
         ...(await resolveTaskLinks({ assignee, song }, actor.memberId)),
       };
       const outcome = await patchTask(id, update);
@@ -64,16 +61,14 @@ export const TASK_TOOLS = [
       return { kind: 'answered', body: confirmUpdate(id, update) };
     },
   }),
-  defineTool({
-    name: 'delete_task',
-    description: 'Delete a task, named by title or id.',
-    routes: ['DELETE /api/tasks/:id'],
-    inputSchema: taskReferenceToolInputSchema,
-    run: async ({ task }) => {
-      const id = await resolveTaskId(task);
-      const outcome = await removeTask(id);
-      if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
-      return { kind: 'answered', body: { id, deleted: true } };
-    },
-  }),
 ];
+
+export const TASK_DELETION = defineDeletion({
+  route: 'DELETE /api/tasks/:id',
+  remove: async (reference) => {
+    const id = await resolveTaskId(reference);
+    const outcome = await removeTask(id);
+    if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
+    return { kind: 'answered', body: { id, deleted: true } };
+  },
+});

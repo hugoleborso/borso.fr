@@ -1,15 +1,17 @@
 import {
-  sessionCreateToolInputSchema,
+  sessionCreateSchema,
   sessionFindToolInputSchema,
-  sessionReferenceToolInputSchema,
-  sessionUpdateToolInputSchema,
+  sessionSaveToolInputSchema,
+  sessionUpdateSchema,
 } from './sessions.schema';
 import {
   confirmUpdate,
   createSession,
+  defineDeletion,
   defineTool,
   listSessionsForTool,
   pageItems,
+  parseToolFields,
   patchSession,
   removeSession,
   resolveSessionId,
@@ -35,42 +37,35 @@ export const SESSION_TOOLS = [
     },
   }),
   defineTool({
-    name: 'create_session',
+    name: 'save_session',
     description:
-      'Add a session. `session.kind` is `concert` (with venue and capacity) or `practice`; `date` is ISO 8601. `create_setlist` then fills it.',
-    routes: ['POST /api/sessions'],
-    inputSchema: sessionCreateToolInputSchema,
-    run: async ({ session }, actor) => {
-      const created = await createSession(session, actor);
-      return {
-        kind: 'answered',
-        body: { id: created.id, kind: created.kind, date: created.date.toISOString() },
-      };
-    },
-  }),
-  defineTool({
-    name: 'update_session',
-    description: 'Change some fields of a session; `changes` holds only the fields to change.',
-    routes: ['PUT /api/sessions/:id'],
-    inputSchema: sessionUpdateToolInputSchema,
-    run: async ({ session, changes }, actor) => {
+      'Add a session: `kind` `concert` (with `venue` and `capacity`) or `practice`, `date` ISO 8601. With `session` (id, `next`, a day YYYY-MM-DD…), change only the fields given.',
+    routes: ['POST /api/sessions', 'PUT /api/sessions/:id'],
+    inputSchema: sessionSaveToolInputSchema,
+    run: async ({ session, ...fields }, actor) => {
+      if (session === undefined) {
+        const created = await createSession(parseToolFields(sessionCreateSchema, fields), actor);
+        return {
+          kind: 'answered',
+          body: { id: created.id, kind: created.kind, date: created.date.toISOString() },
+        };
+      }
       const id = await resolveSessionId(session, actor.now);
+      const changes = parseToolFields(sessionUpdateSchema, fields);
       const outcome = await patchSession(id, changes, actor);
       if (outcome.kind === 'empty') return { kind: 'refused', body: { error: 'empty-update' } };
       if (outcome.kind === 'not-found') return { kind: 'refused', body: { error: 'not-found' } };
       return { kind: 'answered', body: confirmUpdate(id, changes) };
     },
   }),
-  defineTool({
-    name: 'delete_session',
-    description: 'Delete a session; its setlists and takes are kept, detached from it.',
-    routes: ['DELETE /api/sessions/:id'],
-    inputSchema: sessionReferenceToolInputSchema,
-    run: async ({ session }, actor) => {
-      const id = await resolveSessionId(session, actor.now);
-      const outcome = await removeSession(id);
-      if (outcome === 'not-found') return { kind: 'refused', body: { error: 'not-found' } };
-      return { kind: 'answered', body: { id, deleted: true } };
-    },
-  }),
 ];
+
+export const SESSION_DELETION = defineDeletion({
+  route: 'DELETE /api/sessions/:id',
+  remove: async (reference, actor) => {
+    const id = await resolveSessionId(reference, actor.now);
+    const outcome = await removeSession(id);
+    if (outcome === 'not-found') return { kind: 'refused', body: { error: 'not-found' } };
+    return { kind: 'answered', body: { id, deleted: true } };
+  },
+});

@@ -13,6 +13,7 @@ const ANY_METHOD = '*';
 const MIDDLEWARE_METHOD = 'ALL';
 const SUBTREE_SUFFIX = '/*';
 const ROUTE_SEPARATOR = ' ';
+const NOT_FOR_ASSISTANTS = 'operator 2026-10-29: not for assistants';
 
 export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   'GET /api/health': 'A liveness probe for the platform; it carries no band data.',
@@ -38,6 +39,25 @@ export const TOOL_EXCLUSIONS: Readonly<Record<string, string>> = Object.freeze({
   '* /mcp': 'The transport the tools are served through.',
   '* /oauth/*': 'The authorization server an assistant connects with.',
   '* /.well-known/*': 'The discovery documents an assistant reads before connecting.',
+  '* /api/improvements/:id/vote': NOT_FOR_ASSISTANTS,
+  'GET /api/setlists/:id/votes': NOT_FOR_ASSISTANTS,
+  '* /api/setlists/:id/votes/*': NOT_FOR_ASSISTANTS,
+  'PUT /api/setlists/:id/vote-status': NOT_FOR_ASSISTANTS,
+  'GET /api/setlists/:id/closing-proposal': NOT_FOR_ASSISTANTS,
+  'POST /api/setlists/:id/close': NOT_FOR_ASSISTANTS,
+  '* /api/notifications/preferences': NOT_FOR_ASSISTANTS,
+  'POST /api/takes/:id/comments': NOT_FOR_ASSISTANTS,
+  '* /api/takes/:id/comments/:commentId': NOT_FOR_ASSISTANTS,
+  '* /api/transition-comments/*': NOT_FOR_ASSISTANTS,
+  'POST /api/instruments': NOT_FOR_ASSISTANTS,
+  'PUT /api/instruments/order': NOT_FOR_ASSISTANTS,
+  'PUT /api/instruments/:id': NOT_FOR_ASSISTANTS,
+  'DELETE /api/instruments/:id': NOT_FOR_ASSISTANTS,
+  '* /api/mastery/defaults/*': NOT_FOR_ASSISTANTS,
+  '* /api/outreach/*': NOT_FOR_ASSISTANTS,
+  'POST /api/members': NOT_FOR_ASSISTANTS,
+  'PUT /api/members/:id': NOT_FOR_ASSISTANTS,
+  'DELETE /api/members/:id': NOT_FOR_ASSISTANTS,
 });
 
 function describeRoute(route: MountedRoute): string {

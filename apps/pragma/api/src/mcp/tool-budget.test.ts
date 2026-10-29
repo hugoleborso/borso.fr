@@ -38,8 +38,8 @@ const PLANNED_SONG_COUNT = 5;
 const ISO_DAY_LENGTH = 10;
 const SEEDED_MEMBER = SEED_MEMBERS[0];
 
-const TOOL_COUNT_MAX = 73;
-const TOOL_LIST_CHARACTERS_MAX = 34_000;
+const TOOL_COUNT = 35;
+const TOOL_LIST_CHARACTERS_MAX = 19_000;
 const WRITE_CONFIRMATION_CHARACTERS_MAX = 200;
 
 interface TaskBudget {
@@ -51,10 +51,10 @@ const TASK_BUDGETS: Readonly<Record<string, TaskBudget>> = {
   'add a song to the next practice': { calls: 2, characters: 1_500 },
   'what to practise for the next concert': { calls: 1, characters: 2_200 },
   'who plays bass on a song': { calls: 1, characters: 500 },
-  'comment on the latest take of a song': { calls: 1, characters: 150 },
+  'hear what the band said about the latest take of a song': { calls: 1, characters: 350 },
   'plan a practice with five songs': { calls: 2, characters: 250 },
   'swap two songs of the concert setlist': { calls: 2, characters: 2_400 },
-  'rewrite the transition note between two songs': { calls: 1, characters: 200 },
+  'read the transition notes of a setlist': { calls: 1, characters: 1_400 },
   'list my tasks': { calls: 1, characters: 550 },
   "set a member's mastery on a song": { calls: 1, characters: 150 },
   'brief me on the next concert': { calls: 1, characters: 2_300 },
@@ -71,7 +71,7 @@ const READ_BUDGETS: Readonly<Record<string, number>> = {
   get_take: 400,
   list_members: 600,
   list_instruments: 800,
-  get_studies_overview: 2_200,
+  get_me: 2_200,
 };
 
 const textContentSchema = z.array(z.object({ type: z.literal('text'), text: z.string() }));
@@ -228,7 +228,7 @@ describe('assistant tool budget (back-e2e)', () => {
 
     const { tools } = await client.listTools();
 
-    expect(tools.length).toBeLessThanOrEqual(TOOL_COUNT_MAX);
+    expect(tools.length).toBe(TOOL_COUNT);
     expect(JSON.stringify(tools).length).toBeLessThanOrEqual(TOOL_LIST_CHARACTERS_MAX);
   });
 
@@ -252,18 +252,18 @@ describe('assistant tool budget (back-e2e)', () => {
       });
     });
     await runTask('what to practise for the next concert', async (log) => {
-      await log.call('get_studies_overview');
+      await log.call('get_me');
     });
     await runTask('who plays bass on a song', async (log) => {
       await log.call('get_song', { song: titleOf(2) });
     });
-    await runTask('comment on the latest take of a song', async (log) => {
-      await log.call('comment_on_take', { song: songWithTakes.title, body: 'Bien mieux.' });
+    await runTask('hear what the band said about the latest take of a song', async (log) => {
+      await log.call('get_take', { song: songWithTakes.title });
     });
     await runTask('plan a practice with five songs', async (log) => {
       const day = daysFrom(now, NEW_PRACTICE_IN_DAYS).toISOString();
-      await log.call('create_session', { session: { kind: 'practice', date: day } });
-      await log.call('create_setlist', {
+      await log.call('save_session', { kind: 'practice', date: day });
+      await log.call('save_setlist', {
         name: 'Mardi',
         session: day.slice(0, ISO_DAY_LENGTH),
         songs: SEED_SONGS.slice(1, 1 + PLANNED_SONG_COUNT).map((song) => song.title),
@@ -278,12 +278,8 @@ describe('assistant tool budget (back-e2e)', () => {
         swap: [titleOf(0), titleOf(1)],
       });
     });
-    await runTask('rewrite the transition note between two songs', async (log) => {
-      await log.call('set_transition_comment', {
-        from: titleOf(0),
-        to: titleOf(1),
-        comment: 'Enchaîner sans pause.',
-      });
+    await runTask('read the transition notes of a setlist', async (log) => {
+      await log.call('get_setlist', { setlist: 'Répète' });
     });
     await runTask('list my tasks', async (log) => {
       await log.call('list_tasks', { assignee: 'me' });
@@ -326,12 +322,13 @@ describe('assistant tool budget (back-e2e)', () => {
     await log.call('get_take', { song: songWithTakes.id });
     await log.call('list_members');
     await log.call('list_instruments');
-    await log.call('get_studies_overview');
+    await log.call('get_me');
     const writes = new CallLog(client);
-    await writes.call('create_song', { title: 'Creep', status: 'idea' });
-    await writes.call('update_song', { song: 'Creep', status: 'wip' });
+    await writes.call('save_song', { title: 'Creep', status: 'idea' });
+    await writes.call('save_song', { song: 'Creep', status: 'wip' });
     await writes.call('add_setlist_entries', { setlist: 'Répète', songs: ['Creep'] });
-    await writes.call('create_task', { title: 'Book the van', assignee: 'me' });
+    await writes.call('save_task', { title: 'Book the van', assignee: 'me' });
+    await writes.call('delete', { kind: 'task', id: 'Book the van' });
 
     expect(log.calls.map((call) => ({ tool: call.tool, isError: call.isError }))).toEqual(
       Object.keys(READ_BUDGETS).map((tool) => ({ tool, isError: false })),

@@ -1,7 +1,9 @@
 import { describe, expect, it } from 'vitest';
 import {
+  attachTransitionComments,
   type CatalogueSong,
   describeSetlist,
+  listCreationOnlyIssues,
   listNamedCandidates,
   matchEntryReference,
   nameSongs,
@@ -9,7 +11,6 @@ import {
   planEntryOrder,
   projectEntriesForTool,
   projectSetlistsWithEntries,
-  projectVoteBoardForTool,
 } from './setlist-tool.core';
 
 const NAMES = {
@@ -229,35 +230,35 @@ describe('nameSongs', () => {
   });
 });
 
-describe('projectVoteBoardForTool', () => {
-  const tally = {
-    songId: 'song-creep',
-    points: 3,
-    voterCount: 1,
-    pointsByMember: { 'member-hugo': 3 },
-  };
-  const board = {
-    status: 'voting',
-    targetSongCount: 1,
-    budget: { total: 3, spent: 3, remaining: 0 },
-    tallies: [tally],
-    lastScoredAt: null,
-  };
+describe('attachTransitionComments', () => {
+  const creepThenArmy = projectEntriesForTool([CREEP_ENTRY, ARMY_ENTRY], SONGS, NAMES);
 
-  it('names the tallies and the songs closing now would keep', () => {
-    expect(projectVoteBoardForTool(board, { kind: 'ok', tallies: [tally] }, SONGS)).toEqual({
-      status: 'voting',
-      targetSongCount: 1,
-      budget: { total: 3, spent: 3, remaining: 0 },
-      lastScoredAt: null,
-      tallies: [{ song: 'Creep', songId: 'song-creep', points: 3, voters: 1 }],
-      proposal: ['Creep'],
-    });
+  it('gives an entry the comment on going from its song into the next one', () => {
+    const [creep, army] = attachTransitionComments(creepThenArmy, [
+      { songAId: 'song-creep', songBId: 'song-army', comment: 'Straight in.' },
+      { songAId: 'song-army', songBId: 'song-creep', comment: 'The other way round.' },
+    ]);
+    expect(creep).toMatchObject({ songId: 'song-creep', transitionComment: 'Straight in.' });
+    expect(army).not.toHaveProperty('transitionComment');
   });
 
-  it('leaves the proposal out when the vote cannot close', () => {
-    expect(projectVoteBoardForTool(board, { kind: 'no-votes' }, SONGS)).not.toHaveProperty(
-      'proposal',
-    );
+  it('leaves every entry as it was when no comment matches a consecutive pair', () => {
+    expect(
+      attachTransitionComments(creepThenArmy, [
+        { songAId: 'song-army', songBId: 'song-creep', comment: 'The other way round.' },
+      ]),
+    ).toEqual(creepThenArmy);
+  });
+});
+
+describe('listCreationOnlyIssues', () => {
+  it('names each field given that only a new setlist takes', () => {
+    expect(listCreationOnlyIssues({ session: 'next', songs: undefined })).toEqual([
+      { path: ['session'], message: 'only when creating; use link_setlist or add_setlist_entries' },
+    ]);
+  });
+
+  it('finds nothing when neither field is given', () => {
+    expect(listCreationOnlyIssues({})).toEqual([]);
   });
 });

@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  describeInvalidFields,
   describeUnresolvedReference,
   LISTED_CANDIDATES_MAX,
   pickReference,
@@ -72,5 +73,27 @@ describe('pickReference', () => {
       new ToolRefusedError({ error: 'song-not-found', reference: 'Airbag' }),
     );
     expect(() => pickReference('song', candidates, 'Airbag')).toThrow(ToolRefusedError);
+  });
+});
+
+describe('describeInvalidFields', () => {
+  it('names each field once, with the first problem found in it', () => {
+    expect(
+      describeInvalidFields([
+        { path: ['status'], message: 'Required' },
+        { path: ['links', 0, 'url'], message: 'Invalid url' },
+        { path: ['status'], message: 'Invalid enum value' },
+      ]),
+    ).toEqual({
+      error: 'invalid-input',
+      fields: { status: 'Required', 'links.0.url': 'Invalid url' },
+    });
+  });
+
+  it('names the whole input when the problem has no field', () => {
+    expect(describeInvalidFields([{ path: [], message: 'Invalid input' }])).toEqual({
+      error: 'invalid-input',
+      fields: { input: 'Invalid input' },
+    });
   });
 });

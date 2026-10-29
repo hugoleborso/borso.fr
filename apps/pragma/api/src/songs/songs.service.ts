@@ -11,11 +11,14 @@ import { deleteAudioOfDeletedSong } from '../takes/takes.service';
 import { hasLineupChanged } from './song-lineup.core';
 export type { SongRow } from './songs.repository';
 export { didClaimSongWithin, findSongById, findSongByIdWithin } from './songs.repository';
-export { readSongMasteryForTool, writeMasteryOverride } from '../mastery/mastery.service';
+import { readSongMasteryForTool } from '../mastery/mastery.service';
+export { writeMasteryOverride } from '../mastery/mastery.service';
 export {
   confirmUpdate,
+  defineDeletion,
   defineTool,
   pageItems,
+  parseToolFields,
   type ToolActor,
   type ToolAnswer,
 } from '../mcp/mcp.service';
@@ -44,7 +47,12 @@ import {
 } from './songs.repository';
 import type { songCreateInputSchema, songUpdateInputSchema } from './songs.schema';
 
-export type SongToolView = ReturnType<typeof projectSongForTool>;
+type SongMasteryToolView = Awaited<ReturnType<typeof readSongMasteryForTool>>;
+
+export type SongToolView = ReturnType<typeof projectSongForTool> & {
+  readonly mastery: SongMasteryToolView['overrides'];
+  readonly masteryHistory: SongMasteryToolView['history'];
+};
 
 type SongCreateInput = z.infer<typeof songCreateInputSchema>;
 type SongUpdateInput = z.infer<typeof songUpdateInputSchema>;
@@ -182,9 +190,18 @@ export async function readSongForTool(
   reference: string,
   isDetailed: boolean,
 ): Promise<SongToolView | null> {
-  const song = await findSongById(await resolveSongId(reference));
+  const id = await resolveSongId(reference);
+  const [song, names, mastery] = await Promise.all([
+    findSongById(id),
+    readLineupNames(),
+    readSongMasteryForTool(id, isDetailed),
+  ]);
   if (song === null) return null;
-  return projectSongForTool(song, await readLineupNames(), isDetailed);
+  return {
+    ...projectSongForTool(song, names, isDetailed),
+    mastery: mastery.overrides,
+    masteryHistory: mastery.history,
+  };
 }
 
 export async function buildSongUpdate(

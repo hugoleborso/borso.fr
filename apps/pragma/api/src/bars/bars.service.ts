@@ -102,4 +102,4 @@ export async function resolveBarId(reference: string): Promise<string> {
   );
 }
 
-export { confirmUpdate, defineTool } from '../mcp/mcp.service';
+export { confirmUpdate, defineDeletion, defineTool, parseToolFields } from '../mcp/mcp.service';

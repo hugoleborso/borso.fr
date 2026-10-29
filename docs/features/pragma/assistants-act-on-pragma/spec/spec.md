@@ -39,14 +39,16 @@ Claude Code · since 23 Oct · last used 2 min ago     [Revoke]
 
 **Consent page** at `/oauth/consent`, reached after the member is signed in: "Claude Code wants to act on pragma as Hugo. It will be able to do everything you can do in the app." with **Allow** and **Deny**.
 
-**MCP tools**, grouped by area, each one a call to an existing service with the existing input schema:
+**MCP tools**, the 35 the operator approved on 2026-10-29 (see the last row of *Questions, Options and Decisions*):
 
-- catalogue: `search_songs`, `get_song`, `create_song`, `update_song`, `delete_song`, `search_deezer`, `set_default_lineup`, `list_transition_comments`, `set_transition_comment`, `delete_transition_comment`
-- sessions and setlists: `list_sessions`, `get_session`, `create_session`, `update_session`, `delete_session`, `list_setlists`, `get_setlist`, `create_setlist`, `update_setlist`, `add_setlist_entry`, `move_setlist_entry`, `remove_setlist_entry`, `set_entry_lineup`, `cast_vote`
-- takes: `list_takes`, `get_take`, `request_take_upload`, `create_take`, `delete_take`, `comment_on_take`, `delete_take_comment`
-- band operations: tasks, improvements and their votes, bars and outreach, free slots, studies, mastery, members and instruments (read, and the writes the app already offers)
+- sessions and setlists: `find_sessions`, `save_session`, `get_session`, `list_setlists`, `get_setlist` (with the transition comments), `save_setlist`, `link_setlist`, `add_setlist_entries`, `update_setlist_entry`, `remove_setlist_entries`, `reorder_setlist`
+- catalogue: `find_songs`, `get_song` (with the song's mastery scores), `search_deezer`, `save_song`, `set_song_mastery`
+- takes: `list_takes`, `get_take`, `request_take_upload`, `create_take`
+- band: `list_members`, `set_member_instruments`, `list_instruments`, `list_bars`, `search_bar_places`, `get_bar`, `save_bar`, `list_improvements`, `save_improvement`, `list_tasks`, `save_task`, `list_free_slots`
+- the member: `get_me` (with the studies overview), `update_me` (contact details, and logging a study)
+- `delete { kind, id }` for a bar, improvement, session, setlist, song, take or task
 
-The final list is the router list in `app.ts` at plan time. A route without a tool, or a tool without a route, fails a test, so the two cannot drift.
+Every route in `app.ts` has a tool or a reason it has none. A route without either, or a tool without a route, fails a test, so the two cannot drift.
 
 ## Use cases / edge cases
 
@@ -101,6 +103,7 @@ sequenceDiagram
 | Tools from HTTP routes or from services? | call the HTTP API from the MCP handler / call the services | Call the services, with the routes' own Zod schemas. One process, no second authentication hop. |
 | Where does the MCP server run? | the existing API Lambda / its own Lambda | The existing API Lambda at `/mcp`, stateless Streamable HTTP. See ADR-0041. |
 | Token lifetimes | — | Access token 1 hour, refresh token 90 days, rotated on use. Stored as SHA-256 hashes. |
+| Which actions get a tool? (2026-10-29, after the preview trial) | every route a member can call / a smaller list chosen per action | The operator approved 35 tools on 2026-10-29, which narrows "anything the member can do". Assistants do not vote (improvement votes, setlist votes, live concert votes), do not change notification preferences, do not write take comments or transition comments (they read the transition comments through `get_setlist`), do not create, change, reorder or delete instruments, do not set mastery defaults, do not edit the outreach template, and do not add, change or remove members. Creation and change of the same noun share one `save_<noun>` tool, and every deletion goes through one `delete { kind, id }` tool whose description asks the assistant to confirm with the user. Plan D14. |
 
 **Out of scope:** a personal-token fallback; scopes finer than "everything the member can do"; a free-text notify tool; MCP resources and prompts (tools only); streaming tool output.
 

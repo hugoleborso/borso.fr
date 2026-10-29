@@ -24,6 +24,18 @@ export interface ToolDefinition<Schema extends AnyZodObject = AnyZodObject> {
   run(input: z.output<Schema>, actor: ToolActor): Promise<ToolAnswer>;
 }
 
+export interface ToolDeletion {
+  readonly route: string;
+  remove(reference: string, actor: ToolActor): Promise<ToolAnswer>;
+}
+
+export interface DeletionToolDefinition<Kind extends string> {
+  readonly name: string;
+  readonly description: string;
+  readonly kinds: readonly [Kind, ...Kind[]];
+  readonly deletions: Readonly<Record<Kind, ToolDeletion>>;
+}
+
 export interface ToolTextContent {
   readonly type: 'text';
   readonly text: string;

@@ -136,5 +136,5 @@ export async function getInstrumentsForTool(): Promise<InstrumentToolView[]> {
   return instruments.map((instrument) => projectInstrumentForTool(instrument, members));
 }
 
-export { confirmUpdate, defineTool } from '../mcp/mcp.service';
+export { defineTool } from '../mcp/mcp.service';
 export type { LineupNames, NamedLineupInput } from './lineup-names.core';

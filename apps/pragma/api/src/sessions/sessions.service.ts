@@ -16,7 +16,13 @@ import {
   updateSession,
 } from './sessions.repository';
 export { didClaimSessionWithin, findSessionById } from './sessions.repository';
-export { confirmUpdate, defineTool, pageItems } from '../mcp/mcp.service';
+export {
+  confirmUpdate,
+  defineDeletion,
+  defineTool,
+  pageItems,
+  parseToolFields,
+} from '../mcp/mcp.service';
 import { refuseUnresolvedReference } from '../mcp/mcp.service';
 import { isIdentifierReference } from '../helpers/reference/reference.core';
 import { readLineupNames } from '../instruments/instruments.service';

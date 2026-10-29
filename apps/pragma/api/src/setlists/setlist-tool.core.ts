@@ -6,7 +6,7 @@ import {
   type ReferenceMatch,
 } from '../helpers/reference/reference.core';
 import { type LineupNames, nameLineup } from '../instruments/lineup-names.core';
-import type { SongTally, VoteBudget } from './voting.core';
+import type { FieldIssue } from '../mcp/tool-refusal.core';
 
 export interface CatalogueSong {
   readonly id: string;
@@ -151,60 +151,49 @@ export function planEntryOrder(
   return currentIds.map((id) => (id === first ? second : id === second ? first : id));
 }
 
-export interface TallyToolView {
-  readonly song: string;
-  readonly songId: string;
-  readonly points: number;
-  readonly voters: number;
-}
-
-export function nameTallies(
-  tallies: readonly SongTally[],
-  songs: readonly CatalogueSong[],
-): TallyToolView[] {
-  return tallies.map((tally) => ({
-    song: titleOf(songs, tally.songId),
-    songId: tally.songId,
-    points: tally.points,
-    voters: tally.voterCount,
-  }));
-}
-
 export function nameSongs(songIds: readonly string[], songs: readonly CatalogueSong[]): string[] {
   return songIds.map((songId) => titleOf(songs, songId));
 }
 
-export interface VoteBoardReading {
-  readonly status: string;
-  readonly targetSongCount: number;
-  readonly budget: VoteBudget;
-  readonly tallies: readonly SongTally[];
-  readonly lastScoredAt: string | null;
+export interface TransitionCommentNote {
+  readonly songAId: string;
+  readonly songBId: string;
+  readonly comment: string;
 }
 
-export type ProposalReading =
-  | { readonly kind: 'ok'; readonly tallies: readonly SongTally[] }
-  | { readonly kind: 'setlist-not-found' | 'not-voting' | 'no-votes' };
+export type EntryWithTransitionView = EntryToolView & { readonly transitionComment?: string };
+
+const SONG_PAIR_SEPARATOR = '→';
+
+function describeSongPair(songAId: string, songBId: string): string {
+  return `${songAId}${SONG_PAIR_SEPARATOR}${songBId}`;
+}
 
 // @FollowsBlueprint core-projection
-export function projectVoteBoardForTool(
-  board: VoteBoardReading,
-  proposal: ProposalReading,
-  songs: readonly CatalogueSong[],
-) {
-  const view = {
-    status: board.status,
-    targetSongCount: board.targetSongCount,
-    budget: board.budget,
-    lastScoredAt: board.lastScoredAt,
-    tallies: nameTallies(board.tallies, songs),
-  };
-  if (proposal.kind !== 'ok') return view;
-  return {
-    ...view,
-    proposal: nameSongs(
-      proposal.tallies.map((tally) => tally.songId),
-      songs,
-    ),
-  };
+export function attachTransitionComments(
+  entries: readonly EntryToolView[],
+  comments: readonly TransitionCommentNote[],
+): EntryWithTransitionView[] {
+  const commentByPair = new Map(
+    comments.map((note) => [describeSongPair(note.songAId, note.songBId), note.comment]),
+  );
+  return entries.map((entry, index) => {
+    const next = entries[index + 1];
+    if (next === undefined) return entry;
+    const comment = commentByPair.get(describeSongPair(entry.songId, next.songId));
+    return comment === undefined ? entry : { ...entry, transitionComment: comment };
+  });
+}
+
+export interface CreationOnlyFields {
+  readonly session?: string;
+  readonly songs?: readonly string[];
+}
+
+const CREATION_ONLY_PROBLEM = 'only when creating; use link_setlist or add_setlist_entries';
+
+export function listCreationOnlyIssues(fields: CreationOnlyFields): FieldIssue[] {
+  return Object.entries(fields)
+    .filter(([, value]) => value !== undefined)
+    .map(([field]) => ({ path: [field], message: CREATION_ONLY_PROBLEM }));
 }

@@ -80,20 +80,6 @@ export async function deleteScoreHistoryOfDeletedSong(
   await deleteScoreHistoryOfSong(executor, songId);
 }
 
-async function resolveOptionalMemberId(reference: string | undefined): Promise<string | undefined> {
-  if (reference === undefined) return undefined;
-  return await resolveMemberId(reference);
-}
-
-export async function getMasteryDefaultsForTool(memberReference: string | undefined) {
-  const [memberId, defaults, names] = await Promise.all([
-    resolveOptionalMemberId(memberReference),
-    getMasteryDefaults(),
-    readLineupNames(),
-  ]);
-  return nameScores(defaults, names, memberId);
-}
-
 export interface MasteryScoreReferences {
   readonly member: string;
   readonly instrument: string;
@@ -105,16 +91,6 @@ async function resolveScoreKey(references: MasteryScoreReferences) {
     resolveInstrumentId(references.instrument),
   ]);
   return { memberId, instrumentId };
-}
-
-export async function writeMasteryDefault(
-  references: MasteryScoreReferences,
-  score: number | null,
-): Promise<DeletionOutcome | 'saved'> {
-  const key = await resolveScoreKey(references);
-  if (score === null) return await removeMasteryDefault(key.memberId, key.instrumentId);
-  await saveMasteryDefault({ ...key, score });
-  return 'saved';
 }
 
 export async function writeMasteryOverride(
@@ -139,5 +115,3 @@ export async function readSongMasteryForTool(songId: string, isHistoryIncluded: 
     history: isHistoryIncluded ? nameScoreChanges(history, names) : undefined,
   };
 }
-
-export { defineTool } from '../mcp/mcp.service';

@@ -67,7 +67,6 @@ export const memberInstrumentAssignmentSchema = z.object({
 
 export const memberIdParamSchema = z.object({ id: z.string().uuid() });
 export const memberReferenceToolInputSchema = z.object({ member: referenceSchema });
-export const memberUpdateToolInputSchema = memberReferenceToolInputSchema.merge(updateMemberSchema);
 export const memberInstrumentAssignmentToolInputSchema = memberReferenceToolInputSchema.extend({
   instruments: z.array(referenceSchema),
   main: z.array(referenceSchema).optional(),

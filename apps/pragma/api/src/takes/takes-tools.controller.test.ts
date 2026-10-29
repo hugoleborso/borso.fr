@@ -3,11 +3,11 @@ import { S3Client } from '@aws-sdk/client-s3';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { jsonRequest, readJson } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import {
   type AssistantBand,
   callTool,
-  passNotificationGroupWindow,
   prepareAssistantBand,
   useOAuthOrigins,
 } from '../../../test/mcp-utils';
@@ -24,8 +24,6 @@ const PRESIGNER_ENV = {
 const FILE_BYTES = 4_194_304;
 const DURATION_SECONDS = 232;
 const MOMENT_SECONDS = 42;
-const LATER_MOMENT_SECONDS = 90;
-const PAST_END_SECONDS = DURATION_SECONDS + 1;
 const RECORDED_AT = '2026-10-18T20:00:00.000Z';
 
 const idBodySchema = z.object({ id: z.string().uuid() });
@@ -38,10 +36,10 @@ const takesBodySchema = z.object({
   takes: z.array(z.object({ id: z.string().uuid(), by: z.string(), comments: z.number() })),
   total: z.number(),
 });
-const commentBodySchema = z.object({ id: z.string().uuid(), takeId: z.string().uuid() });
+const commentBodySchema = z.object({ comment: z.object({ id: z.string().uuid() }) });
 
 async function createSong(band: AssistantBand): Promise<string> {
-  const reply = await callTool(band.assistant, 'create_song', { title: 'Creep', status: 'idea' });
+  const reply = await callTool(band.assistant, 'save_song', { title: 'Creep', status: 'idea' });
   return idBodySchema.parse(reply.body).id;
 }
 
@@ -76,12 +74,12 @@ async function uploadTake(band: AssistantBand, songId: string): Promise<string> 
 }
 
 async function commentOnTake(band: AssistantBand, takeId: string): Promise<string> {
-  const reply = await callTool(band.assistant, 'comment_on_take', {
-    take: takeId,
-    body: 'The bridge drags',
-    atSeconds: MOMENT_SECONDS,
+  const response = await jsonRequest(band.lea.app, `/api/takes/${takeId}/comments`, {
+    method: 'POST',
+    cookieHeader: band.lea.cookieHeader,
+    body: { body: 'The bridge drags', atSeconds: MOMENT_SECONDS },
   });
-  return commentBodySchema.parse(reply.body).id;
+  return (await readJson(response, commentBodySchema)).comment.id;
 }
 
 function refused(error: string) {
@@ -166,54 +164,17 @@ describe('takes tools (back-e2e)', () => {
     ]);
   });
 
-  it('comments on a take as the granting member, edits the comment, then deletes it', async () => {
+  it('reads the latest take of a song with its comments in recording order', async () => {
     const band = await prepareAssistantBand();
     const takeId = await uploadTake(band, await createSong(band));
+    const commentId = await commentOnTake(band, takeId);
 
-    const commented = commentBodySchema.parse(
-      (
-        await callTool(band.assistant, 'comment_on_take', {
-          song: 'Creep',
-          body: 'The bridge drags',
-          atSeconds: MOMENT_SECONDS,
-        })
-      ).body,
-    );
-    const commentId = commented.id;
-    const updated = await callTool(band.assistant, 'update_take_comment', {
-      take: takeId,
-      comment: commentId,
-      body: 'The bridge drags, slow the fill',
-      atSeconds: LATER_MOMENT_SECONDS,
-    });
     const read = await callTool(band.assistant, 'get_take', { song: 'creep' });
-    const { comments } = await readTakeRows(takeId);
 
-    expect(commented.takeId).toBe(takeId);
-    expect(updated).toEqual({
-      isError: false,
-      body: { id: commentId, updated: ['body', 'atSeconds'] },
-    });
     expect(read.body).toEqual({
       take: expect.objectContaining({ id: takeId, by: 'Hugo', comments: 1 }),
-      comments: [
-        {
-          id: commentId,
-          by: 'Hugo',
-          body: 'The bridge drags, slow the fill',
-          atSeconds: LATER_MOMENT_SECONDS,
-        },
-      ],
+      comments: [{ id: commentId, by: 'Léa', body: 'The bridge drags', atSeconds: MOMENT_SECONDS }],
     });
-    expect(comments.map((comment) => comment.memberId)).toEqual([band.hugo.memberId]);
-
-    const deleted = await callTool(band.assistant, 'delete_take_comment', {
-      take: takeId,
-      comment: commentId,
-    });
-
-    expect(deleted).toEqual({ isError: false, body: { id: commentId, deleted: true } });
-    expect((await readTakeRows(takeId)).comments).toEqual([]);
   });
 
   it('deletes a take with its comments and its audio file', async () => {
@@ -222,7 +183,7 @@ describe('takes tools (back-e2e)', () => {
     await commentOnTake(band, takeId);
     const send = stubObjectDeletion();
 
-    const deleted = await callTool(band.assistant, 'delete_take', { take: takeId });
+    const deleted = await callTool(band.assistant, 'delete', { kind: 'take', id: takeId });
 
     expect(deleted).toEqual({ isError: false, body: { id: takeId, deleted: true } });
     expect(await readTakeRows(takeId)).toEqual({ takes: [], comments: [] });
@@ -233,8 +194,7 @@ describe('takes tools (back-e2e)', () => {
     const band = await prepareAssistantBand();
     const unknownId = randomUUID();
     const songId = await createSong(band);
-    const takeId = await uploadTake(band, songId);
-    const commentId = await commentOnTake(band, takeId);
+    await uploadTake(band, songId);
     stubObjectDeletion();
 
     const replies = {
@@ -260,41 +220,10 @@ describe('takes tools (back-e2e)', () => {
       }),
       missingComments: await callTool(band.assistant, 'get_take', { take: unknownId }),
       noChoice: await callTool(band.assistant, 'get_take', {}),
-      missingTakeComment: await callTool(band.assistant, 'comment_on_take', {
-        take: unknownId,
-        body: 'Nice',
-      }),
-      pastEndComment: await callTool(band.assistant, 'comment_on_take', {
-        take: takeId,
-        body: 'Nice',
-        atSeconds: PAST_END_SECONDS,
-      }),
-      emptyUpdate: await callTool(band.assistant, 'update_take_comment', {
-        take: takeId,
-        comment: commentId,
-      }),
-      pastEndUpdate: await callTool(band.assistant, 'update_take_comment', {
-        take: takeId,
-        comment: commentId,
-        atSeconds: PAST_END_SECONDS,
-      }),
-      missingTakeUpdate: await callTool(band.assistant, 'update_take_comment', {
-        take: unknownId,
-        comment: commentId,
-        body: 'Nice',
-      }),
-      missingCommentUpdate: await callTool(band.assistant, 'update_take_comment', {
-        take: takeId,
-        comment: unknownId,
-        body: 'Nice',
-      }),
-      missingCommentDelete: await callTool(band.assistant, 'delete_take_comment', {
-        take: takeId,
-        comment: unknownId,
-      }),
-      missingTakeDelete: await callTool(band.assistant, 'delete_take', { take: unknownId }),
+      missingTakeDelete: await callTool(band.assistant, 'delete', { kind: 'take', id: unknownId }),
     };
-    await callTool(band.assistant, 'create_song', { title: 'Karma Police', status: 'idea' });
+    await callTool(band.assistant, 'save_song', { title: 'Karma Police', status: 'idea' });
+    const namedTakeDelete = await callTool(band.assistant, 'delete', { kind: 'take', id: 'Creep' });
     const songWithoutTake = await callTool(band.assistant, 'get_take', { song: 'Karma Police' });
 
     expect(replies).toEqual({
@@ -304,14 +233,11 @@ describe('takes tools (back-e2e)', () => {
       unknownSessionTake: refused('session-not-found'),
       missingComments: refused('take-not-found'),
       noChoice: refused('take-or-song-required'),
-      missingTakeComment: refused('take-not-found'),
-      pastEndComment: refused('moment-past-end'),
-      emptyUpdate: refused('empty-update'),
-      pastEndUpdate: refused('moment-past-end'),
-      missingTakeUpdate: refused('take-not-found'),
-      missingCommentUpdate: refused('comment-not-found'),
-      missingCommentDelete: refused('not-found'),
       missingTakeDelete: refused('not-found'),
+    });
+    expect(namedTakeDelete).toEqual({
+      isError: true,
+      body: { error: 'take-not-found', reference: 'Creep' },
     });
     expect(songWithoutTake).toEqual({
       isError: true,
@@ -319,18 +245,15 @@ describe('takes tools (back-e2e)', () => {
     });
   });
 
-  it('pushes a new take and a new comment to the other members only', async () => {
+  it('pushes a new take to the other members only', async () => {
     const band = await prepareAssistantBand();
     const songId = await createSong(band);
     band.send.mockClear();
 
-    const takeId = await uploadTake(band, songId);
-    passNotificationGroupWindow(band.harness);
-    await commentOnTake(band, takeId);
+    await uploadTake(band, songId);
     const sent = readSentNotifications(band.send);
 
     expect(sent.map((notification) => notification.endpoint)).toEqual([
-      deviceEndpoint('lea-phone'),
       deviceEndpoint('lea-phone'),
     ]);
   });

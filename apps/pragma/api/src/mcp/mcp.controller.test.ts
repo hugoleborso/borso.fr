@@ -32,79 +32,41 @@ const FOUR_MINUTES_MS = 240_000;
 const FIVE_MINUTES_MS = 300_000;
 const EXPECTED_CHALLENGE = `Bearer resource_metadata="${MCP_TEST_ISSUER}/.well-known/oauth-protected-resource/mcp"`;
 const SERVED_TOOLS = [
-  'find_songs',
-  'get_song',
-  'search_deezer',
-  'create_song',
-  'update_song',
-  'delete_song',
-  'get_song_mastery',
-  'set_song_mastery',
-  'list_transition_comments',
-  'set_transition_comment',
   'find_sessions',
-  'create_session',
-  'update_session',
-  'delete_session',
+  'save_session',
   'get_session',
   'list_setlists',
   'get_setlist',
-  'create_setlist',
-  'update_setlist',
-  'delete_setlist',
+  'save_setlist',
   'link_setlist',
   'add_setlist_entries',
   'update_setlist_entry',
   'remove_setlist_entries',
   'reorder_setlist',
-  'get_vote_board',
-  'set_vote_status',
-  'cast_vote',
-  'close_vote',
+  'find_songs',
+  'get_song',
+  'search_deezer',
+  'save_song',
+  'set_song_mastery',
   'list_takes',
   'get_take',
   'request_take_upload',
   'create_take',
-  'delete_take',
-  'comment_on_take',
-  'update_take_comment',
-  'delete_take_comment',
-  'list_tasks',
-  'create_task',
-  'update_task',
-  'delete_task',
-  'list_improvements',
-  'create_improvement',
-  'update_improvement',
-  'delete_improvement',
-  'vote_on_improvement',
+  'list_members',
+  'set_member_instruments',
+  'list_instruments',
   'list_bars',
   'search_bar_places',
   'get_bar',
-  'create_bar',
-  'update_bar',
-  'delete_bar',
-  'get_outreach_template',
-  'save_outreach_template',
+  'save_bar',
+  'list_improvements',
+  'save_improvement',
+  'list_tasks',
+  'save_task',
   'list_free_slots',
-  'get_studies_overview',
-  'log_study',
-  'list_mastery_defaults',
-  'set_mastery_default',
-  'list_members',
-  'create_member',
-  'update_member',
-  'delete_member',
-  'set_member_instruments',
-  'list_instruments',
-  'create_instrument',
-  'reorder_instruments',
-  'update_instrument',
-  'delete_instrument',
   'get_me',
-  'update_my_contact',
-  'get_notification_preferences',
-  'set_notification_preference',
+  'update_me',
+  'delete',
 ];
 const INITIALIZE_MESSAGE = {
   jsonrpc: '2.0',
@@ -193,7 +155,7 @@ describe('mcp controller (back-e2e)', () => {
     ]);
     const { tools } = await first.listTools();
     const [created, listed] = await Promise.all([
-      callTool(first, 'create_song', { title: 'Creep', status: 'idea' }),
+      callTool(first, 'save_song', { title: 'Creep', status: 'idea' }),
       callTool(second, 'find_songs'),
     ]);
 
@@ -214,11 +176,11 @@ describe('mcp controller (back-e2e)', () => {
     const tokens = await connectAssistant(harness.app, owner);
     const client = await openMcpClient(harness.app, tokens.accessToken);
 
-    const refusal = await callTool(client, 'create_song', { status: 'idea' });
+    const refusal = await callTool(client, 'save_song', { title: 'Creep', status: 'finished' });
     const unknownTool = await callTool(client, 'add_song', { title: 'Creep' });
 
     expect(refusal.isError).toBe(true);
-    expect(String(refusal.body)).toContain('title');
+    expect(String(refusal.body)).toContain('status');
     expect(unknownTool.isError).toBe(true);
     expect(String(unknownTool.body)).toContain('add_song');
   });

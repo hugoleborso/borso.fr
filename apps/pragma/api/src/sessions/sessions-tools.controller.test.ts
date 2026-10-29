@@ -45,22 +45,22 @@ describe('sessions tools (back-e2e)', () => {
     const band = await prepareAssistantBand();
 
     const created = createdSchema.parse(
-      (
-        await callTool(band.assistant, 'create_session', {
-          session: { kind: 'practice', date: PRACTICE_DATE },
-        })
-      ).body,
+      (await callTool(band.assistant, 'save_session', { kind: 'practice', date: PRACTICE_DATE }))
+        .body,
     );
     const read = sessionBodySchema.parse(
       (await callTool(band.assistant, 'get_session', { session: created.id })).body,
     );
     const listed = await callTool(band.assistant, 'find_sessions', { when: 'all' });
-    const updated = await callTool(band.assistant, 'update_session', {
+    const updated = await callTool(band.assistant, 'save_session', {
       session: created.id,
-      changes: { date: MOVED_PRACTICE_DATE },
+      date: MOVED_PRACTICE_DATE,
     });
     const stored = await readSessionRow(created.id);
-    const deleted = await callTool(band.assistant, 'delete_session', { session: created.id });
+    const deleted = await callTool(band.assistant, 'delete', {
+      kind: 'session',
+      id: created.id,
+    });
 
     expect(created).toEqual({ id: created.id, kind: 'practice', date: PRACTICE_DATE });
     expect(read.session.kind).toBe('practice');
@@ -79,45 +79,48 @@ describe('sessions tools (back-e2e)', () => {
 
     const created = createdSchema.parse(
       (
-        await callTool(band.assistant, 'create_session', {
-          session: {
-            kind: 'concert',
-            date: PRACTICE_DATE,
-            venue: 'La Maroquinerie',
-            capacity: 500,
-          },
+        await callTool(band.assistant, 'save_session', {
+          kind: 'concert',
+          date: PRACTICE_DATE,
+          venue: 'La Maroquinerie',
+          capacity: 500,
         })
       ).body,
     );
     const stored = await readSessionRow(created.id);
-    const missingVenue = await callTool(band.assistant, 'create_session', {
-      session: { kind: 'concert', date: PRACTICE_DATE, capacity: 500 },
+    const missingVenue = await callTool(band.assistant, 'save_session', {
+      kind: 'concert',
+      date: PRACTICE_DATE,
+      capacity: 500,
     });
 
     expect(stored?.venue).toBe('La Maroquinerie');
     expect(stored?.capacity).toBe(500);
-    expect(missingVenue.isError).toBe(true);
-    expect(JSON.stringify(missingVenue.body)).toContain('venue');
+    expect(missingVenue).toEqual({
+      isError: true,
+      body: { error: 'invalid-input', fields: { venue: 'Required' } },
+    });
   });
 
   it('answers the refusal codes the routes answer', async () => {
     const band = await prepareAssistantBand();
     const unknownId = randomUUID();
-    await callTool(band.assistant, 'create_session', {
-      session: { kind: 'practice', date: PRACTICE_DATE },
-    });
+    await callTool(band.assistant, 'save_session', { kind: 'practice', date: PRACTICE_DATE });
 
     const missing = await callTool(band.assistant, 'get_session', { session: unknownId });
-    const missingUpdate = await callTool(band.assistant, 'update_session', {
+    const missingUpdate = await callTool(band.assistant, 'save_session', {
       session: unknownId,
-      changes: { date: MOVED_PRACTICE_DATE },
+      date: MOVED_PRACTICE_DATE,
     });
-    const emptyUpdate = await callTool(band.assistant, 'update_session', {
-      session: '2026-11-03',
-      changes: {},
+    const emptyUpdate = await callTool(band.assistant, 'save_session', { session: '2026-11-03' });
+    const missingDelete = await callTool(band.assistant, 'delete', {
+      kind: 'session',
+      id: unknownId,
     });
-    const missingDelete = await callTool(band.assistant, 'delete_session', { session: unknownId });
-    const missingDay = await callTool(band.assistant, 'delete_session', { session: '2026-11-05' });
+    const missingDay = await callTool(band.assistant, 'delete', {
+      kind: 'session',
+      id: '2026-11-05',
+    });
 
     expect(missing).toEqual({ isError: true, body: { error: 'not-found' } });
     expect(missingUpdate).toEqual({ isError: true, body: { error: 'not-found' } });
@@ -133,16 +136,13 @@ describe('sessions tools (back-e2e)', () => {
     const band = await prepareAssistantBand();
 
     const created = createdSchema.parse(
-      (
-        await callTool(band.assistant, 'create_session', {
-          session: { kind: 'practice', date: PRACTICE_DATE },
-        })
-      ).body,
+      (await callTool(band.assistant, 'save_session', { kind: 'practice', date: PRACTICE_DATE }))
+        .body,
     );
     passNotificationGroupWindow(band.harness);
-    await callTool(band.assistant, 'update_session', {
+    await callTool(band.assistant, 'save_session', {
       session: created.id,
-      changes: { date: MOVED_PRACTICE_DATE },
+      date: MOVED_PRACTICE_DATE,
     });
     const sent = readSentNotifications(band.send);
 

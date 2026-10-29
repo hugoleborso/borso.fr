@@ -31,16 +31,14 @@ const taskLinkShape = {
   song: referenceSchema.nullable().optional(),
 };
 
-export const taskReferenceToolInputSchema = z.object({ task: referenceSchema });
 export const taskListToolInputSchema = z.object({
   assignee: referenceSchema.optional(),
   song: referenceSchema.optional(),
   status: z.enum(TASK_STATUSES).optional(),
   ...pageInputShape,
 });
-export const taskCreateToolInputSchema = taskCreateSchema
-  .omit({ assigneeId: true, songId: true })
-  .extend(taskLinkShape);
-export const taskUpdateToolInputSchema = taskReferenceToolInputSchema
+export const taskCreateFieldsSchema = taskCreateSchema.omit({ assigneeId: true, songId: true });
+export const taskSaveToolInputSchema = z
+  .object({ task: referenceSchema.optional() })
   .merge(taskUpdateSchema.omit({ assigneeId: true, songId: true }))
   .extend(taskLinkShape);

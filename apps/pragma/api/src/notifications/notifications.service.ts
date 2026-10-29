@@ -189,5 +189,3 @@ export async function notifyBand(event: NotificationEvent, now: Date): Promise<N
     return 'failed';
   }
 }
-
-export { defineTool } from '../mcp/mcp.service';

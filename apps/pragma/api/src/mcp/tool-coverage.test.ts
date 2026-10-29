@@ -5,7 +5,7 @@ import { compareRoutesWithTools, TOOL_EXCLUSIONS } from './tool-coverage.core';
 
 const TEST_SEED_FLAG = 'ALLOW_TEST_SEED';
 const TEST_SEED_FLAG_ON = '1';
-const TOOL_NAME_PATTERN = /^[a-z]+(?:_[a-z]+)+$/;
+const TOOL_NAME_PATTERN = /^[a-z]+(?:_[a-z]+)*$/;
 
 function readCoverage() {
   const toolRoutes = ASSISTANT_TOOLS.flatMap((tool) => tool.routes);
@@ -36,7 +36,7 @@ describe('route and tool coverage', () => {
     expect(readCoverage().staleExclusions).toEqual([]);
   });
 
-  it('names each tool verb_noun, and no two tools alike', () => {
+  it('names each tool in lowercase words joined by underscores, and no two tools alike', () => {
     const names = ASSISTANT_TOOLS.map((tool) => tool.name);
     expect(new Set(names).size).toBe(names.length);
     expect(names.filter((name) => !TOOL_NAME_PATTERN.test(name))).toEqual([]);

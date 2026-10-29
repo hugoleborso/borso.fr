@@ -1,25 +1,18 @@
 import {
-  takeCommentCreateToolInputSchema,
-  takeCommentPathToolInputSchema,
-  takeCommentUpdateToolInputSchema,
   takeCreateSchema,
   takeListToolInputSchema,
   takeReadToolInputSchema,
-  takeReferenceToolInputSchema,
   takeSignToolInputSchema,
 } from './takes.schema';
 import {
-  confirmUpdate,
   createTake,
-  createTakeComment,
+  defineDeletion,
   defineTool,
   listTakesForTool,
   mintTakeUpload,
   pageItems,
-  patchTakeComment,
   readTakeForTool,
-  removeTake,
-  removeTakeComment,
+  removeTakeByReference,
   resolveSongId,
   resolveTakeId,
 } from './takes.service';
@@ -88,53 +81,13 @@ export const TAKE_TOOLS = [
       return { kind: 'answered', body: { id: outcome.take.id } };
     },
   }),
-  defineTool({
-    name: 'delete_take',
-    description: 'Delete a take, its comments and its audio file.',
-    routes: ['DELETE /api/takes/:id'],
-    inputSchema: takeReferenceToolInputSchema,
-    run: async ({ take }) => {
-      const outcome = await removeTake(take);
-      if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
-      return { kind: 'answered', body: { id: take, deleted: true } };
-    },
-  }),
-  defineTool({
-    name: 'comment_on_take',
-    description:
-      'Comment, as you, on `take` (id) or on the latest take of `song`. `atSeconds` pins it to a moment.',
-    routes: ['POST /api/takes/:id/comments'],
-    inputSchema: takeCommentCreateToolInputSchema,
-    run: async ({ take, song, ...comment }, actor) => {
-      const takeId = await resolveTakeId(take, song);
-      const outcome = await createTakeComment(takeId, comment, actor);
-      if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: { id: outcome.comment.id, takeId } };
-    },
-  }),
-  defineTool({
-    name: 'update_take_comment',
-    description: 'Change the text or the moment of a comment on a take; give at least one.',
-    routes: ['PATCH /api/takes/:id/comments/:commentId'],
-    inputSchema: takeCommentUpdateToolInputSchema,
-    run: async ({ take, comment, ...changes }) => {
-      if (changes.body === undefined && changes.atSeconds === undefined) {
-        return { kind: 'refused', body: { error: 'empty-update' } };
-      }
-      const outcome = await patchTakeComment(take, comment, changes);
-      if (outcome.kind !== 'ok') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: confirmUpdate(comment, changes) };
-    },
-  }),
-  defineTool({
-    name: 'delete_take_comment',
-    description: 'Delete a comment on a take.',
-    routes: ['DELETE /api/takes/:id/comments/:commentId'],
-    inputSchema: takeCommentPathToolInputSchema,
-    run: async ({ take, comment }) => {
-      const outcome = await removeTakeComment(take, comment);
-      if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
-      return { kind: 'answered', body: { id: comment, deleted: true } };
-    },
-  }),
 ];
+
+export const TAKE_DELETION = defineDeletion({
+  route: 'DELETE /api/takes/:id',
+  remove: async (reference) => {
+    const outcome = await removeTakeByReference(reference);
+    if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
+    return { kind: 'answered', body: { id: reference, deleted: true } };
+  },
+});

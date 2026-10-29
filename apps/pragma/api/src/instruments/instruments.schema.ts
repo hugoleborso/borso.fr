@@ -1,7 +1,6 @@
 import { INSTRUMENT_NAME_MAX_LENGTH } from '@domain/input-limits.core';
 import { boolean, integer, pgTable, text, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
-import { referenceSchema } from '../mcp/tool-input.schema';
 import { INSTRUMENT_FAMILIES, INSTRUMENT_ICONS } from '@domain/instrument.core';
 
 export const instrumentTable = pgTable('instrument', {
@@ -42,9 +41,3 @@ export const instrumentOrderSchema = z.object({
 });
 
 export const instrumentIdParamSchema = z.object({ id: z.string().uuid() });
-export const instrumentReferenceToolInputSchema = z.object({ instrument: referenceSchema });
-export const instrumentUpdateToolInputSchema =
-  instrumentReferenceToolInputSchema.merge(updateInstrumentSchema);
-export const instrumentOrderToolInputSchema = z.object({
-  instruments: z.array(referenceSchema),
-});

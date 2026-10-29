@@ -23,6 +23,7 @@ export const sessionTable = pgTable('session', {
 });
 
 export const SESSION_ORIGINS = ['free_slot'] as const;
+export const SESSION_KINDS = ['concert', 'practice'] as const;
 
 export const friendsCountSchema = z.record(
   z.string().uuid(),
@@ -77,13 +78,14 @@ export type SessionPersistedUpdate = z.infer<typeof sessionPersistedUpdateSchema
 
 export const sessionIdParamSchema = z.object({ id: z.string().uuid() });
 
-export const sessionCreateToolInputSchema = z.object({ session: sessionCreateSchema });
-export const sessionReferenceToolInputSchema = z.object({ session: referenceSchema });
-export const sessionUpdateToolInputSchema = sessionReferenceToolInputSchema.extend({
-  changes: sessionUpdateSchema,
+export const sessionSaveToolInputSchema = z.object({
+  ...concertCreateSchema.partial().shape,
+  ...practiceCreateSchema.partial().shape,
+  session: referenceSchema.optional(),
+  kind: z.enum(SESSION_KINDS).optional(),
 });
 export const sessionFindToolInputSchema = z.object({
   when: z.enum(SESSION_WINDOWS).default('upcoming'),
-  kind: z.enum(['concert', 'practice']).optional(),
+  kind: z.enum(SESSION_KINDS).optional(),
   ...pageInputShape,
 });

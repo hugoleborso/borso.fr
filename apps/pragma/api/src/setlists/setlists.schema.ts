@@ -142,14 +142,12 @@ const POSITION_MAX = 500;
 export const setlistReferenceToolInputSchema = z.object(setlistReferenceShape);
 export const setlistListToolInputSchema = z.object({ session: referenceSchema.optional() });
 export const setlistSessionToolInputSchema = z.object({ session: referenceSchema });
-export const setlistCreateToolInputSchema = z.object({
-  name: setlistCreateSchema.shape.name,
+export const setlistSaveToolInputSchema = z.object({
+  setlist: referenceSchema.optional(),
+  name: setlistRenameSchema.shape.name.optional(),
   session: referenceSchema.optional(),
   songs: z.array(referenceSchema).optional(),
 });
-export const setlistRenameToolInputSchema = z
-  .object(setlistReferenceShape)
-  .merge(setlistRenameSchema);
 export const setlistLinkToolInputSchema = z.object({
   ...setlistReferenceShape,
   session: referenceSchema,
@@ -174,14 +172,4 @@ export const setlistReorderReferencesToolInputSchema = z.object({
     .object({ entry: referenceSchema, position: z.number().int().min(1).max(POSITION_MAX) })
     .optional(),
   swap: z.tuple([referenceSchema, referenceSchema]).optional(),
-});
-export const setlistVoteStatusReferenceToolInputSchema = z
-  .object(setlistReferenceShape)
-  .merge(setlistVoteStatusSchema);
-export const setlistVoteCastToolInputSchema = z
-  .object({ ...setlistReferenceShape, song: referenceSchema })
-  .merge(setlistVoteScoreSchema);
-export const setlistVoteCloseToolInputSchema = z.object({
-  ...setlistReferenceShape,
-  songs: z.array(referenceSchema).min(1),
 });

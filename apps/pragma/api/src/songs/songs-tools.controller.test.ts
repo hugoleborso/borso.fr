@@ -3,9 +3,17 @@ import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
-import { callTool, prepareAssistantBand, useOAuthOrigins } from '../../../test/mcp-utils';
+import {
+  callTool,
+  prepareAssistantBand,
+  refusal,
+  seedInstrument,
+  useOAuthOrigins,
+} from '../../../test/mcp-utils';
 import { deviceEndpoint, readSentNotifications } from '../../../test/push-utils';
 import { songTable } from './songs.schema';
+
+const OVERRIDE_SCORE = 9;
 
 const createdSchema = z.object({ id: z.string().uuid(), title: z.string() });
 const songBodySchema = z.object({
@@ -43,19 +51,18 @@ describe('songs tools (back-e2e)', () => {
     const { assistant } = band;
 
     const created = createdSchema.parse(
-      (await callTool(assistant, 'create_song', { title: 'Seven Nation Army', status: 'idea' }))
-        .body,
+      (await callTool(assistant, 'save_song', { title: 'Seven Nation Army', status: 'idea' })).body,
     );
     const read = songBodySchema.parse(
       (await callTool(assistant, 'get_song', { song: 'seven nation' })).body,
     );
     const found = await callTool(assistant, 'find_songs', { query: 'army' });
-    const updated = await callTool(assistant, 'update_song', {
+    const updated = await callTool(assistant, 'save_song', {
       song: 'Seven Nation Army',
       status: 'wip',
     });
     const stored = await readSongRow(created.id);
-    const deleted = await callTool(assistant, 'delete_song', { song: created.id });
+    const deleted = await callTool(assistant, 'delete', { kind: 'song', id: created.id });
 
     expect(read.song).toEqual({
       id: created.id,
@@ -63,6 +70,7 @@ describe('songs tools (back-e2e)', () => {
       status: 'idea',
       origin: 'cover',
       lineup: {},
+      mastery: [],
     });
     expect(found.body).toEqual({
       songs: [{ id: created.id, title: 'Seven Nation Army', status: 'idea' }],
@@ -79,10 +87,10 @@ describe('songs tools (back-e2e)', () => {
     const band = await prepareAssistantBand();
     const { assistant } = band;
     const first = createdSchema.parse(
-      (await callTool(assistant, 'create_song', { title: 'Creep', status: 'idea' })).body,
+      (await callTool(assistant, 'save_song', { title: 'Creep', status: 'idea' })).body,
     );
     const second = createdSchema.parse(
-      (await callTool(assistant, 'create_song', { title: 'Creep', status: 'wip', artist: 'TLC' }))
+      (await callTool(assistant, 'save_song', { title: 'Creep', status: 'wip', artist: 'TLC' }))
         .body,
     );
 
@@ -112,16 +120,17 @@ describe('songs tools (back-e2e)', () => {
     const unknownId = randomUUID();
     const deezerTrackId = 'deezer-3135556';
     const holder = createdSchema.parse(
-      (await callTool(assistant, 'create_song', { title: 'Creep', status: 'idea', deezerTrackId }))
+      (await callTool(assistant, 'save_song', { title: 'Creep', status: 'idea', deezerTrackId }))
         .body,
     );
 
     const missing = await callTool(assistant, 'get_song', { song: unknownId });
-    const missingUpdate = await callTool(assistant, 'update_song', { song: unknownId, notes: 'x' });
-    const emptyUpdate = await callTool(assistant, 'update_song', { song: holder.id });
-    const missingDelete = await callTool(assistant, 'delete_song', { song: unknownId });
-    const missingTitle = await callTool(assistant, 'delete_song', { song: 'Karma Police' });
-    const duplicate = await callTool(assistant, 'create_song', {
+    const missingUpdate = await callTool(assistant, 'save_song', { song: unknownId, notes: 'x' });
+    const emptyUpdate = await callTool(assistant, 'save_song', { song: holder.id });
+    const missingDelete = await callTool(assistant, 'delete', { kind: 'song', id: unknownId });
+    const missingTitle = await callTool(assistant, 'delete', { kind: 'song', id: 'Karma Police' });
+    const missingField = await callTool(assistant, 'save_song', { title: 'Karma Police' });
+    const duplicate = await callTool(assistant, 'save_song', {
       title: 'Creep (live)',
       status: 'idea',
       deezerTrackId,
@@ -135,6 +144,10 @@ describe('songs tools (back-e2e)', () => {
       isError: true,
       body: { error: 'song-not-found', reference: 'Karma Police' },
     });
+    expect(missingField).toEqual({
+      isError: true,
+      body: { error: 'invalid-input', fields: { status: 'Required' } },
+    });
     expect(duplicate).toEqual({
       isError: true,
       body: { error: 'deezer-track-taken', songId: holder.id, songTitle: 'Creep' },
@@ -146,16 +159,16 @@ describe('songs tools (back-e2e)', () => {
     const { assistant } = band;
     const holder = createdSchema.parse(
       (
-        await callTool(assistant, 'create_song', {
+        await callTool(assistant, 'save_song', {
           title: 'Creep',
           status: 'idea',
           deezerTrackId: 'deezer-1',
         })
       ).body,
     );
-    await callTool(assistant, 'create_song', { title: 'Karma Police', status: 'idea' });
+    await callTool(assistant, 'save_song', { title: 'Karma Police', status: 'idea' });
 
-    const moved = await callTool(assistant, 'update_song', {
+    const moved = await callTool(assistant, 'save_song', {
       song: 'Karma Police',
       deezerTrackId: 'deezer-1',
     });
@@ -169,12 +182,12 @@ describe('songs tools (back-e2e)', () => {
   it('sets the default lineup by name as the member, notifying the other members only', async () => {
     const band = await prepareAssistantBand();
     const { assistant } = band;
-    await callTool(assistant, 'create_instrument', { name: 'Guitare', family: 'harmonic' });
+    await seedInstrument(band.hugo, { name: 'Guitare', family: 'harmonic' });
     const created = createdSchema.parse(
-      (await callTool(assistant, 'create_song', { title: 'Creep', status: 'idea' })).body,
+      (await callTool(assistant, 'save_song', { title: 'Creep', status: 'idea' })).body,
     );
 
-    const lineup = await callTool(assistant, 'update_song', {
+    const lineup = await callTool(assistant, 'save_song', {
       song: 'Creep',
       defaultLineup: { Léa: 'guitare' },
     });
@@ -183,7 +196,7 @@ describe('songs tools (back-e2e)', () => {
     );
     const stored = await readSongRow(created.id);
     const sent = readSentNotifications(band.send);
-    const unknownMember = await callTool(assistant, 'update_song', {
+    const unknownMember = await callTool(assistant, 'save_song', {
       song: 'Creep',
       defaultLineup: { Marc: 'Guitare' },
     });
@@ -201,6 +214,43 @@ describe('songs tools (back-e2e)', () => {
       isError: true,
       body: { error: 'member-not-found', reference: 'Marc' },
     });
+  });
+
+  it('sets a score for one song, reads it with the song and in the history, then removes it', async () => {
+    const band = await prepareAssistantBand();
+    const { assistant } = band;
+    await seedInstrument(band.hugo, { name: 'Bass', family: 'harmonic' });
+    const created = createdSchema.parse(
+      (await callTool(assistant, 'save_song', { title: 'Creep', status: 'idea' })).body,
+    );
+    const key = { song: 'Creep', member: 'Léa', instrument: 'Bass' };
+
+    const saved = await callTool(assistant, 'set_song_mastery', { ...key, score: OVERRIDE_SCORE });
+    const read = songBodySchema.parse(
+      (await callTool(assistant, 'get_song', { song: 'creep' })).body,
+    );
+    const detailed = songBodySchema.parse(
+      (await callTool(assistant, 'get_song', { song: created.id, detail: true })).body,
+    );
+    const removed = await callTool(assistant, 'set_song_mastery', { ...key, score: null });
+    const removedAgain = await callTool(assistant, 'set_song_mastery', { ...key, score: null });
+
+    expect(saved).toEqual({
+      isError: false,
+      body: { songId: created.id, member: 'Léa', instrument: 'Bass', score: OVERRIDE_SCORE },
+    });
+    expect(read.song).toMatchObject({
+      mastery: [{ member: 'Léa', instrument: 'Bass', score: OVERRIDE_SCORE }],
+    });
+    expect(read.song).not.toHaveProperty('masteryHistory');
+    expect(detailed.song).toMatchObject({
+      masteryHistory: [{ member: 'Léa', instrument: 'Bass', score: OVERRIDE_SCORE }],
+    });
+    expect(removed).toEqual({
+      isError: false,
+      body: { songId: created.id, member: 'Léa', instrument: 'Bass' },
+    });
+    expect(removedAgain).toEqual(refusal('not-found'));
   });
 
   it('answers a Deezer outage as the route does', async () => {

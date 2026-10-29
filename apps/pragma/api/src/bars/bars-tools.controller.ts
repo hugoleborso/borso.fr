@@ -2,15 +2,17 @@ import {
   barCreateSchema,
   barListToolInputSchema,
   barReferenceToolInputSchema,
+  barSaveToolInputSchema,
   barSearchQuerySchema,
-  barUpdateToolInputSchema,
 } from './bars.schema';
 import {
   confirmUpdate,
   createBar,
+  defineDeletion,
   defineTool,
-  listBarsForTool,
   getBarById,
+  listBarsForTool,
+  parseToolFields,
   patchBar,
   removeBar,
   resolveBarId,
@@ -53,38 +55,31 @@ export const BAR_TOOLS = [
     },
   }),
   defineTool({
-    name: 'create_bar',
-    description: 'Add a bar to prospect.',
-    routes: ['POST /api/bars'],
-    inputSchema: barCreateSchema,
-    run: async (input) => {
-      const created = await createBar(input);
-      return { kind: 'answered', body: { id: created.id, name: created.name } };
-    },
-  }),
-  defineTool({
-    name: 'update_bar',
-    description: 'Change the fields given of a bar, named by name or id.',
-    routes: ['PUT /api/bars/:id'],
-    inputSchema: barUpdateToolInputSchema,
-    run: async ({ bar, ...changes }) => {
+    name: 'save_bar',
+    description:
+      'Add a bar to prospect (`name` and `status` required), or, with `bar` (name or id), change only the fields given.',
+    routes: ['POST /api/bars', 'PUT /api/bars/:id'],
+    inputSchema: barSaveToolInputSchema,
+    run: async ({ bar, ...fields }) => {
+      if (bar === undefined) {
+        const created = await createBar(parseToolFields(barCreateSchema, fields));
+        return { kind: 'answered', body: { id: created.id, name: created.name } };
+      }
       const id = await resolveBarId(bar);
-      const outcome = await patchBar(id, changes);
+      const outcome = await patchBar(id, fields);
       if (outcome.kind === 'empty') return { kind: 'refused', body: { error: 'empty-update' } };
       if (outcome.kind === 'not-found') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: confirmUpdate(id, changes) };
-    },
-  }),
-  defineTool({
-    name: 'delete_bar',
-    description: 'Delete a bar.',
-    routes: ['DELETE /api/bars/:id'],
-    inputSchema: barReferenceToolInputSchema,
-    run: async ({ bar }) => {
-      const id = await resolveBarId(bar);
-      const outcome = await removeBar(id);
-      if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
-      return { kind: 'answered', body: { id, deleted: true } };
+      return { kind: 'answered', body: confirmUpdate(id, fields) };
     },
   }),
 ];
+
+export const BAR_DELETION = defineDeletion({
+  route: 'DELETE /api/bars/:id',
+  remove: async (reference) => {
+    const id = await resolveBarId(reference);
+    const outcome = await removeBar(id);
+    if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
+    return { kind: 'answered', body: { id, deleted: true } };
+  },
+});

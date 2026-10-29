@@ -2,26 +2,21 @@ import { randomUUID } from 'node:crypto';
 import { eq } from 'drizzle-orm';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { z } from 'zod';
+import { jsonRequest } from '../../../test/auth-utils';
 import { testDatabase, truncateAllTables } from '../../../test/database-utils';
 import {
   type AssistantBand,
   callTool,
   passNotificationGroupWindow,
   prepareAssistantBand,
+  seedInstrument,
   useOAuthOrigins,
 } from '../../../test/mcp-utils';
 import { deviceEndpoint, readSentNotifications } from '../../../test/push-utils';
-import {
-  sessionSetlistTable,
-  setlistEntryTable,
-  setlistTable,
-  setlistVoteTable,
-} from './setlists.schema';
+import { sessionSetlistTable, setlistEntryTable, setlistTable } from './setlists.schema';
 
 const PRACTICE_DATE = '2026-11-03T19:00:00.000Z';
 const PRACTICE_DAY = '2026-11-03';
-const SINGLE_SONG_TARGET = 1;
-const FULL_SINGLE_SONG_BUDGET = 3;
 
 const idBodySchema = z.object({ id: z.string().uuid() });
 const setlistsBodySchema = z.object({
@@ -34,6 +29,7 @@ const entryViewSchema = z.object({
   title: z.string(),
   notes: z.string().optional(),
   lineup: z.record(z.string(), z.string()),
+  transitionComment: z.string().optional(),
 });
 const setlistViewSchema = z.object({
   setlist: z.object({ id: z.string().uuid(), name: z.string(), status: z.string() }),
@@ -41,13 +37,14 @@ const setlistViewSchema = z.object({
 });
 
 async function createSong(band: AssistantBand, title: string): Promise<string> {
-  const reply = await callTool(band.assistant, 'create_song', { title, status: 'idea' });
+  const reply = await callTool(band.assistant, 'save_song', { title, status: 'idea' });
   return idBodySchema.parse(reply.body).id;
 }
 
 async function createPractice(band: AssistantBand): Promise<string> {
-  const reply = await callTool(band.assistant, 'create_session', {
-    session: { kind: 'practice', date: PRACTICE_DATE },
+  const reply = await callTool(band.assistant, 'save_session', {
+    kind: 'practice',
+    date: PRACTICE_DATE,
   });
   return idBodySchema.parse(reply.body).id;
 }
@@ -56,7 +53,7 @@ async function createSetlist(
   band: AssistantBand,
   options: { session?: string; songs?: string[] } = {},
 ): Promise<string> {
-  const reply = await callTool(band.assistant, 'create_setlist', { name: 'Saturday', ...options });
+  const reply = await callTool(band.assistant, 'save_setlist', { name: 'Saturday', ...options });
   return idBodySchema.parse(reply.body).id;
 }
 
@@ -97,9 +94,9 @@ describe('setlists tools (back-e2e)', () => {
     const creepId = await createSong(band, 'Creep');
     const armyId = await createSong(band, 'Seven Nation Army');
     const karmaId = await createSong(band, 'Karma Police');
-    await callTool(band.assistant, 'create_instrument', { name: 'Guitare', family: 'harmonic' });
+    await seedInstrument(band.hugo, { name: 'Guitare', family: 'harmonic' });
 
-    const created = await callTool(band.assistant, 'create_setlist', {
+    const created = await callTool(band.assistant, 'save_setlist', {
       name: 'Saturday',
       session: PRACTICE_DAY,
       songs: ['creep', armyId],
@@ -109,7 +106,7 @@ describe('setlists tools (back-e2e)', () => {
       setlist: 'saturday',
       songs: ['Karma Police'],
     });
-    const renamed = await callTool(band.assistant, 'update_setlist', {
+    const renamed = await callTool(band.assistant, 'save_setlist', {
       setlist: setlistId,
       name: 'Saturday night',
     });
@@ -139,7 +136,7 @@ describe('setlists tools (back-e2e)', () => {
 
     expect(created.body).toEqual({ id: setlistId, songs: 2 });
     expect(added.body).toEqual({ setlistId, entryIds: [expect.any(String)] });
-    expect(renamed.body).toEqual({ id: setlistId, name: 'Saturday night' });
+    expect(renamed.body).toEqual({ id: setlistId, updated: ['name'] });
     expect(noted.body).toEqual({ id: expect.any(String), updated: ['notes'] });
     expect(lineup.body).toEqual({ id: expect.any(String), updated: ['lineupOverride'] });
     expect(swapped.body).toEqual({ order: ['Seven Nation Army', 'Creep', 'Karma Police'] });
@@ -179,7 +176,7 @@ describe('setlists tools (back-e2e)', () => {
       setlist: setlistId,
       order: [creepId],
     });
-    const deleted = await callTool(band.assistant, 'delete_setlist', { setlist: setlistId });
+    const deleted = await callTool(band.assistant, 'delete', { kind: 'setlist', id: setlistId });
     const afterDeletion = await readSetlistRows(setlistId);
 
     expect(reordered.body).toEqual({ order: ['Creep'] });
@@ -212,61 +209,28 @@ describe('setlists tools (back-e2e)', () => {
     expect(rows.links).toEqual([]);
   });
 
-  it('runs an audience vote as the member, from opening to closing', async () => {
+  it('reads what the band wrote about each transition into the next song, which the tools never write', async () => {
     const band = await prepareAssistantBand();
     const creepId = await createSong(band, 'Creep');
-    await createSong(band, 'Seven Nation Army');
-    const setlistId = await createSetlist(band);
-
-    const opened = await callTool(band.assistant, 'set_vote_status', {
-      setlist: setlistId,
-      status: 'voting',
-      targetSongCount: SINGLE_SONG_TARGET,
+    const armyId = await createSong(band, 'Seven Nation Army');
+    await createSetlist(band, { songs: ['Creep', 'Seven Nation Army'] });
+    await jsonRequest(band.lea.app, `/api/transition-comments/${creepId}/${armyId}`, {
+      method: 'PUT',
+      cookieHeader: band.lea.cookieHeader,
+      body: { comment: 'Straight in, no count' },
     });
-    const cast = await callTool(band.assistant, 'cast_vote', {
-      setlist: setlistId,
-      song: 'Creep',
-      points: FULL_SINGLE_SONG_BUDGET,
-    });
-    const overBudget = await callTool(band.assistant, 'cast_vote', {
-      setlist: setlistId,
-      song: 'army',
-      points: 1,
-    });
-    const board = await callTool(band.assistant, 'get_vote_board', { setlist: setlistId });
-    const votes = await testDatabase()
-      .select()
-      .from(setlistVoteTable)
-      .where(eq(setlistVoteTable.setlistId, setlistId));
-    const closed = await callTool(band.assistant, 'close_vote', {
-      setlist: setlistId,
-      songs: ['Creep'],
-    });
-    const lockedEntries = (await readSetlist(band, setlistId)).entries;
-    const lateVote = await callTool(band.assistant, 'cast_vote', {
-      setlist: setlistId,
-      song: creepId,
-      points: 1,
+    await jsonRequest(band.lea.app, `/api/transition-comments/${armyId}/${creepId}`, {
+      method: 'PUT',
+      cookieHeader: band.lea.cookieHeader,
+      body: { comment: 'The other way round' },
     });
 
-    expect(opened).toEqual({ isError: false, body: { setlistId, status: 'voting' } });
-    expect(cast).toEqual({
-      isError: false,
-      body: { points: FULL_SINGLE_SONG_BUDGET, remaining: 0 },
-    });
-    expect(overBudget).toEqual({
-      isError: true,
-      body: { error: 'budget-exhausted', budget: { total: 3, spent: 3, remaining: 0 } },
-    });
-    expect(board.body).toMatchObject({
-      status: 'voting',
-      tallies: [{ song: 'Creep', songId: creepId, points: 3, voters: 1 }],
-      proposal: ['Creep'],
-    });
-    expect(votes.map((vote) => vote.memberId)).toEqual([band.hugo.memberId]);
-    expect(closed).toEqual({ isError: false, body: { setlistId, closed: true } });
-    expect(lockedEntries.map((entry) => entry.songId)).toEqual([creepId]);
-    expect(lateVote).toEqual({ isError: true, body: { error: 'not-voting' } });
+    const read = await readSetlist(band, 'Saturday');
+
+    expect(read.entries.map((entry) => [entry.title, entry.transitionComment])).toEqual([
+      ['Creep', 'Straight in, no count'],
+      ['Seven Nation Army', undefined],
+    ]);
   });
 
   it('answers the refusal codes the routes answer, and names a reference nothing matches', async () => {
@@ -279,15 +243,20 @@ describe('setlists tools (back-e2e)', () => {
       missing: await callTool(band.assistant, 'get_setlist', { setlist: unknownId }),
       missingName: await callTool(band.assistant, 'get_setlist', { setlist: 'Sunday' }),
       missingSession: await callTool(band.assistant, 'get_session', { session: unknownId }),
-      unknownSession: await callTool(band.assistant, 'create_setlist', {
+      unknownSession: await callTool(band.assistant, 'save_setlist', {
         name: 'x',
         session: unknownId,
       }),
-      missingRename: await callTool(band.assistant, 'update_setlist', {
+      missingRename: await callTool(band.assistant, 'save_setlist', {
         setlist: unknownId,
         name: 'x',
       }),
-      missingDelete: await callTool(band.assistant, 'delete_setlist', { setlist: unknownId }),
+      emptyRename: await callTool(band.assistant, 'save_setlist', { setlist: setlistId }),
+      creationOnly: await callTool(band.assistant, 'save_setlist', {
+        setlist: setlistId,
+        songs: [songId],
+      }),
+      missingDelete: await callTool(band.assistant, 'delete', { kind: 'setlist', id: unknownId }),
       missingLink: await callTool(band.assistant, 'link_setlist', {
         setlist: setlistId,
         session: unknownId,
@@ -319,45 +288,23 @@ describe('setlists tools (back-e2e)', () => {
         setlist: unknownId,
         order: [unknownId],
       }),
-      missingBoard: await callTool(band.assistant, 'get_vote_board', { setlist: unknownId }),
-      missingStatus: await callTool(band.assistant, 'set_vote_status', {
-        setlist: unknownId,
-        status: 'voting',
-      }),
-      missingVote: await callTool(band.assistant, 'cast_vote', {
-        setlist: unknownId,
-        song: songId,
-        points: 1,
-      }),
-      closedVote: await callTool(band.assistant, 'cast_vote', {
-        setlist: setlistId,
-        song: songId,
-        points: 1,
-      }),
-      missingClose: await callTool(band.assistant, 'close_vote', {
-        setlist: unknownId,
-        songs: [songId],
-      }),
-      closedClose: await callTool(band.assistant, 'close_vote', {
-        setlist: setlistId,
-        songs: [songId],
-      }),
     };
-    await callTool(band.assistant, 'set_vote_status', { setlist: setlistId, status: 'voting' });
-    const emptyBoard = await callTool(band.assistant, 'get_vote_board', { setlist: setlistId });
-    const emptyClose = await callTool(band.assistant, 'close_vote', {
-      setlist: setlistId,
-      songs: [songId],
-    });
 
     const notFound = { isError: true, body: { error: 'not-found' } };
-    const notVoting = { isError: true, body: { error: 'not-voting' } };
     expect(replies).toEqual({
       missing: notFound,
       missingName: { isError: true, body: { error: 'setlist-not-found', reference: 'Sunday' } },
       missingSession: notFound,
       unknownSession: { isError: true, body: { error: 'session-not-found' } },
       missingRename: notFound,
+      emptyRename: { isError: true, body: { error: 'empty-update' } },
+      creationOnly: {
+        isError: true,
+        body: {
+          error: 'invalid-input',
+          fields: { songs: 'only when creating; use link_setlist or add_setlist_entries' },
+        },
+      },
       missingDelete: notFound,
       missingLink: notFound,
       missingUnlink: notFound,
@@ -367,21 +314,13 @@ describe('setlists tools (back-e2e)', () => {
       missingEntry: { isError: true, body: { error: 'entry-not-found', reference: unknownId } },
       emptyReorder: { isError: true, body: { error: 'empty-update' } },
       missingReorder: { isError: true, body: { error: 'entry-not-found', reference: unknownId } },
-      missingBoard: notFound,
-      missingStatus: notFound,
-      missingVote: notFound,
-      closedVote: notVoting,
-      missingClose: notFound,
-      closedClose: notVoting,
     });
-    expect(emptyBoard.body).not.toHaveProperty('proposal');
-    expect(emptyClose).toEqual({ isError: true, body: { error: 'no-votes' } });
   });
 
   it('pushes each setlist change to the other members only', async () => {
     const band = await prepareAssistantBand();
     const songId = await createSong(band, 'Creep');
-    await callTool(band.assistant, 'create_instrument', { name: 'Guitare', family: 'harmonic' });
+    await seedInstrument(band.hugo, { name: 'Guitare', family: 'harmonic' });
     band.send.mockClear();
     const setlistId = await createSetlist(band);
     passNotificationGroupWindow(band.harness);

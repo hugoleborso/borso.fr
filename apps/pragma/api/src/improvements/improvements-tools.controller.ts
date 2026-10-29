@@ -1,19 +1,15 @@
 import { z } from 'zod';
-import {
-  improvementCreateSchema,
-  improvementReferenceToolInputSchema,
-  improvementUpdateToolInputSchema,
-  improvementVoteToolInputSchema,
-} from './improvements.schema';
+import { improvementCreateSchema, improvementSaveToolInputSchema } from './improvements.schema';
 import {
   confirmUpdate,
   createImprovement,
+  defineDeletion,
   defineTool,
   getImprovementsForTool,
+  parseToolFields,
   patchImprovement,
   removeImprovement,
   resolveImprovementId,
-  setImprovementVote,
 } from './improvements.service';
 
 // @FollowsBlueprint controller-dispatch
@@ -29,50 +25,32 @@ export const IMPROVEMENT_TOOLS = [
     }),
   }),
   defineTool({
-    name: 'create_improvement',
-    description: 'Propose an improvement, as you.',
-    routes: ['POST /api/improvements'],
-    inputSchema: improvementCreateSchema,
-    run: async (input, actor) => {
-      const improvement = await createImprovement(input, actor.memberId, actor.now);
-      return { kind: 'answered', body: { id: improvement.id } };
-    },
-  }),
-  defineTool({
-    name: 'update_improvement',
-    description: 'Change the fields given of an improvement, named by title or id.',
-    routes: ['PUT /api/improvements/:id'],
-    inputSchema: improvementUpdateToolInputSchema,
-    run: async ({ improvement, ...changes }, actor) => {
+    name: 'save_improvement',
+    description:
+      'Propose an improvement as you (`title` required), or, with `improvement` (title or id), change only the fields given.',
+    routes: ['POST /api/improvements', 'PUT /api/improvements/:id'],
+    inputSchema: improvementSaveToolInputSchema,
+    run: async ({ improvement, ...fields }, actor) => {
+      if (improvement === undefined) {
+        const input = parseToolFields(improvementCreateSchema, fields);
+        const created = await createImprovement(input, actor.memberId, actor.now);
+        return { kind: 'answered', body: { id: created.id } };
+      }
       const id = await resolveImprovementId(improvement);
-      const outcome = await patchImprovement(id, changes, actor.memberId);
+      const outcome = await patchImprovement(id, fields, actor.memberId);
       if (outcome.kind === 'empty') return { kind: 'refused', body: { error: 'empty-update' } };
       if (outcome.kind === 'not-found') return { kind: 'refused', body: { error: outcome.kind } };
-      return { kind: 'answered', body: confirmUpdate(id, changes) };
-    },
-  }),
-  defineTool({
-    name: 'delete_improvement',
-    description: 'Delete an improvement and its votes.',
-    routes: ['DELETE /api/improvements/:id'],
-    inputSchema: improvementReferenceToolInputSchema,
-    run: async ({ improvement }) => {
-      const id = await resolveImprovementId(improvement);
-      const outcome = await removeImprovement(id);
-      if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
-      return { kind: 'answered', body: { id, deleted: true } };
-    },
-  }),
-  defineTool({
-    name: 'vote_on_improvement',
-    description: 'Vote for an improvement as you (`vote: true`), or withdraw your vote.',
-    routes: ['PUT /api/improvements/:id/vote', 'DELETE /api/improvements/:id/vote'],
-    inputSchema: improvementVoteToolInputSchema,
-    run: async ({ improvement, vote }, actor) => {
-      const id = await resolveImprovementId(improvement);
-      const view = await setImprovementVote(id, vote, actor.memberId, actor.now);
-      if (view === null) return { kind: 'refused', body: { error: 'not-found' } };
-      return { kind: 'answered', body: { id, votes: view.votes, mine: view.mine } };
+      return { kind: 'answered', body: confirmUpdate(id, fields) };
     },
   }),
 ];
+
+export const IMPROVEMENT_DELETION = defineDeletion({
+  route: 'DELETE /api/improvements/:id',
+  remove: async (reference) => {
+    const id = await resolveImprovementId(reference);
+    const outcome = await removeImprovement(id);
+    if (outcome === 'not-found') return { kind: 'refused', body: { error: outcome } };
+    return { kind: 'answered', body: { id, deleted: true } };
+  },
+});

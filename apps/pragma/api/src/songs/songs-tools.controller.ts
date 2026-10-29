@@ -1,24 +1,23 @@
 import {
   externalSearchQuerySchema,
-  songCreateToolInputSchema,
+  songCreateFieldsSchema,
   songFindToolInputSchema,
-  songMasteryReadToolInputSchema,
   songMasteryToolInputSchema,
   songReadToolInputSchema,
-  songReferenceToolInputSchema,
-  songUpdateToolInputSchema,
+  songSaveToolInputSchema,
 } from './songs.schema';
 import {
   buildSongCreate,
   buildSongUpdate,
   confirmUpdate,
   createSong,
+  defineDeletion,
   defineTool,
   listSongsForTool,
   pageItems,
+  parseToolFields,
   patchSong,
   readSongForTool,
-  readSongMasteryForTool,
   removeSong,
   resolveSongId,
   searchExternalSongs,
@@ -28,19 +27,28 @@ import {
 } from './songs.service';
 
 type SongUpdate = Parameters<typeof patchSong>[1];
+type SongCreate = Parameters<typeof createSong>[0];
 
 const SONG_PAGE_SIZE = 50;
+
+function refuseTakenDeezerTrack(holder: { id: string; title: string }): ToolAnswer {
+  return {
+    kind: 'refused',
+    body: { error: 'deezer-track-taken', songId: holder.id, songTitle: holder.title },
+  };
+}
+
+async function runSongCreate(input: SongCreate): Promise<ToolAnswer> {
+  const outcome = await createSong(input);
+  if (outcome.kind === 'deezer-track-taken') return refuseTakenDeezerTrack(outcome.holder);
+  return { kind: 'answered', body: { id: outcome.song.id, title: outcome.song.title } };
+}
 
 async function runSongUpdate(id: string, input: SongUpdate, actor: ToolActor): Promise<ToolAnswer> {
   const outcome = await patchSong(id, input, actor);
   if (outcome.kind === 'empty') return { kind: 'refused', body: { error: 'empty-update' } };
   if (outcome.kind === 'not-found') return { kind: 'refused', body: { error: 'not-found' } };
-  if (outcome.kind === 'deezer-track-taken') {
-    return {
-      kind: 'refused',
-      body: { error: outcome.kind, songId: outcome.holder.id, songTitle: outcome.holder.title },
-    };
-  }
+  if (outcome.kind === 'deezer-track-taken') return refuseTakenDeezerTrack(outcome.holder);
   return { kind: 'answered', body: confirmUpdate(id, input) };
 }
 
@@ -67,8 +75,12 @@ export const SONG_TOOLS = [
   defineTool({
     name: 'get_song',
     description:
-      'Read one song by title or id, with its lineup by name and its notes; `detail` adds the chart and links.',
-    routes: ['GET /api/songs/:id'],
+      'Read one song by title or id, with its lineup by name, its notes and the mastery scores set for it; `detail` adds the chart, links and mastery history.',
+    routes: [
+      'GET /api/songs/:id',
+      'GET /api/mastery/overrides/:songId',
+      'GET /api/mastery/history/:songId',
+    ],
     inputSchema: songReadToolInputSchema,
     run: async ({ song, detail }) => {
       const view = await readSongForTool(song, detail === true);
@@ -90,54 +102,19 @@ export const SONG_TOOLS = [
     },
   }),
   defineTool({
-    name: 'create_song',
-    description: 'Add a song to the catalogue; `defaultLineup` as in `update_song`.',
-    routes: ['POST /api/songs'],
-    inputSchema: songCreateToolInputSchema,
-    run: async ({ defaultLineup, ...input }) => {
-      const outcome = await createSong(await buildSongCreate(input, defaultLineup));
-      if (outcome.kind === 'deezer-track-taken') {
-        return {
-          kind: 'refused',
-          body: { error: outcome.kind, songId: outcome.holder.id, songTitle: outcome.holder.title },
-        };
+    name: 'save_song',
+    description:
+      'Add a song (`title` and `status` required), or, with `song` (title or id), change only the fields given. `defaultLineup` maps each member to the instrument(s) they play, by name or id; null sits a member out.',
+    routes: ['POST /api/songs', 'PUT /api/songs/:id'],
+    inputSchema: songSaveToolInputSchema,
+    run: async ({ song, defaultLineup, ...fields }, actor) => {
+      if (song === undefined) {
+        const input = parseToolFields(songCreateFieldsSchema, fields);
+        return await runSongCreate(await buildSongCreate(input, defaultLineup));
       }
-      return { kind: 'answered', body: { id: outcome.song.id, title: outcome.song.title } };
-    },
-  }),
-  defineTool({
-    name: 'update_song',
-    description:
-      'Change the fields given of a song. `defaultLineup` maps each member to the instrument(s) they play, by name or id; null sits a member out.',
-    routes: ['PUT /api/songs/:id'],
-    inputSchema: songUpdateToolInputSchema,
-    run: async ({ song, defaultLineup, ...changes }, actor) => {
       const id = await resolveSongId(song);
-      return await runSongUpdate(id, await buildSongUpdate(changes, defaultLineup), actor);
+      return await runSongUpdate(id, await buildSongUpdate(fields, defaultLineup), actor);
     },
-  }),
-  defineTool({
-    name: 'delete_song',
-    description: 'Delete a song with its takes, comments and setlist entries.',
-    routes: ['DELETE /api/songs/:id'],
-    inputSchema: songReferenceToolInputSchema,
-    run: async ({ song }) => {
-      const id = await resolveSongId(song);
-      const outcome = await removeSong(id);
-      if (outcome === 'not-found') return { kind: 'refused', body: { error: 'not-found' } };
-      return { kind: 'answered', body: { id, deleted: true } };
-    },
-  }),
-  defineTool({
-    name: 'get_song_mastery',
-    description:
-      'Read the mastery scores, 0 to 10, set for one song only (they win over the defaults); `history` adds every change.',
-    routes: ['GET /api/mastery/overrides/:songId', 'GET /api/mastery/history/:songId'],
-    inputSchema: songMasteryReadToolInputSchema,
-    run: async ({ song, history }) => ({
-      kind: 'answered',
-      body: await readSongMasteryForTool(await resolveSongId(song), history === true),
-    }),
   }),
   defineTool({
     name: 'set_song_mastery',
@@ -156,3 +133,13 @@ export const SONG_TOOLS = [
     },
   }),
 ];
+
+export const SONG_DELETION = defineDeletion({
+  route: 'DELETE /api/songs/:id',
+  remove: async (reference) => {
+    const id = await resolveSongId(reference);
+    const outcome = await removeSong(id);
+    if (outcome === 'not-found') return { kind: 'refused', body: { error: 'not-found' } };
+    return { kind: 'answered', body: { id, deleted: true } };
+  },
+});

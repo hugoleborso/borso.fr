@@ -1267,13 +1267,22 @@ its own slice as `<domain>-tools.controller.ts`
   is null or empty, and a short confirmation for a write. A refusal is a
   tool error carrying the route's `{ error }` code; an unexpected throw is
   reported as `McpToolFailed` and answers `internal-error`.
+- A `save_<noun>` tool both creates and changes: without a reference it
+  creates, and a creation missing a required field answers `invalid-input`
+  with the fields; with a reference it changes only the fields given. One
+  `delete` tool takes `{ kind, id }` for a bar, improvement, session,
+  setlist, song, take or task, and its description tells the assistant to
+  confirm with the user first.
 - Every mounted route has a tool, unless `TOOL_EXCLUSIONS` in
   `mcp/tool-coverage.core.ts` names it with a reason: credentials,
-  state bound to one browser, the audience ballot, the test seed, and the
-  OAuth and MCP endpoints themselves. A route with neither, a tool naming a
-  route that is gone, and an exclusion matching no route each fail
-  `mcp/tool-coverage.test.ts`. One tool may cover several routes, as
-  `get_setlist` reads a setlist and its entries and `set_mastery_default`
+  state bound to one browser, the audience ballot, the test seed, the
+  OAuth and MCP endpoints themselves, and what the operator kept away from
+  assistants on 2026-10-29 (every vote, notification preferences, take and
+  transition comments, the instrument list, mastery defaults, the outreach
+  template, and adding, renaming or removing members). A route with neither,
+  a tool naming a route that is gone, and an exclusion matching no route each
+  fail `mcp/tool-coverage.test.ts`. One tool may cover several routes, as
+  `get_setlist` reads a setlist and its entries and `set_song_mastery`
   both writes and removes a score.
 - The size of the tool list and of the answers to ten typical band tasks
   are budgets held by `mcp/tool-budget.test.ts`.
@@ -1281,21 +1290,18 @@ its own slice as `<domain>-tools.controller.ts`
 Held by: `api/src/mcp/mcp.controller.test.ts` › answers 401 with the protected resource metadata address to a call without a valid token
 Held by: `api/src/mcp/mcp.controller.test.ts` › lists every served tool, advertises tools only, and serves two clients at once with no session
 Held by: `api/src/songs/songs-tools.controller.test.ts` › answers the refusal codes the routes answer
-Held by: `api/src/transitions/transitions-tools.controller.test.ts` › writes, reads, lists and deletes a transition comment, pushing the change to the other members only
 Held by: `api/src/sessions/sessions-tools.controller.test.ts` › creates a concert with the fields the route requires
-Held by: `api/src/setlists/setlists-tools.controller.test.ts` › runs an audience vote as the member, from opening to closing
 Held by: `api/src/setlists/setlists-tools.controller.test.ts` › pushes each setlist change to the other members only
+Held by: `api/src/setlists/setlists-tools.controller.test.ts` › reads what the band wrote about each transition into the next song, which the tools never write
 Held by: `api/src/takes/takes-tools.controller.test.ts` › signs an upload, then records the take as the granting member
-Held by: `api/src/takes/takes-tools.controller.test.ts` › comments on a take as the granting member, edits the comment, then deletes it
 Held by: `api/src/mcp/tool-coverage.test.ts` › serves a tool for every mounted route that is not excluded with a reason
 Held by: `api/src/mcp/tool-coverage.test.ts` › maps every tool to a route that is mounted
 Held by: `api/src/mcp/tool-coverage.test.ts` › keeps no exclusion for a route that is no longer mounted
 Held by: `api/src/mcp/tool-coverage.core.test.ts` › reports an exclusion that matches no mounted endpoint as stale
 Held by: `api/src/mcp/tool-budget.test.ts` › answers each typical band task within its budget of calls and characters
-Held by: `api/src/improvements/improvements-tools.controller.test.ts` › proposes an improvement and votes for it as the granting member, which the other member sees as not theirs
-Held by: `api/src/studies/studies-tools.controller.test.ts` › logs a study of today as the granting member, shows it in the overview, then undoes it
+Held by: `api/src/improvements/improvements-tools.controller.test.ts` › proposes an improvement as the granting member, and lists whether that member voted for it
+Held by: `api/src/me/me-tools.controller.test.ts` › logs a study of today as the granting member, shows it in get_me, then undoes it
 Held by: `api/src/me/me-tools.controller.test.ts` › reads the granting member, and changes only their own contact details
-Held by: `api/src/notifications/notifications-tools.controller.test.ts` › turns a category off for the granting member only
 
 Not to be confused with: a route, which a browser calls with a cookie; a
 tool calls the same service with a bearer token.
@@ -1334,6 +1340,8 @@ Lives in: `api/src/transitions/`
   separate rows.
 - `comment` is `NOT NULL`, trimmed, 1 to 4 096 characters. `updatedAt` is
   `NOT NULL` and defaults to the write time.
+- An assistant reads it, as `transitionComment` on the setlist entry it
+  leaves from in `get_setlist`, and never writes it.
 
 Held by: `api/src/transitions/transitions.controller.test.ts` › treats A→B and B→A as distinct rows
 Held by: `api/src/transitions/transitions.schema.test.ts` › refuses whitespace alone, which would read as a comment and say nothing

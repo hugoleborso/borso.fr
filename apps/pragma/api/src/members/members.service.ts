@@ -96,4 +96,4 @@ export {
   resolveMemberId,
   resolveOptionalInstrumentIds,
 } from '../instruments/instruments.service';
-export { confirmUpdate, defineTool } from '../mcp/mcp.service';
+export { defineTool } from '../mcp/mcp.service';

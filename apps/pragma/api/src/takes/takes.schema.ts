@@ -100,23 +100,12 @@ const takeChoiceShape = {
 
 export const takeListToolInputSchema = z.object({ song: referenceSchema, ...pageInputShape });
 export const takeReadToolInputSchema = z.object(takeChoiceShape);
-export const takeReferenceToolInputSchema = z.object({ take: z.string().uuid() });
 export const takeSignToolInputSchema = z.object({
   takeId: z.string().uuid(),
   song: referenceSchema,
   contentType: takeContentTypeSchema,
   contentLength: z.number().int().positive().max(TAKE_MAX_BYTES),
 });
-export const takeCommentCreateToolInputSchema = z
-  .object(takeChoiceShape)
-  .merge(takeCommentCreateSchema.strip());
-export const takeCommentPathToolInputSchema = z.object({
-  take: z.string().uuid(),
-  comment: z.string().uuid(),
-});
-export const takeCommentUpdateToolInputSchema = takeCommentPathToolInputSchema.merge(
-  takeCommentChangesSchema.strip(),
-);
 
 export type TakeSignInput = z.infer<typeof takeSignSchema>;
 export type TakeCreateInput = z.infer<typeof takeCreateSchema>;

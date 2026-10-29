@@ -115,18 +115,14 @@ export const songFindToolInputSchema = z.object({
   status: z.enum(SONG_STATUSES).optional(),
   ...pageInputShape,
 });
-export const songCreateToolInputSchema = songCreateInputSchema
-  .omit({ defaultLineup: true })
-  .extend({ defaultLineup: namedLineupSchema.optional() });
-export const songMasteryReadToolInputSchema = songReferenceToolInputSchema.extend({
-  history: z.boolean().optional(),
-});
+export const songCreateFieldsSchema = songCreateInputSchema.omit({ defaultLineup: true });
 export const songMasteryToolInputSchema = songReferenceToolInputSchema.extend({
   member: referenceSchema,
   instrument: referenceSchema,
   score: masteryScoreSchema.nullable(),
 });
-export const songUpdateToolInputSchema = songReferenceToolInputSchema
+export const songSaveToolInputSchema = z
+  .object({ song: referenceSchema.optional() })
   .merge(songUpdateInputSchema.omit({ defaultLineup: true }))
   .extend({ defaultLineup: namedLineupSchema.optional() });
 export const externalSearchQuerySchema = z.object({

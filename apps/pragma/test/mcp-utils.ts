@@ -212,3 +212,17 @@ export function useAssistantToolSuite(): void {
 export function refusal(error: string): ToolReply {
   return { isError: true, body: { error } };
 }
+
+const seededInstrumentSchema = z.object({ instrument: z.object({ id: z.string().uuid() }) });
+
+export async function seedInstrument(
+  member: AuthenticatedApp,
+  instrument: { readonly name: string; readonly family: string },
+): Promise<string> {
+  const response = await jsonRequest(member.app, '/api/instruments', {
+    method: 'POST',
+    cookieHeader: member.cookieHeader,
+    body: instrument,
+  });
+  return (await readJson(response, seededInstrumentSchema)).instrument.id;
+}

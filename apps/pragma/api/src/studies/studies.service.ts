@@ -269,4 +269,3 @@ export async function writeStudyForTool(
 }
 
 export { describeOwnLine } from './study-tool.core';
-export { defineTool } from '../mcp/mcp.service';

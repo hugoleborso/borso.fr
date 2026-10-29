@@ -5,10 +5,10 @@ import {
   callTool,
   prepareAssistantBand,
   refusal,
+  seedInstrument,
   useAssistantToolSuite,
 } from '../../../test/mcp-utils';
 
-const createdSchema = z.object({ id: z.string().uuid(), firstName: z.string() });
 const membersBodySchema = z.object({
   members: z.array(
     z.object({
@@ -26,55 +26,31 @@ const membersBodySchema = z.object({
 describe('members tools (back-e2e)', () => {
   useAssistantToolSuite();
 
-  it('adds a member, renames them, gives them an instrument by name, then removes them', async () => {
+  it('gives a member an instrument by name, and lists the members with what each plays', async () => {
     const band = await prepareAssistantBand();
-    await callTool(band.assistant, 'create_instrument', { name: 'Keys', family: 'harmonic' });
+    await seedInstrument(band.hugo, { name: 'Keys', family: 'harmonic' });
 
-    const member = createdSchema.parse(
-      (await callTool(band.assistant, 'create_member', { firstName: 'Tom' })).body,
-    );
-    const renamed = await callTool(band.assistant, 'update_member', {
-      member: 'tom',
-      firstName: 'Thomas',
-    });
     const assigned = await callTool(band.assistant, 'set_member_instruments', {
-      member: 'Thomas',
+      member: 'lea',
       instruments: ['keys'],
       main: ['Keys'],
     });
     const listed = membersBodySchema.parse((await callTool(band.assistant, 'list_members')).body);
-    const removed = await callTool(band.assistant, 'delete_member', { member: member.id });
-    const remaining = membersBodySchema.parse(
-      (await callTool(band.assistant, 'list_members')).body,
-    );
 
-    expect(renamed).toEqual({ isError: false, body: { id: member.id, updated: ['firstName'] } });
-    expect(assigned).toEqual({ isError: false, body: { id: member.id, instruments: ['keys'] } });
+    expect(assigned).toEqual({
+      isError: false,
+      body: { id: band.lea.memberId, instruments: ['keys'] },
+    });
     expect(listed.members).toContainEqual(
-      expect.objectContaining({ firstName: 'Thomas', instruments: ['Keys'], main: ['Keys'] }),
+      expect.objectContaining({ firstName: 'Léa', instruments: ['Keys'], main: ['Keys'] }),
     );
-    expect(listed.members.map((listedMember) => listedMember.firstName)).toEqual([
-      'Hugo',
-      'Léa',
-      'Thomas',
-    ]);
-    expect(removed).toEqual({ isError: false, body: { id: member.id, deleted: true } });
-    expect(remaining.members.map((listedMember) => listedMember.id)).not.toContain(member.id);
+    expect(listed.members.map((listedMember) => listedMember.firstName)).toEqual(['Hugo', 'Léa']);
   });
 
-  it('answers the refusal codes the routes answer, and names a reference nothing matches', async () => {
+  it('answers the refusal codes the route answers, and names a reference nothing matches', async () => {
     const band = await prepareAssistantBand();
     const unknownId = randomUUID();
 
-    expect(await callTool(band.assistant, 'update_member', { member: 'Léa' })).toEqual(
-      refusal('empty-update'),
-    );
-    expect(
-      await callTool(band.assistant, 'update_member', { member: unknownId, firstName: 'Ghost' }),
-    ).toEqual(refusal('not-found'));
-    expect(await callTool(band.assistant, 'delete_member', { member: unknownId })).toEqual(
-      refusal('not-found'),
-    );
     expect(
       await callTool(band.assistant, 'set_member_instruments', {
         member: unknownId,
@@ -87,9 +63,11 @@ describe('members tools (back-e2e)', () => {
         instruments: ['Theremin'],
       }),
     ).toEqual({ isError: true, body: { error: 'instrument-not-found', reference: 'Theremin' } });
-    expect(await callTool(band.assistant, 'delete_member', { member: 'Ghost' })).toEqual({
-      isError: true,
-      body: { error: 'member-not-found', reference: 'Ghost' },
-    });
+    expect(
+      await callTool(band.assistant, 'set_member_instruments', {
+        member: 'Ghost',
+        instruments: [],
+      }),
+    ).toEqual({ isError: true, body: { error: 'member-not-found', reference: 'Ghost' } });
   });
 });

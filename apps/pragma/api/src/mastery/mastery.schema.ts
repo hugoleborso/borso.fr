@@ -1,7 +1,6 @@
 import { MASTERY_SCORE_MAX, MASTERY_SCORE_MIN } from '@domain/input-limits.core';
 import { integer, pgTable, primaryKey, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
-import { referenceSchema } from '../mcp/tool-input.schema';
 
 // @FollowsBlueprint schema-table-and-input
 export const masteryDefaultTable = pgTable(
@@ -59,9 +58,3 @@ export const masteryOverridePathSchema = masteryDefaultPathSchema.extend({
 });
 
 export const masterySongIdParamSchema = z.object({ songId: z.string().uuid() });
-export const masteryDefaultsListToolInputSchema = z.object({ member: referenceSchema.optional() });
-export const masteryDefaultToolInputSchema = z.object({
-  member: referenceSchema,
-  instrument: referenceSchema,
-  score: masteryScoreSchema.nullable(),
-});
