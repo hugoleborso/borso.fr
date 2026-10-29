@@ -175,6 +175,12 @@ describe('listTokenUtilityCandidates', () => {
     ).toEqual(['!rounded-pill', 'border-t-rule', 'hover:bg-surface', 'shadow-leaf', 'text-meta']);
   });
 
+  it('keeps an arbitrary variant whose selector names an attribute value as one class', () => {
+    expect(
+      listTokenUtilityCandidates("className='has-[[data-a]_[role=tablist]]:border-b-0'"),
+    ).toEqual(['has-[[data-a]_[role=tablist]]:border-b-0']);
+  });
+
   it('reads the utility a variant-prefixed or important class applies', () => {
     expect(readUtilityName('lg:hover:!bg-paper')).toBe('bg-paper');
     expect(readUtilityName('text-ink')).toBe('text-ink');

@@ -91,7 +91,7 @@ export function measureTokenContrast(
   return contrastRatio(compositeOver(text, background), background);
 }
 
-const CLASS_TOKEN = /[!a-z0-9:/._%&[\]-]+/giu;
+const CLASS_TOKEN = /[!a-z0-9:/._%&=[\]-]+/giu;
 const TOKEN_UTILITY_ROOT =
   /^-?(?:(?:bg|text|border(?:-[trblxyse])?|ring|ring-offset|outline|fill|stroke|divide|from|via|to|decoration|placeholder|caret|accent)-|(?:rounded|shadow)(?:-|$))/u;
 
