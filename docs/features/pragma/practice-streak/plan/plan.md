@@ -30,7 +30,7 @@ These choices sit inside the spec's frame, so they are decided here rather than 
 | D5 | The job sends only when the Paris wall hour is 20 or later. Otherwise it logs `streak_reminder_skipped` and returns. The Scheduler target also sets `maxEventAge: Duration.hours(1)` and `retryAttempts: 2`. | A retry after midnight would compute the next day and push "Log a study before midnight" at 00:30. Scheduler keeps the 20:00 time, and this guard only refuses a late retry. |
 | D6 | Pushes go out to all members in parallel. Each member's send is bounded by the existing 5 s deadline. | `API_TIMEOUT_SECONDS` is 20 (read in `cdk/lib/stack.ts`). Five sequential 5 s deadlines would be 25 s. |
 | D7 | Push text lives in `site/public/sw.js` `NOTIFICATION_TEXT`, the way every other push does, not in `en.json`/`fr.json`. There are three message keys: `streak-at-risk` (`{days}`), `streak-band-count` (`{count}`, count ≥ 2) and `streak-band-count-one`. | The worker renders `messageKey` + `parameters` and has no plural rules. The API picks the singular key itself. |
-| D8 | The undo route answers `200 { songId, instrumentId, deleted: true }`, and `POST /api/studies` answers `201 { study }`. Neither carries `myLine`. | The spec drops `myLine`. The `{ …, deleted: true }` shape follows `songs.controller.ts`. |
+| D8 | The undo route answers `200 { songId, instrumentId, deleted: true, streaks }`, and `POST /api/studies` answers `201 { study, streaks }`, where `streaks` is the member's `StreaksView` read in the write's transaction. Neither carries `myLine`. | The spec drops `myLine`. A refetch on another Lambda can miss the write (`docs/knowledge/dsql-strong-consistency-is-per-connection.md`), so the site sets the flames from the answer. Changed after technical validation round 1. |
 | D9 | A failed flame read hides the chips and the sheet. The API's request trace already reports a 5xx to Sentry, so the site adds no reporter. | The spec says "logs the error". The server-side report covers a 5xx. A network failure is the same offline state every other Home query has. |
 | D10 | The band chip shows the `members` glyph and the count. The flame glyph is on the personal chip only. | This follows the spec's ASCII `[👥 4]`. |
 | D11 | The sheet says "No flame yet" whenever a flame is 0. Its member rows are sorted by first name (`getMembersSortedByFirstName`), and the signed-in member is included. | The spec is silent on order. The first-name order is the one the members list already uses. |
@@ -97,14 +97,14 @@ The callers pass only days up to and including `today`. A future day in the set 
 |---|---|---|
 | `api/src/streaks/streaks.types.ts` | NEW, `StreaksView`, `MemberFlame` | `domain-types-module` |
 | `api/src/streaks/streaks.core.ts` (+ test) | NEW, `buildStreaksView(input)`, `collectSessionDays(sessions, firstDay, today)` and `projectStreaksForTool(view)` | `core-projection` |
-| `api/src/streaks/streaks.service.ts` | NEW, `STREAK_LOOKBACK_DAYS = 400` moved here, `readStreaks(memberId, now)` and `readPersonalFlame(memberId, now)` | `service-clock-injected` |
+| `api/src/streaks/streaks.service.ts` | NEW (`STREAK_LOOKBACK_DAYS = 400` and `firstLookbackDay` live in `streaks.core.ts`), `readStreaks(memberId, now)` and `readPersonalFlame(memberId, now)` | `service-clock-injected` |
 | `api/src/streaks/streaks.controller.ts` | NEW, `buildStreaksRouter()` with `.use('*', requireMemberSession).get('/', …)` | `controller-dispatch` |
 | `api/src/streaks/streaks.controller.test.ts` | NEW | `test-back-e2e` |
 | `api/src/app.ts` | `.route('/api/streaks', buildStreaksRouter())` inside the one chained expression | (existing `api-composition-root`) |
 | `api/src/studies/streak.core.ts`, `band-streaks.core.ts` (+ tests) | DELETE | |
 | `api/src/studies/studies.types.ts` | drop `myStreak`, `band`, `BandMemberStreak` and `myLine` from both outcomes | |
-| `api/src/studies/studies.service.ts` | drop `readOwnLine`, `buildMemberStreaks` and `computeStreak`. Add passthroughs `listStudyDaysSince(firstDay)` and `listStudyDaysOfMemberSince(memberId, firstDay)`, because the streaks slice reads studies through the service. | `service-passthrough` |
-| `api/src/studies/studies.controller.ts` | `201 { study }` and undo `200 { songId, instrumentId, deleted: true }` (D8) | |
+| `api/src/studies/studies.service.ts` | drop `readOwnLine`, `buildMemberStreaks` and `computeStreak`. Add `readFlameInputs`, `logStudyWithStreaks` and `undoStudyWithStreaks` (write and study read in one transaction) and re-export `listStudiesOfMemberSince`; `streaks.service` reads from `studies.service`, which keeps `import/no-cycle` clean. | `service-passthrough` |
+| `api/src/studies/studies.controller.ts` | `201 { study, streaks }` and undo `200 { songId, instrumentId, deleted: true, streaks }` (D8) | |
 | `api/src/studies/study-tool.core.ts` (+ test) | drop `describeStreak`, `describeOwnLine`, `myStreak` and `band` from the projection | |
 | `api/src/studies/studies.controller.test.ts` | drop streak assertions. Rename "logs a study once per day and counts it in the streak" to "logs a study once per day". | |
 | `api/src/me/me.service.ts` | `readMeForTool` adds `flames: projectStreaksForTool(await readStreaks(...))`. `logOwnStudy` returns `{ flame: await readPersonalFlame(...) }`, and `OwnStudyLine` becomes that type. | |
@@ -132,7 +132,7 @@ interface StreaksInput {
 }
 ```
 
-`buildStreaksView` forms each member's active set as their study days ∪ `sessionDays`, and the band's as the union over current members ∪ `sessionDays`. A study of a member missing from `members` is ignored, so a deleted member drops out of the band. When the signed-in member is not in `members`, `mine` is the empty flame. `collectSessionDays` maps `parisCalendarDay(session.date)` and keeps days in `[firstLookbackDay, today]`, so a future session counts only once its day comes. The service reads `getSessions(now)`, `getMembersSortedByFirstName()` and `listStudyDaysSince(...)` in one `Promise.all`.
+`buildStreaksView` forms each member's active set as their study days ∪ `sessionDays`, and the band's as the union over current members ∪ `sessionDays`. A study of a member missing from `members` is ignored, so a deleted member drops out of the band. When the signed-in member is not in `members`, `mine` is the empty flame. `collectSessionDays` maps `parisCalendarDay(session.date)` and keeps days in `[firstLookbackDay, today]`, so a future session counts only once its day comes. The service reads `getSessions(now)`, `getMembersSortedByFirstName()` and the band's studies since `firstLookbackDay` in one `Promise.all` (`readFlameInputs`).
 
 `projectStreaksForTool(view)` returns `{ mine, band, members: [{ firstName, days, isTodayCounted }] }`. Ids and colours are left out because a model pays for every character.
 

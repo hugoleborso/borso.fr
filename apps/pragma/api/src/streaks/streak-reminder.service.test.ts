@@ -111,6 +111,18 @@ afterEach(() => {
 
 // @FollowsBlueprint test-back-e2e
 describe('the 20:00 streak reminder (back-e2e)', () => {
+  it('sends one push per open member when two runs fire at the same time', async () => {
+    const band = await prepareBand();
+
+    await Promise.all([runStreakReminder(PARIS_EVENING), runStreakReminder(PARIS_EVENING)]);
+
+    const sentEndpoints = readSentNotifications(band.send).map((sent) => sent.endpoint);
+    expect(sentEndpoints.sort()).toEqual([
+      deviceEndpoint('hugo-phone'),
+      deviceEndpoint('tom-phone'),
+    ]);
+  });
+
   it('sends one push per open member and claims each group once when run twice', async () => {
     const band = await prepareBand();
 

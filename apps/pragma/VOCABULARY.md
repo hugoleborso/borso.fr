@@ -1204,10 +1204,11 @@ Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
 - Shown on Home as two chips that open the streak sheet: the member's own
   flame and the band's. The flame is `accent` once today counts,
   `accent-soft` with an `accent` outline while today is open, and
-  `ink-faint` at 0. Logging or undoing a study marks it stale.
+  `ink-faint` at 0. Logging or undoing a study settles it from the flames
+  the write answers, read in the write's own transaction.
 
 Held by: `site/src/routes/home/HomePage.test.tsx` › puts both flames on the title line, and a tap on either opens the streak sheet
-Held by: `site/src/lib/queries/streaks.queries.test.tsx` › marks the flames stale once a study is logged
+Held by: `site/src/lib/queries/streaks.queries.test.tsx` › settles the flames from the answer once a study is logged
 Held by: `domain/practice-flame.core.test.ts` › keeps a run ending yesterday alive while today is still open
 Held by: `domain/practice-flame.core.test.ts` › bridges a gap that ends yesterday while today is open (Q-A)
 Held by: `domain/practice-flame.core.test.ts` › bridges a gap that crosses a Monday with each week’s own jokers

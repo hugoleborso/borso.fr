@@ -1,10 +1,12 @@
-import { type CalendarDay, parisCalendarDay } from '@domain/paris-day.core';
+import { type CalendarDay, parisCalendarDay, shiftCalendarDay } from '@domain/paris-day.core';
 import {
   computeBandFlame,
   computePersonalFlame,
   type PersonalFlame,
 } from '@domain/practice-flame.core';
 import type { MemberFlame, StreaksView } from './streaks.types';
+
+export const STREAK_LOOKBACK_DAYS = 400;
 
 interface StreaksMember {
   readonly id: string;
@@ -48,6 +50,10 @@ function activeDaysOf(
     .filter((study) => study.memberId === memberId)
     .map((study) => study.studiedOn);
   return new Set([...sessionDays, ...ownStudyDays]);
+}
+
+export function firstLookbackDay(today: CalendarDay): CalendarDay {
+  return shiftCalendarDay(today, -STREAK_LOOKBACK_DAYS);
 }
 
 export function collectSessionDays(

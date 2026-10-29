@@ -20,6 +20,10 @@ const STREAKS = {
   band: { days: 4, isTodayCounted: true },
   members: [],
 };
+const STREAKS_AFTER_WRITE = {
+  ...STREAKS,
+  mine: { days: 13, isTodayCounted: true, jokersLeftThisWeek: 2 },
+};
 const TARGET = { songId: 'song-1', instrumentId: 'guitar-1' };
 
 type LogStudy = ReturnType<typeof useLogStudy>['mutateAsync'];
@@ -85,28 +89,37 @@ describe('the study mutations and the flames', () => {
     stub?.restore();
   });
 
-  it('marks the flames stale once a study is logged', async () => {
+  it('settles the flames from the answer once a study is logged', async () => {
     const queryClient = createIsolatedQueryClient();
     seedStreaks(queryClient);
     stub = stubFetch(() =>
-      Promise.resolve(jsonResponse({ study: { ...TARGET, studiedOn: STREAKS.today } }, 201)),
+      Promise.resolve(
+        jsonResponse(
+          { study: { ...TARGET, studiedOn: STREAKS.today }, streaks: STREAKS_AFTER_WRITE },
+          201,
+        ),
+      ),
     );
     const slot = createMutateSlot<LogStudy>();
     tree = mountWithClient(queryClient, <ProbeLog sink={slot.sink} />);
     await slot.read()(TARGET);
     await flushMicrotasks();
-    expect(isStreaksStale(queryClient)).toBe(true);
+    expect(queryClient.getQueryData(streakKeys.all)).toEqual(STREAKS_AFTER_WRITE);
+    expect(isStreaksStale(queryClient)).toBe(false);
   });
 
-  it('marks the flames stale once a study is undone', async () => {
+  it('settles the flames from the answer once a study is undone', async () => {
     const queryClient = createIsolatedQueryClient();
     seedStreaks(queryClient);
-    stub = stubFetch(() => Promise.resolve(jsonResponse({ ...TARGET, deleted: true })));
+    stub = stubFetch(() =>
+      Promise.resolve(jsonResponse({ ...TARGET, deleted: true, streaks: STREAKS_AFTER_WRITE })),
+    );
     const slot = createMutateSlot<UndoStudy>();
     tree = mountWithClient(queryClient, <ProbeUndo sink={slot.sink} />);
     await slot.read()(TARGET);
     await flushMicrotasks();
-    expect(isStreaksStale(queryClient)).toBe(true);
+    expect(queryClient.getQueryData(streakKeys.all)).toEqual(STREAKS_AFTER_WRITE);
+    expect(isStreaksStale(queryClient)).toBe(false);
   });
 
   it('leaves the flames alone when the study is refused', async () => {
@@ -116,6 +129,7 @@ describe('the study mutations and the flames', () => {
     const slot = createMutateSlot<LogStudy>();
     tree = mountWithClient(queryClient, <ProbeLog sink={slot.sink} />);
     await expect(slot.read()(TARGET)).rejects.toBeInstanceOf(ApiError);
+    expect(queryClient.getQueryData(streakKeys.all)).toEqual(STREAKS);
     expect(isStreaksStale(queryClient)).toBe(false);
   });
 });

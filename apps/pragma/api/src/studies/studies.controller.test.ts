@@ -34,6 +34,10 @@ const overviewSchema = z.object({
     .nullable(),
 });
 
+const mineSchema = z.object({
+  mine: z.object({ days: z.number(), isTodayCounted: z.boolean() }),
+});
+
 const FUTURE_CONCERT_DATE = '2099-06-21T20:00:00.000Z';
 
 async function createId(
@@ -106,6 +110,8 @@ describe('studies controller (back-e2e)', () => {
 
     expect(first.status).toBe(201);
     expect(second.status).toBe(201);
+    const { streaks } = await readJson(first, z.object({ streaks: mineSchema }));
+    expect(streaks.mine).toEqual({ days: 1, isTodayCounted: true });
     expect(await testDatabase().select().from(studyTable)).toHaveLength(1);
     const overview = await readOverview(app, cookieHeader);
     expect(overview.queue).toEqual([
@@ -216,12 +222,23 @@ describe('studies controller (back-e2e)', () => {
       cookieHeader,
     });
     expect(undone.status).toBe(200);
-    expect(
-      await readJson(
-        undone,
-        z.object({ songId: z.string(), instrumentId: z.string(), deleted: z.boolean() }).strict(),
-      ),
-    ).toEqual({ songId, instrumentId, deleted: true });
+    const undoneBody = await readJson(
+      undone,
+      z
+        .object({
+          songId: z.string(),
+          instrumentId: z.string(),
+          deleted: z.boolean(),
+          streaks: mineSchema,
+        })
+        .strict(),
+    );
+    expect(undoneBody).toEqual({
+      songId,
+      instrumentId,
+      deleted: true,
+      streaks: { mine: { days: 0, isTodayCounted: false } },
+    });
     expect(again.status).toBe(404);
   });
 

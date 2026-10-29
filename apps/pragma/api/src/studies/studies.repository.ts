@@ -32,8 +32,11 @@ export async function insertStudyIfAbsentWithin(
     .onConflictDoNothing();
 }
 
-export async function deleteStudy(study: StudyRow): Promise<number> {
-  const deleted = await getDatabase()
+export async function deleteStudyWithin(
+  executor: DatabaseExecutor,
+  study: StudyRow,
+): Promise<number> {
+  const deleted = await executor
     .delete(studyTable)
     .where(
       and(
@@ -47,11 +50,18 @@ export async function deleteStudy(study: StudyRow): Promise<number> {
   return deleted.length;
 }
 
-export async function listStudiesSince(firstDay: CalendarDay): Promise<StudyRow[]> {
-  return await getDatabase()
+export async function listStudiesSinceWithin(
+  executor: DatabaseExecutor,
+  firstDay: CalendarDay,
+): Promise<StudyRow[]> {
+  return await executor
     .select(STUDY_PROJECTION)
     .from(studyTable)
     .where(gte(studyTable.studiedOn, firstDay));
+}
+
+export async function listStudiesSince(firstDay: CalendarDay): Promise<StudyRow[]> {
+  return await listStudiesSinceWithin(getDatabase(), firstDay);
 }
 
 export async function listStudiesOfMemberSince(

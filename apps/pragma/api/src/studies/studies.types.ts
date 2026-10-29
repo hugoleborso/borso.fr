@@ -1,4 +1,5 @@
 import type { CalendarDay } from '@domain/paris-day.core';
+import type { StreaksView } from '../streaks/streaks.types';
 import type { StudyQueueItem } from './study-queue.core';
 
 export interface StudyRow {
@@ -34,3 +35,11 @@ export type StudyWriteOutcome =
   | { readonly kind: 'study-not-in-lineup' };
 
 export type StudyUndoOutcome = { readonly kind: 'ok' } | { readonly kind: 'study-not-found' };
+
+export type StudyWriteWithStreaks =
+  | (Extract<StudyWriteOutcome, { kind: 'ok' }> & { readonly streaks: StreaksView })
+  | Exclude<StudyWriteOutcome, { kind: 'ok' }>;
+
+export type StudyUndoWithStreaks =
+  | { readonly kind: 'ok'; readonly streaks: StreaksView }
+  | Exclude<StudyUndoOutcome, { kind: 'ok' }>;

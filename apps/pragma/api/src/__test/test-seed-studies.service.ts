@@ -1,7 +1,5 @@
 import { logStudy } from '../studies/studies.service';
-import { SEED_STUDIES } from './test-seed-studies.core';
-
-const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
+import { SEED_STUDIES, seedStudyInstant } from './test-seed-studies.core';
 
 // @FollowsBlueprint service-clock-injected
 export async function seedStudies(
@@ -15,7 +13,7 @@ export async function seedStudies(
       memberId: memberIdByName.get(seed.memberFirstName) ?? '',
       songId: songIdByTitle.get(seed.songTitle) ?? '',
       instrumentId: instrumentIdByName.get(seed.instrumentName) ?? '',
-      now: new Date(now.getTime() - seed.daysAgo * MILLISECONDS_PER_DAY),
+      now: seedStudyInstant(now, seed.daysAgo),
     });
     if (logged.kind !== 'ok') {
       throw new Error(`seed study of ${seed.memberFirstName}: ${logged.kind}`);

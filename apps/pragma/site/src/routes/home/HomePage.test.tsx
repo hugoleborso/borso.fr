@@ -1,5 +1,5 @@
-import { QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, within } from '@testing-library/react';
+import { type QueryClient, QueryClientProvider } from '@tanstack/react-query';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { MemoryRouter } from 'react-router-dom';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import '../../i18n/i18n.setup';
@@ -10,6 +10,7 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
+import { streakKeys } from '../../lib/queries/streaks.queries';
 import { recordProductEvent } from '../../observability/product-event.adapter';
 import { HomePage } from './HomePage';
 
@@ -117,9 +118,9 @@ function answerHomeApi(sessions: readonly unknown[], streaksStatus = 200) {
   };
 }
 
-function renderHomePage(): void {
+function renderHomePage(queryClient: QueryClient = createIsolatedQueryClient()): void {
   render(
-    <QueryClientProvider client={createIsolatedQueryClient()}>
+    <QueryClientProvider client={queryClient}>
       <MemoryRouter>
         <HomePage />
       </MemoryRouter>
@@ -242,7 +243,9 @@ describe('the home page', () => {
   it('shows no flame when the flames cannot be read, and the rest of Home still works', async () => {
     const answer = answerHomeApi([NEXT_PRACTICE], 500);
     stub = stubFetch((request) => Promise.resolve(answer(request)));
-    renderHomePage();
+    const queryClient = createIsolatedQueryClient();
+    renderHomePage(queryClient);
+    await waitFor(() => expect(queryClient.getQueryState(streakKeys.all)?.status).toBe('error'));
     expect(await screen.findByRole('region', { name: 'Next session' })).toBeTruthy();
     await screen.findByRole('link', { name: 'Open the setlist' });
     expect(screen.queryByRole('button', { name: /flame/ })).toBe(null);

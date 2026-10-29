@@ -4,6 +4,7 @@ import {
   buildOwnFlame,
   buildStreaksView,
   collectSessionDays,
+  firstLookbackDay,
   projectStreaksForTool,
 } from './streaks.core';
 
@@ -153,5 +154,11 @@ describe('projectStreaksForTool', () => {
       band: { days: 1, isTodayCounted: true },
       members: [{ firstName: 'Léa', days: 1, isTodayCounted: true }],
     });
+  });
+});
+
+describe('firstLookbackDay', () => {
+  it('reads 400 calendar days back from today', () => {
+    expect(firstLookbackDay(TODAY)).toBe('2025-09-24');
   });
 });
