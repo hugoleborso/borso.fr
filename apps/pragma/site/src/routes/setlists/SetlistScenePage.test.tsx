@@ -174,19 +174,19 @@ describe('SetlistScenePage', () => {
   it('marks the song being played as the current pill', () => {
     pressKey(container, 'ArrowRight');
     const current = container.querySelector('button[aria-current="true"]');
-    expect(current?.textContent).toContain('Helpless');
+    expect(current?.getAttribute('aria-label')).toContain('Helpless');
   });
 
   it('turns auto-scroll on and off from the same button', () => {
-    const toggle = Array.from(container.querySelectorAll('button')).find((button) =>
-      button.textContent.includes('Auto-scroll'),
+    const toggle = Array.from(container.querySelectorAll('button')).find(
+      (button) => button.getAttribute('aria-label') === 'Auto-scroll',
     );
     if (toggle === undefined) throw new TypeError('the controls rendered no auto-scroll button');
     clickButton(toggle);
     const running = Array.from(container.querySelectorAll('button')).find(
       (button) => button.getAttribute('aria-pressed') === 'true',
     );
-    expect(running?.textContent).toContain('Stop');
+    expect(running?.getAttribute('aria-label')).toBe('Stop');
   });
 });
 

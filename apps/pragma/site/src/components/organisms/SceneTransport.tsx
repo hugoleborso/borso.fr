@@ -26,7 +26,7 @@ export function SceneTransport({
 }: SceneTransportProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="shrink-0 flex items-stretch gap-2 px-3 sm:px-6 py-3 border-t border-stage-line bg-stage-bg pb-[calc(0.75rem+env(safe-area-inset-bottom))]">
+    <div className="shrink-0 flex items-center gap-2 px-3 sm:px-6 py-1.5 border-t border-stage-line bg-stage-bg pb-[calc(0.375rem+env(safe-area-inset-bottom))]">
       <IconButton
         variant="stage"
         icon="chevL"
@@ -36,7 +36,7 @@ export function SceneTransport({
       />
       <nav
         aria-label={t('scene.rail')}
-        className="flex-1 min-w-0 flex items-stretch gap-2 overflow-x-auto py-0.5 [scrollbar-width:thin]"
+        className="flex-1 min-w-0 flex items-center gap-1.5 overflow-x-auto py-0.5 [scrollbar-width:none]"
       >
         {pills.map((pill, index) => (
           <SceneSongPill key={pill.entryId} pill={pill} onSelect={() => onSelect(index)} />

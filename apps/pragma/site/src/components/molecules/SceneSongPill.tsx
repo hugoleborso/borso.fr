@@ -26,13 +26,6 @@ const TITLE_CLASS_BY_STATE = {
   done: 'text-stage-ink-dim line-through',
 } as const satisfies Readonly<Record<ScenePillState, string>>;
 
-const CAPTION_KEY_BY_STATE = {
-  current: 'scene.pillNow',
-  next: 'scene.pillNext',
-  upcoming: null,
-  done: null,
-} as const satisfies Readonly<Record<ScenePillState, string | null>>;
-
 const ICON_BY_STATE = {
   current: 'play',
   next: 'arrowR',
@@ -43,7 +36,6 @@ const ICON_BY_STATE = {
 // @FollowsBlueprint molecule-presentational
 export function SceneSongPill({ pill, onSelect }: SceneSongPillProps): JSX.Element {
   const { t } = useTranslation();
-  const captionKey = CAPTION_KEY_BY_STATE[pill.state];
   const isCurrent = pill.state === 'current';
   return (
     // eslint-disable-next-line borso/no-raw-interactive-element -- a scene view pill draws on the stage palette, which the design system's buttons do not carry
@@ -51,44 +43,37 @@ export function SceneSongPill({ pill, onSelect }: SceneSongPillProps): JSX.Eleme
       type="button"
       ref={isCurrent ? scrollCurrentPillIntoView : null}
       aria-current={isCurrent ? 'true' : undefined}
+      aria-label={`${pill.ordinal} ${pill.title ?? t('scene.unknownSong')}`}
       onClick={onSelect}
       className={composeClassName(
-        'shrink-0 min-w-[9.5rem] max-w-[13rem] min-h-11 flex flex-col items-start gap-0.5',
-        'px-3.5 py-2 rounded-lg border text-left cursor-pointer transition-colors',
-        'focus-visible:outline-3 focus-visible:outline-stage-ink',
+        'shrink-0 min-h-11 flex items-center gap-1.5 px-3 rounded-pill border cursor-pointer',
+        'transition-colors focus-visible:outline-3 focus-visible:outline-stage-ink',
         SHELL_CLASS_BY_STATE[pill.state],
       )}
     >
+      <Icon
+        name={ICON_BY_STATE[pill.state]}
+        size="sm"
+        className={isCurrent ? 'text-on-accent' : 'text-stage-ink-dim'}
+      />
       <span
         className={composeClassName(
-          'text-label tracking-[0.18em] uppercase',
+          'font-mono text-label tabular-nums',
           isCurrent ? 'text-on-accent' : 'text-stage-ink-dim',
         )}
       >
-        <Icon
-          name={ICON_BY_STATE[pill.state]}
-          size="sm"
-          className="mr-1 inline-block align-middle"
-        />
         {pill.ordinal}
-        {captionKey === null ? null : ` · ${t(captionKey)}`}
       </span>
-      <span
-        className={composeClassName(
-          'font-display text-body truncate max-w-full',
-          TITLE_CLASS_BY_STATE[pill.state],
-        )}
-      >
-        {pill.title ?? t('scene.unknownSong')}
-      </span>
-      <span
-        className={composeClassName(
-          'text-label truncate max-w-full',
-          isCurrent ? 'text-on-accent' : 'text-stage-ink-dim',
-        )}
-      >
-        {pill.subtitle}
-      </span>
+      {isCurrent ? null : (
+        <span
+          className={composeClassName(
+            'max-w-[9rem] truncate text-meta',
+            TITLE_CLASS_BY_STATE[pill.state],
+          )}
+        >
+          {pill.title ?? t('scene.unknownSong')}
+        </span>
+      )}
     </button>
   );
 }

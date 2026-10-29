@@ -26,7 +26,6 @@ export interface ScenePill {
   readonly entryId: string;
   readonly ordinal: string;
   readonly title: string | null;
-  readonly subtitle: string;
   readonly state: ScenePillState;
 }
 
@@ -50,7 +49,6 @@ const STEP_BY_COMMAND = {
   previous: -1,
 } as const satisfies Readonly<Record<SceneKeyCommand, number>>;
 
-const SUBTITLE_SEPARATOR = ' · ';
 const ORDINAL_DIGITS = 2;
 const ORDINAL_PAD = '0';
 const FULL_PERCENT = 100;
@@ -126,14 +124,9 @@ export function buildScenePills(
       entryId: entry.id,
       ordinal: formatSceneOrdinal(index),
       title: song?.title ?? null,
-      subtitle: composeSceneSubtitle(song?.artist ?? '', selectTonalityLabel(entry, song)),
       state: selectPillState(index, currentIndex),
     };
   });
-}
-
-export function composeSceneSubtitle(artist: string, tonalityLabel: string | null): string {
-  return [artist, tonalityLabel ?? ''].filter((part) => part !== '').join(SUBTITLE_SEPARATOR);
 }
 
 function selectTonalityLabel(

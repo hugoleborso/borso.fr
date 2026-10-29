@@ -13,7 +13,6 @@ import {
   SCENE_FONT_SIZE_STEP_PX,
   SCENE_SCROLL_SPEED_STEP_PX_PER_SECOND,
 } from '../../routes/catalog/scene-view.core';
-import { Button } from '../atoms/Button';
 import { IconButton } from '../atoms/IconButton';
 
 interface SceneControlsProps {
@@ -27,7 +26,7 @@ interface SceneControlsProps {
   readonly onToggleAutoScroll: () => void;
 }
 
-const GROUP_CLASS = 'flex items-center gap-2 shrink-0';
+const GROUP_CLASS = 'flex items-center gap-1 shrink-0';
 const READOUT_CLASS = 'font-mono text-meta text-stage-ink-dim px-1 tabular-nums';
 
 // @FollowsBlueprint organism-presentational
@@ -43,7 +42,7 @@ export function SceneControls({
 }: SceneControlsProps): JSX.Element {
   const { t } = useTranslation();
   return (
-    <div className="flex items-center gap-x-3 overflow-x-auto lg:overflow-visible lg:flex-wrap gap-y-2 p-1 [scrollbar-width:none]">
+    <div className="flex flex-wrap items-center gap-x-2 gap-y-2">
       <div className={GROUP_CLASS}>
         <IconButton
           variant="stage"
@@ -84,15 +83,14 @@ export function SceneControls({
       </div>
 
       <div className={GROUP_CLASS}>
-        <Button
+        <IconButton
           icon={isAutoScrolling ? 'pause' : 'play'}
           variant={isAutoScrolling ? 'primary' : 'stage'}
           size="sm"
           onClick={onToggleAutoScroll}
           aria-pressed={isAutoScrolling}
-        >
-          {isAutoScrolling ? t('scene.autoScrollStop') : t('scene.autoScroll')}
-        </Button>
+          label={isAutoScrolling ? t('scene.autoScrollStop') : t('scene.autoScroll')}
+        />
         <IconButton
           variant="stage"
           size="sm"
