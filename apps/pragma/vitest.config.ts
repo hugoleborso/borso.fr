@@ -16,12 +16,14 @@ const ASSISTANT_TEST_FILES = [
   'api/src/**/*-tools.controller.test.ts',
 ];
 
+const DATABASE_WORKERS = 4;
+
 const databaseSuite = {
   globalSetup: ['./test/setup-postgres.ts'],
+  setupFiles: ['./test/worker-database.setup.ts'],
   pool: 'forks' as const,
-  maxWorkers: 1,
+  maxWorkers: DATABASE_WORKERS,
   isolate: false,
-  fileParallelism: false,
   testTimeout: 30_000,
   hookTimeout: 60_000,
 };
@@ -35,8 +37,8 @@ const workspaceAliases = {
 /**
  * @Blueprint workspace-test-config
  * @BlueprintName Workspace Test Configuration
- * @BlueprintUsage Use for the vitest configuration of a full stack workspace, where fast pure tests and serial database tests have to share one run.
- * @BlueprintDescription Declares the two suites as projects rather than as separate configurations, so one command covers both, and gives each an explicit `sequence.groupOrder` because vitest refuses to schedule projects that disagree on `maxWorkers` inside a single group and aborts the whole run before a test executes. Coverage sits above the projects, since a run has one coverage configuration shared by all of them, and its per-file thresholds name the pure files rather than the whole tree.
+ * @BlueprintUsage Use for the vitest configuration of a full stack workspace, where fast pure tests and database tests have to share one run.
+ * @BlueprintDescription Declares the two suites as projects rather than as separate configurations, so one command covers both, and gives each an explicit `sequence.groupOrder` because vitest refuses to schedule projects that disagree on `maxWorkers` inside a single group and aborts the whole run before a test executes. The database suites run their files on several workers, each against a database of its own that `test/setup-postgres.ts` migrates once as a template and `test/worker-database.setup.ts` clones for each worker process on its first file, so one worker's truncations and lock waits never reach another's. Coverage sits above the projects, since a run has one coverage configuration shared by all of them, and its per-file thresholds name the pure files rather than the whole tree.
  */
 export default defineConfig({
   resolve: { alias: workspaceAliases },
