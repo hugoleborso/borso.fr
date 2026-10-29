@@ -52,7 +52,7 @@ export function readQueryArguments(argumentsAfterScript: readonly string[]): str
   return withoutSeparator.join(BLANK);
 }
 
-const APPLICATION_NAMES: ReadonlySet<string> = new Set([
+const APPLICATION_NAMES: ReadonlySet<string | undefined> = new Set([
   ...[...READABLE_SCHEMA_BY_TARGET.keys()].map((target) => target.slice(0, target.indexOf('/'))),
   PRIVATE_APP,
 ]);
@@ -61,7 +61,7 @@ export function readMisplacedApplication(
   argumentsAfterScript: readonly string[],
 ): string | undefined {
   const first = argumentsAfterScript.find((argument) => argument !== ARGUMENT_SEPARATOR);
-  return first !== undefined && APPLICATION_NAMES.has(first) ? first : undefined;
+  return APPLICATION_NAMES.has(first) ? first : undefined;
 }
 
 export function isAgentReaderFunctionName(value: string): boolean {
