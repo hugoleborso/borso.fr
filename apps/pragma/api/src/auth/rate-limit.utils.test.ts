@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  ASSISTANT_REGISTRATION_BUDGET,
   bucketKeyFor,
   createBucketStore,
   MAXIMUM_BUCKETS_BEFORE_EVICTION,
@@ -67,6 +68,19 @@ describe('rate-limit.utils', () => {
           { attempts: RATE_LIMIT_MAX_ATTEMPTS + 1, windowStartedAt: 0 },
           MEMBER_LOGIN_BUDGET,
         ),
+      ).toBe(true);
+    });
+  });
+
+  describe('the assistant registration budget', () => {
+    it('allows ten registrations an hour from one address and refuses the eleventh', () => {
+      expect(ASSISTANT_REGISTRATION_BUDGET).toEqual({
+        scope: 'assistant-registration',
+        maxAttempts: 10,
+        windowMs: 3_600_000,
+      });
+      expect(
+        isRateLimited({ attempts: 11, windowStartedAt: 0 }, ASSISTANT_REGISTRATION_BUDGET),
       ).toBe(true);
     });
   });

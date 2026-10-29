@@ -6,6 +6,11 @@ import {
 import { barTable } from '../bars/bars.schema';
 import { memberCalendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
 import {
+  assistantAuthorizationCodeTable,
+  assistantClientTable,
+  assistantGrantTable,
+} from '../oauth/oauth.schema';
+import {
   notificationDispatchTable,
   notificationPreferenceTable,
   pushSubscriptionTable,
@@ -36,6 +41,9 @@ import { transitionCommentTable } from '../transitions/transitions.schema';
 // @FollowsBlueprint repository-query
 export async function deleteAllDomainRows(): Promise<void> {
   const database = getDatabase();
+  await database.delete(assistantGrantTable);
+  await database.delete(assistantAuthorizationCodeTable);
+  await database.delete(assistantClientTable);
   await database.delete(taskTable);
   await database.delete(takeCommentTable);
   await database.delete(takeTable);
@@ -61,6 +69,17 @@ export async function deleteAllDomainRows(): Promise<void> {
   await database.delete(notificationDispatchTable);
   await database.delete(memberTable);
   await database.delete(instrumentTable);
+}
+
+export interface SeedAssistantGrantRows {
+  readonly client: typeof assistantClientTable.$inferInsert;
+  readonly grant: typeof assistantGrantTable.$inferInsert;
+}
+
+export async function insertSeedAssistantGrant(rows: SeedAssistantGrantRows): Promise<void> {
+  const database = getDatabase();
+  await database.insert(assistantClientTable).values(rows.client);
+  await database.insert(assistantGrantTable).values(rows.grant);
 }
 
 export async function tryReadingProductionMembers(): Promise<string | null> {

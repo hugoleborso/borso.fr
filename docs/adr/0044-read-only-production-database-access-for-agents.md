@@ -38,6 +38,7 @@ talos is left out on purpose. Its data is the owner's private memory, and [ADR-0
 | pragma | `app_config`, `member_credential` | the shared password hash and session HMAC key, members' password hashes and session epochs |
 | pragma | `auth_attempt`, `member_calendar_feed`, `member_passkey`, `push_subscription`, `vapid_key_pair`, `webauthn_challenge` | hashed client addresses, secret calendar addresses, passkey public keys and counters, device push secrets, the push signing key, live sign-in challenges |
 | pragma | `audience_suggestion`, `audience_vote` | the ballot token an audience member votes with |
+| pragma | `assistant_authorization_code`, `assistant_client`, `assistant_grant` | hashed authorization codes and assistant tokens, and the clients they were issued to ([ADR-0042](./0042-pragma-is-its-own-oauth-authorization-server.md)) |
 | last-loop-lepin | `admin_credentials`, `admin_sessions`, `auth_attempts` | the admin PIN's scrypt hash, live admin session ids, raw client addresses |
 | banana-rush | none | players are known by `player.token_hash` only; `game.join_code` is shared with every player by design |
 

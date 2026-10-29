@@ -1,6 +1,15 @@
 import { isReorderOfTheSameIds } from '../helpers/ordering/reorder.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
+import type { Lineup } from '@domain/lineup.core';
+import { pickReference, refuseUnresolvedReference, resolveReference } from '../mcp/mcp.service';
 import { comparePositionThenName, foldPlayersIntoInstruments } from './instrument-players.core';
+import { type InstrumentToolView, projectInstrumentForTool } from './instrument-tool.core';
+import {
+  type LineupNames,
+  listNameCandidates,
+  type NamedLineupInput,
+  resolveNamedLineup,
+} from './lineup-names.core';
 import {
   deleteInstrumentWithLinks,
   didClaimInstrumentsWithin,
@@ -11,6 +20,7 @@ import {
   listInstrumentIdsWithin,
   listInstrumentPlayerLinks,
   listInstruments,
+  listMemberNames,
   listPlayersOfInstrument,
   runInOneInstrumentTransaction,
   setInstrumentPositionWithin,
@@ -80,3 +90,51 @@ export async function reorderInstruments(
 export async function removeInstrument(id: string): Promise<DeletionOutcome> {
   return await deleteInstrumentWithLinks(id);
 }
+
+export async function readLineupNames(): Promise<LineupNames> {
+  const [instruments, members] = await Promise.all([listInstruments(), listMemberNames()]);
+  return {
+    members,
+    instruments: instruments.map((instrument) => ({ id: instrument.id, name: instrument.name })),
+  };
+}
+
+export async function resolveMemberId(reference: string): Promise<string> {
+  return await resolveReference('member', reference, async () =>
+    listNameCandidates(await listMemberNames()),
+  );
+}
+
+export async function resolveInstrumentId(reference: string): Promise<string> {
+  return await resolveReference('instrument', reference, async () =>
+    listNameCandidates((await readLineupNames()).instruments),
+  );
+}
+
+export async function resolveInstrumentIds(references: readonly string[]): Promise<string[]> {
+  const candidates = listNameCandidates((await readLineupNames()).instruments);
+  return references.map((reference) => pickReference('instrument', candidates, reference));
+}
+
+export async function resolveOptionalInstrumentIds(
+  references: readonly string[] | undefined,
+): Promise<string[] | undefined> {
+  if (references === undefined) return undefined;
+  return await resolveInstrumentIds(references);
+}
+
+export async function resolveNamedLineupOrRefuse(input: NamedLineupInput): Promise<Lineup> {
+  const resolution = resolveNamedLineup(input, await readLineupNames());
+  if (resolution.kind === 'unresolved') {
+    return refuseUnresolvedReference(resolution.noun, resolution.reference, resolution.match);
+  }
+  return resolution.lineup;
+}
+
+export async function getInstrumentsForTool(): Promise<InstrumentToolView[]> {
+  const [instruments, members] = await Promise.all([getInstrumentsSorted(), listMemberNames()]);
+  return instruments.map((instrument) => projectInstrumentForTool(instrument, members));
+}
+
+export { defineTool } from '../mcp/mcp.service';
+export type { LineupNames, NamedLineupInput } from './lineup-names.core';

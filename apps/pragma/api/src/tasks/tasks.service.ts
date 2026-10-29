@@ -1,7 +1,17 @@
 import type { z } from 'zod';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { didClaimMemberWithin } from '../members/members.service';
-import { didClaimSongWithin } from '../songs/songs.service';
+import { didClaimSongWithin, getSongs, resolveSongId } from '../songs/songs.service';
+import { readLineupNames, resolveMemberId } from '../instruments/instruments.service';
+import { resolveReference } from '../mcp/mcp.service';
+import {
+  isSelfReference,
+  keepGivenLinks,
+  projectTasksForTool,
+  type TaskFilter,
+  type TaskLinks,
+  type TaskToolView,
+} from './task-tool.core';
 import type { DatabaseExecutor } from '../database/client';
 import { sortTasksByUrgency } from './tasks.core';
 import {
@@ -107,4 +117,75 @@ export async function detachTasksOfSongBeingDeleted(
   songId: string,
 ): Promise<void> {
   await detachDeletedSongFromTasks(transaction, songId);
+}
+
+export {
+  confirmUpdate,
+  defineDeletion,
+  defineTool,
+  pageItems,
+  parseToolFields,
+} from '../mcp/mcp.service';
+
+export async function resolveTaskId(reference: string): Promise<string> {
+  return await resolveReference('task', reference, async () =>
+    (await listTasks()).map((task) => ({ id: task.id, label: task.title })),
+  );
+}
+
+async function resolveAssigneeId(
+  reference: string | null | undefined,
+  actorMemberId: string,
+): Promise<string | null | undefined> {
+  if (reference === undefined || reference === null) return reference;
+  const isSelf = isSelfReference(reference);
+  if (isSelf) return actorMemberId;
+  return await resolveMemberId(reference);
+}
+
+async function resolveLinkedSongId(
+  reference: string | null | undefined,
+): Promise<string | null | undefined> {
+  if (reference === undefined || reference === null) return reference;
+  return await resolveSongId(reference);
+}
+
+export interface TaskLinkReferences {
+  readonly assignee?: string | null | undefined;
+  readonly song?: string | null | undefined;
+}
+
+export async function resolveTaskLinks(
+  references: TaskLinkReferences,
+  actorMemberId: string,
+): Promise<TaskLinks> {
+  const [assigneeId, songId] = await Promise.all([
+    resolveAssigneeId(references.assignee, actorMemberId),
+    resolveLinkedSongId(references.song),
+  ]);
+  return keepGivenLinks(assigneeId, songId);
+}
+
+export async function listTasksForTool(
+  references: { readonly assignee?: string | undefined; readonly song?: string | undefined },
+  status: TaskFilter['status'],
+  actorMemberId: string,
+): Promise<TaskToolView[]> {
+  const links = await resolveTaskLinks(references, actorMemberId);
+  const [tasks, names, songs] = await Promise.all([
+    getTasksSortedByUrgency(),
+    readLineupNames(),
+    getSongs(),
+  ]);
+  const filter = {
+    assigneeId: links.assigneeId ?? undefined,
+    songId: links.songId ?? undefined,
+    status,
+  };
+  return projectTasksForTool(
+    tasks,
+    names.members,
+    songs.map((song) => ({ id: song.id, name: song.title })),
+    filter,
+  );
 }

@@ -30,7 +30,9 @@ export function RequireSession(): JSX.Element {
 
   const VIEW_BY_GATE_STATE = {
     checking: CheckingSession,
-    'sign-in-required': () => <Navigate to="/login" replace state={{ from: location.pathname }} />,
+    'sign-in-required': () => (
+      <Navigate to="/login" replace state={{ from: `${location.pathname}${location.search}` }} />
+    ),
     granted: Outlet,
   } as const;
 

@@ -3,6 +3,7 @@ import {
   formatCapacity,
   formatClockTime,
   formatDueDate,
+  formatTimeAgo,
   formatSessionDate,
   isDueDatePast,
 } from './formatters.utils';
@@ -89,5 +90,33 @@ describe('formatClockTime', () => {
 
   it('hands back what it was given when the text is not a date', () => {
     expect(formatClockTime('not a date', 'en-GB')).toBe('not a date');
+  });
+});
+
+describe('formatTimeAgo', () => {
+  const NOW = Date.parse('2026-10-27T12:00:00.000Z');
+
+  it('names the largest whole unit elapsed', () => {
+    expect(formatTimeAgo('2026-10-27T11:58:00.000Z', NOW, 'en')).toBe('2 minutes ago');
+    expect(formatTimeAgo('2026-10-27T09:00:00.000Z', NOW, 'en')).toBe('3 hours ago');
+    expect(formatTimeAgo('2026-10-22T12:00:00.000Z', NOW, 'en')).toBe('5 days ago');
+    expect(formatTimeAgo('2026-07-27T12:00:00.000Z', NOW, 'en')).toBe('3 months ago');
+    expect(formatTimeAgo('2024-10-27T12:00:00.000Z', NOW, 'en')).toBe('2 years ago');
+  });
+
+  it('switches unit exactly at each boundary', () => {
+    expect(formatTimeAgo('2026-10-27T11:01:00.000Z', NOW, 'en')).toBe('59 minutes ago');
+    expect(formatTimeAgo('2026-10-27T11:00:00.000Z', NOW, 'en')).toBe('1 hour ago');
+    expect(formatTimeAgo('2026-10-26T12:00:00.000Z', NOW, 'en')).toBe('yesterday');
+  });
+
+  it('reads a moment ago, or a clock ahead of the server, as now', () => {
+    expect(formatTimeAgo('2026-10-27T11:59:30.000Z', NOW, 'en')).toBe('this minute');
+    expect(formatTimeAgo('2026-10-27T12:05:00.000Z', NOW, 'en')).toBe('this minute');
+  });
+
+  it('speaks the reader locale and returns an unreadable date unchanged', () => {
+    expect(formatTimeAgo('2026-10-27T11:58:00.000Z', NOW, 'fr')).toBe('il y a 2 minutes');
+    expect(formatTimeAgo('soon', NOW, 'en')).toBe('soon');
   });
 });

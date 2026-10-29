@@ -67,7 +67,7 @@ describe('PreviewableApp (prod, full)', () => {
     stage: 'prod',
     domainName: 'borsouvertures.borso.fr',
     frontend: { distPath: '.' },
-    api: { entry: ENTRY, environment: { FOO: 'bar' } },
+    api: { entry: ENTRY, environment: { FOO: 'bar' }, extraPathPatterns: ['/mcp'] },
     database: { migrationsPath: MIGRATIONS, cluster: clusterStack.cluster },
   });
   const stageTpl = Template.fromStack(stageStack);
@@ -117,6 +117,17 @@ describe('PreviewableApp (prod, full)', () => {
     expect(ids).toMatch(/FrontendUrl/);
     expect(ids).toMatch(/ApiUrl/);
     expect(ids).toMatch(/DbSchema/);
+  });
+
+  it('routes /api/* and the extra path patterns to the API, in that order', () => {
+    stageTpl.hasResourceProperties('AWS::CloudFront::Distribution', {
+      DistributionConfig: Match.objectLike({
+        CacheBehaviors: [
+          Match.objectLike({ PathPattern: '/api/*' }),
+          Match.objectLike({ PathPattern: '/mcp' }),
+        ],
+      }),
+    });
   });
 
   it('never sets ALLOW_TEST_SEED on a prod Lambda', () => {

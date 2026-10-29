@@ -31,10 +31,14 @@ export const requireMemberSession: MiddlewareHandler = async (context, next) => 
   if (verdict.kind !== 'valid') {
     return context.json({ error: 'session-invalid', reason: verdict.kind }, 401);
   }
-  context.set(MEMBER_ID_KEY, verdict.memberId);
+  rememberMemberId(context, verdict.memberId);
   await next();
   return;
 };
+
+export function rememberMemberId(context: Context, memberId: string): void {
+  context.set(MEMBER_ID_KEY, memberId);
+}
 
 export function readMemberId(context: Context): string {
   const memberId: unknown = context.get(MEMBER_ID_KEY);

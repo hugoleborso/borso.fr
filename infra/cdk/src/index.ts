@@ -32,6 +32,7 @@ export {
   requirePrNumber,
 } from './internal/env.js';
 export {
+  apiPublicOrigin,
   type BucketNameSuffix,
   frontendOrigin,
   isProductionStage,

@@ -9,12 +9,30 @@ import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { notifyBand, type WriteActor } from '../notifications/notifications.service';
 import {
   deleteSessionWithCascade,
+  findSessionById,
   insertSession,
   listSessions,
   type SessionRow,
   updateSession,
 } from './sessions.repository';
 export { didClaimSessionWithin, findSessionById } from './sessions.repository';
+export {
+  confirmUpdate,
+  defineDeletion,
+  defineTool,
+  pageItems,
+  parseToolFields,
+} from '../mcp/mcp.service';
+import { refuseUnresolvedReference } from '../mcp/mcp.service';
+import { isIdentifierReference } from '../helpers/reference/reference.core';
+import { readLineupNames } from '../instruments/instruments.service';
+import {
+  matchSessionReference,
+  projectSessionForTool,
+  type SessionSummary,
+  type SessionWindow,
+  summarizeSessionsInWindow,
+} from './session-tool.core';
 import {
   type SessionPersistedUpdate,
   type sessionCreateSchema,
@@ -81,6 +99,30 @@ export async function patchSession(
   if (session === null) return { kind: 'not-found' };
   await notifySessionWritten('session-changed', session, actor);
   return { kind: 'ok', session };
+}
+
+export async function listSessionsForTool(
+  window: SessionWindow,
+  kind: string | undefined,
+  now: Date,
+): Promise<SessionSummary[]> {
+  return summarizeSessionsInWindow(await getSessions(), window, kind, now);
+}
+
+export async function resolveSessionId(reference: string, now: Date): Promise<string> {
+  const isIdentifier = isIdentifierReference(reference);
+  if (isIdentifier) return reference;
+  const match = matchSessionReference(await getSessions(), reference, now);
+  if (match.kind === 'found') return match.id;
+  return refuseUnresolvedReference('session', reference, match);
+}
+
+export type SessionToolView = ReturnType<typeof projectSessionForTool>;
+
+export async function readSessionForTool(id: string): Promise<SessionToolView | null> {
+  const [session, names] = await Promise.all([findSessionById(id), readLineupNames()]);
+  if (session === null) return null;
+  return projectSessionForTool(session, names.members);
 }
 
 export async function removeSession(id: string): Promise<DeletionOutcome> {

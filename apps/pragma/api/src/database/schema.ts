@@ -26,6 +26,11 @@ export {
   pushSubscriptionTable,
   vapidKeyPairTable,
 } from '../notifications/notifications.schema';
+export {
+  assistantAuthorizationCodeTable,
+  assistantClientTable,
+  assistantGrantTable,
+} from '../oauth/oauth.schema';
 export { outreachTemplateTable } from '../outreach/outreach.schema';
 export { sessionTable } from '../sessions/sessions.schema';
 export {

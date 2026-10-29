@@ -37,3 +37,34 @@ export function isDueDatePast(iso: string | null, nowEpochMs: number): boolean {
   if (iso === null) return false;
   return new Date(iso).getTime() < nowEpochMs;
 }
+
+const MILLISECONDS_PER_MINUTE = 60_000;
+const MINUTES_PER_HOUR = 60;
+const HOURS_PER_DAY = 24;
+const DAYS_PER_MONTH = 30;
+const MONTHS_PER_YEAR = 12;
+
+interface ElapsedUnitStep {
+  readonly unit: Intl.RelativeTimeFormatUnit;
+  readonly unitsBeforeNext: number;
+}
+
+const ELAPSED_UNIT_STEPS: readonly ElapsedUnitStep[] = [
+  { unit: 'minute', unitsBeforeNext: MINUTES_PER_HOUR },
+  { unit: 'hour', unitsBeforeNext: HOURS_PER_DAY },
+  { unit: 'day', unitsBeforeNext: DAYS_PER_MONTH },
+  { unit: 'month', unitsBeforeNext: MONTHS_PER_YEAR },
+];
+const LARGEST_ELAPSED_UNIT: Intl.RelativeTimeFormatUnit = 'year';
+
+export function formatTimeAgo(iso: string, nowEpochMs: number, locale: string): string {
+  const date = new Date(iso);
+  if (Number.isNaN(date.getTime())) return iso;
+  const formatter = new Intl.RelativeTimeFormat(locale, { numeric: 'auto' });
+  let elapsed = Math.max(0, Math.floor((nowEpochMs - date.getTime()) / MILLISECONDS_PER_MINUTE));
+  for (const step of ELAPSED_UNIT_STEPS) {
+    if (elapsed < step.unitsBeforeNext) return formatter.format(-elapsed, step.unit);
+    elapsed = Math.floor(elapsed / step.unitsBeforeNext);
+  }
+  return formatter.format(-elapsed, LARGEST_ELAPSED_UNIT);
+}

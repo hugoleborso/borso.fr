@@ -146,6 +146,9 @@ describe('pragma read-only agent access (ADR-0044)', () => {
     expect(readSchemaReaderBlocklist(synthAppStack('prod'))).toStrictEqual([
       'app_config',
       'member_credential',
+      'assistant_authorization_code',
+      'assistant_client',
+      'assistant_grant',
       'auth_attempt',
       'member_calendar_feed',
       'member_passkey',
@@ -176,6 +179,9 @@ describe('pragma preview schema cloning', () => {
     expect(readSchemaCloneConfig(synthAppStack('preview'))).toEqual({
       sourceSchemaName: 'prod',
       tableBlocklist: [
+        'assistant_authorization_code',
+        'assistant_client',
+        'assistant_grant',
         'auth_attempt',
         'member_calendar_feed',
         'member_passkey',
@@ -295,6 +301,41 @@ describe('pragma app stack', () => {
       expect(variables.WEBAUTHN_ORIGIN).toBe(expectedOrigin);
       expect(variables.WEBAUTHN_RELYING_PARTY_ID).toBe(new URL(expectedOrigin).hostname);
     }
+  });
+
+  it('tells the API which origin issues assistant tokens and which serves the consent page', () => {
+    expect(readApiVariables('prod')).toMatchObject({
+      OAUTH_ISSUER: 'https://pragma.borso.fr',
+      OAUTH_CONSENT_ORIGIN: 'https://pragma.borso.fr',
+    });
+    expect(readApiVariables('preview')).toMatchObject({
+      OAUTH_ISSUER: 'https://pragma-pr-1-api.preview.borso.fr',
+      OAUTH_CONSENT_ORIGIN: 'https://pragma-pr-1.preview.borso.fr',
+    });
+  });
+
+  it('routes the assistant and authorization paths on the prod domain to the API, after /api/*', () => {
+    synthAppStack('prod').hasResourceProperties(
+      'AWS::CloudFront::Distribution',
+      Match.objectLike({
+        DistributionConfig: Match.objectLike({
+          CacheBehaviors: [
+            '/api/*',
+            '/mcp',
+            '/oauth/authorize',
+            '/oauth/token',
+            '/oauth/register',
+            '/oauth/revoke',
+            '/.well-known/oauth-*',
+          ].map((pathPattern) =>
+            Match.objectLike({
+              PathPattern: pathPattern,
+              AllowedMethods: Match.arrayWith(['GET', 'OPTIONS', 'POST']),
+            }),
+          ),
+        }),
+      }),
+    );
   });
 
   it('names the Spotify parameter and grants the API permission to read it', () => {

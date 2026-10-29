@@ -1,4 +1,10 @@
 import type { DatabaseExecutor } from '../database/client';
+import {
+  readLineupNames,
+  resolveInstrumentId,
+  resolveMemberId,
+} from '../instruments/instruments.service';
+import { nameScoreChanges, nameScores } from './mastery-tool.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import {
   deleteMasteryDefault,
@@ -72,4 +78,40 @@ export async function deleteScoreHistoryOfDeletedSong(
   songId: string,
 ): Promise<void> {
   await deleteScoreHistoryOfSong(executor, songId);
+}
+
+export interface MasteryScoreReferences {
+  readonly member: string;
+  readonly instrument: string;
+}
+
+async function resolveScoreKey(references: MasteryScoreReferences) {
+  const [memberId, instrumentId] = await Promise.all([
+    resolveMemberId(references.member),
+    resolveInstrumentId(references.instrument),
+  ]);
+  return { memberId, instrumentId };
+}
+
+export async function writeMasteryOverride(
+  references: MasteryScoreReferences & { readonly songId: string },
+  score: number | null,
+  now: Date,
+): Promise<DeletionOutcome | 'saved'> {
+  const key = { ...(await resolveScoreKey(references)), songId: references.songId };
+  if (score === null) return await removeMasteryOverride(key, now);
+  await saveMasteryOverride({ ...key, score }, now);
+  return 'saved';
+}
+
+export async function readSongMasteryForTool(songId: string, isHistoryIncluded: boolean) {
+  const [overrides, history, names] = await Promise.all([
+    getMasteryOverridesForSong(songId),
+    isHistoryIncluded ? getScoreHistoryOfSong(songId) : Promise.resolve([]),
+    readLineupNames(),
+  ]);
+  return {
+    overrides: nameScores(overrides, names, undefined),
+    history: isHistoryIncluded ? nameScoreChanges(history, names) : undefined,
+  };
 }
