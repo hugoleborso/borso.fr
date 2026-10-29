@@ -3,12 +3,16 @@
 import type { JSX } from 'react';
 import { useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { Avatar } from '../../components/atoms/Avatar';
+import { BottomActions } from '../../components/atoms/BottomActions';
+import { Button } from '../../components/atoms/Button';
 import { IconButton } from '../../components/atoms/IconButton';
 import { memberInitial } from '../../components/atoms/member-palette.utils';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { ListRow } from '../../components/molecules/ListRow';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SectionTabs } from '../../components/molecules/SectionTabs';
 import { MasteryMatrix } from '../../components/organisms/MasteryMatrix';
 import { ApiError } from '../../lib/api.client';
 import { useInstrumentsList } from '../../lib/queries/instruments.queries';
@@ -29,6 +33,9 @@ import {
   type MemberFormValues,
   type MemberRow,
   type MemberSelection,
+  MEMBERS_VIEW_PARAM,
+  type MembersView,
+  readMembersView,
   selectMemberFormMode,
   selectMemberWriteIntent,
   selectSelectionAfterDeletion,
@@ -50,6 +57,20 @@ export function MembersPage(): JSX.Element {
   const deleteMember = useDeleteMember();
   const assignInstruments = useAssignMemberInstruments();
   const [selected, setSelected] = useState<MemberSelection | null>(null);
+  const [isFormOpen, setIsFormOpen] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const view = readMembersView(searchParams.get(MEMBERS_VIEW_PARAM));
+  const showView = (next: MembersView): void => {
+    setSearchParams({ [MEMBERS_VIEW_PARAM]: next }, { replace: true });
+  };
+  const openMember = (selection: MemberSelection | null): void => {
+    setSelected(selection);
+    setIsFormOpen(true);
+  };
+  const closeForm = (): void => {
+    setIsFormOpen(false);
+    setSelected(null);
+  };
   const [pendingDeletionId, setPendingDeletionId] = useState<string | null>(null);
   const [localError, setLocalError] = useState<string | null>(null);
   const selectedInstruments = useMemberInstruments(selected?.id ?? '', selected !== null);
@@ -83,7 +104,7 @@ export function MembersPage(): JSX.Element {
 
   const saveMember = (values: MemberFormValues): void => {
     const mutationOptions = {
-      onSuccess: () => setSelected(null),
+      onSuccess: closeForm,
       onError: reportError,
     };
     applyMemberWriteIntent(selectMemberWriteIntent(selected, values), {
@@ -103,53 +124,86 @@ export function MembersPage(): JSX.Element {
     assignInstruments.mutate({ memberId, instrumentIds: [...instrumentIds] });
   };
 
+  const panelByView: Readonly<Record<MembersView, JSX.Element>> = {
+    members: (
+      <ul className="flex max-w-[640px] flex-col gap-1.5" aria-label={t('members.title')}>
+        {membersQuery.isLoading ? (
+          <li className="text-ink-soft italic text-meta">{t('common.loading')}</li>
+        ) : null}
+        {sortedMembers.map((member) => (
+          <li
+            key={member.id}
+            className="flex items-center gap-3 rounded-md bg-leaf px-3 py-2 shadow-leaf transition-colors hover:bg-hover"
+          >
+            <ListRow
+              className="flex-1 text-body"
+              leading={
+                <Avatar
+                  size="md"
+                  aria-hidden="true"
+                  initials={memberInitial(member.firstName)}
+                  color={member.color}
+                />
+              }
+              onClick={() =>
+                openMember({
+                  id: member.id,
+                  firstName: member.firstName,
+                  color: member.color,
+                })
+              }
+            >
+              {member.firstName}
+            </ListRow>
+            <IconButton
+              variant="danger"
+              icon="trash"
+              label={t('common.delete')}
+              onClick={() => setPendingDeletionId(member.id)}
+            />
+          </li>
+        ))}
+      </ul>
+    ),
+    mastery: (
+      <MasteryMatrix
+        members={sortedMembers}
+        instruments={sortedInstruments}
+        onError={setLocalError}
+      />
+    ),
+  };
+  const newMemberActionByView: Readonly<Record<MembersView, JSX.Element | null>> = {
+    members: (
+      <BottomActions>
+        <Button variant="primary" size="lg" icon="plus" onClick={() => openMember(null)}>
+          {t('members.newTitle')}
+        </Button>
+      </BottomActions>
+    ),
+    mastery: null,
+  };
+
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px] flex flex-col gap-6">
-      <PageHeader title={t('members.title')} />
+    <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[1280px]">
+      <PageHeader back={{ to: '/band', label: t('band.title') }} title={t('members.title')}>
+        <SectionTabs
+          label={t('members.viewsLabel')}
+          tabs={[
+            { value: 'members', label: t('members.title'), icon: 'members' },
+            { value: 'mastery', label: t('nav.mastery'), icon: 'chart' },
+          ]}
+          value={view}
+          onChange={showView}
+        />
+      </PageHeader>
       {firstError === null ? null : (
-        <p className="text-danger text-meta" role="alert">
+        <p className="text-danger text-meta mb-3" role="alert">
           {firstError}
         </p>
       )}
-      <div className="grid grid-cols-1 md:grid-cols-[1fr_380px] gap-5 items-start">
-        <ul className="flex flex-col gap-1.5" aria-label={t('members.title')}>
-          {membersQuery.isLoading ? (
-            <li className="text-ink-soft italic text-meta">{t('common.loading')}</li>
-          ) : null}
-          {sortedMembers.map((member) => (
-            <li
-              key={member.id}
-              className="flex items-center gap-3 rounded-md bg-leaf px-3 py-2 shadow-leaf transition-colors hover:bg-hover"
-            >
-              <ListRow
-                className="flex-1 text-body"
-                leading={
-                  <Avatar
-                    size="md"
-                    aria-hidden="true"
-                    initials={memberInitial(member.firstName)}
-                    color={member.color}
-                  />
-                }
-                onClick={() =>
-                  setSelected({
-                    id: member.id,
-                    firstName: member.firstName,
-                    color: member.color,
-                  })
-                }
-              >
-                {member.firstName}
-              </ListRow>
-              <IconButton
-                variant="danger"
-                icon="trash"
-                label={t('common.delete')}
-                onClick={() => setPendingDeletionId(member.id)}
-              />
-            </li>
-          ))}
-        </ul>
+      {panelByView[view]}
+      {isFormOpen ? (
         <MemberEditForm
           key={buildMemberFormKey(selected)}
           mode={selectMemberFormMode(selected)}
@@ -160,15 +214,10 @@ export function MembersPage(): JSX.Element {
           instruments={sortedInstruments}
           assignedInstrumentIds={assignedInstrumentIds}
           onSave={saveMember}
-          onCancel={() => setSelected(null)}
+          onCancel={closeForm}
           onInstrumentsChanged={replaceAssignedInstruments}
         />
-      </div>
-      <MasteryMatrix
-        members={sortedMembers}
-        instruments={sortedInstruments}
-        onError={setLocalError}
-      />
+      ) : null}
       {pendingDeletionId === null ? null : (
         <ConfirmDialog
           question={t('members.deleteConfirm')}
@@ -180,6 +229,7 @@ export function MembersPage(): JSX.Element {
           onCancel={() => setPendingDeletionId(null)}
         />
       )}
+      {newMemberActionByView[view]}
     </section>
   );
 }

@@ -5,8 +5,8 @@ import { useForm } from '@tanstack/react-form';
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Button } from '../atoms/Button';
-import { Card } from '../atoms/Card';
 import { Input } from '../atoms/Input';
+import { Sheet } from '../molecules/Sheet';
 import { isSubmitDisabled } from '../../lib/form-submit.utils';
 import {
   type InstrumentListState,
@@ -91,34 +91,12 @@ function InstrumentPanel({
   );
 }
 
-interface CancelProps {
-  readonly label: string;
-  readonly onCancel: () => void;
-}
-
-function NoCancelButton(): null {
-  return null;
-}
-
-function CancelEditButton({ label, onCancel }: CancelProps): JSX.Element {
-  return (
-    <Button icon="close" type="button" variant="quiet" onClick={onCancel}>
-      {label}
-    </Button>
-  );
-}
-
 const INSTRUMENT_PANEL_BY_MODE: Record<
   MemberFormMode,
   (props: InstrumentPanelProps) => JSX.Element | null
 > = {
   create: NoInstrumentPanel,
   edit: InstrumentPanel,
-};
-
-const CANCEL_BUTTON_BY_MODE: Record<MemberFormMode, (props: CancelProps) => JSX.Element | null> = {
-  create: NoCancelButton,
-  edit: CancelEditButton,
 };
 
 const TITLE_KEY_BY_MODE = {
@@ -142,19 +120,35 @@ export function MemberEditForm({
     onSubmit: ({ value }) => onSave(value),
   });
   const AssignmentPanel = INSTRUMENT_PANEL_BY_MODE[mode];
-  const CancelButton = CANCEL_BUTTON_BY_MODE[mode];
+  const title = t(TITLE_KEY_BY_MODE[mode]);
 
   return (
-    <Card>
-      <h3 className="font-display text-title text-ink m-0 mb-3">{t(TITLE_KEY_BY_MODE[mode])}</h3>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          event.stopPropagation();
-          void form.handleSubmit();
-        }}
-        className="flex flex-col gap-2.5"
-      >
+    <Sheet
+      title={title}
+      label={title}
+      onClose={onCancel}
+      onSubmit={(event) => {
+        event.preventDefault();
+        event.stopPropagation();
+        void form.handleSubmit();
+      }}
+      footer={
+        <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
+          {([canSubmit, isSubmitting]) => (
+            <Button
+              icon="check"
+              type="submit"
+              variant="primary"
+              size="lg"
+              disabled={isSubmitDisabled(canSubmit, isSubmitting)}
+            >
+              {t('common.save')}
+            </Button>
+          )}
+        </form.Subscribe>
+      }
+    >
+      <div className="flex flex-col gap-2.5">
         <label className={FIELD_LABEL_CLASS} htmlFor="member-first-name">
           {t('members.firstName')}
         </label>
@@ -162,6 +156,7 @@ export function MemberEditForm({
           {(field) => (
             <Input
               id="member-first-name"
+              data-sheet-focus
               type="text"
               value={field.state.value}
               onChange={(event) => field.handleChange(event.target.value)}
@@ -192,22 +187,7 @@ export function MemberEditForm({
           assignedInstrumentIds={assignedInstrumentIds}
           onInstrumentsChanged={onInstrumentsChanged}
         />
-        <div className="flex gap-2 mt-2">
-          <form.Subscribe selector={(state) => [state.canSubmit, state.isSubmitting]}>
-            {([canSubmit, isSubmitting]) => (
-              <Button
-                icon="check"
-                type="submit"
-                variant="primary"
-                disabled={isSubmitDisabled(canSubmit, isSubmitting)}
-              >
-                {t('common.save')}
-              </Button>
-            )}
-          </form.Subscribe>
-          <CancelButton label={t('common.cancel')} onCancel={onCancel} />
-        </div>
-      </form>
-    </Card>
+      </div>
+    </Sheet>
   );
 }

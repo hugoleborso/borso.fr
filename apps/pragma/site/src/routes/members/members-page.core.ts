@@ -120,3 +120,12 @@ export function applyMemberWriteIntent<Result>(
   }
   return visitor.update({ id: intent.id, firstName: intent.firstName, color: intent.color });
 }
+
+export const MEMBERS_VIEW_PARAM = 'view';
+export type MembersView = 'members' | 'mastery';
+const MASTERY_VIEW: MembersView = 'mastery';
+
+// @FollowsBlueprint core-decision
+export function readMembersView(requested: string | null): MembersView {
+  return requested === MASTERY_VIEW ? MASTERY_VIEW : 'members';
+}

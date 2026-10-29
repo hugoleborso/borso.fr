@@ -12,6 +12,7 @@ import {
   sortInstrumentsByName,
   sortMembersByFirstName,
   toggleInstrumentAssignment,
+  readMembersView,
 } from './members-page.core';
 import { listMemberPaletteHexes } from '@domain/member-palette.core';
 
@@ -172,5 +173,14 @@ describe('applyMemberWriteIntent', () => {
       firstName: 'Ada',
       color: '#000000',
     });
+  });
+});
+
+describe('readMembersView', () => {
+  it('opens the mastery matrix only when the address asks for it', () => {
+    expect(readMembersView('mastery')).toBe('mastery');
+    expect(readMembersView('members')).toBe('members');
+    expect(readMembersView(null)).toBe('members');
+    expect(readMembersView('other')).toBe('members');
   });
 });
