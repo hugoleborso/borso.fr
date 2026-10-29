@@ -34,7 +34,7 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
 
    **`gh pr edit --attach` does not work from a hosted session, whatever the `gh` version.** The flag is real — 2.99.0 added it on 2026-09-01 — but the upload needs `POST /user/assets`, and every `*.github.com` host here is intercepted by the Claude Code proxy, which answers `403 sessions are bound to their configured repositories`; `gh pr create` also needs GraphQL, which answers `403 GitHub GraphQL is not available from Claude Code sessions`. Screenshots reach the body through step 5b instead.
 
-5b. **Publish the pending screenshots, now that the number exists.** `/visual-validation` left a passing run's PNGs in `<validation_dir>/.pending-upload/<timestamp>/`, gitignored and uncommitted, per [ADR-0023](../../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md). Upload them, then replace the literal `<n>` the report wrote with the real number.
+5b. **Publish the pending screenshots, now that the number exists.** `/visual-validation` left a passing run's PNGs in `<validation_dir>/.pending-upload/<timestamp>/`, gitignored and uncommitted, per [ADR-0023](../../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md). Upload them. **Leave the report alone:** it keeps the literal `<n>` it was written with, because a dated report under `validation/` is append-only and `scripts/check-dated-records-are-append-only.sh` refuses the edit in pre-commit and CI. The number lives in the folder URL the body and the *Screenshots* comment carry. PR #206's open-pr stage followed the old instruction here and was refused.
 
    ```sh
    bucket="$(aws ssm get-parameter --name /borso/shared/previews-bucket-name \
@@ -79,7 +79,7 @@ The budget is not advice. `scripts/pr/check-pr-body.ts` holds every limit and re
    The previews CloudFront function routes any `<name>-pr-<n>` host, so this needed no bucket, distribution, certificate or DNS record. The bucket's `expire-previews` rule deletes everything after 60 days, so there is nothing to tear down. Delete `.pending-upload/` once the body reads back correctly.
 
    **On `AccessDenied`**, the grant in [`docs/aws-setup.md` §12.6](../../../../docs/aws-setup.md) is not applied. Move the staged PNGs back beside the report, commit them, and have *Validation* link the report rather than the images — a raw blob URL ends in `.png` and the hook refuses it for the same reason. Say in one line that the upload was denied, so the next run does not rediscover it.
-6. **Read it back.** `pull_request_read method: get`. GitHub deletes an angle-bracket placeholder even inside a code span, which is why the checker refuses one — see [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../../docs/knowledge/github-mcp-pr-body-sanitizer.md) for what else is confirmed to survive the round trip.
+6. **Read it back.** `pull_request_read method: get`, then check what GitHub kept with `pnpm exec tsx scripts/pr/check-pr-body.ts --pr <pr_number>`, which reads the posted title and body through `gh api` instead of a file. GitHub deletes an angle-bracket placeholder even inside a code span, which is why the checker refuses one — see [`docs/knowledge/github-mcp-pr-body-sanitizer.md`](../../../../docs/knowledge/github-mcp-pr-body-sanitizer.md) for what else is confirmed to survive the round trip.
 
 7. **Subscribe, then stop.** One call to `subscribe_pr_activity`, and end the turn. See *Watching the pull request afterwards*.
 

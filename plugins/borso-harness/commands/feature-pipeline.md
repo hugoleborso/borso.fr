@@ -164,7 +164,12 @@ the workflow doesn't re-invent it:
   stage transition gets a line.
 - `docs/features/<app>/<slug>/runs/<run-id>/agents/<skill>-<NN>.md` —
   one verdict YAML per subagent invocation. The script reads the verdict
-  front-matter to decide the next stage.
+  front-matter to decide the next stage. `<NN>` counts every invocation of
+  that skill in the run and never starts again at `01`: the third technical
+  validation is `technical-validation-03` even when a fix round came between.
+  The same name is the agent's `--from` label and its scratch folder, so a
+  reused number lands a second agent in the first one's logs and verdict file,
+  as it did on PR #206.
 
 ## How to launch — the first time, generate the JS
 

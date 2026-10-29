@@ -6,6 +6,7 @@ import {
   decideReadTarget,
   isAgentReaderFunctionName,
   READER_NOT_PROVISIONED_REFUSAL,
+  readMisplacedApplication,
   readQueryArguments,
 } from './read-target.utils';
 
@@ -57,6 +58,28 @@ describe('readQueryArguments', () => {
 
   it('is empty when nothing was passed', () => {
     expect(readQueryArguments([])).toBe('');
+  });
+});
+
+describe('readMisplacedApplication', () => {
+  it('names an application passed where the statement belongs', () => {
+    expect(readMisplacedApplication(['pragma', 'SELECT 1'])).toBe('pragma');
+  });
+
+  it('names it after a pnpm argument separator too', () => {
+    expect(readMisplacedApplication(['--', 'last-loop-lepin', 'SELECT 1'])).toBe('last-loop-lepin');
+  });
+
+  it('names talos, which the target decision refuses with its own reason', () => {
+    expect(readMisplacedApplication(['talos'])).toBe('talos');
+  });
+
+  it('accepts a statement', () => {
+    expect(readMisplacedApplication(['SELECT 1'])).toBeUndefined();
+  });
+
+  it('accepts no argument at all', () => {
+    expect(readMisplacedApplication([])).toBeUndefined();
   });
 });
 

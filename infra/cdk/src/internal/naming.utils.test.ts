@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import {
   accountScopedBucketName,
+  apiPublicOrigin,
   assertDeployStage,
   bucketName,
   dsqlClusterSsmPaths,
@@ -280,6 +281,29 @@ describe('frontendOrigin', () => {
     ).toBe('https://test-app-pr-5.preview.borso.fr');
     expect(frontendOrigin({ app: 'test-app', stage: 'integ', prNumber: 5 }, undefined)).toBe(
       'https://bp-integ-test-app-pr-5.preview.borso.fr',
+    );
+  });
+});
+
+describe('apiPublicOrigin', () => {
+  it('uses the application domain for prod, where CloudFront forwards the API paths', () => {
+    expect(apiPublicOrigin({ app: 'test-app', stage: 'prod' }, 'test-app.borso.fr')).toBe(
+      'https://test-app.borso.fr',
+    );
+  });
+
+  it('throws for prod without a domain', () => {
+    expect(() => apiPublicOrigin({ app: 'test-app', stage: 'prod' }, undefined)).toThrow(
+      /apiPublicOrigin\(\) requires domainName for the prod stage/,
+    );
+  });
+
+  it('uses the API hostname of the stage for preview and integ', () => {
+    expect(
+      apiPublicOrigin({ app: 'test-app', stage: 'preview', prNumber: 5 }, 'test-app.borso.fr'),
+    ).toBe('https://test-app-pr-5-api.preview.borso.fr');
+    expect(apiPublicOrigin({ app: 'test-app', stage: 'integ', prNumber: 5 }, undefined)).toBe(
+      'https://bp-integ-test-app-pr-5-api.preview.borso.fr',
     );
   });
 });

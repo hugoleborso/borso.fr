@@ -1,6 +1,27 @@
 {
   "account": {
     "addPasskey": "Add a passkey",
+    "assistants": {
+      "claudeCodeHint": "Run this in a terminal, then type /mcp in Claude Code and choose “Authenticate”.",
+      "claudeCodeLabel": "Claude Code",
+      "connected": "Connected assistants",
+      "connectorHint": "Settings → Connectors → Add custom connector, then paste this address.",
+      "connectorLabel": "claude.ai, Le Chat",
+      "copied": "Copied.",
+      "copy": "Copy",
+      "copyFailed": "The browser refused the copy. Select the text instead.",
+      "empty": "No assistant connected yet.",
+      "hint": "Let Claude Code, Mistral Vibe, claude.ai or Le Chat act on pragma as you. Each one asks you to sign in and allow it the first time.",
+      "lastUsed": "last used {{timeAgo}}",
+      "neverUsed": "never used",
+      "revoke": "Revoke",
+      "revokeFailed": "The assistant could not be revoked. Try again.",
+      "revokeLabel": "Revoke {{clientName}}",
+      "since": "since {{date}}",
+      "title": "Connect an assistant",
+      "vibeHint": "Add this to ~/.vibe/config.toml.",
+      "vibeLabel": "Mistral Vibe"
+    },
     "calendarFeed": "Calendar",
     "calendarFeedAddress": "Secret iCal address",
     "calendarFeedConnected": "Calendar connected.",
@@ -716,5 +737,14 @@
       "installQuestion": "Install app?",
       "install": "Install"
     }
+  },
+  "consent": {
+    "allow": "Allow",
+    "deny": "Deny",
+    "failed": "The decision could not be sent. Try again.",
+    "invalid": "This authorization request is not valid. Start again from your assistant.",
+    "question": "{{clientName}} wants to act on pragma as {{memberFirstName}}.",
+    "scope": "It will be able to read and change the band's songs, sessions, setlists, takes, bars and tasks, as you.",
+    "title": "Allow an assistant"
   }
 }

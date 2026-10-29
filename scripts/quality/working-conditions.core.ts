@@ -30,7 +30,7 @@ export interface FrictionBoard {
 const WALL_LINE_PATTERN = /^- `([a-z0-9-]+)` · ([A-Za-z]+) · (.+)$/;
 const MATCH_LINE_PATTERN = /^\s+match:\s*(.*)$/;
 const TERM_SEPARATOR = /\s*\|\s*/;
-const KAIZEN_LINE_PATTERN = /^- \[[0-9:]+\] `([^`]+)` (.+)$/;
+const KAIZEN_LINE_PATTERN = /^- \[(?:\d{4}-\d{2}-\d{2} )?\d{2}:\d{2}\] `([^`]+)` (.+)$/;
 const TABLE_ROW_PATTERN = /^\|(.+)\|\s*$/;
 const NUMBERED_CELL_PATTERN = /^\d+$/;
 const HOOK_WRITER_PREFIX = 'hook:';

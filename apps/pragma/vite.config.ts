@@ -7,6 +7,16 @@ import { defineConfig, type PluginOption } from 'vite';
 const fromHere = (path: string) => fileURLToPath(new URL(path, import.meta.url));
 
 const LOCAL_API_PORT = 3001;
+const LOCAL_API_ORIGIN = `http://localhost:${LOCAL_API_PORT}`;
+const API_PATH_PREFIXES = [
+  '/api',
+  '/mcp',
+  '/oauth/authorize',
+  '/oauth/token',
+  '/oauth/register',
+  '/oauth/revoke',
+  '/.well-known/oauth-',
+];
 const OUTPUT_DIRECTORY = fromHere('./dist');
 
 function readBuildSetting(name: string): string | undefined {
@@ -50,8 +60,6 @@ export default defineConfig({
   ],
   server: {
     port: 5174,
-    proxy: {
-      '/api': `http://localhost:${LOCAL_API_PORT}`,
-    },
+    proxy: Object.fromEntries(API_PATH_PREFIXES.map((prefix) => [prefix, LOCAL_API_ORIGIN])),
   },
 });

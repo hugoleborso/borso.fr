@@ -206,6 +206,7 @@ for a push that changes a pure file. Cost is the product, not either factor.
 | Named paths exist | staged files, and every file naming a removed path | `ci.yml` |
 | NUL bytes, package scripts, negative claims, racy pipelines, migration SQL, manifests, instruction tools | staged files only | `ci.yml` |
 | Vocabulary paths | when a vocabulary changes, a path under `apps/` is removed, or a test a `Held by` line names is edited | `ci.yml` |
+| Application test suites | not run | pre-push runs the tests a push affects; `ci.yml` runs every suite of each changed app in `app-tests (<app>)`, except pragma's database suites, which run in `app-tests (pragma-e2e)` and `app-tests (pragma-assistants)`, each with a Postgres of its own; `full-suite.yml` runs them all on `main` |
 | Every other check in the hook | whole tree, when the commit touches its scope | `ci.yml` |
 
 A link to a generated, gitignored report is not judged, on the commit or in
@@ -256,7 +257,12 @@ moved to pre-push and was removed on 2026-10-29.
   minutes (pragma and talos). Those numbers are inflated by the load, but CI's
   `app-tests` job for pragma, install and coverage included, took 339 to 471 s
   on recent pull requests, and most of each run is spent
-  building the jsdom environment, not in the tests. Pre-push already runs only
+  building the jsdom environment, not in the tests. When the assistant
+  feature's OAuth and MCP suites pushed that job past ten minutes, they moved
+  to a job of their own, `app-tests (pragma-assistants)`, rather than the
+  limit moving. The back-e2e suite followed on pull request #222, into
+  `app-tests (pragma-e2e)`, when the job ended at 9 min 58 s and the runner
+  cancelled it. Pre-push already runs only
   the tests a push affects, which is what keeps it inside its own budget.
   Bringing the suites under 30 s is its own change.
 - **The CI budget beyond `ci.yml`.** `full-suite.yml` runs on `main` after the

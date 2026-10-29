@@ -90,9 +90,12 @@ jobs:
             pnpm --filter "@borso-app/$APP" run test:coverage
           fi
 
+      # `back-e2e-*` picks up a database suite an app split out of `back-e2e`,
+      # such as pragma's `back-e2e-assistants`, which `ci.yml` runs as a job of
+      # its own.
       - name: Back-end end-to-end suite
         if: hashFiles(format('apps/{0}/api/**', matrix.app)) != ''
-        run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e
+        run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e --project 'back-e2e-*'
 
       # Stryker's incremental file records, per mutant, the tests that covered
       # it and the hash of the source it came from. Restoring it means a run

@@ -117,6 +117,7 @@ decision.
 - [`pnpm-dev-serves-a-schema-it-never-migrated.md`](./pnpm-dev-serves-a-schema-it-never-migrated.md) — `pnpm dev` applies no migrations (only the back-e2e setup does), so a new one answers 500 with `errorMissingColumn` until that suite runs; and the dev API shares its Postgres with that suite, so seeding by hand mid-run fails an unrelated test.
 - [`pnpm-peer-warning-is-not-enforcement.md`](./pnpm-peer-warning-is-not-enforcement.md) — pnpm only *warns* on peer-dep mismatch; installs succeed and the bad combination crashes at runtime.
 - [`pnpm-run-test-double-dash-drops-the-filter.md`](./pnpm-run-test-double-dash-drops-the-filter.md) — `pnpm run test -- <path>` hands Vitest a `--` and it runs every file; drop the `--`, or call `vitest run --project <name> <path>`.
+- [`vitest-list-ignores-shard.md`](./vitest-list-ignores-shard.md) — `vitest list --shard=i/n` lists every file, so a shard split cannot be checked by listing it; `--project` is honoured, and a split that must be predictable belongs in a project.
 - [`rtk-pnpm-install-can-skip-lockfile-write.md`](./rtk-pnpm-install-can-skip-lockfile-write.md) — when `pnpm install` is invoked through `rtk`, the lockfile sometimes doesn't write back; mirror from `node_modules/.pnpm/lock.yaml` if `git status` shows nothing changed.
 
 ### Claude Code tooling

@@ -11,8 +11,10 @@ import { answerUnhandledError } from './helpers/observability/unhandled-error.mi
 import { buildImprovementsRouter } from './improvements/improvements.controller';
 import { buildInstrumentsRouter } from './instruments/instruments.controller';
 import { buildMasteryRouter } from './mastery/mastery.controller';
+import { type BuildMcpRouterOptions, buildMcpRouter } from './mcp/mcp.controller';
 import { buildMeRouter } from './me/me.controller';
 import { buildMembersRouter } from './members/members.controller';
+import { type BuildOAuthRoutersOptions, buildOAuthRouters } from './oauth/oauth.controller';
 import { buildNotificationsRouter } from './notifications/notifications.controller';
 import { buildOutreachRouter } from './outreach/outreach.controller';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
@@ -26,6 +28,8 @@ import { buildUploadsRouter } from './uploads/uploads.controller';
 
 export interface CreateAppOptions {
   readonly auth?: BuildAuthRouterOptions;
+  readonly oauth?: BuildOAuthRoutersOptions;
+  readonly mcp?: BuildMcpRouterOptions;
 }
 
 /**
@@ -37,6 +41,7 @@ export interface CreateAppOptions {
 function buildAppRouter(options: CreateAppOptions = {}) {
   const { publicRouter, bootstrapRouter, rotateRouter } = buildAuthRouter(options.auth ?? {});
   const audience = buildAudienceRouter();
+  const oauth = buildOAuthRouters(options.oauth ?? {});
   return new Hono()
     .use('*', traceRequests)
     .use('*', logger())
@@ -65,7 +70,12 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/takes', buildTakesRouter())
     .route('/api/notifications', buildNotificationsRouter())
     .route('/api/audience', audience.publicRouter)
-    .route('/api/audience', audience.gatedRouter);
+    .route('/api/audience', audience.gatedRouter)
+    .route('/api/oauth', oauth.consentRouter)
+    .route('/api/assistant-grants', oauth.grantsRouter)
+    .route('/mcp', buildMcpRouter(options.mcp ?? {}))
+    .route('/oauth', oauth.authorizationRouter)
+    .route('/.well-known', oauth.discoveryRouter);
 }
 
 export type AppRouter = ReturnType<typeof buildAppRouter>;

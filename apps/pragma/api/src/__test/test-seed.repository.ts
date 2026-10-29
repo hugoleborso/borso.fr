@@ -1,66 +1,31 @@
-import {
-  memberCredentialTable,
-  memberPasskeyTable,
-  webauthnChallengeTable,
-} from '../auth/credentials.schema';
-import { barTable } from '../bars/bars.schema';
-import { memberCalendarFeedTable } from '../calendar-feeds/calendar-feeds.schema';
-import {
-  notificationDispatchTable,
-  notificationPreferenceTable,
-  pushSubscriptionTable,
-} from '../notifications/notifications.schema';
 import { sql } from 'drizzle-orm';
 import { getDatabase } from '../database/client';
+import * as schema from '../database/schema';
+import { assistantClientTable, assistantGrantTable } from '../oauth/oauth.schema';
 import { PRODUCTION_SCHEMA, readErrorCode } from './schema-boundary.core';
-import { instrumentTable } from '../instruments/instruments.schema';
-import {
-  masteryDefaultTable,
-  masteryOverrideTable,
-  masteryScoreChangeTable,
-} from '../mastery/mastery.schema';
-import { memberInstrumentTable, memberTable } from '../members/members.schema';
-import { sessionTable } from '../sessions/sessions.schema';
-import {
-  sessionSetlistTable,
-  setlistEntryTable,
-  setlistTable,
-  setlistVoteTable,
-} from '../setlists/setlists.schema';
-import { songTable } from '../songs/songs.schema';
-import { studyTable } from '../studies/studies.schema';
-import { takeCommentTable, takeTable } from '../takes/takes.schema';
-import { taskTable } from '../tasks/tasks.schema';
-import { transitionCommentTable } from '../transitions/transitions.schema';
+
+const TABLES_THE_SEED_KEEPS: ReadonlySet<unknown> = new Set([
+  schema.appConfigTable,
+  schema.vapidKeyPairTable,
+  schema.authAttemptTable,
+]);
 
 // @FollowsBlueprint repository-query
 export async function deleteAllDomainRows(): Promise<void> {
   const database = getDatabase();
-  await database.delete(taskTable);
-  await database.delete(takeCommentTable);
-  await database.delete(takeTable);
-  await database.delete(setlistVoteTable);
-  await database.delete(setlistEntryTable);
-  await database.delete(sessionSetlistTable);
-  await database.delete(setlistTable);
-  await database.delete(sessionTable);
-  await database.delete(memberInstrumentTable);
-  await database.delete(studyTable);
-  await database.delete(masteryScoreChangeTable);
-  await database.delete(masteryOverrideTable);
-  await database.delete(masteryDefaultTable);
-  await database.delete(transitionCommentTable);
-  await database.delete(barTable);
-  await database.delete(songTable);
-  await database.delete(memberPasskeyTable);
-  await database.delete(webauthnChallengeTable);
-  await database.delete(memberCredentialTable);
-  await database.delete(memberCalendarFeedTable);
-  await database.delete(pushSubscriptionTable);
-  await database.delete(notificationPreferenceTable);
-  await database.delete(notificationDispatchTable);
-  await database.delete(memberTable);
-  await database.delete(instrumentTable);
+  const domainTables = Object.values(schema).filter((table) => !TABLES_THE_SEED_KEEPS.has(table));
+  await Promise.all(domainTables.map((table) => database.delete(table)));
+}
+
+export interface SeedAssistantGrantRows {
+  readonly client: typeof assistantClientTable.$inferInsert;
+  readonly grant: typeof assistantGrantTable.$inferInsert;
+}
+
+export async function insertSeedAssistantGrant(rows: SeedAssistantGrantRows): Promise<void> {
+  const database = getDatabase();
+  await database.insert(assistantClientTable).values(rows.client);
+  await database.insert(assistantGrantTable).values(rows.grant);
 }
 
 export async function tryReadingProductionMembers(): Promise<string | null> {

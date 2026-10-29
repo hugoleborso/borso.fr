@@ -1,5 +1,6 @@
 import { date, pgTable, primaryKey, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { z } from 'zod';
+import { referenceSchema } from '../mcp/tool-input.schema';
 
 // @FollowsBlueprint schema-dsql-constraints
 export const studyTable = pgTable(
@@ -29,6 +30,12 @@ export const studyLogSchema = z
 export const studyPathSchema = z.object({
   songId: z.string().uuid(),
   instrumentId: z.string().uuid(),
+});
+
+export const studyToolInputSchema = z.object({
+  song: referenceSchema,
+  instrument: referenceSchema,
+  undo: z.boolean().optional(),
 });
 
 export type StudyLogInput = z.infer<typeof studyLogSchema>;

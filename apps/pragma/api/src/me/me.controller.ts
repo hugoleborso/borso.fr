@@ -40,13 +40,10 @@ export function buildMeRouter() {
       return context.json(member);
     })
     .put('/contact', zValidator('json', memberContactSchema), async (context) => {
-      const memberId = readMemberId(context);
-      const outcome = await saveOwnContactDetails(memberId, context.req.valid('json'));
+      const outcome = await saveOwnContactDetails(readMemberId(context), context.req.valid('json'));
       if (outcome.kind === 'empty') return context.json({ error: 'empty-update' }, 400);
       if (outcome.kind === 'not-found') return context.json({ error: 'unknown-member' }, 404);
-      const member = await readSignedInMember(memberId);
-      if (member === null) return context.json({ error: 'unknown-member' }, 404);
-      return context.json(member);
+      return context.json(outcome.member);
     })
     .put(
       '/calendar-feed',

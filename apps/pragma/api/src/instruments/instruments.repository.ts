@@ -1,4 +1,4 @@
-import { eq, inArray, sql } from 'drizzle-orm';
+import { eq, inArray, like, sql } from 'drizzle-orm';
 import type { z } from 'zod';
 import {
   defaultPositionForFamily,
@@ -8,10 +8,14 @@ import {
   resolveInstrumentIcon,
   resolveInstrumentPosition,
 } from '@domain/instrument.core';
+import { type InstrumentId, type Lineup, withoutInstrument } from '@domain/lineup.core';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
 import { type DeletionOutcome, selectDeletionOutcome } from '../helpers/persistence/deletion.core';
-import { memberInstrumentTable } from '../members/members.schema';
+import { memberInstrumentTable, memberTable } from '../members/members.schema';
+import { lineupOverrideSchema, setlistEntryTable } from '../setlists/setlists.schema';
+import { defaultLineupSchema, songTable } from '../songs/songs.schema';
+import type { NamedEntity } from './lineup-names.core';
 import type { InstrumentPlayer, InstrumentPlayerLink } from './instrument-players.core';
 import {
   type createInstrumentSchema,
@@ -88,6 +92,12 @@ export async function listInstrumentPlayerLinks(): Promise<InstrumentPlayerLink[
     .from(memberInstrumentTable);
 }
 
+export async function listMemberNames(): Promise<NamedEntity[]> {
+  return await getDatabase()
+    .select({ id: memberTable.id, name: memberTable.firstName })
+    .from(memberTable);
+}
+
 export async function listInstrumentIdsWithin(executor: DatabaseExecutor): Promise<string[]> {
   const rows = await executor.select({ id: instrumentTable.id }).from(instrumentTable);
   return rows.map((row) => row.id);
@@ -160,8 +170,59 @@ export async function didClaimInstrumentsWithin(
   return claimed.length === distinctIds.length;
 }
 
+function encodeLineupWithout(
+  encoded: string,
+  parse: (raw: unknown) => Lineup,
+  instrumentId: InstrumentId,
+): string {
+  const raw: unknown = JSON.parse(encoded);
+  return JSON.stringify(withoutInstrument(parse(raw), instrumentId));
+}
+
+async function dropInstrumentFromSongLineupsWithin(
+  executor: DatabaseExecutor,
+  instrumentId: InstrumentId,
+): Promise<void> {
+  const songsHoldingInstrument = await executor
+    .select({ id: songTable.id, defaultLineup: songTable.defaultLineup })
+    .from(songTable)
+    .where(like(songTable.defaultLineup, `%${instrumentId}%`));
+  for (const song of songsHoldingInstrument) {
+    const defaultLineup = encodeLineupWithout(
+      song.defaultLineup,
+      (raw) => defaultLineupSchema.parse(raw),
+      instrumentId,
+    );
+    await executor.update(songTable).set({ defaultLineup }).where(eq(songTable.id, song.id));
+  }
+}
+
+async function dropInstrumentFromEntryLineupsWithin(
+  executor: DatabaseExecutor,
+  instrumentId: InstrumentId,
+): Promise<void> {
+  const entriesHoldingInstrument = await executor
+    .select({ id: setlistEntryTable.id, lineupOverride: setlistEntryTable.lineupOverride })
+    .from(setlistEntryTable)
+    .where(like(setlistEntryTable.lineupOverride, `%${instrumentId}%`));
+  for (const entry of entriesHoldingInstrument) {
+    if (entry.lineupOverride === null) continue;
+    const lineupOverride = encodeLineupWithout(
+      entry.lineupOverride,
+      (raw) => lineupOverrideSchema.parse(raw),
+      instrumentId,
+    );
+    await executor
+      .update(setlistEntryTable)
+      .set({ lineupOverride })
+      .where(eq(setlistEntryTable.id, entry.id));
+  }
+}
+
 export async function deleteInstrumentWithLinks(id: string): Promise<DeletionOutcome> {
   return await runInOneInstrumentTransaction(async (transaction) => {
+    await dropInstrumentFromSongLineupsWithin(transaction, id);
+    await dropInstrumentFromEntryLineupsWithin(transaction, id);
     const deleted = await transaction
       .delete(instrumentTable)
       .where(eq(instrumentTable.id, id))

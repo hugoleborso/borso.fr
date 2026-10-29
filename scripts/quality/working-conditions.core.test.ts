@@ -61,6 +61,18 @@ describe('readKaizenLines', () => {
       { task: 'meta/x', writer: 'main', text: 'a second line' },
     ]);
   });
+
+  it('reads a line stamped with its date as well as its time', () => {
+    expect(readKaizenLines('meta/x', '- [2026-10-29 02:48] `kaizen-206` a dated line\n')).toEqual([
+      { task: 'meta/x', writer: 'kaizen-206', text: 'a dated line' },
+    ]);
+  });
+
+  it('skips a stamp that is neither a time nor a dated time', () => {
+    expect(
+      readKaizenLines('meta/x', '- [soon] `main` no stamp\n- [10-29 02:48] `main` half a date\n'),
+    ).toEqual([]);
+  });
 });
 
 describe('readInventoryLines', () => {

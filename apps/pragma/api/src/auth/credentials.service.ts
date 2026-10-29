@@ -37,7 +37,7 @@ interface ConsumedAttempt {
   readonly isLimited: boolean;
 }
 
-async function consumeAttempt(
+export async function consumeAttempt(
   budget: RateLimitBudget,
   clientAddress: string,
   now: Date,

@@ -59,7 +59,8 @@ inside the deny — so the budget can only be measured from a session holding
 `borso-admin`, and a claim about what fits is unverified anywhere else.
 
 Last verified: 2026-10-29 — against the live `AI-Dev-ReadOnly` user, where the
-three inline policies now spend 1243 + 375 + 173 = 1791 of 2048.
+three inline policies now spend 1248 + 377 + 173 = 1798 of 2048. Listing each
+reader ARN both bare and `:*` would have spent 2515, so each became one ARN ending in `*`.
 
 ## See also
 

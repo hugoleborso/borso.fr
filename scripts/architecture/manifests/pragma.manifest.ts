@@ -283,7 +283,17 @@ export const pragmaManifest: ArchitectureManifest = {
       name: 'Clipboard',
       technology: 'Browser clipboard API',
       description:
-        'Puts the outreach message a member copied for one bar on the clipboard, answering whether the write happened so a refused permission is a message in the page.',
+        'Puts the outreach message a member copied for one bar, or an assistant install command, on the clipboard, answering whether the write happened so a refused permission is a message in the page.',
+      boundary: 'browser-platform',
+      access: 'open',
+    },
+    {
+      id: 'browser-location',
+      icon: '🧭',
+      name: 'Page location',
+      technology: 'Browser location API',
+      description:
+        'Reads the page origin so the Account page shows the assistant server address of the stage it runs on, and leaves the page for the address an assistant registered once the member allows or denies it.',
       boundary: 'browser-platform',
       access: 'open',
     },

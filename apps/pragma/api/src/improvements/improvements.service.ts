@@ -1,5 +1,7 @@
 import { rankImprovements } from '@domain/improvement.core';
 import type { z } from 'zod';
+import { resolveReference } from '../mcp/mcp.service';
+import { type ImprovementToolView, projectImprovementForTool } from './improvement-tool.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { readTally, summariseVotes } from './improvements.core';
 import {
@@ -98,3 +100,17 @@ export async function withdrawVote(
   await deleteVote(improvementId, memberId);
   return await withTally(row, memberId);
 }
+
+export async function getImprovementsForTool(
+  viewerMemberId: string,
+): Promise<ImprovementToolView[]> {
+  return (await getImprovementsRanked(viewerMemberId)).map(projectImprovementForTool);
+}
+
+export async function resolveImprovementId(reference: string): Promise<string> {
+  return await resolveReference('improvement', reference, async () =>
+    (await listImprovements()).map((row) => ({ id: row.id, label: row.title })),
+  );
+}
+
+export { confirmUpdate, defineDeletion, defineTool, parseToolFields } from '../mcp/mcp.service';

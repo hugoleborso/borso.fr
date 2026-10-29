@@ -3,7 +3,15 @@ import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import { recordProductEvent } from '../helpers/observability/product-event.adapter';
 import { notifyBand } from '../notifications/notifications.service';
 import { didClaimSessionWithin } from '../sessions/sessions.service';
-import { didClaimSongWithin, findSongById } from '../songs/songs.service';
+import { didClaimSongWithin, findSongById, resolveSongId } from '../songs/songs.service';
+import { refuseTool } from '../mcp/mcp.service';
+import { isIdentifierReference } from '../helpers/reference/reference.core';
+import {
+  type CommentSummary,
+  summarizeComment,
+  summarizeTake,
+  type TakeSummary,
+} from './take-tool.core';
 import { deleteStoredObjects, mintObjectUpload } from '../uploads/uploads.service';
 import { buildTakeObjectKey, isMomentWithinTake, orderCommentsByTime } from './takes.core';
 import {
@@ -36,6 +44,9 @@ import type {
   TakeUploadOutcome,
   TakeView,
 } from './takes.types';
+
+export { defineDeletion, defineTool, pageItems } from '../mcp/mcp.service';
+export { resolveSongId } from '../songs/songs.service';
 
 const TAKE_OBJECT_DELETE_FAILED = 'TakeObjectDeleteFailed';
 
@@ -238,4 +249,36 @@ export async function detachTakesOfDeletedSession(
   sessionId: string,
 ): Promise<void> {
   await detachTakesOfSessionWithin(executor, sessionId);
+}
+
+export async function listTakesForTool(songReference: string): Promise<TakeSummary[]> {
+  return (await getTakesOfSong(await resolveSongId(songReference))).map(summarizeTake);
+}
+
+export async function resolveTakeId(
+  takeId: string | undefined,
+  songReference: string | undefined,
+): Promise<string> {
+  if (takeId !== undefined) return takeId;
+  if (songReference === undefined) return refuseTool({ error: 'take-or-song-required' });
+  const [latest] = await getTakesOfSong(await resolveSongId(songReference));
+  if (latest === undefined) return refuseTool({ error: 'take-not-found', song: songReference });
+  return latest.id;
+}
+
+export async function removeTakeByReference(reference: string): Promise<DeletionOutcome> {
+  if (!isIdentifierReference(reference)) return refuseTool({ error: 'take-not-found', reference });
+  return await removeTake(reference);
+}
+
+export interface TakeToolView {
+  readonly take: TakeSummary;
+  readonly comments: readonly CommentSummary[];
+}
+
+export async function readTakeForTool(takeId: string): Promise<TakeToolView | null> {
+  const take = await findTake(takeId);
+  if (take === null) return null;
+  const comments = orderCommentsByTime(await listCommentsOfTake(takeId));
+  return { take: summarizeTake(take), comments: comments.map(summarizeComment) };
 }

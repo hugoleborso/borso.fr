@@ -81,6 +81,29 @@ genuinely impossible.
 
 **Sibling defects swept:** none found beyond the three skills named.
 
+## Recurrence on PR #206
+
+The contract change above merged at 07:33 on 2026-10-27, as `a83f0a60`. The
+`/feature-pipeline` run for PR #206 started an hour later from a branch that
+contained it, and four of its stage agents logged the same thing again:
+`technical-validation-01` (twice, in two runs that shared the label),
+`technical-validation-02` and `visual-validation-01` were told to run a
+validation skill, had no Agent tool, and validated in their own context. Their
+reports say so (`runs/2026-10-27-assistants-act-on-pragma/agents/`).
+
+The branch-integration half did not recur: no agent of that run found a
+checkout without the round's commits. That half is something every stage
+agent does with tools it has; the dispatch half is a choice the generated
+script makes, and the script is written fresh from prose at every launch and
+then discarded, so nothing shows whether a given launch read the paragraph.
+
+So a level-5 entry in the one document the script is generated from did not
+hold, which is what `prose-stands-in-for-a-check` on the weak-point map
+predicts. Moving it up a level needs the generated script to exist somewhere a
+check can read it, which CLAUDE.md currently rules out ("No script is
+committed"). That is an operator decision, raised by the kaizen pull request
+for PR #206 rather than taken here.
+
 ## See also
 
 - [`parallel-agents-share-one-index-and-every-generator.md`](./parallel-agents-share-one-index-and-every-generator.md)

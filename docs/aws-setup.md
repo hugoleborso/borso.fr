@@ -460,9 +460,9 @@ refused before anything is invoked.
       "Effect": "Allow",
       "Action": "lambda:InvokeFunction",
       "Resource": [
-        "arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader",
-        "arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader",
-        "arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader"
+        "arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader*",
+        "arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader*",
+        "arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader*"
       ]
     }
   ]
@@ -489,7 +489,7 @@ narrowing statements are what ADR-0049 retired — and appends the two Lambda on
 not cosmetic; see *The 2048-character wall* below.
 
 ```bash
-jq -c --argjson fns '["arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader","arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader"]' '
+jq -c --argjson fns '["arn:aws:lambda:eu-west-3:756586757578:function:pragma-prod-agent-reader*","arn:aws:lambda:eu-west-3:756586757578:function:last-loop-lepin-prod-agent-reader*","arn:aws:lambda:eu-west-3:756586757578:function:banana-rush-prod-agent-reader*"]' '
   .Statement |= (
     map(select(.Sid | test("Dsql|Lambda") | not))
     | map(if .Resource == "*" and (.Action | type) == "array"
@@ -539,7 +539,7 @@ because `Prod-db-read` and `Screenshots-publish` were already spending 525 of th
 
 Two things follow. Compact the JSON — IAM counts whitespace, so `jq -c` buys about a third of
 the document back. And treat the budget as a shared one: as of 2026-10-29 the three policies
-spend 1243 + 375 + 173 = 1791 of 2048, which leaves room for roughly four more ARNs anywhere.
+spend 1248 + 377 + 173 = 1798 of 2048, which leaves room for roughly three more ARNs anywhere.
 The next thing that does not fit moves to a customer-managed policy, which is capped at 6144 and
 attaches to the user the same way; do not golf the Sids to buy another hundred characters.
 
@@ -569,6 +569,15 @@ for f in pragma-prod-agent-reader last-loop-lepin-prod-agent-reader \
     --query 'EvaluationResults[0].EvalDecision' --output text)"
 done
 ```
+
+Run it a second time with `function:$f:\$LATEST` as the resource. `aws lambda invoke` is
+evaluated against the qualified ARN `…:function:<name>:$LATEST`, which an unqualified entry in a
+`NotResource` list does not match, so each reader above ends in `*`, which matches the bare name
+and every qualifier. A deny holding only the bare ARNs answers `allowed` to the first loop and
+still refuses every invoke, which is what happened on 2026-10-29. Listing each reader twice, bare
+and `:*`, is the precise alternative and was tried first: it adds nine ARNs and came to 2515
+characters, past the wall below. The cost of the wildcard is that it also matches any future
+function whose name starts with a reader's name.
 
 On 2026-10-29 that returned `allowed` for the three readers and `explicitDeny` for
 `pragma-prod-api`, with `lambda:UpdateFunctionCode` and `lambda:GetFunction` on a reader both

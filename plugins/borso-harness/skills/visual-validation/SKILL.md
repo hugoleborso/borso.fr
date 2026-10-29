@@ -79,7 +79,7 @@ Do **not** invoke when:
 
    `.pending-upload/` is gitignored, so a `git add` between here and the pull request cannot commit what is waiting to be published. **The upload happens in [`/open-pr`](../open-pr/SKILL.md), not here** — the destination host is `screenshots-pr-<n>`, and the pull request number does not exist yet.
 
-   The report cites a staged file as `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png` with `<n>` left literal; `/open-pr` substitutes the number once it has one. A file that stays in `evidence_dir` keeps its relative path.
+   The report cites a staged file as `https://screenshots-pr-<n>.preview.borso.fr/<timestamp>/<file>.png` with `<n>` left literal, and it stays literal: the report is a dated record that `scripts/check-dated-records-are-append-only.sh` refuses to see edited, so the pull request's *Screenshots* comment and its folder link are where the number is filled in. A file that stays in `evidence_dir` keeps its relative path.
 
 9. **Stage the report and the surviving evidence for commit.** They live under `docs/features/<app>/<slug>/validation/`, which is *not* gitignored. The report is always committed; the screenshots beside it are the ones a FAIL row references.
 

@@ -30,6 +30,15 @@ export function resolveLineup(defaultLineup: Lineup, overrideLineup: Lineup | nu
   return resolved;
 }
 
+// @FollowsBlueprint core-projection
+export function withoutInstrument(lineup: Lineup, instrumentId: InstrumentId): Lineup {
+  const kept: Record<MemberId, readonly InstrumentId[]> = {};
+  for (const [memberId, instrumentIds] of Object.entries(lineup)) {
+    kept[memberId] = instrumentIds.filter((heldId) => heldId !== instrumentId);
+  }
+  return kept;
+}
+
 export type InstrumentedMember = readonly [MemberId, readonly InstrumentId[]];
 
 // @FollowsBlueprint core-projection
