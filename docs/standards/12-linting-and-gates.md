@@ -644,5 +644,9 @@ review.
   `docs/quality/working-conditions.md` and ranks them by how many distinct
   agents hit each one. Its `--check` fails a wall outside Build, Observe and
   Ship, a wall with no terms, a duplicated wall and a wall that files nothing.
+- `generator:scripts/architecture/architecture-graph.ts` draws the
+  architecture maps and fails a `@DependsOnExternal` that the application's
+  manifest does not declare. CI runs it without `--check`, because every
+  refusal fires on the plain run and nothing is committed to compare against.
 - `reviewer` checks that the reason on a disable comment is a claim about that
   line which a reader can check, and not "pre-existing" or "will fix later".
