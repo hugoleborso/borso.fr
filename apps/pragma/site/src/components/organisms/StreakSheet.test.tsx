@@ -78,15 +78,38 @@ describe('StreakSheet', () => {
   });
 
   it.each([
-    { memberIndex: 0, present: ['text-accent', 'fill-accent-soft'], absent: ['fill-accent'] },
-    { memberIndex: 1, present: ['text-ink-faint'], absent: ['text-accent', 'fill-accent'] },
-    { memberIndex: 2, present: ['text-accent', 'fill-accent'], absent: ['fill-accent-soft'] },
-  ])('tones the flame of row $memberIndex with $present', ({ memberIndex, present, absent }) => {
-    const sheet = renderSheet({ ...VIEW, members: [LEA, TOM, MARC] });
-    const flame = within(sheet).getAllByRole('listitem')[memberIndex]?.querySelector('svg');
-    const classes = (flame?.getAttribute('class') ?? '').split(' ');
-    expect(classes).toEqual(expect.arrayContaining(present));
-    expect(classes.filter((name) => absent.includes(name))).toEqual([]);
+    { memberIndex: 0, tone: 'open', layers: 2, sparks: 1 },
+    { memberIndex: 1, tone: 'out', layers: 1, sparks: 0 },
+    { memberIndex: 2, tone: 'counted', layers: 3, sparks: 3 },
+  ])(
+    'draws row $memberIndex with a $tone blaze of $layers layers and $sparks sparks',
+    ({ memberIndex, tone, layers, sparks }) => {
+      const sheet = renderSheet({ ...VIEW, members: [LEA, TOM, MARC] });
+      const mark = within(sheet)
+        .getAllByRole('listitem')
+        [memberIndex]?.querySelector('svg[data-flame-mark]');
+      expect(mark?.getAttribute('data-flame-mark')).toBe('blaze');
+      expect(mark?.getAttribute('data-tone')).toBe(tone);
+      expect(mark?.querySelectorAll('path')).toHaveLength(layers);
+      expect(mark?.querySelectorAll('circle')).toHaveLength(sparks);
+    },
+  );
+
+  it('draws my flame as a large blaze and the band as a bonfire that flickers once today counts', () => {
+    const sheet = renderSheet(VIEW);
+    const marks = [...sheet.querySelectorAll('section svg[data-flame-mark]')];
+    expect(marks.map((mark) => mark.getAttribute('data-flame-mark'))).toEqual(['blaze', 'bonfire']);
+    expect(marks.map((mark) => mark.getAttribute('data-tone'))).toEqual(['open', 'counted']);
+    expect(marks[0]?.getAttribute('width')).toBe('40');
+    expect(marks[0]?.getAttribute('class')).not.toContain('animate-flame-flicker');
+    expect(marks[1]?.getAttribute('class')).toContain('motion-safe:animate-flame-flicker');
+  });
+
+  it('keeps the band bonfire still while today is open for the band', () => {
+    const sheet = renderSheet({ ...VIEW, band: { days: 4, isTodayCounted: false } });
+    const bonfire = sheet.querySelector('svg[data-flame-mark="bonfire"]');
+    expect(bonfire?.getAttribute('data-tone')).toBe('open');
+    expect(bonfire?.getAttribute('class')).not.toContain('animate-flame-flicker');
   });
 
   it('says No flame yet for a flame of zero days', () => {

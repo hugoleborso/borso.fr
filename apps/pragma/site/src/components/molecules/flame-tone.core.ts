@@ -1,21 +1,5 @@
 import type { BandFlame } from '@domain/practice-flame.core';
-
-export type FlameTone = 'counted' | 'open' | 'out';
-
-export type FlameGlyph = 'flame' | 'members';
-
-export const FLAME_TONE_CLASS: Readonly<Record<FlameGlyph, Readonly<Record<FlameTone, string>>>> = {
-  flame: {
-    counted: 'text-accent fill-accent',
-    open: 'text-accent fill-accent-soft',
-    out: 'text-ink-faint',
-  },
-  members: {
-    counted: 'text-accent',
-    open: 'text-accent',
-    out: 'text-ink-faint',
-  },
-};
+import type { FlameTone } from '../atoms/flame-mark.utils';
 
 const FLAME_STATUS_KEY = {
   out: 'streaks.noFlame',

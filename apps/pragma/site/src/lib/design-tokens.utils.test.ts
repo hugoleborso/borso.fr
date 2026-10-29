@@ -25,6 +25,7 @@ const STYLESHEET = readFileSync(STYLESHEET_PATH, 'utf8');
 const TOKENS = readThemeTokens(STYLESHEET);
 const SCHEMES: readonly ColourScheme[] = ['light', 'dark'];
 const MINIMUM_TEXT_CONTRAST = 4.5;
+const MINIMUM_GRAPHIC_CONTRAST = 3;
 const SOURCE_FILE = /\.tsx?$/u;
 const TEST_FILE = /\.test\.tsx?$/u;
 const TOKEN_READER_FILE = 'design-tokens.utils.ts';
@@ -56,6 +57,8 @@ const TEXT_PAIRS: readonly (readonly [string, string])[] = [
   ['stage-ink-dim', 'stage-bg'],
   ['stage-chord', 'stage-bg'],
 ];
+
+const FLAME_SILHOUETTE_SURFACES = ['paper', 'leaf', 'raised', 'sunk'];
 
 const PILL_LABELS: readonly (readonly [string, string])[] = [
   ['ink', 'paper'],
@@ -210,6 +213,21 @@ describe('the stylesheet', () => {
         return ratio === null || ratio < MINIMUM_TEXT_CONTRAST;
       });
       expect(failing).toEqual([]);
+    },
+  );
+
+  it.each(SCHEMES)(
+    'keeps the lit flame outline at 3:1 or more on every surface and on a Home chip in the %s scheme',
+    (scheme) => {
+      const ratios = [
+        ...FLAME_SILHOUETTE_SURFACES.map((under) =>
+          measureTokenContrast(TOKENS, 'flame-deep', under, scheme),
+        ),
+        measureContrastOnFill(TOKENS, 'flame-deep', 'glass', 'paper', scheme),
+      ];
+      expect(ratios.filter((ratio) => ratio === null || ratio < MINIMUM_GRAPHIC_CONTRAST)).toEqual(
+        [],
+      );
     },
   );
 

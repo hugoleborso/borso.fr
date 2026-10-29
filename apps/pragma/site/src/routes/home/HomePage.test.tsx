@@ -229,7 +229,12 @@ describe('the home page', () => {
     const mine = await within(header).findByRole('button', {
       name: 'Your flame, 12 days, today counted',
     });
-    expect(within(header).getByRole('button', { name: 'Band flame, 4 days' })).toBeTruthy();
+    const band = within(header).getByRole('button', { name: 'Band flame, 4 days' });
+    expect(mine.querySelector('svg')?.getAttribute('data-flame-mark')).toBe('blaze');
+    expect(band.querySelector('svg')?.getAttribute('data-flame-mark')).toBe('bonfire');
+    expect(band.querySelector('svg')?.getAttribute('class')).toContain(
+      'motion-safe:animate-flame-flicker',
+    );
     fireEvent.click(mine);
     const sheet = screen.getByRole('dialog', { name: 'Flames' });
     expect(within(sheet).getByText(MEMBER.firstName)).toBeTruthy();

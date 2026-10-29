@@ -3,16 +3,12 @@
 import type { JSX } from 'react';
 import { useTranslation } from 'react-i18next';
 import type { StreaksView } from '../../lib/queries/streaks.queries';
+import { BlazeMark } from '../atoms/BlazeMark';
+import { BonfireMark } from '../atoms/BonfireMark';
 import { ButtonLink } from '../atoms/ButtonLink';
-import { composeClassName } from '../atoms/class-name.utils';
-import { Icon } from '../atoms/Icon';
 import { MemberMark } from '../atoms/MemberMark';
 import { Overline } from '../atoms/Overline';
-import {
-  FLAME_TONE_CLASS,
-  selectFlameStatusKey,
-  selectFlameTone,
-} from '../molecules/flame-tone.core';
+import { selectFlameStatusKey, selectFlameTone } from '../molecules/flame-tone.core';
 import { Sheet } from '../molecules/Sheet';
 
 export interface StreakSheetProps {
@@ -39,14 +35,7 @@ export function StreakSheet({ view, onClose }: StreakSheetProps): JSX.Element {
     >
       <div className="flex flex-col gap-5 pb-2">
         <section className="flex items-center gap-3">
-          <Icon
-            name="flame"
-            size="lg"
-            className={composeClassName(
-              'size-10',
-              FLAME_TONE_CLASS.flame[selectFlameTone(view.mine)],
-            )}
-          />
+          <BlazeMark tone={selectFlameTone(view.mine)} size="lg" />
           <div className="flex min-w-0 flex-col">
             <span className="font-display text-display leading-none text-ink tabular-nums">
               {view.mine.days}
@@ -61,11 +50,7 @@ export function StreakSheet({ view, onClose }: StreakSheetProps): JSX.Element {
         </section>
 
         <section className="flex items-center gap-3">
-          <Icon
-            name="members"
-            size="lg"
-            className={FLAME_TONE_CLASS.members[selectFlameTone(view.band)]}
-          />
+          <BonfireMark tone={selectFlameTone(view.band)} size="md" />
           <div className="flex min-w-0 flex-auto flex-col">
             <Overline>{t('streaks.bandTitle')}</Overline>
             <p className="m-0 text-meta text-ink-soft first-letter:uppercase">
@@ -83,11 +68,7 @@ export function StreakSheet({ view, onClose }: StreakSheetProps): JSX.Element {
                 {member.firstName}
               </span>
               <span className="flex shrink-0 items-center gap-1 text-meta font-semibold text-ink tabular-nums">
-                <Icon
-                  name="flame"
-                  size="sm"
-                  className={FLAME_TONE_CLASS.flame[selectFlameTone(member.flame)]}
-                />
+                <BlazeMark tone={selectFlameTone(member.flame)} size="sm" />
                 {member.flame.days}
               </span>
               <span className="shrink-0 text-meta text-ink-soft first-letter:uppercase">

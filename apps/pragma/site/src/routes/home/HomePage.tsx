@@ -189,7 +189,7 @@ export function HomePage(): JSX.Element {
           streaks === undefined ? null : (
             <>
               <FlameChip
-                glyph="flame"
+                scope="personal"
                 days={streaks.mine.days}
                 tone={selectFlameTone(streaks.mine)}
                 label={t('streaks.mineChip', {
@@ -199,7 +199,7 @@ export function HomePage(): JSX.Element {
                 onPress={openStreakSheet}
               />
               <FlameChip
-                glyph="members"
+                scope="band"
                 days={streaks.band.days}
                 tone={selectFlameTone(streaks.band)}
                 label={t('streaks.bandChip', { count: streaks.band.days })}

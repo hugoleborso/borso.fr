@@ -1202,10 +1202,15 @@ Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
 - Not stored: it is computed on every read from the last 400 days of studies
   and sessions (`STREAK_LOOKBACK_DAYS`).
 - Shown on Home as two chips that open the streak sheet: the member's own
-  flame and the band's. The flame is `accent` once today counts,
-  `accent-soft` with an `accent` outline while today is open, and
-  `ink-faint` at 0. Logging or undoing a study settles it from the flames
-  the write answers, read in the write's own transaction.
+  flame and the band's. Both are drawn marks, not `Icon` glyphs. The
+  personal flame is the `BlazeMark`, one flame in three layers with sparks.
+  The band flame is the `BonfireMark`, three tilted flames. Each reads a
+  tone. `counted` (today counts) layers `flame-deep`, `flame-mid` and
+  `flame-core` under a `flame-glow` drop shadow, and the bonfire flickers
+  unless motion is reduced. `open` (today not yet) is `accent-soft` with an
+  `accent` outline and a faint core. `out` (0 days) is an `ink-faint`
+  outline with no spark. Logging or undoing a study settles it from the
+  flames the write answers, read in the write's own transaction.
 
 Held by: `site/src/routes/home/HomePage.test.tsx` › puts both flames on the title line, and a tap on either opens the streak sheet
 Held by: `site/src/lib/queries/streaks.queries.test.tsx` › settles the flames from the answer once a study is logged

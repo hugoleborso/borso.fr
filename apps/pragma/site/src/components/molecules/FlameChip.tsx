@@ -1,12 +1,20 @@
 /** @Feature streaks */
 
 import type { JSX } from 'react';
+import { BlazeMark } from '../atoms/BlazeMark';
+import { BonfireMark } from '../atoms/BonfireMark';
 import { Chip } from '../atoms/Chip';
-import { Icon } from '../atoms/Icon';
-import { FLAME_TONE_CLASS, type FlameGlyph, type FlameTone } from './flame-tone.core';
+import type { FlameTone } from '../atoms/flame-mark.utils';
+
+export type FlameScope = 'personal' | 'band';
+
+const FLAME_MARK = {
+  personal: BlazeMark,
+  band: BonfireMark,
+} as const satisfies Readonly<Record<FlameScope, typeof BlazeMark>>;
 
 export interface FlameChipProps {
-  readonly glyph: FlameGlyph;
+  readonly scope: FlameScope;
   readonly days: number;
   readonly tone: FlameTone;
   readonly label: string;
@@ -14,10 +22,11 @@ export interface FlameChipProps {
 }
 
 // @FollowsBlueprint molecule-presentational
-export function FlameChip({ glyph, days, tone, label, onPress }: FlameChipProps): JSX.Element {
+export function FlameChip({ scope, days, tone, label, onPress }: FlameChipProps): JSX.Element {
+  const Mark = FLAME_MARK[scope];
   return (
     <Chip aria-label={label} title={label} onPress={onPress} className="tabular-nums">
-      <Icon name={glyph} size="md" className={FLAME_TONE_CLASS[glyph][tone]} />
+      <Mark tone={tone} size="md" />
       {days}
     </Chip>
   );

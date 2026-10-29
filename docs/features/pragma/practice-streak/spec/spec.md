@@ -37,7 +37,7 @@ Home                     [🔥 12] [👥 4]
 
 - Two chips sit right of the `Home` title, on the `PageHeader` line. The first is the signed-in member's flame and its day count. The second is the band's flame and its day count.
 - The flames are drawn marks, not icons, in pragma blues only (operator, 2026-10-29, choosing from [`mockups/flame-options.png`](mockups/flame-options.png)):
-  - **Personal flame** ("Blaze", option B): one flame in three layers (deep blue, blue, a light core), three sparks and a soft blue glow when today counts. It is `accent-soft` with an `accent` outline and a faint core while today is open, and an `ink-faint` outline with no sparks at 0. It is used in your chip, large in the sheet, and in each member row.
+  - **Personal flame** ("Blaze", option B): one flame in three layers (deep blue, blue, a light core), three sparks and a soft blue glow when today counts. It is `accent-soft` with an `accent` outline, a faint core and one spark while today is open, and an `ink-faint` outline with no sparks at 0. It is used in your chip, large in the sheet, and in each member row.
   - **Band flame** ("Bonfire", option A): three tilted flames, each layered the same way, with the glow. It flickers gently, a slow scale and glow pulse, while today counts for the band, and stays still under `prefers-reduced-motion`. Open and 0 follow the personal flame's tones.
 - Each chip is a button with an accessible name, for example "Your flame, 12 days, today counted". Tapping either one opens the **streak sheet**.
 - The streak sheet:
