@@ -30,6 +30,7 @@ export interface CompositionDetailProps {
   readonly onToggleTaskDone: (task: TaskShape) => void;
   readonly onOpenTask: (task: TaskShape) => void;
   readonly onDeleteTask: (task: TaskShape) => void;
+  readonly isTitleShown?: boolean;
 }
 
 const SECTION_LABEL_CLASS = 'text-label tracking-wider uppercase text-ink-soft font-medium';
@@ -39,13 +40,16 @@ const LINK_CLASS = 'inline-flex min-h-11 items-center text-meta text-accent no-u
 export function CompositionDetail(props: CompositionDetailProps): JSX.Element {
   const { t } = useTranslation();
   const { composition } = props;
+  const isTitleShown = props.isTitleShown ?? true;
   const chordProSource = selectChordProSource(composition.chart);
   const hasNotes = selectSongNoteSections(composition).length > 0;
 
   return (
     <div className="flex flex-col gap-4 min-w-0">
       <div className="flex flex-wrap items-center gap-2">
-        <h2 className="font-display text-display text-ink m-0">{composition.title}</h2>
+        {isTitleShown ? (
+          <h2 className="font-display text-display text-ink m-0">{composition.title}</h2>
+        ) : null}
         <StatusChip status={composition.status} />
         <Link to={`/catalog/${composition.id}`} className={composeClassName('ml-auto', LINK_CLASS)}>
           {t('compos.openInCatalog')}

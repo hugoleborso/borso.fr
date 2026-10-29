@@ -142,4 +142,14 @@ describe('the band page', () => {
     expect(links.at(-1)?.getAttribute('href')).toBe('/account');
     expect(links.map((link) => link.getAttribute('href'))).toContain('/members');
   });
+
+  it('puts the band links above the tasks, so no task list hides them, under a fixed header', async () => {
+    renderBandPage();
+    const links = await screen.findByRole('navigation', { name: 'The band' });
+    const tasks = await screen.findByRole('list', { name: 'My tasks' });
+    expect(links.compareDocumentPosition(tasks) & Node.DOCUMENT_POSITION_FOLLOWING).toBeTruthy();
+    const header = screen.getByRole('heading', { level: 1, name: 'Band' }).closest('header');
+    expect(header?.classList.contains('sticky')).toBe(true);
+    expect(header?.querySelector('[role=tablist]')).not.toBeNull();
+  });
 });

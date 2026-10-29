@@ -1,5 +1,5 @@
 import { z } from 'zod';
-import type { BandSessionDriver } from './band-session.setup';
+import type { BandSessionDriver, KnownRecords } from './band-session.setup';
 import {
   READ_CONTENT_BELOW_LIST,
   READ_PAGE_HEADER,
@@ -21,12 +21,14 @@ const SCROLL_SETTLE_MS = 400;
 const SMALL_PHONE = { width: 375, height: 667 } as const;
 const SMALL_PHONE_INSETS = { top: 20, bottom: 0, left: 0, right: 0 } as const;
 const BAND_PATH = '/band';
-const SIGNED_OUT_ROUTES: readonly ScreenRuleRoute[] = [
-  { route: '/login', url: '/login', back: null },
-  { route: '/recover', url: '/recover', back: '/login' },
-];
-const STAGE_ROUTES = new Set(['/catalog/:songId/scene', '/setlists/:setlistId/scene']);
+const EXEMPT_ROUTES: Readonly<Record<string, string>> = {
+  '/login': 'a signed-out card centred on the screen, with no page header and nothing to scroll',
+  '/recover': 'a signed-out card centred on the screen, with no page header and nothing to scroll',
+  '/catalog/:songId/scene': 'a full-screen stage view',
+  '/setlists/:setlistId/scene': 'a full-screen stage view',
+};
 const TAB_ROOTS = new Set(['/', '/catalog', '/sessions', '/setlists', '/band']);
+const REDIRECTS_TO_TAB_ROOT = new Set(['/studies', '/tasks']);
 const BAND_SUB_PAGES = new Set([
   '/members',
   '/instruments',
@@ -36,6 +38,25 @@ const BAND_SUB_PAGES = new Set([
   '/account',
 ]);
 const NO_BACK_LINK_ROUTES = new Set(['/vote/:sessionId']);
+const TAB_VARIANTS: readonly {
+  readonly route: string;
+  readonly view: string;
+  readonly url: (known: KnownRecords) => string;
+}[] = [
+  { route: '/', view: 'tasks', url: () => '/' },
+  { route: '/band', view: 'everyone', url: () => '/band' },
+  { route: '/members', view: 'mastery', url: () => '/members' },
+  ...['sign-in', 'calendar', 'notifications', 'language'].map((view) => ({
+    route: '/account',
+    view,
+    url: () => '/account',
+  })),
+  ...['tasks', 'takes', 'details'].map((view) => ({
+    route: '/sessions/:sessionId (concert)',
+    view,
+    url: (known: KnownRecords) => `/sessions/${known.concert.id}`,
+  })),
+];
 
 const headerSchema = z.object({
   hasHeader: z.boolean(),
@@ -53,9 +74,11 @@ interface ScreenRuleRoute extends RouteTarget {
   readonly back: ExpectedBackLink;
 }
 
-function expectBackLink(route: string): ExpectedBackLink {
+function expectBackLink(routeWithView: string): ExpectedBackLink {
+  const [route = routeWithView] = routeWithView.split('?');
   if (BAND_SUB_PAGES.has(route)) return BAND_PATH;
-  if (TAB_ROOTS.has(route) || NO_BACK_LINK_ROUTES.has(route)) return null;
+  if (TAB_ROOTS.has(route) || REDIRECTS_TO_TAB_ROOT.has(route)) return null;
+  if (NO_BACK_LINK_ROUTES.has(route)) return null;
   return ANY_BACK_LINK;
 }
 
@@ -106,7 +129,6 @@ export async function measureScreenRule(
     reports[target.route] = measured.report;
     violationsByRoute[target.route] = measured.violations;
   };
-  for (const target of SIGNED_OUT_ROUTES) await record(target);
   await driver.signIn();
   const { routes } = await buildSignedInRoutePlan(driver);
   const known = await driver.readKnownRecords();
@@ -120,15 +142,19 @@ export async function measureScreenRule(
       url: `/sessions/${pastPractice?.id ?? known.concert.id}/practice`,
     },
     { route: '/setlists/:setlistId/order', url: `/setlists/${known.main.id}/order` },
+    ...TAB_VARIANTS.map((variant) => ({
+      route: `${variant.route}?view=${variant.view}`,
+      url: `${variant.url(known)}?view=${variant.view}`,
+    })),
   ];
   for (const target of [...routes, ...extraRoutes]) {
-    if (STAGE_ROUTES.has(target.route)) continue;
+    if (target.route in EXEMPT_ROUTES) continue;
     await record({ ...target, back: expectBackLink(target.route) });
   }
   await emulatePhone(driver.session);
   return {
     viewport: `${String(SMALL_PHONE.width)}x${String(SMALL_PHONE.height)}`,
-    exempt: [...STAGE_ROUTES],
+    exempt: EXEMPT_ROUTES,
     ...summariseScreenRule(violationsByRoute),
     violationsByRoute,
     reports,

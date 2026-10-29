@@ -4,12 +4,14 @@ import { selectNextSession } from '@domain/session-schedule.core';
 import type { JSX } from 'react';
 import { useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
 import { ButtonLink } from '../../components/atoms/ButtonLink';
 import { Overline } from '../../components/atoms/Overline';
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { SectionTabs } from '../../components/molecules/SectionTabs';
 import {
   describeTotalDuration,
   type TotalDurationLabel,
@@ -33,7 +35,13 @@ import { useSetlistsBySession } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { useTasksList } from '../../lib/queries/tasks.queries';
 import { isPracticeModeOffered } from '../sessions/practice-mode.core';
-import { buildHomeView, selectHomePrimaryAction } from './home.core';
+import {
+  buildHomeView,
+  HOME_SECTION_PARAM,
+  type HomeSection,
+  readHomeSection,
+  selectHomePrimaryAction,
+} from './home.core';
 import { recordProductEvent } from '../../observability/product-event.adapter';
 
 const NO_ROWS: readonly never[] = [];
@@ -55,6 +63,7 @@ export function HomePage(): JSX.Element {
   const tasksQuery = useTasksList();
   const taskSheet = useTaskSheet();
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const nextSession = useMemo(
     () => selectNextSession(sessionsQuery.data?.sessions ?? NO_ROWS, new Date(nowEpochMs)),
@@ -110,7 +119,44 @@ export function HomePage(): JSX.Element {
       }),
   });
   const primaryLink = primaryAction.link;
+  const isPartShown = setlist !== null && view.memberPart.length > 0;
+  const section = readHomeSection(searchParams.get(HOME_SECTION_PARAM), isPartShown);
+  const showSection = (next: HomeSection): void => {
+    setSearchParams({ [HOME_SECTION_PARAM]: next }, { replace: true });
+  };
   const greetingName = signedInMember.data?.firstName ?? '';
+
+  const panelBySection: Readonly<Record<HomeSection, JSX.Element | null>> = {
+    part:
+      setlist === null ? null : (
+        <div className="flex flex-col gap-2">
+          {memberId === null ? <Overline>{t('home.yourPart')}</Overline> : null}
+          <MemberPartList
+            label={t('home.yourPart')}
+            rows={view.memberPart}
+            path={buildMemberPartPath(setlist.id, memberId ?? '')}
+          />
+        </div>
+      ),
+    tasks:
+      memberId === null ? null : (
+        <div className="flex flex-col gap-2">
+          {isPartShown ? null : <Overline>{t('home.yourTasks')}</Overline>}
+          {view.memberTasks.length === 0 ? (
+            <p className="m-0 text-meta text-ink-soft">{t('home.noOpenTask')}</p>
+          ) : (
+            <TaskList
+              label={t('home.yourTasks')}
+              tasks={view.memberTasks}
+              {...rowLabels}
+              onToggleDone={taskSheet.toggleDone}
+              onOpen={taskSheet.openTask}
+              onDelete={taskSheet.requestDeletion}
+            />
+          )}
+        </div>
+      ),
+  };
 
   return (
     <section className="flex max-w-[640px] flex-col gap-5 px-4 py-4 sm:px-9 sm:py-7">
@@ -140,34 +186,19 @@ export function HomePage(): JSX.Element {
         />
       )}
 
-      {setlist === null || view.memberPart.length === 0 ? null : (
-        <div className="flex flex-col gap-2">
-          <Overline>{t('home.yourPart')}</Overline>
-          <MemberPartList
-            label={t('home.yourPart')}
-            rows={view.memberPart}
-            path={buildMemberPartPath(setlist.id, memberId ?? '')}
-          />
-        </div>
-      )}
+      {isPartShown && memberId !== null ? (
+        <SectionTabs
+          label={t('home.sectionsLabel')}
+          tabs={[
+            { value: 'part', label: t('home.yourPart'), icon: 'song' },
+            { value: 'tasks', label: t('home.yourTasks'), icon: 'tasks' },
+          ]}
+          value={section}
+          onChange={showSection}
+        />
+      ) : null}
 
-      {memberId === null ? null : (
-        <div className="flex flex-col gap-2">
-          <Overline>{t('home.yourTasks')}</Overline>
-          {view.memberTasks.length === 0 ? (
-            <p className="m-0 text-meta text-ink-soft">{t('home.noOpenTask')}</p>
-          ) : (
-            <TaskList
-              label={t('home.yourTasks')}
-              tasks={view.memberTasks}
-              {...rowLabels}
-              onToggleDone={taskSheet.toggleDone}
-              onOpen={taskSheet.openTask}
-              onDelete={taskSheet.requestDeletion}
-            />
-          )}
-        </div>
-      )}
+      {panelBySection[section]}
 
       <TaskSheetHost
         controller={taskSheet}

@@ -5,6 +5,7 @@ import {
   type HomeSong,
   type HomeViewInput,
   selectHomePrimaryAction,
+  readHomeSection,
 } from './home.core';
 
 const MEMBER = 'member-1';
@@ -63,6 +64,20 @@ const INPUT: HomeViewInput = {
 };
 
 // @FollowsBlueprint test-pure-unit
+describe('readHomeSection', () => {
+  it('opens on the member part when there is one, unless the address asks for the tasks', () => {
+    expect(readHomeSection(null, true)).toBe('part');
+    expect(readHomeSection('part', true)).toBe('part');
+    expect(readHomeSection('unknown', true)).toBe('part');
+    expect(readHomeSection('tasks', true)).toBe('tasks');
+  });
+
+  it('shows the tasks when the member has no part', () => {
+    expect(readHomeSection(null, false)).toBe('tasks');
+    expect(readHomeSection('part', false)).toBe('tasks');
+  });
+});
+
 describe('buildHomeView', () => {
   it('lists the songs where the member plays, an override included, with the instruments', () => {
     const view = buildHomeView(INPUT);

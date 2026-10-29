@@ -3,6 +3,7 @@
 import { selectUpcomingConcerts } from '@domain/upcoming-concerts.core';
 import { type JSX, useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
+import { useSearchParams } from 'react-router-dom';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
 import { ApiError } from '../../lib/api.client';
 import { formatSessionDate } from '../../lib/formatters.utils';
@@ -21,14 +22,18 @@ import { isPracticeModeOffered } from '../../routes/sessions/practice-mode.core'
 import { selectSessionFacts } from '../../routes/sessions/session-facts.core';
 import {
   isPreparedConcertPickerShown,
+  listSessionViews,
+  readSessionView,
+  SESSION_VIEW_PARAM,
+  type SessionView,
   selectSessionPills,
 } from '../../routes/sessions/session-page.core';
-import { BottomActions } from '../atoms/BottomActions';
 import { Button } from '../atoms/Button';
 import { ButtonLink } from '../atoms/ButtonLink';
-import { BackLink } from '../molecules/BackLink';
 import { PageHeader } from '../molecules/PageHeader';
 import { PracticeReadView } from '../molecules/PracticeReadView';
+import { SessionPrimaryActions } from '../molecules/SessionPrimaryActions';
+import { SessionViewTabs } from '../molecules/SessionViewTabs';
 import { AttachSetlistDialog } from './AttachSetlistDialog';
 import { ConcertEditForm, type ConcertEditFormPayload } from './ConcertEditForm';
 import { ConcertReadView } from './ConcertReadView';
@@ -36,7 +41,6 @@ import { SessionSetlistPreviews } from './SessionSetlistPreviews';
 import { SessionTakes } from './SessionTakes';
 import { SessionTasks } from './SessionTasks';
 import { SetlistSongPicker } from './SetlistSongPicker';
-import { recordProductEvent } from '../../observability/product-event.adapter';
 
 export interface SessionDetailProps {
   readonly session: SessionRecord;
@@ -81,6 +85,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   const [localError, setLocalError] = useState<string | null>(null);
   const [setlistChooser, setSetlistChooser] = useState<SetlistChooser>('closed');
   const [pickingInto, setPickingInto] = useState<CreatedSetlist | null>(null);
+  const [searchParams, setSearchParams] = useSearchParams();
 
   const friendsCounts = useMemo(() => parseFriendsCounts(session.friendsCountPerMember), [session]);
   const concertFormInitial = useMemo<ConcertEditFormPayload>(
@@ -123,6 +128,17 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     preparedConcertId: session.preparedConcertId ?? null,
     now,
   });
+
+  const isConcert = session.kind === 'concert';
+  const views = listSessionViews(isConcert || isPickerShown);
+  const view = readSessionView(searchParams.get(SESSION_VIEW_PARAM), views);
+  const showView = (nextView: SessionView): void => {
+    setSearchParams({ [SESSION_VIEW_PARAM]: nextView }, { replace: true });
+  };
+  const editConcert = (): void => {
+    setEditingConcert(true);
+    showView('details');
+  };
 
   const saveConcertDetails = (payload: ConcertEditFormPayload): void => {
     if (session.kind !== 'concert') return;
@@ -168,7 +184,6 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
     addSongsToNewSetlist();
   };
 
-  const isConcert = session.kind === 'concert';
   const formattedDate = formatSessionDate(session.date, i18n.language);
   const sessionFacts = selectSessionFacts({
     isConcert,
@@ -179,11 +194,54 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   });
   const titleText = isConcert ? (session.venue ?? formattedDate) : t('sessions.kindPractice');
 
+  const detailsPanel = isConcert ? (
+    editingConcert ? (
+      <ConcertEditForm
+        key={session.id}
+        members={members}
+        initial={concertFormInitial}
+        onSubmit={saveConcertDetails}
+        onCancel={() => setEditingConcert(false)}
+      />
+    ) : (
+      <ConcertReadView
+        venue={session.venue}
+        capacity={session.capacity}
+        gear={session.gear}
+        friendsCounts={friendsCounts}
+        members={members}
+        friendsTotal={friendsTotal}
+      />
+    )
+  ) : isPickerShown ? (
+    <PracticeReadView
+      session={session}
+      preparedConcert={preparedConcert}
+      upcomingConcerts={upcomingConcerts}
+      onChangePreparedConcert={setPreparedConcert}
+      language={i18n.language}
+    />
+  ) : null;
+  const panelByView: Readonly<Record<SessionView, JSX.Element | null>> = {
+    setlist: (
+      <SessionSetlistPreviews
+        sessionId={session.id}
+        setlists={setlists}
+        isLoading={props.isSetlistsLoading}
+        isEmpty={pills.isAddSetlistShown}
+        onAddSetlist={() => setSetlistChooser('add')}
+        onAttachSetlist={() => setSetlistChooser('attach')}
+      />
+    ),
+    tasks: <SessionTasks sessionId={session.id} />,
+    takes: <SessionTakes sessionId={session.id} />,
+    details: detailsPanel,
+  };
+
   return (
     <section className="flex max-w-[1280px] flex-col gap-5 px-4 py-4 sm:px-9 sm:py-7">
-      <BackLink to="/sessions" label={t('sessions.title')} />
-
       <PageHeader
+        back={{ to: '/sessions', label: t('sessions.title') }}
         crumb={t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}
         title={titleText}
         subtitle={[formattedDate, ...sessionFacts].join(' · ')}
@@ -198,60 +256,22 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
               >
                 {t('audience.panelTitle')}
               </ButtonLink>
-              <Button variant="secondary" onClick={() => setEditingConcert(true)} icon="edit">
+              <Button variant="secondary" onClick={editConcert} icon="edit">
                 {t('common.edit')}
               </Button>
             </>
           ) : null
         }
-      />
+      >
+        <SessionViewTabs views={views} value={view} onChange={showView} />
+      </PageHeader>
 
       {localError === null ? null : (
         <p className="m-0 text-meta text-danger" role="alert">
           {localError}
         </p>
       )}
-      <SessionSetlistPreviews
-        sessionId={session.id}
-        setlists={setlists}
-        isLoading={props.isSetlistsLoading}
-        isEmpty={pills.isAddSetlistShown}
-        onAddSetlist={() => setSetlistChooser('add')}
-        onAttachSetlist={() => setSetlistChooser('attach')}
-      />
-
-      <SessionTasks sessionId={session.id} />
-      <SessionTakes sessionId={session.id} />
-
-      {isConcert ? (
-        editingConcert ? (
-          <ConcertEditForm
-            key={session.id}
-            members={members}
-            initial={concertFormInitial}
-            onSubmit={saveConcertDetails}
-            onCancel={() => setEditingConcert(false)}
-          />
-        ) : (
-          <ConcertReadView
-            venue={session.venue}
-            capacity={session.capacity}
-            gear={session.gear}
-            friendsCounts={friendsCounts}
-            members={members}
-            friendsTotal={friendsTotal}
-          />
-        )
-      ) : null}
-      {!isConcert && isPickerShown ? (
-        <PracticeReadView
-          session={session}
-          preparedConcert={preparedConcert}
-          upcomingConcerts={upcomingConcerts}
-          onChangePreparedConcert={setPreparedConcert}
-          language={i18n.language}
-        />
-      ) : null}
+      {panelByView[view]}
 
       {isSetlistChooserOpen ? (
         <AttachSetlistDialog
@@ -270,33 +290,11 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
         onAdded={() => navigateTo(`/setlists/${pickingInto?.id ?? ''}`)}
       />
 
-      <BottomActions>
-        {pills.setlistPath === null ? null : (
-          <ButtonLink icon="arrowR" variant={pills.setlistVariant} to={pills.setlistPath}>
-            {t(pills.setlistLabelKey)}
-          </ButtonLink>
-        )}
-        {pills.practicePath === null ? null : (
-          <ButtonLink
-            icon="play"
-            variant="primary"
-            to={pills.practicePath}
-            onClick={() => recordProductEvent('practice_mode_started')}
-          >
-            {t('practice.start')}
-          </ButtonLink>
-        )}
-        {pills.isAddSetlistShown ? (
-          <Button
-            icon="plus"
-            variant="primary"
-            disabled={createSetlist.isPending}
-            onClick={addSongsToNewSetlist}
-          >
-            {t('sessions.addSetlist')}
-          </Button>
-        ) : null}
-      </BottomActions>
+      <SessionPrimaryActions
+        pills={pills}
+        isAddingSetlist={createSetlist.isPending}
+        onAddSetlist={addSongsToNewSetlist}
+      />
     </section>
   );
 }

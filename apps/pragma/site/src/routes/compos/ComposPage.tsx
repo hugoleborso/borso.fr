@@ -10,6 +10,11 @@ import { composeClassName } from '../../components/atoms/class-name.utils';
 import { ChartKindIcon } from '../../components/molecules/ChartKindIcon';
 import { ListRow } from '../../components/molecules/ListRow';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { Sheet } from '../../components/molecules/Sheet';
+import {
+  BREAKPOINT_BELOW_LG,
+  useIsMediaQueryMatching,
+} from '../../components/molecules/media-query-matching.hook';
 import { StatusChip } from '../../components/molecules/StatusChip';
 import { CompositionDetail } from '../../components/organisms/CompositionDetail';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
@@ -39,6 +44,7 @@ export function ComposPage(): JSX.Element {
   const deleteTask = useDeleteTask();
   const [selectedId, setSelectedId] = useState<string | null>(null);
   const nowEpochMs = useSyncExternalStore(subscribeClock, getCurrentTime, readServerTime);
+  const isNarrow = useIsMediaQueryMatching(BREAKPOINT_BELOW_LG);
 
   const compositions = useMemo(
     () => selectCompositions(songsQuery.data?.songs ?? NO_ROWS),
@@ -74,9 +80,30 @@ export function ComposPage(): JSX.Element {
         ? null
         : 'unknown-error';
 
+  const detail =
+    selected === null ? null : (
+      <CompositionDetail
+        composition={selected}
+        uploadedChart={uploadedChart}
+        signedChartUrl={signedChartUrlQuery.data?.getUrl ?? null}
+        chartErrorMessage={chartError instanceof ApiError ? chartError.message : null}
+        members={lineupMembers}
+        instruments={instruments}
+        tasks={tasksOfSelected}
+        dueLabelOf={(task) => formatDueDate(task.dueDate, i18n.language)}
+        isOverdue={(task) => isDueDatePast(task.dueDate, nowEpochMs)}
+        onToggleTaskDone={(task) =>
+          updateTask.mutate({ id: task.id, status: nextStatusAfterToggle(task.status) })
+        }
+        onOpenTask={() => void navigate('/tasks')}
+        onDeleteTask={(task) => deleteTask.mutate({ id: task.id })}
+        isTitleShown={!isNarrow}
+      />
+    );
+
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
-      <PageHeader title={t('compos.title')} />
+      <PageHeader back={{ to: '/band', label: t('band.title') }} title={t('compos.title')} />
       {errorMessage === null ? null : (
         <p className="text-danger text-meta mb-3" role="alert">
           {errorMessage}
@@ -112,25 +139,18 @@ export function ComposPage(): JSX.Element {
             </li>
           ))}
         </ul>
-        {selected === null ? null : (
-          <CompositionDetail
-            composition={selected}
-            uploadedChart={uploadedChart}
-            signedChartUrl={signedChartUrlQuery.data?.getUrl ?? null}
-            chartErrorMessage={chartError instanceof ApiError ? chartError.message : null}
-            members={lineupMembers}
-            instruments={instruments}
-            tasks={tasksOfSelected}
-            dueLabelOf={(task) => formatDueDate(task.dueDate, i18n.language)}
-            isOverdue={(task) => isDueDatePast(task.dueDate, nowEpochMs)}
-            onToggleTaskDone={(task) =>
-              updateTask.mutate({ id: task.id, status: nextStatusAfterToggle(task.status) })
-            }
-            onOpenTask={() => void navigate('/tasks')}
-            onDeleteTask={(task) => deleteTask.mutate({ id: task.id })}
-          />
-        )}
+        {isNarrow ? null : detail}
       </div>
+      {selected === null || !isNarrow || selectedId === null ? null : (
+        <Sheet
+          title={selected.title}
+          label={selected.title}
+          isTitleARecordName
+          onClose={() => setSelectedId(null)}
+        >
+          {detail}
+        </Sheet>
+      )}
     </section>
   );
 }

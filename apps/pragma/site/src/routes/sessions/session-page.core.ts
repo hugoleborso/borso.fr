@@ -153,3 +153,22 @@ export function selectSessionPills(input: SessionPrimaryActionsInput): SessionPi
     setlistLabelKey: 'sessions.setlist',
   };
 }
+
+export const SESSION_VIEW_PARAM = 'view';
+export const SESSION_VIEWS = ['setlist', 'tasks', 'takes', 'details'] as const;
+export type SessionView = (typeof SESSION_VIEWS)[number];
+const DEFAULT_SESSION_VIEW: SessionView = 'setlist';
+const DETAILS_VIEW: SessionView = 'details';
+
+// @FollowsBlueprint core-decision
+export function listSessionViews(hasDetails: boolean): readonly SessionView[] {
+  return hasDetails ? SESSION_VIEWS : SESSION_VIEWS.filter((view) => view !== DETAILS_VIEW);
+}
+
+// @FollowsBlueprint core-decision
+export function readSessionView(
+  requested: string | null,
+  views: readonly SessionView[],
+): SessionView {
+  return views.find((view) => view === requested) ?? DEFAULT_SESSION_VIEW;
+}

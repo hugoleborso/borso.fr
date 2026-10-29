@@ -7,7 +7,6 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { Button } from '../../components/atoms/Button';
 import { Icon } from '../../components/atoms/Icon';
-import { Overline } from '../../components/atoms/Overline';
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SectionTabs } from '../../components/molecules/SectionTabs';
@@ -76,17 +75,31 @@ export function BandPage(): JSX.Element {
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[1280px]">
-      <PageHeader title={t('band.title')} />
-      <SectionTabs
-        label={t('band.viewsLabel')}
-        tabs={[
-          { value: 'my', label: t('band.myTasks'), icon: 'tasks' },
-          { value: 'everyone', label: t('band.everyone'), icon: 'members' },
-        ]}
-        value={view}
-        onChange={selectView}
-        className="mb-3"
-      />
+      <PageHeader title={t('band.title')}>
+        <SectionTabs
+          label={t('band.viewsLabel')}
+          tabs={[
+            { value: 'my', label: t('band.myTasks'), icon: 'tasks' },
+            { value: 'everyone', label: t('band.everyone'), icon: 'members' },
+          ]}
+          value={view}
+          onChange={selectView}
+        />
+      </PageHeader>
+      <nav aria-label={t('band.linksLabel')} className="mb-4">
+        <div className="-mx-4 flex gap-2 overflow-x-auto px-4 [scrollbar-width:none] sm:mx-0 sm:flex-wrap sm:px-0">
+          {BAND_DESTINATIONS.map((destination) => (
+            <Link
+              key={destination.to}
+              to={destination.to}
+              className="inline-flex min-h-11 shrink-0 items-center gap-2 rounded-pill bg-glass px-3 text-meta font-medium text-ink no-underline hover:bg-hover focus-visible:outline-3 focus-visible:outline-focus"
+            >
+              <Icon name={destination.icon} className="text-accent" />
+              {t(destination.labelKey)}
+            </Link>
+          ))}
+        </div>
+      </nav>
       {errorMessage === null ? null : (
         <p className="text-danger text-meta mb-3" role="alert">
           {errorMessage}
@@ -124,24 +137,6 @@ export function BandPage(): JSX.Element {
           </div>
         </div>
       )}
-
-      <nav aria-label={t('band.linksLabel')} className="mt-6 flex max-w-[640px] flex-col gap-2">
-        <Overline>{t('band.linksLabel')}</Overline>
-        <ul className="m-0 flex list-none flex-col divide-y divide-rule rounded-md bg-leaf p-0 shadow-leaf">
-          {BAND_DESTINATIONS.map((destination) => (
-            <li key={destination.to}>
-              <Link
-                to={destination.to}
-                className="flex min-h-11 items-center gap-3 px-4 py-3 text-body text-ink no-underline hover:bg-hover"
-              >
-                <Icon name={destination.icon} size="md" className="text-ink-soft" />
-                <span className="flex-1">{t(destination.labelKey)}</span>
-                <Icon name="chevR" className="text-ink-faint" />
-              </Link>
-            </li>
-          ))}
-        </ul>
-      </nav>
 
       <TaskSheetHost controller={taskSheet} members={members} songs={songs} />
       <BottomActions>

@@ -48,6 +48,8 @@ function answerSessionApi(request: Request): Response {
   if (pathname === '/api/setlists') {
     return jsonResponse({ setlists: [...sessionSetlists.current, OTHER_SETLIST] });
   }
+  if (pathname === '/api/tasks') return jsonResponse({ tasks: [] });
+  if (pathname === '/api/songs') return jsonResponse({ songs: [] });
   if (pathname.includes('setlists')) return jsonResponse({ setlists: sessionSetlists.current });
   return new Response(null, { status: 404 });
 }
@@ -108,5 +110,30 @@ describe('the concert page', () => {
     expect(within(chooser).getByText('New setlist for this session')).toBeTruthy();
     expect(await within(chooser).findByText('Encores')).toBeTruthy();
     expect(within(chooser).queryByText('Main set')).toBeNull();
+  });
+
+  it('shows one part of the session at a time, chosen from tabs in its fixed header', async () => {
+    renderSessionPage();
+    const header = (
+      await screen.findByRole('heading', { level: 1, name: 'Le Petit Bain' })
+    ).closest('header');
+    if (header === null) throw new Error('no page header');
+    expect(header.classList.contains('sticky')).toBe(true);
+    expect(within(header).getByRole('link', { name: 'Sessions' }).getAttribute('href')).toBe(
+      '/sessions',
+    );
+    const tabs = within(header).getAllByRole('tab');
+    expect(tabs.map((tab) => tab.textContent)).toEqual(['Setlist', 'Tasks', 'Takes', 'Details']);
+    expect(screen.queryByRole('heading', { name: 'Who does what' })).toBeNull();
+
+    fireEvent.click(within(header).getByRole('tab', { name: 'Tasks' }));
+    expect(await screen.findByRole('heading', { name: 'Who does what' })).toBeTruthy();
+    expect(screen.queryByText(/No setlist on this session yet/)).toBeNull();
+  });
+
+  it('opens the details when Edit is tapped', async () => {
+    renderSessionPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit' }));
+    expect(screen.getByRole('tab', { name: 'Details' }).getAttribute('aria-selected')).toBe('true');
   });
 });

@@ -5,8 +5,10 @@ import {
   findSelectedTakeOfSong,
   groupTakesBySong,
   isPreparedConcertPickerShown,
+  listSessionViews,
   type PreviewEntry,
   type PreviewSong,
+  readSessionView,
   selectSessionPills,
 } from './session-page.core';
 
@@ -34,6 +36,26 @@ const SONGS_BY_ID: Readonly<Record<string, PreviewSong>> = {
 };
 
 // @FollowsBlueprint test-pure-unit
+describe('listSessionViews', () => {
+  it('offers the details view only when the session has details to show', () => {
+    expect(listSessionViews(true)).toEqual(['setlist', 'tasks', 'takes', 'details']);
+    expect(listSessionViews(false)).toEqual(['setlist', 'tasks', 'takes']);
+  });
+});
+
+describe('readSessionView', () => {
+  it('reads an offered view from the address', () => {
+    expect(readSessionView('takes', listSessionViews(false))).toBe('takes');
+    expect(readSessionView('details', listSessionViews(true))).toBe('details');
+  });
+
+  it('falls back to the setlist for a view not offered, unknown or absent', () => {
+    expect(readSessionView('details', listSessionViews(false))).toBe('setlist');
+    expect(readSessionView('lineup', listSessionViews(true))).toBe('setlist');
+    expect(readSessionView(null, listSessionViews(true))).toBe('setlist');
+  });
+});
+
 describe('buildSetlistPreview', () => {
   it('shows the first three songs in their order, with the count and the total time', () => {
     const preview = buildSetlistPreview(

@@ -149,3 +149,12 @@ export function selectHomePrimaryAction(input: HomePrimaryActionInput): HomePrim
   }
   return { link: null, isNewSessionOffered: !input.isLoading };
 }
+
+export const HOME_SECTION_PARAM = 'view';
+export type HomeSection = 'part' | 'tasks';
+const TASKS_SECTION: HomeSection = 'tasks';
+
+// @FollowsBlueprint core-decision
+export function readHomeSection(requested: string | null, hasPart: boolean): HomeSection {
+  return hasPart && requested !== TASKS_SECTION ? 'part' : TASKS_SECTION;
+}

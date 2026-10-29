@@ -199,6 +199,10 @@ const agreeWhoDoesWhat: TaskWalkRunner = async (driver) => {
     { css: 'section[aria-label="Next session"] a', scope: 'page' },
     { wait: CREATE_SETTLE_MS },
   );
+  await walk.tap('Tasks tab', { exact: 'Tasks', css: '[role=tab]', scope: 'page' });
+  walk.note(
+    'Operator review 2 put the session page behind tabs (Setlist, Tasks, Takes, Details), so Who does what is one tab away.',
+  );
   await walk.tap('Add a task', { exact: 'Add a task', css: 'button', scope: 'page' });
   walk.note(
     'The task sheet opens with its title field focused and already linked to the session, so typing needs no tap.',
@@ -422,7 +426,7 @@ const recordTakeAndTalk: TaskWalkRunner = async (driver) => {
     )[0];
   let sessionListsTakes: boolean | null = null;
   if (pastPractice !== undefined) {
-    await driver.open(`/sessions/${pastPractice.id}`);
+    await driver.open(`/sessions/${pastPractice.id}?view=takes`);
     await waitForMain(driver.session);
     sessionListsTakes = (await driver.session.evaluate(LISTS_A_DURATION)) === true;
   }
