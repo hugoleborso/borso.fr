@@ -329,6 +329,7 @@ Lives in: `api/src/free-slots/`
   with a feed that could not be read is left out of the calculation and
   listed with the reason.
 - Booking one creates a practice whose `origin` is `free_slot`.
+- Listed on the **Find a slot** page (`/sessions/slots`, `site/src/routes/sessions/FindSlotPage.tsx`), reached from the Sessions header; the Sessions list itself shows none.
 
 Held by: `api/src/free-slots/free-slots.core.test.ts` › opens at 18:00 on weekdays and 10:00 at weekends, until midnight, Paris time
 Held by: `api/src/free-slots/free-slots.core.test.ts` › keeps free time of at least two hours, starting on a quarter hour
@@ -340,7 +341,7 @@ books the slot.
 
 ## Home
 
-The start screen, at `/`: the next session, the signed-in member's part in its setlist, and their open tasks.
+The start screen, at `/`: the next session, then the signed-in member's part in its setlist or their open tasks, one at a time, chosen from two tabs.
 
 Lives in: `site/src/routes/home/`
 

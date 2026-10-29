@@ -65,6 +65,16 @@ Every text pair in `contrast.txt` passes 4.5:1 in both modes. The lowest is `ink
 
 ## Rules
 
+### Screens
+
+Added by the operator's second review of the redesign (spec, *Operator review 2*).
+
+- A screen is a fixed header (the title, the back link when it is a sub-page, the page actions, and its tabs or filters) plus one scrolling list of one kind of content.
+- Nothing of another kind sits below that list: no create form and no secondary panel. People never scroll past a list to find something, so whatever sits below it is never seen.
+- Creating something goes through a **New …** action, in the header or as the bottom strip's pill, that opens a sheet or a page.
+- Content of another kind gets its own page or its own tab.
+- The header stays on screen at every scroll position.
+
 ### Buttons
 
 - Every button has an icon and a label. 44 px tall by default, 36 px inside dense rows, 52 px in a sheet footer. Corners are 10 px. The icon is 18 or 20 px, Lucide, 1.75 stroke.

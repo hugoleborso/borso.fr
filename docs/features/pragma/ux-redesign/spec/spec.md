@@ -31,7 +31,7 @@ Mockups are in `mockups/` (390x844). They were drawn before D11, with the earlie
 - Four tabs: **Home**, **Sessions**, **Songs**, **Band**. No count on any tab. The More drawer goes. (D1)
 - The app opens on Home. (D2) The manifest shortcut points to Home instead of the catalogue.
 - Sessions holds a **Sessions / Setlists** section switch; Setlists is today's setlist library.
-- Band opens on tasks, then lists members, instruments, bars, compositions, improvements and the account page. The language switch moves from the More drawer to the account page.
+- Band opens on tasks, with a row of links to members, instruments, bars, compositions, improvements and the account page above them (operator review 2, Q3). The language switch moves from the More drawer to the account page, on its own Language tab (Q8).
 - Songs carries a **To learn** filter that replaces the Studies tab; a study row opens its song.
 - Each destination has its own icon: Studies and Improvements no longer share `bolt` (rank 35).
 
@@ -62,7 +62,7 @@ Opened by tapping a setlist row. Header: the album cover at 72 px, title, artist
 
 ### Session page (`/sessions/:id`, mockup `after-session.png`)
 
-In order: the setlist preview (count, total time, the first three songs with cover, title and lineup avatars, a `warn` badge on a song with no lineup, **no key**), then **Who does what** (the tasks linked to this session, and **Add a task** with `plus`), then the takes recorded at this session grouped by song. With no setlist yet, the preview is an empty state that says so and offers **Attach an existing setlist**, and the bottom strip's primary pill is **Add a setlist**, which creates a setlist named after the session and opens the Add songs sheet; with setlists, a secondary **Add a setlist** under them offers a new setlist or an existing one (operator review 1, R6). A concert reaches its audience vote through one secondary action, **Audience vote**, beside Edit; the vote block is not on the session page (R4). A past practice does not show the empty "Prepared concert" picker. Primary action (Q1): on a practice's own day, **Start the practice** (`play`), with **Open the setlist** beside it as the second pill; on any other day, and for a concert, **Open the setlist** (`arrowR`). Attendance (D4) and the message thread (D5) are not on this page in this iteration.
+Tabs in the pinned header choose one part at a time (operator review 2, Q3): **Setlist**, **Tasks**, **Takes** and, for a concert or a practice that prepares one, **Details**. In tab order: the setlist preview (count, total time, the first three songs with cover, title and lineup avatars, a `warn` badge on a song with no lineup, **no key**); **Who does what** (the tasks linked to this session, and **Add a task** with `plus`); the takes recorded at this session grouped by song. With no setlist yet, the preview is an empty state that says so and offers **Attach an existing setlist**, and the bottom strip's primary pill is **Add a setlist**, which creates a setlist named after the session and opens the Add songs sheet; with setlists, a secondary **Add a setlist** under them offers a new setlist or an existing one (operator review 1, R6). A concert reaches its audience vote through one secondary action, **Audience vote**, beside **Edit** (Edit opens the Details tab); the vote block is not on the session page (R4). A past practice does not show the empty "Prepared concert" picker. Primary action (Q1): on a practice's own day, **Start the practice** (`play`), with **Open the setlist** beside it as the second pill; on any other day, and for a concert, **Open the setlist** (`arrowR`). Attendance (D4) and the message thread (D5) are not on this page in this iteration.
 
 ### Practice mode (`/sessions/:id/practice`, slice 5, Q1)
 
@@ -97,7 +97,7 @@ Compact rows (cover, title, artist, status badge; chord icon only when a chart e
 
 ### Band tab (`/band`, mockup `after-band.png`)
 
-Opens on **My tasks / Everyone**. **New task** (`plus`) opens a sheet with title (focused), assignee avatars, due date, an optional song chosen among all songs, and an optional session. Tapping a task opens the same sheet filled with its values, in place of today's form 1840 px down the page (rank 2). A long song title in a task wraps or ends in an ellipsis, so the page stays 390 px wide (rank 21). Below the tasks: links to members, instruments, bars, compositions, improvements.
+Opens on **My tasks / Everyone**. **New task** (`plus`) opens a sheet with title (focused), assignee avatars, due date, an optional song chosen among all songs, and an optional session. Tapping a task opens the same sheet filled with its values, in place of today's form 1840 px down the page (rank 2). A long song title in a task wraps or ends in an ellipsis, so the page stays 390 px wide (rank 21). The links to members, instruments, bars, compositions, improvements and the account sit above the tasks, as one row of links that scrolls sideways, so a long task list never hides them (operator review 2); the My tasks / Everyone tabs are pinned in the header.
 
 ### Vote page (`/setlists/:setlistId/vote`)
 
@@ -263,6 +263,7 @@ Not taken: Backstage's cover mosaic in the setlist header, which the critic prai
 
 **Rules:**
 - **Every button has an icon**, never text only: `Button` and `ButtonLink` require `icon` by type; `IconButton` requires `label`, which becomes its accessible name. Section tabs and chips are choices, not buttons; list rows end in `chevR` or start with a cover. One icon per verb and one per destination, from DESIGN.md's verb table plus `reorder`, `swap`, `song`, `clipboard`, `camera`, `refresh`. A control that navigates is a link drawn as a button (`ButtonLink`), never a button inside a link.
+- **Screen shape** (operator review 2): a screen is a fixed header (title, the back link when it is a sub-page, page actions, and its tabs or filters) plus **one** scrolling list of **one** kind of content. Nothing of another kind sits below that list, no create form and no secondary panel, because people never scroll past a list to find it. Creating something goes through a **New …** action, in the header or as the bottom strip's pill, that opens a sheet or a page; content of another kind gets its own page or its own tab. The header stays on screen at any scroll position. The task-metrics harness checks this on every route and every tab at 375x667 (`--screen-rule`) and fails the run on a violation.
 - **One scroll container per screen**: the document scrolls; nothing inside it scrolls vertically; text areas grow; while a sheet is open its body is the only scroll. Horizontal chip strips are allowed.
 - **Primary action placement**: at most one primary per screen, as a pill in the bottom strip above the tab bar, with a second pill allowed beside it; the strip never hides on scroll, and the page's bottom padding equals its height; rare actions go in the header `more` menu; no round floating button; a sheet's actions sit in its footer.
 - **Sheets**: one `Sheet` molecule on `<dialog>` with `showModal()`; grabber, title, `close` icon button, one scroll body, footer; on opening, the focus goes to the first field a person types in, and to Close only when the sheet has no field (rank 23); closes by `close`, Escape or backdrop; one save model per sheet (explicit or automatic with "Saved"); drafts survive a close; a sheet never opens another; confirm is a `Sheet` with a `danger` button.
@@ -278,7 +279,7 @@ Measured with the task-metrics harness at 390x844 in emulated standalone mode, o
 | --- | --- | --- | --- |
 | 1 Prepare the next practice (slice 5) | 18 / 3 / 7 | ≤ 15 / ≤ 1 / ≤ 6 | setlist created from the session in the same flow; the screens target was 4 and is 6 because this path opens two sheets (New practice, Add songs) and the harness counts every sheet as a screen, as it did for `baseline.json` |
 | 2 Build the concert setlist (slice 4) | 10 / 2 / 6 | ≤ 11 / 0 / ≤ 6 | one tap more reaches the Setlists section (D1); order kept after reload |
-| 3 Agree who does what (slice 5) | 9 / 3 / 3, title field at 2.18 screens | ≤ 8 / 0 / ≤ 3 | title focused on opening; song options 6 -> all songs (44 in the seed); task linked to a session |
+| 3 Agree who does what (slice 5) | 9 / 3 / 3, title field at 2.18 screens | ≤ 9 / 0 / ≤ 3 (was ≤ 8; operator review 2 puts Who does what on the session page's Tasks tab, one tap) | title focused on opening; song options 6 -> all songs (44 in the seed); task linked to a session |
 | 3b See my own tasks (slice 2) | 2 / 0 / 3 | 1 / 0 / 2 | |
 | 4 Lineup for one song tonight (slice 3) | 4 / 0 / 3 | 3 / 0 / 2 | lineup sheet inner scroll 1 -> 0 |
 | 5 Note a transition (slices 1 and 3) | 3 / 0 / 2, note not shown | ≤ 3 / 0 / 2 | comment shown on the list; draft kept after a backdrop close |
@@ -303,7 +304,7 @@ Measured with the task-metrics harness at 390x844 in emulated standalone mode, o
 | Sheets with an inner vertical scroll (slice 1, through `Sheet`) | 2 (Add songs, lineup) | 0 |
 | Tabs (slice 2) | 5 plus More | 4, no numbers (was 3 numbers) |
 | `/setlists/:id` first song row top, 375x667 / 390x844 (slice 3) | 269 px / about 265 px, read from a screenshot | ≤ 190 px / ≤ 215 px |
-| `/setlists/:id` sticky elements while scrolling, other than the bottom strip (slice 3) | 1 (71 px chart) | 0 |
+| `/setlists/:id` sticky elements while scrolling, other than the page header and the bottom strip (slice 3; operator review 2 pins the page header on every screen) | 1 (71 px chart) | 0 |
 | Lineup grid: songs with the full lineup on the first screen, 390x844 (slice 3) | about 5, read from a screenshot | ≥ 8 |
 | Lineup grid: changes from the previous song marked (slice 3) | 0 | all |
 | Order screen: rows visible with the curve, 390x844 (slice 4) | about 5 below today's chart, read from a screenshot | ≥ 8 |
@@ -334,6 +335,11 @@ Measured with the task-metrics harness at 390x844 in emulated standalone mode, o
 | Practice mode: current song, Record a take and Next song on screen without scrolling, 375x667 and 390x844 (slice 5) | no such screen | yes |
 | Practice mode: position resumed after a reload the same day (slice 5) | no such screen | yes |
 | Practice mode: take recorded with the network off, then uploaded once back online, linked to the song and the session (slice 5) | no such screen | yes |
+| Screen rule violations, every route and tab at 375x667 (operator review 2, `--screen-rule`) | 76 on 31 routes | 0 (measured: 0 on 38 routes and tabs, `validation/operator-review-2-after.json`) |
+| Page header on screen after scrolling to the end, every route (operator review 2, Q1) | `/catalog` only | every route but the stage views and the two signed-out cards |
+| Band pages with a back link to Band in their header (operator review 2, Q5) | 0 of 6 | 6 of 6 |
+| Free slots on the Sessions list (operator review 2, Q2) | above the sessions | none; one Find a slot link opens `/sessions/slots` |
+| Players named on an instrument row (operator review 2, Q4) | avatars only, up to three per line, no legend | every player, avatar in the stored colour and first name, the main instrument marked in words |
 
 ## Slices
 
@@ -364,6 +370,27 @@ The operator reviewed the whole redesign on the #216 preview on 2026-10-28. Each
 | R8 | Instrument rows are one aligned 56 px line (handle, glyph, name over family, players, Delete). The New instrument form leaves the page: **Add an instrument** (`plus`) is the primary pill in the bottom strip, as Add a song is, and opens a sheet with the fields; tapping an instrument opens the same sheet filled in. | `/instruments` |
 
 Not taken from the review: a calendar feed of the band's sessions that a phone subscribes to (a `webcal://` link on iOS, Google Calendar's `?cid=` link on Android, a copy button). It needs a new public route serving the sessions as iCal behind a per-member secret, which is an architecture decision for an ADR before any code.
+
+## Operator review 2
+
+The operator reviewed the #216 preview again on 2026-10-29. Each item below is a ratified change to this spec, delivered on the same branch, and the rule under it is written into *Design system › Rules* and Notebook's `direction.md`.
+
+**The rule.** A screen is a fixed header (title, back link when it is a sub-page, page actions) plus one scrolling list of one kind of content. Nothing of another kind sits below that list, because people never scroll past a list to find it. Creating something goes through a **New …** action that opens a sheet or a page; content of another kind gets its own page or a tab. The harness enforces it: `--screen-rule`, also on with `--routes`, opens every route and every tab at 375x667 and fails when a page has no header, when the header is not sticky or fixed or has scrolled away at the end of the page, when a sub-page has no back link in its header (to `/band` on the Band pages), or when a form, a field, a heading, a tab list or a list of another kind starts below a list of three rows or more. Stage views and the signed-out cards (`/login`, `/recover`) are exempt. On the app before this review it found 76 violations on 31 routes; after it, none.
+
+| # | Change | Where it lands |
+| --- | --- | --- |
+| Q1 | Every page header is pinned while the content scrolls, not only on Songs: `PageHeader` is the sticky header of every screen, with the back link, the title, the actions and an optional pinned row for tabs, filters or a search. | every route |
+| Q2 | The free slots leave the Sessions list for their own page, **Find a slot** (`/sessions/slots`), reached from one **Find a slot** (`calendar`) link in the Sessions header. The members left out of the count come first, then the free evenings, each booking a practice through the New practice sheet. | `/sessions`, `/sessions/slots` |
+| Q3 | The rule above applies to every screen. Beyond Q7 to Q10, the check found and this review fixed: the session page (Who does what and the takes below the setlist preview, the prepared-concert picker below them), now on the tabs **Setlist**, **Tasks**, **Takes** and **Details**; Home (Your tasks below Your part), now two tabs; Band (its links below the tasks), now a row of links above them; compositions (the detail below the list on a phone), now a sheet; the audience vote page (Ask for something else below the vote list), now a sheet from the header. | session page, Home, Band, `/compos`, `/vote/:sessionId` |
+| Q4 | The avatars on an instrument row are the members whose profile lists that instrument, the ring marking their main instrument; nothing said so, and the fixture gives most instruments one player. Each row now names every player on a second line, **Played by**, with their avatar in their stored colour and their first name, and **main** with a star on the main instrument; the header says where the players come from and that a tap changes the main instrument. | `/instruments` |
+| Q5 | Every Band sub-page (Members, Instruments, Bars, Compositions, Improvements, Account) has a back link to Band in its header. | Band pages |
+| Q6 | On the song page the title wraps anywhere and stops at three lines, and Edit sits in a column that never shrinks, so they never overlap. | `/catalog/:songId` |
+| Q7 | **New improvement** (`plus`) is the bottom strip's pill and opens a sheet; tapping an improvement opens the same sheet filled in. The status filter is pinned in the header. | `/improvements` |
+| Q8 | The account page is five tabs: **Profile** (member card, contact details, password), **Quick sign-in**, **Calendar**, **Notifications**, **Language**. The tab is in the address, so the free slots' "Connect yours" opens Calendar. | `/account` |
+| Q9 | **New member** (`plus`) is the bottom strip's pill and opens the member form as a sheet; tapping a member opens it filled in. **Members** and **Mastery** are two tabs. | `/members` |
+| Q10 | **New bar** (`plus`) is the bottom strip's pill and opens the bar form as a sheet, with the place search at its top; tapping a bar opens it filled in. The outreach message template is a sheet opened from the header. The one-field quick add goes: New bar with a name and Save does the same, with the status already "lead". | `/bars` |
+
+Measured after this review with the harness (`validation/operator-review-2-after.json`): every task walk still meets its target, task 3 at 9 taps for its new target of 9, and the screen rule finds nothing; see the acceptance rows marked *operator review 2*.
 
 ## Changes
 
