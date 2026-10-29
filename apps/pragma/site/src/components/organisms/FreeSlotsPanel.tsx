@@ -85,10 +85,11 @@ function NoSlotView({ exclusions }: ViewProps): JSX.Element {
 }
 
 function SlotsView({ slots, exclusions, onBook }: ViewProps): JSX.Element {
-  const { i18n } = useTranslation();
+  const { t, i18n } = useTranslation();
   return (
     <>
-      <ul className="flex flex-col gap-1.5 p-0 m-0 list-none">
+      <ExclusionList exclusions={exclusions} />
+      <ul className="flex flex-col gap-1.5 p-0 m-0 list-none" aria-label={t('freeSlots.title')}>
         {slots.map((slot) => {
           const formatted = formatFreeSlot(slot.start, slot.end, i18n.language);
           return (
@@ -101,7 +102,6 @@ function SlotsView({ slots, exclusions, onBook }: ViewProps): JSX.Element {
           );
         })}
       </ul>
-      <ExclusionList exclusions={exclusions} />
     </>
   );
 }
@@ -132,13 +132,7 @@ export function FreeSlotsPanel({ onBook }: FreeSlotsPanelProps): JSX.Element {
     ];
 
   return (
-    <section aria-labelledby="free-slots-title" className="flex flex-col gap-2 mb-6">
-      <div className="flex flex-col sm:flex-row sm:items-baseline sm:justify-between gap-1">
-        <h2 id="free-slots-title" className="text-body text-ink m-0">
-          {t('freeSlots.title')}
-        </h2>
-        <p className="text-meta text-ink-soft m-0">{t('freeSlots.subtitle')}</p>
-      </div>
+    <div className="flex flex-col gap-2">
       {freeSlotsQuery.isError ? (
         <p className="text-danger text-meta" role="alert">
           {t('freeSlots.error')}
@@ -146,6 +140,6 @@ export function FreeSlotsPanel({ onBook }: FreeSlotsPanelProps): JSX.Element {
       ) : (
         <View slots={slots} exclusions={exclusions} onBook={onBook} />
       )}
-    </section>
+    </div>
   );
 }

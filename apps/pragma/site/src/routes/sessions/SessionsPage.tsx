@@ -5,12 +5,12 @@ import { type JSX, useMemo, useState, useSyncExternalStore } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Link } from 'react-router-dom';
 import { Button } from '../../components/atoms/Button';
+import { ButtonLink } from '../../components/atoms/ButtonLink';
 import { IconButton } from '../../components/atoms/IconButton';
 import { composeClassName } from '../../components/atoms/class-name.utils';
 import { BottomActions } from '../../components/atoms/BottomActions';
 import { ConfirmDialog } from '../../components/molecules/ConfirmDialog';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
-import { FreeSlotsPanel } from '../../components/organisms/FreeSlotsPanel';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SessionsSectionTabs } from '../../components/molecules/SessionsSectionTabs';
 import { getCurrentTime, readServerTime, subscribeClock } from '../../clock.store';
@@ -23,8 +23,6 @@ const NO_ROWS: readonly never[] = [];
 
 interface SessionDraft {
   readonly kind: 'concert' | 'practice';
-  readonly initialDate?: Date;
-  readonly origin?: 'free_slot';
 }
 
 // @FollowsBlueprint route-list-page
@@ -57,8 +55,16 @@ export function SessionsPage(): JSX.Element {
 
   return (
     <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
-      <PageHeader title={t('sessions.title')} />
-      <SessionsSectionTabs value="sessions" />
+      <PageHeader
+        title={t('sessions.title')}
+        actions={
+          <ButtonLink to="/sessions/slots" variant="secondary" size="sm" icon="calendar">
+            {t('freeSlots.open')}
+          </ButtonLink>
+        }
+      >
+        <SessionsSectionTabs value="sessions" />
+      </PageHeader>
 
       {error === null ? null : (
         <p className="text-danger text-meta mb-3" role="alert">
@@ -68,12 +74,6 @@ export function SessionsPage(): JSX.Element {
       {sessionsQuery.isLoading ? (
         <p className="text-ink-soft italic text-meta">{t('common.loading')}</p>
       ) : null}
-
-      <FreeSlotsPanel
-        onBook={(start) =>
-          setCreating({ kind: 'practice', initialDate: start, origin: 'free_slot' })
-        }
-      />
 
       <ul className="relative pl-8 flex flex-col gap-1">
         <span
@@ -127,8 +127,6 @@ export function SessionsPage(): JSX.Element {
       {creating === null ? null : (
         <CreateSessionDialog
           kind={creating.kind}
-          {...(creating.initialDate === undefined ? {} : { initialDate: creating.initialDate })}
-          {...(creating.origin === undefined ? {} : { origin: creating.origin })}
           onClose={() => setCreating(null)}
           onCreated={(sessionId) => navigateTo(`/sessions/${sessionId}`)}
           existingConcerts={concerts.map((concert) => ({

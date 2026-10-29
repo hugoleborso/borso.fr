@@ -20,6 +20,7 @@ import { LoginPage } from './routes/LoginPage';
 import { MembersPage } from './routes/members/MembersPage';
 import { PracticeModePage } from './routes/sessions/PracticeModePage';
 import { SessionAudiencePage } from './routes/sessions/SessionAudiencePage';
+import { FindSlotPage } from './routes/sessions/FindSlotPage';
 import { SessionDetailPage } from './routes/sessions/SessionDetailPage';
 import { SessionsPage } from './routes/sessions/SessionsPage';
 import { SessionSetlistRedirectPage } from './routes/setlists/SessionSetlistRedirectPage';
@@ -51,6 +52,7 @@ export function App(): JSX.Element {
               <Route path="/catalog/:songId/edit" element={<SongEditPage />} />
               <Route path="/catalog/:songId" element={<SongDetailPage />} />
               <Route path="/sessions" element={<SessionsPage />} />
+              <Route path="/sessions/slots" element={<FindSlotPage />} />
               <Route path="/sessions/:sessionId" element={<SessionDetailPage />} />
               <Route path="/sessions/:sessionId/setlist" element={<SessionSetlistRedirectPage />} />
               <Route path="/sessions/:sessionId/practice" element={<PracticeModePage />} />
