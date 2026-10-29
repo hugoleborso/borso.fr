@@ -3,6 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
+import { streakKeys } from './streaks.queries';
 import { markStudied } from './studies.utils';
 
 export const studyKeys = {
@@ -79,6 +80,9 @@ function useStudyToggle(isStudiedToday: boolean) {
         queryClient.setQueryData(studyKeys.overview(), context.previousOverview);
       }
     },
+    onSuccess: async () => {
+      await queryClient.invalidateQueries({ queryKey: streakKeys.all });
+    },
   };
 }
 
@@ -95,6 +99,7 @@ export function useLogStudy() {
     },
     onMutate: toggle.onMutate,
     onError: toggle.onError,
+    onSuccess: toggle.onSuccess,
   });
 }
 
@@ -111,5 +116,6 @@ export function useUndoStudy() {
     },
     onMutate: toggle.onMutate,
     onError: toggle.onError,
+    onSuccess: toggle.onSuccess,
   });
 }

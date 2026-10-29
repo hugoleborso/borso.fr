@@ -869,6 +869,20 @@
     "yourTasks": "My tasks",
     "sectionsLabel": "My part or my tasks"
   },
+  "streaks": {
+    "mineChip_one": "Your flame, {{count}} day, {{status}}",
+    "mineChip_other": "Your flame, {{count}} days, {{status}}",
+    "bandChip_one": "Band flame, {{count}} day",
+    "bandChip_other": "Band flame, {{count}} days",
+    "todayCounted": "today counted",
+    "todayOpen": "today still open",
+    "jokersLeft_one": "{{count}} joker left this week",
+    "jokersLeft_other": "{{count}} jokers left this week",
+    "noFlame": "No flame yet",
+    "sheetTitle": "Flames",
+    "bandTitle": "Band",
+    "studyASong": "Study a song"
+  },
   "band": {
     "title": "Band",
     "viewsLabel": "Whose tasks",

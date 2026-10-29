@@ -10,6 +10,8 @@ import { Button } from '../../components/atoms/Button';
 import { ButtonLink } from '../../components/atoms/ButtonLink';
 import { Overline } from '../../components/atoms/Overline';
 import { EmptyState } from '../../components/molecules/EmptyState';
+import { FlameChip } from '../../components/molecules/FlameChip';
+import { selectFlameTone, selectTodayStatusKey } from '../../components/molecules/flame-tone.core';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SectionTabs } from '../../components/molecules/SectionTabs';
 import {
@@ -19,6 +21,7 @@ import {
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
 import { MemberPartList } from '../../components/organisms/MemberPartList';
 import { NextSessionCard } from '../../components/organisms/NextSessionCard';
+import { StreakSheet } from '../../components/organisms/StreakSheet';
 import { TaskList } from '../../components/organisms/TaskList';
 import { TaskSheetHost } from '../../components/organisms/TaskSheetHost';
 import { useTaskRowLabels, useTaskSheet } from '../../components/organisms/task-sheet.hook';
@@ -33,6 +36,7 @@ import { useSessionsList } from '../../lib/queries/sessions.queries';
 import { useSetlistEntries } from '../../lib/queries/setlist-entries.queries';
 import { useSetlistsBySession } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
+import { useStreaks } from '../../lib/queries/streaks.queries';
 import { useTasksList } from '../../lib/queries/tasks.queries';
 import { isPracticeModeOffered } from '../sessions/practice-mode.core';
 import {
@@ -64,6 +68,8 @@ export function HomePage(): JSX.Element {
   const tasksQuery = useTasksList();
   const taskSheet = useTaskSheet();
   const [isCreatingSession, setIsCreatingSession] = useState(false);
+  const streaksQuery = useStreaks();
+  const [isStreakSheetOpen, setIsStreakSheetOpen] = useState(false);
   const [searchParams, setSearchParams] = useSearchParams();
 
   const nextSession = useMemo(
@@ -135,6 +141,11 @@ export function HomePage(): JSX.Element {
     setSearchParams({ [HOME_SECTION_PARAM]: next }, { replace: true });
   };
   const greetingName = signedInMember.data?.firstName ?? '';
+  const streaks = streaksQuery.data;
+  const openStreakSheet = (): void => {
+    recordProductEvent('streak_sheet_opened');
+    setIsStreakSheetOpen(true);
+  };
 
   const panelBySection: Readonly<Record<HomeSection, JSX.Element | null>> = {
     part:
@@ -174,6 +185,29 @@ export function HomePage(): JSX.Element {
         crumb={greetingName === '' ? null : t('home.greeting', { name: greetingName })}
         title={t('home.title')}
         className="mb-0 sm:mb-0"
+        actions={
+          streaks === undefined ? null : (
+            <>
+              <FlameChip
+                glyph="flame"
+                days={streaks.mine.days}
+                tone={selectFlameTone(streaks.mine)}
+                label={t('streaks.mineChip', {
+                  count: streaks.mine.days,
+                  status: t(selectTodayStatusKey(streaks.mine)),
+                })}
+                onPress={openStreakSheet}
+              />
+              <FlameChip
+                glyph="members"
+                days={streaks.band.days}
+                tone={selectFlameTone(streaks.band)}
+                label={t('streaks.bandChip', { count: streaks.band.days })}
+                onPress={openStreakSheet}
+              />
+            </>
+          )
+        }
       />
       {sessionsQuery.isLoading ? (
         <p className="m-0 text-meta italic text-ink-soft">{t('common.loading')}</p>
@@ -224,6 +258,9 @@ export function HomePage(): JSX.Element {
         members={membersQuery.data?.members ?? NO_ROWS}
         songs={songs}
       />
+      {isStreakSheetOpen && streaks !== undefined ? (
+        <StreakSheet view={streaks} onClose={() => setIsStreakSheetOpen(false)} />
+      ) : null}
       {isCreatingSession ? (
         <CreateSessionDialog
           kind="practice"

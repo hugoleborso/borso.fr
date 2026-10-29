@@ -1201,7 +1201,13 @@ Lives in: `domain/` (`practice-flame.core.ts`), served by `api/src/streaks/`
   joker: its first missed day ends it. A deleted member's studies drop out.
 - Not stored: it is computed on every read from the last 400 days of studies
   and sessions (`STREAK_LOOKBACK_DAYS`).
+- Shown on Home as two chips that open the streak sheet: the member's own
+  flame and the band's. The flame is `accent` once today counts,
+  `accent-soft` with an `accent` outline while today is open, and
+  `ink-faint` at 0. Logging or undoing a study marks it stale.
 
+Held by: `site/src/routes/home/HomePage.test.tsx` › puts both flames on the title line, and a tap on either opens the streak sheet
+Held by: `site/src/lib/queries/streaks.queries.test.tsx` › marks the flames stale once a study is logged
 Held by: `domain/practice-flame.core.test.ts` › keeps a run ending yesterday alive while today is still open
 Held by: `domain/practice-flame.core.test.ts` › bridges a gap that ends yesterday while today is open (Q-A)
 Held by: `domain/practice-flame.core.test.ts` › bridges a gap that crosses a Monday with each week’s own jokers

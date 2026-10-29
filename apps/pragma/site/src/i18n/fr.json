@@ -869,6 +869,20 @@
     "yourTasks": "Mes tâches",
     "sectionsLabel": "Ma partie ou mes tâches"
   },
+  "streaks": {
+    "mineChip_one": "Ta flamme, {{count}} jour, {{status}}",
+    "mineChip_other": "Ta flamme, {{count}} jours, {{status}}",
+    "bandChip_one": "Flamme du groupe, {{count}} jour",
+    "bandChip_other": "Flamme du groupe, {{count}} jours",
+    "todayCounted": "aujourd’hui compté",
+    "todayOpen": "aujourd’hui encore ouvert",
+    "jokersLeft_one": "{{count}} joker restant cette semaine",
+    "jokersLeft_other": "{{count}} jokers restants cette semaine",
+    "noFlame": "Pas encore de flamme",
+    "sheetTitle": "Flammes",
+    "bandTitle": "Groupe",
+    "studyASong": "Étudier un morceau"
+  },
   "band": {
     "title": "Groupe",
     "viewsLabel": "Tâches de qui",

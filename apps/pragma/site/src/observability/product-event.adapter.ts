@@ -13,7 +13,8 @@ export type ProductEventName =
   | 'setlist_order_opened'
   | 'practice_mode_started'
   | 'practice_mode_ended'
-  | 'chord_chart_added';
+  | 'chord_chart_added'
+  | 'streak_sheet_opened';
 
 export type ProductEventAttributes = Readonly<Record<string, string | number | boolean>>;
 
