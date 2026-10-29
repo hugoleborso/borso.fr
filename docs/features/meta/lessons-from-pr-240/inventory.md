@@ -19,7 +19,7 @@ logged.
 | 04 | implementation | The same parse makes `footer-max-line-length` refuse a body line over 100 characters after any `#N` line. | probe this session, exit 1, `footer's lines must not be longer than 100 characters` | merge into 01: the same two-rule change removes it. |
 | 05 | implementation | `no-broad-kill` refused `pkill`. | archive 17:38 `hook:no-broad-kill` | no-op: PR #234's inventory row 10 already counts this hit, and the hook's message gives `lsof -ti tcp:<port>`. |
 | 06 | implementation | `no-swallowed-push` refused the sweep's push. | commit `25baf90` ("count this sweep's own push refusal") | no-op: PR #234's inventory row 02 counts it, and the hook refused before anything ran. |
-| 07 | implementation | `docs/quality/feature-cost.md` conflicted with PR #235's sweep, which appended its row first. | merge commit `815ae59`, "Conflicts: docs/quality/feature-cost.md" | no-op: one conflict, resolved in one merge commit. A `merge=union` attribute would also keep both sides of an edited prose line without a conflict, which is worse. |
+| 07 | implementation | `docs/quality/feature-cost.md` conflicted with PR #235's sweep, which appended its row first. | merge commit `815ae59`, "Conflicts: docs/quality/feature-cost.md" | fixed: `84fd5971` sets `merge=union` on the file. This sweep hit the same conflict against PR #238's row, two sweeps in a row (measured). The attribute drops the conflict on a prose line both sides edit, and keeps both versions. |
 | 08 | post-merge | The 25 ADRs PR #240 found still `proposed` went to PR #242, opened on the same branch after the merge. | PR #242, base `d1be9c42`, one commit `987a306` | no-op: #242 restarts from the merge and stamps the backlog, and step 1c covers future merges. Whether the operator asked for a separate PR is not in the PR record. |
 | 09 | post-merge | The cache-write target failed all three feature rows, and the sweep wrote that it "decides nothing until the measure isolates the rebuilds". | commit `c93a611`; `lessons-from-pr-234/inventory.md` | no-op here: the targets are the operator's, from PR #224's Kaizen. Whether to retire or re-measure this one is asked in this sweep's reply. |
 | 10 | ci | None. Every run on the PR head was green. | ci run 40925553020, preview 40925553065, screenshots 40925553273 | no-op: nothing failed. |
@@ -29,4 +29,4 @@ logged.
 | 14 | post-merge | The merged session kept running for PR #242, so its cost covers more than PR #240. | `get_session` `session_01K69KnEN4KZEAddTa4QvvkW`, status idle, watching #242 | no-op: the cost row says so. |
 | 15 | post-merge | `no-swallowed-push` refused this sweep's piped push too. | this session's log 18:20 `hook:no-swallowed-push` | no-op: a filed wall, matched at `docs/quality/working-conditions.md:90`, and the hook refused before anything ran. |
 
-Counts: 1 dantotsu, 0 knowledge, 4 merged, 10 no-op.
+Counts: 1 dantotsu, 0 knowledge, 1 fixed, 4 merged, 9 no-op.
