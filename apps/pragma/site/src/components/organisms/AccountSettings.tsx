@@ -95,6 +95,7 @@ export function AccountSettings(): JSX.Element {
             icon: SECTION_ICON[option],
           }))}
           value={section}
+          layout="stacked"
           onChange={(next) => setSearchParams({ [ACCOUNT_SECTION_PARAM]: next }, { replace: true })}
         />
       </PageHeader>

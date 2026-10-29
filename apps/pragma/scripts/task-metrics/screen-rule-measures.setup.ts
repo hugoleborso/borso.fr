@@ -5,6 +5,7 @@ import {
   READ_PAGE_HEADER,
   READ_PAGE_HEADER_BOX,
   READ_PATHNAME,
+  READ_TAB_ROWS,
   SCROLL_TO_PAGE_END,
 } from './page-probes.setup';
 import { buildSignedInRoutePlan, type RouteTarget } from './route-measures.setup';
@@ -70,6 +71,15 @@ const headerBoxSchema = z.object({
   viewportHeight: z.number(),
 });
 const contentBelowListSchema = z.array(z.object({ list: z.string(), below: z.string() }));
+const tabRowsSchema = z.array(
+  z.object({
+    label: z.string(),
+    hidesStart: z.boolean(),
+    hidesEnd: z.boolean(),
+    startCue: z.boolean(),
+    endCue: z.boolean(),
+  }),
+);
 
 interface ScreenRuleRoute extends RouteTarget {
   readonly back: ExpectedBackLink;
@@ -106,10 +116,11 @@ async function measureScreen(
   const contentBelowList = contentBelowListSchema.parse(
     await driver.session.evaluate(READ_CONTENT_BELOW_LIST),
   );
+  const tabRows = tabRowsSchema.parse(await driver.session.evaluate(READ_TAB_ROWS));
   await driver.session.evaluate(SCROLL_TO_PAGE_END);
   await waitMilliseconds(SCROLL_SETTLE_MS);
   const box = headerBoxSchema.parse(await driver.session.evaluate(READ_PAGE_HEADER_BOX));
-  const report = { ...header, ...box, contentBelowList };
+  const report = { ...header, ...box, contentBelowList, tabRows };
   const violations = listScreenRuleViolations(target, report);
   console.log(
     `[screen-rule] ${target.route} -> ${landedOn}: ${violations.length === 0 ? 'ok' : violations.join('; ')}`,

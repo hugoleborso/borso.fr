@@ -516,6 +516,19 @@ export const READ_PAGE_HEADER_BOX = `() => {
   return { headerTopAfterEnd: box === undefined ? null : Math.round(box.top), headerBottomAfterEnd: box === undefined ? null : Math.round(box.bottom), viewportHeight: innerHeight };
 }`;
 
+export const READ_TAB_ROWS = `() => {
+  const EDGE_TOLERANCE_PX = 1;
+  const isShown = (element) => { const box = element.getBoundingClientRect(); return box.width > 0 && box.height > 0 && getComputedStyle(element).visibility !== 'hidden'; };
+  const hasCue = (row, edge) => { const cue = row.parentElement?.querySelector('[data-tab-overflow-cue="' + edge + '"]'); return cue !== null && cue !== undefined && isShown(cue); };
+  return [...document.querySelectorAll('[role=tablist]')].filter(isShown).map((row) => ({
+    label: row.getAttribute('aria-label') ?? '',
+    hidesStart: row.scrollLeft > EDGE_TOLERANCE_PX,
+    hidesEnd: row.scrollLeft + row.clientWidth < row.scrollWidth - EDGE_TOLERANCE_PX,
+    startCue: hasCue(row, 'start'),
+    endCue: hasCue(row, 'end'),
+  }));
+}`;
+
 export const READ_CONTENT_BELOW_LIST = `() => {
   const scope = document.querySelector('main') ?? document.body;
   const OUTSIDE_CONTENT = 'dialog, [data-page-header], [data-bottom-actions], [aria-hidden="true"], details:not([open]) > :not(summary)';

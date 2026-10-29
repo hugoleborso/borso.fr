@@ -15,6 +15,14 @@ const WELL_SHAPED: ScreenShapeReport = {
   headerBottomAfterEnd: 120,
   viewportHeight: VIEWPORT_HEIGHT,
   contentBelowList: [],
+  tabRows: [],
+};
+const FITTING_TAB_ROW = {
+  label: 'Account sections',
+  hidesStart: false,
+  hidesEnd: false,
+  startCue: false,
+  endCue: false,
 };
 
 describe('listScreenRuleViolations', () => {
@@ -111,6 +119,37 @@ describe('listScreenRuleViolations', () => {
     ).toEqual([
       'form "New member" sits below the list ul "Members"',
       'h2 "Mastery" sits below the list ul "Members"',
+    ]);
+  });
+});
+
+describe('the tab rows on a screen', () => {
+  const target = { route: '/account', back: null };
+
+  it('accepts a row whose tabs fit, and a row that shows a cue on each edge it hides', () => {
+    expect(
+      listScreenRuleViolations(target, {
+        ...WELL_SHAPED,
+        tabRows: [
+          FITTING_TAB_ROW,
+          { ...FITTING_TAB_ROW, hidesStart: true, hidesEnd: true, startCue: true, endCue: true },
+        ],
+      }),
+    ).toEqual([]);
+  });
+
+  it('reports each hidden edge that shows no cue', () => {
+    expect(
+      listScreenRuleViolations(target, {
+        ...WELL_SHAPED,
+        tabRows: [
+          { ...FITTING_TAB_ROW, hidesEnd: true },
+          { ...FITTING_TAB_ROW, label: 'Views', hidesStart: true, endCue: true },
+        ],
+      }),
+    ).toEqual([
+      'tab row "Account sections" hides tabs past its end with no cue',
+      'tab row "Views" hides tabs before its start with no cue',
     ]);
   });
 });

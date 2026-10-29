@@ -67,9 +67,9 @@
     "sections": {
       "label": "Account sections",
       "profile": "Profile",
-      "signIn": "Quick sign-in",
+      "signIn": "Sign-in",
       "calendar": "Calendar",
-      "notifications": "Notifications",
+      "notifications": "Alerts",
       "language": "Language"
     }
   },

@@ -50,7 +50,7 @@ describe('the account page', () => {
       within(header)
         .getAllByRole('tab')
         .map((tab) => tab.textContent),
-    ).toEqual(['Profile', 'Quick sign-in', 'Calendar', 'Notifications', 'Language']);
+    ).toEqual(['Profile', 'Sign-in', 'Calendar', 'Alerts', 'Language']);
     expect(screen.getByRole('tab', { name: 'Profile' }).getAttribute('aria-selected')).toBe('true');
   });
 

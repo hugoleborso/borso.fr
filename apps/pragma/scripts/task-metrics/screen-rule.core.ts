@@ -12,6 +12,14 @@ export interface ContentBelowList {
   readonly below: string;
 }
 
+export interface TabRowReport {
+  readonly label: string;
+  readonly hidesStart: boolean;
+  readonly hidesEnd: boolean;
+  readonly startCue: boolean;
+  readonly endCue: boolean;
+}
+
 export interface ScreenShapeReport {
   readonly hasHeader: boolean;
   readonly headerPosition: string;
@@ -20,6 +28,7 @@ export interface ScreenShapeReport {
   readonly headerBottomAfterEnd: number | null;
   readonly viewportHeight: number;
   readonly contentBelowList: readonly ContentBelowList[];
+  readonly tabRows: readonly TabRowReport[];
 }
 
 const FIXED_POSITIONS = new Set(['sticky', 'fixed']);
@@ -43,6 +52,17 @@ function listBackLinkViolations(target: ScreenRuleTarget, report: ScreenShapeRep
     : [`no back link to ${target.back} in the header`];
 }
 
+function listTabRowViolations(tabRow: TabRowReport): string[] {
+  const violations: string[] = [];
+  if (tabRow.hidesStart && !tabRow.startCue) {
+    violations.push(`tab row "${tabRow.label}" hides tabs before its start with no cue`);
+  }
+  if (tabRow.hidesEnd && !tabRow.endCue) {
+    violations.push(`tab row "${tabRow.label}" hides tabs past its end with no cue`);
+  }
+  return violations;
+}
+
 export function listScreenRuleViolations(
   target: ScreenRuleTarget,
   report: ScreenShapeReport,
@@ -57,6 +77,7 @@ export function listScreenRuleViolations(
   for (const found of report.contentBelowList) {
     violations.push(`${found.below} sits below the list ${found.list}`);
   }
+  violations.push(...report.tabRows.flatMap(listTabRowViolations));
   return violations;
 }
 
