@@ -1,5 +1,5 @@
 ---
-summary: 'Driving pragma sign-in from a validator: the seeded logins, a fresh rate-limit bucket per `X-Forwarded-For`, and why passkey claims belong in back-e2e.'
+summary: 'Driving pragma sign-in from a validator: the seeded logins, the `pragma.session-seen` localStorage marker a cookie alone lacks, a fresh rate-limit bucket per `X-Forwarded-For`, and why passkey claims belong in back-e2e.'
 triggers:
   paths:
     - 'docs/features/pragma/*/validation/**'
@@ -30,6 +30,14 @@ The fixture route, if you need to reseed mid-run, is
 `POST /api/__test/seed`, not `/api/test/seed`. Each `pnpm dev` wipes and
 reseeds, so a run that changes passwords leaves nothing behind for the
 next one.
+
+## A cookie alone still lands on /login
+
+Signing in through `POST /api/auth/login` sets the session cookie, but the site
+also reads a `localStorage` marker, `pragma.session-seen` set to `1`
+(`apps/pragma/site/src/lib/session-marker.adapter.ts`). Without it every page
+redirects to `/login`. Sign in through the form, or set the marker on the
+origin before opening a page. An auditor on PR #216 lost a run to this.
 
 ## The rate limiters key on the address
 
