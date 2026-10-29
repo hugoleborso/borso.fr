@@ -72,7 +72,7 @@ export function TasksPage(): JSX.Element {
     tasksQuery.error === null ? taskSheet.errorMessage : tasksQuery.error.message;
 
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[960px]">
       <PageHeader back={{ to: '/band', label: t('band.title') }} title={t('nav.tasks')}>
         <SectionTabs
           label={t('band.viewsLabel')}

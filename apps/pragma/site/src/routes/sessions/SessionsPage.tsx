@@ -94,7 +94,7 @@ export function SessionsPage(): JSX.Element {
   };
 
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[960px]">
       <PageHeader
         title={t('sessions.title')}
         actions={

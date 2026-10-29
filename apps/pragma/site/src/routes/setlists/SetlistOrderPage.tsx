@@ -75,7 +75,7 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   });
 
   return (
-    <section className="flex max-w-[1280px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">
+    <section className="flex max-w-[960px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">
       <PageHeader
         back={{ to: setlistPath, label: displayedName }}
         title={t('setlist.orderTitle')}

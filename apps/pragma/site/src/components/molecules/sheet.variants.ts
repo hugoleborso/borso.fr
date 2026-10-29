@@ -4,12 +4,13 @@ import { cva, type VariantProps } from 'class-variance-authority';
 export const sheetVariants = cva(
   'm-0 mt-auto mx-auto w-full max-w-full sm:max-w-[34rem] flex-col overflow-hidden border-0 p-0 ' +
     'rounded-t-sheet bg-raised text-ink shadow-overlay open:flex backdrop:bg-scrim ' +
+    'lg:mb-auto lg:rounded-sheet ' +
     'motion-safe:transition-transform motion-safe:duration-200',
   {
     variants: {
       size: {
-        sheet: 'max-h-[92dvh]',
-        full: 'h-[92dvh] max-h-[92dvh]',
+        sheet: 'max-h-[92dvh] lg:max-h-[85dvh]',
+        full: 'h-[92dvh] max-h-[92dvh] lg:h-[85dvh] lg:max-h-[85dvh]',
         confirm: 'max-h-[60dvh]',
       },
     },

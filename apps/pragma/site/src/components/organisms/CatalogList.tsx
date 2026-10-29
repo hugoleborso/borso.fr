@@ -9,7 +9,7 @@ export interface CatalogListProps {
 // @FollowsBlueprint organism-presentational
 export function CatalogList({ songs }: CatalogListProps): JSX.Element {
   return (
-    <ul className="m-0 flex list-none flex-col p-0">
+    <ul className="m-0 flex list-none flex-col p-0 lg:grid lg:grid-cols-2 lg:gap-3 xl:grid-cols-3">
       {songs.map((song) => (
         <li key={song.id}>
           <SongCard {...song} />

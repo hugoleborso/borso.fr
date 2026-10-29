@@ -63,7 +63,7 @@ export function SectionTabs<Value extends string>({
   const isStartCueShown = isHidingTabsAtStart(overflow);
   const isEndCueShown = isHidingTabsAtEnd(overflow);
   return (
-    <div className={composeClassName('relative flex', className)}>
+    <div className={composeClassName('relative flex lg:w-fit lg:max-w-full', className)}>
       <div
         ref={setRow}
         role="tablist"

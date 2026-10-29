@@ -247,7 +247,7 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   };
 
   return (
-    <section className="flex max-w-[1280px] flex-col gap-5 px-4 py-4 sm:px-9 sm:py-7">
+    <section className="flex max-w-[960px] flex-col gap-5 px-4 py-4 sm:px-9 sm:py-7">
       <PageHeader
         back={{ to: '/sessions', label: t('sessions.title') }}
         crumb={t(isConcert ? 'sessions.kindConcert' : 'sessions.kindPractice')}

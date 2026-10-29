@@ -126,7 +126,7 @@ function SetlistDetail({ setlistId }: { setlistId: string }): JSX.Element {
     .join(LINE_SEPARATOR);
 
   return (
-    <section className="flex max-w-[1280px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">
+    <section className="flex max-w-[960px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">
       <PageHeader
         back={{ to: header.backTo, label: parentLabel ?? t('setlist.title') }}
         title={displayedName}

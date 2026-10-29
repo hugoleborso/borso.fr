@@ -33,7 +33,7 @@ export function SongCard({
   return (
     <Link
       to={`/catalog/${id}`}
-      className="flex min-h-14 items-center gap-3 border-b border-rule py-1.5 text-ink no-underline hover:bg-hover"
+      className="flex h-full min-h-14 items-center gap-3 border-b border-rule py-1.5 text-ink no-underline hover:bg-hover lg:rounded-md lg:border lg:bg-leaf lg:px-3 lg:py-2.5 lg:hover:border-rule-strong"
     >
       <AlbumCover title={title} deezerAlbumId={deezerAlbumId} />
       <span className="flex min-w-0 flex-1 flex-col">

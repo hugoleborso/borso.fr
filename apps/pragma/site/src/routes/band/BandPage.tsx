@@ -16,7 +16,7 @@ export function BandPage(): JSX.Element {
   const { t } = useTranslation();
 
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 max-w-[960px]">
       <PageHeader title={t('band.title')} />
       <nav aria-label={t('band.linksLabel')}>
         <ul className="m-0 list-none divide-y divide-rule p-0">

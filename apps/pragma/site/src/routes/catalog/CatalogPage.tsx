@@ -117,7 +117,7 @@ export function CatalogPage(): JSX.Element {
   };
 
   return (
-    <div className="max-w-3xl px-4 py-4 sm:px-9 sm:py-7">
+    <div className="max-w-3xl px-4 py-4 sm:px-9 sm:py-7 lg:max-w-[1280px]">
       <PageHeader
         title={t('catalog.title')}
         inline={

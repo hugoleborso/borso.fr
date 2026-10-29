@@ -119,7 +119,7 @@ export function ImprovementsPage(): JSX.Element {
   ];
 
   return (
-    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[1280px]">
+    <section className="px-4 sm:px-9 py-4 sm:py-7 pb-20 max-w-[960px]">
       <PageHeader back={{ to: '/band', label: t('band.title') }} title={t('improvements.title')}>
         <FilterPillGroup options={filterOptions} value={statusFilter} onChange={setStatusFilter} />
       </PageHeader>

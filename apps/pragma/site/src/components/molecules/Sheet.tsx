@@ -69,7 +69,7 @@ export function Sheet({
           <div
             data-sheet-grabber
             aria-hidden="true"
-            className="mx-auto mt-2 h-1 w-9 rounded-pill bg-rule-strong"
+            className="mx-auto mt-2 h-1 w-9 rounded-pill bg-rule-strong lg:hidden"
           />
         ) : null}
         <header className="flex items-center gap-2 py-1 pr-2 pl-4">
