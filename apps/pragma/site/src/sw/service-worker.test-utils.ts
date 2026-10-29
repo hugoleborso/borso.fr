@@ -1,7 +1,16 @@
 /** @Feature shell */
 
 import { createContext, runInContext } from 'node:vm';
+import notificationsSource from '../../public/sw-notifications.js?raw';
 import serviceWorkerSource from '../../public/sw.js?raw';
+
+const IMPORTED_SCRIPTS = new Map([['/sw-notifications.js', notificationsSource]]);
+
+function readImportedScript(url: string): string {
+  const source = IMPORTED_SCRIPTS.get(url);
+  if (source === undefined) throw new Error(`sw.js imports ${url}, which is not in public/`);
+  return source;
+}
 
 export type ServiceWorkerListener = (event: unknown) => void;
 
@@ -163,6 +172,9 @@ export function loadServiceWorker(
     self: serviceWorkerScope,
     caches: cacheStorage,
     fetch: fetchStub,
+    importScripts: (...urls: string[]) => {
+      for (const url of urls) runInContext(readImportedScript(url), context);
+    },
     URL,
     Promise,
     console,

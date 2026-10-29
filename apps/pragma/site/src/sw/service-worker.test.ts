@@ -146,7 +146,7 @@ describe('sw.js, push notifications', () => {
     await worker.dispatch('push', { data: pushData(TAKE_PUSH) });
     expect(worker.notifications).toEqual([
       {
-        title: 'Pragma',
+        title: 'New take',
         options: {
           body: 'Hugo posted a take of Seven Nation Army',
           icon: '/icons/icon-192.png',
@@ -162,6 +162,7 @@ describe('sw.js, push notifications', () => {
   it('renders the same push in French on a French device', async () => {
     const worker = loadServiceWorker(failAlways, { language: 'FR-fr' });
     await worker.dispatch('push', { data: pushData(TAKE_PUSH) });
+    expect(worker.notifications[0]?.title).toBe('Nouvelle prise');
     expect(worker.notifications[0]?.options.body).toBe(
       'Hugo a publié une prise de Seven Nation Army',
     );
@@ -186,6 +187,28 @@ describe('sw.js, push notifications', () => {
       await english.dispatch('push', { data: pushData(pushMessage) });
       await french.dispatch('push', { data: pushData(pushMessage) });
     }
+    expect(english.notifications.map((shown) => shown.title)).toEqual([
+      'New comment',
+      'New session',
+      'Session changed',
+      'Setlist changed',
+      'Lineup changed',
+      'Transition changed',
+      'Flame at risk',
+      'Practice time',
+      'Practice time',
+    ]);
+    expect(french.notifications.map((shown) => shown.title)).toEqual([
+      'Nouveau commentaire',
+      'Nouvelle session',
+      'Session modifiée',
+      'Setlist modifiée',
+      'Composition modifiée',
+      'Transition modifiée',
+      'Flamme en danger',
+      'À toi de jouer',
+      'À toi de jouer',
+    ]);
     expect(english.notifications.map((shown) => shown.options.body)).toEqual([
       'Ana commented on a take of Song',
       'Ana planned a session on not a date',
@@ -265,6 +288,7 @@ describe('sw.js, push notifications', () => {
       'Something changed in the band.',
       'Something changed in the band.',
     ]);
+    expect(worker.notifications[0]?.title).toBe('Band update');
     expect(worker.notifications[0]?.options).toEqual({
       body: 'Something changed in the band.',
       icon: '/icons/icon-192.png',

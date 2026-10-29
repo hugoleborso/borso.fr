@@ -12,7 +12,7 @@
 set -euo pipefail
 
 root="$(cd "$(dirname "$0")/.." && pwd)"
-workspace="$(realpath --relative-to="$root" "$PWD")"
+workspace="${PWD#"$root"/}"
 
 "$root/scripts/ensure-infra-built.sh"
 
