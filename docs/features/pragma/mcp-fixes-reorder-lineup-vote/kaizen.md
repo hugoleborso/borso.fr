@@ -14,3 +14,4 @@ This file is gitignored and is deleted once the kaizen pull request is open.
 
 - [03:14] `main` scripts/local-postgres.sh hard-codes /usr/lib/postgresql/16, so pragma back-e2e cannot run on a local macOS session that has Homebrew postgres
 - [03:31] `main` pretool-gh-pr-create.sh resolves REPO_ROOT to the main checkout from a worktree session, so it reads the main checkout's KAIZEN.md and branch and refuses a PR whose worktree branch already commits the archive
+- [03:42] `main` pre-commit check mutation-covers-gated-files measured 333 ms then 261 ms on the same tree; a budget 10% above its typical run refuses commits on machine load
