@@ -10,6 +10,8 @@ export type ExclusionReason = 'no-calendar' | FeedFailure;
 export interface ExcludedMember {
   readonly memberId: string;
   readonly reason: ExclusionReason;
+  readonly calendarName: string | null;
+  readonly calendarPosition: number | null;
 }
 
 export interface FreeSlotsResult {

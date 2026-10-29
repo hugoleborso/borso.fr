@@ -39,3 +39,7 @@ export const MASTERY_SCORE_MIN = 0;
 export const MASTERY_SCORE_MAX = 10;
 
 export const MAX_UPLOAD_MEBIBYTES = 10;
+
+export const CALENDAR_FEEDS_PER_MEMBER_MAX = 10;
+export const CALENDAR_FEED_NAME_MAX_LENGTH = 120;
+export const CALENDAR_FEED_ADDRESS_MAX_LENGTH = 2_048;

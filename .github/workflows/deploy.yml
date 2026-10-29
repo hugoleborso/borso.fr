@@ -127,6 +127,17 @@ jobs:
       SENTRY_ORG: ${{ vars.SENTRY_ORG }}
       SENTRY_PROJECT: ${{ vars.SENTRY_PROJECT }}
     steps:
+      # A `vars.X` that does not exist reads as an empty string, and an empty
+      # DSN is the designed off switch, so pragma ran in prod with Sentry off
+      # for 17 days after #163 and nothing said so. ADR-0031 has it on in prod.
+      # See docs/dantotsus/the-variable-the-workflow-set-to-nothing.md.
+      - name: Refuse to deploy pragma with Sentry off
+        if: matrix.app == 'pragma'
+        run: |
+          if [ -z "$VITE_SENTRY_DSN" ]; then
+            echo "::error::vars.SENTRY_DSN is empty in the prod environment, so pragma would deploy with Sentry off. Set it, or delete this step and say why in the commit."
+            exit 1
+          fi
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
       - uses: actions/setup-node@v7

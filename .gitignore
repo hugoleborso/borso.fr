@@ -64,8 +64,12 @@ docs/architecture/*-architecture.json
 # revision they would be true at.
 docs/architecture/*-diff.json
 .claude/skills/blueprint/blueprint-index.md
+# Nothing has written this since #224 removed its generator. A cloud session's
+# clone restored from an older environment snapshot still holds the file, and
+# without this line it shows as untracked. Keep the line.
 .claude/skills/blueprint/blueprint-context.json
 .claude/skills/blueprint/blueprint-coverage.html
+.claude/skills/blueprint/blueprint-context.json
 .claude/knowledge-triggers.json
 .claude/.knowledge-triggers.*
 docs/standards/blueprint-defects.md

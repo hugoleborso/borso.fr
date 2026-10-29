@@ -52,6 +52,19 @@ END:VCALENDAR
 "
 `;
 
+exports[`preview calendar fixtures > spread Hugo over two calendars, the second holding only a past day 1`] = `
+"BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//pragma//preview fixtures//EN
+BEGIN:VEVENT
+UID:hugo-band-yesterday@pragma-fixtures
+DTSTART;VALUE=DATE:20261012
+DTEND;VALUE=DATE:20261013
+END:VEVENT
+END:VCALENDAR
+"
+`;
+
 exports[`preview calendar fixtures > write the hugo feed exactly as recorded 1`] = `
 "BEGIN:VCALENDAR
 VERSION:2.0

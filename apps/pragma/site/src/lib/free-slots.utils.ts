@@ -14,6 +14,30 @@ export interface FormattedFreeSlot {
 export interface NamedExclusion {
   readonly firstName: string;
   readonly reason: ExclusionReason;
+  readonly calendarName: string | null;
+  readonly calendarPosition: number | null;
+}
+
+const NAMED_EXCLUSION_MESSAGE_KEY = {
+  'no-calendar': 'freeSlots.excluded.noCalendar',
+  'needs-reconnecting': 'freeSlots.excluded.needsReconnectingNamed',
+  unavailable: 'freeSlots.excluded.unavailableNamed',
+} as const;
+
+const NUMBERED_EXCLUSION_MESSAGE_KEY = {
+  'no-calendar': 'freeSlots.excluded.noCalendar',
+  'needs-reconnecting': 'freeSlots.excluded.needsReconnectingNumbered',
+  unavailable: 'freeSlots.excluded.unavailableNumbered',
+} as const;
+
+export type ExclusionMessageKey =
+  | (typeof NAMED_EXCLUSION_MESSAGE_KEY)[ExclusionReason]
+  | (typeof NUMBERED_EXCLUSION_MESSAGE_KEY)[ExclusionReason];
+
+export function selectExclusionMessageKey(exclusion: NamedExclusion): ExclusionMessageKey {
+  return exclusion.calendarName === null
+    ? NUMBERED_EXCLUSION_MESSAGE_KEY[exclusion.reason]
+    : NAMED_EXCLUSION_MESSAGE_KEY[exclusion.reason];
 }
 
 interface MemberName {
@@ -50,13 +74,20 @@ export function formatFreeSlot(
 }
 
 export function nameExclusions(
-  exclusions: readonly { readonly memberId: string; readonly reason: ExclusionReason }[],
+  exclusions: readonly {
+    readonly memberId: string;
+    readonly reason: ExclusionReason;
+    readonly calendarName: string | null;
+    readonly calendarPosition: number | null;
+  }[],
   members: readonly MemberName[],
 ): NamedExclusion[] {
   const firstNameById = new Map(members.map((member) => [member.id, member.firstName]));
   return exclusions.map((exclusion) => ({
     firstName: firstNameById.get(exclusion.memberId) ?? UNKNOWN_MEMBER_NAME,
     reason: exclusion.reason,
+    calendarName: exclusion.calendarName,
+    calendarPosition: exclusion.calendarPosition,
   }));
 }
 
