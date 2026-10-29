@@ -200,6 +200,7 @@ describe('selectSessionPills', () => {
   it('offers nothing while the setlists load', () => {
     expect(
       selectSessionPills({
+        view: 'setlist',
         isLoading: true,
         isPractice: false,
         sessionId: 's',
@@ -219,6 +220,7 @@ describe('selectSessionPills', () => {
   it('offers Add songs while the session has no setlist', () => {
     expect(
       selectSessionPills({
+        view: 'setlist',
         isLoading: false,
         isPractice: false,
         sessionId: 's',
@@ -238,6 +240,7 @@ describe('selectSessionPills', () => {
   it('opens the setlist on any other day', () => {
     expect(
       selectSessionPills({
+        view: 'setlist',
         isLoading: false,
         isPractice: false,
         sessionId: 's',
@@ -257,6 +260,7 @@ describe('selectSessionPills', () => {
   it('starts the practice on its day, with the setlist beside it under a short label', () => {
     expect(
       selectSessionPills({
+        view: 'setlist',
         isLoading: false,
         isPractice: false,
         sessionId: 's',
@@ -275,7 +279,13 @@ describe('selectSessionPills', () => {
 });
 
 describe('selectSessionPills on a practice', () => {
-  const practice = { isLoading: false, isPractice: true, sessionId: 's', firstSetlistId: 'set-1' };
+  const practice = {
+    isLoading: false,
+    isPractice: true,
+    sessionId: 's',
+    firstSetlistId: 'set-1',
+    view: 'songs',
+  } as const;
 
   it('offers Choose songs as the one primary action, and never the setlist', () => {
     expect(selectSessionPills({ ...practice, isPracticeModeOffered: false })).toEqual({
@@ -304,6 +314,22 @@ describe('selectSessionPills on a practice', () => {
       selectSessionPills({ ...practice, isLoading: true, isPracticeModeOffered: true })
         .chooseSongsVariant,
     ).toBe(null);
+  });
+
+  it('offers Choose songs on the Songs tab only', () => {
+    for (const isPracticeModeOffered of [false, true]) {
+      for (const view of ['tasks', 'takes', 'details'] as const) {
+        expect(
+          selectSessionPills({ ...practice, view, isPracticeModeOffered }).chooseSongsVariant,
+        ).toBe(null);
+      }
+    }
+    expect(selectSessionPills({ ...practice, isPracticeModeOffered: true }).practicePath).toBe(
+      '/sessions/s/practice',
+    );
+    expect(
+      selectSessionPills({ ...practice, view: 'takes', isPracticeModeOffered: true }).practicePath,
+    ).toBe('/sessions/s/practice');
   });
 });
 

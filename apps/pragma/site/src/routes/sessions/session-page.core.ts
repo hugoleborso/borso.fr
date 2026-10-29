@@ -143,6 +143,7 @@ export interface SessionPrimaryActionsInput {
   readonly sessionId: string;
   readonly firstSetlistId: string | null;
   readonly isPracticeModeOffered: boolean;
+  readonly view: SessionView;
 }
 
 export function buildPracticePath(sessionId: string): string {
@@ -150,11 +151,14 @@ export function buildPracticePath(sessionId: string): string {
 }
 
 function selectPracticePills(input: SessionPrimaryActionsInput): SessionPills {
-  if (!input.isPracticeModeOffered) return { ...NO_PILLS, chooseSongsVariant: 'primary' };
+  const isSongsView = input.view === 'songs';
+  if (!input.isPracticeModeOffered) {
+    return { ...NO_PILLS, chooseSongsVariant: isSongsView ? 'primary' : null };
+  }
   return {
     ...NO_PILLS,
     practicePath: buildPracticePath(input.sessionId),
-    chooseSongsVariant: 'secondary',
+    chooseSongsVariant: isSongsView ? 'secondary' : null,
   };
 }
 

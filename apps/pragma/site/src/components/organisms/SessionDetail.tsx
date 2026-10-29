@@ -114,18 +114,6 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   const practiceSongs = usePracticeSongs(isPractice, setlists, songs);
   const songCount = setlists.reduce((total, setlist) => total + setlist.songCount, 0);
   const now = new Date(nowEpochMs);
-  const pills = selectSessionPills({
-    isLoading: props.isSetlistsLoading || practiceSongs.isLoading,
-    isPractice,
-    sessionId: session.id,
-    firstSetlistId: setlists[0]?.id ?? null,
-    isPracticeModeOffered: isPracticeModeOffered({
-      kind: session.kind,
-      date: session.date,
-      songCount,
-      now,
-    }),
-  });
   const isPickerShown = isPreparedConcertPickerShown({
     sessionDate: session.date,
     preparedConcertId: session.preparedConcertId ?? null,
@@ -138,6 +126,20 @@ export function SessionDetail(props: SessionDetailProps): JSX.Element {
   const showView = (nextView: SessionView): void => {
     setSearchParams({ [SESSION_VIEW_PARAM]: nextView }, { replace: true });
   };
+  const pills = selectSessionPills({
+    isLoading: props.isSetlistsLoading || practiceSongs.isLoading,
+    isPractice,
+    sessionId: session.id,
+    firstSetlistId: setlists[0]?.id ?? null,
+    isPracticeModeOffered: isPracticeModeOffered({
+      kind: session.kind,
+      date: session.date,
+      songCount,
+      now,
+    }),
+    view,
+  });
+
   const editConcert = (): void => {
     setEditingConcert(true);
     showView('details');
