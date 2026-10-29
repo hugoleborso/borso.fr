@@ -1,5 +1,7 @@
 /** @Feature songs */
 
+import { type ChartKindTag, extractChartKind } from './chart-kind.utils';
+
 export const CATALOG_FILTERS = [
   'all',
   'learning',
@@ -100,6 +102,38 @@ export function selectSongsToLearn<Song extends CatalogSong & { readonly id: str
     });
   }
   return [...bySongId.values()];
+}
+
+export interface SongCardSource<Status extends string> {
+  readonly id: string;
+  readonly title: string;
+  readonly status: Status;
+  readonly deezerAlbumId: string | null;
+  readonly chart: { readonly kind?: unknown } | null;
+}
+
+export interface SongCardView<Status extends string> {
+  readonly id: string;
+  readonly title: string;
+  readonly detail: string;
+  readonly deezerAlbumId: string | null;
+  readonly status: Status;
+  readonly chartKind: ChartKindTag;
+}
+
+// @FollowsBlueprint core-view-projection
+export function toSongCard<Status extends string>(
+  song: SongCardSource<Status>,
+  detail: string,
+): SongCardView<Status> {
+  return {
+    id: song.id,
+    title: song.title,
+    detail,
+    deezerAlbumId: song.deezerAlbumId,
+    status: song.status,
+    chartKind: extractChartKind(song.chart),
+  };
 }
 
 export function describeSongToLearn(

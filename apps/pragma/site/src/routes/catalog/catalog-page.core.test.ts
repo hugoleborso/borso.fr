@@ -10,6 +10,7 @@ import {
   isMatchingStatusFilter,
   selectVisibleSongs,
   sortSongsByTitle,
+  toSongCard,
 } from './catalog-page.core';
 
 const SONGS: readonly CatalogSong[] = [
@@ -179,5 +180,29 @@ describe('describeSongToLearn', () => {
     expect(
       describeSongToLearn({ song: null, instrumentIds: ['bass'], lowestScore: null }, names),
     ).toBe('Bass');
+  });
+});
+
+describe('toSongCard', () => {
+  it('draws a song as its card, with the line under the title and the kind of its chart', () => {
+    expect(
+      toSongCard(
+        {
+          id: 'song-1',
+          title: 'Lightning',
+          status: 'rehearsed',
+          deezerAlbumId: 'album-9',
+          chart: { kind: 'pdf' },
+        },
+        'Volt',
+      ),
+    ).toEqual({
+      id: 'song-1',
+      title: 'Lightning',
+      detail: 'Volt',
+      deezerAlbumId: 'album-9',
+      status: 'rehearsed',
+      chartKind: 'pdf',
+    });
   });
 });

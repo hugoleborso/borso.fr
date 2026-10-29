@@ -29,9 +29,9 @@ import {
   selectVisibleSongs,
   sortSongsByTitle,
   TO_LEARN_FILTER,
+  toSongCard,
 } from './catalog-page.core';
 import { buildAddSongPath } from './add-song.core';
-import { extractChartKind } from './chart-kind.utils';
 
 const NO_ROWS: readonly never[] = [];
 
@@ -43,26 +43,6 @@ const FILTER_LABEL_KEY = {
   wip: 'catalog.filterWip',
   idea: 'catalog.filterIdea',
 } as const satisfies Readonly<Record<CatalogFilter, string>>;
-
-interface CatalogSongRow {
-  readonly id: string;
-  readonly title: string;
-  readonly artist: string;
-  readonly status: SongCardProps['status'];
-  readonly deezerAlbumId: string | null;
-  readonly chart: { readonly kind?: unknown } | null;
-}
-
-function toSongCard(song: CatalogSongRow, detail: string): SongCardProps {
-  return {
-    id: song.id,
-    title: song.title,
-    detail,
-    deezerAlbumId: song.deezerAlbumId,
-    status: song.status,
-    chartKind: extractChartKind(song.chart),
-  };
-}
 
 /**
  * @Blueprint route-list-page
