@@ -1,5 +1,5 @@
 ---
-summary: 'A pragma preview clones production''s credentials, so only someone holding a production account signs in; validate sign-in locally instead.'
+summary: 'A pragma preview clones production''s credentials; an agent signs in only after seeding that preview, which wipes its clone, so offer the seed as an option and ask before running it.'
 triggers:
   commands:
     - 'pragma-pr-\d+(-api)?\.preview\.borso\.fr'
@@ -49,12 +49,18 @@ and were driven locally instead.
 
 ## If you need the authenticated screens
 
-Two options, in order of preference:
+Three options, in order of preference:
 
 - **Locally.** `scripts/local-postgres.sh`, then seed and write your own
   credential row. This is what PR #95 did for last-loop-lepin's admin forms.
-- **On the preview.** The operator signs in with their production account.
-  There is no agent-reachable path.
+- **On the preview, signed in by the operator.** They use their production
+  account.
+- **On the preview, after a seed, with the operator's go for that preview.**
+  A preview mounts `POST /api/__test/seed`, which deletes the cloned domain
+  rows of that preview's schema and writes the fixture, so `hugo`, `lea`,
+  `marc` and `sarah` sign in with `pragma-preview`. It touches nothing outside
+  that schema. Offer it as an option with that cost before saying the preview
+  is out of reach, and run it as a call of its own.
 
 `last-loop-lepin` is not in the same position: its seed only upserts, so its
 preview is seeded with a fixture — but the seed does **not** write an

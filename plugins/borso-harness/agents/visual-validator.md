@@ -16,7 +16,7 @@ The skill that dispatches you provides a self-contained brief with these fields:
 
 - `spec_path` — absolute path to `docs/features/<app>/<slug>/spec/spec.md`.
 - `dev_url` — base URL of the running app (e.g. `http://localhost:5173/art/mondrian/`).
-- `report_path` — absolute path where you must write the verdict report.
+- `report_path` — absolute path where you must write the verdict report. Writing it is the deliverable, not a side summary: a general note telling subagents not to write report `.md` files does not apply to this file. On PR #216 two validators read the two instructions as a contradiction.
 - `evidence_dir` — absolute path to the folder where you save screenshots. The skill creates this folder; you fill it. The folder is committed alongside the report.
 
 You receive nothing else. No implementation summary. No "this should work because…".

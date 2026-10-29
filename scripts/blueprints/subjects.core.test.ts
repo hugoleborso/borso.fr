@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import {
+  acceptSubjects,
   buildSubjectBaseline,
   describeDetachedClaim,
   listDetachedClaims,
@@ -174,7 +175,35 @@ describe('describeDetachedClaim', () => {
         '`listRunnersForEdition`, which the file still declares. A marker is bound to its subject ' +
         'by position, so a declaration inserted under one moves the claim without changing any ' +
         'count. Move the marker back, or accept the new subject in the same commit: ' +
-        '`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.',
+        `\`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept ${RUNNER_REPOSITORY}\`.`,
     );
+  });
+});
+
+describe('acceptSubjects', () => {
+  const recorded = {
+    [RUNNER_REPOSITORY]: { listRunnersForEdition: 'repository-query' },
+    [EDITION_REPOSITORY]: { findEdition: 'repository-query' },
+  };
+
+  it('rewrites only the files it is given and keeps every other recorded claim', () => {
+    const moved = claim({ subject: 'deleteAllEditionRunners' });
+    const unrecorded = claim({ filePath: 'apps/x/new.core.ts', subject: 'select' });
+    expect(acceptSubjects(recorded, [moved, unrecorded], [RUNNER_REPOSITORY])).toStrictEqual({
+      [EDITION_REPOSITORY]: { findEdition: 'repository-query' },
+      [RUNNER_REPOSITORY]: { deleteAllEditionRunners: 'repository-query' },
+    });
+  });
+
+  it('drops a given file that no longer carries a marker', () => {
+    expect(acceptSubjects(recorded, [], [RUNNER_REPOSITORY])).toStrictEqual({
+      [EDITION_REPOSITORY]: { findEdition: 'repository-query' },
+    });
+  });
+
+  it('rewrites the whole map from the markers on disk when given no path', () => {
+    expect(acceptSubjects(recorded, [claim()], [])).toStrictEqual({
+      [RUNNER_REPOSITORY]: { listRunnersForEdition: 'repository-query' },
+    });
   });
 });

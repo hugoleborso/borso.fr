@@ -78,7 +78,7 @@ Do **not** invoke when:
    evidence_dir     = <validation_dir>/visual-validation-<timestamp>/
    ```
    `mkdir -p` the evidence directory so the validator can drop PNG and GIF files straight in.
-5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path.
+5. **Dispatch the `visual-validator` agent.** Pass the four absolute paths and the dev URL. The agent reads the spec, builds its own assertion list, drives agent-browser, captures evidence, writes the report, and returns only the report path. **Leave the served code alone until the report is back.** The dev server reloads on every save, so an edit made while the agent runs changes the app under rows it has already recorded, and the report then describes two builds at once.
 6. **Read the report.** Surface the verdict (one line). On **FAIL**, list the failing rows verbatim and stop — the next move is to fix the implementation, not to ship. On **PASS_EXCEPT_UNVERIFIABLE**, list the UNVERIFIABLE rows verbatim so the operator can copy them into the PR description per the disclosure rule. Do **not** summarise — the user reads the report.
 7. **Stop the dev server** if the skill spawned it. Leave it running if the operator started it.
 8. **Split the evidence by verdict.** Per [ADR-0023](../../../../docs/adr/0023-validation-screenshots-leave-git-for-the-previews-cdn.md), a passing screenshot goes to the previews CDN and never enters git. Read the report's rows: a screenshot a FAIL row references stays in `evidence_dir`, and every other one moves to the staging folder beside it.
@@ -152,6 +152,3 @@ When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"piloted
 
 **No UI surface.** When the feature has no visible UI, `/visual-validation` should not be invoked at all. The orchestrator owns the skip (decision Q-VIS-VAL): it emits a `tech_lead_visual_validation_skipped` journal event and does not call this skill. No verdict file is written.
 
-## Auto-chain on PR merge: `/after-task-kaizen`
-
-When GitHub fires `pull_request.closed` with `merged: true` for a PR this skill validated (visible to the agent as a `<github-webhook-activity>` block), the agent immediately invokes `/after-task-kaizen` for the merged PR. If not subscribed to the PR's webhook activity, the agent asks once whether to subscribe. The same auto-chain lives in `/technical-validation` — whichever validator the chain reached last carries the trigger.

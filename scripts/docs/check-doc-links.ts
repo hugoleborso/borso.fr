@@ -101,8 +101,12 @@ function listStagedDocuments(present: ReadonlySet<string>): readonly string[] {
   return [...new Set([...staged, ...naming])].filter(isCheckedDocument).sort();
 }
 
+const WORKING_TREE_FILES = ['ls-files', '--cached', '--others', '--exclude-standard'] as const;
+
 function listAllDocuments(): readonly string[] {
-  return splitLines(runGit(['ls-files', `*${MARKDOWN_SUFFIX}`])).filter(isCheckedDocument);
+  return splitLines(runGit([...WORKING_TREE_FILES, `*${MARKDOWN_SUFFIX}`])).filter(
+    isCheckedDocument,
+  );
 }
 
 const TRAILING_SEPARATOR = /\/+$/;
@@ -128,7 +132,7 @@ function selectJudgeable(broken: readonly BrokenLink[]): readonly BrokenLink[] {
   return broken.filter((link) => !ignored.has(resolveTarget(link.document, link.target)));
 }
 
-const trackedFiles = splitLines(runGit(['ls-files']));
+const trackedFiles = splitLines(runGit([...WORKING_TREE_FILES]));
 const presentPaths = buildPresentPaths(trackedFiles);
 
 function isPresent(documentPath: string, target: string): boolean {

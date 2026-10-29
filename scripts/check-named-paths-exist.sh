@@ -20,7 +20,13 @@
 # A reader following either one looks for a file, does not find it, and has to
 # decide whether the artefact is wrong or the corpus is, with nothing to go on.
 #
-# Two surfaces, one question, one gate — deliberately. This repository shipped
+#   * A script one shell script calls by path. PR #224 deleted the argent wrapper
+#     under scripts/ while pragma's task-metrics runner still started it, and nothing said so
+#     until an agent tried a run days later. A call is resolved from the
+#     repository root, from the app or plugin that holds the caller, or from the
+#     caller's own folder, because a script often runs from one of those.
+#
+# Three surfaces, one question, one gate — deliberately. This repository shipped
 # the migration-number check twice because two authors each wrote a gate for the
 # folder in front of them; see
 # docs/dantotsus/the-loop-shipped-the-same-gate-twice.md. Adding a surface here
@@ -43,7 +49,7 @@ cd "$(dirname "$0")/.."
 # files cost 490 ms of CPU against a 300 ms budget. Without
 # it, every file is read, which is how CI calls it; that is about two seconds.
 SUBJECTS=()
-SURFACES=('scripts/*' '.husky/*' '.github/*' 'plugins/*' 'CLAUDE.md' '.claude/*')
+SURFACES=('scripts/*' '.husky/*' '.github/*' 'plugins/*' 'CLAUDE.md' '.claude/*' 'apps/*/scripts/*')
 if [ "${1:-}" = '--staged' ]; then
   STAGED=1
   while IFS= read -r staged; do
@@ -138,12 +144,45 @@ while IFS= read -r mention; do
   present_or_generated "$named" || report "${location}: names ${named}, which is not there"
 done <<<"$paths"
 
+# 3. A script that a shell script or a workflow calls by its path.
+calls="$(
+  list_subject_files 'scripts/*.sh' '.husky/*' '.github/*' 'plugins/*.sh' 'apps/*/scripts/*.sh' |
+    { grep -vE '\.test\.(ts|tsx|js)$' || true; } |
+    { xargs --no-run-if-empty grep -HonE '(^|[^A-Za-z0-9_./${}-]|\./)scripts/[A-Za-z0-9/._-]+\.(sh|ts|mjs|js|py)' 2>/dev/null || true; } |
+    sed -E 's|^([^:]+:[0-9]+:)[^s]*|\1|' |
+    sort -u
+)"
+
+# The folders a call may be relative to: the repository root, the app or plugin
+# holding the caller, and the caller's own folder.
+call_resolves() {
+  local caller="$1" called="$2"
+  [ -e "$called" ] && return 0
+  [ -e "$(dirname "$caller")/$called" ] && return 0
+  case "$caller" in
+    apps/*/* | plugins/*/*)
+      local owner
+      owner="$(cut -d/ -f1-2 <<<"$caller")"
+      [ -e "$owner/$called" ] && return 0
+      ;;
+  esac
+  return 1
+}
+
+while IFS= read -r call; do
+  [ -n "$call" ] || continue
+  called="${call#*:*:}"
+  location="${call%:*}"
+  caller="${call%%:*}"
+  call_resolves "$caller" "$called" || report "${location}: calls ${called}, which is not there"
+done <<<"$calls"
+
 if [ "$failed" -ne 0 ]; then
-  echo "[check-named-paths-exist] A path named in a gate's header, in CLAUDE.md or in a skill is" >&2
+  echo "[check-named-paths-exist] A path named in a gate's header, a script call, CLAUDE.md or a skill is" >&2
   echo "  read by somebody who will go and open it. Point it at what exists, or state the reason" >&2
   echo "  in prose and name nothing — a path that was never written is worse than no path at all," >&2
   echo "  because it sends a reader looking. A glob or a <placeholder> is skipped." >&2
   exit 1
 fi
 
-echo "[check-named-paths-exist] every document a script cites and every path an instruction names is there"
+echo "[check-named-paths-exist] every document a script cites, every script a script calls and every path an instruction names is there"

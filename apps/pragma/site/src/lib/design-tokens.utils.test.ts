@@ -178,6 +178,31 @@ describe('listTokenUtilityCandidates', () => {
     ).toEqual(['!rounded-pill', 'border-t-rule', 'hover:bg-surface', 'shadow-leaf', 'text-meta']);
   });
 
+  it('reads gradient stops only in a source that draws a gradient', () => {
+    expect(listTokenUtilityCandidates("const filters = ['to-learn', 'from-sm', 'via-x'];")).toEqual(
+      [],
+    );
+    expect(
+      listTokenUtilityCandidates("className='bg-linear-to-t from-paper via-veil to-raised'"),
+    ).toEqual(['bg-linear-to-t', 'from-paper', 'to-raised', 'via-veil']);
+    expect(listTokenUtilityCandidates("className='bg-radial -from-paper'")).toEqual([
+      '-from-paper',
+      'bg-radial',
+    ]);
+    expect(listTokenUtilityCandidates("className='bg-conic-180 to-raised'")).toEqual([
+      'bg-conic-180',
+      'to-raised',
+    ]);
+    expect(listTokenUtilityCandidates("className='bg-gradient-x to-raised'")).toEqual([
+      'bg-gradient-x',
+      'to-raised',
+    ]);
+    expect(listTokenUtilityCandidates("className='xbg-linear-x to-raised'")).toEqual([]);
+    expect(listTokenUtilityCandidates("className='bg-paper tone-x to-raised'")).toEqual([
+      'bg-paper',
+    ]);
+  });
+
   it('keeps an arbitrary variant whose selector names an attribute value as one class', () => {
     expect(
       listTokenUtilityCandidates("className='has-[[data-a]_[role=tablist]]:border-b-0'"),

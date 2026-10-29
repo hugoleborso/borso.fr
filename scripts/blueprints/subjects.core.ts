@@ -81,6 +81,26 @@ export function describeDetachedClaim(claim: DetachedClaim): string {
     `\`${claim.subject}\`, which the file still declares. A marker is bound to its subject by ` +
     'position, so a declaration inserted under one moves the claim without changing any count. ' +
     'Move the marker back, or accept the new subject in the same commit: ' +
-    '`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept`.'
+    `\`pnpm exec tsx .claude/skills/blueprint/blueprint-indexing.ts --accept ${claim.filePath}\`.`
   );
+}
+
+export function acceptSubjects(
+  recorded: SubjectBaseline,
+  current: readonly MarkerClaim[],
+  acceptedPaths: readonly string[],
+): SubjectBaseline {
+  if (acceptedPaths.length === 0) return buildSubjectBaseline(current);
+  const accepted = new Set(acceptedPaths);
+  const kept: MarkerClaim[] = Object.entries(recorded)
+    .filter(([filePath]) => !accepted.has(filePath))
+    .flatMap(([filePath, subjects]) =>
+      Object.entries(subjects).map(([subject, blueprintId]) => ({
+        filePath,
+        blueprintId,
+        subject,
+      })),
+    );
+  const refreshed = current.filter((claim) => accepted.has(claim.filePath));
+  return buildSubjectBaseline([...kept, ...refreshed]);
 }

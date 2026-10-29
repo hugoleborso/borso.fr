@@ -608,9 +608,6 @@ Lives in: `api/src/mastery/`
 - The effective score is the override when one exists, and the default
   otherwise (`effective`). A score of 0 is a real answer and wins over the
   default, so the resolution tests for `undefined` explicitly.
-- `meanForSong` averages the effective scores over the member-instrument
-  pairs of the lineup, skipping pairs with nothing recorded, and answers
-  null when nothing is known.
 - Deleting a song deletes its override rows
   (`deleteSongWithCascade`).
 
@@ -1249,8 +1246,7 @@ Lives in: `api/src/studies/` (`concert-readiness.core.ts`)
   are those of every setlist linked to it, counted once.
 - A song is ready when, for every lineup it is played with in those
   setlists, each member and instrument has a score and the mean is 7 or
-  more. One member with nothing recorded keeps the song not ready, unlike
-  `meanForSong`, which skips them.
+  more. One member with nothing recorded keeps the song not ready.
 
 Held by: `api/src/studies/concert-readiness.core.test.ts` › is ready when the lineup mean is exactly the threshold
 Held by: `api/src/studies/concert-readiness.core.test.ts` › is not ready with one silent player even when the others would carry the mean

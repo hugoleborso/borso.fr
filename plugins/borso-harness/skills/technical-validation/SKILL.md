@@ -116,10 +116,6 @@ Same rule as `/visual-validation`:
 - Reports go in `docs/features/<app>/<slug>/validation/` (siblings to `spec/`, `plan/`, and any visual-validation reports).
 - Pair with `/visual-validation` (UI work): visual catches "doesn't render right"; technical catches "renders fine but the code is rotten or untested".
 
-## Auto-chain on PR merge: `/after-task-kaizen`
-
-When GitHub fires `pull_request.closed` with `merged: true` for a PR this skill validated (visible to the agent as a `<github-webhook-activity>` block), the agent immediately invokes `/after-task-kaizen` for the merged PR. If not subscribed to the PR's webhook activity, the agent asks once whether to subscribe. The same auto-chain lives in `/visual-validation` — whichever validator the chain reached last carries the trigger.
-
 ## Verdict émis (when piloted by `/tech-lead-orchestrator`)
 
 When `docs/features/<app>/<slug>/runs/<run-id>/state.json` exists with `"pilotedByTechLead": true`, the skill writes an additional verdict file at `runs/<run-id>/agents/technical-validator-<step>.md` per [`${CLAUDE_PLUGIN_ROOT}/skills/tech-lead-orchestrator/sub-agent-contract.md`](../tech-lead-orchestrator/sub-agent-contract.md). Mapping from the validator's PASS / PASS_EXCEPT_UNVERIFIABLE / FAIL to the YAML front-matter:
