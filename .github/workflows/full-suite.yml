@@ -91,8 +91,8 @@ jobs:
           fi
 
       # `back-e2e-*` picks up a database suite an app split out of `back-e2e`,
-      # such as pragma's `back-e2e-assistants`, which `ci.yml` runs as a job of
-      # its own.
+      # such as pragma's `back-e2e-band` and `back-e2e-assistants`, which
+      # `ci.yml` runs as jobs of their own.
       - name: Back-end end-to-end suite
         if: hashFiles(format('apps/{0}/api/**', matrix.app)) != ''
         run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e --project 'back-e2e-*'

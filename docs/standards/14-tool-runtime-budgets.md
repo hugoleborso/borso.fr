@@ -221,7 +221,7 @@ numbered standard or the commit hook. Cost is the product, not either factor.
 | Named paths exist | staged files, and every file naming a removed path | `ci.yml` |
 | NUL bytes, package scripts, negative claims, racy pipelines, migration SQL, manifests, instruction tools | staged files only | `ci.yml` |
 | Vocabulary paths | when a vocabulary changes, a path under `apps/` is removed, or a test a `Held by` line names is edited | `ci.yml` |
-| Application test suites | not run | pre-push runs the tests a push affects; `ci.yml` runs every suite of each changed app in `app-tests (<app>)`, except pragma's OAuth and MCP database suites, which run in `app-tests (pragma-assistants)` with a Postgres of their own; `full-suite.yml` runs them all on `main` |
+| Application test suites | not run | pre-push runs the tests a push affects; `ci.yml` runs every suite of each changed app in `app-tests (<app>)`, except two of pragma's three database suites, the band suites and the OAuth and MCP suites, which run in `app-tests (pragma-band)` and `app-tests (pragma-assistants)`, each with a Postgres of its own; `full-suite.yml` runs them all on `main` |
 | Every other check in the hook | whole tree, when the commit touches its scope | `ci.yml` |
 
 A link the commit makes to a generated, gitignored report is judged in CI and
@@ -275,7 +275,10 @@ moved to pre-push.
   building the jsdom environment, not in the tests. When the assistant
   feature's OAuth and MCP suites pushed that job past ten minutes, they moved
   to a job of their own, `app-tests (pragma-assistants)`, rather than the
-  limit moving. Pre-push already runs only
+  limit moving. When the job still ran 9 min 23 s to 9 min 55 s on `main`, its
+  band suites (members, sign-in, notifications, the audience and bookings)
+  moved to `app-tests (pragma-band)` the same way. Pre-push
+  already runs only
   the tests a push affects, which is what keeps it inside its own budget.
   Bringing the suites under 30 s is its own change.
 - **The CI budget beyond `ci.yml`.** `full-suite.yml` runs on `main` after the

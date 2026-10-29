@@ -7,9 +7,10 @@
 #
 # The main jobs: `build` (typecheck/lint/build/infra-tests/knip), `app-tests`
 # (vitest for every changed app, each with a Postgres of its own for the
-# back-e2e suite), `app-tests (pragma-assistants)` (pragma's OAuth and MCP
-# suites, split out of `app-tests (pragma)` to keep both inside the ten-minute
-# budget), `gate-canaries`, and `commitlint` (PR-only).
+# back-e2e suite), `app-tests (pragma-band)` and `app-tests (pragma-assistants)`
+# (two of pragma's database suites, split out of `app-tests (pragma)` to keep
+# every pragma job well inside the ten-minute budget), `gate-canaries`, and
+# `commitlint` (PR-only).
 
 name: ci
 
@@ -382,19 +383,26 @@ jobs:
         if: hashFiles(format('apps/{0}/api/**', matrix.app)) != ''
         run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e
 
-  # pragma's assistant suites (the OAuth server, the MCP endpoint and every
-  # `*-tools.controller.test.ts`) form the `back-e2e-assistants` project in
-  # apps/pragma/vitest.config.ts, which the `back-e2e` project excludes. They
-  # run here, beside `app-tests (pragma)`, with a Postgres of their own: in one
-  # job together the two suites ran past the ten-minute budget. No coverage is
-  # collected by either database suite; the per-file thresholds hold over the
-  # `core` project, which stays whole in `app-tests (pragma)`.
-  app-tests-pragma-assistants:
-    name: app-tests (pragma-assistants)
+  # pragma's database tests are three vitest projects in
+  # apps/pragma/vitest.config.ts, and `app-tests (pragma)` runs only `back-e2e`,
+  # the catalogue and platform suites, after the `core` project and its
+  # coverage. The other two run here, one job each, with a Postgres of their
+  # own: `back-e2e-band` (members, sign-in, notifications, the audience,
+  # sessions, free slots, tasks, bars and outreach) and `back-e2e-assistants`
+  # (the OAuth server, the MCP endpoint and every `*-tools.controller.test.ts`).
+  # In one job together they ran within a minute of the ten-minute budget. No
+  # coverage is collected by any database suite; the per-file thresholds hold
+  # over the `core` project, which stays whole in `app-tests (pragma)`.
+  app-tests-pragma-database:
+    name: app-tests (pragma-${{ matrix.suite }})
     needs: detect
     if: contains(fromJson(needs.detect.outputs.apps), 'pragma')
     runs-on: ubuntu-latest
     timeout-minutes: 10
+    strategy:
+      matrix:
+        suite: [band, assistants]
+      fail-fast: false
     services:
       postgres:
         image: postgres:16-alpine
@@ -411,6 +419,7 @@ jobs:
           --health-retries 10
     env:
       DATABASE_URL: postgres://app:app@localhost:5432/app
+      SUITE: ${{ matrix.suite }}
     steps:
       - uses: actions/checkout@v7
       - uses: pnpm/action-setup@v6
@@ -420,8 +429,8 @@ jobs:
           cache: pnpm
       - run: pnpm install --frozen-lockfile
       - run: pnpm --filter @borso/infra build
-      - name: Assistant end-to-end suite
-        run: pnpm --filter @borso-app/pragma exec vitest run --project back-e2e-assistants
+      - name: Database suite
+        run: pnpm --filter @borso-app/pragma exec vitest run --project "back-e2e-$SUITE"
 
   # Every gate the enforcement ledger lists, plus every check script and every
   # generator a hook or workflow runs with --check, is handed a defect it must

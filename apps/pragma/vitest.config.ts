@@ -16,6 +16,21 @@ const ASSISTANT_TEST_FILES = [
   'api/src/**/*-tools.controller.test.ts',
 ];
 
+const BAND_TEST_FILES = [
+  'api/src/audience/**/*.test.ts',
+  'api/src/auth/**/*.test.ts',
+  'api/src/bars/**/*.test.ts',
+  'api/src/free-slots/**/*.test.ts',
+  'api/src/improvements/**/*.test.ts',
+  'api/src/instruments/**/*.test.ts',
+  'api/src/me/**/*.test.ts',
+  'api/src/members/**/*.test.ts',
+  'api/src/notifications/**/*.test.ts',
+  'api/src/outreach/**/*.test.ts',
+  'api/src/sessions/**/*.test.ts',
+  'api/src/tasks/**/*.test.ts',
+];
+
 const databaseSuite = {
   globalSetup: ['./test/setup-postgres.ts'],
   pool: 'forks' as const,
@@ -83,9 +98,20 @@ export default defineConfig({
           name: 'back-e2e',
           environment: 'node',
           include: ['api/src/**/*.test.ts', 'test/**/*.test.ts'],
-          exclude: [...PURE_TEST_FILES, ...ASSISTANT_TEST_FILES],
+          exclude: [...PURE_TEST_FILES, ...ASSISTANT_TEST_FILES, ...BAND_TEST_FILES],
           ...databaseSuite,
           sequence: { groupOrder: 1 },
+        },
+      },
+      {
+        resolve: { alias: workspaceAliases },
+        test: {
+          name: 'back-e2e-band',
+          environment: 'node',
+          include: BAND_TEST_FILES,
+          exclude: [...PURE_TEST_FILES, ...ASSISTANT_TEST_FILES],
+          ...databaseSuite,
+          sequence: { groupOrder: 2 },
         },
       },
       {
@@ -96,7 +122,7 @@ export default defineConfig({
           include: ASSISTANT_TEST_FILES,
           exclude: PURE_TEST_FILES,
           ...databaseSuite,
-          sequence: { groupOrder: 2 },
+          sequence: { groupOrder: 3 },
         },
       },
     ],
