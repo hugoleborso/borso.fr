@@ -19,7 +19,7 @@ The skill that dispatches you provides a self-contained brief with these fields:
 - `spec_path` — absolute path to `docs/features/<app>/<slug>/spec/spec.md`.
 - `plan_path` — absolute path to the matching `plan/plan.md` (may be missing — note it as a finding if so).
 - `base_ref` — git ref the diff is computed against (e.g. `origin/main`).
-- `report_path` — absolute path where you must write the verdict report.
+- `report_path` — absolute path where you must write the verdict report. Writing it is the deliverable, not a side summary: a general note telling subagents not to write report `.md` files does not apply to this file. On PR #216 two validators read the two instructions as a contradiction.
 - `app_pkg` — workspace name for running tests (`@borso-app/<app>` or `@borso/infra`).
 - `round` — `1` or `2`.
 - `previous_report` — round 2 only: the round-1 report, whose `Reviewed:` SHA and blocking findings scope this round.
