@@ -37,5 +37,5 @@ A plain heredoc to `cat` that only mentions the word, and a single
 3. Edit files whose text mentions git with the Edit tool, not with a heredoc.
 
 The repository's own part of this, the rtk rewrite that turned every `git` into
-`rtk git`, no longer applies in a worktree; see
+`rtk git`, was removed with rtk itself on 2026-10-29; see
 [`../dantotsus/the-rewrite-that-hid-git-from-the-guard.md`](../dantotsus/the-rewrite-that-hid-git-from-the-guard.md).

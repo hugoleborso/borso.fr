@@ -6,13 +6,12 @@
 #   - Manual bootstrap on a fresh checkout
 #
 # Installs:
-#   - rtk (token-saving CLI proxy used by .claude/hooks/rtk-rewrite.sh)
 #   - pnpm workspace dependencies
 #   - AWS CLI v2 (only when AWS_ACCESS_KEY_ID is set in the env, e.g. on
 #     claude.ai/code remote sessions configured per docs/aws-setup.md §12)
 #
 # Pre-requisites the script does NOT install:
-#   - jq (rtk runtime dep) — apt-get install jq / brew install jq
+#   - jq (read by every hook in .claude/settings.json) — apt-get install jq / brew install jq
 #   - pnpm (provided via corepack from the packageManager field)
 
 set -euo pipefail
@@ -25,7 +24,7 @@ fail() { printf '[install-repo-deps] ERROR: %s\n' "$*" >&2; exit 1; }
 
 # Optional tools install independently of each other. They used to run under
 # the script's `set -e` in sequence, so the first one whose download failed
-# took every later step with it: a GitHub API 403 while fetching rtk left the
+# took every later step with it: a GitHub API 403 while fetching one tool left the
 # session with no actionlint, no agent-browser, no /tmp/cdk.out sweep and no
 # branch check, and said nothing about any of it. Each failure is now recorded
 # and re-stated at the end, because a tool that is quietly absent turns the
@@ -35,31 +34,21 @@ missing_optional=()
 # These warnings go to stdout, not stderr. The SessionStart hook surfaces only
 # stdout in the banner an agent reads at the top of a session, so a warning on
 # stderr is a warning nobody sees — which is the failure this whole mechanism
-# exists to stop. Observed on the first session to run the fixed script: rtk
-# failed, the run correctly carried on, and not one WARN line reached the
+# exists to stop. Observed on the first session to run the fixed script: one
+# tool failed, the run correctly carried on, and not one WARN line reached the
 # banner.
 note_missing() {
   missing_optional+=("$1")
   printf '[install-repo-deps] WARN: %s\n' "$2"
 }
 
-# 1. jq — required by the rtk PreToolUse hook
+# 1. jq — required by every hook in .claude/settings.json
 if ! command -v jq >/dev/null 2>&1; then
   fail "jq is missing. Install it: apt-get install jq / brew install jq / etc."
 fi
 
-# 2. rtk — install via upstream installer if missing.
-# Installer puts the binary in ~/.local/bin; ensure that's on PATH for this run.
+# 2. ~/.local/bin holds the tools installed below; put it on PATH for this run.
 export PATH="$HOME/.local/bin:$PATH"
-if ! command -v rtk >/dev/null 2>&1; then
-  log "rtk not found; installing from rtk-ai/rtk install.sh"
-  curl -fsSL https://raw.githubusercontent.com/rtk-ai/rtk/refs/heads/master/install.sh | sh || true
-fi
-if command -v rtk >/dev/null 2>&1; then
-  log "rtk: $(rtk --version)"
-else
-  note_missing rtk "rtk did not install (its installer reads the GitHub API, which answers 403 when rate-limited; pin with RTK_VERSION=vX.Y.Z). The PreToolUse hook passes commands through unrewritten, which costs tokens and breaks nothing."
-fi
 
 # 3. pnpm deps
 if ! command -v pnpm >/dev/null 2>&1; then

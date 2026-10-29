@@ -214,5 +214,5 @@ each repository:
 - The blueprint generators in `.claude/skills/blueprint/`, which index
   borso.fr's application layers.
 - borso.fr's own hooks in `.claude/settings.json`: the dependency install at
-  session start, the rtk command rewrite and the notice that a merge deploys
+  session start and the notice that a merge deploys
   to production.

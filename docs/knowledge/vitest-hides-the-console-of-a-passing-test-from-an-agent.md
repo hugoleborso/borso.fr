@@ -23,8 +23,8 @@ logs `PROBE-LOG-LINE` and passes:
 | `vitest run --project core --silent=false <file>` | 0 |
 | `vitest run --project core --reporter=default <file>` | 1 |
 
-The config sets neither `silent` nor a reporter, and the result is the same
-with `rtk` out of the way. So the reporter Vitest picks when an agent runs it
+The config sets neither `silent` nor a reporter, and nothing rewrites the
+command. So the reporter Vitest picks when an agent runs it
 drops the console of a passing test (inferred from the table). `--silent=false`
 does not bring it back. `--reporter=default` does.
 

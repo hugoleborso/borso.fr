@@ -1,13 +1,8 @@
 #!/usr/bin/env bash
 # SessionStart hook — runs at the beginning of every Claude Code session.
 # Calls the repo's install-repo-deps.sh and persists ~/.local/bin to PATH so
-# rtk (and any other user-bin tool the install script puts there) is visible
-# to subsequent tool calls — including the existing PreToolUse rtk-rewrite
-# hook which depends on `command -v rtk` resolving.
-#
-# Runs in BOTH local and remote (Claude on the web) sessions intentionally:
-# rtk's value is identical in both. If you want to gate this to web-only,
-# guard with `if [ "${CLAUDE_CODE_REMOTE:-}" != "true" ]; then exit 0; fi`.
+# the user-bin tools the install script puts there are visible to subsequent
+# tool calls.
 
 set -euo pipefail
 
