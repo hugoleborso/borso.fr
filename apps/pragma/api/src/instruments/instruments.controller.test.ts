@@ -22,6 +22,15 @@ const instrumentSchema = z.object({
 });
 const singleInstrumentEnvelope = z.object({ instrument: instrumentSchema });
 const instrumentListEnvelope = z.object({ instruments: z.array(instrumentSchema) });
+const lineupSchema = z.record(z.string(), z.array(z.string()));
+const songLineupEnvelope = z.object({
+  song: z.object({ id: z.string().uuid(), defaultLineup: lineupSchema }),
+});
+const entryLineupEnvelope = z.object({
+  entry: z.object({ id: z.string().uuid(), lineupOverride: lineupSchema.nullable() }),
+});
+const entryLineupListEnvelope = z.object({ entries: z.array(entryLineupEnvelope.shape.entry) });
+const setlistIdEnvelope = z.object({ setlist: z.object({ id: z.string().uuid() }) });
 
 async function createInstrument(
   app: Parameters<typeof jsonRequest>[0],
@@ -128,6 +137,53 @@ describe('instruments controller (back-e2e)', () => {
     const afterDelete = await jsonRequest(app, '/api/instruments', { cookieHeader });
     const remaining = await readJson(afterDelete, instrumentListEnvelope);
     expect(remaining.instruments.map((row) => row.name)).toEqual(['Drums']);
+  });
+
+  it('takes a deleted instrument out of every song lineup and entry override that held it', async () => {
+    const { app, cookieHeader, memberId } = await buildAuthenticatedApp();
+    const guitarId = await createInstrument(app, cookieHeader, {
+      name: 'Guitar',
+      family: 'harmonic',
+    });
+    const voiceId = await createInstrument(app, cookieHeader, { name: 'Voice', family: 'vocal' });
+    const song = await readJson(
+      await jsonRequest(app, '/api/songs', {
+        method: 'POST',
+        body: {
+          title: 'Creep',
+          status: 'idea',
+          defaultLineup: { [memberId]: [guitarId, voiceId] },
+        },
+        cookieHeader,
+      }),
+      songLineupEnvelope,
+    );
+    const setlist = await readJson(
+      await jsonRequest(app, '/api/setlists', {
+        method: 'POST',
+        body: { name: 'Set' },
+        cookieHeader,
+      }),
+      setlistIdEnvelope,
+    );
+    await jsonRequest(app, `/api/setlists/${setlist.setlist.id}/entries`, {
+      method: 'POST',
+      body: { songId: song.song.id, lineupOverride: { [memberId]: [guitarId] } },
+      cookieHeader,
+    });
+
+    await jsonRequest(app, `/api/instruments/${guitarId}`, { method: 'DELETE', cookieHeader });
+
+    const songAfter = await readJson(
+      await jsonRequest(app, `/api/songs/${song.song.id}`, { cookieHeader }),
+      songLineupEnvelope,
+    );
+    const entriesAfter = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlist.setlist.id}/entries`, { cookieHeader }),
+      entryLineupListEnvelope,
+    );
+    expect(songAfter.song.defaultLineup).toEqual({ [memberId]: [voiceId] });
+    expect(entriesAfter.entries.map((entry) => entry.lineupOverride)).toEqual([{ [memberId]: [] }]);
   });
 
   it('orders the list by family rather than by name, which is what the column reads', async () => {

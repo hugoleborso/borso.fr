@@ -7,9 +7,10 @@
 #
 # The main jobs: `build` (typecheck/lint/build/infra-tests/knip), `app-tests`
 # (vitest for every changed app, each with a Postgres of its own for the
-# back-e2e suite), `app-tests (pragma-assistants)` (pragma's OAuth and MCP
-# suites, split out of `app-tests (pragma)` to keep both inside the ten-minute
-# budget), `gate-canaries`, and `commitlint` (PR-only).
+# back-e2e suite), `app-tests (pragma-e2e)` and `app-tests (pragma-assistants)`
+# (pragma's back-e2e and its OAuth and MCP suites, split out of
+# `app-tests (pragma)` to keep each inside the ten-minute budget),
+# `gate-canaries`, and `commitlint` (PR-only).
 
 name: ci
 
@@ -379,8 +380,45 @@ jobs:
             pnpm --filter "@borso-app/$APP" run test:coverage
           fi
       - name: Back-end end-to-end suite
-        if: hashFiles(format('apps/{0}/api/**', matrix.app)) != ''
+        if: hashFiles(format('apps/{0}/api/**', matrix.app)) != '' && matrix.app != 'pragma'
         run: pnpm --filter "@borso-app/$APP" exec vitest run --project back-e2e
+
+  # pragma's back-e2e suite on a runner of its own. Behind the pure suites and
+  # their coverage gate it finished at 9 min 58 s on pull request #222 and the
+  # runner cancelled the job at ten, with every step green.
+  app-tests-pragma-e2e:
+    name: app-tests (pragma-e2e)
+    needs: detect
+    if: contains(fromJson(needs.detect.outputs.apps), 'pragma')
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: app
+          POSTGRES_PASSWORD: app
+          POSTGRES_DB: app
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U app"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgres://app:app@localhost:5432/app
+    steps:
+      - uses: actions/checkout@v7
+      - uses: pnpm/action-setup@v6
+      - uses: actions/setup-node@v7
+        with:
+          node-version-file: .nvmrc
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm --filter @borso/infra build
+      - name: Back-end end-to-end suite
+        run: pnpm --filter @borso-app/pragma exec vitest run --project back-e2e
 
   # pragma's assistant suites (the OAuth server, the MCP endpoint and every
   # `*-tools.controller.test.ts`) form the `back-e2e-assistants` project in
