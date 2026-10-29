@@ -734,12 +734,6 @@
   "studies": {
     "title": "Studies",
     "subtitle": "What everyone worked on, and whether we are ready for the next concert.",
-    "streakDays_one": "day streak",
-    "streakDays_other": "day streak",
-    "todayCounted": "today counted",
-    "todayPending": "today not yet",
-    "jokerAvailable": "joker available",
-    "jokerUsed": "joker used",
     "notReady": "not ready",
     "ready": "ready",
     "scoreLabel": "My mastery",

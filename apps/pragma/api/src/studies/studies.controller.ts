@@ -26,7 +26,7 @@ export function buildStudiesRouter() {
       if (outcome.kind === 'instrument-not-found')
         return context.json({ error: outcome.kind }, 404);
       if (outcome.kind === 'study-not-in-lineup') return context.json({ error: outcome.kind }, 422);
-      return context.json({ study: outcome.study, myLine: outcome.myLine }, 201);
+      return context.json({ study: outcome.study }, 201);
     })
     .delete('/:songId/:instrumentId', zValidator('param', studyPathSchema), async (context) => {
       const outcome = await undoStudy({
@@ -35,6 +35,6 @@ export function buildStudiesRouter() {
         now: readNow(),
       });
       if (outcome.kind === 'study-not-found') return context.json({ error: outcome.kind }, 404);
-      return context.json({ myLine: outcome.myLine });
+      return context.json({ ...context.req.valid('param'), deleted: true });
     });
 }

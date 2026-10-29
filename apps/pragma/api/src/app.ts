@@ -20,6 +20,7 @@ import { buildOutreachRouter } from './outreach/outreach.controller';
 import { buildOfflineManifestRouter, buildSessionsRouter } from './sessions/sessions.controller';
 import { buildSetlistsRouter } from './setlists/setlists.controller';
 import { buildSongsRouter } from './songs/songs.controller';
+import { buildStreaksRouter } from './streaks/streaks.controller';
 import { buildStudiesRouter } from './studies/studies.controller';
 import { buildTakesRouter } from './takes/takes.controller';
 import { buildTasksRouter } from './tasks/tasks.controller';
@@ -66,6 +67,7 @@ function buildAppRouter(options: CreateAppOptions = {}) {
     .route('/api/outreach', buildOutreachRouter())
     .route('/api/tasks', buildTasksRouter())
     .route('/api/studies', buildStudiesRouter())
+    .route('/api/streaks', buildStreaksRouter())
     .route('/api/uploads', buildUploadsRouter())
     .route('/api/takes', buildTakesRouter())
     .route('/api/notifications', buildNotificationsRouter())

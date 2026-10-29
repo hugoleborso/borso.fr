@@ -10,7 +10,6 @@ import { Chip } from '../../components/atoms/Chip';
 import { Icon } from '../../components/atoms/Icon';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SearchBar } from '../../components/molecules/SearchBar';
-import { StreakBadge } from '../../components/molecules/StreakBadge';
 import { CatalogList } from '../../components/organisms/CatalogList';
 import type { SongCardProps } from '../../components/organisms/SongCard';
 import { ApiError } from '../../lib/api.client';
@@ -125,12 +124,6 @@ export function CatalogPage(): JSX.Element {
           ))}
         </div>
       </PageHeader>
-
-      {isToLearn && overviewQuery.data !== undefined ? (
-        <div className="mb-3">
-          <StreakBadge {...overviewQuery.data.myStreak} />
-        </div>
-      ) : null}
 
       {errorMessage !== null && (
         <p className="text-danger text-meta mb-4" role="alert">

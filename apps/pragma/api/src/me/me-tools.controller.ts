@@ -7,8 +7,8 @@ export const ME_TOOLS = [
   defineTool({
     name: 'get_me',
     description:
-      "Read who you are acting as (id, first name, contact details, calendar feed state) and your studies: your queue, your streak and the band's, and which songs of the next concert are ready.",
-    routes: ['GET /api/me', 'GET /api/studies/overview'],
+      "Read who you are acting as (id, first name, contact details, calendar feed state) and your studies: your queue, your flame, the band's and each member's, and which songs of the next concert are ready.",
+    routes: ['GET /api/me', 'GET /api/studies/overview', 'GET /api/streaks'],
     inputSchema: z.object({}),
     run: async (_input, actor) => {
       const profile = await readMeForTool(actor.memberId, actor.now);

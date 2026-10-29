@@ -1,7 +1,7 @@
 import { and, eq, gte } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
 import { retryingConflictAborts } from '../helpers/persistence/conflict-abort.core';
-import type { CalendarDay } from './paris-day.core';
+import type { CalendarDay } from '@domain/paris-day.core';
 import { studyTable } from './studies.schema';
 import type { StudyRow } from './studies.types';
 

@@ -734,12 +734,6 @@
   "studies": {
     "title": "Révisions",
     "subtitle": "Ce que chacun a bossé, et si on est prêts pour le prochain concert.",
-    "streakDays_one": "jour de série",
-    "streakDays_other": "jours de série",
-    "todayCounted": "aujourd'hui compté",
-    "todayPending": "aujourd'hui pas encore",
-    "jokerAvailable": "joker dispo",
-    "jokerUsed": "joker utilisé",
     "notReady": "pas prêt",
     "ready": "prêt",
     "scoreLabel": "Ma maîtrise",

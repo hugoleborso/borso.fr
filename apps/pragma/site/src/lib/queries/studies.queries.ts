@@ -3,7 +3,7 @@
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
-import { markStudied, settleOwnLine } from './studies.utils';
+import { markStudied } from './studies.utils';
 
 export const studyKeys = {
   all: ['studies'] as const,
@@ -83,7 +83,7 @@ function useStudyToggle(isStudiedToday: boolean) {
 }
 
 // @FollowsBlueprint query-optimistic-mutation
-export function useLogStudy(memberId: string) {
+export function useLogStudy() {
   const toggle = useStudyToggle(true);
   return useMutation({
     mutationKey: studyKeys.all,
@@ -95,16 +95,11 @@ export function useLogStudy(memberId: string) {
     },
     onMutate: toggle.onMutate,
     onError: toggle.onError,
-    onSuccess: (data) => {
-      toggle.queryClient.setQueryData<StudiesOverview>(studyKeys.overview(), (old) =>
-        old === undefined ? old : settleOwnLine(old, memberId, data.myLine),
-      );
-    },
   });
 }
 
 // @FollowsBlueprint query-optimistic-mutation
-export function useUndoStudy(memberId: string) {
+export function useUndoStudy() {
   const toggle = useStudyToggle(false);
   return useMutation({
     mutationKey: studyKeys.all,
@@ -116,10 +111,5 @@ export function useUndoStudy(memberId: string) {
     },
     onMutate: toggle.onMutate,
     onError: toggle.onError,
-    onSuccess: (data) => {
-      toggle.queryClient.setQueryData<StudiesOverview>(studyKeys.overview(), (old) =>
-        old === undefined ? old : settleOwnLine(old, memberId, data.myLine),
-      );
-    },
   });
 }

@@ -63,9 +63,7 @@ const SETLISTS = [
 ];
 const OVERVIEW = {
   today: '2026-10-28',
-  myStreak: { days: 0, isTodayCounted: false, jokerAvailable: true },
   queue: [],
-  band: [],
   readiness: null,
 };
 
@@ -76,10 +74,7 @@ function answerSongApi(request: Request): Response {
   if (pathname === '/api/me') return jsonResponse({ memberId: 'member-1', firstName: 'Hugo' });
   if (pathname === '/api/studies/overview') return jsonResponse(OVERVIEW);
   if (pathname === '/api/studies' && request.method === 'POST') {
-    return jsonResponse(
-      { study: {}, myLine: { streak: OVERVIEW.myStreak, studiesThisWeek: 1 } },
-      201,
-    );
+    return jsonResponse({ study: {} }, 201);
   }
   if (pathname === '/api/members') {
     return jsonResponse({ members: [{ id: 'member-1', firstName: 'Hugo', color: '#d4806a' }] });
