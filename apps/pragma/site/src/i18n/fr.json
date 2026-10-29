@@ -224,7 +224,8 @@
     "filterLabel": "Afficher",
     "emptyToLearn": "Rien à apprendre : tous les morceaux que tu joues sont prêts.",
     "addSong": "Ajouter un morceau",
-    "addSongTitle": "Ajouter un morceau"
+    "addSongTitle": "Ajouter un morceau",
+    "noSongNotes": "Rien d’écrit pour ce morceau."
   },
   "common": {
     "actions": "Actions",

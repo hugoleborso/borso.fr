@@ -45,7 +45,6 @@ export interface SongDetailProps {
   readonly onSelectTake: (takeId: string | null) => void;
 }
 
-const NOTES_ANCHOR = 'song-notes';
 const NO_SETLISTS: readonly never[] = [];
 
 // @FollowsBlueprint organism-query-owning
@@ -96,11 +95,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
         {t(setlistsLine.messageKey, { names: setlistsLine.names })}
       </p>
 
-      <SongRoundActions
-        songId={song.id}
-        defaultLineup={song.defaultLineup}
-        notesAnchor={NOTES_ANCHOR}
-      />
+      <SongRoundActions songId={song.id} defaultLineup={song.defaultLineup} notes={song} />
 
       {props.hasSideLoadFailed ? (
         <p className="text-danger text-meta" role="alert">
@@ -135,9 +130,7 @@ export function SongDetail(props: SongDetailProps): JSX.Element {
 
       <SongDetailSidebar lineupRows={props.lineupRows} baseEnergy={song.baseEnergy} />
 
-      <div id={NOTES_ANCHOR} className="scroll-mt-4">
-        <SongNotesCard song={song} />
-      </div>
+      <SongNotesCard song={song} />
 
       <SongLinksCard links={song.links} />
 

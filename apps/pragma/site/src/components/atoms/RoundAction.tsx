@@ -16,7 +16,6 @@ export type RoundActionProps = RoundActionCommon &
         readonly isDisabled?: boolean;
       }
     | { readonly kind: 'link'; readonly to: string }
-    | { readonly kind: 'anchor'; readonly href: string }
   );
 
 const ACTION_CLASS =
@@ -43,13 +42,6 @@ export function RoundAction(props: RoundActionProps): JSX.Element {
       <Link to={props.to} className={ACTION_CLASS}>
         {content}
       </Link>
-    );
-  }
-  if (props.kind === 'anchor') {
-    return (
-      <a href={props.href} className={ACTION_CLASS}>
-        {content}
-      </a>
     );
   }
   return (

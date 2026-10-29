@@ -224,7 +224,8 @@
     "filterLabel": "Show",
     "emptyToLearn": "Nothing to learn: every song you play is ready.",
     "addSong": "Add a song",
-    "addSongTitle": "Add a song"
+    "addSongTitle": "Add a song",
+    "noSongNotes": "Nothing written down for this song yet."
   },
   "common": {
     "actions": "Actions",

@@ -5,13 +5,15 @@ import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { useSignedInMember } from '../../lib/queries/me.queries';
 import { useLogStudy, useStudiesOverview, useUndoStudy } from '../../lib/queries/studies.queries';
+import type { SongNoteInput } from '../../routes/catalog/song-notes.core';
 import { selectPractisedState } from '../../routes/catalog/song-page.core';
 import { RoundAction } from '../atoms/RoundAction';
+import { SongNotesSheet } from './SongNotesSheet';
 
 export interface SongRoundActionsProps {
   readonly songId: string;
   readonly defaultLineup: Lineup;
-  readonly notesAnchor: string;
+  readonly notes: SongNoteInput;
 }
 
 const NO_QUEUE: readonly never[] = [];
@@ -20,7 +22,7 @@ const NO_QUEUE: readonly never[] = [];
 export function SongRoundActions({
   songId,
   defaultLineup,
-  notesAnchor,
+  notes,
 }: SongRoundActionsProps): JSX.Element {
   const { t } = useTranslation();
   const memberQuery = useSignedInMember();
@@ -29,6 +31,7 @@ export function SongRoundActions({
   const logStudy = useLogStudy(memberId ?? '');
   const undoStudy = useUndoStudy(memberId ?? '');
   const [practisedHere, setPractisedHere] = useState<boolean | null>(null);
+  const [isNotesOpen, setIsNotesOpen] = useState(false);
   const practised = selectPractisedState(
     defaultLineup,
     overviewQuery.data?.queue ?? NO_QUEUE,
@@ -57,10 +60,10 @@ export function SongRoundActions({
         onPress={togglePractised}
       />
       <RoundAction
-        kind="anchor"
+        kind="button"
         icon="text"
         label={t('catalog.notesTitle')}
-        href={`#${notesAnchor}`}
+        onPress={() => setIsNotesOpen(true)}
       />
       <RoundAction
         kind="link"
@@ -68,6 +71,9 @@ export function SongRoundActions({
         label={t('catalog.fullScreen')}
         to={`/catalog/${songId}/scene`}
       />
+      {isNotesOpen ? (
+        <SongNotesSheet songId={songId} notes={notes} onClose={() => setIsNotesOpen(false)} />
+      ) : null}
     </div>
   );
 }

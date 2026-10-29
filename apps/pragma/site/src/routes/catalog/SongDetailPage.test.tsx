@@ -180,4 +180,11 @@ describe('song page', () => {
     expect(studyWrites).toHaveLength(1);
     expect(await studyWrites[0]?.json()).toEqual({ songId: SONG.id, instrumentId: 'bass' });
   });
+
+  it('opens the song notes in a sheet when Notes is tapped', async () => {
+    renderSongPage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Notes' }));
+    const sheet = await screen.findByRole('dialog', { name: 'Notes' });
+    expect(within(sheet).getByText('Count in four.')).toBeTruthy();
+  });
 });
