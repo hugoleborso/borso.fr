@@ -158,6 +158,15 @@ you for free has to be written explicitly in a service, and the decision is
 recorded in
 [`docs/adr/0006-cascade-on-delete-via-json-blob-scrub.md`](../adr/0006-cascade-on-delete-via-json-blob-scrub.md).
 
+A Postgres startup parameter is part of a contract with DSQL, not part of the
+code, so one it does not accept is only refused by a cluster. DSQL closes the
+connection rather than ignoring the parameter, and every driver double in this
+repository takes any options object, so the failure lands at the first query of
+a deployed function and no test, coverage threshold or mutant can reach it.
+`search_path` is the one this repository has proven, and a second one enters the
+list by being run against a cluster in the same commit that adds it. See
+[`docs/dantotsus/the-connection-parameter-no-mock-could-refuse.md`](../dantotsus/the-connection-parameter-no-mock-could-refuse.md).
+
 ## Local development
 
 `scripts/local-postgres.sh` starts a private Postgres cluster without Docker,
@@ -187,6 +196,12 @@ The background is in
   survives the reset and collides with its own `CREATE TABLE` on the second run
   of the suite, which is a state CI never reaches because its Postgres is
   always fresh.
+- `script:scripts/check-dsql-connection-parameters.sh` fails a `connection: { … }`
+  passed to the Postgres driver that names a startup parameter this repository
+  has not run against a real DSQL cluster. The type is
+  `Partial<ConnectionParameters>`, whose index signature accepts every spelling,
+  and the suites mock the driver, so this is the only thing between a plausible
+  Postgres setting and a deployed function that cannot open a connection.
 - `gate:vitest-back-e2e` runs every repository method against a real Postgres.
 - `reviewer` checks that a workflow writing more than one table wraps the
   writes in one transaction owned by the service, and that a cascade DSQL will

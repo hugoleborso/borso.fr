@@ -416,6 +416,13 @@ run_check non-module-scripts '^. apps/[^/]+/site/.*\.html$' scripts/check-non-mo
 # A directory walk piped into `head` or `grep -q` is a race under pipefail.
 run_check_on_files no-racy-pipelines '(\.sh$|^\.husky/)' scripts/check-no-racy-pipelines.sh
 
+# A Postgres startup parameter Aurora DSQL does not accept closes the connection
+# at the first query of a deployed function, and a mocked driver takes any
+# options object. Rung-2 eradication of
+# docs/dantotsus/the-connection-parameter-no-mock-could-refuse.md.
+run_check_on_files dsql-connection-parameters '^(apps|infra)/.*\.ts$' \
+  scripts/check-dsql-connection-parameters.sh
+
 # The harness lives once, in plugins/borso-harness/, and reaches a session only
 # through the links in .claude/ and the hook entries in .claude/settings.json.
 run_check harness-links '^. (plugins/borso-harness/|\.claude/)' scripts/check-harness-links.sh
