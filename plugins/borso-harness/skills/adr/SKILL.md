@@ -84,6 +84,12 @@ Ask the operator to:
 - **List two negative consequences** of the winner. *Closed doors, costs we're now paying.* The skill writes them into *Consequences* under `-`. If the operator can't name a negative, the analysis was lopsided.
 - **State the rejection rationale** for each non-winner: *"loses on criterion X by Y"*. The skill writes those into *Alternatives considered*.
 
+**An option the operator raised is not rejected by argument.** Mark every option with who raised it, and when the winner is not the one the operator named, stop: say in one line that their candidate lost, give the criterion it lost on, and ask. Their yes is what rejects it — silence is not, and neither is a well-written paragraph of reasons. Write their answer into the option's *Operator's answer* field. An ADR whose chosen path beats an operator-raised alternative with no recorded answer is not finished, and the skill does not write the file.
+
+The asymmetry is deliberate. An author-raised alternative is rejected by the rubric, which is what the rubric is for. An operator-raised one is rejected by the operator.
+
+*Why this rule exists:* ADR-0049 shipped per-application readers after the operator asked for one in shared infrastructure. The question was answered with three reasons, the walk moved on, and the preference surfaced again a day later from the merged pull request. See [`docs/dantotsus/the-question-i-answered-instead-of-obeyed.md`](../../../../docs/dantotsus/the-question-i-answered-instead-of-obeyed.md).
+
 Then call the *Procedure* below to write the file.
 
 ## Mode B — Piloted by `/tech-lead-orchestrator`

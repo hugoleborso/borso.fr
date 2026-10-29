@@ -166,6 +166,15 @@ over doing nothing because it moves the guard to a place the caller cannot skip.
 
 ## Why one function per application, not one in `infra/shared`
 
+**The operator raised the shared variant during the walk** — *"Une lambda
+lectrice par app, vraiment ? Pourquoi pas une lambda dans shared infra ?"* —
+and the three reasons below were written as the answer. They were never put
+back to them as a choice, so this section shipped without their yes. Asked
+again on 2026-10-29, after reading the merged pull request, they answered *"Ok
+on garde par app"*. That is the ratification, recorded a day late; the
+procedure that should have collected it at the time is fixed in
+[`the-question-i-answered-instead-of-obeyed.md`](../dantotsus/the-question-i-answered-instead-of-obeyed.md).
+
 The implementation is shared and the instance is not, which is how every other
 piece of this repository's infrastructure is built: `DsqlSchema` and `LambdaApi`
 are single constructs in `infra/cdk` instantiated per app. Three reasons make

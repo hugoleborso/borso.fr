@@ -132,6 +132,15 @@ case "${1:-}" in
       printf '\033[36m[kaizen]\033[0m archived %s entry/entries to %s/%s/kaizen.md — commit it, or the sweep will never see it\n' \
         "$(grep -c '^- \[' "$KAIZEN_FILE" || true)" "$FEATURES_DIRECTORY" "$2"
     fi
+    # The log is drained once its entries are somewhere a commit can carry
+    # them. A session that ships two pull requests archives twice, and a copy
+    # that left the entries behind gave the second archive every line of the
+    # first: PR #218's and PR #219's archives differed by exactly one line, so
+    # that sweep re-triaged work two earlier pull requests had already
+    # eradicated. Draining is safe in this order, because the destination
+    # exists before anything is removed.
+    kept="$(sed '/^- \[/d' "$KAIZEN_FILE")"
+    printf '%s\n' "$kept" > "$KAIZEN_FILE"
     ;;
   init)
     ensure_file

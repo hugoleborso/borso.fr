@@ -44,6 +44,7 @@ below.}}
 
 ### Option A — {{name}} (chosen)
 
+- **Raised by:** {{operator | author}}
 - **Summary:** {{one paragraph}}
 - **Strengths:**
   - {{strength tied to criterion 1}}
@@ -54,14 +55,19 @@ below.}}
 
 ### Option B — {{name}} (rejected)
 
+- **Raised by:** {{operator | author}}
 - **Summary:** {{one paragraph}}
 - **Strengths:** {{...}}
 - **Costs:** {{...}}
 - **Rejection rationale:** {{the criterion this option loses on +
   whether shifting the weights would flip the decision}}
+- **Operator's answer:** {{required when "Raised by" is operator — their words
+  rejecting their own candidate. Silence is not an answer; omit the field only
+  when the author raised the option.}}
 
 ### Option C — {{name}} (rejected)
 
+- **Raised by:** {{operator | author}}
 - **Summary:** {{...}}
 - **Strengths:** {{...}}
 - **Costs:** {{...}}
