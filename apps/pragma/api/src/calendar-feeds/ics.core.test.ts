@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest';
 import type { BusyInterval } from './calendar-feeds.types';
-import { readBusyIntervals } from './ics.core';
+import { CALENDAR_FEED_NAME_MAX_LENGTH } from '@domain/input-limits.core';
+import { readBusyIntervals, readCalendarName } from './ics.core';
 
 const RANGE = { start: new Date('2026-10-12T00:00:00Z'), end: new Date('2026-10-26T00:00:00Z') };
 
@@ -278,5 +279,35 @@ describe('readBusyIntervals', () => {
     expect(readBusyIntervals('<html>not a calendar</html>', RANGE)).toStrictEqual({
       kind: 'unavailable',
     });
+  });
+});
+
+describe('readCalendarName', () => {
+  it('reads the name Google Calendar and Outlook give a feed, trimmed', () => {
+    expect(readCalendarName(calendar('X-WR-CALNAME:  Work  '))).toBe('Work');
+  });
+
+  it('caps a long name at the length the page shows', () => {
+    const name = readCalendarName(calendar(`X-WR-CALNAME:${'a'.repeat(500)}`));
+    expect(name).toBe('a'.repeat(CALENDAR_FEED_NAME_MAX_LENGTH));
+  });
+
+  it('trims before the cap, so leading spaces do not count against it', () => {
+    const name = readCalendarName(calendar(`X-WR-CALNAME:   ${'a'.repeat(500)}`));
+    expect(name).toBe('a'.repeat(CALENDAR_FEED_NAME_MAX_LENGTH));
+  });
+
+  it('trims after the cap, so a cut never ends on a space', () => {
+    const longName = `${'a'.repeat(CALENDAR_FEED_NAME_MAX_LENGTH - 1)} band`;
+    expect(readCalendarName(calendar(`X-WR-CALNAME:${longName}`))).toBe(
+      'a'.repeat(CALENDAR_FEED_NAME_MAX_LENGTH - 1),
+    );
+  });
+
+  it('answers no name for a feed that declares none, an empty one, or a body that is not a calendar', () => {
+    expect(readCalendarName(calendar())).toBeNull();
+    expect(readCalendarName(calendar('X-WR-CALNAME:   '))).toBeNull();
+    expect(readCalendarName('<html>not a calendar</html>')).toBeNull();
+    expect(readCalendarName('')).toBeNull();
   });
 });

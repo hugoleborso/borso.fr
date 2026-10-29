@@ -19,9 +19,16 @@ vi.mock('../../lib/queries/setlist-entries.queries', () => ({
   useAddSetlistEntries: () => ({ mutate: batch.mutate, isPending: false }),
 }));
 
+const songSearch = vi.hoisted(() => ({
+  useSongSearch: vi.fn<(title: string) => { data: undefined; error: null }>(() => ({
+    data: undefined,
+    error: null,
+  })),
+}));
+
 vi.mock('../../lib/queries/songs.queries', () => ({
   useCreateSong: () => ({ mutateAsync: vi.fn(), isPending: false }),
-  useSongSearch: () => ({ data: undefined, error: null }),
+  useSongSearch: songSearch.useSongSearch,
 }));
 
 vi.mock('../../observability/error-reporting.adapter', () => ({
@@ -31,6 +38,8 @@ vi.mock('../../observability/error-reporting.adapter', () => ({
 vi.mock('../../observability/product-event.adapter', () => ({
   recordProductEvent: vi.fn(),
 }));
+
+const SEARCH_PAUSE_MS = 400;
 
 function buildProps(overrides: Partial<SetlistSongPickerProps> = {}): SetlistSongPickerProps {
   return {
@@ -157,5 +166,19 @@ describe('the Add songs sheet', () => {
     render(<SetlistSongPicker {...buildProps()} />);
     fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Psycho Chicken' } });
     expect(screen.getByRole('button', { name: /New song as an idea/ })).toBeTruthy();
+  });
+
+  it('searches the music service for a typed title once the typing pauses', () => {
+    vi.useFakeTimers();
+    try {
+      render(<SetlistSongPicker {...buildProps()} />);
+      fireEvent.change(screen.getByRole('searchbox'), { target: { value: 'Psycho Chicken' } });
+      act(() => {
+        vi.advanceTimersByTime(SEARCH_PAUSE_MS);
+      });
+      expect(songSearch.useSongSearch).toHaveBeenLastCalledWith('Psycho Chicken');
+    } finally {
+      vi.useRealTimers();
+    }
   });
 });

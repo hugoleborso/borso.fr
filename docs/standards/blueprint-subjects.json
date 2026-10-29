@@ -1687,17 +1687,23 @@
     "readCalendarFeed": "adapter-external-service"
   },
   "apps/pragma/api/src/calendar-feeds/calendar-feeds.repository.ts": {
-    "hasCalendarFeed": "repository-query",
-    "upsertCalendarFeed": "repository-idempotent-upsert"
+    "listCalendarFeedsOfMember": "repository-query",
+    "upsertCalendarFeed": "repository-query"
   },
   "apps/pragma/api/src/calendar-feeds/calendar-feeds.schema.ts": {
-    "memberCalendarFeedTable": "schema-table-and-input"
+    "calendarFeedTable": "schema-table-and-input"
   },
   "apps/pragma/api/src/calendar-feeds/calendar-feeds.service.ts": {
     "saveCalendarFeed": "service-orchestration"
   },
   "apps/pragma/api/src/calendar-feeds/feed-address.core.ts": {
     "judgeFeedAddress": "core-decision"
+  },
+  "apps/pragma/api/src/calendar-feeds/feed-cap.core.test.ts": {
+    "describe": "test-pure-unit"
+  },
+  "apps/pragma/api/src/calendar-feeds/feed-cap.core.ts": {
+    "hasRoomForAnotherFeed": "core-decision"
   },
   "apps/pragma/api/src/calendar-feeds/feed-response.core.ts": {
     "classifyFeedStatus": "core-decision"
@@ -3019,7 +3025,8 @@
     "CalendarFeedCard": "organism-query-owning"
   },
   "apps/pragma/site/src/components/organisms/CalendarFeedForm.test.tsx": {
-    "describe": "test-component-render"
+    "describe": "test-component-render",
+    "stubDialogModalMissingFromJsdom": "test-jsdom-gap-stub"
   },
   "apps/pragma/site/src/components/organisms/CalendarFeedForm.tsx": {
     "CalendarFeedForm": "organism-form"
@@ -3663,9 +3670,9 @@
     "upsertMasteryDefault": "utils-pure-module"
   },
   "apps/pragma/site/src/lib/queries/me.queries.ts": {
+    "useAddCalendarFeed": "query-settled-from-the-write-response",
     "useRegisterPasskey": "query-pessimistic-mutation",
     "useRemovePasskey": "query-optimistic-mutation",
-    "useSaveCalendarFeed": "query-settled-from-the-write-response",
     "useSignedInMember": "query-module"
   },
   "apps/pragma/site/src/lib/queries/member-roster.core.test.ts": {

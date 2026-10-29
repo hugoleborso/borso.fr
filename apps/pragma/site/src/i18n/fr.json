@@ -19,13 +19,15 @@
       "vibeLabel": "Mistral Vibe"
     },
     "calendarFeedAddress": "Adresse iCal secrète",
-    "calendarFeedConnected": "Agenda connecté.",
+    "calendarFeedAdd": "Ajouter un agenda",
+    "calendarFeeds": "Agendas connectés",
     "calendarFeedInvalid": "Cette adresse ne peut pas être lue. Colle l’adresse secrète qui commence par https:// ou webcal://.",
     "calendarFeedRemove": "Retirer",
-    "calendarFeedRemoveQuestion": "Retirer ton agenda ? Les créneaux libres seront alors calculés sans toi, et il faudra de nouveau l’adresse secrète pour le reconnecter.",
+    "calendarFeedRemoveQuestion": "Retirer l’agenda {{name}} ? Les créneaux libres ne le liront plus, et il faudra de nouveau son adresse secrète pour le reconnecter.",
     "calendarFeedRemoved": "Agenda retiré.",
-    "calendarFeedReplace": "Remplacer",
     "calendarFeedSaved": "Enregistré.",
+    "calendarFeedUnnamed": "Agenda {{position}}",
+    "calendarFeedsFull": "Tu as connecté {{count}} agendas, le maximum que Pragma lit. Retires-en un pour en ajouter un autre.",
     "changePassword": "Changer de mot de passe",
     "contactDetails": "Coordonnées",
     "contactDetailsSaved": "Coordonnées enregistrées.",
@@ -421,8 +423,10 @@
     "bookAria": "Réserver une répétition le {{day}}, {{hours}}",
     "excluded": {
       "noCalendar": "Sans {{name}}, qui n’a pas d’agenda",
-      "needsReconnecting": "L’agenda de {{name}} est à reconnecter",
-      "unavailable": "L’agenda de {{name}} est indisponible pour l’instant"
+      "needsReconnectingNamed": "L’agenda {{calendar}} de {{name}} est à reconnecter",
+      "unavailableNamed": "L’agenda {{calendar}} de {{name}} est indisponible pour l’instant",
+      "needsReconnectingNumbered": "L’agenda {{position}} de {{name}} est à reconnecter",
+      "unavailableNumbered": "L’agenda {{position}} de {{name}} est indisponible pour l’instant"
     },
     "pageTitle": "Trouver un créneau",
     "open": "Trouver un créneau",

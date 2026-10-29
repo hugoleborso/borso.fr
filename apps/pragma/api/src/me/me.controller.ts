@@ -8,7 +8,10 @@ import {
   passwordChangeSchema,
 } from '../auth/credentials.schema';
 import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
-import { calendarFeedBodySchema } from '../calendar-feeds/calendar-feeds.schema';
+import {
+  calendarFeedBodySchema,
+  calendarFeedIdParamSchema,
+} from '../calendar-feeds/calendar-feeds.schema';
 import { memberContactSchema } from '../members/members.schema';
 import {
   changePassword,
@@ -47,8 +50,8 @@ export function buildMeRouter() {
       if (outcome.kind === 'not-found') return context.json({ error: 'unknown-member' }, 404);
       return context.json(outcome.member);
     })
-    .put(
-      '/calendar-feed',
+    .post(
+      '/calendar-feeds',
       zValidator('json', calendarFeedBodySchema, (result, context) => {
         if (!result.success) return context.json({ error: 'invalid-feed-address' }, 400);
       }),
@@ -61,12 +64,24 @@ export function buildMeRouter() {
         if (outcome.kind === 'invalid-address') {
           return context.json({ error: 'invalid-feed-address' }, 400);
         }
-        return context.json({ calendarFeed: outcome.calendarFeed });
+        if (outcome.kind === 'too-many') {
+          return context.json({ error: 'too-many-calendar-feeds' }, 409);
+        }
+        if (outcome.kind === 'member-gone') return context.json({ error: 'unknown-member' }, 404);
+        return context.json({ calendarFeeds: outcome.calendarFeeds });
       },
     )
-    .delete('/calendar-feed', async (context) => {
-      return context.json({ calendarFeed: await removeCalendarFeed(readMemberId(context)) });
-    })
+    .delete(
+      '/calendar-feeds/:id',
+      zValidator('param', calendarFeedIdParamSchema),
+      async (context) => {
+        const calendarFeeds = await removeCalendarFeed(
+          readMemberId(context),
+          context.req.valid('param').id,
+        );
+        return context.json({ calendarFeeds });
+      },
+    )
     .put('/password', zValidator('json', passwordChangeSchema), async (context) => {
       const { currentPassword, newPassword } = context.req.valid('json');
       const outcome = await changePassword({

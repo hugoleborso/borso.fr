@@ -37,7 +37,7 @@ const SIGNED_IN = {
   username: 'ada',
   phone: null,
   email: null,
-  calendarFeed: { isConnected: false },
+  calendarFeeds: [],
 };
 
 function renderTasksPage(initialEntry = '/tasks'): void {

@@ -1,16 +1,33 @@
 /** @Feature auth */
 
+import { CALENDAR_FEEDS_PER_MEMBER_MAX } from '@domain/input-limits.core';
+
 export const CALENDAR_SECTION_ID = 'calendar';
 
 export const CALENDAR_SECTION_PATH = `/account?view=${CALENDAR_SECTION_ID}`;
 
-export type CalendarFeedFormMode = 'entering' | 'replacing' | 'connected';
+export type CalendarFeedFormMode = 'entering' | 'adding' | 'listing' | 'full';
 
 // @FollowsBlueprint utils-pure-module
 export function selectCalendarFeedFormMode(
-  state: 'connected' | 'absent',
-  isReplacing: boolean,
+  feedCount: number,
+  isAdding: boolean,
 ): CalendarFeedFormMode {
-  if (state === 'absent') return 'entering';
-  return isReplacing ? 'replacing' : 'connected';
+  if (feedCount === 0) return 'entering';
+  if (feedCount >= CALENDAR_FEEDS_PER_MEMBER_MAX) return 'full';
+  return isAdding ? 'adding' : 'listing';
+}
+
+const CONFLICT_STATUS = 409;
+
+export function selectCalendarFeedErrorKey(
+  status: number | null,
+): 'account.calendarFeedsFull' | 'account.calendarFeedInvalid' {
+  return status === CONFLICT_STATUS ? 'account.calendarFeedsFull' : 'account.calendarFeedInvalid';
+}
+
+export type CalendarFeedSaveOutcome = 'saved' | 'refused';
+
+export function isAddressFieldKeptOpen(outcome: CalendarFeedSaveOutcome): boolean {
+  return outcome === 'refused';
 }

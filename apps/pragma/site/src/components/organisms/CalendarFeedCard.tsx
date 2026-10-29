@@ -1,22 +1,24 @@
 /** @Feature auth */
 
+import { CALENDAR_FEEDS_PER_MEMBER_MAX } from '@domain/input-limits.core';
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { scrollIntoViewWhenAddressed } from '../../lib/anchor-scroll.adapter';
+import { ApiError } from '../../lib/api.client';
 import {
+  useAddCalendarFeed,
   useRemoveCalendarFeed,
-  useSaveCalendarFeed,
   useSignedInMember,
 } from '../../lib/queries/me.queries';
 import { Card } from '../atoms/Card';
 import { CalendarFeedForm } from './CalendarFeedForm';
-import { CALENDAR_SECTION_ID } from './calendar-feed-form.utils';
+import { CALENDAR_SECTION_ID, selectCalendarFeedErrorKey } from './calendar-feed-form.utils';
 
 // @FollowsBlueprint organism-query-owning
 export function CalendarFeedCard(): JSX.Element {
   const { t } = useTranslation();
   const member = useSignedInMember();
-  const saveCalendarFeed = useSaveCalendarFeed();
+  const addCalendarFeed = useAddCalendarFeed();
   const removeCalendarFeed = useRemoveCalendarFeed();
   const [calendarFeedMessage, setCalendarFeedMessage] = useState<string | null>(null);
   const [calendarFeedError, setCalendarFeedError] = useState<string | null>(null);
@@ -27,7 +29,7 @@ export function CalendarFeedCard(): JSX.Element {
       className="p-4 sm:p-6 scroll-mt-4"
     >
       <CalendarFeedForm
-        state={member.data?.calendarFeed ?? 'absent'}
+        feeds={member.data?.calendarFeeds ?? []}
         message={calendarFeedMessage}
         error={calendarFeedError}
         isRemoving={removeCalendarFeed.isPending}
@@ -35,18 +37,26 @@ export function CalendarFeedCard(): JSX.Element {
           setCalendarFeedMessage(null);
           setCalendarFeedError(null);
           try {
-            await saveCalendarFeed.mutateAsync({ address });
+            await addCalendarFeed.mutateAsync({ address });
             setCalendarFeedMessage(t('account.calendarFeedSaved'));
-          } catch {
-            setCalendarFeedError(t('account.calendarFeedInvalid'));
+            return 'saved';
+          } catch (error) {
+            const status = error instanceof ApiError ? error.status : null;
+            setCalendarFeedError(
+              t(selectCalendarFeedErrorKey(status), { count: CALENDAR_FEEDS_PER_MEMBER_MAX }),
+            );
+            return 'refused';
           }
         }}
-        onRemove={() => {
+        onRemove={(feedId) => {
           setCalendarFeedMessage(null);
           setCalendarFeedError(null);
-          removeCalendarFeed.mutate(undefined, {
-            onSuccess: () => setCalendarFeedMessage(t('account.calendarFeedRemoved')),
-          });
+          removeCalendarFeed.mutate(
+            { id: feedId },
+            {
+              onSuccess: () => setCalendarFeedMessage(t('account.calendarFeedRemoved')),
+            },
+          );
         }}
       />
     </Card>

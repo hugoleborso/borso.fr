@@ -232,26 +232,36 @@ that one venue.
 
 ## Calendar feed
 
-A member's secret iCal address, which lets the API read that member's
-calendar.
+One of a member's secret iCal addresses, which lets the API read one of
+that member's calendars.
 
 Lives in: `api/src/calendar-feeds/`
 
-- One per member at most, keyed on `memberId` in its own table,
-  `member_calendar_feed`, so no read of `member` carries it (ADR-0037).
+- Up to ten per member (`CALENDAR_FEEDS_PER_MEMBER_MAX`), each with its
+  own `id`, in their own table, `calendar_feed`, so no read of `member`
+  carries them (ADR-0037). One member never holds the same address twice.
+  `member_calendar_feed`, the one-per-member table before it, is left
+  empty and unread, because DSQL cannot change a primary key.
+- Carries the `name` its feed declares in `X-WR-CALNAME` (Google Calendar
+  sets it to the calendar's title), read when the address is saved and
+  capped at 120 characters. A feed that could not be read then, or that
+  declares no name, is saved with none, and the page shows its position.
 - Accepted only as `https`, or `webcal` rewritten to `https`, on port
   443, with a public host name and no user info (`judgeFeedAddress`).
   The same check runs again on every redirect when the feed is read.
-- Written and removed through `/api/me/calendar-feed`. No route ever
-  returns it: the API answers `connected` or `absent`, and a feed that
+- Added through `POST /api/me/calendar-feeds` and removed one by one
+  through `DELETE /api/me/calendar-feeds/:id`. No route ever returns the
+  address: the API answers each feed's `id` and `name`, and a feed that
   failed is logged with the member id and the status, never the address.
 - Left out of every preview clone through `tableBlocklist`, and deleted
   with its member.
 
 Held by: `api/src/calendar-feeds/feed-address.core.test.ts` › turns a webcal address into https
 Held by: `api/src/calendar-feeds/calendar-feed.adapter.test.ts` › refuses a redirect to the Lambda runtime API
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › saves an address, answers only "connected", and never sends the address back
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › deletes the address with its member
+Held by: `api/src/free-slots/free-slots.controller.test.ts` › saves an address under the name its feed declares, and never sends the address back
+Held by: `api/src/free-slots/free-slots.controller.test.ts` › keeps several calendars of one member, and saving one twice keeps one copy
+Held by: `api/src/free-slots/free-slots.controller.test.ts` › refuses one calendar more than the cap, and says why
+Held by: `api/src/free-slots/free-slots.controller.test.ts` › deletes every address with its member
 
 Not to be confused with: a **busy interval**, which is what the API keeps
 from the feed for one request and never stores.
@@ -379,15 +389,17 @@ Lives in: `api/src/free-slots/`
   10:00 to midnight at weekends, Europe/Paris (`buildSearchWindows`).
 - Starts on the next quarter hour, and is shown whole, not cut to two
   hours (`selectFreeSlots`).
-- A member without a feed, with a feed the provider no longer serves, or
-  with a feed that could not be read is left out of the calculation and
-  listed with the reason.
+- Every readable feed of every member is subtracted. A member without a
+  feed is listed as left out. Each feed the provider no longer serves, or
+  that could not be read, is listed with its member, its name and the
+  reason, and that member's other feeds still count.
 - Booking one creates a practice whose `origin` is `free_slot`.
 - Listed on the **Find a slot** page (`/sessions/slots`, `site/src/routes/sessions/FindSlotPage.tsx`), reached from the Sessions header; the Sessions list itself shows none.
 
 Held by: `api/src/free-slots/free-slots.core.test.ts` › opens at 18:00 on weekdays and 10:00 at weekends, until midnight, Paris time
 Held by: `api/src/free-slots/free-slots.core.test.ts` › keeps free time of at least two hours, starting on a quarter hour
-Held by: `api/src/free-slots/free-slots.controller.test.ts` › excludes a member whose address is gone, and one whose provider is down
+Held by: `api/src/free-slots/free-slots.controller.test.ts` › names the calendar whose address is gone, and the one whose provider is down
+Held by: `api/src/free-slots/free-slots.controller.test.ts` › subtracts every calendar of a member, and never puts an address in the slots response
 Held by: `api/src/sessions/sessions.core.test.ts` › keeps only the prepared concert and the origin for a practice
 
 Not to be confused with: a **practice**, which only exists once someone
