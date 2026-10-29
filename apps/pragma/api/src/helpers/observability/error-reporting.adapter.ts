@@ -23,6 +23,8 @@ const PRIVATE_DATA_COLLECTION: ReportingOptions['dataCollection'] = {
   stackFrameVariables: false,
 };
 
+const SHARED_PROJECT_APP_TAGS = { app: 'pragma' } as const;
+
 export interface IncomingRequest {
   readonly method: string;
   readonly sentryTrace: string | undefined;
@@ -41,6 +43,7 @@ export function startErrorReporting(settings: ErrorReportingSettings | undefined
     dsn: settings.dsn,
     environment: settings.environment,
     ...(settings.release === undefined ? {} : { release: settings.release }),
+    initialScope: { tags: SHARED_PROJECT_APP_TAGS },
     tracesSampleRate: settings.tracesSampleRate,
     tracePropagationTargets: OUTGOING_TRACE_PROPAGATION_TARGETS,
     dataCollection: PRIVATE_DATA_COLLECTION,
