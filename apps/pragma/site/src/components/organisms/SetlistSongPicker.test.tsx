@@ -73,11 +73,14 @@ function checkbox(title: string): HTMLElement {
 // @FollowsBlueprint test-component-render
 describe('the Add songs sheet', () => {
   beforeEach(() => {
+    vi.useFakeTimers({ toFake: ['setTimeout', 'clearTimeout'] });
     stubSheetDialog();
   });
 
   afterEach(() => {
     cleanup();
+    vi.clearAllTimers();
+    vi.useRealTimers();
     vi.clearAllMocks();
   });
 
