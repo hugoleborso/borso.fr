@@ -31,10 +31,13 @@ describe('FLAME_LAYERS', () => {
   });
 
   it('draws each layer from its own path, the core inside the middle inside the outer', () => {
-    expect(Object.keys(FLAME_LAYER_PATHS)).toEqual(['outer', 'middle', 'core']);
-    expect(FLAME_LAYER_PATHS.outer.startsWith('M12 1.8')).toBe(true);
-    expect(FLAME_LAYER_PATHS.middle.startsWith('M12 7.6')).toBe(true);
-    expect(FLAME_LAYER_PATHS.core.startsWith('M12 12.6')).toBe(true);
+    expect(FLAME_LAYER_PATHS).toEqual({
+      outer:
+        'M12 1.8c.8 3.4 3.4 5.4 5 7.7 1.2 1.7 1.8 3.4 1.8 5.3A6.8 6.8 0 0 1 12 21.8a6.8 6.8 0 0 1-6.8-6.9c0-2.6 1.2-4.6 2.9-6.1.1 1.8.9 3 2.1 3.6-.4-3.2.4-6.4 1.8-10.6z',
+      middle:
+        'M12 7.6c.6 2.4 2.3 3.8 3.3 5.4.7 1.1 1 2.2 1 3.4a4.3 4.3 0 0 1-8.6 0c0-1.7.8-3 1.9-4 .1 1 .5 1.8 1.2 2.2-.2-2.2.3-4.4 1.2-7z',
+      core: 'M12 12.6c.4 1.4 1.3 2.3 1.9 3.2.4.6.6 1.2.6 1.9a2.5 2.5 0 0 1-5 0c0-1 .5-1.8 1.1-2.4.1.6.3 1 .7 1.2-.1-1.3.2-2.6.7-3.9z',
+    });
   });
 });
 
