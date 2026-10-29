@@ -1,6 +1,6 @@
 # ADR-0049: Agents read production through an invoked reader Lambda
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-10-28
 - **Deciders:** Hugo Borsoni
 - **Tags:** agents, dsql, lambda, security, cdk
@@ -58,9 +58,19 @@ over doing nothing because it moves the guard to a place the caller cannot skip.
 - `-` Changing the refusal rules becomes a production deploy. Editing a regex in
   `read-only-query.utils.ts` was a commit; editing it in the Lambda is a release
   of three applications. The rule gets safer and slower at the same time.
-- `~` Two paths to the same data exist until `db-read.sh` stops speaking Postgres
-  directly. The direct path is kept only for a local session holding the
-  `AI-Dev-ReadOnly` key, and is otherwise the one nobody exercises.
+- `-` `db-read.sh` stops working against a stack whose production deploy has not
+  run since this decision landed. It needs the `AgentReaderFunctionName` output
+  to exist, and refuses on its absence rather than falling back — which is
+  deliberate, because the fallback would be the unguarded path.
+- `+` `AI-Dev-ReadOnly` ends up with **no DSQL right at all**, which was not the
+  plan. The intent was to keep `dsql:DbConnect` as break-glass for a laptop
+  holding the access key; IAM's 2048-character cap on a user's inline policies
+  — an aggregate cap, not a per-policy one — left no room for both. Dropping the
+  break-glass was the better half to cut: it was the one path to production that
+  carried no blocklist, and a laptop that needs the database has `borso-admin`.
+  `dsql:*` went back into the blanket deny and the two narrowing statements
+  ADR-0044 added are retired. The constraint is recorded in
+  [`docs/knowledge/iam-inline-user-policies-share-one-2048-character-budget.md`](../knowledge/iam-inline-user-policies-share-one-2048-character-budget.md).
 
 ## Alternatives considered
 
@@ -209,4 +219,7 @@ there.
 - Related: [ADR-0039](./0039-talos-memory-in-the-database.md) — talos keeps its own `POST /api/agent/sql`, and its `POST /api/agent/changes` write path through `applyChanges` is untouched by this decision.
 - Files the decision lands in: `infra/cdk/src/constructs/`, `apps/{pragma,last-loop-lepin,banana-rush}/cdk/lib/stack.ts`, `scripts/db-read.sh`, `scripts/database/read-only-query.utils.ts`.
 - Policy change: `Explicit-write-deny` on `AI-Dev-ReadOnly`, documented in [`docs/aws-setup.md`](../aws-setup.md) §12.7.
-- Commit: pending.
+- Files the decision landed in: `infra/cdk/src/constructs/dsql-agent-reader.ts`, `infra/cdk/src/internal/agent-reader/{index.ts,read-only-query.utils.ts,principal.utils.ts}`, `infra/cdk/src/constructs/{dsql-schema.ts,previewable-app.ts}`, `scripts/database/{db-read.ts,read-target.utils.ts,reader-invocation.utils.ts}`, `scripts/db-read.sh`, `docs/aws-setup.md` §12.7.
+- The assessment moved rather than being rewritten: `scripts/database/read-only-query.utils.ts` is now `infra/cdk/src/internal/agent-reader/read-only-query.utils.ts`, same code, same tests, bundled into the function. The client keeps only what it must decide before a call it cannot make — the application, the stage and the function to invoke.
+- `DsqlSchema.grantReaderConnect` maps the function's execution role into `ai_reader_prod` beside the IAM user, through the same `Lazy.list` mechanism `grantConnect` already used for the API role.
+- The three applications needed no stack change: `PreviewableApp` creates the reader whenever its schema provisions a reader role, so the three existing `readerPrincipalArns` call sites are what turns it on.
