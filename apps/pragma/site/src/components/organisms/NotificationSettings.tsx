@@ -128,7 +128,9 @@ export function NotificationSettings(): JSX.Element {
   return (
     <Card className="p-4 sm:p-6">
       {offerMessageKey === null ? null : (
-        <p className="text-meta text-ink-soft mt-0 mb-3">{t(offerMessageKey)}</p>
+        <p className="text-meta text-ink-soft mt-0 mb-3" role="status">
+          {t(offerMessageKey)}
+        </p>
       )}
       {isEnableShown ? <EnableOnThisDevice /> : null}
       <CategoryToggles />

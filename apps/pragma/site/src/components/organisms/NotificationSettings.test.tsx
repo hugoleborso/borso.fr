@@ -45,7 +45,7 @@ const PREFERENCES = {
 };
 
 const ENABLE_LABEL = 'Enable on this device';
-const ENABLED_MESSAGE = 'Notifications are on for this device.';
+const ENABLED_MESSAGE = 'On for this device.';
 
 function isChecked(element: HTMLElement): boolean {
   return element instanceof HTMLInputElement && element.checked;
@@ -137,7 +137,7 @@ describe('NotificationSettings', () => {
     api = answerApi(500);
     renderSettings();
     await userEvent.click(await screen.findByRole('button', { name: ENABLE_LABEL }));
-    expect(await readAlertText()).toBe('Notifications could not be enabled. Try again.');
+    expect(await readAlertText()).toBe('Could not be enabled.');
     expect(device.subscribeToPush).not.toHaveBeenCalled();
   });
 
@@ -149,7 +149,7 @@ describe('NotificationSettings', () => {
     device.subscribeToPush.mockRejectedValue(new NotificationPermissionRefusedError('denied'));
     renderSettings();
     await userEvent.click(await screen.findByRole('button', { name: ENABLE_LABEL }));
-    expect(await readAlertText()).toMatch(/blocks notifications/);
+    expect(await readAlertText()).toMatch(/Blocked by this browser/);
   });
 
   it('says enabling failed when anything else goes wrong', async () => {
@@ -157,7 +157,7 @@ describe('NotificationSettings', () => {
     device.subscribeToPush.mockRejectedValue(new Error('push service unreachable'));
     renderSettings();
     await userEvent.click(await screen.findByRole('button', { name: ENABLE_LABEL }));
-    expect(await readAlertText()).toBe('Notifications could not be enabled. Try again.');
+    expect(await readAlertText()).toBe('Could not be enabled.');
   });
 
   it('tells an iPhone in the browser to install pragma, with no Enable button', async () => {
@@ -165,7 +165,7 @@ describe('NotificationSettings', () => {
     device.isPushSupported.mockReturnValue(false);
     device.readInstallContext.mockReturnValue({ isIos: true, isStandalone: false });
     renderSettings();
-    expect(await screen.findByText(/Add to Home Screen/)).not.toBeNull();
+    expect(await screen.findByText(/home screen/)).not.toBeNull();
     expect(screen.queryByRole('button', { name: ENABLE_LABEL })).toBeNull();
   });
 
@@ -173,12 +173,12 @@ describe('NotificationSettings', () => {
     api = answerApi();
     device.isPushSupported.mockReturnValue(false);
     renderSettings();
-    expect(await screen.findByText('This browser cannot receive notifications.')).not.toBeNull();
+    expect(await screen.findByText('Not available in this browser.')).not.toBeNull();
     cleanup();
     device.isPushSupported.mockReturnValue(true);
     device.readNotificationPermission.mockReturnValue('denied');
     renderSettings();
-    expect(await screen.findByText(/blocks notifications/)).not.toBeNull();
+    expect(await screen.findByText(/Blocked by this browser/)).not.toBeNull();
     expect(screen.queryByRole('button', { name: ENABLE_LABEL })).toBeNull();
   });
 

@@ -820,12 +820,12 @@
     }
   },
   "notifications": {
-    "enabled": "Notifications are on for this device.",
-    "denied": "This browser blocks notifications for pragma. Allow them in the browser's site settings, then come back here.",
-    "unsupported": "This browser cannot receive notifications.",
-    "installHint": "On an iPhone, notifications only reach pragma once it is installed on the home screen. In Safari, tap Share, then Add to Home Screen, and open pragma from there.",
+    "enabled": "On for this device.",
+    "denied": "Blocked by this browser.",
+    "unsupported": "Not available in this browser.",
+    "installHint": "Add pragma to the home screen first.",
     "enable": "Enable on this device",
-    "enableFailed": "Notifications could not be enabled. Try again.",
+    "enableFailed": "Could not be enabled.",
     "saveFailed": "That change could not be saved.",
     "categoriesTitle": "Notify me about",
     "categories": {

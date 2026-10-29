@@ -820,12 +820,12 @@
     }
   },
   "notifications": {
-    "enabled": "Les notifications sont activées sur cet appareil.",
-    "denied": "Ce navigateur bloque les notifications de pragma. Autorisez-les dans les réglages du site du navigateur, puis revenez ici.",
-    "unsupported": "Ce navigateur ne peut pas recevoir de notifications.",
-    "installHint": "Sur iPhone, les notifications n’arrivent que si pragma est installé sur l’écran d’accueil. Dans Safari, touchez Partager, puis Sur l’écran d’accueil, et ouvrez pragma depuis là.",
+    "enabled": "Activées sur cet appareil.",
+    "denied": "Bloquées par ce navigateur.",
+    "unsupported": "Indisponibles dans ce navigateur.",
+    "installHint": "Ajoute d’abord pragma à l’écran d’accueil.",
     "enable": "Activer sur cet appareil",
-    "enableFailed": "Les notifications n’ont pas pu être activées. Réessayez.",
+    "enableFailed": "Activation impossible.",
     "saveFailed": "Ce changement n’a pas pu être enregistré.",
     "categoriesTitle": "Me notifier pour",
     "categories": {
