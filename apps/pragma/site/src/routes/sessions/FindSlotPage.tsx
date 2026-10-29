@@ -3,6 +3,7 @@
 import { type JSX, useMemo, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { PageHeader } from '../../components/molecules/PageHeader';
+import { BandCalendarSubscription } from '../../components/organisms/BandCalendarSubscription';
 import { CreateSessionDialog } from '../../components/organisms/CreateSessionDialog';
 import { FreeSlotsPanel } from '../../components/organisms/FreeSlotsPanel';
 import { useNavigateTo } from '../../lib/navigation.hook';
@@ -30,6 +31,7 @@ export function FindSlotPage(): JSX.Element {
         back={{ to: '/sessions', label: t('sessions.title') }}
         title={t('freeSlots.pageTitle')}
         subtitle={t('freeSlots.subtitle')}
+        actions={<BandCalendarSubscription />}
       />
       <FreeSlotsPanel onBook={setBookedStart} />
       {bookedStart === null ? null : (

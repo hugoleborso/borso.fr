@@ -442,7 +442,16 @@
       "unavailable": "{{name}}'s calendar is unavailable right now"
     },
     "pageTitle": "Find a slot",
-    "open": "Find a slot"
+    "open": "Find a slot",
+    "bandCalendar": {
+      "subscribe": "Subscribe to the band calendar",
+      "steps": {
+        "addAccount": "Open Settings, then Calendar, then Accounts, and add the Google account that has access to the band calendar.",
+        "tickCalendar": "Open the Calendar app, tap Calendars at the bottom, and tick \"{{name}}\"."
+      },
+      "fallback": "Or open it in Google Calendar instead:",
+      "openInGoogle": "Open in Google Calendar"
+    }
   },
   "sessions": {
     "addTask": "Add a task",

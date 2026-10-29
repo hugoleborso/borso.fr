@@ -10,6 +10,7 @@ import {
   jsonResponse,
   stubFetch,
 } from '../../lib/queries/queries.test-utils';
+import { BAND_CALENDAR_ID, bandCalendarSubscribeAddress } from '../../lib/band-calendar.utils';
 import { FindSlotPage } from './FindSlotPage';
 import { SessionsPage } from './SessionsPage';
 
@@ -81,6 +82,15 @@ describe('finding a slot', () => {
     expect(
       exclusion.compareDocumentPosition(slots) & Node.DOCUMENT_POSITION_FOLLOWING,
     ).toBeTruthy();
+  });
+
+  it('offers a secondary subscription to the band calendar in its header', () => {
+    renderAt(<FindSlotPage />, '/sessions/slots');
+    const header = screen.getByRole('heading', { level: 1, name: 'Find a slot' }).closest('header');
+    if (header === null) throw new Error('no page header');
+    const subscribe = within(header).getByRole('link', { name: 'Subscribe to the band calendar' });
+    expect(subscribe.getAttribute('href')).toBe(bandCalendarSubscribeAddress(BAND_CALENDAR_ID));
+    expect(subscribe.getAttribute('data-variant')).toBe('secondary');
   });
 
   it('books a practice on a slot from the new session sheet', async () => {

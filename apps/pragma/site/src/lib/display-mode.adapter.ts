@@ -37,7 +37,7 @@ export function readInstallContext(
 }
 
 export function readCalendarPlatform(
-  environment: DisplayEnvironment = readBrowserDisplayEnvironment(),
+  device: Pick<DisplayEnvironment, 'userAgent' | 'maxTouchPoints'> = navigator,
 ): CalendarPlatform {
-  return selectCalendarPlatform(environment.userAgent, environment.maxTouchPoints);
+  return selectCalendarPlatform(device.userAgent, device.maxTouchPoints);
 }

@@ -442,7 +442,16 @@
       "unavailable": "L’agenda de {{name}} est indisponible pour l’instant"
     },
     "pageTitle": "Trouver un créneau",
-    "open": "Trouver un créneau"
+    "open": "Trouver un créneau",
+    "bandCalendar": {
+      "subscribe": "S’abonner au calendrier du groupe",
+      "steps": {
+        "addAccount": "Ouvre Réglages, puis Calendrier, puis Comptes, et ajoute le compte Google qui a accès au calendrier du groupe.",
+        "tickCalendar": "Ouvre l’app Calendrier, touche Calendriers en bas, et coche « {{name}} »."
+      },
+      "fallback": "Ou ouvre-le plutôt dans Google Agenda :",
+      "openInGoogle": "Ouvrir dans Google Agenda"
+    }
   },
   "sessions": {
     "addTask": "Ajouter une tâche",
