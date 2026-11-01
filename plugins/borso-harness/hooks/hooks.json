@@ -58,6 +58,15 @@
             "statusMessage": "Matching the call against the knowledge triggers"
           }
         ]
+      },
+      {
+        "matcher": "Read",
+        "hooks": [
+          {
+            "type": "command",
+            "command": "\"${CLAUDE_PLUGIN_ROOT}\"/hooks/pretool-large-read-goes-to-a-worker.sh"
+          }
+        ]
       }
     ],
     "PostToolUse": [
