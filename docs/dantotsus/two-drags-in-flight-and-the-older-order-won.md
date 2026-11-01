@@ -4,12 +4,12 @@ introduced-at: implementation
 detected-at: production
 severity: high
 related-pr: '#31'
-fix-pr: none (the pull request is not open yet)
-fix-commits: [self]
-eradication-level: 2
-eradication-paths: [eslint-rules/optimistic-mutation-declares-scope.js]
+fix-pr: none (the operator has not chosen the countermeasure yet)
+fix-commits: none (proposal under review, nothing is merged)
+eradication-level: 5
+eradication-paths: []
 time-to-detect: months
-tags: [react, tanstack-query, dsql, optimistic-updates, pragma, talos, last-loop-lepin]
+tags: [react, tanstack-query, dsql, optimistic-updates, pragma]
 zone: apps/pragma/site/src/lib/queries
 weak-point: optimistic-write-undone
 recurs: [optimistic-reorder-reverted-by-stale-dsql-read, the-blueprint-that-mandated-the-refetch-that-undid-it]
@@ -18,99 +18,119 @@ blueprints: [query-optimistic-mutation]
 
 # Two drags in flight, and the older order won
 
+> Status: proposal for the operator to accept or reject. The countermeasure and
+> eradication below are not merged. The front matter says level 5 until one is.
+
 ## Symptom
 
-A band member reordered a setlist, tapped Done, came back later, and found the
-old order: *"quand je change l'ordre, je clique sur terminé puis je reviens,
-ça a pas pris en compte les modifs"*.
+A band member reorders a setlist, taps Done, comes back later, and finds an
+older order:
 
-The screen showed the new order right after Done. The database held an older
-one (measured locally, see below). The next visit refetched and showed it.
+> « quand je change l'ordre, je clique sur terminé puis je reviens, ça a pas
+> pris en compte les modifs » (Thomas)
+
+| Moment | Screen shows | Database holds |
+| --- | --- | --- |
+| Right after Done | the 2nd drag | the 1st drag |
+| Back 35 s later | **the 1st drag** | the 1st drag |
+
+Measured in a browser on a local stack, with the first `PUT` slowed by 1.5 s.
+Without the delay, local `PUT`s take 40 to 120 ms and never overlap, even
+with drags 45 ms apart.
 
 ## Root-cause chain
 
-1. **Why did the next visit show the old order?** The entries `GET` returned
-   the order the database held, and the database held the order of an earlier
+1. **Why does the setlist come back in an older order?** The `GET /entries`
+   on the return visit reads the database, and the database holds an earlier
    drag.
-2. **Why did the database hold an earlier drag?** Two `PUT /reorder` calls were
-   in flight at once, and the one sent first committed last. Each carries the
-   whole order, so the last commit wins. Prod, 2026-10-31: request A started at
-   11:38:05.279, B at 11:38:05.856, B answered 200 at 06.250, A answered 200 at
-   06.727 after 1.65 s billed (measured, CloudWatch `pragma-prod-api`).
-3. **Why could A commit after B?** DSQL takes no locks. B commits first, A's
-   commit aborts on the conflict, and `retryingConflictAborts` runs A again with
-   its older id list, which still passes the same-ids check (inferred: the X-Ray
-   trace shows no SQL detail, and a cold start would give the same timing).
-   Locally, a 1.5 s delay before the transaction gives the same result: screen
-   on drag 2, database on drag 1 (measured).
-4. **Why were two requests in flight at once?** `useReorderSetlist` declared no
-   mutation `scope`, so TanStack Query sends every call as soon as it is made.
-5. **Why did the screen not notice?** Since
+2. **Why does the database hold an earlier drag?** Two `PUT /reorder` were in
+   flight at once, and the one sent first committed last. Each carries the
+   whole order, so the last commit erases the other.
+3. **Why can two be in flight at once?** Each drop calls
+   `useReorderSetlist().mutate` straight away. TanStack Query runs mutations
+   in parallel by default, *"even if you invoke `.mutate()` of the same
+   mutation multiple times"*, and *"the order in which mutations are
+   fulfilled may differ from the order of `mutate` function calls"*
+   ([Mutations guide](https://tanstack.com/query/latest/docs/framework/react/guides/mutations)).
+4. **Why can the first one commit last?** On Aurora DSQL there is no row lock.
+   B commits, A's commit aborts on the conflict, and `retryingConflictAborts`
+   reruns A with its older id list, which still passes the same-ids check
+   (inferred from the code, not observed).
+5. **Why does the screen not notice?** Since
    `optimistic-reorder-reverted-by-stale-dsql-read`, an optimistic mutation
-   never refetches what it wrote. That removed the stale read, and with it the
-   only path by which the client learnt that the server disagreed. The
-   `onMutate` write also resets the cache's age, so Done and the back link
-   showed the cache for 30 s without a request (measured).
+   never rereads what it wrote, so nothing tells the client the server kept
+   another order. `onMutate`'s `setQueryData` also makes the cache fresh for
+   30 s, so Done and an immediate return show the cache without a request
+   (measured).
 
-**Root cause:** *thought "the order the requests leave in is the order they
-commit in", actually "two requests in flight commit in any order, and a client
-that never rereads what it wrote keeps showing the one that lost".*
+**Root cause:** *thought "requests leave in the order of the gestures, so the
+last one sent is the last one written", actually "two requests in flight
+commit in any order, and a client that never rereads what it wrote keeps
+showing the one that lost".*
+
+### What prod shows, and what it does not
+
+- On 2026-10-31 one setlist got six reorders. Two overlapped: A started at
+  11:38:05.279, B at 05.856. B answered 200 in 394 ms, A answered 200 in
+  1.65 s, after B (measured, CloudWatch `pragma-prod-api`, the only reorders
+  in the 7-day retention).
+- The three reorders that followed did not overlap and each resent the whole
+  order. So the final database order probably matches the last screen
+  (inferred). This sequence proves the overlap happens in prod. It does not
+  prove it is the loss Thomas saw.
+- Nothing records who made those drags. Thomas's report date decides whether
+  it is this sequence or one older than the log retention.
 
 ## Detection failure causes
 
-- **Linter:** the standard already asked that writes answering one shared value
+- **Linter:** standard 06 already asked that writes answering one shared value
   share a `scope`. Only a `reviewer` line enforced it, and it named counts and
-  streaks, not a full-order write. 54 of 58 optimistic mutations had no scope
-  (measured by script; oxlint later counted 51 call sites).
-- **Unit tests:** every hook test fires one mutation. None fires two before
-  the first answers, which is the only shape that loses a write.
-- **Local validation:** local PUTs take 40 to 120 ms and Postgres locks the
-  setlist row, so even drags 45 ms apart never overlapped (measured).
-- **Production monitoring:** both requests answered 200. Nothing is wrong in
-  any single request, so no error reached Sentry or the logs.
+  streaks. 54 of 58 optimistic mutations had no scope (measured by script).
+- **Unit tests:** every hook test fires one mutation. None fires a second
+  before the first answers.
+- **Local validation:** local `PUT`s are fast and Postgres locks the setlist
+  row, so overlaps never happen locally (measured).
+- **Production monitoring:** both requests answer 200. Nothing errors, so
+  neither Sentry nor the logs flag anything.
 
-## Countermeasure
+## Countermeasure (proposed)
 
-- **Code:** `useReorderSetlist` and every other entry mutation share
-  `ENTRY_WRITE_SCOPE`. `onMutate` still runs at once (measured in
-  `@tanstack/query-core` 5.102.8 `mutation.ts`), so the row moves on the drop,
-  and the second `PUT` leaves when the first answers. With the scope, the same
-  delayed double drag sent PUT 2 two milliseconds after PUT 1 answered, and the
-  database matched the screen (measured in the browser).
+Two shapes, both on `SetlistOrderPage` and `useReorderSetlist` only:
 
-## Eradication (mandatory — code-level)
+| Option | What the user sees | Cost |
+| --- | --- | --- |
+| A. Refuse a drag while a reorder is pending (operator's idea) | The list is locked until the server answers | 240 ms to 1.65 s of frozen list per drag (prod timings) |
+| B. Give the entry mutations one `scope` | Every drop moves at once, requests queue behind each other | None visible. A failed request rolls back to its snapshot, which can also drop the drags queued after it |
 
-**Type:** DevX check (level 2 — custom rule)
+B keeps the list responsive and is what the code on the branch does. In the
+browser, the second `PUT` left 2 ms after the first answered, and the database
+matched the screen (measured). A and B combine if a visible lock is wanted.
 
-**Reference:** this commit.
+Neither covers two devices reordering the same setlist at once. The server
+keeps whichever commits last. A version number on the reorder would close
+that, and no such report exists.
 
-**The actual fix:**
+## Eradication (proposed, level 2)
+
+**Type:** DevX check (level 2, custom rule), not merged.
+
+`borso/optimistic-mutation-declares-scope` rejects a `useMutation` whose
+options carry `onMutate` and no `scope`.
 
 ```diff
-+// eslint-rules/optimistic-mutation-declares-scope.js
 +if (!hasProperty(options, 'onMutate') || hasProperty(options, 'scope')) return;
 +context.report({ node: options, messageId: 'optimisticMutationWithoutScope' });
 ```
 
-```diff
- export function useReorderSetlist() {
-   const queryClient = useQueryClient();
-   return useMutation({
-     mutationKey: ENTRY_MUTATION_KEY,
-+    scope: ENTRY_WRITE_SCOPE,
-```
+Proof it can fail, measured on the branch:
+- With its `scope` check removed, the rule's own suite fails (1 of 9 cases).
+- With `scope` removed from `useReorderSetlist`, the new hook test fails with
+  `expected [ …(2) ] to have a length of 1 but got 2`: two `PUT`s in flight
+  instead of one.
 
-The rule fails its own suite when its `scope` check is removed, and the new
-`useReorderSetlist` test fails with two requests in flight when the scope is
-removed (both measured).
-
-**Sibling defects swept:** the 51 unscoped optimistic mutations in `pragma`,
-`talos` and `last-loop-lepin` each got their file's write scope. The
-`reviewer` line in `docs/standards/06-data-fetching.md` became the rule.
-
-**Not covered:** two devices writing the same setlist still last-writer-wins
-on the server. A version check on the reorder would close it. No report of it
-exists.
+**Sibling defects:** the rule flags 51 call sites across `pragma`, `talos` and
+`last-loop-lepin`. Each would get its file's write scope. That widens the
+change to three apps, so it is a separate decision from the setlist fix.
 
 ## See also
 
