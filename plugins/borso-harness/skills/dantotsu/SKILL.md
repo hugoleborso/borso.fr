@@ -43,8 +43,10 @@ When the request does not say which, it is analysis.
 ## The entry
 
 Copy [`docs/dantotsus/_template.md`](../../../../docs/dantotsus/_template.md)
-to `docs/dantotsus/<slug>.md`. Keep its headings exactly, add none, and
-write short sentences with nothing superfluous. The title names the problem,
+to `docs/dantotsus/<slug>.md`. Its `##` headings are the only sections:
+`check-dantotsu-front-matter.ts` refuses an added or missing one in an entry
+dated 2026-11-01 or later. Evidence that fits no section goes in the one it
+qualifies. Write short sentences with nothing superfluous. The title names the problem,
 never the solution, and sparks curiosity. Long evidence (a screenshot, a
 log dump) goes in a `<details>` block so the entry stays short.
 

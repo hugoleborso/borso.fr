@@ -1,9 +1,17 @@
 #!/usr/bin/env tsx
 
-import { readDantotsuCorpus, readPathsEverTracked, runGit } from './dantotsu-corpus';
-import { selectSchemaProblems } from './dantotsu-schema.core';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import {
+  DANTOTSUS_DIRECTORY,
+  readDantotsuCorpus,
+  readPathsEverTracked,
+  runGit,
+} from './dantotsu-corpus';
+import { readSectionHeadings, selectSchemaProblems } from './dantotsu-schema.core';
 
 const MAIN_REFERENCE = 'origin/main';
+const TEMPLATE_PATH = join(DANTOTSUS_DIRECTORY, '_template.md');
 const STAGED_DANTOTSU_PATTERN = /^docs\/dantotsus\/(.+)\.md$/;
 
 function refuseShallowClone(): void {
@@ -46,6 +54,7 @@ function main(): void {
     mainCommits: readMainCommits(),
     trackedPaths: readPathsEverTracked(),
     verifiedSlugs: process.argv.includes('--staged') ? readStagedSlugs() : null,
+    templateSections: readSectionHeadings(readFileSync(TEMPLATE_PATH, 'utf8')),
   });
   if (problems.length === 0) {
     process.stdout.write(

@@ -40,6 +40,12 @@ Reproduced on a production build at 375 px with real touch drags (measured):
 The last step turns a wrong display into lost data. The three earlier drags
 are gone from the database.
 
+In prod, one setlist received six `PUT /reorder` between 11:36 and 11:39:52
+UTC, all answering 200 (measured, CloudWatch), which fits the 12:40 report.
+No `GET /entries` reached the server after 11:39:52. A worker answer still
+sends a background request, so that gap is unexplained. A dropped phone
+connection would fit (guess).
+
 ## Causal chain
 
 - Back on the order page, the setlist shows the order from before the drags
@@ -60,6 +66,15 @@ are gone from the database.
 - The next drag then saves the old order
   - Each `PUT /reorder` carries the whole order as the screen shows it, so a
     drag on the old screen writes the old order back with one change
+- Two quick drags can also save an older order on their own
+  - Two `PUT /reorder` were in flight at once in prod: A sent at
+    11:38:05.279 answered after B sent at 05.856 (measured)
+    - TanStack Query runs mutations in parallel by default, and the order
+      they finish in may differ from the order of the calls
+      ([Mutations guide](https://tanstack.com/query/latest/docs/framework/react/guides/mutations))
+      - `useReorderSetlist` declares no `scope`, so every drop sends at once
+    - The one that commits last wins, since each carries the whole order.
+      Reproduced locally with a forced 1.5 s delay on the first `PUT`
 
 ```js
 function staleWhileRevalidate(request) {
@@ -97,19 +112,6 @@ are two caches, and only one of them is updated.
   Whether the worker caused those earlier cases too is a guess.
 - **Production monitoring:** every request answers 200. A read served from
   the worker's cache never reaches the server, so nothing records it.
-
-### What prod shows, and what it does not
-
-- On 2026-10-31 between 11:36 and 11:39:52 UTC, one setlist received six
-  `PUT /reorder`, all answering 200 (measured, CloudWatch). That fits Thomas's
-  12:40 report.
-- Two of those `PUT`s overlapped and finished in the reverse order (A sent at
-  11:38:05.279 answered after B sent at 05.856). Each full-order `PUT` can then
-  overwrite a newer one. This is a second, smaller defect (reproduced locally
-  with a forced delay).
-- No `GET /entries` reached the server after 11:39:52. A worker answer still
-  sends a background request, so this gap is unexplained. A dropped phone
-  connection would fit (guess).
 
 ## Countermeasure
 
