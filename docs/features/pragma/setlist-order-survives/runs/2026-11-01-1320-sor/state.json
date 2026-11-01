@@ -1,0 +1,12 @@
+{
+  "runId": "2026-11-01-1320-sor",
+  "feature": { "app": "pragma", "slug": "setlist-order-survives" },
+  "pilotedByTechLead": true,
+  "stage": "spec",
+  "retries": { "implement": 0, "validate": 0 },
+  "adrIndex": [202611011313],
+  "bytesRead": 0,
+  "specChecksum": null,
+  "startedAt": "2026-11-01T13:53:16.000Z",
+  "updatedAt": "2026-11-01T13:53:16.000Z"
+}
