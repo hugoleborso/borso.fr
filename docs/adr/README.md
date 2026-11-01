@@ -102,6 +102,7 @@ No:
 | [0051](./0051-chord-text-from-paste-and-pdf-text-layer-photos-stay-images.md) | Chord text comes from pasted text and a PDF's text layer; a photo stays an image | accepted | 2026-10-27 |
 | [0052](./0052-pragma-previews-clone-takes-and-read-their-audio-from-production.md) | pragma previews clone takes and read their audio from the production uploads bucket | accepted | 2026-10-29 |
 | [202610291139](./202610291139-pragma-runs-a-daily-job-on-eventbridge-scheduler-in-paris-time.md) | pragma's daily job runs on EventBridge Scheduler in Paris time and invokes the API Lambda | accepted | 2026-10-29 |
+| [202611011313](./202611011313-pragma-offline-reads-through-the-query-cache.md) | Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push | proposed | 2026-11-01 |
 
 ### Data layer
 
@@ -136,6 +137,7 @@ No:
 - 0047 — pragma's design system is Notebook (paper, one blue ink for actions, pencil and highlighter) with Backstage's pill buttons and six other grafts; the only direction keeping every operator rule and every text pair at AA in both schemes. Members keep their own stored colours, shown as filled lanes in the Lineup grid, with the ink on them chosen by contrast and names in a text token.
 - 0048 — Newsreader replaces Instrument Serif with its optical size axis, 278,872 bytes against 43,160, because the ratified screens were drawn with it and notes sit at 14 px.
 - 0051 — chord text comes from pasted text and from a PDF's text layer read in the browser by `pdfjs-dist`, loaded on the chord editor only; a photo stays an image because OCR lost the chord columns on the measured sample.
+- 202611011313 — pragma reads offline from TanStack Query's own cache, persisted with `PersistQueryClientProvider`, and its service worker keeps only the shell and push, because a second data cache that writes never updated lost a setlist's order; the cost is two TanStack packages and a browser storage limit the plan measures.
 
 ### CDK / infra
 
