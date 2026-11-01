@@ -11,6 +11,8 @@ import {
   type SetlistsCache,
 } from './setlists.utils';
 
+const SETLISTS_WRITE_SCOPE = { id: 'setlists-writes' } as const;
+
 export const setlistKeys = {
   all: ['setlists'] as const,
   list: () => [...setlistKeys.all, 'list'] as const,
@@ -147,6 +149,7 @@ export function useCreateSetlist() {
 export function useRenameSetlist() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SETLISTS_WRITE_SCOPE,
     mutationFn: async (variables: { setlistId: string; name: string }) => {
       const response = await api.api.setlists[':id'].$put({
         param: { id: variables.setlistId },
@@ -177,6 +180,7 @@ export function useRenameSetlist() {
 export function useDeleteSetlist() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SETLISTS_WRITE_SCOPE,
     mutationFn: async (variables: { setlistId: string }) => {
       const response = await api.api.setlists[':id'].$delete({
         param: { id: variables.setlistId },
@@ -203,6 +207,7 @@ export function useDeleteSetlist() {
 export function useLinkSetlistToSession() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SETLISTS_WRITE_SCOPE,
     mutationFn: async (variables: { setlist: SetlistSummary; sessionId: string }) => {
       const response = await api.api.setlists[':id'].sessions.$post({
         param: { id: variables.setlist.id },
@@ -232,6 +237,7 @@ export function useLinkSetlistToSession() {
 export function useUnlinkSetlistFromSession() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SETLISTS_WRITE_SCOPE,
     mutationFn: async (variables: { setlistId: string; sessionId: string }) => {
       const response = await api.api.setlists[':id'].sessions[':sessionId'].$delete({
         param: { id: variables.setlistId, sessionId: variables.sessionId },

@@ -5,6 +5,8 @@ import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { upsertMasteryDefault, withoutMasteryDefault } from './mastery.utils';
 
+const MASTERY_WRITE_SCOPE = { id: 'mastery-writes' } as const;
+
 export const masteryKeys = {
   all: ['mastery'] as const,
   defaults: () => [...masteryKeys.all, 'defaults'] as const,
@@ -29,6 +31,7 @@ export function useMasteryDefaults() {
 export function useSaveMasteryDefault() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: MASTERY_WRITE_SCOPE,
     mutationKey: masteryKeys.all,
     mutationFn: async (variables: MasteryDefaultVariables) => {
       const response = await api.api.mastery.defaults.$put({ json: variables });
@@ -57,6 +60,7 @@ export function useSaveMasteryDefault() {
 export function useDeleteMasteryDefault() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: MASTERY_WRITE_SCOPE,
     mutationKey: masteryKeys.all,
     mutationFn: async (variables: { memberId: string; instrumentId: string }) => {
       const response = await api.api.mastery.defaults[':memberId'][':instrumentId'].$delete({

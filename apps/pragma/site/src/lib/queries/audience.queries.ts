@@ -27,6 +27,8 @@ import {
   withRoundAppended,
 } from './audience.utils';
 
+const AUDIENCE_WRITE_SCOPE = { id: 'audience-writes' } as const;
+
 const BALLOT_REJECTED_STATUS = 401;
 
 export const audienceKeys = {
@@ -157,6 +159,7 @@ interface VoteVariables {
 export function useCastVote() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: AUDIENCE_WRITE_SCOPE,
     mutationKey: VOTE_MUTATION_KEY,
     mutationFn: async (variables: VoteVariables) => {
       const response = await sendCarryingABallot({
@@ -193,6 +196,7 @@ export function useCastVote() {
 export function useRetractVote() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: AUDIENCE_WRITE_SCOPE,
     mutationKey: VOTE_MUTATION_KEY,
     mutationFn: async (variables: VoteVariables) => {
       const response = await sendCarryingABallot({

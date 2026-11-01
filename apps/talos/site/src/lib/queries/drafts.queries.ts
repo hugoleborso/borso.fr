@@ -7,6 +7,8 @@ import { replaceBySlug, selectReadyDraftCountDelta, setStatusBySlug } from './ca
 import { selectDraftReversal, selectDraftStatusToast } from './mutation-toasts.core';
 import { todayKeys } from './today.queries';
 
+const DRAFTS_WRITE_SCOPE = { id: 'drafts-writes' } as const;
+
 export const draftKeys = {
   all: ['drafts'] as const,
   list: () => [...draftKeys.all, 'list'] as const,
@@ -74,6 +76,7 @@ export function useChangeDraftStatus() {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   const changeDraftStatus = useMutation({
+    scope: DRAFTS_WRITE_SCOPE,
     mutationFn: async (variables: { slug: string; status: DraftStatusChange }) => {
       const response = await api.api.drafts[':slug'].$patch({
         param: { slug: variables.slug },

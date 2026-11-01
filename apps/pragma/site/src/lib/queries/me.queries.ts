@@ -7,6 +7,8 @@ import { ApiError, api } from '../api.client';
 import { startPasskeyEnrolment } from '../passkey.adapter';
 import { freeSlotsKeys } from './free-slots.queries';
 
+const ME_WRITE_SCOPE = { id: 'me-writes' } as const;
+
 export const meKeys = {
   all: ['me'] as const,
   profile: () => [...meKeys.all, 'profile'] as const,
@@ -180,6 +182,7 @@ export function useRemovePasskey() {
   const queryClient = useQueryClient();
   const passkeysKey = meKeys.passkeys();
   return useMutation({
+    scope: ME_WRITE_SCOPE,
     mutationFn: async (variables: { passkeyId: string }) => {
       const response = await api.api.me.passkeys[':passkeyId'].$delete({
         param: { passkeyId: variables.passkeyId },

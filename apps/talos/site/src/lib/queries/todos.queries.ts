@@ -22,6 +22,8 @@ import {
 } from './mutation-toasts.core';
 import { todayKeys } from './today.queries';
 
+const TODOS_WRITE_SCOPE = { id: 'todos-writes' } as const;
+
 export const todoKeys = {
   all: ['todos'] as const,
   list: (list: TodoListName) => [...todoKeys.all, list, 'list'] as const,
@@ -78,6 +80,7 @@ export function useCreateTodo(list: TodoListName) {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   return useMutation({
+    scope: TODOS_WRITE_SCOPE,
     mutationFn: async (variables: TodoCreation) => {
       const response = await selectTodoEndpoint(list).$post({ json: variables });
       const { status } = response;
@@ -124,6 +127,7 @@ export function useUpdateTodo(list: TodoListName) {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   const updateTodo = useMutation({
+    scope: TODOS_WRITE_SCOPE,
     mutationFn: async (variables: { id: string } & TodoPatch) => {
       const { id, ...patch } = variables;
       const response = await selectTodoEndpoint(list)[':id'].$patch({ param: { id }, json: patch });
@@ -215,6 +219,7 @@ export function useDeleteTodo(list: TodoListName) {
   const toasts = useMutationToasts();
   const restoreTodo = useRestoreTodo(list);
   return useMutation({
+    scope: TODOS_WRITE_SCOPE,
     mutationFn: async (variables: { readonly id: string }) => {
       const response = await selectTodoEndpoint(list)[':id'].$delete({
         param: { id: variables.id },

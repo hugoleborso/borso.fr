@@ -4,6 +4,8 @@ import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api';
 import { replaceEntityBySlug } from './optimistic.utils';
 
+const EDITIONS_WRITE_SCOPE = { id: 'editions-writes' } as const;
+
 // @FollowsBlueprint query-module
 export const editionKeys = {
   all: ['editions'] as const,
@@ -114,6 +116,7 @@ export function useReplaceEdition() {
 export function useDeleteEdition() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: EDITIONS_WRITE_SCOPE,
     mutationKey: editionKeys.all,
     mutationFn: async (variables: { slug: string }) => {
       const response = await api.api.admin.editions[':slug'].$delete({
@@ -147,6 +150,7 @@ export function useDeleteEdition() {
 export function useTransitionEditionStatus() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: EDITIONS_WRITE_SCOPE,
     mutationKey: editionKeys.all,
     mutationFn: async (variables: TransitionEditionStatusVariables) => {
       const response = await api.api.admin.editions[':slug'].status.$put({

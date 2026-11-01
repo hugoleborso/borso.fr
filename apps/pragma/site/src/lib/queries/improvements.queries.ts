@@ -7,6 +7,8 @@ import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { applyVoteIntent, type VoteIntent } from './improvements.utils';
 import { replaceEntityById } from './optimistic.utils';
 
+const IMPROVEMENTS_WRITE_SCOPE = { id: 'improvements-writes' } as const;
+
 export const improvementKeys = {
   all: ['improvements'] as const,
   list: () => [...improvementKeys.all, 'list'] as const,
@@ -62,6 +64,7 @@ export function useCreateImprovement() {
 export function useUpdateImprovement() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: IMPROVEMENTS_WRITE_SCOPE,
     mutationKey: improvementKeys.all,
     mutationFn: async (variables: ImprovementUpdateVariables) => {
       const { id, ...rest } = variables;
@@ -91,6 +94,7 @@ export function useUpdateImprovement() {
 export function useDeleteImprovement() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: IMPROVEMENTS_WRITE_SCOPE,
     mutationKey: improvementKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.improvements[':id'].$delete({ param: { id: variables.id } });
@@ -128,6 +132,7 @@ export interface VoteVariables {
 export function useVoteOnImprovement() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: IMPROVEMENTS_WRITE_SCOPE,
     mutationKey: improvementKeys.all,
     mutationFn: async (variables: VoteVariables) => {
       const response = await VOTE_REQUEST_BY_INTENT[variables.intent](variables.id);

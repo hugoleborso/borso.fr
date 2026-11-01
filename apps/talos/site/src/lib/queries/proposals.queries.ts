@@ -7,6 +7,8 @@ import { replaceBySlug, setStatusBySlug } from './cache-updates.core';
 import { DECISION_CANCELLED_TOAST, selectDecisionToast } from './mutation-toasts.core';
 import { todayKeys } from './today.queries';
 
+const PROPOSALS_WRITE_SCOPE = { id: 'proposals-writes' } as const;
+
 export const proposalKeys = {
   all: ['proposals'] as const,
   list: () => [...proposalKeys.all, 'list'] as const,
@@ -80,6 +82,7 @@ export function useDecideProposal() {
   const toasts = useMutationToasts();
   const cancelDecision = useCancelProposalDecision();
   return useMutation({
+    scope: PROPOSALS_WRITE_SCOPE,
     mutationFn: async (variables: { slug: string } & DecisionBody) => {
       const { slug, ...body } = variables;
       const response = await api.api.proposals[':slug'].decision.$post({
@@ -120,6 +123,7 @@ export function useCancelProposalDecision() {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   return useMutation({
+    scope: PROPOSALS_WRITE_SCOPE,
     mutationFn: async (variables: { slug: string }) => {
       const response = await api.api.proposals[':slug'].decision.$delete({
         param: { slug: variables.slug },

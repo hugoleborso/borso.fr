@@ -5,6 +5,8 @@ import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
+const BARS_WRITE_SCOPE = { id: 'bars-writes' } as const;
+
 export const barKeys = {
   all: ['bars'] as const,
   list: () => [...barKeys.all, 'list'] as const,
@@ -74,6 +76,7 @@ export function useBarPlaceSearch(query: string) {
 export function useCreateBar() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: BARS_WRITE_SCOPE,
     mutationKey: barKeys.all,
     mutationFn: async (variables: BarCreateVariables) => {
       const response = await api.api.bars.$post({ json: variables });
@@ -114,6 +117,7 @@ export function useCreateBar() {
 export function useUpdateBar() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: BARS_WRITE_SCOPE,
     mutationKey: barKeys.all,
     mutationFn: async (variables: BarUpdateVariables) => {
       const { id, ...rest } = variables;
@@ -149,6 +153,7 @@ export function useUpdateBar() {
 export function useDeleteBar() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: BARS_WRITE_SCOPE,
     mutationKey: barKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.bars[':id'].$delete({ param: { id: variables.id } });

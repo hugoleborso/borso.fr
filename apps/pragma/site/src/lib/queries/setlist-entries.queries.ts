@@ -31,7 +31,7 @@ function snapshotEntries(
 }
 
 const ENTRY_MUTATION_KEY = [...setlistKeys.all, 'entry-mutation'] as const;
-const ENTRY_REMOVAL_SCOPE = { id: 'setlist-entry-removal' } as const;
+const ENTRY_WRITE_SCOPE = { id: 'setlist-entry-writes' } as const;
 
 async function fetchSetlistEntries(setlistId: string) {
   const response = await api.api.setlists[':id'].entries.$get({
@@ -73,6 +73,7 @@ export interface AddSetlistEntriesVariables {
 export function useAddSetlistEntries() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: ENTRY_WRITE_SCOPE,
     mutationKey: ENTRY_MUTATION_KEY,
     mutationFn: async (variables: AddSetlistEntriesVariables) => {
       const response = await api.api.setlists[':id'].entries.batch.$post({
@@ -125,6 +126,7 @@ export type SetlistEntryPatch = Parameters<
 export function useUpdateSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: ENTRY_WRITE_SCOPE,
     mutationKey: ENTRY_MUTATION_KEY,
     mutationFn: async (variables: { setlistId: string; entryId: string } & SetlistEntryPatch) => {
       const { setlistId, entryId, ...rest } = variables;
@@ -164,7 +166,7 @@ export function useDeleteSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ENTRY_MUTATION_KEY,
-    scope: ENTRY_REMOVAL_SCOPE,
+    scope: ENTRY_WRITE_SCOPE,
     mutationFn: async (variables: { setlistId: string; entryId: string }) => {
       const response = await api.api.setlists[':id'].entries[':entryId'].$delete({
         param: { id: variables.setlistId, entryId: variables.entryId },
@@ -218,7 +220,7 @@ export function useRestoreSetlistEntry() {
   const queryClient = useQueryClient();
   return useMutation({
     mutationKey: ENTRY_MUTATION_KEY,
-    scope: ENTRY_REMOVAL_SCOPE,
+    scope: ENTRY_WRITE_SCOPE,
     mutationFn: async (variables: RestoreSetlistEntryVariables) => {
       const { entry } = variables;
       const response = await api.api.setlists[':id'].entries.$post({
@@ -280,6 +282,7 @@ export function useRestoreSetlistEntry() {
 export function useReorderSetlist() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: ENTRY_WRITE_SCOPE,
     mutationKey: ENTRY_MUTATION_KEY,
     mutationFn: async (variables: { setlistId: string; entryIds: string[] }) => {
       const response = await api.api.setlists[':id'].reorder.$put({

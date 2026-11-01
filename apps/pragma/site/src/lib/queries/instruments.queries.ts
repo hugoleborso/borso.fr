@@ -6,6 +6,8 @@ import { DEFAULT_INSTRUMENT_POSITION, FALLBACK_INSTRUMENT_ICON } from '@domain/i
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { reorderById, replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
+const INSTRUMENTS_WRITE_SCOPE = { id: 'instruments-writes' } as const;
+
 export const instrumentKeys = {
   all: ['instruments'] as const,
   list: () => [...instrumentKeys.all, 'list'] as const,
@@ -35,6 +37,7 @@ export function useInstrumentsList() {
 export function useCreateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: INSTRUMENTS_WRITE_SCOPE,
     mutationKey: instrumentKeys.all,
     mutationFn: async (variables: InstrumentCreateVariables) => {
       const response = await api.api.instruments.$post({ json: variables });
@@ -80,6 +83,7 @@ export function useCreateInstrument() {
 export function useUpdateInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: INSTRUMENTS_WRITE_SCOPE,
     mutationKey: instrumentKeys.all,
     mutationFn: async (variables: InstrumentUpdateVariables) => {
       const { id, ...rest } = variables;
@@ -118,6 +122,7 @@ export function useUpdateInstrument() {
 export function useReorderInstruments() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: INSTRUMENTS_WRITE_SCOPE,
     mutationKey: instrumentKeys.all,
     mutationFn: async (variables: { instrumentIds: string[] }) => {
       const response = await api.api.instruments.order.$put({ json: variables });
@@ -151,6 +156,7 @@ export function useReorderInstruments() {
 export function useDeleteInstrument() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: INSTRUMENTS_WRITE_SCOPE,
     mutationKey: instrumentKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.instruments[':id'].$delete({

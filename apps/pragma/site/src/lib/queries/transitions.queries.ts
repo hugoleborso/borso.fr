@@ -5,6 +5,8 @@ import type { InferResponseType } from 'hono/client';
 import { ApiError, api } from '../api.client';
 import { upsertTransitionComment } from './transitions.utils';
 
+const TRANSITIONS_WRITE_SCOPE = { id: 'transitions-writes' } as const;
+
 export const transitionKeys = {
   all: ['transition-comments'] as const,
   list: () => [...transitionKeys.all, 'list'] as const,
@@ -49,6 +51,7 @@ export function useTransitionComment(songAId: string, songBId: string, isEnabled
 export function useSaveTransitionComment() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: TRANSITIONS_WRITE_SCOPE,
     mutationKey: transitionKeys.all,
     mutationFn: async (variables: { a: string; b: string; comment: string }) => {
       const response = await api.api['transition-comments'][':a'][':b'].$put({

@@ -1,5 +1,5 @@
 import { afterEach, describe, expect, it } from 'vitest';
-import { useRestoreSetlistEntry } from './setlist-entries.queries';
+import { useReorderSetlist, useRestoreSetlistEntry } from './setlist-entries.queries';
 import { setlistKeys } from './setlists.queries';
 import type { EntriesCache, MinimalSetlistEntry } from './setlists.utils';
 import {
@@ -140,5 +140,49 @@ describe('useRestoreSetlistEntry', () => {
 
     expect(readOrder(queryClient)).toEqual(['a']);
     tree.unmount();
+  });
+});
+
+type ReorderMutate = ReturnType<typeof useReorderSetlist>['mutate'];
+
+function ProbeReorder({ sink }: { sink: (mutate: ReorderMutate) => void }): null {
+  sink(useReorderSetlist().mutate);
+  return null;
+}
+
+// @FollowsBlueprint test-query-hook
+describe('useReorderSetlist', () => {
+  let stub: ReturnType<typeof stubFetch> | null = null;
+  afterEach(() => {
+    stub?.restore();
+    stub = null;
+  });
+
+  it('shows both drops at once and sends the second order only after the first answer', async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(SETLIST_ID), {
+      entries: [makeEntry('a', 0), makeEntry('b', 1), makeEntry('c', 2)],
+    });
+    const firstAnswer = deferred<Response>();
+    stub = stubFetch(async () =>
+      stub?.calls.length === 1 ? firstAnswer.promise : jsonResponse({ ok: true }),
+    );
+    const slot = createMutateSlot<ReorderMutate>();
+    mountWithClient(queryClient, <ProbeReorder sink={slot.sink} />);
+
+    slot.read()({ setlistId: SETLIST_ID, entryIds: ['b', 'a', 'c'] });
+    await flushMicrotasks();
+    slot.read()({ setlistId: SETLIST_ID, entryIds: ['b', 'c', 'a'] });
+    await flushMicrotasks();
+
+    expect(readOrder(queryClient)).toEqual(['b', 'c', 'a']);
+    expect(stub.calls).toHaveLength(1);
+
+    firstAnswer.resolve(jsonResponse({ ok: true }));
+    await flushMicrotasks();
+
+    const [first, second] = stub.calls;
+    expect(await first?.clone().json()).toEqual({ entryIds: ['b', 'a', 'c'] });
+    expect(await second?.clone().json()).toEqual({ entryIds: ['b', 'c', 'a'] });
   });
 });
