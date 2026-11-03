@@ -15,8 +15,26 @@ createRuleTester().run('no-raw-interactive-element', rule, {
       code: 'export function Sheet(props) { return <dialog ref={open}>{props.children}</dialog>; }',
       filename: 'apps/pragma/site/src/components/molecules/Sheet.tsx',
     },
+    'const mark = <span aria-hidden="true" className="dot" />;',
+    'const item = <Menu.Item onClick={open}>{title}</Menu.Item>;',
+    'const row = <div aria-hidden="false" onClick={open}>{title}</div>;',
+    'const row = <div aria-hidden={false} onClick={open}>{title}</div>;',
+    'const row = <div aria-hidden={isHidden} onClick={open}>{title}</div>;',
+    'const row = <div {...props} aria-hidden="true" />;',
   ],
   invalid: [
+    {
+      code: 'const backdrop = <div data-menu-backdrop aria-hidden="true" onClick={close} className="fixed inset-0" />;',
+      errors: [{ messageId: 'hiddenClickTarget' }],
+    },
+    {
+      code: 'const backdrop = <div aria-hidden onPointerDown={close} />;',
+      errors: [{ messageId: 'hiddenClickTarget' }],
+    },
+    {
+      code: 'const backdrop = <div aria-hidden={true} onTouchEnd={close} />;',
+      errors: [{ messageId: 'hiddenClickTarget' }],
+    },
     {
       code: 'const row = <button type="button" onClick={open}>{title}</button>;',
       errors: [{ messageId: 'rawButton' }],
