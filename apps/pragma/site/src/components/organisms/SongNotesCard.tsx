@@ -22,7 +22,7 @@ export function SongNotesCard({ song }: SongNotesCardProps): JSX.Element | null 
   return (
     <Card>
       <div className="text-label tracking-wider uppercase text-ink-soft font-medium mb-2.5">
-        {t('catalog.notesTitle')}
+        {t('catalog.commentsTitle')}
       </div>
       <SongNotes song={song} />
     </Card>

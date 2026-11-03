@@ -41,7 +41,6 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
     readsTheSameBecause: '"gimmick" is the word French musicians use here',
   },
   { key: 'catalog.notesStructure', readsTheSameBecause: 'same word, same spelling' },
-  { key: 'catalog.notesTitle', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.tags', readsTheSameBecause: '"tags" is the word French musicians use here' },
   { key: 'catalog.viewTabInfo', readsTheSameBecause: '"info" is the word French users read here' },
   {
