@@ -51,11 +51,11 @@ describe('listPickableSetlists', () => {
   const own = { id: 'o', name: 'Practice', songIds: [], sessionIds: [PRACTICE] };
   const setlists = [unlinked, own, ofConcert, unnamed];
 
-  it('keeps every setlist the practice does not carry, linked to a concert or not, by name', () => {
+  it('keeps every setlist the practice does not carry, linked to a concert or not, by name from Z to A', () => {
     expect(listPickableSetlists(setlists, PRACTICE, '', labelOf)).toEqual([
-      ofConcert,
-      unlinked,
       unnamed,
+      unlinked,
+      ofConcert,
     ]);
   });
 

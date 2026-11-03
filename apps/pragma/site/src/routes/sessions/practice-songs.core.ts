@@ -80,7 +80,7 @@ export function listPickableSetlists<TSetlist extends PooledSetlist>(
   return setlists
     .filter((setlist) => !setlist.sessionIds.includes(practiceId))
     .filter((setlist) => normalizeForSearch(labelOf(setlist)).includes(needle))
-    .toSorted((left, right) => labelOf(left).localeCompare(labelOf(right)));
+    .toSorted((left, right) => labelOf(right).localeCompare(labelOf(left)));
 }
 
 // @FollowsBlueprint core-view-projection
