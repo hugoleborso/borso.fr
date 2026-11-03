@@ -1,5 +1,6 @@
 import { describe, expect, it, vi } from 'vitest';
 import {
+  closeOnBackdropTap,
   focusFirstField,
   openDialogOnAttach,
   openDismissibleDialogOnAttach,
@@ -73,6 +74,20 @@ function sheetWith(bodyMarkup: string): HTMLDialogElement {
   document.body.append(dialog);
   return dialog;
 }
+
+describe('closeOnBackdropTap', () => {
+  it('closes a menu when the reader taps its shadow, without opening it', () => {
+    const { dialog, showModal, close } = dialogElement();
+    closeOnBackdropTap(dialog);
+    dialog.dispatchEvent(new MouseEvent('click', { bubbles: true }));
+    expect(close).toHaveBeenCalledOnce();
+    expect(showModal).not.toHaveBeenCalled();
+  });
+
+  it('does nothing on the detach call React makes with null', () => {
+    expect(() => closeOnBackdropTap(null)).not.toThrow();
+  });
+});
 
 describe('focusFirstField', () => {
   it('puts the focus in the first field a person types in, in page order, never on Close', () => {
