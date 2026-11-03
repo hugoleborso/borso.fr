@@ -3,6 +3,7 @@
 import { type JSX, useState } from 'react';
 import { useTranslation } from 'react-i18next';
 import { formatSessionDate } from '../../lib/formatters.utils';
+import { buildSetlistIndexRows } from '../../lib/setlist-index.core';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useSavePracticeSongs } from '../../lib/queries/practice-songs.queries';
 import { type SetlistSummary, useSetlistsList } from '../../lib/queries/setlists.queries';
@@ -88,7 +89,14 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
   const allSetlists = setlistsQuery.data?.setlists ?? NO_ROWS;
   const labelOfSetlist = (setlist: SetlistSummary): string =>
     selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
-  const setlists = listPickableSetlists(allSetlists, props.practice.id, query, labelOfSetlist);
+  const setlistOrder = buildSetlistIndexRows(allSetlists, props.sessions).map((row) => row.id);
+  const setlists = listPickableSetlists(
+    allSetlists,
+    setlistOrder,
+    props.practice.id,
+    query,
+    labelOfSetlist,
+  );
   const pooledSongIds = poolPickedSongIds(
     { concertIds: pickedConcertIds, setlistIds: pickedSetlistIds },
     allSetlists,

@@ -50,19 +50,23 @@ describe('listPickableSetlists', () => {
   const unnamed = { id: 'n', name: '', songIds: [], sessionIds: [] };
   const own = { id: 'o', name: 'Practice', songIds: [], sessionIds: [PRACTICE] };
   const setlists = [unlinked, own, ofConcert, unnamed];
+  const ORDER = ['u', 'o', 'c', 'n'];
 
-  it('keeps every setlist the practice does not carry, linked to a concert or not, by name from Z to A', () => {
-    expect(listPickableSetlists(setlists, PRACTICE, '', labelOf)).toEqual([
+  it('keeps every setlist the practice does not carry, linked to a concert or not, in the given order', () => {
+    const order = ['n', 'c', 'o', 'u'];
+    expect(listPickableSetlists(setlists, order, PRACTICE, '', labelOf)).toEqual([
       unnamed,
-      unlinked,
       ofConcert,
+      unlinked,
     ]);
   });
 
   it('matches the search on the shown name ignoring case, accents and surrounding spaces', () => {
-    expect(listPickableSetlists(setlists, PRACTICE, ' ELYSEE  ', labelOf)).toEqual([ofConcert]);
-    expect(listPickableSetlists(setlists, PRACTICE, 'untitled', labelOf)).toEqual([unnamed]);
-    expect(listPickableSetlists(setlists, PRACTICE, 'practice', labelOf)).toEqual([]);
+    expect(listPickableSetlists(setlists, ORDER, PRACTICE, ' ELYSEE  ', labelOf)).toEqual([
+      ofConcert,
+    ]);
+    expect(listPickableSetlists(setlists, ORDER, PRACTICE, 'untitled', labelOf)).toEqual([unnamed]);
+    expect(listPickableSetlists(setlists, ORDER, PRACTICE, 'practice', labelOf)).toEqual([]);
   });
 });
 

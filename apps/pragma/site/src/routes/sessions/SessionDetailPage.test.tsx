@@ -309,9 +309,9 @@ describe('the practice page', () => {
           .getAllByRole('checkbox')
           .map((row) => row.textContent),
       ).toEqual([
+        expect.stringContaining('Encores'),
         expect.stringContaining('Recent'),
         expect.stringContaining('Old'),
-        expect.stringContaining('Encores'),
       ]),
     );
     fireEvent.change(within(sources).getByRole('searchbox'), { target: { value: 'encores' } });

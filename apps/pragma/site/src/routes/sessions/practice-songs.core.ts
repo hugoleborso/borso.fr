@@ -72,6 +72,7 @@ export function listPickableConcerts<TConcert extends PickableConcert>(
 // @FollowsBlueprint core-view-projection
 export function listPickableSetlists<TSetlist extends PooledSetlist>(
   setlists: readonly TSetlist[],
+  orderedIds: readonly string[],
   practiceId: string,
   query: string,
   labelOf: (setlist: TSetlist) => string,
@@ -80,7 +81,7 @@ export function listPickableSetlists<TSetlist extends PooledSetlist>(
   return setlists
     .filter((setlist) => !setlist.sessionIds.includes(practiceId))
     .filter((setlist) => normalizeForSearch(labelOf(setlist)).includes(needle))
-    .toSorted((left, right) => labelOf(right).localeCompare(labelOf(left)));
+    .toSorted((left, right) => orderedIds.indexOf(left.id) - orderedIds.indexOf(right.id));
 }
 
 // @FollowsBlueprint core-view-projection
