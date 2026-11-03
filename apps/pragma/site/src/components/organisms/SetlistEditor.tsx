@@ -168,7 +168,7 @@ export function SetlistEditor({
     if (entry === undefined) return;
     const failRemoval = breakActions.withdrawSong(index, failWith('setlist.failure.remove'));
     removeEntry.mutate({ setlistId, entryId }, { onError: failRemoval });
-    const putBreaksBack = breakActions.rememberPlacement();
+    const putBreaksBack = breakActions.rememberPlacement(index);
     removal.present({ entry, index, title: songsById[entry.songId]?.title ?? '', putBreaksBack });
   };
 

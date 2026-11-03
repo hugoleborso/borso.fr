@@ -72,6 +72,23 @@ export function withdrawSongFromBreaks<TBreak extends PlacedBreak>(
   );
 }
 
+export function restoreBreakPlacement<TBreak extends PlacedBreak>(
+  current: readonly TBreak[],
+  remembered: readonly PlacedBreak[],
+  restoredSongIndex: number,
+): TBreak[] {
+  const rememberedSongsBefore = new Map(
+    remembered.map((setlistBreak) => [setlistBreak.id, setlistBreak.songsBefore]),
+  );
+  return current.map((setlistBreak) => {
+    const songsBefore = rememberedSongsBefore.get(setlistBreak.id);
+    if (songsBefore !== undefined) return { ...setlistBreak, songsBefore };
+    return setlistBreak.songsBefore > restoredSongIndex
+      ? { ...setlistBreak, songsBefore: setlistBreak.songsBefore + 1 }
+      : setlistBreak;
+  });
+}
+
 export function selectBreakTitle(label: string, unnamedTitle: string): string {
   return label === '' ? unnamedTitle : label;
 }

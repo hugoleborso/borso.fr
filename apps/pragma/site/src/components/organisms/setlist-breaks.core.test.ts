@@ -7,6 +7,7 @@ import {
   listItemIds,
   type PlacedBreak,
   recountSongsBefore,
+  restoreBreakPlacement,
   selectBreakTitle,
   selectChangedLabel,
   toOrderRows,
@@ -157,5 +158,30 @@ describe('listItemIds', () => {
       'b',
       'p1',
     ]);
+  });
+});
+
+describe('restoreBreakPlacement', () => {
+  const RESTORED_SONG_INDEX = 1;
+
+  it('puts a break the removal moved back where it stood before the removal', () => {
+    const afterRemoval = { ...INTERMISSION, songsBefore: 1 };
+
+    expect(restoreBreakPlacement([afterRemoval], [INTERMISSION], RESTORED_SONG_INDEX)).toEqual([
+      INTERMISSION,
+    ]);
+  });
+
+  it('moves a break added after the removed song one song later, and keeps one added before it', () => {
+    const addedAfter = { ...TUNING, songsBefore: 2 };
+    const addedBefore = { ...OPENING, songsBefore: 1 };
+
+    expect(
+      restoreBreakPlacement([addedBefore, addedAfter], [INTERMISSION], RESTORED_SONG_INDEX),
+    ).toEqual([addedBefore, { ...addedAfter, songsBefore: 3 }]);
+  });
+
+  it('drops a remembered break deleted before the undo', () => {
+    expect(restoreBreakPlacement([], [INTERMISSION], RESTORED_SONG_INDEX)).toEqual([]);
   });
 });
