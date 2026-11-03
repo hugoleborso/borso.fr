@@ -89,10 +89,10 @@ function answerSongApi(request: Request): Response {
   return new Response(null, { status: 404 });
 }
 
-function renderSongPage(): void {
+function renderSongPage(search = ''): void {
   render(
     <QueryClientProvider client={createIsolatedQueryClient()}>
-      <MemoryRouter initialEntries={[`/catalog/${SONG.id}`]}>
+      <MemoryRouter initialEntries={[`/catalog/${SONG.id}${search}`]}>
         <Routes>
           <Route path="/catalog/:songId" element={<SongDetailPage />} />
         </Routes>
@@ -181,5 +181,26 @@ describe('song page', () => {
     fireEvent.click(await screen.findByRole('button', { name: 'Notes' }));
     const sheet = await screen.findByRole('dialog', { name: 'Notes' });
     expect(within(sheet).getByText('Count in four.')).toBeTruthy();
+  });
+
+  it('opens on the Info tab and moves between the same tabs as the setlist sheet', async () => {
+    renderSongPage();
+    await screen.findByRole('heading', { name: 'Get Lucky' });
+    expect(screen.getAllByRole('tab').map((tab) => tab.textContent)).toEqual([
+      'Info',
+      'Lineup',
+      'Chords',
+      'Takes',
+    ]);
+    expect(screen.getByRole('tab', { name: 'Info' }).getAttribute('aria-selected')).toBe('true');
+    fireEvent.click(screen.getByRole('tab', { name: 'Takes' }));
+    expect(await screen.findByRole('heading', { name: 'Takes' })).toBeTruthy();
+    expect(screen.getByRole('tab', { name: 'Takes' }).getAttribute('aria-selected')).toBe('true');
+  });
+
+  it('opens on the Takes tab when the address selects a take', async () => {
+    renderSongPage('?take=take-1');
+    await screen.findByRole('heading', { name: 'Get Lucky' });
+    expect(screen.getByRole('tab', { name: 'Takes' }).getAttribute('aria-selected')).toBe('true');
   });
 });

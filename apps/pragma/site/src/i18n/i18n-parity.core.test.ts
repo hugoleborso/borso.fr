@@ -43,6 +43,11 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'catalog.notesStructure', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.notesTitle', readsTheSameBecause: 'same word, same spelling' },
   { key: 'catalog.tags', readsTheSameBecause: '"tags" is the word French musicians use here' },
+  { key: 'catalog.viewTabInfo', readsTheSameBecause: '"info" is the word French users read here' },
+  {
+    key: 'catalog.viewTabLineup',
+    readsTheSameBecause: '"lineup" is the word French musicians use here',
+  },
   { key: 'common.actions', readsTheSameBecause: 'same word, same spelling' },
   {
     key: 'compos.lineup',

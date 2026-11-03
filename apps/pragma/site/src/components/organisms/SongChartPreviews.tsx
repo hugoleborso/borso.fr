@@ -9,6 +9,7 @@ import { selectChordProText } from '../../routes/catalog/chart-kind.utils';
 import { clampSemitoneOffset } from '../../routes/catalog/scene-view.core';
 import { Card } from '../atoms/Card';
 import { Icon } from '../atoms/Icon';
+import { EmptyState } from '../molecules/EmptyState';
 import { TransposeStepper } from '../molecules/TransposeStepper';
 import { UploadedChartPreview } from '../molecules/UploadedChartPreview';
 import { ChordChartViewer } from './ChordChartViewer';
@@ -17,12 +18,24 @@ export interface SongChartPreviewsProps {
   readonly chart: SongRecord['chart'];
 }
 
-// @FollowsBlueprint organism-query-owning
+// @FollowsBlueprint organism-presentational
 export function SongChartPreviews({ chart }: SongChartPreviewsProps): JSX.Element {
   const { t } = useTranslation();
+  if (chart === null) {
+    return <EmptyState icon="text">{t('catalog.noChordChart')}</EmptyState>;
+  }
+  return <ChartPreviewCards chart={chart} />;
+}
+
+interface ChartPreviewCardsProps {
+  readonly chart: NonNullable<SongRecord['chart']>;
+}
+
+// @FollowsBlueprint organism-query-owning
+function ChartPreviewCards({ chart }: ChartPreviewCardsProps): JSX.Element {
+  const { t } = useTranslation();
   const [semitones, setSemitones] = useState(0);
-  const uploadedChart =
-    chart !== null && (chart.kind === 'pdf' || chart.kind === 'image') ? chart : null;
+  const uploadedChart = chart.kind === 'pdf' || chart.kind === 'image' ? chart : null;
   const signedChartUrlQuery = useSignedChartUrl(uploadedChart?.s3Key ?? null);
   const chordProText = selectChordProText(chart);
 
