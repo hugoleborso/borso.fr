@@ -184,6 +184,14 @@ const CONCERT_SETLISTS = [
     songIds: ['s2', 's3'],
     sessionIds: [RECENT_CONCERT.id],
   },
+  {
+    id: 'set-encores',
+    name: 'Encores',
+    status: 'locked',
+    songCount: 1,
+    songIds: ['s1'],
+    sessionIds: [],
+  },
 ];
 const NEW_PRACTICE_SETLIST_ID = '12345678-8888-4888-8888-888888888888';
 
@@ -256,12 +264,20 @@ describe('the practice page', () => {
   it('pools the songs of the picked concerts and saves the ticked ones as its songs', async () => {
     renderPracticePage();
     fireEvent.click(await screen.findByRole('button', { name: 'Choose songs' }));
-    const concerts = screen.getByRole('dialog', { name: 'Concerts to prepare' });
-    const rows = await within(concerts).findAllByRole('checkbox');
-    expect(rows.map((row) => row.textContent)).toEqual([
-      expect.stringContaining('La Cigale'),
-      expect.stringContaining('Le Petit Bain'),
-    ]);
+    const concerts = screen.getByRole('dialog', { name: 'Concerts and setlists to prepare' });
+    await waitFor(() =>
+      expect(
+        within(concerts)
+          .getAllByRole('checkbox')
+          .map((row) => row.textContent),
+      ).toEqual([
+        expect.stringContaining('La Cigale'),
+        expect.stringContaining('Le Petit Bain'),
+        expect.stringContaining('Encores'),
+        expect.stringContaining('Old'),
+        expect.stringContaining('Recent'),
+      ]),
+    );
     fireEvent.change(within(concerts).getByRole('searchbox'), { target: { value: 'cigale' } });
     fireEvent.click(within(concerts).getByRole('checkbox', { name: /La Cigale/ }));
     fireEvent.click(within(concerts).getByRole('button', { name: 'Next' }));
@@ -286,5 +302,25 @@ describe('the practice page', () => {
       pathname: `/api/setlists/${NEW_PRACTICE_SETLIST_ID}/entries/batch`,
       body: { songIds: ['s3'] },
     });
+  });
+
+  it('pools the songs of a picked setlist that no concert carries', async () => {
+    renderPracticePage();
+    fireEvent.click(await screen.findByRole('button', { name: 'Choose songs' }));
+    const sources = screen.getByRole('dialog', { name: 'Concerts and setlists to prepare' });
+    fireEvent.change(within(sources).getByRole('searchbox'), { target: { value: 'encores' } });
+    await waitFor(() =>
+      expect(
+        within(sources)
+          .getAllByRole('checkbox')
+          .map((row) => row.textContent),
+      ).toEqual([expect.stringContaining('Encores')]),
+    );
+    fireEvent.click(within(sources).getByRole('checkbox', { name: /Encores/ }));
+    fireEvent.click(within(sources).getByRole('button', { name: 'Next' }));
+
+    const songs = screen.getByRole('dialog', { name: 'Songs to work on' });
+    const songRows = within(songs).getAllByRole('checkbox');
+    expect(songRows.map((row) => row.textContent)).toEqual([expect.stringContaining('Song s1')]);
   });
 });

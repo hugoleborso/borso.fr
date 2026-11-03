@@ -6,6 +6,11 @@ export interface PickableConcert {
   readonly date: string;
 }
 
+export interface PickedSources {
+  readonly concertIds: readonly string[];
+  readonly setlistIds: readonly string[];
+}
+
 export interface PooledSetlist {
   readonly id: string;
   readonly songIds: readonly string[];
@@ -65,17 +70,31 @@ export function listPickableConcerts<TConcert extends PickableConcert>(
 }
 
 // @FollowsBlueprint core-view-projection
-export function poolConcertSongIds(
-  concertIds: readonly string[],
+export function listPickableSetlists<TSetlist extends PooledSetlist>(
+  setlists: readonly TSetlist[],
+  practiceId: string,
+  query: string,
+  labelOf: (setlist: TSetlist) => string,
+): readonly TSetlist[] {
+  const needle = normalizeForSearch(query.trim());
+  return setlists
+    .filter((setlist) => !setlist.sessionIds.includes(practiceId))
+    .filter((setlist) => normalizeForSearch(labelOf(setlist)).includes(needle))
+    .toSorted((left, right) => labelOf(left).localeCompare(labelOf(right)));
+}
+
+// @FollowsBlueprint core-view-projection
+export function poolPickedSongIds(
+  picked: PickedSources,
   setlists: readonly PooledSetlist[],
 ): readonly string[] {
-  return keepFirstOccurrences(
-    concertIds.flatMap((concertId) =>
-      setlists
-        .filter((setlist) => setlist.sessionIds.includes(concertId))
-        .flatMap((setlist) => setlist.songIds),
-    ),
+  const ofConcerts = picked.concertIds.flatMap((concertId) =>
+    setlists.filter((setlist) => setlist.sessionIds.includes(concertId)),
   );
+  const ofSetlists = picked.setlistIds.flatMap((setlistId) =>
+    setlists.filter((setlist) => setlist.id === setlistId),
+  );
+  return keepFirstOccurrences([...ofConcerts, ...ofSetlists].flatMap((setlist) => setlist.songIds));
 }
 
 // @FollowsBlueprint core-view-projection
