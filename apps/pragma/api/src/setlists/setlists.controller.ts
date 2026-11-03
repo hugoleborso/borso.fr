@@ -2,6 +2,9 @@ import { zValidator } from '@hono/zod-validator';
 import { type Context, Hono } from 'hono';
 import { readMemberId, requireMemberSession } from '../auth/member-session.middleware';
 import {
+  setlistBreakCreateSchema,
+  setlistBreakIdParamSchema,
+  setlistBreakUpdateSchema,
   setlistBySessionParamSchema,
   setlistCreateSchema,
   setlistEntryBatchCreateSchema,
@@ -36,6 +39,12 @@ import {
   removeEntryAndCompact,
   reorderEntries,
 } from './setlist-entry.service';
+import {
+  getBreaks,
+  insertBreak,
+  removeBreakAndCompact,
+  renameBreak,
+} from './setlist-break.service';
 import {
   closeVote,
   readClosingProposal,
@@ -247,6 +256,46 @@ export function buildSetlistsRouter() {
         if (updated.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
         if (updated.kind === 'stale') return context.json({ error: 'reorder-stale' }, 409);
         return context.json({ id, entryIds });
+      },
+    )
+    .get('/:id/breaks', zValidator('param', setlistIdParamSchema), async (context) => {
+      const { id } = context.req.valid('param');
+      return context.json({ breaks: await getBreaks(id) });
+    })
+    .post(
+      '/:id/breaks',
+      zValidator('param', setlistIdParamSchema),
+      zValidator('json', setlistBreakCreateSchema),
+      async (context) => {
+        const { id } = context.req.valid('param');
+        const inserted = await insertBreak(id, context.req.valid('json'), readActor(context));
+        if (inserted.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        if (inserted.kind === 'entry-not-found') {
+          return context.json({ error: 'entry-not-found' }, 404);
+        }
+        return context.json({ setlistBreak: inserted.setlistBreak, breaks: inserted.breaks }, 201);
+      },
+    )
+    .put(
+      '/:id/breaks/:breakId',
+      zValidator('param', setlistBreakIdParamSchema),
+      zValidator('json', setlistBreakUpdateSchema),
+      async (context) => {
+        const { id, breakId } = context.req.valid('param');
+        const { label } = context.req.valid('json');
+        const renamed = await renameBreak(id, breakId, label, readActor(context));
+        if (renamed.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ setlistBreak: renamed.setlistBreak, breaks: renamed.breaks });
+      },
+    )
+    .delete(
+      '/:id/breaks/:breakId',
+      zValidator('param', setlistBreakIdParamSchema),
+      async (context) => {
+        const { id, breakId } = context.req.valid('param');
+        const outcome = await removeBreakAndCompact(id, breakId, readActor(context));
+        if (outcome.kind === 'not-found') return context.json({ error: 'not-found' }, 404);
+        return context.json({ id: breakId, deleted: true, breaks: outcome.breaks });
       },
     );
 }

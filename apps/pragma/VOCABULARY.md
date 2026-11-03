@@ -1066,12 +1066,13 @@ Lives in: `api/src/setlists/`
   `NOT NULL` and defaults to the empty string.
 - Optional per-entry values: `energy` (1 to 10), `lineupOverride`,
   `keyOverride` (up to 16 characters) and `capo` (0 to 11).
-- An appended entry takes the position equal to the current entry count.
-- Deleting an entry compacts the remaining positions back to a gapless
-  run (`removeEntryAndCompact`).
+- An appended entry takes the position after the last item of the
+  setlist, entry or **setlist break** (`selectNextItemPosition`).
+- Deleting an entry compacts the remaining entries and breaks back to a
+  gapless run (`removeEntryAndCompact`).
 - A reorder is refused as `stale` unless the submitted ids are exactly the
-  ids already stored for that setlist, each once
-  (`isReorderOfTheSameIds`).
+  entry ids, or the entry and break ids, already stored for that setlist,
+  each once (`arrangeReorder`).
 - An append, a delete and a reorder each run in one transaction that first
   writes the setlist's own row (`didClaimSetlistWithin`), so two of them on
   one setlist cannot interleave: Postgres makes the second wait, and
@@ -1088,6 +1089,38 @@ Held by: `api/src/setlists/setlists.controller.test.ts` › refuses an entry for
 Held by: `api/src/setlists/setlists.controller.test.ts` › gives each of two entries appended at the same moment a position of its own
 Held by: `api/src/setlists/setlists.controller.test.ts` › applies one of two reorders sent at the same moment whole, never a mix of both
 Held by: `api/src/setlists/setlists.controller.test.ts` › keeps positions distinct when an append and a reorder land at the same moment
+
+## Setlist break
+
+A pause between two songs of a setlist: a short break, or the intermission
+between two sets.
+
+Lives in: `api/src/setlists/` (`setlist_break`)
+
+- `setlistId`, `position` and `label` are `NOT NULL`; `label` defaults to the
+  empty string, which the site shows as "Break". It holds up to 80
+  characters.
+- A break is not a **setlist entry**: `setlist_entry.song_id` is
+  `NOT NULL` and Aurora DSQL cannot relax it. So every reader of entries
+  (studies, audience, voting, mastery) keeps reading songs only.
+- A break shares the `position` sequence of its setlist's entries. An
+  append takes the position after the last item, songs or breaks
+  (`selectNextItemPosition`), and a delete of either compacts both.
+- Inserted right after a named entry (`placeBreakAfter`), in the same
+  claimed transaction as any other write to the setlist.
+- A reorder naming the song ids only keeps every break in its slot; one
+  naming every id moves breaks too (`arrangeReorder`).
+- Read with `songsBefore`, the number of songs played before it, which is
+  how the site places it.
+- Deleting the setlist or closing its vote deletes its breaks.
+
+Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › places a break after the song it names, and counts the songs played before it
+Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › keeps every break in its slot when a reorder names the songs only
+Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › compacts songs and breaks into one gapless run after either is deleted
+Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › deletes the breaks of a deleted setlist
+
+Not to be confused with: a song **note**, which is text on one entry; a
+break is its own row in the running order.
 
 ## Sign-in session
 

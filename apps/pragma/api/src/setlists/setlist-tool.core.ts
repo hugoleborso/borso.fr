@@ -70,11 +70,11 @@ export function projectEntriesForTool(
 ): EntryToolView[] {
   return entries
     .toSorted((left, right) => left.position - right.position)
-    .map((entry) => {
+    .map((entry, songIndex) => {
       const defaultLineup = songs.find((song) => song.id === entry.songId)?.defaultLineup ?? {};
       return {
         entryId: entry.id,
-        position: entry.position + FIRST_POSITION,
+        position: songIndex + FIRST_POSITION,
         songId: entry.songId,
         title: titleOf(songs, entry.songId),
         energy: entry.energy,
@@ -196,4 +196,30 @@ export function listCreationOnlyIssues(fields: CreationOnlyFields): FieldIssue[]
   return Object.entries(fields)
     .filter(([, value]) => value !== undefined)
     .map(([field]) => ({ path: [field], message: CREATION_ONLY_PROBLEM }));
+}
+
+export interface BreakToolRequest {
+  readonly break?: string | undefined;
+  readonly after?: string | undefined;
+  readonly label?: string | undefined;
+  readonly remove?: boolean | undefined;
+}
+
+export type BreakToolAction =
+  | { readonly kind: 'add'; readonly after: string; readonly label: string }
+  | { readonly kind: 'rename'; readonly breakId: string; readonly label: string }
+  | { readonly kind: 'remove'; readonly breakId: string }
+  | { readonly kind: 'invalid' };
+
+// @FollowsBlueprint core-decision
+export function selectBreakToolAction(request: BreakToolRequest): BreakToolAction {
+  const { break: breakId, after, label, remove } = request;
+  if (breakId === undefined) {
+    if (after === undefined || remove === true) return { kind: 'invalid' };
+    return { kind: 'add', after, label: label ?? '' };
+  }
+  if (after !== undefined) return { kind: 'invalid' };
+  if (remove === true) return { kind: 'remove', breakId };
+  if (label === undefined) return { kind: 'invalid' };
+  return { kind: 'rename', breakId, label };
 }

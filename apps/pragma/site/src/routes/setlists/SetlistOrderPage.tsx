@@ -9,7 +9,12 @@ import { ButtonLink } from '../../components/atoms/ButtonLink';
 import { EmptyState } from '../../components/molecules/EmptyState';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
-import { type OrderRow, SetlistOrderList } from '../../components/organisms/SetlistOrderList';
+import { SetlistOrderList } from '../../components/organisms/SetlistOrderList';
+import { interleaveBreaks, toOrderRows } from '../../components/organisms/setlist-breaks.utils';
+import {
+  useBreaksFollowingEntries,
+  useSetlistBreaks,
+} from '../../lib/queries/setlist-breaks.queries';
 import {
   useReorderSetlist,
   useSetlistEntriesToReorder,
@@ -20,7 +25,6 @@ import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
 import { useCopySetlistOrder } from './copy-setlist-order.hook';
 
 const NO_ROWS: readonly never[] = [];
-const SONG_ID_FALLBACK_LENGTH = 8;
 
 // @FollowsBlueprint route-detail-page
 export function SetlistOrderPage(): JSX.Element {
@@ -36,6 +40,8 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   const { t } = useTranslation();
   const setlistQuery = useSetlist(setlistId);
   const entriesQuery = useSetlistEntriesToReorder(setlistId);
+  const breaksQuery = useSetlistBreaks(setlistId);
+  const breaksFollowing = useBreaksFollowingEntries();
   const songsQuery = useSongsList();
   const reorder = useReorderSetlist();
   const [hasReorderFailed, setHasReorderFailed] = useState(false);
@@ -74,16 +80,11 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
 
   const displayedName = selectSetlistDisplayName(setlist.name, t('setlist.untitled'));
   const setlistPath = `/setlists/${setlistId}`;
-  const rows: OrderRow[] = setlistEntries.map((entry) => {
-    const song = songsById[entry.songId];
-    return {
-      id: entry.id,
-      title: song?.title ?? entry.songId.slice(0, SONG_ID_FALLBACK_LENGTH),
-      durationSeconds: song?.durationSeconds ?? null,
-      entryEnergy: entry.energy,
-      songEnergy: song?.baseEnergy ?? null,
-    };
-  });
+  const rows = toOrderRows(
+    interleaveBreaks(setlistEntries, breaksQuery.data?.breaks ?? NO_ROWS),
+    songsById,
+    t('setlist.break.orderTitle'),
+  );
 
   return (
     <section className="flex max-w-[960px] flex-col px-4 pt-1 pb-4 sm:px-9 sm:py-7">
@@ -117,10 +118,10 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
           rows={rows}
           onReorder={(orderedIds) => {
             setHasReorderFailed(false);
-            reorder.mutate(
-              { setlistId, entryIds: [...orderedIds] },
-              { onError: () => setHasReorderFailed(true) },
+            const failReorder = breaksFollowing.followReorder(setlistId, orderedIds, () =>
+              setHasReorderFailed(true),
             );
+            reorder.mutate({ setlistId, entryIds: [...orderedIds] }, { onError: failReorder });
           }}
         />
       )}

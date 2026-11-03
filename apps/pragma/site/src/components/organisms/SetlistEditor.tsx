@@ -29,6 +29,7 @@ import { SetlistEntriesList } from './SetlistEntriesList';
 import { type EntrySheetFocus, SetlistEntrySheet } from './SetlistEntrySheet';
 import { SetlistViewContent, type SetlistViewName } from './SetlistViewContent';
 import { SetlistSongPicker } from './SetlistSongPicker';
+import { useSetlistBreakActions } from './setlist-breaks.hook';
 import { indexById } from './setlist-editor.utils';
 import { describeMemberPartsByEntryId, filterEntriesForMember } from './setlist-filter.core';
 import { TransitionCommentModal } from './TransitionCommentModal';
@@ -70,7 +71,8 @@ type SetlistFailureKey =
   | 'setlist.failure.remove'
   | 'setlist.failure.restore'
   | 'setlist.failure.update'
-  | 'setlist.failure.songDefaults';
+  | 'setlist.failure.songDefaults'
+  | 'setlist.failure.break';
 
 // @FollowsBlueprint organism-query-owning
 export function SetlistEditor({
@@ -150,6 +152,7 @@ export function SetlistEditor({
   );
 
   const failWith = (key: SetlistFailureKey) => (): void => setFailureKey(key);
+  const breakActions = useSetlistBreakActions(setlistId, failWith('setlist.failure.break'));
 
   const updateSetlistEntry = (entryId: string, patch: SetlistEntryPatch): void => {
     updateEntry.mutate(
@@ -162,7 +165,8 @@ export function SetlistEditor({
     const index = setlistEntries.findIndex((entry) => entry.id === entryId);
     const entry = setlistEntries[index];
     if (entry === undefined) return;
-    removeEntry.mutate({ setlistId, entryId }, { onError: failWith('setlist.failure.remove') });
+    const failRemoval = breakActions.withdrawSong(index, failWith('setlist.failure.remove'));
+    removeEntry.mutate({ setlistId, entryId }, { onError: failRemoval });
     removal.present({ entry, index, title: songsById[entry.songId]?.title ?? '' });
   };
 
@@ -206,6 +210,7 @@ export function SetlistEditor({
       onOpen={(entryId) => setOpenEntry({ entryId, focus: 'note' })}
       onRemove={removeSetlistEntry}
       onOpenTransition={(songAId, songBId) => setTransitionEditing({ songAId, songBId })}
+      {...breakActions.listProps}
     />
   );
 

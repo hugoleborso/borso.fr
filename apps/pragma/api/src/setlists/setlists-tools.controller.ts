@@ -1,4 +1,5 @@
 import {
+  setlistBreakSaveToolInputSchema,
   setlistEntriesAddToolInputSchema,
   setlistEntriesRemoveToolInputSchema,
   setlistEntryChangeToolInputSchema,
@@ -35,6 +36,7 @@ import {
   resolveSessionId,
   resolveSetlistId,
   resolveSongIds,
+  saveBreakForTool,
   setSessionLink,
   type ToolActor,
 } from './setlists-tools.service';
@@ -100,8 +102,12 @@ export const SETLIST_TOOLS = [
   defineTool({
     name: 'get_setlist',
     description:
-      'Read a setlist by name or id with its songs in order, who plays what, and the comment on each transition into the next song.',
-    routes: ['GET /api/setlists/:id', 'GET /api/setlists/:id/entries'],
+      'Read a setlist by name or id with its songs in order, who plays what, the comment on each transition into the next song, and its breaks, each placed after `afterSongCount` songs.',
+    routes: [
+      'GET /api/setlists/:id',
+      'GET /api/setlists/:id/entries',
+      'GET /api/setlists/:id/breaks',
+    ],
     inputSchema: setlistReferenceToolInputSchema,
     run: async ({ setlist }) => {
       const view = await readSetlistForTool(await resolveSetlistId(setlist));
@@ -175,6 +181,19 @@ export const SETLIST_TOOLS = [
       if (outcome === 'not-found') return NOT_FOUND;
       return { kind: 'answered', body: { setlistId, removed: entryIds.length } };
     },
+  }),
+  defineTool({
+    name: 'save_setlist_break',
+    description:
+      'Add a break (a pause or the intermission) right `after` an entry (song title or entry id), with an optional `label`. With `break` (the breakId get_setlist answers), rename it to `label`, or delete it with `remove`.',
+    routes: [
+      'POST /api/setlists/:id/breaks',
+      'PUT /api/setlists/:id/breaks/:breakId',
+      'DELETE /api/setlists/:id/breaks/:breakId',
+    ],
+    inputSchema: setlistBreakSaveToolInputSchema,
+    run: async ({ setlist, ...request }, actor) =>
+      await saveBreakForTool(await resolveSetlistId(setlist), request, actor),
   }),
   defineTool({
     name: 'reorder_setlist',

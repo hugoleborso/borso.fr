@@ -26,6 +26,11 @@ vi.mock('../../lib/queries/setlist-entries.queries', () => ({
   useReorderSetlist: () => ({ mutate: vi.fn() }),
 }));
 
+vi.mock('../../lib/queries/setlist-breaks.queries', () => ({
+  useSetlistBreaks: () => ({ data: { breaks: [] } }),
+  useBreaksFollowingEntries: () => ({ followReorder: () => vi.fn() }),
+}));
+
 vi.mock('../../lib/queries/songs.queries', () => ({
   useSongsList: () => ({ data: { songs: [] }, isLoading: false }),
 }));
