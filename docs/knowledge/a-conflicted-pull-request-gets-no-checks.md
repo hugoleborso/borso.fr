@@ -89,9 +89,12 @@ three of the same files.
 Written twice, because the entry alone did not stop it happening again: PR #63
 lost an hour to this exact silence two days after this file landed, and tested
 the draft state and the pusher's identity before reading `mergeable_state`.
-`.husky/pre-push` now runs the `merge-tree` check above on every `claude/*`
-push and prints a warning naming this file. See
-[`../dantotsus/the-entry-existed-and-i-lost-the-hour-anyway.md`](../dantotsus/the-entry-existed-and-i-lost-the-hour-anyway.md).
+`.husky/pre-push` now runs the `merge-tree` check above on every push, right
+after it fetches `origin/main`, and refuses a conflicted branch before any gate
+runs. It was a warning printed after the push until PR #252 pushed past it. See
+[`../dantotsus/the-entry-existed-and-i-lost-the-hour-anyway.md`](../dantotsus/the-entry-existed-and-i-lost-the-hour-anyway.md)
+and
+[`../dantotsus/the-conflict-warning-that-spoke-after-the-push.md`](../dantotsus/the-conflict-warning-that-spoke-after-the-push.md).
 
 Two things PR #63 ruled out that are worth not re-testing:
 

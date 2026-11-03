@@ -44,3 +44,4 @@ One row per merged pull request. Only `feature` rows count toward the three.
 | #240 | meta | `session_01K69KnEN4KZEAddTa4QvvkW` | $11.87 at the sweep, which includes PR #242; the session was still running | 336,914 | $2.28 (284,799 tokens) | none | lessons from PR #240 |
 | #243 | fix | `local_77f39bae-cf48-48d6-8820-2e2ca6e7d6f7`, a local Desktop session; the commits carry no `Claude-Session` trailer | unknown, `get_session` reports no usage for a local session | unknown | unknown | none | lessons from PR #243 |
 | #250 | feature | `session_01K69KnBwacsmUASeMPrnkQN` | $10.27 at worker epoch 4, archived; whether it counts earlier epochs is unknown | 284,175 | $2.59 (323,241 tokens) | none, no technical validation ran | lessons from PR #250 |
+| #252 | feature | `session_01K69KnCZjVdjzoStLVQhSxc` | $7.59 at worker epoch 3, idle; whether it counts earlier epochs is unknown | 269,420 | $1.74 (217,687 tokens) | none, no technical validation ran | lessons from PR #252 |

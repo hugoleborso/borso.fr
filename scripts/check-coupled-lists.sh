@@ -78,7 +78,8 @@ done <<<"$unindexed"
 
 # The formatter the repository tells you to run used to be checked here: the
 # agent harness rewrote `pnpm exec prettier` into a build of its own. Prettier
-# is gone and oxfmt replaced it, so there is no such command left to guard. See
+# is gone and oxfmt replaced it. A Prettier call is now refused before it runs,
+# by plugins/borso-harness/hooks/pretool-no-prettier.sh. See
 # docs/adr/0045-oxlint-and-oxfmt-replace-eslint-and-prettier.md.
 
 # 4. The tables a migration creates, and the two lists the back-e2e harness

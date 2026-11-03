@@ -968,6 +968,12 @@
       "plugins": ["vitest", "typescript"]
     },
     {
+      "files": ["apps/*/site/src/components/atoms/*Glyphs.tsx"],
+      "rules": {
+        "max-lines": "off"
+      }
+    },
+    {
       "files": ["**/*.code.js"],
       "rules": {
         "prefer-template": "off",
