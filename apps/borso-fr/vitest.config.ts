@@ -1,3 +1,5 @@
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { defineConfig } from 'vitest/config';
 
 const CONFIG_FILES_THAT_RERUN_EVERY_TEST = ['**/{vitest,vite}.config.*'];
@@ -11,6 +13,7 @@ export default defineConfig({
     include: ['site/src/**/*.test.{ts,tsx}'],
     coverage: {
       provider: 'v8',
+      reportsDirectory: join(tmpdir(), 'vitest-coverage', String(process.pid)),
       include: ['site/**/*.{core,utils,adapter,schema}.ts'],
       thresholds: {
         perFile: true,
