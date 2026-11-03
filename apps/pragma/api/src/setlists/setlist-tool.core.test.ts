@@ -160,11 +160,22 @@ describe('matchEntryReference', () => {
     expect(matchEntryReference(setlistEntries, SONGS, 'Karma')).toEqual({ kind: 'missing' });
   });
 
+  it('numbers the candidates by song order, whatever the stored positions and their gaps', () => {
+    const encore = buildEntry({ id: 'entry-9', position: 4 });
+    expect(matchEntryReference([encore, CREEP_ENTRY], SONGS, 'Creep')).toEqual({
+      kind: 'ambiguous',
+      candidates: [
+        { id: 'entry-1', label: 'Creep', hint: '#1' },
+        { id: 'entry-9', label: 'Creep', hint: '#2' },
+      ],
+    });
+  });
+
   it('lists both entries of a song played twice', () => {
     const encore = buildEntry({ id: 'entry-9', position: 4 });
     const candidates = [
       { id: 'entry-1', label: 'Creep', hint: '#1' },
-      { id: 'entry-9', label: 'Creep', hint: '#5' },
+      { id: 'entry-9', label: 'Creep', hint: '#2' },
     ];
     expect(matchEntryReference([CREEP_ENTRY, encore], SONGS, 'song-creep')).toEqual({
       kind: 'ambiguous',

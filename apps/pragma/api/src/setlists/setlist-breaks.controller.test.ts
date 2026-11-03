@@ -13,10 +13,12 @@ const breakSchema = z.object({
   position: z.number().int(),
   label: z.string(),
 });
-const singleBreakEnvelope = z.object({ setlistBreak: breakSchema });
-const breakListEnvelope = z.object({
-  breaks: z.array(breakSchema.extend({ songsBefore: z.number().int() })),
+const breakViewSchema = breakSchema.extend({ songsBefore: z.number().int() });
+const singleBreakEnvelope = z.object({
+  setlistBreak: breakSchema,
+  breaks: z.array(breakViewSchema),
 });
+const breakListEnvelope = z.object({ breaks: z.array(breakViewSchema) });
 const entryListEnvelope = z.object({
   entries: z.array(z.object({ id: z.string().uuid(), position: z.number().int() })),
 });
@@ -114,9 +116,10 @@ describe('setlist breaks controller (back-e2e)', () => {
       ' Intermission ',
     );
     expect(inserted.status).toBe(201);
-    const { setlistBreak } = await readJson(inserted, singleBreakEnvelope);
 
+    const { setlistBreak, breaks } = await readJson(inserted, singleBreakEnvelope);
     expect(setlistBreak).toMatchObject({ label: 'Intermission', position: 1 });
+    expect(breaks).toEqual([{ ...setlistBreak, songsBefore: 1 }]);
     expect(await readOrder(app, cookieHeader, setlistId)).toEqual([
       entryIds[0],
       setlistBreak.id,
@@ -228,6 +231,10 @@ describe('setlist breaks controller (back-e2e)', () => {
     });
 
     expect(removed.status).toBe(200);
+    const removedBody = await readJson(removed, z.object({ breaks: z.array(breakViewSchema) }));
+    expect(removedBody.breaks.map((row) => [row.id, row.songsBefore])).toEqual([
+      [secondBreak.id, 1],
+    ]);
     const rows = await testDatabase()
       .select({ position: setlistBreakTable.position })
       .from(setlistBreakTable)
@@ -256,7 +263,9 @@ describe('setlist breaks controller (back-e2e)', () => {
       cookieHeader,
     });
 
-    expect((await readJson(renamed, singleBreakEnvelope)).setlistBreak.label).toBe('Tune the bass');
+    const renamedBody = await readJson(renamed, singleBreakEnvelope);
+    expect(renamedBody.setlistBreak.label).toBe('Tune the bass');
+    expect(renamedBody.breaks.map((row) => row.label)).toEqual(['Tune the bass']);
     expect(tooLong.status).toBe(400);
   });
 
@@ -302,5 +311,48 @@ describe('setlist breaks controller (back-e2e)', () => {
 
     const rows = await testDatabase().select().from(setlistBreakTable);
     expect(rows).toEqual([]);
+  });
+
+  it('keeps every position distinct when a break lands while a song is appended', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const { setlistId, entryIds } = await seedSetlistOfThree(app, cookieHeader);
+    const songId = await readId(
+      await jsonRequest(app, '/api/songs', {
+        method: 'POST',
+        body: { title: 'Delta', status: 'idea' },
+        cookieHeader,
+      }),
+      'song',
+    );
+
+    await Promise.all([
+      insertBreakAfter(app, cookieHeader, setlistId, entryIds[0] ?? ''),
+      insertBreakAfter(app, cookieHeader, setlistId, entryIds[1] ?? ''),
+      jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
+        method: 'POST',
+        body: { songId },
+        cookieHeader,
+      }),
+      jsonRequest(app, `/api/setlists/${setlistId}/reorder`, {
+        method: 'PUT',
+        body: { entryIds: [...entryIds].reverse() },
+        cookieHeader,
+      }),
+    ]);
+
+    const [entries, breaks] = await Promise.all([
+      readJson(
+        await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+        entryListEnvelope,
+      ),
+      readJson(
+        await jsonRequest(app, `/api/setlists/${setlistId}/breaks`, { cookieHeader }),
+        breakListEnvelope,
+      ),
+    ]);
+    const positions = [...entries.entries, ...breaks.breaks]
+      .map((item) => item.position)
+      .toSorted((left, right) => left - right);
+    expect(positions).toEqual([0, 1, 2, 3, 4, 5]);
   });
 });

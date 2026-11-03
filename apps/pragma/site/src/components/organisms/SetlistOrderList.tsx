@@ -40,7 +40,7 @@ import {
   sumKnownDurations,
 } from '../molecules/song-duration.utils';
 import { joinSummaryItems } from '../molecules/summary-line.utils';
-import { isBreakLine } from './setlist-breaks.utils';
+import { isBreakLine } from './setlist-breaks.core';
 import { restrictToVerticalAxis } from './setlist-editor.utils';
 
 const DRAG_MODIFIERS = [restrictToVerticalAxis];

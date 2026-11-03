@@ -249,6 +249,43 @@ describe('setlist voting (back-e2e)', () => {
     expect(board.tallies).toHaveLength(2);
   });
 
+  it('drops the breaks of a setlist whose vote closes again', async () => {
+    const { app, cookieHeader } = await buildAuthenticatedApp();
+    const setlistId = await createVotingSetlist(app, cookieHeader, 2);
+    const first = await createSong(app, cookieHeader, 'Première');
+    await score(app, cookieHeader, setlistId, first, 3);
+    const close = async (): Promise<void> => {
+      await jsonRequest(app, `/api/setlists/${setlistId}/close`, {
+        method: 'POST',
+        body: { songIds: [first] },
+        cookieHeader,
+      });
+    };
+    await close();
+    const closedOrder = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
+      z.object({ entries: z.array(z.object({ id: z.string() })) }),
+    );
+    await jsonRequest(app, `/api/setlists/${setlistId}/breaks`, {
+      method: 'POST',
+      body: { afterEntryId: closedOrder.entries[0]?.id, label: 'Intermission' },
+      cookieHeader,
+    });
+    await jsonRequest(app, `/api/setlists/${setlistId}/vote-status`, {
+      method: 'PUT',
+      body: { status: 'voting' },
+      cookieHeader,
+    });
+
+    await close();
+
+    const breaks = await readJson(
+      await jsonRequest(app, `/api/setlists/${setlistId}/breaks`, { cookieHeader }),
+      z.object({ breaks: z.array(z.unknown()) }),
+    );
+    expect(breaks.breaks).toEqual([]);
+  });
+
   it('reopens a closed vote with every point still posted', async () => {
     const { app, cookieHeader } = await buildAuthenticatedApp();
     const setlistId = await createVotingSetlist(app, cookieHeader, 2);

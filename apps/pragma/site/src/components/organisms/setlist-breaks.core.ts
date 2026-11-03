@@ -13,7 +13,7 @@ export type SetlistLine<TEntry, TBreak extends PlacedBreak> =
   | { readonly kind: 'song'; readonly entry: TEntry; readonly songIndex: number }
   | { readonly kind: 'break'; readonly setlistBreak: TBreak };
 
-// @FollowsBlueprint utils-pure-module
+// @FollowsBlueprint core-projection
 export function groupBreaksBySongsBefore<TBreak extends PlacedBreak>(
   breaks: readonly TBreak[],
 ): ReadonlyMap<number, readonly TBreak[]> {
@@ -129,4 +129,10 @@ export function toOrderRows(
       songEnergy: song?.baseEnergy ?? null,
     };
   });
+}
+
+export function listItemIds(entryIds: readonly string[], breaks: readonly PlacedBreak[]): string[] {
+  return interleaveBreaks(entryIds, breaks).map((line) =>
+    line.kind === 'song' ? line.entry : line.setlistBreak.id,
+  );
 }

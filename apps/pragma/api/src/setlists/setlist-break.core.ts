@@ -24,8 +24,8 @@ export function mergeSetlistItems(
   breaks: readonly PositionedRow[],
 ): SetlistItem[] {
   const songs = entries.map((entry): SetlistItem => ({ ...entry, kind: 'song' }));
-  const pauses = breaks.map((row): SetlistItem => ({ ...row, kind: 'break' }));
-  return [...songs, ...pauses].toSorted(compareItems);
+  const breakItems = breaks.map((row): SetlistItem => ({ ...row, kind: 'break' }));
+  return [...songs, ...breakItems].toSorted(compareItems);
 }
 
 // @FollowsBlueprint core-decision

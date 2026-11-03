@@ -19,7 +19,8 @@ songs.
   energy and no length, and the energy curve and the total time ignore it.
 - Song numbers count songs only, so a break never shifts them.
 - The transition note between two songs is not offered across a break.
-- The **My part** view and the **Lineup** view show songs only.
+- The **My part** view and the **Lineup** view show songs only, and offer no
+  **Add a break after**.
 - An assistant reads breaks in `get_setlist` (each placed after
   `afterSongCount` songs) and adds, renames or removes one with
   `save_setlist_break`.
@@ -33,8 +34,10 @@ songs.
   append takes the position after the last item, and every delete compacts
   songs and breaks into one gapless run.
 - `PUT /setlists/:id/reorder` takes either every id (songs and breaks), or the
-  song ids only. With song ids only, each break keeps its slot, so the undo of
-  a removal and the assistant's `reorder_setlist` need no change.
+  song ids only. With song ids only, each break keeps its slot, so the
+  assistant's `reorder_setlist` needs no change. The undo of a song removal
+  remembers where the breaks stood and, once the song is back, sends the full
+  order so each break returns to its place.
 - `GET /setlists/:id/breaks` answers each break with `songsBefore`, the number
   of songs played before it. The site places breaks by that count, so an
   optimistic song reorder never needs the break positions.

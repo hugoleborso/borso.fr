@@ -5,7 +5,7 @@ import type { JSX, KeyboardEvent } from 'react';
 import { useTranslation } from 'react-i18next';
 import { Icon } from '../atoms/Icon';
 import { Menu } from '../molecules/Menu';
-import { isSubmitKey, selectChangedLabel } from './setlist-breaks.utils';
+import { isSubmitKey, selectChangedLabel } from './setlist-breaks.core';
 
 export interface SetlistBreakRowProps {
   readonly label: string;

@@ -16,7 +16,7 @@ import {
 } from './setlist-editor.utils';
 import { buildLineupColumn, type SlotInstrument } from '../molecules/lineup-slots.core';
 import { SetlistBreakRow } from './SetlistBreakRow';
-import { groupBreaksBySongsBefore, type PlacedBreak } from './setlist-breaks.utils';
+import { groupBreaksBySongsBefore, type PlacedBreak } from './setlist-breaks.core';
 import { TransitionStrip } from './TransitionStrip';
 import { type TransitionView, transitionPairKey } from './transition-view.core';
 import type { MemberPartGlyph } from '../molecules/MemberPartGlyphs';
@@ -122,7 +122,7 @@ export function SetlistEntriesList(props: SetlistEntriesListProps): JSX.Element 
             transitionBefore={renderTransitionBefore(fullIndex)}
             onOpen={() => props.onOpen(entry.id)}
             onRemove={props.onRemove}
-            onAddBreakAfter={props.onAddBreakAfter}
+            onAddBreakAfter={props.inFilteredMode ? undefined : props.onAddBreakAfter}
           />,
         ];
       })}

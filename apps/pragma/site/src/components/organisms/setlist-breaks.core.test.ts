@@ -4,13 +4,14 @@ import {
   interleaveBreaks,
   isBreakLine,
   isSubmitKey,
+  listItemIds,
   type PlacedBreak,
   recountSongsBefore,
   selectBreakTitle,
   selectChangedLabel,
   toOrderRows,
   withdrawSongFromBreaks,
-} from './setlist-breaks.utils';
+} from './setlist-breaks.core';
 
 const OPENING: PlacedBreak = { id: 'p0', label: '', position: 0, songsBefore: 0 };
 const INTERMISSION: PlacedBreak = { id: 'p1', label: 'Intermission', position: 3, songsBefore: 2 };
@@ -144,6 +145,17 @@ describe('toOrderRows', () => {
         entryEnergy: null,
         songEnergy: null,
       },
+    ]);
+  });
+});
+
+describe('listItemIds', () => {
+  it('lists the songs and the breaks in the order they are played', () => {
+    expect(listItemIds(['a', 'b'], [INTERMISSION, { ...OPENING, songsBefore: 1 }])).toEqual([
+      'a',
+      'p0',
+      'b',
+      'p1',
     ]);
   });
 });

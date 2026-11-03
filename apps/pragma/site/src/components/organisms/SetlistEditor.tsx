@@ -61,6 +61,7 @@ interface RemovedEntry {
   readonly entry: MinimalSetlistEntry;
   readonly index: number;
   readonly title: string;
+  readonly putBreaksBack: () => void;
 }
 
 const NO_ROWS: readonly never[] = [];
@@ -167,14 +168,15 @@ export function SetlistEditor({
     if (entry === undefined) return;
     const failRemoval = breakActions.withdrawSong(index, failWith('setlist.failure.remove'));
     removeEntry.mutate({ setlistId, entryId }, { onError: failRemoval });
-    removal.present({ entry, index, title: songsById[entry.songId]?.title ?? '' });
+    const putBreaksBack = breakActions.rememberPlacement();
+    removal.present({ entry, index, title: songsById[entry.songId]?.title ?? '', putBreaksBack });
   };
 
   const undoRemoval = (removed: RemovedEntry): void => {
     removal.withdraw();
     restoreEntry.mutate(
       { setlistId, entry: removed.entry, index: removed.index },
-      { onError: failWith('setlist.failure.restore') },
+      { onError: failWith('setlist.failure.restore'), onSuccess: removed.putBreaksBack },
     );
   };
 

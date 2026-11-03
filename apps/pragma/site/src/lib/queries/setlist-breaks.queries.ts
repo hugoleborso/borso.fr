@@ -4,7 +4,7 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import {
   recountSongsBefore,
   withdrawSongFromBreaks,
-} from '../../components/organisms/setlist-breaks.utils';
+} from '../../components/organisms/setlist-breaks.core';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { setlistKeys } from './setlists.queries';
 

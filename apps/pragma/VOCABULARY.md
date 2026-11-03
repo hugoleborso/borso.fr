@@ -1118,6 +1118,8 @@ Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › places a break
 Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › keeps every break in its slot when a reorder names the songs only
 Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › compacts songs and breaks into one gapless run after either is deleted
 Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › deletes the breaks of a deleted setlist
+Held by: `api/src/setlists/voting.controller.test.ts` › drops the breaks of a setlist whose vote closes again
+Held by: `api/src/setlists/setlist-breaks.controller.test.ts` › keeps every position distinct when a break lands while a song is appended
 
 Not to be confused with: a song **note**, which is text on one entry; a
 break is its own row in the running order.

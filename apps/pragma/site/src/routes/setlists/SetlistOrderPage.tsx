@@ -10,7 +10,7 @@ import { EmptyState } from '../../components/molecules/EmptyState';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { SetlistOrderList } from '../../components/organisms/SetlistOrderList';
-import { interleaveBreaks, toOrderRows } from '../../components/organisms/setlist-breaks.utils';
+import { interleaveBreaks, toOrderRows } from '../../components/organisms/setlist-breaks.core';
 import {
   useBreaksFollowingEntries,
   useSetlistBreaks,
