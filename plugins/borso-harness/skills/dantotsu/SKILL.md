@@ -1,315 +1,166 @@
 ---
 name: dantotsu
-description: Use when the user asks for a Dantotsu, root-cause analysis (RCA), five-whys, post-mortem of a defect, or "lean quality investigation" — including the explicit `/dantotsu` invocation. Walks the seven Dantotsu steps and produces a Markdown entry under `docs/dantotsus/`. CRITICAL — eradication is non-optional and must land code, not docs alone. The skill has a hard rule: every dantotsu finishes with at least one of (a) a structural change that makes the defect impossible to reintroduce, (b) a DevX check (linter, type guard, pre-commit hook) that catches the misconception, (c) a vendor patch in `patches/` plus a flag for the human to open the upstream PR, OR — only if none of the above is feasible — (d) a triggered knowledge entry under `docs/knowledge/`, whose `triggers:` front matter names the paths, commands or output at which a hook prints it. Each dantotsu links the commit hash, PR, and code diff that fixed it. Agent never opens PRs against repos outside `hugoleborso/*`. Read the standard at `${CLAUDE_PLUGIN_ROOT}/skills/dantotsu/standard.md` before facilitating one.
+description: Use when the user asks for a Dantotsu, root-cause analysis (RCA), five whys or post-mortem of a defect, or types `/dantotsu`. Writes one entry under `docs/dantotsus/` on the Future of Software guild's template (user impact, causal chain, root cause of occurrence, detection failure causes, countermeasure, eradication), with each section's checkpoints. Stops at a proposal when the operator asked for analysis; ships a code-level eradication when the fix is chosen.
 ---
 
 > **Paths.** `${CLAUDE_PLUGIN_ROOT}` is the borso-harness folder. Claude Code fills it in when the harness loads as a plugin, and the harness's session hook exports it to the shell when a repository links the harness into `.claude/` instead. If it is still unexpanded, the folder is the output of `cd -P .claude/skills/route/../.. && pwd`. Repository paths in this file are borso.fr's layout, which is the default. `${CLAUDE_PLUGIN_ROOT}/scripts/harness-path.sh` prints where the current repository keeps each one (`standards`, `dantotsus`, `knowledge`, `adr`, `features`, `reports`, `prBodyCheck`, `blueprintIndex`, `phone`); read every default through that answer, and when the mapped file is missing, report that step as unverifiable rather than substitute something else. A record of borso.fr's own, such as a dantotsu or ADR cited by name, that this repository does not have is at https://github.com/hugoleborso/borso.fr/tree/main/docs. The harness's agents are dispatched by their bare names, such as `technical-validator`; a session that installed the harness as a plugin lists them as `borso-harness:technical-validator`.
 
-# Dantotsu — radical quality through root-cause analysis
+# Dantotsu: one defect, understood to its misconception
 
-This skill implements the **Dantotsu standard** kept verbatim at
-[`standard.md`](./standard.md). Read it before facilitating one — it
-captures the spirit (intent, typical mistakes, key challenges,
-reframes) that this checklist alone can't.
+A dantotsu investigates one defect until the developer understands the
+belief that made the faulty code feel right, then makes that class of
+defect unable to return. The spirit, the typical mistakes and the reframes
+are in [`standard.md`](./standard.md). Read it before writing one.
 
-> **The intent:** *Inspire every developer to care about quality by
-> fostering a deep understanding of their system — from business
-> modeling to the lines of code they write every day.*
+The entry follows the structure of the Future of Software guild's template:
+six sections, in this order, each answered from the user's side first.
 
-A Dantotsu is a Lean exercise where a developer (with a coach, or
-this skill in coach role) deeply investigates ONE defect to:
+## Two modes
 
-1. Understand it from the user's perspective.
-2. Trace the causal chain through the system.
-3. Find the *misconception* — the technical or business
-   misunderstanding — that made the bad code feel right.
-4. Find why the defect wasn't caught earlier.
-5. Produce a minimal countermeasure that addresses the misconception,
-   not just the symptom.
-6. **Eradicate the defect-class — code-level, not docs alone.**
-7. Spread the lesson so the team's mental model improves.
+- **Analysis.** The operator asked to understand a defect, or asked for a
+  dantotsu before choosing a fix. Write the entry with the countermeasure
+  and eradication as proposals, each option with its cost, then stop and
+  ask which one to ship. Change no product code. The front matter then
+  carries `eradication-level: 5`, `eradication-paths: []` and
+  `fix-commits: none (proposal under review)`, and the entry opens with a
+  one-line status saying it is a proposal.
+- **Fix.** The operator chose the fix, or `/after-task-kaizen` called this
+  skill after a merge. Ship the countermeasure and the eradication, and
+  record them in the entry.
 
-**The goal is NOT to fill out a form.** It is for the developer to
-deepen their understanding of the system — and for the codebase to
-end up structurally unable to host the same defect again.
+When the request does not say which, it is analysis.
 
-## When to facilitate one
+## Before writing
 
-- The user describes a defect (production, staging, local) and wants
-  to investigate.
-- The user says any of: "let's do a Dantotsu" / "RCA" / "five whys" /
-  "post-mortem" / "/dantotsu".
-- The user pastes an error or stack trace and asks "what went wrong here".
-- A PR just fixed a non-trivial bug — the [`/after-task-kaizen`](../after-task-kaizen/SKILL.md)
-  skill calls this one once per surviving subject.
+1. List the existing entries and find any this defect repeats:
+   `${CLAUDE_PLUGIN_ROOT}/skills/dantotsu/scripts/list.sh` (add `--json`
+   for ndjson). Read every entry sharing two or more tags.
+2. Reproduce the defect, or gather its artefacts (logs, rows, traces,
+   screenshots). Label every claim measured, inferred or guess, in the
+   same sentence.
+3. If the feature is no longer used, propose deleting the code instead.
 
-## When NOT to
+## The entry
 
-- Routine fixes where the cause is obvious (typo, missing import) and
-  no analysis was asked for.
-- Feature work or refactors with no defect involved.
-- Documentation-only proposals where the underlying code is fine.
+Copy [`docs/dantotsus/_template.md`](../../../../docs/dantotsus/_template.md)
+to `docs/dantotsus/<slug>.md`. Its `##` headings are the only sections:
+`check-dantotsu-front-matter.ts` refuses an added or missing one in an entry
+dated 2026-11-01 or later. Evidence that fits no section goes in the one it
+qualifies. Write short sentences with nothing superfluous. The title names the problem,
+never the solution, and sparks curiosity. Long evidence (a screenshot, a
+log dump) goes in a `<details>` block so the entry stays short.
 
-## The seven steps
+Each section below ends on its checkpoints. The section is done when every
+checkpoint holds.
 
-For each step's prompts and traps, see
-[`standard.md` §How-to](./standard.md#how-to). What follows is the
-agent-shaped subset.
+### User impact
 
-### 0. Pick a defect
+What the user saw against what they should have seen.
 
-One specific instance, reproducible (or with artefacts), original
-developer reachable (or you proceed hypothetically and say so).
+- Describes the problem without the solution, in the text and the visuals.
+- Shows seen against expected, as a screenshot or a two-column table.
+- Gives exact numbers and names who measured them (the original report, the
+  reproduction).
 
-If the feature is no longer used, the right fix is to **delete the
-code**. Code that doesn't exist has no bugs.
+### Causal chain
 
-### 1. Identify the user-facing defect
+The sequence of events from what the user saw back to the faulty line.
 
-Frame the symptom from the **user's perspective**. Not "DB insert
-threw `ConstraintViolation`" — "the user clicked Save and their
-changes were lost, with a red banner".
+- Nested bullets: each point sits under the one it explains.
+- Reads top to bottom with "Why?" between each point and the next.
+- One branch per cause when several causes combine.
+- Every point is an event that happened, never a missing solution ("we did
+  not do X").
+- Names the faulty line, with at most 20 lines of code.
 
-Capture observed-vs-expected side by side, with screenshot/error
-verbatim. If the bug is already fixed, reproduce against the parent
-commit.
+### Root cause of occurrence
 
-### 2. Identify the causal chain
+The technical or business misconception that made the faulty code feel
+right, in the form *thought ___, actually ___*.
 
-Trace the symptom backwards step-by-step until the **first point
-where the behaviour diverged from intent** — the faulty line.
-Push through external dependencies if needed.
+- Names the actual misconception, not an element of the context.
+- States the fact, without "we did not know".
+- Is sourced: a link to the documentation or source you read this session,
+  with the quoted passage.
+- Passes the test: had the developer known the "actually" part, they would
+  have written correct code first time.
 
-Include 5–20 lines of context, not more.
+### Detection failure causes
 
-### 3. Identify the root cause of occurrence
+Why each layer that could have caught the defect did not, in firing order:
+typing, linter, local validation, CI, review, QA, monitoring.
 
-The faulty line exists because the developer believed something
-that wasn't true. Find that belief.
+- Each cause names the specific reason that layer missed it.
+- "There was no test" is pushed one step further, to why no test covered
+  the path.
 
-**Frame:** *"The developer thought ___, but actually ___."*
+### Countermeasure
 
-**Validate:** *"If the developer had known the 'actually' part,
-would they have written correct code on the first try?"* → Yes ⇒
-root cause found. No ⇒ keep digging.
+The minimal change that restores the behaviour and shows the cause was
+understood. In analysis mode, the options side by side with what the user
+sees and what each costs.
 
-Push past shallow stops:
+- Removes the misconception, rather than wrapping the failing path in a
+  condition.
+- Names how it was verified (the reproduction now passing), or, for a
+  proposal, how it will be.
 
-| Shallow | Push to |
-| --- | --- |
-| "I wasn't paying attention." | Why was the code shaped such that "not paying attention" would break it? |
-| "I forgot to do X." | Why was X required? Could the API design make X mandatory by construction? |
-| "Lack of knowledge of iframes." | *Specifically what* did they think was true? ("I thought `origin` was the URL; it's actually scheme + hostname + port.") |
+### Eradication
 
-Look especially at **business-modelling misunderstandings**, not
-just technical ones — the deepest defects come from misunderstanding
-what the user actually does.
+The mechanism that guarantees this class of defect cannot come back. Keep
+this heading word: `scripts/standards/provenance.core.ts` reads the section
+by `## Eradication`.
 
-### 4. Identify detection failure causes
+- A mechanism, not a to-do list. Pick the highest rung reachable:
+  1. **Structural impossibility**: a type or API shape that cannot express
+     the misconception.
+  2. **DevX check**: a rule under `eslint-rules/`, a hook or a type guard
+     that refuses it at lint or commit time.
+  3. **Vendor patch**: `patches/<lib>/<short>.patch` applied with
+     `pnpm patch`, plus `patches/<lib>/<short>.md` holding the upstream PR
+     body for the operator to send. Open pull requests only against
+     `hugoleborso/*`.
+  4. **Detection**: an alarm, a synth-time test or an integration test on
+     the path that had none.
+  5. **Triggered knowledge entry**: a `docs/knowledge/` file whose
+     `triggers:` name the file, command or output at which the symptom
+     shows. Only when rungs 1 to 4 are impossible.
+- The mechanism has been tried: plant the defect on a scratch copy, run the
+  check, paste its refusal here, revert.
+- Subtract first: a mechanism whose removal makes the defect impossible
+  beats a new check.
+- Similar instances were searched for and listed, with the command that
+  found them.
+- Says "eradicated" only when no defect of the same class can recur, not
+  just this one.
+- Links the commit, the PR and a diff snippet once shipped.
 
-For each defence-in-depth layer that should have caught the defect
-but didn't, name the specific reason. Walk these in firing order:
+## Front matter
 
-- Type system
-- Linter / static analysis
-- Functional validation locally
-- CI (tests, type-check, lint, build)
-- Code review
-- PO / QA validation
-- Staging monitoring
-- Production monitoring / alerting
+`scripts/quality/check-dantotsu-front-matter.ts` refuses a wrong one in
+pre-commit, pre-push and CI.
 
-Avoid "there was no test" as a terminal answer — push to *why* there
-was no test or why the test didn't cover the path.
-
-### 5. Countermeasure
-
-The minimal change that restores correctness AND demonstrates the
-developer understood the cause. Removes the misconception; doesn't
-wrap the failing path in `if` and walk away.
-
-### 6. Eradication — non-optional, code-level
-
-**This step ships code.** The skill rejects "captured as follow-up"
-or "knowledge entry only" except as the last-resort floor.
-
-Pick the highest level of the ladder you can reach (preferred order,
-top is best):
-
-1. **Structural impossibility.** Change types, API shapes, or
-   construct surfaces so the misconception cannot be expressed in
-   code. Example: instead of accepting `unit: string` on a budget,
-   take only `amountUsd: number` and hardcode `'USD'` internally.
-   Now the EUR mistake is unspeakable.
-2. **DevX check.** A linter rule (a custom rule under `eslint-rules/`), a custom
-   `pre-commit` / `pre-push` script, an `actionlint` config, or a
-   typescript type guard that rejects the misconception at
-   compile/lint/commit time. Catches the next instance before it
-   ships.
-3. **Vendor patch.** If the bug is in an open-source library and not
-   misuse on our side, drop a `.patch` file under `patches/<lib>/`
-   and write a `patches/<lib>/<short-name>.md` with the
-   upstream-PR body the human will paste. **The agent never opens
-   PRs against repos outside `hugoleborso/*` — that's a hard rule.**
-   The patch is applied to our `node_modules` via `pnpm patch` so
-   our build is correct meanwhile.
-4. **Detection improvement.** A CloudWatch alarm, a synth-time test,
-   an integration test that exercises the previously-untested path.
-   Catches the next instance after it ships, before users see it.
-5. **Triggered knowledge entry.** A file under `docs/knowledge/` —
-   only if 1–4 are genuinely impossible — **with `triggers:` in its
-   front matter** naming the moment the misconception shows: the file
-   a Write or Edit targets, the command about to run, or the error text
-   a tool prints. `knowledge-triggers.sh` puts the entry's summary in
-   front of the agent at that moment. An entry with no trigger is not
-   this rung, and `scripts/check-knowledge-triggers.sh` refuses it:
-   nine dantotsus record an entry that existed, was correct, and was
-   not read, because a document reaches only someone who already
-   suspects its answer. Pick the trigger from the symptom in step 1,
-   not from the cause: the agent who repeats the mistake sees the
-   symptom. Knowledge alone is *not enough* for a Dantotsu;
-   pure-knowledge subjects belong in `docs/knowledge/` directly, not in
-   `docs/dantotsus/`.
-
-For each item picked, **include the actual diff or commit
-reference** in the entry — not a placeholder. The dantotsu file
-links the commit hash, PR, and a relative-path diff snippet that
-shows what changed.
-
-**Prove a new check can fail, once, when you add it.** For a level 2
-or 4 eradication, reintroduce the defect on a scratch copy, run the
-check, and paste its refusal into the entry's Eradication section,
-then revert. A check that has never refused anything is not an
-eradication. The proof lives in the entry, not in a standing tool:
-the repository keeps no canary per gate.
-
-**Subtract before you add.** Before adding a check, look for the
-mechanism whose removal makes the defect impossible, and prefer it. A
-check that only guards another part of the harness is not an
-eradication of a product or infra defect.
-
-If a Dantotsu's "highest level reached" is (5) alone, it's almost
-always misclassified. Re-read step 3 — the misconception is usually
-expressible in code if you push hard enough.
-
-### 7. Spread the lesson
-
-- Title the entry to **spark curiosity**, not the user-story name.
-- Cross-link to other entries when chains overlap, and name the one this
-  repeats in `recurs:`.
-- Place it: `zone:` puts a dot on the weak-point map that
-  `scripts/quality/weak-points.ts` draws, and `weak-point:` counts it
-  against an engaged weak point
-  ([ADR-0029](../../../../docs/adr/0029-weak-point-management-from-the-dantotsu-record.md)).
-- If a coaching opportunity exists (a developer would benefit from
-  walking through the chain), name it.
-
-## Output — what to write
-
-Drop a Markdown file at `docs/dantotsus/<slug>.md`. Use
-[`docs/dantotsus/_template.md`](../../../../docs/dantotsus/_template.md)
-as the starting point — it has the YAML frontmatter and section
-shape pre-filled.
-
-The frontmatter is read by tools, and
-`scripts/quality/check-dantotsu-front-matter.ts` refuses an entry that
-gets it wrong, in pre-push and in CI. Fill it this way:
-
-- **Fixed lists.** `introduced-at`, `detected-at`, `severity` and
-  `eradication-level` take only the values the template lists.
-- **Pull requests** are `'#<n>'`, or `none (<reason>)`.
-- **`fix-commits`** names commits that resolve on `main`. Write `[self]`
-  when the eradication ships in the same commit as this entry: a squash
-  merge renames every branch commit, so a branch hash written now will not
-  resolve after the merge. Write `none (<reason>)` when nothing was
-  committed, and then the level is 5.
-- **`eradication-paths`** lists the files the eradication lives in. Levels 1
-  to 4 need at least one that is not markdown. An edit to a skill, an agent,
-  CLAUDE.md or a standard is an instruction, which is level 5 however it is
-  described.
-- **`zone`** is the repository path where the defect *lived*: the component,
-  the construct, the gate, the skill. It is not where the fix landed, which
-  for a kaizen pull request is usually `.husky/` or `scripts/`. It must
-  exist in the tree. It places the entry's dot on the weak-point map.
-- **`weak-point`**, optional, names a row of
+- `introduced-at`, `detected-at`, `severity` and `eradication-level` take
+  only the values the template lists.
+- A pull request is `'#<n>'` or `none (<reason>)`.
+- `fix-commits` is `[self]` when the eradication ships in the same commit as
+  the entry (a squash merge renames branch commits), or `none (<reason>)`,
+  and then the level is 5.
+- `eradication-paths` lists the files the eradication lives in. Levels 1 to
+  4 need one that is not markdown. An edit to a skill, an agent, CLAUDE.md
+  or a standard is level 5.
+- `zone` is the path where the defect lived, not where the fix landed. It
+  must exist.
+- `weak-point` names a row of
   [`docs/quality/weak-points.md`](../../../../docs/quality/weak-points.md)
-  when the defect belongs to an engaged weak point. That is what counts it.
-- **`recurs`** names the earlier entry this one repeats, found with the
-  listing script below. When the entry shares two or more tags with an
-  earlier one and is not a repeat, write `recurs: none (<why it is a
-  different class>)`. A repeat retold as a new story is how the same class
-  was written up three times in one day.
-- **No placeholder** anywhere: no `<TBD>`, no `pending`, no
-  `<kaizen-commit>`.
+  when the defect belongs to one.
+- `recurs` names the entry this repeats, or `none (<why it is a different
+  class>)` when it shares two or more tags without repeating.
+- No placeholder anywhere.
 
-## Hard rules (the skill enforces these)
+## Where else things go
 
-- **No issue creation as a substitute for an eradication commit.**
-  Issues drift; the loop dies. The dev's sole and last goal between
-  PRs is shipping the eradications.
-- **No "captured as follow-up; not implemented yet"** in the
-  Eradication section. Either implement it or pick a lower level that
-  you can implement now.
-- **The agent never opens PRs against repositories outside
-  `hugoleborso/*`.** For upstream patches, produce
-  `patches/<lib>/<short-name>.{patch,md}` and stop there. The
-  human chooses whether to send the patch upstream.
-- **Eradication entries link the commit hash + PR + a diff snippet.**
-  No vague pointers; the reader can verify the fix landed.
-
-## Typical mistakes to avoid
-
-(Full list at [`standard.md` §Typical mistakes](./standard.md#typical-mistakes).)
-
-| Mistake | Consequence |
-| --- | --- |
-| Stop at "filling the form" | Bureaucratic; developer thinks it's a waste of time. |
-| Accept "it was just a careless mistake" | No learning. Same defect class recurs. |
-| User-story name as title | Lesson doesn't spread beyond the original team. |
-| Frame technically, not from the user | Developer doesn't connect their code to user value. |
-| Investigate only the local bug | Latent siblings stay in the codebase. |
-| Vague root cause ("lack of knowledge of X") | Doesn't bind to day-to-day code. |
-| **Skip eradication or defer to a follow-up** | Loop dies. The defect class survives. |
-| Lots of unnecessary context | Verbose entries don't get re-read. |
-| Facilitate like a courtroom | Developer avoids future sessions. |
-
-## Reframes — read these before facilitating
-
-| Misconception | Reframe |
-| --- | --- |
-| The developer should do this alone. | The original reasoning is the thing under examination. Bring a second pair of eyes. |
-| We're producing Dantotsu sheets. | We're sparking conversations about defects to surface tacit knowledge. |
-| A good Dantotsu fills every field. | A good Dantotsu deepens the developer's mental model AND ships an eradication. |
-| I do this when there's a major prod bug. | Maintain a regular rhythm to raise the level of play. |
-| Mastery = knowing every framework tidbit. | Mastery is the quality of mental models about business, system structure, and failure modes. |
-
-(Full list at [`standard.md` §Reframes](./standard.md#reframes).)
-
-## Listing existing dantotsus
-
-To get a structured view of every dantotsu (file, date, severity,
-level, tags, title) before deciding whether a new defect overlaps
-with an existing entry, run:
-
-```bash
-${CLAUDE_PLUGIN_ROOT}/skills/dantotsu/scripts/list.sh             # markdown table
-${CLAUDE_PLUGIN_ROOT}/skills/dantotsu/scripts/list.sh --json      # ndjson, agent-friendly
-```
-
-Sorted newest-first. Skips `_template.md` and `README.md`.
-
-## In this repo
-
-- **`docs/dantotsus/`** — RCAs with eradication commits. Every entry
-  has frontmatter linking commit + PR + diff.
-- **`docs/knowledge/`** — pure reference docs (vendor quirks, CLI
-  contracts, conventions). Not Dantotsus — no causal chain, no
-  eradication. Use this folder when the fix is "operator awareness"
-  with no possible code lever.
-- **`docs/dantotsus/_template.md`** — copy this when starting a new
-  entry.
-- **CLAUDE.md's Self-improvement loop** rule: when a PR merges, run
-  [`/after-task-kaizen`](../after-task-kaizen/SKILL.md) →
-  produces one Dantotsu per real defect (with eradication shipped)
-  and one Knowledge entry per vendor surprise → opens the follow-up
-  PR with the `kaizen` label.
+- A vendor quirk or a convention with no causal chain goes to
+  `docs/knowledge/`, not here.
+- After a merge, [`/after-task-kaizen`](../after-task-kaizen/SKILL.md) calls
+  this skill once per real defect, in fix mode.

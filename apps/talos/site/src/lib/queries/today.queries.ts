@@ -4,6 +4,8 @@ import { ApiError, api, readFailureBody } from '../api.client';
 import { useMutationToasts } from '../toast.hook';
 import { FOCUS_SAVED_TOAST } from './mutation-toasts.core';
 
+const TODAY_WRITE_SCOPE = { id: 'today-writes' } as const;
+
 export const todayKeys = {
   all: ['today'] as const,
   overview: () => [...todayKeys.all, 'overview'] as const,
@@ -29,6 +31,7 @@ export function useUpdateFocus() {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   return useMutation({
+    scope: TODAY_WRITE_SCOPE,
     mutationFn: async (variables: FocusUpdate) => {
       const response = await api.api.focus.$put({ json: variables });
       if (!response.ok) {

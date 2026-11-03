@@ -1,5 +1,9 @@
-import { afterEach, describe, expect, it } from 'vitest';
-import { useRestoreSetlistEntry } from './setlist-entries.queries';
+import { afterEach, describe, expect, it, vi } from 'vitest';
+import {
+  useReorderSetlist,
+  useRestoreSetlistEntry,
+  useSetlistEntriesToReorder,
+} from './setlist-entries.queries';
 import { setlistKeys } from './setlists.queries';
 import type { EntriesCache, MinimalSetlistEntry } from './setlists.utils';
 import {
@@ -139,6 +143,99 @@ describe('useRestoreSetlistEntry', () => {
     await flushMicrotasks();
 
     expect(readOrder(queryClient)).toEqual(['a']);
+    tree.unmount();
+  });
+});
+
+type ReorderMutate = ReturnType<typeof useReorderSetlist>['mutate'];
+
+function ProbeReorder({ sink }: { sink: (mutate: ReorderMutate) => void }): null {
+  sink(useReorderSetlist().mutate);
+  return null;
+}
+
+// @FollowsBlueprint test-query-hook
+describe('useReorderSetlist', () => {
+  let stub: ReturnType<typeof stubFetch> | null = null;
+  afterEach(() => {
+    stub?.restore();
+    stub = null;
+  });
+
+  it('shows both drops at once and sends the second order only after the first answer', async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(SETLIST_ID), {
+      entries: [makeEntry('a', 0), makeEntry('b', 1), makeEntry('c', 2)],
+    });
+    const firstAnswer = deferred<Response>();
+    stub = stubFetch(async () =>
+      stub?.calls.length === 1 ? firstAnswer.promise : jsonResponse({ ok: true }),
+    );
+    const slot = createMutateSlot<ReorderMutate>();
+    mountWithClient(queryClient, <ProbeReorder sink={slot.sink} />);
+
+    slot.read()({ setlistId: SETLIST_ID, entryIds: ['b', 'a', 'c'] });
+    await flushMicrotasks();
+    slot.read()({ setlistId: SETLIST_ID, entryIds: ['b', 'c', 'a'] });
+    await flushMicrotasks();
+
+    expect(readOrder(queryClient)).toEqual(['b', 'c', 'a']);
+    expect(stub.calls).toHaveLength(1);
+
+    firstAnswer.resolve(jsonResponse({ ok: true }));
+    await flushMicrotasks();
+
+    const [first, second] = stub.calls;
+    expect(await first?.clone().json()).toEqual({ entryIds: ['b', 'a', 'c'] });
+    expect(await second?.clone().json()).toEqual({ entryIds: ['b', 'c', 'a'] });
+  });
+});
+
+function ProbeEntriesToReorder({
+  sink,
+}: {
+  sink: (state: { order: string[]; isFetchedAfterMount: boolean }) => void;
+}): null {
+  const query = useSetlistEntriesToReorder(SETLIST_ID);
+  sink({
+    order: (query.data?.entries ?? []).map((entry) => entry.id),
+    isFetchedAfterMount: query.isFetchedAfterMount,
+  });
+  return null;
+}
+
+const APP_STALE_TIME_MS = 30_000;
+
+// @FollowsBlueprint test-query-hook
+describe('useSetlistEntriesToReorder', () => {
+  let stub: ReturnType<typeof stubFetch> | null = null;
+  afterEach(() => {
+    stub?.restore();
+    stub = null;
+  });
+
+  it('refetches a restored order on mount and says so only once the server answered', async () => {
+    const queryClient = createIsolatedQueryClient();
+    queryClient.setQueryDefaults(setlistKeys.all, { staleTime: APP_STALE_TIME_MS });
+    queryClient.setQueryData<EntriesCache>(setlistKeys.entriesOf(SETLIST_ID), {
+      entries: [makeEntry('a', 0), makeEntry('b', 1)],
+    });
+    const answer = deferred<Response>();
+    stub = stubFetch(async () => answer.promise);
+    const states: { order: string[]; isFetchedAfterMount: boolean }[] = [];
+    const tree = mountWithClient(
+      queryClient,
+      <ProbeEntriesToReorder sink={(state) => states.push(state)} />,
+    );
+    await flushMicrotasks();
+
+    expect(states.at(-1)).toStrictEqual({ order: ['a', 'b'], isFetchedAfterMount: false });
+
+    answer.resolve(jsonResponse({ entries: [makeEntry('b', 0), makeEntry('a', 1)] }));
+
+    await vi.waitFor(() => {
+      expect(states.at(-1)).toStrictEqual({ order: ['b', 'a'], isFetchedAfterMount: true });
+    });
     tree.unmount();
   });
 });

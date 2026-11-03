@@ -180,17 +180,22 @@ no layer at all.
 `apps/last-loop-lepin/site/src/observability/sentry.ts` is the one module that
 predates the suffix and has not been renamed.
 
-## Writes that answer one shared value run one at a time
+## Optimistic writes run one at a time
 
-When several mutations each answer the same aggregate and write it into one
-key, the answer that arrives last wins, not the write that ran last. On PR #234
-the study log and undo both answered the member's flames. One tap on a
-two-part song sent two writes whose transactions missed each other, so a stale
-flame could land last. Give such mutations one `scope: { id }`, so TanStack
-Query sends each one only after the previous answer. The study writes in
-`apps/pragma/site/src/lib/queries/studies.queries.ts` and the entry removals in
-`setlist-entries.queries.ts` do this. A mutation that writes only its own
-entity's entry needs no scope.
+A mutation that writes the cache in `onMutate` declares a `scope: { id }`,
+shared by every mutation in its file. TanStack Query still runs `onMutate` at
+once, so the screen moves on the tap, and holds the request until the previous
+answer is in (measured in `@tanstack/query-core` 5.102.8, `mutation.ts`, where
+`onMutate` runs before `retryer.start()` and only the retryer waits on
+`canRun`).
+
+The reason is that the client never refetches what it wrote, so it cannot see
+the server keep an older write. Two requests in flight at once can commit in
+either order. On 2026-10-31 two setlist reorders sent 577 ms apart reached prod
+together, and the first sent answered last, 1.65 s against 394 ms. Each carried
+the whole order, so whichever committed last won, and the screen kept showing
+the other one until the next visit refetched. On PR #234 the same race hit the
+study log and undo, which both answered the member's flames.
 
 ## Enforced by
 
@@ -219,7 +224,7 @@ entity's entry needs no scope.
 - `reviewer` checks that a mutation whose full result the client already holds
   reconciles from the response rather than refetching, because an immediate read
   after a write can be served a pre-commit snapshot.
-- `reviewer` checks that mutations which write one shared aggregate from their
-  answers, such as a count or a streak, share a mutation `scope`.
+- `oxlint:borso/optimistic-mutation-declares-scope` rejects a `useMutation`
+  whose options carry `onMutate` and no `scope`.
 - `reviewer` checks that a form goes through `useForm` rather than a chain of
   `useState`, and that a grid goes through `useReactTable`.

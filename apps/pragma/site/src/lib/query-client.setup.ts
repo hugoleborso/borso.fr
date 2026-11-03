@@ -1,9 +1,24 @@
-import { QueryCache, QueryClient } from '@tanstack/react-query';
+/** @DependsOnExternal browser-local-storage */
+
+import { createAsyncStoragePersister } from '@tanstack/query-async-storage-persister';
+import {
+  hashKey,
+  partialMatchKey,
+  type Query,
+  QueryCache,
+  QueryClient,
+} from '@tanstack/react-query';
+import type { PersistQueryClientProviderProps } from '@tanstack/react-query-persist-client';
 import { onSessionEnded } from './api.client';
 import { authKeys, type SessionProbeResult } from './queries/auth.queries';
+import { loadOfflineReadingWhenSignedIn } from './queries/offline-reading.queries';
+import { isSignInUpdate } from './queries/offline-reading.utils';
 import { forgetSessionMarker } from './session-marker.adapter';
 
 const DEFAULT_STALE_TIME_MS = 30_000;
+const PERSISTED_CACHE_MAX_AGE_MS = 7 * 24 * 60 * 60 * 1000;
+const PERSISTED_CACHE_KEY = 'pragma.query-cache';
+const PERSISTED_CACHE_SHAPE_VERSION = '1';
 
 const ENDED_SESSION: SessionProbeResult = { authenticated: false };
 
@@ -18,12 +33,53 @@ export const queryClient = new QueryClient({
     onError: (error, query) => query.meta?.reportFailure?.(error),
   }),
   defaultOptions: {
-    queries: { staleTime: DEFAULT_STALE_TIME_MS, retry: 1 },
+    queries: { staleTime: DEFAULT_STALE_TIME_MS, gcTime: PERSISTED_CACHE_MAX_AGE_MS, retry: 1 },
     mutations: { retry: 0 },
   },
 });
 
+const queryCachePersister = createAsyncStoragePersister({
+  storage: window.localStorage,
+  key: PERSISTED_CACHE_KEY,
+});
+
+function isMutationPersisted(): boolean {
+  return false;
+}
+
+export const queryCachePersistOptions = {
+  persister: queryCachePersister,
+  maxAge: PERSISTED_CACHE_MAX_AGE_MS,
+  buster: PERSISTED_CACHE_SHAPE_VERSION,
+  dehydrateOptions: { shouldDehydrateMutation: isMutationPersisted },
+} satisfies PersistQueryClientProviderProps['persistOptions'];
+
+export function startOfflineReading(): void {
+  void loadOfflineReadingWhenSignedIn(queryClient);
+}
+
+const SESSION_QUERY_HASH = hashKey(authKeys.session());
+
+queryClient.getQueryCache().subscribe((event) => {
+  const isSignIn = isSignInUpdate(
+    {
+      eventType: event.type,
+      actionType: event.type === 'updated' ? event.action.type : undefined,
+      queryHash: event.query.queryHash,
+      data: event.query.state.data,
+    },
+    SESSION_QUERY_HASH,
+  );
+  if (isSignIn) startOfflineReading();
+});
+
+function isBandDataQuery(query: Query): boolean {
+  return !partialMatchKey(query.queryKey, authKeys.all);
+}
+
 onSessionEnded(() => {
   forgetSessionMarker();
+  queryClient.removeQueries({ predicate: isBandDataQuery });
   queryClient.setQueryData<SessionProbeResult>(authKeys.session(), ENDED_SESSION);
+  void queryCachePersister.removeClient();
 });

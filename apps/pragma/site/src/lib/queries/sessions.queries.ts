@@ -1,10 +1,12 @@
 /** @Feature sessions */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { buildOptimisticSession } from './optimistic-session.core';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
+
+const SESSIONS_WRITE_SCOPE = { id: 'sessions-writes' } as const;
 
 type SessionsListShape = InferResponseType<typeof api.api.sessions.$get>;
 type SessionByIdShape = InferResponseType<(typeof api.api.sessions)[':id']['$get']>;
@@ -34,22 +36,26 @@ export function useSessionsList() {
   });
 }
 
-export function useSession(id: string, isEnabled = true) {
-  return useQuery({
+export function sessionQueryOptions(id: string) {
+  return queryOptions({
     queryKey: sessionKeys.byId(id),
     queryFn: async () => {
       const response = await api.api.sessions[':id'].$get({ param: { id } });
       if (!response.ok) throw new ApiError(response.status, `session ${response.status}`, null);
       return response.json();
     },
-    enabled: isEnabled,
   });
+}
+
+export function useSession(id: string, isEnabled = true) {
+  return useQuery({ ...sessionQueryOptions(id), enabled: isEnabled });
 }
 
 // @FollowsBlueprint query-optimistic-insert
 export function useCreateSession() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SESSIONS_WRITE_SCOPE,
     mutationKey: sessionKeys.all,
     mutationFn: async (variables: Parameters<typeof api.api.sessions.$post>[0]['json']) => {
       const response = await api.api.sessions.$post({ json: variables });
@@ -90,6 +96,7 @@ export function useCreateSession() {
 export function useUpdateSession() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SESSIONS_WRITE_SCOPE,
     mutationKey: sessionKeys.all,
     mutationFn: async (
       variables: { id: string } & Parameters<(typeof api.api.sessions)[':id']['$put']>[0]['json'],
@@ -143,6 +150,7 @@ export function useUpdateSession() {
 export function useDeleteSession() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SESSIONS_WRITE_SCOPE,
     mutationKey: sessionKeys.all,
     mutationFn: async ({ id }: { id: string }) => {
       const response = await api.api.sessions[':id'].$delete({ param: { id } });

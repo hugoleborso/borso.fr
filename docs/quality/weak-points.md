@@ -22,7 +22,7 @@ recorded against it.
 | --- | --- | --- | --- | --- |
 | `gate-measures-nothing` | A gate reports green while measuring nothing | factory | 2026-10-10 | Proposed: plant one defect per gate and fail CI when a gate passes it |
 | `prose-stands-in-for-a-check` | A document asserts a property that nothing checks or nobody reads | factory | 2026-10-10 | Proposed: route each knowledge entry to the tool call that needs it, and level instruction edits at 5 |
-| `optimistic-write-undone` | An optimistic write is undone by a refetch or a stale DSQL read | product | 2026-10-10 | Proposed: extend `borso/no-refetch-of-optimistically-written-query` to `refetchInterval` |
+| `optimistic-write-undone` | An optimistic write is undone by a refetch, a stale DSQL read, or a concurrent write that commits last | product | 2026-10-10 | Shipped 2026-11-01: `borso/optimistic-mutation-declares-scope`. Proposed: extend `borso/no-refetch-of-optimistically-written-query` to `refetchInterval` |
 
 ## Why these three
 

@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import { readDantotsuDocument, type DantotsuDocument } from './dantotsu-record.core';
-import { resolveCommit, selectSchemaProblems, type SchemaFacts } from './dantotsu-schema.core';
+import {
+  readSectionHeadings,
+  resolveCommit,
+  selectSchemaProblems,
+  type SchemaFacts,
+} from './dantotsu-schema.core';
 
 const MAIN_COMMIT = 'abc1234def5678';
 const OTHER_COMMIT = 'abd9999000aaaa';
@@ -8,6 +13,7 @@ const FACTS: SchemaFacts = {
   mainCommits: [MAIN_COMMIT, OTHER_COMMIT],
   trackedPaths: new Set(['scripts/check-a.sh', 'docs/knowledge/a.md', 'CLAUDE.md']),
   verifiedSlugs: null,
+  templateSections: ['## User impact', '## Eradication'],
 };
 const VALID_FIELDS: Readonly<Record<string, string>> = {
   date: '2026-08-01',
@@ -313,5 +319,35 @@ describe('selectSchemaProblems', () => {
       'untagged: `tags:` is missing',
       'untagged: `tags:` must be a non-empty [list]',
     ]);
+  });
+});
+
+describe('the template sections', () => {
+  const SECTIONED_BODY = '# Title\n\n## User impact\n\nSeen.\n\n## Eradication\n\nA rule.\n';
+
+  it('reads the headings outside code fences only', () => {
+    expect(readSectionHeadings('## A\n```md\n## B\n```\n### C\n# D\n')).toEqual(['## A', '### C']);
+  });
+
+  it('reads a heading with trailing spaces as the template writes it', () => {
+    expect(readSectionHeadings('## User impact  \n')).toEqual(['## User impact']);
+  });
+
+  it('accepts an entry from 2026-11-01 that keeps exactly the template sections', () => {
+    expect(check([buildEntry('kept', { date: '2026-11-01' }, SECTIONED_BODY)])).toEqual([]);
+  });
+
+  it('refuses an added section and a missing one', () => {
+    const body = '# Title\n\n## User impact\n\n### What prod shows\n';
+    expect(check([buildEntry('drifted', { date: '2026-11-01' }, body)])).toEqual([
+      'drifted: `### What prod shows` is not a section of the template',
+      'drifted: the section `## Eradication` is missing',
+    ]);
+  });
+
+  it('leaves entries written before the template changed alone', () => {
+    expect(check([buildEntry('older', { date: '2026-10-31' }, '# Title\n\n## Symptom\n')])).toEqual(
+      [],
+    );
   });
 });

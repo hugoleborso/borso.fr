@@ -1,6 +1,12 @@
 /** @Feature songs */
 
-import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useMutationState,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful, readErrorBody } from '../api.client';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
@@ -11,6 +17,8 @@ import {
   selectSongThatLostItsLastWrite,
 } from './song-write-failure.core';
 import { type LastSongWriteFailure, selectLastSongWriteFailure } from './song-save-refusal.core';
+
+const SONGS_WRITE_SCOPE = { id: 'songs-writes' } as const;
 
 export const songKeys = {
   all: ['songs'] as const,
@@ -37,8 +45,8 @@ type SongUpdateVariables = { id: string } & Parameters<
  * @BlueprintUsage Use for every call from a front end to its own API. One module per domain, holding the key factory and the hooks.
  * @BlueprintDescription Declares the song query keys in one typed factory so no caller invents a key, and wraps each call in useQuery or useMutation over the Hono client, so the request and response types come from the API router type rather than a hand-written fetcher. Mutations reconcile from the mutation response and roll back in onError.
  */
-export function useSongsList() {
-  return useQuery({
+export function songsListQueryOptions() {
+  return queryOptions({
     queryKey: songKeys.list(),
     queryFn: async () => {
       const response = await api.api.songs.$get();
@@ -48,16 +56,23 @@ export function useSongsList() {
   });
 }
 
-export function useSong(id: string, isEnabled = true) {
-  return useQuery({
+export function songQueryOptions(id: string) {
+  return queryOptions({
     queryKey: songKeys.byId(id),
     queryFn: async () => {
       const response = await api.api.songs[':id'].$get({ param: { id } });
       if (!response.ok) throw new ApiError(response.status, `song ${response.status}`, null);
       return response.json();
     },
-    enabled: isEnabled,
   });
+}
+
+export function useSongsList() {
+  return useQuery(songsListQueryOptions());
+}
+
+export function useSong(id: string, isEnabled = true) {
+  return useQuery({ ...songQueryOptions(id), enabled: isEnabled });
 }
 
 export function useSongSearch(query: string) {
@@ -81,6 +96,7 @@ export function useSongSearch(query: string) {
 export function useCreateSong() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SONGS_WRITE_SCOPE,
     mutationKey: songKeys.all,
     mutationFn: async (variables: SongCreateVariables) => {
       const response = await api.api.songs.$post({ json: variables });
@@ -128,11 +144,12 @@ export function useCreateSong() {
  * @Blueprint query-optimistic-mutation
  * @BlueprintName Optimistic Mutation
  * @BlueprintUsage Use for a write whose new state the client can predict, so the change shows before the server answers.
- * @BlueprintDescription Cancels the in flight reads for every key it is about to touch, snapshots them, writes the predicted rows, and returns the snapshots as the mutation context so `onError` can put them back verbatim. `onSuccess` then overwrites those rows with the one the response carries, which is not the same thing as refetching: a `GET` fired at this moment can be served by a connection that has not seen the commit and would undo the write the user is looking at, whereas the response is the commit. Predicting is not enough on its own, because a write the server enriches — here a Spotify id resolved from the song's ISRC — leaves the client holding a value it had no way to guess.
+ * @BlueprintDescription Cancels the in flight reads for every key it is about to touch, snapshots them, writes the predicted rows, and returns the snapshots as the mutation context so `onError` can put them back verbatim. `onSuccess` then overwrites those rows with the one the response carries, which is not the same thing as refetching: a `GET` fired at this moment can be served by a connection that has not seen the commit and would undo the write the user is looking at, whereas the response is the commit. Predicting is not enough on its own, because a write the server enriches — here a Spotify id resolved from the song's ISRC — leaves the client holding a value it had no way to guess. It declares the file's write `scope`, so a second write waits for the first answer instead of racing it to the database, while its `onMutate` still runs at once.
  */
 export function useUpdateSong() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SONGS_WRITE_SCOPE,
     mutationKey: songKeys.all,
     mutationFn: async (variables: SongUpdateVariables) => {
       const { id, ...rest } = variables;
@@ -215,6 +232,7 @@ function useSongWrites() {
 export function useDeleteSong() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: SONGS_WRITE_SCOPE,
     mutationKey: songKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.songs[':id'].$delete({ param: { id: variables.id } });

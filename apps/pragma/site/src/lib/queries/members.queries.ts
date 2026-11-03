@@ -7,6 +7,8 @@ import { instrumentKeys } from './instruments.queries';
 import { predictMemberRoster } from './member-roster.core';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
+const MEMBERS_WRITE_SCOPE = { id: 'members-writes' } as const;
+
 type InstrumentsListResponse = InferResponseType<typeof api.api.instruments.$get>;
 
 export const memberKeys = {
@@ -64,6 +66,7 @@ export function useMemberInstruments(memberId: string, isEnabled = true) {
 export function useCreateMember() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: MEMBERS_WRITE_SCOPE,
     mutationKey: memberKeys.all,
     mutationFn: async (variables: MemberCreateVariables) => {
       const response = await api.api.members.$post({ json: variables });
@@ -108,6 +111,7 @@ export function useCreateMember() {
 export function useUpdateMember() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: MEMBERS_WRITE_SCOPE,
     mutationKey: memberKeys.all,
     mutationFn: async (variables: MemberUpdateVariables) => {
       const { id, ...rest } = variables;
@@ -143,6 +147,7 @@ export function useUpdateMember() {
 export function useDeleteMember() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: MEMBERS_WRITE_SCOPE,
     mutationKey: memberKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.members[':id'].$delete({
@@ -173,6 +178,7 @@ export function useDeleteMember() {
 export function useAssignMemberInstruments() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: MEMBERS_WRITE_SCOPE,
     mutationKey: memberKeys.all,
     mutationFn: async (variables: MemberInstrumentAssignment) => {
       const { memberId, ...assignment } = variables;

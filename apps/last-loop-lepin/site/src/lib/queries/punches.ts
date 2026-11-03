@@ -2,6 +2,8 @@ import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api';
 
+const PUNCHES_WRITE_SCOPE = { id: 'punches-writes' } as const;
+
 // @FollowsBlueprint query-module
 export const punchKeys = {
   all: ['punches'] as const,
@@ -60,6 +62,7 @@ export function useRegisterPunch() {
 export function useVoidPunch() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: PUNCHES_WRITE_SCOPE,
     mutationKey: punchKeys.all,
     mutationFn: async (variables: VoidPunchVariables) => {
       const response = await api.api.admin.punches[':id'].$delete({

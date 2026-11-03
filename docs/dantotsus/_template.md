@@ -15,89 +15,49 @@ weak-point: <id>                    # optional; an id from docs/quality/weak-poi
 recurs: [<earlier-slug>, …]         # the entry this repeats, or none (<why it is a different class>)
 ---
 
-# <Title — sparks curiosity, hints at the lesson, NOT the user-story name>
+# <The problem, not its solution, phrased to spark curiosity>
 
-## Symptom
+## User impact
 
-User-perspective. Verbatim error or screenshot if useful.
+What the user saw against what they should have seen, with exact numbers
+and who measured them.
 
-## Root-cause chain
+| | Seen | Expected |
+| --- | --- | --- |
+| <moment> | <what the user saw> | <what they should have seen> |
 
-1. **Why?** <step-1 question>
-   <answer>
-2. **Why?** <step-2 question>
-   <answer>
-…
+## Causal chain
 
-**Root cause:** one sentence in `thought X, actually Y` form.
-Validate with: *if the developer had known the "actually" part,
-would they have written correct code on the first try?*
+- <What the user saw>
+  - <The event that caused it>
+    - <The event that caused that, down to the faulty line>
+
+## Root cause of occurrence
+
+*Thought <the belief>, actually <the fact>.*
+
+<The source you read, linked, with the quoted passage.>
 
 ## Detection failure causes
 
-For each defence-in-depth layer that should have caught the defect
-but didn't, name the specific reason. Drop layers that are
-inapplicable. Avoid "no test"-as-terminal — push to *why* there was
-no test or why the test didn't cover the path.
-
-- **Typing:** <…>
-- **Linter / static analysis:** <…>
-- **Functional validation locally:** <…>
-- **CI (tests / build):** <…>
-- **Code review:** <…>
-- **PO / QA validation:** <…>
-- **Staging monitoring:** <…>
-- **Production monitoring / alerting:** <…>
+- **<Layer>:** <the specific reason it missed the defect>
 
 ## Countermeasure
 
-Minimal change that restored correctness AND demonstrates the
-developer understood the cause.
+<The minimal change, and how it was verified. In analysis mode, the options
+side by side with what the user sees and what each costs.>
 
-- **Code:** commit `<sha>` — <what changed and why it addresses the
-  root cause>
-- **Operator action:** <if anything is required outside the codebase>
+## Eradication
 
-## Eradication (mandatory — code-level)
+**Type:** <structural impossibility · DevX check · vendor patch · detection · knowledge> (level <N>)
 
-Level reached on the eradication ladder (top is best):
-
-1. **Structural impossibility** — types / API shapes prevent the
-   misconception from being expressed.
-2. **DevX check** — linter / type guard / pre-commit / actionlint /
-   custom rule rejects the misconception at lint or commit time.
-3. **Vendor patch** — `patches/<lib>/<short>.patch` applied via
-   `pnpm patch`, plus `patches/<lib>/<short>.md` with the
-   upstream-PR body the human will paste. Agent does NOT open
-   PRs against repos outside `hugoleborso/*`.
-4. **Detection** — alarm, synth-time test, integration test that
-   exercises the previously-untested path.
-5. **Knowledge** — only as floor when 1–4 are genuinely
-   impossible. Pure-knowledge subjects belong under
-   `docs/knowledge/`, not here.
-
-Fill exactly these three blocks per shipped eradication. Keep them
-explicit so a reviewer can audit: *what type of fix, where it
-lives, what changed*.
-
-**Type:** <one of: code diff · DevX check · vendor patch · detection · knowledge addition> (level <N> — <name>)
-
-**Reference:** [PR #<n>](url) · commits [`<sha>`](url)[, [`<sha>`](url) ...]
-
-**The actual fix:**
+**Reference:** [PR #<n>](url) · commit [`<sha>`](url)
 
 ```diff
 - <removed>
 + <added>
 ```
 
-For a `knowledge addition` type, replace the diff with a link to
-the `docs/knowledge/<slug>.md` entry and a brief summary of what
-it captures.
+**Proof it can fail:** <the check's refusal on a planted defect>
 
-**Sibling defects swept:** <paths / commits where similar latent
-issues existed and were also addressed>
-
-## See also
-
-- <cross-link to related dantotsus or knowledge entries>
+**Similar instances:** <the search command and what it found>

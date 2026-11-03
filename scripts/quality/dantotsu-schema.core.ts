@@ -27,12 +27,15 @@ export const SEVERITY_VALUES: readonly string[] = ['low', 'medium', 'high'];
 export const ERADICATION_LEVELS: readonly string[] = ['1', '2', '3', '4', '5'];
 export const RECURS_REQUIRED_FROM = '2026-10-10';
 export const SELF_COMMIT = 'self';
+export const TEMPLATE_SECTIONS_REQUIRED_FROM = '2026-11-01';
 
 const SHARED_TAGS_FOR_A_RECURRENCE = 2;
 const OVERLAPPING_ENTRIES_NAMED = 3;
 const LEVELS_THAT_NEED_CODE: ReadonlySet<string> = new Set(['1', '2', '3', '4']);
 const MARKDOWN_EXTENSION = '.md';
 const DATE_PATTERN = /^\d{4}-\d{2}-\d{2}$/;
+const SECTION_HEADING_PATTERN = /^#{2,6}\s+\S/;
+const CODE_FENCE_PATTERN = /^\s*```/;
 const PULL_REQUEST_PATTERN = /^#\d+(, #\d+)*$/;
 const COMMIT_PATTERN = /^[0-9a-f]{7,40}$/;
 const FRONT_MATTER_PLACEHOLDER_PATTERN = /<[^>]*>|\bTBD\b|\bpending\b|to-be-filled/i;
@@ -62,6 +65,7 @@ export interface SchemaFacts {
   readonly mainCommits: readonly string[];
   readonly trackedPaths: ReadonlySet<string>;
   readonly verifiedSlugs: ReadonlySet<string> | null;
+  readonly templateSections: readonly string[];
 }
 
 export function resolveCommit(prefix: string, mainCommits: readonly string[]): string | null {
@@ -84,6 +88,33 @@ function checkEnumeratedFields(document: DantotsuDocument): readonly string[] {
     }
   }
   return problems;
+}
+
+export function readSectionHeadings(markdown: string): readonly string[] {
+  const headings: string[] = [];
+  let isInsideFence = false;
+  for (const line of markdown.split('\n')) {
+    if (CODE_FENCE_PATTERN.test(line)) isInsideFence = !isInsideFence;
+    else if (!isInsideFence && SECTION_HEADING_PATTERN.test(line)) headings.push(line.trim());
+  }
+  return headings;
+}
+
+function checkSections(
+  document: DantotsuDocument,
+  templateSections: readonly string[],
+): readonly string[] {
+  const date = readField(document, 'date');
+  if (date === undefined || date < TEMPLATE_SECTIONS_REQUIRED_FROM) return [];
+  const headings = readSectionHeadings(document.body);
+  return [
+    ...headings
+      .filter((heading) => !templateSections.includes(heading))
+      .map((heading) => `${document.slug}: \`${heading}\` is not a section of the template`),
+    ...templateSections
+      .filter((section) => !headings.includes(section))
+      .map((section) => `${document.slug}: the section \`${section}\` is missing`),
+  ];
 }
 
 function checkDate(document: DantotsuDocument): readonly string[] {
@@ -227,6 +258,7 @@ export function selectSchemaProblems(
       ...checkEradicationPaths(document, facts),
       ...checkTags(document),
       ...checkRecurs(document, corpus),
+      ...checkSections(document, facts.templateSections),
     );
   }
   return problems;

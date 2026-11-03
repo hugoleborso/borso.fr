@@ -10,7 +10,10 @@ import { EmptyState } from '../../components/molecules/EmptyState';
 import { NotFoundNotice } from '../../components/molecules/NotFoundNotice';
 import { PageHeader } from '../../components/molecules/PageHeader';
 import { type OrderRow, SetlistOrderList } from '../../components/organisms/SetlistOrderList';
-import { useReorderSetlist, useSetlistEntries } from '../../lib/queries/setlist-entries.queries';
+import {
+  useReorderSetlist,
+  useSetlistEntriesToReorder,
+} from '../../lib/queries/setlist-entries.queries';
 import { useSetlist } from '../../lib/queries/setlists.queries';
 import { useSongsList } from '../../lib/queries/songs.queries';
 import { selectSetlistDisplayName } from '../../lib/setlist-name.utils';
@@ -32,7 +35,7 @@ export function SetlistOrderPage(): JSX.Element {
 function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   const { t } = useTranslation();
   const setlistQuery = useSetlist(setlistId);
-  const entriesQuery = useSetlistEntries(setlistId);
+  const entriesQuery = useSetlistEntriesToReorder(setlistId);
   const songsQuery = useSongsList();
   const reorder = useReorderSetlist();
   const [hasReorderFailed, setHasReorderFailed] = useState(false);
@@ -44,7 +47,15 @@ function SetlistOrder({ setlistId }: { setlistId: string }): JSX.Element {
   const copyOrder = useCopySetlistOrder(setlistEntries, songsById);
   const setlist = setlistQuery.data?.setlist ?? null;
 
-  if (setlistQuery.isLoading || entriesQuery.isLoading) {
+  if (entriesQuery.isError) {
+    return (
+      <p className="m-0 px-4 py-4 text-meta text-danger sm:px-9 sm:py-7" role="alert">
+        {t('setlist.failure.load')}
+      </p>
+    );
+  }
+  const isOrderFromTheServer = entriesQuery.isFetchedAfterMount;
+  if (setlistQuery.isLoading || !isOrderFromTheServer) {
     return (
       <p className="px-4 py-4 text-meta text-ink-soft italic sm:px-9 sm:py-7">
         {t('common.loading')}

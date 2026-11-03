@@ -10,6 +10,8 @@ import {
 } from '../push-subscription.adapter';
 import { setCategoryToggle } from './notifications.utils';
 
+const NOTIFICATIONS_WRITE_SCOPE = { id: 'notifications-writes' } as const;
+
 export const notificationKeys = {
   all: ['notifications'] as const,
   subscription: () => [...notificationKeys.all, 'subscription'] as const,
@@ -74,6 +76,7 @@ export function useEnablePush() {
 export function useUpdateNotificationPreference() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: NOTIFICATIONS_WRITE_SCOPE,
     mutationFn: async (variables: PreferenceUpdateVariables) => {
       const response = await api.api.notifications.preferences.$put({ json: variables });
       if (!response.ok) {

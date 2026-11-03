@@ -1,9 +1,11 @@
 # Dantotsus — root-cause analyses with shipped eradications
 
-One file per defect. Each is a **Dantotsu**: Symptom → Root-cause
-chain → Detection failure causes → Countermeasure → **Eradication**
-(code-level, non-optional). The Eradication section links the
-commit hash, PR, and a diff snippet showing the fix.
+One file per defect. Each is a **Dantotsu** on the Future of Software
+guild's template: User impact, Causal chain, Root cause of occurrence,
+Detection failure causes, Countermeasure and **Eradication**. Entries
+written before 2026-11-01 use the older Symptom and Root-cause chain
+headings. The Eradication section links the commit hash, PR, and a diff
+snippet showing the fix.
 
 Standard at [`plugins/borso-harness/skills/dantotsu/standard.md`](../../plugins/borso-harness/skills/dantotsu/standard.md).
 Template at [`_template.md`](./_template.md). Skill at

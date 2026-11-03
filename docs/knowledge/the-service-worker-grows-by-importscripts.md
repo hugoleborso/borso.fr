@@ -1,5 +1,5 @@
 ---
-summary: 'Pragma''s `sw.js` sits at the 300-line lint cap; grow it with `importScripts` of another `public/` file and register that file in the test harness.'
+summary: 'Pragma''s `sw.js` is capped at 300 lines by lint like any file; grow it with `importScripts` of another `public/` file and register that file in the test harness.'
 triggers:
   paths:
     - 'apps/pragma/site/public/sw*.js'

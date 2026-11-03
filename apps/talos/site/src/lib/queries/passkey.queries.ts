@@ -7,6 +7,8 @@ import { removeById } from './cache-updates.core';
 import { PASSKEY_ADDED_TOAST, PASSKEY_REMOVED_TOAST } from './mutation-toasts.core';
 import { SIGNED_IN, sessionKeys } from './session.queries';
 
+const PASSKEY_WRITE_SCOPE = { id: 'passkey-writes' } as const;
+
 export const passkeyKeys = {
   all: ['passkeys'] as const,
   list: () => [...passkeyKeys.all, 'list'] as const,
@@ -104,6 +106,7 @@ export function useRemovePasskey() {
   const queryClient = useQueryClient();
   const toasts = useMutationToasts();
   return useMutation({
+    scope: PASSKEY_WRITE_SCOPE,
     mutationFn: async (passkeyId: string) => {
       const response = await api.api.auth.passkeys[':id'].$delete({ param: { id: passkeyId } });
       if (!response.ok) {

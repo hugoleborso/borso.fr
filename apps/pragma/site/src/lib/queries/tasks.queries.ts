@@ -5,6 +5,8 @@ import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
 
+const TASKS_WRITE_SCOPE = { id: 'tasks-writes' } as const;
+
 export const taskKeys = {
   all: ['tasks'] as const,
   list: () => [...taskKeys.all, 'list'] as const,
@@ -49,6 +51,7 @@ export function useTasksList() {
 export function useCreateTask() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: TASKS_WRITE_SCOPE,
     mutationKey: taskKeys.all,
     mutationFn: async (variables: TaskCreateVariables) => {
       const response = await api.api.tasks.$post({ json: variables });
@@ -85,6 +88,7 @@ export function useCreateTask() {
 export function useUpdateTask() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: TASKS_WRITE_SCOPE,
     mutationKey: taskKeys.all,
     mutationFn: async (variables: TaskUpdateVariables) => {
       const { id, ...rest } = variables;
@@ -115,6 +119,7 @@ export function useUpdateTask() {
 export function useDeleteTask() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: TASKS_WRITE_SCOPE,
     mutationKey: taskKeys.all,
     mutationFn: async (variables: { id: string }) => {
       const response = await api.api.tasks[':id'].$delete({ param: { id: variables.id } });

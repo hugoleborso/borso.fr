@@ -5,6 +5,8 @@ import { ApiError, api } from '../api.client';
 import { setlistKeys } from './setlists.queries';
 import { applyScoreToBoard, type VoteBoard } from './voting.utils';
 
+const VOTING_WRITE_SCOPE = { id: 'voting-writes' } as const;
+
 export const votingKeys = {
   all: ['voting'] as const,
   board: (setlistId: string) => [...votingKeys.all, 'board', setlistId] as const,
@@ -45,6 +47,7 @@ export function useScoreSong(setlistId: string, memberId: string) {
   const queryClient = useQueryClient();
   const boardKey = votingKeys.board(setlistId);
   return useMutation({
+    scope: VOTING_WRITE_SCOPE,
     mutationFn: async (variables: ScoreVariables) => {
       const response = await api.api.setlists[':id'].votes[':songId'].$put({
         param: { id: setlistId, songId: variables.songId },

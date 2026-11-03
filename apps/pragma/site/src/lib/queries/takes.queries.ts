@@ -14,6 +14,8 @@ import {
 } from './takes.utils';
 import { useSignedChartUrl } from './uploads.queries';
 
+const TAKES_WRITE_SCOPE = { id: 'takes-writes' } as const;
+
 export const takeKeys = {
   all: ['takes'] as const,
   ofSong: (songId: string) => [...takeKeys.all, 'ofSong', songId] as const,
@@ -136,6 +138,7 @@ function removeTakeFromSessionLists(queryClient: QueryClient, takeId: string): v
 export function useDeleteTake() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: TAKES_WRITE_SCOPE,
     mutationKey: takeKeys.all,
     mutationFn: async (variables: { readonly takeId: string; readonly songId: string }) => {
       const response = await api.api.takes[':id'].$delete({ param: { id: variables.takeId } });
@@ -212,6 +215,7 @@ export function useCreateTakeComment() {
 export function useDeleteTakeComment() {
   const queryClient = useQueryClient();
   return useMutation({
+    scope: TAKES_WRITE_SCOPE,
     mutationKey: takeKeys.all,
     mutationFn: async (variables: TakeCommentTarget & { readonly commentId: string }) => {
       const response = await api.api.takes[':id'].comments[':commentId'].$delete({
