@@ -17,9 +17,10 @@ import {
 } from '../../routes/sessions/practice-songs.core';
 import { AlbumCover } from '../atoms/AlbumCover';
 import { Button } from '../atoms/Button';
-import { Icon } from '../atoms/Icon';
+import { Icon, type IconName } from '../atoms/Icon';
 import { Input } from '../atoms/Input';
 import { CheckableRow } from '../molecules/CheckableRow';
+import { SectionTabs } from '../molecules/SectionTabs';
 import { Sheet } from '../molecules/Sheet';
 import type { PracticeListedSong } from './PracticeSongList';
 import type { PracticeSongs } from './practice-songs.hook';
@@ -42,8 +43,22 @@ export interface PracticeSongsSheetProps {
 
 type PracticeSongsStep = 'sources' | 'songs';
 
-const SECTION_TITLE_CLASS =
-  'm-0 px-1 pt-3 pb-1 text-label font-medium tracking-wider text-ink-soft uppercase';
+type SourceTab = 'concerts' | 'setlists';
+
+interface SourceTabView {
+  readonly label: string;
+  readonly icon: IconName;
+  readonly pickedCount: number;
+  readonly search: string;
+  readonly empty: string;
+  readonly rows: readonly JSX.Element[];
+}
+
+const SOURCE_TABS: readonly SourceTab[] = ['concerts', 'setlists'];
+
+function labelWithPickedCount(label: string, pickedCount: number): string {
+  return pickedCount === 0 ? label : `${label} (${pickedCount})`;
+}
 
 const NO_ROWS: readonly never[] = [];
 
@@ -59,6 +74,7 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
   const [pickedConcertIds, setPickedConcertIds] = useState<readonly string[]>(
     preparedConcertId === null ? NO_ROWS : [preparedConcertId],
   );
+  const [sourceTab, setSourceTab] = useState<SourceTab>('concerts');
   const [pickedSetlistIds, setPickedSetlistIds] = useState<readonly string[]>(NO_ROWS);
   const [tickedSongIds, setTickedSongIds] = useState<readonly string[]>(practiceSongIds);
 
@@ -102,20 +118,77 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
     );
   };
 
+  const sourceTabs = {
+    concerts: {
+      label: t('sessions.practiceSongs.concerts'),
+      icon: 'audience',
+      pickedCount: pickedConcertIds.length,
+      search: t('sessions.practiceSongs.searchConcerts'),
+      empty: t('sessions.practiceSongs.noConcert'),
+      rows: concerts.map((concert) => (
+        <li key={concert.id}>
+          <CheckableRow
+            title={concert.venue ?? dateOf(concert)}
+            detail={dateOf(concert)}
+            leading={<Icon name="audience" className="shrink-0 text-accent" />}
+            isChecked={pickedConcertIds.includes(concert.id)}
+            isDisabled={false}
+            onToggle={() => setPickedConcertIds((picked) => togglePickedId(picked, concert.id))}
+          />
+        </li>
+      )),
+    },
+    setlists: {
+      label: t('sessions.practiceSongs.setlists'),
+      icon: 'setlist',
+      pickedCount: pickedSetlistIds.length,
+      search: t('sessions.practiceSongs.searchSetlists'),
+      empty: t('sessions.practiceSongs.noSetlist'),
+      rows: setlists.map((setlist) => (
+        <li key={setlist.id}>
+          <CheckableRow
+            title={labelOfSetlist(setlist)}
+            detail={t('setlist.songCount', { count: setlist.songCount })}
+            leading={<Icon name="setlist" className="shrink-0 text-accent" />}
+            isChecked={pickedSetlistIds.includes(setlist.id)}
+            isDisabled={false}
+            onToggle={() => setPickedSetlistIds((picked) => togglePickedId(picked, setlist.id))}
+          />
+        </li>
+      )),
+    },
+  } as const satisfies Readonly<Record<SourceTab, SourceTabView>>;
+  const shownSource = sourceTabs[sourceTab];
+
   const sourcesStep = {
     subheader: (
-      <div className="relative">
-        <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft">
-          <Icon name="search" />
-        </span>
-        <Input
-          type="search"
-          value={query}
-          onChange={(event) => setQuery(event.target.value)}
-          placeholder={t('sessions.practiceSongs.search')}
-          aria-label={t('sessions.practiceSongs.search')}
-          className="pl-9"
+      <div className="flex flex-col gap-2">
+        <SectionTabs
+          label={title}
+          tabs={SOURCE_TABS.map((tab) => ({
+            value: tab,
+            icon: sourceTabs[tab].icon,
+            label: labelWithPickedCount(sourceTabs[tab].label, sourceTabs[tab].pickedCount),
+          }))}
+          value={sourceTab}
+          onChange={(tab) => {
+            setSourceTab(tab);
+            setQuery('');
+          }}
         />
+        <div className="relative">
+          <span className="pointer-events-none absolute top-1/2 left-3 -translate-y-1/2 text-ink-soft">
+            <Icon name="search" />
+          </span>
+          <Input
+            type="search"
+            value={query}
+            onChange={(event) => setQuery(event.target.value)}
+            placeholder={shownSource.search}
+            aria-label={shownSource.search}
+            className="pl-9"
+          />
+        </div>
       </div>
     ),
     footer: (
@@ -124,53 +197,12 @@ export function PracticeSongsSheet(props: PracticeSongsSheetProps): JSX.Element 
       </Button>
     ),
     body: (
-      <div className="flex flex-col">
-        {concerts.length === 0 ? null : (
-          <h3 className={SECTION_TITLE_CLASS}>{t('sessions.practiceSongs.concerts')}</h3>
-        )}
-        <ul
-          aria-label={t('sessions.practiceSongs.concerts')}
-          className="m-0 flex list-none flex-col p-0"
-        >
-          {concerts.map((concert) => (
-            <li key={concert.id}>
-              <CheckableRow
-                title={concert.venue ?? dateOf(concert)}
-                detail={dateOf(concert)}
-                leading={<Icon name="audience" className="shrink-0 text-accent" />}
-                isChecked={pickedConcertIds.includes(concert.id)}
-                isDisabled={false}
-                onToggle={() => setPickedConcertIds((picked) => togglePickedId(picked, concert.id))}
-              />
-            </li>
-          ))}
-        </ul>
-        {setlists.length === 0 ? null : (
-          <h3 className={SECTION_TITLE_CLASS}>{t('sessions.practiceSongs.setlists')}</h3>
-        )}
-        <ul
-          aria-label={t('sessions.practiceSongs.setlists')}
-          className="m-0 flex list-none flex-col p-0"
-        >
-          {setlists.map((setlist) => (
-            <li key={setlist.id}>
-              <CheckableRow
-                title={labelOfSetlist(setlist)}
-                detail={t('setlist.songCount', { count: setlist.songCount })}
-                leading={<Icon name="setlist" className="shrink-0 text-accent" />}
-                isChecked={pickedSetlistIds.includes(setlist.id)}
-                isDisabled={false}
-                onToggle={() => setPickedSetlistIds((picked) => togglePickedId(picked, setlist.id))}
-              />
-            </li>
-          ))}
-        </ul>
-        {concerts.length === 0 && setlists.length === 0 ? (
-          <p className="m-0 px-1 py-4 text-meta text-ink-soft">
-            {t('sessions.practiceSongs.noSource')}
-          </p>
+      <ul aria-label={shownSource.label} className="m-0 flex list-none flex-col p-0">
+        {shownSource.rows}
+        {shownSource.rows.length === 0 ? (
+          <li className="px-1 py-4 text-meta text-ink-soft">{shownSource.empty}</li>
         ) : null}
-      </div>
+      </ul>
     ),
   };
 

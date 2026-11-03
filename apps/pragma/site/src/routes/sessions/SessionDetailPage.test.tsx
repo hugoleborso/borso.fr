@@ -265,19 +265,11 @@ describe('the practice page', () => {
     renderPracticePage();
     fireEvent.click(await screen.findByRole('button', { name: 'Choose songs' }));
     const concerts = screen.getByRole('dialog', { name: 'Concerts and setlists to prepare' });
-    await waitFor(() =>
-      expect(
-        within(concerts)
-          .getAllByRole('checkbox')
-          .map((row) => row.textContent),
-      ).toEqual([
-        expect.stringContaining('La Cigale'),
-        expect.stringContaining('Le Petit Bain'),
-        expect.stringContaining('Encores'),
-        expect.stringContaining('Old'),
-        expect.stringContaining('Recent'),
-      ]),
-    );
+    const rows = await within(concerts).findAllByRole('checkbox');
+    expect(rows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('La Cigale'),
+      expect.stringContaining('Le Petit Bain'),
+    ]);
     fireEvent.change(within(concerts).getByRole('searchbox'), { target: { value: 'cigale' } });
     fireEvent.click(within(concerts).getByRole('checkbox', { name: /La Cigale/ }));
     fireEvent.click(within(concerts).getByRole('button', { name: 'Next' }));
@@ -304,23 +296,34 @@ describe('the practice page', () => {
     });
   });
 
-  it('pools the songs of a picked setlist that no concert carries', async () => {
+  it('pools a picked concert and a setlist no concert carries, picked on two tabs', async () => {
     renderPracticePage();
     fireEvent.click(await screen.findByRole('button', { name: 'Choose songs' }));
     const sources = screen.getByRole('dialog', { name: 'Concerts and setlists to prepare' });
-    fireEvent.change(within(sources).getByRole('searchbox'), { target: { value: 'encores' } });
+    fireEvent.click(await within(sources).findByRole('checkbox', { name: /La Cigale/ }));
+    fireEvent.click(within(sources).getByRole('tab', { name: /Setlists/ }));
+    expect(within(sources).getByRole('tab', { name: /Concerts \(1\)/ })).toBeTruthy();
     await waitFor(() =>
       expect(
         within(sources)
           .getAllByRole('checkbox')
           .map((row) => row.textContent),
-      ).toEqual([expect.stringContaining('Encores')]),
+      ).toEqual([
+        expect.stringContaining('Encores'),
+        expect.stringContaining('Old'),
+        expect.stringContaining('Recent'),
+      ]),
     );
+    fireEvent.change(within(sources).getByRole('searchbox'), { target: { value: 'encores' } });
     fireEvent.click(within(sources).getByRole('checkbox', { name: /Encores/ }));
     fireEvent.click(within(sources).getByRole('button', { name: 'Next' }));
 
     const songs = screen.getByRole('dialog', { name: 'Songs to work on' });
     const songRows = within(songs).getAllByRole('checkbox');
-    expect(songRows.map((row) => row.textContent)).toEqual([expect.stringContaining('Song s1')]);
+    expect(songRows.map((row) => row.textContent)).toEqual([
+      expect.stringContaining('Song s2'),
+      expect.stringContaining('Song s3'),
+      expect.stringContaining('Song s1'),
+    ]);
   });
 });
