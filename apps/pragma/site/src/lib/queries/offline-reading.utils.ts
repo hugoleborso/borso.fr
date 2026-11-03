@@ -1,11 +1,16 @@
 /** @Feature shell */
 
+import type { InferResponseType } from 'hono/client';
+import type { api } from '../api.client';
+
 const PATH_SEPARATOR = '/';
 
-export interface OfflineManifestUrls {
-  readonly songDetailUrls: readonly string[];
-  readonly nextSessionUrl: string | null;
-}
+type OfflineManifestResponse = InferResponseType<(typeof api.api)['offline-manifest']['$get'], 200>;
+
+export type OfflineManifestUrls = Pick<
+  OfflineManifestResponse,
+  'songDetailUrls' | 'nextSessionUrl'
+>;
 
 export interface OfflineReadingTargets {
   readonly songIds: readonly string[];
