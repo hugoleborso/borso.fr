@@ -25,12 +25,18 @@ export function openDialogOnAttach(dialog: HTMLDialogElement | null): void {
   focusFirstField(dialog);
 }
 
+function closeDialogWhenItsBackdropIsTapped(this: HTMLDialogElement, event: MouseEvent): void {
+  if (event.target !== this) return;
+  this.close();
+}
+
+export function closeOnBackdropTap(dialog: HTMLDialogElement | null): void {
+  dialog?.addEventListener('click', closeDialogWhenItsBackdropIsTapped);
+}
+
 export function openDismissibleDialogOnAttach(dialog: HTMLDialogElement | null): void {
   if (dialog === null) return;
   dialog.showModal();
   focusFirstField(dialog);
-  dialog.addEventListener('click', (event) => {
-    if (event.target !== dialog) return;
-    dialog.close();
-  });
+  closeOnBackdropTap(dialog);
 }

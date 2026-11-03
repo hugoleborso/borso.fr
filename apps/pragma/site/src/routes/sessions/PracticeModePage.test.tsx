@@ -157,7 +157,10 @@ describe('practice mode', () => {
     renderPracticeMode();
     fireEvent.click(await screen.findByRole('button', { name: 'Next song' }));
     await screen.findByRole('heading', { name: 'Valerie' });
-    const [menuItem, stripPill] = screen.getAllByRole('button', { name: 'End the practice' });
+    const [menuItem, stripPill] = screen.getAllByRole('button', {
+      name: 'End the practice',
+      hidden: true,
+    });
     expect(menuItem).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Next song' })).toBeNull();
     if (stripPill !== undefined) fireEvent.click(stripPill);
