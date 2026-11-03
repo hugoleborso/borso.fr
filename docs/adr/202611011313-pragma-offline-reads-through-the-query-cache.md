@@ -1,6 +1,6 @@
 # ADR-202611011313: Pragma reads offline from the persisted query cache, and its service worker keeps only the shell and push
 
-- **Status:** proposed
+- **Status:** accepted
 - **Date:** 2026-11-01
 - **Deciders:** Hugo
 - **Tags:** pragma, offline, data
