@@ -40,7 +40,7 @@ If the framing is fuzzy, the skill pushes back ("name the force in one phrase") 
 
 ### Round 2 — Define criteria *before* options
 
-Build the rubric. The operator names 3–5 criteria with weights (`high` / `medium` / `low`) — not 1-to-5 scales (hides reasoning). For each criterion, a one-line justification: *why does it matter, anchored to the framing*.
+Build the rubric. Ask the operator for their criteria first, and write who raised each one. The operator names 3–5 criteria with weights (`high` / `medium` / `low`) — not 1-to-5 scales (hides reasoning). For each criterion, a one-line justification: *why does it matter, anchored to the framing*.
 
 Example:
 
@@ -122,7 +122,7 @@ The skill **does not** re-walk the rounds. It validates the payload (≥ 2 alter
    If any conflict exists:
    - **Piloted mode:** emit verdict `status: blocked`, `next: { kind: 'escalate', reason: 'adr-conflict-<slug>' }`, and stop. The orchestrator surfaces the conflict to the human.
    - **Interactive mode:** ask the operator via `AskUserQuestion` whether the new ADR supersedes the conflicting one(s). If yes, add the ids to `supersedes` and continue. If no, bail out with a message.
-5. **Fill the template.** Map inputs (interactive: collected across rounds; piloted: from the payload) to the 7 mandatory sections of [`template.md`](./template.md): header block, Context, Decision, Consequences, Alternatives considered (chosen first), Evaluation rubric, Implementation pointers.
+5. **Fill the template.** Map inputs (interactive: collected across rounds; piloted: from the payload) to the 7 mandatory sections of [`template.md`](./template.md): header block, Context, Criteria, Decision, Consequences, Alternatives considered (chosen first), Scores, Implementation pointers.
 6. **Write the file** at `docs/adr/<id>-<slug>.md` with the rendered markdown. Header reads `# ADR-<id>: <title>`, with the same id as the filename; `check-adr-numbers-resolve.sh` refuses the two disagreeing.
 7. **Update the index** `docs/adr/README.md`:
    - Append a row to the main `| # | Title | Status | Date |` table.
@@ -160,7 +160,7 @@ No:
 The PR description's `## Architecture choices` section is *built from the ADRs* referenced by the diff or the plan. Each ADR contributes:
 
 - Its **Decision** paragraph at level 1 (PR body, always visible) — the one-sentence "we picked X because Y".
-- Its **Alternatives considered + Evaluation rubric** at level 2 (collapsed `<details>`).
+- Its **Alternatives considered + Scores** at level 2 (collapsed `<details>`).
 - Its **Implementation pointers** at level 3 (nested `<details>`).
 
 The ADR is the only source for those sections. `/open-pr` does **not** synthesise architecture-choice content from commits or plan rows — if a non-trivial decision in the diff has no ADR, `/open-pr` flags it in *Known gaps* and points back here.

@@ -7,102 +7,108 @@
 
 ## Context
 
-pragma has no component library. Every interactive primitive is hand-written: `Sheet`, `ConfirmDialog` and `Menu` over a native `<dialog>`, the sheet's swipe gesture, the energy bar's drag. Each one rediscovered a platform edge case after it shipped. Four dantotsus trace to that (measured, `grep` over `docs/dantotsus/`): [the energy bar that wrote on a scroll](../dantotsus/a-control-that-wrote-before-the-gesture-was-decided.md), [the dialog that collapsed on a phone](../dantotsus/a-dialog-that-only-collapsed-on-a-phone.md), [the shell that scrolled inside the window](../dantotsus/the-shell-that-scrolled-inside-a-window-that-still-could.md) and [the menu only its own button could close](../dantotsus/the-menu-that-only-its-own-button-could-close.md). The menu fix of PR #246 was then written three times (a hand-written backdrop, a native popover, a modal dialog) before it met the operator's rule ([the-menu-written-three-times](../dantotsus/the-menu-written-three-times.md)). The operator asked on 2026-11-03 for an easy-to-use component library.
+pragma has no component library. It hand-writes 16 interactive primitives, from the menu and the bottom sheet to the slider and the snackbar (measured, `grep` for roles, dialogs and inputs under `apps/pragma/site/src/components/`). Each one rediscovered a platform edge case after it shipped. Four dantotsus trace to that (measured): [the energy bar that wrote on a scroll](../dantotsus/a-control-that-wrote-before-the-gesture-was-decided.md), [the dialog that collapsed on a phone](../dantotsus/a-dialog-that-only-collapsed-on-a-phone.md), [the shell that scrolled inside the window](../dantotsus/the-shell-that-scrolled-inside-a-window-that-still-could.md) and [the menu only its own button could close](../dantotsus/the-menu-that-only-its-own-button-could-close.md). The menu fix of PR #246 was then written three times ([the-menu-written-three-times](../dantotsus/the-menu-written-three-times.md)). The operator asked on 2026-11-03 for an easy-to-use component library.
 
-The rule any candidate must meet is the one the operator set on PR #246: a tap outside an open menu closes it, and that tap does nothing else. The constraints that close doors: React 19 (`pnpm-workspace.yaml` catalog), Tailwind with pragma's own Notebook tokens ([ADR-0047](./0047-pragma-design-system-is-notebook-with-grafts.md)), so the library must be unstyled; a phone-first installed app, so touch handling matters more than desktop; one developer pays for each migration. A new dependency is an ADR decision under CLAUDE.md.
+Constraints that close doors: React 19, Tailwind with pragma's own Notebook tokens ([ADR-0047](./0047-pragma-design-system-is-notebook-with-grafts.md)), so the library must ship no look of its own; a phone-first installed app; one developer pays for each migration. A new dependency is an ADR decision under CLAUDE.md.
+
+## Criteria
+
+| Criterion | Raised by | Weight | Why it matters | How it is measured |
+|---|---|---|---|---|
+| Does it change the app for its users | operator | high | The band uses pragma at rehearsal; a library must not change what they see or how a tap behaves unless we choose it | Renders of each library's docs demo next to pragma's current primitive, and the tap rule run below |
+| Component coverage | operator | high | A library that covers half the primitives leaves the other half hand-written, which is the problem | Each of the 16 primitives looked up in the library's exports, and its doc page checked |
+| Passes the menu tap rule by default | author | high | The operator set it on PR #246: a tap outside closes the menu and does nothing else | Playwright, emulated iPhone 13, default props |
+| Weight | author | medium | Every screen loads it | `esbuild --minify`, React external, `gzip -9`, for all the components the library covers |
 
 ## Decision
 
-**React Aria Components (`react-aria-components`), adopted one primitive at a time, starting with `Menu`.** It passes the operator's tap rule out of the box, it is unstyled and takes Tailwind classes through data attributes, and it is the lighter of the two candidates that pass (52.9 KB against Base UI's 64.3 KB gzipped for a menu and a dialog, measured). Its press handling is built for touch, which is the class of three of the four dantotsus above (inferred from React Aria's documentation, not measured here).
+**React Aria Components (`react-aria-components` 1.22.1), adopted one primitive at a time, starting with `Menu`.** It covers all 16 primitives, passes the tap rule by default, and ships no look, so pragma keeps its own. Ark UI also covers all 16 and is lighter, but failed the tap rule by default. Base UI passes the tap rule but has no file drop and is the heaviest. Radix covers 12.
 
 ## Consequences
 
-- `+` A menu, a dialog, a popover, a select and their dismissal, focus return and scroll lock come from one maintained source, so the next primitive does not rediscover them.
-- `+` The hand-written code shrinks: `closeOnBackdropTap`, `menu-anchor.utils.ts` and the anchor-positioning rule in `tokens.css` go once `Menu` moves.
-- `-` 52.9 KB gzipped of JavaScript for a menu and a dialog (measured, esbuild minified, React external). pragma loads it on every screen that has a `more` menu.
-- `-` The visible shadow under an open menu is ours to style. The measurement below checked dismissal, not the dimming.
+- `+` All 16 primitives, including the bottom sheet with swipe, come from one maintained source, so the next primitive does not rediscover dismissal, focus return or scroll lock.
+- `+` The look stays pragma's. React Aria ships no styles, and its docs demos show its own example CSS, not a theme the app would inherit.
+- `-` The select changes for users. Every candidate replaces the native `<select>` with its own list, so iPhone users lose the system wheel picker on the fields that use `EnumSelectField` (inferred from the four docs demos, which all draw their own list). Keeping the native select there is a choice the migration can make per field.
+- `-` Up to 122 KB gzipped of JavaScript if all 16 move (measured). pragma's main bundle is 408 KB gzipped today (measured, `pnpm build`), so that is up to 30% more on first load. The hand-written code it replaces comes off that, by an amount not measured.
+- `-` Its toast is still `UNSTABLE_Toast` in 1.22.1 (measured, from its exports). The snackbar would move last.
 - `-` `borso/no-raw-interactive-element` names the files that own a raw `<button>` or `<dialog>`. Each migration moves that ownership to the library wrapper.
-- `~` One dependency, `react-aria-components` 1.22.1, peer React 16.8 to 19.
 
 ## Alternatives considered
 
 ### Option A — React Aria Components (chosen)
 
 - **Raised by:** author
-- **Summary:** Adobe's unstyled components (`MenuTrigger`, `Menu`, `MenuItem`, `Popover`, `Modal`, `Dialog`), styled with Tailwind.
+- **Summary:** Adobe's unstyled components, styled with Tailwind through data attributes. [Docs](https://react-aria.adobe.com/Menu).
 - **Strengths:**
-  - Tap outside closes the menu and does not reach the page (measured, below).
-  - 52.9 KB gzipped for a menu and a dialog (measured).
-  - Last published 2026-10-09 (`npm view`, measured).
+  - Coverage 16 of 16, including `Sheet` for the bottom sheet (measured).
+  - Tap rule passes (measured).
 - **Costs:**
-  - The heaviest API surface of the four: a trigger, a popover and a menu per menu.
-- **Rationale:** It meets the operator's rule at the lower weight of the two that do.
+  - 122 KB gzipped for the 16 (measured).
+  - The toast is unstable.
+- **Rationale:** The only option that covers everything and passes the tap rule.
 
-### Option B — Base UI (`@base-ui/react`) (rejected)
+### Option B — Base UI (`@base-ui/react` 1.9.0) (rejected)
 
 - **Raised by:** author
-- **Summary:** The unstyled library from the Radix and Material UI authors, 1.9.0.
+- **Summary:** The unstyled library from the Radix and Material UI authors. [Docs](https://base-ui.com/react/components/menu).
 - **Strengths:**
-  - Tap outside closes the menu and does not reach the page (measured).
-  - A compact API close to Radix.
+  - Tap rule passes (measured).
+  - A `drawer` for the bottom sheet (measured, from its exports).
 - **Costs:**
-  - 64.3 KB gzipped for a menu and a dialog (measured), 11.4 KB more than Option A.
-- **Rejection rationale:** It loses on weight only. If the operator prefers its API, it is the fallback, and the decision flips at no other cost.
+  - Coverage 15 of 16, no file drop (measured).
+  - 139 KB gzipped for its 15, the heaviest (measured).
+- **Rejection rationale:** It loses on coverage and weight. It is the fallback if the operator prefers its API.
 
 ### Option C — Radix Primitives (rejected)
 
 - **Raised by:** author
-- **Summary:** `@radix-ui/react-dropdown-menu` 2.2.1 and `@radix-ui/react-dialog` 1.3.1.
+- **Summary:** One package per primitive. [Docs](https://www.radix-ui.com/primitives/docs/components/dropdown-menu).
 - **Strengths:**
-  - The lightest, 33.6 KB gzipped (measured).
+  - 55 KB gzipped for its 12 (measured).
 - **Costs:**
-  - With its defaults the tap that closed the menu also clicked the button under it (measured). That is the exact behaviour the operator rejected on PR #246.
-- **Rejection rationale:** It fails the operator's rule by default.
+  - Coverage 12 of 16. No bottom sheet, no number stepper, no search with suggestions, no file drop (measured).
+  - The tap that closed the menu also clicked the button under it (measured).
+- **Rejection rationale:** It fails the tap rule and leaves four primitives hand-written.
 
-### Option D — Ark UI (rejected)
+### Option D — Ark UI (`@ark-ui/react` 5.40.0) (rejected)
 
 - **Raised by:** author
-- **Summary:** `@ark-ui/react` 5.40.0, on Zag state machines.
+- **Summary:** Components on Zag state machines. [Docs](https://ark-ui.com/docs/components/menu).
 - **Strengths:**
-  - 42.9 KB gzipped (measured).
+  - Coverage 16 of 16 (measured).
+  - 113 KB gzipped for the 16, lighter than Option A (measured).
 - **Costs:**
   - With its defaults a tap outside did not close the menu, and the tap reached the page (measured).
-- **Rejection rationale:** It fails the operator's rule by default.
+- **Rejection rationale:** It fails the tap rule by default. Whether a prop fixes it is not measured. If one does, Ark wins on weight.
 
 ### Option E — keep hand-writing primitives (rejected)
 
 - **Raised by:** author
-- **Summary:** Keep `Sheet`, `ConfirmDialog` and `Menu` on the native `<dialog>`, as today.
+- **Summary:** Keep the native `<dialog>` and pragma's own components.
 - **Strengths:**
-  - No JavaScript added. The current `Menu` meets the operator's rule.
+  - Nothing changes for users, and no JavaScript is added.
 - **Costs:**
-  - Four dantotsus and one primitive written three times (measured above). The next primitive starts from zero again.
+  - Four dantotsus and one primitive written three times (measured above).
 - **Rejection rationale:** It is what the operator asked to leave.
 
-## Evaluation rubric
-
-| Criterion | Weight | Why it matters |
-|---|---|---|
-| Meets the tap rule by default | high | The operator set it on PR #246 |
-| Unstyled, Tailwind-friendly | high | ADR-0047's tokens stay the look |
-| Weight | medium | Every screen with a menu loads it |
-| Easy to use | medium | The operator's own words |
+## Scores
 
 |             | A React Aria | B Base UI | C Radix | D Ark UI | E Hand-written |
 |---|---|---|---|---|---|
-| Tap rule | ✓ measured | ✓ measured | ✗ tap reached the page | ✗ menu stayed open | ✓ today's `Menu` |
-| Unstyled | ✓ | ✓ | ✓ | ✓ | ✓ |
-| Weight (gzip) | 52.9 KB | 64.3 KB | 33.6 KB | 42.9 KB | 0 |
-| Easy to use | ✓ one import per part | ✓ | ✓ | ✓ | ✗ each edge case rediscovered |
+| Changes the app | ✗ the select loses the native picker; look unchanged | ✗ same | ✗ same, and the menu tap reaches the page | ✗ same, and the menu stays open | ✓ nothing changes |
+| Coverage | ✓ 16 of 16 | ✗ 15, no file drop | ✗ 12 | ✓ 16 of 16 | ✗ 0, all by hand |
+| Tap rule | ✓ | ✓ | ✗ | ✗ | ✓ today's `Menu` |
+| Weight (gzip) | 122 KB | 139 KB | 55 KB | 113 KB | 0 |
 
-**How the tap rule was measured.** A page held one menu and a button under it. Playwright's Chromium emulated an iPhone 13, tapped the trigger, then tapped the button's position. Each library used its documented minimal menu with default props. Weights come from `esbuild --bundle --minify` of each library's menu and dialog imports, with React external, then `gzip -9`.
+**How it was measured.** Coverage maps each pragma primitive to a component in the library's package exports, and each mapped doc page returned 200 where a made-up page returned 404. The tap rule put one menu over one button, tapped the trigger, then tapped the button's position, in Playwright's Chromium emulating an iPhone 13. Renders of every docs demo at 375 px, beside pragma's current primitive, are in the gallery linked from the pull request.
 
 ## Implementation pointers
 
-- Migrate `Menu` first, keep its `MenuProps`, and keep its five callers unchanged. The shadow keeps `bg-scrim`.
-- Then `Sheet` and `ConfirmDialog` on `ModalOverlay` and `Modal`, which retires `modal-dialog.adapter.ts`.
+- Migrate `Menu` first, keep `MenuProps` and its five callers unchanged, and keep the `bg-scrim` shadow.
+- Then `Sheet` and `ConfirmDialog`, which retires `modal-dialog.adapter.ts`.
+- Decide per field whether a select keeps the native picker.
 - Update `borso/no-raw-interactive-element`'s owner lists in the same commit as each move.
 
 ## Index update
 
-Added to `docs/adr/README.md`.
+Listed in `docs/adr/README.md`.
