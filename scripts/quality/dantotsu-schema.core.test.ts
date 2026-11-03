@@ -329,6 +329,10 @@ describe('the template sections', () => {
     expect(readSectionHeadings('## A\n```md\n## B\n```\n### C\n# D\n')).toEqual(['## A', '### C']);
   });
 
+  it('reads a heading with trailing spaces as the template writes it', () => {
+    expect(readSectionHeadings('## User impact  \n')).toEqual(['## User impact']);
+  });
+
   it('accepts an entry from 2026-11-01 that keeps exactly the template sections', () => {
     expect(check([buildEntry('kept', { date: '2026-11-01' }, SECTIONED_BODY)])).toEqual([]);
   });
