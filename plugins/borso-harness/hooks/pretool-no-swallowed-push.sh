@@ -76,29 +76,21 @@ if grep -qE 'set -[a-zA-Z]*o[[:space:]]+pipefail|set -o pipefail' <<<"$COMMAND_T
   exit 0
 fi
 
-block() {
-  echo "[no-swallowed-push] $1" >&2
-  echo "[no-swallowed-push] pipefail is off here, so the pipeline reports the last stage's status," >&2
-  echo "[no-swallowed-push] and the gate's own message goes to stderr, which is not piped." >&2
-  echo "[no-swallowed-push] Nothing in this command ran, including any step before the $2," >&2
-  echo "[no-swallowed-push] so a \`git add\` chained in front of it staged nothing, and a heredoc" >&2
-  echo "[no-swallowed-push] that was to write the message file wrote nothing: write it again first." >&2
-  echo "[no-swallowed-push] Run it bare and read the tail afterwards:" >&2
-  echo "[no-swallowed-push]   $3" >&2
-  echo "[no-swallowed-push] or keep the status if the output is genuinely too long:" >&2
-  echo "[no-swallowed-push]   set -o pipefail; $3 2>&1 | tail -20" >&2
-  "$(dirname "$0")/kaizen-refusal.sh" no-swallowed-push "piped git push or git commit into another command, throwing away its exit status"
-  exit 2
-}
-
-if grep -qE '(^|[|[:space:]])git[[:space:]]+push([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
-  block "git push piped into another command throws away the push's exit status." \
-    "git push" "git push -u origin <branch>"
-fi
-
-if grep -qE '(^|[|[:space:]])git[[:space:]]+commit([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
-  block "git commit piped into another command throws away the commit hook's exit status." \
-    "git commit" "git commit -F <message-file>"
+# A git push or commit piped into another command is repaired, not refused.
+# Refusing it cost a round trip every time: 113 refusals across 32 tasks by
+# PR #250's sweep. Turning `pipefail` on for this one command keeps git's status
+# through the pipe, which is everything the refusal was protecting, so the hook
+# hands the harness the same command with `set -o pipefail;` in front of it.
+# See docs/dantotsus/a-guard-that-refused-what-it-could-repair.md.
+if grep -qE '(^|[|[:space:]])git[[:space:]]+(push|commit)([[:space:]][^|]*)?\|' <<<"$PIPELINES"; then
+  jq -c '{
+    hookSpecificOutput: {
+      hookEventName: "PreToolUse",
+      updatedInput: (.tool_input + {command: ("set -o pipefail; " + .tool_input.command)}),
+      additionalContext: "[no-swallowed-push] The command ran with set -o pipefail in front, so the exit status is git'"'"'s, not the last pipe stage'"'"'s."
+    }
+  }' <<<"$INPUT"
+  exit 0
 fi
 
 exit 0
