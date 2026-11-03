@@ -67,6 +67,8 @@ When in doubt, ask what breaks if it ships. Nothing breaks: non-blocking.
 
 Build the report around these five categories. Every row goes under exactly one.
 
+A fix-sized spec has *Goal*, *Behaviour*, *Data shape*, *Out of scope* and *Acceptance* instead of the template's Q.O.D., *Files to change*, *Use cases* and *Test strategy*. Six reports from 2026-09 to 2026-11 rebuilt the mapping on their own. Use this one: category A takes one row per *Goal* claim and per *Behaviour* bullet, with the files taken from the plan or the diff; category D takes one row per *Acceptance* and *Behaviour* bullet a unit test can hold, and none is routed to `/visual-validation` unless the spec says so. Say in the preamble that the spec is fix-sized. It is not a finding.
+
 ### A. Correctness vs spec
 
 For every Q.O.D. with a user-facing or behavioural decision **and** every entry under "Files to change" in the spec's *Changes* section:
