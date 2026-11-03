@@ -3,7 +3,7 @@ import '@fontsource-variable/newsreader/opsz.css';
 import '@fontsource-variable/newsreader/opsz-italic.css';
 import '@fontsource-variable/geist/index.css';
 import '@fontsource-variable/jetbrains-mono/index.css';
-import { QueryClientProvider } from '@tanstack/react-query';
+import { PersistQueryClientProvider } from '@tanstack/react-query-persist-client';
 import { StrictMode } from 'react';
 import { createRoot } from 'react-dom/client';
 import { App } from './App';
@@ -11,7 +11,11 @@ import { AppErrorBoundary } from './components/organisms/AppErrorBoundary';
 import './i18n/i18n.setup';
 import './styles/tokens.css';
 import { captureInstallPrompt } from './lib/install-prompt.adapter';
-import { queryClient } from './lib/query-client.setup';
+import {
+  queryCachePersistOptions,
+  queryClient,
+  startOfflineReading,
+} from './lib/query-client.setup';
 import { startTakeQueue } from './lib/take-queue.setup';
 import { registerServiceWorker } from './sw/service-worker.setup';
 
@@ -33,9 +37,13 @@ if (rootElement === null) {
 createRoot(rootElement).render(
   <StrictMode>
     <AppErrorBoundary>
-      <QueryClientProvider client={queryClient}>
+      <PersistQueryClientProvider
+        client={queryClient}
+        persistOptions={queryCachePersistOptions}
+        onSuccess={startOfflineReading}
+      >
         <App />
-      </QueryClientProvider>
+      </PersistQueryClientProvider>
     </AppErrorBoundary>
   </StrictMode>,
 );

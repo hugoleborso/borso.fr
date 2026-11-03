@@ -1,6 +1,6 @@
 /** @Feature auth */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api } from '../api.client';
 import { startPasskeyLogin } from '../passkey.adapter';
 import { forgetSessionMarker, rememberSessionMarker } from '../session-marker.adapter';
@@ -23,14 +23,17 @@ async function probeSession(): Promise<SessionProbeResult> {
   return { authenticated: false };
 }
 
-export function useSessionProbe(isEnabled: boolean) {
-  return useQuery({
+export function sessionProbeQueryOptions() {
+  return queryOptions({
     queryKey: authKeys.session(),
     queryFn: probeSession,
     staleTime: Number.POSITIVE_INFINITY,
     retry: false,
-    enabled: isEnabled,
   });
+}
+
+export function useSessionProbe(isEnabled: boolean) {
+  return useQuery({ ...sessionProbeQueryOptions(), enabled: isEnabled });
 }
 
 async function throwOnFailure(response: Response, label: string) {

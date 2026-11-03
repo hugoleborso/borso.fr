@@ -8,8 +8,10 @@ import {
 } from './service-worker.test-utils';
 
 const SHELL_CACHE = 'pragma-v4-shell';
-const ASSET_URL = 'https://pragma.borso.fr/assets/index-Xz6wOtFh.js';
-const CATALOG_URL = 'https://pragma.borso.fr/api/songs';
+const ORIGIN = 'https://pragma.borso.fr';
+const ASSET_URL = `${ORIGIN}/assets/index-Xz6wOtFh.js`;
+const CATALOG_URL = `${ORIGIN}/api/songs`;
+const SETLIST_ENTRIES_PATH = '/api/setlists/setlist-1/entries';
 
 function serveAlways(
   response: FakeResponse,
@@ -101,18 +103,38 @@ describe('sw.js, the worker that ships', () => {
     expect(entryPoint?.body).toBe('<!doctype html><title>fresh</title>');
   });
 
-  it('answers a readable API path from the cache it holds, and leaves a mutation alone', async () => {
-    const worker = loadServiceWorker(serveAlways(buildResponse('[]', 'application/json')));
+  it('sends an API read to the network even when a cache holds an older copy, so a saved setlist order is never answered from before the drags', async () => {
+    const savedOrder = buildResponse('{"entries":[{"id":"b"},{"id":"a"}]}', 'application/json');
+    const fetchStub = vi.fn(serveAlways(savedOrder));
+    const worker = loadServiceWorker(fetchStub);
+    const olderOrder = buildResponse('{"entries":[{"id":"a"},{"id":"b"}]}', 'application/json');
+    worker.caches.seed('pragma-v4-data', SETLIST_ENTRIES_PATH, olderOrder);
+    worker.caches.seed(SHELL_CACHE, SETLIST_ENTRIES_PATH, olderOrder);
+
+    const served = await worker.respondTo({ url: `${ORIGIN}${SETLIST_ENTRIES_PATH}` });
+    const receivedByThePage = served ?? (await fetchStub(SETLIST_ENTRIES_PATH));
+
+    expect(receivedByThePage.body).toBe(savedOrder.body);
+  });
+
+  it('deletes the API data cache of the previous version on activate', async () => {
+    const worker = loadServiceWorker(serveAlways(buildResponse('', 'text/plain')));
     worker.caches.seed(
       'pragma-v4-data',
-      '/api/songs',
-      buildResponse('[{"id":"1"}]', 'application/json'),
+      SETLIST_ENTRIES_PATH,
+      buildResponse('{"entries":[]}', 'application/json'),
     );
 
-    const read = await worker.respondTo({ url: CATALOG_URL });
+    await worker.dispatch('activate', {});
+
+    expect([...worker.caches.namedCaches.keys()]).toEqual([]);
+  });
+
+  it('leaves a mutation to the network', async () => {
+    const worker = loadServiceWorker(serveAlways(buildResponse('[]', 'application/json')));
+
     const write = await worker.respondTo({ url: CATALOG_URL, method: 'POST' });
 
-    expect(read?.body).toBe('[{"id":"1"}]');
     expect(write).toBeUndefined();
   });
 

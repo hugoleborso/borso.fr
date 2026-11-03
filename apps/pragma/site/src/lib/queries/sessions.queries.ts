@@ -1,6 +1,6 @@
 /** @Feature sessions */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { buildOptimisticSession } from './optimistic-session.core';
@@ -36,16 +36,19 @@ export function useSessionsList() {
   });
 }
 
-export function useSession(id: string, isEnabled = true) {
-  return useQuery({
+export function sessionQueryOptions(id: string) {
+  return queryOptions({
     queryKey: sessionKeys.byId(id),
     queryFn: async () => {
       const response = await api.api.sessions[':id'].$get({ param: { id } });
       if (!response.ok) throw new ApiError(response.status, `session ${response.status}`, null);
       return response.json();
     },
-    enabled: isEnabled,
   });
+}
+
+export function useSession(id: string, isEnabled = true) {
+  return useQuery({ ...sessionQueryOptions(id), enabled: isEnabled });
 }
 
 // @FollowsBlueprint query-optimistic-insert

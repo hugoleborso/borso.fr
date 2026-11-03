@@ -1,6 +1,12 @@
 /** @Feature setlists */
 
-import { useMutation, useQueries, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useQueries,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import { setlistKeys } from './setlists.queries';
 import {
@@ -41,20 +47,20 @@ async function fetchSetlistEntries(setlistId: string) {
   return response.json();
 }
 
-export function useSetlistEntries(setlistId: string, isEnabled = true) {
-  return useQuery({
+export function setlistEntriesQueryOptions(setlistId: string) {
+  return queryOptions({
     queryKey: setlistKeys.entriesOf(setlistId),
     queryFn: () => fetchSetlistEntries(setlistId),
-    enabled: isEnabled,
   });
+}
+
+export function useSetlistEntries(setlistId: string, isEnabled = true) {
+  return useQuery({ ...setlistEntriesQueryOptions(setlistId), enabled: isEnabled });
 }
 
 export function useEntriesOfSetlists(setlistIds: readonly string[]) {
   return useQueries({
-    queries: setlistIds.map((setlistId) => ({
-      queryKey: setlistKeys.entriesOf(setlistId),
-      queryFn: () => fetchSetlistEntries(setlistId),
-    })),
+    queries: setlistIds.map((setlistId) => setlistEntriesQueryOptions(setlistId)),
     combine: (results) => ({
       entriesBySetlistId: Object.fromEntries(
         setlistIds.map((setlistId, index) => [setlistId, results[index]?.data?.entries ?? []]),

@@ -1,6 +1,6 @@
 /** @Feature setlists */
 
-import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import { queryOptions, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { ApiError, api, isResponseSuccessful } from '../api.client';
 import {
   appendSetlistToCache,
@@ -45,12 +45,15 @@ export function useSetlistsList() {
   return useQuery({ queryKey: setlistKeys.list(), queryFn: fetchSetlists });
 }
 
-export function useSetlistsBySession(sessionId: string, isEnabled = true) {
-  return useQuery({
+export function setlistsOfSessionQueryOptions(sessionId: string) {
+  return queryOptions({
     queryKey: setlistKeys.bySessionId(sessionId),
     queryFn: () => fetchSetlistsOfSession(sessionId),
-    enabled: isEnabled,
   });
+}
+
+export function useSetlistsBySession(sessionId: string, isEnabled = true) {
+  return useQuery({ ...setlistsOfSessionQueryOptions(sessionId), enabled: isEnabled });
 }
 
 export function useSetlist(setlistId: string, isEnabled = true) {

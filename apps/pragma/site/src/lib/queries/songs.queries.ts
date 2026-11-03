@@ -1,6 +1,12 @@
 /** @Feature songs */
 
-import { useMutation, useMutationState, useQuery, useQueryClient } from '@tanstack/react-query';
+import {
+  queryOptions,
+  useMutation,
+  useMutationState,
+  useQuery,
+  useQueryClient,
+} from '@tanstack/react-query';
 import type { InferResponseType } from 'hono/client';
 import { ApiError, api, isResponseSuccessful, readErrorBody } from '../api.client';
 import { replaceEntityById, settleTemporaryEntity } from './optimistic.utils';
@@ -39,8 +45,8 @@ type SongUpdateVariables = { id: string } & Parameters<
  * @BlueprintUsage Use for every call from a front end to its own API. One module per domain, holding the key factory and the hooks.
  * @BlueprintDescription Declares the song query keys in one typed factory so no caller invents a key, and wraps each call in useQuery or useMutation over the Hono client, so the request and response types come from the API router type rather than a hand-written fetcher. Mutations reconcile from the mutation response and roll back in onError.
  */
-export function useSongsList() {
-  return useQuery({
+export function songsListQueryOptions() {
+  return queryOptions({
     queryKey: songKeys.list(),
     queryFn: async () => {
       const response = await api.api.songs.$get();
@@ -50,16 +56,23 @@ export function useSongsList() {
   });
 }
 
-export function useSong(id: string, isEnabled = true) {
-  return useQuery({
+export function songQueryOptions(id: string) {
+  return queryOptions({
     queryKey: songKeys.byId(id),
     queryFn: async () => {
       const response = await api.api.songs[':id'].$get({ param: { id } });
       if (!response.ok) throw new ApiError(response.status, `song ${response.status}`, null);
       return response.json();
     },
-    enabled: isEnabled,
   });
+}
+
+export function useSongsList() {
+  return useQuery(songsListQueryOptions());
+}
+
+export function useSong(id: string, isEnabled = true) {
+  return useQuery({ ...songQueryOptions(id), enabled: isEnabled });
 }
 
 export function useSongSearch(query: string) {

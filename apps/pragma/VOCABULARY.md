@@ -741,8 +741,10 @@ key and address rather than the stage's.
 
 ## Offline manifest
 
-The list of URLs the service worker pre-caches so the band can read the
-catalogue and the next setlist with no signal.
+The list of URLs whose reads the app loads into its saved query cache once
+signed in, so the band can read the catalogue and the next setlist with no
+signal (`loadOfflineReadingWhenSignedIn`). The service worker caches no API
+read.
 
 Lives in: `api/src/sessions/`
 
