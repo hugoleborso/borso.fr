@@ -266,11 +266,12 @@ describe('setlist voting (back-e2e)', () => {
       await jsonRequest(app, `/api/setlists/${setlistId}/entries`, { cookieHeader }),
       z.object({ entries: z.array(z.object({ id: z.string() })) }),
     );
-    await jsonRequest(app, `/api/setlists/${setlistId}/breaks`, {
+    const added = await jsonRequest(app, `/api/setlists/${setlistId}/breaks`, {
       method: 'POST',
       body: { afterEntryId: closedOrder.entries[0]?.id, label: 'Intermission' },
       cookieHeader,
     });
+    expect(added.status).toBe(201);
     await jsonRequest(app, `/api/setlists/${setlistId}/vote-status`, {
       method: 'PUT',
       body: { status: 'voting' },

@@ -325,7 +325,7 @@ describe('setlist breaks controller (back-e2e)', () => {
       'song',
     );
 
-    await Promise.all([
+    const answers = await Promise.all([
       insertBreakAfter(app, cookieHeader, setlistId, entryIds[0] ?? ''),
       insertBreakAfter(app, cookieHeader, setlistId, entryIds[1] ?? ''),
       jsonRequest(app, `/api/setlists/${setlistId}/entries`, {
@@ -350,6 +350,8 @@ describe('setlist breaks controller (back-e2e)', () => {
         breakListEnvelope,
       ),
     ]);
+    expect(answers.slice(0, 3).map((answer) => answer.status)).toEqual([201, 201, 201]);
+    expect([200, 409]).toContain(answers[3].status);
     const positions = [...entries.entries, ...breaks.breaks]
       .map((item) => item.position)
       .toSorted((left, right) => left - right);
