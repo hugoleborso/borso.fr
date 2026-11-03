@@ -96,7 +96,7 @@ After a merge, the same reply carries two follow-ups, and says so when either is
 
 ## Checking a screen
 
-- `pnpm dev` in a full-stack app runs the whole app here: site, API and a seeded local Postgres. Its `[dev:db]` line prints the seeded sign-in where the app has one. Reproduce a screen bug there, never on a copied DOM.
+- `pnpm dev` in a full-stack app runs the whole app here: site, API and a seeded local Postgres. Its `[dev:db]` line prints the seeded sign-in where the app has one. Uploads need a preview, because no bucket runs locally. Reproduce a screen bug there, never on a copied DOM.
 - `agent-browser` checks layout, styles, contrast and content. Call it directly; it needs no flag here. Never run `agent-browser install`.
 - `scripts/phone.sh touch '<selector>'` checks a tap on a phone. A click is not a tap. Traps are in `docs/knowledge/driving-previews-with-agent-browser-and-argent.md`.
 

@@ -36,8 +36,11 @@ Agents logged under their labels.
 | 18 | pr-description | #247's ADR link points at the head branch, which breaks when the branch is deleted | PR #247 body | no-op: the branch still exists; the ADR is reachable on `main` and indexed in `docs/adr/README.md` |
 | 19 | post-merge | ADR `202611011313` was still `proposed` after the merge | `docs/adr/README.md` | fixed: stamped `accepted` |
 | 20 | post-merge | `get_session` does not find `session_01K69KnBD6VQ779wocFdaa8R`, so #247's cost is partial | this session | no-op: the cost row says so |
+| 21 | pr-description | The kaizen's ADR picked its own criteria, after the options; the operator named the two that mattered, changes to the app and coverage | operator reply on PR #249 | dantotsu: `an-adr-that-picked-its-own-criteria` |
+| 22 | pr-description | The ADR scored four libraries on two primitives and showed no renders | operator reply on PR #249 | merge into 21: the gallery and the rewritten ADR answer it |
+| 23 | post-merge | `POST /api/uploads/sign` returns 500 under `pnpm dev`, because no bucket runs locally | `pragma-baseline` agent; `UPLOADS_BUCKET not set` in `uploads.adapter.ts` | fixed: CLAUDE.md says uploads need a preview |
 
 ## Counts
 
-20 rows: 1 dantotsu, 1 knowledge, 6 fixed, 4 merged into another row,
+23 rows: 2 dantotsus, 1 knowledge, 7 fixed, 5 merged into another row,
 8 no-op.

@@ -17,3 +17,5 @@ This file is gitignored. Before the pull request opens, run
 Session: 96144670-751b-5c5c-b79a-ed089b954cf4
 
 - [2026-11-03 14:40] `hook:no-swallowed-push` piped git push or git commit into another command, throwing away its exit status
+- [2026-11-03 14:42] `hook:pr-body` wrote a pull-request body carrying markup the server silently strips
+- [2026-11-03 15:40] `pragma-baseline` pragma's local dev API returns 500 on POST /api/uploads/sign, so FileDropZone cannot be reached in pnpm dev without stubbing the presign in the browser.
