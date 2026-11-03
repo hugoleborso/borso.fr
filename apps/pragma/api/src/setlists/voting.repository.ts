@@ -1,6 +1,11 @@
 import { and, eq } from 'drizzle-orm';
 import { type DatabaseExecutor, getDatabase } from '../database/client';
-import { setlistEntryTable, setlistTable, setlistVoteTable } from './setlists.schema';
+import {
+  setlistBreakTable,
+  setlistEntryTable,
+  setlistTable,
+  setlistVoteTable,
+} from './setlists.schema';
 
 export interface VoteRow {
   setlistId: string;
@@ -89,6 +94,7 @@ export async function replaceEntriesWithProposal(
   const database = getDatabase();
   await database.transaction(async (transaction) => {
     await transaction.delete(setlistEntryTable).where(eq(setlistEntryTable.setlistId, setlistId));
+    await transaction.delete(setlistBreakTable).where(eq(setlistBreakTable.setlistId, setlistId));
     if (songIds.length > 0) {
       await transaction.insert(setlistEntryTable).values(
         songIds.map((songId, position) => ({

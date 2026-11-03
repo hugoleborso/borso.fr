@@ -339,4 +339,46 @@ describe('setlists tools (back-e2e)', () => {
       [deviceEndpoint('lea-phone'), `setlist:${setlistId}`],
     ]);
   });
+
+  it('adds a break after a song by title, reads it back in place, renames it and removes it', async () => {
+    const band = await prepareAssistantBand();
+    await createSong(band, 'Creep');
+    await createSong(band, 'Karma Police');
+    await createSong(band, 'Seven Nation Army');
+    const setlistId = await createSetlist(band, {
+      songs: ['Creep', 'Karma Police', 'Seven Nation Army'],
+    });
+    const breakViewSchema = setlistViewSchema.extend({
+      breaks: z.array(
+        z.object({ breakId: z.string().uuid(), label: z.string(), afterSongCount: z.number() }),
+      ),
+    });
+
+    const added = await callTool(band.assistant, 'save_setlist_break', {
+      setlist: setlistId,
+      after: 'Karma Police',
+      label: 'Intermission',
+    });
+    const { breakId } = z.object({ breakId: z.string().uuid() }).parse(added.body);
+    const withBreak = breakViewSchema.parse(
+      (await callTool(band.assistant, 'get_setlist', { setlist: setlistId })).body,
+    );
+    const renamed = await callTool(band.assistant, 'save_setlist_break', {
+      setlist: setlistId,
+      break: breakId,
+      label: 'Beer',
+    });
+    const removal = { setlist: setlistId, break: breakId, remove: true };
+    const removed = await callTool(band.assistant, 'save_setlist_break', removal);
+    const removedAgain = await callTool(band.assistant, 'save_setlist_break', removal);
+    const unclear = await callTool(band.assistant, 'save_setlist_break', { setlist: setlistId });
+
+    expect(withBreak.breaks).toEqual([{ breakId, label: 'Intermission', afterSongCount: 2 }]);
+    expect(withBreak.entries.map((entry) => entry.position)).toEqual([1, 2, 3]);
+    expect(renamed.body).toEqual({ breakId, label: 'Beer' });
+    expect(removed.body).toEqual({ setlistId, removed: breakId });
+    expect(removedAgain.body).toEqual({ error: 'not-found' });
+    expect(unclear.body).toEqual({ error: 'break-needs-after-or-break' });
+    expect((await readSetlist(band, setlistId)).entries).toHaveLength(3);
+  });
 });

@@ -20,6 +20,7 @@ export const setlistKeys = {
   bySessionId: (sessionId: string) => [...setlistKeys.bySession(), sessionId] as const,
   detail: (setlistId: string) => [...setlistKeys.all, 'detail', setlistId] as const,
   entriesOf: (setlistId: string) => [...setlistKeys.all, 'entries', setlistId] as const,
+  breaksOf: (setlistId: string) => [...setlistKeys.all, 'breaks', setlistId] as const,
   creation: () => [...setlistKeys.all, 'creation'] as const,
 };
 

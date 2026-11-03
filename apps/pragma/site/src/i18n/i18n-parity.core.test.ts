@@ -71,7 +71,11 @@ const IDENTICAL_BY_DESIGN: readonly IdenticalByDesign[] = [
   { key: 'sessions.date', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.kindConcert', readsTheSameBecause: 'same word, same spelling' },
   { key: 'sessions.noPreparedConcert', readsTheSameBecause: 'an em dash, not a word' },
-  { key: 'sessions.practiceSongs.back', readsTheSameBecause: 'same word, same spelling' },
+  { key: 'sessions.practiceSongs.concerts', readsTheSameBecause: 'same word, same spelling' },
+  {
+    key: 'sessions.practiceSongs.setlists',
+    readsTheSameBecause: 'same word, and French pluralises it the same way',
+  },
   { key: 'sessions.section.sessions', readsTheSameBecause: 'same word, same spelling' },
   {
     key: 'sessions.section.setlists',

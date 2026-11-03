@@ -1,18 +1,21 @@
 import type { z } from 'zod';
 import type { DatabaseExecutor } from '../database/client';
-import { isReorderOfTheSameIds } from '../helpers/ordering/reorder.core';
 import type { DeletionOutcome } from '../helpers/persistence/deletion.core';
 import type { WriteActor } from '../notifications/notifications.service';
 import { didClaimSongWithin } from '../songs/songs.service';
+import { arrangeReorder } from './setlist-break.core';
 import {
-  countEntriesWithin,
   deleteEntryWithin,
   insertEntryWithin,
-  listEntryIdsInOrderWithin,
   type SetlistEntryRow,
-  setEntryPositionWithin,
   updateEntry,
 } from './setlist-entry.repository';
+import {
+  compactItemsWithin,
+  listItemsWithin,
+  nextItemPositionWithin,
+  writeItemOrderWithin,
+} from './setlist-position.service';
 import { didClaimSetlistWithin, runInOneSetlistTransaction } from './setlists.repository';
 import type {
   SetlistEntryPersistedUpdate,
@@ -37,7 +40,7 @@ export async function appendEntry(
     return await insertEntryWithin(executor, {
       setlistId,
       songId: input.songId,
-      position: await countEntriesWithin(executor, setlistId),
+      position: await nextItemPositionWithin(executor, setlistId),
       energy: input.energy,
       lineupOverride: input.lineupOverride,
       keyOverride: input.keyOverride,
@@ -70,7 +73,7 @@ async function appendSongsWithin(
   setlistId: string,
   songIds: readonly string[],
 ): Promise<SetlistEntryRow[]> {
-  const firstPosition = await countEntriesWithin(executor, setlistId);
+  const firstPosition = await nextItemPositionWithin(executor, setlistId);
   const appended: SetlistEntryRow[] = [];
   for (const [offset, songId] of songIds.entries()) {
     appended.push(
@@ -121,15 +124,6 @@ export async function patchEntry(
   return { kind: 'ok', entry };
 }
 
-export async function writeEntryPositionsWithin(
-  executor: DatabaseExecutor,
-  entryIds: readonly string[],
-): Promise<void> {
-  for (const [position, entryId] of entryIds.entries()) {
-    await setEntryPositionWithin(executor, entryId, position);
-  }
-}
-
 export async function removeEntryAndCompact(
   setlistId: string,
   entryId: string,
@@ -139,7 +133,7 @@ export async function removeEntryAndCompact(
     const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
     if (!isSetlistClaimed) return 'not-found';
     const deletion = await deleteEntryWithin(executor, setlistId, entryId);
-    await writeEntryPositionsWithin(executor, await listEntryIdsInOrderWithin(executor, setlistId));
+    await compactItemsWithin(executor, setlistId);
     return deletion;
   });
   if (outcome === 'not-found') return outcome;
@@ -157,10 +151,10 @@ export async function reorderEntries(
   const reorder = await runInOneSetlistTransaction(async (executor): Promise<ReorderResult> => {
     const isSetlistClaimed = await didClaimSetlistWithin(executor, setlistId);
     if (!isSetlistClaimed) return { kind: 'not-found' };
-    const existingIds = await listEntryIdsInOrderWithin(executor, setlistId);
-    const isCurrent = isReorderOfTheSameIds(existingIds, entryIds);
-    if (!isCurrent) return { kind: 'stale' };
-    await writeEntryPositionsWithin(executor, entryIds);
+    const runningOrder = await listItemsWithin(executor, setlistId);
+    const orderedIds = arrangeReorder(runningOrder, entryIds);
+    if (orderedIds === null) return { kind: 'stale' };
+    await writeItemOrderWithin(executor, runningOrder, orderedIds);
     return { kind: 'ok' };
   });
   if (reorder.kind !== 'ok') return reorder;

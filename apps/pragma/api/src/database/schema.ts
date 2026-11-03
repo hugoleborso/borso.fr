@@ -35,6 +35,7 @@ export { outreachTemplateTable } from '../outreach/outreach.schema';
 export { sessionTable } from '../sessions/sessions.schema';
 export {
   sessionSetlistTable,
+  setlistBreakTable,
   setlistEntryTable,
   setlistTable,
   setlistVoteTable,
