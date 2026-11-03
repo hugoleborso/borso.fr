@@ -1,10 +1,11 @@
 import { describe, expect, it } from 'vitest';
 import {
   listPickableConcerts,
+  listPickableSetlists,
   listPickableSongIds,
   listPracticeSongIds,
   planPracticeSongsSave,
-  poolConcertSongIds,
+  poolPickedSongIds,
   togglePickedId,
 } from './practice-songs.core';
 
@@ -12,6 +13,10 @@ const PRACTICE = 'practice-1';
 
 function concert(id: string, date: string, venue: string) {
   return { id, kind: 'concert', date, venue };
+}
+
+function labelOf(setlist: { readonly name: string }): string {
+  return setlist.name === '' ? 'Untitled setlist' : setlist.name;
 }
 
 // @FollowsBlueprint test-pure-unit
@@ -39,20 +44,69 @@ describe('listPickableConcerts', () => {
   });
 });
 
-describe('poolConcertSongIds', () => {
+describe('listPickableSetlists', () => {
+  const unlinked = { id: 'u', name: 'Rappels', songIds: [], sessionIds: [] };
+  const ofConcert = { id: 'c', name: 'Élysée set', songIds: [], sessionIds: ['c1'] };
+  const unnamed = { id: 'n', name: '', songIds: [], sessionIds: [] };
+  const own = { id: 'o', name: 'Practice', songIds: [], sessionIds: [PRACTICE] };
+  const setlists = [unlinked, own, ofConcert, unnamed];
+  const ORDER = ['u', 'o', 'c', 'n'];
+
+  it('keeps every setlist the practice does not carry, linked to a concert or not, in the given order', () => {
+    const order = ['n', 'c', 'o', 'u'];
+    expect(listPickableSetlists(setlists, order, PRACTICE, '', labelOf)).toEqual([
+      unnamed,
+      ofConcert,
+      unlinked,
+    ]);
+  });
+
+  it('matches the search on the shown name ignoring case, accents and surrounding spaces', () => {
+    expect(listPickableSetlists(setlists, ORDER, PRACTICE, ' ELYSEE  ', labelOf)).toEqual([
+      ofConcert,
+    ]);
+    expect(listPickableSetlists(setlists, ORDER, PRACTICE, 'untitled', labelOf)).toEqual([unnamed]);
+    expect(listPickableSetlists(setlists, ORDER, PRACTICE, 'practice', labelOf)).toEqual([]);
+  });
+});
+
+describe('poolPickedSongIds', () => {
   const setlists = [
     { id: 'a', songIds: ['s1', 's2'], sessionIds: ['c1'] },
     { id: 'b', songIds: ['s2', 's3'], sessionIds: ['c2', 'c1'] },
     { id: 'c', songIds: ['s4'], sessionIds: ['c3'] },
+    { id: 'd', songIds: ['s5', 's1'], sessionIds: [] },
   ];
 
   it('pools the songs of every setlist of the picked concerts, once each, in order', () => {
-    expect(poolConcertSongIds(['c1'], setlists)).toEqual(['s1', 's2', 's3']);
-    expect(poolConcertSongIds(['c3', 'c2'], setlists)).toEqual(['s4', 's2', 's3']);
+    expect(poolPickedSongIds({ concertIds: ['c1'], setlistIds: [] }, setlists)).toEqual([
+      's1',
+      's2',
+      's3',
+    ]);
+    expect(poolPickedSongIds({ concertIds: ['c3', 'c2'], setlistIds: [] }, setlists)).toEqual([
+      's4',
+      's2',
+      's3',
+    ]);
   });
 
-  it('pools nothing when no concert is picked', () => {
-    expect(poolConcertSongIds([], setlists)).toEqual([]);
+  it('adds the songs of the picked setlists after those of the concerts, once each', () => {
+    expect(poolPickedSongIds({ concertIds: [], setlistIds: ['d', 'c'] }, setlists)).toEqual([
+      's5',
+      's1',
+      's4',
+    ]);
+    expect(poolPickedSongIds({ concertIds: ['c1'], setlistIds: ['d'] }, setlists)).toEqual([
+      's1',
+      's2',
+      's3',
+      's5',
+    ]);
+  });
+
+  it('pools nothing when nothing is picked', () => {
+    expect(poolPickedSongIds({ concertIds: [], setlistIds: [] }, setlists)).toEqual([]);
   });
 });
 
