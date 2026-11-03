@@ -67,6 +67,10 @@ When in doubt, ask what breaks if it ships. Nothing breaks: non-blocking.
 
 Build the report around these five categories. Every row goes under exactly one.
 
+### A spec in the short form
+
+A spec may hold only *Goal*, *Behaviour*, *Data shape* and *Out of scope*, with no *Q.O.D.*, *Use cases / edge cases*, *Changes* or *Test strategy*. Three pragma features in a row shipped one (`several-calendar-feeds`, `setlist-order-survives`, `setlist-breaks`). It is valid input, not a gap. Build category A from its *Behaviour* and *Data shape* bullets and take the files from the plan or the diff. Build category D from the same bullets, walked in order and split as step 2 below says, and route nothing to `/visual-validation`. Say so once, in the report's preamble. Add no row, note or friction line asking for the missing sections: each of those three reports asked, and no spec added them. A missing plan is still the `plan absent` row.
+
 ### A. Correctness vs spec
 
 For every Q.O.D. with a user-facing or behavioural decision **and** every entry under "Files to change" in the spec's *Changes* section:
