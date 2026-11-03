@@ -97,14 +97,18 @@ describe('a setlist row', () => {
   it('opens the entry when the row is tapped', () => {
     const onOpen = vi.fn();
     renderRow(buildProps({ onOpen }));
-    fireEvent.click(screen.getByRole('button', { name: /Superstition/ }));
+    const rowButton = screen
+      .getAllByRole('button', { name: /Superstition/ })
+      .find((button) => !button.hasAttribute('popovertarget'));
+    if (rowButton === undefined) throw new Error('the row renders no button of its own');
+    fireEvent.click(rowButton);
     expect(onOpen).toHaveBeenCalledOnce();
   });
 
   it('removes the entry from its more menu with no confirmation sheet', () => {
     const onRemove = vi.fn();
     renderRow(buildProps({ onRemove }));
-    fireEvent.click(screen.getByRole('button', { name: 'Remove from the setlist' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Remove from the setlist', hidden: true }));
     expect(onRemove).toHaveBeenCalledExactlyOnceWith('entry-1');
     expect(screen.queryByRole('dialog')).toBe(null);
   });

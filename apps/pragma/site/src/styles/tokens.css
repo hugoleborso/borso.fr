@@ -125,6 +125,19 @@
     overflow: hidden;
   }
 
+  [popover][data-anchored-menu] {
+    margin: auto;
+  }
+
+  @supports (position-area: bottom) {
+    [popover][data-anchored-menu] {
+      inset: auto;
+      margin: 0.25rem 0;
+      position-area: bottom span-left;
+      position-try-fallbacks: flip-block;
+    }
+  }
+
   body {
     margin: 0;
     font-family: var(--font-sans);

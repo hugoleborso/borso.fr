@@ -6,8 +6,8 @@ severity: medium
 related-pr: '#151'
 fix-pr: none (the pull request is opened after this entry is committed)
 fix-commits: [self]
-eradication-level: 4
-eradication-paths: [apps/pragma/site/src/components/molecules/Menu.test.tsx, apps/pragma/site/src/components/molecules/Menu.tsx]
+eradication-level: 1
+eradication-paths: [apps/pragma/site/src/components/molecules/Menu.tsx, apps/pragma/site/src/styles/tokens.css, apps/pragma/site/src/components/molecules/Menu.test.tsx]
 time-to-detect: weeks
 tags: [react, frontend, pragma, accessibility, testing]
 zone: apps/pragma/site/src/components/molecules/Menu.tsx
@@ -83,52 +83,55 @@ no React state and no `useEffect`, which the standards ban.
 
 ## Countermeasure
 
-`Menu` renders a full-screen transparent backdrop inside the `<details>`,
-between the button and the list. The browser hides it while the menu is
-closed, so it needs no state. While open it covers the page under the list
-(`z-20` under the list's `z-30`), and a tap on it closes the menu without
-activating what lies under it. Escape on the button or an item closes the
-menu and returns focus to the button.
+`Menu` is now a native popover, `popover="auto"`. Its button opens it with
+`popoverTarget`, and each item closes it with `popoverTargetAction="hide"`
+before running. The browser closes it on a tap outside and on Escape, gives
+focus back to the button, and draws it above every other layer.
 
-Checked in a real browser (measured, Playwright, Chromium with touch at
-375 px, same DOM): backdrop absent while closed, present while open, the
-item still topmost at its own position, and a tap on a button outside
-closed the menu without firing that button.
+Placement under the button uses CSS anchor positioning inside
+`@supports (position-area: bottom)` in `tokens.css`. A browser without it
+shows the popover centred on screen, because the same file restores the
+`margin: auto` that Tailwind's preflight removes.
+
+A first version hand-wrote the dismissal with a transparent backdrop. The
+operator asked why it did not reuse the platform popover. Checking the
+running app then showed that backdrop's own defect: the bottom bar (`z30`)
+and the tab bar (`z40`) sat above it and stayed tappable with a menu open.
+
+Checked on the real app (`pnpm dev`, Chromium, 375 px, measured):
+
+| Check | Result |
+| --- | --- |
+| Tap on the button | open, list top 4 px under the button, right edges aligned |
+| Tap outside | closed |
+| Escape | closed, focus back on the button |
+| Last menu on the page | list fits under its button inside the viewport |
+| Item tap | closed, item ran |
+| `@supports` rule removed, as in a browser without anchor positioning | list centred on screen |
+
+One behaviour differs from the backdrop: the tap that closes the menu also
+reaches what is under it. A tap on a song row closes the menu and opens
+the song sheet (measured). This is how a light-dismiss popover works in
+Chromium.
 
 ## Eradication
 
-**Type:** detection (level 4)
+**Type:** structural impossibility (level 1)
 
 **Reference:** commit `[self]` on this entry's pull request
 
 ```diff
-+      <div
-+        data-menu-backdrop
-+        aria-hidden="true"
-+        onClick={closeEnclosingMenu}
-+        className="fixed inset-0 z-20"
-+      />
-       <ul className="absolute top-full right-0 z-30 …">
+-    <details className="relative">
+-      <summary aria-label={label} …>
++      <button type="button" popoverTarget={popoverId} aria-label={label} …>
+-      <ul className="absolute top-full right-0 z-30 …">
++      <ul id={popoverId} popover="auto" data-anchored-menu …>
 ```
 
-```diff
-+  it('closes when the user taps outside the menu', () => {
-+    const details = openMenu();
-+    const backdrop = container.querySelector<HTMLElement>('[data-menu-backdrop]');
-+    expect(backdrop).not.toBeNull();
-+    act(() => backdrop?.click());
-+    expect(details.open).toBe(false);
-+  });
-```
-
-**Proof it can fail:** the test refused the old `Menu` with the two
-failures quoted under *User impact* (measured), and passes on the fix.
-
-Level 1 was considered. The Popover API closes on an outside tap by
-construction, but placing a top-layer popover under its button needs CSS
-anchor positioning, and the share of band phones that support it is
-unknown. The backdrop lives in the one popup primitive, so every caller
-inherits it.
+Dismissal is no longer code in this repository. The browser owns it for
+every caller of `Menu`, so no future menu can forget a dismissal path.
+`Menu.test.tsx` pins the wiring: the list is `popover="auto"`, the button
+targets it, and each item hides it before running.
 
 **Similar instances:** `grep -rn "<details" apps/*/site/src` finds five
 (measured). `Menu` is the only popup. The four in talos (`SourceView`,

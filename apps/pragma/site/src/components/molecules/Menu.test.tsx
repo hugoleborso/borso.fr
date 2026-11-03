@@ -31,37 +31,26 @@ describe('Menu', () => {
     container.remove();
   });
 
-  function openMenu(): HTMLDetailsElement {
-    const details = container.querySelector('details');
-    if (details === null) throw new Error('Menu renders no details element');
-    act(() => container.querySelector('summary')?.click());
-    expect(details.open).toBe(true);
-    return details;
+  function readList(): HTMLUListElement {
+    const list = container.querySelector('ul');
+    if (list === null) throw new Error('Menu renders no list');
+    return list;
   }
 
-  it('closes when the user taps outside the menu', () => {
-    const details = openMenu();
-    const backdrop = container.querySelector<HTMLElement>('[data-menu-backdrop]');
-    expect(backdrop).not.toBeNull();
-    act(() => backdrop?.click());
-    expect(details.open).toBe(false);
+  it('is a light-dismiss popover, so the browser closes it on a tap outside and on Escape', () => {
+    expect(readList().getAttribute('popover')).toBe('auto');
   });
 
-  it('closes on Escape and gives focus back to its button', () => {
-    const details = openMenu();
-    act(() => {
-      container
-        .querySelector('li button')
-        ?.dispatchEvent(new KeyboardEvent('keydown', { key: 'Escape', bubbles: true }));
-    });
-    expect(details.open).toBe(false);
-    expect(document.activeElement).toBe(container.querySelector('summary'));
+  it('opens from its button, which the browser gives focus back to', () => {
+    const button = container.querySelector('button[aria-label="Actions"]');
+    expect(button?.getAttribute('popovertarget')).toBe(readList().id);
   });
 
-  it('closes after an item is chosen', () => {
-    const details = openMenu();
-    act(() => container.querySelector<HTMLButtonElement>('li button')?.click());
-    expect(details.open).toBe(false);
+  it('closes when an item is chosen, then runs it', () => {
+    const renameButton = container.querySelector<HTMLButtonElement>('li button');
+    expect(renameButton?.getAttribute('popovertarget')).toBe(readList().id);
+    expect(renameButton?.getAttribute('popovertargetaction')).toBe('hide');
+    act(() => renameButton?.click());
     expect(ITEMS[0]?.onSelect).toHaveBeenCalledOnce();
   });
 });
