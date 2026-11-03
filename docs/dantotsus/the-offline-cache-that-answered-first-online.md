@@ -128,9 +128,27 @@ which removes the second cache instead of keeping it in step.
 - Every setlist entry write declares one `scope`, so two drags never travel
   at once and the older one cannot commit last.
 
-Verified by unit tests (measured): the worker test below, the persist
-round trip, the session-end purge, the sign-in prefetch and the core suite
-of the site (726 tests in `site/src/lib`, all passing).
+Verified on production builds of this branch served against the local API
+at 375 px, one run after the other on the same setlist (measured,
+Playwright):
+
+| Step | `main`'s worker | This branch |
+| --- | --- | --- |
+| Three drags | server has the new order | server has the new order |
+| Back to Order after 35 s | **order from before the drags** | the saved order |
+| One more drag | server gets the old order plus that drag | server gets the saved order plus that drag |
+
+The unit tests cover the same path: the worker test below, the persist
+round trip, the session-end purge and the sign-in prefetch.
+
+The saved cache opened a sibling of the same class, found by technical
+validation: the order page showed an order restored from `localStorage`,
+up to 7 days old, and accepted a drag before its mount refetch answered.
+The drag cancels that refetch, so it could send the restored order over a
+newer one. The order page now refetches on every mount and shows no row
+until that fetch answered (`useSetlistEntriesToReorder`,
+`SetlistOrderPage.tsx`). Its two tests fail with the fix reverted
+(measured).
 
 ## Eradication
 
